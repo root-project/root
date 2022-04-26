@@ -33,8 +33,7 @@ using ROOT::Experimental::RooNLLVarNew;
 namespace {
 
 std::unique_ptr<RooAbsArg> prepareSimultaneousModelForBatchMode(RooSimultaneous &simPdf, RooArgSet &observables,
-                                                                RooAbsReal *weight, bool isExtended,
-                                                                std::string const &rangeName)
+                                                                bool isExtended, std::string const &rangeName)
 {
 
    // Prepare the NLLTerms for each component
@@ -43,8 +42,7 @@ std::unique_ptr<RooAbsArg> prepareSimultaneousModelForBatchMode(RooSimultaneous 
       auto const &catName = catItem.first;
       auto *pdf = simPdf.getPdf(catName.c_str());
       auto nllName = std::string("nll_") + pdf->GetName();
-      nllTerms.add(
-         *new RooNLLVarNew(nllName.c_str(), nllName.c_str(), *pdf, observables, weight, isExtended, rangeName));
+      nllTerms.add(*new RooNLLVarNew(nllName.c_str(), nllName.c_str(), *pdf, observables, isExtended, rangeName));
    }
 
    RooArgSet newObservables;
@@ -73,8 +71,6 @@ RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data, std::uniqu
                                     RooArgSet const &projDeps, bool isExtended, double integrateOverBinsPrecision,
                                     RooFit::BatchModeOption batchMode)
 {
-   std::unique_ptr<RooRealVar> weightVar;
-
    std::unique_ptr<RooFitDriver> driver;
 
    RooArgSet observables;
@@ -90,12 +86,6 @@ RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data, std::uniqu
                                << ") fixing interpretation of coefficients of any component to range "
                                << addCoefRangeName << "\n";
       pdf.fixAddCoefRange(addCoefRangeName.c_str(), false);
-   }
-
-   if (data.isWeighted()) {
-      // RooRealVar for the weight value (or values as a batch) that will
-      // participate in the computation graph of the RooFit driver.
-      weightVar = std::make_unique<RooRealVar>(RooNLLVarNew::weightVarName, "Weight(s) of events", data.weight());
    }
 
    // Deal with the IntegrateBins argument
@@ -114,11 +104,10 @@ RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data, std::uniqu
       auto *simPdfClone = static_cast<RooSimultaneous *>(simPdf->cloneTree());
       simPdfClone->wrapPdfsInBinSamplingPdfs(data, integrateOverBinsPrecision);
       // Warning! This mutates "observables"
-      nllTerms.addOwned(
-         prepareSimultaneousModelForBatchMode(*simPdfClone, observables, weightVar.get(), isExtended, rangeName));
+      nllTerms.addOwned(prepareSimultaneousModelForBatchMode(*simPdfClone, observables, isExtended, rangeName));
    } else {
-      nllTerms.addOwned(std::make_unique<RooNLLVarNew>("RooNLLVarNew", "RooNLLVarNew", finalPdf, observables,
-                                                       weightVar.get(), isExtended, rangeName));
+      nllTerms.addOwned(
+         std::make_unique<RooNLLVarNew>("RooNLLVarNew", "RooNLLVarNew", finalPdf, observables, isExtended, rangeName));
    }
    if (constraints) {
       nllTerms.addOwned(std::move(constraints));
@@ -162,8 +151,6 @@ RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data, std::uniqu
 
    auto driverWrapper = RooFitDriver::makeAbsRealWrapper(std::move(driver));
    driverWrapper->addOwnedComponents(std::move(nll));
-   if (weightVar)
-      driverWrapper->addOwnedComponents(std::move(weightVar));
 
    return driverWrapper;
 }
