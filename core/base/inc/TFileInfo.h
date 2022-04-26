@@ -60,8 +60,8 @@ public:
       kSortWithIndex  = BIT(17)     // Use index when sorting (in Compare)
    };
 
-   TFileInfo(const char *url = 0, Long64_t size = -1, const char *uuid = 0,
-             const char *md5 = 0, TObject *meta = 0);
+   TFileInfo(const char *url = 0, Long64_t size = -1, const char *uuid = nullptr,
+             const char *md5 = nullptr, TObject *meta = nullptr);
    TFileInfo(const TFileInfo &);
 
    virtual ~TFileInfo();
@@ -91,17 +91,17 @@ public:
    Bool_t          AddUrl(const char *url, Bool_t infront = kFALSE);
    Bool_t          RemoveUrl(const char *url);
    Bool_t          AddMetaData(TObject *meta);
-   Bool_t          RemoveMetaData(const char *meta = 0);
+   Bool_t          RemoveMetaData(const char *meta = nullptr);
 
-   Bool_t          IsSortable() const { return kTRUE; }
-   Int_t           Compare(const TObject *obj) const;
+   Bool_t          IsSortable() const override { return kTRUE; }
+   Int_t           Compare(const TObject *obj) const override;
 
    Int_t           GetIndex() const { return fIndex; }
    void            SetIndex(Int_t idx) { fIndex = idx; }
 
-   void            Print(Option_t *options="") const;
+   void            Print(Option_t *options="") const override;
 
-   ClassDef(TFileInfo,4)   // Describes generic file info including meta data information
+   ClassDefOverride(TFileInfo,4)   // Describes generic file info including meta data information
 };
 
 
@@ -150,9 +150,9 @@ public:
    void            SetTotBytes(Long64_t tot)    { fTotBytes = tot; }
    void            SetZipBytes(Long64_t zip)    { fZipBytes = zip; }
 
-   void            Print(Option_t *options="") const;
+   void            Print(Option_t *options="") const override;
 
-   ClassDef(TFileInfoMeta,2)   // Describes TFileInfo meta data
+   ClassDefOverride(TFileInfoMeta,2)   // Describes TFileInfo meta data
 };
 
 #endif

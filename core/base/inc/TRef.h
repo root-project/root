@@ -61,7 +61,7 @@ public:
    friend Bool_t operator==(const TRef &r1, const TRef &r2);
    friend Bool_t operator!=(const TRef &r1, const TRef &r2);
 
-   ClassDef(TRef,1)  //Persistent Reference link to a TObject
+   ClassDefOverride(TRef,1)  //Persistent Reference link to a TObject
 };
 
 #endif

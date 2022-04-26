@@ -43,20 +43,20 @@ public:
    virtual ~TMacro();
    TMacro& operator=(const TMacro&);
    virtual TObjString  *AddLine(const char *text);
-   virtual void         Browse(TBrowser *b);
+   void                 Browse(TBrowser *b) override;
    virtual TMD5        *Checksum();
    virtual TObjString  *GetLineWith(const char *text) const;
    virtual Bool_t       Load() const; //*MENU*
    virtual Longptr_t    Exec(const char *params = 0, Int_t* error = 0); //*MENU*
    TList               *GetListOfLines() const {return fLines;}
-   virtual void         Paint(Option_t *option="");
-   virtual void         Print(Option_t *option="") const;  //*MENU*
+   void                 Paint(Option_t *option="") override;
+   void                 Print(Option_t *option="") const override;  //*MENU*
    virtual Int_t        ReadFile(const char *filename);
    virtual void         SaveSource(const char *filename);  //*MENU*
-   virtual void         SavePrimitive(std::ostream &out, Option_t *option = "");
+   void                 SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void         SetParams(const char *params=0); //*MENU*
 
-   ClassDef(TMacro,1)  // Class supporting a collection of lines with C++ code.
+   ClassDefOverride(TMacro,1)  // Class supporting a collection of lines with C++ code.
 };
 
 #endif

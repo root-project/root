@@ -98,7 +98,7 @@ private:
    Bool_t      fModified;   // if env rec has been modified
 
    TEnvRec(const char *n, const char *v, const char *t, EEnvLevel l);
-   Int_t    Compare(const TObject *obj) const;
+   Int_t    Compare(const TObject *obj) const override;
    void     ChangeValue(const char *v, const char *t, EEnvLevel l,
                         Bool_t append = kFALSE, Bool_t ignoredup = kFALSE);
    TString  ExpandValue(const char *v);
@@ -106,13 +106,13 @@ private:
 public:
    TEnvRec(): fName(), fType(), fValue(), fLevel(kEnvAll), fModified(kTRUE) { }
    ~TEnvRec();
-   const char *GetName() const { return fName; }
+   const char *GetName() const override { return fName; }
    const char *GetValue() const { return fValue; }
    const char *GetType() const { return fType; }
    EEnvLevel   GetLevel() const { return fLevel; }
-   ULong_t     Hash() const { return fName.Hash(); }
+   ULong_t     Hash() const override { return fName.Hash(); }
 
-   ClassDef(TEnvRec,2)  // Individual TEnv records
+   ClassDefOverride(TEnvRec,2)  // Individual TEnv records
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -160,11 +160,11 @@ public:
    virtual Int_t       WriteFile(const char *fname, EEnvLevel level = kEnvAll);
    virtual void        Save();
    virtual void        SaveLevel(EEnvLevel level);
-   virtual void        Print(Option_t *option="") const;
+   void                Print(Option_t *option="") const override;
    virtual void        PrintEnv(EEnvLevel level = kEnvAll) const;
    Bool_t              IgnoreDuplicates(Bool_t ignore);
 
-   ClassDef(TEnv,2)  // Handle ROOT configuration resources
+   ClassDefOverride(TEnv,2)  // Handle ROOT configuration resources
 };
 
 R__EXTERN TEnv *gEnv;

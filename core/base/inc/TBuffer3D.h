@@ -118,7 +118,7 @@ public:
    mutable UInt_t fPhysicalID;   // Unique replica ID.
 
 
-   ClassDef(TBuffer3D,0)     // 3D primitives description
+   ClassDefOverride(TBuffer3D,0)     // 3D primitives description
 };
 
 /** \class TBuffer3DSphere

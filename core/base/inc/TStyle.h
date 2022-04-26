@@ -146,18 +146,19 @@ public:
    TStyle(const TStyle &style);
    TStyle& operator=(const TStyle& style);
    virtual          ~TStyle();
-   inline Int_t     AxisChoice(Option_t *axis) const {
+   inline Int_t     AxisChoice(Option_t *axis) const
+   {
       // Return axis number (1 for X, 2 for Y, 3 for Z)
       UChar_t a = *axis;
       a -= (a >= 'x') ? 'x' : 'X'; // toupper and a-='X'; intentional underflow
       return (a > 2) ? 0 : (Int_t)(a+1);
-   };
-   virtual void     Browse(TBrowser *b);
+   }
+   void             Browse(TBrowser *b) override;
    static  void     BuildStyles();
-   virtual void     Copy(TObject &style) const;
+   void             Copy(TObject &style) const override;
    virtual void     cd();
 
-   virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
+   Int_t            DistancetoPrimitive(Int_t px, Int_t py) override;
    Int_t            GetNdivisions(Option_t *axis="X") const;
    TAttText        *GetAttDate() {return &fAttDate;}
    Color_t          GetAxisColor(Option_t *axis="X") const;
@@ -280,7 +281,7 @@ public:
    Float_t          GetLineScalePS() const {return fLineScalePS;}
 
    Bool_t           IsReading() const {return fIsReading;}
-   virtual void     Paint(Option_t *option="");
+   void             Paint(Option_t *option="") override;
    virtual void     Reset(Option_t *option="");
 
    void             SetColorModelPS(Int_t c=0);
@@ -403,10 +404,10 @@ public:
    void             SetIsReading(Bool_t reading=kTRUE);
    void             SetPalette(Int_t ncolors=kBird, Int_t *colors=0, Float_t alpha=1.);
    void             SetPalette(TString fileName, Float_t alpha=1.);
-   void             SavePrimitive(std::ostream &out, Option_t * = "");
-   void             SaveSource(const char *filename, Option_t *option=0);
+   void             SavePrimitive(std::ostream &out, Option_t * = "") override;
+   void             SaveSource(const char *filename, Option_t *option = nullptr);
 
-   ClassDef(TStyle, 19);  //A collection of all graphics attributes
+   ClassDefOverride(TStyle, 19);  //A collection of all graphics attributes
 };
 
 

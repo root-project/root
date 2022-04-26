@@ -97,7 +97,7 @@ protected:
 
 public:
    TApplication(const char *appClassName, Int_t *argc, char **argv,
-                void *options = 0, Int_t numOptions = 0);
+                void *options = nullptr, Int_t numOptions = 0);
    virtual ~TApplication();
 
    void            InitializeGraphics();
@@ -110,8 +110,8 @@ public:
    virtual void    HandleIdleTimer();   //*SIGNAL*
    virtual Bool_t  HandleTermInput() { return kFALSE; }
    virtual void    Init() { fAppImp->Init(); }
-   virtual Longptr_t ProcessLine(const char *line, Bool_t sync = kFALSE, Int_t *error = 0);
-   virtual Longptr_t ProcessFile(const char *file, Int_t *error = 0, Bool_t keep = kFALSE);
+   virtual Longptr_t ProcessLine(const char *line, Bool_t sync = kFALSE, Int_t *error = nullptr);
+   virtual Longptr_t ProcessFile(const char *file, Int_t *error = nullptr, Bool_t keep = kFALSE);
    virtual void    Run(Bool_t retrn = kFALSE);
    virtual void    SetIdleTimer(UInt_t idleTimeInSec, const char *command);
    virtual void    RemoveIdleTimer();
@@ -130,7 +130,7 @@ public:
    virtual Bool_t  IsCmdThread() { return fAppImp ? fAppImp->IsCmdThread() : kTRUE; }
    virtual TApplicationImp *GetApplicationImp() { return fAppImp;}
 
-   virtual void    ls(Option_t *option="") const;
+   void            ls(Option_t *option="") const override;
 
    Int_t           Argc() const  { return fArgc; }
    char          **Argv() const  { return fArgv; }
@@ -154,12 +154,12 @@ public:
    virtual void    ReturnPressed(char *text );        //*SIGNAL*
    virtual Int_t   TabCompletionHook(char *buf, int *pLoc, std::ostream& out);
 
-   static Longptr_t ExecuteFile(const char *file, Int_t *error = 0, Bool_t keep = kFALSE);
+   static Longptr_t ExecuteFile(const char *file, Int_t *error = nullptr, Bool_t keep = kFALSE);
    static TList   *GetApplications();
    static void     CreateApplication();
    static void     NeedGraphicsLibs();
 
-   ClassDef(TApplication,0)  //GUI application singleton
+   ClassDefOverride(TApplication,0)  //GUI application singleton
 };
 
 R__EXTERN TApplication *gApplication;
