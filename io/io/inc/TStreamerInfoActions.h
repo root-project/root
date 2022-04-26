@@ -82,7 +82,7 @@ namespace TStreamerInfoActions {
    private:
       // assignment operator must be the default because the 'copy' constructor is actually a move constructor and must be used.
    public:
-      TConfiguredAction() : fAction(0), fConfiguration(0) {}
+      TConfiguredAction() : fAction(0), fConfiguration(nullptr) {}
       TConfiguredAction(const TConfiguredAction &rval) : TObject(rval), fAction(rval.fAction), fConfiguration(rval.fConfiguration)
       {
          // WARNING: Technically this is a move constructor ...
@@ -131,7 +131,7 @@ namespace TStreamerInfoActions {
          return fLoopAction(buffer, start_collection, end_collection, loopconf, fConfiguration);
       }
 
-      ClassDef(TConfiguredAction,0); // A configured action
+      ClassDefOverride(TConfiguredAction,0); // A configured action
    };
 
    struct TIDNode;
@@ -217,7 +217,7 @@ namespace TStreamerInfoActions {
       TActionSequence *CreateSubSequence(const TIDs &element_ids, size_t offset, SequenceGetter_t create);
       void AddToSubSequence(TActionSequence *sequence, const TIDs &element_ids, Int_t offset, SequenceGetter_t create);
 
-      void Print(Option_t * = "") const;
+      void Print(Option_t * = "") const override;
 
       // Maybe owner unique_ptr
       struct SequencePtr {
@@ -293,7 +293,7 @@ namespace TStreamerInfoActions {
          auto seq = info->GetWriteMemberWiseActions(kFALSE);
          return {seq, kFALSE};
       }
-      ClassDef(TActionSequence,0);
+      ClassDefOverride(TActionSequence,0);
    };
 
 }
