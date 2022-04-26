@@ -49,7 +49,7 @@ else: dataset_path = "root://eospublic.cern.ch//eos/root-eos/reduced_atlas_opend
 
 # Create a ROOT dataframe for each dataset
 # Note that we load the filenames from the external json file placed in the same folder than this script.
-files = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "df105.json")))
+files = json.load(open(os.path.join(ROOT.gROOT.GetTutorialsDir(), "rcanvas/df105.json")))
 processes = files.keys()
 df = {}
 xsecs = {}

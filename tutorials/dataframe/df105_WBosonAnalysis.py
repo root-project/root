@@ -38,7 +38,7 @@ if 'df105_WBosonAnalysis.py' in sys.argv[0]:
     args = parser.parse_args()
 else:
     # Notebook
-    args =parser.parse_args(args=[])
+    args = parser.parse_args(args=[])
 
 if args.b: ROOT.gROOT.SetBatch(True)
 if args.t: ROOT.EnableImplicitMT()

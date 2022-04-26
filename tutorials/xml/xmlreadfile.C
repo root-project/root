@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_xml
-/// \notebook -nodraw
+///
 /// Example to read and parse any xml file, supported by TXMLEngine class
 /// The input file, produced by xmlnewfile.C macro is used
 /// If you need full xml syntax support, use TXMLParser instead
