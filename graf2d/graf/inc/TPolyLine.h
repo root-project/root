@@ -44,23 +44,23 @@ public:
    TPolyLine(const TPolyLine &polyline);
    virtual ~TPolyLine();
 
-   virtual void       Copy(TObject &polyline) const;
-   virtual Int_t      DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void       Draw(Option_t *option="");
+   void               Copy(TObject &polyline) const override;
+   Int_t              DistancetoPrimitive(Int_t px, Int_t py) override;
+   void               Draw(Option_t *option="") override;
    virtual TPolyLine *DrawPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
-   virtual void       ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   void               ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    virtual Int_t      GetLastPoint() const { return fLastPoint;}
    Int_t              GetN() const {return fN;}
    Double_t          *GetX() const {return fX;}
    Double_t          *GetY() const {return fY;}
-   Option_t          *GetOption() const {return fOption.Data();}
-   virtual void       ls(Option_t *option="") const;
+   Option_t          *GetOption() const override { return fOption.Data(); }
+   void               ls(Option_t *option="") const override;
    virtual Int_t      Merge(TCollection *list);
-   virtual void       Paint(Option_t *option="");
+   void               Paint(Option_t *option="") override;
    virtual void       PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
    virtual void       PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
-   virtual void       Print(Option_t *option="") const;
-   virtual void       SavePrimitive(std::ostream &out, Option_t *option = "");
+   void               Print(Option_t *option="") const override;
+   void               SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void       SetNDC(Bool_t isNDC=kTRUE);
    virtual Int_t      SetNextPoint(Double_t x, Double_t y); // *MENU*
    virtual void       SetOption(Option_t *option="") {fOption = option;}
@@ -70,7 +70,7 @@ public:
    virtual void       SetPolyLine(Int_t n, Double_t *x, Double_t *y3, Option_t *option="");
    virtual Int_t      Size() const {return fLastPoint+1;}
 
-   ClassDef(TPolyLine,3)  //A PolyLine
+   ClassDefOverride(TPolyLine,3)  //A PolyLine
 };
 
 #endif
