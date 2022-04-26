@@ -53,23 +53,23 @@ public:
    TLeafObject(TBranch *parent, const char *name, const char *type);
    virtual ~TLeafObject();
 
-   virtual Bool_t  CanGenerateOffsetArray() { return false; }
-   virtual void    FillBasket(TBuffer &b);
+   Bool_t          CanGenerateOffsetArray() override { return false; }
+   void            FillBasket(TBuffer &b) override;
    virtual Int_t  *GenerateOffsetArrayBase(Int_t /*base*/, Int_t /*events*/) { return nullptr; }
    TClass         *GetClass() const {return fClass;}
    TMethodCall    *GetMethodCall(const char *name);
    TObject        *GetObject() const {return (TObject*)(*fObjAddress);}
-   const char     *GetTypeName() const ;
-   virtual void   *GetValuePointer() const {return fObjAddress;}
-   Bool_t          IsOnTerminalBranch() const;
+   const char     *GetTypeName() const override;
+   void           *GetValuePointer() const override {return fObjAddress;}
+   Bool_t          IsOnTerminalBranch() const override;
    Bool_t          IsVirtual() const {return fVirtual;}
-   virtual Bool_t  Notify();
-   virtual void    PrintValue(Int_t i=0) const;
-   virtual void    ReadBasket(TBuffer &b);
-   virtual void    SetAddress(void *add=0);
+   Bool_t          Notify() override;
+   void            PrintValue(Int_t i=0) const override;
+   void            ReadBasket(TBuffer &b) override;
+   void            SetAddress(void *add=nullptr) override;
    virtual void    SetVirtual(Bool_t virt=kTRUE) {fVirtual=virt;}
 
-   ClassDef(TLeafObject,4);  //A TLeaf for a general object derived from TObject.
+   ClassDefOverride(TLeafObject,4);  //A TLeaf for a general object derived from TObject.
 };
 
 #endif

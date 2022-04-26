@@ -31,19 +31,19 @@ protected:
    Int_t       fNvar;            ///<  Number of columns
    Float_t    *fArgs;            ///<! [fNvar] Array of variables
 
-   virtual Int_t  Fill();
+   Int_t  Fill() override;
 
 private:
-   TNtuple(const TNtuple&);             // not implemented
-   TNtuple& operator=(const TNtuple&);  // not implemented
+   TNtuple(const TNtuple&) = delete;
+   TNtuple& operator=(const TNtuple&) = delete;
 
 public:
    TNtuple();
    TNtuple(const char *name,const char *title, const char *varlist, Int_t bufsize=32000);
    virtual ~TNtuple();
 
-   virtual void      Browse(TBrowser *b);
-   virtual TTree    *CloneTree(Long64_t nentries = -1, Option_t* option = "");
+           void      Browse(TBrowser *b) override;
+           TTree    *CloneTree(Long64_t nentries = -1, Option_t* option = "") override;
    virtual Int_t     Fill(const Float_t *x);
            Int_t     Fill(Int_t x0) { return Fill((Float_t)x0); }
            Int_t     Fill(Double_t x0) { return Fill((Float_t)x0); }
@@ -54,11 +54,11 @@ public:
                           Float_t x14=0);
    virtual Int_t     GetNvar() const { return fNvar; }
            Float_t  *GetArgs() const { return fArgs; }
-   virtual Long64_t  ReadStream(std::istream& inputStream, const char *branchDescriptor="", char delimiter = ' ');
-   virtual void      ResetBranchAddress(TBranch *);
-           void      ResetBranchAddresses();
+           Long64_t  ReadStream(std::istream& inputStream, const char *branchDescriptor="", char delimiter = ' ') override;
+           void      ResetBranchAddress(TBranch *) override;
+           void      ResetBranchAddresses() override;
 
-   ClassDef(TNtuple,2);  //A simple tree with branches of floats.
+   ClassDefOverride(TNtuple,2);  //A simple tree with branches of floats.
 };
 
 #endif

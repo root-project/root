@@ -37,26 +37,26 @@ public:
    TLeafI(TBranch *parent, const char *name, const char *type);
    virtual ~TLeafI();
 
-   virtual void    Export(TClonesArray *list, Int_t n);
-   virtual void    FillBasket(TBuffer &b);
-   virtual DeserializeType GetDeserializeType() const { return DeserializeType::kInPlace; }
-   const char     *GetTypeName() const;
-   virtual Int_t   GetMaximum() const { return fMaximum; }
-   virtual Int_t   GetMinimum() const { return fMinimum; }
-   Double_t        GetValue(Int_t i=0) const;
-   virtual void   *GetValuePointer() const { return fValue; }
-   virtual Bool_t  IncludeRange(TLeaf *);
-   virtual void    Import(TClonesArray *list, Int_t n);
-   virtual void    PrintValue(Int_t i=0) const;
-   virtual void    ReadBasket(TBuffer &b);
-   virtual void    ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n);
-   virtual bool    ReadBasketFast(TBuffer&, Long64_t);
-   virtual void    ReadValue(std::istream& s, Char_t delim = ' ');
-   virtual void    SetAddress(void *add=0);
+   void            Export(TClonesArray *list, Int_t n) override;
+   void            FillBasket(TBuffer &b) override;
+   DeserializeType GetDeserializeType() const override { return DeserializeType::kInPlace; }
+   const char     *GetTypeName() const override;
+   Int_t           GetMaximum() const override { return fMaximum; }
+   Int_t           GetMinimum() const override { return fMinimum; }
+   Double_t        GetValue(Int_t i=0) const override;
+   void           *GetValuePointer() const override { return fValue; }
+   Bool_t          IncludeRange(TLeaf *) override;
+   void            Import(TClonesArray *list, Int_t n) override;
+   void            PrintValue(Int_t i=0) const override;
+   void            ReadBasket(TBuffer &b) override;
+   void            ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n) override;
+   bool            ReadBasketFast(TBuffer&, Long64_t) override;
+   void            ReadValue(std::istream& s, Char_t delim = ' ') override;
+   void            SetAddress(void *add=nullptr) override;
    virtual void    SetMaximum(Int_t max) {fMaximum = max;}
    virtual void    SetMinimum(Int_t min) {fMinimum = min;}
 
-   ClassDef(TLeafI,1);  //A TLeaf for an Integer data type.
+   ClassDefOverride(TLeafI,1);  //A TLeaf for an Integer data type.
 };
 
 #endif

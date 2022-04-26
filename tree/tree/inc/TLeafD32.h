@@ -39,20 +39,20 @@ public:
    TLeafD32(TBranch *parent, const char *name, const char *type);
    virtual ~TLeafD32();
 
-   virtual DeserializeType GetDeserializeType() const { return DeserializeType::kExternal; }
-   virtual void Export(TClonesArray *list, Int_t n);
-   virtual void FillBasket(TBuffer &b);
-   const char *GetTypeName() const { return "Double32_t"; }
-   Double_t GetValue(Int_t i = 0) const;
-   virtual void *GetValuePointer() const { return fValue; }
-   virtual void Import(TClonesArray *list, Int_t n);
-   virtual void PrintValue(Int_t i = 0) const;
-   virtual void ReadBasket(TBuffer &b);
-   virtual void ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n);
-   virtual void ReadValue(std::istream &s, Char_t delim = ' ');
-   virtual void SetAddress(void *add = 0);
+   DeserializeType GetDeserializeType() const override { return DeserializeType::kExternal; }
+   void            Export(TClonesArray *list, Int_t n) override;
+   void            FillBasket(TBuffer &b) override;
+   const char     *GetTypeName() const override { return "Double32_t"; }
+   Double_t        GetValue(Int_t i = 0) const override;
+   void           *GetValuePointer() const override { return fValue; }
+   void            Import(TClonesArray *list, Int_t n) override;
+   void            PrintValue(Int_t i = 0) const override;
+   void            ReadBasket(TBuffer &b) override;
+   void            ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n) override;
+   void            ReadValue(std::istream &s, Char_t delim = ' ') override;
+   void            SetAddress(void *add = nullptr) override;
 
-   ClassDef(TLeafD32, 1); // A TLeaf for a 24 bit truncated floating point data type.
+   ClassDefOverride(TLeafD32, 1); // A TLeaf for a 24 bit truncated floating point data type.
 };
 
 // if leaf is a simple type, i must be set to 0

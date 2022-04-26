@@ -53,8 +53,8 @@ public:
    virtual void        Init(TTree *) { }
    virtual void        Begin(TTree *) { }
    virtual void        SlaveBegin(TTree *) { }
-   virtual Bool_t      Notify() { return kTRUE; }
-   virtual const char *GetOption() const { return fOption; }
+           Bool_t      Notify() override { return kTRUE; }
+           const char *GetOption() const override { return fOption.Data(); }
    virtual Long64_t    GetStatus() const { return fStatus; }
    virtual Int_t       GetEntry(Long64_t /*entry*/, Int_t /*getall*/ = 0) { return 0; }
    virtual Bool_t      ProcessCut(Long64_t /*entry*/);
@@ -76,7 +76,7 @@ public:
    static  TSelector  *GetSelector(const char *filename);
    static  Bool_t      IsStandardDraw(const char *selec);
 
-   ClassDef(TSelector,2)  //A utility class for tree and object processing
+   ClassDefOverride(TSelector,2)  //A utility class for tree and object processing
 };
 
 #endif

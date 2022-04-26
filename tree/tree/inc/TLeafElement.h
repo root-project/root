@@ -39,39 +39,39 @@ protected:
    mutable std::atomic<EDataType> fDataTypeCache{EDataType::kOther_t}; ///<! Cache of the EDataType of deserialization.
 
 private:
-   virtual Int_t       GetOffsetHeaderSize() const {return 1;}
+   Int_t            GetOffsetHeaderSize() const override {return 1;}
 
 public:
    TLeafElement();
    TLeafElement(TBranch *parent, const char *name, Int_t id, Int_t type);
    virtual ~TLeafElement();
 
-   virtual Bool_t   CanGenerateOffsetArray() { return fLeafCount && fLenType; }
+   Bool_t           CanGenerateOffsetArray() override { return fLeafCount && fLenType; }
    virtual Int_t   *GenerateOffsetArrayBase(Int_t /*base*/, Int_t /*events*/) { return nullptr; }
-   virtual DeserializeType GetDeserializeType() const;
+   DeserializeType  GetDeserializeType() const override;
 
-           Int_t    GetID() const { return fID; }
-   virtual TString  GetFullName() const;
-   virtual Int_t    GetLen() const {return ((TBranchElement*)fBranch)->GetNdata()*fLen;}
+   Int_t            GetID() const { return fID; }
+   TString          GetFullName() const override;
+   Int_t            GetLen() const override { return ((TBranchElement*)fBranch)->GetNdata()*fLen; }
    TMethodCall     *GetMethodCall(const char *name);
-   virtual Int_t    GetMaximum() const {return ((TBranchElement*)fBranch)->GetMaximum();}
-   virtual Int_t    GetNdata() const {return ((TBranchElement*)fBranch)->GetNdata()*fLen;}
-   virtual const char *GetTypeName() const {return ((TBranchElement*)fBranch)->GetTypeName();}
+   Int_t            GetMaximum() const override { return ((TBranchElement*)fBranch)->GetMaximum(); }
+   Int_t            GetNdata() const override { return ((TBranchElement*)fBranch)->GetNdata()*fLen; }
+   const char      *GetTypeName() const override { return ((TBranchElement*)fBranch)->GetTypeName(); }
 
-   virtual Double_t     GetValue(Int_t i=0) const { return ((TBranchElement*)fBranch)->GetValue(i, fLen, kFALSE);}
-   virtual Long64_t     GetValueLong64(Int_t i = 0) const { return ((TBranchElement*)fBranch)->GetTypedValue<Long64_t>(i, fLen, kFALSE); }
-   virtual LongDouble_t GetValueLongDouble(Int_t i = 0) const { return ((TBranchElement*)fBranch)->GetTypedValue<LongDouble_t>(i, fLen, kFALSE); }
+   Double_t         GetValue(Int_t i=0) const override { return ((TBranchElement*)fBranch)->GetValue(i, fLen, kFALSE);}
+   Long64_t         GetValueLong64(Int_t i = 0) const override { return ((TBranchElement*)fBranch)->GetTypedValue<Long64_t>(i, fLen, kFALSE); }
+   LongDouble_t     GetValueLongDouble(Int_t i = 0) const override { return ((TBranchElement*)fBranch)->GetTypedValue<LongDouble_t>(i, fLen, kFALSE); }
    template<typename T> T GetTypedValueSubArray(Int_t i=0, Int_t j=0) const {return ((TBranchElement*)fBranch)->GetTypedValue<T>(i, j, kTRUE);}
 
-   virtual bool     ReadBasketFast(TBuffer&, Long64_t);
- 
-   virtual void    *GetValuePointer() const { return ((TBranchElement*)fBranch)->GetValuePointer(); }
-   virtual Bool_t   IncludeRange(TLeaf *);
-   virtual Bool_t   IsOnTerminalBranch() const;
-   virtual void     PrintValue(Int_t i=0) const {((TBranchElement*)fBranch)->PrintValue(i);}
-   virtual void     SetLeafCount(TLeaf *leaf) {fLeafCount = leaf;}
+   bool             ReadBasketFast(TBuffer&, Long64_t) override;
 
-   ClassDef(TLeafElement,1);  //A TLeaf for a general object derived from TObject.
+   void            *GetValuePointer() const override { return ((TBranchElement*)fBranch)->GetValuePointer(); }
+   Bool_t           IncludeRange(TLeaf *) override;
+   Bool_t           IsOnTerminalBranch() const override;
+   void             PrintValue(Int_t i=0) const override {((TBranchElement*)fBranch)->PrintValue(i);}
+   void             SetLeafCount(TLeaf *leaf) override { fLeafCount = leaf; }
+
+   ClassDefOverride(TLeafElement,1);  //A TLeaf for a general object derived from TObject.
 };
 
 #endif
