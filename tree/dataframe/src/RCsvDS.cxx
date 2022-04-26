@@ -465,7 +465,7 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RCsvDS::GetEntryRanges()
 
    const auto chunkSize = nRecords / fNSlots;
    const auto remainder = 1U == fNSlots ? 0 : nRecords % fNSlots;
-   auto start = 0ULL == fEntryRangesRequested ? 0ULL : fProcessedLines;
+   auto start = fProcessedLines;
    auto end = start;
 
    for (auto i : ROOT::TSeqU(fNSlots)) {
