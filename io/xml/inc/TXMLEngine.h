@@ -105,7 +105,7 @@ public:
    void SaveSingleNode(XMLNodePointer_t xmlnode, TString *res, Int_t layout = 1);
    XMLNodePointer_t ReadSingleNode(const char *src);
 
-   ClassDef(TXMLEngine, 1); // ROOT XML I/O parser, user by TXMLFile to read/write xml files
+   ClassDefOverride(TXMLEngine, 1); // ROOT XML I/O parser, user by TXMLFile to read/write xml files
 };
 
 #endif
