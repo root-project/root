@@ -5,12 +5,13 @@
 template <typename T>
 using Vector_t = std::vector<T>;
 
-TEST(RNTuple, ClassVector)
+template <template <typename> class Coll_t>
+void TestClassVector()
 {
    FileRaii fileGuard("test_ntuple_classvector.root");
 
    auto modelWrite = RNTupleModel::Create();
-   auto wrKlassVec = modelWrite->MakeField<std::vector<CustomStruct>>("klassVec");
+   auto wrKlassVec = modelWrite->MakeField<Coll_t<CustomStruct>>("klassVec");
    CustomStruct klass;
    klass.a = 42.0;
    klass.v1.emplace_back(1.0);
@@ -21,7 +22,7 @@ TEST(RNTuple, ClassVector)
 
    {
       RNTupleWriter ntuple(std::move(modelWrite),
-         std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
+                           std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
       ntuple.Fill();
    }
 
@@ -51,6 +52,15 @@ TEST(RNTuple, ClassVector)
    }
 }
 
+TEST(RNTuple, ClassVector)
+{
+   TestClassVector<Vector_t>();
+}
+
+TEST(RNTuple, ClassRVec)
+{
+   TestClassVector<ROOT::RVec>();
+}
 
 TEST(RNTuple, InsideCollection)
 {
