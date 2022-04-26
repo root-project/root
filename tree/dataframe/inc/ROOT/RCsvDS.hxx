@@ -18,6 +18,7 @@
 #include <deque>
 #include <list>
 #include <unordered_map>
+#include <set>
 #include <memory>
 #include <vector>
 
@@ -47,7 +48,6 @@ private:
    std::unique_ptr<ROOT::Internal::RRawFile> fCsvFile;
    const char fDelimiter;
    const Long64_t fLinesChunkSize;
-   const std::string fFillValue = "";
    ULong64_t fEntryRangesRequested = 0ULL;
    ULong64_t fProcessedLines = 0ULL; // marks the progress of the consumption of the csv lines
    std::vector<std::string> fHeaders;
@@ -78,7 +78,7 @@ protected:
 
 public:
    RCsvDS(std::string_view fileName, bool readHeaders = true, char delimiter = ',', Long64_t linesChunkSize = -1LL,
-          std::unordered_map<std::string, char> colTypes = {});
+          std::unordered_map<std::string, char> &&colTypes = {});
    void Finalize();
    void FreeRecords();
    ~RCsvDS();
@@ -102,7 +102,7 @@ public:
 ///                      column type, values being type alias ('b' for boolean, 'd' for double, 'l' for
 ///                      Long64_t, 's' for std::string)
 RDataFrame MakeCsvDataFrame(std::string_view fileName, bool readHeaders = true, char delimiter = ',',
-                            Long64_t linesChunkSize = -1LL, std::unordered_map<std::string, char> colTypes = {});
+                            Long64_t linesChunkSize = -1LL, std::unordered_map<std::string, char> &&colTypes = {});
 
 } // ns RDF
 

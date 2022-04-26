@@ -21,10 +21,10 @@ ROOT::RDF::MakeCsvDataFrame, which accepts five parameters:
 2. Boolean that specifies whether the first row of the CSV file contains headers or
 not (optional, default `true`). If `false`, header names will be automatically generated as Col0, Col1, ..., ColN.
 3. Delimiter (optional, default ',').
-4. Chunk size (optional, bunch of lines to read, use -1 (which is also default) to read all)
-5. Column Types (optional, map where the keys are the column headers, the values are the desired type;
-can specify column names to any subset of columns; by default types are determined from
-the first row - meaning the default value is {})
+4. Chunk size (optional, default is -1 to read all) - number of lines to read at a time
+5. Column Types (optional, default is an empty map). A map with column names as keys and their type
+(expressed as a single character, see below) as values.
+The type of columns that do not appear in the map is inferred from the data.
 
 The supported types are:
 - Integer: stored as a 64-bit long long int.
@@ -128,26 +128,26 @@ void RCsvDS::FillRecord(const std::string &line, Record_t &record)
       switch (colType) {
       case 'd': {
          record.emplace_back(
-            new double((col != fFillValue) ? std::stod(col) : std::numeric_limits<double>::quiet_NaN()));
+            new double((col != "nan") ? std::stod(col) : std::numeric_limits<double>::quiet_NaN()));
          break;
       }
       case 'l': {
-         if (col != fFillValue) {
+         if (col != "nan") {
             record.emplace_back(new Long64_t(std::stoll(col)));
          } else {
             fColContainingEmpty.insert(fHeaders[i]);
-            record.emplace_back(new Long64_t(std::stoll("0")));
+            record.emplace_back(new Long64_t(0));
          }
          break;
       }
       case 'b': {
          auto b = new bool();
          record.emplace_back(b);
-         if (col != fFillValue) {
+         if (col != "nan") {
             std::istringstream(col) >> std::boolalpha >> *b;
          } else {
             fColContainingEmpty.insert(fHeaders[i]);
-            std::istringstream("false") >> std::boolalpha >> *b;
+            *b = false;
          }
          break;
       }
@@ -202,7 +202,7 @@ std::vector<void *> RCsvDS::GetColumnReadersImpl(std::string_view colName, const
 
 void RCsvDS::InferColTypes(std::vector<std::string> &columns)
 {
-   for (auto const &col : fColTypes) {
+   for (const auto &col : fColTypes) {
       if (!HasColumn(col.first)) {
          std::string msg = "There is no column with name \"" + col.first + "\".";
          if (!fReadHeaders) {
@@ -221,14 +221,14 @@ void RCsvDS::InferColTypes(std::vector<std::string> &columns)
    const auto second_line = fCsvFile->GetFilePos();
    for (auto i = 0u; i < columns.size(); ++i) {
       if (fColTypes.find(fHeaders[i]) == fColTypes.end()) { // type is not yet specified
-         if (columns[i] == fFillValue) {
+         if (columns[i] == "nan") {
             // read 10 lines until a non-empty cell on this column is found, so that type is determined
             // if 10 lines are read, then type is automatically assumed `double`
             for (auto row = 0u; row < 10u; ++row) {
                std::string line;
                if (fCsvFile->Readln(line)) {
                   const auto temp_columns = ParseColumns(line);
-                  if (temp_columns[i] != fFillValue) {
+                  if (temp_columns[i] != "nan") {
                      columns[i] = temp_columns[i];
                      break;
                   }
@@ -239,7 +239,14 @@ void RCsvDS::InferColTypes(std::vector<std::string> &columns)
             // reset the reading from the second line, because the first line is already loaded in `columns`
             fCsvFile->Seek(second_line);
          }
-         InferType(columns[i], i);
+         if (columns[i] == "nan") {
+            // could not find a non-empty value, default to double
+            fColTypes[fHeaders[i]] = 'd';
+            fColTypesList.push_back('d');
+         }
+         else {
+            InferType(columns[i], i);
+         }
       }
    }
 }
@@ -249,9 +256,7 @@ void RCsvDS::InferType(const std::string &col, unsigned int idxCol)
    ColType_t type;
    int dummy;
 
-   if (col == fFillValue) {
-      type = 'd'; // double
-   } else if (fgIntRegex.Index(col, &dummy) != -1) {
+   if (fgIntRegex.Index(col, &dummy) != -1) {
       type = 'l'; // Long64_t
    } else if (fgDoubleRegex1.Index(col, &dummy) != -1 || fgDoubleRegex2.Index(col, &dummy) != -1 ||
               fgDoubleRegex3.Index(col, &dummy) != -1) {
@@ -282,7 +287,7 @@ size_t RCsvDS::ParseValue(const std::string &line, std::vector<std::string> &col
 {
    std::stringstream val;
    bool quoted = false;
-   const size_t prev_i = i; // used to check if cell is empty
+   const size_t prevPos = i; // used to check if cell is empty
 
    for (; i < line.size(); ++i) {
       if (line[i] == fDelimiter && !quoted) {
@@ -299,11 +304,15 @@ size_t RCsvDS::ParseValue(const std::string &line, std::vector<std::string> &col
       }
    }
 
-   if (prev_i == i) // empty entry not in the last column
-      val << fFillValue;
-   columns.emplace_back(val.str());
-   if (i == line.size() - 1 && line[i] == fDelimiter) // empty entry in the last column
-      columns.emplace_back(fFillValue);
+   if (prevPos == i || val.str() == "nan" || val.str() == "NaN") // empty cell or explicit nan/NaN
+      columns.emplace_back("nan");
+   else
+      columns.emplace_back(val.str());
+
+   // if the line ends with the delimiter, we need to append the default column value
+   // for the _next_, last column that won't be parsed (because we are out of characters)
+   if (i == line.size() - 1 && line[i] == fDelimiter)
+      columns.emplace_back("nan");
 
    return i;
 }
@@ -315,13 +324,13 @@ size_t RCsvDS::ParseValue(const std::string &line, std::vector<std::string> &col
 ///                        (default `true`).
 /// \param[in] delimiter Delimiter character (default ',').
 /// \param[in] linesChunkSize bunch of lines to read, use -1 to read all
-/// \param[in] colTypes Allow user to specify custom column types, accepts an unordered map with keys being
-///                     column type, values being type alias ('b' for boolean, 'd' for double, 'l' for
+/// \param[in] colTypes Allows users to manually specify column types. Accepts an unordered map with keys being
+///                     column names, values being type specifiers ('b' for boolean, 'd' for double, 'l' for
 ///                     Long64_t, 's' for std::string)
 RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long64_t linesChunkSize,
-               std::unordered_map<std::string, char> colTypes)
+               std::unordered_map<std::string, char> &&colTypes)
    : fReadHeaders(readHeaders), fCsvFile(ROOT::Internal::RRawFile::Create(fileName)), fDelimiter(delimiter),
-     fLinesChunkSize(linesChunkSize), fColTypes(colTypes)
+     fLinesChunkSize(linesChunkSize), fColTypes(std::move(colTypes))
 {
    std::string line;
 
@@ -349,7 +358,7 @@ RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long
          GenerateHeaders(columns.size());
       }
 
-      // Infer types of columns with first-available record
+      // Infer types of columns from the first non-empty record
       InferColTypes(columns);
 
       // rewind
@@ -429,11 +438,11 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RCsvDS::GetEntryRanges()
       std::string msg = "";
       for (const auto &col : fColContainingEmpty) {
          const auto colT = GetTypeName(col);
-         msg += "Column \"" + col + "\" of " + colT + " type contains empty cell(s).\n";
+         msg += "Column \"" + col + "\" of type " + colT + " contains empty cell(s).\n";
          msg += "There is no `nan` equivalent for " + colT + " type, hence ";
          msg += std::string(colT == "Long64_t" ? "`0`" : "`false`") + " is stored.\n";
       }
-      msg += "To properly handle `nan` of Long64_t type, manually specify the column type to `double`.\n";
+      msg += "Empty cells of type colT are read as 0/false. You can manually set the column type to `double` to read NaN instead.\n";
       Warning("RCsvDS", "%s", msg.c_str());
    }
 
@@ -544,9 +553,9 @@ std::string RCsvDS::GetLabel()
 }
 
 RDataFrame MakeCsvDataFrame(std::string_view fileName, bool readHeaders, char delimiter, Long64_t linesChunkSize,
-                            std::unordered_map<std::string, char> colTypes)
+                            std::unordered_map<std::string, char> &&colTypes)
 {
-   ROOT::RDataFrame rdf(std::make_unique<RCsvDS>(fileName, readHeaders, delimiter, linesChunkSize, colTypes));
+   ROOT::RDataFrame rdf(std::make_unique<RCsvDS>(fileName, readHeaders, delimiter, linesChunkSize, std::move(colTypes)));
    return rdf;
 }
 
