@@ -67,7 +67,7 @@ protected:
 
 public:
 
-   TDataMember(DataMemberInfo_t *info = 0, TClass *cl = 0);
+   TDataMember(DataMemberInfo_t *info = nullptr, TClass *cl = nullptr);
    virtual       ~TDataMember();
    Int_t          GetArrayDim() const;
    DeclId_t       GetDeclId() const;
@@ -83,7 +83,7 @@ public:
    Int_t          GetUnitSize() const;
    TList         *GetOptions();
    TMethodCall   *SetterMethod(TClass *cl);
-   TMethodCall   *GetterMethod(TClass *cl = 0);
+   TMethodCall   *GetterMethod(TClass *cl = nullptr);
 
    Bool_t         IsBasic() const;
    Bool_t         IsEnum() const;

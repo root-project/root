@@ -66,40 +66,40 @@ public:
 
    ~TListOfDataMembers();
 
-   virtual void Clear(Option_t *option);
-   virtual void Delete(Option_t *option="");
+   void       Clear(Option_t *option = "") override;
+   void       Delete(Option_t *option="") override;
 
    using THashList::FindObject;
-   virtual TObject   *FindObject(const char *name) const;
+   TObject   *FindObject(const char *name) const override;
 
    TDictionary *Find(DeclId_t id) const;
    TDictionary *Get(DeclId_t id);
    TDictionary *Get(DataMemberInfo_t *info, bool skipChecks=kFALSE);
 
    Bool_t     IsLoaded() const { return fIsLoaded; }
-   void       AddFirst(TObject *obj);
-   void       AddFirst(TObject *obj, Option_t *opt);
-   void       AddLast(TObject *obj);
-   void       AddLast(TObject *obj, Option_t *opt);
-   void       AddAt(TObject *obj, Int_t idx);
-   void       AddAfter(const TObject *after, TObject *obj);
-   void       AddAfter(TObjLink *after, TObject *obj);
-   void       AddBefore(const TObject *before, TObject *obj);
-   void       AddBefore(TObjLink *before, TObject *obj);
+   void       AddFirst(TObject *obj) override;
+   void       AddFirst(TObject *obj, Option_t *opt) override;
+   void       AddLast(TObject *obj) override;
+   void       AddLast(TObject *obj, Option_t *opt) override;
+   void       AddAt(TObject *obj, Int_t idx) override;
+   void       AddAfter(const TObject *after, TObject *obj) override;
+   void       AddAfter(TObjLink *after, TObject *obj) override;
+   void       AddBefore(const TObject *before, TObject *obj) override;
+   void       AddBefore(TObjLink *before, TObject *obj) override;
 
    TClass    *GetClass() const { return fClass; }
    void       SetClass(TClass* cl) { fClass = cl; }
    void       Update(TDictionary *member);
 
-   void       RecursiveRemove(TObject *obj);
-   TObject   *Remove(TObject *obj);
-   TObject   *Remove(TObjLink *lnk);
+   void       RecursiveRemove(TObject *obj) override;
+   TObject   *Remove(TObject *obj) override;
+   TObject   *Remove(TObjLink *lnk) override;
 
    void Load();
    void Unload();
    void Unload(TDictionary *member);
 
-   ClassDef(TListOfDataMembers,2);  // List of TDataMembers for a class
+   ClassDefOverride(TListOfDataMembers,2);  // List of TDataMembers for a class
 };
 
 #endif // ROOT_TListOfDataMembers

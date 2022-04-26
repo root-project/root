@@ -16,7 +16,7 @@ class TObjArray;
 
 namespace ROOT {
 
-   class TSchemaRule: public TObject
+   class TSchemaRule : public TObject
    {
       public:
 
@@ -24,10 +24,10 @@ namespace ROOT {
          private:
             TString fDimensions;
          public:
-            TSources(const char *name = 0, const char *title = 0, const char *dims = 0) : TNamed(name,title),fDimensions(dims) {}
+            TSources(const char *name = nullptr, const char *title = nullptr, const char *dims = nullptr) : TNamed(name,title), fDimensions(dims) {}
             const char *GetDimensions() { return fDimensions; }
 
-            ClassDef(TSources,2);
+            ClassDefOverride(TSources,2);
          };
 
          typedef enum
@@ -48,7 +48,7 @@ namespace ROOT {
          Bool_t operator == ( const TSchemaRule& rhs ) const;
 
 
-         void             Clear(Option_t * /*option*/ ="");
+         void             Clear(Option_t * /*option*/ ="") override;
          Bool_t           SetFromRule( const char *rule );
 
          const char      *GetVersion( ) const;
@@ -88,9 +88,7 @@ namespace ROOT {
          Bool_t           Conflicts( const TSchemaRule* rule ) const;
 
          void             AsString( TString &out, const char *options = "" ) const;
-         void             ls(Option_t *option="") const;
-
-         ClassDef( TSchemaRule, 1 );
+         void             ls(Option_t *option="") const override;
 
       private:
 
@@ -118,6 +116,9 @@ namespace ROOT {
          ReadRawFuncPtr_t             fReadRawFuncPtr; //! Conversion function pointer for readraw rule
          RuleType_t                   fRuleType;       //  Type of the rule
          TString                      fAttributes;     //  Attributes to be applied to the member (like Owner/NotOwner)
+
+      ClassDefOverride( TSchemaRule, 1 );
+
    };
 } // End of namespace ROOT
 

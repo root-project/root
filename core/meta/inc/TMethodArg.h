@@ -53,14 +53,14 @@ public:
    const char    *GetTypeName() const;
    const char    *GetFullTypeName() const;
    std::string    GetTypeNormalizedName() const;
-   Long_t         Property() const;
+   Long_t         Property() const override;
 
    TDataMember   *GetDataMember() const;
    TList         *GetOptions() const;
 
    void           Update(MethodArgInfo_t *info);
 
-   ClassDef(TMethodArg,0)  //Dictionary for a method argument
+   ClassDefOverride(TMethodArg,0)  //Dictionary for a method argument
 };
 
 #endif
