@@ -99,7 +99,7 @@ morph_datahist_0p5.plotOn(frame1, Name="morph_dh_cHq3=0.5", LineColor="kGreen+2"
 
 model = ROOT.RooWrapperPdf("wrap_pdf", "wrap_pdf", morphfunc)
 data = model.generate({cHq3, obsvar}, 1000000)
-hh_data = ROOT.RooAbsData.createHistogram(data, "x,y", obsvar, Binning=20, YVar=dict(var=cHq3, Binning=50))
+hh_data = data.createHistogram("x,y", obsvar, Binning=20, YVar=dict(var=cHq3, Binning=50))
 hh_data.SetTitle("Morphing prediction")
 
 # Draw plots on canvas

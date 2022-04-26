@@ -2734,3 +2734,106 @@ std::map<const std::string, RooSpan<const RooAbsCategory::value_type>> RooAbsDat
         std::size_t first, std::size_t len) const {
   return store()->getCategoryBatches(first, len);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create a TH2F histogram of the distribution of the specified variable
+/// using this dataset. Apply any cuts to select which events are used.
+/// The variable being plotted can either be contained directly in this
+/// dataset, or else be a function of the variables in this dataset.
+/// The histogram will be created using RooAbsReal::createHistogram() with
+/// the name provided (with our dataset name prepended).
+
+TH2F *RooAbsData::createHistogram(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2, const char *cuts,
+                                  const char *name) const
+{
+   checkInit();
+   return createHistogram(var1, var2, var1.getBins(), var2.getBins(), cuts, name);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create a TH2F histogram of the distribution of the specified variable
+/// using this dataset. Apply any cuts to select which events are used.
+/// The variable being plotted can either be contained directly in this
+/// dataset, or else be a function of the variables in this dataset.
+/// The histogram will be created using RooAbsReal::createHistogram() with
+/// the name provided (with our dataset name prepended).
+
+TH2F *RooAbsData::createHistogram(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2, int nx, int ny,
+                                  const char *cuts, const char *name) const
+{
+   checkInit();
+   static int counter(0);
+
+   std::unique_ptr<RooAbsReal> ownedPlotVarX;
+   // Is this variable in our dataset?
+   auto *plotVarX = static_cast<RooAbsReal *>(_vars.find(var1.GetName()));
+   if (plotVarX == nullptr) {
+      // Is this variable a client of our dataset?
+      if (!var1.dependsOn(_vars)) {
+         coutE(InputArguments) << GetName() << "::createHistogram: Argument " << var1.GetName()
+                               << " is not in dataset and is also not dependent on data set" << std::endl;
+         return nullptr;
+      }
+
+      // Clone derived variable
+      ownedPlotVarX.reset(static_cast<RooAbsReal *>(var1.Clone()));
+      plotVarX = ownedPlotVarX.get();
+
+      // Redirect servers of derived clone to internal ArgSet representing the data in this set
+      plotVarX->redirectServers(const_cast<RooArgSet &>(_vars));
+   }
+
+   std::unique_ptr<RooAbsReal>  ownedPlotVarY;
+   // Is this variable in our dataset?
+   RooAbsReal *plotVarY = (RooAbsReal *)_vars.find(var2.GetName());
+   if (plotVarY == nullptr) {
+      // Is this variable a client of our dataset?
+      if (!var2.dependsOn(_vars)) {
+         coutE(InputArguments) << GetName() << "::createHistogram: Argument " << var2.GetName()
+                               << " is not in dataset and is also not dependent on data set" << std::endl;
+         return nullptr;
+      }
+
+      // Clone derived variable
+      ownedPlotVarY.reset(static_cast<RooAbsReal *>(var2.Clone()));
+      plotVarY = ownedPlotVarY.get();
+
+      // Redirect servers of derived clone to internal ArgSet representing the data in this set
+      plotVarY->redirectServers(const_cast<RooArgSet &>(_vars));
+   }
+
+   // Create selection formula if selection cuts are specified
+   std::unique_ptr<RooFormula> select;
+   if (0 != cuts && strlen(cuts)) {
+      select = std::make_unique<RooFormula>(cuts, cuts, _vars);
+      if (!select->ok()) {
+         return nullptr;
+      }
+   }
+
+   TString histName(name);
+   histName.Prepend("_");
+   histName.Prepend(GetName());
+   histName.Append("_");
+   histName.Append(Form("%08x", counter++));
+
+   // create the histogram
+   auto *histogram =
+      new TH2F(histName.Data(), "Events", nx, var1.getMin(), var1.getMax(), ny, var2.getMin(), var2.getMax());
+   if (!histogram) {
+      coutE(DataHandling) << GetName() << "::createHistogram: unable to create a new histogram" << endl;
+      return nullptr;
+   }
+
+   // Dump contents
+   Int_t nevent = numEntries();
+   for (Int_t i = 0; i < nevent; ++i) {
+      get(i);
+
+      if (select && select->eval() == 0)
+         continue;
+      histogram->Fill(plotVarX->getVal(), plotVarY->getVal(), weight());
+   }
+
+   return histogram;
+}
