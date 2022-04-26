@@ -260,3 +260,25 @@ TEST(RColumnElementEndian, UInt64)
    EXPECT_EQ(0, memcmp(buf2.get(),
                        "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f", 16));
 }
+
+TEST(RColumnElementEndian, Int64Int32)
+{
+   ROOT::Experimental::Detail::RColumnElement<std::int64_t, EColumnType::kInt32> element(nullptr);
+   EXPECT_EQ(element.IsMappable(), false);
+
+   RPageSinkMock sink(element);
+   std::int64_t buf1[] = {0x0a0b0c0d11223344, 0x0a0b0c0d55667788};
+   RPage page1(0, buf1, 8, 2);
+   page1.GrowUnchecked(2);
+   sink.CommitPageImpl(RPageStorage::ColumnHandle_t{}, page1);
+
+   EXPECT_EQ(0, memcmp(sink.GetPages()[0].fBuffer,
+                       "\x44\x33\x22\x11\x88\x77\x66\x55", 8));
+
+   RPageSourceMock source(sink.GetPages(), element);
+   auto page2 = source.PopulatePage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
+   std::unique_ptr<unsigned char[]> buf2(static_cast<unsigned char *>(page2.GetBuffer())); // adopt buffer
+   auto ints = reinterpret_cast<std::int64_t *>(buf2.get());
+   EXPECT_EQ(ints[0], 0x0000000011223344);
+   EXPECT_EQ(ints[1], 0x0000000055667788);
+}

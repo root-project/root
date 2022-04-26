@@ -157,6 +157,9 @@ void ROOT::Experimental::Detail::RColumnElement<std::int64_t, ROOT::Experimental
    std::int32_t *int32Array = reinterpret_cast<std::int32_t *>(dst);
    for (std::size_t i = 0; i < count; ++i) {
       int32Array[i] = int64Array[i];
+#if R__LITTLE_ENDIAN == 0
+      int32Array[i] = RByteSwap<4>::bswap(int32Array[i]);
+#endif
    }
 }
 
@@ -167,5 +170,8 @@ void ROOT::Experimental::Detail::RColumnElement<std::int64_t, ROOT::Experimental
    std::int64_t *int64Array = reinterpret_cast<std::int64_t *>(dst);
    for (std::size_t i = 0; i < count; ++i) {
       int64Array[i] = int32Array[i];
+#if R__LITTLE_ENDIAN == 0
+      int64Array[i] = RByteSwap<8>::bswap(int64Array[i]);
+#endif
    }
 }
