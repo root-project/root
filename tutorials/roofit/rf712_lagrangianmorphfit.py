@@ -8,7 +8,7 @@
 ## \macro_code
 ##
 ## \date January 2022
-## \authors Rahul Balasubramanian
+## \author Rahul Balasubramanian
 
 import ROOT
 

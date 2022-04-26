@@ -6,8 +6,7 @@
 ///
 /// \macro_code
 ///
-/// \author Andrei Gheata
-/// \author Sergey Linev
+/// \authors Andrei Gheata, Sergey Linev
 
 #include <vector>
 #include <string>

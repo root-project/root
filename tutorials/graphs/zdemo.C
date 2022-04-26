@@ -16,7 +16,7 @@
 /// \macro_image
 /// \macro_code
 ///
-/// \authors Michael Tokarev and Elena Potrebenikova (JINR Dubna)
+/// \authors Michael Tokarev, Elena Potrebenikova (JINR Dubna)
 
 #include "TCanvas.h"
 #include "TPad.h"
