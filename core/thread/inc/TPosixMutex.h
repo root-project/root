@@ -42,11 +42,11 @@ public:
    TPosixMutex(Bool_t recursive=kFALSE);
    virtual ~TPosixMutex();
 
-   Int_t  Lock();
-   Int_t  UnLock();
-   Int_t  TryLock();
+   Int_t  Lock() override;
+   Int_t  UnLock() override;
+   Int_t  TryLock() override;
 
-   ClassDef(TPosixMutex,0)  // Posix mutex lock
+   ClassDefOverride(TPosixMutex,0)  // Posix mutex lock
 };
 
 #endif

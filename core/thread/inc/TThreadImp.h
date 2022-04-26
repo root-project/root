@@ -49,7 +49,7 @@ public:
 
    virtual Int_t  Exit(void *ret) = 0;
 
-   ClassDef(TThreadImp,0)  // ThreadImp class
+   ClassDefOverride(TThreadImp,0)  // ThreadImp class
 };
 
 #endif

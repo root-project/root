@@ -34,11 +34,11 @@ public:
    TWin32ThreadFactory(const char *name = "Win32", const char *title = "Win32 Thread Factory");
    virtual ~TWin32ThreadFactory() { }
 
-   virtual TMutexImp      *CreateMutexImp(Bool_t recursive);
-   virtual TConditionImp  *CreateConditionImp(TMutexImp *m);
-   virtual TThreadImp     *CreateThreadImp();
+   TMutexImp      *CreateMutexImp(Bool_t recursive) override;
+   TConditionImp  *CreateConditionImp(TMutexImp *m) override;
+   TThreadImp     *CreateThreadImp() override;
 
-   ClassDef(TWin32ThreadFactory,0)  // Win32 thread factory
+   ClassDefOverride(TWin32ThreadFactory,0)  // Win32 thread factory
 };
 
 #endif

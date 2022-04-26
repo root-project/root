@@ -34,7 +34,7 @@ public:
    virtual Int_t  Signal() = 0;
    virtual Int_t  Broadcast() = 0;
 
-   ClassDef(TConditionImp,0)  // Condition variable implementation ABC
+   ClassDefOverride(TConditionImp,0)  // Condition variable implementation ABC
 };
 
 #endif
