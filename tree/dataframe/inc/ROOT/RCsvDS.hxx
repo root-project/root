@@ -80,16 +80,16 @@ protected:
 public:
    RCsvDS(std::string_view fileName, bool readHeaders = true, char delimiter = ',', Long64_t linesChunkSize = -1LL,
           std::unordered_map<std::string, char> &&colTypes = {});
-   void Finalize();
+   void Finalize() final;
    void FreeRecords();
    ~RCsvDS();
-   const std::vector<std::string> &GetColumnNames() const;
-   std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges();
-   std::string GetTypeName(std::string_view colName) const;
-   bool HasColumn(std::string_view colName) const;
-   bool SetEntry(unsigned int slot, ULong64_t entry);
-   void SetNSlots(unsigned int nSlots);
-   std::string GetLabel();
+   const std::vector<std::string> &GetColumnNames() const final;
+   std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges() final;
+   std::string GetTypeName(std::string_view colName) const final;
+   bool HasColumn(std::string_view colName) const final;
+   bool SetEntry(unsigned int slot, ULong64_t entry) final;
+   void SetNSlots(unsigned int nSlots) final;
+   std::string GetLabel() final;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
