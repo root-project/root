@@ -38,7 +38,7 @@ public:
 
    virtual Bool_t      NextIteration() = 0;
 
-   virtual   void      Close(Option_t * = "") {}
+   virtual void        Close(Option_t * = "") {}
 
    virtual Bool_t      SetNull(Int_t) { return kFALSE; }
    virtual Bool_t      SetInt(Int_t, Int_t) { return kFALSE; }
@@ -114,7 +114,7 @@ public:
    virtual const char* GetErrorMsg() const;
    virtual void        EnableErrorOutput(Bool_t on = kTRUE) { fErrorOut = on; }
 
-   ClassDef(TSQLStatement, 0) //SQL statement
+   ClassDefOverride(TSQLStatement, 0) //SQL statement
 };
 
 #endif

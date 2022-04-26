@@ -45,7 +45,7 @@ public:
    void             AddToSet(const char *key, const char *value);
    void             AddToSetDescription(const char *key, const char *description);
    virtual TString  Generate();
-   virtual void     Clear(const Option_t* = 0);
+   void             Clear(const Option_t* = "") override;
 
    virtual void SetExecutable(const char *value=0, const char *description=0) = 0;
    virtual void SetArguments(const char *value=0, const char *description=0) = 0;
@@ -72,7 +72,7 @@ public:
                               const char *type="VO_ALICE", const char *description=0) = 0;
    virtual void AddToOutputArchive(const char *value=0, const char *description=0) = 0;
 
-   ClassDef(TGridJDL,1)  // ABC defining interface JDL generator
+   ClassDefOverride(TGridJDL,1)  // ABC defining interface JDL generator
 };
 
 #endif

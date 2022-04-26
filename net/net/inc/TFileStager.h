@@ -55,7 +55,7 @@ public:
    //--- Load desired plugin
    static TFileStager *Open(const char *stager);
 
-   ClassDef(TFileStager,0)  // ABC defining interface to a stager
+   ClassDefOverride(TFileStager,0)  // ABC defining interface to a stager
 };
 
 #endif

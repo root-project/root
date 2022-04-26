@@ -35,21 +35,21 @@ public:
    virtual ~TGridResult() { }
 
    virtual const char *GetFileName(UInt_t) const
-      { MayNotUse("GetFileName"); return 0; }
+      { MayNotUse("GetFileName"); return nullptr; }
    virtual const char *GetFileNamePath(UInt_t) const
-      { MayNotUse("GetFileNamePath"); return 0; }
+      { MayNotUse("GetFileNamePath"); return nullptr; }
    virtual const char *GetPath(UInt_t) const
-      { MayNotUse("GetPath"); return 0; }
+      { MayNotUse("GetPath"); return nullptr; }
    virtual const TEntryList *GetEntryList(UInt_t) const
-      { MayNotUse("GetEntryList"); return 0; }
+      { MayNotUse("GetEntryList"); return nullptr; }
    virtual const char *GetKey(UInt_t, const char*) const
-      { MayNotUse("GetKey"); return 0; }
+      { MayNotUse("GetKey"); return nullptr; }
    virtual Bool_t      SetKey(UInt_t, const char*, const char*)
-      { MayNotUse("SetKey"); return 0; }
+      { MayNotUse("SetKey"); return kFALSE; }
    virtual TList      *GetFileInfoList() const
-      { MayNotUse("GetFileInfoList"); return 0; }
+      { MayNotUse("GetFileInfoList"); return nullptr; }
 
-   ClassDef(TGridResult,1)  // ABC defining interface to GRID result set
+   ClassDefOverride(TGridResult,1)  // ABC defining interface to GRID result set
 };
 
 #endif

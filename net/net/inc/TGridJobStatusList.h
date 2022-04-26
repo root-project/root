@@ -36,7 +36,7 @@ public:
    TGridJobStatusList() : fJobID("") { }
    virtual ~TGridJobStatusList() { }
 
-   ClassDef(TGridJobStatusList,1)  // ABC defining interface to a list of GRID jobs
+   ClassDefOverride(TGridJobStatusList,1)  // ABC defining interface to a list of GRID jobs
 };
 
 R__EXTERN TGridJobStatusList *gGridJobStatusList;

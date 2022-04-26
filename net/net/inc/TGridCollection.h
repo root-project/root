@@ -73,7 +73,7 @@ public:
       { MayNotUse("GetExportUrl"); return 0;}
    virtual Bool_t      SetExportUrl(const char * /*exporturl*/ = 0)
       { MayNotUse("SetExportUrl"); return kFALSE;}
-   virtual void         Print(Option_t *) const
+   virtual void         Print(Option_t * = "") const override
       { MayNotUse("Print"); }
    virtual TFile       *OpenFile(const char *)
       { MayNotUse("OpenFile"); return 0;}
@@ -112,7 +112,7 @@ public:
    virtual TFileCollection* GetFileCollection(const char* /*name*/ = "", const char* /*title*/ = "") const
       { MayNotUse("GetFileCollection"); return 0;}
 
-   ClassDef(TGridCollection,1)  // ABC managing collection of files on the Grid
+   ClassDefOverride(TGridCollection,1)  // ABC managing collection of files on the Grid
 };
 
 #endif

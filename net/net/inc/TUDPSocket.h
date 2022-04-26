@@ -68,9 +68,9 @@ protected:
    static ULong64_t fgBytesSent;  // total bytes sent by all socket objects
 
    TUDPSocket() : fAddress(), fBytesRecv(0), fBytesSent(0), fCompress(0),
-                  fLocalAddress(), fRemoteProtocol(), fSecContext(0), fService(),
+                  fLocalAddress(), fRemoteProtocol(), fSecContext(nullptr), fService(),
                   fServType(kSOCKD), fSocket(-1), fUrl(),
-                  fBitsInfo(), fUUIDs(0), fLastUsageMtx(0), fLastUsage() { }
+                  fBitsInfo(), fUUIDs(nullptr), fLastUsageMtx(0), fLastUsage() { }
 
    void         SetDescriptor(Int_t desc) { fSocket = desc; }
    void         SendStreamerInfos(const TMessage &mess);
@@ -79,8 +79,8 @@ protected:
    Bool_t       RecvProcessIDs(TMessage *mess);
 
 private:
-   TUDPSocket&   operator=(const TUDPSocket &);  // not implemented
-   Option_t     *GetOption() const { return TObject::GetOption(); }
+   TUDPSocket&   operator=(const TUDPSocket &) = delete;
+   Option_t     *GetOption() const override { return TObject::GetOption(); }
 
 public:
    TUDPSocket(TInetAddress address, const char *service);
@@ -148,7 +148,7 @@ public:
 
    static void           NetError(const char *where, Int_t error);
 
-   ClassDef(TUDPSocket,0)  //This class implements UDP client sockets
+   ClassDefOverride(TUDPSocket,0)  //This class implements UDP client sockets
 };
 
 //______________________________________________________________________________

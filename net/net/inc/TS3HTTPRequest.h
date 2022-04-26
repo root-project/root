@@ -80,7 +80,7 @@ public:
                 EAuthType authType, const TString& accessKey,
                 const TString& secretKey);
    TS3HTTPRequest(const TS3HTTPRequest& m);
-   virtual ~TS3HTTPRequest() { }
+   virtual ~TS3HTTPRequest() {}
 
    EHTTPVerb       GetHTTPVerb() const { return fVerb; }
    const TString&  GetHost() const { return fHost; }
@@ -101,7 +101,7 @@ public:
    TS3HTTPRequest& SetAuthType(TS3HTTPRequest::EAuthType authType);
    TS3HTTPRequest& SetSessionToken(const TString& token);
 
-   ClassDef(TS3HTTPRequest, 0)  // Create generic HTTP request for Amazon S3 and Google Storage services
+   ClassDefOverride(TS3HTTPRequest, 0)  // Create generic HTTP request for Amazon S3 and Google Storage services
 };
 
 

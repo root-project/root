@@ -28,16 +28,15 @@
 
 class  TSQLRow;
 
-
 class TSQLResult : public TObject {
 
 protected:
    Int_t    fRowCount;   // number of rows in result
 
-   TSQLResult() : fRowCount(0) { }
+   TSQLResult() : fRowCount(0) {}
 
 public:
-   virtual ~TSQLResult() { }
+   virtual ~TSQLResult() {}
 
    virtual void        Close(Option_t *option="") = 0;
    virtual Int_t       GetFieldCount() = 0;
@@ -45,7 +44,7 @@ public:
    virtual Int_t       GetRowCount() const { return fRowCount; }
    virtual TSQLRow    *Next() = 0;
 
-   ClassDef(TSQLResult,0)  // SQL query result
+   ClassDefOverride(TSQLResult,0)  // SQL query result
 };
 
 #endif
