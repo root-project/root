@@ -175,7 +175,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX${CMAKE_CXX_STANDARD}_STANDAR
 if(libcxx)
   CHECK_CXX_COMPILER_FLAG("-stdlib=libc++" HAS_LIBCXX11)
   if(NOT HAS_LIBCXX11)
-    message(STATUS "Current compiler does not suppport -stdlib=libc++ option. Switching OFF libcxx option")
+    message(STATUS "Current compiler does not support -stdlib=libc++ option. Switching OFF libcxx option")
     set(libcxx OFF CACHE BOOL "" FORCE)
   endif()
 endif()

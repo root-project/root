@@ -57,9 +57,9 @@ public:
    // Standard destructor
    virtual ~TIsAProxy();
    // Callbacl to set the class
-   virtual void SetClass(TClass *cl);
+   void SetClass(TClass *cl) override;
    // IsA callback
-   virtual TClass* operator()(const void *obj);
+   TClass* operator()(const void *obj) override;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -85,10 +85,10 @@ public:
    // Standard destructor
    virtual ~TInstrumentedIsAProxy()                    {}
    // Callbacl to set the class
-   virtual void SetClass(TClass *cl)                   { fClass = cl; }
+   virtual void SetClass(TClass *cl) override          { fClass = cl; }
    // IsA callback
-   virtual TClass* operator()(const void *obj) {
-      return obj==0 ? fClass : ((const T*)obj)->IsA();
+   TClass* operator()(const void *obj) override {
+      return !obj ? fClass : ((const T*)obj)->IsA();
    }
 };
 

@@ -112,8 +112,8 @@ public:
 
    Bool_t SetRelativePart(const TString&);
 
-   void   Print(Option_t *option = "") const;
-   Bool_t IsSortable() const { return kTRUE; }
+   void   Print(Option_t *option = "") const override;
+   Bool_t IsSortable() const override { return kTRUE; }
 
    void Normalise();
    void Reset();
@@ -154,7 +154,7 @@ public:
    static TUri Transform(const TUri &reference, const TUri &base);
    static const TString MergePaths(const TUri &reference, const TUri &base);
 
-   ClassDef(TUri, 1)  //Represents an URI
+   ClassDefOverride(TUri, 1)  //Represents an URI
 };
 
 #endif

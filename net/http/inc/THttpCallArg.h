@@ -250,7 +250,7 @@ public:
       AssignWSId();
    }
 
-   ClassDef(THttpCallArg, 0) // Arguments for single HTTP call
+   ClassDefOverride(THttpCallArg, 0) // Arguments for single HTTP call
 };
 
 #endif

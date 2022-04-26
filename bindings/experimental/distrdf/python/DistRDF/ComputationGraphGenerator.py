@@ -12,6 +12,7 @@
 
 import logging
 
+from copy import deepcopy
 from functools import singledispatch
 from typing import Any, List, Union
 
@@ -65,45 +66,68 @@ def _(operation: Snapshot, promise: Any, results: list) -> None:
 
 
 @singledispatch
-def _make_op_lazy_if_needed(operation: Operation, range_id: int) -> None:
+def _create_lazy_op_if_needed(operation: Operation, range_id: int) -> Operation:
     """
     We may need to change the attributes of some operations (currently
     Snapshot and AsNumpy), to make them lazy before triggering
-    the computation graph.
+    the computation graph. In the general case, just return the input operation.
     """
-    pass
+    return operation
 
 
-@_make_op_lazy_if_needed.register
-def _(operation: AsNumpy, range_id: int) -> None:
+@_create_lazy_op_if_needed.register
+def _(operation: AsNumpy, range_id: int) -> AsNumpy:
+    """
+    The AsNumpy operation can be made lazy by setting the boolean keyword
+    argument 'lazy' to 'True'.
+    """
     operation.kwargs["lazy"] = True
+    return operation
 
 
-@_make_op_lazy_if_needed.register
-def _(operation: Snapshot, range_id: int) -> None:
+@_create_lazy_op_if_needed.register
+def _(operation: Snapshot, range_id: int) -> Snapshot:
+    """
+    The Snapshot operation can be made lazy by supplying an RSnapshotOptions
+    object with the 'fLazy' data member set to 'True'. Furthermore, the current
+    range id needs to be appended to the input file name so that the output data
+    from different tasks can be distinguished.
+
+    Note:
+    Since the file name from the original operation needs to be changed, this
+    function makes a deep copy of it and returns the modified copy. This is
+    needed in order to avoid that a task may receive as input an operation that
+    was previously modified by another task. In that case, the file name would
+    contain the range id from the other task, thus leading to create a wrong
+    file name in this function.
+    """
+    op_modified = deepcopy(operation)
+
     # Retrieve filename and append range boundaries
-    filename = operation.args[1].partition(".root")[0]
+    filename = op_modified.args[1].partition(".root")[0]
     path_with_range = "{}_{}.root".format(filename, range_id)
     # Create a partial snapshot on the current range
-    operation.args[1] = path_with_range
+    op_modified.args[1] = path_with_range
 
-    if len(operation.args) == 2:
+    if len(op_modified.args) == 2:
         # Only the first two mandatory arguments were passed
         # Only the following overload is possible
         # Snapshot(std::string_view treename, std::string_view filename, std::string_view columnNameRegexp = "")
-        operation.args.append("")  # Append empty regex
+        op_modified.args.append("")  # Append empty regex
 
-    if len(operation.args) == 4:
+    if len(op_modified.args) == 4:
         # An RSnapshotOptions instance was passed as fourth argument
         # Make it lazy and keep the other options
-        operation.args[3].fLazy = True
+        op_modified.args[3].fLazy = True
     else:
         # We already appended an empty regex for the 2 mandatory arguments overload
         # All other overloads have 3 mandatory arguments
         # We just need to append a lazy RSnapshotOptions now
         lazy_options = ROOT.RDF.RSnapshotOptions()
         lazy_options.fLazy = True
-        operation.args.append(lazy_options)  # Append RSnapshotOptions
+        op_modified.args.append(lazy_options)  # Append RSnapshotOptions
+
+    return op_modified
 
 
 @singledispatch
@@ -120,8 +144,8 @@ def _call_rdf_operation(distrdf_node: Node, previous_rdf_node: Any, range_id: in
     future_results = []
 
     rdf_operation = getattr(previous_rdf_node, distrdf_node.operation.name)
-    _make_op_lazy_if_needed(distrdf_node.operation, range_id)
-    pyroot_node = rdf_operation(*distrdf_node.operation.args, **distrdf_node.operation.kwargs)
+    in_task_op = _create_lazy_op_if_needed(distrdf_node.operation, range_id)
+    pyroot_node = rdf_operation(*in_task_op.args, **in_task_op.kwargs)
 
     # The result is a PyROOT object which is stored together with
     # the DistRDF node. This binds the PyROOT object lifetime to the
@@ -129,7 +153,7 @@ def _call_rdf_operation(distrdf_node: Node, previous_rdf_node: Any, range_id: in
     # is a valid reference pointing to the DistRDF node.
     distrdf_node.pyroot_node = pyroot_node
 
-    append_node_to_results(distrdf_node.operation, pyroot_node, future_results)
+    append_node_to_results(in_task_op, pyroot_node, future_results)
     return future_results
 
 

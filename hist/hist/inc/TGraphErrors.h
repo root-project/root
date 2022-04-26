@@ -26,27 +26,27 @@
 class TGraphErrors : public TGraph {
 
 protected:
-   Double_t    *fEX;        ///<[fNpoints] array of X errors
-   Double_t    *fEY;        ///<[fNpoints] array of Y errors
+   Double_t    *fEX{nullptr};    ///<[fNpoints] array of X errors
+   Double_t    *fEY{nullptr};    ///<[fNpoints] array of Y errors
 
    void       SwapPoints(Int_t pos1, Int_t pos2) override;
 
    Double_t** Allocate(Int_t size) override;
    void       CopyAndRelease(Double_t **newarrays,
-                                     Int_t ibegin, Int_t iend, Int_t obegin) override;
+                             Int_t ibegin, Int_t iend, Int_t obegin) override;
    Bool_t     CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend,
-                                 Int_t obegin) override;
-   Bool_t             CtorAllocate();
+                         Int_t obegin) override;
+   Bool_t     CtorAllocate();
    void       FillZero(Int_t begin, Int_t end,
-                               Bool_t from_ctor = kTRUE) override;
+                       Bool_t from_ctor = kTRUE) override;
    Bool_t     DoMerge(const TGraph * g) override;
 
 
 public:
    TGraphErrors();
    TGraphErrors(Int_t n);
-   TGraphErrors(Int_t n, const Float_t *x, const Float_t *y, const Float_t *ex=0, const Float_t *ey=0);
-   TGraphErrors(Int_t n, const Double_t *x, const Double_t *y, const Double_t *ex=0, const Double_t *ey=0);
+   TGraphErrors(Int_t n, const Float_t *x, const Float_t *y, const Float_t *ex = nullptr, const Float_t *ey = nullptr);
+   TGraphErrors(Int_t n, const Double_t *x, const Double_t *y, const Double_t *ex = nullptr, const Double_t *ey = nullptr);
    TGraphErrors(const TVectorF &vx, const TVectorF &vy, const TVectorF &vex, const TVectorF &vey);
    TGraphErrors(const TVectorD &vx, const TVectorD &vy, const TVectorD &vex, const TVectorD &vey);
    TGraphErrors(const TGraphErrors &gr);

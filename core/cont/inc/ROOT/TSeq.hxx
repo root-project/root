@@ -12,6 +12,7 @@
 #ifndef ROOT_TSeq
 #define ROOT_TSeq
 
+#include "TError.h"
 #include <iterator>
 #include <type_traits>
 
@@ -81,6 +82,7 @@ namespace ROOT {
       TSeq(T theBegin, T theEnd, T theStep = 1):
         fBegin(theBegin), fEnd(theEnd), fStep(theStep) {
          checkIntegralType();
+         R__ASSERT(fStep != 0 && "TSeq does not support steps of size 0.");
       }
 
       class iterator {
@@ -227,9 +229,8 @@ namespace cling {
    std::string printValue(ROOT::TSeq<T> *val)
    {
       std::ostringstream ret;
-      ret << "A sequence of values: " << *val->begin()
-          << " <= i < " << *val->end();
       auto step = val->step();
+      ret << "A sequence of values: " << *val->begin() << ((step > 0) ? " <= i < " : " >= i > ") << *val->end();
       if (1 != step)
           ret << " in steps of " <<  step;
       return ret.str();

@@ -576,7 +576,7 @@ RModel Parse(std::string filename){
          }
 
          default:
-         throw std::runtime_error("Type error: TMVA SOFIE does not yet suppport data type"+ConvertTypeToString(fInputDType));
+         throw std::runtime_error("Type error: TMVA SOFIE does not yet support data type"+ConvertTypeToString(fInputDType));
       }
 
    }
@@ -604,7 +604,7 @@ RModel Parse(std::string filename){
          }
 
          default:
-         throw std::runtime_error("Type error: TMVA SOFIE does not yet suppport data type"+ConvertTypeToString(fInputDType));
+         throw std::runtime_error("Type error: TMVA SOFIE does not yet support data type"+ConvertTypeToString(fInputDType));
 
       }
       }

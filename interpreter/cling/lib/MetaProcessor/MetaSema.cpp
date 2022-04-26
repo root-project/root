@@ -344,7 +344,7 @@ namespace cling {
       "   " << metaString << "class <name>\t\t- Prints out class <name> in a CINT-like style (one-level).\n"
                              "\t\t\t\t  If no name is given, prints out list of all classes.\n"
       "\n"
-      "   " << metaString << "Class <name>\t\t\t- Prints out class <name> in a CINT-like style (all-levels).\n"
+      "   " << metaString << "Class <name>\t\t- Prints out class <name> in a CINT-like style (all-levels).\n"
                              "\t\t\t\t  If no name is given, prints out list of all classes.\n"
       "\n"
       "   " << metaString << "namespace\t\t\t- Prints list of all known namespaces\n"
@@ -357,7 +357,7 @@ namespace cling {
       "   " << metaString << "fileEx\t\t\t- Prints out included (parsed) file statistics\n"
                              "\t\t\t\t  as well as a list of their names\n"
       "\n"
-      "   " << metaString << "g <var>\t\t\t\t- Prints out information about global variable"
+      "   " << metaString << "g <var>\t\t\t- Prints out information about global variable"
                              "\n\t\t\t\t  'var' - if no name is given, print them all\n"
       "\n"
       "   " << metaString << "@ \t\t\t\t- Cancels and ignores the multiline input\n"
@@ -430,16 +430,9 @@ namespace cling {
     m_Interpreter.printIncludedFiles(m_MetaProcessor.getOuts());
   }
 
-  void MetaSema::actOnclassCommand(llvm::StringRef className) const {
-    if (!className.empty())
+  void MetaSema::actOnClassCommand(llvm::StringRef className, bool verbose) const {
       DisplayClass(m_MetaProcessor.getOuts(),
-                   &m_Interpreter, className.str().c_str(), true);
-    else
-      DisplayClasses(m_MetaProcessor.getOuts(), &m_Interpreter, false);
-  }
-
-  void MetaSema::actOnClassCommand() const {
-    DisplayClasses(m_MetaProcessor.getOuts(), &m_Interpreter, true);
+                   &m_Interpreter, className.str().c_str(), verbose);
   }
 
   void MetaSema::actOnNamespaceCommand() const {

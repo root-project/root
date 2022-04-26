@@ -78,42 +78,42 @@ public:
    TList() : fAscending(kTRUE) { }
    TList(TObject *) : fAscending(kTRUE) { } // for backward compatibility, don't use
    virtual           ~TList();
-   virtual void      Clear(Option_t *option="");
-   virtual void      Delete(Option_t *option="");
-   virtual TObject  *FindObject(const char *name) const;
-   virtual TObject  *FindObject(const TObject *obj) const;
-   virtual TIterator *MakeIterator(Bool_t dir = kIterForward) const;
+   void              Clear(Option_t *option="") override;
+   void              Delete(Option_t *option="") override;
+   TObject          *FindObject(const char *name) const override;
+   TObject          *FindObject(const TObject *obj) const override;
+   TIterator        *MakeIterator(Bool_t dir = kIterForward) const override;
 
-   virtual void      Add(TObject *obj) { AddLast(obj); }
+   void              Add(TObject *obj) override { AddLast(obj); }
    virtual void      Add(TObject *obj, Option_t *opt) { AddLast(obj, opt); }
-   virtual void      AddFirst(TObject *obj);
+   void              AddFirst(TObject *obj) override;
    virtual void      AddFirst(TObject *obj, Option_t *opt);
-   virtual void      AddLast(TObject *obj);
+   void              AddLast(TObject *obj) override;
    virtual void      AddLast(TObject *obj, Option_t *opt);
-   virtual void      AddAt(TObject *obj, Int_t idx);
-   virtual void      AddAfter(const TObject *after, TObject *obj);
+   void              AddAt(TObject *obj, Int_t idx) override;
+   void              AddAfter(const TObject *after, TObject *obj) override;
    virtual void      AddAfter(TObjLink *after, TObject *obj);
-   virtual void      AddBefore(const TObject *before, TObject *obj);
+   void              AddBefore(const TObject *before, TObject *obj) override;
    virtual void      AddBefore(TObjLink *before, TObject *obj);
-   virtual TObject  *Remove(TObject *obj);
+   TObject  *Remove(TObject *obj) override;
    virtual TObject  *Remove(TObjLink *lnk);
-           TObject  *Remove(const TObjLinkPtr_t &lnk) { return Remove(lnk.get()); }
-   virtual void      RemoveLast();
-   virtual void      RecursiveRemove(TObject *obj);
+   TObject          *Remove(const TObjLinkPtr_t &lnk) { return Remove(lnk.get()); }
+   void              RemoveLast() override;
+   void              RecursiveRemove(TObject *obj) override;
 
-   virtual TObject  *At(Int_t idx) const;
-   virtual TObject  *After(const TObject *obj) const;
-   virtual TObject  *Before(const TObject *obj) const;
-   virtual TObject  *First() const;
+   TObject          *At(Int_t idx) const override;
+   TObject          *After(const TObject *obj) const override;
+   TObject          *Before(const TObject *obj) const override;
+   TObject          *First() const override;
    virtual TObjLink *FirstLink() const { return fFirst.get(); }
-   virtual TObject **GetObjectRef(const TObject *obj) const;
-   virtual TObject  *Last() const;
+   TObject         **GetObjectRef(const TObject *obj) const override;
+   TObject          *Last() const override;
    virtual TObjLink *LastLink() const { return fLast.get(); }
 
    virtual void      Sort(Bool_t order = kSortAscending);
    Bool_t            IsAscending() { return fAscending; }
 
-   ClassDef(TList,5)  //Doubly linked list
+   ClassDefOverride(TList,5)  //Doubly linked list
 };
 
 
@@ -215,19 +215,19 @@ public:
    TListIter(const TList *l, Bool_t dir = kIterForward);
    TListIter(const TListIter &iter);
    ~TListIter() { }
-   TIterator &operator=(const TIterator &rhs);
+   TIterator &operator=(const TIterator &rhs) override;
    TListIter &operator=(const TListIter &rhs);
 
-   const TCollection *GetCollection() const { return fList; }
-   Option_t          *GetOption() const;
+   const TCollection *GetCollection() const override { return fList; }
+   Option_t          *GetOption() const override;
    void               SetOption(Option_t *option);
-   TObject           *Next();
-   void               Reset();
-   Bool_t             operator!=(const TIterator &aIter) const;
+   TObject           *Next() override;
+   void               Reset() override;
+   Bool_t             operator!=(const TIterator &aIter) const override;
    Bool_t             operator!=(const TListIter &aIter) const;
-   TObject           *operator*() const { return (fCurCursor ? fCurCursor->GetObject() : nullptr); }
+   TObject           *operator*() const override { return (fCurCursor ? fCurCursor->GetObject() : nullptr); }
 
-   ClassDef(TListIter,0)  //Linked list iterator
+   ClassDefOverride(TListIter,0)  //Linked list iterator
 };
 
 inline bool operator==(TObjOptLink *l, const std::shared_ptr<TObjLink> &r) {
