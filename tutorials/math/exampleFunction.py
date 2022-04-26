@@ -4,7 +4,7 @@
 ## Example of using Python functions and input to numerical algorithm
 ## using the ROOT Functor class 
 ##
-## \authors Lorenzo Moneta
+## \author Lorenzo Moneta
 
 import ROOT
 import array
