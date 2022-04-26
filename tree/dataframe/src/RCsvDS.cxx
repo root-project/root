@@ -229,7 +229,7 @@ std::vector<std::string> RCsvDS::ParseColumns(const std::string &line)
 
 size_t RCsvDS::ParseValue(const std::string &line, std::vector<std::string> &columns, size_t i)
 {
-   std::stringstream val;
+   std::string val;
    bool quoted = false;
 
    for (; i < line.size(); ++i) {
@@ -240,14 +240,14 @@ size_t RCsvDS::ParseValue(const std::string &line, std::vector<std::string> &col
          if (line[i + 1] != '"') {
             quoted = !quoted;
          } else {
-            val << line[++i];
+            val += line[++i];
          }
       } else {
-         val << line[i];
+         val += line[i];
       }
    }
 
-   columns.emplace_back(val.str());
+   columns.emplace_back(std::move(val));
 
    return i;
 }
