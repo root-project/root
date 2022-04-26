@@ -57,7 +57,7 @@ mcs = ROOT.RooMCStudy(
 mcs.generateAndFit(500, 2000)
 
 # Make plot of distribution of generated value of f parameter
-h_f_gen = ROOT.RooAbsData.createHistogram(mcs.fitParDataSet(), "f_gen", ROOT.RooFit.AutoBinning(40))
+h_f_gen = mcs.fitParDataSet().createHistogram("f_gen", ROOT.RooFit.AutoBinning(40))
 
 # Make plot of distribution of fitted value of f parameter
 frame1 = mcs.plotParam(f, ROOT.RooFit.Bins(40))

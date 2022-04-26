@@ -55,8 +55,12 @@ w.factory("prod::uv(u[10],v[10])")
 w.factory("sum::uv2(u,v)")
 
 # Lagrangian morphing function for the example shown in rf711_lagrangianmorph
-infilename = ROOT.gROOT.GetTutorialDir().Data() + "/roofit/input_histos_rf_lagrangianmorph.root";
-w.factory("lagrangianmorph::morph($observableName('pTV'),$fileName('"+infilename+"'),$couplings({cHq3[0,1],SM[1]}),$NewPhysics(cHq3=1,SM=0),$folders({'SM_NPsq0','cHq3_NPsq1','cHq3_NPsq2'}))")
+infilename = ROOT.gROOT.GetTutorialDir().Data() + "/roofit/input_histos_rf_lagrangianmorph.root"
+w.factory(
+    "lagrangianmorph::morph($observableName('pTV'),$fileName('"
+    + infilename
+    + "'),$couplings({cHq3[0,1],SM[1]}),$NewPhysics(cHq3=1,SM=0),$folders({'SM_NPsq0','cHq3_NPsq1','cHq3_NPsq2'}))"
+)
 
 # Taylor expansion is done with taylorexpand(func,{var1,var2,...},val,order)
 w.factory("taylorexpand::te(expr::poly('x^4+5*x^3+2*x^2+x+1',x),{x},0.0,2)")
