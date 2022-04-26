@@ -50,35 +50,35 @@ protected:
                               Bool_t forceRead);
    virtual void Create(const char *url, Option_t *option, Int_t netopt);
    virtual void Create(TSocket *s, Option_t *option, Int_t netopt);
-   void         Init(Bool_t create);
-   void         Print(Option_t *option) const;
+   void         Init(Bool_t create) override;
+   void         Print(Option_t *option) const override;
    void         PrintError(const char *where, Int_t err);
    Int_t        Recv(Int_t &status, EMessageTypes &kind);
-   Int_t        SysOpen(const char *pathname, Int_t flags, UInt_t mode);
-   Int_t        SysClose(Int_t fd);
-   Int_t        SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags, Long_t *modtime);
+   Int_t        SysOpen(const char *pathname, Int_t flags, UInt_t mode) override;
+   Int_t        SysClose(Int_t fd) override;
+   Int_t        SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags, Long_t *modtime) override;
 
 public:
    TNetFile(const char *url, Option_t *option = "", const char *ftitle = "",
             Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault, Int_t netopt = 0);
-   TNetFile() : fEndpointUrl(), fUser(), fSocket(0), fProtocol(0), fErrorCode(0), fNetopt(0) { }
+   TNetFile() : fEndpointUrl(), fUser(), fSocket(nullptr), fProtocol(0), fErrorCode(0), fNetopt(0) { }
    virtual ~TNetFile();
 
-   void    Close(Option_t *option="");  // *MENU*
-   void    Flush();
+   void    Close(Option_t *option="") override;  // *MENU*
+   void    Flush() override;
    Int_t   GetErrorCode() const { return fErrorCode; }
-   Bool_t  IsOpen() const;
-   Bool_t  Matches(const char *url);
-   Int_t   ReOpen(Option_t *mode);
-   Bool_t  ReadBuffer(char *buf, Int_t len);
-   Bool_t  ReadBuffer(char *buf, Long64_t pos, Int_t len);
-   Bool_t  ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf);
-   Bool_t  WriteBuffer(const char *buf, Int_t len);
-   void    Seek(Long64_t offset, ERelativeTo pos = kBeg);
+   Bool_t  IsOpen() const override;
+   Bool_t  Matches(const char *url) override;
+   Int_t   ReOpen(Option_t *mode) override;
+   Bool_t  ReadBuffer(char *buf, Int_t len) override;
+   Bool_t  ReadBuffer(char *buf, Long64_t pos, Int_t len) override;
+   Bool_t  ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf) override;
+   Bool_t  WriteBuffer(const char *buf, Int_t len) override;
+   void    Seek(Long64_t offset, ERelativeTo pos = kBeg) override;
 
-   const TUrl *GetEndpointUrl() const { return &fEndpointUrl; }
+   const TUrl *GetEndpointUrl() const override { return &fEndpointUrl; }
 
-   ClassDef(TNetFile,1)  //A ROOT file that reads/writes via a rootd server
+   ClassDefOverride(TNetFile,1)  //A ROOT file that reads/writes via a rootd server
 };
 
 
@@ -93,16 +93,16 @@ private:
    TString     fUser;        // Remote user
    Int_t       fPort;        // Remote port
 
-   TNetSystem(const TNetSystem&);             // not implemented
-   TNetSystem& operator=(const TNetSystem&);  // not implemented
+   TNetSystem(const TNetSystem&) = delete;
+   TNetSystem& operator=(const TNetSystem&) = delete;
 
-   void       *GetDirPtr() const { return fDirp; }
+   void       *GetDirPtr() const override { return fDirp; }
 
 protected:
    Bool_t      fIsLocal;     // TRUE if the path points to this host
    TString     fLocalPrefix; // if fIsLocal, prefix to be prepend locally
 
-   void        Create(const char *url, TSocket *sock = 0);
+   void        Create(const char *url, TSocket *sock = nullptr);
    void        InitRemoteEntity(const char *url);
 
 public:
@@ -110,16 +110,16 @@ public:
    TNetSystem(const char *url, Bool_t ftpowner = kTRUE);
    virtual ~TNetSystem();
 
-   Bool_t      ConsistentWith(const char *path, void *dirptr);
-   Int_t       MakeDirectory(const char *name);
-   void       *OpenDirectory(const char *name);
-   void        FreeDirectory(void *dirp = 0);
-   const char *GetDirEntry(void *dirp = 0);
-   Int_t       GetPathInfo(const char *path, FileStat_t &buf);
-   Bool_t      AccessPathName(const char *path, EAccessMode mode);
-   int         Unlink(const char *path);
+   Bool_t      ConsistentWith(const char *path, void *dirptr) override;
+   Int_t       MakeDirectory(const char *name) override;
+   void       *OpenDirectory(const char *name) override;
+   void        FreeDirectory(void *dirp = nullptr) override;
+   const char *GetDirEntry(void *dirp = nullptr) override;
+   Int_t       GetPathInfo(const char *path, FileStat_t &buf) override;
+   Bool_t      AccessPathName(const char *path, EAccessMode mode) override;
+   int         Unlink(const char *path) override;
 
-   ClassDef(TNetSystem,0)  // Directory handler for NetSystem
+   ClassDefOverride(TNetSystem,0)  // Directory handler for NetSystem
 };
 
 #endif
