@@ -32,3 +32,19 @@ TEST(Packing, Bitfield)
       EXPECT_EQ(b9[i], e9[i]);
    }
 }
+
+TEST(Packing, RColumnSwitch)
+{
+   ROOT::Experimental::Detail::RColumnElement<ROOT::Experimental::RColumnSwitch, ROOT::Experimental::EColumnType::kSwitch> element(nullptr);
+   element.Pack(nullptr, nullptr, 0);
+   element.Unpack(nullptr, nullptr, 0);
+
+   ROOT::Experimental::RColumnSwitch s1(ClusterSize_t{0xaa}, 0x55);
+   std::uint64_t out = 0;
+   element.Pack(&out, &s1, 1);
+   EXPECT_NE(0, out);
+   ROOT::Experimental::RColumnSwitch s2;
+   element.Unpack(&s2, &out, 1);
+   EXPECT_EQ(0xaa, s2.GetIndex());
+   EXPECT_EQ(0x55, s2.GetTag());
+}
