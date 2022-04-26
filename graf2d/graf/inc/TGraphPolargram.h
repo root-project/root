@@ -48,7 +48,7 @@ private:
 
    TString* fPolarLabels;      ///<! [fNdivPol] Specified polar labels
 
-   void Paint(Option_t* options="");
+   void Paint(Option_t* options="") override;
    void PaintRadialDivisions(Bool_t drawaxis);
    void PaintPolarDivisions(Bool_t noLabels);
    void ReduceFraction(Int_t Num, Int_t Denom, Int_t &rnum, Int_t &rden);
@@ -66,34 +66,34 @@ public:
    TGraphPolargram(const char* name="");
    virtual ~TGraphPolargram();
 
-   Color_t  GetPolarColorLabel (){ return fPolarLabelColor;};
-   Color_t  GetRadialColorLabel (){ return fRadialLabelColor;};
+   Color_t  GetPolarColorLabel() { return fPolarLabelColor;}
+   Color_t  GetRadialColorLabel() { return fRadialLabelColor;}
 
-   Double_t GetAngle() { return fAxisAngle;};
-   Double_t GetPolarLabelSize() {return fPolarTextSize;};
-   Double_t GetPolarOffset() { return fPolarOffset; };
-   Double_t GetRadialLabelSize() {return fRadialTextSize;};
-   Double_t GetRadialOffset() { return fRadialOffset; };
-   Double_t GetRMin() { return fRwrmin;};
-   Double_t GetRMax() { return fRwrmax;};
-   Double_t GetTickpolarSize() {return fTickpolarSize;};
-   Double_t GetTMin() { return fRwtmin;};
-   Double_t GetTMax() { return fRwtmax;};
+   Double_t GetAngle() { return fAxisAngle;}
+   Double_t GetPolarLabelSize() {return fPolarTextSize;}
+   Double_t GetPolarOffset() { return fPolarOffset; }
+   Double_t GetRadialLabelSize() {return fRadialTextSize; }
+   Double_t GetRadialOffset() { return fRadialOffset; }
+   Double_t GetRMin() { return fRwrmin; }
+   Double_t GetRMax() { return fRwrmax; }
+   Double_t GetTickpolarSize() {return fTickpolarSize; }
+   Double_t GetTMin() { return fRwtmin; }
+   Double_t GetTMax() { return fRwtmax; }
 
-   Font_t   GetPolarLabelFont() { return fPolarLabelFont;};
-   Font_t   GetRadialLabelFont() { return fRadialLabelFont;};
+   Font_t   GetPolarLabelFont() { return fPolarLabelFont; }
+   Font_t   GetRadialLabelFont() { return fRadialLabelFont; }
 
-   Int_t    DistancetoPrimitive(Int_t px, Int_t py);
-   Int_t    GetNdivPolar() { return fNdivPol;};
-   Int_t    GetNdivRadial() { return fNdivRad;};
+   Int_t    DistancetoPrimitive(Int_t px, Int_t py) override;
+   Int_t    GetNdivPolar() { return fNdivPol; }
+   Int_t    GetNdivRadial() { return fNdivRad; }
 
-   Bool_t   IsDegree() {return fDegree;};
-   Bool_t   IsRadian() {return fRadian;};
-   Bool_t   IsGrad()   {return fGrad;};
+   Bool_t   IsDegree() {return fDegree; }
+   Bool_t   IsRadian() {return fRadian; }
+   Bool_t   IsGrad()   {return fGrad; }
 
    void     ChangeRangePolar(Double_t tmin, Double_t tmax);
-   void     Draw(Option_t* options="");
-   void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   void     Draw(Option_t* options="") override;
+   void     ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    void     PaintCircle(Double_t x, Double_t y, Double_t r,
                         Double_t phimin, Double_t phimax, Double_t theta);
    void     SetAxisAngle(Double_t angle = 0); //*MENU*
@@ -116,7 +116,7 @@ public:
    void     SetToRadian(); //*MENU*
    void     SetTwoPi();
 
-   ClassDef(TGraphPolargram,1); // Polar axis
+   ClassDefOverride(TGraphPolargram,1); // Polar axis
 };
 
 #endif

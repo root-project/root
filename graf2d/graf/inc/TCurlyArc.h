@@ -13,8 +13,6 @@
 
 #include "TCurlyLine.h"
 
-class TPoint;
-
 class TCurlyArc : public TCurlyLine {
 
 private:
@@ -32,10 +30,11 @@ public:
    TCurlyArc(Double_t x1, Double_t y1, Double_t rad,
              Double_t phimin, Double_t phimax,
              Double_t wl = .02, Double_t amp = .01);
-   virtual     ~TCurlyArc(){;}
-   virtual void Build();
-   Int_t        DistancetoPrimitive(Int_t px, Int_t py);
-   void         ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   virtual ~TCurlyArc() {}
+
+   void         Build() override;
+   Int_t        DistancetoPrimitive(Int_t px, Int_t py) override;
+   void         ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    Double_t     GetRadius() const {return fR1;}
    Double_t     GetPhimin() const {return fPhimin;}
    Double_t     GetPhimax() const {return fPhimax;}
@@ -43,7 +42,7 @@ public:
    virtual void SetRadius(Double_t radius);          // *MENU* *ARGS={radius=>fR1}
    virtual void SetPhimin(Double_t phimin);          // *MENU* *ARGS={phimin=>fPhimin}
    virtual void SetPhimax(Double_t phimax);          // *MENU* *ARGS={phimax=>fPhimax}
-   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
+   void         SavePrimitive(std::ostream &out, Option_t * = "") override;
 
    static void          SetDefaultWaveLength(Double_t WaveLength);
    static void          SetDefaultAmplitude (Double_t Amplitude );
@@ -51,17 +50,18 @@ public:
    static Double_t      GetDefaultWaveLength();
    static Double_t      GetDefaultAmplitude ();
    static Bool_t        GetDefaultIsCurly   ();
-   virtual Rectangle_t  GetBBox();
-   virtual TPoint       GetBBoxCenter();
-   virtual void         SetBBoxCenter(const TPoint &p);
-   virtual void         SetBBoxCenterX(const Int_t x);
-   virtual void         SetBBoxCenterY(const Int_t y);
-   virtual void         SetBBoxX1(const Int_t x);
-   virtual void         SetBBoxX2(const Int_t x);
-   virtual void         SetBBoxY1(const Int_t y);
-   virtual void         SetBBoxY2(const Int_t y);
 
-   ClassDef(TCurlyArc,3) // A curly arc
+   Rectangle_t  GetBBox() override;
+   TPoint       GetBBoxCenter() override;
+   void         SetBBoxCenter(const TPoint &p) override;
+   void         SetBBoxCenterX(const Int_t x) override;
+   void         SetBBoxCenterY(const Int_t y) override;
+   void         SetBBoxX1(const Int_t x) override;
+   void         SetBBoxX2(const Int_t x) override;
+   void         SetBBoxY1(const Int_t y) override;
+   void         SetBBoxY2(const Int_t y) override;
+
+   ClassDefOverride(TCurlyArc,3) // A curly arc
 };
 
 #endif

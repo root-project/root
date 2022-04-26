@@ -34,9 +34,9 @@ public:
 
    virtual unsigned char *ReadFile(const char *filename, UInt_t &w,  UInt_t &h) = 0;
    virtual Bool_t WriteFile(const char *filename, unsigned char *argb, UInt_t w,  UInt_t  h) = 0;
-   ULong_t Hash() const { return fExtension.Hash(); }
+   ULong_t Hash() const override { return fExtension.Hash(); }
 
-   ClassDef(TImagePlugin, 0)  // base class for different image format handlers(plugins)
+   ClassDefOverride(TImagePlugin, 0)  // base class for different image format handlers(plugins)
 };
 
 #endif

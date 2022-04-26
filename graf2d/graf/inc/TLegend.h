@@ -31,14 +31,14 @@ public:
             const char* header = "", Option_t* option="brNDC" );
    TLegend( Double_t w, Double_t h, const char* header = "", Option_t* option="brNDC" );
    virtual ~TLegend();
-   TLegend( const TLegend &legend );
+   TLegend(const TLegend &legend);
 
    TLegendEntry   *AddEntry(const TObject* obj, const char* label = "", Option_t* option = "lpf" );
    TLegendEntry   *AddEntry(const char *name, const char* label = "", Option_t* option = "lpf" );
-   virtual void    Clear( Option_t* option = "" ); // *MENU*
-   virtual void    Copy( TObject &obj ) const;
+   void            Clear( Option_t* option = "" ) override; // *MENU*
+   void            Copy( TObject &obj ) const override;
    virtual void    DeleteEntry(); // *MENU*
-   virtual void    Draw( Option_t* option = "" );
+   void            Draw( Option_t* option = "" ) override;
    virtual void    EditEntryAttFill();
    virtual void    EditEntryAttLine();
    virtual void    EditEntryAttMarker();
@@ -53,11 +53,11 @@ public:
    Int_t           GetNRows() const;
    virtual void    InsertEntry( const char* objectName = "",const char* label = "",
                              Option_t* option = "lpf" ); // *MENU*
-   virtual void    Paint( Option_t* option = "" );
+   void            Paint( Option_t* option = "" ) override;
    virtual void    PaintPrimitives();
-   virtual void    Print( Option_t* option = "" ) const;
-   virtual void    RecursiveRemove(TObject *obj);
-   virtual void    SavePrimitive(std::ostream &out, Option_t *option  = "");
+   void            Print( Option_t* option = "" ) const override;
+   void            RecursiveRemove(TObject *obj) override;
+   void            SavePrimitive(std::ostream &out, Option_t *option  = "") override;
    void            SetDefaults() { fEntrySeparation = 0.1f; fMargin = 0.25f; fNColumns = 1; fColumnSeparation = 0.0f; }
    void            SetColumnSeparation( Float_t columnSeparation )
                      { fColumnSeparation = columnSeparation; } // *MENU*
@@ -79,7 +79,7 @@ protected:
    Float_t    fColumnSeparation; ///< Separation between columns, as a fraction of
                                  ///< The space allowed to one column
 
-   ClassDef(TLegend,3) // Legend of markers/lines/boxes to represent obj's
+   ClassDefOverride(TLegend,3) // Legend of markers/lines/boxes to represent obj's
 };
 
 #endif

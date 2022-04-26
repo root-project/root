@@ -28,19 +28,19 @@ protected:
 public:
    TPieSlice();
    TPieSlice(const char *, const char *, TPie*, Double_t val=0);
-   virtual ~TPieSlice() {;}
+   virtual ~TPieSlice() {}
 
-   virtual Int_t  DistancetoPrimitive(Int_t,Int_t);
+   Int_t          DistancetoPrimitive(Int_t,Int_t) override;
    Double_t       GetRadiusOffset();
    Double_t       GetValue();
-   void           SavePrimitive(std::ostream &out, Option_t *opts="");
+   void           SavePrimitive(std::ostream &out, Option_t *opts="") override;
    void           SetIsActive(Bool_t is) { fIsActive = is; }
    void           SetRadiusOffset(Double_t);  // *MENU*
    void           SetValue(Double_t);         // *MENU*
 
    friend class TPie;
 
-   ClassDef(TPieSlice,1)            // Slice of a pie chart graphics class
+   ClassDefOverride(TPieSlice,1)            // Slice of a pie chart graphics class
 };
 
 #endif

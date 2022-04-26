@@ -36,38 +36,37 @@ public:
    TMarker(const TMarker &marker);
    virtual ~TMarker();
 
-   void             Copy(TObject &marker) const;
-   virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void     Draw(Option_t *option="");
+   void             Copy(TObject &marker) const override;
+   Int_t            DistancetoPrimitive(Int_t px, Int_t py) override;
+   void             Draw(Option_t *option="") override;
    virtual TMarker *DrawMarker(Double_t x, Double_t y);
-   virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   void             ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    Double_t         GetX() const  {return fX;}
    Double_t         GetY() const  {return fY;}
-   virtual void     ls(Option_t *option="") const;
-   virtual void     Paint(Option_t *option="");
+   void             ls(Option_t *option="") const override;
+   void             Paint(Option_t *option="") override;
    virtual void     PaintMarker(Double_t x, Double_t y);
    virtual void     PaintMarkerNDC(Double_t u, Double_t v);
-   virtual void     Print(Option_t *option="") const;
-   virtual void     SavePrimitive(std::ostream &out, Option_t *option = "");
+   void             Print(Option_t *option="") const override;
+   void             SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void     SetNDC(Bool_t isNDC=kTRUE);
    virtual void     SetX(Double_t x) { fX = x;} // *MENU*
    virtual void     SetY(Double_t y) { fY = y;} // *MENU*
 
-   virtual Rectangle_t  GetBBox();
-   virtual TPoint       GetBBoxCenter();
-   virtual void         SetBBoxCenter(const TPoint &p);
-   virtual void         SetBBoxCenterX(const Int_t x);
-   virtual void         SetBBoxCenterY(const Int_t y);
-   virtual void         SetBBoxX1(const Int_t x);
-   virtual void         SetBBoxX2(const Int_t x);
-   virtual void         SetBBoxY1(const Int_t y);
-   virtual void         SetBBoxY2(const Int_t y);
+   Rectangle_t      GetBBox() override;
+   TPoint           GetBBoxCenter() override;
+   void             SetBBoxCenter(const TPoint &p) override;
+   void             SetBBoxCenterX(const Int_t x) override;
+   void             SetBBoxCenterY(const Int_t y) override;
+   void             SetBBoxX1(const Int_t x) override;
+   void             SetBBoxX2(const Int_t x) override;
+   void             SetBBoxY1(const Int_t y) override;
+   void             SetBBoxY2(const Int_t y) override;
 
    static  void     DisplayMarkerTypes();
    static  void     DisplayMarkerLineWidths();
 
-   ClassDef(TMarker,3)  //Marker
+   ClassDefOverride(TMarker,3)  //Marker
 };
 
 #endif
-

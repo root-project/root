@@ -43,7 +43,7 @@ public:
    Double_t  GetYq2() const {return fYq2;}
    TF1      *GetF()   const {return fF;}
 
-   ClassDef(TGraphQQ, 1); // to create and to draw quantile-quantile plots
+   ClassDefOverride(TGraphQQ, 1); // to create and to draw quantile-quantile plots
 };
 
 #endif

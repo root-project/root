@@ -31,12 +31,13 @@ public:
       , Double_t phimin=0,Double_t phimax=360);
    TArc(const TArc &arc);
    virtual ~TArc();
-   void Copy(TObject &arc) const;
+
+   void Copy(TObject &arc) const override;
    virtual TArc *DrawArc(Double_t x1, Double_t y1, Double_t radius
                        ,Double_t  phimin=0, Double_t  phimax=360, Option_t *option="");
-   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TArc,1)  //Arc of a circle
+   ClassDefOverride(TArc,1)  //Arc of a circle
 };
 
 #endif

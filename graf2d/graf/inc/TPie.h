@@ -54,10 +54,10 @@ public:
    TPie(const TPie&);
    ~TPie();
 
-   virtual Int_t  DistancetoPrimitive(Int_t px, Int_t py);
+   Int_t          DistancetoPrimitive(Int_t px, Int_t py) override;
    Int_t          DistancetoSlice(Int_t,Int_t);
-   virtual void   Draw(Option_t *option="l"); // *MENU*
-   virtual void   ExecuteEvent(Int_t,Int_t,Int_t);
+   void           Draw(Option_t *option="l") override; // *MENU*
+   void           ExecuteEvent(Int_t,Int_t,Int_t) override;
    Float_t        GetAngle3D() { return fAngle3D; }
    Double_t       GetAngularOffset() { return fAngularOffset; }
    Int_t          GetEntryFillColor(Int_t);
@@ -82,8 +82,8 @@ public:
    Double_t       GetY() { return fY; }
    TLegend       *MakeLegend(Double_t x1=.65,Double_t y1=.65,Double_t x2=.95, Double_t y2=.95, const char *leg_header="");
    void           MakeSlices(Bool_t force=kFALSE);
-   virtual void   Paint(Option_t *);
-   void           SavePrimitive(std::ostream &out, Option_t *opts="");
+   void           Paint(Option_t *) override;
+   void           SavePrimitive(std::ostream &out, Option_t *opts="") override;
    void           SetAngle3D(Float_t val = 30.); // *MENU*
    void           SetAngularOffset(Double_t);
    void           SetCircle(Double_t x=.5, Double_t y=.5, Double_t rad=.4);
@@ -108,7 +108,7 @@ public:
    void           SetY(Double_t); // *MENU*
    void           SortSlices(Bool_t amode=kTRUE,Float_t merge_thresold=.0);
 
-   ClassDef(TPie,1) //Pie chart graphics class
+   ClassDefOverride(TPie,1) //Pie chart graphics class
 };
 
 #endif // ROOT_TPie

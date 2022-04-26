@@ -42,23 +42,23 @@ public:
 
    TLine &operator=(const TLine &src);
 
-   void                 Copy(TObject &line) const;
-   virtual Int_t        DistancetoPrimitive(Int_t px, Int_t py);
+   void                 Copy(TObject &line) const override;
+   Int_t                DistancetoPrimitive(Int_t px, Int_t py) override;
    virtual TLine       *DrawLine(Double_t x1, Double_t y1,Double_t x2, Double_t y2);
    virtual TLine       *DrawLineNDC(Double_t x1, Double_t y1,Double_t x2, Double_t y2);
-   virtual void         ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   void                 ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    Double_t             GetX1() const {return fX1;}
    Double_t             GetX2() const {return fX2;}
    Double_t             GetY1() const {return fY1;}
    Double_t             GetY2() const {return fY2;}
    Bool_t               IsHorizontal();
    Bool_t               IsVertical();
-   virtual void         ls(Option_t *option="") const;
-   virtual void         Paint(Option_t *option="");
+   void                 ls(Option_t *option="") const override;
+   void                 Paint(Option_t *option="") override;
    virtual void         PaintLine(Double_t x1, Double_t y1,Double_t x2, Double_t  y2);
    virtual void         PaintLineNDC(Double_t u1, Double_t v1,Double_t u2, Double_t  v2);
-   virtual void         Print(Option_t *option="") const;
-   virtual void         SavePrimitive(std::ostream &out, Option_t *option = "");
+   void                 Print(Option_t *option="") const override;
+   void                 SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void         SetNDC(Bool_t isNDC=kTRUE);
    void                 SetHorizontal(Bool_t set = kTRUE); // *TOGGLE* *GETTER=IsHorizontal
    void                 SetVertical(Bool_t set = kTRUE); // *TOGGLE* *GETTER=IsVertical
@@ -66,17 +66,17 @@ public:
    virtual void         SetX2(Double_t x2) {fX2=x2;}
    virtual void         SetY1(Double_t y1) {fY1=y1;}
    virtual void         SetY2(Double_t y2) {fY2=y2;}
-   virtual Rectangle_t  GetBBox();
-   virtual TPoint       GetBBoxCenter();
-   virtual void         SetBBoxCenter(const TPoint &p);
-   virtual void         SetBBoxCenterX(const Int_t x);
-   virtual void         SetBBoxCenterY(const Int_t y);
-   virtual void         SetBBoxX1(const Int_t x);
-   virtual void         SetBBoxX2(const Int_t x);
-   virtual void         SetBBoxY1(const Int_t y);
-   virtual void         SetBBoxY2(const Int_t y);
+   Rectangle_t          GetBBox() override;
+   TPoint               GetBBoxCenter() override;
+   void                 SetBBoxCenter(const TPoint &p) override;
+   void                 SetBBoxCenterX(const Int_t x) override;
+   void                 SetBBoxCenterY(const Int_t y) override;
+   void                 SetBBoxX1(const Int_t x) override;
+   void                 SetBBoxX2(const Int_t x) override;
+   void                 SetBBoxY1(const Int_t y) override;
+   void                 SetBBoxY2(const Int_t y) override;
 
-   ClassDef(TLine,3)  //A line segment
+   ClassDefOverride(TLine,3)  //A line segment
 };
 
 #endif
