@@ -25,14 +25,14 @@ class TLegendEntry : public TObject, public TAttText, public TAttLine,
                      public TAttFill, public TAttMarker {
 public:
    TLegendEntry();
-   TLegendEntry(const TObject *obj, const char *label = 0, Option_t *option="lpf" );
+   TLegendEntry(const TObject *obj, const char *label = nullptr, Option_t *option="lpf" );
    TLegendEntry( const TLegendEntry &entry );
    virtual ~TLegendEntry();
-   virtual void          Copy( TObject &obj ) const;
+   void                  Copy( TObject &obj ) const override;
    virtual const char   *GetLabel() const { return fLabel.Data(); }
    virtual TObject      *GetObject() const { return fObject; }
-   virtual Option_t     *GetOption() const { return fOption.Data(); }
-   virtual void          Print( Option_t *option = "" ) const;
+   Option_t             *GetOption() const override { return fOption.Data(); }
+   void                  Print( Option_t *option = "" ) const override;
    virtual void          SaveEntry( std::ostream &out, const char *name );
    virtual void          SetLabel( const char *label = "" ) { fLabel = label; } // *MENU*
    virtual void          SetObject(TObject* obj );
@@ -45,9 +45,9 @@ protected:
    TString       fOption;   ///< Options associated with this entry
 
 private:
-   TLegendEntry& operator=(const TLegendEntry&); // Not implemented
+   TLegendEntry& operator=(const TLegendEntry&) = delete;
 
-   ClassDef(TLegendEntry,1) // Storage class for one entry of a TLegend
+   ClassDefOverride(TLegendEntry,1) // Storage class for one entry of a TLegend
 };
 
 #endif

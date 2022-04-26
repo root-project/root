@@ -35,19 +35,19 @@ public:
    }
    virtual ~TPaveLabel();
 
-   void                Copy(TObject &pavelabel) const;
-   virtual void        Draw(Option_t *option="");
+   void                Copy(TObject &pavelabel) const override;
+   void                Draw(Option_t *option="") override;
    virtual TPaveLabel *DrawPaveLabel(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
                                      const char *label, Option_t *option="");
    const char         *GetLabel() const {return fLabel.Data();}
-   const char         *GetTitle() const {return fLabel.Data();}
-   virtual void        Paint(Option_t *option="");
+   const char         *GetTitle() const override {return fLabel.Data();}
+   void                Paint(Option_t *option="") override;
    virtual void        PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
                                       const char *label, Option_t *option="");
-   virtual void        SavePrimitive(std::ostream &out, Option_t *option = "");
+   void                SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void        SetLabel(const char *label) {fLabel = label;} // *MENU*
 
-   ClassDef(TPaveLabel,1)  //PaveLabel. A Pave with a label
+   ClassDefOverride(TPaveLabel,1)  //PaveLabel. A Pave with a label
 };
 
 #endif
