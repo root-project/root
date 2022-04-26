@@ -69,24 +69,24 @@ public:
 
    virtual void    SetToggledVariable(Int_t &var);
 
-   virtual Bool_t  IsInitialized(){return fInitialized;};
+   virtual Bool_t  IsInitialized(){ return fInitialized; }
 
    virtual Bool_t  GetState();
    virtual void    SetState(Bool_t state);
    virtual void    Toggle();
 
-   virtual void    SetOnValue(Long_t lon){fOnValue=lon;};
-   virtual Long_t  GetOnValue(){return fOnValue;};
-   virtual void    SetOffValue(Long_t lof){fOffValue=lof;};
-   virtual Long_t  GetOffValue(){return fOffValue;};
+   virtual void    SetOnValue(Long_t lon) { fOnValue=lon; }
+   virtual Long_t  GetOnValue() { return fOnValue; }
+   virtual void    SetOffValue(Long_t lof) { fOffValue=lof; }
+   virtual Long_t  GetOffValue() { return fOffValue; }
 
-   virtual Int_t   GetValue(){return fValue;};
+   virtual Int_t   GetValue() { return fValue; }
    virtual void    SetValue(Long_t val);
 
    TMethodCall    *GetGetter() const { return fGetter; }
    TMethodCall    *GetSetter() const { return fSetter; }
 
-   ClassDef(TToggle,0)  //Facility for toggling datamembers on/off
+   ClassDefOverride(TToggle,0)  //Facility for toggling datamembers on/off
 };
 
 #endif

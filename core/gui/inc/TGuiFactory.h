@@ -60,7 +60,7 @@ public:
 
    virtual TInspectorImp *CreateInspectorImp(const TObject *obj, UInt_t width, UInt_t height);
 
-   ClassDef(TGuiFactory,0)  //Abstract factory for GUI components
+   ClassDefOverride(TGuiFactory,0)  //Abstract factory for GUI components
 };
 
 R__EXTERN TGuiFactory *gGuiFactory;

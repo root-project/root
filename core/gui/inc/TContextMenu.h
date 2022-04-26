@@ -76,8 +76,8 @@ public:
    virtual const char *CreateArgumentTitle(TMethodArg *argument);
    virtual const char *CreateDialogTitle(TObject *object, TFunction *method);
    virtual const char *CreatePopupTitle(TObject *object );
-   virtual void Execute(const char *method,  const char *params, Int_t *error=nullptr) { TObject::Execute(method, params, error); }
-   virtual void Execute(TMethod *method, TObjArray *params, Int_t *error=nullptr) { TObject::Execute(method, params, error); }
+   void Execute(const char *method,  const char *params, Int_t *error=nullptr) override { TObject::Execute(method, params, error); }
+   void Execute(TMethod *method, TObjArray *params, Int_t *error=nullptr) override { TObject::Execute(method, params, error); }
    virtual void Execute(TObject *object, TFunction *method, const char *params);
    virtual void Execute(TObject *object, TFunction *method, TObjArray *params);
    void Execute(const char *params) { Execute(fCalledObject, fSelectedMethod, params); }
@@ -97,11 +97,11 @@ public:
    virtual void SetMethod(TFunction *m) { fSelectedMethod = m; }
    virtual void SetCalledObject(TObject *o) { fCalledObject = o; }
    virtual void SetSelectedMenuItem(TClassMenuItem *mi) { fSelectedMenuItem = mi; }
-   virtual void SetNameTitle(const char *name, const char *title) { TNamed::SetNameTitle(name, title); }
+   void SetNameTitle(const char *name, const char *title) override { TNamed::SetNameTitle(name, title); }
    virtual void SetObject(TObject *o) { fSelectedObject = o; }
    virtual void SetPad(TVirtualPad *p) { fSelectedPad = p; }
 
-   ClassDef(TContextMenu,0)  //Context sensitive popup menu
+   ClassDefOverride(TContextMenu,0)  //Context sensitive popup menu
 };
 
 #endif

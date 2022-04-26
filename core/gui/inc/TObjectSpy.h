@@ -41,11 +41,11 @@ public:
    TObjectSpy(TObject *obj = nullptr, Bool_t fixMustCleanupBit=kTRUE);
    virtual ~TObjectSpy();
 
-   virtual void  RecursiveRemove(TObject *obj);
+   void          RecursiveRemove(TObject *obj) override;
    TObject      *GetObject() const { return fObj; }
-   void          SetObject(TObject *obj, Bool_t fixMustCleanupBit=kTRUE);
+   void          SetObject(TObject *obj, Bool_t fixMustCleanupBit = kTRUE);
 
-   ClassDef(TObjectSpy, 0);  // Spy object pointer for deletion
+   ClassDefOverride(TObjectSpy, 0);  // Spy object pointer for deletion
 };
 
 
@@ -63,10 +63,10 @@ public:
    TObjectRefSpy(TObject *&obj, Bool_t fixMustCleanupBit=kTRUE);
    virtual ~TObjectRefSpy();
 
-   virtual void  RecursiveRemove(TObject *obj);
+   void          RecursiveRemove(TObject *obj) override;
    TObject      *GetObject() const { return fObj; }
 
-   ClassDef(TObjectRefSpy, 0);  // Spy object reference for deletion
+   ClassDefOverride(TObjectRefSpy, 0);  // Spy object reference for deletion
 };
 
 #endif
