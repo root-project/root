@@ -36,8 +36,8 @@ class TQSlot;
 
 class TQConnection : public TVirtualQConnection, public TQObject {
 protected:
-   TQSlot  *fSlot = 0;       // slot-method calling interface
-   void    *fReceiver = 0;   // ptr to object to which slot is applied
+   TQSlot  *fSlot = nullptr;       // slot-method calling interface
+   void    *fReceiver = nullptr;   // ptr to object to which slot is applied
    TString  fClassName;  // class name of the receiver
 
    virtual void PrintCollectionHeader(Option_t* option) const override;
@@ -46,19 +46,19 @@ protected:
    void       *GetSlotAddress() const;
    CallFunc_t *LockSlot() const;
    void        UnLockSlot(TQSlot *) const;
-   virtual CallFunc_t *GetSlotCallFunc() const override;
+   CallFunc_t *GetSlotCallFunc() const override;
 
    TQConnection &operator=(const TQConnection &) = delete;
 
-   virtual void SetArg(Long_t param) override { SetArgImpl(param); }
-   virtual void SetArg(ULong_t param) override { SetArgImpl(param); }
-   virtual void SetArg(Float_t param) override { SetArgImpl(param); }
-   virtual void SetArg(Double_t param) override { SetArgImpl(param); }
-   virtual void SetArg(Long64_t param) override { SetArgImpl(param); }
-   virtual void SetArg(ULong64_t param) override { SetArgImpl(param); }
-   virtual void SetArg(const char * param) override { SetArgImpl(param); }
+   void SetArg(Long_t param) override { SetArgImpl(param); }
+   void SetArg(ULong_t param) override { SetArgImpl(param); }
+   void SetArg(Float_t param) override { SetArgImpl(param); }
+   void SetArg(Double_t param) override { SetArgImpl(param); }
+   void SetArg(Long64_t param) override { SetArgImpl(param); }
+   void SetArg(ULong64_t param) override { SetArgImpl(param); }
+   void SetArg(const char * param) override { SetArgImpl(param); }
 
-   virtual void SetArg(const Longptr_t *params, Int_t nparam = -1) override;
+   void SetArg(const Longptr_t *params, Int_t nparam = -1) override;
 
    template <typename T> void SetArgImpl(T arg)
    {
@@ -66,7 +66,7 @@ protected:
       gInterpreter->CallFunc_SetArg(func, arg);
    }
 
-   virtual void SendSignal() override
+   void SendSignal() override
    {
       CallFunc_t *func = LockSlot();
 
