@@ -1,16 +1,108 @@
 import logging
 import warnings
 
+from collections import deque
 from dataclasses import dataclass
+from functools import singledispatch
 from itertools import zip_longest
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, Deque, Dict, List, Optional, Tuple, TYPE_CHECKING, Union
 
 import ROOT
 
 from DistRDF import Ranges
-from DistRDF.Node import HeadNode
+from DistRDF.Node import Node
+from DistRDF.Operation import Action, InstantAction, Operation
+
+# Type hints only
+if TYPE_CHECKING:
+    # Avoid circular imports
+    from DistRDF.Backends.Base import BaseBackend
 
 logger = logging.getLogger(__name__)
+
+
+@singledispatch
+def _append_node_to_actions(operation: Operation, node: Node, actions: List[Node]) -> None:
+    """
+    Appends the input node to the list of action nodes, if the operation of the
+    node is an action.
+    """
+    pass
+
+
+@_append_node_to_actions.register(Action)
+@_append_node_to_actions.register(InstantAction)
+def _(operation: Union[Action, InstantAction], node: Node, actions: List[Node]) -> None:
+    actions.append(node)
+
+
+class HeadNode(Node):
+    """
+    The head node of the computation graph. Keeps record of all nodes in the
+    graph, is then able to generate a flat representation to be sent to the
+    distributed workers.
+
+    Attributes:
+        backend: A reference to the instance of distributed backend that will
+            execute this computation graph.
+
+        graph_nodes: A deque of references to the nodes belonging to this graph.
+
+        node_counter: A counter of how many nodes were created in the graph of
+            this head node, starting from zero.
+    """
+
+    def __init__(self):
+        super().__init__(lambda: self)
+
+        self.backend: BaseBackend = None
+
+        self.node_counter: int = 0
+        # It is important to have a double-ended queue because we need to
+        # traverse the nodes in different ways w.r.t. their insertion order.
+        # While pruning the graph, we need to check leaf nodes before their
+        # parents, so if a child is pruned then it also decrements the counter
+        # of children of its parent. Thus, we need a bottom-up traversal.
+        # While executing the graph in a task, we need to create the RDF nodes
+        # in the order the user requested them, e.g. starting from the
+        # RDataFrame itself, then calling its direct children, their children
+        # and so on. Thus, we need a top-down traversal.
+        self.graph_nodes: Deque[Node] = deque([self])
+
+    def _prune_graph(self):
+        """
+        Prunes nodes from the graph under certain conditions. A node is pruned
+        if it has no children and the user has no references to it. The internal
+        representation of the graph is traversed in such a way so that leaf
+        nodes are checked before their parents.
+        """
+        logger.debug("Starting computational graph pruning")
+        self.graph_nodes = deque(node for node in self.graph_nodes if not node.is_prunable())
+        logger.debug("Ended computational graph pruning")
+
+    def get_action_nodes(self) -> List[Node]:
+        """Generates a list of nodes in the graph that are actions."""
+        # This function is called after distributed execution of the graph, no
+        # need to repeat the pruning
+        action_nodes: List[Node] = []
+        for node in reversed(self.graph_nodes):
+            _append_node_to_actions(node.operation, node, action_nodes)
+        return action_nodes
+
+    def generate_graph_dict(self) -> Dict[int, Node]:
+        """
+        Generates a dictionary holding information about all nodes in the graph.
+        It is then given to the distributed scheduler.
+        """
+        # Need to prune the graph before sending it for distributed execution
+        self._prune_graph()
+        # We need to store references of each node id separately from the node
+        # objects themselves. In a distributed task, we need to know for any
+        # node which node is its parent (in order to execute an RDF operation
+        # on the right node). We can't serialize the reference to the parent
+        # node that each node object has, since that would trigger recursive
+        # serialization of the parent(s) of parent(s) nodes.
+        return {node.node_id: node for node in reversed(self.graph_nodes)}
 
 
 def get_headnode(npartitions: int, *args) -> HeadNode:
@@ -88,7 +180,7 @@ class EmptySourceHeadNode(HeadNode):
             npartitions (int): The number of partitions the dataset will be
                 split in for distributed execution.
         """
-        super(EmptySourceHeadNode, self).__init__(None, None)
+        super().__init__()
 
         self.nentries = nentries
         self.npartitions = npartitions
@@ -173,7 +265,7 @@ class TreeHeadNode(HeadNode):
             npartitions (int): The number of partitions the dataset will be
                 split in for distributed execution.
         """
-        super(TreeHeadNode, self).__init__(None, None)
+        super().__init__()
 
         self.npartitions = npartitions
 

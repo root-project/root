@@ -13,13 +13,16 @@ import logging
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from functools import singledispatch
-from typing import Any, List, Optional, Union
+from typing import Any, List, Optional, TYPE_CHECKING, Union
 
 import ROOT
 
 from DistRDF import Operation
 from DistRDF.ComputationGraphGenerator import ComputationGraphGenerator
 from DistRDF.Node import Node, VariationsNode
+
+if TYPE_CHECKING:
+    from DistRDF.HeadNode import HeadNode
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +55,8 @@ def execute_graph(node: Node) -> None:
         # ROOT.gDirectory won't be changed by the event loop execution.
         with _managed_tcontext():
             headnode = node.get_head()
-            generator = ComputationGraphGenerator(headnode)
+            graph_dict = headnode.generate_graph_dict()  # also takes care of pruning the graph
+            generator = ComputationGraphGenerator(headnode, graph_dict)
             headnode.backend.execute(generator)
 
 
@@ -187,8 +191,18 @@ class ActionProxy(Proxy):
         distributed computation graph, returning a specialized proxy to that
         node. This function is usually called from DistRDF.VariationsFor.
         """
-        newnode = VariationsNode(operation=Operation.create_op("VariationsFor"), get_head=self.proxied_node.get_head)
-        self.proxied_node.children.append(newnode)
+
+        # Generate next node id
+        headnode: HeadNode = self.proxied_node.get_head()
+        headnode.node_counter += 1
+
+        newnode = VariationsNode(get_head=self.proxied_node.get_head, node_id=headnode.node_counter,
+                                 operation=Operation.create_op("VariationsFor"), parent=self.proxied_node)
+
+        self.proxied_node.nchildren += 1
+
+        # Append to the list of nodes for this computation graph
+        headnode.graph_nodes.appendleft(newnode)
 
         return VariationsProxy(newnode)
 
@@ -239,14 +253,21 @@ class TransformationProxy(Proxy):
         # incoming operation call
         op = Operation.create_op(self.proxied_node._new_op_name, *args, **kwargs)
 
+        # Generate next node id
+        headnode: HeadNode = self.proxied_node.get_head()
+        headnode.node_counter += 1
+
         # Create a new `Node` object to house the operation
-        newnode = Node(operation=op, get_head=self.proxied_node.get_head)
+        newnode = Node(get_head=self.proxied_node.get_head, node_id=headnode.node_counter,
+                       operation=op, parent=self.proxied_node)
+
+        self.proxied_node.nchildren += 1
+
+        # Append to the list of nodes for this computation graph
+        headnode.graph_nodes.appendleft(newnode)
 
         # Logger debug statements
         logger.debug("Created new {} node".format(op.name))
-
-        # Add the new node as a child of the current node
-        self.proxied_node.children.append(newnode)
 
         return get_proxy_for(op, newnode)
 
