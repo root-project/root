@@ -172,9 +172,9 @@ public:
       return ExecPluginImpl(params...);
    }
 
-   void        Print(Option_t *opt = "") const;
+   void        Print(Option_t *opt = "") const override;
 
-   ClassDef(TPluginHandler,3)  // Handler for plugin libraries
+   ClassDefOverride(TPluginHandler,3)  // Handler for plugin libraries
 };
 
 
@@ -202,11 +202,11 @@ public:
 
    TPluginHandler *FindHandler(const char *base, const char *uri = 0);
 
-   void   Print(Option_t *opt = "") const;
+   void   Print(Option_t *opt = "") const override;
    Int_t  WritePluginMacros(const char *dir, const char *plugin = 0) const;
    Int_t  WritePluginRecords(const char *envFile, const char *plugin = 0) const;
 
-   ClassDef(TPluginManager,1)  // Manager for plugin handlers
+   ClassDefOverride(TPluginManager,1)  // Manager for plugin handlers
 };
 
 R__EXTERN TPluginManager *gPluginMgr;

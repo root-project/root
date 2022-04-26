@@ -257,9 +257,9 @@ R__EXTERN TVirtualMutex *gSystemMutex;
 class TProcessEventTimer : public TTimer {
 public:
    TProcessEventTimer(Long_t delay);
-   Bool_t Notify() { return kTRUE; }
+   Bool_t Notify() override { return kTRUE; }
    Bool_t ProcessEvents();
-   ClassDef(TProcessEventTimer,0)  // Process pending events at fixed time intervals
+   ClassDefOverride(TProcessEventTimer,0)  // Process pending events at fixed time intervals
 };
 
 
@@ -553,7 +553,7 @@ public:
    virtual TString         SplitAclicMode(const char *filename, TString &mode, TString &args, TString &io) const;
    virtual void            CleanCompiledMacros();
 
-   ClassDef(TSystem,0)  //ABC defining a generic interface to the OS
+   ClassDefOverride(TSystem,0)  //ABC defining a generic interface to the OS
 };
 
 R__EXTERN TSystem *gSystem;

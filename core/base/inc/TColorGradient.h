@@ -84,16 +84,16 @@ public:
                    const Double_t *colorIndices);
 
    void SetCoordinateMode(ECoordinateMode mode);
-   ECoordinateMode GetCoordinateMode()const;
+   ECoordinateMode GetCoordinateMode() const;
 
-   SizeType_t GetNumberOfSteps()const;
-   const Double_t *GetColorPositions()const;
-   const Double_t *GetColors()const;
+   SizeType_t GetNumberOfSteps() const;
+   const Double_t *GetColorPositions() const;
+   const Double_t *GetColors() const;
 
 private:
    void RegisterColor(Color_t colorIndex);
 
-   ClassDef(TColorGradient, 0); //Gradient fill.
+   ClassDefOverride(TColorGradient, 0); //Gradient fill.
 };
 
 class TLinearGradient : public TColorGradient {
@@ -107,14 +107,14 @@ public:
 
    //points are always in NDC (and also affected by fCoordinateMode).
    void SetStartEnd(const Point &p1, const Point &p2);
-   const Point &GetStart()const;
-   const Point &GetEnd()const;
+   const Point &GetStart() const;
+   const Point &GetEnd() const;
 
 private:
    Point fStart;
    Point fEnd;
 
-   ClassDef(TLinearGradient, 0); //Linear gradient fill.
+   ClassDefOverride(TLinearGradient, 0); //Linear gradient fill.
 };
 
 //
@@ -147,10 +147,10 @@ public:
    //Extended gradient.
    void SetStartEndR1R2(const Point &p1, Double_t r1,
                         const Point &p2, Double_t r2);
-   const Point &GetStart()const;
-   Double_t GetR1()const;
-   const Point &GetEnd()const;
-   Double_t GetR2()const;
+   const Point &GetStart() const;
+   Double_t GetR1() const;
+   const Point &GetEnd() const;
+   Double_t GetR2() const;
 
    //Simple radial gradient: the same as extended with
    //start == end, r1 = 0, r2 = radius.
@@ -166,7 +166,7 @@ private:
 
    EGradientType fType = kSimple;
 
-   ClassDef(TRadialGradient, 0); //Radial gradient fill.
+   ClassDefOverride(TRadialGradient, 0); //Radial gradient fill.
 };
 
 

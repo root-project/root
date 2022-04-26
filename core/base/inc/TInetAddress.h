@@ -74,11 +74,11 @@ public:
    const AddressList_t &GetAddresses() const { return fAddresses; }
    const AliasList_t   &GetAliases() const { return fAliases; }
    Bool_t      IsValid() const { return fFamily == -1 ? kFALSE : kTRUE; }
-   void        Print(Option_t *option="") const;
+   void        Print(Option_t *option="") const override;
 
    static const char *GetHostAddress(UInt_t addr);
 
-   ClassDef(TInetAddress,4)  //Represents an Internet Protocol (IP) address
+   ClassDefOverride(TInetAddress,4)  //Represents an Internet Protocol (IP) address
 };
 
 #endif
