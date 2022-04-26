@@ -77,7 +77,7 @@ public:
    Int_t           Update(Long64_t avgsize = -1);
    void            Sort(Bool_t useindex = kFALSE);
    void            SetAnchor(const char *anchor);
-   void            Print(Option_t *option = "") const;
+   void            Print(Option_t *option = "") const override;
 
    void            SetBitAll(UInt_t f);
    void            ResetBitAll(UInt_t f);
@@ -95,17 +95,17 @@ public:
    void            SetDefaultTreeName(const char* treeName) { fDefaultTree = treeName; }
    Long64_t        GetTotalEntries(const char *tree) const;
 
-   TFileInfoMeta  *GetMetaData(const char *meta = 0) const;
+   TFileInfoMeta  *GetMetaData(const char *meta = nullptr) const;
    void            SetDefaultMetaData(const char *meta);
    Bool_t          AddMetaData(TObject *meta);
-   void            RemoveMetaData(const char *meta = 0);
+   void            RemoveMetaData(const char *meta = nullptr);
 
    TFileCollection *GetStagedSubset();
 
    TFileCollection *GetFilesOnServer(const char *server);
    TMap            *GetFilesPerServer(const char *exclude = 0, Bool_t curronly =  kFALSE);
 
-   ClassDef(TFileCollection, 3)  // Collection of TFileInfo objects
+   ClassDefOverride(TFileCollection, 3)  // Collection of TFileInfo objects
 };
 
 #endif

@@ -34,11 +34,11 @@ public:
    TExec(const TExec &text);
    virtual ~TExec();
    virtual void     Exec(const char *command="");
-   virtual void     Paint(Option_t *option="");
-   virtual void     SavePrimitive(std::ostream &out, Option_t *option = "");
+   void             Paint(Option_t *option="") override;
+   void             SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void     SetAction(const char *action) {SetTitle(action);}
 
-   ClassDef(TExec,1);  //To execute a CINT command
+   ClassDefOverride(TExec,1);  //To execute a CINT command
 };
 
 #endif
