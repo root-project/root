@@ -25,7 +25,7 @@
 
 class TClassStreamer {
 protected:
-   TClassStreamer() : fStreamer(0) {};
+   TClassStreamer() : fStreamer(nullptr) {};
    TClassStreamer(const TClassStreamer &rhs) : fStreamer(rhs.fStreamer), fOnFileClass() {};
    TClassStreamer &operator=(const TClassStreamer &rhs) {   fOnFileClass = rhs.fOnFileClass; fStreamer = rhs.fStreamer; return *this; }
 
@@ -55,7 +55,7 @@ public:
       // the handling of the onfileClass (rather than storing and restoring from the
       // fOnFileClass member.
 
-      // Note we can not name this routine 'operator()' has it would be slightly
+      // Note we can not name this routine 'ope overriderator()' has it would be slightly
       // backward incompatible and lead to the following warning/error from the
       // compiler in the derived class overloading the other operator():
 //      include/TClassStreamer.h:51: error: ‘virtual void TClassStreamer::operator()(TBuffer&, void*, const TClass*)’ was hidden

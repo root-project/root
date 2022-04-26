@@ -25,7 +25,7 @@
 
 class TMemberStreamer {
 protected:
-   TMemberStreamer() : fStreamer(0) {};
+   TMemberStreamer() : fStreamer(nullptr) {};
 
 public:
    TMemberStreamer(MemberStreamerFunc_t pointer) : fStreamer(pointer) {};

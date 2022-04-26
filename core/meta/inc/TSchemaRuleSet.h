@@ -61,10 +61,8 @@ namespace Detail {
       void                RemoveRules( TObjArray* rules );
       void                SetClass( TClass* cls );
 
-      void                ls(Option_t *option="") const;
+      void                ls(Option_t *option="") const override;
       void                AsString(TString &out) const;
-
-      ClassDef( TSchemaRuleSet, 1 )
 
    private:
       TObjArray* fPersistentRules; //  Array of the rules that will be embeded in the file
@@ -74,6 +72,9 @@ namespace Detail {
       TString    fClassName;       //  Target class name
       Int_t      fVersion;         //  Target class version
       UInt_t     fCheckSum;        //  Target class checksum
+
+   ClassDefOverride( TSchemaRuleSet, 1 )
+
    };
 
 } // End of Namespace Detail
