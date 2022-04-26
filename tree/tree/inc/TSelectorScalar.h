@@ -40,9 +40,9 @@ public:
    ~TSelectorScalar() { }
 
    void     Inc(Long_t n = 1);
-   Int_t    Merge(TCollection *list);
+   Int_t    Merge(TCollection *list) override;
 
-   ClassDef(TSelectorScalar,1)  // Mergeable scalar
+   ClassDefOverride(TSelectorScalar,1)  // Mergeable scalar
 };
 
 

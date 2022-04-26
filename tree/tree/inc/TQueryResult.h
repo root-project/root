@@ -107,15 +107,15 @@ protected:
 
 public:
    TQueryResult() : fSeqNum(-1), fDraw(0), fStatus(kSubmitted), fUsedCPU(0.),
-                    fInputList(0), fEntries(-1), fFirst(-1), fBytes(0),
-                    fLogFile(0), fSelecHdr(0), fSelecImp(0),
-                    fLibList("-"), fOutputList(0),
+                    fInputList(nullptr), fEntries(-1), fFirst(-1), fBytes(0),
+                    fLogFile(nullptr), fSelecHdr(nullptr), fSelecImp(nullptr),
+                    fLibList("-"), fOutputList(nullptr),
                     fFinalized(kFALSE), fArchived(kFALSE), fPrepTime(0.),
                     fInitTime(0.), fProcTime(0.), fMergeTime(0.),
                     fRecvTime(-1), fTermTime(0.), fNumWrks(-1), fNumMergers(-1) { }
    virtual ~TQueryResult();
 
-   void           Browse(TBrowser *b = 0);
+   void           Browse(TBrowser *b = nullptr) override;
 
    Int_t          GetSeqNum() const { return fSeqNum; }
    EQueryStatus   GetStatus() const { return fStatus; }
@@ -151,9 +151,9 @@ public:
 
    Bool_t         Matches(const char *ref);
 
-   void Print(Option_t *opt = "") const;
+   void           Print(Option_t *opt = "") const override;
 
-   ClassDef(TQueryResult,5)  //Class describing a query
+   ClassDefOverride(TQueryResult,5)  //Class describing a query
 };
 
 inline Bool_t operator!=(const TQueryResult &qr1,  const TQueryResult &qr2)

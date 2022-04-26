@@ -50,25 +50,25 @@ public:
    TBranchObject(TTree *tree, const char *name, const char *classname, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit, Bool_t isptrptr = kTRUE);
    virtual ~TBranchObject();
 
-   virtual void        Browse(TBrowser *b);
-   virtual const char* GetClassName() const { return fClassName.Data(); };
+           void        Browse(TBrowser *b) override;
+           const char* GetClassName() const override { return fClassName.Data(); };
    virtual const char* GetObjClassName() { return fClassName.Data(); };
-   virtual Int_t       GetEntry(Long64_t entry=0, Int_t getall = 0);
-   virtual Int_t       GetExpectedType(TClass *&clptr,EDataType &type);
-   Bool_t              IsFolder() const;
-   virtual void        Print(Option_t *option="") const;
-   virtual void        Reset(Option_t *option="");
-   virtual void        ResetAfterMerge(TFileMergeInfo *);
-   virtual void        SetAddress(void *addobj);
-   virtual void        SetAutoDelete(Bool_t autodel=kTRUE);
-   virtual void        SetBasketSize(Int_t buffsize);
-   virtual void        SetupAddresses();
-   virtual void        UpdateAddress();
+           Int_t       GetEntry(Long64_t entry=0, Int_t getall = 0) override;
+           Int_t       GetExpectedType(TClass *&clptr,EDataType &type) override;
+           Bool_t      IsFolder() const override;
+           void        Print(Option_t *option="") const override;
+           void        Reset(Option_t *option="") override;
+           void        ResetAfterMerge(TFileMergeInfo *) override;
+           void        SetAddress(void *addobj) override;
+           void        SetAutoDelete(Bool_t autodel=kTRUE) override;
+           void        SetBasketSize(Int_t buffsize) override;
+           void        SetupAddresses() override;
+           void        UpdateAddress() override;
 
 private:
-   virtual Int_t       FillImpl(ROOT::Internal::TBranchIMTHelper *);
+           Int_t       FillImpl(ROOT::Internal::TBranchIMTHelper *) override;
 
-   ClassDef(TBranchObject,1);  //Branch in case of an object
+   ClassDefOverride(TBranchObject,1);  //Branch in case of an object
 };
 
 #endif
