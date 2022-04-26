@@ -236,22 +236,22 @@ protected:
    void    *fSender;        //delegation object
    TString  fSenderClass;   //class name of delegation object
 
-   virtual void       *GetSender() { return fSender; }
-   virtual const char *GetSenderClassName() const { return fSenderClass; }
+   void       *GetSender() override { return fSender; }
+   const char *GetSenderClassName() const override { return fSenderClass.Data(); }
 
 private:
    TQObjSender(const TQObjSender&) = delete;
    TQObjSender& operator=(const TQObjSender&) = delete;
 
 public:
-   TQObjSender() : TQObject(), fSender(0), fSenderClass() { }
+   TQObjSender() : TQObject(), fSender(nullptr), fSenderClass() { }
    virtual ~TQObjSender() { Disconnect(); }
 
    virtual void SetSender(void *sender) { fSender = sender; }
    void SetSenderClassName(const char *sclass = "") { fSenderClass = sclass; }
 
-   ClassDef(TQObjSender,0) //Used to "delegate" TQObject functionality
-                           //to interpreted classes, see also RQ_OBJECT.h
+   ClassDefOverride(TQObjSender,0) //Used to "delegate" TQObject functionality
+                                   //to interpreted classes, see also RQ_OBJECT.h
 };
 
 
