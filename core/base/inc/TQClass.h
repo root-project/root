@@ -33,22 +33,22 @@
 class TQClass : public TQObject, public TClass {
 
 private:
-   TQClass(const TClass&) : TQObject(), TClass() {};
-   TQClass& operator=(const TQClass&) { return *this; }
+   TQClass(const TClass&) = delete;
+   TQClass& operator=(const TQClass&) = delete;
 
 friend class TQObject;
 
 public:
    TQClass(const char *name, Version_t cversion,
            const std::type_info &info, TVirtualIsAProxy *isa,
-           const char *dfil = 0, const char *ifil = 0,
+           const char *dfil = nullptr, const char *ifil = nullptr,
            Int_t dl = 0, Int_t il = 0) :
            TQObject(),
            TClass(name, cversion, info,isa,dfil, ifil, dl, il) { }
 
    virtual ~TQClass() { Disconnect(); }
 
-   ClassDef(TQClass,0)  // Class with connections
+   ClassDefOverride(TQClass,0)  // Class with connections
 };
 
 
@@ -62,10 +62,10 @@ namespace Internal {
    class TDefaultInitBehavior;
    class TQObjectInitBehavior : public TDefaultInitBehavior {
    public:
-      virtual TClass *CreateClass(const char *cname, Version_t id,
-                                  const std::type_info &info, TVirtualIsAProxy *isa,
-                                  const char *dfil, const char *ifil,
-                                  Int_t dl, Int_t il) const
+      TClass *CreateClass(const char *cname, Version_t id,
+                          const std::type_info &info, TVirtualIsAProxy *isa,
+                          const char *dfil, const char *ifil,
+                          Int_t dl, Int_t il) const override
       {
          return new TQClass(cname, id, info, isa, dfil, ifil,dl, il);
       }
