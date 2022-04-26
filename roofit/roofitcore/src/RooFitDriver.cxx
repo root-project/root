@@ -41,6 +41,7 @@ and gets destroyed when the fitting ends.
 #include <RooSimultaneous.h>
 #include <RooBatchCompute/Initialisation.h>
 #include <RooBatchCompute/DataKey.h>
+#include <RooFit/BatchModeHelpers.h>
 
 #include <ROOT/StringUtils.hxx>
 
@@ -49,17 +50,9 @@ and gets destroyed when the fitting ends.
 #include <thread>
 #include <unordered_set>
 
+using RooFit::BatchModeHelpers::NamePtrWrapper;
+
 namespace {
-
-// Little wrapper to use a TNamed directly as a RooBatchCompute DataKey
-class NamePtrWrapper {
-public:
-   NamePtrWrapper(TNamed const *namePtr) : _namePtr(namePtr) {}
-   operator RooBatchCompute::DataKey() const { return RooBatchCompute::DataKey::create(_namePtr); }
-
-private:
-   TNamed const *_namePtr;
-};
 
 void logArchitectureInfo(RooFit::BatchModeOption batchMode)
 {
@@ -150,10 +143,19 @@ RooFitDriver::Dataset::Dataset(RooAbsData const &data, RooArgSet const &observab
    {
       auto weight = data.getWeightBatch(0, _nEvents, /*sumW2=*/false);
       auto weightSumW2 = data.getWeightBatch(0, _nEvents, /*sumW2=*/true);
-      if (!weight.empty()) {
-         _dataSpans[nameReg.constPtr(RooNLLVarNew::weightVarName)] = weight;
-         _dataSpans[nameReg.constPtr(RooNLLVarNew::weightVarNameSumW2)] = weightSumW2;
+      if (weight.empty()) {
+         // If the dataset has no weight, we fill the data spans with a scalar
+         // unity weight so we don't need to check for the existance of weights
+         // later in the likelihood.
+         _buffers.emplace();
+         auto &buffer = _buffers.top();
+         buffer.push_back(1.0);
+         buffer.push_back(1.0);
+         weight = RooSpan<const double>(buffer.data(), 1);
+         weightSumW2 = RooSpan<const double>(buffer.data() + 1, 1);
       }
+      _dataSpans[nameReg.constPtr(RooNLLVarNew::weightVarName)] = weight;
+      _dataSpans[nameReg.constPtr(RooNLLVarNew::weightVarNameSumW2)] = weightSumW2;
    }
 
    // Now we have do do the range selection
@@ -177,6 +179,9 @@ RooFitDriver::Dataset::Dataset(RooAbsData const &data, RooArgSet const &observab
       // do the data reduction in the data map
       for (auto const &item : _dataSpans) {
          auto const &allValues = item.second;
+         if (allValues.size() == 1) {
+            continue;
+         }
          _buffers.emplace(_nEvents);
          double *buffer = _buffers.top().data();
          std::size_t j = 0;
@@ -197,25 +202,33 @@ RooFitDriver::Dataset::Dataset(RooAbsData const &data, RooArgSet const &observab
 
 void RooFitDriver::Dataset::splitByCategory(RooAbsCategory const &category)
 {
-
    std::stack<std::vector<double>> oldBuffers;
    std::swap(_buffers, oldBuffers);
 
-   auto catVals = _dataSpans[category.namePtr()];
+   auto catVals = _dataSpans.at(category.namePtr());
 
    std::map<const TNamed *, RooSpan<const double>> dataMapSplit;
 
    for (auto const &dataMapItem : _dataSpans) {
 
       auto const &varNamePtr = dataMapItem.first;
+      auto const &xVals = dataMapItem.second;
+
       if (varNamePtr == category.namePtr())
          continue;
 
       std::map<RooAbsCategory::value_type, std::vector<double>> valuesMap;
 
-      auto xVals = _dataSpans[varNamePtr];
-      for (std::size_t i = 0; i < xVals.size(); ++i) {
-         valuesMap[catVals[i]].push_back(xVals[i]);
+      if (xVals.size() == 1) {
+         // If the span is of size one, we will replicate it for each category
+         // component instead of splitting is up by category value.
+         for (auto const &catItem : category) {
+            valuesMap[catItem.second].push_back(xVals[0]);
+         }
+      } else {
+         for (std::size_t i = 0; i < xVals.size(); ++i) {
+            valuesMap[catVals[i]].push_back(xVals[i]);
+         }
       }
 
       for (auto const &item : valuesMap) {
