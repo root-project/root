@@ -65,7 +65,7 @@ protected:
    void       SumBuffer(Int_t bufsize);
    Int_t      GetBestBuffer();
 
-   void   CreateSemaphore(Int_t pid=0);
+   void   CreateSemaphore(Int_t pid = 0);
    Int_t  AcquireSemaphore();
    Int_t  ReleaseSemaphore();
    void   DeleteSemaphore();
@@ -83,25 +83,25 @@ public:
    void *operator new[](size_t sz, void *vp) { return TObject::operator new[](sz, vp); }
    void     operator delete(void *vp);
 
-   void          Browse(TBrowser *b);
+   void          Browse(TBrowser *b) override;
    void          Close(Option_t *option = "");
    void         *GetBaseAddr() const { return (void *)fBaseAddr; }
    void         *GetBreakval() const;
    TDirectory   *GetDirectory() const {return fDirectory;}
    Int_t         GetFd() const { return fFd; }
    void         *GetMmallocDesc() const { return fMmallocDesc; }
-   const char   *GetName() const { return fName; }
+   const char   *GetName() const override { return fName; }
    Int_t         GetSize() const { return fSize; }
-   const char   *GetOption() const { return fOption; }
-   const char   *GetTitle() const { return fTitle; }
+   const char   *GetOption() const override { return fOption; }
+   const char   *GetTitle() const override { return fTitle; }
    TMapRec      *GetFirst() const { return (TMapRec*)((Longptr_t) fFirst + fOffset); }
    TMapRec      *GetLast() const { return (TMapRec*)((Longptr_t) fLast + fOffset); }
-   Bool_t        IsFolder() const;
+   Bool_t        IsFolder() const override;
    Bool_t        IsWritable() const { return fWritable; }
    void         *OrgAddress(void *addr) const { return (void *)((Longptr_t)addr - fOffset); }
-   void          Print(Option_t *option="") const;
-   void          ls(Option_t *option="") const;
-   Bool_t        cd(const char *path = 0);
+   void          Print(Option_t *option="") const override;
+   void          ls(Option_t *option="") const override;
+   Bool_t        cd(const char *path = nullptr);
 
    void          Add(const TObject *obj, const char *name = "");
    void          Update(TObject *obj = 0);
@@ -114,7 +114,7 @@ public:
    static TMapFile *WhichMapFile(void *addr);
    static void      SetMapAddress(Longptr_t addr);
 
-   ClassDef(TMapFile,0)  // Memory mapped directory structure
+   ClassDefOverride(TMapFile,0)  // Memory mapped directory structure
 };
 
 

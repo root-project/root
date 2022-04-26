@@ -39,13 +39,13 @@ public:
            TFree    *GetBestFree(TList *lfree, Int_t nbytes);
            Long64_t  GetFirst() const {return fFirst;}
            Long64_t  GetLast() const {return fLast;}
-           void      ls(Option_t * = "") const;
+           void      ls(Option_t * = "") const override;
    virtual void      ReadBuffer(char *&buffer);
            void      SetFirst(Long64_t first) {fFirst=first;}
            void      SetLast(Long64_t last) {fLast=last;}
            Int_t     Sizeof() const;
 
-   ClassDef(TFree,1);  //Description of free segments on a file
+   ClassDefOverride(TFree,1);  //Description of free segments on a file
 };
 
 #endif
