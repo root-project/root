@@ -46,6 +46,7 @@ struct RByteSwap {};
 
 template <>
 struct RByteSwap<2> {
+   // Signed integers can be safely byteswapped if they are reinterpret_cast'ed to unsigned
    using value_type = std::uint16_t;
    static value_type bswap(value_type x) { return Rbswap_16(x); }
 };
@@ -71,7 +72,7 @@ static void CopyElementsBswap(void *destination, const void *source, std::size_t
    auto dst = reinterpret_cast<typename RByteSwap<N>::value_type *>(destination);
    auto src = reinterpret_cast<const typename RByteSwap<N>::value_type *>(source);
    for (std::size_t i = 0; i < count; ++i) {
-      *(dst++) = RByteSwap<N>::bswap(*(src++));
+      dst[i] = RByteSwap<N>::bswap(src[i]);
    }
 }
 } // anonymous namespace
@@ -167,7 +168,7 @@ public:
    void Pack(void *dst, void *src, std::size_t count) const final
    {
 #if R__LITTLE_ENDIAN == 1
-      std::memcpy(dst, src, count);
+      RColumnElementBase::Pack(dst, src, count);
 #else
       CopyElementsBswap<sizeof(CppT)>(dst, src, count);
 #endif
@@ -175,7 +176,7 @@ public:
    void Unpack(void *dst, void *src, std::size_t count) const final
    {
 #if R__LITTLE_ENDIAN == 1
-      std::memcpy(dst, src, count);
+      RColumnElementBase::Unpack(dst, src, count);
 #else
       CopyElementsBswap<sizeof(CppT)>(dst, src, count);
 #endif
