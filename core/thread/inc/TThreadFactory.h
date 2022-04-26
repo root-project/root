@@ -39,7 +39,7 @@ public:
    virtual TConditionImp  *CreateConditionImp(TMutexImp *m) = 0;
    virtual TThreadImp     *CreateThreadImp() = 0;
 
-   ClassDef(TThreadFactory,0)  // Thread factory ABC
+   ClassDefOverride(TThreadFactory,0)  // Thread factory ABC
 };
 
 R__EXTERN TThreadFactory *gThreadFactory;

@@ -38,23 +38,23 @@ public:
    TPosixThread() { }
    ~TPosixThread() { }
 
-   virtual Int_t  Join(TThread *th, void **ret);
-   virtual Long_t SelfId();
-   virtual Int_t  Run(TThread *th, const int affinity = -1);
+   Int_t  Join(TThread *th, void **ret) override;
+   Long_t SelfId() override;
+   Int_t  Run(TThread *th, const int affinity = -1) override;
 
-   virtual Int_t  Kill(TThread *th);
-   virtual Int_t  SetCancelOff();
-   virtual Int_t  SetCancelOn();
-   virtual Int_t  SetCancelAsynchronous();
-   virtual Int_t  SetCancelDeferred();
-   virtual Int_t  CancelPoint();
-   virtual Int_t  CleanUpPush(void **main, void *free,void *arg);
-   virtual Int_t  CleanUpPop(void **main, Int_t exe);
-   virtual Int_t  CleanUp(void **main);
+   Int_t  Kill(TThread *th) override;
+   Int_t  SetCancelOff() override;
+   Int_t  SetCancelOn() override;
+   Int_t  SetCancelAsynchronous() override;
+   Int_t  SetCancelDeferred() override;
+   Int_t  CancelPoint() override;
+   Int_t  CleanUpPush(void **main, void *free,void *arg) override;
+   Int_t  CleanUpPop(void **main, Int_t exe) override;
+   Int_t  CleanUp(void **main) override;
 
-   virtual Int_t  Exit(void *ret);
+   Int_t  Exit(void *ret) override;
 
-   ClassDef(TPosixThread,0)  // TPosixThread class
+   ClassDefOverride(TPosixThread,0)  // TPosixThread class
 };
 
 

@@ -34,7 +34,7 @@ public:
    virtual Int_t  TryLock() = 0;
    virtual Int_t  UnLock() = 0;
 
-   ClassDef(TMutexImp,0)  // Mutex lock implementation ABC
+   ClassDefOverride(TMutexImp,0)  // Mutex lock implementation ABC
 };
 
 #endif
