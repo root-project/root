@@ -787,15 +787,12 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
 	     RSubFieldInfo{kBaseClass, static_cast<std::size_t>(baseClass->GetDelta())});
       i++;
    }
-   std::unordered_set<void *> realMembers;
-   for (auto rm : ROOT::Detail::TRangeStaticCast<TRealData>(*fClass->GetListOfRealData()))
-      realMembers.insert(rm->GetDataMember());
    for (auto dataMember : ROOT::Detail::TRangeStaticCast<TDataMember>(*fClass->GetListOfDataMembers())) {
-      // Skip, for instance, unscoped enum constants defined in the class
-      if (realMembers.count(dataMember) == 0)
-         continue;
       // Skip members explicitly marked as transient by user comment
       if (!dataMember->IsPersistent())
+         continue;
+      // Skip, for instance, unscoped enum constants defined in the class
+      if (dataMember->Property() & kIsStatic)
          continue;
       auto subField = Detail::RFieldBase::Create(dataMember->GetName(), dataMember->GetFullTypeName()).Unwrap();
       Attach(std::move(subField),
