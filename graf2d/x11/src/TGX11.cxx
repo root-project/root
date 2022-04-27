@@ -341,7 +341,7 @@ TGX11::~TGX11()
 
 Bool_t TGX11::Init(void *display)
 {
-   if (OpenDisplay((Display *) display) == -1) return kFALSE;
+   if (OpenDisplay(display) == -1) return kFALSE;
    return kTRUE;
 }
 
@@ -1098,7 +1098,7 @@ Int_t TGX11::OpenDisplay(void *disp)
 
    if (fDisplay) return 0;
 
-   fDisplay      = disp;
+   fDisplay      = (void *) disp;
    fScreenNumber = DefaultScreen((Display*)fDisplay);
 
    FindBestVisual();
