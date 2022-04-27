@@ -9,6 +9,7 @@
 ##
 ## \author Wim Lavrijsen
 
+import ROOT
 from ROOT import TCanvas, TPad, TFile, TPaveLabel, TPaveText
 from ROOT import gROOT
 
@@ -23,7 +24,12 @@ pad3.Draw()
 #
 # We connect the ROOT file generated in a previous tutorial
 #
-example = TFile( 'py-hsimple.root' )
+File = "py-hsimple.root"
+if (ROOT.gSystem.AccessPathName(File)) :
+    ROOT.Info("h1ReadAndDraw.py", File+" does not exist")
+    exit()
+
+example = TFile(File)
 example.ls()
 
 # Draw a global picture title
