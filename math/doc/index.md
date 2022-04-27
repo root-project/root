@@ -17,14 +17,14 @@ They consist of the following components:
   function. The current common interface for minimization is the class ROOT::Math::Minimizer and implemented by derived classes in the minimization and fitting libraries. The fitting in %ROOT is
   organized in fitting classes present in MathCore in the (ROOT::Fit namespace) for providing the fitting functionality and the use the minimization libraries via the common interface (ROOT::Math::Minimizer). In detail the minimization libraries, implementing all the new and old minimization interface, include:
 
-   -  \ref MinuitOld "Minuit": library providing via a class TMinuit an implementation of the popular MINUIT minimization package. In addition the library contains also an implementation of the linear fitter (class TLinearFitter), for solving linear least square fits.
-   - \page Minuit2Page "Minuit2": new object-oriented implementation of MINUIT, with the same minimization algorithms (such as Migrad or Simplex). In addition it provides a new implementation of the Fumili algorithm, a specialized method for finding the minimum of a standard least square or likelihood functions.
+   - \ref MinuitOld "Minuit": library providing via a class TMinuit an implementation of the popular MINUIT minimization package. In addition the library contains also an implementation of the linear fitter (class TLinearFitter), for solving linear least square fits.
+   - \ref Minuit2Page "Minuit2": new object-oriented implementation of MINUIT, with the same minimization algorithms (such as Migrad or Simplex). In addition it provides a new implementation of the Fumili algorithm, a specialized method for finding the minimum of a standard least square or likelihood functions.
    - **Fumili**: library providing the implementation of the original Fumili fitting algorithm (class TFumili).
 
 - **Linear algebra**. Two libraries are contained in %ROOT for describing linear algebra matrices and vector classes:
 
    - Matrix: general matrix package providing matrix classes (TMatrixD and TMatrixF)  and vector classes (TVectorD and TVectorF) and the complete environment to perform linear algebra calculations, like equation solving and eigenvalue decompositions.
-   - \page SMatrixPage "SMatrix": package optimized for high performances matrix and vector computations of small and fixed size. It is based on expression templates to achieve an high level optimization.
+   - \ref SMatrixPage "SMatrix": package optimized for high performances matrix and vector computations of small and fixed size. It is based on expression templates to achieve an high level optimization.
 
 
 - **Physics Vectors**: Classes for describing vectors in 2, 3 and 4 dimensions (relativistic vectors) and their rotation and transformation algorithms. Two package exist in %ROOT:
