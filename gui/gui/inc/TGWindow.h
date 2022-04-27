@@ -94,7 +94,7 @@ public:
    virtual Bool_t HandleExpose(Event_t *event)
                   { if (event->fCount == 0) fClient->NeedRedraw(this); return kTRUE; }
    virtual Bool_t HandleEvent(Event_t *) { return kFALSE; }
-   virtual Bool_t HandleTimer(TTimer *) { return kFALSE; }
+   Bool_t         HandleTimer(TTimer *) override { return kFALSE; }
    virtual Bool_t HandleIdleEvent(TGIdleHandler *) { return kFALSE; }
 
    virtual void   Move(Int_t x, Int_t y);
@@ -105,20 +105,20 @@ public:
    virtual UInt_t GetEditDisabled() const { return fEditDisabled; }
    virtual void   SetEditDisabled(UInt_t on = kEditDisable) { fEditDisabled = on; }
    virtual void   SetEditable(Bool_t on = kTRUE)
-                  { if (!(fEditDisabled & kEditDisable)) fClient->SetRoot(on ? this : 0); }
+                  { if (!(fEditDisabled & kEditDisable)) fClient->SetRoot(on ? this : nullptr); }
    virtual Int_t  MustCleanup() const { return 0; }
-   virtual void   Print(Option_t *option="") const;
+   void           Print(Option_t *option="") const override;
 
-   virtual void        SetWindowName(const char *name = 0);
-   virtual const char *GetName() const;
-   virtual void        SetName(const char *name) { fName = name; }
+   virtual void   SetWindowName(const char *name = nullptr);
+   const char    *GetName() const override;
+   virtual void   SetName(const char *name) { fName = name; }
 
    virtual void   SetMapSubwindows(Bool_t /*on*/) {  }
    virtual Bool_t IsMapSubwindows() const { return kTRUE; }
 
-   static Int_t        GetCounter();
+   static Int_t   GetCounter();
 
-   ClassDef(TGWindow, 0);  // GUI Window base class
+   ClassDefOverride(TGWindow, 0);  // GUI Window base class
 };
 
 
@@ -134,12 +134,12 @@ Typically windows created by Xt or Motif.
 class TGUnknownWindowHandler : public TObject {
 
 public:
-   TGUnknownWindowHandler() { }
-   virtual ~TGUnknownWindowHandler() { }
+   TGUnknownWindowHandler() {}
+   virtual ~TGUnknownWindowHandler() {}
 
    virtual Bool_t HandleEvent(Event_t *) = 0;
 
-   ClassDef(TGUnknownWindowHandler,0)  // Abstract event handler for unknown windows
+   ClassDefOverride(TGUnknownWindowHandler,0)  // Abstract event handler for unknown windows
 };
 
 #endif

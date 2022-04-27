@@ -82,7 +82,7 @@ protected:
    Pixel_t        fHighColor;   ///< highlight color
    UInt_t         fStyle;       ///< button style (modern or classic)
 
-   virtual void   SetToggleButton(Bool_t) { }
+   virtual void   SetToggleButton(Bool_t) {}
    virtual void   EmitSignals(Bool_t wasUp);
 
    static const TGGC *fgDefaultGC;
@@ -102,8 +102,8 @@ public:
             UInt_t option = kRaisedFrame | kDoubleBorder);
    virtual ~TGButton();
 
-   virtual Bool_t       HandleButton(Event_t *event);
-   virtual Bool_t       HandleCrossing(Event_t *event);
+   Bool_t               HandleButton(Event_t *event) override;
+   Bool_t               HandleCrossing(Event_t *event) override;
    virtual void         SetUserData(void *userData) { fUserData = userData; }
    virtual void        *GetUserData() const { return fUserData; }
    virtual void         SetToolTipText(const char *text, Long_t delayms = 400);  //*MENU*
@@ -126,16 +126,16 @@ public:
    virtual void         SetStyle(UInt_t newstyle);
    virtual void         SetStyle(const char *style);
 
-   virtual void         SavePrimitive(std::ostream &out, Option_t *option = "");
+   void                 SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   GContext_t GetNormGC() const { return fNormGC; }
+   GContext_t           GetNormGC() const { return fNormGC; }
 
    virtual void Pressed()  { Emit("Pressed()"); }   // *SIGNAL*
    virtual void Released() { Emit("Released()"); }  // *SIGNAL*
    virtual void Clicked()  { Emit("Clicked()"); }   // *SIGNAL*
    virtual void Toggled(Bool_t on) { Emit("Toggled(Bool_t)", on); }  // *SIGNAL*
 
-   ClassDef(TGButton,0)  // Button widget abstract base class
+   ClassDefOverride(TGButton,0)  // Button widget abstract base class
 };
 
 
@@ -154,12 +154,12 @@ protected:
    FontStruct_t   fFontStruct;    // font to draw text
    Bool_t         fHasOwnFont;    // kTRUE - font defined locally,  kFALSE - globally
    Bool_t         fStateOn;       // bit to save the state across disable/enable
-   Bool_t         fPrevStateOn;   // bit to save previos state On/Off
+   Bool_t         fPrevStateOn;   // bit to save previous state On/Off
 
    static const TGFont *fgDefaultFont;
 
    void Init();
-   virtual void DoRedraw();
+   void DoRedraw() override;
 
 private:
    TGTextButton(const TGTextButton&) = delete;
@@ -172,7 +172,7 @@ public:
                 GContext_t norm = GetDefaultGC()(),
                 FontStruct_t font = GetDefaultFontStruct(),
                 UInt_t option = kRaisedFrame | kDoubleBorder);
-   TGTextButton(const TGWindow *p = 0, const char *s = 0, Int_t id = -1,
+   TGTextButton(const TGWindow *p = nullptr, const char *s = nullptr, Int_t id = -1,
                 GContext_t norm = GetDefaultGC()(),
                 FontStruct_t font = GetDefaultFontStruct(),
                 UInt_t option = kRaisedFrame | kDoubleBorder);
@@ -183,11 +183,11 @@ public:
 
    virtual ~TGTextButton();
 
-   virtual TGDimension GetDefaultSize() const;
+   TGDimension        GetDefaultSize() const override;
 
-   virtual Bool_t     HandleKey(Event_t *event);
+   Bool_t             HandleKey(Event_t *event) override;
    const TGHotString *GetText() const { return fLabel; }
-   virtual const char *GetTitle() const { return fLabel->Data(); }
+   const char        *GetTitle() const override { return fLabel->Data(); }
    TString            GetString() const { return TString(fLabel->GetString()); }
    virtual void       SetTextJustify(Int_t tmode);
    Int_t GetTextJustify() const { return fTMode; }
@@ -197,7 +197,7 @@ public:
    virtual void       SetFont(FontStruct_t font, Bool_t global = kFALSE);
    virtual void       SetFont(const char *fontName, Bool_t global = kFALSE);
    virtual void       SetTextColor(Pixel_t color, Bool_t global = kFALSE);
-   virtual void       SetForegroundColor(Pixel_t fore) { SetTextColor(fore); }
+   void               SetForegroundColor(Pixel_t fore) override { SetTextColor(fore); }
    Bool_t             HasOwnFont() const;
    void               SetWrapLength(Int_t wl) { fWrapLength = wl; Layout(); }
    Int_t              GetWrapLength() const { return fWrapLength; }
@@ -216,12 +216,12 @@ public:
 
    void               ChangeText(const char *title)  { SetTitle(title); } //*MENU*icon=bld_rename.png*
 
-   FontStruct_t GetFontStruct() const { return fFontStruct; }
+   FontStruct_t       GetFontStruct() const { return fFontStruct; }
 
-   virtual void       Layout();
-   virtual void       SavePrimitive(std::ostream &out, Option_t *option = "");
+   void               Layout() override;
+   void               SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGTextButton,0)  // A text button widget
+   ClassDefOverride(TGTextButton,0)  // A text button widget
 };
 
 
@@ -232,7 +232,7 @@ protected:
    const TGPicture   *fPicD;           ///< picture shown when button disabled
    Bool_t             fOwnDisabledPic; ///< kTRUE if disabled picture was autogenerated
 
-   virtual void DoRedraw();
+   void DoRedraw() override;
    virtual void CreateDisabledPicture();
 
 private:
@@ -246,7 +246,7 @@ public:
    TGPictureButton(const TGWindow *p, const TGPicture *pic, const char *cmd,
                    Int_t id = -1, GContext_t norm = GetDefaultGC()(),
                    UInt_t option = kRaisedFrame | kDoubleBorder);
-   TGPictureButton(const TGWindow *p = nullptr, const char* pic = 0, Int_t id = -1,
+   TGPictureButton(const TGWindow *p = nullptr, const char* pic = nullptr, Int_t id = -1,
                    GContext_t norm = GetDefaultGC()(),
                    UInt_t option = kRaisedFrame | kDoubleBorder);
    virtual ~TGPictureButton();
@@ -255,9 +255,9 @@ public:
    virtual void     SetDisabledPicture(const TGPicture *pic);
    const TGPicture *GetPicture() const { return fPic; };
    const TGPicture *GetDisabledPicture() const { return fPicD; };
-   virtual void     SavePrimitive(std::ostream &out, Option_t *option = "");
+   void             SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGPictureButton,0)  // A picture button widget
+   ClassDefOverride(TGPictureButton,0)  // A picture button widget
 };
 
 
@@ -275,11 +275,10 @@ protected:
    const TGPicture   *fDisOn;         ///< button disabled and was ON picture
    const TGPicture   *fDisOff;        ///< button disabled and was OFF picture
 
-
    void Init();
    void PSetState(EButtonState state, Bool_t emit);
-   virtual void DoRedraw();
-   virtual void EmitSignals(Bool_t wasUp = kTRUE);
+   void DoRedraw() override;
+   void EmitSignals(Bool_t wasUp = kTRUE) override;
 
    static const TGFont *fgDefaultFont;
    static const TGGC   *fgDefaultGC;
@@ -292,7 +291,7 @@ public:
                  GContext_t norm = GetDefaultGC()(),
                  FontStruct_t font = GetDefaultFontStruct(),
                  UInt_t option = 0);
-   TGCheckButton(const TGWindow *p = 0, const char *s = 0, Int_t id = -1,
+   TGCheckButton(const TGWindow *p = nullptr, const char *s = nullptr, Int_t id = -1,
                  GContext_t norm = GetDefaultGC()(),
                  FontStruct_t font = GetDefaultFontStruct(),
                  UInt_t option = 0);
@@ -302,20 +301,20 @@ public:
                  UInt_t option = 0);
    virtual ~TGCheckButton();
 
-   virtual TGDimension GetDefaultSize() const;
+   TGDimension    GetDefaultSize() const override;
 
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t HandleKey(Event_t *event);
-   virtual Bool_t HandleCrossing(Event_t *event);
-   virtual Bool_t IsToggleButton() const { return kTRUE; }
-   virtual Bool_t IsOn() const { return fState == kButtonDown; }
-   virtual Bool_t IsDown() const { return fState == kButtonDown; }
+   Bool_t         HandleButton(Event_t *event) override;
+   Bool_t         HandleKey(Event_t *event) override;
+   Bool_t         HandleCrossing(Event_t *event) override;
+   Bool_t         IsToggleButton() const override { return kTRUE; }
+   Bool_t         IsOn() const override { return fState == kButtonDown; }
+   Bool_t         IsDown() const override { return fState == kButtonDown; }
    virtual Bool_t IsDisabledAndSelected() const { return ((fState == kButtonDisabled) && fStateOn); }
    virtual void   SetDisabledAndSelected(Bool_t);
-   virtual void   SetState(EButtonState state, Bool_t emit = kFALSE);
-   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
+   void           SetState(EButtonState state, Bool_t emit = kFALSE) override;
+   void           SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGCheckButton,0)  // A check button widget
+   ClassDefOverride(TGCheckButton,0)  // A check button widget
 };
 
 
@@ -334,8 +333,8 @@ protected:
 
    void Init();
    void PSetState(EButtonState state, Bool_t emit);
-   virtual void DoRedraw();
-   virtual void EmitSignals(Bool_t wasUp = kTRUE);
+   void DoRedraw() override;
+   void EmitSignals(Bool_t wasUp = kTRUE) override;
 
    static const TGFont *fgDefaultFont;
    static const TGGC   *fgDefaultGC;
@@ -348,7 +347,7 @@ public:
                  GContext_t norm = GetDefaultGC()(),
                  FontStruct_t font = GetDefaultFontStruct(),
                  UInt_t option = 0);
-   TGRadioButton(const TGWindow *p = 0, const char *s = 0, Int_t id = -1,
+   TGRadioButton(const TGWindow *p = nullptr, const char *s = nullptr, Int_t id = -1,
                  GContext_t norm = GetDefaultGC()(),
                  FontStruct_t font = GetDefaultFontStruct(),
                  UInt_t option = 0);
@@ -358,21 +357,21 @@ public:
                  UInt_t option = 0);
    virtual ~TGRadioButton();
 
-   virtual TGDimension GetDefaultSize() const;
+   TGDimension    GetDefaultSize() const override;
 
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t HandleKey(Event_t *event);
-   virtual Bool_t HandleCrossing(Event_t *event);
-   virtual void   SetState(EButtonState state, Bool_t emit = kFALSE);
+   Bool_t         HandleButton(Event_t *event) override;
+   Bool_t         HandleKey(Event_t *event) override;
+   Bool_t         HandleCrossing(Event_t *event) override;
+   void           SetState(EButtonState state, Bool_t emit = kFALSE) override;
    virtual void   SetDisabledAndSelected(Bool_t);
-   virtual Bool_t IsToggleButton() const { return kTRUE; }
-   virtual Bool_t IsExclusiveToggle() const { return kTRUE; }
-   virtual Bool_t IsOn() const { return fStateOn; }
-   virtual Bool_t IsDown() const { return fStateOn; }
+   Bool_t         IsToggleButton() const override { return kTRUE; }
+   Bool_t         IsExclusiveToggle() const override { return kTRUE; }
+   Bool_t         IsOn() const override { return fStateOn; }
+   Bool_t         IsDown() const override { return fStateOn; }
    virtual Bool_t IsDisabledAndSelected() const { return ((fState == kButtonDisabled) && fStateOn); }
-   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
+   void           SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGRadioButton,0)  // A radio button widget
+   ClassDefOverride(TGRadioButton,0)  // A radio button widget
 };
 
 
@@ -407,7 +406,7 @@ protected:
    TGString     fHeighestLabel; ///< highest label that can be on the button
 ///@]
 
-   virtual void DoRedraw();
+   void DoRedraw() override;
    void Init();
    void BindKeys(Bool_t on = kTRUE);
    void BindMenuKeys(Bool_t on = kTRUE);
@@ -421,20 +420,20 @@ public:
 
    virtual ~TGSplitButton();
 
-   virtual TGDimension GetDefaultSize() const ;
+   TGDimension  GetDefaultSize() const override;
 
-   virtual void   SetText(TGHotString *new_label);
-   virtual void   SetText(const TString &new_label);
-   virtual void   SetFont(FontStruct_t font, Bool_t global = kFALSE);
-   virtual void   SetFont(const char *fontName, Bool_t global = kFALSE);
-   virtual void   SetMBState(EButtonState state);
-   virtual void   SetSplit(Bool_t split);
-   Bool_t         IsSplit() { return fSplit; }
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t HandleCrossing(Event_t *event);
-   virtual Bool_t HandleKey(Event_t *event);
-   virtual Bool_t HandleMotion(Event_t *event);
-   virtual void   Layout();
+   void         SetText(TGHotString *new_label) override;
+   void         SetText(const TString &new_label) override;
+   void         SetFont(FontStruct_t font, Bool_t global = kFALSE) override;
+   void         SetFont(const char *fontName, Bool_t global = kFALSE) override;
+   virtual void SetMBState(EButtonState state);
+   virtual void SetSplit(Bool_t split);
+   Bool_t       IsSplit() { return fSplit; }
+   Bool_t       HandleButton(Event_t *event) override;
+   Bool_t       HandleCrossing(Event_t *event) override;
+   Bool_t       HandleKey(Event_t *event) override;
+   Bool_t       HandleMotion(Event_t *event) override;
+   void         Layout() override;
 
    virtual void MBPressed()  { Emit("MBPressed()"); }   // *SIGNAL*
    virtual void MBReleased() { Emit("MBReleased()"); }  // *SIGNAL*
@@ -442,9 +441,9 @@ public:
    virtual void ItemClicked(Int_t id) { Emit("ItemClicked(Int_t)", id); } // *SIGNAL*
 
    // Slots
-   void HandleMenu(Int_t id) ;
+   void HandleMenu(Int_t id);
 
-   ClassDef(TGSplitButton, 0) //a split button widget
+   ClassDefOverride(TGSplitButton,0) //a split button widget
 };
 
 #endif
