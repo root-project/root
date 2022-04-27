@@ -66,6 +66,7 @@ public:
       fPtr->fUserState = MnUserParameterState(State(), Up(), Seed().Trafo());
       // reset maxedm flag. If new state has edm over max other method must be used
       fPtr->fAboveMaxEdm = status == MnAboveMaxEdm;
+      fPtr->fReachedCallLimit = status == MnReachedCallLimit;
    }
 
    const MinimumSeed &Seed() const { return fPtr->fSeed; }
