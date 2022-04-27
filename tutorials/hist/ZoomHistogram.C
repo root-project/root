@@ -15,14 +15,14 @@
 
 void ZoomHistogram() {
 
-   TH1F *norm = new TH1F("Normal Histogram", "Normal Histogram", 100, 0, 100);
+   TH1F *orig = new TH1F("Normal Histogram", "Normal Histogram", 100, 0, 100);
 
    for (int i = 0; i < 100; ++i) {
      Double_t x = gRandom->Gaus(50, 10);
-     norm->Fill(x);
+     orig->Fill(x);
    }
 
-   TH1F *zoom = (TH1F*) norm->Clone("zoom");
+   TH1F *zoom = (TH1F *)orig->Clone("zoom");
    zoom->SetTitle("Zoomed-in Histogram");
    zoom->GetXaxis()->SetRangeUser(50, 100);
 
@@ -30,7 +30,7 @@ void ZoomHistogram() {
    c1->Divide(2, 1);
 
    c1->cd(1);
-   norm->Draw();
+   orig->Draw();
    c1->cd(2);
    zoom->Draw();
 }
