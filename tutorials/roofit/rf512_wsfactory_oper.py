@@ -10,8 +10,7 @@
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \authors Clemens Lange, Wouter Verkerke (C version)
 
 
 import ROOT
@@ -55,7 +54,7 @@ w.factory("prod::uv(u[10],v[10])")
 # Function addition is done with sum(func1,func2)
 w.factory("sum::uv2(u,v)")
 
-# Lagrangian morphing function for the example shown in rf711_lagrangianmorph 
+# Lagrangian morphing function for the example shown in rf711_lagrangianmorph
 infilename = ROOT.gROOT.GetTutorialDir().Data() + "/roofit/input_histos_rf_lagrangianmorph.root";
 w.factory("lagrangianmorph::morph($observableName('pTV'),$fileName('"+infilename+"'),$couplings({cHq3[0,1],SM[1]}),$NewPhysics(cHq3=1,SM=0),$folders({'SM_NPsq0','cHq3_NPsq1','cHq3_NPsq2'}))")
 
