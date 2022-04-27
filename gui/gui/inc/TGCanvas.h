@@ -64,7 +64,7 @@ protected:
    static TGGC       *fgLineGC;
    static const TGGC &GetLineGC();
 
-   virtual void DoRedraw();
+   void         DoRedraw() override;
    virtual void ActivateItem(TGFrameElement* el);
    virtual void DeActivateItem(TGFrameElement* el);
    virtual void SearchPattern();
@@ -92,9 +92,9 @@ public:
    virtual void SetPagePosition(Int_t x, Int_t y);
    virtual void SetPageDimension(const TGDimension& dim);
    virtual void SetPageDimension(UInt_t w, UInt_t h);
-   virtual void RemoveAll();
+   void         RemoveAll() override;
    virtual void RemoveItem(TGFrame *item);
-   virtual void Layout();
+   void         Layout() override;
 
    TGCanvas         *GetCanvas() const { return fCanvas; }
    const TGWindow   *GetMessageWindow() const { return fMsgWindow; }
@@ -103,7 +103,7 @@ public:
 
    virtual Int_t  NumSelected() const { return fSelected; }
    virtual Int_t  NumItems() const { return fTotal; }
-   virtual TGFrameElement *FindFrame(Int_t x,Int_t y,Bool_t exclude=kTRUE);
+   virtual TGFrameElement *FindFrame(Int_t x,Int_t y, Bool_t exclude=kTRUE);
    virtual TGFrame        *FindFrameByName(const char *name);
    virtual TGHScrollBar *GetHScrollbar() const;
    virtual TGVScrollBar *GetVScrollbar() const;
@@ -124,15 +124,15 @@ public:
                           Bool_t subString = kFALSE);
 
    virtual const TGFrame *GetNextSelected(void **current);
-   virtual TGFrame *GetLastActive() const { return fLastActiveEl ? fLastActiveEl->fFrame : 0; }
-   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
+   virtual TGFrame *GetLastActive() const { return fLastActiveEl ? fLastActiveEl->fFrame : nullptr; }
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   virtual Bool_t HandleDNDFinished() { fBdown = kFALSE; return kTRUE; }
-   virtual Bool_t HandleExpose(Event_t *event);
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t HandleDoubleClick(Event_t *event);
-   virtual Bool_t HandleMotion(Event_t *event);
-   virtual Bool_t HandleKey(Event_t *event);
+   Bool_t HandleDNDFinished() override { fBdown = kFALSE; return kTRUE; }
+   Bool_t HandleExpose(Event_t *event) override;
+   Bool_t HandleButton(Event_t *event) override;
+   Bool_t HandleDoubleClick(Event_t *event) override;
+   Bool_t HandleMotion(Event_t *event) override;
+   Bool_t HandleKey(Event_t *event) override;
 
    const TGPicture *GetObjPicture(TGFrame *f);
    virtual void SetDragPixmap(const TGPicture *pic);
@@ -151,7 +151,7 @@ public:
    virtual void DoubleClicked(TGFrame *f, Int_t btn, Int_t x, Int_t y); //*SIGNAL*
    virtual void Clicked(TGFrame *f, Int_t btn, Int_t x, Int_t y);       //*SIGNAL*
 
-   ClassDef(TGContainer,0)  // Canvas container
+   ClassDefOverride(TGContainer,0)  // Canvas container
 };
 
 
@@ -173,9 +173,9 @@ public:
    TGFrame *GetContainer() const { return fContainer; }
    void SetContainer(TGFrame *f);
 
-   virtual void DrawBorder() { };
-   virtual void Layout() { }
-   virtual TGDimension GetDefaultSize() const { return TGDimension(fWidth, fHeight); }
+   void DrawBorder() override {}
+   void Layout() override {}
+   TGDimension GetDefaultSize() const override { return TGDimension(fWidth, fHeight); }
 
    virtual void SetHPos(Int_t xpos);
    virtual void SetVPos(Int_t ypos);
@@ -183,9 +183,9 @@ public:
 
    Int_t GetHPos() const { return fX0; }
    Int_t GetVPos() const { return fY0; }
-   virtual Bool_t HandleConfigureNotify(Event_t *event);
+   Bool_t HandleConfigureNotify(Event_t *event) override;
 
-   ClassDef(TGViewPort,0)  // Viewport through which to look at a container frame
+   ClassDefOverride(TGViewPort,0)  // Viewport through which to look at a container frame
 };
 
 
@@ -220,9 +220,9 @@ public:
 
    virtual void  AddFrame(TGFrame *f, TGLayoutHints *l = 0);
    virtual void  SetContainer(TGFrame *f) { fVport->SetContainer(f); }
-   virtual void  MapSubwindows();
-   virtual void  DrawBorder();
-   virtual void  Layout();
+   void          MapSubwindows() override;
+   void          DrawBorder() override;
+   void          Layout() override;
    virtual void  ClearViewPort();
    virtual Int_t GetHsbPosition() const;
    virtual Int_t GetVsbPosition() const;
@@ -231,12 +231,12 @@ public:
    void          SetScrolling(Int_t scrolling);
    Int_t         GetScrolling() const { return fScrolling; }
 
-   virtual TGDimension GetDefaultSize() const { return TGDimension(fWidth, fHeight); }
-   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   TGDimension GetDefaultSize() const override { return TGDimension(fWidth, fHeight); }
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 
-   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGCanvas,0)  // A canvas with two scrollbars and a viewport
+   ClassDefOverride(TGCanvas,0)  // A canvas with two scrollbars and a viewport
 };
 
 

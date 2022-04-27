@@ -118,7 +118,7 @@ protected:
    void operator=(const TGTextLayout &tlayout) = delete;
 
 public:
-   TGTextLayout(): fFont(nullptr), fString(""), fWidth(0), fNumChunks(0), fChunks(NULL) {}
+   TGTextLayout(): fFont(nullptr), fString(""), fWidth(0), fNumChunks(0), fChunks(nullptr) {}
    virtual ~TGTextLayout();
 
    void   DrawText(Drawable_t dst, GContext_t gc, Int_t x, Int_t y,
@@ -131,7 +131,7 @@ public:
    Int_t  IntersectText(Int_t x, Int_t y, Int_t w, Int_t h) const;
    void   ToPostscript(TString *dst) const;
 
-   ClassDef(TGTextLayout,0)   // Keep track of string  measurement information.
+   ClassDefOverride(TGTextLayout,0)   // Keep track of string  measurement information.
 };
 
 
@@ -162,7 +162,7 @@ private:
 protected:
    TGFont(const char *name)
      : TNamed(name,""), TRefCnt(), fFontStruct(0), fFontH(0), fFM(),
-     fFA(), fNamedHash(0), fTabWidth(0), fUnderlinePos(0), fUnderlineHeight(0), fBarHeight(0)
+        fFA(), fNamedHash(nullptr), fTabWidth(0), fUnderlinePos(0), fUnderlineHeight(0), fBarHeight(0)
    {
       SetRefCount(1);
       for (Int_t i=0; i<256; i++) {
@@ -203,10 +203,10 @@ public:
    void   DrawChars(Drawable_t dst, GContext_t gc, const char *source,
                    Int_t numChars, Int_t x, Int_t y) const;
 
-   void  Print(Option_t *option="") const;
-   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
+   void Print(Option_t *option="") const override;
+   void SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDef(TGFont,0)   // GUI font description
+   ClassDefOverride(TGFont,0)   // GUI font description
 };
 
 
@@ -255,9 +255,9 @@ public:
    Bool_t   ParseFontName(const char *string, FontAttributes_t *fa);
    const char *NameOfFont(TGFont *font);
 
-   void     Print(Option_t *option="") const;
+   void     Print(Option_t *option="") const override;
 
-   ClassDef(TGFontPool,0)  // Font pool
+   ClassDefOverride(TGFontPool,0)  // Font pool
 };
 
 #endif
