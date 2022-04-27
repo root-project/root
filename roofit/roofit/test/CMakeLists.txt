@@ -15,4 +15,3 @@ ROOT_ADD_GTEST(testRooParamHistFunc testRooParamHistFunc.cxx LIBRARIES Gpad RooF
 ROOT_ADD_GTEST(testRooExponential testRooExponential.cxx
   COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/exponentialPdf.root
   LIBRARIES Core RooFitCore RooFit)
-ROOT_ADD_GTEST(testSumW2Error testSumW2Error.cxx LIBRARIES Gpad RooFitCore RooFit)
