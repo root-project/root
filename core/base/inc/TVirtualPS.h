@@ -68,13 +68,13 @@ public:
    virtual void  WriteInteger(Int_t i, Bool_t space=kTRUE);
    virtual void  WriteReal(Float_t r, Bool_t space=kTRUE);
    virtual void  PrintRaw(Int_t len, const char *str);
-   virtual void *GetStream() const {  return (void*)fStream; }
-   virtual void  SetStream(std::ofstream *os) {  fStream = os; }
+   virtual void *GetStream() const { return (void*)fStream; }
+   virtual void  SetStream(std::ofstream *os) { fStream = os; }
 
    virtual void  SetType(Int_t /*type*/ = -111) { }
    virtual Int_t GetType() const { return 111; }
 
-   ClassDef(TVirtualPS,0)  //Abstract interface to a PostScript driver
+   ClassDefOverride(TVirtualPS,0)  //Abstract interface to a PostScript driver
 };
 
 
