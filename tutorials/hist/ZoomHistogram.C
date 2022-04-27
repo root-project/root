@@ -22,7 +22,7 @@ void ZoomHistogram() {
      orig->Fill(x);
    }
 
-   TH1F *zoom = (TH1F*) orig->Clone("zoom");
+   TH1F *zoom = (TH1F *)orig->Clone("zoom");
    zoom->SetTitle("Zoomed-in Histogram");
    zoom->GetXaxis()->SetRangeUser(50, 100);
 
