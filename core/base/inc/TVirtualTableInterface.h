@@ -17,8 +17,8 @@
 class TVirtualTableInterface {
 
 public:
-   TVirtualTableInterface() {;}
-   virtual ~TVirtualTableInterface() {;}
+   TVirtualTableInterface() {}
+   virtual ~TVirtualTableInterface() {}
 
    virtual Double_t    GetValue(UInt_t row, UInt_t column) = 0;
    virtual const char *GetValueAsString(UInt_t row, UInt_t column) = 0;

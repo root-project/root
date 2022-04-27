@@ -129,7 +129,7 @@ class TVirtualFFT: public TObject {
    static const char*  GetDefaultFFT();
    static void         SetDefaultFFT(const char *name ="");
 
-   ClassDef(TVirtualFFT, 0); //abstract interface for FFT calculations
+   ClassDefOverride(TVirtualFFT, 0); //abstract interface for FFT calculations
 };
 
 #endif

@@ -64,7 +64,7 @@ public:
    virtual void   CloseComposite() = 0;
    virtual void   AddCompositeOp(UInt_t operation) = 0;
 
-   virtual TObject *SelectObject(Int_t, Int_t){return 0;}
+   virtual TObject *SelectObject(Int_t, Int_t) { return nullptr; }
    virtual void   DrawViewer(){}
 
    virtual void PrintObjects(){}
@@ -73,7 +73,7 @@ public:
 
    static  TVirtualViewer3D *Viewer3D(TVirtualPad *pad = 0, Option_t *type = "");
 
-   ClassDef(TVirtualViewer3D,0) // Abstract interface to 3D viewers
+   ClassDefOverride(TVirtualViewer3D,0) // Abstract interface to 3D viewers
 };
 
 #endif
