@@ -71,6 +71,11 @@ double-quote characters must be represented by a pair of double-quote characters
 The current implementation of RCsvDS reads the entire CSV file content into memory before
 RDataFrame starts processing it. Therefore, before creating a CSV RDataFrame, it is
 important to check both how much memory is available and the size of the CSV file.
+
+RCsvDS can handle empty cells and also allows the usage of the special keywords "NaN" and "nan" to
+indicate empty cells. Unless a column is specified to be of type string, the special keywords will be
+read as empty cells. If the column is of type double, empty cells are stored internally as `nan`.
+If the column if of type Long64_t/bool empty cells are stored as 0/false.
 */
 // clang-format on
 
@@ -104,7 +109,7 @@ const TRegexp RCsvDS::fgTrueRegex("^true$");
 const TRegexp RCsvDS::fgFalseRegex("^false$");
 
 const std::unordered_map<RCsvDS::ColType_t, std::string>
-   RCsvDS::fgColTypeMap({{'b', "bool"}, {'d', "double"}, {'l', "Long64_t"}, {'s', "std::string"}});
+   RCsvDS::fgColTypeMap({{'O', "bool"}, {'D', "double"}, {'L', "Long64_t"}, {'T', "std::string"}});
 
 void RCsvDS::FillHeaders(const std::string &line)
 {
@@ -126,12 +131,12 @@ void RCsvDS::FillRecord(const std::string &line, Record_t &record)
       auto colType = fColTypes[fHeaders[i]];
 
       switch (colType) {
-      case 'd': {
+      case 'D': {
          record.emplace_back(
             new double((col != "nan") ? std::stod(col) : std::numeric_limits<double>::quiet_NaN()));
          break;
       }
-      case 'l': {
+      case 'L': {
          if (col != "nan") {
             record.emplace_back(new Long64_t(std::stoll(col)));
          } else {
@@ -140,7 +145,7 @@ void RCsvDS::FillRecord(const std::string &line, Record_t &record)
          }
          break;
       }
-      case 'b': {
+      case 'O': {
          auto b = new bool();
          record.emplace_back(b);
          if (col != "nan") {
@@ -151,7 +156,7 @@ void RCsvDS::FillRecord(const std::string &line, Record_t &record)
          }
          break;
       }
-      case 's': {
+      case 'T': {
          record.emplace_back(new std::string(col));
          break;
       }
@@ -172,8 +177,8 @@ std::vector<void *> RCsvDS::GetColumnReadersImpl(std::string_view colName, const
 {
    const auto colType = GetType(colName);
 
-   if ((colType == 'd' && typeid(double) != ti) || (colType == 'l' && typeid(Long64_t) != ti) ||
-       (colType == 's' && typeid(std::string) != ti) || (colType == 'b' && typeid(bool) != ti)) {
+   if ((colType == 'D' && typeid(double) != ti) || (colType == 'L' && typeid(Long64_t) != ti) ||
+       (colType == 'T' && typeid(std::string) != ti) || (colType == 'O' && typeid(bool) != ti)) {
       std::string err = "The type selected for column \"";
       err += colName;
       err += "\" does not correspond to column type, which is ";
@@ -200,7 +205,7 @@ std::vector<void *> RCsvDS::GetColumnReadersImpl(std::string_view colName, const
    return ret;
 }
 
-void RCsvDS::InferColTypes(std::vector<std::string> &columns)
+void RCsvDS::ValidateColTypes(std::vector<std::string> &columns) const
 {
    for (const auto &col : fColTypes) {
       if (!HasColumn(col.first)) {
@@ -211,42 +216,42 @@ void RCsvDS::InferColTypes(std::vector<std::string> &columns)
          }
          throw std::runtime_error(msg);
       }
-      if (std::string("bdls").find(col.second) == std::string::npos) {
+      if (std::string("ODLT").find(col.second) == std::string::npos) {
          std::string msg = "Type alias '" + std::string(1, col.second) + "' is not supported.\n";
-         msg += "Supported type aliases are 'b' for boolean, 'd' for double, 'l' for Long64_t, 's' for std::string.";
+         msg += "Supported type aliases are 'O' for boolean, 'D' for double, 'L' for Long64_t, 'T' for std::string.";
          throw std::runtime_error(msg);
       }
    }
+}
 
+void RCsvDS::InferColTypes(std::vector<std::string> &columns)
+{
    const auto second_line = fCsvFile->GetFilePos();
+
    for (auto i = 0u; i < columns.size(); ++i) {
-      if (fColTypes.find(fHeaders[i]) == fColTypes.end()) { // type is not yet specified
-         if (columns[i] == "nan") {
-            // read 10 lines until a non-empty cell on this column is found, so that type is determined
-            // if 10 lines are read, then type is automatically assumed `double`
-            for (auto row = 0u; row < 10u; ++row) {
-               std::string line;
-               if (fCsvFile->Readln(line)) {
-                  const auto temp_columns = ParseColumns(line);
-                  if (temp_columns[i] != "nan") {
-                     columns[i] = temp_columns[i];
-                     break;
-                  }
-               } else { // whole column was empty
-                  break;
-               }
-            }
-            // reset the reading from the second line, because the first line is already loaded in `columns`
-            fCsvFile->Seek(second_line);
-         }
-         if (columns[i] == "nan") {
-            // could not find a non-empty value, default to double
-            fColTypes[fHeaders[i]] = 'd';
-            fColTypesList.push_back('d');
-         }
-         else {
-            InferType(columns[i], i);
-         }
+
+      if (fColTypes.find(fHeaders[i]) != fColTypes.end())
+         continue;  // type was manually specified, nothing to do
+
+      // read <=10 extra lines until a non-empty cell on this column is found, so that type is determined
+      for (auto extraRowsRead = 0u; extraRowsRead < 10u && columns[i] == "nan"; ++extraRowsRead) {
+         std::string line;
+         if (!fCsvFile->Readln(line))
+            break; //EOF
+         const auto temp_columns = ParseColumns(line);
+         if (temp_columns[i] != "nan")
+            columns[i] = temp_columns[i]; // will break the loop in the next iteration
+      }
+      // reset the reading from the second line, because the first line is already loaded in `columns`
+      fCsvFile->Seek(second_line);
+
+      if (columns[i] == "nan") {
+         // could not find a non-empty value, default to double
+         fColTypes[fHeaders[i]] = 'D';
+         fColTypesList.push_back('D');
+      }
+      else {
+         InferType(columns[i], i);
       }
    }
 }
@@ -257,14 +262,14 @@ void RCsvDS::InferType(const std::string &col, unsigned int idxCol)
    int dummy;
 
    if (fgIntRegex.Index(col, &dummy) != -1) {
-      type = 'l'; // Long64_t
+      type = 'L'; // Long64_t
    } else if (fgDoubleRegex1.Index(col, &dummy) != -1 || fgDoubleRegex2.Index(col, &dummy) != -1 ||
               fgDoubleRegex3.Index(col, &dummy) != -1) {
-      type = 'd'; // double
+      type = 'D'; // double
    } else if (fgTrueRegex.Index(col, &dummy) != -1 || fgFalseRegex.Index(col, &dummy) != -1) {
-      type = 'b'; // bool
+      type = 'O'; // bool
    } else {       // everything else is a string
-      type = 's'; // std::string
+      type = 'T'; // std::string
    }
    // TODO: Date
 
@@ -358,6 +363,9 @@ RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long
          GenerateHeaders(columns.size());
       }
 
+      // Ensure user is trying to set types only of existing columns
+      ValidateColTypes(columns);
+
       // Infer types of columns from the first non-empty record
       InferColTypes(columns);
 
@@ -377,19 +385,19 @@ void RCsvDS::FreeRecords()
          void *p = record[i];
          const auto colType = fColTypes[fHeaders[i]];
          switch (colType) {
-         case 'd': {
+         case 'D': {
             delete static_cast<double *>(p);
             break;
          }
-         case 'l': {
+         case 'L': {
             delete static_cast<Long64_t *>(p);
             break;
          }
-         case 'b': {
+         case 'O': {
             delete static_cast<bool *>(p);
             break;
          }
-         case 's': {
+         case 'T': {
             delete static_cast<std::string *>(p);
             break;
          }
@@ -508,19 +516,19 @@ bool RCsvDS::SetEntry(unsigned int slot, ULong64_t entry)
    for (auto &colType : fColTypesList) {
       auto dataPtr = fRecords[recordPos][colIndex];
       switch (colType) {
-      case 'd': {
+      case 'D': {
          fDoubleEvtValues[colIndex][slot] = *static_cast<double *>(dataPtr);
          break;
       }
-      case 'l': {
+      case 'L': {
          fLong64EvtValues[colIndex][slot] = *static_cast<Long64_t *>(dataPtr);
          break;
       }
-      case 'b': {
+      case 'O': {
          fBoolEvtValues[colIndex][slot] = *static_cast<bool *>(dataPtr);
          break;
       }
-      case 's': {
+      case 'T': {
          fStringEvtValues[colIndex][slot] = *static_cast<std::string *>(dataPtr);
          break;
       }

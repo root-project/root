@@ -360,14 +360,14 @@ TEST(RCsvDS, NanWarningChecks)
 
 TEST(RCsvDS, SetCustomColumnTypes)
 {
-   RCsvDS tds(fileName4, true, ',', -1LL, {{"col5", 'd'}, {"col6", 'd'}});
+   RCsvDS tds(fileName4, true, ',', -1LL, {{"col5", 'D'}, {"col6", 'D'}});
 
    EXPECT_STREQ("double", tds.GetTypeName("col5").c_str());
    EXPECT_STREQ("double", tds.GetTypeName("col6").c_str());
 
    EXPECT_THROW(
       try {
-         ROOT::RDF::MakeCsvDataFrame(fileName4, true, ',', -1LL, {{"col5", 'd'}, {"wrong", 'd'}});
+         ROOT::RDF::MakeCsvDataFrame(fileName4, true, ',', -1LL, {{"col5", 'D'}, {"wrong", 'D'}});
       } catch (const std::runtime_error &err) {
          EXPECT_EQ(std::string(err.what()), "There is no column with name \"wrong\".");
          throw;
@@ -376,10 +376,10 @@ TEST(RCsvDS, SetCustomColumnTypes)
 
    EXPECT_THROW(
       try {
-         ROOT::RDF::MakeCsvDataFrame(fileName4, true, ',', -1LL, {{"col5", 'd'}, {"col6", 'w'}});
+         ROOT::RDF::MakeCsvDataFrame(fileName4, true, ',', -1LL, {{"col5", 'D'}, {"col6", 'W'}});
       } catch (const std::runtime_error &err) {
-         std::string msg = "Type alias 'w' is not supported.\n";
-         msg += "Supported type aliases are 'b' for boolean, 'd' for double, 'l' for Long64_t, 's' for std::string.";
+         std::string msg = "Type alias 'W' is not supported.\n";
+         msg += "Supported type aliases are 'O' for boolean, 'D' for double, 'L' for Long64_t, 'T' for std::string.";
          EXPECT_EQ(std::string(err.what()), msg);
          throw;
       },

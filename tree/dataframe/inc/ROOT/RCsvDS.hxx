@@ -35,7 +35,7 @@ namespace RDF {
 class RCsvDS final : public ROOT::RDF::RDataSource {
 
 private:
-   // Possible values are d, b, l, s. This is possible only because we treat double, bool, Long64_t and string
+   // Possible values are D, O, L, T. This is possible only because we treat double, bool, Long64_t and string
    using ColType_t = char;
    static const std::unordered_map<ColType_t, std::string> fgColTypeMap;
 
@@ -67,6 +67,7 @@ private:
    void FillRecord(const std::string &, Record_t &);
    void GenerateHeaders(size_t);
    std::vector<void *> GetColumnReadersImpl(std::string_view, const std::type_info &);
+   void ValidateColTypes(std::vector<std::string> &) const;
    void InferColTypes(std::vector<std::string> &);
    void InferType(const std::string &, unsigned int);
    std::vector<std::string> ParseColumns(const std::string &);
@@ -99,8 +100,8 @@ public:
 /// \param[in] delimiter Delimiter character (default ',').
 /// \param[in] linesChunkSize bunch of lines to read, use -1 to read all
 /// \param[in] colTypes Allow user to specify custom column types, accepts an unordered map with keys being
-///                      column type, values being type alias ('b' for boolean, 'd' for double, 'l' for
-///                      Long64_t, 's' for std::string)
+///                      column type, values being type alias ('O' for boolean, 'D' for double, 'L' for
+///                      Long64_t, 'T' for std::string)
 RDataFrame MakeCsvDataFrame(std::string_view fileName, bool readHeaders = true, char delimiter = ',',
                             Long64_t linesChunkSize = -1LL, std::unordered_map<std::string, char> &&colTypes = {});
 
