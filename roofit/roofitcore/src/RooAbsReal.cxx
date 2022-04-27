@@ -2481,12 +2481,24 @@ double RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet &n
     double cenVal = rrv.getVal() ;
     double errVal = sqrt(V(ivar,ivar)) ;
 
+    // Check if the variations are still in the parameter range.
+    if(!rrv.inRange(cenVal+errVal, nullptr) || !rrv.inRange(cenVal-errVal, nullptr)) {
+      std::stringstream ss;
+      ss << "RooAbsReal::getPropagatedError(" << GetName() << "): the 1-sigma variations for the parameter "
+         << "\"" << rrv.GetName() << "\" are invalid "
+         << " because their values (" << cenVal-errVal << ", " << cenVal+errVal
+         << ") are outside the defined range [" << rrv.getMin() << ", " << rrv.getMax() << "]!\n"
+         << "                         The variations will be clipped inside the range."
+         << " This might or might not be acceptable in your usecase.";
+      coutW(Plotting) << ss.str() << std::endl;
+    }
+
     // Make Plus variation
-    rrv.setVal(cenVal+errVal) ;
+    rrv.setVal(std::min(cenVal+errVal, rrv.getMax())) ;
     plusVar.push_back(getVal(nset)) ;
 
     // Make Minus variation
-    rrv.setVal(cenVal-errVal) ;
+    rrv.setVal(std::max(cenVal-errVal, rrv.getMin())) ;
     minusVar.push_back(getVal(nset)) ;
 
     rrv.setVal(cenVal) ;
@@ -2704,9 +2716,23 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
       double cenVal = rrv.getVal() ;
       double errVal = sqrt(V(ivar,ivar)) ;
 
-      // Make Plus variation
-      (static_cast<RooRealVar*>(paramList.at(ivar)))->setVal(cenVal+Z*errVal) ;
+      auto * var = static_cast<RooRealVar*>(paramList.at(ivar));
 
+      // Check if the variations are still in the parameter range, otherwise we
+      // can't compute the error bands and get an invalid plot!
+      if(!var->inRange(cenVal+Z*errVal, nullptr) || !var->inRange(cenVal-Z*errVal, nullptr)) {
+        std::stringstream ss;
+        ss << "RooAbsReal::plotOn(" << GetName() << "): the " << Z << "-sigma error band for the parameter "
+           << "\"" << var->GetName() << "\" is invalid"
+           << " because the variations (" << cenVal-Z*errVal << ", " << cenVal+Z*errVal
+           << ") are outside the defined range [" << var->getMin() << ", " << var->getMax() << "]!\n"
+           << "                         The variations will be clipped inside the range."
+           << " This might or might not be acceptable in your usecase.";
+        coutW(Plotting) << ss.str() << std::endl;
+      }
+
+      // Make Plus variation
+      var->setVal(std::min(cenVal+Z*errVal, var->getMax()));
 
       plotFunc(*cloneFunc);
       plusVar.push_back(frame->getCurve()) ;
@@ -2714,12 +2740,12 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
 
 
       // Make Minus variation
-      (static_cast<RooRealVar*>(paramList.at(ivar)))->setVal(cenVal-Z*errVal) ;
+      var->setVal(std::max(cenVal-Z*errVal, var->getMin()));
       plotFunc(*cloneFunc);
       minusVar.push_back(frame->getCurve()) ;
       frame->remove(nullptr,false) ;
 
-      (static_cast<RooRealVar*>(paramList.at(ivar)))->setVal(cenVal) ;
+      var->setVal(cenVal) ;
     }
 
     TMatrixDSym C(paramList.size()) ;
