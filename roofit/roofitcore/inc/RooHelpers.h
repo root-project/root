@@ -114,6 +114,22 @@ struct DisableCachingRAII {
 };
 
 
+/// Struct to temporarily change the operation mode of a RooAbsArg until it
+/// goes out of scope.
+class ChangeOperModeRAII {
+public:
+   ChangeOperModeRAII(RooAbsArg *arg, RooAbsArg::OperMode opMode) : _arg{arg}, _oldOpMode(arg->operMode())
+   {
+      arg->setOperMode(opMode, /*recurse=*/false);
+   }
+   ~ChangeOperModeRAII() { _arg->setOperMode(_oldOpMode, /*recurse=*/false); }
+
+private:
+   RooAbsArg *_arg = nullptr;
+   RooAbsArg::OperMode _oldOpMode;
+};
+
+
 std::pair<double, double> getRangeOrBinningInterval(RooAbsArg const* arg, const char* rangeName);
 
 bool checkIfRangesOverlap(RooAbsPdf const& pdf, RooAbsData const& data, std::vector<std::string> const& rangeNames);
