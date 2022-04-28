@@ -123,18 +123,27 @@ void RCsvDS::FillRecord(const std::string &line, Record_t &record)
 
       switch (colType) {
       case 'D': {
-         record.emplace_back(new double(std::stod(col)));
+         record.emplace_back(new double((col != "nan") ? std::stod(col) : std::numeric_limits<double>::quiet_NaN()));
          break;
       }
       case 'L': {
-         record.emplace_back(new Long64_t(std::stoll(col)));
+         if (col != "nan") {
+            record.emplace_back(new Long64_t(std::stoll(col)));
+         } else {
+            fColContainingEmpty.insert(fHeaders[i]);
+            record.emplace_back(new Long64_t(0));
+         }
          break;
       }
       case 'O': {
          auto b = new bool();
          record.emplace_back(b);
-         std::istringstream is(col);
-         is >> std::boolalpha >> *b;
+         if (col != "nan") {
+            std::istringstream(col) >> std::boolalpha >> *b;
+         } else {
+            fColContainingEmpty.insert(fHeaders[i]);
+            *b = false;
+         }
          break;
       }
       case 'T': {
@@ -207,9 +216,33 @@ void RCsvDS::ValidateColTypes(std::vector<std::string> &columns) const
 
 void RCsvDS::InferColTypes(std::vector<std::string> &columns)
 {
-   for (auto i = 0u; i < columns.size(); ++i)
-      if (fColTypes.find(fHeaders[i]) == fColTypes.end())
+   const auto second_line = fCsvFile->GetFilePos();
+
+   for (auto i = 0u; i < columns.size(); ++i) {
+
+      if (fColTypes.find(fHeaders[i]) != fColTypes.end())
+         continue; // type was manually specified, nothing to do
+
+      // read <=10 extra lines until a non-empty cell on this column is found, so that type is determined
+      for (auto extraRowsRead = 0u; extraRowsRead < 10u && columns[i] == "nan"; ++extraRowsRead) {
+         std::string line;
+         if (!fCsvFile->Readln(line))
+            break; // EOF
+         const auto temp_columns = ParseColumns(line);
+         if (temp_columns[i] != "nan")
+            columns[i] = temp_columns[i]; // will break the loop in the next iteration
+      }
+      // reset the reading from the second line, because the first line is already loaded in `columns`
+      fCsvFile->Seek(second_line);
+
+      if (columns[i] == "nan") {
+         // could not find a non-empty value, default to double
+         fColTypes[fHeaders[i]] = 'D';
+         fColTypesList.push_back('D');
+      } else {
          InferType(columns[i], i);
+      }
+   }
 }
 
 void RCsvDS::InferType(const std::string &col, unsigned int idxCol)
@@ -248,6 +281,7 @@ size_t RCsvDS::ParseValue(const std::string &line, std::vector<std::string> &col
 {
    std::string val;
    bool quoted = false;
+   const size_t prevPos = i; // used to check if cell is empty
 
    for (; i < line.size(); ++i) {
       if (line[i] == fDelimiter && !quoted) {
@@ -264,7 +298,15 @@ size_t RCsvDS::ParseValue(const std::string &line, std::vector<std::string> &col
       }
    }
 
-   columns.emplace_back(std::move(val));
+   if (prevPos == i || val == "nan" || val == "NaN") // empty cell or explicit nan/NaN
+      columns.emplace_back("nan");
+   else
+      columns.emplace_back(std::move(val));
+
+   // if the line ends with the delimiter, we need to append the default column value
+   // for the _next_, last column that won't be parsed (because we are out of characters)
+   if (i == line.size() - 1 && line[i] == fDelimiter)
+      columns.emplace_back("nan");
 
    return i;
 }
@@ -384,6 +426,18 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RCsvDS::GetEntryRanges()
       fRecords.emplace_back();
       FillRecord(line, fRecords.back());
       --linesToRead;
+   }
+
+   if (!fColContainingEmpty.empty()) {
+      std::string msg = "";
+      for (const auto &col : fColContainingEmpty) {
+         const auto colT = GetTypeName(col);
+         msg += "Column \"" + col + "\" of type " + colT + " contains empty cell(s) or NaN(s).\n";
+         msg += "There is no `nan` equivalent for type " + colT + ", hence ";
+         msg += std::string(colT == "Long64_t" ? "`0`" : "`false`") + " is stored.\n";
+      }
+      msg += "Please manually set the column type to `double` (with `D`) in `MakeCsvDataFrame` to read NaNs instead.\n";
+      Warning("RCsvDS", "%s", msg.c_str());
    }
 
    if (gDebug > 0) {
