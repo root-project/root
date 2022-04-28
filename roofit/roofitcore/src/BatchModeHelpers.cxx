@@ -149,7 +149,7 @@ RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data, std::uniqu
       pdf.setStringAttribute("fitrange", fitrangeValue.c_str());
    }
 
-   auto driverWrapper = RooFitDriver::makeAbsRealWrapper(std::move(driver));
+   auto driverWrapper = RooFitDriver::makeAbsRealWrapper(std::move(driver), *data.get());
    driverWrapper->addOwnedComponents(std::move(nll));
 
    return driverWrapper;
