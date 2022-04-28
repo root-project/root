@@ -14,12 +14,12 @@
 #ifndef RooFit_RooFitDriver_h
 #define RooFit_RooFitDriver_h
 
-#include "RooAbsReal.h"
-#include "RooBatchCompute.h"
-#include "RooGlobalFunc.h"
-#include "RunContext.h"
+#include <RooAbsReal.h>
+#include <RooBatchCompute.h>
+#include <RooGlobalFunc.h>
+#include <RunContext.h>
 
-#include "RooFit/Detail/Buffers.h"
+#include <RooFit/Detail/Buffers.h>
 
 #include <chrono>
 #include <memory>
@@ -51,36 +51,6 @@ namespace Experimental {
 
 class RooFitDriver {
 public:
-   class Dataset {
-   public:
-      Dataset(RooAbsData const &data, RooArgSet const &observables, std::string_view rangeName,
-              RooAbsCategory const *indexCat);
-      Dataset(RooBatchCompute::RunContext const &runContext);
-
-      std::size_t size() const { return _nEvents; }
-
-      std::size_t totalNumberOfEntries() const
-      {
-         std::size_t out = 0;
-         for (auto const &item : _dataSpans) {
-            out += item.second.size();
-         }
-         return out;
-      }
-
-      bool contains(RooAbsArg const *real) const { return _dataSpans.count(real->namePtr()); }
-      RooSpan<const double> const &span(RooAbsArg const *real) const { return _dataSpans.at(real->namePtr()); }
-
-      std::map<const TNamed *, RooSpan<const double>> const &spans() const { return _dataSpans; }
-
-   private:
-      void splitByCategory(RooAbsCategory const &splitCategory);
-
-      std::map<const TNamed *, RooSpan<const double>> _dataSpans;
-      size_t _nEvents = 0;
-      std::stack<std::vector<double>> _buffers;
-   };
-
    RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, RooArgSet const &normSet,
                 RooFit::BatchModeOption batchMode, std::string_view rangeName,
                 RooAbsCategory const *indexCat = nullptr);
@@ -91,8 +61,6 @@ public:
    std::vector<double> getValues();
    double getVal();
    RooAbsReal const &topNode() const { return _topNode; }
-   std::string const &name() const { return _name; }
-   std::string const &title() const { return _title; }
    RooArgSet const &parameters() const { return _parameters; }
 
    class RooAbsRealWrapper final : public RooAbsReal {
@@ -187,6 +155,7 @@ private:
       bool computeInScalarMode = false;
       bool computeInGPU = false;
       bool copyAfterEvaluation = false;
+      bool fromDataset = false;
       std::size_t outputSize = 1;
       ~NodeInfo()
       {
@@ -199,13 +168,12 @@ private:
       }
    };
 
-   void init();
+   void init(std::map<const TNamed *, RooSpan<const double>> const &dataSpans);
 
    double getValHeterogeneous();
    void updateMyClients(const RooAbsArg *node);
    void updateMyServers(const RooAbsArg *node);
    void handleIntegral(const RooAbsArg *node);
-   std::pair<std::chrono::microseconds, std::chrono::microseconds> memcpyBenchmark();
    std::chrono::microseconds simulateFit(std::chrono::microseconds h2dTime, std::chrono::microseconds d2hTime,
                                          std::chrono::microseconds diffThreshold);
    void markGPUNodes();
@@ -223,16 +191,11 @@ private:
 
    void determineOutputSizes(RooArgSet const &serverSet);
 
-   std::string _name;
-   std::string _title;
    RooArgSet _parameters;
 
    const RooFit::BatchModeOption _batchMode = RooFit::BatchModeOption::Off;
    int _getValInvocations = 0;
    double *_cudaMemDataset = nullptr;
-
-   // used to get access to the data that we fit to
-   Dataset _dataset;
 
    // used for preserving static info about the computation graph
    RooBatchCompute::DataMap _dataMapCPU;
@@ -247,6 +210,7 @@ private:
 
    // used for preserving resources
    std::vector<double> _nonDerivedValues;
+   std::stack<std::vector<double>> _vectorBuffers;
 
    std::stack<ChangeOperModeRAII> _changeOperModeRAIIs;
 }; // end class RooFitDriver
