@@ -161,15 +161,17 @@ public:
       }
    }
 
-   Int_t FindColor(UShort_t r, UShort_t g, UShort_t b) {
+   Int_t FindColor(UShort_t r, UShort_t g, UShort_t b) override
+   {
       Int_t ri = TMath:: BinarySearch(6, (const Short_t*)gWebBase, (Short_t)r);
       Int_t gi = TMath:: BinarySearch(6, (const Short_t*)gWebBase, (Short_t)g);
       Int_t bi = TMath:: BinarySearch(6, (const Short_t*)gWebBase, (Short_t)b);
       return fCLUT[ri][gi][bi];
    }
 
-   Int_t *GetRootColors() {
-      static Int_t *gRootColors = 0;
+   Int_t *GetRootColors() override
+   {
+      static Int_t *gRootColors = nullptr;
       if (gRootColors) return gRootColors;
 
       gRootColors = new Int_t[216];
@@ -242,7 +244,7 @@ public:
       }
    }
 
-   Int_t *GetRootColors() { return gDefHistRoot; }
+   Int_t *GetRootColors() override { return gDefHistRoot; }
 };
 
 TImagePalette *gHistImagePalette = new TDefHistImagePalette();

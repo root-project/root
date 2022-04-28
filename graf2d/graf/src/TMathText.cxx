@@ -102,12 +102,12 @@ private:
    }
 protected:
    inline mathtext::affine_transform_t
-   transform_logical_to_pixel(void) const
+   transform_logical_to_pixel(void) const override
    {
       return mathtext::affine_transform_t::identity;
    }
    inline mathtext::affine_transform_t
-   transform_pixel_to_logical(void) const
+   transform_pixel_to_logical(void) const override
    {
       return mathtext::affine_transform_t::identity;
    }
@@ -130,28 +130,28 @@ public:
       for (i = 0; i < mathtext::math_text_renderer_t::NFAMILY; i++) _current_font_size[i] = 0;
    }
    inline float
-   font_size(const unsigned int family = FAMILY_PLAIN) const
+   font_size(const unsigned int family = FAMILY_PLAIN) const override
    {
       return _current_font_size[family];
    }
    inline void
-   point(const float /*x*/, const float /*y*/)
+   point(const float /*x*/, const float /*y*/) override
    {
    }
    inline void
-   set_font_size(const float size, const unsigned int family)
+   set_font_size(const float size, const unsigned int family) override
    {
       _current_font_size[family] = size;
    }
    inline void
-   set_font_size(const float size)
+   set_font_size(const float size) override
    {
       _font_size = size;
       std::fill(_current_font_size,
               _current_font_size + NFAMILY, size);
    }
    inline void
-   reset_font_size(const unsigned int /*family*/)
+   reset_font_size(const unsigned int /*family*/) override
    {
    }
    inline void
@@ -196,7 +196,7 @@ public:
          y * _pad_pixel_transform[4] + _pad_pixel_transform[5]));
    }
    inline void
-   filled_rectangle(const mathtext::bounding_box_t &bounding_box_0)
+   filled_rectangle(const mathtext::bounding_box_t &bounding_box_0) override
    {
       SetFillColor(_parent->fTextColor);
       SetFillStyle(1001);
@@ -220,7 +220,7 @@ public:
       gPad->PaintFillArea(4, xt, yt);
    }
    inline void
-   rectangle(const mathtext::bounding_box_t &/*bounding_box*/)
+   rectangle(const mathtext::bounding_box_t &/*bounding_box*/) override
    {
    }
    inline mathtext::bounding_box_t
@@ -269,7 +269,7 @@ public:
    }
    inline mathtext::bounding_box_t
    bounding_box(const std::wstring string,
-             const unsigned int family = FAMILY_PLAIN)
+             const unsigned int family = FAMILY_PLAIN) override
    {
       if (TTF::fgCurFontIdx<0) return mathtext::bounding_box_t(0, 0, 0, 0, 0, 0);
       if (string.empty() || TTF::fgFace[TTF::fgCurFontIdx] == NULL ||
@@ -296,7 +296,7 @@ public:
    inline void
    text_raw(const float x, const float y,
           const std::wstring string,
-          const unsigned int family = FAMILY_PLAIN)
+          const unsigned int family = FAMILY_PLAIN) override
    {
       SetTextFont((Font_t) root_face_number(family));
       SetTextSize(_current_font_size[family]);
@@ -332,7 +332,7 @@ public:
    inline void
    text_with_bounding_box(const float /*x*/, const float /*y*/,
                      const std::wstring /*string*/,
-                     const unsigned int /*family = FAMILY_PLAIN*/)
+                     const unsigned int /*family = FAMILY_PLAIN*/) override
    {
    }
    using mathtext::math_text_renderer_t::bounding_box;
