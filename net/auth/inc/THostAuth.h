@@ -100,7 +100,7 @@ public:
    TList   *Established() const { return fSecContexts; }
    void     SetEstablished(TList *nl) { fSecContexts = nl; }
 
-   virtual  void  Print(Option_t *option = "") const;
+   void  Print(Option_t *option = "") const override;
    void     PrintEstablished() const;
 
    TRootSecContext *CreateSecContext(const char *user, const char *host, Int_t meth,
@@ -108,7 +108,7 @@ public:
                                      const char *token, TDatime expdate = kROOTTZERO,
                                      void *ctx = 0, Int_t key = -1);
 
-   ClassDef(THostAuth,1)  // Class providing host specific authentication information
+   ClassDefOverride(THostAuth,1)  // Class providing host specific authentication information
 };
 
 #endif

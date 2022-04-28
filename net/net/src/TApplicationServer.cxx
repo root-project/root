@@ -74,7 +74,7 @@ class TASInterruptHandler : public TSignalHandler {
 public:
    TASInterruptHandler(TApplicationServer *s)
       : TSignalHandler(kSigUrgent, kFALSE) { fServ = s; }
-   Bool_t  Notify();
+   Bool_t  Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -97,7 +97,7 @@ class TASSigPipeHandler : public TSignalHandler {
 public:
    TASSigPipeHandler(TApplicationServer *s) : TSignalHandler(kSigPipe, kFALSE)
       { fServ = s; }
-   Bool_t  Notify();
+   Bool_t Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -117,8 +117,8 @@ class TASInputHandler : public TFileHandler {
 public:
    TASInputHandler(TApplicationServer *s, Int_t fd) : TFileHandler(fd, 1)
       { fServ = s; }
-   Bool_t Notify();
-   Bool_t ReadNotify() { return Notify(); }
+   Bool_t Notify() override;
+   Bool_t ReadNotify() override { return Notify(); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////

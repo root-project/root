@@ -31,16 +31,16 @@ class TSocket;
 class TRootAuth : public TVirtualAuth {
 
 public:
-   TRootAuth() { }
-   virtual ~TRootAuth() { }
+   TRootAuth() {}
+   virtual ~TRootAuth() {}
 
    TSecContext *Authenticate(TSocket *, const char *host,
-                             const char *user, Option_t *options = "");
-   Int_t        ClientVersion();
-   void         ErrorMsg(const char *where, Int_t ecode = -1);
-   const char  *Name() { return "Root"; }
+                             const char *user, Option_t *options = "") override;
+   Int_t        ClientVersion() override;
+   void         ErrorMsg(const char *where, Int_t ecode = -1) override;
+   const char  *Name() override { return "Root"; }
 
-   ClassDef(TRootAuth,0)  // client auth interface
+   ClassDefOverride(TRootAuth,0)  // client auth interface
 };
 
 #endif
