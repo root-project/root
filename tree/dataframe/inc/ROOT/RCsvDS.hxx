@@ -18,6 +18,7 @@
 #include <deque>
 #include <list>
 #include <unordered_map>
+#include <set>
 #include <memory>
 #include <vector>
 
@@ -51,6 +52,7 @@ private:
    ULong64_t fProcessedLines = 0ULL; // marks the progress of the consumption of the csv lines
    std::vector<std::string> fHeaders;
    std::unordered_map<std::string, ColType_t> fColTypes;
+   std::set<std::string> fColContainingEmpty; // store columns which had empty entry
    std::list<ColType_t> fColTypesList;
    std::vector<std::vector<void *>> fColAddresses;         // fColAddresses[column][slot]
    std::vector<Record_t> fRecords;                         // fRecords[entry][column]
