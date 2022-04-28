@@ -91,7 +91,38 @@ TGSlider::TGSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t type, Int_t id,
    fDragging = kFALSE;
    fPos = fRelPos = 0;
    fVmax = fVmin = 0;
-   fSliderPic = 0;
+   fSliderPic = nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set slider range
+void  TGSlider::SetRange(Int_t min, Int_t max)
+{
+   if (max > min) {
+      fVmin = min;
+      fVmax = max;
+   } else
+      Warning("SetRange", "Incorrect range boundaries [%d,%d]", min, max);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set slider position
+void  TGSlider::SetPosition(Int_t pos)
+{
+   if ((pos >= fVmin) && (pos <= fVmax)) {
+      fPos = pos;
+      fClient->NeedRedraw(this);
+   } else
+      Warning("SetPosition", "The position (%d) is out of range [%d,%d]", pos, fVmin, fVmax);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Change slider picture
+void TGSlider::ChangeSliderPic(const char *name)
+{
+   if (fSliderPic)
+      fClient->FreePicture(fSliderPic);
+   fSliderPic = fClient->GetPicture(name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

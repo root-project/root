@@ -58,7 +58,7 @@ private:
    TGToolTip   *fTip;  // tooltip
 public:
    TTipDelayTimer(TGToolTip *tip, Long_t ms) : TTimer(ms, kTRUE) { fTip = tip; }
-   Bool_t Notify();
+   Bool_t Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

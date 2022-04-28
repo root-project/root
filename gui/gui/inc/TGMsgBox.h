@@ -84,11 +84,11 @@ public:
             Int_t text_align = kTextCenterX | kTextCenterY);
    virtual ~TGMsgBox();
 
-   virtual void CloseWindow();
-   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
-   virtual Bool_t HandleKey(Event_t* event);
+   void CloseWindow() override;
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
+   Bool_t HandleKey(Event_t* event) override;
 
-   ClassDef(TGMsgBox,0)  // A message dialog box
+   ClassDefOverride(TGMsgBox,0)  // A message dialog box
 };
 
 #endif

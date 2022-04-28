@@ -46,7 +46,7 @@ protected:
    TGGC              fWhiteGC;      ///< graphics context used for scrolling
                                     ///< generates GraphicsExposure events
 
-   virtual void DoRedraw();
+   void DoRedraw() override;
    virtual void UpdateRegion(Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual Bool_t ItemLayout() { return kFALSE; }
 
@@ -65,13 +65,13 @@ public:
 
    TGViewFrame   *GetCanvas() const { return fCanvas; }
 
-   virtual void   Clear(Option_t * = "");
+   void           Clear(Option_t * = "") override;
    virtual void   SetVisibleStart(Int_t newTop, Int_t direction);
    virtual void   ScrollCanvas(Int_t newTop, Int_t direction);
-   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
-   virtual void   DrawBorder();
-   virtual void   Layout();
-   virtual void   SetLayoutManager(TGLayoutManager*) { }
+   Bool_t         ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
+   void           DrawBorder() override;
+   void           Layout() override;
+   void           SetLayoutManager(TGLayoutManager*) override {}
    virtual void   DrawRegion(Int_t x, Int_t y, UInt_t width, UInt_t height);
 
    virtual void ScrollToPosition(TGLongPosition newPos);
@@ -84,25 +84,25 @@ public:
    void ScrollRight(Int_t  pixels)
       { ScrollToPosition(TGLongPosition(fVisible.fX - pixels, fVisible.fY)); }
 
-   virtual TGDimension GetDefaultSize() const { return TGDimension(fWidth, fHeight); }
-   TGDimension GetVirtualSize() const { return fVirtualSize; }
-   TGLongPosition  GetScrollValue() const { return fScrollVal; }
-   TGLongPosition  GetScrollPosition() const { return fVisible; }
+   TGDimension    GetDefaultSize() const override { return TGDimension(fWidth, fHeight); }
+   TGDimension    GetVirtualSize() const { return fVirtualSize; }
+   TGLongPosition GetScrollValue() const { return fScrollVal; }
+   TGLongPosition GetScrollPosition() const { return fVisible; }
 
    TGLongPosition ToVirtual(TGLongPosition coord)  const { return coord + fVisible; }
    TGLongPosition ToPhysical(TGLongPosition coord) const { return coord - fVisible; }
 
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t HandleExpose(Event_t *event);
+   Bool_t         HandleButton(Event_t *event) override;
+   Bool_t         HandleExpose(Event_t *event) override;
 
-   virtual void   ChangeBackground(Pixel_t);
-   virtual void   SetBackgroundColor(Pixel_t);
-   virtual void   SetBackgroundPixmap(Pixmap_t p);
+   void           ChangeBackground(Pixel_t) override;
+   void           SetBackgroundColor(Pixel_t) override;
+   void           SetBackgroundPixmap(Pixmap_t p) override;
    virtual void   UpdateBackgroundStart();
 
    const TGGC &GetViewWhiteGC() { return fWhiteGC; }
 
-   ClassDef(TGView,0)  // View widget base class
+   ClassDefOverride(TGView,0)  // View widget base class
 };
 
 
@@ -117,28 +117,26 @@ public:
    TGViewFrame(TGView *v, UInt_t w, UInt_t h, UInt_t options = 0,
                Pixel_t back = GetWhitePixel());
 
-   Bool_t HandleSelectionRequest(Event_t *event)
+   Bool_t HandleSelectionRequest(Event_t *event) override
             { return fView->HandleSelectionRequest(event); }
-   Bool_t HandleSelectionClear(Event_t *event)
+   Bool_t HandleSelectionClear(Event_t *event) override
             { return fView->HandleSelectionClear(event); }
-   Bool_t HandleSelection(Event_t *event)
+   Bool_t HandleSelection(Event_t *event) override
             { return fView->HandleSelection(event); }
-   Bool_t HandleButton(Event_t *event)
+   Bool_t HandleButton(Event_t *event) override
             { return fView->HandleButton(event); }
-   Bool_t HandleExpose(Event_t *event)
+   Bool_t HandleExpose(Event_t *event) override
             { return fView->HandleExpose(event); }
-   Bool_t HandleCrossing(Event_t *event)
+   Bool_t HandleCrossing(Event_t *event) override
             { return fView->HandleCrossing(event); }
-   Bool_t HandleMotion(Event_t *event)
+   Bool_t HandleMotion(Event_t *event) override
             { return fView->HandleMotion(event); }
-   Bool_t HandleKey(Event_t *event)
+   Bool_t HandleKey(Event_t *event) override
             { return fView->HandleKey(event); }
-   Bool_t HandleDoubleClick(Event_t *event)
+   Bool_t HandleDoubleClick(Event_t *event) override
             { return fView->HandleDoubleClick(event); }
 
-   ClassDef(TGViewFrame,0)  // Frame containing the actual text
+   ClassDefOverride(TGViewFrame,0)  // Frame containing the actual text
 };
-
-
 
 #endif

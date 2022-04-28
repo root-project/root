@@ -102,7 +102,7 @@ protected:
 protected:
    TVirtualTableInterface *fInterface; // Interface to the data source
 
-   virtual void DoRedraw();
+   void DoRedraw() override;
 
    virtual void Expand(UInt_t nrows, UInt_t ncolumns);
    virtual void ExpandColumns(UInt_t ncolumns);
@@ -123,7 +123,7 @@ protected:
    virtual void UpdateRangeFrame();
 
 public:
-   TGTable(const TGWindow *p = 0, Int_t id = 0,
+   TGTable(const TGWindow *p = nullptr, Int_t id = 0,
            TVirtualTableInterface *interface = 0, UInt_t nrows = 50,
            UInt_t ncolumns = 20);
    virtual ~TGTable();
@@ -229,7 +229,7 @@ public:
    virtual void Goto();
    virtual void Update();
 
-   ClassDef(TGTable, 0) // A table used to visualize data from different sources.
+   ClassDefOverride(TGTable, 0) // A table used to visualize data from different sources.
 };
 
 class TTableRange {
@@ -244,6 +244,7 @@ public:
    virtual void Print();
 
    Bool_t operator==(TTableRange &other);
+
    ClassDef(TTableRange, 0) // Range used in TGTable.
 };
 

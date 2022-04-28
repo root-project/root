@@ -184,14 +184,15 @@ public:
    TGListTreeItem *fItem;
 
    TRootBrowserHistoryCursor(TGListTreeItem *item) : fItem(item) {}
-   void Print(Option_t *) const {  if (fItem) printf("%s\n", fItem->GetText()); }
+   void Print(Option_t *) const override {  if (fItem) printf("%s\n", fItem->GetText()); }
 };
 
 
 ////////////////////////////////////////////////////////////////////////////////////
 class TRootBrowserHistory : public TList {
 public:
-   void RecursiveRemove(TObject *obj) {
+   void RecursiveRemove(TObject *obj) override
+   {
       TRootBrowserHistoryCursor *cur;
       TIter next(this);
 
@@ -245,8 +246,8 @@ public:
       fSmall = spic;
       fLarge = pic;
    }
-   ULong_t Hash() const { return fName.Hash(); }
-   const char *GetName() const { return fName.Data(); }
+   ULong_t Hash() const override { return fName.Hash(); }
+   const char *GetName() const override { return fName.Data(); }
 };
 
 
@@ -260,8 +261,9 @@ public:
                 const TGPicture *spic, TGString *name,
                 TObject *obj, TClass *cl, EListViewMode viewMode = kLVSmallIcons);
 
-   virtual TDNDData *GetDNDData(Atom_t) {
-      TObject *object = 0;
+   TDNDData *GetDNDData(Atom_t) override
+   {
+      TObject *object = nullptr;
       if (fObj->IsA() == TKey::Class())
          object = ((TKey *)fObj)->ReadObj();
       else
@@ -276,7 +278,8 @@ public:
       return &fDNDData;
    }
 
-   virtual Bool_t HandleDNDFinished() {
+   Bool_t HandleDNDFinished() override
+   {
       if (GetParent())
          return ((TGFrame *)GetParent())->HandleDNDFinished();
       return kFALSE;
@@ -335,12 +338,12 @@ private:
    const TGPicture *fPic;     // list view icon
 
 public:
-   TRootIconList(TRootIconBox* box = 0);
+   TRootIconList(TRootIconBox* box = nullptr);
    virtual ~TRootIconList();
    void              UpdateName();
-   const char       *GetTitle() const { return "ListView Container"; }
-   Bool_t            IsFolder() const { return kFALSE; }
-   void              Browse(TBrowser *b);
+   const char       *GetTitle() const  override{ return "ListView Container"; }
+   Bool_t            IsFolder() const override { return kFALSE; }
+   void              Browse(TBrowser *b) override;
    const TGPicture  *GetPicture() const { return fPic; }
 };
 
@@ -407,7 +410,7 @@ private:
    void  *FindItem(const TString& name,
                    Bool_t direction = kTRUE,
                    Bool_t caseSensitive = kTRUE,
-                   Bool_t beginWith = kFALSE);
+                   Bool_t beginWith = kFALSE) override;
    void RemoveGarbage();
 
 public:
@@ -422,10 +425,10 @@ public:
                          TObject *obj, const char *name);
    void   SetObjHeaders();
    void   Refresh();
-   void   RemoveAll();
+   void   RemoveAll() override;
    void   SetGroupSize(Int_t siz) { fGroupSize = siz; }
    Int_t  GetGroupSize() const { return fGroupSize; }
-   TGFrameElement *FindFrame(Int_t x, Int_t y, Bool_t exclude=kTRUE) { return TGContainer::FindFrame(x,y,exclude); }
+   TGFrameElement *FindFrame(Int_t x, Int_t y, Bool_t exclude=kTRUE) override { return TGContainer::FindFrame(x,y,exclude); }
    Bool_t WasGrouped() const { return fWasGrouped; }
 };
 

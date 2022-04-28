@@ -25,7 +25,7 @@ protected:
    static Cursor_t fgDefaultCursor; // Default Cursor
 
 protected:
-   virtual void DoRedraw();
+   void DoRedraw() override;
 
    Window_t fInput;                 ///< Input Window
    Pixmap_t fPic, fMask;            ///< Pixmaps used as Window shape
@@ -36,20 +36,20 @@ public:
                 UInt_t options = kChildFrame, Pixel_t back = GetWhitePixel());
    virtual ~TGDragWindow();
 
-   virtual TGDimension GetDefaultSize() const { return TGDimension(fPw, fPh); }
+   TGDimension GetDefaultSize() const override { return TGDimension(fPw, fPh); }
 
-   virtual void MapWindow();
-   virtual void UnmapWindow();
-   virtual void RaiseWindow();
-   virtual void LowerWindow();
-   virtual void MapRaised();
+   void MapWindow() override;
+   void UnmapWindow() override;
+   void RaiseWindow() override;
+   void LowerWindow() override;
+   void MapRaised() override;
 
-   virtual void Layout();
+   void Layout() override;
 
    Window_t GetInputId() const { return fInput; }
    Bool_t HasWindow(Window_t w) const { return (w == fId || w == fInput); }
 
-   ClassDef(TGDragWindow, 0) // Window used for dragging
+   ClassDefOverride(TGDragWindow, 0) // Window used for dragging
 };
 
 
@@ -76,7 +76,7 @@ public:
    void     *fData;           ///< Actual data
    Int_t     fDataLength;     ///< Length of data
 
-   ClassDef(TDNDData, 0) // Drag and drop specific data
+   ClassDefOverride(TDNDData, 0) // Drag and drop specific data
 };
 
 
@@ -154,7 +154,7 @@ public:
    Bool_t         HandleSelectionRequest(Event_t *event);
    Bool_t         HandleSelection(Event_t *event);
 
-   Bool_t         HandleTimer(TTimer *t);
+   Bool_t         HandleTimer(TTimer *t) override;
 
   //--- called by widgets
 
@@ -195,7 +195,7 @@ public:
    static Atom_t  GetDNDActionDescrip();
    static Atom_t  GetXCDNDData();
 
-   ClassDef(TGDNDManager, 0) // The main Drag and Drop Manager
+   ClassDefOverride(TGDNDManager, 0) // The main Drag and Drop Manager
 };
 
 R__EXTERN TGDNDManager *gDNDManager; // global drag and drop manager

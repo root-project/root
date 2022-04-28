@@ -40,10 +40,10 @@ public:
    void   AddText(const char *helpText);
 
    void   Popup();
-   void   CloseWindow();
-   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   void   CloseWindow() override;
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 
-   ClassDef(TRootHelpDialog,0)  //Dialog to display help text
+   ClassDefOverride(TRootHelpDialog,0)  //Dialog to display help text
 };
 
 #endif

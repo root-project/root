@@ -48,7 +48,7 @@ public:
    void     SetSubTab(Int_t sub) { fSubTab = sub; }
    void     SetCommand(const char *cmd) { fCommand = cmd; }
 
-   ClassDef(TBrowserPlugin, 0)  // basic plugin description class
+   ClassDefOverride(TBrowserPlugin, 0)  // basic plugin description class
 };
 
 class TRootBrowser : public TGMainFrame, public TBrowserImp {

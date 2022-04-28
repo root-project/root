@@ -33,14 +33,14 @@ public:
                    UInt_t options = kVerticalFrame,
                    Pixel_t back = GetWhitePixel());
 
-   virtual Bool_t HandleButton(Event_t *);
+   Bool_t HandleButton(Event_t *) override;
    void KeyPressed(TGFrame*, UInt_t, UInt_t);
 
    void SetListBox(TGListBox *lb) { fListBox = lb; }
    void PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h);
    void EndPopup();
 
-   ClassDef(TGComboBoxPopup,0)  // Combobox popup window
+   ClassDefOverride(TGComboBoxPopup,0)  // Combobox popup window
 };
 
 
@@ -73,15 +73,15 @@ public:
 
    virtual ~TGComboBox();
 
-   virtual void DrawBorder();
-   virtual TGDimension GetDefaultSize() const { return TGDimension(fWidth, fHeight); }
+   void DrawBorder() override;
+   TGDimension GetDefaultSize() const override { return TGDimension(fWidth, fHeight); }
 
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t HandleDoubleClick(Event_t *event);
-   virtual Bool_t HandleMotion(Event_t *event);
-   virtual Bool_t HandleSelection(Event_t *event);
-   virtual Bool_t HandleSelectionRequest(Event_t *event);
-   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   Bool_t HandleButton(Event_t *event) override;
+   Bool_t HandleDoubleClick(Event_t *event) override;
+   Bool_t HandleMotion(Event_t *event) override;
+   Bool_t HandleSelection(Event_t *event) override;
+   Bool_t HandleSelectionRequest(Event_t *event) override;
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 
    virtual void AddEntry(TGString *s, Int_t id)
                         { fListBox->AddEntry(s, id); Resize(); }
@@ -98,8 +98,8 @@ public:
    virtual void NewEntry(const char *s = "Entry")
                         { fListBox->NewEntry(s); Resize(); }       //*MENU*
    virtual void RemoveEntry(Int_t id = -1);                        //*MENU*
-   virtual void RemoveAll();                                       //*MENU*
-   virtual void Layout();
+   void         RemoveAll() override;                              //*MENU*
+   void         Layout() override;
    virtual Bool_t IsTextInputEnabled() const { return (fTextEntry != 0); }
    virtual void EnableTextInput(Bool_t on);    //*TOGGLE* *GETTER=IsTextInputEnabled
    virtual void RemoveEntries(Int_t from_ID, Int_t to_ID)
@@ -125,9 +125,10 @@ public:
    virtual void Selected(const char *txt) { Emit("Selected(char*)", txt); } // *SIGNAL*
    virtual void Changed() { Emit("Changed()"); } // *SIGNAL*
    virtual void ReturnPressed();                                     // *SIGNAL*
-   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
 
-   ClassDef(TGComboBox,0)  // Combo box widget
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
+
+   ClassDefOverride(TGComboBox,0)  // Combo box widget
 };
 
 
@@ -143,9 +144,9 @@ public:
               UInt_t options = kHorizontalFrame | kSunkenFrame | kDoubleBorder,
               Pixel_t back = GetWhitePixel());
 
-   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGLineStyleComboBox, 0)  // Line style combobox widget
+   ClassDefOverride(TGLineStyleComboBox, 0)  // Line style combobox widget
 };
 
 
@@ -157,13 +158,13 @@ a combobox for selecting the line width.
 class TGLineWidthComboBox : public TGComboBox {
 
 public:
-   TGLineWidthComboBox(const TGWindow *p = 0, Int_t id = -1,
+   TGLineWidthComboBox(const TGWindow *p = nullptr, Int_t id = -1,
               UInt_t options = kHorizontalFrame | kSunkenFrame | kDoubleBorder,
               Pixel_t back = GetWhitePixel(), Bool_t none=kFALSE);
 
-   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGLineWidthComboBox, 0)  // Line width combobox widget
+   ClassDefOverride(TGLineWidthComboBox, 0)  // Line width combobox widget
 };
 
 
@@ -180,12 +181,12 @@ protected:
    FontStruct_t fFonts[kMaxFonts];
 
 public:
-   TGFontTypeComboBox(const TGWindow *p = 0, Int_t id = -1,
+   TGFontTypeComboBox(const TGWindow *p = nullptr, Int_t id = -1,
             UInt_t options = kHorizontalFrame | kSunkenFrame | kDoubleBorder,
             Pixel_t bask = GetWhitePixel());
    virtual ~TGFontTypeComboBox();
 
-   ClassDef(TGFontTypeComboBox, 0)  // Font type combobox widget
+   ClassDefOverride(TGFontTypeComboBox, 0)  // Font type combobox widget
 };
 
 #endif

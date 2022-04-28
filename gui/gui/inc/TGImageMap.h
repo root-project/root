@@ -68,7 +68,7 @@ public:
    Bool_t operator!=(const TGRegion &r) const { return !(operator==(r)); }
    TGRegion &operator=(const TGRegion &r);
 
-   ClassDef(TGRegion,0) // Describes a region
+   ClassDefOverride(TGRegion,0) // Describes a region
 };
 
 
@@ -100,7 +100,7 @@ public:
    void         SetPopup(TGPopupMenu *popup) { fPopup = popup; }
    void         DisplayPopup();
 
-   ClassDef(TGRegionWithId,0) // Region with id, tooltip text and popup menu
+   ClassDefOverride(TGRegionWithId,0) // Region with id, tooltip text and popup menu
 };
 
 
@@ -128,19 +128,19 @@ public:
    TGImageMap(const TGWindow *p, const TString &pic);
    virtual ~TGImageMap();
 
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t HandleDoubleClick(Event_t *event);
-   virtual Bool_t HandleMotion(Event_t *event);
+   Bool_t HandleButton(Event_t *event) override;
+   Bool_t HandleDoubleClick(Event_t *event) override;
+   Bool_t HandleMotion(Event_t *event) override;
 
    ENavMode       GetNavMode() { return fNavMode; }
    void           AddRegion(const TGRegion &region, Int_t id);
    TGPopupMenu   *CreatePopup(Int_t id);
    TGPopupMenu   *GetPopup(Int_t id);
 
-   void SetToolTipText(const char *text, Long_t delayms = 300);
+   void SetToolTipText(const char *text, Long_t delayms = 300) override;
    void SetToolTipText(Int_t id, const char *text, Long_t delayms = 300);
    void SetCursor(ECursor cursor = kHand) { fCursorMouseOver = cursor; }
-   void SetPicture(const TGPicture * /*new_pic*/) { } // disabled
+   void SetPicture(const TGPicture * /*new_pic*/) override { } // disabled
 
    virtual void RegionClicked(Int_t id); // *SIGNAL*
    virtual void DoubleClicked(Int_t id); // *SIGNAL*
@@ -148,7 +148,7 @@ public:
    virtual void OnMouseOver(Int_t id);   // *SIGNAL*
    virtual void OnMouseOut(Int_t id);    // *SIGNAL*
 
-   ClassDef(TGImageMap,0)  // Clickable image (like MAP in HTML)
+   ClassDefOverride(TGImageMap,0)  // Clickable image (like MAP in HTML)
 };
 
 R__EXTERN TGRegionWithId *gCurrentRegion;

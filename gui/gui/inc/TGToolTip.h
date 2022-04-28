@@ -43,9 +43,9 @@ public:
    TGToolTip(Int_t x, Int_t y, const char *text, Long_t delayms);
    virtual ~TGToolTip();
 
-   virtual void DrawBorder();
+   void DrawBorder() override;
 
-   Bool_t HandleTimer(TTimer *t);
+   Bool_t HandleTimer(TTimer *t) override;
    void   Show(Int_t x, Int_t y);    //*SIGNAL*
    void   Hide();                    //*SIGNAL*
    void   Reset();                   //*SIGNAL*
@@ -55,7 +55,7 @@ public:
    void   SetDelay(Long_t delayms);
    const TGString *GetText() const;
 
-   ClassDef(TGToolTip,0)  //One or multiple lines help text
+   ClassDefOverride(TGToolTip,0)  //One or multiple lines help text
 };
 
 #endif
