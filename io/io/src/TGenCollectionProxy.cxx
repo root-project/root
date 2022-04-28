@@ -44,11 +44,11 @@ public:
    }
    // Standard Destructor
    virtual ~TGenVectorProxy()
-{
+   {
    }
    // Return the address of the value at index 'idx'
-   virtual void* At(UInt_t idx)
-{
+   void* At(UInt_t idx)  override
+   {
       if ( fEnv && fEnv->fObject ) {
          fEnv->fIdx = idx;
          switch( idx ) {
@@ -60,10 +60,10 @@ public:
          }
       }
       Fatal("TGenVectorProxy","At> Logic error - no proxy object set.");
-      return 0;
+      return nullptr;
    }
    // Call to delete/destruct individual item
-   virtual void DeleteItem(Bool_t force, void* ptr) const
+   void DeleteItem(Bool_t force, void* ptr) const override
    {
       if ( force && ptr ) {
          if ( fVal->fProperties&kNeedDelete) {
@@ -97,7 +97,7 @@ public:
    {
       // Standard Destructor.
    }
-   virtual void* At(UInt_t idx)
+   void* At(UInt_t idx) override
    {
       // Return the address of the value at index 'idx'
 
@@ -109,10 +109,10 @@ public:
          return &fLastValue;
       }
       Fatal("TGenVectorProxy","At> Logic error - no proxy object set.");
-      return 0;
+      return nullptr;
    }
 
-   virtual void DeleteItem(Bool_t force, void* ptr) const
+   void DeleteItem(Bool_t force, void* ptr) const override
    {
       // Call to delete/destruct individual item
       if ( force && ptr ) {
@@ -143,7 +143,7 @@ public:
    {
       // Standard Destructor.
    }
-   virtual void* At(UInt_t idx)
+   void* At(UInt_t idx) override
    {
       // Return the address of the value at index 'idx'
 
@@ -168,7 +168,7 @@ public:
       return 0;
    }
 
-   virtual void DeleteItem(Bool_t force, void* ptr) const
+   void DeleteItem(Bool_t force, void* ptr) const override
    {
       // Call to delete/destruct individual item
       if ( force && ptr ) {
@@ -191,15 +191,15 @@ class TGenListProxy : public TGenVectorProxy {
 public:
    // Standard Destructor
    TGenListProxy(const TGenCollectionProxy& c) : TGenVectorProxy(c)
-{
+   {
    }
    // Standard Destructor
    virtual ~TGenListProxy()
-{
+   {
    }
    // Return the address of the value at index 'idx'
-   void* At(UInt_t idx)
-{
+   void* At(UInt_t idx) override
+   {
       if ( fEnv && fEnv->fObject ) {
          switch( idx ) {
          case 0:
@@ -215,7 +215,7 @@ public:
          }
       }
       Fatal("TGenListProxy","At> Logic error - no proxy object set.");
-      return 0;
+      return nullptr;
    }
 };
 
@@ -233,15 +233,15 @@ class TGenSetProxy : public TGenVectorProxy {
 public:
    // Standard Destructor
    TGenSetProxy(const TGenCollectionProxy& c) : TGenVectorProxy(c)
-{
+   {
    }
    // Standard Destructor
    virtual ~TGenSetProxy()
-{
+   {
    }
    // Return the address of the value at index 'idx'
-   void* At(UInt_t idx)
-{
+   void* At(UInt_t idx) override
+   {
       if ( fEnv && fEnv->fObject ) {
          if ( fEnv->fUseTemp ) {
             return (((char*)fEnv->fTemp)+idx*fValDiff);
@@ -260,7 +260,7 @@ public:
          }
       }
       Fatal("TGenSetProxy","At> Logic error - no proxy object set.");
-      return 0;
+      return nullptr;
    }
 };
 
@@ -278,14 +278,14 @@ class TGenMapProxy : public TGenSetProxy {
 public:
    // Standard Destructor
    TGenMapProxy(const TGenCollectionProxy& c) : TGenSetProxy(c)
-{
+   {
    }
    // Standard Destructor
    virtual ~TGenMapProxy()
-{
+   {
    }
    // Call to delete/destruct individual item
-   virtual void DeleteItem(Bool_t force, void* ptr) const
+   void DeleteItem(Bool_t force, void* ptr) const override
    {
       if (force) {
          if ( fKey->fProperties&kNeedDelete) {

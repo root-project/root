@@ -139,11 +139,11 @@ namespace TStreamerInfoActions
       // Mostly to cancel out the PrintDebug.
    public:
       TGenericConfiguration(TVirtualStreamerInfo *info, UInt_t id, TCompInfo_t *compinfo, Int_t offset = 0) : TConfiguration(info,id,compinfo,offset) {};
-      void PrintDebug(TBuffer &, void *) const {
+      void PrintDebug(TBuffer &, void *) const override {
          // Since we call the old code, it will print the debug statement.
       }
 
-      virtual TConfiguration *Copy() { return new TGenericConfiguration(*this); }
+      TConfiguration *Copy() override { return new TGenericConfiguration(*this); }
   };
 
    struct TBitsConfiguration : TConfiguration {
@@ -155,7 +155,8 @@ namespace TStreamerInfoActions
       Int_t  fObjectOffset;  // Offset of the TObject part within the object
 
       TBitsConfiguration(TVirtualStreamerInfo *info, UInt_t id, TCompInfo_t *compinfo, Int_t offset = 0) : TConfiguration(info,id,compinfo,offset),fObjectOffset(0) {};
-      void PrintDebug(TBuffer &, void *) const {
+      void PrintDebug(TBuffer &, void *) const override
+      {
          TStreamerInfo *info = (TStreamerInfo*)fInfo;
          TStreamerElement *aElement = fCompInfo->fElem;
          TString sequenceType;
@@ -167,7 +168,7 @@ namespace TStreamerInfoActions
                 aElement->ClassName(), fOffset, sequenceType.Data());
       }
 
-      void AddToOffset(Int_t delta)
+      void AddToOffset(Int_t delta) override
       {
          // Add the (potentially negative) delta to all the configuration's offset.  This is used by
          // TBranchElement in the case of split sub-object.
@@ -177,13 +178,13 @@ namespace TStreamerInfoActions
          fObjectOffset = 0;
       }
 
-      void SetMissing()
+      void SetMissing() override
       {
          fOffset = TVirtualStreamerInfo::kMissing;
          fObjectOffset = 0;
       }
 
-      virtual TConfiguration *Copy() { return new TBitsConfiguration(*this); }
+      TConfiguration *Copy() override { return new TBitsConfiguration(*this); }
 
    };
 
@@ -890,7 +891,7 @@ namespace TStreamerInfoActions
       Double_t fFactor;
       Double_t fXmin;
       TConfWithFactor(TVirtualStreamerInfo *info, UInt_t id, TCompInfo_t *compinfo, Int_t offset, Double_t factor, Double_t xmin) : TConfiguration(info,id,compinfo,offset),fFactor(factor),fXmin(xmin) {};
-      virtual TConfiguration *Copy() { return new TConfWithFactor(*this); }
+      TConfiguration *Copy() override { return new TConfWithFactor(*this); }
    };
 
    template <typename T>
@@ -909,7 +910,7 @@ namespace TStreamerInfoActions
    public:
       Int_t fNbits;
       TConfNoFactor(TVirtualStreamerInfo *info, UInt_t id, TCompInfo_t *compinfo, Int_t offset, Int_t nbits) : TConfiguration(info,id,compinfo,offset),fNbits(nbits) {};
-      virtual TConfiguration *Copy() { return new TConfNoFactor(*this); }
+      TConfiguration *Copy() override { return new TConfNoFactor(*this); }
    };
 
    template <typename T>
@@ -999,7 +1000,7 @@ namespace TStreamerInfoActions
          TConfiguration(info,id,compinfo,offset,length), fOldClass(oldClass), fNewClass(newClass), fStreamer(streamer), fTypeName(type_name), fIsSTLBase(isbase),
          fCreateIterators(0), fCopyIterator(0), fDeleteIterator(0), fDeleteTwoIterators(0) { Init(); }
 
-      virtual TConfiguration *Copy() { return new TConfigSTL(*this); }
+      TConfiguration *Copy() override { return new TConfigSTL(*this); }
    };
 
    class TConfSTLWithFactor : public TConfigSTL {
@@ -1008,7 +1009,7 @@ namespace TStreamerInfoActions
       Double_t fFactor;
       Double_t fXmin;
       TConfSTLWithFactor(TConfigSTL *orig, Double_t factor, Double_t xmin) : TConfigSTL(*orig),fFactor(factor),fXmin(xmin) {};
-      virtual TConfiguration *Copy() { return new TConfSTLWithFactor(*this); }
+      TConfiguration *Copy() override { return new TConfSTLWithFactor(*this); }
    };
 
    class TConfSTLNoFactor : public TConfigSTL {
@@ -1016,7 +1017,7 @@ namespace TStreamerInfoActions
    public:
       Int_t fNbits;
       TConfSTLNoFactor(TConfigSTL *orig, Int_t nbits) : TConfigSTL(*orig),fNbits(nbits) {};
-      virtual TConfiguration *Copy() { return new TConfSTLNoFactor(*this); }
+      TConfiguration *Copy() override { return new TConfSTLNoFactor(*this); }
    };
 
    class TVectorLoopConfig : public TLoopConfiguration {
@@ -1028,19 +1029,19 @@ namespace TStreamerInfoActions
       TVectorLoopConfig(TVirtualCollectionProxy *proxy, Long_t increment, Bool_t /* read */) : TLoopConfiguration(proxy), fIncrement(increment) {};
       //virtual void PrintDebug(TBuffer &buffer, void *);
       virtual ~TVectorLoopConfig() {};
-      void Print() const
+      void Print() const override
       {
          printf("TVectorLoopConfig: increment=%ld\n",fIncrement);
       }
 
-      void* GetFirstAddress(void *start, const void * /* end */) const
+      void* GetFirstAddress(void *start, const void * /* end */) const override
       {
          // Return the address of the first element of the collection.
 
          return start;
       }
 
-      virtual TLoopConfiguration* Copy() const { return new TVectorLoopConfig(*this); }
+      TLoopConfiguration* Copy() const override { return new TVectorLoopConfig(*this); }
    };
 
    class TAssocLoopConfig : public TLoopConfiguration {
@@ -1049,13 +1050,13 @@ namespace TStreamerInfoActions
       TAssocLoopConfig(TVirtualCollectionProxy *proxy, Bool_t /* read */) : TLoopConfiguration(proxy) {};
       //virtual void PrintDebug(TBuffer &buffer, void *);
       virtual ~TAssocLoopConfig() {};
-      void Print() const
+      void Print() const override
       {
          printf("TAssocLoopConfig: proxy=%s\n",fProxy->GetCollectionClass()->GetName());
       }
-      virtual TLoopConfiguration* Copy() const { return new TAssocLoopConfig(*this); }
+      TLoopConfiguration* Copy() const override { return new TAssocLoopConfig(*this); }
 
-      void* GetFirstAddress(void *start, const void * /* end */) const
+      void* GetFirstAddress(void *start, const void * /* end */) const override
       {
          // Return the address of the first element of the collection.
 
@@ -1096,13 +1097,13 @@ namespace TStreamerInfoActions
          Init(read);
       }
       virtual ~TGenericLoopConfig() {};
-      void Print() const
+      void Print() const override
       {
          printf("TGenericLoopConfig: proxy=%s\n",fProxy->GetCollectionClass()->GetName());
       }
-      virtual TLoopConfiguration* Copy() const { return new TGenericLoopConfig(*this); }
+      TLoopConfiguration* Copy() const override { return new TGenericLoopConfig(*this); }
 
-      void* GetFirstAddress(void *start_collection, const void *end_collection) const
+      void* GetFirstAddress(void *start_collection, const void *end_collection) const override
       {
          // Return the address of the first element of the collection.
 
@@ -1354,7 +1355,6 @@ namespace TStreamerInfoActions
       }
    }
 
-
    INLINE_TEMPLATE_ARGS void ReadSTLObjectWiseFastArray(TBuffer &buf, void *addr, const TConfiguration *conf, Version_t /* vers */, UInt_t /* start */)
    {
       TConfigSTL *config = (TConfigSTL*)conf;
@@ -1472,7 +1472,8 @@ namespace TStreamerInfoActions
          TConfiguration(info, -1, nullptr, offset), fOnfileObject(onfileObject)
       {}
 
-      virtual void Print() const {
+      void Print() const override
+      {
          TStreamerInfo *info = (TStreamerInfo*)fInfo;
          if (fOnfileObject)
             printf("StreamerInfoAction, class:%s, PushDataCache offset=%d\n",
@@ -1481,7 +1482,8 @@ namespace TStreamerInfoActions
             printf("StreamerInfoAction, class:%s, PopDataCache offset=%d\n",
                    info->GetClass()->GetName(), fOffset);
       }
-      virtual void PrintDebug(TBuffer &buffer, void *object) const {
+      void PrintDebug(TBuffer &buffer, void *object) const override
+      {
          if (gDebug > 1) {
             TStreamerInfo *info = (TStreamerInfo*)fInfo;
             printf("StreamerInfoAction, class:%s, %sDataCache, bufpos=%d, arr=%p, offset=%d, onfileObject=%p\n",
@@ -1553,7 +1555,7 @@ namespace TStreamerInfoActions
 
       TConfigurationUseCache(TVirtualStreamerInfo *info, TConfiguredAction &action, Bool_t repeat) :
               TConfiguration(info,action.fConfiguration->fElemId,action.fConfiguration->fCompInfo,action.fConfiguration->fOffset),fAction(action),fNeedRepeat(repeat) {};
-      virtual void PrintDebug(TBuffer &b, void *addr) const
+      void PrintDebug(TBuffer &b, void *addr) const override
       {
          if (gDebug > 1) {
             // Idea: We should print the name of the action function.
@@ -1566,8 +1568,9 @@ namespace TStreamerInfoActions
          }
 
       }
-      virtual ~TConfigurationUseCache() {};
-      virtual TConfiguration *Copy() {
+      virtual ~TConfigurationUseCache() {}
+      TConfiguration *Copy() override
+      {
          TConfigurationUseCache *copy = new TConfigurationUseCache(*this);
          fAction.fConfiguration = copy->fAction.fConfiguration->Copy(); // since the previous allocation did a 'move' of fAction we need to fix it.
          return copy;

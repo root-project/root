@@ -124,7 +124,7 @@ public:
 */
 class TCollectionStreamer   {
 private:
-   TCollectionStreamer& operator=(const TCollectionStreamer&);   // not implemented
+   TCollectionStreamer& operator=(const TCollectionStreamer&) = delete;
 
 protected:
    TGenCollectionProxy* fStreamer;   ///< Pointer to worker streamer
@@ -156,24 +156,24 @@ public:
 */
 class TCollectionClassStreamer : public TClassStreamer, public TCollectionStreamer {
  protected:
-   TCollectionClassStreamer &operator=(const TCollectionClassStreamer &rhs); // Not implemented.
+   TCollectionClassStreamer &operator=(const TCollectionClassStreamer &rhs) = delete;
    /// Copy constructor
    TCollectionClassStreamer(const TCollectionClassStreamer& c)
       : TClassStreamer(c), TCollectionStreamer(c)      {                        }
 
 public:
    /// Initializing constructor
-   TCollectionClassStreamer() : TClassStreamer(0)     {                        }
+   TCollectionClassStreamer() : TClassStreamer(nullptr) {                        }
    /// Standard destructor
-   virtual ~TCollectionClassStreamer()                {                        }
+   virtual ~TCollectionClassStreamer()                  {                        }
    /// Streamer for I/O handling
-   virtual void operator()(TBuffer &buff, void *obj ) { Streamer(buff,obj,0,fOnFileClass); }
+   void operator()(TBuffer &buff, void *obj) override { Streamer(buff,obj,0,fOnFileClass); }
 
-   virtual void Stream(TBuffer &b, void *obj, const TClass *onfileClass)
+   void Stream(TBuffer &b, void *obj, const TClass *onfileClass) override
    {
       if (b.IsReading()) {
          TGenCollectionProxy *proxy = TCollectionStreamer::fStreamer;
-         if (onfileClass==0 || onfileClass == proxy->GetCollectionClass()) {
+         if (!onfileClass || onfileClass == proxy->GetCollectionClass()) {
             proxy->ReadBuffer(b,obj);
          } else {
             proxy->ReadBuffer(b,obj,onfileClass);
@@ -185,7 +185,7 @@ public:
    }
 
    /// Virtual copy constructor.
-   virtual TClassStreamer *Generate() const {
+   TClassStreamer *Generate() const override {
       return new TCollectionClassStreamer(*this);
    }
 
@@ -204,18 +204,18 @@ public:
   */
 class TCollectionMemberStreamer : public TMemberStreamer, public TCollectionStreamer {
 private:
-   TCollectionMemberStreamer &operator=(const TCollectionMemberStreamer &rhs); // Not implemented.
+   TCollectionMemberStreamer &operator=(const TCollectionMemberStreamer &rhs) = delete;
 public:
    /// Initializing constructor
-   TCollectionMemberStreamer() : TMemberStreamer(0) { }
+   TCollectionMemberStreamer() : TMemberStreamer(nullptr) { }
    /// Copy constructor
    TCollectionMemberStreamer(const TCollectionMemberStreamer& c)
       : TMemberStreamer(c), TCollectionStreamer(c)   { }
    /// Standard destructor
    virtual ~TCollectionMemberStreamer()             { }
    /// Streamer for I/O handling
-   virtual void operator()(TBuffer &buff,void *obj,Int_t siz=0)
-   { Streamer(buff, obj, siz, 0); /* FIXME */ }
+   void operator()(TBuffer &buff,void *obj, Int_t siz = 0) override
+   { Streamer(buff, obj, siz, nullptr); /* FIXME */ }
 };
 
 #endif

@@ -342,7 +342,7 @@ private:
 public:
 
    // Virtual copy constructor.
-   virtual TVirtualCollectionProxy* Generate() const;
+   virtual TVirtualCollectionProxy* Generate() const override;
 
    // Copy constructor.
    TGenCollectionProxy(const TGenCollectionProxy& copy);
@@ -360,56 +360,56 @@ public:
    virtual ~TGenCollectionProxy();
 
    // Reset the info gathered from StreamerInfos and value's TClass.
-   virtual Bool_t Reset();
+   Bool_t Reset() override;
 
    // Return a pointer to the TClass representing the container.
-   virtual TClass *GetCollectionClass() const;
+   TClass *GetCollectionClass() const override;
 
    // Return the type of collection see TClassEdit::ESTLType
-   virtual Int_t   GetCollectionType() const;
+   Int_t   GetCollectionType() const override;
 
    // Return the offset between two consecutive value_types (memory layout).
-   virtual ULong_t   GetIncrement() const;
+   ULong_t   GetIncrement() const override;
 
    // Return the sizeof the collection object.
-   virtual UInt_t Sizeof() const;
+   UInt_t Sizeof() const override;
 
    // Push new proxy environment.
-   virtual void PushProxy(void *objstart);
+   void PushProxy(void *objstart) override;
 
    // Pop old proxy environment.
-   virtual void PopProxy();
+   void PopProxy() override;
 
    // Return true if the content is of type 'pointer to'.
-   virtual Bool_t HasPointers() const;
+   Bool_t HasPointers() const override;
 
    // Return a pointer to the TClass representing the content.
-   virtual TClass *GetValueClass() const;
+   TClass *GetValueClass() const override;
 
    // If the content is a simple numerical value, return its type (see TDataType).
-   virtual EDataType GetType() const;
+   EDataType GetType() const override;
 
    // Return the address of the value at index 'idx'.
-   virtual void *At(UInt_t idx);
+   void *At(UInt_t idx) override;
 
    // Clear the container.
-   virtual void Clear(const char *opt = "");
+   void Clear(const char *opt = "") override;
 
    // Resize the container.
    virtual void Resize(UInt_t n, Bool_t force_delete);
 
    // Return the current size of the container.
-   virtual UInt_t Size() const;
+   UInt_t Size() const override;
 
    // Block allocation of containees.
-   virtual void* Allocate(UInt_t n, Bool_t forceDelete);
+   void* Allocate(UInt_t n, Bool_t forceDelete) override;
 
    // Insert data into the container where data is a C-style array of the actual type contained in the collection
    // of the given size.   For associative container (map, etc.), the data type is the pair<key,value>.
-   virtual void  Insert(const void *data, void *container, size_t size);
+   void  Insert(const void *data, void *container, size_t size) override;
 
    // Block commit of containees.
-   virtual void Commit(void* env);
+   void Commit(void* env) override;
 
    // Streamer function.
    virtual void Streamer(TBuffer &refBuffer);
@@ -428,26 +428,26 @@ public:
    virtual TClass* GetOnFileClass() const { return fOnFileClass; }
 
    // MemberWise actions
-   virtual TStreamerInfoActions::TActionSequence *GetConversionReadMemberWiseActions(TClass *oldClass, Int_t version);
-   virtual TStreamerInfoActions::TActionSequence *GetReadMemberWiseActions(Int_t version);
-   virtual TStreamerInfoActions::TActionSequence *GetWriteMemberWiseActions();
+   TStreamerInfoActions::TActionSequence *GetConversionReadMemberWiseActions(TClass *oldClass, Int_t version) override;
+   TStreamerInfoActions::TActionSequence *GetReadMemberWiseActions(Int_t version) override;
+   TStreamerInfoActions::TActionSequence *GetWriteMemberWiseActions() override;
 
    // Set of functions to iterate easily through the collection
 
-   virtual CreateIterators_t GetFunctionCreateIterators(Bool_t read = kTRUE);
+   CreateIterators_t GetFunctionCreateIterators(Bool_t read = kTRUE) override;
    // typedef void (*CreateIterators_t)(void *collection, void **begin_arena, void **end_arena);
    // begin_arena and end_arena should contain the location of a memory arena of size fgIteratorSize.
    // If the collection iterator are of that size or less, the iterators will be constructed in place in those location (new with placement)
    // Otherwise the iterators will be allocated via a regular new and their address returned by modifying the value of begin_arena and end_arena.
 
-   virtual CopyIterator_t GetFunctionCopyIterator(Bool_t read = kTRUE);
+   CopyIterator_t GetFunctionCopyIterator(Bool_t read = kTRUE) override;
    // typedef void* (*CopyIterator_t)(void **dest, const void *source);
    // Copy the iterator source, into dest.   dest should contain the location of a memory arena of size fgIteratorSize.
    // If the collection iterator is of that size or less, the iterator will be constructed in place in this location (new with placement)
    // Otherwise the iterator will be allocated via a regular new.
    // The actual address of the iterator is returned in both case.
 
-   virtual Next_t GetFunctionNext(Bool_t read = kTRUE);
+   Next_t GetFunctionNext(Bool_t read = kTRUE) override;
    // typedef void* (*Next_t)(void *iter, const void *end);
    // iter and end should be pointers to respectively an iterator to be incremented and the result of collection.end()
    // If the iterator has not reached the end of the collection, 'Next' increment the iterator 'iter' and return 0 if
@@ -455,8 +455,8 @@ public:
    // If the end was not reached, 'Next' returns the address of the content pointed to by the iterator before the
    // incrementation ; if the collection contains pointers, 'Next' will return the value of the pointer.
 
-   virtual DeleteIterator_t GetFunctionDeleteIterator(Bool_t read = kTRUE);
-   virtual DeleteTwoIterators_t GetFunctionDeleteTwoIterators(Bool_t read = kTRUE);
+   DeleteIterator_t GetFunctionDeleteIterator(Bool_t read = kTRUE) override;
+   DeleteTwoIterators_t GetFunctionDeleteTwoIterators(Bool_t read = kTRUE) override;
    // typedef void (*DeleteIterator_t)(void *iter);
    // typedef void (*DeleteTwoIterators_t)(void *begin, void *end);
    // If the size of the iterator is greater than fgIteratorArenaSize, call delete on the addresses,
