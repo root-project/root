@@ -9,6 +9,7 @@
 #pragma link C++ class DerivedA2+;
 #pragma link C++ class DerivedB+;
 #pragma link C++ class DerivedC+;
+#pragma link C++ class TestEBO+;
 
 #pragma link C++ class IAuxSetOption+;
 #pragma link C++ class PackedParameters+;
