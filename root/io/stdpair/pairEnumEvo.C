@@ -75,9 +75,9 @@ int pairEnumEvo(int libtype /* used as enum libEnum */, bool fixed, bool readbef
    if (libtype == libEnum::kACLiC)
       gROOT->ProcessLine(".L cmspair.h+");
    else if (libtype == libEnum::kShared)
-      gSystem->Load("libCmsPairCollection.so");
+      gSystem->Load("libCmsPairCollection");
    else if (libtype == libEnum::kPairShared)
-      gSystem->Load("libCmsPair.so");
+      gSystem->Load("libCmsPair");
    else if (libtype == libEnum::kInterpreted)
       gROOT->ProcessLine("#include \"cmspair.h\"");
    else if (libtype == libEnum::kNothing)
