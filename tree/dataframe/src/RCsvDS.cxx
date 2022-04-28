@@ -100,12 +100,13 @@ const TRegexp RCsvDS::fgDoubleRegex3("^[-+]?[0-9]*\\.[0-9]+[eEdDqQ][-+]?[0-9]+$"
 const TRegexp RCsvDS::fgTrueRegex("^true$");
 const TRegexp RCsvDS::fgFalseRegex("^false$");
 
-const std::map<RCsvDS::ColType_t, std::string>
-   RCsvDS::fgColTypeMap({{'b', "bool"}, {'d', "double"}, {'l', "Long64_t"}, {'s', "std::string"}});
+const std::unordered_map<RCsvDS::ColType_t, std::string>
+   RCsvDS::fgColTypeMap({{'O', "bool"}, {'D', "double"}, {'L', "Long64_t"}, {'T', "std::string"}});
 
 void RCsvDS::FillHeaders(const std::string &line)
 {
    auto columns = ParseColumns(line);
+   fHeaders.reserve(columns.size());
    for (auto &col : columns) {
       fHeaders.emplace_back(col);
    }
@@ -121,22 +122,22 @@ void RCsvDS::FillRecord(const std::string &line, Record_t &record)
       auto colType = fColTypes[fHeaders[i]];
 
       switch (colType) {
-      case 'd': {
+      case 'D': {
          record.emplace_back(new double(std::stod(col)));
          break;
       }
-      case 'l': {
+      case 'L': {
          record.emplace_back(new Long64_t(std::stoll(col)));
          break;
       }
-      case 'b': {
+      case 'O': {
          auto b = new bool();
          record.emplace_back(b);
          std::istringstream is(col);
          is >> std::boolalpha >> *b;
          break;
       }
-      case 's': {
+      case 'T': {
          record.emplace_back(new std::string(col));
          break;
       }
@@ -147,7 +148,8 @@ void RCsvDS::FillRecord(const std::string &line, Record_t &record)
 
 void RCsvDS::GenerateHeaders(size_t size)
 {
-   for (size_t i = 0; i < size; ++i) {
+   fHeaders.reserve(size);
+   for (size_t i = 0u; i < size; ++i) {
       fHeaders.push_back("Col" + std::to_string(i));
    }
 }
@@ -156,8 +158,8 @@ std::vector<void *> RCsvDS::GetColumnReadersImpl(std::string_view colName, const
 {
    const auto colType = GetType(colName);
 
-   if ((colType == 'd' && typeid(double) != ti) || (colType == 'l' && typeid(Long64_t) != ti) ||
-       (colType == 's' && typeid(std::string) != ti) || (colType == 'b' && typeid(bool) != ti)) {
+   if ((colType == 'D' && typeid(double) != ti) || (colType == 'L' && typeid(Long64_t) != ti) ||
+       (colType == 'T' && typeid(std::string) != ti) || (colType == 'O' && typeid(bool) != ti)) {
       std::string err = "The type selected for column \"";
       err += colName;
       err += "\" does not correspond to column type, which is ";
@@ -184,13 +186,30 @@ std::vector<void *> RCsvDS::GetColumnReadersImpl(std::string_view colName, const
    return ret;
 }
 
+void RCsvDS::ValidateColTypes(std::vector<std::string> &columns) const
+{
+   for (const auto &col : fColTypes) {
+      if (!HasColumn(col.first)) {
+         std::string msg = "There is no column with name \"" + col.first + "\".";
+         if (!fReadHeaders) {
+            msg += "\nSince the input csv file does not contain headers, valid column names";
+            msg += " are [\"Col0\", ..., \"Col" + std::to_string(columns.size() - 1) + "\"].";
+         }
+         throw std::runtime_error(msg);
+      }
+      if (std::string("ODLT").find(col.second) == std::string::npos) {
+         std::string msg = "Type alias '" + std::string(1, col.second) + "' is not supported.\n";
+         msg += "Supported type aliases are 'O' for boolean, 'D' for double, 'L' for Long64_t, 'T' for std::string.";
+         throw std::runtime_error(msg);
+      }
+   }
+}
+
 void RCsvDS::InferColTypes(std::vector<std::string> &columns)
 {
-   auto i = 0U;
-   for (auto &col : columns) {
-      InferType(col, i);
-      ++i;
-   }
+   for (auto i = 0u; i < columns.size(); ++i)
+      if (fColTypes.find(fHeaders[i]) == fColTypes.end())
+         InferType(columns[i], i);
 }
 
 void RCsvDS::InferType(const std::string &col, unsigned int idxCol)
@@ -199,15 +218,14 @@ void RCsvDS::InferType(const std::string &col, unsigned int idxCol)
    int dummy;
 
    if (fgIntRegex.Index(col, &dummy) != -1) {
-      type = 'l'; // Long64_t
-   } else if (fgDoubleRegex1.Index(col, &dummy) != -1 ||
-              fgDoubleRegex2.Index(col, &dummy) != -1 ||
+      type = 'L'; // Long64_t
+   } else if (fgDoubleRegex1.Index(col, &dummy) != -1 || fgDoubleRegex2.Index(col, &dummy) != -1 ||
               fgDoubleRegex3.Index(col, &dummy) != -1) {
-      type = 'd'; // double
+      type = 'D'; // double
    } else if (fgTrueRegex.Index(col, &dummy) != -1 || fgFalseRegex.Index(col, &dummy) != -1) {
-      type = 'b'; // bool
+      type = 'O'; // bool
    } else {       // everything else is a string
-      type = 's'; // std::string
+      type = 'T'; // std::string
    }
    // TODO: Date
 
@@ -258,11 +276,10 @@ size_t RCsvDS::ParseValue(const std::string &line, std::vector<std::string> &col
 ///                        (default `true`).
 /// \param[in] delimiter Delimiter character (default ',').
 /// \param[in] linesChunkSize bunch of lines to read, use -1 to read all
-RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long64_t linesChunkSize) // TODO: Let users specify types?
-   : fReadHeaders(readHeaders),
-     fCsvFile(ROOT::Internal::RRawFile::Create(fileName)),
-     fDelimiter(delimiter),
-     fLinesChunkSize(linesChunkSize)
+RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long64_t linesChunkSize,
+               std::unordered_map<std::string, char> &&colTypes)
+   : fReadHeaders(readHeaders), fCsvFile(ROOT::Internal::RRawFile::Create(fileName)), fDelimiter(delimiter),
+     fLinesChunkSize(linesChunkSize), fColTypes(std::move(colTypes))
 {
    std::string line;
 
@@ -290,6 +307,9 @@ RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long
          GenerateHeaders(columns.size());
       }
 
+      // Ensure user is trying to set types only of existing columns
+      ValidateColTypes(columns);
+
       // Infer types of columns with first record
       InferColTypes(columns);
 
@@ -309,19 +329,19 @@ void RCsvDS::FreeRecords()
          void *p = record[i];
          const auto colType = fColTypes[fHeaders[i]];
          switch (colType) {
-         case 'd': {
+         case 'D': {
             delete static_cast<double *>(p);
             break;
          }
-         case 'l': {
+         case 'L': {
             delete static_cast<Long64_t *>(p);
             break;
          }
-         case 'b': {
+         case 'O': {
             delete static_cast<bool *>(p);
             break;
          }
-         case 's': {
+         case 'T': {
             delete static_cast<std::string *>(p);
             break;
          }
@@ -428,19 +448,19 @@ bool RCsvDS::SetEntry(unsigned int slot, ULong64_t entry)
    for (auto &colType : fColTypesList) {
       auto dataPtr = fRecords[recordPos][colIndex];
       switch (colType) {
-      case 'd': {
+      case 'D': {
          fDoubleEvtValues[colIndex][slot] = *static_cast<double *>(dataPtr);
          break;
       }
-      case 'l': {
+      case 'L': {
          fLong64EvtValues[colIndex][slot] = *static_cast<Long64_t *>(dataPtr);
          break;
       }
-      case 'b': {
+      case 'O': {
          fBoolEvtValues[colIndex][slot] = *static_cast<bool *>(dataPtr);
          break;
       }
-      case 's': {
+      case 'T': {
          fStringEvtValues[colIndex][slot] = *static_cast<std::string *>(dataPtr);
          break;
       }
@@ -472,10 +492,12 @@ std::string RCsvDS::GetLabel()
    return "RCsv";
 }
 
-RDataFrame MakeCsvDataFrame(std::string_view fileName, bool readHeaders, char delimiter, Long64_t linesChunkSize)
+RDataFrame MakeCsvDataFrame(std::string_view fileName, bool readHeaders, char delimiter, Long64_t linesChunkSize,
+                            std::unordered_map<std::string, char> &&colTypes)
 {
-   ROOT::RDataFrame tdf(std::make_unique<RCsvDS>(fileName, readHeaders, delimiter, linesChunkSize));
-   return tdf;
+   ROOT::RDataFrame rdf(
+      std::make_unique<RCsvDS>(fileName, readHeaders, delimiter, linesChunkSize, std::move(colTypes)));
+   return rdf;
 }
 
 } // ns RDF
