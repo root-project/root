@@ -1811,7 +1811,7 @@ private:
 public:
    TRepeatTimer(TGRepeatFireButton * button, Long_t ms)
     : TTimer(ms, kTRUE), fButton(button) { }
-   virtual Bool_t Notify();
+   Bool_t Notify() override;
 };
 
 
@@ -1844,8 +1844,8 @@ public:
        { fEditDisabled = kEditDisable | kEditDisableGrab; }
    virtual ~TGRepeatFireButton() { delete fTimer; }
 
-   virtual  Bool_t HandleButton(Event_t *event);
-            void   FireButton();
+   Bool_t HandleButton(Event_t *event) override;
+   void   FireButton();
    virtual  void   SetLogStep(Bool_t on = kTRUE) { fStepLog = on; }
 };
 

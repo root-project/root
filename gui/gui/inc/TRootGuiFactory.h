@@ -24,27 +24,26 @@ class TContextMenu;
 class TControlBarImp;
 class TControlBar;
 
-
 class TRootGuiFactory : public TGuiFactory {
 
 public:
    TRootGuiFactory(const char *name = "Root", const char *title = "ROOT GUI Factory");
-   virtual ~TRootGuiFactory() { }
+   virtual ~TRootGuiFactory() {}
 
-   virtual TApplicationImp *CreateApplicationImp(const char *classname, int *argc, char **argv);
+   TApplicationImp *CreateApplicationImp(const char *classname, int *argc, char **argv) override;
 
-   virtual TCanvasImp *CreateCanvasImp(TCanvas *c, const char *title, UInt_t width, UInt_t height);
-   virtual TCanvasImp *CreateCanvasImp(TCanvas *c, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height);
+   TCanvasImp *CreateCanvasImp(TCanvas *c, const char *title, UInt_t width, UInt_t height) override;
+   TCanvasImp *CreateCanvasImp(TCanvas *c, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height) override;
 
-   virtual TBrowserImp *CreateBrowserImp(TBrowser *b, const char *title, UInt_t width, UInt_t height, Option_t *opt="");
-   virtual TBrowserImp *CreateBrowserImp(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height, Option_t *opt="");
+   TBrowserImp *CreateBrowserImp(TBrowser *b, const char *title, UInt_t width, UInt_t height, Option_t *opt="") override;
+   TBrowserImp *CreateBrowserImp(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height, Option_t *opt="") override;
 
-   virtual TContextMenuImp *CreateContextMenuImp(TContextMenu *c, const char *name, const char *title);
+   TContextMenuImp *CreateContextMenuImp(TContextMenu *c, const char *name, const char *title) override;
 
-   virtual TControlBarImp *CreateControlBarImp(TControlBar *c, const char *title);
-   virtual TControlBarImp *CreateControlBarImp(TControlBar *c, const char *title, Int_t x, Int_t y);
+   TControlBarImp *CreateControlBarImp(TControlBar *c, const char *title) override;
+   TControlBarImp *CreateControlBarImp(TControlBar *c, const char *title, Int_t x, Int_t y) override;
 
-   ClassDef(TRootGuiFactory,0)  //Factory for ROOT GUI components
+   ClassDefOverride(TRootGuiFactory,0)  //Factory for ROOT GUI components
 };
 
 #endif

@@ -62,8 +62,8 @@ public:
                   UInt_t options = kVerticalFrame);
    virtual ~TGSearchDialog();
 
-   virtual void   CloseWindow();
-   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   void   CloseWindow() override;
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
    virtual void   SetClose(Bool_t on) { fType->fClose = on; }
    virtual Bool_t IsClose() const {  return fType->fClose; }
    virtual void   TextEntered(const char *text); //*SIGNAL*
@@ -71,7 +71,7 @@ public:
 
    static TGSearchDialog *&SearchDialog();
 
-   ClassDef(TGSearchDialog,0)  // Text search dialog used by TGTextEdit widget
+   ClassDefOverride(TGSearchDialog,0)  // Text search dialog used by TGTextEdit widget
 };
 
 
@@ -98,11 +98,11 @@ public:
                  UInt_t options = kVerticalFrame);
    virtual ~TGPrintDialog();
 
-   virtual void   CloseWindow();
+   void   CloseWindow() override;
    virtual void   GetPrinters();
-   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 
-   ClassDef(TGPrintDialog,0)  // Print dialog used by TGTextEdit widget
+   ClassDefOverride(TGPrintDialog,0)  // Print dialog used by TGTextEdit widget
 };
 
 
@@ -123,10 +123,10 @@ public:
                 Long_t *ret_code = nullptr, UInt_t options = kVerticalFrame);
    virtual ~TGGotoDialog();
 
-   virtual void   CloseWindow();
-   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   void   CloseWindow() override;
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 
-   ClassDef(TGGotoDialog,0)  // Goto line dialog used by TGTextEdit widget
+   ClassDefOverride(TGGotoDialog,0)  // Goto line dialog used by TGTextEdit widget
 };
 
 #endif

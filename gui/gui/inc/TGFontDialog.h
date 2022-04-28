@@ -12,10 +12,7 @@
 #ifndef ROOT_TGFontDialog
 #define ROOT_TGFontDialog
 
-
 #include "TGFrame.h"
-
-
 
 class TGButton;
 class TGLabel;
@@ -23,7 +20,6 @@ class TGListBox;
 class TGComboBox;
 class TGColorSelect;
 class TGFont;
-
 
 class TGFontDialog : public TGTransientFrame {
 
@@ -64,12 +60,12 @@ protected:
 
    Bool_t               Build(char **fontList, Int_t cnt);
    void                 GetFontName();
-   virtual void         CloseWindow();
-   virtual Bool_t       ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   void                 CloseWindow() override;
+   Bool_t               ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 
 public:
-   TGFontDialog(const TGWindow *parent = 0, const TGWindow *t = 0,
-                FontProp_t *fontProp = 0, const TString &sample = "",
+   TGFontDialog(const TGWindow *parent = nullptr, const TGWindow *t = nullptr,
+                FontProp_t *fontProp = nullptr, const TString &sample = "",
                 char **fontList = 0, Bool_t wait = kTRUE);
    virtual ~TGFontDialog();
 
@@ -86,7 +82,7 @@ public:
    virtual void ColorSelected(Pixel_t c)
             { Emit("ColorSelected(Pixel_t)", c); }  //*SIGNAL*
 
-   ClassDef(TGFontDialog,0)  // Font selection dialog
+   ClassDefOverride(TGFontDialog,0)  // Font selection dialog
 };
 
 #endif

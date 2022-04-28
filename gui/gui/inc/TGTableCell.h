@@ -44,12 +44,12 @@ protected:
    static const TGGC   *fgDefaultGC;   ///< Default graphics context
    static const TGFont *fgDefaultFont; ///< Default font
 
-   virtual void DoRedraw();
-   virtual void DrawBorder();
+   void DoRedraw() override;
+   void DrawBorder() override;
    virtual void DrawBorder(Handle_t id, Int_t x, Int_t y);
    virtual void MoveDraw(Int_t x, Int_t y);
-   virtual void Resize(UInt_t width, UInt_t height);
-   virtual void Resize(TGDimension newsize);
+   void Resize(UInt_t width, UInt_t height) override;
+   void Resize(TGDimension newsize) override;
 
    virtual void Highlight();
    void         Init(Bool_t resize);
@@ -58,7 +58,7 @@ public:
    static FontStruct_t GetDefaultFontStruct();
    static const TGGC   &GetDefaultGC();
 
-   TGTableCell(const TGWindow *p = 0, TGTable *table = 0, TGString *label = 0,
+   TGTableCell(const TGWindow *p = nullptr, TGTable *table = nullptr, TGString *label = nullptr,
                UInt_t row = 0, UInt_t column = 0, UInt_t width = 80,
                UInt_t height = 25, GContext_t norm = GetDefaultGC()(),
                FontStruct_t font = GetDefaultFontStruct(), UInt_t option = 0,
@@ -71,7 +71,7 @@ public:
 
    virtual ~TGTableCell();
 
-   virtual void DrawCopy(Handle_t id, Int_t x, Int_t y);
+           void DrawCopy(Handle_t id, Int_t x, Int_t y) override;
 
    virtual void SetLabel(const char *label);
 
@@ -95,7 +95,7 @@ public:
    virtual TGDimension GetSize() const { return TGDimension(fWidth, fHeight); }
    virtual Int_t       GetTextJustify() const { return fTMode; }
 
-   ClassDef(TGTableCell, 0) // A single cell in a TGTable.
-} ;
+   ClassDefOverride(TGTableCell, 0) // A single cell in a TGTable.
+};
 
 #endif

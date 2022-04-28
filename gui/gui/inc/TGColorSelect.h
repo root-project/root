@@ -36,13 +36,13 @@ public:
    TGColorFrame(const TGWindow *p = nullptr, Pixel_t c = 0, Int_t n = 1);
    virtual ~TGColorFrame() { }
 
-   virtual Bool_t  HandleButton(Event_t *event);
-   virtual void    DrawBorder();
+   Bool_t   HandleButton(Event_t *event) override;
+   void     DrawBorder() override;
 
    void     SetActive(Bool_t in) { fActive = in; gClient->NeedRedraw(this); }
    Pixel_t  GetColor() const { return fColor; }
 
-   ClassDef(TGColorFrame,0)  // Frame for color cell
+   ClassDefOverride(TGColorFrame,0)  // Frame for color cell
 };
 
 //----------------------------------------------------------------------
@@ -62,12 +62,12 @@ public:
    TG16ColorSelector(const TGWindow *p = nullptr);
    virtual ~TG16ColorSelector();
 
-   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 
    void    SetActive(Int_t newat);
    Int_t   GetActive() { return fActive; }
 
-   ClassDef(TG16ColorSelector,0)  // 16 color cells
+   ClassDefOverride(TG16ColorSelector,0)  // 16 color cells
 };
 
 //----------------------------------------------------------------------
@@ -88,15 +88,15 @@ public:
    TGColorPopup(const TGWindow *p = nullptr, const TGWindow *m = nullptr, Pixel_t color = 0);
    virtual ~TGColorPopup();
 
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   Bool_t  HandleButton(Event_t *event) override;
+   Bool_t  ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 
    void    PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h);
    void    EndPopup();
    void    PreviewColor(Pixel_t color);
    void    PreviewAlphaColor(ULongptr_t color);
 
-   ClassDef(TGColorPopup,0)  // Color selector popup
+   ClassDefOverride(TGColorPopup,0)  // Color selector popup
 };
 
 //----------------------------------------------------------------------
@@ -109,7 +109,7 @@ protected:
    TGColorPopup *fColorPopup;    ///< color popup associated
    TGPosition    fPressPos;      ///< position of frame on button press event
 
-   virtual void DoRedraw();
+   void DoRedraw() override;
 
    void DrawTriangle(GContext_t gc, Int_t x, Int_t y);
 
@@ -122,8 +122,8 @@ public:
                  Int_t id = -1);
    virtual ~TGColorSelect();
 
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   Bool_t  HandleButton(Event_t *event) override;
+   Bool_t  ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 
    void    SetColor(Pixel_t color, Bool_t emit = kTRUE);
    void    SetAlphaColor(ULong_t color, Bool_t emit = kTRUE);
@@ -132,19 +132,19 @@ public:
    void    Disable();
 
    // dummy methods just to remove from context menu
-   void SetDown(Bool_t on = kTRUE, Bool_t emit = kFALSE) { TGButton::SetDown(on, emit); }
+   void SetDown(Bool_t on = kTRUE, Bool_t emit = kFALSE) override { TGButton::SetDown(on, emit); }
    void Rename(const char *title)  { TGTextButton::SetTitle(title); }
-   void SetEnabled(Bool_t e = kTRUE) { TGButton::SetEnabled(e); }
+   void SetEnabled(Bool_t e = kTRUE) override { TGButton::SetEnabled(e); }
 
-   virtual TGDimension GetDefaultSize() const { return TGDimension(43, 21); }
-   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
+   TGDimension GetDefaultSize() const override { return TGDimension(43, 21); }
+   void SavePrimitive(std::ostream &out, Option_t * = "") override;
 
    virtual void ColorSelected(Pixel_t color = 0)
             { Emit("ColorSelected(Pixel_t)", color ? color : GetColor()); }  //*SIGNAL*
    virtual void AlphaColorSelected(ULong_t colptr = 0)
             { Emit("AlphaColorSelected(ULong_t)", colptr); }  //*SIGNAL*
 
-   ClassDef(TGColorSelect,0)  // Color selection checkbutton
+   ClassDefOverride(TGColorSelect,0)  // Color selection checkbutton
 };
 
 #endif

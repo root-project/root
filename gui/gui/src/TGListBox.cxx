@@ -457,8 +457,9 @@ public:
    TGLBFrameElement(TGFrame *f, TGLayoutHints *l) : TGFrameElement(f, l) {}
    virtual ~TGLBFrameElement() {}
 
-   Bool_t IsSortable() const { return kTRUE; }
-   Int_t  Compare(const TObject *obj) const {
+   Bool_t IsSortable() const override { return kTRUE; }
+   Int_t  Compare(const TObject *obj) const override
+   {
       if (!fFrame->InheritsFrom(TGTextLBEntry::Class())) {
          return 0;
       }

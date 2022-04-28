@@ -34,11 +34,11 @@ private:
 public:
    TGTabLayout(TGTab *main);
 
-   virtual void Layout();
-   virtual TGDimension GetDefaultSize() const;
-   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
+   void Layout() override;
+   TGDimension GetDefaultSize() const override;
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGTabLayout,0)  // Layout manager for TGTab widget
+   ClassDefOverride(TGTabLayout,0)  // Layout manager for TGTab widget
 };
 
 
@@ -76,15 +76,15 @@ public:
 
    virtual TGCompositeFrame *AddTab(TGString *text);
    virtual TGCompositeFrame *AddTab(const char *text);
-   virtual void              AddTab(const char *text, TGCompositeFrame *cf);
-   virtual void              AddTab(TGString *text, TGCompositeFrame *cf);
+   virtual void     AddTab(const char *text, TGCompositeFrame *cf);
+   virtual void     AddTab(TGString *text, TGCompositeFrame *cf);
 
-   virtual void              NewTab(const char *text = "tab");   // *MENU*icon=bld_newtab.png*
-   virtual void              RemoveTab(Int_t tabIndex = -1,
-                                       Bool_t storeRemoved = kTRUE); // *MENU*icon=bld_removetab.png*
-   virtual Bool_t            SetTab(Int_t tabIndex, Bool_t emit = kTRUE);
-   virtual Bool_t            SetTab(const char *name, Bool_t emit = kTRUE);
-   virtual void              DrawBorder() { }
+   virtual void     NewTab(const char *text = "tab");   // *MENU*icon=bld_newtab.png*
+   virtual void     RemoveTab(Int_t tabIndex = -1,
+                              Bool_t storeRemoved = kTRUE); // *MENU*icon=bld_removetab.png*
+   virtual Bool_t   SetTab(Int_t tabIndex, Bool_t emit = kTRUE);
+   virtual Bool_t   SetTab(const char *name, Bool_t emit = kTRUE);
+   void              DrawBorder() override { }
 
    TGCompositeFrame *GetContainer() const { return fContainer; }
    Int_t             GetCurrent() const { return fCurrent; }
@@ -102,14 +102,14 @@ public:
    virtual void      SetScrollingEnabled(Bool_t on = kTRUE);
    Bool_t            IsScrollingEnabled() const;
 
-   virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
+   void              SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    virtual void CloseTab(Int_t id) { Emit("CloseTab(Int_t)", id); }  //*SIGNAL*
    virtual void Removed(Int_t id) { Emit("Removed(Int_t)", id); }    //*SIGNAL*
    virtual void Selected(Int_t id) { Emit("Selected(Int_t)", id); }  //*SIGNAL*
-   virtual TGLayoutManager *GetLayoutManager() const;
+   TGLayoutManager *GetLayoutManager() const override;
 
-   ClassDef(TGTab,0)  // Tab widget
+   ClassDefOverride(TGTab,0)  // Tab widget
 };
 
 
@@ -140,21 +140,21 @@ public:
                 Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGTabElement();
 
-   virtual void        DrawBorder();
-   virtual TGDimension GetDefaultSize() const;
-   const TGString     *GetText() const { return fText; }
-   const char         *GetString() const { return fText->GetString(); }
-   virtual Bool_t      HandleButton(Event_t *event);
-   void                SetText(TGString *text);
-   virtual void        SetEnabled(Bool_t on = kTRUE) { fEnabled = on; }
-   Bool_t              IsEnabled() const { return fEnabled; }
-   virtual void        SetEditDisabled(UInt_t) {}
-   virtual void        ShowClose(Bool_t on = kTRUE);
-   Bool_t              IsCloseShown() const { return fShowClose; }
-   virtual void        SetActive(Bool_t on = kTRUE) { fActive = on; }
-   Bool_t              IsActive() const { return fActive; }
+   void             DrawBorder() override;
+   TGDimension      GetDefaultSize() const override;
+   const TGString  *GetText() const { return fText; }
+   const char      *GetString() const { return fText->GetString(); }
+   Bool_t           HandleButton(Event_t *event) override;
+   void             SetText(TGString *text);
+   virtual void     SetEnabled(Bool_t on = kTRUE) { fEnabled = on; }
+   Bool_t           IsEnabled() const { return fEnabled; }
+   void             SetEditDisabled(UInt_t) override {}
+   virtual void     ShowClose(Bool_t on = kTRUE);
+   Bool_t           IsCloseShown() const { return fShowClose; }
+   virtual void     SetActive(Bool_t on = kTRUE) { fActive = on; }
+   Bool_t           IsActive() const override { return fActive; }
 
-   ClassDef(TGTabElement,0)  // Little tab on tab widget
+   ClassDefOverride(TGTabElement,0)  // Little tab on tab widget
 };
 
 #endif
