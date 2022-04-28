@@ -15,6 +15,7 @@
 #include <RooAbsData.h>
 #include <RooAbsPdf.h>
 #include <RooAddition.h>
+#include <RooBatchCompute.h>
 #include <RooBinSamplingPdf.h>
 #include <RooConstraintSum.h>
 #include <RooDataSet.h>
@@ -22,6 +23,7 @@
 #include <RooNLLVarNew.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
+#include <RooFitDriver.h>
 
 #include <ROOT/StringUtils.hxx>
 
@@ -122,9 +124,11 @@ RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data, std::uniqu
       RooArgSet parameters;
       pdf.getParameters(data.get(), parameters);
       nll->recursiveRedirectServers(parameters);
-      driver = std::make_unique<RooFitDriver>(data, *nll, observables, batchMode, rangeName, &simPdf->indexCat());
+      driver = std::make_unique<RooFitDriver>(*nll, observables, batchMode);
+      driver->setData(data, rangeName, &simPdf->indexCat());
    } else {
-      driver = std::make_unique<RooFitDriver>(data, *nll, observables, batchMode, rangeName);
+      driver = std::make_unique<RooFitDriver>(*nll, observables, batchMode);
+      driver->setData(data, rangeName);
    }
 
    // Set the fitrange attribute so that RooPlot can automatically plot the fitting range by default
@@ -149,7 +153,7 @@ RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data, std::uniqu
       pdf.setStringAttribute("fitrange", fitrangeValue.c_str());
    }
 
-   auto driverWrapper = RooFitDriver::makeAbsRealWrapper(std::move(driver), *data.get());
+   auto driverWrapper = makeDriverAbsRealWrapper(std::move(driver), *data.get());
    driverWrapper->addOwnedComponents(std::move(nll));
 
    return driverWrapper;
@@ -189,4 +193,64 @@ void RooFit::BatchModeHelpers::logArchitectureInfo(RooFit::BatchModeOption batch
    if (batchMode == RooFit::BatchModeOption::Cuda) {
       log("using CUDA computation library");
    }
+}
+
+namespace {
+
+class RooAbsRealWrapper final : public RooAbsReal {
+public:
+   RooAbsRealWrapper() {}
+   RooAbsRealWrapper(RooFitDriver &driver, RooArgSet const &observables, bool ownsDriver)
+      : RooAbsReal{"RooFitDriverWrapper", "RooFitDriverWrapper"}, _driver{&driver}, _ownsDriver{ownsDriver}
+   {
+      _driver->topNode().getParameters(&observables, _parameters, true);
+   }
+
+   RooAbsRealWrapper(const RooAbsRealWrapper &other, const char *name = 0)
+      : RooAbsReal{other, name}, _driver{other._driver}, _parameters{other._parameters}
+   {
+   }
+
+   ~RooAbsRealWrapper() override
+   {
+      if (_ownsDriver)
+         delete _driver;
+   }
+
+   TObject *clone(const char *newname) const override { return new RooAbsRealWrapper(*this, newname); }
+
+   double defaultErrorLevel() const override { return _driver->topNode().defaultErrorLevel(); }
+
+   bool getParameters(const RooArgSet * /*observables*/, RooArgSet &outputSet,
+                      bool /*stripDisconnected=true*/) const override
+   {
+      outputSet.add(_parameters);
+      return false;
+   }
+
+   double getValV(const RooArgSet *) const override { return evaluate(); }
+
+   void applyWeightSquared(bool flag) override
+   {
+      const_cast<RooAbsReal &>(_driver->topNode()).applyWeightSquared(flag);
+   }
+
+protected:
+   double evaluate() const override { return _driver ? _driver->getVal() : 0.0; }
+
+private:
+   RooFitDriver *_driver = nullptr;
+   RooArgSet _parameters;
+   bool _ownsDriver;
+};
+
+} // namespace
+
+/// Static method to create a RooAbsRealWrapper that owns a given RooFitDriver
+/// passed by smart pointer.
+std::unique_ptr<RooAbsReal>
+RooFit::BatchModeHelpers::makeDriverAbsRealWrapper(std::unique_ptr<ROOT::Experimental::RooFitDriver> driver,
+                                                   RooArgSet const &observables)
+{
+   return std::unique_ptr<RooAbsReal>{new RooAbsRealWrapper{*driver.release(), observables, true}};
 }

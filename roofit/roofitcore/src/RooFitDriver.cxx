@@ -16,14 +16,14 @@
 \class RooFitDriver
 \ingroup Roofitcore
 
-This class is responsible for evaluating a RooAbsReal object. Currently,
-it is being used for evaluating a RooAbsArg object and supplying the
-value to the minimizer, during a fit. The class scans the dependencies and
-schedules the computations in a secure and efficient way. The computations
-take place in the RooBatchCompute library and can be carried off by
-either the cpu or a cuda gpu; this class takes care of data transfers.
-An instance of this class is created every time RooAbsPdf::fitTo() is called
-and gets destroyed when the fitting ends.
+This class can evaluate a RooAbsReal object in other ways than recursive graph
+traversal. Currently, it is being used for evaluating a RooAbsReal object and
+supplying the value to the minimizer, during a fit. The class scans the
+dependencies and schedules the computations in a secure and efficient way. The
+computations take place in the RooBatchCompute library and can be carried off
+by either the CPU or a CUDA-supporting GPU. The RooFitDriver class takes care
+of data transfers. An instance of this class is created every time
+RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 **/
 
 #include <RooFitDriver.h>
@@ -40,6 +40,7 @@ and gets destroyed when the fitting ends.
 #include <RooFit/BatchModeDataHelpers.h>
 #include <RooFit/BatchModeHelpers.h>
 #include <RooFit/CUDAHelpers.h>
+#include <RooFit/Detail/Buffers.h>
 
 #include <iomanip>
 #include <numeric>
@@ -49,40 +50,66 @@ and gets destroyed when the fitting ends.
 namespace ROOT {
 namespace Experimental {
 
-using namespace Detail;
+/// A struct used by the RooFitDriver to store information on the RooAbsArgs in
+/// the computation graph.
+struct NodeInfo {
 
-/**
-Construct a new RooFitDriver. The constructor analyzes and saves metadata about the graph,
-useful for the evaluation of it that will be done later. In case cuda mode is selected,
-there's also some CUDA-related initialization.
+   NodeInfo() {}
 
-\param data The dataset for the fitting model
-\param topNode The RooNLLVaNew object that sits on top of the graph and whose value the minimiser needs.
-\param observables The observabes of the pdf
-\param normSet
-\param batchMode The computation mode of the RooBatchCompute library, accepted values are `RooBatchCompute::Cpu` and
-`RooBatchCompute::Cuda`.
-\param rangeName the range name
-\param indexCat
-**/
-RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, RooArgSet const &normSet,
-                           RooFit::BatchModeOption batchMode, std::string_view rangeName,
-                           RooAbsCategory const *indexCat)
+   // No copying because of the owned CUDA pointers and buffers
+   NodeInfo(const NodeInfo &) = delete;
+   NodeInfo &operator=(const NodeInfo &) = delete;
+
+   /// Check the servers of a node that has been computed and release it's resources
+   /// if they are no longer needed.
+   void decrementRemainingClients()
+   {
+      if (--remClients == 0) {
+         buffer.reset();
+      }
+   }
+
+   RooAbsArg *absArg = nullptr;
+
+   std::unique_ptr<Detail::AbsBuffer> buffer;
+
+   cudaEvent_t *event = nullptr;
+   cudaEvent_t *eventStart = nullptr;
+   cudaStream_t *stream = nullptr;
+   std::chrono::microseconds cpuTime{0};
+   std::chrono::microseconds cudaTime{std::chrono::microseconds::max()};
+   std::chrono::microseconds timeLaunched{-1};
+   int nClients = 0;
+   int nServers = 0;
+   int remClients = 0;
+   int remServers = 0;
+   bool computeInScalarMode = false;
+   bool computeInGPU = false;
+   bool copyAfterEvaluation = false;
+   bool fromDataset = false;
+   std::size_t outputSize = 1;
+   ~NodeInfo()
+   {
+      if (event)
+         RooBatchCompute::dispatchCUDA->deleteCudaEvent(event);
+      if (eventStart)
+         RooBatchCompute::dispatchCUDA->deleteCudaEvent(eventStart);
+      if (stream)
+         RooBatchCompute::dispatchCUDA->deleteCudaStream(stream);
+   }
+};
+
+/// Construct a new RooFitDriver. The constructor analyzes and saves metadata about the graph,
+/// useful for the evaluation of it that will be done later. In case the CUDA mode is selected,
+/// there's also some CUDA-related initialization.
+///
+/// \param[in] topNode The RooAbsReal object that sits on top of the
+///            computation graph that we want to evaluate.
+/// \param[in] normSet Normalization set for the evaluation
+/// \param[in] batchMode The computation mode, accepted values are
+///            `RooBatchCompute::Cpu` and `RooBatchCompute::Cuda`.
+RooFitDriver::RooFitDriver(const RooAbsReal &topNode, RooArgSet const &normSet, RooFit::BatchModeOption batchMode)
    : _batchMode{batchMode}, _topNode{topNode}, _normSet{std::make_unique<RooArgSet>(normSet)}
-{
-   init();
-   setData(RooFit::BatchModeDataHelpers::getDataSpans(data, rangeName, indexCat, _vectorBuffers));
-}
-
-RooFitDriver::RooFitDriver(const RooAbsReal &topNode, RooArgSet const &normSet, DataSpansMap const &dataSpans,
-                           RooFit::BatchModeOption batchMode)
-   : _batchMode{batchMode}, _topNode{topNode}, _normSet{std::make_unique<RooArgSet>(normSet)}
-{
-   init();
-   setData(dataSpans);
-}
-
-void RooFitDriver::init()
 {
    // Initialize RooBatchCompute
    RooBatchCompute::init();
@@ -143,6 +170,12 @@ void RooFitDriver::init()
          item.second.stream = RooBatchCompute::dispatchCUDA->newCudaStream();
       }
    }
+}
+
+void RooFitDriver::setData(RooAbsData const &data, std::string_view rangeName,
+                           RooAbsCategory const *indexCatForSplitting)
+{
+   setData(RooFit::BatchModeDataHelpers::getDataSpans(data, rangeName, indexCatForSplitting, _vectorBuffers));
 }
 
 void RooFitDriver::setData(DataSpansMap const &dataSpans)
@@ -234,6 +267,8 @@ std::vector<double> RooFitDriver::getValues()
 
 void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
 {
+   using namespace Detail;
+
    auto nodeAbsReal = dynamic_cast<RooAbsReal const *>(node);
    auto nodeAbsCategory = dynamic_cast<RooAbsCategory const *>(node);
    assert(nodeAbsReal || nodeAbsCategory);
@@ -422,6 +457,8 @@ void RooFitDriver::handleIntegral(const RooAbsArg *node)
 /// in case they only depend on gpu nodes.
 void RooFitDriver::assignToGPU(RooAbsArg const *node)
 {
+   using namespace Detail;
+
    auto nodeAbsReal = dynamic_cast<RooAbsReal const *>(node);
    assert(nodeAbsReal || dynamic_cast<RooAbsCategory const *>(node));
 
@@ -661,6 +698,15 @@ bool RooFitDriver::isInComputationGraph(RooAbsArg const *arg) const
 {
    auto found = _nodeInfos.find(arg);
    return found != _nodeInfos.end() && found->second.absArg == arg;
+}
+
+/// Temporarily change the operation mode of a RooAbsArg until the
+/// RooFitDriver gets deleted.
+void RooFitDriver::setOperMode(RooAbsArg *arg, RooAbsArg::OperMode opMode)
+{
+   if (opMode != arg->operMode()) {
+      _changeOperModeRAIIs.emplace(arg, opMode);
+   }
 }
 
 } // namespace Experimental
