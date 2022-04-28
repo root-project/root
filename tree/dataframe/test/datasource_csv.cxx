@@ -321,4 +321,36 @@ TEST(RCsvDS, ProgressiveReadingRDFMT)
    EXPECT_EQ(6U, *c2);
 }
 
+TEST(RCsvDS, SpecifyColumnTypes)
+{
+   RCsvDS tds0(fileName0, true, ',', -1LL, {{"Age", 'D'}, {"Height", 'T'}}); // with headers
+   EXPECT_STREQ("double", tds0.GetTypeName("Age").c_str());
+   EXPECT_STREQ("std::string", tds0.GetTypeName("Height").c_str());
+
+   RCsvDS tds1(fileName1, false, ',', -1LL, {{"Col1", 'T'}}); // without headers (Col0, ...)
+   EXPECT_STREQ("std::string", tds1.GetTypeName("Col1").c_str());
+
+   EXPECT_THROW(
+      try {
+         ROOT::RDF::MakeCsvDataFrame(fileName1, false, ',', -1LL, {{"Col2", 'L'}, {"wrong1", 'D'}, {"wrong2", 'O'}});
+      } catch (const std::runtime_error &err) {
+         std::string msg = "There is no column with name \"wrong2\".\n";
+         msg += "Since the input csv file does not contain headers, valid column names are [\"Col0\", ..., \"Col3\"].";
+         EXPECT_EQ(std::string(err.what()), msg);
+         throw;
+      },
+      std::runtime_error);
+
+   EXPECT_THROW(
+      try {
+         ROOT::RDF::MakeCsvDataFrame(fileName1, false, ',', -1LL, {{"Col0", 'W'}, {"Col3", 'X'}});
+      } catch (const std::runtime_error &err) {
+         std::string msg = "Type alias 'X' is not supported.\n";
+         msg += "Supported type aliases are 'O' for boolean, 'D' for double, 'L' for Long64_t, 'T' for std::string.";
+         EXPECT_EQ(std::string(err.what()), msg);
+         throw;
+      },
+      std::runtime_error);
+}
+
 #endif // R__USE_IMT

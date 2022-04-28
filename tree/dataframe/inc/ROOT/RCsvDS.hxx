@@ -17,7 +17,7 @@
 #include <cstdint>
 #include <deque>
 #include <list>
-#include <map>
+#include <unordered_map>
 #include <memory>
 #include <vector>
 
@@ -34,9 +34,9 @@ namespace RDF {
 class RCsvDS final : public ROOT::RDF::RDataSource {
 
 private:
-   // Possible values are d, b, l, s. This is possible only because we treat double, bool, Long64_t and string
+   // Possible values are D, O, L, T. This is possible only because we treat double, bool, Long64_t and string
    using ColType_t = char;
-   static const std::map<ColType_t, std::string> fgColTypeMap;
+   static const std::unordered_map<ColType_t, std::string> fgColTypeMap;
 
    // Regular expressions for type inference
    static const TRegexp fgIntRegex, fgDoubleRegex1, fgDoubleRegex2, fgDoubleRegex3, fgTrueRegex, fgFalseRegex;
@@ -50,7 +50,7 @@ private:
    ULong64_t fEntryRangesRequested = 0ULL;
    ULong64_t fProcessedLines = 0ULL; // marks the progress of the consumption of the csv lines
    std::vector<std::string> fHeaders;
-   std::map<std::string, ColType_t> fColTypes;
+   std::unordered_map<std::string, ColType_t> fColTypes;
    std::list<ColType_t> fColTypesList;
    std::vector<std::vector<void *>> fColAddresses;         // fColAddresses[column][slot]
    std::vector<Record_t> fRecords;                         // fRecords[entry][column]
@@ -65,6 +65,7 @@ private:
    void FillRecord(const std::string &, Record_t &);
    void GenerateHeaders(size_t);
    std::vector<void *> GetColumnReadersImpl(std::string_view, const std::type_info &);
+   void ValidateColTypes(std::vector<std::string> &) const;
    void InferColTypes(std::vector<std::string> &);
    void InferType(const std::string &, unsigned int);
    std::vector<std::string> ParseColumns(const std::string &);
@@ -75,7 +76,8 @@ protected:
    std::string AsString();
 
 public:
-   RCsvDS(std::string_view fileName, bool readHeaders = true, char delimiter = ',', Long64_t linesChunkSize = -1LL);
+   RCsvDS(std::string_view fileName, bool readHeaders = true, char delimiter = ',', Long64_t linesChunkSize = -1LL,
+          std::unordered_map<std::string, char> &&colTypes = {});
    void Finalize();
    void FreeRecords();
    ~RCsvDS();
@@ -96,7 +98,7 @@ public:
 /// \param[in] delimiter Delimiter character (default ',').
 /// \param[in] linesChunkSize bunch of lines to read, use -1 to read all
 RDataFrame MakeCsvDataFrame(std::string_view fileName, bool readHeaders = true, char delimiter = ',',
-                            Long64_t linesChunkSize = -1LL);
+                            Long64_t linesChunkSize = -1LL, std::unordered_map<std::string, char> &&colTypes = {});
 
 } // ns RDF
 
