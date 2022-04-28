@@ -128,7 +128,7 @@ private:
 public:
    TAuthenticate(TSocket *sock, const char *remote, const char *proto,
                  const char *user = "");
-   virtual ~TAuthenticate() { }
+   virtual ~TAuthenticate() {}
 
    Bool_t             Authenticate();
    Int_t              AuthExists(TString User, Int_t method, const char *Options,
@@ -204,7 +204,7 @@ public:
    static void        SetTimeOut(Int_t to);
    static void        Show(Option_t *opt="S");
 
-   ClassDef(TAuthenticate,0)  // Class providing remote authentication service
+   ClassDefOverride(TAuthenticate,0)  // Class providing remote authentication service
 };
 
 #endif
