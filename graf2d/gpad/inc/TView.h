@@ -37,7 +37,7 @@ public:
                                     Double_t cospsi, Double_t sinpsi,
                                     Double_t *tnorm, Double_t *tback) = 0;
    virtual void          DrawOutlineCube(TList *outline, Double_t *rmin, Double_t *rmax) = 0;
-   virtual void          ExecuteEvent(Int_t event, Int_t px, Int_t py) = 0;
+           void          ExecuteEvent(Int_t event, Int_t px, Int_t py) override = 0;
    virtual void          ExecuteRotateView(Int_t event, Int_t px, Int_t py) = 0;
    virtual void          FindScope(Double_t *scale, Double_t *center, Int_t &irep) = 0;
    virtual Int_t         GetDistancetoAxis(Int_t axis, Int_t px, Int_t py, Double_t &ratio) = 0;
@@ -98,33 +98,33 @@ public:
    virtual void          MoveViewCommand(Char_t chCode, Int_t count=1) = 0;
    virtual void          MoveWindow(Char_t option) = 0;
 
-   virtual void          AdjustScales(TVirtualPad *pad=0) = 0;
-   virtual void          Centered3DImages(TVirtualPad *pad=0) = 0;
+   virtual void          AdjustScales(TVirtualPad *pad = nullptr) = 0;
+   virtual void          Centered3DImages(TVirtualPad *pad = nullptr) = 0;
    virtual void          Centered() = 0;
-   virtual void          FrontView(TVirtualPad *pad=0) = 0;
+   virtual void          FrontView(TVirtualPad *pad = nullptr) = 0;
    virtual void          Front() = 0;
 
    virtual void          ZoomIn() = 0;
    virtual void          ZoomOut() = 0;
-   virtual void          ZoomView(TVirtualPad *pad=0, Double_t zoomFactor = 1.25 ) = 0;
-   virtual void          UnzoomView(TVirtualPad *pad=0,Double_t unZoomFactor = 1.25) = 0;
+   virtual void          ZoomView(TVirtualPad *pad = nullptr, Double_t zoomFactor = 1.25 ) = 0;
+   virtual void          UnzoomView(TVirtualPad *pad = nullptr, Double_t unZoomFactor = 1.25) = 0;
 
-   virtual void          RotateView(Double_t phi, Double_t theta, TVirtualPad *pad=0) = 0;
-   virtual void          SideView(TVirtualPad *pad=0) = 0;
+   virtual void          RotateView(Double_t phi, Double_t theta, TVirtualPad *pad = nullptr) = 0;
+   virtual void          SideView(TVirtualPad *pad = nullptr) = 0;
    virtual void          Side() = 0;
-   virtual void          TopView(TVirtualPad *pad=0) = 0;
+   virtual void          TopView(TVirtualPad *pad = nullptr) = 0;
    virtual void          Top() = 0;
 
-   virtual void          ToggleRulers(TVirtualPad *pad=0) = 0;
+   virtual void          ToggleRulers(TVirtualPad *pad = nullptr) = 0;
    virtual void          ShowAxis() = 0;
-   virtual void          ToggleZoom(TVirtualPad *pad=0) = 0;
+   virtual void          ToggleZoom(TVirtualPad *pad = nullptr) = 0;
    virtual void          ZoomMove() = 0;
    virtual void          Zoom() = 0;
    virtual void          UnZoom() = 0;
 
-   static TView         *CreateView(Int_t system=1, const Double_t *rmin=0, const Double_t *rmax=0);
+   static TView         *CreateView(Int_t system=1, const Double_t *rmin = nullptr, const Double_t *rmax = nullptr);
 
-   ClassDef(TView,3);  //3-D View abstract interface for 3-D views
+   ClassDefOverride(TView,3);  //3-D View abstract interface for 3-D views
 };
 
 #endif

@@ -71,14 +71,14 @@ private:
 
 protected:
 
-   TVirtualPad *fParentPad = 0; ///< Stores the pad the ratio plot was created in
-   TPad *fUpperPad = 0; ///< The pad which contains the upper plot part
-   TPad *fLowerPad = 0; ///< The pad which contains the calculated lower plot part
-   TPad *fTopPad = 0; ///< The Pad that drawn on top on the others to have consistent coordinates
+   TVirtualPad *fParentPad = nullptr; ///< Stores the pad the ratio plot was created in
+   TPad *fUpperPad = nullptr; ///< The pad which contains the upper plot part
+   TPad *fLowerPad = nullptr; ///< The pad which contains the calculated lower plot part
+   TPad *fTopPad = nullptr; ///< The Pad that drawn on top on the others to have consistent coordinates
 
-   TH1 *fH1 = 0; ///< Stores the primary histogram
-   TH1 *fH2 = 0; ///< Stores the secondary histogram, if there is one
-   TObject *fHistDrawProxy = 0; ///< The object which is actually drawn, this might be TH1 or THStack
+   TH1 *fH1 = nullptr; ///< Stores the primary histogram
+   TH1 *fH2 = nullptr; ///< Stores the secondary histogram, if there is one
+   TObject *fHistDrawProxy = nullptr; ///< The object which is actually drawn, this might be TH1 or THStack
 
    Int_t fMode = 0; ///< Stores which calculation is supposed to be performed as specified by user option
    Int_t fErrorMode = TRatioPlot::ErrorMode::kErrorSymmetric; ///< Stores the error mode, sym, asym or func
@@ -104,20 +104,20 @@ protected:
    Double_t fC1 = 1.; ///< Stores the scale factor for h1 (or THStack sum)
    Double_t fC2 = 1.; ///< Stores the scale factor for h2
 
-   TFitResult *fFitResult = 0; ///< Stores the explicit fit result given in the fit residual case. Can be 0
+   TFitResult *fFitResult = nullptr; ///< Stores the explicit fit result given in the fit residual case. Can be 0
 
-   TAxis *fSharedXAxis = 0; ///< X axis that stores the range for both plots
-   TGaxis *fUpperGXaxis = 0; ///< Upper graphical x axis
-   TGaxis *fLowerGXaxis = 0; ///< Lower graphical x axis
-   TGaxis *fUpperGYaxis = 0; ///< Upper graphical y axis
-   TGaxis *fLowerGYaxis = 0; ///< Lower graphical y axis
-   TGaxis *fUpperGXaxisMirror = 0; ///< Upper mirror of the x axis
-   TGaxis *fLowerGXaxisMirror = 0; ///< Lower mirror of the x axis
-   TGaxis *fUpperGYaxisMirror = 0; ///< Upper mirror of the y axis
-   TGaxis *fLowerGYaxisMirror = 0; ///< Lower mirror of the y axis
+   TAxis *fSharedXAxis = nullptr; ///< X axis that stores the range for both plots
+   TGaxis *fUpperGXaxis = nullptr; ///< Upper graphical x axis
+   TGaxis *fLowerGXaxis = nullptr; ///< Lower graphical x axis
+   TGaxis *fUpperGYaxis = nullptr; ///< Upper graphical y axis
+   TGaxis *fLowerGYaxis = nullptr; ///< Lower graphical y axis
+   TGaxis *fUpperGXaxisMirror = nullptr; ///< Upper mirror of the x axis
+   TGaxis *fLowerGXaxisMirror = nullptr; ///< Lower mirror of the x axis
+   TGaxis *fUpperGYaxisMirror = nullptr; ///< Upper mirror of the y axis
+   TGaxis *fLowerGYaxisMirror = nullptr; ///< Lower mirror of the y axis
 
-   TAxis *fUpYaxis = 0; ///< Clone of the upper y axis
-   TAxis *fLowYaxis = 0; ///< Clone of the lower y axis
+   TAxis *fUpYaxis = nullptr; ///< Clone of the upper y axis
+   TAxis *fLowYaxis = nullptr; ///< Clone of the lower y axis
 
    std::vector<TLine*> fGridlines; ///< Keeps TLine objects for the gridlines
    std::vector<double> fGridlinePositions; ///< Stores the y positions for the gridlines
@@ -161,7 +161,7 @@ public:
 
    TRatioPlot(THStack* st, TH1* h2, Option_t *option = "pois");
 
-   TRatioPlot(TH1* h1, Option_t *option = "", TFitResult *fitres = 0);
+   TRatioPlot(TH1* h1, Option_t *option = "", TFitResult *fitres = nullptr);
 
    void SetH1DrawOpt(Option_t *opt);
    void SetH2DrawOpt(Option_t *opt);
@@ -170,11 +170,11 @@ public:
 
    void SetInsetWidth(Double_t width);
 
-   virtual void Draw(Option_t *chopt="");
-   virtual void Browse(TBrowser *b);
+   void Draw(Option_t *chopt = "") override;
+   void Browse(TBrowser *b) override;
 
 
-   virtual void Paint(Option_t *opt = "");
+   void Paint(Option_t *opt = "") override;
 
    // Slots for signal receiving
    void UnZoomed();
@@ -261,7 +261,7 @@ public:
    void SetC1(Double_t c1) { fC1 = c1; }
    void SetC2(Double_t c2) { fC2 = c2; }
 
-   ClassDef(TRatioPlot, 1)  //A ratio of histograms
+   ClassDefOverride(TRatioPlot, 1)  //A ratio of histograms
 };
 
 #endif

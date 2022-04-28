@@ -25,9 +25,9 @@ public:
 
    TControlBarButton();
    TControlBarButton(const char *label, const char *action="", const char *hint="", const char *type="button");
-   virtual ~TControlBarButton() { }
+   virtual ~TControlBarButton() {}
 
-   virtual void        Create() { }
+   virtual void        Create() {}
    virtual void        Action();
    virtual const char *GetAction() const { return fAction.Data(); }
    virtual Int_t       GetType() const { return fType; }
@@ -35,7 +35,7 @@ public:
    virtual void        SetType(const char *type);
    virtual void        SetType(Int_t type);
 
-   ClassDef(TControlBarButton,0) //The Control bar button
+   ClassDefOverride(TControlBarButton,0) //The Control bar button
 };
 
 #endif
