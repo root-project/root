@@ -32,41 +32,24 @@ namespace ROOT {
    namespace Math {
 
 
-// class to implement transformation of chi2 function
-// in general could make template on the fit method function type
+// Internal class used by GSLNLSMinimizer to implement the transformation of the chi2
+// function used by GSL Non-linear Least-square fitting
 
 class FitTransformFunction : public FitMethodFunction {
 
 public:
 
-   FitTransformFunction(const FitMethodFunction & f, const std::vector<EMinimVariableType> & types, const std::vector<double> & values,
-                              const std::map<unsigned int, std::pair<double, double> > & bounds) :
+   FitTransformFunction(const FitMethodFunction & f, std::unique_ptr<MinimTransformFunction> transFunc ) :
       FitMethodFunction( f.NDim(), f.NPoints() ),
-      fOwnTransformation(true),
       fFunc(f),
-      fTransform(new MinimTransformFunction( new MultiNumGradFunction(f), types, values, bounds) ),
+      fTransform(std::move(transFunc)),
       fGrad( std::vector<double>(f.NDim() ) )
    {
-      // constructor
-      // create a new pointer of  MinimTransformFunction, which will be managed by the class itself
-   }
-
-   FitTransformFunction(const FitMethodFunction & f, MinimTransformFunction *transFunc ) :
-      FitMethodFunction( f.NDim(), f.NPoints() ),
-      fOwnTransformation(true),
-      fFunc(f),
-      fTransform(transFunc),
-      fGrad( std::vector<double>(f.NDim() ) )
-   {
-      // constructor from an already existing Transformation object.
-      // Ownership of the transformation object is passed to caller
+      // constructor from a given FitMethodFunction and  Transformation object.
+      // Ownership of the transformation object is passed to this class
    }
 
    ~FitTransformFunction() override {
-      if (fOwnTransformation) {
-         //assert(fTransform);
-         delete fTransform;
-      }
    }
 
    // re-implement data element
@@ -84,7 +67,7 @@ public:
 
    IMultiGenFunction * Clone() const override {
       // not supported
-      return 0;
+      return nullptr;
    }
 
    // dimension (this is number of free dimensions)
@@ -123,7 +106,7 @@ private:
 
    bool fOwnTransformation;
    const FitMethodFunction & fFunc;                  // pointer to original fit method function
-   MinimTransformFunction * fTransform;        // pointer to transformation function
+   std::unique_ptr<MinimTransformFunction> fTransform;        // pointer to transformation function
    mutable std::vector<double> fGrad;          // cached vector of gradient values
 
 };
@@ -220,12 +203,12 @@ bool GSLNLSMinimizer::Minimize() {
 
    // transformation need a grad function.
    std::unique_ptr<MultiNumGradFunction> gradFunction(new MultiNumGradFunction(*fChi2Func));
-   MinimTransformFunction * trFuncRaw  =  CreateTransformation(startValues, gradFunction.get());
+   std::unique_ptr<MinimTransformFunction> trFuncRaw(CreateTransformation(startValues, gradFunction.get()));
    // need to transform in a FitTransformFunction which is set in the residual functions
    std::unique_ptr<FitTransformFunction> trFunc;
    if (trFuncRaw) {
       //pass ownership of trFuncRaw to FitTransformFunction
-      trFunc.reset(new FitTransformFunction(*fChi2Func, trFuncRaw) );
+      trFunc.reset(new FitTransformFunction(*fChi2Func, std::move(trFuncRaw)));
       for (unsigned int ires = 0; ires < fResiduals.size(); ++ires) {
          fResiduals[ires] = LSResidualFunc(*trFunc, ires);
       }
