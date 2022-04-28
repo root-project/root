@@ -1,7 +1,7 @@
 // Author: Enric Tejedor CERN  10/2017
 
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -99,6 +99,9 @@ public:
 ///                        (default `true`).
 /// \param[in] delimiter Delimiter character (default ',').
 /// \param[in] linesChunkSize bunch of lines to read, use -1 to read all
+/// \param[in] colTypes Allow user to specify custom column types, accepts an unordered map with keys being
+///                      column type, values being type alias ('O' for boolean, 'D' for double, 'L' for
+///                      Long64_t, 'T' for std::string)
 RDataFrame MakeCsvDataFrame(std::string_view fileName, bool readHeaders = true, char delimiter = ',',
                             Long64_t linesChunkSize = -1LL, std::unordered_map<std::string, char> &&colTypes = {});
 

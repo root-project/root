@@ -1,7 +1,7 @@
 // Author: Enric Tejedor CERN  10/2017
 
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -16,19 +16,22 @@
 The RCsvDS class implements a CSV file reader for RDataFrame.
 
 A RDataFrame that reads from a CSV file can be constructed using the factory method
-ROOT::RDF::MakeCsvDataFrame, which accepts three parameters:
+ROOT::RDF::MakeCsvDataFrame, which accepts five parameters:
 1. Path to the CSV file.
 2. Boolean that specifies whether the first row of the CSV file contains headers or
 not (optional, default `true`). If `false`, header names will be automatically generated as Col0, Col1, ..., ColN.
 3. Delimiter (optional, default ',').
+4. Chunk size (optional, default is -1 to read all) - number of lines to read at a time
+5. Column Types (optional, default is an empty map). A map with column names as keys and their type
+(expressed as a single character, see below) as values.
 
-The types of the columns in the CSV file are automatically inferred. The supported
-types are:
-- Integer: stored as a 64-bit long long int.
-- Floating point number: stored with double precision.
-- Boolean: matches the literals `true` and `false`.
+The type of columns that do not appear in the map is inferred from the data.
+The supported types are:
+- Integer: stored as a 64-bit long long int; can be specified in the column types map with 'L'.
+- Floating point number: stored with double precision; specified with 'D'.
+- Boolean: matches the literals `true` and `false`; specified with 'O'.
 - String: stored as an std::string, matches anything that does not fall into any of the
-previous types.
+previous types; specified with 'T'.
 
 These are some formatting rules expected by the RCsvDS implementation:
 - All records must have the same number of fields, in the same order.
@@ -68,6 +71,10 @@ double-quote characters must be represented by a pair of double-quote characters
 The current implementation of RCsvDS reads the entire CSV file content into memory before
 RDataFrame starts processing it. Therefore, before creating a CSV RDataFrame, it is
 important to check both how much memory is available and the size of the CSV file.
+
+RCsvDS can handle empty cells and also allows the usage of the special keywords "NaN" and "nan" to
+indicate `nan` values. If the column is of type double, these cells are stored internally as `nan`.
+Empty cells and explicit `nan`-s inside columns of type Long64_t/bool are stored as zeros.
 */
 // clang-format on
 
@@ -318,6 +325,9 @@ size_t RCsvDS::ParseValue(const std::string &line, std::vector<std::string> &col
 ///                        (default `true`).
 /// \param[in] delimiter Delimiter character (default ',').
 /// \param[in] linesChunkSize bunch of lines to read, use -1 to read all
+/// \param[in] colTypes Allows users to manually specify column types. Accepts an unordered map with keys being
+///                     column names, values being type specifiers ('O' for boolean, 'D' for double, 'L' for
+///                     Long64_t, 'T' for std::string)
 RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long64_t linesChunkSize,
                std::unordered_map<std::string, char> &&colTypes)
    : fReadHeaders(readHeaders), fCsvFile(ROOT::Internal::RRawFile::Create(fileName)), fDelimiter(delimiter),
