@@ -346,14 +346,14 @@ TEST(RCsvDS, NanWarningChecks)
    auto rdf = ROOT::RDF::MakeCsvDataFrame(fileName4);
    auto d = rdf.Display<double, Long64_t, std::string>({"col2", "col5", "col8"});
 
-   const std::string Warn = "Column \"col3\" of type bool contains empty cell(s).\n"
-                            "There is no `nan` equivalent for bool type, hence `false` is stored.\n"
-                            "Column \"col5\" of type Long64_t contains empty cell(s).\n"
-                            "There is no `nan` equivalent for Long64_t type, hence `0` is stored.\n"
-                            "Column \"col6\" of type Long64_t contains empty cell(s).\n"
-                            "There is no `nan` equivalent for Long64_t type, hence `0` is stored.\n"
+   const std::string Warn = "Column \"col3\" of type bool contains empty cell(s) or NaN(s).\n"
+                            "There is no `nan` equivalent for type bool, hence `false` is stored.\n"
+                            "Column \"col5\" of type Long64_t contains empty cell(s) or NaN(s).\n"
+                            "There is no `nan` equivalent for type Long64_t, hence `0` is stored.\n"
+                            "Column \"col6\" of type Long64_t contains empty cell(s) or NaN(s).\n"
+                            "There is no `nan` equivalent for type Long64_t, hence `0` is stored.\n"
                             "Empty cells of type colT are read as 0/false. "
-                            "You can manually set the column type to `double` to read NaN instead.\n";
+                            "Please manually set the column type to `double` (with `D`) in `MakeCsvDataFrame` to read NaNs instead.\n";
 
    ROOT_EXPECT_WARNING(d->AsString(), "RCsvDS", Warn);
 }

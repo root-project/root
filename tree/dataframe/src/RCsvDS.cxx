@@ -27,11 +27,11 @@ not (optional, default `true`). If `false`, header names will be automatically g
 The type of columns that do not appear in the map is inferred from the data.
 
 The supported types are:
-- Integer: stored as a 64-bit long long int.
-- Floating point number: stored with double precision.
-- Boolean: matches the literals `true` and `false`.
+- Integer: stored as a 64-bit long long int; can be specified in the column types map with 'L'.
+- Floating point number: stored with double precision; specified with 'D'.
+- Boolean: matches the literals `true` and `false`; specified with 'O'.
 - String: stored as an std::string, matches anything that does not fall into any of the
-previous types.
+previous types; specified with 'T'.
 
 These are some formatting rules expected by the RCsvDS implementation:
 - All records must have the same number of fields, in the same order.
@@ -73,9 +73,8 @@ RDataFrame starts processing it. Therefore, before creating a CSV RDataFrame, it
 important to check both how much memory is available and the size of the CSV file.
 
 RCsvDS can handle empty cells and also allows the usage of the special keywords "NaN" and "nan" to
-indicate empty cells. Unless a column is specified to be of type string, the special keywords will be
-read as empty cells. If the column is of type double, empty cells are stored internally as `nan`.
-If the column if of type Long64_t/bool empty cells are stored as 0/false.
+indicate `nan` values. If the column is of type double, these cells are stored internally as `nan`.
+Empty cells and explicit `nan`-s inside columns of type Long64_t/bool are stored as zeros.
 */
 // clang-format on
 
@@ -330,8 +329,8 @@ size_t RCsvDS::ParseValue(const std::string &line, std::vector<std::string> &col
 /// \param[in] delimiter Delimiter character (default ',').
 /// \param[in] linesChunkSize bunch of lines to read, use -1 to read all
 /// \param[in] colTypes Allows users to manually specify column types. Accepts an unordered map with keys being
-///                     column names, values being type specifiers ('b' for boolean, 'd' for double, 'l' for
-///                     Long64_t, 's' for std::string)
+///                     column names, values being type specifiers ('O' for boolean, 'D' for double, 'L' for
+///                     Long64_t, 'T' for std::string)
 RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long64_t linesChunkSize,
                std::unordered_map<std::string, char> &&colTypes)
    : fReadHeaders(readHeaders), fCsvFile(ROOT::Internal::RRawFile::Create(fileName)), fDelimiter(delimiter),
@@ -446,11 +445,11 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RCsvDS::GetEntryRanges()
       std::string msg = "";
       for (const auto &col : fColContainingEmpty) {
          const auto colT = GetTypeName(col);
-         msg += "Column \"" + col + "\" of type " + colT + " contains empty cell(s).\n";
-         msg += "There is no `nan` equivalent for " + colT + " type, hence ";
+         msg += "Column \"" + col + "\" of type " + colT + " contains empty cell(s) or NaN(s).\n";
+         msg += "There is no `nan` equivalent for type " + colT + ", hence ";
          msg += std::string(colT == "Long64_t" ? "`0`" : "`false`") + " is stored.\n";
       }
-      msg += "Empty cells of type colT are read as 0/false. You can manually set the column type to `double` to read NaN instead.\n";
+      msg += "Please manually set the column type to `double` (with `D`) in `MakeCsvDataFrame` to read NaNs instead.\n";
       Warning("RCsvDS", "%s", msg.c_str());
    }
 
