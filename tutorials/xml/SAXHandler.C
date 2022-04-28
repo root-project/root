@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_xml
-/// \notebook -nodraw
+///
 /// ROOT implementation of a simple SAX Handler.
 ///
 /// This handler uses TSAXParser, a SAX Parser using the SAX interface
