@@ -44,7 +44,7 @@ private:
    TRint& operator=(const TRint&) = delete;
 
    void    ExecLogon();
-   Longptr_t ProcessRemote(const char *line, Int_t *error = nullptr);
+   Longptr_t ProcessRemote(const char *line, Int_t *error = nullptr) override;
    Longptr_t ProcessLineNr(const char* filestem, const char *line, Int_t *error = nullptr);
 
 public:
@@ -53,18 +53,18 @@ public:
    virtual             ~TRint();
    virtual char       *GetPrompt();
    virtual const char *SetPrompt(const char *newPrompt);
-   virtual void        SetEchoMode(Bool_t mode);
-   virtual void        HandleException(Int_t sig);
-   virtual Bool_t      HandleTermInput();
+           void        SetEchoMode(Bool_t mode) override;
+           void        HandleException(Int_t sig) override;
+           Bool_t      HandleTermInput() override;
    virtual void        PrintLogo(Bool_t lite = kFALSE);
-   virtual void        Run(Bool_t retrn = kFALSE);
-   virtual void        Terminate(int status);
+           void        Run(Bool_t retrn = kFALSE) override;
+   virtual void        Terminate(int status) override;
            void        Interrupt() { fInterrupt = kTRUE; }
-   virtual Int_t       TabCompletionHook(char *buf, int *pLoc, std::ostream& out);
+           Int_t       TabCompletionHook(char *buf, int *pLoc, std::ostream& out) override;
 
    TFileHandler       *GetInputHandler() { return fInputHandler; }
 
-   ClassDef(TRint,0);  //ROOT Interactive Application Interface
+   ClassDefOverride(TRint,0);  //ROOT Interactive Application Interface
 };
 
 #endif

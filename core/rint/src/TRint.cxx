@@ -83,7 +83,7 @@ static void ResetTermAtExit()
 class TInterruptHandler : public TSignalHandler {
 public:
    TInterruptHandler() : TSignalHandler(kSigInterrupt, kFALSE) { }
-   Bool_t  Notify();
+   Bool_t  Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -121,8 +121,8 @@ Bool_t TInterruptHandler::Notify()
 class TTermInputHandler : public TFileHandler {
 public:
    TTermInputHandler(Int_t fd) : TFileHandler(fd, 1) { }
-   Bool_t Notify();
-   Bool_t ReadNotify() { return Notify(); }
+   Bool_t Notify() override;
+   Bool_t ReadNotify() override { return Notify(); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
