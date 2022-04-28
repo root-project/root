@@ -136,7 +136,7 @@ public:
 
    virtual void Print(Option_t* option="");
 
-   ClassDef(TPMERegexp, 0); // Wrapper for Perl-like regular expression matching.
+   ClassDefOverride(TPMERegexp, 0); // Wrapper for Perl-like regular expression matching.
 };
 
 
@@ -155,7 +155,7 @@ public:
    Bool_t NextToken();
    Bool_t AtEnd() const { return fPos >= fFullStr.Length(); }
 
-   ClassDef(TStringToken,0) // String tokenizer using PCRE for finding next tokens.
+   ClassDefOverride(TStringToken,0) // String tokenizer using PCRE for finding next tokens.
 };
 
 #endif

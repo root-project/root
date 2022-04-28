@@ -170,9 +170,9 @@ if (libcxx AND NOT APPLE)
 endif()
 
 if(MSVC)
-  # Definitions of MATH Macros (required in MathCore) like M_PI are only  
-  # exposed on Windows after defining the _USE_MATH_DEFINES macro. By   
-  # specifying it as a property for Core, we ensure that the macros are 
+  # Definitions of MATH Macros (required in MathCore) like M_PI are only
+  # exposed on Windows after defining the _USE_MATH_DEFINES macro. By
+  # specifying it as a property for Core, we ensure that the macros are
   # properly exposed when using Modules on Windows.
   target_compile_definitions(Core PRIVATE _USE_MATH_DEFINES)
 endif()

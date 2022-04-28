@@ -126,7 +126,7 @@ protected:
    Int_t         fIsLeaf;   // run-time type flag
 
 public:
-   TBtNode(Int_t isleaf, TBtInnerNode *p, TBtree *t = 0);
+   TBtNode(Int_t isleaf, TBtInnerNode *p, TBtree *t = nullptr);
    virtual ~TBtNode();
 
    virtual void Add(const TObject *obj, Int_t index) = 0;
@@ -194,19 +194,19 @@ public:
    ~TBtInnerNode();
 
 #ifndef __CINT__
-   void      Add(const TObject *obj, Int_t idx);
+   void      Add(const TObject *obj, Int_t idx) override;
    void      Add(TBtItem &i, Int_t idx);
    void      Add(Int_t at, TObject *obj, TBtNode *n);
    void      AddElt(TBtItem &itm, Int_t at);
    void      AddElt(Int_t at, TObject *obj, TBtNode *n);
-   void      Remove(Int_t idx);
+   void      Remove(Int_t idx) override;
    void      RemoveItem(Int_t idx);
 
-   TObject  *operator[](Int_t i) const;
-   TObject  *Found(const TObject *obj, TBtNode **which, Int_t *where);
+   TObject  *operator[](Int_t i) const override;
+   TObject  *Found(const TObject *obj, TBtNode **which, Int_t *where) override;
 
    Int_t     NofKeys(Int_t idx) const;
-   Int_t     NofKeys() const;
+   Int_t     NofKeys() const override;
    void      SetTree(Int_t i, TBtNode *node) { fItem[i].fTree = node; node->fParent = this; }
    void      SetKey(Int_t i, TObject *obj) { fItem[i].fKey = obj; }
    void      SetItem(Int_t i, TBtItem &itm) { fItem[i] = itm; itm.fTree->fParent = this; }
@@ -215,7 +215,7 @@ public:
    void      SetNofKeys(Int_t i, Int_t r);
    Int_t     IncNofKeys(Int_t i, Int_t n=1);
    Int_t     DecNofKeys(Int_t i, Int_t n=1);
-   Int_t     FindRank(const TObject *obj) const;
+   Int_t     FindRank(const TObject *obj) const override;
    Int_t     FindRankUp(const TBtNode *n) const;
    TBtNode  *GetTree(Int_t i) const { return fItem[i].fTree; }
    TObject  *GetKey(Int_t i) const { return fItem[i].fKey; }
@@ -225,12 +225,12 @@ public:
    void      IncrNofKeys(TBtNode *np);
    void      DecrNofKeys(TBtNode *np);
 
-   TBtLeafNode *FirstLeafNode();
-   TBtLeafNode *LastLeafNode();
+   TBtLeafNode *FirstLeafNode() override;
+   TBtLeafNode *LastLeafNode() override;
 
    void      InformParent();
 
-   void      Split();
+   void      Split() override;
    void      SplitWith(TBtInnerNode *r, Int_t idx);
    void      MergeWithRight(TBtInnerNode *r, Int_t idx);
    void      BalanceWithLeft(TBtInnerNode *l, Int_t idx);
@@ -279,25 +279,25 @@ public:
    ~TBtLeafNode();
 
 #ifndef __CINT__
-   void       Add(const TObject *obj, Int_t idx);
-   void       Remove(Int_t idx);
+   void       Add(const TObject *obj, Int_t idx) override;
+   void       Remove(Int_t idx) override;
    void       RemoveItem(Int_t idx) { Remove(idx); }
 
-   TObject   *operator[](Int_t i) const;
-   TObject   *Found(const TObject *obj, TBtNode **which, Int_t *where);
+   TObject   *operator[](Int_t i) const override;
+   TObject   *Found(const TObject *obj, TBtNode **which, Int_t *where) override;
 
    Int_t      NofKeys(Int_t i) const;
-   Int_t      NofKeys() const;
-   Int_t      FindRank(const TObject *obj) const;
+   Int_t      NofKeys() const override;
+   Int_t      FindRank(const TObject *obj) const override;
    TObject   *GetKey(Int_t idx ) { return fItem[idx]; }
    void       SetKey(Int_t idx, TObject *obj) { fItem[idx] = obj; }
 
    Int_t      IndexOf(const TObject *obj) const;
 
-   TBtLeafNode  *FirstLeafNode();
-   TBtLeafNode  *LastLeafNode();
+   TBtLeafNode  *FirstLeafNode() override;
+   TBtLeafNode  *LastLeafNode() override;
 
-   void       Split();
+   void       Split() override;
    void       SplitWith(TBtLeafNode *r, Int_t idx);
    void       MergeWithRight(TBtLeafNode *r, Int_t idx);
    void       BalanceWithLeft(TBtLeafNode *l, Int_t idx);
@@ -342,23 +342,23 @@ private:
    Int_t          fCursor;    //next position in btree
    Bool_t         fDirection; //iteration direction
 
-   TBtreeIter() : fTree(0), fCurCursor(0), fCursor(0), fDirection(kIterForward) { }
+   TBtreeIter() : fTree(nullptr), fCurCursor(0), fCursor(0), fDirection(kIterForward) { }
 
 public:
    TBtreeIter(const TBtree *t, Bool_t dir = kIterForward);
    TBtreeIter(const TBtreeIter &iter);
    ~TBtreeIter() { }
-   TIterator  &operator=(const TIterator &rhs);
+   TIterator  &operator=(const TIterator &rhs) override;
    TBtreeIter &operator=(const TBtreeIter &rhs);
 
-   const TCollection  *GetCollection() const { return fTree; }
-   TObject            *Next();
-   void                Reset();
-   Bool_t              operator!=(const TIterator &aIter) const;
+   const TCollection  *GetCollection() const override { return fTree; }
+   TObject            *Next() override;
+   void                Reset() override;
+   Bool_t              operator!=(const TIterator &aIter) const override;
    Bool_t              operator!=(const TBtreeIter &aIter) const;
-   TObject            *operator*() const;
+   TObject            *operator*() const override;
 
-   ClassDef(TBtreeIter,0)  //B-tree iterator
+   ClassDefOverride(TBtreeIter,0)  //B-tree iterator
 };
 
 
