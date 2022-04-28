@@ -316,7 +316,11 @@ RooSpan<const double> RooAbsReal::getValues(RooBatchCompute::RunContext& evalDat
 
   normSet = normSet ? normSet : _lastNSet;
 
-  ROOT::Experimental::RooFitDriver driver(evalData, *this, normSet ? *normSet : RooArgSet{});
+  std::map<const TNamed *, RooSpan<const double>> dataSpans;
+  for (auto const &evalDataItem : evalData.spans) {
+    dataSpans[evalDataItem.first->namePtr()] = evalDataItem.second;
+  }
+  ROOT::Experimental::RooFitDriver driver(*this, normSet ? *normSet : RooArgSet{}, dataSpans, RooFit::BatchModeOption::Cpu);
   auto& results = evalData.ownedMemory[this];
   results = driver.getValues(); // the compiler should use the move assignment here
   evalData.spans[this] = results;
