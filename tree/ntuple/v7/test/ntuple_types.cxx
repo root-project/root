@@ -213,6 +213,33 @@ TEST(RNTuple, TClassMultipleInheritance)
    }
 }
 
+TEST(RNTuple, TClassEBO)
+{
+   // Empty base optimization is required for standard layout types (since C++11)
+   EXPECT_EQ(sizeof(TestEBO), sizeof(std::uint64_t));
+   auto field = RField<TestEBO>("klass");
+   EXPECT_EQ(sizeof(TestEBO), field.GetValueSize());
+
+   FileRaii fileGuard("test_ntuple_tclassebo.ntuple");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldKlass = model->MakeField<TestEBO>("klass");
+      RNTupleWriteOptions options;
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath(), options);
+      (*fieldKlass).u64 = 42;
+      ntuple->Fill();
+   }
+
+   {
+      auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
+      EXPECT_EQ(1U, ntuple->GetNEntries());
+      auto idEmptyBase = ntuple->GetDescriptor()->FindFieldId("klass.:_0");
+      EXPECT_NE(idEmptyBase, ROOT::Experimental::kInvalidDescriptorId);
+      auto viewKlass = ntuple->GetView<TestEBO>("klass");
+      EXPECT_EQ(42, viewKlass(0).u64);
+   }
+}
+
 TEST(RNTuple, TClassTemplatedBase)
 {
    // For non-cxxmodules builds, cling needs to parse the header for the `SG::sgkey_t` type to be known
