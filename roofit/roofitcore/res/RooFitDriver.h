@@ -17,7 +17,6 @@
 #include <RooAbsReal.h>
 #include <RooBatchCompute.h>
 #include <RooGlobalFunc.h>
-#include <RunContext.h>
 
 #include <RooFit/Detail/Buffers.h>
 
@@ -51,28 +50,31 @@ namespace Experimental {
 
 class RooFitDriver {
 public:
+   using DataSpansMap = std::map<const TNamed *, RooSpan<const double>>;
+
    RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, RooArgSet const &normSet,
                 RooFit::BatchModeOption batchMode, std::string_view rangeName,
                 RooAbsCategory const *indexCat = nullptr);
 
-   RooFitDriver(const RooBatchCompute::RunContext &runContext, const RooAbsReal &topNode, RooArgSet const &normSet);
+   RooFitDriver(const RooAbsReal &topNode, RooArgSet const &normSet, DataSpansMap const &dataSpans,
+                RooFit::BatchModeOption batchMode);
 
    ~RooFitDriver();
    std::vector<double> getValues();
    double getVal();
    RooAbsReal const &topNode() const { return _topNode; }
-   RooArgSet const &parameters() const { return _parameters; }
 
    class RooAbsRealWrapper final : public RooAbsReal {
    public:
       RooAbsRealWrapper() {}
-      RooAbsRealWrapper(RooFitDriver &driver, bool ownsDriver)
+      RooAbsRealWrapper(RooFitDriver &driver, RooArgSet const &observables, bool ownsDriver)
          : RooAbsReal{"RooFitDriverWrapper", "RooFitDriverWrapper"}, _driver{&driver}, _ownsDriver{ownsDriver}
       {
+         _driver->topNode().getParameters(&observables, _parameters, true);
       }
 
       RooAbsRealWrapper(const RooAbsRealWrapper &other, const char *name = 0)
-         : RooAbsReal{other, name}, _driver{other._driver}
+         : RooAbsReal{other, name}, _driver{other._driver}, _parameters{other._parameters}
       {
       }
 
@@ -89,7 +91,7 @@ public:
       bool getParameters(const RooArgSet * /*observables*/, RooArgSet &outputSet,
                          bool /*stripDisconnected=true*/) const override
       {
-         outputSet.add(_driver->parameters());
+         outputSet.add(_parameters);
          return false;
       }
 
@@ -105,19 +107,21 @@ public:
 
    private:
       RooFitDriver *_driver = nullptr;
+      RooArgSet _parameters;
       bool _ownsDriver;
    };
 
-   std::unique_ptr<RooAbsReal> makeAbsRealWrapper()
+   std::unique_ptr<RooAbsReal> makeAbsRealWrapper(RooArgSet const &observables)
    {
-      return std::unique_ptr<RooAbsReal>{new RooAbsRealWrapper{*this, false}};
+      return std::unique_ptr<RooAbsReal>{new RooAbsRealWrapper{*this, observables, false}};
    }
 
    // Static method to create a RooAbsRealWrapper that owns a given
    // RooFitDriver passed by smart pointer.
-   static std::unique_ptr<RooAbsReal> makeAbsRealWrapper(std::unique_ptr<RooFitDriver> driver)
+   static std::unique_ptr<RooAbsReal>
+   makeAbsRealWrapper(std::unique_ptr<RooFitDriver> driver, RooArgSet const &observables)
    {
-      return std::unique_ptr<RooAbsReal>{new RooAbsRealWrapper{*driver.release(), true}};
+      return std::unique_ptr<RooAbsReal>{new RooAbsRealWrapper{*driver.release(), observables, true}};
    }
 
 private:
@@ -168,11 +172,10 @@ private:
       }
    };
 
-   void init(std::map<const TNamed *, RooSpan<const double>> const &dataSpans);
+   void init();
+   void setData(DataSpansMap const &dataSpans);
 
    double getValHeterogeneous();
-   void updateMyClients(const RooAbsArg *node);
-   void updateMyServers(const RooAbsArg *node);
    void handleIntegral(const RooAbsArg *node);
    std::chrono::microseconds simulateFit(std::chrono::microseconds h2dTime, std::chrono::microseconds d2hTime,
                                          std::chrono::microseconds diffThreshold);
@@ -189,9 +192,9 @@ private:
       }
    }
 
-   void determineOutputSizes(RooArgSet const &serverSet);
+   void determineOutputSizes();
 
-   RooArgSet _parameters;
+   bool isInComputationGraph(RooAbsArg const *arg) const;
 
    const RooFit::BatchModeOption _batchMode = RooFit::BatchModeOption::Off;
    int _getValInvocations = 0;
@@ -202,11 +205,11 @@ private:
    RooBatchCompute::DataMap _dataMapCUDA;
    const RooAbsReal &_topNode;
    std::unique_ptr<RooArgSet> _normSet;
-   std::map<RooAbsArg const *, NodeInfo> _nodeInfos;
-   std::map<RooAbsArg const *, NodeInfo> _integralInfos;
+   std::map<RooBatchCompute::DataKey, NodeInfo> _nodeInfos;
+   std::map<RooBatchCompute::DataKey, NodeInfo> _integralInfos;
 
    // the ordered computation graph
-   std::vector<RooAbsArg *> _orderedNodes;
+   RooArgList _orderedNodes;
 
    // used for preserving resources
    std::vector<double> _nonDerivedValues;
