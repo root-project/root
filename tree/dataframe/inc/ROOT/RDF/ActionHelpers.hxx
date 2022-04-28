@@ -704,6 +704,13 @@ public:
    std::string GetActionName() { return "GraphAsymmErrors"; }
 
    Result_t &PartialUpdate(unsigned int slot) { return *fGraphAsymmErrors[slot]; }
+
+   FillTGraphAsymmErrorsHelper MakeNew(void *newResult)
+   {
+      auto &result = *static_cast<std::shared_ptr<TGraphAsymmErrors> *>(newResult);
+      result->Set(0);
+      return FillTGraphAsymmErrorsHelper(result, fGraphAsymmErrors.size());
+   }
 };
 
 // In case of the take helper we have 4 cases:
