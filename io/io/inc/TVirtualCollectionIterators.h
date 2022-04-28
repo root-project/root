@@ -130,20 +130,20 @@ public:
    RegularIterator(void *collection, TVirtualCollectionProxy *proxy, Bool_t read_from_file) :
       TGenericCollectionIterator(collection,proxy,read_from_file),
       fNext( proxy->GetFunctionNext(read_from_file) ),
-      fCurrent(0),
+      fCurrent(nullptr),
       fStarted(kFALSE)
    {
    }
 
-   void *Next() {
+   void *Next() override {
       fStarted = kTRUE;
       fCurrent = fNext(fIterators.fBegin,fIterators.fEnd);
       return fCurrent;
    }
 
-   virtual void* operator*() const { return fCurrent; }
+   void* operator*() const override { return fCurrent; }
 
-   operator bool() const { return fStarted ? fCurrent != 0 : kTRUE; }
+   operator bool() const override { return fStarted ? fCurrent != nullptr : kTRUE; }
 
 };
 
@@ -154,7 +154,7 @@ class TGenericCollectionIterator::VectorIterator : public TGenericCollectionIter
 
    inline void *GetValue() const {
       if ((bool)*this) return fHasPointer ? *(void**)fIterators.fBegin : fIterators.fBegin;
-      else return 0;
+      else return nullptr;
    }
 
 public:
@@ -165,16 +165,16 @@ public:
    {
    }
 
-   void *Next() {
-      if ( ! (bool)*this ) return 0;
+   void *Next() override {
+      if ( ! (bool)*this ) return nullptr;
       void *result = GetValue();
       fIterators.fBegin = ((char*)fIterators.fBegin) + fIncrement;
       return result;
    }
 
-   virtual void* operator*() const { return GetValue(); }
+   void* operator*() const override { return GetValue(); }
 
-   operator bool() const { return fIterators.fBegin != fIterators.fEnd; }
+   operator bool() const override { return fIterators.fBegin != fIterators.fEnd; }
 
 };
 
@@ -216,8 +216,8 @@ private:
    private:
       TInternalIterator &operator=(const TInternalIterator&); // intentionally not implemented
    public:
-      TInternalIterator() : fCopy(0),fDelete(0),fNext(0),fIter(0) {}
-      TInternalIterator(const TInternalIterator &source) : fCopy(source.fCopy),fDelete(source.fDelete),fNext(source.fNext),fIter(0) {}
+      TInternalIterator() : fCopy(0),fDelete(0),fNext(0),fIter(nullptr) {}
+      TInternalIterator(const TInternalIterator &source) : fCopy(source.fCopy),fDelete(source.fDelete),fNext(source.fNext),fIter(nullptr) {}
 
       Copy_t    fCopy;
       Delete_t  fDelete;
@@ -287,7 +287,7 @@ public:
 
       void **ptr = (void**)internal_iter->fNext(internal_iter->fIter,internal_end->fIter);
       if(ptr) return *ptr;
-      else return 0;
+      else return nullptr;
    }
 
    static void DeleteIterator(void *iter)
