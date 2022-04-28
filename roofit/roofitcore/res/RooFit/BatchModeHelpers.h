@@ -31,6 +31,8 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, std::uni
                                       RooArgSet const &projDeps, bool isExtended, double integrateOverBinsPrecision,
                                       RooFit::BatchModeOption batchMode);
 
+void logArchitectureInfo(RooFit::BatchModeOption batchMode);
+
 // Little wrapper to use a TNamed directly as a RooBatchCompute DataKey.
 class NamePtrWrapper {
 public:

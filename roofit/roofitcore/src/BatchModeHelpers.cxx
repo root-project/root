@@ -154,3 +154,39 @@ RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data, std::uniqu
 
    return driverWrapper;
 }
+
+void RooFit::BatchModeHelpers::logArchitectureInfo(RooFit::BatchModeOption batchMode)
+{
+   // We have to exit early if the message stream is not active. Otherwise it's
+   // possible that this funciton skips logging because it thinks it has
+   // already logged, but actually it didn't.
+   if (!RooMsgService::instance().isActive(static_cast<RooAbsArg *>(nullptr), RooFit::Fitting, RooFit::INFO))
+      return;
+
+   // Don't repeat logging architecture info if the batchMode option didn't change
+   {
+      // Second element of pair tracks whether this function has already been called
+      static std::pair<RooFit::BatchModeOption, bool> lastBatchMode;
+      if (lastBatchMode.second && lastBatchMode.first == batchMode)
+         return;
+      lastBatchMode = {batchMode, true};
+   }
+
+   auto log = [](std::string_view message) {
+      oocxcoutI(static_cast<RooAbsArg *>(nullptr), Fitting) << message << std::endl;
+   };
+
+   if (batchMode == RooFit::BatchModeOption::Cuda && !RooBatchCompute::dispatchCUDA) {
+      throw std::runtime_error(std::string("In: ") + __func__ + "(), " + __FILE__ + ":" + __LINE__ +
+                               ": Cuda implementation of the computing library is not available\n");
+   }
+   if (RooBatchCompute::dispatchCPU->architecture() == RooBatchCompute::Architecture::GENERIC) {
+      log("using generic CPU library compiled with no vectorizations");
+   } else {
+      log(std::string("using CPU computation library compiled with -m") +
+          RooBatchCompute::dispatchCPU->architectureName());
+   }
+   if (batchMode == RooFit::BatchModeOption::Cuda) {
+      log("using CUDA computation library");
+   }
+}
