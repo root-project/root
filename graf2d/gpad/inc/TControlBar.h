@@ -28,7 +28,7 @@ class TControlBar : public TControlBarButton {
 friend class  TControlBarImp;
 
 private:
-   virtual void   Create();
+   void           Create() override;
    void           Initialize(Int_t x, Int_t y);
 
 protected:
@@ -42,7 +42,7 @@ public:
    enum { kVertical = 1, kHorizontal = 2 };
 
    TControlBar();
-   TControlBar(const char *orientation, const char *title="");
+   TControlBar(const char *orientation, const char *title = "");
    TControlBar(const char *orientation, const char *title, Int_t x, Int_t y);
    virtual ~TControlBar();
 
@@ -69,7 +69,7 @@ public:
    void            SetButtonWidth(UInt_t width);
    void            Show();
 
-   ClassDef(TControlBar,0) //Control bar
+   ClassDefOverride(TControlBar,0) //Control bar
 };
 
 #endif

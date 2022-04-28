@@ -30,19 +30,19 @@ public:
    TSlider();
    TSlider(const char *name, const char *title, Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, Color_t color=16, Short_t bordersize=2, Short_t bordermode =-1);
    virtual ~TSlider();
-   TObject      *GetObject()  const {return fObject;}
-   Double_t      GetMinimum() const {return fMinimum;}
-   Double_t      GetMaximum() const {return fMaximum;}
+   TObject      *GetObject()  const { return fObject; }
+   Double_t      GetMinimum() const { return fMinimum; }
+   Double_t      GetMaximum() const { return fMaximum; }
    virtual const char *GetMethod() const { return fMethod.Data(); }
-   virtual void  Paint(Option_t *option="");
-   virtual void  SavePrimitive(std::ostream &out, Option_t *option = "");
-   virtual void  SetMethod(const char *method) { fMethod=method; } // *MENU*
-   void          SetObject(TObject *obj=0) {fObject=obj;}
-   virtual void  SetMinimum(Double_t min=0) {fMinimum=min;}
-   virtual void  SetMaximum(Double_t max=1) {fMaximum=max;}
-   virtual void  SetRange(Double_t xmin=0, Double_t xmax=1);
+   void          Paint(Option_t *option = "") override;
+   void          SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   virtual void  SetMethod(const char *method) { fMethod = method; } // *MENU*
+   void          SetObject(TObject *obj = nullptr) { fObject = obj; }
+   virtual void  SetMinimum(Double_t min = 0) { fMinimum = min; }
+   virtual void  SetMaximum(Double_t max = 1) { fMaximum = max; }
+   virtual void  SetRange(Double_t xmin = 0, Double_t xmax = 1);
 
-   ClassDef(TSlider,1)  //A user interface slider.
+   ClassDefOverride(TSlider,1)  //A user interface slider.
 };
 
 #endif
