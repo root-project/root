@@ -46,17 +46,17 @@ protected:
    public:
       PaintPalette(TImagePalette **palette, TAttImage *attImage)
          { fPalette = palette; fAttImage = attImage; }
-      void Paint(Option_t *option);
+      void Paint(Option_t *option = "") override;
    };
 
    class LimitLine : public TLine {
    private:
       TASPaletteEditor  *fGui;
    protected:
-      virtual void ExecuteEvent(Int_t event, Int_t px, Int_t py);
+      void ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    public:
       LimitLine(Coord_t x, Coord_t y1, Coord_t y2, TASPaletteEditor *gui);
-      void Paint(Option_t *option);
+      void Paint(Option_t *option = "") override;
    };
 
    Double_t              fMinValue;           ///< min value of image
@@ -100,12 +100,12 @@ public:
    TASPaletteEditor(TAttImage *attImage, UInt_t w, UInt_t h);
    virtual ~TASPaletteEditor();
 
-   Bool_t ProcessMessage(Longptr_t msg, Longptr_t param1, Longptr_t param2);
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t param1, Longptr_t param2) override;
 
    void   UpdateRange();
-   void   CloseWindow();
+   void   CloseWindow() override;
 
-   ClassDef(TASPaletteEditor,0)  // GUI to edit a color palette
+   ClassDefOverride(TASPaletteEditor,0)  // GUI to edit a color palette
 };
 
 #endif
