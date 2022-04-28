@@ -76,21 +76,21 @@ protected:
    void CreateBrowser();
 
 public:
-   TGFileBrowser(const TGWindow *p, TBrowser* b=0, UInt_t w=200, UInt_t h=400);
+   TGFileBrowser(const TGWindow *p, TBrowser *b = nullptr, UInt_t w = 200, UInt_t h = 400);
    virtual ~TGFileBrowser();
 
-   virtual void Add(TObject *obj, const char *name = 0, Int_t check = -1);
-   virtual void BrowseObj(TObject *obj);
-   virtual void RecursiveRemove(TObject *obj);
-   virtual void Refresh(Bool_t force = kFALSE);
-   virtual void Show() { MapRaised(); }
-   Option_t    *GetDrawOption() const;
+   void         Add(TObject *obj, const char *name = nullptr, Int_t check = -1) override;
+   void         BrowseObj(TObject *obj) override;
+   void         RecursiveRemove(TObject *obj) override;
+   void         Refresh(Bool_t force = kFALSE) override;
+   void         Show() override { MapRaised(); }
+   Option_t    *GetDrawOption() const override;
 
    TRootBrowser *GetNewBrowser() const          { return fNewBrowser; }
    void          SetNewBrowser(TRootBrowser* b) { fNewBrowser = b;    }
 
-   void        AddFSDirectory(const char* entry, const char* path=0, Option_t *opt="");
-   void        AddKey(TGListTreeItem *itm, TObject *obj, const char *name = 0);
+   void        AddFSDirectory(const char* entry, const char* path = nullptr, Option_t *opt = "");
+   void        AddKey(TGListTreeItem *itm, TObject *obj, const char *name = nullptr);
    void        AddRemoteFile(TObject *obj);
    void        ApplyFilter(Int_t id);
    void        Chdir(TGListTreeItem *item);
@@ -113,7 +113,7 @@ public:
    void        ToggleSort();
    void        Update();
 
-   ClassDef(TGFileBrowser, 0) // File browser.
+   ClassDefOverride(TGFileBrowser, 0) // File browser.
 };
 
 #endif

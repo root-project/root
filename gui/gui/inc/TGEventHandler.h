@@ -30,7 +30,7 @@ private:
    TGWindow *fWindow;
    TObject  *fObject;
 
-   void  *GetSender() { return this; }  //used to set gTQSender
+   void  *GetSender() override { return this; }  //used to set gTQSender
 
 public:
    TGEventHandler(const char *name, TGWindow *w, TObject *obj, const char *title="") :
@@ -59,7 +59,7 @@ public:
    virtual Bool_t ProcessMessage(Longptr_t, Longptr_t, Longptr_t) { return kFALSE; }
    virtual void   Repaint() { }
 
-   ClassDef(TGEventHandler,0)  // Abstract event handler
+   ClassDefOverride(TGEventHandler,0)  // Abstract event handler
 };
 
 #endif

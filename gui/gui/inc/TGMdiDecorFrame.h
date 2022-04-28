@@ -69,13 +69,13 @@ public:
                    Int_t mdioptions = kMdiDefaultResizeMode,
                    Int_t w = 1, Int_t h = 1, UInt_t options = kOwnBackground);
 
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual void   DrawBorder() {};
+   Bool_t HandleButton(Event_t *event) override;
+   void   DrawBorder() override {}
 
    void SetResizeMode(Int_t mode) { fMdiOptions = mode; }
    void SetMinSize(Int_t w = 50, Int_t h = 20) { fMinW = w; fMinH = h; }
 
-   ClassDef(TGMdiWinResizer, 0) // Window Resizer
+   ClassDefOverride(TGMdiWinResizer, 0) // Window Resizer
 };
 
 
@@ -87,10 +87,10 @@ public:
                            Int_t mdioptions = kMdiDefaultResizeMode,
                            Int_t w = 4, Int_t h = 5);
 
-   virtual Bool_t HandleMotion(Event_t *event);
-   virtual void   DrawBorder();
+   Bool_t HandleMotion(Event_t *event) override;
+   void   DrawBorder() override;
 
-   ClassDef(TGMdiVerticalWinResizer, 0) // Vertical Window Resizer
+   ClassDefOverride(TGMdiVerticalWinResizer, 0) // Vertical Window Resizer
 };
 
 
@@ -102,10 +102,10 @@ public:
                              Int_t mdioptions = kMdiDefaultResizeMode,
                              Int_t w = 5, Int_t h = 4);
 
-   virtual Bool_t HandleMotion(Event_t *event);
-   virtual void   DrawBorder();
+   Bool_t HandleMotion(Event_t *event) override;
+   void   DrawBorder() override;
 
-   ClassDef(TGMdiHorizontalWinResizer, 0) // Horizontal Window Resizer
+   ClassDefOverride(TGMdiHorizontalWinResizer, 0) // Horizontal Window Resizer
 };
 
 
@@ -117,10 +117,10 @@ public:
                          Int_t mdioptions = kMdiDefaultResizeMode,
                          Int_t w = 20, Int_t h = 20);
 
-   virtual Bool_t  HandleMotion(Event_t *event);
-   virtual void DrawBorder();
+   Bool_t  HandleMotion(Event_t *event) override;
+   void DrawBorder() override;
 
-   ClassDef(TGMdiCornerWinResizer, 0) // Corner Window Resizer
+   ClassDefOverride(TGMdiCornerWinResizer, 0) // Corner Window Resizer
 };
 
 
@@ -141,7 +141,7 @@ public:
 
    TGPictureButton *GetButton(Int_t no) const { return fButton[no]; }
 
-   ClassDef(TGMdiButtons, 0)  // MDI Buttons Frame
+   ClassDefOverride(TGMdiButtons, 0)  // MDI Buttons Frame
 };
 
 
@@ -156,18 +156,18 @@ protected:
    const TGWindow   *fMsgWindow;    ///< window handling container messages
    TGPopupMenu      *fPopup;        ///< Popup menu associated to the title icon
 
-   virtual void     DoRedraw();
+   void     DoRedraw() override;
 
 public:
    TGMdiTitleIcon(const TGWindow *p, const TGWindow *titlebar,
                   const TGPicture *pic, Int_t w, Int_t h);
    virtual ~TGMdiTitleIcon();
 
-   virtual Bool_t HandleDoubleClick(Event_t *event);
-   virtual Bool_t HandleButton(Event_t *event);
+   Bool_t HandleDoubleClick(Event_t *event) override;
+   Bool_t HandleButton(Event_t *event) override;
    TGPopupMenu *GetPopup() const { return fPopup; }
 
-   ClassDef(TGMdiTitleIcon, 0) // MDI Title Icon
+   ClassDefOverride(TGMdiTitleIcon, 0) // MDI Title Icon
 };
 
 
@@ -199,10 +199,10 @@ protected:
 public:
    virtual ~TGMdiTitleBar();
 
-   virtual Bool_t       HandleButton(Event_t *event);
-   virtual Bool_t       HandleDoubleClick(Event_t *event);
-   virtual Bool_t       HandleMotion(Event_t *event);
-   virtual Bool_t       ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   Bool_t               HandleButton(Event_t *event) override;
+   Bool_t               HandleDoubleClick(Event_t *event) override;
+   Bool_t               HandleMotion(Event_t *event) override;
+   Bool_t               ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 
    void                 SetTitleBarColors(UInt_t fore, UInt_t back, TGFont *f);
    TGMdiButtons        *GetButtons() const { return fButtons; }
@@ -220,7 +220,7 @@ public:
    void                 SetRightButPressed(Bool_t press = kTRUE) { fRightButPressed= press; }
    void                 SetMidButPressed(Bool_t press = kTRUE) { fMidButPressed = press; }
 
-   ClassDef(TGMdiTitleBar, 0) // MDI Title Bar
+   ClassDefOverride(TGMdiTitleBar, 0) // MDI Title Bar
 };
 
 
@@ -261,21 +261,21 @@ public:
                    Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGMdiDecorFrame();
 
-   virtual Bool_t   HandleButton(Event_t *event);
-   virtual Bool_t   HandleConfigureNotify(Event_t *event);
+   Bool_t           HandleButton(Event_t *event) override;
+   Bool_t           HandleConfigureNotify(Event_t *event) override;
 
    virtual Int_t    CloseWindow() { return fFrame->CloseWindow(); }
-   virtual void     Layout();
+   void             Layout() override;
 
-   virtual void     Move(Int_t x, Int_t y);
-   virtual void     MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h);
+   void             Move(Int_t x, Int_t y) override;
+   void             MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h) override;
 
    void             SetMdiButtons(ULong_t buttons);
    ULong_t          GetMdiButtons() const { return fButtonMask; }
 
    void             SetResizeMode(Int_t mode = kMdiDefaultResizeMode);
 
-   void             SetWindowName(const char *name);
+   void             SetWindowName(const char *name) override;
    void             SetWindowIcon(const TGPicture *pic);
    const char      *GetWindowName() {
                      return (const char *)fTitlebar->GetWinName()->GetText()->GetString();
@@ -316,7 +316,7 @@ public:
    TGMdiHorizontalWinResizer *GetLeftVR() const { return fLeftVR; }
    TGMdiHorizontalWinResizer *GetRightVR() const { return fRightVR; }
 
-   ClassDef(TGMdiDecorFrame, 0) // MDI Decor Frame
+   ClassDefOverride(TGMdiDecorFrame, 0) // MDI Decor Frame
 };
 
 #endif

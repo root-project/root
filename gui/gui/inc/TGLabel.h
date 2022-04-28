@@ -42,7 +42,7 @@ protected:
    Bool_t         fHasOwnFont;   ///< kTRUE - font defined locally,  kFALSE - globally
    Bool_t         fDisabled;     ///< if kTRUE label looks disabled (shaded text)
 
-   virtual void DoRedraw();
+   void DoRedraw() override;
    virtual void DrawText(GContext_t gc, Int_t x, Int_t y);
 
    static const TGFont  *fgDefaultFont;
@@ -69,10 +69,10 @@ public:
 
    virtual ~TGLabel();
 
-   virtual TGDimension GetDefaultSize() const;
+   TGDimension GetDefaultSize() const override;
 
    const TGString *GetText() const { return fText; }
-   virtual const char *GetTitle() const { return fText->Data(); }
+   const char *GetTitle() const override { return fText->Data(); }
    virtual void SetText(TGString *newText);
    void SetText(const char *newText) { SetText(new TGString(newText)); }
    virtual void ChangeText(const char *newText) { SetText(newText); } //*MENU*icon=bld_rename.png*
@@ -85,7 +85,7 @@ public:
    virtual void SetTextFont(const char *fontName, Bool_t global = kFALSE);
    virtual void SetTextColor(Pixel_t color, Bool_t global = kFALSE);
    virtual void SetTextColor(TColor *color, Bool_t global = kFALSE);
-   virtual void SetForegroundColor(Pixel_t fore) { SetTextColor(fore); }
+   void SetForegroundColor(Pixel_t fore) override { SetTextColor(fore); }
    virtual void Disable(Bool_t on = kTRUE)
                { fDisabled = on; fClient->NeedRedraw(this); } //*TOGGLE* *GETTER=IsDisabled
    virtual void Enable() { fDisabled = kFALSE; fClient->NeedRedraw(this); }
@@ -109,10 +109,10 @@ public:
    FontStruct_t GetFontStruct() const { return fFont->GetFontStruct(); }
    TGFont      *GetFont() const  { return fFont; }
 
-   virtual void Layout();
-   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
+   void Layout() override;
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGLabel,0)  // A label GUI element
+   ClassDefOverride(TGLabel,0)  // A label GUI element
 };
 
 #endif

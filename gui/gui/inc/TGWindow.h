@@ -62,14 +62,14 @@ public:
       kIsHtmlView = BIT(14)
    };
 
-   TGWindow(const TGWindow *p = 0, Int_t x = 0, Int_t y = 0,
+   TGWindow(const TGWindow *p = nullptr, Int_t x = 0, Int_t y = 0,
             UInt_t w = 0, UInt_t h = 0, UInt_t border = 0,
             Int_t depth = 0,
             UInt_t clss = 0,
-            void *visual = 0,
-            SetWindowAttributes_t *attr = 0,
+            void *visual = nullptr,
+            SetWindowAttributes_t *attr = nullptr,
             UInt_t wtype = 0);
-   TGWindow(TGClient *c, Window_t id, const TGWindow *parent = 0);
+   TGWindow(TGClient *c, Window_t id, const TGWindow *parent = nullptr);
 
    virtual ~TGWindow();
 

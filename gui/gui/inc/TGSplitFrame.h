@@ -33,15 +33,15 @@ public:
 
    // constructors
    TGRectMap(Int_t rx, Int_t ry, UInt_t rw, UInt_t rh):
-             fX(rx), fY(ry), fW(rw), fH(rh) { }
-   virtual ~TGRectMap() { }
+             fX(rx), fY(ry), fW(rw), fH(rh) {}
+   virtual ~TGRectMap() {}
 
    // methods
    Bool_t Contains(Int_t px, Int_t py) const
                 { return ((px >= fX) && (px < fX + (Int_t) fW) &&
                           (py >= fY) && (py < fY + (Int_t) fH)); }
 
-   ClassDef(TGRectMap, 0)  // Rectangle used in TMap
+   ClassDefOverride(TGRectMap, 0)  // Rectangle used in TMap
 };
 
 class TGSplitTool : public TGCompositeFrame {
@@ -62,16 +62,16 @@ public:
    virtual ~TGSplitTool();
 
    void   AddRectangle(TGFrame *frm, Int_t x, Int_t y, Int_t w, Int_t h);
-   void   DoRedraw();
-   void   DrawBorder();
-   Bool_t HandleButton(Event_t *event);
-   Bool_t HandleMotion(Event_t *event);
+   void   DoRedraw() override;
+   void   DrawBorder() override;
+   Bool_t HandleButton(Event_t *event) override;
+   Bool_t HandleMotion(Event_t *event) override;
    void   Show(Int_t x, Int_t y);
    void   Hide();
    void   Reset();
    void   SetPosition(Int_t x, Int_t y);
 
-   ClassDef(TGSplitTool, 0)  // Split frame tool utility
+   ClassDefOverride(TGSplitTool, 0)  // Split frame tool utility
 };
 
 class TGSplitFrame : public TGCompositeFrame {
@@ -95,12 +95,12 @@ public:
                 UInt_t options = 0);
    virtual ~TGSplitFrame();
 
-   virtual void   AddFrame(TGFrame *f, TGLayoutHints *l = nullptr);
-   virtual void   Cleanup();
-   virtual Bool_t HandleConfigureNotify(Event_t *);
+   void           AddFrame(TGFrame *f, TGLayoutHints *l = nullptr) override;
+   void           Cleanup() override;
+   Bool_t         HandleConfigureNotify(Event_t *) override;
    virtual void   HSplit(UInt_t h = 0);
    virtual void   VSplit(UInt_t w = 0);
-   virtual void   RemoveFrame(TGFrame *f);
+   void           RemoveFrame(TGFrame *f) override;
 
    TGSplitFrame  *GetFirst() const { return fFirst; }
    TGFrame       *GetFrame() const { return fFrame; }
@@ -134,9 +134,9 @@ public:
 
    static  void   SwitchFrames(TGFrame *frame, TGCompositeFrame *dest,
                                TGFrame *prev);
-   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGSplitFrame, 0) // Splittable composite frame
+   ClassDefOverride(TGSplitFrame, 0) // Splittable composite frame
 };
 
 #endif

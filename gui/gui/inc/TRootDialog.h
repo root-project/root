@@ -42,13 +42,13 @@ public:
 
    virtual const char *GetParameters();
 
-   virtual void   CloseWindow();
+   void   CloseWindow() override;
    virtual void   Popup();
-   virtual Bool_t HandleKey(Event_t *event);
+   Bool_t HandleKey(Event_t *event) override;
 
    void TabPressed();
 
-   ClassDef(TRootDialog,0)  //Native GUI method argument prompt dialog box
+   ClassDefOverride(TRootDialog,0)  //Native GUI method argument prompt dialog box
 };
 
 #endif

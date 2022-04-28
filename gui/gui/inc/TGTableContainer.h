@@ -30,7 +30,7 @@ public:
    void HandleMouseWheel(Event_t *event);
    virtual void DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h);
 
-   ClassDef(TGTableFrame, 0) // A frame used internally by TGTable.
+   ClassDefOverride(TGTableFrame, 0) // A frame used internally by TGTable.
 };
 
 class TGTableHeaderFrame: public TGCompositeFrame {
@@ -48,7 +48,7 @@ public:
 
    virtual void DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h);
 
-   ClassDef(TGTableHeaderFrame, 0) // A frame used internally by TGTable.
+   ClassDefOverride(TGTableHeaderFrame, 0) // A frame used internally by TGTable.
 };
 
 #endif // ROOT_TGTableFrame

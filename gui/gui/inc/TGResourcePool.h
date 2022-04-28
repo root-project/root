@@ -173,7 +173,7 @@ public:
 
    Atom_t       GetClipboard() const { return fClipboardAtom; }
 
-   ClassDef(TGResourcePool,0)  // Graphics resource pool
+   ClassDefOverride(TGResourcePool,0)  // Graphics resource pool
 };
 
 #endif

@@ -120,7 +120,7 @@ public:
    Int_t            fValueMask;                    ///< MDI hints mask
    TGRectangle      fClient, fDecoration, fIcon;   ///< client, decoration and icon rectangles
 
-   virtual ~TGMdiGeometry() { }
+   virtual ~TGMdiGeometry() {}
 
    ClassDef(TGMdiGeometry, 0) // MDI Geometry
 };
@@ -168,10 +168,10 @@ public:
                   Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGMdiMainFrame();
 
-   virtual Bool_t   HandleKey(Event_t *event);
-   virtual Bool_t   ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   Bool_t           HandleKey(Event_t *event) override;
+   Bool_t           ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 
-   virtual void     Layout();
+   void             Layout() override;
 
    virtual void     FreeMove(TGMdiFrame *frame);
    virtual void     FreeSize(TGMdiFrame *frame);
@@ -224,9 +224,9 @@ public:
    virtual void     FrameRestored(Int_t id) { Emit("FrameRestored(Int_t)", id); } //*SIGNAL*
    virtual void     FramesArranged(Int_t mode) { Emit("FramesArranged(Int_t)", mode); } //*SIGNAL*
 
-   virtual void     SavePrimitive(std::ostream &out, Option_t *option = "");
+   void             SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGMdiMainFrame, 0) // MDI main frame
+   ClassDefOverride(TGMdiMainFrame, 0) // MDI main frame
 };
 
 
@@ -242,10 +242,10 @@ public:
                   UInt_t options = 0,
                   ULong_t back = GetDefaultFrameBackground());
 
-   virtual Bool_t HandleConfigureNotify(Event_t *event);
-   virtual TGDimension GetDefaultSize() const;
+   Bool_t HandleConfigureNotify(Event_t *event) override;
+   TGDimension GetDefaultSize() const override;
 
-   ClassDef(TGMdiContainer, 0) // MDI container
+   ClassDefOverride(TGMdiContainer, 0) // MDI container
 };
 
 #endif

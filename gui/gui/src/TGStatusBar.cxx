@@ -45,7 +45,7 @@ friend class TGStatusBar;
 private:
    TGString  *fStatusInfo;    // status text to be displayed in this part
    Int_t      fYt;            // y position of text in frame
-   virtual void DoRedraw();
+   void DoRedraw() override;
 
 public:
    TGStatusBarPart(const TGWindow *p, Int_t h, Int_t y, ULong_t back = GetDefaultFrameBackground());

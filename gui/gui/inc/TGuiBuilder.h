@@ -35,7 +35,7 @@ public:
                  Int_t type = kGuiBldCtor, TGLayoutHints *hints = 0);
    virtual ~TGuiBldAction();
 
-   ClassDef(TGuiBldAction,0)  // gui builder action
+   ClassDefOverride(TGuiBldAction,0)  // gui builder action
 };
 
 

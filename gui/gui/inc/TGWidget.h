@@ -60,9 +60,9 @@ protected:
 
 public:
    TGWidget():
-     fWidgetId(-1), fWidgetFlags(0), fMsgWindow(0), fCommand() { }
+     fWidgetId(-1), fWidgetFlags(0), fMsgWindow(nullptr), fCommand() { }
    TGWidget(Int_t id):
-     fWidgetId(id), fWidgetFlags(0), fMsgWindow(0), fCommand() { }
+     fWidgetId(id), fWidgetFlags(0), fMsgWindow(nullptr), fCommand() { }
    virtual ~TGWidget() { }
 
    Int_t         WidgetId() const { return fWidgetId; }

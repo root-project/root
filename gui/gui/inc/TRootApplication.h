@@ -26,25 +26,25 @@ private:
    TGClient    *fClient;        // pointer to the client environment
    char        *fDisplay;       // display server to connect to
 
-   TRootApplication() { fClient = 0; fDisplay = 0; }
+   TRootApplication() { fClient = nullptr; fDisplay = nullptr; }
    void GetOptions(Int_t *argc, char **argv);
 
 public:
    TRootApplication(const char *appClassName, Int_t *argc, char **argv);
    virtual ~TRootApplication();
 
-   TGClient     *Client() const { return fClient; }
+   TGClient *Client() const { return fClient; }
 
-   void    Show() { }
-   void    Hide() { }
-   void    Iconify() { }
-   Bool_t  IsCmdThread();
-   void    Init() { }
-   void    Open() { }
-   void    Raise() { }
-   void    Lower() { }
+   void    Show() override {}
+   void    Hide() override {}
+   void    Iconify() override {}
+   Bool_t  IsCmdThread() override;
+   void    Init() override {}
+   void    Open() override {}
+   void    Raise() override {}
+   void    Lower() override {}
 
-   ClassDef(TRootApplication,0)  // ROOT native GUI application environment
+   ClassDefOverride(TRootApplication,0)  // ROOT native GUI application environment
 };
 
 #endif

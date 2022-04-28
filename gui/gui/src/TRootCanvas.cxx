@@ -232,22 +232,22 @@ private:
 public:
    TRootContainer(TRootCanvas *c, Window_t id, const TGWindow *parent);
 
-   Bool_t  HandleButton(Event_t *ev);
-   Bool_t  HandleDoubleClick(Event_t *ev)
+   Bool_t  HandleButton(Event_t *ev) override;
+   Bool_t  HandleDoubleClick(Event_t *ev) override
                { return fCanvas->HandleContainerDoubleClick(ev); }
-   Bool_t  HandleConfigureNotify(Event_t *ev)
+   Bool_t  HandleConfigureNotify(Event_t *ev) override
                { TGFrame::HandleConfigureNotify(ev);
                   return fCanvas->HandleContainerConfigure(ev); }
-   Bool_t  HandleKey(Event_t *ev)
+   Bool_t  HandleKey(Event_t *ev) override
                { return fCanvas->HandleContainerKey(ev); }
-   Bool_t  HandleMotion(Event_t *ev)
+   Bool_t  HandleMotion(Event_t *ev) override
                { return fCanvas->HandleContainerMotion(ev); }
-   Bool_t  HandleExpose(Event_t *ev)
+   Bool_t  HandleExpose(Event_t *ev) override
                { return fCanvas->HandleContainerExpose(ev); }
-   Bool_t  HandleCrossing(Event_t *ev)
+   Bool_t  HandleCrossing(Event_t *ev) override
                { return fCanvas->HandleContainerCrossing(ev); }
-   void    SavePrimitive(std::ostream &out, Option_t * = "");
-   void    SetEditable(Bool_t) { }
+   void    SavePrimitive(std::ostream &out, Option_t * = "") override;
+   void    SetEditable(Bool_t) override { }
 };
 
 ////////////////////////////////////////////////////////////////////////////////

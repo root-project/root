@@ -55,7 +55,7 @@ protected:
 
    void         Init(const TGPicture *blpic, const TGPicture *slpic,
                      FileStat_t &stat, EListViewMode viewMode);
-   virtual void DoRedraw();
+   void DoRedraw() override;
 
 public:
    TGFileItem(const TGWindow *p = nullptr,
@@ -75,9 +75,9 @@ public:
 
    virtual ~TGFileItem();
 
-   virtual void SetViewMode(EListViewMode viewMode);
+   void     SetViewMode(EListViewMode viewMode) override;
 
-   Bool_t   IsActive() const { return fActive; }
+   Bool_t   IsActive() const override { return fActive; }
    Bool_t   IsSymLink() const { return fIsLink; }
    Int_t    GetType() const { return fType; }
    Long64_t GetSize() const { return fSize; }
@@ -89,18 +89,18 @@ public:
       return &fDNDData;
    }
 
-   virtual Atom_t HandleDNDEnter(Atom_t *);
+   Atom_t HandleDNDEnter(Atom_t *) override;
 
-   virtual Bool_t HandleDNDLeave() {
+   Bool_t HandleDNDLeave() override {
       return kTRUE;
    }
 
-   virtual Atom_t HandleDNDPosition(int, int, Atom_t action, int, int) {
+   Atom_t HandleDNDPosition(int, int, Atom_t action, int, int) override {
       if (action == TGDNDManager::GetDNDActionCopy()) return action;
       return kNone;
    }
 
-   virtual Bool_t HandleDNDFinished() {
+   Bool_t HandleDNDFinished() override {
       return ((TGFrame *)(const_cast<TGWindow*>(GetParent())))->HandleDNDFinished();
    }
 
@@ -108,7 +108,7 @@ public:
 
    void SetDNDObject(TObject *obj);
 
-   ClassDef(TGFileItem,0)   // Class representing file system object
+   ClassDefOverride(TGFileItem,0)   // Class representing file system object
 };
 
 
@@ -146,13 +146,13 @@ public:
 
    virtual ~TGFileContainer();
 
-   virtual Bool_t HandleTimer(TTimer *t);
+   Bool_t HandleTimer(TTimer *t) override;
    void StopRefreshTimer();
    void StartRefreshTimer(ULong_t msec=1000);
 
    virtual TGFileItem *AddFile(const char *name, const TGPicture *pic = nullptr, const TGPicture *lpic = nullptr);
    virtual TGFileItem *AddRemoteFile(TObject *obj, const TGPicture *ipic = nullptr, const TGPicture *ilpic = nullptr);
-   virtual void AddFrame(TGFrame *f, TGLayoutHints *l = nullptr);
+   void AddFrame(TGFrame *f, TGLayoutHints *l = nullptr) override;
    virtual void Sort(EFSSortMode sortType);
    virtual void SetFilter(const char *filter);
    virtual void ChangeDirectory(const char *path);
@@ -166,9 +166,9 @@ public:
                                 Int_t file_type, Bool_t is_link, const char *ext,
                                 Bool_t small);
 
-   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGFileContainer,0)  // Container containing file system objects
+   ClassDefOverride(TGFileContainer,0)  // Container containing file system objects
 };
 
 #endif

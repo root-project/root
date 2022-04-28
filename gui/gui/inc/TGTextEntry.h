@@ -56,7 +56,7 @@ protected:
    UInt_t            fDefHeight;         ///< default height
 
             void        CopyText() const;
-   virtual  void        DoRedraw();
+            void        DoRedraw() override;
             Int_t       GetCharacterIndex(Int_t xcoord);
    virtual  void        Init();
    virtual  Bool_t      IsCursorOutOfFrame();
@@ -88,17 +88,17 @@ public:
                UInt_t option = kSunkenFrame | kDoubleBorder,
                Pixel_t back = GetWhitePixel());
 
-   TGTextEntry(const TGWindow *parent = 0, const char *text = 0, Int_t id = -1);
+   TGTextEntry(const TGWindow *parent = nullptr, const char *text = nullptr, Int_t id = -1);
    TGTextEntry(const TString &contents, const TGWindow *parent, Int_t id = -1);
 
    virtual ~TGTextEntry();
 
-   virtual  TGDimension GetDefaultSize() const;
+            TGDimension GetDefaultSize() const override;
    virtual  void        SetDefaultSize(UInt_t w, UInt_t h);
 
    virtual  void        AppendText(const char *text);
             void        Backspace();
-            void        Clear(Option_t *option="");
+            void        Clear(Option_t *option="") override;
             void        CursorLeft(Bool_t mark = kFALSE , Int_t steps = 1);
             void        CursorRight(Bool_t mark = kFALSE , Int_t steps = 1);
             void        CursorWordForward(Bool_t mark = kFALSE);
@@ -106,7 +106,7 @@ public:
             void        Cut();
             void        Del();
             void        Deselect();
-   virtual  void        DrawBorder();
+            void        DrawBorder() override;
             void        End(Bool_t mark = kFALSE);
    ETextJustification   GetAlignment() const       { return fAlignment; }
    TGTextBuffer        *GetBuffer() const { return fText; }
@@ -118,16 +118,16 @@ public:
             Int_t       GetMaxLength() const    { return fMaxLen; }
    const    char       *GetText() const { return fText->GetString(); }
    virtual TGToolTip   *GetToolTip() const { return fTip; }
-   virtual const char  *GetTitle() const { return GetText(); }
+           const char  *GetTitle() const override { return GetText(); }
             Bool_t      HasMarkedText() const  { return fSelectionOn && (fStartIX != fEndIX); }
             Pixel_t     GetTextColor() const { return fNormGC.GetForeground(); }
            FontStruct_t GetFontStruct() const { return fFontStruct; }
             void        Home(Bool_t mark = kFALSE);
    virtual  void        Insert(const char *);
    virtual  void        InsertText(const char *text, Int_t pos);
-            Bool_t      IsFrameDrawn() const       { return fFrameDrawn; }
-            Bool_t      IsEdited() const           { return fEdited; }
-   virtual  void        Layout() { UpdateOffset(); }
+            Bool_t      IsFrameDrawn() const { return fFrameDrawn; }
+            Bool_t      IsEdited() const { return fEdited; }
+            void        Layout() override { UpdateOffset(); }
             void        MarkWord(Int_t pos);
             Int_t       MaxMark() const { return fStartIX > fEndIX ? fStartIX : fEndIX; }
             Int_t       MinMark() const { return fStartIX < fEndIX ? fStartIX : fEndIX; }
@@ -153,23 +153,23 @@ public:
    virtual  void        SetFrameDrawn(Bool_t flag = kTRUE);
    virtual  void        SetState(Bool_t state);
    virtual  void        SetTitle(const char *label) { SetText(label); }
-   virtual  void        SetForegroundColor(Pixel_t fore) { SetTextColor(fore, kFALSE); }
-   Pixel_t              GetForeground() const { return fNormGC.GetForeground(); }
-   Bool_t               HasOwnFont() const { return fHasOwnFont; }
+            void        SetForegroundColor(Pixel_t fore) override { SetTextColor(fore, kFALSE); }
+            Pixel_t     GetForeground() const override { return fNormGC.GetForeground(); }
+            Bool_t      HasOwnFont() const { return fHasOwnFont; }
 
-   virtual  void        SavePrimitive(std::ostream &out, Option_t *option = "");
+            void        SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   virtual  Bool_t      HandleButton(Event_t *event);
-   virtual  Bool_t      HandleDoubleClick(Event_t *event);
-   virtual  Bool_t      HandleCrossing(Event_t *event);
-   virtual  Bool_t      HandleMotion(Event_t *event);
-   virtual  Bool_t      HandleKey(Event_t *event);
-   virtual  Bool_t      HandleFocusChange(Event_t *event);
-   virtual  Bool_t      HandleSelection(Event_t *event);
-   virtual  Bool_t      HandleSelectionClear(Event_t *event);
-   virtual  Bool_t      HandleSelectionRequest(Event_t *event);
-   virtual  Bool_t      HandleTimer(TTimer *t);
-   virtual  Bool_t      HandleConfigureNotify(Event_t *event);
+            Bool_t      HandleButton(Event_t *event) override;
+            Bool_t      HandleDoubleClick(Event_t *event) override;
+            Bool_t      HandleCrossing(Event_t *event) override;
+            Bool_t      HandleMotion(Event_t *event) override;
+            Bool_t      HandleKey(Event_t *event) override;
+            Bool_t      HandleFocusChange(Event_t *event) override;
+            Bool_t      HandleSelection(Event_t *event) override;
+            Bool_t      HandleSelectionClear(Event_t *event) override;
+            Bool_t      HandleSelectionRequest(Event_t *event) override;
+            Bool_t      HandleTimer(TTimer *t) override;
+            Bool_t      HandleConfigureNotify(Event_t *event) override;
 
    virtual  void        TextChanged(const char *text = nullptr);//*SIGNAL*
    virtual  void        ReturnPressed();                        //*SIGNAL*
@@ -181,7 +181,7 @@ public:
    virtual  void        CursorOutDown();                        //*SIGNAL*
    virtual  void        DoubleClicked();                        //*SIGNAL*
 
-   ClassDef(TGTextEntry,0) // The TGTextEntry widget is a simple line editor for inputting text
+   ClassDefOverride(TGTextEntry,0) // The TGTextEntry widget is a simple line editor for inputting text
 };
 
 #endif

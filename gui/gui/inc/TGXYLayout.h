@@ -49,9 +49,9 @@ public:
    void      SetH(Double_t h) { fH = h; }
    void      SetFlag(UInt_t flag) { fFlag = flag; }
 
-   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
+   void SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDef(TGXYLayoutHints,0)  // Hits for the X / Y - layout manager
+   ClassDefOverride(TGXYLayoutHints,0)  // Hits for the X / Y - layout manager
 };
 
 
@@ -63,7 +63,7 @@ protected:
 
    Bool_t            fFirst;          ///< flag to determine the first call of Layout()
    UInt_t            fFirstWidth;     ///< original width of the frame fMain
-   UInt_t            fFirstHeight;    ///< original height of the fram fMain
+   UInt_t            fFirstHeight;    ///< original height of the frame fMain
 
    Int_t             fTWidth;         ///< text width of a default character "1234567890" / 10
    Int_t             fTHeight;        ///< text height
@@ -74,13 +74,13 @@ protected:
 public:
    TGXYLayout(TGCompositeFrame *main);
 
-   virtual void Layout();
-   virtual TGDimension GetDefaultSize() const;
-   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
+   void Layout() override;
+   TGDimension GetDefaultSize() const override;
+   void SavePrimitive(std::ostream &out, Option_t * = "") override;
 
    void NewSize() { fFirst = kTRUE; }
 
-   ClassDef(TGXYLayout,0)  // X / Y - layout manager
+   ClassDefOverride(TGXYLayout,0)  // X / Y - layout manager
 };
 
 #endif

@@ -64,9 +64,9 @@ public:
 
    void AddPopup(TGHotString *s, TGPopupMenu *menu, TGLayoutHints *l);
    TGMenuBar *GetMenuBar() const { return fBar;}
-   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGMdiMenuBar, 0) // MDI menu bar
+   ClassDefOverride(TGMdiMenuBar, 0) // MDI menu bar
 };
 
 #endif

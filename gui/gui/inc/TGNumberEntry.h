@@ -57,7 +57,7 @@ public:
       kNSSHuge = 3           ///< Huge step
    };
 
-   virtual ~TGNumberFormat() { }
+   virtual ~TGNumberFormat() {}
    ClassDef(TGNumberFormat,0)  // Class defining namespace for several enums used by TGNumberEntry
 };
 
@@ -79,7 +79,7 @@ public:
                       FontStruct_t font = GetDefaultFontStruct(),
                       UInt_t option = kSunkenFrame | kDoubleBorder,
                       Pixel_t back = GetWhitePixel());
-   TGNumberEntryField(const TGWindow *parent = 0,
+   TGNumberEntryField(const TGWindow *parent = nullptr,
                       Int_t id = -1, Double_t val = 0,
                       EStyle style = kNESReal,
                       EAttribute attr = kNEAAnyNumber,
@@ -91,7 +91,7 @@ public:
    virtual void SetTime(Int_t hour, Int_t min, Int_t sec, Bool_t emit = kTRUE);
    virtual void SetDate(Int_t year, Int_t month, Int_t day, Bool_t emit = kTRUE);
    virtual void SetHexNumber(ULong_t val, Bool_t emit = kTRUE);
-   virtual void SetText(const char* text, Bool_t emit = kTRUE);
+           void SetText(const char* text, Bool_t emit = kTRUE) override;
 
    virtual Double_t GetNumber() const;
    virtual Long_t   GetIntNumber() const;
@@ -106,40 +106,39 @@ public:
                            EAttribute attr = kNEAAnyNumber);
    virtual void  SetLimits(ELimit limits = kNELNoLimits,
                            Double_t min = 0, Double_t max = 1);
-   virtual void  SetState(Bool_t state);
-   virtual void  SetLogStep(Bool_t on = kTRUE) {
-      // Set logarithmic steps
-      fStepLog = on; }
+           void  SetState(Bool_t state) override;
 
-   virtual EStyle GetNumStyle() const {
-      // Get the numerical style
-      return fNumStyle; }
-   virtual EAttribute GetNumAttr() const {
-      // Get the numerical attribute
-      return fNumAttr; }
-   virtual ELimit GetNumLimits() const {
-      // Get the numerical limit attribute
-      return fNumLimits; }
-   virtual Double_t GetNumMin() const {
-      // Get the lower limit
-      return fNumMin; }
-   virtual Double_t GetNumMax() const {
-      // Get the upper limit
-      return fNumMax; }
-   virtual Bool_t IsLogStep() const {
-      // Is log step enabled?
-      return fStepLog; }
+   /** Set logarithmic steps */
+   virtual void  SetLogStep(Bool_t on = kTRUE) { fStepLog = on; }
 
-   virtual Bool_t HandleKey(Event_t* event);
-   virtual Bool_t HandleFocusChange (Event_t* event);
-   virtual void   TextChanged(const char *text = 0);
-   virtual void   ReturnPressed();
-   virtual void   Layout();
-   virtual Bool_t IsEditable() const { return kFALSE; }
+   /** Get the numerical style */
+   virtual EStyle GetNumStyle() const { return fNumStyle; }
+
+   /** Get the numerical attribute */
+   virtual EAttribute GetNumAttr() const { return fNumAttr; }
+
+   /** Get the numerical limit attribute */
+   virtual ELimit GetNumLimits() const { return fNumLimits; }
+
+   /** Get the lower limit */
+   virtual Double_t GetNumMin() const { return fNumMin; }
+
+   /** Get the upper limit */
+   virtual Double_t GetNumMax() const { return fNumMax; }
+
+   /** Is log step enabled? */
+   virtual Bool_t IsLogStep() const { return fStepLog; }
+
+           Bool_t HandleKey(Event_t* event) override;
+           Bool_t HandleFocusChange (Event_t* event) override;
+           void   TextChanged(const char *text = nullptr) override;
+           void   ReturnPressed() override;
+           void   Layout() override;
+           Bool_t IsEditable() const override { return kFALSE; }
    virtual void   InvalidInput(const char *instr) { Emit("InvalidInput(char*)", instr); }   //*SIGNAL*
-   virtual void   SavePrimitive(std::ostream &out, Option_t * = "");
+   void           SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDef(TGNumberEntryField,0)  // A text entry field used by a TGNumberEntry
+   ClassDefOverride(TGNumberEntryField,0)  // A text entry field used by a TGNumberEntry
 };
 
 
@@ -251,29 +250,26 @@ public:
          SetLimits(GetNumLimits(), min, max);  }            //*MENU*
    virtual void SetLogStep(Bool_t on = kTRUE);              //*TOGGLE* *GETTER=IsLogStep
 
-   virtual void   Associate(const TGWindow *w);
-   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   void   Associate(const TGWindow *w) override;
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
    virtual void   ValueChanged(Long_t val);     //*SIGNAL*
    virtual void   ValueSet(Long_t val);         //*SIGNAL*
    virtual void   Modified();                   //*SIGNAL*
 
-   TGNumberEntryField *GetNumberEntry() const {
-      // Get the number entry field
-      return fNumericEntry; }
-   TGButton *GetButtonUp() const {
-      // Get the up button
-      return fButtonUp; }
-   TGButton *GetButtonDown() const {
-      // Get the down button
-      return fButtonDown; }
+   /** Get the number entry field */
+   TGNumberEntryField *GetNumberEntry() const { return fNumericEntry; }
+   /** Get the up button */
+   TGButton *GetButtonUp() const { return fButtonUp; }
+   /** Get the down button */
+   TGButton *GetButtonDown() const { return fButtonDown; }
 
-   virtual Bool_t IsEditable() const { return kFALSE; }
+   Bool_t IsEditable() const override { return kFALSE; }
 
-   UInt_t GetDefaultHeight() const { return fNumericEntry->GetDefaultHeight(); }
-   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
-   virtual TGLayoutManager *GetLayoutManager() const;
+   UInt_t GetDefaultHeight() const override { return fNumericEntry->GetDefaultHeight(); }
+   void SavePrimitive(std::ostream &out, Option_t * = "") override;
+   TGLayoutManager *GetLayoutManager() const override;
 
-   ClassDef(TGNumberEntry,0)  // Entry field widget for several numeric formats
+   ClassDefOverride(TGNumberEntry,0)  // Entry field widget for several numeric formats
 };
 
 
@@ -287,10 +283,10 @@ private:
 
 public:
    TGNumberEntryLayout(TGNumberEntry *box): fBox(box) { }
-   virtual void Layout();
-   virtual TGDimension GetDefaultSize() const;
+   void Layout() override;
+   TGDimension GetDefaultSize() const override;
 
-   ClassDef(TGNumberEntryLayout,0)  // Layout manager for number entry widget
+   ClassDefOverride(TGNumberEntryLayout,0)  // Layout manager for number entry widget
 };
 
 
