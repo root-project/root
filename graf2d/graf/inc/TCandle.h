@@ -137,7 +137,7 @@ public:
    virtual void   SetQ3(Double_t q3) { fBoxDown = q3; }
 
    int            ParseOption(char *optin);
-   const char *   GetDrawOption() { return fOptionStr; }
+   const char    *GetDrawOption() { return fOptionStr; }
    long           GetOption() { return fOption; }
    bool           IsOption(CandleOption opt);
    static void    SetWhiskerRange(const Double_t wRange);
@@ -145,6 +145,6 @@ public:
    static void    SetScaledCandle(const Bool_t cScale = true);
    static void    SetScaledViolin(const Bool_t vScale = true);
 
-   ClassDef(TCandle,2)  //A Candle
+   ClassDefOverride(TCandle,2)  //A Candle
 };
 #endif
