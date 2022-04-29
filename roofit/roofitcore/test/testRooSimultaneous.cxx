@@ -10,6 +10,7 @@
 #include <RooSimultaneous.h>
 #include <RooProdPdf.h>
 #include <RooWorkspace.h>
+#include <RooThresholdCategory.h>
 
 #include <gtest/gtest.h>
 
@@ -87,4 +88,38 @@ TEST(RooSimultaneous, MultiRangeNLL)
    RooDataSet combData("combData", "", RooArgSet(x), Index(indexCat), Import(datasetMap));
 
    std::unique_ptr<RooAbsReal> nll{simPdf.createNLL(combData, Range("range1,range2"), SplitRange())};
+}
+
+/// GitHub issue #10473.
+/// Crash when RooSimultaneous does not contain a pdf for each value of the index category.
+TEST(RooSimultaneous, CategoriesWithNoPdf)
+{
+   RooRealVar x("x", "", 0, 1);
+   RooRealVar rnd("rnd", "", 0, 1);
+   RooThresholdCategory catThr("cat", "", rnd, "v2", 2);
+   catThr.addThreshold(1. / 3, "v0", 0);
+   catThr.addThreshold(2. / 3, "v1", 1);
+
+   RooRealVar m0("m0", "", 0.5, 0, 1);
+   RooRealVar m1("m1", "", 0.5, 0, 1);
+   RooGenericPdf g0("g0", "", "std::exp(-0.5*(x - m0)^2/0.01)", {x, m0});
+   RooGenericPdf g1("g1", "", "std::exp(-0.5*(x - m1)^2/0.01)", {x, m1});
+   RooGenericPdf rndPdf("rndPdf", "", "1", {});
+   RooProdPdf pdf("pdf", "", RooArgSet(g0, rndPdf));
+
+   auto ds = pdf.generate(RooArgSet(x, rnd), RooFit::Name("ds"), RooFit::NumEvents(100));
+   auto cat = dynamic_cast<RooCategory *>(ds->addColumn(catThr));
+
+   RooSimultaneous sim("sim", "", *cat);
+   sim.addPdf(g0, "v0");
+   sim.addPdf(g1, "v1");
+
+   // We don't care about the fit result, just that it doesn't crash.
+   using namespace RooFit;
+   sim.fitTo(*ds, BatchMode(false), PrintLevel(-1));
+   m0.setVal(0.5);
+   m0.setError(0.0);
+   m1.setVal(0.5);
+   m1.setError(0.0);
+   sim.fitTo(*ds, BatchMode(true), PrintLevel(-1));
 }
