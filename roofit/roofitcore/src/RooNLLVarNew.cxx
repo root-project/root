@@ -205,7 +205,6 @@ void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_
 
 double RooNLLVarNew::evaluate() const
 {
-   throw std::runtime_error("RooNLLVarNew::evaluate was called directly which should not happen!");
    return _value;
 }
 
