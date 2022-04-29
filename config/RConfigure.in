@@ -22,6 +22,11 @@
 
 #define EXTRAICONPATH "@extraiconpath@"
 
+#define ROOT__cplusplus @__cplusplus@
+#if defined(__cplusplus) && (__cplusplus != ROOT__cplusplus)
+# warning "The C++ standard in this build does not match ROOT configuration (@__cplusplus@); this might cause unexpected issues"
+#endif
+
 #@setresuid@ R__HAS_SETRESUID   /**/
 #@hasmathmore@ R__HAS_MATHMORE   /**/
 #@haspthread@ R__HAS_PTHREAD    /**/
