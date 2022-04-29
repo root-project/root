@@ -37,25 +37,18 @@ namespace {
 std::unique_ptr<RooAbsArg> prepareSimultaneousModelForBatchMode(RooSimultaneous &simPdf, RooArgSet &observables,
                                                                 bool isExtended, std::string const &rangeName)
 {
-
    // Prepare the NLLTerms for each component
    RooArgList nllTerms;
-   for (auto const &catItem : simPdf.indexCat()) {
-      auto const &catName = catItem.first;
-      auto *pdf = simPdf.getPdf(catName.c_str());
-      auto nllName = std::string("nll_") + pdf->GetName();
-      nllTerms.add(*new RooNLLVarNew(nllName.c_str(), nllName.c_str(), *pdf, observables, isExtended, rangeName));
-   }
-
    RooArgSet newObservables;
-
-   // Rename the observables and weights in each component
-   std::size_t iNLL = 0;
    for (auto const &catItem : simPdf.indexCat()) {
       auto const &catName = catItem.first;
-      auto &nll = static_cast<RooNLLVarNew &>(nllTerms[iNLL]);
-      newObservables.add(nll.prefixObservableAndWeightNames(std::string("_") + catName + "_"));
-      ++iNLL;
+      if (RooAbsPdf *pdf = simPdf.getPdf(catName.c_str())) {
+         auto nllName = std::string("nll_") + pdf->GetName();
+         auto *nll = new RooNLLVarNew(nllName.c_str(), nllName.c_str(), *pdf, observables, isExtended, rangeName);
+         // Rename the observables and weights
+         newObservables.add(nll->prefixObservableAndWeightNames(std::string("_") + catName + "_"));
+         nllTerms.add(*nll);
+      }
    }
 
    observables.clear();
