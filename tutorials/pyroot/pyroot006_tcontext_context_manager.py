@@ -1,16 +1,16 @@
-# \file
-# \ingroup tutorial_pyroot
-# \notebook -nodraw
-#
-# This tutorial demonstrates the usage of the TContext class as a Python context
-# manager. This functionality is related with how TFile works, so it is
-# suggested to also take a look at the pyroot005 tutorial.
-#
-# \macro_code
-# \macro_output
-#
-# \date March 2022
-# \author Vincenzo Eduardo Padulano CERN/UPV
+## \file
+## \ingroup tutorial_pyroot
+## \notebook -nodraw
+##
+## This tutorial demonstrates the usage of the TContext class as a Python context
+## manager. This functionality is related with how TFile works, so it is
+## suggested to also take a look at the pyroot005 tutorial.
+##
+## \macro_code
+## \macro_output
+##
+## \date March 2022
+## \author Vincenzo Eduardo Padulano CERN/UPV
 import os
 
 import ROOT
