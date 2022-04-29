@@ -563,6 +563,26 @@ TEST_P(RDFVary, JittedFilter)
    EXPECT_EQ(sums2["x:1"], 420);
 }
 
+TEST_P(RDFVary, FilterAfterJittedFilter)
+{
+   auto c = ROOT::RDataFrame(10)
+               .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
+               .Vary(
+                  "x",
+                  [](int x) {
+                     return ROOT::RVecI{x - 1, x + 1};
+                  },
+                  {"x"}, 2)
+               .Filter("x > 1")
+               .Filter([](int x) { return x > 5; }, {"x"})
+               .Count();
+   auto cs = ROOT::RDF::Experimental::VariationsFor(c);
+   EXPECT_EQ(*c, 4);
+   EXPECT_EQ(cs["nominal"], *c);
+   EXPECT_EQ(cs["x:0"], 3);
+   EXPECT_EQ(cs["x:1"], 5);
+}
+
 TEST_P(RDFVary, JittedVary)
 {
    auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; });
