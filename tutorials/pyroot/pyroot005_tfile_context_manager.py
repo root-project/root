@@ -1,15 +1,15 @@
-# \file
-# \ingroup tutorial_pyroot
-# \notebook -nodraw
-#
-# This tutorial demonstrates the usage of the TFile class as a Python context
-# manager.
-#
-# \macro_code
-# \macro_output
-#
-# \date March 2022
-# \author Vincenzo Eduardo Padulano CERN/UPV
+## \file
+## \ingroup tutorial_pyroot
+## \notebook -nodraw
+##
+## This tutorial demonstrates the usage of the TFile class as a Python context
+## manager.
+##
+## \macro_code
+## \macro_output
+##
+## \date March 2022
+## \author Vincenzo Eduardo Padulano CERN/UPV
 import os
 
 import ROOT
