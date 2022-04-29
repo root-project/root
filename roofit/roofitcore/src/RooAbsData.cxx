@@ -1689,23 +1689,23 @@ TList* RooAbsData::split(const RooAbsCategory& splitCat, Bool_t createEmptyDataS
 
 TList* RooAbsData::split(const RooSimultaneous& simpdf, Bool_t createEmptyDataSets) const
 {
-  RooAbsCategoryLValue& splitCat = const_cast<RooAbsCategoryLValue&>(simpdf.indexCat());
+  auto& splitCat = const_cast<RooAbsCategoryLValue&>(simpdf.indexCat());
 
   // Sanity check
   if (!splitCat.dependsOn(*get())) {
     coutE(InputArguments) << "RooTreeData::split(" << GetName() << ") ERROR category " << splitCat.GetName()
     << " doesn't depend on any variable in this dataset" << endl ;
-    return 0 ;
+    return nullptr;
   }
 
   // Clone splitting category and attach to self
   RooAbsCategory* cloneCat =0;
-  RooArgSet* cloneSet = 0;
+  std::unique_ptr<RooArgSet> cloneSet;
   if (splitCat.isDerived()) {
-    cloneSet = (RooArgSet*) RooArgSet(splitCat).snapshot(kTRUE) ;
+    cloneSet.reset(static_cast<RooArgSet*>(RooArgSet(splitCat).snapshot(true)));
     if (!cloneSet) {
       coutE(InputArguments) << "RooTreeData::split(" << GetName() << ") Couldn't deep-clone splitting category, abort." << endl ;
-      return 0 ;
+      return nullptr;
     }
     cloneCat = (RooAbsCategory*) cloneSet->find(splitCat.GetName()) ;
     cloneCat->attachDataSet(*this) ;
@@ -1714,7 +1714,7 @@ TList* RooAbsData::split(const RooSimultaneous& simpdf, Bool_t createEmptyDataSe
     if (!cloneCat) {
       coutE(InputArguments) << "RooTreeData::split(" << GetName() << ") ERROR category " << splitCat.GetName()
       << " is fundamental and does not appear in this dataset" << endl ;
-      return 0 ;
+      return nullptr;
     }
   }
 
@@ -1725,9 +1725,8 @@ TList* RooAbsData::split(const RooSimultaneous& simpdf, Bool_t createEmptyDataSe
   // Construct set of variables to be included in split sets = full set - split category
   RooArgSet subsetVars(*get()) ;
   if (splitCat.isDerived()) {
-    RooArgSet* vars = splitCat.getVariables() ;
+    std::unique_ptr<RooArgSet> vars{splitCat.getVariables()};
     subsetVars.remove(*vars,kTRUE,kTRUE) ;
-    delete vars ;
   } else {
     subsetVars.remove(splitCat,kTRUE,kTRUE) ;
   }
@@ -1741,13 +1740,20 @@ TList* RooAbsData::split(const RooSimultaneous& simpdf, Bool_t createEmptyDataSe
     addWV = kTRUE ;
   }
 
+  // Get the observables for a given pdf in the RooSimultaneous, or an empty
+  // RooArgSet if no pdf is set
+  auto getPdfObservables = [this, &simpdf](const char * label) {
+    RooArgSet obsSet;
+    if(RooAbsPdf* catPdf = simpdf.getPdf(label)) {
+      catPdf->getObservables(this->get(), obsSet);
+    }
+    return obsSet;
+  };
+
   // By default, remove all category observables from the subdatasets
   RooArgSet allObservables;
   for( const auto& catPair : splitCat) {
-    const auto& catPdf = simpdf.getPdf(catPair.first.c_str());
-    RooArgSet obsSet;
-    catPdf->getObservables(this->get(), obsSet);
-    allObservables.add(obsSet);
+    allObservables.add(getPdfObservables(catPair.first.c_str()));
   }
   subsetVars.remove(allObservables, kTRUE, kTRUE);
 
@@ -1757,13 +1763,9 @@ TList* RooAbsData::split(const RooSimultaneous& simpdf, Bool_t createEmptyDataSe
     for (const auto& nameIdx : *cloneCat) {
       // Add in the subset only the observables corresponding to this category
       RooArgSet subsetVarsCat(subsetVars);
-      const auto& catPdf = simpdf.getPdf(nameIdx.first.c_str());
-      RooArgSet obsSet;
-      catPdf->getObservables(this->get(), obsSet);
-      subsetVarsCat.add(obsSet);
-
+      subsetVarsCat.add(getPdfObservables(nameIdx.first.c_str()));
       RooAbsData* subset = emptyClone(nameIdx.first.c_str(), nameIdx.first.c_str(), &subsetVarsCat,(addWV?"weight":0)) ;
-      dsetList->Add((RooAbsArg*)subset) ;
+      dsetList->Add(subset) ;
     }
   }
 
@@ -1776,10 +1778,9 @@ TList* RooAbsData::split(const RooSimultaneous& simpdf, Bool_t createEmptyDataSe
     if (!subset) {
       // Add in the subset only the observables corresponding to this category
       RooArgSet subsetVarsCat(subsetVars);
-      const auto& catPdf = simpdf.getPdf(cloneCat->getCurrentLabel());
-      subsetVarsCat.add(*(catPdf->getObservables(this)));
+      subsetVarsCat.add(getPdfObservables(cloneCat->getCurrentLabel()));
       subset = emptyClone(cloneCat->getCurrentLabel(),cloneCat->getCurrentLabel(),&subsetVarsCat,(addWV?"weight":0));
-      dsetList->Add((RooAbsArg*)subset);
+      dsetList->Add(subset);
     }
     if (!propWeightSquared) {
       subset->add(*row, weight());
@@ -1788,7 +1789,6 @@ TList* RooAbsData::split(const RooSimultaneous& simpdf, Bool_t createEmptyDataSe
     }
   }
 
-  delete cloneSet;
   return dsetList;
 }
 
