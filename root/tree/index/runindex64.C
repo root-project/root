@@ -5,16 +5,12 @@
 bool test(TTree*);
 
 const char* fname = "index64.root";
-#if __APPLE__ and __arm64__
   // Apple M1 has long double == double; these values exceed its range
   // and cannot be represented as (even temporary) expression results.
   // There would be a warning if you'd try.
-  const Long64_t bigval   = 0xFFFFFFFFFFFF;
-  const ULong64_t biguval = 0xFFFFFFFFFFFF0;
-#else
-  const Long64_t bigval   = 0xFFFFFFFFFFFFFFF;  // still positive number
-  const ULong64_t biguval = 0xFFFFFFFFFFFFFFF0;  // "negative" number
-#endif
+  static constexpr bool shortlongdouble = sizeof(longdouble) < 16; // was true for __APPLE__ and __arm64__
+  const Long64_t bigval   = shortlongdouble ? 0xFFFFFFFFFFFF : 0xFFFFFFFFFFFFFFF; // still positive number
+  const ULong64_t biguval = shortlongdouble ?  0xFFFFFFFFFFFF0 : 0xFFFFFFFFFFFFFFF0; // "negative" number
 
 int runindex64(){
 
