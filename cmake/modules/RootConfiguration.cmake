@@ -679,6 +679,11 @@ if(PYTHON_VERSION_STRING_Development_Other)
 endif()
 
 #---RConfigure.h---------------------------------------------------------------------------------------------
+try_compile(has__cplusplus "${CMAKE_BINARY_DIR}" SOURCES "${CMAKE_SOURCE_DIR}/config/__cplusplus.cxx"
+            OUTPUT_VARIABLE __cplusplus_PPout)
+string(REGEX MATCH "__cplusplus=([0-9]+)" __cplusplus "${__cplusplus_PPout}")
+set(__cplusplus ${CMAKE_MATCH_1}L)
+
 configure_file(${PROJECT_SOURCE_DIR}/config/RConfigure.in ginclude/RConfigure.h NEWLINE_STYLE UNIX)
 install(FILES ${CMAKE_BINARY_DIR}/ginclude/RConfigure.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
