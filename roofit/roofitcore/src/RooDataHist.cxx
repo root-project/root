@@ -660,10 +660,17 @@ void RooDataHist::importDHistSet(const RooArgList& /*vars*/, RooCategory& indexC
 void RooDataHist::_adjustBinning(RooRealVar &theirVar, const TAxis &axis,
     RooRealVar *ourVar, Int_t *offset)
 {
-  if (!dynamic_cast<RooRealVar*>(static_cast<RooAbsArg*>(ourVar))) {
-    coutE(InputArguments) << "RooDataHist::adjustBinning(" << GetName() << ") ERROR: dimension " << ourVar->GetName() << " must be real" << endl ;
-    assert(0) ;
-  }
+   const std::string ourVarName(ourVar->GetName() ? ourVar->GetName() : ""), ownName(GetName() ? GetName() : "");
+   // RooRealVar is derived from RooAbsRealLValue which is itself
+   // derived from RooAbsReal and a virtual class RooAbsLValue
+   // supplying setter fuctions, check if ourVar is indeed derived
+   // as real
+   if (!dynamic_cast<RooAbsReal *>(ourVar)) {
+      coutE(InputArguments) << "RooDataHist::adjustBinning(" << ownName << ") ERROR: dimension " << ourVarName
+                            << " must be real\n";
+      throw std::logic_error("Incorrect type object (" + ourVarName +
+                             ") passed as argument to RooDataHist::_adjustBinning. Please report this issue.");
+   }
 
   const double xlo = theirVar.getMin();
   const double xhi = theirVar.getMax();
@@ -681,7 +688,10 @@ void RooDataHist::_adjustBinning(RooRealVar &theirVar, const TAxis &axis,
     theirVar.setBinning(xbins);
 
     if (true || fabs(xloAdj - xlo) > tolerance || fabs(xhiAdj - xhi) > tolerance) {
-      coutI(DataHandling)<< "RooDataHist::adjustBinning(" << GetName() << "): fit range of variable " << ourVar->GetName() << " expanded to nearest bin boundaries: [" << xlo << "," << xhi << "] --> [" << xloAdj << "," << xhiAdj << "]" << endl;
+       coutI(DataHandling) << "RooDataHist::adjustBinning(" << ownName << "): fit range of variable " << ourVarName
+                           << " expanded to nearest bin boundaries: [" << xlo << "," << xhi << "] --> [" << xloAdj
+                           << "," << xhiAdj << "]"
+                           << "\n";
     }
 
     ourVar->setBinning(xbins);
@@ -702,7 +712,10 @@ void RooDataHist::_adjustBinning(RooRealVar &theirVar, const TAxis &axis,
     theirVar.setRange(xloAdj, xhiAdj);
 
     if (fabs(xloAdj - xlo) > tolerance || fabs(xhiAdj - xhi) > tolerance) {
-      coutI(DataHandling)<< "RooDataHist::adjustBinning(" << GetName() << "): fit range of variable " << ourVar->GetName() << " expanded to nearest bin boundaries: [" << xlo << "," << xhi << "] --> [" << xloAdj << "," << xhiAdj << "]" << endl;
+       coutI(DataHandling) << "RooDataHist::adjustBinning(" << ownName << "): fit range of variable " << ourVarName
+                           << " expanded to nearest bin boundaries: [" << xlo << "," << xhi << "] --> [" << xloAdj
+                           << "," << xhiAdj << "]"
+                           << "\n";
     }
 
     RooUniformBinning xbins2(xloAdj, xhiAdj, xbins.numBins());

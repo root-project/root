@@ -115,10 +115,11 @@ RooRealSumFunc::RooRealSumFunc(const char *name, const char *title, const RooArg
    // All coefficients and functions are allowed to be negative
    // but the sum is not, which is enforced at runtime.
 
+   const std::string ownName(GetName() ? GetName() : "");
    if (!(inFuncList.getSize() == inCoefList.getSize() + 1 || inFuncList.getSize() == inCoefList.getSize())) {
-      coutE(InputArguments) << "RooRealSumFunc::RooRealSumFunc(" << GetName()
+      coutE(InputArguments) << "RooRealSumFunc::RooRealSumFunc(" << ownName
                             << ") number of pdfs and coefficients inconsistent, must have Nfunc=Ncoef or Nfunc=Ncoef+1"
-                            << endl;
+                            << "\n";
       assert(0);
    }
 
@@ -131,17 +132,29 @@ RooRealSumFunc::RooRealSumFunc(const char *name, const char *title, const RooArg
    RooAbsArg *func;
    RooAbsArg *coef;
 
+   std::string funcName;
    while ((coef = (RooAbsArg *)coefIter->Next())) {
       func = (RooAbsArg *)funcIter->Next();
+      if (!func) {
+         funcName = "undefined";
+         coutW(InputArguments) << "RooRealSumFunc::RooRealSumFunc(" << ownName << ") func " << funcName
+                               << " does not exist, ignored"
+                               << "\n";
+         continue;
+      }
 
       if (!dynamic_cast<RooAbsReal *>(coef)) {
-         coutW(InputArguments) << "RooRealSumFunc::RooRealSumFunc(" << GetName() << ") coefficient " << coef->GetName()
-                               << " is not of type RooAbsReal, ignored" << endl;
+         const std::string coefName(coef->GetName() ? coef->GetName() : "");
+         coutW(InputArguments) << "RooRealSumFunc::RooRealSumFunc(" << ownName << ") coefficient " << coefName
+                               << " is not of type RooAbsReal, ignored"
+                               << "\n";
          continue;
       }
       if (!dynamic_cast<RooAbsReal *>(func)) {
-         coutW(InputArguments) << "RooRealSumFunc::RooRealSumFunc(" << GetName() << ") func " << func->GetName()
-                               << " is not of type RooAbsReal, ignored" << endl;
+         funcName = (func->GetName() ? func->GetName() : "");
+         coutW(InputArguments) << "RooRealSumFunc::RooRealSumFunc(" << ownName << ") func " << funcName
+                               << " is not of type RooAbsReal, ignored"
+                               << "\n";
          continue;
       }
       _funcList.add(*func);
@@ -151,8 +164,9 @@ RooRealSumFunc::RooRealSumFunc(const char *name, const char *title, const RooArg
    func = (RooAbsArg *)funcIter->Next();
    if (func) {
       if (!dynamic_cast<RooAbsReal *>(func)) {
-         coutE(InputArguments) << "RooRealSumFunc::RooRealSumFunc(" << GetName() << ") last func " << func->GetName()
-                               << " is not of type RooAbsReal, fatal error" << endl;
+         funcName = (func->GetName() ? func->GetName() : "");
+         coutE(InputArguments) << "RooRealSumFunc::RooRealSumFunc(" << ownName << ") last func " << funcName
+                               << " is not of type RooAbsReal, fatal error\n";
          assert(0);
       }
       _funcList.add(*func);
