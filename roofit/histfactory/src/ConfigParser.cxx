@@ -345,277 +345,213 @@ std::vector< RooStats::HistFactory::Measurement > ConfigParser::GetMeasurementsF
 }
 
 
-HistFactory::Measurement ConfigParser::CreateMeasurementFromDriverNode( TXMLNode* node ) {
+HistFactory::Measurement ConfigParser::CreateMeasurementFromDriverNode(TXMLNode *node)
+{
+   // construct and return at bottom
+   HistFactory::Measurement measurement;
 
-
-  HistFactory::Measurement measurement;
-
-  // Set the default values:
-  measurement.SetLumi( 1.0 );
-  measurement.SetLumiRelErr( .10 );
-  measurement.SetBinLow( 0 );
-  measurement.SetBinHigh( 1 );
-  measurement.SetExportOnly( false );
-
-  cxcoutIHF << "Creating new measurement: " << std::endl;
-
-  // First, get the attributes of the node
-  TListIter attribIt = node->GetAttributes();
-  TXMLAttr* curAttr = 0;
-  while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
-
-    if( curAttr->GetName() == TString( "" ) ) {
-      cxcoutEHF << "Found XML attribute in Measurement with no name"  << std::endl;
-      // ADD Output Here
-      throw hf_exc();
-    }
-    else if( curAttr->GetName() == TString( "Name" ) ) {
-      //rowTitle=curAttr->GetValue();
-      measurement.SetName(  curAttr->GetValue() );
-      //measurement.OutputFileName = outputFileNamePrefix+"_"+rowTitle+".root";
-    }
-    else if( curAttr->GetName() == TString( "Lumi" ) ) {
-      measurement.SetLumi( atof(curAttr->GetValue()) );
-    }
-    else if( curAttr->GetName() == TString( "LumiRelErr" ) ) {
-      measurement.SetLumiRelErr( atof(curAttr->GetValue()) );
-    }
-    else if( curAttr->GetName() == TString( "BinLow" ) ) {
-      measurement.SetBinLow( atoi(curAttr->GetValue()) );
-    }
-    else if( curAttr->GetName() == TString( "BinHigh" ) ) {
-      measurement.SetBinHigh( atoi(curAttr->GetValue()) );
-    }
-    else if( curAttr->GetName() == TString( "Mode" ) ) {
-      cout <<"\n INFO: Mode attribute is deprecated, will ignore\n"<<endl;
-    }
-    else if( curAttr->GetName() == TString( "ExportOnly" ) ) {
-      measurement.SetExportOnly( CheckTrueFalse(curAttr->GetValue(),"Measurement") );
-    }
-
-    else {
-      cxcoutEHF << "Found unknown XML attribute in Measurement: " << curAttr->GetName()
-      << std::endl;
-      throw hf_exc();
-    }
-
-  } // End Loop over attributes
-
-
-  // Then, get the properties of the children nodes
-  TXMLNode* child = node->GetChildren();
-  while( child != 0 ) {
-
-    if( child->GetNodeName() == TString( "" ) ) {
-      cxcoutEHF << "Found XML child node of Measurement with no name"  << std::endl;
-      throw hf_exc();
-    }
-
-    else if( child->GetNodeName() == TString( "POI" ) ) {
-      if( child->GetText() == NULL ) {
-   cxcoutEHF << "Error: node: " << child->GetName()
-        << " has no text." << std::endl;
-   throw hf_exc();
-      }
-      //poi// measurement.SetPOI( child->GetText() );
-     AddSubStrings( measurement.GetPOIList(), child->GetText() );
-    }
-
-    else if( child->GetNodeName() == TString( "ParamSetting" ) ) {
-      TListIter paramIt = child->GetAttributes();
-      TXMLAttr* curParam = 0;
-      while( ( curParam = dynamic_cast< TXMLAttr* >( paramIt() ) ) != 0 ) {
-
-   if( curParam->GetName() == TString( "" ) ) {
-     cxcoutEHF << "Error: Found tag attribute with no name in ParamSetting" << std::endl;
-     throw hf_exc();
+   // safety for public functions
+   if (node == nullptr) {
+      cxcoutWHF << "Input driver node is undefined, ignoring\n";
+      return measurement;
    }
-   else if( curParam->GetName() == TString( "Const" ) ) {
-     if(curParam->GetValue()==TString("True")){
-       // Fix here...?
-       if( child->GetText() == NULL ) {
-         cxcoutEHF << "Error: node: " << child->GetName()
-         << " has no text." << std::endl;
+
+   // Set the default values:
+   measurement.SetLumi(1.0);
+   measurement.SetLumiRelErr(.10);
+   measurement.SetBinLow(0);
+   measurement.SetBinHigh(1);
+   measurement.SetExportOnly(false);
+
+   cxcoutIHF << "Creating new measurement:\n";
+
+   // First, get the attributes of the node
+   TListIter attribIt = node->GetAttributes();
+   TXMLAttr *curAttr = nullptr;
+   while ((/**/ curAttr = dynamic_cast<TXMLAttr *>(attribIt()) /**/) != nullptr) {
+      // curAttr is guaranteed non-null above
+      const std::string curAttrName(curAttr->GetName() ? curAttr->GetName() : ""),
+         curAttrValue(curAttr->GetValue() ? curAttr->GetValue() : "");
+      if (curAttrName == "") {
+         cxcoutEHF << "Found XML attribute in Measurement with no name.\n";
+         // ADD Output Here
          throw hf_exc();
-       }
-       AddSubStrings( measurement.GetConstantParams(), child->GetText() );
-     }
-   }
-   else if( curParam->GetName() == TString( "Val" ) ) {
-     double val = atof(curParam->GetValue());
-     if( child->GetText() == NULL ) {
-       cxcoutEHF << "Error: node: " << child->GetName()
-            << " has no text." << std::endl;
-       throw hf_exc();
-     }
-     std::vector<std::string> child_nodes = GetChildrenFromString(child->GetText());
-     for(unsigned int i = 0; i < child_nodes.size(); ++i) {
-       measurement.SetParamValue( child_nodes.at(i), val);
-     }
-     // AddStringValPairToMap( measurement.GetParamValues(), val, child->GetText() );
-   }
-   else {
-     cxcoutEHF << "Found tag attribute with unknown name in ParamSetting: "
-          << curParam->GetName() << std::endl;
-     throw hf_exc();
-   }
+      } else if (curAttrName == "Name") {
+         measurement.SetName(curAttrValue.c_str());
+      } else if (curAttrName == "Lumi") {
+         measurement.SetLumi(std::stof(curAttrValue));
+      } else if (curAttrName == "LumiRelErr") {
+         measurement.SetLumiRelErr(std::stof(curAttrValue));
+      } else if (curAttrName == "BinLow") {
+         measurement.SetBinLow(std::stoi(curAttrValue));
+      } else if (curAttrName == "BinHigh") {
+         measurement.SetBinHigh(std::stoi(curAttrValue));
+      } else if (curAttrName == "Mode") {
+         cout << "\n INFO: Mode attribute is deprecated and no longer supported, will ignore\n";
+      } else if (curAttrName == "ExportOnly") {
+         measurement.SetExportOnly(CheckTrueFalse(curAttrValue, "Measurement"));
+      } else {
+         cxcoutEHF << "Found unknown XML attribute in Measurement: " << curAttrName << "\n";
+         throw hf_exc();
       }
-    }
+   } // End Loop over attributes
 
-    else if( child->GetNodeName() == TString( "Asimov" ) ) {
+   // Then, get the properties of the children nodes
+   TXMLNode *child = node->GetChildren();
+   while (child != nullptr) {
+      const std::string childName(child->GetName() ? child->GetName() : ""),
+         childNodeName(child->GetNodeName() ? child->GetNodeName() : ""),
+         childText(child->GetText() ? child->GetText() : "");
+      if (childNodeName.empty()) {
+         cxcoutEHF << "Found XML child node of Measurement with no name\n";
+         throw hf_exc();
+      } else if (childNodeName == "POI") {
+         if (childText == "") {
+            cxcoutEHF << "Error: node: " << childName << " has no text.\n";
+            throw hf_exc();
+         }
+         // poi // measurement.SetPOI(childText);
+         AddSubStrings(measurement.GetPOIList(), childText);
+      } else if (childNodeName == "ParamSetting") {
+         TListIter paramIt = child->GetAttributes();
+         TXMLAttr *curParam = nullptr;
+         while ((/**/ curParam = dynamic_cast<TXMLAttr *>(paramIt()) /**/) != nullptr) {
+            // curParam is guaranteed non-null above
+            const std::string curParamName(curParam->GetName() ? curParam->GetName() : "");
+            if (curParamName.empty()) {
+               cxcoutEHF << "Error: Found tag attribute with no name in ParamSetting\n";
+               throw hf_exc();
+            } else if (curParamName == "Const") {
+               if (curParam->GetValue() == TString("True")) {
+                  // Fix here...?
+                  if (childText.empty()) {
+                     cxcoutEHF << "Error: node: " << childName << " has no text.\n";
+                     throw hf_exc();
+                  }
+                  AddSubStrings(measurement.GetConstantParams(), childText);
+               }
+            } else if (curParamName == "Val") {
+               double val = atof(curParam->GetValue());
+               if (childText.empty()) {
+                  cxcoutEHF << "Error: node: " << childName << " has no text.\n";
+                  throw hf_exc();
+               }
+               std::vector<std::string> child_nodes = GetChildrenFromString(childText);
+               for (size_t i = 0; i < child_nodes.size(); ++i) {
+                  measurement.SetParamValue(child_nodes.at(i), val);
+               }
+            } else {
+               cxcoutEHF << "Found tag attribute with unknown name in ParamSetting: " << curParamName << "\n";
+               throw hf_exc();
+            }
+         }
+      } else if (childNodeName == "Asimov") {
+         // Now, create and configure an asimov object
+         // and add it to the measurement
+         RooStats::HistFactory::Asimov asimov;
+         std::string ParamFixString;
 
-      //std::string name;
-      //std::map<string, double> fixedParams;
+         // Loop over attributes
+         attribIt = child->GetAttributes();
+         curAttr = nullptr;
+         while ((/**/ curAttr = dynamic_cast<TXMLAttr *>(attribIt()) /**/) != nullptr) {
+            const std::string curAttrName(curAttr->GetName() ? curAttr->GetName() : ""),
+               curAttrValue(curAttr->GetValue() ? curAttr->GetValue() : "");
+            if (curAttrName.empty()) {
+               cxcoutEHF << "Error: Found tag attribute with no name in ConstraintTerm\n";
+               throw hf_exc();
+            } else if (curAttrName == "Name") {
+               asimov.SetName(curAttrValue);
+            } else if (curAttrName == "FixParams") {
+               ParamFixString = curAttrValue;
+            } else {
+               cxcoutEHF << "Found tag attribute with unknown name in ConstraintTerm: " << curAttrName << "\n";
+               throw hf_exc();
+            }
+         }
 
-      // Now, create and configure an asimov object
-      // and add it to the measurement
-      RooStats::HistFactory::Asimov asimov;
-      std::string ParamFixString;
+         // Add any parameters to the asimov dataset
+         // to be fixed during the fitting and dataset generation
+         if (ParamFixString.empty()) {
+            cxcoutWHF << "Warning: Asimov Dataset with name: " << asimov.GetName()
+                      << " added, but no parameters are set to be fixed\n";
+         } else {
+            AddParamsToAsimov(asimov, ParamFixString);
+         }
+         measurement.AddAsimovDataset(asimov);
+      } else if (childNodeName == "ConstraintTerm") {
+         std::vector<string> syst;
+         std::string type = "";
+         double rel = 0;
 
-      // Loop over attributes
-      attribIt = child->GetAttributes();
-      curAttr = 0;
-      while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
+         // Get the list of parameters in this tag:
+         if (childText.empty()) {
+            cxcoutEHF << "Error: node: " << childName << " has no text\n";
+            throw hf_exc();
+         }
+         AddSubStrings(syst, childText);
 
-   if( curAttr->GetName() == TString( "" ) ) {
-     cxcoutEHF << "Error: Found tag attribute with no name in ConstraintTerm" << std::endl;
-     throw hf_exc();
-   }
+         // Now, loop over this tag's attributes
+         attribIt = child->GetAttributes();
+         curAttr = nullptr;
+         while ((/**/ curAttr = dynamic_cast<TXMLAttr *>(attribIt()) /**/) != nullptr) {
+            const std::string curAttrName(curAttr->GetName() ? curAttr->GetName() : ""),
+               curAttrValue(curAttr->GetValue() ? curAttr->GetValue() : "");
+            if (curAttrName.empty()) {
+               cxcoutEHF << "Error: Found tag attribute with no name in ConstraintTerm\n";
+               throw hf_exc();
+            } else if (curAttrName == "Type") {
+               type = curAttrValue;
+            } else if (curAttrName == "RelativeUncertainty") {
+               rel = std::stof(curAttrValue);
+            } else {
+               cxcoutEHF << "Found tag attribute with unknown name in ConstraintTerm: " << curAttrName << "\n";
+               throw hf_exc();
+            }
+         } // End Loop over tag attributes
 
-   else if( curAttr->GetName() == TString( "Name" ) ) {
-     std::string name = curAttr->GetValue();
-     asimov.SetName( name );
-   }
-
-   else if( curAttr->GetName() == TString( "FixParams" ) ) {
-     ParamFixString = curAttr->GetValue();
-     //std::map<std::string, double> fixedParams = ExtractParamMapFromString(FixParamList);
-     //asimov.GetFixedParams() = fixedParams;
-   }
-
-   else {
-     cxcoutEHF << "Found tag attribute with unknown name in ConstraintTerm: "
-          << curAttr->GetName() << std::endl;
-     throw hf_exc();
-   }
-
+         // Now, fill the maps, depending on the type:
+         if (rel != 0) {
+            if (type == "Gamma") {
+               for (const auto &isyst : syst) {
+                  // Fix Here...?
+                  measurement.GetGammaSyst()[isyst] = rel;
+               }
+            } else if (type == "Uniform") {
+               for (const auto &isyst : syst) {
+                  // Fix Here...?
+                  measurement.GetUniformSyst()[isyst] = rel;
+               }
+            } else if (type == "LogNormal") {
+               for (const auto &isyst : syst) {
+                  // Fix Here...?
+                  measurement.GetLogNormSyst()[isyst] = rel;
+               }
+            }
+         } else if (type == "NoConstraint") {
+            for (const auto &isyst : syst) {
+               // Fix Here...?
+               measurement.GetNoSyst()[isyst] = 1.0; // MB : dummy value
+            }
+         } else {
+            // only Gamma, Uniform, LogNormal and NoConstraint are valid types
+            cxcoutEHF << "Error: Encountered unknown type for ConstraintTerm: " << type << "\n";
+            throw hf_exc();
+         }
+         // End adding of Constraint terms
+      } else if (IsAcceptableNode(child)) {
+         /* do nothing */
+      } else {
+         cxcoutEHF << "Found XML child of Measurement with unknown name: " << childNodeName << "\n";
+         throw hf_exc();
       }
-
-      // Add any parameters to the asimov dataset
-      // to be fixed during the fitting and dataset generation
-      if( ParamFixString=="" ) {
-   cxcoutWHF << "Warning: Asimov Dataset with name: " << asimov.GetName()
-        << " added, but no parameters are set to be fixed" << std::endl;
-      }
-      else {
-   AddParamsToAsimov( asimov, ParamFixString );
-      }
-
-      measurement.AddAsimovDataset( asimov );
-
-    }
-
-    else if( child->GetNodeName() == TString( "ConstraintTerm" ) ) {
-      vector<string> syst;
-      string type = "";
-      double rel = 0;
-
-      map<string,double> gammaSyst;
-      map<string,double> uniformSyst;
-      map<string,double> logNormSyst;
-
-      // Get the list of parameters in this tag:
-      if( child->GetText() == NULL ) {
-   cxcoutEHF << "Error: node: " << child->GetName()
-        << " has no text." << std::endl;
-   throw hf_exc();
-      }
-      AddSubStrings(syst, child->GetText());
-
-      // Now, loop over this tag's attributes
-      attribIt = child->GetAttributes();
-      curAttr = 0;
-      while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
-
-   if( curAttr->GetName() == TString( "" ) ) {
-     cxcoutEHF << "Error: Found tag attribute with no name in ConstraintTerm" << std::endl;
-     throw hf_exc();
+      child = child->GetNextNode();
    }
 
-   else if( curAttr->GetName() == TString( "Type" ) ) {
-     type = curAttr->GetValue();
-   }
+   measurement.PrintTree(oocoutI(static_cast<TObject *>(nullptr), HistFactory));
 
-   else if( curAttr->GetName() == TString( "RelativeUncertainty" ) ) {
-     rel = atof(curAttr->GetValue());
-   }
-
-   else {
-     cxcoutEHF << "Found tag attribute with unknown name in ConstraintTerm: "
-          << curAttr->GetName() << std::endl;
-     throw hf_exc();
-   }
-
-      } // End Loop over tag attributes
-
-
-      // Now, fill the maps, depending on the type:
-
-      // Check that the type is in the correct form:
-      if( ! (type=="Gamma"     || type=="Uniform" ||
-        type=="LogNormal" || type=="NoConstraint") ) {
-   cxcoutEHF << "Error: Encountered unknown type for ConstraintTerm: " << type << std::endl;
-   throw hf_exc();
-      }
-
-      if (type=="Gamma" && rel!=0) {
-   for (vector<string>::const_iterator it=syst.begin(); it!=syst.end(); ++it) {
-     // Fix Here...?
-     measurement.GetGammaSyst()[(*it).c_str()] = rel;
-   }
-      }
-
-      if (type=="Uniform" && rel!=0) {
-   for (vector<string>::const_iterator it=syst.begin(); it!=syst.end(); ++it) {
-     // Fix Here...?
-     measurement.GetUniformSyst()[(*it).c_str()] = rel;
-   }
-      }
-
-      if (type=="LogNormal" && rel!=0) {
-   for (vector<string>::const_iterator it=syst.begin(); it!=syst.end(); ++it) {
-     // Fix Here...?
-     measurement.GetLogNormSyst()[(*it).c_str()] = rel;
-   }
-      }
-
-      if (type=="NoConstraint") {
-   for (vector<string>::const_iterator it=syst.begin(); it!=syst.end(); ++it) {
-     // Fix Here...?
-     measurement.GetNoSyst()[(*it).c_str()] = 1.0; // MB : dummy value
-   }
-      }
-    } // End adding of Constraint terms
-
-
-    else if( IsAcceptableNode( child ) ) { ; }
-
-    else {
-    cxcoutEHF << "Found XML child of Measurement with unknown name: " << child->GetNodeName()
-      << std::endl;
-      throw hf_exc();
-    }
-
-    child = child->GetNextNode();
-  }
-
-  measurement.PrintTree(oocoutI(static_cast<TObject*>(nullptr), HistFactory));
-
-  return measurement;
-
+   return measurement;
 }
-
-
 
 HistFactory::Channel ConfigParser::ParseChannelXMLFile( string filen ) {
 
