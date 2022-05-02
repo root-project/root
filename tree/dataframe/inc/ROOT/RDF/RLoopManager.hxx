@@ -11,6 +11,7 @@
 #ifndef ROOT_RLOOPMANAGER
 #define ROOT_RLOOPMANAGER
 
+#include "ROOT/RDF/RDatasetSpec.hxx"
 #include "ROOT/RDF/RNodeBase.hxx"
 #include "ROOT/RDF/RNewSampleNotifier.hxx"
 #include "ROOT/RDF/RSampleInfo.hxx"
@@ -116,6 +117,8 @@ class RLoopManager : public RNodeBase {
    /// argument to RDataFrame's ctor (in which case we let users retain ownership).
    std::shared_ptr<TTree> fTree{nullptr};
    const ColumnNames_t fDefaultColumns;
+   ULong64_t fStartEntry{0};
+   ULong64_t fEndEntry{0};
    const ULong64_t fNEmptyEntries{0};
    const unsigned int fNSlots{1};
    bool fMustRunNamedFilters{true};
@@ -157,6 +160,7 @@ public:
    RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
    RLoopManager(ULong64_t nEmptyEntries);
    RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t &defaultBranches);
+   RLoopManager(const ROOT::RDF::RDatasetSpec &spec);
    RLoopManager(const RLoopManager &) = delete;
    RLoopManager &operator=(const RLoopManager &) = delete;
 
