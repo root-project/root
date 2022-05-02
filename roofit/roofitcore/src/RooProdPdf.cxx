@@ -1976,7 +1976,7 @@ Bool_t RooProdPdf::isDirectGenSafe(const RooAbsArg& arg) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Look up user specified normalization set for given input PDF component
 
-RooArgSet* RooProdPdf::findPdfNSet(RooAbsPdf& pdf) const
+RooArgSet* RooProdPdf::findPdfNSet(RooAbsPdf const& pdf) const
 {
   Int_t idx = _pdfList.index(&pdf) ;
   if (idx<0) return nullptr;
@@ -2311,4 +2311,13 @@ void RooProdPdf::CacheElem::writeToStream(std::ostream& os) const {
 
 void RooProdPdf::writeCacheToStream(std::ostream& os, RooArgSet const* nset) const {
   getCacheElem(nset)->writeToStream(os);
+}
+
+void RooProdPdf::fillNormSetForServer(RooArgSet const& normSet, RooAbsArg const& server, RooArgSet& serverNormSet) const {
+  auto * pdfNset = findPdfNSet(static_cast<RooAbsPdf const&>(server));
+  if (pdfNset && !pdfNset->empty()) {
+    for(auto * arg : *pdfNset) if(server.dependsOn(*arg)) serverNormSet.add(*arg);
+  } else {
+    for(auto * arg : normSet) if(server.dependsOn(*arg)) serverNormSet.add(*arg);
+  }
 }
