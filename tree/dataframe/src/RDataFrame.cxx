@@ -1390,6 +1390,10 @@ RDataFrame::RDataFrame(std::unique_ptr<ROOT::RDF::RDataSource> ds, const ColumnN
 {
 }
 
+RDataFrame::RDataFrame(const ROOT::RDF::RDatasetSpec &spec)
+   : RInterface(std::make_shared<RDFDetail::RLoopManager>(spec))
+{
+}
 } // namespace ROOT
 
 namespace cling {

@@ -359,6 +359,33 @@ RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t 
    fDataSource->SetNSlots(fNSlots);
 }
 
+RLoopManager::RLoopManager(const ROOT::RDF::RDatasetSpec &spec)
+   : fDefaultColumns(spec.fDefaultColumns), fStartEntry(spec.fStartEntry), fEndEntry(spec.fEndEntry),
+     fNSlots(RDFInternal::GetNSlots()),
+     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
+     fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots)
+{
+   // A TChain has a global name
+   auto chain = std::make_shared<TChain>(spec.fDatasetName.c_str());
+
+   if (spec.fSubTreeNames.empty()){
+      // The global name of the chain is also the name of each tree in the list
+      // of files that make the chain.
+      for (const auto &f : spec.fFileNameGlobs)
+         chain->Add(f.c_str());
+   } else {
+      // Some other times, each different file has its own tree name, we need to
+      // reconstruct the full path to the tree in each file and pass that to
+      // TChain::Add
+      auto nfiles = spec.fFileNameGlobs.size();
+      for (decltype(nfiles) i = 0; i < nfiles; i++){
+         const auto fullpath = spec.fFileNameGlobs[i] + "?#" + spec.fSubTreeNames[i];
+         chain->Add(fullpath.c_str());
+      }
+   }
+   SetTree(chain);
+}
+
 struct RSlotRAII {
    RSlotStack &fSlotStack;
    unsigned int fSlot;
@@ -475,6 +502,12 @@ void RLoopManager::RunTreeProcessorMT()
 void RLoopManager::RunTreeReader()
 {
    TTreeReader r(fTree.get(), fTree->GetEntryList());
+
+   if (fEndEntry > fStartEntry) {
+      // User provided a valid entry range for the tree
+      r.SetEntriesRange(fStartEntry, fEndEntry);
+   }
+
    if (0 == fTree->GetEntriesFast())
       return;
    RCallCleanUpTask cleanup(*this, 0u, &r);
