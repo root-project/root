@@ -466,6 +466,14 @@ void RooFitDriver::assignToGPU(RooAbsArg const *node)
    const std::size_t nOut = info.outputSize;
 
    info.remServers = -1;
+   // wait for every server to finish
+   for (auto *server : node->servers()) {
+      if (_nodeInfos.count(server) == 0)
+         continue;
+      const auto &infoServer = _nodeInfos.at(server);
+      if (infoServer.event)
+         RooBatchCompute::dispatchCUDA->cudaStreamWaitEvent(info.stream, infoServer.event);
+   }
 
    info.buffer = info.copyAfterEvaluation ? makePinnedBuffer(nOut, info.stream) : makeGpuBuffer(nOut);
    double *buffer = info.buffer->gpuWritePtr();
