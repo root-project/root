@@ -93,9 +93,11 @@ public:
 
   RooArgSet* getConnectedParameters(const RooArgSet& observables) const ;
 
-  RooArgSet* findPdfNSet(RooAbsPdf& pdf) const ; 
-  
+  RooArgSet* findPdfNSet(RooAbsPdf const& pdf) const ;
+
   void writeCacheToStream(std::ostream& os, RooArgSet const* nset) const;
+
+  void fillNormSetForServer(RooArgSet const& normSet, RooAbsArg const& server, RooArgSet& serverNormSet) const;
 
 private:
 

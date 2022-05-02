@@ -600,6 +600,8 @@ public:
 
   operator RooBatchCompute::DataKey() const { return RooBatchCompute::DataKey::create(this->namePtr()); }
 
+  virtual void fillNormSetForServer(RooArgSet const& normSet, RooAbsArg const& server, RooArgSet& serverNormSet) const;
+
 protected:
    void graphVizAddConnections(std::set<std::pair<RooAbsArg*,RooAbsArg*> >&) ;
 
