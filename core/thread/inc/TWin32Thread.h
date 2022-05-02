@@ -49,7 +49,7 @@ public:
    Int_t  CleanUpPop(void **main, Int_t exe) override;
    Int_t  CleanUp(void **main) override;
 
-   Int_t  Exit(void *ret);
+   Int_t  Exit(void *ret) override;
 
    ClassDefOverride(TWin32Thread,0)  // TWin32Thread class
 };
