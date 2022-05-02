@@ -207,6 +207,9 @@ if(BUILD_DOCUMENTATION)
                                            launcher.py
                                            */io/io/res/*
                                            */src/lexertk.hpp
+                                           *.xml
+                                           *.dtd
+                                           */tutorials/webgui/qt5web/*
                                            )
         #set(DOXYGEN_EXCLUDE_SYMBOLS        std
                                            #cling*)
