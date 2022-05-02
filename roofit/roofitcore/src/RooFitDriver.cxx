@@ -31,7 +31,6 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 #include <RooAbsCategory.h>
 #include <RooAbsData.h>
 #include <RooAbsReal.h>
-#include <RooAbsPdf.h>
 #include <RooArgList.h>
 #include <RooBatchCompute.h>
 #include <RooMsgService.h>
@@ -41,6 +40,8 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 #include <RooFit/BatchModeHelpers.h>
 #include <RooFit/CUDAHelpers.h>
 #include <RooFit/Detail/Buffers.h>
+
+#include "NormalizationHelpers.h"
 
 #include <iomanip>
 #include <numeric>
@@ -103,40 +104,33 @@ struct NodeInfo {
 /// useful for the evaluation of it that will be done later. In case the CUDA mode is selected,
 /// there's also some CUDA-related initialization.
 ///
-/// \param[in] topNode The RooAbsReal object that sits on top of the
+/// \param[in] absReal The RooAbsReal object that sits on top of the
 ///            computation graph that we want to evaluate.
 /// \param[in] normSet Normalization set for the evaluation
 /// \param[in] batchMode The computation mode, accepted values are
 ///            `RooBatchCompute::Cpu` and `RooBatchCompute::Cuda`.
-RooFitDriver::RooFitDriver(const RooAbsReal &topNode, RooArgSet const &normSet, RooFit::BatchModeOption batchMode)
-   : _batchMode{batchMode}, _topNode{topNode}, _normSet{std::make_unique<RooArgSet>(normSet)}
+RooFitDriver::RooFitDriver(const RooAbsReal &absReal, RooArgSet const &normSet, RooFit::BatchModeOption batchMode)
+   : _batchMode{batchMode}
 {
+   _integralUnfolder = std::make_unique<RooFit::NormalizationIntegralUnfolder>(absReal, normSet);
+
    // Initialize RooBatchCompute
    RooBatchCompute::init();
 
    // Some checks and logging of used architectures
    RooFit::BatchModeHelpers::logArchitectureInfo(_batchMode);
 
-   // Get a serial list of the nodes in the computation graph.
-   // treeNodeServelList() is recursive and adds the top node before the children,
-   // so reversing the list gives us a topological ordering of the graph.
+   // Get the set of nodes in the computation graph. Do the detour via
+   // RooArgList to avoid deduplication done after adding each element.
    RooArgList serverList;
-   _topNode.treeNodeServerList(&serverList, nullptr, true, true, false, true);
-
-   // To remove duplicates via the RooArgSet deduplication, we have to fill the
-   // set in reverse order because that's the dependency ordering of the graph.
+   topNode().treeNodeServerList(&serverList, nullptr, true, true, false, true);
+   // If we fill the servers in reverse order, they are approximately in
+   // topological order so we save a bit of work in sortTopologically().
    RooArgSet serverSet;
-   std::unordered_map<TNamed const *, RooAbsArg *> instanceMap;
-   for (std::size_t iNode = serverList.size(); iNode > 0; --iNode) {
-      RooAbsArg *arg = &serverList[iNode - 1];
-      if (instanceMap.find(arg->namePtr()) != instanceMap.end()) {
-         if (arg != instanceMap.at(arg->namePtr())) {
-            serverSet.remove(*instanceMap.at(arg->namePtr()));
-         }
-      }
-      instanceMap[arg->namePtr()] = arg;
-      serverSet.add(*arg);
-   }
+   serverSet.add(serverList.rbegin(), serverList.rend(), /*silent=*/true);
+   // Sort nodes topologically: the servers of any node will be before that
+   // node in the collection.
+   serverSet.sortTopologically();
 
    // Fill the ordered nodes list and initialize the node info structs.
    for (RooAbsArg *arg : serverSet) {
@@ -247,16 +241,16 @@ RooFitDriver::~RooFitDriver()
 std::vector<double> RooFitDriver::getValues()
 {
    getVal();
-   auto const &nodeInfo = _nodeInfos.at(&_topNode);
+   auto const &nodeInfo = _nodeInfos.at(&topNode());
    if (nodeInfo.computeInGPU) {
       std::size_t nOut = nodeInfo.outputSize;
       std::vector<double> out(nOut);
-      RooBatchCompute::dispatchCUDA->memcpyToCPU(out.data(), _dataMapCPU.at(&_topNode).data(), nOut * sizeof(double));
-      _dataMapCPU[&_topNode] = RooSpan<const double>(out.data(), nOut);
+      RooBatchCompute::dispatchCUDA->memcpyToCPU(out.data(), _dataMapCPU.at(&topNode()).data(), nOut * sizeof(double));
+      _dataMapCPU[&topNode()] = RooSpan<const double>(out.data(), nOut);
       return out;
    }
    // We copy the data to the output vector
-   auto dataSpan = _dataMapCPU.at(&_topNode);
+   auto dataSpan = _dataMapCPU.at(&topNode());
    std::vector<double> out;
    out.reserve(dataSpan.size());
    for (auto const &x : dataSpan) {
@@ -277,15 +271,13 @@ void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
 
    if (info.computeInScalarMode) {
       // compute in scalar mode
-      _nonDerivedValues.push_back(nodeAbsCategory ? nodeAbsCategory->getIndex() : nodeAbsReal->getVal(_normSet.get()));
+      _nonDerivedValues.push_back(nodeAbsCategory ? nodeAbsCategory->getIndex() : nodeAbsReal->getVal());
       _dataMapCPU[node] = _dataMapCUDA[node] = RooSpan<const double>(&_nonDerivedValues.back(), nOut);
    } else if (nOut == 1) {
-      handleIntegral(node);
       _nonDerivedValues.push_back(0.0);
       _dataMapCPU[node] = _dataMapCUDA[node] = RooSpan<const double>(&_nonDerivedValues.back(), nOut);
       nodeAbsReal->computeBatch(nullptr, &_nonDerivedValues.back(), nOut, _dataMapCPU);
    } else {
-      handleIntegral(node);
       info.buffer = info.copyAfterEvaluation ? makePinnedBuffer(nOut, info.stream) : makeCpuBuffer(nOut);
       double *buffer = info.buffer->cpuWritePtr();
       _dataMapCPU[node] = RooSpan<const double>(buffer, nOut);
@@ -327,7 +319,7 @@ double RooFitDriver::getVal()
       }
    }
    // return the final value
-   return _dataMapCPU.at(&_topNode)[0];
+   return _dataMapCPU.at(&topNode())[0];
 }
 
 /// Returns the value of the top node in the computation graph
@@ -348,7 +340,7 @@ double RooFitDriver::getValHeterogeneous()
       if (it.second.remServers == 0 && it.second.computeInGPU)
          assignToGPU(it.second.absArg);
 
-   auto const &topNodeInfo = _nodeInfos.at(&_topNode);
+   auto const &topNodeInfo = _nodeInfos.at(&topNode());
    while (topNodeInfo.remServers != -2) {
       // find finished gpu nodes
       for (auto &it : _nodeInfos) {
@@ -414,43 +406,7 @@ double RooFitDriver::getValHeterogeneous()
    }
 
    // return the final value
-   return _dataMapCPU.at(&_topNode)[0];
-}
-
-/// Handles the computation of the integral of a PDF for normalization purposes,
-/// before the pdf is computed.
-void RooFitDriver::handleIntegral(const RooAbsArg *node)
-{
-   // TODO: Put integrals seperately in the computation queue
-   // For now, we just assume they are scalar and assign them some temporary memory
-   if (auto pAbsPdf = dynamic_cast<const RooAbsPdf *>(node)) {
-      auto integral = pAbsPdf->getIntegral(*_normSet);
-
-      if (_integralInfos.count(integral) == 0) {
-         auto &info = _integralInfos[integral];
-         info.absArg = integral;
-         for (RooAbsArg *server : integral->servers()) {
-            if (server->isValueServer(*integral)) {
-               info.outputSize = std::max(info.outputSize, _nodeInfos.at(server).outputSize);
-            }
-         }
-
-         if (info.outputSize > 1 && _batchMode == RooFit::BatchModeOption::Cuda) {
-            info.copyAfterEvaluation = true;
-            info.stream = RooBatchCompute::dispatchCUDA->newCudaStream();
-         } else if (info.outputSize == 1) {
-            info.computeInScalarMode = true;
-         }
-
-         // We don't need dirty flag propagation for nodes evaluated by the
-         // RooFitDriver, because the driver takes care of deciding which node
-         // needs to be re-evaluated.
-         if (!info.computeInScalarMode)
-            setOperMode(integral, RooAbsArg::ADirty);
-      }
-
-      computeCPUNode(integral, _integralInfos.at(integral));
-   }
+   return _dataMapCPU.at(&topNode())[0];
 }
 
 /// Assign a node to be computed in the GPU. Scan it's clients and also assign them
@@ -478,7 +434,6 @@ void RooFitDriver::assignToGPU(RooAbsArg const *node)
    info.buffer = info.copyAfterEvaluation ? makePinnedBuffer(nOut, info.stream) : makeGpuBuffer(nOut);
    double *buffer = info.buffer->gpuWritePtr();
    _dataMapCUDA[node] = RooSpan<const double>(buffer, nOut);
-   handleIntegral(node);
    // measure launching overhead (add computation time later)
    if (_getValInvocations == 2) {
       using namespace std::chrono;
@@ -714,6 +669,11 @@ void RooFitDriver::setOperMode(RooAbsArg *arg, RooAbsArg::OperMode opMode)
    if (opMode != arg->operMode()) {
       _changeOperModeRAIIs.emplace(arg, opMode);
    }
+}
+
+RooAbsReal const &RooFitDriver::topNode() const
+{
+   return static_cast<RooAbsReal const &>(_integralUnfolder->arg());
 }
 
 } // namespace Experimental
