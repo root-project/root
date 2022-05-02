@@ -53,6 +53,10 @@ public:
     return setData(static_cast<RooAbsData const&>(data), cloneData);
   }
 
+  void fillNormSetForServer(RooArgSet const& /*normSet*/, RooAbsArg const& server, RooArgSet& serverNormSet) const override {
+    for(auto * arg : _paramSet) if(server.dependsOn(*arg)) serverNormSet.add(*arg);
+  }
+
 protected:
 
   RooListProxy _set1 ;    // Set of constraint terms

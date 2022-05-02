@@ -68,6 +68,9 @@ public:
   virtual CacheMode canNodeBeCached() const { return RooAbsArg::NotAdvised ; } ;
   virtual void setCacheAndTrackHints(RooArgSet&) ;
 
+  void fillNormSetForServer(RooArgSet const& /*normSet*/, RooAbsArg const& /*server*/, RooArgSet& /*serverNormSet*/) const {
+  }
+
 protected:
 
   class CacheElem : public RooAbsCacheElement {
