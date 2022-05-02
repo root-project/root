@@ -2555,3 +2555,16 @@ void RooAbsArg::applyWeightSquared(bool flag) {
       server->applyWeightSquared(flag);
    }
 }
+
+
+/// Fills a RooArgSet to be used as the normalization set for a server, given a
+/// normalization set for this RooAbsArg.
+///
+/// \param[in] normSet The normalization set for this RooAbsArg.
+/// \param[in] server A server of this RooAbsArg that we determine the
+///            normalization set for.
+/// \param[out] serverNormSet Output parameter. Normalization set for the
+///             server.
+void RooAbsArg::fillNormSetForServer(RooArgSet const& normSet, RooAbsArg const& server, RooArgSet& serverNormSet) const {
+  for(auto * arg : normSet) if(server.dependsOn(*arg)) serverNormSet.add(*arg);
+}

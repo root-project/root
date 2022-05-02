@@ -59,6 +59,8 @@ public:
    CacheMode canNodeBeCached() const override { return RooAbsArg::NotAdvised; };
    void setCacheAndTrackHints(RooArgSet &) override;
 
+   void fillNormSetForServer(RooArgSet const& /*normSet*/, RooAbsArg const& /*server*/, RooArgSet& /*serverNormSet*/) const override {}
+
 protected:
    class CacheElem : public RooAbsCacheElement {
    public:
