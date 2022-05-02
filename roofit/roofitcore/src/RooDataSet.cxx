@@ -711,28 +711,8 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, RooDataSet *dset
 /// subset of an existing data
 
 RooDataSet::RooDataSet(RooStringView name, RooStringView title, RooDataSet *dset,
-             const RooArgSet& vars, const RooFormulaVar& cutVar, const char* wgtVarName) :
-  RooAbsData(name,title,vars)
-{
-  // Initialize datastore
-  _dstore = new RooTreeDataStore(name,title,_vars,*dset->_dstore,cutVar,wgtVarName) ;
-
-  appendToDir(this,kTRUE) ;
-
-  if (wgtVarName) {
-    // Use the supplied weight column
-    initialize(wgtVarName) ;
-  } else {
-    if (dset->_wgtVar && vars.find(dset->_wgtVar->GetName())) {
-      // Use the weight column of the source data set
-      initialize(dset->_wgtVar->GetName()) ;
-    } else {
-      initialize(0) ;
-    }
-  }
-  TRACE_CREATE
-}
-
+             const RooArgSet& vars, const RooFormulaVar& cutVar, const char* wgtVarName)
+  : RooDataSet{name, title, dset, vars, cutVar.expression(), wgtVarName} {}
 
 
 
@@ -751,28 +731,8 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, RooDataSet *dset
 /// constructor with a string based cut expression is recommended.
 
 RooDataSet::RooDataSet(RooStringView name, RooStringView title, TTree *theTree,
-    const RooArgSet& vars, const RooFormulaVar& cutVar, const char* wgtVarName) :
-  RooAbsData(name,title,vars)
-{
-  // Create tree version of datastore
-  RooTreeDataStore* tstore = new RooTreeDataStore(name,title,_vars,*theTree,cutVar,wgtVarName) ;
-
-  // Convert to vector datastore if needed
-  if (defaultStorageType==Tree) {
-    _dstore = tstore ;
-  } else if (defaultStorageType==Vector) {
-    RooVectorDataStore* vstore = new RooVectorDataStore(name,title,_vars,wgtVarName) ;
-    _dstore = vstore ;
-    _dstore->append(*tstore) ;
-    delete tstore ;
-  } else {
-    _dstore = 0 ;
-  }
-
-  appendToDir(this,kTRUE) ;
-  initialize(wgtVarName) ;
-  TRACE_CREATE
-}
+    const RooArgSet& vars, const RooFormulaVar& cutVar, const char* wgtVarName)
+  : RooDataSet{name, title, theTree, vars, cutVar.expression(), wgtVarName} {}
 
 
 
