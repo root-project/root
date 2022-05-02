@@ -26,6 +26,9 @@ class RooAbsArg;
 class RooAbsReal;
 class RooAbsCategory;
 class RooAbsData;
+namespace RooFit {
+class NormalizationIntegralUnfolder;
+}
 
 namespace ROOT {
 namespace Experimental {
@@ -42,7 +45,7 @@ public:
    //////////////////////////
    // Public member functions
 
-   RooFitDriver(const RooAbsReal &topNode, RooArgSet const &normSet,
+   RooFitDriver(const RooAbsReal &absReal, RooArgSet const &normSet,
                 RooFit::BatchModeOption batchMode = RooFit::BatchModeOption::Cpu);
 
    void setData(RooAbsData const &data, std::string_view rangeName = "",
@@ -52,14 +55,13 @@ public:
    ~RooFitDriver();
    std::vector<double> getValues();
    double getVal();
-   RooAbsReal const &topNode() const { return _topNode; }
+   RooAbsReal const &topNode() const;
 
 private:
    ///////////////////////////
    // Private member functions
 
    double getValHeterogeneous();
-   void handleIntegral(const RooAbsArg *node);
    std::chrono::microseconds simulateFit(std::chrono::microseconds h2dTime, std::chrono::microseconds d2hTime,
                                          std::chrono::microseconds diffThreshold);
    void markGPUNodes();
@@ -79,10 +81,7 @@ private:
    // used for preserving static info about the computation graph
    RooBatchCompute::DataMap _dataMapCPU;
    RooBatchCompute::DataMap _dataMapCUDA;
-   const RooAbsReal &_topNode;
-   std::unique_ptr<RooArgSet> _normSet;
    std::map<RooBatchCompute::DataKey, NodeInfo> _nodeInfos;
-   std::map<RooBatchCompute::DataKey, NodeInfo> _integralInfos;
 
    // the ordered computation graph
    RooArgList _orderedNodes;
@@ -90,6 +89,7 @@ private:
    // used for preserving resources
    std::vector<double> _nonDerivedValues;
    std::stack<std::vector<double>> _vectorBuffers;
+   std::unique_ptr<RooFit::NormalizationIntegralUnfolder> _integralUnfolder;
 
    // RAII structures to reset state of computation graph after driver destruction
    std::stack<RooHelpers::ChangeOperModeRAII> _changeOperModeRAIIs;
