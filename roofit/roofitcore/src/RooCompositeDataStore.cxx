@@ -333,26 +333,6 @@ RooAbsArg* RooCompositeDataStore::addColumn(RooAbsArg& newVar, Bool_t adjustRang
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// WVE ownership issue here!! Caller (a RooAbsData) should take ownership of all
-/// arguments, but only does for the first one here...
-
-RooArgSet* RooCompositeDataStore::addColumns(const RooArgList& varList)
-{
-  RooArgSet* ret(0) ;
-  for (auto const& item : _dataMap) {
-    ret = item.second->addColumns(varList) ;
-  }
-  if (ret) {
-    _vars.add(*ret) ;
-  }
-  return ret ;
-}
-
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 RooAbsDataStore* RooCompositeDataStore::merge(const RooArgSet& /*allVars*/, list<RooAbsDataStore*> /*dstoreList*/)
