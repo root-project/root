@@ -683,11 +683,10 @@ void RooFitDriver::determineOutputSizes()
 {
    for (auto *arg : _orderedNodes) {
       auto &argInfo = _nodeInfos.at(arg);
-      for (auto *client : arg->valueClients()) {
-         if (_orderedNodes.containsInstance(*client)) {
-            auto &clientInfo = _nodeInfos.at(client);
-            if (!client->isReducerNode()) {
-               clientInfo.outputSize = std::max(clientInfo.outputSize, argInfo.outputSize);
+      for (auto *server : arg->servers()) {
+         if (server->isValueServer(*arg)) {
+            if (!arg->isReducerNode()) {
+               argInfo.outputSize = std::max(_nodeInfos.at(server).outputSize, argInfo.outputSize);
             }
          }
       }
