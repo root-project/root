@@ -339,7 +339,7 @@ Double_t RooAbsPdf::getValV(const RooArgSet* nset) const
 
   // Process change in last data set used
   Bool_t nsetChanged(kFALSE) ;
-  if (nset!=_normSet || _norm==0) {
+  if (RooFit::getUniqueId(nset) != RooFit::getUniqueId(_normSet) || _norm==0) {
     nsetChanged = syncNormalization(nset) ;
   }
 
