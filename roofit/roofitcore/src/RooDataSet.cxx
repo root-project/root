@@ -1385,11 +1385,11 @@ RooAbsArg* RooDataSet::addColumn(RooAbsArg& var, Bool_t adjustRange)
 
 RooArgSet* RooDataSet::addColumns(const RooArgList& varList)
 {
-  checkInit() ;
-  RooArgSet* ret = _dstore->addColumns(varList) ;
-  _vars.addOwned(*ret) ;
-  initialize(_wgtVar?_wgtVar->GetName():0) ;
-  return ret ;
+  auto * holderSet = new RooArgSet{};
+  for(RooAbsArg * var : varList) {
+    holderSet->add(*addColumn(*var));
+  }
+  return holderSet;
 }
 
 
