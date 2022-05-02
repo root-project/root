@@ -101,21 +101,6 @@ RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, cons
 }
 
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, TTree& t, const RooFormulaVar& select, const char* wgtVarName) :
-  RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)),
-  _varsww(vars),
-  _wgtVar(weightVar(vars,wgtVarName))
-{
-  initialize() ;
-  loadValues(&t,&select) ;
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, TTree& t, const char* selExpr, const char* wgtVarName) :
@@ -133,20 +118,6 @@ RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, cons
     loadValues(&t);
   }
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, const RooAbsDataStore& tds, const RooFormulaVar& select, const char* wgtVarName) :
-  RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)),
-  _varsww(vars),
-  _wgtVar(weightVar(vars,wgtVarName))
-{
-  initialize() ;
-  loadValues(&tds,&select) ;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
