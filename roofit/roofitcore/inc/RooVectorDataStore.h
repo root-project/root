@@ -129,9 +129,8 @@ public:
   // Change observable name
   Bool_t changeObservableName(const char* from, const char* to) override;
 
-  // Add one or more columns
+  // Add one column
   RooAbsArg* addColumn(RooAbsArg& var, Bool_t adjustRange=kTRUE) override;
-  RooArgSet* addColumns(const RooArgList& varList) override;
 
   // Merge column-wise
   RooAbsDataStore* merge(const RooArgSet& allvars, std::list<RooAbsDataStore*> dstoreList) override;

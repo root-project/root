@@ -56,3 +56,13 @@ void RooAbsDataStore::printMultiline(std::ostream& os, Int_t /*content*/, Bool_t
     os << indent << "  Caches " << _cachedVars << std::endl ;
   }
 }
+
+
+RooArgSet* RooAbsDataStore::addColumns(const RooArgList& varList)
+{
+  auto * holderSet = new RooArgSet{};
+  for(RooAbsArg * var : varList) {
+    holderSet->add(*addColumn(*var));
+  }
+  return holderSet;
+}

@@ -86,7 +86,7 @@ public:
 
   // Add one or more columns
   virtual RooAbsArg* addColumn(RooAbsArg& var, Bool_t adjustRange=kTRUE) = 0 ;
-  virtual RooArgSet* addColumns(const RooArgList& varList) = 0 ;
+  RooArgSet* addColumns(const RooArgList& varList);
 
   // Merge column-wise
   virtual RooAbsDataStore* merge(const RooArgSet& allvars, std::list<RooAbsDataStore*> dstoreList) = 0 ;
