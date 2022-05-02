@@ -254,6 +254,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/Buffers.cxx
     src/BidirMMapPipe.cxx
     src/BidirMMapPipe.h
+    src/NormalizationHelpers.cxx
     src/Roo1DTable.cxx
     src/RooAbsAnaConvPdf.cxx
     src/RooAbsArg.cxx
