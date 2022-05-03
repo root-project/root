@@ -1,3 +1,11 @@
+#ifdef __ACLIC__
+#include <ROOT/TThreadedObject.hxx>
+#include <TFile.h>
+#include <TH1.h>
+#include <TROOT.h>
+#include <iostream>
+#endif
+
 int testTThreadedObjectAutoMemManagement() {
    ROOT::EnableThreadSafety();
    const auto filename = "testTThreadedObjectAutoMemManagement.root";

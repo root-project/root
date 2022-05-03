@@ -5,8 +5,15 @@ if(ROOTTEST_OS_ID MATCHES Ubuntu)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-as-needed")
 endif()
 
-ROOTTEST_ADD_TEST(TThreadedObjectAutoMemManagement
-                 MACRO  testTThreadedObjectAutoMemManagement.C)
+if(UNIX AND 32BIT)
+  # linux32 llvm-JIT ABI issue constructing the pair of map<tthread::id, uint>.
+  # Compile instead.
+  ROOTTEST_ADD_TEST(TThreadedObjectAutoMemManagement
+                    MACRO  testTThreadedObjectAutoMemManagement.C+)
+else()
+  ROOTTEST_ADD_TEST(TThreadedObjectAutoMemManagement
+                    MACRO  testTThreadedObjectAutoMemManagement.C)
+endif()
 
 if(ROOT_imt_FOUND)
 
