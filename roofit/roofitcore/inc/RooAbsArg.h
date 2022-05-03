@@ -597,7 +597,7 @@ public:
 
   virtual void applyWeightSquared(bool flag);
 
-  virtual void fillNormSetForServer(RooArgSet const& normSet, RooAbsArg const& server, RooArgSet& serverNormSet) const;
+  virtual std::unique_ptr<RooArgSet> fillNormSetForServer(RooArgSet const& normSet, RooAbsArg const& server) const;
 
 protected:
    void graphVizAddConnections(std::set<std::pair<RooAbsArg*,RooAbsArg*> >&) ;

@@ -18,15 +18,97 @@
 #include <RooAbsReal.h>
 #include <RooAddition.h>
 #include <RooConstraintSum.h>
-#include <RooProdPdf.h>
 
 #include "RooNormalizedPdf.h"
 
+#include <TClass.h>
+
+#include <unordered_set>
+
 namespace {
 
+using RooFit::Detail::DataKey;
+using ServerLists = std::map<DataKey, std::vector<DataKey>>;
+
+class GraphChecker {
+public:
+   GraphChecker(RooAbsArg const &topNode)
+   {
+
+      // Get the list of servers for each node by data key.
+      {
+         RooArgList nodes;
+         topNode.treeNodeServerList(&nodes, nullptr, true, true, false, true);
+         RooArgSet nodesSet{nodes};
+         for (RooAbsArg *node : nodesSet) {
+            _serverLists[node];
+            bool isConstraintSum = dynamic_cast<RooConstraintSum const *>(node);
+            for (RooAbsArg *server : node->servers()) {
+               _serverLists[node].push_back(server);
+               if (isConstraintSum)
+                  _constraints.insert(server);
+            }
+         }
+      }
+      for (auto &item : _serverLists) {
+         auto &l = item.second;
+         std::sort(l.begin(), l.end());
+         l.erase(std::unique(l.begin(), l.end()), l.end());
+      }
+   }
+
+   bool dependsOn(DataKey arg, DataKey testArg)
+   {
+
+      std::pair<DataKey, DataKey> p{arg, testArg};
+
+      auto found = _results.find(p);
+      if (found != _results.end())
+         return found->second;
+
+      if (arg == testArg)
+         return true;
+
+      auto const &serverList = _serverLists.at(arg);
+
+      // Next test direct dependence
+      auto foundServer = std::find(serverList.begin(), serverList.end(), testArg);
+      if (foundServer != serverList.end()) {
+         _results.emplace(p, true);
+         return true;
+      }
+
+      // If not, recurse
+      for (auto const& server : serverList) {
+         bool t = dependsOn(server, testArg);
+         _results.emplace(std::pair<DataKey, DataKey>{server, testArg}, t);
+         if (t) {
+            return true;
+         }
+      }
+
+      _results.emplace(p, false);
+      return false;
+   }
+
+   bool isConstraint(DataKey key) const
+   {
+      auto found = _constraints.find(key);
+      return found != _constraints.end();
+   }
+
+private:
+   std::unordered_set<DataKey> _constraints;
+   ServerLists _serverLists;
+   std::map<std::pair<DataKey, DataKey>, bool> _results;
+};
+
 void treeNodeServerListAndNormSets(const RooAbsArg &arg, RooAbsCollection &list, RooArgSet const &normSet,
-                                   std::unordered_map<RooAbsArg const *, RooArgSet *> &normSets)
+                                   std::unordered_map<DataKey, RooArgSet *> &normSets, GraphChecker const &checker)
 {
+   if (normSets.find(&arg) != normSets.end())
+      return;
+
    list.add(arg, true);
 
    // normalization sets only need to be added for pdfs
@@ -42,29 +124,19 @@ void treeNodeServerListAndNormSets(const RooAbsArg &arg, RooAbsCollection &list,
             continue;
          }
 
-         {
-            // If this is a RooProdPdf server that is also serving a
-            // RooConstraintSum, it should be skipped because it is not
-            // evaluated by the RooProdPdf. It was only part of the RooPdfPdf
-            // to be extracted for the constraint sum.
-            bool skip = false;
-            if (dynamic_cast<RooProdPdf const *>(&arg)) {
-               for (auto *client : server->clients()) {
-                  if (dynamic_cast<RooConstraintSum const *>(client)) {
-                     skip = true;
-                     break;
-                  }
-               }
-            }
-            if (skip) {
-               continue;
-            }
+         // If this is a server that is also serving a RooConstraintSum, it
+         // should be skipped because it is not evaluated by this client (e.g.
+         // a RooProdPdf). It was only part of the servers to be extracted for
+         // the constraint sum.
+         if (!dynamic_cast<RooConstraintSum const *>(&arg) && checker.isConstraint(server)) {
+            continue;
          }
 
-         RooArgSet serverNormSet;
-         arg.fillNormSetForServer(normSet, *server, serverNormSet);
-         // The norm sets are sorted to compare them for equality more easliy
-         serverNormSet.sort();
+         auto differentSet = arg.fillNormSetForServer(normSet, *server);
+         if (differentSet)
+            differentSet->sort();
+
+         auto &serverNormSet = differentSet ? *differentSet : normSet;
 
          // Make sure that the server is not already part of the computation
          // graph with a different normalization set.
@@ -86,13 +158,13 @@ void treeNodeServerListAndNormSets(const RooAbsArg &arg, RooAbsCollection &list,
             continue;
          }
 
-         treeNodeServerListAndNormSets(*server, list, serverNormSet, normSets);
+         treeNodeServerListAndNormSets(*server, list, serverNormSet, normSets, checker);
       }
    }
 }
 
-std::vector<std::unique_ptr<RooAbsArg>> unfoldIntegrals(RooAbsArg const &topNode, RooArgSet const &normSet,
-                                                        std::unordered_map<RooAbsArg const *, RooArgSet *> &normSets)
+std::vector<std::unique_ptr<RooAbsArg>>
+unfoldIntegrals(RooAbsArg const &topNode, RooArgSet const &normSet, std::unordered_map<DataKey, RooArgSet *> &normSets)
 {
    std::vector<std::unique_ptr<RooAbsArg>> newNodes;
 
@@ -100,11 +172,27 @@ std::vector<std::unique_ptr<RooAbsArg>> unfoldIntegrals(RooAbsArg const &topNode
    if (normSet.empty())
       return newNodes;
 
+   GraphChecker checker{topNode};
+
    RooArgSet nodes;
    // The norm sets are sorted to compare them for equality more easliy
    RooArgSet normSetSorted{normSet};
    normSetSorted.sort();
-   treeNodeServerListAndNormSets(topNode, nodes, normSetSorted, normSets);
+   treeNodeServerListAndNormSets(topNode, nodes, normSetSorted, normSets, checker);
+
+   // Clean normsets of the variables that the arg does not depend on
+   // std::unordered_map<std::pair<RooAbsArg const*,RooAbsArg const*>,bool> dependsResults;
+   for (auto &item : normSets) {
+      if (!item.second || item.second->empty())
+         continue;
+      auto actualNormSet = new RooArgSet{};
+      for (auto *narg : *item.second) {
+         if (checker.dependsOn(item.first, narg))
+            actualNormSet->add(*narg);
+      }
+      delete item.second;
+      item.second = actualNormSet;
+   }
 
    for (RooAbsArg *node : nodes) {
 
@@ -203,6 +291,7 @@ RooFit::NormalizationIntegralUnfolder::NormalizationIntegralUnfolder(RooAbsArg c
    for (std::unique_ptr<RooAbsArg> &arg : ownedArgs) {
       _topNodeWrapper->addOwnedComponents(std::move(arg));
    }
+   _arg = &static_cast<RooAddition &>(*_topNodeWrapper).list()[0];
 }
 
 RooFit::NormalizationIntegralUnfolder::~NormalizationIntegralUnfolder()
@@ -212,10 +301,4 @@ RooFit::NormalizationIntegralUnfolder::~NormalizationIntegralUnfolder()
    for (auto &item : _normSets) {
       delete item.second;
    }
-}
-
-/// Returns the top node of the modified computation graph.
-RooAbsArg const &RooFit::NormalizationIntegralUnfolder::arg() const
-{
-   return static_cast<RooAddition &>(*_topNodeWrapper).list()[0];
 }
