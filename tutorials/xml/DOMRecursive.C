@@ -13,7 +13,6 @@
 ///
 /// Requires: `person.xml`
 ///
-/// \macro_output
 /// \macro_code
 ///
 /// \author Sergey Linev
