@@ -106,10 +106,10 @@ public:
   const RooAbsPdf& pdf() const { return _pdf.arg(); }
   const RooAbsReal& observable() const { return _observable.arg(); }
 
-  void fillNormSetForServer(RooArgSet const& /*normSet*/,
-                         RooAbsArg const& /*server*/,
-                         RooArgSet& /*serverNormSet*/) const override {
+  std::unique_ptr<RooArgSet> fillNormSetForServer(RooArgSet const& /*normSet*/,
+                         RooAbsArg const& /*server*/) const override {
     // servers are evaluated unnormalized
+    return std::make_unique<RooArgSet>();
   }
 
 protected:

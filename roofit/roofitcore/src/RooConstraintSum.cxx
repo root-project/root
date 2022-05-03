@@ -106,12 +106,8 @@ void RooConstraintSum::computeBatch(cudaStream_t *, double *output, size_t /*siz
 }
 
 
-void RooConstraintSum::fillNormSetForServer(RooArgSet const & /*normSet*/, RooAbsArg const &server,
-                                            RooArgSet &serverNormSet) const
-{
-   for (auto *arg : _paramSet)
-      if (server.dependsOn(*arg))
-         serverNormSet.add(*arg);
+std::unique_ptr<RooArgSet> RooConstraintSum::fillNormSetForServer(RooArgSet const& /*normSet*/, RooAbsArg const& /*server*/) const {
+  return std::make_unique<RooArgSet>(_paramSet);
 }
 
 

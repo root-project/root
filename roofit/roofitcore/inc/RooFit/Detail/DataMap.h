@@ -61,4 +61,13 @@ using DataMap = std::map<DataKey, RooSpan<const double>>;
 } // namespace Detail
 } // namespace RooFit
 
+namespace std {
+
+template <>
+struct hash<RooFit::Detail::DataKey> {
+   std::size_t operator()(const RooFit::Detail::DataKey &k) const { return hash<TObject const *>{}(&*k); }
+};
+
+} // namespace std
+
 #endif
