@@ -49,8 +49,7 @@ public:
 
    void applyWeightSquared(bool flag) override;
 
-   void
-   fillNormSetForServer(RooArgSet const &normSet, RooAbsArg const &server, RooArgSet &serverNormSet) const override;
+   std::unique_ptr<RooArgSet> fillNormSetForServer(RooArgSet const &normSet, RooAbsArg const &server) const override;
 
 protected:
    RooTemplateProxy<RooAbsPdf> _pdf;
