@@ -55,6 +55,8 @@ public:
   virtual Double_t getValV(const RooArgSet* nset=0) const ;
   RooSpan<const double> getValues(RooBatchCompute::RunContext& inputData, const RooArgSet* = nullptr) const final;
 
+  /// Returns how many times the value of this RooRealVar was reset.
+  std::size_t valueResetCounter() const { return _valueResetCounter; }
   virtual void setVal(Double_t value);
   virtual void setVal(Double_t value, const char* rangeName);
   inline Double_t getError() const { return _error>=0?_error:0. ; }
@@ -165,6 +167,8 @@ public:
   static std::map<std::string,std::weak_ptr<RooRealVarSharedProperties>>* sharedPropList(); // List of properties shared among clones of a variable
   
   std::shared_ptr<RooRealVarSharedProperties> _sharedProp; //! Shared binnings associated with this instance
+                                                           //
+  std::size_t _valueResetCounter; ///<! How many times the value of this variable was reset
 
   ClassDef(RooRealVar,8) // Real-valued variable
 };
