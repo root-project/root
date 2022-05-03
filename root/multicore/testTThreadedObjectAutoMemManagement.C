@@ -1,5 +1,4 @@
-
-void testTThreadedObjectAutoMemManagement() {
+int testTThreadedObjectAutoMemManagement() {
    ROOT::EnableThreadSafety();
    const auto filename = "testTThreadedObjectAutoMemManagement.root";
    const auto nentries = 5000;
