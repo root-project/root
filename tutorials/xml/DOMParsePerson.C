@@ -14,7 +14,6 @@
 ///
 /// Requires: person.xml and person.dtd
 ///
-/// \macro_output
 /// \macro_code
 ///
 /// \author Sergey Linev
