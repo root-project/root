@@ -287,6 +287,7 @@ void RooRealVar::setVal(Double_t value)
   if (clipValue != _value) {
     setValueDirty() ;
     _value = clipValue;
+    ++_valueResetCounter;
   }
 }
 
@@ -303,6 +304,7 @@ void RooRealVar::setVal(Double_t value, const char* rangeName)
   if (clipValue != _value) {
     setValueDirty() ;
     _value = clipValue;
+    ++_valueResetCounter;
   }
 }
 
@@ -1219,6 +1221,11 @@ void RooRealVar::copyCache(const RooAbsArg* source, Bool_t valueOnly, Bool_t set
 {
   // Follow usual procedure for valueklog
   RooAbsReal::copyCache(source,valueOnly,setValDirty) ;
+  double oldVal = _value;
+  RooAbsReal::copyCache(source,valueOnly,setValDirty) ;
+  if(_value != oldVal) {
+    ++_valueResetCounter;
+  }
 
   if (valueOnly) return ;
 
