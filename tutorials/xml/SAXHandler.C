@@ -14,8 +14,6 @@
 ///
 /// Requires: `saxexample.xml`
 ///
-///
-/// \macro_output
 /// \macro_code
 ///
 /// \author Sergey Linev

@@ -5,7 +5,6 @@
 /// The input file, produced by xmlnewfile.C macro is used
 /// If you need full xml syntax support, use TXMLParser instead
 ///
-/// \macro_output
 /// \macro_code
 ///
 /// \author Sergey Linev
