@@ -985,7 +985,10 @@ EXCLUDE_PATTERNS       = */G__* \
                          LinkDef*.h \
                          launcher.py \
                          */io/io/res/* \
-                         */src/lexertk.hpp
+                         */src/lexertk.hpp \
+                         *.xml \
+                         *.dtd \
+                         */tutorials/webgui/qt5web/*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
