@@ -308,10 +308,11 @@ void RooNLLVarNew::applyWeightSquared(bool flag)
    _weightSquared = flag;
 }
 
-void RooNLLVarNew::fillNormSetForServer(RooArgSet const &normSet, RooAbsArg const &server,
-                                        RooArgSet &serverNormSet) const
+std::unique_ptr<RooArgSet>
+RooNLLVarNew::fillNormSetForServer(RooArgSet const & /*normSet*/, RooAbsArg const & /*server*/) const
 {
-   if (!_binnedL) {
-      RooAbsReal::fillNormSetForServer(normSet, server, serverNormSet);
+   if (_binnedL) {
+      return std::make_unique<RooArgSet>();
    }
+   return nullptr;
 }
