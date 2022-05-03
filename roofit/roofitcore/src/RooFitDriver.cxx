@@ -31,6 +31,7 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 #include <RooAbsCategory.h>
 #include <RooAbsData.h>
 #include <RooAbsReal.h>
+#include <RooRealVar.h>
 #include <RooArgList.h>
 #include <RooBatchCompute.h>
 #include <RooMsgService.h>
@@ -87,7 +88,12 @@ struct NodeInfo {
    bool computeInGPU = false;
    bool copyAfterEvaluation = false;
    bool fromDataset = false;
+   bool isVariable = false;
+   bool isDirty = true;
    std::size_t outputSize = 1;
+   std::size_t lastSetValCount = 9999999;
+   double scalarBuffer;
+
    ~NodeInfo()
    {
       if (event)
@@ -134,7 +140,10 @@ RooFitDriver::RooFitDriver(const RooAbsReal &absReal, RooArgSet const &normSet, 
    // Fill the ordered nodes list and initialize the node info structs.
    for (RooAbsArg *arg : serverSet) {
       _orderedNodes.add(*arg);
-      _nodeInfos[arg];
+      auto &nodeInfo = _nodeInfos[arg];
+      if (dynamic_cast<RooRealVar const *>(arg)) {
+         nodeInfo.isVariable = true;
+      }
    }
 
    if (_batchMode == RooFit::BatchModeOption::Cuda) {
@@ -187,6 +196,7 @@ void RooFitDriver::setData(DataSpansMap const &dataSpans)
          auto &argInfo = found->second;
          argInfo.outputSize = span.second.size();
          argInfo.fromDataset = true;
+         argInfo.isDirty = true;
       }
    }
 
@@ -213,17 +223,18 @@ void RooFitDriver::setData(DataSpansMap const &dataSpans)
       return;
 
    std::size_t totalSize = 0;
-   for (auto &record : _dataMapCPU) {
-      totalSize += record.second.size();
+   for (auto const &span : dataSpans) {
+      totalSize += span.second.size();
    }
    // copy observable data to the GPU
    // TODO: use separate buffers here
    _cudaMemDataset = static_cast<double *>(RooBatchCompute::dispatchCUDA->cudaMalloc(totalSize * sizeof(double)));
    size_t idx = 0;
-   for (auto &record : _dataMapCPU) {
-      std::size_t size = record.second.size();
-      _dataMapCUDA[record.first] = RooSpan<double>(_cudaMemDataset + idx, size);
-      RooBatchCompute::dispatchCUDA->memcpyToCUDA(_cudaMemDataset + idx, record.second.data(), size * sizeof(double));
+   for (auto const &dataSpan : dataSpans) {
+      auto &record = _dataMapCPU.at(dataSpan.first);
+      std::size_t size = record.size();
+      _dataMapCUDA[dataSpan.first] = RooSpan<double>(_cudaMemDataset + idx, size);
+      RooBatchCompute::dispatchCUDA->memcpyToCUDA(_cudaMemDataset + idx, record.data(), size * sizeof(double));
       idx += size;
    }
 }
@@ -265,9 +276,8 @@ void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
    const std::size_t nOut = info.outputSize;
 
    if (nOut == 1) {
-      _nonDerivedValues.push_back(0.0);
-      _dataMapCPU[node] = _dataMapCUDA[node] = RooSpan<const double>(&_nonDerivedValues.back(), nOut);
-      nodeAbsReal->computeBatch(nullptr, &_nonDerivedValues.back(), nOut, _dataMapCPU);
+      _dataMapCPU[node] = _dataMapCUDA[node] = RooSpan<const double>(&info.scalarBuffer, nOut);
+      nodeAbsReal->computeBatch(nullptr, &info.scalarBuffer, nOut, _dataMapCPU);
    } else {
       info.buffer = info.copyAfterEvaluation ? makePinnedBuffer(nOut, info.stream) : makeCpuBuffer(nOut);
       double *buffer = info.buffer->cpuWritePtr();
@@ -295,9 +305,6 @@ double RooFitDriver::getVal()
 {
    ++_getValInvocations;
 
-   _nonDerivedValues.clear();
-   _nonDerivedValues.reserve(_orderedNodes.size()); // to avoid reallocation
-
    if (_batchMode == RooFit::BatchModeOption::Cuda) {
       return getValHeterogeneous();
    }
@@ -306,9 +313,32 @@ double RooFitDriver::getVal()
       RooAbsArg *node = _orderedNodes.at(iNode);
       auto &nodeInfo = _nodeInfos.at(node);
       if (!nodeInfo.fromDataset) {
-         computeCPUNode(node, nodeInfo);
+         if (nodeInfo.isVariable) {
+            auto *var = static_cast<RooRealVar const *>(node);
+            if (nodeInfo.lastSetValCount != var->valueResetCounter()) {
+               nodeInfo.isDirty = true;
+               nodeInfo.lastSetValCount = var->valueResetCounter();
+            }
+            if (nodeInfo.isDirty)
+               computeCPUNode(node, nodeInfo);
+         } else {
+            for (RooAbsArg *server : node->servers()) {
+               if (_nodeInfos.at(server).isDirty) {
+                  nodeInfo.isDirty = true;
+                  break;
+               }
+            }
+            if (nodeInfo.isDirty) {
+               computeCPUNode(node, nodeInfo);
+            }
+         }
       }
    }
+
+   for (auto &node : _nodeInfos) {
+      node.second.isDirty = false;
+   }
+
    // return the final value
    return _dataMapCPU.at(&topNode())[0];
 }
