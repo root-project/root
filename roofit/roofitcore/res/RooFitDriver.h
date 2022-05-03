@@ -87,7 +87,6 @@ private:
    RooArgList _orderedNodes;
 
    // used for preserving resources
-   std::vector<double> _nonDerivedValues;
    std::stack<std::vector<double>> _vectorBuffers;
    std::unique_ptr<RooFit::NormalizationIntegralUnfolder> _integralUnfolder;
 
