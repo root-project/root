@@ -36,6 +36,8 @@ protected:
 
    bool IsSame(TObject *obj) const { return obj == fObj; }
 
+   virtual bool CheckObject() const;
+
 public:
    TObjectElement(TObject *obj, const std::string &name = "");
 
