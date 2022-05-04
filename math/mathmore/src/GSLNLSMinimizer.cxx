@@ -32,15 +32,17 @@ namespace ROOT {
    namespace Math {
 
 
-// Internal class used by GSLNLSMinimizer to implement the transformation of the chi2
-// function used by GSL Non-linear Least-square fitting
-
-class FitTransformFunction : public FitMethodFunction {
+/// Internal class used by GSLNLSMinimizer to implement the transformation of the chi2
+/// function used by GSL Non-linear Least-square fitting
+/// The class is template on the FitMethodFunction type to support both gradient and non
+/// gradient functions
+template<class FMFunc>
+class FitTransformFunction : public FMFunc {
 
 public:
 
-   FitTransformFunction(const FitMethodFunction & f, std::unique_ptr<MinimTransformFunction> transFunc ) :
-      FitMethodFunction( f.NDim(), f.NPoints() ),
+   FitTransformFunction(const FMFunc & f, std::unique_ptr<MinimTransformFunction> transFunc ) :
+      FMFunc( f.NDim(), f.NPoints() ),
       fFunc(f),
       fTransform(std::move(transFunc)),
       fGrad( std::vector<double>(f.NDim() ) )
@@ -49,11 +51,11 @@ public:
       // Ownership of the transformation object is passed to this class
    }
 
-   ~FitTransformFunction() override {
+   virtual ~FitTransformFunction()  {
    }
 
    // re-implement data element
-   double DataElement(const double *  x, unsigned i, double * g = 0) const override {
+   virtual double DataElement(const double *  x, unsigned i, double * g = 0) const  {
       // transform from x internal to x external
       const double * xExt = fTransform->Transformation(x);
       if ( g == 0) return fFunc.DataElement( xExt, i );
@@ -65,13 +67,13 @@ public:
    }
 
 
-   IMultiGenFunction * Clone() const override {
+   virtual IMultiGenFunction * Clone() const {
       // not supported
       return nullptr;
    }
 
    // dimension (this is number of free dimensions)
-   unsigned int NDim() const override {
+   virtual unsigned int NDim() const  {
       return fTransform->NDim();
    }
 
@@ -100,12 +102,18 @@ private:
    FitTransformFunction(const FitTransformFunction& rhs);
    FitTransformFunction& operator=(const FitTransformFunction& rhs);
 
-   double DoEval(const double * x) const override {
+   virtual double DoEval(const double * x) const  {
       return fFunc( fTransform->Transformation(x) );
    }
 
+   virtual double DoDerivative(const double * /* x */, unsigned int /*icoord*/) const  {
+   //    // not used
+      assert(false);
+       return 0;
+   }
+
    bool fOwnTransformation;
-   const FitMethodFunction & fFunc;                  // pointer to original fit method function
+   const FMFunc & fFunc;                  // pointer to original fit method function
    std::unique_ptr<MinimTransformFunction> fTransform;        // pointer to transformation function
    mutable std::vector<double> fGrad;          // cached vector of gradient values
 
@@ -113,13 +121,12 @@ private:
 
 
 
-
 // GSLNLSMinimizer implementation
 
-GSLNLSMinimizer::GSLNLSMinimizer( int type ) :
+GSLNLSMinimizer::GSLNLSMinimizer( int type )
    //fNFree(0),
-   fSize(0),
-   fChi2Func(0)
+   //fSize(0),
+   //fChi2Func(0)
 {
    // Constructor implementation : create GSLMultiFit wrapper object
    const gsl_multifit_fdfsolver_type * gsl_type = 0; // use default type defined in GSLMultiFit
@@ -153,43 +160,54 @@ void GSLNLSMinimizer::SetFunction(const ROOT::Math::IMultiGenFunction & func) {
    // need to create vector of functions to be passed to GSL multifit
    // support now only CHi2 implementation
 
-   // call base class method. It will clone the function and set ndimension
+   // call base class method. It will clone the function and set number of dimensions
    BasicMinimizer::SetFunction(func);
-   //need to check if function can be used
-   const ROOT::Math::FitMethodFunction * chi2Func = dynamic_cast<const ROOT::Math::FitMethodFunction *>(ObjFunction());
-   if (chi2Func == 0) {
-      if (PrintLevel() > 0) std::cout << "GSLNLSMinimizer: Invalid function set - only Chi2Func supported" << std::endl;
-      return;
-   }
-   fSize = chi2Func->NPoints();
    fNFree = NDim();
-
-   // use vector by value
-   fResiduals.reserve(fSize);
-   for (unsigned int i = 0; i < fSize; ++i) {
-      fResiduals.push_back( LSResidualFunc(*chi2Func, i) );
-   }
-   // keep pointers to the chi2 function
-   fChi2Func = chi2Func;
+   fUseGradFunction = false;
  }
 
 void GSLNLSMinimizer::SetFunction(const ROOT::Math::IMultiGradFunction & func ) {
    // set the function to minimizer using gradient interface
-   // not supported yet, implemented using the other SetFunction
-   return SetFunction(static_cast<const ROOT::Math::IMultiGenFunction &>(func) );
+   BasicMinimizer::SetFunction(func);
+   fUseGradFunction = true;
 }
 
 
 bool GSLNLSMinimizer::Minimize() {
-   // set initial parameters of the minimizer
-   int debugLevel = PrintLevel();
 
-
-   assert (fGSLMultiFit != 0);
-   if (fResiduals.size() !=  fSize || fChi2Func == 0) {
+   if (ObjFunction() == nullptr) {
       MATH_ERROR_MSG("GSLNLSMinimizer::Minimize","Function has not been  set");
       return false;
    }
+   // check type of function (if it provides gradient)
+   const ROOT::Math::FitMethodFunction * fitFunc = (!fUseGradFunction) ?
+      dynamic_cast<const ROOT::Math::FitMethodFunction *>(ObjFunction()) : nullptr;
+   const ROOT::Math::FitMethodGradFunction * fitGradFunc = (fUseGradFunction) ?
+      dynamic_cast<const ROOT::Math::FitMethodGradFunction *>(ObjFunction()) : nullptr;
+   if (fitFunc == nullptr && fitGradFunc == nullptr) {
+      if (PrintLevel() > 0) std::cout << "GSLNLSMinimizer: Invalid function set - only FitMethodFunction types are supported" << std::endl;
+      return false;
+   }
+
+   if (fitGradFunc)
+      return DoMinimize<ROOT::Math::FitMethodGradFunction>(*fitGradFunc);
+   else
+      return DoMinimize<ROOT::Math::FitMethodFunction>(*fitFunc);
+}
+
+template<class Func>
+bool GSLNLSMinimizer::DoMinimize(const Func & fitFunc) {
+
+   unsigned int size = fitFunc.NPoints();
+   fNCalls = 0;  // reset number of function calls
+
+   std::vector<LSResidualFunc<Func>> residualFuncs;
+   residualFuncs.reserve(size);
+
+   // set initial parameters of the minimizer
+   int debugLevel = PrintLevel();
+
+   assert (fGSLMultiFit != nullptr);
 
    unsigned int npar = NPar();
    unsigned int ndim = NDim();
@@ -202,31 +220,36 @@ bool GSLNLSMinimizer::Minimize() {
    std::vector<double> startValues;
 
    // transformation need a grad function.
-   std::unique_ptr<MultiNumGradFunction> gradFunction(new MultiNumGradFunction(*fChi2Func));
-   std::unique_ptr<MinimTransformFunction> trFuncRaw(CreateTransformation(startValues, gradFunction.get()));
+   std::unique_ptr<MultiNumGradFunction> gradFunction;
+   std::unique_ptr<MinimTransformFunction> trFuncRaw;
+   if (!fUseGradFunction) {
+      gradFunction.reset(new MultiNumGradFunction(fitFunc));
+      trFuncRaw.reset(CreateTransformation(startValues, gradFunction.get()));
+   }
+   else {
+      // use pointer stored in BasicMinimizer
+      trFuncRaw.reset(CreateTransformation(startValues));
+   }
    // need to transform in a FitTransformFunction which is set in the residual functions
-   std::unique_ptr<FitTransformFunction> trFunc;
+   std::unique_ptr<FitTransformFunction<Func>> trFunc;
    if (trFuncRaw) {
       //pass ownership of trFuncRaw to FitTransformFunction
-      trFunc.reset(new FitTransformFunction(*fChi2Func, std::move(trFuncRaw)));
-      for (unsigned int ires = 0; ires < fResiduals.size(); ++ires) {
-         fResiduals[ires] = LSResidualFunc(*trFunc, ires);
-      }
-
+      trFunc.reset(new FitTransformFunction<Func>(fitFunc, std::move(trFuncRaw)));
       assert(npar == trFunc->NTot() );
-      // gradFunction is going to be managed by FitTransFormFunction and does not need
-      // to be deleted
+      for (unsigned int ires = 0; ires < size; ++ires) {
+         residualFuncs.push_back(LSResidualFunc<Func>(*trFunc, ires));
+      }
+   }  else {
+      for (unsigned int ires = 0; ires < size; ++ires) {
+        residualFuncs.push_back( LSResidualFunc<Func>(fitFunc, ires) );
+      }
    }
 
    if (debugLevel >=1 ) std::cout <<"Minimize using GSLNLSMinimizer "  << std::endl;
 
-//    // use a global step size = min (step vectors)
-//    double stepSize = 1;
-//    for (unsigned int i = 0; i < fSteps.size(); ++i)
-//       //stepSize += fSteps[i];
-//       if (fSteps[i] < stepSize) stepSize = fSteps[i];
 
-   int iret = fGSLMultiFit->Set( fResiduals, &startValues.front() );
+   int iret = fGSLMultiFit->Set( residualFuncs, &startValues.front() );
+
    if (iret) {
       MATH_ERROR_MSGVAL("GSLNLSMinimizer::Minimize","Error setting the residual functions ",iret);
       return false;
@@ -246,7 +269,7 @@ bool GSLNLSMinimizer::Minimize() {
          const double * x = fGSLMultiFit->X();
          if (trFunc) x = trFunc->Transformation(x);
          int pr = std::cout.precision(18);
-         std::cout << "            FVAL = " << (*fChi2Func)(x) << std::endl;
+         std::cout << "            FVAL = " << (fitFunc)(x) << std::endl;
          std::cout.precision(pr);
          std::cout << "            X Values : ";
          for (unsigned int i = 0; i < NDim(); ++i)
@@ -299,9 +322,9 @@ bool GSLNLSMinimizer::Minimize() {
    if (trFunc)  x = trFunc->Transformation(x);
    SetFinalValues(x);
 
-   SetMinValue( (*fChi2Func)(x) );
+   SetMinValue( (fitFunc)(x) );
    fStatus = status;
-
+   fNCalls = fitFunc.NCalls();
    fErrors.resize(NDim());
 
    // get errors from cov matrix
@@ -330,7 +353,7 @@ bool GSLNLSMinimizer::Minimize() {
          std::cout << "Edm          = " << fEdm    << std::endl;
          std::cout.precision(pr);
          std::cout << "NIterations  = " << iter << std::endl;
-         std::cout << "NFuncCalls   = " << fChi2Func->NCalls() << std::endl;
+         std::cout << "NFuncCalls   = " << fitFunc.NCalls() << std::endl;
          for (unsigned int i = 0; i < NDim(); ++i)
             std::cout << std::setw(12) <<  VariableName(i) << " = " << std::setw(12) << X()[i] << "   +/-   " << std::setw(12) << fErrors[i] << std::endl;
       }
@@ -338,8 +361,14 @@ bool GSLNLSMinimizer::Minimize() {
       return true;
    }
    else {
+      if (debugLevel >=0 ) {
+         std::cout << "GSLNLSMinimizer: Minimization did not converge: " << std::endl;
+         if (status == GSL_ENOPROG) // case status 27
+            std::cout << "\t iteration is not making progress towards solution" << std::endl;
+         else
+            std::cout << "\t failed with status " << status << std::endl;
+      }
       if (debugLevel >=1 ) {
-         std::cout << "GSLNLSMinimizer: Minimization did not converge" << std::endl;
          std::cout << "FVAL         = " << MinValue() << std::endl;
          std::cout << "Edm   = " << fGSLMultiFit->Edm() << std::endl;
          std::cout << "Niterations  = " << iter << std::endl;

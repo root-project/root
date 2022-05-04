@@ -540,7 +540,7 @@ double FitUtil::EvaluateChi2Effective(const IModelFunction & func, const BinData
 ///  integral option is also not yet implemented
 ///  one can use in that case normal chi2 method
 
-double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData & data, const double * p, unsigned int i, double * g) {
+double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData & data, const double * p, unsigned int i, double * g, bool hasGrad) {
    if (data.GetErrorType() == BinData::kCoordError && data.Opt().fCoordErrors ) {
       MATH_ERROR_MSG("FitUtil::EvaluateChi2Residual","Error on the coordinates are not used in calculating Chi2 residual");
       return 0; // it will assert otherwise later in GetPoint
@@ -610,15 +610,21 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
    resval = CorrectValue(resval);
 
    // estimate gradient
-   if (g != 0) {
+   if (g) {
 
       unsigned int npar = func.NPar();
-      const IGradModelFunction * gfunc = dynamic_cast<const IGradModelFunction *>( &func);
 
-      if (gfunc != 0) {
+      // use gradient of model function only if FCN support gradient
+      const IGradModelFunction * gfunc = (hasGrad) ?
+         dynamic_cast<const IGradModelFunction *>( &func) : nullptr;
+
+      if (gfunc) {
          //case function provides gradient
          if (!useBinIntegral ) {
-            gfunc->ParameterGradient(  x , p, g );
+            gfunc->ParameterGradient(  x , p, g);
+            // std::cout << "compute analytical gradient for model func at " << x[0] << " ";
+            // for (unsigned ip = 0; ip < npar; ip++) std::cout << "(" << p[ip] << ", " << g[ip] << ") " ;
+            // std::cout << std::endl;
          }
          else {
             // needs to calculate the integral for each partial derivative
@@ -627,14 +633,18 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
       }
       else {
          SimpleGradientCalculator  gc( npar, func);
-         if (!useBinIntegral )
+         if (!useBinIntegral ) {
+            SimpleGradientCalculator  gc( npar, func);
             gc.ParameterGradient(x, p, fval, g);
-         else {
+            // std::cout << "compute numerical gradient for model func at " << x[0] << " ";
+            // for (unsigned int ip = 0; ip < npar; ip++) std::cout << "(" << p[ip] << ", " << g[ip] << ") " ;
+            // std::cout << std::endl;
+         } else {
             // needs to calculate the integral for each partial derivative
             CalculateGradientIntegral( gc, x1, x2, p, g);
          }
       }
-      // mutiply by - 1 * weight
+      // multiply by - 1 * weight
       for (unsigned int k = 0; k < npar; ++k) {
          g[k] *= - invError;
          if (useBinVolume) g[k] *= binVolume;
@@ -864,7 +874,7 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
 
 // for LogLikelihood functions
 
-double FitUtil::EvaluatePdf(const IModelFunction & func, const UnBinData & data, const double * p, unsigned int i, double * g) {
+double FitUtil::EvaluatePdf(const IModelFunction & func, const UnBinData & data, const double * p, unsigned int i, double * g, bool hasGrad) {
    // evaluate the pdf contribution to the generic logl function in case of bin data
    // return actually the log of the pdf and its derivatives
 
@@ -878,15 +888,16 @@ double FitUtil::EvaluatePdf(const IModelFunction & func, const UnBinData & data,
    //return
    if (g == 0) return logPdf;
 
-   const IGradModelFunction * gfunc = dynamic_cast<const IGradModelFunction *>( &func);
+   const IGradModelFunction * gfunc = (hasGrad) ?
+      dynamic_cast<const IGradModelFunction *>( &func) : nullptr;
 
    // gradient  calculation
-   if (gfunc != 0) {
+   if (gfunc) {
       //case function provides gradient
       gfunc->ParameterGradient(  x , p, g );
    }
    else {
-      // estimate gradieant numerically with simple 2 point rule
+      // estimate gradient numerically with simple 2 point rule
       // should probably calculate gradient of log(pdf) is more stable numerically
       SimpleGradientCalculator gc(func.NPar(), func);
       gc.ParameterGradient(x, p, fval, g );
@@ -1270,7 +1281,7 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
 /// evaluate the pdf (Poisson) contribution to the logl (return actually log of pdf)
 /// and its gradient
 
-double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData & data, const double * p, unsigned int i, double * g ) {
+double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData & data, const double * p, unsigned int i, double * g, bool hasGrad) {
    double y = 0;
    const double * x1 = data.GetPoint(i,y);
 
@@ -1324,10 +1335,11 @@ double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData
    if (g == 0) return logPdf;
 
    unsigned int npar = func.NPar();
-   const IGradModelFunction * gfunc = dynamic_cast<const IGradModelFunction *>( &func);
+   const IGradModelFunction * gfunc = (hasGrad) ?
+      dynamic_cast<const IGradModelFunction *>( &func) : nullptr;
 
    // gradient  calculation
-   if (gfunc != 0) {
+   if (gfunc) {
       //case function provides gradient
       if (!useBinIntegral )
          gfunc->ParameterGradient(  x , p, g );
