@@ -438,7 +438,7 @@ class RHistStatsPainter extends RPavePainter {
                   lines[j] = lines[j].slice(0,max_hlen+2) + "...";
             }
             this.drawText({ align: (j == 0) ? "middle" : "start", x: margin_x, y: posy,
-                            width: width-2*margin_x, height: stepy, text: lines[j], draw_g: text_g });
+                            width: width - 2*margin_x, height: stepy, text: lines[j], draw_g: text_g });
          } else {
             let parts = lines[j].split("="), args = [];
 

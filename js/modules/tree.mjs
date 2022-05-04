@@ -105,7 +105,8 @@ class TSelector {
 /** @summary Checks array kind
   * @desc return 0 when not array
   * 1 - when arbitrary array
-  * 2 - when plain (1-dim) array with same-type content */
+  * 2 - when plain (1-dim) array with same-type content
+  * @private */
 function checkArrayPrototype(arr, check_content) {
    if (typeof arr !== 'object') return 0;
 
@@ -285,7 +286,8 @@ function getBranchObjectClass(branch, tree, with_clones = false, with_leafs = fa
 
 /** @summary Get branch with specified id
   * @desc All sub-branches checked as well
-  * @returns {Object} branch */
+  * @returns {Object} branch
+  * @private */
 function getTreeBranch(tree, id) {
    if (!Number.isInteger(id)) return;
    let res, seq = 0;
@@ -367,7 +369,8 @@ function findBranchComplex(tree, name, lst = undefined, only_search = false) {
 
 /** @summary Search branch with specified name
   * @param {string} name - name of the branch
-  * @returns {Object} found branch */
+  * @returns {Object} found branch
+  * @private */
 function findBranch(tree, name) {
    let res = findBranchComplex(tree, name, tree.fBranches, true);
    return (!res || (res.rest.length > 0)) ? null : res.branch;
@@ -376,7 +379,8 @@ function findBranch(tree, name) {
 
 /** @summary Returns number of branches in the TTree
   * @desc Checks also sub-branches in the branches
-  * @returns {number} number of branches */
+  * @returns {number} number of branches
+  * @private */
 function getNumBranches(tree) {
    function count(obj) {
       if (!obj || !obj.fBranches) return 0;
@@ -2515,7 +2519,7 @@ function treeProcess(tree, selector, args) {
 
 }
 
-/** @summary  implementation of TTree::Draw
+/** @summary implementation of TTree::Draw
   * @param {object|string} args - different setting or simply draw expression
   * @param {string} args.expr - draw expression
   * @param {string} [args.cut=undefined]   - cut expression (also can be part of 'expr' after '::')

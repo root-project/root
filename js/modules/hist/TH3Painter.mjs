@@ -22,6 +22,7 @@ import { assignFrame3DMethods } from './hist3d.mjs';
 
 /**
  * @summary Painter for TH3 classes
+ * @private
  */
 
 class TH3Painter extends THistPainter {

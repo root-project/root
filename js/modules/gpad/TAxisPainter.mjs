@@ -558,8 +558,9 @@ class TAxisPainter extends ObjectPainter {
    formatLabels(d) {
       let indx = parseFloat(d), a = this.getObject();
       if (!this.regular_labels)
-         indx = (indx - a.fXmin)/(a.fXmax - a.fXmin) * a.fNbins;
-      indx = Math.floor(indx);
+         indx = Math.round((indx - a.fXmin)/(a.fXmax - a.fXmin) * a.fNbins);
+      else
+         indx = Math.floor(indx);
       if ((indx < 0) || (indx >= a.fNbins)) return null;
       for (let i = 0; i < a.fLabels.arr.length; ++i) {
          let tstr = a.fLabels.arr[i];
@@ -925,12 +926,12 @@ class TAxisPainter extends ObjectPainter {
             textscale = Math.min(textscale, (max_text_width - labeloffset) / textwidth);
          }
 
-         if ((textscale > 0.01) && (textscale < 0.7) && !painter.vertical && !rotate_lbls && (maxtextlen > 5) && (label_g.length == 1))
+         if ((textscale > 0.0001) && (textscale < 0.7) && !painter.vertical && !rotate_lbls && (maxtextlen > 5) && (label_g.length == 1))
             lbl_tilt = true;
 
          let scale = textscale * (lbl_tilt ? 3 : 1);
 
-         if ((scale > 0.01) && (scale < 1)) {
+         if ((scale > 0.0001) && (scale < 1)) {
             applied_scale = 1/scale;
             painter.scaleTextDrawing(applied_scale, label_g[0]);
          }
@@ -977,11 +978,11 @@ class TAxisPainter extends ObjectPainter {
             if (this.vertical) {
                arg.x = fix_coord;
                arg.y = pos;
-               arg.align = rotate_lbls ? ((side<0) ? 23 : 20) : ((side<0) ? 12 : 32);
+               arg.align = rotate_lbls ? ((side < 0) ? 23 : 20) : ((side < 0) ? 12 : 32);
             } else {
                arg.x = pos;
                arg.y = fix_coord;
-               arg.align = rotate_lbls ? ((side<0) ? 12 : 32) : ((side<0) ? 20 : 23);
+               arg.align = rotate_lbls ? ((side < 0) ? 12 : 32) : ((side < 0) ? 20 : 23);
             }
 
             if (rotate_lbls)
@@ -1135,7 +1136,7 @@ class TAxisPainter extends ObjectPainter {
          labelMaxWidth = arr[1];
 
          if (settings.Zooming && !this.disable_zooming && !isBatchMode()) {
-            let labelSize = arr[0],
+            let labelSize = Math.max(arr[0], 5),
                 r = axis_g.append("svg:rect")
                           .attr("class", "axis_zoom")
                           .style("opacity", "0")
@@ -1198,7 +1199,7 @@ class TAxisPainter extends ObjectPainter {
             title_shift_y = Math.round(center ? h/2 : (xor_reverse ? h : 0));
 
             this.drawText({ align: this.title_align+";middle",
-                            rotate: (rotate<0) ? 90 : 270,
+                            rotate: (rotate < 0) ? 90 : 270,
                             text: axis.fTitle, color: title_color, draw_g: title_g });
          } else {
             title_offest_k *= side*pad_h;
@@ -1206,7 +1207,7 @@ class TAxisPainter extends ObjectPainter {
             title_shift_x = Math.round(center ? w/2 : (xor_reverse ? 0 : w));
             title_shift_y = Math.round(title_offest_k*axis.fTitleOffset);
             this.drawText({ align: this.title_align+";middle",
-                            rotate: (rotate<0) ? 180 : 0,
+                            rotate: (rotate < 0) ? 180 : 0,
                             text: axis.fTitle, color: title_color, draw_g: title_g });
          }
 
@@ -1296,7 +1297,7 @@ class TAxisPainter extends ObjectPainter {
       this.configureAxis(vertical ? "yaxis" : "xaxis", min, max, min, max, vertical, [0, sz], {
          time_scale: gaxis.fChopt.indexOf("t") >= 0,
          log: (gaxis.fChopt.indexOf("G") >= 0) ? 1 : 0,
-         reverse: reverse,
+         reverse,
          swap_side: reverse
       });
 

@@ -8,7 +8,7 @@ import { THistPainter } from './THistPainter.mjs';
 
 /**
  * @summary Painter for TH1 classes
- *
+ * @private
  */
 
 class TH1Painter extends THistPainter {
@@ -566,8 +566,7 @@ class TH1Painter extends THistPainter {
             if (draw_markers) {
                if ((my >= -yerr1) && (my <= height + yerr2)) {
                   if (path_fill !== null)
-                     path_fill += "M" + mx1 +","+(my-yerr1) +
-                                  "h" + (mx2-mx1) + "v" + (yerr1+yerr2+1) + "h-" + (mx2-mx1) + "z";
+                     path_fill += `M${mx1},${my-yerr1}h${mx2-mx1}v${yerr1+yerr2+1}h${mx1-mx2}z`;
                   if ((path_marker !== null) && do_marker) {
                      path_marker += this.markeratt.create(midx, my);
                      if (hints_marker !== null)

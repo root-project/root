@@ -274,9 +274,9 @@ class RH2Painter extends RHistPainter {
 
             if ((xside != 1) || (yside != 1)) continue;
 
-            if ((cond!=null) && !cond(xx,yy)) continue;
+            if (cond && !cond(xx,yy)) continue;
 
-            if ((res.wmax==null) || (zz>res.wmax)) { res.wmax = zz; res.xmax = xx; res.ymax = yy; }
+            if ((res.wmax === null) || (zz > res.wmax)) { res.wmax = zz; res.xmax = xx; res.ymax = yy; }
 
             stat_sum0 += zz;
             stat_sumx1 += xx * zz;
@@ -293,11 +293,8 @@ class RH2Painter extends RHistPainter {
          res.rmsy = Math.sqrt(Math.abs(stat_sumy2 / stat_sum0 - res.meany * res.meany));
       }
 
-      if (res.wmax===null) res.wmax = 0;
+      if (res.wmax === null) res.wmax = 0;
       res.integral = stat_sum0;
-
-      // if (histo.fEntries > 1) res.entries = histo.fEntries;
-
       return res;
    }
 
@@ -801,7 +798,7 @@ class RH2Painter extends RHistPainter {
    /** @summary Draw RH2 bins as text */
    drawBinsText(handle) {
       let histo = this.getHisto(),
-          i, j, binz, binw, binh, lbl, posx, posy, sizex, sizey;
+          i, j, binz, binw, binh, text, x, y, width, height;
 
       if (handle===null) handle = this.prepareDraw({ rounding: false });
 
@@ -827,22 +824,21 @@ class RH2Painter extends RHistPainter {
             if (profile2d)
                binz = histo.getBinEntries(i+1, j+1);
 
-            lbl = (binz === Math.round(binz)) ? binz.toString() :
+            text = (binz === Math.round(binz)) ? binz.toString() :
                       floatToString(binz, gStyle.fPaintTextFormat);
 
             if (textFont.angle) {
-               posx = Math.round(handle.grx[i] + binw*0.5);
-               posy = Math.round(handle.gry[j+dj] + binh*(0.5 + text_offset));
-               sizex = 0;
-               sizey = 0;
+               x = Math.round(handle.grx[i] + binw*0.5);
+               y = Math.round(handle.gry[j+dj] + binh*(0.5 + text_offset));
+               width = height = 0;
             } else {
-               posx = Math.round(handle.grx[i] + binw*0.1);
-               posy = Math.round(handle.gry[j+dj] + binh*(0.1 + text_offset));
-               sizex = Math.round(binw*0.8);
-               sizey = Math.round(binh*0.8);
+               x = Math.round(handle.grx[i] + binw*0.1);
+               y = Math.round(handle.gry[j+dj] + binh*(0.1 + text_offset));
+               width = Math.round(binw*0.8);
+               height = Math.round(binh*0.8);
             }
 
-            this.drawText({ align: 22, x: posx, y: posy, width: sizex, height: sizey, text: lbl, latex: 0, draw_g: text_g });
+            this.drawText({ align: 22, x, y, width, height, text, latex: 0, draw_g: text_g });
          }
 
       return this.finishTextDrawing(text_g, true).then(() => {

@@ -868,8 +868,8 @@ class TGraphPainter extends ObjectPainter {
                lineatt = new TAttLineHandler({ attr: graph.fAttLine[k], std: false });
                fillatt = new TAttFillHandler({ attr: graph.fAttFill[k], std: false, svg: this.getCanvSvg() });
             }
-            let sub_g = this.draw_g.append("svg:g");
-            let options = k < this.options.blocks.length ? this.options.blocks[k] : this.options;
+            let sub_g = this.draw_g.append("svg:g"),
+                options = k < this.options.blocks.length ? this.options.blocks[k] : this.options;
             this.extractGmeErrors(k);
             this.drawBins(funcs, options, sub_g, w, h, lineatt, fillatt);
          }
@@ -899,7 +899,7 @@ class TGraphPainter extends ObjectPainter {
 
       this.draw_g.selectAll('.grpoint').each(function() {
          let d = d3_select(this).datum();
-         if (d===undefined) return;
+         if (d === undefined) return;
          let dist2 = Math.pow(pnt.x - d.grx1, 2);
          if (pnt.nproc===1) dist2 += Math.pow(pnt.y - d.gry1, 2);
          if (dist2 >= best_dist2) return;
@@ -1214,7 +1214,7 @@ class TGraphPainter extends ObjectPainter {
    /** @summary Start moving of TGraph */
    moveStart(x,y) {
       this.pos_dx = this.pos_dy = 0;
-      let hint = this.extractTooltip({ x:x, y:y });
+      let hint = this.extractTooltip({x, y});
       if (hint && hint.exact && (hint.binindx !== undefined)) {
          this.move_binindx = hint.binindx;
          this.move_bin = hint.bin;
