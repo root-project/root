@@ -335,7 +335,7 @@ namespace FitUtil {
       is used
   */
   double EvaluateChi2Residual(const IModelFunction &func, const BinData &data, const double *p, unsigned int ipoint,
-                              double *g = 0);
+                              double *g = 0, bool hasGrad = false);
 
   /**
       evaluate the pdf contribution to the LogL given a model function and the BinPoint data.
@@ -344,11 +344,11 @@ namespace FitUtil {
       is used
   */
   double
-  EvaluatePdf(const IModelFunction &func, const UnBinData &data, const double *p, unsigned int ipoint, double *g = 0);
+  EvaluatePdf(const IModelFunction &func, const UnBinData &data, const double *p, unsigned int ipoint, double *g = 0, bool hasGrad = false);
 
 #ifdef R__HAS_VECCORE
    template <class NotCompileIfScalarBackend = std::enable_if<!(std::is_same<double, ROOT::Double_v>::value)>>
-   double EvaluatePdf(const IModelFunctionTempl<ROOT::Double_v> &func, const UnBinData &data, const double *p, unsigned int i, double *) {
+   double EvaluatePdf(const IModelFunctionTempl<ROOT::Double_v> &func, const UnBinData &data, const double *p, unsigned int i, double *, bool) {
       // evaluate the pdf contribution to the generic logl function in case of bin data
       // return actually the log of the pdf and its derivatives
       // func.SetParameters(p);
@@ -365,7 +365,7 @@ namespace FitUtil {
        If the function provides parameter derivatives they are used otherwise a simple derivative calculation
        is used
    */
-   double EvaluatePoissonBinPdf(const IModelFunction & func, const BinData & data, const double * x, unsigned int ipoint, double * g = 0);
+   double EvaluatePoissonBinPdf(const IModelFunction & func, const BinData & data, const double * x, unsigned int ipoint, double * g = 0, bool hasGrad = false);
 
    unsigned setAutomaticChunking(unsigned nEvents);
 
@@ -1074,7 +1074,7 @@ namespace FitUtil {
 
       /// evaluate the pdf (Poisson) contribution to the logl (return actually log of pdf)
       /// and its gradient
-      static double EvalPoissonBinPdf(const IModelFunctionTempl<T> &, const BinData &, const double *, unsigned int , double * ) {
+      static double EvalPoissonBinPdf(const IModelFunctionTempl<T> &, const BinData &, const double *, unsigned int , double * , bool) {
          Error("FitUtil::Evaluate<T>::EvaluatePoissonBinPdf", "The vectorized evaluation of the BinnedLikelihood fit evaluated point by point is still not supported");
          return -1.;
       }
@@ -1429,15 +1429,15 @@ namespace FitUtil {
       {
          FitUtil::EvaluateChi2Gradient(func, data, p, g, nPoints, executionPolicy, nChunks);
       }
-      static double EvalChi2Residual(const IModelFunctionTempl<double> &func, const BinData & data, const double * p, unsigned int i, double *g = 0)
+      static double EvalChi2Residual(const IModelFunctionTempl<double> &func, const BinData & data, const double * p, unsigned int i, double *g = 0, bool hasGrad=false)
       {
-         return FitUtil::EvaluateChi2Residual(func, data, p, i, g);
+         return FitUtil::EvaluateChi2Residual(func, data, p, i, g, hasGrad);
       }
 
       /// evaluate the pdf (Poisson) contribution to the logl (return actually log of pdf)
       /// and its gradient
-      static double EvalPoissonBinPdf(const IModelFunctionTempl<double> &func, const BinData & data, const double *p, unsigned int i, double *g ) {
-         return FitUtil::EvaluatePoissonBinPdf(func, data, p, i, g);
+      static double EvalPoissonBinPdf(const IModelFunctionTempl<double> &func, const BinData & data, const double *p, unsigned int i, double *g, bool hasGrad) {
+         return FitUtil::EvaluatePoissonBinPdf(func, data, p, i, g, hasGrad);
       }
 
       static void

@@ -40,6 +40,7 @@
 #include "Math/MinimTransformVariable.h"
 
 #include <vector>
+#include <cassert>
 
 namespace ROOT {
 
@@ -60,6 +61,7 @@ namespace ROOT {
 
     @ingroup MultiMin
 */
+template<class Func>
 class LSResidualFunc : public IMultiGradFunction {
 public:
 
@@ -68,15 +70,14 @@ public:
    {}
 
 
-   LSResidualFunc(const ROOT::Math::FitMethodFunction & func, unsigned int i) :
+   LSResidualFunc(const Func & func, unsigned int i) :
       fIndex(i),
-      fChi2(&func),
-      fX2(std::vector<double>(func.NDim() ) )
+      fChi2(&func)
    {}
 
 
    // copy ctor
-   LSResidualFunc(const LSResidualFunc & rhs) :
+   LSResidualFunc(const LSResidualFunc<Func> & rhs) :
       IMultiGenFunction(),
       IMultiGradFunction()
    {
@@ -84,16 +85,15 @@ public:
    }
 
    // assignment
-   LSResidualFunc & operator= (const LSResidualFunc & rhs)
+   LSResidualFunc<Func> & operator= (const LSResidualFunc<Func> & rhs)
    {
       fIndex = rhs.fIndex;
       fChi2 = rhs.fChi2;
-      fX2 = rhs.fX2;
       return *this;
    }
 
    IMultiGenFunction * Clone() const override {
-      return new LSResidualFunc(*fChi2,fIndex);
+      return new LSResidualFunc<Func>(*fChi2,fIndex);
    }
 
    unsigned int NDim() const override { return fChi2->NDim(); }
@@ -104,35 +104,24 @@ public:
    }
 
    void FdF (const double * x, double & f, double * g) const override {
-      unsigned int n = NDim();
-      std::copy(x,x+n,fX2.begin());
-      const double kEps = 1.0E-4;
-      f = DoEval(x);
-      for (unsigned int i = 0; i < n; ++i) {
-         fX2[i] += kEps;
-         g[i] =  ( DoEval(&fX2.front()) - f )/kEps;
-         fX2[i] = x[i];
-      }
+      f = fChi2->DataElement(x,fIndex,g);
    }
 
 
 private:
 
    double DoEval (const double * x) const override {
-      return fChi2->DataElement(x, fIndex);
+      return fChi2->DataElement(x, fIndex, nullptr);
    }
 
-   double DoDerivative(const double * x, unsigned int icoord) const override {
-      //return  ROOT::Math::Derivator::Eval(*this, x, icoord, 1E-8);
-      std::copy(x,x+NDim(),fX2.begin());
-      const double kEps = 1.0E-4;
-      fX2[icoord] += kEps;
-      return ( DoEval(&fX2.front()) - DoEval(x) )/kEps;
+   double DoDerivative(const double * /* x */, unsigned int /* icoord */) const override {
+      //this function should not be called by GSL
+      assert(false);
+      return 0;
    }
 
    unsigned int fIndex;
-   const ROOT::Math::FitMethodFunction * fChi2;
-   mutable std::vector<double> fX2;  // cached vector
+   const Func * fChi2;
 };
 
 
@@ -196,7 +185,7 @@ public:
    const double *  MinGradient() const override;
 
    /// number of function calls to reach the minimum
-   unsigned int NCalls() const override { return (fChi2Func) ? fChi2Func->NCalls() : 0; }
+   unsigned int NCalls() const override { return fNCalls; }
 
    /// number of free variables (real dimension of the problem)
    /// this is <= Function().NDim() which is the total
@@ -224,20 +213,27 @@ public:
 
 protected:
 
+   /// Internal method to perform minimization
+   /// template on the type of method function
+   template<class Func>
+   bool DoMinimize(const Func & f);
+
 
 private:
 
+   bool fUseGradFunction = false; // flag to indicate if using external gradients
    unsigned int fNFree;      // dimension of the internal function to be minimized
-   unsigned int fSize;        // number of fit points (residuals)
+   //unsigned int fSize;        // number of fit points (residuals)
+   unsigned int fNCalls;        // number of function calls
 
    ROOT::Math::GSLMultiFit * fGSLMultiFit;        // pointer to GSL multi fit solver
-   const ROOT::Math::FitMethodFunction * fChi2Func;      // pointer to Least square function
+   //const ROOT::Math::FitMethodFunction * fChi2Func;      // pointer to Least square function
 
    double fEdm;                                   // edm value
    double fLSTolerance;                           // Line Search Tolerance
    std::vector<double> fErrors;
    std::vector<double> fCovMatrix;              //  cov matrix (stored as cov[ i * dim + j]
-   std::vector<LSResidualFunc> fResiduals;   //! transient Vector of the residual functions
+   //std::vector<LSResidualFunc> fResiduals;   //! transient Vector of the residual functions
 
 
 
