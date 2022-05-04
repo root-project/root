@@ -98,9 +98,24 @@ public:
 
 public:
 
+  /* traits for knowing if is a function supporting gradient*/
+  static bool IsAGradFCN() {
+     return ObjFCNTrait<FunctionType>::IsGrad();
+  }
+
 
 protected:
 
+  // need to use partial specialization since
+  // full specialization is not allowed for nested classes
+  template<class F, bool Dummy = true>
+  struct ObjFCNTrait {
+   static bool IsGrad() { return false; }
+  };
+  template<bool Dummy>
+  struct ObjFCNTrait<ROOT::Math::IMultiGradFunction, Dummy> {
+     static bool IsGrad() { return true;}
+  };
 
 private:
 

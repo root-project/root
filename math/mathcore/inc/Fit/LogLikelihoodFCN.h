@@ -120,7 +120,7 @@ public:
    /// i-th likelihood contribution and its gradient
    virtual double DataElement(const double * x, unsigned int i, double * g) const {
       if (i==0) this->UpdateNCalls();
-      return FitUtil::EvaluatePdf(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g);
+      return FitUtil::EvaluatePdf(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g, BaseFCN::IsAGradFCN());
    }
 
    // need to be virtual to be instantiated
