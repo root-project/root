@@ -87,9 +87,6 @@ namespace RooStats{
             std::map<std::string,double> logNormSyst,
             std::map<std::string,double> noSyst);
 
-      RooAbsArg* MakeLinInterpWithConstraint(RooHistFunc* nominalHistFunc, RooWorkspace* proto, const std::vector<HistoSys>&,
-               const std::string& prefix, std::vector<std::string>& likelihoodTermNames, const RooArgList& observables) const;
-
       RooWorkspace* MakeSingleChannelWorkspace(Measurement& measurement, Channel& channel);
 
       void MakeTotalExpected(RooWorkspace* proto, const std::string& totName,
