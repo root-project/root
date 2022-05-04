@@ -16,18 +16,8 @@ if(NOT TARGET eventexe)
       ROOT_GENERATE_DICTIONARY(EventDict ${ROOT_EVENT_DIR}/Event.h
                   LINKDEF ${ROOT_EVENT_DIR}/EventLinkDef.h)
 
-      if(MSVC)
-        ROOT_LINKER_LIBRARY(EventTreeFormula TEST ${ROOT_EVENT_DIR}/Event.cxx EventDict.cxx
-                    LIBRARIES libCore libTree libHist libMathCore)
-        add_custom_command(TARGET EventTreeFormula POST_BUILD
-           COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libEventTreeFormula.dll
-                                           ${CMAKE_CURRENT_BINARY_DIR}/libEventTreeFormula.dll
-           COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libEventTreeFormula.lib
-                                           ${CMAKE_CURRENT_BINARY_DIR}/libEventTreeFormula.lib)
-      else()
-        ROOT_LINKER_LIBRARY(EventTreeFormula TEST ${ROOT_EVENT_DIR}/Event.cxx EventDict.cxx
-                    LIBRARIES Core Tree Hist MathCore)
-      endif()
+      ROOTTEST_LINKER_LIBRARY(EventTreeFormula TEST ${ROOT_EVENT_DIR}/Event.cxx EventDict.cxx
+                  LIBRARIES Core Tree Hist MathCore)
 
       ROOTTEST_GENERATE_EXECUTABLE(EventGenerate ${ROOT_EVENT_DIR}/MainEvent.cxx
                   LIBRARIES Core RIO Net Tree Hist MathCore EventTreeFormula)

@@ -1189,3 +1189,25 @@ function(find_python_module module)
    find_package_handle_standard_args(py_${module} DEFAULT_MSG PY_${module_upper})
    set(PY_${module_upper}_FOUND ${PY_${module_upper}_FOUND} PARENT_SCOPE)
 endfunction()
+
+#---------------------------------------------------------------------------------------------------
+# function ROOTTEST_LINKER_LIBRARY( <name> source1 source2 ...[TYPE STATIC|SHARED] [DLLEXPORT]
+#                                   [NOINSTALL] LIBRARIES library1 library2 ...
+#                                   DEPENDENCIES dep1 dep2
+#                                   BUILTINS dep1 dep2)
+#
+# this function simply calls the ROOT function ROOT_LINKER_LIBRARY, and add a POST_BUILD custom
+# command to copy the .dll and .lib from the standard config directory (Debug/Release) to its
+# parent directory (CMAKE_CURRENT_BINARY_DIR) on Windows
+#
+#---------------------------------------------------------------------------------------------------
+function(ROOTTEST_LINKER_LIBRARY library)
+   ROOT_LINKER_LIBRARY(${ARGV})
+   if(MSVC)
+      add_custom_command(TARGET ${library} POST_BUILD
+         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/lib${library}.dll
+                                          ${CMAKE_CURRENT_BINARY_DIR}/lib${library}.dll
+         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/lib${library}.lib
+                                           ${CMAKE_CURRENT_BINARY_DIR}/lib${library}.lib)
+   endif()
+endfunction()
