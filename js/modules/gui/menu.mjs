@@ -203,14 +203,14 @@ class JSRootMenu {
 
       this.add("sub:Palette", () => this.input("Enter palette code [1..113]", curr, "int", 1, 113).then(set_func));
 
-      add(50, "ROOT 5", (curr>=10) && (curr<51));
+      add(50, "ROOT 5", (curr >= 10) && (curr < 51));
       add(51, "Deep Sea");
-      add(52, "Grayscale", (curr>0) && (curr<10));
+      add(52, "Grayscale", (curr > 0) && (curr < 10));
       add(53, "Dark body radiator");
       add(54, "Two-color hue");
       add(55, "Rainbow");
       add(56, "Inverted dark body radiator");
-      add(57, "Bird", (curr>113));
+      add(57, "Bird", (curr > 113));
       add(58, "Cubehelix");
       add(59, "Green Red Violet");
       add(60, "Blue Red Yellow");
@@ -237,11 +237,16 @@ class JSRootMenu {
    }
 
    /** @summary Add selection menu entries
+     * @param {String} name - name of submenu
+     * @param {Array} values - array of string entries used as list for selection
+     * @param {String|Number} value - currently elected value, either name or index
+     * @param {Function} set_func - function called when item selected, either name or index depending from value parameter
      * @protected */
    addSelectMenu(name, values, value, set_func) {
+      let use_number = (typeof value == "number");
       this.add("sub:" + name);
       for (let n = 0; n < values.length; ++n)
-         this.addchk(values[n] == value, values[n], values[n], res => set_func(res));
+         this.addchk(use_number ? (n == value) : (values[n] == value), values[n], use_number ? n : values[n], res => set_func(use_number ? Number.parseInt(res) : res));
       this.add("endsub:");
    }
 

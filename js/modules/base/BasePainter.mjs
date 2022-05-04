@@ -64,7 +64,8 @@ function getAbsPosInCanvas(sel, pos) {
   * @param {number} value - value to convert
   * @param {string} [fmt="6.4g"] - format can be like 5.4g or 4.2e or 6.4f
   * @param {boolean} [ret_fmt] - when true returns array with value and actual format like ["0.1","6.4f"]
-  * @returns {string|Array} - converted value or array with value and actual format */
+  * @returns {string|Array} - converted value or array with value and actual format
+  * @private */
 function floatToString(value, fmt, ret_fmt) {
    if (!fmt) fmt = "6.4g";
 
@@ -654,7 +655,8 @@ class BasePainter {
 } // class BasePainter
 
 /** @summary Load and initialize JSDOM from nodes
-  * @returns {Promise} with d3 selection for d3_body */
+  * @returns {Promise} with d3 selection for d3_body
+   * @private */
 function _loadJSDOM() {
    return import("jsdom").then(handle => {
 

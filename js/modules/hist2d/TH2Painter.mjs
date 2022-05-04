@@ -14,6 +14,7 @@ import { THistPainter } from './THistPainter.mjs';
 
 /**
  * @summary Painter for TH2 classes
+ * @private
  */
 
 class TH2Painter extends THistPainter {
@@ -363,10 +364,10 @@ class TH2Painter extends THistPainter {
             gr = bin.fPoly; numgraphs = 1;
             if (gr._typename === 'TMultiGraph') { numgraphs = bin.fPoly.fGraphs.arr.length; gr = null; }
 
-            for (ngr=0;ngr<numgraphs;++ngr) {
+            for (ngr = 0; ngr < numgraphs; ++ngr) {
                if (!gr || (ngr>0)) gr = bin.fPoly.fGraphs.arr[ngr];
 
-               for (n=0;n<gr.fNpoints;++n) {
+               for (n = 0; n < gr.fNpoints; ++n) {
                   ++numpoints;
                   xx += gr.fX[n];
                   yy += gr.fY[n];
@@ -1168,23 +1169,23 @@ class TH2Painter extends THistPainter {
    /** @summary Draw TH2 bins as text */
    drawBinsText(handle) {
       let histo = this.getObject(),
-          posx, posy, sizex, sizey,
-          text_col = this.getColor(histo.fMarkerColor),
-          text_angle = -1*this.options.TextAngle,
-          text_g = this.draw_g.append("svg:g").attr("class","th2_text"),
+          x, y, width, height,
+          color = this.getColor(histo.fMarkerColor),
+          rotate = -1*this.options.TextAngle,
+          draw_g = this.draw_g.append("svg:g").attr("class","th2_text"),
           text_size = 20, text_offset = 0,
           profile2d = this.matchObjectType('TProfile2D') && (typeof histo.getBinEntries=='function'),
           show_err = (this.options.TextKind == "E"),
-          use_latex = (show_err && !this.options.TextLine) ? 1 : 0;
+          latex = (show_err && !this.options.TextLine) ? 1 : 0;
 
-      if (handle === null) handle = this.prepareDraw({ rounding: false });
+      if (!handle) handle = this.prepareDraw({ rounding: false });
 
-      if ((histo.fMarkerSize!==1) && text_angle)
+      if ((histo.fMarkerSize!==1) && rotate)
          text_size = Math.round(0.02*histo.fMarkerSize*this.getFramePainter().getFrameHeight());
 
       if (histo.fBarOffset !== 0) text_offset = histo.fBarOffset*1e-3;
 
-      this.startTextDrawing(42, text_size, text_g, text_size);
+      this.startTextDrawing(42, text_size, draw_g, text_size);
 
       for (let i = handle.i1; i < handle.i2; ++i) {
          let binw = handle.grx[i+1] - handle.grx[i];
@@ -1196,7 +1197,7 @@ class TH2Painter extends THistPainter {
             if (profile2d)
                binz = histo.getBinEntries(i+1, j+1);
 
-            let lbl = (binz === Math.round(binz)) ? binz.toString() :
+            let text = (binz === Math.round(binz)) ? binz.toString() :
                          floatToString(binz, gStyle.fPaintTextFormat);
 
             if (show_err) {
@@ -1204,30 +1205,29 @@ class TH2Painter extends THistPainter {
                    lble = (errz === Math.round(errz)) ? errz.toString() :
                             floatToString(errz, gStyle.fPaintTextFormat);
                if (this.options.TextLine)
-                  lbl += '\xB1' + lble;
+                  text += '\xB1' + lble;
                else
-                  lbl = "#splitline{" + lbl + "}{#pm" + lble + "}";
+                  text = `#splitline{${text}}{#pm${lble}}`;
             }
 
-            if (text_angle /*|| (histo.fMarkerSize!==1)*/) {
-               posx = Math.round(handle.grx[i] + binw*0.5);
-               posy = Math.round(handle.gry[j+1] + binh*(0.5 + text_offset));
-               sizex = 0;
-               sizey = 0;
+            if (rotate /*|| (histo.fMarkerSize!==1)*/) {
+               x = Math.round(handle.grx[i] + binw*0.5);
+               y = Math.round(handle.gry[j+1] + binh*(0.5 + text_offset));
+               width = height = 0;
             } else {
-               posx = Math.round(handle.grx[i] + binw*0.1);
-               posy = Math.round(handle.gry[j+1] + binh*(0.1 + text_offset));
-               sizex = Math.round(binw*0.8);
-               sizey = Math.round(binh*0.8);
+               x = Math.round(handle.grx[i] + binw*0.1);
+               y = Math.round(handle.gry[j+1] + binh*(0.1 + text_offset));
+               width = Math.round(binw*0.8);
+               height = Math.round(binh*0.8);
             }
 
-            this.drawText({ align: 22, x: posx, y: posy, width: sizex, height: sizey, rotate: text_angle, text: lbl, color: text_col, latex: use_latex, draw_g: text_g });
+            this.drawText({ align: 22, x, y, width, height, rotate, text, color, latex, draw_g });
          }
       }
 
       handle.hide_only_zeros = true; // text drawing suppress only zeros
 
-      return this.finishTextDrawing(text_g, true).then(() => handle);
+      return this.finishTextDrawing(draw_g, true).then(() => handle);
    }
 
    /** @summary Draw TH2 bins as arrows */
@@ -1236,8 +1236,8 @@ class TH2Painter extends THistPainter {
           i,j, dn = 1e-30, dx, dy, xc,yc,
           dxn,dyn,x1,x2,y1,y2, anr,si,co,
           handle = this.prepareDraw({ rounding: false }),
-          scale_x = (handle.grx[handle.i2] - handle.grx[handle.i1])/(handle.i2 - handle.i1 + 1-0.03)/2,
-          scale_y = (handle.gry[handle.j2] - handle.gry[handle.j1])/(handle.j2 - handle.j1 + 1-0.03)/2;
+          scale_x = (handle.grx[handle.i2] - handle.grx[handle.i1])/(handle.i2 - handle.i1 + 1)/2,
+          scale_y = (handle.gry[handle.j2] - handle.gry[handle.j1])/(handle.j2 - handle.j1 + 1)/2;
 
       const makeLine = (dx, dy) => {
          if (dx)
@@ -1682,9 +1682,8 @@ class TH2Painter extends THistPainter {
             else
                bars += make_path(pnt.x1, pnt.y1, "V", pnt.y2, "H", pnt.x2, "V", pnt.y1, "Z");
 
-        if (isOption(kAnchor)) { // Draw the anchor line
+        if (isOption(kAnchor))  // Draw the anchor line
             lines += make_path(pnt.x1, pnt.yy1, "H", pnt.x2) + make_path(pnt.x1, pnt.yy2, "H", pnt.x2);
-         }
 
          if (isOption(kWhiskerAll) && !isOption(kHistoZeroIndicator)) { // Whiskers are dashed
             dashed_lines += make_path(center, pnt.y1, "V", pnt.yy1) + make_path(center, pnt.y2, "V", pnt.yy2);
@@ -1695,9 +1694,9 @@ class TH2Painter extends THistPainter {
          if (isOption(kPointsOutliers) || isOption(kPointsAll) || isOption(kPointsAllScat)) {
 
             // reset seed for each projection to have always same pixels
-            let rnd = new TRandom(bin_indx*7521 + Math.round(res.integral));
-
-            let show_all = !isOption(kPointsOutliers), show_scat = isOption(kPointsAllScat);
+            let rnd = new TRandom(bin_indx*7521 + Math.round(res.integral)),
+                show_all = !isOption(kPointsOutliers),
+                show_scat = isOption(kPointsAllScat);
             for (let ii = 0; ii < proj.length; ++ii) {
                let bin_content = proj[ii], binx = (xx[ii] + xx[ii+1])/2,
                    marker_x = center, marker_y = 0;
@@ -1978,7 +1977,7 @@ class TH2Painter extends THistPainter {
 
            let path = "";
 
-           for (let n = 0;n < npix; ++n)
+           for (let n = 0; n < npix; ++n)
               path += this.markeratt.create(arrx[n] * cell_w[colindx], arry[n] * cell_h[colindx]);
 
            pattern.attr("width", cell_w[colindx])
@@ -2012,7 +2011,7 @@ class TH2Painter extends THistPainter {
 
       this.createG(true);
 
-      let handle = null, pr;
+      let handle, pr;
 
       if (this.isTH2Poly()) {
          pr = this.drawPolyBinsColor();
@@ -2076,17 +2075,17 @@ class TH2Painter extends THistPainter {
       let pnts = [];
 
       for (let n = 0; n < nbins; n++) {
-         let angle = (0.5-n/nbins) *Math.PI*2,
+         let angle = (0.5 - n/nbins)*Math.PI*2,
              cx = Math.round((0.9*rect.width/2 - 2*circle_size) * Math.cos(angle)),
              cy = Math.round((0.9*rect.height/2 - 2*circle_size) * Math.sin(angle)),
-             tx = Math.round(0.9*rect.width/2 * Math.cos(angle)),
-             ty = Math.round(0.9*rect.height/2 * Math.sin(angle)),
-             tangle = Math.round(angle / Math.PI * 180), talign = 12,
+             x = Math.round(0.9*rect.width/2 * Math.cos(angle)),
+             y = Math.round(0.9*rect.height/2 * Math.sin(angle)),
+             rotate = Math.round(angle/Math.PI*180), align = 12,
              color = palette ? palette.calcColor(n, nbins) : 'black';
 
          pnts.push({x: cx, y: cy, a: angle, color: color }); // remember points coordinates
 
-         if ((tangle < -90) || (tangle > 90)) { tangle += 180; talign = 32; }
+         if ((rotate < -90) || (rotate > 90)) { rotate += 180; align = 32; }
 
          let s2 = Math.round(text_size/2), s1 = 2*s2;
 
@@ -2095,7 +2094,7 @@ class TH2Painter extends THistPainter {
                     .style('stroke', color)
                     .style('fill','none');
 
-         this.drawText({ align: talign, rotate: tangle, text: getBinLabel(n), x: tx, y: ty });
+         this.drawText({ align, rotate, text: getBinLabel(n), x, y });
       }
 
       let max_width = circle_size/2, max_value = 0, min_value = 0;
@@ -2515,10 +2514,10 @@ class TH2Painter extends THistPainter {
 
       if (pmain.reverse_y) {
          for (j = h.j1; j < h.j2; ++j)
-            if ((pnt.y<=h.gry[j+1]) && (pnt.y>=h.gry[j])) break;
+            if ((pnt.y <= h.gry[j+1]) && (pnt.y >= h.gry[j])) break;
       } else {
          for (j = h.j1; j < h.j2; ++j)
-            if ((pnt.y>=h.gry[j+1]) && (pnt.y<=h.gry[j])) break;
+            if ((pnt.y >= h.gry[j+1]) && (pnt.y <= h.gry[j])) break;
       }
 
       if ((i < h.i2) && (j < h.j2)) {

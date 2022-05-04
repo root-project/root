@@ -18,7 +18,8 @@ import { TPadPainter } from './TPadPainter.mjs';
 
 
 /** @summary direct draw of TFrame object,
-  * @desc pad or canvas should already exist */
+  * @desc pad or canvas should already exist
+  * @private */
 function directDrawTFrame(dom, obj, opt) {
    let fp = new TFramePainter(dom, obj);
    fp.addToPadPrimitives();
@@ -26,7 +27,7 @@ function directDrawTFrame(dom, obj, opt) {
    return fp.redraw();
 }
 
-let TCanvasStatusBits = {
+const TCanvasStatusBits = {
    kShowEventStatus: BIT(15),
    kAutoExec: BIT(16),
    kMenuBar: BIT(17),
@@ -702,9 +703,9 @@ class TCanvasPainter extends TPadPainter {
 
 
 /** @summary Ensure TCanvas and TFrame for the painter object
- * @param {Object} painter  - painter object to process
- * @param {string|boolean} frame_kind  - false for no frame or "3d" for special 3D mode
- * @desc Assign dom, creates TCanvas if necessary, add to list of pad painters */
+  * @param {Object} painter  - painter object to process
+  * @param {string|boolean} frame_kind  - false for no frame or "3d" for special 3D mode
+  * @desc Assign dom, creates TCanvas if necessary, add to list of pad painters */
 function ensureTCanvas(painter, frame_kind) {
    if (!painter)
       return Promise.reject(Error('Painter not provided in ensureTCanvas'));
@@ -741,7 +742,8 @@ function drawTPadSnapshot(dom, snap /*, opt*/) {
    });
 }
 
-/** @summary draw TGaxis object */
+/** @summary draw TGaxis object
+  * @private */
 function drawTGaxis(dom, obj, opt) {
    let painter = new TAxisPainter(dom, obj, false);
    painter.disable_zooming = true;
@@ -751,7 +753,8 @@ function drawTGaxis(dom, obj, opt) {
    }).then(() => painter);
 }
 
-/** @summary draw TGaxis object */
+/** @summary draw TGaxis object
+  * @private */
 function drawTFrame(dom, obj, opt) {
    let fp = new TFramePainter(dom, obj);
    return ensureTCanvas(fp, false).then(() => {

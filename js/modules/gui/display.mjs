@@ -127,7 +127,7 @@ class MDIDisplay extends BasePainter {
 /**
  * @summary Custom MDI display
  *
- * @desc All HTML frames should be created before and add via {@link CustomDisplay.addFrame} calls
+ * @desc All HTML frames should be created before and add via {@link CustomDisplay#addFrame} calls
  * @private
  */
 
@@ -138,9 +138,8 @@ class CustomDisplay extends MDIDisplay {
    }
 
    addFrame(divid, itemname) {
-      if (!(divid in this.frames)) this.frames[divid] = "";
-
-      this.frames[divid] += (itemname + ";");
+      let prev = this.frames[divid] || "";
+      this.frames[divid] = prev + (itemname + ";");
    }
 
    forEachFrame(userfunc) {

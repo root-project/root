@@ -785,8 +785,8 @@ registerMethods("ROOT::Experimental::RPalette", {
       return arr;
    },
 
-   /** @summary extract color with ordinal value between 0 and 1 */
    getColorOrdinal(value) {
+      // extract color with ordinal value between 0 and 1
       if (!this.fColors)
          return "black";
       if ((typeof value != "number") || (value < 0))
@@ -811,10 +811,10 @@ registerMethods("ROOT::Experimental::RPalette", {
       return this.extractRColor(next.fColor);
    },
 
-   /** @summary set full z scale range, used in zooming */
    setFullRange(min, max) {
-       this.full_min = min;
-       this.full_max = max;
+      // set full z scale range, used in zooming
+      this.full_min = min;
+      this.full_max = max;
    },
 
    createContour(logz, nlevels, zmin, zmax, zminpositive) {
@@ -879,7 +879,8 @@ function drawRFont() {
    return true;
 }
 
-/** @summary draw RAxis object */
+/** @summary draw RAxis object
+  * @private */
 function drawRAxis(dom, obj, opt) {
    let painter = new RAxisPainter(dom, obj, opt);
    painter.disable_zooming = true;
@@ -888,7 +889,8 @@ function drawRAxis(dom, obj, opt) {
            .then(() => painter);
 }
 
-/** @summary draw RFrame object */
+/** @summary draw RFrame object
+  * @private */
 function drawRFrame(dom, obj, opt) {
    let p = new RFramePainter(dom, obj);
    if (opt == "3d") p.mode3d = true;

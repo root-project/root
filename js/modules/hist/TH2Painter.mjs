@@ -11,7 +11,8 @@ import { TAxisPainter } from '../gpad/TAxisPainter.mjs';
 import { TH2Painter as TH2Painter2D  } from '../hist2d/TH2Painter.mjs';
 
 
-/** @summary Draw TH2Poly histogram as lego */
+/** @summary Draw TH2Poly histogram as lego
+  * @private */
 function drawTH2PolyLego(painter) {
    let histo = painter.getHisto(),
        pmain = painter.getFramePainter(),

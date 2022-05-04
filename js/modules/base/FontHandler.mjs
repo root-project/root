@@ -17,7 +17,7 @@ const root_fonts_aver_width = [0.5778,0.5314,
 
 /**
  * @summary Helper class for font handling
- *
+ * @private
  */
 
 class FontHandler {

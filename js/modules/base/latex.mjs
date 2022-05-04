@@ -209,7 +209,8 @@ const approximateLabelWidth = (label, font, fsize) => {
    return sum/1000*symbol_width;
 };
 
-/** array defines features supported by latex parser, used by both old and new parsers */
+/** @summary array defines features supported by latex parser, used by both old and new parsers
+  * @private */
 const latex_features = [
    { name: "#it{" }, // italic
    { name: "#bf{" }, // bold

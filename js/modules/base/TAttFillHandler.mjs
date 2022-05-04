@@ -1,10 +1,9 @@
-import { color as d3_color, rgb as d3_rgb } from '../d3.mjs';
+import { color as d3_color, rgb as d3_rgb, select as d3_select } from '../d3.mjs';
 
 import { getColor } from './colors.mjs';
 
 /**
   * @summary Handle for fill attributes
-  *
   * @private
   */
 
@@ -310,14 +309,16 @@ class TAttFillHandler {
    }
 
    /** @summary Create sample of fill pattern inside SVG
-    * @private */
-   createSample(sample_svg, width, height) {
+     * @private */
+   createSample(svg, width, height, plain) {
       // we need to create extra handle to change
-      const sample = new TAttFillHandler({ svg: sample_svg, pattern: this.pattern, color: this.color, color_as_svg: true });
+      if (plain) svg = d3_select(svg);
 
-      sample_svg.append("path")
-         .attr("d", `M0,0h${width}v${height}h${-width}z`)
-         .call(sample.func);
+      const sample = new TAttFillHandler({ svg, pattern: this.pattern, color: this.color, color_as_svg: true });
+
+     svg.append("path")
+        .attr("d", `M0,0h${width}v${height}h${-width}z`)
+        .call(sample.func);
    }
 
 } // class TAttFillHandler

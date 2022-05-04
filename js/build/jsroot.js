@@ -1,4 +1,4 @@
-// https://root.cern/js/ v6.99.99
+// https://root.cern/js/ v7.0.99
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -6,16 +6,16 @@ typeof define === 'function' && define.amd ? define(['exports'], factory) :
 })(this, (function (exports) { 'use strict';
 
 /** @summary version id
-  * @desc For the JSROOT release the string in format "major.minor.patch" like "6.3.0" */
-let version_id = "modules";
+  * @desc For the JSROOT release the string in format "major.minor.patch" like "7.0.0" */
+let version_id = "dev";
 
 /** @summary version date
   * @desc Release date in format day/month/year like "19/11/2021" */
-let version_date = "6/04/2022";
+let version_date = "4/05/2022";
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
-  * Like "6.99.99 21/02/2022" */
+  * Like "7.0.0 14/04/2022" */
 let version = version_id + " " + version_date;
 
 /** @summary Location of JSROOT scripts
@@ -27,19 +27,16 @@ let nodejs = !!((typeof process == 'object') && process.version && (typeof proce
 /** @summary internal data
   * @private */
 let internals = {
-   id_counter: 1          ///< unique id contner, starts from 1,
+   id_counter: 1          ///< unique id contner, starts from 1
 };
 
 //openuicfg // DO NOT DELETE, used to configure openui5 usage like internals.openui5src = "nojsroot";
-
-let source_fullpath = "";
 
 const src = (typeof document === 'undefined' && typeof location === 'undefined' ? new (require('u' + 'rl').URL)('file:' + __filename).href : typeof document === 'undefined' ? location.href : (document.currentScript && document.currentScript.src || new URL('jsroot.js', document.baseURI).href));
 if (src && (typeof src == "string")) {
    const pos = src.indexOf("modules/core.mjs");
    if (pos >= 0) {
-      source_fullpath = src;
-      exports.source_dir = source_fullpath.slice(0, pos);
+      exports.source_dir = src.slice(0, pos);
       console.log(`Set jsroot source_dir to ${exports.source_dir}, ${version}`);
    } else {
       console.log(`jsroot bundle, ${version}`);
@@ -79,7 +76,8 @@ if ((typeof document !== "undefined") && (typeof window !== "undefined")) {
 }
 
 /** @summary Check if prototype string match to array (typed on untyped)
-  * @returns {Number} 0 - not array, 1 - regular array, 2 - typed array */
+  * @returns {Number} 0 - not array, 1 - regular array, 2 - typed array
+  * @private */
 function isArrayProto(proto) {
     if ((proto.length < 14) || (proto.indexOf('[object ') != 0)) return 0;
     let p = proto.indexOf('Array]');
@@ -88,13 +86,11 @@ function isArrayProto(proto) {
     return proto.length == 14 ? 1 : 2;
 }
 
-/** @summary Specialized JSROOT constants, used in {@link settings}
-  * @namespace
-  * @private */
+/** @desc Specialized JSROOT constants, used in {@link settings}
+  * @namespace */
 let constants$1 = {
    /** @summary Kind of 3D rendering, used for {@link settings.Render3D}
-     * @namespace
-     * @private */
+     * @namespace */
    Render3D: {
       /** @summary Default 3D rendering, normally WebGL, if not supported - SVG */
       Default: 0,
@@ -112,20 +108,19 @@ let constants$1 = {
       }
    },
    /** @summary Way to embed 3D into SVG, used for {@link settings.Embed3D}
-     * @namespace
-     * @private */
+     * @namespace */
    Embed3D: {
       /** @summary Do not embed 3D drawing, use complete space */
       NoEmbed: -1,
-      /** @summary Default embeding mode, on Firefox is really ```Embed```, on all other ```Overlay``` */
+      /** @summary Default embeding mode - on Firefox and latest Chrome is real ```Embed```, on all other ```Overlay``` */
       Default: 0,
-      /** @summary WebGL canvas not inserted into SVG, but just overlayed The only way how Chrome browser can be used */
+      /** @summary WebGL canvas not inserted into SVG, but just overlayed The only way how earlier Chrome browser can be used */
       Overlay: 1,
-      /** @summary Really embed WebGL Canvas into SVG, only works with Firefox */
+      /** @summary Really embed WebGL Canvas into SVG */
       Embed: 2,
-      /** @summary Embeding, but when SVG rendering or SVG image converion is used
-        * @private */
+      /** @summary Embeding, but when SVG rendering or SVG image converion is used */
       EmbedSVG: 3,
+      /** @summary Convert string values into number  */
       fromString: function(s) {
          if (s === "embed") return this.Embed;
          if (s === "overlay") return this.Overlay;
@@ -133,8 +128,7 @@ let constants$1 = {
       }
    },
    /** @summary How to use latex in text drawing, used for {@link settings.Latex}
-     * @namespace
-     * @private */
+     * @namespace */
    Latex: {
       /** @summary do not use Latex at all for text drawing */
       Off: 0,
@@ -146,6 +140,7 @@ let constants$1 = {
       MathJax: 3,
       /** @summary always use MathJax for text rendering */
       AlwaysMathJax: 4,
+      /** @summary Convert string values into number */
       fromString: function(s) {
          if (!s || (typeof s !== 'string'))
             return this.Normal;
@@ -169,12 +164,12 @@ let constants$1 = {
    }
 };
 
-/** @summary Central JSROOT settings, independent from {@link gStyle}
+/** @desc Global JSROOT settings
   * @namespace */
 let settings = {
    /** @summary Render of 3D drawing methods, see {@link constants.Render3D} for possible values */
    Render3D: constants$1.Render3D.Default,
-   /** @summary Render of 3D drawing methods in batch mode, see {@link constants.Render3D} for possible values */
+   /** @summary 3D drawing methods in batch mode, see {@link constants.Render3D} for possible values */
    Render3DBatch: constants$1.Render3D.Default,
    /** @summary Way to embed 3D drawing in SVG, see {@link constants.Embed3D} for possible values */
    Embed3D: constants$1.Embed3D.Default,
@@ -194,8 +189,14 @@ let settings = {
    ZoomTouch: true,
    /** @summary Enables move and resize of elements like statbox, title, pave, colz  */
    MoveResize: true,
+   /** @summary Configures keybord key press handling
+     * @desc Can be disabled to prevent keys heandling in complex HTML layouts
+     * @default true */
+   HandleKeys: true,
    /** @summary enables drag and drop functionality */
    DragAndDrop: true,
+   /** @summary Interactive dragging of TGraph points */
+   DragGraphs: true,
    /** @summary Show progress box */
    ProgressBox: true,
    /** @summary Show additional tool buttons on the canvas, false - disabled, true - enabled, 'popup' - only toggle button */
@@ -231,29 +232,25 @@ let settings = {
    /** @summary how many items shown on one level of hierarchy */
    HierarchyLimit: 250,
    /** @summary custom format for all X values, when not specified {@link gStyle.fStatFormat} is used */
-   XValuesFormat : undefined,
+   XValuesFormat: undefined,
    /** @summary custom format for all Y values, when not specified {@link gStyle.fStatFormat} is used */
-   YValuesFormat : undefined,
+   YValuesFormat: undefined,
    /** @summary custom format for all Z values, when not specified {@link gStyle.fStatFormat} is used */
-   ZValuesFormat : undefined,
+   ZValuesFormat: undefined,
    /** @summary Let detect and solve problem when browser returns wrong content-length parameter
      * @desc See [jsroot#189]{@link https://github.com/root-project/jsroot/issues/189} for more info
      * Can be enabled by adding "wrong_http_response" parameter to URL when using JSROOT UI
      * @default false */
    HandleWrongHttpResponse: false,
-   /** @summary Configures keybord key press handling
-     * @desc Can be disabled to prevent keys heandling in complex HTML layouts
+   /** @summary Let tweak browser caching
+     * @desc When specified, extra URL parameter like ```?stamp=unique_value``` append to each files loaded
+     * In such case browser will be forced to load file content disregards of server cache settings
      * @default true */
-   HandleKeys: true,
-  /** @summary Let tweak browser caching
-    * @desc When specified, extra URL parameter like ```?stamp=unique_value``` append to each JSROOT script loaded
-    * In such case browser will be forced to load JSROOT functionality disregards of server cache settings
-    * @default false */
-   NoCache: false,
+   UseStamp: true,
    /** @summary Skip streamer infos from the GUI */
    SkipStreamerInfos: false,
-   /** @summary Interactive dragging of TGraph points */
-   DragGraphs: true
+   /** @summary Show only last cycle for objects in TFile */
+   OnlyLastCycle: false
 };
 
 
@@ -358,7 +355,8 @@ function getDocument() {
 
 /** @summary Inject javascript code
   * @desc Replacement for eval
-  * @returns {Promise} */
+  * @returns {Promise}
+  * @private */
 function injectCode(code) {
    if (nodejs) {
       let name, fs;
@@ -790,7 +788,8 @@ function decodeUrl(url) {
    return res;
 }
 
-/** @summary Find function with given name */
+/** @summary Find function with given name
+  * @private */
 function findFunction(name) {
    if (typeof name === 'function') return name;
    if (typeof name !== 'string') return null;
@@ -927,9 +926,10 @@ function httpRequest(url, kind, post_data) {
 }
 
 /** @summary Create some ROOT classes
-  * @desc Supported classes: "TObject", "TNamed", "TList", "TAxis", "TLine", "TText", "TLatex", "TPad", "TCanvas"
+  * @desc Supported classes: `TObject`, `TNamed`, `TList`, `TAxis`, `TLine`, `TText`, `TLatex`, `TPad`, `TCanvas`
   * @param {string} typename - ROOT class name
   * @example
+  * import { create } from 'path_to_jsroot/modules/core.mjs';
   * let obj = create("TNamed");
   * obj.fName = "name";
   * obj.fTitle = "title"; */
@@ -1037,6 +1037,7 @@ function create$1(typename, target) {
                        fBufferSize: 0, fBuffer: [], fBinStatErrOpt: 0, fStatOverflows: 2 });
          break;
       case 'TH1I':
+      case 'TH1L64':
       case 'TH1F':
       case 'TH1D':
       case 'TH1S':
@@ -1049,6 +1050,7 @@ function create$1(typename, target) {
          extend$1(obj, { fScalefactor: 1., fTsumwy: 0.,  fTsumwy2: 0, fTsumwxy: 0 });
          break;
       case 'TH2I':
+      case 'TH2L64':
       case 'TH2F':
       case 'TH2D':
       case 'TH2S':
@@ -1061,6 +1063,7 @@ function create$1(typename, target) {
          extend$1(obj, { fTsumwy: 0.,  fTsumwy2: 0, fTsumwz: 0.,  fTsumwz2: 0, fTsumwxy: 0, fTsumwxz: 0, fTsumwyz: 0 });
          break;
       case 'TH3I':
+      case 'TH3L64':
       case 'TH3F':
       case 'TH3D':
       case 'TH3S':
@@ -1623,19 +1626,6 @@ function _ensureJSROOT() {
       if (globalThis.JSROOT?._complete_loading)
          return globalThis.JSROOT._complete_loading();
    }).then(() => globalThis.JSROOT);
-}
-
-/** @summary Initialize JSROOT
-  * @desc Called when main JSRoot.core.js script is loaded.
-  * @private */
-if (source_fullpath) {
-
-   let d = decodeUrl(source_fullpath);
-
-   if (d.has('nocache')) settings.NoCache = (new Date).getTime(); // use timestamp to overcome cache limitation
-   if (d.has('wrong_http_response') || decodeUrl().has('wrong_http_response'))
-      settings.HandleWrongHttpResponse = true; // server may send wrong content length by partial requests, use other method to control this
-   if (d.has('nosap')) internals.sap = undefined; // let ignore sap loader even with openui5 loaded
 }
 
 var core = /*#__PURE__*/Object.freeze({
@@ -7535,7 +7525,8 @@ function getAbsPosInCanvas(sel, pos) {
   * @param {number} value - value to convert
   * @param {string} [fmt="6.4g"] - format can be like 5.4g or 4.2e or 6.4f
   * @param {boolean} [ret_fmt] - when true returns array with value and actual format like ["0.1","6.4f"]
-  * @returns {string|Array} - converted value or array with value and actual format */
+  * @returns {string|Array} - converted value or array with value and actual format
+  * @private */
 function floatToString(value, fmt, ret_fmt) {
    if (!fmt) fmt = "6.4g";
 
@@ -8125,7 +8116,8 @@ class BasePainter {
 } // class BasePainter
 
 /** @summary Load and initialize JSDOM from nodes
-  * @returns {Promise} with d3 selection for d3_body */
+  * @returns {Promise} with d3 selection for d3_body
+   * @private */
 function _loadJSDOM() {
    return Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }).then(handle => {
 
@@ -8157,7 +8149,7 @@ const root_fonts_aver_width = [0.5778,0.5314,
 
 /**
  * @summary Helper class for font handling
- *
+ * @private
  */
 
 class FontHandler {
@@ -8478,7 +8470,8 @@ const approximateLabelWidth = (label, font, fsize) => {
    return sum/1000*symbol_width;
 };
 
-/** array defines features supported by latex parser, used by both old and new parsers */
+/** @summary array defines features supported by latex parser, used by both old and new parsers
+  * @private */
 const latex_features = [
    { name: "#it{" }, // italic
    { name: "#bf{" }, // bold
@@ -9475,7 +9468,8 @@ function toHex(num,scale) {
    return s.length == 1 ? '0'+s : s;
 }
 
-/** @summary list of global root colors */
+/** @summary list of global root colors
+  * @private */
 let gbl_colors_list = [];
 
 /** @summary Generates all root colors, used also in jstests to reset colors
@@ -9576,7 +9570,8 @@ function adoptRootColors(objarr) {
 
 /** @summary Return ROOT color by index
   * @desc Color numbering corresponds typical ROOT colors
-  * @returns {String} with RGB color code or existing color name like 'cyan' */
+  * @returns {String} with RGB color code or existing color name like 'cyan'
+  * @private */
 function getColor(indx) {
    return gbl_colors_list[indx];
 }
@@ -9584,7 +9579,8 @@ function getColor(indx) {
 /** @summary Add new color
   * @param {string} rgb - color name or just string with rgb value
   * @param {array} [lst] - optional colors list, to which add colors
-  * @returns {number} index of new color */
+  * @returns {number} index of new color
+  * @private */
 function addColor(rgb, lst) {
    if (!lst) lst = gbl_colors_list;
    let indx = lst.indexOf(rgb);
@@ -9640,7 +9636,7 @@ const root_markers = [
 
 /**
   * @summary Handle for marker attributes
-  *
+  * @private
   */
 
 class TAttMarkerHandler {
@@ -9902,9 +9898,9 @@ class TAttMarkerHandler {
      * @param {number} width - width of sample SVG
      * @param {number} height - height of sample SVG
      * @private */
-   createSample(svg, width, height) {
+   createSample(svg, width, height, plain) {
+      if (plain) svg = select(svg);
       this.resetPos();
-
       svg.append("path")
          .attr("d", this.create(width / 2, height / 2))
          .call(this.func);
@@ -9914,7 +9910,6 @@ class TAttMarkerHandler {
 
 /**
   * @summary Handle for fill attributes
-  *
   * @private
   */
 
@@ -10220,14 +10215,16 @@ class TAttFillHandler {
    }
 
    /** @summary Create sample of fill pattern inside SVG
-    * @private */
-   createSample(sample_svg, width, height) {
+     * @private */
+   createSample(svg, width, height, plain) {
       // we need to create extra handle to change
-      const sample = new TAttFillHandler({ svg: sample_svg, pattern: this.pattern, color: this.color, color_as_svg: true });
+      if (plain) svg = select(svg);
 
-      sample_svg.append("path")
-         .attr("d", `M0,0h${width}v${height}h${-width}z`)
-         .call(sample.func);
+      const sample = new TAttFillHandler({ svg, pattern: this.pattern, color: this.color, color_as_svg: true });
+
+     svg.append("path")
+        .attr("d", `M0,0h${width}v${height}h${-width}z`)
+        .call(sample.func);
    }
 
 } // class TAttFillHandler
@@ -10239,6 +10236,7 @@ const root_line_styles = [
 
 /**
   * @summary Handle for line attributes
+  * @private
   */
 
 class TAttLineHandler {
@@ -10355,7 +10353,8 @@ class TAttLineHandler {
    }
 
    /** @summary Create sample element inside primitive SVG - used in context menu */
-   createSample(svg, width, height) {
+   createSample(svg, width, height, plain) {
+      if (plain) svg = select(svg);
       svg.append("path")
          .attr("d", `M0,${height/2}h${width}`)
          .call(this.func);
@@ -10535,8 +10534,8 @@ class ObjectPainter extends BasePainter {
      * @param {object} obj - new version of object, values will be updated in original object
      * @param {string} [opt] - when specified, new draw options
      * @returns {boolean|Promise} for object redraw
-     * @desc Two actions typically done by redraw - update object content via {@link ObjectPainter.updateObject} and
-      * then redraw correspondent pad via {@link ObjectPainter.redrawPad}. If possible one should redefine
+     * @desc Two actions typically done by redraw - update object content via {@link ObjectPainter#updateObject} and
+      * then redraw correspondent pad via {@link ObjectPainter#redrawPad}. If possible one should redefine
       * only updateObject function and keep this function unchanged. But for some special painters this function is the
       * only way to control how object can be update while requested from the server
       * @protected */
@@ -10622,7 +10621,7 @@ class ObjectPainter extends BasePainter {
    }
 
    /** @summary Checks if draw elements were resized and drawing should be updated.
-     * @desc Redirects to {@link TPadPainter.checkCanvasResize}
+     * @desc Redirects to {@link TPadPainter#checkCanvasResize}
      * @private */
    checkResize(arg) {
       let p = this.getCanvPainter();
@@ -10644,7 +10643,7 @@ class ObjectPainter extends BasePainter {
    }
 
    /** @summary Returns created <g> element used for object drawing
-     * @desc Element should be created by {@link ObjectPainter.createG}
+     * @desc Element should be created by {@link ObjectPainter#createG}
      * @protected */
    getG() { return this.draw_g; }
 
@@ -10837,7 +10836,7 @@ class ObjectPainter extends BasePainter {
    }
 
    /** @summary Converts pad SVG x or y coordinates into axis values.
-     * @desc Reverse transformation for {@link ObjectPainter.axisToSvg}
+     * @desc Reverse transformation for {@link ObjectPainter#axisToSvg}
      * @param {string} axis - name like "x" or "y"
      * @param {number} coord - graphics coordiante.
      * @param {boolean} ndc - kind of return value
@@ -11266,7 +11265,7 @@ class ObjectPainter extends BasePainter {
           font_size = font.size, any_text = false, only_text = true;
 
       if ((f > 0) && ((f < 0.9) || (f > 1)))
-         font.size = Math.floor(font.size / f);
+         font.size = Math.max(1, Math.floor(font.size / f));
 
       if (max_sz && (font.size > max_sz))
          font.size = max_sz;
@@ -11962,7 +11961,7 @@ function resize(dom, arg) {
 
 /** @summary Safely remove all drawings from specified element
   * @param {string|object} dom - id or DOM element
-  * @requires painter
+  * @public
   * @example
   * cleanup("drawing");
   * cleanup(document.querySelector("#drawing")); */
@@ -45132,8 +45131,9 @@ class TAxisPainter extends ObjectPainter {
    formatLabels(d) {
       let indx = parseFloat(d), a = this.getObject();
       if (!this.regular_labels)
-         indx = (indx - a.fXmin)/(a.fXmax - a.fXmin) * a.fNbins;
-      indx = Math.floor(indx);
+         indx = Math.round((indx - a.fXmin)/(a.fXmax - a.fXmin) * a.fNbins);
+      else
+         indx = Math.floor(indx);
       if ((indx < 0) || (indx >= a.fNbins)) return null;
       for (let i = 0; i < a.fLabels.arr.length; ++i) {
          let tstr = a.fLabels.arr[i];
@@ -45499,12 +45499,12 @@ class TAxisPainter extends ObjectPainter {
             textscale = Math.min(textscale, (max_text_width - labeloffset) / textwidth);
          }
 
-         if ((textscale > 0.01) && (textscale < 0.7) && !painter.vertical && !rotate_lbls && (maxtextlen > 5) && (label_g.length == 1))
+         if ((textscale > 0.0001) && (textscale < 0.7) && !painter.vertical && !rotate_lbls && (maxtextlen > 5) && (label_g.length == 1))
             lbl_tilt = true;
 
          let scale = textscale * (lbl_tilt ? 3 : 1);
 
-         if ((scale > 0.01) && (scale < 1)) {
+         if ((scale > 0.0001) && (scale < 1)) {
             applied_scale = 1/scale;
             painter.scaleTextDrawing(applied_scale, label_g[0]);
          }
@@ -45551,11 +45551,11 @@ class TAxisPainter extends ObjectPainter {
             if (this.vertical) {
                arg.x = fix_coord;
                arg.y = pos;
-               arg.align = rotate_lbls ? ((side<0) ? 23 : 20) : ((side<0) ? 12 : 32);
+               arg.align = rotate_lbls ? ((side < 0) ? 23 : 20) : ((side < 0) ? 12 : 32);
             } else {
                arg.x = pos;
                arg.y = fix_coord;
-               arg.align = rotate_lbls ? ((side<0) ? 12 : 32) : ((side<0) ? 20 : 23);
+               arg.align = rotate_lbls ? ((side < 0) ? 12 : 32) : ((side < 0) ? 20 : 23);
             }
 
             if (rotate_lbls)
@@ -45709,7 +45709,7 @@ class TAxisPainter extends ObjectPainter {
          labelMaxWidth = arr[1];
 
          if (settings.Zooming && !this.disable_zooming && !isBatchMode()) {
-            let labelSize = arr[0],
+            let labelSize = Math.max(arr[0], 5),
                 r = axis_g.append("svg:rect")
                           .attr("class", "axis_zoom")
                           .style("opacity", "0")
@@ -45772,7 +45772,7 @@ class TAxisPainter extends ObjectPainter {
             title_shift_y = Math.round(center ? h/2 : (xor_reverse ? h : 0));
 
             this.drawText({ align: this.title_align+";middle",
-                            rotate: (rotate<0) ? 90 : 270,
+                            rotate: (rotate < 0) ? 90 : 270,
                             text: axis.fTitle, color: title_color, draw_g: title_g });
          } else {
             title_offest_k *= side*pad_h;
@@ -45780,7 +45780,7 @@ class TAxisPainter extends ObjectPainter {
             title_shift_x = Math.round(center ? w/2 : (xor_reverse ? 0 : w));
             title_shift_y = Math.round(title_offest_k*axis.fTitleOffset);
             this.drawText({ align: this.title_align+";middle",
-                            rotate: (rotate<0) ? 180 : 0,
+                            rotate: (rotate < 0) ? 180 : 0,
                             text: axis.fTitle, color: title_color, draw_g: title_g });
          }
 
@@ -45870,7 +45870,7 @@ class TAxisPainter extends ObjectPainter {
       this.configureAxis(vertical ? "yaxis" : "xaxis", min, max, min, max, vertical, [0, sz], {
          time_scale: gaxis.fChopt.indexOf("t") >= 0,
          log: (gaxis.fChopt.indexOf("G") >= 0) ? 1 : 0,
-         reverse: reverse,
+         reverse,
          swap_side: reverse
       });
 
@@ -48350,6 +48350,8 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    }
 }
 
+/** @summary Assign 3D methods for frame painter
+  * @private */
 function assignFrame3DMethods(fpainter) {
    Object.assign(fpainter, { create3DScene, render3D, resize3D, highlightBin3D, set3DOptions, drawXYZ });
 }
@@ -48410,7 +48412,6 @@ function drawBinsLego(painter, is_v7 = false) {
 
       return painter._show_empty_bins;
    };
-
 
    let levels = [ axis_zmin, axis_zmax ], palette = null;
 
@@ -48717,7 +48718,8 @@ function drawBinsLego(painter, is_v7 = false) {
    main.toplevel.add(line);
 }
 
-/** @summary Draw TH2 histogram in error mode */
+/** @summary Draw TH2 histogram in error mode
+  * @private */
 function drawBinsError3D(painter, is_v7 = false) {
    const main = painter.getFramePainter(),
          histo = painter.getHisto(),
@@ -48854,7 +48856,8 @@ function drawBinsContour3D(painter, realz = false, is_v7 = false) {
 }
 
 
-/** @summary Draw TH2 histograms in surf mode */
+/** @summary Draw TH2 histograms in surf mode
+  * @private */
 function drawBinsSurf3D(painter, is_v7 = false) {
    let histo = painter.getHisto(),
        main = painter.getFramePainter(),
@@ -49274,6 +49277,12 @@ function drawBinsSurf3D(painter, is_v7 = false) {
 
 /// Special mathematical functions
 
+/**
+ * A math namespace - all functions can be exported from base/math.mjs.
+ * Also all these functions can be used with TFormula calcualtions
+ * @namespace Math
+ */
+
 const kMACHEP  = 1.11022302462515654042363166809e-16,
       kMINLOG  = -708.396418532264078748994506896,
       kMAXLOG  = 709.782712893383973096206318587,
@@ -49286,7 +49295,7 @@ const kMACHEP  = 1.11022302462515654042363166809e-16,
 /** @summary Polynomialeval function
   * @desc calculates a value of a polynomial of the form:
   * a[0]x^N+a[1]x^(N-1) + ... + a[N]
-  * @private */
+  * @memberof Math */
 function Polynomialeval(x, a, N) {
    if (N==0) return a[0];
 
@@ -49299,7 +49308,7 @@ function Polynomialeval(x, a, N) {
 /** @summary Polynomial1eval function
   * @desc calculates a value of a polynomial of the form:
   * x^N+a[0]x^(N-1) + ... + a[N-1]
-  * @private */
+  * @memberof Math */
 function Polynomial1eval(x, a, N) {
    if (N==0) return a[0];
 
@@ -49310,7 +49319,7 @@ function Polynomial1eval(x, a, N) {
 }
 
 /** @summary lgam function, logarithm from gamma
-  * @private */
+  * @memberof Math */
 function lgam(x) {
    let p, q, u, w, z;
    const kMAXLGM = 2.556348e305,
@@ -49402,7 +49411,7 @@ function lgam(x) {
 }
 
 /** @summary Stirling formula for the gamma function
-  * @private */
+  * @memberof Math */
 function stirf(x) {
    let y, w, v;
 
@@ -49433,10 +49442,8 @@ function stirf(x) {
    return y;
 }
 
-let erf;
-
 /** @summary complementary error function
-  * @private */
+  * @memberof Math */
 function erfc(a) {
    const erfP = [
       2.46196981473530512524E-10,
@@ -49509,8 +49516,8 @@ function erfc(a) {
 }
 
 /** @summary error function
-  * @private */
-erf = function(x) {
+  * @memberof Math */
+function erf(x) {
    if(Math.abs(x) > 1.0)
       return 1.0 - erfc(x);
 
@@ -49531,9 +49538,10 @@ erf = function(x) {
    let z = x * x;
 
    return x * Polynomialeval(z, erfT, 4) / Polynomial1eval(z, erfU, 5);
-};
+}
 
-/** @summary lognormal_cdf_c function */
+/** @summary lognormal_cdf_c function
+  * @memberof Math */
 function lognormal_cdf_c(x, m, s, x0) {
    if (x0 === undefined) x0 = 0;
    let z = (Math.log((x-x0))-m)/(s*kSqrt2);
@@ -49541,21 +49549,24 @@ function lognormal_cdf_c(x, m, s, x0) {
    else         return 0.5*(1.0 - erf(z));
 }
 
-/** @summary lognormal_cdf_c function */
+/** @summary lognormal_cdf_c function
+  * @memberof Math */
 function lognormal_cdf(x, m, s, x0 = 0) {
    let z = (Math.log((x-x0))-m)/(s*kSqrt2);
    if (z < -1.) return 0.5*erfc(-z);
    else         return 0.5*(1.0 + erf(z));
 }
 
-/** @summary normal_cdf_c function */
+/** @summary normal_cdf_c function
+  * @memberof Math */
 function normal_cdf_c(x, sigma, x0 = 0) {
    let z = (x-x0)/(sigma*kSqrt2);
    if (z > 1.)  return 0.5*erfc(z);
    else         return 0.5*(1.-erf(z));
 }
 
-/** @summary normal_cdf function */
+/** @summary normal_cdf function
+  * @memberof Math */
 function normal_cdf(x, sigma, x0 = 0) {
    let z = (x-x0)/(sigma*kSqrt2);
    if (z < -1.) return erfc(-z);
@@ -49563,7 +49574,7 @@ function normal_cdf(x, sigma, x0 = 0) {
 }
 
 /** @summary log normal pdf
-  * @private */
+  * @memberof Math */
 function lognormal_pdf(x, m, s, x0 = 0) {
    if ((x-x0) <= 0)
       return 0.0;
@@ -49572,14 +49583,14 @@ function lognormal_pdf(x, m, s, x0 = 0) {
 }
 
 /** @summary normal pdf
-  * @private */
+  * @memberof Math */
 function normal_pdf(x, sigma = 1, x0 = 0) {
    let  tmp = (x-x0)/sigma;
    return (1.0/(Math.sqrt(2 * M_PI) * Math.abs(sigma))) * Math.exp(-tmp*tmp/2);
 }
 
 /** @summary gamma calculation
-  * @private */
+  * @memberof Math */
 function gamma(x) {
    let p, q, z, i, sgngam = 1;
 
@@ -49682,9 +49693,8 @@ function gamma(x) {
    return z * p / q;
 }
 
-
 /** @summary ndtri function
-  * @private */
+  * @memberof Math */
 function ndtri(y0) {
    if ( y0 <= 0.0 )
       return Number.NEGATIVE_INFINITY;
@@ -49773,21 +49783,19 @@ function ndtri(y0) {
 }
 
 /** @summary normal_quantile function
-  * @private */
+  * @memberof Math */
 function normal_quantile(z, sigma) {
    return  sigma * ndtri(z);
 }
 
 /** @summary normal_quantile_c function
-  * @private */
+  * @memberof Math */
 function normal_quantile_c(z, sigma) {
    return - sigma * ndtri(z);
 }
 
-let igam;
-
 /** @summary igamc function
-  * @private */
+  * @memberof Math */
 function igamc(a,x) {
    // LM: for negative values returns 0.0
    // This is correct if a is a negative integer since Gamma(-n) = +/- inf
@@ -49847,8 +49855,8 @@ function igamc(a,x) {
 }
 
 /** @summary igam function
-  * @private */
-igam = function(a, x) {
+  * @memberof Math */
+function igam(a, x) {
 
    // LM: for negative values returns 1.0 instead of zero
    // This is correct if a is a negative integer since Gamma(-n) = +/- inf
@@ -49876,11 +49884,11 @@ igam = function(a, x) {
    } while( c/ans > kMACHEP );
 
    return ans * ax/a;
-};
+}
 
 
 /** @summary igami function
-  * @private */
+  * @memberof Math */
 function igami(a, y0) {
    // check the domain
    if (a <= 0) {
@@ -49991,7 +49999,7 @@ function igami(a, y0) {
 /** @summary landau_pdf function
   * @desc LANDAU pdf : algorithm from CERNLIB G110 denlan
   *  same algorithm is used in GSL
-  * @private */
+  * @memberof Math */
 function landau_pdf(x, xi, x0) {
    if (x0===undefined) x0 = 0;
    if (xi <= 0) return 0;
@@ -50049,7 +50057,7 @@ function landau_pdf(x, xi, x0) {
 }
 
 /** @summary Landau function
-  * @private */
+  * @memberof Math */
 function Landau(x, mpv, sigma, norm) {
    if (sigma <= 0) return 0;
    const den = landau_pdf((x - mpv) / sigma, 1, 0);
@@ -50058,25 +50066,25 @@ function Landau(x, mpv, sigma, norm) {
 }
 
 /** @summary inc_gamma_c
-  * @private */
+  * @memberof Math */
 function inc_gamma_c(a,x) {
    return igamc(a,x);
 }
 
 /** @summary inc_gamma
-  * @private */
+  * @memberof Math */
 function inc_gamma(a,x) {
    return igam(a,x);
 }
 
 /** @summary lgamma
-  * @private */
+  * @memberof Math */
 function lgamma(z) {
    return lgam(z);
 }
 
 /** @summary Probability density function of the beta distribution.
-  * @private */
+  * @memberof Math */
 function beta_pdf(x, a, b) {
   if (x < 0 || x > 1.0) return 0;
   if (x == 0 ) {
@@ -50093,22 +50101,21 @@ function beta_pdf(x, a, b) {
                     Math.log(x) * (a -1.) + Math.log1p(-x) * (b - 1.));
 }
 
-
 /** @summary beta
-  * @private */
+  * @memberof Math */
 function beta(x,y) {
    return Math.exp(lgamma(x)+lgamma(y)-lgamma(x+y));
 }
 
 /** @summary chisquared_cdf_c
-  * @private */
+  * @memberof Math */
 function chisquared_cdf_c(x,r,x0) {
    if (x0===undefined) x0 = 0;
    return inc_gamma_c ( 0.5 * r , 0.5*(x-x0) );
 }
 
 /** @summary Continued fraction expansion #1 for incomplete beta integral
-  * @private */
+  * @memberof Math */
 function incbcf(a,b,x) {
    let xk, pk, pkm1, pkm2, qk, qkm1, qkm2,
        k1, k2, k3, k4, k5, k6, k7, k8,
@@ -50194,7 +50201,7 @@ function incbcf(a,b,x) {
 }
 
 /** @summary Continued fraction expansion #2 for incomplete beta integral
-  * @private */
+  * @memberof Math */
 function incbd(a,b,x) {
    let xk, pk, pkm1, pkm2, qk, qkm1, qkm2,
        k1, k2, k3, k4, k5, k6, k7, k8,
@@ -50279,7 +50286,7 @@ function incbd(a,b,x) {
 }
 
 /** @summary ROOT::Math::Cephes::pseries
-  * @private */
+  * @memberof Math */
 function pseries(a,b,x) {
    let s, t, u, v, n, t1, z, ai;
 
@@ -50320,7 +50327,7 @@ function pseries(a,b,x) {
 }
 
 /** @summary ROOT::Math::Cephes::incbet
-  * @private */
+  * @memberof Math */
 function incbet(aa,bb,xx) {
    let a, b, t, x, xc, w, y, flag;
 
@@ -50411,8 +50418,8 @@ function incbet(aa,bb,xx) {
    return  t;
 }
 
-/** @summary ROOT::Math::Cephes::incbi
-  * @private */
+/** @summary copy of ROOT::Math::Cephes::incbi
+  * @memberof Math */
 function incbi(aa,bb,yy0) {
    let a, b, y0, d, y, x, x0, x1, lgm, yp, di, dithresh, yl, yh, xt;
    let i, rflg, dir, nflg, ihalve = true;
@@ -50688,7 +50695,7 @@ function incbi(aa,bb,yy0) {
 }
 
 /** @summary Calculates the normalized (regularized) incomplete beta function.
-  * @private */
+  * @memberof Math */
 function inc_beta(x,a,b) {
    return incbet(a,b,x);
 }
@@ -50696,74 +50703,74 @@ function inc_beta(x,a,b) {
 const BetaIncomplete = inc_beta;
 
 /** @summary ROOT::Math::beta_quantile
-  * @private */
+  * @memberof Math */
 function beta_quantile(z,a,b) {
    return incbi(a,b,z);
 }
 
 /** @summary Complement of the cumulative distribution function of the beta distribution.
-  * @private */
+  * @memberof Math */
 function beta_cdf_c(x,a,b) {
    return inc_beta(1-x, b, a);
 }
 
 /** @summary chisquared_cdf
-  * @private */
+  * @memberof Math */
 function chisquared_cdf(x,r,x0=0) {
    return inc_gamma ( 0.5 * r , 0.5*(x-x0) );
 }
 
 /** @summary gamma_quantile_c function
-  * @private */
+  * @memberof Math */
 function gamma_quantile_c(z, alpha, theta) {
    return theta * igami( alpha, z);
 }
 
 /** @summary gamma_quantile function
-  * @private */
+  * @memberof Math */
 function gamma_quantile(z, alpha, theta) {
    return theta * igami( alpha, 1.- z);
 }
 
 /** @summary breitwigner_cdf_c function
-  * @private */
+  * @memberof Math */
 function breitwigner_cdf_c(x,gamma, x0 = 0) {
    return 0.5 - Math.atan(2.0 * (x-x0) / gamma) / M_PI;
 }
 
 /** @summary breitwigner_cdf function
-  * @private */
+  * @memberof Math */
 function breitwigner_cdf(x, gamma, x0 = 0) {
    return 0.5 + Math.atan(2.0 * (x-x0) / gamma) / M_PI;
 }
 
 /** @summary cauchy_cdf_c function
-  * @private */
+  * @memberof Math */
 function cauchy_cdf_c(x, b, x0 = 0) {
    return 0.5 - Math.atan( (x-x0) / b) / M_PI;
 }
 
 /** @summary cauchy_cdf function
-  * @private */
+  * @memberof Math */
 function cauchy_cdf(x, b, x0 = 0) {
    return 0.5 + Math.atan( (x-x0) / b) / M_PI;
 }
 
 /** @summary cauchy_pdf function
-  * @private */
+  * @memberof Math */
 function cauchy_pdf(x, b = 1, x0 = 0) {
    return b/(M_PI * ((x-x0)*(x-x0) + b*b));
 }
 
 /** @summary gaussian_pdf function
-  * @private */
+  * @memberof Math */
 function gaussian_pdf(x, sigma = 1, x0 = 0) {
    let tmp = (x-x0)/sigma;
    return (1.0/(Math.sqrt(2 * M_PI) * Math.abs(sigma))) * Math.exp(-tmp*tmp/2);
 }
 
 /** @summary gamma_pdf function
-  * @private */
+  * @memberof Math */
 function gamma_pdf(x, alpha, theta, x0 = 0) {
    if ((x - x0) < 0) {
       return 0.0;
@@ -50776,7 +50783,7 @@ function gamma_pdf(x, alpha, theta, x0 = 0) {
 }
 
 /** @summary tdistribution_cdf_c function
-  * @private */
+  * @memberof Math */
 function tdistribution_cdf_c(x, r, x0 = 0) {
    let p    = x - x0,
        sign = (p > 0) ? 1. : -1;
@@ -50784,7 +50791,7 @@ function tdistribution_cdf_c(x, r, x0 = 0) {
 }
 
 /** @summary tdistribution_cdf function
-  * @private */
+  * @memberof Math */
 function tdistribution_cdf(x, r, x0 = 0) {
    let p    = x - x0,
        sign = (p > 0) ? 1. : -1;
@@ -50792,26 +50799,26 @@ function tdistribution_cdf(x, r, x0 = 0) {
 }
 
 /** @summary tdistribution_pdf function
-  * @private */
+  * @memberof Math */
 function tdistribution_pdf(x, r, x0 = 0) {
    return (Math.exp (lgamma((r + 1.0)/2.0) - lgamma(r/2.0)) / Math.sqrt (M_PI * r))
           * Math.pow ((1.0 + (x-x0)*(x-x0)/r), -(r + 1.0)/2.0);
 }
 
 /** @summary exponential_cdf_c function
-  * @private */
+  * @memberof Math */
 function exponential_cdf_c(x, lambda, x0 = 0) {
    return ((x-x0) < 0) ? 1.0 : Math.exp(-lambda * (x-x0));
 }
 
 /** @summary exponential_cdf function
-  * @private */
+  * @memberof Math */
 function exponential_cdf(x, lambda, x0 = 0) {
    return ((x-x0) < 0) ? 0.0 : -Math.expm1(-lambda * (x-x0));
 }
 
 /** @summary chisquared_pdf
-  * @private */
+  * @memberof Math */
 function chisquared_pdf(x,r,x0) {
    if (x0===undefined) x0 = 0;
    if ((x-x0) < 0) return 0.0;
@@ -50823,7 +50830,7 @@ function chisquared_pdf(x,r,x0) {
 }
 
 /** @summary Probability density function of the F-distribution.
-  * @private */
+  * @memberof Math */
 function fdistribution_pdf(x, n, m, x0 = 0) {
    if (n < 0 || m < 0)
       return Number.NaN;
@@ -50834,10 +50841,8 @@ function fdistribution_pdf(x, n, m, x0 = 0) {
                  + (n/2 -1) * Math.log(x-x0) - ((n+m)/2) * Math.log(m +  n*(x-x0)) );
 }
 
-let fdistribution_cdf;
-
 /** @summary fdistribution_cdf_c function
-  * @private */
+  * @memberof Math */
 function fdistribution_cdf_c(x, n, m, x0 = 0) {
    if (n < 0 || m < 0) return Number.NaN;
 
@@ -50850,8 +50855,8 @@ function fdistribution_cdf_c(x, n, m, x0 = 0) {
 }
 
 /** @summary fdistribution_cdf function
-  * @private */
-fdistribution_cdf = function(x, n, m, x0 = 0) {
+  * @memberof Math */
+function fdistribution_cdf(x, n, m, x0 = 0) {
    if (n < 0 || m < 0) return Number.NaN;
 
    let z = n * (x - x0) / (m + n * (x - x0));
@@ -50860,9 +50865,10 @@ fdistribution_cdf = function(x, n, m, x0 = 0) {
       return 1. - fdistribution_cdf_c(x, n, m, x0);
 
    return inc_beta(z, .5 * n, .5 * m);
-};
+}
 
-/** @summary Prob function */
+/** @summary Prob function
+  * @memberof Math */
 function Prob(chi2, ndf) {
    if (ndf <= 0) return 0; // Set CL to zero in case ndf<=0
 
@@ -50875,44 +50881,44 @@ function Prob(chi2, ndf) {
 }
 
 /** @summary Gaus function
-  * @private */
+  * @memberof Math */
 function Gaus(x, mean, sigma) {
    return Math.exp(-0.5 * Math.pow((x-mean) / sigma, 2));
 }
 
 /** @summary BreitWigner function
-  * @private */
+  * @memberof Math */
 function BreitWigner(x, mean, gamma) {
    return gamma/((x-mean)*(x-mean) + gamma*gamma/4) / 2 / Math.PI;
 }
 
 /** @summary Calculates Beta-function Gamma(p)*Gamma(q)/Gamma(p+q).
-  * @private */
+  * @memberof Math */
 function Beta(x,y) {
    return Math.exp(lgamma(x) + lgamma(y) - lgamma(x+y));
 }
 
 /** @summary GammaDist function
-  * @private */
+  * @memberof Math */
 function GammaDist(x, gamma, mu = 0, beta = 1) {
    if ((x < mu) || (gamma <= 0) || (beta <= 0)) return 0;
    return gamma_pdf(x, gamma, beta, mu);
 }
 
 /** @summary probability density function of Laplace distribution
-  * @private */
+  * @memberof Math */
 function LaplaceDist(x, alpha = 0, beta = 1) {
    return Math.exp(-Math.abs((x-alpha)/beta)) / (2.*beta);
 }
 
 /** @summary distribution function of Laplace distribution
-  * @private */
+  * @memberof Math */
 function LaplaceDistI(x, alpha = 0, beta = 1) {
    return (x <= alpha) ? 0.5*Math.exp(-Math.abs((x-alpha)/beta)) : 1 - 0.5*Math.exp(-Math.abs((x-alpha)/beta));
 }
 
 /** @summary density function for Student's t- distribution
-  * @private */
+  * @memberof Math */
 function Student(T, ndf) {
    if (ndf < 1) return 0;
 
@@ -50924,7 +50930,7 @@ function Student(T, ndf) {
 }
 
 /** @summary cumulative distribution function of Student's
-  * @private */
+  * @memberof Math */
 function StudentI(T, ndf) {
    let r = ndf;
 
@@ -50933,14 +50939,14 @@ function StudentI(T, ndf) {
 }
 
 /** @summary LogNormal function
-  * @private */
+  * @memberof Math */
 function LogNormal(x, sigma, theta = 0, m = 1) {
    if ((x < theta) || (sigma <= 0) || (m <= 0)) return 0;
    return lognormal_pdf(x, Math.log(m), sigma, theta);
 }
 
 /** @summary Computes the probability density function of the Beta distribution
-  * @private */
+  * @memberof Math */
 function BetaDist(x, p, q) {
    if ((x < 0) || (x > 1) || (p <= 0) || (q <= 0))
      return 0;
@@ -50949,44 +50955,51 @@ function BetaDist(x, p, q) {
 }
 
 /** @summary Computes the distribution function of the Beta distribution.
-  * @private */
+  * @memberof Math */
 function BetaDistI(x, p, q) {
    if ((x<0) || (x>1) || (p<=0) || (q<=0)) return 0;
    return BetaIncomplete(x, p, q);
 }
 
-/** @summary gaus function for TFormula */
+/** @summary gaus function for TFormula
+  * @memberof Math */
 function gaus(f, x, i) {
    return f.GetParValue(i+0) * Math.exp(-0.5 * Math.pow((x-f.GetParValue(i+1)) / f.GetParValue(i+2), 2));
 }
 
-/** @summary gausn function for TFormula */
+/** @summary gausn function for TFormula
+  * @memberof Math */
 function gausn(f, x, i) {
    return gaus(f, x, i)/(Math.sqrt(2 * Math.PI) * f.GetParValue(i+2));
 }
 
-/** @summary gausxy function for TFormula */
+/** @summary gausxy function for TFormula
+  * @memberof Math */
 function gausxy(f, x, y, i) {
    return f.GetParValue(i+0) * Math.exp(-0.5 * Math.pow((x-f.GetParValue(i+1)) / f.GetParValue(i+2), 2))
                              * Math.exp(-0.5 * Math.pow((y-f.GetParValue(i+3)) / f.GetParValue(i+4), 2));
 }
 
-/** @summary expo function for TFormula */
+/** @summary expo function for TFormula
+  * @memberof Math */
 function expo(f, x, i) {
    return Math.exp(f.GetParValue(i+0) + f.GetParValue(i+1) * x);
 }
 
-/** @summary landau function for TFormula */
+/** @summary landau function for TFormula
+  * @memberof Math */
 function landau(f, x, i) {
    return Landau(x, f.GetParValue(i+1),f.GetParValue(i+2), false);
 }
 
-/** @summary landaun function for TFormula */
+/** @summary landaun function for TFormula
+  * @memberof Math */
 function landaun(f, x, i) {
    return Landau(x, f.GetParValue(i+1),f.GetParValue(i+2), true);
 }
 
-/** @summary Crystal ball function */
+/** @summary Crystal ball function
+  * @memberof Math */
 function crystalball_function(x, alpha, n, sigma, mean = 0) {
    if (sigma < 0.)     return 0.;
    let z = (x - mean)/sigma;
@@ -51001,7 +51014,8 @@ function crystalball_function(x, alpha, n, sigma, mean = 0) {
   return AA * Math.pow(arg,n);
 }
 
-/** @summary pdf definition of the crystal_ball which is defined only for n > 1 otherwise integral is diverging */
+/** @summary pdf definition of the crystal_ball which is defined only for n > 1 otherwise integral is diverging
+  * @memberof Math */
 function crystalball_pdf(x, alpha, n, sigma, mean = 0) {
    if (sigma < 0.) return 0.;
    if (n <= 1) return Number.NaN;  // pdf is not normalized for n <=1
@@ -51012,7 +51026,8 @@ function crystalball_pdf(x, alpha, n, sigma, mean = 0) {
    return N * crystalball_function(x,alpha,n,sigma,mean);
 }
 
-/** @summary compute the integral of the crystal ball function */
+/** @summary compute the integral of the crystal ball function
+  * @memberof Math */
 function crystalball_integral(x, alpha, n, sigma, mean = 0) {
    if (sigma == 0) return 0;
    if (alpha==0) return 0.;
@@ -51049,6 +51064,8 @@ function crystalball_integral(x, alpha, n, sigma, mean = 0) {
    return sigma * (intgaus + intpow);
 }
 
+/** @summary crystalball_cdf function
+  * @memberof Math */
 function crystalball_cdf(x, alpha, n, sigma, mean = 0) {
    if (n <= 1.)
       return Number.NaN;
@@ -51062,6 +51079,8 @@ function crystalball_cdf(x, alpha, n, sigma, mean = 0) {
    return (alpha > 0) ? 1. - integral/totIntegral : integral/totIntegral;
 }
 
+/** @summary crystalball_cdf_c function
+  * @memberof Math */
 function crystalball_cdf_c(x, alpha, n, sigma, mean = 0) {
    if (n <= 1.)
       return Number.NaN;
@@ -51075,7 +51094,8 @@ function crystalball_cdf_c(x, alpha, n, sigma, mean = 0) {
    return (alpha > 0) ? integral/totIntegral : 1. - (integral/totIntegral);
 }
 
-
+/** @summary ChebyshevN function
+  * @memberof Math */
 function ChebyshevN(n, x, c) {
    let d1 = 0.0, d2 = 0.0, y2 = 2.0 * x;
 
@@ -51088,48 +51108,70 @@ function ChebyshevN(n, x, c) {
    return x * d1 - d2 + c[0];
 }
 
+/** @summary Chebyshev1 function
+  * @memberof Math */
 function Chebyshev1(x, c0, c1) {
    return c0 + c1*x;
 }
 
+/** @summary Chebyshev2 function
+  * @memberof Math */
 function Chebyshev2(x, c0, c1, c2) {
    return c0 + c1*x + c2*(2.0*x*x - 1.0);
 }
 
+/** @summary Chebyshev3 function
+  * @memberof Math */
 function Chebyshev3(x, ...args) {
    return ChebyshevN(3, x, args);
 }
 
+/** @summary Chebyshev4 function
+  * @memberof Math */
 function Chebyshev4(x, ...args) {
    return ChebyshevN(4, x, args);
 }
 
+/** @summary Chebyshev5 function
+  * @memberof Math */
 function Chebyshev5(x, ...args) {
    return ChebyshevN(5, x, args);
 }
 
+/** @summary Chebyshev6 function
+  * @memberof Math */
 function Chebyshev6(x, ...args) {
    return ChebyshevN(6, x, args);
 }
 
+/** @summary Chebyshev7 function
+  * @memberof Math */
 function Chebyshev7(x, ...args) {
    return ChebyshevN(7, x, args);
 }
 
+/** @summary Chebyshev8 function
+  * @memberof Math */
 function Chebyshev8(x, ...args) {
    return ChebyshevN(8, x, args);
 }
 
+/** @summary Chebyshev9 function
+  * @memberof Math */
 function Chebyshev9(x, ...args) {
    return ChebyshevN(9, x, args);
 }
 
+/** @summary Chebyshev10 function
+  * @memberof Math */
 function Chebyshev10(x, ...args) {
    return ChebyshevN(10, x, args);
 }
 
 // =========================================================================
 
+/** @summary Caluclate ClopperPearson
+  * @memberof Math */
 function eff_ClopperPearson(total,passed,level,bUpper) {
    let alpha = (1.0 - level) / 2;
    if(bUpper)
@@ -51139,7 +51181,7 @@ function eff_ClopperPearson(total,passed,level,bUpper) {
 }
 
 /** @summary Caluclate normal
-  * @private */
+  * @memberof Math */
 function eff_Normal(total,passed,level,bUpper) {
    if (total == 0) return bUpper ? 1 : 0;
 
@@ -51155,7 +51197,7 @@ function eff_Normal(total,passed,level,bUpper) {
 }
 
 /** @summary Calculates the boundaries for the frequentist Wilson interval
-  * @private */
+  * @memberof Math */
 function eff_Wilson(total,passed,level,bUpper) {
    let alpha = (1.0 - level)/2;
    if (total == 0) return bUpper ? 1 : 0;
@@ -51171,7 +51213,7 @@ function eff_Wilson(total,passed,level,bUpper) {
 }
 
 /** @summary Calculates the boundaries for the frequentist Agresti-Coull interval
-  * @private */
+  * @memberof Math */
 function eff_AgrestiCoull(total,passed,level,bUpper) {
    let alpha = (1.0 - level)/2,
        kappa = normal_quantile(1 - alpha,1),
@@ -51185,7 +51227,7 @@ function eff_AgrestiCoull(total,passed,level,bUpper) {
 }
 
 /** @summary Calculates the boundaries using the  mid-P binomial
-  * @private */
+  * @memberof Math */
 function eff_MidPInterval(total,passed,level,bUpper) {
    const alpha = 1. - level, alpha_min = alpha/2 , tol = 1e-9; // tolerance
    let pmin = 0, pmax = 1, p = 0;
@@ -51219,7 +51261,7 @@ function eff_MidPInterval(total,passed,level,bUpper) {
 }
 
 /** @summary for a central confidence interval for a Beta distribution
-  * @private */
+  * @memberof Math */
 function eff_Bayesian(total,passed,level,bUpper,alpha,beta) {
    let  a = passed + alpha,
         b = total - passed + beta;
@@ -51237,7 +51279,7 @@ function eff_Bayesian(total,passed,level,bUpper,alpha,beta) {
 }
 
 /** @summary Return function to calculate boundary of TEfficiency
-  * @private */
+  * @memberof Math */
 function getTEfficiencyBoundaryFunc(option, isbayessian) {
    const  kFCP = 0,       ///< Clopper-Pearson interval (recommended by PDG)
           kFNormal = 1,   ///< Normal approximation
@@ -51283,11 +51325,11 @@ lognormal_cdf_c: lognormal_cdf_c,
 lognormal_cdf: lognormal_cdf,
 igami: igami,
 igamc: igamc,
-get igam () { return igam; },
+igam: igam,
 lgam: lgam,
 lgamma: lgamma,
 erfc: erfc,
-get erf () { return erf; },
+erf: erf,
 beta_pdf: beta_pdf,
 inc_beta: inc_beta,
 BetaIncomplete: BetaIncomplete,
@@ -51304,8 +51346,8 @@ beta_cdf_c: beta_cdf_c,
 Landau: Landau,
 fdistribution_pdf: fdistribution_pdf,
 FDist: fdistribution_pdf,
-get fdistribution_cdf () { return fdistribution_cdf; },
-get FDistI () { return fdistribution_cdf; },
+fdistribution_cdf: fdistribution_cdf,
+FDistI: fdistribution_cdf,
 fdistribution_cdf_c: fdistribution_cdf_c,
 normal_cdf_c: normal_cdf_c,
 gaussian_cdf_c: normal_cdf_c,
@@ -51699,7 +51741,8 @@ function addMoveHandler(painter, enabled) {
 }
 
 /** @summary Inject style
-  * @param {String} code - css string */
+  * @param {String} code - css string
+  * @private */
 function injectStyle(code, node) {
    if (isBatchMode() || !code || (typeof document === 'undefined'))
       return true;
@@ -51908,14 +51951,14 @@ class JSRootMenu {
 
       this.add("sub:Palette", () => this.input("Enter palette code [1..113]", curr, "int", 1, 113).then(set_func));
 
-      add(50, "ROOT 5", (curr>=10) && (curr<51));
+      add(50, "ROOT 5", (curr >= 10) && (curr < 51));
       add(51, "Deep Sea");
-      add(52, "Grayscale", (curr>0) && (curr<10));
+      add(52, "Grayscale", (curr > 0) && (curr < 10));
       add(53, "Dark body radiator");
       add(54, "Two-color hue");
       add(55, "Rainbow");
       add(56, "Inverted dark body radiator");
-      add(57, "Bird", (curr>113));
+      add(57, "Bird", (curr > 113));
       add(58, "Cubehelix");
       add(59, "Green Red Violet");
       add(60, "Blue Red Yellow");
@@ -51942,11 +51985,16 @@ class JSRootMenu {
    }
 
    /** @summary Add selection menu entries
+     * @param {String} name - name of submenu
+     * @param {Array} values - array of string entries used as list for selection
+     * @param {String|Number} value - currently elected value, either name or index
+     * @param {Function} set_func - function called when item selected, either name or index depending from value parameter
      * @protected */
    addSelectMenu(name, values, value, set_func) {
+      let use_number = (typeof value == "number");
       this.add("sub:" + name);
       for (let n = 0; n < values.length; ++n)
-         this.addchk(values[n] == value, values[n], values[n], res => set_func(res));
+         this.addchk(use_number ? (n == value) : (values[n] == value), values[n], use_number ? n : values[n], res => set_func(use_number ? Number.parseInt(res) : res));
       this.add("endsub:");
    }
 
@@ -52994,7 +53042,8 @@ function setPainterTooltipEnabled(painter, on) {
       painter.control.setTooltipEnabled(on);
 }
 
-/** @summary Add drag for interactive rectangular elements for painter */
+/** @summary Add drag for interactive rectangular elements for painter
+  * @private */
 function addDragHandler(_painter, arg) {
    if (!settings.MoveResize || isBatchMode()) return;
 
@@ -54401,6 +54450,7 @@ const FrameInteractive = {
 
 /**
  * @summary Painter class for TFrame, main handler for interactivity
+ * @private
  */
 
 class TFramePainter extends ObjectPainter {
@@ -54408,7 +54458,6 @@ class TFramePainter extends ObjectPainter {
    /** @summary constructor
      * @param {object|string} dom - DOM element for drawing or element id
      * @param {object} tframe - TFrame object */
-
    constructor(dom, tframe) {
       super(dom, (tframe && tframe.$dummy) ? null : tframe);
       this.zoom_kind = 0;
@@ -55606,7 +55655,8 @@ class TFramePainter extends ObjectPainter {
    }
 
    /** @summary Provide zooming of single axis
-     * @desc One can specify names like x/y/z but also second axis x2 or y2 */
+     * @desc One can specify names like x/y/z but also second axis x2 or y2
+     * @private */
    zoomSingle(name, vmin, vmax) {
       // disable zooming when axis conversion is enabled
       if (this.projection || !this[name+"_handle"]) return Promise.resolve(false);
@@ -55864,7 +55914,7 @@ class MDIDisplay extends BasePainter {
 /**
  * @summary Custom MDI display
  *
- * @desc All HTML frames should be created before and add via {@link CustomDisplay.addFrame} calls
+ * @desc All HTML frames should be created before and add via {@link CustomDisplay#addFrame} calls
  * @private
  */
 
@@ -55875,9 +55925,8 @@ class CustomDisplay extends MDIDisplay {
    }
 
    addFrame(divid, itemname) {
-      if (!(divid in this.frames)) this.frames[divid] = "";
-
-      this.frames[divid] += (itemname + ";");
+      let prev = this.frames[divid] || "";
+      this.frames[divid] = prev + (itemname + ";");
    }
 
    forEachFrame(userfunc) {
@@ -57552,6 +57601,7 @@ const webSnapIds = { kNone: 0,  kObject: 1, kSVG: 2, kSubPad: 3, kColors: 4, kSt
 
 /**
   * @summary Painter for TPad object
+  * @private
   */
 
 class TPadPainter extends ObjectPainter {
@@ -57705,7 +57755,7 @@ class TPadPainter extends ObjectPainter {
          return this.custom_palette;
 
       let cp = this.getCanvPainter();
-      return cp ? cp.custom_palette : null;
+      return cp?.custom_palette;
    }
 
    /** @summary Returns number of painters
@@ -57848,7 +57898,7 @@ class TPadPainter extends ObjectPainter {
                       .property('vertical', settings.ToolBarVert);
 
          factor = 0.66;
-         if (this.pad && this.pad.fCw && this.pad.fCh && (this.pad.fCw > 0)) {
+         if (this.pad?.fCw && this.pad?.fCh && (this.pad?.fCw > 0)) {
             factor = this.pad.fCh / this.pad.fCw;
             if ((factor < 0.1) || (factor > 10)) factor = 0.66;
          }
@@ -58111,7 +58161,7 @@ class TPadPainter extends ObjectPainter {
    /** @summary Check if special objects appears in primitives
      * @desc it could be list of colors or palette */
    checkSpecialsInPrimitives(can) {
-      let lst = can ? can.fPrimitives : null;
+      let lst = can?.fPrimitives;
       if (!lst) return;
       for (let i = 0; i < lst.arr.length; ++i) {
          if (this.checkSpecial(lst.arr[i])) {
@@ -58126,7 +58176,7 @@ class TPadPainter extends ObjectPainter {
      * @desc used to find title drawing
      * @private */
    findInPrimitives(objname, objtype) {
-      let arr = this.pad && this.pad.fPrimitives ? this.pad.fPrimitives.arr : null;
+      let arr = this.pad?.fPrimitives?.arr;
 
       return arr ? arr.find(obj => (obj.fName == objname) && (objtype ? (obj.typename == objtype) : true)) : null;
    }
@@ -58154,7 +58204,7 @@ class TPadPainter extends ObjectPainter {
 
    /** @summary Return true if any objects beside sub-pads exists in the pad */
    hasObjectsToDraw() {
-      let arr = this.pad && this.pad.fPrimitives ? this.pad.fPrimitives.arr : null;
+      let arr = this.pad?.fPrimitives?.arr;
       return arr && arr.find(obj => obj._typename != "TPad") ? true : false;
    }
 
@@ -58198,7 +58248,7 @@ class TPadPainter extends ObjectPainter {
    }
 
    /** @summary Draw single primitive */
-   drawObject(dom, obj, opt) {
+   drawObject(/* dom, obj, opt */) {
       console.log('Not possible to draw object without loading of draw.mjs');
       return Promise.resolve(null);
    }
@@ -58213,7 +58263,7 @@ class TPadPainter extends ObjectPainter {
             this._start_tm = new Date().getTime();
 
          // set number of primitves
-         this._num_primitives = this.pad && this.pad.fPrimitives ? this.pad.fPrimitives.arr.length : 0;
+         this._num_primitives = this.pad?.fPrimitives?.arr?.length || 0;
 
          // sync to prevent immediate pad redraw during normal drawing sequence
          return this.syncDraw(true).then(() => this.drawPrimitives(0));
@@ -58222,7 +58272,7 @@ class TPadPainter extends ObjectPainter {
       if (indx >= this._num_primitives) {
          if (this._start_tm) {
             let spenttm = new Date().getTime() - this._start_tm;
-            if (spenttm > 1000) console.log(`Canvas ${this.pad ? this.pad.fName : "---"} drawing took ${(spenttm*1e-3).toFixed(2)}s`);
+            if (spenttm > 1000) console.log(`Canvas ${this.pad?.fName || "---"} drawing took ${(spenttm*1e-3).toFixed(2)}s`);
             delete this._start_tm;
          }
 
@@ -59431,7 +59481,8 @@ PadButtonsHandler: PadButtonsHandler
 
 
 /** @summary direct draw of TFrame object,
-  * @desc pad or canvas should already exist */
+  * @desc pad or canvas should already exist
+  * @private */
 function directDrawTFrame(dom, obj, opt) {
    let fp = new TFramePainter(dom, obj);
    fp.addToPadPrimitives();
@@ -59439,7 +59490,7 @@ function directDrawTFrame(dom, obj, opt) {
    return fp.redraw();
 }
 
-let TCanvasStatusBits = {
+const TCanvasStatusBits = {
    kShowEventStatus: BIT(15),
    kAutoExec: BIT(16),
    kMenuBar: BIT(17),
@@ -60115,9 +60166,9 @@ class TCanvasPainter extends TPadPainter {
 
 
 /** @summary Ensure TCanvas and TFrame for the painter object
- * @param {Object} painter  - painter object to process
- * @param {string|boolean} frame_kind  - false for no frame or "3d" for special 3D mode
- * @desc Assign dom, creates TCanvas if necessary, add to list of pad painters */
+  * @param {Object} painter  - painter object to process
+  * @param {string|boolean} frame_kind  - false for no frame or "3d" for special 3D mode
+  * @desc Assign dom, creates TCanvas if necessary, add to list of pad painters */
 function ensureTCanvas(painter, frame_kind) {
    if (!painter)
       return Promise.reject(Error('Painter not provided in ensureTCanvas'));
@@ -60154,7 +60205,8 @@ function drawTPadSnapshot(dom, snap /*, opt*/) {
    });
 }
 
-/** @summary draw TGaxis object */
+/** @summary draw TGaxis object
+  * @private */
 function drawTGaxis(dom, obj, opt) {
    let painter = new TAxisPainter(dom, obj, false);
    painter.disable_zooming = true;
@@ -60164,7 +60216,8 @@ function drawTGaxis(dom, obj, opt) {
    }).then(() => painter);
 }
 
-/** @summary draw TGaxis object */
+/** @summary draw TGaxis object
+  * @private */
 function drawTFrame(dom, obj, opt) {
    let fp = new TFramePainter(dom, obj);
    return ensureTCanvas(fp, false).then(() => {
@@ -60386,14 +60439,14 @@ class TPavePainter extends ObjectPainter {
    }
 
    /** @summary draw TPaveLabel object */
-   drawPaveLabel(_width, _height) {
+   drawPaveLabel(width, height) {
       this.UseTextColor = true;
 
       let pave = this.getObject();
 
-      this.startTextDrawing(pave.fTextFont, _height/1.2);
+      this.startTextDrawing(pave.fTextFont, height/1.2);
 
-      this.drawText({ align: pave.fTextAlign, width: _width, height: _height, text: pave.fLabel, color: this.getColor(pave.fTextColor) });
+      this.drawText({ align: pave.fTextAlign, width, height, text: pave.fLabel, color: this.getColor(pave.fTextColor) });
 
       return this.finishTextDrawing();
    }
@@ -60435,7 +60488,7 @@ class TPavePainter extends ObjectPainter {
       this.UseTextColor = true;
 
       if (nlines == 1) {
-         this.drawText({ align: pt.fTextAlign, width: width, height: height, text: lines[0], color: tcolor, latex: 1 });
+         this.drawText({ align: pt.fTextAlign, width, height, text: lines[0], color: tcolor, latex: 1 });
       } else
       for (let j = 0; j < nlines; ++j) {
          let posy = j*stepy;
@@ -60447,7 +60500,7 @@ class TPavePainter extends ObjectPainter {
                this.drawText({ align: "middle", x: width * n / num_cols, y: posy, latex: 0,
                                width: width/num_cols, height: stepy, text: parts[n], color: tcolor });
          } else if (lines[j].indexOf('=') < 0) {
-            if (j==0) {
+            if (j == 0) {
                has_head = true;
                let max_hlen = Math.max(maxlen, Math.round((width-2*margin_x)/stepy/0.65));
                if (lines[j].length > max_hlen + 5)
@@ -60625,7 +60678,7 @@ class TPavePainter extends ObjectPainter {
 
          this.startTextDrawing(pt.fTextFont, h/1.5, lbl_g);
 
-         this.drawText({ align: 22, x: x, y: y, width: w, height: h, text: pt.fLabel, color: tcolor, draw_g: lbl_g });
+         this.drawText({ align: 22, x, y, width: w, height: h, text: pt.fLabel, color: tcolor, draw_g: lbl_g });
 
          promises.push(this.finishTextDrawing(lbl_g));
 
@@ -61433,7 +61486,7 @@ TPavePainter: TPavePainter,
 produceLegend: produceLegend
 });
 
-/// TH painting base class
+/// histogram painter base class
 
 
 const CoordSystem = { kCARTESIAN: 1, kPOLAR: 2, kCYLINDRICAL: 3, kSPHERICAL: 4, kRAPIDITY: 5 };
@@ -61624,7 +61677,6 @@ function getColorPalette(id) {
     return new ColorPalette(palette);
 }
 
-// ==============================================================================
 
 /**
  * @summary Class to decode histograms draw options
@@ -62026,9 +62078,9 @@ class THistDrawOptions {
 
       return res;
    }
-}
 
-// ==============================================================================
+} // class THistDrawOptions
+
 
 /**
  * @summary Handle for histogram contour
@@ -62133,13 +62185,12 @@ class HistContour {
 
       return (zindx < 0) ? null : palette.calcColorIndex(zindx, this.arr.length);
    }
-}
 
-// ==============================================================================
+} // class HistContour
 
-/** histogram status bits
+/** @summary histogram status bits
   * @private */
-let TH1StatusBits = {
+const TH1StatusBits = {
    kNoStats       : BIT(9),  // don't draw stats box
    kUserContour   : BIT(10), // user specified contour levels
    kCanRebin      : BIT(11), // can rebin axis
@@ -62149,9 +62200,9 @@ let TH1StatusBits = {
    kIsAverage     : BIT(18)  // Bin contents are average (used by Add)
 };
 
+
 /**
  * @summary Basic painter for histogram classes
- *
  * @private
  */
 
@@ -63669,7 +63720,7 @@ class THistPainter extends ObjectPainter {
       return "[" + funcs.axisAsText(name, x1) + ", " + funcs.axisAsText(name, x2) + ")";
    }
 
-   /** @summary draw TH2 object
+   /** @summary generic draw function for histograms
      * @private */
    static _drawHist(painter, opt) {
 
@@ -63709,7 +63760,7 @@ class THistPainter extends ObjectPainter {
 
 /**
  * @summary Painter for TH1 classes
- *
+ * @private
  */
 
 class TH1Painter$2 extends THistPainter {
@@ -64267,8 +64318,7 @@ class TH1Painter$2 extends THistPainter {
             if (draw_markers) {
                if ((my >= -yerr1) && (my <= height + yerr2)) {
                   if (path_fill !== null)
-                     path_fill += "M" + mx1 +","+(my-yerr1) +
-                                  "h" + (mx2-mx1) + "v" + (yerr1+yerr2+1) + "h-" + (mx2-mx1) + "z";
+                     path_fill += `M${mx1},${my-yerr1}h${mx2-mx1}v${yerr1+yerr2+1}h${mx1-mx2}z`;
                   if ((path_marker !== null) && do_marker) {
                      path_marker += this.markeratt.create(midx, my);
                      if (hints_marker !== null)
@@ -64923,6 +64973,7 @@ TH1Painter: TH1Painter
 
 /**
  * @summary Painter for TH2 classes
+ * @private
  */
 
 class TH2Painter$2 extends THistPainter {
@@ -65272,10 +65323,10 @@ class TH2Painter$2 extends THistPainter {
             gr = bin.fPoly; numgraphs = 1;
             if (gr._typename === 'TMultiGraph') { numgraphs = bin.fPoly.fGraphs.arr.length; gr = null; }
 
-            for (ngr=0;ngr<numgraphs;++ngr) {
+            for (ngr = 0; ngr < numgraphs; ++ngr) {
                if (!gr || (ngr>0)) gr = bin.fPoly.fGraphs.arr[ngr];
 
-               for (n=0;n<gr.fNpoints;++n) {
+               for (n = 0; n < gr.fNpoints; ++n) {
                   ++numpoints;
                   xx += gr.fX[n];
                   yy += gr.fY[n];
@@ -66074,23 +66125,23 @@ class TH2Painter$2 extends THistPainter {
    /** @summary Draw TH2 bins as text */
    drawBinsText(handle) {
       let histo = this.getObject(),
-          posx, posy, sizex, sizey,
-          text_col = this.getColor(histo.fMarkerColor),
-          text_angle = -1*this.options.TextAngle,
-          text_g = this.draw_g.append("svg:g").attr("class","th2_text"),
+          x, y, width, height,
+          color = this.getColor(histo.fMarkerColor),
+          rotate = -1*this.options.TextAngle,
+          draw_g = this.draw_g.append("svg:g").attr("class","th2_text"),
           text_size = 20, text_offset = 0,
           profile2d = this.matchObjectType('TProfile2D') && (typeof histo.getBinEntries=='function'),
           show_err = (this.options.TextKind == "E"),
-          use_latex = (show_err && !this.options.TextLine) ? 1 : 0;
+          latex = (show_err && !this.options.TextLine) ? 1 : 0;
 
-      if (handle === null) handle = this.prepareDraw({ rounding: false });
+      if (!handle) handle = this.prepareDraw({ rounding: false });
 
-      if ((histo.fMarkerSize!==1) && text_angle)
+      if ((histo.fMarkerSize!==1) && rotate)
          text_size = Math.round(0.02*histo.fMarkerSize*this.getFramePainter().getFrameHeight());
 
       if (histo.fBarOffset !== 0) text_offset = histo.fBarOffset*1e-3;
 
-      this.startTextDrawing(42, text_size, text_g, text_size);
+      this.startTextDrawing(42, text_size, draw_g, text_size);
 
       for (let i = handle.i1; i < handle.i2; ++i) {
          let binw = handle.grx[i+1] - handle.grx[i];
@@ -66102,7 +66153,7 @@ class TH2Painter$2 extends THistPainter {
             if (profile2d)
                binz = histo.getBinEntries(i+1, j+1);
 
-            let lbl = (binz === Math.round(binz)) ? binz.toString() :
+            let text = (binz === Math.round(binz)) ? binz.toString() :
                          floatToString(binz, gStyle.fPaintTextFormat);
 
             if (show_err) {
@@ -66110,30 +66161,29 @@ class TH2Painter$2 extends THistPainter {
                    lble = (errz === Math.round(errz)) ? errz.toString() :
                             floatToString(errz, gStyle.fPaintTextFormat);
                if (this.options.TextLine)
-                  lbl += '\xB1' + lble;
+                  text += '\xB1' + lble;
                else
-                  lbl = "#splitline{" + lbl + "}{#pm" + lble + "}";
+                  text = `#splitline{${text}}{#pm${lble}}`;
             }
 
-            if (text_angle /*|| (histo.fMarkerSize!==1)*/) {
-               posx = Math.round(handle.grx[i] + binw*0.5);
-               posy = Math.round(handle.gry[j+1] + binh*(0.5 + text_offset));
-               sizex = 0;
-               sizey = 0;
+            if (rotate /*|| (histo.fMarkerSize!==1)*/) {
+               x = Math.round(handle.grx[i] + binw*0.5);
+               y = Math.round(handle.gry[j+1] + binh*(0.5 + text_offset));
+               width = height = 0;
             } else {
-               posx = Math.round(handle.grx[i] + binw*0.1);
-               posy = Math.round(handle.gry[j+1] + binh*(0.1 + text_offset));
-               sizex = Math.round(binw*0.8);
-               sizey = Math.round(binh*0.8);
+               x = Math.round(handle.grx[i] + binw*0.1);
+               y = Math.round(handle.gry[j+1] + binh*(0.1 + text_offset));
+               width = Math.round(binw*0.8);
+               height = Math.round(binh*0.8);
             }
 
-            this.drawText({ align: 22, x: posx, y: posy, width: sizex, height: sizey, rotate: text_angle, text: lbl, color: text_col, latex: use_latex, draw_g: text_g });
+            this.drawText({ align: 22, x, y, width, height, rotate, text, color, latex, draw_g });
          }
       }
 
       handle.hide_only_zeros = true; // text drawing suppress only zeros
 
-      return this.finishTextDrawing(text_g, true).then(() => handle);
+      return this.finishTextDrawing(draw_g, true).then(() => handle);
    }
 
    /** @summary Draw TH2 bins as arrows */
@@ -66142,8 +66192,8 @@ class TH2Painter$2 extends THistPainter {
           i,j, dn = 1e-30, dx, dy, xc,yc,
           dxn,dyn,x1,x2,y1,y2, anr,si,co,
           handle = this.prepareDraw({ rounding: false }),
-          scale_x = (handle.grx[handle.i2] - handle.grx[handle.i1])/(handle.i2 - handle.i1 + 1-0.03)/2,
-          scale_y = (handle.gry[handle.j2] - handle.gry[handle.j1])/(handle.j2 - handle.j1 + 1-0.03)/2;
+          scale_x = (handle.grx[handle.i2] - handle.grx[handle.i1])/(handle.i2 - handle.i1 + 1)/2,
+          scale_y = (handle.gry[handle.j2] - handle.gry[handle.j1])/(handle.j2 - handle.j1 + 1)/2;
 
       const makeLine = (dx, dy) => {
          if (dx)
@@ -66588,9 +66638,8 @@ class TH2Painter$2 extends THistPainter {
             else
                bars += make_path(pnt.x1, pnt.y1, "V", pnt.y2, "H", pnt.x2, "V", pnt.y1, "Z");
 
-        if (isOption(kAnchor)) { // Draw the anchor line
+        if (isOption(kAnchor))  // Draw the anchor line
             lines += make_path(pnt.x1, pnt.yy1, "H", pnt.x2) + make_path(pnt.x1, pnt.yy2, "H", pnt.x2);
-         }
 
          if (isOption(kWhiskerAll) && !isOption(kHistoZeroIndicator)) { // Whiskers are dashed
             dashed_lines += make_path(center, pnt.y1, "V", pnt.yy1) + make_path(center, pnt.y2, "V", pnt.yy2);
@@ -66601,9 +66650,9 @@ class TH2Painter$2 extends THistPainter {
          if (isOption(kPointsOutliers) || isOption(kPointsAll) || isOption(kPointsAllScat)) {
 
             // reset seed for each projection to have always same pixels
-            let rnd = new TRandom(bin_indx*7521 + Math.round(res.integral));
-
-            let show_all = !isOption(kPointsOutliers), show_scat = isOption(kPointsAllScat);
+            let rnd = new TRandom(bin_indx*7521 + Math.round(res.integral)),
+                show_all = !isOption(kPointsOutliers),
+                show_scat = isOption(kPointsAllScat);
             for (let ii = 0; ii < proj.length; ++ii) {
                let bin_content = proj[ii], binx = (xx[ii] + xx[ii+1])/2,
                    marker_x = center, marker_y = 0;
@@ -66884,7 +66933,7 @@ class TH2Painter$2 extends THistPainter {
 
            let path = "";
 
-           for (let n = 0;n < npix; ++n)
+           for (let n = 0; n < npix; ++n)
               path += this.markeratt.create(arrx[n] * cell_w[colindx], arry[n] * cell_h[colindx]);
 
            pattern.attr("width", cell_w[colindx])
@@ -66918,7 +66967,7 @@ class TH2Painter$2 extends THistPainter {
 
       this.createG(true);
 
-      let handle = null, pr;
+      let handle, pr;
 
       if (this.isTH2Poly()) {
          pr = this.drawPolyBinsColor();
@@ -66982,17 +67031,17 @@ class TH2Painter$2 extends THistPainter {
       let pnts = [];
 
       for (let n = 0; n < nbins; n++) {
-         let angle = (0.5-n/nbins) *Math.PI*2,
+         let angle = (0.5 - n/nbins)*Math.PI*2,
              cx = Math.round((0.9*rect.width/2 - 2*circle_size) * Math.cos(angle)),
              cy = Math.round((0.9*rect.height/2 - 2*circle_size) * Math.sin(angle)),
-             tx = Math.round(0.9*rect.width/2 * Math.cos(angle)),
-             ty = Math.round(0.9*rect.height/2 * Math.sin(angle)),
-             tangle = Math.round(angle / Math.PI * 180), talign = 12,
+             x = Math.round(0.9*rect.width/2 * Math.cos(angle)),
+             y = Math.round(0.9*rect.height/2 * Math.sin(angle)),
+             rotate = Math.round(angle/Math.PI*180), align = 12,
              color = palette ? palette.calcColor(n, nbins) : 'black';
 
          pnts.push({x: cx, y: cy, a: angle, color: color }); // remember points coordinates
 
-         if ((tangle < -90) || (tangle > 90)) { tangle += 180; talign = 32; }
+         if ((rotate < -90) || (rotate > 90)) { rotate += 180; align = 32; }
 
          let s2 = Math.round(text_size/2), s1 = 2*s2;
 
@@ -67001,7 +67050,7 @@ class TH2Painter$2 extends THistPainter {
                     .style('stroke', color)
                     .style('fill','none');
 
-         this.drawText({ align: talign, rotate: tangle, text: getBinLabel(n), x: tx, y: ty });
+         this.drawText({ align, rotate, text: getBinLabel(n), x, y });
       }
 
       let max_width = circle_size/2, max_value = 0, min_value = 0;
@@ -67421,10 +67470,10 @@ class TH2Painter$2 extends THistPainter {
 
       if (pmain.reverse_y) {
          for (j = h.j1; j < h.j2; ++j)
-            if ((pnt.y<=h.gry[j+1]) && (pnt.y>=h.gry[j])) break;
+            if ((pnt.y <= h.gry[j+1]) && (pnt.y >= h.gry[j])) break;
       } else {
          for (j = h.j1; j < h.j2; ++j)
-            if ((pnt.y>=h.gry[j+1]) && (pnt.y<=h.gry[j])) break;
+            if ((pnt.y >= h.gry[j+1]) && (pnt.y <= h.gry[j])) break;
       }
 
       if ((i < h.i2) && (j < h.j2)) {
@@ -67614,7 +67663,8 @@ class TH2Painter$2 extends THistPainter {
 /// 3D TH2 drawing
 
 
-/** @summary Draw TH2Poly histogram as lego */
+/** @summary Draw TH2Poly histogram as lego
+  * @private */
 function drawTH2PolyLego(painter) {
    let histo = painter.getHisto(),
        pmain = painter.getFramePainter(),
@@ -67888,6 +67938,7 @@ TH2Painter: TH2Painter
 
 /**
  * @summary Painter for TH3 classes
+ * @private
  */
 
 class TH3Painter extends THistPainter {
@@ -68647,6 +68698,7 @@ const drawFuncs = { lst: [
    { name: "TGraphTime", icon: "img_graph", class: () => Promise.resolve().then(function () { return TGraphTimePainter$1; }).then(h => h.TGraphTimePainter), opt: "once;repeat;first", theonly: true },
    { name: "TGraph2D", icon: "img_graph", class: () => Promise.resolve().then(function () { return TGraph2DPainter$1; }).then(h => h.TGraph2DPainter), opt: ";P;PCOL", theonly: true },
    { name: "TGraph2DErrors", sameas: "TGraph2D", opt: ";P;PCOL;ERR", theonly: true },
+   { name: "TGraph2DAsymmErrors", sameas: "TGraph2D", opt: ";P;PCOL;ERR", theonly: true },
    { name: "TGraphPolargram", icon: "img_graph", class: () => Promise.resolve().then(function () { return TGraphPolarPainter$1; }).then(h => h.TGraphPolargramPainter), theonly: true },
    { name: "TGraphPolar", icon: "img_graph", class: () => Promise.resolve().then(function () { return TGraphPolarPainter$1; }).then(h => h.TGraphPolarPainter), opt: ";F;L;P;PE", theonly: true },
    { name: /^TGraph/, icon: "img_graph", class: () => Promise.resolve().then(function () { return TGraphPainter$2; }).then(h => h.TGraphPainter), opt: ";L;P" },
@@ -68884,7 +68936,7 @@ function setDefaultDrawOpt(classname, opt) {
   * @param {object} obj - object to draw, object type should be registered before with {@link addDrawFunc}
   * @param {string} opt - draw options separated by space, comma or semicolon
   * @returns {Promise} with painter object
-  * @requires painter
+  * @public
   * @desc An extensive list of support draw options can be found on [examples page]{@link https://root.cern/js/latest/examples.htm}
   * @example
   * let file = await openFile("https://root.cern/js/files/hsimple.root");
@@ -69003,9 +69055,9 @@ function draw(dom, obj, opt) {
   * @param {object} obj - object to draw, object type should be registered before with {@link addDrawFunc}
   * @param {string} opt - draw options
   * @returns {Promise} with painter object
-  * @requires painter
   * @desc If drawing was not done before, it will be performed with {@link draw}.
-  * Otherwise drawing content will be updated */
+  * Otherwise drawing content will be updated
+  * @public */
 function redraw(dom, obj, opt) {
 
    if (!obj || (typeof obj !== 'object'))
@@ -69257,7 +69309,8 @@ const clTObject = 'TObject', clTNamed = 'TNamed', clTObjString = 'TObjString', c
 /** @summary Custom streamers for root classes
   * @desc map of user-streamer function like func(buf,obj)
   * or alias (classname) which can be used to read that function
-  * or list of read functions */
+  * or list of read functions
+  * @private */
 const CustomStreamers = {
    TObject(buf, obj) {
       obj.fUniqueID = buf.ntou4();
@@ -69684,8 +69737,9 @@ const CustomStreamers = {
 };
 
 
- /** @summary these are streamers which do not handle version regularly
-  * @desc used for special classes like TRef or TBasket */
+/** @summary these are streamers which do not handle version regularly
+  * @desc used for special classes like TRef or TBasket
+  * @private */
 const DirectStreamers = {
    // do nothing for these classes
    TQObject() {},
@@ -69862,8 +69916,8 @@ function getTypeId(typname, norecursion) {
    return -1;
 }
 
-   /** @summary create element of the streamer
-     * @private  */
+/** @summary create element of the streamer
+  * @private  */
 function createStreamerElement(name, typename, file) {
    const elem = {
       _typename: 'TStreamerElement', fName: name, fTypeName: typename,
@@ -70468,7 +70522,7 @@ function createMemberStreamer(element, file) {
 
 
 /** @summary Analyze and returns arrays kind
-  * @return 0 if TString (or equivalent), positive value - some basic type, -1 - any other kind
+  * @returns 0 if TString (or equivalent), positive value - some basic type, -1 - any other kind
   * @private */
 function getArrayKind(type_name) {
    if ((type_name === clTString) || (type_name === "string") ||
@@ -71178,7 +71232,7 @@ function ZIP_inflate(arr, tgt) {
  *
  * @param input {Buffer} input data
  * @param output {Buffer} output data
- * @return {Number} number of decoded bytes
+ * @returns {Number} number of decoded bytes
  * @private */
 function LZ4_uncompress(input, output, sIdx, eIdx) {
    sIdx = sIdx || 0;
@@ -71848,7 +71902,7 @@ class TDirectory {
    /** @summary Read object from the directory
      * @param {string} name - object name
      * @param {number} [cycle] - cycle number
-     * @return {Promise} with read object */
+     * @returns {Promise} with read object */
    readObject(obj_name, cycle) {
       return this.fFile.readObject(this.dir_name + "/" + obj_name, cycle);
    }
@@ -71880,12 +71934,11 @@ class TDirectory {
       });
    }
 
-} // TDirectory
+} // class TDirectory
 
 /**
   * @summary Interface to read objects from ROOT files
   *
-  * @hideconstructor
   * @desc Use {@link openFile} to create instance of the class
   */
 
@@ -71896,8 +71949,10 @@ class TFile {
       this.fEND = 0;
       this.fFullURL = url;
       this.fURL = url;
-      this.fAcceptRanges = true; // when disabled ('+' at the end of file name), complete file content read with single operation
-      this.fUseStampPar = "stamp=" + (new Date).getTime(); // use additional time stamp parameter for file name to avoid browser caching problem
+      // when disabled ('+' at the end of file name), complete file content read with single operation
+      this.fAcceptRanges = true;
+      // use additional time stamp parameter for file name to avoid browser caching problem
+      this.fUseStampPar = settings.UseStamp ? "stamp=" + (new Date).getTime() : false;
       this.fFileContent = null; // this can be full or partial content of the file (if ranges are not supported or if 1K header read from file)
       // stored as TBuffer instance
       this.fMaxRanges = 200; // maximal number of file ranges requested at once
@@ -71939,7 +71994,7 @@ class TFile {
    }
 
    /** @summary Assign BufferArray with file contentOpen file
-    * @private */
+     * @private */
    assignFileContent(bufArray) {
       this.fFileContent = new TBuffer(new DataView(bufArray));
       this.fAcceptRanges = false;
@@ -71948,8 +72003,8 @@ class TFile {
    }
 
    /** @summary Open file
-    * @returns {Promise} after file keys are read
-    * @private */
+     * @returns {Promise} after file keys are read
+     * @private */
    _open() {
       if (!this.fAcceptRanges || this.fSkipHeadRequest)
          return this.readKeys();
@@ -72274,9 +72329,9 @@ class TFile {
      * @param {number} [cycle] - cycle number, also can be included in obj_name
      * @returns {Promise} promise with object read
      * @example
-     *   let f = await openFile("https://root.cern/js/files/hsimple.root");
-     *   let obj = await f.readObject("hpxpy;1");
-     *   console.log(`Read object of type ${obj._typename}`); */
+     * let f = await openFile("https://root.cern/js/files/hsimple.root");
+     * let obj = await f.readObject("hpxpy;1");
+     * console.log(`Read object of type ${obj._typename}`); */
    readObject(obj_name, cycle, only_dir) {
 
       let pos = obj_name.lastIndexOf(";");
@@ -72289,8 +72344,6 @@ class TFile {
       // remove leading slashes
       while (obj_name.length && (obj_name[0] == "/")) obj_name = obj_name.slice(1);
 
-      let isdir, read_key;
-
       // one uses Promises while in some cases we need to
       // read sub-directory to get list of keys
       // in such situation calls are asynchrone
@@ -72298,6 +72351,8 @@ class TFile {
 
          if ((obj_name == "StreamerInfo") && (key.fClassName == clTList))
             return this.fStreamerInfos;
+
+         let isdir = false;
 
          if ((key.fClassName == 'TDirectory' || key.fClassName == 'TDirectoryFile')) {
             let dir = this.getDir(obj_name, cycle);
@@ -72308,21 +72363,19 @@ class TFile {
          if (!isdir && only_dir)
             return Promise.reject(Error(`Key ${obj_name} is not directory}`));
 
-         read_key = key;
-
          return this.readObjBuffer(key).then(buf => {
 
             if (isdir) {
                let dir = new TDirectory(this, obj_name, cycle);
-               dir.fTitle = read_key.fTitle;
+               dir.fTitle = key.fTitle;
                return dir.readKeys(buf);
             }
 
             let obj = {};
             buf.mapObject(1, obj); // tag object itself with id==1
-            buf.classStreamer(obj, read_key.fClassName);
+            buf.classStreamer(obj, key.fClassName);
 
-            if ((read_key.fClassName === 'TF1') || (read_key.fClassName === 'TF2'))
+            if ((key.fClassName === 'TF1') || (key.fClassName === 'TF2'))
                return this._readFormulas(obj);
 
             return obj;
@@ -72331,7 +72384,7 @@ class TFile {
    }
 
    /** @summary read formulas from the file and add them to TF1/TF2 objects
-    * @private */
+     * @private */
    _readFormulas(tf1) {
 
       let arr = [];
@@ -72347,7 +72400,7 @@ class TFile {
    }
 
    /** @summary extract streamer infos from the buffer
-    * @private */
+     * @private */
    extractStreamerInfos(buf) {
       if (!buf) return;
 
@@ -72403,104 +72456,102 @@ class TFile {
    }
 
    /** @summary Read file keys
-    * @private */
+     * @private */
    readKeys() {
-
-      let file = this;
 
       // with the first readbuffer we read bigger amount to create header cache
       return this.readBuffer([0, 1024]).then(blob => {
-         let buf = new TBuffer(blob, 0, file);
+         let buf = new TBuffer(blob, 0, this);
 
          if (buf.substring(0, 4) !== 'root')
-            return Promise.reject(Error(`Not a ROOT file ${file.fURL}`));
+            return Promise.reject(Error(`Not a ROOT file ${this.fURL}`));
 
          buf.shift(4);
 
-         file.fVersion = buf.ntou4();
-         file.fBEGIN = buf.ntou4();
-         if (file.fVersion < 1000000) { //small file
-            file.fEND = buf.ntou4();
-            file.fSeekFree = buf.ntou4();
-            file.fNbytesFree = buf.ntou4();
+         this.fVersion = buf.ntou4();
+         this.fBEGIN = buf.ntou4();
+         if (this.fVersion < 1000000) { //small file
+            this.fEND = buf.ntou4();
+            this.fSeekFree = buf.ntou4();
+            this.fNbytesFree = buf.ntou4();
             buf.shift(4); // const nfree = buf.ntoi4();
-            file.fNbytesName = buf.ntou4();
-            file.fUnits = buf.ntou1();
-            file.fCompress = buf.ntou4();
-            file.fSeekInfo = buf.ntou4();
-            file.fNbytesInfo = buf.ntou4();
+            this.fNbytesName = buf.ntou4();
+            this.fUnits = buf.ntou1();
+            this.fCompress = buf.ntou4();
+            this.fSeekInfo = buf.ntou4();
+            this.fNbytesInfo = buf.ntou4();
          } else { // new format to support large files
-            file.fEND = buf.ntou8();
-            file.fSeekFree = buf.ntou8();
-            file.fNbytesFree = buf.ntou4();
+            this.fEND = buf.ntou8();
+            this.fSeekFree = buf.ntou8();
+            this.fNbytesFree = buf.ntou4();
             buf.shift(4); // const nfree = buf.ntou4();
-            file.fNbytesName = buf.ntou4();
-            file.fUnits = buf.ntou1();
-            file.fCompress = buf.ntou4();
-            file.fSeekInfo = buf.ntou8();
-            file.fNbytesInfo = buf.ntou4();
+            this.fNbytesName = buf.ntou4();
+            this.fUnits = buf.ntou1();
+            this.fCompress = buf.ntou4();
+            this.fSeekInfo = buf.ntou8();
+            this.fNbytesInfo = buf.ntou4();
          }
 
          // empty file
-         if (!file.fSeekInfo || !file.fNbytesInfo)
-            return Promise.reject(Error(`File ${file.fURL} does not provide streamer infos`));
+         if (!this.fSeekInfo || !this.fNbytesInfo)
+            return Promise.reject(Error(`File ${this.fURL} does not provide streamer infos`));
 
          // extra check to prevent reading of corrupted data
-         if (!file.fNbytesName || file.fNbytesName > 100000)
-            return Promise.reject(Error(`Cannot read directory info of the file ${file.fURL}`));
+         if (!this.fNbytesName || this.fNbytesName > 100000)
+            return Promise.reject(Error(`Cannot read directory info of the file ${this.fURL}`));
 
          //*-*-------------Read directory info
-         let nbytes = file.fNbytesName + 22;
+         let nbytes = this.fNbytesName + 22;
          nbytes += 4;  // fDatimeC.Sizeof();
          nbytes += 4;  // fDatimeM.Sizeof();
          nbytes += 18; // fUUID.Sizeof();
          // assume that the file may be above 2 Gbytes if file version is > 4
-         if (file.fVersion >= 40000) nbytes += 12;
+         if (this.fVersion >= 40000) nbytes += 12;
 
          // this part typically read from the header, no need to optimize
-         return file.readBuffer([file.fBEGIN, Math.max(300, nbytes)]);
+         return this.readBuffer([this.fBEGIN, Math.max(300, nbytes)]);
       }).then(blob3 => {
 
-         let buf3 = new TBuffer(blob3, 0, file);
+         let buf3 = new TBuffer(blob3, 0, this);
 
          // keep only title from TKey data
-         file.fTitle = buf3.readTKey().fTitle;
+         this.fTitle = buf3.readTKey().fTitle;
 
-         buf3.locate(file.fNbytesName);
+         buf3.locate(this.fNbytesName);
 
          // we read TDirectory part of TFile
-         buf3.classStreamer(file, 'TDirectory');
+         buf3.classStreamer(this, 'TDirectory');
 
-         if (!file.fSeekKeys)
-            return Promise.reject(Error(`Empty keys list in ${file.fURL}`));
+         if (!this.fSeekKeys)
+            return Promise.reject(Error(`Empty keys list in ${this.fURL}`));
 
          // read with same request keys and streamer infos
-         return file.readBuffer([file.fSeekKeys, file.fNbytesKeys, file.fSeekInfo, file.fNbytesInfo]);
+         return this.readBuffer([this.fSeekKeys, this.fNbytesKeys, this.fSeekInfo, this.fNbytesInfo]);
       }).then(blobs => {
 
-         const buf4 = new TBuffer(blobs[0], 0, file);
+         const buf4 = new TBuffer(blobs[0], 0, this);
 
          buf4.readTKey(); //
          const nkeys = buf4.ntoi4();
          for (let i = 0; i < nkeys; ++i)
-            file.fKeys.push(buf4.readTKey());
+            this.fKeys.push(buf4.readTKey());
 
-         const buf5 = new TBuffer(blobs[1], 0, file),
+         const buf5 = new TBuffer(blobs[1], 0, this),
                si_key = buf5.readTKey();
          if (!si_key)
-            return Promise.reject(Error(`Fail to read StreamerInfo data in ${file.fURL}`));
+            return Promise.reject(Error(`Fail to read StreamerInfo data in ${this.fURL}`));
 
-         file.fKeys.push(si_key);
-         return file.readObjBuffer(si_key);
+         this.fKeys.push(si_key);
+         return this.readObjBuffer(si_key);
       }).then(blob6 => {
-          file.extractStreamerInfos(blob6);
-          return file;
+          this.extractStreamerInfos(blob6);
+          return this;
       });
    }
 
    /** @summary Read the directory content from  a root file
      * @desc If directory was already read - return previously read object
-     * Same functionality as {@link TFile.readObject}
+     * Same functionality as {@link TFile#readObject}
      * @param {string} dir_name - directory name
      * @param {number} [cycle] - directory cycle
      * @returns {Promise} - promise with read directory */
@@ -72541,8 +72592,8 @@ class TFile {
    }
 
    /** @summary Returns streamer for the class 'clname',
-    * @desc From the list of streamers or generate it from the streamer infos and add it to the list
-    * @private */
+     * @desc From the list of streamers or generate it from the streamer infos and add it to the list
+     * @private */
    getStreamer(clname, ver, s_i) {
 
       // these are special cases, which are handled separately
@@ -72602,7 +72653,7 @@ class TFile {
    }
 
    /** @summary Here we produce list of members, resolving all base classes
-    * @private */
+     * @private */
    getSplittedStreamer(streamer, tgt) {
       if (!streamer) return tgt;
 
@@ -72643,7 +72694,7 @@ class TFile {
    }
 
    /** @summary Fully clenaup TFile data
-    * @private */
+     * @private */
    delete() {
       this.fDirectories = null;
       this.fKeys = null;
@@ -72653,7 +72704,7 @@ class TFile {
       this.fTagOffset = 0;
    }
 
-} // TFile
+} // class TFile
 
 /** @summary Function to read vector element in the streamer
   * @private */
@@ -72896,6 +72947,8 @@ class TNodejsFile extends TFile {
   * @param {string|object} arg - argument for file open like url, see details
   * @returns {object} - Promise with {@link TFile} instance when file is opened
   * @example
+  *
+  * import { openFile } from '/path_to_jsroot/modules/io.mjs';
   * let f = await openFile("https://root.cern/js/files/hsimple.root");
   * console.log(`Open file ${f.getFileName()}`); */
 function openFile(arg) {
@@ -73034,6 +73087,41 @@ function canExpandHandle(handle) {
    return handle?.expand || handle?.get_expand || handle?.expand_item;
 }
 
+/** @summary Save JSROOT settings as specified cookie parameter
+  * @param {Number} expires - days when cookie will be removed by browser, negative - delete immediately
+  * @param {String} name - cookie parameter name
+  * @private */
+function saveSettings(expires = 365, name = "jsroot_settings") {
+   let arg = (expires <= 0) ? "" : btoa(JSON.stringify(settings)),
+       d = new Date();
+   d.setTime((expires <= 0) ? 0 : d.getTime() + expires*24*60*60*1000);
+   document.cookie = `${name}=${arg}; expires=${d.toUTCString()}; SameSite=None; Secure; path=/;`;
+}
+
+/** @summary Read JSROOT settings from specified cookie parameter
+  * @param {Boolean} only_check - when true just checks if settings were stored before with provided name
+  * @param {String} name - cookie parameter name
+  * @private */
+function readSettings(only_check = false, name = "jsroot_settings") {
+   let decodedCookie = decodeURIComponent(document.cookie),
+       ca = decodedCookie.split(';');
+   name += "=";
+   for(let i = 0; i < ca.length; i++) {
+      let c = ca[i];
+      while (c.charAt(0) == ' ')
+        c = c.substring(1);
+      if (c.indexOf(name) == 0) {
+         let s = JSON.parse(atob(c.substring(name.length, c.length)));
+
+         if (s && typeof s == 'object') {
+            if (!only_check)
+               Object.assign(settings, s);
+            return true;
+          }
+       }
+   }
+}
+
 /** @summary draw list content
   * @desc used to draw all items from TList or TObjArray inserted into the TCanvas list of primitives
   * @private */
@@ -73071,7 +73159,7 @@ function drawList(dom, lst, opt) {
   * @private */
 function folderHierarchy(item, obj) {
 
-   if (!obj || !('fFolders' in obj) || (obj.fFolders===null)) return false;
+   if (!obj || !('fFolders' in obj) || (obj.fFolders === null)) return false;
 
    if (obj.fFolders.arr.length===0) { item._more = false; return true; }
 
@@ -73201,8 +73289,11 @@ function keysHierarchy(folder, keys, file, dirname) {
    folder._childs = [];
 
    for (let i = 0; i < keys.length; ++i) {
-      let key = keys[i],
-          item = {
+      let key = keys[i];
+
+      if (settings.OnlyLastCycle && (i > 0) && (key.fName == keys[i-1].fName) && (key.fCycle < keys[i-1].fCycle)) continue;
+
+      let item = {
          _name: key.fName + ";" + key.fCycle,
          _cycle: key.fCycle,
          _kind: "ROOT." + key.fClassName,
@@ -73212,24 +73303,24 @@ function keysHierarchy(folder, keys, file, dirname) {
          _parent: folder
       };
 
-      if (key.fObjlen > 1e5) item._title += ' (size: ' + (key.fObjlen/1e6).toFixed(1) + 'MB)';
+      if (key.fObjlen > 1e5)
+         item._title += ' (size: ' + (key.fObjlen/1e6).toFixed(1) + 'MB)';
 
-      if ('fRealName' in key)
+      if (key.fRealName)
          item._realname = key.fRealName + ";" + key.fCycle;
 
       if (key.fClassName == 'TDirectory' || key.fClassName == 'TDirectoryFile') {
-         let dir = null;
-         if (dirname && file) dir = file.getDir(dirname + key.fName);
-         if (!dir) {
+         let dir = (dirname && file) ? file.getDir(dirname + key.fName) : null;
+         if (dir) {
+            // remove cycle number - we have already directory
+            item._name = key.fName;
+            keysHierarchy(item, dir.fKeys, file, dirname + key.fName + "/");
+         } else  {
             item._more = true;
             item._expand = function(node, obj) {
                // one can get expand call from child objects - ignore them
                return keysHierarchy(node, obj.fKeys);
             };
-         } else {
-            // remove cycle number - we have already directory
-            item._name = key.fName;
-            keysHierarchy(item, dir.fKeys, file, dirname + key.fName + "/");
          }
       } else if ((key.fClassName == 'TList') && (key.fName == 'StreamerInfo')) {
          if (settings.SkipStreamerInfos) continue;
@@ -73248,7 +73339,7 @@ function keysHierarchy(folder, keys, file, dirname) {
 /** @summary Create hierarchy for arbitrary object
   * @private */
 function objectHierarchy(top, obj, args = undefined) {
-   if (!top || (obj===null)) return false;
+   if (!top || (obj === null)) return false;
 
    top._childs = [];
 
@@ -73274,7 +73365,8 @@ function objectHierarchy(top, obj, args = undefined) {
               _value: "",
               _vclass: 'h_value_num'
             };
-            while (item._name.length < namelen) item._name = "0" + item._name;
+            while (item._name.length < namelen)
+               item._name = "0" + item._name;
             top._childs.push(item);
          }
 
@@ -73303,7 +73395,7 @@ function objectHierarchy(top, obj, args = undefined) {
 
    if (compress) {
       arrcompress = true;
-      for (let k=0;k<obj.length;++k) {
+      for (let k = 0; k < obj.length; ++k) {
          let typ = typeof obj[k];
          if ((typ === 'number') || (typ === 'boolean') || (typ=='string' && (obj[k].length<16))) continue;
          arrcompress = false; break;
@@ -73350,7 +73442,7 @@ function objectHierarchy(top, obj, args = undefined) {
             item._value = obj[k].toString();
          } else {
             item._value = "";
-            for (let d=k;d<nextk;++d)
+            for (let d = k; d < nextk; ++d)
                item._value += ((d===k) ? "[ " : ", ") + obj[d].toString();
             item._value += " ]";
          }
@@ -73702,25 +73794,23 @@ class HierarchyPainter extends BasePainter {
       let painter = this;
 
       let folder = {
-         _name : file.fFileName,
-         _title : (file.fTitle ? (file.fTitle + ", path ") : "")  + file.fFullURL,
-         _kind : "ROOT.TFile",
-         _file : file,
-         _fullurl : file.fFullURL,
-         _localfile : file.fLocalFile,
-         _had_direct_read : false,
+         _name: file.fFileName,
+         _title: (file.fTitle ? (file.fTitle + ", path ") : "")  + file.fFullURL,
+         _kind: "ROOT.TFile",
+         _file: file,
+         _fullurl: file.fFullURL,
+         _localfile: file.fLocalFile,
+         _had_direct_read: false,
          // this is central get method, item or itemname can be used, returns promise
-         _get : function(item, itemname) {
-
-            let fff = this; // file item
+         _get: function(item, itemname) {
 
             if (item && item._readobj)
                return Promise.resolve(item._readobj);
 
-            if (item) itemname = painter.itemFullName(item, fff);
+            if (item) itemname = painter.itemFullName(item, this);
 
-            function ReadFileObject(file) {
-               if (!fff._file) fff._file = file;
+            const readFileObject = file => {
+               if (!this._file) this._file = file;
 
                if (!file) return Promise.resolve(null);
 
@@ -73729,20 +73819,20 @@ class HierarchyPainter extends BasePainter {
                   // if object was read even when item did not exist try to reconstruct new hierarchy
                   if (!item && obj) {
                      // first try to found last read directory
-                     let d = painter.findItem({name:itemname, top:fff, last_exists:true, check_keys:true });
-                     if ((d!=null) && ('last' in d) && (d.last!=fff)) {
+                     let d = painter.findItem({name: itemname, top: this, last_exists: true, check_keys: true});
+                     if ((d?.last !== undefined) && (d.last !== this)) {
                         // reconstruct only subdir hierarchy
-                        let dir = file.getDir(painter.itemFullName(d.last, fff));
+                        let dir = file.getDir(painter.itemFullName(d.last, this));
                         if (dir) {
                            d.last._name = d.last._keyname;
-                           let dirname = painter.itemFullName(d.last, fff);
+                           let dirname = painter.itemFullName(d.last, this);
                            keysHierarchy(d.last, dir.fKeys, file, dirname + "/");
                         }
                      } else {
                         // reconstruct full file hierarchy
-                        keysHierarchy(fff, file.fKeys, file, "");
+                        keysHierarchy(this, file.fKeys, file, "");
                      }
-                     item = painter.findItem({name:itemname, top: fff});
+                     item = painter.findItem({name: itemname, top: this});
                   }
 
                   if (item) {
@@ -73753,11 +73843,11 @@ class HierarchyPainter extends BasePainter {
 
                   return obj;
                });
-            }
+            };
 
-            if (fff._file) return ReadFileObject(fff._file);
-            if (fff._localfile) return openFile(fff._localfile).then(f => ReadFileObject(f));
-            if (fff._fullurl) return openFile(fff._fullurl).then(f => ReadFileObject(f));
+            if (this._file) return readFileObject(this._file);
+            if (this._localfile) return openFile(this._localfile).then(f => readFileObject(f));
+            if (this._fullurl) return openFile(this._fullurl).then(f => readFileObject(f));
             return Promise.resolve(null);
          }
       };
@@ -73956,7 +74046,7 @@ class HierarchyPainter extends BasePainter {
 
          return httpRequest(url + urlargs, 'text').then(res => {
             if (d3node.empty()) return res;
-            let col = ((res != null) && (res != 'false')) ? 'green' : 'red';
+            let col = (res && (res != 'false')) ? 'green' : 'red';
             d3node.style('background', col);
             if (hitem._title)
                d3node.attr('title', hitem._title + " lastres=" + res);
@@ -74587,6 +74677,92 @@ class HierarchyPainter extends BasePainter {
          });
    }
 
+   /** @summary Fills settings menu items
+     * @private */
+   fillSettingsMenu(menu) {
+      menu.add("sub:Settings");
+
+      menu.add("sub:Files");
+
+      menu.addchk(settings.OnlyLastCycle, "Last cycle", flag => {
+         settings.OnlyLastCycle = flag;
+         this.forEachRootFile(folder => keysHierarchy(folder, folder._file.fKeys, folder._file, ""));
+         this.refreshHtml();
+      });
+
+      menu.addchk(!settings.SkipStreamerInfos, "Streamer infos", flag => {
+         settings.SkipStreamerInfos = !flag;
+         this.forEachRootFile(folder => keysHierarchy(folder, folder._file.fKeys, folder._file, ""));
+         this.refreshHtml();
+      });
+
+      menu.addchk(settings.UseStamp, "Use stamp arg", flag => { settings.UseStamp = flag; });
+
+      menu.addchk(settings.HandleWrongHttpResponse, "Handle wrong http response", flag => { settings.HandleWrongHttpResponse = flag; });
+
+      menu.add("endsub:");
+
+      menu.add("sub:Toolbar");
+      menu.addchk(settings.ToolBar === false, "Off", flag => { settings.ToolBar = !flag; });
+      menu.addchk(settings.ToolBar === true, "On", flag => { settings.ToolBar = flag; });
+      menu.addchk(settings.ToolBar === "popup", "Popup", flag => { settings.ToolBar = flag ? "popup" : false; });
+      menu.add("separator");
+      menu.addchk(settings.ToolBarSide == "left", "Left side", flag => { settings.ToolBarSide = flag ? "left" : "right"; });
+      menu.addchk(settings.ToolBarVert, "Vertical", flag => { settings.ToolBarVert = flag; });
+      menu.add("endsub:");
+
+      menu.add("sub:Interactive");
+      menu.addchk(settings.Tooltip, "Tooltip", flag => { settings.Tooltip = flag; });
+      menu.addchk(settings.ContextMenu, "Context menus", flag => { settings.ContextMenu = flag; });
+      menu.add("sub:Zooming");
+      menu.addchk(settings.Zooming, "Global", flag => { settings.Zooming = flag; });
+      menu.addchk(settings.ZoomMouse, "Mouse", flag => { settings.ZoomMouse = flag; });
+      menu.addchk(settings.ZoomWheel, "Wheel", flag => { settings.ZoomWheel = flag; });
+      menu.addchk(settings.ZoomTouch, "Touch", flag => { settings.ZoomTouch = flag; });
+      menu.add("endsub:");
+      menu.addchk(settings.HandleKeys, "Keypress handling", flag => { settings.HandleKeys = flag; });
+      menu.addchk(settings.MoveResize, "Move and resize", flag => { settings.MoveResize = flag; });
+      menu.addchk(settings.DragAndDrop, "Drag and drop", flag => { settings.DragAndDrop = flag; });
+      menu.addchk(settings.DragGraphs, "Drag graph points", flag => { settings.DragGraphs = flag; });
+      menu.addchk(settings.ProgressBox, "Progress box", flag => { settings.ProgressBox = flag; });
+      menu.add("endsub:");
+
+      menu.add("sub:Drawing");
+      menu.addSelectMenu("Optimize", ["None", "Smart", "Always"], settings.OptimizeDraw, value => {
+          settings.OptimizeDraw = value;
+      });
+      menu.addPaletteMenu(settings.Palette, pal => { settings.Palette = pal; });
+      menu.addchk(settings.AutoStat, "Auto stat box", flag => { settings.AutoStat = flag; });
+      menu.addSelectMenu("Latex", ["Off", "Symbols", "Normal", "MathJax", "Force MathJax"], settings.Latex, value => {
+          settings.Latex = value;
+      });
+      menu.addSelectMenu("3D rendering", ["Default", "WebGL", "Image"], settings.Render3D, value => {
+          settings.Render3D = value;
+      });
+      menu.addSelectMenu("WebGL embeding", ["Default", "Overlay", "Embed"], settings.Embed3D, value => {
+          settings.Embed3D = value;
+      });
+
+      menu.add("endsub:");
+
+      menu.add("sub:Geometry");
+      menu.add("Grad per segment:  " + settings.GeoGradPerSegm, () => menu.input("Grad per segment in geometry", settings.GeoGradPerSegm, "int", 1, 60).then(val => { settings.GeoGradPerSegm = val; }));
+      menu.addchk(settings.GeoCompressComp, "Compress composites", flag => { settings.GeoCompressComp = flag; });
+      menu.add("endsub:");
+
+      menu.add("Hierarchy limit:  " + settings.HierarchyLimit, () => menu.input("Max number of items in hierarchy", settings.HierarchyLimit, "int", 10, 100000).then(val => { settings.HierarchyLimit = val; }));
+
+      menu.add("separator");
+
+      menu.add("Save settings", () => {
+         let promise = readSettings(true) ? Promise.resolve(true) : menu.confirm("Save settings", "Pressing OK one agreess that JSROOT will store settings as browser cookies");
+         promise.then(res => { if (res) saveSettings(); });
+      });
+      menu.add("Delete settings", () => saveSettings(-1));
+
+      menu.add("endsub:");
+   }
+
    /** @summary Handle context menu in the hieararchy
      * @private */
    tree_contextmenu(evnt, elem) {
@@ -74669,6 +74845,7 @@ class HierarchyPainter extends BasePainter {
 
             menu.add("Direct link", () => window.open(addr));
             menu.add("Only items", () => window.open(addr + "&nobrowser"));
+            this.fillSettingsMenu(menu);
          } else if (onlineprop) {
             this.fillOnlineMenu(menu, onlineprop, itemname);
          } else {
@@ -76615,6 +76792,7 @@ drawInspector: drawInspector,
 drawStreamerInfo: drawStreamerInfo,
 drawList: drawList,
 markAsStreamerInfo: markAsStreamerInfo,
+readSettings: readSettings,
 folderHierarchy: folderHierarchy,
 taskHierarchy: taskHierarchy,
 listHierarchy: listHierarchy,
@@ -76625,6 +76803,10 @@ keysHierarchy: keysHierarchy
 /** @summary Read style and settings from URL
   * @private */
 function readStyleFromURL(url) {
+
+   // first try to read settings from coockies
+   readSettings();
+
    let d = decodeUrl(url);
 
    if (d.has("optimize")) {
@@ -76635,6 +76817,17 @@ function readStyleFromURL(url) {
          if (Number.isInteger(optimize)) settings.OptimizeDraw = optimize;
       }
    }
+
+   if (d.has("lastcycle")) {
+      let val = d.get("lastcycle");
+      settings.OnlyLastCycle = (val != "0") && (val != "false");
+   }
+
+   let usestamp = d.get('usestamp');
+   settings.UseStamp = (usestamp != "0") && (usestamp != "false");
+
+   if (d.has('wrong_http_response'))
+      settings.HandleWrongHttpResponse = true;
 
    let inter = d.get("interactive");
    if (inter === "nomenu")
@@ -76719,9 +76912,16 @@ function readStyleFromURL(url) {
 }
 
 
+
 /** @summary Build main GUI
-  * @returns {Promise} when completed  */
-function buildGUI(gui_element, gui_kind) {
+  * @desc Used in many HTML files to create JSROOT GUI elements
+  * @param {String} gui_element - id of the `<div>` element
+  * @param {String} gui_kind - either "online", "nobrowser", "draw"
+  * @returns {Promise} with {@link HierarchyPainter} instance
+  * @example
+  * import { buildGUI } from '/path_to_jsroot/modules/gui.mjs';
+  * buildGUI("guiDiv"); */
+function buildGUI(gui_element, gui_kind = "") {
    let myDiv = (typeof gui_element == 'string') ? select('#' + gui_element) : select(gui_element);
    if (myDiv.empty())
       return Promise.reject(Error('no div for gui found'));
@@ -78330,7 +78530,8 @@ class Geometry {
 
 } // class Geometry
 
-   /** @summary create geometry to make cut on specified axis */
+/** @summary create geometry to make cut on specified axis
+  * @private */
 function createNormal(axis_name, pos, size) {
    if (!size || (size < 10000)) size = 10000;
 
@@ -86939,7 +87140,7 @@ function drawAxis3D() {
   * @param {boolean} [opt.dflt_colors=false] - use default ROOT colors
   * @returns {object} Object3D with created model
   * @example
-  * import { build } from './path_to_jsroot/modules/geom.mjs';
+  * import { build } from './path_to_jsroot/modules/geom/TGeoPainter.mjs';
   * let obj3d = build(obj);
   * // this is three.js object and can be now inserted in the scene
   */
@@ -87377,6 +87578,7 @@ TGraphTimePainter: TGraphTimePainter
 
 /**
  * @summary Painter for TGraph2D classes
+ * @private
  */
 
 class TGraph2DPainter extends ObjectPainter {
@@ -87392,7 +87594,7 @@ class TGraph2DPainter extends ObjectPainter {
 
       res.Color = d.check("COL");
       res.Line = d.check("LINE");
-      res.Error = d.check("ERR") && this.matchObjectType("TGraph2DErrors");
+      res.Error = d.check("ERR") && (this.matchObjectType("TGraph2DErrors") || this.matchObjectType("TGraph2DAsymmErrors"));
       res.Circles = d.check("P0");
       res.Markers = d.check("P");
 
@@ -87410,23 +87612,30 @@ class TGraph2DPainter extends ObjectPainter {
    /** @summary Create histogram for axes drawing */
    createHistogram() {
       let gr = this.getObject(),
+          asymm = this.matchObjectType("TGraph2DAsymmErrors"),
           xmin = gr.fX[0], xmax = xmin,
           ymin = gr.fY[0], ymax = ymin,
           zmin = gr.fZ[0], zmax = zmin;
 
       for (let p = 0; p < gr.fNpoints;++p) {
 
-         let x = gr.fX[p], y = gr.fY[p], z = gr.fZ[p],
-             errx = this.options.Error ? gr.fEX[p] : 0,
-             erry = this.options.Error ? gr.fEY[p] : 0,
-             errz = this.options.Error ? gr.fEZ[p] : 0;
+         let x = gr.fX[p], y = gr.fY[p], z = gr.fZ[p];
 
-         xmin = Math.min(xmin, x-errx);
-         xmax = Math.max(xmax, x+errx);
-         ymin = Math.min(ymin, y-erry);
-         ymax = Math.max(ymax, y+erry);
-         zmin = Math.min(zmin, z-errz);
-         zmax = Math.max(zmax, z+errz);
+         if (this.options.Error) {
+            xmin = Math.min(xmin, x - (asymm ? gr.fEXlow[p] : gr.fEX[p]));
+            xmax = Math.max(xmax, x + (asymm ? gr.fEXhigh[p] : gr.fEX[p]));
+            ymin = Math.min(ymin, y - (asymm ? gr.fEYlow[p] : gr.fEY[p]));
+            ymax = Math.max(ymax, y + (asymm ? gr.fEYhigh[p] : gr.fEY[p]));
+            zmin = Math.min(zmin, z - (asymm ? gr.fEZlow[p] : gr.fEZ[p]));
+            zmax = Math.max(zmax, z + (asymm ? gr.fEZhigh[p] : gr.fEZ[p]));
+         } else {
+            xmin = Math.min(xmin, x);
+            xmax = Math.max(xmax, x);
+            ymin = Math.min(ymin, y);
+            ymax = Math.max(ymax, y);
+            zmin = Math.min(zmin, z);
+            zmax = Math.max(zmax, z);
+         }
       }
 
       if (xmin >= xmax) xmax = xmin+1;
@@ -87572,13 +87781,15 @@ class TGraph2DPainter extends ObjectPainter {
          let size = Math.floor(countSelected(lvl_zmin, lvl_zmax) / step),
              pnts = null, select = 0,
              index = new Int32Array(size), icnt = 0,
-             err = null, line = null, ierr = 0, iline = 0;
+             err = null, asymm = false, line = null, ierr = 0, iline = 0;
 
          if (this.options.Markers || this.options.Circles)
             pnts = new PointsCreator(size, fp.webgl, scale/3);
 
-         if (this.options.Error)
+         if (this.options.Error) {
             err = new Float32Array(size*6*3);
+            asymm = this.matchObjectType("TGraph2DAsymmErrors");
+          }
 
          if (this.options.Line)
             line = new Float32Array((size-1)*6);
@@ -87602,26 +87813,26 @@ class TGraph2DPainter extends ObjectPainter {
             if (pnts) pnts.addPoint(x,y,z);
 
             if (err) {
-               err[ierr]   = fp.grx(graph.fX[i] - graph.fEX[i]);
+               err[ierr]   = fp.grx(graph.fX[i] - (asymm ? graph.fEXlow[i] : graph.fEX[i]));
                err[ierr+1] = y;
                err[ierr+2] = z;
-               err[ierr+3] = fp.grx(graph.fX[i] + graph.fEX[i]);
+               err[ierr+3] = fp.grx(graph.fX[i] + (asymm ? graph.fEXhigh[i] : graph.fEX[i]));
                err[ierr+4] = y;
                err[ierr+5] = z;
                ierr+=6;
                err[ierr]   = x;
-               err[ierr+1] = fp.gry(graph.fY[i] - graph.fEY[i]);
+               err[ierr+1] = fp.gry(graph.fY[i] - (asymm ? graph.fEYlow[i] : graph.fEY[i]));
                err[ierr+2] = z;
                err[ierr+3] = x;
-               err[ierr+4] = fp.gry(graph.fY[i] + graph.fEY[i]);
+               err[ierr+4] = fp.gry(graph.fY[i] + (asymm ? graph.fEYhigh[i] : graph.fEY[i]));
                err[ierr+5] = z;
                ierr+=6;
                err[ierr]   = x;
                err[ierr+1] = y;
-               err[ierr+2] = fp.grz(graph.fZ[i] - graph.fEZ[i]);
+               err[ierr+2] = fp.grz(graph.fZ[i] - (asymm ? graph.fEZlow[i] : graph.fEZ[i]));
                err[ierr+3] = x;
                err[ierr+4] = y;
-               err[ierr+5] = fp.grz(graph.fZ[i] + graph.fEZ[i]);
+               err[ierr+5] = fp.grz(graph.fZ[i] + (asymm ? graph.fEZhigh[i] : graph.fEZ[i]));
                ierr+=6;
             }
 
@@ -89127,8 +89338,8 @@ class TGraphPainter$1 extends ObjectPainter {
                lineatt = new TAttLineHandler({ attr: graph.fAttLine[k], std: false });
                fillatt = new TAttFillHandler({ attr: graph.fAttFill[k], std: false, svg: this.getCanvSvg() });
             }
-            let sub_g = this.draw_g.append("svg:g");
-            let options = k < this.options.blocks.length ? this.options.blocks[k] : this.options;
+            let sub_g = this.draw_g.append("svg:g"),
+                options = k < this.options.blocks.length ? this.options.blocks[k] : this.options;
             this.extractGmeErrors(k);
             this.drawBins(funcs, options, sub_g, w, h, lineatt, fillatt);
          }
@@ -89158,7 +89369,7 @@ class TGraphPainter$1 extends ObjectPainter {
 
       this.draw_g.selectAll('.grpoint').each(function() {
          let d = select(this).datum();
-         if (d===undefined) return;
+         if (d === undefined) return;
          let dist2 = Math.pow(pnt.x - d.grx1, 2);
          if (pnt.nproc===1) dist2 += Math.pow(pnt.y - d.gry1, 2);
          if (dist2 >= best_dist2) return;
@@ -89473,7 +89684,7 @@ class TGraphPainter$1 extends ObjectPainter {
    /** @summary Start moving of TGraph */
    moveStart(x,y) {
       this.pos_dx = this.pos_dy = 0;
-      let hint = this.extractTooltip({ x:x, y:y });
+      let hint = this.extractTooltip({x, y});
       if (hint && hint.exact && (hint.binindx !== undefined)) {
          this.move_binindx = hint.binindx;
          this.move_bin = hint.bin;
@@ -92116,7 +92327,8 @@ class TSelector {
 /** @summary Checks array kind
   * @desc return 0 when not array
   * 1 - when arbitrary array
-  * 2 - when plain (1-dim) array with same-type content */
+  * 2 - when plain (1-dim) array with same-type content
+  * @private */
 function checkArrayPrototype(arr, check_content) {
    if (typeof arr !== 'object') return 0;
 
@@ -92296,7 +92508,8 @@ function getBranchObjectClass(branch, tree, with_clones = false, with_leafs = fa
 
 /** @summary Get branch with specified id
   * @desc All sub-branches checked as well
-  * @returns {Object} branch */
+  * @returns {Object} branch
+  * @private */
 function getTreeBranch(tree, id) {
    if (!Number.isInteger(id)) return;
    let res, seq = 0;
@@ -92378,7 +92591,8 @@ function findBranchComplex(tree, name, lst = undefined, only_search = false) {
 
 /** @summary Search branch with specified name
   * @param {string} name - name of the branch
-  * @returns {Object} found branch */
+  * @returns {Object} found branch
+  * @private */
 function findBranch(tree, name) {
    let res = findBranchComplex(tree, name, tree.fBranches, true);
    return (!res || (res.rest.length > 0)) ? null : res.branch;
@@ -94511,7 +94725,7 @@ function treeProcess(tree, selector, args) {
 
 }
 
-/** @summary  implementation of TTree::Draw
+/** @summary implementation of TTree::Draw
   * @param {object|string} args - different setting or simply draw expression
   * @param {string} args.expr - draw expression
   * @param {string} [args.cut=undefined]   - cut expression (also can be part of 'expr' after '::')
@@ -96173,11 +96387,11 @@ class RAxisPainter extends RObjectPainter {
             textscale = Math.min(textscale, maxwidth / textwidth);
          }
 
-         if ((textscale > 0.01) && (textscale < 0.8) && !painter.vertical && !rotate_lbls && (maxtextlen > 5) && (side > 0))
+         if ((textscale > 0.0001) && (textscale < 0.8) && !painter.vertical && !rotate_lbls && (maxtextlen > 5) && (side > 0))
             lbls_tilt = true;
 
          let scale = textscale * (lbls_tilt ? 3 : 1);
-         if ((scale > 0.01) && (scale < 1))
+         if ((scale > 0.0001) && (scale < 1))
             painter.scaleTextDrawing(1/scale, label_g);
       }
 
@@ -96492,7 +96706,7 @@ class RAxisPainter extends RObjectPainter {
          smin = min; smax = max;
       }
 
-      this.configureAxis("axis", min, max, smin, smax, drawable.fVertical, undefined, len, { reverse: reverse, labels: labels_len > 0 });
+      this.configureAxis("axis", min, max, smin, smax, drawable.fVertical, undefined, len, { reverse, labels: labels_len > 0 });
 
       this.createG();
 
@@ -100771,8 +100985,8 @@ registerMethods("ROOT::Experimental::RPalette", {
       return arr;
    },
 
-   /** @summary extract color with ordinal value between 0 and 1 */
    getColorOrdinal(value) {
+      // extract color with ordinal value between 0 and 1
       if (!this.fColors)
          return "black";
       if ((typeof value != "number") || (value < 0))
@@ -100797,10 +101011,10 @@ registerMethods("ROOT::Experimental::RPalette", {
       return this.extractRColor(next.fColor);
    },
 
-   /** @summary set full z scale range, used in zooming */
    setFullRange(min, max) {
-       this.full_min = min;
-       this.full_max = max;
+      // set full z scale range, used in zooming
+      this.full_min = min;
+      this.full_max = max;
    },
 
    createContour(logz, nlevels, zmin, zmax, zminpositive) {
@@ -100865,7 +101079,8 @@ function drawRFont() {
    return true;
 }
 
-/** @summary draw RAxis object */
+/** @summary draw RAxis object
+  * @private */
 function drawRAxis(dom, obj, opt) {
    let painter = new RAxisPainter(dom, obj, opt);
    painter.disable_zooming = true;
@@ -100874,7 +101089,8 @@ function drawRAxis(dom, obj, opt) {
            .then(() => painter);
 }
 
-/** @summary draw RFrame object */
+/** @summary draw RFrame object
+  * @private */
 function drawRFrame(dom, obj, opt) {
    let p = new RFramePainter(dom, obj);
    if (opt == "3d") p.mode3d = true;
@@ -101672,7 +101888,7 @@ class RHistStatsPainter extends RPavePainter {
                   lines[j] = lines[j].slice(0,max_hlen+2) + "...";
             }
             this.drawText({ align: (j == 0) ? "middle" : "start", x: margin_x, y: posy,
-                            width: width-2*margin_x, height: stepy, text: lines[j], draw_g: text_g });
+                            width: width - 2*margin_x, height: stepy, text: lines[j], draw_g: text_g });
          } else {
             let parts = lines[j].split("="), args = [];
 
@@ -103026,13 +103242,13 @@ class RH1Painter$2 extends RHistPainter {
                let lbl = (bincont === Math.round(bincont)) ? bincont.toString() : floatToString(bincont, gStyle.fPaintTextFormat);
 
                if (text_font.angle)
-                  this.drawText({ align: 12, x: midx, y: Math.round(my - 2 - text_font.size / 5), width: 0, height: 0, text: lbl, latex: 0 });
+                  this.drawText({ align: 12, x: midx, y: Math.round(my - 2 - text_font.size / 5), text: lbl, latex: 0 });
                else
                   this.drawText({ x: Math.round(mx1 + (mx2 - mx1) * 0.1), y: Math.round(my - 2 - text_font.size), width: Math.round((mx2 - mx1) * 0.8), height: text_font.size, text: lbl, latex: 0 });
             }
 
             if (show_line && (path_line !== null))
-               path_line += ((path_line.length===0) ? "M" : "L") + midx + "," + my;
+               path_line += ((path_line.length === 0) ? "M" : "L") + midx + "," + my;
 
             if (draw_markers) {
                if ((my >= -yerr1) && (my <= height + yerr2)) {
@@ -103925,9 +104141,9 @@ class RH2Painter$2 extends RHistPainter {
 
             if ((xside != 1) || (yside != 1)) continue;
 
-            if ((cond!=null) && !cond(xx,yy)) continue;
+            if (cond && !cond(xx,yy)) continue;
 
-            if ((res.wmax==null) || (zz>res.wmax)) { res.wmax = zz; res.xmax = xx; res.ymax = yy; }
+            if ((res.wmax === null) || (zz > res.wmax)) { res.wmax = zz; res.xmax = xx; res.ymax = yy; }
 
             stat_sum0 += zz;
             stat_sumx1 += xx * zz;
@@ -103944,11 +104160,8 @@ class RH2Painter$2 extends RHistPainter {
          res.rmsy = Math.sqrt(Math.abs(stat_sumy2 / stat_sum0 - res.meany * res.meany));
       }
 
-      if (res.wmax===null) res.wmax = 0;
+      if (res.wmax === null) res.wmax = 0;
       res.integral = stat_sum0;
-
-      // if (histo.fEntries > 1) res.entries = histo.fEntries;
-
       return res;
    }
 
@@ -104446,7 +104659,7 @@ class RH2Painter$2 extends RHistPainter {
    /** @summary Draw RH2 bins as text */
    drawBinsText(handle) {
       let histo = this.getHisto(),
-          i, j, binz, binw, binh, lbl, posx, posy, sizex, sizey;
+          i, j, binz, binw, binh, text, x, y, width, height;
 
       if (handle===null) handle = this.prepareDraw({ rounding: false });
 
@@ -104472,22 +104685,21 @@ class RH2Painter$2 extends RHistPainter {
             if (profile2d)
                binz = histo.getBinEntries(i+1, j+1);
 
-            lbl = (binz === Math.round(binz)) ? binz.toString() :
+            text = (binz === Math.round(binz)) ? binz.toString() :
                       floatToString(binz, gStyle.fPaintTextFormat);
 
             if (textFont.angle) {
-               posx = Math.round(handle.grx[i] + binw*0.5);
-               posy = Math.round(handle.gry[j+dj] + binh*(0.5 + text_offset));
-               sizex = 0;
-               sizey = 0;
+               x = Math.round(handle.grx[i] + binw*0.5);
+               y = Math.round(handle.gry[j+dj] + binh*(0.5 + text_offset));
+               width = height = 0;
             } else {
-               posx = Math.round(handle.grx[i] + binw*0.1);
-               posy = Math.round(handle.gry[j+dj] + binh*(0.1 + text_offset));
-               sizex = Math.round(binw*0.8);
-               sizey = Math.round(binh*0.8);
+               x = Math.round(handle.grx[i] + binw*0.1);
+               y = Math.round(handle.gry[j+dj] + binh*(0.1 + text_offset));
+               width = Math.round(binw*0.8);
+               height = Math.round(binh*0.8);
             }
 
-            this.drawText({ align: 22, x: posx, y: posy, width: sizex, height: sizey, text: lbl, latex: 0, draw_g: text_g });
+            this.drawText({ align: 22, x, y, width, height, text, latex: 0, draw_g: text_g });
          }
 
       return this.finishTextDrawing(text_g, true).then(() => {
