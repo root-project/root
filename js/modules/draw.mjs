@@ -49,6 +49,7 @@ const drawFuncs = { lst: [
    { name: "TGraphTime", icon: "img_graph", class: () => import('./hist/TGraphTimePainter.mjs').then(h => h.TGraphTimePainter), opt: "once;repeat;first", theonly: true },
    { name: "TGraph2D", icon: "img_graph", class: () => import('./hist/TGraph2DPainter.mjs').then(h => h.TGraph2DPainter), opt: ";P;PCOL", theonly: true },
    { name: "TGraph2DErrors", sameas: "TGraph2D", opt: ";P;PCOL;ERR", theonly: true },
+   { name: "TGraph2DAsymmErrors", sameas: "TGraph2D", opt: ";P;PCOL;ERR", theonly: true },
    { name: "TGraphPolargram", icon: "img_graph", class: () => import('./draw/TGraphPolarPainter.mjs').then(h => h.TGraphPolargramPainter), theonly: true },
    { name: "TGraphPolar", icon: "img_graph", class: () => import('./draw/TGraphPolarPainter.mjs').then(h => h.TGraphPolarPainter), opt: ";F;L;P;PE", theonly: true },
    { name: /^TGraph/, icon: "img_graph", class: () => import('./hist2d/TGraphPainter.mjs').then(h => h.TGraphPainter), opt: ";L;P" },
@@ -286,7 +287,7 @@ function setDefaultDrawOpt(classname, opt) {
   * @param {object} obj - object to draw, object type should be registered before with {@link addDrawFunc}
   * @param {string} opt - draw options separated by space, comma or semicolon
   * @returns {Promise} with painter object
-  * @requires painter
+  * @public
   * @desc An extensive list of support draw options can be found on [examples page]{@link https://root.cern/js/latest/examples.htm}
   * @example
   * let file = await openFile("https://root.cern/js/files/hsimple.root");
@@ -405,9 +406,9 @@ function draw(dom, obj, opt) {
   * @param {object} obj - object to draw, object type should be registered before with {@link addDrawFunc}
   * @param {string} opt - draw options
   * @returns {Promise} with painter object
-  * @requires painter
   * @desc If drawing was not done before, it will be performed with {@link draw}.
-  * Otherwise drawing content will be updated */
+  * Otherwise drawing content will be updated
+  * @public */
 function redraw(dom, obj, opt) {
 
    if (!obj || (typeof obj !== 'object'))

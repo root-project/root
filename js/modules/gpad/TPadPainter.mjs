@@ -169,6 +169,7 @@ const webSnapIds = { kNone: 0,  kObject: 1, kSVG: 2, kSubPad: 3, kColors: 4, kSt
 
 /**
   * @summary Painter for TPad object
+  * @private
   */
 
 class TPadPainter extends ObjectPainter {
@@ -322,7 +323,7 @@ class TPadPainter extends ObjectPainter {
          return this.custom_palette;
 
       let cp = this.getCanvPainter();
-      return cp ? cp.custom_palette : null;
+      return cp?.custom_palette;
    }
 
    /** @summary Returns number of painters
@@ -465,7 +466,7 @@ class TPadPainter extends ObjectPainter {
                       .property('vertical', settings.ToolBarVert);
 
          factor = 0.66;
-         if (this.pad && this.pad.fCw && this.pad.fCh && (this.pad.fCw > 0)) {
+         if (this.pad?.fCw && this.pad?.fCh && (this.pad?.fCw > 0)) {
             factor = this.pad.fCh / this.pad.fCw;
             if ((factor < 0.1) || (factor > 10)) factor = 0.66;
          }
@@ -728,7 +729,7 @@ class TPadPainter extends ObjectPainter {
    /** @summary Check if special objects appears in primitives
      * @desc it could be list of colors or palette */
    checkSpecialsInPrimitives(can) {
-      let lst = can ? can.fPrimitives : null;
+      let lst = can?.fPrimitives;
       if (!lst) return;
       for (let i = 0; i < lst.arr.length; ++i) {
          if (this.checkSpecial(lst.arr[i])) {
@@ -743,7 +744,7 @@ class TPadPainter extends ObjectPainter {
      * @desc used to find title drawing
      * @private */
    findInPrimitives(objname, objtype) {
-      let arr = this.pad && this.pad.fPrimitives ? this.pad.fPrimitives.arr : null;
+      let arr = this.pad?.fPrimitives?.arr;
 
       return arr ? arr.find(obj => (obj.fName == objname) && (objtype ? (obj.typename == objtype) : true)) : null;
    }
@@ -771,7 +772,7 @@ class TPadPainter extends ObjectPainter {
 
    /** @summary Return true if any objects beside sub-pads exists in the pad */
    hasObjectsToDraw() {
-      let arr = this.pad && this.pad.fPrimitives ? this.pad.fPrimitives.arr : null;
+      let arr = this.pad?.fPrimitives?.arr;
       return arr && arr.find(obj => obj._typename != "TPad") ? true : false;
    }
 
@@ -815,7 +816,7 @@ class TPadPainter extends ObjectPainter {
    }
 
    /** @summary Draw single primitive */
-   drawObject(dom, obj, opt) {
+   drawObject(/* dom, obj, opt */) {
       console.log('Not possible to draw object without loading of draw.mjs');
       return Promise.resolve(null);
    }
@@ -830,7 +831,7 @@ class TPadPainter extends ObjectPainter {
             this._start_tm = new Date().getTime();
 
          // set number of primitves
-         this._num_primitives = this.pad && this.pad.fPrimitives ? this.pad.fPrimitives.arr.length : 0;
+         this._num_primitives = this.pad?.fPrimitives?.arr?.length || 0;
 
          // sync to prevent immediate pad redraw during normal drawing sequence
          return this.syncDraw(true).then(() => this.drawPrimitives(0));
@@ -839,7 +840,7 @@ class TPadPainter extends ObjectPainter {
       if (indx >= this._num_primitives) {
          if (this._start_tm) {
             let spenttm = new Date().getTime() - this._start_tm;
-            if (spenttm > 1000) console.log(`Canvas ${this.pad ? this.pad.fName : "---"} drawing took ${(spenttm*1e-3).toFixed(2)}s`);
+            if (spenttm > 1000) console.log(`Canvas ${this.pad?.fName || "---"} drawing took ${(spenttm*1e-3).toFixed(2)}s`);
             delete this._start_tm;
          }
 

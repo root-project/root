@@ -342,7 +342,8 @@ function addMoveHandler(painter, enabled) {
 }
 
 /** @summary Inject style
-  * @param {String} code - css string */
+  * @param {String} code - css string
+  * @private */
 function injectStyle(code, node) {
    if (isBatchMode() || !code || (typeof document === 'undefined'))
       return true;
@@ -358,5 +359,5 @@ function injectStyle(code, node) {
    return true;
 }
 
-
-export { showProgress, closeCurrentWindow, loadOpenui5, ToolbarIcons, registerForResize, detectRightButton, addMoveHandler, injectStyle };
+export { showProgress, closeCurrentWindow, loadOpenui5, ToolbarIcons, registerForResize,
+         detectRightButton, addMoveHandler, injectStyle };

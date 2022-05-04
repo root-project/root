@@ -649,11 +649,11 @@ class RAxisPainter extends RObjectPainter {
             textscale = Math.min(textscale, maxwidth / textwidth);
          }
 
-         if ((textscale > 0.01) && (textscale < 0.8) && !painter.vertical && !rotate_lbls && (maxtextlen > 5) && (side > 0))
+         if ((textscale > 0.0001) && (textscale < 0.8) && !painter.vertical && !rotate_lbls && (maxtextlen > 5) && (side > 0))
             lbls_tilt = true;
 
          let scale = textscale * (lbls_tilt ? 3 : 1);
-         if ((scale > 0.01) && (scale < 1))
+         if ((scale > 0.0001) && (scale < 1))
             painter.scaleTextDrawing(1/scale, label_g);
       }
 
@@ -968,7 +968,7 @@ class RAxisPainter extends RObjectPainter {
          smin = min; smax = max;
       }
 
-      this.configureAxis("axis", min, max, smin, smax, drawable.fVertical, undefined, len, { reverse: reverse, labels: labels_len > 0 });
+      this.configureAxis("axis", min, max, smin, smax, drawable.fVertical, undefined, len, { reverse, labels: labels_len > 0 });
 
       this.createG();
 

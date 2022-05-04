@@ -1036,6 +1036,8 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    }
 }
 
+/** @summary Assign 3D methods for frame painter
+  * @private */
 function assignFrame3DMethods(fpainter) {
    Object.assign(fpainter, { create3DScene, render3D, resize3D, highlightBin3D, set3DOptions, drawXYZ });
 }
@@ -1096,7 +1098,6 @@ function drawBinsLego(painter, is_v7 = false) {
 
       return painter._show_empty_bins;
    };
-
 
    let levels = [ axis_zmin, axis_zmax ], palette = null;
 
@@ -1403,7 +1404,8 @@ function drawBinsLego(painter, is_v7 = false) {
    main.toplevel.add(line);
 }
 
-/** @summary Draw TH2 histogram in error mode */
+/** @summary Draw TH2 histogram in error mode
+  * @private */
 function drawBinsError3D(painter, is_v7 = false) {
    const main = painter.getFramePainter(),
          histo = painter.getHisto(),
@@ -1540,7 +1542,8 @@ function drawBinsContour3D(painter, realz = false, is_v7 = false) {
 }
 
 
-/** @summary Draw TH2 histograms in surf mode */
+/** @summary Draw TH2 histograms in surf mode
+  * @private */
 function drawBinsSurf3D(painter, is_v7 = false) {
    let histo = painter.getHisto(),
        main = painter.getFramePainter(),

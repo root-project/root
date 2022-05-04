@@ -1,3 +1,4 @@
+import { select as d3_select } from '../d3.mjs';
 
 import { getColor } from './colors.mjs';
 
@@ -8,6 +9,7 @@ const root_line_styles = [
 
 /**
   * @summary Handle for line attributes
+  * @private
   */
 
 class TAttLineHandler {
@@ -124,7 +126,8 @@ class TAttLineHandler {
    }
 
    /** @summary Create sample element inside primitive SVG - used in context menu */
-   createSample(svg, width, height) {
+   createSample(svg, width, height, plain) {
+      if (plain) svg = d3_select(svg);
       svg.append("path")
          .attr("d", `M0,${height/2}h${width}`)
          .call(this.func);

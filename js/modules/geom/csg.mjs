@@ -769,7 +769,8 @@ class Geometry {
 
 } // class Geometry
 
-   /** @summary create geometry to make cut on specified axis */
+/** @summary create geometry to make cut on specified axis
+  * @private */
 function createNormal(axis_name, pos, size) {
    if (!size || (size < 10000)) size = 10000;
 

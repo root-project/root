@@ -1,6 +1,6 @@
 /// I/O methods of JavaScript ROOT
 
-import { httpRequest, createHttpRequest, BIT, loadScript, internals,
+import { httpRequest, createHttpRequest, BIT, loadScript, internals, settings,
          create, getMethods, addMethods, isNodeJs } from './core.mjs';
 
 const clTObject = 'TObject', clTNamed = 'TNamed', clTObjString = 'TObjString', clTString = 'TString',
@@ -48,7 +48,8 @@ const clTObject = 'TObject', clTNamed = 'TNamed', clTObjString = 'TObjString', c
 /** @summary Custom streamers for root classes
   * @desc map of user-streamer function like func(buf,obj)
   * or alias (classname) which can be used to read that function
-  * or list of read functions */
+  * or list of read functions
+  * @private */
 const CustomStreamers = {
    TObject(buf, obj) {
       obj.fUniqueID = buf.ntou4();
@@ -482,8 +483,9 @@ function addUserStreamer(type, user_streamer) {
 }
 
 
- /** @summary these are streamers which do not handle version regularly
-  * @desc used for special classes like TRef or TBasket */
+/** @summary these are streamers which do not handle version regularly
+  * @desc used for special classes like TRef or TBasket
+  * @private */
 const DirectStreamers = {
    // do nothing for these classes
    TQObject() {},
@@ -660,8 +662,8 @@ function getTypeId(typname, norecursion) {
    return -1;
 }
 
-   /** @summary create element of the streamer
-     * @private  */
+/** @summary create element of the streamer
+  * @private  */
 function createStreamerElement(name, typename, file) {
    const elem = {
       _typename: 'TStreamerElement', fName: name, fTypeName: typename,
@@ -1266,7 +1268,7 @@ function createMemberStreamer(element, file) {
 
 
 /** @summary Analyze and returns arrays kind
-  * @return 0 if TString (or equivalent), positive value - some basic type, -1 - any other kind
+  * @returns 0 if TString (or equivalent), positive value - some basic type, -1 - any other kind
   * @private */
 function getArrayKind(type_name) {
    if ((type_name === clTString) || (type_name === "string") ||
@@ -1976,7 +1978,7 @@ function ZIP_inflate(arr, tgt) {
  *
  * @param input {Buffer} input data
  * @param output {Buffer} output data
- * @return {Number} number of decoded bytes
+ * @returns {Number} number of decoded bytes
  * @private */
 function LZ4_uncompress(input, output, sIdx, eIdx) {
    sIdx = sIdx || 0;
@@ -2646,7 +2648,7 @@ class TDirectory {
    /** @summary Read object from the directory
      * @param {string} name - object name
      * @param {number} [cycle] - cycle number
-     * @return {Promise} with read object */
+     * @returns {Promise} with read object */
    readObject(obj_name, cycle) {
       return this.fFile.readObject(this.dir_name + "/" + obj_name, cycle);
    }
@@ -2678,12 +2680,11 @@ class TDirectory {
       });
    }
 
-} // TDirectory
+} // class TDirectory
 
 /**
   * @summary Interface to read objects from ROOT files
   *
-  * @hideconstructor
   * @desc Use {@link openFile} to create instance of the class
   */
 
@@ -2694,8 +2695,10 @@ class TFile {
       this.fEND = 0;
       this.fFullURL = url;
       this.fURL = url;
-      this.fAcceptRanges = true; // when disabled ('+' at the end of file name), complete file content read with single operation
-      this.fUseStampPar = "stamp=" + (new Date).getTime(); // use additional time stamp parameter for file name to avoid browser caching problem
+      // when disabled ('+' at the end of file name), complete file content read with single operation
+      this.fAcceptRanges = true;
+      // use additional time stamp parameter for file name to avoid browser caching problem
+      this.fUseStampPar = settings.UseStamp ? "stamp=" + (new Date).getTime() : false;
       this.fFileContent = null; // this can be full or partial content of the file (if ranges are not supported or if 1K header read from file)
       // stored as TBuffer instance
       this.fMaxRanges = 200; // maximal number of file ranges requested at once
@@ -2737,7 +2740,7 @@ class TFile {
    }
 
    /** @summary Assign BufferArray with file contentOpen file
-    * @private */
+     * @private */
    assignFileContent(bufArray) {
       this.fFileContent = new TBuffer(new DataView(bufArray));
       this.fAcceptRanges = false;
@@ -2746,8 +2749,8 @@ class TFile {
    }
 
    /** @summary Open file
-    * @returns {Promise} after file keys are read
-    * @private */
+     * @returns {Promise} after file keys are read
+     * @private */
    _open() {
       if (!this.fAcceptRanges || this.fSkipHeadRequest)
          return this.readKeys();
@@ -3072,9 +3075,9 @@ class TFile {
      * @param {number} [cycle] - cycle number, also can be included in obj_name
      * @returns {Promise} promise with object read
      * @example
-     *   let f = await openFile("https://root.cern/js/files/hsimple.root");
-     *   let obj = await f.readObject("hpxpy;1");
-     *   console.log(`Read object of type ${obj._typename}`); */
+     * let f = await openFile("https://root.cern/js/files/hsimple.root");
+     * let obj = await f.readObject("hpxpy;1");
+     * console.log(`Read object of type ${obj._typename}`); */
    readObject(obj_name, cycle, only_dir) {
 
       let pos = obj_name.lastIndexOf(";");
@@ -3087,8 +3090,6 @@ class TFile {
       // remove leading slashes
       while (obj_name.length && (obj_name[0] == "/")) obj_name = obj_name.slice(1);
 
-      let isdir, read_key;
-
       // one uses Promises while in some cases we need to
       // read sub-directory to get list of keys
       // in such situation calls are asynchrone
@@ -3096,6 +3097,8 @@ class TFile {
 
          if ((obj_name == "StreamerInfo") && (key.fClassName == clTList))
             return this.fStreamerInfos;
+
+         let isdir = false;
 
          if ((key.fClassName == 'TDirectory' || key.fClassName == 'TDirectoryFile')) {
             let dir = this.getDir(obj_name, cycle);
@@ -3106,21 +3109,19 @@ class TFile {
          if (!isdir && only_dir)
             return Promise.reject(Error(`Key ${obj_name} is not directory}`));
 
-         read_key = key;
-
          return this.readObjBuffer(key).then(buf => {
 
             if (isdir) {
                let dir = new TDirectory(this, obj_name, cycle);
-               dir.fTitle = read_key.fTitle;
+               dir.fTitle = key.fTitle;
                return dir.readKeys(buf);
             }
 
             let obj = {};
             buf.mapObject(1, obj); // tag object itself with id==1
-            buf.classStreamer(obj, read_key.fClassName);
+            buf.classStreamer(obj, key.fClassName);
 
-            if ((read_key.fClassName === 'TF1') || (read_key.fClassName === 'TF2'))
+            if ((key.fClassName === 'TF1') || (key.fClassName === 'TF2'))
                return this._readFormulas(obj);
 
             return obj;
@@ -3129,7 +3130,7 @@ class TFile {
    }
 
    /** @summary read formulas from the file and add them to TF1/TF2 objects
-    * @private */
+     * @private */
    _readFormulas(tf1) {
 
       let arr = [];
@@ -3145,7 +3146,7 @@ class TFile {
    }
 
    /** @summary extract streamer infos from the buffer
-    * @private */
+     * @private */
    extractStreamerInfos(buf) {
       if (!buf) return;
 
@@ -3201,104 +3202,102 @@ class TFile {
    }
 
    /** @summary Read file keys
-    * @private */
+     * @private */
    readKeys() {
-
-      let file = this;
 
       // with the first readbuffer we read bigger amount to create header cache
       return this.readBuffer([0, 1024]).then(blob => {
-         let buf = new TBuffer(blob, 0, file);
+         let buf = new TBuffer(blob, 0, this);
 
          if (buf.substring(0, 4) !== 'root')
-            return Promise.reject(Error(`Not a ROOT file ${file.fURL}`));
+            return Promise.reject(Error(`Not a ROOT file ${this.fURL}`));
 
          buf.shift(4);
 
-         file.fVersion = buf.ntou4();
-         file.fBEGIN = buf.ntou4();
-         if (file.fVersion < 1000000) { //small file
-            file.fEND = buf.ntou4();
-            file.fSeekFree = buf.ntou4();
-            file.fNbytesFree = buf.ntou4();
+         this.fVersion = buf.ntou4();
+         this.fBEGIN = buf.ntou4();
+         if (this.fVersion < 1000000) { //small file
+            this.fEND = buf.ntou4();
+            this.fSeekFree = buf.ntou4();
+            this.fNbytesFree = buf.ntou4();
             buf.shift(4); // const nfree = buf.ntoi4();
-            file.fNbytesName = buf.ntou4();
-            file.fUnits = buf.ntou1();
-            file.fCompress = buf.ntou4();
-            file.fSeekInfo = buf.ntou4();
-            file.fNbytesInfo = buf.ntou4();
+            this.fNbytesName = buf.ntou4();
+            this.fUnits = buf.ntou1();
+            this.fCompress = buf.ntou4();
+            this.fSeekInfo = buf.ntou4();
+            this.fNbytesInfo = buf.ntou4();
          } else { // new format to support large files
-            file.fEND = buf.ntou8();
-            file.fSeekFree = buf.ntou8();
-            file.fNbytesFree = buf.ntou4();
+            this.fEND = buf.ntou8();
+            this.fSeekFree = buf.ntou8();
+            this.fNbytesFree = buf.ntou4();
             buf.shift(4); // const nfree = buf.ntou4();
-            file.fNbytesName = buf.ntou4();
-            file.fUnits = buf.ntou1();
-            file.fCompress = buf.ntou4();
-            file.fSeekInfo = buf.ntou8();
-            file.fNbytesInfo = buf.ntou4();
+            this.fNbytesName = buf.ntou4();
+            this.fUnits = buf.ntou1();
+            this.fCompress = buf.ntou4();
+            this.fSeekInfo = buf.ntou8();
+            this.fNbytesInfo = buf.ntou4();
          }
 
          // empty file
-         if (!file.fSeekInfo || !file.fNbytesInfo)
-            return Promise.reject(Error(`File ${file.fURL} does not provide streamer infos`));
+         if (!this.fSeekInfo || !this.fNbytesInfo)
+            return Promise.reject(Error(`File ${this.fURL} does not provide streamer infos`));
 
          // extra check to prevent reading of corrupted data
-         if (!file.fNbytesName || file.fNbytesName > 100000)
-            return Promise.reject(Error(`Cannot read directory info of the file ${file.fURL}`));
+         if (!this.fNbytesName || this.fNbytesName > 100000)
+            return Promise.reject(Error(`Cannot read directory info of the file ${this.fURL}`));
 
          //*-*-------------Read directory info
-         let nbytes = file.fNbytesName + 22;
+         let nbytes = this.fNbytesName + 22;
          nbytes += 4;  // fDatimeC.Sizeof();
          nbytes += 4;  // fDatimeM.Sizeof();
          nbytes += 18; // fUUID.Sizeof();
          // assume that the file may be above 2 Gbytes if file version is > 4
-         if (file.fVersion >= 40000) nbytes += 12;
+         if (this.fVersion >= 40000) nbytes += 12;
 
          // this part typically read from the header, no need to optimize
-         return file.readBuffer([file.fBEGIN, Math.max(300, nbytes)]);
+         return this.readBuffer([this.fBEGIN, Math.max(300, nbytes)]);
       }).then(blob3 => {
 
-         let buf3 = new TBuffer(blob3, 0, file);
+         let buf3 = new TBuffer(blob3, 0, this);
 
          // keep only title from TKey data
-         file.fTitle = buf3.readTKey().fTitle;
+         this.fTitle = buf3.readTKey().fTitle;
 
-         buf3.locate(file.fNbytesName);
+         buf3.locate(this.fNbytesName);
 
          // we read TDirectory part of TFile
-         buf3.classStreamer(file, 'TDirectory');
+         buf3.classStreamer(this, 'TDirectory');
 
-         if (!file.fSeekKeys)
-            return Promise.reject(Error(`Empty keys list in ${file.fURL}`));
+         if (!this.fSeekKeys)
+            return Promise.reject(Error(`Empty keys list in ${this.fURL}`));
 
          // read with same request keys and streamer infos
-         return file.readBuffer([file.fSeekKeys, file.fNbytesKeys, file.fSeekInfo, file.fNbytesInfo]);
+         return this.readBuffer([this.fSeekKeys, this.fNbytesKeys, this.fSeekInfo, this.fNbytesInfo]);
       }).then(blobs => {
 
-         const buf4 = new TBuffer(blobs[0], 0, file);
+         const buf4 = new TBuffer(blobs[0], 0, this);
 
          buf4.readTKey(); //
          const nkeys = buf4.ntoi4();
          for (let i = 0; i < nkeys; ++i)
-            file.fKeys.push(buf4.readTKey());
+            this.fKeys.push(buf4.readTKey());
 
-         const buf5 = new TBuffer(blobs[1], 0, file),
+         const buf5 = new TBuffer(blobs[1], 0, this),
                si_key = buf5.readTKey();
          if (!si_key)
-            return Promise.reject(Error(`Fail to read StreamerInfo data in ${file.fURL}`));
+            return Promise.reject(Error(`Fail to read StreamerInfo data in ${this.fURL}`));
 
-         file.fKeys.push(si_key);
-         return file.readObjBuffer(si_key);
+         this.fKeys.push(si_key);
+         return this.readObjBuffer(si_key);
       }).then(blob6 => {
-          file.extractStreamerInfos(blob6);
-          return file;
+          this.extractStreamerInfos(blob6);
+          return this;
       });
    }
 
    /** @summary Read the directory content from  a root file
      * @desc If directory was already read - return previously read object
-     * Same functionality as {@link TFile.readObject}
+     * Same functionality as {@link TFile#readObject}
      * @param {string} dir_name - directory name
      * @param {number} [cycle] - directory cycle
      * @returns {Promise} - promise with read directory */
@@ -3339,8 +3338,8 @@ class TFile {
    }
 
    /** @summary Returns streamer for the class 'clname',
-    * @desc From the list of streamers or generate it from the streamer infos and add it to the list
-    * @private */
+     * @desc From the list of streamers or generate it from the streamer infos and add it to the list
+     * @private */
    getStreamer(clname, ver, s_i) {
 
       // these are special cases, which are handled separately
@@ -3400,7 +3399,7 @@ class TFile {
    }
 
    /** @summary Here we produce list of members, resolving all base classes
-    * @private */
+     * @private */
    getSplittedStreamer(streamer, tgt) {
       if (!streamer) return tgt;
 
@@ -3441,7 +3440,7 @@ class TFile {
    }
 
    /** @summary Fully clenaup TFile data
-    * @private */
+     * @private */
    delete() {
       this.fDirectories = null;
       this.fKeys = null;
@@ -3451,9 +3450,8 @@ class TFile {
       this.fTagOffset = 0;
    }
 
-} // TFile
+} // class TFile
 
-// =======================================================================
 
 /** @summary Reconstruct ROOT object from binary buffer
   * @desc Method can be used to reconstruct ROOT objects from binary buffer
@@ -3738,6 +3736,8 @@ class TNodejsFile extends TFile {
   * @param {string|object} arg - argument for file open like url, see details
   * @returns {object} - Promise with {@link TFile} instance when file is opened
   * @example
+  *
+  * import { openFile } from '/path_to_jsroot/modules/io.mjs';
   * let f = await openFile("https://root.cern/js/files/hsimple.root");
   * console.log(`Open file ${f.getFileName()}`); */
 function openFile(arg) {

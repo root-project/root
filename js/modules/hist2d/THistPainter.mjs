@@ -1,4 +1,4 @@
-/// TH painting base class
+/// histogram painter base class
 
 import { gStyle, BIT, settings, constants, internals, create } from '../core.mjs';
 
@@ -201,10 +201,8 @@ function getColorPalette(id) {
     }
 
     return new ColorPalette(palette);
-};
+}
 
-
-// ==============================================================================
 
 /**
  * @summary Class to decode histograms draw options
@@ -606,9 +604,9 @@ class THistDrawOptions {
 
       return res;
    }
-}
 
-// ==============================================================================
+} // class THistDrawOptions
+
 
 /**
  * @summary Handle for histogram contour
@@ -713,13 +711,12 @@ class HistContour {
 
       return (zindx < 0) ? null : palette.calcColorIndex(zindx, this.arr.length);
    }
-}
 
-// ==============================================================================
+} // class HistContour
 
-/** histogram status bits
+/** @summary histogram status bits
   * @private */
-let TH1StatusBits = {
+const TH1StatusBits = {
    kNoStats       : BIT(9),  // don't draw stats box
    kUserContour   : BIT(10), // user specified contour levels
    kCanRebin      : BIT(11), // can rebin axis
@@ -729,9 +726,9 @@ let TH1StatusBits = {
    kIsAverage     : BIT(18)  // Bin contents are average (used by Add)
 };
 
+
 /**
  * @summary Basic painter for histogram classes
- *
  * @private
  */
 
@@ -2249,7 +2246,7 @@ class THistPainter extends ObjectPainter {
       return "[" + funcs.axisAsText(name, x1) + ", " + funcs.axisAsText(name, x2) + ")";
    }
 
-   /** @summary draw TH2 object
+   /** @summary generic draw function for histograms
      * @private */
    static _drawHist(painter, opt) {
 

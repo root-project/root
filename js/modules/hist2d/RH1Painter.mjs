@@ -431,13 +431,13 @@ class RH1Painter extends RHistPainter {
                let lbl = (bincont === Math.round(bincont)) ? bincont.toString() : floatToString(bincont, gStyle.fPaintTextFormat);
 
                if (text_font.angle)
-                  this.drawText({ align: 12, x: midx, y: Math.round(my - 2 - text_font.size / 5), width: 0, height: 0, text: lbl, latex: 0 });
+                  this.drawText({ align: 12, x: midx, y: Math.round(my - 2 - text_font.size / 5), text: lbl, latex: 0 });
                else
                   this.drawText({ x: Math.round(mx1 + (mx2 - mx1) * 0.1), y: Math.round(my - 2 - text_font.size), width: Math.round((mx2 - mx1) * 0.8), height: text_font.size, text: lbl, latex: 0 });
             }
 
             if (show_line && (path_line !== null))
-               path_line += ((path_line.length===0) ? "M" : "L") + midx + "," + my;
+               path_line += ((path_line.length === 0) ? "M" : "L") + midx + "," + my;
 
             if (draw_markers) {
                if ((my >= -yerr1) && (my <= height + yerr2)) {

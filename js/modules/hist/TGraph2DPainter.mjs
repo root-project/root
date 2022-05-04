@@ -16,6 +16,7 @@ import { createLineSegments, PointsCreator } from '../base/base3d.mjs';
 
 /**
  * @summary Painter for TGraph2D classes
+ * @private
  */
 
 class TGraph2DPainter extends ObjectPainter {
@@ -31,7 +32,7 @@ class TGraph2DPainter extends ObjectPainter {
 
       res.Color = d.check("COL");
       res.Line = d.check("LINE");
-      res.Error = d.check("ERR") && this.matchObjectType("TGraph2DErrors");
+      res.Error = d.check("ERR") && (this.matchObjectType("TGraph2DErrors") || this.matchObjectType("TGraph2DAsymmErrors"));
       res.Circles = d.check("P0");
       res.Markers = d.check("P");
 
@@ -49,23 +50,30 @@ class TGraph2DPainter extends ObjectPainter {
    /** @summary Create histogram for axes drawing */
    createHistogram() {
       let gr = this.getObject(),
+          asymm = this.matchObjectType("TGraph2DAsymmErrors"),
           xmin = gr.fX[0], xmax = xmin,
           ymin = gr.fY[0], ymax = ymin,
           zmin = gr.fZ[0], zmax = zmin;
 
       for (let p = 0; p < gr.fNpoints;++p) {
 
-         let x = gr.fX[p], y = gr.fY[p], z = gr.fZ[p],
-             errx = this.options.Error ? gr.fEX[p] : 0,
-             erry = this.options.Error ? gr.fEY[p] : 0,
-             errz = this.options.Error ? gr.fEZ[p] : 0;
+         let x = gr.fX[p], y = gr.fY[p], z = gr.fZ[p];
 
-         xmin = Math.min(xmin, x-errx);
-         xmax = Math.max(xmax, x+errx);
-         ymin = Math.min(ymin, y-erry);
-         ymax = Math.max(ymax, y+erry);
-         zmin = Math.min(zmin, z-errz);
-         zmax = Math.max(zmax, z+errz);
+         if (this.options.Error) {
+            xmin = Math.min(xmin, x - (asymm ? gr.fEXlow[p] : gr.fEX[p]));
+            xmax = Math.max(xmax, x + (asymm ? gr.fEXhigh[p] : gr.fEX[p]));
+            ymin = Math.min(ymin, y - (asymm ? gr.fEYlow[p] : gr.fEY[p]));
+            ymax = Math.max(ymax, y + (asymm ? gr.fEYhigh[p] : gr.fEY[p]));
+            zmin = Math.min(zmin, z - (asymm ? gr.fEZlow[p] : gr.fEZ[p]));
+            zmax = Math.max(zmax, z + (asymm ? gr.fEZhigh[p] : gr.fEZ[p]));
+         } else {
+            xmin = Math.min(xmin, x);
+            xmax = Math.max(xmax, x);
+            ymin = Math.min(ymin, y);
+            ymax = Math.max(ymax, y);
+            zmin = Math.min(zmin, z);
+            zmax = Math.max(zmax, z);
+         }
       }
 
       if (xmin >= xmax) xmax = xmin+1;
@@ -211,13 +219,15 @@ class TGraph2DPainter extends ObjectPainter {
          let size = Math.floor(countSelected(lvl_zmin, lvl_zmax) / step),
              pnts = null, select = 0,
              index = new Int32Array(size), icnt = 0,
-             err = null, line = null, ierr = 0, iline = 0;
+             err = null, asymm = false, line = null, ierr = 0, iline = 0;
 
          if (this.options.Markers || this.options.Circles)
             pnts = new PointsCreator(size, fp.webgl, scale/3);
 
-         if (this.options.Error)
+         if (this.options.Error) {
             err = new Float32Array(size*6*3);
+            asymm = this.matchObjectType("TGraph2DAsymmErrors");
+          }
 
          if (this.options.Line)
             line = new Float32Array((size-1)*6);
@@ -241,26 +251,26 @@ class TGraph2DPainter extends ObjectPainter {
             if (pnts) pnts.addPoint(x,y,z);
 
             if (err) {
-               err[ierr]   = fp.grx(graph.fX[i] - graph.fEX[i]);
+               err[ierr]   = fp.grx(graph.fX[i] - (asymm ? graph.fEXlow[i] : graph.fEX[i]));
                err[ierr+1] = y;
                err[ierr+2] = z;
-               err[ierr+3] = fp.grx(graph.fX[i] + graph.fEX[i]);
+               err[ierr+3] = fp.grx(graph.fX[i] + (asymm ? graph.fEXhigh[i] : graph.fEX[i]));
                err[ierr+4] = y;
                err[ierr+5] = z;
                ierr+=6;
                err[ierr]   = x;
-               err[ierr+1] = fp.gry(graph.fY[i] - graph.fEY[i]);
+               err[ierr+1] = fp.gry(graph.fY[i] - (asymm ? graph.fEYlow[i] : graph.fEY[i]));
                err[ierr+2] = z;
                err[ierr+3] = x;
-               err[ierr+4] = fp.gry(graph.fY[i] + graph.fEY[i]);
+               err[ierr+4] = fp.gry(graph.fY[i] + (asymm ? graph.fEYhigh[i] : graph.fEY[i]));
                err[ierr+5] = z;
                ierr+=6;
                err[ierr]   = x;
                err[ierr+1] = y;
-               err[ierr+2] = fp.grz(graph.fZ[i] - graph.fEZ[i]);
+               err[ierr+2] = fp.grz(graph.fZ[i] - (asymm ? graph.fEZlow[i] : graph.fEZ[i]));
                err[ierr+3] = x;
                err[ierr+4] = y;
-               err[ierr+5] = fp.grz(graph.fZ[i] + graph.fEZ[i]);
+               err[ierr+5] = fp.grz(graph.fZ[i] + (asymm ? graph.fEZhigh[i] : graph.fEZ[i]));
                ierr+=6;
             }
 

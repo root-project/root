@@ -1,5 +1,11 @@
 /// Special mathematical functions
 
+/**
+ * A math namespace - all functions can be exported from base/math.mjs.
+ * Also all these functions can be used with TFormula calcualtions
+ * @namespace Math
+ */
+
 const kMACHEP  = 1.11022302462515654042363166809e-16,
       kMINLOG  = -708.396418532264078748994506896,
       kMAXLOG  = 709.782712893383973096206318587,
@@ -12,7 +18,7 @@ const kMACHEP  = 1.11022302462515654042363166809e-16,
 /** @summary Polynomialeval function
   * @desc calculates a value of a polynomial of the form:
   * a[0]x^N+a[1]x^(N-1) + ... + a[N]
-  * @private */
+  * @memberof Math */
 function Polynomialeval(x, a, N) {
    if (N==0) return a[0];
 
@@ -25,7 +31,7 @@ function Polynomialeval(x, a, N) {
 /** @summary Polynomial1eval function
   * @desc calculates a value of a polynomial of the form:
   * x^N+a[0]x^(N-1) + ... + a[N-1]
-  * @private */
+  * @memberof Math */
 function Polynomial1eval(x, a, N) {
    if (N==0) return a[0];
 
@@ -36,7 +42,7 @@ function Polynomial1eval(x, a, N) {
 }
 
 /** @summary lgam function, logarithm from gamma
-  * @private */
+  * @memberof Math */
 function lgam(x) {
    let p, q, u, w, z;
    const kMAXLGM = 2.556348e305,
@@ -128,7 +134,7 @@ function lgam(x) {
 }
 
 /** @summary Stirling formula for the gamma function
-  * @private */
+  * @memberof Math */
 function stirf(x) {
    let y, w, v;
 
@@ -159,10 +165,8 @@ function stirf(x) {
    return y;
 }
 
-let erf;
-
 /** @summary complementary error function
-  * @private */
+  * @memberof Math */
 function erfc(a) {
    const erfP = [
       2.46196981473530512524E-10,
@@ -235,8 +239,8 @@ function erfc(a) {
 }
 
 /** @summary error function
-  * @private */
-erf = function(x) {
+  * @memberof Math */
+function erf(x) {
    if(Math.abs(x) > 1.0)
       return 1.0 - erfc(x);
 
@@ -259,7 +263,8 @@ erf = function(x) {
    return x * Polynomialeval(z, erfT, 4) / Polynomial1eval(z, erfU, 5);
 }
 
-/** @summary lognormal_cdf_c function */
+/** @summary lognormal_cdf_c function
+  * @memberof Math */
 function lognormal_cdf_c(x, m, s, x0) {
    if (x0 === undefined) x0 = 0;
    let z = (Math.log((x-x0))-m)/(s*kSqrt2);
@@ -267,21 +272,24 @@ function lognormal_cdf_c(x, m, s, x0) {
    else         return 0.5*(1.0 - erf(z));
 }
 
-/** @summary lognormal_cdf_c function */
+/** @summary lognormal_cdf_c function
+  * @memberof Math */
 function lognormal_cdf(x, m, s, x0 = 0) {
    let z = (Math.log((x-x0))-m)/(s*kSqrt2);
    if (z < -1.) return 0.5*erfc(-z);
    else         return 0.5*(1.0 + erf(z));
 }
 
-/** @summary normal_cdf_c function */
+/** @summary normal_cdf_c function
+  * @memberof Math */
 function normal_cdf_c(x, sigma, x0 = 0) {
    let z = (x-x0)/(sigma*kSqrt2);
    if (z > 1.)  return 0.5*erfc(z);
    else         return 0.5*(1.-erf(z));
 }
 
-/** @summary normal_cdf function */
+/** @summary normal_cdf function
+  * @memberof Math */
 function normal_cdf(x, sigma, x0 = 0) {
    let z = (x-x0)/(sigma*kSqrt2);
    if (z < -1.) return erfc(-z);
@@ -289,7 +297,7 @@ function normal_cdf(x, sigma, x0 = 0) {
 }
 
 /** @summary log normal pdf
-  * @private */
+  * @memberof Math */
 function lognormal_pdf(x, m, s, x0 = 0) {
    if ((x-x0) <= 0)
       return 0.0;
@@ -298,14 +306,14 @@ function lognormal_pdf(x, m, s, x0 = 0) {
 }
 
 /** @summary normal pdf
-  * @private */
+  * @memberof Math */
 function normal_pdf(x, sigma = 1, x0 = 0) {
    let  tmp = (x-x0)/sigma;
    return (1.0/(Math.sqrt(2 * M_PI) * Math.abs(sigma))) * Math.exp(-tmp*tmp/2);
 }
 
 /** @summary gamma calculation
-  * @private */
+  * @memberof Math */
 function gamma(x) {
    let p, q, z, i, sgngam = 1;
 
@@ -408,9 +416,8 @@ function gamma(x) {
    return z * p / q;
 }
 
-
 /** @summary ndtri function
-  * @private */
+  * @memberof Math */
 function ndtri(y0) {
    if ( y0 <= 0.0 )
       return Number.NEGATIVE_INFINITY;
@@ -499,21 +506,19 @@ function ndtri(y0) {
 }
 
 /** @summary normal_quantile function
-  * @private */
+  * @memberof Math */
 function normal_quantile(z, sigma) {
    return  sigma * ndtri(z);
 }
 
 /** @summary normal_quantile_c function
-  * @private */
+  * @memberof Math */
 function normal_quantile_c(z, sigma) {
    return - sigma * ndtri(z);
 }
 
-let igam;
-
 /** @summary igamc function
-  * @private */
+  * @memberof Math */
 function igamc(a,x) {
    // LM: for negative values returns 0.0
    // This is correct if a is a negative integer since Gamma(-n) = +/- inf
@@ -573,8 +578,8 @@ function igamc(a,x) {
 }
 
 /** @summary igam function
-  * @private */
-igam = function(a, x) {
+  * @memberof Math */
+function igam(a, x) {
 
    // LM: for negative values returns 1.0 instead of zero
    // This is correct if a is a negative integer since Gamma(-n) = +/- inf
@@ -606,7 +611,7 @@ igam = function(a, x) {
 
 
 /** @summary igami function
-  * @private */
+  * @memberof Math */
 function igami(a, y0) {
    // check the domain
    if (a <= 0) {
@@ -717,7 +722,7 @@ function igami(a, y0) {
 /** @summary landau_pdf function
   * @desc LANDAU pdf : algorithm from CERNLIB G110 denlan
   *  same algorithm is used in GSL
-  * @private */
+  * @memberof Math */
 function landau_pdf(x, xi, x0) {
    if (x0===undefined) x0 = 0;
    if (xi <= 0) return 0;
@@ -775,7 +780,7 @@ function landau_pdf(x, xi, x0) {
 }
 
 /** @summary Landau function
-  * @private */
+  * @memberof Math */
 function Landau(x, mpv, sigma, norm) {
    if (sigma <= 0) return 0;
    const den = landau_pdf((x - mpv) / sigma, 1, 0);
@@ -784,25 +789,25 @@ function Landau(x, mpv, sigma, norm) {
 }
 
 /** @summary inc_gamma_c
-  * @private */
+  * @memberof Math */
 function inc_gamma_c(a,x) {
    return igamc(a,x);
 }
 
 /** @summary inc_gamma
-  * @private */
+  * @memberof Math */
 function inc_gamma(a,x) {
    return igam(a,x);
 }
 
 /** @summary lgamma
-  * @private */
+  * @memberof Math */
 function lgamma(z) {
    return lgam(z);
 }
 
 /** @summary Probability density function of the beta distribution.
-  * @private */
+  * @memberof Math */
 function beta_pdf(x, a, b) {
   if (x < 0 || x > 1.0) return 0;
   if (x == 0 ) {
@@ -819,22 +824,21 @@ function beta_pdf(x, a, b) {
                     Math.log(x) * (a -1.) + Math.log1p(-x) * (b - 1.));
 }
 
-
 /** @summary beta
-  * @private */
+  * @memberof Math */
 function beta(x,y) {
    return Math.exp(lgamma(x)+lgamma(y)-lgamma(x+y));
 }
 
 /** @summary chisquared_cdf_c
-  * @private */
+  * @memberof Math */
 function chisquared_cdf_c(x,r,x0) {
    if (x0===undefined) x0 = 0;
    return inc_gamma_c ( 0.5 * r , 0.5*(x-x0) );
 }
 
 /** @summary Continued fraction expansion #1 for incomplete beta integral
-  * @private */
+  * @memberof Math */
 function incbcf(a,b,x) {
    let xk, pk, pkm1, pkm2, qk, qkm1, qkm2,
        k1, k2, k3, k4, k5, k6, k7, k8,
@@ -920,7 +924,7 @@ function incbcf(a,b,x) {
 }
 
 /** @summary Continued fraction expansion #2 for incomplete beta integral
-  * @private */
+  * @memberof Math */
 function incbd(a,b,x) {
    let xk, pk, pkm1, pkm2, qk, qkm1, qkm2,
        k1, k2, k3, k4, k5, k6, k7, k8,
@@ -1006,7 +1010,7 @@ function incbd(a,b,x) {
 }
 
 /** @summary ROOT::Math::Cephes::pseries
-  * @private */
+  * @memberof Math */
 function pseries(a,b,x) {
    let s, t, u, v, n, t1, z, ai;
 
@@ -1047,7 +1051,7 @@ function pseries(a,b,x) {
 }
 
 /** @summary ROOT::Math::Cephes::incbet
-  * @private */
+  * @memberof Math */
 function incbet(aa,bb,xx) {
    let a, b, t, x, xc, w, y, flag;
 
@@ -1138,8 +1142,8 @@ function incbet(aa,bb,xx) {
    return  t;
 }
 
-/** @summary ROOT::Math::Cephes::incbi
-  * @private */
+/** @summary copy of ROOT::Math::Cephes::incbi
+  * @memberof Math */
 function incbi(aa,bb,yy0) {
    let a, b, y0, d, y, x, x0, x1, lgm, yp, di, dithresh, yl, yh, xt;
    let i, rflg, dir, nflg, ihalve = true;
@@ -1415,7 +1419,7 @@ function incbi(aa,bb,yy0) {
 }
 
 /** @summary Calculates the normalized (regularized) incomplete beta function.
-  * @private */
+  * @memberof Math */
 function inc_beta(x,a,b) {
    return incbet(a,b,x);
 }
@@ -1423,74 +1427,74 @@ function inc_beta(x,a,b) {
 const BetaIncomplete = inc_beta;
 
 /** @summary ROOT::Math::beta_quantile
-  * @private */
+  * @memberof Math */
 function beta_quantile(z,a,b) {
    return incbi(a,b,z);
 }
 
 /** @summary Complement of the cumulative distribution function of the beta distribution.
-  * @private */
+  * @memberof Math */
 function beta_cdf_c(x,a,b) {
    return inc_beta(1-x, b, a);
 }
 
 /** @summary chisquared_cdf
-  * @private */
+  * @memberof Math */
 function chisquared_cdf(x,r,x0=0) {
    return inc_gamma ( 0.5 * r , 0.5*(x-x0) );
 }
 
 /** @summary gamma_quantile_c function
-  * @private */
+  * @memberof Math */
 function gamma_quantile_c(z, alpha, theta) {
    return theta * igami( alpha, z);
 }
 
 /** @summary gamma_quantile function
-  * @private */
+  * @memberof Math */
 function gamma_quantile(z, alpha, theta) {
    return theta * igami( alpha, 1.- z);
 }
 
 /** @summary breitwigner_cdf_c function
-  * @private */
+  * @memberof Math */
 function breitwigner_cdf_c(x,gamma, x0 = 0) {
    return 0.5 - Math.atan(2.0 * (x-x0) / gamma) / M_PI;
 }
 
 /** @summary breitwigner_cdf function
-  * @private */
+  * @memberof Math */
 function breitwigner_cdf(x, gamma, x0 = 0) {
    return 0.5 + Math.atan(2.0 * (x-x0) / gamma) / M_PI;
 }
 
 /** @summary cauchy_cdf_c function
-  * @private */
+  * @memberof Math */
 function cauchy_cdf_c(x, b, x0 = 0) {
    return 0.5 - Math.atan( (x-x0) / b) / M_PI;
 }
 
 /** @summary cauchy_cdf function
-  * @private */
+  * @memberof Math */
 function cauchy_cdf(x, b, x0 = 0) {
    return 0.5 + Math.atan( (x-x0) / b) / M_PI;
 }
 
 /** @summary cauchy_pdf function
-  * @private */
+  * @memberof Math */
 function cauchy_pdf(x, b = 1, x0 = 0) {
    return b/(M_PI * ((x-x0)*(x-x0) + b*b));
 }
 
 /** @summary gaussian_pdf function
-  * @private */
+  * @memberof Math */
 function gaussian_pdf(x, sigma = 1, x0 = 0) {
    let tmp = (x-x0)/sigma;
    return (1.0/(Math.sqrt(2 * M_PI) * Math.abs(sigma))) * Math.exp(-tmp*tmp/2);
 }
 
 /** @summary gamma_pdf function
-  * @private */
+  * @memberof Math */
 function gamma_pdf(x, alpha, theta, x0 = 0) {
    if ((x - x0) < 0) {
       return 0.0;
@@ -1503,7 +1507,7 @@ function gamma_pdf(x, alpha, theta, x0 = 0) {
 }
 
 /** @summary tdistribution_cdf_c function
-  * @private */
+  * @memberof Math */
 function tdistribution_cdf_c(x, r, x0 = 0) {
    let p    = x - x0,
        sign = (p > 0) ? 1. : -1;
@@ -1511,7 +1515,7 @@ function tdistribution_cdf_c(x, r, x0 = 0) {
 }
 
 /** @summary tdistribution_cdf function
-  * @private */
+  * @memberof Math */
 function tdistribution_cdf(x, r, x0 = 0) {
    let p    = x - x0,
        sign = (p > 0) ? 1. : -1;
@@ -1519,26 +1523,26 @@ function tdistribution_cdf(x, r, x0 = 0) {
 }
 
 /** @summary tdistribution_pdf function
-  * @private */
+  * @memberof Math */
 function tdistribution_pdf(x, r, x0 = 0) {
    return (Math.exp (lgamma((r + 1.0)/2.0) - lgamma(r/2.0)) / Math.sqrt (M_PI * r))
           * Math.pow ((1.0 + (x-x0)*(x-x0)/r), -(r + 1.0)/2.0);
 }
 
 /** @summary exponential_cdf_c function
-  * @private */
+  * @memberof Math */
 function exponential_cdf_c(x, lambda, x0 = 0) {
    return ((x-x0) < 0) ? 1.0 : Math.exp(-lambda * (x-x0));
 }
 
 /** @summary exponential_cdf function
-  * @private */
+  * @memberof Math */
 function exponential_cdf(x, lambda, x0 = 0) {
    return ((x-x0) < 0) ? 0.0 : -Math.expm1(-lambda * (x-x0));
 }
 
 /** @summary chisquared_pdf
-  * @private */
+  * @memberof Math */
 function chisquared_pdf(x,r,x0) {
    if (x0===undefined) x0 = 0;
    if ((x-x0) < 0) return 0.0;
@@ -1550,7 +1554,7 @@ function chisquared_pdf(x,r,x0) {
 }
 
 /** @summary Probability density function of the F-distribution.
-  * @private */
+  * @memberof Math */
 function fdistribution_pdf(x, n, m, x0 = 0) {
    if (n < 0 || m < 0)
       return Number.NaN;
@@ -1561,10 +1565,8 @@ function fdistribution_pdf(x, n, m, x0 = 0) {
                  + (n/2 -1) * Math.log(x-x0) - ((n+m)/2) * Math.log(m +  n*(x-x0)) );
 }
 
-let fdistribution_cdf;
-
 /** @summary fdistribution_cdf_c function
-  * @private */
+  * @memberof Math */
 function fdistribution_cdf_c(x, n, m, x0 = 0) {
    if (n < 0 || m < 0) return Number.NaN;
 
@@ -1577,8 +1579,8 @@ function fdistribution_cdf_c(x, n, m, x0 = 0) {
 }
 
 /** @summary fdistribution_cdf function
-  * @private */
-fdistribution_cdf = function(x, n, m, x0 = 0) {
+  * @memberof Math */
+function fdistribution_cdf(x, n, m, x0 = 0) {
    if (n < 0 || m < 0) return Number.NaN;
 
    let z = n * (x - x0) / (m + n * (x - x0));
@@ -1589,7 +1591,8 @@ fdistribution_cdf = function(x, n, m, x0 = 0) {
    return inc_beta(z, .5 * n, .5 * m);
 }
 
-/** @summary Prob function */
+/** @summary Prob function
+  * @memberof Math */
 function Prob(chi2, ndf) {
    if (ndf <= 0) return 0; // Set CL to zero in case ndf<=0
 
@@ -1602,44 +1605,44 @@ function Prob(chi2, ndf) {
 }
 
 /** @summary Gaus function
-  * @private */
+  * @memberof Math */
 function Gaus(x, mean, sigma) {
    return Math.exp(-0.5 * Math.pow((x-mean) / sigma, 2));
 }
 
 /** @summary BreitWigner function
-  * @private */
+  * @memberof Math */
 function BreitWigner(x, mean, gamma) {
    return gamma/((x-mean)*(x-mean) + gamma*gamma/4) / 2 / Math.PI;
 }
 
 /** @summary Calculates Beta-function Gamma(p)*Gamma(q)/Gamma(p+q).
-  * @private */
+  * @memberof Math */
 function Beta(x,y) {
    return Math.exp(lgamma(x) + lgamma(y) - lgamma(x+y));
 }
 
 /** @summary GammaDist function
-  * @private */
+  * @memberof Math */
 function GammaDist(x, gamma, mu = 0, beta = 1) {
    if ((x < mu) || (gamma <= 0) || (beta <= 0)) return 0;
    return gamma_pdf(x, gamma, beta, mu);
 }
 
 /** @summary probability density function of Laplace distribution
-  * @private */
+  * @memberof Math */
 function LaplaceDist(x, alpha = 0, beta = 1) {
    return Math.exp(-Math.abs((x-alpha)/beta)) / (2.*beta);
 }
 
 /** @summary distribution function of Laplace distribution
-  * @private */
+  * @memberof Math */
 function LaplaceDistI(x, alpha = 0, beta = 1) {
    return (x <= alpha) ? 0.5*Math.exp(-Math.abs((x-alpha)/beta)) : 1 - 0.5*Math.exp(-Math.abs((x-alpha)/beta));
 }
 
 /** @summary density function for Student's t- distribution
-  * @private */
+  * @memberof Math */
 function Student(T, ndf) {
    if (ndf < 1) return 0;
 
@@ -1651,7 +1654,7 @@ function Student(T, ndf) {
 }
 
 /** @summary cumulative distribution function of Student's
-  * @private */
+  * @memberof Math */
 function StudentI(T, ndf) {
    let r = ndf;
 
@@ -1660,14 +1663,14 @@ function StudentI(T, ndf) {
 }
 
 /** @summary LogNormal function
-  * @private */
+  * @memberof Math */
 function LogNormal(x, sigma, theta = 0, m = 1) {
    if ((x < theta) || (sigma <= 0) || (m <= 0)) return 0;
    return lognormal_pdf(x, Math.log(m), sigma, theta);
 }
 
 /** @summary Computes the probability density function of the Beta distribution
-  * @private */
+  * @memberof Math */
 function BetaDist(x, p, q) {
    if ((x < 0) || (x > 1) || (p <= 0) || (q <= 0))
      return 0;
@@ -1676,44 +1679,51 @@ function BetaDist(x, p, q) {
 }
 
 /** @summary Computes the distribution function of the Beta distribution.
-  * @private */
+  * @memberof Math */
 function BetaDistI(x, p, q) {
    if ((x<0) || (x>1) || (p<=0) || (q<=0)) return 0;
    return BetaIncomplete(x, p, q);
 }
 
-/** @summary gaus function for TFormula */
+/** @summary gaus function for TFormula
+  * @memberof Math */
 function gaus(f, x, i) {
    return f.GetParValue(i+0) * Math.exp(-0.5 * Math.pow((x-f.GetParValue(i+1)) / f.GetParValue(i+2), 2));
 }
 
-/** @summary gausn function for TFormula */
+/** @summary gausn function for TFormula
+  * @memberof Math */
 function gausn(f, x, i) {
    return gaus(f, x, i)/(Math.sqrt(2 * Math.PI) * f.GetParValue(i+2));
 }
 
-/** @summary gausxy function for TFormula */
+/** @summary gausxy function for TFormula
+  * @memberof Math */
 function gausxy(f, x, y, i) {
    return f.GetParValue(i+0) * Math.exp(-0.5 * Math.pow((x-f.GetParValue(i+1)) / f.GetParValue(i+2), 2))
                              * Math.exp(-0.5 * Math.pow((y-f.GetParValue(i+3)) / f.GetParValue(i+4), 2));
 }
 
-/** @summary expo function for TFormula */
+/** @summary expo function for TFormula
+  * @memberof Math */
 function expo(f, x, i) {
    return Math.exp(f.GetParValue(i+0) + f.GetParValue(i+1) * x);
 }
 
-/** @summary landau function for TFormula */
+/** @summary landau function for TFormula
+  * @memberof Math */
 function landau(f, x, i) {
    return Landau(x, f.GetParValue(i+1),f.GetParValue(i+2), false);
 }
 
-/** @summary landaun function for TFormula */
+/** @summary landaun function for TFormula
+  * @memberof Math */
 function landaun(f, x, i) {
    return Landau(x, f.GetParValue(i+1),f.GetParValue(i+2), true);
 }
 
-/** @summary Crystal ball function */
+/** @summary Crystal ball function
+  * @memberof Math */
 function crystalball_function(x, alpha, n, sigma, mean = 0) {
    if (sigma < 0.)     return 0.;
    let z = (x - mean)/sigma;
@@ -1728,7 +1738,8 @@ function crystalball_function(x, alpha, n, sigma, mean = 0) {
   return AA * Math.pow(arg,n);
 }
 
-/** @summary pdf definition of the crystal_ball which is defined only for n > 1 otherwise integral is diverging */
+/** @summary pdf definition of the crystal_ball which is defined only for n > 1 otherwise integral is diverging
+  * @memberof Math */
 function crystalball_pdf(x, alpha, n, sigma, mean = 0) {
    if (sigma < 0.) return 0.;
    if (n <= 1) return Number.NaN;  // pdf is not normalized for n <=1
@@ -1739,7 +1750,8 @@ function crystalball_pdf(x, alpha, n, sigma, mean = 0) {
    return N * crystalball_function(x,alpha,n,sigma,mean);
 }
 
-/** @summary compute the integral of the crystal ball function */
+/** @summary compute the integral of the crystal ball function
+  * @memberof Math */
 function crystalball_integral(x, alpha, n, sigma, mean = 0) {
    if (sigma == 0) return 0;
    if (alpha==0) return 0.;
@@ -1776,6 +1788,8 @@ function crystalball_integral(x, alpha, n, sigma, mean = 0) {
    return sigma * (intgaus + intpow);
 }
 
+/** @summary crystalball_cdf function
+  * @memberof Math */
 function crystalball_cdf(x, alpha, n, sigma, mean = 0) {
    if (n <= 1.)
       return Number.NaN;
@@ -1789,6 +1803,8 @@ function crystalball_cdf(x, alpha, n, sigma, mean = 0) {
    return (alpha > 0) ? 1. - integral/totIntegral : integral/totIntegral;
 }
 
+/** @summary crystalball_cdf_c function
+  * @memberof Math */
 function crystalball_cdf_c(x, alpha, n, sigma, mean = 0) {
    if (n <= 1.)
       return Number.NaN;
@@ -1802,7 +1818,8 @@ function crystalball_cdf_c(x, alpha, n, sigma, mean = 0) {
    return (alpha > 0) ? integral/totIntegral : 1. - (integral/totIntegral);
 }
 
-
+/** @summary ChebyshevN function
+  * @memberof Math */
 function ChebyshevN(n, x, c) {
    let d1 = 0.0, d2 = 0.0, y2 = 2.0 * x;
 
@@ -1815,48 +1832,70 @@ function ChebyshevN(n, x, c) {
    return x * d1 - d2 + c[0];
 }
 
+/** @summary Chebyshev1 function
+  * @memberof Math */
 function Chebyshev1(x, c0, c1) {
    return c0 + c1*x;
 }
 
+/** @summary Chebyshev2 function
+  * @memberof Math */
 function Chebyshev2(x, c0, c1, c2) {
    return c0 + c1*x + c2*(2.0*x*x - 1.0);
 }
 
+/** @summary Chebyshev3 function
+  * @memberof Math */
 function Chebyshev3(x, ...args) {
    return ChebyshevN(3, x, args);
 }
 
+/** @summary Chebyshev4 function
+  * @memberof Math */
 function Chebyshev4(x, ...args) {
    return ChebyshevN(4, x, args);
 }
 
+/** @summary Chebyshev5 function
+  * @memberof Math */
 function Chebyshev5(x, ...args) {
    return ChebyshevN(5, x, args);
 }
 
+/** @summary Chebyshev6 function
+  * @memberof Math */
 function Chebyshev6(x, ...args) {
    return ChebyshevN(6, x, args);
 }
 
+/** @summary Chebyshev7 function
+  * @memberof Math */
 function Chebyshev7(x, ...args) {
    return ChebyshevN(7, x, args);
 }
 
+/** @summary Chebyshev8 function
+  * @memberof Math */
 function Chebyshev8(x, ...args) {
    return ChebyshevN(8, x, args);
 }
 
+/** @summary Chebyshev9 function
+  * @memberof Math */
 function Chebyshev9(x, ...args) {
    return ChebyshevN(9, x, args);
 }
 
+/** @summary Chebyshev10 function
+  * @memberof Math */
 function Chebyshev10(x, ...args) {
    return ChebyshevN(10, x, args);
 }
 
 // =========================================================================
 
+/** @summary Caluclate ClopperPearson
+  * @memberof Math */
 function eff_ClopperPearson(total,passed,level,bUpper) {
    let alpha = (1.0 - level) / 2;
    if(bUpper)
@@ -1866,7 +1905,7 @@ function eff_ClopperPearson(total,passed,level,bUpper) {
 }
 
 /** @summary Caluclate normal
-  * @private */
+  * @memberof Math */
 function eff_Normal(total,passed,level,bUpper) {
    if (total == 0) return bUpper ? 1 : 0;
 
@@ -1882,7 +1921,7 @@ function eff_Normal(total,passed,level,bUpper) {
 }
 
 /** @summary Calculates the boundaries for the frequentist Wilson interval
-  * @private */
+  * @memberof Math */
 function eff_Wilson(total,passed,level,bUpper) {
    let alpha = (1.0 - level)/2;
    if (total == 0) return bUpper ? 1 : 0;
@@ -1898,7 +1937,7 @@ function eff_Wilson(total,passed,level,bUpper) {
 }
 
 /** @summary Calculates the boundaries for the frequentist Agresti-Coull interval
-  * @private */
+  * @memberof Math */
 function eff_AgrestiCoull(total,passed,level,bUpper) {
    let alpha = (1.0 - level)/2,
        kappa = normal_quantile(1 - alpha,1),
@@ -1912,7 +1951,7 @@ function eff_AgrestiCoull(total,passed,level,bUpper) {
 }
 
 /** @summary Calculates the boundaries using the  mid-P binomial
-  * @private */
+  * @memberof Math */
 function eff_MidPInterval(total,passed,level,bUpper) {
    const alpha = 1. - level, equal_tailed = true, alpha_min = equal_tailed ? alpha/2 : alpha, tol = 1e-9; // tolerance
    let pmin = 0, pmax = 1, p = 0;
@@ -1946,7 +1985,7 @@ function eff_MidPInterval(total,passed,level,bUpper) {
 }
 
 /** @summary for a central confidence interval for a Beta distribution
-  * @private */
+  * @memberof Math */
 function eff_Bayesian(total,passed,level,bUpper,alpha,beta) {
    let  a = passed + alpha,
         b = total - passed + beta;
@@ -1964,7 +2003,7 @@ function eff_Bayesian(total,passed,level,bUpper,alpha,beta) {
 }
 
 /** @summary Return function to calculate boundary of TEfficiency
-  * @private */
+  * @memberof Math */
 function getTEfficiencyBoundaryFunc(option, isbayessian) {
    const  kFCP = 0,       ///< Clopper-Pearson interval (recommended by PDG)
           kFNormal = 1,   ///< Normal approximation

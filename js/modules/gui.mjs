@@ -2,11 +2,15 @@ import { decodeUrl, settings, constants, gStyle, internals, findFunction, parse 
 
 import { select as d3_select } from './d3.mjs';
 
-import { HierarchyPainter } from './gui/HierarchyPainter.mjs';
+import { HierarchyPainter, readSettings } from './gui/HierarchyPainter.mjs';
 
 /** @summary Read style and settings from URL
   * @private */
 function readStyleFromURL(url) {
+
+   // first try to read settings from coockies
+   readSettings();
+
    let d = decodeUrl(url);
 
    if (d.has("optimize")) {
@@ -17,6 +21,17 @@ function readStyleFromURL(url) {
          if (Number.isInteger(optimize)) settings.OptimizeDraw = optimize;
       }
    }
+
+   if (d.has("lastcycle")) {
+      let val = d.get("lastcycle");
+      settings.OnlyLastCycle = (val != "0") && (val != "false");
+   }
+
+   let usestamp = d.get('usestamp')
+   settings.UseStamp = (usestamp != "0") && (usestamp != "false");
+
+   if (d.has('wrong_http_response'))
+      settings.HandleWrongHttpResponse = true;
 
    let inter = d.get("interactive");
    if (inter === "nomenu")
@@ -101,9 +116,16 @@ function readStyleFromURL(url) {
 }
 
 
+
 /** @summary Build main GUI
-  * @returns {Promise} when completed  */
-function buildGUI(gui_element, gui_kind) {
+  * @desc Used in many HTML files to create JSROOT GUI elements
+  * @param {String} gui_element - id of the `<div>` element
+  * @param {String} gui_kind - either "online", "nobrowser", "draw"
+  * @returns {Promise} with {@link HierarchyPainter} instance
+  * @example
+  * import { buildGUI } from '/path_to_jsroot/modules/gui.mjs';
+  * buildGUI("guiDiv"); */
+function buildGUI(gui_element, gui_kind = "") {
    let myDiv = (typeof gui_element == 'string') ? d3_select('#' + gui_element) : d3_select(gui_element);
    if (myDiv.empty())
       return Promise.reject(Error('no div for gui found'));

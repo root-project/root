@@ -1,3 +1,5 @@
+import { select as d3_select } from '../d3.mjs';
+
 import { getColor } from './colors.mjs';
 
 const root_markers = [
@@ -15,7 +17,7 @@ const root_markers = [
 
 /**
   * @summary Handle for marker attributes
-  *
+  * @private
   */
 
 class TAttMarkerHandler {
@@ -277,9 +279,9 @@ class TAttMarkerHandler {
      * @param {number} width - width of sample SVG
      * @param {number} height - height of sample SVG
      * @private */
-   createSample(svg, width, height) {
+   createSample(svg, width, height, plain) {
+      if (plain) svg = d3_select(svg);
       this.resetPos();
-
       svg.append("path")
          .attr("d", this.create(width / 2, height / 2))
          .call(this.func);

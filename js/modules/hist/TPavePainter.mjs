@@ -223,14 +223,14 @@ class TPavePainter extends ObjectPainter {
    }
 
    /** @summary draw TPaveLabel object */
-   drawPaveLabel(_width, _height) {
+   drawPaveLabel(width, height) {
       this.UseTextColor = true;
 
       let pave = this.getObject();
 
-      this.startTextDrawing(pave.fTextFont, _height/1.2);
+      this.startTextDrawing(pave.fTextFont, height/1.2);
 
-      this.drawText({ align: pave.fTextAlign, width: _width, height: _height, text: pave.fLabel, color: this.getColor(pave.fTextColor) });
+      this.drawText({ align: pave.fTextAlign, width, height, text: pave.fLabel, color: this.getColor(pave.fTextColor) });
 
       return this.finishTextDrawing();
    }
@@ -272,7 +272,7 @@ class TPavePainter extends ObjectPainter {
       this.UseTextColor = true;
 
       if (nlines == 1) {
-         this.drawText({ align: pt.fTextAlign, width: width, height: height, text: lines[0], color: tcolor, latex: 1 });
+         this.drawText({ align: pt.fTextAlign, width, height, text: lines[0], color: tcolor, latex: 1 });
       } else
       for (let j = 0; j < nlines; ++j) {
          let posy = j*stepy;
@@ -284,7 +284,7 @@ class TPavePainter extends ObjectPainter {
                this.drawText({ align: "middle", x: width * n / num_cols, y: posy, latex: 0,
                                width: width/num_cols, height: stepy, text: parts[n], color: tcolor });
          } else if (lines[j].indexOf('=') < 0) {
-            if (j==0) {
+            if (j == 0) {
                has_head = true;
                let max_hlen = Math.max(maxlen, Math.round((width-2*margin_x)/stepy/0.65));
                if (lines[j].length > max_hlen + 5)
@@ -462,7 +462,7 @@ class TPavePainter extends ObjectPainter {
 
          this.startTextDrawing(pt.fTextFont, h/1.5, lbl_g);
 
-         this.drawText({ align: 22, x: x, y: y, width: w, height: h, text: pt.fLabel, color: tcolor, draw_g: lbl_g });
+         this.drawText({ align: 22, x, y, width: w, height: h, text: pt.fLabel, color: tcolor, draw_g: lbl_g });
 
          promises.push(this.finishTextDrawing(lbl_g));
 

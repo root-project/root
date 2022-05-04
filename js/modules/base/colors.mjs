@@ -5,7 +5,8 @@ function toHex(num,scale) {
    return s.length == 1 ? '0'+s : s;
 }
 
-/** @summary list of global root colors */
+/** @summary list of global root colors
+  * @private */
 let gbl_colors_list = [];
 
 /** @summary Generates all root colors, used also in jstests to reset colors
@@ -106,7 +107,8 @@ function adoptRootColors(objarr) {
 
 /** @summary Return ROOT color by index
   * @desc Color numbering corresponds typical ROOT colors
-  * @returns {String} with RGB color code or existing color name like 'cyan' */
+  * @returns {String} with RGB color code or existing color name like 'cyan'
+  * @private */
 function getColor(indx) {
    return gbl_colors_list[indx];
 }
@@ -114,7 +116,8 @@ function getColor(indx) {
 /** @summary Add new color
   * @param {string} rgb - color name or just string with rgb value
   * @param {array} [lst] - optional colors list, to which add colors
-  * @returns {number} index of new color */
+  * @returns {number} index of new color
+  * @private */
 function addColor(rgb, lst) {
    if (!lst) lst = gbl_colors_list;
    let indx = lst.indexOf(rgb);

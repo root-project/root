@@ -1,15 +1,15 @@
 
 /** @summary version id
-  * @desc For the JSROOT release the string in format "major.minor.patch" like "6.3.0" */
-let version_id = "modules";
+  * @desc For the JSROOT release the string in format "major.minor.patch" like "7.0.0" */
+let version_id = "dev";
 
 /** @summary version date
   * @desc Release date in format day/month/year like "19/11/2021" */
-let version_date = "6/04/2022";
+let version_date = "4/05/2022";
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
-  * Like "6.99.99 21/02/2022" */
+  * Like "7.0.0 14/04/2022" */
 let version = version_id + " " + version_date;
 
 /** @summary Location of JSROOT scripts
@@ -21,19 +21,16 @@ let nodejs = !!((typeof process == 'object') && process.version && (typeof proce
 /** @summary internal data
   * @private */
 let internals = {
-   id_counter: 1          ///< unique id contner, starts from 1,
+   id_counter: 1          ///< unique id contner, starts from 1
 };
 
 //openuicfg // DO NOT DELETE, used to configure openui5 usage like internals.openui5src = "nojsroot";
-
-let source_fullpath = "";
 
 const src = import.meta?.url;
 if (src && (typeof src == "string")) {
    const pos = src.indexOf("modules/core.mjs");
    if (pos >= 0) {
-      source_fullpath = src;
-      source_dir = source_fullpath.slice(0, pos);
+      source_dir = src.slice(0, pos);
       console.log(`Set jsroot source_dir to ${source_dir}, ${version}`);
    } else {
       console.log(`jsroot bundle, ${version}`);
@@ -73,7 +70,8 @@ if ((typeof document !== "undefined") && (typeof window !== "undefined")) {
 }
 
 /** @summary Check if prototype string match to array (typed on untyped)
-  * @returns {Number} 0 - not array, 1 - regular array, 2 - typed array */
+  * @returns {Number} 0 - not array, 1 - regular array, 2 - typed array
+  * @private */
 function isArrayProto(proto) {
     if ((proto.length < 14) || (proto.indexOf('[object ') != 0)) return 0;
     let p = proto.indexOf('Array]');
@@ -82,13 +80,11 @@ function isArrayProto(proto) {
     return proto.length == 14 ? 1 : 2;
 }
 
-/** @summary Specialized JSROOT constants, used in {@link settings}
-  * @namespace
-  * @private */
+/** @desc Specialized JSROOT constants, used in {@link settings}
+  * @namespace */
 let constants = {
    /** @summary Kind of 3D rendering, used for {@link settings.Render3D}
-     * @namespace
-     * @private */
+     * @namespace */
    Render3D: {
       /** @summary Default 3D rendering, normally WebGL, if not supported - SVG */
       Default: 0,
@@ -106,20 +102,19 @@ let constants = {
       }
    },
    /** @summary Way to embed 3D into SVG, used for {@link settings.Embed3D}
-     * @namespace
-     * @private */
+     * @namespace */
    Embed3D: {
       /** @summary Do not embed 3D drawing, use complete space */
       NoEmbed: -1,
-      /** @summary Default embeding mode, on Firefox is really ```Embed```, on all other ```Overlay``` */
+      /** @summary Default embeding mode - on Firefox and latest Chrome is real ```Embed```, on all other ```Overlay``` */
       Default: 0,
-      /** @summary WebGL canvas not inserted into SVG, but just overlayed The only way how Chrome browser can be used */
+      /** @summary WebGL canvas not inserted into SVG, but just overlayed The only way how earlier Chrome browser can be used */
       Overlay: 1,
-      /** @summary Really embed WebGL Canvas into SVG, only works with Firefox */
+      /** @summary Really embed WebGL Canvas into SVG */
       Embed: 2,
-      /** @summary Embeding, but when SVG rendering or SVG image converion is used
-        * @private */
+      /** @summary Embeding, but when SVG rendering or SVG image converion is used */
       EmbedSVG: 3,
+      /** @summary Convert string values into number  */
       fromString: function(s) {
          if (s === "embed") return this.Embed;
          if (s === "overlay") return this.Overlay;
@@ -127,8 +122,7 @@ let constants = {
       }
    },
    /** @summary How to use latex in text drawing, used for {@link settings.Latex}
-     * @namespace
-     * @private */
+     * @namespace */
    Latex: {
       /** @summary do not use Latex at all for text drawing */
       Off: 0,
@@ -140,6 +134,7 @@ let constants = {
       MathJax: 3,
       /** @summary always use MathJax for text rendering */
       AlwaysMathJax: 4,
+      /** @summary Convert string values into number */
       fromString: function(s) {
          if (!s || (typeof s !== 'string'))
             return this.Normal;
@@ -163,12 +158,12 @@ let constants = {
    }
 };
 
-/** @summary Central JSROOT settings, independent from {@link gStyle}
+/** @desc Global JSROOT settings
   * @namespace */
 let settings = {
    /** @summary Render of 3D drawing methods, see {@link constants.Render3D} for possible values */
    Render3D: constants.Render3D.Default,
-   /** @summary Render of 3D drawing methods in batch mode, see {@link constants.Render3D} for possible values */
+   /** @summary 3D drawing methods in batch mode, see {@link constants.Render3D} for possible values */
    Render3DBatch: constants.Render3D.Default,
    /** @summary Way to embed 3D drawing in SVG, see {@link constants.Embed3D} for possible values */
    Embed3D: constants.Embed3D.Default,
@@ -188,8 +183,14 @@ let settings = {
    ZoomTouch: true,
    /** @summary Enables move and resize of elements like statbox, title, pave, colz  */
    MoveResize: true,
+   /** @summary Configures keybord key press handling
+     * @desc Can be disabled to prevent keys heandling in complex HTML layouts
+     * @default true */
+   HandleKeys: true,
    /** @summary enables drag and drop functionality */
    DragAndDrop: true,
+   /** @summary Interactive dragging of TGraph points */
+   DragGraphs: true,
    /** @summary Show progress box */
    ProgressBox: true,
    /** @summary Show additional tool buttons on the canvas, false - disabled, true - enabled, 'popup' - only toggle button */
@@ -225,29 +226,25 @@ let settings = {
    /** @summary how many items shown on one level of hierarchy */
    HierarchyLimit: 250,
    /** @summary custom format for all X values, when not specified {@link gStyle.fStatFormat} is used */
-   XValuesFormat : undefined,
+   XValuesFormat: undefined,
    /** @summary custom format for all Y values, when not specified {@link gStyle.fStatFormat} is used */
-   YValuesFormat : undefined,
+   YValuesFormat: undefined,
    /** @summary custom format for all Z values, when not specified {@link gStyle.fStatFormat} is used */
-   ZValuesFormat : undefined,
+   ZValuesFormat: undefined,
    /** @summary Let detect and solve problem when browser returns wrong content-length parameter
      * @desc See [jsroot#189]{@link https://github.com/root-project/jsroot/issues/189} for more info
      * Can be enabled by adding "wrong_http_response" parameter to URL when using JSROOT UI
      * @default false */
    HandleWrongHttpResponse: false,
-   /** @summary Configures keybord key press handling
-     * @desc Can be disabled to prevent keys heandling in complex HTML layouts
+   /** @summary Let tweak browser caching
+     * @desc When specified, extra URL parameter like ```?stamp=unique_value``` append to each files loaded
+     * In such case browser will be forced to load file content disregards of server cache settings
      * @default true */
-   HandleKeys: true,
-  /** @summary Let tweak browser caching
-    * @desc When specified, extra URL parameter like ```?stamp=unique_value``` append to each JSROOT script loaded
-    * In such case browser will be forced to load JSROOT functionality disregards of server cache settings
-    * @default false */
-   NoCache: false,
+   UseStamp: true,
    /** @summary Skip streamer infos from the GUI */
    SkipStreamerInfos: false,
-   /** @summary Interactive dragging of TGraph points */
-   DragGraphs: true
+   /** @summary Show only last cycle for objects in TFile */
+   OnlyLastCycle: false
 };
 
 
@@ -352,7 +349,8 @@ function getDocument() {
 
 /** @summary Inject javascript code
   * @desc Replacement for eval
-  * @returns {Promise} */
+  * @returns {Promise}
+  * @private */
 function injectCode(code) {
    if (nodejs) {
       let name, fs;
@@ -784,7 +782,8 @@ function decodeUrl(url) {
    return res;
 }
 
-/** @summary Find function with given name */
+/** @summary Find function with given name
+  * @private */
 function findFunction(name) {
    if (typeof name === 'function') return name;
    if (typeof name !== 'string') return null;
@@ -921,9 +920,10 @@ function httpRequest(url, kind, post_data) {
 }
 
 /** @summary Create some ROOT classes
-  * @desc Supported classes: "TObject", "TNamed", "TList", "TAxis", "TLine", "TText", "TLatex", "TPad", "TCanvas"
+  * @desc Supported classes: `TObject`, `TNamed`, `TList`, `TAxis`, `TLine`, `TText`, `TLatex`, `TPad`, `TCanvas`
   * @param {string} typename - ROOT class name
   * @example
+  * import { create } from 'path_to_jsroot/modules/core.mjs';
   * let obj = create("TNamed");
   * obj.fName = "name";
   * obj.fTitle = "title"; */
@@ -1031,6 +1031,7 @@ function create(typename, target) {
                        fBufferSize: 0, fBuffer: [], fBinStatErrOpt: 0, fStatOverflows: 2 });
          break;
       case 'TH1I':
+      case 'TH1L64':
       case 'TH1F':
       case 'TH1D':
       case 'TH1S':
@@ -1043,6 +1044,7 @@ function create(typename, target) {
          extend(obj, { fScalefactor: 1., fTsumwy: 0.,  fTsumwy2: 0, fTsumwxy: 0 });
          break;
       case 'TH2I':
+      case 'TH2L64':
       case 'TH2F':
       case 'TH2D':
       case 'TH2S':
@@ -1055,6 +1057,7 @@ function create(typename, target) {
          extend(obj, { fTsumwy: 0.,  fTsumwy2: 0, fTsumwz: 0.,  fTsumwz2: 0, fTsumwxy: 0, fTsumwxz: 0, fTsumwyz: 0 });
          break;
       case 'TH3I':
+      case 'TH3L64':
       case 'TH3F':
       case 'TH3D':
       case 'TH3S':
@@ -1618,20 +1621,6 @@ function _ensureJSROOT() {
          return globalThis.JSROOT._complete_loading();
    }).then(() => globalThis.JSROOT);
 }
-
-/** @summary Initialize JSROOT
-  * @desc Called when main JSRoot.core.js script is loaded.
-  * @private */
-if (source_fullpath) {
-
-   let d = decodeUrl(source_fullpath);
-
-   if (d.has('nocache')) settings.NoCache = (new Date).getTime(); // use timestamp to overcome cache limitation
-   if (d.has('wrong_http_response') || decodeUrl().has('wrong_http_response'))
-      settings.HandleWrongHttpResponse = true; // server may send wrong content length by partial requests, use other method to control this
-   if (d.has('nosap')) internals.sap = undefined; // let ignore sap loader even with openui5 loaded
-}
-
 
 export {
 version_id,
