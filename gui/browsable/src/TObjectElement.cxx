@@ -299,12 +299,27 @@ TObjectElement::TObjectElement(std::unique_ptr<RHolder> &obj, const std::string 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Check if object still exsists
+
+bool TObjectElement::CheckObject() const
+{
+   if (!fObj) return false;
+   if (fObj->IsZombie()) {
+      auto self = const_cast<TObjectElement *>(this);
+      self->fObj = nullptr;
+      return false;
+   }
+   return true;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Returns name of the TObject
 
 std::string TObjectElement::GetName() const
 {
    if (!fName.empty()) return fName;
-   return fObj ? fObj->GetName() : "";
+   return CheckObject() ? fObj->GetName() : "";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -312,7 +327,7 @@ std::string TObjectElement::GetName() const
 
 std::string TObjectElement::GetTitle() const
 {
-   return fObj ? fObj->GetTitle() : "";
+   return CheckObject() ? fObj->GetTitle() : "";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -320,7 +335,7 @@ std::string TObjectElement::GetTitle() const
 
 bool TObjectElement::IsFolder() const
 {
-   return fObj ? fObj->IsFolder() : false;
+   return CheckObject() ? fObj->IsFolder() : false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -364,7 +379,7 @@ std::unique_ptr<RHolder> TObjectElement::GetObject()
 
 const TClass *TObjectElement::GetClass() const
 {
-   return fObj ? fObj->IsA() : nullptr;
+   return CheckObject() ? fObj->IsA() : nullptr;
 }
 
 
