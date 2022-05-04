@@ -485,11 +485,13 @@ sap.ui.define([
             size      : "200px"
          });
 
-         return XMLView.create({
+         return import('/jsrootsys/modules/main.mjs').then(imp_main =>
+         XMLView.create({
             viewName : "rootui5.canv.view.Panel",
+            viewData: { jsroot: imp_main },
             layoutData: oLd,
             height: "100%"
-         }).then(oView => {
+         })).then(oView => {
             vsplit.addContentArea(oView);
             return oView.getController();
          });
