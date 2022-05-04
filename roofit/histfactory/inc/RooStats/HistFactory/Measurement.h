@@ -123,6 +123,11 @@ public:
   std::map< std::string, double >& GetLogNormSyst() { return fLogNormSyst; }
   std::map< std::string, double >& GetNoSyst() { return fNoSyst; }
 
+  std::map< std::string, double > const& GetGammaSyst() const { return fGammaSyst; }
+  std::map< std::string, double > const& GetUniformSyst() const { return fUniformSyst; }
+  std::map< std::string, double > const& GetLogNormSyst() const { return fLogNormSyst; }
+  std::map< std::string, double > const& GetNoSyst() const { return fNoSyst; }
+
   std::string GetInterpolationScheme() { return fInterpolationScheme; }
 
 private:

@@ -376,74 +376,58 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     return histFuncInWS;
   }
 
-  void HistoToWorkspaceFactoryFast::AddMultiVarGaussConstraint(RooWorkspace* proto, string prefix,int lowBin, int highBin, vector<string>& constraintTermNames){
-    // these are the nominal predictions: eg. the mean of some space of variations
-    // later fill these in a loop over histogram bins
+  namespace {
 
-    TVectorD mean(highBin); //-lowBin); // MB: fix range
-    cout << "a" << endl;
-    for(Int_t i=lowBin; i<highBin; ++i){
-      std::stringstream str;
-      str<<"_"<<i;
-      RooRealVar* temp = proto->var(prefix+str.str());
-      mean(i) = temp->getVal();
-    }
+  void makeGaussianConstraint(RooAbsArg& param, RooWorkspace& proto, bool isUniform,
+                              std::vector<std::string> & constraintTermNames) {
+      std::string paramName = param.GetName();
+      std::string constraintName = paramName + "Constraint";
 
-    TMatrixDSym Cov(highBin-lowBin);
-    for(int i=lowBin; i<highBin; ++i){
-      for(int j=0; j<highBin-lowBin; ++j){
-        if(i==j) { Cov(i,j) = sqrt(mean(i)); } // MB : this doesn't make sense to me if lowBin!=0 (?)
-   else { Cov(i,j) = 0; }
+      // do nothing if the constraint term already exists
+      if(proto.pdf(constraintName)) return;
+
+      // case systematic is uniform (asssume they are like a Gaussian but with
+      // a large width (100 instead of 1)
+      const double gaussSigma = isUniform ? 100. : 1.0;
+      if (isUniform) {
+         cxcoutIHF << "Added a uniform constraint for " << paramName << " as a Gaussian constraint with a very large sigma " << std::endl;
       }
+
+      std::stringstream command;
+      command << "Gaussian::" << constraintName << "(" << paramName << ",nom_" << paramName << "[0.,-10,10],"
+              << gaussSigma << ")";
+      constraintTermNames.emplace_back(proto.factory( command.str().c_str() )->GetName());
+      auto * normParam = proto.var(std::string("nom_") + paramName);
+      normParam->setConstant();
+      const_cast<RooArgSet*>(proto.set("globalObservables"))->add(*normParam);
+  }
+
+  /// Make list of abstract parameters that interpolate in space of variations.
+  RooArgList makeInterpolationParameters(std::vector<HistoSys> const& histoSysList, RooWorkspace& proto) {
+    RooArgList params( ("alpha_Hist") );
+
+    // range is set using defined macro (see top of the page)
+    string range=string("[")+alpha_Low+","+alpha_High+"]";
+
+    for(auto const& histoSys : histoSysList) {
+      const std::string histoSysName = histoSys.GetName();
+      RooRealVar* temp = proto.var("alpha_" + histoSysName);
+      if(!temp){
+        temp = (RooRealVar*) proto.factory(("alpha_" + histoSysName + range).c_str());
+      }
+      params.add(* temp );
     }
 
-    // can't make MultiVarGaussian with factory yet, do it by hand
-    RooArgList floating( *(proto->set(prefix.c_str() ) ) );
-    RooMultiVarGaussian constraint((prefix+"Constraint").c_str(),"",
-             floating, mean, Cov);
-
-    proto->import(constraint, RecycleConflictNodes());
-
-    constraintTermNames.push_back(constraint.GetName());
+    return params;
   }
 
   /// Create a linear interpolation object that holds nominal and systematics, import it into the workspace,
   /// and return a pointer to it.
-  RooAbsArg* HistoToWorkspaceFactoryFast::MakeLinInterpWithConstraint(RooHistFunc* nominalFunc,
-      RooWorkspace* proto, const std::vector<HistoSys>& histoSysList,
-      const string& prefix, std::vector<string>& constraintTermNames,
-      const RooArgList& observables) const {
-
-    // these are the nominal predictions: eg. the mean of some space of variations
-    // later fill these in a loop over histogram bins
-
-    // make list of abstract parameters that interpolate in space of variations
-    RooArgList params( ("alpha_Hist") );
-    // range is set using defined macro (see top of the page)
-    string range=string("[")+alpha_Low+","+alpha_High+"]";
-
-    // Loop over the HistoSys list
-    for(unsigned int j=0; j<histoSysList.size(); ++j){
-      std::stringstream str;
-      str<<"_"<<j;
-
-      const HistoSys& histoSys = histoSysList.at(j);
-      string histoSysName = histoSys.GetName();
-
-      RooRealVar* temp = (RooRealVar*) proto->var("alpha_" + histoSysName);
-      if(!temp){
-
-        temp = (RooRealVar*) proto->factory(("alpha_" + histoSysName + range).c_str());
-
-        // now add a constraint term for these parameters
-        string command=("Gaussian::alpha_"+histoSysName+"Constraint(alpha_"+histoSysName+",nom_alpha_"+histoSysName+"[0.,-10,10],1.)");
-        cxcoutI(HistFactory) << command << endl;
-        constraintTermNames.push_back(  proto->factory( command.c_str() )->GetName() );
-        proto->var("nom_alpha_"+histoSysName)->setConstant();
-        const_cast<RooArgSet*>(proto->set("globalObservables"))->add(*proto->var("nom_alpha_"+histoSysName));
-      }
-      params.add(* temp );
-    }
+  RooAbsArg* makeLinInterp(RooArgList const& interpolationParams,
+                           RooHistFunc* nominalFunc,
+                           RooWorkspace* proto, const std::vector<HistoSys>& histoSysList,
+                           const string& prefix,
+                           const RooArgList& observables) {
 
     // now make function that linearly interpolates expectation between variations
     // get low/high variations to interpolate between
@@ -464,7 +448,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     }
 
     // this is sigma(params), a piece-wise linear interpolation
-    PiecewiseInterpolation interp(prefix.c_str(),"",*nominalFunc,lowSet,highSet,params);
+    PiecewiseInterpolation interp(prefix.c_str(),"",*nominalFunc,lowSet,highSet,interpolationParams);
     interp.setPositiveDefinite();
     interp.setAllInterpCodes(4); // LM: change to 4 (piece-wise linear to 6th order polynomial interpolation + linear extrapolation )
     // KC: interpo codes 1 etc. don't have proper analytic integral.
@@ -478,6 +462,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     assert(interpInWS);
 
     return interpInWS;
+  }
+
   }
 
   // GHL: Consider passing the NormFactor list instead of the entire sample
@@ -619,33 +605,13 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
       }
       else {
-
-         // add the Gaussian constraint part
-
-         // case systematic is uniform (asssume they are like a gauaaian bbut with a large width
-         // (100 instead of 1)
-         double gaussSigma = 1;
-         if (meas.GetUniformSyst().count(sys.GetName()) > 0 ) {
-            gaussSigma = 100;
-            cxcoutIHF << "Added a uniform constraint for " << name << " as a gaussian constraint with a very large sigma " << std::endl;
-         }
-
-         // add Gaussian constraint terms (normal + log-normal case)
          RooRealVar* alpha = (RooRealVar*) proto->var(prefix + sys.GetName());
          if(!alpha) {
-
             alpha = (RooRealVar*) proto->factory((prefix + sys.GetName() + range).c_str());
-            RooAbsArg * nomAlpha = proto->factory(TString::Format("nom_%s[0.,-10,10]",alpha->GetName() ) );
-            RooAbsArg * gausConstraint =  proto->factory(TString::Format("Gaussian::%sConstraint(%s,%s,%f)",alpha->GetName(),alpha->GetName(), nomAlpha->GetName(), gaussSigma) );
-             //cout << command << endl;
-            constraintTermNames.push_back( gausConstraint->GetName() );
-            proto->var("nom_" + prefix + sys.GetName())->setConstant();
-            const_cast<RooArgSet*>(proto->set("globalObservables"))->add(*nomAlpha);
          }
-
-
-         // add constraint in terms of bifrucated gauss with low/high as sigmas
-         //std::stringstream lowhigh;
+         // add the Gaussian constraint part
+         const bool isUniform = meas.GetUniformSyst().count(sys.GetName()) > 0;
+         makeGaussianConstraint(*alpha, *proto, isUniform, constraintTermNames);
 
          // check if exists a log-normal constraint
          if (meas.GetLogNormSyst().count(sys.GetName()) == 0 &&  meas.GetGammaSyst().count(sys.GetName()) == 0 ) {
@@ -1315,8 +1281,18 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
         // name of source for variation
         string constraintPrefix = sample.GetName() + "_" + channel_name + "_Hist_alpha";
 
-        sampleHistFuncs.push_back( MakeLinInterpWithConstraint(nominalHistFunc, proto,
-            sample.GetHistoSysList(), constraintPrefix, constraintTermNames, observables) );
+        // make list of abstract parameters that interpolate in space of variations
+        RooArgList interpParams = makeInterpolationParameters(sample.GetHistoSysList(), *proto);
+
+        // next, cerate the constraint terms
+        for(std::size_t i = 0; i < interpParams.size(); ++i) {
+          bool isUniform = measurement.GetUniformSyst().count(sample.GetHistoSysList()[i].GetName()) > 0;
+          makeGaussianConstraint(interpParams[i], *proto, isUniform, constraintTermNames);
+        }
+
+        // finally, create the interpolated function
+        sampleHistFuncs.push_back( makeLinInterp(interpParams, nominalHistFunc, proto,
+            sample.GetHistoSysList(), constraintPrefix, observables) );
       }
 
       ////////////////////////////////////
