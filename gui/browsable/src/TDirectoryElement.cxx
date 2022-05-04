@@ -24,7 +24,6 @@
 #include "TFile.h"
 #include "TClass.h"
 #include "TEnv.h"
-#include "TH1.h"
 
 #include <cstring>
 #include <string>
@@ -77,7 +76,15 @@ class TDirectoryLevelIter : public RLevelIter {
       fObj = fIter->Next();
       if (!fObj) {
          fIter.reset();
-         return false;
+         if (!fKeysIter || !fDir)
+            return false;
+         fKeysIter = false;
+         fIter.reset(fDir->GetList()->MakeIterator());
+         fObj = fIter->Next();
+         if (!fObj) {
+            fIter.reset();
+            return false;
+         }
       }
       if (!fKeysIter) {
          fCurrentName = fObj->GetName();
@@ -261,7 +268,7 @@ public:
       return nullptr;
    }
 
-   /** Return object associated with TKey, if TDirectory has object of that name it will be returned */
+   /** Return object associated with the TKey */
    std::unique_ptr<RHolder> GetObject() override
    {
       if (fElement)
@@ -274,6 +281,7 @@ public:
       std::string namecycle = fKeyName + ";"s + std::to_string(fKeyCycle);
 
       void *obj = fDir->GetObjectChecked(namecycle.c_str(), obj_class);
+
       if (!obj)
          return nullptr;
 
@@ -281,12 +289,6 @@ public:
 
       if (tobj) {
          bool owned_by_dir = (fDir->FindObject(tobj) == tobj) || (fKeyClass == "TGeoManager");
-
-         if (owned_by_dir && tobj->InheritsFrom(TH1::Class())) {
-            auto hist = dynamic_cast<TH1*>(tobj);
-            hist->SetDirectory(nullptr);
-            owned_by_dir = false;
-         }
 
          return std::make_unique<TObjectHolder>(tobj, !owned_by_dir);
       }
@@ -356,7 +358,7 @@ Element representing TDirectory
 
 class TDirectoryElement : public RElement {
    std::string fFileName;       ///<!   file name
-   TDirectory *fDir{nullptr};   ///<!   subdirectory (ifany)
+   TDirectory *fDir{nullptr};   ///<!   sub-directory (if any)
 
    ///////////////////////////////////////////////////////////////////
    /// Get TDirectory. Checks if parent file is still there. If not, means it was closed outside ROOT
@@ -429,6 +431,30 @@ public:
       return false;
    }
 
+};
+
+
+class TObjectIndDirElement : public TObjectElement {
+protected:
+   TDirectory   *fDir{nullptr};
+
+   bool CheckObject() const override
+   {
+      if (!fDir || !fObj)
+        return false;
+
+      if (!fDir->IsZombie() || !fDir->FindObject(fObj)) {
+         auto self = const_cast<TObjectIndDirElement *>(this);
+         self->fDir = nullptr;
+         self->fObj = nullptr;
+         self->fObject.reset();
+         return false;
+      }
+      return true;
+   }
+
+public:
+   TObjectIndDirElement(TDirectory *dir, TObject *obj) : TObjectElement(obj), fDir(dir) {}
 };
 
 // ==============================================================================================
