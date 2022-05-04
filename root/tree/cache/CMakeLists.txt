@@ -55,13 +55,9 @@ ROOTTEST_ADD_TEST(LastCluster
                   OUTREF execLastCluster.ref)
 
 ROOT_GENERATE_DICTIONARY(G__TheEvent ${CMAKE_CURRENT_SOURCE_DIR}/Event.h LINKDEF EventLinkDef.h)
-ROOT_LINKER_LIBRARY(TheEvent TEST Event.cxx G__TheEvent.cxx LIBRARIES ${ROOT_LIBRARIES})
+ROOTTEST_LINKER_LIBRARY(TheEvent TEST Event.cxx G__TheEvent.cxx LIBRARIES ${ROOT_LIBRARIES})
 ROOTTEST_ADD_TEST(perfstattest-libevent-build 
                   COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config $<CONFIG> --target G__TheEvent${fast} TheEvent${fast} -- ${always-make})
-if(MSVC)
-      add_custom_command(TARGET TheEvent POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libTheEvent.dll ${CMAKE_CURRENT_BINARY_DIR})
-endif()
 
 set(RootExeOptions -e "gSystem->Load(\"libTheEvent\")")
 if(compression_default STREQUAL "lz4")
