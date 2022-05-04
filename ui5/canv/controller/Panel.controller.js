@@ -26,7 +26,8 @@ sap.ui.define([
             }
 
             this.object = obj;
-            d3.select(this.getView().getDomRef()).style('overflow','hidden');
+            let elem = this.getView().getDomRef();
+            elem.style.overflow = "hidden";
 
             this.jsroot.draw(this.getView().getDomRef(), obj, options).then(painter => {
                console.log("object painting finished");
@@ -96,7 +97,7 @@ sap.ui.define([
          if (this.panel_data) this.drawModel(this.panel_data);
       },
 
-      onResize: function(event) {
+      onResize: function() {
          // use timeout
          if (this.resize_tmout) clearTimeout(this.resize_tmout);
          this.resize_tmout = setTimeout(this.onResizeTimeout.bind(this), 300); // minimal latency
@@ -131,8 +132,6 @@ sap.ui.define([
       },
 
       onExit: function() {
-         console.log("Exit from JSROOT Panel", this.getView().getId());
-
          if (this.object_painter) {
             this.object_painter.cleanup();
             delete this.object_painter;
