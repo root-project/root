@@ -13,7 +13,8 @@
 /** \class ParamHistFunc
  * \ingroup HistFactory
  *   A class which maps the current values of a RooRealVar
- *  (or a set of RooRealVars) to one of a number of RooRealVars:
+ *  (or a set of RooRealVars) to one of a number of RooAbsReal
+ *  (nominally RooRealVar):
  *
  *  `ParamHistFunc: {val1, val2, ...} -> {gamma (RooRealVar)}`
  *
@@ -67,7 +68,7 @@ ParamHistFunc::ParamHistFunc()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a function which returns binewise-values
-/// This class contains N RooRealVar's, one for each
+/// This class contains N RooAbsReals's, one for each
 /// bin from the given RooRealVar.
 ///
 /// The value of the function in the ith bin is 
@@ -111,7 +112,7 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a function which returns bin-wise values.
 /// This class allows to multiply bin contents of histograms
-/// with the values of a set of RooRealVars.
+/// with the values of a set of RooAbsReal.
 ///
 /// The value of the function in the ith bin is 
 /// given by:
@@ -200,7 +201,7 @@ ParamHistFunc::~ParamHistFunc()
 /// It uses the binMap to convert the RooDataSet style index
 /// into the TH1 style index (which is how they are stored
 /// internally in the '_paramSet' vector).
-RooRealVar& ParamHistFunc::getParameter( Int_t index ) const {
+RooAbsReal& ParamHistFunc::getParameter( Int_t index ) const {
 
   auto const& n = _numBinsPerDim;
 
@@ -213,21 +214,21 @@ RooRealVar& ParamHistFunc::getParameter( Int_t index ) const {
   int j = (index % n.y) / n.z;
   int k = index % (n.yz);
 
-  return static_cast<RooRealVar&>(_paramSet[i + j * n.x + k * n.xy]);
+  return static_cast<RooAbsReal&>(_paramSet[i + j * n.x + k * n.xy]);
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooRealVar& ParamHistFunc::getParameter() const {
+RooAbsReal& ParamHistFunc::getParameter() const {
   Int_t index = getCurrentBin();
   return getParameter( index );
 }
 
 
 void ParamHistFunc::setParamConst( Int_t index, Bool_t varConst ) {
-  RooRealVar& var = getParameter( index );
-  var.setConstant( varConst );
+  RooAbsReal& var = getParameter( index );
+  var.setAttribute( "Constant", varConst );
 }
 
 
@@ -260,7 +261,13 @@ void ParamHistFunc::setShape( TH1* shape ) {
       TH1BinNumber++;
     }
 
-    static_cast<RooRealVar&>(_paramSet[i]).setVal( shape->GetBinContent(TH1BinNumber) );
+    RooRealVar* param = dynamic_cast<RooRealVar*>(&_paramSet[i]);
+    if(!param) {
+       std::cout << "Error - ParamHisFunc: cannot set Shape of ParamHistFunc: " << GetName()
+                 << " - param is not RooRealVar" << std::endl;
+       throw std::runtime_error("setShape");
+    }
+    param->setVal( shape->GetBinContent(TH1BinNumber) );
   }
 
 }
@@ -556,16 +563,16 @@ Int_t ParamHistFunc::addParamSet( const RooArgList& params ) {
     return 1;
 
   }
-  
-  // Check that the elements 
-  // are actually RooRealVar's
-  // If so, add them to the 
+
+  // Check that the elements
+  // are actually RooAbsreal's
+  // If so, add them to the
   // list of params
 
   for (const auto comp : params) {
-    if (!dynamic_cast<const RooRealVar*>(comp)) {
+    if (!dynamic_cast<const RooAbsReal*>(comp)) {
       auto errorMsg = std::string("ParamHistFunc::(") + GetName() + ") ERROR: component "
-                      + comp->GetName() + " in parameter list is not of type RooRealVar.";
+                      + comp->GetName() + " in parameter list is not of type RooAbsReal.";
       coutE(InputArguments) <<  errorMsg << std::endl;
       throw std::runtime_error(errorMsg);
     }
@@ -611,7 +618,7 @@ void ParamHistFunc::computeBatch(cudaStream_t*, double* output, size_t size, Roo
     }
 
     const auto index = _dataSet.getIndex(_dataVars, /*fast=*/true);
-    const RooRealVar& param = getParameter(index);
+    const RooAbsReal& param = getParameter(index);
     output[i] = param.getVal();
   }
 
@@ -670,7 +677,7 @@ Double_t ParamHistFunc::analyticalIntegralWN(Int_t /*code*/, const RooArgSet* /*
   auto binVolumes = _dataSet.binVolumes(0, _dataSet.numEntries());
 
   for (unsigned int i=0; i < _paramSet.size(); ++i) {
-    const auto& param = static_cast<const RooRealVar&>(_paramSet[i]);
+    const auto& param = static_cast<const RooAbsReal&>(_paramSet[i]);
     assert(static_cast<Int_t>(i) == _dataSet.getIndex(param)); // We assume that each parameter i belongs to bin i
 
     // Get the gamma's value
