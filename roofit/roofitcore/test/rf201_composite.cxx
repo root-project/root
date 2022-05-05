@@ -27,8 +27,8 @@ using namespace RooFit ;
 class TestBasic201 : public RooFitTestUnit
 {
 public:
-  TestBasic201(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Addition operator p.d.f.",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic201(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Addition operator p.d.f.",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
     // S e t u p   c o m p o n e n t   p d f s
     // ---------------------------------------
@@ -100,7 +100,7 @@ public:
     //
     //   model2 = bkg + (sig1 + sig2)
     //
-    RooAddPdf  model2("model","g1+g2+a",RooArgList(bkg,sig1,sig2),RooArgList(bkgfrac,sig1frac),kTRUE) ;
+    RooAddPdf  model2("model","g1+g2+a",RooArgList(bkg,sig1,sig2),RooArgList(bkgfrac,sig1frac),true) ;
 
     // NB: Each coefficient is interpreted as the fraction of the
     // left-hand component of the i-th recursive sum, i.e.
@@ -119,7 +119,7 @@ public:
     regPlot(xframe,"rf201_plot1") ;
 
     delete data ;
-    return kTRUE ;
+    return true ;
 
   }
 

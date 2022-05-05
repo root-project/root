@@ -85,7 +85,7 @@ protected:
 
       RooRealVar *frac(int i);
       const RooRealVar *frac(int i) const;
-      void calculateFractions(const RooMomentMorphFuncND &self, Bool_t verbose = kTRUE) const;
+      void calculateFractions(const RooMomentMorphFuncND &self, bool verbose = true) const;
    };
 
 public:
@@ -103,9 +103,9 @@ public:
    TObject *clone(const char *newname) const override { return new RooMomentMorphFuncND(*this, newname); }
 
    void setMode(const Setting &setting) { _setting = setting; }
-   virtual Bool_t selfNormalized() const { return kTRUE; }
-   Bool_t setBinIntegrator(RooArgSet &allVars);
-   void useHorizontalMorphing(Bool_t val) { _useHorizMorph = val; }
+   virtual bool selfNormalized() const { return true; }
+   bool setBinIntegrator(RooArgSet &allVars);
+   void useHorizontalMorphing(bool val) { _useHorizMorph = val; }
 
    Double_t evaluate() const override;
    virtual Double_t getVal(const RooArgSet *set = 0) const;
@@ -151,7 +151,7 @@ protected:
    mutable std::vector<int> _squareIdx;
 
    Setting _setting;
-   Bool_t _useHorizMorph;
+   bool _useHorizMorph;
 
    inline int sij(const int &i, const int &j) const { return (i * _obsList.getSize() + j); }
 

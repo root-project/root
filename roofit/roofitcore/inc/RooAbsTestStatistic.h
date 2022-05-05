@@ -63,7 +63,7 @@ public:
   virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
                                       const RooArgSet& projDeps, Configuration const& cfg) = 0;
 
-  void constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt=kTRUE) override ;
+  void constOptimizeTestStatistic(ConstOpCode opcode, bool doAlsoTrackingOpt=true) override ;
 
   virtual Double_t combinedValue(RooAbsReal** gofArray, Int_t nVal) const = 0 ;
   virtual Double_t globalNormalization() const {
@@ -71,10 +71,10 @@ public:
     return 1.0 ;
   }
 
-  Bool_t setData(RooAbsData& data, Bool_t cloneData=kTRUE) override ;
+  bool setData(RooAbsData& data, bool cloneData=true) override ;
 
-  void enableOffsetting(Bool_t flag) override ;
-  Bool_t isOffsetting() const override { return _doOffset ; }
+  void enableOffsetting(bool flag) override ;
+  bool isOffsetting() const override { return _doOffset ; }
   Double_t offset() const override { return _offset.Sum() ; }
   virtual Double_t offsetCarry() const { return _offset.Carry(); }
 
@@ -82,7 +82,7 @@ protected:
 
   void printCompactTreeHook(std::ostream& os, const char* indent="") override ;
 
-  Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) override ;
+  bool redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive) override ;
   Double_t evaluate() const override ;
 
   virtual Double_t evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const = 0 ;
@@ -122,22 +122,22 @@ protected:
   const RooArgSet* _projDeps = nullptr; ///< Pointer to set with projected observables
   std::string _rangeName ;              ///< Name of range in which to calculate test statistic
   std::string _addCoefRangeName ;       ///< Name of reference to be used for RooAddPdf components
-  Bool_t _splitRange = false;           ///< Split rangeName in RooSimultaneous index labels if true
+  bool _splitRange = false;           ///< Split rangeName in RooSimultaneous index labels if true
   Int_t _simCount = 1;                  ///< Total number of component p.d.f.s in RooSimultaneous (if any)
-  Bool_t _verbose = false;              ///< Verbose messaging if true
+  bool _verbose = false;              ///< Verbose messaging if true
 
-  virtual Bool_t setDataSlave(RooAbsData& /*data*/, Bool_t /*cloneData*/=kTRUE, Bool_t /*ownNewDataAnyway*/=kFALSE) { return kTRUE ; }
+  virtual bool setDataSlave(RooAbsData& /*data*/, bool /*cloneData*/=true, bool /*ownNewDataAnyway*/=false) { return true ; }
 
   //private:
 
 
-  virtual Bool_t processEmptyDataSets() const { return kTRUE ; }
+  virtual bool processEmptyDataSets() const { return true ; }
 
-  Bool_t initialize() ;
+  bool initialize() ;
   void initSimMode(RooSimultaneous* pdf, RooAbsData* data, const RooArgSet* projDeps, std::string const& rangeName, std::string const& addCoefRangeName) ;
   void initMPMode(RooAbsReal* real, RooAbsData* data, const RooArgSet* projDeps, std::string const& rangeName, std::string const& addCoefRangeName) ;
 
-  mutable Bool_t _init = false;   ///<! Is object initialized
+  mutable bool _init = false;   ///<! Is object initialized
   GOFOpMode _gofOpMode = Slave;   ///< Operation mode of test statistic instance
 
   Int_t _nEvents = 0;             ///< Total number of events in test statistic calculation
@@ -155,7 +155,7 @@ protected:
   pRooRealMPFE*  _mpfeArray = nullptr; ///<! Array of parallel execution frond ends
 
   RooFit::MPSplit _mpinterl = RooFit::BulkPartition;  ///< Use interleaving strategy rather than N-wise split for partioning of dataset for multiprocessor-split
-  Bool_t         _doOffset = false;                   ///< Apply interval value offset to control numeric precision?
+  bool         _doOffset = false;                   ///< Apply interval value offset to control numeric precision?
   const bool  _takeGlobalObservablesFromData = false; ///< If the global observable values are taken from data
   mutable ROOT::Math::KahanSum<double> _offset = 0.0; ///<! Offset as KahanSum to avoid loss of precision
   mutable Double_t _evalCarry = 0.0;                  ///<! carry of Kahan sum in evaluatePartition

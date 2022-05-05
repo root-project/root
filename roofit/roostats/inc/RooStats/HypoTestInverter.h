@@ -147,7 +147,7 @@ public:
    void SetNumErr(double err) { fNumErr = err; }
 
    /// set flag to close proof for every new run
-   static void SetCloseProof(Bool_t flag);
+   static void SetCloseProof(bool flag);
 
 
 protected:

@@ -79,16 +79,16 @@ ClassImp(RooNumConvolution);
 ////////////////////////////////////////////////////////////////////////////////
 
 RooNumConvolution::RooNumConvolution() :
-  _init(kFALSE),
+  _init(false),
   _integrand(0),
   _integrator(0),
   _cloneVar(0),
   _clonePdf(0),
   _cloneModel(0),
-  _useWindow(kFALSE),
+  _useWindow(false),
   _windowScale(1),
   _verboseThresh(2000),
-  _doProf(kFALSE),
+  _doProf(false),
   _callHist(0)
 {
 }
@@ -107,7 +107,7 @@ RooNumConvolution::RooNumConvolution() :
 
 RooNumConvolution::RooNumConvolution(const char *name, const char *title, RooRealVar& convVar, RooAbsReal& inPdf, RooAbsReal& resmodel, const RooNumConvolution* proto) :
   RooAbsReal(name,title),
-  _init(kFALSE),
+  _init(false),
   _convIntConfig(RooNumIntConfig::defaultConfig()),
   _integrand(0),
   _integrator(0),
@@ -119,11 +119,11 @@ RooNumConvolution::RooNumConvolution(const char *name, const char *title, RooRea
   _cloneVar(0),
   _clonePdf(0),
   _cloneModel(0),
-  _useWindow(kFALSE),
+  _useWindow(false),
   _windowScale(1),
-  _windowParam("windowParam","Convolution window parameter",this,kFALSE),
+  _windowParam("windowParam","Convolution window parameter",this,false),
   _verboseThresh(2000),
-  _doProf(kFALSE),
+  _doProf(false),
   _callHist(0)
 {
   // Use Adaptive Gauss-Kronrod integration by default for the convolution integral
@@ -145,7 +145,7 @@ RooNumConvolution::RooNumConvolution(const char *name, const char *title, RooRea
 
 RooNumConvolution::RooNumConvolution(const RooNumConvolution& other, const char* name) :
   RooAbsReal(other,name),
-  _init(kFALSE),
+  _init(false),
   _convIntConfig(other._convIntConfig),
   _integrand(0),
   _integrator(0),
@@ -204,9 +204,9 @@ void RooNumConvolution::initialize() const
 
   // Instantiate integrator for convolution integrand
   _integrator = RooNumIntFactory::instance().createIntegrator(*_integrand,_convIntConfig,1) ;
-  _integrator->setUseIntegrandLimits(kFALSE) ;
+  _integrator->setUseIntegrandLimits(false) ;
 
-  _init = kTRUE ;
+  _init = true ;
 }
 
 
@@ -263,11 +263,11 @@ Double_t RooNumConvolution::evaluate() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Intercept server redirects. Throw away cache, as figuring out redirections on the cache is an unsolvable problem.
 
-Bool_t RooNumConvolution::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/,
-                     Bool_t /*nameChange*/, Bool_t /*isRecursive*/)
+bool RooNumConvolution::redirectServersHook(const RooAbsCollection& /*newServerList*/, bool /*mustReplaceAll*/,
+                     bool /*nameChange*/, bool /*isRecursive*/)
 {
-  _init = kFALSE ;
-  return kFALSE ;
+  _init = false ;
+  return false ;
 }
 
 
@@ -277,7 +277,7 @@ Bool_t RooNumConvolution::redirectServersHook(const RooAbsCollection& /*newServe
 
 void RooNumConvolution::clearConvolutionWindow()
 {
-  _useWindow = kFALSE ;
+  _useWindow = false ;
   _windowParam.removeAll() ;
 }
 
@@ -290,7 +290,7 @@ void RooNumConvolution::clearConvolutionWindow()
 
 void RooNumConvolution::setConvolutionWindow(RooAbsReal& centerParam, RooAbsReal& widthParam, Double_t widthScaleFactor)
 {
-  _useWindow = kTRUE ;
+  _useWindow = true ;
   _windowParam.removeAll() ;
   _windowParam.add(centerParam) ;
   _windowParam.add(widthParam) ;
@@ -325,7 +325,7 @@ void RooNumConvolution::setCallWarning(Int_t threshold)
 ///
 /// Calling this function with flag set to false will deactivate call profiling and delete the profiling histogram
 
-void RooNumConvolution::setCallProfiling(Bool_t flag, Int_t nbinX, Int_t nbinCall, Int_t nCallHigh)
+void RooNumConvolution::setCallProfiling(bool flag, Int_t nbinX, Int_t nbinCall, Int_t nCallHigh)
 {
   if (flag) {
     if (_doProf) {
@@ -334,13 +334,13 @@ void RooNumConvolution::setCallProfiling(Bool_t flag, Int_t nbinX, Int_t nbinCal
     _callHist = new TH2F(Form("callHist_%s",GetName()),Form("Call Profiling of RooNumConvolution %s",GetTitle()),
           nbinX,_origVar.min(),_origVar.max(),
           nbinCall,0,nCallHigh) ;
-    _doProf=kTRUE ;
+    _doProf=true ;
 
   } else if (_doProf) {
 
     delete _callHist ;
     _callHist = 0 ;
-    _doProf = kFALSE ;
+    _doProf = false ;
   }
 
 }

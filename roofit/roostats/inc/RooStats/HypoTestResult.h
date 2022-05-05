@@ -74,7 +74,7 @@ namespace RooStats {
       RooDataSet* GetFitInfo() const { return fFitInfo.get(); }
       Double_t GetTestStatisticData(void) const { return fTestStatisticData; }
       const RooArgList* GetAllTestStatisticsData(void) const { return fAllTestStatisticsData; }
-      Bool_t HasTestStatisticData(void) const;
+      bool HasTestStatisticData(void) const;
 
       void SetAltDistribution(SamplingDistribution *alt);
       void SetNullDistribution(SamplingDistribution *null);
@@ -84,11 +84,11 @@ namespace RooStats {
       void SetTestStatisticData(const Double_t tsd);
       void SetAllTestStatisticsData(const RooArgList* tsd);
 
-      void SetPValueIsRightTail(Bool_t pr);
-      Bool_t GetPValueIsRightTail(void) const { return fPValueIsRightTail; }
+      void SetPValueIsRightTail(bool pr);
+      bool GetPValueIsRightTail(void) const { return fPValueIsRightTail; }
 
-      void SetBackgroundAsAlt(Bool_t l = kTRUE) { fBackgroundIsAlt = l; }
-      Bool_t GetBackGroundIsAlt(void) const { return fBackgroundIsAlt; }
+      void SetBackgroundAsAlt(bool l = true) { fBackgroundIsAlt = l; }
+      bool GetBackGroundIsAlt(void) const { return fBackgroundIsAlt; }
 
       /// The error on the "confidence level" of the null hypothesis
       Double_t CLbError() const;
@@ -109,7 +109,7 @@ namespace RooStats {
       void Print(const Option_t* = "") const override;
 
    private:
-      void UpdatePValue(const SamplingDistribution* distr, Double_t &pvalue, Double_t &perror,  Bool_t pIsRightTail);
+      void UpdatePValue(const SamplingDistribution* distr, Double_t &pvalue, Double_t &perror,  bool pIsRightTail);
 
 
    protected:
@@ -125,8 +125,8 @@ namespace RooStats {
       RooDataSet* fNullDetailedOutput;
       RooDataSet* fAltDetailedOutput;
       std::unique_ptr<RooDataSet> fFitInfo;
-      Bool_t fPValueIsRightTail;
-      Bool_t fBackgroundIsAlt;
+      bool fPValueIsRightTail;
+      bool fBackgroundIsAlt;
 
       ClassDefOverride(HypoTestResult,4)  // Base class to represent results of a hypothesis test
 

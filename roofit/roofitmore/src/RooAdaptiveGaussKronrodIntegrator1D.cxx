@@ -195,7 +195,7 @@ RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const R
   _maxSeg = (Int_t) confSet.getRealValue("maxSeg",100) ;
   _methodKey = confSet.getCatIndex("method",2) ;
 
-  _useIntegrandLimits= kTRUE;
+  _useIntegrandLimits= true;
   _valid= initialize();
 }
 
@@ -219,7 +219,7 @@ RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const R
   _maxSeg = (Int_t) confSet.getRealValue("maxSeg",100) ;
   _methodKey = confSet.getCatIndex("method",2) ;
 
-  _useIntegrandLimits= kFALSE;
+  _useIntegrandLimits= false;
   _valid= initialize();
 }
 
@@ -238,7 +238,7 @@ RooAbsIntegrator* RooAdaptiveGaussKronrodIntegrator1D::clone(const RooAbsFunc& f
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize integrator allocate buffers and setup GSL workspace
 
-Bool_t RooAdaptiveGaussKronrodIntegrator1D::initialize()
+bool RooAdaptiveGaussKronrodIntegrator1D::initialize()
 {
   // Allocate coordinate buffer size after number of function dimensions
   _x = new Double_t[_function->getDimension()] ;
@@ -265,15 +265,15 @@ RooAdaptiveGaussKronrodIntegrator1D::~RooAdaptiveGaussKronrodIntegrator1D()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Change our integration limits. Return kTRUE if the new limits are
-/// ok, or otherwise kFALSE. Always returns kFALSE and does nothing
+/// Change our integration limits. Return true if the new limits are
+/// ok, or otherwise false. Always returns false and does nothing
 /// if this object was constructed to always use our integrand's limits.
 
-Bool_t RooAdaptiveGaussKronrodIntegrator1D::setLimits(Double_t* xmin, Double_t* xmax)
+bool RooAdaptiveGaussKronrodIntegrator1D::setLimits(Double_t* xmin, Double_t* xmax)
 {
   if(_useIntegrandLimits) {
     coutE(Integration) << "RooAdaptiveGaussKronrodIntegrator1D::setLimits: cannot override integrand's limits" << endl;
-    return kFALSE;
+    return false;
   }
 
   _xmin= *xmin;
@@ -284,10 +284,10 @@ Bool_t RooAdaptiveGaussKronrodIntegrator1D::setLimits(Double_t* xmin, Double_t* 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check that our integration range is finite and otherwise return kFALSE.
+/// Check that our integration range is finite and otherwise return false.
 /// Update the limits from the integrand if requested.
 
-Bool_t RooAdaptiveGaussKronrodIntegrator1D::checkLimits() const
+bool RooAdaptiveGaussKronrodIntegrator1D::checkLimits() const
 {
   if(_useIntegrandLimits) {
     assert(0 != integrand() && integrand()->isValid());
@@ -296,8 +296,8 @@ Bool_t RooAdaptiveGaussKronrodIntegrator1D::checkLimits() const
   }
 
   // Determine domain type
-  Bool_t infLo= RooNumber::isInfinite(_xmin);
-  Bool_t infHi= RooNumber::isInfinite(_xmax);
+  bool infLo= RooNumber::isInfinite(_xmin);
+  bool infHi= RooNumber::isInfinite(_xmax);
 
   if (!infLo && !infHi) {
     _domainType = Closed ;
@@ -310,7 +310,7 @@ Bool_t RooAdaptiveGaussKronrodIntegrator1D::checkLimits() const
   }
 
 
-  return kTRUE ;
+  return true ;
 }
 
 

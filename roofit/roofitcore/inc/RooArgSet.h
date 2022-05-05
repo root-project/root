@@ -155,26 +155,26 @@ public:
   RooAbsArg& operator[](const TString& str) const;
 
 
-  /// Shortcut for readFromStream(std::istream&, Bool_t, const char*, const char*, Bool_t), setting
+  /// Shortcut for readFromStream(std::istream&, bool, const char*, const char*, bool), setting
   /// `flagReadAtt` and `section` to 0.
   virtual bool readFromStream(std::istream& is, bool compact, bool verbose=false) {
     // I/O streaming interface (machine readable)
     return readFromStream(is, compact, 0, 0, verbose) ;
   }
-  Bool_t readFromStream(std::istream& is, Bool_t compact, const char* flagReadAtt, const char* section, Bool_t verbose=kFALSE) ;
+  bool readFromStream(std::istream& is, bool compact, const char* flagReadAtt, const char* section, bool verbose=false) ;
   virtual void writeToStream(std::ostream& os, bool compact, const char* section=0) const;
   void writeToFile(const char* fileName) const ;
-  Bool_t readFromFile(const char* fileName, const char* flagReadAtt=0, const char* section=0, Bool_t verbose=kFALSE) ;
+  bool readFromFile(const char* fileName, const char* flagReadAtt=0, const char* section=0, bool verbose=false) ;
 
 
   /// Check if this exact instance is in this collection.
-  Bool_t containsInstance(const RooAbsArg& var) const override {
+  bool containsInstance(const RooAbsArg& var) const override {
     return find(var) == &var;
   }
 
   static void cleanup() ;
 
-  Bool_t isInRange(const char* rangeSpec) ;
+  bool isInRange(const char* rangeSpec) ;
 
   /// Use RooAbsCollection::snapshot(), but return as RooArgSet.
   RooArgSet * snapshot(bool deepCopy = true) const {
@@ -182,7 +182,7 @@ public:
   }
 
   /// \copydoc RooAbsCollection::snapshot()
-  Bool_t snapshot(RooAbsCollection& output, Bool_t deepCopy=kTRUE) const {
+  bool snapshot(RooAbsCollection& output, bool deepCopy=true) const {
     return RooAbsCollection::snapshot(output, deepCopy);
   }
 
@@ -193,7 +193,7 @@ public:
   RooFit::UniqueId<RooArgSet> const& uniqueId() const { return _uniqueId; }
 
 protected:
-  Bool_t checkForDup(const RooAbsArg& arg, Bool_t silent) const ;
+  bool checkForDup(const RooAbsArg& arg, bool silent) const ;
   bool canBeAdded(const RooAbsArg& arg, bool silent) const override {
     return !checkForDup(arg, silent);
   }

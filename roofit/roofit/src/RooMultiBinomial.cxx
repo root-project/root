@@ -47,7 +47,7 @@ ClassImp(RooMultiBinomial);
 RooMultiBinomial::RooMultiBinomial(const char *name, const char *title,
                const RooArgList& effFuncList,
                const RooArgList& catList,
-               Bool_t ignoreNonVisible) :
+               bool ignoreNonVisible) :
   RooAbsReal(name,title),
   _catList("catList","list of cats", this),
   _effFuncList("effFuncList","list of eff funcs",this),
@@ -111,7 +111,7 @@ Double_t RooMultiBinomial::evaluate() const
   }
 
   vector<Double_t> effValue(effFuncListSize);
-  Bool_t notVisible = true;
+  bool notVisible = true;
 
   // Calculate efficiency per accept/reject decision
 

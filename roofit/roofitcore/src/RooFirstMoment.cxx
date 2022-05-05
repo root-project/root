@@ -61,8 +61,8 @@ RooFirstMoment::RooFirstMoment()
 ////////////////////////////////////////////////////////////////////////////////
 
 RooFirstMoment::RooFirstMoment(const char* name, const char* title, RooAbsReal& func, RooRealVar& x) :
-  RooAbsMoment(name, title,func,x,1,kFALSE),
-  _xf("!xf","xf",this,kFALSE,kFALSE),
+  RooAbsMoment(name, title,func,x,1,false),
+  _xf("!xf","xf",this,false,false),
   _ixf("!ixf","ixf",this),
   _if("!if","if",this)
 {
@@ -74,13 +74,13 @@ RooFirstMoment::RooFirstMoment(const char* name, const char* title, RooAbsReal& 
   XF->setExpensiveObjectCache(func.expensiveObjectCache()) ;
 
   if (func.isBinnedDistribution(x)) {
-    XF->specialIntegratorConfig(kTRUE)->method1D().setLabel("RooBinIntegrator");
+    XF->specialIntegratorConfig(true)->method1D().setLabel("RooBinIntegrator");
   }
 
   RooRealIntegral* intXF = (RooRealIntegral*) XF->createIntegral(x) ;
   RooRealIntegral* intF =  (RooRealIntegral*) func.createIntegral(x) ;
-  intXF->setCacheNumeric(kTRUE) ;
-  intF->setCacheNumeric(kTRUE) ;
+  intXF->setCacheNumeric(true) ;
+  intF->setCacheNumeric(true) ;
 
   _xf.setArg(*XF) ;
   _ixf.setArg(*intXF) ;
@@ -90,9 +90,9 @@ RooFirstMoment::RooFirstMoment(const char* name, const char* title, RooAbsReal& 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooFirstMoment::RooFirstMoment(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, Bool_t intNSet) :
-  RooAbsMoment(name, title,func,x,1,kFALSE),
-  _xf("!xf","xf",this,kFALSE,kFALSE),
+RooFirstMoment::RooFirstMoment(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, bool intNSet) :
+  RooAbsMoment(name, title,func,x,1,false),
+  _xf("!xf","xf",this,false,false),
   _ixf("!ixf","ixf",this),
   _if("!if","if",this)
 {
@@ -106,20 +106,20 @@ RooFirstMoment::RooFirstMoment(const char* name, const char* title, RooAbsReal& 
   XF->setExpensiveObjectCache(func.expensiveObjectCache()) ;
 
   if (func.isBinnedDistribution(x)) {
-    XF->specialIntegratorConfig(kTRUE)->method1D().setLabel("RooBinIntegrator");
+    XF->specialIntegratorConfig(true)->method1D().setLabel("RooBinIntegrator");
   }
 
   if (intNSet && _nset.getSize()>0 && func.isBinnedDistribution(_nset)) {
-    XF->specialIntegratorConfig(kTRUE)->method2D().setLabel("RooBinIntegrator");
-    XF->specialIntegratorConfig(kTRUE)->methodND().setLabel("RooBinIntegrator");
+    XF->specialIntegratorConfig(true)->method2D().setLabel("RooBinIntegrator");
+    XF->specialIntegratorConfig(true)->methodND().setLabel("RooBinIntegrator");
   }
 
   RooArgSet intSet(x) ;
-  if (intNSet) intSet.add(_nset,kTRUE) ;
+  if (intNSet) intSet.add(_nset,true) ;
   RooRealIntegral* intXF = (RooRealIntegral*) XF->createIntegral(intSet,&_nset) ;
   RooRealIntegral* intF =  (RooRealIntegral*) func.createIntegral(intSet,&_nset) ;
-  intXF->setCacheNumeric(kTRUE) ;
-  intF->setCacheNumeric(kTRUE) ;
+  intXF->setCacheNumeric(true) ;
+  intF->setCacheNumeric(true) ;
 
   _xf.setArg(*XF) ;
   _ixf.setArg(*intXF) ;

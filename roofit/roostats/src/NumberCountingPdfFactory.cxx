@@ -104,7 +104,7 @@ void NumberCountingPdfFactory::AddModel(Double_t* sig,
       str<<"_"<<i;
       RooRealVar*   expectedSignal =
          new RooRealVar(("expected_s"+str.str()).c_str(),("expected_s"+str.str()).c_str(),sig[i], 0., 2*sig[i]);
-      expectedSignal->setConstant(kTRUE);
+      expectedSignal->setConstant(true);
 
       RooProduct*   s =
          new RooProduct(("s"+str.str()).c_str(),("s"+str.str()).c_str(), RooArgSet(*masterSignal, *expectedSignal));
@@ -113,7 +113,7 @@ void NumberCountingPdfFactory::AddModel(Double_t* sig,
          new RooRealVar(("b"+str.str()).c_str(),("b"+str.str()).c_str(), .5,  0.,1.);
       RooRealVar*  tau =
          new RooRealVar(("tau"+str.str()).c_str(),("tau"+str.str()).c_str(), .5, 0., 1.);
-      tau->setConstant(kTRUE);
+      tau->setConstant(true);
 
       RooAddition*  splusb =
          new RooAddition(("splusb"+str.str()).c_str(),("s"+str.str()+"+"+"b"+str.str()).c_str(),

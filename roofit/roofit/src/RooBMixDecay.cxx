@@ -176,7 +176,7 @@ Double_t RooBMixDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, cons
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooBMixDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK) const
+Int_t RooBMixDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK) const
 {
   if (staticInitOK) {
     if (matchArgs(directVars,generateVars,_t,_mixState,_tagFlav)) return 4 ;
@@ -283,7 +283,7 @@ void RooBMixDecay::generateEvent(Int_t code)
     Double_t dil = 1-2.*_mistag ;
     Double_t maxAcceptProb = 1 + TMath::Abs(_delMistag) + TMath::Abs(dil) ;
     Double_t acceptProb = (1-_tagFlav*_delMistag) + _mixState*dil*cos(_dm*tval);
-    Bool_t mixAccept = maxAcceptProb*RooRandom::uniform() < acceptProb ? kTRUE : kFALSE ;
+    bool mixAccept = maxAcceptProb*RooRandom::uniform() < acceptProb ? true : false ;
 
     if (tval<_t.max() && tval>_t.min() && mixAccept) {
       _t = tval ;

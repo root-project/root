@@ -26,8 +26,8 @@ using namespace RooFit ;
 class TestBasic101 : public RooFitTestUnit
 {
 public:
-  TestBasic101(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Fitting,plotting & event generation of basic p.d.f",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic101(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Fitting,plotting & event generation of basic p.d.f",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
     // S e t u p   m o d e l
     // ---------------------
@@ -83,7 +83,7 @@ public:
 
     delete data ;
 
-    return kTRUE ;
+    return true ;
   }
 } ;
 

@@ -238,7 +238,7 @@ void RooRandomizeParamMCSModule::sampleSumGauss(const RooArgSet& paramSet, Doubl
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize module after attachment to RooMCStudy object
 
-Bool_t RooRandomizeParamMCSModule::initializeInstance()
+bool RooRandomizeParamMCSModule::initializeInstance()
 {
   // Loop over all uniform smearing parameters
   std::list<UniParam>::iterator uiter ;
@@ -347,7 +347,7 @@ Bool_t RooRandomizeParamMCSModule::initializeInstance()
   // Create new dataset to be merged with RooMCStudy::fitParDataSet
   _data = new RooDataSet("DeltaLLSigData","Additional data for Delta(-log(L)) study",_genParSet) ;
 
-  return kTRUE ;
+  return true ;
 }
 
 
@@ -355,11 +355,11 @@ Bool_t RooRandomizeParamMCSModule::initializeInstance()
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize module at beginning of RooCMStudy run
 
-Bool_t RooRandomizeParamMCSModule::initializeRun(Int_t /*numSamples*/)
+bool RooRandomizeParamMCSModule::initializeRun(Int_t /*numSamples*/)
 {
   // Clear dataset at beginning of run
   _data->reset() ;
-  return kTRUE ;
+  return true ;
 }
 
 
@@ -367,7 +367,7 @@ Bool_t RooRandomizeParamMCSModule::initializeRun(Int_t /*numSamples*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Apply all smearings to generator parameters
 
-Bool_t RooRandomizeParamMCSModule::processBeforeGen(Int_t /*sampleNum*/)
+bool RooRandomizeParamMCSModule::processBeforeGen(Int_t /*sampleNum*/)
 {
   // Apply uniform smearing to all generator parameters for which it is requested
   std::list<UniParam>::iterator uiter ;
@@ -446,7 +446,7 @@ Bool_t RooRandomizeParamMCSModule::processBeforeGen(Int_t /*sampleNum*/)
   // Store generator values for all modified parameters
   _data->add(_genParSet) ;
 
-  return kTRUE ;
+  return true ;
 }
 
 

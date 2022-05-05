@@ -29,8 +29,8 @@ using namespace RooFit ;
 class TestBasic406 : public RooFitTestUnit
 {
 public:
-  TestBasic406(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Category-to-category functions",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic406(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Category-to-category functions",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // C o n s t r u c t  t w o   c a t e g o r i e s
   // ----------------------------------------------
@@ -102,7 +102,7 @@ public:
 
   delete data ;
 
-  return kTRUE ;
+  return true ;
   }
 
 } ;

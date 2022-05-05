@@ -62,7 +62,7 @@ public:
   RooAbsArg* createArg(const char* className, const char* objName, const char* varList) ;
 
   // Create operator p.d.f.s
-  RooAddPdf* add(const char *objName, const char* specList, Bool_t recursiveCoefs=kFALSE) ;
+  RooAddPdf* add(const char *objName, const char* specList, bool recursiveCoefs=false) ;
   RooRealSumPdf* amplAdd(const char *objName, const char* specList) ;
   RooProdPdf* prod(const char *objName, const char* pdfList) ;
   RooSimultaneous* simul(const char* objName, const char* indexCat, const char* pdfMap) ;
@@ -157,7 +157,7 @@ public:
 
 protected:
 
-  Bool_t checkSyntax(const char* arg) ;
+  bool checkSyntax(const char* arg) ;
 
   std::string varTag(std::string& func, std::vector<std::string>& args) ;
 

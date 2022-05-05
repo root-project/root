@@ -28,9 +28,9 @@ class RooMoment : public RooAbsMoment {
 public:
 
   RooMoment() ;
-  RooMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x, Int_t order=1, Bool_t central=kFALSE, Bool_t takeRoot=kFALSE) ;
-  RooMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, Int_t order=1, Bool_t central=kFALSE, Bool_t takeRoot=kFALSE,
-       Bool_t intNSet=kFALSE) ;
+  RooMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x, Int_t order=1, bool central=false, bool takeRoot=false) ;
+  RooMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, Int_t order=1, bool central=false, bool takeRoot=false,
+       bool intNSet=false) ;
   ~RooMoment() override ;
 
   RooMoment(const RooMoment& other, const char* name = 0);

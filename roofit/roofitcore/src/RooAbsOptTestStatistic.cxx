@@ -84,9 +84,9 @@ RooAbsOptTestStatistic:: RooAbsOptTestStatistic()
   _origFunc = 0 ;
   _origData = 0 ;
 
-  _ownData = kTRUE ;
-  _sealed = kFALSE ;
-  _optimized = kFALSE ;
+  _ownData = true ;
+  _sealed = false ;
+  _optimized = false ;
 }
 
 
@@ -121,8 +121,8 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
                                                RooAbsTestStatistic::Configuration const& cfg) :
   RooAbsTestStatistic(name,title,real,indata,projDeps,cfg),
   _projDeps(0),
-  _sealed(kFALSE),
-  _optimized(kFALSE),
+  _sealed(false),
+  _optimized(false),
   _integrateBinsPrecision(cfg.integrateOverBinsPrecision)
 {
   // Don't do a thing in master mode
@@ -135,8 +135,8 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
     _projDeps = 0 ;
     _origFunc = 0 ;
     _origData = 0 ;
-    _ownData = kFALSE ;
-    _sealed = kFALSE ;
+    _ownData = false ;
+    _sealed = false ;
     return ;
   }
 
@@ -150,7 +150,7 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
 /// Copy constructor
 
 RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic& other, const char* name) :
-  RooAbsTestStatistic(other,name), _sealed(other._sealed), _sealNotice(other._sealNotice), _optimized(kFALSE),
+  RooAbsTestStatistic(other,name), _sealed(other._sealed), _sealNotice(other._sealNotice), _optimized(false),
   _integrateBinsPrecision(other._integrateBinsPrecision)
 {
   // Don't do a thing in master mode
@@ -163,7 +163,7 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic& oth
     _projDeps = 0 ;
     _origFunc = 0 ;
     _origData = 0 ;
-    _ownData = kFALSE ;
+    _ownData = false ;
     return ;
   }
 
@@ -228,7 +228,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   delete origParams ;
 
   // Store normalization set
-  _normSet = (RooArgSet*) indata.get()->snapshot(kFALSE) ;
+  _normSet = (RooArgSet*) indata.get()->snapshot(false) ;
 
   // Expand list of observables with any observables used in parameterized ranges.
   // This NEEDS to be a counting loop since we are inserting during the loop.
@@ -236,8 +236,8 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
     auto realDepRLV = dynamic_cast<const RooAbsRealLValue*>((*_funcObsSet)[i]);
     if (realDepRLV && realDepRLV->isDerived()) {
       RooArgSet tmp2;
-      realDepRLV->leafNodeServerList(&tmp2, 0, kTRUE);
-      _funcObsSet->add(tmp2,kTRUE);
+      realDepRLV->leafNodeServerList(&tmp2, 0, true);
+      _funcObsSet->add(tmp2,true);
     }
   }
 
@@ -282,7 +282,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   } else {
     _dataClone = (RooAbsData*) indata.Clone() ;
   }
-  _ownData = kTRUE ;
+  _ownData = true ;
 
 
   // ******************************************************************
@@ -367,16 +367,16 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   if (rangeName && strlen(rangeName)) {
 
     // WVE Remove projected dependents from normalization
-    _funcClone->fixAddCoefNormalization(*_dataClone->get(),kFALSE) ;
+    _funcClone->fixAddCoefNormalization(*_dataClone->get(),false) ;
 
     if (addCoefRangeName && strlen(addCoefRangeName)) {
       cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName()
                  << ") fixing interpretation of coefficients of any RooAddPdf component to range " << addCoefRangeName << endl ;
-      _funcClone->fixAddCoefRange(addCoefRangeName,kFALSE) ;
+      _funcClone->fixAddCoefRange(addCoefRangeName,false) ;
     } else {
       cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName()
               << ") fixing interpretation of coefficients of any RooAddPdf to full domain of observables " << endl ;
-      _funcClone->fixAddCoefRange(Form("NormalizationRangeFor%s",rangeName),kFALSE) ;
+      _funcClone->fixAddCoefRange(Form("NormalizationRangeFor%s",rangeName),false) ;
     }
   }
 
@@ -395,10 +395,10 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   // Remove projected dependents from normalization set
   if (projDeps.getSize()>0) {
 
-    _projDeps = (RooArgSet*) projDeps.snapshot(kFALSE) ;
+    _projDeps = (RooArgSet*) projDeps.snapshot(false) ;
 
     //RooArgSet* tobedel = (RooArgSet*) _normSet->selectCommon(*_projDeps) ;
-    _normSet->remove(*_projDeps,kTRUE,kTRUE) ;
+    _normSet->remove(*_projDeps,true,true) ;
 
     // Mark all projected dependents as such
     RooArgSet *projDataDeps = (RooArgSet*) _funcObsSet->selectCommon(*_projDeps) ;
@@ -479,11 +479,11 @@ Double_t RooAbsOptTestStatistic::combinedValue(RooAbsReal** array, Int_t n) cons
 ////////////////////////////////////////////////////////////////////////////////
 /// Catch server redirect calls and forward to internal clone of function
 
-Bool_t RooAbsOptTestStatistic::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive)
+bool RooAbsOptTestStatistic::redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive)
 {
   RooAbsTestStatistic::redirectServersHook(newServerList,mustReplaceAll,nameChange,isRecursive) ;
-  if (operMode()!=Slave) return kFALSE ;
-  Bool_t ret = _funcClone->recursiveRedirectServers(newServerList,kFALSE,nameChange) ;
+  if (operMode()!=Slave) return false ;
+  bool ret = _funcClone->recursiveRedirectServers(newServerList,false,nameChange) ;
   return ret ;
 }
 
@@ -511,7 +511,7 @@ void RooAbsOptTestStatistic::printCompactTreeHook(ostream& os, const char* inden
 /// be abandoned. If codes ConfigChange or ValueChange are sent, any existing
 /// constant term optimizations will be redone.
 
-void RooAbsOptTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt)
+void RooAbsOptTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, bool doAlsoTrackingOpt)
 {
   //   cout << "ROATS::constOpt(" << GetName() << ") funcClone structure dump BEFORE const-opt" << endl ;
   //   _funcClone->Print("t") ;
@@ -544,21 +544,21 @@ void RooAbsOptTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, Bool
     cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName()
            << ") optimizing evaluation of test statistic by finding all nodes in p.d.f that depend exclusively"
            << " on observables and constant parameters and precalculating their values" << endl ;
-    optimizeConstantTerms(kTRUE,doAlsoTrackingOpt) ;
+    optimizeConstantTerms(true,doAlsoTrackingOpt) ;
     break ;
 
   case DeActivate:
     cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName()
            << ") deactivating optimization of constant terms in test statistic" << endl ;
-    optimizeConstantTerms(kFALSE) ;
+    optimizeConstantTerms(false) ;
     break ;
 
   case ConfigChange:
     cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName()
            << ") one ore more parameter were changed from constant to floating or vice versa, "
            << "re-evaluating constant term optimization" << endl ;
-    optimizeConstantTerms(kFALSE) ;
-    optimizeConstantTerms(kTRUE,doAlsoTrackingOpt) ;
+    optimizeConstantTerms(false) ;
+    optimizeConstantTerms(true,doAlsoTrackingOpt) ;
     break ;
 
   case ValueChange:
@@ -597,7 +597,7 @@ void RooAbsOptTestStatistic::optimizeCaching()
   _funcClone->optimizeCacheMode(*_funcObsSet) ;
 
   // Disable propagation of dirty state flags for observables
-  _dataClone->setDirtyProp(kFALSE) ;
+  _dataClone->setDirtyProp(false) ;
 
   // Disable reading of observables that are not used
   _dataClone->optimizeReadingWithCaching(*_funcClone, RooArgSet(),requiredExtraObservables()) ;
@@ -614,7 +614,7 @@ void RooAbsOptTestStatistic::optimizeCaching()
 /// that are exclusively used in constant terms are disabled as
 /// they serve no more purpose
 
-void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t applyTrackingOpt)
+void RooAbsOptTestStatistic::optimizeConstantTerms(bool activate, bool applyTrackingOpt)
 {
   if(activate) {
 
@@ -636,7 +636,7 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t apply
     if (_funcClone->getAttribute("NoOptimizeLevel2")) {
       coutI(Minimization) << " Optimization customization: Level-2 constant-term optimization prohibited by attribute NoOptimizeLevel2 set on top-level pdf  "
                           << _funcClone->IsA()->GetName() << "::" << _funcClone->GetName() << endl ;
-      applyTrackingOpt=kFALSE ;
+      applyTrackingOpt=false ;
     }
 
     // Apply tracking optimization here. Default strategy is to track components
@@ -653,7 +653,7 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t apply
         coutW(Optimization) << "RooAbsOptTestStatistic::optimizeConstantTerms(" << GetName()
                      << ") WARNING Cache-and-track optimization (Optimize level 2) is only available for datasets"
                      << " implement in terms of RooVectorDataStore - ignoring this option for current dataset" << endl ;
-        applyTrackingOpt = kFALSE ;
+        applyTrackingOpt = false ;
       }
     }
 
@@ -664,12 +664,12 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t apply
         arg->setCacheAndTrackHints(trackNodes);
       }
       // Do not set CacheAndTrack on constant expressions
-      RooArgSet* constNodes = (RooArgSet*) trackNodes.selectByAttrib("Constant",kTRUE) ;
+      RooArgSet* constNodes = (RooArgSet*) trackNodes.selectByAttrib("Constant",true) ;
       trackNodes.remove(*constNodes) ;
       delete constNodes ;
 
       // Set CacheAndTrack flag on all remaining nodes
-      trackNodes.setAttribAll("CacheAndTrack",kTRUE) ;
+      trackNodes.setAttribAll("CacheAndTrack",true) ;
     }
 
     // Find all nodes that depend exclusively on constant parameters
@@ -685,7 +685,7 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t apply
       cacheArg->setOperMode(RooAbsArg::AClean) ;
     }
 
-    RooArgSet* constNodes = (RooArgSet*) _cachedNodes.selectByAttrib("ConstantExpressionCached",kTRUE) ;
+    RooArgSet* constNodes = (RooArgSet*) _cachedNodes.selectByAttrib("ConstantExpressionCached",true) ;
     RooArgSet actualTrackNodes(_cachedNodes) ;
     actualTrackNodes.remove(*constNodes) ;
     if (constNodes->getSize()>0) {
@@ -707,7 +707,7 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t apply
     // Disable reading of observables that are no longer used
     _dataClone->optimizeReadingWithCaching(*_funcClone, _cachedNodes,requiredExtraObservables()) ;
 
-    _optimized = kTRUE ;
+    _optimized = true ;
 
   } else {
 
@@ -715,34 +715,34 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t apply
     _dataClone->resetCache() ;
 
     // Reactivate all tree branches
-    _dataClone->setArgStatus(*_dataClone->get(),kTRUE) ;
+    _dataClone->setArgStatus(*_dataClone->get(),true) ;
 
     // Reset all nodes to ADirty
     optimizeCaching() ;
 
     // Disable propagation of dirty state flags for observables
-    _dataClone->setDirtyProp(kFALSE) ;
+    _dataClone->setDirtyProp(false) ;
 
     _cachedNodes.removeAll() ;
 
 
-    _optimized = kFALSE ;
+    _optimized = false ;
   }
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Change dataset that is used to given one. If cloneData is kTRUE, a clone of
+/// Change dataset that is used to given one. If cloneData is true, a clone of
 /// in the input dataset is made.  If the test statistic was constructed with
 /// a range specification on the data, the cloneData argument is ignored and
 /// the data is always cloned.
-Bool_t RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, Bool_t cloneData, Bool_t ownNewData)
+bool RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, bool cloneData, bool ownNewData)
 {
 
   if (operMode()==SimMaster) {
     //cout << "ROATS::setDataSlave() ERROR this is SimMaster _funcClone = " << _funcClone << endl ;
-    return kFALSE ;
+    return false ;
   }
 
   //cout << "ROATS::setDataSlave() new dataset size = " << indata.numEntries() << endl ;
@@ -763,7 +763,7 @@ Bool_t RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, Bool_t cloneData
   if (!cloneData && _rangeName.size()>0) {
     coutW(InputArguments) << "RooAbsOptTestStatistic::setData(" << GetName() << ") WARNING: test statistic was constructed with range selection on data, "
           << "ignoring request to _not_ clone the input dataset" << endl ;
-    cloneData = kTRUE ;
+    cloneData = true ;
   }
 
   if (cloneData) {
@@ -773,7 +773,7 @@ Bool_t RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, Bool_t cloneData
     } else {
       _dataClone = ((RooAbsData&)indata).reduce(RooFit::SelectVars(*indata.get()),RooFit::CutRange(_rangeName.c_str())) ;
     }
-    _ownData = kTRUE ;
+    _ownData = true ;
 
   } else {
 
@@ -785,7 +785,7 @@ Bool_t RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, Bool_t cloneData
 
   // Attach function clone to dataset
   _dataClone->attachBuffers(*_funcObsSet) ;
-  _dataClone->setDirtyProp(kFALSE) ;
+  _dataClone->setDirtyProp(false) ;
   _data = _dataClone ;
 
   // ReCache constant nodes with dataset
@@ -805,7 +805,7 @@ Bool_t RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, Bool_t cloneData
     recursiveRedirectServers(*_data->getGlobalObservables()) ;
   }
 
-  return kTRUE ;
+  return true ;
 }
 
 
@@ -816,7 +816,7 @@ Bool_t RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, Bool_t cloneData
 RooAbsData& RooAbsOptTestStatistic::data()
 {
   if (_sealed) {
-    Bool_t notice = (sealNotice() && strlen(sealNotice())) ;
+    bool notice = (sealNotice() && strlen(sealNotice())) ;
     coutW(ObjectHandling) << "RooAbsOptTestStatistic::data(" << GetName()
            << ") WARNING: object sealed by creator - access to data is not permitted: "
            << (notice?sealNotice():"<no user notice>") << endl ;
@@ -832,7 +832,7 @@ RooAbsData& RooAbsOptTestStatistic::data()
 const RooAbsData& RooAbsOptTestStatistic::data() const
 {
   if (_sealed) {
-    Bool_t notice = (sealNotice() && strlen(sealNotice())) ;
+    bool notice = (sealNotice() && strlen(sealNotice())) ;
     coutW(ObjectHandling) << "RooAbsOptTestStatistic::data(" << GetName()
            << ") WARNING: object sealed by creator - access to data is not permitted: "
            << (notice?sealNotice():"<no user notice>") << endl ;

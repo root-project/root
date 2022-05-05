@@ -31,11 +31,11 @@ class RooSuperCategory ;
 class RooProdGenContext : public RooAbsGenContext {
 public:
   RooProdGenContext(const RooProdPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
-          const RooArgSet* auxProto=0, Bool_t _verbose= kFALSE);
+          const RooArgSet* auxProto=0, bool _verbose= false);
   ~RooProdGenContext() override;
 
   void setProtoDataOrder(Int_t* lut) override ;
-  void printMultiline(std::ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override ;
+  void printMultiline(std::ostream &os, Int_t content, bool verbose=false, TString indent="") const override ;
 
   void attach(const RooArgSet& params) override ;
 
@@ -57,7 +57,7 @@ protected:
   RooRealIntegral* _pdfCcdInt ;
   RooArgSet _uniObs ;            ///< Observable to be generated with flat distribution
   TIterator* _uniIter ;          ///< Iterator over uniform observables
-  Bool_t _ccdRefresh ;
+  bool _ccdRefresh ;
   Double_t * _ccdTable ;
   const RooProdPdf *_pdf ;       ///<  Original PDF
   std::list<RooAbsGenContext*>  _gcList ; ///<  List of component generator contexts

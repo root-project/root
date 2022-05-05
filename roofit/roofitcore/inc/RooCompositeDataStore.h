@@ -66,13 +66,13 @@ public:
   Double_t weight() const override ;
   Double_t weightError(RooAbsData::ErrorType etype=RooAbsData::Poisson) const override ;
   void weightError(Double_t& lo, Double_t& hi, RooAbsData::ErrorType etype=RooAbsData::Poisson) const override ;
-  Bool_t isWeighted() const override ;
+  bool isWeighted() const override ;
 
   // Change observable name
-  Bool_t changeObservableName(const char* from, const char* to) override ;
+  bool changeObservableName(const char* from, const char* to) override ;
 
   // Add one column
-  RooAbsArg* addColumn(RooAbsArg& var, Bool_t adjustRange=kTRUE) override ;
+  RooAbsArg* addColumn(RooAbsArg& var, bool adjustRange=true) override ;
 
   // Merge column-wise
   RooAbsDataStore* merge(const RooArgSet& allvars, std::list<RooAbsDataStore*> dstoreList) override ;
@@ -91,13 +91,13 @@ public:
   void resetBuffers() override ;
 
   // Constant term  optimizer interface
-  void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0, Bool_t skipZeroWeights=kFALSE) override ;
+  void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0, bool skipZeroWeights=false) override ;
   const RooAbsArg* cacheOwner() override { return 0 ; }
-  void setArgStatus(const RooArgSet& set, Bool_t active) override ;
+  void setArgStatus(const RooArgSet& set, bool active) override ;
   void resetCache() override ;
 
-  void recalculateCache(const RooArgSet* /*proj*/, Int_t /*firstEvent*/, Int_t /*lastEvent*/, Int_t /*stepSize*/, Bool_t /*skipZeroWeights*/) override ;
-  Bool_t hasFilledCache() const override ;
+  void recalculateCache(const RooArgSet* /*proj*/, Int_t /*firstEvent*/, Int_t /*lastEvent*/, Int_t /*stepSize*/, bool /*skipZeroWeights*/) override ;
+  bool hasFilledCache() const override ;
 
   void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=0, const char* rangeName=0,
       std::size_t nStart=0, std::size_t nStop = std::numeric_limits<std::size_t>::max()) override;
@@ -123,7 +123,7 @@ public:
   mutable RooAbsDataStore* _curStore = nullptr; ///<! Datastore associated with current event
   mutable Int_t _curIndex = 0; ///<! Index associated with current event
   mutable std::unique_ptr<std::vector<double>> _weightBuffer; ///<! Buffer for weights in case a batch of values is requested.
-  Bool_t _ownComps = false; ///<!
+  bool _ownComps = false; ///<!
 
   ClassDefOverride(RooCompositeDataStore,1) // Composite Data Storage class
 };

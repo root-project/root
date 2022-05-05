@@ -30,18 +30,18 @@ class TIterator;
 class RooBinnedGenContext : public RooAbsGenContext {
 public:
   RooBinnedGenContext(const RooAbsPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
-                   const RooArgSet* auxProto=0, Bool_t _verbose= kFALSE);
+                   const RooArgSet* auxProto=0, bool _verbose= false);
   ~RooBinnedGenContext() override;
 
-  RooDataSet* generate(Double_t nEvents=0, Bool_t skipInit=kFALSE, Bool_t extendedMode=kFALSE) override ;
+  RooDataSet* generate(Double_t nEvents=0, bool skipInit=false, bool extendedMode=false) override ;
 
   void setProtoDataOrder(Int_t*) override  {}
 
   void attach(const RooArgSet& params) override ;
 
-  void printMultiline(std::ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override ;
+  void printMultiline(std::ostream &os, Int_t content, bool verbose=false, TString indent="") const override ;
 
-  void setExpectedData(Bool_t) override ;
+  void setExpectedData(bool) override ;
 
 protected:
 
@@ -54,7 +54,7 @@ protected:
   RooArgSet* _pdfSet ;          ///<  Set owned all nodes of internal clone of p.d.f
   RooAbsPdf *_pdf ;             ///<  Pointer to cloned p.d.f
   RooDataHist* _hist ;          ///< Histogram
-  Bool_t _expectedData ;        ///< Asimov?
+  bool _expectedData ;        ///< Asimov?
 
   ClassDefOverride(RooBinnedGenContext,0) // Specialized context for generating a dataset from a binned pdf
 };

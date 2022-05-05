@@ -73,7 +73,7 @@ PointSetInterval::~PointSetInterval()
 ////////////////////////////////////////////////////////////////////////////////
 /// Method to determine if a parameter point is in the interval
 
-Bool_t PointSetInterval::IsInInterval(const RooArgSet &parameterPoint) const
+bool PointSetInterval::IsInInterval(const RooArgSet &parameterPoint) const
 {
   RooDataSet*  tree = dynamic_cast<RooDataSet*>(  fParameterPointsInInterval );
   RooDataHist* hist = dynamic_cast<RooDataHist*>( fParameterPointsInInterval );
@@ -125,7 +125,7 @@ RooArgSet* PointSetInterval::GetParameters() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t PointSetInterval::CheckParameters(const RooArgSet &parameterPoint) const
+bool PointSetInterval::CheckParameters(const RooArgSet &parameterPoint) const
 {
    if (parameterPoint.getSize() != fParameterPointsInInterval->get()->getSize() ) {
      std::cout << "PointSetInterval: argument size is wrong, parameters don't match: arg=" << parameterPoint

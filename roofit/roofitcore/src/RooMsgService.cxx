@@ -111,8 +111,8 @@ RooMsgService::RooMsgService()
 
 
 void RooMsgService::reset() {
-  _silentMode = kFALSE ;
-  _showPid = kFALSE ;
+  _silentMode = false ;
+  _showPid = false ;
   _globMinLevel = DEBUG ;
   _lastMsgLevel = DEBUG ;
 
@@ -156,7 +156,7 @@ RooMsgService::~RooMsgService()
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns true if any debug level stream is active
 
-Bool_t RooMsgService::anyDebug()
+bool RooMsgService::anyDebug()
 {
   return instance()._debugCount>0 ;
 }
@@ -182,7 +182,7 @@ RooWorkspace* RooMsgService::debugWorkspace()
 /// This method accepts the following arguments to configure the stream:
 /// <table>
 /// <tr><th> Output Style options <th>
-/// <tr><td> Prefix(Bool_t flag=kTRUE) <td> Prefix all messages in this stream with Topic/Originator information
+/// <tr><td> Prefix(bool flag=true) <td> Prefix all messages in this stream with Topic/Originator information
 /// <tr><th> Filtering options <th>
 /// <tr><td> Topic()                   <td> Restrict stream to messages on given topic
 /// <tr><td> ObjectName(const char*)   <td> Restrict stream to messages from object with given name
@@ -207,7 +207,7 @@ Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1, co
 
   // Define configuration for this method
   RooCmdConfig pc(Form("RooMsgService::addReportingStream(%s)",GetName())) ;
-  pc.defineInt("prefix","Prefix",0,kTRUE) ;
+  pc.defineInt("prefix","Prefix",0,true) ;
   pc.defineInt("color","Color",0,static_cast<Int_t>(kBlack)) ;
   pc.defineInt("topic","Topic",0,0xFFFFF) ;
   pc.defineString("objName","ObjectName",0,"") ;
@@ -220,7 +220,7 @@ Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1, co
 
   // Process & check varargs
   pc.process(l) ;
-  if (!pc.ok(kTRUE)) {
+  if (!pc.ok(true)) {
     return -1 ;
   }
 
@@ -231,7 +231,7 @@ Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1, co
   const char* baseClassName =  pc.getString("baseClassName") ;
   const char* tagName =  pc.getString("tagName") ;
   const char* outFile = pc.getString("outFile") ;
-  Bool_t prefix = pc.getInt("prefix") ;
+  bool prefix = pc.getInt("prefix") ;
   Color_t color = static_cast<Color_t>(pc.getInt("color")) ;
   auto wrapper = static_cast<RooHelpers::WrapIntoTObject<ostream>*>(pc.getObject("outStream"));
   ostream* os = nullptr;
@@ -245,7 +245,7 @@ Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1, co
   StreamConfig newStream ;
 
   // Store configuration info
-  newStream.active = kTRUE ;
+  newStream.active = true ;
   newStream.minLevel = level ;
   newStream.topic = topic ;
   newStream.objectName = (objName ? objName : "" ) ;
@@ -329,7 +329,7 @@ void RooMsgService::deleteStream(Int_t id)
 ////////////////////////////////////////////////////////////////////////////////
 /// (De)Activate stream with given unique ID
 
-void RooMsgService::setStreamStatus(Int_t id, Bool_t flag)
+void RooMsgService::setStreamStatus(Int_t id, bool flag)
 {
   if (id<0 || id>=static_cast<Int_t>(_streams.size())) {
     cout << "RooMsgService::setStreamStatus() ERROR: invalid stream ID " << id << endl ;
@@ -349,11 +349,11 @@ void RooMsgService::setStreamStatus(Int_t id, Bool_t flag)
 ////////////////////////////////////////////////////////////////////////////////
 /// Get activation status of stream with given unique ID
 
-Bool_t RooMsgService::getStreamStatus(Int_t id) const
+bool RooMsgService::getStreamStatus(Int_t id) const
 {
   if (id<0 || id>= static_cast<Int_t>(_streams.size())) {
     cout << "RooMsgService::getStreamStatus() ERROR: invalid stream ID " << id << endl ;
-    return kFALSE ;
+    return false ;
   }
   return _streams[id].active ;
 }
@@ -395,7 +395,7 @@ void RooMsgService::restoreState()
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if logging is active for given object/topic/RooFit::%MsgLevel combination
 
-Bool_t RooMsgService::isActive(const RooAbsArg* self, RooFit::MsgTopic topic, RooFit::MsgLevel level)
+bool RooMsgService::isActive(const RooAbsArg* self, RooFit::MsgTopic topic, RooFit::MsgLevel level)
 {
   return (activeStream(self,topic,level)>=0) ;
 }
@@ -404,7 +404,7 @@ Bool_t RooMsgService::isActive(const RooAbsArg* self, RooFit::MsgTopic topic, Ro
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if logging is active for given object/topic/RooFit::%MsgLevel combination
 
-Bool_t RooMsgService::isActive(const TObject* self, RooFit::MsgTopic topic, RooFit::MsgLevel level)
+bool RooMsgService::isActive(const TObject* self, RooFit::MsgTopic topic, RooFit::MsgLevel level)
 {
   return (activeStream(self,topic,level)>=0) ;
 }
@@ -443,39 +443,39 @@ Int_t RooMsgService::activeStream(const TObject* self, RooFit::MsgTopic topic, R
 ////////////////////////////////////////////////////////////////////////////////
 /// Determine if message from given object at given level on given topic is logged
 
-Bool_t RooMsgService::StreamConfig::match(RooFit::MsgLevel level, RooFit::MsgTopic top, const RooAbsArg* obj)
+bool RooMsgService::StreamConfig::match(RooFit::MsgLevel level, RooFit::MsgTopic top, const RooAbsArg* obj)
 {
-  if (!active) return kFALSE ;
-  if (level<minLevel) return kFALSE ;
-  if (!(topic&top)) return kFALSE ;
+  if (!active) return false ;
+  if (level<minLevel) return false ;
+  if (!(topic&top)) return false ;
 
-  if (universal) return kTRUE ;
+  if (universal) return true ;
 
-  if (objectName.size()>0 && objectName != obj->GetName()) return kFALSE ;
-  if (className.size()>0 && className != obj->IsA()->GetName()) return kFALSE ;
-  if (baseClassName.size()>0 && !obj->IsA()->InheritsFrom(baseClassName.c_str())) return kFALSE ;
-  if (tagName.size()>0 && !obj->getAttribute(tagName.c_str())) return kFALSE ;
+  if (objectName.size()>0 && objectName != obj->GetName()) return false ;
+  if (className.size()>0 && className != obj->IsA()->GetName()) return false ;
+  if (baseClassName.size()>0 && !obj->IsA()->InheritsFrom(baseClassName.c_str())) return false ;
+  if (tagName.size()>0 && !obj->getAttribute(tagName.c_str())) return false ;
 
-  return kTRUE ;
+  return true ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Determine if message from given object at given level on given topic is logged
 
-Bool_t RooMsgService::StreamConfig::match(RooFit::MsgLevel level, RooFit::MsgTopic top, const TObject* obj)
+bool RooMsgService::StreamConfig::match(RooFit::MsgLevel level, RooFit::MsgTopic top, const TObject* obj)
 {
-  if (!active) return kFALSE ;
-  if (level<minLevel) return kFALSE ;
-  if (!(topic&top)) return kFALSE ;
+  if (!active) return false ;
+  if (level<minLevel) return false ;
+  if (!(topic&top)) return false ;
 
-  if (universal) return kTRUE ;
+  if (universal) return true ;
 
-  if (objectName.size()>0 && objectName != obj->GetName()) return kFALSE ;
-  if (className.size()>0 && className != obj->IsA()->GetName()) return kFALSE ;
-  if (baseClassName.size()>0 && !obj->IsA()->InheritsFrom(baseClassName.c_str())) return kFALSE ;
+  if (objectName.size()>0 && objectName != obj->GetName()) return false ;
+  if (className.size()>0 && className != obj->IsA()->GetName()) return false ;
+  if (baseClassName.size()>0 && !obj->IsA()->InheritsFrom(baseClassName.c_str())) return false ;
 
-  return kTRUE ;
+  return true ;
 }
 
 
@@ -484,7 +484,7 @@ Bool_t RooMsgService::StreamConfig::match(RooFit::MsgLevel level, RooFit::MsgTop
 /// Log error message associated with RooAbsArg object self at given level and topic. If skipPrefix
 /// is true the standard RooMsgService prefix is not added.
 
-ostream& RooMsgService::log(const RooAbsArg* self, RooFit::MsgLevel level, RooFit::MsgTopic topic, Bool_t skipPrefix)
+ostream& RooMsgService::log(const RooAbsArg* self, RooFit::MsgLevel level, RooFit::MsgTopic topic, bool skipPrefix)
 {
   if (level>=ERROR) {
     _errorCount++ ;
@@ -521,7 +521,7 @@ ostream& RooMsgService::log(const RooAbsArg* self, RooFit::MsgLevel level, RooFi
 /// Log error message associated with TObject object self at given level and topic. If skipPrefix
 /// is true the standard RooMsgService prefix is not added.
 
-ostream& RooMsgService::log(const TObject* self, RooFit::MsgLevel level, RooFit::MsgTopic topic, Bool_t skipPrefix)
+ostream& RooMsgService::log(const TObject* self, RooFit::MsgLevel level, RooFit::MsgTopic topic, bool skipPrefix)
 {
   if (level>=ERROR) {
     _errorCount++ ;
@@ -553,9 +553,9 @@ ostream& RooMsgService::log(const TObject* self, RooFit::MsgLevel level, RooFit:
 
 void RooMsgService::Print(Option_t *options) const
 {
-  Bool_t activeOnly = kTRUE ;
+  bool activeOnly = true ;
   if (TString(options).Contains("V") || TString(options).Contains("v")) {
-    activeOnly = kFALSE ;
+    activeOnly = false ;
   }
 
   cout << (activeOnly?"Active Message streams":"All Message streams") << endl ;

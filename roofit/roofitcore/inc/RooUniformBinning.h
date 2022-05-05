@@ -33,7 +33,7 @@ public:
 
   Int_t numBoundaries() const override { return _nbins + 1 ; }
   Int_t binNumber(Double_t x) const override  ;
-  Bool_t isUniform() const override { return kTRUE ; }
+  bool isUniform() const override { return true ; }
 
   Double_t lowBound() const override { return _xlo ; }
   Double_t highBound() const override { return _xhi ; }

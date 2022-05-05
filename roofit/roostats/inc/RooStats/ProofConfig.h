@@ -49,7 +49,7 @@ class ProofConfig {
 
       /// configure proof with number of experiments and host session
       ///  in case of Prooflite, it is better to define the number of workers as "worker=n" in the host string
-      ProofConfig(RooWorkspace &w, Int_t nExperiments = 0, const char *host = "", Bool_t showGui = kFALSE) :
+      ProofConfig(RooWorkspace &w, Int_t nExperiments = 0, const char *host = "", bool showGui = false) :
          fWorkspace(w),
          fNExperiments(nExperiments),
          fHost(host),
@@ -97,16 +97,16 @@ class ProofConfig {
       /// return fNExperiments
       Int_t GetNExperiments(void) const { return fNExperiments; }
       /// return fShowGui
-      Bool_t GetShowGui(void) const { return fShowGui; }
+      bool GetShowGui(void) const { return fShowGui; }
       /// return true if it is a Lite session (ProofLite)
-      Bool_t IsLite() const { return fLite; }
+      bool IsLite() const { return fLite; }
 
    protected:
       RooWorkspace& fWorkspace;   ///< workspace that is to be used with the RooStudyManager
       Int_t fNExperiments;        ///< number of experiments. This is sometimes called "events" in proof; "experiments" in RooStudyManager.
       TString fHost;              ///< Proof hostname. Use empty string (ie "") for proof-lite. Can also handle options like "workers=2" to run on two nodes.
-      Bool_t fShowGui;            ///< Whether to show the Proof Progress window.
-      Bool_t fLite;               ///< Whether we have a Proof Lite session
+      bool fShowGui;            ///< Whether to show the Proof Progress window.
+      bool fLite;               ///< Whether we have a Proof Lite session
 
    protected:
    ClassDef(ProofConfig,1) // Configuration options for proof.

@@ -98,7 +98,7 @@ TIterator* RooSuperCategory::MakeIterator() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the value of the super category to the specified index.
 /// This will propagate to the sub-categories, and set their state accordingly.
-bool RooSuperCategory::setIndex(Int_t index, Bool_t printError)
+bool RooSuperCategory::setIndex(Int_t index, bool printError)
 {
   if (index < 0) {
     if (printError)
@@ -128,7 +128,7 @@ bool RooSuperCategory::setIndex(Int_t index, Bool_t printError)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the value of the super category by specifying the state name.
 /// This looks up the corresponding index number, and calls setIndex().
-Bool_t RooSuperCategory::setLabel(const char* label, Bool_t printError)
+bool RooSuperCategory::setLabel(const char* label, bool printError)
 {
   const value_type index = _multiCat->lookupIndex(label);
   return setIndex(index, printError);
@@ -138,7 +138,7 @@ Bool_t RooSuperCategory::setLabel(const char* label, Bool_t printError)
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the state of this object to the specified output stream.
 
-void RooSuperCategory::printMultiline(ostream& os, Int_t content, Bool_t verbose, TString indent) const
+void RooSuperCategory::printMultiline(ostream& os, Int_t content, bool verbose, TString indent) const
 {
   RooAbsCategory::printMultiline(os,content,verbose,indent) ;
 
@@ -154,7 +154,7 @@ void RooSuperCategory::printMultiline(ostream& os, Int_t content, Bool_t verbose
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check that all input category states are in the given range.
-Bool_t RooSuperCategory::inRange(const char* rangeName) const
+bool RooSuperCategory::inRange(const char* rangeName) const
 {
   for (const auto c : _multiCat->inputCatList()) {
     auto cat = static_cast<RooAbsCategoryLValue*>(c);
@@ -169,7 +169,7 @@ Bool_t RooSuperCategory::inRange(const char* rangeName) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check that any of the input categories has a range with the given name.
-Bool_t RooSuperCategory::hasRange(const char* rangeName) const
+bool RooSuperCategory::hasRange(const char* rangeName) const
 {
   for (const auto c : _multiCat->inputCatList()) {
     auto cat = static_cast<RooAbsCategoryLValue*>(c);

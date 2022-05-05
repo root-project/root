@@ -83,7 +83,7 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
    ROOT::Math::KahanSum<double> result;
    double sumWeight;
 
-   data_->store()->recalculateCache(nullptr, events.begin(N_events_), events.end(N_events_), 1, kTRUE);
+   data_->store()->recalculateCache(nullptr, events.begin(N_events_), events.end(N_events_), 1, true);
 
    if (useBatchedEvaluations_) {
       std::tie(result, sumWeight) = RooNLLVar::computeBatchedFunc(pdf_.get(), data_.get(), evalData_, normSet_.get(), apply_weight_squared,

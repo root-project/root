@@ -48,7 +48,7 @@ ClassImp(RooMomentMorphFuncND)
 RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, const RooArgList &parList,
                                            const RooArgList &obsList, const Grid2 &referenceGrid,
                                            const Setting &setting)
-   : RooAbsReal(name, title), _cacheMgr(this, 10, kTRUE, kTRUE), _parList("parList", "List of morph parameters", this),
+   : RooAbsReal(name, title), _cacheMgr(this, 10, true, true), _parList("parList", "List of morph parameters", this),
      _obsList("obsList", "List of observables", this), _referenceGrid(referenceGrid),
      _pdfList("pdfList", "List of pdfs", this), _setting(setting), _useHorizMorph(true)
 {
@@ -70,7 +70,7 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, 
 RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, RooAbsReal &_m,
                                            const RooArgList &varList, const RooArgList &pdfList,
                                            const TVectorD &mrefpoints, Setting setting)
-   : RooAbsReal(name, title), _cacheMgr(this, 10, kTRUE, kTRUE), _parList("parList", "List of morph parameters", this),
+   : RooAbsReal(name, title), _cacheMgr(this, 10, true, true), _parList("parList", "List of morph parameters", this),
      _obsList("obsList", "List of observables", this), _pdfList("pdfList", "List of pdfs", this), _setting(setting),
      _useHorizMorph(true)
 {
@@ -107,7 +107,7 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, 
 RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, RooAbsReal &_m,
                                            const RooArgList &varList, const RooArgList &pdfList,
                                            const RooArgList &mrefList, Setting setting)
-   : RooAbsReal(name, title), _cacheMgr(this, 10, kTRUE, kTRUE), _parList("parList", "List of morph parameters", this),
+   : RooAbsReal(name, title), _cacheMgr(this, 10, true, true), _parList("parList", "List of morph parameters", this),
      _obsList("obsList", "List of observables", this), _pdfList("pdfList", "List of pdfs", this), _setting(setting),
      _useHorizMorph(true)
 {
@@ -456,8 +456,8 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
                                    ? ((RooAbsReal *)_pdfList.at(i))->sigma((RooRealVar &)*obsList.at(j))
                                    : ((RooAbsReal *)_pdfList.at(i))->sigma((RooRealVar &)*obsList.at(j), obsList);
 
-            mom->setLocalNoDirtyInhibit(kTRUE);
-            mom->mean()->setLocalNoDirtyInhibit(kTRUE);
+            mom->setLocalNoDirtyInhibit(true);
+            mom->mean()->setLocalNoDirtyInhibit(true);
 
             sigmarv[sij(i, j)] = mom;
             meanrv[sij(i, j)] = mom->mean();
@@ -534,7 +534,7 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
 
    // change tracker for fraction parameters
    string trackerName = Form("%s_frac_tracker", GetName());
-   RooChangeTracker *tracker = new RooChangeTracker(trackerName.c_str(), trackerName.c_str(), _parList, kTRUE);
+   RooChangeTracker *tracker = new RooChangeTracker(trackerName.c_str(), trackerName.c_str(), _parList, true);
 
    // Store it in the cache
    cache = new CacheElem(*theSumFunc, *tracker, fracl);
@@ -569,8 +569,8 @@ RooAbsReal *RooMomentMorphFuncND::sumFunc(const RooArgSet *nset)
 {
    CacheElem *cache = getCache(nset ? nset : _curNormSet);
 
-   if (cache->_tracker->hasChanged(kTRUE)) {
-      cache->calculateFractions(*this, kFALSE); // verbose turned off
+   if (cache->_tracker->hasChanged(true)) {
+      cache->calculateFractions(*this, false); // verbose turned off
    }
    return cache->_sumFunc;
 }
@@ -580,8 +580,8 @@ Double_t RooMomentMorphFuncND::evaluate() const
 {
    CacheElem *cache = getCache(_curNormSet);
 
-   if (cache->_tracker->hasChanged(kTRUE)) {
-      cache->calculateFractions(*this, kFALSE); // verbose turned off
+   if (cache->_tracker->hasChanged(true)) {
+      cache->calculateFractions(*this, false); // verbose turned off
    }
 
    Double_t ret = cache->_sumFunc->getVal(_obsList.nset());
@@ -641,7 +641,7 @@ bool RooMomentMorphFuncND::next_combination(const Iterator first, Iterator k, co
 }
 
 //_____________________________________________________________________________
-void RooMomentMorphFuncND::CacheElem::calculateFractions(const RooMomentMorphFuncND &self, Bool_t verbose) const
+void RooMomentMorphFuncND::CacheElem::calculateFractions(const RooMomentMorphFuncND &self, bool verbose) const
 {
    int nPdf = self._pdfList.getSize();
    int nPar = self._parList.getSize();
@@ -876,13 +876,13 @@ void RooMomentMorphFuncND::findShape(const vector<double> &x) const
 }
 
 //_____________________________________________________________________________
-Bool_t RooMomentMorphFuncND::setBinIntegrator(RooArgSet &allVars)
+bool RooMomentMorphFuncND::setBinIntegrator(RooArgSet &allVars)
 {
    if (allVars.getSize() == 1) {
       RooAbsReal *temp = const_cast<RooMomentMorphFuncND *>(this);
-      temp->specialIntegratorConfig(kTRUE)->method1D().setLabel("RooBinIntegrator");
+      temp->specialIntegratorConfig(true)->method1D().setLabel("RooBinIntegrator");
       int nbins = ((RooRealVar *)allVars.first())->numBins();
-      temp->specialIntegratorConfig(kTRUE)->getConfigSection("RooBinIntegrator").setRealValue("numBins", nbins);
+      temp->specialIntegratorConfig(true)->getConfigSection("RooBinIntegrator").setRealValue("numBins", nbins);
       return true;
    } else {
       cout << "Currently BinIntegrator only knows how to deal with 1-d " << endl;

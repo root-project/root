@@ -30,7 +30,7 @@ namespace RooFit { class BidirMMapPipe; }
 class RooRealMPFE : public RooAbsReal {
 public:
   // Constructors, assignment etc
-  RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, Bool_t calcInline=kFALSE) ;
+  RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, bool calcInline=false) ;
   RooRealMPFE(const RooRealMPFE& other, const char* name=0);
   TObject* clone(const char* newname) const override { return new RooRealMPFE(*this,newname); }
   ~RooRealMPFE() override;
@@ -39,11 +39,11 @@ public:
   Double_t getValV(const RooArgSet* nset=0) const override ;
   void standby() ;
 
-  void setVerbose(Bool_t clientFlag=kTRUE, Bool_t serverFlag=kTRUE) ;
+  void setVerbose(bool clientFlag=true, bool serverFlag=true) ;
 
-  void applyNLLWeightSquared(Bool_t flag) ;
+  void applyNLLWeightSquared(bool flag) ;
 
-  void enableOffsetting(Bool_t flag) override ;
+  void enableOffsetting(bool flag) override ;
 
   void followAsSlave(RooRealMPFE& master) { _updateMaster = &master ; }
 
@@ -52,7 +52,7 @@ public:
   // Function evaluation
   Double_t evaluate() const override ;
   friend class RooAbsTestStatistic ;
-  void constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTracking=kTRUE) override ;
+  void constOptimizeTestStatistic(ConstOpCode opcode, bool doAlsoTracking=true) override ;
   virtual Double_t getCarry() const;
 
   enum State { Initialize,Client,Server,Inline } ;
@@ -65,24 +65,24 @@ public:
   void initVars() ;
   void serverLoop() ;
 
-  void doApplyNLLW2(Bool_t flag) ;
+  void doApplyNLLW2(bool flag) ;
 
   RooRealProxy _arg ; ///< Function to calculate in parallel process
   RooListProxy _vars ;   ///< Variables
   RooArgList _saveVars ;  ///< Copy of variables
-  mutable Bool_t _calcInProgress ;
-  Bool_t _verboseClient ;
-  Bool_t _verboseServer ;
-  Bool_t _inlineMode ;
-  mutable Bool_t _forceCalc ;
+  mutable bool _calcInProgress ;
+  bool _verboseClient ;
+  bool _verboseServer ;
+  bool _inlineMode ;
+  mutable bool _forceCalc ;
   mutable RooAbsReal::ErrorLoggingMode _remoteEvalErrorLoggingState ;
 
   RooFit::BidirMMapPipe *_pipe; ///<! connection to child
 
-  mutable std::vector<Bool_t> _valueChanged ; ///<! Flags if variable needs update on server-side
-  mutable std::vector<Bool_t> _constChanged ; ///<! Flags if variable needs update on server-side
+  mutable std::vector<bool> _valueChanged ; ///<! Flags if variable needs update on server-side
+  mutable std::vector<bool> _constChanged ; ///<! Flags if variable needs update on server-side
   RooRealMPFE* _updateMaster ; ///<! Update master
-  mutable Bool_t _retrieveDispatched ; ///<!
+  mutable bool _retrieveDispatched ; ///<!
   mutable Double_t _evalCarry; ///<!
 
   static RooMPSentinel _sentinel ;

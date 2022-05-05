@@ -26,10 +26,10 @@ public:
   RooChi2MCSModule(const RooChi2MCSModule& other) ;
   ~RooChi2MCSModule() override ;
 
-  Bool_t initializeInstance() override ;
-  Bool_t initializeRun(Int_t /*numSamples*/) override ;
+  bool initializeInstance() override ;
+  bool initializeRun(Int_t /*numSamples*/) override ;
   RooDataSet* finalizeRun() override ;
-  Bool_t processAfterFit(Int_t /*sampleNum*/) override  ;
+  bool processAfterFit(Int_t /*sampleNum*/) override  ;
 
 private:
 

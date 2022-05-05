@@ -36,7 +36,7 @@ public:
    RooNLLVarNew(const RooNLLVarNew &other, const char *name = 0);
    TObject *clone(const char *newname) const override { return new RooNLLVarNew(*this, newname); }
 
-   void getParametersHook(const RooArgSet *nset, RooArgSet *list, Bool_t stripDisconnected) const override;
+   void getParametersHook(const RooArgSet *nset, RooArgSet *list, bool stripDisconnected) const override;
 
    /// Return default level for MINUIT error analysis.
    double defaultErrorLevel() const override { return 0.5; }

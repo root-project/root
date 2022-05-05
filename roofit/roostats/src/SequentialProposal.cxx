@@ -63,7 +63,7 @@ void SequentialProposal::Propose(RooArgSet& xPrime, RooArgSet& x )
 /// Return the probability of proposing the point x1 given the starting
 /// point x2
 
-Bool_t SequentialProposal::IsSymmetric(RooArgSet& , RooArgSet& ) {
+bool SequentialProposal::IsSymmetric(RooArgSet& , RooArgSet& ) {
    return true;
 }
 

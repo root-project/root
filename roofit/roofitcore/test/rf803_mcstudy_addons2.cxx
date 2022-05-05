@@ -31,8 +31,8 @@ using namespace RooFit ;
 class TestBasic803 : public RooFitTestUnit
 {
 public:
-  TestBasic803(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("MC Study with param rand. and Z calc",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic803(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("MC Study with param rand. and Z calc",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // C r e a t e   m o d e l
   // -----------------------
@@ -66,8 +66,8 @@ public:
 
   // Configure manager to perform binned extended likelihood fits (Binned(),Extended()) on data generated
   // with a Poisson fluctuation on Nobs (Extended())
-  RooMCStudy* mcs = new RooMCStudy(model,mjjj,Binned(),Silence(),Extended(kTRUE),
-               FitOptions(Extended(kTRUE),PrintEvalErrors(-1))) ;
+  RooMCStudy* mcs = new RooMCStudy(model,mjjj,Binned(),Silence(),Extended(true),
+               FitOptions(Extended(true),PrintEvalErrors(-1))) ;
 
 
 
@@ -126,7 +126,7 @@ public:
 
   delete mcs ;
 
-  return kTRUE ;
+  return true ;
 
   }
 } ;

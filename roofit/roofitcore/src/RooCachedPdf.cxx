@@ -46,7 +46,7 @@ ClassImp(RooCachedPdf);
 RooCachedPdf::RooCachedPdf(const char *name, const char *title, RooAbsPdf& _pdf) :
    RooAbsCachedPdf(name,title),
    pdf("pdf","pdf",this,_pdf),
-   _cacheObs("cacheObs","cacheObs",this,kFALSE,kFALSE)
+   _cacheObs("cacheObs","cacheObs",this,false,false)
  {
  }
 
@@ -68,7 +68,7 @@ RooCachedPdf::RooCachedPdf(const char *name, const char *title, RooAbsPdf& _pdf)
 RooCachedPdf::RooCachedPdf(const char *name, const char *title, RooAbsPdf& _pdf, const RooArgSet& cacheObs) :
    RooAbsCachedPdf(name,title),
    pdf("pdf","pdf",this,_pdf),
-   _cacheObs("cacheObs","cacheObs",this,kFALSE,kFALSE)
+   _cacheObs("cacheObs","cacheObs",this,false,false)
  {
    _cacheObs.add(cacheObs) ;
  }
@@ -110,13 +110,13 @@ void RooCachedPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const
   }
 
   // Update contents of histogram
-  ((RooAbsPdf&)pdf.arg()).fillDataHist(cache.hist(),&cache.nset(),1.0,kFALSE,kTRUE) ;
+  ((RooAbsPdf&)pdf.arg()).fillDataHist(cache.hist(),&cache.nset(),1.0,false,true) ;
 
   if (cache.hist()->get()->getSize()>1) {
     ccoutP(Eval) << endl ;
   }
 
-  cache.pdf()->setUnitNorm(kTRUE) ;
+  cache.pdf()->setUnitNorm(true) ;
 }
 
 

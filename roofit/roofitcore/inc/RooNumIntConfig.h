@@ -54,16 +54,16 @@ public:
 
   // Set/get switch that activates printing of number of required
   // function evaluations for each numeric integration
-  Bool_t printEvalCounter() const { return _printEvalCounter ; }
-  void setPrintEvalCounter(Bool_t newVal) { _printEvalCounter = newVal ; }
+  bool printEvalCounter() const { return _printEvalCounter ; }
+  void setPrintEvalCounter(bool newVal) { _printEvalCounter = newVal ; }
 
   static RooNumIntConfig& defaultConfig() ;
 
-  Bool_t addConfigSection(const RooAbsIntegrator* proto, const RooArgSet& defaultConfig) ;
+  bool addConfigSection(const RooAbsIntegrator* proto, const RooArgSet& defaultConfig) ;
   const RooArgSet& getConfigSection(const char* name) const ;
   RooArgSet& getConfigSection(const char* name) ;
 
-  void printMultiline(std::ostream &os, Int_t content, Bool_t verbose, TString indent= "") const override;
+  void printMultiline(std::ostream &os, Int_t content, bool verbose, TString indent= "") const override;
 
   StyleOption defaultPrintStyle(Option_t* opt) const override ;
   inline void Print(Option_t *options= 0) const override {
@@ -73,7 +73,7 @@ public:
 protected:
   Double_t _epsAbs          ; ///< Absolute precision
   Double_t _epsRel          ; ///< Relative precision
-  Bool_t   _printEvalCounter ; ///< Flag to control printing of function evaluation counter
+  bool   _printEvalCounter ; ///< Flag to control printing of function evaluation counter
 
   RooCategory _method1D     ; ///< Selects integration method for 1D integrals
   RooCategory _method2D     ; ///< Selects integration method for 2D integrals

@@ -36,12 +36,12 @@ public:
   RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
   ~RooIntegrator2D() override ;
 
-  Bool_t checkLimits() const override;
+  bool checkLimits() const override;
 
-  Bool_t canIntegrate1D() const override { return kFALSE ; }
-  Bool_t canIntegrate2D() const override { return kTRUE ; }
-  Bool_t canIntegrateND() const override { return kFALSE ; }
-  Bool_t canIntegrateOpenEnded() const override { return kFALSE ; }
+  bool canIntegrate1D() const override { return false ; }
+  bool canIntegrate2D() const override { return true ; }
+  bool canIntegrateND() const override { return false ; }
+  bool canIntegrateOpenEnded() const override { return false ; }
 
 protected:
 

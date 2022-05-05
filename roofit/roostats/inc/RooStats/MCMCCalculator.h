@@ -105,9 +105,9 @@ namespace RooStats {
       virtual void SetAxes(RooArgList& axes)
       { fAxes = &axes; }
       /// set whether to use kernel estimation to determine the interval
-      virtual void SetUseKeys(Bool_t useKeys) { fUseKeys = useKeys; }
+      virtual void SetUseKeys(bool useKeys) { fUseKeys = useKeys; }
       /// set whether to use sparse histogram (if using histogram at all)
-      virtual void SetUseSparseHist(Bool_t useSparseHist)
+      virtual void SetUseSparseHist(bool useSparseHist)
       { fUseSparseHist = useSparseHist; }
 
       /// set what type of interval to have the MCMCInterval represent
@@ -179,8 +179,8 @@ namespace RooStats {
       Int_t fNumBins;        ///< set the number of bins to create for each
                              ///< axis when constructing the interval
       RooArgList * fAxes;    ///< which variables to put on each axis
-      Bool_t fUseKeys;       ///< whether to use kernel estimation to determine interval
-      Bool_t fUseSparseHist; ///< whether to use sparse histogram (if using hist at all)
+      bool fUseKeys;       ///< whether to use kernel estimation to determine interval
+      bool fUseSparseHist; ///< whether to use sparse histogram (if using hist at all)
       Double_t fLeftSideTF;  ///< left side tail-fraction for interval
       Double_t fEpsilon;     ///< acceptable error for Keys interval determination
 

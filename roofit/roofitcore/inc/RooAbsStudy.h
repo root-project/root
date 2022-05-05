@@ -33,23 +33,23 @@ class RooStudyPackage ;
 class RooAbsStudy : public TNamed {
 public:
 
-  RooAbsStudy() :  _storeDetails(kFALSE), _summaryData(0), _detailData(0), _ownDetailData(kTRUE) {} ;
+  RooAbsStudy() :  _storeDetails(false), _summaryData(0), _detailData(0), _ownDetailData(true) {} ;
   RooAbsStudy(const char* name, const char* title) ;
   RooAbsStudy(const RooAbsStudy& other) ;
   virtual RooAbsStudy* clone(const char* newname="") const = 0 ;
   TObject* Clone(const char* newname="") const override { return clone(newname) ; }
   ~RooAbsStudy() override ;
 
-  virtual Bool_t attach(RooWorkspace& /*w*/) { return kFALSE ; } ;
-  virtual Bool_t initialize() { return kFALSE ; } ;
-  virtual Bool_t execute() { return kFALSE ; } ;
-  virtual Bool_t finalize() { return 0 ; } ;
-  void storeDetailedOutput(Bool_t flag) { _storeDetails = flag ; }
+  virtual bool attach(RooWorkspace& /*w*/) { return false ; } ;
+  virtual bool initialize() { return false ; } ;
+  virtual bool execute() { return false ; } ;
+  virtual bool finalize() { return 0 ; } ;
+  void storeDetailedOutput(bool flag) { _storeDetails = flag ; }
 
   RooDataSet* summaryData() { return _summaryData ; }
   RooLinkedList* detailedData() { return _detailData ; }
 
-  void releaseDetailData() { _ownDetailData = kFALSE ; }
+  void releaseDetailData() { _ownDetailData = false ; }
 
   virtual void dump() {} ;
 
@@ -64,10 +64,10 @@ public:
 
  private:
 
-  Bool_t _storeDetails ;
+  bool _storeDetails ;
   RooDataSet* _summaryData ;     ///<!
   RooLinkedList*  _detailData ;  ///<!
-  Bool_t      _ownDetailData ;
+  bool      _ownDetailData ;
 
   ClassDefOverride(RooAbsStudy,1) // Abstract base class for RooStudyManager modules
 } ;

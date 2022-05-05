@@ -22,14 +22,14 @@
 class RooAbsIntegrator : public TObject {
 public:
   RooAbsIntegrator() ;
-  RooAbsIntegrator(const RooAbsFunc& function, Bool_t printEvalCounter=kFALSE);
+  RooAbsIntegrator(const RooAbsFunc& function, bool printEvalCounter=false);
   /// Destructor
   inline ~RooAbsIntegrator() override {
   }
   virtual RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const = 0 ;
 
   /// Is integrator in valid state
-  inline Bool_t isValid() const {
+  inline bool isValid() const {
     return _valid;
   }
 
@@ -44,30 +44,30 @@ public:
   }
 
   /// If true, finite limits are required on the observable range
-  inline virtual Bool_t checkLimits() const {
-    return kTRUE;
+  inline virtual bool checkLimits() const {
+    return true;
   }
 
   Double_t calculate(const Double_t *yvec=0) ;
   virtual Double_t integral(const Double_t *yvec=0)=0 ;
 
-  virtual Bool_t canIntegrate1D() const = 0 ;
-  virtual Bool_t canIntegrate2D() const = 0 ;
-  virtual Bool_t canIntegrateND() const = 0 ;
-  virtual Bool_t canIntegrateOpenEnded() const = 0 ;
+  virtual bool canIntegrate1D() const = 0 ;
+  virtual bool canIntegrate2D() const = 0 ;
+  virtual bool canIntegrateND() const = 0 ;
+  virtual bool canIntegrateOpenEnded() const = 0 ;
 
-  Bool_t printEvalCounter() const { return _printEvalCounter ; }
-  void setPrintEvalCounter(Bool_t value) { _printEvalCounter = value ; }
+  bool printEvalCounter() const { return _printEvalCounter ; }
+  void setPrintEvalCounter(bool value) { _printEvalCounter = value ; }
 
-  virtual Bool_t setLimits(Double_t*, Double_t*) { return kFALSE ; }
-  virtual Bool_t setLimits(Double_t xmin, Double_t xmax) ;
-  virtual Bool_t setUseIntegrandLimits(Bool_t flag) ;
+  virtual bool setLimits(Double_t*, Double_t*) { return false ; }
+  virtual bool setLimits(Double_t xmin, Double_t xmax) ;
+  virtual bool setUseIntegrandLimits(bool flag) ;
 
 protected:
 
   const RooAbsFunc *_function; ///< Pointer to function binding of integrand
-  Bool_t _valid;               ///< Is integrator in valid state?
-  Bool_t _printEvalCounter ;   ///< If true print number of function evaluation required for integration
+  bool _valid;               ///< Is integrator in valid state?
+  bool _printEvalCounter ;   ///< If true print number of function evaluation required for integration
 
   ClassDefOverride(RooAbsIntegrator,0) // Abstract interface for real-valued function integrators
 };

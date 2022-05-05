@@ -28,7 +28,7 @@ namespace RooBatchCompute{ struct RunContext; }
 
 class RooRealBinding : public RooAbsFunc {
 public:
-  RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, const RooArgSet* nset=0, Bool_t clipInvalid=kFALSE, const TNamed* rangeName=0);
+  RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, const RooArgSet* nset=0, bool clipInvalid=false, const TNamed* rangeName=0);
   RooRealBinding(const RooRealBinding& other, const RooArgSet* nset=0) ;
   ~RooRealBinding() override;
 
@@ -54,8 +54,8 @@ protected:
   const RooAbsReal *_func;
   std::vector<RooAbsRealLValue*> _vars; ///< Non-owned pointers to variables
   const RooArgSet *_nset;
-  mutable Bool_t _xvecValid;
-  Bool_t _clipInvalid ;
+  mutable bool _xvecValid;
+  bool _clipInvalid ;
   mutable Double_t* _xsave ;
   const TNamed* _rangeName ; ///<!
 

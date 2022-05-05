@@ -52,9 +52,9 @@ ClassImp(RooHistFunc);
 RooHistFunc::RooHistFunc() :
   _dataHist(0),
   _intOrder(0),
-  _cdfBoundaries(kFALSE),
+  _cdfBoundaries(false),
   _totVolume(0),
-  _unitNorm(kFALSE)
+  _unitNorm(false)
 {
   TRACE_CREATE
 }
@@ -74,9 +74,9 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& v
   _dataHist((RooDataHist*)&dhist),
   _codeReg(10),
   _intOrder(intOrder),
-  _cdfBoundaries(kFALSE),
+  _cdfBoundaries(false),
   _totVolume(0),
-  _unitNorm(kFALSE)
+  _unitNorm(false)
 {
   _histObsList.addClone(vars) ;
   _depList.add(vars) ;
@@ -116,9 +116,9 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList& 
   _dataHist((RooDataHist*)&dhist),
   _codeReg(10),
   _intOrder(intOrder),
-  _cdfBoundaries(kFALSE),
+  _cdfBoundaries(false),
   _totVolume(0),
-  _unitNorm(kFALSE)
+  _unitNorm(false)
 {
   _histObsList.addClone(histObs) ;
   _depList.add(funcObs) ;
@@ -189,7 +189,7 @@ Double_t RooHistFunc::evaluate() const
 
       if (harg != parg) {
         parg->syncCache() ;
-        harg->copyCache(parg,kTRUE) ;
+        harg->copyCache(parg,true) ;
         if (!harg->inRange(0)) {
           return 0 ;
         }
@@ -197,7 +197,7 @@ Double_t RooHistFunc::evaluate() const
     }
   }
 
-  Double_t ret =  _dataHist->weightFast(_histObsList,_intOrder,kFALSE,_cdfBoundaries) ;
+  Double_t ret =  _dataHist->weightFast(_histObsList,_intOrder,false,_cdfBoundaries) ;
   return ret ;
 }
 
@@ -470,7 +470,7 @@ std::list<Double_t>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_t 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if our datahist is already in the workspace.
 /// In case of error, return true.
-Bool_t RooHistFunc::importWorkspaceHook(RooWorkspace& ws)
+bool RooHistFunc::importWorkspaceHook(RooWorkspace& ws)
 {
   // Check if dataset with given name already exists
   RooAbsData* wsdata = ws.embeddedData(_dataHist->GetName()) ;
@@ -492,10 +492,10 @@ Bool_t RooHistFunc::importWorkspaceHook(RooWorkspace& ws)
 
         // not identical, clone rename and import
         TString uniqueName = Form("%s_%s",_dataHist->GetName(),GetName()) ;
-        Bool_t flag = ws.import(*_dataHist,RooFit::Rename(uniqueName.Data()),RooFit::Embedded()) ;
+        bool flag = ws.import(*_dataHist,RooFit::Rename(uniqueName.Data()),RooFit::Embedded()) ;
         if (flag) {
           coutE(ObjectHandling) << " RooHistPdf::importWorkspaceHook(" << GetName() << ") unable to import clone of underlying RooDataHist with unique name " << uniqueName << ", abort" << endl ;
-          return kTRUE ;
+          return true ;
         }
         _dataHist = (RooDataHist*) ws.embeddedData(uniqueName.Data()) ;
       }
@@ -504,15 +504,15 @@ Bool_t RooHistFunc::importWorkspaceHook(RooWorkspace& ws)
 
       // Exists and is NOT of correct type: clone rename and import
       TString uniqueName = Form("%s_%s",_dataHist->GetName(),GetName()) ;
-      Bool_t flag = ws.import(*_dataHist,RooFit::Rename(uniqueName.Data()),RooFit::Embedded()) ;
+      bool flag = ws.import(*_dataHist,RooFit::Rename(uniqueName.Data()),RooFit::Embedded()) ;
       if (flag) {
         coutE(ObjectHandling) << " RooHistPdf::importWorkspaceHook(" << GetName() << ") unable to import clone of underlying RooDataHist with unique name " << uniqueName << ", abort" << endl ;
-        return kTRUE ;
+        return true ;
       }
       _dataHist = (RooDataHist*) ws.embeddedData(uniqueName.Data()) ;
 
     }
-    return kFALSE ;
+    return false ;
   }
 
   // We need to import our datahist into the workspace
@@ -520,24 +520,24 @@ Bool_t RooHistFunc::importWorkspaceHook(RooWorkspace& ws)
 
   // Redirect our internal pointer to the copy in the workspace
   _dataHist = (RooDataHist*) ws.embeddedData(_dataHist->GetName()) ;
-  return kFALSE ;
+  return false ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t RooHistFunc::areIdentical(const RooDataHist& dh1, const RooDataHist& dh2)
+bool RooHistFunc::areIdentical(const RooDataHist& dh1, const RooDataHist& dh2)
 {
-  if (fabs(dh1.sumEntries()-dh2.sumEntries())>1e-8) return kFALSE ;
-  if (dh1.numEntries() != dh2.numEntries()) return kFALSE ;
+  if (fabs(dh1.sumEntries()-dh2.sumEntries())>1e-8) return false ;
+  if (dh1.numEntries() != dh2.numEntries()) return false ;
   for (int i=0 ; i < dh1.numEntries() ; i++) {
     dh1.get(i) ;
     dh2.get(i) ;
-    if (fabs(dh1.weight()-dh2.weight())>1e-8) return kFALSE ;
+    if (fabs(dh1.weight()-dh2.weight())>1e-8) return false ;
   }
   using RooHelpers::getColonSeparatedNameString;
-  if (getColonSeparatedNameString(*dh1.get()) != getColonSeparatedNameString(*dh2.get())) return kFALSE ;
-  return kTRUE ;
+  if (getColonSeparatedNameString(*dh1.get()) != getColonSeparatedNameString(*dh2.get())) return false ;
+  return true ;
 }
 
 
@@ -582,7 +582,7 @@ Int_t RooHistFunc::getBin() const {
 
       if (harg != parg) {
         parg->syncCache() ;
-        harg->copyCache(parg,kTRUE) ;
+        harg->copyCache(parg,true) ;
         if (!harg->inRange(nullptr)) {
           return -1;
         }

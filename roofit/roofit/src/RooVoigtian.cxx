@@ -42,7 +42,7 @@ ClassImp(RooVoigtian);
 RooVoigtian::RooVoigtian(const char *name, const char *title,
           RooAbsReal& _x, RooAbsReal& _mean,
           RooAbsReal& _width, RooAbsReal& _sigma,
-              Bool_t doFast) :
+              bool doFast) :
   RooAbsPdf(name,title),
   x("x","Dependent",this,_x),
   mean("mean","Mean",this,_mean),

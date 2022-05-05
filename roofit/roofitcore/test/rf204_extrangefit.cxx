@@ -29,8 +29,8 @@ using namespace RooFit ;
 class TestBasic204 : public RooFitTestUnit
 {
 public:
-  TestBasic204(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Extended ML fit in sub range",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic204(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Extended ML fit in sub range",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
     // S e t u p   c o m p o n e n t   p d f s
     // ---------------------------------------
@@ -84,12 +84,12 @@ public:
 
 
     // Perform unbinned extended ML fit to data
-    RooFitResult* r = model.fitTo(*data,Extended(kTRUE),Save()) ;
+    RooFitResult* r = model.fitTo(*data,Extended(true),Save()) ;
 
 
     regResult(r,"rf204_result") ;
 
     delete data ;
-    return kTRUE ;
+    return true ;
   }
 } ;

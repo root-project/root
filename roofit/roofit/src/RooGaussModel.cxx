@@ -72,8 +72,8 @@ ClassImp(RooGaussModel);
 RooGaussModel::RooGaussModel(const char *name, const char *title, RooAbsRealLValue& xIn,
               RooAbsReal& _mean, RooAbsReal& _sigma) :
   RooResolutionModel(name,title,xIn),
-  _flatSFInt(kFALSE),
-  _asympInt(kFALSE),
+  _flatSFInt(false),
+  _asympInt(false),
   mean("mean","Mean",this,_mean),
   sigma("sigma","Width",this,_sigma),
   msf("msf","Mean Scale Factor",this,(RooRealVar&)RooRealConstant::value(1)),
@@ -87,8 +87,8 @@ RooGaussModel::RooGaussModel(const char *name, const char *title, RooAbsRealLVal
               RooAbsReal& _mean, RooAbsReal& _sigma,
               RooAbsReal& _msSF) :
   RooResolutionModel(name,title,xIn),
-  _flatSFInt(kFALSE),
-  _asympInt(kFALSE),
+  _flatSFInt(false),
+  _asympInt(false),
   mean("mean","Mean",this,_mean),
   sigma("sigma","Width",this,_sigma),
   msf("msf","Mean Scale Factor",this,_msSF),
@@ -102,8 +102,8 @@ RooGaussModel::RooGaussModel(const char *name, const char *title, RooAbsRealLVal
               RooAbsReal& _mean, RooAbsReal& _sigma,
               RooAbsReal& _meanSF, RooAbsReal& _sigmaSF) :
   RooResolutionModel(name,title,xIn),
-  _flatSFInt(kFALSE),
-  _asympInt(kFALSE),
+  _flatSFInt(false),
+  _asympInt(false),
   mean("mean","Mean",this,_mean),
   sigma("sigma","Width",this,_sigma),
   msf("msf","Mean Scale Factor",this,_meanSF),
@@ -489,7 +489,7 @@ std::complex<Double_t> RooGaussModel::evalCerfInt(Double_t sign, Double_t _x, Do
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooGaussModel::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
+Int_t RooGaussModel::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool /*staticInitOK*/) const
 {
   if (matchArgs(directVars,generateVars,x)) return 1 ;
   return 0 ;

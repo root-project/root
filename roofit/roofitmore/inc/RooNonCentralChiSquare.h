@@ -30,7 +30,7 @@ public:
 
    void SetErrorTolerance(Double_t t) {fErrorTol = t;}
    void SetMaxIters(Int_t mi) {fMaxIters = mi;}
-   void SetForceSum(Bool_t flag);
+   void SetForceSum(bool flag);
 
 
    Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
@@ -43,9 +43,9 @@ protected:
    RooRealProxy lambda ;
    Double_t fErrorTol;
    Int_t fMaxIters;
-   Bool_t fForceSum;
-   mutable Bool_t fHasIssuedConvWarning;
-   mutable Bool_t fHasIssuedSumWarning;
+   bool fForceSum;
+   mutable bool fHasIssuedConvWarning;
+   mutable bool fHasIssuedSumWarning;
    Double_t evaluate() const override ;
 
 private:

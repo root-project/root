@@ -108,10 +108,10 @@ RooSegmentedIntegrator2D::~RooSegmentedIntegrator2D()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check that our integration range is finite and otherwise return kFALSE.
+/// Check that our integration range is finite and otherwise return false.
 /// Update the limits from the integrand if requested.
 
-Bool_t RooSegmentedIntegrator2D::checkLimits() const
+bool RooSegmentedIntegrator2D::checkLimits() const
 {
   if(_useIntegrandLimits) {
     assert(0 != integrand() && integrand()->isValid());
@@ -121,9 +121,9 @@ Bool_t RooSegmentedIntegrator2D::checkLimits() const
   _range= _xmax - _xmin;
   if(_range <= 0) {
     oocoutE((TObject*)0,InputArguments) << "RooIntegrator1D::checkLimits: bad range with min >= max" << endl;
-    return kFALSE;
+    return false;
   }
-  Bool_t ret =  (RooNumber::isInfinite(_xmin) || RooNumber::isInfinite(_xmax)) ? kFALSE : kTRUE;
+  bool ret =  (RooNumber::isInfinite(_xmin) || RooNumber::isInfinite(_xmax)) ? false : true;
 
   // Adjust component integrators, if already created
   if (_array && ret) {

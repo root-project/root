@@ -147,7 +147,7 @@ RooArgList RooNumRunningInt::RICacheElem::containedArgs(Action action)
 /// the result in the cache histogram provided
 /// by RooAbsCachedPdf
 
-void RooNumRunningInt::RICacheElem::calculate(Bool_t cdfmode)
+void RooNumRunningInt::RICacheElem::calculate(bool cdfmode)
 {
   // Update contents of histogram
   Int_t nbins = hist()->numEntries() ;
@@ -180,7 +180,7 @@ void RooNumRunningInt::RICacheElem::calculate(Bool_t cdfmode)
   }
 
   if (cdfmode) {
-    func()->setCdfBoundaries(kTRUE) ;
+    func()->setCdfBoundaries(true) ;
   }
   _self->x = xsave ;
 }
@@ -258,7 +258,7 @@ void RooNumRunningInt::RICacheElem::addPoint(Int_t ix)
 void RooNumRunningInt::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cache) const
 {
   RICacheElem& riCache = static_cast<RICacheElem&>(cache) ;
-  riCache.calculate(kFALSE) ;
+  riCache.calculate(false) ;
 }
 
 
@@ -284,7 +284,7 @@ RooArgSet* RooNumRunningInt::actualObservables(const RooArgSet& /*nset*/) const
 RooArgSet* RooNumRunningInt::actualParameters(const RooArgSet& /*nset*/) const
 {
   RooArgSet* ret = func.arg().getParameters(RooArgSet()) ;
-  ret->remove(x.arg(),kTRUE,kTRUE) ;
+  ret->remove(x.arg(),true,true) ;
   return ret ;
 }
 

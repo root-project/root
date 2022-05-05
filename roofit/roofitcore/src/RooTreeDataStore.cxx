@@ -146,7 +146,7 @@ RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, cons
 RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, RooAbsDataStore& tds,
           const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
           Int_t nStart, Int_t nStop, const char* wgtVarName) :
-  RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)), _defCtor(kFALSE),
+  RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)), _defCtor(false),
   _varsww(vars),
   _wgtVar(weightVar(vars,wgtVarName))
 {
@@ -201,7 +201,7 @@ RooArgSet RooTreeDataStore::varsNoWeight(const RooArgSet& allVars, const char* w
   if(wgtName) {
     RooAbsArg* wgt = allVars.find(wgtName) ;
     if (wgt) {
-      ret.remove(*wgt,kTRUE,kTRUE) ;
+      ret.remove(*wgt,true,true) ;
     }
   }
   return ret ;
@@ -341,7 +341,7 @@ void RooTreeDataStore::createTree(RooStringView name, RooStringView title)
   TString pwd(gDirectory->GetPath()) ;
   TString memDir(gROOT->GetName()) ;
   memDir.Append(":/") ;
-  Bool_t notInMemNow= (pwd!=memDir) ;
+  bool notInMemNow= (pwd!=memDir) ;
 
   // cout << "RooTreeData::createTree pwd=" << pwd << " memDir=" << memDir << " notInMemNow = " << (notInMemNow?"T":"F") << endl ;
 
@@ -380,13 +380,13 @@ void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, c
   tClone->SetDirectory(t->GetDirectory());
 
   // Clone list of variables
-  std::unique_ptr<RooArgSet> sourceArgSet( _varsww.snapshot(kFALSE) );
+  std::unique_ptr<RooArgSet> sourceArgSet( _varsww.snapshot(false) );
 
   // Check that we have the branches:
-  Bool_t missingBranches = kFALSE;
+  bool missingBranches = false;
   for (const auto var : *sourceArgSet) {
      if (!tClone->GetBranch(var->GetName())) {
-        missingBranches = kTRUE;
+        missingBranches = true;
         coutE(InputArguments) << "Didn't find a branch in Tree '" << tClone->GetName() << "' to read variable '"
                               << var->GetName() << "' from."
                               << "\n\tNote: Name the RooFit variable the same as the branch." << std::endl;
@@ -408,7 +408,7 @@ void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, c
   if (select) {
     selectClone.reset( static_cast<RooFormulaVar*>(select->cloneTree()) );
     selectClone->recursiveRedirectServers(*sourceArgSet) ;
-    selectClone->setOperMode(RooAbsArg::ADirty,kTRUE) ;
+    selectClone->setOperMode(RooAbsArg::ADirty,true) ;
   }
 
   // Loop over events in source tree
@@ -420,7 +420,7 @@ void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, c
     tClone->GetEntry(entryNumber,1);
 
     // Copy from source to destination
-    Bool_t allOK(kTRUE) ;
+    bool allOK(true) ;
     for (unsigned int j=0; j < sourceArgSet->size(); ++j) {
       auto destArg = _varsww[j];
       const auto sourceArg = (*sourceArgSet)[j];
@@ -429,7 +429,7 @@ void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, c
       sourceArg->copyCache(destArg) ;
       if (!destArg->isValid()) {
         numInvalid++ ;
-        allOK=kFALSE ;
+        allOK=false ;
         if (numInvalid < 5) {
           coutI(DataHandling) << "RooTreeDataStore::loadValues(" << GetName() << ") Skipping event #" << i << " because " << destArg->GetName()
               << " cannot accommodate the value " << static_cast<RooAbsReal*>(sourceArg)->getVal() << std::endl;
@@ -473,7 +473,7 @@ void RooTreeDataStore::loadValues(const RooAbsDataStore *ads, const RooFormulaVa
   if (select) {
     selectClone.reset( static_cast<RooFormulaVar*>(select->cloneTree()) );
     selectClone->recursiveRedirectServers(*ads->get()) ;
-    selectClone->setOperMode(RooAbsArg::ADirty,kTRUE) ;
+    selectClone->setOperMode(RooAbsArg::ADirty,true) ;
   }
 
   // Force RDS internal initialization
@@ -707,7 +707,7 @@ void RooTreeDataStore::weightError(Double_t& lo, Double_t& hi, RooAbsData::Error
 ////////////////////////////////////////////////////////////////////////////////
 /// Change name of internal observable named 'from' into 'to'
 
-Bool_t RooTreeDataStore::changeObservableName(const char* from, const char* to)
+bool RooTreeDataStore::changeObservableName(const char* from, const char* to)
 {
   // Find observable to be changed
   RooAbsArg* var = _vars.find(from) ;
@@ -715,7 +715,7 @@ Bool_t RooTreeDataStore::changeObservableName(const char* from, const char* to)
   // Check that we found it
   if (!var) {
     coutE(InputArguments) << "RooTreeDataStore::changeObservableName(" << GetName() << " no observable " << from << " in this dataset" << endl ;
-    return kTRUE ;
+    return true ;
   }
 
   // Process name change
@@ -751,7 +751,7 @@ Bool_t RooTreeDataStore::changeObservableName(const char* from, const char* to)
 
   }
 
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -777,7 +777,7 @@ Bool_t RooTreeDataStore::changeObservableName(const char* from, const char* to)
 ///       Only in cases where such a modification of fit behaviour is intentional,
 ///       this function should be used.
 
-RooAbsArg* RooTreeDataStore::addColumn(RooAbsArg& newVar, Bool_t adjustRange)
+RooAbsArg* RooTreeDataStore::addColumn(RooAbsArg& newVar, bool adjustRange)
 {
   checkInit() ;
 
@@ -795,7 +795,7 @@ RooAbsArg* RooTreeDataStore::addColumn(RooAbsArg& newVar, Bool_t adjustRange)
 
   // Clone variable and attach to cloned tree
   RooAbsArg* newVarClone = newVar.cloneTree() ;
-  newVarClone->recursiveRedirectServers(_vars,kFALSE) ;
+  newVarClone->recursiveRedirectServers(_vars,false) ;
 
   // Attach value place holder to this tree
   ((RooAbsArg*)valHolder)->attachToTree(*_tree,_defTreeBufSize) ;
@@ -946,17 +946,17 @@ void RooTreeDataStore::reset()
 /// internal cache of 'newVar' will be loaded with the
 /// precalculated value and it's dirty flag will be cleared.
 
-void RooTreeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, const RooArgSet* nset, Bool_t /*skipZeroWeights*/)
+void RooTreeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, const RooArgSet* nset, bool /*skipZeroWeights*/)
 {
   checkInit() ;
 
   _cacheOwner = owner ;
 
-  RooArgSet* constExprVarSet = (RooArgSet*) newVarSet.selectByAttrib("ConstantExpression",kTRUE) ;
+  RooArgSet* constExprVarSet = (RooArgSet*) newVarSet.selectByAttrib("ConstantExpression",true) ;
   TIterator *iter = constExprVarSet->createIterator() ;
   RooAbsArg *arg ;
 
-  Bool_t doTreeFill = (_cachedVars.getSize()==0) ;
+  bool doTreeFill = (_cachedVars.getSize()==0) ;
 
   while ((arg=(RooAbsArg*)iter->Next())) {
     // Attach original newVar to this tree
@@ -1001,7 +1001,7 @@ void RooTreeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, c
 /// Activate or deactivate the branch status of the TTree branch associated
 /// with the given set of dataset observables
 
-void RooTreeDataStore::setArgStatus(const RooArgSet& set, Bool_t active)
+void RooTreeDataStore::setArgStatus(const RooArgSet& set, bool active)
 {
   TIterator* iter = set.createIterator() ;
   RooAbsArg* arg ;
@@ -1093,7 +1093,7 @@ void RooTreeDataStore::checkInit() const
 {
   if (_defCtor) {
     const_cast<RooTreeDataStore*>(this)->initialize() ;
-    _defCtor = kFALSE ;
+    _defCtor = false ;
   }
 }
 

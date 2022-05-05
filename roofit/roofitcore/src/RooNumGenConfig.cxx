@@ -170,7 +170,7 @@ RooNumGenConfig& RooNumGenConfig::operator=(const RooNumGenConfig& other)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooCategory& RooNumGenConfig::method1D(Bool_t cond, Bool_t cat)
+RooCategory& RooNumGenConfig::method1D(bool cond, bool cat)
 {
   if (cond && cat) return _method1DCondCat ;
   if (cond) return _method1DCond ;
@@ -182,7 +182,7 @@ RooCategory& RooNumGenConfig::method1D(Bool_t cond, Bool_t cat)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooCategory& RooNumGenConfig::method2D(Bool_t cond, Bool_t cat)
+RooCategory& RooNumGenConfig::method2D(bool cond, bool cat)
 {
   if (cond && cat) return _method2DCondCat ;
   if (cond) return _method2DCond ;
@@ -194,7 +194,7 @@ RooCategory& RooNumGenConfig::method2D(Bool_t cond, Bool_t cat)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooCategory& RooNumGenConfig::methodND(Bool_t cond, Bool_t cat)
+RooCategory& RooNumGenConfig::methodND(bool cond, bool cat)
 {
   if (cond && cat) return _methodNDCondCat ;
   if (cond) return _methodNDCond ;
@@ -206,7 +206,7 @@ RooCategory& RooNumGenConfig::methodND(Bool_t cond, Bool_t cat)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const RooCategory& RooNumGenConfig::method1D(Bool_t cond, Bool_t cat) const
+const RooCategory& RooNumGenConfig::method1D(bool cond, bool cat) const
 {
   return const_cast<RooNumGenConfig*>(this)->method1D(cond,cat) ;
 }
@@ -215,7 +215,7 @@ const RooCategory& RooNumGenConfig::method1D(Bool_t cond, Bool_t cat) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const RooCategory& RooNumGenConfig::method2D(Bool_t cond, Bool_t cat) const
+const RooCategory& RooNumGenConfig::method2D(bool cond, bool cat) const
 {
   return const_cast<RooNumGenConfig*>(this)->method2D(cond,cat) ;
 }
@@ -224,7 +224,7 @@ const RooCategory& RooNumGenConfig::method2D(Bool_t cond, Bool_t cat) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const RooCategory& RooNumGenConfig::methodND(Bool_t cond, Bool_t cat) const
+const RooCategory& RooNumGenConfig::methodND(bool cond, bool cat) const
 {
   return const_cast<RooNumGenConfig*>(this)->methodND(cond,cat) ;
 }
@@ -236,7 +236,7 @@ const RooCategory& RooNumGenConfig::methodND(Bool_t cond, Bool_t cat) const
 /// automatically determined from instance passed as 'proto'. The defaultConfig object is associated
 /// as the default configuration for the integrator.
 
-Bool_t RooNumGenConfig::addConfigSection(const RooAbsNumGenerator* proto, const RooArgSet& inDefaultConfig)
+bool RooNumGenConfig::addConfigSection(const RooAbsNumGenerator* proto, const RooArgSet& inDefaultConfig)
 {
   std::string name = proto->IsA()->GetName();
 
@@ -268,7 +268,7 @@ Bool_t RooNumGenConfig::addConfigSection(const RooAbsNumGenerator* proto, const 
   config->setName(name.c_str());
   _configSets.Add(config) ;
 
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -319,7 +319,7 @@ RooPrintable::StyleOption RooNumGenConfig::defaultPrintStyle(Option_t* opt) cons
 ////////////////////////////////////////////////////////////////////////////////
 /// Detailed printing interface
 
-void RooNumGenConfig::printMultiline(ostream &os, Int_t /*content*/, Bool_t verbose, TString indent) const
+void RooNumGenConfig::printMultiline(ostream &os, Int_t /*content*/, bool verbose, TString indent) const
 {
   os << endl ;
   os << indent << "1-D sampling method: " << _method1D.getCurrentLabel() << endl ;

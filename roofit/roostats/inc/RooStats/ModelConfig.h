@@ -175,7 +175,7 @@ public:
 
       // make global observables constant
      for (auto *arg : set){
-         arg->setAttribute("Constant", kTRUE);
+         arg->setAttribute("Constant", true);
      }
 
       fGlobalObsName=std::string(GetName()) + "_GlobalObservables";
@@ -271,7 +271,7 @@ public:
 protected:
 
    /// helper function to check that content of a given set is exclusively parameters
-   Bool_t SetHasOnlyParameters(const RooArgSet& set, const char* errorMsgPrefix=0) ;
+   bool SetHasOnlyParameters(const RooArgSet& set, const char* errorMsgPrefix=0) ;
 
    /// helper functions to define a set in the WS
    void DefineSetInWS(const char* name, const RooArgSet& set);

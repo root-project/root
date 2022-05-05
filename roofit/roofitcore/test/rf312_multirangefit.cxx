@@ -28,8 +28,8 @@ using namespace RooFit ;
 class TestBasic312 : public RooFitTestUnit
 {
 public:
-  TestBasic312(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Fit in multiple rectangular ranges",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic312(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Fit in multiple rectangular ranges",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // C r e a t e   2 D   p d f   a n d   d a t a
   // -------------------------------------------
@@ -118,7 +118,7 @@ public:
 
   delete modelData ;
 
-  return kTRUE ;
+  return true ;
 
   }
 } ;

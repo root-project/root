@@ -172,7 +172,7 @@ Double_t RooBCPGenDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, co
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooBCPGenDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK) const
+Int_t RooBCPGenDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK) const
 {
   if (staticInitOK) {
     if (matchArgs(directVars,generateVars,_t,_tag)) return 2 ;
@@ -229,7 +229,7 @@ void RooBCPGenDecay::generateEvent(Int_t code)
                            + (_tag*(1-2*_avgMistag) + _mu*(1. - _tag*_delMistag))*_avgS*sin(_dm*tval)
                            - (_tag*(1-2*_avgMistag) + _mu*(1. - _tag*_delMistag))*_avgC*cos(_dm*tval);
 
-    Bool_t accept = maxAcceptProb*RooRandom::uniform() < acceptProb ? kTRUE : kFALSE ;
+    bool accept = maxAcceptProb*RooRandom::uniform() < acceptProb ? true : false ;
 
     if (tval<_t.max() && tval>_t.min() && accept) {
       _t = tval ;

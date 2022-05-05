@@ -95,7 +95,7 @@ struct HypoTestWrapper {
 ////////////////////////////////////////////////////////////////////////////////
 /// set flag to close proof for every new run
 
-void HypoTestInverter::SetCloseProof(Bool_t flag) {
+void HypoTestInverter::SetCloseProof(bool flag) {
    fgCloseProof  = flag;
 }
 

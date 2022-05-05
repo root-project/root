@@ -53,7 +53,7 @@ RooBrentRootFinder::RooBrentRootFinder(const RooAbsFunc& function) :
 /// Prints a warning if the initial interval does not bracket a single
 /// root or if the root is not found after a fixed number of iterations.
 
-Bool_t RooBrentRootFinder::findRoot(Double_t &result, Double_t xlo, Double_t xhi, Double_t value) const
+bool RooBrentRootFinder::findRoot(Double_t &result, Double_t xlo, Double_t xhi, Double_t value) const
 {
   _function->saveXVec() ;
 
@@ -63,17 +63,17 @@ Bool_t RooBrentRootFinder::findRoot(Double_t &result, Double_t xlo, Double_t xhi
   if(fb*fa > 0) {
     oocxcoutD((TObject*)0,Eval) << "RooBrentRootFinder::findRoot(" << _function->getName() << "): initial interval does not bracket a root: ("
             << a << "," << b << "), value = " << value << " f[xlo] = " << fa << " f[xhi] = " << fb << endl;
-    return kFALSE;
+    return false;
   }
 
-  Bool_t ac_equal(kFALSE);
+  bool ac_equal(false);
   Double_t fc= fb;
   Double_t c(0),d(0),e(0);
   for(Int_t iter= 0; iter <= MaxIterations; iter++) {
 
     if ((fb < 0 && fc < 0) || (fb > 0 && fc > 0)) {
       // Rename a,b,c and adjust bounding interval d
-      ac_equal = kTRUE;
+      ac_equal = true;
       c = a;
       fc = fa;
       d = b - a;
@@ -81,7 +81,7 @@ Bool_t RooBrentRootFinder::findRoot(Double_t &result, Double_t xlo, Double_t xhi
     }
 
     if (fabs (fc) < fabs (fb)) {
-      ac_equal = kTRUE;
+      ac_equal = true;
       a = b;
       b = c;
       c = a;
@@ -98,7 +98,7 @@ Bool_t RooBrentRootFinder::findRoot(Double_t &result, Double_t xlo, Double_t xhi
       //cout << "RooBrentRootFinder: iter = " << iter << " m = " << m << " tol = " << tol << endl ;
       result= b;
       _function->restoreXVec() ;
-      return kTRUE;
+      return true;
     }
 
     if (fabs (e) < tol || fabs (fa) <= fabs (fb)) {
@@ -161,5 +161,5 @@ Bool_t RooBrentRootFinder::findRoot(Double_t &result, Double_t xlo, Double_t xhi
 
   _function->restoreXVec() ;
 
-  return kFALSE;
+  return false;
 }

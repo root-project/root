@@ -46,7 +46,7 @@ namespace RooStats {
       ~LikelihoodInterval() override;
 
       /// check if given point is in the interval
-      Bool_t IsInInterval(const RooArgSet&) const override;
+      bool IsInInterval(const RooArgSet&) const override;
 
       /// set the confidence level for the interval (e.g 0.682 for a 1-sigma interval)
       void SetConfidenceLevel(Double_t cl) override {fConfidenceLevel = cl; ResetLimits(); }
@@ -58,7 +58,7 @@ namespace RooStats {
        RooArgSet* GetParameters() const override;
 
       /// check if parameters are correct (i.e. they are the POI of this interval)
-      Bool_t CheckParameters(const RooArgSet&) const override ;
+      bool CheckParameters(const RooArgSet&) const override ;
 
 
       /// return the lower bound of the interval on a given parameter
@@ -71,7 +71,7 @@ namespace RooStats {
 
       /// find both lower and upper interval boundaries for a given parameter
       /// return false if the bounds have not been found
-      Bool_t FindLimits(const RooRealVar & param, double & lower, double &upper);
+      bool FindLimits(const RooRealVar & param, double & lower, double &upper);
 
       /// return the 2D-contour points for the given subset of parameters
       /// by default make the contour using 30 points. The User has to preallocate the x and y array which will return

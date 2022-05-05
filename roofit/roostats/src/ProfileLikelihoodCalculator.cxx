@@ -337,7 +337,7 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
       if (mytarget) {
          oldValues[i] = mytarget->getVal();
          mytarget->setVal( ( (RooRealVar&) poiList[i] ).getVal() );
-         mytarget->setConstant(kTRUE);
+         mytarget->setConstant(true);
       }
    }
 

@@ -25,7 +25,7 @@ public:
   RooEffGenContext(const RooAbsPdf &model,
                    const RooAbsPdf &pdf,const RooAbsReal& eff,
                    const RooArgSet &vars, const RooDataSet *prototype= 0,
-                   const RooArgSet* auxProto=0, Bool_t verbose=kFALSE, const RooArgSet* forceDirect=0);
+                   const RooArgSet* auxProto=0, bool verbose=false, const RooArgSet* forceDirect=0);
   ~RooEffGenContext() override;
 
 protected:

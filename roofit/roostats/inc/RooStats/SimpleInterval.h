@@ -36,7 +36,7 @@ namespace RooStats {
     ~SimpleInterval() override;
 
     /// check if parameter is in the interval
-    Bool_t IsInInterval(const RooArgSet&) const override;
+    bool IsInInterval(const RooArgSet&) const override;
 
     /// set the confidence level for the interval. Simple interval is defined at construction time so this function
     /// has no effect
@@ -54,7 +54,7 @@ namespace RooStats {
     RooArgSet* GetParameters() const override;
 
     /// check if parameters are correct (i.e. they are the POI of this interval)
-    Bool_t CheckParameters(const RooArgSet&) const override ;
+    bool CheckParameters(const RooArgSet&) const override ;
 
 
 

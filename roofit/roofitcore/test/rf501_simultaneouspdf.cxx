@@ -29,8 +29,8 @@ using namespace RooFit ;
 class TestBasic501 : public RooFitTestUnit
 {
 public:
-  TestBasic501(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Simultaneous p.d.f. operator",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic501(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Simultaneous p.d.f. operator",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // C r e a t e   m o d e l   f o r   p h y s i c s   s a m p l e
   // -------------------------------------------------------------
@@ -144,7 +144,7 @@ public:
   delete data ;
   delete data_ctl ;
 
-  return kTRUE ;
+  return true ;
 
   }
 

@@ -37,17 +37,17 @@ public:
   RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
   ~RooBinIntegrator() override;
 
-  Bool_t checkLimits() const override;
+  bool checkLimits() const override;
   Double_t integral(const Double_t *yvec=0) override ;
 
   using RooAbsIntegrator::setLimits ;
-  Bool_t setLimits(Double_t* xmin, Double_t* xmax) override;
-  Bool_t setUseIntegrandLimits(Bool_t flag) override {_useIntegrandLimits = flag ; return kTRUE ; }
+  bool setLimits(Double_t* xmin, Double_t* xmax) override;
+  bool setUseIntegrandLimits(bool flag) override {_useIntegrandLimits = flag ; return true ; }
 
-  Bool_t canIntegrate1D() const override { return kTRUE ; }
-  Bool_t canIntegrate2D() const override { return kTRUE ; }
-  Bool_t canIntegrateND() const override { return kTRUE ; }
-  Bool_t canIntegrateOpenEnded() const override { return kFALSE ; }
+  bool canIntegrate1D() const override { return true ; }
+  bool canIntegrate2D() const override { return true ; }
+  bool canIntegrateND() const override { return true ; }
+  bool canIntegrateOpenEnded() const override { return false ; }
 
 protected:
 
@@ -61,7 +61,7 @@ protected:
   std::vector<std::vector<double>> _binb;   ///<! list of bin boundaries
   mutable Int_t _numBins;                   ///<! Size of integration range
 
-  Bool_t _useIntegrandLimits;  ///< If true limits of function binding are ued
+  bool _useIntegrandLimits;  ///< If true limits of function binding are ued
 
   std::unique_ptr<RooBatchCompute::RunContext> _evalData;     ///<! Run context for evaluating a function.
   std::unique_ptr<RooBatchCompute::RunContext> _evalDataOrig; ///<! Run context to save bin centres in between invocations.

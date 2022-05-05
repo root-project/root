@@ -42,7 +42,7 @@ public:
   virtual void printValue(std::ostream& os) const ;
   virtual void printArgs(std::ostream& os) const ;
   virtual void printExtras(std::ostream& os) const ;
-  virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
+  virtual void printMultiline(std::ostream& os, Int_t contents, bool verbose=false, TString indent="") const ;
   virtual void printTree(std::ostream& os, TString indent="") const ;
 
   static std::ostream& defaultPrintStream(std::ostream *os= 0);

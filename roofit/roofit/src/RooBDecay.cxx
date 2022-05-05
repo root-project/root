@@ -204,7 +204,7 @@ Double_t RooBDecay::coefAnalyticalIntegral(Int_t coef, Int_t code, const char* r
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooBDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
+Int_t RooBDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool /*staticInitOK*/) const
 {
   if (matchArgs(directVars, generateVars, _t)) return 1;
   return 0;

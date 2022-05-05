@@ -29,22 +29,22 @@ class RooNumGenConfig ;
 
 class RooAbsNumGenerator : public TNamed, public RooPrintable {
 public:
-  RooAbsNumGenerator() : _cloneSet(0), _funcClone(0), _funcMaxVal(0), _verbose(kFALSE), _isValid(kFALSE), _funcValStore(0), _funcValPtr(0), _cache(0) {} ;
-  RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &genVars, Bool_t verbose=kFALSE, const RooAbsReal* maxFuncVal=0);
+  RooAbsNumGenerator() : _cloneSet(0), _funcClone(0), _funcMaxVal(0), _verbose(false), _isValid(false), _funcValStore(0), _funcValPtr(0), _cache(0) {} ;
+  RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &genVars, bool verbose=false, const RooAbsReal* maxFuncVal=0);
   virtual RooAbsNumGenerator* clone(const RooAbsReal&, const RooArgSet& genVars, const RooArgSet& condVars,
-                const RooNumGenConfig& config, Bool_t verbose=kFALSE, const RooAbsReal* maxFuncVal=0) const = 0 ;
+                const RooNumGenConfig& config, bool verbose=false, const RooAbsReal* maxFuncVal=0) const = 0 ;
 
-  Bool_t isValid() const {
+  bool isValid() const {
     // If true, generator is in a valid state
     return _isValid;
   }
   ~RooAbsNumGenerator() override;
 
-  inline void setVerbose(Bool_t verbose= kTRUE) {
+  inline void setVerbose(bool verbose= true) {
     // If flag is true, verbose messaging will be active during generation
     _verbose= verbose;
   }
-  inline Bool_t isVerbose() const {
+  inline bool isVerbose() const {
     // Return status of verbose messaging flag
     return _verbose;
   }
@@ -65,8 +65,8 @@ public:
   void attachParameters(const RooArgSet& vars) ;
 
   // Advertisement of capabilities
-  virtual Bool_t canSampleCategories() const { return kFALSE ; }
-  virtual Bool_t canSampleConditional() const { return kFALSE ; } // Must implement getFuncMax()
+  virtual bool canSampleCategories() const { return false ; }
+  virtual bool canSampleConditional() const { return false ; } // Must implement getFuncMax()
 
 protected:
 
@@ -74,7 +74,7 @@ protected:
   RooAbsReal *_funcClone;              ///< Pointer to top level node of cloned function
   const RooAbsReal *_funcMaxVal ;      ///< Container for maximum function value
   RooArgSet _catVars,_realVars ;       ///< Sets of discrete and real valued observabeles
-  Bool_t _verbose, _isValid;           ///< Verbose and valid flag
+  bool _verbose, _isValid;           ///< Verbose and valid flag
   RooRealVar *_funcValStore,*_funcValPtr; ///< RRVs storing function value in context and in output dataset
 
   RooDataSet *_cache;                  ///< Dataset holding generared values of observables

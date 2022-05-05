@@ -402,7 +402,7 @@ Int_t SPlot::GetNumSWeightVars() const
 ///
 /// After fixing non-yield parameters, this function will start a fit by calling
 /// ```
-/// pdf->fitTo(*fSData, RooFit::Extended(kTRUE), RooFit::SumW2Error(kTRUE), RooFit::PrintLevel(-1), RooFit::PrintEvalErrors(-1)).
+/// pdf->fitTo(*fSData, RooFit::Extended(true), RooFit::SumW2Error(true), RooFit::PrintLevel(-1), RooFit::PrintEvalErrors(-1)).
 /// ```
 /// One can pass additional arguments to `fitTo`, such as `RooFit::Range("fitrange")`, as `arg5`, `arg6`, `arg7`, `arg8`.
 ///
@@ -428,7 +428,7 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
     // Need a counting loop since collection is being modified
     auto& par = (*constParameters)[i];
     if (std::any_of(yieldsTmp.begin(), yieldsTmp.end(), [&](const RooAbsArg* yield){ return yield->dependsOn(par); })) {
-      constParameters->remove(par, kTRUE, kTRUE);
+      constParameters->remove(par, true, true);
       --i;
     }
   }
@@ -450,7 +450,7 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
 
   // Fit yields to the data with all other variables held constant
   // This is necessary because SPlot assumes the yields minimise -Log(likelihood)
-  pdf->fitTo(*fSData, RooFit::Extended(kTRUE), RooFit::SumW2Error(kTRUE), RooFit::PrintLevel(-1), RooFit::PrintEvalErrors(-1), arg5, arg6, arg7, arg8);
+  pdf->fitTo(*fSData, RooFit::Extended(true), RooFit::SumW2Error(true), RooFit::PrintLevel(-1), RooFit::PrintEvalErrors(-1), arg5, arg6, arg7, arg8);
 
   // Hold the value of the fitted yields
   std::vector<double> yieldsHolder;
@@ -459,7 +459,7 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
     yieldsHolder.push_back(static_cast<RooAbsReal*>(yieldsTmp.at(i))->getVal());
 
   const Int_t nspec = yieldsTmp.getSize();
-  RooArgList yields = *(RooArgList*)yieldsTmp.snapshot(kFALSE);
+  RooArgList yields = *(RooArgList*)yieldsTmp.snapshot(false);
 
   if (RooMsgService::instance().isActive(this, RooFit::InputArguments, RooFit::DEBUG)) {
     coutI(InputArguments) << "Printing Yields" << endl;
@@ -469,7 +469,7 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
   // The list of variables to normalize over when calculating PDF values.
 
   RooArgSet vars(*fSData->get() );
-  vars.remove(projDeps, kTRUE, kTRUE);
+  vars.remove(projDeps, true, true);
 
   // Attach data set
 
@@ -715,7 +715,7 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
   //Make any variables that were forced to constant no longer constant
 
   for(Int_t i=0; i < (Int_t) constVarHolder.size(); i++)
-    constVarHolder.at(i)->setConstant(kFALSE);
+    constVarHolder.at(i)->setConstant(false);
 
   return;
 

@@ -43,7 +43,7 @@ ClassImp(RooConvIntegrandBinding);
 
 RooConvIntegrandBinding::RooConvIntegrandBinding(const RooAbsReal& func, const RooAbsReal& model,
                    RooAbsReal& xprime, RooAbsReal& x,
-                   const RooArgSet* nset, Bool_t clipInvalid) :
+                   const RooArgSet* nset, bool clipInvalid) :
 
   RooAbsFunc(2), _func(&func), _model(&model), _vars(0), _nset(nset), _clipInvalid(clipInvalid)
 {
@@ -68,7 +68,7 @@ RooConvIntegrandBinding::RooConvIntegrandBinding(const RooAbsReal& func, const R
   // allocate memory
   _vars= new RooAbsRealLValue*[2];
   if(0 == _vars) {
-    _valid= kFALSE;
+    _valid= false;
     return;
   }
 
@@ -77,17 +77,17 @@ RooConvIntegrandBinding::RooConvIntegrandBinding(const RooAbsReal& func, const R
   if(0 == _vars[0]) {
     oocoutE(&func,InputArguments) << "RooConvIntegrandBinding: cannot bind to ";
     xprime.Print("1");
-    _valid= kFALSE;
+    _valid= false;
   }
 
   _vars[1]= dynamic_cast<RooAbsRealLValue*>(&x);
   if(0 == _vars[1]) {
     oocoutE(&func,InputArguments) << "RooConvIntegrandBinding: cannot bind to ";
     x.Print("1");
-    _valid= kFALSE;
+    _valid= false;
   }
 
-  _xvecValid = kTRUE ;
+  _xvecValid = true ;
 }
 
 
@@ -104,12 +104,12 @@ RooConvIntegrandBinding::~RooConvIntegrandBinding()
 ////////////////////////////////////////////////////////////////////////////////
 /// Load external input values
 
-void RooConvIntegrandBinding::loadValues(const Double_t xvector[], Bool_t clipInvalid) const
+void RooConvIntegrandBinding::loadValues(const Double_t xvector[], bool clipInvalid) const
 {
-  _xvecValid = kTRUE ;
+  _xvecValid = true ;
   for(UInt_t index= 0; index < _dimension; index++) {
     if (clipInvalid && !_vars[index]->isValidReal(xvector[index])) {
-      _xvecValid = kFALSE ;
+      _xvecValid = false ;
     } else {
       //cout << "RooConvBasBinding::loadValues[" << index << "] loading value " << xvector[index] << endl ;
       _vars[index]->setVal(xvector[index]);
@@ -134,7 +134,7 @@ Double_t RooConvIntegrandBinding::operator()(const Double_t xvector[]) const
 
   // Next evaluate model at x-x'
   const Double_t xvec_tmp[2] = { xvector[1]-xvector[0] , xvector[1] } ;
-  loadValues(xvec_tmp,kTRUE);
+  loadValues(xvec_tmp,true);
   if (!_xvecValid) return 0 ;
   Double_t g_xmxp = _model->getVal(_nset) ;
 

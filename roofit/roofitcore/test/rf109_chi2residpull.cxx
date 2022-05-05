@@ -25,8 +25,8 @@ using namespace RooFit ;
 class TestBasic109 : public RooFitTestUnit
 {
 public:
-  TestBasic109(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Calculation of chi^2 and residuals in plots",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic109(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Calculation of chi^2 and residuals in plots",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
     // S e t u p   m o d e l
     // ---------------------
@@ -89,6 +89,6 @@ public:
     //delete hresid ;
     //delete hpull ;
 
-    return kTRUE ;
+    return true ;
   }
 } ;

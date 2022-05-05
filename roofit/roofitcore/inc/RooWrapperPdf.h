@@ -44,7 +44,7 @@ public:
   }
 
   // Analytical Integration handling
-  Bool_t forceAnalyticalInt(const RooAbsArg& dep) const override {
+  bool forceAnalyticalInt(const RooAbsArg& dep) const override {
     return _func.arg().forceAnalyticalInt(dep);
   }
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet,
@@ -70,7 +70,7 @@ public:
 //      bool /*staticInitOK = true*/) const override { return 0; }
 //  void initGenerator(Int_t /*code*/) override { }
 //  void generateEvent(Int_t /*code*/) override { }
-//  Bool_t isDirectGenSafe(const RooAbsArg& /*arg*/) const override { return false; }
+//  bool isDirectGenSafe(const RooAbsArg& /*arg*/) const override { return false; }
 
 
   // Hints for optimized brute-force sampling
@@ -85,7 +85,7 @@ public:
   }
 
   // Plotting and binning hints
-  Bool_t isBinnedDistribution(const RooArgSet& obs) const override {
+  bool isBinnedDistribution(const RooArgSet& obs) const override {
     return _func.arg().isBinnedDistribution(obs);
   }
   std::list<Double_t>* binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override {

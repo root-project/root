@@ -62,17 +62,17 @@ public:
     _value = other._value ;
   }
 
-  inline Bool_t operator==(const RooCatType& other) const {
+  inline bool operator==(const RooCatType& other) const {
     // Equality operator with other RooCatType
     return (_value==other._value) ;
   }
 
-  inline Bool_t operator==(Int_t index) const {
+  inline bool operator==(Int_t index) const {
     // Return true if index value matches integer
     return (_value==index) ;
   }
 
-  Bool_t operator==(const char* label) const {
+  bool operator==(const char* label) const {
     // Return true if state name matchins string
     return label && !strcmp(_label,label) ;
   }

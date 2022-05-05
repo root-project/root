@@ -30,8 +30,8 @@ using namespace RooFit ;
 class TestBasic701 : public RooFitTestUnit
 {
 public:
-  TestBasic701(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Efficiency operator p.d.f. 1D",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic701(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Efficiency operator p.d.f. 1D",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // C o n s t r u c t   e f f i c i e n c y   f u n c t i o n   e ( x )
   // -------------------------------------------------------------------
@@ -101,6 +101,6 @@ public:
 
   delete data ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;

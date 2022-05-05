@@ -23,7 +23,7 @@ public:
   RooBrentRootFinder(const RooAbsFunc& function);
   inline ~RooBrentRootFinder() override { }
 
-  Bool_t findRoot(Double_t &result, Double_t xlo, Double_t xhi, Double_t value= 0) const override;
+  bool findRoot(Double_t &result, Double_t xlo, Double_t xhi, Double_t value= 0) const override;
 
   /// Set convergence tolerance parameter
   void setTol(Double_t tol) {

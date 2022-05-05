@@ -38,7 +38,7 @@ namespace RooStats {
 class NuisanceParametersSampler {
 
    public:
-      NuisanceParametersSampler(RooAbsPdf *prior=NULL, const RooArgSet *parameters=NULL, Int_t nToys=1000, Bool_t asimov=kFALSE) :
+      NuisanceParametersSampler(RooAbsPdf *prior=NULL, const RooArgSet *parameters=NULL, Int_t nToys=1000, bool asimov=false) :
          fPrior(prior),
          fParams(parameters),
          fNToys(nToys),
@@ -58,7 +58,7 @@ class NuisanceParametersSampler {
       RooAbsPdf *fPrior;           // prior for nuisance parameters
       const RooArgSet *fParams;    // nuisance parameters
       Int_t fNToys;
-      Bool_t fExpected;
+      bool fExpected;
 
       std::unique_ptr<RooAbsData> fPoints;         // generated nuisance parameter points
       Int_t fIndex;                // current index in fPoints array
@@ -72,9 +72,9 @@ class ToyMCSampler: public TestStatSampler {
       ToyMCSampler(TestStatistic &ts, Int_t ntoys);
       ~ToyMCSampler() override;
 
-      static void SetAlwaysUseMultiGen(Bool_t flag);
+      static void SetAlwaysUseMultiGen(bool flag);
 
-      void SetUseMultiGen(Bool_t flag) { fUseMultiGen = flag ; }
+      void SetUseMultiGen(bool flag) { fUseMultiGen = flag ; }
 
       /// main interface
       SamplingDistribution* GetSamplingDistribution(RooArgSet& paramPoint) override;
@@ -187,18 +187,18 @@ class ToyMCSampler: public TestStatSampler {
       }
       void SetTestStatistic(TestStatistic *t) override { return SetTestStatistic(t,0); }
 
-      virtual void SetExpectedNuisancePar(Bool_t i = kTRUE) { fExpectedNuisancePar = i; }
-      virtual void SetAsimovNuisancePar(Bool_t i = kTRUE) { fExpectedNuisancePar = i; }
+      virtual void SetExpectedNuisancePar(bool i = true) { fExpectedNuisancePar = i; }
+      virtual void SetAsimovNuisancePar(bool i = true) { fExpectedNuisancePar = i; }
 
       /// Checks for sufficient information to do a GetSamplingDistribution(...).
-      Bool_t CheckConfig(void);
+      bool CheckConfig(void);
 
       /// control to use bin data generation (=> see RooFit::AllBinned() option)
       void SetGenerateBinned(bool binned = true) { fGenerateBinned = binned; }
       /// name of the tag for individual components to be generated binned (=> see RooFit::GenBinned() option)
       void SetGenerateBinnedTag( const char* binnedTag = "" ) { fGenerateBinnedTag = binnedTag; }
       /// set auto binned generation (=> see RooFit::AutoBinned() option)
-      void SetGenerateAutoBinned( Bool_t autoBinned = kTRUE ) { fGenerateAutoBinned = autoBinned; }
+      void SetGenerateAutoBinned( bool autoBinned = true ) { fGenerateAutoBinned = autoBinned; }
 
       /// Set the name of the sampling distribution used for plotting
       void SetSamplingDistName(const char* name) override { if(name) fSamplingDistName = name; }
@@ -252,10 +252,10 @@ class ToyMCSampler: public TestStatSampler {
       Int_t fNToys;   ///< number of toys to generate
       Int_t fNEvents; ///< number of events per toy (may be ignored depending on settings)
       Double_t fSize;
-      Bool_t fExpectedNuisancePar; ///< whether to use expectation values for nuisance parameters (ie Asimov data set)
-      Bool_t fGenerateBinned;
+      bool fExpectedNuisancePar; ///< whether to use expectation values for nuisance parameters (ie Asimov data set)
+      bool fGenerateBinned;
       TString fGenerateBinnedTag;
-      Bool_t fGenerateAutoBinned;
+      bool fGenerateAutoBinned;
 
       /// minimum no of toys in tails for adaptive sampling
       /// (taking weights into account, therefore double)
@@ -284,8 +284,8 @@ class ToyMCSampler: public TestStatSampler {
       mutable std::unique_ptr<RooAbsPdf::GenSpec> _gs3; ///<! GenSpec #3
       mutable std::unique_ptr<RooAbsPdf::GenSpec> _gs4; ///<! GenSpec #4
 
-      static Bool_t fgAlwaysUseMultiGen ;  ///< Use PrepareMultiGen always
-      Bool_t fUseMultiGen ;                ///< Use PrepareMultiGen?
+      static bool fgAlwaysUseMultiGen ;  ///< Use PrepareMultiGen always
+      bool fUseMultiGen ;                ///< Use PrepareMultiGen?
 
    protected:
    ClassDefOverride(ToyMCSampler, 4) // A simple implementation of the TestStatSampler interface

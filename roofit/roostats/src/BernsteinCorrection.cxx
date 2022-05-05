@@ -105,7 +105,7 @@ Int_t BernsteinCorrection::ImportCorrectedPdf(RooWorkspace* wks,
   TString minimType =  ROOT::Math::MinimizerOptions::DefaultMinimizerType();
   int printLevel =  ROOT::Math::MinimizerOptions::DefaultPrintLevel()-1;
 
-  RooFitResult* nominalResult = nominal->fitTo(*data,Save(),Minos(kFALSE), Hesse(kFALSE),PrintLevel(printLevel),Minimizer(minimType));
+  RooFitResult* nominalResult = nominal->fitTo(*data,Save(),Minos(false), Hesse(false),PrintLevel(printLevel),Minimizer(minimType));
   Double_t lastNll= nominalResult->minNll();
 
   if (nominalResult->status() != 0 ) {
@@ -151,7 +151,7 @@ Int_t BernsteinCorrection::ImportCorrectedPdf(RooWorkspace* wks,
     RooEffProd* corrected = new RooEffProd("corrected","",*nominal,*poly);
 
     // check to see how well this correction fits
-    RooFitResult* result = corrected->fitTo(*data,Save(),Minos(kFALSE), Hesse(kFALSE),PrintLevel(printLevel),Minimizer(minimType));
+    RooFitResult* result = corrected->fitTo(*data,Save(),Minos(false), Hesse(false),PrintLevel(printLevel),Minimizer(minimType));
 
     if (result->status() != 0) {
        std::cout << "BernsteinCorrection::ImportCorrectedPdf  - Error fit with corrected model failed" << std::endl;
@@ -294,17 +294,17 @@ void BernsteinCorrection::CreateQSamplingDist(RooWorkspace* wks,
     RooDataSet* tmpData = toyGen.generate(*x,data->numEntries());
     // check to see how well this correction fits
     RooFitResult* result
-      = corrected->fitTo(*tmpData,Save(),Minos(kFALSE),
-          Hesse(kFALSE),PrintLevel(printLevel),Minimizer(minimType));
+      = corrected->fitTo(*tmpData,Save(),Minos(false),
+          Hesse(false),PrintLevel(printLevel),Minimizer(minimType));
 
     RooFitResult* resultNull
-      = correctedNull->fitTo(*tmpData,Save(),Minos(kFALSE),
-          Hesse(kFALSE),PrintLevel(printLevel),Minimizer(minimType));
+      = correctedNull->fitTo(*tmpData,Save(),Minos(false),
+          Hesse(false),PrintLevel(printLevel),Minimizer(minimType));
 
 
     RooFitResult* resultExtra
-      = correctedExtra->fitTo(*tmpData,Save(),Minos(kFALSE),
-          Hesse(kFALSE),PrintLevel(printLevel),Minimizer(minimType));
+      = correctedExtra->fitTo(*tmpData,Save(),Minos(false),
+          Hesse(false),PrintLevel(printLevel),Minimizer(minimType));
 
 
     // Hypothesis test between previous correction (null)

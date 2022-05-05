@@ -27,8 +27,8 @@ using namespace RooFit ;
 class TestBasic202 : public RooFitTestUnit
 {
 public:
-  TestBasic202(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Extended ML fits to addition operator p.d.f.s",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic202(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Extended ML fits to addition operator p.d.f.s",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
     // S e t u p   c o m p o n e n t   p d f s
     // ---------------------------------------
@@ -113,7 +113,7 @@ public:
     regPlot(xframe,"rf202_plot1") ;
 
     delete data ;
-    return kTRUE ;
+    return true ;
 
   }
 

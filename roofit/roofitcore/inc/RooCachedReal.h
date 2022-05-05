@@ -19,7 +19,7 @@
 
 class RooCachedReal : public RooAbsCachedReal {
 public:
-  RooCachedReal() : _cacheSource(kFALSE) {
+  RooCachedReal() : _cacheSource(false) {
     // coverity[UNINIT_CTOR]
   }
   RooCachedReal(const char *name, const char *title, RooAbsReal& _func, const RooArgSet& cacheObs);
@@ -32,16 +32,16 @@ public:
   /// will use special boundary conditions for use with cumulative distribution
   /// functions: at the lower bound the function is forced to converge at zero and the upper
   /// bound is the function is forced to converge at 1.0
-  void setCdfBoundaries(Bool_t flag) {
+  void setCdfBoundaries(bool flag) {
     _useCdfBoundaries = flag ;
   }
   /// If true the c.d.f boundary mode is active
-  Bool_t getCdfBoundaries() const {
+  bool getCdfBoundaries() const {
     return _useCdfBoundaries ;
   }
 
-  Bool_t cacheSource() const { return _cacheSource ; }
-  void setCacheSource(Bool_t flag) { _cacheSource = flag ; }
+  bool cacheSource() const { return _cacheSource ; }
+  void setCacheSource(bool flag) { _cacheSource = flag ; }
 
 protected:
 
@@ -65,8 +65,8 @@ protected:
 
   RooRealProxy func ;           ///< Proxy to function being cached
   RooSetProxy  _cacheObs ;      ///< Variables to be cached
-  Bool_t _useCdfBoundaries ;    ///< Are c.d.f boundary conditions used by the RooHistFuncs?
-  Bool_t _cacheSource ;         ///< Keep an attached clone of the source in the cache for fast operation
+  bool _useCdfBoundaries ;    ///< Are c.d.f boundary conditions used by the RooHistFuncs?
+  bool _cacheSource ;         ///< Keep an attached clone of the source in the cache for fast operation
 
 private:
 

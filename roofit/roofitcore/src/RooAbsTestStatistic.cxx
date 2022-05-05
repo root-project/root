@@ -291,17 +291,17 @@ Double_t RooAbsTestStatistic::evaluate() const
 /// infrastructure for simultaneous p.d.f processing and/or
 /// parallelized processing if requested
 
-Bool_t RooAbsTestStatistic::initialize()
+bool RooAbsTestStatistic::initialize()
 {
-  if (_init) return kFALSE;
+  if (_init) return false;
 
   if (MPMaster == _gofOpMode) {
     initMPMode(_func,_data,_projDeps,_rangeName,_addCoefRangeName) ;
   } else if (SimMaster == _gofOpMode) {
     initSimMode((RooSimultaneous*)_func,_data,_projDeps,_rangeName,_addCoefRangeName) ;
   }
-  _init = kTRUE;
-  return kFALSE;
+  _init = true;
+  return false;
 }
 
 
@@ -309,7 +309,7 @@ Bool_t RooAbsTestStatistic::initialize()
 ////////////////////////////////////////////////////////////////////////////////
 /// Forward server redirect calls to component test statistics
 
-Bool_t RooAbsTestStatistic::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t)
+bool RooAbsTestStatistic::redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool)
 {
   if (SimMaster == _gofOpMode && _gofArray) {
     // Forward to slaves
@@ -327,7 +327,7 @@ Bool_t RooAbsTestStatistic::redirectServersHook(const RooAbsCollection& newServe
       }
     }
   }
-  return kFALSE;
+  return false;
 }
 
 
@@ -360,7 +360,7 @@ void RooAbsTestStatistic::printCompactTreeHook(ostream& os, const char* indent)
 /// Forward constant term optimization management calls to component
 /// test statistics
 
-void RooAbsTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt)
+void RooAbsTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, bool doAlsoTrackingOpt)
 {
   initialize();
   if (SimMaster == _gofOpMode) {
@@ -433,7 +433,7 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const R
 
     ccoutD(Eval) << "RooAbsTestStatistic::initMPMode: starting remote server process #" << i << endl;
     _mpfeArray[i] = new RooRealMPFE(Form("%s_%zx_MPFE%d",GetName(),(size_t)this,i),Form("%s_%zx_MPFE%d",GetTitle(),(size_t)this,i),*gof,false);
-    //_mpfeArray[i]->setVerbose(kTRUE,kTRUE);
+    //_mpfeArray[i]->setVerbose(true,true);
     _mpfeArray[i]->initialize();
     if (i > 0) {
       _mpfeArray[i]->followAsSlave(*_mpfeArray[0]);
@@ -500,11 +500,11 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
       // *** START HERE
       // WVE HACK determine if we have a RooRealSumPdf and then treat it like a binned likelihood
       RooAbsPdf* binnedPdf = 0 ;
-      Bool_t binnedL = kFALSE ;
+      bool binnedL = false ;
       if (pdf->getAttribute("BinnedLikelihood") && pdf->IsA()->InheritsFrom(RooRealSumPdf::Class())) {
         // Simplest case: top-level of component is a RRSP
         binnedPdf = pdf ;
-        binnedL = kTRUE ;
+        binnedL = true ;
       } else if (pdf->IsA()->InheritsFrom(RooProdPdf::Class())) {
         // Default case: top-level pdf is a product of RRSP and other pdfs
         RooFIter iter = ((RooProdPdf*)pdf)->pdfList().fwdIterator() ;
@@ -512,7 +512,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
         while ((component = iter.next())) {
           if (component->getAttribute("BinnedLikelihood") && component->IsA()->InheritsFrom(RooRealSumPdf::Class())) {
             binnedPdf = (RooAbsPdf*) component ;
-            binnedL = kTRUE ;
+            binnedL = true ;
           }
           if (component->getAttribute("MAIN_MEASUREMENT")) {
             // not really a binned pdf, but this prevents a (potentially) long list of subsidiary measurements to be passed to the slave calculator
@@ -589,16 +589,16 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Change dataset that is used to given one. If cloneData is kTRUE, a clone of
+/// Change dataset that is used to given one. If cloneData is true, a clone of
 /// in the input dataset is made.  If the test statistic was constructed with
 /// a range specification on the data, the cloneData argument is ignored and
 /// the data is always cloned.
-Bool_t RooAbsTestStatistic::setData(RooAbsData& indata, Bool_t cloneData)
+bool RooAbsTestStatistic::setData(RooAbsData& indata, bool cloneData)
 {
   // Trigger refresh of likelihood offsets
   if (isOffsetting()) {
-    enableOffsetting(kFALSE);
-    enableOffsetting(kTRUE);
+    enableOffsetting(false);
+    enableOffsetting(true);
   }
 
   switch(operMode()) {
@@ -629,7 +629,7 @@ Bool_t RooAbsTestStatistic::setData(RooAbsData& indata, Bool_t cloneData)
 
       for (int i = 0; i < _nGof; ++i) {
         if (auto compData = static_cast<RooAbsData*>(dlist->FindObject(_gofArray[i]->GetName()))) {
-          _gofArray[i]->setDataSlave(*compData,kFALSE,kTRUE);
+          _gofArray[i]->setDataSlave(*compData,false,true);
         } else {
           coutE(DataHandling) << "RooAbsTestStatistic::setData(" << GetName() << ") ERROR: Cannot find component data for state " << _gofArray[i]->GetName() << endl;
         }
@@ -648,7 +648,7 @@ Bool_t RooAbsTestStatistic::setData(RooAbsData& indata, Bool_t cloneData)
 
 
 
-void RooAbsTestStatistic::enableOffsetting(Bool_t flag)
+void RooAbsTestStatistic::enableOffsetting(bool flag)
 {
   // Apply internal value offsetting to control numeric precision
   if (!_init) {

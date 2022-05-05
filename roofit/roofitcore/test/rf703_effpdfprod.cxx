@@ -28,8 +28,8 @@ using namespace RooFit ;
 class TestBasic703 : public RooFitTestUnit
 {
 public:
-  TestBasic703(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Efficiency product operator p.d.f",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic703(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Efficiency product operator p.d.f",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // D e f i n e   o b s e r v a b l e s   a n d   d e c a y   p d f
   // ---------------------------------------------------------------
@@ -94,6 +94,6 @@ public:
 
 
   delete data ;
-  return kTRUE ;
+  return true ;
   }
 } ;

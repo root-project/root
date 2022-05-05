@@ -26,7 +26,7 @@ public:
   TObject* clone(const char* newname) const override { return new RooEffProd(*this,newname); }
 
   RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype,
-                                       const RooArgSet* auxProto, Bool_t verbose) const override;
+                                       const RooArgSet* auxProto, bool verbose) const override;
 
 protected:
 

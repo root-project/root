@@ -92,7 +92,7 @@ void LikelihoodJob::update_state()
             RooRealVar *rvar = (RooRealVar *)vars_.at(item.var_index);
             rvar->setVal(static_cast<Double_t>(item.value));
             if (rvar->isConstant() != item.is_constant) {
-               rvar->setConstant(static_cast<Bool_t>(item.is_constant));
+               rvar->setConstant(static_cast<bool>(item.is_constant));
             }
          }
          break;
@@ -112,7 +112,7 @@ void LikelihoodJob::updateWorkersParameters()
       bool constChanged = false;
       std::vector<update_state_t> to_update;
       for (std::size_t ix = 0u; ix < static_cast<std::size_t>(vars_.getSize()); ++ix) {
-         valChanged = !vars_[ix].isIdentical(save_vars_[ix], kTRUE);
+         valChanged = !vars_[ix].isIdentical(save_vars_[ix], true);
          constChanged = (vars_[ix].isConstant() != save_vars_[ix].isConstant());
 
          if (valChanged || constChanged) {
@@ -128,7 +128,7 @@ void LikelihoodJob::updateWorkersParameters()
             if (rar_val) {
                Double_t val = rar_val->getVal();
                dynamic_cast<RooRealVar *>(&save_vars_[ix])->setVal(val);
-               Bool_t isC = vars_[ix].isConstant();
+               bool isC = vars_[ix].isConstant();
                to_update.push_back(update_state_t{ix, val, isC});
             }
          }

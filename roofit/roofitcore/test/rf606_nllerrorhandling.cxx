@@ -25,8 +25,8 @@ using namespace RooFit ;
 class TestBasic606 : public RooFitTestUnit
 {
 public:
-  TestBasic606(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("NLL error handling",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic606(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("NLL error handling",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // C r e a t e   m o d e l  a n d   d a t a s e t
   // ----------------------------------------------
@@ -58,9 +58,9 @@ public:
   // F i t   m o d e l   t o   d a t a
   // ---------------------------------
 
-  argus.fitTo(*data,PrintEvalErrors(10),Warnings(kFALSE)) ;
+  argus.fitTo(*data,PrintEvalErrors(10),Warnings(false)) ;
   m0.setError(0.1) ;
-  argus.fitTo(*data,PrintEvalErrors(0),EvalErrorWall(kFALSE),Warnings(kFALSE)) ;
+  argus.fitTo(*data,PrintEvalErrors(0),EvalErrorWall(false),Warnings(false)) ;
 
 
 
@@ -95,7 +95,7 @@ public:
   regPlot(frame3,"rf606_plot3") ;
 
   delete data ;
-  return kTRUE ;
+  return true ;
 
   }
 } ;

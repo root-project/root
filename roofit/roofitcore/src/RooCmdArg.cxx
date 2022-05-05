@@ -59,8 +59,8 @@ const RooCmdArg& RooCmdArg::none()
 
 RooCmdArg::RooCmdArg() : TNamed("","")
 {
-  _procSubArgs = kFALSE ;
-  _prefixSubArgs = kTRUE ;
+  _procSubArgs = false ;
+  _prefixSubArgs = true ;
   _c = 0 ;
   _o[0] = 0 ;
   _o[1] = 0 ;
@@ -95,8 +95,8 @@ RooCmdArg::RooCmdArg(const char* name, Int_t i1, Int_t i2, Double_t d1, Double_t
   if (c1) _c[0].add(*c1) ;
   if (c2) _c[1].add(*c2) ;
 
-  _procSubArgs = kTRUE ;
-  _prefixSubArgs = kTRUE ;
+  _procSubArgs = true ;
+  _prefixSubArgs = true ;
   if (ca) {
     _argList.Add(new RooCmdArg(*ca)) ;
   }

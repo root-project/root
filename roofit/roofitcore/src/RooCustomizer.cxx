@@ -219,8 +219,8 @@ static Int_t init()
 RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& masterCat,
     RooArgSet& splitLeafs, RooArgSet* splitLeafsAll) :
   TNamed(pdf.GetName(),pdf.GetTitle()),
-  _sterile(kFALSE),
-  _owning(kTRUE),
+  _sterile(false),
+  _owning(true),
   _masterPdf((RooAbsArg*)&pdf),
   _masterCat((RooAbsCategoryLValue*)&masterCat),
   _masterBranchList("masterBranchList"),
@@ -243,8 +243,8 @@ RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& m
 
 RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const char* name) :
   TNamed(pdf.GetName(),pdf.GetTitle()),
-  _sterile(kTRUE),
-  _owning(kFALSE),
+  _sterile(true),
+  _owning(false),
   _name(name),
   _masterPdf((RooAbsArg*)&pdf),
   _masterCat(0),
@@ -358,7 +358,7 @@ void RooCustomizer::replaceArg(const RooAbsArg& orig, const RooAbsArg& subst)
 /// modification. The returned head node owns all cloned branch nodes
 /// that were created in the cloning process.
 
-RooAbsArg* RooCustomizer::build(Bool_t verbose)
+RooAbsArg* RooCustomizer::build(bool verbose)
 {
   // Execute build
   RooAbsArg* ret =  doBuild(_name.Length()>0?_name.Data():0,verbose) ;
@@ -394,7 +394,7 @@ RooAbsArg* RooCustomizer::build(Bool_t verbose)
 /// is owned by the customizer.  This function cannot be called on
 /// customizer build with the sterile constructor.
 
-RooAbsArg* RooCustomizer::build(const char* masterCatState, Bool_t verbose)
+RooAbsArg* RooCustomizer::build(const char* masterCatState, bool verbose)
 {
   if (_sterile) {
     coutE(InputArguments) << "RooCustomizer::build(" << _name
@@ -417,7 +417,7 @@ RooAbsArg* RooCustomizer::build(const char* masterCatState, Bool_t verbose)
 ////////////////////////////////////////////////////////////////////////////////
 /// Back-end implementation of the p.d.f building functionality
 
-RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
+RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, bool verbose)
 {
   // Find nodes that must be split according to provided description, Clone nodes, change their names
   RooArgSet masterNodesToBeSplit("masterNodesToBeSplit") ;
@@ -595,9 +595,9 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
 
   // Reconnect cloned branches to each other and to cloned nodess
   for (auto branch : clonedMasterBranches) {
-    branch->redirectServers(clonedMasterBranches,kFALSE,kTRUE) ;
-    branch->redirectServers(clonedMasterNodes,kFALSE,kTRUE) ;
-    branch->redirectServers(masterReplacementNodes,kFALSE,kTRUE) ;
+    branch->redirectServers(clonedMasterBranches,false,true) ;
+    branch->redirectServers(clonedMasterNodes,false,true) ;
+    branch->redirectServers(masterReplacementNodes,false,true) ;
   }
 
   return cloneTopPdf ? cloneTopPdf : _masterPdf ;
@@ -648,7 +648,7 @@ void RooCustomizer::printArgs(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print customizer configuration details
 
-void RooCustomizer::printMultiline(ostream& os, Int_t /*content*/, Bool_t /*verbose*/, TString indent) const
+void RooCustomizer::printMultiline(ostream& os, Int_t /*content*/, bool /*verbose*/, TString indent) const
 {
   os << indent << "RooCustomizer for " << _masterPdf->GetName() << (_sterile?" (sterile)":"") << endl ;
 
@@ -762,7 +762,7 @@ std::string RooCustomizer::CustIFace::create(RooFactoryWSTool& ft, const char* t
   }
 
   // Build the desired edited object
-  RooAbsArg* targ = cust.build(kFALSE)  ;
+  RooAbsArg* targ = cust.build(false)  ;
   if (!targ) {
     throw string(Form("RooCustomizer::CustIFace::create() ERROR in customizer build, object %snot created",instanceName)) ;
   }

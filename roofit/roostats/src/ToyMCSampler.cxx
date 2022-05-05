@@ -137,11 +137,11 @@ void NuisanceParametersSampler::Refresh() {
    }
 }
 
-Bool_t ToyMCSampler::fgAlwaysUseMultiGen = kFALSE ;
+bool ToyMCSampler::fgAlwaysUseMultiGen = false ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ToyMCSampler::SetAlwaysUseMultiGen(Bool_t flag) { fgAlwaysUseMultiGen = flag ; }
+void ToyMCSampler::SetAlwaysUseMultiGen(bool flag) { fgAlwaysUseMultiGen = flag ; }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Proof constructor. Do not use.
@@ -157,10 +157,10 @@ ToyMCSampler::ToyMCSampler() : fSamplingDistName("SD"), fNToys(1)
 
    fSize = 0.05;
    fNEvents = 0;
-   fGenerateBinned = kFALSE;
+   fGenerateBinned = false;
    fGenerateBinnedTag = "";
-   fGenerateAutoBinned = kTRUE;
-   fExpectedNuisancePar = kFALSE;
+   fGenerateAutoBinned = true;
+   fExpectedNuisancePar = false;
 
    fToysInTails = 0.0;
    fMaxToys = RooNumber::infinity();
@@ -175,7 +175,7 @@ ToyMCSampler::ToyMCSampler() : fSamplingDistName("SD"), fNToys(1)
    //suppress messages for num integration of Roofit
    RooMsgService::instance().getStream(1).removeTopic(RooFit::NumIntegration);
 
-   fUseMultiGen = kFALSE ;
+   fUseMultiGen = false ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -190,10 +190,10 @@ ToyMCSampler::ToyMCSampler(TestStatistic &ts, Int_t ntoys) : fSamplingDistName(t
 
    fSize = 0.05;
    fNEvents = 0;
-   fGenerateBinned = kFALSE;
+   fGenerateBinned = false;
    fGenerateBinnedTag = "";
-   fGenerateAutoBinned = kTRUE;
-   fExpectedNuisancePar = kFALSE;
+   fGenerateAutoBinned = true;
+   fExpectedNuisancePar = false;
 
    fToysInTails = 0.0;
    fMaxToys = RooNumber::infinity();
@@ -208,7 +208,7 @@ ToyMCSampler::ToyMCSampler(TestStatistic &ts, Int_t ntoys) : fSamplingDistName(t
    //suppress messages for num integration of Roofit
    RooMsgService::instance().getStream(1).removeTopic(RooFit::NumIntegration);
 
-   fUseMultiGen = kFALSE ;
+   fUseMultiGen = false ;
 
    AddTestStatistic(&ts);
 }
@@ -225,7 +225,7 @@ ToyMCSampler::~ToyMCSampler() {
 /// only checks, no guessing/determination (do this in calculators,
 /// e.g. using ModelConfig::GuessObsAndNuisance(...))
 
-Bool_t ToyMCSampler::CheckConfig(void) {
+bool ToyMCSampler::CheckConfig(void) {
    bool goodConfig = true;
 
    if(fTestStatistics.size() == 0 || fTestStatistics[0] == NULL) { ooccoutE((TObject*)NULL,InputArguments) << "Test statistic not set." << endl; goodConfig = false; }
@@ -565,7 +565,7 @@ RooAbsData* ToyMCSampler::GenerateToyData(RooArgSet& paramPoint, double& weight,
       // parameters fixed although under "normal" circumstances it is
       // randomized.
       RooArgSet allVarsMinusParamPoint(*allVars);
-      allVarsMinusParamPoint.remove(paramPoint, kFALSE, kTRUE); // match by name
+      allVarsMinusParamPoint.remove(paramPoint, false, true); // match by name
 
       // get nuisance parameter point and weight
       fNuisanceParametersSampler->NextPoint(allVarsMinusParamPoint, weight);

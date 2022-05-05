@@ -31,8 +31,8 @@ using namespace RooFit ;
 class TestBasic802 : public RooFitTestUnit
 {
 public:
-  TestBasic802(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("MC Study with chi^2 calculator",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic802(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("MC Study with chi^2 calculator",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // C r e a t e   m o d e l
   // -----------------------
@@ -114,6 +114,6 @@ public:
   delete mcs ;
   delete mcs2 ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;

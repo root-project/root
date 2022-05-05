@@ -66,7 +66,7 @@ ClassImp(RooGenContext);
 
 RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
               const RooDataSet *prototype, const RooArgSet* auxProto,
-              Bool_t verbose, const RooArgSet* forceDirect) :
+              bool verbose, const RooArgSet* forceDirect) :
   RooAbsGenContext(model,vars,prototype,auxProto,verbose),
   _pdfClone(0), _acceptRejectFunc(0), _generator(0),
   _maxVar(0), _uniIter(0), _updateFMaxPerEvent(0)
@@ -89,7 +89,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 
   // Find the clone in the snapshot list
   _pdfClone = static_cast<RooAbsPdf*>(_cloneSet.find(model.GetName()));
-  _pdfClone->setOperMode(RooAbsArg::ADirty,kTRUE) ;
+  _pdfClone->setOperMode(RooAbsArg::ADirty,true) ;
 
   // Optionally fix RooAddPdf normalizations
   if (prototype&&_pdfClone->dependsOn(*prototype->get())) {
@@ -99,7 +99,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   }
 
   // Analyze the list of variables to generate...
-  _isValid= kTRUE;
+  _isValid= true;
   TIterator *iterator= vars.createIterator();
   TIterator *servers= _pdfClone->serverIterator();
   const RooAbsArg *tmp = 0;
@@ -108,7 +108,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
     // is this argument derived?
     if(!tmp->isFundamental()) {
       coutE(Generation) << "RooGenContext::ctor(): cannot generate values for derived \""  << tmp->GetName() << "\"" << endl;
-      _isValid= kFALSE;
+      _isValid= false;
       continue;
     }
     // lookup this argument in the cloned set of PDF dependents
@@ -157,7 +157,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 
   // If PDF depends on prototype data, direct generator cannot use static initialization
   // in initGenerator()
-  Bool_t staticInitOK = !_pdfClone->dependsOn(_protoVars) ;
+  bool staticInitOK = !_pdfClone->dependsOn(_protoVars) ;
   if (!staticInitOK) {
     cxcoutD(Generation) << "RooGenContext::ctor() Model depends on supplied protodata observables, static initialization of internal generator will not be allowed" << endl ;
   }
@@ -326,9 +326,9 @@ RooGenContext::~RooGenContext()
 
 void RooGenContext::attach(const RooArgSet& args)
 {
-  _pdfClone->recursiveRedirectServers(args,kFALSE);
+  _pdfClone->recursiveRedirectServers(args,false);
   if (_acceptRejectFunc) {
-    _acceptRejectFunc->recursiveRedirectServers(args,kFALSE) ; // WVE DEBUG
+    _acceptRejectFunc->recursiveRedirectServers(args,false) ; // WVE DEBUG
   }
 
   // Attach the RooAcceptReject generator the event buffer
@@ -430,7 +430,7 @@ void RooGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
 ////////////////////////////////////////////////////////////////////////////////
 /// Printing interface
 
-void RooGenContext::printMultiline(ostream &os, Int_t content, Bool_t verbose, TString indent) const
+void RooGenContext::printMultiline(ostream &os, Int_t content, bool verbose, TString indent) const
 {
   RooAbsGenContext::printMultiline(os,content,verbose,indent);
   os << indent << " --- RooGenContext --- " << endl ;

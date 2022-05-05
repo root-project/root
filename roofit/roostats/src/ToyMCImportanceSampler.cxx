@@ -323,7 +323,7 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
       // parameters fixed although under "normal" circumstances it is
       // randomized.
       RooArgSet allVarsMinusParamPoint(*allVars);
-      allVarsMinusParamPoint.remove(paramPoint, kFALSE, kTRUE); // match by name
+      allVarsMinusParamPoint.remove(paramPoint, false, true); // match by name
 
       // get nuisance parameter point and weight
       fNuisanceParametersSampler->NextPoint(allVarsMinusParamPoint, globalWeight);
@@ -365,11 +365,11 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
       allVars->assign(*fNullSnapshots[i]);
       if( !fNullNLLs[i] ) {
          RooArgSet* allParams = fNullDensities[i]->getParameters(*data);
-         fNullNLLs[i] = fNullDensities[i]->createNLL(*data, RooFit::CloneData(kFALSE), RooFit::Constrain(*allParams),
+         fNullNLLs[i] = fNullDensities[i]->createNLL(*data, RooFit::CloneData(false), RooFit::Constrain(*allParams),
                                                      RooFit::ConditionalObservables(fConditionalObs));
          delete allParams;
       }else{
-         fNullNLLs[i]->setData( *data, kFALSE );
+         fNullNLLs[i]->setData( *data, false );
       }
       nullNLLVals[i] = fNullNLLs[i]->getVal();
       // FOR DEBuGGING!!!!!!!!!!!!!!!!!
@@ -391,11 +391,11 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
       }
       if( !fImpNLLs[i] ) {
          RooArgSet* allParams = fImportanceDensities[i]->getParameters(*data);
-         fImpNLLs[i] = fImportanceDensities[i]->createNLL(*data, RooFit::CloneData(kFALSE), RooFit::Constrain(*allParams),
+         fImpNLLs[i] = fImportanceDensities[i]->createNLL(*data, RooFit::CloneData(false), RooFit::Constrain(*allParams),
                                                           RooFit::ConditionalObservables(fConditionalObs));
          delete allParams;
       }else{
-         fImpNLLs[i]->setData( *data, kFALSE );
+         fImpNLLs[i]->setData( *data, false );
       }
       impNLLVals[i] = fImpNLLs[i]->getVal();
       // FOR DEBuGGING!!!!!!!!!!!!!!!!!

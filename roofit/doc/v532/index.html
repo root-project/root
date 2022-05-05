@@ -65,11 +65,11 @@
          than follow the unbinned strategy. The rationale is that such datasets result in much faster likelihood
          calculations (for nbin smaller than nevent). The optimization is also exact: the likelihood of a binned 
          data using a binned pdf is identical to that of an unbinned dataset with a binned pdf. Nevertheless you can 
-         switch off this feature by passing AutoBinned(kFALSE) to RooAbsPdf::generate().
+         switch off this feature by passing AutoBinned(false) to RooAbsPdf::generate().
 </li>
      <li>Mixed binned/unbinned generation from simultaneous pdf. For a RooSimultaneous consisting of exclusively
          extended terms it is now possible to generate a mixed binned/unbinned datasets. Components defined
-         by a binned pdf at the top level are automatically generated binned (unless AutoBinned(kFALSE) is set)
+         by a binned pdf at the top level are automatically generated binned (unless AutoBinned(false) is set)
          but it is also possible to generate other component pdfs forcibly binned by adding GenBinned(tagname)
          to generate(). In that case all component pdfs labeled with pdf->setAttribute(tagname) will be generated
          binned. To generate all component binned, the shorthand method AllBinned() can be used. All binned

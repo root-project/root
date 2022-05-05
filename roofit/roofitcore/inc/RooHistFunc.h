@@ -66,12 +66,12 @@ public:
   Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
   /// Set use of special boundary conditions for c.d.f.s
-  void setCdfBoundaries(Bool_t flag) {
+  void setCdfBoundaries(bool flag) {
     _cdfBoundaries = flag ;
   }
 
   /// If true, special boundary conditions for c.d.f.s are used
-  Bool_t getCdfBoundaries() const {
+  bool getCdfBoundaries() const {
 
     return _cdfBoundaries ;
   }
@@ -81,7 +81,7 @@ public:
 
   std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override ;
   std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override ;
-  Bool_t isBinnedDistribution(const RooArgSet&) const override { return _intOrder==0 ; }
+  bool isBinnedDistribution(const RooArgSet&) const override { return _intOrder==0 ; }
   RooArgSet const& getHistObsList() const { return _histObsList; }
 
 
@@ -90,8 +90,8 @@ public:
 
 protected:
 
-  Bool_t importWorkspaceHook(RooWorkspace& ws) override ;
-  Bool_t areIdentical(const RooDataHist& dh1, const RooDataHist& dh2) ;
+  bool importWorkspaceHook(RooWorkspace& ws) override ;
+  bool areIdentical(const RooDataHist& dh1, const RooDataHist& dh2) ;
 
   Double_t evaluate() const override;
   void computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap&) const override;
@@ -104,9 +104,9 @@ protected:
   RooDataHist*      _dataHist ;      ///< Unowned pointer to underlying histogram
   mutable RooAICRegistry _codeReg ;  ///<! Auxiliary class keeping tracking of analytical integration code
   Int_t             _intOrder ;      ///< Interpolation order
-  Bool_t            _cdfBoundaries ; ///< Use boundary conditions for CDFs.
+  bool            _cdfBoundaries ; ///< Use boundary conditions for CDFs.
   mutable Double_t  _totVolume ;     ///<! Total volume of space (product of ranges of observables)
-  Bool_t            _unitNorm  ;     ///<! Assume contents is unit normalized (for use as pdf cache)
+  bool            _unitNorm  ;     ///<! Assume contents is unit normalized (for use as pdf cache)
 
   ClassDefOverride(RooHistFunc,2) // Histogram based function
 };

@@ -73,7 +73,7 @@ public:
 
 protected:
 
-  Bool_t processEmptyDataSets() const override { return _extended ; }
+  bool processEmptyDataSets() const override { return _extended ; }
   Double_t evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const override;
 
   static RooArgSet _emptySet ; // Supports named argument constructor
@@ -82,10 +82,10 @@ private:
   ComputeResult computeBatched(std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const;
   ComputeResult computeScalar(std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const;
 
-  Bool_t _extended{false};
+  bool _extended{false};
   bool _batchEvaluations{false};
-  Bool_t _weightSq{false}; ///< Apply weights squared?
-  mutable Bool_t _first{true}; ///<!
+  bool _weightSq{false}; ///< Apply weights squared?
+  mutable bool _first{true}; ///<!
   ROOT::Math::KahanSum<double> _offsetSaveW2{0.0}; ///<!
 
   mutable std::vector<Double_t> _binw ; ///<!

@@ -88,14 +88,14 @@ RooCmdArg Slice(RooCategory& cat, const char* label) ;
 RooCmdArg Slice(std::map<RooCategory*, std::string> const&) ;
 RooCmdArg Project(const RooArgSet& projSet) ;
 RooCmdArg Project(RooArgSet && projSet) ;
-RooCmdArg ProjWData(const RooAbsData& projData, Bool_t binData=kFALSE) ;
-RooCmdArg ProjWData(const RooArgSet& projSet, const RooAbsData& projData, Bool_t binData=kFALSE) ;
-RooCmdArg ProjWData(RooArgSet && projSet, const RooAbsData& projData, Bool_t binData=kFALSE) ;
+RooCmdArg ProjWData(const RooAbsData& projData, bool binData=false) ;
+RooCmdArg ProjWData(const RooArgSet& projSet, const RooAbsData& projData, bool binData=false) ;
+RooCmdArg ProjWData(RooArgSet && projSet, const RooAbsData& projData, bool binData=false) ;
 RooCmdArg Asymmetry(const RooCategory& cat) ;
 RooCmdArg Precision(Double_t prec) ;
 RooCmdArg ShiftToZero() ;
-RooCmdArg Range(const char* rangeName, Bool_t adjustNorm=kTRUE) ;
-RooCmdArg Range(Double_t lo, Double_t hi, Bool_t adjustNorm=kTRUE) ;
+RooCmdArg Range(const char* rangeName, bool adjustNorm=true) ;
+RooCmdArg Range(Double_t lo, Double_t hi, bool adjustNorm=true) ;
 RooCmdArg NormRange(const char* rangeNameList) ;
 RooCmdArg VLines() ;
 RooCmdArg LineColor(Color_t color) ;
@@ -110,9 +110,9 @@ RooCmdArg AddTo(const char* name, double wgtSel=1.0, double wgtOther=1.0) ;
 RooCmdArg EvalErrorValue(Double_t value) ;
 RooCmdArg MoveToBack()  ;
 RooCmdArg VisualizeError(const RooDataSet& paramData, Double_t Z=1) ;
-RooCmdArg VisualizeError(const RooFitResult& fitres, Double_t Z=1, Bool_t linearMethod=kTRUE) ;
-RooCmdArg VisualizeError(const RooFitResult& fitres, const RooArgSet& param, Double_t Z=1, Bool_t linearMethod=kTRUE) ;
-RooCmdArg VisualizeError(const RooFitResult& fitres, RooArgSet && param, Double_t Z=1, Bool_t linearMethod=kTRUE) ;
+RooCmdArg VisualizeError(const RooFitResult& fitres, Double_t Z=1, bool linearMethod=true) ;
+RooCmdArg VisualizeError(const RooFitResult& fitres, const RooArgSet& param, Double_t Z=1, bool linearMethod=true) ;
+RooCmdArg VisualizeError(const RooFitResult& fitres, RooArgSet && param, Double_t Z=1, bool linearMethod=true) ;
 RooCmdArg ShowProgress() ;
 
 // RooAbsPdf::plotOn arguments
@@ -152,11 +152,11 @@ RooCmdArg Import(const char* state, TH1& histo) ;
 RooCmdArg Import(const std::map<std::string,TH1*>&) ;
 RooCmdArg Import(const char* state, RooDataHist& dhist) ;
 RooCmdArg Import(const std::map<std::string,RooDataHist*>&) ;
-RooCmdArg Import(TH1& histo, Bool_t importDensity=kFALSE) ;
+RooCmdArg Import(TH1& histo, bool importDensity=false) ;
 
 // RooDataSet::ctor arguments
-RooCmdArg WeightVar(const char* name, Bool_t reinterpretAsWeight=kFALSE) ;
-RooCmdArg WeightVar(const RooRealVar& arg, Bool_t reinterpretAsWeight=kFALSE) ;
+RooCmdArg WeightVar(const char* name, bool reinterpretAsWeight=false) ;
+RooCmdArg WeightVar(const RooRealVar& arg, bool reinterpretAsWeight=false) ;
 RooCmdArg Import(const char* state, RooDataSet& data) ;
 RooCmdArg Import(const std::map<std::string,RooDataSet*>& ) ;
 RooCmdArg Link(const char* state, RooAbsData& data) ;
@@ -207,7 +207,7 @@ RooCmdArg EventRange(Int_t nStart, Int_t nStop) ;
  * @{
  */
 // RooChi2Var::ctor / RooNLLVar arguments
-RooCmdArg Extended(Bool_t flag=kTRUE) ;
+RooCmdArg Extended(bool flag=true) ;
 RooCmdArg DataError(Int_t) ;
 RooCmdArg NumCPU(Int_t nCPU, Int_t interleave=0) ;
 
@@ -240,18 +240,18 @@ RooCmdArg ProjectedObservables(Args_t &&... argsOrArgSet) {
   return ConditionalObservables(std::forward<Args_t>(argsOrArgSet)...);
 }
 
-RooCmdArg Verbose(Bool_t flag=kTRUE) ;
-RooCmdArg Save(Bool_t flag=kTRUE) ;
-RooCmdArg Timer(Bool_t flag=kTRUE) ;
+RooCmdArg Verbose(bool flag=true) ;
+RooCmdArg Save(bool flag=true) ;
+RooCmdArg Timer(bool flag=true) ;
 RooCmdArg PrintLevel(Int_t code) ;
-RooCmdArg Warnings(Bool_t flag=kTRUE) ;
+RooCmdArg Warnings(bool flag=true) ;
 RooCmdArg Strategy(Int_t code) ;
-RooCmdArg InitialHesse(Bool_t flag=kTRUE) ;
-RooCmdArg Hesse(Bool_t flag=kTRUE) ;
-RooCmdArg Minos(Bool_t flag=kTRUE) ;
+RooCmdArg InitialHesse(bool flag=true) ;
+RooCmdArg Hesse(bool flag=true) ;
+RooCmdArg Minos(bool flag=true) ;
 RooCmdArg Minos(const RooArgSet& minosArgs) ;
 RooCmdArg Minos(RooArgSet && minosArgs) ;
-RooCmdArg SplitRange(Bool_t flag=kTRUE) ;
+RooCmdArg SplitRange(bool flag=true) ;
 RooCmdArg SumCoefRange(const char* rangeName) ;
 RooCmdArg Constrain(const RooArgSet& params) ;
 RooCmdArg Constrain(RooArgSet && params) ;
@@ -266,13 +266,13 @@ RooCmdArg GlobalObservablesTag(const char* tagName) ;
 RooCmdArg ExternalConstraints(const RooArgSet& constraintPdfs) ;
 RooCmdArg ExternalConstraints(RooArgSet && constraintPdfs) ;
 RooCmdArg PrintEvalErrors(Int_t numErrors) ;
-RooCmdArg EvalErrorWall(Bool_t flag) ;
-RooCmdArg SumW2Error(Bool_t flag) ;
-RooCmdArg AsymptoticError(Bool_t flag) ;
-RooCmdArg CloneData(Bool_t flag) ;
-RooCmdArg Integrate(Bool_t flag) ;
+RooCmdArg EvalErrorWall(bool flag) ;
+RooCmdArg SumW2Error(bool flag) ;
+RooCmdArg AsymptoticError(bool flag) ;
+RooCmdArg CloneData(bool flag) ;
+RooCmdArg Integrate(bool flag) ;
 RooCmdArg Minimizer(const char* type, const char* alg=0) ;
-RooCmdArg Offset(Bool_t flag=kTRUE) ;
+RooCmdArg Offset(bool flag=true) ;
 RooCmdArg RecoverFromUndefinedRegions(double strength);
 /** @} */
 
@@ -281,30 +281,30 @@ RooCmdArg Label(const char* str) ;
 RooCmdArg Layout(Double_t xmin, Double_t xmax=0.99, Double_t ymin=0.95) ;
 RooCmdArg Parameters(const RooArgSet& params) ;
 RooCmdArg Parameters(RooArgSet && params) ;
-RooCmdArg ShowConstants(Bool_t flag=kTRUE) ;
+RooCmdArg ShowConstants(bool flag=true) ;
 
 // RooTreeData::statOn arguments
 RooCmdArg What(const char* str) ;
 
 // RooProdPdf::ctor arguments
-RooCmdArg Conditional(const RooArgSet& pdfSet, const RooArgSet& depSet, Bool_t depsAreCond=kFALSE) ;
-RooCmdArg Conditional(RooArgSet && pdfSet, const RooArgSet& depSet, Bool_t depsAreCond=kFALSE) ;
-RooCmdArg Conditional(const RooArgSet& pdfSet, RooArgSet && depSet, Bool_t depsAreCond=kFALSE) ;
-RooCmdArg Conditional(RooArgSet && pdfSet, RooArgSet && depSet, Bool_t depsAreCond=kFALSE) ;
+RooCmdArg Conditional(const RooArgSet& pdfSet, const RooArgSet& depSet, bool depsAreCond=false) ;
+RooCmdArg Conditional(RooArgSet && pdfSet, const RooArgSet& depSet, bool depsAreCond=false) ;
+RooCmdArg Conditional(const RooArgSet& pdfSet, RooArgSet && depSet, bool depsAreCond=false) ;
+RooCmdArg Conditional(RooArgSet && pdfSet, RooArgSet && depSet, bool depsAreCond=false) ;
 
 /**
  * \defgroup Generating Arguments for generating data
  * @{
  */
 // RooAbsPdf::generate arguments
-RooCmdArg ProtoData(const RooDataSet& protoData, Bool_t randomizeOrder=kFALSE, Bool_t resample=kFALSE) ;
+RooCmdArg ProtoData(const RooDataSet& protoData, bool randomizeOrder=false, bool resample=false) ;
 RooCmdArg NumEvents(Int_t numEvents) ;
 RooCmdArg NumEvents(Double_t numEvents) ;
-RooCmdArg AutoBinned(Bool_t flag=kTRUE) ;
+RooCmdArg AutoBinned(bool flag=true) ;
 RooCmdArg GenBinned(const char* tag) ;
 RooCmdArg AllBinned() ;
-RooCmdArg ExpectedData(Bool_t flag=kTRUE) ;
-RooCmdArg Asimov(Bool_t flag=kTRUE) ;
+RooCmdArg ExpectedData(bool flag=true) ;
+RooCmdArg Asimov(bool flag=true) ;
 
 /** @} */
 
@@ -312,11 +312,11 @@ RooCmdArg Asimov(Bool_t flag=kTRUE) ;
 RooCmdArg YVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none()) ;
 RooCmdArg ZVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none()) ;
 RooCmdArg AxisLabel(const char* name) ;
-RooCmdArg Scaling(Bool_t flag) ;
+RooCmdArg Scaling(bool flag) ;
 
 
 // RooAbsReal::createHistogram arguments
-RooCmdArg IntrinsicBinning(Bool_t flag=kTRUE) ;
+RooCmdArg IntrinsicBinning(bool flag=true) ;
 
 // RooAbsReal::createIntegral arguments
 template<class... Args_t>
@@ -327,12 +327,12 @@ RooCmdArg NormSet(Args_t &&... argsOrArgSet) {
 RooCmdArg NumIntConfig(const RooNumIntConfig& cfg) ;
 
 // RooMCStudy::ctor arguments
-RooCmdArg Silence(Bool_t flag=kTRUE) ;
+RooCmdArg Silence(bool flag=true) ;
 RooCmdArg FitModel(RooAbsPdf& pdf) ;
 RooCmdArg FitOptions(const RooCmdArg& arg1                ,const RooCmdArg& arg2=RooCmdArg::none(),
                      const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
                      const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
-RooCmdArg Binned(Bool_t flag=kTRUE) ;
+RooCmdArg Binned(bool flag=true) ;
 
 // RooMCStudy::plot* arguments
 RooCmdArg Frame(const RooCmdArg& arg1                ,const RooCmdArg& arg2=RooCmdArg::none(),
@@ -340,15 +340,15 @@ RooCmdArg Frame(const RooCmdArg& arg1                ,const RooCmdArg& arg2=RooC
                 const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
 RooCmdArg FrameBins(Int_t nbins) ;
 RooCmdArg FrameRange(Double_t xlo, Double_t xhi) ;
-RooCmdArg FitGauss(Bool_t flag=kTRUE) ;
+RooCmdArg FitGauss(bool flag=true) ;
 
 // RooRealVar::format arguments
 RooCmdArg AutoPrecision(Int_t ndigit=2) ;
 RooCmdArg FixedPrecision(Int_t ndigit=2) ;
-RooCmdArg TLatexStyle(Bool_t flag=kTRUE) ;
-RooCmdArg LatexStyle(Bool_t flag=kTRUE) ;
-RooCmdArg LatexTableStyle(Bool_t flag=kTRUE) ;
-RooCmdArg VerbatimName(Bool_t flag=kTRUE) ;
+RooCmdArg TLatexStyle(bool flag=true) ;
+RooCmdArg LatexStyle(bool flag=true) ;
+RooCmdArg LatexTableStyle(bool flag=true) ;
+RooCmdArg VerbatimName(bool flag=true) ;
 
 // RooMsgService::addReportingStream arguments
 RooCmdArg Topic(Int_t topic) ;
@@ -357,19 +357,19 @@ RooCmdArg ClassName(const char* name) ;
 RooCmdArg BaseClassName(const char* name) ;
 RooCmdArg TagName(const char* name) ;
 RooCmdArg OutputStream(std::ostream& os) ;
-RooCmdArg Prefix(Bool_t flag) ;
+RooCmdArg Prefix(bool flag) ;
 RooCmdArg Color(Color_t color) ;
 
 // RooWorkspace::import() arguments
-RooCmdArg RenameConflictNodes(const char* suffix, Bool_t renameOrigNodes=kFALSE) ;
+RooCmdArg RenameConflictNodes(const char* suffix, bool renameOrigNodes=false) ;
 RooCmdArg RenameAllNodes(const char* suffix) ;
 RooCmdArg RenameAllVariables(const char* suffix) ;
 RooCmdArg RenameAllVariablesExcept(const char* suffix,const char* exceptionList) ;
 RooCmdArg RenameVariable(const char* inputName, const char* outputName) ;
 RooCmdArg Rename(const char* suffix) ;
-RooCmdArg RecycleConflictNodes(Bool_t flag=kTRUE) ;
-RooCmdArg Embedded(Bool_t flag=kTRUE) ;
-RooCmdArg NoRecursion(Bool_t flag=kTRUE) ;
+RooCmdArg RecycleConflictNodes(bool flag=true) ;
+RooCmdArg Embedded(bool flag=true) ;
+RooCmdArg NoRecursion(bool flag=true) ;
 
 // RooSimCloneTool::build() arguments
 RooCmdArg SplitParam(const char* varname, const char* catname) ;

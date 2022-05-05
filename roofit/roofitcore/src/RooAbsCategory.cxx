@@ -147,7 +147,7 @@ const char* RooAbsCategory::getCurrentLabel() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Equality operator with a integer (compares with state index number)
 
-Bool_t RooAbsCategory::operator==(RooAbsCategory::value_type index) const
+bool RooAbsCategory::operator==(RooAbsCategory::value_type index) const
 {
   return (index==getCurrentIndex()) ;
 }
@@ -157,7 +157,7 @@ Bool_t RooAbsCategory::operator==(RooAbsCategory::value_type index) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Equality operator with a string (compares with state label string)
 
-Bool_t RooAbsCategory::operator==(const char* label) const
+bool RooAbsCategory::operator==(const char* label) const
 {
   return strcmp(label, getCurrentLabel()) == 0;
 }
@@ -168,20 +168,20 @@ Bool_t RooAbsCategory::operator==(const char* label) const
 /// Equality operator with another RooAbsArg. Only functional
 /// is also a RooAbsCategory, will return true if index is the same
 
-Bool_t RooAbsCategory::operator==(const RooAbsArg& other) const
+bool RooAbsCategory::operator==(const RooAbsArg& other) const
 {
   const RooAbsCategory* otherCat = dynamic_cast<const RooAbsCategory*>(&other) ;
-  return otherCat ? operator==(otherCat->getCurrentIndex()) : kFALSE ;
+  return otherCat ? operator==(otherCat->getCurrentIndex()) : false ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t RooAbsCategory::isIdentical(const RooAbsArg& other, Bool_t assumeSameType) const
+bool RooAbsCategory::isIdentical(const RooAbsArg& other, bool assumeSameType) const
 {
   if (!assumeSameType) {
     const RooAbsCategory* otherCat = dynamic_cast<const RooAbsCategory*>(&other) ;
-    return otherCat ? operator==(otherCat->getCurrentIndex()) : kFALSE ;
+    return otherCat ? operator==(otherCat->getCurrentIndex()) : false ;
   } else {
     return getCurrentIndex() == static_cast<const RooAbsCategory&>(other).getCurrentIndex();
   }
@@ -190,7 +190,7 @@ Bool_t RooAbsCategory::isIdentical(const RooAbsArg& other, Bool_t assumeSameType
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if a state with index `index` exists.
-Bool_t RooAbsCategory::hasIndex(RooAbsCategory::value_type index) const
+bool RooAbsCategory::hasIndex(RooAbsCategory::value_type index) const
 {
   for (const auto& item : stateNames()) {
     if (item.second == index)
@@ -298,7 +298,7 @@ RooAbsCategory::value_type RooAbsCategory::lookupIndex(const std::string& stateN
 /// Find our type that matches the specified type, or return 0 for no match.
 /// \deprecated RooCatType is not used, any more. This function will create one and let it leak.
 /// Use lookupIndex() (preferred) or lookupName() instead.
-const RooCatType* RooAbsCategory::lookupType(const RooCatType &other, Bool_t printError) const
+const RooCatType* RooAbsCategory::lookupType(const RooCatType &other, bool printError) const
 {
   return lookupType(other.getVal(), printError);
 }
@@ -309,7 +309,7 @@ const RooCatType* RooAbsCategory::lookupType(const RooCatType &other, Bool_t pri
 /// Find our type corresponding to the specified index, or return nullptr for no match.
 /// \deprecated RooCatType is not used, any more. This function will create one and let it leak.
 /// Use lookupIndex() (preferred) or lookupName() instead.
-const RooCatType* RooAbsCategory::lookupType(RooAbsCategory::value_type index, Bool_t printError) const
+const RooCatType* RooAbsCategory::lookupType(RooAbsCategory::value_type index, bool printError) const
 {
   for (const auto& item : stateNames())
   if (item.second == index) {
@@ -330,7 +330,7 @@ const RooCatType* RooAbsCategory::lookupType(RooAbsCategory::value_type index, B
 /// Find our type corresponding to the specified label, or return 0 for no match.
 /// \deprecated RooCatType is not used, any more. This function will create one and let it leak.
 /// Use lookupIndex() (preferred) or lookupName() instead.
-const RooCatType* RooAbsCategory::lookupType(const char* label, Bool_t printError) const
+const RooCatType* RooAbsCategory::lookupType(const char* label, bool printError) const
 {
   for (const auto& type : stateNames()) {
     if(type.first == label)
@@ -355,7 +355,7 @@ const RooCatType* RooAbsCategory::lookupType(const char* label, Bool_t printErro
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if given state is defined for this object
 
-Bool_t RooAbsCategory::isValid(const RooCatType& value)  const
+bool RooAbsCategory::isValid(const RooCatType& value)  const
 {
   return hasIndex(value.getVal()) ;
 }
@@ -375,9 +375,9 @@ Roo1DTable* RooAbsCategory::createTable(const char *label)  const
 ////////////////////////////////////////////////////////////////////////////////
 /// Read object contents from stream (dummy for now)
 
-Bool_t RooAbsCategory::readFromStream(istream&, Bool_t, Bool_t)
+bool RooAbsCategory::readFromStream(istream&, bool, bool)
 {
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -385,7 +385,7 @@ Bool_t RooAbsCategory::readFromStream(istream&, Bool_t, Bool_t)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write object contents to ostream
 
-void RooAbsCategory::writeToStream(ostream& os, Bool_t /* compact */) const
+void RooAbsCategory::writeToStream(ostream& os, bool /* compact */) const
 {
   os << getCurrentLabel() ;
 }
@@ -408,7 +408,7 @@ void RooAbsCategory::printValue(ostream& os) const
 ///
 ///     Shape : label, index, defined types
 
-void RooAbsCategory::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TString indent) const
+void RooAbsCategory::printMultiline(ostream& os, Int_t contents, bool verbose, TString indent) const
 {
   RooAbsArg::printMultiline(os,contents,verbose,indent);
 
@@ -473,7 +473,7 @@ void RooAbsCategory::attachToTree(TTree& tree, Int_t bufSize)
       {"Float_t",   [&](){ return createTreeReadBuffer<Float_t  >(cleanName, tree); }},
       {"Double_t",  [&](){ return createTreeReadBuffer<Double_t >(cleanName, tree); }},
       {"UChar_t",   [&](){ return createTreeReadBuffer<UChar_t  >(cleanName, tree); }},
-      {"Bool_t",    [&](){ return createTreeReadBuffer<Bool_t   >(cleanName, tree); }},
+      {"bool",    [&](){ return createTreeReadBuffer<bool   >(cleanName, tree); }},
       {"Char_t",    [&](){ return createTreeReadBuffer<Char_t   >(cleanName, tree); }},
       {"UInt_t",    [&](){ return createTreeReadBuffer<UInt_t   >(cleanName, tree); }},
       {"Long64_t",  [&](){ return createTreeReadBuffer<Long64_t >(cleanName, tree); }},
@@ -530,7 +530,7 @@ void RooAbsCategory::fillTreeBranch(TTree& t)
 ////////////////////////////////////////////////////////////////////////////////
 /// (De)activate associate tree branch
 
-void RooAbsCategory::setTreeBranchStatus(TTree& t, Bool_t active)
+void RooAbsCategory::setTreeBranchStatus(TTree& t, bool active)
 {
   TBranch* branch = t.GetBranch(Form("%s_idx",GetName())) ;
   if (branch) {
@@ -556,7 +556,7 @@ void RooAbsCategory::syncCache(const RooArgSet*)
 /// cache is clean(valid) before this function is called, e.g. by
 /// calling syncCache() on the source.
 
-void RooAbsCategory::copyCache(const RooAbsArg *source, Bool_t /*valueOnly*/, Bool_t setValDirty)
+void RooAbsCategory::copyCache(const RooAbsArg *source, bool /*valueOnly*/, bool setValDirty)
 {
    auto other = static_cast<const RooAbsCategory*>(source);
    assert(dynamic_cast<const RooAbsCategory*>(source));
@@ -663,7 +663,7 @@ RooAbsArg *RooAbsCategory::createFundamental(const char* newname) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Determine if category has 2 or 3 states with index values -1,0,1
 
-Bool_t RooAbsCategory::isSignType(Bool_t mustHaveZero) const
+bool RooAbsCategory::isSignType(bool mustHaveZero) const
 {
   const auto& theStateNames = stateNames();
 

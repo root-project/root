@@ -121,7 +121,7 @@ Double_t RooSpHarmonic::evaluate() const
 ////////////////////////////////////////////////////////////////////////////////
 
 namespace {
-  Bool_t fullRange(const RooRealProxy& x, const char* range, Bool_t phi)
+  bool fullRange(const RooRealProxy& x, const char* range, bool phi)
   {
     if (phi) {
       return range == 0 || strlen(range) == 0
@@ -142,8 +142,8 @@ namespace {
 Int_t RooSpHarmonic::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
 {
   // we don't support indefinite integrals... maybe one day, when there is a use for it.....
-  Bool_t cthetaOK = fullRange(_ctheta, rangeName, kFALSE);
-  Bool_t phiOK    = fullRange(_phi,    rangeName, kTRUE );
+  bool cthetaOK = fullRange(_ctheta, rangeName, false);
+  bool phiOK    = fullRange(_phi,    rangeName, true );
   if (cthetaOK && phiOK && matchArgs(allVars, analVars, _ctheta, _phi)) return 3;
   if (            phiOK && matchArgs(allVars, analVars,          _phi)) return 2;
   return RooLegendre::getAnalyticalIntegral(allVars, analVars, rangeName);

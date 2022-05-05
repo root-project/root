@@ -53,13 +53,13 @@ public:
   const std::map<std::string, value_type>::value_type& getOrdinal(unsigned int n) const;
   unsigned int getCurrentOrdinalNumber() const;
 
-  Bool_t operator==(value_type index) const ;
-  Bool_t operator!=(value_type index) {  return !operator==(index);}
-  Bool_t operator==(const char* label) const ;
-  Bool_t operator!=(const char* label) { return !operator==(label);}
-  Bool_t operator==(const RooAbsArg& other) const override ;
-  Bool_t         operator!=(const RooAbsArg& other) { return !operator==(other);}
-  Bool_t isIdentical(const RooAbsArg& other, Bool_t assumeSameType=kFALSE) const override;
+  bool operator==(value_type index) const ;
+  bool operator!=(value_type index) {  return !operator==(index);}
+  bool operator==(const char* label) const ;
+  bool operator!=(const char* label) { return !operator==(label);}
+  bool operator==(const RooAbsArg& other) const override ;
+  bool         operator!=(const RooAbsArg& other) { return !operator==(other);}
+  bool isIdentical(const RooAbsArg& other, bool assumeSameType=false) const override;
 
   /// Check if a state with name `label` exists.
   bool hasLabel(const std::string& label) const {
@@ -74,20 +74,20 @@ public:
   value_type lookupIndex(const std::string& stateName) const;
 
 
-  Bool_t isSignType(Bool_t mustHaveZero=kFALSE) const ;
+  bool isSignType(bool mustHaveZero=false) const ;
 
   Roo1DTable *createTable(const char *label) const ;
 
   // I/O streaming interface
-  Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) override ;
-  void writeToStream(std::ostream& os, Bool_t compact) const override ;
+  bool readFromStream(std::istream& is, bool compact, bool verbose=false) override ;
+  void writeToStream(std::ostream& os, bool compact) const override ;
 
   void printValue(std::ostream& os) const override ;
-  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const override ;
+  void printMultiline(std::ostream& os, Int_t contents, bool verbose=false, TString indent="") const override ;
 
-  virtual Bool_t isIntegrationSafeLValue(const RooArgSet* /*set*/) const {
+  virtual bool isIntegrationSafeLValue(const RooArgSet* /*set*/) const {
     // Is this l-value object safe for use as integration observable
-    return kTRUE ;
+    return true ;
   }
 
   RooAbsArg *createFundamental(const char* newname=0) const override;
@@ -115,13 +115,13 @@ public:
   /// @{
   const RooCatType*
   R__SUGGEST_ALTERNATIVE("This interface is inefficient. Use lookupName()")
-  lookupType(value_type index, Bool_t printError=kFALSE) const;
+  lookupType(value_type index, bool printError=false) const;
   const RooCatType*
   R__SUGGEST_ALTERNATIVE("This interface is inefficient. Use lookupIndex()")
-  lookupType(const char* label, Bool_t printError=kFALSE) const;
+  lookupType(const char* label, bool printError=false) const;
   const RooCatType*
   R__SUGGEST_ALTERNATIVE("This interface is inefficient. Use lookupName() / lookupIndex()")
-  lookupType(const RooCatType& type, Bool_t printError=kFALSE) const;
+  lookupType(const RooCatType& type, bool printError=false) const;
   TIterator*
   R__SUGGEST_ALTERNATIVE("This interface is inefficient. Use begin(), end() or range-based for loops.")
   typeIterator() const;
@@ -134,7 +134,7 @@ public:
   /// Retrieve current label. Use getCurrentLabel() for more clarity.
   const char* getLabel() const { return getCurrentLabel(); }
 protected:
-  virtual Bool_t
+  virtual bool
   R__SUGGEST_ALTERNATIVE("This interface is inefficient. Use hasIndex() or hasLabel().")
   isValid(const RooCatType& value) const ;
   /// \deprecated Use defineState(const std::string& label)
@@ -202,11 +202,11 @@ protected:
 
   friend class RooVectorDataStore ;
   void syncCache(const RooArgSet* set=0) override ;
-  void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE, Bool_t setValueDirty=kTRUE) override ;
+  void copyCache(const RooAbsArg* source, bool valueOnly=false, bool setValueDirty=true) override ;
   void setCachedValue(double value, bool notifyClients = true) final;
   void attachToTree(TTree& t, Int_t bufSize=32000) override ;
   void attachToVStore(RooVectorDataStore& vstore) override ;
-  void setTreeBranchStatus(TTree& t, Bool_t active) override ;
+  void setTreeBranchStatus(TTree& t, bool active) override ;
   void fillTreeBranch(TTree& t) override ;
 
   RooCatType* retrieveLegacyState(value_type index) const;

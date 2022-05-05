@@ -28,8 +28,8 @@ using namespace RooFit ;
 class TestBasic316 : public RooFitTestUnit
 {
 public:
-  TestBasic316(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Likelihood ratio projection plot",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic316(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Likelihood ratio projection plot",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // C r e a t e   3 D   p d f   a n d   d a t a
   // -------------------------------------------
@@ -124,6 +124,6 @@ public:
   delete sigyz ;
   delete totyz ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;
