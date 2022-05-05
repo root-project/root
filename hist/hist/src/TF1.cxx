@@ -2480,8 +2480,12 @@ Double_t TF1::GradientPar(Int_t ipar, const Double_t *x, Double_t eps)
 
 void TF1::GradientPar(const Double_t *x, Double_t *grad, Double_t eps)
 {
-   if (fFormula && fFormula->HasGeneratedGradient())
-      fFormula->GradientPar(x,grad);
+   if (fFormula && fFormula->HasGeneratedGradient()) {
+      // need to allocate a vector here
+      std::vector<double> gvec(fNpar);
+      fFormula->GradientPar(x,gvec);
+      std::copy(gvec.begin(),gvec.end(), grad);
+   }
    else
       GradientParTempl<Double_t>(x, grad, eps);
 }

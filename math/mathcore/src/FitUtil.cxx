@@ -840,7 +840,7 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
    // }
    else {
       Error("FitUtil::EvaluateChi2Gradient",
-            "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
+            "Execution policy unknown. Available choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
    }
 
 #ifndef R__USE_IMT
@@ -985,7 +985,7 @@ double FitUtil::EvaluateLogL(const IModelFunction &func, const UnBinData &data, 
             }
          }
 
-         // needed to compue effective global weight in case of extended likelihood
+         // needed to compute effective global weight in case of extended likelihood
 
          auto mapFunction = [&](const unsigned i) {
             double W = 0;
@@ -1077,7 +1077,7 @@ double FitUtil::EvaluateLogL(const IModelFunction &func, const UnBinData &data, 
     sumW=resArray.weight;
     sumW2=resArray.weight2;
 #endif
-//   } else if(executionPolicy == ROOT::Fit::kMultitProcess){
+//   } else if(executionPolicy == ROOT::Fit::kMultiProcess){
     // ROOT::TProcessExecutor pool;
     // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
   } else{
