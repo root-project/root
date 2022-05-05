@@ -634,7 +634,6 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
       else {
          SimpleGradientCalculator  gc( npar, func);
          if (!useBinIntegral ) {
-            SimpleGradientCalculator  gc( npar, func);
             gc.ParameterGradient(x, p, fval, g);
             // std::cout << "compute numerical gradient for model func at " << x[0] << " ";
             // for (unsigned int ip = 0; ip < npar; ip++) std::cout << "(" << p[ip] << ", " << g[ip] << ") " ;
