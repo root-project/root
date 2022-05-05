@@ -27,12 +27,12 @@ public:
   // Constructors, assignment etc.
 
   /// Default constructor
-  RooArgProxy() : _owner(0), _arg(0), _valueServer(kFALSE), _shapeServer(kFALSE), _isFund(kTRUE), _ownArg(kFALSE) {
+  RooArgProxy() : _owner(0), _arg(0), _valueServer(false), _shapeServer(false), _isFund(true), _ownArg(false) {
   } ;
   RooArgProxy(const char* name, const char* desc, RooAbsArg* owner,
-         Bool_t valueServer, Bool_t shapeServer, Bool_t proxyOwnsArg=kFALSE) ;
+         bool valueServer, bool shapeServer, bool proxyOwnsArg=false) ;
   RooArgProxy(const char* name, const char* desc, RooAbsArg* owner, RooAbsArg& arg,
-         Bool_t valueServer, Bool_t shapeServer, Bool_t proxyOwnsArg=kFALSE) ;
+         bool valueServer, bool shapeServer, bool proxyOwnsArg=false) ;
   RooArgProxy(const char* name, RooAbsArg* owner, const RooArgProxy& other) ;
   ~RooArgProxy() override ;
 
@@ -45,7 +45,7 @@ public:
   const char* name() const override {
     return GetName() ;
   }
-  void print(std::ostream& os, Bool_t addContents=kFALSE) const override ;
+  void print(std::ostream& os, bool addContents=false) const override ;
 
 protected:
 
@@ -53,22 +53,22 @@ protected:
   RooAbsArg* _owner ;       ///< Pointer to owner of proxy
   RooAbsArg* _arg ;         ///< Pointer to content of proxy
 
-  Bool_t _valueServer ;     ///< If true contents is value server of owner
-  Bool_t _shapeServer ;     ///< If true contents is shape server of owner
-  Bool_t _isFund ;          ///< If true proxy contains an lvalue
-  Bool_t _ownArg ;          ///< If true proxy owns contents
+  bool _valueServer ;     ///< If true contents is value server of owner
+  bool _shapeServer ;     ///< If true contents is shape server of owner
+  bool _isFund ;          ///< If true proxy contains an lvalue
+  bool _ownArg ;          ///< If true proxy owns contents
 
   friend class RooAbsArg ;
 
   /// Returns true of contents is value server of owner
-  inline Bool_t isValueServer() const {
+  inline bool isValueServer() const {
     return _valueServer ;
   }
   /// Returns true if contents is shape server of owner
-  inline Bool_t isShapeServer() const {
+  inline bool isShapeServer() const {
     return _shapeServer ;
   }
-  Bool_t changePointer(const RooAbsCollection& newServerSet, Bool_t nameChange=kFALSE, Bool_t factoryInitMode=kFALSE) override ;
+  bool changePointer(const RooAbsCollection& newServerSet, bool nameChange=false, bool factoryInitMode=false) override ;
 
   virtual void changeDataSet(const RooArgSet* newNormSet) ;
 

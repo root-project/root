@@ -26,21 +26,21 @@ class RooDataSet;
 class RooAbsGenContext : public TNamed, public RooPrintable {
 public:
   RooAbsGenContext(const RooAbsPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0, const RooArgSet* auxProto=0,
-         Bool_t _verbose= kFALSE) ;
+         bool _verbose= false) ;
   ~RooAbsGenContext() override;
 
-  virtual RooDataSet *generate(Double_t nEvents= 0, Bool_t skipInit=kFALSE, Bool_t extendedMode=kFALSE);
+  virtual RooDataSet *generate(Double_t nEvents= 0, bool skipInit=false, bool extendedMode=false);
 
-  Bool_t isValid() const {
+  bool isValid() const {
     // If true generator context is in a valid state
     return _isValid;
   }
 
-  inline void setVerbose(Bool_t verbose= kTRUE) {
+  inline void setVerbose(bool verbose= true) {
     // Set/clear verbose messaging
     _verbose= verbose;
   }
-  inline Bool_t isVerbose() const {
+  inline bool isVerbose() const {
     // If true verbose messaging is active
     return _verbose;
   }
@@ -58,12 +58,12 @@ public:
   void printTitle(std::ostream& os) const override ;
   void printClassName(std::ostream& os) const override ;
   void printArgs(std::ostream& os) const override ;
-  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const override;
+  void printMultiline(std::ostream& os, Int_t contents, bool verbose=false, TString indent="") const override;
 
   Int_t defaultPrintContents(Option_t* opt) const override ;
   StyleOption defaultPrintStyle(Option_t* opt) const override ;
 
-  virtual void setExpectedData(Bool_t) {} ;
+  virtual void setExpectedData(bool) {} ;
 
   virtual void generateEvent(RooArgSet &theEvent, Int_t remaining) = 0;
   virtual void initGenerator(const RooArgSet &theEvent);
@@ -76,8 +76,8 @@ protected:
 
   const RooDataSet *_prototype; ///< Pointer to prototype dataset
   RooArgSet _theEvent;          ///< Pointer to observable event being generated
-  Bool_t _isValid;              ///< Is context in valid state?
-  Bool_t _verbose;              ///< Verbose messaging?
+  bool _isValid;              ///< Is context in valid state?
+  bool _verbose;              ///< Verbose messaging?
   UInt_t _expectedEvents;       ///< Number of expected events from extended p.d.f
   RooArgSet _protoVars;         ///< Prototype observables
   Int_t _nextProtoIndex;        ///< Next prototype event to load according to LUT

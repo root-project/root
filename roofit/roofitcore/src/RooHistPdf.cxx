@@ -50,7 +50,7 @@ ClassImp(RooHistPdf);
 /// Default constructor
 /// coverity[UNINIT_CTOR]
 
-RooHistPdf::RooHistPdf() : _dataHist(0), _totVolume(0), _unitNorm(kFALSE)
+RooHistPdf::RooHistPdf() : _dataHist(0), _totVolume(0), _unitNorm(false)
 {
 
 }
@@ -69,9 +69,9 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& var
   _dataHist((RooDataHist*)&dhist),
   _codeReg(10),
   _intOrder(intOrder),
-  _cdfBoundaries(kFALSE),
+  _cdfBoundaries(false),
   _totVolume(0),
-  _unitNorm(kFALSE)
+  _unitNorm(false)
 {
   _histObsList.addClone(vars) ;
   _pdfObsList.add(vars) ;
@@ -121,9 +121,9 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList& pd
   _dataHist((RooDataHist*)&dhist),
   _codeReg(10),
   _intOrder(intOrder),
-  _cdfBoundaries(kFALSE),
+  _cdfBoundaries(false),
   _totVolume(0),
-  _unitNorm(kFALSE)
+  _unitNorm(false)
 {
   _histObsList.addClone(histObs) ;
   _pdfObsList.add(pdfObs) ;
@@ -209,7 +209,7 @@ Double_t RooHistPdf::evaluate() const
 
     if (harg != parg) {
       parg->syncCache() ;
-      harg->copyCache(parg,kTRUE) ;
+      harg->copyCache(parg,true) ;
       if (!harg->inRange(0)) {
         return 0 ;
       }
@@ -337,7 +337,7 @@ Double_t RooHistPdf::analyticalIntegral(Int_t code,
     // Transfer values from
     if (ha != pa) {
       pa->syncCache();
-      ha->copyCache(pa,kTRUE);
+      ha->copyCache(pa,true);
     }
   }
 
@@ -503,16 +503,16 @@ Double_t RooHistPdf::maxVal(Int_t code) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t RooHistPdf::areIdentical(const RooDataHist& dh1, const RooDataHist& dh2)
+bool RooHistPdf::areIdentical(const RooDataHist& dh1, const RooDataHist& dh2)
 {
-  if (fabs(dh1.sumEntries()-dh2.sumEntries())>1e-8) return kFALSE ;
-  if (dh1.numEntries() != dh2.numEntries()) return kFALSE ;
+  if (fabs(dh1.sumEntries()-dh2.sumEntries())>1e-8) return false ;
+  if (dh1.numEntries() != dh2.numEntries()) return false ;
   for (int i=0 ; i < dh1.numEntries() ; i++) {
     dh1.get(i) ;
     dh2.get(i) ;
-    if (fabs(dh1.weight()-dh2.weight())>1e-8) return kFALSE ;
+    if (fabs(dh1.weight()-dh2.weight())>1e-8) return false ;
   }
-  return kTRUE ;
+  return true ;
 }
 
 
@@ -520,14 +520,14 @@ Bool_t RooHistPdf::areIdentical(const RooDataHist& dh1, const RooDataHist& dh2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if our datahist is already in the workspace
 
-Bool_t RooHistPdf::importWorkspaceHook(RooWorkspace& ws)
+bool RooHistPdf::importWorkspaceHook(RooWorkspace& ws)
 {
   std::list<RooAbsData*> allData = ws.allData() ;
   std::list<RooAbsData*>::const_iterator iter ;
   for (iter = allData.begin() ; iter != allData.end() ; ++iter) {
     // If your dataset is already in this workspace nothing needs to be done
     if (*iter == _dataHist) {
-      return kFALSE ;
+      return false ;
     }
   }
 
@@ -548,10 +548,10 @@ Bool_t RooHistPdf::importWorkspaceHook(RooWorkspace& ws)
 
    // not identical, clone rename and import
    TString uniqueName = Form("%s_%s",_dataHist->GetName(),GetName()) ;
-   Bool_t flag = ws.import(*_dataHist,RooFit::Rename(uniqueName.Data()),RooFit::Embedded()) ;
+   bool flag = ws.import(*_dataHist,RooFit::Rename(uniqueName.Data()),RooFit::Embedded()) ;
    if (flag) {
      coutE(ObjectHandling) << " RooHistPdf::importWorkspaceHook(" << GetName() << ") unable to import clone of underlying RooDataHist with unique name " << uniqueName << ", abort" << endl ;
-     return kTRUE ;
+     return true ;
    }
    _dataHist = (RooDataHist*) ws.embeddedData(uniqueName.Data()) ;
       }
@@ -560,15 +560,15 @@ Bool_t RooHistPdf::importWorkspaceHook(RooWorkspace& ws)
 
       // Exists and is NOT of correct type: clone rename and import
       TString uniqueName = Form("%s_%s",_dataHist->GetName(),GetName()) ;
-      Bool_t flag = ws.import(*_dataHist,RooFit::Rename(uniqueName.Data()),RooFit::Embedded()) ;
+      bool flag = ws.import(*_dataHist,RooFit::Rename(uniqueName.Data()),RooFit::Embedded()) ;
       if (flag) {
    coutE(ObjectHandling) << " RooHistPdf::importWorkspaceHook(" << GetName() << ") unable to import clone of underlying RooDataHist with unique name " << uniqueName << ", abort" << endl ;
-   return kTRUE ;
+   return true ;
       }
       _dataHist = (RooDataHist*) ws.embeddedData(uniqueName.Data()) ;
 
     }
-    return kFALSE ;
+    return false ;
   }
 
   // We need to import our datahist into the workspace
@@ -576,7 +576,7 @@ Bool_t RooHistPdf::importWorkspaceHook(RooWorkspace& ws)
 
   // Redirect our internal pointer to the copy in the workspace
   _dataHist = (RooDataHist*) ws.embeddedData(_dataHist->GetName()) ;
-  return kFALSE ;
+  return false ;
 }
 
 

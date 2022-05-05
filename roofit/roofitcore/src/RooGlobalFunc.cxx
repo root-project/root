@@ -80,18 +80,18 @@ namespace RooFit {
   RooCmdArg Project(RooArgSet && projSet)          { return Project(RooCmdArg::take(std::move(projSet))); }
   RooCmdArg ProjWData(const RooArgSet& projSet,
                       const RooAbsData& projData,
-                      Bool_t binData)              { return RooCmdArg("ProjData",binData,0,0,0,0,0,&projSet,&projData) ; }
-  RooCmdArg ProjWData(RooArgSet && projSet, const RooAbsData& projData, Bool_t binData) {
+                      bool binData)              { return RooCmdArg("ProjData",binData,0,0,0,0,0,&projSet,&projData) ; }
+  RooCmdArg ProjWData(RooArgSet && projSet, const RooAbsData& projData, bool binData) {
     return ProjWData(RooCmdArg::take(std::move(projSet)), projData, binData);
   }
   RooCmdArg ProjWData(const RooAbsData& projData,
-                      Bool_t binData)              { return RooCmdArg("ProjData",binData,0,0,0,0,0,0,&projData) ; }
+                      bool binData)              { return RooCmdArg("ProjData",binData,0,0,0,0,0,0,&projData) ; }
   RooCmdArg Asymmetry(const RooCategory& cat)      { return RooCmdArg("Asymmetry",0,0,0,0,0,0,&cat,0) ; }
   RooCmdArg Precision(Double_t prec)               { return RooCmdArg("Precision",0,0,prec,0,0,0,0,0) ; }
   RooCmdArg ShiftToZero()                          { return RooCmdArg("ShiftToZero",1,0,0,0,0,0,0,0) ; }
   RooCmdArg Normalization(Double_t scaleFactor)    { return RooCmdArg("Normalization",RooAbsReal::Relative,0,scaleFactor,0,0,0,0,0) ; }
-  RooCmdArg Range(const char* rangeName, Bool_t adjustNorm)   { return RooCmdArg("RangeWithName",adjustNorm,0,0,0,rangeName,0,0,0) ; }
-  RooCmdArg Range(Double_t lo, Double_t hi, Bool_t adjustNorm){ return RooCmdArg("Range",adjustNorm,0,lo,hi,0,0,0,0) ; }
+  RooCmdArg Range(const char* rangeName, bool adjustNorm)   { return RooCmdArg("RangeWithName",adjustNorm,0,0,0,rangeName,0,0,0) ; }
+  RooCmdArg Range(Double_t lo, Double_t hi, bool adjustNorm){ return RooCmdArg("Range",adjustNorm,0,lo,hi,0,0,0,0) ; }
   RooCmdArg NormRange(const char* rangeNameList)   { return RooCmdArg("NormRange",0,0,0,0,rangeNameList,0,0,0) ; }
   RooCmdArg VLines()                               { return RooCmdArg("VLines",1,0,0,0,0,0,0,0) ; }
   RooCmdArg LineColor(Color_t color)               { return RooCmdArg("LineColor",color,0,0,0,0,0,0,0) ; }
@@ -105,10 +105,10 @@ namespace RooFit {
   RooCmdArg AddTo(const char* name, double wgtSel, double wgtOther) { return RooCmdArg("AddTo",0,0,wgtSel,wgtOther,name,0,0,0) ; }
   RooCmdArg EvalErrorValue(Double_t val)           { return RooCmdArg("EvalErrorValue",1,0,val,0,0,0,0,0) ; }
   RooCmdArg MoveToBack()                           { return RooCmdArg("MoveToBack",1,0,0,0,0,0,0,0) ; }
-  RooCmdArg VisualizeError(const RooFitResult& fitres, Double_t Z, Bool_t EVmethod)  { return RooCmdArg("VisualizeError",EVmethod,0,Z,0,0,0,&fitres,0) ; }
-  RooCmdArg VisualizeError(const RooFitResult& fitres, const RooArgSet& param, Double_t Z, Bool_t EVmethod)
+  RooCmdArg VisualizeError(const RooFitResult& fitres, Double_t Z, bool EVmethod)  { return RooCmdArg("VisualizeError",EVmethod,0,Z,0,0,0,&fitres,0) ; }
+  RooCmdArg VisualizeError(const RooFitResult& fitres, const RooArgSet& param, Double_t Z, bool EVmethod)
                                                                   { return RooCmdArg("VisualizeError",EVmethod,0,Z,0,0,0,&fitres,0,0,0,&param) ; }
-  RooCmdArg VisualizeError(const RooFitResult& fitres, RooArgSet && param, Double_t Z, Bool_t linearMethod) {
+  RooCmdArg VisualizeError(const RooFitResult& fitres, RooArgSet && param, Double_t Z, bool linearMethod) {
     return VisualizeError(fitres, RooCmdArg::take(std::move(param)), Z, linearMethod);
   }
   RooCmdArg VisualizeError(const RooDataSet& paramData, Double_t Z) { return RooCmdArg("VisualizeErrorData",0,0,Z,0,0,0,&paramData,0) ; }
@@ -139,7 +139,7 @@ namespace RooFit {
   RooCmdArg Index(RooCategory& icat)                      { return RooCmdArg("IndexCat",0,0,0,0,0,0,&icat,0) ; }
   RooCmdArg Import(const char* state, TH1& histo)         { return RooCmdArg("ImportHistoSlice",0,0,0,0,state,0,&histo,0) ; }
   RooCmdArg Import(const char* state, RooDataHist& dhist) { return RooCmdArg("ImportDataHistSlice",0,0,0,0,state,0,&dhist,0) ; }
-  RooCmdArg Import(TH1& histo, Bool_t importDensity)      { return RooCmdArg("ImportHisto",importDensity,0,0,0,0,0,&histo,0) ; }
+  RooCmdArg Import(TH1& histo, bool importDensity)      { return RooCmdArg("ImportHisto",importDensity,0,0,0,0,0,&histo,0) ; }
 
   RooCmdArg Import(const std::map<std::string,RooDataHist*>& arg) {
     return processMap("ImportDataHistSliceMany", processImportItem<RooDataHist>, arg);
@@ -150,8 +150,8 @@ namespace RooFit {
 
 
   // RooDataSet::ctor arguments
-  RooCmdArg WeightVar(const char* name, Bool_t reinterpretAsWeight) { return RooCmdArg("WeightVarName",reinterpretAsWeight,0,0,0,name,0,0,0) ; }
-  RooCmdArg WeightVar(const RooRealVar& arg, Bool_t reinterpretAsWeight)  { return RooCmdArg("WeightVar",reinterpretAsWeight,0,0,0,0,0,&arg,0) ; }
+  RooCmdArg WeightVar(const char* name, bool reinterpretAsWeight) { return RooCmdArg("WeightVarName",reinterpretAsWeight,0,0,0,name,0,0,0) ; }
+  RooCmdArg WeightVar(const RooRealVar& arg, bool reinterpretAsWeight)  { return RooCmdArg("WeightVar",reinterpretAsWeight,0,0,0,0,0,&arg,0) ; }
   RooCmdArg Link(const char* state, RooAbsData& data)   { return RooCmdArg("LinkDataSlice",0,0,0,0,state,0,&data,0) ;}
   RooCmdArg Import(const char* state, RooDataSet& data) { return RooCmdArg("ImportDataSlice",0,0,0,0,state,0,&data,0) ; }
   RooCmdArg Import(RooDataSet& data)                    { return RooCmdArg("ImportData",0,0,0,0,0,0,&data,0) ; }
@@ -172,7 +172,7 @@ namespace RooFit {
 
 
   // RooChi2Var::ctor / RooNLLVar arguments
-  RooCmdArg Extended(Bool_t flag) { return RooCmdArg("Extended",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg Extended(bool flag) { return RooCmdArg("Extended",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg DataError(Int_t etype) { return RooCmdArg("DataError",(Int_t)etype,0,0,0,0,0,0,0) ; }
   RooCmdArg NumCPU(Int_t nCPU, Int_t interleave)   { return RooCmdArg("NumCPU",nCPU,interleave,0,0,0,0,0,0) ; }
   RooCmdArg BatchMode(std::string const& batchMode) {
@@ -200,7 +200,7 @@ namespace RooFit {
                    const RooCmdArg& arg5,const RooCmdArg& arg6,const RooCmdArg& arg7,const RooCmdArg& arg8) {
             RooCmdArg ret("FormatArgs",0,0,0,0,what,0,0,0) ; ret.addArg(arg1) ; ret.addArg(arg2) ;
             ret.addArg(arg3) ; ret.addArg(arg4) ; ret.addArg(arg5) ; ret.addArg(arg6) ; ret.addArg(arg7) ; ret.addArg(arg8) ;
-            ret.setProcessRecArgs(kFALSE) ; return ret ;
+            ret.setProcessRecArgs(false) ; return ret ;
   }
 
   // RooAbsRealLValue::frame arguments
@@ -217,18 +217,18 @@ namespace RooFit {
   // RooAbsPdf::fitTo arguments
   RooCmdArg PrefitDataFraction(Double_t data_ratio)  { return RooCmdArg("Prefit",0,0,data_ratio,0,nullptr,nullptr,nullptr,nullptr) ; }
   RooCmdArg Optimize(Int_t flag)         { return RooCmdArg("Optimize",flag,0,0,0,0,0,0,0) ; }
-  RooCmdArg Verbose(Bool_t flag)         { return RooCmdArg("Verbose",flag,0,0,0,0,0,0,0) ; }
-  RooCmdArg Save(Bool_t flag)            { return RooCmdArg("Save",flag,0,0,0,0,0,0,0) ; }
-  RooCmdArg Timer(Bool_t flag)           { return RooCmdArg("Timer",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg Verbose(bool flag)         { return RooCmdArg("Verbose",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg Save(bool flag)            { return RooCmdArg("Save",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg Timer(bool flag)           { return RooCmdArg("Timer",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg PrintLevel(Int_t level)      { return RooCmdArg("PrintLevel",level,0,0,0,0,0,0,0) ; }
-  RooCmdArg Warnings(Bool_t flag)        { return RooCmdArg("Warnings",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg Warnings(bool flag)        { return RooCmdArg("Warnings",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg Strategy(Int_t code)         { return RooCmdArg("Strategy",code,0,0,0,0,0,0,0) ; }
-  RooCmdArg InitialHesse(Bool_t flag)    { return RooCmdArg("InitialHesse",flag,0,0,0,0,0,0,0) ; }
-  RooCmdArg Hesse(Bool_t flag)           { return RooCmdArg("Hesse",flag,0,0,0,0,0,0,0) ; }
-  RooCmdArg Minos(Bool_t flag)           { return RooCmdArg("Minos",flag,0,0,0,0,0,0,0) ; }
-  RooCmdArg Minos(const RooArgSet& minosArgs)            { return RooCmdArg("Minos",kTRUE,0,0,0,0,0,&minosArgs,0) ; }
+  RooCmdArg InitialHesse(bool flag)    { return RooCmdArg("InitialHesse",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg Hesse(bool flag)           { return RooCmdArg("Hesse",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg Minos(bool flag)           { return RooCmdArg("Minos",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg Minos(const RooArgSet& minosArgs)            { return RooCmdArg("Minos",true,0,0,0,0,0,&minosArgs,0) ; }
   RooCmdArg Minos(RooArgSet && minosArgs) { return Minos(RooCmdArg::take(std::move(minosArgs))); }
-  RooCmdArg SplitRange(Bool_t flag)                      { return RooCmdArg("SplitRange",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg SplitRange(bool flag)                      { return RooCmdArg("SplitRange",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg SumCoefRange(const char* rangeName)          { return RooCmdArg("SumCoefRange",0,0,0,0,rangeName,0,0,0) ; }
   RooCmdArg Constrain(const RooArgSet& params)           { return RooCmdArg("Constrain",0,0,0,0,0,0,0,0,0,0,&params) ; }
   RooCmdArg Constrain(RooArgSet && params) { return Constrain(RooCmdArg::take(std::move(params))); }
@@ -237,13 +237,13 @@ namespace RooFit {
   RooCmdArg ExternalConstraints(const RooArgSet& cpdfs)  { return RooCmdArg("ExternalConstraints",0,0,0,0,0,0,&cpdfs,0,0,0,&cpdfs) ; }
   RooCmdArg ExternalConstraints(RooArgSet && cpdfs)      { return ExternalConstraints(RooCmdArg::take(std::move(cpdfs))); }
   RooCmdArg PrintEvalErrors(Int_t numErrors)             { return RooCmdArg("PrintEvalErrors",numErrors,0,0,0,0,0,0,0) ; }
-  RooCmdArg EvalErrorWall(Bool_t flag)                   { return RooCmdArg("EvalErrorWall",flag,0,0,0,0,0,0,0) ; }
-  RooCmdArg SumW2Error(Bool_t flag)                      { return RooCmdArg("SumW2Error",flag,0,0,0,0,0,0,0) ; }
-  RooCmdArg AsymptoticError(Bool_t flag)                      { return RooCmdArg("AsymptoticError",flag,0,0,0,0,0,0,0) ; }
-  RooCmdArg CloneData(Bool_t flag)                       { return RooCmdArg("CloneData",flag,0,0,0,0,0,0,0) ; }
-  RooCmdArg Integrate(Bool_t flag)                       { return RooCmdArg("Integrate",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg EvalErrorWall(bool flag)                   { return RooCmdArg("EvalErrorWall",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg SumW2Error(bool flag)                      { return RooCmdArg("SumW2Error",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg AsymptoticError(bool flag)                      { return RooCmdArg("AsymptoticError",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg CloneData(bool flag)                       { return RooCmdArg("CloneData",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg Integrate(bool flag)                       { return RooCmdArg("Integrate",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg Minimizer(const char* type, const char* alg) { return RooCmdArg("Minimizer",0,0,0,0,type,alg,0,0) ; }
-  RooCmdArg Offset(Bool_t flag)                          { return RooCmdArg("OffsetLikelihood",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg Offset(bool flag)                          { return RooCmdArg("OffsetLikelihood",flag,0,0,0,0,0,0,0) ; }
   /// When parameters are chosen such that a PDF is undefined, try to indicate to the minimiser how to leave this region.
   /// \param strength Strength of hints for minimiser. Set to zero to switch off.
   RooCmdArg RecoverFromUndefinedRegions(double strength) { return RooCmdArg("RecoverFromUndefinedRegions",0,0,strength,0,0,0,0,0) ; }
@@ -254,31 +254,31 @@ namespace RooFit {
   RooCmdArg Layout(Double_t xmin, Double_t xmax, Double_t ymin) { return RooCmdArg("Layout",Int_t(ymin*10000),0,xmin,xmax,0,0,0,0) ; }
   RooCmdArg Parameters(const RooArgSet& params) { return RooCmdArg("Parameters",0,0,0,0,0,0,&params,0) ; }
   RooCmdArg Parameters(RooArgSet && params) { return Parameters(RooCmdArg::take(std::move(params))) ; }
-  RooCmdArg ShowConstants(Bool_t flag) { return RooCmdArg("ShowConstants",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg ShowConstants(bool flag) { return RooCmdArg("ShowConstants",flag,0,0,0,0,0,0,0) ; }
 
   // RooTreeData::statOn arguments
   RooCmdArg What(const char* str) { return RooCmdArg("What",0,0,0,0,str,0,0,0) ; }
 
   // RooProdPdf::ctor arguments
-  RooCmdArg Conditional(const RooArgSet& pdfSet, const RooArgSet& depSet, Bool_t depsAreCond) { return RooCmdArg("Conditional",depsAreCond,0,0,0,0,0,0,0,0,0,&pdfSet,&depSet) ; } ;
-  RooCmdArg Conditional(RooArgSet && pdfSet, const RooArgSet& depSet, Bool_t depsAreCond) {
+  RooCmdArg Conditional(const RooArgSet& pdfSet, const RooArgSet& depSet, bool depsAreCond) { return RooCmdArg("Conditional",depsAreCond,0,0,0,0,0,0,0,0,0,&pdfSet,&depSet) ; } ;
+  RooCmdArg Conditional(RooArgSet && pdfSet, const RooArgSet& depSet, bool depsAreCond) {
     return Conditional(RooCmdArg::take(std::move(pdfSet)), depSet, depsAreCond);
   }
-  RooCmdArg Conditional(const RooArgSet& pdfSet, RooArgSet && depSet, Bool_t depsAreCond) {
+  RooCmdArg Conditional(const RooArgSet& pdfSet, RooArgSet && depSet, bool depsAreCond) {
     return Conditional(pdfSet, RooCmdArg::take(std::move(depSet)), depsAreCond);
   }
-  RooCmdArg Conditional(RooArgSet && pdfSet, RooArgSet && depSet, Bool_t depsAreCond) {
+  RooCmdArg Conditional(RooArgSet && pdfSet, RooArgSet && depSet, bool depsAreCond) {
     return Conditional(RooCmdArg::take(std::move(pdfSet)), RooCmdArg::take(std::move(depSet)), depsAreCond);
   }
 
   // RooAbsPdf::generate arguments
-  RooCmdArg ProtoData(const RooDataSet& protoData, Bool_t randomizeOrder, Bool_t resample)
+  RooCmdArg ProtoData(const RooDataSet& protoData, bool randomizeOrder, bool resample)
                                          { return RooCmdArg("PrototypeData",randomizeOrder,resample,0,0,0,0,&protoData,0) ; }
   RooCmdArg NumEvents(Int_t numEvents)   { return RooCmdArg("NumEvents",numEvents,0,0,0,0,0,0,0) ; }
   RooCmdArg NumEvents(Double_t numEvents)   { return RooCmdArg("NumEventsD",0,0,numEvents,0,0,0,0,0) ; }
-  RooCmdArg ExpectedData(Bool_t flag)    { return RooCmdArg("ExpectedData",flag,0,0,0,0,0,0,0) ; }
-  RooCmdArg Asimov(Bool_t flag)          { return ExpectedData(flag) ; }
-  RooCmdArg AutoBinned(Bool_t flag)      { return RooCmdArg("AutoBinned",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg ExpectedData(bool flag)    { return RooCmdArg("ExpectedData",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg Asimov(bool flag)          { return ExpectedData(flag) ; }
+  RooCmdArg AutoBinned(bool flag)      { return RooCmdArg("AutoBinned",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg GenBinned(const char* tag)   { return RooCmdArg("GenBinned",0,0,0,0,tag,0,0,0) ; }
   RooCmdArg AllBinned()                  { return RooCmdArg("GenBinned",0,0,0,0,"*",0,0,0) ; }
 
@@ -287,10 +287,10 @@ namespace RooFit {
   RooCmdArg YVar(const RooAbsRealLValue& var, const RooCmdArg& arg)       { return RooCmdArg("YVar",0,0,0,0,0,0,&var,0,&arg) ; }
   RooCmdArg ZVar(const RooAbsRealLValue& var, const RooCmdArg& arg)       { return RooCmdArg("ZVar",0,0,0,0,0,0,&var,0,&arg) ; }
   RooCmdArg AxisLabel(const char* name)                                   { return RooCmdArg("AxisLabel",0,0,0,0,name,0,0,0) ; }
-  RooCmdArg Scaling(Bool_t flag)                                          { return RooCmdArg("Scaling",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg Scaling(bool flag)                                          { return RooCmdArg("Scaling",flag,0,0,0,0,0,0,0) ; }
 
   // RooAbsReal::createHistogram arguments
-  RooCmdArg IntrinsicBinning(Bool_t flag)                                 { return RooCmdArg("IntrinsicBinning",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg IntrinsicBinning(bool flag)                                 { return RooCmdArg("IntrinsicBinning",flag,0,0,0,0,0,0,0) ; }
 
   // RooAbsData::createHistogram arguments
   RooCmdArg AutoSymBinning(Int_t nbins, Double_t marginFactor) { return RooCmdArg("AutoRangeData",1,nbins,marginFactor,0,0,0,0,0) ; }
@@ -304,15 +304,15 @@ namespace RooFit {
   RooCmdArg NumIntConfig(const RooNumIntConfig& cfg) { return RooCmdArg("NumIntConfig",0,0,0,0,0,0,&cfg,0) ; }
 
   // RooMCStudy::ctor arguments
-  RooCmdArg Silence(Bool_t flag) { return RooCmdArg("Silence",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg Silence(bool flag) { return RooCmdArg("Silence",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg FitModel(RooAbsPdf& pdf) { return RooCmdArg("FitModel",0,0,0,0,0,0,&pdf,0) ; }
   RooCmdArg FitOptions(const RooCmdArg& arg1 ,const RooCmdArg& arg2, const RooCmdArg& arg3,
                        const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6) {
              RooCmdArg ret("FitOptArgs",0,0,0,0,0,0,0,0) ; ret.addArg(arg1) ; ret.addArg(arg2) ;
              ret.addArg(arg3) ; ret.addArg(arg4) ; ret.addArg(arg5) ; ret.addArg(arg6) ;
-             ret.setProcessRecArgs(kFALSE) ; return ret ;
+             ret.setProcessRecArgs(false) ; return ret ;
   }
-  RooCmdArg Binned(Bool_t flag)               { return RooCmdArg("Binned",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg Binned(bool flag)               { return RooCmdArg("Binned",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg BootStrapData(const RooDataSet& dset) { return RooCmdArg("BootStrapData",0,0,0,0,0,0,&dset,0) ; }
 
 
@@ -322,24 +322,24 @@ namespace RooFit {
                   const RooCmdArg& arg5,const RooCmdArg& arg6) {
             RooCmdArg ret("FrameArgs",0,0,0,0,0,0,0,0) ; ret.addArg(arg1) ; ret.addArg(arg2) ;
             ret.addArg(arg3) ; ret.addArg(arg4) ; ret.addArg(arg5) ; ret.addArg(arg6) ;
-            ret.setProcessRecArgs(kFALSE) ; return ret ;
+            ret.setProcessRecArgs(false) ; return ret ;
   }
   RooCmdArg FrameBins(Int_t nbins)                 { return RooCmdArg("Bins",nbins,0,0,0,0,0,0,0) ; }
   RooCmdArg FrameRange(Double_t xlo, Double_t xhi) { return RooCmdArg("Range",0,0,xlo,xhi,0,0,0,0) ; }
-  RooCmdArg FitGauss(Bool_t flag)                  { return RooCmdArg("FitGauss",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg FitGauss(bool flag)                  { return RooCmdArg("FitGauss",flag,0,0,0,0,0,0,0) ; }
 
   // RooRealVar::format arguments
-  RooCmdArg ShowName(Bool_t flag)             { return RooCmdArg("ShowName",flag,0,0,0,0,0,0,0) ; }
-  RooCmdArg ShowValue(Bool_t flag)            { return RooCmdArg("ShowValue",flag,0,0,0,0,0,0,0) ; }
-  RooCmdArg ShowError(Bool_t flag)            { return RooCmdArg("ShowError",flag,0,0,0,0,0,0,0) ; }
-  RooCmdArg ShowAsymError(Bool_t flag)        { return RooCmdArg("ShowAsymError",flag,0,0,0,0,0,0,0) ; }
-  RooCmdArg ShowUnit(Bool_t flag)             { return RooCmdArg("ShowUnit",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg ShowName(bool flag)             { return RooCmdArg("ShowName",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg ShowValue(bool flag)            { return RooCmdArg("ShowValue",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg ShowError(bool flag)            { return RooCmdArg("ShowError",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg ShowAsymError(bool flag)        { return RooCmdArg("ShowAsymError",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg ShowUnit(bool flag)             { return RooCmdArg("ShowUnit",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg AutoPrecision(Int_t ndigit)   { return RooCmdArg("AutoPrecision",ndigit,0,0,0,0,0,0,0) ; }
   RooCmdArg FixedPrecision(Int_t ndigit)  { return RooCmdArg("FixedPrecision",ndigit,0,0,0,0,0,0,0) ; }
-  RooCmdArg TLatexStyle(Bool_t flag)      { return RooCmdArg("TLatexStyle",flag,0,0,0,0,0,0,0) ; }
-  RooCmdArg LatexStyle(Bool_t flag)       { return RooCmdArg("LatexStyle",flag,0,0,0,0,0,0,0) ; }
-  RooCmdArg LatexTableStyle(Bool_t flag)  { return RooCmdArg("LatexTableStyle",flag,0,0,0,0,0,0,0) ; }
-  RooCmdArg VerbatimName(Bool_t flag)     { return RooCmdArg("VerbatimName",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg TLatexStyle(bool flag)      { return RooCmdArg("TLatexStyle",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg LatexStyle(bool flag)       { return RooCmdArg("LatexStyle",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg LatexTableStyle(bool flag)  { return RooCmdArg("LatexTableStyle",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg VerbatimName(bool flag)     { return RooCmdArg("VerbatimName",flag,0,0,0,0,0,0,0) ; }
 
   // RooMsgService::addReportingStream arguments
   RooCmdArg Topic(Int_t topic)              { return RooCmdArg("Topic",topic,0,0,0,0,0,0,0) ; }
@@ -348,20 +348,20 @@ namespace RooFit {
   RooCmdArg BaseClassName(const char* name) { return RooCmdArg("BaseClassName",0,0,0,0,name,0,0,0) ; }
   RooCmdArg TagName(const char* name)     { return RooCmdArg("LabelName",0,0,0,0,name,0,0,0) ; }
   RooCmdArg OutputStream(ostream& os)    { return RooCmdArg("OutputStream",0,0,0,0,0,0,new RooHelpers::WrapIntoTObject<ostream>(os),0) ; }
-  RooCmdArg Prefix(Bool_t flag)          { return RooCmdArg("Prefix",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg Prefix(bool flag)          { return RooCmdArg("Prefix",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg Color(Color_t color)         { return RooCmdArg("Color",color,0,0,0,0,0,0,0) ; }
 
 
   // RooWorkspace::import() arguments
-  RooCmdArg RenameConflictNodes(const char* suffix, Bool_t ro) { return RooCmdArg("RenameConflictNodes",ro,0,0,0,suffix,0,0,0) ; }
-  RooCmdArg RecycleConflictNodes(Bool_t flag)               { return RooCmdArg("RecycleConflictNodes",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg RenameConflictNodes(const char* suffix, bool ro) { return RooCmdArg("RenameConflictNodes",ro,0,0,0,suffix,0,0,0) ; }
+  RooCmdArg RecycleConflictNodes(bool flag)               { return RooCmdArg("RecycleConflictNodes",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg RenameAllNodes(const char* suffix)              { return RooCmdArg("RenameAllNodes",0,0,0,0,suffix,0,0,0) ; }
   RooCmdArg RenameAllVariables(const char* suffix)          { return RooCmdArg("RenameAllVariables",0,0,0,0,suffix,0,0,0) ; }
   RooCmdArg RenameAllVariablesExcept(const char* suffix, const char* except)    { return RooCmdArg("RenameAllVariables",0,0,0,0,suffix,except,0,0) ; }
   RooCmdArg RenameVariable(const char* in, const char* out) { return RooCmdArg("RenameVar",0,0,0,0,in,out,0,0) ; }
   RooCmdArg Rename(const char* suffix)                      { return RooCmdArg("Rename",0,0,0,0,suffix,0,0,0) ; }
-  RooCmdArg Embedded(Bool_t flag)                           { return RooCmdArg("Embedded",flag,0,0,0,0,0,0,0) ; }
-  RooCmdArg NoRecursion(Bool_t flag)                        { return RooCmdArg("NoRecursion",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg Embedded(bool flag)                           { return RooCmdArg("Embedded",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg NoRecursion(bool flag)                        { return RooCmdArg("NoRecursion",flag,0,0,0,0,0,0,0) ; }
 
   // RooSimCloneTool::build() arguments
   RooCmdArg SplitParam(const char* varname, const char* catname)         { return RooCmdArg("SplitParam",0,0,0,0,varname,catname,0,0) ; }
@@ -383,7 +383,7 @@ namespace RooFit {
                      const RooCmdArg& arg5,const RooCmdArg& arg6,const RooCmdArg& arg7,const RooCmdArg& arg8) {
     RooCmdArg ret("MultiArg",0,0,0,0,0,0,0,0) ; ret.addArg(arg1) ; ret.addArg(arg2) ;
     ret.addArg(arg3) ; ret.addArg(arg4) ; ret.addArg(arg5) ; ret.addArg(arg6) ; ret.addArg(arg7) ; ret.addArg(arg8) ;
-    ret.setProcessRecArgs(kTRUE,kFALSE) ; return ret ;
+    ret.setProcessRecArgs(true,false) ; return ret ;
   }
 
   RooConstVar& RooConst(Double_t val) { return RooRealConstant::value(val) ; }

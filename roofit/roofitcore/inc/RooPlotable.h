@@ -47,7 +47,7 @@ public:
   virtual Double_t getFitRangeNEvt(Double_t xlo, Double_t xhi) const = 0;
   virtual Double_t getFitRangeBinW() const = 0;
 
-  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent= "") const override;
+  void printMultiline(std::ostream& os, Int_t contents, bool verbose=false, TString indent= "") const override;
 
   TObject *crossCast();
 protected:

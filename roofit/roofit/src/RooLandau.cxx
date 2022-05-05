@@ -68,7 +68,7 @@ void RooLandau::computeBatch(cudaStream_t* stream, double* output, size_t nEvent
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooLandau::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
+Int_t RooLandau::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool /*staticInitOK*/) const
 {
   if (matchArgs(directVars,generateVars,x)) return 1 ;
   return 0 ;

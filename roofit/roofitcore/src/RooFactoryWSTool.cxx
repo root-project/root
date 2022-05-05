@@ -426,7 +426,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
       } else if ((*ti)=="const char*") {
    RooFactoryWSTool::as_STRING(i) ;
    cintExpr += Form(",RooFactoryWSTool::as_STRING(%d)",i) ;
-      } else if ((*ti)=="Int_t" || (*ti)=="int" || (*ti)=="Bool_t" || (*ti)=="bool") {
+      } else if ((*ti)=="Int_t" || (*ti)=="int" || (*ti)=="bool" || (*ti)=="bool") {
    RooFactoryWSTool::as_INT(i) ;
    cintExpr += Form(",RooFactoryWSTool::as_INT(%d)",i) ;
       } else if ((*ti)=="Double_t") {
@@ -503,7 +503,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooAddPdf* RooFactoryWSTool::add(const char *objName, const char* specList, Bool_t recursiveCoefs)
+RooAddPdf* RooFactoryWSTool::add(const char *objName, const char* specList, bool recursiveCoefs)
 {
   // Spec list is of form a*A,b*B,c*C,D [ *d]
 
@@ -606,9 +606,9 @@ RooProdPdf* RooFactoryWSTool::prod(const char *objName, const char* pdfList)
       sep++ ;
 
       // |x is conditional on x, |~x is conditional on all but x
-      Bool_t invCond(kFALSE) ;
+      bool invCond(false) ;
       if (*sep=='~') {
-   invCond=kTRUE ;
+   invCond=true ;
    sep++ ;
       }
 
@@ -952,7 +952,7 @@ std::string RooFactoryWSTool::processCompositeExpression(const char* token)
   list<string> singleExpr ;
   list<char> separator ;
   Int_t blevel(0) ;
-  Bool_t litmode(kFALSE) ;
+  bool litmode(false) ;
   while(*p) {
 
     // Keep track of opening and closing brackets
@@ -1041,7 +1041,7 @@ std::string RooFactoryWSTool::processSingleExpression(const char* arg)
 
   char* tok = p ;
   Int_t blevel=0 ;
-  Bool_t litmode(kFALSE) ;
+  bool litmode(false) ;
   while(*p) {
 
     // Keep track of opening and closing brackets
@@ -1259,7 +1259,7 @@ TClass* RooFactoryWSTool::resolveClassName(const char* className)
   }
 
   // Now find dealiased class in ROOT class table
-  TClass* tc =  TClass::GetClass(className,kTRUE,kTRUE) ;
+  TClass* tc =  TClass::GetClass(className,true,true) ;
 
   // If its not there, try prefixing with Roo
   if (!tc) {
@@ -1472,7 +1472,7 @@ vector<string> RooFactoryWSTool::splitFunctionArgs(const char* funcExpr)
 
   char* tok = p ;
   Int_t blevel=0 ;
-  Bool_t litmode(kFALSE) ;
+  bool litmode(false) ;
   while(*p) {
 
     // Keep track of opening and closing brackets
@@ -1524,7 +1524,7 @@ vector<string> RooFactoryWSTool::splitFunctionArgs(const char* funcExpr)
 /// Perform basic syntax on given factory expression. If function returns
 /// true syntax errors are found.
 
-Bool_t RooFactoryWSTool::checkSyntax(const char* arg)
+bool RooFactoryWSTool::checkSyntax(const char* arg)
 {
   // Count parentheses
   Int_t nParentheses(0), nBracket(0), nAccolade(0) ;
@@ -1540,17 +1540,17 @@ Bool_t RooFactoryWSTool::checkSyntax(const char* arg)
   }
   if (nParentheses!=0) {
     coutE(ObjectHandling) << "RooFactoryWSTool::checkSyntax ERROR non-matching '" << (nParentheses>0?"(":")") << "' in expression" << endl ;
-    return kTRUE ;
+    return true ;
   }
   if (nBracket!=0) {
     coutE(ObjectHandling) << "RooFactoryWSTool::checkSyntax ERROR non-matching '" << (nBracket>0?"[":"]") << "' in expression" << endl ;
-    return kTRUE ;
+    return true ;
   }
   if (nAccolade!=0) {
     coutE(ObjectHandling) << "RooFactoryWSTool::checkSyntax ERROR non-matching '" << (nAccolade>0?"{":"}") << "' in expression" << endl ;
-    return kTRUE ;
+    return true ;
   }
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -1972,12 +1972,12 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
   if (cl=="SUM") {
 
     // SUM::name[a*A,b*B,C]
-    ft.add(instName,pargs,kFALSE) ;
+    ft.add(instName,pargs,false) ;
 
   } else if (cl=="RSUM") {
 
     // RSUM::name[a*A,b*B,C]
-    ft.add(instName,pargs,kTRUE) ;
+    ft.add(instName,pargs,true) ;
 
   } else if (cl=="ASUM") {
 

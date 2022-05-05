@@ -30,13 +30,13 @@ public:
   // Analytical integration support
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=0) const override ;
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
-  Bool_t forceAnalyticalInt(const RooAbsArg& dep) const override ;
+  bool forceAnalyticalInt(const RooAbsArg& dep) const override ;
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const override;
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void initGenerator(Int_t /*code*/) override {} ; // optional pre-generation initialization
   void generateEvent(Int_t code) override;
 
-  Bool_t selfNormalized() const override { return kTRUE ; }
+  bool selfNormalized() const override { return true ; }
 
   // Handle projection of projection explicitly
   RooAbsPdf* createProjection(const RooArgSet& iset) override ;
@@ -61,7 +61,7 @@ protected:
   } ;
   mutable RooObjCacheManager _cacheMgr ; ///<! The cache manager
 
-  Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) override ;
+  bool redirectServersHook(const RooAbsCollection& newServerList, bool /*mustReplaceAll*/, bool /*nameChange*/, bool /*isRecursive*/) override ;
 
   const RooAbsReal* getProjection(const RooArgSet* iset, const RooArgSet* nset, const char* rangeName, int& code) const ;
   Double_t evaluate() const override ;

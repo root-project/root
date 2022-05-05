@@ -172,7 +172,7 @@ RooSpan<double> RooFormulaVar::evaluateSpan(RooBatchCompute::RunContext& inputDa
 ////////////////////////////////////////////////////////////////////////////////
 /// Propagate server change information to embedded RooFormula object
 
-Bool_t RooFormulaVar::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t /*isRecursive*/)
+bool RooFormulaVar::redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool /*isRecursive*/)
 {
   bool success = getFormula().changeDependents(newServerList,mustReplaceAll,nameChange);
 
@@ -185,7 +185,7 @@ Bool_t RooFormulaVar::redirectServersHook(const RooAbsCollection& newServerList,
 ////////////////////////////////////////////////////////////////////////////////
 /// Print info about this object to the specified stream.
 
-void RooFormulaVar::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TString indent) const
+void RooFormulaVar::printMultiline(ostream& os, Int_t contents, bool verbose, TString indent) const
 {
   RooAbsReal::printMultiline(os,contents,verbose,indent);
   if(verbose) {
@@ -211,10 +211,10 @@ void RooFormulaVar::printMetaArgs(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Read object contents from given stream
 
-Bool_t RooFormulaVar::readFromStream(istream& /*is*/, Bool_t /*compact*/, Bool_t /*verbose*/)
+bool RooFormulaVar::readFromStream(istream& /*is*/, bool /*compact*/, bool /*verbose*/)
 {
   coutE(InputArguments) << "RooFormulaVar::readFromStream(" << GetName() << "): can't read" << endl ;
-  return kTRUE ;
+  return true ;
 }
 
 
@@ -222,7 +222,7 @@ Bool_t RooFormulaVar::readFromStream(istream& /*is*/, Bool_t /*compact*/, Bool_t
 ////////////////////////////////////////////////////////////////////////////////
 /// Write object contents to given stream
 
-void RooFormulaVar::writeToStream(ostream& os, Bool_t compact) const
+void RooFormulaVar::writeToStream(ostream& os, bool compact) const
 {
   if (compact) {
     cout << getVal() << endl ;

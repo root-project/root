@@ -78,22 +78,22 @@ ClassImp(RooRealMPFE);
 /// asynchronously in a separate process. If calcInline is true the value of 'arg'
 /// is calculate synchronously in the current process.
 
-RooRealMPFE::RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, Bool_t calcInline) :
+RooRealMPFE::RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, bool calcInline) :
   RooAbsReal(name,title),
   _state(Initialize),
   _arg("arg","arg",this,arg),
   _vars("vars","vars",this),
-  _calcInProgress(kFALSE),
-  _verboseClient(kFALSE),
-  _verboseServer(kFALSE),
+  _calcInProgress(false),
+  _verboseClient(false),
+  _verboseServer(false),
   _inlineMode(calcInline),
   _remoteEvalErrorLoggingState(RooAbsReal::PrintErrors),
   _pipe(0),
   _updateMaster(0),
-  _retrieveDispatched(kFALSE), _evalCarry(0.)
+  _retrieveDispatched(false), _evalCarry(0.)
 {
 #ifdef _WIN32
-  _inlineMode = kTRUE;
+  _inlineMode = true;
 #endif
   initVars() ;
   _sentinel.add(*this) ;
@@ -111,7 +111,7 @@ RooRealMPFE::RooRealMPFE(const RooRealMPFE& other, const char* name) :
   _state(Initialize),
   _arg("arg",this,other._arg),
   _vars("vars",this,other._vars),
-  _calcInProgress(kFALSE),
+  _calcInProgress(false),
   _verboseClient(other._verboseClient),
   _verboseServer(other._verboseServer),
   _inlineMode(other._inlineMode),
@@ -119,7 +119,7 @@ RooRealMPFE::RooRealMPFE(const RooRealMPFE& other, const char* name) :
   _remoteEvalErrorLoggingState(other._remoteEvalErrorLoggingState),
   _pipe(0),
   _updateMaster(0),
-  _retrieveDispatched(kFALSE), _evalCarry(other._evalCarry)
+  _retrieveDispatched(false), _evalCarry(other._evalCarry)
 {
   initVars() ;
   _sentinel.add(*this) ;
@@ -149,7 +149,7 @@ void RooRealMPFE::initVars()
 
   // Retrieve non-constant parameters
   RooArgSet* vars = _arg.arg().getParameters(RooArgSet()) ;
-  //RooArgSet* ncVars = (RooArgSet*) vars->selectByAttrib("Constant",kFALSE) ;
+  //RooArgSet* ncVars = (RooArgSet*) vars->selectByAttrib("Constant",false) ;
   RooArgList varList(*vars) ;
 
   // Save in lists
@@ -159,7 +159,7 @@ void RooRealMPFE::initVars()
   _constChanged.resize(_vars.getSize()) ;
 
   // Force next calculation
-  _forceCalc = kTRUE ;
+  _forceCalc = true ;
 
   delete vars ;
   //delete ncVars ;
@@ -214,7 +214,7 @@ void RooRealMPFE::initialize()
    GetName() << ") successfully forked server process " <<
        _pipe->pidOtherEnd() << endl ;
     _state = Client ;
-    _calcInProgress = kFALSE ;
+    _calcInProgress = false ;
   }
 #endif // _WIN32
 }
@@ -232,7 +232,7 @@ void RooRealMPFE::serverLoop()
 
   Int_t idx, index, numErrors ;
   Double_t value ;
-  Bool_t isConst ;
+  bool isConst ;
 
   clearEvalErrorLog() ;
 
@@ -279,9 +279,9 @@ void RooRealMPFE::serverLoop()
       if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName()
                 << ") IPC fromClient> Calculate" << endl ;
 
-      RooAbsReal::setHideOffset(kFALSE) ;
+      RooAbsReal::setHideOffset(false) ;
       _value = _arg ;
-      RooAbsReal::setHideOffset(kTRUE) ;
+      RooAbsReal::setHideOffset(true) ;
       break ;
 
     case Retrieve:
@@ -328,7 +328,7 @@ void RooRealMPFE::serverLoop()
 
     case ConstOpt:
       {
-   Bool_t doTrack ;
+   bool doTrack ;
    int code;
    *_pipe >> code >> doTrack;
    if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName()
@@ -339,7 +339,7 @@ void RooRealMPFE::serverLoop()
 
     case Verbose:
       {
-      Bool_t flag ;
+      bool flag ;
       *_pipe >> flag;
       if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName()
                 << ") IPC fromClient> Verbose " << (flag?1:0) << endl ;
@@ -350,7 +350,7 @@ void RooRealMPFE::serverLoop()
 
     case ApplyNLLW2:
       {
-      Bool_t flag ;
+      bool flag ;
       *_pipe >> flag;
       if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName()
                 << ") IPC fromClient> ApplyNLLW2 " << (flag?1:0) << endl ;
@@ -362,7 +362,7 @@ void RooRealMPFE::serverLoop()
 
     case EnableOffset:
       {
-      Bool_t flag ;
+      bool flag ;
       *_pipe >> flag;
       if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName()
                 << ") IPC fromClient> EnableOffset " << (flag?1:0) << endl ;
@@ -431,10 +431,10 @@ void RooRealMPFE::calculate() const
     while((var = viter.next())) {
       saveVar = siter.next() ;
 
-      //Bool_t valChanged = !(*var==*saveVar) ;
-      Bool_t valChanged,constChanged  ;
+      //bool valChanged = !(*var==*saveVar) ;
+      bool valChanged,constChanged  ;
       if (!_updateMaster) {
-   valChanged = !var->isIdentical(*saveVar,kTRUE) ;
+   valChanged = !var->isIdentical(*saveVar,true) ;
    constChanged = (var->isConstant() != saveVar->isConstant()) ;
    _valueChanged[i] = valChanged ;
    _constChanged[i] = constChanged ;
@@ -456,7 +456,7 @@ void RooRealMPFE::calculate() const
    if (dynamic_cast<RooAbsReal*>(var)) {
      int msg = SendReal ;
      Double_t val = ((RooAbsReal*)var)->getVal() ;
-     Bool_t isC = var->isConstant() ;
+     bool isC = var->isConstant() ;
      *_pipe << msg << i << val << isC;
 
      if (_verboseServer) cout << "RooRealMPFE::calculate(" << GetName()
@@ -479,14 +479,14 @@ void RooRealMPFE::calculate() const
 
     // Clear dirty state and mark that calculation request was dispatched
     clearValueDirty() ;
-    _calcInProgress = kTRUE ;
-    _forceCalc = kFALSE ;
+    _calcInProgress = true ;
+    _forceCalc = false ;
 
     msg = Retrieve ;
     *_pipe << msg << BidirMMapPipe::flush;
     if (_verboseServer) cout << "RooRealMPFE::evaluate(" << GetName()
               << ") IPC toServer> Retrieve " << endl ;
-    _retrieveDispatched = kTRUE ;
+    _retrieveDispatched = true ;
 
   } else if (_state!=Inline) {
     cout << "RooRealMPFE::calculate(" << GetName()
@@ -564,7 +564,7 @@ Double_t RooRealMPFE::evaluate() const
                 << ") IPC toServer> Retrieve " << endl ;
     }
     if (needflush) *_pipe << BidirMMapPipe::flush;
-    _retrieveDispatched = kFALSE ;
+    _retrieveDispatched = false ;
 
 
     Int_t numError;
@@ -600,7 +600,7 @@ Double_t RooRealMPFE::evaluate() const
     }
 
     // Mark end of calculation in progress
-    _calcInProgress = kFALSE ;
+    _calcInProgress = false ;
     return_value = value ;
 #endif // _WIN32
   }
@@ -655,7 +655,7 @@ void RooRealMPFE::standby()
 /// Intercept call to optimize constant term in test statistics
 /// and forward it to object on server side.
 
-void RooRealMPFE::constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTracking)
+void RooRealMPFE::constOptimizeTestStatistic(ConstOpCode opcode, bool doAlsoTracking)
 {
 #ifndef _WIN32
   if (_state==Client) {
@@ -681,7 +681,7 @@ void RooRealMPFE::constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTr
 /// Control verbose messaging related to inter process communication
 /// on both client and server side
 
-void RooRealMPFE::setVerbose(Bool_t clientFlag, Bool_t serverFlag)
+void RooRealMPFE::setVerbose(bool clientFlag, bool serverFlag)
 {
 #ifndef _WIN32
   if (_state==Client) {
@@ -699,7 +699,7 @@ void RooRealMPFE::setVerbose(Bool_t clientFlag, Bool_t serverFlag)
 /// Control verbose messaging related to inter process communication
 /// on both client and server side
 
-void RooRealMPFE::applyNLLWeightSquared(Bool_t flag)
+void RooRealMPFE::applyNLLWeightSquared(bool flag)
 {
 #ifndef _WIN32
   if (_state==Client) {
@@ -715,7 +715,7 @@ void RooRealMPFE::applyNLLWeightSquared(Bool_t flag)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooRealMPFE::doApplyNLLW2(Bool_t flag)
+void RooRealMPFE::doApplyNLLW2(bool flag)
 {
   RooNLLVar* nll = dynamic_cast<RooNLLVar*>(_arg.absArg()) ;
   if (nll) {
@@ -728,7 +728,7 @@ void RooRealMPFE::doApplyNLLW2(Bool_t flag)
 /// Control verbose messaging related to inter process communication
 /// on both client and server side
 
-void RooRealMPFE::enableOffsetting(Bool_t flag)
+void RooRealMPFE::enableOffsetting(bool flag)
 {
 #ifndef _WIN32
   if (_state==Client) {

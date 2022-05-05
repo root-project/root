@@ -45,7 +45,7 @@ ClassImp(RooArgProxy);
 /// Constructor with owner and proxied variable.
 
 RooArgProxy::RooArgProxy(const char* inName, const char* desc, RooAbsArg* owner,
-          Bool_t valueServer, Bool_t shapeServer, Bool_t proxyOwnsArg) :
+          bool valueServer, bool shapeServer, bool proxyOwnsArg) :
   TNamed(inName,desc), _owner(owner), _arg(0),
   _valueServer(valueServer), _shapeServer(shapeServer), _ownArg(proxyOwnsArg)
 {
@@ -60,7 +60,7 @@ RooArgProxy::RooArgProxy(const char* inName, const char* desc, RooAbsArg* owner,
 /// shape dirty flags. If proxyOwnsArg is true, the proxy takes ownership of its component
 
 RooArgProxy::RooArgProxy(const char* inName, const char* desc, RooAbsArg* owner, RooAbsArg& arg,
-          Bool_t valueServer, Bool_t shapeServer, Bool_t proxyOwnsArg) :
+          bool valueServer, bool shapeServer, bool proxyOwnsArg) :
   TNamed(inName,desc), _owner(owner), _arg(&arg),
   _valueServer(valueServer), _shapeServer(shapeServer), _ownArg(proxyOwnsArg)
 {
@@ -103,7 +103,7 @@ RooArgProxy::~RooArgProxy()
 /// the replacement object can have a different name and is identified as the replacement object by
 /// the existence of a boolean attribute "origName:MyName" where MyName is the name of this instance
 
-Bool_t RooArgProxy::changePointer(const RooAbsCollection& newServerList, Bool_t nameChange, Bool_t factoryInitMode)
+bool RooArgProxy::changePointer(const RooAbsCollection& newServerList, bool nameChange, bool factoryInitMode)
 {
   RooAbsArg* newArg = nullptr;
   const bool initEmpty = _arg == nullptr;
@@ -149,7 +149,7 @@ void RooArgProxy::changeDataSet(const RooArgSet* newNormSet)
 /// Print the name of the proxy on ostream. If addContents is
 /// true also the value of the contained RooAbsArg is also printed
 
-void RooArgProxy::print(ostream& os, Bool_t addContents) const
+void RooArgProxy::print(ostream& os, bool addContents) const
 {
   os << name() << "=" << (_arg?_arg->GetName():"NULL")  ;
   if (_arg && addContents) {

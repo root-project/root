@@ -31,18 +31,18 @@ class RooFFTConvPdf ;
 class RooConvGenContext : public RooAbsGenContext {
 public:
   RooConvGenContext(const RooFFTConvPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
-          const RooArgSet* auxProto=0, Bool_t _verbose= kFALSE);
+          const RooArgSet* auxProto=0, bool _verbose= false);
   RooConvGenContext(const RooNumConvPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
-          const RooArgSet* auxProto=0, Bool_t _verbose= kFALSE);
+          const RooArgSet* auxProto=0, bool _verbose= false);
   RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
-          const RooArgSet* auxProto=0, Bool_t _verbose= kFALSE);
+          const RooArgSet* auxProto=0, bool _verbose= false);
   ~RooConvGenContext() override;
 
   void setProtoDataOrder(Int_t* lut) override ;
 
   void attach(const RooArgSet& params) override ;
 
-  void printMultiline(std::ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override ;
+  void printMultiline(std::ostream &os, Int_t content, bool verbose=false, TString indent="") const override ;
 
   void initGenerator(const RooArgSet &theEvent) override;
   void generateEvent(RooArgSet &theEvent, Int_t remaining) override;

@@ -28,16 +28,16 @@ public:
   RooExpensiveObjectCache(const RooExpensiveObjectCache&) ;
   ~RooExpensiveObjectCache() override ;
 
-  Bool_t registerObject(const char* ownerName, const char* objectName, TObject& cacheObject, TIterator* paramIter) ;
-  Bool_t registerObject(const char* ownerName, const char* objectName, TObject& cacheObject, const RooArgSet& params) ;
+  bool registerObject(const char* ownerName, const char* objectName, TObject& cacheObject, TIterator* paramIter) ;
+  bool registerObject(const char* ownerName, const char* objectName, TObject& cacheObject, const RooArgSet& params) ;
   const TObject* retrieveObject(const char* name, TClass* tclass, const RooArgSet& params) ;
 
   const TObject* getObj(Int_t uniqueID) ;
-  Bool_t clearObj(Int_t uniqueID) ;
-  Bool_t setObj(Int_t uniqueID, TObject* obj) ;
+  bool clearObj(Int_t uniqueID) ;
+  bool setObj(Int_t uniqueID, TObject* obj) ;
   void clearAll() ;
 
-  void importCacheObjects(RooExpensiveObjectCache& other, const char* ownerName, Bool_t verbose=kFALSE) ;
+  void importCacheObjects(RooExpensiveObjectCache& other, const char* ownerName, bool verbose=false) ;
 
   static RooExpensiveObjectCache& instance() ;
 
@@ -51,7 +51,7 @@ public:
     ExpensiveObject(Int_t uid, const char* ownerName, TObject& payload, TIterator* paramIter) ;
     ExpensiveObject(Int_t uid, const ExpensiveObject& other) ;
     virtual ~ExpensiveObject() ;
-    Bool_t matches(TClass* tc, const RooArgSet& params) ;
+    bool matches(TClass* tc, const RooArgSet& params) ;
 
     Int_t uid() const { return _uid ; }
     const TObject* payload() const { return _payload ; }

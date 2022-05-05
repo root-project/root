@@ -31,17 +31,17 @@ public:
   RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
   ~RooSegmentedIntegrator1D() override;
 
-  Bool_t checkLimits() const override;
+  bool checkLimits() const override;
   Double_t integral(const Double_t *yvec=0) override ;
 
   using RooAbsIntegrator::setLimits ;
-  Bool_t setLimits(Double_t *xmin, Double_t *xmax) override;
-  Bool_t setUseIntegrandLimits(Bool_t flag) override { _useIntegrandLimits = flag ; return kTRUE ; }
+  bool setLimits(Double_t *xmin, Double_t *xmax) override;
+  bool setUseIntegrandLimits(bool flag) override { _useIntegrandLimits = flag ; return true ; }
 
-  Bool_t canIntegrate1D() const override { return kTRUE ; }
-  Bool_t canIntegrate2D() const override { return kFALSE ; }
-  Bool_t canIntegrateND() const override { return kFALSE ; }
-  Bool_t canIntegrateOpenEnded() const override { return kFALSE ; }
+  bool canIntegrate1D() const override { return true ; }
+  bool canIntegrate2D() const override { return false ; }
+  bool canIntegrateND() const override { return false ; }
+  bool canIntegrateOpenEnded() const override { return false ; }
 
 protected:
 
@@ -51,14 +51,14 @@ protected:
   mutable Double_t _xmin ;
   mutable Double_t _xmax ;
   mutable Double_t _range ;
-  Bool_t _valid ;
+  bool _valid ;
   Int_t _nseg ; // Number of segments
-  Bool_t _useIntegrandLimits ;
+  bool _useIntegrandLimits ;
 
   RooNumIntConfig _config ;
   RooIntegrator1D** _array ; ///< Array of segment integrators
 
-  Bool_t initialize();
+  bool initialize();
 
   ClassDefOverride(RooSegmentedIntegrator1D,0) // 1-dimensional piece-wise numerical integration engine
 };

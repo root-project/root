@@ -68,7 +68,7 @@ RooFitResult::RooFitResult(const char* name, const char* title) :
   TNamed(name,title), _constPars(0), _initPars(0), _finalPars(0), _globalCorr(0), _randomPars(0), _Lt(0),
   _CM(0), _VM(0), _GC(0)
 {
-  if (name) appendToDir(this,kTRUE) ;
+  if (name) appendToDir(this,true) ;
 }
 
 
@@ -102,7 +102,7 @@ RooFitResult::RooFitResult(const RooFitResult& other) :
   if (other._GC) _GC = new TVectorD(*other._GC) ;
 
   if (GetName())
-    appendToDir(this, kTRUE);
+    appendToDir(this, true);
 }
 
 
@@ -496,7 +496,7 @@ Double_t RooFitResult::covariance(Int_t row, Int_t col) const
 /// the initial and final values of the floating parameters are printed.
 /// Standard mode only the final values of the floating parameters are printed
 
-void RooFitResult::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbose, TString indent) const
+void RooFitResult::printMultiline(ostream& os, Int_t /*contents*/, bool verbose, TString indent) const
 {
 
   os << endl
@@ -532,10 +532,10 @@ void RooFitResult::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbos
     }
 
     // Has any parameter asymmetric errors?
-    Bool_t doAsymErr(kFALSE) ;
+    bool doAsymErr(false) ;
     for (i=0 ; i<_finalPars->getSize() ; i++) {
       if (((RooRealVar*)_finalPars->at(i))->hasAsymError()) {
-   doAsymErr=kTRUE ;
+   doAsymErr=true ;
    break ;
       }
     }
@@ -896,11 +896,11 @@ bool RooFitResult::isIdentical(const RooFitResult& other, double tol, double tol
       auto ov = static_cast<const RooAbsReal*>(other._globalCorr->find(_globalCorr->at(i)->GetName())) ;
       if (!ov) {
         if(verbose) cout << "RooFitResult::isIdentical: cannot find global correlation coefficient " << tv->GetName() << " in reference" << endl ;
-        ret = kFALSE ;
+        ret = false ;
       }
       if (ov && deviationCorr(tv->getVal(), ov->getVal())) {
         isIdenticalErrMsg("global correlation coefficient", tv, ov, verbose);
-        ret = kFALSE ;
+        ret = false ;
       }
     }
 
@@ -912,11 +912,11 @@ bool RooFitResult::isIdentical(const RooFitResult& other, double tol, double tol
         auto ov = static_cast<const RooAbsReal*>(orow->find(tv->GetName())) ;
         if (!ov) {
           if(verbose) cout << "RooFitResult::isIdentical: cannot find correlation coefficient " << tv->GetName() << " in reference" << endl ;
-          ret = kFALSE ;
+          ret = false ;
         }
         if (ov && deviationCorr(tv->getVal(), ov->getVal())) {
           isIdenticalErrMsg("correlation coefficient", tv, ov, verbose);
-          ret = kFALSE ;
+          ret = false ;
         }
       }
     }
@@ -962,7 +962,7 @@ RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList)
     if (gMinuit->fNvarl[i-1] < 0) continue;
     Int_t l = gMinuit->fNiofex[i-1];
     TString varName(gMinuit->fCpnam[i-1]) ;
-    Bool_t isConst(l==0) ;
+    bool isConst(l==0) ;
 
     Double_t xlo = gMinuit->fAlim[i-1];
     Double_t xhi = gMinuit->fBlim[i-1];
@@ -1322,7 +1322,7 @@ RooAbsPdf* RooFitResult::createHessePdf(const RooArgSet& params) const
     RooArgList mu ;
     for (Int_t i=0 ; i<_finalPars->getSize() ; i++) {
       RooRealVar* parclone = (RooRealVar*) _finalPars->at(i)->Clone(Form("%s_centralvalue",_finalPars->at(i)->GetName())) ;
-      parclone->setConstant(kTRUE) ;
+      parclone->setConstant(true) ;
       mu.add(*parclone) ;
     }
 
@@ -1358,7 +1358,7 @@ RooAbsPdf* RooFitResult::createHessePdf(const RooArgSet& params) const
   RooArgList mu1 ;
   for (UInt_t i=0 ; i<map1.size() ; i++) {
     RooRealVar* parclone = (RooRealVar*) _finalPars->at(map1[i])->Clone(Form("%s_centralvalue",_finalPars->at(map1[i])->GetName())) ;
-    parclone->setConstant(kTRUE) ;
+    parclone->setConstant(true) ;
     mu1.add(*parclone) ;
   }
 

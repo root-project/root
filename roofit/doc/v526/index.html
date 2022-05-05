@@ -188,7 +188,7 @@ RooAddPdf::genmodel[ Nsig * sig + Nbkg * bkg ] = 0.502276
      <tt>RooDataSet</tt> objects without copying the input data. 
 <pre>
    // Make 2 input datasets and an index category
-   RooWorkspace w("w",kTRUE) ;
+   RooWorkspace w("w",true) ;
    w-&gt;factory("Gaussian::g(x[-10,10],m[-10,10],s[3,0.1,10])")
    w-&gt;factory("Uniform::u(x)")
    w-&gt;factory("index[S,B]")

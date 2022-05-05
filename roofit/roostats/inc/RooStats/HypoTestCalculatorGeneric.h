@@ -91,7 +91,7 @@ namespace RooStats {
 
    private:
       void SetupSampler(const ModelConfig& model) const;
-      void SetAdaptiveLimits(Double_t obsTestStat, Bool_t forNull) const;
+      void SetAdaptiveLimits(Double_t obsTestStat, bool forNull) const;
       SamplingDistribution* GenerateSamplingDistribution(
          ModelConfig *thisModel,
          double obsTestStat,

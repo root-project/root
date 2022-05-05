@@ -126,7 +126,7 @@ RooGaussKronrodIntegrator1D::RooGaussKronrodIntegrator1D(const RooAbsFunc& funct
   _epsAbs(config.epsRel()),
   _epsRel(config.epsAbs())
 {
-  _useIntegrandLimits= kTRUE;
+  _useIntegrandLimits= true;
   _valid= initialize();
 }
 
@@ -143,7 +143,7 @@ RooGaussKronrodIntegrator1D::RooGaussKronrodIntegrator1D(const RooAbsFunc& funct
   _xmin(xmin),
   _xmax(xmax)
 {
-  _useIntegrandLimits= kFALSE;
+  _useIntegrandLimits= false;
   _valid= initialize();
 }
 
@@ -162,7 +162,7 @@ RooAbsIntegrator* RooGaussKronrodIntegrator1D::clone(const RooAbsFunc& function,
 ////////////////////////////////////////////////////////////////////////////////
 /// Perform one-time initialization of integrator
 
-Bool_t RooGaussKronrodIntegrator1D::initialize()
+bool RooGaussKronrodIntegrator1D::initialize()
 {
   // Allocate coordinate buffer size after number of function dimensions
   _x = new Double_t[_function->getDimension()] ;
@@ -185,15 +185,15 @@ RooGaussKronrodIntegrator1D::~RooGaussKronrodIntegrator1D()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Change our integration limits. Return kTRUE if the new limits are
-/// ok, or otherwise kFALSE. Always returns kFALSE and does nothing
+/// Change our integration limits. Return true if the new limits are
+/// ok, or otherwise false. Always returns false and does nothing
 /// if this object was constructed to always use our integrand's limits.
 
-Bool_t RooGaussKronrodIntegrator1D::setLimits(Double_t* xmin, Double_t* xmax)
+bool RooGaussKronrodIntegrator1D::setLimits(Double_t* xmin, Double_t* xmax)
 {
   if(_useIntegrandLimits) {
     oocoutE((TObject*)0,Eval) << "RooGaussKronrodIntegrator1D::setLimits: cannot override integrand's limits" << endl;
-    return kFALSE;
+    return false;
   }
   _xmin= *xmin;
   _xmax= *xmax;
@@ -203,17 +203,17 @@ Bool_t RooGaussKronrodIntegrator1D::setLimits(Double_t* xmin, Double_t* xmax)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check that our integration range is finite and otherwise return kFALSE.
+/// Check that our integration range is finite and otherwise return false.
 /// Update the limits from the integrand if requested.
 
-Bool_t RooGaussKronrodIntegrator1D::checkLimits() const
+bool RooGaussKronrodIntegrator1D::checkLimits() const
 {
   if(_useIntegrandLimits) {
     assert(0 != integrand() && integrand()->isValid());
     _xmin= integrand()->getMinLimit(0);
     _xmax= integrand()->getMaxLimit(0);
   }
-  return kTRUE ;
+  return true ;
 }
 
 

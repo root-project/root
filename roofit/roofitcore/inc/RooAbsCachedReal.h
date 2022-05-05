@@ -30,9 +30,9 @@ public:
   ~RooAbsCachedReal() override ;
 
   Double_t getValV(const RooArgSet* set=0) const override ;
-  virtual Bool_t selfNormalized() const {
+  virtual bool selfNormalized() const {
     // Declares function self normalized
-    return kTRUE ;
+    return true ;
   }
 
   void setInterpolationOrder(Int_t order) ;
@@ -41,15 +41,15 @@ public:
     return _ipOrder ;
   }
 
-  Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const override {
+  bool forceAnalyticalInt(const RooAbsArg& /*dep*/) const override {
     // Force all observables to be offered for internal integration
-    return kTRUE ;
+    return true ;
   }
 
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=0) const override ;
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
 
-  void disableCache(Bool_t flag) {
+  void disableCache(bool flag) {
     // Switch to disable caching mechanism
     _disableCache = flag ;
   }
@@ -72,8 +72,8 @@ protected:
     RooAbsReal* sourceClone() { return _sourceClone ; }
     void setSourceClone(RooAbsReal* newSource) { delete _sourceClone ; _sourceClone = newSource ; }
 
-    Bool_t cacheSource() { return _cacheSource ; }
-    void setCacheSource(Bool_t flag) { _cacheSource = flag ; }
+    bool cacheSource() { return _cacheSource ; }
+    void setCacheSource(bool flag) { _cacheSource = flag ; }
 
   private:
     // Payload
@@ -81,7 +81,7 @@ protected:
     RooChangeTracker* _paramTracker ;
     RooDataHist*      _hist ;
     RooAbsReal*       _sourceClone ;
-    Bool_t            _cacheSource ;
+    bool            _cacheSource ;
   } ;
 
   FuncCacheElem* getCache(const RooArgSet* nset) const ;
@@ -112,7 +112,7 @@ protected:
 
 private:
 
-  Bool_t _disableCache ; // Flag to run object in passthrough (= non-caching mode)
+  bool _disableCache ; // Flag to run object in passthrough (= non-caching mode)
 
   ClassDefOverride(RooAbsCachedReal,1) // Abstract base class for cached p.d.f.s
 };

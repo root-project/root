@@ -26,15 +26,15 @@ class RooAbsRealLValue ;
 
 class RooAbsFunc {
 public:
-  inline RooAbsFunc(UInt_t dimension) : _ncall(0), _dimension(dimension), _valid(kTRUE) { }
-  inline RooAbsFunc(const RooAbsFunc& other) : _ncall(0), _dimension(other._dimension), _valid(kTRUE) { }
+  inline RooAbsFunc(UInt_t dimension) : _ncall(0), _dimension(dimension), _valid(true) { }
+  inline RooAbsFunc(const RooAbsFunc& other) : _ncall(0), _dimension(other._dimension), _valid(true) { }
 
   inline virtual ~RooAbsFunc() { }
   inline UInt_t getDimension() const {
     // Dimension of function
     return _dimension;
   }
-  inline Bool_t isValid() const {
+  inline bool isValid() const {
     // Is function in valid state
     return _valid;
   }
@@ -77,7 +77,7 @@ public:
 protected:
   mutable Int_t _ncall ;  ///< Function call counter
   UInt_t _dimension;      ///< Number of observables
-  Bool_t _valid;          ///< Is binding in valid state?
+  bool _valid;          ///< Is binding in valid state?
    ClassDef(RooAbsFunc,0) ///< Abstract real-valued function interface
 };
 

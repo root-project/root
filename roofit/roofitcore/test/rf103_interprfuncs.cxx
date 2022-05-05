@@ -27,8 +27,8 @@ using namespace RooFit ;
 class TestBasic103 : public RooFitTestUnit
 {
 public:
-  TestBasic103(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Interpreted expression p.d.f.",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic103(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Interpreted expression p.d.f.",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
     /////////////////////////////////////////////////////////
     // G e n e r i c   i n t e r p r e t e d   p . d . f . //
@@ -110,6 +110,6 @@ public:
     delete data ;
     delete data2 ;
 
-    return kTRUE ;
+    return true ;
   }
 } ;

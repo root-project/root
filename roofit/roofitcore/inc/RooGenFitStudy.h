@@ -43,10 +43,10 @@ public:
   void setGenConfig(const char* pdfName, const char* obsName, const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg()) ;
   void setFitConfig(const char* pdfName, const char* obsName, const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg()) ;
 
-  Bool_t attach(RooWorkspace& w) override ;
-  Bool_t initialize() override ;
-  Bool_t execute() override ;
-  Bool_t finalize() override ;
+  bool attach(RooWorkspace& w) override ;
+  bool initialize() override ;
+  bool execute() override ;
+  bool finalize() override ;
 
   void Print(Option_t *options= 0) const override;
 

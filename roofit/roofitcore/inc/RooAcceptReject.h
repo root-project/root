@@ -31,9 +31,9 @@ public:
   RooAcceptReject() : _nextCatVar(0), _nextRealVar(0) {
     // coverity[UNINIT_CTOR]
   } ;
-  RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig& config, Bool_t verbose=kFALSE, const RooAbsReal* maxFuncVal=0);
+  RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig& config, bool verbose=false, const RooAbsReal* maxFuncVal=0);
   RooAbsNumGenerator* clone(const RooAbsReal& func, const RooArgSet& genVars, const RooArgSet& /*condVars*/,
-             const RooNumGenConfig& config, Bool_t verbose=kFALSE, const RooAbsReal* maxFuncVal=0) const override {
+             const RooNumGenConfig& config, bool verbose=false, const RooAbsReal* maxFuncVal=0) const override {
     return new RooAcceptReject(func,genVars,config,verbose,maxFuncVal) ;
   }
   ~RooAcceptReject() override;
@@ -43,8 +43,8 @@ public:
 
 
   // Advertisement of capabilities
-  Bool_t canSampleConditional() const override { return kTRUE ; }
-  Bool_t canSampleCategories() const override { return kTRUE ; }
+  bool canSampleConditional() const override { return true ; }
+  bool canSampleCategories() const override { return true ; }
 
 
 protected:

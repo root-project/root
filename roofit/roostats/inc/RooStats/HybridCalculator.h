@@ -94,8 +94,8 @@ namespace RooStats {
 
       // these flags tell us if the nuisance pdfs came from an external resource (via ForcePriorNuisance)
       // or were created internally and should be deleted
-      Bool_t fPriorNuisanceNullExternal;
-      Bool_t fPriorNuisanceAltExternal;
+      bool fPriorNuisanceNullExternal;
+      bool fPriorNuisanceAltExternal;
 
       // different number of toys for null and alt
       int fNToysNull;

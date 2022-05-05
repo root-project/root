@@ -56,8 +56,8 @@ const Double_t RooKeysPdf::_nSigma = std::sqrt(-2. *
 /// coverity[UNINIT_CTOR]
 
   RooKeysPdf::RooKeysPdf() : _nEvents(0), _dataPts(0), _dataWgts(0), _weights(0), _sumWgt(0),
-              _mirrorLeft(kFALSE), _mirrorRight(kFALSE),
-              _asymLeft(kFALSE), _asymRight(kFALSE)
+              _mirrorLeft(false), _mirrorRight(false),
+              _asymLeft(false), _asymRight(false)
 {
   TRACE_CREATE
 }

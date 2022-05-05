@@ -28,7 +28,7 @@ ClassImp(RooPoisson);
 RooPoisson::RooPoisson(const char *name, const char *title,
              RooAbsReal& _x,
              RooAbsReal& _mean,
-             Bool_t noRounding) :
+             bool noRounding) :
   RooAbsPdf(name,title),
   x("x","x",this,_x),
   mean("mean","mean",this,_mean),
@@ -144,7 +144,7 @@ Double_t RooPoisson::analyticalIntegral(Int_t code, const char* rangeName) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Advertise internal generator in x
 
-Int_t RooPoisson::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
+Int_t RooPoisson::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool /*staticInitOK*/) const
 {
   if (matchArgs(directVars,generateVars,x)) return 1 ;
   return 0 ;

@@ -196,7 +196,7 @@ RooAbsTestStatistic* RooNLLVar::create(const char *name, const char *title, RooA
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooNLLVar::applyWeightSquared(Bool_t flag)
+void RooNLLVar::applyWeightSquared(bool flag)
 {
   if (_gofOpMode==Slave) {
     if (flag != _weightSq) {

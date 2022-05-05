@@ -60,7 +60,7 @@ RooDerivative::RooDerivative(const char* name, const char* title, RooAbsReal& fu
   RooAbsReal(name, title),
   _order(orderIn),
   _eps(epsIn),
-  _nset("nset","nset",this,kFALSE,kFALSE),
+  _nset("nset","nset",this,false,false),
   _func("function","function",this,func),
   _x("x","x",this,x),
   _ftor(0),
@@ -77,7 +77,7 @@ RooDerivative::RooDerivative(const char* name, const char* title, RooAbsReal& fu
   RooAbsReal(name, title),
   _order(orderIn),
   _eps(epsIn),
-  _nset("nset","nset",this,kFALSE,kFALSE),
+  _nset("nset","nset",this,false,false),
   _func("function","function",this,func),
   _x("x","x",this,x),
   _ftor(0),
@@ -126,7 +126,7 @@ Double_t RooDerivative::evaluate() const
   if (!_ftor) {
     _ftor = _func.arg().functor(_x.arg(),RooArgSet(),_nset)  ;
     ROOT::Math::WrappedFunction<RooFunctor&> wf(*_ftor);
-    _rd = new ROOT::Math::RichardsonDerivator(wf,_eps*(_x.max()-_x.min()),kTRUE) ;
+    _rd = new ROOT::Math::RichardsonDerivator(wf,_eps*(_x.max()-_x.min()),true) ;
   }
 
   switch (_order) {
@@ -142,11 +142,11 @@ Double_t RooDerivative::evaluate() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Zap functor and derivator ;
 
-Bool_t RooDerivative::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/)
+bool RooDerivative::redirectServersHook(const RooAbsCollection& /*newServerList*/, bool /*mustReplaceAll*/, bool /*nameChange*/, bool /*isRecursive*/)
 {
   delete _ftor ;
   delete _rd ;
   _ftor = 0 ;
   _rd = 0 ;
-  return kFALSE ;
+  return false ;
 }

@@ -144,7 +144,7 @@ RooChebychev::RooChebychev(const RooChebychev& other, const char* name) :
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooChebychev::selectNormalizationRange(const char* rangeName, Bool_t force)
+void RooChebychev::selectNormalizationRange(const char* rangeName, bool force)
 {
   if (rangeName && (force || !_refRangeName)) {
     _refRangeName = (TNamed*) RooNameReg::instance().constPtr(rangeName) ;

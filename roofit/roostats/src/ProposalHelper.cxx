@@ -55,11 +55,11 @@ ProposalHelper::ProposalHelper()
 {
    fPdfProp = new PdfProposal();
    fVars = NULL;
-   fOwnsPdfProp = kTRUE;
-   fOwnsPdf = kFALSE;
-   fOwnsCluesPdf = kFALSE;
-   fOwnsVars = kFALSE;
-   fUseUpdates = kFALSE;
+   fOwnsPdfProp = true;
+   fOwnsPdf = false;
+   fOwnsCluesPdf = false;
+   fOwnsVars = false;
+   fUseUpdates = false;
    fPdf = NULL;
    fSigmaRangeDivisor = SIGMA_RANGE_DIVISOR;
    fCluesPdf = NULL;
@@ -101,10 +101,10 @@ ProposalFunction* ProposalHelper::GetProposalFunction()
    RooAddPdf* addPdf = new RooAddPdf("proposalFunction", "Proposal Density",
          *components, *coeffs);
    fPdfProp->SetPdf(*addPdf);
-   fPdfProp->SetOwnsPdf(kTRUE);
+   fPdfProp->SetOwnsPdf(true);
    if (fCacheSize > 0)
       fPdfProp->SetCacheSize(fCacheSize);
-   fOwnsPdfProp = kFALSE;
+   fOwnsPdfProp = false;
    return fPdfProp;
 }
 

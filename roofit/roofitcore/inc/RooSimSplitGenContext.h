@@ -26,17 +26,17 @@ class RooAbsCategoryLValue ;
 
 class RooSimSplitGenContext : public RooAbsGenContext {
 public:
-  RooSimSplitGenContext(const RooSimultaneous &model, const RooArgSet &vars, Bool_t _verbose= kFALSE, Bool_t autoBinned=kTRUE, const char* binnedTag="");
+  RooSimSplitGenContext(const RooSimultaneous &model, const RooArgSet &vars, bool _verbose= false, bool autoBinned=true, const char* binnedTag="");
   ~RooSimSplitGenContext() override;
   void setProtoDataOrder(Int_t* lut) override ;
 
   void attach(const RooArgSet& params) override ;
 
-  void printMultiline(std::ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override ;
+  void printMultiline(std::ostream &os, Int_t content, bool verbose=false, TString indent="") const override ;
 
-  RooDataSet *generate(Double_t nEvents= 0, Bool_t skipInit=kFALSE, Bool_t extendedMode=kFALSE) override;
+  RooDataSet *generate(Double_t nEvents= 0, bool skipInit=false, bool extendedMode=false) override;
 
-  void setExpectedData(Bool_t) override ;
+  void setExpectedData(bool) override ;
 
 protected:
 

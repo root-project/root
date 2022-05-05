@@ -51,7 +51,7 @@ MinuitFcnGrad::MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAb
    : RooAbsMinimizerFcn(RooArgList(*_likelihood->getParameters()), context, verbose), minuit_internal_x_(NDim(), 0),
      minuit_external_x_(NDim(), 0)
 {
-   synchronizeParameterSettings(parameters, kTRUE, verbose);
+   synchronizeParameterSettings(parameters, true, verbose);
 
    calculation_is_clean = std::make_shared<WrapperCalculationCleanFlags>();
 
@@ -70,14 +70,14 @@ MinuitFcnGrad::MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAb
 
 double MinuitFcnGrad::DoEval(const double *x) const
 {
-   Bool_t parameters_changed = syncParameterValuesFromMinuitCalls(x, false);
+   bool parameters_changed = syncParameterValuesFromMinuitCalls(x, false);
 
    // Calculate the function for these parameters
-   //   RooAbsReal::setHideOffset(kFALSE);
+   //   RooAbsReal::setHideOffset(false);
    likelihood->evaluate();
    double fvalue = likelihood->getResult().Sum();
    calculation_is_clean->likelihood = true;
-   //   RooAbsReal::setHideOffset(kTRUE);
+   //   RooAbsReal::setHideOffset(true);
 
    if (!parameters_changed) {
       return fvalue;
@@ -97,12 +97,12 @@ double MinuitFcnGrad::DoEval(const double *x) const
                << "RooGradMinimizerFcn: Minimized function has error status but is ignored" << std::endl;
          }
 
-         Bool_t first(kTRUE);
+         bool first(true);
          ooccoutW(static_cast<RooAbsArg *>(nullptr), Eval) << "Parameter values: ";
          for (const auto rooAbsArg : *_floatParamList) {
             auto var = static_cast<const RooRealVar *>(rooAbsArg);
             if (first) {
-               first = kFALSE;
+               first = false;
             } else {
                ooccoutW(static_cast<RooAbsArg *>(nullptr), Eval) << ", ";
             }
@@ -240,10 +240,10 @@ double MinuitFcnGrad::DoDerivative(const double * /*x*/, unsigned int /*icoord*/
    throw std::runtime_error("MinuitFcnGrad::DoDerivative is not implemented, please use Gradient instead.");
 }
 
-Bool_t
-MinuitFcnGrad::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameters, Bool_t optConst, Bool_t verbose)
+bool
+MinuitFcnGrad::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameters, bool optConst, bool verbose)
 {
-   Bool_t returnee = synchronizeParameterSettings(parameters, optConst, verbose);
+   bool returnee = synchronizeParameterSettings(parameters, optConst, verbose);
    likelihood->synchronizeParameterSettings(parameters);
    gradient->synchronizeParameterSettings(parameters);
 

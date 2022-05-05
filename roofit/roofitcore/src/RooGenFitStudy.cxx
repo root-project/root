@@ -93,22 +93,22 @@ RooGenFitStudy::~RooGenFitStudy()
 ////////////////////////////////////////////////////////////////////////////////
 /// Function called after insertion into workspace
 
-Bool_t RooGenFitStudy::attach(RooWorkspace& w)
+bool RooGenFitStudy::attach(RooWorkspace& w)
 {
-  Bool_t ret = kFALSE ;
+  bool ret = false ;
 
   RooAbsPdf* pdf = w.pdf(_genPdfName.c_str()) ;
   if (pdf) {
     _genPdf = pdf ;
   } else {
     coutE(InputArguments) << "RooGenFitStudy(" << GetName() << ") ERROR: generator p.d.f named " << _genPdfName << " not found in workspace " << w.GetName() << endl ;
-    ret = kTRUE ;
+    ret = true ;
   }
 
   _genObs.add(w.argSet(_genObsName)) ;
   if (_genObs.getSize()==0) {
     coutE(InputArguments) << "RooGenFitStudy(" << GetName() << ") ERROR: no generator observables defined" << endl ;
-    ret = kTRUE ;
+    ret = true ;
   }
 
   pdf = w.pdf(_fitPdfName.c_str()) ;
@@ -116,13 +116,13 @@ Bool_t RooGenFitStudy::attach(RooWorkspace& w)
     _fitPdf = pdf ;
   } else {
     coutE(InputArguments) << "RooGenFitStudy(" << GetName() << ") ERROR: fitting p.d.f named " << _fitPdfName << " not found in workspace " << w.GetName() << endl ;
-    ret = kTRUE ;
+    ret = true ;
   }
 
   _fitObs.add(w.argSet(_fitObsName)) ;
   if (_fitObs.getSize()==0) {
     coutE(InputArguments) << "RooGenFitStudy(" << GetName() << ") ERROR: no fitting observables defined" << endl ;
-    ret = kTRUE ;
+    ret = true ;
   }
 
   return ret ;
@@ -159,7 +159,7 @@ void RooGenFitStudy::setFitConfig(const char* pdfName, const char* obsName, cons
 ////////////////////////////////////////////////////////////////////////////////
 /// One-time initialization of study
 
-Bool_t RooGenFitStudy::initialize()
+bool RooGenFitStudy::initialize()
 {
   _nllVar = new RooRealVar("NLL","-log(Likelihood)",0) ;
   _ngenVar = new RooRealVar("ngen","number of generated events",0) ;
@@ -173,7 +173,7 @@ Bool_t RooGenFitStudy::initialize()
   _genSpec = _genPdf->prepareMultiGen(_genObs,(RooCmdArg&)*_genOpts.At(0),(RooCmdArg&)*_genOpts.At(1),(RooCmdArg&)*_genOpts.At(2)) ;
 
   registerSummaryOutput(*_params,modelParams) ;
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -181,11 +181,11 @@ Bool_t RooGenFitStudy::initialize()
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute one study iteration
 
-Bool_t RooGenFitStudy::execute()
+bool RooGenFitStudy::execute()
 {
   _params->assign(*_initParams) ;
   RooDataSet* data = _genPdf->generate(*_genSpec) ;
-  RooFitResult* fr  = _fitPdf->fitTo(*data,RooFit::Save(kTRUE),(RooCmdArg&)*_fitOpts.At(0),(RooCmdArg&)*_fitOpts.At(1),(RooCmdArg&)*_fitOpts.At(2)) ;
+  RooFitResult* fr  = _fitPdf->fitTo(*data,RooFit::Save(true),(RooCmdArg&)*_fitOpts.At(0),(RooCmdArg&)*_fitOpts.At(1),(RooCmdArg&)*_fitOpts.At(2)) ;
 
   if (fr->status()==0) {
     _ngenVar->setVal(data->sumEntries()) ;
@@ -195,7 +195,7 @@ Bool_t RooGenFitStudy::execute()
   }
 
   delete data ;
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -203,7 +203,7 @@ Bool_t RooGenFitStudy::execute()
 ////////////////////////////////////////////////////////////////////////////////
 /// Finalization of study
 
-Bool_t RooGenFitStudy::finalize()
+bool RooGenFitStudy::finalize()
 {
   delete _params ;
   delete _nllVar ;
@@ -217,7 +217,7 @@ Bool_t RooGenFitStudy::finalize()
   _genSpec = 0 ;
 
 
-  return kFALSE ;
+  return false ;
 }
 
 

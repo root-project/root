@@ -29,7 +29,7 @@ public:
   TObject* clone(const char* newname) const override { return new RooLandau(*this,newname); }
   inline ~RooLandau() override { }
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const override;
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void generateEvent(Int_t code) override;
 
 protected:

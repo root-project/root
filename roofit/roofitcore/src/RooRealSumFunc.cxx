@@ -56,7 +56,7 @@ using namespace std;
 
 ClassImp(RooRealSumFunc);
 
-Bool_t RooRealSumFunc::_doFloorGlobal = kFALSE;
+bool RooRealSumFunc::_doFloorGlobal = false;
 
 //_____________________________________________________________________________
 RooRealSumFunc::RooRealSumFunc() : _normIntMgr(this, 10)
@@ -65,15 +65,15 @@ RooRealSumFunc::RooRealSumFunc() : _normIntMgr(this, 10)
    // coverity[UNINIT_CTOR]
    _funcIter = _funcList.createIterator();
    _coefIter = _coefList.createIterator();
-   _doFloor = kFALSE;
+   _doFloor = false;
    TRACE_CREATE
 }
 
 //_____________________________________________________________________________
 RooRealSumFunc::RooRealSumFunc(const char *name, const char *title)
-   : RooAbsReal(name, title), _normIntMgr(this, 10), _haveLastCoef(kFALSE),
+   : RooAbsReal(name, title), _normIntMgr(this, 10), _haveLastCoef(false),
      _funcList("!funcList", "List of functions", this), _coefList("!coefList", "List of coefficients", this),
-     _doFloor(kFALSE)
+     _doFloor(false)
 {
    // Constructor with name and title
    _funcIter = _funcList.createIterator();
@@ -84,9 +84,9 @@ RooRealSumFunc::RooRealSumFunc(const char *name, const char *title)
 //_____________________________________________________________________________
 RooRealSumFunc::RooRealSumFunc(const char *name, const char *title, RooAbsReal &func1, RooAbsReal &func2,
                                RooAbsReal &coef1)
-   : RooAbsReal(name, title), _normIntMgr(this, 10), _haveLastCoef(kFALSE),
+   : RooAbsReal(name, title), _normIntMgr(this, 10), _haveLastCoef(false),
      _funcList("!funcList", "List of functions", this), _coefList("!coefList", "List of coefficients", this),
-     _doFloor(kFALSE)
+     _doFloor(false)
 {
    // Construct p.d.f consisting of coef1*func1 + (1-coef1)*func2
    // The input coefficients and functions are allowed to be negative
@@ -105,9 +105,9 @@ RooRealSumFunc::RooRealSumFunc(const char *name, const char *title, RooAbsReal &
 //_____________________________________________________________________________
 RooRealSumFunc::RooRealSumFunc(const char *name, const char *title, const RooArgList &inFuncList,
                                const RooArgList &inCoefList)
-   : RooAbsReal(name, title), _normIntMgr(this, 10), _haveLastCoef(kFALSE),
+   : RooAbsReal(name, title), _normIntMgr(this, 10), _haveLastCoef(false),
      _funcList("!funcList", "List of functions", this), _coefList("!coefList", "List of coefficients", this),
-     _doFloor(kFALSE)
+     _doFloor(false)
 {
    // Constructor p.d.f implementing sum_i [ coef_i * func_i ], if N_coef==N_func
    // or sum_i [ coef_i * func_i ] + (1 - sum_i [ coef_i ] )* func_N if Ncoef==N_func-1
@@ -171,7 +171,7 @@ RooRealSumFunc::RooRealSumFunc(const char *name, const char *title, const RooArg
       }
       _funcList.add(*func);
    } else {
-      _haveLastCoef = kTRUE;
+      _haveLastCoef = true;
    }
 
    delete funcIter;
@@ -258,7 +258,7 @@ Double_t RooRealSumFunc::evaluate() const
 
 
 //_____________________________________________________________________________
-Bool_t RooRealSumFunc::checkObservables(const RooArgSet *nset) const
+bool RooRealSumFunc::checkObservables(const RooArgSet *nset) const
 {
    // Check if FUNC is valid for given normalization set.
    // Coeffient and FUNC must be non-overlapping, but func-coefficient
@@ -267,7 +267,7 @@ Bool_t RooRealSumFunc::checkObservables(const RooArgSet *nset) const
    // In the present implementation, coefficients may not be observables or derive
    // from observables
 
-   Bool_t ret(kFALSE);
+   bool ret(false);
 
    _funcIter->Reset();
    _coefIter->Reset();
@@ -279,13 +279,13 @@ Bool_t RooRealSumFunc::checkObservables(const RooArgSet *nset) const
          coutE(InputArguments) << "RooRealSumFunc::checkObservables(" << GetName() << "): ERROR: coefficient "
                                << coef->GetName() << " and FUNC " << func->GetName()
                                << " have one or more observables in common" << endl;
-         ret = kTRUE;
+         ret = true;
       }
       if (coef->dependsOn(*nset)) {
          coutE(InputArguments) << "RooRealPdf::checkObservables(" << GetName() << "): ERROR coefficient "
                                << coef->GetName() << " depends on one or more of the following observables";
          nset->Print("1");
-         ret = kTRUE;
+         ret = true;
       }
    }
 
@@ -449,7 +449,7 @@ Double_t RooRealSumFunc::analyticalIntegralWN(Int_t code, const RooArgSet *normS
 std::list<Double_t> *RooRealSumFunc::binBoundaries(RooAbsRealLValue &obs, Double_t xlo, Double_t xhi) const
 {
    list<Double_t> *sumBinB = 0;
-   Bool_t needClean(kFALSE);
+   bool needClean(false);
 
    RooFIter iter = _funcList.fwdIterator();
    RooAbsReal *func;
@@ -474,7 +474,7 @@ std::list<Double_t> *RooRealSumFunc::binBoundaries(RooAbsRealLValue &obs, Double
             delete sumBinB;
             delete funcBinB;
             sumBinB = newSumBinB;
-            needClean = kTRUE;
+            needClean = true;
          }
       }
    }
@@ -489,7 +489,7 @@ std::list<Double_t> *RooRealSumFunc::binBoundaries(RooAbsRealLValue &obs, Double
 }
 
 //_____________________________________________________________________________B
-Bool_t RooRealSumFunc::isBinnedDistribution(const RooArgSet &obs) const
+bool RooRealSumFunc::isBinnedDistribution(const RooArgSet &obs) const
 {
    // If all components that depend on obs are binned that so is the product
 
@@ -497,18 +497,18 @@ Bool_t RooRealSumFunc::isBinnedDistribution(const RooArgSet &obs) const
    RooAbsReal *func;
    while ((func = (RooAbsReal *)iter.next())) {
       if (func->dependsOn(obs) && !func->isBinnedDistribution(obs)) {
-         return kFALSE;
+         return false;
       }
    }
 
-   return kTRUE;
+   return true;
 }
 
 //_____________________________________________________________________________
 std::list<Double_t> *RooRealSumFunc::plotSamplingHint(RooAbsRealLValue &obs, Double_t xlo, Double_t xhi) const
 {
    list<Double_t> *sumHint = 0;
-   Bool_t needClean(kFALSE);
+   bool needClean(false);
 
    RooFIter iter = _funcList.fwdIterator();
    RooAbsReal *func;
@@ -534,7 +534,7 @@ std::list<Double_t> *RooRealSumFunc::plotSamplingHint(RooAbsRealLValue &obs, Dou
             // Copy merged array without duplicates to new sumHintArrau
             delete sumHint;
             sumHint = newSumHint;
-            needClean = kTRUE;
+            needClean = true;
          }
       }
    }
@@ -572,7 +572,7 @@ void RooRealSumFunc::printMetaArgs(ostream &os) const
    _funcIter->Reset();
    _coefIter->Reset();
 
-   Bool_t first(kTRUE);
+   bool first(true);
 
    RooAbsArg *coef, *func;
    if (_coefList.getSize() != 0) {
@@ -580,7 +580,7 @@ void RooRealSumFunc::printMetaArgs(ostream &os) const
          if (!first) {
             os << " + ";
          } else {
-            first = kFALSE;
+            first = false;
          }
          func = (RooAbsArg *)_funcIter->Next();
          os << coef->GetName() << " * " << func->GetName();
@@ -595,7 +595,7 @@ void RooRealSumFunc::printMetaArgs(ostream &os) const
          if (!first) {
             os << " + ";
          } else {
-            first = kFALSE;
+            first = false;
          }
          os << func->GetName();
       }

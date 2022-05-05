@@ -34,12 +34,12 @@ public:
   void sampleSumUniform(const RooArgSet& paramSet, Double_t lo, Double_t hi) ;
   void sampleSumGauss(const RooArgSet& paramSet, Double_t lo, Double_t hi) ;
 
-  Bool_t initializeInstance() override ;
+  bool initializeInstance() override ;
 
-  Bool_t initializeRun(Int_t /*numSamples*/) override ;
+  bool initializeRun(Int_t /*numSamples*/) override ;
   RooDataSet* finalizeRun() override ;
 
-  Bool_t processBeforeGen(Int_t /*sampleNum*/) override ;
+  bool processBeforeGen(Int_t /*sampleNum*/) override ;
 
 private:
 

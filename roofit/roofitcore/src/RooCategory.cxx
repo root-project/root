@@ -161,7 +161,7 @@ RooCategory::~RooCategory()
 /// If printError is set, a message will be printed if
 /// the specified index does not represent a valid state.
 /// \return bool signalling if an error occurred.
-Bool_t RooCategory::setIndex(Int_t index, Bool_t printError)
+bool RooCategory::setIndex(Int_t index, bool printError)
 {
   if (!hasIndex(index)) {
     if (printError) {
@@ -183,7 +183,7 @@ Bool_t RooCategory::setIndex(Int_t index, Bool_t printError)
 /// If printError is set, a message will be printed if
 /// the specified label does not represent a valid state.
 /// \return false on success.
-Bool_t RooCategory::setLabel(const char* label, Bool_t printError)
+bool RooCategory::setLabel(const char* label, bool printError)
 {
   const auto item = stateNames().find(label);
   if (item != stateNames().end()) {
@@ -285,7 +285,7 @@ std::map<std::string, RooAbsCategory::value_type>& RooCategory::states() {
 /// Read object contents from given stream. If token is a decimal digit, try to
 /// find a corresponding state for it. If that succeeds, the state denoted by this
 /// index is used. Otherwise, interpret it as a label.
-Bool_t RooCategory::readFromStream(istream& is, Bool_t /*compact*/, Bool_t verbose)
+bool RooCategory::readFromStream(istream& is, bool /*compact*/, bool verbose)
 {
   // Read single token
   RooStreamParser parser(is) ;
@@ -303,7 +303,7 @@ Bool_t RooCategory::readFromStream(istream& is, Bool_t /*compact*/, Bool_t verbo
 ////////////////////////////////////////////////////////////////////////////////
 /// compact only at the moment
 
-void RooCategory::writeToStream(ostream& os, Bool_t compact) const
+void RooCategory::writeToStream(ostream& os, bool compact) const
 {
   if (compact) {
     os << getCurrentIndex() ;
@@ -318,7 +318,7 @@ void RooCategory::writeToStream(ostream& os, Bool_t compact) const
 /// \note This affects **all** copies of this category, because they are sharing
 /// range definitions. This ensures that categories inside a dataset and their
 /// counterparts on the outside will both see a modification of the range.
-void RooCategory::clearRange(const char* name, Bool_t silent)
+void RooCategory::clearRange(const char* name, bool silent)
 {
   std::map<std::string, std::vector<value_type>>::iterator item = _ranges->find(name);
   if (item == _ranges->end()) {
@@ -335,7 +335,7 @@ void RooCategory::clearRange(const char* name, Bool_t silent)
 
 void RooCategory::setRange(const char* name, const char* stateNameList)
 {
-  clearRange(name,kTRUE) ;
+  clearRange(name,true) ;
   addToRange(name,stateNameList) ;
 }
 

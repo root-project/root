@@ -62,7 +62,7 @@ ClassImp(RooAddModel);
 ////////////////////////////////////////////////////////////////////////////////
 
 RooAddModel::RooAddModel() :
-  _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
+  _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,false,false),
   _refCoefRangeName(0),
   _projectCoefs(false),
   _projCacheMgr(this,10),
@@ -86,18 +86,18 @@ RooAddModel::RooAddModel() :
 ///
 /// All PDFs must inherit from RooAbsPdf. All coefficients must inherit from RooAbsReal.
 
-RooAddModel::RooAddModel(const char *name, const char *title, const RooArgList& inPdfList, const RooArgList& inCoefList, Bool_t ownPdfList) :
+RooAddModel::RooAddModel(const char *name, const char *title, const RooArgList& inPdfList, const RooArgList& inCoefList, bool ownPdfList) :
   RooResolutionModel(name,title,(static_cast<RooResolutionModel*>(inPdfList.at(0)))->convVar()),
-  _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
+  _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,false,false),
   _refCoefRangeName(0),
-  _projectCoefs(kFALSE),
+  _projectCoefs(false),
   _projCacheMgr(this,10),
   _intCacheMgr(this,10),
   _codeReg(10),
   _pdfList("!pdfs","List of PDFs",this),
   _coefList("!coefficients","List of coefficients",this),
-  _haveLastCoef(kFALSE),
-  _allExtendable(kFALSE)
+  _haveLastCoef(false),
+  _allExtendable(false)
 {
    const std::string ownName(GetName() ? GetName() : "");
    if (inPdfList.size() > inCoefList.size() + 1 || inPdfList.size() < inCoefList.size()) {
@@ -153,7 +153,7 @@ RooAddModel::RooAddModel(const char *name, const char *title, const RooArgList& 
       }
       _pdfList.add(*pdf);
    } else {
-      _haveLastCoef = kTRUE;
+      _haveLastCoef = true;
    }
 
    _coefCache = new Double_t[_pdfList.getSize()];
@@ -209,10 +209,10 @@ RooAddModel::~RooAddModel()
 void RooAddModel::fixCoefNormalization(const RooArgSet& refCoefNorm)
 {
   if (refCoefNorm.getSize()==0) {
-    _projectCoefs = kFALSE ;
+    _projectCoefs = false ;
     return ;
   }
-  _projectCoefs = kTRUE ;
+  _projectCoefs = true ;
 
   _refCoefNorm.removeAll() ;
   _refCoefNorm.add(refCoefNorm) ;
@@ -236,7 +236,7 @@ void RooAddModel::fixCoefNormalization(const RooArgSet& refCoefNorm)
 void RooAddModel::fixCoefRange(const char* rangeName)
 {
   _refCoefRangeName = (TNamed*)RooNameReg::ptr(rangeName) ;
-  if (_refCoefRangeName) _projectCoefs = kTRUE ;
+  if (_refCoefRangeName) _projectCoefs = true ;
 }
 
 
@@ -284,7 +284,7 @@ RooResolutionModel* RooAddModel::convolution(RooFormulaVar* inBasis, RooAbsArg* 
     theCoefList.add(*coef) ;
   }
 
-  RooAddModel* convSum = new RooAddModel(newName,newTitle,modelList,theCoefList,kTRUE) ;
+  RooAddModel* convSum = new RooAddModel(newName,newTitle,modelList,theCoefList,true) ;
   for (std::set<std::string>::const_iterator attrIt = _boolAttrib.begin();
       attrIt != _boolAttrib.end(); ++attrIt) {
     convSum->setAttribute((*attrIt).c_str()) ;
@@ -307,13 +307,13 @@ RooResolutionModel* RooAddModel::convolution(RooFormulaVar* inBasis, RooAbsArg* 
 
 Int_t RooAddModel::basisCode(const char* name) const
 {
-  Bool_t first(kTRUE), code(0) ;
+  bool first(true), code(0) ;
   for (auto obj : _pdfList) {
     auto model = static_cast<RooResolutionModel*>(obj);
     Int_t subCode = model->basisCode(name) ;
     if (first) {
       code = subCode ;
-      first = kFALSE ;
+      first = false ;
     } else if (subCode==0) {
       code = 0 ;
     }
@@ -347,7 +347,7 @@ RooAddModel::CacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const R
   // Retrieve the combined set of dependents of this PDF ;
   RooArgSet *fullDepList = getObservables(nset) ;
   if (iset) {
-    fullDepList->remove(*iset,kTRUE,kTRUE) ;
+    fullDepList->remove(*iset,true,true) ;
   }
 
   // Fill with dummy unit RRVs for now
@@ -361,14 +361,14 @@ RooAddModel::CacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const R
     // Remove PDF dependents
     RooArgSet* pdfDeps = pdf->getObservables(nset) ;
     if (pdfDeps) {
-      supNSet.remove(*pdfDeps,kTRUE,kTRUE) ;
+      supNSet.remove(*pdfDeps,true,true) ;
       delete pdfDeps ;
     }
 
     // Remove coef dependents
     if (coef) {
       RooArgSet* coefDeps = coef->getObservables(nset);
-      supNSet.remove(*coefDeps,kTRUE,kTRUE) ;
+      supNSet.remove(*coefDeps,true,true) ;
       delete coefDeps ;
     }
 
@@ -438,7 +438,7 @@ RooAddModel::CacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const R
       // Calculation optional supplemental normalization term
       RooArgSet supNormSet(_refCoefNorm) ;
       RooArgSet* deps = thePdf->getParameters(RooArgSet()) ;
-      supNormSet.remove(*deps,kTRUE,kTRUE) ;
+      supNormSet.remove(*deps,true,true) ;
       delete deps ;
 
       RooAbsReal* snorm ;
@@ -658,9 +658,9 @@ void RooAddModel::resetErrorCounters(Int_t resetValue)
 /// Coeffient and PDF must be non-overlapping, but pdf-coefficient
 /// pairs may overlap each other
 
-Bool_t RooAddModel::checkObservables(const RooArgSet* nset) const
+bool RooAddModel::checkObservables(const RooArgSet* nset) const
 {
-  Bool_t ret(kFALSE) ;
+  bool ret(false) ;
 
   for (unsigned int i = 0; i < _coefList.size(); ++i) {
     auto pdf = &_pdfList[i];
@@ -669,7 +669,7 @@ Bool_t RooAddModel::checkObservables(const RooArgSet* nset) const
     if (pdf->observableOverlaps(nset,*coef)) {
       coutE(InputArguments) << "RooAddModel::checkObservables(" << GetName() << "): ERROR: coefficient " << coef->GetName()
              << " and PDF " << pdf->GetName() << " have one or more dependents in common" << endl ;
-      ret = kTRUE ;
+      ret = true ;
     }
   }
 
@@ -825,7 +825,7 @@ Double_t RooAddModel::expectedEvents(const RooArgSet* nset) const
 /// Interface function used by test statistics to freeze choice of observables
 /// for interpretation of fraction coefficients
 
-void RooAddModel::selectNormalization(const RooArgSet* depSet, Bool_t force)
+void RooAddModel::selectNormalization(const RooArgSet* depSet, bool force)
 {
   if (!force && _refCoefNorm.getSize()!=0) {
     return ;
@@ -847,7 +847,7 @@ void RooAddModel::selectNormalization(const RooArgSet* depSet, Bool_t force)
 /// Interface function used by test statistics to freeze choice of range
 /// for interpretation of fraction coefficients
 
-void RooAddModel::selectNormalizationRange(const char* rangeName, Bool_t force)
+void RooAddModel::selectNormalizationRange(const char* rangeName, bool force)
 {
   if (!force && _refCoefRangeName) {
     return ;
@@ -862,7 +862,7 @@ void RooAddModel::selectNormalizationRange(const char* rangeName, Bool_t force)
 /// Return specialized context to efficiently generate toy events from RooAddModels.
 
 RooAbsGenContext* RooAddModel::genContext(const RooArgSet &vars, const RooDataSet *prototype,
-               const RooArgSet* auxProto, Bool_t verbose) const
+               const RooArgSet* auxProto, bool verbose) const
 {
   return new RooAddGenContext(*this,vars,prototype,auxProto,verbose) ;
 }
@@ -872,16 +872,16 @@ RooAbsGenContext* RooAddModel::genContext(const RooArgSet &vars, const RooDataSe
 ////////////////////////////////////////////////////////////////////////////////
 /// Direct generation is safe if all components say so
 
-Bool_t RooAddModel::isDirectGenSafe(const RooAbsArg& arg) const
+bool RooAddModel::isDirectGenSafe(const RooAbsArg& arg) const
 {
   for (auto obj : _pdfList) {
     auto pdf = static_cast<RooAbsPdf*>(obj);
 
     if (!pdf->isDirectGenSafe(arg)) {
-      return kFALSE ;
+      return false ;
     }
   }
-  return kTRUE ;
+  return true ;
 }
 
 
@@ -889,7 +889,7 @@ Bool_t RooAddModel::isDirectGenSafe(const RooAbsArg& arg) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return pseud-code that indicates if all components can do internal generation (1) or not (0)
 
-Int_t RooAddModel::getGenerator(const RooArgSet& directVars, RooArgSet &/*generateVars*/, Bool_t /*staticInitOK*/) const
+Int_t RooAddModel::getGenerator(const RooArgSet& directVars, RooArgSet &/*generateVars*/, bool /*staticInitOK*/) const
 {
   for (auto obj : _pdfList) {
     auto pdf = static_cast<RooAbsPdf*>(obj);
@@ -948,7 +948,7 @@ RooArgList RooAddModel::IntCacheElem::containedArgs(Action)
 
 void RooAddModel::printMetaArgs(ostream& os) const
 {
-  Bool_t first(kTRUE) ;
+  bool first(true) ;
 
   os << "(" ;
   for (unsigned int i=0; i < _coefList.size(); ++i) {
@@ -957,7 +957,7 @@ void RooAddModel::printMetaArgs(ostream& os) const
     if (!first) {
       os << " + " ;
     } else {
-      first = kFALSE ;
+      first = false ;
     }
     os << coef->GetName() << " * " << pdf->GetName() ;
   }

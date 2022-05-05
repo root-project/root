@@ -30,8 +30,8 @@ using namespace RooFit ;
 class TestBasic307 : public RooFitTestUnit
 {
 public:
-  TestBasic307(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Full per-event error p.d.f. F(t|dt)G(dt)",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic307(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Full per-event error p.d.f. F(t|dt)G(dt)",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // B - p h y s i c s   p d f   w i t h   p e r - e v e n t  G a u s s i a n   r e s o l u t i o n
   // ----------------------------------------------------------------------------------------------
@@ -106,7 +106,7 @@ public:
   delete expHistDterr ;
   delete data ;
 
-  return kTRUE ;
+  return true ;
 
   }
 } ;

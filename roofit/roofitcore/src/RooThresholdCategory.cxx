@@ -73,7 +73,7 @@ RooThresholdCategory::RooThresholdCategory(const RooThresholdCategory& other, co
 /// Insert threshold at value upperLimit. All values below upper limit (and above any lower
 /// thresholds, if any) will be mapped to a state name 'catName' with index 'catIdx'
 
-Bool_t RooThresholdCategory::addThreshold(Double_t upperLimit, const char* catName, Int_t catIdx)
+bool RooThresholdCategory::addThreshold(Double_t upperLimit, const char* catName, Int_t catIdx)
 {
   // Check if identical threshold values is not defined yet
   for (const auto& thresh : _threshList) {
@@ -122,7 +122,7 @@ RooAbsCategory::value_type RooThresholdCategory::evaluate() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Write object contents to given stream
 
-void RooThresholdCategory::writeToStream(ostream& os, Bool_t compact) const
+void RooThresholdCategory::writeToStream(ostream& os, bool compact) const
 {
   if (compact) {
     // Write value only
@@ -148,7 +148,7 @@ void RooThresholdCategory::writeToStream(ostream& os, Bool_t compact) const
 ///     Shape : default value
 ///   Verbose : list of thresholds
 
-void RooThresholdCategory::printMultiline(ostream& os, Int_t content, Bool_t verbose, TString indent) const
+void RooThresholdCategory::printMultiline(ostream& os, Int_t content, bool verbose, TString indent) const
 {
    RooAbsCategory::printMultiline(os,content,verbose,indent);
 

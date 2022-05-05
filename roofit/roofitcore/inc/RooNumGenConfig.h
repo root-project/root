@@ -31,21 +31,21 @@ public:
   ~RooNumGenConfig() override;
 
   // Return selected integration techniques for 1,2,N dimensional integrals
-  RooCategory& method1D(Bool_t cond, Bool_t cat) ;
-  RooCategory& method2D(Bool_t cond, Bool_t cat) ;
-  RooCategory& methodND(Bool_t cond, Bool_t cat) ;
-  const RooCategory& method1D(Bool_t cond, Bool_t cat) const ;
-  const RooCategory& method2D(Bool_t cond, Bool_t cat) const ;
-  const RooCategory& methodND(Bool_t cond, Bool_t cat) const ;
+  RooCategory& method1D(bool cond, bool cat) ;
+  RooCategory& method2D(bool cond, bool cat) ;
+  RooCategory& methodND(bool cond, bool cat) ;
+  const RooCategory& method1D(bool cond, bool cat) const ;
+  const RooCategory& method2D(bool cond, bool cat) const ;
+  const RooCategory& methodND(bool cond, bool cat) const ;
 
 
   static RooNumGenConfig& defaultConfig() ;
 
-  Bool_t addConfigSection(const RooAbsNumGenerator* proto, const RooArgSet& defaultConfig) ;
+  bool addConfigSection(const RooAbsNumGenerator* proto, const RooArgSet& defaultConfig) ;
   const RooArgSet& getConfigSection(const char* name) const ;
   RooArgSet& getConfigSection(const char* name) ;
 
-  void printMultiline(std::ostream &os, Int_t content, Bool_t verbose, TString indent= "") const override;
+  void printMultiline(std::ostream &os, Int_t content, bool verbose, TString indent= "") const override;
 
   inline void Print(Option_t *options= 0) const override {
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));

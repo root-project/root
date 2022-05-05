@@ -52,7 +52,7 @@ public:
 
 protected:
 
-  Bool_t          _ownBinding ; ///< Do we own the binding function
+  bool          _ownBinding ; ///< Do we own the binding function
   RooArgSet       _nset ;       ///< Normalization observables
   RooAbsFunc*     _binding ;    ///< Function binding
   Double_t*       _x ;          ///<! Transfer array ;

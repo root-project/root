@@ -91,8 +91,8 @@ public:
   RooAbsCollection(RooAbsCollection && other);
 
   // Copy list and contents (and optionally 'deep' servers)
-  RooAbsCollection *snapshot(Bool_t deepCopy=kTRUE) const ;
-  Bool_t snapshot(RooAbsCollection& output, Bool_t deepCopy=kTRUE) const ;
+  RooAbsCollection *snapshot(bool deepCopy=true) const ;
+  bool snapshot(RooAbsCollection& output, bool deepCopy=true) const ;
 
   /// Set the size at which the collection will automatically start using an extra
   /// lookup table instead of performing a linear search.
@@ -109,12 +109,12 @@ public:
   Storage_t const& get() const { return _list; }
 
   // List content management
-  virtual Bool_t add(const RooAbsArg& var, Bool_t silent=kFALSE) ;
-  virtual Bool_t addOwned(RooAbsArg& var, Bool_t silent=kFALSE);
+  virtual bool add(const RooAbsArg& var, bool silent=false) ;
+  virtual bool addOwned(RooAbsArg& var, bool silent=false);
   bool addOwned(std::unique_ptr<RooAbsArg> var, bool silent=false);
-  virtual RooAbsArg *addClone(const RooAbsArg& var, Bool_t silent=kFALSE) ;
-  virtual Bool_t replace(const RooAbsArg& var1, const RooAbsArg& var2) ;
-  virtual Bool_t remove(const RooAbsArg& var, Bool_t silent=kFALSE, Bool_t matchByNameOnly=kFALSE) ;
+  virtual RooAbsArg *addClone(const RooAbsArg& var, bool silent=false) ;
+  virtual bool replace(const RooAbsArg& var1, const RooAbsArg& var2) ;
+  virtual bool remove(const RooAbsArg& var, bool silent=false, bool matchByNameOnly=false) ;
   virtual void removeAll() ;
 
   template<typename Iterator_t,
@@ -131,16 +131,16 @@ public:
   ////////////////////////////////////////////////////////////////////////////////
   /// Add a collection of arguments to this collection by calling add()
   /// for each element in the source collection
-  bool add(const RooAbsCollection& list, bool silent=kFALSE) {
+  bool add(const RooAbsCollection& list, bool silent=false) {
     return add(list._list.begin(), list._list.end(), silent);
   }
   virtual bool addOwned(const RooAbsCollection& list, bool silent=false);
   bool addOwned(RooAbsCollection&& list, bool silent=false);
-  virtual void   addClone(const RooAbsCollection& list, Bool_t silent=kFALSE);
-  Bool_t replace(const RooAbsCollection &other);
-  Bool_t remove(const RooAbsCollection& list, Bool_t silent=kFALSE, Bool_t matchByNameOnly=kFALSE) ;
+  virtual void   addClone(const RooAbsCollection& list, bool silent=false);
+  bool replace(const RooAbsCollection &other);
+  bool remove(const RooAbsCollection& list, bool silent=false, bool matchByNameOnly=false) ;
   template<class forwardIt>
-  void remove(forwardIt rangeBegin, forwardIt rangeEnd, Bool_t silent = kFALSE, Bool_t matchByNameOnly = kFALSE) {
+  void remove(forwardIt rangeBegin, forwardIt rangeEnd, bool silent = false, bool matchByNameOnly = false) {
       for (forwardIt it = rangeBegin; it != rangeEnd; ++it) {
         static_assert(std::is_same<
             typename std::iterator_traits<forwardIt>::value_type,
@@ -151,17 +151,17 @@ public:
   }
 
    // Utilities functions when used as configuration object
-   Double_t getRealValue(const char* name, Double_t defVal=0, Bool_t verbose=kFALSE) const ;
-   const char* getCatLabel(const char* name, const char* defVal="", Bool_t verbose=kFALSE) const ;
-   Int_t getCatIndex(const char* name, Int_t defVal=0, Bool_t verbose=kFALSE) const ;
-   const char* getStringValue(const char* name, const char* defVal="", Bool_t verbose=kFALSE) const ;
-   Bool_t setRealValue(const char* name, Double_t newVal=0, Bool_t verbose=kFALSE) ;
-   Bool_t setCatLabel(const char* name, const char* newVal="", Bool_t verbose=kFALSE) ;
-   Bool_t setCatIndex(const char* name, Int_t newVal=0, Bool_t verbose=kFALSE) ;
-   Bool_t setStringValue(const char* name, const char* newVal="", Bool_t verbose=kFALSE) ;
+   Double_t getRealValue(const char* name, Double_t defVal=0, bool verbose=false) const ;
+   const char* getCatLabel(const char* name, const char* defVal="", bool verbose=false) const ;
+   Int_t getCatIndex(const char* name, Int_t defVal=0, bool verbose=false) const ;
+   const char* getStringValue(const char* name, const char* defVal="", bool verbose=false) const ;
+   bool setRealValue(const char* name, Double_t newVal=0, bool verbose=false) ;
+   bool setCatLabel(const char* name, const char* newVal="", bool verbose=false) ;
+   bool setCatIndex(const char* name, Int_t newVal=0, bool verbose=false) ;
+   bool setStringValue(const char* name, const char* newVal="", bool verbose=false) ;
 
   // Group operations on AbsArgs
-  void setAttribAll(const Text_t* name, Bool_t value=kTRUE) ;
+  void setAttribAll(const Text_t* name, bool value=true) ;
 
   // List search methods
   RooAbsArg *find(const char *name) const ;
@@ -175,18 +175,18 @@ public:
 
   /// Check if collection contains an argument with the same name as var.
   /// To check for a specific instance, use containsInstance().
-  Bool_t contains(const RooAbsArg& var) const {
+  bool contains(const RooAbsArg& var) const {
     return find(var) != nullptr;
   }
   /// Check if this exact instance is in this collection.
-  virtual Bool_t containsInstance(const RooAbsArg& var) const {
+  virtual bool containsInstance(const RooAbsArg& var) const {
     return std::find(_list.begin(), _list.end(), &var) != _list.end();
   }
-  RooAbsCollection* selectByAttrib(const char* name, Bool_t value) const ;
+  RooAbsCollection* selectByAttrib(const char* name, bool value) const ;
   bool selectCommon(const RooAbsCollection& refColl, RooAbsCollection& outColl) const ;
   RooAbsCollection* selectCommon(const RooAbsCollection& refColl) const ;
-  RooAbsCollection* selectByName(const char* nameList, Bool_t verbose=kFALSE) const ;
-  Bool_t equals(const RooAbsCollection& otherColl) const ;
+  RooAbsCollection* selectByName(const char* nameList, bool verbose=false) const ;
+  bool equals(const RooAbsCollection& otherColl) const ;
   bool hasSameLayout(const RooAbsCollection& other) const;
 
   template<typename Iterator_t,
@@ -210,7 +210,7 @@ public:
   /// TIterator-style iteration over contained elements.
   /// \note These iterators are slow. Use begin() and end() or
   /// range-based for loop instead.
-  inline TIterator* createIterator(Bool_t dir = kIterForward) const
+  inline TIterator* createIterator(bool dir = kIterForward) const
   R__SUGGEST_ALTERNATIVE("begin(), end() and range-based for loops.") {
     // Create and return an iterator over the elements in this collection
     return new RooLinkedListIter(makeLegacyIterator(dir));
@@ -218,7 +218,7 @@ public:
 
   /// TIterator-style iteration over contained elements.
   /// \note This iterator is slow. Use begin() and end() or range-based for loop instead.
-  RooLinkedListIter iterator(Bool_t dir = kIterForward) const
+  RooLinkedListIter iterator(bool dir = kIterForward) const
   R__SUGGEST_ALTERNATIVE("begin(), end() and range-based for loops.") {
     return RooLinkedListIter(makeLegacyIterator(dir));
   }
@@ -303,7 +303,7 @@ public:
   void printTitle(std::ostream& os) const override ;
   void printClassName(std::ostream& os) const override ;
   void printValue(std::ostream& os) const override ;
-  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const override ;
+  void printMultiline(std::ostream& os, Int_t contents, bool verbose=false, TString indent="") const override ;
 
   Int_t defaultPrintContents(Option_t* opt) const override ;
 
@@ -323,19 +323,19 @@ public:
     // Return namer of collection
     return _name.Data() ;
   }
-  Bool_t isOwning() const {
+  bool isOwning() const {
     // Does collection own contents?
     return _ownCont ;
   }
 
-  Bool_t allInRange(const char* rangeSpec) const ;
+  bool allInRange(const char* rangeSpec) const ;
 
   void dump() const ;
 
-  void releaseOwnership() { _ownCont = kFALSE ; }
-  void takeOwnership() { _ownCont = kTRUE ; }
+  void releaseOwnership() { _ownCont = false ; }
+  void takeOwnership() { _ownCont = true ; }
 
-  void sort(Bool_t reverse = false);
+  void sort(bool reverse = false);
   void sortTopologically();
 
   void RecursiveRemove(TObject *obj) override;
@@ -357,14 +357,14 @@ protected:
   Storage_t _list;  ///< Actual object storage
   using LegacyIterator_t = TIteratorToSTLInterface<Storage_t>;
 
-  Bool_t _ownCont = false; ///< Flag to identify a list that owns its contents.
+  bool _ownCont = false; ///< Flag to identify a list that owns its contents.
   TString _name;           ///< Our name.
-  Bool_t _allRRV = true;   ///< All contents are RRV
+  bool _allRRV = true;   ///< All contents are RRV
 
   void deleteList() ;
 
   // Support for snapshot method
-  Bool_t addServerClonesToList(const RooAbsArg& var) ;
+  bool addServerClonesToList(const RooAbsArg& var) ;
 
   inline TNamed* structureTag() { if (_structureTag==0) makeStructureTag() ; return _structureTag ; }
   inline TNamed* typedStructureTag() { if (_typedStructureTag==0) makeTypedStructureTag() ; return _typedStructureTag ; }

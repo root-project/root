@@ -41,14 +41,14 @@ public:
 
   Double_t evaluate() const override ;
 
-  RooNumIntConfig& convIntConfig() { _init = kFALSE ; return _convIntConfig ; }
-  const RooNumIntConfig& convIntConfig() const { _init = kFALSE ; return _convIntConfig ; }
+  RooNumIntConfig& convIntConfig() { _init = false ; return _convIntConfig ; }
+  const RooNumIntConfig& convIntConfig() const { _init = false ; return _convIntConfig ; }
 
   void clearConvolutionWindow() ;
   void setConvolutionWindow(RooAbsReal& centerParam, RooAbsReal& widthParam, Double_t widthScaleFactor=1) ;
 
   void setCallWarning(Int_t threshold=2000) ;
-  void setCallProfiling(Bool_t flag, Int_t nbinX = 40, Int_t nbinCall = 40, Int_t nCallHigh=1000) ;
+  void setCallProfiling(bool flag, Int_t nbinX = 40, Int_t nbinCall = 40, Int_t nCallHigh=1000) ;
   const TH2* profileData() const { return _doProf ? _callHist : 0 ; }
 
   // Access components
@@ -60,9 +60,9 @@ protected:
 
   friend class RooNumConvPdf ;
 
-  mutable Bool_t _init ;
+  mutable bool _init ;
   void initialize() const ;
-  Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) override ;
+  bool redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive) override ;
 
   void printCompactTreeHook(std::ostream& os, const char* indent="") override ;
 
@@ -86,12 +86,12 @@ protected:
   RooAbsReal&   clonePdf()   const { if (!_init) initialize() ; return (RooAbsReal&)  *_clonePdf ; }
   RooAbsReal&   cloneModel() const { if (!_init) initialize() ; return (RooAbsReal&)  *_cloneModel ; }
 
-  Bool_t       _useWindow   ;     ///< Switch to activate window convolution
+  bool       _useWindow   ;     ///< Switch to activate window convolution
   Double_t     _windowScale ;     ///< Scale factor for window parameter
   RooListProxy _windowParam ;     ///< Holder for optional convolution integration window scaling parameter
 
   Int_t        _verboseThresh ;   ///< Call count threshold for verbose printing
-  Bool_t       _doProf   ;        ///< Switch to activate profiling option
+  bool       _doProf   ;        ///< Switch to activate profiling option
   TH2*         _callHist ;        ///<! Histogram recording number of calls per convolution integral calculation
 
   ClassDefOverride(RooNumConvolution,1)   // Operator PDF implementing numeric convolution of 2 input functions

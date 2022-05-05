@@ -38,7 +38,7 @@ ClassImp(RooBlindTools);
 /// Constructor
 
 RooBlindTools::RooBlindTools(const char *stSeedIn, blindMode Mode,
-              Double_t centralValue, Double_t sigmaOffset, Bool_t s2bMode) :
+              Double_t centralValue, Double_t sigmaOffset, bool s2bMode) :
 
   _PrecisionOffsetScale(sigmaOffset),
   _PrecisionCentralValue(centralValue),

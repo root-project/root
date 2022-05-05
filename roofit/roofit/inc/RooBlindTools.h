@@ -47,7 +47,7 @@ public:
    blindMode Mode=full,   // blinding mode
    Double_t centralValue=0.0,     // Central value for Precision measurements
    Double_t sigmaOffset=1.0,      // range for Offset
-   Bool_t s2bMode=kFALSE          // Use sin2beta modifications?
+   bool s2bMode=false          // Use sin2beta modifications?
    );
 
   // Copy
@@ -138,7 +138,7 @@ private:
   Double_t _PrecisionUniform;
   Double_t _PrecisionCentralValue;
   blindMode _mode;
-  Bool_t   _s2bMode ;
+  bool   _s2bMode ;
 
   // setup data members from string seed
   void setup(const char *stSeed);

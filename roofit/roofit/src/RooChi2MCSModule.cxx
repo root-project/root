@@ -85,7 +85,7 @@ RooChi2MCSModule:: ~RooChi2MCSModule()
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize module after attachment to RooMCStudy object
 
-Bool_t RooChi2MCSModule::initializeInstance()
+bool RooChi2MCSModule::initializeInstance()
 {
   // Construct variable that holds -log(L) fit with null hypothesis for given parameter
   _chi2     = new RooRealVar("chi2","chi^2",0) ;
@@ -96,16 +96,16 @@ Bool_t RooChi2MCSModule::initializeInstance()
   // Create new dataset to be merged with RooMCStudy::fitParDataSet
   _data = new RooDataSet("Chi2Data","Additional data for Chi2 study",RooArgSet(*_chi2,*_ndof,*_chi2red,*_prob)) ;
 
-  return kTRUE ;
+  return true ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize module at beginning of RooCMStudy run
 
-Bool_t RooChi2MCSModule::initializeRun(Int_t /*numSamples*/)
+bool RooChi2MCSModule::initializeRun(Int_t /*numSamples*/)
 {
   _data->reset() ;
-  return kTRUE ;
+  return true ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -121,19 +121,19 @@ RooDataSet* RooChi2MCSModule::finalizeRun()
 ////////////////////////////////////////////////////////////////////////////////
 /// Bin dataset and calculate chi2 of p.d.f w.r.t binned dataset
 
-Bool_t RooChi2MCSModule::processAfterFit(Int_t /*sampleNum*/)
+bool RooChi2MCSModule::processAfterFit(Int_t /*sampleNum*/)
 {
   RooAbsData* data = genSample() ;
   RooDataHist* binnedData = dynamic_cast<RooDataHist*>(data) ;
-  Bool_t deleteData(kFALSE) ;
+  bool deleteData(false) ;
   if (!binnedData) {
-    deleteData = kTRUE ;
+    deleteData = true ;
     binnedData = ((RooDataSet*)data)->binnedClone() ;
   }
 
   RooChi2Var chi2Var("chi2Var","chi2Var",*fitModel(),*binnedData,RooFit::Extended(extendedGen()),RooFit::DataError(RooAbsData::SumW2)) ;
 
-  RooArgSet* floatPars = (RooArgSet*) fitParams()->selectByAttrib("Constant",kFALSE) ;
+  RooArgSet* floatPars = (RooArgSet*) fitParams()->selectByAttrib("Constant",false) ;
 
   _chi2->setVal(chi2Var.getVal()) ;
   _ndof->setVal(binnedData->numEntries()-floatPars->getSize()-1) ;
@@ -147,5 +147,5 @@ Bool_t RooChi2MCSModule::processAfterFit(Int_t /*sampleNum*/)
   }
   delete floatPars ;
 
-  return kTRUE ;
+  return true ;
 }

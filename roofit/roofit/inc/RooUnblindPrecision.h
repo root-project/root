@@ -28,10 +28,10 @@ public:
   // Constructors, assignment etc
   RooUnblindPrecision() ;
   RooUnblindPrecision(const char *name, const char *title,
-            const char *blindString, Double_t centralValue, Double_t scale, RooAbsReal& blindValue, Bool_t sin2betaMode=kFALSE);
+            const char *blindString, Double_t centralValue, Double_t scale, RooAbsReal& blindValue, bool sin2betaMode=false);
   RooUnblindPrecision(const char *name, const char *title,
             const char *blindString, Double_t centralValue, Double_t scale,
-            RooAbsReal& blindValue, RooAbsCategory& blindState, Bool_t sin2betaMode=kFALSE);
+            RooAbsReal& blindValue, RooAbsCategory& blindState, bool sin2betaMode=false);
   RooUnblindPrecision(const RooUnblindPrecision& other, const char* name=0);
   TObject* clone(const char* newname) const override { return new RooUnblindPrecision(*this,newname); }
   ~RooUnblindPrecision() override;

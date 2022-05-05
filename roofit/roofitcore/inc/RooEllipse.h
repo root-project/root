@@ -29,7 +29,7 @@ public:
   void printName(std::ostream& os) const override ;
   void printTitle(std::ostream& os) const override ;
   void printClassName(std::ostream& os) const override ;
-  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const override;
+  void printMultiline(std::ostream& os, Int_t contents, bool verbose=false, TString indent="") const override;
 
   /// Printing interface
   inline void Print(Option_t *options= 0) const override {

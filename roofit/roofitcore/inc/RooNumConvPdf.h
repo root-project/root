@@ -44,7 +44,7 @@ public:
   inline void setConvolutionWindow(RooAbsReal& centerParam, RooAbsReal& widthParam, Double_t widthScaleFactor=1)
    { conv().setConvolutionWindow(centerParam,widthParam,widthScaleFactor) ; }
   inline void setCallWarning(Int_t threshold=2000) { conv().setCallWarning(threshold) ; }
-  inline void setCallProfiling(Bool_t flag, Int_t nbinX = 40, Int_t nbinCall = 40, Int_t nCallHigh=1000)
+  inline void setCallProfiling(bool flag, Int_t nbinX = 40, Int_t nbinCall = 40, Int_t nCallHigh=1000)
    { conv().setCallProfiling(flag,nbinX,nbinCall,nCallHigh) ; }
   inline const TH2* profileData() const { return conv().profileData() ; }
 
@@ -62,7 +62,7 @@ protected:
 
   RooNumConvolution& conv() const { if (!_init) initialize() ; return *_conv ; }
 
-  mutable Bool_t _init ; ///<! do not persist
+  mutable bool _init ; ///<! do not persist
   void initialize() const ;
   mutable RooNumConvolution* _conv ; ///<! Actual convolution calculation
 
@@ -71,7 +71,7 @@ protected:
   RooRealProxy _origModel ;       ///< Original resolution model
 
   RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0,
-                                       const RooArgSet* auxProto=0, Bool_t verbose= kFALSE) const override ;
+                                       const RooArgSet* auxProto=0, bool verbose= false) const override ;
 
   friend class RooConvGenContext ;
 

@@ -28,8 +28,8 @@ using namespace RooFit ;
 class TestBasic111 : public RooFitTestUnit
 {
 public:
-  TestBasic111(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Numeric integration configuration",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic111(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Numeric integration configuration",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
     // A d j u s t   g l o b a l   1 D   i n t e g r a t i o n   p r e c i s i o n
     // ----------------------------------------------------------------------------
@@ -97,6 +97,6 @@ public:
     delete intLandau2 ;
     delete intLandau3 ;
 
-    return kTRUE ;
+    return true ;
   }
 } ;

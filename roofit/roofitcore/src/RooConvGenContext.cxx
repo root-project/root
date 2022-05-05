@@ -57,14 +57,14 @@ ClassImp(RooConvGenContext);
 /// generators that may be defined.
 
 RooConvGenContext::RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArgSet &vars,
-                 const RooDataSet *prototype, const RooArgSet* auxProto, Bool_t verbose) :
+                 const RooDataSet *prototype, const RooArgSet* auxProto, bool verbose) :
   RooAbsGenContext(model,vars,prototype,auxProto,verbose), _pdfVarsOwned(0), _modelVarsOwned(0)
 {
   cxcoutI(Generation) << "RooConvGenContext::ctor() setting up special generator context for analytical convolution p.d.f. " << model.GetName()
             << " for generation of observable(s) " << vars << endl ;
 
   // Clone PDF and change model to internal truth model
-  _pdfCloneSet = (RooArgSet*) RooArgSet(model).snapshot(kTRUE) ;
+  _pdfCloneSet = (RooArgSet*) RooArgSet(model).snapshot(true) ;
   if (!_pdfCloneSet) {
     coutE(Generation) << "RooConvGenContext::RooConvGenContext(" << GetName() << ") Couldn't deep-clone PDF, abort," << endl ;
     RooErrorHandler::softAbort() ;
@@ -84,7 +84,7 @@ RooConvGenContext::RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArg
   _pdfGen = pdfClone->genContext(*_pdfVars,prototype,auxProto,verbose) ;
 
   // Clone resolution model and use as normal PDF
-  _modelCloneSet = (RooArgSet*) RooArgSet(*model._convSet.at(0)).snapshot(kTRUE) ;
+  _modelCloneSet = (RooArgSet*) RooArgSet(*model._convSet.at(0)).snapshot(true) ;
   if (!_modelCloneSet) {
     coutE(Generation) << "RooConvGenContext::RooConvGenContext(" << GetName() << ") Couldn't deep-clone resolution model, abort," << endl ;
     RooErrorHandler::softAbort() ;
@@ -135,20 +135,20 @@ RooConvGenContext::RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArg
 /// generators that may be defined.
 
 RooConvGenContext::RooConvGenContext(const RooNumConvPdf &model, const RooArgSet &vars,
-                 const RooDataSet *prototype, const RooArgSet* auxProto, Bool_t verbose) :
+                 const RooDataSet *prototype, const RooArgSet* auxProto, bool verbose) :
   RooAbsGenContext(model,vars,prototype,auxProto,verbose)
 {
   cxcoutI(Generation) << "RooConvGenContext::ctor() setting up special generator context for numeric convolution p.d.f. " << model.GetName()
          << " for generation of observable(s) " << vars << endl ;
 
   // Create generator for physics X truth model
-  _pdfVarsOwned = (RooArgSet*) model.conv().clonePdf().getObservables(&vars)->snapshot(kTRUE) ;
+  _pdfVarsOwned = (RooArgSet*) model.conv().clonePdf().getObservables(&vars)->snapshot(true) ;
   _pdfVars = new RooArgSet(*_pdfVarsOwned) ;
   _pdfGen = ((RooAbsPdf&)model.conv().clonePdf()).genContext(*_pdfVars,prototype,auxProto,verbose) ;
   _pdfCloneSet = 0 ;
 
   // Create generator for resolution model as PDF
-  _modelVarsOwned = (RooArgSet*) model.conv().cloneModel().getObservables(&vars)->snapshot(kTRUE) ;
+  _modelVarsOwned = (RooArgSet*) model.conv().cloneModel().getObservables(&vars)->snapshot(true) ;
   _modelVars = new RooArgSet(*_modelVarsOwned) ;
   _convVarName = model.conv().cloneVar().GetName() ;
   _modelGen = ((RooAbsPdf&)model.conv().cloneModel()).genContext(*_modelVars,prototype,auxProto,verbose) ;
@@ -175,7 +175,7 @@ RooConvGenContext::RooConvGenContext(const RooNumConvPdf &model, const RooArgSet
 /// generators that may be defined.
 
 RooConvGenContext::RooConvGenContext(const RooFFTConvPdf &model, const RooArgSet &vars,
-                 const RooDataSet *prototype, const RooArgSet* auxProto, Bool_t verbose) :
+                 const RooDataSet *prototype, const RooArgSet* auxProto, bool verbose) :
   RooAbsGenContext(model,vars,prototype,auxProto,verbose)
 {
   cxcoutI(Generation) << "RooConvGenContext::ctor() setting up special generator context for fft convolution p.d.f. " << model.GetName()
@@ -184,22 +184,22 @@ RooConvGenContext::RooConvGenContext(const RooFFTConvPdf &model, const RooArgSet
   _convVarName = model._x.arg().GetName() ;
 
   // Create generator for physics model
-  _pdfCloneSet = (RooArgSet*) RooArgSet(model._pdf1.arg()).snapshot(kTRUE) ;
+  _pdfCloneSet = (RooArgSet*) RooArgSet(model._pdf1.arg()).snapshot(true) ;
   RooAbsPdf* pdfClone = (RooAbsPdf*) _pdfCloneSet->find(model._pdf1.arg().GetName()) ;
   RooRealVar* cvPdf = (RooRealVar*) _pdfCloneSet->find(model._x.arg().GetName()) ;
   cvPdf->removeRange() ;
   RooArgSet* tmp1 = pdfClone->getObservables(&vars) ;
-  _pdfVarsOwned = (RooArgSet*) tmp1->snapshot(kTRUE) ;
+  _pdfVarsOwned = (RooArgSet*) tmp1->snapshot(true) ;
   _pdfVars = new RooArgSet(*_pdfVarsOwned) ;
   _pdfGen = pdfClone->genContext(*_pdfVars,prototype,auxProto,verbose) ;
 
   // Create generator for resolution model
-  _modelCloneSet = (RooArgSet*) RooArgSet(model._pdf2.arg()).snapshot(kTRUE) ;
+  _modelCloneSet = (RooArgSet*) RooArgSet(model._pdf2.arg()).snapshot(true) ;
   RooAbsPdf* modelClone = (RooAbsPdf*) _modelCloneSet->find(model._pdf2.arg().GetName()) ;
   RooRealVar* cvModel = (RooRealVar*) _modelCloneSet->find(model._x.arg().GetName()) ;
   cvModel->removeRange() ;
   RooArgSet* tmp2 = modelClone->getObservables(&vars) ;
-  _modelVarsOwned = (RooArgSet*) tmp2->snapshot(kTRUE) ;
+  _modelVarsOwned = (RooArgSet*) tmp2->snapshot(true) ;
   _modelVars = new RooArgSet(*_modelVarsOwned) ;
   _modelGen = modelClone->genContext(*_pdfVars,prototype,auxProto,verbose) ;
 
@@ -244,10 +244,10 @@ void RooConvGenContext::attach(const RooArgSet& args)
 
   // Replace all servers in _pdfVars and _modelVars with those in theEvent, except for the convolution variable
   RooArgSet* pdfCommon = (RooArgSet*) args.selectCommon(*_pdfVars) ;
-  pdfCommon->remove(*cvPdf,kTRUE,kTRUE) ;
+  pdfCommon->remove(*cvPdf,true,true) ;
 
   RooArgSet* modelCommon = (RooArgSet*) args.selectCommon(*_modelVars) ;
-  modelCommon->remove(*cvModel,kTRUE,kTRUE) ;
+  modelCommon->remove(*cvModel,true,true) ;
 
   _pdfGen->attach(*pdfCommon) ;
   _modelGen->attach(*modelCommon) ;
@@ -270,12 +270,12 @@ void RooConvGenContext::initGenerator(const RooArgSet &theEvent)
 
   // Replace all servers in _pdfVars and _modelVars with those in theEvent, except for the convolution variable
   RooArgSet* pdfCommon = (RooArgSet*) theEvent.selectCommon(*_pdfVars) ;
-  pdfCommon->remove(*_cvPdf,kTRUE,kTRUE) ;
+  pdfCommon->remove(*_cvPdf,true,true) ;
   _pdfVars->replace(*pdfCommon) ;
   delete pdfCommon ;
 
   RooArgSet* modelCommon = (RooArgSet*) theEvent.selectCommon(*_modelVars) ;
-  modelCommon->remove(*_cvModel,kTRUE,kTRUE) ;
+  modelCommon->remove(*_cvModel,true,true) ;
   _modelVars->replace(*modelCommon) ;
   delete modelCommon ;
 
@@ -328,7 +328,7 @@ void RooConvGenContext::setProtoDataOrder(Int_t* lut)
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the details of this generator context
 
-void RooConvGenContext::printMultiline(ostream &os, Int_t content, Bool_t verbose, TString indent) const
+void RooConvGenContext::printMultiline(ostream &os, Int_t content, bool verbose, TString indent) const
 {
   RooAbsGenContext::printMultiline(os,content,verbose,indent) ;
   os << indent << "--- RooConvGenContext ---" << endl ;

@@ -119,14 +119,14 @@ void RooProduct::addTerm(RooAbsArg* term) {
 /// Force internal handling of integration of given observable if any
 /// of the product terms depend on it.
 
-Bool_t RooProduct::forceAnalyticalInt(const RooAbsArg& dep) const
+bool RooProduct::forceAnalyticalInt(const RooAbsArg& dep) const
 {
   // Force internal handling of integration of given observable if any
   // of the product terms depend on it.
 
   RooFIter compRIter = _compRSet.fwdIterator() ;
   RooAbsReal* rcomp ;
-  Bool_t depends(kFALSE);
+  bool depends(false);
   while((rcomp=(RooAbsReal*)compRIter.next())&&!depends) {
         depends = rcomp->dependsOn(dep);
   }
@@ -173,7 +173,7 @@ RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) con
   }
 
   // Merge groups with overlapping dependents
-  Bool_t overlap;
+  bool overlap;
   do {
     std::pair<ProdMap::iterator,ProdMap::iterator> i = findOverlap2nd(map->begin(),map->end());
     overlap = (i.first!=i.second);
@@ -351,9 +351,9 @@ const char* RooProduct::makeFPName(const char *pfx,const RooArgSet& terms) const
   pname = pfx;
   RooFIter i = terms.fwdIterator();
   RooAbsArg *arg;
-  Bool_t first(kTRUE);
+  bool first(true);
   while((arg=(RooAbsArg*)i.next())) {
-    if (first) { first=kFALSE;}
+    if (first) { first=false;}
     else pname.Append("_X_");
     pname.Append(arg->GetName());
   }
@@ -431,7 +431,7 @@ std::list<Double_t>* RooProduct::binBoundaries(RooAbsRealLValue& obs, Double_t x
 
 
 //_____________________________________________________________________________B
-Bool_t RooProduct::isBinnedDistribution(const RooArgSet& obs) const
+bool RooProduct::isBinnedDistribution(const RooArgSet& obs) const
 {
   // If all components that depend on obs are binned that so is the product
 
@@ -439,11 +439,11 @@ Bool_t RooProduct::isBinnedDistribution(const RooArgSet& obs) const
     auto func = static_cast<const RooAbsReal*>(item);
 
     if (func->dependsOn(obs) && !func->isBinnedDistribution(obs)) {
-      return kFALSE ;
+      return false ;
     }
   }
 
-  return kTRUE  ;
+  return true  ;
 }
 
 
@@ -513,17 +513,17 @@ void RooProduct::setCacheAndTrackHints(RooArgSet& trackNodes)
 
 void RooProduct::printMetaArgs(ostream& os) const
 {
-  Bool_t first(kTRUE) ;
+  bool first(true) ;
 
   for (const auto rcomp : _compRSet) {
-    if (!first) {  os << " * " ; } else {  first = kFALSE ; }
+    if (!first) {  os << " * " ; } else {  first = false ; }
     os << rcomp->GetName() ;
   }
 
   for (const auto item : _compCSet) {
     auto ccomp = static_cast<const RooAbsCategory*>(item);
 
-    if (!first) {  os << " * " ; } else {  first = kFALSE ; }
+    if (!first) {  os << " * " ; } else {  first = false ; }
     os << ccomp->GetName() ;
   }
 
@@ -551,10 +551,10 @@ std::pair<RPPMIter,RPPMIter> findOverlap2nd(RPPMIter i, RPPMIter end)
 void dump_map(ostream& os, RPPMIter i, RPPMIter end)
 {
   // Utility dump function for debugging
-  Bool_t first(kTRUE);
+  bool first(true);
   os << " [ " ;
   for(; i!=end;++i) {
-    if (first) { first=kFALSE; }
+    if (first) { first=false; }
     else { os << " , " ; }
     os << *(i->first) << " -> " << *(i->second) ;
   }

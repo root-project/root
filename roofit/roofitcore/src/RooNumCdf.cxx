@@ -79,7 +79,7 @@ RooNumCdf::~RooNumCdf()
 void RooNumCdf::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cache) const
 {
   RICacheElem& riCache = static_cast<RICacheElem&>(cache) ;
-  riCache.calculate(kTRUE) ;
+  riCache.calculate(true) ;
 }
 
 

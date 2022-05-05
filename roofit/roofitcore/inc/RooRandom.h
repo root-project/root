@@ -34,7 +34,7 @@ public:
   static Double_t gaussian(TRandom *generator= randomGenerator());
 
   static RooQuasiRandomGenerator *quasiGenerator();
-  static Bool_t quasi(UInt_t dimension, Double_t vector[],
+  static bool quasi(UInt_t dimension, Double_t vector[],
             RooQuasiRandomGenerator *generator= quasiGenerator());
 
 private:

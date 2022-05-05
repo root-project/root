@@ -27,8 +27,8 @@ using namespace RooFit ;
 class TestBasic203 : public RooFitTestUnit
 {
 public:
-  TestBasic203(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Basic fitting and plotting in ranges",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic203(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Basic fitting and plotting in ranges",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
     // S e t u p   m o d e l
     // ---------------------
@@ -54,7 +54,7 @@ public:
     // ---------------------------
 
     // Fit p.d.f to all data
-    RooFitResult* r_full = model.fitTo(*modelData,Save(kTRUE)) ;
+    RooFitResult* r_full = model.fitTo(*modelData,Save(true)) ;
 
 
     // F i t   p a r t i a l   r a n g e
@@ -64,7 +64,7 @@ public:
     x.setRange("signal",-3,3) ;
 
     // Fit p.d.f only to data in "signal" range
-    RooFitResult* r_sig = model.fitTo(*modelData,Save(kTRUE),Range("signal")) ;
+    RooFitResult* r_sig = model.fitTo(*modelData,Save(true),Range("signal")) ;
 
 
     // P l o t   /   p r i n t   r e s u l t s
@@ -81,6 +81,6 @@ public:
     regResult(r_sig,"rf203_r_sig") ;
 
     delete modelData ;
-    return kTRUE;
+    return true;
   }
 } ;

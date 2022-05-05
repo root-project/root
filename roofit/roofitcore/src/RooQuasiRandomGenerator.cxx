@@ -47,7 +47,7 @@ RooQuasiRandomGenerator::RooQuasiRandomGenerator()
 {
   if(!_coefsCalculated) {
     calculateCoefs(MaxDimension);
-    _coefsCalculated= kTRUE;
+    _coefsCalculated= true;
   }
   // allocate workspace memory
   _nextq= new Int_t[MaxDimension];
@@ -78,7 +78,7 @@ void RooQuasiRandomGenerator::reset()
 /// Generate the next number in the sequence for the specified dimension.
 /// The maximum dimension supported is 12.
 
-Bool_t RooQuasiRandomGenerator::generate(UInt_t dimension, Double_t vector[])
+bool RooQuasiRandomGenerator::generate(UInt_t dimension, Double_t vector[])
 {
   /* Load the result from the saved state. */
   static const Double_t recip = 1.0/(double)(1U << NBits); /* 2^(-nbits) */
@@ -102,7 +102,7 @@ Bool_t RooQuasiRandomGenerator::generate(UInt_t dimension, Double_t vector[])
   }
   if(r >= NBits) {
     oocoutE((TObject*)0,Integration) << "RooQuasiRandomGenerator::generate: internal error!" << endl;
-    return kFALSE;
+    return false;
   }
 
   /* Calculate the next state. */
@@ -111,7 +111,7 @@ Bool_t RooQuasiRandomGenerator::generate(UInt_t dimension, Double_t vector[])
   }
   _sequenceCount++;
 
-  return kTRUE;
+  return true;
 }
 
 
@@ -354,4 +354,4 @@ const Int_t RooQuasiRandomGenerator::_polyDegree[RooQuasiRandomGenerator::MaxDim
   0, 1, 1, 2, 3, 3, 4, 4, 4, 5, 5, 5, 5
 };
 
-Bool_t RooQuasiRandomGenerator::_coefsCalculated= kFALSE;
+bool RooQuasiRandomGenerator::_coefsCalculated= false;

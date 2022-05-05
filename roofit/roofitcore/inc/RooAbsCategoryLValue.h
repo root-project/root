@@ -55,8 +55,8 @@ public:
   /// If printError is set, a message will be printed if
   /// the specified state name does not represent a valid state.
   /// \return bool to signal an error.
-  virtual bool setLabel(const char* label, Bool_t printError=kTRUE) = 0;
-  /// \copydoc setLabel(const char*, Bool_t)
+  virtual bool setLabel(const char* label, bool printError=true) = 0;
+  /// \copydoc setLabel(const char*, bool)
   bool setLabel(const std::string& label, bool printError = true) {
     return setLabel(label.c_str(), printError);
   }
@@ -97,14 +97,14 @@ public:
   Int_t getBin(const RooAbsBinning* /*ptr*/) const override { return getBin((const char*)0) ; }
 
 
-  inline void setConstant(Bool_t value= kTRUE) {
+  inline void setConstant(bool value= true) {
     // Declare category constant
     setAttribute("Constant",value);
   }
 
-  inline Bool_t isLValue() const override {
+  inline bool isLValue() const override {
     // Object is an l-value
-    return kTRUE;
+    return true;
   }
 
 protected:
@@ -118,7 +118,7 @@ protected:
   }
   /// \endcond
 
-  void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE, Bool_t setValDirty=kTRUE) override ;
+  void copyCache(const RooAbsArg* source, bool valueOnly=false, bool setValDirty=true) override ;
 
   ClassDefOverride(RooAbsCategoryLValue,1) // Abstract modifiable index variable
 };

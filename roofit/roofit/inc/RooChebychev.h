@@ -36,7 +36,7 @@ public:
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
   Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
-  void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) override ;
+  void selectNormalizationRange(const char* rangeName=0, bool force=false) override ;
 
 private:
 

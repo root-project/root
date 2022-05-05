@@ -29,7 +29,7 @@ public:
 
   RooFirstMoment() ;
   RooFirstMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x) ;
-  RooFirstMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, Bool_t intNSet=kFALSE) ;
+  RooFirstMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, bool intNSet=false) ;
   ~RooFirstMoment() override ;
 
   RooFirstMoment(const RooFirstMoment& other, const char* name = 0);

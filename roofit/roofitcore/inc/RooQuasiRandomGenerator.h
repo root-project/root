@@ -23,7 +23,7 @@ public:
   RooQuasiRandomGenerator();
   virtual ~RooQuasiRandomGenerator();
   void reset();
-  Bool_t generate(UInt_t dimension, Double_t vector[]);
+  bool generate(UInt_t dimension, Double_t vector[]);
   enum { MaxDimension = 12 , NBits = 31 , MaxDegree = 50 , MaxPrimitiveDegree = 5 };
 protected:
   void calculateCoefs(UInt_t dimension);
@@ -39,7 +39,7 @@ private:
   Int_t *_nextq;
   Int_t _sequenceCount;
 
-  static Bool_t _coefsCalculated;
+  static bool _coefsCalculated;
   static Int_t _cj[NBits][MaxDimension];
   static const Int_t _primitivePoly[MaxDimension+1][MaxPrimitiveDegree+1];
   static const Int_t _polyDegree[MaxDimension+1];

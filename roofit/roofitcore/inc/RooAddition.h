@@ -28,8 +28,8 @@ class RooAddition : public RooAbsReal {
 public:
 
   RooAddition() ;
-  RooAddition(const char *name, const char *title, const RooArgList& sumSet, Bool_t takeOwnerShip=kFALSE) ;
-  RooAddition(const char *name, const char *title, const RooArgList& sumSet1, const RooArgList& sumSet2, Bool_t takeOwnerShip=kFALSE) ;
+  RooAddition(const char *name, const char *title, const RooArgList& sumSet, bool takeOwnerShip=false) ;
+  RooAddition(const char *name, const char *title, const RooArgList& sumSet1, const RooArgList& sumSet2, bool takeOwnerShip=false) ;
   ~RooAddition() override ;
 
   RooAddition(const RooAddition& other, const char* name = 0);
@@ -42,20 +42,20 @@ public:
   const RooArgList& list1() const { return _set ; }
   const RooArgList& list() const { return _set ; }
 
-  Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const override {
+  bool forceAnalyticalInt(const RooAbsArg& /*dep*/) const override {
       // Force RooRealIntegral to offer all observables for internal integration
-      return kTRUE ;
+      return true ;
   }
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars, const char* rangeName=0) const override;
   Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
-  Bool_t setData(RooAbsData& data, Bool_t cloneData=kTRUE) override ;
+  bool setData(RooAbsData& data, bool cloneData=true) override ;
 
   std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override ;
   std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override ;
-  Bool_t isBinnedDistribution(const RooArgSet& obs) const override  ;
+  bool isBinnedDistribution(const RooArgSet& obs) const override  ;
 
-  void enableOffsetting(Bool_t) override ;
+  void enableOffsetting(bool) override ;
 
 protected:
 

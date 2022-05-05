@@ -66,11 +66,11 @@ void RooProofDriverSelector::SlaveBegin(TTree * /*tree*/)
 
 }
 
-Bool_t RooProofDriverSelector::Process(Long64_t entry)
+bool RooProofDriverSelector::Process(Long64_t entry)
 {
   cout << "RooProofDriverSelector::Process(" << entry << ")" << endl ;
   _pkg->runOne() ;
-  return kTRUE;
+  return true;
 }
 
 
@@ -91,8 +91,8 @@ void RooProofDriverSelector::Init(TTree *tree)
    fChain->SetBranchAddress("i", &i, &b_i);
 }
 
-Bool_t RooProofDriverSelector::Notify()
+bool RooProofDriverSelector::Notify()
 {
-   return kTRUE;
+   return true;
 }
 

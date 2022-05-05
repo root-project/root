@@ -847,7 +847,7 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
    assert(poi);
 
    // try to reduce some error messages
-   //Bool_t silentMode = (RooMsgService::instance().globalKillBelow() >= RooFit::ERROR || RooMsgService::instance().silentMode()) ;
+   //bool silentMode = (RooMsgService::instance().globalKillBelow() >= RooFit::ERROR || RooMsgService::instance().silentMode()) ;
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CountErrors);
 
 
@@ -1044,7 +1044,7 @@ RooPlot* BayesianCalculator::GetPosteriorPlot(bool norm, double precision ) cons
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CountErrors);
 
    plot->SetTitle(TString("Posterior probability of parameter \"")+TString(poi->GetName())+TString("\""));
-   posterior->plotOn(plot,RooFit::Range(fLower,fUpper,kFALSE),RooFit::VLines(),RooFit::DrawOption("F"),RooFit::MoveToBack(),RooFit::FillColor(kGray),RooFit::Precision(precision));
+   posterior->plotOn(plot,RooFit::Range(fLower,fUpper,false),RooFit::VLines(),RooFit::DrawOption("F"),RooFit::MoveToBack(),RooFit::FillColor(kGray),RooFit::Precision(precision));
    posterior->plotOn(plot);
    plot->GetYaxis()->SetTitle("posterior function");
 
@@ -1124,7 +1124,7 @@ SimpleInterval* BayesianCalculator::GetInterval() const
    // get integrated likelihood (posterior function)
    GetPosteriorFunction();
 
-   //Bool_t silentMode = (RooMsgService::instance().globalKillBelow() >= RooFit::ERROR || RooMsgService::instance().silentMode()) ;
+   //bool silentMode = (RooMsgService::instance().globalKillBelow() >= RooFit::ERROR || RooMsgService::instance().silentMode()) ;
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CountErrors);
 
    if (fLeftSideFraction < 0 ) {

@@ -76,7 +76,7 @@ RooAdaptiveIntegratorND::RooAdaptiveIntegratorND()
   _integrator = 0 ;
   _nError = 0 ;
   _nWarn = 0 ;
-  _useIntegrandLimits = kTRUE ;
+  _useIntegrandLimits = true ;
   _intName = "(none)" ;
 }
 
@@ -104,7 +104,7 @@ RooAdaptiveIntegratorND::RooAdaptiveIntegratorND(const RooAbsFunc& function, con
   _epsRel = config.epsRel();
   _integrator = new ROOT::Math::AdaptiveIntegratorMultiDim(_epsAbs,_epsRel,_nmax) ;
   _integrator->SetFunction(*_func) ;
-  _useIntegrandLimits=kTRUE ;
+  _useIntegrandLimits=true ;
 
   _xmin = 0 ;
   _xmax = 0 ;
@@ -148,10 +148,10 @@ RooAdaptiveIntegratorND::~RooAdaptiveIntegratorND()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check that our integration range is finite and otherwise return kFALSE.
+/// Check that our integration range is finite and otherwise return false.
 /// Update the limits from the integrand if requested.
 
-Bool_t RooAdaptiveIntegratorND::checkLimits() const
+bool RooAdaptiveIntegratorND::checkLimits() const
 {
   if (!_xmin) {
     _xmin = new Double_t[_func->NDim()] ;
@@ -165,20 +165,20 @@ Bool_t RooAdaptiveIntegratorND::checkLimits() const
     }
   }
 
-  return kTRUE ;
+  return true ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Change our integration limits. Return kTRUE if the new limits are
-/// ok, or otherwise kFALSE. Always returns kFALSE and does nothing
+/// Change our integration limits. Return true if the new limits are
+/// ok, or otherwise false. Always returns false and does nothing
 /// if this object was constructed to always use our integrand's limits.
 
-Bool_t RooAdaptiveIntegratorND::setLimits(Double_t *xmin, Double_t *xmax)
+bool RooAdaptiveIntegratorND::setLimits(Double_t *xmin, Double_t *xmax)
 {
   if(_useIntegrandLimits) {
     oocoutE((TObject*)0,Integration) << "RooAdaptiveIntegratorND::setLimits: cannot override integrand's limits" << endl;
-    return kFALSE;
+    return false;
   }
   for (UInt_t i=0 ; i<_func->NDim() ; i++) {
     _xmin[i]= xmin[i];

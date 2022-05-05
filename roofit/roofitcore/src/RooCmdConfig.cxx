@@ -114,7 +114,7 @@ std::string RooCmdConfig::missingArgs() const
   std::unique_ptr<TIterator> iter{_rList.MakeIterator()};
   while(auto const& s = iter->Next()) {
     if (first) {
-      first=kFALSE ;
+      first=false ;
     } else {
       ret += ", ";
     }
@@ -141,11 +141,11 @@ void RooCmdConfig::defineDependency(const char* refArgName, const char* neededAr
 /// Define integer property name 'name' mapped to integer in slot 'intNum' in RooCmdArg with name argName
 /// Define default value for this int property to be defVal in case named argument is not processed
 
-Bool_t RooCmdConfig::defineInt(const char* name, const char* argName, Int_t intNum, Int_t defVal)
+bool RooCmdConfig::defineInt(const char* name, const char* argName, Int_t intNum, Int_t defVal)
 {
   if (findVar(_iList, name) != _iList.end()) {
     coutE(InputArguments) << "RooCmdConfig::defintInt: name '" << name << "' already defined" << endl ;
-    return kTRUE ;
+    return true ;
   }
 
   _iList.emplace_back();
@@ -154,7 +154,7 @@ Bool_t RooCmdConfig::defineInt(const char* name, const char* argName, Int_t intN
   ri.argName = argName;
   ri.val = defVal;
   ri.num = intNum;
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -163,11 +163,11 @@ Bool_t RooCmdConfig::defineInt(const char* name, const char* argName, Int_t intN
 /// Define Double_t property name 'name' mapped to Double_t in slot 'doubleNum' in RooCmdArg with name argName
 /// Define default value for this Double_t property to be defVal in case named argument is not processed
 
-Bool_t RooCmdConfig::defineDouble(const char* name, const char* argName, Int_t doubleNum, Double_t defVal)
+bool RooCmdConfig::defineDouble(const char* name, const char* argName, Int_t doubleNum, Double_t defVal)
 {
   if (findVar(_dList, name) != _dList.end()) {
     coutE(InputArguments) << "RooCmdConfig::defineDouble: name '" << name << "' already defined" << endl ;
-    return kTRUE ;
+    return true ;
   }
 
   _dList.emplace_back();
@@ -176,7 +176,7 @@ Bool_t RooCmdConfig::defineDouble(const char* name, const char* argName, Int_t d
   rd.argName = argName;
   rd.val = defVal;
   rd.num = doubleNum;
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -187,11 +187,11 @@ Bool_t RooCmdConfig::defineDouble(const char* name, const char* argName, Int_t d
 /// If appendMode is true, values found in multiple matching RooCmdArg arguments will be concatenated
 /// in the output string. If it is false, only the value of the last processed instance is retained
 
-Bool_t RooCmdConfig::defineString(const char* name, const char* argName, Int_t stringNum, const char* defVal, Bool_t appendMode)
+bool RooCmdConfig::defineString(const char* name, const char* argName, Int_t stringNum, const char* defVal, bool appendMode)
 {
   if (findVar(_sList, name) != _sList.end()) {
     coutE(InputArguments) << "RooCmdConfig::defineString: name '" << name << "' already defined" << endl ;
-    return kTRUE ;
+    return true ;
   }
 
   _sList.emplace_back();
@@ -201,7 +201,7 @@ Bool_t RooCmdConfig::defineString(const char* name, const char* argName, Int_t s
   rs.val = defVal;
   rs.appendMode = appendMode;
   rs.num = stringNum;
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -212,12 +212,12 @@ Bool_t RooCmdConfig::defineString(const char* name, const char* argName, Int_t s
 /// If isArray is true, an array of TObjects is harvested in case multiple matching named arguments are processed.
 /// If isArray is false, only the TObject in the last processed named argument is retained
 
-Bool_t RooCmdConfig::defineObject(const char* name, const char* argName, Int_t setNum, const TObject* defVal, Bool_t isArray)
+bool RooCmdConfig::defineObject(const char* name, const char* argName, Int_t setNum, const TObject* defVal, bool isArray)
 {
 
   if (findVar(_oList, name) != _oList.end()) {
     coutE(InputArguments) << "RooCmdConfig::defineObject: name '" << name << "' already defined" << endl ;
-    return kTRUE ;
+    return true ;
   }
 
   _oList.emplace_back();
@@ -227,7 +227,7 @@ Bool_t RooCmdConfig::defineObject(const char* name, const char* argName, Int_t s
   os.val.Add(const_cast<TObject*>(defVal));
   os.appendMode = isArray;
   os.num = setNum;
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -238,12 +238,12 @@ Bool_t RooCmdConfig::defineObject(const char* name, const char* argName, Int_t s
 /// If isArray is true, an array of TObjects is harvested in case multiple matching named arguments are processed.
 /// If isArray is false, only the TObject in the last processed named argument is retained
 
-Bool_t RooCmdConfig::defineSet(const char* name, const char* argName, Int_t setNum, const RooArgSet* defVal)
+bool RooCmdConfig::defineSet(const char* name, const char* argName, Int_t setNum, const RooArgSet* defVal)
 {
 
   if (findVar(_cList, name) != _cList.end()) {
     coutE(InputArguments) << "RooCmdConfig::defineObject: name '" << name << "' already defined" << endl ;
-    return kTRUE ;
+    return true ;
   }
 
   _cList.emplace_back();
@@ -252,7 +252,7 @@ Bool_t RooCmdConfig::defineSet(const char* name, const char* argName, Int_t setN
   cs.argName = argName;
   cs.val = const_cast<RooArgSet*>(defVal);
   cs.num = setNum;
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -295,9 +295,9 @@ void RooCmdConfig::print() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Process given list with RooCmdArgs
 
-Bool_t RooCmdConfig::process(const RooLinkedList& argList)
+bool RooCmdConfig::process(const RooLinkedList& argList)
 {
-  Bool_t ret(kFALSE) ;
+  bool ret(false) ;
   for(auto * arg : static_range_cast<RooCmdArg*>(argList)) {
     ret |= process(*arg) ;
   }
@@ -309,19 +309,19 @@ Bool_t RooCmdConfig::process(const RooLinkedList& argList)
 ////////////////////////////////////////////////////////////////////////////////
 /// Process given RooCmdArg
 
-Bool_t RooCmdConfig::process(const RooCmdArg& arg)
+bool RooCmdConfig::process(const RooCmdArg& arg)
 {
   // Retrive command code
   const char* opc = arg.opcode() ;
 
   // Ignore empty commands
-  if (!opc) return kFALSE ;
+  if (!opc) return false ;
 
   // Check if not forbidden
   if (_fList.FindObject(opc)) {
     coutE(InputArguments) << _name << " ERROR: argument " << opc << " not allowed in this context" << endl ;
-    _error = kTRUE ;
-    return kTRUE ;
+    _error = true ;
+    return true ;
   }
 
   // Check if this code generates any dependencies
@@ -352,13 +352,13 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
   }
 
 
-  Bool_t anyField(kFALSE) ;
+  bool anyField(false) ;
 
   // Find registered integer fields for this opcode
   for(auto& ri : _iList) {
     if (!TString(opc).CompareTo(ri.argName)) {
       ri.val = arg.getInt(ri.num) ;
-      anyField = kTRUE ;
+      anyField = true ;
       if (_verbose) {
    cout << "RooCmdConfig::process " << ri.name << "[Int_t]" << " set to " << ri.val << endl ;
       }
@@ -369,7 +369,7 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
   for(auto& rd : _dList) {
     if (!TString(opc).CompareTo(rd.argName)) {
       rd.val = arg.getDouble(rd.num) ;
-      anyField = kTRUE ;
+      anyField = true ;
       if (_verbose) {
    cout << "RooCmdConfig::process " << rd.name << "[Double_t]" << " set to " << rd.val << endl ;
       }
@@ -389,7 +389,7 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
       } else {
         if(newStr) rs.val = newStr;
       }
-      anyField = kTRUE ;
+      anyField = true ;
       if (_verbose) {
         std::cout << "RooCmdConfig::process " << rs.name << "[string]" << " set to " << rs.val << std::endl ;
       }
@@ -401,7 +401,7 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
     if (!TString(opc).CompareTo(os.argName)) {
       if(!os.appendMode) os.val.Clear();
       os.val.Add(const_cast<TObject*>(arg.getObject(os.num)));
-      anyField = kTRUE ;
+      anyField = true ;
       if (_verbose) {
    cout << "RooCmdConfig::process " << os.name << "[TObject]" << " set to " ;
    if (os.val.At(0)) {
@@ -417,7 +417,7 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
   for(auto& cs : _cList) {
     if (!TString(opc).CompareTo(cs.argName)) {
       cs.val = const_cast<RooArgSet*>(arg.getSet(cs.num));
-      anyField = kTRUE ;
+      anyField = true ;
       if (_verbose) {
    cout << "RooCmdConfig::process " << cs.name << "[RooArgSet]" << " set to " ;
    if (cs.val) {
@@ -429,7 +429,7 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
     }
   }
 
-  Bool_t multiArg = !TString("MultiArg").CompareTo(opc) ;
+  bool multiArg = !TString("MultiArg").CompareTo(opc) ;
 
   if (!anyField && !_allowUndefined && !multiArg) {
     coutE(InputArguments) << _name << " ERROR: unrecognized command: " << opc << endl ;
@@ -446,7 +446,7 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
   TNamed *pcmd = new TNamed(opc,opc) ;
   _pList.Add(pcmd) ;
 
-  Bool_t depRet = kFALSE ;
+  bool depRet = false ;
   if (arg.procSubArgs()) {
     for (Int_t ia=0 ; ia<arg.subArgs().GetSize() ; ia++) {
       RooCmdArg* subArg = static_cast<RooCmdArg*>(arg.subArgs().At(ia)) ;
@@ -460,7 +460,7 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
     }
   }
 
-  return ((anyField||_allowUndefined)?kFALSE:kTRUE)||depRet ;
+  return ((anyField||_allowUndefined)?false:true)||depRet ;
 }
 
 
@@ -468,9 +468,9 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if RooCmdArg with name 'cmdName' has been processed
 
-Bool_t RooCmdConfig::hasProcessed(const char* cmdName) const
+bool RooCmdConfig::hasProcessed(const char* cmdName) const
 {
-  return _pList.FindObject(cmdName) ? kTRUE : kFALSE ;
+  return _pList.FindObject(cmdName) ? true : false ;
 }
 
 
@@ -504,7 +504,7 @@ Double_t RooCmdConfig::getDouble(const char* name, Double_t defVal)
 /// property is registered, return defVal. If convEmptyToNull
 /// is true, empty string will be returned as null pointers
 
-const char* RooCmdConfig::getString(const char* name, const char* defVal, Bool_t convEmptyToNull)
+const char* RooCmdConfig::getString(const char* name, const char* defVal, bool convEmptyToNull)
 {
   auto found = findVar(_sList, name);
   if(found == _sList.end()) return defVal;
@@ -551,9 +551,9 @@ const RooLinkedList& RooCmdConfig::getObjectList(const char* name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true of parsing was successful
 
-Bool_t RooCmdConfig::ok(Bool_t verbose) const
+bool RooCmdConfig::ok(bool verbose) const
 {
-  if (_rList.GetSize()==0 && !_error) return kTRUE ;
+  if (_rList.GetSize()==0 && !_error) return true ;
 
   if (verbose) {
     std::string margs = missingArgs() ;
@@ -563,7 +563,7 @@ Bool_t RooCmdConfig::ok(Bool_t verbose) const
       coutE(InputArguments) << _name << " ERROR: illegal combination of arguments and/or missing arguments" << endl ;
     }
   }
-  return kFALSE ;
+  return false ;
 }
 
 

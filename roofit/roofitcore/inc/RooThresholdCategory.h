@@ -34,12 +34,12 @@ public:
   TObject* clone(const char* newname) const override { return new RooThresholdCategory(*this, newname); }
 
   // Mapping function
-  Bool_t addThreshold(Double_t upperLimit, const char* catName, Int_t catIdx=-99999) ;
+  bool addThreshold(Double_t upperLimit, const char* catName, Int_t catIdx=-99999) ;
 
   // Printing interface (human readable)
-  void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override ;
+  void printMultiline(std::ostream& os, Int_t content, bool verbose=false, TString indent="") const override ;
 
-  void writeToStream(std::ostream& os, Bool_t compact) const override ;
+  void writeToStream(std::ostream& os, bool compact) const override ;
 
 protected:
 

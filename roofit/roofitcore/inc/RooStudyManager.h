@@ -42,11 +42,11 @@ public:
   void run(Int_t nExperiments) ;
 
   // PROOF-based parallel running
-  void runProof(Int_t nExperiments, const char* proofHost="", Bool_t showGui=kTRUE) ;
+  void runProof(Int_t nExperiments, const char* proofHost="", bool showGui=true) ;
   static void closeProof(Option_t *option = "s") ;
 
   // Batch running
-  void prepareBatchInput(const char* studyName, Int_t nExpPerJob, Bool_t unifiedInput) ;
+  void prepareBatchInput(const char* studyName, Int_t nExpPerJob, bool unifiedInput) ;
   void processBatchOutput(const char* filePat) ;
 
   RooWorkspace& wspace() { return _pkg->wspace() ; }

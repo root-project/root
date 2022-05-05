@@ -39,8 +39,8 @@ public:
   bool isFundamental() const override { return true; }
 
   // I/O streaming interface (machine readable)
-  bool readFromStream(std::istream& is, Bool_t compact, Bool_t verbose) override;
-  void writeToStream(std::ostream& os, Bool_t /*compact*/) const override { os << _string; }
+  bool readFromStream(std::istream& is, bool compact, bool verbose) override;
+  void writeToStream(std::ostream& os, bool /*compact*/) const override { os << _string; }
 
   // Return value and unit accessors
   bool operator==(const char* val) const { return _string == val; }
@@ -48,7 +48,7 @@ public:
     auto otherStr = dynamic_cast<const RooStringVar*>(&other);
     return otherStr && _string == otherStr->_string;
   }
-  bool isIdentical(const RooAbsArg& other, Bool_t /*assumeSameType*/) const override { return *this == other; }
+  bool isIdentical(const RooAbsArg& other, bool /*assumeSameType*/) const override { return *this == other; }
 
   // Printing interface (human readable)
   void printValue(std::ostream& os) const override { os << _string; }
@@ -60,15 +60,15 @@ public:
 
 protected:
   // Internal consistency checking (needed by RooDataSet)
-  Bool_t isValid() const override { return true; }
-  virtual Bool_t isValidString(const char*, Bool_t /*printError=kFALSE*/) const { return true; }
+  bool isValid() const override { return true; }
+  virtual bool isValidString(const char*, bool /*printError=false*/) const { return true; }
 
   void syncCache(const RooArgSet* /*nset*/ = nullptr) override { }
-  void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE, Bool_t setValDiry=kTRUE) override;
+  void copyCache(const RooAbsArg* source, bool valueOnly=false, bool setValDiry=true) override;
   void attachToTree(TTree& t, Int_t bufSize=32000) override;
   void attachToVStore(RooVectorDataStore&) override { }
   void fillTreeBranch(TTree& t) override;
-  void setTreeBranchStatus(TTree& t, Bool_t active) override;
+  void setTreeBranchStatus(TTree& t, bool active) override;
 
 private:
   std::string _string;

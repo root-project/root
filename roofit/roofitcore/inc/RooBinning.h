@@ -65,22 +65,22 @@ public:
   Double_t binLow(Int_t bin) const override;
   Double_t binHigh(Int_t bin) const override;
 
-  Bool_t addBoundary(Double_t boundary);
+  bool addBoundary(Double_t boundary);
   void addBoundaryPair(Double_t boundary, Double_t mirrorPoint = 0);
   void addUniform(Int_t nBins, Double_t xlo, Double_t xhi);
-  Bool_t removeBoundary(Double_t boundary);
+  bool removeBoundary(Double_t boundary);
 
-  Bool_t hasBoundary(Double_t boundary);
+  bool hasBoundary(Double_t boundary);
 
 protected:
 
-  Bool_t binEdges(Int_t bin, Double_t& xlo, Double_t& xhi) const;
+  bool binEdges(Int_t bin, Double_t& xlo, Double_t& xhi) const;
   void updateBinCount();
 
   Double_t _xlo;          ///< Lower bound
   Double_t _xhi;          ///< Upper bound
-  Bool_t _ownBoundLo;     ///< Does the lower bound coincide with a bin boundary
-  Bool_t _ownBoundHi;     ///< Does the upper bound coincide with a bin boundary
+  bool _ownBoundLo;     ///< Does the lower bound coincide with a bin boundary
+  bool _ownBoundHi;     ///< Does the upper bound coincide with a bin boundary
   Int_t _nbins;           ///< Numer of bins
 
   std::vector<Double_t> _boundaries; ///< Boundaries

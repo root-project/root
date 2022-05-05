@@ -132,9 +132,9 @@ RooIntegrator2D::~RooIntegrator2D()
 ////////////////////////////////////////////////////////////////////////////////
 /// Verify that the limits are OK for this integrator (i.e. no open-ended ranges)
 
-Bool_t RooIntegrator2D::checkLimits() const
+bool RooIntegrator2D::checkLimits() const
 {
-  Bool_t ret = RooIntegrator1D::checkLimits() ;
+  bool ret = RooIntegrator1D::checkLimits() ;
   ret &= _xIntegrator->checkLimits() ;
   return ret ;
 }

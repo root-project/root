@@ -76,7 +76,7 @@ RooCompositeDataStore::RooCompositeDataStore(
 /// Convert map by label to map by index for more efficient internal use
 
 RooCompositeDataStore::RooCompositeDataStore(const RooCompositeDataStore& other, const char* newname) :
-  RooAbsDataStore(other,newname), _indexCat(other._indexCat), _curStore(other._curStore), _curIndex(other._curIndex), _ownComps(kTRUE)
+  RooAbsDataStore(other,newname), _indexCat(other._indexCat), _curStore(other._curStore), _curIndex(other._curIndex), _ownComps(true)
 {
   for (const auto& item : other._dataMap) {
     RooAbsDataStore* clonedata = item.second->clone() ;
@@ -90,7 +90,7 @@ RooCompositeDataStore::RooCompositeDataStore(const RooCompositeDataStore& other,
 /// Update index category pointer, if it is contained in input argument vars
 
 RooCompositeDataStore::RooCompositeDataStore(const RooCompositeDataStore& other, const RooArgSet& vars, const char* newname) :
-  RooAbsDataStore(other,vars,newname), _indexCat(other._indexCat), _curStore(other._curStore), _curIndex(other._curIndex), _ownComps(kTRUE)
+  RooAbsDataStore(other,vars,newname), _indexCat(other._indexCat), _curStore(other._curStore), _curIndex(other._curIndex), _ownComps(true)
 {
   RooCategory* newIdx = (RooCategory*) vars.find(other._indexCat->GetName()) ;
   if (newIdx) {
@@ -149,7 +149,7 @@ RooAbsDataStore* RooCompositeDataStore::reduce(
 ////////////////////////////////////////////////////////////////////////////////
 /// Forward recalculate request to all subsets
 
-void RooCompositeDataStore::recalculateCache(const RooArgSet* proj, Int_t firstEvent, Int_t lastEvent, Int_t stepSize, Bool_t skipZeroWeights)
+void RooCompositeDataStore::recalculateCache(const RooArgSet* proj, Int_t firstEvent, Int_t lastEvent, Int_t stepSize, bool skipZeroWeights)
 {
   for (auto const& item : _dataMap) {
     item.second->recalculateCache(proj,firstEvent,lastEvent,stepSize,skipZeroWeights) ;
@@ -159,9 +159,9 @@ void RooCompositeDataStore::recalculateCache(const RooArgSet* proj, Int_t firstE
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t RooCompositeDataStore::hasFilledCache() const
+bool RooCompositeDataStore::hasFilledCache() const
 {
-  Bool_t ret(kFALSE) ;
+  bool ret(false) ;
   for (auto const& item : _dataMap) {
     ret |= item.second->hasFilledCache() ;
   }
@@ -269,12 +269,12 @@ void RooCompositeDataStore::weightError(Double_t& lo, Double_t& hi, RooAbsData::
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t RooCompositeDataStore::isWeighted() const
+bool RooCompositeDataStore::isWeighted() const
 {
   for (auto const& item : _dataMap) {
-    if (item.second->isWeighted()) return kTRUE ;
+    if (item.second->isWeighted()) return true ;
   }
-  return kFALSE ; ;
+  return false ; ;
 }
 
 
@@ -290,7 +290,7 @@ void RooCompositeDataStore::loadValues(const RooAbsDataStore*, const RooFormulaV
 ////////////////////////////////////////////////////////////////////////////////
 /// Change name of internal observable named 'from' into 'to'
 
-Bool_t RooCompositeDataStore::changeObservableName(const char* from, const char* to)
+bool RooCompositeDataStore::changeObservableName(const char* from, const char* to)
 {
 
   // Find observable to be changed
@@ -299,14 +299,14 @@ Bool_t RooCompositeDataStore::changeObservableName(const char* from, const char*
   // Check that we found it
   if (!var) {
     coutE(InputArguments) << "RooCompositeDataStore::changeObservableName(" << GetName() << " no observable " << from << " in this dataset" << endl ;
-    return kTRUE ;
+    return true ;
   }
 
   // Process name change
   var->SetName(to) ;
 
   // Forward name change request to component datasets
-  Bool_t ret(kFALSE) ;
+  bool ret(false) ;
   for (auto const& item : _dataMap) {
     ret |= item.second->changeObservableName(from,to) ;
   }
@@ -320,7 +320,7 @@ Bool_t RooCompositeDataStore::changeObservableName(const char* from, const char*
 /// WVE ownership issue here!! Caller (a RooAbsData) should take ownership of all
 /// arguments, but only does for the first one here...
 
-RooAbsArg* RooCompositeDataStore::addColumn(RooAbsArg& newVar, Bool_t adjustRange)
+RooAbsArg* RooCompositeDataStore::addColumn(RooAbsArg& newVar, bool adjustRange)
 {
   RooAbsArg* ret(0) ;
   for (auto const& item : _dataMap) {
@@ -384,7 +384,7 @@ void RooCompositeDataStore::reset()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooCompositeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, const RooArgSet* nset, Bool_t skipZeroWeights)
+void RooCompositeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, const RooArgSet* nset, bool skipZeroWeights)
 {
   for (auto const& item : _dataMap) {
     item.second->cacheArgs(owner,newVarSet,nset,skipZeroWeights) ;
@@ -395,7 +395,7 @@ void RooCompositeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarS
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooCompositeDataStore::setArgStatus(const RooArgSet& set, Bool_t active)
+void RooCompositeDataStore::setArgStatus(const RooArgSet& set, bool active)
 {
   for (auto const& item : _dataMap) {
     RooArgSet* subset = (RooArgSet*) set.selectCommon(*item.second->get()) ;

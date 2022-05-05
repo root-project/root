@@ -35,16 +35,16 @@ public:
   ~RooAbsMCStudyModule() override {} ;
 
   /// Initializer method called upon attachement to given RooMCStudy object
-  Bool_t doInitializeInstance(RooMCStudy& /*study*/) ;
+  bool doInitializeInstance(RooMCStudy& /*study*/) ;
 
   /// Initializer called immediately after attachment to RooMCStudy object and initialization of module base class
-  virtual Bool_t initializeInstance() {
-    return kTRUE ;
+  virtual bool initializeInstance() {
+    return true ;
   }
 
   /// Method called at the beginning of each RooMCStudy run
-  virtual Bool_t initializeRun(Int_t /*numSamples*/) {
-    return kTRUE ;
+  virtual bool initializeRun(Int_t /*numSamples*/) {
+    return true ;
   }
 
   /// Method called at the end of each RooMCStudy run. If a RooDataSet is returned, it must have a length equal to
@@ -55,20 +55,20 @@ public:
 
   /// Method called after resetting of generator parameters to initial values and before call to generator context
   /// Any modifications to generator parameters will affect next generation operation (only)
-  virtual Bool_t processBeforeGen(Int_t /*sampleNum*/) {
-    return kTRUE ;
+  virtual bool processBeforeGen(Int_t /*sampleNum*/) {
+    return true ;
   }
 
   /// Method called after generation of toy data sample and resetting of fit parameters to initial values and before
   /// actual fit is performed. Any modifications to fit parameters will apply to next fit operation. Note that setConstant
   /// flag of fit parameters are not explicitly reset by RooMCStudy, so any changes made to these flags here will persist
-  virtual Bool_t processBetweenGenAndFit(Int_t /*sampleNum*/) {
-    return kTRUE ;
+  virtual bool processBetweenGenAndFit(Int_t /*sampleNum*/) {
+    return true ;
   }
 
   /// Method called after fit has been performed.
-  virtual Bool_t processAfterFit(Int_t /*sampleNum*/) {
-    return kTRUE ;
+  virtual bool processAfterFit(Int_t /*sampleNum*/) {
+    return true ;
   }
 
 protected:
@@ -156,12 +156,12 @@ protected:
    }
 
    /// If true extended mode generation is requested
-   Bool_t extendedGen() {
+   bool extendedGen() {
      return _mcs ? _mcs->_extendedGen : 0 ;
    }
 
    /// If true binning of data between generating and fitting is requested
-   Bool_t binGenData() {
+   bool binGenData() {
      return _mcs ? _mcs->_binGenData : 0 ;
    }
 
@@ -171,12 +171,12 @@ protected:
    }
 
    /// If true randomization of prototype data order is requested
-   Bool_t randProto() {
+   bool randProto() {
      return _mcs ? _mcs->_randProto : 0 ;
    }
 
    /// If true verbose message in the generation step is requested
-   Bool_t verboseGen() {
+   bool verboseGen() {
      return _mcs ? _mcs->_verboseGen : 0 ;
    }
 

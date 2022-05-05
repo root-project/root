@@ -28,11 +28,11 @@ using namespace RooFit ;
 class TestBasic804 : public RooFitTestUnit
 {
 public:
-  TestBasic804(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("MC Studies with aux. obs. constraints",refFile,writeRef,verbose) {} ;
+  TestBasic804(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("MC Studies with aux. obs. constraints",refFile,writeRef,verbose) {} ;
 
   Double_t htol() { return 0.1 ; } // numerically very difficult test
 
-  Bool_t testCode() {
+  bool testCode() {
 
   // C r e a t e   m o d e l   w i t h   p a r a m e t e r   c o n s t r a i n t
   // ---------------------------------------------------------------------------
@@ -88,7 +88,7 @@ public:
   regPlot(frame1,"rf804_plot1") ;
   regPlot(frame2,"rf804_plot2") ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;
 

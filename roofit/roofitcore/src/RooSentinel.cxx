@@ -35,7 +35,7 @@ installs an atexit() function that takes care of this
 #include "RooExpensiveObjectCache.h"
 #include "RooDataSet.h"
 
-Bool_t RooSentinel::_active = kFALSE ;
+bool RooSentinel::_active = false ;
 
 static void CleanUpRooFitAtExit()
 {
@@ -54,7 +54,7 @@ static void CleanUpRooFitAtExit()
 void RooSentinel::activate()
 {
   if (!_active) {
-    _active = kTRUE ;
+    _active = true ;
     atexit(CleanUpRooFitAtExit) ;
   }
 }

@@ -115,7 +115,7 @@ RooAbsCategory::value_type RooBinningCategory::evaluate() const
 ///     Shape : default value
 ///   Verbose : list of thresholds
 
-void RooBinningCategory::printMultiline(ostream& os, Int_t content, Bool_t verbose, TString indent) const
+void RooBinningCategory::printMultiline(ostream& os, Int_t content, bool verbose, TString indent) const
 {
    RooAbsCategory::printMultiline(os,content,verbose,indent);
 

@@ -27,8 +27,8 @@ using namespace RooFit ;
 class TestBasic706 : public RooFitTestUnit
 {
 public:
-  TestBasic706(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Histogram based p.d.f.s",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic706(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Histogram based p.d.f.s",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // C r e a t e   p d f   f o r   s a m p l i n g
   // ---------------------------------------------
@@ -84,6 +84,6 @@ public:
   delete data2 ;
   delete hist2 ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;

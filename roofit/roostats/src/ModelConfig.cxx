@@ -307,7 +307,7 @@ void ModelConfig::ImportDataInWS(RooAbsData & data) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t ModelConfig::SetHasOnlyParameters(const RooArgSet& set, const char* errorMsgPrefix) {
+bool ModelConfig::SetHasOnlyParameters(const RooArgSet& set, const char* errorMsgPrefix) {
 
     RooArgSet nonparams ; 
     for (auto const *arg : set) {

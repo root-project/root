@@ -30,8 +30,8 @@ using namespace RooFit ;
 class TestBasic708 : public RooFitTestUnit
 {
 public:
-  TestBasic708(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("B Physics p.d.f.s",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic708(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("B Physics p.d.f.s",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   ////////////////////////////////////////////////////
   // B - D e c a y   w i t h   m i x i n g          //
@@ -215,6 +215,6 @@ public:
   delete data3 ;
   delete data4 ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;

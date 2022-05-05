@@ -33,7 +33,7 @@ namespace RooStats {
 
 
     /// check if parameter is in the interval
-    Bool_t IsInInterval(const RooArgSet&) const override;
+    bool IsInInterval(const RooArgSet&) const override;
 
     /// set the confidence level for the interval
     void SetConfidenceLevel(Double_t cl) override {fConfidenceLevel = cl;}
@@ -52,7 +52,7 @@ namespace RooStats {
     RooAbsData* GetParameterPoints() const {return (RooAbsData*)fParameterPointsInInterval->Clone();}
 
     /// return a cloned list with the parameter of interest
-    Bool_t CheckParameters(const RooArgSet&) const override ;
+    bool CheckParameters(const RooArgSet&) const override ;
 
     /// return lower limit on a given parameter
     Double_t LowerLimit(RooRealVar& param) ;

@@ -185,7 +185,7 @@ namespace RooStats {
     virtual RooArgSet* GetParameters() const;
 
     /// check if parameters are correct. (dummy implementation to start)
-    Bool_t CheckParameters(RooArgSet&) const ;
+    bool CheckParameters(RooArgSet&) const ;
 
   protected:
     ClassDefOverride(ConfidenceBelt,1)  // A confidence belt for the Neyman Construction

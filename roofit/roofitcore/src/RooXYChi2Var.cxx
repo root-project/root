@@ -83,14 +83,14 @@ RooXYChi2Var::RooXYChi2Var()
 ///                                 are the Double_t values that correspond to the Y and its error
 ///
 
-RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataSet& xydata, Bool_t integrate) :
+RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataSet& xydata, bool integrate) :
   RooAbsOptTestStatistic(name,title,func,xydata,RooArgSet(),makeRooAbsTestStatisticCfg()),
-  _extended(kFALSE),
+  _extended(false),
   _integrate(integrate),
   _intConfig(*defaultIntegratorConfig()),
   _funcInt(0)
 {
-  _extended = kFALSE ;
+  _extended = false ;
   _yvar = 0 ;
 
   initialize() ;
@@ -111,14 +111,14 @@ RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsReal& func
 ///                                 are the Double_t values that correspond to the Y and its error
 ///
 
-RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataSet& xydata, RooRealVar& yvar, Bool_t integrate) :
+RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataSet& xydata, RooRealVar& yvar, bool integrate) :
   RooAbsOptTestStatistic(name,title,func,xydata,RooArgSet(),makeRooAbsTestStatisticCfg()),
-  _extended(kFALSE),
+  _extended(false),
   _integrate(integrate),
   _intConfig(*defaultIntegratorConfig()),
   _funcInt(0)
 {
-  _extended = kFALSE ;
+  _extended = false ;
   _yvar = (RooRealVar*) _dataClone->get()->find(yvar.GetName()) ;
 
   initialize() ;
@@ -142,9 +142,9 @@ RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsReal& func
 ///                                 are the Double_t values that correspond to the Y and its error
 ///
 
-RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPdf, RooDataSet& xydata, Bool_t integrate) :
+RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPdf, RooDataSet& xydata, bool integrate) :
   RooAbsOptTestStatistic(name,title,extPdf,xydata,RooArgSet(),makeRooAbsTestStatisticCfg()),
-  _extended(kTRUE),
+  _extended(true),
   _integrate(integrate),
   _intConfig(*defaultIntegratorConfig()),
   _funcInt(0)
@@ -176,9 +176,9 @@ RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPd
 ///                                 are the Double_t values that correspond to the Y and its error
 ///
 
-RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPdf, RooDataSet& xydata, RooRealVar& yvar, Bool_t integrate) :
+RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPdf, RooDataSet& xydata, RooRealVar& yvar, bool integrate) :
   RooAbsOptTestStatistic(name,title,extPdf,xydata,RooArgSet(),makeRooAbsTestStatisticCfg()),
-  _extended(kTRUE),
+  _extended(true),
   _integrate(integrate),
   _intConfig(*defaultIntegratorConfig()),
   _funcInt(0)
@@ -256,7 +256,7 @@ void RooXYChi2Var::initIntegrator()
     _rrvIter->Reset() ;
     RooRealVar* x ;
     while((x=(RooRealVar*)_rrvIter->Next())) {
-      _binList.push_back(&x->getBinning("bin",kFALSE,kTRUE)) ;
+      _binList.push_back(&x->getBinning("bin",false,true)) ;
     }
   }
 
@@ -401,7 +401,7 @@ Double_t RooXYChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t las
   // Loop over bins of dataset
   RooDataSet* xydata = (RooDataSet*) _dataClone ;
 
-  _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize,kFALSE ) ;
+  _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize,false ) ;
 
   for (auto i=firstEvent ; i<lastEvent ; i+=stepSize) {
 

@@ -59,12 +59,12 @@ public:
   void setVal(Double_t value) override;
   void setVal(Double_t value, const char* rangeName) override;
   inline Double_t getError() const { return _error>=0?_error:0. ; }
-  inline Bool_t hasError(Bool_t allowZero=kTRUE) const { return allowZero ? (_error>=0) : (_error>0) ; }
+  inline bool hasError(bool allowZero=true) const { return allowZero ? (_error>=0) : (_error>0) ; }
   inline void setError(Double_t value) { _error= value ; }
   inline void removeError() { _error = -1 ; }
   inline Double_t getAsymErrorLo() const { return _asymErrLo<=0?_asymErrLo:0. ; }
   inline Double_t getAsymErrorHi() const { return _asymErrHi>=0?_asymErrHi:0. ; }
-  inline Bool_t hasAsymError(Bool_t allowZero=kTRUE) const { return allowZero ? ((_asymErrHi>=0 && _asymErrLo<=0)) :  ((_asymErrHi>0 && _asymErrLo<0)) ; }
+  inline bool hasAsymError(bool allowZero=true) const { return allowZero ? ((_asymErrHi>=0 && _asymErrLo<=0)) :  ((_asymErrHi>0 && _asymErrLo<0)) ; }
   inline void removeAsymError() { _asymErrLo = 1 ; _asymErrHi = -1 ; }
   inline void setAsymError(Double_t lo, Double_t hi) { _asymErrLo = lo ; _asymErrHi = hi ; }
   inline Double_t getErrorLo() const { return _asymErrLo<=0?_asymErrLo:-1*_error ; }
@@ -88,9 +88,9 @@ public:
   void setBinning(const RooAbsBinning& binning, const char* name=0) ;
 
   // RooAbsRealLValue implementation
-  Bool_t hasBinning(const char* name) const override ;
-  const RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) const override ;
-  RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) override ;
+  bool hasBinning(const char* name) const override ;
+  const RooAbsBinning& getBinning(const char* name=0, bool verbose=true, bool createOnTheFly=false) const override ;
+  RooAbsBinning& getBinning(const char* name=0, bool verbose=true, bool createOnTheFly=false) override ;
   std::list<std::string> getBinningNames() const override ;
 
   // Set infinite fit range limits
@@ -102,14 +102,14 @@ public:
   void removeRange(const char* name=0);
 
   // I/O streaming interface (machine readable)
-  Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) override ;
-  void writeToStream(std::ostream& os, Bool_t compact) const override ;
+  bool readFromStream(std::istream& is, bool compact, bool verbose=false) override ;
+  void writeToStream(std::ostream& os, bool compact) const override ;
 
   // We implement a fundamental type of AbsArg that can be stored in a dataset
-  inline Bool_t isFundamental() const override { return kTRUE; }
+  inline bool isFundamental() const override { return true; }
 
   // Force to be a leaf-node of any expression tree, even if we have (shape) servers
-  Bool_t isDerived() const override {
+  bool isDerived() const override {
     // Does value or shape of this arg depend on any other arg?
     return !_serverList.empty() || _proxyList.GetEntries()>0;
   }
@@ -117,27 +117,27 @@ public:
   // Printing interface (human readable)
   void printValue(std::ostream& os) const override ;
   void printExtras(std::ostream& os) const override ;
-  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const override ;
+  void printMultiline(std::ostream& os, Int_t contents, bool verbose=false, TString indent="") const override ;
   Int_t defaultPrintContents(Option_t* opt) const override ;
 
 
   TString* format(const RooCmdArg& formatArg) const ;
   TString* format(Int_t sigDigits, const char *options) const ;
 
-  static void printScientific(Bool_t flag=kFALSE) ;
+  static void printScientific(bool flag=false) ;
   static void printSigDigits(Int_t ndig=5) ;
 
   using RooAbsRealLValue::operator= ;
 
   void deleteSharedProperties() ;
 
-  void copyCacheFast(const RooRealVar& other, Bool_t setValDirty=kTRUE) { _value = other._value ; if (setValDirty) setValueDirty() ; }
+  void copyCacheFast(const RooRealVar& other, bool setValDirty=true) { _value = other._value ; if (setValDirty) setValueDirty() ; }
 
   static void cleanup() ;
 
   protected:
 
-  static Bool_t _printScientific ;
+  static bool _printScientific ;
   static Int_t  _printSigDigits ;
 
   friend class RooAbsRealLValue ;
@@ -145,7 +145,7 @@ public:
 
 
   Double_t evaluate() const override { return _value ; } // dummy because we overloaded getVal()
-  void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE, Bool_t setValDirty=kTRUE) override ;
+  void copyCache(const RooAbsArg* source, bool valueOnly=false, bool setValDirty=true) override ;
   void attachToTree(TTree& t, Int_t bufSize=32000) override ;
   void attachToVStore(RooVectorDataStore& vstore) override ;
   void fillTreeBranch(TTree& t) override ;

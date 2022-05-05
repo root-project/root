@@ -27,8 +27,8 @@ using namespace RooFit ;
 class TestBasic205 : public RooFitTestUnit
 {
 public:
-  TestBasic205(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Component plotting variations",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic205(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Component plotting variations",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
     // S e t u p   c o m p o s i t e    p d f
     // --------------------------------------
@@ -117,7 +117,7 @@ public:
     regPlot(xframe2,"rf205_plot2") ;
 
     delete data ;
-    return kTRUE ;
+    return true ;
 
   }
 

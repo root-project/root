@@ -36,10 +36,10 @@
 
 class RooUnitTest : public TNamed {
 public:
-  RooUnitTest(const char* name, TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode="off") ;
+  RooUnitTest(const char* name, TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode="off") ;
   ~RooUnitTest() override ;
 
-  void setDebug(Bool_t flag) { _debug = flag ; }
+  void setDebug(bool flag) { _debug = flag ; }
   void setSilentMode() ;
   void clearSilentMode() ;
   void regPlot(RooPlot* frame, const char* refName) ;
@@ -49,12 +49,12 @@ public:
   void regWS(RooWorkspace* ws, const char* refName) ;
   void regTH(TH1* h, const char* refName) ;
   RooWorkspace* getWS(const char* refName) ;
-  Bool_t runTest() ;
-  Bool_t runCompTests() ;
-  Bool_t areTHidentical(TH1* htest, TH1* href) ;
+  bool runTest() ;
+  bool runCompTests() ;
+  bool areTHidentical(TH1* htest, TH1* href) ;
 
-  virtual Bool_t isTestAvailable() { return kTRUE ; }
-  virtual Bool_t testCode() = 0 ;
+  virtual bool isTestAvailable() { return true ; }
+  virtual bool testCode() = 0 ;
 
   virtual Double_t htol() { return 5e-4 ; }  ///< histogram test tolerance (KS dist != prob)
 #ifdef R__FAST_MATH
@@ -73,8 +73,8 @@ protected:
   static TDirectory* gMemDir ;
 
   TFile* _refFile ;
-  Bool_t _debug ;
-  Bool_t _write ;
+  bool _debug ;
+  bool _write ;
   Int_t _verb ;
   std::string _batchMode="off";
    std::list<std::pair<RooPlot*, std::string> > _regPlots ;

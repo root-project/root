@@ -36,7 +36,7 @@ ClassImp(RooParamHistFunc);
 ////////////////////////////////////////////////////////////////////////////////
 /// Populate x with observables
 
-RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, RooDataHist& dh, Bool_t paramRelative) :
+RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, RooDataHist& dh, bool paramRelative) :
   RooAbsReal(name,title),
   _x("x","x",this),
   _p("p","p",this),
@@ -54,7 +54,7 @@ RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, RooDataH
     RooRealVar* var = new RooRealVar(vname,vname,0,1000) ;
     var->setVal(_relParam ? 1 : _dh.weight()) ;
     var->setError(_relParam ? 1 / sqrt(_dh.weight()) : sqrt(_dh.weight()));
-    var->setConstant(kTRUE) ;
+    var->setConstant(true) ;
     allVars.add(*var) ;
     _p.add(*var) ;
   }
@@ -64,7 +64,7 @@ RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, RooDataH
 ////////////////////////////////////////////////////////////////////////////////
 /// Populate x with observables
 
-RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, const RooAbsArg& /*x*/, RooDataHist& dh, Bool_t paramRelative) :
+RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, const RooAbsArg& /*x*/, RooDataHist& dh, bool paramRelative) :
   RooAbsReal(name,title),
   _x("x","x",this),
   _p("p","p",this),
@@ -81,7 +81,7 @@ RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, const Ro
     RooRealVar* var = new RooRealVar(vname,vname,0,1000) ;
     var->setVal(_relParam ? 1 : _dh.weight()) ;
     var->setError(_relParam ? 1 / sqrt(_dh.weight()) : sqrt(_dh.weight()));
-    var->setConstant(kTRUE) ;
+    var->setConstant(true) ;
     allVars.add(*var) ;
     _p.add(*var) ;
   }
@@ -90,7 +90,7 @@ RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, const Ro
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, RooDataHist& dh, const RooParamHistFunc& paramSource, Bool_t paramRelative) :
+RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, RooDataHist& dh, const RooParamHistFunc& paramSource, bool paramRelative) :
   RooAbsReal(name,title),
   _x("x","x",this),
   _p("p","p",this),
@@ -119,7 +119,7 @@ RooParamHistFunc::RooParamHistFunc(const RooParamHistFunc& other, const char* na
 
 Double_t RooParamHistFunc::evaluate() const
 {
-  Int_t idx = ((RooDataHist&)_dh).getIndex(_x,kTRUE) ;
+  Int_t idx = ((RooDataHist&)_dh).getIndex(_x,true) ;
   Double_t ret = ((RooAbsReal*)_p.at(idx))->getVal() ;
   if (_relParam) {
     Double_t nom = getNominal(idx) ;
@@ -233,7 +233,7 @@ Int_t RooParamHistFunc::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& a
 {
   // Simplest scenario, integrate over all dependents
   RooAbsCollection *allVarsCommon = allVars.selectCommon(_x) ;
-  Bool_t intAllObs = (allVarsCommon->getSize()==_x.getSize()) ;
+  bool intAllObs = (allVarsCommon->getSize()==_x.getSize()) ;
   delete allVarsCommon ;
   if (intAllObs && matchArgs(allVars,analVars,_x)) {
     return 1 ;

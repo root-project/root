@@ -59,7 +59,7 @@ RooAbsMCStudyModule::RooAbsMCStudyModule(const RooAbsMCStudyModule& other) : TNa
 /// Store reference to RooMCStudy object that this module relates to and call internal module
 /// initialization function
 
-Bool_t RooAbsMCStudyModule::doInitializeInstance(RooMCStudy& study)
+bool RooAbsMCStudyModule::doInitializeInstance(RooMCStudy& study)
 {
   _mcs = &study ;
   return initializeInstance() ;

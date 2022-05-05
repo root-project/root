@@ -180,7 +180,7 @@ RooSpan<double> RooLegendre::evaluateSpan(RooBatchCompute::RunContext& evalData,
 ////////////////////////////////////////////////////////////////////////////////
 
 namespace {
-  Bool_t fullRange(const RooRealProxy& x ,const char* range)
+  bool fullRange(const RooRealProxy& x ,const char* range)
   {
     return range == 0 || strlen(range) == 0
         ? std::fabs(x.min() + 1.) < 1.e-8 && std::fabs(x.max() - 1.) < 1.e-8

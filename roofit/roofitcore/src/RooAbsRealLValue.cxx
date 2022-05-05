@@ -87,14 +87,14 @@ RooAbsRealLValue::~RooAbsRealLValue()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return kTRUE if the input value is within our fit range. Otherwise, return
-/// kFALSE and write a clipped value into clippedValPtr if it is non-zero.
+/// Return true if the input value is within our fit range. Otherwise, return
+/// false and write a clipped value into clippedValPtr if it is non-zero.
 
-Bool_t RooAbsRealLValue::inRange(Double_t value, const char* rangeName, Double_t* clippedValPtr) const
+bool RooAbsRealLValue::inRange(Double_t value, const char* rangeName, Double_t* clippedValPtr) const
 {
   // Double_t range = getMax() - getMin() ; // ok for +/-INIFINITY
   Double_t clippedValue(value);
-  Bool_t isInRange(kTRUE) ;
+  bool isInRange(true) ;
 
   const RooAbsBinning& binning = getBinning(rangeName) ;
   Double_t min = binning.lowBound() ;
@@ -103,12 +103,12 @@ Bool_t RooAbsRealLValue::inRange(Double_t value, const char* rangeName, Double_t
   // test this value against our upper fit limit
   if(!RooNumber::isInfinite(max) && value > (max+1e-6)) {
     clippedValue = max;
-    isInRange = kFALSE ;
+    isInRange = false ;
   }
   // test this value against our lower fit limit
   if(!RooNumber::isInfinite(min) && value < min-1e-6) {
     clippedValue = min ;
-    isInRange = kFALSE ;
+    isInRange = false ;
   }
 
   if (clippedValPtr) *clippedValPtr=clippedValue ;
@@ -138,15 +138,15 @@ void RooAbsRealLValue::inRange(std::span<const double> values, std::string const
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if given value is valid
 
-Bool_t RooAbsRealLValue::isValidReal(Double_t value, Bool_t verbose) const
+bool RooAbsRealLValue::isValidReal(Double_t value, bool verbose) const
 {
   if (!inRange(value,0)) {
     if (verbose)
       coutI(InputArguments) << "RooRealVar::isValid(" << GetName() << "): value " << value
              << " out of range (" << getMin() << " - " << getMax() << ")" << endl ;
-    return kFALSE ;
+    return false ;
   }
-  return kTRUE ;
+  return true ;
 }
 
 
@@ -154,9 +154,9 @@ Bool_t RooAbsRealLValue::isValidReal(Double_t value, Bool_t verbose) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Read object contents from given stream
 
-Bool_t RooAbsRealLValue::readFromStream(istream& /*is*/, Bool_t /*compact*/, Bool_t /*verbose*/)
+bool RooAbsRealLValue::readFromStream(istream& /*is*/, bool /*compact*/, bool /*verbose*/)
 {
-  return kTRUE ;
+  return true ;
 }
 
 
@@ -164,7 +164,7 @@ Bool_t RooAbsRealLValue::readFromStream(istream& /*is*/, Bool_t /*compact*/, Boo
 ////////////////////////////////////////////////////////////////////////////////
 /// Write object contents to given stream
 
-void RooAbsRealLValue::writeToStream(ostream& /*os*/, Bool_t /*compact*/) const
+void RooAbsRealLValue::writeToStream(ostream& /*os*/, bool /*compact*/) const
 {
 }
 
@@ -247,7 +247,7 @@ RooPlot* RooAbsRealLValue::frame(const RooLinkedList& cmdList) const
 
   // Process & check varargs
   pc.process(cmdList) ;
-  if (!pc.ok(kTRUE)) {
+  if (!pc.ok(true)) {
     return 0 ;
   }
 
@@ -261,7 +261,7 @@ RooPlot* RooAbsRealLValue::frame(const RooLinkedList& cmdList) const
       xmax = getMax() ;
     }
   } else if (pc.hasProcessed("RangeWithName")) {
-    const char* rangeName=pc.getString("rangeName",0,kTRUE) ;
+    const char* rangeName=pc.getString("rangeName",0,true) ;
     xmin = getMin(rangeName) ;
     xmax = getMax(rangeName) ;
   } else if (pc.hasProcessed("AutoRange")) {
@@ -294,8 +294,8 @@ RooPlot* RooAbsRealLValue::frame(const RooLinkedList& cmdList) const
   }
 
   Int_t nbins = pc.getInt("nbins") ;
-  const char* name = pc.getString("name",0,kTRUE) ;
-  const char* title = pc.getString("title",0,kTRUE) ;
+  const char* name = pc.getString("name",0,true) ;
+  const char* title = pc.getString("title",0,true) ;
 
   RooPlot* theFrame = new RooPlot(*this,xmin,xmax,nbins) ;
 
@@ -390,7 +390,7 @@ RooPlot *RooAbsRealLValue::frame() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy cache of another RooAbsArg to our cache
 
-void RooAbsRealLValue::copyCache(const RooAbsArg* source, Bool_t valueOnly, Bool_t setValDirty)
+void RooAbsRealLValue::copyCache(const RooAbsArg* source, bool valueOnly, bool setValDirty)
 {
   RooAbsReal::copyCache(source,valueOnly,setValDirty) ;
   setVal(_value) ; // force back-propagation
@@ -400,7 +400,7 @@ void RooAbsRealLValue::copyCache(const RooAbsArg* source, Bool_t valueOnly, Bool
 ////////////////////////////////////////////////////////////////////////////////
 /// Structure printing
 
-void RooAbsRealLValue::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TString indent) const
+void RooAbsRealLValue::printMultiline(ostream& os, Int_t contents, bool verbose, TString indent) const
 {
   RooAbsReal::printMultiline(os,contents,verbose,indent);
   os << indent << "--- RooAbsRealLValue ---" << endl;
@@ -507,7 +507,7 @@ void RooAbsRealLValue::setBinFast(Int_t ibin, const RooAbsBinning& binning)
 /// Check if fit range is usable as plot range, i.e. it is neither
 /// open ended, nor empty
 
-Bool_t RooAbsRealLValue::fitRangeOKForPlotting() const
+bool RooAbsRealLValue::fitRangeOKForPlotting() const
 {
   return (hasMin() && hasMax() && (getMin()!=getMax())) ;
 }
@@ -518,7 +518,7 @@ Bool_t RooAbsRealLValue::fitRangeOKForPlotting() const
 /// Check if current value is inside range with given name. Multiple comma-separated
 /// ranges can be passed. In this case, it will be checked if the value is in any of
 /// these ranges.
-Bool_t RooAbsRealLValue::inRange(const char* name) const
+bool RooAbsRealLValue::inRange(const char* name) const
 {
   const double val = getVal() ;
   const double epsilon = 1e-8 * fabs(val) ;
@@ -613,14 +613,14 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooLinkedList& cm
 
   // Process & check varargs
   pc.process(cmdList) ;
-  if (!pc.ok(kTRUE)) {
+  if (!pc.ok(true)) {
     return 0 ;
   }
 
   // Initialize arrays for call to implementation version of createHistogram
   const char* axisLabel = pc.getString("axisLabel") ;
   const RooAbsBinning* binning[3] ;
-  Bool_t ownBinning[3]  = { kFALSE, kFALSE, kFALSE } ;
+  bool ownBinning[3]  = { false, false, false } ;
   RooArgList vars ;
 
   // Prepare X dimension
@@ -628,12 +628,12 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooLinkedList& cm
   if (pc.hasProcessed("Binning")) {
     binning[0] = static_cast<RooAbsBinning*>(pc.getObject("xbinning")) ;
   } else if (pc.hasProcessed("BinningName")) {
-    binning[0] = &getBinning(pc.getString("xbinningName",0,kTRUE)) ;
+    binning[0] = &getBinning(pc.getString("xbinningName",0,true)) ;
   } else if (pc.hasProcessed("BinningSpec")) {
     Double_t xlo = pc.getDouble("xlo") ;
     Double_t xhi = pc.getDouble("xhi") ;
     binning[0] = new RooUniformBinning((xlo==xhi)?getMin():xlo,(xlo==xhi)?getMax():xhi,pc.getInt("nxbins")) ;
-    ownBinning[0] = kTRUE ;
+    ownBinning[0] = true ;
   } else {
     binning[0] = &getBinning() ;
   }
@@ -644,12 +644,12 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooLinkedList& cm
     if (pc.hasProcessed("YVar::Binning")) {
       binning[1] = static_cast<RooAbsBinning*>(pc.getObject("ybinning")) ;
     } else if (pc.hasProcessed("YVar::BinningName")) {
-      binning[1] = &yvar.getBinning(pc.getString("ybinningName",0,kTRUE)) ;
+      binning[1] = &yvar.getBinning(pc.getString("ybinningName",0,true)) ;
     } else if (pc.hasProcessed("YVar::BinningSpec")) {
       Double_t ylo = pc.getDouble("ylo") ;
       Double_t yhi = pc.getDouble("yhi") ;
       binning[1] = new RooUniformBinning((ylo==yhi)?yvar.getMin():ylo,(ylo==yhi)?yvar.getMax():yhi,pc.getInt("nybins")) ;
-      ownBinning[1] = kTRUE ;
+      ownBinning[1] = true ;
     } else {
       binning[1] = &yvar.getBinning() ;
     }
@@ -661,12 +661,12 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooLinkedList& cm
     if (pc.hasProcessed("ZVar::Binning")) {
       binning[2] = static_cast<RooAbsBinning*>(pc.getObject("zbinning")) ;
     } else if (pc.hasProcessed("ZVar::BinningName")) {
-      binning[2] = &zvar.getBinning(pc.getString("zbinningName",0,kTRUE)) ;
+      binning[2] = &zvar.getBinning(pc.getString("zbinningName",0,true)) ;
     } else if (pc.hasProcessed("ZVar::BinningSpec")) {
       Double_t zlo = pc.getDouble("zlo") ;
       Double_t zhi = pc.getDouble("zhi") ;
       binning[2] = new RooUniformBinning((zlo==zhi)?zvar.getMin():zlo,(zlo==zhi)?zvar.getMax():zhi,pc.getInt("nzbins")) ;
-      ownBinning[2] = kTRUE ;
+      ownBinning[2] = true ;
     } else {
       binning[2] = &zvar.getBinning() ;
     }
@@ -999,7 +999,7 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
 
   // Set the histogram coordinate axis labels from the titles of each variable, adding units if necessary.
   for(index= 0; index < dim; index++) {
-    TString axisTitle(xyz[index]->getTitle(kTRUE));
+    TString axisTitle(xyz[index]->getTitle(true));
     switch(index) {
     case 0:
       histogram->SetXTitle(axisTitle.Data());
@@ -1050,11 +1050,11 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
 }
 
 
-Bool_t RooAbsRealLValue::isJacobianOK(const RooArgSet&) const
+bool RooAbsRealLValue::isJacobianOK(const RooArgSet&) const
 {
   // Interface function to indicate that this lvalue
   // has a unit or constant jacobian terms with respect to
   // the observable passed as argument. This default implementation
   // always returns true (i.e. jacobian is constant)
-  return kTRUE ;
+  return true ;
 }

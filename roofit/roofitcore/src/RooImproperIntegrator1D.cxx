@@ -60,7 +60,7 @@ void RooImproperIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 /// Default constructor
 
 RooImproperIntegrator1D::RooImproperIntegrator1D() :
-  _case(ClosedBothEnds), _xmin(-10), _xmax(10), _useIntegrandLimits(kTRUE),
+  _case(ClosedBothEnds), _xmin(-10), _xmax(10), _useIntegrandLimits(true),
   _origFunc(0), _function(0), _integrator1(0), _integrator2(0), _integrator3(0)
 {
 }
@@ -72,7 +72,7 @@ RooImproperIntegrator1D::RooImproperIntegrator1D() :
 
 RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function) :
   RooAbsIntegrator(function),
-  _useIntegrandLimits(kTRUE),
+  _useIntegrandLimits(true),
   _origFunc((RooAbsFunc*)&function),
   _function(0),
   _integrator1(0),
@@ -90,7 +90,7 @@ RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function) :
 
 RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) :
   RooAbsIntegrator(function),
-  _useIntegrandLimits(kTRUE),
+  _useIntegrandLimits(true),
   _origFunc((RooAbsFunc*)&function),
   _function(0),
   _config(config),
@@ -110,7 +110,7 @@ RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function, Dou
   RooAbsIntegrator(function),
   _xmin(xmin),
   _xmax(xmax),
-  _useIntegrandLimits(kFALSE),
+  _useIntegrandLimits(false),
   _origFunc((RooAbsFunc*)&function),
   _function(0),
   _config(config),
@@ -196,7 +196,7 @@ void RooImproperIntegrator1D::initialize(const RooAbsFunc* function)
     break;
   case Invalid:
   default:
-    _valid= kFALSE;
+    _valid= false;
   }
 }
 
@@ -214,15 +214,15 @@ RooImproperIntegrator1D::~RooImproperIntegrator1D()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Change our integration limits. Return kTRUE if the new limits are
-/// ok, or otherwise kFALSE. Always returns kFALSE and does nothing
+/// Change our integration limits. Return true if the new limits are
+/// ok, or otherwise false. Always returns false and does nothing
 /// if this object was constructed to always use our integrand's limits.
 
-Bool_t RooImproperIntegrator1D::setLimits(Double_t *xmin, Double_t *xmax)
+bool RooImproperIntegrator1D::setLimits(Double_t *xmin, Double_t *xmax)
 {
   if(_useIntegrandLimits) {
     oocoutE((TObject*)0,Integration) << "RooIntegrator1D::setLimits: cannot override integrand's limits" << endl;
-    return kFALSE;
+    return false;
   }
 
   _xmin= *xmin;
@@ -237,19 +237,19 @@ Bool_t RooImproperIntegrator1D::setLimits(Double_t *xmin, Double_t *xmax)
 /// may be necessary to reconfigure (e.g. if an open ended range becomes
 /// a closed range
 
-Bool_t RooImproperIntegrator1D::checkLimits() const
+bool RooImproperIntegrator1D::checkLimits() const
 {
   // Has either limit changed?
   if (_useIntegrandLimits) {
     if(_xmin == integrand()->getMinLimit(0) &&
-       _xmax == integrand()->getMaxLimit(0)) return kTRUE;
+       _xmax == integrand()->getMaxLimit(0)) return true;
   }
 
   // The limits have changed: can we use the same strategy?
   if(limitsCase() != _case) {
     // Reinitialize embedded integrators, will automatically propagate new limits
     const_cast<RooImproperIntegrator1D*>(this)->initialize() ;
-    return kTRUE ;
+    return true ;
   }
 
   // Reuse our existing integrators by updating their limits
@@ -274,9 +274,9 @@ Bool_t RooImproperIntegrator1D::checkLimits() const
     break;
   case Invalid:
   default:
-    return kFALSE;
+    return false;
   }
-  return kTRUE;
+  return true;
 }
 
 
@@ -293,8 +293,8 @@ RooImproperIntegrator1D::LimitsCase RooImproperIntegrator1D::limitsCase() const
     _xmax= integrand()->getMaxLimit(0);
   }
 
-  Bool_t inf1= RooNumber::isInfinite(_xmin);
-  Bool_t inf2= RooNumber::isInfinite(_xmax);
+  bool inf1= RooNumber::isInfinite(_xmin);
+  bool inf2= RooNumber::isInfinite(_xmax);
   if(!inf1 && !inf2) {
     // both limits are finite
     return ClosedBothEnds;

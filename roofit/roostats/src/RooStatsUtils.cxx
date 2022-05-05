@@ -326,7 +326,7 @@ namespace RooStats {
       os << "( ";
       for (int i = 0; i< l.getSize(); ++i) {
          if (first) {
-            first=kFALSE ;
+            first=false ;
          } else {
             os << ", " ;
          }

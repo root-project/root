@@ -27,8 +27,8 @@ using namespace RooFit ;
 class TestBasic313 : public RooFitTestUnit
 {
 public:
-  TestBasic313(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Integration over non-rectangular regions",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic313(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Integration over non-rectangular regions",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // C r e a t e   3 D   p d f
   // -------------------------
@@ -81,6 +81,6 @@ public:
 
   delete intPdf ;
 
-  return kTRUE;
+  return true;
   }
 } ;

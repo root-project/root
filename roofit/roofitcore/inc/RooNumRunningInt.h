@@ -31,7 +31,7 @@ protected:
     RICacheElem(const RooNumRunningInt& ri, const RooArgSet* nset) ;
     ~RICacheElem() override ;
     RooArgList containedArgs(Action) override ;
-    void calculate(Bool_t cdfmode) ;
+    void calculate(bool cdfmode) ;
     void addRange(Int_t ixlo, Int_t ixhi, Int_t nbins) ;
     void addPoint(Int_t ix) ;
 

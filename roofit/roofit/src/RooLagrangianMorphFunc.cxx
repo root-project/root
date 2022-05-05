@@ -817,7 +817,7 @@ void collectHistograms(const char *name, TDirectory *file, std::map<std::string,
          // RooLagrangianMorphFunc::setDataHistogram(hist,&var,dh);
          // RooArgSet vars;
          // vars.add(var);
-         // dh->importTH1(vars,*hist,1.,kFALSE);
+         // dh->importTH1(vars,*hist,1.,false);
       } else {
          if (!binningOK) {
             int n = hist->GetNbinsX();
@@ -1656,7 +1656,7 @@ RooRealVar *RooLagrangianMorphFunc::setupObservable(const char *obsname, TClass 
 {
    // cxcoutP(ObjectHandling) << "setting up observable" << std::endl;
    RooRealVar *obs = nullptr;
-   Bool_t obsExists(false);
+   bool obsExists(false);
    if (this->_observables.at(0) != 0) {
       obs = (RooRealVar *)this->_observables.at(0);
       obsExists = true;
@@ -1932,7 +1932,7 @@ void RooLagrangianMorphFunc::setup(bool own)
             name << "!vertex" << i;
             std::stringstream title;
             title << "set of couplings in the vertex " << i;
-            diagram.push_back(new RooListProxy(name.str().c_str(), title.str().c_str(), this, kTRUE, kFALSE));
+            diagram.push_back(new RooListProxy(name.str().c_str(), title.str().c_str(), this, true, false));
             if (own) {
                diagram[i]->addOwned(*diagrams[j][i]);
             } else {
@@ -1947,7 +1947,7 @@ void RooLagrangianMorphFunc::setup(bool own)
       RooArgList operators;
       std::vector<RooListProxy *> vertices;
       extractOperators(this->_config.couplings, operators);
-      vertices.push_back(new RooListProxy("!couplings", "set of couplings in the vertex", this, kTRUE, kFALSE));
+      vertices.push_back(new RooListProxy("!couplings", "set of couplings in the vertex", this, true, false));
       if (own) {
          this->_operators.addOwned(operators);
          vertices[0]->addOwned(this->_config.couplings);
@@ -1965,8 +1965,8 @@ void RooLagrangianMorphFunc::setup(bool own)
       extractOperators(this->_config.prodCouplings, operators);
       extractOperators(this->_config.decCouplings, operators);
       vertices.push_back(
-         new RooListProxy("!production", "set of couplings in the production vertex", this, kTRUE, kFALSE));
-      vertices.push_back(new RooListProxy("!decay", "set of couplings in the decay vertex", this, kTRUE, kFALSE));
+         new RooListProxy("!production", "set of couplings in the production vertex", this, true, false));
+      vertices.push_back(new RooListProxy("!decay", "set of couplings in the decay vertex", this, true, false));
       if (own) {
          this->_operators.addOwned(operators);
          vertices[0]->addOwned(this->_config.prodCouplings);
@@ -2063,9 +2063,9 @@ double RooLagrangianMorphFunc::getScale()
 // default constructor
 
 RooLagrangianMorphFunc::RooLagrangianMorphFunc()
-   : _cacheMgr(this, 10, true, true), _operators("operators", "set of operators", this, kTRUE, kFALSE),
-     _observables("observable", "morphing observable", this, kTRUE, kFALSE),
-     _binWidths("binWidths", "set of bin width objects", this, kTRUE, kFALSE)
+   : _cacheMgr(this, 10, true, true), _operators("operators", "set of operators", this, true, false),
+     _observables("observable", "morphing observable", this, true, false),
+     _binWidths("binWidths", "set of bin width objects", this, true, false)
 {
    static int counter(0);
    counter++;
@@ -3025,7 +3025,7 @@ Double_t RooLagrangianMorphFunc::evaluate() const
 ////////////////////////////////////////////////////////////////////////////////
 /// check if this PDF is a binned distribution in the given observable
 
-Bool_t RooLagrangianMorphFunc::isBinnedDistribution(const RooArgSet &obs) const
+bool RooLagrangianMorphFunc::isBinnedDistribution(const RooArgSet &obs) const
 {
    return this->getFunc()->isBinnedDistribution(obs);
 }
@@ -3033,7 +3033,7 @@ Bool_t RooLagrangianMorphFunc::isBinnedDistribution(const RooArgSet &obs) const
 ////////////////////////////////////////////////////////////////////////////////
 /// check if observable exists in the RooArgSet (-?-)
 
-Bool_t RooLagrangianMorphFunc::checkObservables(const RooArgSet *nset) const
+bool RooLagrangianMorphFunc::checkObservables(const RooArgSet *nset) const
 {
    return this->getFunc()->checkObservables(nset);
 }
@@ -3041,7 +3041,7 @@ Bool_t RooLagrangianMorphFunc::checkObservables(const RooArgSet *nset) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Force analytical integration for the given observable
 
-Bool_t RooLagrangianMorphFunc::forceAnalyticalInt(const RooAbsArg &arg) const
+bool RooLagrangianMorphFunc::forceAnalyticalInt(const RooAbsArg &arg) const
 {
    return this->getFunc()->forceAnalyticalInt(arg);
 }

@@ -45,21 +45,21 @@ public:
   RooGExpModel(const char *name, const char *title, RooAbsRealLValue& x,
           RooAbsReal& mean, RooAbsReal& sigma, RooAbsReal& rlife,
           RooAbsReal& meanSF, RooAbsReal& sigmaSF, RooAbsReal& rlifeSF,
-          Bool_t nlo=kFALSE, Type type=Normal) ;
+          bool nlo=false, Type type=Normal) ;
 
   RooGExpModel(const char *name, const char *title, RooAbsRealLValue& x,
           RooAbsReal& sigma, RooAbsReal& rlife,
-          Bool_t nlo=kFALSE, Type type=Normal) ;
+          bool nlo=false, Type type=Normal) ;
 
   RooGExpModel(const char *name, const char *title, RooAbsRealLValue& x,
           RooAbsReal& sigma, RooAbsReal& rlife,
           RooAbsReal& srSF,
-          Bool_t nlo=kFALSE, Type type=Normal) ;
+          bool nlo=false, Type type=Normal) ;
 
   RooGExpModel(const char *name, const char *title, RooAbsRealLValue& x,
           RooAbsReal& sigma, RooAbsReal& rlife,
           RooAbsReal& sigmaSF, RooAbsReal& rlifeSF,
-          Bool_t nlo=kFALSE, Type type=Normal) ;
+          bool nlo=false, Type type=Normal) ;
 
 
 
@@ -71,12 +71,12 @@ public:
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
   Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const override;
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void generateEvent(Int_t code) override;
 
-  void advertiseFlatScaleFactorIntegral(Bool_t flag) { _flatSFInt = flag ; }
+  void advertiseFlatScaleFactorIntegral(bool flag) { _flatSFInt = flag ; }
 
-  void advertiseAsymptoticIntegral(Bool_t flag) { _asympInt = flag ; }  // added FMV,07/24/03
+  void advertiseAsymptoticIntegral(bool flag) { _asympInt = flag ; }  // added FMV,07/24/03
 
 protected:
   Double_t evaluate() const override ;
@@ -108,10 +108,10 @@ private:
   RooRealProxy ssf ;
   RooRealProxy rsf ;
 
-  Bool_t _flip ;
-  Bool_t _nlo ;
-  Bool_t _flatSFInt ;
-  Bool_t _asympInt ;  // added FMV,07/24/03
+  bool _flip ;
+  bool _nlo ;
+  bool _flatSFInt ;
+  bool _asympInt ;  // added FMV,07/24/03
 
   ClassDefOverride(RooGExpModel,2) // Gauss (x) Exponential resolution model
 };

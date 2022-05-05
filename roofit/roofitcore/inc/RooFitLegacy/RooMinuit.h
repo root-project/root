@@ -50,8 +50,8 @@ public:
   void setErrorLevel(Double_t level) ;
   void setEps(Double_t eps) ;
   void optimizeConst(Int_t flag) ;
-  void setEvalErrorWall(Bool_t flag) { _doEvalErrorWall = flag ; }
-  void setOffsetting(Bool_t flag) ;
+  void setEvalErrorWall(bool flag) { _doEvalErrorWall = flag ; }
+  void setOffsetting(bool flag) ;
 
   RooFitResult* fit(const char* options) ;
 
@@ -72,10 +72,10 @@ public:
   void setNoWarn() ;
   Int_t setWarnLevel(Int_t newLevel) ;
   void setPrintEvalErrors(Int_t numEvalErrors) { _printEvalErrors = numEvalErrors ; }
-  void setVerbose(Bool_t flag=kTRUE) { _verbose = flag ; }
-  void setProfile(Bool_t flag=kTRUE) { _profile = flag ; }
+  void setVerbose(bool flag=true) { _verbose = flag ; }
+  void setProfile(bool flag=true) { _profile = flag ; }
   void setMaxEvalMultiplier(Int_t n) { _maxEvalMult = n ; }
-  Bool_t setLogFile(const char* logfile=0) ;
+  bool setLogFile(const char* logfile=0) ;
 
   static void cleanup() ;
 
@@ -92,7 +92,7 @@ protected:
   void profileStart() ;
   void profileStop() ;
 
-  Bool_t synchronize(Bool_t verbose) ;
+  bool synchronize(bool verbose) ;
   void backProp() ;
 
   inline Int_t getNPar() const { return _nPar ; }
@@ -101,7 +101,7 @@ protected:
 
   Double_t getPdfParamVal(Int_t index) ;
   Double_t getPdfParamErr(Int_t index) ;
-  virtual Bool_t setPdfParamVal(Int_t index, Double_t value, Bool_t verbose=kFALSE) ;
+  virtual bool setPdfParamVal(Int_t index, Double_t value, bool verbose=false) ;
   void setPdfParamErr(Int_t index, Double_t value) ;
   void setPdfParamErr(Int_t index, Double_t loVal, Double_t hiVal) ;
   void clearPdfParamAsymErr(Int_t index) ;
@@ -117,12 +117,12 @@ private:
   Int_t       _warnLevel ;
   Int_t       _status ;
   Int_t       _optConst ;
-  Bool_t      _profile ;
-  Bool_t      _handleLocalErrors ;
+  bool      _profile ;
+  bool      _handleLocalErrors ;
   Int_t       _numBadNLL ;
   Int_t       _nPar ;
   Int_t       _printEvalErrors ;
-  Bool_t      _doEvalErrorWall ;
+  bool      _doEvalErrorWall ;
   Int_t       _maxEvalMult ;
   RooArgList* _floatParamList ;
   std::vector<RooAbsArg*> _floatParamVec ;
@@ -133,7 +133,7 @@ private:
 
   Double_t    _maxFCN ;
   std::ofstream*   _logfile ;
-  Bool_t      _verbose ;
+  bool      _verbose ;
   TStopwatch  _timer ;
   TStopwatch  _cumulTimer ;
 

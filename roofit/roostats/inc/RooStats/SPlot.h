@@ -40,7 +40,7 @@ namespace RooStats{
     SPlot(const char* name, const char* title, const RooDataSet &data);
     SPlot(const char* name, const char* title,RooDataSet& data, RooAbsPdf* pdf,
      const RooArgList &yieldsList,const RooArgSet &projDeps=RooArgSet(),
-     bool useWeights=kTRUE, bool copyDataSet = kFALSE, const char* newName = "",
+     bool useWeights=true, bool copyDataSet = false, const char* newName = "",
      const RooCmdArg& fitToarg5=RooCmdArg::none(),
      const RooCmdArg& fitToarg6=RooCmdArg::none(),
      const RooCmdArg& fitToarg7=RooCmdArg::none(),
@@ -55,7 +55,7 @@ namespace RooStats{
     Int_t GetNumSWeightVars() const;
 
     void AddSWeight(RooAbsPdf* pdf, const RooArgList &yieldsTmp,
-          const RooArgSet &projDeps=RooArgSet(), bool includeWeights=kTRUE,
+          const RooArgSet &projDeps=RooArgSet(), bool includeWeights=true,
           const RooCmdArg& fitToarg5=RooCmdArg::none(),
           const RooCmdArg& fitToarg6=RooCmdArg::none(),
           const RooCmdArg& fitToarg7=RooCmdArg::none(),

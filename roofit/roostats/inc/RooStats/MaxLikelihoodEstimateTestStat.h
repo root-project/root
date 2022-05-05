@@ -75,7 +75,7 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
 
     /*
     // this is more straight forward, but produces a lot of messages
-    RooFitResult* res = fPdf.fitTo(data, RooFit::CloneData(kFALSE),RooFit::Minos(0),RooFit::Hesse(false), RooFit::Save(1),RooFit::PrintLevel(-1),RooFit::PrintEvalErrors(0));
+    RooFitResult* res = fPdf.fitTo(data, RooFit::CloneData(false),RooFit::Minos(0),RooFit::Hesse(false), RooFit::Save(1),RooFit::PrintLevel(-1),RooFit::PrintEvalErrors(0));
     RooRealVar* mle = (RooRealVar*) res->floatParsFinal().find(fParameter.GetName());
     double ret = mle->getVal();
     delete res;
@@ -86,7 +86,7 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
     RooStats::RemoveConstantParameters(allParams);
 
     // need to call constrain for RooSimultaneous until stripDisconnected problem fixed
-    RooAbsReal* nll = fPdf->createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams),RooFit::ConditionalObservables(fConditionalObs));
+    RooAbsReal* nll = fPdf->createNLL(data, RooFit::CloneData(false),RooFit::Constrain(*allParams),RooFit::ConditionalObservables(fConditionalObs));
 
     //RooAbsReal* nll = fPdf->createNLL(data, RooFit::CloneData(false));
 

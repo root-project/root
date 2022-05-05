@@ -70,7 +70,7 @@ public:
     get(index) ;
     return weight() ;
   }
-  virtual Bool_t isWeighted() const = 0 ;
+  virtual bool isWeighted() const = 0 ;
 
   /// Retrieve batches for all observables in this data store.
   virtual RooBatchCompute::RunContext getBatches(std::size_t first, std::size_t len) const = 0;
@@ -82,10 +82,10 @@ public:
   virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len) const = 0;
 
   // Change observable name
-  virtual Bool_t changeObservableName(const char* from, const char* to) =0 ;
+  virtual bool changeObservableName(const char* from, const char* to) =0 ;
 
   // Add one or more columns
-  virtual RooAbsArg* addColumn(RooAbsArg& var, Bool_t adjustRange=kTRUE) = 0 ;
+  virtual RooAbsArg* addColumn(RooAbsArg& var, bool adjustRange=true) = 0 ;
   RooArgSet* addColumns(const RooArgList& varList);
 
   // Merge column-wise
@@ -119,27 +119,27 @@ public:
   void printArgs(std::ostream& os) const override;
   /// Print value of the dataset, i.e. the sum of weights contained in the dataset
   void printValue(std::ostream& os) const override { os << numEntries() << " entries" ; }
-  void printMultiline(std::ostream& os, Int_t content, Bool_t verbose, TString indent) const override;
+  void printMultiline(std::ostream& os, Int_t content, bool verbose, TString indent) const override;
 
   /// Define default print options, for a given print style
   int defaultPrintContents(Option_t* /*opt*/) const override { return kName|kClassName|kArgs|kValue ; }
 
 
   // Constant term  optimizer interface
-  virtual void cacheArgs(const RooAbsArg* cacheOwner, RooArgSet& varSet, const RooArgSet* nset=0, Bool_t skipZeroWeights=kFALSE) = 0 ;
+  virtual void cacheArgs(const RooAbsArg* cacheOwner, RooArgSet& varSet, const RooArgSet* nset=0, bool skipZeroWeights=false) = 0 ;
   virtual const RooAbsArg* cacheOwner() = 0 ;
   virtual void attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVars) = 0 ;
-  virtual void setArgStatus(const RooArgSet& set, Bool_t active) = 0 ;
+  virtual void setArgStatus(const RooArgSet& set, bool active) = 0 ;
   const RooArgSet& cachedVars() const { return _cachedVars ; }
   virtual void resetCache() = 0 ;
-  virtual void recalculateCache(const RooArgSet* /*proj*/, Int_t /*firstEvent*/, Int_t /*lastEvent*/, Int_t /*stepSize*/, Bool_t /* skipZeroWeights*/) {} ;
+  virtual void recalculateCache(const RooArgSet* /*proj*/, Int_t /*firstEvent*/, Int_t /*lastEvent*/, Int_t /*stepSize*/, bool /* skipZeroWeights*/) {} ;
 
-  virtual void setDirtyProp(Bool_t flag) { _doDirtyProp = flag ; }
-  Bool_t dirtyProp() const { return _doDirtyProp ; }
+  virtual void setDirtyProp(bool flag) { _doDirtyProp = flag ; }
+  bool dirtyProp() const { return _doDirtyProp ; }
 
   virtual void checkInit() const {} ;
 
-  virtual Bool_t hasFilledCache() const { return kFALSE ; }
+  virtual bool hasFilledCache() const { return false ; }
 
   virtual const TTree* tree() const { return 0 ; }
   virtual void dump() {}
@@ -154,7 +154,7 @@ public:
   RooArgSet _vars;
   RooArgSet _cachedVars;
 
-  Bool_t _doDirtyProp = true; ///< Switch do (de)activate dirty state propagation when loading a data point
+  bool _doDirtyProp = true; ///< Switch do (de)activate dirty state propagation when loading a data point
 
   ClassDefOverride(RooAbsDataStore,1) // Abstract Data Storage class
 };

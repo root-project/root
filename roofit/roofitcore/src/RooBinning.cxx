@@ -50,7 +50,7 @@ ClassImp(RooBinning);
 
 RooBinning::RooBinning(Double_t xlo, Double_t xhi, const char* name) :
   RooAbsBinning(name),
-  _xlo(0), _xhi(0), _ownBoundLo(kTRUE), _ownBoundHi(kTRUE),
+  _xlo(0), _xhi(0), _ownBoundLo(true), _ownBoundHi(true),
   _array(0), _blo(0)
 {
   setRange(xlo,xhi);
@@ -61,7 +61,7 @@ RooBinning::RooBinning(Double_t xlo, Double_t xhi, const char* name) :
 
 RooBinning::RooBinning(Int_t nbins, Double_t xlo, Double_t xhi, const char* name) :
   RooAbsBinning(name),
-  _xlo(0), _xhi(0), _ownBoundLo(kTRUE), _ownBoundHi(kTRUE),
+  _xlo(0), _xhi(0), _ownBoundLo(true), _ownBoundHi(true),
   _array(0), _blo(0)
 {
   _boundaries.reserve(1 + nbins);
@@ -75,7 +75,7 @@ RooBinning::RooBinning(Int_t nbins, Double_t xlo, Double_t xhi, const char* name
 
 RooBinning::RooBinning(Int_t nbins, const Double_t* boundaries, const char* name) :
   RooAbsBinning(name),
-  _xlo(0), _xhi(0), _ownBoundLo(kTRUE), _ownBoundHi(kTRUE),
+  _xlo(0), _xhi(0), _ownBoundLo(true), _ownBoundHi(true),
   _array(0), _blo(0)
 {
   // Variable bin size constructor
@@ -106,21 +106,21 @@ RooBinning::~RooBinning()
 ////////////////////////////////////////////////////////////////////////////////
 /// Add bin boundary at given value
 
-Bool_t RooBinning::addBoundary(Double_t boundary)
+bool RooBinning::addBoundary(Double_t boundary)
 {
   std::vector<Double_t>::iterator it =
       std::lower_bound(_boundaries.begin(), _boundaries.end(), boundary);
   if (_boundaries.end() != it && *it == boundary) {
     // If boundary previously existed as range delimiter,
     //                    convert to regular boundary now
-    if (boundary == _xlo) _ownBoundLo = kFALSE;
-    if (boundary == _xhi) _ownBoundHi = kFALSE;
-    return kFALSE;
+    if (boundary == _xlo) _ownBoundLo = false;
+    if (boundary == _xhi) _ownBoundHi = false;
+    return false;
   }
   // Add a new boundary
   _boundaries.insert(it, boundary);
   updateBinCount();
-  return kTRUE;
+  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -135,7 +135,7 @@ void RooBinning::addBoundaryPair(Double_t boundary, Double_t mirrorPoint)
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove boundary at given value
 
-Bool_t RooBinning::removeBoundary(Double_t boundary)
+bool RooBinning::removeBoundary(Double_t boundary)
 {
   std::vector<Double_t>::iterator it = std::lower_bound(_boundaries.begin(),
       _boundaries.end(), boundary);
@@ -151,16 +151,16 @@ Bool_t RooBinning::removeBoundary(Double_t boundary)
       if (boundary == _xhi) _xhi = _boundaries.back();
     }
     updateBinCount();
-    return kFALSE;
+    return false;
   }
   // Return error status - no boundary found
-  return kTRUE;
+  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if boundary exists at given value
 
-Bool_t RooBinning::hasBoundary(Double_t boundary)
+bool RooBinning::hasBoundary(Double_t boundary)
 {
   return std::binary_search(_boundaries.begin(), _boundaries.end(), boundary);
 }
@@ -266,14 +266,14 @@ void RooBinning::updateBinCount()
 /// Return upper and lower bound of bin 'bin'. If the return value
 /// is true an error occurred
 
-Bool_t RooBinning::binEdges(Int_t bin, Double_t& xlo, Double_t& xhi) const
+bool RooBinning::binEdges(Int_t bin, Double_t& xlo, Double_t& xhi) const
 {
   if (0 > bin || bin >= _nbins) {
     coutE(InputArguments) << "RooBinning::binEdges ERROR: bin number must be in range (0," << _nbins << ")" << endl;
-    return kTRUE;
+    return true;
   }
   xlo = _boundaries[bin + _blo], xhi = _boundaries[bin + _blo + 1];
-  return kFALSE;
+  return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -29,8 +29,8 @@ public:
   RooAbsCacheElement() : _owner(0) {
     // Default constructor
   } ;
-  virtual Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/,
-                 Bool_t /*nameChange*/, Bool_t /*isRecursive*/)  ;
+  virtual bool redirectServersHook(const RooAbsCollection& /*newServerList*/, bool /*mustReplaceAll*/,
+                 bool /*nameChange*/, bool /*isRecursive*/)  ;
   virtual void printCompactTreeHook(std::ostream&, const char *, Int_t curElem, Int_t totElem) ;
   virtual ~RooAbsCacheElement() {
     // Destructor

@@ -30,8 +30,8 @@ using namespace RooFit ;
 class TestBasic314 : public RooFitTestUnit
 {
 public:
-  TestBasic314(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Fit with non-rectangular observable boundaries",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic314(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Fit with non-rectangular observable boundaries",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // D e f i n e   o b s e r v a b l e s   a n d   d e c a y   p d f
   // ---------------------------------------------------------------
@@ -87,6 +87,6 @@ public:
   delete dacc ;
   delete dall ;
 
-  return kTRUE;
+  return true;
   }
 } ;

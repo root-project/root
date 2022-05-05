@@ -34,7 +34,7 @@ public:
 
   Double_t coefficient(Int_t basisIndex) const override ;
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const override;
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void generateEvent(Int_t code) override;
 
 protected:

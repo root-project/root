@@ -54,9 +54,9 @@ been used by the Tevatron experiments.
 #include "RooGlobalFunc.h"
 
 
-Bool_t RooStats::RatioOfProfiledLikelihoodsTestStat::fgAlwaysReuseNll = kTRUE ;
+bool RooStats::RatioOfProfiledLikelihoodsTestStat::fgAlwaysReuseNll = true ;
 
-void RooStats::RatioOfProfiledLikelihoodsTestStat::SetAlwaysReuseNLL(Bool_t flag) { fgAlwaysReuseNll = flag ; }
+void RooStats::RatioOfProfiledLikelihoodsTestStat::SetAlwaysReuseNLL(bool flag) { fgAlwaysReuseNll = flag ; }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// returns -logL(poi, conditional MLE of nuisance params)

@@ -41,7 +41,7 @@ RooHistConstraint::RooHistConstraint(const char *name, const char *title,
   RooAbsPdf(name,title),
   _gamma("gamma","gamma",this),
   _nominal("nominal","nominal",this),
-  _relParam(kTRUE)
+  _relParam(true)
 {
   // Implementing constraint on sum of RooParamHists
   //
@@ -142,7 +142,7 @@ RooHistConstraint::RooHistConstraint(const char *name, const char *title,
         sumVal2 += (*iter)->getNominal(i) ;
       }
       var->setVal(sumVal2) ;
-      var->setConstant(kTRUE) ;
+      var->setConstant(true) ;
 
       vname = Form("%s_nominal_error_bin_%i",GetName(),i) ;
       RooRealVar* vare = new RooRealVar(vname,vname,0,1000) ;
@@ -152,13 +152,13 @@ RooHistConstraint::RooHistConstraint(const char *name, const char *title,
         sumErr2 += pow((*iter)->getNominalError(i),2) ;
       }
       vare->setVal(sqrt(sumErr2)) ;
-      vare->setConstant(kTRUE) ;
+      vare->setConstant(true) ;
 
       allVars.add(RooArgSet(*var,*vare)) ;
       _nominal.add(*var) ;
       //      _nominalErr.add(*vare) ;
 
-      ((RooRealVar*)_gamma.at(i))->setConstant(kFALSE) ;
+      ((RooRealVar*)_gamma.at(i))->setConstant(false) ;
 
     }
   }

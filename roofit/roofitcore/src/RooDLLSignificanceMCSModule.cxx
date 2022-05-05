@@ -110,12 +110,12 @@ RooDLLSignificanceMCSModule:: ~RooDLLSignificanceMCSModule()
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize module after attachment to RooMCStudy object
 
-Bool_t RooDLLSignificanceMCSModule::initializeInstance()
+bool RooDLLSignificanceMCSModule::initializeInstance()
 {
   // Check that parameter is also present in fit parameter list of RooMCStudy object
   if (!fitParams()->find(_parName.c_str())) {
     coutE(InputArguments) << "RooDLLSignificanceMCSModule::initializeInstance:: ERROR: No parameter named " << _parName << " in RooMCStudy!" << endl ;
-    return kFALSE ;
+    return false ;
   }
 
   // Construct variable that holds -log(L) fit with null hypothesis for given parameter
@@ -136,7 +136,7 @@ Bool_t RooDLLSignificanceMCSModule::initializeInstance()
   // Create new dataset to be merged with RooMCStudy::fitParDataSet
   _data = new RooDataSet("DeltaLLSigData","Additional data for Delta(-log(L)) study",RooArgSet(*_nll0h,*_dll0h,*_sig0h)) ;
 
-  return kTRUE ;
+  return true ;
 }
 
 
@@ -144,10 +144,10 @@ Bool_t RooDLLSignificanceMCSModule::initializeInstance()
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize module at beginning of RooCMStudy run
 
-Bool_t RooDLLSignificanceMCSModule::initializeRun(Int_t /*numSamples*/)
+bool RooDLLSignificanceMCSModule::initializeRun(Int_t /*numSamples*/)
 {
   _data->reset() ;
-  return kTRUE ;
+  return true ;
 }
 
 
@@ -169,13 +169,13 @@ RooDataSet* RooDLLSignificanceMCSModule::finalizeRun()
 /// null hypothesis value and rerun fit Save difference in likelihood
 /// and associated Gaussian significance in auxilary dataset
 
-Bool_t RooDLLSignificanceMCSModule::processAfterFit(Int_t /*sampleNum*/)
+bool RooDLLSignificanceMCSModule::processAfterFit(Int_t /*sampleNum*/)
 {
   RooRealVar* par = static_cast<RooRealVar*>(fitParams()->find(_parName.c_str())) ;
   par->setVal(_nullValue) ;
-  par->setConstant(kTRUE) ;
+  par->setConstant(true) ;
   RooFitResult* frnull = refit() ;
-  par->setConstant(kFALSE) ;
+  par->setConstant(false) ;
 
   _nll0h->setVal(frnull->minNll()) ;
 
@@ -189,5 +189,5 @@ Bool_t RooDLLSignificanceMCSModule::processAfterFit(Int_t /*sampleNum*/)
 
   delete frnull ;
 
-  return kTRUE ;
+  return true ;
 }

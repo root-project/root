@@ -59,20 +59,20 @@ RooNumGenFactory::RooNumGenFactory()
   RooFoamGenerator::registerSampler(*this) ;
 
   // Prepare default
-  RooNumGenConfig::defaultConfig().method1D(kFALSE,kFALSE).setLabel("RooFoamGenerator") ;
-  RooNumGenConfig::defaultConfig().method1D(kTRUE ,kFALSE).setLabel("RooAcceptReject") ;
-  RooNumGenConfig::defaultConfig().method1D(kFALSE,kTRUE ).setLabel("RooAcceptReject") ;
-  RooNumGenConfig::defaultConfig().method1D(kTRUE, kTRUE ).setLabel("RooAcceptReject") ;
+  RooNumGenConfig::defaultConfig().method1D(false,false).setLabel("RooFoamGenerator") ;
+  RooNumGenConfig::defaultConfig().method1D(true ,false).setLabel("RooAcceptReject") ;
+  RooNumGenConfig::defaultConfig().method1D(false,true ).setLabel("RooAcceptReject") ;
+  RooNumGenConfig::defaultConfig().method1D(true, true ).setLabel("RooAcceptReject") ;
 
-  RooNumGenConfig::defaultConfig().method2D(kFALSE,kFALSE).setLabel("RooFoamGenerator") ;
-  RooNumGenConfig::defaultConfig().method2D(kTRUE ,kFALSE).setLabel("RooAcceptReject") ;
-  RooNumGenConfig::defaultConfig().method2D(kFALSE,kTRUE ).setLabel("RooAcceptReject") ;
-  RooNumGenConfig::defaultConfig().method2D(kTRUE, kTRUE ).setLabel("RooAcceptReject") ;
+  RooNumGenConfig::defaultConfig().method2D(false,false).setLabel("RooFoamGenerator") ;
+  RooNumGenConfig::defaultConfig().method2D(true ,false).setLabel("RooAcceptReject") ;
+  RooNumGenConfig::defaultConfig().method2D(false,true ).setLabel("RooAcceptReject") ;
+  RooNumGenConfig::defaultConfig().method2D(true, true ).setLabel("RooAcceptReject") ;
 
-  RooNumGenConfig::defaultConfig().methodND(kFALSE,kFALSE).setLabel("RooFoamGenerator") ;
-  RooNumGenConfig::defaultConfig().methodND(kTRUE ,kFALSE).setLabel("RooAcceptReject") ;
-  RooNumGenConfig::defaultConfig().methodND(kFALSE,kTRUE ).setLabel("RooAcceptReject") ;
-  RooNumGenConfig::defaultConfig().methodND(kTRUE, kTRUE ).setLabel("RooAcceptReject") ;
+  RooNumGenConfig::defaultConfig().methodND(false,false).setLabel("RooFoamGenerator") ;
+  RooNumGenConfig::defaultConfig().methodND(true ,false).setLabel("RooAcceptReject") ;
+  RooNumGenConfig::defaultConfig().methodND(false,true ).setLabel("RooAcceptReject") ;
+  RooNumGenConfig::defaultConfig().methodND(true, true ).setLabel("RooAcceptReject") ;
 
 }
 
@@ -115,13 +115,13 @@ RooNumGenFactory& RooNumGenFactory::instance()
 /// default configuration options and an optional list of names of other numeric integrators
 /// on which this integrator depends. Returns true if integrator was previously registered
 
-Bool_t RooNumGenFactory::storeProtoSampler(RooAbsNumGenerator* proto, const RooArgSet& defConfig)
+bool RooNumGenFactory::storeProtoSampler(RooAbsNumGenerator* proto, const RooArgSet& defConfig)
 {
   TString name = proto->IsA()->GetName() ;
 
   if (getProtoSampler(name)) {
     //cout << "RooNumGenFactory::storeSampler() ERROR: integrator '" << name << "' already registered" << endl ;
-    return kTRUE ;
+    return true ;
   }
 
   // Add to factory
@@ -130,7 +130,7 @@ Bool_t RooNumGenFactory::storeProtoSampler(RooAbsNumGenerator* proto, const RooA
   // Add default config to master config
   RooNumGenConfig::defaultConfig().addConfigSection(proto,defConfig) ;
 
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -158,16 +158,16 @@ const RooAbsNumGenerator* RooNumGenFactory::getProtoSampler(const char* name)
 /// the number of dimensions, the nature of the limits (open ended vs closed) and the user
 /// preference stated in 'config'
 
-RooAbsNumGenerator* RooNumGenFactory::createSampler(RooAbsReal& func, const RooArgSet& genVars, const RooArgSet& condVars, const RooNumGenConfig& config, Bool_t verbose, RooAbsReal* maxFuncVal)
+RooAbsNumGenerator* RooNumGenFactory::createSampler(RooAbsReal& func, const RooArgSet& genVars, const RooArgSet& condVars, const RooNumGenConfig& config, bool verbose, RooAbsReal* maxFuncVal)
 {
   // Find method defined configuration
   Int_t ndim = genVars.getSize() ;
-  Bool_t cond = (condVars.getSize() > 0) ? kTRUE : kFALSE ;
+  bool cond = (condVars.getSize() > 0) ? true : false ;
 
-  Bool_t hasCat(kFALSE) ;
+  bool hasCat(false) ;
   for (const auto arg : genVars) {
     if (arg->IsA()==RooCategory::Class()) {
-      hasCat=kTRUE ;
+      hasCat=true ;
       break ;
     }
   }

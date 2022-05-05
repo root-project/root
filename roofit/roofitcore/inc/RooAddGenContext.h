@@ -32,16 +32,16 @@ class TRandom;
 class RooAddGenContext : public RooAbsGenContext {
 public:
   RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
-                   const RooArgSet* auxProto=0, Bool_t _verbose= kFALSE);
+                   const RooArgSet* auxProto=0, bool _verbose= false);
   RooAddGenContext(const RooAddModel &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
-                   const RooArgSet* auxProto=0, Bool_t _verbose= kFALSE);
+                   const RooArgSet* auxProto=0, bool _verbose= false);
   ~RooAddGenContext() override;
 
   void setProtoDataOrder(Int_t* lut) override ;
 
   void attach(const RooArgSet& params) override ;
 
-  void printMultiline(std::ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override ;
+  void printMultiline(std::ostream &os, Int_t content, bool verbose=false, TString indent="") const override ;
 
 protected:
 
@@ -57,7 +57,7 @@ protected:
   std::vector<RooAbsGenContext*> _gcList ;  ///<  List of component generator contexts
   Int_t  _nComp ;                   ///<  Number of PDF components
   Double_t* _coefThresh ;           ///<[_nComp] Array of coefficient thresholds
-  Bool_t _isModel ;                 ///< Are we generating from a RooAddPdf or a RooAddModel
+  bool _isModel ;                 ///< Are we generating from a RooAddPdf or a RooAddModel
   RooAddModel::CacheElem* _mcache ; ///<! RooAddModel cache element
   RooAddPdf::CacheElem* _pcache ;   ///<! RooAddPdf cache element
 

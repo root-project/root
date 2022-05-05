@@ -54,7 +54,7 @@ public:
           const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
           const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
 
-  RooSimultaneous* build(const char* simPdfName,BuildConfig& bc, Bool_t verbose=kTRUE) ;
+  RooSimultaneous* build(const char* simPdfName,BuildConfig& bc, bool verbose=true) ;
 
   class SimWSIFace : public RooFactoryWSTool::IFace {
   public:
@@ -68,7 +68,7 @@ protected:
   RooSimWSTool(const RooSimWSTool&) ;
 
   ObjBuildConfig* validateConfig(BuildConfig& bc) ;
-  RooSimultaneous* executeBuild(const char* simPdfName,ObjBuildConfig& obc, Bool_t verbose=kTRUE) ;
+  RooSimultaneous* executeBuild(const char* simPdfName,ObjBuildConfig& obc, bool verbose=true) ;
   std::string makeSplitName(const RooArgSet& splitCatSet) ;
 
   RooWorkspace* _ws ;

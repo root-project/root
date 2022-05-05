@@ -43,10 +43,10 @@ public:
    virtual ~RooAbsMinimizerFcn() = default;
 
    /// Informs Minuit through its parameter_settings vector of RooFit parameter properties.
-   Bool_t synchronizeParameterSettings(std::vector<ROOT::Fit::ParameterSettings> &parameters, Bool_t optConst, Bool_t verbose);
+   bool synchronizeParameterSettings(std::vector<ROOT::Fit::ParameterSettings> &parameters, bool optConst, bool verbose);
    /// Like synchronizeParameterSettings, Synchronize informs Minuit through its parameter_settings vector of RooFit parameter properties,
    /// but Synchronize can be overridden to e.g. also include gradient strategy synchronization in subclasses.
-   virtual Bool_t Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameters, Bool_t optConst, Bool_t verbose);
+   virtual bool Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameters, bool optConst, bool verbose);
 
    RooArgList *GetFloatParamList();
    RooArgList *GetConstParamList();
@@ -55,7 +55,7 @@ public:
    Int_t GetNumInvalidNLL() const;
 
    // need access from Minimizer:
-   void SetEvalErrorWall(Bool_t flag);
+   void SetEvalErrorWall(bool flag);
    /// Try to recover from invalid function values. When invalid function values are encountered,
    /// a penalty term is returned to the minimiser to make it back off. This sets the strength of this penalty.
    /// \note A strength of zero is equivalent to a constant penalty (= the gradient vanishes, ROOT < 6.24).
@@ -68,7 +68,7 @@ public:
    void zeroEvalCount();
    /// Return a possible offset that's applied to the function to separate invalid function values from valid ones.
    double getOffset() const { return _funcOffset; }
-   void SetVerbose(Bool_t flag = kTRUE);
+   void SetVerbose(bool flag = true);
 
    /// Put Minuit results back into RooFit objects.
    void BackProp(const ROOT::Fit::FitResult &results);
@@ -81,7 +81,7 @@ public:
    /// Set different external covariance matrix
    void ApplyCovarianceMatrix(TMatrixDSym &V);
 
-   Bool_t SetLogFile(const char *inLogfile);
+   bool SetLogFile(const char *inLogfile);
    std::ofstream *GetLogFile() { return _logfile; }
 
    unsigned int getNDim() const { return _nDim; }
@@ -97,10 +97,10 @@ public:
    bool getOptConst();
    std::vector<double> getParameterValues() const;
 
-   Bool_t SetPdfParamVal(int index, double value) const;
+   bool SetPdfParamVal(int index, double value) const;
 
    /// Enable or disable offsetting on the function to be minimized, which enhances numerical precision.
-   virtual void setOffsetting(Bool_t flag) = 0;
+   virtual void setOffsetting(bool flag) = 0;
    virtual bool fit(ROOT::Fit::Fitter&) const = 0;
    virtual ROOT::Math::IMultiGenFunction* getMultiGenFcn() = 0;
 
@@ -108,7 +108,7 @@ protected:
    void optimizeConstantTerms(bool constStatChange, bool constValChange);
    /// This function must be overridden in the derived class to pass on constant term optimization configuration
    /// to the function to be minimized. For a RooAbsArg, this would be RooAbsArg::constOptimizeTestStatistic.
-   virtual void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, Bool_t doAlsoTrackingOpt) = 0;
+   virtual void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt) = 0;
 
    // used in BackProp (Minuit results -> RooFit) and ApplyCovarianceMatrix
    void SetPdfParamErr(Int_t index, Double_t value);
@@ -131,7 +131,7 @@ protected:
 
    unsigned int _nDim = 0;
 
-   Bool_t _optConst = kFALSE;
+   bool _optConst = false;
 
    std::unique_ptr<RooArgList> _floatParamList;
    std::unique_ptr<RooArgList> _constParamList;

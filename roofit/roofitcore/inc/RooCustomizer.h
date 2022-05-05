@@ -42,15 +42,15 @@ public:
   ~RooCustomizer() override ;
 
   /// If flag is true, make customizer own all created components
-  void setOwning(Bool_t flag) {
+  void setOwning(bool flag) {
     _owning = flag ;
   }
 
   void splitArgs(const RooArgSet& argSet, const RooAbsCategory& splitCat) ;
   void splitArg(const RooAbsArg& arg, const RooAbsCategory& splitCat) ;
   void replaceArg(const RooAbsArg& orig, const RooAbsArg& subst) ;
-  RooAbsArg* build(const char* masterCatState, Bool_t verbose=kFALSE) ;
-  RooAbsArg* build(Bool_t verbose=kFALSE) ;
+  RooAbsArg* build(const char* masterCatState, bool verbose=false) ;
+  RooAbsArg* build(bool verbose=false) ;
 
   /// Return list of cloned branch nodes
   const RooArgSet& cloneBranchList() const {
@@ -66,7 +66,7 @@ public:
   void printTitle(std::ostream& os) const override ;
   void printClassName(std::ostream& os) const override ;
   void printArgs(std::ostream& os) const override ;
-  void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent= "") const override;
+  void printMultiline(std::ostream& os, Int_t content, bool verbose=false, TString indent= "") const override;
 
   /// Printing interface
   inline void Print(Option_t *options= 0) const override {
@@ -88,10 +88,10 @@ protected:
   RooCustomizer(const RooCustomizer&) ;
   void initialize() ;
 
-  RooAbsArg* doBuild(const char* masterCatState, Bool_t verbose) ;
+  RooAbsArg* doBuild(const char* masterCatState, bool verbose) ;
 
-  Bool_t _sterile ; ///< If true we do not have as associated master category
-  Bool_t _owning ;  ///< If true we own all created components
+  bool _sterile ; ///< If true we do not have as associated master category
+  bool _owning ;  ///< If true we own all created components
   TString _name ;   ///< Name of this object
 
   TList _splitArgList ; ///< List of RooAbsArgs to be split

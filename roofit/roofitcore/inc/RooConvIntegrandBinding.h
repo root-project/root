@@ -26,7 +26,7 @@ class RooConvIntegrandBinding : public RooAbsFunc {
 public:
   RooConvIntegrandBinding(const RooAbsReal& func, const RooAbsReal& model,
                 RooAbsReal& x, RooAbsReal& xprime,
-                     const RooArgSet* nset=0, Bool_t clipInvalid=kFALSE);
+                     const RooArgSet* nset=0, bool clipInvalid=false);
   ~RooConvIntegrandBinding() override;
 
   Double_t operator()(const Double_t xvector[]) const override;
@@ -38,15 +38,15 @@ public:
   }
 
 protected:
-  void loadValues(const Double_t xvector[], Bool_t clipInvalid=kFALSE) const;
+  void loadValues(const Double_t xvector[], bool clipInvalid=false) const;
 
   const RooAbsReal *_func;   ///< Pointer to input function
   const RooAbsReal *_model ; ///< Pointer to input resolution model
 
   RooAbsRealLValue **_vars;  ///< Array of pointers to variables
   const RooArgSet *_nset;    ///< Normalization set to be used for function evaluations
-  mutable Bool_t _xvecValid; ///< If true _xvec defines a valid point
-  Bool_t _clipInvalid ;      ///< If true, invalid x values are clipped into their valid range
+  mutable bool _xvecValid; ///< If true _xvec defines a valid point
+  bool _clipInvalid ;      ///< If true, invalid x values are clipped into their valid range
 
   ClassDefOverride(RooConvIntegrandBinding,0) // RooAbsFunc representation of convolution integrands
 };

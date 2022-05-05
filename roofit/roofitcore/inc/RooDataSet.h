@@ -110,12 +110,12 @@ public:
   static RooDataSet *read(const char *filename, const RooArgList &variables,
            const char *opts= "", const char* commonPath="",
            const char *indexCatName=0) ;
-  Bool_t write(const char* filename) const;
-  Bool_t write(std::ostream & ofs) const;
+  bool write(const char* filename) const;
+  bool write(std::ostream & ofs) const;
 
 
-  Bool_t isWeighted() const override;
-  Bool_t isNonPoissonWeighted() const override;
+  bool isWeighted() const override;
+  bool isNonPoissonWeighted() const override;
 
   Double_t weight() const override;
   /// Returns a pointer to the weight variable (if set).
@@ -136,14 +136,14 @@ public:
   virtual void addFast(const RooArgSet& row, Double_t weight=1.0, Double_t weightError=0);
 
   void append(RooDataSet& data) ;
-  Bool_t merge(RooDataSet* data1, RooDataSet* data2=0, RooDataSet* data3=0,
+  bool merge(RooDataSet* data1, RooDataSet* data2=0, RooDataSet* data3=0,
            RooDataSet* data4=0, RooDataSet* data5=0, RooDataSet* data6=0) ;
-  Bool_t merge(std::list<RooDataSet*> dsetList) ;
+  bool merge(std::list<RooDataSet*> dsetList) ;
 
-  virtual RooAbsArg* addColumn(RooAbsArg& var, Bool_t adjustRange=kTRUE) ;
+  virtual RooAbsArg* addColumn(RooAbsArg& var, bool adjustRange=true) ;
   virtual RooArgSet* addColumns(const RooArgList& varList) ;
 
-  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const override;
+  void printMultiline(std::ostream& os, Int_t contents, bool verbose=false, TString indent="") const override;
   void printArgs(std::ostream& os) const override;
   void printValue(std::ostream& os) const override;
 

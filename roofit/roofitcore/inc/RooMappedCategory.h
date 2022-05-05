@@ -36,15 +36,15 @@ public:
   ~RooMappedCategory() override;
 
   // Mapping function
-  Bool_t map(const char* inKeyRegExp, const char* outKeyName, Int_t outKeyNum=NoCatIdx) ;
+  bool map(const char* inKeyRegExp, const char* outKeyName, Int_t outKeyNum=NoCatIdx) ;
 
   // Printing interface (human readable)
-  void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override ;
+  void printMultiline(std::ostream& os, Int_t content, bool verbose=false, TString indent="") const override ;
   void printMetaArgs(std::ostream& os) const override ;
 
   // I/O streaming interface (machine readable)
-  Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) override ;
-  void writeToStream(std::ostream& os, Bool_t compact) const override ;
+  bool readFromStream(std::istream& is, bool compact, bool verbose=false) override ;
+  void writeToStream(std::ostream& os, bool compact) const override ;
 
 
   class Entry {
@@ -54,7 +54,7 @@ public:
     Entry(const char* exp, RooAbsCategory::value_type cat);
     Entry(const Entry& other);
     bool ok();
-    Bool_t match(const char* testPattern) const;
+    bool match(const char* testPattern) const;
     Entry& operator=(const Entry& other);
     RooAbsCategory::value_type outCat() const { return _catIdx; }
     const TRegexp* regexp() const;

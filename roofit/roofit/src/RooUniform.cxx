@@ -33,7 +33,7 @@ ClassImp(RooUniform);
 
 RooUniform::RooUniform(const char *name, const char *title, const RooArgSet& _x) :
   RooAbsPdf(name,title),
-  x("x","Observables",this,kTRUE,kFALSE)
+  x("x","Observables",this,true,false)
 {
   x.add(_x) ;
 }
@@ -115,7 +115,7 @@ Double_t RooUniform::analyticalIntegral(Int_t code, const char* rangeName) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Advertise internal generator
 
-Int_t RooUniform::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
+Int_t RooUniform::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool /*staticInitOK*/) const
 {
   Int_t nx = x.getSize() ;
   if (nx>31) {

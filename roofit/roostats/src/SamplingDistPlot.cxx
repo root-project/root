@@ -51,14 +51,14 @@ SamplingDistPlot::SamplingDistPlot(Int_t nbins) :
    fItems(),
    fOtherItems(),
    fRooPlot(NULL),
-   fLogXaxis(kFALSE),
-   fLogYaxis(kFALSE),
+   fLogXaxis(false),
+   fLogYaxis(false),
    fXMin(NaN), fXMax(NaN), fYMin(NaN), fYMax(NaN),
-   fApplyStyle(kTRUE),
+   fApplyStyle(true),
    fFillStyle(3004)
 {
   fIterator = fItems.MakeIterator();
-  fIsWeighted = kFALSE;
+  fIsWeighted = false;
   fBins = nbins;
   fMarkerType = 20;
   fColor = 1;
@@ -73,14 +73,14 @@ SamplingDistPlot::SamplingDistPlot(Int_t nbins, Double_t min, Double_t max) :
    fItems(),
    fOtherItems(),
    fRooPlot(NULL),
-   fLogXaxis(kFALSE),
-   fLogYaxis(kFALSE),
+   fLogXaxis(false),
+   fLogYaxis(false),
    fXMin(NaN), fXMax(NaN), fYMin(NaN), fYMax(NaN),
-   fApplyStyle(kTRUE),
+   fApplyStyle(true),
    fFillStyle(3004)
 {
   fIterator = fItems.MakeIterator();
-  fIsWeighted = kFALSE;
+  fIsWeighted = false;
   fBins = nbins;
   fMarkerType = 20;
   fColor = 1;
@@ -172,7 +172,7 @@ Double_t SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *s
    fMarkerType++;
    fColor++;
 
-   fHist->SetStats(kFALSE);
+   fHist->SetStats(false);
 
    addObject(fHist, options.Data());
 
@@ -244,10 +244,10 @@ void SamplingDistPlot::AddTF1(TF1* f, const char* title, Option_t *drawOptions) 
 
 void SamplingDistPlot::SetSampleWeights(const SamplingDistribution* samplingDist)
 {
-  fIsWeighted = kFALSE;
+  fIsWeighted = false;
 
   if(samplingDist->GetSampleWeights().size() != 0){
-    fIsWeighted = kTRUE;
+    fIsWeighted = true;
     fSampleWeights = samplingDist->GetSampleWeights();
   }
 

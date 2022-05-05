@@ -37,7 +37,7 @@ RooMomentMorphFunc::RooMomentMorphFunc()
 //_____________________________________________________________________________
 RooMomentMorphFunc::RooMomentMorphFunc(const char *name, const char *title, RooAbsReal &_m, const RooArgList &varList,
                                        const RooArgList &pdfList, const TVectorD &mrefpoints, Setting setting)
-   : RooAbsReal(name, title), _cacheMgr(this, 10, kTRUE, kTRUE), m("m", "m", this, _m),
+   : RooAbsReal(name, title), _cacheMgr(this, 10, true, true), m("m", "m", this, _m),
      _varList("varList", "List of variables", this), _pdfList("pdfList", "List of pdfs", this), _setting(setting),
      _useHorizMorph(true)
 {
@@ -72,7 +72,7 @@ RooMomentMorphFunc::RooMomentMorphFunc(const char *name, const char *title, RooA
 //_____________________________________________________________________________
 RooMomentMorphFunc::RooMomentMorphFunc(const char *name, const char *title, RooAbsReal &_m, const RooArgList &varList,
                                        const RooArgList &pdfList, const RooArgList &mrefList, Setting setting)
-   : RooAbsReal(name, title), _cacheMgr(this, 10, kTRUE, kTRUE), m("m", "m", this, _m),
+   : RooAbsReal(name, title), _cacheMgr(this, 10, true, true), m("m", "m", this, _m),
      _varList("varList", "List of variables", this), _pdfList("pdfList", "List of pdfs", this), _setting(setting),
      _useHorizMorph(true)
 {
@@ -232,8 +232,8 @@ RooMomentMorphFunc::CacheElem *RooMomentMorphFunc::getCache(const RooArgSet * /*
             RooAbsMoment *mom = nVar == 1 ? ((RooAbsPdf *)_pdfList.at(i))->sigma((RooRealVar &)*varList.at(j))
                                           : ((RooAbsPdf *)_pdfList.at(i))->sigma((RooRealVar &)*varList.at(j), varList);
 
-            mom->setLocalNoDirtyInhibit(kTRUE);
-            mom->mean()->setLocalNoDirtyInhibit(kTRUE);
+            mom->setLocalNoDirtyInhibit(true);
+            mom->mean()->setLocalNoDirtyInhibit(true);
 
             sigmarv[ij(i, j)] = mom;
             meanrv[ij(i, j)] = mom->mean();
@@ -311,7 +311,7 @@ RooMomentMorphFunc::CacheElem *RooMomentMorphFunc::getCache(const RooArgSet * /*
 
    // change tracker for fraction parameters
    std::string trackerName = Form("%s_frac_tracker", GetName());
-   RooChangeTracker *tracker = new RooChangeTracker(trackerName.c_str(), trackerName.c_str(), m.arg(), kTRUE);
+   RooChangeTracker *tracker = new RooChangeTracker(trackerName.c_str(), trackerName.c_str(), m.arg(), true);
 
    // Store it in the cache
    cache = new CacheElem(*theSumFunc, *tracker, fracl);
@@ -346,8 +346,8 @@ RooAbsReal *RooMomentMorphFunc::sumFunc(const RooArgSet *nset)
 {
    CacheElem *cache = getCache(nset ? nset : _curNormSet);
 
-   if (cache->_tracker->hasChanged(kTRUE)) {
-      cache->calculateFractions(*this, kFALSE); // verbose turned off
+   if (cache->_tracker->hasChanged(true)) {
+      cache->calculateFractions(*this, false); // verbose turned off
    }
 
    return cache->_sumFunc;
@@ -358,8 +358,8 @@ const RooAbsReal *RooMomentMorphFunc::sumFunc(const RooArgSet *nset) const
 {
    CacheElem *cache = getCache(nset ? nset : _curNormSet);
 
-   if (cache->_tracker->hasChanged(kTRUE)) {
-      cache->calculateFractions(*this, kFALSE); // verbose turned off
+   if (cache->_tracker->hasChanged(true)) {
+      cache->calculateFractions(*this, false); // verbose turned off
    }
 
    return cache->_sumFunc;
@@ -370,8 +370,8 @@ Double_t RooMomentMorphFunc::evaluate() const
 {
    CacheElem *cache = getCache(_curNormSet);
 
-   if (cache->_tracker->hasChanged(kTRUE)) {
-      cache->calculateFractions(*this, kFALSE); // verbose turned off
+   if (cache->_tracker->hasChanged(true)) {
+      cache->calculateFractions(*this, false); // verbose turned off
    }
 
    Double_t ret = cache->_sumFunc->getVal(_pdfList.nset());
@@ -391,7 +391,7 @@ const RooRealVar *RooMomentMorphFunc::CacheElem::frac(Int_t i) const
 }
 
 //_____________________________________________________________________________
-void RooMomentMorphFunc::CacheElem::calculateFractions(const RooMomentMorphFunc &self, Bool_t verbose) const
+void RooMomentMorphFunc::CacheElem::calculateFractions(const RooMomentMorphFunc &self, bool verbose) const
 {
    Int_t nPdf = self._pdfList.getSize();
 
@@ -502,7 +502,7 @@ std::list<Double_t> *RooMomentMorphFunc::binBoundaries(RooAbsRealLValue &obs, Do
 }
 
 //_____________________________________________________________________________
-Bool_t RooMomentMorphFunc::isBinnedDistribution(const RooArgSet &obs) const
+bool RooMomentMorphFunc::isBinnedDistribution(const RooArgSet &obs) const
 {
    return sumFunc(0)->isBinnedDistribution(obs);
 }

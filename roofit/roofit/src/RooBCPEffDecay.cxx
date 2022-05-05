@@ -172,7 +172,7 @@ Double_t RooBCPEffDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, co
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooBCPEffDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK) const
+Int_t RooBCPEffDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK) const
 {
   if (staticInitOK) {
     if (matchArgs(directVars,generateVars,_t,_tag)) return 2 ;
@@ -230,7 +230,7 @@ void RooBCPEffDecay::generateEvent(Int_t code)
                            - (_tag*(1-2*_avgMistag))*(_CPeigenval*_absLambda*_argLambda)*sin(_dm*tval)
                            - (_tag*(1-2*_avgMistag))*(1-al2)/2*cos(_dm*tval);
 
-    Bool_t accept = maxAcceptProb*RooRandom::uniform() < acceptProb ? kTRUE : kFALSE ;
+    bool accept = maxAcceptProb*RooRandom::uniform() < acceptProb ? true : false ;
 
     if (tval<_t.max() && tval>_t.min() && accept) {
       _t = tval ;

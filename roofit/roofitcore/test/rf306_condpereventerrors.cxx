@@ -29,8 +29,8 @@ using namespace RooFit ;
 class TestBasic306 : public RooFitTestUnit
 {
 public:
-  TestBasic306(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Conditional use of per-event error p.d.f. F(t|dt)",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic306(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Conditional use of per-event error p.d.f. F(t|dt)",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // B - p h y s i c s   p d f   w i t h   p e r - e v e n t  G a u s s i a n   r e s o l u t i o n
   // ----------------------------------------------------------------------------------------------
@@ -100,8 +100,8 @@ public:
   //
   // Instead of integrating out dterr, make a weighted average of curves
   // at values dterr_i as given in the external dataset.
-  // (The kTRUE argument bins the data before projection to speed up the process)
-  decay_gm.plotOn(frame2,ProjWData(*expDataDterr,kTRUE)) ;
+  // (The true argument bins the data before projection to speed up the process)
+  decay_gm.plotOn(frame2,ProjWData(*expDataDterr,true)) ;
 
 
   regTH(hh_decay,"rf306_model2d") ;
@@ -111,7 +111,7 @@ public:
   delete expDataDterr ;
   delete data ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;
 

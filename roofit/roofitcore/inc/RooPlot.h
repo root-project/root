@@ -100,7 +100,7 @@ public:
   void SetNameTitle(const char *name, const char* title) override ;
   void SetNdivisions(Int_t n = 510, Option_t* axis = "X") ;
   void SetOption(Option_t* option = " ") ;
-  void SetStats(Bool_t stats = kTRUE) ;
+  void SetStats(bool stats = true) ;
   void SetTickLength(Float_t length = 0.02, Option_t* axis = "X") ;
   void SetTitleFont(Style_t font = 62, Option_t* axis = "X") ;
   void SetTitleOffset(Float_t offset = 1, Option_t* axis = "X") ;
@@ -115,12 +115,12 @@ public:
   TObject* getObject(Int_t idx) const ;
   Stat_t numItems() const {return _items.size();}
 
-  void addPlotable(RooPlotable *plotable, Option_t *drawOptions= "", Bool_t invisible=kFALSE, Bool_t refreshNorm=kFALSE);
-  void addObject(TObject* obj, Option_t* drawOptions= "", Bool_t invisible=kFALSE);
-  void addTH1(TH1 *hist, Option_t* drawOptions= "", Bool_t invisible=kFALSE);
+  void addPlotable(RooPlotable *plotable, Option_t *drawOptions= "", bool invisible=false, bool refreshNorm=false);
+  void addObject(TObject* obj, Option_t* drawOptions= "", bool invisible=false);
+  void addTH1(TH1 *hist, Option_t* drawOptions= "", bool invisible=false);
   std::unique_ptr<TLegend> BuildLegend() const;
 
-  void remove(const char* name=0, Bool_t deleteToo=kTRUE) ;
+  void remove(const char* name=0, bool deleteToo=true) ;
 
   // ascii printing
   void printName(std::ostream& os) const override ;
@@ -128,7 +128,7 @@ public:
   void printClassName(std::ostream& os) const override ;
   void printArgs(std::ostream& os) const override ;
   void printValue(std::ostream& os) const override ;
-  void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override ;
+  void printMultiline(std::ostream& os, Int_t content, bool verbose=false, TString indent="") const override ;
 
   Int_t defaultPrintContents(Option_t* opt) const override ;
 
@@ -160,15 +160,15 @@ public:
 
 
   // rearrange drawing order of contained objects
-  Bool_t drawBefore(const char *before, const char *target);
-  Bool_t drawAfter(const char *after, const char *target);
+  bool drawBefore(const char *before, const char *target);
+  bool drawAfter(const char *after, const char *target);
 
   // get/set drawing options for contained objects
   TString getDrawOptions(const char *name) const;
-  Bool_t setDrawOptions(const char *name, TString options);
+  bool setDrawOptions(const char *name, TString options);
 
-  Bool_t getInvisible(const char* name) const ;
-  void setInvisible(const char* name, Bool_t flag=kTRUE) ;
+  bool getInvisible(const char* name) const ;
+  void setInvisible(const char* name, bool flag=true) ;
 
   virtual void SetMaximum(Double_t maximum = -1111) ;
   virtual void SetMinimum(Double_t minimum = -1111) ;
@@ -185,13 +185,13 @@ public:
   void Browse(TBrowser *b) override ;
 
   /// \copydoc AddDirectoryStatus()
-  static Bool_t addDirectoryStatus() ;
+  static bool addDirectoryStatus() ;
   /// \copydoc AddDirectory()
-  static Bool_t setAddDirectoryStatus(Bool_t flag) ;
+  static bool setAddDirectoryStatus(bool flag) ;
 
   /// Configure whether new instances of RooPlot will add themselves to `gDirectory`.
   /// Like TH1::AddDirectory().
-  static void AddDirectory(Bool_t add=kTRUE) {
+  static void AddDirectory(bool add=true) {
     setAddDirectoryStatus(add);
   }
   /// Query whether new instances of RooPlot will add themselves to `gDirectory`.
@@ -199,7 +199,7 @@ public:
   /// this instance will be associated to the file. Closing the file will e.g.
   /// write the instance to the file, and then delete it.
   /// Like TH1::AddDirectoryStatus().
-  static Bool_t AddDirectoryStatus() {
+  static bool AddDirectoryStatus() {
     return addDirectoryStatus();
   }
 
@@ -214,12 +214,12 @@ protected:
   class DrawOpt {
     public:
 
-    DrawOpt(const char* _rawOpt=0) : invisible(kFALSE) { drawOptions[0] = 0 ; initialize(_rawOpt) ; }
+    DrawOpt(const char* _rawOpt=0) : invisible(false) { drawOptions[0] = 0 ; initialize(_rawOpt) ; }
     void initialize(const char* _rawOpt) ;
     const char* rawOpt() const ;
 
     char drawOptions[128] ;
-    Bool_t invisible ;
+    bool invisible ;
   } ;
 
 
@@ -230,7 +230,7 @@ protected:
 
   void updateYAxis(Double_t ymin, Double_t ymax, const char *label= "");
   void updateFitRangeNorm(const TH1* hist);
-  void updateFitRangeNorm(const RooPlotable* rp, Bool_t refeshNorm=kFALSE);
+  void updateFitRangeNorm(const RooPlotable* rp, bool refeshNorm=false);
 
   TH1* _hist = nullptr;      ///< Histogram that we uses as basis for drawing the content
   Items _items;  ///< A list of the items we contain.
@@ -248,7 +248,7 @@ protected:
 
   TDirectory* _dir = nullptr; ///<! non-persistent
 
-  static Bool_t _addDirStatus ; ///< static flag controlling AutoDirectoryAdd feature
+  static bool _addDirStatus ; ///< static flag controlling AutoDirectoryAdd feature
 
   ClassDefOverride(RooPlot,3)        // Plot frame and container for graphics objects
 };

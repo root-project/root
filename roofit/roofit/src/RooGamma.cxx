@@ -114,7 +114,7 @@ Double_t RooGamma::analyticalIntegral(Int_t code, const char* rangeName) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooGamma::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
+Int_t RooGamma::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool /*staticInitOK*/) const
 {
   if (matchArgs(directVars,generateVars,x)) return 1 ;
   return 0 ;

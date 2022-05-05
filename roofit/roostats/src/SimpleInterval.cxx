@@ -99,7 +99,7 @@ SimpleInterval::~SimpleInterval()
 ////////////////////////////////////////////////////////////////////////////////
 /// Method to determine if a parameter point is in the interval
 
-Bool_t SimpleInterval::IsInInterval(const RooArgSet &parameterPoint) const
+bool SimpleInterval::IsInInterval(const RooArgSet &parameterPoint) const
 {
    if( !this->CheckParameters(parameterPoint) )
       return false;
@@ -128,7 +128,7 @@ RooArgSet* SimpleInterval::GetParameters() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t SimpleInterval::CheckParameters(const RooArgSet &parameterPoint) const
+bool SimpleInterval::CheckParameters(const RooArgSet &parameterPoint) const
 {
    if (parameterPoint.getSize() != fParameters.getSize() ) {
       std::cout << "size is wrong, parameters don't match" << std::endl;

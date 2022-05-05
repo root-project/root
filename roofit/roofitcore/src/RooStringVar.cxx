@@ -56,7 +56,7 @@ RooStringVar::RooStringVar(const RooStringVar& other, const char* name) :
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read object contents from given stream
-bool RooStringVar::readFromStream(std::istream& is, Bool_t compact, Bool_t)
+bool RooStringVar::readFromStream(std::istream& is, bool compact, bool)
 {
   TString token,errorPrefix("RooStringVar::readFromStream(") ;
   errorPrefix.Append(GetName()) ;
@@ -66,7 +66,7 @@ bool RooStringVar::readFromStream(std::istream& is, Bool_t compact, Bool_t)
   TString newValue ;
 
   if (compact) {
-    parser.readString(newValue,kTRUE) ;
+    parser.readString(newValue,true) ;
   } else {
     newValue = parser.readLine() ;
   }
@@ -84,7 +84,7 @@ bool RooStringVar::readFromStream(std::istream& is, Bool_t compact, Bool_t)
 /// Warning: This function copies the cached values of source,
 ///          it is the callers responsibility to make sure the cache is clean
 
-void RooStringVar::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/, Bool_t setValDirty)
+void RooStringVar::copyCache(const RooAbsArg* source, bool /*valueOnly*/, bool setValDirty)
 {
   auto other = dynamic_cast<const RooStringVar*>(source) ;
   assert(other);
@@ -133,7 +133,7 @@ void RooStringVar::fillTreeBranch(TTree& t)
 ////////////////////////////////////////////////////////////////////////////////
 /// (De)Activate associated tree branch
 
-void RooStringVar::setTreeBranchStatus(TTree& t, Bool_t active)
+void RooStringVar::setTreeBranchStatus(TTree& t, bool active)
 {
   TBranch* branch = t.GetBranch(GetName()) ;
   if (branch) {

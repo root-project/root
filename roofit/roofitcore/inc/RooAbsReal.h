@@ -141,9 +141,9 @@ public:
 
   Double_t getPropagatedError(const RooFitResult &fr, const RooArgSet &nset = RooArgSet()) const;
 
-  Bool_t operator==(Double_t value) const ;
-  Bool_t operator==(const RooAbsArg& other) const override;
-  Bool_t isIdentical(const RooAbsArg& other, Bool_t assumeSameType=kFALSE) const override;
+  bool operator==(Double_t value) const ;
+  bool operator==(const RooAbsArg& other) const override;
+  bool isIdentical(const RooAbsArg& other, bool assumeSameType=false) const override;
 
 
   inline const Text_t *getUnit() const {
@@ -154,10 +154,10 @@ public:
     // Set unit description to given string
     _unit= unit;
   }
-  TString getTitle(Bool_t appendUnit= kFALSE) const;
+  TString getTitle(bool appendUnit= false) const;
 
   // Lightweight interface adaptors (caller takes ownership)
-  RooAbsFunc *bindVars(const RooArgSet &vars, const RooArgSet* nset=0, Bool_t clipInvalid=kFALSE) const;
+  RooAbsFunc *bindVars(const RooArgSet &vars, const RooArgSet* nset=0, bool clipInvalid=false) const;
 
   // Create a fundamental-type object that can hold our value.
   RooAbsArg *createFundamental(const char* newname=0) const override;
@@ -167,17 +167,17 @@ public:
   virtual Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
   virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
   virtual Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
-  virtual Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const {
+  virtual bool forceAnalyticalInt(const RooAbsArg& /*dep*/) const {
     // Interface to force RooRealIntegral to offer given observable for internal integration
     // even if this is deemed unsafe. This default implementation returns always false
-    return kFALSE ;
+    return false ;
   }
-  virtual void forceNumInt(Bool_t flag=kTRUE) {
+  virtual void forceNumInt(bool flag=true) {
     // If flag is true, all advertised analytical integrals will be ignored
     // and all integrals are calculated numerically
     _forceNumInt = flag ;
   }
-  Bool_t getForceNumInt() const { return _forceNumInt ; }
+  bool getForceNumInt() const { return _forceNumInt ; }
 
   // Chi^2 fits to histograms
   virtual RooFitResult* chi2FitTo(RooDataHist& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),
@@ -261,12 +261,12 @@ public:
   RooNumIntConfig* getIntegratorConfig() ;
   static RooNumIntConfig* defaultIntegratorConfig()  ;
   RooNumIntConfig* specialIntegratorConfig() const ;
-  RooNumIntConfig* specialIntegratorConfig(Bool_t createOnTheFly) ;
+  RooNumIntConfig* specialIntegratorConfig(bool createOnTheFly) ;
   void setIntegratorConfig() ;
   void setIntegratorConfig(const RooNumIntConfig& config) ;
 
-  virtual void fixAddCoefNormalization(const RooArgSet& addNormSet=RooArgSet(),Bool_t force=kTRUE) ;
-  virtual void fixAddCoefRange(const char* rangeName=0,Bool_t force=kTRUE) ;
+  virtual void fixAddCoefNormalization(const RooArgSet& addNormSet=RooArgSet(),bool force=true) ;
+  virtual void fixAddCoefRange(const char* rangeName=0,bool force=true) ;
 
   virtual void preferredObservableScanOrder(const RooArgSet& obs, RooArgSet& orderedObs) const ;
 
@@ -288,8 +288,8 @@ public:
 
   // Fill an existing histogram
   TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars,
-           Double_t scaleFactor= 1, const RooArgSet *projectedVars= 0, Bool_t scaling=kTRUE,
-           const RooArgSet* condObs=0, Bool_t setError=kTRUE) const;
+           Double_t scaleFactor= 1, const RooArgSet *projectedVars= 0, bool scaling=true,
+           const RooArgSet* condObs=0, bool setError=true) const;
 
   // Create 1,2, and 3D histograms from and fill it
   TH1 *createHistogram(const char* varNameList, Int_t xbins=0, Int_t ybins=0, Int_t zbins=0) const ;
@@ -302,15 +302,15 @@ public:
 
   // Fill a RooDataHist
   RooDataHist* fillDataHist(RooDataHist *hist, const RooArgSet* nset, Double_t scaleFactor,
-             Bool_t correctForBinVolume=kFALSE, Bool_t showProgress=kFALSE) const ;
+             bool correctForBinVolume=false, bool showProgress=false) const ;
 
   // I/O streaming interface (machine readable)
-  Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) override ;
-  void writeToStream(std::ostream& os, Bool_t compact) const override ;
+  bool readFromStream(std::istream& is, bool compact, bool verbose=false) override ;
+  void writeToStream(std::ostream& os, bool compact) const override ;
 
   // Printing interface (human readable)
   void printValue(std::ostream& os) const override ;
-  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const override ;
+  void printMultiline(std::ostream& os, Int_t contents, bool verbose=false, TString indent="") const override ;
 
   inline void setCachedValue(double value, bool notifyClients = true) final;
 
@@ -341,7 +341,7 @@ public:
   static void clearEvalErrorLog() ;
 
   /// Tests if the distribution is binned. Unless overridden by derived classes, this always returns false.
-  virtual Bool_t isBinnedDistribution(const RooArgSet& /*obs*/) const { return kFALSE ; }
+  virtual bool isBinnedDistribution(const RooArgSet& /*obs*/) const { return false ; }
   virtual std::list<Double_t>* binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const;
   virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const;
 
@@ -354,40 +354,40 @@ public:
   RooDerivative* derivative(RooRealVar& obs, Int_t order=1, Double_t eps=0.001) ;
   RooDerivative* derivative(RooRealVar& obs, const RooArgSet& normSet, Int_t order, Double_t eps=0.001) ;
 
-  RooAbsMoment* moment(RooRealVar& obs, Int_t order, Bool_t central, Bool_t takeRoot) ;
-  RooAbsMoment* moment(RooRealVar& obs, const RooArgSet& normObs, Int_t order, Bool_t central, Bool_t takeRoot, Bool_t intNormObs) ;
+  RooAbsMoment* moment(RooRealVar& obs, Int_t order, bool central, bool takeRoot) ;
+  RooAbsMoment* moment(RooRealVar& obs, const RooArgSet& normObs, Int_t order, bool central, bool takeRoot, bool intNormObs) ;
 
-  RooAbsMoment* mean(RooRealVar& obs) { return moment(obs,1,kFALSE,kFALSE) ; }
-  RooAbsMoment* mean(RooRealVar& obs, const RooArgSet& nset) { return moment(obs,nset,1,kFALSE,kFALSE,kTRUE) ; }
-  RooAbsMoment* sigma(RooRealVar& obs) { return moment(obs,2,kTRUE,kTRUE) ; }
-  RooAbsMoment* sigma(RooRealVar& obs, const RooArgSet& nset) { return moment(obs,nset,2,kTRUE,kTRUE,kTRUE) ; }
+  RooAbsMoment* mean(RooRealVar& obs) { return moment(obs,1,false,false) ; }
+  RooAbsMoment* mean(RooRealVar& obs, const RooArgSet& nset) { return moment(obs,nset,1,false,false,true) ; }
+  RooAbsMoment* sigma(RooRealVar& obs) { return moment(obs,2,true,true) ; }
+  RooAbsMoment* sigma(RooRealVar& obs, const RooArgSet& nset) { return moment(obs,nset,2,true,true,true) ; }
 
   Double_t findRoot(RooRealVar& x, Double_t xmin, Double_t xmax, Double_t yval) ;
 
 
-  virtual Bool_t setData(RooAbsData& /*data*/, Bool_t /*cloneData*/=kTRUE) { return kTRUE ; }
+  virtual bool setData(RooAbsData& /*data*/, bool /*cloneData*/=true) { return true ; }
 
-  virtual void enableOffsetting(Bool_t) {} ;
-  virtual Bool_t isOffsetting() const { return kFALSE ; }
+  virtual void enableOffsetting(bool) {} ;
+  virtual bool isOffsetting() const { return false ; }
   virtual Double_t offset() const { return 0 ; }
 
-  static void setHideOffset(Bool_t flag);
-  static Bool_t hideOffset() ;
+  static void setHideOffset(bool flag);
+  static bool hideOffset() ;
 
 protected:
   // Hook for objects with normalization-dependent parameters interpretation
-  virtual void selectNormalization(const RooArgSet* depSet=0, Bool_t force=kFALSE) ;
-  virtual void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) ;
+  virtual void selectNormalization(const RooArgSet* depSet=0, bool force=false) ;
+  virtual void selectNormalizationRange(const char* rangeName=0, bool force=false) ;
 
   // Helper functions for plotting
-  Bool_t plotSanityChecks(RooPlot* frame) const ;
+  bool plotSanityChecks(RooPlot* frame) const ;
   void makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* allVars,
-          RooArgSet& projectedVars, Bool_t silent) const ;
+          RooArgSet& projectedVars, bool silent) const ;
 
-  TString integralNameSuffix(const RooArgSet& iset, const RooArgSet* nset=0, const char* rangeName=0, Bool_t omitEmpty=kFALSE) const ;
+  TString integralNameSuffix(const RooArgSet& iset, const RooArgSet* nset=0, const char* rangeName=0, bool omitEmpty=false) const ;
 
 
-  Bool_t isSelectedComp() const ;
+  bool isSelectedComp() const ;
 
 
  public:
@@ -401,22 +401,22 @@ protected:
   RooFitResult* chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList) ;
 
   void plotOnCompSelect(RooArgSet* selNodes) const ;
-  RooPlot* plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, Double_t Z, const RooArgSet* params, const RooLinkedList& argList, Bool_t method1) const ;
+  RooPlot* plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, Double_t Z, const RooArgSet* params, const RooLinkedList& argList, bool method1) const ;
 
   // Support interface for subclasses to advertise their analytic integration
   // and generator capabilities in their analyticalIntegral() and generateEvent()
   // implementations.
-  Bool_t matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps,
+  bool matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps,
          const RooArgProxy& a) const ;
-  Bool_t matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps,
+  bool matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps,
          const RooArgProxy& a, const RooArgProxy& b) const ;
-  Bool_t matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps,
+  bool matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps,
          const RooArgProxy& a, const RooArgProxy& b, const RooArgProxy& c) const ;
-  Bool_t matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps,
+  bool matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps,
          const RooArgProxy& a, const RooArgProxy& b,
          const RooArgProxy& c, const RooArgProxy& d) const ;
 
-  Bool_t matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps,
+  bool matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps,
          const RooArgSet& set) const ;
 
 
@@ -470,10 +470,10 @@ protected:
   friend class RooRealIntegral ;
   friend class RooVectorDataStore ;
   void syncCache(const RooArgSet* set=0) override { getVal(set) ; }
-  void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE, Bool_t setValDirty=kTRUE) override ;
+  void copyCache(const RooAbsArg* source, bool valueOnly=false, bool setValDirty=true) override ;
   void attachToTree(TTree& t, Int_t bufSize=32000) override ;
   void attachToVStore(RooVectorDataStore& vstore) override ;
-  void setTreeBranchStatus(TTree& t, Bool_t active) override ;
+  void setTreeBranchStatus(TTree& t, bool active) override ;
   void fillTreeBranch(TTree& t) override ;
 
   friend class RooRealBinding ;
@@ -483,7 +483,7 @@ protected:
   mutable Double_t _value ; ///< Cache for current value of object
   TString  _unit ;          ///< Unit for objects value
   TString  _label ;         ///< Plot label for objects value
-  Bool_t   _forceNumInt ;   ///< Force numerical integration if flag set
+  bool   _forceNumInt ;   ///< Force numerical integration if flag set
 
   friend class RooAbsPdf ;
   friend class RooAbsAnaConvPdf ;
@@ -494,26 +494,26 @@ protected:
   friend class RooAbsOptGoodnessOfFit ;
 
   struct PlotOpt {
-   PlotOpt() : drawOptions("L"), scaleFactor(1.0), stype(Relative), projData(0), binProjData(kFALSE), projSet(0), precision(1e-3),
-               shiftToZero(kFALSE),projDataSet(0),normRangeName(0),rangeLo(0),rangeHi(0),postRangeFracScale(kFALSE),wmode(RooCurve::Extended),
-               projectionRangeName(0),curveInvisible(kFALSE), curveName(0),addToCurveName(0),addToWgtSelf(1.),addToWgtOther(1.),
-               numCPU(1),interleave(RooFit::Interleave),curveNameSuffix(""), numee(10), eeval(0), doeeval(kFALSE), progress(kFALSE), errorFR(0) {} ;
+   PlotOpt() : drawOptions("L"), scaleFactor(1.0), stype(Relative), projData(0), binProjData(false), projSet(0), precision(1e-3),
+               shiftToZero(false),projDataSet(0),normRangeName(0),rangeLo(0),rangeHi(0),postRangeFracScale(false),wmode(RooCurve::Extended),
+               projectionRangeName(0),curveInvisible(false), curveName(0),addToCurveName(0),addToWgtSelf(1.),addToWgtOther(1.),
+               numCPU(1),interleave(RooFit::Interleave),curveNameSuffix(""), numee(10), eeval(0), doeeval(false), progress(false), errorFR(0) {} ;
    Option_t* drawOptions ;
    Double_t scaleFactor ;
    ScaleType stype ;
    const RooAbsData* projData ;
-   Bool_t binProjData ;
+   bool binProjData ;
    const RooArgSet* projSet ;
    Double_t precision ;
-   Bool_t shiftToZero ;
+   bool shiftToZero ;
    const RooArgSet* projDataSet ;
    const char* normRangeName ;
    Double_t rangeLo ;
    Double_t rangeHi ;
-   Bool_t postRangeFracScale ;
+   bool postRangeFracScale ;
    RooCurve::WingMode wmode ;
    const char* projectionRangeName ;
-   Bool_t curveInvisible ;
+   bool curveInvisible ;
    const char* curveName ;
    const char* addToCurveName ;
    Double_t addToWgtSelf ;
@@ -523,8 +523,8 @@ protected:
    const char* curveNameSuffix ;
    Int_t    numee ;
    Double_t eeval ;
-   Bool_t   doeeval ;
-   Bool_t progress ;
+   bool   doeeval ;
+   bool progress ;
    const RooFitResult* errorFR ;
   } ;
 
@@ -545,7 +545,7 @@ private:
   static std::map<const RooAbsArg*,std::pair<std::string,std::list<EvalError> > > _evalErrorList ;
   static Int_t _evalErrorCount ;
 
-  Bool_t matchArgsByName(const RooArgSet &allArgs, RooArgSet &matchedArgs, const TList &nameList) const;
+  bool matchArgsByName(const RooArgSet &allArgs, RooArgSet &matchedArgs, const TList &nameList) const;
 
   std::unique_ptr<TreeReadBuffer> _treeReadBuffer; //! A buffer for reading values from trees
 
@@ -556,13 +556,13 @@ protected:
   friend class RooRealSumFunc;
   friend class RooAddPdf ;
   friend class RooAddModel ;
-  void selectComp(Bool_t flag) {
+  void selectComp(bool flag) {
     // If flag is true, only selected component will be included in evaluates of RooAddPdf components
     _selectComp = flag ;
   }
-  static void globalSelectComp(Bool_t flag) ;
-  Bool_t _selectComp ;               //! Component selection flag for RooAbsPdf::plotCompOn
-  static Bool_t _globalSelectComp ;  // Global activation switch for component selection
+  static void globalSelectComp(bool flag) ;
+  bool _selectComp ;               //! Component selection flag for RooAbsPdf::plotCompOn
+  static bool _globalSelectComp ;  // Global activation switch for component selection
   // This struct can be used to flip the global switch to select components.
   // Doing this with RAII prevents forgetting to reset the state.
   struct GlobalSelectComponentRAII {
@@ -582,7 +582,7 @@ protected:
 
 
   mutable RooArgSet* _lastNSet ; ///<!
-  static Bool_t _hideOffset ;    ///< Offset hiding flag
+  static bool _hideOffset ;    ///< Offset hiding flag
 
   ClassDefOverride(RooAbsReal,2) // Abstract real-valued variable
 };

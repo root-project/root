@@ -45,7 +45,7 @@ public:
   Int_t getCoefAnalyticalIntegral(Int_t coef, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
   Double_t coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName=0) const override ;
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const override;
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void initGenerator(Int_t code) override ;
   void generateEvent(Int_t code) override ;
 

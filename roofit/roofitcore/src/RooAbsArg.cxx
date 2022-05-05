@@ -109,9 +109,9 @@ char* operator+( streampos&, char* );
 ClassImp(RooAbsArg);
 ;
 
-Bool_t RooAbsArg::_verboseDirty(kFALSE) ;
-Bool_t RooAbsArg::_inhibitDirty(kFALSE) ;
-Bool_t RooAbsArg::inhibitDirty() const { return _inhibitDirty && !_localNoInhibitDirty; }
+bool RooAbsArg::_verboseDirty(false) ;
+bool RooAbsArg::_inhibitDirty(false) ;
+bool RooAbsArg::inhibitDirty() const { return _inhibitDirty && !_localNoInhibitDirty; }
 
 std::map<RooAbsArg*,std::unique_ptr<TRefArray>> RooAbsArg::_ioEvoList;
 std::stack<RooAbsArg*> RooAbsArg::_ioReadStack ;
@@ -121,8 +121,8 @@ std::stack<RooAbsArg*> RooAbsArg::_ioReadStack ;
 /// Default constructor
 
 RooAbsArg::RooAbsArg()
-   : TNamed(), _deleteWatch(kFALSE), _valueDirty(kTRUE), _shapeDirty(kTRUE), _operMode(Auto), _fast(kFALSE), _ownedComponents(nullptr),
-     _prohibitServerRedirect(kFALSE), _namePtr(0), _isConstant(kFALSE), _localNoInhibitDirty(kFALSE),
+   : TNamed(), _deleteWatch(false), _valueDirty(true), _shapeDirty(true), _operMode(Auto), _fast(false), _ownedComponents(nullptr),
+     _prohibitServerRedirect(false), _namePtr(0), _isConstant(false), _localNoInhibitDirty(false),
      _myws(0)
 {
   _namePtr = RooNameReg::instance().constPtr(GetName()) ;
@@ -135,9 +135,9 @@ RooAbsArg::RooAbsArg()
 /// dirty flags set.
 
 RooAbsArg::RooAbsArg(const char *name, const char *title)
-   : TNamed(name, title), _deleteWatch(kFALSE), _valueDirty(kTRUE), _shapeDirty(kTRUE), _operMode(Auto), _fast(kFALSE),
-     _ownedComponents(0), _prohibitServerRedirect(kFALSE), _namePtr(0), _isConstant(kFALSE),
-     _localNoInhibitDirty(kFALSE), _myws(0)
+   : TNamed(name, title), _deleteWatch(false), _valueDirty(true), _shapeDirty(true), _operMode(Auto), _fast(false),
+     _ownedComponents(0), _prohibitServerRedirect(false), _namePtr(0), _isConstant(false),
+     _localNoInhibitDirty(false), _myws(0)
 {
   if (name == nullptr || strlen(name) == 0) {
     throw std::logic_error("Each RooFit object needs a name. "
@@ -153,14 +153,14 @@ RooAbsArg::RooAbsArg(const char *name, const char *title)
 RooAbsArg::RooAbsArg(const RooAbsArg &other, const char *name)
    : TNamed(name ? name : other.GetName(), other.GetTitle()), RooPrintable(other),
      _boolAttrib(other._boolAttrib),
-     _stringAttrib(other._stringAttrib), _deleteWatch(other._deleteWatch), _operMode(Auto), _fast(kFALSE),
-     _ownedComponents(0), _prohibitServerRedirect(kFALSE),
+     _stringAttrib(other._stringAttrib), _deleteWatch(other._deleteWatch), _operMode(Auto), _fast(false),
+     _ownedComponents(0), _prohibitServerRedirect(false),
      _namePtr(name ? RooNameReg::instance().constPtr(name) : other._namePtr),
      _isConstant(other._isConstant), _localNoInhibitDirty(other._localNoInhibitDirty), _myws(0)
 {
 
   // Copy server list by hand
-  Bool_t valueProp, shapeProp ;
+  bool valueProp, shapeProp ;
   for (const auto server : other._serverList) {
     valueProp = server->_clientListValue.containsByNamePtr(&other);
     shapeProp = server->_clientListShape.containsByNamePtr(&other);
@@ -214,25 +214,25 @@ RooAbsArg::~RooAbsArg()
 {
   // Notify all servers that they no longer need to serve us
   while (!_serverList.empty()) {
-    removeServer(*_serverList.containedObjects().back(), kTRUE);
+    removeServer(*_serverList.containedObjects().back(), true);
   }
 
   // Notify all clients that they are in limbo
   std::vector<RooAbsArg*> clientListTmp(_clientList.begin(), _clientList.end()); // have to copy, as we invalidate iterators
-  Bool_t first(kTRUE) ;
+  bool first(true) ;
   for (auto client : clientListTmp) {
     client->setAttribute("ServerDied") ;
     TString attr("ServerDied:");
     attr.Append(GetName());
     attr.Append(Form("(%zx)",(size_t)this)) ;
     client->setAttribute(attr.Data());
-    client->removeServer(*this,kTRUE);
+    client->removeServer(*this,true);
 
     if (_verboseDirty) {
 
       if (first) {
    cxcoutD(Tracing) << "RooAbsArg::dtor(" << GetName() << "," << this << ") DeleteWatch: object is being destroyed" << endl ;
-   first = kFALSE ;
+   first = false ;
       }
 
       cxcoutD(Tracing)  << fName << "::" << ClassName() << ":~RooAbsArg: dependent \""
@@ -252,7 +252,7 @@ RooAbsArg::~RooAbsArg()
 /// Control global dirty inhibit mode. When set to true no value or shape dirty
 /// flags are propagated and cache is always considered to be dirty.
 
-void RooAbsArg::setDirtyInhibit(Bool_t flag)
+void RooAbsArg::setDirtyInhibit(bool flag)
 {
   _inhibitDirty = flag ;
 }
@@ -261,7 +261,7 @@ void RooAbsArg::setDirtyInhibit(Bool_t flag)
 ////////////////////////////////////////////////////////////////////////////////
 /// Activate verbose messaging related to dirty flag propagation
 
-void RooAbsArg::verboseDirty(Bool_t flag)
+void RooAbsArg::verboseDirty(bool flag)
 {
   _verboseDirty = flag ;
 }
@@ -269,7 +269,7 @@ void RooAbsArg::verboseDirty(Bool_t flag)
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if this object was created as a clone of 'other'
 
-Bool_t RooAbsArg::isCloneOf(const RooAbsArg& other) const
+bool RooAbsArg::isCloneOf(const RooAbsArg& other) const
 {
   return (getAttribute(Form("CloneOf(%zx)",(size_t)&other)) ||
      other.getAttribute(Form("CloneOf(%zx)",(size_t)this))) ;
@@ -279,7 +279,7 @@ Bool_t RooAbsArg::isCloneOf(const RooAbsArg& other) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Set (default) or clear a named boolean attribute of this object.
 
-void RooAbsArg::setAttribute(const Text_t* name, Bool_t value)
+void RooAbsArg::setAttribute(const Text_t* name, bool value)
 {
   // Preserve backward compatibility - any strong
   if(string("Constant")==name) {
@@ -302,7 +302,7 @@ void RooAbsArg::setAttribute(const Text_t* name, Bool_t value)
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if a named attribute is set. By default, all attributes are unset.
 
-Bool_t RooAbsArg::getAttribute(const Text_t* name) const
+bool RooAbsArg::getAttribute(const Text_t* name) const
 {
   return (_boolAttrib.find(name) != _boolAttrib.end()) ;
 }
@@ -338,7 +338,7 @@ const Text_t* RooAbsArg::getStringAttribute(const Text_t* key) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Set (default) or clear a named boolean attribute of this object.
 
-void RooAbsArg::setTransientAttribute(const Text_t* name, Bool_t value)
+void RooAbsArg::setTransientAttribute(const Text_t* name, bool value)
 {
   if (value) {
 
@@ -360,7 +360,7 @@ void RooAbsArg::setTransientAttribute(const Text_t* name, Bool_t value)
 /// Check if a named attribute is set. By default, all attributes
 /// are unset.
 
-Bool_t RooAbsArg::getTransientAttribute(const Text_t* name) const
+bool RooAbsArg::getTransientAttribute(const Text_t* name) const
 {
   return (_boolAttribTransient.find(name) != _boolAttribTransient.end()) ;
 }
@@ -376,7 +376,7 @@ Bool_t RooAbsArg::getTransientAttribute(const Text_t* name) const
 /// \param shapeProp In addition to the basic client-server relationship, declare dependence on the server's shape.
 /// \param refCount Optionally add with higher reference count (if multiple components depend on it)
 
-void RooAbsArg::addServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp, std::size_t refCount)
+void RooAbsArg::addServer(RooAbsArg& server, bool valueProp, bool shapeProp, std::size_t refCount)
 {
   if (_prohibitServerRedirect) {
     cxcoutF(LinkStateMgmt) << "RooAbsArg::addServer(" << this << "," << GetName()
@@ -412,7 +412,7 @@ void RooAbsArg::addServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp,
 /// Register a list of RooAbsArg as servers to us by calling
 /// addServer() for each arg in the list
 
-void RooAbsArg::addServerList(RooAbsCollection& serverList, Bool_t valueProp, Bool_t shapeProp)
+void RooAbsArg::addServerList(RooAbsCollection& serverList, bool valueProp, bool shapeProp)
 {
   _serverList.reserve(_serverList.size() + serverList.size());
 
@@ -427,7 +427,7 @@ void RooAbsArg::addServerList(RooAbsCollection& serverList, Bool_t valueProp, Bo
 /// Unregister another RooAbsArg as a server to us, ie, declare that
 /// we no longer depend on its value and shape.
 
-void RooAbsArg::removeServer(RooAbsArg& server, Bool_t force)
+void RooAbsArg::removeServer(RooAbsArg& server, bool force)
 {
   if (_prohibitServerRedirect) {
     cxcoutF(LinkStateMgmt) << "RooAbsArg::addServer(" << this << "," << GetName() << "): PROHIBITED SERVER REMOVAL REQUESTED: removing server "
@@ -452,10 +452,10 @@ void RooAbsArg::removeServer(RooAbsArg& server, Bool_t force)
 ////////////////////////////////////////////////////////////////////////////////
 /// Replace 'oldServer' with 'newServer'
 
-void RooAbsArg::replaceServer(RooAbsArg& oldServer, RooAbsArg& newServer, Bool_t propValue, Bool_t propShape)
+void RooAbsArg::replaceServer(RooAbsArg& oldServer, RooAbsArg& newServer, bool propValue, bool propShape)
 {
   Int_t count = _serverList.refCount(&oldServer);
-  removeServer(oldServer, kTRUE);
+  removeServer(oldServer, true);
   addServer(newServer, propValue, propShape, count);
 }
 
@@ -463,7 +463,7 @@ void RooAbsArg::replaceServer(RooAbsArg& oldServer, RooAbsArg& newServer, Bool_t
 ////////////////////////////////////////////////////////////////////////////////
 /// Change dirty flag propagation mask for specified server
 
-void RooAbsArg::changeServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp)
+void RooAbsArg::changeServer(RooAbsArg& server, bool valueProp, bool shapeProp)
 {
   if (!_serverList.containsByNamePtr(&server)) {
     coutE(LinkStateMgmt) << "RooAbsArg::changeServer(" << GetName() << "): Server "
@@ -497,9 +497,9 @@ void RooAbsArg::changeServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapePr
 /// Fill supplied list with all leaf nodes of the arg tree, starting with
 /// ourself as top node. A leaf node is node that has no servers declared.
 
-void RooAbsArg::leafNodeServerList(RooAbsCollection* list, const RooAbsArg* arg, Bool_t recurseNonDerived) const
+void RooAbsArg::leafNodeServerList(RooAbsCollection* list, const RooAbsArg* arg, bool recurseNonDerived) const
 {
-  treeNodeServerList(list,arg,kFALSE,kTRUE,kFALSE,recurseNonDerived) ;
+  treeNodeServerList(list,arg,false,true,false,recurseNonDerived) ;
 }
 
 
@@ -508,9 +508,9 @@ void RooAbsArg::leafNodeServerList(RooAbsCollection* list, const RooAbsArg* arg,
 /// Fill supplied list with all branch nodes of the arg tree starting with
 /// ourself as top node. A branch node is node that has one or more servers declared.
 
-void RooAbsArg::branchNodeServerList(RooAbsCollection* list, const RooAbsArg* arg, Bool_t recurseNonDerived) const
+void RooAbsArg::branchNodeServerList(RooAbsCollection* list, const RooAbsArg* arg, bool recurseNonDerived) const
 {
-  treeNodeServerList(list,arg,kTRUE,kFALSE,kFALSE,recurseNonDerived) ;
+  treeNodeServerList(list,arg,true,false,false,recurseNonDerived) ;
 }
 
 
@@ -524,7 +524,7 @@ void RooAbsArg::branchNodeServerList(RooAbsCollection* list, const RooAbsArg* ar
 /// \param[in] valueOnly Only check if an element is a value server (no shape server).
 /// \param[in] recurseFundamental
 
-void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg, Bool_t doBranch, Bool_t doLeaf, Bool_t valueOnly, Bool_t recurseFundamental) const
+void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg, bool doBranch, bool doLeaf, bool valueOnly, bool recurseFundamental) const
 {
 //   if (arg==0) {
 //     cout << "treeNodeServerList(" << GetName() << ") doBranch=" << (doBranch?"T":"F") << " doLeaf = " << (doLeaf?"T":"F") << " valueOnly=" << (valueOnly?"T":"F") << endl ;
@@ -541,7 +541,7 @@ void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg,
       (doLeaf&&arg->isFundamental()&&(!(recurseFundamental&&arg->isDerived()))) ||
       (doLeaf && !arg->isFundamental() && !arg->isDerived())) {
 
-    list->add(*arg,kTRUE) ;
+    list->add(*arg,true) ;
   }
 
   // Recurse if current node is derived
@@ -549,7 +549,7 @@ void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg,
     for (const auto server : arg->_serverList) {
 
       // Skip non-value server nodes if requested
-      Bool_t isValueSrv = server->_clientListValue.containsByNamePtr(arg);
+      bool isValueSrv = server->_clientListValue.containsByNamePtr(arg);
       if (valueOnly && !isValueSrv) {
         continue ;
       }
@@ -599,7 +599,7 @@ void RooAbsArg::addParameters(RooAbsCollection& params, const RooArgSet* nset, b
   getParametersHook(nset,&nodeParamServers,stripDisconnected) ;
 
   // Add parameters of this node to the combined list
-  params.add(nodeParamServers,kTRUE) ;
+  params.add(nodeParamServers,true) ;
 
   // Now recurse into branch servers
   std::sort(branchList.begin(), branchList.end());
@@ -756,7 +756,7 @@ bool RooAbsArg::getObservables(const RooAbsCollection* dataList, RooArgSet& outp
 
   // Make iterator over tree leaf node list
   RooArgSet leafList("leafNodeServerList") ;
-  treeNodeServerList(&leafList,0,kFALSE,kTRUE,valueOnly) ;
+  treeNodeServerList(&leafList,0,false,true,valueOnly) ;
 
   if (valueOnly) {
     for (const auto arg : leafList) {
@@ -797,29 +797,29 @@ RooArgSet* RooAbsArg::getComponents() const
 /// consistency checks of the variables. If this function returns
 /// true, indicating an error, the fitter or generator will abort.
 
-Bool_t RooAbsArg::checkObservables(const RooArgSet*) const
+bool RooAbsArg::checkObservables(const RooArgSet*) const
 {
-  return kFALSE ;
+  return false ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Recursively call checkObservables on all nodes in the expression tree
 
-Bool_t RooAbsArg::recursiveCheckObservables(const RooArgSet* nset) const
+bool RooAbsArg::recursiveCheckObservables(const RooArgSet* nset) const
 {
   RooArgSet nodeList ;
   treeNodeServerList(&nodeList) ;
   RooFIter iter = nodeList.fwdIterator() ;
 
   RooAbsArg* arg ;
-  Bool_t ret(kFALSE) ;
+  bool ret(false) ;
   while((arg=iter.next())) {
     if (arg->getAttribute("ServerDied")) {
       coutE(LinkStateMgmt) << "RooAbsArg::recursiveCheckObservables(" << GetName() << "): ERROR: one or more servers of node "
             << arg->GetName() << " no longer exists!" << endl ;
       arg->Print("v") ;
-      ret = kTRUE ;
+      ret = true ;
     }
     ret |= arg->checkObservables(nset) ;
   }
@@ -832,17 +832,17 @@ Bool_t RooAbsArg::recursiveCheckObservables(const RooArgSet* nset) const
 /// Test whether we depend on (ie, are served by) any object in the
 /// specified collection. Uses the dependsOn(RooAbsArg&) member function.
 
-Bool_t RooAbsArg::dependsOn(const RooAbsCollection& serverList, const RooAbsArg* ignoreArg, Bool_t valueOnly) const
+bool RooAbsArg::dependsOn(const RooAbsCollection& serverList, const RooAbsArg* ignoreArg, bool valueOnly) const
 {
   // Test whether we depend on (ie, are served by) any object in the
   // specified collection. Uses the dependsOn(RooAbsArg&) member function.
 
   for (auto server : serverList) {
     if (dependsOn(*server,ignoreArg,valueOnly)) {
-      return kTRUE;
+      return true;
     }
   }
-  return kFALSE;
+  return false;
 }
 
 
@@ -851,13 +851,13 @@ Bool_t RooAbsArg::dependsOn(const RooAbsCollection& serverList, const RooAbsArg*
 /// Note that RooAbsArg objects are considered equivalent if they have
 /// the same name.
 
-Bool_t RooAbsArg::dependsOn(const RooAbsArg& testArg, const RooAbsArg* ignoreArg, Bool_t valueOnly) const
+bool RooAbsArg::dependsOn(const RooAbsArg& testArg, const RooAbsArg* ignoreArg, bool valueOnly) const
 {
-  if (this==ignoreArg) return kFALSE ;
+  if (this==ignoreArg) return false ;
 
   // First check if testArg is self
-  //if (!TString(testArg.GetName()).CompareTo(GetName())) return kTRUE ;
-  if (testArg.namePtr()==namePtr()) return kTRUE ;
+  //if (!TString(testArg.GetName()).CompareTo(GetName())) return true ;
+  if (testArg.namePtr()==namePtr()) return true ;
 
 
   // Next test direct dependence
@@ -866,7 +866,7 @@ Bool_t RooAbsArg::dependsOn(const RooAbsArg& testArg, const RooAbsArg* ignoreArg
 
     // Return true if valueOnly is FALSE or if server is value server, otherwise keep looking
     if ( !valueOnly || foundServer->isValueServer(*this)) {
-      return kTRUE ;
+      return true ;
     }
   }
 
@@ -874,12 +874,12 @@ Bool_t RooAbsArg::dependsOn(const RooAbsArg& testArg, const RooAbsArg* ignoreArg
   for (const auto server : _serverList) {
     if ( !valueOnly || server->isValueServer(*this)) {
       if (server->dependsOn(testArg,ignoreArg,valueOnly)) {
-        return kTRUE ;
+        return true ;
       }
     }
   }
 
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -887,7 +887,7 @@ Bool_t RooAbsArg::dependsOn(const RooAbsArg& testArg, const RooAbsArg* ignoreArg
 ////////////////////////////////////////////////////////////////////////////////
 /// Test if any of the nodes of tree are shared with that of the given tree
 
-Bool_t RooAbsArg::overlaps(const RooAbsArg& testArg, Bool_t valueOnly) const
+bool RooAbsArg::overlaps(const RooAbsArg& testArg, bool valueOnly) const
 {
   RooArgSet list("treeNodeList") ;
   treeNodeServerList(&list) ;
@@ -901,7 +901,7 @@ Bool_t RooAbsArg::overlaps(const RooAbsArg& testArg, Bool_t valueOnly) const
 /// Test if any of the dependents of the arg tree (as determined by getObservables)
 /// overlaps with those of the testArg.
 
-Bool_t RooAbsArg::observableOverlaps(const RooAbsData* dset, const RooAbsArg& testArg) const
+bool RooAbsArg::observableOverlaps(const RooAbsData* dset, const RooAbsArg& testArg) const
 {
   return observableOverlaps(dset->get(),testArg) ;
 }
@@ -911,10 +911,10 @@ Bool_t RooAbsArg::observableOverlaps(const RooAbsData* dset, const RooAbsArg& te
 /// Test if any of the dependents of the arg tree (as determined by getObservables)
 /// overlaps with those of the testArg.
 
-Bool_t RooAbsArg::observableOverlaps(const RooArgSet* nset, const RooAbsArg& testArg) const
+bool RooAbsArg::observableOverlaps(const RooArgSet* nset, const RooAbsArg& testArg) const
 {
   RooArgSet* depList = getObservables(nset) ;
-  Bool_t ret = testArg.dependsOn(*depList) ;
+  bool ret = testArg.dependsOn(*depList) ;
   delete depList ;
   return ret ;
 }
@@ -934,7 +934,7 @@ void RooAbsArg::setValueDirty(const RooAbsArg* source)
 
   // Handle no-propagation scenarios first
   if (_clientListValue.size() == 0) {
-    _valueDirty = kTRUE ;
+    _valueDirty = true ;
     return ;
   }
 
@@ -955,7 +955,7 @@ void RooAbsArg::setValueDirty(const RooAbsArg* source)
             << "): dirty flag " << (_valueDirty?"already ":"") << "raised" << endl ;
   }
 
-  _valueDirty = kTRUE ;
+  _valueDirty = true ;
 
 
   for (auto client : _clientListValue) {
@@ -978,7 +978,7 @@ void RooAbsArg::setShapeDirty(const RooAbsArg* source)
   }
 
   if (_clientListShape.empty()) {
-    _shapeDirty = kTRUE ;
+    _shapeDirty = true ;
     return ;
   }
 
@@ -993,7 +993,7 @@ void RooAbsArg::setShapeDirty(const RooAbsArg* source)
   }
 
   // Propagate dirty flag to all clients if this is a down->up transition
-  _shapeDirty=kTRUE ;
+  _shapeDirty=true ;
 
   for (auto client : _clientListShape) {
     client->setShapeDirty(source) ;
@@ -1028,11 +1028,11 @@ void RooAbsArg::setShapeDirty(const RooAbsArg* source)
 /// ```
 /// Now, the renamed object will be selected based on the attribute "ORIGNAME:<name>".
 /// \param[in] isRecursionStep Internal switch used when called from recursiveRedirectServers().
-Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursionStep)
+bool RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, bool mustReplaceAll, bool nameChange, bool isRecursionStep)
 {
   // Trivial case, no servers
-  if (_serverList.empty()) return kFALSE ;
-  if (newSetOrig.getSize()==0) return kFALSE ;
+  if (_serverList.empty()) return false ;
+  if (newSetOrig.getSize()==0) return false ;
 
   // Strip any non-matching removal nodes from newSetOrig
   RooAbsCollection* newSet ;
@@ -1057,7 +1057,7 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
   }
 
   // Replace current servers with new servers with the same name from the given list
-  Bool_t ret(kFALSE) ;
+  bool ret(false) ;
 
   //Copy original server list to not confuse the iterator while deleting
   std::vector<RooAbsArg*> origServerList, origServerValue, origServerShape;
@@ -1091,7 +1091,7 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
       if (mustReplaceAll) {
         coutE(LinkStateMgmt) << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName()
                     << " (" << (void*)oldServer << ") not redirected" << (nameChange?"[nameChange]":"") << endl ;
-        ret = kTRUE ;
+        ret = true ;
       }
       continue ;
     }
@@ -1115,14 +1115,14 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
   for (int i=0 ; i<numProxies() ; i++) {
     RooAbsProxy* p = getProxy(i) ;
     if (!p) continue ;
-    Bool_t ret2 = p->changePointer(*newSet,nameChange,kFALSE) ;
+    bool ret2 = p->changePointer(*newSet,nameChange,false) ;
 
     if (mustReplaceAll && !ret2) {
       auto ap = dynamic_cast<const RooArgProxy*>(p);
       coutE(LinkStateMgmt) << "RooAbsArg::redirectServers(" << GetName()
               << "): ERROR, proxy '" << p->name()
               << "' with arg '" << (ap ? ap->absArg()->GetName() : "<could not cast>") << "' could not be adjusted" << endl;
-      ret = kTRUE ;
+      ret = true ;
     }
   }
 
@@ -1147,7 +1147,7 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
 /// \param[in] nameChange If true, search for an item with the bool attribute "ORIGNAME:<oldName>" set.
 /// Use `<object>.setAttribute("ORIGNAME:<oldName>")` to set this attribute.
 /// \return Pointer to the new server or `nullptr` if there's no unique match.
-RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, Bool_t nameChange) const
+RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, bool nameChange) const
 {
   RooAbsArg *newServer = 0;
   if (!nameChange) {
@@ -1159,7 +1159,7 @@ RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, Bool_t nameC
     TString nameAttrib("ORIGNAME:") ;
     nameAttrib.Append(GetName()) ;
 
-    RooArgSet* tmp = (RooArgSet*) newSet.selectByAttrib(nameAttrib,kTRUE) ;
+    RooArgSet* tmp = (RooArgSet*) newSet.selectByAttrib(nameAttrib,true) ;
     if(0 != tmp) {
 
       // Check if any match was found
@@ -1194,14 +1194,14 @@ RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, Bool_t nameC
 /// \copydetails RooAbsArg::redirectServers
 /// \param newSet Roo collection
 /// \param recurseInNewSet be recursive
-Bool_t RooAbsArg::recursiveRedirectServers(const RooAbsCollection& newSet, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t recurseInNewSet)
+bool RooAbsArg::recursiveRedirectServers(const RooAbsCollection& newSet, bool mustReplaceAll, bool nameChange, bool recurseInNewSet)
 {
   // Cyclic recursion protection
   static std::set<const RooAbsArg*> callStack;
   {
     std::set<const RooAbsArg*>::iterator it = callStack.lower_bound(this);
     if (it != callStack.end() && this == *it) {
-      return kFALSE;
+      return false;
     } else {
       callStack.insert(it, this);
     }
@@ -1209,18 +1209,18 @@ Bool_t RooAbsArg::recursiveRedirectServers(const RooAbsCollection& newSet, Bool_
 
   // Do not recurse into newset if not so specified
 //   if (!recurseInNewSet && newSet.contains(*this)) {
-//     return kFALSE ;
+//     return false ;
 //   }
 
 
   // Apply the redirectServers function recursively on all branch nodes in this argument tree.
-  Bool_t ret(kFALSE) ;
+  bool ret(false) ;
 
   cxcoutD(LinkStateMgmt) << "RooAbsArg::recursiveRedirectServers(" << this << "," << GetName() << ") newSet = " << newSet << " mustReplaceAll = "
           << (mustReplaceAll?"T":"F") << " nameChange = " << (nameChange?"T":"F") << " recurseInNewSet = " << (recurseInNewSet?"T":"F") << endl ;
 
   // Do redirect on self (identify operation as recursion step)
-  ret |= redirectServers(newSet,mustReplaceAll,nameChange,kTRUE) ;
+  ret |= redirectServers(newSet,mustReplaceAll,nameChange,true) ;
 
   // Do redirect on servers
   for (const auto server : _serverList){
@@ -1415,9 +1415,9 @@ void RooAbsArg::attachToTree(TTree& ,Int_t)
 ////////////////////////////////////////////////////////////////////////////////
 /// WVE (08/21/01) Probably obsolete now
 
-Bool_t RooAbsArg::isValid() const
+bool RooAbsArg::isValid() const
 {
-  return kTRUE ;
+  return true ;
 }
 
 
@@ -1496,7 +1496,7 @@ Int_t RooAbsArg::defaultPrintContents(Option_t* /*opt*/) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Implement multi-line detailed printing
 
-void RooAbsArg::printMultiline(ostream& os, Int_t /*contents*/, Bool_t /*verbose*/, TString indent) const
+void RooAbsArg::printMultiline(ostream& os, Int_t /*contents*/, bool /*verbose*/, TString indent) const
 {
   os << indent << "--- RooAbsArg ---" << endl;
   // dirty state flags
@@ -1575,7 +1575,7 @@ void RooAbsArg::printTree(ostream& os, TString /*indent*/) const
 
 ostream& operator<<(ostream& os, RooAbsArg const& arg)
 {
-  arg.writeToStream(os,kTRUE) ;
+  arg.writeToStream(os,true) ;
   return os ;
 }
 
@@ -1584,7 +1584,7 @@ ostream& operator<<(ostream& os, RooAbsArg const& arg)
 
 istream& operator>>(istream& is, RooAbsArg &arg)
 {
-  arg.readFromStream(is,kTRUE,kFALSE) ;
+  arg.readFromStream(is,true,false) ;
   return is ;
 }
 
@@ -1594,10 +1594,10 @@ istream& operator>>(istream& is, RooAbsArg &arg)
 void RooAbsArg::printAttribList(ostream& os) const
 {
   set<string>::const_iterator iter = _boolAttrib.begin() ;
-  Bool_t first(kTRUE) ;
+  bool first(true) ;
   while (iter != _boolAttrib.end()) {
     os << (first?" [":",") << *iter ;
-    first=kFALSE ;
+    first=false ;
     ++iter ;
   }
   if (!first) os << "] " ;
@@ -1659,7 +1659,7 @@ Int_t RooAbsArg::Compare(const TObject* other) const
 /// If depth flag is true, information is recursively printed for
 /// all nodes in this arg tree.
 
-void RooAbsArg::printDirty(Bool_t depth) const
+void RooAbsArg::printDirty(bool depth) const
 {
   if (depth) {
 
@@ -1668,7 +1668,7 @@ void RooAbsArg::printDirty(Bool_t depth) const
     RooFIter bIter = branchList.fwdIterator() ;
     RooAbsArg* branch ;
     while((branch=bIter.next())) {
-      branch->printDirty(kFALSE) ;
+      branch->printDirty(false) ;
     }
 
   } else {
@@ -1744,10 +1744,10 @@ void RooAbsArg::optimizeCacheMode(const RooArgSet& observables, RooArgSet& optim
     if (dynamic_cast<RooRealIntegral*>(this)) {
       cxcoutI(Integration) << "RooAbsArg::optimizeCacheMode(" << GetName() << ") integral depends on value of one or more observables and will be evaluated for every event" << endl ;
     }
-    optimizedNodes.add(*this,kTRUE) ;
+    optimizedNodes.add(*this,true) ;
     if (operMode()==AClean) {
     } else {
-      setOperMode(ADirty,kTRUE) ; // WVE propagate flag recursively to top of tree
+      setOperMode(ADirty,true) ; // WVE propagate flag recursively to top of tree
     }
   } else {
   }
@@ -1767,10 +1767,10 @@ void RooAbsArg::optimizeCacheMode(const RooArgSet& observables, RooArgSet& optim
 /// Find branch nodes with all-constant parameters, and add them to the list of
 /// nodes that can be cached with a dataset in a test statistic calculation
 
-Bool_t RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cacheList)
+bool RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cacheList)
 {
   RooLinkedList proc ;
-  Bool_t ret = findConstantNodes(observables,cacheList,proc) ;
+  bool ret = findConstantNodes(observables,cacheList,proc) ;
 
   // If node can be optimized and hasn't been identified yet, add it to the list
   coutI(Optimization) << "RooAbsArg::findConstantNodes(" << GetName() << "): components "
@@ -1785,28 +1785,28 @@ Bool_t RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cac
 /// Find branch nodes with all-constant parameters, and add them to the list of
 /// nodes that can be cached with a dataset in a test statistic calculation
 
-Bool_t RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cacheList, RooLinkedList& processedNodes)
+bool RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cacheList, RooLinkedList& processedNodes)
 {
   // Caching only applies to branch nodes
   if (!isDerived()) {
-    return kFALSE;
+    return false;
   }
 
   // Terminate call if this node was already processed (tree structure may be cyclical)
   if (processedNodes.findArg(this)) {
-    return kFALSE ;
+    return false ;
   } else {
     processedNodes.Add(this) ;
   }
 
   // Check if node depends on any non-constant parameter
-  Bool_t canOpt(kTRUE) ;
+  bool canOpt(true) ;
   RooArgSet* paramSet = getParameters(observables) ;
   RooFIter iter = paramSet->fwdIterator() ;
   RooAbsArg* param ;
   while((param = iter.next())) {
     if (!param->isConstant()) {
-      canOpt=kFALSE ;
+      canOpt=false ;
       break ;
     }
   }
@@ -1814,7 +1814,7 @@ Bool_t RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cac
 
 
   if (getAttribute("NeverConstant")) {
-    canOpt = kFALSE ;
+    canOpt = false ;
   }
 
   if (canOpt) {
@@ -1830,7 +1830,7 @@ Bool_t RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cac
       cxcoutD(Optimization) << "RooAbsArg::findConstantNodes(" << GetName() << ") adding self to list of constant nodes" << endl ;
 
       if (canOpt) setAttribute("ConstantExpressionCached") ;
-      cacheList.add(*this,kFALSE) ;
+      cacheList.add(*this,false) ;
     }
   }
 
@@ -1849,7 +1849,7 @@ Bool_t RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cac
     getCache(i)->findConstantNodes(observables,cacheList,processedNodes) ;
   }
 
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -1860,7 +1860,7 @@ Bool_t RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cac
 /// optimization. This default implementation takes no action other than to
 /// forward the calls to all servers
 
-void RooAbsArg::constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt)
+void RooAbsArg::constOptimizeTestStatistic(ConstOpCode opcode, bool doAlsoTrackingOpt)
 {
   for (const auto server : _serverList) {
     server->constOptimizeTestStatistic(opcode,doAlsoTrackingOpt) ;
@@ -1873,7 +1873,7 @@ void RooAbsArg::constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrac
 /// is true, then a mode change to AlwaysDirty will automatically
 /// be propagated recursively to all client nodes
 
-void RooAbsArg::setOperMode(OperMode mode, Bool_t recurseADirty)
+void RooAbsArg::setOperMode(OperMode mode, bool recurseADirty)
 {
   // Prevent recursion loops
   if (mode==_operMode) return ;
@@ -2064,7 +2064,7 @@ RooAbsCache* RooAbsArg::getCache(Int_t index) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return RooArgSet with all variables (tree leaf nodes of expresssion tree)
 
-RooArgSet* RooAbsArg::getVariables(Bool_t stripDisconnected) const
+RooArgSet* RooAbsArg::getVariables(bool stripDisconnected) const
 {
   return getParameters(RooArgSet(),stripDisconnected) ;
 }
@@ -2193,7 +2193,7 @@ void RooAbsArg::graphVizAddConnections(set<pair<RooAbsArg*,RooAbsArg*> >& linkSe
 
 
 // //_____________________________________________________________________________
-// TGraphStruct* RooAbsArg::graph(Bool_t useFactoryTag, Double_t textSize)
+// TGraphStruct* RooAbsArg::graph(bool useFactoryTag, Double_t textSize)
 // {
 //   // Return a TGraphStruct object filled with the tree structure of the pdf object
 
@@ -2260,7 +2260,7 @@ void RooAbsArg::graphVizAddConnections(set<pair<RooAbsArg*,RooAbsArg*> >& linkSe
 
 
 // //_____________________________________________________________________________
-// Bool_t RooAbsArg::inhibitDirty()
+// bool RooAbsArg::inhibitDirty()
 // {
 //   // Return current status of the inhibitDirty global flag. If true
 //   // no dirty state change tracking occurs and all caches are considered
@@ -2517,7 +2517,7 @@ void RooRefArray::Streamer(TBuffer &R__b)
 
    } else {
 
-     R__c = R__b.WriteVersion(RooRefArray::IsA(), kTRUE);
+     R__c = R__b.WriteVersion(RooRefArray::IsA(), true);
 
      // Make a temporary refArray and write that to the streamer
      TRefArray refArray(GetEntriesFast());
@@ -2528,7 +2528,7 @@ void RooRefArray::Streamer(TBuffer &R__b)
      delete iter ;
 
      refArray.Streamer(R__b) ;
-     R__b.SetByteCount(R__c, kTRUE) ;
+     R__b.SetByteCount(R__c, true) ;
 
    }
 }

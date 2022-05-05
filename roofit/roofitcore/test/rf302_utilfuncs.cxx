@@ -30,8 +30,8 @@ using namespace RooFit ;
 class TestBasic302 : public RooFitTestUnit
 {
 public:
-  TestBasic302(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Sum and product utility functions",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic302(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Sum and product utility functions",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // C r e a t e   o b s e r v a b l e s ,   p a r a m e t e r s
   // -----------------------------------------------------------
@@ -108,6 +108,6 @@ public:
   regTH(hh_model_3,"rf202_model2d_3") ;
   regTH(hh_model_4,"rf202_model2d_4") ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;

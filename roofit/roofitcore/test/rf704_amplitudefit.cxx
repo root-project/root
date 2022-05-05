@@ -31,8 +31,8 @@ using namespace RooFit ;
 class TestBasic704 : public RooFitTestUnit
 {
 public:
-  TestBasic704(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Amplitude sum operator p.d.f",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic704(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Amplitude sum operator p.d.f",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // S e t u p   2 D   a m p l i t u d e   f u n c t i o n s
   // -------------------------------------------------------
@@ -114,6 +114,6 @@ public:
   delete coshGConv ;
   delete sinhGConv ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;

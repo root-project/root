@@ -51,7 +51,7 @@ RooAbsCachedReal::RooAbsCachedReal(const char *name, const char *title, Int_t ip
   RooAbsReal(name,title),
   _cacheMgr(this,10),
   _ipOrder(ipOrder),
-  _disableCache(kFALSE)
+  _disableCache(false)
  {
  }
 
@@ -138,7 +138,7 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
   Int_t sterileIdx(-1) ;
   FuncCacheElem* cache = (FuncCacheElem*) _cacheMgr.getObj(nset,0,&sterileIdx) ;
   if (cache) {
-    if (cache->paramTracker()->hasChanged(kTRUE)) {
+    if (cache->paramTracker()->hasChanged(true)) {
       ccoutD(Eval) << "RooAbsCachedReal::getCache(" << GetName() << ") cached function "
         << cache->func()->GetName() << " requires recalculation as parameters changed" << endl ;
       fillCacheObject(*cache) ;
@@ -193,7 +193,7 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
 RooAbsCachedReal::FuncCacheElem::FuncCacheElem(const RooAbsCachedReal& self, const RooArgSet* nset)
 {
   // Disable source caching by default
-  _cacheSource = kFALSE ;
+  _cacheSource = false ;
   _sourceClone = 0 ;
 
   RooArgSet* nset2 = self.actualObservables(nset?*nset:RooArgSet()) ;
@@ -222,8 +222,8 @@ RooAbsCachedReal::FuncCacheElem::FuncCacheElem(const RooAbsCachedReal& self, con
   // Create pseudo-object that tracks changes in parameter values
   RooArgSet* params = self.actualParameters(orderedObs) ;
   string name= Form("%s_CACHEPARAMS",_func->GetName()) ;
-  _paramTracker = new RooChangeTracker(name.c_str(),name.c_str(),*params,kTRUE) ;
-  _paramTracker->hasChanged(kTRUE) ; // clear dirty flag as cache is up-to-date upon creation
+  _paramTracker = new RooChangeTracker(name.c_str(),name.c_str(),*params,true) ;
+  _paramTracker->hasChanged(true) ; // clear dirty flag as cache is up-to-date upon creation
 
   // Introduce formal dependency of RooHistFunc on parameters so that const optimization code
   // makes the correct decisions
@@ -260,10 +260,10 @@ TString RooAbsCachedReal::cacheNameSuffix(const RooArgSet& nset) const
   if (nset.getSize()>0) {
     TIterator* iter = nset.createIterator() ;
     RooAbsArg* arg ;
-    Bool_t first(kTRUE) ;
+    bool first(true) ;
     while((arg=(RooAbsArg*)iter->Next())) {
       if (first) {
-   first=kFALSE ;
+   first=false ;
       } else {
    name.Append(",") ;
       }

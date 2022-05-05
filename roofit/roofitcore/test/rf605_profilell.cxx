@@ -28,8 +28,8 @@ using namespace RooFit ;
 class TestBasic605 : public RooFitTestUnit
 {
 public:
-  TestBasic605(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Profile Likelihood operator",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic605(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Profile Likelihood operator",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // C r e a t e   m o d e l   a n d   d a t a s e t
   // -----------------------------------------------
@@ -108,7 +108,7 @@ public:
 
   delete data ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;
 

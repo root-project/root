@@ -185,7 +185,7 @@ void SamplingDistribution::Add(const SamplingDistribution* other)
 /// Returns the integral in the open/closed/mixed interval. Default is [low,high) interval.
 /// Normalization can be turned off.
 
-Double_t SamplingDistribution::Integral(Double_t low, Double_t high, Bool_t normalize, Bool_t lowClosed, Bool_t
+Double_t SamplingDistribution::Integral(Double_t low, Double_t high, bool normalize, bool lowClosed, bool
                                         highClosed) const
 {
    double error = 0;
@@ -235,7 +235,7 @@ void SamplingDistribution::SortValues() const {
 /// Normalization can be turned off.
 /// compute also the error on the integral
 
-Double_t SamplingDistribution::IntegralAndError(Double_t & error, Double_t low, Double_t high, Bool_t normalize, Bool_t lowClosed, Bool_t
+Double_t SamplingDistribution::IntegralAndError(Double_t & error, Double_t low, Double_t high, bool normalize, bool lowClosed, bool
                                                 highClosed) const
 {
    int n = fSamplingDist.size();
@@ -308,7 +308,7 @@ Double_t SamplingDistribution::IntegralAndError(Double_t & error, Double_t low, 
 /// returns the closed integral [-inf,x]
 
 Double_t SamplingDistribution::CDF(Double_t x) const {
-   return Integral(-RooNumber::infinity(), x, kTRUE, kTRUE, kTRUE);
+   return Integral(-RooNumber::infinity(), x, true, true, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

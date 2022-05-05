@@ -368,7 +368,7 @@ std::string RooFormula::reconstructFormula(std::string internalRepr) const {
 ////////////////////////////////////////////////////////////////////////////////
 /// Recompile formula with new expression. In case of error, the old formula is
 /// retained.
-Bool_t RooFormula::reCompile(const char* newFormula)
+bool RooFormula::reCompile(const char* newFormula)
 {
   try {
     installFormulaOrThrow(newFormula);
@@ -392,8 +392,8 @@ void RooFormula::dump() const
 /// Change used variables to those with the same name in given list.
 /// \param[in] newDeps New dependents to replace the old ones.
 /// \param[in] mustReplaceAll Will yield an error if one dependent does not have a replacement.
-/// \param[in] nameChange Passed down to RooAbsArg::findNewServer(const RooAbsCollection&, Bool_t) const.
-Bool_t RooFormula::changeDependents(const RooAbsCollection& newDeps, Bool_t mustReplaceAll, Bool_t nameChange)
+/// \param[in] nameChange Passed down to RooAbsArg::findNewServer(const RooAbsCollection&, bool) const.
+bool RooFormula::changeDependents(const RooAbsCollection& newDeps, bool mustReplaceAll, bool nameChange)
 {
   //Change current servers to new servers with the same name given in list
   bool errorStat = false;
@@ -516,7 +516,7 @@ void RooFormula::computeBatch(cudaStream_t*, double* output, size_t nEvents, Roo
 ////////////////////////////////////////////////////////////////////////////////
 /// Printing interface
 
-void RooFormula::printMultiline(ostream& os, Int_t /*contents*/, Bool_t /*verbose*/, TString indent) const
+void RooFormula::printMultiline(ostream& os, Int_t /*contents*/, bool /*verbose*/, TString indent) const
 {
   os << indent << "--- RooFormula ---" << endl;
   os << indent << " Formula:        '" << GetTitle() << "'" << endl;

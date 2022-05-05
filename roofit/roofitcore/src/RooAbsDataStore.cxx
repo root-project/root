@@ -40,7 +40,7 @@ void RooAbsDataStore::printArgs(std::ostream& os) const  { _vars.printValue(os);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Detailed printing interface
-void RooAbsDataStore::printMultiline(std::ostream& os, Int_t /*content*/, Bool_t verbose, TString indent) const
+void RooAbsDataStore::printMultiline(std::ostream& os, Int_t /*content*/, bool verbose, TString indent) const
 {
   os << indent << "DataStore " << GetName() << " (" << GetTitle() << ")" << std::endl ;
   os << indent << "  Contains " << numEntries() << " entries" << std::endl;

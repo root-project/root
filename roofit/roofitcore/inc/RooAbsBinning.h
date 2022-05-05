@@ -45,7 +45,7 @@ public:
   virtual Double_t binWidth(Int_t bin) const = 0 ;
   virtual Double_t binLow(Int_t bin) const = 0 ;
   virtual Double_t binHigh(Int_t bin) const = 0 ;
-  virtual Bool_t isUniform() const { return kFALSE ; }
+  virtual bool isUniform() const { return false ; }
 
   virtual void setRange(Double_t xlo, Double_t xhi) = 0 ;
   /// Change lower bound to xlo.
@@ -77,8 +77,8 @@ public:
 
   /// Interface function. If true, min/max of binning is parameterized by external RooAbsReals.
   /// Default to `false`, unless overridden by a sub class.
-  virtual Bool_t isParameterized() const {
-    return kFALSE ;
+  virtual bool isParameterized() const {
+    return false ;
   }
   /// Return pointer to RooAbsReal parameterized lower bound, if any.
   virtual RooAbsReal* lowBoundFunc() const {
@@ -89,8 +89,8 @@ public:
     return 0 ;
   }
   /// If true (default), the range definition can be shared across clones of a RooRealVar.
-  virtual Bool_t isShareable() const {
-    return kTRUE ;
+  virtual bool isShareable() const {
+    return true ;
   }
   /// Hook interface function to execute code upon insertion into a RooAbsRealLValue.
   virtual void insertHook(RooAbsRealLValue&) const {  }

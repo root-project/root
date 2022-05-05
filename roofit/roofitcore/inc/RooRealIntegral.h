@@ -44,9 +44,9 @@ public:
 
   Double_t getValV(const RooArgSet* set=0) const override ;
 
-  Bool_t isValid() const override { return _valid; }
+  bool isValid() const override { return _valid; }
 
-  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const override ;
+  void printMultiline(std::ostream& os, Int_t contents, bool verbose=false, TString indent="") const override ;
   void printMetaArgs(std::ostream& os) const override ;
 
   const RooArgSet& numIntCatVars() const { return _sumList ; }
@@ -57,12 +57,12 @@ public:
   const char* intRange() { return _rangeName ? _rangeName->GetName() : 0 ; }
   const RooAbsReal& integrand() const { return _function.arg() ; }
 
-  void setCacheNumeric(Bool_t flag) {
+  void setCacheNumeric(bool flag) {
     // If true, value of this integral is cached if it is (partially numeric)
     _cacheNum = flag ;
   }
 
-  Bool_t getCacheNumeric() {
+  bool getCacheNumeric() {
     // If true, value of this integral is cached if it is (partially numeric)
     return _cacheNum ;
   }
@@ -78,20 +78,20 @@ public:
 
   RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=0, const RooNumIntConfig* cfg=0, const char* rangeName=0) const override ;
 
-  void setAllowComponentSelection(Bool_t allow);
-  Bool_t getAllowComponentSelection() const;
+  void setAllowComponentSelection(bool allow);
+  bool getAllowComponentSelection() const;
 
 protected:
 
-  mutable Bool_t _valid;
-  Bool_t _respectCompSelect;
+  mutable bool _valid;
+  bool _respectCompSelect;
 
   const RooArgSet& parameters() const ;
 
   enum IntOperMode { Hybrid, Analytic, PassThrough } ;
   //friend class RooAbsPdf ;
 
-  Bool_t initNumIntegrator() const;
+  bool initNumIntegrator() const;
   void autoSelectDirtyMode() ;
 
   virtual Double_t sum() const ;
@@ -100,12 +100,12 @@ protected:
 
   // Evaluation and validation implementation
   Double_t evaluate() const override ;
-  Bool_t isValidReal(Double_t value, Bool_t printError=kFALSE) const override ;
-  Bool_t servesExclusively(const RooAbsArg* server,const RooArgSet& exclLVBranches, const RooArgSet& allBranches) const ;
+  bool isValidReal(Double_t value, bool printError=false) const override ;
+  bool servesExclusively(const RooAbsArg* server,const RooArgSet& exclLVBranches, const RooArgSet& allBranches) const ;
 
 
-  Bool_t redirectServersHook(const RooAbsCollection& newServerList,
-                 Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) override ;
+  bool redirectServersHook(const RooAbsCollection& newServerList,
+                 bool mustReplaceAll, bool nameChange, bool isRecursive) override ;
 
   // Function pointer and integrands list
   mutable RooSetProxy _sumList ; ///< Set of discrete observable over which is summed numerically
@@ -128,7 +128,7 @@ protected:
   Int_t _mode ;
   IntOperMode _intOperMode ;   ///< integration operation mode
 
-  mutable Bool_t _restartNumIntEngine ; ///<! do not persist
+  mutable bool _restartNumIntEngine ; ///<! do not persist
   mutable RooAbsIntegrator* _numIntEngine ;  ///<! do not persist
   mutable RooAbsFunc *_numIntegrand;         ///<! do not persist
 
@@ -136,7 +136,7 @@ protected:
 
   mutable RooArgSet* _params ; ///<! cache for set of parameters
 
-  Bool_t _cacheNum ;           ///< Cache integral if numeric
+  bool _cacheNum ;           ///< Cache integral if numeric
   static Int_t _cacheAllNDim ; ///<! Cache all integrals with given numeric dimension
 
   ClassDefOverride(RooRealIntegral,3) // Real-valued function representing an integral over a RooAbsReal object

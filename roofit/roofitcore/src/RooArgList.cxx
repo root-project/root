@@ -140,7 +140,7 @@ RooArgList::~RooArgList()
 /// white space. The contents of each element is written by the arguments'
 /// writeToStream() function
 
-void RooArgList::writeToStream(ostream& os, Bool_t compact)
+void RooArgList::writeToStream(ostream& os, bool compact)
 {
   if (!compact) {
     coutE(InputArguments) << "RooArgList::writeToStream(" << GetName() << ") non-compact mode not supported" << endl ;
@@ -148,7 +148,7 @@ void RooArgList::writeToStream(ostream& os, Bool_t compact)
   }
 
   for (const auto obj : _list) {
-    obj->writeToStream(os,kTRUE);
+    obj->writeToStream(os,true);
     os << " " ;
   }
   os << endl ;
@@ -163,20 +163,20 @@ void RooArgList::writeToStream(ostream& os, Bool_t compact)
 /// by white space. The value of each argument is read by the arguments
 /// readFromStream function.
 
-Bool_t RooArgList::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
+bool RooArgList::readFromStream(istream& is, bool compact, bool verbose)
 {
   if (!compact) {
     coutE(InputArguments) << "RooArgList::readFromStream(" << GetName() << ") non-compact mode not supported" << endl ;
-    return kTRUE ;
+    return true ;
   }
 
   RooStreamParser parser(is) ;
   for (auto next : _list) {
     if (!next->getAttribute("Dynamic")) {
-      if (next->readFromStream(is,kTRUE,verbose)) {
+      if (next->readFromStream(is,true,verbose)) {
         parser.zapToEnd() ;
 
-        return kTRUE ;
+        return true ;
       }
     } else {
     }
@@ -190,7 +190,7 @@ Bool_t RooArgList::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
     }
   }
 
-  return kFALSE ;
+  return false ;
 }
 
 

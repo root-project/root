@@ -161,7 +161,7 @@ public:
   /// \param[in] shapeServer Notify the owner if shape (e.g. binning) changes.
   /// \param[in] proxyOwnsArg Proxy will delete the payload if owning.
   RooTemplateProxy(const char* theName, const char* desc, RooAbsArg* owner,
-      Bool_t valueServer=true, Bool_t shapeServer=false, Bool_t proxyOwnsArg=false)
+      bool valueServer=true, bool shapeServer=false, bool proxyOwnsArg=false)
   : RooArgProxy(theName, desc, owner, valueServer, shapeServer, proxyOwnsArg) { }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -175,7 +175,7 @@ public:
   /// \param[in] shapeServer Notify the owner if shape (e.g. binning) changes.
   /// \param[in] proxyOwnsArg Proxy will delete the payload if owning.
   RooTemplateProxy(const char* theName, const char* desc, RooAbsArg* owner, T& ref,
-      Bool_t valueServer=true, Bool_t shapeServer=false, Bool_t proxyOwnsArg=false) :
+      bool valueServer=true, bool shapeServer=false, bool proxyOwnsArg=false) :
         RooArgProxy(theName, desc, owner, const_cast<typename std::remove_const<T>::type&>(ref), valueServer, shapeServer, proxyOwnsArg) { }
 
 

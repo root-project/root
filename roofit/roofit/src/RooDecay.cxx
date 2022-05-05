@@ -97,7 +97,7 @@ Double_t RooDecay::coefficient(Int_t /*basisIndex*/) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
+Int_t RooDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool /*staticInitOK*/) const
 {
   if (matchArgs(directVars,generateVars,_t)) return 1 ;
   return 0 ;

@@ -27,7 +27,7 @@ public:
   RooVoigtian(const char *name, const char *title,
          RooAbsReal& _x, RooAbsReal& _mean,
               RooAbsReal& _width, RooAbsReal& _sigma,
-              Bool_t doFast = kFALSE);
+              bool doFast = false);
   RooVoigtian(const RooVoigtian& other, const char* name=0) ;
   TObject* clone(const char* newname) const override { return new RooVoigtian(*this,newname); }
   inline ~RooVoigtian() override { }
@@ -36,8 +36,8 @@ public:
 // of the complex error function using look-up tables
 // (default is the "slow" CERNlib algorithm)
 
-  inline void selectFastAlgorithm()    { _doFast = kTRUE;  }
-  inline void selectDefaultAlgorithm() { _doFast = kFALSE; }
+  inline void selectFastAlgorithm()    { _doFast = true;  }
+  inline void selectDefaultAlgorithm() { _doFast = false; }
 
 protected:
 
@@ -52,7 +52,7 @@ protected:
 
 private:
 
-  Bool_t _doFast;
+  bool _doFast;
   ClassDefOverride(RooVoigtian,2) // Voigtian PDF (Gauss (x) BreitWigner)
 };
 

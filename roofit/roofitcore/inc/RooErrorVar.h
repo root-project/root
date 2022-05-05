@@ -48,14 +48,14 @@ public:
     ((RooRealVar&)_realVar.arg()).setVal(value) ;
   }
 
-  inline Bool_t isFundamental() const override {
-    // Return kTRUE as we implement a fundamental type of AbsArg that can be stored in a dataset
-    return kTRUE ;
+  inline bool isFundamental() const override {
+    // Return true as we implement a fundamental type of AbsArg that can be stored in a dataset
+    return true ;
   }
 
   // I/O streaming interface (machine readable)
-  Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) override ;
-  void writeToStream(std::ostream& os, Bool_t compact) const override ;
+  bool readFromStream(std::istream& is, bool compact, bool verbose=false) override ;
+  void writeToStream(std::ostream& os, bool compact) const override ;
 
   // Set/get finite fit range limits
   /// Set lower bound of default range to value
@@ -76,9 +76,9 @@ public:
 
   void setBins(Int_t nBins);
   void setBinning(const RooAbsBinning& binning, const char* name=0) ;
-  const RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) const override ;
-  RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) override ;
-  Bool_t hasBinning(const char* name) const override ;
+  const RooAbsBinning& getBinning(const char* name=0, bool verbose=true, bool createOnTheFly=false) const override ;
+  RooAbsBinning& getBinning(const char* name=0, bool verbose=true, bool createOnTheFly=false) override ;
+  bool hasBinning(const char* name) const override ;
   std::list<std::string> getBinningNames() const override ;
 
   // Set infinite fit range limits

@@ -28,8 +28,8 @@ using namespace RooFit ;
 class TestBasic602 : public RooFitTestUnit
 {
 public:
-  TestBasic602(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Chi2 minimization",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic602(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Chi2 minimization",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // S e t u p   m o d e l
   // ---------------------
@@ -83,6 +83,6 @@ public:
   delete d ;
   delete dh ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;

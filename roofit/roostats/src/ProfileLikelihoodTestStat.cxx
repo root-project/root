@@ -42,9 +42,9 @@ either use:
 
 using namespace std;
 
-Bool_t RooStats::ProfileLikelihoodTestStat::fgAlwaysReuseNll = kTRUE ;
+bool RooStats::ProfileLikelihoodTestStat::fgAlwaysReuseNll = true ;
 
-void RooStats::ProfileLikelihoodTestStat::SetAlwaysReuseNLL(Bool_t flag) { fgAlwaysReuseNll = flag ; }
+void RooStats::ProfileLikelihoodTestStat::SetAlwaysReuseNLL(bool flag) { fgAlwaysReuseNll = flag ; }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// internal function to evaluate test statistics
@@ -81,26 +81,26 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
        if (fPrintLevel < 3) RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
 
        // simple
-       Bool_t reuse=(fReuseNll || fgAlwaysReuseNll) ;
+       bool reuse=(fReuseNll || fgAlwaysReuseNll) ;
 
-       Bool_t created(kFALSE) ;
+       bool created(false) ;
        if (!reuse || fNll==0) {
           RooArgSet* allParams = fPdf->getParameters(data);
           RooStats::RemoveConstantParameters(allParams);
 
           // need to call constrain for RooSimultaneous until stripDisconnected problem fixed
-          fNll = fPdf->createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams),
+          fNll = fPdf->createNLL(data, RooFit::CloneData(false),RooFit::Constrain(*allParams),
                                  RooFit::GlobalObservables(fGlobalObs), RooFit::ConditionalObservables(fConditionalObs), RooFit::Offset(fLOffset));
 
           if (fPrintLevel > 0 && fLOffset) cout << "ProfileLikelihoodTestStat::Evaluate - Use Offset in creating NLL " << endl ;
 
-          created = kTRUE ;
+          created = true ;
           delete allParams;
           if (fPrintLevel > 1) cout << "creating NLL " << fNll << " with data = " << &data << endl ;
        }
        if (reuse && !created) {
          if (fPrintLevel > 1) cout << "reusing NLL " << fNll << " new data = " << &data << endl ;
-         fNll->setData(data,kFALSE) ;
+         fNll->setData(data,false) ;
        }
        // print data in case of number counting (simple data sets)
        if (fPrintLevel > 1 && data.numEntries() == 1) {
@@ -232,7 +232,7 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
           // for conditional only or unconditional fits
           // need to compute nll value without the offset
           if (fLOffset) {
-             RooAbsReal::setHideOffset(kFALSE) ;
+             RooAbsReal::setHideOffset(false) ;
              pll = fNll->getVal();
           }
           else {

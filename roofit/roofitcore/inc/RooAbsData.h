@@ -95,7 +95,7 @@ public:
   void checkInit() const ;
 
   // Change name of observable
-  virtual Bool_t changeObservableName(const char* from, const char* to) ;
+  virtual bool changeObservableName(const char* from, const char* to) ;
 
   // Add one ore more rows of data
   virtual void add(const RooArgSet& row, Double_t weight=1, Double_t weightError=0) = 0 ; // DERIVED
@@ -108,7 +108,7 @@ public:
   }
   virtual Double_t weight() const = 0 ; // DERIVED
   virtual Double_t weightSquared() const = 0 ; // DERIVED
-  virtual Bool_t valid() const { return kTRUE ; }
+  virtual bool valid() const { return true ; }
 
   enum ErrorType { Poisson, SumW2, None, Auto, Expected } ;
   /// Return the symmetric error on the current weight.
@@ -152,18 +152,18 @@ public:
   /// \param[in] cutRange If the observables have a range with this name, only count events inside this range.
   virtual Double_t sumEntries(const char* cutSpec, const char* cutRange=0) const = 0 ; // DERIVED
   double sumEntriesW2() const;
-  virtual Bool_t isWeighted() const {
+  virtual bool isWeighted() const {
     // Do events in dataset have weights?
-    return kFALSE ;
+    return false ;
   }
-  virtual Bool_t isNonPoissonWeighted() const {
+  virtual bool isNonPoissonWeighted() const {
     // Do events in dataset have non-integer weights?
-    return kFALSE ;
+    return false ;
   }
   virtual void reset() ;
 
 
-  Bool_t getRange(const RooAbsRealLValue& var, Double_t& lowest, Double_t& highest, Double_t marginFrac=0, Bool_t symMode=kFALSE) const ;
+  bool getRange(const RooAbsRealLValue& var, Double_t& lowest, Double_t& highest, Double_t marginFrac=0, bool symMode=false) const ;
 
   // Plot the distribution of a real valued arg
   virtual Roo1DTable* table(const RooArgSet& catSet, const char* cuts="", const char* opts="") const ;
@@ -179,8 +179,8 @@ public:
 
   // WVE --- This needs to be public to avoid CINT problems
   struct PlotOpt {
-   PlotOpt() : cuts(""), drawOptions("P"), bins(0), etype(RooAbsData::Poisson), cutRange(0), histName(0), histInvisible(kFALSE),
-              addToHistName(0),addToWgtSelf(1.),addToWgtOther(1.),xErrorSize(1),refreshFrameNorm(kFALSE),correctForBinWidth(kTRUE),
+   PlotOpt() : cuts(""), drawOptions("P"), bins(0), etype(RooAbsData::Poisson), cutRange(0), histName(0), histInvisible(false),
+              addToHistName(0),addToWgtSelf(1.),addToWgtOther(1.),xErrorSize(1),refreshFrameNorm(false),correctForBinWidth(true),
               scaleFactor(1.) {} ;
    const char* cuts ;
    Option_t* drawOptions ;
@@ -188,24 +188,24 @@ public:
    RooAbsData::ErrorType etype ;
    const char* cutRange ;
    const char* histName ;
-   Bool_t histInvisible ;
+   bool histInvisible ;
    const char* addToHistName ;
    Double_t addToWgtSelf ;
    Double_t addToWgtOther ;
    Double_t xErrorSize ;
-   Bool_t refreshFrameNorm ;
-   Bool_t correctForBinWidth ;
+   bool refreshFrameNorm ;
+   bool correctForBinWidth ;
    Double_t scaleFactor ;
   } ;
 
   // Split a dataset by a category
-  virtual TList* split(const RooAbsCategory& splitCat, Bool_t createEmptyDataSets=kFALSE) const ;
+  virtual TList* split(const RooAbsCategory& splitCat, bool createEmptyDataSets=false) const ;
 
   // Split a dataset by categories of a RooSimultaneous
-  virtual TList* split(const RooSimultaneous& simpdf, Bool_t createEmptyDataSets=kFALSE) const ;
+  virtual TList* split(const RooSimultaneous& simpdf, bool createEmptyDataSets=false) const ;
 
   // Fast splitting for SimMaster setData
-  Bool_t canSplitFast() const ;
+  bool canSplitFast() const ;
   RooAbsData* getSimData(const char* idxstate) ;
 
   /// Calls createHistogram(const char *name, const RooAbsRealLValue& xvar, const RooLinkedList& argList) const
@@ -242,11 +242,11 @@ public:
   void printName(std::ostream& os) const override ;
   void printTitle(std::ostream& os) const override ;
   void printClassName(std::ostream& os) const override ;
-  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const override ;
+  void printMultiline(std::ostream& os, Int_t contents, bool verbose=false, TString indent="") const override ;
 
   Int_t defaultPrintContents(Option_t* opt) const override ;
 
-  void setDirtyProp(Bool_t flag) ;
+  void setDirtyProp(bool flag) ;
 
   Double_t moment(const RooRealVar& var, Double_t order, const char* cutSpec=0, const char* cutRange=0) const ;
   Double_t moment(const RooRealVar& var, Double_t order, Double_t offset, const char* cutSpec=0, const char* cutRange=0) const ;
@@ -257,13 +257,13 @@ public:
   Double_t skewness(const RooRealVar& var, const char* cutSpec=0, const char* cutRange=0) const { return standMoment(var,3,cutSpec,cutRange) ; }
   Double_t kurtosis(const RooRealVar& var, const char* cutSpec=0, const char* cutRange=0) const { return standMoment(var,4,cutSpec,cutRange) ; }
 
-  Double_t covariance(RooRealVar &x,RooRealVar &y, const char* cutSpec=0, const char* cutRange=0) const { return corrcov(x,y,cutSpec,cutRange,kFALSE) ; }
-  Double_t correlation(RooRealVar &x,RooRealVar &y, const char* cutSpec=0, const char* cutRange=0) const { return corrcov(x,y,cutSpec,cutRange,kTRUE) ; }
+  Double_t covariance(RooRealVar &x,RooRealVar &y, const char* cutSpec=0, const char* cutRange=0) const { return corrcov(x,y,cutSpec,cutRange,false) ; }
+  Double_t correlation(RooRealVar &x,RooRealVar &y, const char* cutSpec=0, const char* cutRange=0) const { return corrcov(x,y,cutSpec,cutRange,true) ; }
 
   TMatrixDSym* covarianceMatrix(const char* cutSpec=0, const char* cutRange=0) const { return covarianceMatrix(*get(),cutSpec,cutRange) ; }
   TMatrixDSym* correlationMatrix(const char* cutSpec=0, const char* cutRange=0) const { return correlationMatrix(*get(),cutSpec,cutRange) ; }
-  TMatrixDSym* covarianceMatrix(const RooArgList& vars, const char* cutSpec=0, const char* cutRange=0) const { return corrcovMatrix(vars,cutSpec,cutRange,kFALSE) ; }
-  TMatrixDSym* correlationMatrix(const RooArgList& vars, const char* cutSpec=0, const char* cutRange=0) const { return corrcovMatrix(vars,cutSpec,cutRange,kTRUE) ; }
+  TMatrixDSym* covarianceMatrix(const RooArgList& vars, const char* cutSpec=0, const char* cutRange=0) const { return corrcovMatrix(vars,cutSpec,cutRange,false) ; }
+  TMatrixDSym* correlationMatrix(const RooArgList& vars, const char* cutSpec=0, const char* cutRange=0) const { return corrcovMatrix(vars,cutSpec,cutRange,true) ; }
 
   RooRealVar* meanVar(const RooRealVar &var, const char* cutSpec=0, const char* cutRange=0) const ;
   RooRealVar* rmsVar(const RooRealVar &var, const char* cutSpec=0, const char* cutRange=0) const ;
@@ -283,11 +283,11 @@ public:
 
   void RecursiveRemove(TObject *obj) override;
 
-  Bool_t hasFilledCache() const ;
+  bool hasFilledCache() const ;
 
   void addOwnedComponent(const char* idxlabel, RooAbsData& data) ;
   static void claimVars(RooAbsData*) ;
-  static Bool_t releaseVars(RooAbsData*) ;
+  static bool releaseVars(RooAbsData*) ;
 
   enum StorageType { Tree, Vector, Composite };
 
@@ -327,11 +327,11 @@ protected:
 
   StorageType storageType;
 
-  Double_t corrcov(const RooRealVar& x, const RooRealVar& y, const char* cutSpec, const char* cutRange, Bool_t corr) const  ;
-  TMatrixDSym* corrcovMatrix(const RooArgList& vars, const char* cutSpec, const char* cutRange, Bool_t corr) const  ;
+  Double_t corrcov(const RooRealVar& x, const RooRealVar& y, const char* cutSpec, const char* cutRange, bool corr) const  ;
+  TMatrixDSym* corrcovMatrix(const RooArgList& vars, const char* cutSpec, const char* cutRange, bool corr) const  ;
 
   virtual void optimizeReadingWithCaching(RooAbsArg& arg, const RooArgSet& cacheList, const RooArgSet& keepObsList) ;
-  Bool_t allClientsCached(RooAbsArg*, const RooArgSet&) ;
+  bool allClientsCached(RooAbsArg*, const RooArgSet&) ;
 
 
  // PlotOn implementation
@@ -349,9 +349,9 @@ protected:
   // for access into copied dataset:
   friend class RooFit::TestStatistics::RooAbsL;
 
-  virtual void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0, Bool_t skipZeroWeights=kFALSE) ;
+  virtual void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0, bool skipZeroWeights=false) ;
   virtual void resetCache() ;
-  virtual void setArgStatus(const RooArgSet& set, Bool_t active) ;
+  virtual void setArgStatus(const RooArgSet& set, bool active) ;
   virtual void attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVars) ;
 
   virtual RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=0,

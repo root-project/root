@@ -44,7 +44,7 @@ public:
   ~RooAbsAnaConvPdf() override;
 
   Int_t declareBasis(const char* expression, const RooArgList& params) ;
-  void printMultiline(std::ostream& stream, Int_t contents, Bool_t verbose=kFALSE, TString indent= "") const override ;
+  void printMultiline(std::ostream& stream, Int_t contents, bool verbose=false, TString indent= "") const override ;
 
   // Coefficient normalization access
   inline Double_t getCoefNorm(Int_t coefIdx, const RooArgSet& nset, const char* rangeName) const {
@@ -62,18 +62,18 @@ public:
   // Coefficient Analytical integration support
   virtual Int_t getCoefAnalyticalIntegral(Int_t coef, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
   virtual Double_t coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName=0) const ;
-  Bool_t forceAnalyticalInt(const RooAbsArg& dep) const override ;
+  bool forceAnalyticalInt(const RooAbsArg& dep) const override ;
 
   virtual Double_t coefficient(Int_t basisIndex) const = 0 ;
   virtual RooArgSet* coefVars(Int_t coefIdx) const ;
 
-  Bool_t isDirectGenSafe(const RooAbsArg& arg) const override ;
+  bool isDirectGenSafe(const RooAbsArg& arg) const override ;
 
   void setCacheAndTrackHints(RooArgSet&) override ;
 
   RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0,
-                                       const RooArgSet* auxProto=0, Bool_t verbose= kFALSE) const override ;
-  virtual Bool_t changeModel(const RooResolutionModel& newModel) ;
+                                       const RooArgSet* auxProto=0, bool verbose= false) const override ;
+  virtual bool changeModel(const RooResolutionModel& newModel) ;
 
   /// Retrieve the convolution variable.
   RooAbsRealLValue* convVar();
@@ -85,7 +85,7 @@ public:
 protected:
   Double_t getCoefNorm(Int_t coefIdx, const RooArgSet* nset, const TNamed* rangeName) const ;
 
-  Bool_t _isCopy ;
+  bool _isCopy ;
 
   Double_t evaluate() const override ;
 

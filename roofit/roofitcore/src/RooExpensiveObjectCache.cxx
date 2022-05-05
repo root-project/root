@@ -89,10 +89,10 @@ RooExpensiveObjectCache& RooExpensiveObjectCache::instance()
 /// need to be the name of cacheObject and with given set of dependent parameters with validity for the
 /// current values of those parameters. It can be retrieved later by callin retrieveObject()
 
-Bool_t RooExpensiveObjectCache::registerObject(const char* ownerName, const char* objectName, TObject& cacheObject, const RooArgSet& params)
+bool RooExpensiveObjectCache::registerObject(const char* ownerName, const char* objectName, TObject& cacheObject, const RooArgSet& params)
 {
   TIterator* parIter = params.createIterator() ;
-  Bool_t ret = registerObject(ownerName,objectName,cacheObject,parIter) ;
+  bool ret = registerObject(ownerName,objectName,cacheObject,parIter) ;
   delete parIter ;
 
   return ret ;
@@ -106,7 +106,7 @@ Bool_t RooExpensiveObjectCache::registerObject(const char* ownerName, const char
 /// need to be the name of cacheObject and with given set of dependent parameters with validity for the
 /// current values of those parameters. It can be retrieved later by callin retrieveObject()
 
-Bool_t RooExpensiveObjectCache::registerObject(const char* ownerName, const char* objectName, TObject& cacheObject, TIterator* parIter)
+bool RooExpensiveObjectCache::registerObject(const char* ownerName, const char* objectName, TObject& cacheObject, TIterator* parIter)
 {
   // Delete any previous object
   ExpensiveObject* eo = _map[objectName] ;
@@ -118,7 +118,7 @@ Bool_t RooExpensiveObjectCache::registerObject(const char* ownerName, const char
   // Install new object
   _map[objectName] = new ExpensiveObject(olduid!=-1?olduid:_nextUID++, ownerName,cacheObject,parIter) ;
 
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -166,15 +166,15 @@ const TObject* RooExpensiveObjectCache::getObj(Int_t uid)
 /// Clear cache element with given unique ID
 /// Retrieve payload object of cache element with given unique ID
 
-Bool_t RooExpensiveObjectCache::clearObj(Int_t uid)
+bool RooExpensiveObjectCache::clearObj(Int_t uid)
 {
   for (std::map<TString,ExpensiveObject*>::iterator iter = _map.begin() ; iter !=_map.end() ; ++iter) {
     if (iter->second->uid() == uid) {
       _map.erase(iter->first) ;
-      return kFALSE ;
+      return false ;
     }
   }
-  return kTRUE ;
+  return true ;
 }
 
 
@@ -183,15 +183,15 @@ Bool_t RooExpensiveObjectCache::clearObj(Int_t uid)
 /// Place new payload object in cache element with given unique ID. Cache
 /// will take ownership of provided object!
 
-Bool_t RooExpensiveObjectCache::setObj(Int_t uid, TObject* obj)
+bool RooExpensiveObjectCache::setObj(Int_t uid, TObject* obj)
 {
   for (std::map<TString,ExpensiveObject*>::iterator iter = _map.begin() ; iter !=_map.end() ; ++iter) {
     if (iter->second->uid() == uid) {
       iter->second->setPayload(obj) ;
-      return kFALSE ;
+      return false ;
     }
   }
-  return kTRUE ;
+  return true ;
 }
 
 
@@ -267,10 +267,10 @@ RooExpensiveObjectCache::ExpensiveObject::~ExpensiveObject()
 ////////////////////////////////////////////////////////////////////////////////
 /// Check object type ;
 
-Bool_t RooExpensiveObjectCache::ExpensiveObject::matches(TClass* tc, const RooArgSet& params)
+bool RooExpensiveObjectCache::ExpensiveObject::matches(TClass* tc, const RooArgSet& params)
 {
   if (_payload->IsA() != tc) {
-    return kFALSE;
+    return false;
   }
 
   // Check parameters
@@ -281,21 +281,21 @@ Bool_t RooExpensiveObjectCache::ExpensiveObject::matches(TClass* tc, const RooAr
     if (real) {
       if (fabs(real->getVal()-_realRefParams[real->GetName()])>1e-12) {
    delete iter ;
-   return kFALSE ;
+   return false ;
       }
     } else {
       RooAbsCategory* cat = dynamic_cast<RooAbsCategory*>(arg) ;
       if (cat) {
    if (cat->getCurrentIndex() != _catRefParams[cat->GetName()]) {
      delete iter ;
-     return kFALSE ;
+     return false ;
    }
       }
     }
   }
   delete iter ;
 
-  return kTRUE ;
+  return true ;
 
 }
 
@@ -343,7 +343,7 @@ void RooExpensiveObjectCache::ExpensiveObject::print() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooExpensiveObjectCache::importCacheObjects(RooExpensiveObjectCache& other, const char* ownerName, Bool_t verbose)
+void RooExpensiveObjectCache::importCacheObjects(RooExpensiveObjectCache& other, const char* ownerName, bool verbose)
 {
   map<TString,ExpensiveObject*>::const_iterator iter = other._map.begin() ;
   while(iter!=other._map.end()) {

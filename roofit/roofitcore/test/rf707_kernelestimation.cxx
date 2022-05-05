@@ -30,8 +30,8 @@ using namespace RooFit ;
 class TestBasic707 : public RooFitTestUnit
 {
 public:
-  TestBasic707(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Kernel estimation p.d.f.s",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic707(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Kernel estimation p.d.f.s",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // C r e a t e   l o w   s t a t s   1 - D   d a t a s e t
   // -------------------------------------------------------
@@ -115,6 +115,6 @@ public:
   delete data1 ;
   delete data2 ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;

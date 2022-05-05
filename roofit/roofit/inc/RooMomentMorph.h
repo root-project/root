@@ -40,9 +40,9 @@ public:
 
   void useHorizontalMorphing(bool val) { _useHorizMorph = val; }
 
-  Bool_t selfNormalized() const override {
+  bool selfNormalized() const override {
     // P.d.f is self normalized
-    return kTRUE ;
+    return true ;
   }
 
   virtual Double_t getVal(const RooArgSet* set=0) const ;
@@ -62,7 +62,7 @@ protected:
 
     RooRealVar* frac(Int_t i ) ;
     const RooRealVar* frac(Int_t i ) const ;
-    void calculateFractions(const RooMomentMorph& self, Bool_t verbose=kTRUE) const;
+    void calculateFractions(const RooMomentMorph& self, bool verbose=true) const;
   } ;
   mutable RooObjCacheManager _cacheMgr ; //! The cache manager
   mutable RooArgSet* _curNormSet ; //! Current normalization set

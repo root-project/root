@@ -43,9 +43,9 @@ ClassImp(RooProfileLL);
    RooAbsReal("RooProfileLL","RooProfileLL"),
    _nll(),
    _obs("paramOfInterest","Parameters of interest",this),
-   _par("nuisanceParam","Nuisance parameters",this,kFALSE,kFALSE),
-   _startFromMin(kTRUE),
-   _absMinValid(kFALSE),
+   _par("nuisanceParam","Nuisance parameters",this,false,false),
+   _startFromMin(true),
+   _absMinValid(false),
    _absMin(0),
    _neval(0)
 {
@@ -63,9 +63,9 @@ RooProfileLL::RooProfileLL(const char *name, const char *title,
   RooAbsReal(name,title),
   _nll("input","-log(L) function",this,nllIn),
   _obs("paramOfInterest","Parameters of interest",this),
-  _par("nuisanceParam","Nuisance parameters",this,kFALSE,kFALSE),
-  _startFromMin(kTRUE),
-  _absMinValid(kFALSE),
+  _par("nuisanceParam","Nuisance parameters",this,false,false),
+  _startFromMin(true),
+  _absMinValid(false),
   _absMin(0),
   _neval(0)
 {
@@ -85,7 +85,7 @@ RooProfileLL::RooProfileLL(const RooProfileLL& other, const char* name) :
   _obs("obs",this,other._obs),
   _par("par",this,other._par),
   _startFromMin(other._startFromMin),
-  _absMinValid(kFALSE),
+  _absMinValid(false),
   _absMin(0),
   _paramFixed(other._paramFixed),
   _neval(0)
@@ -135,10 +135,10 @@ void RooProfileLL::initializeMinimizer() const
 {
   coutI(Minimization) << "RooProfileLL::evaluate(" << GetName() << ") Creating instance of MINUIT" << endl ;
 
-  Bool_t smode = RooMsgService::instance().silentMode() ;
-  RooMsgService::instance().setSilentMode(kTRUE) ;
+  bool smode = RooMsgService::instance().silentMode() ;
+  RooMsgService::instance().setSilentMode(true) ;
   _minimizer = std::make_unique<RooMinimizer>(const_cast<RooAbsReal&>(_nll.arg())) ;
-  if (!smode) RooMsgService::instance().setSilentMode(kFALSE) ;
+  if (!smode) RooMsgService::instance().setSilentMode(false) ;
 
 }
 
@@ -164,7 +164,7 @@ Double_t RooProfileLL::evaluate() const
 
 
   // Set all observables constant in the minimization
-  const_cast<RooSetProxy&>(_obs).setAttribAll("Constant",kTRUE) ;
+  const_cast<RooSetProxy&>(_obs).setAttribAll("Constant",true) ;
   ccoutP(Eval) << "." ; ccoutP(Eval).flush() ;
 
   // If requested set initial parameters to those corresponding to absolute minimum
@@ -210,7 +210,7 @@ void RooProfileLL::validateAbsMin() const
    cxcoutI(Minimization) << "RooProfileLL::evaluate(" << GetName() << ") constant status of parameter " << par->GetName() << " has changed from "
             << (_paramFixed[par->GetName()]?"fixed":"floating") << " to " << (par->isConstant()?"fixed":"floating")
             << ", recalculating absolute minimum" << endl ;
-   _absMinValid = kFALSE ;
+   _absMinValid = false ;
    break ;
       }
     }
@@ -240,7 +240,7 @@ void RooProfileLL::validateAbsMin() const
     }
 
     // Find minimum with all observables floating
-    const_cast<RooSetProxy&>(_obs).setAttribAll("Constant",kFALSE) ;
+    const_cast<RooSetProxy&>(_obs).setAttribAll("Constant",false) ;
 
     //TString minim=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
     //TString algorithm = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str();
@@ -250,7 +250,7 @@ void RooProfileLL::validateAbsMin() const
 
     // Save value and remember
     _absMin = _nll ;
-    _absMinValid = kTRUE ;
+    _absMinValid = true ;
 
     // Save parameter values at abs minimum as well
     _paramAbsMin.removeAll() ;
@@ -268,11 +268,11 @@ void RooProfileLL::validateAbsMin() const
     if (dologI(Minimization)) {
       cxcoutI(Minimization) << "RooProfileLL::evaluate(" << GetName() << ") minimum found at (" ;
 
-      Bool_t first=kTRUE ;
+      bool first=true ;
       for(auto const& arg : _obs) {
         ccxcoutI(Minimization) << (first?"":", ") << arg->GetName() << "="
                                << static_cast<RooAbsReal const*>(arg)->getVal() ;
-        first=kFALSE ;
+        first=false ;
       }
       ccxcoutI(Minimization) << ")" << endl ;
     }
@@ -287,11 +287,11 @@ void RooProfileLL::validateAbsMin() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t RooProfileLL::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/,
-                Bool_t /*nameChange*/, Bool_t /*isRecursive*/)
+bool RooProfileLL::redirectServersHook(const RooAbsCollection& /*newServerList*/, bool /*mustReplaceAll*/,
+                bool /*nameChange*/, bool /*isRecursive*/)
 {
   _minimizer.reset(nullptr);
-  return kFALSE ;
+  return false ;
 }
 
 

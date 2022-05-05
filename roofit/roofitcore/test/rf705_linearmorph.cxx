@@ -32,8 +32,8 @@ public:
 
   Double_t ctol() { return 5e-2 ; } // very conservative, this is a numerically difficult test
 
-  TestBasic705(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Linear morph operator p.d.f.",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic705(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Linear morph operator p.d.f.",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // C r e a t e   e n d   p o i n t   p d f   s h a p e s
   // ------------------------------------------------------
@@ -110,7 +110,7 @@ public:
   RooDataSet* data = lmorph.generate(x,1000) ;
 
   // Fit pdf to toy data
-  lmorph.setCacheAlpha(kTRUE) ;
+  lmorph.setCacheAlpha(true) ;
   lmorph.fitTo(*data) ;
 
   // Plot fitted pdf and data overlaid
@@ -129,7 +129,7 @@ public:
   RooNLLVar nll("nll","nll",lmorph,*data) ;
   nll.plotOn(frame3,ShiftToZero()) ;
 
-  lmorph.setCacheAlpha(kFALSE) ;
+  lmorph.setCacheAlpha(false) ;
 
 
   regPlot(frame1,"rf705_plot1") ;
@@ -139,6 +139,6 @@ public:
 
   delete data ;
 
-  return kTRUE;
+  return true;
   }
 } ;

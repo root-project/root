@@ -114,13 +114,13 @@ RooNumIntFactory& RooNumIntFactory::instance()
 /// default configuration options and an optional list of names of other numeric integrators
 /// on which this integrator depends. Returns true if integrator was previously registered
 
-Bool_t RooNumIntFactory::storeProtoIntegrator(RooAbsIntegrator* proto, const RooArgSet& defConfig, const char* depName)
+bool RooNumIntFactory::storeProtoIntegrator(RooAbsIntegrator* proto, const RooArgSet& defConfig, const char* depName)
 {
   TString name = proto->IsA()->GetName() ;
 
   if (getProtoIntegrator(name)) {
     //cout << "RooNumIntFactory::storeIntegrator() ERROR: integrator '" << name << "' already registered" << endl ;
-    return kTRUE ;
+    return true ;
   }
 
   // Add to factory
@@ -129,7 +129,7 @@ Bool_t RooNumIntFactory::storeProtoIntegrator(RooAbsIntegrator* proto, const Roo
   // Add default config to master config
   RooNumIntConfig::defaultConfig().addConfigSection(proto,defConfig) ;
 
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -167,17 +167,17 @@ const char* RooNumIntFactory::getDepIntegratorName(const char* name) const
 /// the number of dimensions, the nature of the limits (open ended vs closed) and the user
 /// preference stated in 'config'
 
-RooAbsIntegrator* RooNumIntFactory::createIntegrator(RooAbsFunc& func, const RooNumIntConfig& config, Int_t ndimPreset, Bool_t isBinned) const
+RooAbsIntegrator* RooNumIntFactory::createIntegrator(RooAbsFunc& func, const RooNumIntConfig& config, Int_t ndimPreset, bool isBinned) const
 {
   // First determine dimensionality and domain of integrand
   Int_t ndim = ndimPreset>0 ? ndimPreset : ((Int_t)func.getDimension()) ;
 
-  Bool_t openEnded = kFALSE ;
+  bool openEnded = false ;
   Int_t i ;
   for (i=0 ; i<ndim ; i++) {
     if(RooNumber::isInfinite(func.getMinLimit(i)) ||
        RooNumber::isInfinite(func.getMaxLimit(i))) {
-      openEnded = kTRUE ;
+      openEnded = true ;
     }
   }
 
@@ -213,7 +213,7 @@ RooAbsIntegrator* RooNumIntFactory::createIntegrator(RooAbsFunc& func, const Roo
   const RooAbsIntegrator* proto = getProtoIntegrator(method) ;
   RooAbsIntegrator* engine =  proto->clone(func,config) ;
   if (config.printEvalCounter()) {
-    engine->setPrintEvalCounter(kTRUE) ;
+    engine->setPrintEvalCounter(true) ;
   }
   return engine ;
 }

@@ -29,7 +29,7 @@ namespace RooFit {
 
 typedef Double_t (*CFUNCD4DDDD)(Double_t,Double_t,Double_t,Double_t) ;
 typedef Double_t (*CFUNCD4DDDI)(Double_t,Double_t,Double_t,Int_t) ;
-typedef Double_t (*CFUNCD4DDDB)(Double_t,Double_t,Double_t,Bool_t) ;
+typedef Double_t (*CFUNCD4DDDB)(Double_t,Double_t,Double_t,bool) ;
 
 RooAbsReal* bindFunction(const char* name,CFUNCD4DDDD func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z, RooAbsReal& w) ;
 RooAbsReal* bindFunction(const char* name,CFUNCD4DDDI func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z, RooAbsReal& w) ;
@@ -203,7 +203,7 @@ void RooCFunction4Ref<VO,VI1,VI2,VI3,VI4>::Streamer(TBuffer &R__b)
    } else {
 
      UInt_t R__c;
-     R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
+     R__c = R__b.WriteVersion(thisClass::IsA(), true);
 
      // Lookup name of reference C function
      TString tmpName = fmap().lookupName(_ptr) ;
@@ -216,7 +216,7 @@ void RooCFunction4Ref<VO,VI1,VI2,VI3,VI4>::Streamer(TBuffer &R__b)
      // Persist the name
      tmpName.Streamer(R__b) ;
 
-     R__b.SetByteCount(R__c, kTRUE);
+     R__b.SetByteCount(R__c, true);
 
    }
 }

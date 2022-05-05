@@ -31,7 +31,7 @@ public:
   ~RooBinningCategory() override;
 
   /// Printing interface (human readable)
-  void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override ;
+  void printMultiline(std::ostream& os, Int_t content, bool verbose=false, TString indent="") const override ;
 
 protected:
 

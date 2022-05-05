@@ -48,14 +48,14 @@ ClassImp(RooStepFunction);
 
 RooStepFunction::RooStepFunction()
 {
-  _interpolate = kFALSE ;
+  _interpolate = false ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
 RooStepFunction::RooStepFunction(const char* name, const char* title,
-             RooAbsReal& x, const RooArgList& coefList, const RooArgList& boundaryList, Bool_t interpolate) :
+             RooAbsReal& x, const RooArgList& coefList, const RooArgList& boundaryList, bool interpolate) :
   RooAbsReal(name, title),
   _x("x", "Dependent", this, x),
   _coefList("coefList","List of coefficients",this),

@@ -48,7 +48,7 @@ namespace RooStats {
       ~MCMCInterval() override;
 
       /// determine whether this point is in the confidence interval
-      Bool_t IsInInterval(const RooArgSet& point) const override;
+      bool IsInInterval(const RooArgSet& point) const override;
 
       /// set the desired confidence level (see GetActualConfidenceLevel())
       /// Note: calling this function triggers the algorithm that determines
@@ -79,11 +79,11 @@ namespace RooStats {
 
       /// whether the specified confidence level is a floor for the actual
       /// confidence level (strict), or a ceiling (not strict)
-      virtual void SetHistStrict(Bool_t isHistStrict)
+      virtual void SetHistStrict(bool isHistStrict)
       { fIsHistStrict = isHistStrict; }
 
       /// check if parameters are correct. (dummy implementation to start)
-      Bool_t CheckParameters(const RooArgSet& point) const override;
+      bool CheckParameters(const RooArgSet& point) const override;
 
       /// Set the parameters of interest for this interval
       /// and change other internal data members accordingly
@@ -162,15 +162,15 @@ namespace RooStats {
       { fNumBurnInSteps = numBurnInSteps; }
 
       /// set whether to use kernel estimation to determine the interval
-      virtual void SetUseKeys(Bool_t useKeys) { fUseKeys = useKeys; }
+      virtual void SetUseKeys(bool useKeys) { fUseKeys = useKeys; }
 
       /// set whether to use a sparse histogram.  you MUST also call
-      /// SetUseKeys(kFALSE) to use a histogram.
-      virtual void SetUseSparseHist(Bool_t useSparseHist)
+      /// SetUseKeys(false) to use a histogram.
+      virtual void SetUseSparseHist(bool useSparseHist)
       { fUseSparseHist = useSparseHist; }
 
       /// get whether we used kernel estimation to determine the interval
-      virtual Bool_t GetUseKeys() { return fUseKeys; }
+      virtual bool GetUseKeys() { return fUseKeys; }
 
       /// get the number of steps in the chain to discard as burn-in,
 
@@ -270,8 +270,8 @@ namespace RooStats {
       }
 
    private:
-      inline Bool_t AcceptableConfLevel(Double_t confLevel);
-      inline Bool_t WithinDeltaFraction(Double_t a, Double_t b);
+      inline bool AcceptableConfLevel(Double_t confLevel);
+      inline bool WithinDeltaFraction(Double_t a, Double_t b);
 
    protected:
       // data members
@@ -302,9 +302,9 @@ namespace RooStats {
 
       TH1* fHist;                 ///< the binned Markov Chain data
 
-      Bool_t fUseKeys;            ///< whether to use kernel estimation
-      Bool_t fUseSparseHist;      ///< whether to use sparse hist (vs. RooDataHist)
-      Bool_t fIsHistStrict;       ///< whether the specified confidence level is a
+      bool fUseKeys;            ///< whether to use kernel estimation
+      bool fUseSparseHist;      ///< whether to use sparse hist (vs. RooDataHist)
+      bool fIsHistStrict;       ///< whether the specified confidence level is a
                                   ///< floor for the actual confidence level (strict),
                                   ///< or a ceiling (not strict) for determination by
                                   ///< histogram

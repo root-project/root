@@ -39,7 +39,7 @@ ClassImp(RooObjCacheManager);
    ;
 
 
-Bool_t RooObjCacheManager::_clearObsList(kFALSE) ;
+bool RooObjCacheManager::_clearObsList(false) ;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of object cache manager for given owner. If clearCacheOnServerRedirect is true
@@ -48,11 +48,11 @@ Bool_t RooObjCacheManager::_clearObsList(kFALSE) ;
 /// what you're doing as properly implementing server redirect in cache elements can get very
 /// complicated, especially if there are (cyclical) reference back to the owning object
 
-RooObjCacheManager::RooObjCacheManager(RooAbsArg* owner, Int_t maxSize, Bool_t clearCacheOnServerRedirect, Bool_t allowOptimize) :
+RooObjCacheManager::RooObjCacheManager(RooAbsArg* owner, Int_t maxSize, bool clearCacheOnServerRedirect, bool allowOptimize) :
   RooCacheManager<RooAbsCacheElement>(owner,maxSize),
   _clearOnRedirect(clearCacheOnServerRedirect),
   _allowOptimize(allowOptimize),
-  _optCacheModeSeen(kFALSE),
+  _optCacheModeSeen(false),
   _optCacheObservables(0)
 {
 }
@@ -65,7 +65,7 @@ RooObjCacheManager::RooObjCacheManager(const RooObjCacheManager& other, RooAbsAr
   RooCacheManager<RooAbsCacheElement>(other,owner),
   _clearOnRedirect(other._clearOnRedirect),
   _allowOptimize(other._allowOptimize),
-  _optCacheModeSeen(kFALSE), // cache mode properties are not transferred in copy ctor
+  _optCacheModeSeen(false), // cache mode properties are not transferred in copy ctor
   _optCacheObservables(0)
 {
 }
@@ -87,7 +87,7 @@ RooObjCacheManager::~RooObjCacheManager()
 /// the cache (i.e. keep the structure but delete all contents). If not
 /// forward serverRedirect to cache elements
 
-Bool_t RooObjCacheManager::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive)
+bool RooObjCacheManager::redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive)
 {
   if (_clearOnRedirect) {
 
@@ -103,7 +103,7 @@ Bool_t RooObjCacheManager::redirectServersHook(const RooAbsCollection& newServer
 
   }
 
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -136,7 +136,7 @@ void RooObjCacheManager::optimizeCacheMode(const RooArgSet& obs, RooArgSet& optN
 {
   oocxcoutD(_owner,Caching) << "RooObjCacheManager::optimizeCacheMode(owner=" << _owner->GetName() << ") obs = " << obs << endl ;
 
-  _optCacheModeSeen = kTRUE ;
+  _optCacheModeSeen = true ;
 
   if (_optCacheObservables) {
     _optCacheObservables->removeAll() ;
@@ -166,7 +166,7 @@ void RooObjCacheManager::sterilize()
   if (_optCacheObservables && _clearObsList) {
     delete _optCacheObservables ;
     _optCacheObservables = 0 ;
-    _optCacheModeSeen = kFALSE ;
+    _optCacheModeSeen = false ;
   }
 
 }

@@ -48,8 +48,8 @@ ClassImp(RooAddGenContext);
 
 RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars,
                const RooDataSet *prototype, const RooArgSet* auxProto,
-               Bool_t verbose) :
-  RooAbsGenContext(model,vars,prototype,auxProto,verbose), _isModel(kFALSE)
+               bool verbose) :
+  RooAbsGenContext(model,vars,prototype,auxProto,verbose), _isModel(false)
 {
   cxcoutI(Generation) << "RooAddGenContext::ctor() setting up event special generator context for sum p.d.f. " << model.GetName()
          << " for generation of observable(s) " << vars ;
@@ -58,21 +58,21 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
   ccxcoutI(Generation) << endl ;
 
   // Constructor. Build an array of generator contexts for each product component PDF
-  _pdfSet = (RooArgSet*) RooArgSet(model).snapshot(kTRUE) ;
+  _pdfSet = (RooArgSet*) RooArgSet(model).snapshot(true) ;
   _pdf = (RooAddPdf*) _pdfSet->find(model.GetName()) ;
-  _pdf->setOperMode(RooAbsArg::ADirty,kTRUE) ;
+  _pdf->setOperMode(RooAbsArg::ADirty,true) ;
 
   // Fix normalization set of this RooAddPdf
   if (prototype)
     {
       RooArgSet coefNSet(vars) ;
       coefNSet.add(*prototype->get()) ;
-      _pdf->fixAddCoefNormalization(coefNSet,kFALSE) ;
+      _pdf->fixAddCoefNormalization(coefNSet,false) ;
     }
 
   _nComp = model._pdfList.getSize() ;
   _coefThresh = new Double_t[_nComp+1] ;
-  _vars = (RooArgSet*) vars.snapshot(kFALSE) ;
+  _vars = (RooArgSet*) vars.snapshot(false) ;
 
   for (const auto arg : model._pdfList) {
     auto pdf = dynamic_cast<const RooAbsPdf *>(arg);
@@ -100,8 +100,8 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
 
 RooAddGenContext::RooAddGenContext(const RooAddModel &model, const RooArgSet &vars,
                const RooDataSet *prototype, const RooArgSet* auxProto,
-               Bool_t verbose) :
-  RooAbsGenContext(model,vars,prototype,auxProto,verbose), _isModel(kTRUE)
+               bool verbose) :
+  RooAbsGenContext(model,vars,prototype,auxProto,verbose), _isModel(true)
 {
   cxcoutI(Generation) << "RooAddGenContext::ctor() setting up event special generator context for sum resolution model " << model.GetName()
          << " for generation of observable(s) " << vars ;
@@ -110,12 +110,12 @@ RooAddGenContext::RooAddGenContext(const RooAddModel &model, const RooArgSet &va
   ccxcoutI(Generation) << endl ;
 
   // Constructor. Build an array of generator contexts for each product component PDF
-  _pdfSet = (RooArgSet*) RooArgSet(model).snapshot(kTRUE) ;
+  _pdfSet = (RooArgSet*) RooArgSet(model).snapshot(true) ;
   _pdf = (RooAbsPdf*) _pdfSet->find(model.GetName()) ;
 
   _nComp = model._pdfList.getSize() ;
   _coefThresh = new Double_t[_nComp+1] ;
-  _vars = (RooArgSet*) vars.snapshot(kFALSE) ;
+  _vars = (RooArgSet*) vars.snapshot(false) ;
 
   for (const auto obj : model._pdfList) {
     auto pdf = static_cast<RooAbsPdf*>(obj);
@@ -258,7 +258,7 @@ void RooAddGenContext::setProtoDataOrder(Int_t* lut)
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the details of the context
 
-void RooAddGenContext::printMultiline(ostream &os, Int_t content, Bool_t verbose, TString indent) const
+void RooAddGenContext::printMultiline(ostream &os, Int_t content, bool verbose, TString indent) const
 {
   RooAbsGenContext::printMultiline(os,content,verbose,indent) ;
   os << indent << "--- RooAddGenContext ---" << endl ;

@@ -75,7 +75,7 @@ void RooAcceptReject::registerSampler(RooNumGenFactory& fact)
 /// variables to be generated, genVars. The function and its dependents are
 /// cloned and so will not be disturbed during the generation process.
 
-RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig& config, Bool_t verbose, const RooAbsReal* maxFuncVal) :
+RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig& config, bool verbose, const RooAbsReal* maxFuncVal) :
   RooAbsNumGenerator(func,genVars,verbose,maxFuncVal), _nextCatVar(0), _nextRealVar(0)
 {
   _minTrialsArray[0] = static_cast<Int_t>(config.getConfigSection("RooAcceptReject").getRealValue("nTrial0D")) ;

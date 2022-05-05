@@ -29,12 +29,12 @@ public:
   enum GeneratorType { QuasiRandom, PseudoRandom };
   RooMCIntegrator() ;
   RooMCIntegrator(const RooAbsFunc& function, SamplingMode mode= Importance,
-        GeneratorType genType= QuasiRandom, Bool_t verbose= kFALSE);
+        GeneratorType genType= QuasiRandom, bool verbose= false);
   RooMCIntegrator(const RooAbsFunc& function, const RooNumIntConfig& config);
   RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
   ~RooMCIntegrator() override;
 
-  Bool_t checkLimits() const override;
+  bool checkLimits() const override;
   Double_t integral(const Double_t* yvec=0) override;
 
   enum Stage { AllStages, ReuseGrid, RefineGrid };
@@ -48,10 +48,10 @@ public:
 
   const RooGrid &grid() const { return _grid; }
 
-  Bool_t canIntegrate1D() const override { return kTRUE ; }
-  Bool_t canIntegrate2D() const override { return kTRUE ; }
-  Bool_t canIntegrateND() const override { return kTRUE ; }
-  Bool_t canIntegrateOpenEnded() const override { return kFALSE ; }
+  bool canIntegrate1D() const override { return true ; }
+  bool canIntegrate2D() const override { return true ; }
+  bool canIntegrateND() const override { return true ; }
+  bool canIntegrateOpenEnded() const override { return false ; }
 
 protected:
 
@@ -61,7 +61,7 @@ protected:
   mutable RooGrid _grid;  // Sampling grid definition
 
   // control variables
-  Bool_t _verbose;          ///< Verbosity control
+  bool _verbose;          ///< Verbosity control
   Double_t _alpha;          ///< Grid stiffness parameter
   Int_t _mode;              ///< Sampling mode
   GeneratorType _genType;   ///< Generator type

@@ -120,17 +120,17 @@ public:
   }
   Double_t weightError(RooAbsData::ErrorType etype=RooAbsData::Poisson) const override;
   void weightError(Double_t& lo, Double_t& hi, RooAbsData::ErrorType etype=RooAbsData::Poisson) const override;
-  Bool_t isWeighted() const override { return _wgtVar || _extWgtArray; }
+  bool isWeighted() const override { return _wgtVar || _extWgtArray; }
 
   RooBatchCompute::RunContext getBatches(std::size_t first, std::size_t len) const override;
   std::map<const std::string, RooSpan<const RooAbsCategory::value_type>> getCategoryBatches(std::size_t /*first*/, std::size_t len) const override;
   RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len) const override;
 
   // Change observable name
-  Bool_t changeObservableName(const char* from, const char* to) override;
+  bool changeObservableName(const char* from, const char* to) override;
 
   // Add one column
-  RooAbsArg* addColumn(RooAbsArg& var, Bool_t adjustRange=kTRUE) override;
+  RooAbsArg* addColumn(RooAbsArg& var, bool adjustRange=true) override;
 
   // Merge column-wise
   RooAbsDataStore* merge(const RooArgSet& allvars, std::list<RooAbsDataStore*> dstoreList) override;
@@ -162,12 +162,12 @@ public:
 
   // Constant term  optimizer interface
   const RooAbsArg* cacheOwner() override { return _cacheOwner ; }
-  void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0, Bool_t skipZeroWeights=kTRUE) override;
+  void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0, bool skipZeroWeights=true) override;
   void attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVars) override;
   void resetCache() override;
-  void recalculateCache(const RooArgSet* /*proj*/, Int_t firstEvent, Int_t lastEvent, Int_t stepSize, Bool_t skipZeroWeights) override;
+  void recalculateCache(const RooArgSet* /*proj*/, Int_t firstEvent, Int_t lastEvent, Int_t stepSize, bool skipZeroWeights) override;
 
-  void setArgStatus(const RooArgSet& set, Bool_t active) override;
+  void setArgStatus(const RooArgSet& set, bool active) override;
 
   const RooVectorDataStore* cache() const { return _cache ; }
 
@@ -183,7 +183,7 @@ public:
     _extSumW2Array = arraySumW2 ;
   }
 
-  void setDirtyProp(Bool_t flag) override {
+  void setDirtyProp(bool flag) override {
     _doDirtyProp = flag ;
     if (_cache) {
       _cache->setDirtyProp(flag) ;
@@ -266,9 +266,9 @@ public:
       _tracker = new RooChangeTracker(Form("track_%s",_nativeReal->GetName()),"tracker",deps) ;
     }
 
-    Bool_t needRecalc() {
-      if (!_tracker) return kFALSE ;
-      return _tracker->hasChanged(kTRUE) ;
+    bool needRecalc() {
+      if (!_tracker) return false ;
+      return _tracker->hasChanged(true) ;
     }
 
     void fill() {
@@ -657,15 +657,15 @@ public:
 
   RealVector* addReal(RooAbsReal* real);
 
-  Bool_t isFullReal(RooAbsReal* real);
+  bool isFullReal(RooAbsReal* real);
 
-  Bool_t hasError(RooAbsReal* real);
+  bool hasError(RooAbsReal* real);
 
-  Bool_t hasAsymError(RooAbsReal* real);
+  bool hasAsymError(RooAbsReal* real);
 
   RealFullVector* addRealFull(RooAbsReal* real);
 
-  Bool_t hasFilledCache() const override { return _cache ? kTRUE : kFALSE ; }
+  bool hasFilledCache() const override { return _cache ? true : false ; }
 
   void forceCacheUpdate() override;
 
@@ -692,7 +692,7 @@ public:
   RooVectorDataStore* _cache = nullptr; ///<! Optimization cache
   RooAbsArg* _cacheOwner = nullptr; ///<! Cache owner
 
-  Bool_t _forcedUpdate = false; ///<! Request for forced cache update
+  bool _forcedUpdate = false; ///<! Request for forced cache update
 
   ClassDefOverride(RooVectorDataStore, 7) // STL-vector-based Data Storage class
 };

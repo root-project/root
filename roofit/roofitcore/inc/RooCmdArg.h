@@ -42,7 +42,7 @@ public:
   RooCmdArg(const RooCmdArg& other) ;
   RooCmdArg& operator=(const RooCmdArg& other) ;
   void addArg(const RooCmdArg& arg) ;
-  void setProcessRecArgs(Bool_t flag, Bool_t prefix=kTRUE) {
+  void setProcessRecArgs(bool flag, bool prefix=true) {
     // If true flag this object as containing recursive arguments
     _procSubArgs = flag ;
     _prefixSubArgs = prefix ;
@@ -122,10 +122,10 @@ private:
   Int_t _i[2] ;            ///< Payload integers
   std::string _s[3] ;      ///< Payload strings
   TObject* _o[2] ;         ///< Payload objects
-  Bool_t _procSubArgs ;    ///< If true argument requires recursive processing
+  bool _procSubArgs ;    ///< If true argument requires recursive processing
   RooArgSet* _c ;          ///< Payload RooArgSets
   RooLinkedList _argList ; ///< Payload sub-arguments
-  Bool_t _prefixSubArgs ;  ///< Prefix sub-arguments with container name?
+  bool _prefixSubArgs ;  ///< Prefix sub-arguments with container name?
 
   using DataCollection = std::vector<std::unique_ptr<TObject>>;
   std::shared_ptr<DataCollection> _sharedData; ///<!

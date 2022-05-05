@@ -28,7 +28,7 @@ public:
 
   RooGenProdProj() ;
   RooGenProdProj(const char *name, const char *title, const RooArgSet& _prodSet, const RooArgSet& _intSet,
-       const RooArgSet& _normSet, const char* isetRangeName, const char* normRangeName=0, Bool_t doFactorize=kTRUE) ;
+       const RooArgSet& _normSet, const char* isetRangeName, const char* normRangeName=0, bool doFactorize=true) ;
 
   RooGenProdProj(const RooGenProdProj& other, const char* name = 0);
   TObject* clone(const char* newname) const override { return new RooGenProdProj(*this, newname); }
@@ -37,7 +37,7 @@ public:
 protected:
 
   RooAbsReal* makeIntegral(const char* name, const RooArgSet& compSet, const RooArgSet& intSet,
-            RooArgSet& saveSet, const char* isetRangeName, Bool_t doFactorize) ;
+            RooArgSet& saveSet, const char* isetRangeName, bool doFactorize) ;
 
   void operModeHook() override ;
 
@@ -47,7 +47,7 @@ protected:
   RooSetProxy _compSetN ; ///< Set proxy for numerator components
   RooSetProxy _compSetD ; ///< Set proxy for denominator components
   RooListProxy _intList ; ///< Master integrals representing numerator and denominator
-  Bool_t _haveD ;         ///< Do we have a denominator term?
+  bool _haveD ;         ///< Do we have a denominator term?
 
   ClassDefOverride(RooGenProdProj,1) // General form of projected integral of product of PDFs, utility class for RooProdPdf
 };

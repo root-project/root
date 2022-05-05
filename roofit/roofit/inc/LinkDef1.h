@@ -92,9 +92,9 @@
 #pragma link C++ class RooCFunction3Ref<Double_t,Double_t,Double_t,Double_t>- ;
 #pragma link C++ class RooCFunction3Binding<Double_t,Double_t,Double_t,Double_t>+ ;
 #pragma link C++ class RooCFunction3PdfBinding<Double_t,Double_t,Double_t,Double_t>+ ;
-#pragma link C++ class RooCFunction3Ref<Double_t,Double_t,Double_t,Bool_t>- ;
-#pragma link C++ class RooCFunction3Binding<Double_t,Double_t,Double_t,Bool_t>+ ;
-#pragma link C++ class RooCFunction3PdfBinding<Double_t,Double_t,Double_t,Bool_t>+ ;
+#pragma link C++ class RooCFunction3Ref<Double_t,Double_t,Double_t,bool>- ;
+#pragma link C++ class RooCFunction3Binding<Double_t,Double_t,Double_t,bool>+ ;
+#pragma link C++ class RooCFunction3PdfBinding<Double_t,Double_t,Double_t,bool>+ ;
 #pragma link C++ class RooCFunction3Ref<Double_t,Double_t,Int_t,Int_t>- ;
 #pragma link C++ class RooCFunction3Binding<Double_t,Double_t,Int_t,Int_t>+ ;
 #pragma link C++ class RooCFunction3PdfBinding<Double_t,Double_t,Int_t,Int_t>+ ;
@@ -114,9 +114,9 @@
 #pragma link C++ class RooCFunction4Ref<Double_t,Double_t,Double_t,Double_t,Int_t>- ;
 #pragma link C++ class RooCFunction4Binding<Double_t,Double_t,Double_t,Double_t,Int_t>+ ;
 #pragma link C++ class RooCFunction4PdfBinding<Double_t,Double_t,Double_t,Double_t,Int_t>+ ;
-#pragma link C++ class RooCFunction4Ref<Double_t,Double_t,Double_t,Double_t,Bool_t>- ;
-#pragma link C++ class RooCFunction4Binding<Double_t,Double_t,Double_t,Double_t,Bool_t>+ ;
-#pragma link C++ class RooCFunction4PdfBinding<Double_t,Double_t,Double_t,Double_t,Bool_t>+ ;
+#pragma link C++ class RooCFunction4Ref<Double_t,Double_t,Double_t,Double_t,bool>- ;
+#pragma link C++ class RooCFunction4Binding<Double_t,Double_t,Double_t,Double_t,bool>+ ;
+#pragma link C++ class RooCFunction4PdfBinding<Double_t,Double_t,Double_t,Double_t,bool>+ ;
 
 //#ifdef USE_FOR_AUTLOADING
 //#pragma link C++ class RooFit ;

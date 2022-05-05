@@ -73,7 +73,7 @@ ROOT::Math::IBaseFunctionMultiDim* RooMinimizerFcn::Clone() const
   return new RooMinimizerFcn(*this) ;
 }
 
-void RooMinimizerFcn::setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, Bool_t doAlsoTrackingOpt)
+void RooMinimizerFcn::setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt)
 {
    _funct->constOptimizeTestStatistic(opcode, doAlsoTrackingOpt);
 }
@@ -88,9 +88,9 @@ double RooMinimizerFcn::DoEval(const double *x) const {
   }
 
   // Calculate the function for these parameters
-  RooAbsReal::setHideOffset(kFALSE) ;
+  RooAbsReal::setHideOffset(false) ;
   double fvalue = _funct->getVal();
-  RooAbsReal::setHideOffset(kTRUE) ;
+  RooAbsReal::setHideOffset(true) ;
 
   if (!std::isfinite(fvalue) || RooAbsReal::numEvalErrors() > 0 || fvalue > 1e30) {
     printEvalErrors();
@@ -136,7 +136,7 @@ std::string RooMinimizerFcn::getFunctionTitle() const
    return _funct->GetTitle();
 }
 
-void RooMinimizerFcn::setOffsetting(Bool_t flag)
+void RooMinimizerFcn::setOffsetting(bool flag)
 {
    _funct->enableOffsetting(flag);
 }

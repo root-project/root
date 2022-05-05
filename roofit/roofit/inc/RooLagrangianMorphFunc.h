@@ -112,13 +112,13 @@ public:
    binBoundaries(RooAbsRealLValue & /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override;
    std::list<Double_t> *
    plotSamplingHint(RooAbsRealLValue & /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override;
-   Bool_t isBinnedDistribution(const RooArgSet &obs) const override;
+   bool isBinnedDistribution(const RooArgSet &obs) const override;
    Double_t evaluate() const override;
    TObject *clone(const char *newname) const override;
    Double_t getValV(const RooArgSet *set = 0) const override;
 
-   Bool_t checkObservables(const RooArgSet *nset) const override;
-   Bool_t forceAnalyticalInt(const RooAbsArg &arg) const override;
+   bool checkObservables(const RooArgSet *nset) const override;
+   bool forceAnalyticalInt(const RooAbsArg &arg) const override;
    Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &numVars, const RooArgSet *normSet,
                                          const char *rangeName = 0) const override;
    Double_t
@@ -245,7 +245,7 @@ public:
    Double_t expectedEvents(const RooArgSet *nset) const;
    Double_t expectedEvents(const RooArgSet &nset) const;
    Double_t expectedEvents() const;
-   Bool_t selfNormalized() const { return true; }
+   bool selfNormalized() const { return true; }
 
    void readParameters(TDirectory *f);
    void collectInputs(TDirectory *f);

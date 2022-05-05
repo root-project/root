@@ -21,11 +21,11 @@ It is often called as the LEP Test statistic.
 #include "RooStats/SimpleLikelihoodRatioTestStat.h"
 #include "RooStats/RooStatsUtils.h"
 
-Bool_t RooStats::SimpleLikelihoodRatioTestStat::fgAlwaysReuseNll = kTRUE ;
+bool RooStats::SimpleLikelihoodRatioTestStat::fgAlwaysReuseNll = true ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooStats::SimpleLikelihoodRatioTestStat::SetAlwaysReuseNLL(Bool_t flag) { fgAlwaysReuseNll = flag ; }
+void RooStats::SimpleLikelihoodRatioTestStat::SetAlwaysReuseNLL(bool flag) { fgAlwaysReuseNll = flag ; }
 
 Double_t RooStats::SimpleLikelihoodRatioTestStat::Evaluate(RooAbsData& data, RooArgSet& nullPOI) {
 
@@ -46,17 +46,17 @@ Double_t RooStats::SimpleLikelihoodRatioTestStat::Evaluate(RooAbsData& data, Roo
    RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
    RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
 
-   Bool_t reuse = (fReuseNll || fgAlwaysReuseNll) ;
+   bool reuse = (fReuseNll || fgAlwaysReuseNll) ;
 
-   Bool_t created = kFALSE ;
+   bool created = false ;
    if (!fNllNull) {
       RooArgSet* allParams = fNullPdf->getParameters(data);
-      fNllNull = fNullPdf->createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams),RooFit::GlobalObservables(fGlobalObs),RooFit::ConditionalObservables(fConditionalObs));
+      fNllNull = fNullPdf->createNLL(data, RooFit::CloneData(false),RooFit::Constrain(*allParams),RooFit::GlobalObservables(fGlobalObs),RooFit::ConditionalObservables(fConditionalObs));
       delete allParams;
-      created = kTRUE ;
+      created = true ;
    }
    if (reuse && !created) {
-      fNllNull->setData(data, kFALSE) ;
+      fNllNull->setData(data, false) ;
    }
 
    // make sure we set the variables attached to this nll
@@ -74,15 +74,15 @@ Double_t RooStats::SimpleLikelihoodRatioTestStat::Evaluate(RooAbsData& data, Roo
    }
    delete attachedSet;
 
-   created = kFALSE ;
+   created = false ;
    if (!fNllAlt) {
       RooArgSet* allParams = fAltPdf->getParameters(data);
-      fNllAlt = fAltPdf->createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams),RooFit::GlobalObservables(fGlobalObs),RooFit::ConditionalObservables(fConditionalObs));
+      fNllAlt = fAltPdf->createNLL(data, RooFit::CloneData(false),RooFit::Constrain(*allParams),RooFit::GlobalObservables(fGlobalObs),RooFit::ConditionalObservables(fConditionalObs));
       delete allParams;
-      created = kTRUE ;
+      created = true ;
    }
    if (reuse && !created) {
-      fNllAlt->setData(data, kFALSE) ;
+      fNllAlt->setData(data, false) ;
    }
    // make sure we set the variables attached to this nll
    attachedSet = fNllAlt->getVariables();

@@ -34,7 +34,7 @@ namespace RooStats {
       /// Determine whether or not the proposal density is symmetric for
       /// points x1 and x2 - that is, whether the probability of reaching x2
       /// from x1 is equal to the probability of reaching x1 from x2
-      Bool_t IsSymmetric(RooArgSet& x1, RooArgSet& x2) override;
+      bool IsSymmetric(RooArgSet& x1, RooArgSet& x2) override;
 
       /// Return the probability of proposing the point x1 given the starting
       /// point x2

@@ -48,7 +48,7 @@ ClassImp(RooChangeTracker);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooChangeTracker::RooChangeTracker() : _checkVal(kFALSE), _init(kFALSE)
+RooChangeTracker::RooChangeTracker() : _checkVal(false), _init(false)
 {
 }
 
@@ -61,14 +61,14 @@ RooChangeTracker::RooChangeTracker() : _checkVal(kFALSE), _init(kFALSE)
 /// tracked arguments are compared with reference values ensuring
 /// that values have actually changed.
 
-RooChangeTracker::RooChangeTracker(const char* name, const char* title, const RooArgSet& trackSet, Bool_t checkValues) :
+RooChangeTracker::RooChangeTracker(const char* name, const char* title, const RooArgSet& trackSet, bool checkValues) :
   RooAbsReal(name, title),
   _realSet("realSet","Set of real-valued components to be tracked",this),
   _catSet("catSet","Set of discrete-valued components to be tracked",this),
   _realRef(trackSet.getSize()),
   _catRef(trackSet.getSize()),
   _checkVal(checkValues),
-  _init(kFALSE)
+  _init(false)
 {
 for (const auto arg : trackSet) {
     if (dynamic_cast<const RooAbsReal*>(arg)) {
@@ -105,22 +105,22 @@ RooChangeTracker::RooChangeTracker(const RooChangeTracker& other, const char* na
   _realRef(other._realRef),
   _catRef(other._catRef),
   _checkVal(other._checkVal),
-  _init(kFALSE)
+  _init(false)
 {
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns true if state has changed since last call with clearState=kTRUE.
+/// Returns true if state has changed since last call with clearState=true.
 /// If clearState is true, changeState flag will be cleared.
 
-Bool_t RooChangeTracker::hasChanged(Bool_t clearState)
+bool RooChangeTracker::hasChanged(bool clearState)
 {
 
   // If dirty flag did not change, object has not changed in any case
   if (!isValueDirty()) {
-    return kFALSE ;
+    return false ;
   }
 
   // If no value checking is required and dirty flag has changed, return true
@@ -132,22 +132,22 @@ Bool_t RooChangeTracker::hasChanged(Bool_t clearState)
       clearValueDirty() ;
     }
 
-    //cout << "RooChangeTracker(" << GetName() << ") isValueDirty = kTRUE, returning kTRUE" << endl ;
+    //cout << "RooChangeTracker(" << GetName() << ") isValueDirty = true, returning true" << endl ;
 
-    return kTRUE ;
+    return true ;
   }
 
   // Compare values against reference
   if (clearState) {
 
-    Bool_t valuesChanged(kFALSE) ;
+    bool valuesChanged(false) ;
 
     // Check if any of the real values changed
     for (unsigned int i=0; i < _realSet.size(); ++i) {
       auto real = static_cast<const RooAbsReal*>(_realSet.at(i));
       if (real->getVal() != _realRef[i]) {
         // cout << "RooChangeTracker(" << this << "," << GetName() << ") value of " << real->GetName() << " has changed from " << _realRef[i] << " to " << real->getVal() << " clearState = " << (clearState?"T":"F") << endl ;
-        valuesChanged = kTRUE ;
+        valuesChanged = true ;
         _realRef[i] = real->getVal() ;
       }
     }
@@ -156,7 +156,7 @@ Bool_t RooChangeTracker::hasChanged(Bool_t clearState)
       auto cat = static_cast<const RooAbsCategory*>(_catSet.at(i));
       if (cat->getCurrentIndex() != _catRef[i]) {
         // cout << "RooChangeTracker(" << this << "," << GetName() << ") value of " << cat->GetName() << " has changed from " << _catRef[i-1] << " to " << cat->getIndex() << endl ;
-        valuesChanged = kTRUE ;
+        valuesChanged = true ;
         _catRef[i] = cat->getCurrentIndex() ;
       }
     }
@@ -165,8 +165,8 @@ Bool_t RooChangeTracker::hasChanged(Bool_t clearState)
 
 
     if (!_init) {
-      valuesChanged=kTRUE ;
-      _init = kTRUE ;
+      valuesChanged=true ;
+      _init = true ;
     }
 
     // cout << "RooChangeTracker(" << GetName() << ") returning " << (valuesChanged?"T":"F") << endl ;
@@ -181,20 +181,20 @@ Bool_t RooChangeTracker::hasChanged(Bool_t clearState)
     for (unsigned int i=0; i < _realSet.size(); ++i) {
       auto real = static_cast<const RooAbsReal*>(_realSet.at(i));
       if (real->getVal() != _realRef[i]) {
-        return kTRUE ;
+        return true ;
       }
     }
     // Check if any of the categories changed
     for (unsigned int i=0; i < _catSet.size(); ++i) {
       auto cat = static_cast<const RooAbsCategory*>(_catSet.at(i));
       if (cat->getCurrentIndex() != _catRef[i]) {
-        return kTRUE ;
+        return true ;
       }
     }
 
   }
 
-  return kFALSE ;
+  return false ;
 }
 
 

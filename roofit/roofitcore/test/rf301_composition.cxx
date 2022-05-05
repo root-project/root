@@ -29,8 +29,8 @@ using namespace RooFit ;
 class TestBasic301 : public RooFitTestUnit
 {
 public:
-  TestBasic301(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Composition extension of basic p.d.f",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic301(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Composition extension of basic p.d.f",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // S e t u p   c o m p o s e d   m o d e l   g a u s s ( x , m ( y ) , s )
   // -----------------------------------------------------------------------
@@ -75,7 +75,7 @@ public:
   regTH(hh_model,"rf302_model2d") ;
 
   delete data ;
-  return kTRUE ;
+  return true ;
   }
 } ;
 

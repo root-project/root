@@ -44,7 +44,7 @@ RooGradMinimizerFcn::RooGradMinimizerFcn(RooAbsReal *funct, RooMinimizer *contex
 {
    // TODO: added "parameters" after rewrite in april 2020, check if correct
    auto parameters = _context->fitter()->Config().ParamsSettings();
-   synchronizeParameterSettings(parameters, kTRUE, verbose);
+   synchronizeParameterSettings(parameters, true, verbose);
    synchronizeGradientParameterSettings(parameters);
    setStrategy(ROOT::Math::MinimizerOptions::DefaultStrategy());
    setErrorLevel(ROOT::Math::MinimizerOptions::DefaultErrorDef());
@@ -71,7 +71,7 @@ void RooGradMinimizerFcn::synchronizeGradientParameterSettings(
 
 double RooGradMinimizerFcn::DoEval(const double *x) const
 {
-      Bool_t parameters_changed = kFALSE;
+      bool parameters_changed = false;
 
    // Set the parameter values for this iteration
    for (unsigned index = 0; index < NDim(); index++) {
@@ -80,9 +80,9 @@ double RooGradMinimizerFcn::DoEval(const double *x) const
    }
 
    // Calculate the function for these parameters
-   RooAbsReal::setHideOffset(kFALSE);
+   RooAbsReal::setHideOffset(false);
    double fvalue = _funct->getVal();
-   RooAbsReal::setHideOffset(kTRUE);
+   RooAbsReal::setHideOffset(true);
 
    if (!parameters_changed) {
       return fvalue;
@@ -104,11 +104,11 @@ double RooGradMinimizerFcn::DoEval(const double *x) const
 
          TIterator *iter = _floatParamList->createIterator();
          RooRealVar *var;
-         Bool_t first(kTRUE);
+         bool first(true);
          ooccoutW(static_cast<RooAbsArg *>(nullptr), Eval) << "Parameter values: ";
          while ((var = (RooRealVar *)iter->Next())) {
             if (first) {
-               first = kFALSE;
+               first = false;
             } else
                ooccoutW(static_cast<RooAbsArg *>(nullptr), Eval) << ", ";
             ooccoutW(static_cast<RooAbsArg *>(nullptr), Eval) << var->GetName() << "=" << var->getVal();
@@ -240,10 +240,10 @@ void RooGradMinimizerFcn::setStrategy(int istrat)
    setNcycles(strategy.GradientNCycles());
 }
 
-Bool_t
-RooGradMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameters, Bool_t optConst, Bool_t verbose)
+bool
+RooGradMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameters, bool optConst, bool verbose)
 {
-   Bool_t returnee = synchronizeParameterSettings(parameters, optConst, verbose);
+   bool returnee = synchronizeParameterSettings(parameters, optConst, verbose);
    synchronizeGradientParameterSettings(parameters);
    setStrategy(_context->fitter()->Config().MinimizerOptions().Strategy());
    setErrorLevel(_context->fitter()->Config().MinimizerOptions().ErrorDef());

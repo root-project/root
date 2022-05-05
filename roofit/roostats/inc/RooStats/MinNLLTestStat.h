@@ -74,14 +74,14 @@ Internally it operates by delegating to a MinNLLTestStat object.
    delete fProflts;
      }
 
-     void SetOneSided(Bool_t flag=true) {fProflts->SetOneSided(flag);}
-     void SetOneSidedDiscovery(Bool_t flag=true) {fProflts->SetOneSidedDiscovery(flag);}
-     void SetReuseNLL(Bool_t flag) { fProflts->SetReuseNLL(flag); }
+     void SetOneSided(bool flag=true) {fProflts->SetOneSided(flag);}
+     void SetOneSidedDiscovery(bool flag=true) {fProflts->SetOneSidedDiscovery(flag);}
+     void SetReuseNLL(bool flag) { fProflts->SetReuseNLL(flag); }
      void SetMinimizer(const char* minimizer){ fProflts->SetMinimizer(minimizer); }
      void SetStrategy(Int_t strategy){ fProflts->SetStrategy(strategy); }
      void SetTolerance(double tol){ fProflts->SetTolerance(tol); }
      void SetPrintLevel(Int_t printlevel){ fProflts->SetPrintLevel(printlevel); }
-     void SetLOffset(Bool_t flag=kTRUE) { fProflts->SetLOffset(flag) ; }
+     void SetLOffset(bool flag=true) { fProflts->SetLOffset(flag) ; }
 
      // Main interface to evaluate the test statistic on a dataset
      Double_t Evaluate(RooAbsData& data, RooArgSet& paramsOfInterest) override {

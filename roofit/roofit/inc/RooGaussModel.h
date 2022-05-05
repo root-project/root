@@ -37,7 +37,7 @@ public:
   enum BasisSign { Both=0, Plus=+1, Minus=-1 } ;
 
   // Constructors, assignment etc
-  inline RooGaussModel() : _flatSFInt(kFALSE), _asympInt(kFALSE) { }
+  inline RooGaussModel() : _flatSFInt(false), _asympInt(false) { }
   RooGaussModel(const char *name, const char *title, RooAbsRealLValue& x,
       RooAbsReal& mean, RooAbsReal& sigma) ;
   RooGaussModel(const char *name, const char *title, RooAbsRealLValue& x,
@@ -52,12 +52,12 @@ public:
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
   Double_t analyticalIntegral(Int_t code, const char* rangeName) const override ;
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const override;
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void generateEvent(Int_t code) override;
 
-  void advertiseFlatScaleFactorIntegral(Bool_t flag) { _flatSFInt = flag ; }
+  void advertiseFlatScaleFactorIntegral(bool flag) { _flatSFInt = flag ; }
 
-  void advertiseAymptoticIntegral(Bool_t flag) { _asympInt = flag ; }  // added FMV,07/24/03
+  void advertiseAymptoticIntegral(bool flag) { _asympInt = flag ; }  // added FMV,07/24/03
 
 protected:
 
@@ -66,9 +66,9 @@ protected:
   // Calculate common normalization factors
   std::complex<Double_t> evalCerfInt(Double_t sign, Double_t wt, Double_t tau, Double_t umin, Double_t umax, Double_t c) const;
 
-  Bool_t _flatSFInt ;
+  bool _flatSFInt ;
 
-  Bool_t _asympInt ;  // added FMV,07/24/03
+  bool _asympInt ;  // added FMV,07/24/03
 
   RooRealProxy mean ;
   RooRealProxy sigma ;

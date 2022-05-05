@@ -36,7 +36,7 @@ public:
   RooFormulaVar(const RooFormulaVar& other, const char* name=0);
   TObject* clone(const char* newname) const override { return new RooFormulaVar(*this,newname); }
 
-  inline Bool_t ok() const { return getFormula().ok() ; }
+  inline bool ok() const { return getFormula().ok() ; }
   const char* expression() const { return _formExpr.Data(); }
   const RooArgList& dependents() const { return _actualVars; }
 
@@ -50,11 +50,11 @@ public:
   }
 
   // I/O streaming interface (machine readable)
-  Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) override ;
-  void writeToStream(std::ostream& os, Bool_t compact) const override ;
+  bool readFromStream(std::istream& is, bool compact, bool verbose=false) override ;
+  void writeToStream(std::ostream& os, bool compact) const override ;
 
   // Printing interface (human readable)
-  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent= "") const override ;
+  void printMultiline(std::ostream& os, Int_t contents, bool verbose=false, TString indent= "") const override ;
   void printMetaArgs(std::ostream& os) const override ;
 
   // Debugging
@@ -81,9 +81,9 @@ public:
 
   protected:
   // Post-processing of server redirection
-  Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) override ;
+  bool redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive) override ;
 
-  Bool_t isValidReal(Double_t /*value*/, Bool_t /*printError*/) const override {return true;}
+  bool isValidReal(Double_t /*value*/, bool /*printError*/) const override {return true;}
 
   private:
   RooFormula& getFormula() const;

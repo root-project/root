@@ -54,7 +54,7 @@ the proposal density to maintain detailed balance.
       /// Determine whether or not the proposal density is symmetric for
       /// points x1 and x2 - that is, whether the probability of reaching x2
       /// from x1 is equal to the probability of reaching x1 from x2
-      virtual Bool_t IsSymmetric(RooArgSet& x1, RooArgSet& x2) = 0;
+      virtual bool IsSymmetric(RooArgSet& x1, RooArgSet& x2) = 0;
 
       /// Return the probability of proposing the point x1 given the starting
       /// point x2

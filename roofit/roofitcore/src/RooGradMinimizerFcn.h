@@ -36,8 +36,8 @@ public:
    double getErrorDef() const;
    void setStrategy(int istrat);
 
-   Bool_t Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings, Bool_t optConst,
-                      Bool_t verbose = kFALSE) override;
+   bool Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings, bool optConst,
+                      bool verbose = false) override;
 
    void synchronizeGradientParameterSettings(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) const;
 
@@ -49,7 +49,7 @@ public:
    inline void setErrorLevel(double error_level) const { _gradf.SetErrorLevel(error_level); }
    inline std::string getFunctionName() const override { return _funct->GetName(); }
    inline std::string getFunctionTitle() const override { return _funct->GetTitle(); }
-   inline void setOffsetting(Bool_t flag) override { _funct->enableOffsetting(flag); }
+   inline void setOffsetting(bool flag) override { _funct->enableOffsetting(flag); }
 
    bool fit(ROOT::Fit::Fitter& fitter) const override { return fitter.FitFCN(*this); };
    ROOT::Math::IMultiGenFunction* getMultiGenFcn() override { return this; };
@@ -61,7 +61,7 @@ private:
    bool syncParameter(double x, std::size_t ix) const;
    bool syncParameters(const double *x) const;
 
-   inline void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, Bool_t doAlsoTrackingOpt) override
+   inline void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt) override
    {
       _funct->constOptimizeTestStatistic(opcode, doAlsoTrackingOpt);
    }

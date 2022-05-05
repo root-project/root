@@ -39,7 +39,7 @@ public:
 
    bool selfNormalized() const override { return true; }
 
-   Bool_t forceAnalyticalInt(const RooAbsArg & /*dep*/) const override { return true; }
+   bool forceAnalyticalInt(const RooAbsArg & /*dep*/) const override { return true; }
    /// Forward determination of analytical integration capabilities to input p.d.f
    Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &analVars, const RooArgSet * /*normSet*/,
                                  const char *rangeName = 0) const override

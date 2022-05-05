@@ -39,7 +39,7 @@ public:
   }
 
   // Analytical Integration handling
-  Bool_t forceAnalyticalInt(const RooAbsArg& dep) const override {
+  bool forceAnalyticalInt(const RooAbsArg& dep) const override {
     return _pdf->forceAnalyticalInt(dep);
   }
   /// Forwards to the PDF's implementation.
@@ -84,7 +84,7 @@ public:
   /// Forwards to the PDF's implementation.
   void generateEvent(Int_t code) override { _pdf->generateEvent(code); }
   /// Forwards to the PDF's implementation.
-  Bool_t isDirectGenSafe(const RooAbsArg& arg) const override { return _pdf->isDirectGenSafe(arg); }
+  bool isDirectGenSafe(const RooAbsArg& arg) const override { return _pdf->isDirectGenSafe(arg); }
 
 
   // Hints for optimized brute-force sampling

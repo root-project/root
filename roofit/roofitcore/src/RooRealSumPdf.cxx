@@ -63,7 +63,7 @@ using namespace std;
 
 ClassImp(RooRealSumPdf);
 
-Bool_t RooRealSumPdf::_doFloorGlobal = kFALSE ;
+bool RooRealSumPdf::_doFloorGlobal = false ;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -136,7 +136,7 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title,
 /// \param extended   Interpret as extended PDF (requires equal number of functions and coefficients)
 
 RooRealSumPdf::RooRealSumPdf(const char *name, const char *title,
-    const RooArgList& inFuncList, const RooArgList& inCoefList, Bool_t extended) :
+    const RooArgList& inFuncList, const RooArgList& inCoefList, bool extended) :
   RooRealSumPdf(name, title)
 {
   _extended = extended;
@@ -314,9 +314,9 @@ void RooRealSumPdf::computeBatch(cudaStream_t* /*stream*/, double* output, size_
 /// In the present implementation, coefficients may not be observables or derive
 /// from observables.
 
-Bool_t RooRealSumPdf::checkObservables(const RooArgSet* nset) const
+bool RooRealSumPdf::checkObservables(const RooArgSet* nset) const
 {
-  Bool_t ret(kFALSE) ;
+  bool ret(false) ;
 
   for (unsigned int i=0; i < _coefList.size(); ++i) {
     const auto& coef = _coefList[i];
@@ -325,12 +325,12 @@ Bool_t RooRealSumPdf::checkObservables(const RooArgSet* nset) const
     if (func.observableOverlaps(nset, coef)) {
       coutE(InputArguments) << "RooRealSumPdf::checkObservables(" << GetName() << "): ERROR: coefficient " << coef.GetName()
              << " and FUNC " << func.GetName() << " have one or more observables in common" << endl ;
-      ret = kTRUE ;
+      ret = true ;
     }
     if (coef.dependsOn(*nset)) {
       coutE(InputArguments) << "RooRealPdf::checkObservables(" << GetName() << "): ERROR coefficient " << coef.GetName()
              << " depends on one or more of the following observables" ; nset->Print("1") ;
-      ret = kTRUE ;
+      ret = true ;
     }
   }
 
@@ -506,7 +506,7 @@ Double_t RooRealSumPdf::expectedEvents(const RooArgSet* nset) const
 std::list<Double_t>* RooRealSumPdf::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
   list<Double_t>* sumBinB = 0 ;
-  Bool_t needClean(kFALSE) ;
+  bool needClean(false) ;
 
   // Loop over components pdf
   for (const auto elm : _funcList) {
@@ -530,7 +530,7 @@ std::list<Double_t>* RooRealSumPdf::binBoundaries(RooAbsRealLValue& obs, Double_
    delete sumBinB ;
    delete funcBinB ;
    sumBinB = newSumBinB ;
-   needClean = kTRUE ;
+   needClean = true ;
       }
     }
   }
@@ -547,17 +547,17 @@ std::list<Double_t>* RooRealSumPdf::binBoundaries(RooAbsRealLValue& obs, Double_
 
 
 /// Check if all components that depend on `obs` are binned.
-Bool_t RooRealSumPdf::isBinnedDistribution(const RooArgSet& obs) const
+bool RooRealSumPdf::isBinnedDistribution(const RooArgSet& obs) const
 {
   for (const auto elm : _funcList) {
     auto func = static_cast<RooAbsReal*>(elm);
 
     if (func->dependsOn(obs) && !func->isBinnedDistribution(obs)) {
-      return kFALSE ;
+      return false ;
     }
   }
 
-  return kTRUE  ;
+  return true  ;
 }
 
 
@@ -569,7 +569,7 @@ Bool_t RooRealSumPdf::isBinnedDistribution(const RooArgSet& obs) const
 std::list<Double_t>* RooRealSumPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
   list<Double_t>* sumHint = 0 ;
-  Bool_t needClean(kFALSE) ;
+  bool needClean(false) ;
 
   // Loop over components pdf
   for (const auto elm : _funcList) {
@@ -594,7 +594,7 @@ std::list<Double_t>* RooRealSumPdf::plotSamplingHint(RooAbsRealLValue& obs, Doub
    // Copy merged array without duplicates to new sumHintArrau
    delete sumHint ;
    sumHint = newSumHint ;
-   needClean = kTRUE ;
+   needClean = true ;
       }
     }
   }
@@ -633,7 +633,7 @@ void RooRealSumPdf::setCacheAndTrackHints(RooArgSet& trackNodes)
 void RooRealSumPdf::printMetaArgs(ostream& os) const
 {
 
-  Bool_t first(kTRUE) ;
+  bool first(true) ;
 
   if (_coefList.getSize()!=0) {
     auto funcIter = _funcList.begin();
@@ -642,7 +642,7 @@ void RooRealSumPdf::printMetaArgs(ostream& os) const
       if (!first) {
         os << " + " ;
       } else {
-        first = kFALSE ;
+        first = false ;
       }
       const auto func = *(funcIter++);
       os << coef->GetName() << " * " << func->GetName();
@@ -657,7 +657,7 @@ void RooRealSumPdf::printMetaArgs(ostream& os) const
       if (!first) {
         os << " + " ;
       } else {
-        first = kFALSE ;
+        first = false ;
       }
       os << func->GetName() ;
     }

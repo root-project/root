@@ -44,11 +44,11 @@ public:
 
 
   // Run methods
-  Bool_t generateAndFit(Int_t nSamples, Int_t nEvtPerSample=0, Bool_t keepGenData=kFALSE, const char* asciiFilePat=0) ;
-  Bool_t generate(Int_t nSamples, Int_t nEvtPerSample=0, Bool_t keepGenData=kFALSE, const char* asciiFilePat=0) ;
-  Bool_t fit(Int_t nSamples, const char* asciiFilePat) ;
-  Bool_t fit(Int_t nSamples, TList& dataSetList) ;
-  Bool_t addFitResult(const RooFitResult& fr) ;
+  bool generateAndFit(Int_t nSamples, Int_t nEvtPerSample=0, bool keepGenData=false, const char* asciiFilePat=0) ;
+  bool generate(Int_t nSamples, Int_t nEvtPerSample=0, bool keepGenData=false, const char* asciiFilePat=0) ;
+  bool fit(Int_t nSamples, const char* asciiFilePat) ;
+  bool fit(Int_t nSamples, TList& dataSetList) ;
+  bool addFitResult(const RooFitResult& fr) ;
 
   // Result accessors
   const RooArgSet* fitParams(Int_t sampleNum) const ;
@@ -90,16 +90,16 @@ public:
 
   RooPlot* plotNLL(Double_t lo, Double_t hi, Int_t nBins=100) ;
   RooPlot* plotError(const RooRealVar& param, Double_t lo, Double_t hi, Int_t nbins=100) ;
-  RooPlot* plotPull(const RooRealVar& param, Double_t lo=-3.0, Double_t hi=3.0, Int_t nbins=25, Bool_t fitGauss=kFALSE) ;
+  RooPlot* plotPull(const RooRealVar& param, Double_t lo=-3.0, Double_t hi=3.0, Int_t nbins=25, bool fitGauss=false) ;
 
 protected:
 
   friend class RooAbsMCStudyModule ;
 
-  RooPlot* makeFrameAndPlotCmd(const RooRealVar& param, RooLinkedList& cmdList, Bool_t symRange=kFALSE) const ;
+  RooPlot* makeFrameAndPlotCmd(const RooRealVar& param, RooLinkedList& cmdList, bool symRange=false) const ;
 
-  Bool_t run(Bool_t generate, Bool_t fit, Int_t nSamples, Int_t nEvtPerSample, Bool_t keepGenData, const char* asciiFilePat) ;
-  Bool_t fitSample(RooAbsData* genSample) ;
+  bool run(bool generate, bool fit, Int_t nSamples, Int_t nEvtPerSample, bool keepGenData, const char* asciiFilePat) ;
+  bool fitSample(RooAbsData* genSample) ;
   RooFitResult* doFit(RooAbsData* genSample) ;
 
   void calcPulls() ;
@@ -128,15 +128,15 @@ protected:
   RooDataSet* _genParData ;     // List of of generated parameters of each sample
   RooDataSet* _fitParData ;     // Data set of fit parameters of each sample
   RooLinkedList _fitOptList ;   // Fit option command list
-  Bool_t      _extendedGen ;    // Add poisson term to number of events to generate?
-  Bool_t      _binGenData ;     // Bin data between generating and fitting
+  bool      _extendedGen ;    // Add poisson term to number of events to generate?
+  bool      _binGenData ;     // Bin data between generating and fitting
   Double_t    _nExpGen ;        // Number of expected events to generate in extended mode
-  Bool_t      _randProto ;      // Randomize order of prototype data access
+  bool      _randProto ;      // Randomize order of prototype data access
 
-  Bool_t      _canAddFitResults ; ///< Allow adding of external fit results?
-  Bool_t      _verboseGen       ; ///< Verbose generation?
-  Bool_t      _perExptGenParams ; ///< Do generation parameter change per event?
-  Bool_t      _silence          ; ///< Silent running mode?
+  bool      _canAddFitResults ; ///< Allow adding of external fit results?
+  bool      _verboseGen       ; ///< Verbose generation?
+  bool      _perExptGenParams ; ///< Do generation parameter change per event?
+  bool      _silence          ; ///< Silent running mode?
 
   std::list<RooAbsMCStudyModule*> _modList ; ///< List of additional study modules ;
 

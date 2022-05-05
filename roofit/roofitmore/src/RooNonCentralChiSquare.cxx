@@ -104,7 +104,7 @@ RooNonCentralChiSquare::RooNonCentralChiSquare(const RooNonCentralChiSquare& oth
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooNonCentralChiSquare::SetForceSum(Bool_t flag) {
+void RooNonCentralChiSquare::SetForceSum(bool flag) {
    fForceSum = flag;
 #ifndef R__HAS_MATHMORE
    if (!fForceSum) {

@@ -68,8 +68,8 @@ private:
 
   Double_t g(Double_t x,Double_t sigma) const;
 
-  Bool_t _mirrorLeft, _mirrorRight;
-  Bool_t _asymLeft, _asymRight;
+  bool _mirrorLeft, _mirrorRight;
+  bool _asymLeft, _asymRight;
 
   // cached info on variable
   Char_t _varName[128];

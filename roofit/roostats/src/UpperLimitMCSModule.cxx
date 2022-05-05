@@ -91,12 +91,12 @@ UpperLimitMCSModule:: ~UpperLimitMCSModule()
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize module after attachment to RooMCStudy object
 
-Bool_t UpperLimitMCSModule::initializeInstance()
+bool UpperLimitMCSModule::initializeInstance()
 {
   // Check that parameter is also present in fit parameter list of RooMCStudy object
   if (!fitParams()->find(_parName.c_str())) {
     coutE(InputArguments) << "UpperLimitMCSModule::initializeInstance:: ERROR: No parameter named " << _parName << " in RooMCStudy!" << endl ;
-    return kFALSE ;
+    return false ;
   }
 
   //Construct the ProfileLikelihoodCalculator
@@ -115,16 +115,16 @@ Bool_t UpperLimitMCSModule::initializeInstance()
   // Create new dataset to be merged with RooMCStudy::fitParDataSet
   _data = new RooDataSet("ULSigData","Additional data for UL study",RooArgSet(*_ul)) ;
 
-  return kTRUE ;
+  return true ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize module at beginning of RooCMStudy run
 
-Bool_t UpperLimitMCSModule::initializeRun(Int_t /*numSamples*/)
+bool UpperLimitMCSModule::initializeRun(Int_t /*numSamples*/)
 {
   _data->reset() ;
-  return kTRUE ;
+  return true ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -139,7 +139,7 @@ RooDataSet* UpperLimitMCSModule::finalizeRun()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Bool_t UpperLimitMCSModule::processAfterFit(Int_t /*sampleNum*/)
+// bool UpperLimitMCSModule::processAfterFit(Int_t /*sampleNum*/)
 // {
 //   // Save likelihood from nominal fit, fix chosen parameter to its
 //   // null hypothesis value and rerun fit Save difference in likelihood
@@ -147,9 +147,9 @@ RooDataSet* UpperLimitMCSModule::finalizeRun()
 
 //   RooRealVar* par = static_cast<RooRealVar*>(fitParams()->find(_parName.c_str())) ;
 //   par->setVal(_nullValue) ;
-//   par->setConstant(kTRUE) ;
+//   par->setConstant(true) ;
 //   RooFitResult* frnull = refit() ;
-//   par->setConstant(kFALSE) ;
+//   par->setConstant(false) ;
 
 //   _nll0h->setVal(frnull->minNll()) ;
 
@@ -162,16 +162,16 @@ RooDataSet* UpperLimitMCSModule::finalizeRun()
 //   _data->add(RooArgSet(*_nll0h,*_dll0h,*_sig0h)) ;
 
 //   delete frnull ;
-//   return kTRUE ;
+//   return true ;
 
 // }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t UpperLimitMCSModule::processBetweenGenAndFit(Int_t /*sampleNum*/) {
+bool UpperLimitMCSModule::processBetweenGenAndFit(Int_t /*sampleNum*/) {
   std::cout<<"after generation Test"<<std::endl;
 
-  if (!fitInitParams() || !genSample() || !fitParams() || !fitModel() ) return kFALSE;
+  if (!fitInitParams() || !genSample() || !fitParams() || !fitModel() ) return false;
 
   static_cast<RooRealVar*>(_poi->first())->setVal(static_cast<RooRealVar*>(fitInitParams()->find(_parName.c_str()))->getVal());
 
@@ -187,7 +187,7 @@ Bool_t UpperLimitMCSModule::processBetweenGenAndFit(Int_t /*sampleNum*/) {
   plc.SetTestSize(2*(1-_cl));
   RooStats::ConfInterval* pllint=plc.GetInterval();
 
-  if (!pllint) return kFALSE;
+  if (!pllint) return false;
 
   std::cout<<"poi value: "<<((RooRealVar*)( _poi->first()))->getVal()<<std::endl;
   std::cout<<(static_cast<RooRealVar*>((fitParams()->find(_parName.c_str()))))->getVal()<<std::endl;
@@ -216,5 +216,5 @@ Bool_t UpperLimitMCSModule::processBetweenGenAndFit(Int_t /*sampleNum*/) {
   delete pllint;
 
 
-  return kTRUE;
+  return true;
 }

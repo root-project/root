@@ -190,7 +190,7 @@ void RooCFunction1Ref<VO,VI>::Streamer(TBuffer &R__b)
    } else {
 
      UInt_t R__c;
-     R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
+     R__c = R__b.WriteVersion(thisClass::IsA(), true);
 
      // Lookup name of reference C function
      TString tmpName = fmap().lookupName(_ptr) ;
@@ -209,7 +209,7 @@ void RooCFunction1Ref<VO,VI>::Streamer(TBuffer &R__b)
      // Persist the name
      tmpName.Streamer(R__b) ;
 
-     R__b.SetByteCount(R__c, kTRUE);
+     R__b.SetByteCount(R__c, true);
 
    }
 }

@@ -34,8 +34,8 @@ using namespace RooFit ;
 class TestBasic209 : public RooFitTestUnit
 {
 public:
-  TestBasic209(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Analytical convolution operator",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic209(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Analytical convolution operator",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
     // B - p h y s i c s   p d f   w i t h   t r u t h   r e s o l u t i o n
     // ---------------------------------------------------------------------
@@ -90,7 +90,7 @@ public:
 
     regPlot(frame,"rf209_plot1") ;
 
-    return kTRUE ;
+    return true ;
 
   }
 } ;

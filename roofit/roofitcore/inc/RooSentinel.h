@@ -25,7 +25,7 @@ public:
 
 protected:
 
-  static Bool_t _active ;
+  static bool _active ;
 
   RooSentinel() {} ;
   RooSentinel(const RooSentinel&) {}

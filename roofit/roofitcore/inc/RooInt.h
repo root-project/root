@@ -33,7 +33,7 @@ public:
 
   // Sorting interface ;
   Int_t Compare(const TObject* other) const override ;
-  Bool_t IsSortable() const override { return kTRUE ; }
+  bool IsSortable() const override { return true ; }
 
 protected:
 

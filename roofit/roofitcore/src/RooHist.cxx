@@ -82,7 +82,7 @@ RooHist::RooHist() :
 /// nominal bin width is calculated as range/nbins.
 
 RooHist::RooHist(const TH1 &data, Double_t nominalBinWidth, Double_t nSigma, RooAbsData::ErrorType etype, Double_t xErrorFrac,
-       Bool_t correctForBinWidth, Double_t scaleFactor) :
+       bool correctForBinWidth, Double_t scaleFactor) :
   TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma), _rawEntries(-1)
 {
   if(etype == RooAbsData::Poisson && correctForBinWidth == false) {
@@ -134,7 +134,7 @@ RooHist::RooHist(const TH1 &data, Double_t nominalBinWidth, Double_t nSigma, Roo
 /// nominal bin width is calculated as range/nbins.
 
 RooHist::RooHist(const TH1 &data1, const TH1 &data2, Double_t nominalBinWidth, Double_t nSigma,
-       RooAbsData::ErrorType etype, Double_t xErrorFrac, Bool_t efficiency, Double_t scaleFactor) :
+       RooAbsData::ErrorType etype, Double_t xErrorFrac, bool efficiency, Double_t scaleFactor) :
   TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma), _rawEntries(-1)
 {
   initialize();
@@ -304,7 +304,7 @@ RooHist::RooHist(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xErrorFrac, 
 
   RooAbsFunc *funcPtr = nullptr;
   RooAbsFunc *rawPtr  = nullptr;
-  funcPtr= f.bindVars(x,normVars,kTRUE);
+  funcPtr= f.bindVars(x,normVars,true);
 
   // apply a scale factor if necessary
   if(scaleFactor != 1) {
@@ -474,7 +474,7 @@ void RooHist::addBin(Axis_t binCenter, Double_t n, Double_t binWidth, Double_t x
 /// bins with different widths.
 
 void RooHist::addBinWithError(Axis_t binCenter, Double_t n, Double_t elow, Double_t ehigh, Double_t binWidth,
-               Double_t xErrorFrac, Bool_t correctForBinWidth, Double_t scaleFactor)
+               Double_t xErrorFrac, bool correctForBinWidth, Double_t scaleFactor)
 {
   Double_t scale= 1;
   if(binWidth > 0 && correctForBinWidth) {
@@ -621,13 +621,13 @@ void RooHist::addEfficiencyBinWithError(Axis_t binCenter, Double_t n1, Double_t 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return kTRUE if binning of this RooHist is identical to that of 'other'
+/// Return true if binning of this RooHist is identical to that of 'other'
 
-Bool_t RooHist::hasIdenticalBinning(const RooHist& other) const
+bool RooHist::hasIdenticalBinning(const RooHist& other) const
 {
   // First check if number of bins is the same
   if (GetN() != other.GetN()) {
-    return kFALSE ;
+    return false ;
   }
 
   // Next require that all bin centers are the same
@@ -639,27 +639,27 @@ Bool_t RooHist::hasIdenticalBinning(const RooHist& other) const
     other.GetPoint(i,x2,y2) ;
 
     if (fabs(x1-x2)>1e-10) {
-      return kFALSE ;
+      return false ;
     }
 
   }
 
-  return kTRUE ;
+  return true ;
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return kTRUE if contents of this RooHist is identical within given
+/// Return true if contents of this RooHist is identical within given
 /// relative tolerance to that of 'other'
 
-Bool_t RooHist::isIdentical(const RooHist& other, Double_t tol, bool verbose) const
+bool RooHist::isIdentical(const RooHist& other, Double_t tol, bool verbose) const
 {
   // Make temporary TH1s output of RooHists to perform Kolmogorov test
-  TH1::AddDirectory(kFALSE) ;
+  TH1::AddDirectory(false) ;
   TH1F h_self("h_self","h_self",GetN(),0,1) ;
   TH1F h_other("h_other","h_other",GetN(),0,1) ;
-  TH1::AddDirectory(kTRUE) ;
+  TH1::AddDirectory(true) ;
 
   for (Int_t i=0 ; i<GetN() ; i++) {
     h_self.SetBinContent(i+1,GetY()[i]) ;
@@ -670,10 +670,10 @@ Bool_t RooHist::isIdentical(const RooHist& other, Double_t tol, bool verbose) co
   if (M>tol) {
     Double_t kprob = h_self.KolmogorovTest(&h_other) ;
     if(verbose) cout << "RooHist::isIdentical() tolerance exceeded M=" << M << " (tol=" << tol << "), corresponding prob = " << kprob << endl ;
-    return kFALSE ;
+    return false ;
   }
 
-  return kTRUE ;
+  return true ;
 }
 
 
@@ -685,7 +685,7 @@ Bool_t RooHist::isIdentical(const RooHist& other, Double_t tol, bool verbose) co
 ///      Shape: error CL and maximum value
 ///    Verbose: print our bin contents and errors
 
-void RooHist::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TString indent) const
+void RooHist::printMultiline(ostream& os, Int_t contents, bool verbose, TString indent) const
 {
   RooPlotable::printMultiline(os,contents,verbose,indent);
   os << indent << "--- RooHist ---" << endl;

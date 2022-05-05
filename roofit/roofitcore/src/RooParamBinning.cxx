@@ -130,7 +130,7 @@ void RooParamBinning::insertHook(RooAbsRealLValue& owner) const
 //   cout << "_xlo = " << _xlo << " _xhi = " << _xhi << endl ;
 
   // If list proxy does not exist, create it now
-  _lp = new RooListProxy(Form("range::%s",GetName()),"lp",&owner,kFALSE,kTRUE) ;
+  _lp = new RooListProxy(Form("range::%s",GetName()),"lp",&owner,false,true) ;
   _lp->add(*_xlo) ;
   _lp->add(*_xhi) ;
   _xlo = 0 ;
@@ -281,7 +281,7 @@ Double_t* RooParamBinning::array() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print details of binning
 
-void RooParamBinning::printMultiline(ostream &os, Int_t /*content*/, Bool_t /*verbose*/, TString indent) const
+void RooParamBinning::printMultiline(ostream &os, Int_t /*content*/, bool /*verbose*/, TString indent) const
 {
   os << indent << "_xlo = " << _xlo << endl ;
   os << indent << "_xhi = " << _xhi << endl ;

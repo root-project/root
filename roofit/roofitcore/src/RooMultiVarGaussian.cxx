@@ -45,8 +45,8 @@ ClassImp(RooMultiVarGaussian);
 RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
                 const RooArgList& xvec, const RooArgList& mu, const TMatrixDSym& cov) :
   RooAbsPdf(name,title),
-  _x("x","Observables",this,kTRUE,kFALSE),
-  _mu("mu","Offset vector",this,kTRUE,kFALSE),
+  _x("x","Observables",this,true,false),
+  _mu("mu","Offset vector",this,true,false),
   _cov(cov),
   _covI(cov),
   _z(4)
@@ -65,10 +65,10 @@ RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
 ////////////////////////////////////////////////////////////////////////////////
 
 RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
-                const RooArgList& xvec, const RooFitResult& fr, Bool_t reduceToConditional) :
+                const RooArgList& xvec, const RooFitResult& fr, bool reduceToConditional) :
   RooAbsPdf(name,title),
-  _x("x","Observables",this,kTRUE,kFALSE),
-  _mu("mu","Offset vector",this,kTRUE,kFALSE),
+  _x("x","Observables",this,true,false),
+  _mu("mu","Offset vector",this,true,false),
   _cov(reduceToConditional ? fr.conditionalCovarianceMatrix(xvec) : fr.reducedCovarianceMatrix(xvec)),
   _covI(_cov),
   _z(4)
@@ -81,7 +81,7 @@ RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
   for (Int_t i=0 ; i<fpf.getSize() ; i++) {
     if (xvec.find(fpf.at(i)->GetName())) {
       RooRealVar* parclone = (RooRealVar*) fpf.at(i)->Clone(Form("%s_centralvalue",fpf.at(i)->GetName())) ;
-      parclone->setConstant(kTRUE) ;
+      parclone->setConstant(true) ;
       _mu.addOwned(*parclone) ;
       munames.push_back(fpf.at(i)->GetName()) ;
     }
@@ -104,8 +104,8 @@ RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
 RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
                 const RooArgList& xvec, const TVectorD& mu, const TMatrixDSym& cov) :
   RooAbsPdf(name,title),
-  _x("x","Observables",this,kTRUE,kFALSE),
-  _mu("mu","Offset vector",this,kTRUE,kFALSE),
+  _x("x","Observables",this,true,false),
+  _mu("mu","Offset vector",this,true,false),
   _cov(cov),
   _covI(cov),
   _z(4)
@@ -127,8 +127,8 @@ RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
 RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
                 const RooArgList& xvec, const TMatrixDSym& cov) :
   RooAbsPdf(name,title),
-  _x("x","Observables",this,kTRUE,kFALSE),
-  _mu("mu","Offset vector",this,kTRUE,kFALSE),
+  _x("x","Observables",this,true,false),
+  _mu("mu","Offset vector",this,true,false),
   _cov(cov),
   _covI(cov),
   _z(4)
@@ -197,7 +197,7 @@ Int_t RooMultiVarGaussian::getAnalyticalIntegral(RooArgSet& allVarsIn, RooArgSet
   // If allVars contains x_i it cannot contain mu_i
   for (Int_t i=0 ; i<_x.getSize() ; i++) {
     if (allVars.contains(*_x.at(i))) {
-      allVars.remove(*_mu.at(i),kTRUE,kTRUE) ;
+      allVars.remove(*_mu.at(i),true,true) ;
     }
   }
 
@@ -221,7 +221,7 @@ Int_t RooMultiVarGaussian::getAnalyticalIntegral(RooArgSet& allVarsIn, RooArgSet
   // Advertise partial analytical integral over all observables for which is wide enough to
   // use asymptotic integral calculation
   BitBlock bits ;
-  Bool_t anyBits(kFALSE) ;
+  bool anyBits(false) ;
   syncMuVec() ;
   for (int i=0 ; i<_x.getSize() ; i++) {
 
@@ -233,7 +233,7 @@ Int_t RooMultiVarGaussian::getAnalyticalIntegral(RooArgSet& allVarsIn, RooArgSet
    cxcoutD(Integration) << "RooMultiVarGaussian::getAnalyticalIntegral(" << GetName()
               << ") Advertising analytical integral over " << xi->GetName() << " as range is >" << _z << " sigma" << endl ;
    bits.setBit(i) ;
-   anyBits = kTRUE ;
+   anyBits = true ;
    analVars.add(*allVars.find(_x.at(i)->GetName())) ;
       } else {
    cxcoutD(Integration) << "RooMultiVarGaussian::getAnalyticalIntegral(" << GetName() << ") Range of " << xi->GetName() << " is <"
@@ -249,7 +249,7 @@ Int_t RooMultiVarGaussian::getAnalyticalIntegral(RooArgSet& allVarsIn, RooArgSet
    cxcoutD(Integration) << "RooMultiVarGaussian::getAnalyticalIntegral(" << GetName()
               << ") Advertising analytical integral over " << pi->GetName() << " as range is >" << _z << " sigma" << endl ;
    bits.setBit(i) ;
-   anyBits = kTRUE ;
+   anyBits = true ;
    analVars.add(*allVars.find(_mu.at(i)->GetName())) ;
       } else {
    cxcoutD(Integration) << "RooMultiVarGaussian::getAnalyticalIntegral(" << GetName() << ") Range of " << pi->GetName() << " is <"
@@ -367,7 +367,7 @@ RooMultiVarGaussian::AnaIntData& RooMultiVarGaussian::anaIntData(Int_t code) con
 ////////////////////////////////////////////////////////////////////////////////
 /// Special case: generate all observables
 
-Int_t RooMultiVarGaussian::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
+Int_t RooMultiVarGaussian::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool /*staticInitOK*/) const
 {
   if (directVars.getSize()==_x.getSize()) {
     generateVars.add(directVars) ;
@@ -468,11 +468,11 @@ void RooMultiVarGaussian::generateEvent(Int_t code)
     }
 
     // Transfer values and check if values are in range
-    Bool_t ok(kTRUE) ;
+    bool ok(true) ;
     for (int i=0 ; i<nobs ; i++) {
       RooRealVar* xi = (RooRealVar*)_x.at(omap[i]) ;
       if (xgen(i)<xi->getMin() || xgen(i)>xi->getMax()) {
-   ok = kFALSE ;
+   ok = false ;
    break ;
       } else {
    xi->setVal(xgen(i)) ;
@@ -645,22 +645,22 @@ void RooMultiVarGaussian::BitBlock::setBit(Int_t ibit)
   if (ibit<128) { b3 |= (1<<(ibit-96)) ; return ; }
 }
 
-Bool_t RooMultiVarGaussian::BitBlock::getBit(Int_t ibit)
+bool RooMultiVarGaussian::BitBlock::getBit(Int_t ibit)
 {
   if (ibit<32) return (b0 & (1<<ibit)) ;
   if (ibit<64) return (b1 & (1<<(ibit-32))) ;
   if (ibit<96) return (b2 & (1<<(ibit-64))) ;
   if (ibit<128) return (b3 & (1<<(ibit-96))) ;
-  return kFALSE ;
+  return false ;
 }
 
-Bool_t RooMultiVarGaussian::BitBlock::operator==(const BitBlock& other)
+bool RooMultiVarGaussian::BitBlock::operator==(const BitBlock& other)
 {
-  if (b0 != other.b0) return kFALSE ;
-  if (b1 != other.b1) return kFALSE ;
-  if (b2 != other.b2) return kFALSE ;
-  if (b3 != other.b3) return kFALSE ;
-  return kTRUE ;
+  if (b0 != other.b0) return false ;
+  if (b1 != other.b1) return false ;
+  if (b2 != other.b2) return false ;
+  if (b3 != other.b3) return false ;
+  return true ;
 }
 
 

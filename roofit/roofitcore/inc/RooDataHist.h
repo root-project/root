@@ -87,8 +87,8 @@ public:
   Double_t sumEntries(const char* cutSpec, const char* cutRange=0) const override;
 
   /// Always returns true as all histograms use event weights.
-  Bool_t isWeighted() const override { return true; }
-  Bool_t isNonPoissonWeighted() const override ;
+  bool isWeighted() const override { return true; }
+  bool isNonPoissonWeighted() const override ;
 
   RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len, bool sumW2=false) const override;
 
@@ -109,7 +109,7 @@ public:
   /// Return weight of i-th bin. \see getIndex()
   double weight(std::size_t i) const { return _wgt[i]; }
   double weightFast(const RooArgSet& bin, int intOrder, bool correctForBinSize, bool cdfBoundaries);
-  Double_t weight(const RooArgSet& bin, Int_t intOrder=1, Bool_t correctForBinSize=kFALSE, Bool_t cdfBoundaries=kFALSE, Bool_t oneSafe=kFALSE);
+  Double_t weight(const RooArgSet& bin, Int_t intOrder=1, bool correctForBinSize=false, bool cdfBoundaries=false, bool oneSafe=false);
   /// Return squared weight sum of i-th bin. \see getIndex()
   double weightSquared(std::size_t i) const { return get_sumw2(i); }
   /// Return bin volume of i-th bin. \see getIndex()
@@ -134,7 +134,7 @@ public:
 
   void reset() override;
 
-  void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override;
+  void printMultiline(std::ostream& os, Int_t content, bool verbose=false, TString indent="") const override;
   void printArgs(std::ostream& os) const override;
   void printValue(std::ostream& os) const override;
   void printDataHistogram(std::ostream& os, RooRealVar* obs) const;
@@ -142,8 +142,8 @@ public:
   void SetName(const char *name) override;
   void SetNameTitle(const char *name, const char* title) override;
 
-  Int_t getIndex(const RooAbsCollection& coord, Bool_t fast = false) const;
-  /// \copydoc getIndex(const RooAbsCollection&,Bool_t) const
+  Int_t getIndex(const RooAbsCollection& coord, bool fast = false) const;
+  /// \copydoc getIndex(const RooAbsCollection&,bool) const
   ///
   /// \note This overload only exists because there is an implicit conversion from RooAbsArg
   /// to RooArgSet, and this needs to remain supported. This enables code like
@@ -156,7 +156,7 @@ public:
   /// dataHist.getIndex(RooArgSet(x));
   /// ```
   /// in this case.
-  Int_t getIndex(const RooArgSet& coord, Bool_t fast = false) const {
+  Int_t getIndex(const RooArgSet& coord, bool fast = false) const {
     return getIndex(static_cast<const RooAbsCollection&>(coord), fast);
   }
 
@@ -243,7 +243,7 @@ protected:
 
   void setAllWeights(Double_t value) ;
 
-  void initialize(const char* binningName=0,Bool_t fillTree=kTRUE) ;
+  void initialize(const char* binningName=0,bool fillTree=true) ;
   RooDataHist(RooStringView name, RooStringView title, RooDataHist* h, const RooArgSet& varSubset,
         const RooFormulaVar* cutVar, const char* cutRange, Int_t nStart, Int_t nStop) ;
   RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=0,
@@ -253,8 +253,8 @@ protected:
   void checkBinBounds() const;
 
   void adjustBinning(const RooArgList& vars, const TH1& href, Int_t* offset=0) ;
-  void importTH1(const RooArgList& vars, const TH1& histo, Double_t initWgt, Bool_t doDensityCorrection) ;
-  void importTH1Set(const RooArgList& vars, RooCategory& indexCat, std::map<std::string,TH1*> hmap, Double_t initWgt, Bool_t doDensityCorrection) ;
+  void importTH1(const RooArgList& vars, const TH1& histo, Double_t initWgt, bool doDensityCorrection) ;
+  void importTH1Set(const RooArgList& vars, RooCategory& indexCat, std::map<std::string,TH1*> hmap, Double_t initWgt, bool doDensityCorrection) ;
   void importDHistSet(const RooArgList& vars, RooCategory& indexCat, std::map<std::string,RooDataHist*> dmap, Double_t initWgt) ;
 
   Double_t get_wgt(std::size_t idx)   const { return _wgt[idx]; }

@@ -29,8 +29,8 @@ using namespace RooFit ;
 class TestBasic305 : public RooFitTestUnit
 {
 public:
-  TestBasic305(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Product operator p.d.f. with conditional term",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic305(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Product operator p.d.f. with conditional term",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // C r e a t e   c o n d i t i o n a l   p d f   g x ( x | y )
   // -----------------------------------------------------------
@@ -92,7 +92,7 @@ public:
 
   delete data ;
 
-  return kTRUE ;
+  return true ;
 
   }
 } ;

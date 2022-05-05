@@ -74,7 +74,7 @@ MCMCIntervalPlot::MCMCIntervalPlot()
    fShadeColor = kGray;
    fLineWidth = 1;
    //fContourColor = kBlack;
-   fShowBurnIn = kTRUE;
+   fShowBurnIn = true;
    fWalk = NULL;
    fBurnIn = NULL;
    fFirst = NULL;
@@ -98,7 +98,7 @@ MCMCIntervalPlot::MCMCIntervalPlot(MCMCInterval& interval)
    fShadeColor = kGray;
    fLineWidth = 1;
    //fContourColor = kBlack;
-   fShowBurnIn = kTRUE;
+   fShowBurnIn = true;
    fWalk = NULL;
    fBurnIn = NULL;
    fFirst = NULL;
@@ -162,7 +162,7 @@ void MCMCIntervalPlot::DrawPosterior(const Option_t* options)
 ////////////////////////////////////////////////////////////////////////////////
 
 void* MCMCIntervalPlot::DrawPosteriorHist(const Option_t* /*options*/,
-      const char* title, Bool_t scale)
+      const char* title, bool scale)
 {
    if (fPosteriorHist == NULL)
       fPosteriorHist = fInterval->GetPosteriorHist();
@@ -212,7 +212,7 @@ void* MCMCIntervalPlot::DrawPosteriorKeysPdf(const Option_t* options)
    }
 
    TString title(GetTitle());
-   Bool_t isEmpty = (title.CompareTo("") == 0);
+   bool isEmpty = (title.CompareTo("") == 0);
 
    if (fDimension == 1) {
       RooRealVar* v = (RooRealVar*)fParameters->first();
@@ -236,7 +236,7 @@ void* MCMCIntervalPlot::DrawPosteriorKeysPdf(const Option_t* options)
       RooRealVar* xVar = (RooRealVar*)axes->at(0);
       RooRealVar* yVar = (RooRealVar*)axes->at(1);
       TH2F* keysHist = (TH2F*)fPosteriorKeysPdf->createHistogram(
-            "keysPlot2D", *xVar, RooFit::YVar(*yVar), RooFit::Scaling(kFALSE));
+            "keysPlot2D", *xVar, RooFit::YVar(*yVar), RooFit::Scaling(false));
       if (isEmpty)
          keysHist->SetTitle(
                Form("MCMC histogram of posterior Keys PDF for %s, %s",
@@ -284,7 +284,7 @@ void MCMCIntervalPlot::DrawShortestInterval(const Option_t* options)
 void MCMCIntervalPlot::DrawKeysPdfInterval(const Option_t* options)
 {
    TString title(GetTitle());
-   Bool_t isEmpty = (title.CompareTo("") == 0);
+   bool isEmpty = (title.CompareTo("") == 0);
 
    if (fDimension == 1) {
       // Draw the posterior keys PDF as well so the user can see where the
@@ -310,7 +310,7 @@ void MCMCIntervalPlot::DrawKeysPdfInterval(const Option_t* options)
                   p->GetName()));
          fPosteriorKeysPdf->plotOn(frame,
                RooFit::Normalization(1, RooAbsReal::Raw),
-               RooFit::Range(ll, ul, kFALSE),
+               RooFit::Range(ll, ul, false),
                RooFit::VLines(),
                RooFit::DrawOption("F"),
                RooFit::MoveToBack(),
@@ -348,7 +348,7 @@ void MCMCIntervalPlot::DrawKeysPdfInterval(const Option_t* options)
       RooRealVar* xVar = (RooRealVar*)axes->at(0);
       RooRealVar* yVar = (RooRealVar*)axes->at(1);
       TH2F* contHist = (TH2F*)fPosteriorKeysPdf->createHistogram(
-          "keysContour2D", *xVar, RooFit::YVar(*yVar), RooFit::Scaling(kFALSE));
+          "keysContour2D", *xVar, RooFit::YVar(*yVar), RooFit::Scaling(false));
       //if (isEmpty)
       //   contHist->SetTitle(Form("MCMC Keys conf. interval for %s, %s",
       //            axes->at(0)->GetName(), axes->at(1)->GetName()));
@@ -359,7 +359,7 @@ void MCMCIntervalPlot::DrawKeysPdfInterval(const Option_t* options)
       else
          contHist->SetTitle(NULL);
 
-      contHist->SetStats(kFALSE);
+      contHist->SetStats(false);
 
       TString tmpOpt(options);
       if (!tmpOpt.Contains("CONT2")) tmpOpt.Append("CONT2");
@@ -381,7 +381,7 @@ void MCMCIntervalPlot::DrawKeysPdfInterval(const Option_t* options)
 void MCMCIntervalPlot::DrawHistInterval(const Option_t* options)
 {
    TString title(GetTitle());
-   Bool_t isEmpty = (title.CompareTo("") == 0);
+   bool isEmpty = (title.CompareTo("") == 0);
 
    if (fDimension == 1) {
       // draw lower and upper limits
@@ -400,7 +400,7 @@ void MCMCIntervalPlot::DrawHistInterval(const Option_t* options)
          hist->SetTitle(GetTitle());
       hist->GetYaxis()->SetTitle(Form("Posterior for parameter %s",
                p->GetName()));
-      hist->SetStats(kFALSE);
+      hist->SetStats(false);
       TH1F* copy = (TH1F*)hist->Clone(Form("%s_copy", hist->GetTitle()));
       Double_t histCutoff = fInterval->GetHistCutoff();
 
@@ -459,7 +459,7 @@ void MCMCIntervalPlot::DrawHistInterval(const Option_t* options)
          fPosteriorHist->SetTitle(NULL);
       delete axes;
 
-      fPosteriorHist->SetStats(kFALSE);
+      fPosteriorHist->SetStats(false);
 
       TString tmpOpt(options);
       if (!tmpOpt.Contains("CONT2")) tmpOpt.Append("CONT2");
@@ -480,7 +480,7 @@ void MCMCIntervalPlot::DrawHistInterval(const Option_t* options)
 void MCMCIntervalPlot::DrawTailFractionInterval(const Option_t* options)
 {
    TString title(GetTitle());
-   Bool_t isEmpty = (title.CompareTo("") == 0);
+   bool isEmpty = (title.CompareTo("") == 0);
 
    if (fDimension == 1) {
       // Draw the posterior histogram as well so the user can see where the
@@ -497,7 +497,7 @@ void MCMCIntervalPlot::DrawTailFractionInterval(const Option_t* options)
          hist->SetTitle(GetTitle());
       hist->GetYaxis()->SetTitle(Form("Posterior for parameter %s",
                p->GetName()));
-      hist->SetStats(kFALSE);
+      hist->SetStats(false);
       TH1F* copy = (TH1F*)hist->Clone(Form("%s_copy", hist->GetTitle()));
 
       Int_t i;
@@ -552,7 +552,7 @@ void* MCMCIntervalPlot::DrawPosteriorKeysProduct(const Option_t* options)
    RooArgList* axes = fInterval->GetAxes();
 
    TString title(GetTitle());
-   Bool_t isEmpty = (title.CompareTo("") == 0);
+   bool isEmpty = (title.CompareTo("") == 0);
 
    if (fDimension == 1) {
       RooPlot* frame = ((RooRealVar*)fParameters->first())->frame();
@@ -571,7 +571,7 @@ void* MCMCIntervalPlot::DrawPosteriorKeysProduct(const Option_t* options)
       RooRealVar* xVar = (RooRealVar*)axes->at(0);
       RooRealVar* yVar = (RooRealVar*)axes->at(1);
       TH2F* productHist = (TH2F*)fPosteriorKeysProduct->createHistogram(
-            "prodPlot2D", *xVar, RooFit::YVar(*yVar), RooFit::Scaling(kFALSE));
+            "prodPlot2D", *xVar, RooFit::YVar(*yVar), RooFit::Scaling(false));
       if (isEmpty)
          productHist->SetTitle(
                Form("MCMC Posterior Keys Product Hist. for %s, %s",
@@ -623,7 +623,7 @@ void MCMCIntervalPlot::DrawChainScatter(RooRealVar& xVar, RooRealVar& yVar)
    firstY = markovChain->Get(0)->getRealValue(yVar.GetName());
 
    TString title(GetTitle());
-   Bool_t isEmpty = (title.CompareTo("") == 0);
+   bool isEmpty = (title.CompareTo("") == 0);
 
    TGraph* walk = new TGraph(size - burnInSteps, x, y);
    if (isEmpty)
@@ -690,7 +690,7 @@ void MCMCIntervalPlot::DrawParameterVsTime(RooRealVar& param)
    }
 
    TString title(GetTitle());
-   Bool_t isEmpty = (title.CompareTo("") == 0);
+   bool isEmpty = (title.CompareTo("") == 0);
 
    TGraph* paramGraph = new TGraph(numEntries, time, value);
    if (isEmpty)
@@ -729,7 +729,7 @@ void MCMCIntervalPlot::DrawNLLVsTime()
    }
 
    TString title(GetTitle());
-   Bool_t isEmpty = (title.CompareTo("") == 0);
+   bool isEmpty = (title.CompareTo("") == 0);
 
    TGraph* nllGraph = new TGraph(numEntries, time, nllValue);
    if (isEmpty)
@@ -761,7 +761,7 @@ void MCMCIntervalPlot::DrawNLLHist(const Option_t* options)
       fNLLHist = new TH1F("mcmc_nll_hist", "MCMC NLL Histogram",
             nllVar->getBins(), 0, maxNLL);
       TString title(GetTitle());
-      Bool_t isEmpty = (title.CompareTo("") == 0);
+      bool isEmpty = (title.CompareTo("") == 0);
       if (!isEmpty)
          fNLLHist->SetTitle(GetTitle());
       fNLLHist->GetXaxis()->SetTitle("-log(likelihood)");

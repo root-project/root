@@ -38,26 +38,26 @@ public:
   RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
   ~RooIntegrator1D() override;
 
-  Bool_t checkLimits() const override;
+  bool checkLimits() const override;
   Double_t integral(const Double_t *yvec=0) override ;
 
   using RooAbsIntegrator::setLimits ;
-  Bool_t setLimits(Double_t* xmin, Double_t* xmax) override;
-  Bool_t setUseIntegrandLimits(Bool_t flag) override {_useIntegrandLimits = flag ; return kTRUE ; }
+  bool setLimits(Double_t* xmin, Double_t* xmax) override;
+  bool setUseIntegrandLimits(bool flag) override {_useIntegrandLimits = flag ; return true ; }
 
-  Bool_t canIntegrate1D() const override { return kTRUE ; }
-  Bool_t canIntegrate2D() const override { return kFALSE ; }
-  Bool_t canIntegrateND() const override { return kFALSE ; }
-  Bool_t canIntegrateOpenEnded() const override { return kFALSE ; }
+  bool canIntegrate1D() const override { return true ; }
+  bool canIntegrate2D() const override { return false ; }
+  bool canIntegrateND() const override { return false ; }
+  bool canIntegrateOpenEnded() const override { return false ; }
 
 protected:
 
   friend class RooNumIntFactory ;
   static void registerIntegrator(RooNumIntFactory& fact) ;
 
-  Bool_t initialize();
+  bool initialize();
 
-  Bool_t _useIntegrandLimits;  ///< If true limits of function binding are used
+  bool _useIntegrandLimits;  ///< If true limits of function binding are used
 
   // Integrator configuration
   SummationRule _rule;
@@ -66,7 +66,7 @@ protected:
   Int_t _fixSteps ;      ///< Fixed number of steps
   Double_t _epsAbs ;     ///< Absolute convergence tolerance
   Double_t _epsRel ;     ///< Relative convergence tolerance
-  Bool_t _doExtrap ;     ///< Apply conversion step?
+  bool _doExtrap ;     ///< Apply conversion step?
   enum { _nPoints = 5 };
 
   // Numerical integrator support functions

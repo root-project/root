@@ -37,7 +37,7 @@ public:
   void addTerm(RooAbsArg* term);
 
   TObject* clone(const char* newname) const override { return new RooProduct(*this, newname); }
-  Bool_t forceAnalyticalInt(const RooAbsArg& dep) const override ;
+  bool forceAnalyticalInt(const RooAbsArg& dep) const override ;
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars,
                                                    const RooArgSet* normSet,
                                                    const char* rangeName=0) const override ;
@@ -54,7 +54,7 @@ public:
 
   std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override ;
   std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override ;
-  Bool_t isBinnedDistribution(const RooArgSet& obs) const override ;
+  bool isBinnedDistribution(const RooArgSet& obs) const override ;
 
   CacheMode canNodeBeCached() const override { return RooAbsArg::NotAdvised ; } ;
   void setCacheAndTrackHints(RooArgSet&) override ;

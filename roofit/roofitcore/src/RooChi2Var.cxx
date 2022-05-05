@@ -122,7 +122,7 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsReal& func, Ro
 {
   RooCmdConfig pc("RooChi2Var::RooChi2Var") ;
   pc.defineInt("etype","DataError",0,(Int_t)RooDataHist::Auto) ;
-  pc.defineInt("extended","Extended",0,kFALSE) ;
+  pc.defineInt("extended","Extended",0,false) ;
   pc.allowUndefined() ;
 
   pc.process(arg1) ;  pc.process(arg2) ;  pc.process(arg3) ;
@@ -182,7 +182,7 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooD
                          makeRooAbsTestStatisticCfgForPdf(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9))
 {
   RooCmdConfig pc("RooChi2Var::RooChi2Var") ;
-  pc.defineInt("extended","Extended",0,kFALSE) ;
+  pc.defineInt("extended","Extended",0,false) ;
   pc.defineInt("etype","DataError",0,(Int_t)RooDataHist::Auto) ;
   pc.allowUndefined() ;
 
@@ -280,7 +280,7 @@ Double_t RooChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastE
 
   Double_t result(0), carry(0);
 
-  _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize, kFALSE) ;
+  _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize, false) ;
 
 
   // Determine normalization factor depending on type of input function

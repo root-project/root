@@ -65,7 +65,7 @@ ClassImp(RooCurve);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-RooCurve::RooCurve() : _showProgress(kFALSE)
+RooCurve::RooCurve() : _showProgress(false)
 {
   initialize();
 }
@@ -81,8 +81,8 @@ RooCurve::RooCurve() : _showProgress(kFALSE)
 /// point of the curve go through zero.
 RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Double_t xhi, Int_t xbins,
     Double_t scaleFactor, const RooArgSet *normVars, Double_t prec, Double_t resolution,
-    Bool_t shiftToZero, WingMode wmode, Int_t nEvalError, Int_t doEEVal, Double_t eeVal,
-    Bool_t showProg) :
+    bool shiftToZero, WingMode wmode, Int_t nEvalError, Int_t doEEVal, Double_t eeVal,
+    bool showProg) :
         TGraph(),
         RooPlotable(),
         _showProgress(showProg)
@@ -111,7 +111,7 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Doubl
 
   RooAbsFunc *funcPtr = 0;
   RooAbsFunc *rawPtr  = 0;
-  funcPtr= f.bindVars(x,normVars,kTRUE);
+  funcPtr= f.bindVars(x,normVars,true);
 
   // apply a scale factor if necessary
   if(scaleFactor != 1) {
@@ -166,8 +166,8 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Doubl
 
 RooCurve::RooCurve(const char *name, const char *title, const RooAbsFunc &func,
          Double_t xlo, Double_t xhi, UInt_t minPoints, Double_t prec, Double_t resolution,
-         Bool_t shiftToZero, WingMode wmode, Int_t nEvalError, Int_t doEEVal, Double_t eeVal) :
-  _showProgress(kFALSE)
+         bool shiftToZero, WingMode wmode, Int_t nEvalError, Int_t doEEVal, Double_t eeVal) :
+  _showProgress(false)
 {
   SetName(name);
   SetTitle(title);
@@ -199,7 +199,7 @@ RooCurve::RooCurve(const char *name, const char *title, const RooAbsFunc &func,
 /// \param[in] scale2 Scale y values for c2 by this factor.
 
 RooCurve::RooCurve(const char* name, const char* title, const RooCurve& c1, const RooCurve& c2, Double_t scale1, Double_t scale2) :
-  _showProgress(kFALSE)
+  _showProgress(false)
 {
   initialize() ;
   SetName(name) ;
@@ -306,7 +306,7 @@ void RooCurve::shiftCurveToZero(Double_t prevYMax)
 
 void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
           Int_t minPoints, Double_t prec, Double_t resolution, WingMode wmode,
-          Int_t numee, Bool_t doEEVal, Double_t eeVal, list<Double_t>* samplingHint)
+          Int_t numee, bool doEEVal, Double_t eeVal, list<Double_t>* samplingHint)
 {
   // check the inputs
   if(!func.isValid()) {
@@ -422,7 +422,7 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
 
 void RooCurve::addRange(const RooAbsFunc& func, Double_t x1, Double_t x2,
          Double_t y1, Double_t y2, Double_t minDy, Double_t minDx,
-         Int_t numee, Bool_t doEEVal, Double_t eeVal)
+         Int_t numee, bool doEEVal, Double_t eeVal)
 {
   // Explicitly skip empty ranges to eliminate point duplication
   if (fabs(x2-x1)<1e-20) {
@@ -535,7 +535,7 @@ void RooCurve::printClassName(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the details of this curve
 
-void RooCurve::printMultiline(ostream& os, Int_t /*contents*/, Bool_t /*verbose*/, TString indent) const
+void RooCurve::printMultiline(ostream& os, Int_t /*contents*/, bool /*verbose*/, TString indent) const
 {
   os << indent << "--- RooCurve ---" << endl ;
   Int_t n= GetN();
@@ -745,7 +745,7 @@ RooCurve* RooCurve::makeErrorBand(const vector<RooCurve*>& variations, Double_t 
   vector<double> bandLo(GetN()) ;
   vector<double> bandHi(GetN()) ;
   for (int i=0 ; i<GetN() ; i++) {
-    calcBandInterval(variations,i,Z,bandLo[i],bandHi[i],kFALSE) ;
+    calcBandInterval(variations,i,Z,bandLo[i],bandHi[i],false) ;
   }
 
   for (int i=0 ; i<GetN() ; i++) {
@@ -844,7 +844,7 @@ void RooCurve::calcBandInterval(const vector<RooCurve*>& plusVar, const vector<R
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooCurve::calcBandInterval(const vector<RooCurve*>& variations,Int_t i,Double_t Z, Double_t& lo, Double_t& hi, Bool_t approxGauss) const
+void RooCurve::calcBandInterval(const vector<RooCurve*>& variations,Int_t i,Double_t Z, Double_t& lo, Double_t& hi, bool approxGauss) const
 {
   vector<double> y(variations.size()) ;
   Int_t j(0) ;
@@ -882,7 +882,7 @@ void RooCurve::calcBandInterval(const vector<RooCurve*>& variations,Int_t i,Doub
 /// Return true if curve is identical to other curve allowing for given
 /// absolute tolerance on each point compared point.
 
-Bool_t RooCurve::isIdentical(const RooCurve& other, Double_t tol, bool verbose) const
+bool RooCurve::isIdentical(const RooCurve& other, Double_t tol, bool verbose) const
 {
   // Determine X range and Y range
   Int_t n= min(GetN(),other.GetN());
@@ -895,7 +895,7 @@ Bool_t RooCurve::isIdentical(const RooCurve& other, Double_t tol, bool verbose) 
   }
   const double Yrange=ymax-ymin ;
 
-  Bool_t ret(kTRUE) ;
+  bool ret(true) ;
   for(Int_t i= 2; i < n-2; i++) {
     Double_t yTest = interpolate(other.fX[i],1e-10) ;
     Double_t rdy = fabs(yTest-other.fY[i])/Yrange ;

@@ -34,7 +34,7 @@ namespace RooStats {
          fDetailedOutput = NULL;
          fNullParameters = NULL;
          fAltParameters = NULL;
-         fReuseNll=kFALSE ;
+         fReuseNll=false ;
          fNllNull=NULL ;
          fNllAlt=NULL ;
       }
@@ -60,7 +60,7 @@ namespace RooStats {
          fDetailedOutputEnabled = false;
          fDetailedOutput = NULL;
 
-         fReuseNll=kFALSE ;
+         fReuseNll=false ;
          fNllNull=NULL ;
          fNllAlt=NULL ;
       }
@@ -84,7 +84,7 @@ namespace RooStats {
          fDetailedOutputEnabled = false;
          fDetailedOutput = NULL;
 
-         fReuseNll=kFALSE ;
+         fReuseNll=false ;
          fNllNull=NULL ;
          fNllAlt=NULL ;
       }
@@ -97,9 +97,9 @@ namespace RooStats {
          if (fDetailedOutput) delete fDetailedOutput;
       }
 
-      static void SetAlwaysReuseNLL(Bool_t flag);
+      static void SetAlwaysReuseNLL(bool flag);
 
-      void SetReuseNLL(Bool_t flag) { fReuseNll = flag ; }
+      void SetReuseNLL(bool flag) { fReuseNll = flag ; }
 
       void SetNullParameters(const RooArgSet& nullParameters) {
          if (fNullParameters) delete fNullParameters;
@@ -163,8 +163,8 @@ namespace RooStats {
 
       RooAbsReal* fNllNull ;  ///<! transient copy of the null NLL
       RooAbsReal* fNllAlt ;   ///<!  transient copy of the alt NLL
-      static Bool_t fgAlwaysReuseNll ;
-      Bool_t fReuseNll ;
+      static bool fgAlwaysReuseNll ;
+      bool fReuseNll ;
 
 
    protected:

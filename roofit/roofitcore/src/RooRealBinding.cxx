@@ -52,7 +52,7 @@ ClassImp(RooRealBinding);
 /// defined range of the variables are clipped to fit in the defined
 /// range.
 
-RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, const RooArgSet* nset, Bool_t clipInvalid, const TNamed* rangeName) :
+RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, const RooArgSet* nset, bool clipInvalid, const TNamed* rangeName) :
   RooAbsFunc(vars.getSize()), _func(&func), _vars(), _nset(nset), _clipInvalid(clipInvalid), _xsave(0), _rangeName(rangeName), _funcSave(0)
 {
   // check that all of the arguments are real valued and store them
@@ -62,7 +62,7 @@ RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, co
     if(_vars.back() == nullptr) {
       oocoutE((TObject*)0,InputArguments) << "RooRealBinding: cannot bind to " << var->GetName()
           << ". Variables need to be assignable, e.g. instances of RooRealVar." << endl ;
-      _valid= kFALSE;
+      _valid= false;
     }
     if (!_func->dependsOn(*_vars[index])) {
       oocoutW((TObject*)nullptr, InputArguments) << "RooRealBinding: The function " << func.GetName() << " does not depend on the parameter " << _vars[index]->GetName()
@@ -70,7 +70,7 @@ RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, co
     }
   }
 
-  _xvecValid = kTRUE ;
+  _xvecValid = true ;
 }
 
 
@@ -170,11 +170,11 @@ void RooRealBinding::restoreXVec() const
 /// requires. The size of `xvector` is not checked.
 void RooRealBinding::loadValues(const Double_t xvector[]) const
 {
-  _xvecValid = kTRUE ;
+  _xvecValid = true ;
   const char* range = RooNameReg::instance().constStr(_rangeName) ;
   for(UInt_t index= 0; index < _dimension; index++) {
     if (_clipInvalid && !_vars[index]->isValidReal(xvector[index])) {
-      _xvecValid = kFALSE ;
+      _xvecValid = false ;
     } else {
       _vars[index]->setVal(xvector[index],range);
     }

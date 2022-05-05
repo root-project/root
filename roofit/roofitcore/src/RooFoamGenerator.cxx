@@ -84,7 +84,7 @@ void RooFoamGenerator::registerSampler(RooNumGenFactory& fact)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooFoamGenerator::RooFoamGenerator(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig& config, Bool_t verbose, const RooAbsReal* maxFuncVal) :
+RooFoamGenerator::RooFoamGenerator(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig& config, bool verbose, const RooAbsReal* maxFuncVal) :
   RooAbsNumGenerator(func,genVars,verbose,maxFuncVal)
 {
   _binding = new RooTFoamBinding(*_funcClone,_realVars) ;

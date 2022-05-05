@@ -41,7 +41,7 @@ FlexibleInterpVar::FlexibleInterpVar()
 {
   _nominal = 0;
   _interpBoundary=1.;
-  _logInit = kFALSE ;
+  _logInit = false ;
   TRACE_CREATE
 }
 
@@ -55,7 +55,7 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
   _paramList("paramList","List of paramficients",this),
   _nominal(argNominal), _low(lowVec), _high(highVec), _interpBoundary(1.)
 {
-  _logInit = kFALSE ;
+  _logInit = false ;
 
   for (auto param : paramList) {
     if (!dynamic_cast<RooAbsReal*>(param)) {
@@ -92,7 +92,7 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
     _high.push_back(val->getVal()) ;
   }
 
-  _logInit = kFALSE ;
+  _logInit = false ;
 
   for (auto param : paramList) {
     if (!dynamic_cast<RooAbsReal*>(param)) {
@@ -125,7 +125,7 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
   _paramList("paramList","List of paramficients",this),
   _nominal(argNominal), _low(lowVec), _high(highVec), _interpCode(code), _interpBoundary(1.)
 {
-  _logInit = kFALSE ;
+  _logInit = false ;
 
   for (auto param : paramList) {
     if (!dynamic_cast<RooAbsReal*>(param)) {
@@ -155,7 +155,7 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title) :
   _paramList("paramList","List of coefficients",this),
   _nominal(0), _interpBoundary(1.)
 {
-  _logInit = kFALSE ;
+  _logInit = false ;
   TRACE_CREATE
 }
 
@@ -168,7 +168,7 @@ FlexibleInterpVar::FlexibleInterpVar(const FlexibleInterpVar& other, const char*
 
 {
   // Copy constructor
-  _logInit = kFALSE ;
+  _logInit = false ;
   TRACE_CREATE
 
 }
@@ -196,7 +196,7 @@ void FlexibleInterpVar::setInterpCode(RooAbsReal& param, int code){
     _interpCode.at(index) = code;
   }
   // GHL: Adding suggestion by Swagato:
-  _logInit = kFALSE ;
+  _logInit = false ;
   setValueDirty();
 }
 
@@ -207,7 +207,7 @@ void FlexibleInterpVar::setAllInterpCodes(int code){
     _interpCode.at(i) = code;
   }
   // GHL: Adding suggestion by Swagato:
-  _logInit = kFALSE ;
+  _logInit = false ;
   setValueDirty();
 
 }
@@ -218,7 +218,7 @@ void FlexibleInterpVar::setNominal(Double_t newNominal){
   coutW(InputArguments) << "FlexibleInterpVar::setNominal : nominal is now " << newNominal << endl ;
   _nominal = newNominal;
 
-  _logInit = kFALSE ;
+  _logInit = false ;
 
   setValueDirty();
 }
@@ -236,7 +236,7 @@ void FlexibleInterpVar::setLow(RooAbsReal& param, Double_t newLow){
     _low.at(index) = newLow;
   }
 
-  _logInit = kFALSE ;
+  _logInit = false ;
 
   setValueDirty();
 }
@@ -254,7 +254,7 @@ void FlexibleInterpVar::setHigh(RooAbsReal& param, Double_t newHigh){
     _high.at(index) = newHigh;
   }
 
-  _logInit = kFALSE ;
+  _logInit = false ;
   setValueDirty();
 }
 
@@ -284,7 +284,7 @@ double FlexibleInterpVar::PolyInterpValue(int i, double x) const {
    // which do not depend on x but on the boundaries values
    if (!_logInit) {
 
-      _logInit=kTRUE ;
+      _logInit=true ;
 
       unsigned int n = _low.size();
       assert(n == _high.size() );
@@ -452,7 +452,7 @@ Double_t FlexibleInterpVar::evaluate() const
 }
 
 void FlexibleInterpVar::printMultiline(ostream& os, Int_t contents,
-                   Bool_t verbose, TString indent) const
+                   bool verbose, TString indent) const
 {
   RooAbsReal::printMultiline(os,contents,verbose,indent);
   os << indent << "--- FlexibleInterpVar ---" << endl;

@@ -69,7 +69,7 @@ ClassImp(RooNDKeysPdf);
 /// expression in observables that specifies the weight of each event.
 
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const RooDataSet &data,
-                           TString options, Double_t rho, Double_t nSigma, Bool_t rotate, Bool_t sortInput)
+                           TString options, Double_t rho, Double_t nSigma, bool rotate, bool sortInput)
    : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
      _rhoList("rhoList", "List of rho parameters", this), _data(&data), _options(options), _widthFactor(rho),
      _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput), _nAdpt(1)
@@ -93,7 +93,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
 /// Constructor
 
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const TH1 &hist,
-                           TString options, Double_t rho, Double_t nSigma, Bool_t rotate, Bool_t sortInput)
+                           TString options, Double_t rho, Double_t nSigma, bool rotate, bool sortInput)
    : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
      _rhoList("rhoList", "List of rho parameters", this), _ownedData(createDatasetFromHist(varList, hist)), _data(_ownedData.get()),
      _options(options), _widthFactor(rho), _nSigma(nSigma), _rotate(rotate),
@@ -116,7 +116,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
 /// Constructor
 
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const RooDataSet &data,
-                           const TVectorD &rho, TString options, Double_t nSigma, Bool_t rotate, Bool_t sortInput)
+                           const TVectorD &rho, TString options, Double_t nSigma, bool rotate, bool sortInput)
    : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
      _rhoList("rhoList", "List of rho parameters", this), _data(&data), _options(options), _widthFactor(-1.0),
      _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput), _nAdpt(1)
@@ -155,7 +155,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
 /// please use the first constructor form.
 
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const RooDataSet &data,
-                           const RooArgList &rhoList, TString options, Double_t nSigma, Bool_t rotate, Bool_t sortInput)
+                           const RooArgList &rhoList, TString options, Double_t nSigma, bool rotate, bool sortInput)
    : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
      _rhoList("rhoList", "List of rho parameters", this), _data(&data), _options(options), _widthFactor(-1.0),
      _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput), _nAdpt(1)
@@ -201,7 +201,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
 /// Constructor
 
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const TH1 &hist,
-                           const RooArgList &rhoList, TString options, Double_t nSigma, Bool_t rotate, Bool_t sortInput)
+                           const RooArgList &rhoList, TString options, Double_t nSigma, bool rotate, bool sortInput)
    : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
      _rhoList("rhoList", "List of rho parameters", this), _ownedData(createDatasetFromHist(varList, hist)), _data(_ownedData.get()),
      _options(options), _widthFactor(-1), _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput),
@@ -248,7 +248,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
 /// Constructor
 
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, RooAbsReal &x, const RooDataSet &data, Mirror mirror,
-                           Double_t rho, Double_t nSigma, Bool_t rotate, Bool_t sortInput)
+                           Double_t rho, Double_t nSigma, bool rotate, bool sortInput)
    : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
      _rhoList("rhoList", "List of rho parameters", this), _data(&data), _options("a"), _widthFactor(rho),
      _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput), _nAdpt(1)
@@ -271,7 +271,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, RooAbsReal &x, c
 /// please use the first constructor form.
 
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, RooAbsReal &x, RooAbsReal &y, const RooDataSet &data,
-                           TString options, Double_t rho, Double_t nSigma, Bool_t rotate, Bool_t sortInput)
+                           TString options, Double_t rho, Double_t nSigma, bool rotate, bool sortInput)
    : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
      _rhoList("rhoList", "List of rho parameters", this), _data(&data), _options(options), _widthFactor(rho),
      _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput), _nAdpt(1)
@@ -381,7 +381,7 @@ RooNDKeysPdf::~RooNDKeysPdf()
 ////////////////////////////////////////////////////////////////////////////////
 /// evaluation order of constructor.
 
-void RooNDKeysPdf::createPdf(Bool_t firstCall)
+void RooNDKeysPdf::createPdf(bool firstCall)
 {
   if (firstCall) {
     // set options
@@ -457,9 +457,9 @@ void RooNDKeysPdf::initialize()
   _nDim      = _varList.getSize();
   _nEvents   = (Int_t)_data->numEntries();
   _nEventsM  = _nEvents;
-  _fixedShape= kFALSE;
+  _fixedShape= false;
 
-  _netFluxZ = kFALSE;
+  _netFluxZ = false;
   _nEventsBW = 0;
   _nEventsBMSW = 0;
 
@@ -522,7 +522,7 @@ void RooNDKeysPdf::initialize()
 ////////////////////////////////////////////////////////////////////////////////
 /// copy the dataset and calculate some useful variables
 
-void RooNDKeysPdf::loadDataSet(Bool_t firstCall)
+void RooNDKeysPdf::loadDataSet(bool firstCall)
 {
   // first some initialization
   _nEventsW=0.;
@@ -766,8 +766,8 @@ void RooNDKeysPdf::calculateShell(BoxInfo* bi) const
 {
   for (Int_t j=0; j<_nDim; j++) {
     if (bi->xVarLo[j]==_xDatLo[j] && bi->xVarHi[j]==_xDatHi[j]) {
-      bi->netFluxZ = bi->netFluxZ && kTRUE;
-    } else { bi->netFluxZ = kFALSE; }
+      bi->netFluxZ = bi->netFluxZ && true;
+    } else { bi->netFluxZ = false; }
 
     bi->xVarLoM3s[j] = bi->xVarLo[j] - _nSigma * (_n * _sigma[j]);
     bi->xVarLoP3s[j] = bi->xVarLo[j] + _nSigma * (_n * _sigma[j]);
@@ -785,18 +785,18 @@ void RooNDKeysPdf::calculateShell(BoxInfo* bi) const
     Int_t i = wMapItr.first;
 
     const vector<Double_t>& x = _dataPts[i];
-    Bool_t inVarRange(kTRUE);
-    Bool_t inVarRangePlusShell(kTRUE);
+    bool inVarRange(true);
+    bool inVarRangePlusShell(true);
 
     for (Int_t j=0; j<_nDim; j++) {
 
       if (x[j]>bi->xVarLo[j] && x[j]<bi->xVarHi[j]) {
-        inVarRange = inVarRange && kTRUE;
-      } else { inVarRange = inVarRange && kFALSE; }
+        inVarRange = inVarRange && true;
+      } else { inVarRange = inVarRange && false; }
 
       if (x[j]>bi->xVarLoM3s[j] && x[j]<bi->xVarHiP3s[j]) {
-        inVarRangePlusShell = inVarRangePlusShell && kTRUE;
-      } else { inVarRangePlusShell = inVarRangePlusShell && kFALSE; }
+        inVarRangePlusShell = inVarRangePlusShell && true;
+      } else { inVarRangePlusShell = inVarRangePlusShell && false; }
     }
 
     // event in range?
@@ -806,13 +806,13 @@ void RooNDKeysPdf::calculateShell(BoxInfo* bi) const
 
     // event in shell?
     if (inVarRangePlusShell) {
-      bi->bpsIdcs[i] = kTRUE;
-      Bool_t inShell(kFALSE);
+      bi->bpsIdcs[i] = true;
+      bool inShell(false);
       for (Int_t j=0; j<_nDim; j++) {
         if ((x[j]>bi->xVarLoM3s[j] && x[j]<bi->xVarLoP3s[j]) && x[j]<(bi->xVarLo[j]+bi->xVarHi[j])/2.) {
-          inShell = kTRUE;
+          inShell = true;
         } else if ((x[j]>bi->xVarHiM3s[j] && x[j]<bi->xVarHiP3s[j]) && x[j]>(bi->xVarLo[j]+bi->xVarHi[j])/2.) {
-          inShell = kTRUE;
+          inShell = true;
         }
       }
       if (inShell) bi->sIdcs.push_back(i); // needed for normalization
@@ -858,7 +858,7 @@ void RooNDKeysPdf::sortDataIndices(BoxInfo* bi)
   if (!_sortInput) {
     _ibNoSort.clear();
     for (unsigned int i = 0; i < _dataPtsR.size(); ++i) {
-      _ibNoSort[i] = kTRUE;
+      _ibNoSort[i] = true;
     }
     return;
   }
@@ -969,7 +969,7 @@ Double_t RooNDKeysPdf::gauss(vector<Double_t>& x, vector<vector<Double_t> >& wei
   const double sqrt2pi = std::sqrt(TMath::TwoPi());
 
   Double_t z=0.;
-  map<Int_t,Bool_t> ibMap;
+  map<Int_t,bool> ibMap;
 
   // determine input loop range for event x
   if (_sortInput) {
@@ -1016,7 +1016,7 @@ Double_t RooNDKeysPdf::gauss(vector<Double_t>& x, vector<vector<Double_t> >& wei
 ////////////////////////////////////////////////////////////////////////////////
 /// determine closest points to x, to loop over in evaluate()
 
-void RooNDKeysPdf::loopRange(vector<Double_t>& x, map<Int_t,Bool_t>& ibMap) const
+void RooNDKeysPdf::loopRange(vector<Double_t>& x, map<Int_t,bool>& ibMap) const
 {
    ibMap.clear();
    TVectorD xRm(_nDim);
@@ -1040,7 +1040,7 @@ void RooNDKeysPdf::loopRange(vector<Double_t>& x, map<Int_t,Bool_t>& ibMap) cons
   vector<TVectorD> xvecRm(1,xRm);
   vector<TVectorD> xvecRp(1,xRp);
 
-  map<Int_t,Bool_t> ibMapRT;
+  map<Int_t,bool> ibMapRT;
 
   for (Int_t j=0; j<_nDim; j++) {
     ibMap.clear();
@@ -1053,13 +1053,13 @@ void RooNDKeysPdf::loopRange(vector<Double_t>& x, map<Int_t,Bool_t>& ibMap) cons
     auto it = lo;
 
     if (j==0) {
-      if (_nDim==1) { for (it=lo; it!=hi; ++it) ibMap[(*it).first] = kTRUE; }
-      else { for (it=lo; it!=hi; ++it) ibMapRT[(*it).first] = kTRUE; }
+      if (_nDim==1) { for (it=lo; it!=hi; ++it) ibMap[(*it).first] = true; }
+      else { for (it=lo; it!=hi; ++it) ibMapRT[(*it).first] = true; }
       continue;
     }
 
     for (it=lo; it!=hi; ++it)
-      if (ibMapRT.find((*it).first)!=ibMapRT.end()) { ibMap[(*it).first] = kTRUE; }
+      if (ibMapRT.find((*it).first)!=ibMapRT.end()) { ibMap[(*it).first] = true; }
 
     ibMapRT.clear();
     if (j!=_nDim-1) { ibMapRT = ibMap; }
@@ -1070,9 +1070,9 @@ void RooNDKeysPdf::loopRange(vector<Double_t>& x, map<Int_t,Bool_t>& ibMap) cons
 
 void RooNDKeysPdf::boxInfoInit(BoxInfo* bi, const char* rangeName, Int_t /*code*/) const
 {
-  vector<Bool_t> doInt(_nDim,kTRUE);
+  vector<bool> doInt(_nDim,true);
 
-  bi->filled = kFALSE;
+  bi->filled = false;
 
   bi->xVarLo.resize(_nDim,0.);
   bi->xVarHi.resize(_nDim,0.);
@@ -1081,7 +1081,7 @@ void RooNDKeysPdf::boxInfoInit(BoxInfo* bi, const char* rangeName, Int_t /*code*
   bi->xVarHiM3s.resize(_nDim,0.);
   bi->xVarHiP3s.resize(_nDim,0.);
 
-  bi->netFluxZ = kTRUE;
+  bi->netFluxZ = true;
   bi->bpsIdcs.clear();
   bi->bIdcs.clear();
   bi->sIdcs.clear();
@@ -1106,7 +1106,7 @@ void RooNDKeysPdf::boxInfoInit(BoxInfo* bi, const char* rangeName, Int_t /*code*
 
 Double_t RooNDKeysPdf::evaluate() const
 {
-   if ( (_tracker && _tracker->hasChanged(kTRUE)) || (_weights != &_weights0 && _weights != &_weights1) ) {
+   if ( (_tracker && _tracker->hasChanged(true)) || (_weights != &_weights0 && _weights != &_weights1) ) {
       updateRho(); // update internal rho parameters
       // redetermine static and/or adaptive bandwidth
       const_cast<RooNDKeysPdf*>(this)->calculateBandWidth();
@@ -1153,7 +1153,7 @@ Double_t RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) con
   Int_t nComb = 1 << (_nDim);
   R__ASSERT(code>=1 && code<nComb) ;
 
-  vector<Bool_t> doInt(_nDim,kTRUE);
+  vector<bool> doInt(_nDim,true);
 
   // get BoxInfo
   BoxInfo* bi(0);
@@ -1169,12 +1169,12 @@ Double_t RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) con
   } else bi= &_fullBoxInfo ;
 
   // have boundaries changed?
-  Bool_t newBounds(kFALSE);
+  bool newBounds(false);
   for (unsigned int j=0; j < _varList.size(); ++j) {
     auto var = static_cast<const RooAbsRealLValue*>(_varList.at(j));
     if ((var->getMin(rangeName)-bi->xVarLo[j]!=0) ||
         (var->getMax(rangeName)-bi->xVarHi[j]!=0)) {
-      newBounds = kTRUE;
+      newBounds = true;
     }
   }
 
@@ -1189,7 +1189,7 @@ Double_t RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) con
     // Fill box info with contents
     calculateShell(bi);
     calculatePreNorm(bi);
-    bi->filled = kTRUE;
+    bi->filled = true;
     const_cast<RooNDKeysPdf*>(this)->sortDataIndices(bi);
   }
 

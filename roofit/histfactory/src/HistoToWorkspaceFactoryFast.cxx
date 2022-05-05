@@ -728,9 +728,9 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
     // Sum all samples
     RooRealSumPdf tot(totName.c_str(), totName.c_str(), shapeList, coefList, true);
-    tot.specialIntegratorConfig(kTRUE)->method1D().setLabel("RooBinIntegrator")  ;
-    tot.specialIntegratorConfig(kTRUE)->method2D().setLabel("RooBinIntegrator")  ;
-    tot.specialIntegratorConfig(kTRUE)->methodND().setLabel("RooBinIntegrator")  ;
+    tot.specialIntegratorConfig(true)->method1D().setLabel("RooBinIntegrator")  ;
+    tot.specialIntegratorConfig(true)->method2D().setLabel("RooBinIntegrator")  ;
+    tot.specialIntegratorConfig(true)->methodND().setLabel("RooBinIntegrator")  ;
     tot.forceNumInt();
 
     // for mixed generation in RooSimultaneous
@@ -2434,7 +2434,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       << " (sigma<=0)"
       << " (TH1 bin number = " << TH1BinNumber << ")"
       << std::endl;
-      gamma.setConstant(kTRUE);
+      gamma.setConstant(true);
       continue;
     }
 
@@ -2513,7 +2513,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       << " and is < " << minSigma
       << ". Setting: " << gamma.GetName() << " to constant"
       << std::endl;
-      gamma.setConstant(kTRUE);
+      gamma.setConstant(true);
     }
 
     constraintTermNames.push_back( constrName );

@@ -27,8 +27,8 @@ using namespace RooFit ;
 class TestBasic402 : public RooFitTestUnit
 {
 public:
-  TestBasic402(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Basic operations on datasets",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic402(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Basic operations on datasets",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // Binned (RooDataHist) and unbinned datasets (RooDataSet) share
   // many properties and inherit from a common abstract base class
@@ -121,6 +121,6 @@ public:
   delete d3 ;
   delete d4 ;
   delete dh2 ;
-  return kTRUE ;
+  return true ;
   }
 } ;

@@ -301,7 +301,7 @@ Double_t RooNonCPEigenDecay::coefAnalyticalIntegral( Int_t basisIndex,
   case 1:
     if (basisIndex == _basisExp) return 2*(1 + rhoQc*_acp*(1 - 2*_wQ));
     if (basisIndex == _basisSin || basisIndex==_basisCos) return 0;
-    assert( kFALSE );
+    assert( false );
 
     // Integration over 'rhoQ'
   case 2:
@@ -315,16 +315,16 @@ Double_t RooNonCPEigenDecay::coefAnalyticalIntegral( Int_t basisIndex,
 
       return + ( (1 - _acp)*a_cos_m + (1 + _acp)*a_cos_p )*(1 - 2*_avgW)*_tag;
 
-    assert( kFALSE );
+    assert( false );
 
     // Integration over 'tag' and 'rhoQ'
   case 3:
     if (basisIndex == _basisExp) return 2*2; // for both: tag and charge
     if (basisIndex == _basisSin || basisIndex==_basisCos) return 0;
-    assert( kFALSE );
+    assert( false );
 
   default:
-    assert( kFALSE );
+    assert( false );
   }
 
   return 0;
@@ -333,7 +333,7 @@ Double_t RooNonCPEigenDecay::coefAnalyticalIntegral( Int_t basisIndex,
 ////////////////////////////////////////////////////////////////////////////////
 
 Int_t RooNonCPEigenDecay::getGenerator( const RooArgSet& directVars,
-               RooArgSet&       generateVars, Bool_t staticInitOK ) const
+               RooArgSet&       generateVars, bool staticInitOK ) const
 {
   if (staticInitOK) {
     if (matchArgs( directVars, generateVars, _t, _tag, _rhoQ )) return 4;
@@ -388,7 +388,7 @@ void RooNonCPEigenDecay::initGenerator( Int_t code )
 void RooNonCPEigenDecay::generateEvent( Int_t code )
 {
   // Generate delta-t dependent
-  while (kTRUE) {
+  while (true) {
 
     // B flavor and rho charge (we do not use the integrated weights)
     if (code != 1) {
@@ -441,7 +441,7 @@ void RooNonCPEigenDecay::generateEvent( Int_t code )
     assert( acceptProb <= maxAcceptProb );
 
     // hit or miss...
-    Bool_t accept = maxAcceptProb*RooRandom::uniform() < acceptProb ? kTRUE : kFALSE;
+    bool accept = maxAcceptProb*RooRandom::uniform() < acceptProb ? true : false;
 
     if (accept && tval<_t.max() && tval>_t.min()) {
       _t = tval;

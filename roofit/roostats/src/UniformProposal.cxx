@@ -52,7 +52,7 @@ void UniformProposal::Propose(RooArgSet& xPrime, RooArgSet& /* x */)
 /// points x1 and x2 - that is, whether the probability of reaching x2
 /// from x1 is equal to the probability of reaching x1 from x2
 
-Bool_t UniformProposal::IsSymmetric(RooArgSet& /* x1 */ , RooArgSet& /* x2 */)
+bool UniformProposal::IsSymmetric(RooArgSet& /* x1 */ , RooArgSet& /* x2 */)
 {
    return true;
 }

@@ -50,7 +50,7 @@ ClassImp(RooAbsMoment);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooAbsMoment::RooAbsMoment() : _order(1), _takeRoot(kFALSE)
+RooAbsMoment::RooAbsMoment() : _order(1), _takeRoot(false)
 {
 }
 
@@ -58,14 +58,14 @@ RooAbsMoment::RooAbsMoment() : _order(1), _takeRoot(kFALSE)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooAbsMoment::RooAbsMoment(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, Int_t orderIn, Bool_t takeRoot) :
+RooAbsMoment::RooAbsMoment(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, Int_t orderIn, bool takeRoot) :
   RooAbsReal(name, title),
   _order(orderIn),
   _takeRoot(takeRoot),
-  _nset("nset","nset",this,kFALSE,kFALSE),
-  _func("function","function",this,func,kFALSE,kFALSE),
-  _x("x","x",this,x,kFALSE,kFALSE),
-  _mean("!mean","!mean",this,kFALSE,kFALSE)
+  _nset("nset","nset",this,false,false),
+  _func("function","function",this,func,false,false),
+  _x("x","x",this,x,false,false),
+  _mean("!mean","!mean",this,false,false)
 {
 }
 
@@ -79,7 +79,7 @@ RooAbsMoment::RooAbsMoment(const RooAbsMoment& other, const char* name) :
   _nset("nset",this,other._nset),
   _func("function",this,other._func),
   _x("x",this,other._x),
-  _mean("!mean","!mean",this,kFALSE,kFALSE)
+  _mean("!mean","!mean",this,false,false)
 {
 }
 

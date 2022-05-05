@@ -33,24 +33,24 @@ using namespace RooFit ;
 class TestBasic208 : public RooFitTestUnit
 {
 public:
-  TestBasic208(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("FFT Convolution operator p.d.f.",refFile,writeRef,verbose) {} ;
+  TestBasic208(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("FFT Convolution operator p.d.f.",refFile,writeRef,verbose) {} ;
 
-  Bool_t isTestAvailable() {
+  bool isTestAvailable() {
 
     TPluginHandler *h;
     if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualFFT"))) {
       if (h->LoadPlugin() == -1) {
-   return kFALSE;
+   return false;
       } else {
-   return kTRUE ;
+   return true ;
       }
     }
-    return kFALSE ;
+    return false ;
   }
 
   Double_t ctol() { return 5e-3 ; } // Account for difficult shape of Landau distribution
 
-  Bool_t testCode() {
+  bool testCode() {
 
     // S e t u p   c o m p o n e n t   p d f s
     // ---------------------------------------
@@ -97,7 +97,7 @@ public:
     regPlot(frame,"rf208_plot1") ;
 
     delete data ;
-    return kTRUE ;
+    return true ;
 
   }
 } ;

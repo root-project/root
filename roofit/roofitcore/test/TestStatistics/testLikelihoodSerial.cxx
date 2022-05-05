@@ -391,7 +391,7 @@ TEST_F(LikelihoodSerialSimBinnedConstrainedTest, ConstrainedAndOffset)
 {
    // a variation to test some additional parameters (ConstrainedParameters and offsetting)
    nll.reset(pdf->createNLL(*data, RooFit::Constrain(RooArgSet(*w.var("alpha_bkg_obs_A"))),
-                            RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_B"))), RooFit::Offset(kTRUE)));
+                            RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_B"))), RooFit::Offset(true)));
 
    // --------
 

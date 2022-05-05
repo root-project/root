@@ -65,7 +65,7 @@ Double_t RooEffProd::evaluate() const
 /// in a more efficient way than can be done for generic correlated products
 
 RooAbsGenContext* RooEffProd::genContext(const RooArgSet &vars, const RooDataSet *prototype,
-                                            const RooArgSet* auxProto, Bool_t verbose) const
+                                            const RooArgSet* auxProto, bool verbose) const
 {
   return new RooEffGenContext(*this,
                               static_cast<RooAbsPdf const&>(_pdf.arg()),

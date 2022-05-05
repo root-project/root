@@ -31,8 +31,8 @@ using namespace RooFit ;
 class TestBasic607 : public RooFitTestUnit
 {
 public:
-  TestBasic607(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Fit Result functionality",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic607(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Fit Result functionality",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // C r e a t e   p d f ,   d a t a
   // --------------------------------
@@ -98,7 +98,7 @@ public:
   delete data ;
   delete r ;
 
-  return kTRUE ;
+  return true ;
 
   }
 } ;

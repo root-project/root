@@ -34,8 +34,8 @@ using namespace RooFit ;
 class TestBasic599 : public RooFitTestUnit
 {
 public:
-  TestBasic599(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Workspace and p.d.f. persistence",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic599(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Workspace and p.d.f. persistence",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
     if (_write) {
 
@@ -158,7 +158,7 @@ public:
     } else {
 
       RooWorkspace* w = getWS("Basic11_ws") ;
-      if (!w) return kFALSE ;
+      if (!w) return false ;
 
       // Retrieve p.d.f from workspace
       RooAbsPdf* gaussx = w->pdf("gaussx") ;
@@ -230,6 +230,6 @@ public:
     }
 
     // "Workspace persistence"
-    return kTRUE ;
+    return true ;
   }
 } ;

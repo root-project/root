@@ -119,7 +119,7 @@ Double_t RooGaussian::analyticalIntegral(Int_t code, const char* rangeName) cons
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooGaussian::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
+Int_t RooGaussian::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool /*staticInitOK*/) const
 {
   if (matchArgs(directVars,generateVars,x)) return 1 ;
   if (matchArgs(directVars,generateVars,mean)) return 2 ;

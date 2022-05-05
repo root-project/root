@@ -32,31 +32,31 @@ public:
   RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
   ~RooAdaptiveGaussKronrodIntegrator1D() override;
 
-  Bool_t checkLimits() const override;
+  bool checkLimits() const override;
   Double_t integral(const Double_t *yvec=0) override ;
 
   using RooAbsIntegrator::setLimits ;
-  Bool_t setLimits(Double_t* xmin, Double_t* xmax) override;
-  Bool_t setUseIntegrandLimits(Bool_t flag) override {
+  bool setLimits(Double_t* xmin, Double_t* xmax) override;
+  bool setUseIntegrandLimits(bool flag) override {
     // If flag is true, intergration limits are taken from definition in input function binding
-    _useIntegrandLimits = flag ; return kTRUE ;
+    _useIntegrandLimits = flag ; return true ;
   }
 
-  Bool_t canIntegrate1D() const override {
+  bool canIntegrate1D() const override {
     // We can integrate 1-dimensional functions
-    return kTRUE ;
+    return true ;
   }
-  Bool_t canIntegrate2D() const override {
+  bool canIntegrate2D() const override {
     // We can not integrate 2-dimensional functions
-    return kFALSE ;
+    return false ;
   }
-  Bool_t canIntegrateND() const override {
+  bool canIntegrateND() const override {
     // We can not integrate >2-dimensional functions
-    return kFALSE ;
+    return false ;
   }
-  Bool_t canIntegrateOpenEnded() const override {
+  bool canIntegrateOpenEnded() const override {
     // We can integrate over open-ended domains
-    return kTRUE ;
+    return true ;
   }
 
 protected:
@@ -69,9 +69,9 @@ protected:
 
   friend double RooAdaptiveGaussKronrodIntegrator1D_GSL_GlueFunction(double x, void *data) ;
 
-  Bool_t initialize();
+  bool initialize();
 
-  Bool_t _useIntegrandLimits;
+  bool _useIntegrandLimits;
 
   Double_t* xvec(Double_t& xx) {
     // Return contents of xx in internal array pointer

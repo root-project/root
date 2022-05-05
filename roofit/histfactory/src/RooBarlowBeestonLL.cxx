@@ -52,7 +52,7 @@ ClassImp(RooStats::HistFactory::RooBarlowBeestonLL);
    RooAbsReal("RooBarlowBeestonLL","RooBarlowBeestonLL"),
    _nll(),
 //   _obs("paramOfInterest","Parameters of interest",this),
-//  _par("nuisanceParam","Nuisance parameters",this,kFALSE,kFALSE),
+//  _par("nuisanceParam","Nuisance parameters",this,false,false),
   _pdf(NULL), _data(NULL)
 {
   // Default constructor
@@ -69,7 +69,7 @@ RooStats::HistFactory::RooBarlowBeestonLL::RooBarlowBeestonLL(const char *name, 
   RooAbsReal(name,title),
   _nll("input","-log(L) function",this,nllIn),
   //  _obs("paramOfInterest","Parameters of interest",this),
-  //  _par("nuisanceParam","Nuisance parameters",this,kFALSE,kFALSE),
+  //  _par("nuisanceParam","Nuisance parameters",this,false,false),
   _pdf(NULL), _data(NULL)
 {
   // Constructor of profile likelihood given input likelihood nll w.r.t
@@ -654,7 +654,7 @@ void RooStats::HistFactory::RooBarlowBeestonLL::validateAbsMin() const
    cxcoutI(Minimization) << "RooStats::HistFactory::RooBarlowBeestonLL::evaluate(" << GetName() << ") constant status of parameter " << par->GetName() << " has changed from "
             << (_paramFixed[par->GetName()]?"fixed":"floating") << " to " << (par->isConstant()?"fixed":"floating")
             << ", recalculating absolute minimum" << endl ;
-   _absMinValid = kFALSE ;
+   _absMinValid = false ;
    break ;
       }
     }
@@ -668,7 +668,7 @@ void RooStats::HistFactory::RooBarlowBeestonLL::validateAbsMin() const
 
 
     // Save current values of non-marginalized parameters
-    RooArgSet* obsStart = (RooArgSet*) _obs.snapshot(kFALSE) ;
+    RooArgSet* obsStart = (RooArgSet*) _obs.snapshot(false) ;
 
     // Start from previous global minimum
     if (_paramAbsMin.getSize()>0) {
@@ -679,18 +679,18 @@ void RooStats::HistFactory::RooBarlowBeestonLL::validateAbsMin() const
     }
 
     // Find minimum with all observables floating
-    const_cast<RooSetProxy&>(_obs).setAttribAll("Constant",kFALSE) ;
+    const_cast<RooSetProxy&>(_obs).setAttribAll("Constant",false) ;
     _minuit->migrad() ;
 
     // Save value and remember
     _absMin = _nll ;
-    _absMinValid = kTRUE ;
+    _absMinValid = true ;
 
     // Save parameter values at abs minimum as well
     _paramAbsMin.removeAll() ;
 
     // Only store non-constant parameters here!
-    RooArgSet* tmp = (RooArgSet*) _par.selectByAttrib("Constant",kFALSE) ;
+    RooArgSet* tmp = (RooArgSet*) _par.selectByAttrib("Constant",false) ;
     _paramAbsMin.addClone(*tmp) ;
     delete tmp ;
 
@@ -707,11 +707,11 @@ void RooStats::HistFactory::RooBarlowBeestonLL::validateAbsMin() const
       cxcoutI(Minimization) << "RooStats::HistFactory::RooBarlowBeestonLL::evaluate(" << GetName() << ") minimum found at (" ;
 
       RooAbsReal* arg ;
-      Bool_t first=kTRUE ;
+      bool first=true ;
       _oiter->Reset() ;
       while ((arg=(RooAbsReal*)_oiter->Next())) {
    ccxcoutI(Minimization) << (first?"":", ") << arg->GetName() << "=" << arg->getVal() ;
-   first=kFALSE ;
+   first=false ;
       }
       ccxcoutI(Minimization) << ")" << endl ;
     }
@@ -727,8 +727,8 @@ void RooStats::HistFactory::RooBarlowBeestonLL::validateAbsMin() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t RooStats::HistFactory::RooBarlowBeestonLL::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/,
-                Bool_t /*nameChange*/, Bool_t /*isRecursive*/)
+bool RooStats::HistFactory::RooBarlowBeestonLL::redirectServersHook(const RooAbsCollection& /*newServerList*/, bool /*mustReplaceAll*/,
+                bool /*nameChange*/, bool /*isRecursive*/)
 {
   /*
   if (_minuit) {
@@ -736,7 +736,7 @@ Bool_t RooStats::HistFactory::RooBarlowBeestonLL::redirectServersHook(const RooA
     _minuit = 0 ;
   }
   */
-  return kFALSE ;
+  return false ;
 }
 
 

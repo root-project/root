@@ -33,7 +33,7 @@ public:
 
 protected:
 
-  mutable Bool_t _first   ;  ///< Bit indicating if operator() has been called yet
+  mutable bool _first   ;  ///< Bit indicating if operator() has been called yet
   const RooAbsReal* _real ;  ///< Real function to be projected
   const RooAbsData* _data ;  ///< Dataset used for projection
   const RooArgSet*  _nset ;  ///< Normalization set for real function

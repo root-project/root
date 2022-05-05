@@ -72,7 +72,7 @@ public:
   Double_t weight() const override ;
   Double_t weightError(RooAbsData::ErrorType etype=RooAbsData::Poisson) const override ;
   void weightError(Double_t& lo, Double_t& hi, RooAbsData::ErrorType etype=RooAbsData::Poisson) const override ;
-  Bool_t isWeighted() const override { return (_wgtVar!=0||_extWgtArray!=0) ; }
+  bool isWeighted() const override { return (_wgtVar!=0||_extWgtArray!=0) ; }
 
   RooBatchCompute::RunContext getBatches(std::size_t first, std::size_t len) const override {
     //TODO
@@ -84,10 +84,10 @@ public:
   RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len) const override;
 
   // Change observable name
-  Bool_t changeObservableName(const char* from, const char* to) override ;
+  bool changeObservableName(const char* from, const char* to) override ;
 
   // Add one column
-  RooAbsArg* addColumn(RooAbsArg& var, Bool_t adjustRange=kTRUE) override ;
+  RooAbsArg* addColumn(RooAbsArg& var, bool adjustRange=true) override ;
 
   // Merge column-wise
   RooAbsDataStore* merge(const RooArgSet& allvars, std::list<RooAbsDataStore*> dstoreList) override ;
@@ -118,9 +118,9 @@ public:
   void   Draw(Option_t* option = "") override ;
 
   // Constant term  optimizer interface
-  void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0, Bool_t skipZeroWeights=kFALSE) override ;
+  void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0, bool skipZeroWeights=false) override ;
   const RooAbsArg* cacheOwner() override { return _cacheOwner ; }
-  void setArgStatus(const RooArgSet& set, Bool_t active) override ;
+  void setArgStatus(const RooArgSet& set, bool active) override ;
   void resetCache() override ;
 
   void loadValues(const TTree *t, const RooFormulaVar* select=0, const char* rangeName=0, Int_t nStart=0, Int_t nStop=2000000000)  ;
@@ -161,7 +161,7 @@ public:
   TTree *_tree = nullptr;                 // TTree holding the data points
   TTree *_cacheTree = nullptr;            //! TTree holding the cached function values
   const RooAbsArg* _cacheOwner = nullptr; //! Object owning cache contents
-  mutable Bool_t _defCtor = false;        //! Was object constructed with default ctor?
+  mutable bool _defCtor = false;        //! Was object constructed with default ctor?
 
   RooArgSet _varsww ;
   RooRealVar* _wgtVar = nullptr;     // Pointer to weight variable (if set)

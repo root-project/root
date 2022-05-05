@@ -53,13 +53,13 @@ ClassImp(RooAbsNumGenerator);
 /// variables to be generated, genVars. The function and its dependents are
 /// cloned and so will not be disturbed during the generation process.
 
-RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &genVars, Bool_t verbose, const RooAbsReal* maxFuncVal) :
+RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &genVars, bool verbose, const RooAbsReal* maxFuncVal) :
   TNamed(func), _cloneSet(0), _funcClone(0), _funcMaxVal(maxFuncVal), _verbose(verbose), _funcValStore(0), _funcValPtr(0), _cache(0)
 {
   // Clone the function and all nodes that it depends on so that this generator
   // is independent of any existing objects.
   RooArgSet nodes(func,func.GetName());
-  _cloneSet= (RooArgSet*) nodes.snapshot(kTRUE);
+  _cloneSet= (RooArgSet*) nodes.snapshot(true);
   if (!_cloneSet) {
     coutE(Generation) << "RooAbsNumGenerator::RooAbsNumGenerator(" << GetName() << ") Couldn't deep-clone function, abort," << endl ;
     RooErrorHandler::softAbort() ;
@@ -72,7 +72,7 @@ RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &
   // Check that each argument is fundamental, and separate them into
   // sets of categories and reals. Check that the area of the generating
   // space is finite.
-  _isValid= kTRUE;
+  _isValid= true;
   TIterator *iterator= genVars.createIterator();
   const RooAbsArg *found = 0;
   const RooAbsArg *arg   = 0;
@@ -80,7 +80,7 @@ RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &
     if(!arg->isFundamental()) {
       coutE(Generation) << fName << "::" << ClassName() << ": cannot generate values for derived \""
          << arg->GetName() << "\"" << endl;
-      _isValid= kFALSE;
+      _isValid= false;
       continue;
     }
     // look for this argument in the generating function's dependents
@@ -105,13 +105,13 @@ RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &
       else {
    coutE(Generation) << fName << "::" << ClassName() << ": cannot generate values for \""
            << realVar->GetName() << "\" with unbound range" << endl;
-   _isValid= kFALSE;
+   _isValid= false;
       }
     }
     else {
       coutE(Generation) << fName << "::" << ClassName() << ": cannot generate values for \""
          << arg->GetName() << "\" with unexpected type" << endl;
-      _isValid= kFALSE;
+      _isValid= false;
     }
   }
   delete iterator;
@@ -134,7 +134,7 @@ RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &
   // attach our function clone to the cache dataset
   const RooArgSet *cacheVars= _cache->get();
   assert(0 != cacheVars);
-  _funcClone->recursiveRedirectServers(*cacheVars,kFALSE);
+  _funcClone->recursiveRedirectServers(*cacheVars,false);
 
   // update ours sets of category and real args to refer to the cache dataset
   const RooArgSet *dataVars= _cache->get();
@@ -166,7 +166,7 @@ RooAbsNumGenerator::~RooAbsNumGenerator()
 void RooAbsNumGenerator::attachParameters(const RooArgSet& vars)
 {
   RooArgSet newParams(vars) ;
-  newParams.remove(*_cache->get(),kTRUE,kTRUE) ;
+  newParams.remove(*_cache->get(),true,true) ;
   _funcClone->recursiveRedirectServers(newParams) ;
 }
 

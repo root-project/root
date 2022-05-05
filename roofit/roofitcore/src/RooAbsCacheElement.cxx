@@ -38,10 +38,10 @@ ClassImp(RooAbsCacheElement);
 ////////////////////////////////////////////////////////////////////////////////
 /// Interface for server redirect calls
 
-Bool_t RooAbsCacheElement::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/,
-                      Bool_t /*nameChange*/, Bool_t /*isRecursive*/)
+bool RooAbsCacheElement::redirectServersHook(const RooAbsCollection& /*newServerList*/, bool /*mustReplaceAll*/,
+                      bool /*nameChange*/, bool /*isRecursive*/)
 {
-  return kFALSE ;
+  return false ;
 }
 
 

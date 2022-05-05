@@ -102,7 +102,7 @@ By default, `RooFit::MultiProcess` spins up as many workers as there are cores i
 To change the number of workers, call `RooFit::MultiProcess::Config::setDefaultNWorkers(desired_N_workers)` **before** creating the `RooMinimizer`.
 
 As noted above, offsetting is purely a function of the `RooMinimizer` when using `TestStatistics` classes.
-Whereas with `fitTo` we can pass in a `RooFit::Offset(kTRUE)` optional `RooCmdArg` argument to activate offsetting, here we must do it on the minimizer as follows:
+Whereas with `fitTo` we can pass in a `RooFit::Offset(true)` optional `RooCmdArg` argument to activate offsetting, here we must do it on the minimizer as follows:
 ```c++
 m.setOffsetting(true);
 ```

@@ -25,8 +25,8 @@ public:
 
   void Add(TObject* arg) override { Add(arg,1) ; }
   void Add(TObject* obj, Int_t count) override ;
-  Bool_t Remove(TObject* obj) override ;
-  virtual Bool_t RemoveAll(TObject* obj) ;
+  bool Remove(TObject* obj) override ;
+  virtual bool RemoveAll(TObject* obj) ;
   Int_t refCount(TObject* obj) const;
 
 protected:

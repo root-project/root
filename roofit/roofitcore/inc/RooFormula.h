@@ -40,7 +40,7 @@ public:
   ////////////////////////////////////////////////////////////////////////////////
   /// Return list of arguments which are used in the formula.
   RooArgSet actualDependents() const {return usedVariables();}
-  Bool_t changeDependents(const RooAbsCollection& newDeps, Bool_t mustReplaceAll, Bool_t nameChange) ;
+  bool changeDependents(const RooAbsCollection& newDeps, bool mustReplaceAll, bool nameChange) ;
 
   /// Return pointer to the parameter with given name.
   /// \return Parameter if in use, nullptr if not in use.
@@ -54,7 +54,7 @@ public:
     return _origList.at(index);
   }
 
-  Bool_t ok() const { return _tFormula != nullptr; }
+  bool ok() const { return _tFormula != nullptr; }
   /// Evalute all parameters/observables, and then evaluate formula.
   Double_t eval(const RooArgSet* nset=0) const;
   RooSpan<double> evaluateSpan(const RooAbsReal* dataOwner, RooBatchCompute::RunContext& inputData, const RooArgSet* nset = nullptr) const;
@@ -62,7 +62,7 @@ public:
 
   /// DEBUG: Dump state information
   void dump() const;
-  Bool_t reCompile(const char* newFormula) ;
+  bool reCompile(const char* newFormula) ;
 
 
   void printValue(std::ostream& os) const override ;
@@ -70,7 +70,7 @@ public:
   void printTitle(std::ostream& os) const override ;
   void printClassName(std::ostream& os) const override ;
   void printArgs(std::ostream& os) const override ;
-  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const override ;
+  void printMultiline(std::ostream& os, Int_t contents, bool verbose=false, TString indent="") const override ;
 
   void Print(Option_t *options= 0) const override {
     // Printing interface (human readable)

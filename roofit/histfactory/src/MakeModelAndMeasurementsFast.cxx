@@ -361,7 +361,7 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
   cxcoutPHF << "\n---------------"
     << "\nDoing "<< channel << " Fit"
     << "\n---------------\n\n" << std::endl;
-  model->fitTo(*simData, Minos(kTRUE), PrintLevel(RooMsgService::instance().isActive(static_cast<TObject*>(nullptr), RooFit::HistFactory, RooFit::DEBUG) ? 1 : -1));
+  model->fitTo(*simData, Minos(true), PrintLevel(RooMsgService::instance().isActive(static_cast<TObject*>(nullptr), RooFit::HistFactory, RooFit::DEBUG) ? 1 : -1));
 
   // If there are no parameters of interest,
   // we exit the function here
@@ -485,7 +485,7 @@ void RooStats::HistFactory::FitModel(RooWorkspace * combined, std::string data_n
     }
 
     RooAbsPdf* model=combined_config->GetPdf();
-    model->fitTo(*simData, Minos(kTRUE), PrintLevel(1));
+    model->fitTo(*simData, Minos(true), PrintLevel(1));
 
   }
 

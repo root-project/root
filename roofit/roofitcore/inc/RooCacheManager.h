@@ -71,9 +71,9 @@ public:
   }
 
   /// Interface function to intercept server redirects
-  Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/,
-                 Bool_t /*nameChange*/, Bool_t /*isRecursive*/) override {
-    return kFALSE ;
+  bool redirectServersHook(const RooAbsCollection& /*newServerList*/, bool /*mustReplaceAll*/,
+                 bool /*nameChange*/, bool /*isRecursive*/) override {
+    return false ;
   }
   /// Interface function to intercept cache operation mode changes
   void operModeHook() override {
@@ -95,7 +95,7 @@ public:
       oocoutI(_owner,Optimization) << "RooCacheManager::wireCache(" << _owner->GetName() << ") no cached elements!" << std::endl ;
     } else if (_size==1) {
       oocoutI(_owner,Optimization) << "RooCacheManager::wireCache(" << _owner->GetName() << ") now wiring cache" << std::endl ;
-      _wired=kTRUE ;
+      _wired=true ;
     } else if (_size>1) {
       oocoutI(_owner,Optimization) << "RooCacheManager::wireCache(" << _owner->GetName() << ") cache cannot be wired because it contains more than one element" << std::endl ;
     }
@@ -109,7 +109,7 @@ protected:
 
   std::vector<RooNormSetCache> _nsetCache ; ///<! Normalization/Integration set manager
   std::vector<T*> _object ;                 ///<! Payload
-  Bool_t _wired ;               ///<! In wired mode, there is a single payload which is returned always
+  bool _wired ;               ///<! In wired mode, there is a single payload which is returned always
 
   ClassDefOverride(RooCacheManager,2) // Cache Manager class generic objects
 } ;
@@ -125,7 +125,7 @@ RooCacheManager<T>::RooCacheManager(Int_t maxSize) : RooAbsCache(0)
   _maxSize = maxSize ;
   _nsetCache.resize(_maxSize) ; // = new RooNormSetCache[maxSize] ;
   _object.resize(_maxSize,0) ; // = new T*[maxSize] ;
-  _wired = kFALSE ;
+  _wired = false ;
 }
 
 
@@ -141,7 +141,7 @@ RooCacheManager<T>::RooCacheManager(RooAbsArg* owner, Int_t maxSize) : RooAbsCac
 
   _nsetCache.resize(_maxSize) ; // = new RooNormSetCache[maxSize] ;
   _object.resize(_maxSize,0) ; // = new T*[maxSize] ;
-  _wired = kFALSE ;
+  _wired = false ;
   _lastIndex = -1 ;
 
   Int_t i ;
@@ -160,7 +160,7 @@ RooCacheManager<T>::RooCacheManager(const RooCacheManager& other, RooAbsArg* own
 
   _nsetCache.resize(_maxSize) ; // = new RooNormSetCache[_maxSize] ;
   _object.resize(_maxSize,0) ; // = new T*[_maxSize] ;
-  _wired = kFALSE ;
+  _wired = false ;
   _lastIndex = -1 ;
 
   //std::cout << "RooCacheManager:cctor(" << this << ") other = " << &other << " _size=" << _size << " _maxSize = " << _maxSize << std::endl ;
@@ -252,7 +252,7 @@ Int_t RooCacheManager<T>::setObj(const RooArgSet* nset, const RooArgSet* iset, T
   }
 
   //cout << "RooCacheManager::setObj<T>(" << this << ") _size = " << _size << " _maxSize = " << _maxSize << endl ;
-  _nsetCache[_size].autoCache(_owner,nset,iset,isetRangeName,kTRUE) ;
+  _nsetCache[_size].autoCache(_owner,nset,iset,isetRangeName,true) ;
   if (_object[_size]) {
     delete _object[_size] ;
   }
@@ -264,7 +264,7 @@ Int_t RooCacheManager<T>::setObj(const RooArgSet* nset, const RooArgSet* iset, T
   insertObjectHook(*obj) ;
 
   // Unwire cache in case it was wired
-  _wired = kFALSE ;
+  _wired = false ;
 
   return _size-1 ;
 }
@@ -284,7 +284,7 @@ T* RooCacheManager<T>::getObj(const RooArgSet* nset, const RooArgSet* iset, Int_
 
   Int_t i ;
   for (i=0 ; i<_size ; i++) {
-    if (_nsetCache[i].contains(nset,iset,isetRangeName)==kTRUE) {
+    if (_nsetCache[i].contains(nset,iset,isetRangeName)==true) {
       _lastIndex = i ;
       if(_object[i]==0 && sterileIdx) *sterileIdx=i ;
       return _object[i] ;
@@ -292,7 +292,7 @@ T* RooCacheManager<T>::getObj(const RooArgSet* nset, const RooArgSet* iset, Int_
   }
 
   for (i=0 ; i<_size ; i++) {
-    if (_nsetCache[i].autoCache(_owner,nset,iset,isetRangeName,kFALSE)==kFALSE) {
+    if (_nsetCache[i].autoCache(_owner,nset,iset,isetRangeName,false)==false) {
       _lastIndex = i ;
       if(_object[i]==0 && sterileIdx) *sterileIdx=i ;
       return _object[i] ;

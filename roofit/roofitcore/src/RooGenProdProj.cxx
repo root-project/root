@@ -52,7 +52,7 @@ ClassImp(RooGenProdProj);
 RooGenProdProj::RooGenProdProj() :
   _compSetOwnedN(0),
   _compSetOwnedD(0),
-  _haveD(kFALSE)
+  _haveD(false)
 {
 }
 
@@ -62,14 +62,14 @@ RooGenProdProj::RooGenProdProj() :
 /// integrated over _intSet in range isetRangeName while normalized over _normSet
 
 RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArgSet& _prodSet, const RooArgSet& _intSet,
-                const RooArgSet& _normSet, const char* isetRangeName, const char* normRangeName, Bool_t doFactorize) :
+                const RooArgSet& _normSet, const char* isetRangeName, const char* normRangeName, bool doFactorize) :
   RooAbsReal(name, title),
   _compSetOwnedN(0),
   _compSetOwnedD(0),
-  _compSetN("compSetN","Set of integral components owned by numerator",this,kFALSE),
-  _compSetD("compSetD","Set of integral components owned by denominator",this,kFALSE),
-  _intList("intList","List of integrals",this,kTRUE),
-  _haveD(kFALSE)
+  _compSetN("compSetN","Set of integral components owned by numerator",this,false),
+  _compSetD("compSetD","Set of integral components owned by denominator",this,false),
+  _intList("intList","List of integrals",this,true),
+  _haveD(false)
 {
   // Set expensive object cache to that of first item in prodSet
   setExpensiveObjectCache(_prodSet.first()->expensiveObjectCache()) ;
@@ -93,7 +93,7 @@ RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArg
   _intList.add(*numerator) ;
   if (denominator) {
     _intList.add(*denominator) ;
-    _haveD = kTRUE ;
+    _haveD = true ;
   }
 }
 
@@ -114,7 +114,7 @@ RooGenProdProj::RooGenProdProj(const RooGenProdProj& other, const char* name) :
   TIterator* iter = serverIterator() ;
   RooAbsArg* server ;
   while((server=(RooAbsArg*)iter->Next())) {
-    removeServer(*server,kTRUE) ;
+    removeServer(*server,true) ;
   }
   delete iter ;
 
@@ -174,7 +174,7 @@ RooGenProdProj::~RooGenProdProj()
 ///
 /// The integration is factorized into components as much as possible and done analytically as far as possible.
 RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& compSet, const RooArgSet& intSet,
-                RooArgSet& saveSet, const char* isetRangeName, Bool_t doFactorize)
+                RooArgSet& saveSet, const char* isetRangeName, bool doFactorize)
 {
   RooArgSet anaIntSet, numIntSet ;
 

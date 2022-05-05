@@ -125,13 +125,13 @@ namespace RooStats {
       mutable RooAbsData* fPointsToTest;      ///< points to perform the construction
       mutable RooAbsData* fPOIToTest;         ///< value of POI points to perform the construction
       mutable ConfidenceBelt* fConfBelt;
-      Bool_t fAdaptiveSampling;               ///< controls use of adaptive sampling algorithm
+      bool fAdaptiveSampling;               ///< controls use of adaptive sampling algorithm
       Double_t fAdditionalNToysFactor;        ///< give user ability to ask for more toys
       Int_t fNbins;                           ///< number of samples per variable
-      Bool_t fFluctuateData;                  ///< tell ToyMCSampler to fluctuate number of entries in dataset
-      Bool_t fDoProfileConstruction;          ///< instead of full construction over nuisance parameters, do profile
-      Bool_t fSaveBeltToFile;                 ///< controls use if ConfidenceBelt should be saved to a TFile
-      Bool_t fCreateBelt;                     ///< controls use if ConfidenceBelt should be saved to a TFile
+      bool fFluctuateData;                  ///< tell ToyMCSampler to fluctuate number of entries in dataset
+      bool fDoProfileConstruction;          ///< instead of full construction over nuisance parameters, do profile
+      bool fSaveBeltToFile;                 ///< controls use if ConfidenceBelt should be saved to a TFile
+      bool fCreateBelt;                     ///< controls use if ConfidenceBelt should be saved to a TFile
 
    protected:
       ClassDefOverride(FeldmanCousins,2)   // Interface for tools setting limits (producing confidence intervals)

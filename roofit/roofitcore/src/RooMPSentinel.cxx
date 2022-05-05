@@ -65,7 +65,7 @@ RooMPSentinel::~RooMPSentinel()
 
 void RooMPSentinel::add(RooRealMPFE& mpfe)
 {
-  _mpfeSet.add(mpfe,kTRUE) ;
+  _mpfeSet.add(mpfe,true) ;
 }
 
 
@@ -75,5 +75,5 @@ void RooMPSentinel::add(RooRealMPFE& mpfe)
 
 void RooMPSentinel::remove(RooRealMPFE& mpfe)
 {
-  _mpfeSet.remove(mpfe,kTRUE) ;
+  _mpfeSet.remove(mpfe,true) ;
 }

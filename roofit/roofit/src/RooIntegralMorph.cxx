@@ -104,7 +104,7 @@ RooIntegralMorph::RooIntegralMorph(const char *name, const char *title,
                 RooAbsReal& _pdf2,
                 RooAbsReal& _x,
                 RooAbsReal& _alpha,
-                Bool_t doCacheAlpha) :
+                bool doCacheAlpha) :
   RooAbsCachedPdf(name,title,2),
   pdf1("pdf1","pdf1",this,_pdf1),
   pdf2("pdf2","pdf2",this,_pdf2),
@@ -152,8 +152,8 @@ RooArgSet* RooIntegralMorph::actualParameters(const RooArgSet& /*nset*/) const
 {
   RooArgSet* par1 = pdf1.arg().getParameters(RooArgSet()) ;
   RooArgSet* par2 = pdf2.arg().getParameters(RooArgSet()) ;
-  par1->add(*par2,kTRUE) ;
-  par1->remove(x.arg(),kTRUE,kTRUE) ;
+  par1->add(*par2,true) ;
+  par1->remove(x.arg(),true,true) ;
   if (!_cacheAlpha) {
     par1->add(alpha.arg()) ;
   }
@@ -268,7 +268,7 @@ RooIntegralMorph::MorphCacheElem::MorphCacheElem(RooIntegralMorph& self, const R
   // _calcX = 0 ;
 
   // Must do this here too: fillCache() may not be called if cache contents is retrieved from EOcache
-  pdf()->setUnitNorm(kTRUE) ;
+  pdf()->setUnitNorm(true) ;
 
   _yatXmax = 0 ;
   _yatXmin = 0 ;
@@ -289,7 +289,7 @@ RooIntegralMorph::MorphCacheElem::~MorphCacheElem()
 /// Calculate the x value of the output p.d.f at the given cdf value y.
 /// The ok boolean is filled with the success status of the operation.
 
-Double_t RooIntegralMorph::MorphCacheElem::calcX(Double_t y, Bool_t& ok)
+Double_t RooIntegralMorph::MorphCacheElem::calcX(Double_t y, bool& ok)
 {
   if (y<0 || y>1) {
     oocoutW(_self,Eval) << "RooIntegralMorph::MorphCacheElem::calcX() WARNING: requested root finding for unphysical CDF value " << y << endl ;
@@ -299,7 +299,7 @@ Double_t RooIntegralMorph::MorphCacheElem::calcX(Double_t y, Bool_t& ok)
   Double_t xmax = _x->getMax("cache") ;
   Double_t xmin = _x->getMin("cache") ;
 
-  ok=kTRUE ;
+  ok=true ;
   ok &= _rf1->findRoot(x1,xmin,xmax,y) ;
   ok &= _rf2->findRoot(x2,xmin,xmax,y) ;
   if (!ok) return 0 ;
@@ -358,7 +358,7 @@ void RooIntegralMorph::MorphCacheElem::calculate(TIterator* dIter)
     Double_t y = offset + i*delta ;
 
     // Calculate corresponding X
-    Bool_t ok ;
+    bool ok ;
     Double_t X = calcX(y,ok) ;
     if (ok) {
       Int_t iX = binX(X) ;
@@ -432,7 +432,7 @@ void RooIntegralMorph::MorphCacheElem::calculate(TIterator* dIter)
     hist()->set(0) ;
   }
 
-  pdf()->setUnitNorm(kTRUE) ;
+  pdf()->setUnitNorm(true) ;
   _self->x = xsave ;
 
   oocxcoutD(_self,Eval) << "RooIntegralMorph::MorphCacheElem::calculate(" << _self->GetName() << ") calculation required " << _ccounter << " samplings of cdfs" << endl ;
@@ -460,7 +460,7 @@ void RooIntegralMorph::MorphCacheElem::fillGap(Int_t ixlo, Int_t ixhi, Double_t 
 
   // Determine where half-way Y value lands
   Double_t ymid = _yatX[ixlo]*splitPoint + _yatX[ixhi]*(1-splitPoint) ;
-  Bool_t ok ;
+  bool ok ;
   Double_t Xmid = calcX(ymid,ok) ;
   if (!ok) {
     oocoutW(_self,Eval) << "RooIntegralMorph::MorphCacheElem::fillGap(" << _self->GetName() << ") unable to calculate midpoint in gap ["
@@ -564,7 +564,7 @@ void RooIntegralMorph::MorphCacheElem::findRange()
   Int_t nbins = _x->numBins("cache") ;
 
   Double_t x1,x2 ;
-  Bool_t ok = kTRUE ;
+  bool ok = true ;
   Double_t ymin=0.1,yminSave(-1) ;
   Double_t Xsave(-1),Xlast=xmax ;
 
@@ -603,7 +603,7 @@ void RooIntegralMorph::MorphCacheElem::findRange()
 
   // Find highest Y value that can be measured
   // Start at 1 - 0.1 and iteratively lower delta by sqrt(10)
-  ok = kTRUE ;
+  ok = true ;
   Double_t deltaymax=0.1, deltaymaxSave(-1) ;
   Xlast=xmin ;
   while(true) {

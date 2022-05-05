@@ -39,7 +39,7 @@ namespace RooStats {
       /// Determine whether or not the proposal density is symmetric for
       /// points x1 and x2 - that is, whether the probability of reaching x2
       /// from x1 is equal to the probability of reaching x1 from x2
-      Bool_t IsSymmetric(RooArgSet& x1, RooArgSet& x2) override;
+      bool IsSymmetric(RooArgSet& x1, RooArgSet& x2) override;
 
       /// Return the probability of proposing the point x1 given the starting
       /// point x2
@@ -88,9 +88,9 @@ namespace RooStats {
 
       /// set whether we own the PDF that serves as the proposal density function
       /// By default, when constructed, PdfProposal does NOT own the PDF.
-      virtual void SetOwnsPdf(Bool_t ownsPdf) { fOwnsPdf = ownsPdf; }
+      virtual void SetOwnsPdf(bool ownsPdf) { fOwnsPdf = ownsPdf; }
 
-      //virtual void SetIsAlwaysSymmetric(Bool_t isAlwaysSymmetric)
+      //virtual void SetIsAlwaysSymmetric(bool isAlwaysSymmetric)
       //{ fIsAlwaysSymmetric = isAlwaysSymmetric; }
 
       ~PdfProposal() override
@@ -109,11 +109,11 @@ namespace RooStats {
       Int_t fCachePosition; /// our position in the cached proposal data set
       RooDataSet* fCache; /// the cached proposal data set
       RooArgSet fMaster; /// pointers to master variables needed for updates
-      Bool_t fOwnsPdf; /// whether we own the proposal density function
-      //Bool_t fIsAlwaysSymmetric; // does Q(x1 | x2) == Q(x2 | x1) for all x1, x2
+      bool fOwnsPdf; /// whether we own the proposal density function
+      //bool fIsAlwaysSymmetric; // does Q(x1 | x2) == Q(x2 | x1) for all x1, x2
 
       /// determine whether these two RooArgSets represent the same point
-      virtual Bool_t Equals(RooArgSet& x1, RooArgSet& x2);
+      virtual bool Equals(RooArgSet& x1, RooArgSet& x2);
 
       /// Interface for tools setting limits (producing confidence intervals)
       ClassDefOverride(PdfProposal,1)

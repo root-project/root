@@ -108,7 +108,7 @@ void RooMCIntegrator::registerIntegrator(RooNumIntFactory& fact)
 /// VEGAS documentation on details of the mode and type parameters.
 
 RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, SamplingMode mode,
-             GeneratorType genType, Bool_t verbose) :
+             GeneratorType genType, bool verbose) :
   RooAbsIntegrator(function), _grid(function), _verbose(verbose),
   _alpha(1.5),  _mode(mode), _genType(genType),
   _nRefineIter(5),_nRefinePerDim(1000),_nIntegratePerDim(5000)
@@ -128,7 +128,7 @@ RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, const RooNumIntConf
   RooAbsIntegrator(function), _grid(function)
 {
   const RooArgSet& configSet = config.getConfigSection(IsA()->GetName()) ;
-  _verbose = (Bool_t) configSet.getCatIndex("verbose",0) ;
+  _verbose = (bool) configSet.getCatIndex("verbose",0) ;
   _alpha = configSet.getRealValue("alpha",1.5) ;
   _mode = (SamplingMode) configSet.getCatIndex("samplingMode",Importance) ;
   _genType = (GeneratorType) configSet.getCatIndex("genType",QuasiRandom) ;
@@ -165,10 +165,10 @@ RooMCIntegrator::~RooMCIntegrator()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if we can integrate over the current domain. If return value
-/// is kTRUE we cannot handle the current limits (e.g. where the domain
+/// is true we cannot handle the current limits (e.g. where the domain
 /// of one or more observables is open ended.
 
-Bool_t RooMCIntegrator::checkLimits() const
+bool RooMCIntegrator::checkLimits() const
 {
   return _grid.initialize(*integrand());
 }
@@ -183,7 +183,7 @@ Bool_t RooMCIntegrator::checkLimits() const
 
 Double_t RooMCIntegrator::integral(const Double_t* /*yvec*/)
 {
-  _timer.Start(kTRUE);
+  _timer.Start(true);
   vegas(AllStages,_nRefinePerDim*_grid.getDimension(),_nRefineIter);
   Double_t ret = vegas(ReuseGrid,_nIntegratePerDim*_grid.getDimension(),1);
   return ret ;
@@ -285,7 +285,7 @@ Double_t RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, Do
       for(UInt_t k = 0; k < _calls_per_box; k++) {
         // generate a random point in this box
         Double_t bin_vol(0);
-        _grid.generatePoint(box, x, bin, bin_vol, _genType == QuasiRandom ? kTRUE : kFALSE);
+        _grid.generatePoint(box, x, bin, bin_vol, _genType == QuasiRandom ? true : false);
         // evaluate the integrand at the generated point
         Double_t fval= jacbin*bin_vol*integrand(x);
         // update mean and variance calculations
@@ -313,10 +313,10 @@ Double_t RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, Do
         }
         oocoutP(this,Integration) << "RooMCIntegrator: still working ... iteration "
             << it << '/' << iterations << "  box " << index << "/"<< std::pow(_grid.getNBoxes(), _grid.getDimension()) << endl;
-        _timer.Start(kTRUE);
+        _timer.Start(true);
       }
       else {
-        _timer.Start(kFALSE);
+        _timer.Start(false);
       }
 
     } while(_grid.nextBox(box));

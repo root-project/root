@@ -40,17 +40,17 @@ public:
   void setVal(Double_t value) override ;
 
   // Jacobian and limits
-  Bool_t hasBinning(const char* name) const override ;
-  const RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) const override ;
-  RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) override  ;
+  bool hasBinning(const char* name) const override ;
+  const RooAbsBinning& getBinning(const char* name=0, bool verbose=true, bool createOnTheFly=false) const override ;
+  RooAbsBinning& getBinning(const char* name=0, bool verbose=true, bool createOnTheFly=false) override  ;
   std::list<std::string> getBinningNames() const override;
 
   Double_t jacobian() const override ;
-  Bool_t isJacobianOK(const RooArgSet& depList) const override ;
+  bool isJacobianOK(const RooArgSet& depList) const override ;
 
   // I/O streaming interface (machine readable)
-  Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) override ;
-  void writeToStream(std::ostream& os, Bool_t compact) const override ;
+  bool readFromStream(std::istream& is, bool compact, bool verbose=false) override ;
+  void writeToStream(std::ostream& os, bool compact) const override ;
 
   // Printing interface (human readable)
 

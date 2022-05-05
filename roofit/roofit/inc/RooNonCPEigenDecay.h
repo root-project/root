@@ -89,7 +89,7 @@ public:
   Double_t coefAnalyticalIntegral( Int_t coef, Int_t code, const char* rangeName=0 ) const override;
 
   Int_t getGenerator( const RooArgSet& directVars,
-            RooArgSet&       generateVars, Bool_t staticInitOK=kTRUE ) const override;
+            RooArgSet&       generateVars, bool staticInitOK=true ) const override;
   void initGenerator( Int_t code ) override;
   void generateEvent( Int_t code ) override;
 

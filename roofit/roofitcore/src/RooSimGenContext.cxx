@@ -57,7 +57,7 @@ ClassImp(RooSimGenContext);
 /// generation of events to the appropriate component generator context
 
 RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet &vars,
-               const RooDataSet *prototype, const RooArgSet* auxProto, Bool_t verbose) :
+               const RooDataSet *prototype, const RooArgSet* auxProto, bool verbose) :
   RooAbsGenContext(model,vars,prototype,auxProto,verbose), _pdf(&model), _protoData(0)
 {
   // Determine if we are requested to generate the index category
@@ -65,30 +65,30 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
   RooArgSet pdfVars(vars) ;
 
   RooArgSet allPdfVars(pdfVars) ;
-  if (prototype) allPdfVars.add(*prototype->get(),kTRUE) ;
+  if (prototype) allPdfVars.add(*prototype->get(),true) ;
 
   if (!idxCat->isDerived()) {
-    pdfVars.remove(*idxCat,kTRUE,kTRUE) ;
-    Bool_t doGenIdx = allPdfVars.find(idxCat->GetName())?kTRUE:kFALSE ;
+    pdfVars.remove(*idxCat,true,true) ;
+    bool doGenIdx = allPdfVars.find(idxCat->GetName())?true:false ;
 
     if (!doGenIdx) {
       oocoutE(_pdf,Generation) << "RooSimGenContext::ctor(" << GetName() << ") ERROR: This context must"
                 << " generate the index category" << endl ;
-      _isValid = kFALSE ;
+      _isValid = false ;
       _numPdf = 0 ;
-      _haveIdxProto = kFALSE ;
+      _haveIdxProto = false ;
       return ;
     }
   } else {
     TIterator* sIter = idxCat->serverIterator() ;
     RooAbsArg* server ;
-    Bool_t anyServer(kFALSE), allServers(kTRUE) ;
+    bool anyServer(false), allServers(true) ;
     while((server=(RooAbsArg*)sIter->Next())) {
       if (vars.find(server->GetName())) {
-   anyServer=kTRUE ;
-   pdfVars.remove(*server,kTRUE,kTRUE) ;
+   anyServer=true ;
+   pdfVars.remove(*server,true,true) ;
       } else {
-   allServers=kFALSE ;
+   allServers=false ;
       }
     }
     delete sIter ;
@@ -96,21 +96,21 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
     if (anyServer && !allServers) {
       oocoutE(_pdf,Generation) << "RooSimGenContext::ctor(" << GetName() << ") ERROR: This context must"
                 << " generate all components of a derived index category" << endl ;
-      _isValid = kFALSE ;
+      _isValid = false ;
       _numPdf = 0 ;
-      _haveIdxProto = kFALSE ;
+      _haveIdxProto = false ;
       return ;
     }
   }
 
   // We must either have the prototype or extended likelihood to determined
   // the relative fractions of the components
-  _haveIdxProto = prototype ? kTRUE : kFALSE ;
+  _haveIdxProto = prototype ? true : false ;
   _idxCatName = idxCat->GetName() ;
   if (!_haveIdxProto && !model.canBeExtended()) {
     oocoutE(_pdf,Generation) << "RooSimGenContext::ctor(" << GetName() << ") ERROR: Need either extended mode"
               << " or prototype data to calculate number of events per category" << endl ;
-    _isValid = kFALSE ;
+    _isValid = false ;
     _numPdf = 0 ;
     return ;
   }
@@ -150,7 +150,7 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
 
 
   // Clone the index category
-  _idxCatSet = (RooArgSet*) RooArgSet(model._indexCat.arg()).snapshot(kTRUE) ;
+  _idxCatSet = (RooArgSet*) RooArgSet(model._indexCat.arg()).snapshot(true) ;
   if (!_idxCatSet) {
     oocoutE(_pdf,Generation) << "RooSimGenContext::RooSimGenContext(" << GetName() << ") Couldn't deep-clone index category, abort," << endl ;
     throw std::string("RooSimGenContext::RooSimGenContext() Couldn't deep-clone index category, abort") ;
@@ -183,7 +183,7 @@ RooSimGenContext::~RooSimGenContext()
 void RooSimGenContext::attach(const RooArgSet& args)
 {
   if (_idxCat->isDerived()) {
-    _idxCat->recursiveRedirectServers(args,kTRUE) ;
+    _idxCat->recursiveRedirectServers(args,true) ;
   }
 
   // Forward initGenerator call to all components
@@ -201,7 +201,7 @@ void RooSimGenContext::initGenerator(const RooArgSet &theEvent)
 {
   // Attach the index category clone to the event
   if (_idxCat->isDerived()) {
-    _idxCat->recursiveRedirectServers(theEvent,kTRUE) ;
+    _idxCat->recursiveRedirectServers(theEvent,true) ;
   } else {
     _idxCat = (RooAbsCategoryLValue*) theEvent.find(_idxCat->GetName()) ;
   }
@@ -341,7 +341,7 @@ void RooSimGenContext::setProtoDataOrder(Int_t* lut)
 ////////////////////////////////////////////////////////////////////////////////
 /// Detailed printing interface
 
-void RooSimGenContext::printMultiline(ostream &os, Int_t content, Bool_t verbose, TString indent) const
+void RooSimGenContext::printMultiline(ostream &os, Int_t content, bool verbose, TString indent) const
 {
   RooAbsGenContext::printMultiline(os,content,verbose,indent) ;
   os << indent << "--- RooSimGenContext ---" << endl ;

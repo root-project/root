@@ -31,8 +31,8 @@ using namespace RooFit ;
 class TestBasic801 : public RooFitTestUnit
 {
 public:
-  TestBasic801(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Automated MC studies",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic801(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Automated MC studies",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // C r e a t e   m o d e l
   // -----------------------
@@ -83,8 +83,8 @@ public:
   // A Binned() option is added in this example to bin the data between generation and fitting
   // to speed up the study at the expemse of some precision
 
-  RooMCStudy* mcstudy = new RooMCStudy(model,x,Binned(kTRUE),Silence(),Extended(),
-                   FitOptions(Save(kTRUE),PrintEvalErrors(0))) ;
+  RooMCStudy* mcstudy = new RooMCStudy(model,x,Binned(true),Silence(),Extended(),
+                   FitOptions(Save(true),PrintEvalErrors(0))) ;
 
 
   // G e n e r a t e   a n d   f i t   e v e n t s
@@ -101,7 +101,7 @@ public:
   // Make plots of the distributions of mean, the error on mean and the pull of mean
   RooPlot* frame1 = mcstudy->plotParam(mean,Bins(40)) ;
   RooPlot* frame2 = mcstudy->plotError(mean,Bins(40)) ;
-  RooPlot* frame3 = mcstudy->plotPull(mean,Bins(40),FitGauss(kTRUE)) ;
+  RooPlot* frame3 = mcstudy->plotPull(mean,Bins(40),FitGauss(true)) ;
 
   // Plot distribution of minimized likelihood
   RooPlot* frame4 = mcstudy->plotNLL(Bins(40)) ;
@@ -113,6 +113,6 @@ public:
 
   delete mcstudy ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;

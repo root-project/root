@@ -71,7 +71,7 @@ protected:
   RooSetProxy _params ;  ///< Effective parameters of this p.d.f.
 
   void calcParams() ;
-  Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) override ;
+  bool redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive) override ;
 
   std::vector<double>  scanPdf(RooRealVar& obs, RooAbsPdf& pdf, const RooDataHist& hist, const RooArgSet& slicePos, Int_t& N, Int_t& N2, Int_t& zeroBin, Double_t shift) const ;
 
@@ -113,7 +113,7 @@ protected:
   Double_t  _shift2 ;
 
   RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0,
-                                       const RooArgSet* auxProto=0, Bool_t verbose= kFALSE) const override ;
+                                       const RooArgSet* auxProto=0, bool verbose= false) const override ;
 
   friend class RooConvGenContext ;
   RooSetProxy  _cacheObs ; ///< Non-convolution observables that are also cached
