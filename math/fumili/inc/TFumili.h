@@ -109,7 +109,7 @@ public:
    void             SetData(Double_t *,Int_t,Int_t);
    void     SetFitMethod(const char *name) override;
    Int_t    SetParameter(Int_t ipar,const char *parname,Double_t value,Double_t verr,Double_t vlow, Double_t vhigh) override;
-   void             SetParNumber(Int_t ParNum) { fNpar = ParNum;};
+   void     SetParNumber(Int_t ParNum);
 
    ClassDefOverride(TFumili,0) //The FUMILI Minimization package
 };
