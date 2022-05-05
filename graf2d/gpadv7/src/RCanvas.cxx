@@ -80,23 +80,6 @@ void ROOT::Experimental::RCanvas::Update(bool async, CanvasCallback_t callback)
       fPainter->CanvasUpdated(fModified, async, callback);
 }
 
-class RCanvasCleanup : public TObject {
-public:
-
-   static RCanvasCleanup *gInstance;
-
-   RCanvasCleanup() : TObject() { gInstance = this; }
-
-   virtual ~RCanvasCleanup()
-   {
-      gInstance = nullptr;
-      ROOT::Experimental::RCanvas::ReleaseHeldCanvases();
-   }
-};
-
-RCanvasCleanup *RCanvasCleanup::gInstance = nullptr;
-
-
 ///////////////////////////////////////////////////////////////////////////////////////
 /// Create new canvas instance
 
@@ -107,14 +90,6 @@ std::shared_ptr<ROOT::Experimental::RCanvas> ROOT::Experimental::RCanvas::Create
    {
       std::lock_guard<std::mutex> grd(GetHeldCanvasesMutex());
       GetHeldCanvases().emplace_back(pCanvas);
-   }
-
-   if (!RCanvasCleanup::gInstance) {
-      auto cleanup = new RCanvasCleanup();
-      TDirectory::TContext ctxt(nullptr);
-      TDirectory *dummydir = new TDirectory("rcanvas_cleanup_dummydir","title");
-      dummydir->GetList()->Add(cleanup);
-      gROOT->GetListOfClosedObjects()->Add(dummydir);
    }
 
    return pCanvas;
