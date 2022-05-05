@@ -90,7 +90,7 @@ public:
    virtual ~RCanvasCleanup()
    {
       gInstance = nullptr;
-      ROOT::Experimental::RCanvas::ReleaseHeldCanvases();
+      // ROOT::Experimental::RCanvas::ReleaseHeldCanvases();
    }
 };
 
