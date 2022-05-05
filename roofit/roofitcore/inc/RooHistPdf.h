@@ -70,39 +70,39 @@ public:
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
   Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
-  void setCdfBoundaries(Bool_t flag) {
+  void setCdfBoundaries(bool flag) {
     // Set use of special boundary conditions for c.d.f.s
     _cdfBoundaries = flag ;
   }
-  Bool_t getCdfBoundaries() const {
+  bool getCdfBoundaries() const {
     // If true, special boundary conditions for c.d.f.s are used
     return _cdfBoundaries ;
   }
 
-  void setUnitNorm(Bool_t flag) {
+  void setUnitNorm(bool flag) {
     // Declare contents to have unit normalization
     _unitNorm = flag ;
   }
-  Bool_t haveUnitNorm() const {
+  bool haveUnitNorm() const {
     // Return true if contents is declared to be unit normalized
     return _unitNorm ;
   }
 
-  Bool_t selfNormalized() const override { return _unitNorm ; }
+  bool selfNormalized() const override { return _unitNorm ; }
 
   Int_t getMaxVal(const RooArgSet& vars) const override ;
   Double_t maxVal(Int_t code) const override ;
 
   std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override ;
   std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override ;
-  Bool_t isBinnedDistribution(const RooArgSet&) const override { return _intOrder==0 ; }
+  bool isBinnedDistribution(const RooArgSet&) const override { return _intOrder==0 ; }
 
 
 protected:
 
-  Bool_t areIdentical(const RooDataHist& dh1, const RooDataHist& dh2) ;
+  bool areIdentical(const RooDataHist& dh1, const RooDataHist& dh2) ;
 
-  Bool_t importWorkspaceHook(RooWorkspace& ws) override ;
+  bool importWorkspaceHook(RooWorkspace& ws) override ;
 
   Double_t evaluate() const override;
   Double_t totalVolume() const ;
@@ -114,9 +114,9 @@ protected:
   RooDataHist*      _dataHist ;      ///< Unowned pointer to underlying histogram
   mutable RooAICRegistry _codeReg ;  ///<! Auxiliary class keeping tracking of analytical integration code
   Int_t             _intOrder ;      ///< Interpolation order
-  Bool_t            _cdfBoundaries ; ///< Use boundary conditions for CDFs.
+  bool            _cdfBoundaries ; ///< Use boundary conditions for CDFs.
   mutable Double_t  _totVolume ;     ///<! Total volume of space (product of ranges of observables)
-  Bool_t            _unitNorm  ;     ///< Assume contents is unit normalized (for use as pdf cache)
+  bool            _unitNorm  ;     ///< Assume contents is unit normalized (for use as pdf cache)
 
   ClassDefOverride(RooHistPdf,4) // Histogram based PDF
 };

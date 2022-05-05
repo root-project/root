@@ -47,13 +47,13 @@ public:
   Double_t averageBinWidth() const override { return _binw ; }
   Double_t* array() const override ;
 
-  void printMultiline(std::ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override ;
+  void printMultiline(std::ostream &os, Int_t content, bool verbose=false, TString indent="") const override ;
 
   void insertHook(RooAbsRealLValue&) const override  ;
   void removeHook(RooAbsRealLValue&) const override  ;
 
-  Bool_t isShareable() const override { return kFALSE ; } // parameterized binning cannot be shared across instances
-  Bool_t isParameterized() const override { return kTRUE ; } // binning is parameterized, range will need special handling in integration
+  bool isShareable() const override { return false ; } // parameterized binning cannot be shared across instances
+  bool isParameterized() const override { return true ; } // binning is parameterized, range will need special handling in integration
   RooAbsReal* lowBoundFunc() const override { return xlo() ; }
   RooAbsReal* highBoundFunc() const override { return xhi() ; }
 

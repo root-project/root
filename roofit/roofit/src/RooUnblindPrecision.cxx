@@ -50,7 +50,7 @@ RooUnblindPrecision::RooUnblindPrecision()
 RooUnblindPrecision::RooUnblindPrecision(const char *name, const char *title,
                 const char *blindString, Double_t centralValue,
                 Double_t scale, RooAbsReal& value,
-                Bool_t sin2betaMode)
+                bool sin2betaMode)
   : RooAbsHiddenReal(name,title),
   _value("value","Precision blinded value",this,value),
   _blindEngine(blindString,RooBlindTools::full,centralValue,scale,sin2betaMode)
@@ -63,7 +63,7 @@ RooUnblindPrecision::RooUnblindPrecision(const char *name, const char *title,
 RooUnblindPrecision::RooUnblindPrecision(const char *name, const char *title,
                 const char *blindString, Double_t centralValue,
                 Double_t scale, RooAbsReal& value, RooAbsCategory& blindState,
-                Bool_t sin2betaMode)
+                bool sin2betaMode)
   : RooAbsHiddenReal(name,title,blindState),
   _value("value","Precision blinded value",this,value),
   _blindEngine(blindString,RooBlindTools::full,centralValue,scale,sin2betaMode)

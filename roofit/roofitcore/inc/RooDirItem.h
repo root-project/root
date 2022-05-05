@@ -27,7 +27,7 @@ public:
 
 protected:
 
-  void appendToDir(TObject* obj, Bool_t forceMemoryResident=kFALSE) ;
+  void appendToDir(TObject* obj, bool forceMemoryResident=false) ;
   void removeFromDir(TObject* obj) ;
 
   TDirectory* _dir{nullptr}; ///<! Associated directory

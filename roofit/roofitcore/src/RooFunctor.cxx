@@ -45,7 +45,7 @@ ClassImp(RooFunctor);
 
 RooFunctor::RooFunctor(const RooAbsFunc& func)
 {
-  _ownBinding = kFALSE ;
+  _ownBinding = false ;
 
   _x = new Double_t[func.getDimension()] ;
 
@@ -68,8 +68,8 @@ RooFunctor::RooFunctor(const RooAbsReal& func, const RooArgList& observables, co
   allVars.add(parameters) ;
 
   // Create RooFit function binding
-  _binding = new RooRealBinding(func,allVars,&_nset,kFALSE,0) ;
-  _ownBinding = kTRUE ;
+  _binding = new RooRealBinding(func,allVars,&_nset,false,0) ;
+  _ownBinding = true ;
 
   // Allocate transfer array
   _x = new Double_t[allVars.getSize()] ;
@@ -90,8 +90,8 @@ RooFunctor::RooFunctor(const RooAbsReal& func, const RooArgList& observables, co
   allVars.add(parameters) ;
 
   // Create RooFit function binding
-  _binding = new RooRealBinding(func,allVars,&_nset,kFALSE,0) ;
-  _ownBinding = kTRUE ;
+  _binding = new RooRealBinding(func,allVars,&_nset,false,0) ;
+  _ownBinding = true ;
 
   // Allocate transfer array
   _x = new Double_t[allVars.getSize()] ;

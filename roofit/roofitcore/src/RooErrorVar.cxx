@@ -89,9 +89,9 @@ Double_t RooErrorVar::getValV(const RooArgSet*) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if we have binning with given name
 
-Bool_t RooErrorVar::hasBinning(const char* name) const
+bool RooErrorVar::hasBinning(const char* name) const
 {
-  return _altBinning.FindObject(name) ? kTRUE : kFALSE ;
+  return _altBinning.FindObject(name) ? true : false ;
 }
 
 
@@ -100,7 +100,7 @@ Bool_t RooErrorVar::hasBinning(const char* name) const
 /// Return binning with given name. If no binning exists with such a name, clone the default
 /// binning on the fly if so requested
 
-const RooAbsBinning& RooErrorVar::getBinning(const char* name, Bool_t verbose, Bool_t createOnTheFly) const
+const RooAbsBinning& RooErrorVar::getBinning(const char* name, bool verbose, bool createOnTheFly) const
 {
   return const_cast<RooErrorVar*>(this)->getBinning(name,verbose,createOnTheFly) ;
 }
@@ -111,7 +111,7 @@ const RooAbsBinning& RooErrorVar::getBinning(const char* name, Bool_t verbose, B
 /// Return binning with given name. If no binning exists with such a name, clone the default
 /// binning on the fly if so requested
 
-RooAbsBinning& RooErrorVar::getBinning(const char* name, Bool_t /*verbose*/, Bool_t createOnTheFly)
+RooAbsBinning& RooErrorVar::getBinning(const char* name, bool /*verbose*/, bool createOnTheFly)
 {
   // Return default (normalization) binning and range if no name is specified
   if (name==0) {
@@ -274,10 +274,10 @@ void RooErrorVar::setBins(Int_t nBins) {
 
 void RooErrorVar::setRange( const char* name, Double_t min, Double_t max)
 {
-  Bool_t exists = name ? (_altBinning.FindObject(name)?kTRUE:kFALSE) : kTRUE ;
+  bool exists = name ? (_altBinning.FindObject(name)?true:false) : true ;
 
   // Set new fit range
-  RooAbsBinning& binning = getBinning(name,kFALSE) ;
+  RooAbsBinning& binning = getBinning(name,false) ;
 
   // Check if new limit is consistent
   if (min>max) {
@@ -302,7 +302,7 @@ void RooErrorVar::setRange( const char* name, Double_t min, Double_t max)
 ////////////////////////////////////////////////////////////////////////////////
 /// Read object contents from given stream
 
-Bool_t RooErrorVar::readFromStream(istream& is, Bool_t /*compact*/, Bool_t verbose)
+bool RooErrorVar::readFromStream(istream& is, bool /*compact*/, bool verbose)
 {
   TString token,errorPrefix("RooErrorVar::readFromStream(") ;
   errorPrefix.Append(GetName()) ;
@@ -311,12 +311,12 @@ Bool_t RooErrorVar::readFromStream(istream& is, Bool_t /*compact*/, Bool_t verbo
   Double_t value(0) ;
 
     // Compact mode: Read single token
-  if (parser.readDouble(value,verbose)) return kTRUE ;
+  if (parser.readDouble(value,verbose)) return true ;
   if (isValidReal(value,verbose)) {
     setVal(value) ;
-    return kFALSE ;
+    return false ;
   } else {
-    return kTRUE ;
+    return true ;
   }
 }
 
@@ -325,7 +325,7 @@ Bool_t RooErrorVar::readFromStream(istream& is, Bool_t /*compact*/, Bool_t verbo
 ////////////////////////////////////////////////////////////////////////////////
 /// Write value to stream
 
-void RooErrorVar::writeToStream(ostream& os, Bool_t /*compact*/) const
+void RooErrorVar::writeToStream(ostream& os, bool /*compact*/) const
 {
   os << getVal() ;
 }

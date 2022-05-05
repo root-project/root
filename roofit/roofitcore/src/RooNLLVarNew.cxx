@@ -202,7 +202,7 @@ double RooNLLVarNew::evaluate() const
    return _value;
 }
 
-void RooNLLVarNew::getParametersHook(const RooArgSet * /*nset*/, RooArgSet *params, Bool_t /*stripDisconnected*/) const
+void RooNLLVarNew::getParametersHook(const RooArgSet * /*nset*/, RooArgSet *params, bool /*stripDisconnected*/) const
 {
    // strip away the observables and weights
    params->remove(_observables, true, true);

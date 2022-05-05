@@ -58,9 +58,9 @@ public:
   void setErrorLevel(Double_t level) ;
   void setEps(Double_t eps) ;
   void optimizeConst(int flag) ;
-  void setEvalErrorWall(Bool_t flag) ;
+  void setEvalErrorWall(bool flag) ;
   void setRecoverFromNaNStrength(double strength) ;
-  void setOffsetting(Bool_t flag) ;
+  void setOffsetting(bool flag) ;
   void setMaxIterations(int n) ;
   void setMaxFunctionCalls(int n) ;
 

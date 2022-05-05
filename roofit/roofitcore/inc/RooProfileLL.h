@@ -27,8 +27,8 @@ public:
   RooProfileLL(const RooProfileLL& other, const char* name=0) ;
   TObject* clone(const char* newname) const override { return new RooProfileLL(*this,newname); }
 
-  void setAlwaysStartFromMin(Bool_t flag) { _startFromMin = flag ; }
-  Bool_t alwaysStartFromMin() const { return _startFromMin ; }
+  void setAlwaysStartFromMin(bool flag) { _startFromMin = flag ; }
+  bool alwaysStartFromMin() const { return _startFromMin ; }
 
   RooMinimizer* minimizer() { if (!_minimizer) initializeMinimizer(); return _minimizer.get() ; }
   RooAbsReal& nll() { return const_cast<RooAbsReal&>(_nll.arg()) ; }
@@ -37,9 +37,9 @@ public:
 
   RooAbsReal* createProfile(const RooArgSet& paramsOfInterest) override ;
 
-  Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) override ;
+  bool redirectServersHook(const RooAbsCollection& /*newServerList*/, bool /*mustReplaceAll*/, bool /*nameChange*/, bool /*isRecursive*/) override ;
 
-  void clearAbsMin() { _absMinValid = kFALSE ; }
+  void clearAbsMin() { _absMinValid = false ; }
 
   Int_t numEval() const { return _neval ; }
 
@@ -52,14 +52,14 @@ protected:
   RooRealProxy _nll ;    ///< Input -log(L) function
   RooSetProxy _obs ;     ///< Parameters of profile likelihood
   RooSetProxy _par ;     ///< Marginalised parameters of likelihood
-  Bool_t _startFromMin ; ///< Always start minimization for global minimum?
+  bool _startFromMin ; ///< Always start minimization for global minimum?
 
   TIterator* _piter ; ///<! Iterator over profile likelihood parameters to be minimized
   TIterator* _oiter ; ///<! Iterator of profile likelihood output parameter(s)
 
   mutable std::unique_ptr<RooMinimizer> _minimizer = nullptr ; ///<! Internal minimizer instance
 
-  mutable Bool_t _absMinValid ; ///< flag if absmin is up-to-date
+  mutable bool _absMinValid ; ///< flag if absmin is up-to-date
   mutable Double_t _absMin ; ///< absolute minimum of -log(L)
   mutable RooArgSet _paramAbsMin ; ///< Parameter values at absolute minimum
   mutable RooArgSet _obsAbsMin ; ///< Observable values at absolute minimum

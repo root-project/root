@@ -36,7 +36,7 @@ public:
 
   Int_t numBins() const { return _dataSet.numEntries(); } // Number of bins (called numEntries in RooDataHist)
 
-  void setParamConst( Int_t, Bool_t=kTRUE );
+  void setParamConst( Int_t, bool=true );
   void setConstant(bool constant);
 
   void setShape(TH1* shape);
@@ -49,7 +49,7 @@ public:
 
   double binVolume() const { return _dataSet.binVolume(); }
 
-  Bool_t forceAnalyticalInt(const RooAbsArg&) const override { return kTRUE ; }
+  bool forceAnalyticalInt(const RooAbsArg&) const override { return true ; }
 
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet,const char* rangeName=0) const override;
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override;
@@ -60,7 +60,7 @@ public:
 
   std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override;
   std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override;
-  Bool_t isBinnedDistribution(const RooArgSet& obs) const override { return _dataVars.overlaps(obs); }
+  bool isBinnedDistribution(const RooArgSet& obs) const override { return _dataVars.overlaps(obs); }
 
 
 protected:

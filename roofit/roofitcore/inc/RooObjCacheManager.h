@@ -31,11 +31,11 @@ class RooObjCacheManager : public RooCacheManager<RooAbsCacheElement> {
 
 public:
 
-  RooObjCacheManager(RooAbsArg* owner=0, Int_t maxSize=2, Bool_t clearCacheOnServerRedirect=kTRUE, Bool_t allowOptimize=kFALSE) ;
+  RooObjCacheManager(RooAbsArg* owner=0, Int_t maxSize=2, bool clearCacheOnServerRedirect=true, bool allowOptimize=false) ;
   RooObjCacheManager(const RooObjCacheManager& other, RooAbsArg* owner=0) ;
   ~RooObjCacheManager() override ;
 
-  Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) override ;
+  bool redirectServersHook(const RooAbsCollection& /*newServerList*/, bool /*mustReplaceAll*/, bool /*nameChange*/, bool /*isRecursive*/) override ;
   void operModeHook() override ;
   void optimizeCacheMode(const RooArgSet& /*obs*/, RooArgSet& /*optSet*/, RooLinkedList& /*processedNodes*/) override ;
   void printCompactTreeHook(std::ostream&, const char *) override ;
@@ -45,20 +45,20 @@ public:
 
   void sterilize() override ;
 
-  static void doClearObsList(Bool_t flag) { _clearObsList = flag ; }
-  static Bool_t clearObsList() { return _clearObsList ; }
+  static void doClearObsList(bool flag) { _clearObsList = flag ; }
+  static bool clearObsList() { return _clearObsList ; }
 
-  void setClearOnRedirect(Bool_t flag) { _clearOnRedirect = flag ; }
+  void setClearOnRedirect(bool flag) { _clearOnRedirect = flag ; }
 
 protected:
 
-  Bool_t _clearOnRedirect ;
-  Bool_t _allowOptimize ;
-  Bool_t _optCacheModeSeen  ;              ///<!
+  bool _clearOnRedirect ;
+  bool _allowOptimize ;
+  bool _optCacheModeSeen  ;              ///<!
 
   RooArgSet* _optCacheObservables ;        ///<! current optCacheObservables
 
-  static Bool_t _clearObsList ; ///< Clear obslist on sterilize?
+  static bool _clearObsList ; ///< Clear obslist on sterilize?
 
   ClassDefOverride(RooObjCacheManager,3) ///< Cache manager for generic caches that contain RooAbsArg objects
 } ;

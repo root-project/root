@@ -50,7 +50,7 @@ Note, one could use the same class for a Bayesian "credible interval".
       }
 
       /// check if given point is in the interval
-      virtual Bool_t IsInInterval(const RooArgSet&) const = 0;
+      virtual bool IsInInterval(const RooArgSet&) const = 0;
 
       /// used to set confidence level.  Keep pure virtual
       virtual void SetConfidenceLevel(Double_t cl) = 0;
@@ -62,7 +62,7 @@ Note, one could use the same class for a Bayesian "credible interval".
       virtual RooArgSet* GetParameters() const = 0;
 
       /// check if parameters are correct (i.e. they are the POI of this interval)
-      virtual Bool_t CheckParameters(const RooArgSet&) const = 0;
+      virtual bool CheckParameters(const RooArgSet&) const = 0;
 
 
    protected:

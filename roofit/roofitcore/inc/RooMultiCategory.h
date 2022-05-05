@@ -35,11 +35,11 @@ public:
   ~RooMultiCategory() override;
 
   // Printing interface (human readable)
-  void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override;
+  void printMultiline(std::ostream& os, Int_t content, bool verbose=false, TString indent="") const override;
 
   /// Multi categories cannot be read from streams.
-  Bool_t readFromStream(std::istream& /*is*/, Bool_t /*compact*/, Bool_t /*verbose=kFALSE*/) override { return true; }
-  void writeToStream(std::ostream& os, Bool_t compact) const override;
+  bool readFromStream(std::istream& /*is*/, bool /*compact*/, bool /*verbose=false*/) override { return true; }
+  void writeToStream(std::ostream& os, bool compact) const override;
 
   const RooArgSet& inputCatList() const { return _catSet ; }
   const char* getCurrentLabel() const override;

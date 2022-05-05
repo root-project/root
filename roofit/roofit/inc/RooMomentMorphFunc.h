@@ -41,10 +41,10 @@ public:
 
    void useHorizontalMorphing(bool val) { _useHorizMorph = val; }
 
-   virtual Bool_t selfNormalized() const
+   virtual bool selfNormalized() const
    {
       // P.d.f is self normalized
-      return kTRUE;
+      return true;
    }
 
    virtual Double_t getVal(const RooArgSet *set = 0) const;
@@ -53,7 +53,7 @@ public:
 
    std::list<Double_t> *plotSamplingHint(RooAbsRealLValue &obs, Double_t xlo, Double_t xhi) const override;
    std::list<Double_t> *binBoundaries(RooAbsRealLValue & /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override;
-   Bool_t isBinnedDistribution(const RooArgSet &obs) const override;
+   bool isBinnedDistribution(const RooArgSet &obs) const override;
 
 protected:
    class CacheElem : public RooAbsCacheElement {
@@ -71,7 +71,7 @@ protected:
 
       RooRealVar *frac(Int_t i);
       const RooRealVar *frac(Int_t i) const;
-      void calculateFractions(const RooMomentMorphFunc &self, Bool_t verbose = kTRUE) const;
+      void calculateFractions(const RooMomentMorphFunc &self, bool verbose = true) const;
    };
    mutable RooObjCacheManager _cacheMgr; //! The cache manager
    mutable RooArgSet *_curNormSet;       //! Current normalization set

@@ -77,9 +77,9 @@ namespace RooStats {
          fAltProfile.EnableDetailedOutput(fDetailedOutputEnabled);
       }
 
-      static void SetAlwaysReuseNLL(Bool_t flag);
+      static void SetAlwaysReuseNLL(bool flag);
 
-      void SetReuseNLL(Bool_t flag) {
+      void SetReuseNLL(bool flag) {
          fNullProfile.SetReuseNLL(flag);
          fAltProfile.SetReuseNLL(flag);
       }
@@ -138,8 +138,8 @@ namespace RooStats {
       ProfileLikelihoodTestStat fAltProfile;
 
       RooArgSet* fAltPOI;
-      Bool_t fSubtractMLE;
-      static Bool_t fgAlwaysReuseNll ;
+      bool fSubtractMLE;
+      static bool fgAlwaysReuseNll ;
 
       bool fDetailedOutputEnabled;
       RooArgSet* fDetailedOutput;

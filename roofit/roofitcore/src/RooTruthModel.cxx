@@ -122,7 +122,7 @@ void RooTruthModel::changeBasis(RooFormulaVar* inBasis)
   // Change basis pointer and update client-server link
   _basis = inBasis ;
   if (_basis) {
-    addServer(*_basis,kTRUE,kFALSE) ;
+    addServer(*_basis,true,false) ;
   }
 
   _basisCode = inBasis?basisCode(inBasis->GetTitle()):0 ;
@@ -337,7 +337,7 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) co
 
 RooAbsGenContext* RooTruthModel::modelGenContext
 (const RooAbsAnaConvPdf& convPdf, const RooArgSet &vars, const RooDataSet *prototype,
- const RooArgSet* auxProto, Bool_t verbose) const
+ const RooArgSet* auxProto, bool verbose) const
 {
   RooArgSet forceDirect(convVar()) ;
   return new RooGenContext(dynamic_cast<const RooAbsPdf&>(convPdf), vars, prototype,
@@ -349,7 +349,7 @@ RooAbsGenContext* RooTruthModel::modelGenContext
 ////////////////////////////////////////////////////////////////////////////////
 /// Advertise internal generator for observable x
 
-Int_t RooTruthModel::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
+Int_t RooTruthModel::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool /*staticInitOK*/) const
 {
   if (matchArgs(directVars,generateVars,x)) return 1 ;
   return 0 ;

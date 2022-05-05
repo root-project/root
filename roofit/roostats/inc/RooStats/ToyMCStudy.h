@@ -38,7 +38,7 @@ class ToyMCStudy: public RooAbsStudy {
       {
          // In this case, this is the normal output. The SamplingDistribution
          // instances are stored as detailed output.
-         storeDetailedOutput(kTRUE);
+         storeDetailedOutput(true);
       }
 
       RooAbsStudy* clone(const char* /*newname*/="") const override { return new ToyMCStudy(*this) ; }
@@ -46,9 +46,9 @@ class ToyMCStudy: public RooAbsStudy {
       ~ToyMCStudy() override {}
 
       // RooAbsStudy interfaces
-      Bool_t initialize(void) override;
-      Bool_t execute(void) override;
-      Bool_t finalize(void) override;
+      bool initialize(void) override;
+      bool execute(void) override;
+      bool finalize(void) override;
 
       RooDataSet* merge();
 

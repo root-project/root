@@ -54,7 +54,7 @@ RooTrace& RooTrace::instance()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooTrace::RooTrace() : _active(kFALSE), _verbose(kFALSE)
+RooTrace::RooTrace() : _active(false), _verbose(false)
 {
 }
 
@@ -128,7 +128,7 @@ void RooTrace::destroySpecial3(const char* name)
 ////////////////////////////////////////////////////////////////////////////////
 /// If flag is true, memory tracing is activated
 
-void RooTrace::active(Bool_t flag)
+void RooTrace::active(bool flag)
 {
   RooTrace::instance()._active = flag ;
 }
@@ -138,7 +138,7 @@ void RooTrace::active(Bool_t flag)
 /// If flag is true, a message will be printed at each
 /// object creation or deletion
 
-void RooTrace::verbose(Bool_t flag)
+void RooTrace::verbose(bool flag)
 {
   RooTrace::instance()._verbose = flag ;
 }
@@ -224,13 +224,13 @@ void RooTrace::mark3()
 
 void RooTrace::dump()
 {
-  RooTrace::instance().dump3(cout,kFALSE) ;
+  RooTrace::instance().dump3(cout,false) ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooTrace::dump(ostream& os, Bool_t sinceMarked)
+void RooTrace::dump(ostream& os, bool sinceMarked)
 {
   RooTrace::instance().dump3(os,sinceMarked) ;
 }
@@ -240,7 +240,7 @@ void RooTrace::dump(ostream& os, Bool_t sinceMarked)
 /// Dump contents of object register to stream 'os'. If sinceMarked is
 /// true, only object created after the last call to mark() are shown.
 
-void RooTrace::dump3(ostream& os, Bool_t sinceMarked)
+void RooTrace::dump3(ostream& os, bool sinceMarked)
 {
   os << "List of RooFit objects allocated while trace active:" << endl ;
 

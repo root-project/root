@@ -124,15 +124,15 @@ void RooAbsL::initClones(RooAbsPdf &inpdf, RooAbsData &indata)
    pdf_->recursiveRedirectServers(*origParams);
 
    // Store normalization set
-   normSet_.reset((RooArgSet *)indata.get()->snapshot(kFALSE));
+   normSet_.reset((RooArgSet *)indata.get()->snapshot(false));
 
    // Expand list of observables with any observables used in parameterized ranges
    for (const auto realDep : *_funcObsSet) {
       auto realDepRLV = dynamic_cast<RooAbsRealLValue *>(realDep);
       if (realDepRLV && realDepRLV->isDerived()) {
          RooArgSet tmp2;
-         realDepRLV->leafNodeServerList(&tmp2, 0, kTRUE);
-         _funcObsSet->add(tmp2, kTRUE);
+         realDepRLV->leafNodeServerList(&tmp2, 0, true);
+         _funcObsSet->add(tmp2, true);
       }
    }
 
@@ -206,7 +206,7 @@ void RooAbsL::initClones(RooAbsPdf &inpdf, RooAbsData &indata)
    // Set value caching mode for all nodes that depend on any of the observables to ADirty
    pdf_->optimizeCacheMode(*_funcObsSet);
    // Disable propagation of dirty state flags for observables
-   data_->setDirtyProp(kFALSE);
+   data_->setDirtyProp(false);
 
    // Disable reading of observables that are not used
    data_->optimizeReadingWithCaching(*pdf_, RooArgSet(), RooArgSet());

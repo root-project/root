@@ -34,13 +34,13 @@ public:
   ~RooAbsHiddenReal() override;
 
   // I/O streaming interface (machine readable)
-  Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) override ;
-  void writeToStream(std::ostream& os, Bool_t compact) const override ;
+  bool readFromStream(std::istream& is, bool compact, bool verbose=false) override ;
+  void writeToStream(std::ostream& os, bool compact) const override ;
 
   // Printing interface (human readable)
   void printValue(std::ostream& stream) const override ;
 
-  inline Bool_t isHidden() const {
+  inline bool isHidden() const {
     // If true, hiding mode is active
     return _state.arg().getCurrentIndex()!=0 ;
   }

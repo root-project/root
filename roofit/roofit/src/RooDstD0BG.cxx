@@ -106,15 +106,15 @@ Double_t RooDstD0BG::analyticalIntegral(Int_t code, const char* rangeName) const
       if (max <= dm0 ) return 0;
       else if (min < dm0) min = dm0;
 
-      Bool_t doNumerical= kFALSE;
-      if ( A != 0 ) doNumerical= kTRUE;
+      bool doNumerical= false;
+      if ( A != 0 ) doNumerical= true;
       else if (B < 0) {
    // If b<0, pdf can be negative at large dm, the integral should
    // only up to where pdf hits zero. Better solution should be
    // solve the zero and use it as max.
    // Here we check this whether pdf(max) < 0. If true, let numerical
    // integral take care of. ( kind of ugly!)
-   if ( 1- exp(-(max-dm0)/C) + B*(max/dm0 -1) < 0) doNumerical= kTRUE;
+   if ( 1- exp(-(max-dm0)/C) + B*(max/dm0 -1) < 0) doNumerical= true;
       }
       if ( ! doNumerical ) {
    return (max-min)+ C* exp(dm0/C)* (exp(-max/C)- exp(-min/C)) +

@@ -69,11 +69,11 @@ namespace RooStats {
     const TString GetVarName() const {return fVarName;}
 
     /// numerical integral in these limits
-    Double_t Integral(Double_t low, Double_t high, Bool_t normalize = kTRUE, Bool_t lowClosed = kTRUE, Bool_t highClosed = kFALSE) const;
+    Double_t Integral(Double_t low, Double_t high, bool normalize = true, bool lowClosed = true, bool highClosed = false) const;
 
     /// numerical integral in these limits including error estimation
-    Double_t IntegralAndError(Double_t & error, Double_t low, Double_t high, Bool_t normalize = kTRUE,
-                              Bool_t lowClosed = kTRUE, Bool_t highClosed = kFALSE) const;
+    Double_t IntegralAndError(Double_t & error, Double_t low, Double_t high, bool normalize = true,
+                              bool lowClosed = true, bool highClosed = false) const;
 
     /// calculate CDF as a special case of Integral(...) with lower limit equal to -inf
     Double_t CDF(Double_t x) const;

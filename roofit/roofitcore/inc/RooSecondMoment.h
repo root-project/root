@@ -28,8 +28,8 @@ class RooSecondMoment : public RooAbsMoment {
 public:
 
   RooSecondMoment() ;
-  RooSecondMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x, Bool_t central=kFALSE, Bool_t takeRoot=kFALSE) ;
-  RooSecondMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, Bool_t central=kFALSE, Bool_t takeRoot=kFALSE, Bool_t intNSet=kFALSE) ;
+  RooSecondMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x, bool central=false, bool takeRoot=false) ;
+  RooSecondMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, bool central=false, bool takeRoot=false, bool intNSet=false) ;
   ~RooSecondMoment() override ;
 
   RooSecondMoment(const RooSecondMoment& other, const char* name = 0);

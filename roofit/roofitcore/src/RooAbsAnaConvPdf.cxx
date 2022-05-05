@@ -95,9 +95,9 @@ RooAbsAnaConvPdf::RooAbsAnaConvPdf() :
 
 RooAbsAnaConvPdf::RooAbsAnaConvPdf(const char *name, const char *title,
                const RooResolutionModel& model, RooRealVar& cVar) :
-  RooAbsPdf(name,title), _isCopy(kFALSE),
-  _model("!model","Original resolution model",this,(RooResolutionModel&)model,kFALSE,kFALSE),
-  _convVar("!convVar","Convolution variable",this,cVar,kFALSE,kFALSE),
+  RooAbsPdf(name,title), _isCopy(false),
+  _model("!model","Original resolution model",this,(RooResolutionModel&)model,false,false),
+  _convVar("!convVar","Convolution variable",this,cVar,false,false),
   _convSet("!convSet","Set of resModel X basisFunc convolutions",this),
   _coefNormMgr(this,10),
   _codeReg(10)
@@ -110,7 +110,7 @@ RooAbsAnaConvPdf::RooAbsAnaConvPdf(const char *name, const char *title,
 ////////////////////////////////////////////////////////////////////////////////
 
 RooAbsAnaConvPdf::RooAbsAnaConvPdf(const RooAbsAnaConvPdf& other, const char* name) :
-  RooAbsPdf(other,name), _isCopy(kTRUE),
+  RooAbsPdf(other,name), _isCopy(true),
   _model("!model",this,other._model),
   _convVar("!convVar",this,other._convVar),
   _convSet("!convSet",this,other._convSet),
@@ -205,17 +205,17 @@ Int_t RooAbsAnaConvPdf::declareBasis(const char* expression, const RooArgList& p
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the current resolution model to newModel
 
-Bool_t RooAbsAnaConvPdf::changeModel(const RooResolutionModel& newModel)
+bool RooAbsAnaConvPdf::changeModel(const RooResolutionModel& newModel)
 {
   RooArgList newConvSet ;
-  Bool_t allOK(kTRUE) ;
+  bool allOK(true) ;
   for (auto convArg : _convSet) {
     auto conv = static_cast<RooResolutionModel*>(convArg);
 
     // Build new resolution model
     RooResolutionModel* newConv = newModel.convolution((RooFormulaVar*)&conv->basis(),this) ;
     if (!newConvSet.add(*newConv)) {
-      allOK = kFALSE ;
+      allOK = false ;
       break ;
     }
   }
@@ -225,7 +225,7 @@ Bool_t RooAbsAnaConvPdf::changeModel(const RooResolutionModel& newModel)
     // Delete new basis functions created sofar
     std::for_each(newConvSet.begin(), newConvSet.end(), [](RooAbsArg* arg){delete arg;});
 
-    return kTRUE ;
+    return true ;
   }
 
   // Replace old convolutions with new set
@@ -233,10 +233,10 @@ Bool_t RooAbsAnaConvPdf::changeModel(const RooResolutionModel& newModel)
   _convSet.addOwned(newConvSet) ;
 
   // Update server link by hand, since _model.setArg() below will not do this
-  replaceServer((RooAbsArg&)_model.arg(),(RooAbsArg&)newModel,kFALSE,kFALSE) ;
+  replaceServer((RooAbsArg&)_model.arg(),(RooAbsArg&)newModel,false,false) ;
 
   _model.setArg((RooResolutionModel&)newModel) ;
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -250,21 +250,21 @@ Bool_t RooAbsAnaConvPdf::changeModel(const RooResolutionModel& newModel)
 /// a (slower) generic generation context that uses accept/reject sampling
 
 RooAbsGenContext* RooAbsAnaConvPdf::genContext(const RooArgSet &vars, const RooDataSet *prototype,
-                      const RooArgSet* auxProto, Bool_t verbose) const
+                      const RooArgSet* auxProto, bool verbose) const
 {
   // Check if the resolution model specifies a special context to be used.
   RooResolutionModel* conv = dynamic_cast<RooResolutionModel*>(_model.absArg());
   assert(conv);
 
   RooArgSet* modelDep = _model.absArg()->getObservables(&vars) ;
-  modelDep->remove(*convVar(),kTRUE,kTRUE) ;
+  modelDep->remove(*convVar(),true,true) ;
   Int_t numAddDep = modelDep->getSize() ;
   delete modelDep ;
 
   // Check if physics PDF and resolution model can both directly generate the convolution variable
   RooArgSet dummy ;
-  Bool_t pdfCanDir = (getGenerator(*convVar(),dummy) != 0) ;
-  Bool_t resCanDir = conv && (conv->getGenerator(*convVar(),dummy)!=0) && conv->isDirectGenSafe(*convVar()) ;
+  bool pdfCanDir = (getGenerator(*convVar(),dummy) != 0) ;
+  bool resCanDir = conv && (conv->getGenerator(*convVar(),dummy)!=0) && conv->isDirectGenSafe(*convVar()) ;
 
   if (numAddDep>0 || !pdfCanDir || !resCanDir) {
     // Any resolution model with more dependents than the convolution variable
@@ -292,13 +292,13 @@ RooAbsGenContext* RooAbsAnaConvPdf::genContext(const RooArgSet &vars, const RooD
 /// from the internal generator (this is the case if the chosen resolution
 /// model is the truth model)
 
-Bool_t RooAbsAnaConvPdf::isDirectGenSafe(const RooAbsArg& arg) const
+bool RooAbsAnaConvPdf::isDirectGenSafe(const RooAbsArg& arg) const
 {
 
   // All direct generation of convolution arg if model is truth model
   if (!TString(_convVar.absArg()->GetName()).CompareTo(arg.GetName()) &&
       dynamic_cast<RooTruthModel*>(_model.absArg())) {
-    return kTRUE ;
+    return true ;
   }
 
   return RooAbsPdf::isDirectGenSafe(arg) ;
@@ -385,10 +385,10 @@ Int_t RooAbsAnaConvPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
   TIterator* convIter = _convSet.createIterator() ;
 
   while(((arg=(RooAbsArg*) varIter->Next()))) {
-    Bool_t ok(kTRUE) ;
+    bool ok(true) ;
     convIter->Reset() ;
     while(((conv=(RooResolutionModel*) convIter->Next()))) {
-      if (conv->dependsOn(*arg)) ok=kFALSE ;
+      if (conv->dependsOn(*arg)) ok=false ;
     }
 
     if (ok) {
@@ -408,10 +408,10 @@ Int_t RooAbsAnaConvPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
   if (normSetAll) {
     varIter  =  normSetAll->createIterator() ;
     while(((arg=(RooAbsArg*) varIter->Next()))) {
-      Bool_t ok(kTRUE) ;
+      bool ok(true) ;
       convIter->Reset() ;
       while(((conv=(RooResolutionModel*) convIter->Next()))) {
-   if (conv->dependsOn(*arg)) ok=kFALSE ;
+   if (conv->dependsOn(*arg)) ok=false ;
       }
 
       if (ok) {
@@ -590,9 +590,9 @@ Double_t RooAbsAnaConvPdf::coefAnalyticalIntegral(Int_t coef, Int_t code, const 
 /// but feed them to the resolution models integration interface, which will
 /// make the final determination on how to integrate these dependents.
 
-Bool_t RooAbsAnaConvPdf::forceAnalyticalInt(const RooAbsArg& /*dep*/) const
+bool RooAbsAnaConvPdf::forceAnalyticalInt(const RooAbsArg& /*dep*/) const
 {
-  return kTRUE ;
+  return true ;
 }
 
 
@@ -672,7 +672,7 @@ RooArgSet* RooAbsAnaConvPdf::coefVars(Int_t /*coefIdx*/) const
 ///
 ///   Verbose : detailed information on convolution integrals
 
-void RooAbsAnaConvPdf::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TString indent) const
+void RooAbsAnaConvPdf::printMultiline(ostream& os, Int_t contents, bool verbose, TString indent) const
 {
   RooAbsPdf::printMultiline(os,contents,verbose,indent);
 

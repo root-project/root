@@ -27,27 +27,27 @@ class RooAddModel : public RooResolutionModel {
 public:
 
   RooAddModel() ;
-  RooAddModel(const char *name, const char *title, const RooArgList& pdfList, const RooArgList& coefList, Bool_t ownPdfList=kFALSE) ;
+  RooAddModel(const char *name, const char *title, const RooArgList& pdfList, const RooArgList& coefList, bool ownPdfList=false) ;
   RooAddModel(const RooAddModel& other, const char* name=0) ;
   TObject* clone(const char* newname) const override { return new RooAddModel(*this,newname) ; }
   RooResolutionModel* convolution(RooFormulaVar* basis, RooAbsArg* owner) const override ;
   ~RooAddModel() override ;
 
   Double_t evaluate() const override ;
-  Bool_t checkObservables(const RooArgSet* nset) const override ;
+  bool checkObservables(const RooArgSet* nset) const override ;
 
   Int_t basisCode(const char* name) const override ;
 
-  Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const override {
+  bool forceAnalyticalInt(const RooAbsArg& /*dep*/) const override {
     // Force RooRealIntegral to offer all observables for internal integration
-    return kTRUE ;
+    return true ;
   }
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const override ;
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
 
   /// Model is self normalized when used as p.d.f
-  Bool_t selfNormalized() const override {
-    return _basisCode==0 ? kTRUE : kFALSE ;
+  bool selfNormalized() const override {
+    return _basisCode==0 ? true : false ;
   }
 
   /// Return extended mode capabilities
@@ -69,9 +69,9 @@ public:
     return _coefList ;
   }
 
-  Bool_t isDirectGenSafe(const RooAbsArg& arg) const override ;
+  bool isDirectGenSafe(const RooAbsArg& arg) const override ;
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const override;
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void generateEvent(Int_t code) override;
 
 
@@ -85,15 +85,15 @@ protected:
 
   friend class RooAddGenContext ;
   RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0,
-                                       const RooArgSet* auxProto=0, Bool_t verbose= kFALSE) const override ;
+                                       const RooArgSet* auxProto=0, bool verbose= false) const override ;
 
-  void selectNormalization(const RooArgSet* depSet=0, Bool_t force=kFALSE) override ;
-  void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) override ;
+  void selectNormalization(const RooArgSet* depSet=0, bool force=false) override ;
+  void selectNormalizationRange(const char* rangeName=0, bool force=false) override ;
 
   mutable RooSetProxy _refCoefNorm ;   ///<! Reference observable set for coefficient interpretation
   mutable TNamed* _refCoefRangeName ;  ///<! Reference range name for coefficient interpretation
 
-  Bool_t _projectCoefs ;         ///< If true coefficients need to be projected for use in evaluate()
+  bool _projectCoefs ;         ///< If true coefficients need to be projected for use in evaluate()
   mutable Double_t* _coefCache ; ///<! Transiet cache with transformed values of coefficients
 
 
@@ -132,8 +132,8 @@ protected:
   RooListProxy _coefList ;  ///<  List of coefficients
   mutable RooArgList* _snormList{nullptr};  ///<!  List of supplemental normalization factors
 
-  Bool_t _haveLastCoef ;    ///<  Flag indicating if last PDFs coefficient was supplied in the ctor
-  Bool_t _allExtendable ;   ///<  Flag indicating if all PDF components are extendable
+  bool _haveLastCoef ;    ///<  Flag indicating if last PDFs coefficient was supplied in the ctor
+  bool _allExtendable ;   ///<  Flag indicating if all PDF components are extendable
 
   mutable Int_t _coefErrCount ; ///<! Coefficient error counter
 

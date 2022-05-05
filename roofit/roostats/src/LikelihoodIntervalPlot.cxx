@@ -412,7 +412,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
          newProfile->fillHistogram(hist2D, RooArgList(*myparam,*myparamY), 1, 0, false, 0, false);
 
          hist2D->SetTitle(title);
-         hist2D->SetStats(kFALSE);
+         hist2D->SetStats(false);
 
          //need many color levels for drawing with option colz
          if (plotHist) {

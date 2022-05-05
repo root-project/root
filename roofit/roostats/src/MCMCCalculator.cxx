@@ -67,8 +67,8 @@ MCMCCalculator::MCMCCalculator() :
    fNumIters = 0;
    fNumBurnInSteps = 0;
    fNumBins = 0;
-   fUseKeys = kFALSE;
-   fUseSparseHist = kFALSE;
+   fUseKeys = false;
+   fUseSparseHist = false;
    fSize = -1;
    fIntervalType = MCMCInterval::kShortest;
    fLeftSideTF = -1;
@@ -120,8 +120,8 @@ void MCMCCalculator::SetupBasicUsage()
    fNumIters = 10000;
    fNumBurnInSteps = 40;
    fNumBins = 50;
-   fUseKeys = kFALSE;
-   fUseSparseHist = kFALSE;
+   fUseKeys = false;
+   fUseSparseHist = false;
    SetTestSize(0.05);
    fIntervalType = MCMCInterval::kShortest;
    fLeftSideTF = -1;

@@ -27,19 +27,19 @@ public:
   static const RooHistError &instance();
   virtual ~RooHistError() {} ;
 
-  Bool_t getPoissonInterval(Int_t n, Double_t &mu1, Double_t &mu2, Double_t nSigma= 1) const;
-  Bool_t getBinomialIntervalAsym(Int_t n, Int_t m, Double_t &a1, Double_t &a2, Double_t nSigma= 1) const;
-  Bool_t getBinomialIntervalEff(Int_t n, Int_t m, Double_t &a1, Double_t &a2, Double_t nSigma= 1) const;
-  Bool_t getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, Double_t pointEstimate, Double_t stepSize,
+  bool getPoissonInterval(Int_t n, Double_t &mu1, Double_t &mu2, Double_t nSigma= 1) const;
+  bool getBinomialIntervalAsym(Int_t n, Int_t m, Double_t &a1, Double_t &a2, Double_t nSigma= 1) const;
+  bool getBinomialIntervalEff(Int_t n, Int_t m, Double_t &a1, Double_t &a2, Double_t nSigma= 1) const;
+  bool getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, Double_t pointEstimate, Double_t stepSize,
            Double_t &lo, Double_t &hi, Double_t nSigma) const;
 
   static RooAbsFunc *createPoissonSum(Int_t n) ;
-  static RooAbsFunc *createBinomialSum(Int_t n, Int_t m, Bool_t eff) ;
+  static RooAbsFunc *createBinomialSum(Int_t n, Int_t m, bool eff) ;
 
 private:
 
 
-  Bool_t getPoissonIntervalCalc(Int_t n, Double_t &mu1, Double_t &mu2, Double_t nSigma= 1) const;
+  bool getPoissonIntervalCalc(Int_t n, Double_t &mu1, Double_t &mu2, Double_t nSigma= 1) const;
   Double_t _poissonLoLUT[1000] ;
   Double_t _poissonHiLUT[1000] ;
 

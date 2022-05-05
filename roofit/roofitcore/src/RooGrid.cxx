@@ -46,7 +46,7 @@ ClassImp(RooGrid);
 /// Default constructor
 
 RooGrid::RooGrid() :
-  _valid(kFALSE), _dim(0), _bins(0), _boxes(0), _vol(0), _xl(0),  _xu(0),  _delx(0),  _d(0),  _xi(0),  _xin(0),  _weight(0)
+  _valid(false), _dim(0), _bins(0), _boxes(0), _vol(0), _xl(0),  _xu(0),  _delx(0),  _d(0),  _xi(0),  _xin(0),  _weight(0)
 {
 }
 
@@ -55,7 +55,7 @@ RooGrid::RooGrid() :
 /// Constructor with given function binding
 
 RooGrid::RooGrid(const RooAbsFunc &function)
-  : _valid(kTRUE), _xl(0),_xu(0),_delx(0),_xi(0)
+  : _valid(true), _xl(0),_xu(0),_delx(0),_xi(0)
 {
   // check that the input function is valid
   if(!(_valid= function.isValid())) {
@@ -74,7 +74,7 @@ RooGrid::RooGrid(const RooAbsFunc &function)
   _weight= new Double_t[maxBins];
   if(!_xl || !_xu || !_delx || !_d || !_xi || !_xin || !_weight) {
     oocoutE((TObject*)0,Integration) << ClassName() << ": memory allocation failed" << endl;
-    _valid= kFALSE;
+    _valid= false;
     return;
   }
 
@@ -101,9 +101,9 @@ RooGrid::~RooGrid()
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and store the grid dimensions and volume using the
 /// specified function, and initialize the grid using a single bin.
-/// Return kTRUE, or else kFALSE if the range is not valid.
+/// Return true, or else false if the range is not valid.
 
-Bool_t RooGrid::initialize(const RooAbsFunc &function)
+bool RooGrid::initialize(const RooAbsFunc &function)
 {
   _vol= 1;
   _bins= 1;
@@ -111,25 +111,25 @@ Bool_t RooGrid::initialize(const RooAbsFunc &function)
     _xl[index]= function.getMinLimit(index);
     if(RooNumber::isInfinite(_xl[index])) {
       oocoutE((TObject*)0,Integration) << ClassName() << ": lower limit of dimension " << index << " is infinite" << endl;
-      return kFALSE;
+      return false;
     }
     _xu[index]= function.getMaxLimit(index);
     if(RooNumber::isInfinite(_xl[index])) {
       oocoutE((TObject*)0,Integration) << ClassName() << ": upper limit of dimension " << index << " is infinite" << endl;
-      return kFALSE;
+      return false;
     }
     Double_t dx= _xu[index] - _xl[index];
     if(dx <= 0) {
       oocoutE((TObject*)0,Integration) << ClassName() << ": bad range for dimension " << index << ": [" << _xl[index]
                    << "," << _xu[index] << "]" << endl;
-      return kFALSE;
+      return false;
     }
     _delx[index]= dx;
     _vol*= dx;
     coord(0,index) = 0;
     coord(1,index) = 1;
   }
-  return kTRUE;
+  return true;
 }
 
 
@@ -194,7 +194,7 @@ void RooGrid::resetValues()
 /// that each range from 0 to getNBoxes()-1.
 
 void RooGrid::generatePoint(const UInt_t box[], Double_t x[], UInt_t bin[], Double_t &vol,
-             Bool_t useQuasiRandom) const
+             bool useQuasiRandom) const
 {
   vol= 1;
 
@@ -250,21 +250,21 @@ void RooGrid::firstBox(UInt_t box[]) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Update the specified array of box indices to refer to the next box
-/// in the standard traversal order and return kTRUE, or else return
-/// kFALSE if we the indices already refer to the last box.
+/// in the standard traversal order and return true, or else return
+/// false if we the indices already refer to the last box.
 
-Bool_t RooGrid::nextBox(UInt_t box[]) const
+bool RooGrid::nextBox(UInt_t box[]) const
 {
   // try incrementing each index until we find one that does not roll
   // over, starting from the last index.
   Int_t j(_dim-1);
   while (j >= 0) {
     box[j]= (box[j] + 1) % _boxes;
-    if (0 != box[j]) return kTRUE;
+    if (0 != box[j]) return true;
     j--;
   }
   // if we get here, then there are no more boxes
-  return kFALSE;
+  return false;
 }
 
 
@@ -272,7 +272,7 @@ Bool_t RooGrid::nextBox(UInt_t box[]) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print info about this object to the specified stream.
 
-void RooGrid::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbose, TString indent) const
+void RooGrid::printMultiline(ostream& os, Int_t /*contents*/, bool verbose, TString indent) const
 {
   os << ClassName() << ": volume = " << getVolume() << endl;
   os << indent << "  Has " << getDimension() << " dimension(s) each subdivided into "

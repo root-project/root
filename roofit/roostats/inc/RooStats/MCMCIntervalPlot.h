@@ -38,7 +38,7 @@ namespace RooStats {
       void SetLineColor(Color_t color) {fLineColor = color;}
       void SetLineWidth(Int_t width) {fLineWidth = width;}
       void SetShadeColor(Color_t color) {fShadeColor = color;}
-      void SetShowBurnIn(Bool_t showBurnIn) { fShowBurnIn = showBurnIn; }
+      void SetShowBurnIn(bool showBurnIn) { fShowBurnIn = showBurnIn; }
 
       void Draw(const Option_t* options = NULL) override;
 
@@ -63,7 +63,7 @@ namespace RooStats {
       Color_t fLineColor;
       Color_t fShadeColor;
       Int_t fLineWidth;
-      Bool_t fShowBurnIn;
+      bool fShowBurnIn;
       TGraph* fWalk;
       TGraph* fBurnIn;
       TGraph* fFirst;
@@ -73,7 +73,7 @@ namespace RooStats {
    protected:
       void DrawPosterior(const Option_t* options = NULL);
       void* DrawPosteriorHist(const Option_t* options = NULL,
-            const char* title = NULL, Bool_t scale = kTRUE);
+            const char* title = NULL, bool scale = true);
       void* DrawPosteriorKeysPdf(const Option_t* options = NULL);
       void* DrawPosteriorKeysProduct(const Option_t* options = NULL);
 

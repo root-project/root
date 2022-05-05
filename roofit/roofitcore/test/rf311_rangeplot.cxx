@@ -27,8 +27,8 @@ using namespace RooFit ;
 class TestBasic311 : public RooFitTestUnit
 {
 public:
-  TestBasic311(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Data and p.d.f projection in sub range",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic311(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Data and p.d.f projection in sub range",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // C r e a t e   3 D   p d f   a n d   d a t a
   // -------------------------------------------
@@ -92,6 +92,6 @@ public:
 
   delete data ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;

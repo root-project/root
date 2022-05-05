@@ -114,7 +114,7 @@ TEST(GradMinimizerDebugging, DISABLED_Gaussian1DNominal)
 
    m0.setStrategy(0);
    m0.setPrintLevel(100);
-   m0.setVerbose(kTRUE);
+   m0.setVerbose(true);
 
    m0.migrad();
 }
@@ -139,7 +139,7 @@ TEST(GradMinimizerDebugging, DISABLED_Gaussian1DGradMinimizer)
 
    m1.setStrategy(0);
    m1.setPrintLevel(100);
-   m1.setVerbose(kTRUE);
+   m1.setVerbose(true);
 
    m1.migrad();
 }
@@ -155,7 +155,7 @@ TEST(GradMinimizer, GaussianND)
    // produce the same random stuff every time
    RooRandom::randomGenerator()->SetSeed(1);
 
-   RooWorkspace w("w", kFALSE);
+   RooWorkspace w("w", false);
 
    std::unique_ptr<RooAbsReal> nll;
    std::unique_ptr<RooArgSet> all_values;
@@ -251,7 +251,7 @@ TEST(GradMinimizerReverse, GaussianND)
    // produce the same random stuff every time
    RooRandom::randomGenerator()->SetSeed(1);
 
-   RooWorkspace w("w", kFALSE);
+   RooWorkspace w("w", false);
 
    std::unique_ptr<RooAbsReal> nll;
    std::unique_ptr<RooArgSet> all_values;

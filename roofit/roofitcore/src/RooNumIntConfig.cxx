@@ -70,7 +70,7 @@ RooNumIntConfig& RooNumIntConfig::defaultConfig()
 RooNumIntConfig::RooNumIntConfig() :
   _epsAbs(1e-7),
   _epsRel(1e-7),
-  _printEvalCounter(kFALSE),
+  _printEvalCounter(false),
   _method1D("method1D","1D integration method"),
   _method2D("method2D","2D integration method"),
   _methodND("methodND","ND integration method"),
@@ -164,7 +164,7 @@ RooNumIntConfig& RooNumIntConfig::operator=(const RooNumIntConfig& other)
 /// automatically determined from instance passed as 'proto'. The defaultConfig object is associated
 /// as the default configuration for the integrator.
 
-Bool_t RooNumIntConfig::addConfigSection(const RooAbsIntegrator* proto, const RooArgSet& inDefaultConfig)
+bool RooNumIntConfig::addConfigSection(const RooAbsIntegrator* proto, const RooArgSet& inDefaultConfig)
 {
   std::string name = proto->IsA()->GetName() ;
 
@@ -195,7 +195,7 @@ Bool_t RooNumIntConfig::addConfigSection(const RooAbsIntegrator* proto, const Ro
   config->setName(name.c_str());
   _configSets.Add(config) ;
 
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -272,7 +272,7 @@ void RooNumIntConfig::setEpsRel(Double_t newEpsRel)
 ////////////////////////////////////////////////////////////////////////////////
 /// Detailed printing interface
 
-void RooNumIntConfig::printMultiline(ostream &os, Int_t /*content*/, Bool_t verbose, TString indent) const
+void RooNumIntConfig::printMultiline(ostream &os, Int_t /*content*/, bool verbose, TString indent) const
 {
   os << indent << "Requested precision: " << _epsAbs << " absolute, " << _epsRel << " relative" << endl << endl ;
   if (_printEvalCounter) {
@@ -314,7 +314,7 @@ void RooNumIntConfig::printMultiline(ostream &os, Int_t /*content*/, Bool_t verb
 
       os << "Configuration: " << endl ;
       configSet->printMultiline(os,kName|kValue) ;
-      //configSet->writeToStream(os,kFALSE) ;
+      //configSet->writeToStream(os,false) ;
 
       const char* depName = RooNumIntFactory::instance().getDepIntegratorName(configSet->GetName()) ;
       if (strlen(depName)>0) {

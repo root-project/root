@@ -42,15 +42,15 @@ public:
   static RooAbsPdf* makePdfInstance(const char* className, const char* name, const char* expression, const RooArgList& vars, const char* intExpression=0) ;
   static RooAbsPdf* makePdfInstance(const char* name, const char* expression, const RooArgList& vars, const char* intExpression=0) ;
 
-  static Bool_t makeAndCompilePdf(const char* name, const char* expression, const RooArgList& vars, const char* intExpression=0) ;
-  static Bool_t makeAndCompileFunction(const char* name, const char* expression, const RooArgList& args, const char* intExpression=0) ;
+  static bool makeAndCompilePdf(const char* name, const char* expression, const RooArgList& vars, const char* intExpression=0) ;
+  static bool makeAndCompileFunction(const char* name, const char* expression, const RooArgList& args, const char* intExpression=0) ;
 
-  static Bool_t makePdf(const char* name, const char* realArgNames=0, const char* catArgNames=0,
-         const char* expression="1.0", Bool_t hasAnaInt=kFALSE, Bool_t hasIntGen=kFALSE, const char* intExpression=0) ;
-  static Bool_t makeFunction(const char* name, const char* realArgNames=0, const char* catArgNames=0,
-              const char* expression="1.0", Bool_t hasAnaInt=kFALSE, const char* intExpression=0) ;
-  static Bool_t makeClass(const char* className, const char* name, const char* realArgNames=0, const char* catArgNames=0,
-           const char* expression="1.0", Bool_t hasAnaInt=kFALSE, Bool_t hasIntGen=kFALSE, const char* intExpression=0) ;
+  static bool makePdf(const char* name, const char* realArgNames=0, const char* catArgNames=0,
+         const char* expression="1.0", bool hasAnaInt=false, bool hasIntGen=false, const char* intExpression=0) ;
+  static bool makeFunction(const char* name, const char* realArgNames=0, const char* catArgNames=0,
+              const char* expression="1.0", bool hasAnaInt=false, const char* intExpression=0) ;
+  static bool makeClass(const char* className, const char* name, const char* realArgNames=0, const char* catArgNames=0,
+           const char* expression="1.0", bool hasAnaInt=false, bool hasIntGen=false, const char* intExpression=0) ;
 
   class ClassFacIFace : public RooFactoryWSTool::IFace {
   public:

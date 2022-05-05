@@ -226,7 +226,7 @@ RooAbsReal& ParamHistFunc::getParameter() const {
 }
 
 
-void ParamHistFunc::setParamConst( Int_t index, Bool_t varConst ) {
+void ParamHistFunc::setParamConst( Int_t index, bool varConst ) {
   RooAbsReal& var = getParameter( index );
   var.setAttribute( "Constant", varConst );
 }

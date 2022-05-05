@@ -114,7 +114,7 @@ LikelihoodInterval::~LikelihoodInterval()
 /// This is the main method to satisfy the RooStats::ConfInterval interface.
 /// It returns true if the parameter point is in the interval.
 
-Bool_t LikelihoodInterval::IsInInterval(const RooArgSet &parameterPoint) const
+bool LikelihoodInterval::IsInInterval(const RooArgSet &parameterPoint) const
 {
    RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
    RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
@@ -170,7 +170,7 @@ RooArgSet* LikelihoodInterval::GetParameters() const
 ////////////////////////////////////////////////////////////////////////////////
 /// check that the parameters are correct
 
-Bool_t LikelihoodInterval::CheckParameters(const RooArgSet &parameterPoint) const
+bool LikelihoodInterval::CheckParameters(const RooArgSet &parameterPoint) const
 {
   if (parameterPoint.getSize() != fParameters.getSize() ) {
     std::cout << "size is wrong, parameters don't match" << std::endl;
@@ -257,7 +257,7 @@ bool LikelihoodInterval::CreateMinimizer() {
    // now do binding of NLL with a functor for Minimizer
    if (config.useLikelihoodOffset) {
       ccoutI(InputArguments) << "LikelihoodInterval: using nll offset - set all RooAbsReal to hide the offset  " << std::endl;
-      RooAbsReal::setHideOffset(kFALSE); // need to keep this false
+      RooAbsReal::setHideOffset(false); // need to keep this false
    }
    fFunctor = std::make_shared<RooFunctor>(nll, RooArgSet(), params);
 

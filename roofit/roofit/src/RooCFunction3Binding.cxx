@@ -41,7 +41,7 @@ namespace RooFit {
   }
 
   RooAbsReal* bindFunction(const char* name,CFUNCD3DDB func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z) {
-    return new RooCFunction3Binding<Double_t,Double_t,Double_t,Bool_t>(name,name,func,x,y,z) ;
+    return new RooCFunction3Binding<Double_t,Double_t,Double_t,bool>(name,name,func,x,y,z) ;
   }
 
   RooAbsReal* bindFunction(const char* name,CFUNCD3DII func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z) {
@@ -65,7 +65,7 @@ namespace RooFit {
   }
 
   RooAbsPdf* bindPdf(const char* name,CFUNCD3DDB func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z) {
-    return new RooCFunction3PdfBinding<Double_t,Double_t,Double_t,Bool_t>(name,name,func,x,y,z) ;
+    return new RooCFunction3PdfBinding<Double_t,Double_t,Double_t,bool>(name,name,func,x,y,z) ;
   }
 
   RooAbsPdf* bindPdf(const char* name,CFUNCD3DII func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z) {

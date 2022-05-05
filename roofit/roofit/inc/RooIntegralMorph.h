@@ -32,20 +32,20 @@ public:
          RooAbsReal& _pdf1,
          RooAbsReal& _pdf2,
            RooAbsReal& _x,
-         RooAbsReal& _alpha, Bool_t cacheAlpha=kFALSE);
+         RooAbsReal& _alpha, bool cacheAlpha=false);
   RooIntegralMorph(const RooIntegralMorph& other, const char* name=0) ;
   TObject* clone(const char* newname) const override { return new RooIntegralMorph(*this,newname); }
   inline ~RooIntegralMorph() override { }
 
-  Bool_t selfNormalized() const override {
+  bool selfNormalized() const override {
     // P.d.f is self normalized
-    return kTRUE ;
+    return true ;
   }
-  void setCacheAlpha(Bool_t flag) {
+  void setCacheAlpha(bool flag) {
     // Activate caching of p.d.f. shape for all values of alpha as well
     _cacheMgr.sterilize() ; _cacheAlpha = flag ;
   }
-  Bool_t cacheAlpha() const {
+  bool cacheAlpha() const {
     // If true caching of p.d.f for all alpha values is active
     return _cacheAlpha ;
   }
@@ -62,7 +62,7 @@ public:
   protected:
 
     void findRange() ;
-    Double_t calcX(Double_t y, Bool_t& ok) ;
+    Double_t calcX(Double_t y, bool& ok) ;
     Int_t binX(Double_t x) ;
     void fillGap(Int_t ixlo, Int_t ixhi,Double_t splitPoint=0.5) ;
     void interpolateGap(Int_t ixlo, Int_t ixhi) ;
@@ -102,7 +102,7 @@ protected:
   RooRealProxy pdf2 ; // Second input shape
   RooRealProxy x ;    // Observable
   RooRealProxy alpha ; // Interpolation parameter
-  Bool_t _cacheAlpha ; // If true, both (x,alpha) are cached
+  bool _cacheAlpha ; // If true, both (x,alpha) are cached
   mutable MorphCacheElem* _cache ; // Current morph cache element in use
 
 

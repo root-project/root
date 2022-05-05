@@ -28,12 +28,12 @@ class RooAbsMoment : public RooAbsReal {
 public:
 
   RooAbsMoment() ;
-  RooAbsMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x, Int_t order=1, Bool_t takeRoot=kFALSE) ;
+  RooAbsMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x, Int_t order=1, bool takeRoot=false) ;
   RooAbsMoment(const RooAbsMoment& other, const char* name = 0);
   ~RooAbsMoment() override ;
 
   Int_t order() const { return _order ; }
-  Bool_t central() const { return _mean.absArg() ? kTRUE : kFALSE ; }
+  bool central() const { return _mean.absArg() ? true : false ; }
   RooAbsReal* mean() { return (RooAbsReal*) _mean.absArg() ; }
 
 

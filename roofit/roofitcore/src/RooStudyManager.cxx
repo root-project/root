@@ -98,7 +98,7 @@ void RooStudyManager::run(Int_t nExperiments)
 ////////////////////////////////////////////////////////////////////////////////
 /// Open PROOF-Lite session
 
-void RooStudyManager::runProof(Int_t nExperiments, const char* proofHost, Bool_t showGui)
+void RooStudyManager::runProof(Int_t nExperiments, const char* proofHost, bool showGui)
 {
   coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") opening PROOF session" << endl ;
   void* p = (void*) gROOT->ProcessLineFast(Form("TProof::Open(\"%s\")",proofHost)) ;
@@ -163,7 +163,7 @@ void RooStudyManager::closeProof(Option_t *option)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooStudyManager::prepareBatchInput(const char* studyName, Int_t nExpPerJob, Bool_t unifiedInput=kFALSE)
+void RooStudyManager::prepareBatchInput(const char* studyName, Int_t nExpPerJob, bool unifiedInput=false)
 {
   TFile f(Form("study_data_%s.root",studyName),"RECREATE") ;
   _pkg->Write("studypack") ;
@@ -306,7 +306,7 @@ void RooStudyManager::expandWildCardSpec(const char* name, list<string>& result)
    if (dir) {
       //create a TList to store the file names (not yet sorted)
       TList l;
-      TRegexp re(basename,kTRUE);
+      TRegexp re(basename,true);
       const char *file;
       while ((file = gSystem->GetDirEntry(dir))) {
          if (!strcmp(file,".") || !strcmp(file,"..")) continue;

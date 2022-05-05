@@ -275,7 +275,7 @@ RooArgSet* ConfidenceBelt::GetParameters() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t ConfidenceBelt::CheckParameters(RooArgSet &parameterPoint) const
+bool ConfidenceBelt::CheckParameters(RooArgSet &parameterPoint) const
 {
    if (parameterPoint.getSize() != fParameterPoints->get()->getSize() ) {
       std::cout << "size is wrong, parameters don't match" << std::endl;

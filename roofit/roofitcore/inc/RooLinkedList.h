@@ -65,11 +65,11 @@ public:
   bool empty() const { return _size == 0 ; }
 
   virtual void Add(TObject* arg) { Add(arg,1) ; }
-  virtual Bool_t Remove(TObject* arg) ;
+  virtual bool Remove(TObject* arg) ;
   TObject* At(int index) const ;
-  Bool_t Replace(const TObject* oldArg, const TObject* newArg) ;
-  TIterator* MakeIterator(Bool_t forward = kTRUE) const ;
-  RooLinkedListIter iterator(Bool_t forward = kTRUE) const ;
+  bool Replace(const TObject* oldArg, const TObject* newArg) ;
+  TIterator* MakeIterator(bool forward = true) const ;
+  RooLinkedListIter iterator(bool forward = true) const ;
   RooFIter fwdIterator() const ;
   RooLinkedListIterImpl begin() const;
   RooLinkedListIterImpl end() const;
@@ -91,14 +91,14 @@ public:
   void RecursiveRemove(TObject *obj) override;
 
   void Print(const char* opt) const override ;
-  void Sort(Bool_t ascend=kTRUE) ;
+  void Sort(bool ascend=true) ;
 
   // const char* GetName() const { return "" ; /*_name.Data() ; */ }
   // void SetName(const char* /*name*/) { /*_name = name ; */ }
   const char* GetName() const override { return _name.Data() ;  }
   void SetName(const char* name) { _name = name ;  }
 
-   void useNptr(Bool_t flag) { _useNptr = flag ; }
+   void useNptr(bool flag) { _useNptr = flag ; }
    // needed for using it in THashList/THashTable
 
    ULong_t  Hash() const override { return _name.Hash(); }
@@ -127,7 +127,7 @@ protected:
   std::unique_ptr<HashTableByLink> _htableLink; ///<! Hash table by link pointer
 
   TString             _name ;
-  Bool_t              _useNptr ; ///<!
+  bool              _useNptr ; ///<!
 
 private:
   template <bool ascending>

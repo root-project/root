@@ -147,7 +147,7 @@ void RooEllipse::printClassName(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print detailed multi line information on ellipse on ostreamx
 
-void RooEllipse::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TString indent) const
+void RooEllipse::printMultiline(ostream& os, Int_t contents, bool verbose, TString indent) const
 {
   RooPlotable::printMultiline(os,contents,verbose,indent);
   for(Int_t index=0; index < fNpoints; index++) {

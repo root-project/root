@@ -261,12 +261,12 @@ MarkovChain* MetropolisHastings::ConstructChain()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t MetropolisHastings::ShouldTakeStep(Double_t a)
+bool MetropolisHastings::ShouldTakeStep(Double_t a)
 {
    if ((fType == kLog && a <= 0.0) || (fType == kRegular && a >= 1.0)) {
       // The proposed point has a higher likelihood than the
       // current point, so we should go there
-      return kTRUE;
+      return true;
    }
    else {
       // generate numbers on a log distribution to decide
@@ -280,7 +280,7 @@ Bool_t MetropolisHastings::ShouldTakeStep(Double_t a)
          if (-1.0 * rand >= a)
             // we chose to go to the new proposed point
             // even though it has a lower likelihood than the current one
-            return kTRUE;
+            return true;
       } else {
          // fType must be kRegular
          // kbelasco: ensure that we never visit a point where PDF == 0
@@ -288,9 +288,9 @@ Bool_t MetropolisHastings::ShouldTakeStep(Double_t a)
          if (rand < a)
             // we chose to go to the new proposed point
             // even though it has a lower likelihood than the current one
-            return kTRUE;
+            return true;
       }
-      return kFALSE;
+      return false;
    }
 }
 

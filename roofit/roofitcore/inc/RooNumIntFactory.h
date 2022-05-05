@@ -33,11 +33,11 @@ public:
   static RooNumIntFactory& instance() ;
   ~RooNumIntFactory() override = default;
 
-  Bool_t storeProtoIntegrator(RooAbsIntegrator* proto, const RooArgSet& defConfig, const char* depName="") ;
+  bool storeProtoIntegrator(RooAbsIntegrator* proto, const RooArgSet& defConfig, const char* depName="") ;
   const RooAbsIntegrator* getProtoIntegrator(const char* name) const;
   const char* getDepIntegratorName(const char* name) const;
 
-  RooAbsIntegrator* createIntegrator(RooAbsFunc& func, const RooNumIntConfig& config, Int_t ndim=0, Bool_t isBinned=kFALSE) const;
+  RooAbsIntegrator* createIntegrator(RooAbsFunc& func, const RooNumIntConfig& config, Int_t ndim=0, bool isBinned=false) const;
 
 
 private:

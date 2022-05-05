@@ -57,7 +57,7 @@ namespace RooStats {
 
     void Draw(Option_t *options=0) override;
 
-    /// Applies a predefined style if fApplyStyle is kTRUE (default).
+    /// Applies a predefined style if fApplyStyle is true (default).
     void ApplyDefaultStyle(void);
 
     void SetLineColor(Color_t color, const SamplingDistribution *samplDist = 0);
@@ -74,7 +74,7 @@ namespace RooStats {
 
     /// If you do not want SamplingDistPlot to interfere with your style settings, call this
     /// function with "false" before Draw().
-    void SetApplyStyle(Bool_t s) { fApplyStyle = s; }
+    void SetApplyStyle(bool s) { fApplyStyle = s; }
 
     /// Returns the TH1F associated with the give SamplingDistribution.
     /// Intended use: Access to member functions of TH1F like GetMean(),
@@ -88,9 +88,9 @@ namespace RooStats {
     RooPlot * GetPlot() { return fRooPlot; }
 
     /// changes plot to log scale on x axis
-    void SetLogXaxis(Bool_t lx) { fLogXaxis = lx; }
+    void SetLogXaxis(bool lx) { fLogXaxis = lx; }
     /// changes plot to log scale on y axis
-    void SetLogYaxis(Bool_t ly) { fLogYaxis = ly; }
+    void SetLogYaxis(bool ly) { fLogYaxis = ly; }
 
     /// change x range
     void SetXRange( double mi, double ma ) { fXMin = mi; fXMax = ma; }
@@ -104,7 +104,7 @@ namespace RooStats {
     std::vector<Double_t> fSamplingDistr;
     std::vector<Double_t> fSampleWeights;
 
-    Bool_t fIsWeighted;
+    bool fIsWeighted;
 
     Int_t fBins;
     Int_t fMarkerType;
@@ -121,12 +121,12 @@ namespace RooStats {
     TList fOtherItems;  ///< other objects to be drawn like TLine etc.
     TIterator* fIterator;
     RooPlot* fRooPlot;
-    Bool_t fLogXaxis;
-    Bool_t fLogYaxis;
+    bool fLogXaxis;
+    bool fLogYaxis;
 
     double fXMin, fXMax, fYMin, fYMax;
 
-    Bool_t fApplyStyle;
+    bool fApplyStyle;
     Style_t fFillStyle;
 
     void SetSampleWeights(const SamplingDistribution *samplingDist);

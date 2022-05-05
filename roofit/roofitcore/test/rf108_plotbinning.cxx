@@ -28,8 +28,8 @@ using namespace RooFit ;
 class TestBasic108 : public RooFitTestUnit
 {
 public:
-  TestBasic108(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Non-standard binning in counting and asymmetry plots",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic108(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Non-standard binning in counting and asymmetry plots",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
     // S e t u p   m o d e l
     // ---------------------
@@ -126,6 +126,6 @@ public:
 
     delete data ;
 
-    return kTRUE ;
+    return true ;
   }
 } ;

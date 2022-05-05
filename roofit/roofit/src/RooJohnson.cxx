@@ -197,7 +197,7 @@ double RooJohnson::analyticalIntegral(Int_t code, const char* rangeName) const
 /// Advertise which kind of direct event generation is supported.
 ///
 /// So far, only generating mass values is supported.
-Int_t RooJohnson::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
+Int_t RooJohnson::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool /*staticInitOK*/) const
 {
   if (matchArgs(directVars, generateVars, _mass)) return 1 ;
 //  if (matchArgs(directVars, generateVars, _mu)) return 2 ;

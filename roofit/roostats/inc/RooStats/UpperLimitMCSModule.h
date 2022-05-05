@@ -32,13 +32,13 @@ public:
    UpperLimitMCSModule(const UpperLimitMCSModule& other) ;
    ~UpperLimitMCSModule() override ;
 
-   Bool_t initializeInstance() override ;
+   bool initializeInstance() override ;
 
-   Bool_t initializeRun(Int_t /*numSamples*/) override ;
+   bool initializeRun(Int_t /*numSamples*/) override ;
    RooDataSet* finalizeRun() override ;
 
-   //Bool_t processAfterFit(Int_t /*sampleNum*/)  ;
-   Bool_t processBetweenGenAndFit(Int_t /*sampleNum*/) override ;
+   //bool processAfterFit(Int_t /*sampleNum*/)  ;
+   bool processBetweenGenAndFit(Int_t /*sampleNum*/) override ;
 
 private:
 

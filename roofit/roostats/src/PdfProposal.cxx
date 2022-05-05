@@ -75,7 +75,7 @@ using namespace std;
 PdfProposal::PdfProposal() : ProposalFunction()
 {
    fPdf = NULL;
-   fOwnsPdf = kFALSE;
+   fOwnsPdf = false;
    fCacheSize = 1;
    fCachePosition = 0;
    fCache = NULL;
@@ -88,7 +88,7 @@ PdfProposal::PdfProposal() : ProposalFunction()
 PdfProposal::PdfProposal(RooAbsPdf& pdf) : ProposalFunction()
 {
    fPdf = &pdf;
-   fOwnsPdf = kFALSE;
+   fOwnsPdf = false;
    fCacheSize = 1;
    fCachePosition = 0;
    fCache = NULL;
@@ -97,16 +97,16 @@ PdfProposal::PdfProposal(RooAbsPdf& pdf) : ProposalFunction()
 ////////////////////////////////////////////////////////////////////////////////
 /// determine whether these two RooArgSets represent the same point
 
-Bool_t PdfProposal::Equals(RooArgSet& x1, RooArgSet& x2)
+bool PdfProposal::Equals(RooArgSet& x1, RooArgSet& x2)
 {
    if (x1.equals(x2)) {
       for (auto const *r : static_range_cast<RooRealVar*>(x1))
          if (r->getVal() != x2.getRealValue(r->GetName())) {
-            return kFALSE;
+            return false;
          }
-      return kTRUE;
+      return true;
    }
-   return kFALSE;
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -126,7 +126,7 @@ void PdfProposal::Propose(RooArgSet& xPrime, RooArgSet& x)
       fCache = fPdf->generate(xPrime, fCacheSize);
    }
 
-   Bool_t moved = false;
+   bool moved = false;
    if (fMap.size() > 0) {
       moved = !Equals(fLastX, x);
 
@@ -163,7 +163,7 @@ void PdfProposal::Propose(RooArgSet& xPrime, RooArgSet& x)
 /// points x1 and x2 - that is, whether the probabilty of reaching x2
 /// from x1 is equal to the probability of reaching x1 from x2
 
-Bool_t PdfProposal::IsSymmetric(RooArgSet& /* x1 */, RooArgSet& /* x2 */)
+bool PdfProposal::IsSymmetric(RooArgSet& /* x1 */, RooArgSet& /* x2 */)
 {
    // kbelasco: is there a better way to do this?
    return false;

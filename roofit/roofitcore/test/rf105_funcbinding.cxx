@@ -29,8 +29,8 @@ using namespace RooFit ;
 class TestBasic105 : public RooFitTestUnit
 {
 public:
-  TestBasic105(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("C++ function binding operator p.d.f",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic105(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("C++ function binding operator p.d.f",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
     // B i n d   T M a t h : : E r f   C   f u n c t i o n
     // ---------------------------------------------------
@@ -91,6 +91,6 @@ public:
     delete rfa1 ;
     delete data ;
 
-    return kTRUE ;
+    return true ;
   }
 } ;

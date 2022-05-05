@@ -29,8 +29,8 @@ using namespace RooFit ;
 class TestBasic601 : public RooFitTestUnit
 {
 public:
-  TestBasic601(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Interactive Minuit",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic601(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Interactive Minuit",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // S e t u p   p d f   a n d   l i k e l i h o o d
   // -----------------------------------------------
@@ -95,7 +95,7 @@ public:
   m.hesse() ;
 
   // Now fix sigma_g2
-  sigma_g2.setConstant(kTRUE) ;
+  sigma_g2.setConstant(true) ;
 
   // Rerun MIGRAD,HESSE
   m.migrad() ;
@@ -108,6 +108,6 @@ public:
 
   delete data ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;

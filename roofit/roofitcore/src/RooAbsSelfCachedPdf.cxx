@@ -78,9 +78,9 @@ void RooAbsSelfCachedPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) 
   RooDataHist& cacheHist = *cache.hist() ;
 
   // Make deep clone of self in non-caching mde and attach to dataset observables
-  RooArgSet* cloneSet = (RooArgSet*) RooArgSet(*this).snapshot(kTRUE) ;
+  RooArgSet* cloneSet = (RooArgSet*) RooArgSet(*this).snapshot(true) ;
   RooAbsSelfCachedPdf* clone2 = (RooAbsSelfCachedPdf*) cloneSet->find(GetName()) ;
-  clone2->disableCache(kTRUE) ;
+  clone2->disableCache(true) ;
   clone2->attachDataSet(cacheHist) ;
 
   // Iterator over all bins of RooDataHist and fill weights
@@ -90,7 +90,7 @@ void RooAbsSelfCachedPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) 
     cacheHist.set(i, wgt, 0.);
   }
 
-  cache.pdf()->setUnitNorm(kTRUE) ;
+  cache.pdf()->setUnitNorm(true) ;
 
   delete cloneSet ;
 }
@@ -130,7 +130,7 @@ RooArgSet* RooAbsSelfCachedPdf::actualParameters(const RooArgSet& nset) const
   }
 
   // Remove all given observables from server list
-  serverSet->remove(nset,kTRUE,kTRUE);
+  serverSet->remove(nset,true,true);
 
   return serverSet;
 }

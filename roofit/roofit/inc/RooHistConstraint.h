@@ -30,7 +30,7 @@ protected:
 
   RooListProxy _gamma ;
   RooListProxy _nominal ;
-  Bool_t _relParam ;
+  bool _relParam ;
 
   Double_t evaluate() const override ;
 

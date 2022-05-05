@@ -27,8 +27,8 @@ using namespace RooFit ;
 class TestBasic404 : public RooFitTestUnit
 {
 public:
-  TestBasic404(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Categories basic functionality",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic404(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Categories basic functionality",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // C o n s t r u c t    a   c a t e g o r y   w i t h   l a b e l s
   // ----------------------------------------------------------------
@@ -106,7 +106,7 @@ public:
 
   delete goodData ;
   delete data ;
-  return kTRUE ;
+  return true ;
 
   }
 

@@ -29,8 +29,8 @@ using namespace RooFit ;
 class TestBasic405 : public RooFitTestUnit
 {
 public:
-  TestBasic405(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Real-to-category functions",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic405(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Real-to-category functions",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
 
   // D e f i n e   p d f   i n   x ,   s a m p l e   d a t a s e t   i n   x
@@ -121,7 +121,7 @@ public:
   delete data ;
   delete dataSel ;
 
-  return kTRUE ;
+  return true ;
 
   }
 

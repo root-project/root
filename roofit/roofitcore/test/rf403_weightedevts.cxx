@@ -31,8 +31,8 @@ using namespace RooFit ;
 class TestBasic403 : public RooFitTestUnit
 {
 public:
-  TestBasic403(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Fits with weighted datasets",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic403(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Fits with weighted datasets",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // C r e a t e   o b s e r v a b l e   a n d   u n w e i g h t e d   d a t a s e t
   // -------------------------------------------------------------------------------
@@ -153,6 +153,6 @@ public:
   delete data2 ;
   delete data3 ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;

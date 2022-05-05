@@ -144,10 +144,10 @@ void RooAbsBinning::Streamer(TBuffer &R__b)
       RooPrintable::Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, RooAbsBinning::IsA());
    } else {
-      R__c = R__b.WriteVersion(RooAbsBinning::IsA(), kTRUE);
+      R__c = R__b.WriteVersion(RooAbsBinning::IsA(), true);
       TNamed::Streamer(R__b);
       RooPrintable::Streamer(R__b);
-      R__b.SetByteCount(R__c, kTRUE);
+      R__b.SetByteCount(R__c, true);
    }
 }
 

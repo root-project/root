@@ -42,14 +42,14 @@ RooEffGenContext::RooEffGenContext(const RooAbsPdf &model,
                                    const RooAbsPdf& pdf, const RooAbsReal& eff,
                                    const RooArgSet &vars,
                                    const RooDataSet *prototype, const RooArgSet* auxProto,
-                                   Bool_t verbose, const RooArgSet* /*forceDirect*/) :
+                                   bool verbose, const RooArgSet* /*forceDirect*/) :
    RooAbsGenContext(model, vars, prototype, auxProto, verbose), _maxEff(0.)
 {
    RooArgSet x(eff,eff.GetName());
-   _cloneSet = static_cast<RooArgSet*>(x.snapshot(kTRUE));
+   _cloneSet = static_cast<RooArgSet*>(x.snapshot(true));
    _eff = dynamic_cast<RooAbsReal*>(_cloneSet->find(eff.GetName()));
    _generator = pdf.genContext(vars, prototype, auxProto, verbose);
-   _vars = static_cast<RooArgSet*>(vars.snapshot(kTRUE));
+   _vars = static_cast<RooArgSet*>(vars.snapshot(true));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

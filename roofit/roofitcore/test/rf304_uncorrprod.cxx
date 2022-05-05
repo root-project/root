@@ -27,8 +27,8 @@ using namespace RooFit ;
 class TestBasic304 : public RooFitTestUnit
 {
 public:
-  TestBasic304(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Product operator p.d.f. with uncorrelated terms",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic304(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Product operator p.d.f. with uncorrelated terms",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // C r e a t e   c o m p o n e n t   p d f s   i n   x   a n d   y
   // ----------------------------------------------------------------
@@ -76,7 +76,7 @@ public:
 
   delete data ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;
 

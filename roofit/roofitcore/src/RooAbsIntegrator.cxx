@@ -38,7 +38,7 @@ ClassImp(RooAbsIntegrator);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooAbsIntegrator::RooAbsIntegrator() : _function(0), _valid(kFALSE), _printEvalCounter(kFALSE)
+RooAbsIntegrator::RooAbsIntegrator() : _function(0), _valid(false), _printEvalCounter(false)
 {
 }
 
@@ -47,7 +47,7 @@ RooAbsIntegrator::RooAbsIntegrator() : _function(0), _valid(kFALSE), _printEvalC
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooAbsIntegrator::RooAbsIntegrator(const RooAbsFunc& function, Bool_t doPrintEvalCounter) :
+RooAbsIntegrator::RooAbsIntegrator(const RooAbsFunc& function, bool doPrintEvalCounter) :
   _function(&function), _valid(function.isValid()), _printEvalCounter(doPrintEvalCounter)
 {
 }
@@ -74,7 +74,7 @@ Double_t RooAbsIntegrator::calculate(const Double_t *yvec)
 ////////////////////////////////////////////////////////////////////////////////
 /// Interface to set limits on integration
 
-Bool_t RooAbsIntegrator::setLimits(Double_t xmin, Double_t xmax)
+bool RooAbsIntegrator::setLimits(Double_t xmin, Double_t xmax)
 {
   return setLimits(&xmin,&xmax) ;
 }
@@ -84,7 +84,7 @@ Bool_t RooAbsIntegrator::setLimits(Double_t xmin, Double_t xmax)
 ////////////////////////////////////////////////////////////////////////////////
 /// Interface function that allows to defer limit definition to integrand definition
 
-Bool_t RooAbsIntegrator::setUseIntegrandLimits(Bool_t)
+bool RooAbsIntegrator::setUseIntegrandLimits(bool)
 {
-  return kFALSE ;
+  return false ;
 }

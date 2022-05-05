@@ -59,7 +59,7 @@ ClassImp(RooGExpModel);
 RooGExpModel::RooGExpModel(const char *name, const char *title, RooAbsRealLValue& xIn,
     RooAbsReal& meanIn, RooAbsReal& sigmaIn, RooAbsReal& rlifeIn,
     RooAbsReal& meanSF, RooAbsReal& sigmaSF, RooAbsReal& rlifeSF,
-    Bool_t nlo, Type type) :
+    bool nlo, Type type) :
   RooResolutionModel(name, title, xIn),
   _mean("mean", "Mean of Gaussian component", this, meanIn),
   sigma("sigma", "Width", this, sigmaIn),
@@ -87,7 +87,7 @@ RooGExpModel::RooGExpModel(const char *name, const char *title, RooAbsRealLValue
 /// \param[in] type  Switch between normal and flipped model.
 RooGExpModel::RooGExpModel(const char *name, const char *title, RooAbsRealLValue& xIn,
             RooAbsReal& _sigma, RooAbsReal& _rlife,
-            Bool_t nlo, Type type) :
+            bool nlo, Type type) :
   RooResolutionModel(name,title,xIn),
   _mean("mean", "Mean of Gaussian component", this, RooRealConstant::value(0.)),
   sigma("sigma","Width",this,_sigma),
@@ -95,7 +95,7 @@ RooGExpModel::RooGExpModel(const char *name, const char *title, RooAbsRealLValue
   _meanSF("meanSF", "Scale factor for mean", this, RooRealConstant::value(1)),
   ssf("ssf","Sigma Scale Factor",this,(RooRealVar&)RooRealConstant::value(1)),
   rsf("rsf","RLife Scale Factor",this,(RooRealVar&)RooRealConstant::value(1)),
-  _flip(type==Flipped),_nlo(nlo), _flatSFInt(kFALSE), _asympInt(kFALSE)
+  _flip(type==Flipped),_nlo(nlo), _flatSFInt(false), _asympInt(false)
 {
 }
 
@@ -113,7 +113,7 @@ RooGExpModel::RooGExpModel(const char *name, const char *title, RooAbsRealLValue
 RooGExpModel::RooGExpModel(const char *name, const char *title, RooAbsRealLValue& xIn,
             RooAbsReal& _sigma, RooAbsReal& _rlife,
             RooAbsReal& _rsSF,
-            Bool_t nlo, Type type) :
+            bool nlo, Type type) :
   RooResolutionModel(name,title,xIn),
   _mean("mean", "Mean of Gaussian component", this, RooRealConstant::value(0.)),
   sigma("sigma","Width",this,_sigma),
@@ -123,8 +123,8 @@ RooGExpModel::RooGExpModel(const char *name, const char *title, RooAbsRealLValue
   rsf("rsf","RLife Scale Factor",this,_rsSF),
   _flip(type==Flipped),
   _nlo(nlo),
-  _flatSFInt(kFALSE),
-  _asympInt(kFALSE)
+  _flatSFInt(false),
+  _asympInt(false)
 {
 }
 
@@ -143,7 +143,7 @@ RooGExpModel::RooGExpModel(const char *name, const char *title, RooAbsRealLValue
 RooGExpModel::RooGExpModel(const char *name, const char *title, RooAbsRealLValue& xIn,
             RooAbsReal& _sigma, RooAbsReal& _rlife,
             RooAbsReal& _sigmaSF, RooAbsReal& _rlifeSF,
-            Bool_t nlo, Type type) :
+            bool nlo, Type type) :
   RooResolutionModel(name,title,xIn),
   _mean("mean", "Mean of Gaussian component", this, RooRealConstant::value(0.)),
   sigma("sigma","Width",this,_sigma),
@@ -153,8 +153,8 @@ RooGExpModel::RooGExpModel(const char *name, const char *title, RooAbsRealLValue
   rsf("rsf","RLife Scale Factor",this,_rlifeSF),
   _flip(type==Flipped),
   _nlo(nlo),
-  _flatSFInt(kFALSE),
-  _asympInt(kFALSE)
+  _flatSFInt(false),
+  _asympInt(false)
 {
 }
 
@@ -891,7 +891,7 @@ Double_t RooGExpModel::evalCerfInt(Double_t sign, Double_t tau, Double_t umin, D
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooGExpModel::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
+Int_t RooGExpModel::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool /*staticInitOK*/) const
 {
   if (matchArgs(directVars,generateVars,x)) return 1 ;
   return 0 ;

@@ -88,9 +88,9 @@ RooIntegrator1D::RooIntegrator1D() :
 
 RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, SummationRule rule,
              Int_t maxSteps, Double_t eps) :
-  RooAbsIntegrator(function), _rule(rule), _maxSteps(maxSteps),  _minStepsZero(999), _fixSteps(0), _epsAbs(eps), _epsRel(eps), _doExtrap(kTRUE)
+  RooAbsIntegrator(function), _rule(rule), _maxSteps(maxSteps),  _minStepsZero(999), _fixSteps(0), _epsAbs(eps), _epsRel(eps), _doExtrap(true)
 {
-  _useIntegrandLimits= kTRUE;
+  _useIntegrandLimits= true;
   _valid= initialize();
 }
 
@@ -110,9 +110,9 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Doub
   _fixSteps(0),
   _epsAbs(eps),
   _epsRel(eps),
-  _doExtrap(kTRUE)
+  _doExtrap(true)
 {
-  _useIntegrandLimits= kFALSE;
+  _useIntegrandLimits= false;
   _xmin= xmin;
   _xmax= xmax;
   _valid= initialize();
@@ -135,14 +135,14 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, const RooNumIntConf
   _maxSteps = (Int_t) configSet.getRealValue("maxSteps",20) ;
   _minStepsZero = (Int_t) configSet.getRealValue("minSteps",999) ;
   _fixSteps = (Int_t) configSet.getRealValue("fixSteps",0) ;
-  _doExtrap = (Bool_t) configSet.getCatIndex("extrapolation",1) ;
+  _doExtrap = (bool) configSet.getCatIndex("extrapolation",1) ;
 
   if (_fixSteps>_maxSteps) {
     oocoutE((TObject*)0,Integration) << "RooIntegrator1D::ctor() ERROR: fixSteps>maxSteps, fixSteps set to maxSteps" << endl ;
     _fixSteps = _maxSteps ;
   }
 
-  _useIntegrandLimits= kTRUE;
+  _useIntegrandLimits= true;
   _valid= initialize();
 }
 
@@ -164,9 +164,9 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Doub
   _maxSteps = (Int_t) configSet.getRealValue("maxSteps",20) ;
   _minStepsZero = (Int_t) configSet.getRealValue("minSteps",999) ;
   _fixSteps = (Int_t) configSet.getRealValue("fixSteps",0) ;
-  _doExtrap = (Bool_t) configSet.getCatIndex("extrapolation",1) ;
+  _doExtrap = (bool) configSet.getCatIndex("extrapolation",1) ;
 
-  _useIntegrandLimits= kFALSE;
+  _useIntegrandLimits= false;
   _xmin= xmin;
   _xmax= xmax;
   _valid= initialize();
@@ -187,7 +187,7 @@ RooAbsIntegrator* RooIntegrator1D::clone(const RooAbsFunc& function, const RooNu
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the integrator
 
-Bool_t RooIntegrator1D::initialize()
+bool RooIntegrator1D::initialize()
 {
   // apply defaults if necessary
   if(_maxSteps <= 0) {
@@ -200,7 +200,7 @@ Bool_t RooIntegrator1D::initialize()
   // check that the integrand is a valid function
   if(!isValid()) {
     oocoutE((TObject*)0,Integration) << "RooIntegrator1D::initialize: cannot integrate invalid function" << endl;
-    return kFALSE;
+    return false;
   }
 
   // Allocate coordinate buffer size after number of function dimensions
@@ -232,15 +232,15 @@ RooIntegrator1D::~RooIntegrator1D()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Change our integration limits. Return kTRUE if the new limits are
-/// ok, or otherwise kFALSE. Always returns kFALSE and does nothing
+/// Change our integration limits. Return true if the new limits are
+/// ok, or otherwise false. Always returns false and does nothing
 /// if this object was constructed to always use our integrand's limits.
 
-Bool_t RooIntegrator1D::setLimits(Double_t *xmin, Double_t *xmax)
+bool RooIntegrator1D::setLimits(Double_t *xmin, Double_t *xmax)
 {
   if(_useIntegrandLimits) {
     oocoutE((TObject*)0,Integration) << "RooIntegrator1D::setLimits: cannot override integrand's limits" << endl;
-    return kFALSE;
+    return false;
   }
   _xmin= *xmin;
   _xmax= *xmax;
@@ -249,10 +249,10 @@ Bool_t RooIntegrator1D::setLimits(Double_t *xmin, Double_t *xmax)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check that our integration range is finite and otherwise return kFALSE.
+/// Check that our integration range is finite and otherwise return false.
 /// Update the limits from the integrand if requested.
 
-Bool_t RooIntegrator1D::checkLimits() const
+bool RooIntegrator1D::checkLimits() const
 {
   if(_useIntegrandLimits) {
     assert(0 != integrand() && integrand()->isValid());
@@ -262,9 +262,9 @@ Bool_t RooIntegrator1D::checkLimits() const
   const_cast<double&>(_range) = _xmax - _xmin;
   if (_range < 0.) {
     oocoutE((TObject*)0,Integration) << "RooIntegrator1D::checkLimits: bad range with min > max (_xmin = " << _xmin << " _xmax = " << _xmax << ")" << endl;
-    return kFALSE;
+    return false;
   }
-  return (RooNumber::isInfinite(_xmin) || RooNumber::isInfinite(_xmax)) ? kFALSE : kTRUE;
+  return (RooNumber::isInfinite(_xmin) || RooNumber::isInfinite(_xmax)) ? false : true;
 }
 
 
@@ -293,10 +293,10 @@ Double_t RooIntegrator1D::integral(const Double_t *yvec)
     _s[j]= (_rule == Trapezoid) ? addTrapezoids(j) : addMidpoints(j);
 
     if (j >= _minStepsZero) {
-      Bool_t allZero(kTRUE) ;
+      bool allZero(true) ;
       for (int jj=0 ; jj<=j ; jj++) {
         if (_s[j]>=zeroThresh) {
-          allZero=kFALSE ;
+          allZero=false ;
         }
       }
       if (allZero) {

@@ -38,7 +38,7 @@
    data set and the interval is then calculated by adding the heights of the bins
    in decreasing order until the desired level of confidence has been reached.
    Note that this means the actual confidence level is >= the confidence level
-   prescribed by the client (unless the user calls SetHistStrict(kFALSE)).  This
+   prescribed by the client (unless the user calls SetHistStrict(false)).  This
    method is the default but may not remain as such in future releases, so you may
    wish to explicitly configure to use this method by calling SetUseKeys(false)
 
@@ -117,9 +117,9 @@ MCMCInterval::MCMCInterval(const char* name)
    fHistCutoff = -1;
    fKeysCutoff = -1;
    fDimension = 1;
-   fUseKeys = kFALSE;
-   fUseSparseHist = kFALSE;
-   fIsHistStrict = kTRUE;
+   fUseKeys = false;
+   fUseSparseHist = false;
+   fIsHistStrict = true;
    fEpsilon = DEFAULT_EPSILON;
    fDelta = DEFAULT_DELTA;
    fIntervalType = kShortest;
@@ -153,9 +153,9 @@ MCMCInterval::MCMCInterval(const char* name,
    fHist = NULL;
    fHistCutoff = -1;
    fKeysCutoff = -1;
-   fUseKeys = kFALSE;
-   fUseSparseHist = kFALSE;
-   fIsHistStrict = kTRUE;
+   fUseKeys = false;
+   fUseSparseHist = false;
+   fIsHistStrict = true;
    fEpsilon = DEFAULT_EPSILON;
    SetParameters(parameters);
    fDelta = DEFAULT_DELTA;
@@ -226,7 +226,7 @@ struct CompareVectorIndices {
 /// or posterior representation NULL/empty since they should only get this
 /// through the MCMCCalculator
 
-Bool_t MCMCInterval::IsInInterval(const RooArgSet& point) const
+bool MCMCInterval::IsInInterval(const RooArgSet& point) const
 {
    if (fIntervalType == kShortest) {
       if (fUseKeys) {
@@ -250,7 +250,7 @@ Bool_t MCMCInterval::IsInInterval(const RooArgSet& point) const
             Double_t* x = new Double_t[fDimension];
             for (Int_t i = 0; i < fDimension; i++)
                x[i] = fAxes[i]->getVal();
-            bin = fSparseHist->GetBin(x, kFALSE);
+            bin = fSparseHist->GetBin(x, false);
             Double_t weight = fSparseHist->GetBinContent((Long64_t)bin);
             delete[] x;
             return (weight >= (Double_t)fHistCutoff);
@@ -758,7 +758,7 @@ void MCMCInterval::DetermineByKeys()
       fKeysCutoff = topCutoff;
       return;
    }
-   Bool_t changed = kFALSE;
+   bool changed = false;
    // find high end of range
    while (confLevel > fConfidenceLevel) {
       topCutoff *= 2.0;
@@ -768,12 +768,12 @@ void MCMCInterval::DetermineByKeys()
          fKeysCutoff = topCutoff;
          return;
       }
-      changed = kTRUE;
+      changed = true;
    }
    if (changed) {
       bottomCutoff = topCutoff / 2.0;
    } else {
-      changed = kFALSE;
+      changed = false;
       bottomCutoff /= 2.0;
       confLevel = CalcConfLevel(bottomCutoff, full);
       if (AcceptableConfLevel(confLevel)) {
@@ -789,7 +789,7 @@ void MCMCInterval::DetermineByKeys()
             fKeysCutoff = bottomCutoff;
             return;
          }
-         changed = kTRUE;
+         changed = true;
       }
       if (changed) {
          topCutoff = bottomCutoff * 2.0;
@@ -926,7 +926,7 @@ void MCMCInterval::DetermineByDataHist()
       bins[ibin] = ibin;
    std::stable_sort(bins.begin(), bins.end(), CompareDataHistBins(fDataHist));
 
-   Double_t nEntries = fDataHist->sum(kFALSE);
+   Double_t nEntries = fDataHist->sum(false);
    Double_t sum = 0;
    Double_t content;
    Int_t i;
@@ -1460,14 +1460,14 @@ RooArgSet* MCMCInterval::GetParameters() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t MCMCInterval::AcceptableConfLevel(Double_t confLevel)
+bool MCMCInterval::AcceptableConfLevel(Double_t confLevel)
 {
    return (TMath::Abs(confLevel - fConfidenceLevel) < fEpsilon);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t MCMCInterval::WithinDeltaFraction(Double_t a, Double_t b)
+bool MCMCInterval::WithinDeltaFraction(Double_t a, Double_t b)
 {
    return (TMath::Abs(a - b) < TMath::Abs(fDelta * (a + b)/2));
 }
@@ -1502,7 +1502,7 @@ void MCMCInterval::CreateKeysDataHist()
    // first scan through fAxes to make sure all binnings are uniform, or else
    // we can't change the number of bins because there seems to be an error
    // when setting the binning itself rather than just the number of bins
-   Bool_t tempChangeBinning = true;
+   bool tempChangeBinning = true;
    for (i = 0; i < fDimension; i++) {
       if (!fAxes[i]->getBinning(NULL, false, false).isUniform()) {
          tempChangeBinning = false;
@@ -1545,17 +1545,17 @@ void MCMCInterval::CreateKeysDataHist()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t MCMCInterval::CheckParameters(const RooArgSet& parameterPoint) const
+bool MCMCInterval::CheckParameters(const RooArgSet& parameterPoint) const
 {
    // check that the parameters are correct
 
    if (parameterPoint.getSize() != fParameters.getSize() ) {
      coutE(Eval) << "MCMCInterval: size is wrong, parameters don't match" << std::endl;
-     return kFALSE;
+     return false;
    }
    if ( ! parameterPoint.equals( fParameters ) ) {
      coutE(Eval) << "MCMCInterval: size is ok, but parameters don't match" << std::endl;
-     return kFALSE;
+     return false;
    }
-   return kTRUE;
+   return true;
 }

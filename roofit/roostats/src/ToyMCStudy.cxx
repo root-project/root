@@ -40,12 +40,12 @@ namespace RooStats {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t ToyMCStudy::initialize(void) {
+bool ToyMCStudy::initialize(void) {
    coutP(Generation) << "initialize" << endl;
 
    if(!fToyMCSampler) {
       coutE(InputArguments) << "Need an instance of ToyMCSampler to run." << endl;
-      return kFALSE;
+      return false;
    }else{
       coutI(InputArguments) << "Using given ToyMCSampler." << endl;
    }
@@ -70,30 +70,30 @@ Bool_t ToyMCStudy::initialize(void) {
 
    coutI(InputArguments) << "Worker " << iworker << " seed is: " << RooRandom::randomGenerator()->GetSeed() << endl;
 
-   return kFALSE;
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t ToyMCStudy::execute(void) {
+bool ToyMCStudy::execute(void) {
 
    coutP(Generation) << "ToyMCStudy::execute - run with seed " <<   RooRandom::randomGenerator()->Integer(TMath::Limits<unsigned int>::Max() ) << std::endl;
    RooDataSet* sd = fToyMCSampler->GetSamplingDistributionsSingleWorker(fParamPoint);
    ToyMCPayload *sdw = new ToyMCPayload(sd);
    storeDetailedOutput(*sdw);
 
-   return kFALSE;
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t ToyMCStudy::finalize(void) {
+bool ToyMCStudy::finalize(void) {
    coutP(Generation) << "ToyMCStudy::finalize" << endl;
 
    if(fToyMCSampler) delete fToyMCSampler;
    fToyMCSampler = NULL;
 
-   return kFALSE;
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

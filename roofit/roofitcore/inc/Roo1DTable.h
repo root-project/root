@@ -33,10 +33,10 @@ public:
   Roo1DTable(const Roo1DTable& other) ;
 
   void fill(RooAbsCategory& cat, Double_t weight=1.0) override ;
-  Double_t get(const char* label, Bool_t silent=kFALSE) const ;
-  Double_t getFrac(const char* label, Bool_t silent=kFALSE) const ;
-  Double_t get(const int index, Bool_t silent=kFALSE) const ;
-  Double_t getFrac(const int index, Bool_t silent=kFALSE) const ;
+  Double_t get(const char* label, bool silent=false) const ;
+  Double_t getFrac(const char* label, bool silent=false) const ;
+  Double_t get(const int index, bool silent=false) const ;
+  Double_t getFrac(const int index, bool silent=false) const ;
   Double_t getOverflow() const ;
 
   // Printing interface (human readable)
@@ -44,7 +44,7 @@ public:
   void printTitle(std::ostream& os) const override ;
   void printClassName(std::ostream& os) const override ;
   void printValue(std::ostream& os) const override ;
-  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const override ;
+  void printMultiline(std::ostream& os, Int_t contents, bool verbose=false, TString indent="") const override ;
   Int_t defaultPrintContents(Option_t* opt) const override ;
 
   inline void Print(Option_t *options= 0) const override {
@@ -52,7 +52,7 @@ public:
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
-  Bool_t isIdentical(const RooTable& other, bool verbose) override ;
+  bool isIdentical(const RooTable& other, bool verbose) override ;
 
 protected:
 

@@ -53,8 +53,8 @@ TDirectory* RooUnitTest::gMemDir = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooUnitTest::RooUnitTest(const char* name, TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : TNamed(name,name),
-                                  _refFile(refFile), _debug(kFALSE), _write(writeRef), _verb(verbose), _batchMode(batchMode)
+RooUnitTest::RooUnitTest(const char* name, TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : TNamed(name,name),
+                                  _refFile(refFile), _debug(false), _write(writeRef), _verb(verbose), _batchMode(batchMode)
 {
 }
 
@@ -161,7 +161,7 @@ RooWorkspace* RooUnitTest::getWS(const char* refName)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t RooUnitTest::areTHidentical(TH1* htest, TH1* href)
+bool RooUnitTest::areTHidentical(TH1* htest, TH1* href)
 {
   if (htest->GetDimension() != href->GetDimension()) {
     return false ;
@@ -207,9 +207,9 @@ Bool_t RooUnitTest::areTHidentical(TH1* htest, TH1* href)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t RooUnitTest::runCompTests()
+bool RooUnitTest::runCompTests()
 {
-  Bool_t ret = true ;
+  bool ret = true ;
 
   list<pair<RooPlot*, string> >::iterator iter = _regPlots.begin() ;
   while (iter!=_regPlots.end()) {
@@ -235,7 +235,7 @@ Bool_t RooUnitTest::runCompTests()
       }
 
       RooPlot* compPlot = _debug ? iter->first->emptyClone(Form("%s_comparison",iter->first->GetName())) : 0 ;
-      Bool_t anyFail=false ;
+      bool anyFail=false ;
 
       Stat_t nItems = iter->first->numItems() ;
       for (Stat_t i=0 ; i<nItems ; i++) {
@@ -570,7 +570,7 @@ void RooUnitTest::clearSilentMode()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t RooUnitTest::runTest()
+bool RooUnitTest::runTest()
 {
   gMemDir->cd() ;
 

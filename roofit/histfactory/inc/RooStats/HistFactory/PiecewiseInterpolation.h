@@ -31,7 +31,7 @@ class PiecewiseInterpolation : public RooAbsReal {
 public:
 
   PiecewiseInterpolation() ;
-  PiecewiseInterpolation(const char *name, const char *title, const RooAbsReal& nominal, const RooArgList& lowSet, const RooArgList& highSet, const RooArgList& paramSet, Bool_t takeOwnerShip=kFALSE) ;
+  PiecewiseInterpolation(const char *name, const char *title, const RooAbsReal& nominal, const RooArgList& lowSet, const RooArgList& highSet, const RooArgList& paramSet, bool takeOwnerShip=false) ;
   ~PiecewiseInterpolation() override ;
 
   PiecewiseInterpolation(const PiecewiseInterpolation& other, const char* name = 0);
@@ -51,8 +51,8 @@ public:
   const RooArgList& paramList() const { return _paramSet ; }
   const std::vector<int>&  interpolationCodes() const { return _interpCode; }
 
-  //virtual Bool_t forceAnalyticalInt(const RooAbsArg&) const { return kTRUE ; }
-  Bool_t setBinIntegrator(RooArgSet& allVars) ;
+  //virtual bool forceAnalyticalInt(const RooAbsArg&) const { return true ; }
+  bool setBinIntegrator(RooArgSet& allVars) ;
 
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet,const char* rangeName=0) const override ;
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
@@ -65,7 +65,7 @@ public:
 
   std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override ;
   std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override ;
-  Bool_t isBinnedDistribution(const RooArgSet& obs) const override ;
+  bool isBinnedDistribution(const RooArgSet& obs) const override ;
 
 protected:
 
@@ -92,7 +92,7 @@ protected:
   RooListProxy _highSet ;          ///< High-side variation
   RooListProxy _paramSet ;         ///< interpolation parameters
   RooListProxy _normSet ;          ///< interpolation parameters
-  Bool_t _positiveDefinite;        ///< protect against negative and 0 bins.
+  bool _positiveDefinite;        ///< protect against negative and 0 bins.
 
   std::vector<int> _interpCode;
 

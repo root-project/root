@@ -35,12 +35,12 @@ public:
   RooCmdConfig(const RooCmdConfig& other) ;
 
   /// If flag is true verbose messaging is activated
-  void setVerbose(Bool_t flag) {
+  void setVerbose(bool flag) {
     _verbose = flag ;
   }
   /// If flag is true the processing of unrecognized RooCmdArgs
   /// is not considered an error
-  void allowUndefined(Bool_t flag=kTRUE) {
+  void allowUndefined(bool flag=true) {
     _allowUndefined = flag ;
   }
   void defineDependency(const char* refArgName, const char* neededArgName) ;
@@ -52,33 +52,33 @@ public:
   void defineMutex(const char* head, Args_t && ... tail);
   void defineMutex(const char*) {} // to end the recursion of defineMutex()
 
-  Bool_t defineInt(const char* name, const char* argName, Int_t intNum, Int_t defValue=0) ;
-  Bool_t defineDouble(const char* name, const char* argName, Int_t doubleNum, Double_t defValue=0.) ;
-  Bool_t defineString(const char* name, const char* argName, Int_t stringNum, const char* defValue="",Bool_t appendMode=kFALSE) ;
-  Bool_t defineObject(const char* name, const char* argName, Int_t setNum, const TObject* obj=0, Bool_t isArray=kFALSE) ;
-  Bool_t defineSet(const char* name, const char* argName, Int_t setNum, const RooArgSet* set=0) ;
+  bool defineInt(const char* name, const char* argName, Int_t intNum, Int_t defValue=0) ;
+  bool defineDouble(const char* name, const char* argName, Int_t doubleNum, Double_t defValue=0.) ;
+  bool defineString(const char* name, const char* argName, Int_t stringNum, const char* defValue="",bool appendMode=false) ;
+  bool defineObject(const char* name, const char* argName, Int_t setNum, const TObject* obj=0, bool isArray=false) ;
+  bool defineSet(const char* name, const char* argName, Int_t setNum, const RooArgSet* set=0) ;
 
-  Bool_t process(const RooCmdArg& arg) ;
+  bool process(const RooCmdArg& arg) ;
   template<class... Args_t>
   bool process(const RooCmdArg& arg, Args_t && ...args);
-  Bool_t process(const RooLinkedList& argList) ;
+  bool process(const RooLinkedList& argList) ;
   template<typename It_t>
   bool process(It_t begin, It_t end);
 
   Int_t getInt(const char* name, Int_t defaultValue=0) ;
   Double_t getDouble(const char* name, Double_t defaultValue=0) ;
-  const char* getString(const char* name, const char* defaultValue="",Bool_t convEmptyToNull=kFALSE) ;
+  const char* getString(const char* name, const char* defaultValue="",bool convEmptyToNull=false) ;
   TObject* getObject(const char* name, TObject* obj=0) ;
   RooArgSet* getSet(const char* name, RooArgSet* set=0) ;
   const RooLinkedList& getObjectList(const char* name) ;
 
-  Bool_t ok(Bool_t verbose) const ;
+  bool ok(bool verbose) const ;
 
   std::string missingArgs() const ;
 
   RooLinkedList filterCmdList(RooLinkedList& cmdInList, const char* cmdNameList, bool removeFromInList=true) const;
   void stripCmdList(RooLinkedList& cmdList, const char* cmdsToPurge) const;
-  Bool_t hasProcessed(const char* cmdName) const ;
+  bool hasProcessed(const char* cmdName) const ;
 
   void print() const;
 
@@ -111,9 +111,9 @@ protected:
 
   TString _name ;
 
-  Bool_t _verbose = false;
-  Bool_t _error = false;
-  Bool_t _allowUndefined = false;
+  bool _verbose = false;
+  bool _error = false;
+  bool _allowUndefined = false;
 
   std::vector<Var<int>> _iList ; ///< Integer list
   std::vector<Var<double>> _dList ; ///< Double list
@@ -204,7 +204,7 @@ std::string RooCmdConfig::decodeStringOnTheFly(
   pc.allowUndefined() ;
   pc.defineString("theString",cmdArgName,strIdx,defVal) ;
   pc.process(std::forward<Args_t>(args)...);
-  const char* ret =  pc.getString("theString",0,kTRUE) ;
+  const char* ret =  pc.getString("theString",0,true) ;
 
   return ret ? ret : "";
 }

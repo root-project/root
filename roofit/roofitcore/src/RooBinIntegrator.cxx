@@ -65,7 +65,7 @@ void RooBinIntegrator::registerIntegrator(RooNumIntFactory& fact)
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooBinIntegrator::RooBinIntegrator() : _numBins(0), _useIntegrandLimits(kFALSE), _x(0)
+RooBinIntegrator::RooBinIntegrator() : _numBins(0), _useIntegrandLimits(false), _x(0)
 {
 }
 
@@ -76,7 +76,7 @@ RooBinIntegrator::RooBinIntegrator() : _numBins(0), _useIntegrandLimits(kFALSE),
 RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function) :
   RooAbsIntegrator(function)
 {
-  _useIntegrandLimits= kTRUE;
+  _useIntegrandLimits= true;
   assert(_function && _function->isValid());
 
   // Allocate coordinate buffer size after number of function dimensions
@@ -128,7 +128,7 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, const RooNumIntCo
   RooAbsIntegrator(function)
 {
   const RooArgSet& configSet = config.getConfigSection(IsA()->GetName()) ;
-  _useIntegrandLimits= kTRUE;
+  _useIntegrandLimits= true;
   _numBins = (Int_t) configSet.getRealValue("numBins") ;
   assert(_function && _function->isValid());
 
@@ -192,15 +192,15 @@ RooBinIntegrator::~RooBinIntegrator()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Change our integration limits. Return kTRUE if the new limits are
-/// ok, or otherwise kFALSE. Always returns kFALSE and does nothing
+/// Change our integration limits. Return true if the new limits are
+/// ok, or otherwise false. Always returns false and does nothing
 /// if this object was constructed to always use our integrand's limits.
 
-Bool_t RooBinIntegrator::setLimits(Double_t *xmin, Double_t *xmax)
+bool RooBinIntegrator::setLimits(Double_t *xmin, Double_t *xmax)
 {
   if(_useIntegrandLimits) {
     oocoutE((TObject*)0,Integration) << "RooBinIntegrator::setLimits: cannot override integrand's limits" << endl;
-    return kFALSE;
+    return false;
   }
   _xmin[0]= *xmin;
   _xmax[0]= *xmax;
@@ -209,10 +209,10 @@ Bool_t RooBinIntegrator::setLimits(Double_t *xmin, Double_t *xmax)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check that our integration range is finite and otherwise return kFALSE.
+/// Check that our integration range is finite and otherwise return false.
 /// Update the limits from the integrand if requested.
 
-Bool_t RooBinIntegrator::checkLimits() const
+bool RooBinIntegrator::checkLimits() const
 {
   if(_useIntegrandLimits) {
     assert(0 != integrand() && integrand()->isValid());
@@ -226,14 +226,14 @@ Bool_t RooBinIntegrator::checkLimits() const
   for (UInt_t i=0 ; i<_function->getDimension() ; i++) {
     if (_xmax[i]<=_xmin[i]) {
       oocoutE((TObject*)0,Integration) << "RooBinIntegrator::checkLimits: bad range with min >= max (_xmin = " << _xmin[i] << " _xmax = " << _xmax[i] << ")" << endl;
-      return kFALSE;
+      return false;
     }
     if (RooNumber::isInfinite(_xmin[i]) || RooNumber::isInfinite(_xmax[i])) {
-      return kFALSE ;
+      return false ;
     }
   }
 
-  return kTRUE;
+  return true;
 }
 
 

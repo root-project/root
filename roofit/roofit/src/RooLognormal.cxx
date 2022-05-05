@@ -112,7 +112,7 @@ Double_t RooLognormal::analyticalIntegral(Int_t code, const char* rangeName) con
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooLognormal::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
+Int_t RooLognormal::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool /*staticInitOK*/) const
 {
   if (matchArgs(directVars,generateVars,x)) return 1 ;
   return 0 ;

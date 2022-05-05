@@ -28,8 +28,8 @@ using namespace RooFit ;
 class TestBasic604 : public RooFitTestUnit
 {
 public:
-  TestBasic604(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Auxiliary observable constraints",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic604(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Auxiliary observable constraints",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // C r e a t e   m o d e l  a n d   d a t a s e t
   // ----------------------------------------------
@@ -94,6 +94,6 @@ public:
 
   delete d ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;

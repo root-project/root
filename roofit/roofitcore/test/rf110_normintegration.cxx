@@ -24,8 +24,8 @@ using namespace RooFit ;
 class TestBasic110 : public RooFitTestUnit
 {
 public:
-  TestBasic110(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Normalization of p.d.f.s in 1D",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic110(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Normalization of p.d.f.s in 1D",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
     // S e t u p   m o d e l
     // ---------------------
@@ -86,6 +86,6 @@ public:
     delete igx_sig ;
     delete gx_cdf ;
 
-    return kTRUE ;
+    return true ;
   }
 } ;

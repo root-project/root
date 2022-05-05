@@ -33,9 +33,9 @@ public:
    ~RooRealSumFunc() override;
 
    Double_t evaluate() const override;
-   Bool_t checkObservables(const RooArgSet *nset) const override;
+   bool checkObservables(const RooArgSet *nset) const override;
 
-   Bool_t forceAnalyticalInt(const RooAbsArg &arg) const override { return arg.isFundamental(); }
+   bool forceAnalyticalInt(const RooAbsArg &arg) const override { return arg.isFundamental(); }
    Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &numVars, const RooArgSet *normSet,
                                  const char *rangeName = 0) const override;
    Double_t analyticalIntegralWN(Int_t code, const RooArgSet *normSet, const char *rangeName = 0) const override;
@@ -47,12 +47,12 @@ public:
 
    std::list<Double_t> *binBoundaries(RooAbsRealLValue & /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override;
    std::list<Double_t> *plotSamplingHint(RooAbsRealLValue & /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override;
-   Bool_t isBinnedDistribution(const RooArgSet &obs) const override;
+   bool isBinnedDistribution(const RooArgSet &obs) const override;
 
-   void setFloor(Bool_t flag) { _doFloor = flag; }
-   Bool_t getFloor() const { return _doFloor; }
-   static void setFloorGlobal(Bool_t flag) { _doFloorGlobal = flag; }
-   static Bool_t getFloorGlobal() { return _doFloorGlobal; }
+   void setFloor(bool flag) { _doFloor = flag; }
+   bool getFloor() const { return _doFloor; }
+   static void setFloorGlobal(bool flag) { _doFloorGlobal = flag; }
+   static bool getFloorGlobal() { return _doFloorGlobal; }
 
    CacheMode canNodeBeCached() const override { return RooAbsArg::NotAdvised; };
    void setCacheAndTrackHints(RooArgSet &) override;
@@ -75,15 +75,15 @@ protected:
    };
    mutable RooObjCacheManager _normIntMgr; //! The integration cache manager
 
-   Bool_t _haveLastCoef;
+   bool _haveLastCoef;
 
    RooListProxy _funcList; ///<  List of component FUNCs
    RooListProxy _coefList; ///<  List of coefficients
    TIterator *_funcIter;   ///<! Iterator over FUNC list
    TIterator *_coefIter;   ///<! Iterator over coefficient list
 
-   Bool_t _doFloor;              ///< Introduce floor at zero in pdf
-   static Bool_t _doFloorGlobal; ///< Global flag for introducing floor at zero in pdf
+   bool _doFloor;              ///< Introduce floor at zero in pdf
+   static bool _doFloorGlobal; ///< Global flag for introducing floor at zero in pdf
 
 private:
    ClassDefOverride(RooRealSumFunc, 4) // PDF constructed from a sum of (non-pdf) functions

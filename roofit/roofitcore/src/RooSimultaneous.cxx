@@ -39,7 +39,7 @@ the dataset. Further, the PDF needs to know the relative probabilities of each c
 how many events are in which category. This can be achieved in two ways:
 - Generating with proto data that have category entries: An event from the same category as
 in the proto data is created for each event in the proto data.
-See RooAbsPdf::generate(const RooArgSet&,const RooDataSet&,Int_t,Bool_t,Bool_t,Bool_t) const.
+See RooAbsPdf::generate(const RooArgSet&,const RooDataSet&,Int_t,bool,bool,bool) const.
 - No proto data: A category is chosen randomly.
 \note This requires that the PDFs building the simultaneous are extended. In this way,
 the relative probability of each category can be calculated from the number of events
@@ -90,7 +90,7 @@ ClassImp(RooSimultaneous);
 RooSimultaneous::RooSimultaneous(const char *name, const char *title,
              RooAbsCategoryLValue& inIndexCat) :
   RooAbsPdf(name,title),
-  _plotCoefNormSet("!plotCoefNormSet","plotCoefNormSet",this,kFALSE,kFALSE),
+  _plotCoefNormSet("!plotCoefNormSet","plotCoefNormSet",this,false,false),
   _plotCoefNormRange(0),
   _partIntMgr(this,10),
   _indexCat("indexCat","Index category",this,inIndexCat),
@@ -113,7 +113,7 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
 RooSimultaneous::RooSimultaneous(const char *name, const char *title,
              const RooArgList& inPdfList, RooAbsCategoryLValue& inIndexCat) :
   RooAbsPdf(name,title),
-  _plotCoefNormSet("!plotCoefNormSet","plotCoefNormSet",this,kFALSE,kFALSE),
+  _plotCoefNormSet("!plotCoefNormSet","plotCoefNormSet",this,false,false),
   _plotCoefNormRange(0),
   _partIntMgr(this,10),
   _indexCat("indexCat","Index category",this,inIndexCat),
@@ -142,7 +142,7 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
 RooSimultaneous::RooSimultaneous(const char *name, const char *title,
              map<string,RooAbsPdf*> pdfMap, RooAbsCategoryLValue& inIndexCat) :
   RooAbsPdf(name,title),
-  _plotCoefNormSet("!plotCoefNormSet","plotCoefNormSet",this,kFALSE,kFALSE),
+  _plotCoefNormSet("!plotCoefNormSet","plotCoefNormSet",this,false,false),
   _plotCoefNormRange(0),
   _partIntMgr(this,10),
   _indexCat("indexCat","Index category",this,inIndexCat),
@@ -168,10 +168,10 @@ namespace RooSimultaneousAux {
 void RooSimultaneous::initialize(RooAbsCategoryLValue& inIndexCat, std::map<std::string,RooAbsPdf*> pdfMap)
 {
   // First see if there are any RooSimultaneous input components
-  Bool_t simComps(kFALSE) ;
+  bool simComps(false) ;
   for (map<string,RooAbsPdf*>::iterator iter=pdfMap.begin() ; iter!=pdfMap.end() ; ++iter) {
     if (dynamic_cast<RooSimultaneous*>(iter->second)) {
-      simComps = kTRUE ;
+      simComps = true ;
       break ;
     }
   }
@@ -206,7 +206,7 @@ void RooSimultaneous::initialize(RooAbsCategoryLValue& inIndexCat, std::map<std:
       ci.simPdf = simComp ;
       ci.subIndex = &simComp->indexCat() ;
       ci.subIndexComps = simComp->indexCat().isFundamental() ? new RooArgSet(simComp->indexCat()) : simComp->indexCat().getVariables() ;
-      allAuxCats.add(*(ci.subIndexComps),kTRUE) ;
+      allAuxCats.add(*(ci.subIndexComps),true) ;
     } else {
       ci.simPdf = 0 ;
       ci.subIndex = 0 ;
@@ -370,20 +370,20 @@ RooAbsPdf* RooSimultaneous::getPdf(const char* catName) const
 /// \param[in] catLabel Name of the category state to be associated to the PDF.
 /// \return `true` in case of failure.
 
-Bool_t RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
+bool RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
 {
   // PDFs cannot overlap with the index category
   if (pdf.dependsOn(_indexCat.arg())) {
     coutE(InputArguments) << "RooSimultaneous::addPdf(" << GetName() << "): PDF '" << pdf.GetName()
            << "' overlaps with index category '" << _indexCat.arg().GetName() << "'."<< endl ;
-    return kTRUE ;
+    return true ;
   }
 
   // Each index state can only have one PDF associated with it
   if (_pdfProxyList.FindObject(catLabel)) {
     coutE(InputArguments) << "RooSimultaneous::addPdf(" << GetName() << "): index state '"
            << catLabel << "' has already an associated PDF." << endl ;
-    return kTRUE ;
+    return true ;
   }
 
   const RooSimultaneous* simPdf = dynamic_cast<const RooSimultaneous*>(&pdf) ;
@@ -392,7 +392,7 @@ Bool_t RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
     coutE(InputArguments) << "RooSimultaneous::addPdf(" << GetName()
            << ") ERROR: you cannot add a RooSimultaneous component to a RooSimultaneous using addPdf()."
            << " Use the constructor with RooArgList if input p.d.f.s or the map<string,RooAbsPdf&> instead." << endl ;
-    return kTRUE ;
+    return true ;
 
   } else {
 
@@ -402,7 +402,7 @@ Bool_t RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
     _numPdf += 1 ;
   }
 
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -416,8 +416,8 @@ Bool_t RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
 
 RooAbsPdf::ExtendMode RooSimultaneous::extendMode() const
 {
-  Bool_t anyCanExtend(kFALSE) ;
-  Bool_t anyMustExtend(kFALSE) ;
+  bool anyCanExtend(false) ;
+  bool anyMustExtend(false) ;
 
   for (Int_t i=0 ; i<_numPdf ; i++) {
     RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.At(i);
@@ -427,11 +427,11 @@ RooAbsPdf::ExtendMode RooSimultaneous::extendMode() const
       if (pdf->canBeExtended()) {
          //cout << "RooSim::extendedMode(" << GetName() << ") component " << pdf->GetName() << " can be extended"
          //     << endl;
-         anyCanExtend = kTRUE;
+         anyCanExtend = true;
       }
       if (pdf->mustBeExtended()) {
          //cout << "RooSim::extendedMode(" << GetName() << ") component " << pdf->GetName() << " MUST be extended" << endl;
-         anyMustExtend = kTRUE;
+         anyMustExtend = true;
       }
     }
   }
@@ -594,10 +594,10 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 
   // Extract projection configuration from command list
   RooCmdConfig pc(Form("RooSimultaneous::plotOn(%s)",GetName())) ;
-  pc.defineString("sliceCatState","SliceCat",0,"",kTRUE) ;
+  pc.defineString("sliceCatState","SliceCat",0,"",true) ;
   pc.defineDouble("scaleFactor","Normalization",0,1.0) ;
   pc.defineInt("scaleType","Normalization",0,RooAbsPdf::Relative) ;
-  pc.defineObject("sliceCatList","SliceCat",0,0,kTRUE) ;
+  pc.defineObject("sliceCatList","SliceCat",0,0,true) ;
   // This dummy is needed for plotOn to recognize the "SliceCatMany" command.
   // It is not used directly, but the "SliceCat" commands are nested in it.
   // Removing this dummy definition results in "ERROR: unrecognized command: SliceCatMany".
@@ -611,7 +611,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 
   // Process and check varargs
   pc.process(cmdList) ;
-  if (!pc.ok(kTRUE)) {
+  if (!pc.ok(true)) {
     return frame ;
   }
 
@@ -625,7 +625,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 
 
   // Look for category slice arguments and add them to the master slice list if found
-  const char* sliceCatState = pc.getString("sliceCatState",0,kTRUE) ;
+  const char* sliceCatState = pc.getString("sliceCatState",0,true) ;
   const RooLinkedList& sliceCatList = pc.getObjectList("sliceCatList") ;
   if (sliceCatState) {
 
@@ -646,7 +646,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
         // Set the slice position to the value indicated by slabel
         scat->setLabel(slabel) ;
         // Add the slice category to the master slice set
-        sliceSet->add(*scat,kFALSE) ;
+        sliceSet->add(*scat,false) ;
       }
     }
   }
@@ -660,7 +660,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   // Make list of variables to be projected
   RooArgSet projectedVars ;
   if (sliceSet) {
-    makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
+    makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,true) ;
 
     // Take out the sliced variables
     for (const auto sliceArg : *sliceSet) {
@@ -673,12 +673,12 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
       }
     }
   } else if (projSet) {
-    makeProjectionSet(frame->getPlotVar(),projSet,projectedVars,kFALSE) ;
+    makeProjectionSet(frame->getPlotVar(),projSet,projectedVars,false) ;
   } else {
-    makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
+    makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,true) ;
   }
 
-  Bool_t projIndex(kFALSE) ;
+  bool projIndex(false) ;
 
   if (!_indexCat.arg().isDerived()) {
     // *** Error checking for a fundamental index category ***
@@ -692,7 +692,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     }
 
     if (projectedVars.find(_indexCat.arg().GetName())) {
-      projIndex=kTRUE ;
+      projIndex=true ;
     }
 
   } else {
@@ -700,10 +700,10 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 
     // Determine if any servers of the index category are in the projectedVars
     RooArgSet projIdxServers ;
-    Bool_t anyServers(kFALSE) ;
+    bool anyServers(false) ;
     for (const auto server : _indexCat->servers()) {
       if (projectedVars.find(server->GetName())) {
-        anyServers=kTRUE ;
+        anyServers=true ;
         projIdxServers.add(*server) ;
       }
     }
@@ -712,11 +712,11 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     // index category components we're projecting over
 
     // Determine if all projected servers of the index category are in the projection dataset
-    Bool_t allServers(kTRUE) ;
+    bool allServers(true) ;
     std::string missing;
     for (const auto server : projIdxServers) {
       if (!projData->get()->find(server->GetName())) {
-        allServers=kFALSE ;
+        allServers=false ;
         missing = server->GetName();
       }
     }
@@ -729,7 +729,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     }
 
     if (anyServers) {
-      projIndex = kTRUE ;
+      projIndex = true ;
     }
   }
 
@@ -756,7 +756,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 
     // Make cut string to exclude rows from projection data
     TString cutString ;
-    Bool_t first(kTRUE) ;
+    bool first(true) ;
     for (const auto arg : *idxCompSliceSet) {
       auto idxComp = static_cast<RooCategory*>(arg);
       RooAbsArg* slicedComponent = nullptr;
@@ -768,14 +768,14 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
       if (!first) {
         cutString.Append("&&") ;
       } else {
-        first=kFALSE ;
+        first=false ;
       }
       cutString.Append(Form("%s==%d",idxComp->GetName(),idxComp->getCurrentIndex())) ;
     }
 
     // Make temporary projData without RooSim index category components
     RooArgSet projDataVars(*projData->get()) ;
-    projDataVars.remove(*idxCompSliceSet,kTRUE,kTRUE) ;
+    projDataVars.remove(*idxCompSliceSet,true,true) ;
 
     std::unique_ptr<RooAbsData> projDataTmp( const_cast<RooAbsData*>(projData)->reduce(projDataVars,cutString) );
 
@@ -799,7 +799,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   // using the weights from the data as coefficients
 
   // Build the list of indexCat components that are sliced
-  idxCompSliceSet->remove(projectedVars,kTRUE,kTRUE) ;
+  idxCompSliceSet->remove(projectedVars,true,true) ;
 
   // Make a new expression that is the weighted sum of requested components
   RooArgList pdfCompList ;
@@ -813,12 +813,12 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     idxCatClone->setLabel(proxy->name()) ;
 
     // Determine if this component is the current slice (if we slice)
-    Bool_t skip(kFALSE) ;
+    bool skip(false) ;
     for (const auto idxSliceCompArg : *idxCompSliceSet) {
       const auto idxSliceComp = static_cast<RooAbsCategory*>(idxSliceCompArg);
       RooAbsCategory* idxComp = (RooAbsCategory*) idxCloneSet->find(idxSliceComp->GetName()) ;
       if (idxComp->getCurrentIndex()!=idxSliceComp->getCurrentIndex()) {
-        skip=kTRUE ;
+        skip=true ;
         break ;
       }
     }
@@ -848,13 +848,13 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     // Construct cut string to only select projection data event that match the current slice
     TString cutString ;
     if (idxCompSliceSet->getSize()>0) {
-      Bool_t first(kTRUE) ;
+      bool first(true) ;
       for (const auto idxSliceCompArg : *idxCompSliceSet) {
         const auto idxSliceComp = static_cast<RooAbsCategory*>(idxSliceCompArg);
         if (!first) {
           cutString.Append("&&") ;
         } else {
-          first=kFALSE ;
+          first=false ;
         }
         cutString.Append(Form("%s==%d",idxSliceComp->GetName(),idxSliceComp->getCurrentIndex())) ;
       }
@@ -864,7 +864,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     RooArgSet projDataVars(*projData->get()) ;
     RooArgSet* idxCatServers = _indexCat.arg().getObservables(frame->getNormVars()) ;
 
-    projDataVars.remove(*idxCatServers,kTRUE,kTRUE) ;
+    projDataVars.remove(*idxCatServers,true,true) ;
 
     if (idxCompSliceSet->getSize()>0) {
       projDataTmp.reset( const_cast<RooAbsData*>(projData)->reduce(projDataVars,cutString) );
@@ -876,7 +876,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 
     if (projSet) {
       projSetTmp.add(*projSet) ;
-      projSetTmp.remove(*idxCatServers,kTRUE,kTRUE);
+      projSetTmp.remove(*idxCatServers,true,true);
     }
 
 
@@ -889,7 +889,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
           << " represents a slice in index category components " << *idxCompSliceSet << endl ;
 
     RooArgSet* idxCompProjSet = _indexCat.arg().getObservables(frame->getNormVars()) ;
-    idxCompProjSet->remove(*idxCompSliceSet,kTRUE,kTRUE) ;
+    idxCompProjSet->remove(*idxCompSliceSet,true,true) ;
     if (idxCompProjSet->getSize()>0) {
       coutI(Plotting) << "RooSimultaneous::plotOn(" << GetName() << ") plot on " << frame->getPlotVar()->GetName()
             << " averages with data index category components " << *idxCompProjSet << endl ;
@@ -936,7 +936,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 
 RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t scaleFactor,
              ScaleType stype, const RooAbsData* projData, const RooArgSet* projSet,
-             Double_t /*precision*/, Bool_t /*shiftToZero*/, const RooArgSet* /*projDataSet*/,
+             Double_t /*precision*/, bool /*shiftToZero*/, const RooArgSet* /*projDataSet*/,
              Double_t /*rangeLo*/, Double_t /*rangeHi*/, RooCurve::WingMode /*wmode*/) const
 {
   // Make command list
@@ -961,7 +961,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
 /// for interpretation of fraction coefficients. Needed here because a RooSimultaneous
 /// works like a RooAddPdf when plotted
 
-void RooSimultaneous::selectNormalization(const RooArgSet* normSet, Bool_t /*force*/)
+void RooSimultaneous::selectNormalization(const RooArgSet* normSet, bool /*force*/)
 {
   _plotCoefNormSet.removeAll() ;
   if (normSet) _plotCoefNormSet.add(*normSet) ;
@@ -973,7 +973,7 @@ void RooSimultaneous::selectNormalization(const RooArgSet* normSet, Bool_t /*for
 /// for interpretation of fraction coefficients. Needed here because a RooSimultaneous
 /// works like a RooAddPdf when plotted
 
-void RooSimultaneous::selectNormalizationRange(const char* normRange2, Bool_t /*force*/)
+void RooSimultaneous::selectNormalizationRange(const char* normRange2, bool /*force*/)
 {
   _plotCoefNormRange = RooNameReg::ptr(normRange2) ;
 }
@@ -984,7 +984,7 @@ void RooSimultaneous::selectNormalizationRange(const char* normRange2, Bool_t /*
 ////////////////////////////////////////////////////////////////////////////////
 
 RooAbsGenContext* RooSimultaneous::autoGenContext(const RooArgSet &vars, const RooDataSet* prototype,
-                    const RooArgSet* auxProto, Bool_t verbose, Bool_t autoBinned, const char* binnedTag) const
+                    const RooArgSet* auxProto, bool verbose, bool autoBinned, const char* binnedTag) const
 {
   const char* idxCatName = _indexCat.arg().GetName() ;
 
@@ -1008,7 +1008,7 @@ RooAbsGenContext* RooSimultaneous::autoGenContext(const RooArgSet &vars, const R
 /// Return specialized generator context for simultaneous p.d.f.s
 
 RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars, const RooDataSet *prototype,
-                     const RooArgSet* auxProto, Bool_t verbose) const
+                     const RooArgSet* auxProto, bool verbose) const
 {
   const char* idxCatName = _indexCat.arg().GetName() ;
   const RooArgSet* protoVars = prototype ? prototype->get() : 0 ;
@@ -1022,20 +1022,20 @@ RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars, const RooDa
     // Generating dependents of a derived index category
 
     // Determine if we none,any or all servers
-    Bool_t anyServer(kFALSE), allServers(kTRUE) ;
+    bool anyServer(false), allServers(true) ;
     if (prototype) {
       TIterator* sIter = _indexCat.arg().serverIterator() ;
       RooAbsArg* server ;
       while((server=(RooAbsArg*)sIter->Next())) {
    if (prototype->get()->find(server->GetName())) {
-     anyServer=kTRUE ;
+     anyServer=true ;
    } else {
-     allServers=kFALSE ;
+     allServers=false ;
    }
       }
       delete sIter ;
     } else {
-      allServers=kTRUE ;
+      allServers=true ;
     }
 
     if (allServers) {
@@ -1070,8 +1070,8 @@ RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars, const RooDa
 RooDataHist* RooSimultaneous::fillDataHist(RooDataHist *hist,
                                            const RooArgSet* nset,
                                            Double_t scaleFactor,
-                                           Bool_t correctForBinVolume,
-                                           Bool_t showProgress) const
+                                           bool correctForBinVolume,
+                                           bool showProgress) const
 {
   if (RooAbsReal::fillDataHist (hist, nset, scaleFactor,
                                 correctForBinVolume, showProgress) == 0)

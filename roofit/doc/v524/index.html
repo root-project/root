@@ -207,7 +207,7 @@ with associated errors on Y and optionally on X.
 interpreted as the 'Y' value, but an <tt>YVar()</tt> argument can designate any other
 dataset column as Y value. If X errors are defined, one can choose to integrate the fitted
 function over the range of the X errors, rather than taking the central value by adding
-an <tt>Integrate(kTRUE)</tt> argument to <tt>chi2FitTo()</tt>
+an <tt>Integrate(true)</tt> argument to <tt>chi2FitTo()</tt>
 
 <p>Two new arguments, <tt>StoreError(const RooArgSet&)</tt> and <tt>StoreAsymError(const RooArgSet&)</tt> 
 have been added to the <tt>RooDataSet</tt> constructor to simplify the process of storing the errors
@@ -337,7 +337,7 @@ can be obtained through the <tt>RooAbsData::store()</tt> method.)
 Note that in future releases it is no longer guaranteed that all datasets are implemented
 with a plain <tt>TTree</tt> implementation, so any user code that uses the tree
 implementation directly should implement checks that the implementation
-is indeed tree-based (<tt>data->store()->InheritsFrom(RooTreeDataStore::Class())==kTRUE)</tt>).
+is indeed tree-based (<tt>data->store()->InheritsFrom(RooTreeDataStore::Class())==true)</tt>).
 <br><br>
 In future release additional implementations of <tt>RooAbsDataStore</tt> will
 be provided that will support new dataset functionality such as the
@@ -361,7 +361,7 @@ a C++ namespace with the same name as the <tt>RooWorkspace</tt> object.
 <p>Given e.g. a workspace <tt>w</tt>, with a Gaussian p.d.f <tt>gauss</tt> in terms of variables 
 <tt>x,m,s</tt> one can now do
 <pre>
-   RooWorkspace w("w",kTRUE) ; // workspace with CINT interface activated
+   RooWorkspace w("w",true) ; // workspace with CINT interface activated
    // ... fill workspace with RooGaussian gauss(x,m,s) ...
    RooPlot* frame = w::x.frame() ;
    w::gauss.plotOn(frame) ;

@@ -31,13 +31,13 @@ public:
   void printName(std::ostream& os) const override ;
   void printTitle(std::ostream& os) const override ;
   void printClassName(std::ostream& os) const override ;
-  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const override;
+  void printMultiline(std::ostream& os, Int_t contents, bool verbose=false, TString indent="") const override;
 
   inline void Print(Option_t *options= 0) const override {
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
-  inline Bool_t isValid() const { return _valid; }
+  inline bool isValid() const { return _valid; }
   inline UInt_t getDimension() const { return _dim; }
   inline Double_t getVolume() const { return _vol; }
   inline UInt_t getNBins() const { return _bins; }
@@ -47,16 +47,16 @@ public:
   inline Double_t *createPoint() const { return _valid ? new Double_t[_dim] : 0; }
   inline UInt_t *createIndexVector() const { return _valid ? new UInt_t[_dim] : 0; }
 
-  Bool_t initialize(const RooAbsFunc &function);
+  bool initialize(const RooAbsFunc &function);
   void resize(UInt_t bins);
   void resetValues();
   void generatePoint(const UInt_t box[], Double_t x[], UInt_t bin[],
-           Double_t &vol, Bool_t useQuasiRandom= kTRUE) const;
+           Double_t &vol, bool useQuasiRandom= true) const;
   void accumulate(const UInt_t bin[], Double_t amount);
   void refine(Double_t alpha= 1.5);
 
   void firstBox(UInt_t box[]) const;
-  Bool_t nextBox(UInt_t box[]) const;
+  bool nextBox(UInt_t box[]) const;
 
   enum { maxBins = 50 }; // must be even
 
@@ -71,7 +71,7 @@ protected:
 
 protected:
 
-  Bool_t _valid;              ///< Is configuration valid
+  bool _valid;              ///< Is configuration valid
   UInt_t _dim,_bins,_boxes;   ///< Number of dimensions, bins and boxes
   Double_t _vol;              ///< Volume
 

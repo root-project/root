@@ -28,7 +28,7 @@
 namespace RooFit {
 
 typedef Double_t (*CFUNCD3DDD)(Double_t,Double_t,Double_t) ;
-typedef Double_t (*CFUNCD3DDB)(Double_t,Double_t,Bool_t) ;
+typedef Double_t (*CFUNCD3DDB)(Double_t,Double_t,bool) ;
 typedef Double_t (*CFUNCD3DII)(Double_t,Int_t,Int_t) ;
 typedef Double_t (*CFUNCD3UDU)(UInt_t,Double_t,UInt_t) ;
 typedef Double_t (*CFUNCD3UDD)(UInt_t,Double_t,Double_t) ;
@@ -210,7 +210,7 @@ void RooCFunction3Ref<VO,VI1,VI2,VI3>::Streamer(TBuffer &R__b)
    } else {
 
      UInt_t R__c;
-     R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
+     R__c = R__b.WriteVersion(thisClass::IsA(), true);
 
      // Lookup name of reference C function
      TString tmpName = fmap().lookupName(_ptr) ;
@@ -229,7 +229,7 @@ void RooCFunction3Ref<VO,VI1,VI2,VI3>::Streamer(TBuffer &R__b)
      // Persist the name
      tmpName.Streamer(R__b) ;
 
-     R__b.SetByteCount(R__c, kTRUE);
+     R__b.SetByteCount(R__c, true);
 
    }
 }

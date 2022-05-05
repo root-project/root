@@ -42,7 +42,7 @@ RooConvCoefVar::RooConvCoefVar(const char *name, const char *title, const RooAbs
                 Int_t coefIdx, const RooArgSet* varList) :
   RooAbsReal(name,title),
   _varSet("varSet","Set of coefficient variables",this),
-  _convPdf("convPdf","Convoluted PDF",this,(RooAbsReal&)input,kFALSE,kFALSE),
+  _convPdf("convPdf","Convoluted PDF",this,(RooAbsReal&)input,false,false),
   _coefIdx(coefIdx)
 {
   if (varList) _varSet.add(*varList) ;

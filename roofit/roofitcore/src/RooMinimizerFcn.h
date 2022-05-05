@@ -46,9 +46,9 @@ public:
    std::string getFunctionName() const override;
    std::string getFunctionTitle() const override;
 
-   void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, Bool_t doAlsoTrackingOpt) override;
+   void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt) override;
 
-   void setOffsetting(Bool_t flag) override;
+   void setOffsetting(bool flag) override;
    bool fit(ROOT::Fit::Fitter& fitter) const override { return fitter.FitFCN(*this); };
    ROOT::Math::IMultiGenFunction* getMultiGenFcn() override { return this; };
 

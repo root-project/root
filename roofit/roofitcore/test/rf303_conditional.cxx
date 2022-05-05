@@ -54,8 +54,8 @@ RooDataSet* makeFakeDataXY()
 
 
 
-  TestBasic303(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Conditional use of F(x|y)",refFile,writeRef,verbose) {} ;
-  Bool_t testCode() {
+  TestBasic303(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Conditional use of F(x|y)",refFile,writeRef,verbose) {} ;
+  bool testCode() {
 
   // S e t u p   c o m p o s e d   m o d e l   g a u s s ( x , m ( y ) , s )
   // -----------------------------------------------------------------------
@@ -125,7 +125,7 @@ RooDataSet* makeFakeDataXY()
   delete expDataY ;
   delete data ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;
 

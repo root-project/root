@@ -37,7 +37,7 @@ public:
   void setOwner(RooAbsArg* owner);
 
   /// Interface for server redirect calls.
-  virtual Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/,
+  virtual bool redirectServersHook(const RooAbsCollection& /*newServerList*/,
                                      bool /*mustReplaceAll*/,
                                      bool /*nameChange*/,
                                      bool /*isRecursive*/) { return false; }

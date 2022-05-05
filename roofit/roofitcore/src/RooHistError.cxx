@@ -74,17 +74,17 @@ RooHistError::RooHistError()
 /// to start at n. This method uses a lookup table to return precalculated results
 /// for n<1000
 
-Bool_t RooHistError::getPoissonInterval(Int_t n, Double_t &mu1, Double_t &mu2, Double_t nSigma) const
+bool RooHistError::getPoissonInterval(Int_t n, Double_t &mu1, Double_t &mu2, Double_t nSigma) const
 {
   // Use lookup table for most common cases
   if (n<1000 && nSigma==1.) {
     mu1=_poissonLoLUT[n] ;
     mu2=_poissonHiLUT[n] ;
-    return kTRUE ;
+    return true ;
   }
 
   // Forward to calculation method
-  Bool_t ret =  getPoissonIntervalCalc(n,mu1,mu2,nSigma) ;
+  bool ret =  getPoissonIntervalCalc(n,mu1,mu2,nSigma) ;
   return ret ;
 }
 
@@ -97,19 +97,19 @@ Bool_t RooHistError::getPoissonInterval(Int_t n, Double_t &mu1, Double_t &mu2, D
 /// the point estimate n (ie, for small n) in which case the interval is adjusted
 /// to start at n.
 
-Bool_t RooHistError::getPoissonIntervalCalc(Int_t n, Double_t &mu1, Double_t &mu2, Double_t nSigma) const
+bool RooHistError::getPoissonIntervalCalc(Int_t n, Double_t &mu1, Double_t &mu2, Double_t nSigma) const
 {
   // sanity checks
   if(n < 0) {
     oocoutE((TObject*)0,Plotting) << "RooHistError::getPoissonInterval: cannot calculate interval for n = " << n << endl;
-    return kFALSE;
+    return false;
   }
 
   // use assymptotic error if possible
   if(n > 100) {
     mu1= n - sqrt(n+0.25) + 0.5;
     mu2= n + sqrt(n+0.25) + 0.5;
-    return kTRUE;
+    return true;
   }
 
   // create a function object to use
@@ -126,22 +126,22 @@ Bool_t RooHistError::getPoissonIntervalCalc(Int_t n, Double_t &mu1, Double_t &mu
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return 'nSigma' binomial confidence interval for (n,m). The result is return in asym1 and asym2.
-/// If the return values is kFALSE and error occurred.
+/// If the return values is false and error occurred.
 
-Bool_t RooHistError::getBinomialIntervalAsym(Int_t n, Int_t m,
+bool RooHistError::getBinomialIntervalAsym(Int_t n, Int_t m,
                     Double_t &asym1, Double_t &asym2, Double_t nSigma) const
 {
   // sanity checks
   if(n < 0 || m < 0) {
     oocoutE((TObject*)0,Plotting) << "RooHistError::getPoissonInterval: cannot calculate interval for n,m = " << n << "," << m << endl;
-    return kFALSE;
+    return false;
   }
 
   // handle the special case of no events in either category
   if(n == 0 && m == 0) {
     asym1= -1;
     asym2= +1;
-    return kTRUE;
+    return true;
   }
 
   // handle cases when n,m>100 (factorials in BinomialSum will overflow around 170)
@@ -153,20 +153,20 @@ Bool_t RooHistError::getBinomialIntervalAsym(Int_t n, Int_t m,
 
     asym1 = asym-nSigma*approxErr ;
     asym2 = asym+nSigma*approxErr ;
-    return kTRUE ;
+    return true ;
   }
 
   // swap n and m to ensure that n <= m
-  Bool_t swapped(kFALSE);
+  bool swapped(false);
   if(n > m) {
-    swapped= kTRUE;
+    swapped= true;
     Int_t tmp(m);
     m= n;
     n= tmp;
   }
 
   // create the function objects to use
-  Bool_t status(kFALSE);
+  bool status(false);
   BinomialSumAsym upper(n,m);
   if(n > 0) {
     BinomialSumAsym lower(n-1,m+1);
@@ -189,22 +189,22 @@ Bool_t RooHistError::getBinomialIntervalAsym(Int_t n, Int_t m,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return 'nSigma' binomial confidence interval for (n,m). The result is return in asym1 and asym2.
-/// If the return values is kFALSE and error occurred.
+/// If the return values is false and error occurred.
 
-Bool_t RooHistError::getBinomialIntervalEff(Int_t n, Int_t m,
+bool RooHistError::getBinomialIntervalEff(Int_t n, Int_t m,
                     Double_t &asym1, Double_t &asym2, Double_t nSigma) const
 {
   // sanity checks
   if(n < 0 || m < 0) {
     oocoutE((TObject*)0,Plotting) << "RooHistError::getPoissonInterval: cannot calculate interval for n,m = " << n << "," << m << endl;
-    return kFALSE;
+    return false;
   }
 
   // handle the special case of no events in either category
   if(n == 0 && m == 0) {
     asym1= -1;
     asym2= +1;
-    return kTRUE;
+    return true;
   }
 
   // handle cases when n,m>80 (factorials in BinomialSum will overflow around 170)
@@ -216,20 +216,20 @@ Bool_t RooHistError::getBinomialIntervalEff(Int_t n, Int_t m,
 
     asym1 = asym-nSigma*0.5*approxErr ;
     asym2 = asym+nSigma*0.5*approxErr ;
-    return kTRUE ;
+    return true ;
   }
 
   // swap n and m to ensure that n <= m
-  Bool_t swapped(kFALSE);
+  bool swapped(false);
   if(n > m) {
-    swapped= kTRUE;
+    swapped= true;
     Int_t tmp(m);
     m= n;
     n= tmp;
   }
 
   // create the function objects to use
-  Bool_t status(kFALSE);
+  bool status(false);
   BinomialSumEff upper(n,m);
   Double_t eff = (Double_t)(n)/(n+m) ;
   if(n > 0) {
@@ -258,7 +258,7 @@ Bool_t RooHistError::getBinomialIntervalEff(Int_t n, Int_t m,
 /// unless this would exclude the pointEstimate, in which case a one-sided interval
 /// pinned at the point estimate is returned instead.
 
-Bool_t RooHistError::getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, Double_t pointEstimate,
+bool RooHistError::getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, Double_t pointEstimate,
              Double_t stepSize, Double_t &lo, Double_t &hi, Double_t nSigma) const
 {
   // sanity checks
@@ -269,7 +269,7 @@ Bool_t RooHistError::getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, Dou
   Double_t alpha= 0.5*(1-beta);
 
   // Does the central interval contain the point estimate?
-  Bool_t ok(kTRUE);
+  bool ok(true);
   Double_t loProb(1),hiProb(0);
   if(0 != Ql) loProb= (*Ql)(&pointEstimate);
   if(0 != Qu) hiProb= (*Qu)(&pointEstimate);
@@ -338,7 +338,7 @@ RooAbsFunc *RooHistError::createPoissonSum(Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Create and return a BinomialSum function binding
 
-RooAbsFunc *RooHistError::createBinomialSum(Int_t n, Int_t m, Bool_t eff)
+RooAbsFunc *RooHistError::createBinomialSum(Int_t n, Int_t m, bool eff)
 {
   if (eff) {
     return new BinomialSumEff(n,m) ;

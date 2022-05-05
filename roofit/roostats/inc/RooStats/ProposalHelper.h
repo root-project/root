@@ -48,14 +48,14 @@ namespace RooStats {
                            size << ". Cache size unchanged." << std::endl;
       }
 
-      virtual void SetUpdateProposalParameters(Bool_t updateParams)
+      virtual void SetUpdateProposalParameters(bool updateParams)
       { fUseUpdates = updateParams; }
 
       virtual void SetVariables(RooArgList& vars)
       { fVars = &vars; }
 
       virtual void SetVariables(const RooArgList& vars)
-      { fVars = new RooArgList(vars); fOwnsVars = kTRUE; }
+      { fVars = new RooArgList(vars); fOwnsVars = true; }
 
       /// set what fraction of the proposal density function should come from
       /// a uniform proposal distribution
@@ -85,7 +85,7 @@ namespace RooStats {
       {
          RooArgList* argList = new RooArgList(vars);
          SetVariables(*argList);
-         fOwnsVars = kTRUE;
+         fOwnsVars = true;
       }
 
       ~ProposalHelper() override
@@ -110,12 +110,12 @@ namespace RooStats {
       Double_t fSigmaRangeDivisor;   ///< range divisor to get sigma for each variable
       Double_t fUniFrac;             ///< what fraction of the PDF integral is uniform
       Double_t fCluesFrac;           ///< what fraction of the PDF integral comes from clues
-      Bool_t fOwnsPdfProp;           ///< whether we own the PdfProposal; equivalent to:
+      bool fOwnsPdfProp;           ///< whether we own the PdfProposal; equivalent to:
                                      ///< !(whether we have returned it in GetProposalFunction)
-      Bool_t fOwnsPdf;               ///< whether we created (and own) the main pdf
-      Bool_t fOwnsCluesPdf;          ///< whether we created (and own) the clues pdf
-      Bool_t fOwnsVars;              ///< whether we own fVars
-      Bool_t fUseUpdates;            ///< whether to set updates for proposal params in PdfProposal
+      bool fOwnsPdf;               ///< whether we created (and own) the main pdf
+      bool fOwnsCluesPdf;          ///< whether we created (and own) the clues pdf
+      bool fOwnsVars;              ///< whether we own fVars
+      bool fUseUpdates;            ///< whether to set updates for proposal params in PdfProposal
       const Option_t* fCluesOptions; ///< option string for clues RooNDKeysPdf
 
       void CreatePdf();

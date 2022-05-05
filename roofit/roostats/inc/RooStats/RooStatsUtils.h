@@ -98,7 +98,7 @@ namespace RooStats {
 
    /// assuming all values in set are RooRealVars, randomize their values
    inline void RandomizeCollection(RooAbsCollection& set,
-                                   Bool_t randomizeConstants = kTRUE)
+                                   bool randomizeConstants = true)
    {
 
       // repeat loop to avoid calling isConstant for nothing

@@ -185,7 +185,7 @@ namespace RooStats {
       double fBrfPrecision;              ///< root finder precision
       mutable int fNScanBins;            ///< number of bins to scan, if = -1 no scan is done (default)
       int fNumIterations;                ///< number of iterations (when using ToyMC)
-      mutable Bool_t    fValidInterval;
+      mutable bool    fValidInterval;
 
       TString fIntegrationType;
 

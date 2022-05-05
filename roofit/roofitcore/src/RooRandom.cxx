@@ -116,7 +116,7 @@ Double_t RooRandom::gaussian(TRandom *generator)
 /// Niederreiter base 2 generator described in Bratley, Fox, Niederreiter,
 /// ACM Trans. Model. Comp. Sim. 2, 195 (1992).
 
-Bool_t RooRandom::quasi(UInt_t dimension, Double_t vector[], RooQuasiRandomGenerator *generator)
+bool RooRandom::quasi(UInt_t dimension, Double_t vector[], RooQuasiRandomGenerator *generator)
 {
   return generator->generate(dimension,vector);
 }

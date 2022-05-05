@@ -31,7 +31,7 @@ public:
 
   virtual void fill(RooAbsCategory& cat, Double_t weight=1.0) = 0 ;
 
-  virtual Bool_t isIdentical(const RooTable& other, bool verbose) = 0 ;
+  virtual bool isIdentical(const RooTable& other, bool verbose) = 0 ;
 
 protected:
 

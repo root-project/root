@@ -38,7 +38,7 @@ RooConstVar::RooConstVar(const char *name, const char *title, Double_t value) :
 {
   _fast = true;
   _value = value;
-  setAttribute("Constant",kTRUE) ;
+  setAttribute("Constant",true) ;
 }
 
 
@@ -66,7 +66,7 @@ RooSpan<const double> RooConstVar::getValues(RooBatchCompute::RunContext& evalDa
 ////////////////////////////////////////////////////////////////////////////////
 /// Write object contents to stream
 
-void RooConstVar::writeToStream(ostream& os, Bool_t /*compact*/) const
+void RooConstVar::writeToStream(ostream& os, bool /*compact*/) const
 {
   os << _value ;
 }
