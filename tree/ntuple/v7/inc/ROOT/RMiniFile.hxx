@@ -76,20 +76,6 @@ struct RFileNTupleAnchor {
    /// Currently unused, reserved for later use
    std::uint64_t fReserved = 0;
 
-   /// The canonical, member-wise equality test
-   bool operator==(const RFileNTupleAnchor &other) const
-   {
-      return fVersion == other.fVersion &&
-         fSize == other.fSize &&
-         fSeekHeader == other.fSeekHeader &&
-         fNBytesHeader == other.fNBytesHeader &&
-         fLenHeader == other.fLenHeader &&
-         fSeekFooter == other.fSeekFooter &&
-         fNBytesFooter == other.fNBytesFooter &&
-         fLenFooter == other.fLenFooter &&
-         fReserved == other.fReserved;
-   }
-
    // RNTuple implements the hadd MergeFile interface
    /// Merge this NTuple with the input list entries
    Long64_t Merge(TCollection *input, TFileMergeInfo *mergeInfo);

@@ -1,5 +1,15 @@
 #include "ntuple_test.hxx"
 
+namespace {
+bool IsEqual(const ROOT::Experimental::Internal::RFileNTupleAnchor &a,
+             const ROOT::Experimental::Internal::RFileNTupleAnchor &b)
+{
+   return a.fVersion == b.fVersion && a.fSize == b.fSize && a.fSeekHeader == b.fSeekHeader &&
+          a.fNBytesHeader == b.fNBytesHeader && a.fLenHeader == b.fLenHeader && a.fSeekFooter == b.fSeekFooter &&
+          a.fNBytesFooter == b.fNBytesFooter && a.fLenFooter == b.fLenFooter && a.fReserved == b.fReserved;
+}
+} // namespace
+
 TEST(MiniFile, Raw)
 {
    FileRaii fileGuard("test_ntuple_minifile_raw.ntuple");
@@ -61,7 +71,7 @@ TEST(MiniFile, Stream)
    auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "READ"));
    ASSERT_TRUE(file);
    auto k = std::unique_ptr<RNTuple>(file->Get<RNTuple>("MyNTuple"));
-   EXPECT_EQ(ntuple, *k);
+   EXPECT_TRUE(IsEqual(ntuple, *k));
 }
 
 
