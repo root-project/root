@@ -51,19 +51,20 @@ public:
    TNetXNGSystem(const char *url, Bool_t owner = kTRUE);
    virtual ~TNetXNGSystem();
 
-   virtual void       *OpenDirectory(const char *dir);
-   virtual Int_t       MakeDirectory(const char *dir);
-   virtual void        FreeDirectory(void *dirp);
-   virtual const char *GetDirEntry(void *dirp);
-   virtual Int_t       GetPathInfo(const char *path, FileStat_t &buf);
-   virtual Bool_t      ConsistentWith(const char *path, void *dirptr);
-   virtual int         Unlink(const char *path);
-   virtual Bool_t      IsPathLocal(const char *path);
+   void       *OpenDirectory(const char *dir) override;
+   Int_t       MakeDirectory(const char *dir) override;
+   void        FreeDirectory(void *dirp) override;
+   const char *GetDirEntry(void *dirp) override;
+   Int_t       GetPathInfo(const char *path, FileStat_t &buf) override;
+   Bool_t      ConsistentWith(const char *path, void *dirptr) override;
+   int         Unlink(const char *path) override;
+   Bool_t      IsPathLocal(const char *path) override;
+
    virtual Int_t       Locate(const char *path, TString &endurl);
    virtual Int_t       Stage(const char *path, UChar_t priority);
    virtual Int_t       Stage(TCollection *files, UChar_t priority);
 
-   ClassDef(TNetXNGSystem, 0)  // ROOT class definition
+   ClassDefOverride(TNetXNGSystem, 0)  // ROOT class definition
 };
 
 #endif
