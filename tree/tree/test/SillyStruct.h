@@ -13,5 +13,5 @@ public:
    int    i;
    double d;
 
-   ClassDef(SillyStruct, 1)
+   ClassDefOverride(SillyStruct, 1)
 };
