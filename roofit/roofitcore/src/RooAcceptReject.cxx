@@ -84,13 +84,10 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
   _minTrialsArray[3] = static_cast<Int_t>(config.getConfigSection("RooAcceptReject").getRealValue("nTrial3D")) ;
 
   _realSampleDim = _realVars.getSize() ;
-  TIterator* iter = _catVars.createIterator() ;
-  RooAbsCategory* cat ;
   _catSampleMult = 1 ;
-  while((cat=(RooAbsCategory*)iter->Next())) {
+  for (auto * cat : static_range_cast<RooAbsCategory*>(_catVars)) {
     _catSampleMult *=  cat->numTypes() ;
   }
-  delete iter ;
 
 
   // calculate the minimum number of trials needed to estimate our integral and max value

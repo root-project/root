@@ -650,13 +650,9 @@ void RooAbsPdf::setTraceCounter(Int_t value, bool allNodes)
   } else {
     RooArgList branchList ;
     branchNodeServerList(&branchList) ;
-    TIterator* iter = branchList.createIterator() ;
-    RooAbsArg* arg ;
-    while((arg=(RooAbsArg*)iter->Next())) {
-      RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(arg) ;
+    for(auto * pdf : dynamic_range_cast<RooAbsPdf*>(branchList)) {
       if (pdf) pdf->setTraceCounter(value,false) ;
     }
-    delete iter ;
   }
 
 }
