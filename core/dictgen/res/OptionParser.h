@@ -1422,7 +1422,7 @@ public:
   {
   }
 
-  bool perform(Option&)
+  bool perform(Option&) override
   {
     if (*buffer_max == 0x7fffffff)
       return false; // overflow protection: don't accept number of options that doesn't fit signed int
@@ -1462,7 +1462,7 @@ public:
     parser.op_count = bufidx;
   }
 
-  bool perform(Option& option)
+  bool perform(Option& option) override
   {
     if (bufmax < 0 || parser.op_count < bufmax)
     {
@@ -1482,7 +1482,7 @@ public:
     return true; // NOTE: an option that is discarded because of a full buffer is not fatal
   }
 
-  bool finished(int numargs, const char** args)
+  bool finished(int numargs, const char** args) override
   {
     // only overwrite non-option argument list if there's at least 1
     // new non-option argument. Otherwise we keep the old list. This
@@ -1755,7 +1755,7 @@ struct PrintUsageImplementation
   {
     OStream& ostream;
 
-    virtual void operator()(const char* str, int size)
+    void operator()(const char* str, int size) override
     {
       ostream.write(str, size);
     }
