@@ -36,18 +36,18 @@ public:
    TNetXNGFileStager(const char *url = "");
    virtual ~TNetXNGFileStager();
 
-   Bool_t IsStaged(const char *path);
-   Int_t  Locate(const char *path, TString &endpath);
-   Int_t  LocateCollection(TFileCollection *fc, Bool_t addDummyUrl = kFALSE);
-   Bool_t Matches(const char *s);
-   Bool_t Stage(const char *path, Option_t *opt = 0);
-   Bool_t Stage(TCollection *pathlist, Option_t *opt = 0);
-   Bool_t IsValid() const { return (fSystem ? kTRUE : kFALSE); }
+   Bool_t IsStaged(const char *path) override;
+   Int_t  Locate(const char *path, TString &endpath) override;
+   Int_t  LocateCollection(TFileCollection *fc, Bool_t addDummyUrl = kFALSE) override;
+   Bool_t Matches(const char *s) override;
+   Bool_t Stage(const char *path, Option_t *opt = 0) override;
+   Bool_t Stage(TCollection *pathlist, Option_t *opt = 0) override;
+   Bool_t IsValid() const override { return (fSystem ? kTRUE : kFALSE); }
 
 private:
    UChar_t ParseStagePriority(Option_t *opt);
 
-   ClassDef( TNetXNGFileStager, 0 ) //! Interface to a 'XRD' staging
+   ClassDefOverride(TNetXNGFileStager, 0) //! Interface to a 'XRD' staging
 };
 
 #endif
