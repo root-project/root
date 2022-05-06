@@ -29,14 +29,6 @@ class RLogChannel;
 /// Log channel for RNTuple diagnostics.
 RLogChannel &NTupleLog();
 
-struct RNTuple;
-
-namespace Internal {
-
-void PrintRNTuple(const RNTuple& ntuple, std::ostream& output);
-
-} // namespace Internal
-
 /**
  * The fields in the ntuple model tree can carry different structural information about the type system.
  * Leaf fields contain just data, collection fields resolve to offset columns, record fields have no
