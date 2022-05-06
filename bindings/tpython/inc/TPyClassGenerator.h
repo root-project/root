@@ -17,10 +17,10 @@
 
 class TPyClassGenerator : public TClassGenerator {
 public:
-   virtual TClass *GetClass(const char *name, Bool_t load);
-   virtual TClass *GetClass(const std::type_info &typeinfo, Bool_t load);
-   virtual TClass *GetClass(const char *name, Bool_t load, Bool_t silent);
-   virtual TClass *GetClass(const std::type_info &typeinfo, Bool_t load, Bool_t silent);
+   TClass *GetClass(const char *name, Bool_t load) override;
+   TClass *GetClass(const std::type_info &typeinfo, Bool_t load) override;
+   TClass *GetClass(const char *name, Bool_t load, Bool_t silent) override;
+   TClass *GetClass(const std::type_info &typeinfo, Bool_t load, Bool_t silent) override;
 };
 
 #endif // !ROOT_TPyClassGenerator
