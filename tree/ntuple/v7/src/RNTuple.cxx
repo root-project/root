@@ -389,10 +389,21 @@ ROOT::Experimental::RCollectionNTupleWriter::RCollectionNTupleWriter(std::unique
 
 //------------------------------------------------------------------------------
 
+std::unique_ptr<ROOT::Experimental::RNTupleReader> ROOT::Experimental::RNTuple::MakeReader()
+{
+   if (!fFile)
+      throw RException(R__FAIL("Invalid RNTuple object"));
+
+   return nullptr;
+   // Detail::RPageSource::Create()
+}
+
 void ROOT::Experimental::RNTuple::Streamer(TBuffer &buf)
 {
    if (buf.IsReading()) {
       RNTuple::Class()->ReadBuffer(buf, this);
+      R__ASSERT(buf.GetParent() && buf.GetParent()->InheritsFrom("TFile"));
+      fFile = reinterpret_cast<TFile *>(buf.GetParent());
    } else {
       RNTuple::Class()->WriteBuffer(buf, this);
    }
