@@ -386,3 +386,14 @@ ROOT::Experimental::RCollectionNTupleWriter::RCollectionNTupleWriter(std::unique
    : fOffset(0), fDefaultEntry(std::move(defaultEntry))
 {
 }
+
+//------------------------------------------------------------------------------
+
+void ROOT::Experimental::RNTuple::Streamer(TBuffer &buf)
+{
+   if (buf.IsReading()) {
+      RNTuple::Class()->ReadBuffer(buf, this);
+   } else {
+      RNTuple::Class()->WriteBuffer(buf, this);
+   }
+}

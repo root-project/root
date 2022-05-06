@@ -472,9 +472,13 @@ private:
    using Internal::RFileNTupleAnchor::fVersion;
 
 public:
+   virtual ~RNTuple() = default;
+
    // RNTuple implements the hadd MergeFile interface
    /// Merge this NTuple with the input list entries
    Long64_t Merge(TCollection *input, TFileMergeInfo *mergeInfo);
+
+   ClassDef(RNTuple, 2);
 };
 
 } // namespace Experimental
