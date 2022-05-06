@@ -63,7 +63,7 @@ public:
    const char *GetNamespaceHref() const;
    const char *GetNamespacePrefix() const;
 
-   ClassDef(TXMLNode,0);  // XML node under DOM tree
+   ClassDefOverride(TXMLNode,0);  // XML node under DOM tree
 };
 
 #endif

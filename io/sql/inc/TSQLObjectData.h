@@ -39,7 +39,7 @@ protected:
    TString fClassName;
    Version_t fVersion;
 
-   ClassDef(TSQLObjectInfo, 1) // Info (classname, version) about object in database
+   ClassDefOverride(TSQLObjectInfo, 1) // Info (classname, version) about object in database
 };
 
 //=======================================================================
@@ -95,7 +95,7 @@ protected:
    const char *fBlobTypeName;   ///<! name type (without prefix) in current blob row
    TObjArray *fUnpack;          //!
 
-   ClassDef(TSQLObjectData, 1) // Keeps the data requested from the SQL server for an object.
+   ClassDefOverride(TSQLObjectData, 1) // Keeps the data requested from the SQL server for an object.
 };
 
 // ======================================================================
@@ -122,7 +122,7 @@ protected:
    Bool_t fIsMoreRows;     ///<!  indicates if class data has not yet read rows
    TList *fRowsPool;       ///<!  pool of extracted, but didnot used rows
 
-   ClassDef(TSQLObjectDataPool, 1) // XML object keeper class
+   ClassDefOverride(TSQLObjectDataPool, 1) // XML object keeper class
 };
 
 #endif

@@ -29,15 +29,15 @@ private:
 
    virtual Int_t           Parse();
 
-   TSAXParser(const TSAXParser&);             // Not implemented
-   TSAXParser& operator=(const TSAXParser&);  // Not implemented
+   TSAXParser(const TSAXParser&) = delete;
+   TSAXParser& operator=(const TSAXParser&) = delete;
 
 public:
    TSAXParser();
    virtual ~TSAXParser();
 
-   virtual Int_t           ParseFile(const char *filename);
-   virtual Int_t           ParseBuffer(const char *contents, Int_t len);
+           Int_t           ParseFile(const char *filename) override;
+           Int_t           ParseBuffer(const char *contents, Int_t len) override;
 
    virtual void            OnStartDocument();  //*SIGNAL*
    virtual void            OnEndDocument();  //*SIGNAL*
@@ -52,7 +52,7 @@ public:
 
    virtual void            ConnectToHandler(const char *handlerName, void *handler);
 
-   ClassDef(TSAXParser,0); // SAX Parser
+   ClassDefOverride(TSAXParser,0); // SAX Parser
 };
 
 #endif

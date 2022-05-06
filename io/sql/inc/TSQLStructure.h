@@ -80,7 +80,7 @@ public:
    const char *GetColumn(Int_t n);
    Bool_t IsNumeric(Int_t n);
 
-   ClassDef(TSQLTableData, 1); // Collection of columns data for single SQL table
+   ClassDefOverride(TSQLTableData, 1); // Collection of columns data for single SQL table
 };
 
 //______________________________________________________________________
@@ -161,7 +161,7 @@ public:
    void AddObjectData(TSQLObjectData *objdata);
    TSQLObjectData *GetObjectData(Bool_t search = false);
 
-   virtual void Print(Option_t *option = "") const;
+   void Print(Option_t *option = "") const override;
    void PrintLevel(Int_t level) const;
 
    Bool_t ConvertToTables(TSQLFile *f, Long64_t keyid, TObjArray *cmds);
@@ -207,7 +207,7 @@ public:
 
    enum ESQLIdType { kIdTable = 0, kIdRawTable = 1, kIdColumn = 2 };
 
-   ClassDef(TSQLStructure, 1); // Table/structure description used internally by TBufferSQL.
+   ClassDefOverride(TSQLStructure, 1); // Table/structure description used internally by TBufferSQL.
 };
 
 // text constants, used in SQL I/O

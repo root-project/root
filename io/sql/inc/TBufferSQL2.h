@@ -46,8 +46,8 @@ protected:
    TMap *fPoolsMap;              ///<!   map of pools with data from different tables
 
    // TBufferSQL2 objects cannot be copied or assigned
-   TBufferSQL2(const TBufferSQL2 &);    // not implemented
-   void operator=(const TBufferSQL2 &); // not implemented
+   TBufferSQL2(const TBufferSQL2 &) = delete;
+   void operator=(const TBufferSQL2 &) = delete;
 
    TBufferSQL2();
 
