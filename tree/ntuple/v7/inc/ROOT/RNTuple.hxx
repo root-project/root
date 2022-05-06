@@ -460,6 +460,21 @@ public:
 };
 
 class RNTuple : public Internal::RFileNTupleAnchor {
+private:
+   using Internal::RFileNTupleAnchor::fLenFooter;
+   using Internal::RFileNTupleAnchor::fLenHeader;
+   using Internal::RFileNTupleAnchor::fNBytesFooter;
+   using Internal::RFileNTupleAnchor::fNBytesHeader;
+   using Internal::RFileNTupleAnchor::fReserved;
+   using Internal::RFileNTupleAnchor::fSeekFooter;
+   using Internal::RFileNTupleAnchor::fSeekHeader;
+   using Internal::RFileNTupleAnchor::fSize;
+   using Internal::RFileNTupleAnchor::fVersion;
+
+public:
+   // RNTuple implements the hadd MergeFile interface
+   /// Merge this NTuple with the input list entries
+   Long64_t Merge(TCollection *input, TFileMergeInfo *mergeInfo);
 };
 
 } // namespace Experimental
