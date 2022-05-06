@@ -46,7 +46,7 @@ namespace {
       // Returns false on error
       bool Complete(Text& line /*in+out*/, size_t& cursor /*in+out*/,
                     EditorRange& r /*out*/,
-                    std::vector<std::string>& displayCompletions /*out*/) {
+                    std::vector<std::string>& displayCompletions /*out*/) override {
          strlcpy(fLineBuf, line.GetText().c_str(), fgLineBufSize);
          int cursorInt = (int) cursor;
          std::stringstream sstr;
@@ -98,7 +98,7 @@ namespace {
       // Returns false on error
       bool Complete(Text& line /*in+out*/, size_t& cursor /*in+out*/,
                     EditorRange& r /*out*/,
-                    std::vector<std::string>& completions /*out*/) {
+                    std::vector<std::string>& completions /*out*/) override {
          gInterpreter->CodeComplete(line.GetText(), cursor, completions);
          // FIXME: handle single completion by completing "line"
          // FIXME: adjust r's update range, for now:
