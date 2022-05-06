@@ -179,12 +179,12 @@ public:
                       const int *pgDebug = 0);
    virtual ~TClingLookupHelper() { /* we're not owner */ }
 
-   virtual bool ExistingTypeCheck(const std::string &tname, std::string &result);
-   virtual void GetPartiallyDesugaredName(std::string &nameLong);
-   virtual bool IsAlreadyPartiallyDesugaredName(const std::string &nondef, const std::string &nameLong);
-   virtual bool IsDeclaredScope(const std::string &base, bool &isInlined);
-   virtual bool GetPartiallyDesugaredNameWithScopeHandling(const std::string &tname, std::string &result, bool dropstd = true);
-   virtual void ShuttingDownSignal();
+   bool ExistingTypeCheck(const std::string &tname, std::string &result) override;
+   void GetPartiallyDesugaredName(std::string &nameLong) override;
+   bool IsAlreadyPartiallyDesugaredName(const std::string &nondef, const std::string &nameLong) override;
+   bool IsDeclaredScope(const std::string &base, bool &isInlined) override;
+   bool GetPartiallyDesugaredNameWithScopeHandling(const std::string &tname, std::string &result, bool dropstd = true) override;
+   void ShuttingDownSignal() override;
 };
 
 //______________________________________________________________________________
