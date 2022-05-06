@@ -14,6 +14,7 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class ROOT::Experimental::RNTuple+;
+#pragma link C++ class ROOT::Experimental::Internal::RFileNTupleAnchor + ;
+#pragma link C++ class ROOT::Experimental::RNTuple - ;
 
 #endif

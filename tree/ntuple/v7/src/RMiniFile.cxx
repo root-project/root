@@ -809,7 +809,7 @@ struct RTFNTuple {
    RUInt16BE fVersionClass{0};
    RInt32BE fChecksum{ChecksumRNTupleClass()};
    RUInt32BE fVersionInternal{0};
-   RUInt32BE fSize{sizeof(ROOT::Experimental::RNTuple)};
+   RUInt32BE fSize{sizeof(ROOT::Experimental::Internal::RFileNTupleAnchor)};
    RUInt64BE fSeekHeader{0};
    RUInt32BE fNBytesHeader{0};
    RUInt32BE fLenHeader{0};
@@ -819,46 +819,32 @@ struct RTFNTuple {
    RUInt64BE fReserved{0};
 
    RTFNTuple() = default;
-   explicit RTFNTuple(const ROOT::Experimental::RNTuple &inMemoryNTuple) {
-      fVersionInternal = inMemoryNTuple.fVersion;
-      fSize            = inMemoryNTuple.fSize;
-      fSeekHeader      = inMemoryNTuple.fSeekHeader;
-      fNBytesHeader    = inMemoryNTuple.fNBytesHeader;
-      fLenHeader       = inMemoryNTuple.fLenHeader;
-      fSeekFooter      = inMemoryNTuple.fSeekFooter;
-      fNBytesFooter    = inMemoryNTuple.fNBytesFooter;
-      fLenFooter       = inMemoryNTuple.fLenFooter;
-      fReserved        = inMemoryNTuple.fReserved;
+   explicit RTFNTuple(const ROOT::Experimental::Internal::RFileNTupleAnchor &inMemoryAnchor)
+   {
+      fVersionInternal = inMemoryAnchor.fVersion;
+      fSize = inMemoryAnchor.fSize;
+      fSeekHeader = inMemoryAnchor.fSeekHeader;
+      fNBytesHeader = inMemoryAnchor.fNBytesHeader;
+      fLenHeader = inMemoryAnchor.fLenHeader;
+      fSeekFooter = inMemoryAnchor.fSeekFooter;
+      fNBytesFooter = inMemoryAnchor.fNBytesFooter;
+      fLenFooter = inMemoryAnchor.fLenFooter;
+      fReserved = inMemoryAnchor.fReserved;
    }
    std::uint32_t GetSize() const { return sizeof(RTFNTuple); }
-   ROOT::Experimental::RNTuple ToRNTuple() const {
-      ROOT::Experimental::RNTuple ntuple;
-      ntuple.fVersion      = fVersionInternal;
-      ntuple.fSize         = fSize;
-      ntuple.fSeekHeader   = fSeekHeader;
-      ntuple.fNBytesHeader = fNBytesHeader;
-      ntuple.fLenHeader    = fLenHeader;
-      ntuple.fSeekFooter   = fSeekFooter;
-      ntuple.fNBytesFooter = fNBytesFooter;
-      ntuple.fLenFooter    = fLenFooter;
-      ntuple.fReserved     = fReserved;
-      return ntuple;
-   }
-   void Print(std::ostream& output) {
-      output << "RTFNTuple {\n";
-      output << "    fByteCount: " << fByteCount << ",\n";
-      output << "    fVersionClass: " << fVersionClass << ",\n";
-      output << "    fChecksum: " << fChecksum << ",\n";
-      output << "    fVersionInternal: " << fVersionInternal << ",\n";
-      output << "    fSize: " << fSize << ",\n";
-      output << "    fSeekHeader: " << fSeekHeader << ",\n";
-      output << "    fNBytesHeader: " << fNBytesHeader << ",\n";
-      output << "    fLenHeader: " << fLenHeader << ",\n";
-      output << "    fSeekFooter: " << fSeekFooter << ",\n";
-      output << "    fNBytesFooter: " << fNBytesFooter << ",\n";
-      output << "    fLenFooter: " << fLenFooter << ",\n";
-      output << "    fReserved: " << fReserved << ",\n";
-      output << "}";
+   ROOT::Experimental::Internal::RFileNTupleAnchor ToAnchor() const
+   {
+      ROOT::Experimental::Internal::RFileNTupleAnchor anchor;
+      anchor.fVersion = fVersionInternal;
+      anchor.fSize = fSize;
+      anchor.fSeekHeader = fSeekHeader;
+      anchor.fNBytesHeader = fNBytesHeader;
+      anchor.fLenHeader = fLenHeader;
+      anchor.fSeekFooter = fSeekFooter;
+      anchor.fNBytesFooter = fNBytesFooter;
+      anchor.fLenFooter = fLenFooter;
+      anchor.fReserved = fReserved;
+      return anchor;
    }
 };
 
@@ -919,7 +905,7 @@ ROOT::Experimental::Internal::RMiniFileReader::RMiniFileReader(ROOT::Internal::R
 {
 }
 
-ROOT::Experimental::RResult<ROOT::Experimental::RNTuple>
+ROOT::Experimental::RResult<ROOT::Experimental::Internal::RFileNTupleAnchor>
 ROOT::Experimental::Internal::RMiniFileReader::GetNTuple(std::string_view ntupleName)
 {
    char ident[4];
@@ -930,8 +916,7 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTuple(std::string_view ntuple
    return GetNTupleBare(ntupleName);
 }
 
-
-ROOT::Experimental::RResult<ROOT::Experimental::RNTuple>
+ROOT::Experimental::RResult<ROOT::Experimental::Internal::RFileNTupleAnchor>
 ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view ntupleName)
 {
    RTFHeader fileHeader;
@@ -984,10 +969,10 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view 
    offset = key.GetSeekKey() + key.fKeyLen;
    RTFNTuple ntuple;
    ReadBuffer(&ntuple, sizeof(ntuple), offset);
-   return ntuple.ToRNTuple();
+   return ntuple.ToAnchor();
 }
 
-ROOT::Experimental::RResult<ROOT::Experimental::RNTuple>
+ROOT::Experimental::RResult<ROOT::Experimental::Internal::RFileNTupleAnchor>
 ROOT::Experimental::Internal::RMiniFileReader::GetNTupleBare(std::string_view ntupleName)
 {
    RBareFileHeader fileHeader;
@@ -1006,7 +991,7 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleBare(std::string_view nt
 
    RTFNTuple ntuple;
    ReadBuffer(&ntuple, sizeof(ntuple), offset);
-   return ntuple.ToRNTuple();
+   return ntuple.ToAnchor();
 }
 
 
