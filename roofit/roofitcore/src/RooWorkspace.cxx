@@ -1125,9 +1125,7 @@ bool RooWorkspace::importClassCode(const char* pat, bool doReplace)
   bool ret(true) ;
 
   TRegexp re(pat,true) ;
-  TIterator* iter = componentIterator() ;
-  RooAbsArg* carg ;
-  while((carg=(RooAbsArg*)iter->Next())) {
+  for (RooAbsArg * carg : _allOwnedNodes) {
     TString className = carg->ClassName() ;
     if (className.Index(re)>=0 && !_classes.autoImportClass(carg->IsA(),doReplace)) {
       coutW(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") WARNING: problems import class code of object "
@@ -1135,7 +1133,6 @@ bool RooWorkspace::importClassCode(const char* pat, bool doReplace)
       ret = false ;
     }
   }
-  delete iter ;
 
   return ret ;
 }
@@ -1975,9 +1972,7 @@ bool RooWorkspace::makeDir()
   TString title= Form("TDirectory representation of RooWorkspace %s",GetName()) ;
   _dir = new WSDir(GetName(),title.Data(),this) ;
 
-  TIter iter = componentIterator() ;
-  RooAbsArg* darg ;
-  while((darg=(RooAbsArg*)iter.Next())) {
+  for (RooAbsArg * darg : _allOwnedNodes) {
     if (darg->IsA() != RooConstVar::Class()) {
       _dir->InternalAppend(darg) ;
     }

@@ -258,10 +258,8 @@ TString RooAbsCachedReal::cacheNameSuffix(const RooArgSet& nset) const
   TString name ;
   name.Append("_Obs[") ;
   if (nset.getSize()>0) {
-    TIterator* iter = nset.createIterator() ;
-    RooAbsArg* arg ;
     bool first(true) ;
-    while((arg=(RooAbsArg*)iter->Next())) {
+    for (RooAbsArg * arg : nset) {
       if (first) {
    first=false ;
       } else {
@@ -269,7 +267,6 @@ TString RooAbsCachedReal::cacheNameSuffix(const RooArgSet& nset) const
       }
       name.Append(arg->GetName()) ;
     }
-    delete iter ;
   }
 
   name.Append("]") ;

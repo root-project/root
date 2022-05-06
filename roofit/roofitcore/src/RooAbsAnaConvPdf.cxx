@@ -370,24 +370,19 @@ Int_t RooAbsAnaConvPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
   if (_forceNumInt) return 0 ;
 
   // Select subset of allVars that are actual dependents
-  RooArgSet* allDeps = getObservables(allVars) ;
-  RooArgSet* normSet = normSet2 ? getObservables(normSet2) : 0 ;
+  RooArgSet allDeps;
+  getObservables(&allVars, allDeps);
+  std::unique_ptr<RooArgSet> normSet{normSet2 ? getObservables(normSet2) : nullptr};
 
-  RooAbsArg *arg ;
-  RooResolutionModel *conv ;
-
-  RooArgSet* intSetAll = new RooArgSet(*allDeps,"intSetAll") ;
+  RooArgSet intSetAll{allDeps,"intSetAll"};
 
   // Split intSetAll in coef/conv parts
-  RooArgSet* intCoefSet = new RooArgSet("intCoefSet") ;
-  RooArgSet* intConvSet = new RooArgSet("intConvSet") ;
-  TIterator* varIter  = intSetAll->createIterator() ;
-  TIterator* convIter = _convSet.createIterator() ;
+  auto intCoefSet = std::make_unique<RooArgSet>("intCoefSet");
+  auto intConvSet = std::make_unique<RooArgSet>("intConvSet");
 
-  while(((arg=(RooAbsArg*) varIter->Next()))) {
+  for (RooAbsArg * arg : intSetAll) {
     bool ok(true) ;
-    convIter->Reset() ;
-    while(((conv=(RooResolutionModel*) convIter->Next()))) {
+    for (RooAbsArg * conv : _convSet) {
       if (conv->dependsOn(*arg)) ok=false ;
     }
 
@@ -398,61 +393,44 @@ Int_t RooAbsAnaConvPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
     }
 
   }
-  delete varIter ;
-
 
   // Split normSetAll in coef/conv parts
-  RooArgSet* normCoefSet = new RooArgSet("normCoefSet") ;
-  RooArgSet* normConvSet = new RooArgSet("normConvSet") ;
-  RooArgSet* normSetAll = normSet ? (new RooArgSet(*normSet,"normSetAll")) : 0 ;
-  if (normSetAll) {
-    varIter  =  normSetAll->createIterator() ;
-    while(((arg=(RooAbsArg*) varIter->Next()))) {
+  auto normCoefSet = std::make_unique<RooArgSet>("normCoefSet");
+  auto normConvSet = std::make_unique<RooArgSet>("normConvSet");
+  if (normSet) {
+    for (RooAbsArg * arg : *normSet) {
       bool ok(true) ;
-      convIter->Reset() ;
-      while(((conv=(RooResolutionModel*) convIter->Next()))) {
-   if (conv->dependsOn(*arg)) ok=false ;
+      for (RooAbsArg * conv : _convSet) {
+        if (conv->dependsOn(*arg)) ok=false ;
       }
 
       if (ok) {
-   normCoefSet->add(*arg) ;
+        normCoefSet->add(*arg) ;
       } else {
-   normConvSet->add(*arg) ;
+        normConvSet->add(*arg) ;
       }
 
     }
-    delete varIter ;
-  }
-  delete convIter ;
-
-  if (intCoefSet->empty()) {
-    delete intCoefSet ; intCoefSet=0 ;
-  }
-  if (intConvSet->empty()) {
-    delete intConvSet ; intConvSet=0 ;
-  }
-  if (normCoefSet->empty()) {
-    delete normCoefSet ; normCoefSet=0 ;
-  }
-  if (normConvSet->empty()) {
-    delete normConvSet ; normConvSet=0 ;
   }
 
+  if (intCoefSet->empty()) intCoefSet.reset();
+  if (intConvSet->empty()) intConvSet.reset();
+  if (normCoefSet->empty()) normCoefSet.reset();
+  if (normConvSet->empty()) normConvSet.reset();
 
 
   // Store integration configuration in registry
   Int_t masterCode(0) ;
   std::vector<Int_t> tmp(1, 0) ;
 
-  masterCode = _codeReg.store(tmp, intCoefSet, intConvSet, normCoefSet, normConvSet) + 1 ; // takes ownership of all sets
+  // takes ownership of all sets
+  masterCode = _codeReg.store(tmp,
+                              intCoefSet.release(),
+                              intConvSet.release(),
+                              normCoefSet.release(),
+                              normConvSet.release()) + 1;
 
-  analVars.add(*allDeps) ;
-  delete allDeps ;
-  if (normSet) delete normSet ;
-  if (normSetAll) delete normSetAll ;
-  delete intSetAll ;
-
-//   cout << this << "---> masterCode = " << masterCode << endl ;
+  analVars.add(allDeps) ;
 
   return masterCode  ;
 }
@@ -677,9 +655,7 @@ void RooAbsAnaConvPdf::printMultiline(ostream& os, Int_t contents, bool verbose,
   RooAbsPdf::printMultiline(os,contents,verbose,indent);
 
   os << indent << "--- RooAbsAnaConvPdf ---" << endl;
-  TIter iter = _convSet.createIterator() ;
-  RooResolutionModel* conv ;
-  while (((conv=(RooResolutionModel*)iter.Next()))) {
+  for (auto * conv : static_range_cast<RooResolutionModel*>(_convSet)) {
     conv->printMultiline(os,contents,verbose,indent) ;
   }
 }
