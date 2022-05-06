@@ -37,13 +37,17 @@ class RRawFile;
 
 namespace Experimental {
 
+namespace Internal {
+
 // clang-format off
 /**
-\class ROOT::Experimental::RNTuple
+\class ROOT::Experimental::Internal::RFileNTupleAnchor
 \ingroup NTuple
 \brief Entry point for an RNTuple in a ROOT file
 
 The class points to the header and footer keys, which in turn have the references to the pages.
+In the list of keys, this object appears as "ROOT::Experimental::RNTuple".
+...
 Only the RNTuple key will be listed in the list of keys. Like TBaskets, the pages are "invisible" keys.
 Byte offset references in the RNTuple header and footer reference directly the data part of page records,
 skipping the TFile key part.
@@ -52,11 +56,11 @@ While the class is central to anchoring an RNTuple in a TFile, it is an internal
 Note that there is no user-facing RNTuple class but RNTupleReader and RNTupleWriter.
 */
 // clang-format on
-struct RNTuple {
+struct RFileNTupleAnchor {
    /// Allows for evolving the struct in future versions
    std::uint32_t fVersion = 0;
    /// Allows for skipping the struct
-   std::uint32_t fSize = sizeof(RNTuple);
+   std::uint32_t fSize = sizeof(RFileNTupleAnchor);
    /// The file offset of the header excluding the TKey part
    std::uint64_t fSeekHeader = 0;
    /// The size of the compressed ntuple header
@@ -73,7 +77,8 @@ struct RNTuple {
    std::uint64_t fReserved = 0;
 
    /// The canonical, member-wise equality test
-   bool operator ==(const RNTuple &other) const {
+   bool operator==(const RFileNTupleAnchor &other) const
+   {
       return fVersion == other.fVersion &&
          fSize == other.fSize &&
          fSeekHeader == other.fSeekHeader &&
@@ -89,8 +94,6 @@ struct RNTuple {
    /// Merge this NTuple with the input list entries
    Long64_t Merge(TCollection *input, TFileMergeInfo *mergeInfo);
 };
-
-namespace Internal {
 
 /// Holds status information of an open ROOT file during writing
 struct RTFileControlBlock;
@@ -112,16 +115,16 @@ private:
    /// Indicates whether the file is a TFile container or an RNTuple bare file
    bool fIsBare = false;
    /// Used when the file container turns out to be a bare file
-   RResult<RNTuple> GetNTupleBare(std::string_view ntupleName);
+   RResult<RFileNTupleAnchor> GetNTupleBare(std::string_view ntupleName);
    /// Used when the file turns out to be a TFile container
-   RResult<RNTuple> GetNTupleProper(std::string_view ntupleName);
+   RResult<RFileNTupleAnchor> GetNTupleProper(std::string_view ntupleName);
 
 public:
    RMiniFileReader() = default;
    /// Uses the given raw file to read byte ranges
    explicit RMiniFileReader(ROOT::Internal::RRawFile *rawFile);
    /// Extracts header and footer location for the RNTuple identified by ntupleName
-   RResult<RNTuple> GetNTuple(std::string_view ntupleName);
+   RResult<RFileNTupleAnchor> GetNTuple(std::string_view ntupleName);
    /// Reads a given byte range from the file into the provided memory buffer
    void ReadBuffer(void *buffer, size_t nbytes, std::uint64_t offset);
 };
@@ -190,7 +193,7 @@ private:
    /// The file name without parent directory; only required when writing with a C file stream
    std::string fFileName;
    /// Header and footer location of the ntuple, written on Commit()
-   RNTuple fNTupleAnchor;
+   RFileNTupleAnchor fNTupleAnchor;
 
    explicit RNTupleFileWriter(std::string_view name);
 

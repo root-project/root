@@ -18,6 +18,7 @@
 
 #include <ROOT/RConfig.hxx> // for R__unlikely
 #include <ROOT/RError.hxx>
+#include <ROOT/RMiniFile.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleOptions.hxx>
@@ -456,6 +457,9 @@ public:
    }
 
    ClusterSize_t *GetOffsetPtr() { return &fOffset; }
+};
+
+class RNTuple : public Internal::RFileNTupleAnchor {
 };
 
 } // namespace Experimental

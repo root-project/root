@@ -164,9 +164,9 @@ TEST(MiniFile, Failures)
 
    auto rawFile = RRawFile::Create(fileGuard.GetPath());
    RMiniFileReader reader(rawFile.get());
-   RNTuple ntuple;
+   ROOT::Experimental::Internal::RFileNTupleAnchor anchor;
    try {
-      ntuple = reader.GetNTuple("No such RNTuple").Inspect();
+      anchor = reader.GetNTuple("No such RNTuple").Inspect();
       FAIL() << "bad RNTuple names should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("no RNTuple named 'No such RNTuple' in file '" + fileGuard.GetPath()));
