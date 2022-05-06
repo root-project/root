@@ -118,7 +118,7 @@ class RLoopManager : public RNodeBase {
    std::shared_ptr<TTree> fTree{nullptr};
    const ColumnNames_t fDefaultColumns;
    ULong64_t fStartEntry{0};
-   ULong64_t fEndEntry{0};
+   ULong64_t fEndEntry{std::numeric_limits<ULong64_t>::max()};
    const ULong64_t fNEmptyEntries{0};
    const unsigned int fNSlots{1};
    bool fMustRunNamedFilters{true};

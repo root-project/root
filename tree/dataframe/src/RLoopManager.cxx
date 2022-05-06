@@ -501,12 +501,12 @@ void RLoopManager::RunTreeProcessorMT()
 /// Run event loop over one or multiple ROOT files, in sequence.
 void RLoopManager::RunTreeReader()
 {
+   if (fEndEntry == fStartEntry) // empty range => no work needed
+      return;
+
    TTreeReader r(fTree.get(), fTree->GetEntryList());
 
-   if (fEndEntry > fStartEntry) {
-      // User provided a valid entry range for the tree
-      r.SetEntriesRange(fStartEntry, fEndEntry);
-   }
+   r.SetEntriesRange(fStartEntry, fEndEntry);
 
    if (0 == fTree->GetEntriesFast())
       return;
