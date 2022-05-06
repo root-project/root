@@ -75,10 +75,6 @@ struct RFileNTupleAnchor {
    std::uint32_t fLenFooter = 0;
    /// Currently unused, reserved for later use
    std::uint64_t fReserved = 0;
-
-   // RNTuple implements the hadd MergeFile interface
-   /// Merge this NTuple with the input list entries
-   Long64_t Merge(TCollection *input, TFileMergeInfo *mergeInfo);
 };
 
 /// Holds status information of an open ROOT file during writing
