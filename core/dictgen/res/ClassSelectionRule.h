@@ -56,7 +56,7 @@ public:
    ClassSelectionRule(long index, bool inherit, ESelect sel, std::string attributeName, std::string attributeValue, cling::Interpreter &interp, const char* selFileName = "", long lineno = -1):
    BaseSelectionRule(index, sel, attributeName, attributeValue, interp, selFileName, lineno), fIsInheritable(inherit), fRequestStreamerInfo(false), fRequestNoStreamer(false), fRequestNoInputOperator(false), fRequestOnlyTClass(false), fRequestProtected(false), fRequestPrivate(false), fRequestedVersionNumber(-1) {}
 
-   void Print(std::ostream &out) const;
+   void Print(std::ostream &out) const final;
 
    void AddFieldSelectionRule(const VariableSelectionRule& field); //adds entry to the filed selections list
    bool HasFieldSelectionRules() const;
