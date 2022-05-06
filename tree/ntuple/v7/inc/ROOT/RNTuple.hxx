@@ -459,20 +459,14 @@ public:
    ClusterSize_t *GetOffsetPtr() { return &fOffset; }
 };
 
-class RNTuple : public Internal::RFileNTupleAnchor {
+class RNTuple : private Internal::RFileNTupleAnchor {
 private:
-   using Internal::RFileNTupleAnchor::fLenFooter;
-   using Internal::RFileNTupleAnchor::fLenHeader;
-   using Internal::RFileNTupleAnchor::fNBytesFooter;
-   using Internal::RFileNTupleAnchor::fNBytesHeader;
-   using Internal::RFileNTupleAnchor::fReserved;
-   using Internal::RFileNTupleAnchor::fSeekFooter;
-   using Internal::RFileNTupleAnchor::fSeekHeader;
-   using Internal::RFileNTupleAnchor::fSize;
-   using Internal::RFileNTupleAnchor::fVersion;
+   TFile *fFile; ///<!
 
 public:
    virtual ~RNTuple() = default;
+
+   std::unique_ptr<RNTupleReader> MakeReader();
 
    // RNTuple implements the hadd MergeFile interface
    /// Merge this NTuple with the input list entries
