@@ -40,12 +40,12 @@ class FTGL_EXPORT FTGLOutlineFont : public FTFont
         /**
          * Prepare for rendering
          */
-        virtual void PreRender();
+        virtual void PreRender() override;
 
         /**
          * Cleanup after rendering
          */
-        virtual void PostRender();
+        virtual void PostRender() override;
 
     private:
         /**
@@ -54,7 +54,7 @@ class FTGL_EXPORT FTGLOutlineFont : public FTFont
          * @param g The glyph index NOT the char code.
          * @return  An FTOutlineGlyph or <code>null</code> on failure.
          */
-        inline virtual FTGlyph* MakeGlyph( unsigned int g);
+        inline virtual FTGlyph* MakeGlyph( unsigned int g) override;
 
 };
 #endif // __FTGLOutlineFont__
