@@ -158,9 +158,9 @@ RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, RooA
   createTree(makeTreeName(), title);
 
   // Deep clone cutVar and attach clone to this dataset
-  RooFormulaVar* cloneVar = 0;
+  std::unique_ptr<RooFormulaVar> cloneVar;
   if (cutVar) {
-    cloneVar = (RooFormulaVar*) cutVar->cloneTree() ;
+    cloneVar.reset(static_cast<RooFormulaVar*>(cutVar->cloneTree()));
     cloneVar->attachDataStore(tds) ;
   }
 
@@ -173,9 +173,7 @@ RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, RooA
   _cacheTree->CopyEntries(((RooTreeDataStore&)tds)._cacheTree) ;
   _cacheOwner = 0 ;
 
-  loadValues(&tds,cloneVar,cutRange,nStart,nStop);
-
-  if (cloneVar) delete cloneVar ;
+  loadValues(&tds,cloneVar.get(),cutRange,nStart,nStop);
 }
 
 
@@ -233,13 +231,10 @@ void RooTreeDataStore::attachCache(const RooAbsArg* newOwner, const RooArgSet& c
 {
   // iterate over the cache variables for this dataset
   _cachedVars.removeAll() ;
-  TIterator* iter = cachedVarsIn.createIterator() ;
-  RooAbsArg *var;
-  while((0 != (var= (RooAbsArg*)iter->Next()))) {
+  for (RooAbsArg * var : cachedVarsIn) {
     var->attachToTree(*_cacheTree,_defTreeBufSize) ;
     _cachedVars.add(*var) ;
   }
-  delete iter ;
   _cacheOwner = newOwner ;
 
 }
@@ -952,13 +947,11 @@ void RooTreeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, c
 
   _cacheOwner = owner ;
 
-  RooArgSet* constExprVarSet = (RooArgSet*) newVarSet.selectByAttrib("ConstantExpression",true) ;
-  TIterator *iter = constExprVarSet->createIterator() ;
-  RooAbsArg *arg ;
+  std::unique_ptr<RooArgSet> constExprVarSet{static_cast<RooArgSet*>(newVarSet.selectByAttrib("ConstantExpression",true))};
 
   bool doTreeFill = (_cachedVars.empty()) ;
 
-  while ((arg=(RooAbsArg*)iter->Next())) {
+  for (RooAbsArg * arg : *constExprVarSet) {
     // Attach original newVar to this tree
     arg->attachToTree(*_cacheTree,_defTreeBufSize) ;
     //arg->recursiveRedirectServers(_vars) ;
@@ -973,12 +966,11 @@ void RooTreeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, c
     get(i) ;
 
     // Evaluate the cached variables and store the results
-    iter->Reset() ;
-    while ((arg=(RooAbsArg*)iter->Next())) {
+    for (RooAbsArg * arg : *constExprVarSet) {
       arg->setValueDirty() ;
       arg->syncCache(nset) ;
       if (!doTreeFill) {
-   arg->fillTreeBranch(*_cacheTree) ;
+        arg->fillTreeBranch(*_cacheTree) ;
       }
     }
 
@@ -989,9 +981,6 @@ void RooTreeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, c
 
   // WVE need to restore TTRee buffers to previous values here
   //restoreAlternateBuffers() ;
-
-  delete iter ;
-  delete constExprVarSet ;
 }
 
 
@@ -1003,9 +992,7 @@ void RooTreeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, c
 
 void RooTreeDataStore::setArgStatus(const RooArgSet& set, bool active)
 {
-  TIterator* iter = set.createIterator() ;
-  RooAbsArg* arg ;
-  while ((arg=(RooAbsArg*)iter->Next())) {
+  for (RooAbsArg * arg : set) {
     RooAbsArg* depArg = _vars.find(arg->GetName()) ;
     if (!depArg) {
       coutE(InputArguments) << "RooTreeDataStore::setArgStatus(" << GetName()
@@ -1014,7 +1001,6 @@ void RooTreeDataStore::setArgStatus(const RooArgSet& set, bool active)
     }
     depArg->setTreeBranchStatus(*_tree,active) ;
   }
-  delete iter ;
 }
 
 

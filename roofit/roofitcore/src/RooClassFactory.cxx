@@ -85,9 +85,7 @@ RooClassFactory::~RooClassFactory()
 bool RooClassFactory::makeAndCompilePdf(const char* name, const char* expression, const RooArgList& vars, const char* intExpression)
 {
   string realArgNames,catArgNames ;
-  TIterator* iter = vars.createIterator() ;
-  RooAbsArg* arg ;
-  while((arg=(RooAbsArg*)iter->Next())) {
+  for (RooAbsArg * arg : vars) {
     if (dynamic_cast<RooAbsReal*>(arg)) {
       if (realArgNames.size()>0) realArgNames += "," ;
       realArgNames += arg->GetName() ;
@@ -99,7 +97,6 @@ bool RooClassFactory::makeAndCompilePdf(const char* name, const char* expression
                      << " is neither RooAbsReal nor RooAbsCategory and is ignored" << endl ;
     }
   }
-  delete iter ;
 
   bool ret = makePdf(name,realArgNames.c_str(),catArgNames.c_str(),expression,intExpression?true:false,false,intExpression) ;
   if (ret) {
@@ -129,9 +126,7 @@ bool RooClassFactory::makeAndCompilePdf(const char* name, const char* expression
 bool RooClassFactory::makeAndCompileFunction(const char* name, const char* expression, const RooArgList& vars, const char* intExpression)
 {
   string realArgNames,catArgNames ;
-  TIterator* iter = vars.createIterator() ;
-  RooAbsArg* arg ;
-  while((arg=(RooAbsArg*)iter->Next())) {
+  for (RooAbsArg * arg : vars) {
     if (dynamic_cast<RooAbsReal*>(arg)) {
       if (realArgNames.size()>0) realArgNames += "," ;
       realArgNames += arg->GetName() ;
@@ -143,7 +138,6 @@ bool RooClassFactory::makeAndCompileFunction(const char* name, const char* expre
                    << " is neither RooAbsReal nor RooAbsCategory and is ignored" << endl ;
     }
   }
-  delete iter ;
 
   bool ret = makeFunction(name,realArgNames.c_str(),catArgNames.c_str(),expression,intExpression?true:false,intExpression) ;
   if (ret) {
@@ -216,34 +210,30 @@ RooAbsReal* RooClassFactory::makeFunctionInstance(const char* className, const c
     RooErrorHandler::softAbort() ;
   }
 
-  // Create CINT line that instantiates specialized object
-  string line = Form("new %s(\"%s\",\"%s\"",className,name,name) ;
+  // Create interpreter line that instantiates specialized object
+  std::string line = std::string("new ") + className + "(\"" + name + "\",\"" + name + "\"";
 
   // Make list of pointer values (represented in hex ascii) to be passed to cint
   // Note that the order of passing arguments must match the convention in which
   // the class code is generated: first all reals, then all categories
 
-  TIterator* iter = vars.createIterator() ;
-  string argList ;
+  std::string argList ;
   // First pass the RooAbsReal arguments in the list order
-  RooAbsArg* var ;
-  while((var=(RooAbsArg*)iter->Next())) {
+  for(RooAbsArg * var : vars) {
     if (dynamic_cast<RooAbsReal*>(var)) {
       argList += Form(",*((RooAbsReal*)0x%zx)",(size_t)var) ;
     }
   }
-  iter->Reset() ;
   // Next pass the RooAbsCategory arguments in the list order
-  while((var=(RooAbsArg*)iter->Next())) {
+  for(RooAbsArg * var : vars) {
     if (dynamic_cast<RooAbsCategory*>(var)) {
       argList += Form(",*((RooAbsCategory*)0x%zx)",(size_t)var) ;
     }
   }
-  delete iter ;
 
   line += argList + ") ;" ;
 
-  // Let CINT instantiate specialized formula
+  // Let interpreter instantiate specialized formula
   return (RooAbsReal*) gInterpreter->ProcessLineSynch(line.c_str()) ;
 }
 
@@ -312,34 +302,30 @@ RooAbsPdf* RooClassFactory::makePdfInstance(const char* className, const char* n
     RooErrorHandler::softAbort() ;
   }
 
-  // Create CINT line that instantiates specialized object
-  string line = Form("new %s(\"%s\",\"%s\"",className,name,name) ;
+  // Create interpreter line that instantiates specialized object
+  std::string line = std::string("new ") + className + "(\"" + name + "\",\"" + name + "\"";
 
   // Make list of pointer values (represented in hex ascii) to be passed to cint
   // Note that the order of passing arguments must match the convention in which
   // the class code is generated: first all reals, then all categories
 
-  TIterator* iter = vars.createIterator() ;
-  string argList ;
+  std::string argList ;
   // First pass the RooAbsReal arguments in the list order
-  RooAbsArg* var ;
-  while((var=(RooAbsArg*)iter->Next())) {
+  for (RooAbsArg * var : vars) {
     if (dynamic_cast<RooAbsReal*>(var)) {
       argList += Form(",*((RooAbsReal*)0x%zx)",(size_t)var) ;
     }
   }
-  iter->Reset() ;
   // Next pass the RooAbsCategory arguments in the list order
-  while((var=(RooAbsArg*)iter->Next())) {
+  for (RooAbsArg * var : vars) {
     if (dynamic_cast<RooAbsCategory*>(var)) {
       argList += Form(",*((RooAbsCategory*)0x%zx)",(size_t)var) ;
     }
   }
-  delete iter ;
 
   line += argList + ") ;" ;
 
-  // Let CINT instantiate specialized formula
+  // Let interpreter instantiate specialized formula
   return (RooAbsPdf*) gInterpreter->ProcessLineSynch(line.c_str()) ;
 }
 

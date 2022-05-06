@@ -73,10 +73,8 @@ RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &
   // sets of categories and reals. Check that the area of the generating
   // space is finite.
   _isValid= true;
-  TIterator *iterator= genVars.createIterator();
   const RooAbsArg *found = 0;
-  const RooAbsArg *arg   = 0;
-  while((arg= (const RooAbsArg*)iterator->Next())) {
+  for (RooAbsArg const* arg : genVars) {
     if(!arg->isFundamental()) {
       coutE(Generation) << fName << "::" << ClassName() << ": cannot generate values for derived \""
          << arg->GetName() << "\"" << endl;
@@ -114,7 +112,6 @@ RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &
       _isValid= false;
     }
   }
-  delete iterator;
   if(!_isValid) {
     coutE(Generation) << fName << "::" << ClassName() << ": constructor failed with errors" << endl;
     return;

@@ -61,13 +61,9 @@ void RooAbsCacheElement::printCompactTreeHook(std::ostream&, const char *, Int_t
 
 void RooAbsCacheElement::optimizeCacheMode(const RooArgSet& obs, RooArgSet& optNodes, RooLinkedList& processedNodes)
 {
-  RooArgList list = containedArgs(OptimizeCaching) ;
-  TIterator* iter = list.createIterator() ;
-  RooAbsArg* arg ;
-  while((arg=(RooAbsArg*)iter->Next())) {
+  for (RooAbsArg * arg : containedArgs(OptimizeCaching)) {
     arg->optimizeCacheMode(obs, optNodes, processedNodes) ;
   }
-  delete iter ;
 }
 
 

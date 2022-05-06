@@ -125,19 +125,12 @@ RooGenProdProj::RooGenProdProj(const RooGenProdProj& other, const char* name) :
   _compSetOwnedD = (RooArgSet*) other._compSetD.snapshot() ;
   _compSetD.add(*_compSetOwnedD) ;
 
-  RooAbsArg* arg ;
-  TIterator* nIter = _compSetOwnedN->createIterator() ;
-  while((arg=(RooAbsArg*)nIter->Next())) {
-//     cout << "ownedN elem " << arg->GetName() << "(" << arg << ")" << endl ;
+  for (RooAbsArg * arg : *_compSetOwnedN) {
     arg->setOperMode(_operMode) ;
   }
-  delete nIter ;
-  TIterator* dIter = _compSetOwnedD->createIterator() ;
-  while((arg=(RooAbsArg*)dIter->Next())) {
-//     cout << "ownedD elem " << arg->GetName() << "(" << arg << ")" << endl ;
+  for (RooAbsArg * arg : *_compSetOwnedD) {
     arg->setOperMode(_operMode) ;
   }
-  delete dIter ;
 
   // Fill _intList
   _haveD = other._haveD ;

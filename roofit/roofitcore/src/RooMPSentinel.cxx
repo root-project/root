@@ -50,12 +50,9 @@ RooMPSentinel::RooMPSentinel()
 
 RooMPSentinel::~RooMPSentinel()
 {
-  TIterator *iter = _mpfeSet.createIterator() ;
-  RooRealMPFE* mpfe ;
-  while((mpfe=(RooRealMPFE*)iter->Next())) {
+  for(auto * mpfe : static_range_cast<RooRealMPFE*>(_mpfeSet)) {
     mpfe->standby() ;
   }
-  delete iter ;
 }
 
 

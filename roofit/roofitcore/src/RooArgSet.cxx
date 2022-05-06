@@ -626,15 +626,10 @@ bool RooArgSet::isInRange(const char* rangeSpec)
   strlcpy(buf,rangeSpec,1024) ;
   char* token = strtok(buf,",") ;
 
-  TIterator* iter = createIterator() ;
-
   while(token) {
 
     bool accept=true ;
-    iter->Reset() ;
-    RooAbsArg* arg ;
-    while((arg=(RooAbsArg*)iter->Next())) {
-      RooAbsRealLValue* lvarg = dynamic_cast<RooAbsRealLValue*>(arg) ;
+    for (auto * lvarg : dynamic_range_cast<RooAbsRealLValue*>(*this)) {
       if (lvarg) {
    if (!lvarg->inRange(token)) {
      accept=false ;
@@ -644,14 +639,12 @@ bool RooArgSet::isInRange(const char* rangeSpec)
       // WVE MUST HANDLE RooAbsCategoryLValue ranges as well
     }
     if (accept) {
-      delete iter ;
       return true ;
     }
 
     token = strtok(0,",") ;
   }
 
-  delete iter ;
   return false ;
 }
 
