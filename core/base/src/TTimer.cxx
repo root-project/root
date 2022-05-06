@@ -57,14 +57,16 @@ private:
 public:
    TSingleShotCleaner() : TTimer(10, kTRUE) { fGarbage = new TList(); }
    virtual ~TSingleShotCleaner() { fGarbage->Delete(); delete fGarbage; }
-   void TurnOn() {
-      TObject *obj = (TObject*) gTQSender;
+   void TurnOn() override
+   {
+      TObject *obj = (TObject *)gTQSender;
       fGarbage->Add(obj);
       Reset();
       if (gSystem)
          gSystem->AddTimer(this);
    }
-   Bool_t Notify() {
+   Bool_t Notify() override
+   {
       fGarbage->Delete();
       Reset();
       if (gSystem)
@@ -271,7 +273,7 @@ void TTimer::SingleShot(Int_t milliSec, const char *receiver_class,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function checks if the timer is running within gSystem 
+/// This function checks if the timer is running within gSystem
 /// (Has been started and did not finish yet).
 
 bool TTimer::IsRunning()

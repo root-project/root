@@ -48,7 +48,7 @@
 //       }
 //    }
 //
-// Load this class into root session and try the folllowing:
+// Load this class into root session and try the following:
 //
 // a = new A();
 // b = new A();
