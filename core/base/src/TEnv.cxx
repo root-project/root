@@ -231,8 +231,8 @@ private:
    EEnvLevel fLevel;
 
 public:
-   TReadEnvParser(TEnv *e, FILE *f, EEnvLevel l) : TEnvParser(e, f), fLevel(l) { }
-   void KeyValue(const TString &name, const TString &value, const TString &type)
+   TReadEnvParser(TEnv *e, FILE *f, EEnvLevel l) : TEnvParser(e, f), fLevel(l) {}
+   void KeyValue(const TString &name, const TString &value, const TString &type) override
       { fEnv->SetValue(name, value, fLevel, type); }
 };
 
@@ -245,9 +245,9 @@ private:
    FILE *fOfp;
 
 public:
-   TWriteEnvParser(TEnv *e, FILE *f, FILE *of) : TEnvParser(e, f), fOfp(of) { }
-   void KeyValue(const TString &name, const TString &value, const TString &type);
-   void Char(Int_t c) { fputc(c, fOfp); }
+   TWriteEnvParser(TEnv *e, FILE *f, FILE *of) : TEnvParser(e, f), fOfp(of) {}
+   void KeyValue(const TString &name, const TString &value, const TString &type) override;
+   void Char(Int_t c) override { fputc(c, fOfp); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////

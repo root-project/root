@@ -62,9 +62,7 @@ public:
    CallFunc_t *GetFunc() const { return fFunc; }
    void        EndExecuting();
 
-   const char *GetName() const {
-      return fName.Data();
-   }
+   const char *GetName() const override { return fName.Data(); }
 
    Int_t GetMethodNargs() { return fMethod->GetNargs(); }
 
@@ -75,14 +73,10 @@ public:
    void ExecuteMethod(void *object, Double_t param);
    void ExecuteMethod(void *object, const char *params);
    void ExecuteMethod(void *object, Longptr_t *paramArr, Int_t nparam = -1);
-   void Print(Option_t *opt = "") const;
-   void ls(Option_t *opt = "") const {
-      Print(opt);
-   }
+   void Print(Option_t *opt = "") const override;
+   void ls(Option_t *opt = "") const override { Print(opt); }
 
-   Bool_t IsExecuting() const {
-      return fExecuting > 0;
-   }
+   Bool_t IsExecuting() const { return fExecuting > 0; }
 };
 
 

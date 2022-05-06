@@ -318,7 +318,7 @@ public:
 
    Bool_t Disconnect(void *receiver=nullptr, const char *slot_name=nullptr);
    Int_t  GetNargs() const { return fSignalArgs; }
-   void   ls(Option_t *option = "") const;
+   void   ls(Option_t *option = "") const override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
