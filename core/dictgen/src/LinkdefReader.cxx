@@ -737,7 +737,7 @@ public:
 
    void HandlePragma(clang::Preprocessor &PP,
                      clang::PragmaIntroducer Introducer,
-                     clang::Token &tok) {
+                     clang::Token &tok) override {
       // Handle a #pragma found by the Preprocessor.
 
       // check whether we care about the pragma - we are a named handler,
@@ -786,7 +786,7 @@ public:
 
    void HandlePragma(clang::Preprocessor &PP,
                      clang::PragmaIntroducer Introducer,
-                     clang::Token &tok) {
+                     clang::Token &tok) override {
       // Handle a #pragma found by the Preprocessor.
 
       // check whether we care about the pragma - we are a named handler,
@@ -845,7 +845,7 @@ public:
 
    void HandlePragma(clang::Preprocessor &PP,
                      clang::PragmaIntroducer Introducer,
-                     clang::Token &tok) {
+                     clang::Token &tok) override {
       // Handle a #pragma found by the Preprocessor.
 
       // check whether we care about the pragma - we are a named handler,
@@ -950,7 +950,7 @@ public:
 
    void HandlePragma(clang::Preprocessor &PP,
                      clang::PragmaIntroducer Introducer,
-                     clang::Token &tok) {
+                     clang::Token &tok) override {
       // Handle a #pragma found by the Preprocessor.
 
       // check whether we care about the pragma - we are a named handler,

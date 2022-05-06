@@ -3472,11 +3472,11 @@ public:
 
    ~TRootClingCallbacks(){};
 
-   virtual void InclusionDirective(clang::SourceLocation /*HashLoc*/, const clang::Token & /*IncludeTok*/,
-                                   llvm::StringRef FileName, bool IsAngled, clang::CharSourceRange /*FilenameRange*/,
-                                   const clang::FileEntry * /*File*/, llvm::StringRef /*SearchPath*/,
-                                   llvm::StringRef /*RelativePath*/, const clang::Module * /*Imported*/,
-                                   clang::SrcMgr::CharacteristicKind /*FileType*/)
+   void InclusionDirective(clang::SourceLocation /*HashLoc*/, const clang::Token & /*IncludeTok*/,
+                           llvm::StringRef FileName, bool IsAngled, clang::CharSourceRange /*FilenameRange*/,
+                           const clang::FileEntry * /*File*/, llvm::StringRef /*SearchPath*/,
+                           llvm::StringRef /*RelativePath*/, const clang::Module * /*Imported*/,
+                           clang::SrcMgr::CharacteristicKind /*FileType*/) override
    {
       if (isLocked) return;
       if (IsAngled) return;
@@ -3507,9 +3507,9 @@ public:
    // outside environment and pre-included files have no effect. This hook
    // informs rootcling when a new submodule is being built so that it can
    // make Core.Rtypes.h visible.
-   virtual void EnteredSubmodule(clang::Module* M,
-                                 clang::SourceLocation ImportLoc,
-                                 bool ForPragma) {
+   void EnteredSubmodule(clang::Module* M,
+                         clang::SourceLocation ImportLoc,
+                         bool ForPragma) override {
       assert(M);
       using namespace clang;
       if (llvm::StringRef(M->Name).endswith("ACLiC_dict")) {
@@ -4518,7 +4518,7 @@ int RootClingMain(int argc,
          clang::PragmaNamespace(pragma) {}
       void HandlePragma(clang::Preprocessor &PP,
                         clang::PragmaIntroducer Introducer,
-                        clang::Token &tok) {
+                        clang::Token &tok) override {
          PP.DiscardUntilEndOfDirective();
       }
    };
