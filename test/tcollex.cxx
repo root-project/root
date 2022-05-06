@@ -31,16 +31,19 @@ public:
    ~TObjNum() { Printf("~TObjNum = %d", num); }
    void    SetNum(int i) { num = i; }
    int     GetNum() { return num; }
-   void    Print(Option_t *) const { Printf("TObjNum = %d", num); }
-   ULong_t Hash() const { return num; }
-   Bool_t  IsEqual(const TObject *obj) const { return num == ((TObjNum*)obj)->num; }
-   Bool_t  IsSortable() const { return kTRUE; }
-   Int_t   Compare(const TObject *obj) const { if (num > ((TObjNum*)obj)->num)
-                                      return 1;
-                                   else if (num < ((TObjNum*)obj)->num)
-                                      return -1;
-                                   else
-                                      return 0; }
+   void    Print(Option_t *) const override { Printf("TObjNum = %d", num); }
+   ULong_t Hash() const override { return num; }
+   Bool_t  IsEqual(const TObject *obj) const override { return num == ((TObjNum*)obj)->num; }
+   Bool_t  IsSortable() const override { return kTRUE; }
+   Int_t   Compare(const TObject *obj) const override
+   {
+      if (num > ((TObjNum *)obj)->num)
+         return 1;
+      else if (num < ((TObjNum *)obj)->num)
+         return -1;
+      else
+         return 0;
+   }
 };
 
 void Test_TObjArray()
