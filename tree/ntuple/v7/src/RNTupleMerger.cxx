@@ -19,13 +19,13 @@
 #include <ROOT/RNTupleMerger.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 
-Long64_t ROOT::Experimental::RNTuple::Merge(TCollection* inputs, TFileMergeInfo* mergeInfo) {
+Long64_t ROOT::Experimental::Internal::RFileNTupleAnchor::Merge(TCollection *inputs, TFileMergeInfo *mergeInfo)
+{
    if (inputs == nullptr || mergeInfo == nullptr) {
       return -1;
    }
    return -1;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
