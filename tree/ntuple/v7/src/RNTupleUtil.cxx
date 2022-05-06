@@ -25,26 +25,3 @@ ROOT::Experimental::RLogChannel &ROOT::Experimental::NTupleLog() {
    static RLogChannel sLog("ROOT.NTuple");
    return sLog;
 }
-
-
-namespace ROOT {
-namespace Experimental {
-namespace Internal {
-
-void PrintRNTuple(const RNTuple& ntuple, std::ostream& output) {
-   output << "RNTuple {\n";
-   output << "    fVersion: " << ntuple.fVersion << ",\n";
-   output << "    fSize: " << ntuple.fSize << ",\n";
-   output << "    fSeekHeader: " << ntuple.fSeekHeader << ",\n";
-   output << "    fNBytesHeader: " << ntuple.fNBytesHeader << ",\n";
-   output << "    fLenHeader: " << ntuple.fLenHeader << ",\n";
-   output << "    fSeekFooter: " << ntuple.fSeekFooter << ",\n";
-   output << "    fNBytesFooter: " << ntuple.fNBytesFooter << ",\n";
-   output << "    fLenFooter: " << ntuple.fLenFooter << ",\n";
-   output << "    fReserved: " << ntuple.fReserved << ",\n";
-   output << "}";
-}
-
-} // namespace Internal
-} // namespace Experimental
-} // namespace ROOT
