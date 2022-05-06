@@ -66,7 +66,7 @@ public:
    const char         *GetValidateError() const { return fValidateError; }
    const char         *GetValidateWarning() const { return fValidateWarning; }
 
-   ClassDef(TXMLParser,0);  // XML SAX parser
+   ClassDefOverride(TXMLParser,0);  // XML SAX parser
 };
 
 #endif

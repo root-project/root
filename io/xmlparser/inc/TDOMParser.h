@@ -22,21 +22,21 @@ class TDOMParser : public TXMLParser {
 private:
    TXMLDocument *fTXMLDoc;      ///< xmlDoc
 
-   TDOMParser(const TDOMParser&);            // Not implemented
-   TDOMParser& operator=(const TDOMParser&); // Not implemented
+   TDOMParser(const TDOMParser&) = delete;
+   TDOMParser& operator=(const TDOMParser&) = delete;
    Int_t ParseContext();
 
 public:
    TDOMParser();
    virtual ~TDOMParser();
 
-   virtual Int_t   ParseFile(const char *filename);
-   virtual Int_t   ParseBuffer(const char *buffer, Int_t len);
-   virtual void    ReleaseUnderlying();
+   Int_t   ParseFile(const char *filename) override;
+   Int_t   ParseBuffer(const char *buffer, Int_t len) override;
+   void    ReleaseUnderlying() override;
 
    virtual TXMLDocument *GetXMLDocument() const;
 
-   ClassDef(TDOMParser, 0); // DOM Parser
+   ClassDefOverride(TDOMParser, 0); // DOM Parser
 };
 
 #endif
