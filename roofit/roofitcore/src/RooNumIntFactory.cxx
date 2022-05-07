@@ -45,8 +45,6 @@ the preference of the caller as encoded in the configuration object.
 #include "RooSegmentedIntegrator2D.h"
 #include "RooImproperIntegrator1D.h"
 #include "RooMCIntegrator.h"
-//#include "RooGaussKronrodIntegrator1D.h"
-//#include "RooAdaptiveGaussKronrodIntegrator1D.h"
 #include "RooAdaptiveIntegratorND.h"
 
 #include "RooMsgService.h"
@@ -82,7 +80,7 @@ void RooNumIntFactory::init() {
 #ifdef R__HAS_MATHMORE
   int iret = gSystem->Load("libRooFitMore");
   if (iret < 0) {
-     oocoutE((TObject*)nullptr, Integration) << " RooNumIntFactory::Init : libRooFitMore cannot be loaded. GSL integrators will not beavailable ! " << std::endl;
+     oocoutE(nullptr, Integration) << " RooNumIntFactory::Init : libRooFitMore cannot be loaded. GSL integrators will not beavailable ! " << std::endl;
   }
 #endif
 }
@@ -204,7 +202,7 @@ RooAbsIntegrator* RooNumIntFactory::createIntegrator(RooAbsFunc& func, const Roo
 
   // Check that a method was defined for this case
   if (!method.CompareTo("N/A")) {
-    oocoutE((TObject*)0,Integration) << "RooNumIntFactory::createIntegrator: No integration method has been defined for "
+    oocoutE(nullptr,Integration) << "RooNumIntFactory::createIntegrator: No integration method has been defined for "
                  << (openEnded?"an open ended ":"a ") << ndim << "-dimensional integral" << endl ;
     return 0 ;
   }

@@ -95,7 +95,7 @@ RooArgSet getConstraintsSet(RooAbsPdf *pdf, RooAbsData *data, ConstrainedParamet
       std::unique_ptr<RooArgSet> allVars{pdf->getVariables()};
       global_observables.set.add(
          *dynamic_cast<RooArgSet *>(allVars->selectByAttrib(global_observables_tag.c_str(), true)));
-      oocoutI((TObject *)nullptr, Minimization)
+      oocoutI(nullptr, Minimization)
          << "User-defined specification of global observables definition with tag named '" << global_observables_tag
          << "'" << std::endl;
    } else if (global_observables.set.getSize() == 0) {
@@ -103,7 +103,7 @@ RooArgSet getConstraintsSet(RooAbsPdf *pdf, RooAbsData *data, ConstrainedParamet
       // node
       const char *defGlobObsTag = pdf->getStringAttribute("DefaultGlobalObservablesTag");
       if (defGlobObsTag) {
-         oocoutI((TObject *)nullptr, Minimization)
+         oocoutI(nullptr, Minimization)
             << "p.d.f. provides built-in specification of global observables definition with tag named '"
             << defGlobObsTag << "'" << std::endl;
          std::unique_ptr<RooArgSet> allVars{pdf->getVariables()};
@@ -156,10 +156,10 @@ buildSubsidiaryL(RooAbsPdf *pdf, RooAbsData *data, ConstrainedParameters constra
    // Include constraints, if any, in likelihood
    if (allConstraints.getSize() > 0) {
 
-      oocoutI((TObject *)nullptr, Minimization)
+      oocoutI(nullptr, Minimization)
          << " Including the following contraint terms in minimization: " << allConstraints << std::endl;
       if (global_observables.set.getSize() > 0) {
-         oocoutI((TObject *)nullptr, Minimization)
+         oocoutI(nullptr, Minimization)
             << "The following global observables have been defined: " << global_observables.set << std::endl;
       }
       std::string name("likelihood for pdf ");
@@ -308,7 +308,7 @@ getSimultaneousComponents(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended ex
          }
       }
    }
-   oocoutI((TObject *)nullptr, Fitting) << "getSimultaneousComponents: created " << n << " slave calculators."
+   oocoutI(nullptr, Fitting) << "getSimultaneousComponents: created " << n << " slave calculators."
                                         << std::endl;
 
    return components;

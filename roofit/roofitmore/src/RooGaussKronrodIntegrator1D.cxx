@@ -102,7 +102,7 @@ static Roo_reg_GKInteg1D instance;
 void RooGaussKronrodIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 {
   fact.storeProtoIntegrator(new RooGaussKronrodIntegrator1D(),RooArgSet()) ;
-  oocoutI((TObject*)nullptr,Integration) << "RooGaussKronrodIntegrator1D has been registered" << std::endl;
+  oocoutI(nullptr,Integration) << "RooGaussKronrodIntegrator1D has been registered" << std::endl;
 }
 
 
@@ -192,7 +192,7 @@ RooGaussKronrodIntegrator1D::~RooGaussKronrodIntegrator1D()
 bool RooGaussKronrodIntegrator1D::setLimits(Double_t* xmin, Double_t* xmax)
 {
   if(_useIntegrandLimits) {
-    oocoutE((TObject*)0,Eval) << "RooGaussKronrodIntegrator1D::setLimits: cannot override integrand's limits" << endl;
+    oocoutE(nullptr,Eval) << "RooGaussKronrodIntegrator1D::setLimits: cannot override integrand's limits" << endl;
     return false;
   }
   _xmin= *xmin;
@@ -282,7 +282,7 @@ Double_t RooGaussKronrodIntegrator1D::integral(const Double_t *yvec)
 #define GSL_SUCCESS 0
 #define GSL_EBADTOL 13  /* user specified an invalid tolerance */
 #define GSL_ETOL    14  /* failed to reach the specified tolerance */
-#define GSL_ERROR(a,b) oocoutE((TObject*)0,Eval) << "RooGaussKronrodIntegrator1D::integral() ERROR: " << a << endl ; return b ;
+#define GSL_ERROR(a,b) oocoutE(nullptr,Eval) << "RooGaussKronrodIntegrator1D::integral() ERROR: " << a << endl ; return b ;
 #define GSL_DBL_MIN        2.2250738585072014e-308
 #define GSL_DBL_EPSILON    2.2204460492503131e-16
 

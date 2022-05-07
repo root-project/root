@@ -932,7 +932,7 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
   // Check that we have 1-3 vars
   Int_t dim= vars.getSize();
   if(dim < 1 || dim > 3) {
-    oocoutE((TObject*)0,InputArguments) << "RooAbsReal::createHistogram: dimension not supported: " << dim << endl;
+    oocoutE(nullptr,InputArguments) << "RooAbsReal::createHistogram: dimension not supported: " << dim << endl;
     return 0;
   }
 
@@ -946,7 +946,7 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
     const RooAbsArg *arg= vars.at(index);
     xyz[index]= dynamic_cast<const RooAbsRealLValue*>(arg);
     if(!xyz[index]) {
-      oocoutE((TObject*)0,InputArguments) << "RooAbsRealLValue::createHistogram: variable is not real lvalue: " << arg->GetName() << endl;
+      oocoutE(nullptr,InputArguments) << "RooAbsRealLValue::createHistogram: variable is not real lvalue: " << arg->GetName() << endl;
       return 0;
     }
     histName.Append("_");
@@ -993,7 +993,7 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
     break;
   }
   if(!histogram) {
-    oocoutE((TObject*)0,InputArguments) << "RooAbsReal::createHistogram: unable to create a new histogram" << endl;
+    oocoutE(nullptr,InputArguments) << "RooAbsReal::createHistogram: unable to create a new histogram" << endl;
     return 0;
   }
 

@@ -94,7 +94,7 @@ void LikelihoodWrapper::setOffsettingMode(OffsettingMode mode)
 {
    offsetting_mode_ = mode;
    if (isOffsetting()) {
-      oocoutI(static_cast<RooAbsArg *>(nullptr), Minimization)
+      oocoutI(nullptr, Minimization)
          << "LikelihoodWrapper::setOffsettingMode(" << GetName()
          << "): changed offsetting mode while offsetting was enabled; resetting offset values" << std::endl;
       offset_ = {};
@@ -118,7 +118,7 @@ ROOT::Math::KahanSum<double> LikelihoodWrapper::applyOffsetting(ROOT::Math::Kaha
                return {current_value.Result() - offset_.Result()};
             }
          }
-         oocoutI(static_cast<RooAbsArg *>(nullptr), Minimization)
+         oocoutI(nullptr, Minimization)
             << "LikelihoodWrapper::applyOffsetting(" << GetName() << "): Likelihood offset now set to " << offset_
             << std::endl;
       }

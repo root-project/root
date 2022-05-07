@@ -51,7 +51,7 @@ RooLognormal::RooLognormal(const char *name, const char *title,
 
     auto par = dynamic_cast<const RooAbsRealLValue*>(&_k);
     if (par && par->getMin()<=1 && par->getMax()>=1 ) {
-      oocoutE(this, InputArguments) << "The parameter '" << par->GetName() << "' with range [" << par->getMin("") << ", "
+      coutE(InputArguments) << "The parameter '" << par->GetName() << "' with range [" << par->getMin("") << ", "
           << par->getMax() << "] of the " << this->IsA()->GetName() << " '" << this->GetName()
           << "' can reach the unsafe value 1.0 " << ". Advise to limit its range." << std::endl;
     }

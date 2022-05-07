@@ -737,7 +737,7 @@ std::pair<const RooArgSet*, RooAddPdf::CacheElem*> RooAddPdf::getNormAndCache(co
 
     // If nset is STILL nullptr, print a warning.
     if (nset == nullptr) {
-       oocoutW(this, Eval) << "Evaluating RooAddPdf without a defined normalization set. This can lead to ambiguos "
+       coutW(Eval) << "Evaluating RooAddPdf without a defined normalization set. This can lead to ambiguos "
           "coefficients definition and incorrect results."
                            << " Use RooAddPdf::fixCoefNormalization(nset) to provide a normalization set for "
           "defining uniquely RooAddPdf coefficients!"

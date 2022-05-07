@@ -177,7 +177,7 @@ bool RooAdaptiveIntegratorND::checkLimits() const
 bool RooAdaptiveIntegratorND::setLimits(Double_t *xmin, Double_t *xmax)
 {
   if(_useIntegrandLimits) {
-    oocoutE((TObject*)0,Integration) << "RooAdaptiveIntegratorND::setLimits: cannot override integrand's limits" << endl;
+    oocoutE(nullptr,Integration) << "RooAdaptiveIntegratorND::setLimits: cannot override integrand's limits" << endl;
     return false;
   }
   for (UInt_t i=0 ; i<_func->NDim() ; i++) {

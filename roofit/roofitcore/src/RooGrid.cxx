@@ -59,7 +59,7 @@ RooGrid::RooGrid(const RooAbsFunc &function)
 {
   // check that the input function is valid
   if(!(_valid= function.isValid())) {
-    oocoutE((TObject*)0,InputArguments) << ClassName() << ": cannot initialize using an invalid function" << endl;
+    oocoutE(nullptr,InputArguments) << ClassName() << ": cannot initialize using an invalid function" << endl;
     return;
   }
 
@@ -73,7 +73,7 @@ RooGrid::RooGrid(const RooAbsFunc &function)
   _xin= new Double_t[maxBins+1];
   _weight= new Double_t[maxBins];
   if(!_xl || !_xu || !_delx || !_d || !_xi || !_xin || !_weight) {
-    oocoutE((TObject*)0,Integration) << ClassName() << ": memory allocation failed" << endl;
+    oocoutE(nullptr,Integration) << ClassName() << ": memory allocation failed" << endl;
     _valid= false;
     return;
   }
@@ -110,17 +110,17 @@ bool RooGrid::initialize(const RooAbsFunc &function)
   for(UInt_t index= 0; index < _dim; index++) {
     _xl[index]= function.getMinLimit(index);
     if(RooNumber::isInfinite(_xl[index])) {
-      oocoutE((TObject*)0,Integration) << ClassName() << ": lower limit of dimension " << index << " is infinite" << endl;
+      oocoutE(nullptr,Integration) << ClassName() << ": lower limit of dimension " << index << " is infinite" << endl;
       return false;
     }
     _xu[index]= function.getMaxLimit(index);
     if(RooNumber::isInfinite(_xl[index])) {
-      oocoutE((TObject*)0,Integration) << ClassName() << ": upper limit of dimension " << index << " is infinite" << endl;
+      oocoutE(nullptr,Integration) << ClassName() << ": upper limit of dimension " << index << " is infinite" << endl;
       return false;
     }
     Double_t dx= _xu[index] - _xl[index];
     if(dx <= 0) {
-      oocoutE((TObject*)0,Integration) << ClassName() << ": bad range for dimension " << index << ": [" << _xl[index]
+      oocoutE(nullptr,Integration) << ClassName() << ": bad range for dimension " << index << ": [" << _xl[index]
                    << "," << _xu[index] << "]" << endl;
       return false;
     }
