@@ -125,7 +125,7 @@ namespace RooStats {
       // utility function to factorize constraint terms from a pdf
       // (from G. Petrucciani)
       if (!model.GetObservables() ) {
-         oocoutE((TObject*)0,InputArguments) << "RooStatsUtils::FactorizePdf - invalid input model: missing observables" << endl;
+         oocoutE(nullptr,InputArguments) << "RooStatsUtils::FactorizePdf - invalid input model: missing observables" << endl;
          return;
       }
       return FactorizePdf(*model.GetObservables(), pdf, obsTerms, constraints);
@@ -137,7 +137,7 @@ namespace RooStats {
       RooArgList obsTerms, constraints;
       FactorizePdf(observables, pdf, obsTerms, constraints);
       if(constraints.getSize() == 0) {
-         oocoutW((TObject *)0, Eval) << "RooStatsUtils::MakeNuisancePdf - no constraints found on nuisance parameters in the input model" << endl;
+         oocoutW(nullptr, Eval) << "RooStatsUtils::MakeNuisancePdf - no constraints found on nuisance parameters in the input model" << endl;
          return 0;
       }
       return new RooProdPdf(name,"", constraints);
@@ -146,7 +146,7 @@ namespace RooStats {
    RooAbsPdf * MakeNuisancePdf(const RooStats::ModelConfig &model, const char *name) {
       // make a nuisance pdf by factorizing out all constraint terms in a common pdf
       if (!model.GetPdf() || !model.GetObservables() ) {
-         oocoutE((TObject*)0, InputArguments) << "RooStatsUtils::MakeNuisancePdf - invalid input model: missing pdf and/or observables" << endl;
+         oocoutE(nullptr, InputArguments) << "RooStatsUtils::MakeNuisancePdf - invalid input model: missing pdf and/or observables" << endl;
          return 0;
       }
       return MakeNuisancePdf(*model.GetPdf(), *model.GetObservables(), name);
@@ -216,8 +216,8 @@ namespace RooStats {
       // make a clone pdf without all constraint terms in a common pdf
       RooAbsPdf * unconstrainedPdf = StripConstraints(pdf, observables);
       if(!unconstrainedPdf) {
-         oocoutE((TObject *)NULL, InputArguments) << "RooStats::MakeUnconstrainedPdf - invalid observable list passed (observables not found in original pdf) or invalid pdf passed (without observables)" << endl;
-         return NULL;
+         oocoutE(nullptr, InputArguments) << "RooStats::MakeUnconstrainedPdf - invalid observable list passed (observables not found in original pdf) or invalid pdf passed (without observables)" << endl;
+         return nullptr;
       }
       if(name != NULL) unconstrainedPdf->SetName(name);
       return unconstrainedPdf;
@@ -226,8 +226,8 @@ namespace RooStats {
    RooAbsPdf * MakeUnconstrainedPdf(const RooStats::ModelConfig &model, const char *name) {
       // make a clone pdf without all constraint terms in a common pdf
       if(!model.GetPdf() || !model.GetObservables()) {
-         oocoutE((TObject *)NULL, InputArguments) << "RooStatsUtils::MakeUnconstrainedPdf - invalid input model: missing pdf and/or observables" << endl;
-         return NULL;
+         oocoutE(nullptr, InputArguments) << "RooStatsUtils::MakeUnconstrainedPdf - invalid input model: missing pdf and/or observables" << endl;
+         return nullptr;
       }
       return MakeUnconstrainedPdf(*model.GetPdf(), *model.GetObservables(), name);
    }

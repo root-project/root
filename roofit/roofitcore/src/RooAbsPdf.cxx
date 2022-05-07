@@ -1641,7 +1641,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   if (prefit != 0)  {
     size_t nEvents = static_cast<size_t>(prefit*data.numEntries());
     if (prefit > 0.5 || nEvents < 100)  {
-      oocoutW(this,InputArguments) << "PrefitDataFraction should be in suitable range."
+      coutW(InputArguments) << "PrefitDataFraction should be in suitable range."
       << "With the current PrefitDataFraction=" << prefit
       << ", the number of events would be " << nEvents<< " out of "
       << data.numEntries() << ". Skipping prefit..." << endl;

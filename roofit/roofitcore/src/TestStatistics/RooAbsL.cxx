@@ -57,7 +57,7 @@ RooAbsL::RooAbsL(std::shared_ptr<RooAbsPdf> pdf, std::shared_ptr<RooAbsData> dat
    extended_ = isExtendedHelper(pdf_.get(), extended);
    if (extended == Extended::Auto) {
       if (extended_) {
-         oocoutI((TObject *)nullptr, Minimization)
+         oocoutI(nullptr, Minimization)
             << "in RooAbsL ctor: p.d.f. provides expected number of events, including extended term in likelihood."
             << std::endl;
       }
@@ -157,7 +157,7 @@ void RooAbsL::initClones(RooAbsPdf &inpdf, RooAbsData &indata)
       // Check that range of observables in pdf is equal or contained in range of observables in data
 
       if (!realReal->getBinning().lowBoundFunc() && realReal->getMin() < (datReal->getMin() - 1e-6)) {
-         oocoutE((TObject *)0, InputArguments) << "RooAbsL: ERROR minimum of FUNC observable " << arg->GetName() << "("
+         oocoutE(nullptr, InputArguments) << "RooAbsL: ERROR minimum of FUNC observable " << arg->GetName() << "("
                                                << realReal->getMin() << ") is smaller than that of " << arg->GetName()
                                                << " in the dataset (" << datReal->getMin() << ")" << std::endl;
          RooErrorHandler::softAbort();
@@ -165,7 +165,7 @@ void RooAbsL::initClones(RooAbsPdf &inpdf, RooAbsData &indata)
       }
 
       if (!realReal->getBinning().highBoundFunc() && realReal->getMax() > (datReal->getMax() + 1e-6)) {
-         oocoutE((TObject *)0, InputArguments)
+         oocoutE(nullptr, InputArguments)
             << "RooAbsL: ERROR maximum of FUNC observable " << arg->GetName() << " is larger than that of "
             << arg->GetName() << " in the dataset" << std::endl;
          RooErrorHandler::softAbort();

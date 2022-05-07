@@ -1557,11 +1557,11 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
   } else {
     ownIsBlind = false ;
     if (blindState->IsA()!=RooCategory::Class()) {
-      oocoutE((TObject*)0,DataHandling) << "RooDataSet::read: ERROR: variable list already contains"
+      oocoutE(nullptr,DataHandling) << "RooDataSet::read: ERROR: variable list already contains"
           << "a non-RooCategory blindState member" << endl ;
       return 0 ;
     }
-    oocoutW((TObject*)0,DataHandling) << "RooDataSet::read: WARNING: recycling existing "
+    oocoutW(nullptr,DataHandling) << "RooDataSet::read: WARNING: recycling existing "
         << "blindState category in variable list" << endl ;
   }
   RooCategory* blindCat = (RooCategory*) blindState ;
@@ -1580,7 +1580,7 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
   auto data = std::make_unique<RooDataSet>("dataset", fileList, variables);
   if (ownIsBlind) { variables.remove(*blindState) ; delete blindState ; }
   if(!data) {
-    oocoutE((TObject*)0,DataHandling) << "RooDataSet::read: unable to create a new dataset"
+    oocoutE(nullptr,DataHandling) << "RooDataSet::read: unable to create a new dataset"
         << endl;
     return nullptr;
   }

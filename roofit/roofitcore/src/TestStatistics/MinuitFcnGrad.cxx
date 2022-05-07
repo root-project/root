@@ -88,12 +88,12 @@ double MinuitFcnGrad::DoEval(const double *x) const
       if (_printEvalErrors >= 0) {
 
          if (_doEvalErrorWall) {
-            oocoutW(static_cast<RooAbsArg *>(nullptr), Eval)
+            oocoutW(nullptr, Eval)
                << "RooGradMinimizerFcn: Minimized function has error status." << std::endl
                << "Returning maximum FCN so far (" << _maxFCN
                << ") to force MIGRAD to back out of this region. Error log follows" << std::endl;
          } else {
-            oocoutW(static_cast<RooAbsArg *>(nullptr), Eval)
+            oocoutW(nullptr, Eval)
                << "RooGradMinimizerFcn: Minimized function has error status but is ignored" << std::endl;
          }
 

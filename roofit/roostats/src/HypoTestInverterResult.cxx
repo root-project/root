@@ -237,7 +237,7 @@ int HypoTestInverterResult::ExclusionCleanup()
 
     const std::vector<double> & values = s->GetSamplingDistribution();
     if ((int) values.size() != fgAsymptoticNumPoints) {
-       oocoutE(this,Eval) << "HypoTestInverterResult::ExclusionCleanup - invalid size of sampling distribution" << std::endl;
+       coutE(Eval) << "HypoTestInverterResult::ExclusionCleanup - invalid size of sampling distribution" << std::endl;
        delete s;
        break;
     }
@@ -330,14 +330,14 @@ bool HypoTestInverterResult::Add( const HypoTestInverterResult& otherResult   )
    if (fExpPValues.GetSize() > 0 && fExpPValues.GetSize() != nThis ) return false;
    if (otherResult.fExpPValues.GetSize() > 0 && otherResult.fExpPValues.GetSize() != nOther ) return false;
 
-   oocoutI(this,Eval) << "HypoTestInverterResult::Add - merging result from " << otherResult.GetName()
+   coutI(Eval) << "HypoTestInverterResult::Add - merging result from " << otherResult.GetName()
                                 << " in " << GetName() << std::endl;
 
    bool addExpPValues = (fExpPValues.GetSize() == 0 && otherResult.fExpPValues.GetSize() > 0);
    bool mergeExpPValues = (fExpPValues.GetSize() > 0 && otherResult.fExpPValues.GetSize() > 0);
 
    if (addExpPValues || mergeExpPValues)
-      oocoutI(this,Eval) << "HypoTestInverterResult::Add - merging also the expected p-values from pseudo-data" << std::endl;
+      coutI(Eval) << "HypoTestInverterResult::Add - merging also the expected p-values from pseudo-data" << std::endl;
 
 
    // case current result is empty
@@ -371,7 +371,7 @@ bool HypoTestInverterResult::Add( const HypoTestInverterResult& otherResult   )
                   int thisNToys = (thisHTR->GetNullDistribution() ) ? thisHTR->GetNullDistribution()->GetSize() : 0;
                   int otherNToys = (otherHTR->GetNullDistribution() ) ? otherHTR->GetNullDistribution()->GetSize() : 0;
                   if (thisNToys != otherNToys )
-                     oocoutW(this,Eval) << "HypoTestInverterResult::Add expected p values have been generated with different toys " << thisNToys << " , " << otherNToys << std::endl;
+                     coutW(Eval) << "HypoTestInverterResult::Add expected p values have been generated with different toys " << thisNToys << " , " << otherNToys << std::endl;
                }
                break;
             }
@@ -390,10 +390,10 @@ bool HypoTestInverterResult::Add( const HypoTestInverterResult& otherResult   )
    }
 
    if (ArraySize() > nThis)
-      oocoutI(this,Eval) << "HypoTestInverterResult::Add  - new number of points is " << fXValues.size()
+      coutI(Eval) << "HypoTestInverterResult::Add  - new number of points is " << fXValues.size()
                          << std::endl;
    else
-      oocoutI(this,Eval) << "HypoTestInverterResult::Add  - new toys/point is "
+      coutI(Eval) << "HypoTestInverterResult::Add  - new toys/point is "
                          <<  ((HypoTestResult*) fYObjects.At(0))->GetNullDistribution()->GetSize()
                          << std::endl;
 
@@ -432,7 +432,7 @@ bool HypoTestInverterResult::Add (Double_t x, const HypoTestResult & res)
 double HypoTestInverterResult::GetXValue( int index ) const
 {
   if ( index >= ArraySize() || index<0 ) {
-    oocoutE(this,InputArguments) << "Problem: You are asking for an impossible array index value\n";
+    coutE(InputArguments) << "Problem: You are asking for an impossible array index value\n";
     return -999;
   }
 
@@ -551,7 +551,7 @@ double HypoTestInverterResult::CLsError( int index ) const
 HypoTestResult* HypoTestInverterResult::GetResult( int index ) const
 {
    if ( index >= ArraySize() || index<0 ) {
-      oocoutE(this,InputArguments) << "Problem: You are asking for an impossible array index value\n";
+      coutE(InputArguments) << "Problem: You are asking for an impossible array index value\n";
       return 0;
    }
 
@@ -723,7 +723,7 @@ double HypoTestInverterResult::FindInterpolatedLimit(double target, bool lowSear
 
    if (ArraySize()<2) {
       double val =  (lowSearch) ? xmin : xmax;
-      oocoutW(this,Eval) << "HypoTestInverterResult::FindInterpolatedLimit"
+      coutW(Eval) << "HypoTestInverterResult::FindInterpolatedLimit"
                          << " - not enough points to get the inverted interval - return "
                          <<  val << std::endl;
       fLowerLimit = varmin;
@@ -975,13 +975,13 @@ Double_t HypoTestInverterResult::CalculateEstimatedError(double target, bool low
 {
 
   if (ArraySize()==0) {
-     oocoutW(this,Eval) << "HypoTestInverterResult::CalculateEstimateError"
+     coutW(Eval) << "HypoTestInverterResult::CalculateEstimateError"
                         << "Empty result \n";
     return 0;
   }
 
   if (ArraySize()<2) {
-     oocoutW(this,Eval) << "HypoTestInverterResult::CalculateEstimateError"
+     coutW(Eval) << "HypoTestInverterResult::CalculateEstimateError"
                         << " only  points - return its error\n";
      return GetYError(0);
   }
@@ -1014,7 +1014,7 @@ Double_t HypoTestInverterResult::CalculateEstimatedError(double target, bool low
      }
   }
   if (graph.GetN() < 2) {
-     if (np >= 2) oocoutW(this,Eval) << "HypoTestInverterResult::CalculateEstimatedError - no valid points - cannot estimate  the " << type << " limit error " << std::endl;
+     if (np >= 2) coutW(Eval) << "HypoTestInverterResult::CalculateEstimatedError - no valid points - cannot estimate  the " << type << " limit error " << std::endl;
      return 0;
   }
 
@@ -1066,7 +1066,7 @@ Double_t HypoTestInverterResult::CalculateEstimatedError(double target, bool low
      }
   }
   else {
-     oocoutW(this,Eval) << "HypoTestInverterResult::CalculateEstimatedError - cannot estimate  the " << type << " limit error " << std::endl;
+     coutW(Eval) << "HypoTestInverterResult::CalculateEstimatedError - cannot estimate  the " << type << " limit error " << std::endl;
      theError = 0;
   }
   if (lower)
@@ -1182,7 +1182,7 @@ SamplingDistribution *  HypoTestInverterResult::GetExpectedPValueDist(int index)
 
 SamplingDistribution *  HypoTestInverterResult::GetLimitDistribution(bool lower ) const {
    if (ArraySize()<2) {
-      oocoutE(this,Eval) << "HypoTestInverterResult::GetLimitDistribution"
+      coutE(Eval) << "HypoTestInverterResult::GetLimitDistribution"
                          << " not  enough points -  return 0 " << std::endl;
       return 0;
    }

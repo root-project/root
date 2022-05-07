@@ -111,7 +111,7 @@ RooBinnedL::evaluatePartition(Section bins, std::size_t /*components_begin*/, st
          // Catch error condition: data present where zero events are predicted
 //         logEvalError(Form("Observed %f events in bin %d with zero event yield", N, i));
          // TODO: check if using regular stream vs logEvalError error gathering is ok
-         oocoutI(static_cast<RooAbsArg *>(nullptr), Minimization)
+         oocoutI(nullptr, Minimization)
             << "Observed " << N << " events in bin " << i << " with zero event yield" << std::endl;
 
       } else if (fabs(mu) < 1e-10 && fabs(N) < 1e-10) {

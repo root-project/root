@@ -157,7 +157,7 @@ Int_t ParamHistFunc::GetNumBins( const RooArgSet& vars ) {
     if (!dynamic_cast<RooRealVar*>(comp)) {
       auto errorMsg = std::string("ParamHistFunc::GetNumBins") + vars.GetName() + ") ERROR: component "
                       + comp->GetName() + " in vars list is not of type RooRealVar";
-      oocoutE(static_cast<TObject*>(nullptr), InputArguments) <<  errorMsg << std::endl;
+      oocoutE(nullptr, InputArguments) <<  errorMsg << std::endl;
       throw std::runtime_error(errorMsg);
     }
     auto var = static_cast<RooRealVar*>(comp);

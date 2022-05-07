@@ -46,7 +46,7 @@ RooSubsidiaryL::RooSubsidiaryL(const std::string &parent_pdf_name, const RooArgS
 {
    for (const auto comp : pdfs) {
       if (!dynamic_cast<RooAbsPdf *>(comp)) {
-         oocoutE((TObject *)0, InputArguments) << "RooSubsidiaryL::ctor(" << GetName() << ") ERROR: component "
+         oocoutE(nullptr, InputArguments) << "RooSubsidiaryL::ctor(" << GetName() << ") ERROR: component "
                                                << comp->GetName() << " is not of type RooAbsPdf" << std::endl;
          RooErrorHandler::softAbort();
       }
@@ -60,7 +60,7 @@ ROOT::Math::KahanSum<double> RooSubsidiaryL::evaluatePartition(RooAbsL::Section 
                                                                std::size_t /*components_end*/)
 {
    if (events.begin_fraction != 0 || events.end_fraction != 1) {
-      oocoutW((TObject *)0, InputArguments) << "RooSubsidiaryL::evaluatePartition can only calculate everything, so "
+      oocoutW(nullptr, InputArguments) << "RooSubsidiaryL::evaluatePartition can only calculate everything, so "
                                                "section should be {0,1}, but it's not!"
                                             << std::endl;
    }

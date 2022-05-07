@@ -826,14 +826,14 @@ RooFitResult* RooMinimizer::lastMinuitFit(const RooArgList& varList)
   // the fit parameters as the given varList of parameters.
 
   if (_theFitter==0 || _theFitter->GetMinimizer()==0) {
-    oocoutE((TObject*)0,InputArguments) << "RooMinimizer::save: Error, run minimization before!"
+    oocoutE(nullptr,InputArguments) << "RooMinimizer::save: Error, run minimization before!"
                << endl ;
     return nullptr;
   }
 
   // Verify length of supplied varList
   if (!varList.empty() && varList.size() != _theFitter->Result().NTotalParameters()) {
-    oocoutE((TObject*)0,InputArguments)
+    oocoutE(nullptr,InputArguments)
       << "RooMinimizer::lastMinuitFit: ERROR: supplied variable list must be either empty " << endl
       << "                             or match the number of variables of the last fit ("
       << _theFitter->Result().NTotalParameters() << ")" << endl ;
@@ -844,7 +844,7 @@ RooFitResult* RooMinimizer::lastMinuitFit(const RooArgList& varList)
   // Verify that all members of varList are of type RooRealVar
   for (RooAbsArg * arg : varList) {
     if (!dynamic_cast<RooRealVar*>(arg)) {
-      oocoutE((TObject*)0,InputArguments) << "RooMinimizer::lastMinuitFit: ERROR: variable '"
+      oocoutE(nullptr,InputArguments) << "RooMinimizer::lastMinuitFit: ERROR: variable '"
                  << arg->GetName() << "' is not of type RooRealVar" << endl ;
       return nullptr;
     }
@@ -887,7 +887,7 @@ RooFitResult* RooMinimizer::lastMinuitFit(const RooArgList& varList)
       }
 
       if (varName.CompareTo(var->GetName())) {
-   oocoutI((TObject*)0,Eval)  << "RooMinimizer::lastMinuitFit: fit parameter '" << varName
+   oocoutI(nullptr,Eval)  << "RooMinimizer::lastMinuitFit: fit parameter '" << varName
                << "' stored in variable '" << var->GetName() << "'" << endl ;
       }
 

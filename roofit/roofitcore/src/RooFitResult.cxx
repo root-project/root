@@ -935,9 +935,9 @@ RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList)
 {
   // Verify length of supplied varList
   if (varList.getSize()>0 && varList.getSize()!=gMinuit->fNu) {
-    oocoutE((TObject*)0,InputArguments) << "RooFitResult::lastMinuitFit: ERROR: supplied variable list must be either empty " << endl
+    oocoutE(nullptr,InputArguments) << "RooFitResult::lastMinuitFit: ERROR: supplied variable list must be either empty " << endl
                << "                             or match the number of variables of the last fit (" << gMinuit->fNu << ")" << endl ;
-    return 0 ;
+    return nullptr;
   }
 
   // Verify that all members of varList are of type RooRealVar
@@ -945,8 +945,8 @@ RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList)
   RooAbsArg* arg  ;
   while((arg=(RooAbsArg*)iter.Next())) {
     if (!dynamic_cast<RooRealVar*>(arg)) {
-      oocoutE((TObject*)0,InputArguments) << "RooFitResult::lastMinuitFit: ERROR: variable '" << arg->GetName() << "' is not of type RooRealVar" << endl ;
-      return 0 ;
+      oocoutE(nullptr,InputArguments) << "RooFitResult::lastMinuitFit: ERROR: variable '" << arg->GetName() << "' is not of type RooRealVar" << endl ;
+      return nullptr;
     }
   }
 
@@ -987,7 +987,7 @@ RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList)
    var->setRange(xlo,xhi) ;
       }
       if (varName.CompareTo(var->GetName())) {
-   oocoutI((TObject*)0,Eval) << "RooFitResult::lastMinuitFit: fit parameter '" << varName
+   oocoutI(nullptr,Eval) << "RooFitResult::lastMinuitFit: fit parameter '" << varName
               << "' stored in variable '" << var->GetName() << "'" << endl ;
       }
 
@@ -1030,7 +1030,7 @@ RooFitResult *RooFitResult::prefitResult(const RooArgList &paramList)
    RooAbsArg *arg;
    while ((arg = (RooAbsArg *)iter.Next())) {
       if (!dynamic_cast<RooRealVar *>(arg)) {
-         oocoutE((TObject *)0, InputArguments) << "RooFitResult::lastMinuitFit: ERROR: variable '" << arg->GetName()
+         oocoutE(nullptr, InputArguments) << "RooFitResult::lastMinuitFit: ERROR: variable '" << arg->GetName()
                                                << "' is not of type RooRealVar" << endl;
          return nullptr;
       }

@@ -92,7 +92,7 @@ class ToyMCSampler: public TestStatSampler {
       /// is used. The snapshot and TestStatistic is also optional.
       virtual void AddTestStatistic(TestStatistic* t = NULL) {
          if( t == NULL ) {
-            oocoutI((TObject*)0,InputArguments) << "No test statistic given. Doing nothing." << std::endl;
+            oocoutI(nullptr,InputArguments) << "No test statistic given. Doing nothing." << std::endl;
             return;
          }
 
@@ -102,7 +102,7 @@ class ToyMCSampler: public TestStatSampler {
       /// generates toy data
       ///   without weight
       virtual RooAbsData* GenerateToyData(RooArgSet& paramPoint, RooAbsPdf& pdf) const {
-         if(fExpectedNuisancePar) oocoutE((TObject*)NULL,InputArguments) << "ToyMCSampler: using expected nuisance parameters but ignoring weight. Use GetSamplingDistribution(paramPoint, weight) instead." << std::endl;
+         if(fExpectedNuisancePar) oocoutE(nullptr,InputArguments) << "ToyMCSampler: using expected nuisance parameters but ignoring weight. Use GetSamplingDistribution(paramPoint, weight) instead." << std::endl;
          double weight;
          return GenerateToyData(paramPoint, weight, pdf);
       }
@@ -177,7 +177,7 @@ class ToyMCSampler: public TestStatSampler {
       /// Set the TestStatistic (want the argument to be a function of the data & parameter points
       virtual void SetTestStatistic(TestStatistic *testStatistic, unsigned int i) {
          if( fTestStatistics.size() < i ) {
-            oocoutE((TObject*)NULL,InputArguments) << "Cannot set test statistic for this index." << std::endl;
+            oocoutE(nullptr,InputArguments) << "Cannot set test statistic for this index." << std::endl;
             return;
          }
          if( fTestStatistics.size() == i)

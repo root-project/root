@@ -139,7 +139,7 @@ RooAbsIntegrator* RooImproperIntegrator1D::clone(const RooAbsFunc& function, con
 void RooImproperIntegrator1D::initialize(const RooAbsFunc* function)
 {
   if(!isValid()) {
-    oocoutE((TObject*)0,Integration) << "RooImproperIntegrator: cannot integrate invalid function" << endl;
+    oocoutE(nullptr,Integration) << "RooImproperIntegrator: cannot integrate invalid function" << endl;
     return;
   }
   // Create a new function object that uses the change of vars: x -> 1/x
@@ -221,7 +221,7 @@ RooImproperIntegrator1D::~RooImproperIntegrator1D()
 bool RooImproperIntegrator1D::setLimits(Double_t *xmin, Double_t *xmax)
 {
   if(_useIntegrandLimits) {
-    oocoutE((TObject*)0,Integration) << "RooIntegrator1D::setLimits: cannot override integrand's limits" << endl;
+    oocoutE(nullptr,Integration) << "RooIntegrator1D::setLimits: cannot override integrand's limits" << endl;
     return false;
   }
 

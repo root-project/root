@@ -99,7 +99,7 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function) :
     // Retrieve bin configuration from integrand
     std::unique_ptr<list<Double_t>> tmp{ _function->binBoundaries(i) };
     if (!tmp) {
-      oocoutW((TObject*)0,Integration) << "RooBinIntegrator::RooBinIntegrator WARNING: integrand provide no binning definition observable #"
+      oocoutW(nullptr,Integration) << "RooBinIntegrator::RooBinIntegrator WARNING: integrand provide no binning definition observable #"
           << i << " substituting default binning of " << _numBins << " bins" << endl ;
       tmp.reset( new list<Double_t> );
       for (Int_t j=0 ; j<=_numBins ; j++) {
@@ -148,7 +148,7 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, const RooNumIntCo
     // Retrieve bin configuration from integrand
     std::unique_ptr<list<Double_t>> tmp{ _function->binBoundaries(i) };
     if (!tmp) {
-      oocoutW((TObject*)0,Integration) << "RooBinIntegrator::RooBinIntegrator WARNING: integrand provide no binning definition observable #"
+      oocoutW(nullptr,Integration) << "RooBinIntegrator::RooBinIntegrator WARNING: integrand provide no binning definition observable #"
           << i << " substituting default binning of " << _numBins << " bins" << endl ;
       tmp.reset( new list<Double_t> );
       for (Int_t j=0 ; j<=_numBins ; j++) {
@@ -199,7 +199,7 @@ RooBinIntegrator::~RooBinIntegrator()
 bool RooBinIntegrator::setLimits(Double_t *xmin, Double_t *xmax)
 {
   if(_useIntegrandLimits) {
-    oocoutE((TObject*)0,Integration) << "RooBinIntegrator::setLimits: cannot override integrand's limits" << endl;
+    oocoutE(nullptr,Integration) << "RooBinIntegrator::setLimits: cannot override integrand's limits" << endl;
     return false;
   }
   _xmin[0]= *xmin;
@@ -225,7 +225,7 @@ bool RooBinIntegrator::checkLimits() const
   }
   for (UInt_t i=0 ; i<_function->getDimension() ; i++) {
     if (_xmax[i]<=_xmin[i]) {
-      oocoutE((TObject*)0,Integration) << "RooBinIntegrator::checkLimits: bad range with min >= max (_xmin = " << _xmin[i] << " _xmax = " << _xmax[i] << ")" << endl;
+      oocoutE(nullptr,Integration) << "RooBinIntegrator::checkLimits: bad range with min >= max (_xmin = " << _xmin[i] << " _xmax = " << _xmax[i] << ")" << endl;
       return false;
     }
     if (RooNumber::isInfinite(_xmin[i]) || RooNumber::isInfinite(_xmax[i])) {

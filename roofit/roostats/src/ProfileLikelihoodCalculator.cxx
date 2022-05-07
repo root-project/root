@@ -147,17 +147,17 @@ RooAbsReal *  ProfileLikelihoodCalculator::DoGlobalFit() const {
    }
 
       // calculate MLE
-   oocoutP((TObject*)0,Minimization) << "ProfileLikelihoodCalcultor::DoGLobalFit - find MLE " << std::endl;
+   oocoutP(nullptr,Minimization) << "ProfileLikelihoodCalcultor::DoGLobalFit - find MLE " << std::endl;
 
    if (fFitResult) delete fFitResult;
    fFitResult = DoMinimizeNLL(nll);
 
    // print fit result
    if (fFitResult) {
-      fFitResult->printStream( oocoutI((TObject*)0,Minimization), fFitResult->defaultPrintContents(0), fFitResult->defaultPrintStyle(0) );
+      fFitResult->printStream( oocoutI(nullptr,Minimization), fFitResult->defaultPrintContents(0), fFitResult->defaultPrintStyle(0) );
 
       if (fFitResult->status() != 0)
-         oocoutW((TObject*)0,Minimization) << "ProfileLikelihoodCalcultor::DoGlobalFit -  Global fit failed - status = " << fFitResult->status() << std::endl;
+         oocoutW(nullptr,Minimization) << "ProfileLikelihoodCalcultor::DoGlobalFit -  Global fit failed - status = " << fFitResult->status() << std::endl;
       else
          fGlobalFitDone = true;
    }
@@ -174,7 +174,7 @@ RooFitResult * ProfileLikelihoodCalculator::DoMinimizeNLL(RooAbsReal * nll)  {
    int strategy = ROOT::Math::MinimizerOptions::DefaultStrategy();
    int level = ROOT::Math::MinimizerOptions::DefaultPrintLevel() -1;// RooFit level starts from  -1
    int tolerance = ROOT::Math::MinimizerOptions::DefaultTolerance();
-   oocoutP((TObject*)0,Minimization) << "ProfileLikelihoodCalcultor::DoMinimizeNLL - using " << minimType << " / " << minimAlgo << " with strategy " << strategy << std::endl;
+   oocoutP(nullptr,Minimization) << "ProfileLikelihoodCalcultor::DoMinimizeNLL - using " << minimType << " / " << minimAlgo << " with strategy " << strategy << std::endl;
    // do global fit and store fit result for further use
 
    const auto& config = GetGlobalRooStatsConfig();
@@ -362,17 +362,17 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
 
    Double_t nLLatCondMLE = nLLatMLE;
    if (existVarParams) {
-      oocoutP((TObject*)0,Minimization) << "ProfileLikelihoodCalcultor::GetHypoTest - do conditional fit " << std::endl;
+      oocoutP(nullptr,Minimization) << "ProfileLikelihoodCalcultor::GetHypoTest - do conditional fit " << std::endl;
 
       RooFitResult * fit2 = DoMinimizeNLL(nll);
 
       // print fit result
       if (fit2) {
          nLLatCondMLE = fit2->minNll();
-         fit2->printStream( oocoutI((TObject*)0,Minimization), fit2->defaultPrintContents(0), fit2->defaultPrintStyle(0) );
+         fit2->printStream( oocoutI(nullptr,Minimization), fit2->defaultPrintContents(0), fit2->defaultPrintStyle(0) );
 
          if (fit2->status() != 0)
-            oocoutW((TObject*)0,Minimization) << "ProfileLikelihoodCalcultor::GetHypotest -  Conditional fit failed - status = " << fit2->status() << std::endl;
+            oocoutW(nullptr,Minimization) << "ProfileLikelihoodCalcultor::GetHypotest -  Conditional fit failed - status = " << fit2->status() << std::endl;
       }
 
    }

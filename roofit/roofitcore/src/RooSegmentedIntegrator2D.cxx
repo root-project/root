@@ -120,7 +120,7 @@ bool RooSegmentedIntegrator2D::checkLimits() const
   }
   _range= _xmax - _xmin;
   if(_range <= 0) {
-    oocoutE((TObject*)0,InputArguments) << "RooIntegrator1D::checkLimits: bad range with min >= max" << endl;
+    oocoutE(nullptr,InputArguments) << "RooIntegrator1D::checkLimits: bad range with min >= max" << endl;
     return false;
   }
   bool ret =  (RooNumber::isInfinite(_xmin) || RooNumber::isInfinite(_xmax)) ? false : true;

@@ -217,7 +217,7 @@ const RooArgSet& RooNumIntConfig::getConfigSection(const char* name) const
   static RooArgSet dummy ;
   RooArgSet* config = (RooArgSet*) _configSets.FindObject(name) ;
   if (!config) {
-    oocoutE((TObject*)0,InputArguments) << "RooNumIntConfig::getConfigSection: ERROR: no configuration stored for integrator '" << name << "'" << endl ;
+    oocoutE(nullptr,InputArguments) << "RooNumIntConfig::getConfigSection: ERROR: no configuration stored for integrator '" << name << "'" << endl ;
     return dummy ;
   }
   return *config ;
@@ -231,7 +231,7 @@ const RooArgSet& RooNumIntConfig::getConfigSection(const char* name) const
 void RooNumIntConfig::setEpsAbs(Double_t newEpsAbs)
 {
   if (newEpsAbs<0) {
-    oocoutE((TObject*)0,InputArguments) << "RooNumIntConfig::setEpsAbs: ERROR: target absolute precision must be greater or equal than zero" << endl ;
+    oocoutE(nullptr,InputArguments) << "RooNumIntConfig::setEpsAbs: ERROR: target absolute precision must be greater or equal than zero" << endl ;
     return ;
   }
   _epsAbs = newEpsAbs ;
@@ -261,7 +261,7 @@ RooPrintable::StyleOption RooNumIntConfig::defaultPrintStyle(Option_t* opt) cons
 void RooNumIntConfig::setEpsRel(Double_t newEpsRel)
 {
   if (newEpsRel<0) {
-    oocoutE((TObject*)0,InputArguments) << "RooNumIntConfig::setEpsRel: ERROR: target absolute precision must be greater or equal than zero" << endl ;
+    oocoutE(nullptr,InputArguments) << "RooNumIntConfig::setEpsRel: ERROR: target absolute precision must be greater or equal than zero" << endl ;
     return ;
   }
   _epsRel = newEpsRel ;

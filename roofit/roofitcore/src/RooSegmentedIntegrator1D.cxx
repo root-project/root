@@ -164,7 +164,7 @@ RooSegmentedIntegrator1D::~RooSegmentedIntegrator1D()
 bool RooSegmentedIntegrator1D::setLimits(Double_t* xmin, Double_t* xmax)
 {
   if(_useIntegrandLimits) {
-    oocoutE((TObject*)0,InputArguments) << "RooSegmentedIntegrator1D::setLimits: cannot override integrand's limits" << endl;
+    oocoutE(nullptr,InputArguments) << "RooSegmentedIntegrator1D::setLimits: cannot override integrand's limits" << endl;
     return false;
   }
   _xmin= *xmin;
@@ -187,7 +187,7 @@ bool RooSegmentedIntegrator1D::checkLimits() const
   }
   _range= _xmax - _xmin;
   if(_range <= 0) {
-    oocoutE((TObject*)0,InputArguments) << "RooIntegrator1D::checkLimits: bad range with min >= max" << endl;
+    oocoutE(nullptr,InputArguments) << "RooIntegrator1D::checkLimits: bad range with min >= max" << endl;
     return false;
   }
   bool ret =  (RooNumber::isInfinite(_xmin) || RooNumber::isInfinite(_xmax)) ? false : true;

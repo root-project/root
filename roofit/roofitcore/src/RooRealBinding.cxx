@@ -60,12 +60,12 @@ RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, co
     RooAbsArg* var = vars[index];
     _vars.push_back(dynamic_cast<RooAbsRealLValue*>(var));
     if(_vars.back() == nullptr) {
-      oocoutE((TObject*)0,InputArguments) << "RooRealBinding: cannot bind to " << var->GetName()
+      oocoutE(nullptr,InputArguments) << "RooRealBinding: cannot bind to " << var->GetName()
           << ". Variables need to be assignable, e.g. instances of RooRealVar." << endl ;
       _valid= false;
     }
     if (!_func->dependsOn(*_vars[index])) {
-      oocoutW((TObject*)nullptr, InputArguments) << "RooRealBinding: The function " << func.GetName() << " does not depend on the parameter " << _vars[index]->GetName()
+      oocoutW(nullptr, InputArguments) << "RooRealBinding: The function " << func.GetName() << " does not depend on the parameter " << _vars[index]->GetName()
           << ". Note that passing copies of the parameters is not supported." << std::endl;
     }
   }

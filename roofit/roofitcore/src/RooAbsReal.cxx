@@ -3662,7 +3662,7 @@ void RooAbsReal::logEvalError(const RooAbsReal* originator, const char* origName
   }
 
   if (_evalErrorMode==PrintErrors) {
-   oocoutE((TObject*)0,Eval) << "RooAbsReal::logEvalError(" << "<STATIC>" << ") evaluation error, " << endl
+   oocoutE(nullptr,Eval) << "RooAbsReal::logEvalError(" << "<STATIC>" << ") evaluation error, " << endl
          << " origin       : " << origName << endl
          << " message      : " << ee._msg << endl
          << " server values: " << ee._srvval << endl ;

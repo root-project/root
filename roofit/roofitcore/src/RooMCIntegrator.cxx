@@ -311,7 +311,7 @@ Double_t RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, Do
           index += box[i] * sizeOfDim;
           sizeOfDim *= _grid.getNBoxes();
         }
-        oocoutP(this,Integration) << "RooMCIntegrator: still working ... iteration "
+        coutP(Integration) << "RooMCIntegrator: still working ... iteration "
             << it << '/' << iterations << "  box " << index << "/"<< std::pow(_grid.getNBoxes(), _grid.getDimension()) << endl;
         _timer.Start(true);
       }

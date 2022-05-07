@@ -190,7 +190,7 @@ RooAbsNumGenerator* RooNumGenFactory::createSampler(RooAbsReal& func, const RooA
 
   // Check that a method was defined for this case
   if (!method.CompareTo("N/A")) {
-    oocoutE((TObject*)0,Integration) << "RooNumGenFactory::createSampler: No sampler method has been defined for "
+    oocoutE(nullptr,Integration) << "RooNumGenFactory::createSampler: No sampler method has been defined for "
                  << (cond?"a conditional ":"a ") << ndim << "-dimensional p.d.f" << endl ;
     return 0 ;
   }

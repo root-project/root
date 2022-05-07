@@ -58,7 +58,7 @@ void ConstantTermsOptimizer::enableConstantTermsOptimization(RooAbsReal *functio
    // dataset is constructed in terms of a RooVectorDataStore
    if (applyTrackingOpt) {
       if (!dynamic_cast<RooVectorDataStore *>(dataset->store())) {
-         oocoutW((TObject *)nullptr, Optimization)
+         oocoutW(nullptr, Optimization)
             << "enableConstantTermsOptimization(function: " << function->GetName()
             << ", dataset: " << dataset->GetName()
             << ") WARNING Cache-and-track optimization (Optimize level 2) is only available for datasets"
@@ -103,21 +103,21 @@ void ConstantTermsOptimizer::enableConstantTermsOptimization(RooAbsReal *functio
    actualTrackNodes.remove(*constNodes);
    if (constNodes->getSize() > 0) {
       if (constNodes->getSize() < 20) {
-         oocoutI((TObject*)nullptr, Minimization)
+         oocoutI(nullptr, Minimization)
             << " The following expressions have been identified as constant and will be precalculated and cached: "
             << *constNodes << std::endl;
       } else {
-         oocoutI((TObject*)nullptr, Minimization) << " A total of " << constNodes->getSize()
+         oocoutI(nullptr, Minimization) << " A total of " << constNodes->getSize()
                              << " expressions have been identified as constant and will be precalculated and cached."
                              << std::endl;
       }
    }
    if (actualTrackNodes.getSize() > 0) {
       if (actualTrackNodes.getSize() < 20) {
-         oocoutI((TObject*)nullptr, Minimization) << " The following expressions will be evaluated in cache-and-track mode: "
+         oocoutI(nullptr, Minimization) << " The following expressions will be evaluated in cache-and-track mode: "
                              << actualTrackNodes << std::endl;
       } else {
-         oocoutI((TObject*)nullptr, Minimization) << " A total of " << constNodes->getSize()
+         oocoutI(nullptr, Minimization) << " A total of " << constNodes->getSize()
                              << " expressions will be evaluated in cache-and-track-mode." << std::endl;
       }
    }
