@@ -138,7 +138,7 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, const RooNumIntConf
   _doExtrap = (bool) configSet.getCatIndex("extrapolation",1) ;
 
   if (_fixSteps>_maxSteps) {
-    oocoutE((TObject*)0,Integration) << "RooIntegrator1D::ctor() ERROR: fixSteps>maxSteps, fixSteps set to maxSteps" << endl ;
+    oocoutE(nullptr,Integration) << "RooIntegrator1D::ctor() ERROR: fixSteps>maxSteps, fixSteps set to maxSteps" << endl ;
     _fixSteps = _maxSteps ;
   }
 
@@ -199,7 +199,7 @@ bool RooIntegrator1D::initialize()
 
   // check that the integrand is a valid function
   if(!isValid()) {
-    oocoutE((TObject*)0,Integration) << "RooIntegrator1D::initialize: cannot integrate invalid function" << endl;
+    oocoutE(nullptr,Integration) << "RooIntegrator1D::initialize: cannot integrate invalid function" << endl;
     return false;
   }
 
@@ -239,7 +239,7 @@ RooIntegrator1D::~RooIntegrator1D()
 bool RooIntegrator1D::setLimits(Double_t *xmin, Double_t *xmax)
 {
   if(_useIntegrandLimits) {
-    oocoutE((TObject*)0,Integration) << "RooIntegrator1D::setLimits: cannot override integrand's limits" << endl;
+    oocoutE(nullptr,Integration) << "RooIntegrator1D::setLimits: cannot override integrand's limits" << endl;
     return false;
   }
   _xmin= *xmin;
@@ -261,7 +261,7 @@ bool RooIntegrator1D::checkLimits() const
   }
   const_cast<double&>(_range) = _xmax - _xmin;
   if (_range < 0.) {
-    oocoutE((TObject*)0,Integration) << "RooIntegrator1D::checkLimits: bad range with min > max (_xmin = " << _xmin << " _xmax = " << _xmax << ")" << endl;
+    oocoutE(nullptr,Integration) << "RooIntegrator1D::checkLimits: bad range with min > max (_xmin = " << _xmin << " _xmax = " << _xmax << ")" << endl;
     return false;
   }
   return (RooNumber::isInfinite(_xmin) || RooNumber::isInfinite(_xmax)) ? false : true;
@@ -335,10 +335,10 @@ Double_t RooIntegrator1D::integral(const Double_t *yvec)
     _h[j+1]= (_rule == Trapezoid) ? _h[j]/4. : _h[j]/9.;
   }
 
-  oocoutW((TObject*)0,Integration) << "RooIntegrator1D::integral: integral of " << _function->getName() << " over range (" << _xmin << "," << _xmax << ") did not converge after "
+  oocoutW(nullptr,Integration) << "RooIntegrator1D::integral: integral of " << _function->getName() << " over range (" << _xmin << "," << _xmax << ") did not converge after "
       << _maxSteps << " steps" << endl;
   for(Int_t j = 1; j <= _maxSteps; ++j) {
-    ooccoutW((TObject*)0,Integration) << "   [" << j << "] h = " << _h[j] << " , s = " << _s[j] << endl;
+    ooccoutW(nullptr,Integration) << "   [" << j << "] h = " << _h[j] << " , s = " << _s[j] << endl;
   }
 
   return _s[_maxSteps] ;
@@ -436,7 +436,7 @@ void RooIntegrator1D::extrapolate(Int_t n)
       hp=xa[i+m];
       w=_c[i+1]-_d[i];
       if((den=ho-hp) == 0.0) {
-   oocoutE((TObject*)0,Integration) << "RooIntegrator1D::extrapolate: internal error" << endl;
+   oocoutE(nullptr,Integration) << "RooIntegrator1D::extrapolate: internal error" << endl;
       }
       den=w/den;
       _d[i]=hp*den;

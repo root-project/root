@@ -282,7 +282,7 @@ void SamplingDistPlot::addObject(TObject *obj, Option_t *drawOptions)
 void SamplingDistPlot::addOtherObject(TObject *obj, Option_t *drawOptions)
 {
   if(0 == obj) {
-     oocoutE(this,InputArguments) << fName << "::addOtherObject: called with a null pointer" << std::endl;
+     coutE(InputArguments) << fName << "::addOtherObject: called with a null pointer" << std::endl;
      return;
   }
 
@@ -317,7 +317,7 @@ void SamplingDistPlot::Draw(Option_t * /*options */) {
    fRooPlot = xaxis.frame();
    RooPlot::setAddDirectoryStatus(dirStatus);
    if (!fRooPlot) {
-     oocoutE(this,InputArguments) << "invalid variable to plot" << std::endl;
+     coutE(InputArguments) << "invalid variable to plot" << std::endl;
      return;
    }
    fRooPlot->SetTitle("");

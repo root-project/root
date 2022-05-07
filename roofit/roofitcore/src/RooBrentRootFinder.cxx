@@ -156,7 +156,7 @@ bool RooBrentRootFinder::findRoot(Double_t &result, Double_t xlo, Double_t xhi, 
 
   }
   // Return our best guess if we run out of iterations
-  oocoutE((TObject*)0,Eval) << "RooBrentRootFinder::findRoot(" << _function->getName() << "): maximum iterations exceeded." << endl;
+  oocoutE(nullptr,Eval) << "RooBrentRootFinder::findRoot(" << _function->getName() << "): maximum iterations exceeded." << endl;
   result= b;
 
   _function->restoreXVec() ;

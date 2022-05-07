@@ -74,7 +74,7 @@ Double_t RooStats::RatioOfProfiledLikelihoodsTestStat::ProfiledLikelihood(RooAbs
    else if (&pdf == fAltProfile.GetPdf() )
       return fAltProfile.EvaluateProfileLikelihood(type, data, poi);
 
-   oocoutE((TObject*)NULL,InputArguments) << "RatioOfProfiledLikelihoods::ProfileLikelihood - invalid pdf used for computing the profiled likelihood - return NaN"
+   oocoutE(nullptr,InputArguments) << "RatioOfProfiledLikelihoods::ProfileLikelihood - invalid pdf used for computing the profiled likelihood - return NaN"
                          << std::endl;
 
    return TMath::QuietNaN();

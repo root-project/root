@@ -166,7 +166,7 @@ void RooAdaptiveGaussKronrodIntegrator1D::registerIntegrator(RooNumIntFactory& f
      method.defineType("61Points", 6);
      method.setIndex(2);
      fact.storeProtoIntegrator(new RooAdaptiveGaussKronrodIntegrator1D(), RooArgSet(maxSeg, method));
-     oocoutI((TObject*)nullptr,Integration)  << "RooAdaptiveGaussKronrodIntegrator1D has been registered " << std::endl;
+     oocoutI(nullptr,Integration)  << "RooAdaptiveGaussKronrodIntegrator1D has been registered " << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -400,7 +400,7 @@ Double_t RooAdaptiveGaussKronrodIntegrator1D::integral(const Double_t *yvec)
 #define GSL_ENOMEM   8  /* malloc failed */
 #define GSL_EBADTOL 13  /* user specified an invalid tolerance */
 #define GSL_ETOL    14  /* failed to reach the specified tolerance */
-#define GSL_ERROR(a,b) oocoutE((TObject*)0,Integration) << "RooAdaptiveGaussKronrodIntegrator1D::integral() ERROR: " << a << endl ; return b ;
+#define GSL_ERROR(a,b) oocoutE(nullptr,Integration) << "RooAdaptiveGaussKronrodIntegrator1D::integral() ERROR: " << a << endl ; return b ;
 #define GSL_DBL_MIN        2.2250738585072014e-308
 #define GSL_DBL_MAX        1.7976931348623157e+308
 #define GSL_DBL_EPSILON    2.2204460492503131e-16

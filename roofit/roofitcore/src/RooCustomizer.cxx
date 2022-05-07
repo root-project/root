@@ -757,7 +757,7 @@ std::string RooCustomizer::CustIFace::create(RooFactoryWSTool& ft, const char* t
     if (orig && subst) {
       cust.replaceArg(*orig,*subst) ;
     } else {
-      oocoutW((TObject*)0,ObjectHandling) << "RooCustomizer::CustIFace::create() WARNING: input or replacement of a replacement operation not found, operation ignored"<< endl ;
+      oocoutW(nullptr,ObjectHandling) << "RooCustomizer::CustIFace::create() WARNING: input or replacement of a replacement operation not found, operation ignored"<< endl ;
     }
   }
 

@@ -190,7 +190,7 @@ PointSetInterval* NeymanConstruction::GetInterval() const {
                      samplingDist,
                      additionalMC);
         if (!samplingDist) {
-           oocoutE((TObject*)0,Eval) << "Neyman Construction: error generating sampling distribution" << endl;
+           oocoutE(nullptr,Eval) << "Neyman Construction: error generating sampling distribution" << endl;
            return 0;
         }
    totalMC=samplingDist->GetSize();
@@ -239,7 +239,7 @@ PointSetInterval* NeymanConstruction::GetInterval() const {
       // generating the sampling dist of the test statistic.
       samplingDist = fTestStatSampler->GetSamplingDistribution(*point);
       if (!samplingDist) {
-         oocoutE((TObject*)0,Eval) << "Neyman Construction: error generating sampling distribution" << endl;
+         oocoutE(nullptr,Eval) << "Neyman Construction: error generating sampling distribution" << endl;
          return 0;
       }
 

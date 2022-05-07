@@ -548,7 +548,7 @@ HistFactory::Measurement ConfigParser::CreateMeasurementFromDriverNode(TXMLNode 
       child = child->GetNextNode();
    }
 
-   measurement.PrintTree(oocoutI(static_cast<TObject *>(nullptr), HistFactory));
+   measurement.PrintTree(oocoutI(nullptr, HistFactory));
 
    return measurement;
 }
@@ -709,7 +709,7 @@ HistFactory::Channel ConfigParser::ParseChannelXMLFile( string filen ) {
   } // End loop over tags in this channel
 
   cxcoutIHF << "Created Channel: " << std::endl;
-  channel.Print(oocoutI(static_cast<TObject*>(nullptr), HistFactory));
+  channel.Print(oocoutI(nullptr, HistFactory));
 
   return channel;
 
@@ -1061,7 +1061,7 @@ HistFactory::NormFactor ConfigParser::MakeNormFactor( TXMLNode* node ) {
     throw hf_exc();
   }
 
-  norm.Print(oocoutI(static_cast<TObject*>(nullptr), HistFactory));
+  norm.Print(oocoutI(nullptr, HistFactory));
 
   return norm;
 
@@ -1175,7 +1175,7 @@ HistFactory::HistoSys ConfigParser::MakeHistoSys( TXMLNode* node ) {
   }
 
 
-  histoSys.Print(oocoutI(static_cast<TObject*>(nullptr), HistFactory));
+  histoSys.Print(oocoutI(nullptr, HistFactory));
 
   return histoSys;
 
@@ -1225,7 +1225,7 @@ HistFactory::OverallSys ConfigParser::MakeOverallSys( TXMLNode* node ) {
   }
 
 
-  overallSys.Print(oocoutI(static_cast<TObject*>(nullptr), HistFactory));
+  overallSys.Print(oocoutI(nullptr, HistFactory));
 
   return overallSys;
 
@@ -1305,7 +1305,7 @@ HistFactory::ShapeFactor ConfigParser::MakeShapeFactor( TXMLNode* node ) {
     shapeFactor.SetInputFile( ShapeInputFile );
   }
 
-  shapeFactor.Print(oocoutI(static_cast<TObject*>(nullptr), HistFactory));
+  shapeFactor.Print(oocoutI(nullptr, HistFactory));
 
   return shapeFactor;
 
@@ -1395,7 +1395,7 @@ HistFactory::ShapeSys ConfigParser::MakeShapeSys( TXMLNode* node ) {
     throw hf_exc();
   }
 
-  shapeSys.Print(oocoutI(static_cast<TObject*>(nullptr), HistFactory));
+  shapeSys.Print(oocoutI(nullptr, HistFactory));
 
   return shapeSys;
 
@@ -1483,7 +1483,7 @@ HistFactory::StatError ConfigParser::ActivateStatError( TXMLNode* node ) {
     }
   */
 
-  statError.Print(oocoutI(static_cast<TObject*>(nullptr), HistFactory));
+  statError.Print(oocoutI(nullptr, HistFactory));
 
   return statError;
 

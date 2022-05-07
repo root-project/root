@@ -113,7 +113,7 @@ AsymptoticCalculator::AsymptoticCalculator(
    if (muNull->getVal() == muNull->getMin()) {
       fOneSidedDiscovery = true;
       if (verbose > 0)
-         oocoutI((TObject*)0,InputArguments) << "AsymptotiCalculator: Minimum of POI is " << muNull->getMin() << " corresponds to null  snapshot   - default configuration is  one-sided discovery formulae  " << std::endl;
+         oocoutI(nullptr,InputArguments) << "AsymptotiCalculator: Minimum of POI is " << muNull->getMin() << " corresponds to null  snapshot   - default configuration is  one-sided discovery formulae  " << std::endl;
    }
 
 }
@@ -133,17 +133,17 @@ bool AsymptoticCalculator::Initialize() const {
 
    int verbose = fgPrintLevel;
    if (verbose >= 0)
-      oocoutP((TObject*)0,Eval) << "AsymptoticCalculator::Initialize...." << std::endl;
+      oocoutP(nullptr,Eval) << "AsymptoticCalculator::Initialize...." << std::endl;
 
 
    RooAbsPdf * nullPdf = GetNullModel()->GetPdf();
    if (!nullPdf) {
-      oocoutE((TObject*)0,InputArguments) << "AsymptoticCalculator::Initialize - ModelConfig has not a pdf defined" << std::endl;
+      oocoutE(nullptr,InputArguments) << "AsymptoticCalculator::Initialize - ModelConfig has not a pdf defined" << std::endl;
       return false;
    }
    RooAbsData * obsData = const_cast<RooAbsData *>(GetData() );
    if (!obsData ) {
-      oocoutE((TObject*)0,InputArguments) << "AsymptoticCalculator::Initialize - data set has not been defined" << std::endl;
+      oocoutE(nullptr,InputArguments) << "AsymptoticCalculator::Initialize - data set has not been defined" << std::endl;
       return false;
    }
    RooAbsData & data = *obsData;
@@ -152,11 +152,11 @@ bool AsymptoticCalculator::Initialize() const {
 
    const RooArgSet * poi = GetNullModel()->GetParametersOfInterest();
    if (!poi || poi->getSize() == 0) {
-      oocoutE((TObject*)0,InputArguments) << "AsymptoticCalculator::Initialize -  ModelConfig has not POI defined." << endl;
+      oocoutE(nullptr,InputArguments) << "AsymptoticCalculator::Initialize -  ModelConfig has not POI defined." << endl;
       return false;
    }
    if (poi->getSize() > 1) {
-      oocoutW((TObject*)0,InputArguments) << "AsymptoticCalculator::Initialize - ModelConfig has more than one POI defined \n\t"
+      oocoutW(nullptr,InputArguments) << "AsymptoticCalculator::Initialize - ModelConfig has more than one POI defined \n\t"
                                           << "The asymptotic calculator works for only one POI - consider as POI only the first parameter"
                                           << std::endl;
    }
@@ -165,7 +165,7 @@ bool AsymptoticCalculator::Initialize() const {
    // This will set the poi value to the null snapshot value in the ModelConfig
    const RooArgSet * nullSnapshot = GetNullModel()->GetSnapshot();
    if(nullSnapshot == NULL || nullSnapshot->getSize() == 0) {
-      oocoutE((TObject*)0,InputArguments) << "AsymptoticCalculator::Initialize - Null model needs a snapshot. Set using modelconfig->SetSnapshot(poi)." << endl;
+      oocoutE(nullptr,InputArguments) << "AsymptoticCalculator::Initialize - Null model needs a snapshot. Set using modelconfig->SetSnapshot(poi)." << endl;
       return false;
    }
 
@@ -188,14 +188,14 @@ bool AsymptoticCalculator::Initialize() const {
 
    // evaluate the unconditional nll for the full model on the  observed data
    if (verbose >= 0)
-      oocoutP((TObject*)0,Eval) << "AsymptoticCalculator::Initialize - Find  best unconditional NLL on observed data" << endl;
+      oocoutP(nullptr,Eval) << "AsymptoticCalculator::Initialize - Find  best unconditional NLL on observed data" << endl;
    fNLLObs = EvaluateNLL( *nullPdf, data, GetNullModel()->GetConditionalObservables(),GetNullModel()->GetGlobalObservables());
    // fill also snapshot of best poi
    poi->snapshot(fBestFitPoi);
    RooRealVar * muBest = dynamic_cast<RooRealVar*>(fBestFitPoi.first());
    assert(muBest);
    if (verbose >= 0)
-      oocoutP((TObject*)0,Eval) << "Best fitted POI value = " << muBest->getVal() << " +/- " << muBest->getError() << std::endl;
+      oocoutP(nullptr,Eval) << "Best fitted POI value = " << muBest->getVal() << " +/- " << muBest->getError() << std::endl;
    // keep snapshot of all best fit parameters
    allParams->snapshot(fBestFitParams);
    delete allParams;
@@ -203,13 +203,13 @@ bool AsymptoticCalculator::Initialize() const {
    // compute Asimov data set for the background (alt poi ) value
    const RooArgSet * altSnapshot = GetAlternateModel()->GetSnapshot();
    if(altSnapshot == NULL || altSnapshot->getSize() == 0) {
-      oocoutE((TObject*)0,InputArguments) << "Alt (Background)  model needs a snapshot. Set using modelconfig->SetSnapshot(poi)." << endl;
+      oocoutE(nullptr,InputArguments) << "Alt (Background)  model needs a snapshot. Set using modelconfig->SetSnapshot(poi)." << endl;
       return false;
    }
 
    RooArgSet poiAlt(*altSnapshot);  // this is the poi snapshot of B (i.e. for mu=0)
 
-   oocoutP((TObject*)0,Eval) << "AsymptoticCalculator: Building Asimov data Set" << endl;
+   oocoutP(nullptr,Eval) << "AsymptoticCalculator: Building Asimov data Set" << endl;
 
    // check that in case of binned models the n number of bins of the observables are consistent
    // with the number of bins  in the observed data
@@ -222,7 +222,7 @@ bool AsymptoticCalculator::Initialize() const {
       if (data.IsA() == RooDataHist::Class() ) {
          if (data.numEntries() != xobs->getBins() ) {
             prevBins = xobs->getBins();
-            oocoutW((TObject*)0,InputArguments) << "AsymptoticCalculator: number of bins in " << xobs->GetName() << " are different than data bins "
+            oocoutW(nullptr,InputArguments) << "AsymptoticCalculator: number of bins in " << xobs->GetName() << " are different than data bins "
                                                 << " set the same data bins " << data.numEntries() << " in range "
                                                 << " [ " << xobs->getMin() << " , " << xobs->getMax() << " ]" << std::endl;
             xobs->setBins(data.numEntries());
@@ -232,7 +232,7 @@ bool AsymptoticCalculator::Initialize() const {
 
    if (!fNominalAsimov) {
       if (verbose >= 0)
-         oocoutI((TObject*)0,InputArguments) << "AsymptoticCalculator: Asimov data will be generated using fitted nuisance parameter values" << endl;
+         oocoutI(nullptr,InputArguments) << "AsymptoticCalculator: Asimov data will be generated using fitted nuisance parameter values" << endl;
       RooArgSet * tmp = (RooArgSet*) poiAlt.snapshot();
       fAsimovData = MakeAsimovData( data, *GetNullModel(), poiAlt, fAsimovGlobObs,tmp);
    }
@@ -240,13 +240,13 @@ bool AsymptoticCalculator::Initialize() const {
    else {
       // assume use current value of nuisance as nominal ones
       if (verbose >= 0)
-         oocoutI((TObject*)0,InputArguments) << "AsymptoticCalculator: Asimovdata set will be generated using nominal (current) nuisance parameter values" << endl;
+         oocoutI(nullptr,InputArguments) << "AsymptoticCalculator: Asimovdata set will be generated using nominal (current) nuisance parameter values" << endl;
       nominalParams.assign(poiAlt); // set poi to alt value but keep nuisance at the nominal one
       fAsimovData = MakeAsimovData( *GetNullModel(), nominalParams, fAsimovGlobObs);
    }
 
    if (!fAsimovData) {
-      oocoutE((TObject*)0,InputArguments) << "AsymptoticCalculator: Error : Asimov data set could not be generated " << endl;
+      oocoutE(nullptr,InputArguments) << "AsymptoticCalculator: Error : Asimov data set could not be generated " << endl;
       return false;
    }
 
@@ -268,7 +268,7 @@ bool AsymptoticCalculator::Initialize() const {
    RooRealVar * muAlt = (RooRealVar*) poiAlt.first();
    assert(muAlt);
    if (verbose>=0)
-      oocoutP((TObject*)0,Eval) << "AsymptoticCalculator::Initialize Find  best conditional NLL on ASIMOV data set for given alt POI ( " <<
+      oocoutP(nullptr,Eval) << "AsymptoticCalculator::Initialize Find  best conditional NLL on ASIMOV data set for given alt POI ( " <<
          muAlt->GetName() << " ) = " << muAlt->getVal() << std::endl;
 
    fNLLAsimov =  EvaluateNLL( *nullPdf, *fAsimovData, GetNullModel()->GetConditionalObservables(), GetNullModel()->GetGlobalObservables(), &poiAlt );
@@ -427,7 +427,7 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
 
        }
        else {
-          oocoutE((TObject*)0,Fitting) << "FIT FAILED !- return a NaN NLL " << std::endl;
+          oocoutE(nullptr,Fitting) << "FIT FAILED !- return a NaN NLL " << std::endl;
           val =  TMath::QuietNaN();
        }
 
@@ -479,13 +479,13 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    // re-initialized the calculator in case it is needed (pdf or data modified)
    if (!fIsInitialized) {
       if (!Initialize() ) {
-         oocoutE((TObject*)0,InputArguments) << "AsymptoticCalculator::GetHypoTest - Error initializing Asymptotic calculator - return NULL result " << endl;
+         oocoutE(nullptr,InputArguments) << "AsymptoticCalculator::GetHypoTest - Error initializing Asymptotic calculator - return NULL result " << endl;
          return 0;
       }
    }
 
    if (!fAsimovData) {
-       oocoutE((TObject*)0,InputArguments) << "AsymptoticCalculator::GetHypoTest - Asimov data set has not been generated - return NULL result " << endl;
+       oocoutE(nullptr,InputArguments) << "AsymptoticCalculator::GetHypoTest - Asimov data set has not been generated - return NULL result " << endl;
        return 0;
    }
 
@@ -505,7 +505,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    RooArgSet poiTest(*nullSnapshot);
 
    if (poiTest.getSize() > 1)  {
-      oocoutW((TObject*)0,InputArguments) << "AsymptoticCalculator::GetHypoTest: snapshot has more than one POI - assume as POI first parameter " << std::endl;
+      oocoutW(nullptr,InputArguments) << "AsymptoticCalculator::GetHypoTest: snapshot has more than one POI - assume as POI first parameter " << std::endl;
    }
 
    RooArgSet * allParams = nullPdf->getParameters(*GetData() );
@@ -523,8 +523,8 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
 
    if (verbose> 0) {
       std::cout << std::endl;
-      oocoutI((TObject*)0,Eval) << "AsymptoticCalculator::GetHypoTest: - perform  an hypothesis test for  POI ( " << muTest->GetName() << " ) = " << muTest->getVal() << std::endl;
-      oocoutP((TObject*)0,Eval) << "AsymptoticCalculator::GetHypoTest -  Find  best conditional NLL on OBSERVED data set ..... " << std::endl;
+      oocoutI(nullptr,Eval) << "AsymptoticCalculator::GetHypoTest: - perform  an hypothesis test for  POI ( " << muTest->GetName() << " ) = " << muTest->getVal() << std::endl;
+      oocoutP(nullptr,Eval) << "AsymptoticCalculator::GetHypoTest -  Find  best conditional NLL on OBSERVED data set ..... " << std::endl;
    }
 
    // evaluate the conditional NLL on the observed data for the snapshot value
@@ -535,7 +535,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
 
 
    if (verbose > 0)
-      oocoutP((TObject*)0,Eval) << "\t OBSERVED DATA :  qmu   = " << qmu << " condNLL = " << condNLL << " uncond " << fNLLObs << std::endl;
+      oocoutP(nullptr,Eval) << "\t OBSERVED DATA :  qmu   = " << qmu << " condNLL = " << condNLL << " uncond " << fNLLObs << std::endl;
 
 
    // this tolerance is used to avoid having negative qmu due to numerical errors
@@ -543,17 +543,17 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    if (qmu < -tol || TMath::IsNaN(fNLLObs) ) {
 
       if (qmu < 0)
-         oocoutW((TObject*)0,Minimization) << "AsymptoticCalculator:  Found a negative value of the qmu - retry to do the unconditional fit "
+         oocoutW(nullptr,Minimization) << "AsymptoticCalculator:  Found a negative value of the qmu - retry to do the unconditional fit "
                                            << std::endl;
       else
-         oocoutW((TObject*)0,Minimization) << "AsymptoticCalculator:  unconditional fit failed before - retry to do it now "
+         oocoutW(nullptr,Minimization) << "AsymptoticCalculator:  unconditional fit failed before - retry to do it now "
                                            << std::endl;
 
 
       double nll = EvaluateNLL( *nullPdf, const_cast<RooAbsData&>(*GetData()),GetNullModel()->GetConditionalObservables(),GetNullModel()->GetGlobalObservables());
 
       if (nll < fNLLObs || (TMath::IsNaN(fNLLObs) && !TMath::IsNaN(nll) ) ) {
-         oocoutW((TObject*)0,Minimization) << "AsymptoticCalculator:  Found a better unconditional minimum "
+         oocoutW(nullptr,Minimization) << "AsymptoticCalculator:  Found a better unconditional minimum "
                                            << " old NLL = " << fNLLObs << " old muHat " << muHat->getVal() << std::endl;
 
          // update values
@@ -566,26 +566,26 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
          muHat =  dynamic_cast<RooRealVar*> (  fBestFitPoi.first() );
          assert(muHat);
 
-        oocoutW((TObject*)0,Minimization) << "AsymptoticCalculator:  New minimum  found for                       "
+        oocoutW(nullptr,Minimization) << "AsymptoticCalculator:  New minimum  found for                       "
                                           << "    NLL = " << fNLLObs << "    muHat  " << muHat->getVal() << std::endl;
 
 
         qmu = 2.*(condNLL - fNLLObs);
 
         if (verbose > 0)
-           oocoutP((TObject*)0,Eval) << "After unconditional refit,  new qmu value is " << qmu << std::endl;
+           oocoutP(nullptr,Eval) << "After unconditional refit,  new qmu value is " << qmu << std::endl;
 
       }
    }
 
    if (qmu < -tol ) {
-      oocoutE((TObject*)0,Minimization) << "AsymptoticCalculator:  qmu is still < 0  for mu = "
+      oocoutE(nullptr,Minimization) << "AsymptoticCalculator:  qmu is still < 0  for mu = "
                                         <<  muTest->getVal() << " return a dummy result "
                                         << std::endl;
       return new HypoTestResult();
    }
    if (TMath::IsNaN(qmu) ) {
-      oocoutE((TObject*)0,Minimization) << "AsymptoticCalculator:  failure in fitting for qmu or qmuA "
+      oocoutE(nullptr,Minimization) << "AsymptoticCalculator:  failure in fitting for qmu or qmuA "
                                         <<  muTest->getVal() << " return a dummy result "
                                         << std::endl;
       return new HypoTestResult();
@@ -610,7 +610,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    }
 
 
-   if (verbose > 0) oocoutP((TObject*)0,Eval) << "AsymptoticCalculator::GetHypoTest -- Find  best conditional NLL on ASIMOV data set .... " << std::endl;
+   if (verbose > 0) oocoutP(nullptr,Eval) << "AsymptoticCalculator::GetHypoTest -- Find  best conditional NLL on ASIMOV data set .... " << std::endl;
 
    double condNLL_A = EvaluateNLL( *nullPdf, *fAsimovData, GetNullModel()->GetConditionalObservables(),  GetNullModel()->GetGlobalObservables(), &poiTest);
 
@@ -618,45 +618,45 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    double qmu_A = 2.*(condNLL_A - fNLLAsimov  );
 
    if (verbose > 0)
-      oocoutP((TObject*)0,Eval) << "\t ASIMOV data qmu_A = " << qmu_A << " condNLL = " << condNLL_A << " uncond " << fNLLAsimov << std::endl;
+      oocoutP(nullptr,Eval) << "\t ASIMOV data qmu_A = " << qmu_A << " condNLL = " << condNLL_A << " uncond " << fNLLAsimov << std::endl;
 
    if (qmu_A < -tol || TMath::IsNaN(fNLLAsimov) ) {
 
       if (qmu_A < 0)
-         oocoutW((TObject*)0,Minimization) << "AsymptoticCalculator:  Found a negative value of the qmu Asimov- retry to do the unconditional fit "
+         oocoutW(nullptr,Minimization) << "AsymptoticCalculator:  Found a negative value of the qmu Asimov- retry to do the unconditional fit "
                                            << std::endl;
       else
-         oocoutW((TObject*)0,Minimization) << "AsymptoticCalculator:  Fit failed for  unconditional the qmu Asimov- retry  unconditional fit "
+         oocoutW(nullptr,Minimization) << "AsymptoticCalculator:  Fit failed for  unconditional the qmu Asimov- retry  unconditional fit "
                                            << std::endl;
 
 
       double nll = EvaluateNLL( *nullPdf, *fAsimovData,  GetNullModel()->GetConditionalObservables(), GetNullModel()->GetGlobalObservables() );
 
       if (nll < fNLLAsimov || (TMath::IsNaN(fNLLAsimov) && !TMath::IsNaN(nll) )) {
-         oocoutW((TObject*)0,Minimization) << "AsymptoticCalculator:  Found a better unconditional minimum for Asimov data set"
+         oocoutW(nullptr,Minimization) << "AsymptoticCalculator:  Found a better unconditional minimum for Asimov data set"
                                            << " old NLL = " << fNLLAsimov << std::endl;
 
          // update values
          fNLLAsimov = nll;
 
-         oocoutW((TObject*)0,Minimization) << "AsymptoticCalculator:  New minimum  found for                       "
+         oocoutW(nullptr,Minimization) << "AsymptoticCalculator:  New minimum  found for                       "
                                            << "    NLL = " << fNLLAsimov << std::endl;
          qmu_A = 2.*(condNLL_A - fNLLAsimov);
 
         if (verbose > 0)
-           oocoutP((TObject*)0,Eval) << "After unconditional Asimov refit,  new qmu_A value is " << qmu_A << std::endl;
+           oocoutP(nullptr,Eval) << "After unconditional Asimov refit,  new qmu_A value is " << qmu_A << std::endl;
 
       }
    }
 
    if (qmu_A < - tol) {
-      oocoutE((TObject*)0,Minimization) << "AsymptoticCalculator:  qmu_A is still < 0  for mu = "
+      oocoutE(nullptr,Minimization) << "AsymptoticCalculator:  qmu_A is still < 0  for mu = "
                                         <<  muTest->getVal() << " return a dummy result "
                                         << std::endl;
       return new HypoTestResult();
    }
    if (TMath::IsNaN(qmu) ) {
-      oocoutE((TObject*)0,Minimization) << "AsymptoticCalculator:  failure in fitting for qmu or qmuA "
+      oocoutE(nullptr,Minimization) << "AsymptoticCalculator:  failure in fitting for qmu or qmuA "
                                         <<  muTest->getVal() << " return a dummy result "
                                         << std::endl;
       return new HypoTestResult();
@@ -687,10 +687,10 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
          assert(muAlt != 0 );
          if (muTest->getMin() == muAlt->getVal()   ) {
             fUseQTilde = 1;
-            oocoutI((TObject*)0,InputArguments) << "Minimum of POI is " << muTest->getMin() << " corresponds to alt  snapshot   - using qtilde asymptotic formulae  " << std::endl;
+            oocoutI(nullptr,InputArguments) << "Minimum of POI is " << muTest->getMin() << " corresponds to alt  snapshot   - using qtilde asymptotic formulae  " << std::endl;
          } else {
             fUseQTilde = 0;
-            oocoutI((TObject*)0,InputArguments) << "Minimum of POI is " << muTest->getMin() << " is different to alt snapshot " << muAlt->getVal()
+            oocoutI(nullptr,InputArguments) << "Minimum of POI is " << muTest->getMin() << " is different to alt snapshot " << muAlt->getVal()
                                                 << " - using standard q asymptotic formulae  " << std::endl;
          }
       }
@@ -701,14 +701,14 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    //check for one side condition (remember this is valid only for one poi)
    if (fOneSided ) {
       if ( muHat->getVal() > muTest->getVal() ) {
-         oocoutI((TObject*)0,Eval) << "Using one-sided qmu - setting qmu to zero  muHat = " << muHat->getVal()
+         oocoutI(nullptr,Eval) << "Using one-sided qmu - setting qmu to zero  muHat = " << muHat->getVal()
                                    << " muTest = " << muTest->getVal() << std::endl;
          qmu = 0;
       }
    }
    if (fOneSidedDiscovery ) {
       if ( muHat->getVal() < muTest->getVal() ) {
-         oocoutI((TObject*)0,Eval) << "Using one-sided discovery qmu - setting qmu to zero  muHat = " << muHat->getVal()
+         oocoutI(nullptr,Eval) << "Using one-sided discovery qmu - setting qmu to zero  muHat = " << muHat->getVal()
                                    << " muTest = " << muTest->getVal() << std::endl;
          qmu = 0;
       }
@@ -736,16 +736,16 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
       // for one-sided PL (q_mu : equations 56,57)
       if (verbose>2) {
          if (fOneSided)
-            oocoutI((TObject*)0,Eval) << "Using one-sided limit asymptotic formula (qmu)" << endl;
+            oocoutI(nullptr,Eval) << "Using one-sided limit asymptotic formula (qmu)" << endl;
          else
-            oocoutI((TObject*)0,Eval) << "Using one-sided discovery asymptotic formula (q0)" << endl;
+            oocoutI(nullptr,Eval) << "Using one-sided discovery asymptotic formula (q0)" << endl;
       }
       pnull = ROOT::Math::normal_cdf_c( sqrtqmu, 1.);
       palt = ROOT::Math::normal_cdf( sqrtqmu_A - sqrtqmu, 1.);
    }
    else  {
       // for 2-sided PL (t_mu : equations 35,36 in asymptotic paper)
-      if (verbose > 2) oocoutI((TObject*)0,Eval) << "Using two-sided asymptotic  formula (tmu)" << endl;
+      if (verbose > 2) oocoutI(nullptr,Eval) << "Using two-sided asymptotic  formula (tmu)" << endl;
       pnull = 2.*ROOT::Math::normal_cdf_c( sqrtqmu, 1.);
       palt = ROOT::Math::normal_cdf_c( sqrtqmu + sqrtqmu_A, 1.) +
          ROOT::Math::normal_cdf_c( sqrtqmu - sqrtqmu_A, 1.);
@@ -756,7 +756,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
       if (fOneSided) {
          // for bounded one-sided (q_mu_tilde: equations 64,65)
          if ( qmu > qmu_A && (qmu_A > 0 || qmu > tol) ) { // to avoid case 0/0
-            if (verbose > 2) oocoutI((TObject*)0,Eval) << "Using qmu_tilde (qmu is greater than qmu_A)" << endl;
+            if (verbose > 2) oocoutI(nullptr,Eval) << "Using qmu_tilde (qmu is greater than qmu_A)" << endl;
             pnull = ROOT::Math::normal_cdf_c( (qmu + qmu_A)/(2 * sqrtqmu_A), 1.);
             palt = ROOT::Math::normal_cdf_c( (qmu - qmu_A)/(2 * sqrtqmu_A), 1.);
          }
@@ -765,7 +765,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
          // for 2 sided bounded test statistic  (N.B there is no one sided discovery qtilde)
          // t_mu_tilde: equations 43,44 in asymptotic paper
          if ( qmu >  qmu_A  && (qmu_A > 0 || qmu > tol)  ) {
-            if (verbose > 2) oocoutI((TObject*)0,Eval) << "Using tmu_tilde (qmu is greater than qmu_A)" << endl;
+            if (verbose > 2) oocoutI(nullptr,Eval) << "Using tmu_tilde (qmu is greater than qmu_A)" << endl;
             pnull = ROOT::Math::normal_cdf_c(sqrtqmu,1.) +
                     ROOT::Math::normal_cdf_c( (qmu + qmu_A)/(2 * sqrtqmu_A), 1.);
             palt = ROOT::Math::normal_cdf_c( sqrtqmu_A + sqrtqmu, 1.) +
@@ -782,7 +782,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
 
    if (verbose > 0)
       //std::cout
-      oocoutP((TObject*)0,Eval)
+      oocoutP(nullptr,Eval)
          << "poi = " << muTest->getVal() << " qmu = " << qmu << " qmu_A = " << qmu_A
          << " sigma = " << muTest->getVal()/sqrtqmu_A
          << "  CLsplusb = " << pnull << " CLb = " << palt << " CLs = " <<  res->CLs() << std::endl;
@@ -829,7 +829,7 @@ double AsymptoticCalculator::GetExpectedPValues(double pnull, double palt, doubl
    brf.SetFunction( wf, 0, 20);
    bool ret = brf.Solve();
    if (!ret) {
-      oocoutE((TObject*)0,Eval)  << "Error finding expected p-values - return -1" << std::endl;
+      oocoutE(nullptr,Eval)  << "Error finding expected p-values - return -1" << std::endl;
       return -1;
    }
    double sqrttmu_A = brf.Root();
@@ -840,7 +840,7 @@ double AsymptoticCalculator::GetExpectedPValues(double pnull, double palt, doubl
    brf.SetFunction(wf2,0,20);
    ret = brf.Solve();
    if (!ret) {
-      oocoutE((TObject*)0,Eval)  << "Error finding expected p-values - return -1" << std::endl;
+      oocoutE(nullptr,Eval)  << "Error finding expected p-values - return -1" << std::endl;
       return -1;
    }
    return  2*ROOT::Math::normal_cdf_c( brf.Root(),1.);
@@ -888,12 +888,12 @@ void AsymptoticCalculator::FillBins(const RooAbsPdf & pdf, const RooArgList &obs
          if (fval*expectedEvents <= 0)
          {
             if (fval*expectedEvents < 0) {
-               oocoutW(static_cast<TObject*>(nullptr),InputArguments)
+               oocoutW(nullptr,InputArguments)
                    << "AsymptoticCalculator::" << __func__
                    << "(): Detected a bin with negative expected events! Please check your inputs." << endl;
             }
             else {
-               oocoutW(static_cast<TObject*>(nullptr),InputArguments)
+               oocoutW(nullptr,InputArguments)
                    << "AsymptoticCalculator::" << __func__
                    << "(): Detected a bin with zero expected events- skip it" << endl;
             }
@@ -944,7 +944,7 @@ bool AsymptoticCalculator::SetObsToExpected(RooProdPdf &prod, const RooArgSet &o
             if (subprod)
                ret &= SetObsToExpected(*subprod, obs);
             else {
-               oocoutE(static_cast<TObject *>(nullptr), InputArguments)
+               oocoutE(nullptr, InputArguments)
                   << "Illegal term in counting model: "
                    << "the PDF " << a->GetName()
                    << " depends on the observables, but is not a Poisson, Gaussian or Product"
@@ -974,34 +974,34 @@ bool AsymptoticCalculator::SetObsToExpected(RooAbsPdf &pdf, const RooArgSet &obs
    for (RooAbsArg *a =  iter.next(); a != 0; a = iter.next()) {
       if (obs.contains(*a)) {
          if (myobs != 0) {
-            oocoutF((TObject*)0,Generation) << "AsymptoticCalculator::SetObsExpected( " << pdfName << " ) : Has two observables ?? " << endl;
+            oocoutF(nullptr,Generation) << "AsymptoticCalculator::SetObsExpected( " << pdfName << " ) : Has two observables ?? " << endl;
             return false;
          }
          myobs = dynamic_cast<RooRealVar *>(a);
          if (myobs == 0) {
-            oocoutF((TObject*)0,Generation) << "AsymptoticCalculator::SetObsExpected( " << pdfName << " ) : Observable is not a RooRealVar??" << endl;
+            oocoutF(nullptr,Generation) << "AsymptoticCalculator::SetObsExpected( " << pdfName << " ) : Observable is not a RooRealVar??" << endl;
             return false;
          }
       } else {
          if (!a->isConstant() ) {
             if (myexp != 0) {
-               oocoutE((TObject*)0,Generation) << "AsymptoticCalculator::SetObsExpected( " << pdfName << " ) : Has two non-const arguments  " << endl;
+               oocoutE(nullptr,Generation) << "AsymptoticCalculator::SetObsExpected( " << pdfName << " ) : Has two non-const arguments  " << endl;
                return false;
             }
             myexp = dynamic_cast<RooAbsReal *>(a);
             if (myexp == 0) {
-               oocoutF((TObject*)0,Generation) << "AsymptoticCalculator::SetObsExpected( " << pdfName << " ) : Expected is not a RooAbsReal??" << endl;
+               oocoutF(nullptr,Generation) << "AsymptoticCalculator::SetObsExpected( " << pdfName << " ) : Expected is not a RooAbsReal??" << endl;
                return false;
             }
          }
       }
    }
    if (myobs == 0)  {
-      oocoutF((TObject*)0,Generation) << "AsymptoticCalculator::SetObsExpected( " << pdfName << " ) : No observable?" << endl;
+      oocoutF(nullptr,Generation) << "AsymptoticCalculator::SetObsExpected( " << pdfName << " ) : No observable?" << endl;
       return false;
    }
    if (myexp == 0) {
-      oocoutF((TObject*)0,Generation) << "AsymptoticCalculator::SetObsExpected( " << pdfName << " ) : No observable?" << endl;
+      oocoutF(nullptr,Generation) << "AsymptoticCalculator::SetObsExpected( " << pdfName << " ) : No observable?" << endl;
       return false;
    }
 
@@ -1038,7 +1038,7 @@ RooAbsData * AsymptoticCalculator::GenerateCountingAsimovData(RooAbsPdf & pdf, c
     } else if ((gaus = dynamic_cast<RooGaussian *>(&pdf)) != 0) {
         r = SetObsToExpected(*gaus, observables);
     } else {
-       oocoutE((TObject*)0,InputArguments) << "A counting model pdf must be either a RooProdPdf or a RooPoisson or a RooGaussian" << endl;
+       oocoutE(nullptr,InputArguments) << "A counting model pdf must be either a RooProdPdf or a RooPoisson or a RooGaussian" << endl;
     }
     if (!r) return 0;
     int icat = 0;
@@ -1157,7 +1157,7 @@ RooAbsData * AsymptoticCalculator::GenerateAsimovData(const RooAbsPdf & pdf, con
   RooCategory& channelCat = const_cast<RooCategory&>(dynamic_cast<const RooCategory&>(simPdf->indexCat()));
   int nrIndices = channelCat.numTypes();
   if( nrIndices == 0 ) {
-    oocoutW((TObject*)0,Generation) << "Simultaneous pdf does not contain any categories." << endl;
+    oocoutW(nullptr,Generation) << "Simultaneous pdf does not contain any categories." << endl;
   }
   for (int i=0;i<nrIndices;i++){
     channelCat.setIndex(i);
@@ -1175,12 +1175,12 @@ RooAbsData * AsymptoticCalculator::GenerateAsimovData(const RooAbsPdf & pdf, con
     //((RooRealVar*)obstmp->first())->Print();
     //cout << "expected events " << pdftmp->expectedEvents(*obstmp) << endl;
     if (!dataSinglePdf) {
-       oocoutE((TObject*)0,Generation) << "Error generating an Asimov data set for pdf " << pdftmp->GetName() << endl;
+       oocoutE(nullptr,Generation) << "Error generating an Asimov data set for pdf " << pdftmp->GetName() << endl;
        return 0;
     }
 
     if (asimovDataMap.count(string(channelCat.getCurrentLabel())) != 0) {
-      oocoutE((TObject*)0,Generation) << "AsymptoticCalculator::GenerateAsimovData(): The PDF for " << channelCat.getCurrentLabel()
+      oocoutE(nullptr,Generation) << "AsymptoticCalculator::GenerateAsimovData(): The PDF for " << channelCat.getCurrentLabel()
           << " was already defined. It will be overridden. The faulty category definitions follow:" << endl;
       channelCat.Print("V");
     }
@@ -1403,7 +1403,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
       RooArgSet nuis;
       if (model.GetNuisanceParameters()) nuis.add(*model.GetNuisanceParameters());
       if (nuis.getSize() == 0) {
-            oocoutW((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData: model does not have nuisance parameters but has global observables"
+            oocoutW(nullptr,Generation) << "AsymptoticCalculator::MakeAsimovData: model does not have nuisance parameters but has global observables"
                                             << " set global observables to model values " << endl;
             asimovGlobObs.assign(gobs);
             return asimov;
@@ -1412,7 +1412,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
       // part 1: create the nuisance pdf
       std::unique_ptr<RooAbsPdf> nuispdf(RooStats::MakeNuisancePdf(model,"TempNuisPdf") );
       if (nuispdf.get() == 0) {
-         oocoutF((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData: model has nuisance parameters and global obs but no nuisance pdf "
+         oocoutF(nullptr,Generation) << "AsymptoticCalculator::MakeAsimovData: model has nuisance parameters and global obs but no nuisance pdf "
                                          << std::endl;
       }
       // unfold the nuisance pdf if it is a prod pdf
@@ -1436,12 +1436,12 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
          std::unique_ptr<RooArgSet> cpars(cterm->getParameters(&gobs));
          std::unique_ptr<RooArgSet> cgobs(cterm->getObservables(&gobs));
          if (cgobs->getSize() > 1) {
-            oocoutE(static_cast<TObject*>(nullptr),Generation) << "AsymptoticCalculator::MakeAsimovData: constraint term  " <<  cterm->GetName()
+            oocoutE(nullptr,Generation) << "AsymptoticCalculator::MakeAsimovData: constraint term  " <<  cterm->GetName()
                                             << " has multiple global observables -cannot generate - skip it" << std::endl;
             continue;
          }
          else if (cgobs->getSize() == 0) {
-            oocoutW(static_cast<TObject *>(nullptr), Generation)
+            oocoutW(nullptr, Generation)
                << "AsymptoticCalculator::MakeAsimovData: constraint term  " << cterm->GetName()
                                             << " has no global observables - skip it" << std::endl;
             continue;
@@ -1452,7 +1452,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
          // remove the constant parameters in cpars
          RooStats::RemoveConstantParameters(cpars.get());
          if (cpars->getSize() != 1) {
-            oocoutE(static_cast<TObject *>(nullptr), Generation)
+            oocoutE(nullptr, Generation)
                << "AsymptoticCalculator::MakeAsimovData:constraint term "
                                             << cterm->GetName() << " has multiple floating params - cannot generate - skip it " << std::endl;
             continue;
@@ -1467,7 +1467,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
               cClass != RooGamma::Class() && cClass != RooLognormal::Class() &&
               cClass != RooBifurGauss::Class()  ) {
             TString className =  (cClass) ?  cClass->GetName() : "undefined";
-            oocoutW(static_cast<TObject *>(nullptr), Generation)
+            oocoutW(nullptr, Generation)
                << "AsymptoticCalculator::MakeAsimovData:constraint term "
                                             << cterm->GetName() << " of type " << className
                                             << " is a non-supported type - result might be not correct " << std::endl;
@@ -1487,7 +1487,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
             // in this case n+1 is the server and we don;t have a direct dependency, but we want to set n to the b value
             // so in case of the Gamma ignore this test
             if ( cClass != RooGamma::Class() ) {
-               oocoutE(static_cast<TObject *>(nullptr), Generation)
+               oocoutE(nullptr, Generation)
                   << "AsymptoticCalculator::MakeAsimovData:constraint term "
                                                << cterm->GetName() << " has no direct dependence on global observable- cannot generate it " << std::endl;
                continue;
@@ -1508,7 +1508,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
                }
             }
             if (thetaGamma == 0) {
-               oocoutI(static_cast<TObject *>(nullptr), Generation)
+               oocoutI(nullptr, Generation)
                   << "AsymptoticCalculator::MakeAsimovData:constraint term "
                                                << cterm->GetName() << " is a Gamma distribution and no server named theta is found. Assume that the Gamma scale is  1 " << std::endl;
             }
@@ -1526,7 +1526,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
 
                // found server depending on nuisance
                if (foundServer) {
-                  oocoutE(static_cast<TObject *>(nullptr),Generation) << "AsymptoticCalculator::MakeAsimovData:constraint term "
+                  oocoutE(nullptr,Generation) << "AsymptoticCalculator::MakeAsimovData:constraint term "
                                             << cterm->GetName() << " constraint term has more server depending on nuisance- cannot generate it " <<
                      std::endl;
                   foundServer = false;
@@ -1545,7 +1545,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
          }
 
          if (!foundServer) {
-            oocoutE(static_cast<TObject *>(nullptr),Generation) << "AsymptoticCalculator::MakeAsimovData - can't find nuisance for constraint term - global observables will not be set to Asimov value " << cterm->GetName() << std::endl;
+            oocoutE(nullptr,Generation) << "AsymptoticCalculator::MakeAsimovData - can't find nuisance for constraint term - global observables will not be set to Asimov value " << cterm->GetName() << std::endl;
             std::cerr << "Parameters: " << std::endl;
             cpars->Print("V");
             std::cerr << "Observables: " << std::endl;

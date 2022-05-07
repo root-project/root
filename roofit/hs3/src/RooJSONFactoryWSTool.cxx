@@ -215,7 +215,7 @@ namespace {
 
 void logInputArgumentsError(std::stringstream &&ss)
 {
-   oocoutE(static_cast<RooAbsArg *>(nullptr), InputArguments) << ss.str();
+   oocoutE(nullptr, InputArguments) << ss.str();
 }
 
 } // namespace
