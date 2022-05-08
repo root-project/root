@@ -267,7 +267,7 @@ void RooMinuit::setOffsetting(bool flag)
 
 RooFitResult* RooMinuit::fit(const char* options)
 {
-  if (_floatParamList->getSize()==0) {
+  if (_floatParamList->empty()) {
     return 0 ;
   }
 
@@ -303,7 +303,7 @@ RooFitResult* RooMinuit::fit(const char* options)
 
 Int_t RooMinuit::migrad()
 {
-  if (_floatParamList->getSize()==0) {
+  if (_floatParamList->empty()) {
     return -1 ;
   }
 
@@ -337,7 +337,7 @@ Int_t RooMinuit::migrad()
 
 Int_t RooMinuit::hesse()
 {
-  if (_floatParamList->getSize()==0) {
+  if (_floatParamList->empty()) {
     return -1 ;
   }
 
@@ -370,7 +370,7 @@ Int_t RooMinuit::hesse()
 
 Int_t RooMinuit::minos()
 {
-  if (_floatParamList->getSize()==0) {
+  if (_floatParamList->empty()) {
     return -1 ;
   }
 
@@ -410,7 +410,7 @@ Int_t RooMinuit::minos()
 
 Int_t RooMinuit::minos(const RooArgSet& minosParamList)
 {
-  if (_floatParamList->getSize()==0) {
+  if (_floatParamList->empty()) {
     return -1 ;
   }
 
@@ -466,7 +466,7 @@ Int_t RooMinuit::minos(const RooArgSet& minosParamList)
 
 Int_t RooMinuit::seek()
 {
-  if (_floatParamList->getSize()==0) {
+  if (_floatParamList->empty()) {
     return -1 ;
   }
 
@@ -499,7 +499,7 @@ Int_t RooMinuit::seek()
 
 Int_t RooMinuit::simplex()
 {
-  if (_floatParamList->getSize()==0) {
+  if (_floatParamList->empty()) {
     return -1 ;
   }
 
@@ -533,7 +533,7 @@ Int_t RooMinuit::simplex()
 
 Int_t RooMinuit::improve()
 {
-  if (_floatParamList->getSize()==0) {
+  if (_floatParamList->empty()) {
     return -1 ;
   }
 
@@ -875,7 +875,7 @@ RooFitResult* RooMinuit::save(const char* userName, const char* userTitle)
   name = userName ? userName : Form("%s", _func->GetName()) ;
   title = userTitle ? userTitle : Form("%s", _func->GetTitle()) ;
 
-  if (_floatParamList->getSize()==0) {
+  if (_floatParamList->empty()) {
     RooFitResult* fitRes = new RooFitResult(name,title) ;
     fitRes->setConstParList(*_constParamList) ;
     fitRes->setInitParList(RooArgList()) ;

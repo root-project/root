@@ -424,7 +424,7 @@ void RooFFTConvPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const
   //cout << "RooFFTConvPdf::fillCacheObject() otherObs = " << otherObs << endl ;
 
   // Handle trivial scenario -- no other observables
-  if (otherObs.getSize()==0) {
+  if (otherObs.empty()) {
     fillCacheSlice((FFTCacheElem&)cache,RooArgSet()) ;
     return ;
   }

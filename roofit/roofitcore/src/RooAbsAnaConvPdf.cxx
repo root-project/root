@@ -365,7 +365,7 @@ Int_t RooAbsAnaConvPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
                        RooArgSet& analVars, const RooArgSet* normSet2, const char* /*rangeName*/) const
 {
   // Handle trivial no-integration scenario
-  if (allVars.getSize()==0) return 0 ;
+  if (allVars.empty()) return 0 ;
 
   if (_forceNumInt) return 0 ;
 
@@ -425,16 +425,16 @@ Int_t RooAbsAnaConvPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
   }
   delete convIter ;
 
-  if (intCoefSet->getSize()==0) {
+  if (intCoefSet->empty()) {
     delete intCoefSet ; intCoefSet=0 ;
   }
-  if (intConvSet->getSize()==0) {
+  if (intConvSet->empty()) {
     delete intConvSet ; intConvSet=0 ;
   }
-  if (normCoefSet->getSize()==0) {
+  if (normCoefSet->empty()) {
     delete normCoefSet ; normCoefSet=0 ;
   }
-  if (normConvSet->getSize()==0) {
+  if (normConvSet->empty()) {
     delete normConvSet ; normConvSet=0 ;
   }
 

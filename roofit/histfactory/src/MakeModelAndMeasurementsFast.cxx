@@ -362,7 +362,7 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
 
   // If there are no parameters of interest,
   // we exit the function here
-  if( POIs->getSize()==0 ) {
+  if( POIs->empty() ) {
     cxcoutWHF << "WARNING: No POIs found in measurement: " << MeasurementName << std::endl;
     return;
   }

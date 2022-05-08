@@ -451,7 +451,7 @@ RooDataSet* ToyMCSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramP
 void ToyMCSampler::GenerateGlobalObservables(RooAbsPdf& pdf) const {
 
 
-   if(!fGlobalObservables  ||  fGlobalObservables->getSize()==0) {
+   if(!fGlobalObservables  ||  fGlobalObservables->empty()) {
       ooccoutE(nullptr,InputArguments) << "Global Observables not set." << endl;
       return;
    }

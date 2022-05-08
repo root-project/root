@@ -302,7 +302,7 @@ Int_t RooRealSumFunc::getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &ana
    // Advertise that all integrals can be handled internally.
 
    // Handle trivial no-integration scenario
-   if (allVars.getSize() == 0)
+   if (allVars.empty())
       return 0;
    if (_forceNumInt)
       return 0;

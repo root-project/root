@@ -347,7 +347,7 @@ Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
                     const RooArgSet* normSet2, const char* rangeName) const
 {
   // Handle trivial no-integration scenario
-  if (allVars.getSize()==0) return 0 ;
+  if (allVars.empty()) return 0 ;
   if (_forceNumInt) return 0 ;
 
   // Select subset of allVars that are actual dependents

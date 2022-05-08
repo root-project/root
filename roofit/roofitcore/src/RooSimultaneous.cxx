@@ -251,7 +251,7 @@ void RooSimultaneous::initialize(RooAbsCategoryLValue& inIndexCat, std::map<std:
 
       // Entry is a simultaneous p.d.f
 
-      if (repliCats.getSize()==0) {
+      if (repliCats.empty()) {
 
         // Case 1 -- No replication of components of RooSim component are required
 
@@ -989,7 +989,7 @@ RooAbsGenContext* RooSimultaneous::autoGenContext(const RooArgSet &vars, const R
   const char* idxCatName = _indexCat.arg().GetName() ;
 
   if (vars.find(idxCatName) && prototype==0
-      && (auxProto==0 || auxProto->getSize()==0)
+      && (auxProto==0 || auxProto->empty())
       && (autoBinned || (binnedTag && strlen(binnedTag)))) {
 
     // Return special generator config that can also do binned generation for selected states

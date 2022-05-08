@@ -166,12 +166,12 @@ void RooStats::HistFactory::RooBarlowBeestonLL::initializeBarlowCache() {
   RooArgSet* obsSet = _pdf->getObservables(*_data);
   FactorizeHistFactoryPdf(*obsSet, *_pdf, obsTerms, constraints);
 
-  if( obsTerms.getSize() == 0 ) {
+  if( obsTerms.empty() ) {
     std::cout << "Error: Found no observable terms with pdf: " << _pdf->GetName()
          << " using dataset: " << _data->GetName() << std::endl;
     return;
   }
-  if( constraints.getSize() == 0 ) {
+  if( constraints.empty() ) {
     std::cout << "Error: Found no constraint terms with pdf: " << _pdf->GetName()
          << " using dataset: " << _data->GetName() << std::endl;
     return;

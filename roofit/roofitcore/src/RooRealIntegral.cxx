@@ -475,7 +475,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
 
   // If nothing was integrated analytically, swap back LVbranches for LVservers for subsequent numeric integration
-  if (_anaList.getSize()==0) {
+  if (_anaList.empty()) {
     if (exclLVServers.getSize()>0) {
       //cout << "NUMINT phase analList is empty. exclLVServers = " << exclLVServers << endl ;
       intDepList.remove(exclLVBranches) ;
@@ -605,7 +605,7 @@ bool RooRealIntegral::servesExclusively(const RooAbsArg* server,const RooArgSet&
   // Determine if given server serves exclusively exactly one of the given nodes in exclLVBranches
 
   // Special case, no LV servers available
-  if (exclLVBranches.getSize()==0) return false ;
+  if (exclLVBranches.empty()) return false ;
 
   // If server has no clients and is not an LValue itself, return false
    if (server->_clientList.empty() && exclLVBranches.find(server->GetName())) {
@@ -756,7 +756,7 @@ RooRealIntegral::~RooRealIntegral()
 RooAbsReal* RooRealIntegral::createIntegral(const RooArgSet& iset, const RooArgSet* nset, const RooNumIntConfig* cfg, const char* rangeName) const
 {
   // Handle special case of no integration with default algorithm
-  if (iset.getSize()==0) {
+  if (iset.empty()) {
     return RooAbsReal::createIntegral(iset,nset,cfg,rangeName) ;
   }
 
@@ -938,7 +938,7 @@ double RooRealIntegral::evaluate() const
 
 double RooRealIntegral::jacobianProduct() const
 {
-  if (_jacList.getSize()==0) {
+  if (_jacList.empty()) {
     return 1 ;
   }
 

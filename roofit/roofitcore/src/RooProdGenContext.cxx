@@ -133,7 +133,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 
       // Check if this component has any dependents that need to be generated
       // e.g. it can happen that there are none if all dependents of this component are prototyped
-      if (termDeps->getSize()==0) {
+      if (termDeps->empty()) {
    cxcoutD(Generation) << "RooProdGenContext::ctor() term has no observables requested to be generated, removing it" << endl ;
    termList.Remove(term) ;
    depsList.Remove(termDeps) ;

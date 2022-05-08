@@ -106,7 +106,7 @@ bool RooGenFitStudy::attach(RooWorkspace& w)
   }
 
   _genObs.add(w.argSet(_genObsName)) ;
-  if (_genObs.getSize()==0) {
+  if (_genObs.empty()) {
     coutE(InputArguments) << "RooGenFitStudy(" << GetName() << ") ERROR: no generator observables defined" << endl ;
     ret = true ;
   }
@@ -120,7 +120,7 @@ bool RooGenFitStudy::attach(RooWorkspace& w)
   }
 
   _fitObs.add(w.argSet(_fitObsName)) ;
-  if (_fitObs.getSize()==0) {
+  if (_fitObs.empty()) {
     coutE(InputArguments) << "RooGenFitStudy(" << GetName() << ") ERROR: no fitting observables defined" << endl ;
     ret = true ;
   }

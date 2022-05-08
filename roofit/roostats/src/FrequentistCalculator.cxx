@@ -77,7 +77,7 @@ int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTest
          if (fNullModel->GetNuisanceParameters()) {
             RooArgSet remain(*fNullModel->GetNuisanceParameters());
             remain.remove(*fConditionalMLEsNull,true,true);
-            if( remain.getSize() == 0 ) doProfile = false;
+            if( remain.empty() ) doProfile = false;
          }
       }
    }else{
@@ -189,7 +189,7 @@ int FrequentistCalculator::PreAltHook(RooArgSet *parameterPoint, double obsTestS
          if (fAltModel->GetNuisanceParameters()) {
             RooArgSet remain(*fAltModel->GetNuisanceParameters());
             remain.remove(*fConditionalMLEsAlt,true,true);
-            if( remain.getSize() == 0 ) doProfile = false;
+            if( remain.empty() ) doProfile = false;
          }
       }
    }else{

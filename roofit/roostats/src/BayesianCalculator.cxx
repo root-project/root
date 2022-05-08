@@ -789,7 +789,7 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
       coutE(InputArguments) << "BayesianCalculator::GetPosteriorPdf - missing pdf model" << std::endl;
       return 0;
    }
-   if (fPOI.getSize() == 0) {
+   if (fPOI.empty()) {
       coutE(InputArguments) << "BayesianCalculator::GetPosteriorPdf - missing parameter of interest" << std::endl;
       return 0;
    }
@@ -869,7 +869,7 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
    delete constrainedParams;
 
 
-   if ( fNuisanceParameters.getSize() == 0 ||  fIntegrationType.Contains("ROOFIT") ) {
+   if ( fNuisanceParameters.empty() ||  fIntegrationType.Contains("ROOFIT") ) {
 
       ccoutD(Eval) << "BayesianCalculator::GetPosteriorFunction : use ROOFIT integration  "
                    << std::endl;
@@ -912,7 +912,7 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
 
 
       // if no nuisance parameter we can just return the likelihood function
-      if (fNuisanceParameters.getSize() == 0) {
+      if (fNuisanceParameters.empty()) {
          fIntegratedLikelihood = fLikelihood;
          fLikelihood = 0;
       }

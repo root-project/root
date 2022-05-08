@@ -1300,7 +1300,7 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
   }
 
   // Do not rearrage terms if numerator and denominator are effectively empty
-  if (nomList.getSize()==0) {
+  if (nomList.empty()) {
     return ;
   }
 
@@ -1511,7 +1511,7 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
 
   // CASE II: Dropped terms: if term is entirely unnormalized, it should be dropped
   // ------------------------------------------------------------------------------
-  if (nset && termNSet.getSize()==0) {
+  if (nset && termNSet.empty()) {
 
     //cout << "processProductTerm(" << GetName() << ") case II " << endl ;
 
@@ -2062,7 +2062,7 @@ RooArgSet* RooProdPdf::getConnectedParameters(const RooArgSet& observables) cons
 void RooProdPdf::getParametersHook(const RooArgSet* nset, RooArgSet* params, bool stripDisconnected) const
 {
   if (!stripDisconnected) return ;
-  if (!nset || nset->getSize()==0) return ;
+  if (!nset || nset->empty()) return ;
 
   // Get/create appropriate term list for this normalization set
   Int_t code = getPartIntList(nset, nullptr);

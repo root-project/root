@@ -956,7 +956,7 @@ void RooTreeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, c
   TIterator *iter = constExprVarSet->createIterator() ;
   RooAbsArg *arg ;
 
-  bool doTreeFill = (_cachedVars.getSize()==0) ;
+  bool doTreeFill = (_cachedVars.empty()) ;
 
   while ((arg=(RooAbsArg*)iter->Next())) {
     // Attach original newVar to this tree

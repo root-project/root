@@ -635,7 +635,7 @@ RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* ns
   RooAbsReal* integral = 0 ;
 
   // Handle trivial case of no integration here explicitly
-  if (iset.getSize()==0) {
+  if (iset.empty()) {
 
     TString title(GetTitle()) ;
     title.Prepend("Integral of ") ;
@@ -656,7 +656,7 @@ RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* ns
 
     // If largest set of observables that can be integrated is empty set, problem was ill defined
     // Postpone error messaging and handling to end of function, exit loop here
-    if (innerSet.getSize()==0) {
+    if (innerSet.empty()) {
       error = true ;
       break ;
     }
