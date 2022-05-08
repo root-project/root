@@ -231,34 +231,48 @@ ROOT::Experimental::Detail::RPageSourceFile::RPageSourceFile(std::string_view nt
    fReader = Internal::RMiniFileReader(fFile.get());
 }
 
+void ROOT::Experimental::Detail::RPageSourceFile::InitDescriptor(const Internal::RFileNTupleAnchor &anchor)
+{
+   fDescriptorBuilder.SetOnDiskHeaderSize(anchor.fNBytesHeader);
+   auto buffer = std::make_unique<unsigned char[]>(anchor.fLenHeader);
+   auto zipBuffer = std::make_unique<unsigned char[]>(anchor.fNBytesHeader);
+   fReader.ReadBuffer(zipBuffer.get(), anchor.fNBytesHeader, anchor.fSeekHeader);
+   fDecompressor->Unzip(zipBuffer.get(), anchor.fNBytesHeader, anchor.fLenHeader, buffer.get());
+   Internal::RNTupleSerializer::DeserializeHeaderV1(buffer.get(), anchor.fLenHeader, fDescriptorBuilder);
+
+   fDescriptorBuilder.AddToOnDiskFooterSize(anchor.fNBytesFooter);
+   buffer = std::make_unique<unsigned char[]>(anchor.fLenFooter);
+   zipBuffer = std::make_unique<unsigned char[]>(anchor.fNBytesFooter);
+   fReader.ReadBuffer(zipBuffer.get(), anchor.fNBytesFooter, anchor.fSeekFooter);
+   fDecompressor->Unzip(zipBuffer.get(), anchor.fNBytesFooter, anchor.fLenFooter, buffer.get());
+   Internal::RNTupleSerializer::DeserializeFooterV1(buffer.get(), anchor.fLenFooter, fDescriptorBuilder);
+}
+
+std::unique_ptr<ROOT::Experimental::Detail::RPageSourceFile>
+ROOT::Experimental::Detail::RPageSourceFile::CreateFromAnchor(const Internal::RFileNTupleAnchor &anchor,
+                                                              std::string_view path, const RNTupleReadOptions &options)
+{
+   auto pageSource = std::make_unique<RPageSourceFile>("", path, options);
+   pageSource->InitDescriptor(anchor);
+   pageSource->fNTupleName = pageSource->fDescriptorBuilder.GetDescriptor().GetName();
+   return pageSource;
+}
 
 ROOT::Experimental::Detail::RPageSourceFile::~RPageSourceFile() = default;
 
 
 ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFile::AttachImpl()
 {
-   RNTupleDescriptorBuilder descBuilder;
-   auto ntpl = fReader.GetNTuple(fNTupleName).Unwrap();
+   if (fDescriptorBuilder.GetDescriptor().GetOnDiskHeaderSize() == 0) {
+      auto anchor = fReader.GetNTuple(fNTupleName).Unwrap();
+      InitDescriptor(anchor);
+   }
 
-   descBuilder.SetOnDiskHeaderSize(ntpl.fNBytesHeader);
-   auto buffer = std::make_unique<unsigned char[]>(ntpl.fLenHeader);
-   auto zipBuffer = std::make_unique<unsigned char[]>(ntpl.fNBytesHeader);
-   fReader.ReadBuffer(zipBuffer.get(), ntpl.fNBytesHeader, ntpl.fSeekHeader);
-   fDecompressor->Unzip(zipBuffer.get(), ntpl.fNBytesHeader, ntpl.fLenHeader, buffer.get());
-   Internal::RNTupleSerializer::DeserializeHeaderV1(buffer.get(), ntpl.fLenHeader, descBuilder);
-
-   descBuilder.AddToOnDiskFooterSize(ntpl.fNBytesFooter);
-   buffer = std::make_unique<unsigned char[]>(ntpl.fLenFooter);
-   zipBuffer = std::make_unique<unsigned char[]>(ntpl.fNBytesFooter);
-   fReader.ReadBuffer(zipBuffer.get(), ntpl.fNBytesFooter, ntpl.fSeekFooter);
-   fDecompressor->Unzip(zipBuffer.get(), ntpl.fNBytesFooter, ntpl.fLenFooter, buffer.get());
-   Internal::RNTupleSerializer::DeserializeFooterV1(buffer.get(), ntpl.fLenFooter, descBuilder);
-
-   auto ntplDesc = descBuilder.MoveDescriptor();
+   auto ntplDesc = fDescriptorBuilder.MoveDescriptor();
 
    for (const auto &cgDesc : ntplDesc.GetClusterGroupIterable()) {
-      buffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLength());
-      zipBuffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLocator().fBytesOnStorage);
+      auto buffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLength());
+      auto zipBuffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLocator().fBytesOnStorage);
       fReader.ReadBuffer(zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage,
                          cgDesc.GetPageListLocator().fPosition);
       fDecompressor->Unzip(zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage, cgDesc.GetPageListLength(),

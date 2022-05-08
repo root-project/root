@@ -466,6 +466,7 @@ private:
 public:
    virtual ~RNTuple() = default;
 
+   std::unique_ptr<Detail::RPageSource> MakePageSource();
    std::unique_ptr<RNTupleReader> MakeReader();
 
    // RNTuple implements the hadd MergeFile interface

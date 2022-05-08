@@ -26,6 +26,7 @@
 #endif
 
 #include <TError.h>
+#include <TFile.h>
 #include <TROOT.h> // for IsImplicitMTEnabled()
 
 #include <algorithm>
@@ -407,4 +408,13 @@ void ROOT::Experimental::RNTuple::Streamer(TBuffer &buf)
    } else {
       RNTuple::Class()->WriteBuffer(buf, this);
    }
+}
+
+std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::RNTuple::MakePageSource() const
+{
+   if (!fFile)
+      throw RException(R__FAIL("This RNTuple object was not streamed from a file"));
+
+   auto path = fFile->GetEndpointUrl()->GetFile();
+   return Detail::RPageSourceFile::CreateFromAnchor(GetAnchor(), path, RNTupleReadOptions());
 }

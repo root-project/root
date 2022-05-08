@@ -70,9 +70,8 @@ TEST(MiniFile, Stream)
 
    auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "READ"));
    ASSERT_TRUE(file);
-   auto k = std::unique_ptr<ROOT::Experimental::Internal::RFileNTupleAnchor>(
-      file->Get<ROOT::Experimental::Internal::RFileNTupleAnchor>("MyNTuple"));
-   EXPECT_TRUE(IsEqual(ntuple, *k));
+   auto k = std::unique_ptr<ROOT::Experimental::RNTuple>(file->Get<ROOT::Experimental::RNTuple>("MyNTuple"));
+   EXPECT_TRUE(IsEqual(ntuple, *reinterpret_cast<ROOT::Experimental::Internal::RFileNTupleAnchor *>(k.get())));
 }
 
 
