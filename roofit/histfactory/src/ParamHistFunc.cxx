@@ -149,7 +149,7 @@ Int_t ParamHistFunc::GetNumBins( const RooArgSet& vars ) {
 
   // A helper method to get the number of bins
 
-  if( vars.getSize() == 0 ) return 0;
+  if( vars.empty() ) return 0;
 
   Int_t numBins = 1;
 
@@ -637,7 +637,7 @@ Int_t ParamHistFunc::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
                     const char* /*rangeName*/) const
 {
   // Handle trivial no-integration scenario
-  if (allVars.getSize()==0) return 0 ;
+  if (allVars.empty()) return 0 ;
   if (_forceNumInt) return 0 ;
 
 

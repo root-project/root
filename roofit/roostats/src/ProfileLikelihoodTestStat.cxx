@@ -197,7 +197,7 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
 
           // in case no nuisance parameters are present
           // no need to minimize just evaluate the nll
-          if (allParams.getSize() == 0 ) {
+          if (allParams.empty() ) {
              // be sure to evaluate with offsets
              if (fLOffset) RooAbsReal::setHideOffset(false);
              condML = fNll->getVal();

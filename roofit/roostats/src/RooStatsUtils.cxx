@@ -136,7 +136,7 @@ namespace RooStats {
       // make a nuisance pdf by factorizing out all constraint terms in a common pdf
       RooArgList obsTerms, constraints;
       FactorizePdf(observables, pdf, obsTerms, constraints);
-      if(constraints.getSize() == 0) {
+      if(constraints.empty()) {
          oocoutW(nullptr, Eval) << "RooStatsUtils::MakeNuisancePdf - no constraints found on nuisance parameters in the input model" << endl;
          return 0;
       }
@@ -164,7 +164,7 @@ namespace RooStats {
             if(newPdfi != NULL) newList.add(*newPdfi);
          }
 
-         if(newList.getSize() == 0) return NULL; // only constraints in product
+         if(newList.empty()) return NULL; // only constraints in product
          // return single component (no longer a product)
          else if(newList.getSize() == 1) return dynamic_cast<RooAbsPdf *>(newList.at(0)->clone(TString::Format("%s_unconstrained",
                                                                                                                newList.at(0)->GetName())));

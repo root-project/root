@@ -208,7 +208,7 @@ RooAddModel::~RooAddModel()
 
 void RooAddModel::fixCoefNormalization(const RooArgSet& refCoefNorm)
 {
-  if (refCoefNorm.getSize()==0) {
+  if (refCoefNorm.empty()) {
     _projectCoefs = false ;
     return ;
   }
@@ -565,7 +565,7 @@ void RooAddModel::updateCoefficients(CacheElem& cache, const RooArgSet* nset) co
 
 
   // Stop here if not projection is required or needed
-  if ((!_projectCoefs) || cache._projList.getSize()==0) {
+  if ((!_projectCoefs) || cache._projList.empty()) {
     //     cout << "SYNC no projection required rangeName = " << (rangeName?rangeName:"<none>") << endl ;
     return ;
   }

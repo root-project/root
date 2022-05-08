@@ -336,7 +336,7 @@ void MCMCInterval::CreateKeysPdf()
    // kbelasco: check here for memory leak.  does RooNDKeysPdf use
    // the RooArgList passed to it or does it make a clone?
    // also check for memory leak from chain, does RooNDKeysPdf clone that?
-   if (fAxes == NULL || fParameters.getSize() == 0) {
+   if (fAxes == NULL || fParameters.empty()) {
       coutE(InputArguments) << "Error in MCMCInterval::CreateKeysPdf: "
          << "parameters have not been set." << endl;
       return;
@@ -502,7 +502,7 @@ void MCMCInterval::CreateSparseHist()
 
 void MCMCInterval::CreateDataHist()
 {
-   if (fParameters.getSize() == 0 || fChain == NULL) {
+   if (fParameters.empty() || fChain == NULL) {
       coutE(Eval) << "* Error in MCMCInterval::CreateDataHist(): " <<
                      "Crucial data member was NULL or empty." << endl;
       coutE(Eval) << "Make sure to fully construct/initialize." << endl;

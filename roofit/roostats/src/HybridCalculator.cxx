@@ -36,11 +36,11 @@ using namespace std;
 
 int HybridCalculator::CheckHook(void) const {
 
-   if( fPriorNuisanceNull && (!fNullModel->GetNuisanceParameters() || fNullModel->GetNuisanceParameters()->getSize() == 0) ) {
+   if( fPriorNuisanceNull && (!fNullModel->GetNuisanceParameters() || fNullModel->GetNuisanceParameters()->empty()) ) {
       oocoutE(nullptr,InputArguments)  << "HybridCalculator - Nuisance PDF has been specified, but is unaware of which parameters are the nuisance parameters. Must set nuisance parameters in the Null ModelConfig." << endl;
       return -1; // error
    }
-   if( fPriorNuisanceAlt && (!fAltModel->GetNuisanceParameters() || fAltModel->GetNuisanceParameters()->getSize() == 0) ) {
+   if( fPriorNuisanceAlt && (!fAltModel->GetNuisanceParameters() || fAltModel->GetNuisanceParameters()->empty()) ) {
       oocoutE(nullptr,InputArguments)  << "HybridCalculator - Nuisance PDF has been specified, but is unaware of which parameters are the nuisance parameters. Must set nuisance parameters in the Alt ModelConfig" << endl;
       return -1; // error
    }
@@ -60,7 +60,7 @@ int HybridCalculator::PreNullHook(RooArgSet* /*parameterPoint*/, double obsTestS
       fTestStatSampler->SetPriorNuisance(fPriorNuisanceNull);
    } else if(
       fNullModel->GetNuisanceParameters() == NULL ||
-      fNullModel->GetNuisanceParameters()->getSize() == 0
+      fNullModel->GetNuisanceParameters()->empty()
    ) {
       oocoutI(nullptr,InputArguments)
        << "HybridCalculator - No nuisance parameters specified for Null model and no prior forced. "
@@ -109,7 +109,7 @@ int HybridCalculator::PreAltHook(RooArgSet* /*parameterPoint*/, double obsTestSt
      fTestStatSampler->SetPriorNuisance(fPriorNuisanceAlt);
    } else if (
       fAltModel->GetNuisanceParameters()==NULL ||
-      fAltModel->GetNuisanceParameters()->getSize()==0
+      fAltModel->GetNuisanceParameters()->empty()
    ) {
       oocoutI(nullptr,InputArguments)
        << "HybridCalculator - No nuisance parameters specified for Alt model and no prior forced. "

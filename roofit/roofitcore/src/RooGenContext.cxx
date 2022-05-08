@@ -74,8 +74,8 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   cxcoutI(Generation) << "RooGenContext::ctor() setting up event generator context for p.d.f. " << model.GetName()
          << " for generation of observable(s) " << vars ;
   if (prototype) ccxcoutI(Generation) << " with prototype data for " << *prototype->get() ;
-  if (auxProto && auxProto->getSize()>0)  ccxcoutI(Generation) << " with auxiliary prototypes " << *auxProto ;
-  if (forceDirect && forceDirect->getSize()>0)  ccxcoutI(Generation) << " with internal generation forced for observables " << *forceDirect ;
+  if (auxProto && !auxProto->empty())  ccxcoutI(Generation) << " with auxiliary prototypes " << *auxProto ;
+  if (forceDirect && !forceDirect->empty())  ccxcoutI(Generation) << " with internal generation forced for observables " << *forceDirect ;
   ccxcoutI(Generation) << endl ;
 
 
@@ -148,10 +148,10 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 
   // At this point directVars are all variables that are safe to be generated directly
   //               otherVars are all variables that are _not_ safe to be generated directly
-  if (_directVars.getSize()>0) {
+  if (!_directVars.empty()) {
     cxcoutD(Generation) << "RooGenContext::ctor() observables " << _directVars << " are safe for internal generator (if supported by p.d.f)" << endl ;
   }
-  if (_otherVars.getSize()>0) {
+  if (!_otherVars.empty()) {
     cxcoutD(Generation) << "RooGenContext::ctor() observables " << _otherVars << " are NOT safe for internal generator (if supported by p.d.f)" << endl ;
   }
 
@@ -164,7 +164,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 
   // Can the model generate any of the direct variables itself?
   RooArgSet generatedVars;
-  if (_directVars.getSize()>0) {
+  if (!_directVars.empty()) {
     _code= _pdfClone->getGenerator(_directVars,generatedVars,staticInitOK);
 
     cxcoutD(Generation) << "RooGenContext::ctor() Model indicates that it can internally generate observables "
@@ -182,10 +182,10 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   _directVars.add(generatedVars);
 
   cxcoutI(Generation) << "RooGenContext::ctor() Context will" ;
-  if (_directVars.getSize()>0) ccxcoutI(Generation) << " let model internally generate observables " << _directVars ;
-  if (_directVars.getSize()>0 && _otherVars.getSize()>0)  ccxcoutI(Generation) << " and" ;
-  if (_otherVars.getSize()>0)  ccxcoutI(Generation) << " generate variables " << _otherVars << " with accept/reject sampling" ;
-  if (_uniformVars.getSize()>0) ccxcoutI(Generation) << ", non-observable variables " << _uniformVars << " will be generated with flat distribution" ;
+  if (!_directVars.empty()) ccxcoutI(Generation) << " let model internally generate observables " << _directVars ;
+  if (!_directVars.empty() && !_otherVars.empty())  ccxcoutI(Generation) << " and" ;
+  if (!_otherVars.empty())  ccxcoutI(Generation) << " generate variables " << _otherVars << " with accept/reject sampling" ;
+  if (!_uniformVars.empty()) ccxcoutI(Generation) << ", non-observable variables " << _uniformVars << " will be generated with flat distribution" ;
   ccxcoutI(Generation) << endl ;
 
   // initialize the accept-reject generator
@@ -203,7 +203,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   model.getObservables(&_protoVars, protoDeps);
 
 
-  if (_protoVars.getSize()==0) {
+  if (_protoVars.empty()) {
 
     // No prototype variables
 

@@ -151,7 +151,7 @@ MCMCInterval* MCMCCalculator::GetInterval() const
 {
 
    if (!fData || !fPdf   ) return 0;
-   if (fPOI.getSize() == 0) return 0;
+   if (fPOI.empty()) return 0;
 
    if (fSize < 0) {
       coutE(InputArguments) << "MCMCCalculator::GetInterval: "

@@ -224,7 +224,7 @@ LikelihoodInterval* ProfileLikelihoodCalculator::GetInterval() const {
 //    RooAbsData* data = fWS->data(fDataName);
    RooAbsPdf * pdf = GetPdf();
    RooAbsData* data = GetData();
-   if (!data || !pdf || fPOI.getSize() == 0) return 0;
+   if (!data || !pdf || fPOI.empty()) return 0;
 
    RooArgSet* constrainedParams = pdf->getParameters(*data);
    RemoveConstantParameters(constrainedParams);
@@ -305,7 +305,7 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
 
    if (!data || !pdf) return 0;
 
-   if (fNullParams.getSize() == 0) return 0;
+   if (fNullParams.empty()) return 0;
 
    // make a clone and ordered list since a vector will be associated to keep parameter values
    // clone the list since first fit will changes the fNullParams values

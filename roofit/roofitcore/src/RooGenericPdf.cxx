@@ -66,7 +66,7 @@ RooGenericPdf::RooGenericPdf(const char *name, const char *title, const RooArgLi
   _actualVars.add(dependents) ;
   formula();
 
-  if (_actualVars.getSize()==0) _value = traceEval(0) ;
+  if (_actualVars.empty()) _value = traceEval(0) ;
 }
 
 
@@ -83,7 +83,7 @@ RooGenericPdf::RooGenericPdf(const char *name, const char *title,
   _actualVars.add(dependents) ;
   formula();
 
-  if (_actualVars.getSize()==0) _value = traceEval(0) ;
+  if (_actualVars.empty()) _value = traceEval(0) ;
 }
 
 

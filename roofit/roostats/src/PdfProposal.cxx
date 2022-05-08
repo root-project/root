@@ -114,7 +114,7 @@ bool PdfProposal::Equals(RooArgSet& x1, RooArgSet& x2)
 
 void PdfProposal::Propose(RooArgSet& xPrime, RooArgSet& x)
 {
-   if (fLastX.getSize() == 0) {
+   if (fLastX.empty()) {
       // fLastX not yet initialized
       fLastX.addClone(x);
       // generate initial cache
@@ -196,7 +196,7 @@ double PdfProposal::GetProposalDensity(RooArgSet& x1, RooArgSet& x2)
 void PdfProposal::AddMapping(RooRealVar& proposalParam, RooAbsReal& update)
 {
    fMaster.add(*update.getParameters((RooAbsData*)NULL));
-   if (update.getParameters((RooAbsData*)NULL)->getSize() == 0)
+   if (update.getParameters((RooAbsData*)NULL)->empty())
       fMaster.add(update);
    fMap.insert(pair<RooRealVar*, RooAbsReal*>(&proposalParam, &update));
 }

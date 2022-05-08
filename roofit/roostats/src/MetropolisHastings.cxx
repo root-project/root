@@ -95,7 +95,7 @@ MetropolisHastings::MetropolisHastings(RooAbsReal& function, const RooArgSet& pa
 
 MarkovChain* MetropolisHastings::ConstructChain()
 {
-   if (fParameters.getSize() == 0 || !fPropFunc || !fFunction) {
+   if (fParameters.empty() || !fPropFunc || !fFunction) {
       coutE(Eval) << "Critical members unintialized: parameters, proposal " <<
                      " function, or (log) likelihood function" << endl;
          return NULL;
@@ -107,7 +107,7 @@ MarkovChain* MetropolisHastings::ConstructChain()
       return NULL;
    }
 
-   if (fChainParams.getSize() == 0) fChainParams.add(fParameters);
+   if (fChainParams.empty()) fChainParams.add(fParameters);
 
    RooArgSet x;
    RooArgSet xPrime;
