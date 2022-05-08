@@ -116,7 +116,7 @@ double RooExtendPdf::expectedEvents(const RooArgSet* nset) const
 {
   const RooAbsPdf& pdf = *_pdf;
 
-  if (_rangeName && (!nset || nset->getSize()==0)) {
+  if (_rangeName && (!nset || nset->empty())) {
     coutW(InputArguments) << "RooExtendPdf::expectedEvents(" << GetName() << ") WARNING: RooExtendPdf needs non-null normalization set to calculate fraction in range "
            << _rangeName << ".  Results may be nonsensical" << endl ;
   }

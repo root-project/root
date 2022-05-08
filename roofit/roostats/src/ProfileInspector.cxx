@@ -120,7 +120,7 @@ TList* ProfileInspector::GetListOfProfilePlots( RooAbsData& data, RooStats::Mode
     for (auto const *nuis_param : dynamic_range_cast<RooRealVar *> (*nuis_params)){
        if(nuis_param) {
           string name = nuis_param->GetName();
-          if(nuis_params->getSize()==0) continue;
+          if(nuis_params->empty()) continue;
           if(nuis_param && (! nuis_param->isConstant())){
              if(name_val.find(name)==name_val.end()) name_val[name]=std::vector<double>(curve_N);
              name_val[name][i]=nuis_param->getVal();

@@ -1032,7 +1032,7 @@ bool RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, bool mustRep
 {
   // Trivial case, no servers
   if (_serverList.empty()) return false ;
-  if (newSetOrig.getSize()==0) return false ;
+  if (newSetOrig.empty()) return false ;
 
   // Strip any non-matching removal nodes from newSetOrig
   RooAbsCollection* newSet ;
@@ -1163,7 +1163,7 @@ RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, bool nameCha
     if(0 != tmp) {
 
       // Check if any match was found
-      if (tmp->getSize()==0) {
+      if (tmp->empty()) {
         delete tmp ;
         return 0 ;
       }

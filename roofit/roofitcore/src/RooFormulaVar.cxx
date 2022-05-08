@@ -76,7 +76,7 @@ RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char* in
 {
   _actualVars.add(dependents) ;
 
-  if (_actualVars.getSize()==0) {
+  if (_actualVars.empty()) {
     _value = traceEval(0);
   } else {
     _formula.reset(new RooFormula(GetName(), _formExpr, _actualVars, checkVariables));
@@ -100,7 +100,7 @@ RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgLi
 {
   _actualVars.add(dependents) ;
 
-  if (_actualVars.getSize()==0) {
+  if (_actualVars.empty()) {
     _value = traceEval(0);
   } else {
     _formula.reset(new RooFormula(GetName(), _formExpr, _actualVars, checkVariables));

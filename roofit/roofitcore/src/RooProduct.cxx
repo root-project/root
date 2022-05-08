@@ -262,7 +262,7 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
       term = (RooAbsReal*)j.next();
     }
     assert(term!=0);
-    if (i->first->getSize()==0) { // check whether we need to integrate over this term or not...
+    if (i->first->empty()) { // check whether we need to integrate over this term or not...
       cache->_prodList.add(*term);
       cxcoutD(Integration) << "RooProduct::getPartIntList(" << GetName() << ") adding simple factor " << term->GetName() << endl;
     } else {
@@ -299,7 +299,7 @@ Int_t RooProduct::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
   // Declare that we can analytically integrate all requested observables
   // (basically, we will take care of the problem, and delegate where required)
   //assert(normSet==0);
-  assert(analVars.getSize()==0);
+  assert(analVars.empty());
   analVars.add(allVars) ;
   Int_t code = getPartIntList(&analVars,rangeName)+1;
   return code ;

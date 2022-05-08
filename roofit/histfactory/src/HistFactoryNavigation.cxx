@@ -57,7 +57,7 @@ namespace RooStats {
         << " is NULL" << std::endl;
    throw hf_exc();
       }
-      if( observables_in_mc->getSize() == 0 ) {
+      if( observables_in_mc->empty() ) {
    std::cout << "Error: Observable list: " << observables_in_mc->GetName()
         << " found in ModelConfig: " << mc->GetName()
         << " has no entries." << std::endl;
@@ -122,7 +122,7 @@ namespace RooStats {
         << " is NULL" << std::endl;
    throw hf_exc();
       }
-      if( observables_in_mc->getSize() == 0 ) {
+      if( observables_in_mc->empty() ) {
    std::cout << "Error: Observable list: " << observables_in_mc->GetName()
         << " found in ModelConfig: " << ModelConfigName
         << " in file: " << FileName
@@ -159,7 +159,7 @@ namespace RooStats {
    std::cout << "Error: Supplied Observable set is NULL" << std::endl;
    throw hf_exc();
       }
-      if( observables->getSize() == 0 ) {
+      if( observables->empty() ) {
    std::cout << "Error: Observable list: " << observables->GetName()
         << " has no entries." << std::endl;
    throw hf_exc();

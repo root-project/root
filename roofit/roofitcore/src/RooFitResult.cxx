@@ -970,7 +970,7 @@ RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList)
     double xval = gMinuit->fU[i-1] ;
 
     RooRealVar* var ;
-    if (varList.getSize()==0) {
+    if (varList.empty()) {
 
       if ((xlo<xhi) && !isConst) {
    var = new RooRealVar(varName,varName,xval,xlo,xhi) ;
