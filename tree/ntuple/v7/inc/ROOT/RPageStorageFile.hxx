@@ -38,6 +38,8 @@ class RRawFile;
 }
 
 namespace Experimental {
+class RNTuple;
+
 namespace Detail {
 
 class RClusterPool;
@@ -112,6 +114,8 @@ public:
 */
 // clang-format on
 class RPageSourceFile : public RPageSource {
+   friend class ROOT::Experimental::RNTuple;
+
 private:
    /// Summarizes cluster-level information that are necessary to populate a certain page.
    /// Used by PopulatePageFromCluster().
@@ -133,10 +137,15 @@ private:
    std::unique_ptr<ROOT::Internal::RRawFile> fFile;
    /// Takes the fFile to read ntuple blobs from it
    Internal::RMiniFileReader fReader;
+   RNTupleDescriptorBuilder fDescriptorBuilder;
    /// The cluster pool asynchronously preloads the next few clusters
    std::unique_ptr<RClusterPool> fClusterPool;
 
+   void InitDescriptor(const Internal::RFileNTupleAnchor &anchor);
+
    RPageSourceFile(std::string_view ntupleName, const RNTupleReadOptions &options);
+   static std::unique_ptr<RPageSourceFile> CreateFromAnchor(const Internal::RFileNTupleAnchor &anchor,
+                                                            std::string_view path, const RNTupleReadOptions &options);
    RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
                                  ClusterSize_t::ValueType idxInCluster);
 
