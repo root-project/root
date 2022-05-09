@@ -136,6 +136,7 @@
 #pragma link C++ class RooLinTransBinning+ ;
 #pragma link C++ class RooList+ ;
 #pragma link C++ class RooListProxy+ ;
+#pragma read sourceClass="RooCollectionProxy<RooArgList>" targetClass="RooListProxy" ;
 #pragma link C++ class RooMappedCategory+ ;
 #pragma read sourceClass="RooMappedCategory" targetClass="RooMappedCategory" version="[1]" include="RooFitLegacy/RooCatTypeLegacy.h" source="RooCatType* _defCat" target="_defCat" code="{ _defCat = onfile._defCat->getVal(); }"
 #pragma link C++ class RooMappedCategory::Entry+;
@@ -211,6 +212,7 @@
 #pragma link C++ class RooSegmentedIntegrator2D+ ;
 #pragma link C++ class RooSetPair+ ;
 #pragma link C++ class RooSetProxy+ ;
+#pragma read sourceClass="RooCollectionProxy<RooArgSet>" targetClass="RooSetProxy" ;
 #pragma link C++ class RooSharedProperties+ ;
 #pragma link C++ class RooSimGenContext+ ;
 #pragma link C++ class RooSimSplitGenContext+ ;
