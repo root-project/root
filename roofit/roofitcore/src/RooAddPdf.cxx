@@ -701,8 +701,7 @@ void RooAddPdf::updateCoefficients(CacheElem& cache, const RooArgSet* nset) cons
 /// Look up projection cache and per-PDF norm sets. If a PDF doesn't have a special
 /// norm set, use the `defaultNorm`. If `defaultNorm == nullptr`, use the member
 /// _normSet.
-std::pair<const RooArgSet*, RooAddPdf::CacheElem*> RooAddPdf::getNormAndCache(const RooArgSet* defaultNorm) const {
-  const RooArgSet* nset = defaultNorm ? defaultNorm : _normSet;
+std::pair<const RooArgSet*, RooAddPdf::CacheElem*> RooAddPdf::getNormAndCache(const RooArgSet* nset) const {
 
   // Treat empty normalization set and nullptr the same way.
   if(nset && nset->empty()) nset = nullptr;
@@ -757,9 +756,9 @@ std::pair<const RooArgSet*, RooAddPdf::CacheElem*> RooAddPdf::getNormAndCache(co
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return the current value
 
-Double_t RooAddPdf::evaluate() const
+double RooAddPdf::getValV(const RooArgSet* normSet) const
 {
-  auto normAndCache = getNormAndCache();
+  auto normAndCache = getNormAndCache(normSet);
   const RooArgSet* nset = normAndCache.first;
   CacheElem* cache = normAndCache.second;
 
@@ -789,7 +788,7 @@ void RooAddPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvent
 {
   RooBatchCompute::VarVector pdfs;
   RooBatchCompute::ArgVector coefs;
-  CacheElem* cache = getNormAndCache().second;
+  CacheElem* cache = getNormAndCache(nullptr).second;
   for (unsigned int pdfNo = 0; pdfNo < _pdfList.size(); ++pdfNo)
   {
     auto pdf = static_cast<RooAbsPdf*>(&_pdfList[pdfNo]);
