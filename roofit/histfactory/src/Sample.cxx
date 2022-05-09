@@ -201,7 +201,7 @@ void RooStats::HistFactory::Sample::Print( std::ostream& stream ) const {
 
 }
 
-void RooStats::HistFactory::Sample::PrintXML( std::ofstream& xml ) {
+void RooStats::HistFactory::Sample::PrintXML( std::ofstream& xml ) const {
 
 
   // Create the sample tag
