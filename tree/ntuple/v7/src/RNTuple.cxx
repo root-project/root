@@ -403,6 +403,8 @@ void ROOT::Experimental::RNTuple::Streamer(TBuffer &buf)
       R__ASSERT(buf.GetParent() && buf.GetParent()->InheritsFrom("TFile"));
       fFile = reinterpret_cast<TFile *>(buf.GetParent());
    } else {
+      // On disk, we store a plain RFileNTupleAnchor (aka an RNTuple version 1)
+      // See RFileNTupleAnchor documentation for details
       Internal::RFileNTupleAnchor anchor(*this);
       auto cl = TClass::GetClass<Internal::RFileNTupleAnchor>();
       cl->WriteBuffer(buf, &anchor);
