@@ -47,7 +47,7 @@ class RPageSource;
 }
 
 namespace Internal {
-struct RNTupleTester;
+struct RNTupleTester; // friend of RNTuple
 }
 
 /**
@@ -462,13 +462,35 @@ public:
    ClusterSize_t *GetOffsetPtr() { return &fOffset; }
 };
 
+// clang-format off
+/**
+\class ROOT::Experimental::RNTuple
+\ingroup NTuple
+\brief Representation of an RNTuple data set in a ROOT file
+
+This class provides an API entry point to an RNTuple stored in a ROOT file. Its main purpose is to
+construct a page source for an RNTuple, which in turn can be used to read an RNTuple with an RDF or
+an RNTupleReader.
+
+For instance, for an RNTuple called "Events" in a ROOT file, usage can be
+~~~ {.cpp}
+auto f = TFile::Open("data.root");
+auto ntpl = f->Get<ROOT::Experimental::RNTuple>("Events");
+
+auto pageSource = ntpl->MakePageSource();
+// or
+auto reader = RNTupleReader::Open(ntpl);
+~~~
+*/
+// clang-format on
 class RNTuple final : protected Internal::RFileNTupleAnchor {
    friend class ROOT::Experimental::Internal::RNTupleFileWriter;
    friend class ROOT::Experimental::Internal::RNTupleTester;
 
 private:
-   TFile *fFile = nullptr; ///<!
+   TFile *fFile = nullptr; ///<! The file from which the ntuple was streamed, registered in the custom streamer
 
+   // Conversion between hidden base class and derived class
    RNTuple(const Internal::RFileNTupleAnchor &a) : Internal::RFileNTupleAnchor(a) {}
    Internal::RFileNTupleAnchor GetAnchor() const { return *this; }
 
@@ -476,12 +498,16 @@ public:
    RNTuple() = default;
    ~RNTuple() = default;
 
+   /// Create a page source from the RNTuple object. Requires the RNTuple object to be streamed from a file.
+   /// If fFile is not set, an exception is thrown.
    std::unique_ptr<Detail::RPageSource> MakePageSource() const;
 
-   // RNTuple implements the hadd MergeFile interface
+   /// RNTuple implements the hadd MergeFile interface
    /// Merge this NTuple with the input list entries
    Long64_t Merge(TCollection *input, TFileMergeInfo *mergeInfo);
 
+   // The RNTuple on-disk is always version 1. See Internal::RFileNTupleAnchor for the interplay between
+   // Internal::RFileNTupleAnchor and RNTuple.
    ClassDefNV(RNTuple, 2);
 };
 
