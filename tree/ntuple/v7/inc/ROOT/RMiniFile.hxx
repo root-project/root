@@ -46,14 +46,21 @@ namespace Internal {
 \brief Entry point for an RNTuple in a ROOT file
 
 The class points to the header and footer keys, which in turn have the references to the pages.
-In the list of keys, this object appears as "ROOT::Experimental::RNTuple".
-...
 Only the RNTuple key will be listed in the list of keys. Like TBaskets, the pages are "invisible" keys.
 Byte offset references in the RNTuple header and footer reference directly the data part of page records,
 skipping the TFile key part.
 
-While the class is central to anchoring an RNTuple in a TFile, it is an internal detail not exposed to users.
-Note that there is no user-facing RNTuple class but RNTupleReader and RNTupleWriter.
+In the list of keys, this object appears as "ROOT::Experimental::RNTuple".
+
+The RNTuple object is the user-facing representation of an RNTuple data set in a ROOT file.
+The RFileNTupleAnchor is the low-level entry point of an RNTuple in a ROOT file used by the page storage layer.
+
+The ROOT::Experimental::RNTuple object inherits from RFileNTupleAnchor. It only adds methods and transient members.
+Reading and writing RNTuple anchors from/to files makes use of ROOT's schema evolution. The on-disk data
+is an RNTuple object in version 1 (which is, technically, the RFileNTupleAnchor class layout under the name
+"ROOT::Experimental::RNTuple").  The in-memory RNTuple object has class layout version 2.
+On read, the automatic schema evolution creates the RFileNTupleAnchor base class from the version 1 on-disk layout.
+On write, the RNTuple class is streamed as an RFileNTupleAnchor.
 */
 // clang-format on
 struct RFileNTupleAnchor {
