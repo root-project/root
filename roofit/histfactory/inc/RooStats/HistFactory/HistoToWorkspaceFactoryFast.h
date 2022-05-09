@@ -98,8 +98,8 @@ namespace RooStats{
 
       RooDataSet* MergeDataSets(RooWorkspace* combined,
             std::vector<std::unique_ptr<RooWorkspace>>& wspace_vec,
-            std::vector<std::string> channel_names,
-            std::string dataSetName,
+            std::vector<std::string> const& channel_names,
+            std::string const& dataSetName,
             RooArgList obsList,
             RooCategory* channelCat);
 
@@ -116,8 +116,8 @@ namespace RooStats{
                    ParamHistFunc& paramHist, const TH1* uncertHist,
                    Constraint::Type type, double minSigma );
 
-      void ConfigureHistFactoryDataset(RooDataSet* obsData, TH1* nominal, RooWorkspace* proto,
-                   std::vector<std::string> obsNameVec);
+      void ConfigureHistFactoryDataset(RooDataSet& obsData, TH1 const& nominal, RooWorkspace& proto,
+                   std::vector<std::string> const& obsNameVec);
 
       std::vector<std::string> fSystToFix;
       std::map<std::string, double> fParamValues;
