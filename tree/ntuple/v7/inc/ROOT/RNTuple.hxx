@@ -39,6 +39,7 @@ namespace ROOT {
 namespace Experimental {
 
 class REntry;
+class RNTuple;
 class RNTupleModel;
 
 namespace Detail {
@@ -186,6 +187,8 @@ public:
    static std::unique_ptr<RNTupleReader> Open(std::string_view ntupleName,
                                               std::string_view storage,
                                               const RNTupleReadOptions &options = RNTupleReadOptions());
+   static std::unique_ptr<RNTupleReader>
+   Open(const RNTuple *ntuple, const RNTupleReadOptions &options = RNTupleReadOptions());
    /// Open RNTuples as one virtual, horizontally combined ntuple.  The underlying RNTuples must
    /// have an identical number of entries.  Fields in the combined RNTuple are named with the ntuple name
    /// as a prefix, e.g. myNTuple1.px and myNTuple2.pt (see tutorial ntpl006_friends)
@@ -500,7 +503,7 @@ public:
 
    /// Create a page source from the RNTuple object. Requires the RNTuple object to be streamed from a file.
    /// If fFile is not set, an exception is thrown.
-   std::unique_ptr<Detail::RPageSource> MakePageSource() const;
+   std::unique_ptr<Detail::RPageSource> MakePageSource(const RNTupleReadOptions &options = RNTupleReadOptions()) const;
 
    /// RNTuple implements the hadd MergeFile interface
    /// Merge this NTuple with the input list entries
