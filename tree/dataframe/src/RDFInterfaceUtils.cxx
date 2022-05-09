@@ -522,6 +522,19 @@ void CheckForDefinition(const std::string &where, std::string_view definedColVie
    }
 }
 
+/// Throw if the column has systematic variations attached.
+void CheckForNoVariations(const std::string &where, std::string_view definedColView, const RColumnRegister &customCols)
+{
+   const std::string definedCol(definedColView);
+   const auto &variationDeps = customCols.GetVariationDeps(definedCol);
+   if (!variationDeps.empty()) {
+      const std::string error =
+         "RDataFrame::" + where + ": cannot redefine column \"" + definedCol +
+         "\". The column depends on one or more systematic variations and re-defining varied columns is not supported.";
+      throw std::runtime_error(error);
+   }
+}
+
 void CheckTypesAndPars(unsigned int nTemplateParams, unsigned int nColumnNames)
 {
    if (nTemplateParams != nColumnNames) {
