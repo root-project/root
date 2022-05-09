@@ -459,21 +459,26 @@ public:
    ClusterSize_t *GetOffsetPtr() { return &fOffset; }
 };
 
-class RNTuple : private Internal::RFileNTupleAnchor {
+class RNTuple final : protected Internal::RFileNTupleAnchor {
+   friend class ROOT::Experimental::Internal::RNTupleFileWriter;
+
 private:
-   TFile *fFile; ///<!
+   TFile *fFile = nullptr; ///<!
+
+   RNTuple(const Internal::RFileNTupleAnchor &a) : Internal::RFileNTupleAnchor(a) {}
 
 public:
-   virtual ~RNTuple() = default;
+   RNTuple() = default;
+   ~RNTuple() = default;
 
-   std::unique_ptr<Detail::RPageSource> MakePageSource();
-   std::unique_ptr<RNTupleReader> MakeReader();
+   std::unique_ptr<Detail::RPageSource> MakePageSource() const;
+   Internal::RFileNTupleAnchor GetAnchor() const { return *this; }
 
    // RNTuple implements the hadd MergeFile interface
    /// Merge this NTuple with the input list entries
    Long64_t Merge(TCollection *input, TFileMergeInfo *mergeInfo);
 
-   ClassDef(RNTuple, 2);
+   ClassDefNV(RNTuple, 2);
 };
 
 } // namespace Experimental
