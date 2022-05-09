@@ -59,15 +59,15 @@ void testGausFit( std::string type = "Minuit2", int n = 1000) {
    h1->Draw();
    c1->cd(2);
    std::cout << "\nDo Fit 2\n";
-   h2->Fit("gaus","VE");
+   h2->Fit("gaus","E");
    h2->Draw();
    c1->cd(3);
    std::cout << "\nDo Fit 3\n";
-   h3->Fit("gaus","IE");
+   h3->Fit("gaus","IGE");
    h3->Draw();
    c1->cd(4);
    std::cout << "\nDo Fit 4\n";
-   h4->Fit("gaus","VLE");
+   h4->Fit("gaus","LE");
    h4->Draw();
 
 }
@@ -79,6 +79,3 @@ void minuit2GausFit() {
    testGausFit("Fumili2",n);
 
 }
-
-
-
