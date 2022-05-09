@@ -18,6 +18,7 @@
 #include "ROOT/RMiniFile.hxx"
 
 #include <ROOT/RRawFile.hxx>
+#include <ROOT/RNTuple.hxx> // For converting an anchor to an RNTuple object
 #include <ROOT/RNTupleZip.hxx>
 
 #include <TError.h>
@@ -866,7 +867,7 @@ static constexpr char const *kBlobClassName = "RBlob";
 /// The class name of the RNTuple anchor
 static constexpr char const *kNTupleClassName = "ROOT::Experimental::RNTuple";
 
-/// The RKeyBlob writes an invsisble key into a TFile.  That is, a key that is not indexed in the list of keys,
+/// The RKeyBlob writes an invisible key into a TFile.  That is, a key that is not indexed in the list of keys,
 /// like a TBasket.
 class RKeyBlob : public TKey {
 public:
@@ -1174,7 +1175,8 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::Commit()
 {
    if (fFileProper) {
       // Easy case, the ROOT file header and the RNTuple streaming is taken care of by TFile
-      fFileProper.fFile->WriteObject(&fNTupleAnchor, fNTupleName.c_str());
+      ROOT::Experimental::RNTuple ntuple(fNTupleAnchor);
+      fFileProper.fFile->WriteObject(&ntuple, fNTupleName.c_str());
       fFileProper.fFile->Write();
       return;
    }
