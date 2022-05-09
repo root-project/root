@@ -763,45 +763,6 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     proto->defineSet(prefix.c_str(),Pois); // add argset to workspace
   }
 
-   void HistoToWorkspaceFactoryFast::SetObsToExpected(RooWorkspace* proto, string obsPrefix, string expPrefix, int lowBin, int highBin){
-    /////////////////////////////////
-    // set observed to expected
-     TTree* tree = new TTree();
-     Double_t* obsForTree = new Double_t[highBin-lowBin];
-     RooArgList obsList("obsList");
-
-     for(Int_t i=lowBin; i<highBin; ++i){
-       std::stringstream str;
-       str<<"_"<<i;
-       RooRealVar* obs = (RooRealVar*) proto->var(obsPrefix+str.str());
-       cout << "expected number of events called: " << expPrefix << endl;
-       RooAbsReal* exp = proto->function((expPrefix+str.str()).c_str());
-       if(obs && exp){
-
-         //proto->Print();
-         obs->setVal(  exp->getVal() );
-         cout << "setting obs"+str.str()+" to expected = " << exp->getVal() << " check: " << obs->getVal() << endl;
-
-         // add entry to array and attach to tree
-         obsForTree[i] = exp->getVal();
-         tree->Branch((obsPrefix+str.str()).c_str(), obsForTree+i ,(obsPrefix+str.str()+"/D").c_str());
-         obsList.add(*obs);
-       }else{
-         cout << "problem retrieving obs or exp " << obsPrefix+str.str() << obs << " " << expPrefix+str.str() << exp << endl;
-       }
-     }
-     tree->Fill();
-     RooDataSet* data = new RooDataSet("expData","", tree, obsList); // one experiment
-
-     delete tree;
-     delete [] obsForTree;
-
-     proto->import(*data);
-
-     delete data;
-
-  }
-
   //////////////////////////////////////////////////////////////////////////////
 
   void HistoToWorkspaceFactoryFast::EditSyst(RooWorkspace* proto, const char* pdfNameChar,
