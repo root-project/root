@@ -46,6 +46,9 @@ class RPageSink;
 class RPageSource;
 }
 
+namespace Internal {
+struct RNTupleTester;
+}
 
 /**
  * Listing of the different options that can be printed by RNTupleReader::GetInfo()
@@ -461,18 +464,19 @@ public:
 
 class RNTuple final : protected Internal::RFileNTupleAnchor {
    friend class ROOT::Experimental::Internal::RNTupleFileWriter;
+   friend class ROOT::Experimental::Internal::RNTupleTester;
 
 private:
    TFile *fFile = nullptr; ///<!
 
    RNTuple(const Internal::RFileNTupleAnchor &a) : Internal::RFileNTupleAnchor(a) {}
+   Internal::RFileNTupleAnchor GetAnchor() const { return *this; }
 
 public:
    RNTuple() = default;
    ~RNTuple() = default;
 
    std::unique_ptr<Detail::RPageSource> MakePageSource() const;
-   Internal::RFileNTupleAnchor GetAnchor() const { return *this; }
 
    // RNTuple implements the hadd MergeFile interface
    /// Merge this NTuple with the input list entries
