@@ -158,22 +158,6 @@ namespace HistFactory{
     // Name of an 'edited' model, if necessary
     std::string NewModelName = "newSimPdf"; // <- This name is hard-coded in HistoToWorkspaceFactoryFast::EditSyt.  Probably should be changed to : std::string("new") + ModelName;
 
-#ifdef DO_EDIT_WS    
-    // Activate Additional Constraint Terms
-    if(    measurement.GetGammaSyst().size() > 0 
-	|| measurement.GetUniformSyst().size() > 0 
-	|| measurement.GetLogNormSyst().size() > 0 
-	|| measurement.GetNoSyst().size() > 0) {
-      HistoToWorkspaceFactoryFast::EditSyst( ws_single, (ModelName).c_str(), 
-					     measurement.GetGammaSyst(), 
-					     measurement.GetUniformSyst(), 
-					     measurement.GetLogNormSyst(), 
-					     measurement.GetNoSyst());
-
-      proto_config->SetPdf( *ws_single->pdf( "newSimPdf" ) );
-    }
-#endif
-    
     // Set the ModelConfig's Params of Interest
     RooAbsData* expData = ws_single->data("asimovData");
     if( !expData ) {
@@ -1796,8 +1780,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       auto obsDataUnbinned = make_unique<RooDataSet>("obsData","",*proto->set("obsAndWeight"),weightName);
 
 
-      ConfigureHistFactoryDataset( obsDataUnbinned.get(), mnominal, 
-          proto, fObsNameVec );
+      ConfigureHistFactoryDataset( *obsDataUnbinned, *mnominal,
+          *proto, fObsNameVec );
 
       proto->import(*obsDataUnbinned);
     } // End: Has non-null 'data' entry
@@ -1818,8 +1802,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       auto obsDataUnbinned = make_unique<RooDataSet>(dataName.c_str(), dataName.c_str(),
           *proto->set("obsAndWeight"), weightName);
 
-      ConfigureHistFactoryDataset( obsDataUnbinned.get(), mnominal, 
-          proto, fObsNameVec );
+      ConfigureHistFactoryDataset( *obsDataUnbinned, *mnominal,
+          *proto, fObsNameVec );
 
       proto->import(*obsDataUnbinned);
 
@@ -1832,53 +1816,51 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
   }
 
 
-  void HistoToWorkspaceFactoryFast::ConfigureHistFactoryDataset( RooDataSet* obsDataUnbinned, 
-								 TH1* mnominal, 
-								 RooWorkspace* proto,
-								 std::vector<std::string> ObsNameVec) {
+  void HistoToWorkspaceFactoryFast::ConfigureHistFactoryDataset( RooDataSet& obsDataUnbinned,
+                         TH1 const& mnominal,
+                         RooWorkspace& proto,
+                         std::vector<std::string> const& obsNameVec) {
 
     // Take a RooDataSet and fill it with the entries
     // from a TH1*, using the observable names to
     // determine the columns
 
-     if (ObsNameVec.empty() ) {
+     if (obsNameVec.empty() ) {
         Error("ConfigureHistFactoryDataset","Invalid input - return");
         return;
      }
-    
-    //ES// TH1* mnominal = summary.at(0).nominal;
-    // TH1* mnominal = data.GetHisto(); 
-    TAxis* ax = mnominal->GetXaxis(); 
-    TAxis* ay = mnominal->GetYaxis(); 
-    TAxis* az = mnominal->GetZaxis(); 	
+
+    TAxis const* ax = mnominal.GetXaxis();
+    TAxis const* ay = mnominal.GetYaxis();
+    TAxis const* az = mnominal.GetZaxis();
 
     for (int i=1; i<=ax->GetNbins(); ++i) { // 1 or more dimension
 
-      Double_t xval = ax->GetBinCenter(i);
-      proto->var( ObsNameVec[0].c_str() )->setVal( xval );
+      double xval = ax->GetBinCenter(i);
+      proto.var( obsNameVec[0].c_str() )->setVal( xval );
 
-      if(ObsNameVec.size()==1) {
-	Double_t fval = mnominal->GetBinContent(i);
-	obsDataUnbinned->add( *proto->set("obsAndWeight"), fval );
+      if(obsNameVec.size()==1) {
+   double fval = mnominal.GetBinContent(i);
+   obsDataUnbinned.add( *proto.set("obsAndWeight"), fval );
       } else { // 2 or more dimensions
 
-	for(int j=1; j<=ay->GetNbins(); ++j) {
-	  Double_t yval = ay->GetBinCenter(j);
-	  proto->var( ObsNameVec[1].c_str() )->setVal( yval );
+   for(int j=1; j<=ay->GetNbins(); ++j) {
+     double yval = ay->GetBinCenter(j);
+     proto.var( obsNameVec[1].c_str() )->setVal( yval );
 
-	  if(ObsNameVec.size()==2) { 
-	    Double_t fval = mnominal->GetBinContent(i,j);
-	    obsDataUnbinned->add( *proto->set("obsAndWeight"), fval );
-	  } else { // 3 dimensions 
+     if(obsNameVec.size()==2) {
+       double fval = mnominal.GetBinContent(i,j);
+       obsDataUnbinned.add( *proto.set("obsAndWeight"), fval );
+     } else { // 3 dimensions
 
-	    for(int k=1; k<=az->GetNbins(); ++k) {
-	      Double_t zval = az->GetBinCenter(k);
-	      proto->var( ObsNameVec[2].c_str() )->setVal( zval );
-	      Double_t fval = mnominal->GetBinContent(i,j,k);
-	      obsDataUnbinned->add( *proto->set("obsAndWeight"), fval );
-	    }
-	  }
-	}
+       for(int k=1; k<=az->GetNbins(); ++k) {
+         double zval = az->GetBinCenter(k);
+         proto.var( obsNameVec[2].c_str() )->setVal( zval );
+         double fval = mnominal.GetBinContent(i,j,k);
+         obsDataUnbinned.add( *proto.set("obsAndWeight"), fval );
+       }
+     }
+   }
       }
     }
   }
@@ -1990,25 +1972,9 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     combined->factory("weightVar[0,-1e10,1e10]");
     obsList.add(*combined->var("weightVar"));
 
-    // Loop over channels and create the asimov
-    /*
-    for(unsigned int i = 0; i< ch_names.size(); ++i){
-      cout << "merging data for channel " << ch_names[i].c_str() << endl;
-      RooDataSet * tempData=new RooDataSet(ch_names[i].c_str(),"", obsList, Index(*channelCat),
-					   WeightVar("weightVar"),
-					  Import(ch_names[i].c_str(),*(RooDataSet*)chs[i]->data("asimovData")));
-      if(simData){
-	simData->append(*tempData);
-      delete tempData;
-      }else{
-	simData = tempData;
-      }
-    }
-    
-    if (simData) combined->import(*simData,Rename("asimovData"));
-    */
-    RooDataSet* asimov_combined = (RooDataSet*) AsymptoticCalculator::GenerateAsimovData(*simPdf, 
-											 obsList);
+    // Create Asimov data for the combined dataset
+    RooDataSet* asimov_combined = (RooDataSet*) AsymptoticCalculator::GenerateAsimovData(*simPdf,
+                                  obsList);
     if( asimov_combined ) {
       combined->import( *asimov_combined, Rename("asimovData"));
     }
@@ -2023,50 +1989,6 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       MergeDataSets(combined, chs, ch_names, "obsData", obsList, channelCat);
     }
 
-    /*
-    if(chs[0]->data("obsData") != NULL){
-      RooDataSet * simData=NULL;
-      //simData=NULL;
-
-      // Loop through channels, get their individual datasets,
-      // and add them to the combined dataset
-      for(unsigned int i = 0; i< ch_names.size(); ++i){
-	cout << "merging data for channel " << ch_names[i].c_str() << endl;
-
-	RooDataSet* obsDataInChannel = (RooDataSet*) chs[i]->data("obsData");
-	RooDataSet * tempData = new RooDataSet(ch_names[i].c_str(),"", obsList, Index(*channelCat),
-					       WeightVar("weightVar"),
-					       Import(ch_names[i].c_str(),*obsDataInChannel)); 
-	// *(RooDataSet*) chs[i]->data("obsData")));
-	if(simData) {
-	  simData->append(*tempData);
-	  delete tempData;
-	}
-	else {
-	  simData = tempData;
-	}
-      } // End Loop Over Channels
-      
-      // Check that we successfully created the dataset
-      // and import it into the workspace
-      if(simData) {
-	combined->import(*simData, Rename("obsData"));
-      }
-      else {
-	std::cout << "Error: Unable to merge observable datasets" << std::endl;
-	throw hf_exc();
-      }
-
-    } // End 'if' on data != NULL
-    */
-
-    // Now, create any additional Asimov datasets that
-    // are configured in the measurement
-
-
-    //    obsList.Print();
-    //    combined->import(obsList);
-    //    combined->Print();
 
     obsList.add(*channelCat);
     combined->defineSet("observables",obsList);
@@ -2129,11 +2051,11 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
 
   RooDataSet* HistoToWorkspaceFactoryFast::MergeDataSets(RooWorkspace* combined,
-							 std::vector<std::unique_ptr<RooWorkspace>>& wspace_vec,
-							 std::vector<std::string> channel_names, 
-							 std::string dataSetName,
-							 RooArgList obsList,
-							 RooCategory* channelCat) {
+                      std::vector<std::unique_ptr<RooWorkspace>>& wspace_vec,
+                      std::vector<std::string> const& channel_names,
+                      std::string const& dataSetName,
+                      RooArgList obsList,
+                      RooCategory* channelCat) {
 
     // Create the total dataset
     RooDataSet* simData=NULL;
