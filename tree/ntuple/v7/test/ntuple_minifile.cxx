@@ -1,6 +1,8 @@
 #include "ntuple_test.hxx"
 
-namespace {
+namespace ROOT {
+namespace Experimental {
+namespace Internal {
 bool IsEqual(const ROOT::Experimental::Internal::RFileNTupleAnchor &a,
              const ROOT::Experimental::Internal::RFileNTupleAnchor &b)
 {
@@ -8,7 +10,17 @@ bool IsEqual(const ROOT::Experimental::Internal::RFileNTupleAnchor &a,
           a.fNBytesHeader == b.fNBytesHeader && a.fLenHeader == b.fLenHeader && a.fSeekFooter == b.fSeekFooter &&
           a.fNBytesFooter == b.fNBytesFooter && a.fLenFooter == b.fLenFooter && a.fReserved == b.fReserved;
 }
-} // namespace
+
+struct RNTupleTester {
+   ROOT::Experimental::RNTuple fNtpl;
+
+   explicit RNTupleTester(const ROOT::Experimental::RNTuple &ntpl) : fNtpl(ntpl) {}
+   Internal::RFileNTupleAnchor GetAnchor() const { return fNtpl.GetAnchor(); }
+};
+
+} // namespace Internal
+} // namespace Experimental
+} // namespace ROOT
 
 TEST(MiniFile, Raw)
 {
@@ -71,7 +83,7 @@ TEST(MiniFile, Stream)
    auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "READ"));
    ASSERT_TRUE(file);
    auto k = std::unique_ptr<ROOT::Experimental::RNTuple>(file->Get<ROOT::Experimental::RNTuple>("MyNTuple"));
-   EXPECT_TRUE(IsEqual(ntuple, k->GetAnchor()));
+   EXPECT_TRUE(IsEqual(ntuple, ROOT::Experimental::Internal::RNTupleTester(*k).GetAnchor()));
 }
 
 
