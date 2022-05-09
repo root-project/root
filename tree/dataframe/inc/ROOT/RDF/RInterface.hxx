@@ -563,6 +563,7 @@ public:
       RDFInternal::CheckValidCppVarName(name, where);
       RDFInternal::CheckForDefinition(where, name, fColRegister, fLoopManager->GetBranchNames(),
                                       fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+      RDFInternal::CheckForNoVariations(where, name, fColRegister);
 
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
       auto jittedDefine = RDFInternal::BookDefineJit(name, expression, *fLoopManager, fDataSource, fColRegister,
@@ -3250,6 +3251,7 @@ private:
       } else {
          RDFInternal::CheckForDefinition(where, name, fColRegister, fLoopManager->GetBranchNames(),
                                          fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+         RDFInternal::CheckForNoVariations(where, name, fColRegister);
       }
 
       using ArgTypes_t = typename TTraits::CallableTraits<F>::arg_types;
