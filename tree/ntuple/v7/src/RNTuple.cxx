@@ -142,6 +142,12 @@ std::unique_ptr<ROOT::Experimental::RNTupleReader> ROOT::Experimental::RNTupleRe
    return std::make_unique<RNTupleReader>(Detail::RPageSource::Create(ntupleName, storage, options));
 }
 
+std::unique_ptr<ROOT::Experimental::RNTupleReader>
+ROOT::Experimental::RNTupleReader::Open(const ROOT::Experimental::RNTuple *ntuple, const RNTupleReadOptions &options)
+{
+   return std::make_unique<RNTupleReader>(ntuple->MakePageSource(options));
+}
+
 std::unique_ptr<ROOT::Experimental::RNTupleReader> ROOT::Experimental::RNTupleReader::OpenFriends(
    std::span<ROpenSpec> ntuples)
 {
@@ -403,11 +409,12 @@ void ROOT::Experimental::RNTuple::Streamer(TBuffer &buf)
    }
 }
 
-std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::RNTuple::MakePageSource() const
+std::unique_ptr<ROOT::Experimental::Detail::RPageSource>
+ROOT::Experimental::RNTuple::MakePageSource(const RNTupleReadOptions &options) const
 {
    if (!fFile)
       throw RException(R__FAIL("This RNTuple object was not streamed from a file"));
 
    auto path = fFile->GetEndpointUrl()->GetFile();
-   return Detail::RPageSourceFile::CreateFromAnchor(GetAnchor(), path, RNTupleReadOptions());
+   return Detail::RPageSourceFile::CreateFromAnchor(GetAnchor(), path, options);
 }
