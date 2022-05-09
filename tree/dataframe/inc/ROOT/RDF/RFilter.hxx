@@ -52,20 +52,25 @@ namespace Detail {
 namespace RDF {
 using namespace ROOT::TypeTraits;
 namespace RDFGraphDrawing = ROOT::Internal::RDF::GraphDrawing;
+class RJittedFilter;
 
-template <typename FilterF, typename PrevNode>
+template <typename FilterF, typename PrevNodeRaw>
 class R__CLING_PTRCHECK(off) RFilter final : public RFilterBase {
    using ColumnTypes_t = typename CallableTraits<FilterF>::arg_types;
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
+   // If the PrevNode is a RJittedFilter, treat it as a more generic RFilterBase: when dealing with systematic
+   // variations we'll have a RJittedFilter node for the nominal case but other "universes" will use concrete filters,
+   // so we normalize the "previous node type" to the base type RFilterBase.
+   using PrevNode_t = std::conditional_t<std::is_same<PrevNodeRaw, RJittedFilter>::value, RFilterBase, PrevNodeRaw>;
 
    FilterF fFilter;
    /// Column readers per slot and per input column
    std::vector<std::array<std::unique_ptr<RColumnReaderBase>, ColumnTypes_t::list_size>> fValues;
-   const std::shared_ptr<PrevNode> fPrevNodePtr;
-   PrevNode &fPrevNode;
+   const std::shared_ptr<PrevNode_t> fPrevNodePtr;
+   PrevNode_t &fPrevNode;
 
 public:
-   RFilter(FilterF f, const ROOT::RDF::ColumnNames_t &columns, std::shared_ptr<PrevNode> pd,
+   RFilter(FilterF f, const ROOT::RDF::ColumnNames_t &columns, std::shared_ptr<PrevNode_t> pd,
            const RDFInternal::RColumnRegister &colRegister, std::string_view name = "",
            const std::string &variationName = "nominal")
       : RFilterBase(pd->GetLoopManagerUnchecked(), name, pd->GetLoopManagerUnchecked()->GetNSlots(), colRegister,
@@ -204,7 +209,7 @@ public:
       auto prevNode = fPrevNodePtr;
       if (static_cast<RNodeBase *>(fPrevNodePtr.get()) != static_cast<RNodeBase *>(fLoopManager) &&
           RDFInternal::IsStrInVec(variationName, prevNode->GetVariations()))
-         prevNode = std::static_pointer_cast<PrevNode>(prevNode->GetVariedFilter(variationName));
+         prevNode = std::static_pointer_cast<PrevNode_t>(prevNode->GetVariedFilter(variationName));
 
       // the varied filters get a copy of the callable object.
       // TODO document this
