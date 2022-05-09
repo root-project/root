@@ -263,6 +263,8 @@ ROOT::Experimental::Detail::RPageSourceFile::~RPageSourceFile() = default;
 
 ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFile::AttachImpl()
 {
+   // If we constructed the page source with (ntuple name, path), we need to find the anchor first.
+   // Otherwise, the page source was created by OpenFromAnchor() and the header and footer are already processed.
    if (fDescriptorBuilder.GetDescriptor().GetOnDiskHeaderSize() == 0) {
       auto anchor = fReader.GetNTuple(fNTupleName).Unwrap();
       InitDescriptor(anchor);
