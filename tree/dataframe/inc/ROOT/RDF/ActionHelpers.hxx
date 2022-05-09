@@ -550,6 +550,17 @@ public:
       UnsetDirectoryIfPossible(result.get());
       return FillParHelper(result, fObjects.size());
    }
+
+   // This overload is selected if HIST does not have a Reset method, i.e. we cannot
+   // safely re-initialize variations of the result (see above).
+   // In this case we simply error out.
+   template <typename H = HIST, typename... ExtraArgs>
+   FillParHelper MakeNew(void *, ExtraArgs...)
+   {
+      throw std::runtime_error(
+         "A systematic variation was requested for a custom Fill action, but the type of the object to be filled does "
+         "not implement a Reset method, so we cannot safely re-initialize variations of the result. Aborting.");
+   }
 };
 
 class R__CLING_PTRCHECK(off) FillTGraphHelper : public ROOT::Detail::RDF::RActionImpl<FillTGraphHelper> {
