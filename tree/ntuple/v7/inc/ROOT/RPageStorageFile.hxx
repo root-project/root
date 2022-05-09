@@ -137,13 +137,16 @@ private:
    std::unique_ptr<ROOT::Internal::RRawFile> fFile;
    /// Takes the fFile to read ntuple blobs from it
    Internal::RMiniFileReader fReader;
+   /// The descriptor is created from the header and footer either in AttachImpl or in CreateFromAnchor
    RNTupleDescriptorBuilder fDescriptorBuilder;
    /// The cluster pool asynchronously preloads the next few clusters
    std::unique_ptr<RClusterPool> fClusterPool;
 
+   /// Deserialized header and footer into a minimal descriptor held by fDescriptorBuilder
    void InitDescriptor(const Internal::RFileNTupleAnchor &anchor);
 
    RPageSourceFile(std::string_view ntupleName, const RNTupleReadOptions &options);
+   /// Used from the RNTuple class to build a datasource if the anchor is already available
    static std::unique_ptr<RPageSourceFile> CreateFromAnchor(const Internal::RFileNTupleAnchor &anchor,
                                                             std::string_view path, const RNTupleReadOptions &options);
    RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
