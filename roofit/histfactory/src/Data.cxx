@@ -17,10 +17,6 @@
 #include "RooStats/HistFactory/Data.h"
 
 
-RooStats::HistFactory::Data::Data() : fName("") {
-  ;
-}
-
 RooStats::HistFactory::Data::Data( std::string HistoName, std::string InputFile,
                std::string HistoPath ) :
   fInputFile( InputFile ), fHistoName( HistoName ), fHistoPath( HistoPath ) {;}
@@ -65,7 +61,7 @@ void RooStats::HistFactory::Data::writeToFile( std::string OutputFileName, std::
 }
 
 
-void RooStats::HistFactory::Data::PrintXML( std::ostream& xml ) {
+void RooStats::HistFactory::Data::PrintXML( std::ostream& xml ) const {
 
   xml << "    <Data HistoName=\"" << GetHistoName() << "\" "
       << "InputFile=\"" << GetInputFile() << "\" "
