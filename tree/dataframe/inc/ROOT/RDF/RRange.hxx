@@ -34,14 +34,19 @@ std::shared_ptr<GraphNode> CreateRangeNode(const ROOT::Detail::RDF::RRangeBase *
 namespace Detail {
 namespace RDF {
 namespace RDFGraphDrawing = ROOT::Internal::RDF::GraphDrawing;
+class RJittedFilter;
 
-template <typename PrevNode>
+template <typename PrevNodeRaw>
 class RRange final : public RRangeBase {
-   const std::shared_ptr<PrevNode> fPrevNodePtr;
-   PrevNode &fPrevNode;
+   // If the PrevNode is a RJittedFilter, treat it as a more generic RFilterBase: when dealing with systematic
+   // variations we'll have a RJittedFilter node for the nominal case but other "universes" will use concrete filters,
+   // so we normalize the "previous node type" to the base type RFilterBase.
+   using PrevNode_t = std::conditional_t<std::is_same<PrevNodeRaw, RJittedFilter>::value, RFilterBase, PrevNodeRaw>;
+   const std::shared_ptr<PrevNode_t> fPrevNodePtr;
+   PrevNode_t &fPrevNode;
 
 public:
-   RRange(unsigned int start, unsigned int stop, unsigned int stride, std::shared_ptr<PrevNode> pd)
+   RRange(unsigned int start, unsigned int stop, unsigned int stride, std::shared_ptr<PrevNode_t> pd)
       : RRangeBase(pd->GetLoopManagerUnchecked(), start, stop, stride, pd->GetLoopManagerUnchecked()->GetNSlots(),
                    pd->GetVariations()),
         fPrevNodePtr(std::move(pd)), fPrevNode(*fPrevNodePtr)
@@ -147,7 +152,7 @@ public:
       auto prevNode = fPrevNodePtr;
       if (static_cast<RNodeBase *>(fPrevNodePtr.get()) != static_cast<RNodeBase *>(fLoopManager) &&
           RDFInternal::IsStrInVec(variationName, prevNode->GetVariations()))
-         prevNode = std::static_pointer_cast<PrevNode>(prevNode->GetVariedFilter(variationName));
+         prevNode = std::static_pointer_cast<PrevNode_t>(prevNode->GetVariedFilter(variationName));
 
       auto variedRange = std::unique_ptr<RRangeBase>(new RRange(fStart, fStop, fStride, std::move(prevNode)));
       fLoopManager->Book(variedRange.get());
