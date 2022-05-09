@@ -103,9 +103,6 @@ namespace RooStats{
       RooHistFunc* MakeExpectedHistFunc(const TH1* hist, RooWorkspace* proto, std::string prefix,
           const RooArgList& observables) const;
 
-      void SetObsToExpected(RooWorkspace* proto, std::string obsPrefix, std::string expPrefix,
-             int lowBin, int highBin);
-
       std::unique_ptr<TH1> MakeScaledUncertaintyHist(const std::string& Name,
                  std::vector< std::pair<const TH1*, const TH1*> > HistVec ) const;
 
