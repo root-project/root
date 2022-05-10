@@ -31,7 +31,6 @@ TEST(RNTuple, StdPair)
    auto field = RField<std::pair<int64_t, float>>("pairField");
    EXPECT_STREQ("std::pair<std::int64_t,float>", field.GetType().c_str());
    auto otherField = RFieldBase::Create("test", "std::pair<int64_t, float>").Unwrap();
-   // sizeof check fails, RPairField does not take into account 4 trailing padding bytes
    EXPECT_EQ((sizeof(std::pair<int64_t, float>)), field.GetValueSize());
    EXPECT_EQ((sizeof(std::pair<int64_t, float>)), otherField->GetValueSize());
    EXPECT_EQ((alignof(std::pair<int64_t, float>)), field.GetAlignment());

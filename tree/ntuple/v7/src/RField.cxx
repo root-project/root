@@ -904,6 +904,8 @@ ROOT::Experimental::RRecordField::RRecordField(
       fSize += GetItemPadding(fSize, item->GetAlignment()) + item->GetValueSize();
       Attach(std::move(item));
    }
+   // Trailing padding to comply with the alignment requirements of the type with stricter alignment
+   fSize += GetItemPadding(fSize, fMaxAlignment);
 }
 
 
