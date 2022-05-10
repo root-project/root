@@ -49,7 +49,6 @@ uniformly over their intervals before construction of the MarkovChain begins.
 
 #include "Rtypes.h"
 #include "RooRealVar.h"
-#include "RooNLLVar.h"
 #include "RooGlobalFunc.h"
 #include "RooDataSet.h"
 #include "RooArgSet.h"

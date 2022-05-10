@@ -20,8 +20,6 @@
 
 #include "RooRealVar.h"
 
-#include "RooNLLVar.h"
-
 #include "Math/MinimizerOptions.h"
 
 #include "RooStats/RooStatsUtils.h"

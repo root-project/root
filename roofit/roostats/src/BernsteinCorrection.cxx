@@ -59,7 +59,6 @@ generating the toys (either via a histogram or via an independent model that is 
 #include <iostream>
 
 #include "RooEffProd.h"
-#include "RooNLLVar.h"
 #include "RooWorkspace.h"
 #include "RooDataHist.h"
 #include "RooHistPdf.h"

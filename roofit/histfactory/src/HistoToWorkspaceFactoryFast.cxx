@@ -38,7 +38,6 @@
 #include "RooSimultaneous.h"
 #include "RooMultiVarGaussian.h"
 #include "RooNumIntConfig.h"
-#include "RooNLLVar.h"
 #include "RooProfileLL.h"
 #include "RooFitResult.h"
 #include "RooDataHist.h"

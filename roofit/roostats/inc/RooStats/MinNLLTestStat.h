@@ -25,7 +25,6 @@
 
 #include "RooRealVar.h"
 #include "RooProfileLL.h"
-#include "RooNLLVar.h"
 #include "RooMsgService.h"
 
 #include "RooMinimizer.h"

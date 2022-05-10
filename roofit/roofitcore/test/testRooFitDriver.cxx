@@ -15,7 +15,6 @@
 #include "RooConstVar.h"
 #include "RooArgusBG.h"
 #include "RooAddPdf.h"
-#include "RooNLLVar.h"
 #include "RooNLLVarNew.h"
 #include "RooFitDriver.h"
 #include "RooFit/BatchModeHelpers.h"

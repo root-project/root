@@ -29,7 +29,6 @@
 #include "RooAbsData.h"
 #include "RooMsgService.h"
 #include "RooRealVar.h"
-#include "RooNLLVar.h"
 
 #include "RooStats/RooStatsUtils.h"
 #include "RooProdPdf.h"

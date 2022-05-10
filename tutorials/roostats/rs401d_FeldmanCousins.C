@@ -37,7 +37,6 @@
 #include "RooPolynomial.h"
 #include "RooRandom.h"
 
-#include "RooNLLVar.h"
 #include "RooProfileLL.h"
 
 #include "RooPlot.h"
@@ -187,8 +186,8 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins = false, bool doMCMC = true)
 
    // plot the likelihood function
    dataCanvas->cd(3);
-   RooNLLVar nll("nll", "nll", model, *data, Extended());
-   RooProfileLL pll("pll", "", nll, RooArgSet(deltaMSq, sinSq2theta));
+   std::unique_ptr<RooAbsReal> nll{model.createNLL(*data, Extended)};
+   RooProfileLL pll("pll", "", *nll, RooArgSet(deltaMSq, sinSq2theta));
    //  TH1* hhh = nll.createHistogram("hhh",sinSq2theta,Binning(40),YVar(deltaMSq,Binning(40))) ;
    TH1 *hhh = pll.createHistogram("hhh", sinSq2theta, Binning(40), YVar(deltaMSq, Binning(40)), Scaling(kFALSE));
    hhh->SetLineColor(kBlue);

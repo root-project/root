@@ -26,13 +26,13 @@ is store in the summary dataset.
 
 #include "Riostream.h"
 
+#include "RooAbsPdf.h"
 #include "RooDataSet.h"
 #include "RooRealVar.h"
 #include "TString.h"
 #include "RooFitResult.h"
 #include "RooChi2MCSModule.h"
 #include "RooMsgService.h"
-#include "RooChi2Var.h"
 #include "RooDataHist.h"
 #include "TMath.h"
 #include "RooGlobalFunc.h"
@@ -131,11 +131,11 @@ bool RooChi2MCSModule::processAfterFit(Int_t /*sampleNum*/)
     binnedData = ((RooDataSet*)data)->binnedClone() ;
   }
 
-  RooChi2Var chi2Var("chi2Var","chi2Var",*fitModel(),*binnedData,RooFit::Extended(extendedGen()),RooFit::DataError(RooAbsData::SumW2)) ;
+  std::unique_ptr<RooAbsReal> chi2Var{fitModel()->createChi2(*binnedData,RooFit::Extended(extendedGen()),RooFit::DataError(RooAbsData::SumW2))};
 
   RooArgSet* floatPars = (RooArgSet*) fitParams()->selectByAttrib("Constant",false) ;
 
-  _chi2->setVal(chi2Var.getVal()) ;
+  _chi2->setVal(chi2Var->getVal()) ;
   _ndof->setVal(binnedData->numEntries()-floatPars->getSize()-1) ;
   _chi2red->setVal(_chi2->getVal()/_ndof->getVal()) ;
   _prob->setVal(TMath::Prob(_chi2->getVal(),static_cast<int>(_ndof->getVal()))) ;

@@ -17,7 +17,6 @@
 #include "RooFormulaVar.h"
 #include "RooGenericPdf.h"
 #include "RooPolynomial.h"
-#include "RooChi2Var.h"
 #include "RooMinimizer.h"
 #include "TCanvas.h"
 #include "TAxis.h"
@@ -131,8 +130,8 @@ void rf403_weightedevts()
    // NB: Within the usual approximations of a chi2 fit, a chi2 fit to weighted
    // data using sum-of-weights-squared errors does give correct error
    // estimates
-   RooChi2Var chi2("chi2", "chi2", p2, *binnedData, DataError(RooAbsData::SumW2));
-   RooMinimizer m(chi2);
+   std::unique_ptr<RooAbsReal> chi2{p2.createChi2(*binnedData, DataError(RooAbsData::SumW2))};
+   RooMinimizer m(*chi2);
    m.migrad();
    m.hesse();
 

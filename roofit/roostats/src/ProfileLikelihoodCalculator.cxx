@@ -61,7 +61,6 @@ AsymptoticCalculator, which can compute in addition the expected
 #include "RooFitResult.h"
 #include "RooRealVar.h"
 #include "RooProfileLL.h"
-#include "RooNLLVar.h"
 #include "RooGlobalFunc.h"
 #include "RooMsgService.h"
 
