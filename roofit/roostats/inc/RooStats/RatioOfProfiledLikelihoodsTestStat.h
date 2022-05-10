@@ -14,8 +14,6 @@
 
 #include "Rtypes.h"
 
-#include "RooNLLVar.h"
-
 #include "RooStats/TestStatistic.h"
 
 #include "RooStats/ProfileLikelihoodTestStat.h"

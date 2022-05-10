@@ -52,7 +52,6 @@ The calculator can generate Asimov datasets from two kinds of PDFs:
 #include "RooRealVar.h"
 #include "RooMinimizer.h"
 #include "RooFitResult.h"
-#include "RooNLLVar.h"
 #include "Math/MinimizerOptions.h"
 #include "RooPoisson.h"
 #include "RooUniform.h"

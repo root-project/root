@@ -65,5 +65,5 @@ model.chi2FitTo(dh, ll)
 # messages
 dsmall = d.reduce(ROOT.RooFit.EventRange(1, 100))
 dhsmall = dsmall.binnedClone()
-chi2_lowstat = ROOT.RooChi2Var("chi2_lowstat", "chi2", model, dhsmall)
+chi2_lowstat = model.createChi2(dhsmall)
 print(chi2_lowstat.getVal())

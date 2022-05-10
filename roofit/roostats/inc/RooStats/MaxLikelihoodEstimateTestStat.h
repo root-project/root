@@ -16,8 +16,6 @@
 
 #include "Rtypes.h"
 
-#include "RooNLLVar.h"
-
 #include "RooFitResult.h"
 #include "RooStats/TestStatistic.h"
 #include "RooAbsPdf.h"

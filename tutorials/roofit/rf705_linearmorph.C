@@ -15,7 +15,6 @@
 #include "RooGaussian.h"
 #include "RooPolynomial.h"
 #include "RooIntegralMorph.h"
-#include "RooNLLVar.h"
 #include "TCanvas.h"
 #include "TAxis.h"
 #include "RooPlot.h"
@@ -107,8 +106,8 @@ void rf705_linearmorph()
    RooPlot *frame3 = alpha.frame(Bins(100), Range(0.1, 0.9));
 
    // Make 2D pdf of histogram
-   RooNLLVar nll("nll", "nll", lmorph, *data);
-   nll.plotOn(frame3, ShiftToZero());
+   std::unique_ptr<RooAbsReal> nll{lmorph.createNLL(*data)};
+   nll->plotOn(frame3, ShiftToZero());
 
    lmorph.setCacheAlpha(kFALSE);
 

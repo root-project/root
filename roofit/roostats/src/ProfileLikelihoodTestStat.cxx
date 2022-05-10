@@ -31,7 +31,6 @@ either use:
 #include "RooStats/DetailedOutputAggregator.h"
 
 #include "RooProfileLL.h"
-#include "RooNLLVar.h"
 #include "RooMsgService.h"
 #include "RooMinimizer.h"
 #include "RooArgSet.h"

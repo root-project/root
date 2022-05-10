@@ -13,8 +13,7 @@
 
 #include "Rtypes.h"
 
-#include "RooNLLVar.h"
-
+#include "RooAbsPdf.h"
 #include "RooRealVar.h"
 
 #include "RooStats/TestStatistic.h"

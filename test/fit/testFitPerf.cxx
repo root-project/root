@@ -45,7 +45,6 @@
 #include "RooRealVar.h"
 #include "RooGaussian.h"
 #include "RooMinimizer.h"
-#include "RooChi2Var.h"
 #include "RooGlobalFunc.h"
 #include "RooFitResult.h"
 #include "RooProdPdf.h"
