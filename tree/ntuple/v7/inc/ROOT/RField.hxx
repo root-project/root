@@ -335,18 +335,25 @@ public:
 /// The field for an untyped record. The subfields are stored consequitively in a memory block, i.e.
 /// the memory layout is identical to one that a C++ struct would have
 class RRecordField : public Detail::RFieldBase {
-private:
+protected:
    std::size_t fMaxAlignment = 1;
    std::size_t fSize = 0;
 
-protected:
+   std::size_t GetItemPadding(std::size_t baseOffset, std::size_t itemAlignment) const;
+
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
    std::size_t AppendImpl(const Detail::RFieldValue& value) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
    void ReadInClusterImpl(const RClusterIndex &clusterIndex, Detail::RFieldValue *value) final;
 
 public:
-   RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<Detail::RFieldBase>> &itemFields);
+   RRecordField(std::string_view fieldName, std::string_view type,
+                std::vector<std::unique_ptr<Detail::RFieldBase>> &&itemFields);
+   RRecordField(std::string_view fieldName, std::string_view type,
+                std::vector<std::unique_ptr<Detail::RFieldBase>> &itemFields)
+     : RRecordField(fieldName, type, std::move(itemFields)) {}
+   RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<Detail::RFieldBase>> &itemFields)
+     : RRecordField(fieldName, "", itemFields) {}
    RRecordField(RRecordField&& other) = default;
    RRecordField& operator =(RRecordField&& other) = default;
    ~RRecordField() = default;
@@ -354,14 +361,13 @@ public:
    void GenerateColumnsImpl() final {}
    void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue GenerateValue(void* where) final;
+   Detail::RFieldValue GenerateValue(void* where) override;
    void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final;
    Detail::RFieldValue CaptureValue(void *where) final;
    std::vector<Detail::RFieldValue> SplitValue(const Detail::RFieldValue &value) const final;
    size_t GetValueSize() const final { return fSize; }
    size_t GetAlignment() const final { return fMaxAlignment; }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
-   static std::size_t GetItemPadding(std::size_t baseOffset, std::size_t itemAlignment);
 };
 
 /// The generic field for a (nested) std::vector<Type> except for std::vector<bool>
@@ -1539,56 +1545,29 @@ public:
    size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
 };
 
-class RPairField : public Detail::RFieldBase {
-private:
-   std::size_t fMaxAlignment = 1;
-   std::size_t fSize = 0;
-   static std::string GetTypeList(
-      const std::pair<Detail::RFieldBase*, Detail::RFieldBase*> &itemFields);
-
-protected:
-   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
-   std::size_t AppendImpl(const Detail::RFieldValue& value) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
-   void ReadInClusterImpl(const RClusterIndex &clusterIndex, Detail::RFieldValue *value) final;
-
-public:
-   RPairField(std::string_view fieldName,
-      const std::pair<Detail::RFieldBase*, Detail::RFieldBase*> &itemFields);
-   RPairField(RPairField &&other) = default;
-   RPairField& operator =(RPairField &&other) = default;
-   ~RPairField() = default;
-
-   void GenerateColumnsImpl() final {};
-   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
-   using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue GenerateValue(void *where) override;
-   void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final;
-   Detail::RFieldValue CaptureValue(void *where) final;
-   size_t GetValueSize() const final { return fSize; }
-   size_t GetAlignment() const final { return fMaxAlignment; }
-};
-
 template <typename T1, typename T2>
-class RField<std::pair<T1, T2>> : public RPairField {
+class RField<std::pair<T1, T2>> : public RRecordField {
 private:
    using ContainerT = typename std::pair<T1,T2>;
    template <typename Ty1, typename Ty2>
-   static std::pair<Detail::RFieldBase*, Detail::RFieldBase*> BuildItemFields()
+   static std::vector<std::unique_ptr<Detail::RFieldBase>> BuildItemFields()
    {
-      return std::make_pair(new RField<Ty1>("first"), new RField<Ty2>("second"));
+      std::vector<std::unique_ptr<Detail::RFieldBase>> items;
+      items.push_back(std::make_unique<RField<Ty1>>("_0"));
+      items.push_back(std::make_unique<RField<Ty2>>("_1"));
+      return items;
    }
 
 public:
    static std::string TypeName() {
       return "std::pair<" + RField<T1>::TypeName() + "," + RField<T2>::TypeName() + ">";
    }
-   explicit RField(std::string_view name) : RPairField(name, BuildItemFields<T1, T2>()) {}
+   explicit RField(std::string_view name) : RRecordField(name, TypeName(), BuildItemFields<T1, T2>()) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
 
-   using Detail::RFieldBase::GenerateValue;
+   using RRecordField::GenerateValue;
    template <typename... ArgsT>
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where, ArgsT&&... args)
    {
