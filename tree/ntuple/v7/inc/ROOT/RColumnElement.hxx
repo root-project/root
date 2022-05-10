@@ -17,6 +17,7 @@
 #define ROOT7_RColumnElement
 
 #include <ROOT/RColumnModel.hxx>
+#include <ROOT/RConfig.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 
 #include <Byteswap.h>
@@ -29,14 +30,11 @@
 #include <type_traits>
 
 #ifndef R__LITTLE_ENDIAN
-#if defined(_WIN32) || defined(__LITTLE_ENDIAN__) || \
-  (defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+#ifdef R__BYTESWAP
+// `R__BYTESWAP` is defined in RConfig.hxx for little-endian architectures; undefined otherwise
 # define R__LITTLE_ENDIAN 1
-#elif defined(__BIG_ENDIAN__) || \
-  (defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
-# define R__LITTLE_ENDIAN 0
 #else
-# error "Unsupported endianness"
+# define R__LITTLE_ENDIAN 0
 #endif
 #endif /* R__LITTLE_ENDIAN */
 
@@ -140,7 +138,7 @@ public:
 template <typename CppT>
 class RColumnElementLE : public RColumnElementBase {
 public:
-   static constexpr bool kIsMappable = R__LITTLE_ENDIAN;
+   static constexpr bool kIsMappable = (R__LITTLE_ENDIAN == 1);
    RColumnElementLE(void *rawContent, std::size_t size) : RColumnElementBase(rawContent, size) {}
 
    void Pack(void *dst, void *src, std::size_t count) const final
