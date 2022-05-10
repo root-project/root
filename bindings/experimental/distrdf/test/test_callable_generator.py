@@ -322,3 +322,55 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         self.assertListEqual(nodes, [n4.proxied_node, n5.proxied_node])
         # One occurrence of 't' per action node
         self.assertListEqual(triggerables, [t, t])
+
+    def test_nodes_gt_python_recursion_limit(self):
+        """
+        Check that we can handle more nodes than the Python default maximum
+        number of recursive function calls (1000).
+        """
+        # A mock RDF object
+        t = ComputationGraphGeneratorTest.Temp()
+
+        # Head node
+        hn = create_dummy_headnode(1)
+        hn.backend = ComputationGraphGeneratorTest.TestBackend()
+        node = Proxy.TransformationProxy(hn)
+        # Create three branches
+        n1 = node.Define()
+        n2 = node.Filter()
+        # Append 1000 nodes per branch
+        for _ in range(1000):
+            n1 = n1.Define()
+            n2 = n2.Filter()
+
+        # Generate and execute the mapper
+        graph_dict = hn.generate_graph_dict()
+        mapper_func = ComputationGraphGenerator.generate_computation_graph
+        mapper_func(graph_dict, t, 0)
+
+        # Required order in the list of returned values (the nodes are stored
+        # in DFS order the first time they are appended to the graph)
+        reqd_order = [1, 2] * (1+1000)  # (branches + 1000 nodes per branch)
+
+        self.assertEqual(t.ord_list, reqd_order)
+
+
+        # Now overwrite the branches so that we can trigger the pruning later
+        n1 = node.Filter()
+        n2 = node.Define()
+        # Append 1000 nodes per branch
+        for _ in range(1000):
+            n1 = n1.Filter()
+            n2 = n2.Define()
+        # Reset the mock list of nodes so old nodes are not kept
+        t.ord_list = []
+
+        # Generate and execute the mapper
+        graph_dict = hn.generate_graph_dict()
+        mapper_func(graph_dict, t, 0)
+
+        # Required order in the list of returned values (the nodes are stored
+        # in DFS order the first time they are appended to the graph)
+        reqd_order = [2, 1] * (1+1000)  # (branches + 1000 nodes per branch)
+
+        self.assertEqual(t.ord_list, reqd_order)
