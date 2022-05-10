@@ -47,7 +47,7 @@ namespace reco {
 class Track {};
 
 namespace Muon {
-enum MuonTrackType {
+enum MuonTrackType : unsigned int {
    kNone
 };
 } // reco::Muon
