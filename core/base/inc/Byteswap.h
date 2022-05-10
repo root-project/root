@@ -110,4 +110,37 @@ static inline uint64_t R__bswap_constant_64(uint64_t x) {
 /* Return a value with all bytes in the 64 bit argument swapped.  */
 #define Rbswap_64(x) R__bswap_64(x)
 
+/// \brief Helper templated class for swapping bytes; specializations for `N={2,4,8}`
+/// are provided below.  This class can be used to byteswap any other type, e.g. in a
+/// templated function (see example below).
+/// ```
+/// template <typename T>
+/// void byteswap_arg(T &x) {
+///    using value_type = typename RByteSwap<sizeof(T)>::value_type;
+///    x = RByteSwap<sizeof(T)>::bswap(reinterpret_cast<value_type>(x));
+/// }
+/// ```
+template <unsigned N>
+struct RByteSwap {
+};
+
+template <>
+struct RByteSwap<2> {
+   // Signed integers can be safely byteswapped if they are reinterpret_cast'ed to unsigned
+   using value_type = std::uint16_t;
+   static value_type bswap(value_type x) { return Rbswap_16(x); }
+};
+
+template <>
+struct RByteSwap<4> {
+   using value_type = std::uint32_t;
+   static value_type bswap(value_type x) { return Rbswap_32(x); }
+};
+
+template <>
+struct RByteSwap<8> {
+   using value_type = std::uint64_t;
+   static value_type bswap(value_type x) { return Rbswap_64(x); }
+};
+
 #endif /* Byteswap.h */
