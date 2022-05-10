@@ -403,11 +403,28 @@ void ROOT::Experimental::RNTuple::Streamer(TBuffer &buf)
       R__ASSERT(buf.GetParent() && buf.GetParent()->InheritsFrom("TFile"));
       fFile = reinterpret_cast<TFile *>(buf.GetParent());
    } else {
+      RNTuple::Class()->WriteBuffer(buf, this);
       // On disk, we store a plain RFileNTupleAnchor (aka an RNTuple version 1)
       // See RFileNTupleAnchor documentation for details
-      Internal::RFileNTupleAnchor anchor(*this);
-      auto cl = TClass::GetClass<Internal::RFileNTupleAnchor>();
-      cl->WriteBuffer(buf, &anchor);
+      // UInt_t bcnt = buf.GetCurrent() - buf.Buffer();
+      // Version_t version = 0;
+      // buf << version; // ROOT class version 1, forced
+      //      std::uint32_t classBcnt = 0x40000000 | (fSize + sizeof(std::uint16_t) + sizeof(std::uint32_t));
+      //      std::uint16_t classVersion = 1;
+      //      std::uint32_t classChecksum = 1700499286; // TODO
+      //      buf << classBcnt;
+      //      buf << classVersion;
+      //      buf << classChecksum;
+      //
+      //      buf << fVersion;
+      //      buf << fSize;
+      //      buf << fSeekHeader;
+      //      buf << fNBytesHeader;
+      //      buf << fLenHeader;
+      //      buf << fSeekFooter;
+      //      buf << fNBytesFooter;
+      //      buf << fLenFooter;
+      //      buf << fReserved;
    }
 }
 

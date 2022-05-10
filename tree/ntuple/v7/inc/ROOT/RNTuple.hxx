@@ -486,16 +486,53 @@ auto reader = RNTupleReader::Open(ntpl);
 ~~~
 */
 // clang-format on
-class RNTuple final : protected Internal::RFileNTupleAnchor {
+class RNTuple final {
    friend class ROOT::Experimental::Internal::RNTupleFileWriter;
    friend class ROOT::Experimental::Internal::RNTupleTester;
 
-private:
+public:
+   std::int32_t fChecksum = ROOT::Experimental::Internal::RFileNTupleAnchor::ChecksumRNTupleClass();
+   std::uint32_t fVersion = 0;
+   std::uint32_t fSize = sizeof(ROOT::Experimental::Internal::RFileNTupleAnchor);
+   std::uint64_t fSeekHeader = 0;
+   std::uint32_t fNBytesHeader = 0;
+   std::uint32_t fLenHeader = 0;
+   std::uint64_t fSeekFooter = 0;
+   std::uint32_t fNBytesFooter = 0;
+   std::uint32_t fLenFooter = 0;
+   std::uint64_t fReserved = 0;
+
    TFile *fFile = nullptr; ///<! The file from which the ntuple was streamed, registered in the custom streamer
 
    // Conversion between hidden base class and derived class
-   RNTuple(const Internal::RFileNTupleAnchor &a) : Internal::RFileNTupleAnchor(a) {}
-   Internal::RFileNTupleAnchor GetAnchor() const { return *this; }
+   RNTuple(const Internal::RFileNTupleAnchor &a)
+   {
+      fChecksum = a.fChecksum;
+      fVersion = a.fVersion;
+      fSize = a.fSize;
+      fSeekHeader = a.fSeekHeader;
+      fNBytesHeader = a.fNBytesHeader;
+      fLenHeader = a.fLenHeader;
+      fSeekFooter = a.fSeekFooter;
+      fNBytesFooter = a.fNBytesFooter;
+      fLenFooter = a.fLenFooter;
+      fReserved = a.fReserved;
+   }
+   Internal::RFileNTupleAnchor GetAnchor() const
+   {
+      Internal::RFileNTupleAnchor a;
+      a.fChecksum = fChecksum;
+      a.fVersion = fVersion;
+      a.fSize = fSize;
+      a.fSeekHeader = fSeekHeader;
+      a.fNBytesHeader = fNBytesHeader;
+      a.fLenHeader = fLenHeader;
+      a.fSeekFooter = fSeekFooter;
+      a.fNBytesFooter = fNBytesFooter;
+      a.fLenFooter = fLenFooter;
+      a.fReserved = fReserved;
+      return a;
+   }
 
 public:
    RNTuple() = default;
@@ -511,7 +548,7 @@ public:
 
    // The RNTuple on-disk is always version 1. See Internal::RFileNTupleAnchor for the interplay between
    // Internal::RFileNTupleAnchor and RNTuple.
-   ClassDefNV(RNTuple, 2);
+   ClassDefNV(RNTuple, 1);
 };
 
 } // namespace Experimental
