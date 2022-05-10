@@ -42,7 +42,6 @@
 #include "RooProdPdf.h"
 #include "RooAddPdf.h"
 #include "RooGaussian.h"
-#include "RooNLLVar.h"
 #include "RooProfileLL.h"
 #include "RooWorkspace.h"
 

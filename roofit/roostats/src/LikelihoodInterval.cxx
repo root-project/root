@@ -65,12 +65,6 @@
 #include <functional>
 #include <ctype.h>   // need to use c version of toupper defined here
 
-/*
-// for debugging
-#include "RooNLLVar.h"
-#include "RooDataSet.h"
-#include "RooAbsData.h"
-*/
 
 ClassImp(RooStats::LikelihoodInterval); ;
 

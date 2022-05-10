@@ -13,7 +13,6 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooArgusBG.h"
-#include "RooNLLVar.h"
 #include "TCanvas.h"
 #include "TAxis.h"
 #include "RooPlot.h"
@@ -77,7 +76,7 @@ void rf606_nllerrorhandling()
    // ------------------------------------------------------------------
 
    // Construct likelihood function of model and data
-   RooNLLVar nll("nll", "nll", argus, *data);
+   std::unique_ptr<RooAbsReal> nll{argus.createNLL(*data)};
 
    // Plot likelihood in m0 in range that includes problematic values
    // In this configuration no messages are printed for likelihood evaluation errors,
@@ -85,7 +84,7 @@ void rf606_nllerrorhandling()
    // on the curve will be set to the value given in EvalErrorValue().
 
    RooPlot *frame2 = m0.frame(Range(5.288, 5.293), Title("-log(L) scan vs m0, problematic regions masked"));
-   nll.plotOn(frame2, PrintEvalErrors(-1), ShiftToZero(), EvalErrorValue(nll.getVal() + 10), LineColor(kRed));
+   nll->plotOn(frame2, PrintEvalErrors(-1), ShiftToZero(), EvalErrorValue(nll->getVal() + 10), LineColor(kRed));
    frame2->SetMaximum(15);
    frame2->SetMinimum(0);
 

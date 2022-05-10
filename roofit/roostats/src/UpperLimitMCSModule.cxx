@@ -29,7 +29,6 @@ upper limit for each toy-MC sample generated
 #include "RooStats/LikelihoodIntervalPlot.h"
 #include "RooStats/ProfileLikelihoodCalculator.h"
 #include "TCanvas.h"
-#include "RooNLLVar.h"
 #include "RooCmdArg.h"
 #include "RooRealVar.h"
 
