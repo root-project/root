@@ -10,7 +10,8 @@ ROOTTEST_ADD_TEST(WriteFile
                   COPY_TO_BUILDDIR testobject.h testobjectderived.h
                   PRECMD ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config $<CONFIG> --target base${fast}
                   MACRO execWriteFile.cxx+
-                  OUTREF execWriteFile${ref_suffix})
+                  OUTREF execWriteFile${ref_suffix}
+                  TIMEOUT 600)
 
 if(${compression_default} STREQUAL "lz4")
   set(outref_suffix "LZ4")
