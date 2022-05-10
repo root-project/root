@@ -90,6 +90,7 @@ struct NodeInfo {
    bool fromDataset = false;
    bool isVariable = false;
    bool isDirty = true;
+   bool isCategory = false;
    std::size_t outputSize = 1;
    std::size_t lastSetValCount = 9999999;
    double scalarBuffer;
@@ -143,6 +144,9 @@ RooFitDriver::RooFitDriver(const RooAbsReal &absReal, RooArgSet const &normSet, 
       auto &nodeInfo = _nodeInfos[arg];
       if (dynamic_cast<RooRealVar const *>(arg)) {
          nodeInfo.isVariable = true;
+      }
+      if (dynamic_cast<RooAbsCategory const *>(arg)) {
+         nodeInfo.isCategory = true;
       }
    }
 
@@ -436,8 +440,7 @@ void RooFitDriver::assignToGPU(RooAbsArg const *node)
 {
    using namespace Detail;
 
-   auto nodeAbsReal = dynamic_cast<RooAbsReal const *>(node);
-   assert(nodeAbsReal || dynamic_cast<RooAbsCategory const *>(node));
+   auto nodeAbsReal = static_cast<RooAbsReal const *>(node);
 
    NodeInfo &info = _nodeInfos.at(node);
    const std::size_t nOut = info.outputSize;
