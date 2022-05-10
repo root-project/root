@@ -49,21 +49,20 @@ public:
 
    void applyWeightSquared(bool flag) override;
 
-protected:
-   void setObservables(RooArgSet const &observables)
-   {
-      _observables.clear();
-      _observables.add(observables);
-   }
+   void
+   fillNormSetForServer(RooArgSet const &normSet, RooAbsArg const &server, RooArgSet &serverNormSet) const override;
 
+protected:
    RooTemplateProxy<RooAbsPdf> _pdf;
    RooArgSet _observables;
    mutable double _sumWeight = 0.0;         //!
    mutable double _sumWeight2 = 0.0;        //!
    bool _isExtended;
    bool _weightSquared = false;
+   bool _binnedL = false;
    std::string _prefix;
    std::unique_ptr<RooTemplateProxy<RooAbsReal>> _fractionInRange;
+   mutable std::vector<double> _binw; //!
 
    double evaluate() const override;
 
