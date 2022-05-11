@@ -1,22 +1,20 @@
+from abc import ABC, abstractmethod
 import logging
 import warnings
 
-from collections import deque
+from collections import Counter, deque
 from dataclasses import dataclass
-from functools import singledispatch
+from functools import partial, singledispatch
 from itertools import zip_longest
-from typing import Callable, Deque, Dict, List, Optional, Tuple, TYPE_CHECKING, Union
+from typing import Callable, Deque, Dict, Iterable, List, Optional, Tuple, Union
 
 import ROOT
 
-from DistRDF import Ranges
+from DistRDF import ComputationGraphGenerator, Ranges
+from DistRDF.Backends.Base import BaseBackend, distrdf_mapper, distrdf_reducer, TaskResult
 from DistRDF.Node import Node
 from DistRDF.Operation import Action, InstantAction, Operation
-
-# Type hints only
-if TYPE_CHECKING:
-    # Avoid circular imports
-    from DistRDF.Backends.Base import BaseBackend
+from DistRDF.Backends import Utils
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +34,24 @@ def _(operation: Union[Action, InstantAction], node: Node, actions: List[Node]) 
     actions.append(node)
 
 
-class HeadNode(Node):
+@dataclass
+class TaskObjects:
+    """
+    Holds objects needed in a distributed task.
+    Attributes:
+        rdf: The starting node of the RDataFrame computation graph. Only in a
+            TTree-based run, if the task has nothing to process then this
+            attribute is None.
+        entries_in_trees: A struct holding the amount of processed entries in
+            the task, as well as a dictionary where each key is an identifier
+            for a tree opened in the task and the value is the number of entries
+            in that tree. This attribute is not None only in a TTree-based run.
+    """
+    rdf: Optional[ROOT.RDF.RNode]
+    entries_in_trees: Optional[Ranges.TaskTreeEntries]
+
+
+class HeadNode(Node, ABC):
     """
     The head node of the computation graph. Keeps record of all nodes in the
     graph, is then able to generate a flat representation to be sent to the
@@ -52,10 +67,10 @@ class HeadNode(Node):
             this head node, starting from zero.
     """
 
-    def __init__(self):
+    def __init__(self, backend: BaseBackend):
         super().__init__(lambda: self)
 
-        self.backend: BaseBackend = None
+        self.backend = backend
 
         self.node_counter: int = 0
         # It is important to have a double-ended queue because we need to
@@ -80,7 +95,7 @@ class HeadNode(Node):
         self.graph_nodes = deque(node for node in self.graph_nodes if not node.is_prunable())
         logger.debug("Ended computational graph pruning")
 
-    def get_action_nodes(self) -> List[Node]:
+    def _get_action_nodes(self) -> List[Node]:
         """Generates a list of nodes in the graph that are actions."""
         # This function is called after distributed execution of the graph, no
         # need to repeat the pruning
@@ -89,7 +104,7 @@ class HeadNode(Node):
             _append_node_to_actions(node.operation, node, action_nodes)
         return action_nodes
 
-    def generate_graph_dict(self) -> Dict[int, Node]:
+    def _generate_graph_dict(self) -> Dict[int, Node]:
         """
         Generates a dictionary holding information about all nodes in the graph.
         It is then given to the distributed scheduler.
@@ -104,8 +119,68 @@ class HeadNode(Node):
         # serialization of the parent(s) of parent(s) nodes.
         return {node.node_id: node for node in reversed(self.graph_nodes)}
 
+    @abstractmethod
+    def _build_ranges(self) -> List[Ranges.DataRange]:
+        pass
 
-def get_headnode(npartitions: int, *args) -> HeadNode:
+    @abstractmethod
+    def _generate_rdf_creator(self) -> Callable[[Ranges.DataRange], TaskObjects]:
+        pass
+
+    @abstractmethod
+    def _handle_returned_values(self, values: "TaskResult") -> Iterable:
+        pass
+
+    def execute_graph(self) -> None:
+        """
+        Executes an RDataFrame computation graph on a distributed backend.
+
+        The needed ingredients are:
+
+        - A collection of logical ranges in which the dataset is split. Each
+          range is going to be assigned to a distributed task.
+        - A representation of the computation graph that the task needs to
+          execute.
+        - A way to generate an RDataFrame instance starting from the logical
+          range of the task.
+        - Optionally, some setup code to be run at the beginning of each task.
+
+        These are used as inputs to a generic mapper function. Results from the
+        various mappers are then reduced and the final results are retrieved in
+        the local session. These are properly handled to perform extra checks,
+        depending on the data source. Finally, the local user-facing nodes are
+        filled with the values that were computed distributedly so that they
+        can be accessed in the application like with local RDataFrame.
+        """
+        # Check if the workflow must be generated in optimized mode
+        optimized = ROOT.RDF.Experimental.Distributed.optimized
+
+        if optimized:
+            computation_graph_callable = ComputationGraphGenerator.get_callable_optimized()
+        else:
+            computation_graph_callable = partial(
+                ComputationGraphGenerator.trigger_computation_graph, self._generate_graph_dict())
+
+        mapper = partial(distrdf_mapper,
+                         build_rdf_from_range=self._generate_rdf_creator(),
+                         computation_graph_callable=computation_graph_callable,
+                         initialization_fn=self.backend.initialization,
+                         optimized=optimized)
+
+        # Execute graph distributedly and return the aggregated results from all
+        # tasks
+        returned_values = self.backend.ProcessAndMerge(self._build_ranges(), mapper, distrdf_reducer)
+        # Perform any extra checks that may be needed according to the
+        # type of the head node
+        final_values = self._handle_returned_values(returned_values)
+        # List of action nodes in the same order as values
+        local_nodes = self._get_action_nodes()
+        # Set the value of every action node
+        for node, value in zip(local_nodes, final_values):
+            Utils.set_value_on_node(value, node, self.backend)
+
+
+def get_headnode(backend: BaseBackend, npartitions: int, *args) -> HeadNode:
     """
     A factory for different kinds of head nodes of the RDataFrame computation
     graph, depending on the arguments to the RDataFrame constructor. Currently
@@ -123,36 +198,19 @@ def get_headnode(npartitions: int, *args) -> HeadNode:
     firstarg = args[0]
     if isinstance(firstarg, int):
         # RDataFrame(ULong64_t numEntries)
-        return EmptySourceHeadNode(npartitions, firstarg)
+        return EmptySourceHeadNode(backend, npartitions, firstarg)
     elif isinstance(firstarg, (ROOT.TTree, str)):
         # RDataFrame(std::string_view treeName, filenameglob, defaultBranches = {})
         # RDataFrame(std::string_view treename, filenames, defaultBranches = {})
         # RDataFrame(std::string_view treeName, dirPtr, defaultBranches = {})
         # RDataFrame(TTree &tree, const ColumnNames_t &defaultBranches = {})
-        return TreeHeadNode(npartitions, *args)
+        return TreeHeadNode(backend, npartitions, *args)
     else:
         raise RuntimeError(
             ("First argument {} of type {} is not recognised as a supported "
                 "argument for distributed RDataFrame. Currently only TTree/Tchain "
                 "based datasets or datasets created from a number of entries "
                 "can be processed distributedly.").format(firstarg, type(firstarg)))
-
-
-@dataclass
-class TaskObjects:
-    """
-    Holds objects needed in a distributed task.
-    Attributes:
-        rdf: The starting node of the RDataFrame computation graph. Only in a
-            TTree-based run, if the task has nothing to process then this
-            attribute is None.
-        entries_in_trees: A struct holding the amount of processed entries in
-            the task, as well as a dictionary where each key is an identifier
-            for a tree opened in the task and the value is the number of entries
-            in that tree. This attribute is not None only in a TTree-based run.
-    """
-    rdf: Optional[ROOT.RDF.RNode]
-    entries_in_trees: Optional[Ranges.TaskTreeEntries]
 
 
 class EmptySourceHeadNode(HeadNode):
@@ -170,7 +228,7 @@ class EmptySourceHeadNode(HeadNode):
             for distributed execution.
     """
 
-    def __init__(self, npartitions, nentries):
+    def __init__(self, backend: BaseBackend, npartitions: int, nentries: int):
         """
         Creates a new RDataFrame instance for the given arguments.
 
@@ -180,12 +238,12 @@ class EmptySourceHeadNode(HeadNode):
             npartitions (int): The number of partitions the dataset will be
                 split in for distributed execution.
         """
-        super().__init__()
+        super().__init__(backend)
 
         self.nentries = nentries
         self.npartitions = npartitions
 
-    def build_ranges(self):
+    def _build_ranges(self) -> List[Ranges.DataRange]:
         """Build the ranges for this dataset."""
         # Empty datasets cannot be processed distributedly
         if not self.nentries:
@@ -203,7 +261,7 @@ class EmptySourceHeadNode(HeadNode):
             self.npartitions = self.nentries
         return Ranges.get_balanced_ranges(self.nentries, self.npartitions)
 
-    def generate_rdf_creator(self):
+    def _generate_rdf_creator(self) -> Callable[[Ranges.DataRange], TaskObjects]:
         """
         Generates a function that is responsible for building an instance of
         RDataFrame on a distributed mapper for a given entry range. Specific for
@@ -219,6 +277,13 @@ class EmptySourceHeadNode(HeadNode):
             return TaskObjects(ROOT.RDataFrame(nentries).Range(current_range.start, current_range.end), None)
 
         return build_rdf_from_range
+
+    def _handle_returned_values(self, values: "TaskResult") -> Iterable:
+        """
+        Handle values returned after distributed execution. No extra checks are
+        needed in the empty source case.
+        """
+        return values.mergeables
 
 
 class TreeHeadNode(HeadNode):
@@ -255,7 +320,7 @@ class TreeHeadNode(HeadNode):
 
     """
 
-    def __init__(self, npartitions, *args):
+    def __init__(self, backend: BaseBackend, npartitions: int, *args):
         """
         Creates a new RDataFrame instance for the given arguments.
 
@@ -265,7 +330,7 @@ class TreeHeadNode(HeadNode):
             npartitions (int): The number of partitions the dataset will be
                 split in for distributed execution.
         """
-        super().__init__()
+        super().__init__(backend)
 
         self.npartitions = npartitions
 
@@ -309,7 +374,7 @@ class TreeHeadNode(HeadNode):
         self.subtreenames = [str(treename) for treename in ROOT.Internal.TreeUtils.GetTreeFullPaths(self.tree)]
         self.inputfiles = [str(filename) for filename in ROOT.Internal.TreeUtils.GetFileNamesFromTree(self.tree)]
 
-    def build_ranges(self) -> List[Ranges.TreeRangePerc]:
+    def _build_ranges(self) -> List[Ranges.DataRange]:
         """Build the ranges for this dataset."""
         logger.debug("Building ranges from dataset info:\n"
                      "main treename: %s\n"
@@ -335,7 +400,7 @@ class TreeHeadNode(HeadNode):
 
         return Ranges.get_percentage_ranges(self.subtreenames, self.inputfiles, self.npartitions, self.friendinfo)
 
-    def generate_rdf_creator(self) -> Callable[[Ranges.TreeRangePerc], TaskObjects]:
+    def _generate_rdf_creator(self) -> Callable[[Ranges.DataRange], TaskObjects]:
         """
         Generates a function that is responsible for building an instance of
         RDataFrame on a distributed mapper for a given entry range. Specific for
@@ -460,3 +525,37 @@ class TreeHeadNode(HeadNode):
             return TaskObjects(rdf, entries_in_trees)
 
         return build_rdf_from_range
+
+    def _handle_returned_values(self, values: "TaskResult") -> Iterable:
+        """
+        Handle values returned after distributed execution. When the data source
+        is a TTree, check that exactly the input files and all the entries in
+        the dataset were processed during distributed execution.
+        """
+        if values.mergeables is None:
+            raise RuntimeError("The distributed execution returned no values. "
+                               "This can happen if all files in your dataset contain empty trees.")
+
+        # User could have requested to read the same file multiple times indeed
+        input_files_and_trees = [
+            f"{filename}?#{treename}" for filename, treename in zip(self.inputfiles, self.subtreenames)
+        ]
+        files_counts = Counter(input_files_and_trees)
+
+        entries_in_trees = values.entries_in_trees
+        # Keys should be exactly the same
+        if files_counts.keys() != entries_in_trees.trees_with_entries.keys():
+            raise RuntimeError("The specified input files and the files that were "
+                               "actually processed are not the same.")
+
+        # Multiply the entries of each tree by the number of times it was
+        # requested by the user
+        for fullpath in files_counts:
+            entries_in_trees.trees_with_entries[fullpath] *= files_counts[fullpath]
+
+        total_dataset_entries = sum(entries_in_trees.trees_with_entries.values())
+        if entries_in_trees.processed_entries != total_dataset_entries:
+            raise RuntimeError(f"The dataset has {total_dataset_entries} entries, "
+                               f"but {entries_in_trees.processed_entries} were processed.")
+
+        return values.mergeables

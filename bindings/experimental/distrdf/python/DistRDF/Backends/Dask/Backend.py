@@ -153,5 +153,5 @@ class DaskBackend(Base.BaseBackend):
         #    `optimize_npartitions` function
         # 3. Set `npartitions` to 2
         npartitions = kwargs.pop("npartitions", self.optimize_npartitions())
-        headnode = HeadNode.get_headnode(npartitions, *args)
-        return DataFrame.RDataFrame(headnode, self)
+        headnode = HeadNode.get_headnode(self, npartitions, *args)
+        return DataFrame.RDataFrame(headnode)
