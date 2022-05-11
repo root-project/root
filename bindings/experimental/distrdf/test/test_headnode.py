@@ -11,7 +11,7 @@ def create_dummy_headnode(*args):
     """Create dummy head node instance needed in the test"""
     # Pass None as `npartitions`. The tests will modify this member
     # according to needs
-    return get_headnode(None, *args)
+    return get_headnode(None, None, *args)
 
 
 class DataFrameConstructorTests(unittest.TestCase):

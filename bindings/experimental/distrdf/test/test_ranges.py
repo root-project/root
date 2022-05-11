@@ -103,14 +103,14 @@ class EmptySourceRanges(unittest.TestCase):
 
     def test_buildranges_with_balanced_ranges(self):
         """
-        Check that build_ranges produces balanced ranges when there are no
+        Check that _build_ranges produces balanced ranges when there are no
         clusters involved.
         """
         npartitions = 16
         nentries = 50
-        headnode = get_headnode(npartitions, nentries)
+        headnode = get_headnode(None, npartitions, nentries)
 
-        crs = headnode.build_ranges()
+        crs = headnode._build_ranges()
         ranges = emptysourceranges_to_tuples(crs)
 
         ranges_reqd = [
@@ -222,7 +222,7 @@ class TreeRanges(unittest.TestCase):
         treename = "myTree"
         filename = "backend/2cluste*.root"
         npartitions = 2
-        rdf = get_headnode(npartitions, treename, filename)
+        rdf = get_headnode(None, npartitions, treename, filename)
 
         expected_inputfiles = ["backend/2clusters.root"]
         extracted_inputfiles = rdf.inputfiles
@@ -253,7 +253,7 @@ class TreeRanges(unittest.TestCase):
         chain.Add(str(filename1 + "?#" + treename1))
         chain.Add(str(filename2 + "?#" + treename2))
 
-        rdf = get_headnode(npartitions, chain)
+        rdf = get_headnode(None, npartitions, chain)
         extracted_subtreenames = rdf.subtreenames
         extracted_filenames = rdf.inputfiles
 
