@@ -45,10 +45,13 @@ namespace RooStats{
 
     public:
 
+      struct Configuration {
+        bool binnedFitOptimization = true;
+      };
 
-      HistoToWorkspaceFactoryFast();
-      HistoToWorkspaceFactoryFast(  RooStats::HistFactory::Measurement& Meas );
-      ~HistoToWorkspaceFactoryFast() override;
+      HistoToWorkspaceFactoryFast() {}
+      HistoToWorkspaceFactoryFast(RooStats::HistFactory::Measurement& Meas);
+      HistoToWorkspaceFactoryFast(RooStats::HistFactory::Measurement& Meas, Configuration const& cfg);
 
       static void ConfigureWorkspaceForMeasurement( const std::string& ModelName,
                       RooWorkspace* ws_single,
@@ -118,10 +121,10 @@ namespace RooStats{
 
       std::vector<std::string> fSystToFix;
       std::map<std::string, double> fParamValues;
-      double fNomLumi;
-      double fLumiError;
-      int fLowBin;
-      int fHighBin;
+      double fNomLumi = 1.0;
+      double fLumiError = 0.0;
+      int fLowBin = 0;
+      int fHighBin = 0;
 
     private:
 
@@ -130,6 +133,7 @@ namespace RooStats{
       std::vector<std::string> fObsNameVec;
       std::string fObsName;
       std::vector<std::string> fPreprocessFunctions;
+      const Configuration fCfg;
 
       RooArgList createObservables(const TH1 *hist, RooWorkspace *proto) const;
 

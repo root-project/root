@@ -90,6 +90,28 @@ Before v6.28, it was ensured that no `RooArgSet` and `RooDataSet` objects on the
 With v6.28, this is not guaranteed anymore.
 Hence, if your code uses pointer comparisons to uniquely identify RooArgSet or RooDataSet instances, please consider using the new `RooArgSet::uniqueId()` or `RooAbsData::uniqueId()`.
 
+### Introducing binned likelihood fit optimization in HistFactory
+
+In a binned likelihood fit, it is possible to skip the PDF normalization when
+the unnormalized binned PDF can be interpreted directly in terms of event
+yields. This is now done by default for HistFactory models, which
+results in great speedups for binned fits with many channels. Some RooFit users
+like ATLAS were already using this for a long time.
+
+To disable this optimization when using the `hist2workspace` executable, add the `-disable_binned_fit_optimization` command line argument.
+Directly in C++, you can also set the `binnedFitOptimization` to `false` in the
+HistFactory configuration as follows:
+```C++
+RooStats::HistFactory::MakeModelAndMeasurementFast(measurement, {.binnedFitOptimization=false});
+```
+If your compiler doesn't support aggregate initialization with designators, you
+need to create and edit the configuration struct explicitely:
+```C++
+RooStats::HistFactory::HistoToWorkspaceFactoryFast::Configuration hfCfg;
+hfCfg.binnedFitOptimization = false;
+RooStats::HistFactory::MakeModelAndMeasurementFast(measurement, hfCfg);
+```
+
 ### Removal of HistoToWorkspaceFactory (non-Fast)
 
 The original `HistoToWorkspaceFactory` produced models that consisted of a
