@@ -218,8 +218,16 @@ private:
 
    explicit RNTupleFileWriter(std::string_view name);
 
-   /// For a TFile container written by a C file stream, write the records that constitute an empty file
+   /// For a TFile container written by a C file stream, write the header and TFile object
    void WriteTFileSkeleton(int defaultCompression);
+   /// The only key that will be visible in file->ls()
+   void WriteTFileNTupleKey();
+   /// Write the TList with the RNTuple key
+   void WriteTFileKeysList();
+   /// Write the compressed streamer info record with the description of the RNTuple class
+   void WriteTFileStreamerInfo();
+   /// Last record in the file
+   void WriteTFileFreeList();
    /// For a bare file, which is necessarily written by a C file stream, write file header
    void WriteBareFileSkeleton(int defaultCompression);
 
