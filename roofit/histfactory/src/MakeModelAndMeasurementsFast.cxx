@@ -8,8 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-
-
+#include "RooStats/HistFactory/MakeModelAndMeasurementsFast.h"
 
 // from std
 #include <string>
@@ -34,10 +33,8 @@
 // from this package
 #include "RooStats/HistFactory/EstimateSummary.h"
 #include "RooStats/HistFactory/Measurement.h"
-#include "RooStats/HistFactory/HistoToWorkspaceFactoryFast.h"
 #include "RooStats/HistFactory/HistFactoryException.h"
 
-#include "RooStats/HistFactory/MakeModelAndMeasurementsFast.h"
 #include "HFMsgService.h"
 
 using namespace RooFit;
@@ -98,8 +95,8 @@ using namespace RooFit;
   </ul>
   </ul>
 */
-RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::HistFactory::Measurement& measurement ) {
-
+RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::HistFactory::Measurement& measurement, HistoToWorkspaceFactoryFast::Configuration const& cfg)
+{
   // This will be returned
   RooWorkspace* ws = NULL;
   TFile* outFile = NULL;
@@ -164,7 +161,7 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
     tableFile =  fopen( tableFileName.c_str(), "a");
 
     cxcoutIHF << "Creating the HistoToWorkspaceFactoryFast factory" << std::endl;
-    HistoToWorkspaceFactoryFast factory( measurement );
+    HistoToWorkspaceFactoryFast factory{measurement, cfg};
 
     // Make the factory, and do some preprocessing
     // HistoToWorkspaceFactoryFast factory(measurement, rowTitle, outFile);
