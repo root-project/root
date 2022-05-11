@@ -29,7 +29,7 @@ class Action(Operation):
 
 class VariationsFor(Action):
     """
-    DistRDF.VariationsFor creates a 'VariationsNode' node in the distributed
+    DistRDF.VariationsFor creates a specific node in the distributed
     RDataFrame graph. This acts as an action node.
     """
     pass

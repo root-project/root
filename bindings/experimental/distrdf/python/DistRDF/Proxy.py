@@ -13,16 +13,13 @@ import logging
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from functools import singledispatch
-from typing import Any, List, Optional, TYPE_CHECKING, Union
+from typing import Any, List, Optional, Union
 
 import ROOT
 
 from DistRDF import Operation
 from DistRDF.ComputationGraphGenerator import ComputationGraphGenerator
-from DistRDF.Node import Node, VariationsNode
-
-if TYPE_CHECKING:
-    from DistRDF.HeadNode import HeadNode
+from DistRDF.Node import Node
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +57,20 @@ def execute_graph(node: Node) -> None:
             headnode.backend.execute(generator)
 
 
+def _create_new_node(parent: Node, operation: Operation.Operation) -> Node:
+    """Creates a new node and inserts it in the computation graph"""
+
+    headnode = parent.get_head()
+    headnode.node_counter += 1
+
+    newnode = Node(parent.get_head, headnode.node_counter, operation, parent)
+
+    parent.nchildren += 1
+
+    headnode.graph_nodes.appendleft(newnode)
+
+    return newnode
+
 class Proxy(ABC):
     """
     Abstract class for proxies objects. These objects help to keep track of
@@ -69,7 +80,7 @@ class Proxy(ABC):
     proxied node from :obj:`True` to :obj:`False`.
     """
 
-    def __init__(self, node):
+    def __init__(self, node: Node):
         """
         Creates a new `Proxy` object for a given node.
 
@@ -103,7 +114,7 @@ class VariationsProxy(Proxy):
     ROOT::RDF::Experimental::RResultMap.
     """
 
-    def __init__(self, node: VariationsNode):
+    def __init__(self, node: Node):
         super().__init__(node)
         self._keys: Optional[List[str]] = None
 
@@ -191,20 +202,7 @@ class ActionProxy(Proxy):
         distributed computation graph, returning a specialized proxy to that
         node. This function is usually called from DistRDF.VariationsFor.
         """
-
-        # Generate next node id
-        headnode: HeadNode = self.proxied_node.get_head()
-        headnode.node_counter += 1
-
-        newnode = VariationsNode(get_head=self.proxied_node.get_head, node_id=headnode.node_counter,
-                                 operation=Operation.create_op("VariationsFor"), parent=self.proxied_node)
-
-        self.proxied_node.nchildren += 1
-
-        # Append to the list of nodes for this computation graph
-        headnode.graph_nodes.appendleft(newnode)
-
-        return VariationsProxy(newnode)
+        return VariationsProxy(_create_new_node(self.proxied_node, Operation.create_op("VariationsFor")))
 
 
 class TransformationProxy(Proxy):
@@ -249,26 +247,8 @@ class TransformationProxy(Proxy):
         Handles an operation call to the current node and returns the new node
         built using the operation call.
         """
-        # Create a new `Operation` object for the
-        # incoming operation call
         op = Operation.create_op(self.proxied_node._new_op_name, *args, **kwargs)
-
-        # Generate next node id
-        headnode: HeadNode = self.proxied_node.get_head()
-        headnode.node_counter += 1
-
-        # Create a new `Node` object to house the operation
-        newnode = Node(get_head=self.proxied_node.get_head, node_id=headnode.node_counter,
-                       operation=op, parent=self.proxied_node)
-
-        self.proxied_node.nchildren += 1
-
-        # Append to the list of nodes for this computation graph
-        headnode.graph_nodes.appendleft(newnode)
-
-        # Logger debug statements
-        logger.debug("Created new {} node".format(op.name))
-
+        newnode = _create_new_node(self.proxied_node, op)
         return get_proxy_for(op, newnode)
 
 
