@@ -142,11 +142,3 @@ class Node(object):
         logger.debug(f"node {self.node_id} should not be pruned")
 
         return False
-
-
-class VariationsNode(Node):
-    """
-    Helper tag for a node of the computation graph that is responsible for
-    querying systematic variations from another action.
-    """
-    pass
