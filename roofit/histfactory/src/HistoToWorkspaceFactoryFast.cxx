@@ -92,21 +92,18 @@ ClassImp(RooStats::HistFactory::HistoToWorkspaceFactoryFast);
 namespace RooStats{
 namespace HistFactory{
 
-  HistoToWorkspaceFactoryFast::HistoToWorkspaceFactoryFast() :
-       fNomLumi(1.0), fLumiError(0),
-       fLowBin(0), fHighBin(0)
-  {}
+  HistoToWorkspaceFactoryFast::HistoToWorkspaceFactoryFast(RooStats::HistFactory::Measurement& measurement) :
+    HistoToWorkspaceFactoryFast{measurement, Configuration{}} {}
 
-  HistoToWorkspaceFactoryFast::~HistoToWorkspaceFactoryFast(){
-  }
-
-  HistoToWorkspaceFactoryFast::HistoToWorkspaceFactoryFast(RooStats::HistFactory::Measurement& measurement ) :
+  HistoToWorkspaceFactoryFast::HistoToWorkspaceFactoryFast(RooStats::HistFactory::Measurement& measurement,
+                                                           Configuration const& cfg) :
     fSystToFix( measurement.GetConstantParams() ),
     fParamValues( measurement.GetParamValues() ),
     fNomLumi( measurement.GetLumi() ),
     fLumiError( measurement.GetLumi()*measurement.GetLumiRelErr() ),
     fLowBin( measurement.GetBinLow() ),
-    fHighBin( measurement.GetBinHigh() ) {
+    fHighBin( measurement.GetBinHigh() ),
+    fCfg{cfg} {
 
     // Set Preprocess functions
     SetFunctionsToPreprocess( measurement.GetPreprocessFunctions() );
@@ -735,6 +732,11 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
     // for mixed generation in RooSimultaneous
     tot.setAttribute("GenerateBinned"); // for use with RooSimultaneous::generate in mixed mode
+
+    // Enable the binned likelihood optimization
+    if(fCfg.binnedFitOptimization) {
+      tot.setAttribute("BinnedLikelihood");
+    }
 
     proto->import(tot, RecycleConflictNodes());
   }
