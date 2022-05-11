@@ -37,7 +37,7 @@ class DistRDataFrameInvariants(unittest.TestCase):
     """
 
     class TestBackend(Base.BaseBackend):
-        """Dummy backend to test the build_ranges method in Dist class."""
+        """Dummy backend to test the _build_ranges method in Dist class."""
 
         def ProcessAndMerge(self, ranges, mapper, reducer):
             """
@@ -74,7 +74,7 @@ class DistRDataFrameInvariants(unittest.TestCase):
         filenames = ["1cluster_20entries.root"] * 5
 
         for npartitions in range(1, 6):
-            headnode = HeadNode.get_headnode(npartitions, treename, filenames)
             backend = DistRDataFrameInvariants.TestBackend()
-            rdf = DataFrame.RDataFrame(headnode, backend)
+            headnode = HeadNode.get_headnode(backend, npartitions, treename, filenames)
+            rdf = DataFrame.RDataFrame(headnode)
             self.assertEqual(rdf.Count().GetValue(), 100)
