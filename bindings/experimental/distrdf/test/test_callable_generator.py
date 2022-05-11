@@ -8,7 +8,7 @@ def create_dummy_headnode(*args):
     """Create dummy head node instance needed in the test"""
     # Pass None as `npartitions`. The tests will modify this member
     # according to needs
-    return HeadNode.get_headnode(None, *args)
+    return HeadNode.get_headnode(None, None, *args)
 
 
 class ComputationGraphGeneratorTest(unittest.TestCase):
@@ -76,10 +76,10 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         n6 = node.Filter()  # noqa: avoid PEP8 F841
 
         # Generate and execute the mapper
-        graph_dict = hn.generate_graph_dict()
+        graph_dict = hn._generate_graph_dict()
         mapper_func = ComputationGraphGenerator.generate_computation_graph
         triggerables = mapper_func(graph_dict, t, 0)
-        nodes = hn.get_action_nodes()
+        nodes = hn._get_action_nodes()
 
         # Required order in the list of returned values (the nodes are stored
         # in DFS order the first time they are appended to the graph)
@@ -121,10 +121,10 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         # because it holds a reference to the ID of the father.
 
         # Generate and execute the mapper
-        graph_dict = hn.generate_graph_dict()
+        graph_dict = hn._generate_graph_dict()
         mapper_func = ComputationGraphGenerator.generate_computation_graph
         triggerables = mapper_func(graph_dict, t, 0)
-        nodes = hn.get_action_nodes()
+        nodes = hn._get_action_nodes()
 
         reqd_order = [1, 2, 2, 3, 2, 2]
 
@@ -159,10 +159,10 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         n5 = n1.Count()  # noqa: avoid PEP8 F841
 
         # Generate and execute the mapper
-        graph_dict = hn.generate_graph_dict()
+        graph_dict = hn._generate_graph_dict()
         mapper_func = ComputationGraphGenerator.generate_computation_graph
         triggerables = mapper_func(graph_dict, t, 0)
-        nodes = hn.get_action_nodes()
+        nodes = hn._get_action_nodes()
 
         reqd_order = [1, 2, 2, 3, 2, 3]
 
@@ -196,10 +196,10 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         n4 = n3 = n2 = None  # noqa: avoid PEP8 F841
 
         # Generate and execute the mapper
-        graph_dict = hn.generate_graph_dict()
+        graph_dict = hn._generate_graph_dict()
         mapper_func = ComputationGraphGenerator.generate_computation_graph
         triggerables = mapper_func(graph_dict, t, 0)
-        nodes = hn.get_action_nodes()
+        nodes = hn._get_action_nodes()
 
         reqd_order = [1, 2, 2]
 
@@ -233,10 +233,10 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         n2 = None
 
         # Generate and execute the mapper
-        graph_dict = hn.generate_graph_dict()
+        graph_dict = hn._generate_graph_dict()
         mapper_func = ComputationGraphGenerator.generate_computation_graph
         triggerables = mapper_func(graph_dict, t, 0)
-        nodes = hn.get_action_nodes()
+        nodes = hn._get_action_nodes()
 
         reqd_order = [1, 2, 2, 3, 2, 2]
         # Removing references from n2 will not prune any node
@@ -274,10 +274,10 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         n6.proxied_node.value = 1
 
         # Generate and execute the mapper
-        graph_dict = hn.generate_graph_dict()
+        graph_dict = hn._generate_graph_dict()
         mapper_func = ComputationGraphGenerator.generate_computation_graph
         triggerables = mapper_func(graph_dict, t, 0)
-        nodes = hn.get_action_nodes()
+        nodes = hn._get_action_nodes()
 
         # The node 'n6' will be pruned. Hence,
         # there's only one '3' in this list.
@@ -311,10 +311,10 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         n6 = node.Filter()  # noqa: avoid PEP8 F841
 
         # Generate and execute the mapper
-        graph_dict = hn.generate_graph_dict()
+        graph_dict = hn._generate_graph_dict()
         mapper_func = ComputationGraphGenerator.generate_computation_graph
         triggerables = mapper_func(graph_dict, t, 0)
-        nodes = hn.get_action_nodes()
+        nodes = hn._get_action_nodes()
 
         reqd_order = [1, 2, 2, 3, 3, 2]
 
@@ -344,7 +344,7 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
             n2 = n2.Filter()
 
         # Generate and execute the mapper
-        graph_dict = hn.generate_graph_dict()
+        graph_dict = hn._generate_graph_dict()
         mapper_func = ComputationGraphGenerator.generate_computation_graph
         mapper_func(graph_dict, t, 0)
 
@@ -366,7 +366,7 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         t.ord_list = []
 
         # Generate and execute the mapper
-        graph_dict = hn.generate_graph_dict()
+        graph_dict = hn._generate_graph_dict()
         mapper_func(graph_dict, t, 0)
 
         # Required order in the list of returned values (the nodes are stored
