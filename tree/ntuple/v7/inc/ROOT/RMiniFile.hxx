@@ -55,12 +55,9 @@ In the list of keys, this object appears as "ROOT::Experimental::RNTuple".
 The RNTuple object is the user-facing representation of an RNTuple data set in a ROOT file.
 The RFileNTupleAnchor is the low-level entry point of an RNTuple in a ROOT file used by the page storage layer.
 
-The ROOT::Experimental::RNTuple object inherits from RFileNTupleAnchor. It only adds methods and transient members.
-Reading and writing RNTuple anchors from/to files makes use of ROOT's schema evolution. The on-disk data
-is an RNTuple object in version 1 (which is, technically, the RFileNTupleAnchor class layout under the name
-"ROOT::Experimental::RNTuple").  The in-memory RNTuple object has class layout version 2.
-On read, the automatic schema evolution creates the RFileNTupleAnchor base class from the version 1 on-disk layout.
-On write, the RNTuple class is streamed as an RFileNTupleAnchor.
+The ROOT::Experimental::RNTuple object has the same on-disk layout as the RFileNTupleAnchor.
+It only adds methods and transient members. Reading and writing RNTuple anchors with TFile and the minifile writer
+is thus fully interoperable (same on-disk information).
 */
 // clang-format on
 struct RFileNTupleAnchor {
