@@ -407,6 +407,36 @@ void ROOT::Experimental::RNTuple::Streamer(TBuffer &buf)
    }
 }
 
+ROOT::Experimental::RNTuple::RNTuple(const Internal::RFileNTupleAnchor &a)
+{
+   fChecksum = a.fChecksum;
+   fVersion = a.fVersion;
+   fSize = a.fSize;
+   fSeekHeader = a.fSeekHeader;
+   fNBytesHeader = a.fNBytesHeader;
+   fLenHeader = a.fLenHeader;
+   fSeekFooter = a.fSeekFooter;
+   fNBytesFooter = a.fNBytesFooter;
+   fLenFooter = a.fLenFooter;
+   fReserved = a.fReserved;
+}
+
+ROOT::Experimental::Internal::RFileNTupleAnchor ROOT::Experimental::RNTuple::GetAnchor() const
+{
+   Internal::RFileNTupleAnchor a;
+   a.fChecksum = fChecksum;
+   a.fVersion = fVersion;
+   a.fSize = fSize;
+   a.fSeekHeader = fSeekHeader;
+   a.fNBytesHeader = fNBytesHeader;
+   a.fLenHeader = fLenHeader;
+   a.fSeekFooter = fSeekFooter;
+   a.fNBytesFooter = fNBytesFooter;
+   a.fLenFooter = fLenFooter;
+   a.fReserved = fReserved;
+   return a;
+}
+
 std::unique_ptr<ROOT::Experimental::Detail::RPageSource>
 ROOT::Experimental::RNTuple::MakePageSource(const RNTupleReadOptions &options)
 {

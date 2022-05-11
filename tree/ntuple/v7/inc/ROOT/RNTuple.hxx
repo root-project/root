@@ -494,7 +494,7 @@ private:
    /// Persistent data members need to be identical to the ones from RFileNTupleAnchor
    /// TODO(jblomer): Remove unneeded fChecksum, fVersion, fSize, fReserved once RNTuple moves out of experimental
 
-   std::int32_t fChecksum = ROOT::Experimental::Internal::RFileNTupleAnchor::ChecksumRNTupleClass();
+   std::int32_t fChecksum = 0;
    std::uint32_t fVersion = 0;
    std::uint32_t fSize = sizeof(ROOT::Experimental::Internal::RFileNTupleAnchor);
    std::uint64_t fSeekHeader = 0;
@@ -508,34 +508,8 @@ private:
    TFile *fFile = nullptr; ///<! The file from which the ntuple was streamed, registered in the custom streamer
 
    // Conversion between low-level anchor and RNTuple UI class
-   RNTuple(const Internal::RFileNTupleAnchor &a)
-   {
-      fChecksum = a.fChecksum;
-      fVersion = a.fVersion;
-      fSize = a.fSize;
-      fSeekHeader = a.fSeekHeader;
-      fNBytesHeader = a.fNBytesHeader;
-      fLenHeader = a.fLenHeader;
-      fSeekFooter = a.fSeekFooter;
-      fNBytesFooter = a.fNBytesFooter;
-      fLenFooter = a.fLenFooter;
-      fReserved = a.fReserved;
-   }
-   Internal::RFileNTupleAnchor GetAnchor() const
-   {
-      Internal::RFileNTupleAnchor a;
-      a.fChecksum = fChecksum;
-      a.fVersion = fVersion;
-      a.fSize = fSize;
-      a.fSeekHeader = fSeekHeader;
-      a.fNBytesHeader = fNBytesHeader;
-      a.fLenHeader = fLenHeader;
-      a.fSeekFooter = fSeekFooter;
-      a.fNBytesFooter = fNBytesFooter;
-      a.fLenFooter = fLenFooter;
-      a.fReserved = fReserved;
-      return a;
-   }
+   RNTuple(const Internal::RFileNTupleAnchor &a);
+   Internal::RFileNTupleAnchor GetAnchor() const;
 
 public:
    RNTuple() = default;

@@ -117,6 +117,34 @@ public:
    }
 };
 
+constexpr std::int32_t ChecksumRNTupleClass() {
+   const char ident[] = "ROOT::Experimental::RNTuple"
+                        "fChecksum"
+                        "int"
+                        "fVersion"
+                        "unsigned int"
+                        "fSize"
+                        "unsigned int"
+                        "fSeekHeader"
+                        "unsigned long"
+                        "fNBytesHeader"
+                        "unsigned int"
+                        "fLenHeader"
+                        "unsigned int"
+                        "fSeekFooter"
+                        "unsigned long"
+                        "fNBytesFooter"
+                        "unsigned int"
+                        "fLenFooter"
+                        "unsigned int"
+                        "fReserved"
+                        "unsigned long";
+   std::int32_t id = 0;
+   for (unsigned i = 0; i < (sizeof(ident) - 1); i++)
+      id = static_cast<std::int32_t>(static_cast<std::int64_t>(id) * 3 + ident[i]);
+   return id;
+}
+
 
 #pragma pack(push, 1)
 /// A name (type, identifies, ...) in the TFile binary format
@@ -718,7 +746,7 @@ struct RTFStreamerInfoObject {
       'R', 'N', 'T', 'u', 'p', 'l', 'e'};
    char fLTitle = 0;
 
-   RInt32BE fChecksum{ROOT::Experimental::Internal::RFileNTupleAnchor::ChecksumRNTupleClass()};
+   RInt32BE fChecksum{ChecksumRNTupleClass()};
    RUInt32BE fVersionRNTuple{1};
 
    RUInt32BE fByteCountObjArr{0x40000000 |
@@ -812,7 +840,7 @@ struct RTFFile {
 struct RTFNTuple {
    RUInt32BE fByteCount{0x40000000 | (sizeof(RTFNTuple) - sizeof(fByteCount))};
    RUInt16BE fVersionClass{1};
-   RInt32BE fChecksum{0};
+   RInt32BE fChecksum{ChecksumRNTupleClass()};
    RUInt32BE fVersionInternal{0};
    RUInt32BE fSize{sizeof(ROOT::Experimental::Internal::RFileNTupleAnchor)};
    RUInt64BE fSeekHeader{0};
@@ -826,7 +854,6 @@ struct RTFNTuple {
    RTFNTuple() = default;
    explicit RTFNTuple(const ROOT::Experimental::Internal::RFileNTupleAnchor &inMemoryAnchor)
    {
-      fChecksum = inMemoryAnchor.fChecksum;
       fVersionInternal = inMemoryAnchor.fVersion;
       fSize = inMemoryAnchor.fSize;
       fSeekHeader = inMemoryAnchor.fSeekHeader;
@@ -978,13 +1005,6 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view 
    offset = key.GetSeekKey() + key.fKeyLen;
    RTFNTuple ntuple;
    ReadBuffer(&ntuple, sizeof(ntuple), offset);
-   // printf("READ THE NTUPLE BACK: %u %u %u %u %u %lu\n",
-   //       (uint32_t)ntuple.fByteCount & ~(0x40000000),
-   //       (uint16_t)ntuple.fVersionClass,
-   //       (uint32_t)ntuple.fChecksum,
-   //       (uint32_t)ntuple.fVersionInternal,
-   //       (uint32_t)ntuple.fSize,
-   //       (uint64_t)ntuple.fSeekHeader);
    return ntuple.ToAnchor();
 }
 

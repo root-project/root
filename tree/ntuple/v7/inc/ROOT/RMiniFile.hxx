@@ -61,38 +61,9 @@ is thus fully interoperable (same on-disk information).
 */
 // clang-format on
 struct RFileNTupleAnchor {
-   static constexpr std::int32_t ChecksumRNTupleClass()
-   {
-      const char ident[] = "ROOT::Experimental::RNTuple"
-                           "fChecksum"
-                           "int"
-                           "fVersion"
-                           "unsigned int"
-                           "fSize"
-                           "unsigned int"
-                           "fSeekHeader"
-                           "unsigned long"
-                           "fNBytesHeader"
-                           "unsigned int"
-                           "fLenHeader"
-                           "unsigned int"
-                           "fSeekFooter"
-                           "unsigned long"
-                           "fNBytesFooter"
-                           "unsigned int"
-                           "fLenFooter"
-                           "unsigned int"
-                           "fReserved"
-                           "unsigned long";
-      std::int32_t id = 0;
-      for (unsigned i = 0; i < (sizeof(ident) - 1); i++)
-         id = static_cast<std::int32_t>(static_cast<std::int64_t>(id) * 3 + ident[i]);
-      return id;
-   }
-
    /// The ROOT streamer info checksum. Older RNTuple versions used class version 0 and a serialized checksum,
    /// now we use class version 1 and "promote" the checksum as a class member
-   std::int32_t fChecksum = ChecksumRNTupleClass();
+   std::int32_t fChecksum = 0;
    /// Allows for evolving the struct in future versions
    std::uint32_t fVersion = 0;
    /// Allows for skipping the struct
