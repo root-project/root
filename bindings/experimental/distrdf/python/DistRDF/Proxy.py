@@ -18,7 +18,6 @@ from typing import Any, List, Optional, Union
 import ROOT
 
 from DistRDF import Operation
-from DistRDF.ComputationGraphGenerator import ComputationGraphGenerator
 from DistRDF.Node import Node
 
 logger = logging.getLogger(__name__)
@@ -51,10 +50,9 @@ def execute_graph(node: Node) -> None:
         # Creating a ROOT.TDirectory.TContext in a context manager so that
         # ROOT.gDirectory won't be changed by the event loop execution.
         with _managed_tcontext():
-            headnode = node.get_head()
-            graph_dict = headnode.generate_graph_dict()  # also takes care of pruning the graph
-            generator = ComputationGraphGenerator(headnode, graph_dict)
-            headnode.backend.execute(generator)
+            # All the information needed to reconstruct the computation graph on
+            # the workers is contained in the head node
+            node.get_head().execute_graph()
 
 
 def _create_new_node(parent: Node, operation: Operation.Operation) -> Node:
@@ -70,6 +68,7 @@ def _create_new_node(parent: Node, operation: Operation.Operation) -> Node:
     headnode.graph_nodes.appendleft(newnode)
 
     return newnode
+
 
 class Proxy(ABC):
     """

@@ -24,7 +24,6 @@ from DistRDF.PythonMergeables import SnapshotResult
 
 # Type hints only
 if TYPE_CHECKING:
-    from DistRDF.HeadNode import HeadNode  # Avoid circular imports
     from DistRDF.Node import Node
 
 logger = logging.getLogger(__name__)
@@ -149,7 +148,7 @@ def _(op: VariationsFor, parent_rdf_node: Any, range_id: int) -> Tuple[Any, Oper
     return ROOT.RDF.Experimental.VariationsFor(parent_rdf_node), op
 
 
-def generate_computation_graph(graph: Dict[int, "Node"], starting_node: Any, range_id: int) -> List:
+def generate_computation_graph(graph: Dict[int, "Node"], starting_node: ROOT.RDF.RNode, range_id: int) -> List:
     """
     Generates the RDataFrame computation graph from the nodes stored in the
     input graph.
@@ -189,117 +188,101 @@ def generate_computation_graph(graph: Dict[int, "Node"], starting_node: Any, ran
     return promises
 
 
-class ComputationGraphGenerator(object):
+def trigger_computation_graph(graph: Dict[int, "Node"], starting_node: ROOT.RDF.RNode, range_id: int) -> List:
     """
-    Class that generates a callable to parse a DistRDF graph.
+    Trigger the computation graph.
 
-    Attributes:
-        headnode: Head node of a DistRDF graph.
+    The list of actions to be performed is retrieved by calling
+    generate_computation_graph. Afterwards, the C++ RDF computation graph is
+    triggered through the `ROOT::Internal::RDF::TriggerRun` function with
+    the GIL released.
 
-        graph: The representation of the computation graph.
+    Args:
+        graph: A representation of the computation graph.
+
+        starting_node: The node where the generation of the
+            computation graph is started. Either an actual RDataFrame or the
+            result of a Range operation (in case of empty data source).
+
+        range_id: The id of the current range. Needed to assign a
+            file name to a partial Snapshot if it was requested.
+
+    Returns:
+        list: A list of objects that can be either used as or converted into
+            mergeable values.
+    """
+    actions = generate_computation_graph(graph, starting_node, range_id)
+
+    # Trigger computation graph with the GIL released
+    rnode = ROOT.RDF.AsRNode(starting_node)
+    ROOT.Internal.RDF.TriggerRun.__release_gil__ = True
+    ROOT.Internal.RDF.TriggerRun(rnode)
+
+    # Return a list of objects that can be later merged. In most cases this
+    # is still made of RResultPtrs that will then be used as input arguments
+    # to `ROOT::RDF::Detail::GetMergeableValue`. For `AsNumpy`, it returns
+    # an instance of `AsNumpyResult`. For `Snapshot`, it returns a
+    # `SnapshotResult`
+    return actions
+
+# TODO: revisit CppWorkflow part, currently untested
+
+
+def get_callable_optimized(self):
+    """
+    Converts a given graph into a callable and returns the same.
+    The callable is optimized to execute the graph with compiled C++
+    performance.
+
+    Returns:
+        function: The callable that takes in a PyROOT RDataFrame object
+        and executes all operations from the DistRDF graph
+        on it, recursively.
     """
 
-    def __init__(self, headnode: "HeadNode", graph: Dict[int, "Node"]):
-        self.headnode = headnode
-        self.graph = graph
-
-    def trigger_computation_graph(self, starting_node, range_id):
+    def run_computation_graph(rdf_node, range_id):
         """
-        Trigger the computation graph.
-
-        The list of actions to be performed is retrieved by calling
-        generate_computation_graph. Afterwards, the C++ RDF computation graph is
-        triggered through the `ROOT::Internal::RDF::TriggerRun` function with
-        the GIL released.
+        The callable that traverses the DistRDF graph nodes, generates the
+        code to create the same graph in C++, compiles it and runs it.
+        This function triggers the event loop via the CppWorkflow class.
 
         Args:
-            starting_node (ROOT.RDF.RNode): The node where the generation of the
-                computation graph is started. Either an actual RDataFrame or the
-                result of a Range operation (in case of empty data source).
-            range_id (int): The id of the current range. Needed to assign a
-                file name to a partial Snapshot if it was requested.
+            rdf_node (ROOT.RDF.RNode): The RDataFrame node that will serve as
+                the root of the computation graph.
+            range_id (int): Id of the current range. Needed to assign a name
+                to a partial Snapshot output file.
 
         Returns:
-            list: A list of objects that can be either used as or converted into
-                mergeable values.
-        """
-        actions = generate_computation_graph(self.graph, starting_node, range_id)
-
-        # Trigger computation graph with the GIL released
-        rnode = ROOT.RDF.AsRNode(starting_node)
-        ROOT.Internal.RDF.TriggerRun.__release_gil__ = True
-        ROOT.Internal.RDF.TriggerRun(rnode)
-
-        # Return a list of objects that can be later merged. In most cases this
-        # is still made of RResultPtrs that will then be used as input arguments
-        # to `ROOT::RDF::Detail::GetMergeableValue`. For `AsNumpy`, it returns
-        # an instance of `AsNumpyResult`. For `Snapshot`, it returns a
-        # `SnapshotResult`
-        return actions
-
-    def get_callable(self):
-        """
-        Prunes the DistRDF computation graph from unneeded nodes and returns
-        a function responsible for creating and triggering the corresponding
-        C++ RDF computation graph.
-        """
-        return self.trigger_computation_graph
-
-    def get_callable_optimized(self):
-        """
-        Converts a given graph into a callable and returns the same.
-        The callable is optimized to execute the graph with compiled C++
-        performance.
-
-        Returns:
-            function: The callable that takes in a PyROOT RDataFrame object
-            and executes all operations from the DistRDF graph
-            on it, recursively.
+            tuple[list, list]: the first element is the list of results of the actions
+                in the C++ workflow, the second element is the list of
+                result types corresponding to those actions.
         """
 
-        def run_computation_graph(rdf_node, range_id):
-            """
-            The callable that traverses the DistRDF graph nodes, generates the
-            code to create the same graph in C++, compiles it and runs it.
-            This function triggers the event loop via the CppWorkflow class.
+        # Generate the code of the C++ workflow
+        cpp_workflow = CppWorkflow(self.headnode, range_id)
 
-            Args:
-                rdf_node (ROOT.RDF.RNode): The RDataFrame node that will serve as
-                    the root of the computation graph.
-                range_id (int): Id of the current range. Needed to assign a name
-                    to a partial Snapshot output file.
+        logger.debug("Generated C++ workflow is:\n{}".format(cpp_workflow))
 
-            Returns:
-                tuple[list, list]: the first element is the list of results of the actions
-                    in the C++ workflow, the second element is the list of
-                    result types corresponding to those actions.
-            """
+        # Compile and run the C++ workflow on the received RDF head node
+        return cpp_workflow.execute(ROOT.RDF.AsRNode(rdf_node))
 
-            # Generate the code of the C++ workflow
-            cpp_workflow = CppWorkflow(self.headnode, range_id)
+    def explore_graph(py_node, cpp_workflow, range_id, parent_idx):
+        """
+        Recursively traverses the DistRDF graph nodes in DFS order and,
+        for each of them, adds a new node to the C++ workflow.
 
-            logger.debug("Generated C++ workflow is:\n{}".format(cpp_workflow))
+        Args:
+            py_node (Node): Object that contains the information to add the
+                corresponding node to the C++ workflow.
+            cpp_workflow (CppWorkflow): Object that encapsulates the creation
+                of the C++ workflow graph.
+            range_id (int): Id of the current range. Needed to assign a name to a
+                partial Snapshot output file.
+            parent_idx (int): Index of the parent node in the C++ workflow.
+        """
+        node_idx = cpp_workflow.add_node(py_node.operation, range_id, parent_idx)
 
-            # Compile and run the C++ workflow on the received RDF head node
-            return cpp_workflow.execute(ROOT.RDF.AsRNode(rdf_node))
+        for child_node in py_node.children:
+            explore_graph(child_node, cpp_workflow, range_id, node_idx)
 
-        def explore_graph(py_node, cpp_workflow, range_id, parent_idx):
-            """
-            Recursively traverses the DistRDF graph nodes in DFS order and,
-            for each of them, adds a new node to the C++ workflow.
-
-            Args:
-                py_node (Node): Object that contains the information to add the
-                    corresponding node to the C++ workflow.
-                cpp_workflow (CppWorkflow): Object that encapsulates the creation
-                    of the C++ workflow graph.
-                range_id (int): Id of the current range. Needed to assign a name to a
-                    partial Snapshot output file.
-                parent_idx (int): Index of the parent node in the C++ workflow.
-            """
-            node_idx = cpp_workflow.add_node(py_node.operation, range_id, parent_idx)
-
-            for child_node in py_node.children:
-                explore_graph(child_node, cpp_workflow, range_id, node_idx)
-
-        return run_computation_graph
+    return run_computation_graph

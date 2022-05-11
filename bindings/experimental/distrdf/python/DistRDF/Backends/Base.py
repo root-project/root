@@ -11,20 +11,19 @@
 ################################################################################
 
 from abc import ABC, abstractmethod
-from collections import Counter
 from dataclasses import dataclass
-from functools import partial, singledispatch
+from functools import partial
 from typing import Callable, Iterable, List, Optional, TYPE_CHECKING, Union
 
 import ROOT
 
 from DistRDF import Ranges
 from DistRDF.Backends import Utils
-from DistRDF.HeadNode import HeadNode, TaskObjects, TreeHeadNode
 
 # Type hints only
 if TYPE_CHECKING:
-    from DistRDF.ComputationGraphGenerator import ComputationGraphGenerator
+    from DistRDF.HeadNode import TaskObjects
+    from DistRDF.Ranges import DataRange
 
 
 def setup_mapper(initialization_fn: Callable) -> None:
@@ -94,7 +93,7 @@ class TaskResult:
 def distrdf_mapper(
         current_range: Union[Ranges.EmptySourceRange, Ranges.TreeRangePerc],
         build_rdf_from_range:  Callable[[Union[Ranges.EmptySourceRange, Ranges.TreeRangePerc]],
-                                        TaskObjects],
+                                        "TaskObjects"],
         computation_graph_callable: Callable[[ROOT.RDF.RNode, int], List],
         initialization_fn: Callable,
         optimized: bool) -> TaskResult:
@@ -160,51 +159,6 @@ def distrdf_reducer(results_inout: TaskResult,
     return TaskResult(mergeables_updated, entries_in_trees_out)
 
 
-@singledispatch
-def handle_returned_values(headnode: HeadNode, values: TaskResult) -> Iterable:
-    """
-    Handle values returned after distributed execution. In general, nothing
-    needs to be done here.
-    """
-    return values.mergeables
-
-
-@handle_returned_values.register
-def _(headnode: TreeHeadNode, values: TaskResult) -> Iterable:
-    """
-    Handle values returned after distributed execution. When the data source is
-    a TTree, check that exactly the input files and all the entries in the
-    dataset were processed during distributed execution.
-    """
-    if values.mergeables is None:
-        raise RuntimeError("The distributed execution returned no values. "
-                           "This can happen if all files in your dataset contain empty trees.")
-
-    # User could have requested to read the same file multiple times indeed
-    input_files_and_trees = [
-        f"{filename}?#{treename}" for filename, treename in zip(headnode.inputfiles, headnode.subtreenames)
-    ]
-    files_counts = Counter(input_files_and_trees)
-
-    entries_in_trees = values.entries_in_trees
-    # Keys should be exactly the same
-    if files_counts.keys() != entries_in_trees.trees_with_entries.keys():
-        raise RuntimeError("The specified input files and the files that were "
-                           "actually processed are not the same.")
-
-    # Multiply the entries of each tree by the number of times it was
-    # requested by the user
-    for fullpath in files_counts:
-        entries_in_trees.trees_with_entries[fullpath] *= files_counts[fullpath]
-
-    total_dataset_entries = sum(entries_in_trees.trees_with_entries.values())
-    if entries_in_trees.processed_entries != total_dataset_entries:
-        raise RuntimeError(f"The dataset has {total_dataset_entries} entries, "
-                           f"but {entries_in_trees.processed_entries} were processed.")
-
-    return values.mergeables
-
-
 class BaseBackend(ABC):
     """
     Base class for RDataFrame distributed backends.
@@ -249,54 +203,10 @@ class BaseBackend(ABC):
         cls.initialization = partial(fun, *args, **kwargs)
         fun(*args, **kwargs)
 
-    def execute(self, generator: "ComputationGraphGenerator"):
-        """
-        Executes an RDataFrame computation graph on a distributed backend.
-
-        Args:
-            generator (ComputationGraphGenerator): A factory object for a
-                computation graph. Its ``get_callable`` method will return a
-                function responsible for creating the computation graph of a
-                given RDataFrame object and a range of entries. The range is
-                needed for the `Snapshot` operation.
-        """
-        # Check if the workflow must be generated in optimized mode
-        optimized = ROOT.RDF.Experimental.Distributed.optimized
-
-        if optimized:
-            computation_graph_callable = generator.get_callable_optimized()
-        else:
-            computation_graph_callable = generator.get_callable()
-
-        # Avoid having references to the instance inside the mapper
-        initialization_fn = self.initialization
-
-        # Build the ranges for the current dataset
-        headnode = generator.headnode
-
-        ranges = headnode.build_ranges()
-        build_rdf_from_range = headnode.generate_rdf_creator()
-
-        mapper = partial(distrdf_mapper,
-                         build_rdf_from_range=build_rdf_from_range,
-                         computation_graph_callable=computation_graph_callable,
-                         initialization_fn=initialization_fn,
-                         optimized=optimized)
-
-        # Values produced after Map-Reduce
-        returned_values = self.ProcessAndMerge(ranges, mapper, distrdf_reducer)
-
-        # Extract actual results of the RDataFrame operations requested
-        actual_values = handle_returned_values(headnode, returned_values)
-        # List of action nodes in the same order as values
-        nodes = headnode.get_action_nodes()
-
-        # Set the value of every action node
-        for node, value in zip(nodes, actual_values):
-            Utils.set_value_on_node(value, node, self)
-
     @abstractmethod
-    def ProcessAndMerge(self, ranges, mapper, reducer):
+    def ProcessAndMerge(self, ranges: List["DataRange"],
+                        mapper: Callable[..., TaskResult],
+                        reducer: Callable[[TaskResult, TaskResult], TaskResult]) -> TaskResult:
         """
         Subclasses must define how to run map-reduce functions on a given
         backend.

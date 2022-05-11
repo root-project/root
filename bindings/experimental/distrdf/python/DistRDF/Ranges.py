@@ -10,7 +10,15 @@ import ROOT
 logger = logging.getLogger(__name__)
 
 
-class EmptySourceRange(object):
+class DataRange:
+    """
+    A logical range of entries in which a dataset is split. Depending on the
+    input data source, this can have different attributes.
+    """
+    pass
+
+
+class EmptySourceRange(DataRange):
     """
     Empty source range of entries
 
@@ -80,7 +88,7 @@ def get_balanced_ranges(nentries, npartitions):
 
 
 @dataclass
-class TreeRange:
+class TreeRange(DataRange):
     """
     Range of entries in one of the trees in the chain of a single distributed task.
 
@@ -127,7 +135,7 @@ class TreeRange:
 
 
 @dataclass
-class TreeRangePerc:
+class TreeRangePerc(DataRange):
     """
     Range of percentages to be considered for a list of trees. Building block
     for an actual range of entries of a distributed task.
