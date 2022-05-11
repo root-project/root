@@ -143,7 +143,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleReader> ROOT::Experimental::RNTupleRe
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleReader>
-ROOT::Experimental::RNTupleReader::Open(const ROOT::Experimental::RNTuple *ntuple, const RNTupleReadOptions &options)
+ROOT::Experimental::RNTupleReader::Open(ROOT::Experimental::RNTuple *ntuple, const RNTupleReadOptions &options)
 {
    return std::make_unique<RNTupleReader>(ntuple->MakePageSource(options));
 }
@@ -404,36 +404,18 @@ void ROOT::Experimental::RNTuple::Streamer(TBuffer &buf)
       fFile = reinterpret_cast<TFile *>(buf.GetParent());
    } else {
       RNTuple::Class()->WriteBuffer(buf, this);
-      // On disk, we store a plain RFileNTupleAnchor (aka an RNTuple version 1)
-      // See RFileNTupleAnchor documentation for details
-      // UInt_t bcnt = buf.GetCurrent() - buf.Buffer();
-      // Version_t version = 0;
-      // buf << version; // ROOT class version 1, forced
-      //      std::uint32_t classBcnt = 0x40000000 | (fSize + sizeof(std::uint16_t) + sizeof(std::uint32_t));
-      //      std::uint16_t classVersion = 1;
-      //      std::uint32_t classChecksum = 1700499286; // TODO
-      //      buf << classBcnt;
-      //      buf << classVersion;
-      //      buf << classChecksum;
-      //
-      //      buf << fVersion;
-      //      buf << fSize;
-      //      buf << fSeekHeader;
-      //      buf << fNBytesHeader;
-      //      buf << fLenHeader;
-      //      buf << fSeekFooter;
-      //      buf << fNBytesFooter;
-      //      buf << fLenFooter;
-      //      buf << fReserved;
    }
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RPageSource>
-ROOT::Experimental::RNTuple::MakePageSource(const RNTupleReadOptions &options) const
+ROOT::Experimental::RNTuple::MakePageSource(const RNTupleReadOptions &options)
 {
    if (!fFile)
       throw RException(R__FAIL("This RNTuple object was not streamed from a file"));
 
+   // TODO(jblomer): Add RRawFile factory that create a raw file from a TFile. This may then duplicate the file
+   // descriptor (to avoid re-open).  There could also be a raw file that uses a TFile as a "backend" for TFile cases
+   // that are unsupported by raw file.
    auto path = fFile->GetEndpointUrl()->GetFile();
    return Detail::RPageSourceFile::CreateFromAnchor(GetAnchor(), path, options);
 }

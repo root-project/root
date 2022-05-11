@@ -188,7 +188,7 @@ public:
                                               std::string_view storage,
                                               const RNTupleReadOptions &options = RNTupleReadOptions());
    static std::unique_ptr<RNTupleReader>
-   Open(const RNTuple *ntuple, const RNTupleReadOptions &options = RNTupleReadOptions());
+   Open(RNTuple *ntuple, const RNTupleReadOptions &options = RNTupleReadOptions());
    /// Open RNTuples as one virtual, horizontally combined ntuple.  The underlying RNTuples must
    /// have an identical number of entries.  Fields in the combined RNTuple are named with the ntuple name
    /// as a prefix, e.g. myNTuple1.px and myNTuple2.pt (see tutorial ntpl006_friends)
@@ -490,7 +490,10 @@ class RNTuple final {
    friend class ROOT::Experimental::Internal::RNTupleFileWriter;
    friend class ROOT::Experimental::Internal::RNTupleTester;
 
-public:
+private:
+   /// Persistent data members need to be identical to the ones from RFileNTupleAnchor
+   /// TODO(jblomer): Remove unneeded fChecksum, fVersion, fSize, fReserved once RNTuple moves out of experimental
+
    std::int32_t fChecksum = ROOT::Experimental::Internal::RFileNTupleAnchor::ChecksumRNTupleClass();
    std::uint32_t fVersion = 0;
    std::uint32_t fSize = sizeof(ROOT::Experimental::Internal::RFileNTupleAnchor);
@@ -504,7 +507,7 @@ public:
 
    TFile *fFile = nullptr; ///<! The file from which the ntuple was streamed, registered in the custom streamer
 
-   // Conversion between hidden base class and derived class
+   // Conversion between low-level anchor and RNTuple UI class
    RNTuple(const Internal::RFileNTupleAnchor &a)
    {
       fChecksum = a.fChecksum;
@@ -540,14 +543,12 @@ public:
 
    /// Create a page source from the RNTuple object. Requires the RNTuple object to be streamed from a file.
    /// If fFile is not set, an exception is thrown.
-   std::unique_ptr<Detail::RPageSource> MakePageSource(const RNTupleReadOptions &options = RNTupleReadOptions()) const;
+   std::unique_ptr<Detail::RPageSource> MakePageSource(const RNTupleReadOptions &options = RNTupleReadOptions());
 
    /// RNTuple implements the hadd MergeFile interface
    /// Merge this NTuple with the input list entries
    Long64_t Merge(TCollection *input, TFileMergeInfo *mergeInfo);
 
-   // The RNTuple on-disk is always version 1. See Internal::RFileNTupleAnchor for the interplay between
-   // Internal::RFileNTupleAnchor and RNTuple.
    ClassDefNV(RNTuple, 1);
 };
 
