@@ -361,7 +361,7 @@ void TSpectrum::SetResolution(Double_t resolution)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This function calculates background spectrum from source spectrum.
-/// The result is placed in the vector pointed by spe1945ctrum pointer.
+/// The result is placed in the vector pointed by spectrum pointer.
 /// The goal is to separate the useful information (peaks) from useless
 /// information (background).
 ///
