@@ -586,6 +586,11 @@ Variants are stored in $n+1$ fields:
   - Variant mother field of type Switch; the dispatch tag points to the principle column of the active type
   - Child fields of types `T1`, ..., `Tn`; their names are `_0`, `_1`, ...
 
+#### std::pair<T1, T2>
+
+A pair is stored as two fields, i.e. one of type `T1` and one of type `T2`. `T1` and `T2` must be types with RNTuple I/O support.
+The child fileds are named `_0` and `_1`.
+
 ### User-defined classes
 
 User defined C++ classes are supported with the following limitations
