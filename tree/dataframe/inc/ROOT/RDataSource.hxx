@@ -104,6 +104,9 @@ RDataSource implementations must support running multiple event-loops consecutiv
  - \b GetEntryRanges() will be called several times, including during an event loop, as additional ranges are needed.  It will not be called concurrently.
  - \b Initialize() and \b Finalize() are called once per event-loop,  right before starting and right after finishing.
  - \b InitSlot(), \b SetEntry(), and \b FinalizeSlot() can be called concurrently from multiple threads, multiple times per event-loop.
+
+ Advanced users that plan to implement a custom RDataSource can check out existing implementations, e.g. RCsvDS or RNTupleDS.
+ See the inheritance diagram below for the full list of existing concrete implementations.
 */
 class RDataSource {
    // clang-format on
