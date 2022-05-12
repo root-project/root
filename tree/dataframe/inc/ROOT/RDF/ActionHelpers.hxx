@@ -43,6 +43,7 @@
 #include "TObject.h"
 #include "TTree.h"
 #include "TTreeReader.h" // for SnapshotHelper
+#include "TStatistic.h"
 #include "ROOT/RDF/RActionImpl.hxx"
 #include "ROOT/RDF/RMergeableValue.hxx"
 
@@ -326,6 +327,22 @@ template <typename HIST = Hist_t>
 class R__CLING_PTRCHECK(off) FillHelper : public RActionImpl<FillHelper<HIST>> {
    std::vector<HIST *> fObjects;
 
+   template <typename H = HIST, typename = decltype(std::declval<H>().Reset())>
+   void ResetIfPossible(H *h)
+   {
+      h->Reset();
+   }
+
+   void ResetIfPossible(TStatistic *h) { *h = TStatistic(); }
+
+   // cannot safely re-initialize variations of the result, hence error out
+   void ResetIfPossible(...)
+   {
+      throw std::runtime_error(
+         "A systematic variation was requested for a custom Fill action, but the type of the object to be filled does "
+         "not implement a Reset method, so we cannot safely re-initialize variations of the result. Aborting.");
+   }
+
    void UnsetDirectoryIfPossible(TH1 *h) {
       h->SetDirectory(nullptr);
    }
@@ -505,27 +522,13 @@ public:
       return "Fill custom object";
    }
 
-   // generic objects might not have a Reset method, in which case we do the safe thing and disable MakeNew:
-   // it would be hard to guarantee that the object copied from the original action is in a clean state, it
-   // might have been copied _after_ the event loop that filled it already happened.
-   template <typename H = HIST, typename = decltype(std::declval<H>().Reset())>
+   template <typename H = HIST>
    FillHelper MakeNew(void *newResult)
    {
       auto &result = *static_cast<std::shared_ptr<H> *>(newResult);
-      result->Reset();
+      ResetIfPossible(result.get());
       UnsetDirectoryIfPossible(result.get());
       return FillHelper(result, fObjects.size());
-   }
-
-   // This overload is selected if HIST does not have a Reset method, i.e. we cannot
-   // safely re-initialize variations of the result (see above).
-   // In this case we simply error out.
-   template <typename H = HIST, typename... ExtraArgs>
-   FillHelper MakeNew(void *, ExtraArgs...)
-   {
-      throw std::runtime_error(
-         "A systematic variation was requested for a custom Fill action, but the type of the object to be filled does "
-         "not implement a Reset method, so we cannot safely re-initialize variations of the result. Aborting.");
    }
 };
 
