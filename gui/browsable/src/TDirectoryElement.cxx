@@ -278,6 +278,11 @@ public:
       if (!obj_class)
          return nullptr;
 
+      if (!obj_class->HasDictionary()) {
+         R__LOG_ERROR(ROOT::Experimental::BrowsableLog()) << "Class " << fKeyClass << " does not have dictionary, object " << fKeyName << " cannot be read";
+         return nullptr;
+      }
+
       std::string namecycle = fKeyName + ";"s + std::to_string(fKeyCycle);
 
       void *obj = fDir->GetObjectChecked(namecycle.c_str(), obj_class);
