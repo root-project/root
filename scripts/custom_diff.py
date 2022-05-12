@@ -10,7 +10,7 @@ import sys, os, time, difflib, optparse, re
 #---------------------------------------------------------------------------------------------------------------------------
 #---Filter and substitutions------------------------------------------------------------------------------------------------
 
-def filter(lines):
+def filter(lines, ignoreWhiteSpace = False):
   outlines = []
   for line in lines:
     if sys.platform == 'win32':
@@ -52,7 +52,8 @@ def filter(lines):
     #---Remove versioning in std-------------------------------------------------
     nline = re.sub(r'std::__[0-9]::', 'std::', nline)
     #---Remove white spaces------------------------------------------------------
-    nline = re.sub(r'[ ]', '', nline)
+    if (ignoreWhiteSpace):
+      nline = re.sub(r'[ ]', '', nline)
     outlines.append(nline)
   return outlines
 
@@ -85,8 +86,17 @@ def main():
     fromlines = open(fromfile, 'r' if sys.version_info >= (3, 4) else 'U').readlines()
     tolines = open(tofile, 'r' if sys.version_info >= (3, 4) else 'U').readlines()
 
-  fromlines = filter(fromlines)
-  tolines = filter(tolines)
+  nows_fromlines = filter(fromlines, True)
+  nows_tolines = filter(tolines, True)
+
+  check = difflib.context_diff(nows_fromlines, nows_tolines)
+  try:
+    first = next(check)
+  except StopIteration:
+    sys.exit(0)
+
+  fromlines = filter(fromlines, False)
+  tolines = filter(tolines, False)
 
   if options.u:
     diff = difflib.unified_diff(fromlines, tolines, fromfile, tofile, fromdate, todate, n=n)
