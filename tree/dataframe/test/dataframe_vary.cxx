@@ -654,6 +654,30 @@ TEST_P(RDFVary, VariedHistosMustHaveNoDirectory)
    EXPECT_EQ(hs["x:1"].GetDirectory(), nullptr);
 }
 
+// If VariationsFor is called after the nominal result has already been produced/filled, the copies
+// of the result object used to produced the varied results have to be reset to an empty/initial state.
+// Here we test that this is the case for histograms and TStatistic objects.
+TEST_P(RDFVary, FillHelperResets)
+{
+   auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; });
+
+   auto h = df.Vary("x", SimpleVariation, {}, 2).Histo1D<int>({"", "", 20, -10, 10}, "x");
+   auto hs1 = VariationsFor(h);
+   EXPECT_EQ(hs1["x:0"].GetMean(), -1);
+   EXPECT_EQ(hs1["x:1"].GetMean(), 2);
+   auto hs2 = VariationsFor(h);
+   EXPECT_EQ(hs2["x:0"].GetMean(), -1);
+   EXPECT_EQ(hs2["x:1"].GetMean(), 2);
+
+   auto s = df.Vary("x", SimpleVariation, {}, 2).Stats<int>("x");
+   auto ss1 = VariationsFor(s);
+   EXPECT_EQ(ss1["x:0"].GetMean(), -1);
+   EXPECT_EQ(ss1["x:1"].GetMean(), 2);
+   auto ss2 = VariationsFor(s);
+   EXPECT_EQ(ss2["x:0"].GetMean(), -1);
+   EXPECT_EQ(ss2["x:1"].GetMean(), 2);
+}
+
 // instantiate single-thread tests
 INSTANTIATE_TEST_SUITE_P(Seq, RDFVary, ::testing::Values(false));
 
