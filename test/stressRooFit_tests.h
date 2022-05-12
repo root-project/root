@@ -4457,7 +4457,7 @@ public:
   // Construct a chi^2 of the data and the model,
   // which is the input probability density scaled
   // by the number of events in the dataset
-  RooChi2Var chi2("chi2","chi2",model,*dh) ;
+  RooChi2Var chi2("chi2","chi2",model,*dh, DataError(RooAbsData::SumW2), Verbose(false)) ;
 
   // Use RooMinimizer interface to minimize chi^2
   RooMinimizer m(chi2) ;
