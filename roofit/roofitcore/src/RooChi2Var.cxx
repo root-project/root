@@ -199,71 +199,12 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooD
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor of a chi2 for given p.d.f. with respect given binned
-/// dataset. If cutRange is specified the calculation of the chi2 is
-/// restricted to that named range. If addCoefRange is specified, the
-/// interpretation of fractions for all component RooAddPdfs that do
-/// not have a frozen range interpretation is set to chosen range
-/// name. If nCPU is greater than one the chi^2 calculation is
-/// parallelized over the specified number of processors. If
-/// interleave is true the partitioning of event over processors
-/// follows a (i % n == i_set) strategy rather than a bulk
-/// partitioning strategy which may result in unequal load balancing
-/// in binned datasets with many (adjacent) zero bins. If
-/// splitCutRange is true the cutRange is used to construct an
-/// individual cutRange for each RooSimultaneous index category state
-/// name cutRange_{indexStateName}.
-
-RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooDataHist& hdata,
-                       RooAbsTestStatistic::Configuration const& cfg, bool extended, RooDataHist::ErrorType etype) :
-  RooAbsOptTestStatistic(name,title,pdf,hdata,RooArgSet(), cfg),
-   _etype(etype), _funcMode(extended?ExtendedPdf:Pdf)
-{
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor of a chi2 for given p.d.f. with respect given binned
-/// dataset taking the observables specified in projDeps as projected
-/// observables. If cutRange is specified the calculation of the chi2
-/// is restricted to that named range. If addCoefRange is specified,
-/// the interpretation of fractions for all component RooAddPdfs that
-/// do not have a frozen range interpretation is set to chosen range
-/// name. If nCPU is greater than one the chi^2 calculation is
-/// parallelized over the specified number of processors. If
-/// interleave is true the partitioning of event over processors
-/// follows a (i % n == i_set) strategy rather than a bulk
-/// partitioning strategy which may result in unequal load balancing
-/// in binned datasets with many (adjacent) zero bins. If
-/// splitCutRange is true the cutRange is used to construct an
-/// individual cutRange for each RooSimultaneous index category state
-/// name cutRange_{indexStateName}.
-
-RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsReal& func, RooDataHist& hdata,
-                       const RooArgSet& projDeps, RooChi2Var::FuncMode fmode,
-                       RooAbsTestStatistic::Configuration const& cfg,
-                       RooDataHist::ErrorType etype) :
-  RooAbsOptTestStatistic(name,title,func,hdata,projDeps,cfg),
-  _etype(etype), _funcMode(fmode)
-{
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
 RooChi2Var::RooChi2Var(const RooChi2Var& other, const char* name) :
   RooAbsOptTestStatistic(other,name),
   _etype(other._etype),
   _funcMode(other._funcMode)
-{
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooChi2Var::~RooChi2Var()
 {
 }
 
