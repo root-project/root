@@ -2810,12 +2810,12 @@ void TFitEditor::DrawSelection(bool restore)
    if ( !fParentPad ) return;
 
    if (restore) {
-      #ifndef R__HAS_COCOA
+#ifndef R__HAS_COCOA
       px1old = fParentPad->XtoAbsPixel(fParentPad->GetUxmin());
       py1old = fParentPad->YtoAbsPixel(fParentPad->GetUymin());
       px2old = fParentPad->XtoAbsPixel(fParentPad->GetUxmax());
       py2old = fParentPad->YtoAbsPixel(fParentPad->GetUymax());
-      #endif
+#endif
       return;
    }
 
