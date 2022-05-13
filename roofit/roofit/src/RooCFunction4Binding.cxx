@@ -37,27 +37,27 @@ templateClassImp(RooCFunction4Ref);
 namespace RooFit {
 
   RooAbsReal* bindFunction(const char* name,CFUNCD4DDDD func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z, RooAbsReal& w) {
-    return new RooCFunction4Binding<Double_t,Double_t,Double_t,Double_t,Double_t>(name,name,func,x,y,z,w) ;
+    return new RooCFunction4Binding<double,double,double,double,double>(name,name,func,x,y,z,w) ;
   }
 
   RooAbsReal* bindFunction(const char* name,CFUNCD4DDDI func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z, RooAbsReal& w) {
-    return new RooCFunction4Binding<Double_t,Double_t,Double_t,Double_t,Int_t>(name,name,func,x,y,z,w) ;
+    return new RooCFunction4Binding<double,double,double,double,Int_t>(name,name,func,x,y,z,w) ;
   }
 
   RooAbsReal* bindFunction(const char* name,CFUNCD4DDDB func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z, RooAbsReal& w) {
-    return new RooCFunction4Binding<Double_t,Double_t,Double_t,Double_t,bool>(name,name,func,x,y,z,w) ;
+    return new RooCFunction4Binding<double,double,double,double,bool>(name,name,func,x,y,z,w) ;
   }
 
   RooAbsPdf* bindPdf(const char* name,CFUNCD4DDDD func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z, RooAbsReal& w) {
-    return new RooCFunction4PdfBinding<Double_t,Double_t,Double_t,Double_t,Double_t>(name,name,func,x,y,z,w) ;
+    return new RooCFunction4PdfBinding<double,double,double,double,double>(name,name,func,x,y,z,w) ;
   }
 
   RooAbsPdf* bindPdf(const char* name,CFUNCD4DDDI func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z, RooAbsReal& w) {
-    return new RooCFunction4PdfBinding<Double_t,Double_t,Double_t,Double_t,Int_t>(name,name,func,x,y,z,w) ;
+    return new RooCFunction4PdfBinding<double,double,double,double,Int_t>(name,name,func,x,y,z,w) ;
   }
 
   RooAbsPdf* bindPdf(const char* name,CFUNCD4DDDB func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z, RooAbsReal& w) {
-    return new RooCFunction4PdfBinding<Double_t,Double_t,Double_t,Double_t,bool>(name,name,func,x,y,z,w) ;
+    return new RooCFunction4PdfBinding<double,double,double,double,bool>(name,name,func,x,y,z,w) ;
   }
 
 }

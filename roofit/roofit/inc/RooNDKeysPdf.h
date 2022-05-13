@@ -35,7 +35,7 @@ class RooArgSet;
 class RooChangeTracker;
 
 #ifndef __CINT__
-class VecVecDouble : public std::vector<std::vector<Double_t> >  { } ;
+class VecVecDouble : public std::vector<std::vector<double> >  { } ;
 class VecTVecDouble : public std::vector<TVectorD> { } ;
 typedef std::pair<Int_t, VecVecDouble::iterator > iiPair;
 typedef std::vector< iiPair > iiVec;
@@ -57,29 +57,29 @@ public:
   RooNDKeysPdf() = default;
 
   RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const RooDataSet &data,
-               TString options = "ma", Double_t rho = 1, Double_t nSigma = 3, bool rotate = true,
+               TString options = "ma", double rho = 1, double nSigma = 3, bool rotate = true,
                bool sortInput = true);
 
   RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const TH1 &hist, TString options = "ma",
-               Double_t rho = 1, Double_t nSigma = 3, bool rotate = true, bool sortInput = true);
+               double rho = 1, double nSigma = 3, bool rotate = true, bool sortInput = true);
 
   RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const RooDataSet &data,
-               const TVectorD &rho, TString options = "ma", Double_t nSigma = 3, bool rotate = true,
+               const TVectorD &rho, TString options = "ma", double nSigma = 3, bool rotate = true,
                bool sortInput = true);
 
   RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const RooDataSet &data,
-               const RooArgList &rhoList, TString options = "ma", Double_t nSigma = 3, bool rotate = true,
+               const RooArgList &rhoList, TString options = "ma", double nSigma = 3, bool rotate = true,
                bool sortInput = true);
 
   RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const TH1 &hist,
-               const RooArgList &rhoList, TString options = "ma", Double_t nSigma = 3, bool rotate = true,
+               const RooArgList &rhoList, TString options = "ma", double nSigma = 3, bool rotate = true,
                bool sortInput = true);
 
   RooNDKeysPdf(const char *name, const char *title, RooAbsReal &x, const RooDataSet &data, Mirror mirror = NoMirror,
-               Double_t rho = 1, Double_t nSigma = 3, bool rotate = true, bool sortInput = true);
+               double rho = 1, double nSigma = 3, bool rotate = true, bool sortInput = true);
 
   RooNDKeysPdf(const char *name, const char *title, RooAbsReal &x, RooAbsReal &y, const RooDataSet &data,
-               TString options = "ma", Double_t rho = 1.0, Double_t nSigma = 3, bool rotate = true,
+               TString options = "ma", double rho = 1.0, double nSigma = 3, bool rotate = true,
                bool sortInput = true);
 
   RooNDKeysPdf(const RooNDKeysPdf& other, const char* name=0);
@@ -88,7 +88,7 @@ public:
   TObject* clone(const char* newname) const override { return new RooNDKeysPdf(*this,newname); }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
   inline void fixShape(bool fix) {
     createPdf(false);
@@ -100,10 +100,10 @@ public:
   struct BoxInfo {
     bool filled;
     bool netFluxZ;
-    Double_t nEventsBW;
-    Double_t nEventsBMSW;
-    std::vector<Double_t> xVarLo, xVarHi;
-    std::vector<Double_t> xVarLoM3s, xVarLoP3s, xVarHiM3s, xVarHiP3s;
+    double nEventsBW;
+    double nEventsBMSW;
+    std::vector<double> xVarLo, xVarHi;
+    std::vector<double> xVarLoM3s, xVarLoP3s, xVarHiM3s, xVarHiP3s;
     std::map<Int_t,bool> bpsIdcs;
     std::vector<Int_t> sIdcs;
     std::vector<Int_t> bIdcs;
@@ -115,7 +115,7 @@ protected:
   RooListProxy _varList ;
   RooListProxy _rhoList;
 
-  Double_t evaluate() const override;
+  double evaluate() const override;
 
   void createPdf(bool firstCall = true);
   void setOptions();
@@ -127,8 +127,8 @@ protected:
   void calculatePreNorm(BoxInfo *bi) const;
   void sortDataIndices(BoxInfo *bi = 0);
   void calculateBandWidth();
-  Double_t gauss(std::vector<Double_t> &x, std::vector<std::vector<Double_t>> &weights) const;
-  void loopRange(std::vector<Double_t> &x, std::map<Int_t, bool> &ibMap) const;
+  double gauss(std::vector<double> &x, std::vector<std::vector<double>> &weights) const;
+  void loopRange(std::vector<double> &x, std::map<Int_t, bool> &ibMap) const;
   void boxInfoInit(BoxInfo *bi, const char *rangeName, Int_t code) const;
   RooDataSet *createDatasetFromHist(const RooArgList &varList, const TH1 &hist) const;
   void updateRho() const;
@@ -141,8 +141,8 @@ protected:
   std::unique_ptr<RooDataSet> _ownedData{nullptr};
   const RooDataSet* _data; //! do not persist
   mutable TString _options;
-  Double_t _widthFactor;
-  Double_t _nSigma;
+  double _widthFactor;
+  double _nSigma;
 
   bool _fixedShape{false};
   bool _mirror{false};
@@ -152,33 +152,33 @@ protected:
   Int_t _nDim{0};
   Int_t _nEvents{0};
   Int_t _nEventsM{0};
-  Double_t _nEventsW{0.};
-  Double_t _d{0.};
-  Double_t _n{0.};
+  double _nEventsW{0.};
+  double _d{0.};
+  double _n{0.};
 
   // cached info on variable
-  std::vector<std::vector<Double_t> > _dataPts;
+  std::vector<std::vector<double> > _dataPts;
   std::vector<TVectorD> _dataPtsR;
-  std::vector<std::vector<Double_t> > _weights0;            // Plain weights
-  std::vector<std::vector<Double_t> > _weights1;            // Weights for adaptive kernels
-  std::vector<std::vector<Double_t> >* _weights{nullptr};   //! Weights to be used. Points either to _weights0 or _weights1
+  std::vector<std::vector<double> > _weights0;            // Plain weights
+  std::vector<std::vector<double> > _weights1;            // Weights for adaptive kernels
+  std::vector<std::vector<double> >* _weights{nullptr};   //! Weights to be used. Points either to _weights0 or _weights1
 
   std::vector<itVec> _sortTVIdcs; //!
 
   std::vector<std::string> _varName;
-  mutable std::vector<Double_t> _rho;
+  mutable std::vector<double> _rho;
   RooArgSet _dataVars;
-  mutable std::vector<Double_t> _x; // Cache for x values
-  std::vector<Double_t> _x0, _x1, _x2;
-  std::vector<Double_t> _mean, _sigma;
-  std::vector<Double_t> _xDatLo, _xDatHi;
-  std::vector<Double_t> _xDatLo3s, _xDatHi3s;
+  mutable std::vector<double> _x; // Cache for x values
+  std::vector<double> _x0, _x1, _x2;
+  std::vector<double> _mean, _sigma;
+  std::vector<double> _xDatLo, _xDatHi;
+  std::vector<double> _xDatLo3s, _xDatHi3s;
 
   bool _netFluxZ{false};
-  Double_t _nEventsBW{0.};
-  Double_t _nEventsBMSW{0.};
-  std::vector<Double_t> _xVarLo, _xVarHi;
-  std::vector<Double_t> _xVarLoM3s, _xVarLoP3s, _xVarHiM3s, _xVarHiP3s;
+  double _nEventsBW{0.};
+  double _nEventsBMSW{0.};
+  std::vector<double> _xVarLo, _xVarHi;
+  std::vector<double> _xVarLoM3s, _xVarLoP3s, _xVarHiM3s, _xVarHiP3s;
   std::map<Int_t,bool> _bpsIdcs;
   std::map<Int_t, bool> _ibNoSort;
   std::vector<Int_t> _sIdcs;
@@ -190,16 +190,16 @@ protected:
   mutable BoxInfo _fullBoxInfo ;
 
   std::vector<Int_t> _idx;
-  Double_t _minWeight{0.};
-  Double_t _maxWeight{0.};
-  std::map<Int_t,Double_t> _wMap;
+  double _minWeight{0.};
+  double _maxWeight{0.};
+  std::map<Int_t,double> _wMap;
 
   TMatrixDSym* _covMat{nullptr};
   TMatrixDSym* _corrMat{nullptr};
   TMatrixD* _rotMat{nullptr};
   TVectorD* _sigmaR{nullptr};
   TVectorD* _dx{nullptr};
-  Double_t _sigmaAvgR{0.};
+  double _sigmaAvgR{0.};
 
   bool _rotate;
   bool _sortInput;

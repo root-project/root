@@ -65,7 +65,7 @@ public:
 
     Int_t _uid ; ///< Unique element ID ;
     TObject* _payload ; ///< Payload
-    std::map<TString,Double_t> _realRefParams ; ///< Names and values of real-valued reference parameters
+    std::map<TString,double> _realRefParams ; ///< Names and values of real-valued reference parameters
     std::map<TString,Int_t> _catRefParams ; ///< Names and values of discrete-valued reference parameters
     TString _ownerName ; ///< Name of RooAbsArg object that is associated to cache contents
 

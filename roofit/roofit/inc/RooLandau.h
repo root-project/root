@@ -38,7 +38,7 @@ protected:
   RooRealProxy mean ;
   RooRealProxy sigma ;
 
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
   void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 

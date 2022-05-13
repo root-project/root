@@ -42,13 +42,13 @@ public:
   void add(RooFit::SuperFloat c, RooAbsReal *t);
   void setCoefficient(size_t idx, RooFit::SuperFloat c);
   RooFit::SuperFloat getCoefficient(size_t idx);
-  Double_t evaluate() const override;
-  std::list<Double_t> *binBoundaries(RooAbsRealLValue &obs,
-                                             Double_t xlo,
-                                             Double_t xhi) const override;
-  std::list<Double_t> *plotSamplingHint(RooAbsRealLValue &obs,
-                                                Double_t xlo,
-                                                Double_t xhi) const override;
+  double evaluate() const override;
+  std::list<double> *binBoundaries(RooAbsRealLValue &obs,
+                                             double xlo,
+                                             double xhi) const override;
+  std::list<double> *plotSamplingHint(RooAbsRealLValue &obs,
+                                                double xlo,
+                                                double xhi) const override;
 
   ClassDefOverride(RooLinearCombination, 1)
 };

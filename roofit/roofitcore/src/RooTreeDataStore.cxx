@@ -602,7 +602,7 @@ const RooArgSet* RooTreeDataStore::get(Int_t index) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the weight of the n-th data point (n='index') in memory
 
-Double_t RooTreeDataStore::weight() const
+double RooTreeDataStore::weight() const
 {
   return _curWgt ;
 }
@@ -610,14 +610,14 @@ Double_t RooTreeDataStore::weight() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooTreeDataStore::weightError(RooAbsData::ErrorType etype) const
+double RooTreeDataStore::weightError(RooAbsData::ErrorType etype) const
 {
   if (_extWgtArray) {
 
     // We have a weight array, use that info
 
     // Return symmetric error on current bin calculated either from Poisson statistics or from SumOfWeights
-    Double_t lo = 0, hi =0;
+    double lo = 0, hi =0;
     weightError(lo,hi,etype) ;
     return (lo+hi)/2 ;
 
@@ -642,7 +642,7 @@ Double_t RooTreeDataStore::weightError(RooAbsData::ErrorType etype) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooTreeDataStore::weightError(Double_t& lo, Double_t& hi, RooAbsData::ErrorType etype) const
+void RooTreeDataStore::weightError(double& lo, double& hi, RooAbsData::ErrorType etype) const
 {
   if (_extWgtArray) {
 
@@ -666,7 +666,7 @@ void RooTreeDataStore::weightError(Double_t& lo, Double_t& hi, RooAbsData::Error
       }
 
       // Otherwise Calculate poisson errors
-      Double_t ym,yp ;
+      double ym,yp ;
       RooHistError::instance().getPoissonInterval(Int_t(weight()+0.5),ym,yp,1) ;
       lo = weight()-ym ;
       hi = yp-weight() ;
@@ -817,7 +817,7 @@ RooAbsArg* RooTreeDataStore::addColumn(RooAbsArg& newVar, bool adjustRange)
 
   if (adjustRange) {
 //     // Set range of valHolder to (just) bracket all values stored in the dataset
-//     Double_t vlo,vhi ;
+//     double vlo,vhi ;
 //     RooRealVar* rrvVal = dynamic_cast<RooRealVar*>(valHolder) ;
 //     if (rrvVal) {
 //       getRange(*rrvVal,vlo,vhi,0.05) ;
@@ -881,17 +881,17 @@ void RooTreeDataStore::append(RooAbsDataStore& other)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooTreeDataStore::sumEntries() const
+double RooTreeDataStore::sumEntries() const
 {
   if (_wgtVar) {
 
-    Double_t sum(0), carry(0);
+    double sum(0), carry(0);
     Int_t nevt = numEntries() ;
     for (int i=0 ; i<nevt ; i++) {
       get(i) ;
       // Kahan's algorithm for summing to avoid loss of precision
-      Double_t y = _wgtVar->getVal() - carry;
-      Double_t t = sum + y;
+      double y = _wgtVar->getVal() - carry;
+      double t = sum + y;
       carry = (t - sum) - y;
       sum = t;
     }
@@ -899,12 +899,12 @@ Double_t RooTreeDataStore::sumEntries() const
 
   } else if (_extWgtArray) {
 
-    Double_t sum(0) , carry(0);
+    double sum(0) , carry(0);
     Int_t nevt = numEntries() ;
     for (int i=0 ; i<nevt ; i++) {
       // Kahan's algorithm for summing to avoid loss of precision
-      Double_t y = _extWgtArray[i] - carry;
-      Double_t t = sum + y;
+      double y = _extWgtArray[i] - carry;
+      double t = sum + y;
       carry = (t - sum) - y;
       sum = t;
     }

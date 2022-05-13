@@ -148,7 +148,7 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
       _binnedPdf = nullptr;
     } else {
       auto* var = static_cast<RooRealVar*>(obs.first());
-      std::unique_ptr<std::list<Double_t>> boundaries{_binnedPdf->binBoundaries(*var,var->getMin(),var->getMax())};
+      std::unique_ptr<std::list<double>> boundaries{_binnedPdf->binBoundaries(*var,var->getMin(),var->getMax())};
       auto biter = boundaries->begin() ;
       _binw.reserve(boundaries->size()-1) ;
       double lastBound = (*biter) ;
@@ -224,7 +224,7 @@ void RooNLLVar::applyWeightSquared(bool flag)
 /// If this an extended likelihood, the extended term is added to the return likelihood
 /// in the batch that encounters the event with index 0.
 
-Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const
+double RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const
 {
   // Throughout the calculation, we use Kahan's algorithm for summing to
   // prevent loss of precision - this is a factor four more expensive than

@@ -37,7 +37,7 @@ protected:
   RooArgSet* actualObservables(const RooArgSet& nset) const override ;
   RooArgSet* actualParameters(const RooArgSet& nset) const override ;
   void fillCacheObject(PdfCacheElem& cachePdf) const override ;
-  Double_t evaluate() const override {
+  double evaluate() const override {
     // Dummy evaluate, it is never called
     return 0 ;
   }

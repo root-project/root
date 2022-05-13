@@ -41,7 +41,7 @@ protected:
 
   void operModeHook() override ;
 
-  Double_t evaluate() const override;
+  double evaluate() const override;
   RooArgSet* _compSetOwnedN ; ///< Owner of numerator components
   RooArgSet* _compSetOwnedD ; ///< Owner of denominator components
   RooSetProxy _compSetN ; ///< Set proxy for numerator components

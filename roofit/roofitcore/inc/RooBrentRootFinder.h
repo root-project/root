@@ -23,17 +23,17 @@ public:
   RooBrentRootFinder(const RooAbsFunc& function);
   inline ~RooBrentRootFinder() override { }
 
-  bool findRoot(Double_t &result, Double_t xlo, Double_t xhi, Double_t value= 0) const override;
+  bool findRoot(double &result, double xlo, double xhi, double value= 0) const override;
 
   /// Set convergence tolerance parameter
-  void setTol(Double_t tol) {
+  void setTol(double tol) {
     _tol = tol ;
   }
 
 protected:
   enum { MaxIterations = 512 };
 
-  Double_t _tol ;
+  double _tol ;
 
   ClassDefOverride(RooBrentRootFinder,0) // Abstract interface for 1-dim real-valued function root finders
 };

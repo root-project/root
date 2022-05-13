@@ -30,7 +30,7 @@ class TestBasic804 : public RooFitTestUnit
 public:
   TestBasic804(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("MC Studies with aux. obs. constraints",refFile,writeRef,verbose) {} ;
 
-  Double_t htol() { return 0.1 ; } // numerically very difficult test
+  double htol() { return 0.1 ; } // numerically very difficult test
 
   bool testCode() {
 

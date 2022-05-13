@@ -355,7 +355,7 @@ RooMomentMorph::CacheElem::~CacheElem()
 ////////////////////////////////////////////////////////////////////////////////
 /// Special version of getVal() overrides RooAbsReal::getVal() to save value of current normalization set
 
-Double_t RooMomentMorph::getVal(const RooArgSet* set) const
+double RooMomentMorph::getVal(const RooArgSet* set) const
 {
   _curNormSet = set ? (RooArgSet*)set : (RooArgSet*)&_varList ;
   return RooAbsPdf::getVal(set) ;
@@ -376,7 +376,7 @@ RooAbsPdf* RooMomentMorph::sumPdf(const RooArgSet* nset)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooMomentMorph::evaluate() const
+double RooMomentMorph::evaluate() const
 {
   CacheElem* cache = getCache(_curNormSet) ;
 
@@ -384,7 +384,7 @@ Double_t RooMomentMorph::evaluate() const
     cache->calculateFractions(*this,false); // verbose turned off
   }
 
-  Double_t ret = cache->_sumPdf->getVal(_pdfList.nset());
+  double ret = cache->_sumPdf->getVal(_pdfList.nset());
   return ret ;
 }
 
@@ -408,7 +408,7 @@ void RooMomentMorph::CacheElem::calculateFractions(const RooMomentMorph& self, b
 {
   Int_t nPdf = self._pdfList.getSize();
 
-  Double_t dm = self.m - (*self._mref)[0];
+  double dm = self.m - (*self._mref)[0];
 
   // fully non-linear
   double sumposfrac=0.;

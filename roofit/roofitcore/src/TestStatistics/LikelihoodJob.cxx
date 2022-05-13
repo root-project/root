@@ -90,7 +90,7 @@ void LikelihoodJob::update_state()
          std::vector<update_state_t> to_update(message_begin, message_end);
          for (auto const &item : to_update) {
             RooRealVar *rvar = (RooRealVar *)vars_.at(item.var_index);
-            rvar->setVal(static_cast<Double_t>(item.value));
+            rvar->setVal(static_cast<double>(item.value));
             if (rvar->isConstant() != item.is_constant) {
                rvar->setConstant(static_cast<bool>(item.is_constant));
             }
@@ -126,7 +126,7 @@ void LikelihoodJob::updateWorkersParameters()
             // send message to queue (which will relay to workers)
             RooAbsReal *rar_val = dynamic_cast<RooAbsReal *>(&vars_[ix]);
             if (rar_val) {
-               Double_t val = rar_val->getVal();
+               double val = rar_val->getVal();
                dynamic_cast<RooRealVar *>(&save_vars_[ix])->setVal(val);
                bool isC = vars_[ix].isConstant();
                to_update.push_back(update_state_t{ix, val, isC});

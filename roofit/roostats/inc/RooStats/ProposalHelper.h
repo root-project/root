@@ -59,11 +59,11 @@ namespace RooStats {
 
       /// set what fraction of the proposal density function should come from
       /// a uniform proposal distribution
-      virtual void SetUniformFraction(Double_t uniFrac) { fUniFrac = uniFrac; }
+      virtual void SetUniformFraction(double uniFrac) { fUniFrac = uniFrac; }
 
       /// set what fraction of the proposal density function should come from
       /// the bank of clues
-      virtual void SetCluesFraction(Double_t cluesFrac) { fCluesFrac = cluesFrac; }
+      virtual void SetCluesFraction(double cluesFrac) { fCluesFrac = cluesFrac; }
 
       /// set the covariance matrix to use for a multi-variate Gaussian proposal
       virtual void SetCovMatrix(const TMatrixDSym& covMatrix)
@@ -72,7 +72,7 @@ namespace RooStats {
       /// set what divisor we will use when dividing the range of a variable to
       /// determine the width of the proposal function for each dimension
       /// e.g. divisor = 6 for sigma = 1/6th
-      virtual void SetWidthRangeDivisor(Double_t divisor)
+      virtual void SetWidthRangeDivisor(double divisor)
       { if (divisor > 0.) fSigmaRangeDivisor = divisor; }
 
       /// set the option string to pass to the RooNDKeysPdf constructor
@@ -107,9 +107,9 @@ namespace RooStats {
       PdfProposal* fPdfProp;         ///< the PdfProposal we are (probably) going to return
       RooArgList* fVars;             ///< the RooRealVars to generate proposals for
       Int_t fCacheSize;              ///< for generating proposals from PDFs
-      Double_t fSigmaRangeDivisor;   ///< range divisor to get sigma for each variable
-      Double_t fUniFrac;             ///< what fraction of the PDF integral is uniform
-      Double_t fCluesFrac;           ///< what fraction of the PDF integral comes from clues
+      double fSigmaRangeDivisor;   ///< range divisor to get sigma for each variable
+      double fUniFrac;             ///< what fraction of the PDF integral is uniform
+      double fCluesFrac;           ///< what fraction of the PDF integral comes from clues
       bool fOwnsPdfProp;           ///< whether we own the PdfProposal; equivalent to:
                                      ///< !(whether we have returned it in GetProposalFunction)
       bool fOwnsPdf;               ///< whether we created (and own) the main pdf

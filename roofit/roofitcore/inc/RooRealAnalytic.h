@@ -24,7 +24,7 @@ public:
     RooRealBinding(func,vars,normSet,rangeName), _code(code) { }
   inline ~RooRealAnalytic() override { }
 
-  Double_t operator()(const Double_t xvector[]) const override;
+  double operator()(const double xvector[]) const override;
   RooSpan<const double> getValues(std::vector<RooSpan<const double>> coordinates) const override;
 
 protected:

@@ -118,15 +118,15 @@ void RooNonCentralChiSquare::SetForceSum(bool flag) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooNonCentralChiSquare::evaluate() const
+double RooNonCentralChiSquare::evaluate() const
 {
    // ENTER EXPRESSION IN TERMS OF VARIABLE ARGUMENTS HERE
 
 
    // chi^2(0,k) gives inf and causes various problems
    // truncate
-   Double_t xmin = x.min();
-   Double_t xmax = x.max();
+   double xmin = x.min();
+   double xmax = x.max();
    double _x = x;
    if(_x<=0){
      // options for dealing with this
@@ -209,12 +209,12 @@ Int_t RooNonCentralChiSquare::getAnalyticalIntegral(RooArgSet& allVars, RooArgSe
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooNonCentralChiSquare::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooNonCentralChiSquare::analyticalIntegral(Int_t code, const char* rangeName) const
 {
    R__ASSERT(code==1 );
    //  cout << "evaluating analytic integral" << endl;
-   Double_t xmin = x.min(rangeName);
-   Double_t xmax = x.max(rangeName);
+   double xmin = x.min(rangeName);
+   double xmax = x.max(rangeName);
 
    // if xmin~0 and xmax big, then can return 1. b/c evaluate is normalized.
 

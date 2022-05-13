@@ -72,7 +72,7 @@ RooAddModel::RooAddModel() :
   _haveLastCoef(false),
   _allExtendable(false)
 {
-  _coefCache = new Double_t[10] ;
+  _coefCache = new double[10] ;
   _coefErrCount = _errorCount ;
 }
 
@@ -156,7 +156,7 @@ RooAddModel::RooAddModel(const char *name, const char *title, const RooArgList& 
       _haveLastCoef = true;
    }
 
-   _coefCache = new Double_t[_pdfList.getSize()];
+   _coefCache = new double[_pdfList.getSize()];
    _coefErrCount = _errorCount;
 
    if (ownPdfList) {
@@ -180,7 +180,7 @@ RooAddModel::RooAddModel(const RooAddModel& other, const char* name) :
   _haveLastCoef(other._haveLastCoef),
   _allExtendable(other._allExtendable)
 {
-  _coefCache = new Double_t[_pdfList.getSize()] ;
+  _coefCache = new double[_pdfList.getSize()] ;
   _coefErrCount = _errorCount ;
 }
 
@@ -512,7 +512,7 @@ void RooAddModel::updateCoefficients(CacheElem& cache, const RooArgSet* nset) co
   if (_allExtendable) {
 
     // coef[i] = expectedEvents[i] / SUM(expectedEvents)
-    Double_t coefSum(0) ;
+    double coefSum(0) ;
     for (i=0 ; i<_pdfList.getSize() ; i++) {
       _coefCache[i] = ((RooAbsPdf*)_pdfList.at(i))->expectedEvents(_refCoefNorm.getSize()>0?&_refCoefNorm:nset) ;
       coefSum += _coefCache[i] ;
@@ -529,7 +529,7 @@ void RooAddModel::updateCoefficients(CacheElem& cache, const RooArgSet* nset) co
     if (_haveLastCoef) {
 
       // coef[i] = coef[i] / SUM(coef)
-      Double_t coefSum(0) ;
+      double coefSum(0) ;
       for (i=0 ; i<_coefList.getSize() ; i++) {
    _coefCache[i] = ((RooAbsPdf*)_coefList.at(i))->getVal(nset) ;
    coefSum += _coefCache[i] ;
@@ -540,7 +540,7 @@ void RooAddModel::updateCoefficients(CacheElem& cache, const RooArgSet* nset) co
     } else {
 
       // coef[i] = coef[i] ; coef[n] = 1-SUM(coef[0...n-1])
-      Double_t lastCoef(1) ;
+      double lastCoef(1) ;
       for (i=0 ; i<_coefList.getSize() ; i++) {
    _coefCache[i] = ((RooAbsPdf*)_coefList.at(i))->getVal(nset) ;
    cxcoutD(Caching) << "SYNC: orig coef[" << i << "] = " << _coefCache[i] << endl ;
@@ -571,7 +571,7 @@ void RooAddModel::updateCoefficients(CacheElem& cache, const RooArgSet* nset) co
   }
 
   // Adjust coefficients for given projection
-  Double_t coefSum(0) ;
+  double coefSum(0) ;
   for (i=0 ; i<_pdfList.getSize() ; i++) {
     GlobalSelectComponentRAII compRAII(true);
 
@@ -589,7 +589,7 @@ void RooAddModel::updateCoefficients(CacheElem& cache, const RooArgSet* nset) co
       r1->printCompactTree(ccoutD(Eval)) ;
     }
 
-    Double_t proj = pp->getVal()/sn->getVal()*(r2->getVal()/r1->getVal()) ;
+    double proj = pp->getVal()/sn->getVal()*(r2->getVal()/r1->getVal()) ;
 
     _coefCache[i] *= proj ;
     coefSum += _coefCache[i] ;
@@ -608,7 +608,7 @@ void RooAddModel::updateCoefficients(CacheElem& cache, const RooArgSet* nset) co
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate the current value
 
-Double_t RooAddModel::evaluate() const
+double RooAddModel::evaluate() const
 {
   const RooArgSet* nset = _normSet ;
   CacheElem* cache = getProjCache(nset) ;
@@ -617,16 +617,16 @@ Double_t RooAddModel::evaluate() const
 
 
   // Do running sum of coef/pdf pairs, calculate lastCoef.
-  Double_t snormVal ;
-  Double_t value(0) ;
+  double snormVal ;
+  double value(0) ;
   Int_t i(0) ;
   for (auto obj : _pdfList) {
     auto pdf = static_cast<RooAbsPdf*>(obj);
 
     if (_coefCache[i]!=0.) {
       snormVal = nset ? ((RooAbsReal*)cache->_suppNormList.at(i))->getVal() : 1.0 ;
-      Double_t pdfVal = pdf->getVal(nset) ;
-      // Double_t pdfNorm = pdf->getNorm(nset) ;
+      double pdfVal = pdf->getVal(nset) ;
+      // double pdfNorm = pdf->getNorm(nset) ;
       if (pdf->isSelectedComp()) {
    value += pdfVal*_coefCache[i]/snormVal ;
    cxcoutD(Eval) << "RooAddModel::evaluate(" << GetName() << ")  value += ["
@@ -737,7 +737,7 @@ void RooAddModel::getCompIntList(const RooArgSet* nset, const RooArgSet* iset, p
 ////////////////////////////////////////////////////////////////////////////////
 /// Return analytical integral defined by given scenario code
 
-Double_t RooAddModel::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const
+double RooAddModel::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const
 {
   // No integration scenario
   if (code==0) {
@@ -770,14 +770,14 @@ Double_t RooAddModel::analyticalIntegralWN(Int_t code, const RooArgSet* normSet,
   updateCoefficients(*pcache,nset) ;
 
   // Do running sum of coef/pdf pairs, calculate lastCoef.
-  Double_t snormVal ;
-  Double_t value(0) ;
+  double snormVal ;
+  double value(0) ;
   Int_t i(0) ;
   for (const auto obj : *compIntList) {
     auto pdfInt = static_cast<const RooAbsReal*>(obj);
     if (_coefCache[i]!=0.) {
       snormVal = nset ? ((RooAbsReal*)pcache->_suppNormList.at(i))->getVal() : 1.0 ;
-      Double_t intVal = pdfInt->getVal(nset) ;
+      double intVal = pdfInt->getVal(nset) ;
       value += intVal*_coefCache[i]/snormVal ;
       cxcoutD(Eval) << "RooAddModel::evaluate(" << GetName() << ")  value += ["
             << pdfInt->GetName() << "] " << intVal << " * " << _coefCache[i] << " / " << snormVal << endl ;
@@ -795,9 +795,9 @@ Double_t RooAddModel::analyticalIntegralWN(Int_t code, const RooArgSet* normSet,
 /// Return the number of expected events, which is either the sum of all coefficients
 /// or the sum of the components extended terms
 
-Double_t RooAddModel::expectedEvents(const RooArgSet* nset) const
+double RooAddModel::expectedEvents(const RooArgSet* nset) const
 {
-  Double_t expectedTotal(0.0);
+  double expectedTotal(0.0);
 
   if (_allExtendable) {
 

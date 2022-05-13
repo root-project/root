@@ -427,7 +427,7 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
 /// This list is stored in the "TH1" index order.
 RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Prefix,
                 const RooArgList& vars,
-                Double_t gamma_min, Double_t gamma_max) {
+                double gamma_min, double gamma_max) {
 
 
 
@@ -451,7 +451,7 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
 /// height of the histogram bins.
 /// Store them in a list
 RooArgList ParamHistFunc::createParamSet(const std::string& Prefix, Int_t numBins,
-                Double_t gamma_min, Double_t gamma_max) {
+                double gamma_min, double gamma_max) {
 
   // Get the number of bins
   // in the nominal histogram
@@ -467,7 +467,7 @@ RooArgList ParamHistFunc::createParamSet(const std::string& Prefix, Int_t numBin
 
   }
 
-  Double_t gamma_nominal = 1.0;
+  double gamma_nominal = 1.0;
 
   if( gamma_nominal < gamma_min ) {
     gamma_nominal = gamma_min;
@@ -587,7 +587,7 @@ Int_t ParamHistFunc::addParamSet( const RooArgList& params ) {
 ////////////////////////////////////////////////////////////////////////////////
 /// Find the bin corresponding to the current value of the observable, and evaluate
 /// the associated parameter.
-Double_t ParamHistFunc::evaluate() const
+double ParamHistFunc::evaluate() const
 {
   return getParameter().getVal();
 }
@@ -666,10 +666,10 @@ Int_t ParamHistFunc::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
 /// Implement analytical integrations by doing appropriate weighting from  component integrals
 /// functions to integrators of components
 
-Double_t ParamHistFunc::analyticalIntegralWN(Int_t /*code*/, const RooArgSet* /*normSet2*/,
+double ParamHistFunc::analyticalIntegralWN(Int_t /*code*/, const RooArgSet* /*normSet2*/,
                     const char* /*rangeName*/) const
 {
-  Double_t value(0) ;
+  double value(0) ;
 
   // Simply loop over bins,
   // get the height, and
@@ -698,23 +698,23 @@ Double_t ParamHistFunc::analyticalIntegralWN(Int_t /*code*/, const RooArgSet* /*
 /// as the recursive division strategy of RooCurve cannot deal efficiently
 /// with the vertical lines that occur in a non-interpolated histogram
 
-std::list<Double_t>* ParamHistFunc::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo,
-                  Double_t xhi) const
+std::list<double>* ParamHistFunc::plotSamplingHint(RooAbsRealLValue& obs, double xlo,
+                  double xhi) const
 {
   // copied and edited from RooHistFunc
   RooAbsLValue* lvarg = &obs;
 
   // Retrieve position of all bin boundaries
   const RooAbsBinning* binning = lvarg->getBinningPtr(0) ;
-  Double_t* boundaries = binning->array() ;
+  double* boundaries = binning->array() ;
 
-  std::list<Double_t>* hint = new std::list<Double_t> ;
+  std::list<double>* hint = new std::list<double> ;
 
   // Widen range slighty
   xlo = xlo - 0.01*(xhi-xlo) ;
   xhi = xhi + 0.01*(xhi-xlo) ;
 
-  Double_t delta = (xhi-xlo)*1e-8 ;
+  double delta = (xhi-xlo)*1e-8 ;
 
   // Construct array with pairs of points positioned epsilon to the left and
   // right of the bin boundaries
@@ -733,17 +733,17 @@ std::list<Double_t>* ParamHistFunc::plotSamplingHint(RooAbsRealLValue& obs, Doub
 /// as the recursive division strategy of RooCurve cannot deal efficiently
 /// with the vertical lines that occur in a non-interpolated histogram
 
-std::list<Double_t>* ParamHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_t xlo,
-                    Double_t xhi) const
+std::list<double>* ParamHistFunc::binBoundaries(RooAbsRealLValue& obs, double xlo,
+                    double xhi) const
 {
   // copied and edited from RooHistFunc
   RooAbsLValue* lvarg = &obs;
 
   // Retrieve position of all bin boundaries
   const RooAbsBinning* binning = lvarg->getBinningPtr(0) ;
-  Double_t* boundaries = binning->array() ;
+  double* boundaries = binning->array() ;
 
-  std::list<Double_t>* hint = new std::list<Double_t> ;
+  std::list<double>* hint = new std::list<double> ;
 
   // Construct array with pairs of points positioned epsilon to the left and
   // right of the bin boundaries

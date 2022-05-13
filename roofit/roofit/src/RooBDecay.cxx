@@ -108,7 +108,7 @@ RooBDecay::~RooBDecay()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBDecay::coefficient(Int_t basisIndex) const
+double RooBDecay::coefficient(Int_t basisIndex) const
 {
   if(basisIndex == _basisCosh)
     {
@@ -180,7 +180,7 @@ Int_t RooBDecay::getCoefAnalyticalIntegral(Int_t coef, RooArgSet& allVars, RooAr
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBDecay::coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName) const
+double RooBDecay::coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName) const
 {
   if(coef == _basisCosh)
     {
@@ -215,21 +215,21 @@ Int_t RooBDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVa
 void RooBDecay::generateEvent(Int_t code)
 {
   R__ASSERT(code==1);
-  Double_t gammamin = 1/_tau-TMath::Abs(_dgamma)/2;
+  double gammamin = 1/_tau-TMath::Abs(_dgamma)/2;
   while(1) {
-    Double_t t = -log(RooRandom::uniform())/gammamin;
+    double t = -log(RooRandom::uniform())/gammamin;
     if (_type == Flipped || (_type == DoubleSided && RooRandom::uniform() <0.5) ) t *= -1;
     if ( t<_t.min() || t>_t.max() ) continue;
 
-    Double_t dgt = _dgamma*t/2;
-    Double_t dmt = _dm*t;
-    Double_t ft = fabs(t);
-    Double_t f = exp(-ft/_tau)*(_f0*cosh(dgt)+_f1*sinh(dgt)+_f2*cos(dmt)+_f3*sin(dmt));
+    double dgt = _dgamma*t/2;
+    double dmt = _dm*t;
+    double ft = fabs(t);
+    double f = exp(-ft/_tau)*(_f0*cosh(dgt)+_f1*sinh(dgt)+_f2*cos(dmt)+_f3*sin(dmt));
     if(f < 0) {
       cout << "RooBDecay::generateEvent(" << GetName() << ") ERROR: PDF value less than zero" << endl;
       ::abort();
     }
-    Double_t w = 1.001*exp(-ft*gammamin)*(TMath::Abs(_f0)+TMath::Abs(_f1)+sqrt(_f2*_f2+_f3*_f3));
+    double w = 1.001*exp(-ft*gammamin)*(TMath::Abs(_f0)+TMath::Abs(_f1)+sqrt(_f2*_f2+_f3*_f3));
     if(w < f) {
       cout << "RooBDecay::generateEvent(" << GetName() << ") ERROR: Envelope function less than p.d.f. " << endl;
       cout << _f0 << endl;

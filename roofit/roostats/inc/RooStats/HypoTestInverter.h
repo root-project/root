@@ -108,13 +108,13 @@ public:
    void SetModel(const ModelConfig &) override { } // not needed
 
    /// set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
-   void SetTestSize(Double_t size) override {fSize = size; if (fResults) fResults->SetTestSize(size); }
+   void SetTestSize(double size) override {fSize = size; if (fResults) fResults->SetTestSize(size); }
    /// set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
-   void SetConfidenceLevel(Double_t cl) override {fSize = 1.-cl;  if (fResults) fResults->SetConfidenceLevel(cl); }
+   void SetConfidenceLevel(double cl) override {fSize = 1.-cl;  if (fResults) fResults->SetConfidenceLevel(cl); }
    /// Get the size of the test (eg. rate of Type I error)
-   Double_t Size() const override {return fSize;}
+   double Size() const override {return fSize;}
    /// Get the Confidence level for the test
-   Double_t ConfidenceLevel()  const override {return 1.-fSize;}
+   double ConfidenceLevel()  const override {return 1.-fSize;}
 
    /// destructor
    ~HypoTestInverter() override ;

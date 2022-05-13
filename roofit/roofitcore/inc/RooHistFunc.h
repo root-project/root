@@ -48,7 +48,7 @@ public:
 
   /// Get total bin volume spanned by this hist function.
   /// In 1-d, this is e.g. the range spanned on the x-axis.
-  Double_t totVolume() const;
+  double totVolume() const;
 
   /// Set histogram interpolation order.
   void setInterpolationOrder(Int_t order) {
@@ -63,7 +63,7 @@ public:
   }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
   /// Set use of special boundary conditions for c.d.f.s
   void setCdfBoundaries(bool flag) {
@@ -77,10 +77,10 @@ public:
   }
 
   Int_t getMaxVal(const RooArgSet& vars) const override;
-  Double_t maxVal(Int_t code) const override;
+  double maxVal(Int_t code) const override;
 
-  std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override ;
-  std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override ;
+  std::list<double>* binBoundaries(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
+  std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override ;
   bool isBinnedDistribution(const RooArgSet&) const override { return _intOrder==0 ; }
   RooArgSet const& getHistObsList() const { return _histObsList; }
 
@@ -93,7 +93,7 @@ protected:
   bool importWorkspaceHook(RooWorkspace& ws) override ;
   bool areIdentical(const RooDataHist& dh1, const RooDataHist& dh2) ;
 
-  Double_t evaluate() const override;
+  double evaluate() const override;
   void computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap&) const override;
   friend class RooAbsCachedReal ;
 
@@ -105,7 +105,7 @@ protected:
   mutable RooAICRegistry _codeReg ;  ///<! Auxiliary class keeping tracking of analytical integration code
   Int_t             _intOrder ;      ///< Interpolation order
   bool            _cdfBoundaries ; ///< Use boundary conditions for CDFs.
-  mutable Double_t  _totVolume ;     ///<! Total volume of space (product of ranges of observables)
+  mutable double  _totVolume ;     ///<! Total volume of space (product of ranges of observables)
   bool            _unitNorm  ;     ///<! Assume contents is unit normalized (for use as pdf cache)
 
   ClassDefOverride(RooHistFunc,2) // Histogram based function

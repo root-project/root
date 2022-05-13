@@ -21,23 +21,23 @@
 
 class RooScaledFunc : public RooAbsFunc {
 public:
-  inline RooScaledFunc(const RooAbsFunc &func, Double_t scaleFactor) :
+  inline RooScaledFunc(const RooAbsFunc &func, double scaleFactor) :
     RooAbsFunc(func.getDimension()), _func(&func), _scaleFactor(scaleFactor) { }
   inline ~RooScaledFunc() override { }
 
-  inline Double_t operator()(const Double_t xvector[]) const override {
+  inline double operator()(const double xvector[]) const override {
     return _scaleFactor*(*_func)(xvector);
   }
-  inline Double_t getMinLimit(UInt_t index) const override { return _func->getMinLimit(index); }
-  inline Double_t getMaxLimit(UInt_t index) const override { return _func->getMaxLimit(index); }
+  inline double getMinLimit(UInt_t index) const override { return _func->getMinLimit(index); }
+  inline double getMaxLimit(UInt_t index) const override { return _func->getMaxLimit(index); }
 
-  std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override {
+  std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override {
     return _func->plotSamplingHint(obs,xlo,xhi) ;
   }
 
 protected:
   const RooAbsFunc *_func;
-  Double_t _scaleFactor;
+  double _scaleFactor;
 
   ClassDefOverride(RooScaledFunc,0) // Function binding applying scaling to another function binding
 };

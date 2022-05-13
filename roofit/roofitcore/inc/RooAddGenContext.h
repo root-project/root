@@ -56,7 +56,7 @@ protected:
   RooAbsPdf *_pdf ;                 ///<  Pointer to cloned p.d.f
   std::vector<RooAbsGenContext*> _gcList ;  ///<  List of component generator contexts
   Int_t  _nComp ;                   ///<  Number of PDF components
-  Double_t* _coefThresh ;           ///<[_nComp] Array of coefficient thresholds
+  double* _coefThresh ;           ///<[_nComp] Array of coefficient thresholds
   bool _isModel ;                 ///< Are we generating from a RooAddPdf or a RooAddModel
   RooAddModel::CacheElem* _mcache ; ///<! RooAddModel cache element
   RooAddPdf::CacheElem* _pcache ;   ///<! RooAddPdf cache element

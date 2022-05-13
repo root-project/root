@@ -81,7 +81,7 @@ enum class BatchModeOption { Off, Cpu, Cuda, Old };
  * @{
  */
 RooCmdArg DrawOption(const char* opt) ;
-RooCmdArg Normalization(Double_t scaleFactor) ;
+RooCmdArg Normalization(double scaleFactor) ;
 RooCmdArg Slice(const RooArgSet& sliceSet) ;
 RooCmdArg Slice(RooArgSet && sliceSet) ;
 RooCmdArg Slice(RooCategory& cat, const char* label) ;
@@ -92,10 +92,10 @@ RooCmdArg ProjWData(const RooAbsData& projData, bool binData=false) ;
 RooCmdArg ProjWData(const RooArgSet& projSet, const RooAbsData& projData, bool binData=false) ;
 RooCmdArg ProjWData(RooArgSet && projSet, const RooAbsData& projData, bool binData=false) ;
 RooCmdArg Asymmetry(const RooCategory& cat) ;
-RooCmdArg Precision(Double_t prec) ;
+RooCmdArg Precision(double prec) ;
 RooCmdArg ShiftToZero() ;
 RooCmdArg Range(const char* rangeName, bool adjustNorm=true) ;
-RooCmdArg Range(Double_t lo, Double_t hi, bool adjustNorm=true) ;
+RooCmdArg Range(double lo, double hi, bool adjustNorm=true) ;
 RooCmdArg NormRange(const char* rangeNameList) ;
 RooCmdArg VLines() ;
 RooCmdArg LineColor(Color_t color) ;
@@ -107,16 +107,16 @@ RooCmdArg ProjectionRange(const char* rangeName) ;
 RooCmdArg Name(const char* name) ;
 RooCmdArg Invisible(bool inv=true) ;
 RooCmdArg AddTo(const char* name, double wgtSel=1.0, double wgtOther=1.0) ;
-RooCmdArg EvalErrorValue(Double_t value) ;
+RooCmdArg EvalErrorValue(double value) ;
 RooCmdArg MoveToBack()  ;
-RooCmdArg VisualizeError(const RooDataSet& paramData, Double_t Z=1) ;
-RooCmdArg VisualizeError(const RooFitResult& fitres, Double_t Z=1, bool linearMethod=true) ;
-RooCmdArg VisualizeError(const RooFitResult& fitres, const RooArgSet& param, Double_t Z=1, bool linearMethod=true) ;
-RooCmdArg VisualizeError(const RooFitResult& fitres, RooArgSet && param, Double_t Z=1, bool linearMethod=true) ;
+RooCmdArg VisualizeError(const RooDataSet& paramData, double Z=1) ;
+RooCmdArg VisualizeError(const RooFitResult& fitres, double Z=1, bool linearMethod=true) ;
+RooCmdArg VisualizeError(const RooFitResult& fitres, const RooArgSet& param, double Z=1, bool linearMethod=true) ;
+RooCmdArg VisualizeError(const RooFitResult& fitres, RooArgSet && param, double Z=1, bool linearMethod=true) ;
 RooCmdArg ShowProgress() ;
 
 // RooAbsPdf::plotOn arguments
-RooCmdArg Normalization(Double_t scaleFactor, Int_t scaleType) ;
+RooCmdArg Normalization(double scaleFactor, Int_t scaleType) ;
 template<class... Args_t>
 RooCmdArg Components(Args_t &&... argsOrArgSet) {
   return RooCmdArg("SelectCompSet",0,0,0,0,0,0,
@@ -134,10 +134,10 @@ RooCmdArg MarkerStyle(Style_t style) ;
 RooCmdArg MarkerSize(Size_t size) ;
 RooCmdArg MarkerColor(Color_t color) ;
 RooCmdArg CutRange(const char* rangeName) ;
-RooCmdArg XErrorSize(Double_t width) ;
+RooCmdArg XErrorSize(double width) ;
 RooCmdArg RefreshNorm() ;
 RooCmdArg Efficiency(const RooCategory& cat) ;
-RooCmdArg Rescale(Double_t factor) ;
+RooCmdArg Rescale(double factor) ;
 
 /** @} */
 
@@ -146,7 +146,7 @@ RooCmdArg Rescale(Double_t factor) ;
  * @{
  */
 // RooDataHist::ctor arguments
-RooCmdArg Weight(Double_t wgt) ;
+RooCmdArg Weight(double wgt) ;
 RooCmdArg Index(RooCategory& icat) ;
 RooCmdArg Import(const char* state, TH1& histo) ;
 RooCmdArg Import(const std::map<std::string,TH1*>&) ;
@@ -185,12 +185,12 @@ RooCmdArg Sibling(const RooAbsCollection& sibling) ;
 // RooAbsRealLValue::frame arguments
 RooCmdArg Title(const char* name) ;
 RooCmdArg Bins(Int_t nbin) ;
-RooCmdArg AutoSymRange(const RooAbsData& data, Double_t marginFactor=0.1) ;
-RooCmdArg AutoRange(const RooAbsData& data, Double_t marginFactor=0.1) ;
+RooCmdArg AutoSymRange(const RooAbsData& data, double marginFactor=0.1) ;
+RooCmdArg AutoRange(const RooAbsData& data, double marginFactor=0.1) ;
 
 // RooAbsData::createHistogram arguments
-RooCmdArg AutoSymBinning(Int_t nbins=100, Double_t marginFactor=0.1) ;
-RooCmdArg AutoBinning(Int_t nbins=100, Double_t marginFactor=0.1) ;
+RooCmdArg AutoSymBinning(Int_t nbins=100, double marginFactor=0.1) ;
+RooCmdArg AutoBinning(Int_t nbins=100, double marginFactor=0.1) ;
 
 // RooAbsReal::fillHistogram arguments
 RooCmdArg IntegratedObservables(const RooArgSet& intObs) ;
@@ -221,7 +221,7 @@ inline RooCmdArg BatchMode(bool batchModeOn) { return BatchMode(batchModeOn ? "c
 RooCmdArg IntegrateBins(double precision);
 
 // RooAbsPdf::fitTo arguments
-RooCmdArg PrefitDataFraction(Double_t data_ratio = 0.0) ;
+RooCmdArg PrefitDataFraction(double data_ratio = 0.0) ;
 RooCmdArg Optimize(Int_t flag=2) ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -278,7 +278,7 @@ RooCmdArg RecoverFromUndefinedRegions(double strength);
 
 // RooAbsPdf::paramOn arguments
 RooCmdArg Label(const char* str) ;
-RooCmdArg Layout(Double_t xmin, Double_t xmax=0.99, Double_t ymin=0.95) ;
+RooCmdArg Layout(double xmin, double xmax=0.99, double ymin=0.95) ;
 RooCmdArg Parameters(const RooArgSet& params) ;
 RooCmdArg Parameters(RooArgSet && params) ;
 RooCmdArg ShowConstants(bool flag=true) ;
@@ -299,7 +299,7 @@ RooCmdArg Conditional(RooArgSet && pdfSet, RooArgSet && depSet, bool depsAreCond
 // RooAbsPdf::generate arguments
 RooCmdArg ProtoData(const RooDataSet& protoData, bool randomizeOrder=false, bool resample=false) ;
 RooCmdArg NumEvents(Int_t numEvents) ;
-RooCmdArg NumEvents(Double_t numEvents) ;
+RooCmdArg NumEvents(double numEvents) ;
 RooCmdArg AutoBinned(bool flag=true) ;
 RooCmdArg GenBinned(const char* tag) ;
 RooCmdArg AllBinned() ;
@@ -339,7 +339,7 @@ RooCmdArg Frame(const RooCmdArg& arg1                ,const RooCmdArg& arg2=RooC
                 const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
                 const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
 RooCmdArg FrameBins(Int_t nbins) ;
-RooCmdArg FrameRange(Double_t xlo, Double_t xhi) ;
+RooCmdArg FrameRange(double xlo, double xhi) ;
 RooCmdArg FitGauss(bool flag=true) ;
 
 // RooRealVar::format arguments
@@ -392,7 +392,7 @@ RooCmdArg MultiArg(const RooCmdArg& arg1, const RooCmdArg& arg2,
          const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none(),
          const RooCmdArg& arg7=RooCmdArg::none(),const RooCmdArg& arg8=RooCmdArg::none()) ;
 
-RooConstVar& RooConst(Double_t val) ;
+RooConstVar& RooConst(double val) ;
 
 // End group CmdArgs:
 /**
@@ -402,7 +402,7 @@ RooConstVar& RooConst(Double_t val) ;
 
 namespace RooFitShortHand {
 
-RooConstVar& C(Double_t value);
+RooConstVar& C(double value);
 
 } // namespace RooFitShortHand
 

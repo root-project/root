@@ -35,7 +35,7 @@ public:
   RooAddition(const RooAddition& other, const char* name = 0);
   TObject* clone(const char* newname) const override { return new RooAddition(*this, newname); }
 
-  Double_t defaultErrorLevel() const override ;
+  double defaultErrorLevel() const override ;
 
   void printMetaArgs(std::ostream& os) const override ;
 
@@ -47,12 +47,12 @@ public:
       return true ;
   }
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars, const char* rangeName=0) const override;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
   bool setData(RooAbsData& data, bool cloneData=true) override ;
 
-  std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override ;
-  std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override ;
+  std::list<double>* binBoundaries(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
+  std::list<double>* plotSamplingHint(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
   bool isBinnedDistribution(const RooArgSet& obs) const override  ;
 
   void enableOffsetting(bool) override ;
@@ -71,7 +71,7 @@ protected:
   };
   mutable RooObjCacheManager _cacheMgr ; ///<! The cache manager
 
-  Double_t evaluate() const override;
+  double evaluate() const override;
 
   ClassDefOverride(RooAddition,3) // Sum of RooAbsReal objects
 };

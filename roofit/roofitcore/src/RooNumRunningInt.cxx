@@ -103,8 +103,8 @@ RooNumRunningInt::RICacheElem::RICacheElem(const RooNumRunningInt& self, const R
   FuncCacheElem(self,nset), _self(&const_cast<RooNumRunningInt&>(self))
 {
   // Instantiate temp arrays
-  _ax = new Double_t[hist()->numEntries()] ;
-  _ay = new Double_t[hist()->numEntries()] ;
+  _ax = new double[hist()->numEntries()] ;
+  _ay = new double[hist()->numEntries()] ;
 
   // Copy X values from histo
   _xx = (RooRealVar*) hist()->get()->find(self.x.arg().GetName()) ;
@@ -152,7 +152,7 @@ void RooNumRunningInt::RICacheElem::calculate(bool cdfmode)
   // Update contents of histogram
   Int_t nbins = hist()->numEntries() ;
 
-  Double_t xsave = _self->x ;
+  double xsave = _self->x ;
 
   Int_t lastHi=0 ;
   Int_t nInitRange=32 ;
@@ -169,7 +169,7 @@ void RooNumRunningInt::RICacheElem::calculate(bool cdfmode)
   }
 
   // Normalize and transfer to cache histogram
-  Double_t binv = (_self->x.max()-_self->x.min())/nbins ;
+  double binv = (_self->x.max()-_self->x.min())/nbins ;
   for (int i=0 ; i<nbins ; i++) {
     hist()->get(i) ;
     if (cdfmode) {
@@ -221,7 +221,7 @@ void RooNumRunningInt::RICacheElem::addRange(Int_t ixlo, Int_t ixhi, Int_t nbins
   addPoint(ixmid) ;
 
   // Calculate difference of mid-point w.r.t interpolated value
-  Double_t yInt = _ay[ixlo] + (_ay[ixhi]-_ay[ixlo])*(ixmid-ixlo)/(ixhi-ixlo) ;
+  double yInt = _ay[ixlo] + (_ay[ixhi]-_ay[ixlo])*(ixmid-ixlo)/(ixhi-ixlo) ;
 
   // If relative deviation is greater than tolerance divide and iterate
   if (fabs(yInt-_ay[ixmid])*(_ax[nbins-1]-_ax[0])>1e-6) {
@@ -301,7 +301,7 @@ RooAbsCachedReal::FuncCacheElem* RooNumRunningInt::createCache(const RooArgSet* 
 ////////////////////////////////////////////////////////////////////////////////
 /// Dummy function that is never called
 
-Double_t RooNumRunningInt::evaluate() const
+double RooNumRunningInt::evaluate() const
 {
   cout << "RooNumRunningInt::evaluate(" << GetName() << ")" << endl ;
   return 0 ;

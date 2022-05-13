@@ -45,13 +45,13 @@ used for coverage studies, the Neyman Construction, etc.
       virtual SamplingDistribution* GetSamplingDistribution(RooArgSet& paramsOfInterest) = 0;
 
       /// Main interface to evaluate the test statistic on a dataset
-      virtual Double_t EvaluateTestStatistic(RooAbsData& data, RooArgSet& paramsOfInterest) = 0;
+      virtual double EvaluateTestStatistic(RooAbsData& data, RooArgSet& paramsOfInterest) = 0;
 
       /// Get the TestStatistic
       virtual TestStatistic* GetTestStatistic()  const = 0;
 
       /// Get the Confidence level for the test
-      virtual Double_t ConfidenceLevel()  const = 0;
+      virtual double ConfidenceLevel()  const = 0;
 
       /// Common Initialization
       virtual void Initialize(RooAbsArg& testStatistic, RooArgSet& paramsOfInterest, RooArgSet& nuisanceParameters) = 0;
@@ -73,9 +73,9 @@ used for coverage studies, the Neyman Construction, etc.
       virtual void SetGlobalObservables(const RooArgSet& ) = 0;
 
       /// set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
-      virtual void SetTestSize(Double_t size) = 0;
+      virtual void SetTestSize(double size) = 0;
       /// set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
-      virtual void SetConfidenceLevel(Double_t cl) = 0;
+      virtual void SetConfidenceLevel(double cl) = 0;
 
       /// Set the TestStatistic (want the argument to be a function of the data & parameter points
       virtual void SetTestStatistic(TestStatistic* testStatistic) = 0;

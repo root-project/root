@@ -66,10 +66,10 @@ namespace RooStats {
       /// it does not subtract off the global MLE
       /// because  nuisance parameters of null and alternate may not
       /// be the same.
-      Double_t ProfiledLikelihood(RooAbsData& data, RooArgSet& poi, RooAbsPdf& pdf);
+      double ProfiledLikelihood(RooAbsData& data, RooArgSet& poi, RooAbsPdf& pdf);
 
       /// evaluate the ratio of profile likelihood
-      Double_t Evaluate(RooAbsData& data, RooArgSet& nullParamsOfInterest) override;
+      double Evaluate(RooAbsData& data, RooArgSet& nullParamsOfInterest) override;
 
       virtual void EnableDetailedOutput( bool e=true ) {
          fDetailedOutputEnabled = e;
@@ -92,7 +92,7 @@ namespace RooStats {
          fNullProfile.SetStrategy(strategy);
          fAltProfile.SetStrategy(strategy);
       }
-      void SetTolerance(Double_t tol){
+      void SetTolerance(double tol){
          fNullProfile.SetTolerance(tol);
          fAltProfile.SetTolerance(tol);
       }

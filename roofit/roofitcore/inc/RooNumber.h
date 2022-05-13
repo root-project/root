@@ -23,11 +23,11 @@ public:
 
   virtual ~RooNumber() {} ;
 
-  static Double_t infinity() ;
-  static Int_t isInfinite(Double_t x) ;
+  static double infinity() ;
+  static Int_t isInfinite(double x) ;
 
  private:
-  static Double_t _Infinity ;
+  static double _Infinity ;
 
   ClassDef(RooNumber,0) // wrapper class for portable numerics
 };

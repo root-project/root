@@ -57,15 +57,15 @@ public:
   // Write current row
   Int_t fill() override ;
 
-  Double_t sumEntries() const override ;
+  double sumEntries() const override ;
 
   // Retrieve a row
   using RooAbsDataStore::get ;
   const RooArgSet* get(Int_t index) const override ;
   using RooAbsDataStore::weight ;
-  Double_t weight() const override ;
-  Double_t weightError(RooAbsData::ErrorType etype=RooAbsData::Poisson) const override ;
-  void weightError(Double_t& lo, Double_t& hi, RooAbsData::ErrorType etype=RooAbsData::Poisson) const override ;
+  double weight() const override ;
+  double weightError(RooAbsData::ErrorType etype=RooAbsData::Poisson) const override ;
+  void weightError(double& lo, double& hi, RooAbsData::ErrorType etype=RooAbsData::Poisson) const override ;
   bool isWeighted() const override ;
 
   // Change observable name

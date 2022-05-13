@@ -298,7 +298,7 @@ void RooConvGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
     _pdfGen->generateEvent(*_pdfVars,remaining) ;
 
     // Construct smeared convolution variable
-    Double_t convValSmeared = _cvPdf->getVal() + _cvModel->getVal() ;
+    double convValSmeared = _cvPdf->getVal() + _cvModel->getVal() ;
     if (_cvOut->isValidReal(convValSmeared)) {
       // Smeared value in acceptance range, transfer values to output set
       theEvent.assign(*_modelVars) ;

@@ -28,9 +28,9 @@ public:
   // Constructors, assignment etc
   RooUnblindPrecision() ;
   RooUnblindPrecision(const char *name, const char *title,
-            const char *blindString, Double_t centralValue, Double_t scale, RooAbsReal& blindValue, bool sin2betaMode=false);
+            const char *blindString, double centralValue, double scale, RooAbsReal& blindValue, bool sin2betaMode=false);
   RooUnblindPrecision(const char *name, const char *title,
-            const char *blindString, Double_t centralValue, Double_t scale,
+            const char *blindString, double centralValue, double scale,
             RooAbsReal& blindValue, RooAbsCategory& blindState, bool sin2betaMode=false);
   RooUnblindPrecision(const RooUnblindPrecision& other, const char* name=0);
   TObject* clone(const char* newname) const override { return new RooUnblindPrecision(*this,newname); }
@@ -39,7 +39,7 @@ public:
 protected:
 
   // Function evaluation
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
 
   RooRealProxy _value ;          // Holder of the blind value
   RooBlindTools _blindEngine ;   // Blinding engine

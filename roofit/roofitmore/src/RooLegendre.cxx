@@ -108,7 +108,7 @@ RooLegendre::RooLegendre(const RooLegendre& other, const char* name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Note: P_0^0 = 1, so P_l^m = P_l^m P_0^0
 
-Double_t RooLegendre::evaluate() const
+double RooLegendre::evaluate() const
 {
 #ifdef R__HAS_MATHMORE
   double r = 1;
@@ -201,7 +201,7 @@ Int_t RooLegendre::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
 /// this was verified to match mathematica for
 /// l1 in [0,2], m1 in [0,l1], l2 in [l1,4], m2 in [0,l2]
 
-Double_t RooLegendre::analyticalIntegral(Int_t code, const char* ) const
+double RooLegendre::analyticalIntegral(Int_t code, const char* ) const
 {
   R__ASSERT(code==1) ;
   if ( _m1==_m2 )                 return ( _l1 == _l2) ?  TMath::Factorial(_l1+_m2)/TMath::Factorial(_l1-_m1)*double(2)/(2*_l1+1) : 0.;
@@ -250,6 +250,6 @@ namespace {
         return m2[j-1];
     }
 }
-Double_t RooLegendre::maxVal( Int_t /*code*/) const {
+double RooLegendre::maxVal( Int_t /*code*/) const {
     return maxSingle(_l1,_m1)*maxSingle(_l2,_m2);
 }

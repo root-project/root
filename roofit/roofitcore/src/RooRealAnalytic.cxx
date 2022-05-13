@@ -38,7 +38,7 @@ ClassImp(RooRealAnalytic);
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate our analytic integral at the specified values of the dependents.
 
-Double_t RooRealAnalytic::operator()(const Double_t xvector[]) const
+double RooRealAnalytic::operator()(const double xvector[]) const
 {
   assert(isValid());
   loadValues(xvector);

@@ -103,7 +103,7 @@ RooFit::SuperFloat RooLinearCombination::getCoefficient(size_t idx) {
   return this->_coefficients[idx];
 }
 
-Double_t RooLinearCombination::evaluate() const {
+double RooLinearCombination::evaluate() const {
   // call the evaluation
 #ifdef USE_UBLAS
     RooFit::SuperFloat result;
@@ -129,9 +129,9 @@ Double_t RooLinearCombination::evaluate() const {
 #endif
 }
 
-std::list<Double_t> *RooLinearCombination::binBoundaries(RooAbsRealLValue &obs,
-                                                      Double_t xlo,
-                                                      Double_t xhi) const {
+std::list<double> *RooLinearCombination::binBoundaries(RooAbsRealLValue &obs,
+                                                      double xlo,
+                                                      double xhi) const {
   // Forward the plot sampling hint from the p.d.f. that defines the observable
   // obs
   for(auto const& func : _actualVars) {
@@ -143,9 +143,9 @@ std::list<Double_t> *RooLinearCombination::binBoundaries(RooAbsRealLValue &obs,
   return 0;
 }
 
-std::list<Double_t> *RooLinearCombination::plotSamplingHint(RooAbsRealLValue &obs,
-                                                         Double_t xlo,
-                                                         Double_t xhi) const {
+std::list<double> *RooLinearCombination::plotSamplingHint(RooAbsRealLValue &obs,
+                                                         double xlo,
+                                                         double xhi) const {
   // Forward the plot sampling hint from the p.d.f. that defines the observable
   // obs
   for(auto const& func : _actualVars) {

@@ -33,22 +33,22 @@ class RooCurve : public TGraph, public RooPlotable {
 public:
   RooCurve();
   enum WingMode { NoWings=0 ,Straight=1, Extended=2 } ;
-  RooCurve(const RooAbsReal &func, RooAbsRealLValue &x, Double_t xlo, Double_t xhi, Int_t xbins,
-      Double_t scaleFactor= 1, const RooArgSet *normVars= 0, Double_t prec= 1e-3, Double_t resolution= 1e-3,
-      bool shiftToZero=false, WingMode wmode=Extended, Int_t nEvalError=-1, Int_t doEEVal=false, Double_t eeVal=0,
+  RooCurve(const RooAbsReal &func, RooAbsRealLValue &x, double xlo, double xhi, Int_t xbins,
+      double scaleFactor= 1, const RooArgSet *normVars= 0, double prec= 1e-3, double resolution= 1e-3,
+      bool shiftToZero=false, WingMode wmode=Extended, Int_t nEvalError=-1, Int_t doEEVal=false, double eeVal=0,
       bool showProgress=false);
-  RooCurve(const char *name, const char *title, const RooAbsFunc &func, Double_t xlo,
-      Double_t xhi, UInt_t minPoints, Double_t prec= 1e-3, Double_t resolution= 1e-3,
-      bool shiftToZero=false, WingMode wmode=Extended, Int_t nEvalError=-1, Int_t doEEVal=false, Double_t eeVal=0);
+  RooCurve(const char *name, const char *title, const RooAbsFunc &func, double xlo,
+      double xhi, UInt_t minPoints, double prec= 1e-3, double resolution= 1e-3,
+      bool shiftToZero=false, WingMode wmode=Extended, Int_t nEvalError=-1, Int_t doEEVal=false, double eeVal=0);
   ~RooCurve() override;
 
-  RooCurve(const char* name, const char* title, const RooCurve& c1, const RooCurve& c2, Double_t scale1=1., Double_t scale2=1.) ;
+  RooCurve(const char* name, const char* title, const RooCurve& c1, const RooCurve& c2, double scale1=1., double scale2=1.) ;
 
-  void addPoint(Double_t x, Double_t y);
+  void addPoint(double x, double y);
 
-  Double_t getFitRangeBinW() const override;
-  Double_t getFitRangeNEvt(Double_t xlo, Double_t xhi) const override ;
-  Double_t getFitRangeNEvt() const override;
+  double getFitRangeBinW() const override;
+  double getFitRangeNEvt(double xlo, double xhi) const override ;
+  double getFitRangeNEvt() const override;
 
 
   void printName(std::ostream& os) const override ;
@@ -61,32 +61,32 @@ public:
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
-  Double_t chiSquare(const RooHist& hist, int nFitParam) const ;
-  Int_t findPoint(Double_t value, Double_t tolerance=1e-10) const ;
-  Double_t average(Double_t lo, Double_t hi) const ;
-  Double_t interpolate(Double_t x, Double_t tolerance=1e-10) const ;
+  double chiSquare(const RooHist& hist, int nFitParam) const ;
+  Int_t findPoint(double value, double tolerance=1e-10) const ;
+  double average(double lo, double hi) const ;
+  double interpolate(double x, double tolerance=1e-10) const ;
 
-  bool isIdentical(const RooCurve& other, Double_t tol=1e-6, bool verbose=true) const ;
+  bool isIdentical(const RooCurve& other, double tol=1e-6, bool verbose=true) const ;
 
-  RooCurve* makeErrorBand(const std::vector<RooCurve*>& variations, Double_t Z=1) const ;
-  RooCurve* makeErrorBand(const std::vector<RooCurve*>& plusVar, const std::vector<RooCurve*>& minusVar, const TMatrixD& V, Double_t Z=1) const ;
+  RooCurve* makeErrorBand(const std::vector<RooCurve*>& variations, double Z=1) const ;
+  RooCurve* makeErrorBand(const std::vector<RooCurve*>& plusVar, const std::vector<RooCurve*>& minusVar, const TMatrixD& V, double Z=1) const ;
 
 protected:
 
-  void calcBandInterval(const std::vector<RooCurve*>& variations,Int_t i,Double_t Z,Double_t& lo, Double_t& hi, bool approxGauss) const ;
+  void calcBandInterval(const std::vector<RooCurve*>& variations,Int_t i,double Z,double& lo, double& hi, bool approxGauss) const ;
   void calcBandInterval(const std::vector<RooCurve*>& plusVar, const std::vector<RooCurve*>& minusVar, Int_t i, const TMatrixD& V,
-         Double_t Z,Double_t& lo, Double_t& hi) const ;
+         double Z,double& lo, double& hi) const ;
 
   void initialize();
-  void addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
-       Int_t minPoints, Double_t prec, Double_t resolution, WingMode wmode,
-       Int_t numee=0, bool doEEVal=false, Double_t eeVal=0.,std::list<Double_t>* samplingHint=0) ;
-  void addRange(const RooAbsFunc& func, Double_t x1, Double_t x2, Double_t y1,
-      Double_t y2, Double_t minDy, Double_t minDx,
-      Int_t numee=0, bool doEEVal=false, Double_t eeVal=0.)  ;
+  void addPoints(const RooAbsFunc &func, double xlo, double xhi,
+       Int_t minPoints, double prec, double resolution, WingMode wmode,
+       Int_t numee=0, bool doEEVal=false, double eeVal=0.,std::list<double>* samplingHint=0) ;
+  void addRange(const RooAbsFunc& func, double x1, double x2, double y1,
+      double y2, double minDy, double minDx,
+      Int_t numee=0, bool doEEVal=false, double eeVal=0.)  ;
 
 
-  void shiftCurveToZero(Double_t prevYMax) ;
+  void shiftCurveToZero(double prevYMax) ;
 
   bool _showProgress ; ///<! Show progress indication when adding points
 

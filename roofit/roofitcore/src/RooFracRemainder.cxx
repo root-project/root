@@ -106,9 +106,9 @@ RooFracRemainder::~RooFracRemainder()
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate value
 
-Double_t RooFracRemainder::evaluate() const
+double RooFracRemainder::evaluate() const
 {
-  Double_t sum(1);
+  double sum(1);
   RooAbsReal* comp ;
   const RooArgSet* nset = _set1.nset() ;
 

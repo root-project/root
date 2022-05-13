@@ -837,7 +837,7 @@ TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
   RooLinkedList ownedCmds ;
   RooCmdArg* autoRD = (RooCmdArg*) argList.find("AutoRangeData") ;
   if (autoRD) {
-    Double_t xmin,xmax ;
+    double xmin,xmax ;
     if (!getRange((RooRealVar&)xvar,xmin,xmax,autoRD->getDouble(0),autoRD->getInt(0))) {
        RooCmdArg* bincmd = (RooCmdArg*) RooFit::Binning(autoRD->getInt(1),xmin,xmax).Clone() ;
        ownedCmds.Add(bincmd) ;
@@ -848,7 +848,7 @@ TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
   if (yvar) {
     RooCmdArg* autoRDY = (RooCmdArg*) ((RooCmdArg*)argList.find("YVar"))->subArgs().find("AutoRangeData") ;
     if (autoRDY) {
-      Double_t ymin,ymax ;
+      double ymin,ymax ;
       if (!getRange((RooRealVar&)(*yvar),ymin,ymax,autoRDY->getDouble(0),autoRDY->getInt(0))) {
          RooCmdArg* bincmd = (RooCmdArg*) RooFit::Binning(autoRDY->getInt(1),ymin,ymax).Clone() ;
          //ownedCmds.Add(bincmd) ;
@@ -861,7 +861,7 @@ TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
   if (zvar) {
     RooCmdArg* autoRDZ = (RooCmdArg*) ((RooCmdArg*)argList.find("ZVar"))->subArgs().find("AutoRangeData") ;
     if (autoRDZ) {
-      Double_t zmin,zmax ;
+      double zmin,zmax ;
       if (!getRange((RooRealVar&)(*zvar),zmin,zmax,autoRDZ->getDouble(0),autoRDZ->getInt(0))) {
          RooCmdArg* bincmd = (RooCmdArg*) RooFit::Binning(autoRDZ->getInt(1),zmin,zmax).Clone() ;
          //ownedCmds.Add(bincmd) ;
@@ -958,7 +958,7 @@ Int_t RooAbsData::defaultPrintContents(Option_t* /*opt*/) const
 /// \param[in] cutRange If specified, calculate inside the range named 'cutRange' (also applies cut spec)
 /// \return \f$ \frac{\left< \left( X - \left< X \right> \right)^n \right>}{\sigma^n} \f$,  where n = order.
 
-Double_t RooAbsData::standMoment(const RooRealVar &var, Double_t order, const char* cutSpec, const char* cutRange) const
+double RooAbsData::standMoment(const RooRealVar &var, double order, const char* cutSpec, const char* cutRange) const
 {
   // Hardwire invariant answer for first and second moment
   if (order==1) return 0 ;
@@ -977,9 +977,9 @@ Double_t RooAbsData::standMoment(const RooRealVar &var, Double_t order, const ch
 /// \return \f$ \left< \left( X - \left< X \right> \right)^n \right> \f$ of order \f$n\f$.
 ///
 
-Double_t RooAbsData::moment(const RooRealVar& var, Double_t order, const char* cutSpec, const char* cutRange) const
+double RooAbsData::moment(const RooRealVar& var, double order, const char* cutSpec, const char* cutRange) const
 {
-  Double_t offset = order>1 ? moment(var,1,cutSpec,cutRange) : 0 ;
+  double offset = order>1 ? moment(var,1,cutSpec,cutRange) : 0 ;
   return moment(var,order,offset,cutSpec,cutRange) ;
 
 }
@@ -990,7 +990,7 @@ Double_t RooAbsData::moment(const RooRealVar& var, Double_t order, const char* c
 /// the moment is calculated on the subset of the data which pass the C++ cut specification expression 'cutSpec'
 /// and/or are inside the range named 'cutRange'
 
-Double_t RooAbsData::moment(const RooRealVar& var, Double_t order, Double_t offset, const char* cutSpec, const char* cutRange) const
+double RooAbsData::moment(const RooRealVar& var, double order, double offset, const char* cutSpec, const char* cutRange) const
 {
   // Lookup variable in dataset
   auto arg = _vars.find(var.GetName());
@@ -1054,7 +1054,7 @@ RooRealVar* RooAbsData::dataRealVar(const char* methodname, const RooRealVar& ex
 ////////////////////////////////////////////////////////////////////////////////
 /// Internal method to calculate single correlation and covariance elements
 
-Double_t RooAbsData::corrcov(const RooRealVar &x, const RooRealVar &y, const char* cutSpec, const char* cutRange, bool corr) const
+double RooAbsData::corrcov(const RooRealVar &x, const RooRealVar &y, const char* cutSpec, const char* cutRange, bool corr) const
 {
   // Lookup variable in dataset
   RooRealVar *xdata = dataRealVar(corr?"correlation":"covariance",x) ;
@@ -1071,7 +1071,7 @@ Double_t RooAbsData::corrcov(const RooRealVar &x, const RooRealVar &y, const cha
   RooFormula* select = cutSpec ? new RooFormula("select",cutSpec,*get()) : 0 ;
 
   // Calculate requested moment
-  Double_t xysum(0),xsum(0),ysum(0),x2sum(0),y2sum(0);
+  double xysum(0),xsum(0),ysum(0),x2sum(0),y2sum(0);
   const RooArgSet* vars ;
   for(Int_t index= 0; index < numEntries(); index++) {
     vars = get(index) ;
@@ -1225,10 +1225,10 @@ RooRealVar* RooAbsData::meanVar(const RooRealVar &var, const char* cutSpec, cons
   meanv->setPlotLabel(label.Data());
 
   // fill in this variable's value and error
-  Double_t meanVal=moment(var,1,0,cutSpec,cutRange) ;
-  Double_t N(sumEntries(cutSpec,cutRange)) ;
+  double meanVal=moment(var,1,0,cutSpec,cutRange) ;
+  double N(sumEntries(cutSpec,cutRange)) ;
 
-  Double_t rmsVal= sqrt(moment(var,2,meanVal,cutSpec,cutRange)*N/(N-1));
+  double rmsVal= sqrt(moment(var,2,meanVal,cutSpec,cutRange)*N/(N-1));
   meanv->setVal(meanVal) ;
   meanv->setError(N > 0 ? rmsVal/sqrt(N) : 0);
 
@@ -1260,9 +1260,9 @@ RooRealVar* RooAbsData::rmsVar(const RooRealVar &var, const char* cutSpec, const
   rms->setPlotLabel(label);
 
   // Fill in this variable's value and error
-  Double_t meanVal(moment(var,1,0,cutSpec,cutRange)) ;
-  Double_t N(sumEntries(cutSpec, cutRange));
-  Double_t rmsVal= sqrt(moment(var,2,meanVal,cutSpec,cutRange)*N/(N-1));
+  double meanVal(moment(var,1,0,cutSpec,cutRange)) ;
+  double N(sumEntries(cutSpec, cutRange));
+  double rmsVal= sqrt(moment(var,2,meanVal,cutSpec,cutRange)*N/(N-1));
   rms->setVal(rmsVal) ;
   rms->setError(rmsVal/sqrt(2*N));
 
@@ -1291,7 +1291,7 @@ RooRealVar* RooAbsData::rmsVar(const RooRealVar &var, const char* cutSpec, const
 ///   <tr><td> `VerbatimName(bool flag)`   <td> Put variable name in a \\verb+   + clause.
 ///   </table>
 /// <tr><td> `Label(const chat* label)`   <td> Add header label to parameter box
-/// <tr><td> `Layout(Double_t xmin, Double_t xmax, Double_t ymax)`   <td> Specify relative position of left,right side of box and top of box. Position of
+/// <tr><td> `Layout(double xmin, double xmax, double ymax)`   <td> Specify relative position of left,right side of box and top of box. Position of
 ///     bottom of box is calculated automatically from number lines in box
 /// <tr><td> `Cut(const char* expression)`   <td> Apply given cut expression to data when calculating statistics
 /// <tr><td> `CutRange(const char* rangeName)`   <td> Only consider events within given range when calculating statistics. Multiple
@@ -1331,9 +1331,9 @@ RooPlot* RooAbsData::statOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
   }
 
   const char* label = pc.getString("label") ;
-  Double_t xmin = pc.getDouble("xmin") ;
-  Double_t xmax = pc.getDouble("xmax") ;
-  Double_t ymax = pc.getInt("ymaxi") / 10000. ;
+  double xmin = pc.getDouble("xmin") ;
+  double xmax = pc.getDouble("xmax") ;
+  double ymax = pc.getInt("ymaxi") / 10000. ;
   const char* formatStr = pc.getString("formatStr") ;
   Int_t sigDigit = pc.getInt("sigDigit") ;
   const char* what = pc.getString("what") ;
@@ -1353,7 +1353,7 @@ RooPlot* RooAbsData::statOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
 /// Implementation back-end of statOn() method with named arguments
 
 RooPlot* RooAbsData::statOn(RooPlot* frame, const char* what, const char *label, Int_t sigDigits,
-              Option_t *options, Double_t xmin, Double_t xmax, Double_t ymax,
+              Option_t *options, double xmin, double xmax, double ymax,
               const char* cutSpec, const char* cutRange, const RooCmdArg* formatCmd)
 {
   bool showLabel= (label != 0 && strlen(label) > 0);
@@ -1369,7 +1369,7 @@ RooPlot* RooAbsData::statOn(RooPlot* frame, const char* what, const char *label,
   if (showM) nPar++ ;
 
   // calculate the box's size
-  Double_t dy(0.06), ymin(ymax-nPar*dy);
+  double dy(0.06), ymin(ymax-nPar*dy);
   if(showLabel) ymin-= dy;
 
   // create the box and set its options
@@ -1565,14 +1565,14 @@ TH1 *RooAbsData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char
     }
 
 
-    Double_t error2 = TMath::Power(hist->GetBinError(bin),2)-TMath::Power(weight(),2)  ;
-    Double_t we = weightError(RooAbsData::SumW2) ;
+    double error2 = TMath::Power(hist->GetBinError(bin),2)-TMath::Power(weight(),2)  ;
+    double we = weightError(RooAbsData::SumW2) ;
     if (we==0) we = weight() ;
     error2 += TMath::Power(we,2) ;
 
 
-//     Double_t we = weightError(RooAbsData::SumW2) ;
-//     Double_t error2(0) ;
+//     double we = weightError(RooAbsData::SumW2) ;
+//     double error2(0) ;
 //     if (we==0) {
 //       we = weight() ; //sqrt(weight()) ;
 //       error2 = TMath::Power(hist->GetBinError(bin),2)-TMath::Power(weight(),2) + TMath::Power(we,2) ;
@@ -1827,7 +1827,7 @@ TList* RooAbsData::split(const RooSimultaneous& simpdf, bool createEmptyDataSets
 ///     If set, any subsequent PDF will normalize to this dataset, even if it is
 ///     not the first one added to the frame. By default only the 1st dataset
 ///     added to a frame will update the normalization information
-/// <tr><td> RooFit::Rescale(Double_t f)
+/// <tr><td> RooFit::Rescale(double f)
 ///     <td> Rescale drawn histogram by given factor.
 /// <tr><td> RooFit::Cut(const char*)
 ///     <td> Only plot entries that pass the given cut.
@@ -1869,7 +1869,7 @@ TList* RooAbsData::split(const RooSimultaneous& simpdf, bool createEmptyDataSets
 ///     <td> Select fill style, default is filled.
 /// <tr><td> RooFit::FillColor(Color_t color)
 ///     <td> Select fill color by ROOT color code
-/// <tr><td> RooFit::XErrorSize(Double_t frac)
+/// <tr><td> RooFit::XErrorSize(double frac)
 ///     <td> Select size of X error bar as fraction of the bin width, default is 1
 ///
 /// <tr><th> <th> Misc. other options
@@ -1935,8 +1935,8 @@ RooPlot* RooAbsData::plotOn(RooPlot* frame, const RooLinkedList& argList) const
   } else if (pc.hasProcessed("BinningName")) {
     o.bins = &frame->getPlotVar()->getBinning(pc.getString("binningName")) ;
   } else if (pc.hasProcessed("BinningSpec")) {
-    Double_t xlo = pc.getDouble("xlo") ;
-    Double_t xhi = pc.getDouble("xhi") ;
+    double xlo = pc.getDouble("xlo") ;
+    double xhi = pc.getDouble("xhi") ;
     o.bins = new RooUniformBinning((xlo==xhi)?frame->getPlotVar()->getMin():xlo,
                (xlo==xhi)?frame->getPlotVar()->getMax():xhi,pc.getInt("nbins")) ;
   }
@@ -2051,7 +2051,7 @@ RooPlot *RooAbsData::plotOn(RooPlot *frame, PlotOpt o) const
 
   // If frame has no predefined bin width (event density) it will be adjusted to
   // our histograms bin width so we should force that bin width here
-  Double_t nomBinWidth ;
+  double nomBinWidth ;
   if (frame->getFitRangeNEvt()==0 && o.bins) {
     nomBinWidth = o.bins->averageBinWidth() ;
   } else {
@@ -2069,7 +2069,7 @@ RooPlot *RooAbsData::plotOn(RooPlot *frame, PlotOpt o) const
   // If the dataset variable has a wide range than the plot variable,
   // calculate the number of entries in the dataset in the plot variable fit range
   RooAbsRealLValue* dataVar = (RooAbsRealLValue*) _vars.find(var->GetName()) ;
-  Double_t nEnt(sumEntries()) ;
+  double nEnt(sumEntries()) ;
   if (dataVar->getMin()<var->getMin() || dataVar->getMax()>var->getMax()) {
     RooAbsData* tmp = ((RooAbsData*)this)->reduce(*var) ;
     nEnt = tmp->sumEntries() ;
@@ -2371,7 +2371,7 @@ Roo1DTable* RooAbsData::table(const RooAbsCategory& cat, const char* cuts, const
 /// observable 'var' in this dataset. If the return value is true and error
 /// occurred
 
-bool RooAbsData::getRange(const RooAbsRealLValue& var, Double_t& lowest, Double_t& highest, Double_t marginFrac, bool symMode) const
+bool RooAbsData::getRange(const RooAbsRealLValue& var, double& lowest, double& highest, double marginFrac, bool symMode) const
 {
   // Lookup variable in dataset
   const auto arg = _vars.find(var.GetName());
@@ -2409,7 +2409,7 @@ bool RooAbsData::getRange(const RooAbsRealLValue& var, Double_t& lowest, Double_
   if (marginFrac>0) {
     if (symMode==false) {
 
-      Double_t margin = marginFrac*(highest-lowest) ;
+      double margin = marginFrac*(highest-lowest) ;
       lowest -= margin ;
       highest += margin ;
       if (lowest<var.getMin()) lowest = var.getMin() ;
@@ -2417,8 +2417,8 @@ bool RooAbsData::getRange(const RooAbsRealLValue& var, Double_t& lowest, Double_
 
     } else {
 
-      Double_t mom1 = moment(*varPtr,1) ;
-      Double_t delta = ((highest-mom1)>(mom1-lowest)?(highest-mom1):(mom1-lowest))*(1+marginFrac) ;
+      double mom1 = moment(*varPtr,1) ;
+      double delta = ((highest-mom1)>(mom1-lowest)?(highest-mom1):(mom1-lowest))*(1+marginFrac) ;
       lowest = mom1-delta ;
       highest = mom1+delta ;
       if (lowest<var.getMin()) lowest = var.getMin() ;

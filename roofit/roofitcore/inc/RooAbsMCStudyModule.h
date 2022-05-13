@@ -166,7 +166,7 @@ protected:
    }
 
    /// Return expected number of events from generator model
-   Double_t numExpGen() {
+   double numExpGen() {
      return _mcs ? _mcs->_nExpGen : 0 ;
    }
 

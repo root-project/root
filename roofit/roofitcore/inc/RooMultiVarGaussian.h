@@ -36,14 +36,14 @@ public:
   RooMultiVarGaussian(const char *name, const char *title, const RooArgList& xvec, const RooFitResult& fr, bool reduceToConditional=true) ;
   RooMultiVarGaussian(const char *name, const char *title, const RooArgList& xvec, const TVectorD& mu, const TMatrixDSym& covMatrix) ;
   RooMultiVarGaussian(const char *name, const char *title, const RooArgList& xvec,const TMatrixDSym& covMatrix) ;
-  void setAnaIntZ(Double_t z) { _z = z ; }
+  void setAnaIntZ(double z) { _z = z ; }
 
   RooMultiVarGaussian(const RooMultiVarGaussian& other, const char* name=0) ;
   TObject* clone(const char* newname) const override { return new RooMultiVarGaussian(*this,newname); }
   inline ~RooMultiVarGaussian() override { }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void initGenerator(Int_t code) override ;
@@ -54,7 +54,7 @@ public:
   class AnaIntData {
   public:
     TMatrixD    S22bar ;
-    Double_t    S22det ;
+    double    S22det ;
     std::vector<int> pmap ;
     Int_t       nint ;
   } ;
@@ -100,13 +100,13 @@ protected:
   RooListProxy _mu ;
   TMatrixDSym _cov ;
   TMatrixDSym _covI ;
-  Double_t    _det ;
-  Double_t    _z ;
+  double    _det ;
+  double    _z ;
 
   void syncMuVec() const ;
   mutable TVectorD _muVec ; //! Do not persist
 
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
 
 private:
 

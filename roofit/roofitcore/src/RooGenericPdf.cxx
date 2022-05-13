@@ -117,7 +117,7 @@ RooFormula& RooGenericPdf::formula() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate current value of this object
 
-Double_t RooGenericPdf::evaluate() const
+double RooGenericPdf::evaluate() const
 {
   return formula().eval(_normSet) ;
 }
@@ -159,7 +159,7 @@ bool RooGenericPdf::setFormula(const char* inFormula)
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if given value is valid
 
-bool RooGenericPdf::isValidReal(Double_t /*value*/, bool /*printError*/) const
+bool RooGenericPdf::isValidReal(double /*value*/, bool /*printError*/) const
 {
   return true ;
 }

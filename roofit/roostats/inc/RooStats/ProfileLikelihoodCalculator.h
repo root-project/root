@@ -33,13 +33,13 @@ namespace RooStats {
       /// defining the null parameters and their value. There is no need to pass the alternate parameters. These
       /// will be obtained by the value maximizing the likelihood function
       ProfileLikelihoodCalculator(RooAbsData& data, RooAbsPdf& pdf, const RooArgSet& paramsOfInterest,
-                                  Double_t size = 0.05, const RooArgSet* nullParams = 0 );
+                                  double size = 0.05, const RooArgSet* nullParams = 0 );
 
 
       /// Constructor from data and a model configuration
       /// If the ModelConfig defines a prior pdf for any of the parameters those will be included as constrained terms in the
       /// likelihood function
-      ProfileLikelihoodCalculator(RooAbsData& data, ModelConfig & model, Double_t size = 0.05);
+      ProfileLikelihoodCalculator(RooAbsData& data, ModelConfig & model, double size = 0.05);
 
 
       ~ProfileLikelihoodCalculator() override;

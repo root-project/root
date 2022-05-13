@@ -42,13 +42,13 @@ protected:
 
   RooListProxy     _realSet ;        ///< List of reals to track
   RooListProxy     _catSet ;         ///< List of categories to check
-  std::vector<Double_t> _realRef ;   ///< Reference values for reals
+  std::vector<double> _realRef ;   ///< Reference values for reals
   std::vector<Int_t>    _catRef ;    ///< Reference values for categories
   bool       _checkVal ;           ///< Check contents as well if true
 
   bool        _init ; //!
 
-  Double_t evaluate() const override { return 1 ; }
+  double evaluate() const override { return 1 ; }
 
   ClassDefOverride(RooChangeTracker,1) // Meta object that tracks changes in set of other arguments
 };

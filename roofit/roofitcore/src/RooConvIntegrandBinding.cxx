@@ -104,7 +104,7 @@ RooConvIntegrandBinding::~RooConvIntegrandBinding()
 ////////////////////////////////////////////////////////////////////////////////
 /// Load external input values
 
-void RooConvIntegrandBinding::loadValues(const Double_t xvector[], bool clipInvalid) const
+void RooConvIntegrandBinding::loadValues(const double xvector[], bool clipInvalid) const
 {
   _xvecValid = true ;
   for(UInt_t index= 0; index < _dimension; index++) {
@@ -121,7 +121,7 @@ void RooConvIntegrandBinding::loadValues(const Double_t xvector[], bool clipInva
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate self at given parameter values
 
-Double_t RooConvIntegrandBinding::operator()(const Double_t xvector[]) const
+double RooConvIntegrandBinding::operator()(const double xvector[]) const
 {
   assert(isValid());
   _ncall++ ;
@@ -130,13 +130,13 @@ Double_t RooConvIntegrandBinding::operator()(const Double_t xvector[]) const
   loadValues(xvector);
   if (!_xvecValid) return 0 ;
   //cout << "RooConvIntegrandBinding::operator(): evaluating f(x') at x' = " << xvector[0] << endl ;
-  Double_t f_xp = _func->getVal(_nset) ;
+  double f_xp = _func->getVal(_nset) ;
 
   // Next evaluate model at x-x'
-  const Double_t xvec_tmp[2] = { xvector[1]-xvector[0] , xvector[1] } ;
+  const double xvec_tmp[2] = { xvector[1]-xvector[0] , xvector[1] } ;
   loadValues(xvec_tmp,true);
   if (!_xvecValid) return 0 ;
-  Double_t g_xmxp = _model->getVal(_nset) ;
+  double g_xmxp = _model->getVal(_nset) ;
 
   //cout << "RooConvIntegrandBinding::operator(): evaluating g(x-x') at x-x' = " << _vars[0]->getVal() << " = " << g_xmxp << endl ;
   //cout << "RooConvIntegrandBinding::operator(): return value = " << f_xp << " * " << g_xmxp << " = " << f_xp*g_xmxp << endl ;
@@ -151,7 +151,7 @@ Double_t RooConvIntegrandBinding::operator()(const Double_t xvector[]) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Retrieve lower limit of i-th observable
 
-Double_t RooConvIntegrandBinding::getMinLimit(UInt_t index) const
+double RooConvIntegrandBinding::getMinLimit(UInt_t index) const
 {
   assert(isValid());
   return _vars[index]->getMin();
@@ -161,7 +161,7 @@ Double_t RooConvIntegrandBinding::getMinLimit(UInt_t index) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Retrieve upper limit of i-th observable
 
-Double_t RooConvIntegrandBinding::getMaxLimit(UInt_t index) const
+double RooConvIntegrandBinding::getMaxLimit(UInt_t index) const
 {
   assert(isValid());
   return _vars[index]->getMax();

@@ -20,7 +20,7 @@
 
 #include <complex>
 
-typedef Double_t *pDouble_t;
+typedef double *pdouble;
 
 class RooMath {
 public:
@@ -166,12 +166,12 @@ public:
    static std::complex<double> erfc_fast(const std::complex<double> z);
 
    // 1-D nth order polynomial interpolation routines
-   static Double_t interpolate(Double_t yArr[], Int_t nOrder, Double_t x);
-   static Double_t interpolate(Double_t xa[], Double_t ya[], Int_t n, Double_t x);
+   static double interpolate(double yArr[], Int_t nOrder, double x);
+   static double interpolate(double xa[], double ya[], Int_t n, double x);
 
-   static inline Double_t erf(Double_t x) { return TMath::Erf(x); }
+   static inline double erf(double x) { return TMath::Erf(x); }
 
-   static inline Double_t erfc(Double_t x) { return TMath::Erfc(x); }
+   static inline double erfc(double x) { return TMath::Erfc(x); }
 };
 
 #endif

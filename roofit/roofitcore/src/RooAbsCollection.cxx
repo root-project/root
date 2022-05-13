@@ -991,7 +991,7 @@ Int_t RooAbsCollection::index(const char* name) const {
 /// Get value of a RooAbsReal stored in set with given name. If none is found, value of defVal is returned.
 /// No error messages are printed unless the verbose flag is set
 
-Double_t RooAbsCollection::getRealValue(const char* name, Double_t defVal, bool verbose) const
+double RooAbsCollection::getRealValue(const char* name, double defVal, bool verbose) const
 {
    RooAbsArg* raa = find(name) ;
    if (!raa) {
@@ -1012,7 +1012,7 @@ Double_t RooAbsCollection::getRealValue(const char* name, Double_t defVal, bool 
 /// Set value of a RooAbsRealLValye stored in set with given name to newVal
 /// No error messages are printed unless the verbose flag is set
 
-bool RooAbsCollection::setRealValue(const char* name, Double_t newVal, bool verbose)
+bool RooAbsCollection::setRealValue(const char* name, double newVal, bool verbose)
 {
    RooAbsArg* raa = find(name) ;
    if (!raa) {

@@ -28,7 +28,7 @@ class UpperLimitMCSModule : public RooAbsMCStudyModule {
 public:
 
 
-   UpperLimitMCSModule(const RooArgSet* poi, Double_t CL=0.95) ;
+   UpperLimitMCSModule(const RooArgSet* poi, double CL=0.95) ;
    UpperLimitMCSModule(const UpperLimitMCSModule& other) ;
    ~UpperLimitMCSModule() override ;
 
@@ -48,7 +48,7 @@ private:
 
    const RooArgSet* _poi;  ///< parameters of interest
    RooDataSet* _data ;     ///< Summary dataset to store results
-   Double_t _cl;
+   double _cl;
    RooAbsPdf* _model;
 
    ClassDefOverride(UpperLimitMCSModule,0) // MCStudy module to calculate upper limit of a given poi

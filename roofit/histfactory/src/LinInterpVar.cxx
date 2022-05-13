@@ -88,9 +88,9 @@ LinInterpVar::LinInterpVar(const LinInterpVar& other, const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return value of polynomial
 
-Double_t LinInterpVar::evaluate() const
+double LinInterpVar::evaluate() const
 {
-  Double_t sum(_nominal) ;
+  double sum(_nominal) ;
   
   int i=0;
   for(auto const* param: static_range_cast<RooAbsReal *>(_paramList)) {

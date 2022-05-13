@@ -52,14 +52,14 @@ public:
   bool forceAnalyticalInt(const RooAbsArg&) const override { return true ; }
 
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet,const char* rangeName=0) const override;
-  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override;
+  double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override;
 
   static RooArgList createParamSet(RooWorkspace& w, const std::string&, const RooArgList& Vars);
-  static RooArgList createParamSet(RooWorkspace& w, const std::string&, const RooArgList& Vars, Double_t, Double_t);
-  static RooArgList createParamSet(const std::string&, Int_t, Double_t, Double_t);
+  static RooArgList createParamSet(RooWorkspace& w, const std::string&, const RooArgList& Vars, double, double);
+  static RooArgList createParamSet(const std::string&, Int_t, double, double);
 
-  std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override;
-  std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override;
+  std::list<double>* binBoundaries(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override;
+  std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override;
   bool isBinnedDistribution(const RooArgSet& obs) const override { return _dataVars.overlaps(obs); }
 
 

@@ -34,7 +34,7 @@ public:
   inline ~RooChebychev() override { }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
   void selectNormalizationRange(const char* rangeName=0, bool force=false) override ;
 
@@ -44,11 +44,11 @@ private:
   RooListProxy _coefList ;
   mutable TNamed* _refRangeName ;
 
-  Double_t evaluate() const override;
+  double evaluate() const override;
   void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
-  Double_t evalAnaInt(const Double_t a, const Double_t b) const;
+  double evalAnaInt(const double a, const double b) const;
 
   ClassDefOverride(RooChebychev,2) // Chebychev polynomial PDF
 };

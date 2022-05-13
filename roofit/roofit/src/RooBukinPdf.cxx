@@ -84,7 +84,7 @@ RooBukinPdf::RooBukinPdf(const RooBukinPdf& other, const char *name):
 ////////////////////////////////////////////////////////////////////////////////
 /// Implementation
 
-Double_t RooBukinPdf::evaluate() const
+double RooBukinPdf::evaluate() const
 {
   const double consts = 2*sqrt(2*log(2.0));
   double r1=0,r2=0,r3=0,r4=0,r5=0,hp=0;

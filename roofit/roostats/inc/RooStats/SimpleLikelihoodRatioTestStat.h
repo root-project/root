@@ -139,7 +139,7 @@ namespace RooStats {
       /// so the constraint pdf's will be normalized correctly on the global observables when computing the NLL
       void SetGlobalObservables(const RooArgSet& set) override {fGlobalObs.removeAll(); fGlobalObs.add(set);}
 
-      Double_t Evaluate(RooAbsData& data, RooArgSet& nullPOI) override;
+      double Evaluate(RooAbsData& data, RooArgSet& nullPOI) override;
 
       virtual void EnableDetailedOutput( bool e=true ) { fDetailedOutputEnabled = e; fDetailedOutput = NULL; }
       const RooArgSet* GetDetailedOutput(void) const override { return fDetailedOutput; }

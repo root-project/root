@@ -27,15 +27,15 @@ public:
   // Constructors, assignment etc
   RooGaussKronrodIntegrator1D() ;
   RooGaussKronrodIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) ;
-  RooGaussKronrodIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax, const RooNumIntConfig& config) ;
+  RooGaussKronrodIntegrator1D(const RooAbsFunc& function, double xmin, double xmax, const RooNumIntConfig& config) ;
   RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
   ~RooGaussKronrodIntegrator1D() override;
 
   bool checkLimits() const override;
-  Double_t integral(const Double_t *yvec=0) override ;
+  double integral(const double *yvec=0) override ;
 
   using RooAbsIntegrator::setLimits ;
-  bool setLimits(Double_t* xmin, Double_t* xmax) override;
+  bool setLimits(double* xmin, double* xmax) override;
   bool setUseIntegrandLimits(bool flag) override {_useIntegrandLimits = flag ; return true ; }
 
   bool canIntegrate1D() const override { return true ; }
@@ -54,14 +54,14 @@ protected:
 
   bool _useIntegrandLimits;  // Use limits in function binding?
 
-  Double_t* xvec(Double_t& xx) { _x[0] = xx ; return _x ; }
-  Double_t *_x ; //! do not persist
+  double* xvec(double& xx) { _x[0] = xx ; return _x ; }
+  double *_x ; //! do not persist
 
-  Double_t _epsAbs ;                   // Absolute precision
-  Double_t _epsRel ;                   // Relative precision
+  double _epsAbs ;                   // Absolute precision
+  double _epsRel ;                   // Relative precision
 
-  mutable Double_t _xmin;              //! Lower integration bound
-  mutable Double_t _xmax;              //! Upper integration bound
+  mutable double _xmin;              //! Lower integration bound
+  mutable double _xmax;              //! Upper integration bound
 
   ClassDefOverride(RooGaussKronrodIntegrator1D,0) // 1-dimensional Gauss-Kronrod numerical integration engine
 };

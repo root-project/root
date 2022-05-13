@@ -109,7 +109,7 @@ RooBCPGenDecay::~RooBCPGenDecay()
 /// B0    : _tag = +1
 /// B0bar : _tag = -1
 
-Double_t RooBCPGenDecay::coefficient(Int_t basisIndex) const
+double RooBCPGenDecay::coefficient(Int_t basisIndex) const
 {
   if (basisIndex==_basisExp) {
     //exp term: (1 -/+ dw + mu*_tag*w)
@@ -143,7 +143,7 @@ Int_t RooBCPGenDecay::getCoefAnalyticalIntegral(Int_t /*code*/, RooArgSet& allVa
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBCPGenDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, const char* /*rangeName*/) const
+double RooBCPGenDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, const char* /*rangeName*/) const
 {
   switch(code) {
     // No integration
@@ -187,9 +187,9 @@ void RooBCPGenDecay::initGenerator(Int_t code)
 {
   if (code==2) {
     // Calculate the fraction of mixed events to generate
-    Double_t sumInt = RooRealIntegral("sumInt","sum integral",*this,RooArgSet(_t.arg(),_tag.arg())).getVal() ;
+    double sumInt = RooRealIntegral("sumInt","sum integral",*this,RooArgSet(_t.arg(),_tag.arg())).getVal() ;
     _tag = 1 ;
-    Double_t b0Int = RooRealIntegral("mixInt","mix integral",*this,RooArgSet(_t.arg())).getVal() ;
+    double b0Int = RooRealIntegral("mixInt","mix integral",*this,RooArgSet(_t.arg())).getVal() ;
     _genB0Frac = b0Int/sumInt ;
   }
 }
@@ -200,14 +200,14 @@ void RooBCPGenDecay::initGenerator(Int_t code)
 void RooBCPGenDecay::generateEvent(Int_t code)
 {
   if (code==2) {
-    Double_t rand = RooRandom::uniform() ;
+    double rand = RooRandom::uniform() ;
     _tag = (rand<=_genB0Frac) ? 1 : -1 ;
   }
 
   // Generate delta-t dependent
   while(1) {
-    Double_t rand = RooRandom::uniform() ;
-    Double_t tval(0) ;
+    double rand = RooRandom::uniform() ;
+    double tval(0) ;
 
     switch(_type) {
     case SingleSided:
@@ -222,10 +222,10 @@ void RooBCPGenDecay::generateEvent(Int_t code)
     }
 
     // Accept event if T is in generated range
-    Double_t maxDil = 1.0 ;
+    double maxDil = 1.0 ;
 // 2 in next line is conservative and inefficient - allows for delMistag=1!
-    Double_t maxAcceptProb = 2 + fabs(maxDil*_avgS) + fabs(maxDil*_avgC);
-    Double_t acceptProb    = (1-_tag*_delMistag + _mu*_tag*(1. - 2.*_avgMistag))
+    double maxAcceptProb = 2 + fabs(maxDil*_avgS) + fabs(maxDil*_avgC);
+    double acceptProb    = (1-_tag*_delMistag + _mu*_tag*(1. - 2.*_avgMistag))
                            + (_tag*(1-2*_avgMistag) + _mu*(1. - _tag*_delMistag))*_avgS*sin(_dm*tval)
                            - (_tag*(1-2*_avgMistag) + _mu*(1. - _tag*_delMistag))*_avgC*cos(_dm*tval);
 

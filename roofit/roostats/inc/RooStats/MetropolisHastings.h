@@ -77,8 +77,8 @@ namespace RooStats {
       enum FunctionType fType;     ///< whether the likelihood is on a regular, log, (or other) scale
 
       // whether we should take the step, based on the value of d, fSign, fType
-      virtual bool ShouldTakeStep(Double_t d);
-      virtual Double_t CalcNLL(Double_t xL);
+      virtual bool ShouldTakeStep(double d);
+      virtual double CalcNLL(double xL);
 
       ClassDefOverride(MetropolisHastings,2) // Markov Chain Monte Carlo calculator for Bayesian credible intervals
    };

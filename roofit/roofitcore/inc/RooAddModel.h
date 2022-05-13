@@ -33,7 +33,7 @@ public:
   RooResolutionModel* convolution(RooFormulaVar* basis, RooAbsArg* owner) const override ;
   ~RooAddModel() override ;
 
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
   bool checkObservables(const RooArgSet* nset) const override ;
 
   Int_t basisCode(const char* name) const override ;
@@ -43,7 +43,7 @@ public:
     return true ;
   }
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const override ;
-  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
+  double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
 
   /// Model is self normalized when used as p.d.f
   bool selfNormalized() const override {
@@ -57,7 +57,7 @@ public:
 
   /// Return expected number of events for extended likelihood calculation, which
   /// is the sum of all coefficients.
-  Double_t expectedEvents(const RooArgSet* nset) const override ;
+  double expectedEvents(const RooArgSet* nset) const override ;
 
   /// Return list of component p.d.fs
   const RooArgList& pdfList() const {
@@ -94,7 +94,7 @@ protected:
   mutable TNamed* _refCoefRangeName ;  ///<! Reference range name for coefficient interpretation
 
   bool _projectCoefs ;         ///< If true coefficients need to be projected for use in evaluate()
-  mutable Double_t* _coefCache ; ///<! Transiet cache with transformed values of coefficients
+  mutable double* _coefCache ; ///<! Transiet cache with transformed values of coefficients
 
 
   class CacheElem : public RooAbsCacheElement {

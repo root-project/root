@@ -117,7 +117,7 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
 
   // Initialize fraction threshold array (used only in extended mode)
   _numPdf = model._pdfProxyList.GetSize() ;
-  _fracThresh = new Double_t[_numPdf+1] ;
+  _fracThresh = new double[_numPdf+1] ;
   _fracThresh[0] = 0 ;
 
   // Generate index category and all registered PDFS
@@ -276,7 +276,7 @@ void RooSimGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
   } else {
 
     // Throw a random number and select PDF from fraction threshold table
-    Double_t rand = RooRandom::uniform() ;
+    double rand = RooRandom::uniform() ;
     Int_t i=0 ;
     for (i=0 ; i<_numPdf ; i++) {
       if (rand>_fracThresh[i] && rand<_fracThresh[i+1]) {

@@ -41,11 +41,11 @@ public:
 
 protected:
 
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
 
   const ROOT::Math::IBaseFunctionMultiDim* func ;    // Functor
   RooListProxy                       vars ;    // Argument reference
-  Double_t*                           x ; // Argument value array
+  double*                           x ; // Argument value array
 
 
 private:
@@ -68,11 +68,11 @@ public:
 
 protected:
 
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
 
   const ROOT::Math::IBaseFunctionMultiDim* func ;    // Functor
   RooListProxy                       vars ;    // Argument reference
-  Double_t*                             x ; // Argument value array
+  double*                             x ; // Argument value array
 
 
 private:

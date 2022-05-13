@@ -95,7 +95,7 @@ RooJeffreysPrior::~RooJeffreysPrior()
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return current value of self
 
-Double_t RooJeffreysPrior::evaluate() const
+double RooJeffreysPrior::evaluate() const
 {
   RooHelpers::LocalChangeMsgLevel msgLvlRAII(RooFit::WARNING);
 

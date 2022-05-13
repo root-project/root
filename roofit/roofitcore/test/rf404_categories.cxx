@@ -75,11 +75,11 @@ public:
 
   // Retrieve number of events from table
   // Number can be non-integer if source dataset has weighed events
-  Double_t nb0 = btable->get("B0") ;
+  double nb0 = btable->get("B0") ;
   regValue(nb0,"rf404_nb0") ;
 
   // Retrieve fraction of events with "Lepton" tag
-  Double_t fracLep = ttable->getFrac("Lepton") ;
+  double fracLep = ttable->getFrac("Lepton") ;
   regValue(fracLep,"rf404_fracLep") ;
 
 

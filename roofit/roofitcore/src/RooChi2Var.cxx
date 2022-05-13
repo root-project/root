@@ -275,16 +275,16 @@ RooChi2Var::~RooChi2Var()
 /// straight addition, but since evaluating the PDF is usually much more
 /// expensive than that, we tolerate the additional cost...
 
-Double_t RooChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const
+double RooChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const
 {
 
-  Double_t result(0), carry(0);
+  double result(0), carry(0);
 
   _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize, false) ;
 
 
   // Determine normalization factor depending on type of input function
-  Double_t normFactor(1) ;
+  double normFactor(1) ;
   switch (_funcMode) {
   case Function: normFactor=1 ; break ;
   case Pdf: normFactor = _dataClone->sumEntries() ; break ;
@@ -300,16 +300,16 @@ Double_t RooChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastE
 
     if (!hdata->valid()) continue;
 
-    const Double_t nData = hdata->weight() ;
+    const double nData = hdata->weight() ;
 
-    const Double_t nPdf = _funcClone->getVal(_normSet) * normFactor * hdata->binVolume() ;
+    const double nPdf = _funcClone->getVal(_normSet) * normFactor * hdata->binVolume() ;
 
-    const Double_t eExt = nPdf-nData ;
+    const double eExt = nPdf-nData ;
 
 
-    Double_t eInt ;
+    double eInt ;
     if (_etype != RooAbsData::Expected) {
-      Double_t eIntLo,eIntHi ;
+      double eIntLo,eIntHi ;
       hdata->weightError(eIntLo,eIntHi,_etype) ;
       eInt = (eExt>0) ? eIntHi : eIntLo ;
     } else {
@@ -328,9 +328,9 @@ Double_t RooChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastE
 
 //     cout << "Chi2Var[" << i << "] nData = " << nData << " nPdf = " << nPdf << " errorExt = " << eExt << " errorInt = " << eInt << " contrib = " << eExt*eExt/(eInt*eInt) << endl ;
 
-    Double_t term = eExt*eExt/(eInt*eInt) ;
-    Double_t y = term - carry;
-    Double_t t = result + y;
+    double term = eExt*eExt/(eInt*eInt) ;
+    double y = term - carry;
+    double t = result + y;
     carry = (t - result) - y;
     result = t;
   }

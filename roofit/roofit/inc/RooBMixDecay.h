@@ -37,10 +37,10 @@ public:
   TObject* clone(const char* newname) const override { return new RooBMixDecay(*this,newname) ; }
   ~RooBMixDecay() override;
 
-  Double_t coefficient(Int_t basisIndex) const override ;
+  double coefficient(Int_t basisIndex) const override ;
 
   Int_t getCoefAnalyticalIntegral(Int_t coef, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-  Double_t coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName=0) const override ;
+  double coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName=0) const override ;
 
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void initGenerator(Int_t code) override ;
@@ -59,10 +59,10 @@ protected:
   Int_t _basisExp ;
   Int_t _basisCos ;
 
-  Double_t _genMixFrac ;   //! do not persist
-  Double_t _genFlavFrac ;  //!
-  Double_t _genFlavFracMix ;   //!
-  Double_t _genFlavFracUnmix ; //!
+  double _genMixFrac ;   //! do not persist
+  double _genFlavFrac ;  //!
+  double _genFlavFracMix ;   //!
+  double _genFlavFracUnmix ; //!
 
   ClassDefOverride(RooBMixDecay,1) // B Mixing decay PDF
 };

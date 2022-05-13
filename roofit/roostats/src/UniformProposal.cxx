@@ -61,13 +61,13 @@ bool UniformProposal::IsSymmetric(RooArgSet& /* x1 */ , RooArgSet& /* x2 */)
 /// Return the probability of proposing the point x1 given the starting
 /// point x2
 
-Double_t UniformProposal::GetProposalDensity(RooArgSet& /* x1 */,
+double UniformProposal::GetProposalDensity(RooArgSet& /* x1 */,
                                               RooArgSet& x2)
 {
    // For a uniform proposal, all points have equal probability and the
    // value of the proposal density function is:
    // 1 / (N-dimensional volume of interval)
-   Double_t volume = 1.0;
+   double volume = 1.0;
    for (auto const *var : static_range_cast<RooRealVar *> (x2))
       volume *= (var->getMax() - var->getMin());
    return 1.0 / volume;

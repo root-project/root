@@ -45,16 +45,16 @@ public:
   using Items = std::vector<std::pair<TObject*,std::string>>;
 
   RooPlot() ;
-  RooPlot(const char* name, const char* title, const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nBins) ;
-  RooPlot(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nBins);
-  RooPlot(Double_t xmin, Double_t xmax);
-  RooPlot(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax);
+  RooPlot(const char* name, const char* title, const RooAbsRealLValue &var, double xmin, double xmax, Int_t nBins) ;
+  RooPlot(const RooAbsRealLValue &var, double xmin, double xmax, Int_t nBins);
+  RooPlot(double xmin, double xmax);
+  RooPlot(double xmin, double xmax, double ymin, double ymax);
   RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2);
   RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2,
-     Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax);
+     double xmin, double xmax, double ymin, double ymax);
   ~RooPlot() override;
 
-  static RooPlot* frame(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nBins);
+  static RooPlot* frame(const RooAbsRealLValue &var, double xmin, double xmax, Int_t nBins);
   static RooPlot* frameWithLabels(const RooAbsRealLValue &var);
 
   RooPlot* emptyClone(const char* name) ;
@@ -70,15 +70,15 @@ public:
   TAxis* GetYaxis() const ;
   Int_t GetNbinsX() const ;
   Int_t GetNdivisions(Option_t* axis = "X") const ;
-  Double_t GetMinimum(Double_t minval = -FLT_MAX) const ;
-  Double_t GetMaximum(Double_t maxval = FLT_MAX) const ;
+  double GetMinimum(double minval = -FLT_MAX) const ;
+  double GetMaximum(double maxval = FLT_MAX) const ;
 
   void SetAxisColor(Color_t color = 1, Option_t* axis = "X") ;
-  void SetAxisRange(Double_t xmin, Double_t xmax, Option_t* axis = "X") ;
+  void SetAxisRange(double xmin, double xmax, Option_t* axis = "X") ;
   void SetBarOffset(Float_t offset = 0.25) ;
   void SetBarWidth(Float_t width = 0.5) ;
-  void SetContour(Int_t nlevels, const Double_t* levels = 0) ;
-  void SetContourLevel(Int_t level, Double_t value) ;
+  void SetContour(Int_t nlevels, const double* levels = 0) ;
+  void SetContourLevel(Int_t level, double value) ;
   void SetDrawOption(Option_t* option = "") override ;
   void SetFillAttributes() ;
   void SetFillColor(Color_t fcolor) ;
@@ -139,12 +139,12 @@ public:
   // data member get/set methods
   inline RooAbsRealLValue *getPlotVar() const { return _plotVarClone; }
   ///Return the number of events in the fit range
-  inline Double_t getFitRangeNEvt() const { return _normNumEvts; }
-  Double_t getFitRangeNEvt(Double_t xlo, Double_t xhi) const ;
+  inline double getFitRangeNEvt() const { return _normNumEvts; }
+  double getFitRangeNEvt(double xlo, double xhi) const ;
   ///Return the bin width that is being used to normalise the PDF
-  inline Double_t getFitRangeBinW() const { return _normBinWidth; }
-  inline Double_t getPadFactor() const { return _padFactor; }
-  inline void setPadFactor(Double_t factor) { if(factor >= 0) _padFactor= factor; }
+  inline double getFitRangeBinW() const { return _normBinWidth; }
+  inline double getPadFactor() const { return _padFactor; }
+  inline void setPadFactor(double factor) { if(factor >= 0) _padFactor= factor; }
   void updateNormVars(const RooArgSet &vars);
   const RooArgSet *getNormVars() const { return _normVars; }
 
@@ -170,12 +170,12 @@ public:
   bool getInvisible(const char* name) const ;
   void setInvisible(const char* name, bool flag=true) ;
 
-  virtual void SetMaximum(Double_t maximum = -1111) ;
-  virtual void SetMinimum(Double_t minimum = -1111) ;
+  virtual void SetMaximum(double maximum = -1111) ;
+  virtual void SetMinimum(double minimum = -1111) ;
 
   ///Shortcut for RooPlot::chiSquare(const char* pdfname, const char* histname, int nFitParam=0)
-  Double_t chiSquare(int nFitParam=0) const { return chiSquare(0,0,nFitParam) ; }
-  Double_t chiSquare(const char* pdfname, const char* histname, int nFitParam=0) const ;
+  double chiSquare(int nFitParam=0) const { return chiSquare(0,0,nFitParam) ; }
+  double chiSquare(const char* pdfname, const char* histname, int nFitParam=0) const ;
 
   RooHist* residHist(const char* histname=0, const char* pdfname=0,bool normalize=false, bool useAverage=true) const ;
   ///Uses residHist() and sets normalize=true
@@ -228,23 +228,23 @@ protected:
   Items::iterator findItem(std::string const& name);
   Items::const_iterator findItem(std::string const& name) const;
 
-  void updateYAxis(Double_t ymin, Double_t ymax, const char *label= "");
+  void updateYAxis(double ymin, double ymax, const char *label= "");
   void updateFitRangeNorm(const TH1* hist);
   void updateFitRangeNorm(const RooPlotable* rp, bool refeshNorm=false);
 
   TH1* _hist = nullptr;      ///< Histogram that we uses as basis for drawing the content
   Items _items;  ///< A list of the items we contain.
-  Double_t _padFactor;       ///< Scale our y-axis to _padFactor of our maximum contents.
+  double _padFactor;       ///< Scale our y-axis to _padFactor of our maximum contents.
   RooAbsRealLValue *_plotVarClone = nullptr; ///< A clone of the variable we are plotting.
   RooArgSet *_plotVarSet = nullptr; ///< A list owning the cloned tree nodes of the plotVarClone
   RooArgSet *_normVars = nullptr; ///< Variables that PDF plots should be normalized over
 
   const RooPlotable* _normObj = nullptr; ///<! Pointer to normalization object ;
-  Double_t _normNumEvts;     ///< Number of events in histogram (for normalization)
-  Double_t _normBinWidth;    ///< Histogram bin width (for normalization)
+  double _normNumEvts;     ///< Number of events in histogram (for normalization)
+  double _normBinWidth;    ///< Histogram bin width (for normalization)
 
-  Double_t _defYmin = 1e-5; ///< Default minimum for Yaxis (as calculated from contents)
-  Double_t _defYmax = 1.0;  ///< Default maximum for Yaxis (as calculated from contents)
+  double _defYmin = 1e-5; ///< Default minimum for Yaxis (as calculated from contents)
+  double _defYmax = 1.0;  ///< Default maximum for Yaxis (as calculated from contents)
 
   TDirectory* _dir = nullptr; ///<! non-persistent
 

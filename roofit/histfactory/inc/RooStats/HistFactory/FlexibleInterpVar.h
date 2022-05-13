@@ -28,7 +28,7 @@ namespace HistFactory{
     FlexibleInterpVar() ;
     FlexibleInterpVar(const char *name, const char *title,
             const RooArgList& _paramList,
-            Double_t nominal, const RooArgList& low, const RooArgList& high);
+            double nominal, const RooArgList& low, const RooArgList& high);
 
     FlexibleInterpVar(const char *name, const char *title,
             const RooArgList& _paramList,
@@ -44,9 +44,9 @@ namespace HistFactory{
     void setInterpCode(RooAbsReal& param, int code);
     void setAllInterpCodes(int code);
     void setGlobalBoundary(double boundary) {_interpBoundary = boundary;}
-    void setNominal(Double_t newNominal);
-    void setLow(RooAbsReal& param, Double_t newLow);
-    void setHigh(RooAbsReal& param, Double_t newHigh);
+    void setNominal(double newNominal);
+    void setLow(RooAbsReal& param, double newLow);
+    void setHigh(RooAbsReal& param, double newHigh);
 
     void printAllInterpCodes();
 
@@ -68,16 +68,16 @@ namespace HistFactory{
   protected:
 
     RooListProxy _paramList ;
-    Double_t _nominal;
+    double _nominal;
     std::vector<double> _low;
     std::vector<double> _high;
     std::vector<int> _interpCode;
-    Double_t _interpBoundary;
+    double _interpBoundary;
 
     mutable bool         _logInit ;            ///<! flag used for caching polynomial coefficients
     mutable std::vector< double>  _polCoeff;     ///<! cached polynomial coefficients
 
-    Double_t evaluate() const override;
+    double evaluate() const override;
 
     ClassDefOverride(RooStats::HistFactory::FlexibleInterpVar,2) // flexible interpolation
   };

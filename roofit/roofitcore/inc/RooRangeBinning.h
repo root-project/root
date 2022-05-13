@@ -22,31 +22,31 @@ class RooRangeBinning : public RooAbsBinning {
 public:
 
   RooRangeBinning(const char* name=0) ;
-  RooRangeBinning(Double_t xmin, Double_t xmax, const char* name=0) ;
+  RooRangeBinning(double xmin, double xmax, const char* name=0) ;
   RooRangeBinning(const RooRangeBinning&, const char* name=0) ;
   RooAbsBinning* clone(const char* name=0) const override { return new RooRangeBinning(*this,name?name:GetName()) ; }
   ~RooRangeBinning() override ;
 
   Int_t numBoundaries() const override { return 2 ; }
-  Int_t binNumber(Double_t) const override { return 0 ; }
-  Double_t binCenter(Int_t) const override { return (_range[0] + _range[1]) / 2 ; }
-  Double_t binWidth(Int_t) const override { return (_range[1] - _range[0]) ; }
-  Double_t binLow(Int_t) const override { return _range[0] ; }
-  Double_t binHigh(Int_t) const override { return _range[1] ; }
+  Int_t binNumber(double) const override { return 0 ; }
+  double binCenter(Int_t) const override { return (_range[0] + _range[1]) / 2 ; }
+  double binWidth(Int_t) const override { return (_range[1] - _range[0]) ; }
+  double binLow(Int_t) const override { return _range[0] ; }
+  double binHigh(Int_t) const override { return _range[1] ; }
 
-  void setRange(Double_t xlo, Double_t xhi) override ;
-  void setMin(Double_t xlo) override { setRange(xlo,highBound()) ; }
-  void setMax(Double_t xhi) override { setRange(lowBound(),xhi) ; }
+  void setRange(double xlo, double xhi) override ;
+  void setMin(double xlo) override { setRange(xlo,highBound()) ; }
+  void setMax(double xhi) override { setRange(lowBound(),xhi) ; }
 
-  Double_t lowBound() const override { return _range[0] ; }
-  Double_t highBound() const override { return _range[1] ; }
-  Double_t averageBinWidth() const override { return binWidth(0) ; }
+  double lowBound() const override { return _range[0] ; }
+  double highBound() const override { return _range[1] ; }
+  double averageBinWidth() const override { return binWidth(0) ; }
 
-  Double_t* array() const override { return const_cast<Double_t*>(_range) ; }
+  double* array() const override { return const_cast<double*>(_range) ; }
 
 protected:
 
-  Double_t _range[2] ;
+  double _range[2] ;
 
   ClassDefOverride(RooRangeBinning,1) // Binning that only defines the total range
 };

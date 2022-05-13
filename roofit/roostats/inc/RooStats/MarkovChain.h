@@ -35,14 +35,14 @@ namespace RooStats {
       MarkovChain(const char* name, const char* title, RooArgSet& parameters);
 
       /// safely add an entry to the chain
-      virtual void Add(RooArgSet& entry, Double_t nllValue, Double_t weight = 1.0);
+      virtual void Add(RooArgSet& entry, double nllValue, double weight = 1.0);
       /// add an entry to the chain ONLY IF you have constructed with parameters
       /// or called SetParameters
-      virtual void AddFast(RooArgSet& entry, Double_t nllValue, Double_t weight = 1.0);
+      virtual void AddFast(RooArgSet& entry, double nllValue, double weight = 1.0);
       /// add another markov chain
       virtual void AddWithBurnIn(MarkovChain& otherChain, Int_t burnIn = 0);
       /// add another markov chain
-      virtual void Add(MarkovChain& otherChain, Double_t discardEntries = 0.0);
+      virtual void Add(MarkovChain& otherChain, double discardEntries = 0.0);
       /// set which of your parameters this chain should store
       virtual void SetParameters(RooArgSet& parameters);
       /// get the number of steps in the chain
@@ -52,13 +52,13 @@ namespace RooStats {
       /// get the entry at the current position
       virtual const RooArgSet* Get() const { return fChain->get(); }
       /// get the weight of the current (last indexed) entry
-      virtual Double_t Weight() const;
+      virtual double Weight() const;
       /// get the weight of entry at position i
-      virtual Double_t Weight(Int_t i) const;
+      virtual double Weight(Int_t i) const;
       /// get the NLL value of entry at position i
-      virtual Double_t NLL(Int_t i) const;
+      virtual double NLL(Int_t i) const;
       /// get the NLL value of the current (last indexed) entry
-      virtual Double_t NLL() const;
+      virtual double NLL() const;
 
       /// get this MarkovChain as a RooDataSet whose entries contain the values
       /// of whichVars.  Call with whichVars = NULL (default) to get values of

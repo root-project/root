@@ -27,13 +27,13 @@ class RooConstVar final : public RooAbsReal {
 public:
   // Constructors, assignment etc
   RooConstVar() { }
-  RooConstVar(const char *name, const char *title, Double_t value);
+  RooConstVar(const char *name, const char *title, double value);
   RooConstVar(const RooConstVar& other, const char* name=0);
   TObject* clone(const char* newname) const override { return new RooConstVar(*this,newname); }
   ~RooConstVar() override = default;
 
   /// Return (constant) value.
-  Double_t getValV(const RooArgSet*) const override {
+  double getValV(const RooArgSet*) const override {
     return _value;
   }
 
@@ -56,7 +56,7 @@ public:
 
 protected:
 
-  Double_t evaluate() const override {
+  double evaluate() const override {
     return _value;
   }
 

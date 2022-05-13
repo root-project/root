@@ -36,7 +36,7 @@ public:
   ~RooRealMPFE() override;
 
   void calculate() const ;
-  Double_t getValV(const RooArgSet* nset=0) const override ;
+  double getValV(const RooArgSet* nset=0) const override ;
   void standby() ;
 
   void setVerbose(bool clientFlag=true, bool serverFlag=true) ;
@@ -50,10 +50,10 @@ public:
   protected:
 
   // Function evaluation
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
   friend class RooAbsTestStatistic ;
   void constOptimizeTestStatistic(ConstOpCode opcode, bool doAlsoTracking=true) override ;
-  virtual Double_t getCarry() const;
+  virtual double getCarry() const;
 
   enum State { Initialize,Client,Server,Inline } ;
   State _state ;
@@ -83,7 +83,7 @@ public:
   mutable std::vector<bool> _constChanged ; ///<! Flags if variable needs update on server-side
   RooRealMPFE* _updateMaster ; ///<! Update master
   mutable bool _retrieveDispatched ; ///<!
-  mutable Double_t _evalCarry; ///<!
+  mutable double _evalCarry; ///<!
 
   static RooMPSentinel _sentinel ;
 

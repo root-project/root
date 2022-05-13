@@ -87,7 +87,7 @@ RooProjectedPdf::RooProjectedPdf() : _cacheMgr(this,10)
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate projected p.d.f
 
-Double_t RooProjectedPdf::evaluate() const
+double RooProjectedPdf::evaluate() const
 {
   // Calculate current unnormalized value of object
   int code ;
@@ -181,7 +181,7 @@ Int_t RooProjectedPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& an
 ////////////////////////////////////////////////////////////////////////////////
 /// Return analytical integral represent by appropriate element of projection cache
 
-Double_t RooProjectedPdf::analyticalIntegralWN(Int_t code, const RooArgSet* /*normSet*/, const char* rangeName) const
+double RooProjectedPdf::analyticalIntegralWN(Int_t code, const RooArgSet* /*normSet*/, const char* rangeName) const
 {
   CacheElem *cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1) ;
 

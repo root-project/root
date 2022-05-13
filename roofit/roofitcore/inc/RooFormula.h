@@ -56,7 +56,7 @@ public:
 
   bool ok() const { return _tFormula != nullptr; }
   /// Evalute all parameters/observables, and then evaluate formula.
-  Double_t eval(const RooArgSet* nset=0) const;
+  double eval(const RooArgSet* nset=0) const;
   RooSpan<double> evaluateSpan(const RooAbsReal* dataOwner, RooBatchCompute::RunContext& inputData, const RooArgSet* nset = nullptr) const;
   void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const;
 

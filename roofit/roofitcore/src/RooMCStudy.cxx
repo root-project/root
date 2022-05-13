@@ -1160,8 +1160,8 @@ RooPlot* RooMCStudy::makeFrameAndPlotCmd(const RooRealVar& param, RooLinkedList&
 
   // Make frame according to specs
   Int_t nbins = pc.getInt("nbins") ;
-  Double_t xlo = pc.getDouble("xlo") ;
-  Double_t xhi = pc.getDouble("xhi") ;
+  double xlo = pc.getDouble("xlo") ;
+  double xhi = pc.getDouble("xhi") ;
   RooPlot* frame ;
 
   if (pc.hasProcessed("FrameArgs")) {
@@ -1196,7 +1196,7 @@ RooPlot* RooMCStudy::makeFrameAndPlotCmd(const RooRealVar& param, RooLinkedList&
 /// Create a RooPlot of the -log(L) distribution in the range lo-hi
 /// with 'nBins' bins
 
-RooPlot* RooMCStudy::plotNLL(Double_t lo, Double_t hi, Int_t nBins)
+RooPlot* RooMCStudy::plotNLL(double lo, double hi, Int_t nBins)
 {
   RooPlot* frame = _nllVar->frame(lo,hi,nBins) ;
 
@@ -1210,7 +1210,7 @@ RooPlot* RooMCStudy::plotNLL(Double_t lo, Double_t hi, Int_t nBins)
 /// Create a RooPlot of the distribution of the fitted errors of the given parameter.
 /// The frame is created with a range [lo,hi] and plotted data will be binned in 'nbins' bins
 
-RooPlot* RooMCStudy::plotError(const RooRealVar& param, Double_t lo, Double_t hi, Int_t nbins)
+RooPlot* RooMCStudy::plotError(const RooRealVar& param, double lo, double hi, Int_t nbins)
 {
   if (_canAddFitResults) {
     calcPulls() ;
@@ -1240,7 +1240,7 @@ RooPlot* RooMCStudy::plotError(const RooRealVar& param, Double_t lo, Double_t hi
 /// - Parameters have different names: The position of the fit parameter in the set of fit parameters will be
 ///   computed. The parameter at the same position in the set of generator parameters will be used.
 
-RooPlot* RooMCStudy::plotPull(const RooRealVar& param, Double_t lo, Double_t hi, Int_t nbins, bool fitGauss)
+RooPlot* RooMCStudy::plotPull(const RooRealVar& param, double lo, double hi, Int_t nbins, bool fitGauss)
 {
   if (_canAddFitResults) {
     calcPulls() ;

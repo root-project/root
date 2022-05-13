@@ -53,7 +53,7 @@ RooLandau::RooLandau(const RooLandau& other, const char* name) :
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooLandau::evaluate() const
+double RooLandau::evaluate() const
 {
   return TMath::Landau(x, mean, sigma);
 }
@@ -79,7 +79,7 @@ Int_t RooLandau::getGenerator(const RooArgSet& directVars, RooArgSet &generateVa
 void RooLandau::generateEvent(Int_t code)
 {
   assert(1 == code); (void)code;
-  Double_t xgen ;
+  double xgen ;
   while(1) {
     xgen = RooRandom::randomGenerator()->Landau(mean,sigma);
     if (xgen<x.max() && xgen>x.min()) {

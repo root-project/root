@@ -105,8 +105,8 @@ public:
    bool setBinIntegrator(RooArgSet &allVars);
    void useHorizontalMorphing(bool val) { _useHorizMorph = val; }
 
-   Double_t evaluate() const override;
-   virtual Double_t getVal(const RooArgSet *set = 0) const;
+   double evaluate() const override;
+   virtual double getVal(const RooArgSet *set = 0) const;
 
 protected:
    void initialize();

@@ -27,7 +27,7 @@ bool RooStats::SimpleLikelihoodRatioTestStat::fgAlwaysReuseNll = true ;
 
 void RooStats::SimpleLikelihoodRatioTestStat::SetAlwaysReuseNLL(bool flag) { fgAlwaysReuseNll = flag ; }
 
-Double_t RooStats::SimpleLikelihoodRatioTestStat::Evaluate(RooAbsData& data, RooArgSet& nullPOI) {
+double RooStats::SimpleLikelihoodRatioTestStat::Evaluate(RooAbsData& data, RooArgSet& nullPOI) {
 
    if (fFirstEval && ParamsAreEqual()) {
       oocoutW(fNullParameters,InputArguments)

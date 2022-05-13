@@ -41,7 +41,7 @@ using namespace RooStats;
 /// SamplingDistribution constructor
 
 SamplingDistribution::SamplingDistribution( const char *name, const char *title,
-                   std::vector<Double_t>& samplingDist, const char * varName) :
+                   std::vector<double>& samplingDist, const char * varName) :
   TNamed(name,title)
 {
   fSamplingDist = samplingDist;
@@ -58,7 +58,7 @@ SamplingDistribution::SamplingDistribution( const char *name, const char *title,
 /// SamplingDistribution constructor
 
 SamplingDistribution::SamplingDistribution( const char *name, const char *title,
-                   std::vector<Double_t>& samplingDist, std::vector<Double_t>& sampleWeights, const char * varName) :
+                   std::vector<double>& samplingDist, std::vector<double>& sampleWeights, const char * varName) :
   TNamed(name,title)
 {
   fSamplingDist = samplingDist;
@@ -185,7 +185,7 @@ void SamplingDistribution::Add(const SamplingDistribution* other)
 /// Returns the integral in the open/closed/mixed interval. Default is [low,high) interval.
 /// Normalization can be turned off.
 
-Double_t SamplingDistribution::Integral(Double_t low, Double_t high, bool normalize, bool lowClosed, bool
+double SamplingDistribution::Integral(double low, double high, bool normalize, bool lowClosed, bool
                                         highClosed) const
 {
    double error = 0;
@@ -235,12 +235,12 @@ void SamplingDistribution::SortValues() const {
 /// Normalization can be turned off.
 /// compute also the error on the integral
 
-Double_t SamplingDistribution::IntegralAndError(Double_t & error, Double_t low, Double_t high, bool normalize, bool lowClosed, bool
+double SamplingDistribution::IntegralAndError(double & error, double low, double high, bool normalize, bool lowClosed, bool
                                                 highClosed) const
 {
    int n = fSamplingDist.size();
    if( n == 0 ) {
-      error = numeric_limits<Double_t>::infinity();
+      error = numeric_limits<double>::infinity();
       return 0.0;
    }
 
@@ -307,25 +307,25 @@ Double_t SamplingDistribution::IntegralAndError(Double_t & error, Double_t low, 
 ////////////////////////////////////////////////////////////////////////////////
 /// returns the closed integral [-inf,x]
 
-Double_t SamplingDistribution::CDF(Double_t x) const {
+double SamplingDistribution::CDF(double x) const {
    return Integral(-RooNumber::infinity(), x, true, true, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// returns the inverse of the cumulative distribution function
 
-Double_t SamplingDistribution::InverseCDF(Double_t pvalue)
+double SamplingDistribution::InverseCDF(double pvalue)
 {
-  Double_t dummy=0;
+  double dummy=0;
   return InverseCDF(pvalue,0,dummy);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// returns the inverse of the cumulative distribution function, with variations depending on number of samples
 
-Double_t SamplingDistribution::InverseCDF(Double_t pvalue,
-                 Double_t sigmaVariation,
-                 Double_t& inverseWithVariation)
+double SamplingDistribution::InverseCDF(double pvalue,
+                 double sigmaVariation,
+                 double& inverseWithVariation)
 {
    if (fSumW.size() != fSamplingDist.size())
       SortValues();
@@ -403,7 +403,7 @@ Double_t SamplingDistribution::InverseCDF(Double_t pvalue,
 ////////////////////////////////////////////////////////////////////////////////
 /// returns the inverse of the cumulative distribution function
 
-Double_t SamplingDistribution::InverseCDFInterpolate(Double_t pvalue)
+double SamplingDistribution::InverseCDFInterpolate(double pvalue)
 {
    if (fSumW.size() != fSamplingDist.size())
       SortValues();
@@ -420,10 +420,10 @@ Double_t SamplingDistribution::InverseCDFInterpolate(Double_t pvalue)
   if(nominal >= (Int_t)fSamplingDist.size()-1 ) {
     return RooNumber::infinity();
   }
-  Double_t upperX = fSamplingDist[nominal+1];
-  Double_t upperY = ((Double_t) (nominal+1))/fSamplingDist.size();
-  Double_t lowerX =  fSamplingDist[nominal];
-  Double_t lowerY = ((Double_t) nominal)/fSamplingDist.size();
+  double upperX = fSamplingDist[nominal+1];
+  double upperY = ((double) (nominal+1))/fSamplingDist.size();
+  double lowerX =  fSamplingDist[nominal];
+  double lowerY = ((double) nominal)/fSamplingDist.size();
 
   //  std::cout << upperX << " " << upperY << " " << lowerX << " " << lowerY << std::endl;
 

@@ -77,7 +77,7 @@ public:
   Int_t getMaxVal(const RooArgSet& vars) const override {
     return _func.arg().getMaxVal(vars);
   }
-  Double_t maxVal(Int_t code) const override {
+  double maxVal(Int_t code) const override {
     return _func.arg().maxVal(code);
   }
   Int_t minTrialSamples(const RooArgSet& arGenObs) const override {
@@ -88,10 +88,10 @@ public:
   bool isBinnedDistribution(const RooArgSet& obs) const override {
     return _func.arg().isBinnedDistribution(obs);
   }
-  std::list<Double_t>* binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override {
+  std::list<double>* binBoundaries(RooAbsRealLValue& obs, double xlo, double xhi) const override {
     return _func.arg().binBoundaries(obs, xlo, xhi);
   }
-  std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override {
+  std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override {
     return _func.arg().plotSamplingHint(obs, xlo, xhi);
   }
 

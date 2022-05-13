@@ -37,7 +37,7 @@ public:
   ~RooLinearVar() override ;
 
   // Parameter value and error accessors
-  void setVal(Double_t value) override ;
+  void setVal(double value) override ;
 
   // Jacobian and limits
   bool hasBinning(const char* name) const override ;
@@ -45,7 +45,7 @@ public:
   RooAbsBinning& getBinning(const char* name=0, bool verbose=true, bool createOnTheFly=false) override  ;
   std::list<std::string> getBinningNames() const override;
 
-  Double_t jacobian() const override ;
+  double jacobian() const override ;
   bool isJacobianOK(const RooArgSet& depList) const override ;
 
   // I/O streaming interface (machine readable)
@@ -59,7 +59,7 @@ public:
 
 protected:
 
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
 
   mutable RooLinTransBinning _binning ;
   RooLinkedList _altBinning ; ///<!

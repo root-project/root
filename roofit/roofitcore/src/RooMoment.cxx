@@ -173,10 +173,10 @@ RooMoment::~RooMoment()
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate value
 
-Double_t RooMoment::evaluate() const
+double RooMoment::evaluate() const
 {
-  Double_t ratio = _ixf / _if ;
-  Double_t ret =  _takeRoot ? pow(ratio,1.0/_order) : ratio ;
+  double ratio = _ixf / _if ;
+  double ret =  _takeRoot ? pow(ratio,1.0/_order) : ratio ;
   return ret ;
 }
 

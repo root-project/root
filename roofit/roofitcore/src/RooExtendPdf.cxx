@@ -112,7 +112,7 @@ RooExtendPdf::~RooExtendPdf()
 /// \f$ x \f$ over the full range. `norm` is the number of events given as parameter to the constructor.
 ///
 /// If the nested PDF can be extended, \f$ N \f$ is further scaled by its expected number of events.
-Double_t RooExtendPdf::expectedEvents(const RooArgSet* nset) const
+double RooExtendPdf::expectedEvents(const RooArgSet* nset) const
 {
   const RooAbsPdf& pdf = *_pdf;
 
@@ -121,7 +121,7 @@ Double_t RooExtendPdf::expectedEvents(const RooArgSet* nset) const
            << _rangeName << ".  Results may be nonsensical" << endl ;
   }
 
-  Double_t nExp = _n ;
+  double nExp = _n ;
 
   // Optionally multiply with fractional normalization
   if (_rangeName) {

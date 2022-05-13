@@ -37,7 +37,7 @@ ClassImp(RooLinTransBinning);
 /// Constructor with a given input binning and the slope and offset to be applied to
 /// construct the linear transformation
 
-RooLinTransBinning::RooLinTransBinning(const RooAbsBinning& input, Double_t slope, Double_t offset, const char* name) :
+RooLinTransBinning::RooLinTransBinning(const RooAbsBinning& input, double slope, double offset, const char* name) :
   RooAbsBinning(name)
 {
   updateInput(input,slope,offset) ;
@@ -70,7 +70,7 @@ RooLinTransBinning::~RooLinTransBinning()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooLinTransBinning::setRange(Double_t /*xlo*/, Double_t /*xhi*/)
+void RooLinTransBinning::setRange(double /*xlo*/, double /*xhi*/)
 {
   // Change limits -- not implemented
 }
@@ -79,12 +79,12 @@ void RooLinTransBinning::setRange(Double_t /*xlo*/, Double_t /*xhi*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return array of bin boundaries
 
-Double_t* RooLinTransBinning::array() const
+double* RooLinTransBinning::array() const
 {
   const int n = numBoundaries();
   // Return array with boundary values
   if (_array) delete[] _array ;
-  _array = new Double_t[n] ;
+  _array = new double[n] ;
 
   const double* inputArray = _input->array() ;
 
@@ -106,7 +106,7 @@ Double_t* RooLinTransBinning::array() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Update the slope and offset parameters and the pointer to the input binning
 
-void RooLinTransBinning::updateInput(const RooAbsBinning& input, Double_t slope, Double_t offset)
+void RooLinTransBinning::updateInput(const RooAbsBinning& input, double slope, double offset)
 {
   _input = (RooAbsBinning*) &input ;
   _slope = slope ;

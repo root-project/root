@@ -53,7 +53,7 @@
 ///  interface for this is quite similar to that for integrals of regular PDFs. Two functions,
 ///  \code{.cpp}
 ///   Int_t getCoefAnalyticalIntegral(Int_t coef, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
-///   Double_t coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName) const
+///   double coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName) const
 ///  \endcode
 ///
 ///  advertise the coefficient integration capabilities and implement them respectively.
@@ -324,17 +324,17 @@ RooAbsRealLValue* RooAbsAnaConvPdf::convVar()
 /// PDF = sum_k coef_k * [ basis_k (x) ResModel ]
 ///
 
-Double_t RooAbsAnaConvPdf::evaluate() const
+double RooAbsAnaConvPdf::evaluate() const
 {
-  Double_t result(0) ;
+  double result(0) ;
 
   Int_t index(0) ;
   for (auto convArg : _convSet) {
     auto conv = static_cast<RooAbsPdf*>(convArg);
-    Double_t coef = coefficient(index++) ;
+    double coef = coefficient(index++) ;
     if (coef!=0.) {
-      Double_t c = conv->getVal(0) ;
-      Double_t r = coef ;
+      double c = conv->getVal(0) ;
+      double r = coef ;
       cxcoutD(Eval) << "RooAbsAnaConvPdf::evaluate(" << GetName() << ") val += coef*conv [" << index-1 << "/"
           << _convSet.getSize() << "] coef = " << r << " conv = " << c << endl ;
       result += conv->getVal(0)*coef ;
@@ -488,7 +488,7 @@ Int_t RooAbsAnaConvPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
 /// Set \f$ x \f$ must be contained in \f$ v \f$ and set \f$ y \f$ must be contained in \f$ w \f$.
 ///
 
-Double_t RooAbsAnaConvPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const
+double RooAbsAnaConvPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const
 {
   // WVE needs adaptation to handle new rangeName feature
 
@@ -500,16 +500,16 @@ Double_t RooAbsAnaConvPdf::analyticalIntegralWN(Int_t code, const RooArgSet* nor
   _codeReg.retrieve(code-1,intCoefSet,intConvSet,normCoefSet,normConvSet) ;
 
   Int_t index(0) ;
-  Double_t answer(0) ;
+  double answer(0) ;
 
   if (normCoefSet==0&&normConvSet==0) {
 
     // Integral over unnormalized function
-    Double_t integral(0) ;
+    double integral(0) ;
     const TNamed *_rangeName = RooNameReg::ptr(rangeName);
     for (auto convArg : _convSet) {
       auto conv = static_cast<RooResolutionModel*>(convArg);
-      Double_t coef = getCoefNorm(index++,intCoefSet,_rangeName) ;
+      double coef = getCoefNorm(index++,intCoefSet,_rangeName) ;
       //cout << "coefInt[" << index << "] = " << coef << " " ; intCoefSet->Print("1") ;
       if (coef!=0) {
    integral += coef* conv->getNormObj(0,intConvSet,_rangeName)->getVal();
@@ -522,23 +522,23 @@ Double_t RooAbsAnaConvPdf::analyticalIntegralWN(Int_t code, const RooArgSet* nor
   } else {
 
     // Integral over normalized function
-    Double_t integral(0) ;
-    Double_t norm(0) ;
+    double integral(0) ;
+    double norm(0) ;
     const TNamed *_rangeName = RooNameReg::ptr(rangeName);
     for (auto convArg : _convSet) {
       auto conv = static_cast<RooResolutionModel*>(convArg);
 
-      Double_t coefInt = getCoefNorm(index,intCoefSet,_rangeName) ;
+      double coefInt = getCoefNorm(index,intCoefSet,_rangeName) ;
       //cout << "coefInt[" << index << "] = " << coefInt << "*" << term << " " << (intCoefSet?*intCoefSet:RooArgSet()) << endl ;
       if (coefInt!=0) {
-   Double_t term = conv->getNormObj(0,intConvSet,_rangeName)->getVal();
+   double term = conv->getNormObj(0,intConvSet,_rangeName)->getVal();
    integral += coefInt*term ;
       }
 
-      Double_t coefNorm = getCoefNorm(index,normCoefSet) ;
+      double coefNorm = getCoefNorm(index,normCoefSet) ;
       //cout << "coefNorm[" << index << "] = " << coefNorm << "*" << term << " " << (normCoefSet?*normCoefSet:RooArgSet()) << endl ;
       if (coefNorm!=0) {
-   Double_t term = conv->getNormObj(0,normConvSet)->getVal();
+   double term = conv->getNormObj(0,normConvSet)->getVal();
    norm += coefNorm*term ;
       }
 
@@ -570,7 +570,7 @@ Int_t RooAbsAnaConvPdf::getCoefAnalyticalIntegral(Int_t /* coef*/, RooArgSet& /*
 /// Default implementation of function implementing advertised integrals. Only
 /// the pass-through scenario (no integration) is implemented.
 
-Double_t RooAbsAnaConvPdf::coefAnalyticalIntegral(Int_t coef, Int_t code, const char* /*rangeName*/) const
+double RooAbsAnaConvPdf::coefAnalyticalIntegral(Int_t coef, Int_t code, const char* /*rangeName*/) const
 {
   if (code==0) return coefficient(coef) ;
   coutE(InputArguments) << "RooAbsAnaConvPdf::coefAnalyticalIntegral(" << GetName() << ") ERROR: unrecognized integration code: " << code << endl ;
@@ -601,7 +601,7 @@ bool RooAbsAnaConvPdf::forceAnalyticalInt(const RooAbsArg& /*dep*/) const
 /// Returns the normalization integral value of the coefficient with number coefIdx over normalization
 /// set nset in range rangeName
 
-Double_t RooAbsAnaConvPdf::getCoefNorm(Int_t coefIdx, const RooArgSet* nset, const TNamed* rangeName) const
+double RooAbsAnaConvPdf::getCoefNorm(Int_t coefIdx, const RooArgSet* nset, const TNamed* rangeName) const
 {
   if (nset==0) return coefficient(coefIdx) ;
 

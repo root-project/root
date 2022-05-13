@@ -62,7 +62,7 @@ namespace RooStats {
       void SetData(RooAbsData &data) override { fData = &data; }
 
       /// Returns instance of TestStatSampler. Use to change properties of
-      /// TestStatSampler, e.g. GetTestStatSampler.SetTestSize(Double_t size);
+      /// TestStatSampler, e.g. GetTestStatSampler.SetTestSize(double size);
       TestStatSampler* GetTestStatSampler(void) const { return fTestStatSampler; }
 
       /// Set this for re-using always the same toys for alternate hypothesis in
@@ -91,7 +91,7 @@ namespace RooStats {
 
    private:
       void SetupSampler(const ModelConfig& model) const;
-      void SetAdaptiveLimits(Double_t obsTestStat, bool forNull) const;
+      void SetAdaptiveLimits(double obsTestStat, bool forNull) const;
       SamplingDistribution* GenerateSamplingDistribution(
          ModelConfig *thisModel,
          double obsTestStat,

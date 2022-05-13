@@ -53,7 +53,7 @@ protected:
   RooArgSet* actualParameters(const RooArgSet& nset) const override ;
   void fillCacheObject(FuncCacheElem& cacheFunc) const override ;
   /// Dummy evaluate, it is never called
-  Double_t evaluate() const override {
+  double evaluate() const override {
     return func ;
   }
 

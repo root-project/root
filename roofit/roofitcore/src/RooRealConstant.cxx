@@ -47,7 +47,7 @@ ClassImp(RooRealConstant);
 /// Return previously created object if available,
 /// otherwise create a new one on the fly.
 
-RooConstVar& RooRealConstant::value(Double_t value)
+RooConstVar& RooRealConstant::value(double value)
 {
   // Lookup existing constant
   for (auto varArg : constDB()) {

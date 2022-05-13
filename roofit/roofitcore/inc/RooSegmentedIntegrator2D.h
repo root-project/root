@@ -27,7 +27,7 @@ public:
   RooSegmentedIntegrator2D() ;
 
   RooSegmentedIntegrator2D(const RooAbsFunc& function, const RooNumIntConfig& config) ;
-  RooSegmentedIntegrator2D(const RooAbsFunc& function, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax,
+  RooSegmentedIntegrator2D(const RooAbsFunc& function, double xmin, double xmax, double ymin, double ymax,
         const RooNumIntConfig& config) ;
   RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
   ~RooSegmentedIntegrator2D() override ;

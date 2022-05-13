@@ -56,7 +56,7 @@ RooExponential::RooExponential(const RooExponential& other, const char* name) :
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooExponential::evaluate() const{
+double RooExponential::evaluate() const{
   return exp(c*x);
 }
 
@@ -78,7 +78,7 @@ Int_t RooExponential::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analV
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooExponential::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooExponential::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   assert(code == 1 || code ==2);
 

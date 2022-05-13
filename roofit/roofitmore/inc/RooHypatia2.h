@@ -52,7 +52,7 @@ private:
   RooRealProxy _a2;
   RooRealProxy _n2;
 
-  Double_t evaluate() const override;
+  double evaluate() const override;
   RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const override;
 
   /// \cond CLASS_DEF_DOXY

@@ -147,9 +147,9 @@ TEST(RooDataSet, ReducingData) {
     mytree.Fill() ;
   }
 
-  Double_t chi2cutval = 1.0;
-  constexpr Double_t massmin = 0;
-  constexpr Double_t massmax = 40;
+  double chi2cutval = 1.0;
+  constexpr double massmin = 0;
+  constexpr double massmax = 40;
 
   //Now use roofit
   //observables from ttree

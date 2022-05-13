@@ -153,9 +153,9 @@ RooFirstMoment::~RooFirstMoment()
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate value
 
-Double_t RooFirstMoment::evaluate() const
+double RooFirstMoment::evaluate() const
 {
-  Double_t ratio = _ixf / _if ;
+  double ratio = _ixf / _if ;
   //cout << "\nRooFirstMoment::eval(" << GetName() << ") val = " << ratio << endl ;
   return ratio ;
 }

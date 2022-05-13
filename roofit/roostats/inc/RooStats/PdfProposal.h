@@ -43,7 +43,7 @@ namespace RooStats {
 
       /// Return the probability of proposing the point x1 given the starting
       /// point x2
-      Double_t GetProposalDensity(RooArgSet& x1, RooArgSet& x2) override;
+      double GetProposalDensity(RooArgSet& x1, RooArgSet& x2) override;
 
       /// Set the PDF to be the proposal density function
       virtual void SetPdf(RooAbsPdf& pdf) { fPdf = &pdf; }

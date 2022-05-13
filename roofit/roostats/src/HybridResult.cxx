@@ -180,7 +180,7 @@ double HybridResult::AlternatePValue() const
 /// \sigma_{CL_{b}} = \sqrt{CL_{b} \left( 1 - CL_{b} \right) / n_{toys}}
 /// \f]
 
-Double_t HybridResult::CLbError() const
+double HybridResult::CLbError() const
 {
   unsigned const int n = fTestStat_b.size();
   return TMath::Sqrt(CLb() * (1. - CLb()) / n);
@@ -193,7 +193,7 @@ Double_t HybridResult::CLbError() const
 /// \sigma_{CL_{s+b}} = \sqrt{CL_{s+b} \left( 1 - CL_{s+b} \right) / n_{toys}}
 /// \f]
 
-Double_t HybridResult::CLsplusbError() const
+double HybridResult::CLsplusbError() const
 {
   unsigned const int n = fTestStat_sb.size();
   return TMath::Sqrt(CLsplusb() * (1. - CLsplusb()) / n);
@@ -206,7 +206,7 @@ Double_t HybridResult::CLsplusbError() const
 /// \sigma_{CL_s} = CL_s \sqrt{\left( \frac{\sigma_{CL_{s+b}}}{CL_{s+b}} \right)^2 + \left( \frac{\sigma_{CL_{b}}}{CL_{b}} \right)^2}
 /// \f]
 
-Double_t HybridResult::CLsError() const
+double HybridResult::CLsError() const
 {
   unsigned const int n_b = fTestStat_b.size();
   unsigned const int n_sb = fTestStat_sb.size();

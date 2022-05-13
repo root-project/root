@@ -56,10 +56,10 @@ namespace RooStats {
       /// of this IntervalCalculator
       /// Also, calling this function again with a different confidence level
       /// re-triggers the calculation of the interval
-      void SetConfidenceLevel(Double_t cl) override;
+      void SetConfidenceLevel(double cl) override;
 
       /// get the desired confidence level (see GetActualConfidenceLevel())
-      Double_t ConfidenceLevel() const override {return fConfidenceLevel;}
+      double ConfidenceLevel() const override {return fConfidenceLevel;}
 
       /// return a set containing the parameters of this interval
       /// the caller owns the returned RooArgSet*
@@ -67,15 +67,15 @@ namespace RooStats {
 
       /// get the cutoff bin height for being considered in the
       /// confidence interval
-      virtual Double_t GetHistCutoff();
+      virtual double GetHistCutoff();
 
       /// get the cutoff RooNDKeysPdf value for being considered in the
       /// confidence interval
-      virtual Double_t GetKeysPdfCutoff();
-      ///virtual Double_t GetKeysPdfCutoff() { return fKeysCutoff; }
+      virtual double GetKeysPdfCutoff();
+      ///virtual double GetKeysPdfCutoff() { return fKeysCutoff; }
 
       /// get the actual value of the confidence level for this interval.
-      virtual Double_t GetActualConfidenceLevel();
+      virtual double GetActualConfidenceLevel();
 
       /// whether the specified confidence level is a floor for the actual
       /// confidence level (strict), or a ceiling (not strict)
@@ -108,53 +108,53 @@ namespace RooStats {
       }
 
       /// get the lowest value of param that is within the confidence interval
-      virtual Double_t LowerLimit(RooRealVar& param);
+      virtual double LowerLimit(RooRealVar& param);
 
       /// determine lower limit of the lower confidence interval
-      virtual Double_t LowerLimitTailFraction(RooRealVar& param);
+      virtual double LowerLimitTailFraction(RooRealVar& param);
 
       /// get the lower limit of param in the shortest confidence interval
       /// Note that this works better for some distributions (ones with exactly
       /// one maximum) than others, and sometimes has little value.
-      virtual Double_t LowerLimitShortest(RooRealVar& param);
+      virtual double LowerLimitShortest(RooRealVar& param);
 
       /// determine lower limit in the shortest interval by using keys pdf
-      virtual Double_t LowerLimitByKeys(RooRealVar& param);
+      virtual double LowerLimitByKeys(RooRealVar& param);
 
       /// determine lower limit using histogram
-      virtual Double_t LowerLimitByHist(RooRealVar& param);
+      virtual double LowerLimitByHist(RooRealVar& param);
 
       /// determine lower limit using histogram
-      virtual Double_t LowerLimitBySparseHist(RooRealVar& param);
+      virtual double LowerLimitBySparseHist(RooRealVar& param);
 
       /// determine lower limit using histogram
-      virtual Double_t LowerLimitByDataHist(RooRealVar& param);
+      virtual double LowerLimitByDataHist(RooRealVar& param);
 
       /// get the highest value of param that is within the confidence interval
-      virtual Double_t UpperLimit(RooRealVar& param);
+      virtual double UpperLimit(RooRealVar& param);
 
       /// determine upper limit of the lower confidence interval
-      virtual Double_t UpperLimitTailFraction(RooRealVar& param);
+      virtual double UpperLimitTailFraction(RooRealVar& param);
 
       /// get the upper limit of param in the confidence interval
       /// Note that this works better for some distributions (ones with exactly
       /// one maximum) than others, and sometimes has little value.
-      virtual Double_t UpperLimitShortest(RooRealVar& param);
+      virtual double UpperLimitShortest(RooRealVar& param);
 
       /// determine upper limit in the shortest interval by using keys pdf
-      virtual Double_t UpperLimitByKeys(RooRealVar& param);
+      virtual double UpperLimitByKeys(RooRealVar& param);
 
       /// determine upper limit using histogram
-      virtual Double_t UpperLimitByHist(RooRealVar& param);
+      virtual double UpperLimitByHist(RooRealVar& param);
 
       /// determine upper limit using histogram
-      virtual Double_t UpperLimitBySparseHist(RooRealVar& param);
+      virtual double UpperLimitBySparseHist(RooRealVar& param);
 
       /// determine upper limit using histogram
-      virtual Double_t UpperLimitByDataHist(RooRealVar& param);
+      virtual double UpperLimitByDataHist(RooRealVar& param);
 
       /// Determine the approximate maximum value of the Keys PDF
-      Double_t GetKeysMax();
+      double GetKeysMax();
 
       /// set the number of steps in the chain to discard as burn-in,
       /// starting from the first
@@ -226,7 +226,7 @@ namespace RooStats {
       { return fChain->GetWeightVar(); }
 
       /// set the acceptable level or error for Keys interval determination
-      virtual void SetEpsilon(Double_t epsilon)
+      virtual void SetEpsilon(double epsilon)
       {
          if (epsilon < 0)
             coutE(InputArguments) << "MCMCInterval::SetEpsilon will not allow "
@@ -247,7 +247,7 @@ namespace RooStats {
       virtual enum IntervalType GetIntervalType() { return fIntervalType; }
 
       /// set the left-side tail fraction for a tail-fraction interval
-      virtual void SetLeftSideTailFraction(Double_t a) {
+      virtual void SetLeftSideTailFraction(double a) {
          fIntervalType = kTailFraction;
          fLeftSideTF = a;
       }
@@ -260,7 +260,7 @@ namespace RooStats {
       /// topCutoff (a) is considered == bottomCutoff (b) iff
       /// (TMath::Abs(a - b) < TMath::Abs(fDelta * (a + b)/2))
       /// when determining the confidence interval by Keys
-      virtual void SetDelta(Double_t delta)
+      virtual void SetDelta(double delta)
       {
          if (delta < 0.)
             coutE(InputArguments) << "MCMCInterval::SetDelta will not allow "
@@ -270,35 +270,35 @@ namespace RooStats {
       }
 
    private:
-      inline bool AcceptableConfLevel(Double_t confLevel);
-      inline bool WithinDeltaFraction(Double_t a, Double_t b);
+      inline bool AcceptableConfLevel(double confLevel);
+      inline bool WithinDeltaFraction(double a, double b);
 
    protected:
       // data members
       RooArgSet  fParameters;     ///< parameters of interest for this interval
       MarkovChain* fChain;        ///< the markov chain
-      Double_t fConfidenceLevel;  ///< Requested confidence level (eg. 0.95 for 95% CL)
+      double fConfidenceLevel;  ///< Requested confidence level (eg. 0.95 for 95% CL)
 
       RooDataHist* fDataHist;     ///< the binned Markov Chain data
       THnSparse* fSparseHist;     ///< the binned Markov Chain data
-      Double_t fHistConfLevel;    ///< the actual conf level determined by hist
-      Double_t fHistCutoff;       ///< cutoff bin size to be in interval
+      double fHistConfLevel;    ///< the actual conf level determined by hist
+      double fHistCutoff;       ///< cutoff bin size to be in interval
 
       RooNDKeysPdf* fKeysPdf;     ///< the kernel estimation pdf
       RooProduct* fProduct;       ///< the (keysPdf * heaviside) product
       Heaviside* fHeaviside;      ///< the Heaviside function
       RooDataHist* fKeysDataHist; ///< data hist representing product
       RooRealVar* fCutoffVar;     ///< cutoff variable to use for integrating keys pdf
-      Double_t fKeysConfLevel;    ///< the actual conf level determined by keys
-      Double_t fKeysCutoff;       ///< cutoff keys pdf value to be in interval
-      Double_t fFull;             ///< Value of intergral of fProduct
+      double fKeysConfLevel;    ///< the actual conf level determined by keys
+      double fKeysCutoff;       ///< cutoff keys pdf value to be in interval
+      double fFull;             ///< Value of intergral of fProduct
 
-      Double_t fLeftSideTF;       ///< left side tail-fraction for interval
-      Double_t fTFConfLevel;      ///< the actual conf level of tail-fraction interval
+      double fLeftSideTF;       ///< left side tail-fraction for interval
+      double fTFConfLevel;      ///< the actual conf level of tail-fraction interval
       std::vector<Int_t> fVector; ///< vector containing the Markov chain data
-      Double_t fVecWeight;        ///< sum of weights of all entries in fVector
-      Double_t fTFLower;          ///< lower limit of the tail-fraction interval
-      Double_t fTFUpper;          ///< upper limit of the tail-fraction interval
+      double fVecWeight;        ///< sum of weights of all entries in fVector
+      double fTFLower;          ///< lower limit of the tail-fraction interval
+      double fTFUpper;          ///< upper limit of the tail-fraction interval
 
       TH1* fHist;                 ///< the binned Markov Chain data
 
@@ -315,9 +315,9 @@ namespace RooStats {
                                   ///< the axes of the histogram
                                   ///< fAxes[0] represents x-axis, [1] y, [2] z, etc
 
-      Double_t fEpsilon;          ///< acceptable error for Keys interval determination
+      double fEpsilon;          ///< acceptable error for Keys interval determination
 
-      Double_t fDelta;            ///< topCutoff (a) considered == bottomCutoff (b) iff
+      double fDelta;            ///< topCutoff (a) considered == bottomCutoff (b) iff
                                   ///< (TMath::Abs(a - b) < TMath::Abs(fDelta * (a + b)/2));
                                   ///< Theoretically, the Abs is not needed here, but
                                   ///< floating-point arithmetic does not always work
@@ -339,7 +339,7 @@ namespace RooStats {
       virtual void CreateKeysPdf();
       virtual void CreateKeysDataHist();
       virtual void CreateVector(RooRealVar* param);
-      inline virtual Double_t CalcConfLevel(Double_t cutoff, Double_t full);
+      inline virtual double CalcConfLevel(double cutoff, double full);
 
       ClassDefOverride(MCMCInterval,1)  // Concrete implementation of a ConfInterval based on MCMC calculation
 

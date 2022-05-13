@@ -29,7 +29,7 @@ public:
          bool _verbose= false) ;
   ~RooAbsGenContext() override;
 
-  virtual RooDataSet *generate(Double_t nEvents= 0, bool skipInit=false, bool extendedMode=false);
+  virtual RooDataSet *generate(double nEvents= 0, bool skipInit=false, bool extendedMode=false);
 
   bool isValid() const {
     // If true generator context is in a valid state
@@ -72,7 +72,7 @@ protected:
 
   virtual RooDataSet* createDataSet(const char* name, const char* title, const RooArgSet& obs) ;
 
-  void resampleData(Double_t& ratio) ;
+  void resampleData(double& ratio) ;
 
   const RooDataSet *_prototype; ///< Pointer to prototype dataset
   RooArgSet _theEvent;          ///< Pointer to observable event being generated

@@ -205,7 +205,7 @@ RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const R
 /// Constructor taking a function binding, an integration range and a configuration object
 
 RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const RooAbsFunc& function,
-                            Double_t xmin, Double_t xmax,
+                            double xmin, double xmax,
                             const RooNumIntConfig& config) :
   RooAbsIntegrator(function),
   _epsAbs(config.epsRel()),
@@ -241,7 +241,7 @@ RooAbsIntegrator* RooAdaptiveGaussKronrodIntegrator1D::clone(const RooAbsFunc& f
 bool RooAdaptiveGaussKronrodIntegrator1D::initialize()
 {
   // Allocate coordinate buffer size after number of function dimensions
-  _x = new Double_t[_function->getDimension()] ;
+  _x = new double[_function->getDimension()] ;
   _workspace = gsl_integration_workspace_alloc (_maxSeg)  ;
 
   return checkLimits();
@@ -269,7 +269,7 @@ RooAdaptiveGaussKronrodIntegrator1D::~RooAdaptiveGaussKronrodIntegrator1D()
 /// ok, or otherwise false. Always returns false and does nothing
 /// if this object was constructed to always use our integrand's limits.
 
-bool RooAdaptiveGaussKronrodIntegrator1D::setLimits(Double_t* xmin, Double_t* xmax)
+bool RooAdaptiveGaussKronrodIntegrator1D::setLimits(double* xmin, double* xmax)
 {
   if(_useIntegrandLimits) {
     coutE(Integration) << "RooAdaptiveGaussKronrodIntegrator1D::setLimits: cannot override integrand's limits" << endl;
@@ -329,7 +329,7 @@ double RooAdaptiveGaussKronrodIntegrator1D_GSL_GlueFunction(double x, void *data
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return integral at at given parameter values
 
-Double_t RooAdaptiveGaussKronrodIntegrator1D::integral(const Double_t *yvec)
+double RooAdaptiveGaussKronrodIntegrator1D::integral(const double *yvec)
 {
   assert(isValid());
 

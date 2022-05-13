@@ -36,7 +36,7 @@ class TVirtualFitter ;
 class TH2F ;
 class RooPlot ;
 
-void RooMinuitGlue(Int_t& /*np*/, Double_t* /*gin*/,  Double_t &f, Double_t *par, Int_t /*flag*/) ;
+void RooMinuitGlue(Int_t& /*np*/, double* /*gin*/,  double &f, double *par, Int_t /*flag*/) ;
 
 class RooMinuit : public TObject {
 public:
@@ -47,8 +47,8 @@ public:
   enum Strategy { Speed=0, Balance=1, Robustness=2 } ;
   enum PrintLevel { None=-1, Reduced=0, Normal=1, ExtraForProblem=2, Maximum=3 } ;
   void setStrategy(Int_t strat) ;
-  void setErrorLevel(Double_t level) ;
-  void setEps(Double_t eps) ;
+  void setErrorLevel(double level) ;
+  void setEps(double eps) ;
   void optimizeConst(Int_t flag) ;
   void setEvalErrorWall(bool flag) { _doEvalErrorWall = flag ; }
   void setOffsetting(bool flag) ;
@@ -65,8 +65,8 @@ public:
 
   RooFitResult* save(const char* name=0, const char* title=0) ;
   RooPlot* contour(RooRealVar& var1, RooRealVar& var2,
-         Double_t n1=1, Double_t n2=2, Double_t n3=0,
-         Double_t n4=0, Double_t n5=0, Double_t n6=0) ;
+         double n1=1, double n2=2, double n3=0,
+         double n4=0, double n5=0, double n6=0) ;
 
   Int_t setPrintLevel(Int_t newLevel) ;
   void setNoWarn() ;
@@ -87,7 +87,7 @@ protected:
   friend class RooAbsPdf ;
   void applyCovarianceMatrix(TMatrixDSym& V) ;
 
-  friend void RooMinuitGlue(Int_t &np, Double_t *gin, Double_t &f, Double_t *par, Int_t flag) ;
+  friend void RooMinuitGlue(Int_t &np, double *gin, double &f, double *par, Int_t flag) ;
 
   void profileStart() ;
   void profileStop() ;
@@ -97,13 +97,13 @@ protected:
 
   inline Int_t getNPar() const { return _nPar ; }
   inline std::ofstream* logfile() const { return _logfile ; }
-  inline Double_t& maxFCN() { return _maxFCN ; }
+  inline double& maxFCN() { return _maxFCN ; }
 
-  Double_t getPdfParamVal(Int_t index) ;
-  Double_t getPdfParamErr(Int_t index) ;
-  virtual bool setPdfParamVal(Int_t index, Double_t value, bool verbose=false) ;
-  void setPdfParamErr(Int_t index, Double_t value) ;
-  void setPdfParamErr(Int_t index, Double_t loVal, Double_t hiVal) ;
+  double getPdfParamVal(Int_t index) ;
+  double getPdfParamErr(Int_t index) ;
+  virtual bool setPdfParamVal(Int_t index, double value, bool verbose=false) ;
+  void setPdfParamErr(Int_t index, double value) ;
+  void setPdfParamErr(Int_t index, double loVal, double hiVal) ;
   void clearPdfParamAsymErr(Int_t index) ;
 
   void saveStatus(const char* label, Int_t status) { _statusHistory.push_back(std::pair<std::string,int>(label,status)) ; }
@@ -131,7 +131,7 @@ private:
   RooArgList* _initConstParamList ;
   RooAbsReal* _func ;
 
-  Double_t    _maxFCN ;
+  double    _maxFCN ;
   std::ofstream*   _logfile ;
   bool      _verbose ;
   TStopwatch  _timer ;

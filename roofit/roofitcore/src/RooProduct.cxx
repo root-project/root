@@ -309,7 +309,7 @@ Int_t RooProduct::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate integral internally from appropriate partial integral cache
 
-Double_t RooProduct::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooProduct::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   // note: rangeName implicit encoded in code: see _cacheMgr.setObj in getPartIntList...
   CacheElem *cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1);
@@ -330,9 +330,9 @@ Double_t RooProduct::analyticalIntegral(Int_t code, const char* rangeName) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return product of partial terms in partIntList
 
-Double_t RooProduct::calculate(const RooArgList& partIntList) const
+double RooProduct::calculate(const RooArgList& partIntList) const
 {
-  Double_t val=1;
+  double val=1;
   for (const auto arg : partIntList) {
     const auto term = static_cast<const RooAbsReal*>(arg);
     double x = term->getVal();
@@ -365,9 +365,9 @@ const char* RooProduct::makeFPName(const char *pfx,const RooArgSet& terms) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate product of input functions
 
-Double_t RooProduct::evaluate() const
+double RooProduct::evaluate() const
 {
-  Double_t prod(1) ;
+  double prod(1) ;
 
   const RooArgSet* nset = _compRSet.nset() ;
   for (const auto item : _compRSet) {
@@ -415,12 +415,12 @@ void RooProduct::computeBatch(cudaStream_t* /*stream*/, double* output, size_t n
 ////////////////////////////////////////////////////////////////////////////////
 /// Forward the plot sampling hint from the p.d.f. that defines the observable obs
 
-std::list<Double_t>* RooProduct::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
+std::list<double>* RooProduct::binBoundaries(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
   for (const auto item : _compRSet) {
     auto func = static_cast<const RooAbsReal*>(item);
 
-    list<Double_t>* binb = func->binBoundaries(obs,xlo,xhi) ;
+    list<double>* binb = func->binBoundaries(obs,xlo,xhi) ;
     if (binb) {
       return binb ;
     }
@@ -451,12 +451,12 @@ bool RooProduct::isBinnedDistribution(const RooArgSet& obs) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Forward the plot sampling hint from the p.d.f. that defines the observable obs
 
-std::list<Double_t>* RooProduct::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
+std::list<double>* RooProduct::plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
   for (const auto item : _compRSet) {
     auto func = static_cast<const RooAbsReal*>(item);
 
-    list<Double_t>* hint = func->plotSamplingHint(obs,xlo,xhi) ;
+    list<double>* hint = func->plotSamplingHint(obs,xlo,xhi) ;
     if (hint) {
       return hint ;
     }

@@ -54,7 +54,7 @@ RooGaussian::RooGaussian(const RooGaussian& other, const char* name) :
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooGaussian::evaluate() const
+double RooGaussian::evaluate() const
 {
   const double arg = x - mean;
   const double sig = sigma;
@@ -81,7 +81,7 @@ Int_t RooGaussian::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooGaussian::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooGaussian::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   assert(code==1 || code==2);
 
@@ -131,7 +131,7 @@ Int_t RooGaussian::getGenerator(const RooArgSet& directVars, RooArgSet &generate
 void RooGaussian::generateEvent(Int_t code)
 {
   assert(code==1 || code==2) ;
-  Double_t xgen ;
+  double xgen ;
   if(code==1){
     while(1) {
       xgen = RooRandom::randomGenerator()->Gaus(mean,sigma);

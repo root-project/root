@@ -28,13 +28,13 @@ public:
 
   static TRandom *randomGenerator();
   static void setRandomGenerator(TRandom* gen);
-  static Double_t uniform(TRandom *generator= randomGenerator());
-  static void uniform(UInt_t dimension, Double_t vector[], TRandom *generator= randomGenerator());
+  static double uniform(TRandom *generator= randomGenerator());
+  static void uniform(UInt_t dimension, double vector[], TRandom *generator= randomGenerator());
   static UInt_t integer(UInt_t max, TRandom *generator= randomGenerator());
-  static Double_t gaussian(TRandom *generator= randomGenerator());
+  static double gaussian(TRandom *generator= randomGenerator());
 
   static RooQuasiRandomGenerator *quasiGenerator();
-  static bool quasi(UInt_t dimension, Double_t vector[],
+  static bool quasi(UInt_t dimension, double vector[],
             RooQuasiRandomGenerator *generator= quasiGenerator());
 
 private:

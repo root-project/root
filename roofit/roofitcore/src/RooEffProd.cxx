@@ -54,7 +54,7 @@ RooEffProd::RooEffProd(const RooEffProd& other, const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return 'raw' unnormalized value of p.d.f
 
-Double_t RooEffProd::evaluate() const
+double RooEffProd::evaluate() const
 {
   return _eff * _pdf;
 }

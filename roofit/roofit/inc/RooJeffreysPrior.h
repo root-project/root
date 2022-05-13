@@ -33,7 +33,7 @@ protected:
   RooListProxy _obsSet ;   // Observables of the PDF.
   RooListProxy _paramSet ; // Parameters of the PDF.
 
-  Double_t evaluate() const override;
+  double evaluate() const override;
 
 private:
   struct CacheElem : public RooAbsCacheElement {

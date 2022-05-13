@@ -47,9 +47,9 @@ namespace RooStats {
       MCMCInterval* GetInterval() const override;
 
       /// Get the size of the test (eg. rate of Type I error)
-      Double_t Size() const override {return fSize;}
+      double Size() const override {return fSize;}
       /// Get the Confidence level for the test
-      Double_t ConfidenceLevel() const override {return 1.-fSize;}
+      double ConfidenceLevel() const override {return 1.-fSize;}
 
       void SetModel(const ModelConfig & model) override;
 
@@ -81,10 +81,10 @@ namespace RooStats {
       virtual void SetGlobalObservables(const RooArgSet& set) {fGlobalObs.removeAll(); fGlobalObs.add(set);}
 
       /// set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
-      void SetTestSize(Double_t size) override {fSize = size;}
+      void SetTestSize(double size) override {fSize = size;}
 
       /// set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
-      void SetConfidenceLevel(Double_t cl) override {fSize = 1.-cl;}
+      void SetConfidenceLevel(double cl) override {fSize = 1.-cl;}
 
       /// set the proposal function for suggesting new points for the MCMC
       virtual void SetProposalFunction(ProposalFunction& proposalFunction)
@@ -118,7 +118,7 @@ namespace RooStats {
       /// MCMCInterval to find a tail-fraction interval.
       /// Note: that `a' must be in the range 0 <= a <= 1
       /// or the user will be notified of the error
-      virtual void SetLeftSideTailFraction(Double_t a);
+      virtual void SetLeftSideTailFraction(double a);
 
       /// Set the desired level of confidence-level accuracy  for Keys interval
       /// determination.
@@ -130,7 +130,7 @@ namespace RooStats {
       /// Any value of this "epsilon" > 0 is considered acceptable, though it is
       /// advisable to not use a value too small, because the integration of the
       /// Keys PDF sometimes does not have extremely high accuracy.
-      virtual void SetKeysConfidenceAccuracy(Double_t epsilon)
+      virtual void SetKeysConfidenceAccuracy(double epsilon)
       {
          if (epsilon < 0)
             coutE(InputArguments) << "MCMCInterval::SetEpsilon will not allow "
@@ -153,7 +153,7 @@ namespace RooStats {
       /// satisfy this condition:
       ///
       /// TMath::Abs(a - b) < TMath::Abs(delta * (a + b)/2)
-      virtual void SetKeysTerminationThreshold(Double_t delta)
+      virtual void SetKeysTerminationThreshold(double delta)
       {
          if (delta < 0.)
             coutE(InputArguments) << "MCMCInterval::SetDelta will not allow "
@@ -164,7 +164,7 @@ namespace RooStats {
 
    protected:
 
-      Double_t fSize;              ///< size of the test (eg. specified rate of Type I error)
+      double fSize;              ///< size of the test (eg. specified rate of Type I error)
       RooArgSet   fPOI;            ///< parameters of interest for interval
       RooArgSet   fNuisParams;     ///< nuisance parameters for interval (not really used)
       RooArgSet   fChainParams;    ///< parameters to store in the chain (if not specified they are all of them )
@@ -181,10 +181,10 @@ namespace RooStats {
       RooArgList * fAxes;    ///< which variables to put on each axis
       bool fUseKeys;       ///< whether to use kernel estimation to determine interval
       bool fUseSparseHist; ///< whether to use sparse histogram (if using hist at all)
-      Double_t fLeftSideTF;  ///< left side tail-fraction for interval
-      Double_t fEpsilon;     ///< acceptable error for Keys interval determination
+      double fLeftSideTF;  ///< left side tail-fraction for interval
+      double fEpsilon;     ///< acceptable error for Keys interval determination
 
-      Double_t fDelta; ///< acceptable error for Keys cutoffs being equal
+      double fDelta; ///< acceptable error for Keys cutoffs being equal
                        ///< topCutoff (a) considered == bottomCutoff (b) iff
                        ///< (TMath::Abs(a - b) < TMath::Abs(fDelta * (a + b)/2));
                        ///< Theoretically, the Abs is not needed here, but

@@ -88,9 +88,9 @@ public:
                      const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
 
 
-  RooPlot* plotNLL(Double_t lo, Double_t hi, Int_t nBins=100) ;
-  RooPlot* plotError(const RooRealVar& param, Double_t lo, Double_t hi, Int_t nbins=100) ;
-  RooPlot* plotPull(const RooRealVar& param, Double_t lo=-3.0, Double_t hi=3.0, Int_t nbins=25, bool fitGauss=false) ;
+  RooPlot* plotNLL(double lo, double hi, Int_t nBins=100) ;
+  RooPlot* plotError(const RooRealVar& param, double lo, double hi, Int_t nbins=100) ;
+  RooPlot* plotPull(const RooRealVar& param, double lo=-3.0, double hi=3.0, Int_t nbins=25, bool fitGauss=false) ;
 
 protected:
 
@@ -130,7 +130,7 @@ protected:
   RooLinkedList _fitOptList ;   // Fit option command list
   bool      _extendedGen ;    // Add poisson term to number of events to generate?
   bool      _binGenData ;     // Bin data between generating and fitting
-  Double_t    _nExpGen ;        // Number of expected events to generate in extended mode
+  double    _nExpGen ;        // Number of expected events to generate in extended mode
   bool      _randProto ;      // Randomize order of prototype data access
 
   bool      _canAddFitResults ; ///< Allow adding of external fit results?

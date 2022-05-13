@@ -31,8 +31,8 @@ public:
   void setPunctuation(const TString& punct) ;
   TString getPunctuation() const { return _punct ; }
 
-  bool readDouble(Double_t& value, bool zapOnError=false) ;
-  bool convertToDouble(const TString& token, Double_t& value) ;
+  bool readDouble(double& value, bool zapOnError=false) ;
+  bool convertToDouble(const TString& token, double& value) ;
 
   bool readInteger(Int_t& value, bool zapOnError=false) ;
   bool convertToInteger(const TString& token, Int_t& value) ;

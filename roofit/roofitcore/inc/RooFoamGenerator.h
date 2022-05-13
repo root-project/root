@@ -38,7 +38,7 @@ public:
   }
   ~RooFoamGenerator() override;
 
-  const RooArgSet *generateEvent(UInt_t remaining, Double_t& resampleRatio) override;
+  const RooArgSet *generateEvent(UInt_t remaining, double& resampleRatio) override;
 
   TFoam& engine() { return *_tfoam; }
 
@@ -52,9 +52,9 @@ protected:
 
   RooTFoamBinding* _binding ; ///< Binding of RooAbsReal to TFoam function interface
   TFoam*           _tfoam ;   ///< Instance of TFOAM generator
-  Double_t*        _xmin ;    ///< Lower bound of observables to be generated ;
-  Double_t*        _range ;   ///< Range of observables to be generated ;
-  Double_t*        _vec ;     ///< Transfer array for FOAM output
+  double*        _xmin ;    ///< Lower bound of observables to be generated ;
+  double*        _range ;   ///< Range of observables to be generated ;
+  double*        _vec ;     ///< Transfer array for FOAM output
 
 
   ClassDefOverride(RooFoamGenerator,0) // Context for generating a dataset from a PDF using the TFoam class

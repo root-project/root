@@ -98,21 +98,21 @@ TList* ProfileInspector::GetListOfProfilePlots( RooAbsData& data, RooStats::Mode
 
   TList * list = new TList;
   Int_t curve_N=100;
-  Double_t* curve_x=0;
+  double* curve_x=0;
 //   if(curve){
 //     curve_N=curve->GetN();
 //     curve_x=curve->GetX();
 //     } else {
-  Double_t max = dynamic_cast<RooAbsRealLValue*>(poi)->getMax();
-  Double_t min = dynamic_cast<RooAbsRealLValue*>(poi)->getMin();
-  Double_t step = (max-min)/(curve_N-1);
-  curve_x=new Double_t[curve_N];
+  double max = dynamic_cast<RooAbsRealLValue*>(poi)->getMax();
+  double min = dynamic_cast<RooAbsRealLValue*>(poi)->getMin();
+  double step = (max-min)/(curve_N-1);
+  curve_x=new double[curve_N];
   for(int i=0; i<curve_N; ++i){
      curve_x[i]=min+step*i;
   }
 //   }
 
-  map<string, std::vector<Double_t> > name_val;
+  map<string, std::vector<double> > name_val;
   for(int i=0; i<curve_N; i++){
     poi->setVal(curve_x[i]);
     profile->getVal();
@@ -122,7 +122,7 @@ TList* ProfileInspector::GetListOfProfilePlots( RooAbsData& data, RooStats::Mode
           string name = nuis_param->GetName();
           if(nuis_params->getSize()==0) continue;
           if(nuis_param && (! nuis_param->isConstant())){
-             if(name_val.find(name)==name_val.end()) name_val[name]=std::vector<Double_t>(curve_N);
+             if(name_val.find(name)==name_val.end()) name_val[name]=std::vector<double>(curve_N);
              name_val[name][i]=nuis_param->getVal();
 
              if(i==curve_N-1){

@@ -47,7 +47,7 @@ RooUnblindOffset::RooUnblindOffset()
 /// Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
 
 RooUnblindOffset::RooUnblindOffset(const char *name, const char *title,
-                const char *blindString, Double_t scale, RooAbsReal& cpasym)
+                const char *blindString, double scale, RooAbsReal& cpasym)
   : RooAbsHiddenReal(name,title),
   _value("value","Offset blinded value",this,cpasym),
   _blindEngine(blindString,RooBlindTools::full,0.,scale)
@@ -58,7 +58,7 @@ RooUnblindOffset::RooUnblindOffset(const char *name, const char *title,
 /// Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
 
 RooUnblindOffset::RooUnblindOffset(const char *name, const char *title,
-               const char *blindString, Double_t scale, RooAbsReal& cpasym,
+               const char *blindString, double scale, RooAbsReal& cpasym,
                RooAbsCategory& blindState)
   : RooAbsHiddenReal(name,title,blindState),
     _value("value","Offset blinded value",this,cpasym),
@@ -86,7 +86,7 @@ RooUnblindOffset::~RooUnblindOffset()
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate RooBlindTools unhide-offset method on blind value
 
-Double_t RooUnblindOffset::evaluate() const
+double RooUnblindOffset::evaluate() const
 {
   if (isHidden()) {
     // Blinding is active for this event

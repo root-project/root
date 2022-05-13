@@ -59,7 +59,7 @@ public:
 
     // Calculate integral over landau with default choice of numeric integrator
     RooAbsReal* intLandau = landau.createIntegral(x) ;
-    Double_t val = intLandau->getVal() ;
+    double val = intLandau->getVal() ;
     regValue(val,"rf111_val1") ;
 
 
@@ -75,7 +75,7 @@ public:
 
     // Calculate integral over landau with custom integral specification
     RooAbsReal* intLandau2 = landau.createIntegral(x,NumIntConfig(customConfig)) ;
-    Double_t val2 = intLandau2->getVal() ;
+    double val2 = intLandau2->getVal() ;
     regValue(val2,"rf111_val2") ;
 
 
@@ -89,7 +89,7 @@ public:
 
     // Calculate integral over landau custom numeric integrator specified as object default
     RooAbsReal* intLandau3 = landau.createIntegral(x) ;
-    Double_t val3 = intLandau3->getVal() ;
+    double val3 = intLandau3->getVal() ;
     regValue(val3,"rf111_val3") ;
 
 

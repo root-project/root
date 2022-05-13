@@ -39,13 +39,13 @@ public:
   TObject* clone(const char* newname) const override { return new RooNumConvolution(*this,newname) ; }
   ~RooNumConvolution() override ;
 
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
 
   RooNumIntConfig& convIntConfig() { _init = false ; return _convIntConfig ; }
   const RooNumIntConfig& convIntConfig() const { _init = false ; return _convIntConfig ; }
 
   void clearConvolutionWindow() ;
-  void setConvolutionWindow(RooAbsReal& centerParam, RooAbsReal& widthParam, Double_t widthScaleFactor=1) ;
+  void setConvolutionWindow(RooAbsReal& centerParam, RooAbsReal& widthParam, double widthScaleFactor=1) ;
 
   void setCallWarning(Int_t threshold=2000) ;
   void setCallProfiling(bool flag, Int_t nbinX = 40, Int_t nbinCall = 40, Int_t nCallHigh=1000) ;
@@ -87,7 +87,7 @@ protected:
   RooAbsReal&   cloneModel() const { if (!_init) initialize() ; return (RooAbsReal&)  *_cloneModel ; }
 
   bool       _useWindow   ;     ///< Switch to activate window convolution
-  Double_t     _windowScale ;     ///< Scale factor for window parameter
+  double     _windowScale ;     ///< Scale factor for window parameter
   RooListProxy _windowParam ;     ///< Holder for optional convolution integration window scaling parameter
 
   Int_t        _verboseThresh ;   ///< Call count threshold for verbose printing

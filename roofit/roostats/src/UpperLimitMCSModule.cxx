@@ -42,7 +42,7 @@ using namespace RooStats ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-UpperLimitMCSModule::UpperLimitMCSModule(const RooArgSet* poi, Double_t CL) :
+UpperLimitMCSModule::UpperLimitMCSModule(const RooArgSet* poi, double CL) :
   RooAbsMCStudyModule(Form("UpperLimitMCSModule_%s",poi->first()->GetName()),Form("UpperLimitMCSModule_%s",poi->first()->GetName())),
   _parName(poi->first()->GetName()),
   _plc(0),_ul(0),_poi(0), _data(0),_cl(CL), _model(0)
@@ -153,8 +153,8 @@ RooDataSet* UpperLimitMCSModule::finalizeRun()
 
 //   _nll0h->setVal(frnull->minNll()) ;
 
-//   Double_t deltaLL = (frnull->minNll() - nllVar()->getVal()) ;
-//   Double_t signif = deltaLL>0 ? sqrt(2*deltaLL) : -sqrt(-2*deltaLL) ;
+//   double deltaLL = (frnull->minNll() - nllVar()->getVal()) ;
+//   double signif = deltaLL>0 ? sqrt(2*deltaLL) : -sqrt(-2*deltaLL) ;
 //   _sig0h->setVal(signif) ;
 //   _dll0h->setVal(deltaLL) ;
 

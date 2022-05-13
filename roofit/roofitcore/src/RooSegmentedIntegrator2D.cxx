@@ -78,8 +78,8 @@ RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc& function, c
 /// Constructor integral on given function binding, with given configuration and
 /// explicit definition of integration range
 
-RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
-             Double_t ymin, Double_t ymax,
+RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc& function, double xmin, double xmax,
+             double ymin, double ymax,
              const RooNumIntConfig& config) :
   RooSegmentedIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooSegmentedIntegrator1D(function,ymin,ymax,config)))),xmin,xmax,config)
 {
@@ -127,7 +127,7 @@ bool RooSegmentedIntegrator2D::checkLimits() const
 
   // Adjust component integrators, if already created
   if (_array && ret) {
-    Double_t segSize = (_xmax - _xmin) / _nseg ;
+    double segSize = (_xmax - _xmin) / _nseg ;
     Int_t i ;
     for (i=0 ; i<_nseg ; i++) {
       _array[i]->setLimits(_xmin+i*segSize,_xmin+(i+1)*segSize) ;

@@ -231,8 +231,8 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
 
       if (nPoints <=0) nPoints = 100; // default in 1D
 
-      const Double_t xcont_min = fInterval->LowerLimit(*myparam);
-      const Double_t xcont_max = fInterval->UpperLimit(*myparam);
+      const double xcont_min = fInterval->LowerLimit(*myparam);
+      const double xcont_max = fInterval->UpperLimit(*myparam);
 
       RooRealVar* myarg = (RooRealVar *) newProfile->getVariables()->find(myparam->GetName());
       double x1 = myarg->getMin();
@@ -324,8 +324,8 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
 
 
       //myarg->setVal(xcont_max);
-      //const Double_t Yat_Xmax = newProfile->getVal();
-      Double_t Yat_Xmax = 0.5*ROOT::Math::chisquared_quantile(fInterval->ConfidenceLevel(),1);
+      //const double Yat_Xmax = newProfile->getVal();
+      double Yat_Xmax = 0.5*ROOT::Math::chisquared_quantile(fInterval->ConfidenceLevel(),1);
 
       TLine *Yline_cutoff = new TLine(x1,Yat_Xmax,x2,Yat_Xmax);
       TLine *Yline_min = new TLine(xcont_min,0.,xcont_min,Yat_Xmax);
@@ -373,7 +373,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
 
       auto *myparamY = static_cast<RooRealVar*>((*fParamsPlot)[1]);
 
-      Double_t cont_level = ROOT::Math::chisquared_quantile(fInterval->ConfidenceLevel(),fNdimPlot); // level for -2log LR
+      double cont_level = ROOT::Math::chisquared_quantile(fInterval->ConfidenceLevel(),fNdimPlot); // level for -2log LR
       cont_level = cont_level/2; // since we are plotting -log LR
 
       RooArgList params(*newProfile->getVariables());
@@ -480,14 +480,14 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
 
             // in case of option CONT4 I need to re-make the Pad
             if (tmpOpt.Contains("cont4")) {
-               Double_t bm = gPad->GetBottomMargin();
-               Double_t lm = gPad->GetLeftMargin();
-               Double_t rm = gPad->GetRightMargin();
-               Double_t tm = gPad->GetTopMargin();
-               Double_t x1 = hist2D->GetXaxis()->GetXmin();
-               Double_t y1 = hist2D->GetYaxis()->GetXmin();
-               Double_t x2 = hist2D->GetXaxis()->GetXmax();
-               Double_t y2 = hist2D->GetYaxis()->GetXmax();
+               double bm = gPad->GetBottomMargin();
+               double lm = gPad->GetLeftMargin();
+               double rm = gPad->GetRightMargin();
+               double tm = gPad->GetTopMargin();
+               double x1 = hist2D->GetXaxis()->GetXmin();
+               double y1 = hist2D->GetYaxis()->GetXmin();
+               double x2 = hist2D->GetXaxis()->GetXmax();
+               double y2 = hist2D->GetYaxis()->GetXmax();
 
                TPad *null=new TPad("null","null",0,0,1,1);
                null->SetFillStyle(0);

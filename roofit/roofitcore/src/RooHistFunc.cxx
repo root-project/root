@@ -179,7 +179,7 @@ RooHistFunc::~RooHistFunc()
 /// of the dependents, normalized by the histograms contents. Interpolation
 /// is applied if the RooHistFunc is configured to do that
 
-Double_t RooHistFunc::evaluate() const
+double RooHistFunc::evaluate() const
 {
   // Transfer values from
   if (_depList.getSize()>0) {
@@ -197,7 +197,7 @@ Double_t RooHistFunc::evaluate() const
     }
   }
 
-  Double_t ret =  _dataHist->weightFast(_histObsList,_intOrder,false,_cdfBoundaries) ;
+  double ret =  _dataHist->weightFast(_histObsList,_intOrder,false,_cdfBoundaries) ;
   return ret ;
 }
 
@@ -250,14 +250,14 @@ Int_t RooHistFunc::getMaxVal(const RooArgSet& vars) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooHistFunc::maxVal(Int_t code) const
+double RooHistFunc::maxVal(Int_t code) const
 {
   R__ASSERT(code==1) ;
 
-  Double_t max(-1) ;
+  double max(-1) ;
   for (Int_t i=0 ; i<_dataHist->numEntries() ; i++) {
     _dataHist->get(i) ;
-    Double_t wgt = _dataHist->weight() ;
+    double wgt = _dataHist->weight() ;
     if (wgt>max) max=wgt ;
   }
 
@@ -267,7 +267,7 @@ Double_t RooHistFunc::maxVal(Int_t code) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the total volume spanned by the observables of the RooDataHist
 
-Double_t RooHistFunc::totVolume() const
+double RooHistFunc::totVolume() const
 {
   // Return previously calculated value, if any
   if (_totVolume>0) {
@@ -308,7 +308,7 @@ Int_t RooHistFunc::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
 /// is deferred to RooDataHist::sum() which implements partial
 /// or complete summation over the histograms contents
 
-Double_t RooHistFunc::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooHistFunc::analyticalIntegral(Int_t code, const char* rangeName) const
 {
     return RooHistPdf::analyticalIntegral(code, rangeName, _histObsList, _depList, *_dataHist, true);
 }
@@ -319,7 +319,7 @@ Double_t RooHistFunc::analyticalIntegral(Int_t code, const char* rangeName) cons
 /// as the recursive division strategy of RooCurve cannot deal efficiently
 /// with the vertical lines that occur in a non-interpolated histogram
 
-list<Double_t>* RooHistFunc::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
+list<double>* RooHistFunc::plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
   // No hints are required when interpolation is used
   if (_intOrder>1) {
@@ -348,15 +348,15 @@ list<Double_t>* RooHistFunc::plotSamplingHint(RooAbsRealLValue& obs, Double_t xl
 
   // Retrieve position of all bin boundaries
   const RooAbsBinning* binning = lvarg->getBinningPtr(0) ;
-  Double_t* boundaries = binning->array() ;
+  double* boundaries = binning->array() ;
 
-  list<Double_t>* hint = new list<Double_t> ;
+  list<double>* hint = new list<double> ;
 
   // Widen range slighty
   xlo = xlo - 0.01*(xhi-xlo) ;
   xhi = xhi + 0.01*(xhi-xlo) ;
 
-  Double_t delta = (xhi-xlo)*1e-8 ;
+  double delta = (xhi-xlo)*1e-8 ;
 
   // Construct array with pairs of points positioned epsilon to the left and
   // right of the bin boundaries
@@ -376,7 +376,7 @@ list<Double_t>* RooHistFunc::plotSamplingHint(RooAbsRealLValue& obs, Double_t xl
 /// as the recursive division strategy of RooCurve cannot deal efficiently
 /// with the vertical lines that occur in a non-interpolated histogram
 
-std::list<Double_t>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
+std::list<double>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
   // No hints are required when interpolation is used
   if (_intOrder>1) {
@@ -440,18 +440,18 @@ std::list<Double_t>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_t 
 
   // Retrieve position of all bin boundaries
   const RooAbsBinning* binning = lvarg->getBinningPtr(0) ;
-  Double_t* boundaries = binning->array() ;
+  double* boundaries = binning->array() ;
 
-  list<Double_t>* hint = new list<Double_t> ;
+  list<double>* hint = new list<double> ;
 
-  Double_t delta = (xhi-xlo)*1e-8 ;
+  double delta = (xhi-xlo)*1e-8 ;
 
   // Construct array with pairs of points positioned epsilon to the left and
   // right of the bin boundaries
   for (Int_t i=0 ; i<binning->numBoundaries() ; i++) {
     if (boundaries[i]>xlo-delta && boundaries[i]<xhi+delta) {
 
-      Double_t boundary = boundaries[i] ;
+      double boundary = boundaries[i] ;
       if (transform) {
    transform->setVal(boundary) ;
    //cout << "transform bound " << boundary << " using " << transform->GetName() << " result " << obs.getVal() << endl ;

@@ -76,7 +76,7 @@ RooBinnedGenContext::RooBinnedGenContext(const RooAbsPdf &model, const RooArgSet
   while((var=viter.next())) {
     RooRealVar* rvar = dynamic_cast<RooRealVar*>(var) ;
     if (rvar) {
-      list<Double_t>* binb = model.binBoundaries(*rvar,rvar->getMin(),rvar->getMax()) ;
+      list<double>* binb = model.binBoundaries(*rvar,rvar->getMin(),rvar->getMax()) ;
       delete binb ;
     }
   }
@@ -133,12 +133,12 @@ void RooBinnedGenContext::setExpectedData(bool flag)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooDataSet *RooBinnedGenContext::generate(Double_t nEvt, bool /*skipInit*/, bool extended)
+RooDataSet *RooBinnedGenContext::generate(double nEvt, bool /*skipInit*/, bool extended)
 {
   // Scale to number of events and introduce Poisson fluctuations
   _hist->reset() ;
 
-  Double_t nEvents = nEvt ;
+  double nEvents = nEvt ;
 
   if (nEvents<=0) {
     if (!_pdf->canBeExtended()) {
@@ -165,20 +165,20 @@ RooDataSet *RooBinnedGenContext::generate(Double_t nEvt, bool /*skipInit*/, bool
   RooDataSet* wudata = new RooDataSet("wu","wu",tmp,RooFit::WeightVar("weight")) ;
 
   vector<int> histOut(_hist->numEntries()) ;
-  Double_t histMax(-1) ;
+  double histMax(-1) ;
   Int_t histOutSum(0) ;
   for (int i=0 ; i<_hist->numEntries() ; i++) {
     _hist->get(i) ;
     if (_expectedData) {
 
       // Expected data, multiply p.d.f by nEvents
-      Double_t w=_hist->weight()*nEvents ;
+      double w=_hist->weight()*nEvents ;
       wudata->add(*_hist->get(),w) ;
 
     } else if (extended) {
 
       // Extended mode, set contents to Poisson(pdf*nEvents)
-      Double_t w = RooRandom::randomGenerator()->Poisson(_hist->weight()*nEvents) ;
+      double w = RooRandom::randomGenerator()->Poisson(_hist->weight()*nEvents) ;
       wudata->add(*_hist->get(),w) ;
 
     } else {
@@ -207,7 +207,7 @@ RooDataSet *RooBinnedGenContext::generate(Double_t nEvt, bool /*skipInit*/, bool
 
       Int_t ibinRand = RooRandom::randomGenerator()->Integer(_hist->numEntries()) ;
       _hist->get(ibinRand) ;
-      Double_t ranY = RooRandom::randomGenerator()->Uniform(histMax) ;
+      double ranY = RooRandom::randomGenerator()->Uniform(histMax) ;
 
       if (ranY<_hist->weight()) {
    if (wgt==1) {

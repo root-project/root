@@ -70,7 +70,7 @@ RooEllipse::~RooEllipse()
 /// The degenerate case |rho|=1 corresponds to a straight line and
 /// is handled as a special case.
 
-RooEllipse::RooEllipse(const char *name, Double_t x1, Double_t x2, Double_t s1, Double_t s2, Double_t rho, Int_t points)
+RooEllipse::RooEllipse(const char *name, double x1, double x2, double s1, double s2, double rho, Int_t points)
 {
   SetName(name);
   SetTitle(name);
@@ -79,7 +79,7 @@ RooEllipse::RooEllipse(const char *name, Double_t x1, Double_t x2, Double_t s1, 
     coutE(InputArguments) << "RooEllipse::RooEllipse: bad parameter s1 or s2 < 0" << endl;
     return;
   }
-  Double_t tmp= 1-rho*rho;
+  double tmp= 1-rho*rho;
   if(tmp < 0) {
     coutE(InputArguments) << "RooEllipse::RooEllipse: bad parameter |rho| > 1" << endl;
     return;
@@ -92,7 +92,7 @@ RooEllipse::RooEllipse(const char *name, Double_t x1, Double_t x2, Double_t s1, 
     setYAxisLimits(x2-s2,x2+s2);
   }
   else {
-    Double_t r,psi,phi,u1,u2,xx1,xx2,dphi(2*TMath::Pi()/points);
+    double r,psi,phi,u1,u2,xx1,xx2,dphi(2*TMath::Pi()/points);
     for(Int_t index= 0; index < points; index++) {
       phi= index*dphi;
       // adjust the angular spacing of the points for the aspect ratio

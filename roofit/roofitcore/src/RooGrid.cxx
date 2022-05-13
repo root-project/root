@@ -65,13 +65,13 @@ RooGrid::RooGrid(const RooAbsFunc &function)
 
   // allocate workspace memory
   _dim= function.getDimension();
-  _xl= new Double_t[_dim];
-  _xu= new Double_t[_dim];
-  _delx= new Double_t[_dim];
-  _d= new Double_t[_dim*maxBins];
-  _xi= new Double_t[_dim*(maxBins+1)];
-  _xin= new Double_t[maxBins+1];
-  _weight= new Double_t[maxBins];
+  _xl= new double[_dim];
+  _xu= new double[_dim];
+  _delx= new double[_dim];
+  _d= new double[_dim*maxBins];
+  _xi= new double[_dim*(maxBins+1)];
+  _xin= new double[maxBins+1];
+  _weight= new double[maxBins];
   if(!_xl || !_xu || !_delx || !_d || !_xi || !_xin || !_weight) {
     oocoutE(nullptr,Integration) << ClassName() << ": memory allocation failed" << endl;
     _valid= false;
@@ -118,7 +118,7 @@ bool RooGrid::initialize(const RooAbsFunc &function)
       oocoutE(nullptr,Integration) << ClassName() << ": upper limit of dimension " << index << " is infinite" << endl;
       return false;
     }
-    Double_t dx= _xu[index] - _xl[index];
+    double dx= _xu[index] - _xl[index];
     if(dx <= 0) {
       oocoutE(nullptr,Integration) << ClassName() << ": bad range for dimension " << index << ": [" << _xl[index]
                    << "," << _xu[index] << "]" << endl;
@@ -145,11 +145,11 @@ void RooGrid::resize(UInt_t bins)
   if(bins == _bins) return;
 
   // weight is ratio of bin sizes
-  Double_t pts_per_bin = (Double_t) _bins / (Double_t) bins;
+  double pts_per_bin = (double) _bins / (double) bins;
 
   // loop over grid dimensions
   for (UInt_t j = 0; j < _dim; j++) {
-    Double_t xold,xnew(0),dw(0);
+    double xold,xnew(0),dw(0);
     Int_t i = 1;
     // loop over bins in this dimension and load _xin[] with new bin edges
 
@@ -193,7 +193,7 @@ void RooGrid::resetValues()
 /// The box is specified by the array box[] of box integer indices
 /// that each range from 0 to getNBoxes()-1.
 
-void RooGrid::generatePoint(const UInt_t box[], Double_t x[], UInt_t bin[], Double_t &vol,
+void RooGrid::generatePoint(const UInt_t box[], double x[], UInt_t bin[], double &vol,
              bool useQuasiRandom) const
 {
   vol= 1;
@@ -211,14 +211,14 @@ void RooGrid::generatePoint(const UInt_t box[], Double_t x[], UInt_t bin[], Doub
 
     // generate a random point uniformly distributed (in box space)
     // within the box[j]-th box of coordinate axis j.
-    Double_t z= ((box[j] + x[j])/_boxes)*_bins;
+    double z= ((box[j] + x[j])/_boxes)*_bins;
 
     // store the bin in which this point lies along the j-th
     // coordinate axis and calculate its width and position y
     // in normalized bin coordinates.
     Int_t k= (Int_t)z;
     bin[j] = k;
-    Double_t y, bin_width;
+    double y, bin_width;
     if(k == 0) {
       bin_width= coord(1,j);
       y= z * bin_width;
@@ -321,7 +321,7 @@ void RooGrid::printClassName(ostream& os) const
 /// Add the specified amount to bin[j] of the 1D histograms associated
 /// with each axis j.
 
-void RooGrid::accumulate(const UInt_t bin[], Double_t amount)
+void RooGrid::accumulate(const UInt_t bin[], double amount)
 {
   for(UInt_t j = 0; j < _dim; j++) value(bin[j],j) += amount;
 }
@@ -333,21 +333,21 @@ void RooGrid::accumulate(const UInt_t bin[], Double_t amount)
 /// usually be between 1 (stiffer) and 2 (more flexible). A value of zero
 /// prevents any rebinning.
 
-void RooGrid::refine(Double_t alpha)
+void RooGrid::refine(double alpha)
 {
   for (UInt_t j = 0; j < _dim; j++) {
 
     // smooth this dimension's histogram of grid values and calculate the
     // new sum of the histogram contents as grid_tot_j
-    Double_t oldg = value(0,j);
-    Double_t newg = value(1,j);
+    double oldg = value(0,j);
+    double newg = value(1,j);
     value(0,j)= (oldg + newg)/2;
-    Double_t grid_tot_j = value(0,j);
+    double grid_tot_j = value(0,j);
     // this loop implements value(i,j) = ( value(i-1,j)+value(i,j)+value(i+1,j) ) / 3
 
     UInt_t i;
     for (i = 1; i < _bins - 1; i++) {
-      Double_t rc = oldg + newg;
+      double rc = oldg + newg;
       oldg = newg;
       newg = value(i+1,j);
       value(i,j)= (rc + newg)/3;
@@ -358,7 +358,7 @@ void RooGrid::refine(Double_t alpha)
 
     // calculate the weights for each bin of this dimension's histogram of values
     // and their sum
-    Double_t tot_weight(0);
+    double tot_weight(0);
     for (i = 0; i < _bins; i++) {
       _weight[i] = 0;
       if (value(i,j) > 0) {
@@ -369,11 +369,11 @@ void RooGrid::refine(Double_t alpha)
       tot_weight += _weight[i];
     }
 
-    Double_t pts_per_bin = tot_weight / _bins;
+    double pts_per_bin = tot_weight / _bins;
 
-    Double_t xold;
-    Double_t xnew = 0;
-    Double_t dw = 0;
+    double xold;
+    double xnew = 0;
+    double dw = 0;
 
     UInt_t k;
     i = 1;

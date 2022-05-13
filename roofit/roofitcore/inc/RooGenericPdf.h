@@ -51,7 +51,7 @@ protected:
 
   // Function evaluation
   RooListProxy _actualVars ;
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
   RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& inputData, const RooArgSet* normSet) const override;
   void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const override;
 
@@ -60,7 +60,7 @@ protected:
   // Post-processing of server redirection
   bool redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive) override ;
 
-  bool isValidReal(Double_t value, bool printError) const override ;
+  bool isValidReal(double value, bool printError) const override ;
 
   std::unique_ptr<RooFormula> _formula{nullptr}; ///<! Formula engine
   TString _formExpr ;            ///< Formula expression string

@@ -29,7 +29,7 @@ public:
   RooTable(const char *name, const char *title);
   RooTable(const RooTable& other) ;
 
-  virtual void fill(RooAbsCategory& cat, Double_t weight=1.0) = 0 ;
+  virtual void fill(RooAbsCategory& cat, double weight=1.0) = 0 ;
 
   virtual bool isIdentical(const RooTable& other, bool verbose) = 0 ;
 

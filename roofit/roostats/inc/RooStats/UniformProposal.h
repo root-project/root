@@ -38,7 +38,7 @@ namespace RooStats {
 
       /// Return the probability of proposing the point x1 given the starting
       /// point x2
-      Double_t GetProposalDensity(RooArgSet& x1, RooArgSet& x2) override;
+      double GetProposalDensity(RooArgSet& x1, RooArgSet& x2) override;
 
       ~UniformProposal() override {}
 

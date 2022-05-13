@@ -35,7 +35,7 @@ class RooMultiBinomial : public RooAbsReal {
  protected:
 
   // Function evaluation
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
 
  private:
 

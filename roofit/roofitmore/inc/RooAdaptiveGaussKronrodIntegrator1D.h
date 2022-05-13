@@ -27,16 +27,16 @@ public:
   // Constructors, assignment etc
   RooAdaptiveGaussKronrodIntegrator1D() ;
   RooAdaptiveGaussKronrodIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) ;
-  RooAdaptiveGaussKronrodIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
+  RooAdaptiveGaussKronrodIntegrator1D(const RooAbsFunc& function, double xmin, double xmax,
                                       const RooNumIntConfig& config) ;
   RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
   ~RooAdaptiveGaussKronrodIntegrator1D() override;
 
   bool checkLimits() const override;
-  Double_t integral(const Double_t *yvec=0) override ;
+  double integral(const double *yvec=0) override ;
 
   using RooAbsIntegrator::setLimits ;
-  bool setLimits(Double_t* xmin, Double_t* xmax) override;
+  bool setLimits(double* xmin, double* xmax) override;
   bool setUseIntegrandLimits(bool flag) override {
     // If flag is true, intergration limits are taken from definition in input function binding
     _useIntegrandLimits = flag ; return true ;
@@ -73,20 +73,20 @@ protected:
 
   bool _useIntegrandLimits;
 
-  Double_t* xvec(Double_t& xx) {
+  double* xvec(double& xx) {
     // Return contents of xx in internal array pointer
     _x[0] = xx ; return _x ;
   }
-  Double_t *_x ;                        //! Current coordinate
+  double *_x ;                        //! Current coordinate
 
-  Double_t _epsAbs ;                   // Absolute precision
-  Double_t _epsRel ;                   // Relative precision
+  double _epsAbs ;                   // Absolute precision
+  double _epsRel ;                   // Relative precision
   Int_t    _methodKey ;                // GSL method key
   Int_t    _maxSeg ;                   // Maximum number of segments
   void*    _workspace ;                // GSL workspace
 
-  mutable Double_t _xmin;              //! Lower integration bound
-  mutable Double_t _xmax;              //! Upper integration bound
+  mutable double _xmin;              //! Lower integration bound
+  mutable double _xmax;              //! Upper integration bound
 
   ClassDefOverride(RooAdaptiveGaussKronrodIntegrator1D,0) // 1-dimensional adaptive Gauss-Kronrod numerical integration engine
 };

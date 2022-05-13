@@ -76,7 +76,7 @@ RooExtendedTerm::~RooExtendedTerm()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return number of expected events from associated event count variable
 
-Double_t RooExtendedTerm::expectedEvents(const RooArgSet* /*nset*/) const
+double RooExtendedTerm::expectedEvents(const RooArgSet* /*nset*/) const
 {
   return _n ;
 }

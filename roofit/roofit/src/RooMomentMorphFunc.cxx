@@ -334,7 +334,7 @@ RooMomentMorphFunc::CacheElem::~CacheElem()
 }
 
 //_____________________________________________________________________________
-Double_t RooMomentMorphFunc::getVal(const RooArgSet *set) const
+double RooMomentMorphFunc::getVal(const RooArgSet *set) const
 {
    // Special version of getVal() overrides RooAbsReal::getVal() to save value of current normalization set
    _curNormSet = set ? (RooArgSet *)set : (RooArgSet *)&_varList;
@@ -366,7 +366,7 @@ const RooAbsReal *RooMomentMorphFunc::sumFunc(const RooArgSet *nset) const
 }
 
 //_____________________________________________________________________________
-Double_t RooMomentMorphFunc::evaluate() const
+double RooMomentMorphFunc::evaluate() const
 {
    CacheElem *cache = getCache(_curNormSet);
 
@@ -374,7 +374,7 @@ Double_t RooMomentMorphFunc::evaluate() const
       cache->calculateFractions(*this, false); // verbose turned off
    }
 
-   Double_t ret = cache->_sumFunc->getVal(_pdfList.nset());
+   double ret = cache->_sumFunc->getVal(_pdfList.nset());
    return ret;
 }
 
@@ -395,7 +395,7 @@ void RooMomentMorphFunc::CacheElem::calculateFractions(const RooMomentMorphFunc 
 {
    Int_t nPdf = self._pdfList.getSize();
 
-   Double_t dm = self.m - (*self._mref)[0];
+   double dm = self.m - (*self._mref)[0];
 
    // fully non-linear
    double sumposfrac = 0.;
@@ -490,13 +490,13 @@ int RooMomentMorphFunc::idxmax(const double &mval) const
 }
 
 //_____________________________________________________________________________
-std::list<Double_t> *RooMomentMorphFunc::plotSamplingHint(RooAbsRealLValue &obs, Double_t xlo, Double_t xhi) const
+std::list<double> *RooMomentMorphFunc::plotSamplingHint(RooAbsRealLValue &obs, double xlo, double xhi) const
 {
    return sumFunc(0)->plotSamplingHint(obs, xlo, xhi);
 }
 
 //_____________________________________________________________________________
-std::list<Double_t> *RooMomentMorphFunc::binBoundaries(RooAbsRealLValue &obs, Double_t xlo, Double_t xhi) const
+std::list<double> *RooMomentMorphFunc::binBoundaries(RooAbsRealLValue &obs, double xlo, double xhi) const
 {
    return sumFunc(0)->binBoundaries(obs, xlo, xhi);
 }

@@ -73,7 +73,7 @@ RooThresholdCategory::RooThresholdCategory(const RooThresholdCategory& other, co
 /// Insert threshold at value upperLimit. All values below upper limit (and above any lower
 /// thresholds, if any) will be mapped to a state name 'catName' with index 'catIdx'
 
-bool RooThresholdCategory::addThreshold(Double_t upperLimit, const char* catName, Int_t catIdx)
+bool RooThresholdCategory::addThreshold(double upperLimit, const char* catName, Int_t catIdx)
 {
   // Check if identical threshold values is not defined yet
   for (const auto& thresh : _threshList) {

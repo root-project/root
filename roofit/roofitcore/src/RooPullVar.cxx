@@ -93,11 +93,11 @@ RooPullVar::~RooPullVar()
 /// otherwise use symmetric error. If measurement has no error
 /// return zero.
 
-Double_t RooPullVar::evaluate() const
+double RooPullVar::evaluate() const
 {
   const auto& meas = _meas.arg();
   if (meas.hasAsymError()) {
-    Double_t delta = _meas-_true ;
+    double delta = _meas-_true ;
     if (delta<0) {
       return delta/meas.getAsymErrorHi() ;
     } else {

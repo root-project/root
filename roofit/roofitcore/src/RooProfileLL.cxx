@@ -149,7 +149,7 @@ void RooProfileLL::initializeMinimizer() const
 /// parameters that are not considered observables of this profile
 /// likelihood object.
 
-Double_t RooProfileLL::evaluate() const
+double RooProfileLL::evaluate() const
 {
   // Instantiate minimizer if we haven't done that already
   if (!_minimizer) {

@@ -44,7 +44,7 @@ namespace HistFactory{
 
     TIterator* _paramIter ;  ///<! do not persist
 
-    Double_t evaluate() const override;
+    double evaluate() const override;
 
     ClassDefOverride(RooStats::HistFactory::LinInterpVar,1) // Piecewise linear interpolation
   };

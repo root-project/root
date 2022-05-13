@@ -107,7 +107,7 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
 
   // Initialize fraction threshold array (used only in extended mode)
   _numPdf = model._pdfProxyList.GetSize() ;
-  _fracThresh = new Double_t[_numPdf+1] ;
+  _fracThresh = new double[_numPdf+1] ;
   _fracThresh[0] = 0 ;
 
   // Generate index category and all registered PDFS
@@ -206,7 +206,7 @@ void RooSimSplitGenContext::initGenerator(const RooArgSet &theEvent)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooDataSet* RooSimSplitGenContext::generate(Double_t nEvents, bool skipInit, bool extendedMode)
+RooDataSet* RooSimSplitGenContext::generate(double nEvents, bool skipInit, bool extendedMode)
 {
   if(!isValid()) {
     coutE(Generation) << ClassName() << "::" << GetName() << ": context is not valid" << endl;
@@ -230,7 +230,7 @@ RooDataSet* RooSimSplitGenContext::generate(Double_t nEvents, bool skipInit, boo
   }
 
   // Generate lookup table from expected event counts
-  vector<Double_t> nGen(_numPdf) ;
+  vector<double> nGen(_numPdf) ;
   if (extendedMode ) {
     _proxyIter->Reset() ;
     RooRealProxy* proxy ;
@@ -257,9 +257,9 @@ RooDataSet* RooSimSplitGenContext::generate(Double_t nEvents, bool skipInit, boo
     }
 
     // Determine from that total number of events to be generated for each component
-    Double_t nGenSoFar(0) ;
+    double nGenSoFar(0) ;
     while (nGenSoFar<nEvents) {
-      Double_t rand = RooRandom::uniform() ;
+      double rand = RooRandom::uniform() ;
       i=0 ;
       for (i=0 ; i<_numPdf ; i++) {
    if (rand>_fracThresh[i] && rand<_fracThresh[i+1]) {

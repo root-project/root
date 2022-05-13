@@ -106,7 +106,7 @@ RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function, con
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with function binding, definition of integration range and configuration object
 
-RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax, const RooNumIntConfig& config) :
+RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function, double xmin, double xmax, const RooNumIntConfig& config) :
   RooAbsIntegrator(function),
   _xmin(xmin),
   _xmax(xmax),
@@ -218,7 +218,7 @@ RooImproperIntegrator1D::~RooImproperIntegrator1D()
 /// ok, or otherwise false. Always returns false and does nothing
 /// if this object was constructed to always use our integrand's limits.
 
-bool RooImproperIntegrator1D::setLimits(Double_t *xmin, Double_t *xmax)
+bool RooImproperIntegrator1D::setLimits(double *xmin, double *xmax)
 {
   if(_useIntegrandLimits) {
     oocoutE(nullptr,Integration) << "RooIntegrator1D::setLimits: cannot override integrand's limits" << endl;
@@ -326,9 +326,9 @@ RooImproperIntegrator1D::LimitsCase RooImproperIntegrator1D::limitsCase() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate the integral at the given parameter values of the function binding
 
-Double_t RooImproperIntegrator1D::integral(const Double_t* yvec)
+double RooImproperIntegrator1D::integral(const double* yvec)
 {
-  Double_t result(0);
+  double result(0);
   if(0 != _integrator1) result+= _integrator1->integral(yvec);
   if(0 != _integrator2) result+= _integrator2->integral(yvec);
   if(0 != _integrator3) result+= _integrator3->integral(yvec);

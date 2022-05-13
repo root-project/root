@@ -85,7 +85,7 @@ RooUnblindCPAsymVar::~RooUnblindCPAsymVar()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooUnblindCPAsymVar::evaluate() const
+double RooUnblindCPAsymVar::evaluate() const
 {
   if (isHidden()) {
     // Blinding active for this event

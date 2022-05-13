@@ -100,12 +100,12 @@ namespace RooStats {
      void SetPrintLevel(Int_t printlevel){fPrintLevel=printlevel;}
 
      /// Main interface to evaluate the test statistic on a dataset
-     Double_t Evaluate(RooAbsData& data, RooArgSet& paramsOfInterest) override {
+     double Evaluate(RooAbsData& data, RooArgSet& paramsOfInterest) override {
         return EvaluateProfileLikelihood(0, data, paramsOfInterest);
      }
 
      /// evaluate  the profile likelihood ratio (type = 0) or the minimum of likelihood (type=1) or the conditional LL (type = 2)
-     virtual Double_t EvaluateProfileLikelihood(int type, RooAbsData &data, RooArgSet & paramsOfInterest);
+     virtual double EvaluateProfileLikelihood(int type, RooAbsData &data, RooArgSet & paramsOfInterest);
 
      virtual void EnableDetailedOutput( bool e=true, bool withErrorsAndPulls=false ) {
         fDetailedOutputEnabled = e;
@@ -146,7 +146,7 @@ namespace RooStats {
       RooAbsReal* fNll; //!
       const RooArgSet* fCachedBestFitParams;
       RooAbsData* fLastData;
-      //      Double_t fLastMLE;
+      //      double fLastMLE;
       LimitType fLimitType;
       bool fSigned;
 
@@ -164,7 +164,7 @@ namespace RooStats {
       bool fReuseNll ;
       TString fMinimizer;
       Int_t fStrategy;
-      Double_t fTolerance;
+      double fTolerance;
       Int_t fPrintLevel;
       bool fLOffset ;
 

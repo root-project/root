@@ -30,7 +30,7 @@ public:
   inline ~RooUniform() override { }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void generateEvent(Int_t code) override;
@@ -39,7 +39,7 @@ protected:
 
   RooListProxy x ;
 
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
   RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* /*normSet*/ = nullptr) const override;
 
 

@@ -49,8 +49,8 @@ public:
     return _verbose;
   }
 
-  virtual const RooArgSet *generateEvent(UInt_t remaining, Double_t& resampleRatio) = 0;
-  virtual Double_t getFuncMax() { return 0 ; }
+  virtual const RooArgSet *generateEvent(UInt_t remaining, double& resampleRatio) = 0;
+  virtual double getFuncMax() { return 0 ; }
 
    inline void Print(Option_t *options= 0) const override {
      // ascii printing interface

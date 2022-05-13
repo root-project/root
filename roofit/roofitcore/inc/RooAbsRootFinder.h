@@ -25,7 +25,7 @@ public:
   RooAbsRootFinder(const RooAbsFunc& function);
   inline virtual ~RooAbsRootFinder() { }
 
-  virtual bool findRoot(Double_t &result, Double_t xlo, Double_t xhi, Double_t value= 0) const = 0;
+  virtual bool findRoot(double &result, double xlo, double xhi, double value= 0) const = 0;
 
 protected:
   const RooAbsFunc *_function; ///< Pointer to input function

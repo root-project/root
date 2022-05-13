@@ -429,7 +429,7 @@ bool RooFormula::changeDependents(const RooAbsCollection& newDeps, bool mustRepl
 /// and then the formula is evaluated.
 /// \param[in] nset Normalisation set passed to evaluation of arguments serving values.
 /// \return The result of the evaluation.
-Double_t RooFormula::eval(const RooArgSet* nset) const
+double RooFormula::eval(const RooArgSet* nset) const
 {
   if (!_tFormula) {
     coutF(Eval) << __func__ << " (" << GetName() << "): Formula didn't compile: " << GetTitle() << endl;

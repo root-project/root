@@ -156,15 +156,15 @@ void RooChebychev::selectNormalizationRange(const char* rangeName, bool force)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooChebychev::evaluate() const
+double RooChebychev::evaluate() const
 {
   // first bring the range of the variable _x to the normalised range [-1, 1]
   // calculate sum_k c_k T_k(x) where x is given in the normalised range,
   // c_0 = 1, and the higher coefficients are given in _coefList
-  const Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName():0);
-  const Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName():0);
+  const double xmax = _x.max(_refRangeName?_refRangeName->GetName():0);
+  const double xmin = _x.min(_refRangeName?_refRangeName->GetName():0);
   // transform to range [-1, +1]
-  const Double_t x = (_x - 0.5 * (xmax + xmin)) / (0.5 * (xmax - xmin));
+  const double x = (_x - 0.5 * (xmax + xmin)) / (0.5 * (xmax - xmin));
   // extract current values of coefficients
   using size_type = typename RooListProxy::Storage_t::size_type;
   const size_type iend = _coefList.size();
@@ -205,16 +205,16 @@ Int_t RooChebychev::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVar
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooChebychev::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooChebychev::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   assert(1 == code); (void)code;
 
-  const Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName():0);
-  const Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName():0);
-  const Double_t halfrange = .5 * (xmax - xmin), mid = .5 * (xmax + xmin);
+  const double xmax = _x.max(_refRangeName?_refRangeName->GetName():0);
+  const double xmin = _x.min(_refRangeName?_refRangeName->GetName():0);
+  const double halfrange = .5 * (xmax - xmin), mid = .5 * (xmax + xmin);
   // the full range of the function is mapped to the normalised [-1, 1] range
-  const Double_t b = (_x.max(rangeName) - mid) / halfrange;
-  const Double_t a = (_x.min(rangeName) - mid) / halfrange;
+  const double b = (_x.max(rangeName) - mid) / halfrange;
+  const double a = (_x.min(rangeName) - mid) / halfrange;
 
   // take care to multiply with the right factor to account for the mapping to
   // normalised range [-1, 1]
@@ -223,7 +223,7 @@ Double_t RooChebychev::analyticalIntegral(Int_t code, const char* rangeName) con
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooChebychev::evalAnaInt(const Double_t a, const Double_t b) const
+double RooChebychev::evalAnaInt(const double a, const double b) const
 {
    // coefficient for integral(T_0(x)) is 1 (implicit), integrate by hand
    // T_0(x) and T_1(x), and use for n > 1: integral(T_n(x) dx) =

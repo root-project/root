@@ -86,7 +86,7 @@ ProfileLikelihoodCalculator::ProfileLikelihoodCalculator() :
 }
 
 ProfileLikelihoodCalculator::ProfileLikelihoodCalculator(RooAbsData& data, RooAbsPdf& pdf, const RooArgSet& paramsOfInterest,
-                                                         Double_t size, const RooArgSet* nullParams ) :
+                                                         double size, const RooArgSet* nullParams ) :
    CombinedCalculator(data,pdf, paramsOfInterest, size, nullParams ),
    fFitResult(0), fGlobalFitDone(false)
 {
@@ -94,7 +94,7 @@ ProfileLikelihoodCalculator::ProfileLikelihoodCalculator(RooAbsData& data, RooAb
    // the pdf must contain eventually the nuisance parameters
 }
 
-ProfileLikelihoodCalculator::ProfileLikelihoodCalculator(RooAbsData& data,  ModelConfig& model, Double_t size) :
+ProfileLikelihoodCalculator::ProfileLikelihoodCalculator(RooAbsData& data,  ModelConfig& model, double size) :
    CombinedCalculator(data, model, size),
    fFitResult(0), fGlobalFitDone(false)
 {
@@ -326,9 +326,9 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
    RooArgSet* constrainedParams = pdf->getParameters(*data);
    RemoveConstantParameters(constrainedParams);
 
-   Double_t nLLatMLE = fFitResult->minNll();
+   double nLLatMLE = fFitResult->minNll();
    // in case of using offset need to save offset value
-   Double_t nlloffset = (RooStats::IsNLLOffset() ) ? nll->getVal() - nLLatMLE : 0;
+   double nlloffset = (RooStats::IsNLLOffset() ) ? nll->getVal() - nLLatMLE : 0;
 
    // set POI to given values, set constant, calculate conditional MLE
    std::vector<double> oldValues(poiList.getSize() );
@@ -360,7 +360,7 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
       }
    }
 
-   Double_t nLLatCondMLE = nLLatMLE;
+   double nLLatCondMLE = nLLatMLE;
    if (existVarParams) {
       oocoutP(nullptr,Minimization) << "ProfileLikelihoodCalcultor::GetHypoTest - do conditional fit " << std::endl;
 
@@ -384,13 +384,13 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
    }
 
    // Use Wilks' theorem to translate -2 log lambda into a significance/p-value
-   Double_t deltaNLL = std::max( nLLatCondMLE-nLLatMLE, 0.);
+   double deltaNLL = std::max( nLLatCondMLE-nLLatMLE, 0.);
 
    // get number of free parameter of interest
    RemoveConstantParameters(poiList);
    int ndf = poiList.getSize();
 
-   Double_t pvalue = ROOT::Math::chisquared_cdf_c( 2* deltaNLL, ndf);
+   double pvalue = ROOT::Math::chisquared_cdf_c( 2* deltaNLL, ndf);
 
    // in case of one dimension (1 poi) do the one-sided p-value (need to divide by 2)
    if (ndf == 1) pvalue = 0.5 * pvalue;

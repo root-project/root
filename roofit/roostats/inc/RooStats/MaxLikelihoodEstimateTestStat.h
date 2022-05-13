@@ -67,7 +67,7 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
    }
 
   //______________________________
-  Double_t Evaluate(RooAbsData& data, RooArgSet& /*nullPOI*/) override {
+  double Evaluate(RooAbsData& data, RooArgSet& /*nullPOI*/) override {
 
 
     RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();

@@ -148,7 +148,7 @@ RooNumConvPdf::~RooNumConvPdf()
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return value of p.d.f
 
-Double_t RooNumConvPdf::evaluate() const
+double RooNumConvPdf::evaluate() const
 {
   if (!_init) initialize() ;
 

@@ -40,7 +40,7 @@ class RooStepFunction : public RooAbsReal {
 
  protected:
 
-  Double_t evaluate() const override;
+  double evaluate() const override;
 
  private:
 

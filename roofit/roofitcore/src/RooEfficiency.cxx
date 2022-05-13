@@ -83,9 +83,9 @@ RooEfficiency::~RooEfficiency()
 /// Calculate the raw value of this p.d.f which is the effFunc
 /// value if cat==1 and it is (1-effFunc) if cat==0
 
-Double_t RooEfficiency::evaluate() const
+double RooEfficiency::evaluate() const
 {
-  Double_t effFuncVal = _effFunc ;
+  double effFuncVal = _effFunc ;
 
   // Truncate efficiency function in range 0.0-1.0
   if (_effFunc>1) {
@@ -117,7 +117,7 @@ Int_t RooEfficiency::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooEfficiency::analyticalIntegral(Int_t code, const char* /*rangeName*/) const
+double RooEfficiency::analyticalIntegral(Int_t code, const char* /*rangeName*/) const
 {
   R__ASSERT(code==1) ;
   return 1.0 ;

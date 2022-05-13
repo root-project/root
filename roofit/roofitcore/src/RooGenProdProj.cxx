@@ -264,13 +264,13 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return value of normalization projection
 
-Double_t RooGenProdProj::evaluate() const
+double RooGenProdProj::evaluate() const
 {
-  Double_t nom = ((RooAbsReal*)_intList.at(0))->getVal() ;
+  double nom = ((RooAbsReal*)_intList.at(0))->getVal() ;
 
   if (!_haveD) return nom ;
 
-  Double_t den = ((RooAbsReal*)_intList.at(1))->getVal() ;
+  double den = ((RooAbsReal*)_intList.at(1))->getVal() ;
 
   //cout << "RooGenProdProj::eval(" << GetName() << ") nom = " << nom << " den = " << den << endl ;
 

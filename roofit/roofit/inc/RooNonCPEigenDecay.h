@@ -82,11 +82,11 @@ public:
   }
   ~RooNonCPEigenDecay( void ) override;
 
-  Double_t coefficient( Int_t basisIndex ) const override;
+  double coefficient( Int_t basisIndex ) const override;
 
   Int_t getCoefAnalyticalIntegral( Int_t coef, RooArgSet& allVars,
                     RooArgSet& analVars, const char* rangeName=0 ) const override;
-  Double_t coefAnalyticalIntegral( Int_t coef, Int_t code, const char* rangeName=0 ) const override;
+  double coefAnalyticalIntegral( Int_t coef, Int_t code, const char* rangeName=0 ) const override;
 
   Int_t getGenerator( const RooArgSet& directVars,
             RooArgSet&       generateVars, bool staticInitOK=true ) const override;
@@ -109,8 +109,8 @@ protected:
   RooCategoryProxy _rhoQ;
   RooRealProxy     _correctQ;
   RooRealProxy     _wQ;
-  Double_t         _genB0Frac;
-  Double_t         _genRhoPlusFrac;
+  double         _genB0Frac;
+  double         _genRhoPlusFrac;
 
   DecayType        _type;
   Int_t            _basisExp;

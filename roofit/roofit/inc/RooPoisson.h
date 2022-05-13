@@ -25,7 +25,7 @@ public:
   inline ~RooPoisson() override {  }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override;
+  double analyticalIntegral(Int_t code, const char* rangeName=0) const override;
 
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void generateEvent(Int_t code) override;
@@ -48,7 +48,7 @@ protected:
   bool  _noRounding ;
   bool  _protectNegative{true};
 
-  Double_t evaluate() const override;
+  double evaluate() const override;
   void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 

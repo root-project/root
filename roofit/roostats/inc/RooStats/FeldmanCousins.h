@@ -43,9 +43,9 @@ namespace RooStats {
       PointSetInterval* GetInterval() const override;
 
       /// Get the size of the test (eg. rate of Type I error)
-      Double_t Size() const override {return fSize;}
+      double Size() const override {return fSize;}
       /// Get the Confidence level for the test
-      Double_t ConfidenceLevel()  const override {return 1.-fSize;}
+      double ConfidenceLevel()  const override {return 1.-fSize;}
       /// Set the DataSet
       void SetData(RooAbsData& /*data*/) override {
          std::cout << "DEPRECATED, set data in constructor" << std::endl;
@@ -76,9 +76,9 @@ namespace RooStats {
       }
 
       /// set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
-      void SetTestSize(Double_t size) override {fSize = size;}
+      void SetTestSize(double size) override {fSize = size;}
       /// set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
-      void SetConfidenceLevel(Double_t cl) override {fSize = 1.-cl;}
+      void SetConfidenceLevel(double cl) override {fSize = 1.-cl;}
 
       void SetModel(const ModelConfig &) override;
 
@@ -105,7 +105,7 @@ namespace RooStats {
       void CreateConfBelt(bool flag=true){fCreateBelt = flag;}
 
       /// Returns instance of TestStatSampler. Use to change properties of
-      /// TestStatSampler, e.g. GetTestStatSampler.SetTestSize(Double_t size);
+      /// TestStatSampler, e.g. GetTestStatSampler.SetTestSize(double size);
       TestStatSampler* GetTestStatSampler() const;
 
 
@@ -117,7 +117,7 @@ namespace RooStats {
       /// initializes fTestStatSampler data member (mutable)
       void CreateTestStatSampler() const;
 
-      Double_t fSize;     ///< size of the test (eg. specified rate of Type I error)
+      double fSize;     ///< size of the test (eg. specified rate of Type I error)
       ModelConfig &fModel;
       RooAbsData & fData; ///< data set
 
@@ -126,7 +126,7 @@ namespace RooStats {
       mutable RooAbsData* fPOIToTest;         ///< value of POI points to perform the construction
       mutable ConfidenceBelt* fConfBelt;
       bool fAdaptiveSampling;               ///< controls use of adaptive sampling algorithm
-      Double_t fAdditionalNToysFactor;        ///< give user ability to ask for more toys
+      double fAdditionalNToysFactor;        ///< give user ability to ask for more toys
       Int_t fNbins;                           ///< number of samples per variable
       bool fFluctuateData;                  ///< tell ToyMCSampler to fluctuate number of entries in dataset
       bool fDoProfileConstruction;          ///< instead of full construction over nuisance parameters, do profile

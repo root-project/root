@@ -69,7 +69,7 @@ ClassImp(RooNDKeysPdf);
 /// expression in observables that specifies the weight of each event.
 
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const RooDataSet &data,
-                           TString options, Double_t rho, Double_t nSigma, bool rotate, bool sortInput)
+                           TString options, double rho, double nSigma, bool rotate, bool sortInput)
    : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
      _rhoList("rhoList", "List of rho parameters", this), _data(&data), _options(options), _widthFactor(rho),
      _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput), _nAdpt(1)
@@ -93,7 +93,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
 /// Constructor
 
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const TH1 &hist,
-                           TString options, Double_t rho, Double_t nSigma, bool rotate, bool sortInput)
+                           TString options, double rho, double nSigma, bool rotate, bool sortInput)
    : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
      _rhoList("rhoList", "List of rho parameters", this), _ownedData(createDatasetFromHist(varList, hist)), _data(_ownedData.get()),
      _options(options), _widthFactor(rho), _nSigma(nSigma), _rotate(rotate),
@@ -116,7 +116,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
 /// Constructor
 
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const RooDataSet &data,
-                           const TVectorD &rho, TString options, Double_t nSigma, bool rotate, bool sortInput)
+                           const TVectorD &rho, TString options, double nSigma, bool rotate, bool sortInput)
    : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
      _rhoList("rhoList", "List of rho parameters", this), _data(&data), _options(options), _widthFactor(-1.0),
      _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput), _nAdpt(1)
@@ -155,7 +155,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
 /// please use the first constructor form.
 
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const RooDataSet &data,
-                           const RooArgList &rhoList, TString options, Double_t nSigma, bool rotate, bool sortInput)
+                           const RooArgList &rhoList, TString options, double nSigma, bool rotate, bool sortInput)
    : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
      _rhoList("rhoList", "List of rho parameters", this), _data(&data), _options(options), _widthFactor(-1.0),
      _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput), _nAdpt(1)
@@ -201,7 +201,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
 /// Constructor
 
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const TH1 &hist,
-                           const RooArgList &rhoList, TString options, Double_t nSigma, bool rotate, bool sortInput)
+                           const RooArgList &rhoList, TString options, double nSigma, bool rotate, bool sortInput)
    : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
      _rhoList("rhoList", "List of rho parameters", this), _ownedData(createDatasetFromHist(varList, hist)), _data(_ownedData.get()),
      _options(options), _widthFactor(-1), _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput),
@@ -248,7 +248,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
 /// Constructor
 
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, RooAbsReal &x, const RooDataSet &data, Mirror mirror,
-                           Double_t rho, Double_t nSigma, bool rotate, bool sortInput)
+                           double rho, double nSigma, bool rotate, bool sortInput)
    : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
      _rhoList("rhoList", "List of rho parameters", this), _data(&data), _options("a"), _widthFactor(rho),
      _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput), _nAdpt(1)
@@ -271,7 +271,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, RooAbsReal &x, c
 /// please use the first constructor form.
 
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, RooAbsReal &x, RooAbsReal &y, const RooDataSet &data,
-                           TString options, Double_t rho, Double_t nSigma, bool rotate, bool sortInput)
+                           TString options, double rho, double nSigma, bool rotate, bool sortInput)
    : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
      _rhoList("rhoList", "List of rho parameters", this), _data(&data), _options(options), _widthFactor(rho),
      _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput), _nAdpt(1)
@@ -475,9 +475,9 @@ void RooNDKeysPdf::initialize()
     R__ASSERT (_nEvents!=0);
   }
 
-  _d         = static_cast<Double_t>(_nDim);
+  _d         = static_cast<double>(_nDim);
 
-  vector<Double_t> dummy(_nDim,0.);
+  vector<double> dummy(_nDim,0.);
   _dataPts.resize(_nEvents,dummy);
   _weights0.resize(_nEvents,dummy);
 
@@ -551,10 +551,10 @@ void RooNDKeysPdf::loadDataSet(bool firstCall)
 
     _data->get(i); // fills dVars
     _idx.push_back(i);
-    vector<Double_t>& point  = _dataPts[i];
+    vector<double>& point  = _dataPts[i];
     TVectorD& pointV = _dataPtsR[i];
 
-    Double_t myweight = _data->weight(); // default is one?
+    double myweight = _data->weight(); // default is one?
     if ( TMath::Abs(myweight)>_maxWeight ) { _maxWeight = TMath::Abs(myweight); }
     _nEventsW += myweight;
 
@@ -663,21 +663,21 @@ void RooNDKeysPdf::mirrorDataSet()
      // cout<<"xDatHi3s["<<j<<"]="<<_xDatHi3s[j]<<endl;
   }
 
-  vector<Double_t> dummy(_nDim,0.);
+  vector<double> dummy(_nDim,0.);
 
   // 1.
   for (Int_t i=0; i<_nEvents; i++) {
-    vector<Double_t>& x = _dataPts[i];
+    vector<double>& x = _dataPts[i];
 
     Int_t size = 1;
-    vector<vector<Double_t> > mpoints(size,dummy);
+    vector<vector<double> > mpoints(size,dummy);
     vector<vector<Int_t> > mjdcs(size);
 
     // create all mirror configurations for event i
     for (Int_t j=0; j<_nDim; j++) {
 
       vector<Int_t>& mjdxK = mjdcs[0];
-      vector<Double_t>& mpointK = mpoints[0];
+      vector<double>& mpointK = mpoints[0];
 
       // single mirror *at physical boundaries*
       if ((x[j]>_xDatLo[j] && x[j]<_xDatLo3s[j]) && x[j]<(_xDatLo[j]+_xDatHi[j])/2.) {
@@ -696,11 +696,11 @@ void RooNDKeysPdf::mirrorDataSet()
     // 2.
     // generate all mirror points for event i
     vector<Int_t>& mjdx = mjdcs[0];
-    vector<Double_t>& mpoint = mpoints[0];
+    vector<double>& mpoint = mpoints[0];
 
     // number of mirror points for this mirror configuration
     Int_t eMir = 1 << mjdx.size();
-    vector<vector<Double_t> > epoints(eMir,x);
+    vector<vector<double> > epoints(eMir,x);
 
     for (Int_t m=0; m<Int_t(mjdx.size()); m++) {
       Int_t size1 = 1 << m;
@@ -709,7 +709,7 @@ void RooNDKeysPdf::mirrorDataSet()
       for (Int_t l=size1; l<size2; ++l) {
    epoints[l] = epoints[l-size1];
    // fill high mirror points
-   vector<Double_t>& epoint = epoints[l];
+   vector<double>& epoint = epoints[l];
    epoint[mjdx[Int_t(mjdx.size()-1)-m]] = mpoint[mjdx[Int_t(mjdx.size()-1)-m]];
       }
     }
@@ -748,7 +748,7 @@ void RooNDKeysPdf::loadWeightSet()
 
   for (Int_t i=0; i<_nEventsM; i++) {
     _data->get(_idx[i]);
-    Double_t myweight = _data->weight();
+    double myweight = _data->weight();
     //if ( TMath::Abs(myweight)>_minWeight ) {
       _wMap[i] = myweight;
     //}
@@ -784,7 +784,7 @@ void RooNDKeysPdf::calculateShell(BoxInfo* bi) const
   for (const auto& wMapItr : _wMap) {
     Int_t i = wMapItr.first;
 
-    const vector<Double_t>& x = _dataPts[i];
+    const vector<double>& x = _dataPts[i];
     bool inVarRange(true);
     bool inVarRangePlusShell(true);
 
@@ -908,7 +908,7 @@ void RooNDKeysPdf::calculateBandWidth()
 
   // fixed width approximation
   for (Int_t i=0; i<_nEvents; i++) {
-    vector<Double_t>& weight = _weights0[i];
+    vector<double>& weight = _weights0[i];
     for (Int_t j = 0; j < _nDim; j++) {
        weight[j] = _n * (*_sigmaR)[j];
        // cout<<"j: "<<j<<", _n: "<<_n<<", sigmaR="<<(*_sigmaR)[j]<<", weight="<<weight[j]<<endl;
@@ -922,11 +922,11 @@ void RooNDKeysPdf::calculateBandWidth()
      double sqrt12 = sqrt(12.);
      double sqrtSigmaAvgR = sqrt(_sigmaAvgR);
 
-     vector<Double_t> dummy(_nDim, 0.);
+     vector<double> dummy(_nDim, 0.);
      _weights1.resize(_nEvents, dummy);
 
-     std::vector<std::vector<Double_t>> *weights_prev(0);
-     std::vector<std::vector<Double_t>> *weights_new(0);
+     std::vector<std::vector<double>> *weights_prev(0);
+     std::vector<std::vector<double>> *weights_new(0);
 
      // cout << "Number of adaptive iterations: " << _nAdpt << endl;
 
@@ -944,12 +944,12 @@ void RooNDKeysPdf::calculateBandWidth()
         }
 
         for (Int_t i = 0; i < _nEvents; ++i) {
-           vector<Double_t> &x = _dataPts[i];
-           Double_t f = TMath::Power(gauss(x, *weights_prev) / _nEventsW, -1. / (2. * _d));
+           vector<double> &x = _dataPts[i];
+           double f = TMath::Power(gauss(x, *weights_prev) / _nEventsW, -1. / (2. * _d));
 
-           vector<Double_t> &weight = (*weights_new)[i];
+           vector<double> &weight = (*weights_new)[i];
            for (Int_t j = 0; j < _nDim; j++) {
-              Double_t norm = (_n * (*_sigmaR)[j]) / sqrtSigmaAvgR;
+              double norm = (_n * (*_sigmaR)[j]) / sqrtSigmaAvgR;
               weight[j] = norm * f / sqrt12; //  note additional factor of sqrt(12) compared with HEP-EX/0011057
            }
         }
@@ -962,13 +962,13 @@ void RooNDKeysPdf::calculateBandWidth()
 ////////////////////////////////////////////////////////////////////////////////
 /// loop over all closest point to x, as determined by loopRange()
 
-Double_t RooNDKeysPdf::gauss(vector<Double_t>& x, vector<vector<Double_t> >& weights) const
+double RooNDKeysPdf::gauss(vector<double>& x, vector<vector<double> >& weights) const
 {
   if(_nEvents==0) return 0.;
 
   const double sqrt2pi = std::sqrt(TMath::TwoPi());
 
-  Double_t z=0.;
+  double z=0.;
   map<Int_t,bool> ibMap;
 
   // determine input loop range for event x
@@ -982,14 +982,14 @@ Double_t RooNDKeysPdf::gauss(vector<Double_t>& x, vector<vector<Double_t> >& wei
   for (const auto& ibMapItr : _sortInput ? ibMap : _ibNoSort) {
      Int_t i = ibMapItr.first;
 
-     Double_t g(1.);
+     double g(1.);
 
      if (i >= (Int_t)_idx.size()) {
         continue;
      } //---> 1.myline
 
-     const vector<Double_t> &point = _dataPts[i];
-     const vector<Double_t> &weight = weights[_idx[i]];
+     const vector<double> &point = _dataPts[i];
+     const vector<double> &weight = weights[_idx[i]];
 
      for (Int_t j = 0; j < _nDim; j++) {
         (*_dx)[j] = x[j] - point[j];
@@ -1000,8 +1000,8 @@ Double_t RooNDKeysPdf::gauss(vector<Double_t>& x, vector<vector<Double_t> >& wei
      }
 
      for (Int_t j = 0; j < _nDim; j++) {
-        Double_t r = (*_dx)[j]; // x[j] - point[j];
-        Double_t c = 1. / (2. * weight[j] * weight[j]);
+        double r = (*_dx)[j]; // x[j] - point[j];
+        double c = 1. / (2. * weight[j] * weight[j]);
 
         // cout << "j = " << j << " x[j] = " << point[j] << " w = " << weight[j] << endl;
 
@@ -1016,7 +1016,7 @@ Double_t RooNDKeysPdf::gauss(vector<Double_t>& x, vector<vector<Double_t> >& wei
 ////////////////////////////////////////////////////////////////////////////////
 /// determine closest points to x, to loop over in evaluate()
 
-void RooNDKeysPdf::loopRange(vector<Double_t>& x, map<Int_t,bool>& ibMap) const
+void RooNDKeysPdf::loopRange(vector<double>& x, map<Int_t,bool>& ibMap) const
 {
    ibMap.clear();
    TVectorD xRm(_nDim);
@@ -1104,7 +1104,7 @@ void RooNDKeysPdf::boxInfoInit(BoxInfo* bi, const char* rangeName, Int_t /*code*
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooNDKeysPdf::evaluate() const
+double RooNDKeysPdf::evaluate() const
 {
    if ( (_tracker && _tracker->hasChanged(true)) || (_weights != &_weights0 && _weights != &_weights1) ) {
       updateRho(); // update internal rho parameters
@@ -1118,7 +1118,7 @@ Double_t RooNDKeysPdf::evaluate() const
      _x[j] = var->getVal(nset);
    }
 
-  Double_t val = gauss(_x,*_weights);
+  double val = gauss(_x,*_weights);
   //cout<<"returning "<<val<<endl;
 
   if (val>=1E-20)
@@ -1142,7 +1142,7 @@ Int_t RooNDKeysPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVar
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   checkInitWeights();
 
@@ -1194,7 +1194,7 @@ Double_t RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) con
   }
 
   // first guess
-  Double_t norm=bi->nEventsBW;
+  double norm=bi->nEventsBW;
 
   if (_mirror && bi->netFluxZ) {
     // KEYS expression is self-normalized
@@ -1208,11 +1208,11 @@ Double_t RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) con
     if (norm<0.) norm=0.;
 
     for (Int_t i=0; i<Int_t(bi->sIdcs.size()); ++i) {
-      Double_t prob=1.;
-      const vector<Double_t>& x = _dataPts[bi->sIdcs[i]];
-      const vector<Double_t>& weight = (*_weights)[_idx[bi->sIdcs[i]]];
+      double prob=1.;
+      const vector<double>& x = _dataPts[bi->sIdcs[i]];
+      const vector<double>& weight = (*_weights)[_idx[bi->sIdcs[i]]];
 
-      vector<Double_t> chi(_nDim,100.);
+      vector<double> chi(_nDim,100.);
 
       for (Int_t j=0; j<_nDim; j++) {
    if(!doInt[j]) continue;
@@ -1283,30 +1283,30 @@ RooDataSet* RooNDKeysPdf::createDatasetFromHist(const RooArgList &varList, const
    for (int i = 1; i <= hist.GetXaxis()->GetNbins(); ++i) {
       // 1 or more dimension
 
-      Double_t xval = hist.GetXaxis()->GetBinCenter(i);
+      double xval = hist.GetXaxis()->GetBinCenter(i);
       varVec[0]->setVal(xval);
 
       if (varVec.size() == 1) {
-         Double_t fval = hist.GetBinContent(i);
+         double fval = hist.GetBinContent(i);
          weight.setVal(fval);
          dataFromHist->add(varsAndWeightSet, fval);
       } else { // 2 or more dimensions
 
          for (int j = 1; j <= hist.GetYaxis()->GetNbins(); ++j) {
-            Double_t yval = hist.GetYaxis()->GetBinCenter(j);
+            double yval = hist.GetYaxis()->GetBinCenter(j);
             varVec[1]->setVal(yval);
 
             if (varVec.size() == 2) {
-               Double_t fval = hist.GetBinContent(i, j);
+               double fval = hist.GetBinContent(i, j);
                weight.setVal(fval);
                dataFromHist->add(varsAndWeightSet, fval);
             } else { // 3 dimensions
 
                for (int k = 1; k <= hist.GetZaxis()->GetNbins(); ++k) {
-                  Double_t zval = hist.GetZaxis()->GetBinCenter(k);
+                  double zval = hist.GetZaxis()->GetBinCenter(k);
                   varVec[2]->setVal(zval);
 
-                  Double_t fval = hist.GetBinContent(i, j, k);
+                  double fval = hist.GetBinContent(i, j, k);
                   weight.setVal(fval);
                   dataFromHist->add(varsAndWeightSet, fval);
                }
@@ -1330,12 +1330,12 @@ TMatrixD RooNDKeysPdf::getWeights(const int &k) const
    cxcoutD(Eval) << "RooNDKeysPdf::getWeights() Return evaluated weights." << endl;
 
    for (Int_t i = 0; i < _nEvents; ++i) {
-      const vector<Double_t>& x = _dataPts[i];
+      const vector<double>& x = _dataPts[i];
       for (Int_t j = 0; j < _nDim; j++) {
          mref(i, j) = x[j];
       }
 
-      const vector<Double_t>& weight = (*_weights)[i];
+      const vector<double>& weight = (*_weights)[i];
       mref(i, _nDim) = weight[k];
    }
 

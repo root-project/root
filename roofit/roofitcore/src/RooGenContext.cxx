@@ -215,7 +215,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
       if (maxFindCode != 0) {
    coutI(Generation) << "RooGenContext::ctor() no prototype data provided, all observables are generated with numerically and "
                << "model supports analytical maximum findin:, can provide analytical pdf maximum to numeric generator" << endl ;
-   Double_t maxVal = _pdfClone->maxVal(maxFindCode) / _pdfClone->getNorm(&_theEvent) ;
+   double maxVal = _pdfClone->maxVal(maxFindCode) / _pdfClone->getNorm(&_theEvent) ;
    _maxVar = new RooRealVar("funcMax","function maximum",maxVal) ;
    cxcoutD(Generation) << "RooGenContext::ctor() maximum value returned by RooAbsPdf::maxVal() is " << maxVal << endl ;
       }
@@ -277,7 +277,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
    RooAbsNumGenerator* maxFinder = RooNumGenFactory::instance().createSampler(*_acceptRejectFunc,otherAndProto,RooArgSet(_protoVars),
                                  *model.getGeneratorConfig(),_verbose) ;
 //    RooAcceptReject maxFinder(*_acceptRejectFunc,otherAndProto,RooNumGenConfig::defaultConfig(),_verbose) ;
-   Double_t max = maxFinder->getFuncMax() ;
+   double max = maxFinder->getFuncMax() ;
    _maxVar = new RooRealVar("funcMax","function maximum",max) ;
 
    if (max==0) {
@@ -380,13 +380,13 @@ void RooGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
     // call the accept-reject generator to generate its variables
 
     if (_updateFMaxPerEvent!=0) {
-      Double_t max = _pdfClone->maxVal(_updateFMaxPerEvent)/_pdfClone->getNorm(_otherVars) ;
+      double max = _pdfClone->maxVal(_updateFMaxPerEvent)/_pdfClone->getNorm(_otherVars) ;
       cxcoutD(Generation) << "RooGenContext::initGenerator() reevaluation of maximum function value is required for each event, new value is  " << max << endl ;
       _maxVar->setVal(max) ;
     }
 
     if (_generator) {
-      Double_t resampleRatio(1) ;
+      double resampleRatio(1) ;
       const RooArgSet *subEvent= _generator->generateEvent(remaining,resampleRatio);
       if (resampleRatio<1) {
    coutI(Generation) << "RooGenContext::generateEvent INFO: accept/reject generator requests resampling of previously produced events by factor "

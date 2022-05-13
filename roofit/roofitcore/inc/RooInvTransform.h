@@ -23,12 +23,12 @@ public:
   RooInvTransform(const RooAbsFunc &func);
   inline ~RooInvTransform() override { }
 
-  inline Double_t operator()(const Double_t xvector[]) const override {
-    Double_t xinv= 1./xvector[0];
+  inline double operator()(const double xvector[]) const override {
+    double xinv= 1./xvector[0];
     return (*_func)(&xinv)*xinv*xinv;
   }
-  inline Double_t getMinLimit(UInt_t index) const override { return 1/_func->getMaxLimit(index); }
-  inline Double_t getMaxLimit(UInt_t index) const override { return 1/_func->getMinLimit(index); }
+  inline double getMinLimit(UInt_t index) const override { return 1/_func->getMaxLimit(index); }
+  inline double getMaxLimit(UInt_t index) const override { return 1/_func->getMinLimit(index); }
 
 protected:
   const RooAbsFunc *_func; ///< Input function binding

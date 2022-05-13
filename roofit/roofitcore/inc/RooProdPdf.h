@@ -34,10 +34,10 @@ class RooProdPdf : public RooAbsPdf {
 public:
 
   RooProdPdf() ;
-  RooProdPdf(const char *name, const char *title, Double_t cutOff=0);
+  RooProdPdf(const char *name, const char *title, double cutOff=0);
   RooProdPdf(const char *name, const char *title,
-       RooAbsPdf& pdf1, RooAbsPdf& pdf2, Double_t cutOff=0) ;
-  RooProdPdf(const char* name, const char* title, const RooArgList& pdfList, Double_t cutOff=0) ;
+       RooAbsPdf& pdf1, RooAbsPdf& pdf2, double cutOff=0) ;
+  RooProdPdf(const char* name, const char* title, const RooArgList& pdfList, double cutOff=0) ;
   RooProdPdf(const char* name, const char* title, const RooArgSet& fullPdfSet, const RooLinkedList& cmdArgList) ;
 
   RooProdPdf(const char* name, const char* title, const RooArgSet& fullPdfSet,
@@ -60,11 +60,11 @@ public:
 
   bool forceAnalyticalInt(const RooAbsArg& dep) const override ;
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const override ;
-  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
+  double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
   bool selfNormalized() const override { return _selfNorm ; }
 
   ExtendMode extendMode() const override ;
-  Double_t expectedEvents(const RooArgSet* nset) const override ;
+  double expectedEvents(const RooArgSet* nset) const override ;
 
   const RooArgList& pdfList() const { return _pdfList ; }
 
@@ -76,8 +76,8 @@ public:
   // Constraint management
   RooArgSet* getConstraints(const RooArgSet& observables, RooArgSet& constrainedParams, bool stripDisconnected) const override ;
 
-  std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override ;
-  std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override ;
+  std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override ;
+  std::list<double>* binBoundaries(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
   bool isBinnedDistribution(const RooArgSet& obs) const override  ;
 
   void printMetaArgs(std::ostream& os) const override ;
@@ -101,7 +101,7 @@ public:
 
 private:
 
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
   void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
@@ -157,7 +157,7 @@ private:
   void rearrangeProduct(CacheElem&) const;
   RooAbsReal* specializeIntegral(RooAbsReal& orig, const char* targetRangeName) const ;
   RooAbsReal* specializeRatio(RooFormulaVar& input, const char* targetRangeName) const ;
-  Double_t calculate(const RooProdPdf::CacheElem& cache, bool verbose=false) const ;
+  double calculate(const RooProdPdf::CacheElem& cache, bool verbose=false) const ;
 
 
   friend class RooProdGenContext ;
@@ -167,7 +167,7 @@ private:
 
   mutable RooAICRegistry _genCode ; ///<! Registry of composite direct generator codes
 
-  Double_t _cutOff ;       ///<  Cutoff parameter for running product
+  double _cutOff ;       ///<  Cutoff parameter for running product
   RooListProxy _pdfList ;  ///<  List of PDF components
   std::vector<std::unique_ptr<RooArgSet>> _pdfNSetList ; ///< List of PDF component normalization sets
   Int_t _extendedIndex ;   ///<  Index of extended PDF (if any)

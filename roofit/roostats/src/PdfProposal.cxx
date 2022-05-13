@@ -173,7 +173,7 @@ bool PdfProposal::IsSymmetric(RooArgSet& /* x1 */, RooArgSet& /* x2 */)
 /// Return the probability of proposing the point x1 given the starting
 /// point x2
 
-Double_t PdfProposal::GetProposalDensity(RooArgSet& x1, RooArgSet& x2)
+double PdfProposal::GetProposalDensity(RooArgSet& x1, RooArgSet& x2)
 {
    RooStats::SetParameters(&x2, &fMaster);
    for (fIt = fMap.begin(); fIt != fMap.end(); fIt++)

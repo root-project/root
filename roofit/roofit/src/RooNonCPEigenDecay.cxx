@@ -215,15 +215,15 @@ RooNonCPEigenDecay::~RooNonCPEigenDecay( void )
 ///  - rho-  : _rhoQ == -1
 ///  - the charge correction factor "_correctQ" serves to implement mis-charges
 
-Double_t RooNonCPEigenDecay::coefficient( Int_t basisIndex ) const
+double RooNonCPEigenDecay::coefficient( Int_t basisIndex ) const
 {
   Int_t rhoQc = _rhoQ * int(_correctQ);
   assert( rhoQc == 1 || rhoQc == -1 );
 
-  Double_t a_sin_p = _avgS + _delS;
-  Double_t a_sin_m = _avgS - _delS;
-  Double_t a_cos_p = _avgC + _delC;
-  Double_t a_cos_m = _avgC - _delC;
+  double a_sin_p = _avgS + _delS;
+  double a_sin_m = _avgS - _delS;
+  double a_cos_p = _avgC + _delC;
+  double a_cos_m = _avgC - _delC;
 
   if (basisIndex == _basisExp) {
     if (rhoQc == -1 || rhoQc == +1)
@@ -282,15 +282,15 @@ Int_t RooNonCPEigenDecay::getCoefAnalyticalIntegral( Int_t /*code*/, RooArgSet& 
 ////////////////////////////////////////////////////////////////////////////////
 /// correct for the right/wrong charge...
 
-Double_t RooNonCPEigenDecay::coefAnalyticalIntegral( Int_t basisIndex,
+double RooNonCPEigenDecay::coefAnalyticalIntegral( Int_t basisIndex,
                        Int_t code, const char* /*rangeName*/ ) const
 {
   Int_t rhoQc = _rhoQ*int(_correctQ);
 
-  Double_t a_sin_p = _avgS + _delS;
-  Double_t a_sin_m = _avgS - _delS;
-  Double_t a_cos_p = _avgC + _delC;
-  Double_t a_cos_m = _avgC - _delC;
+  double a_sin_p = _avgS + _delS;
+  double a_sin_m = _avgS - _delS;
+  double a_cos_p = _avgC + _delC;
+  double a_cos_m = _avgC - _delC;
 
   switch(code) {
 
@@ -350,11 +350,11 @@ void RooNonCPEigenDecay::initGenerator( Int_t code )
 {
   if (code == 2 || code == 4) {
     // Calculate the fraction of mixed events to generate
-    Double_t sumInt1 = RooRealIntegral( "sumInt1", "sum integral1", *this,
+    double sumInt1 = RooRealIntegral( "sumInt1", "sum integral1", *this,
                RooArgSet( _t.arg(), _tag.arg(), _rhoQ.arg() )
                   ).getVal();
     _tag = -1;
-    Double_t b0Int1 = RooRealIntegral( "mixInt1", "mix integral1", *this,
+    double b0Int1 = RooRealIntegral( "mixInt1", "mix integral1", *this,
                    RooArgSet( _t.arg(), _rhoQ.arg() )
                  ).getVal();
     _genB0Frac = b0Int1/sumInt1;
@@ -368,11 +368,11 @@ void RooNonCPEigenDecay::initGenerator( Int_t code )
 
   if (code == 3 || code == 4) {
     // Calculate the fraction of positive rho's to generate
-    Double_t sumInt2 = RooRealIntegral( "sumInt2", "sum integral2", *this,
+    double sumInt2 = RooRealIntegral( "sumInt2", "sum integral2", *this,
                RooArgSet( _t.arg(), _tag.arg(), _rhoQ.arg() )
                   ).getVal();
     _rhoQ = 1;
-    Double_t b0Int2 = RooRealIntegral( "mixInt2", "mix integral2", *this,
+    double b0Int2 = RooRealIntegral( "mixInt2", "mix integral2", *this,
                    RooArgSet( _t.arg(), _tag.arg() )
                  ).getVal();
     _genRhoPlusFrac = b0Int2/sumInt2;
@@ -399,20 +399,20 @@ void RooNonCPEigenDecay::generateEvent( Int_t code )
     // opposite charge?
     // Int_t rhoQc = _rhoQ*int(_correctQ);
 
-    Double_t a_sin_p = _avgS + _delS;
-    Double_t a_sin_m = _avgS - _delS;
-    Double_t a_cos_p = _avgC + _delC;
-    Double_t a_cos_m = _avgC - _delC;
+    double a_sin_p = _avgS + _delS;
+    double a_sin_m = _avgS - _delS;
+    double a_cos_p = _avgC + _delC;
+    double a_cos_m = _avgC - _delC;
 
     // maximum probability density
     double a1 = 1 + sqrt(TMath::Power(a_cos_m, 2) + TMath::Power(a_sin_m, 2));
     double a2 = 1 + sqrt(TMath::Power(a_cos_p, 2) + TMath::Power(a_sin_p, 2));
 
-    Double_t maxAcceptProb = (1.10 + TMath::Abs(_acp)) * (a1 > a2 ? a1 : a2);
+    double maxAcceptProb = (1.10 + TMath::Abs(_acp)) * (a1 > a2 ? a1 : a2);
     // The 1.10 in the above line is a security feature to prevent crashes close to the limit at 1.00
 
-    Double_t rand = RooRandom::uniform();
-    Double_t tval(0);
+    double rand = RooRandom::uniform();
+    double tval(0);
 
     switch(_type) {
 
@@ -430,12 +430,12 @@ void RooNonCPEigenDecay::generateEvent( Int_t code )
     }
 
     // get coefficients
-    Double_t expC = coefficient( _basisExp );
-    Double_t sinC = coefficient( _basisSin );
-    Double_t cosC = coefficient( _basisCos );
+    double expC = coefficient( _basisExp );
+    double sinC = coefficient( _basisSin );
+    double cosC = coefficient( _basisCos );
 
     // probability density
-    Double_t acceptProb  = expC + sinC*sin(_dm*tval) + cosC*cos(_dm*tval);
+    double acceptProb  = expC + sinC*sin(_dm*tval) + cosC*cos(_dm*tval);
 
     // sanity check...
     assert( acceptProb <= maxAcceptProb );

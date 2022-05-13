@@ -214,7 +214,7 @@ void FlexibleInterpVar::setAllInterpCodes(int code){
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void FlexibleInterpVar::setNominal(Double_t newNominal){
+void FlexibleInterpVar::setNominal(double newNominal){
   coutW(InputArguments) << "FlexibleInterpVar::setNominal : nominal is now " << newNominal << endl ;
   _nominal = newNominal;
 
@@ -225,7 +225,7 @@ void FlexibleInterpVar::setNominal(Double_t newNominal){
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void FlexibleInterpVar::setLow(RooAbsReal& param, Double_t newLow){
+void FlexibleInterpVar::setLow(RooAbsReal& param, double newLow){
   int index = _paramList.index(&param);
   if(index<0){
       coutE(InputArguments) << "FlexibleInterpVar::setLow ERROR:  " << param.GetName()
@@ -243,7 +243,7 @@ void FlexibleInterpVar::setLow(RooAbsReal& param, Double_t newLow){
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void FlexibleInterpVar::setHigh(RooAbsReal& param, Double_t newHigh){
+void FlexibleInterpVar::setHigh(RooAbsReal& param, double newHigh){
   int index = _paramList.index(&param);
   if(index<0){
       coutE(InputArguments) << "FlexibleInterpVar::setHigh ERROR:  " << param.GetName()
@@ -360,9 +360,9 @@ const std::vector<double>& FlexibleInterpVar::high() const { return _high; }
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return value of polynomial
 
-Double_t FlexibleInterpVar::evaluate() const
+double FlexibleInterpVar::evaluate() const
 {
-  Double_t total(_nominal) ;
+  double total(_nominal) ;
   int i=0;
 
   for (auto arg : _paramList) {

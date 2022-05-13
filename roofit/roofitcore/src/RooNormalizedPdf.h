@@ -47,13 +47,13 @@ public:
       return _pdf->getAnalyticalIntegralWN(allVars, analVars, &_normSet, rangeName);
    }
    /// Forward calculation of analytical integrals to input p.d.f
-   Double_t analyticalIntegralWN(Int_t code, const RooArgSet * /*normSet*/, const char *rangeName = 0) const override
+   double analyticalIntegralWN(Int_t code, const RooArgSet * /*normSet*/, const char *rangeName = 0) const override
    {
       return _pdf->analyticalIntegralWN(code, &_normSet, rangeName);
    }
 
    ExtendMode extendMode() const override { return static_cast<RooAbsPdf &>(*_pdf).extendMode(); }
-   Double_t expectedEvents(const RooArgSet *nset) const override
+   double expectedEvents(const RooArgSet *nset) const override
    {
       return static_cast<RooAbsPdf &>(*_pdf).expectedEvents(nset);
    }

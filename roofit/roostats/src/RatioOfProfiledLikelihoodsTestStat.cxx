@@ -65,7 +65,7 @@ void RooStats::RatioOfProfiledLikelihoodsTestStat::SetAlwaysReuseNLL(bool flag) 
 ///
 /// L.M. : not sure why this method is needed now
 
-Double_t RooStats::RatioOfProfiledLikelihoodsTestStat::ProfiledLikelihood(RooAbsData& data, RooArgSet& poi, RooAbsPdf& pdf) {
+double RooStats::RatioOfProfiledLikelihoodsTestStat::ProfiledLikelihood(RooAbsData& data, RooArgSet& poi, RooAbsPdf& pdf) {
    int type = (fSubtractMLE) ? 0 : 2;
 
    // null
@@ -84,7 +84,7 @@ Double_t RooStats::RatioOfProfiledLikelihoodsTestStat::ProfiledLikelihood(RooAbs
 ////////////////////////////////////////////////////////////////////////////////
 /// evaluate the ratio of profile likelihood
 
-Double_t  RooStats::RatioOfProfiledLikelihoodsTestStat::Evaluate(RooAbsData& data, RooArgSet& nullParamsOfInterest) {
+double  RooStats::RatioOfProfiledLikelihoodsTestStat::Evaluate(RooAbsData& data, RooArgSet& nullParamsOfInterest) {
 
    int type = (fSubtractMLE) ? 0 : 2;
 

@@ -795,7 +795,7 @@ RooAbsReal* RooRealIntegral::createIntegral(const RooArgSet& iset, const RooArgS
 /// cached value, otherwise recalculate on the fly and refill
 /// the cache
 
-Double_t RooRealIntegral::getValV(const RooArgSet* nset) const
+double RooRealIntegral::getValV(const RooArgSet* nset) const
 {
 //   // fast-track clean-cache processing
 //   if (_operMode==AClean) {
@@ -821,11 +821,11 @@ Double_t RooRealIntegral::getValV(const RooArgSet* nset) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Perform the integration and return the result
 
-Double_t RooRealIntegral::evaluate() const
+double RooRealIntegral::evaluate() const
 {
   GlobalSelectComponentRAII selCompRAII(_globalSelectComp || !_respectCompSelect);
 
-  Double_t retVal(0) ;
+  double retVal(0) ;
   switch (_intOperMode) {
 
   case Hybrid:
@@ -936,13 +936,13 @@ Double_t RooRealIntegral::evaluate() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return product of jacobian terms originating from analytical integration
 
-Double_t RooRealIntegral::jacobianProduct() const
+double RooRealIntegral::jacobianProduct() const
 {
   if (_jacList.getSize()==0) {
     return 1 ;
   }
 
-  Double_t jacProd(1) ;
+  double jacProd(1) ;
   for (const auto elm : _jacList) {
     auto arg = static_cast<const RooAbsRealLValue*>(elm);
     jacProd *= arg->jacobian() ;
@@ -958,11 +958,11 @@ Double_t RooRealIntegral::jacobianProduct() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Perform summation of list of category dependents to be integrated
 
-Double_t RooRealIntegral::sum() const
+double RooRealIntegral::sum() const
 {
   if (_sumList.getSize()!=0) {
     // Add integrals for all permutations of categories summed over
-    Double_t total(0) ;
+    double total(0) ;
 
     RooSuperCategory* sumCat = (RooSuperCategory*) _sumCat.first() ;
     for (const auto& nameIdx : *sumCat) {
@@ -976,7 +976,7 @@ Double_t RooRealIntegral::sum() const
 
   } else {
     // Simply return integral
-    Double_t ret = integrate() / jacobianProduct() ;
+    double ret = integrate() / jacobianProduct() ;
     return ret ;
   }
 }
@@ -985,7 +985,7 @@ Double_t RooRealIntegral::sum() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Perform hybrid numerical/analytical integration over all real-valued dependents
 
-Double_t RooRealIntegral::integrate() const
+double RooRealIntegral::integrate() const
 {
   if (!_numIntEngine) {
     // Trivial case, fully analytical integration
@@ -1044,7 +1044,7 @@ const RooArgSet& RooRealIntegral::parameters() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if current value is valid
 
-bool RooRealIntegral::isValidReal(Double_t /*value*/, bool /*printError*/) const
+bool RooRealIntegral::isValidReal(double /*value*/, bool /*printError*/) const
 {
   return true ;
 }

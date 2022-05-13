@@ -201,7 +201,7 @@ inline double integrateTailRegular(double sigma, double alpha, double n, double 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooCrystalBall::evaluate() const
+double RooCrystalBall::evaluate() const
 {
    const double x = x_;
    const double x0 = x0_;
@@ -239,7 +239,7 @@ Int_t RooCrystalBall::getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analV
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooCrystalBall::analyticalIntegral(Int_t code, const char *rangeName) const
+double RooCrystalBall::analyticalIntegral(Int_t code, const char *rangeName) const
 {
    R__ASSERT(code == 1);
 
@@ -293,7 +293,7 @@ Int_t RooCrystalBall::getMaxVal(const RooArgSet &vars) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooCrystalBall::maxVal(Int_t code) const
+double RooCrystalBall::maxVal(Int_t code) const
 {
    R__ASSERT(code == 1);
 

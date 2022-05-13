@@ -36,14 +36,14 @@ public:
   TObject* clone(const char* newname) const override { return new RooErrorVar(*this,newname); }
   ~RooErrorVar() override ;
 
-  Double_t getValV(const RooArgSet* set=0) const override ;
+  double getValV(const RooArgSet* set=0) const override ;
 
-  Double_t evaluate() const override {
+  double evaluate() const override {
     // return error of input RooRealVar
     return ((RooRealVar&)_realVar.arg()).getError() ;
   }
 
-  void setVal(Double_t value) override {
+  void setVal(double value) override {
     // Set error of input RooRealVar to value
     ((RooRealVar&)_realVar.arg()).setVal(value) ;
   }
@@ -59,20 +59,20 @@ public:
 
   // Set/get finite fit range limits
   /// Set lower bound of default range to value
-  inline void setMin(Double_t value) {
+  inline void setMin(double value) {
     setMin(0,value) ;
   }
   /// Set upper bound of default range to value
-  inline void setMax(Double_t value) {
+  inline void setMax(double value) {
     setMax(0,value) ;
   }
   /// Set default ranges to [min,max]
-  inline void setRange(Double_t min, Double_t max) {
+  inline void setRange(double min, double max) {
     setRange(0,min,max) ;
   }
-  void setMin(const char* name, Double_t value) ;
-  void setMax(const char* name, Double_t value) ;
-  void setRange(const char* name, Double_t min, Double_t max) ;
+  void setMin(const char* name, double value) ;
+  void setMax(const char* name, double value) ;
+  void setRange(const char* name, double min, double max) ;
 
   void setBins(Int_t nBins);
   void setBinning(const RooAbsBinning& binning, const char* name=0) ;

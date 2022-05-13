@@ -47,8 +47,8 @@ public:
     // Create ROOT TTree filled with a Gaussian distribution in x and a uniform distribution in y
 
     TTree* tree = new TTree("tree","tree") ;
-    Double_t* px = new Double_t ;
-    Double_t* py = new Double_t ;
+    double* px = new double ;
+    double* py = new double ;
     tree->Branch("x",px,"x/D") ;
     tree->Branch("y",py,"y/D") ;
     for (int i=0 ; i<100 ; i++) {

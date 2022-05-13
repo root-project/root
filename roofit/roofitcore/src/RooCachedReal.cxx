@@ -150,7 +150,7 @@ void RooCachedReal::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cache) cons
   // Iterator over all bins of RooDataHist and fill weights
   for (Int_t i=0 ; i<cache.hist()->numEntries() ; i++) {
     const RooArgSet* obs = cache.hist()->get(i) ;
-    Double_t binVal = cache.sourceClone()->getVal(obs) ;
+    double binVal = cache.sourceClone()->getVal(obs) ;
     cache.hist()->set(i, binVal, 0.);
   }
 

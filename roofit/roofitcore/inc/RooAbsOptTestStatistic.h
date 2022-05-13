@@ -36,7 +36,7 @@ public:
   RooAbsOptTestStatistic(const RooAbsOptTestStatistic& other, const char* name=0);
   ~RooAbsOptTestStatistic() override;
 
-  Double_t combinedValue(RooAbsReal** gofArray, Int_t nVal) const override ;
+  double combinedValue(RooAbsReal** gofArray, Int_t nVal) const override ;
 
   RooAbsReal& function() { return *_funcClone ; }
   const RooAbsReal& function() const { return *_funcClone ; }

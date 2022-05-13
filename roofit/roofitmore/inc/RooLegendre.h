@@ -31,17 +31,17 @@ public:
   inline ~RooLegendre() override { }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
   Int_t getMaxVal( const RooArgSet& vars) const override;
-  Double_t maxVal( Int_t code) const override;
+  double maxVal( Int_t code) const override;
 
 protected: // allow RooSpHarmonic access...
   RooRealProxy _ctheta;
   int _l1,_m1;
   int _l2,_m2;
 
-  Double_t evaluate() const override;
+  double evaluate() const override;
   RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const override;
 
   ClassDefOverride(RooLegendre,1) // Legendre polynomial

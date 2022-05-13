@@ -47,7 +47,7 @@ public:
 
   ~RooXYChi2Var() override;
 
-  Double_t defaultErrorLevel() const override {
+  double defaultErrorLevel() const override {
     // The default error level for MINUIT error analysis for a chi^2 is 1.0
     return 1.0 ;
   }
@@ -65,7 +65,7 @@ protected:
 
   RooArgSet requiredExtraObservables() const override ;
 
-  Double_t fy() const ;
+  double fy() const ;
 
   bool _extended ; ///< Is the input function and extended p.d.f.
   bool _integrate ; ///< Is integration over the bin volume requested
@@ -76,9 +76,9 @@ protected:
 
   void initialize() ;
   void initIntegrator() ;
-  Double_t xErrorContribution(Double_t ydata) const ;
+  double xErrorContribution(double ydata) const ;
 
-  Double_t evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const override ;
+  double evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const override ;
 
   RooNumIntConfig   _intConfig ; ///< Numeric integrator configuration for integration of function over bin
   RooAbsReal*       _funcInt ; ///<! Function integral

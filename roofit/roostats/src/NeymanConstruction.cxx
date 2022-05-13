@@ -140,7 +140,7 @@ PointSetInterval* NeymanConstruction::GetInterval() const {
     fTestStatSampler->SetParametersForTestStat(*fPOI);
 
      // get the value of the test statistic for this data set
-    Double_t thisTestStatistic = fTestStatSampler->EvaluateTestStatistic(fData, *fPOI );
+    double thisTestStatistic = fTestStatSampler->EvaluateTestStatistic(fData, *fPOI );
     /*
     cout << "NC CHECK: " << i << endl;
     point->Print();
@@ -153,9 +153,9 @@ PointSetInterval* NeymanConstruction::GetInterval() const {
     // define the acceptance region in the data
 
     SamplingDistribution* samplingDist=0;
-    Double_t sigma;
-    Double_t upperEdgeOfAcceptance, upperEdgeMinusSigma, upperEdgePlusSigma;
-    Double_t lowerEdgeOfAcceptance, lowerEdgeMinusSigma, lowerEdgePlusSigma;
+    double sigma;
+    double upperEdgeOfAcceptance, upperEdgeMinusSigma, upperEdgePlusSigma;
+    double lowerEdgeOfAcceptance, lowerEdgeMinusSigma, lowerEdgePlusSigma;
     Int_t additionalMC=0;
 
     // the adaptive sampling algorithm wants at least one toy event to be outside
@@ -173,7 +173,7 @@ PointSetInterval* NeymanConstruction::GetInterval() const {
       totalMC = (Int_t) (2./fSize);
     }
     // use control
-    Double_t tmc = Double_t(totalMC)*fAdditionalNToysFactor;
+    double tmc = double(totalMC)*fAdditionalNToysFactor;
     totalMC = (Int_t) tmc;
 
     ToyMCSampler* toyMCSampler = dynamic_cast<ToyMCSampler*>(fTestStatSampler);

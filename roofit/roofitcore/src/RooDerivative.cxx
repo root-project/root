@@ -56,7 +56,7 @@ RooDerivative::RooDerivative() : _order(1), _eps(1e-7), _ftor(0), _rd(0)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooDerivative::RooDerivative(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, Int_t orderIn, Double_t epsIn) :
+RooDerivative::RooDerivative(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, Int_t orderIn, double epsIn) :
   RooAbsReal(name, title),
   _order(orderIn),
   _eps(epsIn),
@@ -73,7 +73,7 @@ RooDerivative::RooDerivative(const char* name, const char* title, RooAbsReal& fu
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooDerivative::RooDerivative(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, Int_t orderIn, Double_t epsIn) :
+RooDerivative::RooDerivative(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, Int_t orderIn, double epsIn) :
   RooAbsReal(name, title),
   _order(orderIn),
   _eps(epsIn),
@@ -121,7 +121,7 @@ RooDerivative::~RooDerivative()
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate value
 
-Double_t RooDerivative::evaluate() const
+double RooDerivative::evaluate() const
 {
   if (!_ftor) {
     _ftor = _func.arg().functor(_x.arg(),RooArgSet(),_nset)  ;

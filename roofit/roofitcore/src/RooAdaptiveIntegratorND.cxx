@@ -154,8 +154,8 @@ RooAdaptiveIntegratorND::~RooAdaptiveIntegratorND()
 bool RooAdaptiveIntegratorND::checkLimits() const
 {
   if (!_xmin) {
-    _xmin = new Double_t[_func->NDim()] ;
-    _xmax = new Double_t[_func->NDim()] ;
+    _xmin = new double[_func->NDim()] ;
+    _xmax = new double[_func->NDim()] ;
   }
 
   if (_useIntegrandLimits) {
@@ -174,7 +174,7 @@ bool RooAdaptiveIntegratorND::checkLimits() const
 /// ok, or otherwise false. Always returns false and does nothing
 /// if this object was constructed to always use our integrand's limits.
 
-bool RooAdaptiveIntegratorND::setLimits(Double_t *xmin, Double_t *xmax)
+bool RooAdaptiveIntegratorND::setLimits(double *xmin, double *xmax)
 {
   if(_useIntegrandLimits) {
     oocoutE(nullptr,Integration) << "RooAdaptiveIntegratorND::setLimits: cannot override integrand's limits" << endl;
@@ -194,9 +194,9 @@ bool RooAdaptiveIntegratorND::setLimits(Double_t *xmin, Double_t *xmax)
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate integral at given function binding parameter values
 
-Double_t RooAdaptiveIntegratorND::integral(const Double_t* /*yvec*/)
+double RooAdaptiveIntegratorND::integral(const double* /*yvec*/)
 {
-  Double_t ret = _integrator->Integral(_xmin,_xmax) ;
+  double ret = _integrator->Integral(_xmin,_xmax) ;
   if (_integrator->Status()==1) {
     _nError++ ;
     if (_nError<=_nWarn) {

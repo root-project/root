@@ -96,7 +96,7 @@ RooProdPdf::RooProdPdf() :
 ////////////////////////////////////////////////////////////////////////////////
 /// Dummy constructor
 
-RooProdPdf::RooProdPdf(const char *name, const char *title, Double_t cutOff) :
+RooProdPdf::RooProdPdf(const char *name, const char *title, double cutOff) :
   RooAbsPdf(name,title),
   _cacheMgr(this,10),
   _genCode(10),
@@ -131,7 +131,7 @@ RooProdPdf::RooProdPdf(const char *name, const char *title, Double_t cutOff) :
 ///
 
 RooProdPdf::RooProdPdf(const char *name, const char *title,
-             RooAbsPdf& pdf1, RooAbsPdf& pdf2, Double_t cutOff) :
+             RooAbsPdf& pdf1, RooAbsPdf& pdf2, double cutOff) :
   RooAbsPdf(name,title),
   _cacheMgr(this,10),
   _genCode(10),
@@ -184,7 +184,7 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
 /// If a cutoff is specified, the PDFs most likely to be small should
 /// be put first in the product. The default cutOff value is zero.
 
-RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& inPdfList, Double_t cutOff) :
+RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& inPdfList, double cutOff) :
   RooAbsPdf(name,title),
   _cacheMgr(this,10),
   _genCode(10),
@@ -446,7 +446,7 @@ RooProdPdf::CacheElem* RooProdPdf::getCacheElem(RooArgSet const* nset) const {
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate current value of object
 
-Double_t RooProdPdf::evaluate() const
+double RooProdPdf::evaluate() const
 {
   return calculate(*getCacheElem(_normSet)) ;
 }
@@ -457,7 +457,7 @@ Double_t RooProdPdf::evaluate() const
 /// Calculate running product of pdfs terms, using the supplied
 /// normalization set in 'normSetList' for each component
 
-Double_t RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, bool /*verbose*/) const
+double RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, bool /*verbose*/) const
 {
   if (cache._isRearranged) {
     if (dologD(Eval)) {
@@ -471,13 +471,13 @@ Double_t RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, bool /*verbos
     return cache._rearrangedNum->getVal() / cache._rearrangedDen->getVal();
   } else {
 
-    Double_t value = 1.0;
+    double value = 1.0;
     assert(cache._normList.size() == cache._partList.size());
     for (std::size_t i = 0; i < cache._partList.size(); ++i) {
       const auto& partInt = static_cast<const RooAbsReal&>(cache._partList[i]);
       const auto normSet = cache._normList[i].get();
 
-      const Double_t piVal = partInt.getVal(normSet->getSize() > 0 ? normSet : nullptr);
+      const double piVal = partInt.getVal(normSet->getSize() > 0 ? normSet : nullptr);
       value *= piVal ;
       if (value <= _cutOff) break;
     }
@@ -1736,7 +1736,7 @@ Int_t RooProdPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
 ////////////////////////////////////////////////////////////////////////////////
 /// Return analytical integral defined by given scenario code
 
-Double_t RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const
+double RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const
 {
   // No integration scenario
   if (code==0) {
@@ -1762,7 +1762,7 @@ Double_t RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, 
     cache = (CacheElem*) _cacheMgr.getObj(&nset,&iset,&code2,rangeName) ;
   }
 
-  Double_t val = calculate(*cache,true) ;
+  double val = calculate(*cache,true) ;
 //   cout << "RPP::aIWN(" << GetName() << ") ,code = " << code << ", value = " << val << endl ;
 
   return val ;
@@ -1794,7 +1794,7 @@ RooAbsPdf::ExtendMode RooProdPdf::extendMode() const
 /// Return the expected number of events associated with the extendable input PDF
 /// in the product. If there is no extendable term, abort.
 
-Double_t RooProdPdf::expectedEvents(const RooArgSet* nset) const
+double RooProdPdf::expectedEvents(const RooArgSet* nset) const
 {
   if (_extendedIndex<0) {
     coutF(Generation) << "Requesting expected number of events from a RooProdPdf that does not contain an extended p.d.f" << endl ;
@@ -2118,12 +2118,12 @@ void RooProdPdf::fixRefRange(const char* rangeName)
 ////////////////////////////////////////////////////////////////////////////////
 /// Forward the plot sampling hint from the p.d.f. that defines the observable obs
 
-std::list<Double_t>* RooProdPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
+std::list<double>* RooProdPdf::plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
   RooAbsPdf* pdf ;
   RooFIter pdfIter = _pdfList.fwdIterator();
   while((pdf=(RooAbsPdf*)pdfIter.next())) {
-    list<Double_t>* hint = pdf->plotSamplingHint(obs,xlo,xhi) ;
+    list<double>* hint = pdf->plotSamplingHint(obs,xlo,xhi) ;
     if (hint) {
       return hint ;
     }
@@ -2158,12 +2158,12 @@ bool RooProdPdf::isBinnedDistribution(const RooArgSet& obs) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Forward the plot sampling hint from the p.d.f. that defines the observable obs
 
-std::list<Double_t>* RooProdPdf::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
+std::list<double>* RooProdPdf::binBoundaries(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
   RooAbsPdf* pdf ;
   RooFIter pdfIter = _pdfList.fwdIterator();
   while((pdf=(RooAbsPdf*)pdfIter.next())) {
-    list<Double_t>* hint = pdf->binBoundaries(obs,xlo,xhi) ;
+    list<double>* hint = pdf->binBoundaries(obs,xlo,xhi) ;
     if (hint) {
       return hint ;
     }

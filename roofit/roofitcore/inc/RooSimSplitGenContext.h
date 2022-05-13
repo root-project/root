@@ -34,7 +34,7 @@ public:
 
   void printMultiline(std::ostream &os, Int_t content, bool verbose=false, TString indent="") const override ;
 
-  RooDataSet *generate(Double_t nEvents= 0, bool skipInit=false, bool extendedMode=false) override;
+  RooDataSet *generate(double nEvents= 0, bool skipInit=false, bool extendedMode=false) override;
 
   void setExpectedData(bool) override ;
 
@@ -54,7 +54,7 @@ protected:
   std::vector<int>               _gcIndex ; ///< Index value corresponding to component
   TString _idxCatName ;                     ///< Name of index category
   Int_t _numPdf ;                           ///< Number of generated PDFs
-  Double_t* _fracThresh ;                   ///< fraction thresholds
+  double* _fracThresh ;                   ///< fraction thresholds
 
   RooArgSet _allVarsPdf ; ///< All pdf variables
   TIterator* _proxyIter ; ///< Iterator over pdf proxies

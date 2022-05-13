@@ -37,7 +37,7 @@ protected:
   RooListProxy _set1 ;            ///< Set of input fractions
   mutable TIterator* _setIter1 ;  ///<! Iterator over set of input fractions
 
-  Double_t evaluate() const override;
+  double evaluate() const override;
 
   ClassDefOverride(RooFracRemainder,1) // Utility function calculating remainder fraction, i.e. 1-sum_i(a_i)
 };

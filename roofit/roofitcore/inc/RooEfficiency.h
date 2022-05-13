@@ -36,12 +36,12 @@ public:
   ~RooEfficiency() override;
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
 protected:
 
   // Function evaluation
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
   RooCategoryProxy _cat ; ///< Accept/reject categort
   RooRealProxy _effFunc ; ///< Efficiency modeling function
   TString _sigCatName ;   ///< Name of accept state of accept/reject category

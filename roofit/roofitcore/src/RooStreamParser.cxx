@@ -408,10 +408,10 @@ bool RooStreamParser::expectToken(const TString& expected, bool zapOnError)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Read the next token and convert it to a Double_t. Returns true
+/// Read the next token and convert it to a double. Returns true
 /// if an error occurred in reading or conversion
 
-bool RooStreamParser::readDouble(Double_t& value, bool /*zapOnError*/)
+bool RooStreamParser::readDouble(double& value, bool /*zapOnError*/)
 {
   TString token(readToken()) ;
   if (token.IsNull()) return true ;
@@ -424,7 +424,7 @@ bool RooStreamParser::readDouble(Double_t& value, bool /*zapOnError*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert given string to a double. Return true if the conversion fails.
 
-bool RooStreamParser::convertToDouble(const TString& token, Double_t& value)
+bool RooStreamParser::convertToDouble(const TString& token, double& value)
 {
   char* endptr = 0;
   const char* data=token.Data() ;

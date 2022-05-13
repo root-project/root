@@ -52,7 +52,7 @@ RooRangeBinning::RooRangeBinning(const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct binning with range [xmin,xmax] with no binning substructure
 
-RooRangeBinning::RooRangeBinning(Double_t xmin, Double_t xmax, const char* name) :
+RooRangeBinning::RooRangeBinning(double xmin, double xmax, const char* name) :
   RooAbsBinning(name)
 {
   _range[0] = xmin ;
@@ -85,7 +85,7 @@ RooRangeBinning::~RooRangeBinning()
 ////////////////////////////////////////////////////////////////////////////////
 /// Change limits of the binning to [xlo,xhi]
 
-void RooRangeBinning::setRange(Double_t xlo, Double_t xhi)
+void RooRangeBinning::setRange(double xlo, double xhi)
 {
   if (xlo>xhi) {
     oocoutE(nullptr,InputArguments) << "RooRangeBinning::setRange: ERROR low bound > high bound" << endl ;

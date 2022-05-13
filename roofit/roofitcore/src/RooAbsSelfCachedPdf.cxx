@@ -86,7 +86,7 @@ void RooAbsSelfCachedPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) 
   // Iterator over all bins of RooDataHist and fill weights
   for (Int_t i=0 ; i<cacheHist.numEntries() ; i++) {
     const RooArgSet* obs = cacheHist.get(i) ;
-    Double_t wgt = clone2->getVal(obs) ;
+    double wgt = clone2->getVal(obs) ;
     cacheHist.set(i, wgt, 0.);
   }
 

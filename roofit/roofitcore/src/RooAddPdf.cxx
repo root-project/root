@@ -916,7 +916,7 @@ Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars
 ////////////////////////////////////////////////////////////////////////////////
 /// Return analytical integral defined by given scenario code
 
-Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const
+double RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const
 {
   // WVE needs adaptation to handle new rangeName feature
   if (code==0) {
@@ -973,7 +973,7 @@ Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, c
 /// or the sum of the components extended terms, multiplied with the fraction that
 /// is in the current range w.r.t the reference range
 
-Double_t RooAddPdf::expectedEvents(const RooArgSet* nset) const
+double RooAddPdf::expectedEvents(const RooArgSet* nset) const
 {
   double expectedTotal{0.0};
 
@@ -1077,16 +1077,16 @@ RooArgList RooAddPdf::CacheElem::containedArgs(Action)
 ////////////////////////////////////////////////////////////////////////////////
 /// Loop over components for plot sampling hints and merge them if there are multiple
 
-std::list<Double_t>* RooAddPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
+std::list<double>* RooAddPdf::plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
-  std::unique_ptr<std::list<Double_t>> sumHint = nullptr ;
+  std::unique_ptr<std::list<double>> sumHint = nullptr ;
   bool needClean = false;
 
   // Loop over components pdf
   for (const auto arg : _pdfList) {
     auto pdf = static_cast<const RooAbsPdf*>(arg);
 
-    std::unique_ptr<std::list<Double_t>> pdfHint{pdf->plotSamplingHint(obs,xlo,xhi)} ;
+    std::unique_ptr<std::list<double>> pdfHint{pdf->plotSamplingHint(obs,xlo,xhi)} ;
 
     // Process hint
     if (pdfHint) {
@@ -1097,7 +1097,7 @@ std::list<Double_t>* RooAddPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t
 
       } else {
 
-   auto newSumHint = std::make_unique<std::list<Double_t>>(sumHint->size()+pdfHint->size());
+   auto newSumHint = std::make_unique<std::list<double>>(sumHint->size()+pdfHint->size());
 
    // Merge hints into temporary array
    merge(pdfHint->begin(),pdfHint->end(),sumHint->begin(),sumHint->end(),newSumHint->begin()) ;
@@ -1120,15 +1120,15 @@ std::list<Double_t>* RooAddPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t
 ////////////////////////////////////////////////////////////////////////////////
 /// Loop over components for plot sampling hints and merge them if there are multiple
 
-std::list<Double_t>* RooAddPdf::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
+std::list<double>* RooAddPdf::binBoundaries(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
-  std::unique_ptr<list<Double_t>> sumBinB = nullptr ;
+  std::unique_ptr<list<double>> sumBinB = nullptr ;
   bool needClean = false;
 
   // Loop over components pdf
   for (auto arg : _pdfList) {
     auto pdf = static_cast<const RooAbsPdf *>(arg);
-    std::unique_ptr<list<Double_t>> pdfBinB{pdf->binBoundaries(obs,xlo,xhi)};
+    std::unique_ptr<list<double>> pdfBinB{pdf->binBoundaries(obs,xlo,xhi)};
 
     // Process hint
     if (pdfBinB) {
@@ -1139,7 +1139,7 @@ std::list<Double_t>* RooAddPdf::binBoundaries(RooAbsRealLValue& obs, Double_t xl
 
       } else {
 
-   auto newSumBinB = std::make_unique<list<Double_t>>(sumBinB->size()+pdfBinB->size()) ;
+   auto newSumBinB = std::make_unique<list<double>>(sumBinB->size()+pdfBinB->size()) ;
 
    // Merge hints into temporary array
    merge(pdfBinB->begin(),pdfBinB->end(),sumBinB->begin(),sumBinB->end(),newSumBinB->begin()) ;

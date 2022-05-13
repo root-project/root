@@ -73,7 +73,7 @@ struct  EstimateSummary : public TObject {
 
   bool IncludeStatError; // Flag to implement Statistical errors for this sample
   ConstraintType StatConstraintType;  // The type of constraint binwise stat errors
-  Double_t RelErrorThreshold; // The minimum relative uncertainty for a bin to use stat errors
+  double RelErrorThreshold; // The minimum relative uncertainty for a bin to use stat errors
   TH1* relStatError; // An (optional) externally provided shape for this error
 
   //  bool doShapeFactor; // A flag to include a ShapeFactor ParamatarizedHistogram

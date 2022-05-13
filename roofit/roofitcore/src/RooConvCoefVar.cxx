@@ -66,7 +66,7 @@ RooConvCoefVar::RooConvCoefVar(const RooConvCoefVar& other, const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Return value of chosen coefficient
 
-Double_t RooConvCoefVar::getValV(const RooArgSet*) const
+double RooConvCoefVar::getValV(const RooArgSet*) const
 {
   return evaluate() ;
 }
@@ -76,7 +76,7 @@ Double_t RooConvCoefVar::getValV(const RooArgSet*) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return value of chosen coefficient
 
-Double_t RooConvCoefVar::evaluate() const
+double RooConvCoefVar::evaluate() const
 {
   return ((RooAbsAnaConvPdf&)_convPdf.arg()).coefficient(_coefIdx) ;
 }
@@ -97,7 +97,7 @@ Int_t RooConvCoefVar::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analV
 ////////////////////////////////////////////////////////////////////////////////
 /// Return analytical integral of chosen coefficient
 
-Double_t RooConvCoefVar::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooConvCoefVar::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   return ((RooAbsAnaConvPdf&)_convPdf.arg()).coefAnalyticalIntegral(_coefIdx,code,rangeName) ;
 }

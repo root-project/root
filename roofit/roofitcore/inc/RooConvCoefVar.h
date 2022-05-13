@@ -38,11 +38,11 @@ public:
   ~RooConvCoefVar() override {
   } ;
 
-  Double_t getValV(const RooArgSet* nset=0) const override ;
+  double getValV(const RooArgSet* nset=0) const override ;
 
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
 protected:
 

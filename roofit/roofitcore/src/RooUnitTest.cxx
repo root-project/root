@@ -28,7 +28,7 @@ Object          | function
 ----------------|------------
    RooPlot      | regPlot()
    RooFitResult | regResult()
-   Double_t     | regValue()
+   double     | regValue()
    RooTable     | regTable()
    TH1/2/3      | regTH()
    RooWorkspace | regWS()
@@ -96,7 +96,7 @@ void RooUnitTest::regResult(RooFitResult* r, const char* refName)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooUnitTest::regValue(Double_t d, const char* refName)
+void RooUnitTest::regValue(double d, const char* refName)
 {
   if (_refFile) {
     string refNameStr(refName) ;
@@ -170,7 +170,7 @@ bool RooUnitTest::areTHidentical(TH1* htest, TH1* href)
   // Use Kolmogorov distance as metric rather than probability
   // because we expect histograms to be identical rather
   // than drawn from the same parent distribution
-  Double_t kmax = htest->KolmogorovTest(href,"M") ;
+  double kmax = htest->KolmogorovTest(href,"M") ;
 
   if (kmax>htol()) {
 
@@ -373,7 +373,7 @@ bool RooUnitTest::runCompTests()
     ++iter2 ;
   }
 
-  list<pair<Double_t, string> >::iterator iter3 = _regValues.begin() ;
+  list<pair<double, string> >::iterator iter3 = _regValues.begin() ;
   while (iter3!=_regValues.end()) {
 
     if (!_write) {
@@ -390,10 +390,10 @@ bool RooUnitTest::runCompTests()
       }
 
       if (_verb > 0) {
-   cout << "comparing value " << iter3->first << " to benchmark " << iter3->second << " = " << (Double_t)(*ref) << endl ;
+   cout << "comparing value " << iter3->first << " to benchmark " << iter3->second << " = " << (double)(*ref) << endl ;
       }
 
-      if (fabs(iter3->first - (Double_t)(*ref))>vtol() ) {
+      if (fabs(iter3->first - (double)(*ref))>vtol() ) {
         if(_verb >= 0) cout << "RooUnitTest ERROR: comparison of value " << iter3->first <<   " fails comparison with reference " << ref->GetName() << endl ;
         ret = false ;
       }
@@ -403,7 +403,7 @@ bool RooUnitTest::runCompTests()
 
       // Writing mode
 
-      std::cout <<"RooUnitTest: Writing reference Double_t " << iter3->first << " as benchmark " << iter3->second << endl ;
+      std::cout <<"RooUnitTest: Writing reference double " << iter3->first << " as benchmark " << iter3->second << endl ;
       _refFile->cd() ;
       RooDouble* rd = new RooDouble(iter3->first) ;
       rd->Write(iter3->second.c_str()) ;

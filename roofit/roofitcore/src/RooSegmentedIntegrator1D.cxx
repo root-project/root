@@ -85,7 +85,7 @@ RooSegmentedIntegrator1D::RooSegmentedIntegrator1D(const RooAbsFunc& function, c
 /// Constructor integral on given function binding, with given configuration and
 /// explicit definition of integration range
 
-RooSegmentedIntegrator1D::RooSegmentedIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
+RooSegmentedIntegrator1D::RooSegmentedIntegrator1D(const RooAbsFunc& function, double xmin, double xmax,
                      const RooNumIntConfig& config) :
   RooAbsIntegrator(function), _config(config)
 {
@@ -126,7 +126,7 @@ bool RooSegmentedIntegrator1D::initialize()
 
   Int_t i ;
 
-  Double_t segSize = (_xmax - _xmin) / _nseg ;
+  double segSize = (_xmax - _xmin) / _nseg ;
 
   // Adjust integrator configurations for reduced intervals
   _config.setEpsRel(_config.epsRel()/sqrt(1.*_nseg)) ;
@@ -161,7 +161,7 @@ RooSegmentedIntegrator1D::~RooSegmentedIntegrator1D()
 /// ok, or otherwise false. Always returns false and does nothing
 /// if this object was constructed to always use our integrand's limits.
 
-bool RooSegmentedIntegrator1D::setLimits(Double_t* xmin, Double_t* xmax)
+bool RooSegmentedIntegrator1D::setLimits(double* xmin, double* xmax)
 {
   if(_useIntegrandLimits) {
     oocoutE(nullptr,InputArguments) << "RooSegmentedIntegrator1D::setLimits: cannot override integrand's limits" << endl;
@@ -194,7 +194,7 @@ bool RooSegmentedIntegrator1D::checkLimits() const
 
   // Adjust component integrators, if already created
   if (_array && ret) {
-    Double_t segSize = (_xmax - _xmin) / _nseg ;
+    double segSize = (_xmax - _xmin) / _nseg ;
     Int_t i ;
     for (i=0 ; i<_nseg ; i++) {
       _array[i]->setLimits(_xmin+i*segSize,_xmin+(i+1)*segSize) ;
@@ -210,12 +210,12 @@ bool RooSegmentedIntegrator1D::checkLimits() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate integral at given function binding parameter values
 
-Double_t RooSegmentedIntegrator1D::integral(const Double_t *yvec)
+double RooSegmentedIntegrator1D::integral(const double *yvec)
 {
   assert(isValid());
 
   Int_t i ;
-  Double_t result(0) ;
+  double result(0) ;
   for (i=0 ; i<_nseg ; i++) {
     result += _array[i]->integral(yvec) ;
   }

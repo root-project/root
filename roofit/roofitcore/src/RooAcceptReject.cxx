@@ -173,7 +173,7 @@ RooAcceptReject::~RooAcceptReject()
 /// will be overwritten by a subsequent call. The input parameter 'remaining' should
 /// contain your best guess at the total number of subsequent events you will request.
 
-const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining, Double_t& resampleRatio)
+const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining, double& resampleRatio)
 {
   // are we actually generating anything? (the cache always contains at least our function value)
   const RooArgSet *event= _cache->get();
@@ -197,7 +197,7 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining, Double_t& resa
     }
 
     event= 0;
-    Double_t oldMax2(_maxFuncVal);
+    double oldMax2(_maxFuncVal);
     while(0 == event) {
       // Use any cached events first
       if (_maxFuncVal>oldMax2) {
@@ -218,10 +218,10 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining, Double_t& resa
    return 0;
       }
 
-      Double_t eff= _funcSum/(_totalEvents*_maxFuncVal);
+      double eff= _funcSum/(_totalEvents*_maxFuncVal);
       Long64_t extra= 1 + (Long64_t)(1.05*remaining/eff);
       cxcoutD(Generation) << "RooAcceptReject::generateEvent: adding " << extra << " events to the cache, eff = " << eff << endl;
-      Double_t oldMax(_maxFuncVal);
+      double oldMax(_maxFuncVal);
       while(extra--) {
    addEventToCache();
    if((_maxFuncVal > oldMax)) {
@@ -269,7 +269,7 @@ const RooArgSet *RooAcceptReject::nextAcceptedEvent()
   while((event= _cache->get(_eventsUsed))) {
     _eventsUsed++ ;
     // accept this cached event?
-    Double_t r= RooRandom::uniform();
+    double r= RooRandom::uniform();
     if(r*_maxFuncVal > _funcValPtr->getVal()) {
       //cout << " event number " << _eventsUsed << " has been rejected" << endl ;
       continue;
@@ -305,7 +305,7 @@ void RooAcceptReject::addEventToCache()
   while((real= (RooRealVar*)_nextRealVar->Next())) real->randomize();
 
   // calculate and store our function value at this new point
-  Double_t val= _funcClone->getVal();
+  double val= _funcClone->getVal();
   _funcValPtr->setVal(val);
 
   // Update the estimated integral and maximum value. Increase our
@@ -324,7 +324,7 @@ void RooAcceptReject::addEventToCache()
 
 }
 
-Double_t RooAcceptReject::getFuncMax()
+double RooAcceptReject::getFuncMax()
 {
   // Empirically determine maximum value of function by taking a large number
   // of samples. The actual number depends on the number of dimensions in which

@@ -95,8 +95,8 @@ TEST(RooAbsPdf, ConditionalFitBatchMode)
     auto d = std::make_unique<RooDataSet>("d", "d", RooArgSet(x, y));
 
     for (int i = 0; i < 10000; i++) {
-      Double_t tmpy = gRandom->Gaus(3, 2);
-      Double_t tmpx = gRandom->Poisson(tmpy);
+      double tmpy = gRandom->Gaus(3, 2);
+      double tmpx = gRandom->Poisson(tmpy);
       if (fabs(tmpy) > 1 && fabs(tmpy) < 5 && fabs(tmpx) < 10) {
         x = tmpx;
         y = tmpy;

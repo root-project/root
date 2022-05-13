@@ -59,19 +59,19 @@ namespace RooStats {
       double GetTestStat_data(){ return fTestStat_data;}
 
       // Return p-value for null hypothesis
-      Double_t NullPValue() const override;
+      double NullPValue() const override;
 
       // Return p-value for alternate hypothesis
-      Double_t AlternatePValue() const override;
+      double AlternatePValue() const override;
 
       /// The error on the "confidence level" of the null hypothesis
-      Double_t CLbError() const;
+      double CLbError() const;
 
       /// The error on the "confidence level" of the alternative hypothesis
-      Double_t CLsplusbError() const;
+      double CLsplusbError() const;
 
       /// The error on the ratio \f$CL_{s+b}/CL_{b}\f$
-      Double_t CLsError() const;
+      double CLsError() const;
 
    private:
 

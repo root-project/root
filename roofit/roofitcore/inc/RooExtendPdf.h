@@ -29,7 +29,7 @@ public:
   TObject* clone(const char* newname) const override { return new RooExtendPdf(*this,newname) ; }
   ~RooExtendPdf() override ;
 
-  Double_t evaluate() const override { return _pdf ; }
+  double evaluate() const override { return _pdf ; }
 
   bool forceAnalyticalInt(const RooAbsArg& /*dep*/) const override { return true ; }
   /// Forward determination of analytical integration capabilities to input p.d.f
@@ -37,13 +37,13 @@ public:
     return _pdf->getAnalyticalIntegralWN(allVars, analVars, normSet, rangeName) ;
   }
   /// Forward calculation of analytical integrals to input p.d.f
-  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override {
+  double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override {
     return _pdf->analyticalIntegralWN(code, normSet, rangeName) ;
   }
 
   bool selfNormalized() const override { return true ; }
   ExtendMode extendMode() const override { return CanBeExtended ; }
-  Double_t expectedEvents(const RooArgSet* nset) const override ;
+  double expectedEvents(const RooArgSet* nset) const override ;
 
 protected:
 

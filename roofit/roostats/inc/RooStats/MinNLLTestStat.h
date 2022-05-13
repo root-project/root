@@ -84,7 +84,7 @@ Internally it operates by delegating to a MinNLLTestStat object.
      void SetLOffset(bool flag=true) { fProflts->SetLOffset(flag) ; }
 
      // Main interface to evaluate the test statistic on a dataset
-     Double_t Evaluate(RooAbsData& data, RooArgSet& paramsOfInterest) override {
+     double Evaluate(RooAbsData& data, RooArgSet& paramsOfInterest) override {
        return fProflts->EvaluateProfileLikelihood(1, data, paramsOfInterest); //find unconditional NLL minimum
      }
 
