@@ -2803,9 +2803,9 @@ void TFitEditor::DoSliderXMoved()
 
 void TFitEditor::DrawSelection(bool restore)
 {
-   #ifndef R__HAS_COCOA
+#ifndef R__HAS_COCOA
    static Int_t  px1old, py1old, px2old, py2old; // to remember the square drawn.
-   #endif
+#endif
 
    if ( !fParentPad ) return;
 
