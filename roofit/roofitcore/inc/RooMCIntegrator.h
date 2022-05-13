@@ -35,13 +35,13 @@ public:
   ~RooMCIntegrator() override;
 
   bool checkLimits() const override;
-  Double_t integral(const Double_t* yvec=0) override;
+  double integral(const double* yvec=0) override;
 
   enum Stage { AllStages, ReuseGrid, RefineGrid };
-  Double_t vegas(Stage stage, UInt_t calls, UInt_t iterations, Double_t *absError= 0);
+  double vegas(Stage stage, UInt_t calls, UInt_t iterations, double *absError= 0);
 
-  Double_t getAlpha() const { return _alpha;   }
-  void setAlpha(Double_t alpha) { _alpha= alpha; }
+  double getAlpha() const { return _alpha;   }
+  void setAlpha(double alpha) { _alpha= alpha; }
 
   GeneratorType getGenType() const { return _genType; }
   void setGenType(GeneratorType type) { _genType= type; }
@@ -62,7 +62,7 @@ protected:
 
   // control variables
   bool _verbose;          ///< Verbosity control
-  Double_t _alpha;          ///< Grid stiffness parameter
+  double _alpha;          ///< Grid stiffness parameter
   Int_t _mode;              ///< Sampling mode
   GeneratorType _genType;   ///< Generator type
   Int_t _nRefineIter ;      ///< Number of refinement iterations
@@ -71,7 +71,7 @@ protected:
 
   TStopwatch _timer;        ///< Timer
 
-  Double_t _jac,_wtd_int_sum,_sum_wgts,_chi_sum,_chisq,_result,_sigma; ///< Scratch variables preserved between calls to vegas1/2/2
+  double _jac,_wtd_int_sum,_sum_wgts,_chi_sum,_chisq,_result,_sigma; ///< Scratch variables preserved between calls to vegas1/2/2
   UInt_t _it_start,_it_num,_samples,_calls_per_box;                    ///< Scratch variables preserved between calls to vegas1/2/2
 
   ClassDefOverride(RooMCIntegrator,0) // VEGAS based multi-dimensional numerical integration engine

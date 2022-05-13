@@ -59,10 +59,10 @@ RooBifurGauss::RooBifurGauss(const RooBifurGauss& other, const char* name) :
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBifurGauss::evaluate() const {
-  Double_t arg = x - mean;
+double RooBifurGauss::evaluate() const {
+  double arg = x - mean;
 
-  Double_t coef(0.0);
+  double coef(0.0);
 
   if (arg < 0.0){
     if (TMath::Abs(sigmaL) > 1e-30) {
@@ -95,15 +95,15 @@ Int_t RooBifurGauss::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBifurGauss::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooBifurGauss::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   switch(code) {
   case 1:
     {
-      static Double_t root2 = sqrt(2.) ;
-      static Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
+      static double root2 = sqrt(2.) ;
+      static double rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
 
-//       Double_t coefL(0.0), coefR(0.0);
+//       double coefL(0.0), coefR(0.0);
 //       if (TMath::Abs(sigmaL) > 1e-30) {
 //    coefL = -0.5/(sigmaL*sigmaL);
 //       }
@@ -112,10 +112,10 @@ Double_t RooBifurGauss::analyticalIntegral(Int_t code, const char* rangeName) co
 //    coefR = -0.5/(sigmaR*sigmaR);
 //       }
 
-      Double_t xscaleL = root2*sigmaL;
-      Double_t xscaleR = root2*sigmaR;
+      double xscaleL = root2*sigmaL;
+      double xscaleR = root2*sigmaR;
 
-      Double_t integral = 0.0;
+      double integral = 0.0;
       if(x.max(rangeName) < mean)
       {
    integral = sigmaL * ( RooMath::erf((x.max(rangeName) - mean)/xscaleL) - RooMath::erf((x.min(rangeName) - mean)/xscaleL) );

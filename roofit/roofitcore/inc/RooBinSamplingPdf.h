@@ -73,7 +73,7 @@ public:
   }
 
   ExtendMode extendMode() const override { return _pdf->extendMode(); }
-  Double_t expectedEvents(const RooArgSet* nset) const override { return _pdf->expectedEvents(nset); }
+  double expectedEvents(const RooArgSet* nset) const override { return _pdf->expectedEvents(nset); }
 
   /// Forwards to the PDF's implementation.
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet& generateVars, bool staticInitOK = true) const override {
@@ -89,13 +89,13 @@ public:
 
   // Hints for optimized brute-force sampling
   Int_t getMaxVal(const RooArgSet& vars) const override { return _pdf->getMaxVal(vars); }
-  Double_t maxVal(Int_t code) const override { return _pdf->maxVal(code); }
+  double maxVal(Int_t code) const override { return _pdf->maxVal(code); }
   Int_t minTrialSamples(const RooArgSet& arGenObs) const override { return _pdf->minTrialSamples(arGenObs); }
 
   // Plotting and binning hints
   /// Returns true, since this PDF is meant to be binned.
   bool isBinnedDistribution(const RooArgSet& /*obs*/) const override { return true; }
-  std::list<double>* binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override;
+  std::list<double>* binBoundaries(RooAbsRealLValue& obs, double xlo, double xhi) const override;
   std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override;
 
   std::unique_ptr<ROOT::Math::IntegratorOneDim>& integrator() const;

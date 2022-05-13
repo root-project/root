@@ -52,7 +52,7 @@ ClassImp(RooDLLSignificanceMCSModule);
 /// Constructor of module with parameter to be interpreted as nSignal and the value of the
 /// null hypothesis for nSignal (usually zero)
 
-RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const RooRealVar& param, Double_t nullHypoValue) :
+RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const RooRealVar& param, double nullHypoValue) :
   RooAbsMCStudyModule(Form("RooDLLSignificanceMCSModule_%s",param.GetName()),Form("RooDLLSignificanceMCSModule_%s",param.GetName())),
   _parName(param.GetName()),
   _data(0), _nll0h(0), _dll0h(0), _sig0h(0), _nullValue(nullHypoValue)
@@ -65,7 +65,7 @@ RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const RooRealVar& param
 /// Constructor of module with parameter name to be interpreted as nSignal and the value of the
 /// null hypothesis for nSignal (usually zero)
 
-RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const char* parName, Double_t nullHypoValue) :
+RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const char* parName, double nullHypoValue) :
   RooAbsMCStudyModule(Form("RooDLLSignificanceMCSModule_%s",parName),Form("RooDLLSignificanceMCSModule_%s",parName)),
   _parName(parName),
   _data(0), _nll0h(0), _dll0h(0), _sig0h(0), _nullValue(nullHypoValue)
@@ -179,8 +179,8 @@ bool RooDLLSignificanceMCSModule::processAfterFit(Int_t /*sampleNum*/)
 
   _nll0h->setVal(frnull->minNll()) ;
 
-  Double_t deltaLL = (frnull->minNll() - nllVar()->getVal()) ;
-  Double_t signif = deltaLL>0 ? sqrt(2*deltaLL) : -sqrt(-2*deltaLL) ;
+  double deltaLL = (frnull->minNll() - nllVar()->getVal()) ;
+  double signif = deltaLL>0 ? sqrt(2*deltaLL) : -sqrt(-2*deltaLL) ;
   _sig0h->setVal(signif) ;
   _dll0h->setVal(deltaLL) ;
 

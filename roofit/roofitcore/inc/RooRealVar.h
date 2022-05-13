@@ -42,45 +42,45 @@ public:
   // Constructors, assignment etc.
   RooRealVar() ;
   RooRealVar(const char *name, const char *title,
-        Double_t value, const char *unit= "") ;
-  RooRealVar(const char *name, const char *title, Double_t minValue,
-      Double_t maxValue, const char *unit= "");
-  RooRealVar(const char *name, const char *title, Double_t value,
-      Double_t minValue, Double_t maxValue, const char *unit= "") ;
+        double value, const char *unit= "") ;
+  RooRealVar(const char *name, const char *title, double minValue,
+      double maxValue, const char *unit= "");
+  RooRealVar(const char *name, const char *title, double value,
+      double minValue, double maxValue, const char *unit= "") ;
   RooRealVar(const RooRealVar& other, const char* name=0);
   RooRealVar& operator=(const RooRealVar& other);
   TObject* clone(const char* newname) const override { return new RooRealVar(*this,newname); }
   ~RooRealVar() override;
 
   // Parameter value and error accessors
-  Double_t getValV(const RooArgSet* nset=0) const override ;
+  double getValV(const RooArgSet* nset=0) const override ;
   RooSpan<const double> getValues(RooBatchCompute::RunContext& inputData, const RooArgSet* = nullptr) const final;
 
-  void setVal(Double_t value) override;
-  void setVal(Double_t value, const char* rangeName) override;
-  inline Double_t getError() const { return _error>=0?_error:0. ; }
+  void setVal(double value) override;
+  void setVal(double value, const char* rangeName) override;
+  inline double getError() const { return _error>=0?_error:0. ; }
   inline bool hasError(bool allowZero=true) const { return allowZero ? (_error>=0) : (_error>0) ; }
-  inline void setError(Double_t value) { _error= value ; }
+  inline void setError(double value) { _error= value ; }
   inline void removeError() { _error = -1 ; }
-  inline Double_t getAsymErrorLo() const { return _asymErrLo<=0?_asymErrLo:0. ; }
-  inline Double_t getAsymErrorHi() const { return _asymErrHi>=0?_asymErrHi:0. ; }
+  inline double getAsymErrorLo() const { return _asymErrLo<=0?_asymErrLo:0. ; }
+  inline double getAsymErrorHi() const { return _asymErrHi>=0?_asymErrHi:0. ; }
   inline bool hasAsymError(bool allowZero=true) const { return allowZero ? ((_asymErrHi>=0 && _asymErrLo<=0)) :  ((_asymErrHi>0 && _asymErrLo<0)) ; }
   inline void removeAsymError() { _asymErrLo = 1 ; _asymErrHi = -1 ; }
-  inline void setAsymError(Double_t lo, Double_t hi) { _asymErrLo = lo ; _asymErrHi = hi ; }
-  inline Double_t getErrorLo() const { return _asymErrLo<=0?_asymErrLo:-1*_error ; }
-  inline Double_t getErrorHi() const { return _asymErrHi>=0?_asymErrHi:_error ; }
+  inline void setAsymError(double lo, double hi) { _asymErrLo = lo ; _asymErrHi = hi ; }
+  inline double getErrorLo() const { return _asymErrLo<=0?_asymErrLo:-1*_error ; }
+  inline double getErrorHi() const { return _asymErrHi>=0?_asymErrHi:_error ; }
 
   RooErrorVar* errorVar() const ;
 
   // Set/get finite fit range limits
-  void setMin(const char* name, Double_t value) ;
-  void setMax(const char* name, Double_t value) ;
-  void setRange(const char* name, Double_t min, Double_t max) ;
+  void setMin(const char* name, double value) ;
+  void setMax(const char* name, double value) ;
+  void setRange(const char* name, double min, double max) ;
   void setRange(const char* name, RooAbsReal& min, RooAbsReal& max) ;
-  inline void setMin(Double_t value) { setMin(0,value) ; }
-  inline void setMax(Double_t value) { setMax(0,value) ; }
+  inline void setMin(double value) { setMin(0,value) ; }
+  inline void setMax(double value) { setMax(0,value) ; }
   /// Set the limits of the default range.
-  inline void setRange(Double_t min, Double_t max) { setRange(0,min,max) ; }
+  inline void setRange(double min, double max) { setRange(0,min,max) ; }
   /// Set parameterised limits of the default range. See setRange(const char*, RooAbsReal&, RooAbsReal&).
   inline void setRange(RooAbsReal& min, RooAbsReal& max) { setRange(0,min,max) ; }
 
@@ -141,20 +141,20 @@ public:
   static Int_t  _printSigDigits ;
 
   friend class RooAbsRealLValue ;
-  void setValFast(Double_t value) override { _value = value ; setValueDirty() ; }
+  void setValFast(double value) override { _value = value ; setValueDirty() ; }
 
 
-  Double_t evaluate() const override { return _value ; } // dummy because we overloaded getVal()
+  double evaluate() const override { return _value ; } // dummy because we overloaded getVal()
   void copyCache(const RooAbsArg* source, bool valueOnly=false, bool setValDirty=true) override ;
   void attachToTree(TTree& t, Int_t bufSize=32000) override ;
   void attachToVStore(RooVectorDataStore& vstore) override ;
   void fillTreeBranch(TTree& t) override ;
 
-  Double_t chopAt(Double_t what, Int_t where) const ;
+  double chopAt(double what, Int_t where) const ;
 
-  Double_t _error;      ///< Symmetric error associated with current value
-  Double_t _asymErrLo ; ///< Low side of asymmetric error associated with current value
-  Double_t _asymErrHi ; ///< High side of asymmetric error associated with current value
+  double _error;      ///< Symmetric error associated with current value
+  double _asymErrLo ; ///< Low side of asymmetric error associated with current value
+  double _asymErrHi ; ///< High side of asymmetric error associated with current value
   std::unique_ptr<RooAbsBinning> _binning;
   std::unordered_map<std::string,std::unique_ptr<RooAbsBinning>> _altNonSharedBinning ; ///<! Non-shareable alternative binnings
 

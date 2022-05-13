@@ -195,9 +195,9 @@ Int_t RooCompositeDataStore::fill()
 ////////////////////////////////////////////////////////////////////////////////
 /// Forward fill request to appropriate subset
 
-Double_t RooCompositeDataStore::sumEntries() const
+double RooCompositeDataStore::sumEntries() const
 {
-  Double_t sum(0) ;
+  double sum(0) ;
 
   for (auto const& item : _dataMap) {
     sum+= item.second->sumEntries() ;
@@ -235,7 +235,7 @@ const RooArgSet* RooCompositeDataStore::get(Int_t idx) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooCompositeDataStore::weight() const
+double RooCompositeDataStore::weight() const
 {
   if (!_curStore) get(0) ;
   // coverity[FORWARD_NULL]
@@ -245,7 +245,7 @@ Double_t RooCompositeDataStore::weight() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooCompositeDataStore::weightError(RooAbsData::ErrorType etype) const
+double RooCompositeDataStore::weightError(RooAbsData::ErrorType etype) const
 {
   if (!_curStore) get(0) ;
   // coverity[FORWARD_NULL]
@@ -257,7 +257,7 @@ Double_t RooCompositeDataStore::weightError(RooAbsData::ErrorType etype) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooCompositeDataStore::weightError(Double_t& lo, Double_t& hi, RooAbsData::ErrorType etype) const
+void RooCompositeDataStore::weightError(double& lo, double& hi, RooAbsData::ErrorType etype) const
 {
   if (!_curStore) get(0) ;
   // coverity[FORWARD_NULL]

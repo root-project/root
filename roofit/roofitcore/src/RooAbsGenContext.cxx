@@ -145,7 +145,7 @@ RooDataSet* RooAbsGenContext::createDataSet(const char* name, const char* title,
 /// method. A virtual initGenerator() method is also called just before the
 /// first call to generateEvent().
 
-RooDataSet *RooAbsGenContext::generate(Double_t nEvents, bool skipInit, bool extendedMode)
+RooDataSet *RooAbsGenContext::generate(double nEvents, bool skipInit, bool extendedMode)
 {
   if(!isValid()) {
     coutE(Generation) << ClassName() << "::" << GetName() << ": context is not valid" << endl;
@@ -366,7 +366,7 @@ void RooAbsGenContext::setProtoDataOrder(Int_t* lut)
 ////////////////////////////////////////////////////////////////////////////////
 /// Rescale existing output buffer with given ratio
 
-void RooAbsGenContext::resampleData(Double_t& ratio)
+void RooAbsGenContext::resampleData(double& ratio)
 {
 
   Int_t nOrig = _genData->numEntries() ;

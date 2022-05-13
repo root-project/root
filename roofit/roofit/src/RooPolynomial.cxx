@@ -121,7 +121,7 @@ RooPolynomial::~RooPolynomial()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooPolynomial::evaluate() const
+double RooPolynomial::evaluate() const
 {
   // Calculate and return value of polynomial
 
@@ -136,8 +136,8 @@ Double_t RooPolynomial::evaluate() const
        _wksp.push_back(c->getVal(nset));
     }
   }
-  const Double_t x = _x;
-  Double_t retVal = _wksp[sz - 1];
+  const double x = _x;
+  double retVal = _wksp[sz - 1];
   for (unsigned i = sz - 1; i--; ) retVal = _wksp[i] + x * retVal;
   return retVal * std::pow(x, lowestOrder) + (lowestOrder ? 1.0 : 0.0);
 }
@@ -168,11 +168,11 @@ Int_t RooPolynomial::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Do the analytical integral according to the code that was returned by getAnalyticalIntegral().
-Double_t RooPolynomial::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooPolynomial::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   R__ASSERT(code==1) ;
 
-  const Double_t xmin = _x.min(rangeName), xmax = _x.max(rangeName);
+  const double xmin = _x.min(rangeName), xmax = _x.max(rangeName);
   const int lowestOrder = _lowestOrder;
   const unsigned sz = _coefList.getSize();
   if (!sz) return xmax - xmin;
@@ -182,11 +182,11 @@ Double_t RooPolynomial::analyticalIntegral(Int_t code, const char* rangeName) co
     const RooArgSet* nset = _coefList.nset();
     unsigned i = 1 + lowestOrder;
     for (auto *c : static_range_cast<RooAbsReal *>(_coefList)) {
-      _wksp.push_back(c->getVal(nset) / Double_t(i));
+      _wksp.push_back(c->getVal(nset) / double(i));
       ++i;
     }
   }
-  Double_t min = _wksp[sz - 1], max = _wksp[sz - 1];
+  double min = _wksp[sz - 1], max = _wksp[sz - 1];
   for (unsigned i = sz - 1; i--; )
     min = _wksp[i] + xmin * min, max = _wksp[i] + xmax * max;
   return max * std::pow(xmax, 1 + lowestOrder) - min * std::pow(xmin, 1 + lowestOrder) +

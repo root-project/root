@@ -42,7 +42,7 @@ public:
     return &_nominal.arg();
   }
 
-  //  virtual Double_t defaultErrorLevel() const ;
+  //  virtual double defaultErrorLevel() const ;
 
   //  void printMetaArgs(std::ostream& os) const ;
 
@@ -55,7 +55,7 @@ public:
   bool setBinIntegrator(RooArgSet& allVars) ;
 
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet,const char* rangeName=0) const override ;
-  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
+  double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
 
   void setPositiveDefinite(bool flag=true){_positiveDefinite=flag;}
 
@@ -63,8 +63,8 @@ public:
   void setAllInterpCodes(int code);
   void printAllInterpCodes();
 
-  std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override ;
-  std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override ;
+  std::list<double>* binBoundaries(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
+  std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override ;
   bool isBinnedDistribution(const RooArgSet& obs) const override ;
 
 protected:
@@ -96,7 +96,7 @@ protected:
 
   std::vector<int> _interpCode;
 
-  Double_t evaluate() const override;
+  double evaluate() const override;
   void computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap&) const override;
 
   ClassDefOverride(PiecewiseInterpolation,4) // Sum of RooAbsReal objects

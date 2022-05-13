@@ -108,20 +108,20 @@ public:
 
    ~RooLagrangianMorphFunc() override;
 
-   std::list<Double_t> *
-   binBoundaries(RooAbsRealLValue & /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override;
-   std::list<Double_t> *
-   plotSamplingHint(RooAbsRealLValue & /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override;
+   std::list<double> *
+   binBoundaries(RooAbsRealLValue & /*obs*/, double /*xlo*/, double /*xhi*/) const override;
+   std::list<double> *
+   plotSamplingHint(RooAbsRealLValue & /*obs*/, double /*xlo*/, double /*xhi*/) const override;
    bool isBinnedDistribution(const RooArgSet &obs) const override;
-   Double_t evaluate() const override;
+   double evaluate() const override;
    TObject *clone(const char *newname) const override;
-   Double_t getValV(const RooArgSet *set = 0) const override;
+   double getValV(const RooArgSet *set = 0) const override;
 
    bool checkObservables(const RooArgSet *nset) const override;
    bool forceAnalyticalInt(const RooAbsArg &arg) const override;
    Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &numVars, const RooArgSet *normSet,
                                          const char *rangeName = 0) const override;
-   Double_t
+   double
    analyticalIntegralWN(Int_t code, const RooArgSet *normSet, const char *rangeName = 0) const override;
    void printMetaArgs(std::ostream &os) const override;
    RooAbsArg::CacheMode canNodeBeCached() const override;
@@ -242,9 +242,9 @@ public:
    std::unique_ptr<RooWrapperPdf> createPdf() const;
 
    RooAbsPdf::ExtendMode extendMode() const;
-   Double_t expectedEvents(const RooArgSet *nset) const;
-   Double_t expectedEvents(const RooArgSet &nset) const;
-   Double_t expectedEvents() const;
+   double expectedEvents(const RooArgSet *nset) const;
+   double expectedEvents(const RooArgSet &nset) const;
+   double expectedEvents() const;
    bool selfNormalized() const { return true; }
 
    void readParameters(TDirectory *f);

@@ -151,11 +151,11 @@ public:
   }
 
    // Utilities functions when used as configuration object
-   Double_t getRealValue(const char* name, Double_t defVal=0, bool verbose=false) const ;
+   double getRealValue(const char* name, double defVal=0, bool verbose=false) const ;
    const char* getCatLabel(const char* name, const char* defVal="", bool verbose=false) const ;
    Int_t getCatIndex(const char* name, Int_t defVal=0, bool verbose=false) const ;
    const char* getStringValue(const char* name, const char* defVal="", bool verbose=false) const ;
-   bool setRealValue(const char* name, Double_t newVal=0, bool verbose=false) ;
+   bool setRealValue(const char* name, double newVal=0, bool verbose=false) ;
    bool setCatLabel(const char* name, const char* newVal="", bool verbose=false) ;
    bool setCatIndex(const char* name, Int_t newVal=0, bool verbose=false) ;
    bool setStringValue(const char* name, const char* newVal="", bool verbose=false) ;

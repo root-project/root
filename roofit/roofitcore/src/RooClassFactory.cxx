@@ -514,7 +514,7 @@ bool RooClassFactory::makeClass(const char* baseName, const char* className, con
 
   if (hasAnaInt) {
     hf << "  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;" << endl
-       << "  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;" << endl
+       << "  double analyticalIntegral(Int_t code, const char* rangeName=0) const ;" << endl
        << "" << endl ;
   }
 
@@ -538,7 +538,7 @@ bool RooClassFactory::makeClass(const char* baseName, const char* className, con
   }
 
   hf << "  " << endl
-     << "  Double_t evaluate() const ;" << endl
+     << "  double evaluate() const ;" << endl
      << "" << endl
      << "private:" << endl
      << "" << endl
@@ -623,7 +623,7 @@ bool RooClassFactory::makeClass(const char* baseName, const char* className, con
      << endl
      << endl
 
-     << " Double_t " << className << "::evaluate() const " << endl
+     << " double " << className << "::evaluate() const " << endl
      << " { " << endl
      << "   // ENTER EXPRESSION IN TERMS OF VARIABLE ARGUMENTS HERE " << endl
      << "   return " << expression << " ; " << endl
@@ -674,7 +674,7 @@ bool RooClassFactory::makeClass(const char* baseName, const char* className, con
        << endl
        << endl
 
-       << " Double_t " << className << "::analyticalIntegral(Int_t code, const char* rangeName) const  " << endl
+       << " double " << className << "::analyticalIntegral(Int_t code, const char* rangeName) const  " << endl
        << " { " << endl
        << "   // RETURN ANALYTICAL INTEGRAL DEFINED BY RETURN CODE ASSIGNED BY getAnalyticalIntegral" << endl
        << "   // THE MEMBER FUNCTION x.min(rangeName) AND x.max(rangeName) WILL RETURN THE INTEGRATION" << endl

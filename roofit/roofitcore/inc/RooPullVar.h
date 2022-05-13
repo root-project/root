@@ -37,7 +37,7 @@ protected:
   RooTemplateProxy<RooRealVar> _meas ;
   RooRealProxy _true ;
 
-  Double_t evaluate() const override;
+  double evaluate() const override;
 
   ClassDefOverride(RooPullVar,1) // Calculation of pull of measurement w.r.t a truth value
 };

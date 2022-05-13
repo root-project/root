@@ -33,7 +33,7 @@ ClassImp(RooConstVar);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with value
-RooConstVar::RooConstVar(const char *name, const char *title, Double_t value) :
+RooConstVar::RooConstVar(const char *name, const char *title, double value) :
   RooAbsReal(name,title)
 {
   _fast = true;

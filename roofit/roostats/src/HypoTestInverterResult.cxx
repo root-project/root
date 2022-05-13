@@ -407,7 +407,7 @@ bool HypoTestInverterResult::Add( const HypoTestInverterResult& otherResult   )
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a single point result (an HypoTestResult)
 
-bool HypoTestInverterResult::Add (Double_t x, const HypoTestResult & res)
+bool HypoTestInverterResult::Add (double x, const HypoTestResult & res)
 {
    int i= FindIndex(x);
    if (i<0) {
@@ -937,7 +937,7 @@ int HypoTestInverterResult::FindClosestPointIndex(double target, int mode, doubl
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t HypoTestInverterResult::LowerLimit()
+double HypoTestInverterResult::LowerLimit()
 {
   if (fFittedLowerLimit) return fLowerLimit;
   //std::cout << "finding point with cl = " << 1-(1-ConfidenceLevel())/2 << endl;
@@ -953,7 +953,7 @@ Double_t HypoTestInverterResult::LowerLimit()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t HypoTestInverterResult::UpperLimit()
+double HypoTestInverterResult::UpperLimit()
 {
    //std::cout << "finding point with cl = " << (1-ConfidenceLevel())/2 << endl;
   if (fFittedUpperLimit) return fUpperLimit;
@@ -971,7 +971,7 @@ Double_t HypoTestInverterResult::UpperLimit()
 /// either CLs or CLsplusb divided by an estimate of the slope at this
 /// point.
 
-Double_t HypoTestInverterResult::CalculateEstimatedError(double target, bool lower, double xmin, double xmax)
+double HypoTestInverterResult::CalculateEstimatedError(double target, bool lower, double xmin, double xmax)
 {
 
   if (ArraySize()==0) {
@@ -1084,7 +1084,7 @@ Double_t HypoTestInverterResult::CalculateEstimatedError(double target, bool low
 ////////////////////////////////////////////////////////////////////////////////
 /// need to have compute first lower limit
 
-Double_t HypoTestInverterResult::LowerLimitEstimatedError()
+double HypoTestInverterResult::LowerLimitEstimatedError()
 {
    if (TMath::IsNaN(fLowerLimit) ) LowerLimit();
    if (fLowerLimitError >= 0) return fLowerLimitError;
@@ -1094,7 +1094,7 @@ Double_t HypoTestInverterResult::LowerLimitEstimatedError()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t HypoTestInverterResult::UpperLimitEstimatedError()
+double HypoTestInverterResult::UpperLimitEstimatedError()
 {
    if (TMath::IsNaN(fUpperLimit) ) UpperLimit();
    if (fUpperLimitError >= 0) return fUpperLimitError;

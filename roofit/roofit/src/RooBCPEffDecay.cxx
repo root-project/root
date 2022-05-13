@@ -111,7 +111,7 @@ RooBCPEffDecay::~RooBCPEffDecay()
 /// B0bar : _tag = -1
 /// \param[in] basisIndex
 
-Double_t RooBCPEffDecay::coefficient(Int_t basisIndex) const
+double RooBCPEffDecay::coefficient(Int_t basisIndex) const
 {
   if (basisIndex==_basisExp) {
     //exp term: (1 -/+ dw)(1+a^2)/2
@@ -146,7 +146,7 @@ Int_t RooBCPEffDecay::getCoefAnalyticalIntegral(Int_t /*code*/, RooArgSet& allVa
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBCPEffDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, const char* /*rangeName*/) const
+double RooBCPEffDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, const char* /*rangeName*/) const
 {
   switch(code) {
     // No integration
@@ -187,9 +187,9 @@ void RooBCPEffDecay::initGenerator(Int_t code)
 {
   if (code==2) {
     // Calculate the fraction of mixed events to generate
-    Double_t sumInt = RooRealIntegral("sumInt","sum integral",*this,RooArgSet(_t.arg(),_tag.arg())).getVal() ;
+    double sumInt = RooRealIntegral("sumInt","sum integral",*this,RooArgSet(_t.arg(),_tag.arg())).getVal() ;
     _tag = 1 ;
-    Double_t b0Int = RooRealIntegral("mixInt","mix integral",*this,RooArgSet(_t.arg())).getVal() ;
+    double b0Int = RooRealIntegral("mixInt","mix integral",*this,RooArgSet(_t.arg())).getVal() ;
     _genB0Frac = b0Int/sumInt ;
   }
 }
@@ -201,14 +201,14 @@ void RooBCPEffDecay::initGenerator(Int_t code)
 void RooBCPEffDecay::generateEvent(Int_t code)
 {
   if (code==2) {
-    Double_t rand = RooRandom::uniform() ;
+    double rand = RooRandom::uniform() ;
     _tag = (rand<=_genB0Frac) ? 1 : -1 ;
   }
 
   // Generate delta-t dependent
   while(1) {
-    Double_t rand = RooRandom::uniform() ;
-    Double_t tval(0) ;
+    double rand = RooRandom::uniform() ;
+    double tval(0) ;
 
     switch(_type) {
     case SingleSided:
@@ -223,10 +223,10 @@ void RooBCPEffDecay::generateEvent(Int_t code)
     }
 
     // Accept event if T is in generated range
-    Double_t maxDil = 1.0 ;
-    Double_t al2 = _absLambda*_absLambda ;
-    Double_t maxAcceptProb = (1+al2) + fabs(maxDil*_CPeigenval*_absLambda*_argLambda) + fabs(maxDil*(1-al2)/2);
-    Double_t acceptProb    = (1+al2)/2*(1-_tag*_delMistag)
+    double maxDil = 1.0 ;
+    double al2 = _absLambda*_absLambda ;
+    double maxAcceptProb = (1+al2) + fabs(maxDil*_CPeigenval*_absLambda*_argLambda) + fabs(maxDil*(1-al2)/2);
+    double acceptProb    = (1+al2)/2*(1-_tag*_delMistag)
                            - (_tag*(1-2*_avgMistag))*(_CPeigenval*_absLambda*_argLambda)*sin(_dm*tval)
                            - (_tag*(1-2*_avgMistag))*(1-al2)/2*cos(_dm*tval);
 

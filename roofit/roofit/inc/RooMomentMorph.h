@@ -45,7 +45,7 @@ public:
     return true ;
   }
 
-  virtual Double_t getVal(const RooArgSet* set=0) const ;
+  virtual double getVal(const RooArgSet* set=0) const ;
   RooAbsPdf* sumPdf(const RooArgSet* nset) ;
 
 
@@ -69,7 +69,7 @@ protected:
 
   friend class CacheElem ; // Cache needs to be able to clear _norm pointer
 
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
 
   void     initialize();
   CacheElem* getCache(const RooArgSet* nset) const ;

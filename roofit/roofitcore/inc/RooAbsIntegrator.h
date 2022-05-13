@@ -34,7 +34,7 @@ public:
   }
 
   /// Return value of integrand at given observable values
-  inline Double_t integrand(const Double_t x[]) const {
+  inline double integrand(const double x[]) const {
     return (*_function)(x);
   }
 
@@ -48,8 +48,8 @@ public:
     return true;
   }
 
-  Double_t calculate(const Double_t *yvec=0) ;
-  virtual Double_t integral(const Double_t *yvec=0)=0 ;
+  double calculate(const double *yvec=0) ;
+  virtual double integral(const double *yvec=0)=0 ;
 
   virtual bool canIntegrate1D() const = 0 ;
   virtual bool canIntegrate2D() const = 0 ;
@@ -59,8 +59,8 @@ public:
   bool printEvalCounter() const { return _printEvalCounter ; }
   void setPrintEvalCounter(bool value) { _printEvalCounter = value ; }
 
-  virtual bool setLimits(Double_t*, Double_t*) { return false ; }
-  virtual bool setLimits(Double_t xmin, Double_t xmax) ;
+  virtual bool setLimits(double*, double*) { return false ; }
+  virtual bool setLimits(double xmin, double xmax) ;
   virtual bool setUseIntegrandLimits(bool flag) ;
 
 protected:

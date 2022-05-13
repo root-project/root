@@ -90,7 +90,7 @@ RooRandomizeParamMCSModule:: ~RooRandomizeParamMCSModule()
 /// Request uniform smearing of param in range [lo,hi] in RooMCStudy
 /// generation cycle
 
-void RooRandomizeParamMCSModule::sampleUniform(RooRealVar& param, Double_t lo, Double_t hi)
+void RooRandomizeParamMCSModule::sampleUniform(RooRealVar& param, double lo, double hi)
 {
   // If we're already attached to a RooMCStudy, check that given param is actual generator model parameter
   // If not attached, this check is repeated at the attachment moment
@@ -111,7 +111,7 @@ void RooRandomizeParamMCSModule::sampleUniform(RooRealVar& param, Double_t lo, D
 /// Request Gaussian smearing of param in with mean 'mean' and width
 /// 'sigma' in RooMCStudy generation cycle
 
-void RooRandomizeParamMCSModule::sampleGaussian(RooRealVar& param, Double_t mean, Double_t sigma)
+void RooRandomizeParamMCSModule::sampleGaussian(RooRealVar& param, double mean, double sigma)
 {
   // If we're already attached to a RooMCStudy, check that given param is actual generator model parameter
   // If not attached, this check is repeated at the attachment moment
@@ -136,7 +136,7 @@ void RooRandomizeParamMCSModule::sampleGaussian(RooRealVar& param, Double_t mean
 /// in paramSet to make the sum of the parameters add up to the
 /// sampled value in the range [lo,hi]
 
-void RooRandomizeParamMCSModule::sampleSumUniform(const RooArgSet& paramSet, Double_t lo, Double_t hi)
+void RooRandomizeParamMCSModule::sampleSumUniform(const RooArgSet& paramSet, double lo, double hi)
 {
   // Check that all args are RooRealVars
   RooArgSet okset ;
@@ -191,7 +191,7 @@ void RooRandomizeParamMCSModule::sampleSumUniform(const RooArgSet& paramSet, Dou
 /// parameters add up to the sampled value from the
 /// gaussian(mean,sigma)
 
-void RooRandomizeParamMCSModule::sampleSumGauss(const RooArgSet& paramSet, Double_t mean, Double_t sigma)
+void RooRandomizeParamMCSModule::sampleSumGauss(const RooArgSet& paramSet, double mean, double sigma)
 {
   // Check that all args are RooRealVars
   RooArgSet okset ;
@@ -372,7 +372,7 @@ bool RooRandomizeParamMCSModule::processBeforeGen(Int_t /*sampleNum*/)
   // Apply uniform smearing to all generator parameters for which it is requested
   std::list<UniParam>::iterator uiter ;
   for (uiter= _unifParams.begin() ; uiter!= _unifParams.end() ; ++uiter) {
-    Double_t newVal = RooRandom::randomGenerator()->Uniform(uiter->_lo,uiter->_hi) ;
+    double newVal = RooRandom::randomGenerator()->Uniform(uiter->_lo,uiter->_hi) ;
     oocoutE(nullptr,Generation) << "RooRandomizeParamMCSModule::processBeforeGen: applying uniform smearing to generator parameter "
     << uiter->_param->GetName() << " in range [" << uiter->_lo << "," << uiter->_hi << "], chosen value for this sample is " << newVal << endl ;
     uiter->_param->setVal(newVal) ;
@@ -384,7 +384,7 @@ bool RooRandomizeParamMCSModule::processBeforeGen(Int_t /*sampleNum*/)
   // Apply gaussian smearing to all generator parameters for which it is requested
   std::list<GausParam>::iterator giter ;
   for (giter= _gausParams.begin() ; giter!= _gausParams.end() ; ++giter) {
-    Double_t newVal = RooRandom::randomGenerator()->Gaus(giter->_mean,giter->_sigma) ;
+    double newVal = RooRandom::randomGenerator()->Gaus(giter->_mean,giter->_sigma) ;
     oocoutI(nullptr,Generation) << "RooRandomizeParamMCSModule::processBeforeGen: applying gaussian smearing to generator parameter "
     << giter->_param->GetName() << " with a mean of " << giter->_mean << " and a width of " << giter->_sigma << ", chosen value for this sample is " << newVal << endl ;
     giter->_param->setVal(newVal) ;
@@ -398,14 +398,14 @@ bool RooRandomizeParamMCSModule::processBeforeGen(Int_t /*sampleNum*/)
   for (usiter= _unifParamSets.begin() ; usiter!= _unifParamSets.end() ; ++usiter) {
 
     // Calculate new value for sum
-    Double_t newVal = RooRandom::randomGenerator()->Uniform(usiter->_lo,usiter->_hi) ;
+    double newVal = RooRandom::randomGenerator()->Uniform(usiter->_lo,usiter->_hi) ;
     oocoutI(nullptr,Generation) << "RooRandomizeParamMCSModule::processBeforeGen: applying uniform smearing to sum of set of generator parameters "
                 <<  usiter->_pset
                 << " in range [" << usiter->_lo << "," << usiter->_hi << "], chosen sum value for this sample is " << newVal << endl ;
 
     // Determine original value of sum and calculate per-component scale factor to obtain new valye for sum
     RooAddition sumVal("sumVal","sumVal",usiter->_pset) ;
-    Double_t compScaleFactor = newVal/sumVal.getVal() ;
+    double compScaleFactor = newVal/sumVal.getVal() ;
 
     // Apply multiplicative correction to each term of the sum
     TIterator* iter = usiter->_pset.createIterator() ;
@@ -423,7 +423,7 @@ bool RooRandomizeParamMCSModule::processBeforeGen(Int_t /*sampleNum*/)
   for (gsiter= _gausParamSets.begin() ; gsiter!= _gausParamSets.end() ; ++gsiter) {
 
     // Calculate new value for sum
-    Double_t newVal = RooRandom::randomGenerator()->Gaus(gsiter->_mean,gsiter->_sigma) ;
+    double newVal = RooRandom::randomGenerator()->Gaus(gsiter->_mean,gsiter->_sigma) ;
     oocoutI(nullptr,Generation) << "RooRandomizeParamMCSModule::processBeforeGen: applying gaussian smearing to sum of set of generator parameters "
                 << gsiter->_pset
                 << " with a mean of " << gsiter->_mean << " and a width of " << gsiter->_sigma
@@ -431,7 +431,7 @@ bool RooRandomizeParamMCSModule::processBeforeGen(Int_t /*sampleNum*/)
 
     // Determine original value of sum and calculate per-component scale factor to obtain new valye for sum
     RooAddition sumVal("sumVal","sumVal",gsiter->_pset) ;
-    Double_t compScaleFactor = newVal/sumVal.getVal() ;
+    double compScaleFactor = newVal/sumVal.getVal() ;
 
     // Apply multiplicative correction to each term of the sum
     TIter iter = gsiter->_pset.createIterator() ;

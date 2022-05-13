@@ -25,7 +25,7 @@ protected:
 
   RooRealProxy pdf ;
 
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
 
 private:
 

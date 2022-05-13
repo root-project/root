@@ -25,9 +25,9 @@ public:
     RooAbsFunc(integrator.integrand()->getDimension()-1), _integrator(&integrator) {} ;
   ~RooIntegratorBinding() override {} ;
 
-  inline Double_t operator()(const Double_t xvector[]) const override { _ncall++ ; return _integrator->integral(xvector) ; }
-  inline Double_t getMinLimit(UInt_t index) const override { return _integrator->integrand()->getMinLimit(index+1); }
-  inline Double_t getMaxLimit(UInt_t index) const override { return _integrator->integrand()->getMaxLimit(index+1); }
+  inline double operator()(const double xvector[]) const override { _ncall++ ; return _integrator->integral(xvector) ; }
+  inline double getMinLimit(UInt_t index) const override { return _integrator->integrand()->getMinLimit(index+1); }
+  inline double getMaxLimit(UInt_t index) const override { return _integrator->integrand()->getMaxLimit(index+1); }
 
 protected:
   RooAbsIntegrator* _integrator ;  ///< Numeric integrator

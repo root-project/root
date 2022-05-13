@@ -26,16 +26,16 @@ public:
   // Constructors, assignment etc
   RooSegmentedIntegrator1D() ;
   RooSegmentedIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) ;
-  RooSegmentedIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax, const RooNumIntConfig& config) ;
+  RooSegmentedIntegrator1D(const RooAbsFunc& function, double xmin, double xmax, const RooNumIntConfig& config) ;
 
   RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
   ~RooSegmentedIntegrator1D() override;
 
   bool checkLimits() const override;
-  Double_t integral(const Double_t *yvec=0) override ;
+  double integral(const double *yvec=0) override ;
 
   using RooAbsIntegrator::setLimits ;
-  bool setLimits(Double_t *xmin, Double_t *xmax) override;
+  bool setLimits(double *xmin, double *xmax) override;
   bool setUseIntegrandLimits(bool flag) override { _useIntegrandLimits = flag ; return true ; }
 
   bool canIntegrate1D() const override { return true ; }
@@ -48,9 +48,9 @@ protected:
   friend class RooNumIntFactory ;
   static void registerIntegrator(RooNumIntFactory& fact) ;
 
-  mutable Double_t _xmin ;
-  mutable Double_t _xmax ;
-  mutable Double_t _range ;
+  mutable double _xmin ;
+  mutable double _xmax ;
+  mutable double _range ;
   bool _valid ;
   Int_t _nseg ; // Number of segments
   bool _useIntegrandLimits ;

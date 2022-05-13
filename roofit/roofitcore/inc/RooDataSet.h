@@ -95,8 +95,8 @@ public:
 
   RooDataHist* binnedClone(const char* newName=0, const char* newTitle=0) const ;
 
-  Double_t sumEntries() const override;
-  Double_t sumEntries(const char* cutSpec, const char* cutRange=0) const override;
+  double sumEntries() const override;
+  double sumEntries(const char* cutSpec, const char* cutRange=0) const override;
 
   virtual RooPlot* plotOnXY(RooPlot* frame,
              const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),
@@ -117,10 +117,10 @@ public:
   bool isWeighted() const override;
   bool isNonPoissonWeighted() const override;
 
-  Double_t weight() const override;
+  double weight() const override;
   /// Returns a pointer to the weight variable (if set).
   RooRealVar* weightVar() const { return _wgtVar; }
-  Double_t weightSquared() const override;
+  double weightSquared() const override;
   void weightError(double& lo, double& hi,ErrorType etype=SumW2) const override;
   double weightError(ErrorType etype=SumW2) const override;
 
@@ -130,10 +130,10 @@ public:
   RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len, bool sumW2) const override;
 
   /// Add one ore more rows of data
-  void add(const RooArgSet& row, Double_t weight=1.0, Double_t weightError=0) override;
-  virtual void add(const RooArgSet& row, Double_t weight, Double_t weightErrorLo, Double_t weightErrorHi);
+  void add(const RooArgSet& row, double weight=1.0, double weightError=0) override;
+  virtual void add(const RooArgSet& row, double weight, double weightErrorLo, double weightErrorHi);
 
-  virtual void addFast(const RooArgSet& row, Double_t weight=1.0, Double_t weightError=0);
+  virtual void addFast(const RooArgSet& row, double weight=1.0, double weightError=0);
 
   void append(RooDataSet& data) ;
   bool merge(RooDataSet* data1, RooDataSet* data2=0, RooDataSet* data3=0,

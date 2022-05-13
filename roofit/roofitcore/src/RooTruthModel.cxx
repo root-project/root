@@ -136,7 +136,7 @@ void RooTruthModel::changeBasis(RooFormulaVar* inBasis)
 /// Evaluate the truth model: a delta function when used as PDF,
 /// the basis function itself, when convoluted with a basis function.
 
-Double_t RooTruthModel::evaluate() const
+double RooTruthModel::evaluate() const
 {
   // No basis: delta function
   if (_basisCode == noBasis) {
@@ -158,36 +158,36 @@ Double_t RooTruthModel::evaluate() const
       (basisSign==Plus  && x<0)) return 0 ;
 
 
-  Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
+  double tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
   // Return desired basis function
   switch(basisType) {
   case expBasis: {
-    //cout << " RooTruthModel::eval(" << GetName() << ") expBasis mode ret = " << exp(-fabs((Double_t)x)/tau) << " tau = " << tau << endl ;
-    return exp(-fabs((Double_t)x)/tau) ;
+    //cout << " RooTruthModel::eval(" << GetName() << ") expBasis mode ret = " << exp(-fabs((double)x)/tau) << " tau = " << tau << endl ;
+    return exp(-fabs((double)x)/tau) ;
   }
   case sinBasis: {
-    Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-    return exp(-fabs((Double_t)x)/tau)*sin(x*dm) ;
+    double dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
+    return exp(-fabs((double)x)/tau)*sin(x*dm) ;
   }
   case cosBasis: {
-    Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-    return exp(-fabs((Double_t)x)/tau)*cos(x*dm) ;
+    double dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
+    return exp(-fabs((double)x)/tau)*cos(x*dm) ;
   }
   case linBasis: {
-    Double_t tscaled = fabs((Double_t)x)/tau;
+    double tscaled = fabs((double)x)/tau;
     return exp(-tscaled)*tscaled ;
   }
   case quadBasis: {
-    Double_t tscaled = fabs((Double_t)x)/tau;
+    double tscaled = fabs((double)x)/tau;
     return exp(-tscaled)*tscaled*tscaled;
   }
   case sinhBasis: {
-    Double_t dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-    return exp(-fabs((Double_t)x)/tau)*sinh(x*dg/2) ;
+    double dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
+    return exp(-fabs((double)x)/tau)*sinh(x*dg/2) ;
   }
   case coshBasis: {
-    Double_t dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-    return exp(-fabs((Double_t)x)/tau)*cosh(x*dg/2) ;
+    double dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
+    return exp(-fabs((double)x)/tau)*cosh(x*dg/2) ;
   }
   default:
     R__ASSERT(0) ;
@@ -242,7 +242,7 @@ Int_t RooTruthModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 /// Implement analytical integrals when used as p.d.f and for compiled
 /// basis functions.
 
-Double_t RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) const
 {
 
   // Code must be 1
@@ -256,12 +256,12 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) co
   BasisSign basisSign = (BasisSign)( _basisCode - 10*(basisType-1) - 2 ) ;
   //cout << " calling RooTruthModel::analyticalIntegral with basisType " << basisType << endl;
 
-  Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
+  double tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
   switch (basisType) {
   case expBasis:
     {
       // WVE fixed for ranges
-      Double_t result(0) ;
+      double result(0) ;
       if (tau==0) return 1 ;
       if ((basisSign != Minus) && (x.max(rangeName)>0)) {
    result += tau*(-exp(-x.max(rangeName)/tau) -  -exp(-max(0.,x.min(rangeName))/tau) ) ; // plus and both
@@ -274,18 +274,18 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) co
     }
   case sinBasis:
     {
-      Double_t result(0) ;
+      double result(0) ;
       if (tau==0) return 0 ;
-      Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
+      double dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
       if (basisSign != Minus) result += exp(-x.max(rangeName)/tau)*(-1/tau*sin(dm*x.max(rangeName)) - dm*cos(dm*x.max(rangeName))) + dm;  // fixed FMV 08/29/03
       if (basisSign != Plus)  result -= exp( x.min(rangeName)/tau)*(-1/tau*sin(dm*(-x.min(rangeName))) - dm*cos(dm*(-x.min(rangeName)))) + dm ;  // fixed FMV 08/29/03
       return result / (1/(tau*tau) + dm*dm) ;
     }
   case cosBasis:
     {
-      Double_t result(0) ;
+      double result(0) ;
       if (tau==0) return 1 ;
-      Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
+      double dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
       if (basisSign != Minus) result += exp(-x.max(rangeName)/tau)*(-1/tau*cos(dm*x.max(rangeName)) + dm*sin(dm*x.max(rangeName))) + 1/tau ;
       if (basisSign != Plus)  result += exp( x.min(rangeName)/tau)*(-1/tau*cos(dm*(-x.min(rangeName))) + dm*sin(dm*(-x.min(rangeName)))) + 1/tau ; // fixed FMV 08/29/03
       return result / (1/(tau*tau) + dm*dm) ;
@@ -293,33 +293,33 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) co
   case linBasis:
     {
       if (tau==0) return 0 ;
-      Double_t t_max = x.max(rangeName)/tau ;
+      double t_max = x.max(rangeName)/tau ;
       return tau*( 1 - (1 + t_max)*exp(-t_max) ) ;
     }
   case quadBasis:
     {
       if (tau==0) return 0 ;
-      Double_t t_max = x.max(rangeName)/tau ;
+      double t_max = x.max(rangeName)/tau ;
       return tau*( 2 - (2 + (2 + t_max)*t_max)*exp(-t_max) ) ;
     }
   case sinhBasis:
     {
-      Double_t result(0) ;
+      double result(0) ;
       if (tau==0) return 0 ;
-      Double_t dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-      Double_t taup = 2*tau/(2-tau*dg);
-      Double_t taum = 2*tau/(2+tau*dg);
+      double dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
+      double taup = 2*tau/(2-tau*dg);
+      double taum = 2*tau/(2+tau*dg);
       if (basisSign != Minus) result += 0.5*( taup*(1-exp(-x.max(rangeName)/taup)) - taum*(1-exp(-x.max(rangeName)/taum)) ) ;
       if (basisSign != Plus)  result -= 0.5*( taup*(1-exp( x.min(rangeName)/taup)) - taum*(1-exp( x.min(rangeName)/taum)) ) ;
       return result ;
     }
   case coshBasis:
     {
-      Double_t result(0) ;
+      double result(0) ;
       if (tau==0) return 1 ;
-      Double_t dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-      Double_t taup = 2*tau/(2-tau*dg);
-      Double_t taum = 2*tau/(2+tau*dg);
+      double dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
+      double taup = 2*tau/(2-tau*dg);
+      double taum = 2*tau/(2+tau*dg);
       if (basisSign != Minus) result += 0.5*( taup*(1-exp(-x.max(rangeName)/taup)) + taum*(1-exp(-x.max(rangeName)/taum)) ) ;
       if (basisSign != Plus)  result += 0.5*( taup*(1-exp( x.min(rangeName)/taup)) + taum*(1-exp( x.min(rangeName)/taum)) ) ;
       return result ;
@@ -365,7 +365,7 @@ Int_t RooTruthModel::getGenerator(const RooArgSet& directVars, RooArgSet &genera
 void RooTruthModel::generateEvent(Int_t code)
 {
   R__ASSERT(code==1) ;
-  Double_t zero(0.) ;
+  double zero(0.) ;
   x = zero ;
   return;
 }

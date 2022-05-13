@@ -75,7 +75,7 @@ RooCmdArg::RooCmdArg() : TNamed("","")
 /// Constructor with full specification of payload: two integers, two doubles,
 /// three string poiners, two object pointers and one RooCmdArg pointer
 
-RooCmdArg::RooCmdArg(const char* name, Int_t i1, Int_t i2, Double_t d1, Double_t d2,
+RooCmdArg::RooCmdArg(const char* name, Int_t i1, Int_t i2, double d1, double d2,
            const char* s1, const char* s2, const TObject* o1, const TObject* o2,
            const RooCmdArg* ca, const char* s3, const RooArgSet* c1, const RooArgSet* c2) :
   TNamed(name,name)

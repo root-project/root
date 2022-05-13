@@ -104,9 +104,9 @@ RooFoamGenerator::RooFoamGenerator(const RooAbsReal &func, const RooArgSet &genV
   _tfoam->SetChat((Int_t)config.getConfigSection("RooFoamGenerator").getRealValue("chatLevel")) ;
   _tfoam->Initialize() ;
 
-  _vec = new Double_t[_realVars.getSize()] ;
-  _xmin  = new Double_t[_realVars.getSize()] ;
-  _range = new Double_t[_realVars.getSize()] ;
+  _vec = new double[_realVars.getSize()] ;
+  _xmin  = new double[_realVars.getSize()] ;
+  _range = new double[_realVars.getSize()] ;
 
   Int_t i(0) ;
   for (const auto arg : _realVars) {
@@ -135,7 +135,7 @@ RooFoamGenerator::~RooFoamGenerator()
 ////////////////////////////////////////////////////////////////////////////////
 /// are we actually generating anything? (the cache always contains at least our function value)
 
-const RooArgSet *RooFoamGenerator::generateEvent(UInt_t /*remaining*/, Double_t& /*resampleRatio*/)
+const RooArgSet *RooFoamGenerator::generateEvent(UInt_t /*remaining*/, double& /*resampleRatio*/)
 {
   const RooArgSet *event= _cache->get();
   if(event->getSize() == 1) return event;

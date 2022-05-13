@@ -57,12 +57,12 @@ RooAbsIntegrator::RooAbsIntegrator(const RooAbsFunc& function, bool doPrintEvalC
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate integral value with given array of parameter values
 
-Double_t RooAbsIntegrator::calculate(const Double_t *yvec)
+double RooAbsIntegrator::calculate(const double *yvec)
 {
   integrand()->resetNumCall() ;
 
   integrand()->saveXVec() ;
-  Double_t ret = integral(yvec) ;
+  double ret = integral(yvec) ;
   integrand()->restoreXVec() ;
 
   cxcoutD(NumIntegration) << IsA()->GetName() << "::calculate(" << _function->getName() << ") number of function calls = " << integrand()->numCall()<<", result  = "<<ret << endl ;
@@ -74,7 +74,7 @@ Double_t RooAbsIntegrator::calculate(const Double_t *yvec)
 ////////////////////////////////////////////////////////////////////////////////
 /// Interface to set limits on integration
 
-bool RooAbsIntegrator::setLimits(Double_t xmin, Double_t xmax)
+bool RooAbsIntegrator::setLimits(double xmin, double xmax)
 {
   return setLimits(&xmin,&xmax) ;
 }

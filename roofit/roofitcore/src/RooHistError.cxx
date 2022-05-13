@@ -74,7 +74,7 @@ RooHistError::RooHistError()
 /// to start at n. This method uses a lookup table to return precalculated results
 /// for n<1000
 
-bool RooHistError::getPoissonInterval(Int_t n, Double_t &mu1, Double_t &mu2, Double_t nSigma) const
+bool RooHistError::getPoissonInterval(Int_t n, double &mu1, double &mu2, double nSigma) const
 {
   // Use lookup table for most common cases
   if (n<1000 && nSigma==1.) {
@@ -97,7 +97,7 @@ bool RooHistError::getPoissonInterval(Int_t n, Double_t &mu1, Double_t &mu2, Dou
 /// the point estimate n (ie, for small n) in which case the interval is adjusted
 /// to start at n.
 
-bool RooHistError::getPoissonIntervalCalc(Int_t n, Double_t &mu1, Double_t &mu2, Double_t nSigma) const
+bool RooHistError::getPoissonIntervalCalc(Int_t n, double &mu1, double &mu2, double nSigma) const
 {
   // sanity checks
   if(n < 0) {
@@ -116,11 +116,11 @@ bool RooHistError::getPoissonIntervalCalc(Int_t n, Double_t &mu1, Double_t &mu2,
   PoissonSum upper(n);
   if(n > 0) {
     PoissonSum lower(n-1);
-    return getInterval(&upper,&lower,(Double_t)n,1.0,mu1,mu2,nSigma);
+    return getInterval(&upper,&lower,(double)n,1.0,mu1,mu2,nSigma);
   }
 
   // Backup solution for negative numbers
-  return getInterval(&upper,0,(Double_t)n,1.0,mu1,mu2,nSigma);
+  return getInterval(&upper,0,(double)n,1.0,mu1,mu2,nSigma);
 }
 
 
@@ -129,7 +129,7 @@ bool RooHistError::getPoissonIntervalCalc(Int_t n, Double_t &mu1, Double_t &mu2,
 /// If the return values is false and error occurred.
 
 bool RooHistError::getBinomialIntervalAsym(Int_t n, Int_t m,
-                    Double_t &asym1, Double_t &asym2, Double_t nSigma) const
+                    double &asym1, double &asym2, double nSigma) const
 {
   // sanity checks
   if(n < 0 || m < 0) {
@@ -146,10 +146,10 @@ bool RooHistError::getBinomialIntervalAsym(Int_t n, Int_t m,
 
   // handle cases when n,m>100 (factorials in BinomialSum will overflow around 170)
   if ((n>100&&m>100)) {
-    Double_t N = n ;
-    Double_t M = m ;
-    Double_t asym = 1.0*(N-M)/(N+M) ;
-    Double_t approxErr = sqrt(4.0*n/(N+M)*(1-N/(N+M))/(N+M)) ;
+    double N = n ;
+    double M = m ;
+    double asym = 1.0*(N-M)/(N+M) ;
+    double approxErr = sqrt(4.0*n/(N+M)*(1-N/(N+M))/(N+M)) ;
 
     asym1 = asym-nSigma*approxErr ;
     asym2 = asym+nSigma*approxErr ;
@@ -170,15 +170,15 @@ bool RooHistError::getBinomialIntervalAsym(Int_t n, Int_t m,
   BinomialSumAsym upper(n,m);
   if(n > 0) {
     BinomialSumAsym lower(n-1,m+1);
-    status= getInterval(&upper,&lower,(Double_t)(n-m)/(n+m),0.1,asym1,asym2,nSigma);
+    status= getInterval(&upper,&lower,(double)(n-m)/(n+m),0.1,asym1,asym2,nSigma);
   }
   else {
-    status= getInterval(&upper,0,(Double_t)(n-m)/(n+m),0.1,asym1,asym2,nSigma);
+    status= getInterval(&upper,0,(double)(n-m)/(n+m),0.1,asym1,asym2,nSigma);
   }
 
   // undo the swap here
   if(swapped) {
-    Double_t tmp(asym1);
+    double tmp(asym1);
     asym1= -asym2;
     asym2= -tmp;
   }
@@ -192,7 +192,7 @@ bool RooHistError::getBinomialIntervalAsym(Int_t n, Int_t m,
 /// If the return values is false and error occurred.
 
 bool RooHistError::getBinomialIntervalEff(Int_t n, Int_t m,
-                    Double_t &asym1, Double_t &asym2, Double_t nSigma) const
+                    double &asym1, double &asym2, double nSigma) const
 {
   // sanity checks
   if(n < 0 || m < 0) {
@@ -209,10 +209,10 @@ bool RooHistError::getBinomialIntervalEff(Int_t n, Int_t m,
 
   // handle cases when n,m>80 (factorials in BinomialSum will overflow around 170)
   if ((n>80&&m>80)) {
-    Double_t N = n ;
-    Double_t M = m ;
-    Double_t asym = 1.0*(N)/(N+M) ;
-    Double_t approxErr = sqrt(4.0*n/(N+M)*(1-N/(N+M))/(N+M)) ;
+    double N = n ;
+    double M = m ;
+    double asym = 1.0*(N)/(N+M) ;
+    double approxErr = sqrt(4.0*n/(N+M)*(1-N/(N+M))/(N+M)) ;
 
     asym1 = asym-nSigma*0.5*approxErr ;
     asym2 = asym+nSigma*0.5*approxErr ;
@@ -231,7 +231,7 @@ bool RooHistError::getBinomialIntervalEff(Int_t n, Int_t m,
   // create the function objects to use
   bool status(false);
   BinomialSumEff upper(n,m);
-  Double_t eff = (Double_t)(n)/(n+m) ;
+  double eff = (double)(n)/(n+m) ;
   if(n > 0) {
     BinomialSumEff lower(n-1,m+1);
     status= getInterval(&upper,&lower,eff,0.1,asym1,asym2,nSigma*0.5);
@@ -242,7 +242,7 @@ bool RooHistError::getBinomialIntervalEff(Int_t n, Int_t m,
 
   // undo the swap here
   if(swapped) {
-    Double_t tmp(asym1);
+    double tmp(asym1);
     asym1= 1-asym2;
     asym2= 1-tmp;
   }
@@ -258,26 +258,26 @@ bool RooHistError::getBinomialIntervalEff(Int_t n, Int_t m,
 /// unless this would exclude the pointEstimate, in which case a one-sided interval
 /// pinned at the point estimate is returned instead.
 
-bool RooHistError::getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, Double_t pointEstimate,
-             Double_t stepSize, Double_t &lo, Double_t &hi, Double_t nSigma) const
+bool RooHistError::getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, double pointEstimate,
+             double stepSize, double &lo, double &hi, double nSigma) const
 {
   // sanity checks
   assert(0 != Qu || 0 != Ql);
 
   // convert number of sigma into a confidence level
-  Double_t beta= TMath::Erf(nSigma/sqrt(2.));
-  Double_t alpha= 0.5*(1-beta);
+  double beta= TMath::Erf(nSigma/sqrt(2.));
+  double alpha= 0.5*(1-beta);
 
   // Does the central interval contain the point estimate?
   bool ok(true);
-  Double_t loProb(1),hiProb(0);
+  double loProb(1),hiProb(0);
   if(0 != Ql) loProb= (*Ql)(&pointEstimate);
   if(0 != Qu) hiProb= (*Qu)(&pointEstimate);
 
   if (Qu && (0 == Ql || loProb > alpha + beta))  {
     // Force the low edge to be at the pointEstimate
     lo= pointEstimate;
-    Double_t target= loProb - beta;
+    double target= loProb - beta;
     hi= seek(*Qu,lo,+stepSize,target);
     RooBrentRootFinder uFinder(*Qu);
     ok= uFinder.findRoot(hi,hi-stepSize,hi,target);
@@ -285,7 +285,7 @@ bool RooHistError::getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, Doubl
   else if(Ql && (0 == Qu || hiProb < alpha)) {
     // Force the high edge to be at pointEstimate
     hi= pointEstimate;
-    Double_t target= hiProb + beta;
+    double target= hiProb + beta;
     lo= seek(*Ql,hi,-stepSize,target);
     RooBrentRootFinder lFinder(*Ql);
     ok= lFinder.findRoot(lo,lo,lo+stepSize,target);
@@ -308,11 +308,11 @@ bool RooHistError::getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, Doubl
 /// Scan f(x)-value until it changes sign. Start at the specified point and take constant
 /// steps of the specified size. Give up after 1000 steps.
 
-Double_t RooHistError::seek(const RooAbsFunc &f, Double_t startAt, Double_t step, Double_t value) const
+double RooHistError::seek(const RooAbsFunc &f, double startAt, double step, double value) const
 {
   Int_t steps(1000);
-  Double_t min(f.getMinLimit(1)),max(f.getMaxLimit(1));
-  Double_t x(startAt), f0= f(&startAt) - value;
+  double min(f.getMinLimit(1)),max(f.getMaxLimit(1));
+  double x(startAt), f0= f(&startAt) - value;
   do {
     x+= step;
   }

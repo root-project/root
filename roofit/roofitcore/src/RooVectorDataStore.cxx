@@ -338,8 +338,8 @@ Int_t RooVectorDataStore::fill()
     catVec->fill() ;
   }
   // use Kahan's algorithm to sum up weights to avoid loss of precision
-  Double_t y = (_wgtVar ? _wgtVar->getVal() : 1.) - _sumWeightCarry;
-  Double_t t = _sumWeight + y;
+  double y = (_wgtVar ? _wgtVar->getVal() : 1.) - _sumWeightCarry;
+  double t = _sumWeight + y;
   _sumWeightCarry = (t - _sumWeight) - y;
   _sumWeight = t;
 
@@ -426,14 +426,14 @@ const RooArgSet* RooVectorDataStore::getNative(Int_t index) const
 /// Return the error of the current weight.
 /// @param[in] etype Switch between simple Poisson or sum-of-weights statistics
 
-Double_t RooVectorDataStore::weightError(RooAbsData::ErrorType etype) const
+double RooVectorDataStore::weightError(RooAbsData::ErrorType etype) const
 {
   if (_extWgtArray) {
 
     // We have a weight array, use that info
 
     // Return symmetric error on current bin calculated either from Poisson statistics or from SumOfWeights
-    Double_t lo = 0, hi = 0 ;
+    double lo = 0, hi = 0 ;
     weightError(lo,hi,etype) ;
     return (lo+hi)/2 ;
 
@@ -460,7 +460,7 @@ Double_t RooVectorDataStore::weightError(RooAbsData::ErrorType etype) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooVectorDataStore::weightError(Double_t& lo, Double_t& hi, RooAbsData::ErrorType etype) const
+void RooVectorDataStore::weightError(double& lo, double& hi, RooAbsData::ErrorType etype) const
 {
   if (_extWgtArray) {
     double wgt;
@@ -486,7 +486,7 @@ void RooVectorDataStore::weightError(Double_t& lo, Double_t& hi, RooAbsData::Err
 
       // Otherwise Calculate poisson errors
       wgt = weight();
-      Double_t ym,yp ;
+      double ym,yp ;
       RooHistError::instance().getPoissonInterval(Int_t(wgt+0.5),ym,yp,1);
       lo = wgt-ym;
       hi = yp-wgt;

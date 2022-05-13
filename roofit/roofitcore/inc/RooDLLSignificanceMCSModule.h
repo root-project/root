@@ -23,8 +23,8 @@
 class RooDLLSignificanceMCSModule : public RooAbsMCStudyModule {
 public:
 
-  RooDLLSignificanceMCSModule(const RooRealVar& param, Double_t nullHypoValue=0) ;
-  RooDLLSignificanceMCSModule(const char* parName, Double_t nullHypoValue=0) ;
+  RooDLLSignificanceMCSModule(const RooRealVar& param, double nullHypoValue=0) ;
+  RooDLLSignificanceMCSModule(const char* parName, double nullHypoValue=0) ;
   RooDLLSignificanceMCSModule(const RooDLLSignificanceMCSModule& other) ;
   ~RooDLLSignificanceMCSModule() override ;
 
@@ -42,7 +42,7 @@ private:
   RooRealVar* _nll0h ;     ///< Container variable for NLL result on null hypothesis
   RooRealVar* _dll0h ;     ///< Container variable for delta NLL
   RooRealVar* _sig0h ;     ///< Container variable for NLL result with signal
-  Double_t    _nullValue ; ///< Numeric value of Nsignal parameter representing the null hypothesis
+  double    _nullValue ; ///< Numeric value of Nsignal parameter representing the null hypothesis
 
   ClassDefOverride(RooDLLSignificanceMCSModule,0) // MCStudy module to calculate Delta(-logL) significance w.r.t given null hypothesis
 } ;

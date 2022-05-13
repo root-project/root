@@ -77,7 +77,7 @@ using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-BernsteinCorrection::BernsteinCorrection(Double_t tolerance):
+BernsteinCorrection::BernsteinCorrection(double tolerance):
    fMaxDegree(10), fMaxCorrection(100), fTolerance(tolerance){
 }
 
@@ -106,7 +106,7 @@ Int_t BernsteinCorrection::ImportCorrectedPdf(RooWorkspace* wks,
   int printLevel =  ROOT::Math::MinimizerOptions::DefaultPrintLevel()-1;
 
   RooFitResult* nominalResult = nominal->fitTo(*data,Save(),Minos(false), Hesse(false),PrintLevel(printLevel),Minimizer(minimType));
-  Double_t lastNll= nominalResult->minNll();
+  double lastNll= nominalResult->minNll();
 
   if (nominalResult->status() != 0 ) {
      std::cout << "BernsteinCorrection::ImportCorrectedPdf  - Error fit with nominal model failed - exit" << std::endl;
@@ -120,7 +120,7 @@ Int_t BernsteinCorrection::ImportCorrectedPdf(RooWorkspace* wks,
   // Local variables that we want to keep in scope after loop
   RooArgList coeff;
   vector<RooRealVar*> coefficients;
-  Double_t q = 1E6;
+  double q = 1E6;
   Int_t degree = -1;
 
   // The while loop
@@ -286,7 +286,7 @@ void BernsteinCorrection::CreateQSamplingDist(RooWorkspace* wks,
 
 
   //  TH1F* samplingDist = new TH1F("samplingDist","",20,0,10);
-  Double_t q = 0, qExtra = 0;
+  double q = 0, qExtra = 0;
   // do toys
   for(int i=0; i<nToys; ++i){
     cout << "on toy " << i << endl;

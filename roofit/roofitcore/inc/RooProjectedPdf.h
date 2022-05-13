@@ -29,7 +29,7 @@ public:
 
   // Analytical integration support
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=0) const override ;
-  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
+  double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
   bool forceAnalyticalInt(const RooAbsArg& dep) const override ;
 
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
@@ -64,7 +64,7 @@ protected:
   bool redirectServersHook(const RooAbsCollection& newServerList, bool /*mustReplaceAll*/, bool /*nameChange*/, bool /*isRecursive*/) override ;
 
   const RooAbsReal* getProjection(const RooArgSet* iset, const RooArgSet* nset, const char* rangeName, int& code) const ;
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
 
 private:
 

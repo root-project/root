@@ -200,7 +200,7 @@ RooHistPdf::~RooHistPdf()
 /// of the observables, normalized by the histograms contents. Interpolation
 /// is applied if the RooHistPdf is configured to do that.
 
-Double_t RooHistPdf::evaluate() const
+double RooHistPdf::evaluate() const
 {
   // Transfer values from
   for (unsigned int i=0; i < _pdfObsList.size(); ++i) {
@@ -225,7 +225,7 @@ Double_t RooHistPdf::evaluate() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the total volume spanned by the observables of the RooHistPdf
 
-Double_t RooHistPdf::totVolume() const
+double RooHistPdf::totVolume() const
 {
   // Return previously calculated value, if any
   if (_totVolume>0) {
@@ -308,7 +308,7 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars,
 }
 
 
-Double_t RooHistPdf::analyticalIntegral(Int_t code,
+double RooHistPdf::analyticalIntegral(Int_t code,
                                         const char* rangeName,
                                         RooArgSet const& histObsList,
                                         RooSetProxy const& pdfObsList,
@@ -341,7 +341,7 @@ Double_t RooHistPdf::analyticalIntegral(Int_t code,
     }
   }
 
-  Double_t ret = (code & 1) ? dataHist.sum(intSet,histObsList,true,!histFuncMode) :
+  double ret = (code & 1) ? dataHist.sum(intSet,histObsList,true,!histFuncMode) :
                               dataHist.sum(intSet,histObsList,true,!histFuncMode, ranges);
 
   return ret ;
@@ -365,7 +365,7 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 /// is deferred to RooDataHist::sum() which implements partial
 /// or complete summation over the histograms contents.
 
-Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooHistPdf::analyticalIntegral(Int_t code, const char* rangeName) const
 {
     return analyticalIntegral(code, rangeName, _histObsList, _pdfObsList, *_dataHist, false);
 }
@@ -376,7 +376,7 @@ Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* rangeName) const
 /// as the recursive division strategy of RooCurve cannot deal efficiently
 /// with the vertical lines that occur in a non-interpolated histogram
 
-list<Double_t>* RooHistPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
+list<double>* RooHistPdf::plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
   // No hints are required when interpolation is used
   if (_intOrder>0) {
@@ -405,15 +405,15 @@ list<Double_t>* RooHistPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo
   // Retrieve position of all bin boundaries
 
   const RooAbsBinning* binning = lval->getBinningPtr(0) ;
-  Double_t* boundaries = binning->array() ;
+  double* boundaries = binning->array() ;
 
-  list<Double_t>* hint = new list<Double_t> ;
+  list<double>* hint = new list<double> ;
 
   // Widen range slighty
   xlo = xlo - 0.01*(xhi-xlo) ;
   xhi = xhi + 0.01*(xhi-xlo) ;
 
-  Double_t delta = (xhi-xlo)*1e-8 ;
+  double delta = (xhi-xlo)*1e-8 ;
 
   // Construct array with pairs of points positioned epsilon to the left and
   // right of the bin boundaries
@@ -434,7 +434,7 @@ list<Double_t>* RooHistPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo
 /// as the recursive division strategy of RooCurve cannot deal efficiently
 /// with the vertical lines that occur in a non-interpolated histogram
 
-std::list<Double_t>* RooHistPdf::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
+std::list<double>* RooHistPdf::binBoundaries(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
   // No hints are required when interpolation is used
   if (_intOrder>0) {
@@ -449,9 +449,9 @@ std::list<Double_t>* RooHistPdf::binBoundaries(RooAbsRealLValue& obs, Double_t x
 
   // Retrieve position of all bin boundaries
   const RooAbsBinning* binning = lvarg->getBinningPtr(0) ;
-  Double_t* boundaries = binning->array() ;
+  double* boundaries = binning->array() ;
 
-  list<Double_t>* hint = new list<Double_t> ;
+  list<double>* hint = new list<double> ;
 
   // Construct array with pairs of points positioned epsilon to the left and
   // right of the bin boundaries
@@ -484,14 +484,14 @@ Int_t RooHistPdf::getMaxVal(const RooArgSet& vars) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooHistPdf::maxVal(Int_t code) const
+double RooHistPdf::maxVal(Int_t code) const
 {
   R__ASSERT(code==1) ;
 
-  Double_t max(-1) ;
+  double max(-1) ;
   for (Int_t i=0 ; i<_dataHist->numEntries() ; i++) {
     _dataHist->get(i) ;
-    Double_t wgt = _dataHist->weight() ;
+    double wgt = _dataHist->weight() ;
     if (wgt>max) max=wgt ;
   }
 

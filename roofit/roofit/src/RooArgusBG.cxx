@@ -78,11 +78,11 @@ RooArgusBG::RooArgusBG(const RooArgusBG& other, const char* name) :
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooArgusBG::evaluate() const {
-  Double_t t= m/m0;
+double RooArgusBG::evaluate() const {
+  double t= m/m0;
   if(t >= 1) return 0;
 
-  Double_t u= 1 - t*t;
+  double u= 1 - t*t;
   return m*TMath::Power(u,p)*exp(c*u) ;
 }
 
@@ -108,16 +108,16 @@ Int_t RooArgusBG::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooArgusBG::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooArgusBG::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   R__ASSERT(code==1);
   // Formula for integration over m when p=0.5
-  static const Double_t pi = atan2(0.0,-1.0);
-  Double_t min = (m.min(rangeName) < m0) ? m.min(rangeName) : m0;
-  Double_t max = (m.max(rangeName) < m0) ? m.max(rangeName) : m0;
-  Double_t f1 = (1.-TMath::Power(min/m0,2));
-  Double_t f2 = (1.-TMath::Power(max/m0,2));
-  Double_t aLow, aHigh ;
+  static const double pi = atan2(0.0,-1.0);
+  double min = (m.min(rangeName) < m0) ? m.min(rangeName) : m0;
+  double max = (m.max(rangeName) < m0) ? m.max(rangeName) : m0;
+  double f1 = (1.-TMath::Power(min/m0,2));
+  double f2 = (1.-TMath::Power(max/m0,2));
+  double aLow, aHigh ;
   if ( c < 0. ) {
     aLow  = -0.5*m0*m0*(exp(c*f1)*sqrt(f1)/c + 0.5/TMath::Power(-c,1.5)*sqrt(pi)*RooMath::erf(sqrt(-c*f1)));
     aHigh = -0.5*m0*m0*(exp(c*f2)*sqrt(f2)/c + 0.5/TMath::Power(-c,1.5)*sqrt(pi)*RooMath::erf(sqrt(-c*f2)));
@@ -128,7 +128,7 @@ Double_t RooArgusBG::analyticalIntegral(Int_t code, const char* rangeName) const
     aLow  = 0.5*m0*m0*exp(c*f1)/(c*sqrt(c)) * (0.5*sqrt(pi)*(RooMath::faddeeva(sqrt(c*f1))).imag() - sqrt(c*f1));
     aHigh = 0.5*m0*m0*exp(c*f2)/(c*sqrt(c)) * (0.5*sqrt(pi)*(RooMath::faddeeva(sqrt(c*f2))).imag() - sqrt(c*f2));
   }
-  Double_t area = aHigh - aLow;
+  double area = aHigh - aLow;
   //cout << "c = " << c << "aHigh = " << aHigh << " aLow = " << aLow << " area = " << area << endl ;
   return area;
 

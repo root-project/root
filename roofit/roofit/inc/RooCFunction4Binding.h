@@ -27,9 +27,9 @@
 
 namespace RooFit {
 
-typedef Double_t (*CFUNCD4DDDD)(Double_t,Double_t,Double_t,Double_t) ;
-typedef Double_t (*CFUNCD4DDDI)(Double_t,Double_t,Double_t,Int_t) ;
-typedef Double_t (*CFUNCD4DDDB)(Double_t,Double_t,Double_t,bool) ;
+typedef double (*CFUNCD4DDDD)(double,double,double,double) ;
+typedef double (*CFUNCD4DDDI)(double,double,double,Int_t) ;
+typedef double (*CFUNCD4DDDB)(double,double,double,bool) ;
 
 RooAbsReal* bindFunction(const char* name,CFUNCD4DDDD func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z, RooAbsReal& w) ;
 RooAbsReal* bindFunction(const char* name,CFUNCD4DDDI func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z, RooAbsReal& w) ;
@@ -255,7 +255,7 @@ protected:
   RooRealProxy z ;              // Argument reference
   RooRealProxy w ;              // Argument reference
 
-  Double_t evaluate() const override {
+  double evaluate() const override {
     // Return value of embedded function using value of referenced variable x
     return func(x,y,z,w) ;
   }
@@ -328,7 +328,7 @@ protected:
   RooRealProxy z ;              // Argument reference
   RooRealProxy w ;              // Argument reference
 
-  Double_t evaluate() const override {
+  double evaluate() const override {
     // Return value of embedded function using value of referenced variable x
     return func(x,y,z,w) ;
   }

@@ -99,7 +99,7 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
 
          // TODO: the following should also be factored out into free/static functions like RooNLLVar::Compute*
          // Calculate sum of weights-squared here for extended term
-         Double_t sumW2;
+         double sumW2;
          if (useBatchedEvaluations_) {
             const RooSpan<const double> eventWeights = data_->getWeightBatch(0, N_events_);
             if (eventWeights.empty()) {
@@ -120,7 +120,7 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
             sumW2 = sumW2KahanSum.Sum();
          }
 
-         Double_t expected = pdf_->expectedEvents(data_->get());
+         double expected = pdf_->expectedEvents(data_->get());
 
          // Adjust calculation of extended term with W^2 weighting: adjust poisson such that
          // estimate of Nexpected stays at the same value, but has a different variance, rescale
@@ -137,10 +137,10 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
          //  sum[w^2] / sum[w] * expected - sum[w^2] * log (expectedW)
          //  and since the weights are constants in the likelihood we can use log(expected) instead of log(expectedW)
 
-         Double_t expectedW2 = expected * sumW2 / data_->sumEntries();
-         Double_t extra = expectedW2 - sumW2 * log(expected);
+         double expectedW2 = expected * sumW2 / data_->sumEntries();
+         double extra = expectedW2 - sumW2 * log(expected);
 
-         // Double_t y = pdf->extendedTerm(sumW2, data->get()) - carry;
+         // double y = pdf->extendedTerm(sumW2, data->get()) - carry;
 
          result += extra;
       } else {

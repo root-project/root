@@ -90,15 +90,15 @@ RooAbsRealLValue::~RooAbsRealLValue()
 /// Return true if the input value is within our fit range. Otherwise, return
 /// false and write a clipped value into clippedValPtr if it is non-zero.
 
-bool RooAbsRealLValue::inRange(Double_t value, const char* rangeName, Double_t* clippedValPtr) const
+bool RooAbsRealLValue::inRange(double value, const char* rangeName, double* clippedValPtr) const
 {
-  // Double_t range = getMax() - getMin() ; // ok for +/-INIFINITY
-  Double_t clippedValue(value);
+  // double range = getMax() - getMin() ; // ok for +/-INIFINITY
+  double clippedValue(value);
   bool isInRange(true) ;
 
   const RooAbsBinning& binning = getBinning(rangeName) ;
-  Double_t min = binning.lowBound() ;
-  Double_t max = binning.highBound() ;
+  double min = binning.lowBound() ;
+  double max = binning.highBound() ;
 
   // test this value against our upper fit limit
   if(!RooNumber::isInfinite(max) && value > (max+1e-6)) {
@@ -138,7 +138,7 @@ void RooAbsRealLValue::inRange(std::span<const double> values, std::string const
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if given value is valid
 
-bool RooAbsRealLValue::isValidReal(Double_t value, bool verbose) const
+bool RooAbsRealLValue::isValidReal(double value, bool verbose) const
 {
   if (!inRange(value,0)) {
     if (verbose)
@@ -171,11 +171,11 @@ void RooAbsRealLValue::writeToStream(ostream& /*os*/, bool /*compact*/) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Assignment operator from a Double_t
+/// Assignment operator from a double
 
-RooAbsArg& RooAbsRealLValue::operator=(Double_t newValue)
+RooAbsArg& RooAbsRealLValue::operator=(double newValue)
 {
-  Double_t clipValue ;
+  double clipValue ;
   // Clip
   inRange(newValue,0,&clipValue) ;
   setVal(clipValue) ;
@@ -252,7 +252,7 @@ RooPlot* RooAbsRealLValue::frame(const RooLinkedList& cmdList) const
   }
 
   // Extract values from named arguments
-  Double_t xmin(getMin()),xmax(getMax()) ;
+  double xmin(getMin()),xmax(getMax()) ;
   if (pc.hasProcessed("Range")) {
     xmin = pc.getDouble("min") ;
     xmax = pc.getDouble("max") ;
@@ -273,7 +273,7 @@ RooPlot* RooAbsRealLValue::frame(const RooLinkedList& cmdList) const
     }
     if (pc.getInt("rangeSym")==0) {
       // Regular mode: range is from xmin to xmax with given extra margin
-      Double_t margin = pc.getDouble("rangeMargin")*(xmax-xmin) ;
+      double margin = pc.getDouble("rangeMargin")*(xmax-xmin) ;
       xmin -= margin ;
       xmax += margin ;
       if (xmin<getMin()) xmin = getMin() ;
@@ -281,8 +281,8 @@ RooPlot* RooAbsRealLValue::frame(const RooLinkedList& cmdList) const
     } else {
       // Symmetric mode: range is centered at mean of distribution with enough width to include
       // both lowest and highest point with margin
-      Double_t dmean = rangeData->moment((RooRealVar&)*this,1) ;
-      Double_t ddelta = ((xmax-dmean)>(dmean-xmin)?(xmax-dmean):(dmean-xmin))*(1+pc.getDouble("rangeMargin")) ;
+      double dmean = rangeData->moment((RooRealVar&)*this,1) ;
+      double ddelta = ((xmax-dmean)>(dmean-xmin)?(xmax-dmean):(dmean-xmin))*(1+pc.getDouble("rangeMargin")) ;
       xmin = dmean-ddelta ;
       xmax = dmean+ddelta ;
       if (xmin<getMin()) xmin = getMin() ;
@@ -317,7 +317,7 @@ RooPlot* RooAbsRealLValue::frame(const RooLinkedList& cmdList) const
 /// y.plotOn(...) method, for example. The caller is responsible for deleting
 /// the returned object.
 
-RooPlot *RooAbsRealLValue::frame(Double_t xlo, Double_t xhi, Int_t nbins) const
+RooPlot *RooAbsRealLValue::frame(double xlo, double xhi, Int_t nbins) const
 {
   return new RooPlot(*this,xlo,xhi,nbins);
 }
@@ -330,7 +330,7 @@ RooPlot *RooAbsRealLValue::frame(Double_t xlo, Double_t xhi, Int_t nbins) const
 /// y.plotOn(...) method, for example. The caller is responsible for deleting
 /// the returned object.
 
-RooPlot *RooAbsRealLValue::frame(Double_t xlo, Double_t xhi) const
+RooPlot *RooAbsRealLValue::frame(double xlo, double xhi) const
 {
   return new RooPlot(*this,xlo,xhi,getBins());
 }
@@ -430,8 +430,8 @@ void RooAbsRealLValue::printMultiline(ostream& os, Int_t contents, bool verbose,
 void RooAbsRealLValue::randomize(const char* rangeName)
 {
   RooAbsBinning& binning = getBinning(rangeName) ;
-  Double_t min = binning.lowBound() ;
-  Double_t max = binning.highBound() ;
+  double min = binning.lowBound() ;
+  double max = binning.highBound() ;
 
   if(!RooNumber::isInfinite(min) && !RooNumber::isInfinite(max)) {
     setValFast(min + RooRandom::uniform()*(max-min));
@@ -483,7 +483,7 @@ void RooAbsRealLValue::setBin(Int_t ibin, const RooAbsBinning& binning)
 
 void RooAbsRealLValue::randomize(const RooAbsBinning& binning)
 {
-  Double_t range= binning.highBound() - binning.lowBound() ;
+  double range= binning.highBound() - binning.lowBound() ;
   setVal(binning.lowBound() + RooRandom::uniform()*range);
 }
 
@@ -630,8 +630,8 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooLinkedList& cm
   } else if (pc.hasProcessed("BinningName")) {
     binning[0] = &getBinning(pc.getString("xbinningName",0,true)) ;
   } else if (pc.hasProcessed("BinningSpec")) {
-    Double_t xlo = pc.getDouble("xlo") ;
-    Double_t xhi = pc.getDouble("xhi") ;
+    double xlo = pc.getDouble("xlo") ;
+    double xhi = pc.getDouble("xhi") ;
     binning[0] = new RooUniformBinning((xlo==xhi)?getMin():xlo,(xlo==xhi)?getMax():xhi,pc.getInt("nxbins")) ;
     ownBinning[0] = true ;
   } else {
@@ -646,8 +646,8 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooLinkedList& cm
     } else if (pc.hasProcessed("YVar::BinningName")) {
       binning[1] = &yvar.getBinning(pc.getString("ybinningName",0,true)) ;
     } else if (pc.hasProcessed("YVar::BinningSpec")) {
-      Double_t ylo = pc.getDouble("ylo") ;
-      Double_t yhi = pc.getDouble("yhi") ;
+      double ylo = pc.getDouble("ylo") ;
+      double yhi = pc.getDouble("yhi") ;
       binning[1] = new RooUniformBinning((ylo==yhi)?yvar.getMin():ylo,(ylo==yhi)?yvar.getMax():yhi,pc.getInt("nybins")) ;
       ownBinning[1] = true ;
     } else {
@@ -663,8 +663,8 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooLinkedList& cm
     } else if (pc.hasProcessed("ZVar::BinningName")) {
       binning[2] = &zvar.getBinning(pc.getString("zbinningName",0,true)) ;
     } else if (pc.hasProcessed("ZVar::BinningSpec")) {
-      Double_t zlo = pc.getDouble("zlo") ;
-      Double_t zhi = pc.getDouble("zhi") ;
+      double zlo = pc.getDouble("zlo") ;
+      double zhi = pc.getDouble("zhi") ;
       binning[2] = new RooUniformBinning((zlo==zhi)?zvar.getMin():zlo,(zlo==zhi)?zvar.getMax():zhi,pc.getInt("nzbins")) ;
       ownBinning[2] = true ;
     } else {
@@ -701,8 +701,8 @@ TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel
   }
 
   RooArgList list(*this) ;
-  Double_t xlo = getMin() ;
-  Double_t xhi = getMax() ;
+  double xlo = getMin() ;
+  double xhi = getMax() ;
   Int_t nbins = getBins() ;
 
   // coverity[ARRAY_VS_SINGLETON]
@@ -718,7 +718,7 @@ TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel
 /// changed with setPlotBins(). The caller takes ownership of the returned
 /// object and is responsible for deleting it.
 
-TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel, Double_t xlo, Double_t xhi, Int_t nBins) const
+TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel, double xlo, double xhi, Int_t nBins) const
 {
   RooArgList list(*this) ;
 
@@ -750,7 +750,7 @@ TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel
 /// and is responsible for deleting it.
 
 TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue &yvar, const char *zAxisLabel,
-               Double_t* xlo, Double_t* xhi, Int_t* nBins) const
+               double* xlo, double* xhi, Int_t* nBins) const
 {
   if ((!xlo && xhi) || (xlo && !xhi)) {
     coutE(InputArguments) << "RooAbsRealLValue::createHistogram(" << GetName()
@@ -758,12 +758,12 @@ TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
     return 0 ;
   }
 
-  Double_t xlo_fit[2] ;
-  Double_t xhi_fit[2] ;
+  double xlo_fit[2] ;
+  double xhi_fit[2] ;
   Int_t nbins_fit[2] ;
 
-  Double_t *xlo2 = xlo;
-  Double_t *xhi2 = xhi;
+  double *xlo2 = xlo;
+  double *xhi2 = xhi;
   Int_t *nBins2 = nBins;
 
   if (!xlo2) {
@@ -824,7 +824,7 @@ TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
 /// and is responsible for deleting it.
 
 TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue &yvar, const RooAbsRealLValue &zvar,
-               const char *tAxisLabel, Double_t* xlo, Double_t* xhi, Int_t* nBins) const
+               const char *tAxisLabel, double* xlo, double* xhi, Int_t* nBins) const
 {
   if ((!xlo && xhi) || (xlo && !xhi)) {
     coutE(InputArguments) << "RooAbsRealLValue::createHistogram(" << GetName()
@@ -832,12 +832,12 @@ TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
     return 0 ;
   }
 
-  Double_t xlo_fit[3] ;
-  Double_t xhi_fit[3] ;
+  double xlo_fit[3] ;
+  double xhi_fit[3] ;
   Int_t nbins_fit[3] ;
 
-  Double_t *xlo2 = xlo;
-  Double_t *xhi2 = xhi;
+  double *xlo2 = xlo;
+  double *xhi2 = xhi;
   Int_t* nBins2 = nBins;
   if (!xlo2) {
 
@@ -902,7 +902,7 @@ TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
 /// nBins should match the number of objects in vars.
 
 TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const char *tAxisLabel,
-                   Double_t* xlo, Double_t* xhi, Int_t* nBins)
+                   double* xlo, double* xhi, Int_t* nBins)
 {
   const RooAbsBinning* bin[3] ;
   Int_t ndim = vars.getSize() ;
@@ -1021,7 +1021,7 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
     TString axisTitle(tAxisLabel);
     axisTitle.Append(" / ( ");
     for(Int_t index2= 0; index2 < dim; index2++) {
-      Double_t delta= bins[index2]->averageBinWidth() ; // xyz[index2]->getBins();
+      double delta= bins[index2]->averageBinWidth() ; // xyz[index2]->getBins();
       if(index2 > 0) axisTitle.Append(" x ");
       axisTitle.Append(Form("%g",delta));
       if(strlen(xyz[index2]->getUnit())) {

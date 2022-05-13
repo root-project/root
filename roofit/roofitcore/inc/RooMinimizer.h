@@ -55,8 +55,8 @@ public:
   enum Strategy { Speed=0, Balance=1, Robustness=2 } ;
   enum PrintLevel { None=-1, Reduced=0, Normal=1, ExtraForProblem=2, Maximum=3 } ;
   void setStrategy(int strat) ;
-  void setErrorLevel(Double_t level) ;
-  void setEps(Double_t eps) ;
+  void setErrorLevel(double level) ;
+  void setEps(double eps) ;
   void optimizeConst(int flag) ;
   void setEvalErrorWall(bool flag) ;
   void setRecoverFromNaNStrength(double strength) ;

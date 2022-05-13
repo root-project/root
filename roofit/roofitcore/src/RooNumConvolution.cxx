@@ -224,21 +224,21 @@ RooNumConvolution::~RooNumConvolution()
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate convolution integral
 
-Double_t RooNumConvolution::evaluate() const
+double RooNumConvolution::evaluate() const
 {
   // Check if deferred initialization has occurred
   if (!_init) initialize() ;
 
   // Retrieve current value of convolution variable
-  Double_t x = _origVar ;
+  double x = _origVar ;
 
   // Propagate current normalization set to integrand
   _integrand->setNormalizationSet(_origVar.nset()) ;
 
   // Adjust convolution integration window
   if (_useWindow) {
-    Double_t center = ((RooAbsReal*)_windowParam.at(0))->getVal() ;
-    Double_t width = _windowScale * ((RooAbsReal*)_windowParam.at(1))->getVal() ;
+    double center = ((RooAbsReal*)_windowParam.at(0))->getVal() ;
+    double width = _windowScale * ((RooAbsReal*)_windowParam.at(1))->getVal() ;
     _integrator->setLimits(x-center-width,x-center+width) ;
   } else {
     _integrator->setLimits(-RooNumber::infinity(),RooNumber::infinity()) ;
@@ -246,7 +246,7 @@ Double_t RooNumConvolution::evaluate() const
 
   // Calculate convolution for present x
   if (_doProf) _integrand->resetNumCall() ;
-  Double_t ret = _integrator->integral(&x) ;
+  double ret = _integrator->integral(&x) ;
   if (_doProf) {
     _callHist->Fill(x,_integrand->numCall()) ;
     if (_integrand->numCall()>_verboseThresh) {
@@ -288,7 +288,7 @@ void RooNumConvolution::clearConvolutionWindow()
 /// where x is current value of convolution variablem, C = centerParam, W=widthParam and S = widthScaleFactor
 /// Inputs centerParam and withParam can be function expressions (RooAbsReal, RooFormulaVar) etc.
 
-void RooNumConvolution::setConvolutionWindow(RooAbsReal& centerParam, RooAbsReal& widthParam, Double_t widthScaleFactor)
+void RooNumConvolution::setConvolutionWindow(RooAbsReal& centerParam, RooAbsReal& widthParam, double widthScaleFactor)
 {
   _useWindow = true ;
   _windowParam.removeAll() ;

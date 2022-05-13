@@ -57,10 +57,10 @@ RooBinnedL::RooBinnedL(RooAbsPdf *pdf, RooAbsData *data)
          "RooBinnedL can only be created from combination of pdf and data which has exactly one observable!");
    } else {
       RooRealVar *var = (RooRealVar *)obs->first();
-      std::list<Double_t> *boundaries = pdf->binBoundaries(*var, var->getMin(), var->getMax());
-      std::list<Double_t>::iterator biter = boundaries->begin();
+      std::list<double> *boundaries = pdf->binBoundaries(*var, var->getMin(), var->getMax());
+      std::list<double>::iterator biter = boundaries->begin();
       _binw.resize(boundaries->size() - 1);
-      Double_t lastBound = (*biter);
+      double lastBound = (*biter);
       ++biter;
       int ibin = 0;
       while (biter != boundaries->end()) {
@@ -100,11 +100,11 @@ RooBinnedL::evaluatePartition(Section bins, std::size_t /*components_begin*/, st
       if (!data_->valid())
          continue;
 
-      Double_t eventWeight = data_->weight();
+      double eventWeight = data_->weight();
 
       // Calculate log(Poisson(N|mu) for this bin
-      Double_t N = eventWeight;
-      Double_t mu = pdf_->getVal() * _binw[i];
+      double N = eventWeight;
+      double mu = pdf_->getVal() * _binw[i];
 
       if (mu <= 0 && N > 0) {
 
@@ -121,7 +121,7 @@ RooBinnedL::evaluatePartition(Section bins, std::size_t /*components_begin*/, st
 
       } else {
 
-         Double_t term = -1 * (-mu + N * log(mu) - TMath::LnGamma(N + 1));
+         double term = -1 * (-mu + N * log(mu) - TMath::LnGamma(N + 1));
 
          sumWeight += eventWeight;
          result += term;

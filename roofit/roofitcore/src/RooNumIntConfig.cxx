@@ -228,7 +228,7 @@ const RooArgSet& RooNumIntConfig::getConfigSection(const char* name) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Set absolute convergence criteria (convergence if abs(Err)<newEpsAbs)
 
-void RooNumIntConfig::setEpsAbs(Double_t newEpsAbs)
+void RooNumIntConfig::setEpsAbs(double newEpsAbs)
 {
   if (newEpsAbs<0) {
     oocoutE(nullptr,InputArguments) << "RooNumIntConfig::setEpsAbs: ERROR: target absolute precision must be greater or equal than zero" << endl ;
@@ -258,7 +258,7 @@ RooPrintable::StyleOption RooNumIntConfig::defaultPrintStyle(Option_t* opt) cons
 ////////////////////////////////////////////////////////////////////////////////
 /// Set relative convergence criteria (convergence if abs(Err)/abs(Int)<newEpsRel)
 
-void RooNumIntConfig::setEpsRel(Double_t newEpsRel)
+void RooNumIntConfig::setEpsRel(double newEpsRel)
 {
   if (newEpsRel<0) {
     oocoutE(nullptr,InputArguments) << "RooNumIntConfig::setEpsRel: ERROR: target absolute precision must be greater or equal than zero" << endl ;

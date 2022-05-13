@@ -90,7 +90,7 @@ HypoTestResult::HypoTestResult(const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Alternate constructor
 
-HypoTestResult::HypoTestResult(const char* name, Double_t nullp, Double_t altp) :
+HypoTestResult::HypoTestResult(const char* name, double nullp, double altp) :
    TNamed(name,name),
    fNullPValue(nullp), fAlternatePValue(altp),
    fNullPValueError(0), fAlternatePValueError(0),
@@ -221,7 +221,7 @@ void HypoTestResult::SetNullDistribution(SamplingDistribution *null) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void HypoTestResult::SetTestStatisticData(const Double_t tsd) {
+void HypoTestResult::SetTestStatisticData(const double tsd) {
    fTestStatisticData = tsd;
 
    UpdatePValue(fNullDistr, fNullPValue, fNullPValueError, true);
@@ -260,7 +260,7 @@ bool HypoTestResult::HasTestStatisticData(void) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t HypoTestResult::NullPValueError() const {
+double HypoTestResult::NullPValueError() const {
    // compute error on Null pvalue
    return fNullPValueError;
 }
@@ -270,20 +270,20 @@ Double_t HypoTestResult::NullPValueError() const {
 /// \f$CL_{b}\f$ = 1 - NullPValue()
 /// must use opposite condition that routine above
 
-Double_t HypoTestResult::CLbError() const {
+double HypoTestResult::CLbError() const {
    return fBackgroundIsAlt ? fAlternatePValueError : fNullPValueError;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t HypoTestResult::CLsplusbError() const {
+double HypoTestResult::CLsplusbError() const {
    return fBackgroundIsAlt ? fNullPValueError : fAlternatePValueError;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Taylor expansion series approximation for standard deviation (error propagation)
 
-Double_t HypoTestResult::SignificanceError() const {
+double HypoTestResult::SignificanceError() const {
    return NullPValueError() / ROOT::Math::normal_pdf(Significance());
 }
 
@@ -295,7 +295,7 @@ Double_t HypoTestResult::SignificanceError() const {
 /// \sqrt{\left( \frac{\sigma_{CL_{s+b}}}{CL_{s+b}} \right)^2 + \left( \frac{\sigma_{CL_{b}}}{CL_{b}} \right)^2}
 /// \f]
 
-Double_t HypoTestResult::CLsError() const {
+double HypoTestResult::CLsError() const {
    if(!fAltDistr || !fNullDistr) return 0.0;
 
    // unsigned const int n_b = fNullDistr->GetSamplingDistribution().size();
@@ -313,7 +313,7 @@ Double_t HypoTestResult::CLsError() const {
 ////////////////////////////////////////////////////////////////////////////////
 /// updates the pvalue if sufficient data is available
 
-void HypoTestResult::UpdatePValue(const SamplingDistribution* distr, Double_t &pvalue, Double_t &perror, bool /*isNull*/) {
+void HypoTestResult::UpdatePValue(const SamplingDistribution* distr, double &pvalue, double &perror, bool /*isNull*/) {
    if(IsNaN(fTestStatisticData)) return;
    if(!distr) return;
 

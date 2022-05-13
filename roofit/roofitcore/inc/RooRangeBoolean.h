@@ -34,14 +34,14 @@ public:
   ~RooRangeBoolean() override ;
 
 
-  std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override ;
+  std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override ;
 
 protected:
 
   RooRealProxy _x;
   TString _rangeName ;
 
-  Double_t evaluate() const override;
+  double evaluate() const override;
 
   ClassDefOverride(RooRangeBoolean,1) // Polynomial function
 };

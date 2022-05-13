@@ -69,7 +69,7 @@ public:
 
   Int_t basisCode(const char* name) const override ;
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void generateEvent(Int_t code) override;
@@ -79,27 +79,27 @@ public:
   void advertiseAsymptoticIntegral(bool flag) { _asympInt = flag ; }  // added FMV,07/24/03
 
 protected:
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
 
 private:
-  //Double_t calcDecayConv(Double_t sign, Double_t tau, Double_t sig, Double_t rtau) const ;
-  Double_t calcDecayConv(Double_t sign, Double_t tau, Double_t sig, Double_t rtau, Double_t fsign) const ;
+  //double calcDecayConv(double sign, double tau, double sig, double rtau) const ;
+  double calcDecayConv(double sign, double tau, double sig, double rtau, double fsign) const ;
    // modified FMV,08/13/03
-  std::complex<Double_t> calcSinConv(Double_t sign, Double_t sig, Double_t tau, Double_t omega, Double_t rtau, Double_t fsign) const ;
-  Double_t calcSinConv(Double_t sign, Double_t sig, Double_t tau, Double_t rtau, Double_t fsign) const ;
-  std::complex<Double_t> calcSinConvNorm(Double_t sign, Double_t tau, Double_t omega,
-                        Double_t sig, Double_t rtau, Double_t fsign, const char* rangeName) const ; // modified FMV,07/24/03
-  Double_t calcSinConvNorm(Double_t sign, Double_t tau,
-        Double_t sig, Double_t rtau, Double_t fsign, const char* rangeName) const ; // added FMV,08/18/03
-  //Double_t calcSinhConv(Double_t sign, Double_t sign1, Double_t sign2, Double_t tau, Double_t dgamma, Double_t sig, Double_t rtau, Double_t fsign) const ;
-  //Double_t calcCoshConv(Double_t sign, Double_t tau, Double_t dgamma, Double_t sig, Double_t rtau, Double_t fsign) const ;
+  std::complex<double> calcSinConv(double sign, double sig, double tau, double omega, double rtau, double fsign) const ;
+  double calcSinConv(double sign, double sig, double tau, double rtau, double fsign) const ;
+  std::complex<double> calcSinConvNorm(double sign, double tau, double omega,
+                        double sig, double rtau, double fsign, const char* rangeName) const ; // modified FMV,07/24/03
+  double calcSinConvNorm(double sign, double tau,
+        double sig, double rtau, double fsign, const char* rangeName) const ; // added FMV,08/18/03
+  //double calcSinhConv(double sign, double sign1, double sign2, double tau, double dgamma, double sig, double rtau, double fsign) const ;
+  //double calcCoshConv(double sign, double tau, double dgamma, double sig, double rtau, double fsign) const ;
 
-  static std::complex<Double_t> evalCerfApprox(Double_t swt, Double_t u, Double_t c);
+  static std::complex<double> evalCerfApprox(double swt, double u, double c);
 
   // Calculate common normalization factors
   // added FMV,07/24/03
-  std::complex<Double_t> evalCerfInt(Double_t sign, Double_t wt, Double_t tau, Double_t umin, Double_t umax, Double_t c) const ;
-  Double_t evalCerfInt(Double_t sign, Double_t tau, Double_t umin, Double_t umax, Double_t c) const ;
+  std::complex<double> evalCerfInt(double sign, double wt, double tau, double umin, double umax, double c) const ;
+  double evalCerfInt(double sign, double tau, double umin, double umax, double c) const ;
 
   RooRealProxy _mean;
   RooRealProxy sigma ;

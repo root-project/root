@@ -71,12 +71,12 @@ RooLognormal::RooLognormal(const RooLognormal& other, const char* name) :
 /// standard parameterization to a lognormal random variable
 /// => treat ln(k) as -ln(k) for k<1
 
-Double_t RooLognormal::evaluate() const
+double RooLognormal::evaluate() const
 {
-  Double_t ln_k = TMath::Abs(TMath::Log(k));
-  Double_t ln_m0 = TMath::Log(m0);
+  double ln_k = TMath::Abs(TMath::Log(k));
+  double ln_m0 = TMath::Log(m0);
 
-  Double_t ret = ROOT::Math::lognormal_pdf(x,ln_m0,ln_k);
+  double ret = ROOT::Math::lognormal_pdf(x,ln_m0,ln_k);
   return ret ;
 }
 
@@ -98,14 +98,14 @@ Int_t RooLognormal::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVar
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooLognormal::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooLognormal::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   R__ASSERT(code==1) ;
 
-  static const Double_t root2 = sqrt(2.) ;
+  static const double root2 = sqrt(2.) ;
 
-  Double_t ln_k = TMath::Abs(TMath::Log(k));
-  Double_t ret = 0.5*( RooMath::erf( TMath::Log(x.max(rangeName)/m0)/(root2*ln_k) ) - RooMath::erf( TMath::Log(x.min(rangeName)/m0)/(root2*ln_k) ) ) ;
+  double ln_k = TMath::Abs(TMath::Log(k));
+  double ret = 0.5*( RooMath::erf( TMath::Log(x.max(rangeName)/m0)/(root2*ln_k) ) - RooMath::erf( TMath::Log(x.min(rangeName)/m0)/(root2*ln_k) ) ) ;
 
   return ret ;
 }
@@ -124,7 +124,7 @@ void RooLognormal::generateEvent(Int_t code)
 {
   R__ASSERT(code==1) ;
 
-  Double_t xgen ;
+  double xgen ;
   while(1) {
     xgen = TMath::Exp(RooRandom::randomGenerator()->Gaus(TMath::Log(m0),TMath::Log(k)));
     if (xgen<=x.max() && xgen>=x.min()) {

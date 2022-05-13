@@ -131,7 +131,7 @@ void MCMCCalculator::SetupBasicUsage()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCMCCalculator::SetLeftSideTailFraction(Double_t a)
+void MCMCCalculator::SetLeftSideTailFraction(double a)
 {
    if (a < 0 || a > 1) {
       coutE(InputArguments) << "MCMCCalculator::SetLeftSideTailFraction: "

@@ -61,11 +61,11 @@ namespace RooStats{
           const RooCmdArg& fitToarg7=RooCmdArg::none(),
           const RooCmdArg& fitToarg8=RooCmdArg::none());
 
-    Double_t GetSumOfEventSWeight(Int_t numEvent) const;
+    double GetSumOfEventSWeight(Int_t numEvent) const;
 
-    Double_t GetYieldFromSWeight(const char* sVariable) const;
+    double GetYieldFromSWeight(const char* sVariable) const;
 
-    Double_t GetSWeight(Int_t numEvent, const char* sVariable) const;
+    double GetSWeight(Int_t numEvent, const char* sVariable) const;
 
 
 

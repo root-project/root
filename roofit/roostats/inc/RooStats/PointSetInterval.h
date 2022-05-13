@@ -36,14 +36,14 @@ namespace RooStats {
     bool IsInInterval(const RooArgSet&) const override;
 
     /// set the confidence level for the interval
-    void SetConfidenceLevel(Double_t cl) override {fConfidenceLevel = cl;}
+    void SetConfidenceLevel(double cl) override {fConfidenceLevel = cl;}
 
     /// return the confidence level for the interval
-    Double_t ConfidenceLevel() const override {return fConfidenceLevel;}
+    double ConfidenceLevel() const override {return fConfidenceLevel;}
 
     /// Method to return lower limit on a given parameter
-    ///  Double_t LowerLimit(RooRealVar& param) ; // could provide, but misleading?
-    ///      Double_t UpperLimit(RooRealVar& param) ; // could provide, but misleading?
+    ///  double LowerLimit(RooRealVar& param) ; // could provide, but misleading?
+    ///      double UpperLimit(RooRealVar& param) ; // could provide, but misleading?
 
     /// return a cloned list with the parameter of interest
     RooArgSet* GetParameters() const override;
@@ -55,10 +55,10 @@ namespace RooStats {
     bool CheckParameters(const RooArgSet&) const override ;
 
     /// return lower limit on a given parameter
-    Double_t LowerLimit(RooRealVar& param) ;
+    double LowerLimit(RooRealVar& param) ;
 
     /// return upper limit on a given parameter
-    Double_t UpperLimit(RooRealVar& param) ;
+    double UpperLimit(RooRealVar& param) ;
 
 
   protected:
@@ -67,7 +67,7 @@ namespace RooStats {
 
   private:
 
-    Double_t fConfidenceLevel;              ///< confidence level
+    double fConfidenceLevel;              ///< confidence level
     RooAbsData* fParameterPointsInInterval; ///< either a histogram (RooDataHist) or a tree (RooDataSet)
 
 

@@ -433,10 +433,10 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
   // Save a graph of the profile likelihood curve
   RooCurve* curve=frame->getCurve();
   Int_t curve_N=curve->GetN();
-  Double_t* curve_x=curve->GetX();
+  double* curve_x=curve->GetX();
 
-  Double_t * x_arr = new Double_t[curve_N];
-  Double_t * y_arr_nll = new Double_t[curve_N];
+  double * x_arr = new double[curve_N];
+  double * y_arr_nll = new double[curve_N];
 
   for(int i=0; i<curve_N; i++){
     double f=curve_x[i];

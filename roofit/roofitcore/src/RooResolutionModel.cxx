@@ -41,7 +41,7 @@
  *  ```
  *  function indicating which basis functions this resolution model supports, and
  *  ```
- *    Double_t evaluate(),
+ *    double evaluate(),
  *  ```
  *  which should implement the resolution model (optionally convoluted with one of the
  *  supported basis functions). RooResolutionModel objects can be used as regular
@@ -244,7 +244,7 @@ const RooRealVar& RooResolutionModel::basisConvVar() const
 /// call RooAbsPdf::getValF(), otherwise return unnormalized value
 /// regardless of specified normalization set
 
-Double_t RooResolutionModel::getValV(const RooArgSet* nset) const
+double RooResolutionModel::getValV(const RooArgSet* nset) const
 {
   if (!_basis) return RooAbsPdf::getValV(nset) ;
 
@@ -296,7 +296,7 @@ bool RooResolutionModel::redirectServersHook(const RooAbsCollection& newServerLi
 ////////////////////////////////////////////////////////////////////////////////
 /// Floating point error checking and tracing for given float value
 
-//bool RooResolutionModel::traceEvalHook(Double_t value) const
+//bool RooResolutionModel::traceEvalHook(double value) const
 //{
 //  // check for a math error or negative value
 //   return TMath::IsNaN(value) ;
@@ -317,7 +317,7 @@ void RooResolutionModel::normLeafServerList(RooArgSet& list) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the integral of this PDF over all elements of 'nset'.
 
-Double_t RooResolutionModel::getNorm(const RooArgSet* nset) const
+double RooResolutionModel::getNorm(const RooArgSet* nset) const
 {
   if (!nset) {
     return getVal() ;
@@ -327,7 +327,7 @@ Double_t RooResolutionModel::getNorm(const RooArgSet* nset) const
   if (_verboseEval>1) cxcoutD(Tracing) << IsA()->GetName() << "::getNorm(" << GetName()
                    << "): norm(" << _norm << ") = " << _norm->getVal() << endl ;
 
-  Double_t ret = _norm->getVal() ;
+  double ret = _norm->getVal() ;
   return ret ;
 }
 

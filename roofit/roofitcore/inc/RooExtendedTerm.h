@@ -28,11 +28,11 @@ public:
   TObject* clone(const char* newname) const override { return new RooExtendedTerm(*this,newname) ; }
   ~RooExtendedTerm() override ;
 
-  Double_t evaluate() const override { return 1. ; }
+  double evaluate() const override { return 1. ; }
 
   ExtendMode extendMode() const override { return CanBeExtended ; }
   /// Return number of expected events, in other words the value of the associated n parameter.
-  Double_t expectedEvents(const RooArgSet* nset) const override ;
+  double expectedEvents(const RooArgSet* nset) const override ;
 
 protected:
 

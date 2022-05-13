@@ -32,21 +32,21 @@ public:
    TObject *clone(const char *newname) const override { return new RooRealSumFunc(*this, newname); }
    ~RooRealSumFunc() override;
 
-   Double_t evaluate() const override;
+   double evaluate() const override;
    bool checkObservables(const RooArgSet *nset) const override;
 
    bool forceAnalyticalInt(const RooAbsArg &arg) const override { return arg.isFundamental(); }
    Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &numVars, const RooArgSet *normSet,
                                  const char *rangeName = 0) const override;
-   Double_t analyticalIntegralWN(Int_t code, const RooArgSet *normSet, const char *rangeName = 0) const override;
+   double analyticalIntegralWN(Int_t code, const RooArgSet *normSet, const char *rangeName = 0) const override;
 
    const RooArgList &funcList() const { return _funcList; }
    const RooArgList &coefList() const { return _coefList; }
 
    void printMetaArgs(std::ostream &os) const override;
 
-   std::list<Double_t> *binBoundaries(RooAbsRealLValue & /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override;
-   std::list<Double_t> *plotSamplingHint(RooAbsRealLValue & /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override;
+   std::list<double> *binBoundaries(RooAbsRealLValue & /*obs*/, double /*xlo*/, double /*xhi*/) const override;
+   std::list<double> *plotSamplingHint(RooAbsRealLValue & /*obs*/, double /*xlo*/, double /*xhi*/) const override;
    bool isBinnedDistribution(const RooArgSet &obs) const override;
 
    void setFloor(bool flag) { _doFloor = flag; }

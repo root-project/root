@@ -82,11 +82,11 @@ public:
     return getCurrentOrdinalNumber();
   }
   Int_t numBins(const char* rangeName=nullptr) const override ;
-  Double_t getBinWidth(Int_t /*i*/, const char* /*rangeName*/=0) const override {
+  double getBinWidth(Int_t /*i*/, const char* /*rangeName*/=0) const override {
     // Return volume of i-th bin (according to binning named rangeName if rangeName!=0)
     return 1.0 ;
   }
-  Double_t volume(const char* rangeName) const override {
+  double volume(const char* rangeName) const override {
     // Return span of range with given name (=number of states included in this range)
     return numTypes(rangeName) ;
   }

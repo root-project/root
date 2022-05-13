@@ -288,7 +288,7 @@ bool AsymptoticCalculator::Initialize() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   const RooArgSet * condObs, const RooArgSet * globObs, const RooArgSet *poiSet) {
+double AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   const RooArgSet * condObs, const RooArgSet * globObs, const RooArgSet *poiSet) {
     int verbose = fgPrintLevel;
 
 

@@ -38,7 +38,7 @@ ClassImp(RooBlindTools);
 /// Constructor
 
 RooBlindTools::RooBlindTools(const char *stSeedIn, blindMode Mode,
-              Double_t centralValue, Double_t sigmaOffset, bool s2bMode) :
+              double centralValue, double sigmaOffset, bool s2bMode) :
 
   _PrecisionOffsetScale(sigmaOffset),
   _PrecisionCentralValue(centralValue),
@@ -103,93 +103,93 @@ RooBlindTools::~RooBlindTools(){}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBlindTools::HideDeltaZ(Double_t DeltaZ, Double_t STag)const{
+double RooBlindTools::HideDeltaZ(double DeltaZ, double STag)const{
   Int_t sTag = SignOfTag(STag);
-  Double_t DeltaZPrime = _DeltaZSignFlip*DeltaZ*sTag + _DeltaZOffset;
+  double DeltaZPrime = _DeltaZSignFlip*DeltaZ*sTag + _DeltaZOffset;
 
   return DeltaZPrime;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBlindTools::HiDelZPdG(Double_t DeltaZ, Double_t STag, Double_t PdG) const{
+double RooBlindTools::HiDelZPdG(double DeltaZ, double STag, double PdG) const{
   Int_t sTag = SignOfTag(STag);
-  Double_t DeltaZPrime = _DeltaZSignFlip*(DeltaZ - PdG)*sTag + _DeltaZOffset;
+  double DeltaZPrime = _DeltaZSignFlip*(DeltaZ - PdG)*sTag + _DeltaZOffset;
 
   return DeltaZPrime;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBlindTools::UnHideDeltaZ(Double_t DeltaZPrime, Double_t STag) const{
+double RooBlindTools::UnHideDeltaZ(double DeltaZPrime, double STag) const{
   Int_t sTag = SignOfTag(STag);
-  Double_t DeltaZ = (DeltaZPrime - _DeltaZOffset)/(sTag*_DeltaZSignFlip);
+  double DeltaZ = (DeltaZPrime - _DeltaZOffset)/(sTag*_DeltaZSignFlip);
 
   return DeltaZ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBlindTools::UnHiDelZPdG(Double_t DeltaZPrime, Double_t STag, Double_t PdG) const{
+double RooBlindTools::UnHiDelZPdG(double DeltaZPrime, double STag, double PdG) const{
   Int_t sTag = SignOfTag(STag);
-  Double_t DeltaZ = PdG + (DeltaZPrime - _DeltaZOffset)/(sTag*_DeltaZSignFlip);
+  double DeltaZ = PdG + (DeltaZPrime - _DeltaZOffset)/(sTag*_DeltaZSignFlip);
 
   return DeltaZ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBlindTools::UnHideAsym(Double_t AsymPrime) const{
+double RooBlindTools::UnHideAsym(double AsymPrime) const{
   if(mode()==dataonly) return AsymPrime;
 
-  Double_t Asym = (AsymPrime - _AsymOffset)/_AsymSignFlip;
+  double Asym = (AsymPrime - _AsymOffset)/_AsymSignFlip;
 
   return Asym;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBlindTools::HideAsym(Double_t Asym) const{
+double RooBlindTools::HideAsym(double Asym) const{
   if(mode()==dataonly) return Asym;
 
-  Double_t AsymPrime = Asym*_AsymSignFlip + _AsymOffset;
+  double AsymPrime = Asym*_AsymSignFlip + _AsymOffset;
 
   return AsymPrime;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBlindTools::UnHideDeltaM(Double_t DeltaMPrime) const{
+double RooBlindTools::UnHideDeltaM(double DeltaMPrime) const{
   if(mode()==dataonly) return DeltaMPrime;
 
-  Double_t DeltaM = DeltaMPrime - _DeltaMOffset;
+  double DeltaM = DeltaMPrime - _DeltaMOffset;
 
   return DeltaM;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBlindTools::HideDeltaM(Double_t DeltaM) const{
+double RooBlindTools::HideDeltaM(double DeltaM) const{
   if(mode()==dataonly) return DeltaM;
 
-  Double_t DeltaMPrime = DeltaM + _DeltaMOffset;
+  double DeltaMPrime = DeltaM + _DeltaMOffset;
 
   return DeltaMPrime;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBlindTools::UnHiAsPdG(Double_t AsymPrime, Double_t PdG) const{
+double RooBlindTools::UnHiAsPdG(double AsymPrime, double PdG) const{
   if(mode()==dataonly) return AsymPrime;
 
-  Double_t Asym = PdG + (AsymPrime - _AsymOffset)/_AsymSignFlip;
+  double Asym = PdG + (AsymPrime - _AsymOffset)/_AsymSignFlip;
 
   return Asym;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBlindTools::MysteryPhase() const{
+double RooBlindTools::MysteryPhase() const{
   if(mode()==dataonly) return 0.0;
 
   return _MysteryPhase;
@@ -197,20 +197,20 @@ Double_t RooBlindTools::MysteryPhase() const{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBlindTools::HiAsPdG(Double_t Asym, Double_t PdG) const{
+double RooBlindTools::HiAsPdG(double Asym, double PdG) const{
   if(mode()==dataonly) return Asym;
 
-  Double_t AsymPrime = (Asym - PdG)*_AsymSignFlip + _AsymOffset;
+  double AsymPrime = (Asym - PdG)*_AsymSignFlip + _AsymOffset;
 
   return AsymPrime;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBlindTools::UnHidePrecision(Double_t PrecisionPrime) const{
+double RooBlindTools::UnHidePrecision(double PrecisionPrime) const{
   if(mode()==dataonly) return PrecisionPrime;
 
-  Double_t Precision(0.);
+  double Precision(0.);
 
   if (_PrecisionSignFlip>0) {
     Precision = PrecisionPrime - _PrecisionOffset;
@@ -225,10 +225,10 @@ Double_t RooBlindTools::UnHidePrecision(Double_t PrecisionPrime) const{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBlindTools::HidePrecision(Double_t Precision) const{
+double RooBlindTools::HidePrecision(double Precision) const{
   if(mode()==dataonly) return Precision;
 
-  Double_t PrecisionPrime(0.);
+  double PrecisionPrime(0.);
 
   if (_PrecisionSignFlip>0) {
     PrecisionPrime = Precision + _PrecisionOffset;
@@ -242,7 +242,7 @@ Double_t RooBlindTools::HidePrecision(Double_t Precision) const{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBlindTools::UnHideOffset(Double_t PrecisionPrime) const{
+double RooBlindTools::UnHideOffset(double PrecisionPrime) const{
   if(mode()==dataonly) return PrecisionPrime;
 
   return PrecisionPrime - _PrecisionOffset;
@@ -250,7 +250,7 @@ Double_t RooBlindTools::UnHideOffset(Double_t PrecisionPrime) const{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBlindTools::HideOffset(Double_t Precision) const{
+double RooBlindTools::HideOffset(double Precision) const{
   if(mode()==dataonly) return Precision;
 
   return Precision + _PrecisionOffset;
@@ -258,7 +258,7 @@ Double_t RooBlindTools::HideOffset(Double_t Precision) const{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBlindTools::UnHideUniform(Double_t PrecisionPrime) const{
+double RooBlindTools::UnHideUniform(double PrecisionPrime) const{
   if(mode()==dataonly) return PrecisionPrime;
 
   return PrecisionPrime - _PrecisionUniform;
@@ -266,7 +266,7 @@ Double_t RooBlindTools::UnHideUniform(Double_t PrecisionPrime) const{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBlindTools::HideUniform(Double_t Precision) const{
+double RooBlindTools::HideUniform(double Precision) const{
   if(mode()==dataonly) return Precision;
 
   return Precision + _PrecisionUniform;
@@ -274,10 +274,10 @@ Double_t RooBlindTools::HideUniform(Double_t Precision) const{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBlindTools::RandomizeTag(Double_t STag, Int_t EventNumber) const{
+double RooBlindTools::RandomizeTag(double STag, Int_t EventNumber) const{
   Int_t Seed = EventNumber % 7997 + 2;
-  Double_t r = PseudoRandom(Seed);
-  Double_t STagPrime(0.0);
+  double r = PseudoRandom(Seed);
+  double STagPrime(0.0);
 
   if (r < _STagConstant){
     STagPrime = STag;
@@ -291,7 +291,7 @@ Double_t RooBlindTools::RandomizeTag(Double_t STag, Int_t EventNumber) const{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBlindTools::Randomizer(const char *StringAlphabet) const{
+double RooBlindTools::Randomizer(const char *StringAlphabet) const{
   char lowerseed[1024] ;
   strlcpy(lowerseed,_stSeed,1024) ;
 
@@ -327,7 +327,7 @@ Double_t RooBlindTools::Randomizer(const char *StringAlphabet) const{
   jRan = (jRan*ia + ic) % im;
   jRan = (jRan*ia + ic) % im;
 
-  Double_t theRan = (float) jRan / (float) im;
+  double theRan = (float) jRan / (float) im;
 
   return theRan;    //theRan is between 0.0 - 1.0
 
@@ -335,7 +335,7 @@ Double_t RooBlindTools::Randomizer(const char *StringAlphabet) const{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBlindTools::PseudoRandom(Int_t Seed) const{
+double RooBlindTools::PseudoRandom(Int_t Seed) const{
   if (Seed<1 || Seed>8000 ) {
     cout<< "RooBlindTools::PseudoRandom: Your integer Seed is Bad" <<endl;
   }
@@ -349,7 +349,7 @@ Double_t RooBlindTools::PseudoRandom(Int_t Seed) const{
   jRan = (jRan*ia + ic) % im;
   jRan = (jRan*ia + ic) % im;
 
-  Double_t theRan = (float) jRan / (float) im;
+  double theRan = (float) jRan / (float) im;
 
   return theRan;    //theRan is between 0.0 - 1.0
 
@@ -357,19 +357,19 @@ Double_t RooBlindTools::PseudoRandom(Int_t Seed) const{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBlindTools::MakeOffset(const char *StringAlphabet) const{
-  Double_t theRan = Randomizer(StringAlphabet);
+double RooBlindTools::MakeOffset(const char *StringAlphabet) const{
+  double theRan = Randomizer(StringAlphabet);
 
-  Double_t theOffset = (2.0)*theRan - (1.0);
+  double theOffset = (2.0)*theRan - (1.0);
 
   return theOffset;   //theOffset lies between -1.0 and 1.0
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBlindTools::MakeGaussianOffset(const char *StringAlphabet) const{
-  Double_t theRan1 = Randomizer(StringAlphabet);
-  Double_t theRan2 = Randomizer("cdefghijklmnopqrstuvwxyzab");
+double RooBlindTools::MakeGaussianOffset(const char *StringAlphabet) const{
+  double theRan1 = Randomizer(StringAlphabet);
+  double theRan2 = Randomizer("cdefghijklmnopqrstuvwxyzab");
 
   if (theRan1==0.0 || theRan1==1.0){
     theRan1 = 0.5;
@@ -378,17 +378,17 @@ Double_t RooBlindTools::MakeGaussianOffset(const char *StringAlphabet) const{
     theRan2 = 0.5;
   }
 
-  Double_t theOffset = sin(2.0*3.14159*theRan1)*sqrt(-2.0*log(theRan2));
+  double theOffset = sin(2.0*3.14159*theRan1)*sqrt(-2.0*log(theRan2));
 
   return theOffset;   //theOffset is Gaussian with mean 0, sigma 1
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBlindTools::MakeSignFlip(const char *StringAlphabet) const{
-  Double_t theRan = Randomizer(StringAlphabet);
+double RooBlindTools::MakeSignFlip(const char *StringAlphabet) const{
+  double theRan = Randomizer(StringAlphabet);
 
-  Double_t theSignFlip = 1.0;
+  double theSignFlip = 1.0;
   if (theRan>0.5){
     theSignFlip = 1.0;
   } else {
@@ -400,7 +400,7 @@ Double_t RooBlindTools::MakeSignFlip(const char *StringAlphabet) const{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooBlindTools::SignOfTag(Double_t STag) const{
+Int_t RooBlindTools::SignOfTag(double STag) const{
   Int_t sTag;
   if (STag < 0.0){
     sTag = -1;

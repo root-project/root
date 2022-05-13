@@ -39,9 +39,9 @@ public:
     return _valid;
   }
 
-  virtual Double_t operator()(const Double_t xvector[]) const = 0;
-  virtual Double_t getMinLimit(UInt_t dimension) const = 0;
-  virtual Double_t getMaxLimit(UInt_t dimension) const = 0;
+  virtual double operator()(const double xvector[]) const = 0;
+  virtual double getMinLimit(UInt_t dimension) const = 0;
+  virtual double getMaxLimit(UInt_t dimension) const = 0;
 
   /// Return number of function calls since last reset
   Int_t numCall() const {
@@ -66,11 +66,11 @@ public:
     return "(unnamed)" ;
   }
 
-  virtual std::list<Double_t>* binBoundaries(Int_t) const { return nullptr; }
+  virtual std::list<double>* binBoundaries(Int_t) const { return nullptr; }
 
   /// Interface for returning an optional hint for initial sampling points when constructing a curve
   /// projected on observable.
-  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const {
+  virtual std::list<double>* plotSamplingHint(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const {
     return nullptr;
   }
 

@@ -42,7 +42,7 @@ public:
   TObject* clone(const char* newname) const override { return new RooRealIntegral(*this,newname); }
   ~RooRealIntegral() override;
 
-  Double_t getValV(const RooArgSet* set=0) const override ;
+  double getValV(const RooArgSet* set=0) const override ;
 
   bool isValid() const override { return _valid; }
 
@@ -71,7 +71,7 @@ public:
 
   static Int_t getCacheAllNumeric() ;
 
-  std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override {
+  std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override {
     // Forward plot sampling hint of integrand
     return _function.arg().plotSamplingHint(obs,xlo,xhi) ;
   }
@@ -94,13 +94,13 @@ protected:
   bool initNumIntegrator() const;
   void autoSelectDirtyMode() ;
 
-  virtual Double_t sum() const ;
-  virtual Double_t integrate() const ;
-  virtual Double_t jacobianProduct() const ;
+  virtual double sum() const ;
+  virtual double integrate() const ;
+  virtual double jacobianProduct() const ;
 
   // Evaluation and validation implementation
-  Double_t evaluate() const override ;
-  bool isValidReal(Double_t value, bool printError=false) const override ;
+  double evaluate() const override ;
+  bool isValidReal(double value, bool printError=false) const override ;
   bool servesExclusively(const RooAbsArg* server,const RooArgSet& exclLVBranches, const RooArgSet& allBranches) const ;
 
 

@@ -70,7 +70,7 @@ in a common way for several concrete calculators.
       {}
 
       CombinedCalculator(RooAbsData& data, RooAbsPdf& pdf, const RooArgSet& paramsOfInterest,
-                         Double_t size = 0.05, const RooArgSet* nullParams = 0, const RooArgSet* altParams = 0, const RooArgSet* nuisParams = 0) :
+                         double size = 0.05, const RooArgSet* nullParams = 0, const RooArgSet* altParams = 0, const RooArgSet* nuisParams = 0) :
 
          fPdf(&pdf),
          fData(&data),
@@ -84,7 +84,7 @@ in a common way for several concrete calculators.
 
       /// constructor from data and model configuration
       CombinedCalculator(RooAbsData& data, const ModelConfig& model,
-                         Double_t size = 0.05) :
+                         double size = 0.05) :
          fPdf(0),
          fData(&data)
       {
@@ -101,13 +101,13 @@ in a common way for several concrete calculators.
       HypoTestResult* GetHypoTest() const override = 0;
 
       /// set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
-      void SetTestSize(Double_t size) override {fSize = size;}
+      void SetTestSize(double size) override {fSize = size;}
       /// set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
-      void SetConfidenceLevel(Double_t cl) override {fSize = 1.-cl;}
+      void SetConfidenceLevel(double cl) override {fSize = 1.-cl;}
       /// Get the size of the test (eg. rate of Type I error)
-      Double_t Size() const override {return fSize;}
+      double Size() const override {return fSize;}
       /// Get the Confidence level for the test
-      Double_t ConfidenceLevel()  const override {return 1.-fSize;}
+      double ConfidenceLevel()  const override {return 1.-fSize;}
 
       /// Set the DataSet, add to the the workspace if not already there
       void SetData(RooAbsData & data) override {
@@ -158,7 +158,7 @@ in a common way for several concrete calculators.
       RooAbsPdf * GetPdf() const { return fPdf; }
       RooAbsData * GetData() const { return fData; }
 
-      Double_t fSize; ///< size of the test (eg. specified rate of Type I error)
+      double fSize; ///< size of the test (eg. specified rate of Type I error)
 
       RooAbsPdf  * fPdf;
       RooAbsData * fData;

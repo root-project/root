@@ -473,7 +473,7 @@ void RooAbsCategory::attachToTree(TTree& tree, Int_t bufSize)
       {"Float_t",   [&](){ return createTreeReadBuffer<Float_t  >(cleanName, tree); }},
       {"Double_t",  [&](){ return createTreeReadBuffer<Double_t >(cleanName, tree); }},
       {"UChar_t",   [&](){ return createTreeReadBuffer<UChar_t  >(cleanName, tree); }},
-      {"bool",    [&](){ return createTreeReadBuffer<bool   >(cleanName, tree); }},
+      {"Boolt_",    [&](){ return createTreeReadBuffer<Bool_t   >(cleanName, tree); }},
       {"Char_t",    [&](){ return createTreeReadBuffer<Char_t   >(cleanName, tree); }},
       {"UInt_t",    [&](){ return createTreeReadBuffer<UInt_t   >(cleanName, tree); }},
       {"Long64_t",  [&](){ return createTreeReadBuffer<Long64_t >(cleanName, tree); }},

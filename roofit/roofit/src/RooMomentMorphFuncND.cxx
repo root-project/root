@@ -293,7 +293,7 @@ void RooMomentMorphFuncND::initialize()
       for (int k = 0; k < nPdf; ++k) {
          vector<double> dm2;
          for (int idim = 0; idim < nPar; idim++) {
-            Double_t delta = _referenceGrid._nref[k][idim] - _referenceGrid._nref[0][idim];
+            double delta = _referenceGrid._nref[k][idim] - _referenceGrid._nref[0][idim];
             dm2.push_back(delta);
          }
          dm[k] = dm2;
@@ -317,7 +317,7 @@ void RooMomentMorphFuncND::initialize()
          for (int i = 0; i < nCombs; i++) {
             double tmpDm = 1.0;
             for (int ix = 0; ix < nPar; ix++) {
-               Double_t delta = dm[k][ix];
+               double delta = dm[k][ix];
                tmpDm *= TMath::Power(delta, static_cast<double>(output[i][ix]));
             }
             M(k, nperm) = tmpDm;
@@ -557,7 +557,7 @@ RooMomentMorphFuncND::CacheElem::~CacheElem()
 }
 
 //_____________________________________________________________________________
-Double_t RooMomentMorphFuncND::getVal(const RooArgSet *set) const
+double RooMomentMorphFuncND::getVal(const RooArgSet *set) const
 {
    // Special version of getVal() overrides RooAbsReal::getVal() to save value of current normalization set
    _curNormSet = set ? (RooArgSet *)set : (RooArgSet *)&_obsList;
@@ -576,7 +576,7 @@ RooAbsReal *RooMomentMorphFuncND::sumFunc(const RooArgSet *nset)
 }
 
 //_____________________________________________________________________________
-Double_t RooMomentMorphFuncND::evaluate() const
+double RooMomentMorphFuncND::evaluate() const
 {
    CacheElem *cache = getCache(_curNormSet);
 
@@ -584,7 +584,7 @@ Double_t RooMomentMorphFuncND::evaluate() const
       cache->calculateFractions(*this, false); // verbose turned off
    }
 
-   Double_t ret = cache->_sumFunc->getVal(_obsList.nset());
+   double ret = cache->_sumFunc->getVal(_obsList.nset());
 
    return ret;
 }
@@ -646,14 +646,14 @@ void RooMomentMorphFuncND::CacheElem::calculateFractions(const RooMomentMorphFun
    int nPdf = self._pdfList.getSize();
    int nPar = self._parList.getSize();
 
-   Double_t fracLinear(1.);
-   Double_t fracNonLinear(1.);
+   double fracLinear(1.);
+   double fracNonLinear(1.);
 
    if (self._setting == NonLinear || self._setting == NonLinearLinFractions || self._setting == NonLinearPosFractions) {
       // Calculate the delta vector
       vector<double> dm2;
       for (int idim = 0; idim < nPar; idim++) {
-         Double_t delta = ((RooRealVar *)self._parList.at(idim))->getVal() - self._referenceGrid._nref[0][idim];
+         double delta = ((RooRealVar *)self._parList.at(idim))->getVal() - self._referenceGrid._nref[0][idim];
          dm2.push_back(delta);
       }
 
@@ -676,7 +676,7 @@ void RooMomentMorphFuncND::CacheElem::calculateFractions(const RooMomentMorphFun
       for (int i = 0; i < nCombs; i++) {
          double tmpDm = 1.0;
          for (int ix = 0; ix < nPar; ix++) {
-            Double_t delta = dm2[ix];
+            double delta = dm2[ix];
             tmpDm *= TMath::Power(delta, static_cast<double>(output[i][ix]));
          }
          deltavec[nperm] = tmpDm;
@@ -764,7 +764,7 @@ void RooMomentMorphFuncND::CacheElem::calculateFractions(const RooMomentMorphFun
          } while (next_combination(xtmp.begin(), xtmp.begin() + iperm, xtmp.end()));
       }
 
-      Double_t origFrac1(0.), origFrac2(0.);
+      double origFrac1(0.), origFrac2(0.);
       for (int i = 0; i < depth; ++i) {
          double ffrac = 0.;
          for (int j = 0; j < depth; ++j) {

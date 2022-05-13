@@ -61,10 +61,10 @@ public:
   // Retrieve a row
   virtual const RooArgSet* get(Int_t index) const = 0 ;
   virtual const RooArgSet* get() const { return &_vars ; }
-  virtual Double_t weight() const = 0 ;
+  virtual double weight() const = 0 ;
 
-  virtual Double_t weightError(RooAbsData::ErrorType etype=RooAbsData::Poisson) const = 0 ;
-  virtual void weightError(Double_t& lo, Double_t& hi, RooAbsData::ErrorType etype=RooAbsData::Poisson) const = 0 ;
+  virtual double weightError(RooAbsData::ErrorType etype=RooAbsData::Poisson) const = 0 ;
+  virtual void weightError(double& lo, double& hi, RooAbsData::ErrorType etype=RooAbsData::Poisson) const = 0 ;
 
   double weight(Int_t index) const {
     get(index) ;
@@ -96,14 +96,14 @@ public:
 
   // General & bookkeeping methods
   virtual Int_t numEntries() const = 0 ;
-  virtual Double_t sumEntries() const { return 0 ; } ;
+  virtual double sumEntries() const { return 0 ; } ;
   virtual void reset() = 0 ;
 
   // Buffer redirection routines used in inside RooAbsOptTestStatistics
   virtual void attachBuffers(const RooArgSet& extObs) = 0 ;
   virtual void resetBuffers() = 0 ;
 
-  virtual void setExternalWeightArray(const Double_t* /*arrayWgt*/, const Double_t* /*arrayWgtErrLo*/, const Double_t* /*arrayWgtErrHi*/, const Double_t* /*arraySumW2*/) {} ;
+  virtual void setExternalWeightArray(const double* /*arrayWgt*/, const double* /*arrayWgtErrLo*/, const double* /*arrayWgtErrHi*/, const double* /*arraySumW2*/) {} ;
 
   // Printing interface (human readable)
   inline void Print(Option_t *options= 0) const override {

@@ -352,7 +352,7 @@ double* HybridPlot::GetHistoPvals (TH1* histo, double percentage){
 double HybridPlot::GetMedian(TH1* histo){
 
    //int xbin_median;
-   Double_t* integral = histo->GetIntegral();
+   double* integral = histo->GetIntegral();
    int median_i = 0;
    for (int j=0;j<histo->GetNbinsX(); j++)
       if (integral[j]<0.5)

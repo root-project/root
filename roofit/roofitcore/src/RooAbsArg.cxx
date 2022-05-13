@@ -2193,7 +2193,7 @@ void RooAbsArg::graphVizAddConnections(set<pair<RooAbsArg*,RooAbsArg*> >& linkSe
 
 
 // //_____________________________________________________________________________
-// TGraphStruct* RooAbsArg::graph(bool useFactoryTag, Double_t textSize)
+// TGraphStruct* RooAbsArg::graph(bool useFactoryTag, double textSize)
 // {
 //   // Return a TGraphStruct object filled with the tree structure of the pdf object
 

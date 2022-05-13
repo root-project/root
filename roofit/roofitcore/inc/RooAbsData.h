@@ -45,7 +45,7 @@ class RooAbsBinning ;
 class Roo1DTable ;
 class RooAbsDataStore ;
 template<typename T> class TMatrixTSym;
-using TMatrixDSym = TMatrixTSym<Double_t>;
+using TMatrixDSym = TMatrixTSym<double>;
 class RooFormulaVar;
 namespace RooBatchCompute{
 struct RunContext;
@@ -98,7 +98,7 @@ public:
   virtual bool changeObservableName(const char* from, const char* to) ;
 
   // Add one ore more rows of data
-  virtual void add(const RooArgSet& row, Double_t weight=1, Double_t weightError=0) = 0 ; // DERIVED
+  virtual void add(const RooArgSet& row, double weight=1, double weightError=0) = 0 ; // DERIVED
   virtual void fill() ;
 
   // Load a given row of data
@@ -106,8 +106,8 @@ public:
     // Return current row of dataset
     return &_vars ;
   }
-  virtual Double_t weight() const = 0 ; // DERIVED
-  virtual Double_t weightSquared() const = 0 ; // DERIVED
+  virtual double weight() const = 0 ; // DERIVED
+  virtual double weightSquared() const = 0 ; // DERIVED
   virtual bool valid() const { return true ; }
 
   enum ErrorType { Poisson, SumW2, None, Auto, Expected } ;
@@ -146,11 +146,11 @@ public:
   /// Return number of entries in dataset, i.e., count unweighted entries.
   virtual Int_t numEntries() const ;
   /// Return effective number of entries in dataset, i.e., sum all weights.
-  virtual Double_t sumEntries() const = 0 ;
+  virtual double sumEntries() const = 0 ;
   /// Return effective number of entries in dataset inside range or after cuts, i.e., sum certain weights.
   /// \param[in] cutSpec Apply given cut when counting (e.g. `0 < x && x < 5`). Passing `"1"` selects all events.
   /// \param[in] cutRange If the observables have a range with this name, only count events inside this range.
-  virtual Double_t sumEntries(const char* cutSpec, const char* cutRange=0) const = 0 ; // DERIVED
+  virtual double sumEntries(const char* cutSpec, const char* cutRange=0) const = 0 ; // DERIVED
   double sumEntriesW2() const;
   virtual bool isWeighted() const {
     // Do events in dataset have weights?
@@ -163,7 +163,7 @@ public:
   virtual void reset() ;
 
 
-  bool getRange(const RooAbsRealLValue& var, Double_t& lowest, Double_t& highest, Double_t marginFrac=0, bool symMode=false) const ;
+  bool getRange(const RooAbsRealLValue& var, double& lowest, double& highest, double marginFrac=0, bool symMode=false) const ;
 
   // Plot the distribution of a real valued arg
   virtual Roo1DTable* table(const RooArgSet& catSet, const char* cuts="", const char* opts="") const ;
@@ -190,12 +190,12 @@ public:
    const char* histName ;
    bool histInvisible ;
    const char* addToHistName ;
-   Double_t addToWgtSelf ;
-   Double_t addToWgtOther ;
-   Double_t xErrorSize ;
+   double addToWgtSelf ;
+   double addToWgtOther ;
+   double xErrorSize ;
    bool refreshFrameNorm ;
    bool correctForBinWidth ;
-   Double_t scaleFactor ;
+   double scaleFactor ;
   } ;
 
   // Split a dataset by a category
@@ -248,17 +248,17 @@ public:
 
   void setDirtyProp(bool flag) ;
 
-  Double_t moment(const RooRealVar& var, Double_t order, const char* cutSpec=0, const char* cutRange=0) const ;
-  Double_t moment(const RooRealVar& var, Double_t order, Double_t offset, const char* cutSpec=0, const char* cutRange=0) const ;
-  Double_t standMoment(const RooRealVar& var, Double_t order, const char* cutSpec=0, const char* cutRange=0) const ;
+  double moment(const RooRealVar& var, double order, const char* cutSpec=0, const char* cutRange=0) const ;
+  double moment(const RooRealVar& var, double order, double offset, const char* cutSpec=0, const char* cutRange=0) const ;
+  double standMoment(const RooRealVar& var, double order, const char* cutSpec=0, const char* cutRange=0) const ;
 
-  Double_t mean(const RooRealVar& var, const char* cutSpec=0, const char* cutRange=0) const { return moment(var,1,0,cutSpec,cutRange) ; }
-  Double_t sigma(const RooRealVar& var, const char* cutSpec=0, const char* cutRange=0) const { return sqrt(moment(var,2,cutSpec,cutRange)) ; }
-  Double_t skewness(const RooRealVar& var, const char* cutSpec=0, const char* cutRange=0) const { return standMoment(var,3,cutSpec,cutRange) ; }
-  Double_t kurtosis(const RooRealVar& var, const char* cutSpec=0, const char* cutRange=0) const { return standMoment(var,4,cutSpec,cutRange) ; }
+  double mean(const RooRealVar& var, const char* cutSpec=0, const char* cutRange=0) const { return moment(var,1,0,cutSpec,cutRange) ; }
+  double sigma(const RooRealVar& var, const char* cutSpec=0, const char* cutRange=0) const { return sqrt(moment(var,2,cutSpec,cutRange)) ; }
+  double skewness(const RooRealVar& var, const char* cutSpec=0, const char* cutRange=0) const { return standMoment(var,3,cutSpec,cutRange) ; }
+  double kurtosis(const RooRealVar& var, const char* cutSpec=0, const char* cutRange=0) const { return standMoment(var,4,cutSpec,cutRange) ; }
 
-  Double_t covariance(RooRealVar &x,RooRealVar &y, const char* cutSpec=0, const char* cutRange=0) const { return corrcov(x,y,cutSpec,cutRange,false) ; }
-  Double_t correlation(RooRealVar &x,RooRealVar &y, const char* cutSpec=0, const char* cutRange=0) const { return corrcov(x,y,cutSpec,cutRange,true) ; }
+  double covariance(RooRealVar &x,RooRealVar &y, const char* cutSpec=0, const char* cutRange=0) const { return corrcov(x,y,cutSpec,cutRange,false) ; }
+  double correlation(RooRealVar &x,RooRealVar &y, const char* cutSpec=0, const char* cutRange=0) const { return corrcov(x,y,cutSpec,cutRange,true) ; }
 
   TMatrixDSym* covarianceMatrix(const char* cutSpec=0, const char* cutRange=0) const { return covarianceMatrix(*get(),cutSpec,cutRange) ; }
   TMatrixDSym* correlationMatrix(const char* cutSpec=0, const char* cutRange=0) const { return correlationMatrix(*get(),cutSpec,cutRange) ; }
@@ -276,8 +276,8 @@ public:
 
   virtual RooPlot* statOn(RooPlot* frame, const char *what,
            const char *label= "", Int_t sigDigits= 2,
-           Option_t *options= "NELU", Double_t xmin=0.15,
-           Double_t xmax= 0.65,Double_t ymax=0.85,
+           Option_t *options= "NELU", double xmin=0.15,
+           double xmax= 0.65,double ymax=0.85,
                           const char* cutSpec=0, const char* cutRange=0,
                           const RooCmdArg* formatCmd=0);
 
@@ -327,7 +327,7 @@ protected:
 
   StorageType storageType;
 
-  Double_t corrcov(const RooRealVar& x, const RooRealVar& y, const char* cutSpec, const char* cutRange, bool corr) const  ;
+  double corrcov(const RooRealVar& x, const RooRealVar& y, const char* cutSpec, const char* cutRange, bool corr) const  ;
   TMatrixDSym* corrcovMatrix(const RooArgList& vars, const char* cutSpec, const char* cutRange, bool corr) const  ;
 
   virtual void optimizeReadingWithCaching(RooAbsArg& arg, const RooArgSet& cacheList, const RooArgSet& keepObsList) ;

@@ -23,7 +23,7 @@ public:
   RooQuasiRandomGenerator();
   virtual ~RooQuasiRandomGenerator();
   void reset();
-  bool generate(UInt_t dimension, Double_t vector[]);
+  bool generate(UInt_t dimension, double vector[]);
   enum { MaxDimension = 12 , NBits = 31 , MaxDegree = 50 , MaxPrimitiveDegree = 5 };
 protected:
   void calculateCoefs(UInt_t dimension);

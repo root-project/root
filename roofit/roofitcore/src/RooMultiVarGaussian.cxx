@@ -171,7 +171,7 @@ void RooMultiVarGaussian::syncMuVec() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Represent observables as vector
 
-Double_t RooMultiVarGaussian::evaluate() const
+double RooMultiVarGaussian::evaluate() const
 {
   TVectorD x(_x.getSize()) ;
   for (int i=0 ; i<_x.getSize() ; i++) {
@@ -182,7 +182,7 @@ Double_t RooMultiVarGaussian::evaluate() const
   syncMuVec() ;
   TVectorD x_min_mu = x - _muVec ;
 
-  Double_t alpha =  x_min_mu * (_covI * x_min_mu) ;
+  double alpha =  x_min_mu * (_covI * x_min_mu) ;
   return exp(-0.5*alpha) ;
 }
 
@@ -284,7 +284,7 @@ Int_t RooMultiVarGaussian::getAnalyticalIntegral(RooArgSet& allVarsIn, RooArgSet
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle full integral here
 
-Double_t RooMultiVarGaussian::analyticalIntegral(Int_t code, const char* /*rangeName*/) const
+double RooMultiVarGaussian::analyticalIntegral(Int_t code, const char* /*rangeName*/) const
 {
   if (code==-1) {
     return pow(2*3.14159268,_x.getSize()/2.)*sqrt(fabs(_det)) ;
@@ -303,7 +303,7 @@ Double_t RooMultiVarGaussian::analyticalIntegral(Int_t code, const char* /*range
   }
 
   // Calculate partial integral
-  Double_t ret = pow(2*3.14159268,aid.nint/2.)/sqrt(fabs(aid.S22det))*exp(-0.5*u*(aid.S22bar*u)) ;
+  double ret = pow(2*3.14159268,aid.nint/2.)/sqrt(fabs(aid.S22det))*exp(-0.5*u*(aid.S22bar*u)) ;
 
   return ret ;
 }

@@ -36,12 +36,12 @@ public:
   TObject* clone(const char* newname) const override { return new RooNumConvPdf(*this,newname) ; }
   ~RooNumConvPdf() override ;
 
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
 
   // Calls forwarded to RooNumConvolution
   inline RooNumIntConfig& convIntConfig() { return conv().convIntConfig() ; }
   inline void clearConvolutionWindow() { conv().clearConvolutionWindow() ; }
-  inline void setConvolutionWindow(RooAbsReal& centerParam, RooAbsReal& widthParam, Double_t widthScaleFactor=1)
+  inline void setConvolutionWindow(RooAbsReal& centerParam, RooAbsReal& widthParam, double widthScaleFactor=1)
    { conv().setConvolutionWindow(centerParam,widthParam,widthScaleFactor) ; }
   inline void setCallWarning(Int_t threshold=2000) { conv().setCallWarning(threshold) ; }
   inline void setCallProfiling(bool flag, Int_t nbinX = 40, Int_t nbinCall = 40, Int_t nCallHigh=1000)

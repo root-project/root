@@ -191,7 +191,7 @@ bool LikelihoodInterval::CheckParameters(const RooArgSet &parameterPoint) const
 /// and is true if calculation is successful
 /// in case of error return also a lower limit value of zero
 
-Double_t LikelihoodInterval::LowerLimit(const RooRealVar& param, bool & status)
+double LikelihoodInterval::LowerLimit(const RooRealVar& param, bool & status)
 {
    double lower = 0;
    double upper = 0;
@@ -205,7 +205,7 @@ Double_t LikelihoodInterval::LowerLimit(const RooRealVar& param, bool & status)
 /// and is true if calculation is successful
 /// in case of error return also a lower limit value of zero
 
-Double_t LikelihoodInterval::UpperLimit(const RooRealVar& param, bool & status)
+double LikelihoodInterval::UpperLimit(const RooRealVar& param, bool & status)
 {
    double lower = 0;
    double upper = 0;
@@ -375,7 +375,7 @@ bool LikelihoodInterval::FindLimits(const RooRealVar & param, double &lower, dou
 }
 
 
-Int_t LikelihoodInterval::GetContourPoints(const RooRealVar & paramX, const RooRealVar & paramY, Double_t * x, Double_t *y, Int_t npoints ) {
+Int_t LikelihoodInterval::GetContourPoints(const RooRealVar & paramX, const RooRealVar & paramY, double * x, double *y, Int_t npoints ) {
    // use Minuit to find the contour of the likelihood function at the desired CL
 
    // check the parameters

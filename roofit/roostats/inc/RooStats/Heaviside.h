@@ -30,7 +30,7 @@ namespace RooStats {
       RooRealProxy x ;
       RooRealProxy c ;
 
-      Double_t evaluate() const override ;
+      double evaluate() const override ;
 
    private:
 

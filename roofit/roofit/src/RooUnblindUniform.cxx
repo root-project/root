@@ -55,7 +55,7 @@ RooUnblindUniform::RooUnblindUniform()
 /// only hold the blinded values.
 
 RooUnblindUniform::RooUnblindUniform(const char *name, const char *title,
-                const char *blindString, Double_t scale, RooAbsReal& blindValue)
+                const char *blindString, double scale, RooAbsReal& blindValue)
   : RooAbsHiddenReal(name,title),
   _value("value","Uniform blinded value",this,blindValue),
   _blindEngine(blindString,RooBlindTools::full,0.,scale)
@@ -82,7 +82,7 @@ RooUnblindUniform::~RooUnblindUniform()
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate RooBlindTools unhide-offset method on blind value
 
-Double_t RooUnblindUniform::evaluate() const
+double RooUnblindUniform::evaluate() const
 {
   return _blindEngine.UnHideUniform(_value);
 }

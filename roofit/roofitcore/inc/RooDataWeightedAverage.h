@@ -40,16 +40,16 @@ public:
     return new RooDataWeightedAverage(name,title,real,adata,projDeps,cfg) ;
   }
 
-  Double_t globalNormalization() const override ;
+  double globalNormalization() const override ;
 
   ~RooDataWeightedAverage() override;
 
 
 protected:
 
-  Double_t _sumWeight ;  ///< Global sum of weights needed for normalization
+  double _sumWeight ;  ///< Global sum of weights needed for normalization
   bool _showProgress ; ///< Show progress indication during evaluation if true
-  Double_t evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const override ;
+  double evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const override ;
 
   ClassDefOverride(RooDataWeightedAverage,1) // Optimized calculator of data weighted average of a RooAbsReal
 };

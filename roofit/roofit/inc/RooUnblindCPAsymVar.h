@@ -39,7 +39,7 @@ public:
 protected:
 
   // Function evaluation
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
 
   RooRealProxy _asym ;
   RooBlindTools _blindEngine ;

@@ -89,15 +89,15 @@ RooDataProjBinding::~RooDataProjBinding()
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate data-projected values of the bound real function.
 
-Double_t RooDataProjBinding::operator()(const Double_t xvector[]) const
+double RooDataProjBinding::operator()(const double xvector[]) const
 {
   assert(isValid());
   loadValues(xvector);
 
   //RooAbsArg::setDirtyInhibit(true) ;
 
-  Double_t result(0) ;
-  Double_t wgtSum(0) ;
+  double result(0) ;
+  double wgtSum(0) ;
 
   if (_catTable) {
 
@@ -107,7 +107,7 @@ Double_t RooDataProjBinding::operator()(const Double_t xvector[]) const
       _superCat->setIndex(nameIdx) ;
 
       // Add weighted sum
-      Double_t wgt = _catTable->get(nameIdx.first.c_str());
+      double wgt = _catTable->get(nameIdx.first.c_str());
       if (wgt) {
    result += wgt * _real->getVal(_nset) ;
    wgtSum += wgt ;
@@ -138,8 +138,8 @@ Double_t RooDataProjBinding::operator()(const Double_t xvector[]) const
     for (i=0 ; i<nEvt ; i++) {
       _data->get(i) ;
 
-      Double_t wgt = _data->weight() ;
-      Double_t ret ;
+      double wgt = _data->weight() ;
+      double ret ;
       if (wgt) {
    ret = _real->getVal(_nset) ;
    result += wgt * ret ;

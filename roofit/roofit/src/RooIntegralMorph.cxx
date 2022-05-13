@@ -193,7 +193,7 @@ void RooIntegralMorph::fillCacheObject(PdfCacheElem& cache) const
   } else {
     TIterator* slIter = cache.hist()->sliceIterator((RooAbsArg&)alpha.arg(),RooArgSet()) ;
 
-    Double_t alphaSave = alpha ;
+    double alphaSave = alpha ;
     RooArgSet alphaSet(alpha.arg()) ;
     coutP(Eval) << "RooIntegralMorph::fillCacheObject(" << GetName() << ") filling multi-dimensional cache" ;
     while(slIter->Next()) {
@@ -289,15 +289,15 @@ RooIntegralMorph::MorphCacheElem::~MorphCacheElem()
 /// Calculate the x value of the output p.d.f at the given cdf value y.
 /// The ok boolean is filled with the success status of the operation.
 
-Double_t RooIntegralMorph::MorphCacheElem::calcX(Double_t y, bool& ok)
+double RooIntegralMorph::MorphCacheElem::calcX(double y, bool& ok)
 {
   if (y<0 || y>1) {
     oocoutW(_self,Eval) << "RooIntegralMorph::MorphCacheElem::calcX() WARNING: requested root finding for unphysical CDF value " << y << endl ;
   }
-  Double_t x1,x2 ;
+  double x1,x2 ;
 
-  Double_t xmax = _x->getMax("cache") ;
-  Double_t xmin = _x->getMin("cache") ;
+  double xmax = _x->getMax("cache") ;
+  double xmin = _x->getMin("cache") ;
 
   ok=true ;
   ok &= _rf1->findRoot(x1,xmin,xmax,y) ;
@@ -311,10 +311,10 @@ Double_t RooIntegralMorph::MorphCacheElem::calcX(Double_t y, bool& ok)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the bin number enclosing the given x value
 
-Int_t RooIntegralMorph::MorphCacheElem::binX(Double_t X)
+Int_t RooIntegralMorph::MorphCacheElem::binX(double X)
 {
-  Double_t xmax = _x->getMax("cache") ;
-  Double_t xmin = _x->getMin("cache") ;
+  double xmax = _x->getMax("cache") ;
+  double xmin = _x->getMin("cache") ;
   return (Int_t)(_x->numBins("cache")*(X-xmin)/(xmax-xmin)) ;
 }
 
@@ -324,11 +324,11 @@ Int_t RooIntegralMorph::MorphCacheElem::binX(Double_t X)
 
 void RooIntegralMorph::MorphCacheElem::calculate(TIterator* dIter)
 {
-  Double_t xsave = _self->x ;
+  double xsave = _self->x ;
 
   // if (!_yatX) {
-  //   _yatX = new Double_t[_x->numBins("cache")+1] ;
-  //   _calcX = new Double_t[_x->numBins("cache")+1] ;
+  //   _yatX = new double[_x->numBins("cache")+1] ;
+  //   _calcX = new double[_x->numBins("cache")+1] ;
   // }
 
  _yatX.resize(_x->numBins("cache")+1);
@@ -353,13 +353,13 @@ void RooIntegralMorph::MorphCacheElem::calculate(TIterator* dIter)
   for (int i=0 ; i<10 ; i++) {
 
     // Take a point in y
-    Double_t offset = _yatX[_yatXmin] ;
-    Double_t delta = (_yatX[_yatXmax] - _yatX[_yatXmin])/10 ;
-    Double_t y = offset + i*delta ;
+    double offset = _yatX[_yatXmin] ;
+    double delta = (_yatX[_yatXmax] - _yatX[_yatXmin])/10 ;
+    double y = offset + i*delta ;
 
     // Calculate corresponding X
     bool ok ;
-    Double_t X = calcX(y,ok) ;
+    double X = calcX(y,ok) ;
     if (ok) {
       Int_t iX = binX(X) ;
       _yatX[iX] = y ;
@@ -383,17 +383,17 @@ void RooIntegralMorph::MorphCacheElem::calculate(TIterator* dIter)
   }
 
   // Make one more iteration to recalculate Y value at bin centers
-  Double_t xmax = _x->getMax("cache") ;
-  Double_t xmin = _x->getMin("cache") ;
-  Double_t binw = (xmax-xmin)/_x->numBins("cache") ;
+  double xmax = _x->getMax("cache") ;
+  double xmin = _x->getMin("cache") ;
+  double binw = (xmax-xmin)/_x->numBins("cache") ;
   for (int i=_yatXmin+1 ; i<_yatXmax-1 ; i++) {
 
     // Calculate additional offset to apply if bin ixlo does not have X value calculated at bin center
-    Double_t xBinC = xmin + (i+0.5)*binw ;
-    Double_t xOffset = xBinC-_calcX[i] ;
+    double xBinC = xmin + (i+0.5)*binw ;
+    double xOffset = xBinC-_calcX[i] ;
     if (fabs(xOffset/binw)>1e-3) {
-      Double_t slope = (_yatX[i+1]-_yatX[i-1])/(_calcX[i+1]-_calcX[i-1]) ;
-      Double_t newY = _yatX[i] + slope*xOffset ;
+      double slope = (_yatX[i+1]-_yatX[i-1])/(_calcX[i+1]-_calcX[i-1]) ;
+      double newY = _yatX[i] + slope*xOffset ;
       //cout << "bin " << i << " needs to be re-centered " << xOffset/binw << " slope = " << slope << " origY = " << _yatX[i] << " newY = " << newY << endl ;
       _yatX[i] = newY ;
     }
@@ -408,18 +408,18 @@ void RooIntegralMorph::MorphCacheElem::calculate(TIterator* dIter)
   // Transfer calculated values to histogram
   for (int i=_yatXmin ; i<_yatXmax ; i++) {
 
-    Double_t y = _yatX[i] ;
+    double y = _yatX[i] ;
 
-    Double_t x1,x2 ;
+    double x1,x2 ;
 
-    Double_t xMin = _x->getMin("cache") ;
-    Double_t xMax = _x->getMax("cache") ;
+    double xMin = _x->getMin("cache") ;
+    double xMax = _x->getMax("cache") ;
     _rf1->findRoot(x1,xMin,xMax,y) ;
     _rf2->findRoot(x2,xMin,xMax,y) ;
 
-    _x->setVal(x1) ; Double_t f1x1 = _pdf1->getVal(&nsetTmp) ;
-    _x->setVal(x2) ; Double_t f2x2 = _pdf2->getVal(&nsetTmp) ;
-    Double_t fbarX = f1x1*f2x2 / ( _alpha->getVal()*f2x2 + (1-_alpha->getVal())*f1x1 ) ;
+    _x->setVal(x1) ; double f1x1 = _pdf1->getVal(&nsetTmp) ;
+    _x->setVal(x2) ; double f2x2 = _pdf2->getVal(&nsetTmp) ;
+    double fbarX = f1x1*f2x2 / ( _alpha->getVal()*f2x2 + (1-_alpha->getVal())*f1x1 ) ;
 
     dIter->Next() ;
     //_hist->get(i) ;
@@ -444,7 +444,7 @@ void RooIntegralMorph::MorphCacheElem::calculate(TIterator* dIter)
 /// If the midpoint value of y is very close to the midpoint in x, use interpolation
 /// to fill the gaps, otherwise the intervals again.
 
-void RooIntegralMorph::MorphCacheElem::fillGap(Int_t ixlo, Int_t ixhi, Double_t splitPoint)
+void RooIntegralMorph::MorphCacheElem::fillGap(Int_t ixlo, Int_t ixhi, double splitPoint)
 {
   // CONVENTION: _yatX[ixlo] is filled, _yatX[ixhi] is filled, elements in between are empty
   //   cout << "fillGap: gap from _yatX[" << ixlo << "]=" << _yatX[ixlo] << " to _yatX[" << ixhi << "]=" << _yatX[ixhi] << ", size = " << ixhi-ixlo << endl ;
@@ -459,9 +459,9 @@ void RooIntegralMorph::MorphCacheElem::fillGap(Int_t ixlo, Int_t ixhi, Double_t 
   }
 
   // Determine where half-way Y value lands
-  Double_t ymid = _yatX[ixlo]*splitPoint + _yatX[ixhi]*(1-splitPoint) ;
+  double ymid = _yatX[ixlo]*splitPoint + _yatX[ixhi]*(1-splitPoint) ;
   bool ok ;
-  Double_t Xmid = calcX(ymid,ok) ;
+  double Xmid = calcX(ymid,ok) ;
   if (!ok) {
     oocoutW(_self,Eval) << "RooIntegralMorph::MorphCacheElem::fillGap(" << _self->GetName() << ") unable to calculate midpoint in gap ["
          << ixlo << "," << ixhi << "], resorting to interpolation" << endl ;
@@ -469,7 +469,7 @@ void RooIntegralMorph::MorphCacheElem::fillGap(Int_t ixlo, Int_t ixhi, Double_t 
   }
 
   Int_t iX = binX(Xmid) ;
-  Double_t cq = (Xmid-_calcX[ixlo])/(_calcX[ixhi]-_calcX[ixlo])-0.5 ;
+  double cq = (Xmid-_calcX[ixlo])/(_calcX[ixhi]-_calcX[ixlo])-0.5 ;
 
   // Store midway point
   _yatX[iX] = ymid ;
@@ -493,7 +493,7 @@ void RooIntegralMorph::MorphCacheElem::fillGap(Int_t ixlo, Int_t ixhi, Double_t 
 
       if (splitPoint<0.95) {
    // Midway value lands on lowest bin, retry split with higher split point
-   Double_t newSplit = splitPoint + 0.5*(1-splitPoint) ;
+   double newSplit = splitPoint + 0.5*(1-splitPoint) ;
    fillGap(ixlo,ixhi,newSplit) ;
       } else {
    // Give up and resort to interpolation
@@ -504,7 +504,7 @@ void RooIntegralMorph::MorphCacheElem::fillGap(Int_t ixlo, Int_t ixhi, Double_t 
 
       // Midway value lands on highest bin, retry split with lower split point
       if (splitPoint>0.05) {
-   Double_t newSplit = splitPoint/2 ;
+   double newSplit = splitPoint/2 ;
    fillGap(ixlo,ixhi,newSplit) ;
       } else {
    // Give up and resort to interpolation
@@ -532,16 +532,16 @@ void RooIntegralMorph::MorphCacheElem::interpolateGap(Int_t ixlo, Int_t ixhi)
 {
   //cout << "filling gap with linear interpolation ixlo=" << ixlo << " ixhi=" << ixhi << endl ;
 
-  Double_t xmax = _x->getMax("cache") ;
-  Double_t xmin = _x->getMin("cache") ;
-  Double_t binw = (xmax-xmin)/_x->numBins("cache") ;
+  double xmax = _x->getMax("cache") ;
+  double xmin = _x->getMin("cache") ;
+  double binw = (xmax-xmin)/_x->numBins("cache") ;
 
   // Calculate deltaY in terms of actual X difference calculate, not based on nominal bin width
-  Double_t deltaY = (_yatX[ixhi]-_yatX[ixlo])/((_calcX[ixhi]-_calcX[ixlo])/binw) ;
+  double deltaY = (_yatX[ixhi]-_yatX[ixlo])/((_calcX[ixhi]-_calcX[ixlo])/binw) ;
 
   // Calculate additional offset to apply if bin ixlo does not have X value calculated at bin center
-  Double_t xBinC = xmin + (ixlo+0.5)*binw ;
-  Double_t xOffset = xBinC-_calcX[ixlo] ;
+  double xBinC = xmin + (ixlo+0.5)*binw ;
+  double xOffset = xBinC-_calcX[ixlo] ;
 
   for (int j=ixlo+1 ; j<ixhi ; j++) {
     _yatX[j] = _yatX[ixlo]+(xOffset+(j-ixlo))*deltaY ;
@@ -559,14 +559,14 @@ void RooIntegralMorph::MorphCacheElem::interpolateGap(Int_t ixlo, Int_t ixhi)
 
 void RooIntegralMorph::MorphCacheElem::findRange()
 {
-  Double_t xmin = _x->getMin("cache") ;
-  Double_t xmax = _x->getMax("cache") ;
+  double xmin = _x->getMin("cache") ;
+  double xmax = _x->getMax("cache") ;
   Int_t nbins = _x->numBins("cache") ;
 
-  Double_t x1,x2 ;
+  double x1,x2 ;
   bool ok = true ;
-  Double_t ymin=0.1,yminSave(-1) ;
-  Double_t Xsave(-1),Xlast=xmax ;
+  double ymin=0.1,yminSave(-1) ;
+  double Xsave(-1),Xlast=xmax ;
 
   // Find lowest Y value that can be measured
   // Start at 0.1 and iteratively lower limit by sqrt(10)
@@ -579,7 +579,7 @@ void RooIntegralMorph::MorphCacheElem::findRange()
     if (!ok) break ;
 
     // Terminate if value of X no longer moves by >0.1 bin size
-    Double_t X = _alpha->getVal()*x1 + (1-_alpha->getVal())*x2 ;
+    double X = _alpha->getVal()*x1 + (1-_alpha->getVal())*x2 ;
     if (fabs(X-Xlast)/(xmax-xmin)<0.0001) {
       break ;
     }
@@ -604,7 +604,7 @@ void RooIntegralMorph::MorphCacheElem::findRange()
   // Find highest Y value that can be measured
   // Start at 1 - 0.1 and iteratively lower delta by sqrt(10)
   ok = true ;
-  Double_t deltaymax=0.1, deltaymaxSave(-1) ;
+  double deltaymax=0.1, deltaymaxSave(-1) ;
   Xlast=xmin ;
   while(true) {
     ok &= _rf1->findRoot(x1,xmin,xmax,1-deltaymax) ;
@@ -616,7 +616,7 @@ void RooIntegralMorph::MorphCacheElem::findRange()
     if (!ok) break ;
 
     // Terminate if value of X no longer moves by >0.1 bin size
-    Double_t X = _alpha->getVal()*x1 + (1-_alpha->getVal())*x2 ;
+    double X = _alpha->getVal()*x1 + (1-_alpha->getVal())*x2 ;
     if (fabs(X-Xlast)/(xmax-xmin)<0.0001) {
       break ;
     }
@@ -650,7 +650,7 @@ void RooIntegralMorph::MorphCacheElem::findRange()
 ////////////////////////////////////////////////////////////////////////////////
 /// Dummy
 
-Double_t RooIntegralMorph::evaluate() const
+double RooIntegralMorph::evaluate() const
 {
   return 0 ;
 }

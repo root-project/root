@@ -145,7 +145,7 @@ RooFormula& RooFormulaVar::getFormula() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate current value of object from internal formula
 
-Double_t RooFormulaVar::evaluate() const
+double RooFormulaVar::evaluate() const
 {
   return getFormula().eval(_lastNSet);
 }
@@ -236,11 +236,11 @@ void RooFormulaVar::writeToStream(ostream& os, bool compact) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Forward the plot sampling hint from the p.d.f. that defines the observable obs
 
-std::list<Double_t>* RooFormulaVar::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
+std::list<double>* RooFormulaVar::binBoundaries(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
   for (const auto par : _actualVars) {
     auto func = static_cast<const RooAbsReal*>(par);
-    list<Double_t>* binb = nullptr;
+    list<double>* binb = nullptr;
 
     if (func && (binb = func->binBoundaries(obs,xlo,xhi)) ) {
       return binb;
@@ -255,11 +255,11 @@ std::list<Double_t>* RooFormulaVar::binBoundaries(RooAbsRealLValue& obs, Double_
 ////////////////////////////////////////////////////////////////////////////////
 /// Forward the plot sampling hint from the p.d.f. that defines the observable obs
 
-std::list<Double_t>* RooFormulaVar::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
+std::list<double>* RooFormulaVar::plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
   for (const auto par : _actualVars) {
     auto func = dynamic_cast<const RooAbsReal*>(par);
-    list<Double_t>* hint = nullptr;
+    list<double>* hint = nullptr;
 
     if (func && (hint = func->plotSamplingHint(obs,xlo,xhi)) ) {
       return hint;
@@ -280,7 +280,7 @@ std::list<Double_t>* RooFormulaVar::plotSamplingHint(RooAbsRealLValue& obs, Doub
 /// RooChi2Var. If the addition contains neither or both
 /// issue a warning message and return a value of 1
 
-Double_t RooFormulaVar::defaultErrorLevel() const
+double RooFormulaVar::defaultErrorLevel() const
 {
   RooAbsReal* nllArg(0) ;
   RooAbsReal* chi2Arg(0) ;

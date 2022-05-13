@@ -29,14 +29,14 @@ namespace RooStats {
 
   class SamplingSummaryLookup : public TObject {
 
-     typedef std::pair<Double_t, Double_t> AcceptanceCriteria; // defined by Confidence level, leftside tail probability
+     typedef std::pair<double, double> AcceptanceCriteria; // defined by Confidence level, leftside tail probability
      typedef std::map<Int_t, AcceptanceCriteria> LookupTable; // map ( Index, ( CL, leftside tail prob) )
 
   public:
     SamplingSummaryLookup() {}
     ~SamplingSummaryLookup() override {}
 
-    void Add(Double_t cl, Double_t leftside){
+    void Add(double cl, double leftside){
       // add cl,leftside pair to lookup table
       AcceptanceCriteria tmp(cl, leftside);
 
@@ -47,11 +47,11 @@ namespace RooStats {
    fLookupTable[fLookupTable.size()]= tmp;
     }
 
-    Int_t GetLookupIndex(Double_t cl, Double_t leftside){
+    Int_t GetLookupIndex(double cl, double leftside){
       // get index for cl,leftside pair
       AcceptanceCriteria tmp(cl, leftside);
 
-      Double_t tolerance = 1E-6; // some small number to protect floating point comparison.  What is better way?
+      double tolerance = 1E-6; // some small number to protect floating point comparison.  What is better way?
       LookupTable::iterator it = fLookupTable.begin();
       Int_t index = -1;
       for(; it!= fLookupTable.end(); ++it) {
@@ -68,7 +68,7 @@ namespace RooStats {
       return index;
     }
 
-  Double_t GetConfidenceLevel(Int_t index){
+  double GetConfidenceLevel(Int_t index){
     if(index<0 || index>(Int_t)fLookupTable.size()) {
        std::cout << "SamplingSummaryLookup::GetConfidenceLevel, index not in lookup table" << std::endl;
        return -1;
@@ -76,7 +76,7 @@ namespace RooStats {
     return fLookupTable[index].first;
   }
 
-  Double_t GetLeftSideTailFraction(Int_t index){
+  double GetLeftSideTailFraction(Int_t index){
     if(index<0 || index>(Int_t)fLookupTable.size()) {
        std::cout << "SamplingSummaryLookup::GetLeftSideTailFraction, index not in lookup table" << std::endl;
        return -1;
@@ -98,19 +98,19 @@ namespace RooStats {
      AcceptanceRegion() : fLookupIndex(0), fLowerLimit(0), fUpperLimit(0) {}
     ~AcceptanceRegion() override {}
 
-    AcceptanceRegion(Int_t lu, Double_t ll, Double_t ul){
+    AcceptanceRegion(Int_t lu, double ll, double ul){
       fLookupIndex = lu;
       fLowerLimit = ll;
       fUpperLimit = ul;
     }
     Int_t GetLookupIndex(){return fLookupIndex;}
-    Double_t GetLowerLimit(){return fLowerLimit;}
-    Double_t GetUpperLimit(){return fUpperLimit;}
+    double GetLowerLimit(){return fLowerLimit;}
+    double GetUpperLimit(){return fUpperLimit;}
 
   private:
     Int_t fLookupIndex; // want a small footprint reference to the RooArgSet for particular parameter point
-    Double_t fLowerLimit;  // lower limit on test statistic
-    Double_t fUpperLimit;  // upper limit on test statistic
+    double fLowerLimit;  // lower limit on test statistic
+    double fUpperLimit;  // upper limit on test statistic
 
   protected:
     ClassDefOverride(AcceptanceRegion,1)  // A simple class for acceptance regions used for ConfidenceBelt
@@ -171,15 +171,15 @@ namespace RooStats {
     ~ConfidenceBelt() override;
 
     /// add after creating a region
-    void AddAcceptanceRegion(RooArgSet&, AcceptanceRegion region, Double_t cl=-1., Double_t leftside=-1.);
+    void AddAcceptanceRegion(RooArgSet&, AcceptanceRegion region, double cl=-1., double leftside=-1.);
 
     /// add without creating a region, more useful for clients
-    void AddAcceptanceRegion(RooArgSet& point, Int_t dataSetIndex, Double_t lower, Double_t upper, Double_t cl=-1., Double_t leftside=-1.);
+    void AddAcceptanceRegion(RooArgSet& point, Int_t dataSetIndex, double lower, double upper, double cl=-1., double leftside=-1.);
 
-    AcceptanceRegion* GetAcceptanceRegion(RooArgSet&, Double_t cl=-1., Double_t leftside=-1.);
-    Double_t GetAcceptanceRegionMin(RooArgSet&, Double_t cl=-1., Double_t leftside=-1.);
-    Double_t GetAcceptanceRegionMax(RooArgSet&, Double_t cl=-1., Double_t leftside=-1.);
-    std::vector<Double_t> ConfidenceLevels() const ;
+    AcceptanceRegion* GetAcceptanceRegion(RooArgSet&, double cl=-1., double leftside=-1.);
+    double GetAcceptanceRegionMin(RooArgSet&, double cl=-1., double leftside=-1.);
+    double GetAcceptanceRegionMax(RooArgSet&, double cl=-1., double leftside=-1.);
+    std::vector<double> ConfidenceLevels() const ;
 
     /// do we want it to return list of parameters
     virtual RooArgSet* GetParameters() const;

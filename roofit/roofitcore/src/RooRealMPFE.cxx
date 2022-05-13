@@ -32,12 +32,12 @@ Simple use demonstration
 ~~~{.cpp}
 RooAbsReal* slowFunc ;
 
-Double_t val = slowFunc->getVal() // Evaluate slowFunc in current process
+double val = slowFunc->getVal() // Evaluate slowFunc in current process
 
 RooRealMPFE mpfe("mpfe","frontend to slowFunc",*slowFunc) ;
 mpfe.calculate() ;           // Start calculation of slow-func in remote process
                              // .. do other stuff here ..
-Double_t val = mpfe.getVal() // Wait for remote calculation to finish and retrieve value
+double val = mpfe.getVal() // Wait for remote calculation to finish and retrieve value
 ~~~
 
 For general multiprocessing in ROOT, please refer to the TProcessExecutor class.
@@ -165,7 +165,7 @@ void RooRealMPFE::initVars()
   //delete ncVars ;
 }
 
-Double_t RooRealMPFE::getCarry() const
+double RooRealMPFE::getCarry() const
 {
   if (_inlineMode) {
     RooAbsTestStatistic* tmp = dynamic_cast<RooAbsTestStatistic*>(_arg.absArg());
@@ -231,7 +231,7 @@ void RooRealMPFE::serverLoop()
   int msg ;
 
   Int_t idx, index, numErrors ;
-  Double_t value ;
+  double value ;
   bool isConst ;
 
   clearEvalErrorLog() ;
@@ -455,7 +455,7 @@ void RooRealMPFE::calculate() const
    // send message to server
    if (dynamic_cast<RooAbsReal*>(var)) {
      int msg = SendReal ;
-     Double_t val = ((RooAbsReal*)var)->getVal() ;
+     double val = ((RooAbsReal*)var)->getVal() ;
      bool isC = var->isConstant() ;
      *_pipe << msg << i << val << isC;
 
@@ -506,7 +506,7 @@ void RooRealMPFE::calculate() const
 /// until remote process has finished calculation and returns
 /// remote value
 
-Double_t RooRealMPFE::getValV(const RooArgSet* /*nset*/) const
+double RooRealMPFE::getValV(const RooArgSet* /*nset*/) const
 {
 
   if (isValueDirty()) {
@@ -534,17 +534,17 @@ Double_t RooRealMPFE::getValV(const RooArgSet* /*nset*/) const
 /// If error were logged use logEvalError() on remote side
 /// transfer those errors to the local eval error queue.
 
-Double_t RooRealMPFE::evaluate() const
+double RooRealMPFE::evaluate() const
 {
   // Retrieve value of arg
-  Double_t return_value = 0;
+  double return_value = 0;
   if (_state==Inline) {
     return_value = _arg ;
   } else if (_state==Client) {
 #ifndef _WIN32
     bool needflush = false;
     int msg;
-    Double_t value;
+    double value;
 
     // If current error loggin state is not the same as remote state
     // update the remote state

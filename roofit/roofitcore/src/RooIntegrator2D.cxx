@@ -66,7 +66,7 @@ RooIntegrator2D::RooIntegrator2D() :
 /// limits are taken from the definition in the function binding.
 
 RooIntegrator2D::RooIntegrator2D(const RooAbsFunc& function, RooIntegrator1D::SummationRule rule,
-             Int_t maxSteps, Double_t eps) :
+             Int_t maxSteps, double eps) :
   RooIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooIntegrator1D(function,rule,maxSteps,eps)))),rule,maxSteps,eps)
 {
 }
@@ -77,9 +77,9 @@ RooIntegrator2D::RooIntegrator2D(const RooAbsFunc& function, RooIntegrator1D::Su
 /// maximum number of steps, conversion tolerance and an explicit
 /// choice of integration limits on both dimensions.
 
-RooIntegrator2D::RooIntegrator2D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
-             Double_t ymin, Double_t ymax,
-             SummationRule rule, Int_t maxSteps, Double_t eps) :
+RooIntegrator2D::RooIntegrator2D(const RooAbsFunc& function, double xmin, double xmax,
+             double ymin, double ymax,
+             SummationRule rule, Int_t maxSteps, double eps) :
   RooIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooIntegrator1D(function,ymin,ymax,rule,maxSteps,eps)))),xmin,xmax,rule,maxSteps,eps)
 {
 }
@@ -101,8 +101,8 @@ RooIntegrator2D::RooIntegrator2D(const RooAbsFunc& function, const RooNumIntConf
 /// Constructor with a function binding, a configuration object and
 /// an explicit definition of the integration limits.
 
-RooIntegrator2D::RooIntegrator2D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
-             Double_t ymin, Double_t ymax,
+RooIntegrator2D::RooIntegrator2D(const RooAbsFunc& function, double xmin, double xmax,
+             double ymin, double ymax,
              const RooNumIntConfig& config) :
   RooIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooIntegrator1D(function,ymin,ymax,config)))),xmin,xmax,config)
 {

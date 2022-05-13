@@ -203,11 +203,11 @@ RooRealSumFunc::~RooRealSumFunc()
 }
 
 //_____________________________________________________________________________
-Double_t RooRealSumFunc::evaluate() const
+double RooRealSumFunc::evaluate() const
 {
    // Calculate the current value
 
-   Double_t value(0);
+   double value(0);
 
    // Do running sum of coef/func pairs, calculate lastCoef.
    RooFIter funcIter = _funcList.fwdIterator();
@@ -216,10 +216,10 @@ Double_t RooRealSumFunc::evaluate() const
    RooAbsReal *func;
 
    // N funcs, N-1 coefficients
-   Double_t lastCoef(1);
+   double lastCoef(1);
    while ((coef = (RooAbsReal *)coefIter.next())) {
       func = (RooAbsReal *)funcIter.next();
-      Double_t coefVal = coef->getVal();
+      double coefVal = coef->getVal();
       if (coefVal) {
          cxcoutD(Eval) << "RooRealSumFunc::eval(" << GetName() << ") coefVal = " << coefVal
                        << " funcVal = " << func->IsA()->GetName() << "::" << func->GetName() << " = " << func->getVal()
@@ -351,7 +351,7 @@ Int_t RooRealSumFunc::getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &ana
 }
 
 //_____________________________________________________________________________
-Double_t RooRealSumFunc::analyticalIntegralWN(Int_t code, const RooArgSet *normSet2, const char *rangeName) const
+double RooRealSumFunc::analyticalIntegralWN(Int_t code, const RooArgSet *normSet2, const char *rangeName) const
 {
    // cout <<
    // "RooRealSumFunc::analyticalIntegralWN:"<<GetName()<<"("<<code<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>")
@@ -384,14 +384,14 @@ Double_t RooRealSumFunc::analyticalIntegralWN(Int_t code, const RooArgSet *normS
    RooFIter coefIter = _coefList.fwdIterator();
    RooFIter funcIter = _funcList.fwdIterator();
    RooAbsReal *coef(0), *funcInt(0), *func(0);
-   Double_t value(0);
+   double value(0);
 
    // N funcs, N-1 coefficients
-   Double_t lastCoef(1);
+   double lastCoef(1);
    while ((coef = (RooAbsReal *)coefIter.next())) {
       funcInt = (RooAbsReal *)funcIntIter.next();
       func = (RooAbsReal *)funcIter.next();
-      Double_t coefVal = coef->getVal(normSet2);
+      double coefVal = coef->getVal(normSet2);
       if (coefVal) {
          assert(func);
          if (normSet2 == 0 || func->isSelectedComp()) {
@@ -417,7 +417,7 @@ Double_t RooRealSumFunc::analyticalIntegralWN(Int_t code, const RooArgSet *normS
       }
    }
 
-   Double_t normVal(1);
+   double normVal(1);
    if (normSet2 && normSet2->getSize() > 0) {
       normVal = 0;
 
@@ -427,7 +427,7 @@ Double_t RooRealSumFunc::analyticalIntegralWN(Int_t code, const RooArgSet *normS
       RooFIter coefIter2 = _coefList.fwdIterator();
       while ((coef = (RooAbsReal *)coefIter2.next())) {
          funcNorm = (RooAbsReal *)funcNormIter.next();
-         Double_t coefVal = coef->getVal(normSet2);
+         double coefVal = coef->getVal(normSet2);
          if (coefVal) {
             assert(funcNorm);
             normVal += funcNorm->getVal() * coefVal;
@@ -446,9 +446,9 @@ Double_t RooRealSumFunc::analyticalIntegralWN(Int_t code, const RooArgSet *normS
 }
 
 //_____________________________________________________________________________
-std::list<Double_t> *RooRealSumFunc::binBoundaries(RooAbsRealLValue &obs, Double_t xlo, Double_t xhi) const
+std::list<double> *RooRealSumFunc::binBoundaries(RooAbsRealLValue &obs, double xlo, double xhi) const
 {
-   list<Double_t> *sumBinB = 0;
+   list<double> *sumBinB = 0;
    bool needClean(false);
 
    RooFIter iter = _funcList.fwdIterator();
@@ -456,7 +456,7 @@ std::list<Double_t> *RooRealSumFunc::binBoundaries(RooAbsRealLValue &obs, Double
    // Loop over components pdf
    while ((func = (RooAbsReal *)iter.next())) {
 
-      list<Double_t> *funcBinB = func->binBoundaries(obs, xlo, xhi);
+      list<double> *funcBinB = func->binBoundaries(obs, xlo, xhi);
 
       // Process hint
       if (funcBinB) {
@@ -465,7 +465,7 @@ std::list<Double_t> *RooRealSumFunc::binBoundaries(RooAbsRealLValue &obs, Double
             sumBinB = funcBinB;
          } else {
 
-            list<Double_t> *newSumBinB = new list<Double_t>(sumBinB->size() + funcBinB->size());
+            list<double> *newSumBinB = new list<double>(sumBinB->size() + funcBinB->size());
 
             // Merge hints into temporary array
             merge(funcBinB->begin(), funcBinB->end(), sumBinB->begin(), sumBinB->end(), newSumBinB->begin());
@@ -481,7 +481,7 @@ std::list<Double_t> *RooRealSumFunc::binBoundaries(RooAbsRealLValue &obs, Double
 
    // Remove consecutive duplicates
    if (needClean) {
-      list<Double_t>::iterator new_end = unique(sumBinB->begin(), sumBinB->end());
+      list<double>::iterator new_end = unique(sumBinB->begin(), sumBinB->end());
       sumBinB->erase(new_end, sumBinB->end());
    }
 
@@ -505,9 +505,9 @@ bool RooRealSumFunc::isBinnedDistribution(const RooArgSet &obs) const
 }
 
 //_____________________________________________________________________________
-std::list<Double_t> *RooRealSumFunc::plotSamplingHint(RooAbsRealLValue &obs, Double_t xlo, Double_t xhi) const
+std::list<double> *RooRealSumFunc::plotSamplingHint(RooAbsRealLValue &obs, double xlo, double xhi) const
 {
-   list<Double_t> *sumHint = 0;
+   list<double> *sumHint = 0;
    bool needClean(false);
 
    RooFIter iter = _funcList.fwdIterator();
@@ -515,7 +515,7 @@ std::list<Double_t> *RooRealSumFunc::plotSamplingHint(RooAbsRealLValue &obs, Dou
    // Loop over components pdf
    while ((func = (RooAbsReal *)iter.next())) {
 
-      list<Double_t> *funcHint = func->plotSamplingHint(obs, xlo, xhi);
+      list<double> *funcHint = func->plotSamplingHint(obs, xlo, xhi);
 
       // Process hint
       if (funcHint) {
@@ -526,7 +526,7 @@ std::list<Double_t> *RooRealSumFunc::plotSamplingHint(RooAbsRealLValue &obs, Dou
 
          } else {
 
-            list<Double_t> *newSumHint = new list<Double_t>(sumHint->size() + funcHint->size());
+            list<double> *newSumHint = new list<double>(sumHint->size() + funcHint->size());
 
             // Merge hints into temporary array
             merge(funcHint->begin(), funcHint->end(), sumHint->begin(), sumHint->end(), newSumHint->begin());
@@ -541,7 +541,7 @@ std::list<Double_t> *RooRealSumFunc::plotSamplingHint(RooAbsRealLValue &obs, Dou
 
    // Remove consecutive duplicates
    if (needClean) {
-      list<Double_t>::iterator new_end = unique(sumHint->begin(), sumHint->end());
+      list<double>::iterator new_end = unique(sumHint->begin(), sumHint->end());
       sumHint->erase(new_end, sumHint->end());
    }
 

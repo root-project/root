@@ -165,11 +165,11 @@ PiecewiseInterpolation::~PiecewiseInterpolation()
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return current value of self
 
-Double_t PiecewiseInterpolation::evaluate() const
+double PiecewiseInterpolation::evaluate() const
 {
   ///////////////////
-  Double_t nominal = _nominal;
-  Double_t sum(nominal) ;
+  double nominal = _nominal;
+  double sum(nominal) ;
 
   for (unsigned int i=0; i < _paramSet.size(); ++i) {
     auto param = static_cast<RooAbsReal*>(_paramSet.at(i));
@@ -535,7 +535,7 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
 /// Implement analytical integrations by doing appropriate weighting from  component integrals
 /// functions to integrators of components
 
-Double_t PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSet* /*normSet2*/,const char* /*rangeName*/) const
+double PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSet* /*normSet2*/,const char* /*rangeName*/) const
 {
   /*
   cout <<"Enter analytic Integral"<<endl;
@@ -616,8 +616,8 @@ Double_t PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSe
   // old integral, only works for linear and not positive definite
 
   RooAbsReal *low, *high;
-  Double_t value(0);
-  Double_t nominal(0);
+  double value(0);
+  double nominal(0);
 
   // get nominal
   int i=0;
@@ -751,7 +751,7 @@ void PiecewiseInterpolation::printAllInterpCodes(){
 ////////////////////////////////////////////////////////////////////////////////
 /// WVE note: assumes nominal and alternates have identical structure, must add explicit check
 
-std::list<Double_t>* PiecewiseInterpolation::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
+std::list<double>* PiecewiseInterpolation::binBoundaries(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
   return _nominal.arg().binBoundaries(obs,xlo,xhi) ;
 }
@@ -769,7 +769,7 @@ bool PiecewiseInterpolation::isBinnedDistribution(const RooArgSet& obs) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::list<Double_t>* PiecewiseInterpolation::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
+std::list<double>* PiecewiseInterpolation::plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
   return _nominal.arg().plotSamplingHint(obs,xlo,xhi) ;
 }

@@ -28,17 +28,17 @@ public:
   inline ~RooSpHarmonic() override { }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
   Int_t getMaxVal( const RooArgSet& vars) const override;
-  Double_t maxVal( Int_t code) const override;
+  double maxVal( Int_t code) const override;
 
 private:
   RooRealProxy _phi;
   double _n;
   int _sgn1,_sgn2;
 
-  Double_t evaluate() const override;
+  double evaluate() const override;
 
   ClassDefOverride(RooSpHarmonic,1) // SpHarmonic polynomial
 };

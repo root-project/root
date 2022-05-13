@@ -71,7 +71,7 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
     }
 
   _nComp = model._pdfList.getSize() ;
-  _coefThresh = new Double_t[_nComp+1] ;
+  _coefThresh = new double[_nComp+1] ;
   _vars = (RooArgSet*) vars.snapshot(false) ;
 
   for (const auto arg : model._pdfList) {
@@ -114,7 +114,7 @@ RooAddGenContext::RooAddGenContext(const RooAddModel &model, const RooArgSet &va
   _pdf = (RooAbsPdf*) _pdfSet->find(model.GetName()) ;
 
   _nComp = model._pdfList.getSize() ;
-  _coefThresh = new Double_t[_nComp+1] ;
+  _coefThresh = new double[_nComp+1] ;
   _vars = (RooArgSet*) vars.snapshot(false) ;
 
   for (const auto obj : model._pdfList) {
@@ -194,7 +194,7 @@ void RooAddGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
 {
   // Throw a random number to determin which component to generate
   updateThresholds() ;
-  Double_t rand = RooRandom::uniform() ;
+  double rand = RooRandom::uniform() ;
   Int_t i=0 ;
   for (i=0 ; i<_nComp ; i++) {
     if (rand>_coefThresh[i] && rand<_coefThresh[i+1]) {

@@ -118,7 +118,7 @@ RooPolyVar::~RooPolyVar()
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return value of polynomial
 
-Double_t RooPolyVar::evaluate() const
+double RooPolyVar::evaluate() const
 {
   const unsigned sz = _coefList.getSize();
   const int lowestOrder = _lowestOrder;
@@ -132,8 +132,8 @@ Double_t RooPolyVar::evaluate() const
       _wksp.push_back(c->getVal(nset));
     }
   }
-  const Double_t x = _x;
-  Double_t retVal = _wksp[sz - 1];
+  const double x = _x;
+  double retVal = _wksp[sz - 1];
   for (unsigned i = sz - 1; i--; ) retVal = _wksp[i] + x * retVal;
   return retVal * std::pow(x, lowestOrder);
 }
@@ -154,11 +154,11 @@ Int_t RooPolyVar::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return analytical integral over x
 
-Double_t RooPolyVar::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooPolyVar::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   R__ASSERT(code==1) ;
 
-  const Double_t xmin = _x.min(rangeName), xmax = _x.max(rangeName);
+  const double xmin = _x.min(rangeName), xmax = _x.max(rangeName);
   const int lowestOrder = _lowestOrder;
   const unsigned sz = _coefList.getSize();
   if (!sz) return xmax - xmin;
@@ -170,11 +170,11 @@ Double_t RooPolyVar::analyticalIntegral(Int_t code, const char* rangeName) const
     unsigned i = 1 + lowestOrder;
     RooAbsReal* c;
     while ((c = (RooAbsReal*) it.next())) {
-      _wksp.push_back(c->getVal(nset) / Double_t(i));
+      _wksp.push_back(c->getVal(nset) / double(i));
       ++i;
     }
   }
-  Double_t min = _wksp[sz - 1], max = _wksp[sz - 1];
+  double min = _wksp[sz - 1], max = _wksp[sz - 1];
   for (unsigned i = sz - 1; i--; )
     min = _wksp[i] + xmin * min, max = _wksp[i] + xmax * max;
   return max * std::pow(xmax, 1 + lowestOrder) - min * std::pow(xmin, 1 + lowestOrder);

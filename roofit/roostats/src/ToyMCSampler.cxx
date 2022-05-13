@@ -64,7 +64,7 @@ namespace RooStats {
 /// nuisPoint can be more objects than just the nuisance
 /// parameters.
 
-void NuisanceParametersSampler::NextPoint(RooArgSet& nuisPoint, Double_t& weight) {
+void NuisanceParametersSampler::NextPoint(RooArgSet& nuisPoint, double& weight) {
 
    // check whether to get new set of nuisanceParPoints
    if (fIndex >= fNToys) {
@@ -380,7 +380,7 @@ RooDataSet* ToyMCSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramP
 
    // counts the number of toys in the limits set for adaptive sampling
    // (taking weights into account; always on first test statistic)
-   Double_t toysInTails = 0.0;
+   double toysInTails = 0.0;
 
    for (Int_t i = 0; i < fMaxToys; ++i) {
       // need to check at the beginning for case that zero toys are requested
@@ -396,7 +396,7 @@ RooDataSet* ToyMCSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramP
       // TODO: change this treatment to keep track of all values so that the threshold
       // for adaptive sampling is counted for all distributions and not just the
       // first one.
-      Double_t valueFirst = -999.0, weight = 1.0;
+      double valueFirst = -999.0, weight = 1.0;
 
       // set variables to requested parameter point
       allVars->assign(*saveAll); // important for example for SimpleLikelihoodRatioTestStat

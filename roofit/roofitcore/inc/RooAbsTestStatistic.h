@@ -65,8 +65,8 @@ public:
 
   void constOptimizeTestStatistic(ConstOpCode opcode, bool doAlsoTrackingOpt=true) override ;
 
-  virtual Double_t combinedValue(RooAbsReal** gofArray, Int_t nVal) const = 0 ;
-  virtual Double_t globalNormalization() const {
+  virtual double combinedValue(RooAbsReal** gofArray, Int_t nVal) const = 0 ;
+  virtual double globalNormalization() const {
     // Default value of global normalization factor is 1.0
     return 1.0 ;
   }
@@ -75,18 +75,18 @@ public:
 
   void enableOffsetting(bool flag) override ;
   bool isOffsetting() const override { return _doOffset ; }
-  Double_t offset() const override { return _offset.Sum() ; }
-  virtual Double_t offsetCarry() const { return _offset.Carry(); }
+  double offset() const override { return _offset.Sum() ; }
+  virtual double offsetCarry() const { return _offset.Carry(); }
 
 protected:
 
   void printCompactTreeHook(std::ostream& os, const char* indent="") override ;
 
   bool redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive) override ;
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
 
-  virtual Double_t evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const = 0 ;
-  virtual Double_t getCarry() const;
+  virtual double evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const = 0 ;
+  virtual double getCarry() const;
 
   void setMPSet(Int_t setNum, Int_t numSets) ;
   void setSimCount(Int_t simCount) {
@@ -158,7 +158,7 @@ protected:
   bool         _doOffset = false;                   ///< Apply interval value offset to control numeric precision?
   const bool  _takeGlobalObservablesFromData = false; ///< If the global observable values are taken from data
   mutable ROOT::Math::KahanSum<double> _offset = 0.0; ///<! Offset as KahanSum to avoid loss of precision
-  mutable Double_t _evalCarry = 0.0;                  ///<! carry of Kahan sum in evaluatePartition
+  mutable double _evalCarry = 0.0;                  ///<! carry of Kahan sum in evaluatePartition
 
   ClassDefOverride(RooAbsTestStatistic,3) // Abstract base class for real-valued test statistics
 

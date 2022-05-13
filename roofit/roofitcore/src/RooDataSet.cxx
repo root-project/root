@@ -721,7 +721,7 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, RooDataSet *dset
 /// of the data set are defined by the 'vars' RooArgSet. For each dimension
 /// specified, the TTree must have a branch with the same name. For category
 /// branches, this branch should contain the numeric index value. Real dimensions
-/// can be constructed from either 'Double_t' or 'Float_t' tree branches. In the
+/// can be constructed from either 'double' or 'Float_t' tree branches. In the
 /// latter case, an automatic conversion is applied.
 ///
 /// The 'cutVar' formula variable
@@ -745,7 +745,7 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, TTree *theTree,
 /// \param[in] vars Defines the columns of the data set. For each dimension
 /// specified, the TTree must have a branch with the same name. For category
 /// branches, this branch should contain the numeric index value. Real dimensions
-/// can be constructed from either 'Double_t' or 'Float_t' tree branches. In the
+/// can be constructed from either 'double' or 'Float_t' tree branches. In the
 /// latter case, an automatic conversion is applied.
 /// \param[in] cuts Optional RooFormula expression to select the subset of the data points
 /// to be imported. The cut expression can refer to any variable in `vars`.
@@ -936,7 +936,7 @@ RooDataHist* RooDataSet::binnedClone(const char* newName, const char* newTitle) 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return event weight of current event
 
-Double_t RooDataSet::weight() const
+double RooDataSet::weight() const
 {
   return store()->weight() ;
 }
@@ -946,7 +946,7 @@ Double_t RooDataSet::weight() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return squared event weight of current event
 
-Double_t RooDataSet::weightSquared() const
+double RooDataSet::weightSquared() const
 {
   return store()->weight()*store()->weight() ;
 }
@@ -1016,7 +1016,7 @@ const RooArgSet* RooDataSet::get(Int_t index) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooDataSet::sumEntries() const
+double RooDataSet::sumEntries() const
 {
   return store()->sumEntries() ;
 }
@@ -1026,7 +1026,7 @@ Double_t RooDataSet::sumEntries() const
 /// Return the sum of weights in all entries matching cutSpec (if specified)
 /// and in named range cutRange (if specified)
 
-Double_t RooDataSet::sumEntries(const char* cutSpec, const char* cutRange) const
+double RooDataSet::sumEntries(const char* cutSpec, const char* cutRange) const
 {
   // Setup RooFormulaVar for cutSpec if it is present
   std::unique_ptr<RooFormula> select = nullptr ;
@@ -1107,7 +1107,7 @@ const RooArgSet* RooDataSet::get() const
 /// \note This requires including the weight variable in the set of `StoreError` variables when constructing
 /// the dataset.
 
-void RooDataSet::add(const RooArgSet& data, Double_t wgt, Double_t wgtError)
+void RooDataSet::add(const RooArgSet& data, double wgt, double wgtError)
 {
   checkInit() ;
 
@@ -1159,7 +1159,7 @@ void RooDataSet::add(const RooArgSet& data, Double_t wgt, Double_t wgtError)
 /// \note This requires including the weight variable in the set of `StoreAsymError` variables when constructing
 /// the dataset.
 
-void RooDataSet::add(const RooArgSet& indata, Double_t inweight, Double_t weightErrorLo, Double_t weightErrorHi)
+void RooDataSet::add(const RooArgSet& indata, double inweight, double weightErrorLo, double weightErrorHi)
 {
   checkInit() ;
 
@@ -1209,7 +1209,7 @@ void RooDataSet::add(const RooArgSet& indata, Double_t inweight, Double_t weight
 /// \note This requires including the weight variable in the set of `StoreError` variables when constructing
 /// the dataset.
 
-void RooDataSet::addFast(const RooArgSet& data, Double_t wgt, Double_t wgtError)
+void RooDataSet::addFast(const RooArgSet& data, double wgt, double wgtError)
 {
   checkInit() ;
 
@@ -1373,8 +1373,8 @@ RooArgSet* RooDataSet::addColumns(const RooArgList& varList)
 /// <tr><td> LineWidth(Int_t width)          <td> Select line with in pixels, default is 3
 /// <tr><td> MarkerStyle(Int_t style)        <td> Select the ROOT marker style, default is 21
 /// <tr><td> MarkerColor(Int_t color)        <td> Select the ROOT marker color, default is black
-/// <tr><td> MarkerSize(Double_t size)       <td> Select the ROOT marker size
-/// <tr><td> Rescale(Double_t factor)        <td> Apply global rescaling factor to histogram
+/// <tr><td> MarkerSize(double size)       <td> Select the ROOT marker size
+/// <tr><td> Rescale(double factor)        <td> Apply global rescaling factor to histogram
 /// <tr><th> Misc. other options <th> Effect
 /// <tr><td> Name(const chat* name)          <td> Give curve specified name in frame. Useful if curve is to be referenced later
 /// <tr><td> Invisible(bool flag)          <td> Add curve to frame, but do not display. Useful in combination AddTo()
@@ -1421,7 +1421,7 @@ RooPlot* RooDataSet::plotOnXY(RooPlot* frame, const RooCmdArg& arg1, const RooCm
   const char* drawOptions = pc.getString("drawOption") ;
   Int_t histInvisible = pc.getInt("histInvisible") ;
   const char* histName = pc.getString("histName",0,true) ;
-  Double_t scaleFactor = pc.getDouble("scaleFactor") ;
+  double scaleFactor = pc.getDouble("scaleFactor") ;
 
   RooRealVar* xvar = (RooRealVar*) _vars.find(frame->getPlotVar()->GetName()) ;
 
@@ -1451,10 +1451,10 @@ RooPlot* RooDataSet::plotOnXY(RooPlot* frame, const RooCmdArg& arg1, const RooCm
 
   for (int i=0 ; i<numEntries() ; i++) {
     get(i) ;
-    Double_t x = xvar->getVal() ;
-    Double_t exlo = xvar->getErrorLo() ;
-    Double_t exhi = xvar->getErrorHi() ;
-    Double_t y,eylo,eyhi ;
+    double x = xvar->getVal() ;
+    double exlo = xvar->getErrorLo() ;
+    double exhi = xvar->getErrorHi() ;
+    double y,eylo,eyhi ;
     if (!dataY) {
       y = weight() ;
       weightError(eylo,eyhi) ;
@@ -1661,7 +1661,7 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
       return nullptr;
     }
 
-    //  Double_t value;
+    //  double value;
     Int_t line(0) ;
     bool haveBlindString(false) ;
 

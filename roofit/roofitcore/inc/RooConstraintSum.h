@@ -63,7 +63,7 @@ protected:
   RooSetProxy _paramSet ; ///< Set of parameters to which constraints apply
   const bool _takeGlobalObservablesFromData = false; ///< If the global observable values are taken from data
 
-  Double_t evaluate() const override;
+  double evaluate() const override;
 
   ClassDefOverride(RooConstraintSum,3) // sum of -log of set of RooAbsPdf representing parameter constraints
 };

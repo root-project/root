@@ -43,7 +43,7 @@ public:
 
 protected:
 
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
 
   const ROOT::Math::IBaseFunctionOneDim* func ;    // Functor
   RooRealProxy                       var ;    // Argument reference
@@ -69,7 +69,7 @@ public:
 
 protected:
 
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
 
   const ROOT::Math::IBaseFunctionOneDim* func ;    // Functor
   RooRealProxy                           var ;    // Argument reference

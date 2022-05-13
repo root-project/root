@@ -55,7 +55,7 @@ public:
 
   void applyWeightSquared(bool flag) override;
 
-  Double_t defaultErrorLevel() const override { return 0.5 ; }
+  double defaultErrorLevel() const override { return 0.5 ; }
 
   void batchMode(bool on = true) {
     _batchEvaluations = on;
@@ -74,7 +74,7 @@ public:
 protected:
 
   bool processEmptyDataSets() const override { return _extended ; }
-  Double_t evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const override;
+  double evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const override;
 
   static RooArgSet _emptySet ; // Supports named argument constructor
 
@@ -88,7 +88,7 @@ private:
   mutable bool _first{true}; ///<!
   ROOT::Math::KahanSum<double> _offsetSaveW2{0.0}; ///<!
 
-  mutable std::vector<Double_t> _binw ; ///<!
+  mutable std::vector<double> _binw ; ///<!
   mutable RooRealSumPdf* _binnedPdf{nullptr}; ///<!
   mutable std::unique_ptr<RooBatchCompute::RunContext> _evalData; ///<! Struct to store function evaluation workspaces.
 

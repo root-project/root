@@ -55,7 +55,7 @@ public:
   // --- low level factory interface ---
 
   // Create variables
-  RooRealVar* createVariable(const char* name, Double_t xmin, Double_t xmax) ;
+  RooRealVar* createVariable(const char* name, double xmin, double xmax) ;
   RooCategory* createCategory(const char* name, const char* stateNameList=0) ;
 
   // Create functions and p.d.f.s (any RooAbsArg)
@@ -107,9 +107,9 @@ public:
 
   static const char* as_STRING(UInt_t idx) { checkIndex(idx) ; return of()->asSTRING(of()->_args[idx].c_str()) ; }
   static Int_t as_INT(UInt_t idx) { checkIndex(idx) ; return of()->asINT(of()->_args[idx].c_str()) ; }
-  static Double_t as_DOUBLE(UInt_t idx) { checkIndex(idx) ; return of()->asDOUBLE(of()->_args[idx].c_str()) ; }
+  static double as_DOUBLE(UInt_t idx) { checkIndex(idx) ; return of()->asDOUBLE(of()->_args[idx].c_str()) ; }
   static Int_t as_INT(UInt_t idx, Int_t defVal) { checkIndex(idx) ;   if (idx>of()->_args.size()-1) return defVal ; return of()->asINT(of()->_args[idx].c_str()) ; }
-  static Double_t as_DOUBLE(UInt_t idx, Double_t defVal) { checkIndex(idx) ;   if (idx>of()->_args.size()-1) return defVal ; return of()->asDOUBLE(of()->_args[idx].c_str()) ; }
+  static double as_DOUBLE(UInt_t idx, double defVal) { checkIndex(idx) ;   if (idx>of()->_args.size()-1) return defVal ; return of()->asDOUBLE(of()->_args[idx].c_str()) ; }
 
   RooAbsArg& asARG(const char*) ;
 
@@ -134,7 +134,7 @@ public:
 
   const char* asSTRING(const char*) ;
   Int_t asINT(const char*) ;
-  Double_t asDOUBLE(const char*) ;
+  double asDOUBLE(const char*) ;
 
   class IFace {
   public:

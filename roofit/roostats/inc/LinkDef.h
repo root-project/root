@@ -107,17 +107,17 @@
 
 #pragma link C++ class RooStats::UpperLimitMCSModule+;
 
-#pragma link C++ function RooStats::NumberCountingUtils::BinomialExpZ(Double_t , Double_t ,Double_t);
-#pragma link C++ function RooStats::NumberCountingUtils::BinomialWithTauExpZ(Double_t,Double_t,Double_t);
-#pragma link C++ function RooStats::NumberCountingUtils::BinomialObsZ(Double_t,Double_t,Double_t);
-#pragma link C++ function RooStats::NumberCountingUtils::BinomialWithTauObsZ(Double_t,Double_t,Double_t);
-#pragma link C++ function RooStats::NumberCountingUtils::BinomialExpP(Double_t,Double_t,Double_t);
-#pragma link C++ function RooStats::NumberCountingUtils::BinomialWithTauExpP(Double_t,Double_t,Double_t);
-#pragma link C++ function RooStats::NumberCountingUtils::BinomialObsP(Double_t,Double_t,Double_t);
-#pragma link C++ function RooStats::NumberCountingUtils::BinomialWithTauObsP(Double_t,Double_t,Double_t);
+#pragma link C++ function RooStats::NumberCountingUtils::BinomialExpZ(double , double ,double);
+#pragma link C++ function RooStats::NumberCountingUtils::BinomialWithTauExpZ(double,double,double);
+#pragma link C++ function RooStats::NumberCountingUtils::BinomialObsZ(double,double,double);
+#pragma link C++ function RooStats::NumberCountingUtils::BinomialWithTauObsZ(double,double,double);
+#pragma link C++ function RooStats::NumberCountingUtils::BinomialExpP(double,double,double);
+#pragma link C++ function RooStats::NumberCountingUtils::BinomialWithTauExpP(double,double,double);
+#pragma link C++ function RooStats::NumberCountingUtils::BinomialObsP(double,double,double);
+#pragma link C++ function RooStats::NumberCountingUtils::BinomialWithTauObsP(double,double,double);
 
-#pragma link C++ function RooStats::PValueToSignificance(Double_t);
-#pragma link C++ function RooStats::SignificanceToPValue(Double_t);
+#pragma link C++ function RooStats::PValueToSignificance(double);
+#pragma link C++ function RooStats::SignificanceToPValue(double);
 #pragma link C++ function RooStats::RemoveConstantParameters(RooArgSet* set);
 #pragma link C++ function RooStats::RemoveConstantParameters(RooArgList& set);
 #pragma link C++ function RooStats::SetParameters(const RooArgSet* , RooArgSet* );

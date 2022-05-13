@@ -58,7 +58,7 @@ public:
 
   ~RooChi2Var() override;
 
-  Double_t defaultErrorLevel() const override {
+  double defaultErrorLevel() const override {
     // The default error level for MINUIT error analysis for a chi^2 is 1.0
     return 1.0 ;
   }
@@ -70,7 +70,7 @@ protected:
   RooDataHist::ErrorType _etype ;     ///< Error type store in associated RooDataHist
   FuncMode _funcMode ;                ///< Function, P.d.f. or extended p.d.f?
 
-  Double_t evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const override ;
+  double evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const override ;
 
   ClassDefOverride(RooChi2Var,1) // Chi^2 function of p.d.f w.r.t a binned dataset
 };

@@ -36,7 +36,7 @@ public:
   inline ~RooDstD0BG() override { };
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
 protected:
 
@@ -44,7 +44,7 @@ protected:
   RooRealProxy dm0 ;
   RooRealProxy C,A,B ;
 
-  Double_t evaluate() const override;
+  double evaluate() const override;
   void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 

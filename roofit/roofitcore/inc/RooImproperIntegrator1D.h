@@ -28,15 +28,15 @@ public:
   RooImproperIntegrator1D() ;
   RooImproperIntegrator1D(const RooAbsFunc& function);
   RooImproperIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config);
-  RooImproperIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax, const RooNumIntConfig& config);
+  RooImproperIntegrator1D(const RooAbsFunc& function, double xmin, double xmax, const RooNumIntConfig& config);
   RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
   ~RooImproperIntegrator1D() override;
 
   bool checkLimits() const override;
   using RooAbsIntegrator::setLimits ;
-  bool setLimits(Double_t* xmin, Double_t* xmax) override;
+  bool setLimits(double* xmin, double* xmax) override;
   bool setUseIntegrandLimits(bool flag) override {_useIntegrandLimits = flag ; return true ; }
-  Double_t integral(const Double_t* yvec=0) override ;
+  double integral(const double* yvec=0) override ;
 
   bool canIntegrate1D() const override { return true ; }
   bool canIntegrate2D() const override { return false ; }
@@ -54,7 +54,7 @@ protected:
           OpenAboveSpansZero, OpenAbove };
   LimitsCase limitsCase() const;
   LimitsCase _case; ///< Configuration of limits
-  mutable Double_t _xmin, _xmax; ///< Value of limits
+  mutable double _xmin, _xmax; ///< Value of limits
   bool _useIntegrandLimits;    ///< Use limits in function binding?
 
   RooAbsFunc*      _origFunc ;  ///< Original function binding

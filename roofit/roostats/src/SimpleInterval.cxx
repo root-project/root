@@ -84,7 +84,7 @@ SimpleInterval::operator=(const SimpleInterval& other)
 ////////////////////////////////////////////////////////////////////////////////
 /// Alternate constructor
 
-SimpleInterval::SimpleInterval(const char* name, const RooRealVar & var, Double_t lower, Double_t upper, Double_t cl) :
+SimpleInterval::SimpleInterval(const char* name, const RooRealVar & var, double lower, double upper, double cl) :
    ConfInterval(name), fParameters(var), fLowerLimit(lower), fUpperLimit(upper), fConfidenceLevel(cl)
 {
 }

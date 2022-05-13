@@ -39,10 +39,10 @@ public:
    }
 
    inline double getCarry() const { return eval_carry; }
-   inline Double_t defaultErrorLevel() const override { return 0.5; }
+   inline double defaultErrorLevel() const override { return 0.5; }
 
 protected:
-   Double_t evaluate() const override;
+   double evaluate() const override;
 
 private:
    std::shared_ptr<RooAbsL> likelihood_;

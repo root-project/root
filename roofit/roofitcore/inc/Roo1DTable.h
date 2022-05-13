@@ -32,12 +32,12 @@ public:
   Roo1DTable(const char *name, const char *title, const RooAbsCategory &cat);
   Roo1DTable(const Roo1DTable& other) ;
 
-  void fill(RooAbsCategory& cat, Double_t weight=1.0) override ;
-  Double_t get(const char* label, bool silent=false) const ;
-  Double_t getFrac(const char* label, bool silent=false) const ;
-  Double_t get(const int index, bool silent=false) const ;
-  Double_t getFrac(const int index, bool silent=false) const ;
-  Double_t getOverflow() const ;
+  void fill(RooAbsCategory& cat, double weight=1.0) override ;
+  double get(const char* label, bool silent=false) const ;
+  double getFrac(const char* label, bool silent=false) const ;
+  double get(const int index, bool silent=false) const ;
+  double getFrac(const int index, bool silent=false) const ;
+  double getOverflow() const ;
 
   // Printing interface (human readable)
   void printName(std::ostream& os) const override ;
@@ -58,9 +58,9 @@ protected:
 
 
   TObjArray _types ;             ///< Array of defined category states
-  std::vector<Double_t> _count ; ///< Array of counters for each state
-  Double_t  _total ;             ///< Total number of entries
-  Double_t  _nOverflow ;         ///< Number of overflow entries
+  std::vector<double> _count ; ///< Array of counters for each state
+  double  _total ;             ///< Total number of entries
+  double  _nOverflow ;         ///< Number of overflow entries
 
   ClassDefOverride(Roo1DTable,1) // 1-dimensional table
 };

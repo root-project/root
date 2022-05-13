@@ -51,7 +51,7 @@ namespace RooStats {
       /// fLeftSideTailFraction*fSize defines lower edge of acceptance region.
       /// Unified limits use 0, central limits use 0.5,
       /// for upper/lower limits it is 0/1 depends on sign of test statistic w.r.t. parameter
-      void SetLeftSideTailFraction(Double_t leftSideFraction = 0.) {fLeftSideFraction = leftSideFraction;}
+      void SetLeftSideTailFraction(double leftSideFraction = 0.) {fLeftSideFraction = leftSideFraction;}
 
       /// User-defined set of points to test
       void SetParameterPointsToTest(RooAbsData& pointsToTest) {
@@ -66,10 +66,10 @@ namespace RooStats {
       ///      void SetNumSteps(std::map<RooAbsArg, Int_t>)
 
       /// Get the size of the test (eg. rate of Type I error)
-      Double_t Size() const override {return fSize;}
+      double Size() const override {return fSize;}
 
       /// Get the Confidence level for the test
-      Double_t ConfidenceLevel()  const override {return 1.-fSize;}
+      double ConfidenceLevel()  const override {return 1.-fSize;}
 
       /// Set ModelConfig
       void SetModel(const ModelConfig &model) override {fModel = model;}
@@ -93,9 +93,9 @@ namespace RooStats {
       }
 
       /// set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
-      void SetTestSize(Double_t size) override {fSize = size;}
+      void SetTestSize(double size) override {fSize = size;}
       /// set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
-      void SetConfidenceLevel(Double_t cl) override {fSize = 1.-cl;}
+      void SetConfidenceLevel(double cl) override {fSize = 1.-cl;}
 
       /// Get confidence belt. This requires that CreateConfBelt() has been called.
       ConfidenceBelt* GetConfidenceBelt() {return fCreateBelt ? fConfBelt : nullptr;}
@@ -115,22 +115,22 @@ namespace RooStats {
       void CreateConfBelt(bool flag=true){fCreateBelt = flag;}
 
       /// Returns instance of TestStatSampler. Use to change properties of
-      /// TestStatSampler, e.g. GetTestStatSampler.SetTestSize(Double_t size);
+      /// TestStatSampler, e.g. GetTestStatSampler.SetTestSize(double size);
       TestStatSampler* GetTestStatSampler(void) { return fTestStatSampler; }
 
 
    private:
 
-      Double_t fSize;    ///< size of the test (eg. specified rate of Type I error)
+      double fSize;    ///< size of the test (eg. specified rate of Type I error)
       RooAbsData& fData; ///< data set
       ModelConfig &fModel;
 
       TestStatSampler* fTestStatSampler;
       RooAbsData* fPointsToTest;
-      Double_t fLeftSideFraction;
+      double fLeftSideFraction;
       ConfidenceBelt* fConfBelt;
       bool fAdaptiveSampling;          ///< controls use of adaptive sampling algorithm
-      Double_t fAdditionalNToysFactor; ///< give user ability to ask for more toys
+      double fAdditionalNToysFactor; ///< give user ability to ask for more toys
       bool fSaveBeltToFile;            ///< controls use if ConfidenceBelt should be saved to a TFile
       bool fCreateBelt;                ///< controls use if ConfidenceBelt should be saved to a TFile
 

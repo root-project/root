@@ -63,7 +63,7 @@ public:
    /// away from invalid function values.
    void SetRecoverFromNaNStrength(double strength) { _recoverFromNaNStrength = strength; }
    void SetPrintEvalErrors(Int_t numEvalErrors);
-   Double_t &GetMaxFCN();
+   double &GetMaxFCN();
    Int_t evalCounter() const;
    void zeroEvalCount();
    /// Return a possible offset that's applied to the function to separate invalid function values from valid ones.
@@ -111,9 +111,9 @@ protected:
    virtual void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt) = 0;
 
    // used in BackProp (Minuit results -> RooFit) and ApplyCovarianceMatrix
-   void SetPdfParamErr(Int_t index, Double_t value);
+   void SetPdfParamErr(Int_t index, double value);
    void ClearPdfParamAsymErr(Int_t index);
-   void SetPdfParamErr(Int_t index, Double_t loVal, Double_t hiVal);
+   void SetPdfParamErr(Int_t index, double loVal, double hiVal);
 
    void printEvalErrors() const;
 

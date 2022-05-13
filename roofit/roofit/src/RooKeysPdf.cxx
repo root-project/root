@@ -49,8 +49,8 @@ using namespace std;
 
 ClassImp(RooKeysPdf);
 
-const Double_t RooKeysPdf::_nSigma = std::sqrt(-2. *
-    std::log(std::numeric_limits<Double_t>::epsilon()));
+const double RooKeysPdf::_nSigma = std::sqrt(-2. *
+    std::log(std::numeric_limits<double>::epsilon()));
 
 ////////////////////////////////////////////////////////////////////////////////
 /// coverity[UNINIT_CTOR]
@@ -67,7 +67,7 @@ const Double_t RooKeysPdf::_nSigma = std::sqrt(-2. *
 
 RooKeysPdf::RooKeysPdf(const char *name, const char *title,
                        RooAbsReal& x, RooDataSet& data,
-                       Mirror mirror, Double_t rho) :
+                       Mirror mirror, double rho) :
   RooAbsPdf(name,title),
   _x("x","observable",this,x),
   _nEvents(0),
@@ -96,7 +96,7 @@ RooKeysPdf::RooKeysPdf(const char *name, const char *title,
 
 RooKeysPdf::RooKeysPdf(const char *name, const char *title,
                        RooAbsReal& xpdf, RooRealVar& xdata, RooDataSet& data,
-                       Mirror mirror, Double_t rho) :
+                       Mirror mirror, double rho) :
   RooAbsPdf(name,title),
   _x("x","Observable",this,xpdf),
   _nEvents(0),
@@ -135,8 +135,8 @@ RooKeysPdf::RooKeysPdf(const RooKeysPdf& other, const char* name):
   _binWidth = other._binWidth;
 
   // copy over data and weights... not necessary, commented out for speed
-//    _dataPts = new Double_t[_nEvents];
-//    _weights = new Double_t[_nEvents];
+//    _dataPts = new double[_nEvents];
+//    _weights = new double[_nEvents];
 //    for (Int_t i= 0; i<_nEvents; i++) {
 //      _dataPts[i]= other._dataPts[i];
 //      _weights[i]= other._weights[i];
@@ -164,8 +164,8 @@ RooKeysPdf::~RooKeysPdf() {
 
 namespace {
   struct Data {
-    Double_t x;
-    Double_t w;
+    double x;
+    double w;
   };
   // helper to order two Data structures
   struct cmp {
@@ -180,18 +180,18 @@ void RooKeysPdf::LoadDataSet( RooDataSet& data) {
 
   std::vector<Data> tmp;
   tmp.reserve((1 + _mirrorLeft + _mirrorRight) * data.numEntries());
-  Double_t x0 = 0., x1 = 0., x2 = 0.;
+  double x0 = 0., x1 = 0., x2 = 0.;
   _sumWgt = 0.;
   // read the data set into tmp and accumulate some statistics
   RooRealVar& real = (RooRealVar&)(data.get()->operator[](_varName));
   for (Int_t i = 0; i < data.numEntries(); ++i) {
     data.get(i);
-    const Double_t x = real.getVal();
-    const Double_t w = data.weight();
+    const double x = real.getVal();
+    const double w = data.weight();
     x0 += w;
     x1 += w * x;
     x2 += w * x * x;
-    _sumWgt += Double_t(1 + _mirrorLeft + _mirrorRight) * w;
+    _sumWgt += double(1 + _mirrorLeft + _mirrorRight) * w;
 
     Data p;
     p.x = x, p.w = w;
@@ -210,8 +210,8 @@ void RooKeysPdf::LoadDataSet( RooDataSet& data) {
 
   // copy the sorted data set to its final destination
   _nEvents = tmp.size();
-  _dataPts  = new Double_t[_nEvents];
-  _dataWgts = new Double_t[_nEvents];
+  _dataPts  = new double[_nEvents];
+  _dataWgts = new double[_nEvents];
   for (unsigned i = 0; i < tmp.size(); ++i) {
     _dataPts[i] = tmp[i].x;
     _dataWgts[i] = tmp[i].w;
@@ -222,13 +222,13 @@ void RooKeysPdf::LoadDataSet( RooDataSet& data) {
     tmp2.swap(tmp);
   }
 
-  Double_t meanv=x1/x0;
-  Double_t sigmav=std::sqrt(x2/x0-meanv*meanv);
-  Double_t h=std::pow(Double_t(4)/Double_t(3),0.2)*std::pow(_nEvents,-0.2)*_rho;
-  Double_t hmin=h*sigmav*std::sqrt(2.)/10;
-  Double_t norm=h*std::sqrt(sigmav)/(2.0*std::sqrt(3.0));
+  double meanv=x1/x0;
+  double sigmav=std::sqrt(x2/x0-meanv*meanv);
+  double h=std::pow(double(4)/double(3),0.2)*std::pow(_nEvents,-0.2)*_rho;
+  double hmin=h*sigmav*std::sqrt(2.)/10;
+  double norm=h*std::sqrt(sigmav)/(2.0*std::sqrt(3.0));
 
-  _weights=new Double_t[_nEvents];
+  _weights=new double[_nEvents];
   for(Int_t j=0;j<_nEvents;++j) {
     _weights[j]=norm/std::sqrt(g(_dataPts[j],h*sigmav));
     if (_weights[j]<hmin) _weights[j]=hmin;
@@ -240,36 +240,36 @@ void RooKeysPdf::LoadDataSet( RooDataSet& data) {
   // binned approximation in _lookupTable we have to touch when filling it.
   for (Int_t i=0;i<_nPoints+1;++i) _lookupTable[i] = 0.;
   for(Int_t j=0;j<_nEvents;++j) {
-      const Double_t xlo = std::min(_hi,
+      const double xlo = std::min(_hi,
          std::max(_lo, _dataPts[j] - _nSigma * _weights[j]));
-      const Double_t xhi = std::max(_lo,
+      const double xhi = std::max(_lo,
          std::min(_hi, _dataPts[j] + _nSigma * _weights[j]));
       if (xlo >= xhi) continue;
-      const Double_t chi2incr = _binWidth / _weights[j] / std::sqrt(2.);
-      const Double_t weightratio = _dataWgts[j] / _weights[j];
+      const double chi2incr = _binWidth / _weights[j] / std::sqrt(2.);
+      const double weightratio = _dataWgts[j] / _weights[j];
       const Int_t binlo = static_cast<Int_t>(std::floor((xlo - _lo) / _binWidth));
       const Int_t binhi = static_cast<Int_t>(_nPoints - std::floor((_hi - xhi) / _binWidth));
-      const Double_t x = (Double_t(_nPoints - binlo) * _lo +
-         Double_t(binlo) * _hi) / Double_t(_nPoints);
-      Double_t chi = (x - _dataPts[j]) / _weights[j] / std::sqrt(2.);
+      const double x = (double(_nPoints - binlo) * _lo +
+         double(binlo) * _hi) / double(_nPoints);
+      double chi = (x - _dataPts[j]) / _weights[j] / std::sqrt(2.);
       for (Int_t k = binlo; k <= binhi; ++k, chi += chi2incr) {
      _lookupTable[k] += weightratio * std::exp(- chi * chi);
       }
   }
   if (_asymLeft) {
       for(Int_t j=0;j<_nEvents;++j) {
-     const Double_t xlo = std::min(_hi,
+     const double xlo = std::min(_hi,
         std::max(_lo, 2. * _lo - _dataPts[j] + _nSigma * _weights[j]));
-     const Double_t xhi = std::max(_lo,
+     const double xhi = std::max(_lo,
         std::min(_hi, 2. * _lo - _dataPts[j] - _nSigma * _weights[j]));
      if (xlo >= xhi) continue;
-     const Double_t chi2incr = _binWidth / _weights[j] / std::sqrt(2.);
-     const Double_t weightratio = _dataWgts[j] / _weights[j];
+     const double chi2incr = _binWidth / _weights[j] / std::sqrt(2.);
+     const double weightratio = _dataWgts[j] / _weights[j];
      const Int_t binlo = static_cast<Int_t>(std::floor((xlo - _lo) / _binWidth));
      const Int_t binhi = static_cast<Int_t>(_nPoints - std::floor((_hi - xhi) / _binWidth));
-     const Double_t x = (Double_t(_nPoints - binlo) * _lo +
-        Double_t(binlo) * _hi) / Double_t(_nPoints);
-     Double_t chi = (x - (2. * _lo - _dataPts[j])) / _weights[j] / std::sqrt(2.);
+     const double x = (double(_nPoints - binlo) * _lo +
+        double(binlo) * _hi) / double(_nPoints);
+     double chi = (x - (2. * _lo - _dataPts[j])) / _weights[j] / std::sqrt(2.);
      for (Int_t k = binlo; k <= binhi; ++k, chi += chi2incr) {
          _lookupTable[k] -= weightratio * std::exp(- chi * chi);
      }
@@ -277,49 +277,49 @@ void RooKeysPdf::LoadDataSet( RooDataSet& data) {
   }
   if (_asymRight) {
       for(Int_t j=0;j<_nEvents;++j) {
-     const Double_t xlo = std::min(_hi,
+     const double xlo = std::min(_hi,
         std::max(_lo, 2. * _hi - _dataPts[j] + _nSigma * _weights[j]));
-     const Double_t xhi = std::max(_lo,
+     const double xhi = std::max(_lo,
         std::min(_hi, 2. * _hi - _dataPts[j] - _nSigma * _weights[j]));
      if (xlo >= xhi) continue;
-     const Double_t chi2incr = _binWidth / _weights[j] / std::sqrt(2.);
-     const Double_t weightratio = _dataWgts[j] / _weights[j];
+     const double chi2incr = _binWidth / _weights[j] / std::sqrt(2.);
+     const double weightratio = _dataWgts[j] / _weights[j];
      const Int_t binlo = static_cast<Int_t>(std::floor((xlo - _lo) / _binWidth));
      const Int_t binhi = static_cast<Int_t>(_nPoints - std::floor((_hi - xhi) / _binWidth));
-     const Double_t x = (Double_t(_nPoints - binlo) * _lo +
-        Double_t(binlo) * _hi) / Double_t(_nPoints);
-     Double_t chi = (x - (2. * _hi - _dataPts[j])) / _weights[j] / std::sqrt(2.);
+     const double x = (double(_nPoints - binlo) * _lo +
+        double(binlo) * _hi) / double(_nPoints);
+     double chi = (x - (2. * _hi - _dataPts[j])) / _weights[j] / std::sqrt(2.);
      for (Int_t k = binlo; k <= binhi; ++k, chi += chi2incr) {
          _lookupTable[k] -= weightratio * std::exp(- chi * chi);
      }
       }
   }
-  static const Double_t sqrt2pi(std::sqrt(2*TMath::Pi()));
+  static const double sqrt2pi(std::sqrt(2*TMath::Pi()));
   for (Int_t i=0;i<_nPoints+1;++i)
     _lookupTable[i] /= sqrt2pi * _sumWgt;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooKeysPdf::evaluate() const {
-  Int_t i = (Int_t)floor((Double_t(_x)-_lo)/_binWidth);
+double RooKeysPdf::evaluate() const {
+  Int_t i = (Int_t)floor((double(_x)-_lo)/_binWidth);
   if (i<0) {
 //     cerr << "got point below lower bound:"
-//     << Double_t(_x) << " < " << _lo
+//     << double(_x) << " < " << _lo
 //     << " -- performing linear extrapolation..." << endl;
     i=0;
   }
   if (i>_nPoints-1) {
 //     cerr << "got point above upper bound:"
-//     << Double_t(_x) << " > " << _hi
+//     << double(_x) << " > " << _hi
 //     << " -- performing linear extrapolation..." << endl;
     i=_nPoints-1;
   }
-  Double_t dx = (Double_t(_x)-(_lo+i*_binWidth))/_binWidth;
+  double dx = (double(_x)-(_lo+i*_binWidth))/_binWidth;
 
   // for now do simple linear interpolation.
   // one day replace by splines...
-  Double_t ret = (_lookupTable[i]+dx*(_lookupTable[i+1]-_lookupTable[i]));
+  double ret = (_lookupTable[i]+dx*(_lookupTable[i+1]-_lookupTable[i]));
   if (ret<0) ret=0 ;
   return ret ;
 }
@@ -331,17 +331,17 @@ Int_t RooKeysPdf::getAnalyticalIntegral(
   return 0;
 }
 
-Double_t RooKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   R__ASSERT(1 == code);
   // this code is based on _lookupTable and uses linear interpolation, just as
   // evaluate(); integration is done using the trapez rule
-  const Double_t xmin = std::max(_lo, _x.min(rangeName));
-  const Double_t xmax = std::min(_hi, _x.max(rangeName));
+  const double xmin = std::max(_lo, _x.min(rangeName));
+  const double xmax = std::min(_hi, _x.max(rangeName));
   const Int_t imin = (Int_t)floor((xmin - _lo) / _binWidth);
   const Int_t imax = std::min((Int_t)floor((xmax - _lo) / _binWidth),
       _nPoints - 1);
-  Double_t sum = 0.;
+  double sum = 0.;
   // sum up complete bins in middle
   if (imin + 1 < imax)
     sum += _lookupTable[imin + 1] + _lookupTable[imax];
@@ -349,8 +349,8 @@ Double_t RooKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
     sum += 2. * _lookupTable[i];
   sum *= _binWidth * 0.5;
   // treat incomplete bins
-  const Double_t dxmin = (xmin - (_lo + imin * _binWidth)) / _binWidth;
-  const Double_t dxmax = (xmax - (_lo + imax * _binWidth)) / _binWidth;
+  const double dxmin = (xmin - (_lo + imin * _binWidth)) / _binWidth;
+  const double dxmax = (xmax - (_lo + imax * _binWidth)) / _binWidth;
   if (imin < imax) {
     // first bin
     sum += _binWidth * (1. - dxmin) * 0.5 * (_lookupTable[imin + 1] +
@@ -377,10 +377,10 @@ Int_t RooKeysPdf::getMaxVal(const RooArgSet& vars) const
   return 0;
 }
 
-Double_t RooKeysPdf::maxVal(Int_t code) const
+double RooKeysPdf::maxVal(Int_t code) const
 {
   R__ASSERT(1 == code);
-  Double_t max = -std::numeric_limits<Double_t>::max();
+  double max = -std::numeric_limits<double>::max();
   for (Int_t i = 0; i <= _nPoints; ++i)
     if (max < _lookupTable[i]) max = _lookupTable[i];
   return max;
@@ -388,20 +388,20 @@ Double_t RooKeysPdf::maxVal(Int_t code) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooKeysPdf::g(Double_t x,Double_t sigmav) const {
-  Double_t y=0;
+double RooKeysPdf::g(double x,double sigmav) const {
+  double y=0;
   // since data is sorted, we can be a little faster because we know which data
   // points contribute
-  Double_t* it = std::lower_bound(_dataPts, _dataPts + _nEvents,
+  double* it = std::lower_bound(_dataPts, _dataPts + _nEvents,
       x - _nSigma * sigmav);
   if (it >= (_dataPts + _nEvents)) return 0.;
-  Double_t* iend = std::upper_bound(it, _dataPts + _nEvents,
+  double* iend = std::upper_bound(it, _dataPts + _nEvents,
       x + _nSigma * sigmav);
   for ( ; it < iend; ++it) {
-    const Double_t r = (x - *it) / sigmav;
+    const double r = (x - *it) / sigmav;
     y += std::exp(-0.5 * r * r);
   }
 
-  static const Double_t sqrt2pi(std::sqrt(2*TMath::Pi()));
+  static const double sqrt2pi(std::sqrt(2*TMath::Pi()));
   return y/(sigmav*sqrt2pi*_nEvents);
 }

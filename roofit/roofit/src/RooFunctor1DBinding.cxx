@@ -70,7 +70,7 @@ void RooFunctor1DBinding::printArgs(ostream& os) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooFunctor1DBinding::evaluate() const {
+double RooFunctor1DBinding::evaluate() const {
     // Return value of embedded function using value of referenced variable x
     return (*func)(var.arg().getVal()) ;
   }
@@ -111,7 +111,7 @@ void RooFunctor1DPdfBinding::printArgs(ostream& os) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooFunctor1DPdfBinding::evaluate() const {
+double RooFunctor1DPdfBinding::evaluate() const {
     // Return value of embedded function using value of referenced variable x
     return (*func)(var.arg().getVal()) ;
   }

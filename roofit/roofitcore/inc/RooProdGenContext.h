@@ -58,7 +58,7 @@ protected:
   RooArgSet _uniObs ;            ///< Observable to be generated with flat distribution
   TIterator* _uniIter ;          ///< Iterator over uniform observables
   bool _ccdRefresh ;
-  Double_t * _ccdTable ;
+  double * _ccdTable ;
   const RooProdPdf *_pdf ;       ///<  Original PDF
   std::list<RooAbsGenContext*>  _gcList ; ///<  List of component generator contexts
   RooArgSet _ownedMultiProds ;   ///<  Owned auxiliary multi-term product PDFs
