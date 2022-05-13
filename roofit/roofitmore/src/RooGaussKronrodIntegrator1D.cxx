@@ -136,7 +136,7 @@ RooGaussKronrodIntegrator1D::RooGaussKronrodIntegrator1D(const RooAbsFunc& funct
 /// Construct integral on 'function' using given configuration object in the given range
 
 RooGaussKronrodIntegrator1D::RooGaussKronrodIntegrator1D(const RooAbsFunc& function,
-                      Double_t xmin, Double_t xmax, const RooNumIntConfig& config) :
+                      double xmin, double xmax, const RooNumIntConfig& config) :
   RooAbsIntegrator(function),
   _epsAbs(config.epsRel()),
   _epsRel(config.epsAbs()),
@@ -165,7 +165,7 @@ RooAbsIntegrator* RooGaussKronrodIntegrator1D::clone(const RooAbsFunc& function,
 bool RooGaussKronrodIntegrator1D::initialize()
 {
   // Allocate coordinate buffer size after number of function dimensions
-  _x = new Double_t[_function->getDimension()] ;
+  _x = new double[_function->getDimension()] ;
 
   return checkLimits();
 }
@@ -189,7 +189,7 @@ RooGaussKronrodIntegrator1D::~RooGaussKronrodIntegrator1D()
 /// ok, or otherwise false. Always returns false and does nothing
 /// if this object was constructed to always use our integrand's limits.
 
-bool RooGaussKronrodIntegrator1D::setLimits(Double_t* xmin, Double_t* xmax)
+bool RooGaussKronrodIntegrator1D::setLimits(double* xmin, double* xmax)
 {
   if(_useIntegrandLimits) {
     oocoutE(nullptr,Eval) << "RooGaussKronrodIntegrator1D::setLimits: cannot override integrand's limits" << endl;
@@ -229,7 +229,7 @@ double RooGaussKronrodIntegrator1D_GSL_GlueFunction(double x, void *data)
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return integral
 
-Double_t RooGaussKronrodIntegrator1D::integral(const Double_t *yvec)
+double RooGaussKronrodIntegrator1D::integral(const double *yvec)
 {
   assert(isValid());
 

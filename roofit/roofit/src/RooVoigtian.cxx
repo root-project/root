@@ -65,13 +65,13 @@ RooVoigtian::RooVoigtian(const RooVoigtian& other, const char* name) :
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooVoigtian::evaluate() const
+double RooVoigtian::evaluate() const
 {
-  Double_t s = (sigma>0) ? sigma : -sigma ;
-  Double_t w = (width>0) ? width : -width ;
+  double s = (sigma>0) ? sigma : -sigma ;
+  double w = (width>0) ? width : -width ;
 
-  Double_t coef= -0.5/(s*s);
-  Double_t arg = x - mean;
+  double coef= -0.5/(s*s);
+  double arg = x - mean;
 
   // return constant for zero width and sigma
   if (s==0. && w==0.) return 1.;
@@ -83,11 +83,11 @@ Double_t RooVoigtian::evaluate() const
   if (w==0.) return exp(coef*arg*arg);
 
   // actual Voigtian for non-trivial width and sigma
-  Double_t c = 1./(sqrt(2.)*s);
-  Double_t a = 0.5*c*w;
-  Double_t u = c*arg;
-  std::complex<Double_t> z(u,a) ;
-  std::complex<Double_t> v(0.) ;
+  double c = 1./(sqrt(2.)*s);
+  double a = 0.5*c*w;
+  double u = c*arg;
+  std::complex<double> z(u,a) ;
+  std::complex<double> v(0.) ;
 
   if (_doFast) {
     v = RooMath::faddeeva_fast(z);

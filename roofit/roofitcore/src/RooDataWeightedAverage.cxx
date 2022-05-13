@@ -93,7 +93,7 @@ RooDataWeightedAverage::~RooDataWeightedAverage()
 /// be defined to obtain final test statistic. For a data weighted avarage this
 /// the the sum of all weights
 
-Double_t RooDataWeightedAverage::globalNormalization() const
+double RooDataWeightedAverage::globalNormalization() const
 {
   return _sumWeight ;
 }
@@ -103,9 +103,9 @@ Double_t RooDataWeightedAverage::globalNormalization() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate the data weighted average for events [firstEVent,lastEvent] with step size stepSize
 
-Double_t RooDataWeightedAverage::evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const
+double RooDataWeightedAverage::evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const
 {
-  Double_t result(0) ;
+  double result(0) ;
 
   _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize,false) ;
 
@@ -120,7 +120,7 @@ Double_t RooDataWeightedAverage::evaluatePartition(std::size_t firstEvent, std::
     _dataClone->get(i);
     if (_dataClone->weight()==0) continue ;
 
-    Double_t term = _dataClone->weight() * _funcClone->getVal(_normSet);
+    double term = _dataClone->weight() * _funcClone->getVal(_normSet);
     result += term;
   }
 

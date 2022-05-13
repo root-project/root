@@ -66,7 +66,7 @@ protected:
   mutable std::map< std::string, std::vector< BarlowCache > > _barlowCache;
   mutable std::set< std::string > _statUncertParams;
   mutable std::map<std::string,bool> _paramFixed ; ///< Parameter constant status at last time of use
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
 
 private:
 

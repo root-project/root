@@ -67,7 +67,7 @@ public:
   // Constructors, assignment etc
   RooAbsReal() ;
   RooAbsReal(const char *name, const char *title, const char *unit= "") ;
-  RooAbsReal(const char *name, const char *title, Double_t minVal, Double_t maxVal,
+  RooAbsReal(const char *name, const char *title, double minVal, double maxVal,
         const char *unit= "") ;
   RooAbsReal(const RooAbsReal& other, const char* name=0);
   RooAbsReal& operator=(const RooAbsReal& other);
@@ -90,7 +90,7 @@ public:
   /// the variables to normalise over.
   /// These are integrated over their current ranges to compute the normalisation constant,
   /// and the unnormalised result is divided by this value.
-  inline Double_t getVal(const RooArgSet* normalisationSet = nullptr) const {
+  inline double getVal(const RooArgSet* normalisationSet = nullptr) const {
     // Sometimes, the calling code uses an empty RooArgSet to request evaluation
     // without normalization set instead of following the `nullptr` convention.
     // To remove this ambiguity which might not always be correctly handled in
@@ -113,7 +113,7 @@ public:
   }
 
   /// Like getVal(const RooArgSet*), but always requires an argument for normalisation.
-  inline  Double_t getVal(const RooArgSet& normalisationSet) const {
+  inline  double getVal(const RooArgSet& normalisationSet) const {
     // Sometimes, the calling code uses an empty RooArgSet to request evaluation
     // without normalization set instead of following the `nullptr` convention.
     // To remove this ambiguity which might not always be correctly handled in
@@ -121,7 +121,7 @@ public:
     return _fast ? _value : getValV(normalisationSet.empty() ? nullptr : &normalisationSet) ;
   }
 
-  virtual Double_t getValV(const RooArgSet* normalisationSet = nullptr) const ;
+  virtual double getValV(const RooArgSet* normalisationSet = nullptr) const ;
 
   /// \deprecated getValBatch() has been removed in favour of the faster getValues(). If your code is affected
   /// by this change, please consult the release notes for ROOT 6.24 for guidance on how to make this transition.
@@ -139,9 +139,9 @@ public:
   virtual RooSpan<const double> getValues(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet = nullptr) const;
   std::vector<double> getValues(RooAbsData const& data, RooFit::BatchModeOption batchMode=RooFit::BatchModeOption::Cpu) const;
 
-  Double_t getPropagatedError(const RooFitResult &fr, const RooArgSet &nset = RooArgSet()) const;
+  double getPropagatedError(const RooFitResult &fr, const RooArgSet &nset = RooArgSet()) const;
 
-  bool operator==(Double_t value) const ;
+  bool operator==(double value) const ;
   bool operator==(const RooAbsArg& other) const override;
   bool isIdentical(const RooAbsArg& other, bool assumeSameType=false) const override;
 
@@ -164,9 +164,9 @@ public:
 
   // Analytical integration support
   virtual Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=0) const ;
-  virtual Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
+  virtual double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
   virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  virtual Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  virtual double analyticalIntegral(Int_t code, const char* rangeName=0) const ;
   virtual bool forceAnalyticalInt(const RooAbsArg& /*dep*/) const {
     // Interface to force RooRealIntegral to offer given observable for internal integration
     // even if this is deemed unsafe. This default implementation returns always false
@@ -244,7 +244,7 @@ public:
 
   // Optimized accept/reject generator support
   virtual Int_t getMaxVal(const RooArgSet& vars) const ;
-  virtual Double_t maxVal(Int_t code) const ;
+  virtual double maxVal(Int_t code) const ;
   virtual Int_t minTrialSamples(const RooArgSet& /*arGenObs*/) const { return 0 ; }
 
 
@@ -252,7 +252,7 @@ public:
   void setPlotLabel(const char *label);
   const char *getPlotLabel() const;
 
-  virtual Double_t defaultErrorLevel() const {
+  virtual double defaultErrorLevel() const {
     // Return default level for MINUIT error analysis
     return 1.0 ;
   }
@@ -284,11 +284,11 @@ public:
 
   // Forwarder function for backward compatibility
   virtual RooPlot *plotSliceOn(RooPlot *frame, const RooArgSet& sliceSet, Option_t* drawOptions="L",
-                Double_t scaleFactor=1.0, ScaleType stype=Relative, const RooAbsData* projData=0) const;
+                double scaleFactor=1.0, ScaleType stype=Relative, const RooAbsData* projData=0) const;
 
   // Fill an existing histogram
   TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars,
-           Double_t scaleFactor= 1, const RooArgSet *projectedVars= 0, bool scaling=true,
+           double scaleFactor= 1, const RooArgSet *projectedVars= 0, bool scaling=true,
            const RooArgSet* condObs=0, bool setError=true) const;
 
   // Create 1,2, and 3D histograms from and fill it
@@ -301,7 +301,7 @@ public:
                        const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;
 
   // Fill a RooDataHist
-  RooDataHist* fillDataHist(RooDataHist *hist, const RooArgSet* nset, Double_t scaleFactor,
+  RooDataHist* fillDataHist(RooDataHist *hist, const RooArgSet* nset, double scaleFactor,
              bool correctForBinVolume=false, bool showProgress=false) const ;
 
   // I/O streaming interface (machine readable)
@@ -342,8 +342,8 @@ public:
 
   /// Tests if the distribution is binned. Unless overridden by derived classes, this always returns false.
   virtual bool isBinnedDistribution(const RooArgSet& /*obs*/) const { return false ; }
-  virtual std::list<Double_t>* binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const;
-  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const;
+  virtual std::list<double>* binBoundaries(RooAbsRealLValue& obs, double xlo, double xhi) const;
+  virtual std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const;
 
   RooGenFunction* iGenFunction(RooRealVar& x, const RooArgSet& nset=RooArgSet()) ;
   RooMultiGenFunction* iGenFunction(const RooArgSet& observables, const RooArgSet& nset=RooArgSet()) ;
@@ -351,8 +351,8 @@ public:
   RooFunctor* functor(const RooArgList& obs, const RooArgList& pars=RooArgList(), const RooArgSet& nset=RooArgSet()) const ;
   TF1* asTF(const RooArgList& obs, const RooArgList& pars=RooArgList(), const RooArgSet& nset=RooArgSet()) const ;
 
-  RooDerivative* derivative(RooRealVar& obs, Int_t order=1, Double_t eps=0.001) ;
-  RooDerivative* derivative(RooRealVar& obs, const RooArgSet& normSet, Int_t order, Double_t eps=0.001) ;
+  RooDerivative* derivative(RooRealVar& obs, Int_t order=1, double eps=0.001) ;
+  RooDerivative* derivative(RooRealVar& obs, const RooArgSet& normSet, Int_t order, double eps=0.001) ;
 
   RooAbsMoment* moment(RooRealVar& obs, Int_t order, bool central, bool takeRoot) ;
   RooAbsMoment* moment(RooRealVar& obs, const RooArgSet& normObs, Int_t order, bool central, bool takeRoot, bool intNormObs) ;
@@ -362,14 +362,14 @@ public:
   RooAbsMoment* sigma(RooRealVar& obs) { return moment(obs,2,true,true) ; }
   RooAbsMoment* sigma(RooRealVar& obs, const RooArgSet& nset) { return moment(obs,nset,2,true,true,true) ; }
 
-  Double_t findRoot(RooRealVar& x, Double_t xmin, Double_t xmax, Double_t yval) ;
+  double findRoot(RooRealVar& x, double xmin, double xmax, double yval) ;
 
 
   virtual bool setData(RooAbsData& /*data*/, bool /*cloneData*/=true) { return true ; }
 
   virtual void enableOffsetting(bool) {} ;
   virtual bool isOffsetting() const { return false ; }
-  virtual Double_t offset() const { return 0 ; }
+  virtual double offset() const { return 0 ; }
 
   static void setHideOffset(bool flag);
   static bool hideOffset() ;
@@ -401,7 +401,7 @@ protected:
   RooFitResult* chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList) ;
 
   void plotOnCompSelect(RooArgSet* selNodes) const ;
-  RooPlot* plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, Double_t Z, const RooArgSet* params, const RooLinkedList& argList, bool method1) const ;
+  RooPlot* plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, double Z, const RooArgSet* params, const RooLinkedList& argList, bool method1) const ;
 
   // Support interface for subclasses to advertise their analytic integration
   // and generator capabilities in their analyticalIntegral() and generateEvent()
@@ -432,10 +432,10 @@ protected:
 
 
   // Function evaluation and error tracing
-  Double_t traceEval(const RooArgSet* set) const ;
+  double traceEval(const RooArgSet* set) const ;
 
   /// Evaluate this PDF / function / constant. Needs to be overridden by all derived classes.
-  virtual Double_t evaluate() const = 0;
+  virtual double evaluate() const = 0;
 
   /// \deprecated evaluateBatch() has been removed in favour of the faster evaluateSpan(). If your code is affected
   /// by this change, please consult the release notes for ROOT 6.24 for guidance on how to make this transition.
@@ -461,7 +461,7 @@ protected:
   void checkBatchComputation(const RooBatchCompute::RunContext& evalData, std::size_t evtNo, const RooArgSet* normSet = nullptr, double relAccuracy = 1.E-13) const;
 
   /// Debug version of getVal(), which is slow and does error checking.
-  Double_t _DEBUG_getVal(const RooArgSet* normalisationSet) const;
+  double _DEBUG_getVal(const RooArgSet* normalisationSet) const;
 
   //--------------------------------------------------------------------
 
@@ -477,10 +477,10 @@ protected:
   void fillTreeBranch(TTree& t) override ;
 
   friend class RooRealBinding ;
-  Double_t _plotMin ;       ///< Minimum of plot range
-  Double_t _plotMax ;       ///< Maximum of plot range
+  double _plotMin ;       ///< Minimum of plot range
+  double _plotMax ;       ///< Maximum of plot range
   Int_t    _plotBins ;      ///< Number of plot bins
-  mutable Double_t _value ; ///< Cache for current value of object
+  mutable double _value ; ///< Cache for current value of object
   TString  _unit ;          ///< Unit for objects value
   TString  _label ;         ///< Plot label for objects value
   bool   _forceNumInt ;   ///< Force numerical integration if flag set
@@ -499,30 +499,30 @@ protected:
                projectionRangeName(0),curveInvisible(false), curveName(0),addToCurveName(0),addToWgtSelf(1.),addToWgtOther(1.),
                numCPU(1),interleave(RooFit::Interleave),curveNameSuffix(""), numee(10), eeval(0), doeeval(false), progress(false), errorFR(0) {} ;
    Option_t* drawOptions ;
-   Double_t scaleFactor ;
+   double scaleFactor ;
    ScaleType stype ;
    const RooAbsData* projData ;
    bool binProjData ;
    const RooArgSet* projSet ;
-   Double_t precision ;
+   double precision ;
    bool shiftToZero ;
    const RooArgSet* projDataSet ;
    const char* normRangeName ;
-   Double_t rangeLo ;
-   Double_t rangeHi ;
+   double rangeLo ;
+   double rangeHi ;
    bool postRangeFracScale ;
    RooCurve::WingMode wmode ;
    const char* projectionRangeName ;
    bool curveInvisible ;
    const char* curveName ;
    const char* addToCurveName ;
-   Double_t addToWgtSelf ;
-   Double_t addToWgtOther ;
+   double addToWgtSelf ;
+   double addToWgtOther ;
    Int_t    numCPU ;
    RooFit::MPSplit interleave ;
    const char* curveNameSuffix ;
    Int_t    numee ;
-   Double_t eeval ;
+   double eeval ;
    bool   doeeval ;
    bool progress ;
    const RooFitResult* errorFR ;

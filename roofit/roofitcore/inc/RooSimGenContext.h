@@ -55,7 +55,7 @@ protected:
   bool _haveIdxProto{false};               ///< Flag set if generation of index is requested
   TString _idxCatName{};                     ///< Name of index category
   Int_t _numPdf{0};                          ///< Number of generated PDFs
-  Double_t* _fracThresh{nullptr};            ///<[_numPdf] Fraction threshold array
+  double* _fracThresh{nullptr};            ///<[_numPdf] Fraction threshold array
   RooDataSet* _protoData{nullptr};           ///<! Prototype dataset
 
   RooArgSet _allVarsPdf{};        ///< All pdf variables

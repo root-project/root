@@ -45,7 +45,7 @@ public:
     return _state.arg().getCurrentIndex()!=0 ;
   }
 
-  Double_t getHiddenVal(const RooArgSet* nset=0) const {
+  double getHiddenVal(const RooArgSet* nset=0) const {
     // Bypass accessor to function value that also works in hidden mode
     return RooAbsReal::getVal(nset) ;
   }
@@ -55,7 +55,7 @@ protected:
   // This is dubious from a C++ point of view, but it blocks the interactive user
   // from accidentally calling getVal() without explicit cast, which is the whole
   // point of this class
-  Double_t getValV(const RooArgSet* nset=0) const override {
+  double getValV(const RooArgSet* nset=0) const override {
     // Forward call to RooAbsReal
     return RooAbsReal::getValV(nset) ;
   }

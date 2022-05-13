@@ -99,7 +99,7 @@ Roo1DTable::~Roo1DTable()
 /// current category state matches no table slot name, the table
 /// overflow counter is incremented.
 
-void Roo1DTable::fill(RooAbsCategory& cat, Double_t weight)
+void Roo1DTable::fill(RooAbsCategory& cat, double weight)
 {
   if (weight==0) return ;
 
@@ -193,7 +193,7 @@ void Roo1DTable::printMultiline(ostream& os, Int_t /*contents*/, bool verbose, T
 
   // Determine maximum label and count width
   Int_t labelWidth(0) ;
-  Double_t maxCount(1) ;
+  double maxCount(1) ;
 
   int i;
   for (i=0 ; i<_types.GetEntries() ; i++) {
@@ -242,7 +242,7 @@ void Roo1DTable::printMultiline(ostream& os, Int_t /*contents*/, bool verbose, T
 /// Return the table entry named 'label'. Zero is returned if given
 /// label doesn't occur in table.
 
-Double_t Roo1DTable::get(const char* label, bool silent) const
+double Roo1DTable::get(const char* label, bool silent) const
 {
 
   TObject* cat = _types.FindObject(label) ;
@@ -261,7 +261,7 @@ Double_t Roo1DTable::get(const char* label, bool silent) const
 /// Return the table entry named 'label'. Zero is returned if given
 /// label doesn't occur in table.
 
-Double_t Roo1DTable::get(const int index, bool silent) const
+double Roo1DTable::get(const int index, bool silent) const
 {
   const RooCatType* cat = 0;
   int i = 0;
@@ -287,7 +287,7 @@ Double_t Roo1DTable::get(const int index, bool silent) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the number of overflow entries in the table.
 
-Double_t Roo1DTable::getOverflow() const
+double Roo1DTable::getOverflow() const
 {
   return _nOverflow ;
 }
@@ -299,7 +299,7 @@ Double_t Roo1DTable::getOverflow() const
 /// The normalization includes the number of overflows.
 /// Zero is returned if given label doesn't occur in table.
 
-Double_t Roo1DTable::getFrac(const char* label, bool silent) const
+double Roo1DTable::getFrac(const char* label, bool silent) const
 {
   if (_total) {
     return get(label,silent) / _total ;
@@ -316,7 +316,7 @@ Double_t Roo1DTable::getFrac(const char* label, bool silent) const
 /// The normalization includes the number of overflows.
 /// Zero is returned if given label doesn't occur in table.
 
-Double_t Roo1DTable::getFrac(const int index, bool silent) const
+double Roo1DTable::getFrac(const int index, bool silent) const
 {
   if (_total) {
     return get(index, silent) / _total ;

@@ -62,9 +62,9 @@ public:
   protected:
 
     void findRange() ;
-    Double_t calcX(Double_t y, bool& ok) ;
-    Int_t binX(Double_t x) ;
-    void fillGap(Int_t ixlo, Int_t ixhi,Double_t splitPoint=0.5) ;
+    double calcX(double y, bool& ok) ;
+    Int_t binX(double x) ;
+    void fillGap(Int_t ixlo, Int_t ixhi,double splitPoint=0.5) ;
     void interpolateGap(Int_t ixlo, Int_t ixhi) ;
 
     RooIntegralMorph* _self ; //
@@ -80,12 +80,12 @@ public:
     RooBrentRootFinder* _rf1 ; // ROOT finder on CDF1
     RooBrentRootFinder* _rf2 ; // ROOT finder of CDF2 ;
 
-    std::vector<Double_t> _yatX ; //
-    std::vector<Double_t> _calcX; //
+    std::vector<double> _yatX ; //
+    std::vector<double> _calcX; //
     Int_t _yatXmin, _yatXmax ;
     Int_t _ccounter ;
 
-    Double_t _ycutoff ;
+    double _ycutoff ;
 
   } ;
 
@@ -106,7 +106,7 @@ protected:
   mutable MorphCacheElem* _cache ; // Current morph cache element in use
 
 
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
 
 private:
 

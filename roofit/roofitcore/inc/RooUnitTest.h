@@ -44,7 +44,7 @@ public:
   void clearSilentMode() ;
   void regPlot(RooPlot* frame, const char* refName) ;
   void regResult(RooFitResult* r, const char* refName) ;
-  void regValue(Double_t value, const char* refName) ;
+  void regValue(double value, const char* refName) ;
   void regTable(RooTable* t, const char* refName) ;
   void regWS(RooWorkspace* ws, const char* refName) ;
   void regTH(TH1* h, const char* refName) ;
@@ -56,15 +56,15 @@ public:
   virtual bool isTestAvailable() { return true ; }
   virtual bool testCode() = 0 ;
 
-  virtual Double_t htol() { return 5e-4 ; }  ///< histogram test tolerance (KS dist != prob)
+  virtual double htol() { return 5e-4 ; }  ///< histogram test tolerance (KS dist != prob)
 #ifdef R__FAST_MATH
-  virtual Double_t ctol() { return 2e-3 ; }  ///< curve test tolerance
+  virtual double ctol() { return 2e-3 ; }  ///< curve test tolerance
 #else
-  virtual Double_t ctol() { return 4e-3 ; }  ///< curve test tolerance
+  virtual double ctol() { return 4e-3 ; }  ///< curve test tolerance
 #endif
-  virtual Double_t fptol() { return 1e-5 ; } ///< fit parameter test tolerance
-  virtual Double_t fctol() { return 1e-4 ; } ///< fit correlation test tolerance
-  virtual Double_t vtol() { return 1e-3 ; }  ///< value test tolerance
+  virtual double fptol() { return 1e-5 ; } ///< fit parameter test tolerance
+  virtual double fctol() { return 1e-4 ; } ///< fit correlation test tolerance
+  virtual double vtol() { return 1e-3 ; }  ///< value test tolerance
 
   static void setMemDir(TDirectory* memDir);
 
@@ -79,7 +79,7 @@ protected:
   std::string _batchMode="off";
    std::list<std::pair<RooPlot*, std::string> > _regPlots ;
    std::list<std::pair<RooFitResult*, std::string> > _regResults ;
-   std::list<std::pair<Double_t, std::string> > _regValues ;
+   std::list<std::pair<double, std::string> > _regValues ;
    std::list<std::pair<RooTable*,std::string> > _regTables ;
    std::list<std::pair<RooWorkspace*,std::string> > _regWS ;
    std::list<std::pair<TH1*,std::string> > _regTH ;

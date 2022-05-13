@@ -28,14 +28,14 @@ public:
    inline ~RooCrystalBall() override {}
 
    Int_t getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char *rangeName = 0) const override;
-   Double_t analyticalIntegral(Int_t code, const char *rangeName = 0) const override;
+   double analyticalIntegral(Int_t code, const char *rangeName = 0) const override;
 
    // Optimized accept/reject generator support
    Int_t getMaxVal(const RooArgSet &vars) const override;
-   Double_t maxVal(Int_t code) const override;
+   double maxVal(Int_t code) const override;
 
 protected:
-   Double_t evaluate() const override;
+   double evaluate() const override;
 
 private:
    RooRealProxy x_;

@@ -90,7 +90,7 @@ ConfidenceBelt::~ConfidenceBelt()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t ConfidenceBelt::GetAcceptanceRegionMin(RooArgSet& parameterPoint, Double_t cl, Double_t leftside) {
+double ConfidenceBelt::GetAcceptanceRegionMin(RooArgSet& parameterPoint, double cl, double leftside) {
   if(cl>0 || leftside > 0) cout <<"using default cl, leftside for now" <<endl;
   AcceptanceRegion * region = GetAcceptanceRegion(parameterPoint, cl,leftside);
   return (region) ? region->GetLowerLimit() : TMath::QuietNaN();
@@ -98,7 +98,7 @@ Double_t ConfidenceBelt::GetAcceptanceRegionMin(RooArgSet& parameterPoint, Doubl
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t ConfidenceBelt::GetAcceptanceRegionMax(RooArgSet& parameterPoint, Double_t cl, Double_t leftside) {
+double ConfidenceBelt::GetAcceptanceRegionMax(RooArgSet& parameterPoint, double cl, double leftside) {
   if(cl>0 || leftside > 0) cout <<"using default cl, leftside for now" <<endl;
   AcceptanceRegion * region = GetAcceptanceRegion(parameterPoint, cl,leftside);
   return (region) ? region->GetUpperLimit() : TMath::QuietNaN();
@@ -106,16 +106,16 @@ Double_t ConfidenceBelt::GetAcceptanceRegionMax(RooArgSet& parameterPoint, Doubl
 
 ////////////////////////////////////////////////////////////////////////////////
 
-vector<Double_t> ConfidenceBelt::ConfidenceLevels() const {
-  vector<Double_t> levels;
+vector<double> ConfidenceBelt::ConfidenceLevels() const {
+  vector<double> levels;
   return levels;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint, Int_t dsIndex,
-                Double_t lower, Double_t upper,
-                Double_t cl, Double_t leftside){
+                double lower, double upper,
+                double cl, double leftside){
   if(cl>0 || leftside > 0) cout <<"using default cl, leftside for now" <<endl;
 
   RooDataSet*  tree = dynamic_cast<RooDataSet*>(  fParameterPoints );
@@ -172,7 +172,7 @@ void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint, Int_t dsInde
 ////////////////////////////////////////////////////////////////////////////////
 
 void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint, AcceptanceRegion region,
-                Double_t cl, Double_t leftside){
+                double cl, double leftside){
   if(cl>0 || leftside > 0) cout <<"using default cl, leftside for now" <<endl;
 
   RooDataSet*  tree = dynamic_cast<RooDataSet*>(  fParameterPoints );
@@ -210,7 +210,7 @@ void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint, AcceptanceRe
 ////////////////////////////////////////////////////////////////////////////////
 /// Method to determine if a parameter point is in the interval
 
-AcceptanceRegion* ConfidenceBelt::GetAcceptanceRegion(RooArgSet &parameterPoint, Double_t cl, Double_t leftside)
+AcceptanceRegion* ConfidenceBelt::GetAcceptanceRegion(RooArgSet &parameterPoint, double cl, double leftside)
 {
   if(cl>0 || leftside > 0) cout <<"using default cl, leftside for now" <<endl;
 

@@ -53,13 +53,13 @@ RooBrentRootFinder::RooBrentRootFinder(const RooAbsFunc& function) :
 /// Prints a warning if the initial interval does not bracket a single
 /// root or if the root is not found after a fixed number of iterations.
 
-bool RooBrentRootFinder::findRoot(Double_t &result, Double_t xlo, Double_t xhi, Double_t value) const
+bool RooBrentRootFinder::findRoot(double &result, double xlo, double xhi, double value) const
 {
   _function->saveXVec() ;
 
-  Double_t a(xlo),b(xhi);
-  Double_t fa= (*_function)(&a) - value;
-  Double_t fb= (*_function)(&b) - value;
+  double a(xlo),b(xhi);
+  double fa= (*_function)(&a) - value;
+  double fb= (*_function)(&b) - value;
   if(fb*fa > 0) {
     oocxcoutD((TObject*)0,Eval) << "RooBrentRootFinder::findRoot(" << _function->getName() << "): initial interval does not bracket a root: ("
             << a << "," << b << "), value = " << value << " f[xlo] = " << fa << " f[xhi] = " << fb << endl;
@@ -67,8 +67,8 @@ bool RooBrentRootFinder::findRoot(Double_t &result, Double_t xlo, Double_t xhi, 
   }
 
   bool ac_equal(false);
-  Double_t fc= fb;
-  Double_t c(0),d(0),e(0);
+  double fc= fb;
+  double c(0),d(0),e(0);
   for(Int_t iter= 0; iter <= MaxIterations; iter++) {
 
     if ((fb < 0 && fc < 0) || (fb > 0 && fc > 0)) {
@@ -90,8 +90,8 @@ bool RooBrentRootFinder::findRoot(Double_t &result, Double_t xlo, Double_t xhi, 
       fc = fa;
     }
 
-    Double_t tol = 0.5 * _tol * fabs(b);
-    Double_t m = 0.5 * (c - b);
+    double tol = 0.5 * _tol * fabs(b);
+    double m = 0.5 * (c - b);
 
 
     if (fb == 0 || fabs(m) <= tol) {
@@ -108,8 +108,8 @@ bool RooBrentRootFinder::findRoot(Double_t &result, Double_t xlo, Double_t xhi, 
     }
     else {
       // Attempt inverse cubic interpolation
-      Double_t p, q, r;
-      Double_t s = fb / fa;
+      double p, q, r;
+      double s = fb / fa;
 
       if (ac_equal) {
    p = 2 * m * s;
@@ -129,8 +129,8 @@ bool RooBrentRootFinder::findRoot(Double_t &result, Double_t xlo, Double_t xhi, 
    p = -p;
       }
 
-      Double_t min1= 3 * m * q - fabs (tol * q);
-      Double_t min2= fabs (e * q);
+      double min1= 3 * m * q - fabs (tol * q);
+      double min2= fabs (e * q);
       if (2 * p < (min1 < min2 ? min1 : min2)) {
    // Accept the interpolation
    e = d;

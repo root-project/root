@@ -34,7 +34,7 @@ public:
   TObject* clone(const char* newname) const override { return new RooThresholdCategory(*this, newname); }
 
   // Mapping function
-  bool addThreshold(Double_t upperLimit, const char* catName, Int_t catIdx=-99999) ;
+  bool addThreshold(double upperLimit, const char* catName, Int_t catIdx=-99999) ;
 
   // Printing interface (human readable)
   void printMultiline(std::ostream& os, Int_t content, bool verbose=false, TString indent="") const override ;

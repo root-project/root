@@ -101,7 +101,7 @@ RooRealVar::RooRealVar()  :  _error(0), _asymErrLo(0), _asymErrHi(0), _binning(n
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a constant variable with a value and optional unit.
 RooRealVar::RooRealVar(const char *name, const char *title,
-             Double_t value, const char *unit) :
+             double value, const char *unit) :
   RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1),
   _binning(new RooUniformBinning(-1,1,100))
 {
@@ -117,7 +117,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 /// Create a variable allowed to float in the given range.
 /// The initial value will be set to the center of the range.
 RooRealVar::RooRealVar(const char *name, const char *title,
-             Double_t minValue, Double_t maxValue,
+             double minValue, double maxValue,
              const char *unit) :
   RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1),
   _binning(new RooUniformBinning(minValue,maxValue,100))
@@ -152,7 +152,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 /// Create a variable with the given starting value. It is allowed to float
 /// within the defined range. Optionally, a unit can be specified for axis labels.
 RooRealVar::RooRealVar(const char *name, const char *title,
-             Double_t value, Double_t minValue, Double_t maxValue,
+             double value, double minValue, double maxValue,
              const char *unit) :
   RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1),
   _binning(new RooUniformBinning(minValue,maxValue,100))
@@ -160,7 +160,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
     _fast = true ;
     setRange(minValue,maxValue) ;
 
-    Double_t clipValue ;
+    double clipValue ;
     inRange(value,0,&clipValue) ;
     _value = clipValue ;
 
@@ -239,7 +239,7 @@ RooRealVar::~RooRealVar()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return value of variable
 
-Double_t RooRealVar::getValV(const RooArgSet*) const
+double RooRealVar::getValV(const RooArgSet*) const
 {
   return _value ;
 }
@@ -278,9 +278,9 @@ RooSpan<const double> RooRealVar::getValues(RooBatchCompute::RunContext& inputDa
 /// Set value of variable to 'value'. If 'value' is outside
 /// range of object, clip value into range
 
-void RooRealVar::setVal(Double_t value)
+void RooRealVar::setVal(double value)
 {
-  Double_t clipValue ;
+  double clipValue ;
   inRange(value,0,&clipValue) ;
 
   if (clipValue != _value) {
@@ -294,9 +294,9 @@ void RooRealVar::setVal(Double_t value)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set value of variable to `value`. If `value` is outside of the
 /// range named `rangeName`, clip value into that range.
-void RooRealVar::setVal(Double_t value, const char* rangeName)
+void RooRealVar::setVal(double value, const char* rangeName)
 {
-  Double_t clipValue ;
+  double clipValue ;
   inRange(value,rangeName,&clipValue) ;
 
   if (clipValue != _value) {
@@ -482,7 +482,7 @@ void RooRealVar::setBinning(const RooAbsBinning& binning, const char* name)
 /// Set minimum of name range to given value. If name is null
 /// minimum of default range is set
 
-void RooRealVar::setMin(const char* name, Double_t value)
+void RooRealVar::setMin(const char* name, double value)
 {
   // Set new minimum of fit range
   RooAbsBinning& binning = getBinning(name,true,true) ;
@@ -498,7 +498,7 @@ void RooRealVar::setMin(const char* name, Double_t value)
 
   // Clip current value in window if it fell out
   if (!name) {
-    Double_t clipValue ;
+    double clipValue ;
     if (!inRange(_value,0,&clipValue)) {
       setVal(clipValue) ;
     }
@@ -512,7 +512,7 @@ void RooRealVar::setMin(const char* name, Double_t value)
 /// Set maximum of name range to given value. If name is null
 /// maximum of default range is set
 
-void RooRealVar::setMax(const char* name, Double_t value)
+void RooRealVar::setMax(const char* name, double value)
 {
   // Set new maximum of fit range
   RooAbsBinning& binning = getBinning(name,true,true) ;
@@ -528,7 +528,7 @@ void RooRealVar::setMax(const char* name, Double_t value)
 
   // Clip current value in window if it fell out
   if (!name) {
-    Double_t clipValue ;
+    double clipValue ;
     if (!inRange(_value,0,&clipValue)) {
       setVal(clipValue) ;
     }
@@ -547,7 +547,7 @@ void RooRealVar::setMax(const char* name, Double_t value)
 /// plotting). If the name is `nullptr`, the function sets the limits of the default range.
 /// \param[in] min Miniminum of the range.
 /// \param[in] max Maximum of the range.
-void RooRealVar::setRange(const char* name, Double_t min, Double_t max)
+void RooRealVar::setRange(const char* name, double min, double max)
 {
   bool exists = name == nullptr || sharedProp()->_altBinning.count(name) > 0;
 
@@ -595,7 +595,7 @@ bool RooRealVar::readFromStream(istream& is, bool compact, bool verbose)
   errorPrefix.Append(GetName()) ;
   errorPrefix.Append(")") ;
   RooStreamParser parser(is,errorPrefix) ;
-  Double_t value(0) ;
+  double value(0) ;
 
   if (compact) {
     // Compact mode: Read single token
@@ -636,13 +636,13 @@ bool RooRealVar::readFromStream(istream& is, bool compact, bool verbose)
    if (tmp.CompareTo("(")) {
      // Symmetric error, convert token do double
 
-     Double_t error ;
+     double error ;
      parser.convertToDouble(tmp,error) ;
      setError(error) ;
 
    } else {
      // Have error
-     Double_t asymErrLo=0., asymErrHi=0.;
+     double asymErrLo=0., asymErrHi=0.;
      if (parser.readDouble(asymErrLo,true) ||
          parser.expectToken(",",true) ||
          parser.readDouble(asymErrHi,true) ||
@@ -659,7 +659,7 @@ bool RooRealVar::readFromStream(istream& is, bool compact, bool verbose)
       } else if (!token.CompareTo("P")) {
 
    // Next tokens are plot limits
-   Double_t plotMin(0), plotMax(0) ;
+   double plotMin(0), plotMax(0) ;
         Int_t plotBins(0) ;
    if (parser.expectToken("(",true) ||
        parser.readDouble(plotMin,true) ||
@@ -675,7 +675,7 @@ bool RooRealVar::readFromStream(istream& is, bool compact, bool verbose)
       } else if (!token.CompareTo("F")) {
 
    // Next tokens are fit limits
-   Double_t fitMin, fitMax ;
+   double fitMin, fitMax ;
    Int_t fitBins ;
    if (parser.expectToken("(",true) ||
        parser.readDouble(fitMin,true) ||
@@ -693,7 +693,7 @@ bool RooRealVar::readFromStream(istream& is, bool compact, bool verbose)
       } else if (!token.CompareTo("L")) {
 
    // Next tokens are fit limits
-   Double_t fitMin = 0.0, fitMax = 0.0;
+   double fitMin = 0.0, fitMax = 0.0;
 // Int_t fitBins ;
    if (parser.expectToken("(",true) ||
        parser.readDouble(fitMin,true) ||
@@ -1076,11 +1076,11 @@ TString *RooRealVar::format(Int_t sigDigits, const char *options) const
 /// Utility to calculate number of decimals to show
 /// based on magnitude of error
 
-Double_t RooRealVar::chopAt(Double_t what, Int_t where) const
+double RooRealVar::chopAt(double what, Int_t where) const
 {
-  Double_t scale= pow(10.0,where);
+  double scale= pow(10.0,where);
   Int_t trunc= (Int_t)floor(what/scale + 0.5);
-  return (Double_t)trunc*scale;
+  return (double)trunc*scale;
 }
 
 
@@ -1245,7 +1245,7 @@ void RooRealVar::Streamer(TBuffer &R__b)
     RooAbsRealLValue::Streamer(R__b);
     if (R__v==1) {
       coutI(Eval) << "RooRealVar::Streamer(" << GetName() << ") converting version 1 data format" << endl ;
-      Double_t fitMin, fitMax ;
+      double fitMin, fitMax ;
       Int_t fitBins ;
       R__b >> fitMin;
       R__b >> fitMax;

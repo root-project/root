@@ -39,30 +39,30 @@ public:
     return numBoundaries()-1 ;
   }
   virtual Int_t numBoundaries() const = 0 ;
-  virtual Int_t binNumber(Double_t x) const = 0 ;
-  virtual Int_t rawBinNumber(Double_t x) const { return binNumber(x) ; }
-  virtual Double_t binCenter(Int_t bin) const = 0 ;
-  virtual Double_t binWidth(Int_t bin) const = 0 ;
-  virtual Double_t binLow(Int_t bin) const = 0 ;
-  virtual Double_t binHigh(Int_t bin) const = 0 ;
+  virtual Int_t binNumber(double x) const = 0 ;
+  virtual Int_t rawBinNumber(double x) const { return binNumber(x) ; }
+  virtual double binCenter(Int_t bin) const = 0 ;
+  virtual double binWidth(Int_t bin) const = 0 ;
+  virtual double binLow(Int_t bin) const = 0 ;
+  virtual double binHigh(Int_t bin) const = 0 ;
   virtual bool isUniform() const { return false ; }
 
-  virtual void setRange(Double_t xlo, Double_t xhi) = 0 ;
+  virtual void setRange(double xlo, double xhi) = 0 ;
   /// Change lower bound to xlo.
-  virtual void setMin(Double_t xlo) {
+  virtual void setMin(double xlo) {
     setRange(xlo,highBound()) ;
   }
   /// Change upper bound to xhi.
-  virtual void setMax(Double_t xhi) {
+  virtual void setMax(double xhi) {
     setRange(lowBound(),xhi) ;
   }
 
-  virtual Double_t lowBound() const = 0 ;
-  virtual Double_t highBound() const = 0 ;
-  virtual Double_t averageBinWidth() const = 0 ;
+  virtual double lowBound() const = 0 ;
+  virtual double highBound() const = 0 ;
+  virtual double averageBinWidth() const = 0 ;
 
 
-  virtual Double_t* array() const = 0 ;
+  virtual double* array() const = 0 ;
 
   inline void Print(Option_t *options= 0) const override {
     // Printing interface

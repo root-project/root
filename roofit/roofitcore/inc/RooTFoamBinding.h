@@ -26,7 +26,7 @@ public:
   RooTFoamBinding(const RooAbsReal& pdf, const RooArgSet& observables) ;
   ~RooTFoamBinding() override;
 
-  Double_t Density(Int_t ndim, Double_t *) override ;
+  double Density(Int_t ndim, double *) override ;
 
   RooRealBinding& binding() { return *_binding ; }
 

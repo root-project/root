@@ -78,10 +78,10 @@ void RooQuasiRandomGenerator::reset()
 /// Generate the next number in the sequence for the specified dimension.
 /// The maximum dimension supported is 12.
 
-bool RooQuasiRandomGenerator::generate(UInt_t dimension, Double_t vector[])
+bool RooQuasiRandomGenerator::generate(UInt_t dimension, double vector[])
 {
   /* Load the result from the saved state. */
-  static const Double_t recip = 1.0/(double)(1U << NBits); /* 2^(-nbits) */
+  static const double recip = 1.0/(double)(1U << NBits); /* 2^(-nbits) */
 
   UInt_t dim;
   for(dim=0; dim < dimension; dim++) {

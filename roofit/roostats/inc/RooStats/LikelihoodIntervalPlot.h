@@ -61,7 +61,7 @@ namespace RooStats {
     void SetFillStyle(const Style_t style) {fFillStyle = style;}
     /// set the fill contour color
     void SetContourColor(const Color_t color) {fColor = color;}
-    void SetMaximum(const Double_t theMaximum) {fMaximum = theMaximum;}
+    void SetMaximum(const double theMaximum) {fMaximum = theMaximum;}
     void SetNPoints(Int_t np) { fNPoints = np; }
 
 
@@ -80,13 +80,13 @@ namespace RooStats {
     Int_t fNdimPlot;
     Int_t fNPoints;      ///< number of points used to scan the PL
 
-    Double_t fMaximum;   ///< function maximum
+    double fMaximum;   ///< function maximum
     // ranges for plots
-    Double_t fXmin;
-    Double_t fXmax;
-    Double_t fYmin;
-    Double_t fYmax;
-    Double_t fPrecision; ///< RooCurve precision
+    double fXmin;
+    double fXmax;
+    double fYmin;
+    double fYmax;
+    double fPrecision; ///< RooCurve precision
 
     LikelihoodInterval *fInterval;
 

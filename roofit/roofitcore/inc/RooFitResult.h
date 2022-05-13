@@ -92,11 +92,11 @@ public:
     return _numBadNLL ;
   }
   /// Return estimated distance to minimum.
-  inline Double_t edm() const {
+  inline double edm() const {
     return _edm ;
   }
   /// Return minimized -log(L) value.
-  inline Double_t minNll() const {
+  inline double minNll() const {
     return _minNLL ;
   }
   /// Return list of constant parameters.
@@ -115,7 +115,7 @@ public:
   TH2* correlationHist(const char* name = "correlation_matrix") const ;
 
   /// Return correlation between par1 and par2.
-  Double_t correlation(const RooAbsArg& par1, const RooAbsArg& par2) const {
+  double correlation(const RooAbsArg& par1, const RooAbsArg& par2) const {
     return correlation(par1.GetName(),par2.GetName()) ;
   }
   /// Return pointer to list of correlations of all parameters with par.
@@ -123,7 +123,7 @@ public:
     return correlation(par.GetName()) ;
   }
 
-  Double_t correlation(const char* parname1, const char* parname2) const ;
+  double correlation(const char* parname1, const char* parname2) const ;
   const RooArgList* correlation(const char* parname) const ;
 
 
@@ -134,8 +134,8 @@ public:
 
 
   // Global correlation accessors
-  Double_t globalCorr(const RooAbsArg& par) { return globalCorr(par.GetName()) ; }
-  Double_t globalCorr(const char* parname) ;
+  double globalCorr(const RooAbsArg& par) { return globalCorr(par.GetName()) ; }
+  double globalCorr(const char* parname) ;
   const RooArgList* globalCorr() ;
 
 
@@ -166,8 +166,8 @@ protected:
   void setConstParList(const RooArgList& list) ;
   void setInitParList(const RooArgList& list) ;
   void setFinalParList(const RooArgList& list) ;
-  inline void setMinNLL(Double_t val) { _minNLL = val ; }
-  inline void setEDM(Double_t val) { _edm = val ; }
+  inline void setMinNLL(double val) { _minNLL = val ; }
+  inline void setEDM(double val) { _edm = val ; }
   inline void setStatus(Int_t val) { _status = val ; }
   inline void setCovQual(Int_t val) { _covQual = val ; }
   inline void setNumInvalidNLL(Int_t val) { _numBadNLL=val ; }
@@ -177,14 +177,14 @@ protected:
   void fillPrefitCorrMatrix();
   void setStatusHistory(std::vector<std::pair<std::string,int> >& hist) { _statusHistory = hist ; }
 
-  Double_t correlation(Int_t row, Int_t col) const;
-  Double_t covariance(Int_t row, Int_t col) const;
+  double correlation(Int_t row, Int_t col) const;
+  double covariance(Int_t row, Int_t col) const;
 
   Int_t    _status ;          ///< MINUIT status code
   Int_t    _covQual ;         ///< MINUIT quality code of covariance matrix
   Int_t    _numBadNLL ;       ///< Number calls with bad (zero,negative) likelihood
-  Double_t _minNLL ;          ///< NLL at minimum
-  Double_t _edm ;             ///< Estimated distance to minimum
+  double _minNLL ;          ///< NLL at minimum
+  double _edm ;             ///< Estimated distance to minimum
   RooArgList* _constPars ;    ///< List of constant parameters
   RooArgList* _initPars ;     ///< List of floating parameters with initial values
   RooArgList* _finalPars ;    ///< List of floating parameters with final values

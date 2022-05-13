@@ -90,7 +90,7 @@ RooDecay::~RooDecay()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooDecay::coefficient(Int_t /*basisIndex*/) const
+double RooDecay::coefficient(Int_t /*basisIndex*/) const
 {
   return 1 ;
 }
@@ -111,8 +111,8 @@ void RooDecay::generateEvent(Int_t code)
 
   // Generate delta-t dependent
   while(1) {
-    Double_t rand = RooRandom::uniform() ;
-    Double_t tval(0) ;
+    double rand = RooRandom::uniform() ;
+    double tval(0) ;
 
     switch(_type) {
     case SingleSided:

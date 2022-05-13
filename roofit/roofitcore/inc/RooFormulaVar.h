@@ -65,13 +65,13 @@ public:
     return getFormula();
   }
 
-  Double_t defaultErrorLevel() const override ;
+  double defaultErrorLevel() const override ;
 
-  std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override ;
-  std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override ;
+  std::list<double>* binBoundaries(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
+  std::list<double>* plotSamplingHint(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
 
   // Function evaluation
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
   RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const override;
   inline void computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const override
   {
@@ -83,7 +83,7 @@ public:
   // Post-processing of server redirection
   bool redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive) override ;
 
-  bool isValidReal(Double_t /*value*/, bool /*printError*/) const override {return true;}
+  bool isValidReal(double /*value*/, bool /*printError*/) const override {return true;}
 
   private:
   RooFormula& getFormula() const;

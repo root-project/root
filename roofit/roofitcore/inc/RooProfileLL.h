@@ -60,12 +60,12 @@ protected:
   mutable std::unique_ptr<RooMinimizer> _minimizer = nullptr ; ///<! Internal minimizer instance
 
   mutable bool _absMinValid ; ///< flag if absmin is up-to-date
-  mutable Double_t _absMin ; ///< absolute minimum of -log(L)
+  mutable double _absMin ; ///< absolute minimum of -log(L)
   mutable RooArgSet _paramAbsMin ; ///< Parameter values at absolute minimum
   mutable RooArgSet _obsAbsMin ; ///< Observable values at absolute minimum
   mutable std::map<std::string,bool> _paramFixed ; ///< Parameter constant status at last time of use
   mutable Int_t _neval ; ///< Number evaluations used in last minimization
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
 
 
 private:

@@ -48,7 +48,7 @@ namespace RooStats {
      SamplingDistribution* GetSamplingDistribution(RooArgSet& paramsOfInterest) override  {
        (void)paramsOfInterest; // avoid warning
        // normally this method would be complex, but here it is simple for debugging
-       std::vector<Double_t> testStatVec;
+       std::vector<double> testStatVec;
        for(Int_t i=0; i<1000; ++i){
     testStatVec.push_back( fRand->Uniform() );
        }
@@ -56,7 +56,7 @@ namespace RooStats {
      }
 
      /// Main interface to evaluate the test statistic on a dataset
-     Double_t EvaluateTestStatistic(RooAbsData& /*data*/, RooArgSet& /*paramsOfInterest*/) override  {
+     double EvaluateTestStatistic(RooAbsData& /*data*/, RooArgSet& /*paramsOfInterest*/) override  {
        //       data = data; // avoid warning
        //       paramsOfInterest = paramsOfInterest; // avoid warning
        return fRand->Uniform();
@@ -69,7 +69,7 @@ namespace RooStats {
       }
 
       /// Get the Confidence level for the test
-      Double_t ConfidenceLevel()  const override {return 1.-fSize;}
+      double ConfidenceLevel()  const override {return 1.-fSize;}
 
       /// Common Initialization
       void Initialize(RooAbsArg& /* testStatistic */, RooArgSet& /* paramsOfInterest */, RooArgSet& /* nuisanceParameters */ ) override {
@@ -89,9 +89,9 @@ namespace RooStats {
 
 
       /// set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
-      void SetTestSize(Double_t size) override {fSize = size;}
+      void SetTestSize(double size) override {fSize = size;}
       /// set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
-      void SetConfidenceLevel(Double_t cl) override {fSize = 1.-cl;}
+      void SetConfidenceLevel(double cl) override {fSize = 1.-cl;}
 
       /// Set the TestStatistic (want the argument to be a function of the data & parameter points
       void SetTestStatistic(TestStatistic* /*testStatistic*/) override {
@@ -99,7 +99,7 @@ namespace RooStats {
       }
 
    private:
-      Double_t fSize;
+      double fSize;
       RooRealVar* fTestStatistic;
       TRandom* fRand;
 

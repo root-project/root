@@ -33,8 +33,8 @@ public:
   virtual void setBin(Int_t ibin, const char* rangeName=0) = 0 ;
   virtual Int_t getBin(const char* rangeName=0) const = 0 ;
   virtual Int_t numBins(const char* rangeName=0) const = 0 ;
-  virtual Double_t getBinWidth(Int_t i, const char* rangeName=0) const = 0 ;
-  virtual Double_t volume(const char* rangeName) const = 0 ;
+  virtual double getBinWidth(Int_t i, const char* rangeName=0) const = 0 ;
+  virtual double volume(const char* rangeName) const = 0 ;
   virtual void randomize(const char* rangeName=0) = 0 ;
 
   virtual const RooAbsBinning* getBinningPtr(const char* rangeName) const = 0 ;

@@ -62,10 +62,10 @@ problem in a common way for several concrete calculators.
       virtual ConfInterval* GetInterval() const = 0;
 
       /// Get the size of the test (eg. rate of Type I error)
-      virtual Double_t Size() const = 0;
+      virtual double Size() const = 0;
 
       /// Get the Confidence level for the test
-      virtual Double_t ConfidenceLevel()  const = 0;
+      virtual double ConfidenceLevel()  const = 0;
 
       /// Set the DataSet ( add to the the workspace if not already there ?)
       virtual void SetData(RooAbsData&) = 0;
@@ -74,10 +74,10 @@ problem in a common way for several concrete calculators.
       virtual void SetModel(const ModelConfig & /* model */) = 0;
 
       /// set the size of the test (rate of Type I error) ( e.g. 0.05 for a 95% Confidence Interval)
-      virtual void SetTestSize(Double_t size) = 0;
+      virtual void SetTestSize(double size) = 0;
 
       /// set the confidence level for the interval (e.g. 0.95 for a 95% Confidence Interval)
-      virtual void SetConfidenceLevel(Double_t cl) = 0;
+      virtual void SetConfidenceLevel(double cl) = 0;
 
    protected:
       ClassDef(IntervalCalculator,1)   // Interface for tools setting limits (producing confidence intervals)

@@ -458,15 +458,15 @@ RooAbsOptTestStatistic::~RooAbsOptTestStatistic()
 /// the global result. This default implementation adds the partition return
 /// values
 
-Double_t RooAbsOptTestStatistic::combinedValue(RooAbsReal** array, Int_t n) const
+double RooAbsOptTestStatistic::combinedValue(RooAbsReal** array, Int_t n) const
 {
   // Default implementation returns sum of components
-  Double_t sum(0), carry(0);
+  double sum(0), carry(0);
   for (Int_t i = 0; i < n; ++i) {
-    Double_t y = array[i]->getValV();
+    double y = array[i]->getValV();
     carry += reinterpret_cast<RooAbsOptTestStatistic*>(array[i])->getCarry();
     y -= carry;
-    const Double_t t = sum + y;
+    const double t = sum + y;
     carry = (t - sum) - y;
     sum = t;
   }

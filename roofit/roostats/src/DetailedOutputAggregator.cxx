@@ -135,7 +135,7 @@ namespace RooStats {
       for (RooAbsArg* v : *fBuiltSet) {
          if (RooRealVar* var= dynamic_cast<RooRealVar*>(v)) {
             // Invalidate values in case we don't set some of them next time round (eg. if fit not done)
-            var->setVal(std::numeric_limits<Double_t>::quiet_NaN());
+            var->setVal(std::numeric_limits<double>::quiet_NaN());
             var->removeError();
             var->removeAsymError();
          }

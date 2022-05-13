@@ -47,7 +47,7 @@ RooFunctor::RooFunctor(const RooAbsFunc& func)
 {
   _ownBinding = false ;
 
-  _x = new Double_t[func.getDimension()] ;
+  _x = new double[func.getDimension()] ;
 
   _nobs = func.getDimension() ;
   _npar = 0 ;
@@ -72,7 +72,7 @@ RooFunctor::RooFunctor(const RooAbsReal& func, const RooArgList& observables, co
   _ownBinding = true ;
 
   // Allocate transfer array
-  _x = new Double_t[allVars.getSize()] ;
+  _x = new double[allVars.getSize()] ;
   _nobs = observables.getSize() ;
   _npar = parameters.getSize() ;
 }
@@ -94,7 +94,7 @@ RooFunctor::RooFunctor(const RooAbsReal& func, const RooArgList& observables, co
   _ownBinding = true ;
 
   // Allocate transfer array
-  _x = new Double_t[allVars.getSize()] ;
+  _x = new double[allVars.getSize()] ;
   _nobs = observables.getSize() ;
   _npar = parameters.getSize() ;
 }
@@ -115,7 +115,7 @@ RooFunctor::RooFunctor(const RooFunctor& other) :
   } else {
     _binding = other._binding ;
   }
-  _x = new Double_t[_nobs+_npar] ;
+  _x = new double[_nobs+_npar] ;
 }
 
 
@@ -134,21 +134,21 @@ RooFunctor::~RooFunctor()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooFunctor::eval(const Double_t *x) const
+double RooFunctor::eval(const double *x) const
 {
   return (*_binding)(x) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooFunctor::eval(Double_t x) const
+double RooFunctor::eval(double x) const
 {
   return (*_binding)(&x) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooFunctor::eval(const Double_t *x, const Double_t *p) const
+double RooFunctor::eval(const double *x, const double *p) const
 {
   for (int i=0 ; i<_nobs ; i++) {
     _x[i] = x[i] ;

@@ -96,22 +96,22 @@ namespace RooStats {
       virtual void SetGlobalObservables(const RooArgSet& set) {fGlobalObs.removeAll(); fGlobalObs.add(set);}
 
       /// set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
-      void SetTestSize( Double_t size ) override {
+      void SetTestSize( double size ) override {
          fSize = size;
          fValidInterval = false;
       }
       /// set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
-      void SetConfidenceLevel( Double_t cl ) override { SetTestSize(1.-cl); }
+      void SetConfidenceLevel( double cl ) override { SetTestSize(1.-cl); }
       /// Get the size of the test (eg. rate of Type I error)
-      Double_t Size() const override { return fSize; }
+      double Size() const override { return fSize; }
       /// Get the Confidence level for the test
-      Double_t ConfidenceLevel() const override { return 1.-fSize; }
+      double ConfidenceLevel() const override { return 1.-fSize; }
 
       /// set the fraction of probability content on the left tail
       /// Central limits use 0.5 (default case)
       /// for upper limits it is 0 and 1 for lower limit
       /// For shortest intervals a negative value (i.e. -1) must be given
-      void SetLeftSideTailFraction(Double_t leftSideFraction )  {fLeftSideFraction = leftSideFraction;}
+      void SetLeftSideTailFraction(double leftSideFraction )  {fLeftSideFraction = leftSideFraction;}
 
       /// set the Bayesian calculator to compute the shortest interval (default is central interval)
       /// to switch off SetLeftSideTailFraction to the right value
@@ -177,9 +177,9 @@ namespace RooStats {
       mutable RooAbsPdf* fPosteriorPdf;          ///< normalized (on the poi) posterior pdf
       mutable ROOT::Math::IGenFunction * fPosteriorFunction;   ///< function representing the posterior
       mutable TF1 * fApproxPosterior;    ///< TF1 representing the scanned posterior function
-      mutable Double_t  fLower;          ///< computer lower interval bound
-      mutable Double_t  fUpper;          ///< upper interval bound
-      mutable Double_t  fNLLMin;         ///< minimum value of Nll
+      mutable double  fLower;          ///< computer lower interval bound
+      mutable double  fUpper;          ///< upper interval bound
+      mutable double  fNLLMin;         ///< minimum value of Nll
       double fSize;                      ///< size used for getting the interval
       double fLeftSideFraction;          ///< fraction of probability content on left side of interval
       double fBrfPrecision;              ///< root finder precision

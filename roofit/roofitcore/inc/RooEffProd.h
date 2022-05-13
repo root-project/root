@@ -31,7 +31,7 @@ public:
 protected:
 
   // Function evaluation
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
 
   RooRealProxy _pdf ;               ///< Probability Density function
   RooRealProxy _eff;                ///< Efficiency function

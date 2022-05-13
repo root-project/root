@@ -263,11 +263,11 @@ RooPlot *RooFitResult::plotOn(RooPlot *frame, const char *parName1, const char *
   opt.ToUpper();
 
   // lookup the 2x2 covariance matrix elements for these variables
-  Double_t x1= par1->getVal();
-  Double_t x2= par2->getVal();
-  Double_t s1= par1->getError();
-  Double_t s2= par2->getError();
-  Double_t rho= correlation(parName1, parName2);
+  double x1= par1->getVal();
+  double x2= par2->getVal();
+  double s1= par1->getError();
+  double s2= par2->getError();
+  double rho= correlation(parName1, parName2);
 
   // add a 1-sigma error ellipse, if requested
   if(opt.Contains("E")) {
@@ -355,7 +355,7 @@ const RooArgList& RooFitResult::randomizePars() const
       // calculate the diagonal term first
       L(iPar,iPar)= covariance(iPar,iPar);
       for(Int_t k= 0; k < iPar; k++) {
-   Double_t tmp= L(k,iPar);
+   double tmp= L(k,iPar);
    L(iPar,iPar)-= tmp*tmp;
       }
       L(iPar,iPar)= sqrt(L(iPar,iPar));
@@ -397,7 +397,7 @@ const RooArgList& RooFitResult::randomizePars() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the correlation between parameters 'par1' and 'par2'
 
-Double_t RooFitResult::correlation(const char* parname1, const char* parname2) const
+double RooFitResult::correlation(const char* parname1, const char* parname2) const
 {
   Int_t idx1 = _finalPars->index(parname1) ;
   Int_t idx2 = _finalPars->index(parname2) ;
@@ -437,7 +437,7 @@ const RooArgList* RooFitResult::correlation(const char* parname) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the global correlation of the named parameter
 
-Double_t RooFitResult::globalCorr(const char* parname)
+double RooFitResult::globalCorr(const char* parname)
 {
   if (_globalCorr==0) {
     fillLegacyCorrMatrix() ;
@@ -475,7 +475,7 @@ const RooArgList* RooFitResult::globalCorr()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a correlation matrix element addressed with numeric indices.
 
-Double_t RooFitResult::correlation(Int_t row, Int_t col) const
+double RooFitResult::correlation(Int_t row, Int_t col) const
 {
   return (*_CM)(row,col) ;
 }
@@ -484,7 +484,7 @@ Double_t RooFitResult::correlation(Int_t row, Int_t col) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the covariance matrix element addressed with numeric indices.
 
-Double_t RooFitResult::covariance(Int_t row, Int_t col) const
+double RooFitResult::covariance(Int_t row, Int_t col) const
 {
   return (*_VM)(row,col) ;
 }
@@ -557,7 +557,7 @@ void RooFitResult::printMultiline(ostream& os, Int_t /*contents*/, bool verbose,
    os << setw(21) << Form(" (+%8.2e,-%8.2e)",((RooRealVar*)_finalPars->at(i))->getAsymErrorHi(),
                           -1*((RooRealVar*)_finalPars->at(i))->getAsymErrorLo()) ;
       } else {
-   Double_t err = ((RooRealVar*)_finalPars->at(i))->getError() ;
+   double err = ((RooRealVar*)_finalPars->at(i))->getError() ;
    os << (doAsymErr?"        ":"") << " +/- " << setw(9)  << Form("%9.2e",err) ;
       }
 
@@ -575,7 +575,7 @@ void RooFitResult::printMultiline(ostream& os, Int_t /*contents*/, bool verbose,
        << indent << "  --------------------  --------------------------" << endl ;
 
     for (i=0 ; i<_finalPars->getSize() ; i++) {
-      Double_t err = ((RooRealVar*)_finalPars->at(i))->getError() ;
+      double err = ((RooRealVar*)_finalPars->at(i))->getError() ;
       os << indent << "  "    << setw(20) << ((RooAbsArg*)_finalPars->at(i))->GetName()
     << "  "    << setw(12) << Form("%12.4e",((RooRealVar*)_finalPars->at(i))->getVal())
     << " +/- " << setw(9)  << Form("%9.2e",err)
@@ -964,10 +964,10 @@ RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList)
     TString varName(gMinuit->fCpnam[i-1]) ;
     bool isConst(l==0) ;
 
-    Double_t xlo = gMinuit->fAlim[i-1];
-    Double_t xhi = gMinuit->fBlim[i-1];
-    Double_t xerr = gMinuit->fWerr[l-1];
-    Double_t xval = gMinuit->fU[i-1] ;
+    double xlo = gMinuit->fAlim[i-1];
+    double xhi = gMinuit->fBlim[i-1];
+    double xerr = gMinuit->fWerr[l-1];
+    double xval = gMinuit->fU[i-1] ;
 
     RooRealVar* var ;
     if (varList.getSize()==0) {
@@ -1002,7 +1002,7 @@ RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList)
   }
 
   Int_t icode,npari,nparx ;
-  Double_t fmin,edm,errdef ;
+  double fmin,edm,errdef ;
   gMinuit->mnstat(fmin,edm,errdef,npari,nparx,icode) ;
 
   r->setConstParList(constPars) ;
@@ -1197,7 +1197,7 @@ TMatrixDSym RooFitResult::conditionalCovarianceMatrix(const RooArgList& params) 
     return V ;
   }
 
-  Double_t det = V.Determinant() ;
+  double det = V.Determinant() ;
 
   if (det<=0) {
     coutE(Eval) << "RooFitResult::conditionalCovarianceMatrix(" << GetName() << ") ERROR: covariance matrix is not positive definite (|V|="
@@ -1283,7 +1283,7 @@ const TMatrixDSym& RooFitResult::correlationMatrix() const
 RooAbsPdf* RooFitResult::createHessePdf(const RooArgSet& params) const
 {
   const TMatrixDSym& V = covarianceMatrix() ;
-  Double_t det = V.Determinant() ;
+  double det = V.Determinant() ;
 
   if (det<=0) {
     coutE(Eval) << "RooFitResult::createHessePdf(" << GetName() << ") ERROR: covariance matrix is not positive definite (|V|="

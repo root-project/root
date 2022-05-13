@@ -47,7 +47,7 @@ RooUniform::RooUniform(const RooUniform& other, const char* name) :
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooUniform::evaluate() const
+double RooUniform::evaluate() const
 {
   return 1 ;
 }
@@ -100,9 +100,9 @@ Int_t RooUniform::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 ////////////////////////////////////////////////////////////////////////////////
 /// Implement analytical integral
 
-Double_t RooUniform::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooUniform::analyticalIntegral(Int_t code, const char* rangeName) const
 {
-  Double_t ret(1) ;
+  double ret(1) ;
   for (int i=0 ; i<32 ; i++) {
     if (code&(1<<i)) {
       RooAbsRealLValue* var = (RooAbsRealLValue*)x.at(i) ;

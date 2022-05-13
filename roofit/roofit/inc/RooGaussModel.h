@@ -50,7 +50,7 @@ public:
 
   Int_t basisCode(const char* name) const override ;
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName) const override ;
 
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void generateEvent(Int_t code) override;
@@ -61,10 +61,10 @@ public:
 
 protected:
 
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
 
   // Calculate common normalization factors
-  std::complex<Double_t> evalCerfInt(Double_t sign, Double_t wt, Double_t tau, Double_t umin, Double_t umax, Double_t c) const;
+  std::complex<double> evalCerfInt(double sign, double wt, double tau, double umin, double umax, double c) const;
 
   bool _flatSFInt ;
 

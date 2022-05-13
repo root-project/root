@@ -67,7 +67,7 @@ SamplingDistPlot::SamplingDistPlot(Int_t nbins) :
 ////////////////////////////////////////////////////////////////////////////////
 /// SamplingDistPlot constructor with bin size, min and max
 
-SamplingDistPlot::SamplingDistPlot(Int_t nbins, Double_t min, Double_t max) :
+SamplingDistPlot::SamplingDistPlot(Int_t nbins, double min, double max) :
    fHist(0),
    fLegend(NULL),
    fItems(),
@@ -103,7 +103,7 @@ SamplingDistPlot::~SamplingDistPlot()
 ////////////////////////////////////////////////////////////////////////////////
 /// adds sampling distribution (and normalizes if "NORMALIZE" is given as an option)
 
-Double_t SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *samplingDist, Option_t *drawOptions) {
+double SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *samplingDist, Option_t *drawOptions) {
    fSamplingDistr = samplingDist->GetSamplingDistribution();
    if( fSamplingDistr.empty() ) {
       coutW(Plotting) << "Empty sampling distribution given to plot. Skipping." << endl;
@@ -114,7 +114,7 @@ Double_t SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *s
    TString options(drawOptions);
    options.ToUpper();
 
-   Double_t xmin(TMath::Infinity()), xmax(-TMath::Infinity());
+   double xmin(TMath::Infinity()), xmax(-TMath::Infinity());
    // remove cases where xmin and xmax are +/- inf
    for( unsigned int i=0; i < fSamplingDistr.size(); i++ ) {
       if( fSamplingDistr[i] < xmin  &&  fSamplingDistr[i] != -TMath::Infinity() ) {
@@ -134,8 +134,8 @@ Double_t SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *s
    // add 1.5 bins left and right
    assert(fBins > 1);
    double binWidth = (xmax-xmin)/(fBins);
-   Double_t xlow = xmin - 1.5*binWidth;
-   Double_t xup  = xmax + 1.5*binWidth;
+   double xlow = xmin - 1.5*binWidth;
+   double xup  = xmax + 1.5*binWidth;
    if( !IsNaN(fXMin) ) xlow = fXMin;
    if( !IsNaN(fXMax) ) xup = fXMax;
 
@@ -146,7 +146,7 @@ Double_t SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *s
    fHist->GetXaxis()->SetTitle(fVarName.Data());
 
 
-   std::vector<Double_t>::iterator valuesIt = fSamplingDistr.begin();
+   std::vector<double>::iterator valuesIt = fSamplingDistr.begin();
    for (int w_idx = 0; valuesIt != fSamplingDistr.end(); ++valuesIt, ++w_idx) {
       if (fIsWeighted) fHist->Fill(*valuesIt, fSampleWeights[w_idx]);
       else fHist->Fill(*valuesIt);
@@ -184,12 +184,12 @@ Double_t SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *s
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t SamplingDistPlot::AddSamplingDistributionShaded(const SamplingDistribution *samplingDist, Double_t minShaded, Double_t maxShaded, Option_t *drawOptions) {
+double SamplingDistPlot::AddSamplingDistributionShaded(const SamplingDistribution *samplingDist, double minShaded, double maxShaded, Option_t *drawOptions) {
    if( samplingDist->GetSamplingDistribution().empty() ) {
       coutW(Plotting) << "Empty sampling distribution given to plot. Skipping." << endl;
       return 0.0;
    }
-   Double_t scaleFactor = AddSamplingDistribution(samplingDist, drawOptions);
+   double scaleFactor = AddSamplingDistribution(samplingDist, drawOptions);
 
    TH1F *shaded = (TH1F*)fHist->Clone((string(samplingDist->GetName())+string("_shaded")).c_str());
    shaded->SetDirectory(0);
@@ -215,7 +215,7 @@ Double_t SamplingDistPlot::AddSamplingDistributionShaded(const SamplingDistribut
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SamplingDistPlot::AddLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, const char* title) {
+void SamplingDistPlot::AddLine(double x1, double y1, double x2, double y2, const char* title) {
    TLine *line = new TLine(x1, y1, x2, y2);
    line->SetLineWidth(3);
    line->SetLineColor(kBlack);
@@ -299,7 +299,7 @@ void SamplingDistPlot::addOtherObject(TObject *obj, Option_t *drawOptions)
 void SamplingDistPlot::Draw(Option_t * /*options */) {
    ApplyDefaultStyle();
 
-   Double_t theMin(0.), theMax(0.), theYMin(NaN), theYMax(0.);
+   double theMin(0.), theMax(0.), theYMin(NaN), theYMax(0.);
    GetAbsoluteInterval(theMin, theMax, theYMax);
    if( !IsNaN(fXMin) ) theMin = fXMin;
    if( !IsNaN(fXMax) ) theMax = fXMax;
@@ -404,11 +404,11 @@ void SamplingDistPlot::ApplyDefaultStyle(void) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SamplingDistPlot::GetAbsoluteInterval(Double_t &theMin, Double_t &theMax, Double_t &theYMax) const
+void SamplingDistPlot::GetAbsoluteInterval(double &theMin, double &theMax, double &theYMax) const
 {
-   Double_t tmpmin = TMath::Infinity();
-   Double_t tmpmax = -TMath::Infinity();
-   Double_t tmpYmax = -TMath::Infinity();
+   double tmpmin = TMath::Infinity();
+   double tmpmax = -TMath::Infinity();
+   double tmpYmax = -TMath::Infinity();
 
   fIterator->Reset();
   TH1F *obj = 0;

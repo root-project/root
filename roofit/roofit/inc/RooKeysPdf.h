@@ -31,50 +31,50 @@ public:
   RooKeysPdf() ;
   RooKeysPdf(const char *name, const char *title,
              RooAbsReal& x, RooDataSet& data, Mirror mirror= NoMirror,
-        Double_t rho=1);
+        double rho=1);
   RooKeysPdf(const char *name, const char *title,
              RooAbsReal& x, RooRealVar& xdata, RooDataSet& data, Mirror mirror= NoMirror,
-        Double_t rho=1);
+        double rho=1);
   RooKeysPdf(const RooKeysPdf& other, const char* name=0);
   TObject* clone(const char* newname) const override {return new RooKeysPdf(*this,newname); }
   ~RooKeysPdf() override;
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
      const char* rangeName = 0) const override;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName = 0) const override;
+  double analyticalIntegral(Int_t code, const char* rangeName = 0) const override;
   Int_t getMaxVal(const RooArgSet& vars) const override;
-  Double_t maxVal(Int_t code) const override;
+  double maxVal(Int_t code) const override;
 
   void LoadDataSet( RooDataSet& data);
 
 protected:
 
   RooRealProxy _x ;
-  Double_t evaluate() const override;
+  double evaluate() const override;
 
 private:
   // how far you have to go out in a Gaussian until it is smaller than the
   // machine precision
-  static const Double_t _nSigma; //!
+  static const double _nSigma; //!
 
   Int_t _nEvents;
-  Double_t *_dataPts;  //[_nEvents]
-  Double_t *_dataWgts; //[_nEvents]
-  Double_t *_weights;  //[_nEvents]
-  Double_t _sumWgt ;
+  double *_dataPts;  //[_nEvents]
+  double *_dataWgts; //[_nEvents]
+  double *_weights;  //[_nEvents]
+  double _sumWgt ;
 
   enum { _nPoints = 1000 };
-  Double_t _lookupTable[_nPoints+1];
+  double _lookupTable[_nPoints+1];
 
-  Double_t g(Double_t x,Double_t sigma) const;
+  double g(double x,double sigma) const;
 
   bool _mirrorLeft, _mirrorRight;
   bool _asymLeft, _asymRight;
 
   // cached info on variable
   Char_t _varName[128];
-  Double_t _lo, _hi, _binWidth;
-  Double_t _rho;
+  double _lo, _hi, _binWidth;
+  double _rho;
 
   ClassDefOverride(RooKeysPdf,2) // One-dimensional non-parametric kernel estimation p.d.f.
 };

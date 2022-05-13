@@ -41,7 +41,7 @@ RooRealL::RooRealL(const RooRealL &other, const char *name)
    vars_obs_.add(other.vars_obs_) ;
 }
 
-Double_t RooRealL::evaluate() const
+double RooRealL::evaluate() const
 {
    // Transfer values from proxy variables to internal variables of likelihood
    if (!vars_proxy_.empty()) {
@@ -59,7 +59,7 @@ Double_t RooRealL::evaluate() const
 
    auto ret_kahan = likelihood_->evaluatePartition({0, 1}, 0, last_component);
 
-   const Double_t norm = globalNormalization();
+   const double norm = globalNormalization();
    double ret = ret_kahan.Sum() / norm;
    eval_carry = ret_kahan.Carry() / norm;
 

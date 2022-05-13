@@ -179,7 +179,7 @@ RooAbsTestStatistic::~RooAbsTestStatistic()
 /// data, and then combined. If the test statistic calculation is parallelized,
 /// partitions are calculated in nCPU processes and combined a posteriori.
 
-Double_t RooAbsTestStatistic::evaluate() const
+double RooAbsTestStatistic::evaluate() const
 {
   // One-time Initialization
   if (!_init) {
@@ -188,18 +188,18 @@ Double_t RooAbsTestStatistic::evaluate() const
 
   if (SimMaster == _gofOpMode) {
     // Evaluate array of owned GOF objects
-    Double_t ret = 0.;
+    double ret = 0.;
 
     if (_mpinterl == RooFit::BulkPartition || _mpinterl == RooFit::Interleave ) {
       ret = combinedValue((RooAbsReal**)_gofArray,_nGof);
     } else {
-      Double_t sum = 0., carry = 0.;
+      double sum = 0., carry = 0.;
       for (Int_t i = 0 ; i < _nGof; ++i) {
    if (i % _numSets == _setNum || (_mpinterl==RooFit::Hybrid && _gofSplitMode[i] != RooFit::SimComponents )) {
-     Double_t y = _gofArray[i]->getValV();
+     double y = _gofArray[i]->getValV();
      carry += _gofArray[i]->getCarry();
      y -= carry;
-     const Double_t t = sum + y;
+     const double t = sum + y;
      carry = (t - sum) - y;
      sum = t;
    }
@@ -210,7 +210,7 @@ Double_t RooAbsTestStatistic::evaluate() const
 
     // Only apply global normalization if SimMaster doesn't have MP master
     if (numSets()==1) {
-      const Double_t norm = globalNormalization();
+      const double norm = globalNormalization();
       ret /= norm;
       _evalCarry /= norm;
     }
@@ -223,20 +223,20 @@ Double_t RooAbsTestStatistic::evaluate() const
     for (Int_t i = 0; i < _nCPU; ++i) _mpfeArray[i]->calculate();
 
 
-    Double_t sum(0), carry = 0.;
+    double sum(0), carry = 0.;
     for (Int_t i = 0; i < _nCPU; ++i) {
-      Double_t y = _mpfeArray[i]->getValV();
+      double y = _mpfeArray[i]->getValV();
       carry += _mpfeArray[i]->getCarry();
       y -= carry;
-      const Double_t t = sum + y;
+      const double t = sum + y;
       carry = (t - sum) - y;
       sum = t;
     }
 
-    Double_t ret = sum ;
+    double ret = sum ;
     _evalCarry = carry;
 
-    const Double_t norm = globalNormalization();
+    const double norm = globalNormalization();
     ret /= norm;
     _evalCarry /= norm;
 
@@ -271,10 +271,10 @@ Double_t RooAbsTestStatistic::evaluate() const
       break ;
     }
 
-    Double_t ret = evaluatePartition(nFirst,nLast,nStep);
+    double ret = evaluatePartition(nFirst,nLast,nStep);
 
     if (numSets()==1) {
-      const Double_t norm = globalNormalization();
+      const double norm = globalNormalization();
       ret /= norm;
       _evalCarry /= norm;
     }
@@ -680,5 +680,5 @@ void RooAbsTestStatistic::enableOffsetting(bool flag)
 }
 
 
-Double_t RooAbsTestStatistic::getCarry() const
+double RooAbsTestStatistic::getCarry() const
 { return _evalCarry; }

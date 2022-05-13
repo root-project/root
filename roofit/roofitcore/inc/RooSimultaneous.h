@@ -46,17 +46,17 @@ public:
   TObject* clone(const char* newname) const override { return new RooSimultaneous(*this,newname) ; }
   ~RooSimultaneous() override ;
 
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
   bool selfNormalized() const override { return true ; }
   bool addPdf(const RooAbsPdf& pdf, const char* catLabel) ;
 
   ExtendMode extendMode() const override ;
 
-  Double_t expectedEvents(const RooArgSet* nset) const override ;
+  double expectedEvents(const RooArgSet* nset) const override ;
 
   bool forceAnalyticalInt(const RooAbsArg&) const override { return true ; }
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const override ;
-  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
+  double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
 
   using RooAbsPdf::plotOn ;
   RooPlot* plotOn(RooPlot* frame,
@@ -70,10 +70,10 @@ public:
   RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const override ;
 
   // Backward compatibility function
-  virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions, Double_t scaleFactor=1.0,
+  virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions, double scaleFactor=1.0,
            ScaleType stype=Relative, const RooAbsData* projData=0, const RooArgSet* projSet=0,
-           Double_t precision=1e-3, bool shiftToZero=false, const RooArgSet* projDataSet=0,
-           Double_t rangeLo=0, Double_t rangeHi=0, RooCurve::WingMode wmode=RooCurve::Extended) const;
+           double precision=1e-3, bool shiftToZero=false, const RooArgSet* projDataSet=0,
+           double rangeLo=0, double rangeHi=0, RooCurve::WingMode wmode=RooCurve::Extended) const;
 
   RooAbsPdf* getPdf(const char* catName) const ;
   const RooAbsCategoryLValue& indexCat() const { return (RooAbsCategoryLValue&) _indexCat.arg() ; }
@@ -81,7 +81,7 @@ public:
 
   RooDataSet* generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents) override ;
 
-  virtual RooDataHist* fillDataHist(RooDataHist *hist, const RooArgSet* nset, Double_t scaleFactor,
+  virtual RooDataHist* fillDataHist(RooDataHist *hist, const RooArgSet* nset, double scaleFactor,
                 bool correctForBinVolume=false, bool showProgress=false) const ;
 
   void wrapPdfsInBinSamplingPdfs(RooAbsData const &data, double precision);

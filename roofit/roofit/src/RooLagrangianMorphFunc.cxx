@@ -2882,7 +2882,7 @@ RooAbsPdf::ExtendMode RooLagrangianMorphFunc::extendMode() const
 /// return expected number of events for extended likelihood calculation,
 /// this is the sum of all coefficients
 
-Double_t RooLagrangianMorphFunc::expectedEvents(const RooArgSet *nset) const
+double RooLagrangianMorphFunc::expectedEvents(const RooArgSet *nset) const
 {
    return this->createPdf()->expectedEvents(nset);
 }
@@ -2890,7 +2890,7 @@ Double_t RooLagrangianMorphFunc::expectedEvents(const RooArgSet *nset) const
 ////////////////////////////////////////////////////////////////////////////////
 /// return the number of expected events for the current parameter set
 
-Double_t RooLagrangianMorphFunc::expectedEvents() const
+double RooLagrangianMorphFunc::expectedEvents() const
 {
    RooArgSet set;
    set.add(*this->getObservable());
@@ -2901,7 +2901,7 @@ Double_t RooLagrangianMorphFunc::expectedEvents() const
 /// return expected number of events for extended likelihood calculation,
 /// this is the sum of all coefficients
 
-Double_t RooLagrangianMorphFunc::expectedEvents(const RooArgSet &nset) const
+double RooLagrangianMorphFunc::expectedEvents(const RooArgSet &nset) const
 {
    return createPdf()->expectedEvents(&nset);
 }
@@ -2984,7 +2984,7 @@ void RooLagrangianMorphFunc::printCouplings() const
 ////////////////////////////////////////////////////////////////////////////////
 /// retrieve the list of bin boundaries
 
-std::list<Double_t> *RooLagrangianMorphFunc::binBoundaries(RooAbsRealLValue &obs, Double_t xlo, Double_t xhi) const
+std::list<double> *RooLagrangianMorphFunc::binBoundaries(RooAbsRealLValue &obs, double xlo, double xhi) const
 {
    return this->getFunc()->binBoundaries(obs, xlo, xhi);
 }
@@ -2992,7 +2992,7 @@ std::list<Double_t> *RooLagrangianMorphFunc::binBoundaries(RooAbsRealLValue &obs
 ////////////////////////////////////////////////////////////////////////////////
 /// retrieve the sample Hint
 
-std::list<Double_t> *RooLagrangianMorphFunc::plotSamplingHint(RooAbsRealLValue &obs, Double_t xlo, Double_t xhi) const
+std::list<double> *RooLagrangianMorphFunc::plotSamplingHint(RooAbsRealLValue &obs, double xlo, double xhi) const
 {
    return this->getFunc()->plotSamplingHint(obs, xlo, xhi);
 }
@@ -3000,7 +3000,7 @@ std::list<Double_t> *RooLagrangianMorphFunc::plotSamplingHint(RooAbsRealLValue &
 ////////////////////////////////////////////////////////////////////////////////
 /// call getVal on the internal function
 
-Double_t RooLagrangianMorphFunc::getValV(const RooArgSet *set) const
+double RooLagrangianMorphFunc::getValV(const RooArgSet *set) const
 {
    // cout << "XX RooLagrangianMorphFunc::getValV(" << this << ") set = " << set
    // << std::endl ;
@@ -3011,7 +3011,7 @@ Double_t RooLagrangianMorphFunc::getValV(const RooArgSet *set) const
 ////////////////////////////////////////////////////////////////////////////////
 /// call getVal on the internal function
 
-Double_t RooLagrangianMorphFunc::evaluate() const
+double RooLagrangianMorphFunc::evaluate() const
 {
    // call getVal on the internal function
    RooRealSumFunc *pdf = this->getFunc();
@@ -3058,7 +3058,7 @@ Int_t RooLagrangianMorphFunc::getAnalyticalIntegralWN(RooArgSet &allVars, RooArg
 ////////////////////////////////////////////////////////////////////////////////
 /// Retrieve the matrix of coefficients
 
-Double_t RooLagrangianMorphFunc::analyticalIntegralWN(Int_t code, const RooArgSet *normSet, const char *rangeName) const
+double RooLagrangianMorphFunc::analyticalIntegralWN(Int_t code, const RooArgSet *normSet, const char *rangeName) const
 {
    return this->getFunc()->analyticalIntegralWN(code, normSet, rangeName);
 }

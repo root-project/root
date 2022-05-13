@@ -37,43 +37,43 @@ templateClassImp(RooCFunction2Ref);
 namespace RooFit {
 
   RooAbsReal* bindFunction(const char* name,CFUNCD2DD func,RooAbsReal& x, RooAbsReal& y) {
-    return new RooCFunction2Binding<Double_t,Double_t,Double_t>(name,name,func,x,y) ;
+    return new RooCFunction2Binding<double,double,double>(name,name,func,x,y) ;
   }
 
   RooAbsReal* bindFunction(const char* name,CFUNCD2ID func,RooAbsReal& x, RooAbsReal& y) {
-    return new RooCFunction2Binding<Double_t,Int_t,Double_t>(name,name,func,x,y) ;
+    return new RooCFunction2Binding<double,Int_t,double>(name,name,func,x,y) ;
   }
 
   RooAbsReal* bindFunction(const char* name,CFUNCD2UD func,RooAbsReal& x, RooAbsReal& y) {
-    return new RooCFunction2Binding<Double_t,UInt_t,Double_t>(name,name,func,x,y) ;
+    return new RooCFunction2Binding<double,UInt_t,double>(name,name,func,x,y) ;
   }
 
   RooAbsReal* bindFunction(const char* name,CFUNCD2DI func,RooAbsReal& x, RooAbsReal& y) {
-    return new RooCFunction2Binding<Double_t,Double_t,Int_t>(name,name,func,x,y) ;
+    return new RooCFunction2Binding<double,double,Int_t>(name,name,func,x,y) ;
   }
 
   RooAbsReal* bindFunction(const char* name,CFUNCD2II func,RooAbsReal& x, RooAbsReal& y) {
-    return new RooCFunction2Binding<Double_t,Int_t,Int_t>(name,name,func,x,y) ;
+    return new RooCFunction2Binding<double,Int_t,Int_t>(name,name,func,x,y) ;
   }
 
   RooAbsPdf* bindPdf(const char* name,CFUNCD2DD func,RooAbsReal& x, RooAbsReal& y) {
-    return new RooCFunction2PdfBinding<Double_t,Double_t,Double_t>(name,name,func,x,y) ;
+    return new RooCFunction2PdfBinding<double,double,double>(name,name,func,x,y) ;
   }
 
   RooAbsPdf* bindPdf(const char* name,CFUNCD2ID func,RooAbsReal& x, RooAbsReal& y) {
-    return new RooCFunction2PdfBinding<Double_t,Int_t,Double_t>(name,name,func,x,y) ;
+    return new RooCFunction2PdfBinding<double,Int_t,double>(name,name,func,x,y) ;
   }
 
   RooAbsPdf* bindPdf(const char* name,CFUNCD2UD func,RooAbsReal& x, RooAbsReal& y) {
-    return new RooCFunction2PdfBinding<Double_t,UInt_t,Double_t>(name,name,func,x,y) ;
+    return new RooCFunction2PdfBinding<double,UInt_t,double>(name,name,func,x,y) ;
   }
 
   RooAbsPdf* bindPdf(const char* name,CFUNCD2DI func,RooAbsReal& x, RooAbsReal& y) {
-    return new RooCFunction2PdfBinding<Double_t,Double_t,Int_t>(name,name,func,x,y) ;
+    return new RooCFunction2PdfBinding<double,double,Int_t>(name,name,func,x,y) ;
   }
 
   RooAbsPdf* bindPdf(const char* name,CFUNCD2II func,RooAbsReal& x, RooAbsReal& y) {
-    return new RooCFunction2PdfBinding<Double_t,Int_t,Int_t>(name,name,func,x,y) ;
+    return new RooCFunction2PdfBinding<double,Int_t,Int_t>(name,name,func,x,y) ;
   }
 
 }

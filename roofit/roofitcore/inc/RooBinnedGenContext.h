@@ -33,7 +33,7 @@ public:
                    const RooArgSet* auxProto=0, bool _verbose= false);
   ~RooBinnedGenContext() override;
 
-  RooDataSet* generate(Double_t nEvents=0, bool skipInit=false, bool extendedMode=false) override ;
+  RooDataSet* generate(double nEvents=0, bool skipInit=false, bool extendedMode=false) override ;
 
   void setProtoDataOrder(Int_t*) override  {}
 

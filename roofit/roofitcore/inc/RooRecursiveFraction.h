@@ -36,7 +36,7 @@ protected:
 
   RooListProxy _list ;
 
-  Double_t evaluate() const override;
+  double evaluate() const override;
 
   ClassDefOverride(RooRecursiveFraction,1) // Recursive fraction formula f1*(1-f2)*(1-f3) etc...
 } ;

@@ -122,7 +122,7 @@ MarkovChain* MetropolisHastings::ConstructChain()
    chain->SetParameters(fChainParams);
 
    Int_t weight = 0;
-   Double_t xL = 0.0, xPrimeL = 0.0, a = 0.0;
+   double xL = 0.0, xPrimeL = 0.0, a = 0.0;
 
    // ibucur: i think the user should have the possibility to display all the message
    //    levels should they want to; maybe a setPrintLevel would be appropriate
@@ -215,8 +215,8 @@ MarkovChain* MetropolisHastings::ConstructChain()
       //a = xL / xPrimeL;
 
       if (!hadEvalError && !fPropFunc->IsSymmetric(xPrime, x)) {
-         Double_t xPrimePD = fPropFunc->GetProposalDensity(xPrime, x);
-         Double_t xPD      = fPropFunc->GetProposalDensity(x, xPrime);
+         double xPrimePD = fPropFunc->GetProposalDensity(xPrime, x);
+         double xPD      = fPropFunc->GetProposalDensity(x, xPrime);
          if (fType == kRegular)
             a *= xPD / xPrimePD;
          else
@@ -228,7 +228,7 @@ MarkovChain* MetropolisHastings::ConstructChain()
 
          // add the current point with the current weight
          if (weight != 0.0)
-            chain->Add(x, CalcNLL(xL), (Double_t)weight);
+            chain->Add(x, CalcNLL(xL), (double)weight);
 
          // reset the weight and go to xPrime
          weight = 1;
@@ -242,7 +242,7 @@ MarkovChain* MetropolisHastings::ConstructChain()
 
    // make sure to add the last point
    if (weight != 0.0)
-      chain->Add(x, CalcNLL(xL), (Double_t)weight);
+      chain->Add(x, CalcNLL(xL), (double)weight);
    ooccoutP((TObject *)0, Generation) << endl;
 
    RooMsgService::instance().setGlobalKillBelow(oldMsgLevel);
@@ -261,7 +261,7 @@ MarkovChain* MetropolisHastings::ConstructChain()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MetropolisHastings::ShouldTakeStep(Double_t a)
+bool MetropolisHastings::ShouldTakeStep(double a)
 {
    if ((fType == kLog && a <= 0.0) || (fType == kRegular && a >= 1.0)) {
       // The proposed point has a higher likelihood than the
@@ -271,8 +271,8 @@ bool MetropolisHastings::ShouldTakeStep(Double_t a)
    else {
       // generate numbers on a log distribution to decide
       // whether to go to xPrime or stay at x
-      //Double_t rand = fGen.Uniform(1.0);
-      Double_t rand = RooRandom::uniform();
+      //double rand = fGen.Uniform(1.0);
+      double rand = RooRandom::uniform();
       if (fType == kLog) {
          rand = TMath::Log(rand);
          // kbelasco: should this be changed to just (-rand > a) for logical
@@ -296,7 +296,7 @@ bool MetropolisHastings::ShouldTakeStep(Double_t a)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t MetropolisHastings::CalcNLL(Double_t xL)
+double MetropolisHastings::CalcNLL(double xL)
 {
    if (fType == kLog) {
       if (fSign == kNegative)

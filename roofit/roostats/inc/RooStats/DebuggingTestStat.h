@@ -48,7 +48,7 @@ namespace RooStats {
      }
 
      /// Main interface to evaluate the test statistic on a dataset
-     Double_t Evaluate(RooAbsData& /*data*/, RooArgSet& /*paramsOfInterest*/) override  {
+     double Evaluate(RooAbsData& /*data*/, RooArgSet& /*paramsOfInterest*/) override  {
        //data = data; // avoid warning
        //paramsOfInterest = paramsOfInterest; //avoid warning
        return fRand->Uniform();

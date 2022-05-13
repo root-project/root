@@ -39,8 +39,8 @@ RooDataSet* makeFakeDataXY()
   RooDataSet* d = new RooDataSet("d","d",RooArgSet(x,y)) ;
 
   for (int i=0 ; i<10000 ; i++) {
-    Double_t tmpy = gRandom->Gaus(0,10) ;
-    Double_t tmpx = gRandom->Gaus(0.5*tmpy,1) ;
+    double tmpy = gRandom->Gaus(0,10) ;
+    double tmpx = gRandom->Gaus(0.5*tmpy,1) ;
     if (fabs(tmpy)<10 && fabs(tmpx)<10) {
       x = tmpx ;
       y = tmpy ;

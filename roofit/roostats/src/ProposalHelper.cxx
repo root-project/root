@@ -42,10 +42,10 @@ using namespace RooFit;
 using namespace RooStats;
 using namespace std;
 
-//static const Double_t DEFAULT_UNI_FRAC = 0.10;
-static const Double_t DEFAULT_CLUES_FRAC = 0.20;
-//static const Double_t SIGMA_RANGE_DIVISOR = 6;
-static const Double_t SIGMA_RANGE_DIVISOR = 5;
+//static const double DEFAULT_UNI_FRAC = 0.10;
+static const double DEFAULT_CLUES_FRAC = 0.20;
+//static const double SIGMA_RANGE_DIVISOR = 6;
+static const double SIGMA_RANGE_DIVISOR = 5;
 //static const Int_t DEFAULT_CACHE_SIZE = 100;
 //static const Option_t* CLUES_OPTIONS = "a";
 
@@ -148,7 +148,7 @@ void ProposalHelper::CreateCovMatrix(RooArgList& xVec)
    RooRealVar* r;
    for (Int_t i = 0; i < size; i++) {
       r = (RooRealVar*)xVec.at(i);
-      Double_t range = r->getMax() - r->getMin();
+      double range = r->getMax() - r->getMin();
       (*fCovMatrix)(i,i) = range / fSigmaRangeDivisor;
    }
 }

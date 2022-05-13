@@ -44,8 +44,8 @@ protected:
   RooRealProxy _xf ;                     ///< (X-offset)*F
   RooRealProxy _ixf ;                    ///< Int((X-offset)*F(X))dx ;
   RooRealProxy _if ;                     ///< Int(F(x))dx ;
-  Double_t _xfOffset ;                   ///< offset
-  Double_t evaluate() const override;
+  double _xfOffset ;                   ///< offset
+  double evaluate() const override;
 
   ClassDefOverride(RooSecondMoment,1) // Representation of moment in a RooAbsReal in a given RooRealVar
 };

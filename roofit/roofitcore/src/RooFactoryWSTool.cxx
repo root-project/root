@@ -152,7 +152,7 @@ RooFactoryWSTool::~RooFactoryWSTool()
 ////////////////////////////////////////////////////////////////////////////////
 /// Low-level factory interface for creating a RooRealVar with a given range and initial value
 
-RooRealVar* RooFactoryWSTool::createVariable(const char* name, Double_t xmin, Double_t xmax)
+RooRealVar* RooFactoryWSTool::createVariable(const char* name, double xmin, double xmax)
 {
   // First check if variable already exists
   if (_ws->var(name)) {
@@ -429,7 +429,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
       } else if ((*ti)=="Int_t" || (*ti)=="int" || (*ti)=="bool" || (*ti)=="bool") {
    RooFactoryWSTool::as_INT(i) ;
    cintExpr += Form(",RooFactoryWSTool::as_INT(%d)",i) ;
-      } else if ((*ti)=="Double_t") {
+      } else if ((*ti)=="double") {
    RooFactoryWSTool::as_DOUBLE(i) ;
    cintExpr += Form(",RooFactoryWSTool::as_DOUBLE(%d)",i) ;
       } else if (isEnum(ti->c_str())) {
@@ -1318,7 +1318,7 @@ string RooFactoryWSTool::processCreateVar(string& func, vector<string>& args)
     if (args.size()==1) {
 
       // One argument, create constant variable with given value
-      Double_t xinit = atof((ai)->c_str()) ;
+      double xinit = atof((ai)->c_str()) ;
       cxcoutD(ObjectHandling) << "CREATE variable " << func << " xinit = " << xinit << endl ;
       RooRealVar tmp(func.c_str(),func.c_str(),xinit) ;
       tmp.setStringAttribute("factory_tag",varTag(func,args).c_str()) ;
@@ -1329,8 +1329,8 @@ string RooFactoryWSTool::processCreateVar(string& func, vector<string>& args)
     } else if (args.size()==2) {
 
       // Two arguments, create variable with given range
-      Double_t xlo = atof((ai++)->c_str()) ;
-      Double_t xhi = atof(ai->c_str()) ;
+      double xlo = atof((ai++)->c_str()) ;
+      double xhi = atof(ai->c_str()) ;
       cxcoutD(ObjectHandling) << "CREATE variable " << func << " xlo = " << xlo << " xhi = " << xhi << endl ;
       RooRealVar tmp(func.c_str(),func.c_str(),xlo,xhi) ;
       tmp.setStringAttribute("factory_tag",varTag(func,args).c_str()) ;
@@ -1341,9 +1341,9 @@ string RooFactoryWSTool::processCreateVar(string& func, vector<string>& args)
     } else if (args.size()==3) {
 
       // Three arguments, create variable with given initial value and range
-      Double_t xinit = atof((ai++)->c_str()) ;
-      Double_t xlo = atof((ai++)->c_str()) ;
-      Double_t xhi = atof(ai->c_str()) ;
+      double xinit = atof((ai++)->c_str()) ;
+      double xlo = atof((ai++)->c_str()) ;
+      double xhi = atof(ai->c_str()) ;
       cxcoutD(ObjectHandling) << "CREATE variable " << func << " xinit = " << xinit << " xlo = " << xlo << " xhi = " << xhi << endl ;
       RooRealVar tmp(func.c_str(),func.c_str(),xinit,xlo,xhi) ;
       tmp.setStringAttribute("factory_tag",varTag(func,args).c_str()) ;
@@ -1921,9 +1921,9 @@ Int_t RooFactoryWSTool::asINT(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as Double_t
+/// CINT constructor interface, return constructor string argument `#idx` as double
 
-Double_t RooFactoryWSTool::asDOUBLE(const char* arg)
+double RooFactoryWSTool::asDOUBLE(const char* arg)
 {
   return atof(arg) ;
 }

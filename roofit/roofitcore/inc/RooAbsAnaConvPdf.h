@@ -47,24 +47,24 @@ public:
   void printMultiline(std::ostream& stream, Int_t contents, bool verbose=false, TString indent= "") const override ;
 
   // Coefficient normalization access
-  inline Double_t getCoefNorm(Int_t coefIdx, const RooArgSet& nset, const char* rangeName) const {
+  inline double getCoefNorm(Int_t coefIdx, const RooArgSet& nset, const char* rangeName) const {
     // Returns normalization integral for coefficient coefIdx for observables nset in range rangeNae
     return getCoefNorm(coefIdx,&nset,rangeName) ;
   }
-  Double_t getCoefNorm(Int_t coefIdx, const RooArgSet* nset=0, const char* rangeName=0) const {
+  double getCoefNorm(Int_t coefIdx, const RooArgSet* nset=0, const char* rangeName=0) const {
        return getCoefNorm(coefIdx,nset,RooNameReg::ptr(rangeName));
   }
 
   // Analytical integration support
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=0) const override ;
-  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
+  double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
 
   // Coefficient Analytical integration support
   virtual Int_t getCoefAnalyticalIntegral(Int_t coef, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  virtual Double_t coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName=0) const ;
+  virtual double coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName=0) const ;
   bool forceAnalyticalInt(const RooAbsArg& dep) const override ;
 
-  virtual Double_t coefficient(Int_t basisIndex) const = 0 ;
+  virtual double coefficient(Int_t basisIndex) const = 0 ;
   virtual RooArgSet* coefVars(Int_t coefIdx) const ;
 
   bool isDirectGenSafe(const RooAbsArg& arg) const override ;
@@ -83,11 +83,11 @@ public:
   }
 
 protected:
-  Double_t getCoefNorm(Int_t coefIdx, const RooArgSet* nset, const TNamed* rangeName) const ;
+  double getCoefNorm(Int_t coefIdx, const RooArgSet* nset, const TNamed* rangeName) const ;
 
   bool _isCopy ;
 
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
 
   void makeCoefVarList(RooArgList&) const ;
 

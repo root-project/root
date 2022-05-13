@@ -50,7 +50,7 @@ public:
    bool Add( const HypoTestInverterResult& otherResult );
 
    ///add the result of a single point (an HypoTestRsult)
-   bool Add( Double_t x, const HypoTestResult & result );
+   bool Add( double x, const HypoTestResult & result );
 
    /// function to return the value of the parameter of interest for the i^th entry in the results
    double GetXValue( int index ) const ;
@@ -96,13 +96,13 @@ public:
    int FindIndex(double xvalue) const;
 
    /// set the size of the test (rate of Type I error) (eg. 0.05 for a 95% Confidence Interval)
-   virtual void SetTestSize( Double_t size ) { fConfidenceLevel = 1.-size; }
+   virtual void SetTestSize( double size ) { fConfidenceLevel = 1.-size; }
 
    /// set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
-   void SetConfidenceLevel( Double_t cl ) override { fConfidenceLevel = cl; }
+   void SetConfidenceLevel( double cl ) override { fConfidenceLevel = cl; }
 
    /// set CLs threshold for exclusion cleanup function
-   inline void SetCLsCleanupThreshold( Double_t th ) { fCLsCleanupThreshold = th; }
+   inline void SetCLsCleanupThreshold( double th ) { fCLsCleanupThreshold = th; }
 
    /// flag to switch between using CLsb (default) or CLs as confidence level
    void UseCLs( bool on = true ) { fUseCLs = on; }
@@ -113,17 +113,17 @@ public:
    bool IsTwoSided() const { return fIsTwoSided; }
 
    /// lower and upper bound of the confidence interval (to get upper/lower limits, multiply the size( = 1-confidence level ) by 2
-   Double_t LowerLimit() override;
-   Double_t UpperLimit() override;
+   double LowerLimit() override;
+   double UpperLimit() override;
 
    /// rough estimation of the error on the computed bound of the confidence interval
    /// Estimate of lower limit error
    ///function evaluates only a rough error on the lower limit. Be careful when using this estimation
-   Double_t LowerLimitEstimatedError();
+   double LowerLimitEstimatedError();
 
    /// Estimate of lower limit error
    ///function evaluates only a rough error on the lower limit. Be careful when using this estimation
-   Double_t UpperLimitEstimatedError();
+   double UpperLimitEstimatedError();
 
    /// return expected distribution of p-values (Cls or Clsplusb)
 

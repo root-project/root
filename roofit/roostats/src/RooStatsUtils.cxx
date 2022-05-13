@@ -56,7 +56,7 @@ namespace RooStats {
       return theConfig;
    }
 
-   Double_t AsimovSignificance(Double_t s, Double_t b, Double_t sigma_b ) {
+   double AsimovSignificance(double s, double b, double sigma_b ) {
    // Asimov significance
    // formula [10] and [20] from  https://www.pp.rhul.ac.uk/~cowan/stat/notes/medsigNote.pdf
       // case we have a sigma_b
@@ -235,7 +235,7 @@ namespace RooStats {
    // Helper class for GetAsTTree
    class BranchStore {
       public:
-         std::map<TString, Double_t> fVarVals;
+         std::map<TString, double> fVarVals;
          double fInval;
          TTree *fTree;
 
@@ -247,7 +247,7 @@ namespace RooStats {
 
          ~BranchStore() {
             if (fTree) {
-               for(std::map<TString, Double_t>::iterator it = fVarVals.begin();it!=fVarVals.end();++it) {
+               for(std::map<TString, double>::iterator it = fVarVals.begin();it!=fVarVals.end();++it) {
                   TBranch *br = fTree->GetBranch( it->first );
                   if (br) br->ResetAddress();
                }
@@ -256,13 +256,13 @@ namespace RooStats {
 
          void AssignToTTree(TTree &myTree) {
             fTree = &myTree;
-            for(std::map<TString, Double_t>::iterator it = fVarVals.begin();it!=fVarVals.end();++it) {
+            for(std::map<TString, double>::iterator it = fVarVals.begin();it!=fVarVals.end();++it) {
                const TString& name = it->first;
                myTree.Branch( name, &fVarVals[name], TString::Format("%s/D", name.Data()));
             }
          }
          void ResetValues() {
-            for(std::map<TString, Double_t>::iterator it = fVarVals.begin();it!=fVarVals.end();++it) {
+            for(std::map<TString, double>::iterator it = fVarVals.begin();it!=fVarVals.end();++it) {
                const TString& name = it->first;
                fVarVals[name] = fInval;
             }

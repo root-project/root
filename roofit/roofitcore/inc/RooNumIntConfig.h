@@ -47,10 +47,10 @@ public:
   const RooCategory& methodNDOpen() const { return _methodNDOpen ; }
 
   // Set/get absolute and relative precision convergence criteria
-  Double_t epsAbs() const { return _epsAbs ; }
-  Double_t epsRel() const { return _epsRel ; }
-  void setEpsAbs(Double_t newEpsAbs) ;
-  void setEpsRel(Double_t newEpsRel) ;
+  double epsAbs() const { return _epsAbs ; }
+  double epsRel() const { return _epsRel ; }
+  void setEpsAbs(double newEpsAbs) ;
+  void setEpsRel(double newEpsRel) ;
 
   // Set/get switch that activates printing of number of required
   // function evaluations for each numeric integration
@@ -71,8 +71,8 @@ public:
   }
 
 protected:
-  Double_t _epsAbs          ; ///< Absolute precision
-  Double_t _epsRel          ; ///< Relative precision
+  double _epsAbs          ; ///< Absolute precision
+  double _epsRel          ; ///< Relative precision
   bool   _printEvalCounter ; ///< Flag to control printing of function evaluation counter
 
   RooCategory _method1D     ; ///< Selects integration method for 1D integrals

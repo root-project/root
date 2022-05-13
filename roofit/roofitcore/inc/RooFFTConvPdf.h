@@ -34,13 +34,13 @@ public:
   TObject* clone(const char* newname) const override { return new RooFFTConvPdf(*this,newname); }
   ~RooFFTConvPdf() override ;
 
-  void setShift(Double_t val1, Double_t val2) { _shift1 = val1 ; _shift2 = val2 ; }
+  void setShift(double val1, double val2) { _shift1 = val1 ; _shift2 = val2 ; }
   void setCacheObservables(const RooArgSet& obs) { _cacheObs.removeAll() ; _cacheObs.add(obs) ; }
   const RooArgSet& cacheObservables() const { return _cacheObs ; }
 
   /// Return value of buffer fraction applied in FFT calculation array beyond either
   /// end of the observable domain to reduce cyclical effects
-  Double_t bufferFraction() const {
+  double bufferFraction() const {
     return _bufFrac ;
   }
 
@@ -53,13 +53,13 @@ public:
     return _bufStrat ;
   }
   void setBufferStrategy(BufStrat bs) ;
-  void setBufferFraction(Double_t frac) ;
+  void setBufferFraction(double frac) ;
 
   void printMetaArgs(std::ostream& os) const override ;
 
   // Propagate maximum value estimate of pdf1 as convolution can only result in lower max values
   Int_t getMaxVal(const RooArgSet& vars) const override { return _pdf1.arg().getMaxVal(vars) ; }
-  Double_t maxVal(Int_t code) const override { return _pdf1.arg().maxVal(code) ; }
+  double maxVal(Int_t code) const override { return _pdf1.arg().maxVal(code) ; }
 
 
 protected:
@@ -73,7 +73,7 @@ protected:
   void calcParams() ;
   bool redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive) override ;
 
-  std::vector<double>  scanPdf(RooRealVar& obs, RooAbsPdf& pdf, const RooDataHist& hist, const RooArgSet& slicePos, Int_t& N, Int_t& N2, Int_t& zeroBin, Double_t shift) const ;
+  std::vector<double>  scanPdf(RooRealVar& obs, RooAbsPdf& pdf, const RooDataHist& hist, const RooArgSet& slicePos, Int_t& N, Int_t& N2, Int_t& zeroBin, double shift) const ;
 
   class FFTCacheElem : public PdfCacheElem {
   public:
@@ -94,7 +94,7 @@ protected:
 
   friend class FFTCacheElem ;
 
-  Double_t evaluate() const override { RooArgSet dummy(_x.arg()) ; return getVal(&dummy) ; } ; // dummy
+  double evaluate() const override { RooArgSet dummy(_x.arg()) ; return getVal(&dummy) ; } ; // dummy
   const char* inputBaseName() const override ;
   RooArgSet* actualObservables(const RooArgSet& nset) const override ;
   RooArgSet* actualParameters(const RooArgSet& nset) const override ;
@@ -106,11 +106,11 @@ protected:
   TString histNameSuffix() const override ;
 
   // mutable std:: map<const RooHistPdf*,CacheAuxInfo*> _cacheAuxInfo ; //! Auxilary Cache information (do not persist)
-  Double_t _bufFrac ; // Sampling buffer size as fraction of domain size
+  double _bufFrac ; // Sampling buffer size as fraction of domain size
   BufStrat _bufStrat ; // Strategy to fill the buffer
 
-  Double_t  _shift1 ;
-  Double_t  _shift2 ;
+  double  _shift1 ;
+  double  _shift2 ;
 
   RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0,
                                        const RooArgSet* auxProto=0, bool verbose= false) const override ;

@@ -19,7 +19,7 @@
 \class RooDouble
 \ingroup Roofitcore
 
-RooDouble is a minimal implementation of a TObject holding a Double_t
+RooDouble is a minimal implementation of a TObject holding a double
 value.
 **/
 
@@ -35,7 +35,7 @@ ClassImp(RooDouble);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooDouble::RooDouble(Double_t value) : TNamed(), _value(value)
+RooDouble::RooDouble(double value) : TNamed(), _value(value)
 {
   SetName(Form("%f",value)) ;
 }

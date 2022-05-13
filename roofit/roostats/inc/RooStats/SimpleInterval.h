@@ -30,7 +30,7 @@ namespace RooStats {
     SimpleInterval& operator=(const SimpleInterval& other) ;
 
     /// constructor from name, the Parameter of interest and lower/upper bound values
-    SimpleInterval(const char* name, const RooRealVar & var, Double_t lower, Double_t upper, Double_t cl);
+    SimpleInterval(const char* name, const RooRealVar & var, double lower, double upper, double cl);
 
     /// destructor
     ~SimpleInterval() override;
@@ -40,15 +40,15 @@ namespace RooStats {
 
     /// set the confidence level for the interval. Simple interval is defined at construction time so this function
     /// has no effect
-    void SetConfidenceLevel(Double_t ) override {}
+    void SetConfidenceLevel(double ) override {}
 
     /// return the confidence interval
-    Double_t ConfidenceLevel() const override {return fConfidenceLevel;}
+    double ConfidenceLevel() const override {return fConfidenceLevel;}
 
     /// return the interval lower limit
-    virtual Double_t LowerLimit() {return fLowerLimit;}
+    virtual double LowerLimit() {return fLowerLimit;}
     /// return the interval upper limit
-    virtual Double_t UpperLimit() {return fUpperLimit;}
+    virtual double UpperLimit() {return fUpperLimit;}
 
     /// return a cloned list with the parameter of interest
     RooArgSet* GetParameters() const override;
@@ -63,9 +63,9 @@ namespace RooStats {
     ClassDefOverride(SimpleInterval,1)  // Concrete implementation of ConfInterval for simple 1-D intervals in the form [a,b]
 
     RooArgSet fParameters;      ///< set containing the parameter of interest
-    Double_t  fLowerLimit;      ///< lower interval limit
-    Double_t  fUpperLimit;      ///< upper interval limit
-    Double_t  fConfidenceLevel; ///< confidence level
+    double  fLowerLimit;      ///< lower interval limit
+    double  fUpperLimit;      ///< upper interval limit
+    double  fConfidenceLevel; ///< confidence level
 
   };
 }

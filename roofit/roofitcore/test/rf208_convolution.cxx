@@ -48,7 +48,7 @@ public:
     return false ;
   }
 
-  Double_t ctol() { return 5e-3 ; } // Account for difficult shape of Landau distribution
+  double ctol() { return 5e-3 ; } // Account for difficult shape of Landau distribution
 
   bool testCode() {
 

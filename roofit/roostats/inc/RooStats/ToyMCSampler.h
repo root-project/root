@@ -49,7 +49,7 @@ class NuisanceParametersSampler {
       }
       virtual ~NuisanceParametersSampler() = default;
 
-      void NextPoint(RooArgSet& nuisPoint, Double_t& weight);
+      void NextPoint(RooArgSet& nuisPoint, double& weight);
 
    protected:
       void Refresh();
@@ -117,10 +117,10 @@ class ToyMCSampler: public TestStatSampler {
 
 
       /// Main interface to evaluate the test statistic on a dataset
-      virtual Double_t EvaluateTestStatistic(RooAbsData& data, RooArgSet& nullPOI, int i ) {
+      virtual double EvaluateTestStatistic(RooAbsData& data, RooArgSet& nullPOI, int i ) {
          return fTestStatistics[i]->Evaluate(data, nullPOI);
       }
-      Double_t EvaluateTestStatistic(RooAbsData& data, RooArgSet& nullPOI) override { return EvaluateTestStatistic( data,nullPOI, 0 ); }
+      double EvaluateTestStatistic(RooAbsData& data, RooArgSet& nullPOI) override { return EvaluateTestStatistic( data,nullPOI, 0 ); }
       virtual RooArgList* EvaluateAllTestStatistics(RooAbsData& data, const RooArgSet& poi);
 
 
@@ -130,7 +130,7 @@ class ToyMCSampler: public TestStatSampler {
       }
       TestStatistic* GetTestStatistic(void) const override { return GetTestStatistic(0); }
 
-      Double_t ConfidenceLevel() const override { return 1. - fSize; }
+      double ConfidenceLevel() const override { return 1. - fSize; }
       void Initialize(
          RooAbsArg& /*testStatistic*/,
          RooArgSet& /*paramsOfInterest*/,
@@ -170,9 +170,9 @@ class ToyMCSampler: public TestStatSampler {
 
 
       /// set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
-      void SetTestSize(Double_t size) override { fSize = size; }
+      void SetTestSize(double size) override { fSize = size; }
       /// set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
-      void SetConfidenceLevel(Double_t cl) override { fSize = 1. - cl; }
+      void SetConfidenceLevel(double cl) override { fSize = 1. - cl; }
 
       /// Set the TestStatistic (want the argument to be a function of the data & parameter points
       virtual void SetTestStatistic(TestStatistic *testStatistic, unsigned int i) {
@@ -205,19 +205,19 @@ class ToyMCSampler: public TestStatSampler {
       std::string GetSamplingDistName(void) { return fSamplingDistName; }
 
       /// This option forces a maximum number of total toys.
-      void SetMaxToys(Double_t t) { fMaxToys = t; }
+      void SetMaxToys(double t) { fMaxToys = t; }
 
-      void SetToysLeftTail(Double_t toys, Double_t threshold) {
+      void SetToysLeftTail(double toys, double threshold) {
          fToysInTails = toys;
          fAdaptiveLowLimit = threshold;
          fAdaptiveHighLimit = RooNumber::infinity();
       }
-      void SetToysRightTail(Double_t toys, Double_t threshold) {
+      void SetToysRightTail(double toys, double threshold) {
          fToysInTails = toys;
          fAdaptiveHighLimit = threshold;
          fAdaptiveLowLimit = -RooNumber::infinity();
       }
-      void SetToysBothTails(Double_t toys, Double_t low_threshold, Double_t high_threshold) {
+      void SetToysBothTails(double toys, double low_threshold, double high_threshold) {
          fToysInTails = toys;
          fAdaptiveHighLimit = high_threshold;
          fAdaptiveLowLimit = low_threshold;
@@ -251,7 +251,7 @@ class ToyMCSampler: public TestStatSampler {
       const RooArgSet *fGlobalObservables;
       Int_t fNToys;   ///< number of toys to generate
       Int_t fNEvents; ///< number of events per toy (may be ignored depending on settings)
-      Double_t fSize;
+      double fSize;
       bool fExpectedNuisancePar; ///< whether to use expectation values for nuisance parameters (ie Asimov data set)
       bool fGenerateBinned;
       TString fGenerateBinnedTag;
@@ -260,13 +260,13 @@ class ToyMCSampler: public TestStatSampler {
       /// minimum no of toys in tails for adaptive sampling
       /// (taking weights into account, therefore double)
       /// Default: 0.0 which means no adaptive sampling
-      Double_t fToysInTails;
+      double fToysInTails;
       /// maximum no of toys
       /// (taking weights into account, therefore double)
-      Double_t fMaxToys;
+      double fMaxToys;
       /// tails
-      Double_t fAdaptiveLowLimit;
-      Double_t fAdaptiveHighLimit;
+      double fAdaptiveLowLimit;
+      double fAdaptiveHighLimit;
 
       const RooDataSet *fProtoData; ///< in dev
 

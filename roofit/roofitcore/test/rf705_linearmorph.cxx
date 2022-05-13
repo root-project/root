@@ -30,7 +30,7 @@ class TestBasic705 : public RooFitTestUnit
 {
 public:
 
-  Double_t ctol() { return 5e-2 ; } // very conservative, this is a numerically difficult test
+  double ctol() { return 5e-2 ; } // very conservative, this is a numerically difficult test
 
   TestBasic705(TFile* refFile, bool writeRef, Int_t verbose) : RooFitTestUnit("Linear morph operator p.d.f.",refFile,writeRef,verbose) {} ;
   bool testCode() {

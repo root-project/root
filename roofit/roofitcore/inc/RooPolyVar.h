@@ -38,7 +38,7 @@ public:
   ~RooPolyVar() override ;
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
 protected:
 
@@ -46,9 +46,9 @@ protected:
   RooListProxy _coefList ;
   Int_t _lowestOrder ;
 
-  mutable std::vector<Double_t> _wksp; ///<! do not persist
+  mutable std::vector<double> _wksp; ///<! do not persist
 
-  Double_t evaluate() const override;
+  double evaluate() const override;
 
   ClassDefOverride(RooPolyVar,1) // Polynomial function
 };

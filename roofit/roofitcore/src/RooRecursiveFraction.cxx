@@ -100,12 +100,12 @@ RooRecursiveFraction::~RooRecursiveFraction()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return value of \f$ a_n * \prod_{i=0}^{n-1} (1 - a_i) \f$.
-Double_t RooRecursiveFraction::evaluate() const
+double RooRecursiveFraction::evaluate() const
 {
   const RooArgSet* nset = _list.nset() ;
 
   // Note that input coefficients are saved in reverse in this list.
-  Double_t prod = static_cast<RooAbsReal&>(_list[0]).getVal(nset);
+  double prod = static_cast<RooAbsReal&>(_list[0]).getVal(nset);
 
   for (unsigned int i=1; i < _list.size(); ++i) {
     prod *= (1 - static_cast<RooAbsReal&>(_list[i]).getVal(nset));

@@ -68,12 +68,12 @@ RooDstD0BG::RooDstD0BG(const RooDstD0BG& other, const char *name) :
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooDstD0BG::evaluate() const
+double RooDstD0BG::evaluate() const
 {
-  Double_t arg= dm- dm0;
+  double arg= dm- dm0;
   if (arg <= 0 ) return 0;
-  Double_t ratio= dm/dm0;
-  Double_t val= (1- exp(-arg/C))* TMath::Power(ratio, A) + B*(ratio-1);
+  double ratio= dm/dm0;
+  double val= (1- exp(-arg/C))* TMath::Power(ratio, A) + B*(ratio-1);
 
   return (val > 0 ? val : 0) ;
 }
@@ -96,13 +96,13 @@ Int_t RooDstD0BG::getAnalyticalIntegral(RooArgSet& /*allVars*/, RooArgSet& /*ana
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooDstD0BG::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooDstD0BG::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   switch(code) {
   case 1:
     {
-      Double_t min= dm.min(rangeName);
-      Double_t max= dm.max(rangeName);
+      double min= dm.min(rangeName);
+      double max= dm.max(rangeName);
       if (max <= dm0 ) return 0;
       else if (min < dm0) min = dm0;
 

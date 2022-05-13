@@ -38,10 +38,10 @@ public:
   ~RooBinIntegrator() override;
 
   bool checkLimits() const override;
-  Double_t integral(const Double_t *yvec=0) override ;
+  double integral(const double *yvec=0) override ;
 
   using RooAbsIntegrator::setLimits ;
-  bool setLimits(Double_t* xmin, Double_t* xmax) override;
+  bool setLimits(double* xmin, double* xmax) override;
   bool setUseIntegrandLimits(bool flag) override {_useIntegrandLimits = flag ; return true ; }
 
   bool canIntegrate1D() const override { return true ; }
@@ -56,8 +56,8 @@ protected:
   RooBinIntegrator(const RooBinIntegrator&) ;
 
   // Numerical integrator workspace
-  mutable std::vector<Double_t> _xmin;      ///<! Lower integration bound
-  mutable std::vector<Double_t> _xmax;      ///<! Upper integration bound
+  mutable std::vector<double> _xmin;      ///<! Lower integration bound
+  mutable std::vector<double> _xmax;      ///<! Upper integration bound
   std::vector<std::vector<double>> _binb;   ///<! list of bin boundaries
   mutable Int_t _numBins;                   ///<! Size of integration range
 
@@ -70,7 +70,7 @@ protected:
   double* xvec(double xx, double yy) { _x[0] = xx ; _x[1] = yy ; return _x ; }
   double* xvec(double xx, double yy, double zz) { _x[0] = xx ; _x[1] = yy ; _x[2] = zz ; return _x ; }
 
-  Double_t *_x ; ///<! do not persist
+  double *_x ; ///<! do not persist
 
   ClassDefOverride(RooBinIntegrator,0) // 1-dimensional numerical integration engine
 };

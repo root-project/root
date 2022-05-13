@@ -27,7 +27,7 @@ public:
 
   inline RooRealConstant() {} ;
   virtual ~RooRealConstant() {} ;
-  static RooConstVar& value(Double_t value) ;
+  static RooConstVar& value(double value) ;
 
   static RooConstVar& removalDummy() ;
 

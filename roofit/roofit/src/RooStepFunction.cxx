@@ -103,7 +103,7 @@ RooStepFunction::RooStepFunction(const RooStepFunction& other, const char* name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Transfer contents to vector for use below
 
-Double_t RooStepFunction::evaluate() const
+double RooStepFunction::evaluate() const
 {
   vector<double> b(_boundaryList.getSize()) ;
   vector<double> c(_coefList.getSize()+3) ;
@@ -150,8 +150,8 @@ Double_t RooStepFunction::evaluate() const
 
     for (Int_t i=0;i<nc-1;i++){
       if (_x>c[i]&&_x<=c[i+1]) {
-   Double_t xx[2] ; xx[0]=c[i] ; xx[1]=c[i+1] ;
-   Double_t yy[2] ; yy[0]=y[i] ; yy[1]=y[i+1] ;
+   double xx[2] ; xx[0]=c[i] ; xx[1]=c[i+1] ;
+   double yy[2] ; yy[0]=y[i] ; yy[1]=y[i+1] ;
    return RooMath::interpolate(xx,yy,2,_x) ;
       }
     }

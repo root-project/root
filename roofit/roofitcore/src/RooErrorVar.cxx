@@ -79,7 +79,7 @@ RooErrorVar::~RooErrorVar()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return value, i.e. error on input variable
 
-Double_t RooErrorVar::getValV(const RooArgSet*) const
+double RooErrorVar::getValV(const RooArgSet*) const
 {
   return evaluate();
 }
@@ -208,7 +208,7 @@ void RooErrorVar::setBinning(const RooAbsBinning& binning, const char* name)
 /// Set the lower bound of the range with the given name to the given value
 /// If name is a null pointer, set the lower bound of the default range
 
-void RooErrorVar::setMin(const char* name, Double_t value)
+void RooErrorVar::setMin(const char* name, double value)
 {
   // Set new minimum of fit range
   RooAbsBinning& binning = getBinning(name) ;
@@ -224,7 +224,7 @@ void RooErrorVar::setMin(const char* name, Double_t value)
 
   // Clip current value in window if it fell out
   if (!name) {
-    Double_t clipValue ;
+    double clipValue ;
     if (!inRange(_value,0,&clipValue)) {
       setVal(clipValue) ;
     }
@@ -238,7 +238,7 @@ void RooErrorVar::setMin(const char* name, Double_t value)
 /// Set the upper bound of the range with the given name to the given value
 /// If name is a null pointer, set the upper bound of the default range
 
-void RooErrorVar::setMax(const char* name, Double_t value)
+void RooErrorVar::setMax(const char* name, double value)
 {
   // Set new maximum of fit range
   RooAbsBinning& binning = getBinning(name) ;
@@ -254,7 +254,7 @@ void RooErrorVar::setMax(const char* name, Double_t value)
 
   // Clip current value in window if it fell out
   if (!name) {
-    Double_t clipValue ;
+    double clipValue ;
     if (!inRange(_value,0,&clipValue)) {
       setVal(clipValue) ;
     }
@@ -272,7 +272,7 @@ void RooErrorVar::setBins(Int_t nBins) {
 /// Set the upper and lower lower bound of the range with the given name to the given values
 /// If name is a null pointer, set the upper and lower bounds of the default range
 
-void RooErrorVar::setRange( const char* name, Double_t min, Double_t max)
+void RooErrorVar::setRange( const char* name, double min, double max)
 {
   bool exists = name ? (_altBinning.FindObject(name)?true:false) : true ;
 
@@ -308,7 +308,7 @@ bool RooErrorVar::readFromStream(istream& is, bool /*compact*/, bool verbose)
   errorPrefix.Append(GetName()) ;
   errorPrefix.Append(")") ;
   RooStreamParser parser(is,errorPrefix) ;
-  Double_t value(0) ;
+  double value(0) ;
 
     // Compact mode: Read single token
   if (parser.readDouble(value,verbose)) return true ;

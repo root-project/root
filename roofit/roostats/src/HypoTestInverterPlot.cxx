@@ -96,9 +96,9 @@ TGraphErrors* HypoTestInverterPlot::MakePlot(Option_t * opt)
    TMath::SortItr(fResults->fXValues.begin(), fResults->fXValues.end(), index.begin(), false);
 
    // copy result in sorted arrays
-   std::vector<Double_t> xArray;
-   std::vector<Double_t> yArray;
-   std::vector<Double_t> yErrArray;
+   std::vector<double> xArray;
+   std::vector<double> yArray;
+   std::vector<double> yErrArray;
 
    for (int i=0; i<nEntries; i++) {
       double CLVal = 0., CLErr = 0.;

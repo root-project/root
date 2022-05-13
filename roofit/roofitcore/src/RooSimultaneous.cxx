@@ -454,7 +454,7 @@ RooAbsPdf::ExtendMode RooSimultaneous::extendMode() const
 /// Return the current value:
 /// the value of the PDF associated with the current index category state
 
-Double_t RooSimultaneous::evaluate() const
+double RooSimultaneous::evaluate() const
 {
   // Retrieve the proxy by index name
   RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.FindObject(_indexCat.label()) ;
@@ -463,11 +463,11 @@ Double_t RooSimultaneous::evaluate() const
   if (proxy==0) return 0 ;
 
   // Calculate relative weighting factor for sim-pdfs of all extendable components
-  Double_t catFrac(1) ;
+  double catFrac(1) ;
   if (canBeExtended()) {
-    Double_t nEvtCat = ((RooAbsPdf*)(proxy->absArg()))->expectedEvents(_normSet) ;
+    double nEvtCat = ((RooAbsPdf*)(proxy->absArg()))->expectedEvents(_normSet) ;
 
-    Double_t nEvtTot(0) ;
+    double nEvtTot(0) ;
     TIterator* iter = _pdfProxyList.MakeIterator() ;
     RooRealProxy* proxy2 ;
     while((proxy2=(RooRealProxy*)iter->Next())) {
@@ -489,11 +489,11 @@ Double_t RooSimultaneous::evaluate() const
 /// otherwise return the number of expected events of the PDF
 /// associated with the current index category state
 
-Double_t RooSimultaneous::expectedEvents(const RooArgSet* nset) const
+double RooSimultaneous::expectedEvents(const RooArgSet* nset) const
 {
   if (nset->contains(_indexCat.arg())) {
 
-    Double_t sum(0) ;
+    double sum(0) ;
 
     TIterator* iter = _pdfProxyList.MakeIterator() ;
     RooRealProxy* proxy ;
@@ -561,7 +561,7 @@ Int_t RooSimultaneous::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& an
 ////////////////////////////////////////////////////////////////////////////////
 /// Return analytical integration defined by given code
 
-Double_t RooSimultaneous::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* /*rangeName*/) const
+double RooSimultaneous::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* /*rangeName*/) const
 {
   // No integration scenario
   if (code==0) {
@@ -620,7 +620,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   const RooArgSet* sliceSetTmp = (const RooArgSet*) pc.getObject("sliceSet") ;
   std::unique_ptr<RooArgSet> sliceSet( sliceSetTmp ? ((RooArgSet*) sliceSetTmp->Clone()) : nullptr );
   const RooArgSet* projSet = (const RooArgSet*) pc.getObject("projSet") ;
-  Double_t scaleFactor = pc.getDouble("scaleFactor") ;
+  double scaleFactor = pc.getDouble("scaleFactor") ;
   ScaleType stype = (ScaleType) pc.getInt("scaleType") ;
 
 
@@ -807,7 +807,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 //RooAbsPdf* pdf ;
   RooRealProxy* proxy ;
   TIter pIter = _pdfProxyList.MakeIterator() ;
-  Double_t sumWeight(0) ;
+  double sumWeight(0) ;
   while((proxy=(RooRealProxy*)pIter.Next())) {
 
     idxCatClone->setLabel(proxy->name()) ;
@@ -934,10 +934,10 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 ////////////////////////////////////////////////////////////////////////////////
 /// OBSOLETE -- Retained for backward compatibility
 
-RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t scaleFactor,
+RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, double scaleFactor,
              ScaleType stype, const RooAbsData* projData, const RooArgSet* projSet,
-             Double_t /*precision*/, bool /*shiftToZero*/, const RooArgSet* /*projDataSet*/,
-             Double_t /*rangeLo*/, Double_t /*rangeHi*/, RooCurve::WingMode /*wmode*/) const
+             double /*precision*/, bool /*shiftToZero*/, const RooArgSet* /*projDataSet*/,
+             double /*rangeLo*/, double /*rangeHi*/, RooCurve::WingMode /*wmode*/) const
 {
   // Make command list
   RooLinkedList cmdList ;
@@ -1069,7 +1069,7 @@ RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars, const RooDa
 
 RooDataHist* RooSimultaneous::fillDataHist(RooDataHist *hist,
                                            const RooArgSet* nset,
-                                           Double_t scaleFactor,
+                                           double scaleFactor,
                                            bool correctForBinVolume,
                                            bool showProgress) const
 {

@@ -27,7 +27,7 @@ public:
   RooDataProjBinding(const RooAbsReal &real, const RooAbsData& data, const RooArgSet &vars, const RooArgSet* normSet=0) ;
   ~RooDataProjBinding() override ;
 
-  Double_t operator()(const Double_t xvector[]) const override;
+  double operator()(const double xvector[]) const override;
 
   RooSpan<const double> getValues(std::vector<RooSpan<const double>> coordinates) const override;
 

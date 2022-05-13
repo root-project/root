@@ -67,7 +67,7 @@ bool SequentialProposal::IsSymmetric(RooArgSet& , RooArgSet& ) {
    return true;
 }
 
-Double_t SequentialProposal::GetProposalDensity(RooArgSet& ,
+double SequentialProposal::GetProposalDensity(RooArgSet& ,
                                                 RooArgSet& )
 {
    return 1.0; // should not be needed

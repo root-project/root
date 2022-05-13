@@ -110,7 +110,7 @@ RooLinearVar::~RooLinearVar()
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate current value of this object
 
-Double_t RooLinearVar::evaluate() const
+double RooLinearVar::evaluate() const
 {
   return _offset + _var * _slope ;
 }
@@ -121,7 +121,7 @@ Double_t RooLinearVar::evaluate() const
 /// Assign given value to linear transformation: sets input variable to (value-offset)/slope
 /// If slope is zerom an error message is printed and no assignment is made
 
-void RooLinearVar::setVal(Double_t value)
+void RooLinearVar::setVal(double value)
 {
   //cout << "RooLinearVar::setVal(" << GetName() << "): new value = " << value << endl ;
 
@@ -168,7 +168,7 @@ bool RooLinearVar::isJacobianOK(const RooArgSet& depList) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return value of Jacobian associated with the transformation
 
-Double_t RooLinearVar::jacobian() const
+double RooLinearVar::jacobian() const
 {
   return _slope*((RooAbsRealLValue&)_var.arg()).jacobian() ;
 }

@@ -47,12 +47,12 @@ public:
       return true;
    }
 
-   virtual Double_t getVal(const RooArgSet *set = 0) const;
+   virtual double getVal(const RooArgSet *set = 0) const;
    RooAbsReal *sumFunc(const RooArgSet *nset);
    const RooAbsReal *sumFunc(const RooArgSet *nset) const;
 
-   std::list<Double_t> *plotSamplingHint(RooAbsRealLValue &obs, Double_t xlo, Double_t xhi) const override;
-   std::list<Double_t> *binBoundaries(RooAbsRealLValue & /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override;
+   std::list<double> *plotSamplingHint(RooAbsRealLValue &obs, double xlo, double xhi) const override;
+   std::list<double> *binBoundaries(RooAbsRealLValue & /*obs*/, double /*xlo*/, double /*xhi*/) const override;
    bool isBinnedDistribution(const RooArgSet &obs) const override;
 
 protected:
@@ -78,7 +78,7 @@ protected:
 
    friend class CacheElem; // Cache needs to be able to clear _norm pointer
 
-   Double_t evaluate() const override;
+   double evaluate() const override;
 
    void initialize();
    CacheElem *getCache(const RooArgSet *nset) const;

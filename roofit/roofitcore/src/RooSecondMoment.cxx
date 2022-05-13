@@ -185,15 +185,15 @@ RooSecondMoment::~RooSecondMoment()
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate value
 
-Double_t RooSecondMoment::evaluate() const
+double RooSecondMoment::evaluate() const
 {
-  Double_t ratio = _ixf / _if ;
+  double ratio = _ixf / _if ;
 
   if (_mean.absArg()) {
     ratio -= (_mean - _xfOffset)*(_mean-_xfOffset) ;
   }
 
-  Double_t ret =  _takeRoot ? sqrt(ratio) : ratio ;
+  double ret =  _takeRoot ? sqrt(ratio) : ratio ;
   return ret ;
 }
 

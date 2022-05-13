@@ -79,7 +79,7 @@ NumberCountingPdfFactory::~NumberCountingPdfFactory(){
 ///
 /// For the future, perhaps this method should be extended to include the efficiency terms automatically.
 
-void NumberCountingPdfFactory::AddModel(Double_t* sig,
+void NumberCountingPdfFactory::AddModel(double* sig,
                Int_t nbins,
                RooWorkspace* ws,
                const char* pdfName, const char* muName) {
@@ -91,7 +91,7 @@ void NumberCountingPdfFactory::AddModel(Double_t* sig,
 
    TList likelihoodFactors;
 
-   //  Double_t MaxSigma = 8; // Needed to set ranges for variables.
+   //  double MaxSigma = 8; // Needed to set ranges for variables.
 
    RooRealVar*   masterSignal =
       new RooRealVar(muName,"masterSignal",1., 0., 3.);
@@ -154,13 +154,13 @@ void NumberCountingPdfFactory::AddModel(Double_t* sig,
 /// Arguments are an array of expected signal, expected background, and relative
 /// background uncertainty (eg. 0.1 for 10% uncertainty), and the number of channels.
 
-void NumberCountingPdfFactory::AddExpData(Double_t* sig,
-                 Double_t* back,
-                 Double_t* back_syst,
+void NumberCountingPdfFactory::AddExpData(double* sig,
+                 double* back,
+                 double* back_syst,
                  Int_t nbins,
                  RooWorkspace* ws, const char* dsName) {
 
-   std::vector<Double_t> mainMeas(nbins);
+   std::vector<double> mainMeas(nbins);
 
    // loop over channels
    for(Int_t i=0; i<nbins; ++i){
@@ -174,14 +174,14 @@ void NumberCountingPdfFactory::AddExpData(Double_t* sig,
 /// ratio of background expected in the sideband to that expected in signal region,
 /// and the number of channels.
 
-void NumberCountingPdfFactory::AddExpDataWithSideband(Double_t* sigExp,
-                                                      Double_t* backExp,
-                                                      Double_t* tau,
+void NumberCountingPdfFactory::AddExpDataWithSideband(double* sigExp,
+                                                      double* backExp,
+                                                      double* tau,
                                                       Int_t nbins,
                                                       RooWorkspace* ws, const char* dsName) {
 
-   std::vector<Double_t> mainMeas(nbins);
-   std::vector<Double_t> sideband(nbins);
+   std::vector<double> mainMeas(nbins);
+   std::vector<double> sideband(nbins);
    for(Int_t i=0; i<nbins; ++i){
       mainMeas[i] = sigExp[i] + backExp[i];
       sideband[i] = backExp[i]*tau[i];
@@ -194,7 +194,7 @@ void NumberCountingPdfFactory::AddExpDataWithSideband(Double_t* sigExp,
 /// need to be careful here that the range of observable in the dataset is consistent with the one in the workspace
 /// don't rescale unless necessary.  If it is necessary, then rescale by x10 or a defined maximum.
 
-RooRealVar* NumberCountingPdfFactory::SafeObservableCreation(RooWorkspace* ws, const char* varName, Double_t value) {
+RooRealVar* NumberCountingPdfFactory::SafeObservableCreation(RooWorkspace* ws, const char* varName, double value) {
    return SafeObservableCreation(ws, varName, value, 10.*value);
 
 }
@@ -204,7 +204,7 @@ RooRealVar* NumberCountingPdfFactory::SafeObservableCreation(RooWorkspace* ws, c
 /// don't rescale unless necessary.  If it is necessary, then rescale by x10 or a defined maximum.
 
 RooRealVar* NumberCountingPdfFactory::SafeObservableCreation(RooWorkspace* ws, const char* varName,
-                          Double_t value, Double_t maximum) {
+                          double value, double maximum) {
    RooRealVar*   x = ws->var( varName );
    if( !x )
       x = new RooRealVar(varName, varName, value, 0, maximum );
@@ -220,32 +220,32 @@ RooRealVar* NumberCountingPdfFactory::SafeObservableCreation(RooWorkspace* ws, c
 /// Arguments are an array of results from a main measurement, a measured background,
 ///  and relative background uncertainty (eg. 0.1 for 10% uncertainty), and the number of channels.
 
-void NumberCountingPdfFactory::AddData(Double_t* mainMeas,
-                                       Double_t* back,
-                                       Double_t* back_syst,
+void NumberCountingPdfFactory::AddData(double* mainMeas,
+                                       double* back,
+                                       double* back_syst,
                                        Int_t nbins,
                                        RooWorkspace* ws, const char* dsName) {
 
    using namespace RooFit;
    using std::vector;
 
-   Double_t MaxSigma = 8; // Needed to set ranges for variables.
+   double MaxSigma = 8; // Needed to set ranges for variables.
 
    TList observablesCollection;
 
    TTree* tree = new TTree();
-   std::vector<Double_t> xForTree(nbins);
-   std::vector<Double_t> yForTree(nbins);
+   std::vector<double> xForTree(nbins);
+   std::vector<double> yForTree(nbins);
 
    // loop over channels
    for(Int_t i=0; i<nbins; ++i){
       std::stringstream str;
       str<<"_"<<i;
 
-      //Double_t _tau = 1./back[i]/back_syst[i]/back_syst[i];
+      //double _tau = 1./back[i]/back_syst[i]/back_syst[i];
       // LM: compute tau correctly for the Gamma distribution : mode = tau*b  and variance is (tau*b+1)
-      Double_t err = back_syst[i];
-      Double_t _tau = (1.0 + sqrt(1 + 4 * err * err))/ (2. * err * err)/ back[i];
+      double err = back_syst[i];
+      double _tau = (1.0 + sqrt(1 + 4 * err * err))/ (2. * err * err)/ back[i];
 
       RooRealVar*  tau = SafeObservableCreation(ws,  ("tau"+str.str()).c_str(), _tau );
 
@@ -300,23 +300,23 @@ void NumberCountingPdfFactory::AddData(Double_t* mainMeas,
 /// Arguments are an array of expected signal, expected background, and relative
 /// background uncertainty (eg. 0.1 for 10% uncertainty), and the number of channels.
 
-void NumberCountingPdfFactory::AddDataWithSideband(Double_t* mainMeas,
-                                                   Double_t* sideband,
-                                                   Double_t* tauForTree,
+void NumberCountingPdfFactory::AddDataWithSideband(double* mainMeas,
+                                                   double* sideband,
+                                                   double* tauForTree,
                                                    Int_t nbins,
                                                    RooWorkspace* ws, const char* dsName) {
 
    using namespace RooFit;
    using std::vector;
 
-   Double_t MaxSigma = 8; // Needed to set ranges for variables.
+   double MaxSigma = 8; // Needed to set ranges for variables.
 
    TList observablesCollection;
 
    TTree* tree = new TTree();
 
-   std::vector<Double_t> xForTree(nbins);
-   std::vector<Double_t> yForTree(nbins);
+   std::vector<double> xForTree(nbins);
+   std::vector<double> yForTree(nbins);
 
 
    // loop over channels
@@ -324,9 +324,9 @@ void NumberCountingPdfFactory::AddDataWithSideband(Double_t* mainMeas,
       std::stringstream str;
       str<<"_"<<i;
 
-      Double_t _tau = tauForTree[i];
-      Double_t back_syst = 1./sqrt(sideband[i]);
-      Double_t back = (sideband[i]/_tau);
+      double _tau = tauForTree[i];
+      double back_syst = 1./sqrt(sideband[i]);
+      double back = (sideband[i]/_tau);
 
 
       RooRealVar*  tau = SafeObservableCreation(ws,  ("tau"+str.str()).c_str(), _tau );

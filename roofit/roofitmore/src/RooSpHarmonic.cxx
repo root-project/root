@@ -110,7 +110,7 @@ RooSpHarmonic::RooSpHarmonic(const RooSpHarmonic& other, const char* name)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooSpHarmonic::evaluate() const
+double RooSpHarmonic::evaluate() const
 {
     double n = _n*N(_l1,_m1)*N(_l2,_m2)*RooLegendre::evaluate();
     if (_sgn1!=0) n *= (_sgn1<0 ? sin(_m1*_phi) : cos(_m1*_phi) );
@@ -151,7 +151,7 @@ Int_t RooSpHarmonic::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooSpHarmonic::analyticalIntegral(Int_t code, const char* range) const
+double RooSpHarmonic::analyticalIntegral(Int_t code, const char* range) const
 {
   if (code==3) {
     return (_l1==_l2 && _sgn1*_m1==_sgn2*_m2 ) ? _n : 0 ;
@@ -170,7 +170,7 @@ Int_t RooSpHarmonic::getMaxVal( const RooArgSet& vars) const {
     return RooLegendre::getMaxVal(vars);
 }
 
-Double_t RooSpHarmonic::maxVal( Int_t code) const {
+double RooSpHarmonic::maxVal( Int_t code) const {
     double n = _n*N(_l1,_m1)*N(_l2,_m2);
     return n*RooLegendre::maxVal(code);
 }

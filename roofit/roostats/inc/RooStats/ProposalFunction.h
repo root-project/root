@@ -58,7 +58,7 @@ the proposal density to maintain detailed balance.
 
       /// Return the probability of proposing the point x1 given the starting
       /// point x2
-      virtual Double_t GetProposalDensity(RooArgSet& x1, RooArgSet& x2) = 0;
+      virtual double GetProposalDensity(RooArgSet& x1, RooArgSet& x2) = 0;
 
       /// Check the parameters for which the ProposalFunction will
       /// propose values to make sure they are all RooRealVars

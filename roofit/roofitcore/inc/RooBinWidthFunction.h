@@ -66,11 +66,11 @@ public:
     return _histFunc->isBinnedDistribution(obs);
   }
   /// Return bin boundaries of internal RooHistFunc.
-  std::list<Double_t>* binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override {
+  std::list<double>* binBoundaries(RooAbsRealLValue& obs, double xlo, double xhi) const override {
     return _histFunc->binBoundaries(obs, xlo, xhi);
   }
   /// Return plotSamplingHint of internal RooHistFunc.
-  std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override {
+  std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override {
     return _histFunc->plotSamplingHint(obs, xlo, xhi);
   }
 

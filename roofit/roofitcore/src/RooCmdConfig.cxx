@@ -160,10 +160,10 @@ bool RooCmdConfig::defineInt(const char* name, const char* argName, Int_t intNum
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Define Double_t property name 'name' mapped to Double_t in slot 'doubleNum' in RooCmdArg with name argName
-/// Define default value for this Double_t property to be defVal in case named argument is not processed
+/// Define double property name 'name' mapped to double in slot 'doubleNum' in RooCmdArg with name argName
+/// Define default value for this double property to be defVal in case named argument is not processed
 
-bool RooCmdConfig::defineDouble(const char* name, const char* argName, Int_t doubleNum, Double_t defVal)
+bool RooCmdConfig::defineDouble(const char* name, const char* argName, Int_t doubleNum, double defVal)
 {
   if (findVar(_dList, name) != _dList.end()) {
     coutE(InputArguments) << "RooCmdConfig::defineDouble: name '" << name << "' already defined" << endl ;
@@ -182,8 +182,8 @@ bool RooCmdConfig::defineDouble(const char* name, const char* argName, Int_t dou
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Define Double_t property name 'name' mapped to Double_t in slot 'stringNum' in RooCmdArg with name argName
-/// Define default value for this Double_t property to be defVal in case named argument is not processed
+/// Define double property name 'name' mapped to double in slot 'stringNum' in RooCmdArg with name argName
+/// Define default value for this double property to be defVal in case named argument is not processed
 /// If appendMode is true, values found in multiple matching RooCmdArg arguments will be concatenated
 /// in the output string. If it is false, only the value of the last processed instance is retained
 
@@ -269,7 +269,7 @@ void RooCmdConfig::print() const
 
   // Find registered double fields for this opcode
   for(auto const& rd : _dList) {
-    cout << rd.name << "[Double_t] = " << rd.val << endl ;
+    cout << rd.name << "[double] = " << rd.val << endl ;
   }
 
   // Find registered string fields for this opcode
@@ -371,7 +371,7 @@ bool RooCmdConfig::process(const RooCmdArg& arg)
       rd.val = arg.getDouble(rd.num) ;
       anyField = true ;
       if (_verbose) {
-   cout << "RooCmdConfig::process " << rd.name << "[Double_t]" << " set to " << rd.val << endl ;
+   cout << "RooCmdConfig::process " << rd.name << "[double]" << " set to " << rd.val << endl ;
       }
     }
   }
@@ -488,10 +488,10 @@ Int_t RooCmdConfig::getInt(const char* name, Int_t defVal)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return Double_t property registered with name 'name'. If no
+/// Return double property registered with name 'name'. If no
 /// property is registered, return defVal
 
-Double_t RooCmdConfig::getDouble(const char* name, Double_t defVal)
+double RooCmdConfig::getDouble(const char* name, double defVal)
 {
   auto found = findVar(_dList, name);
   return found != _dList.end() ? found->val : defVal;

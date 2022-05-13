@@ -41,7 +41,7 @@ public:
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars,
                                                    const RooArgSet* normSet,
                                                    const char* rangeName=0) const override ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override;
+  double analyticalIntegral(Int_t code, const char* rangeName=0) const override;
 
 
   RooArgList components() { RooArgList tmp(_compRSet) ; tmp.add(_compCSet) ; return tmp ; }
@@ -52,8 +52,8 @@ public:
 
   void printMetaArgs(std::ostream& os) const override ;
 
-  std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override ;
-  std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override ;
+  std::list<double>* binBoundaries(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
+  std::list<double>* plotSamplingHint(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
   bool isBinnedDistribution(const RooArgSet& obs) const override ;
 
   CacheMode canNodeBeCached() const override { return RooAbsArg::NotAdvised ; } ;
@@ -75,8 +75,8 @@ protected:
   mutable RooObjCacheManager _cacheMgr ; //! The cache manager
 
 
-  Double_t calculate(const RooArgList& partIntList) const;
-  Double_t evaluate() const override;
+  double calculate(const RooArgList& partIntList) const;
+  double evaluate() const override;
   void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const override;
 
   const char* makeFPName(const char *pfx,const RooArgSet& terms) const ;

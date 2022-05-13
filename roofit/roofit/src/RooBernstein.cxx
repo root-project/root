@@ -84,11 +84,11 @@ void RooBernstein::selectNormalizationRange(const char* rangeName, bool force)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBernstein::evaluate() const
+double RooBernstein::evaluate() const
 {
   double xmax,xmin;
   std::tie(xmin, xmax) = _x->getRange(_refRangeName.empty() ? nullptr : _refRangeName.c_str());
-  Double_t x = (_x - xmin) / (xmax - xmin); // rescale to [0,1]
+  double x = (_x - xmin) / (xmax - xmin); // rescale to [0,1]
   Int_t degree = _coefList.getSize() - 1; // n+1 polys of degree n
 
   if(degree == 0) {
@@ -97,23 +97,23 @@ Double_t RooBernstein::evaluate() const
 
   } else if(degree == 1) {
 
-    Double_t a0 = static_cast<RooAbsReal &>(_coefList[0]).getVal(); // c0
-    Double_t a1 = static_cast<RooAbsReal &>(_coefList[1]).getVal() - a0; // c1 - c0
+    double a0 = static_cast<RooAbsReal &>(_coefList[0]).getVal(); // c0
+    double a1 = static_cast<RooAbsReal &>(_coefList[1]).getVal() - a0; // c1 - c0
     return a1 * x + a0;
 
   } else if(degree == 2) {
 
-    Double_t a0 = static_cast<RooAbsReal &>(_coefList[0]).getVal();  // c0
-    Double_t a1 = 2 * (static_cast<RooAbsReal &>(_coefList[1]).getVal() - a0); // 2 * (c1 - c0)
-    Double_t a2 = static_cast<RooAbsReal &>(_coefList[2]).getVal() - a1 - a0;  // c0 - 2 * c1 + c2
+    double a0 = static_cast<RooAbsReal &>(_coefList[0]).getVal();  // c0
+    double a1 = 2 * (static_cast<RooAbsReal &>(_coefList[1]).getVal() - a0); // 2 * (c1 - c0)
+    double a2 = static_cast<RooAbsReal &>(_coefList[2]).getVal() - a1 - a0;  // c0 - 2 * c1 + c2
     return (a2 * x + a1) * x + a0;
 
   } else if(degree > 2) {
 
-    Double_t t = x;
-    Double_t s = 1 - x;
+    double t = x;
+    double s = 1 - x;
 
-    Double_t result = static_cast<RooAbsReal &>(_coefList[0]).getVal() * s;
+    double result = static_cast<RooAbsReal &>(_coefList[0]).getVal() * s;
     for(Int_t i = 1; i < degree; i++) {
       result = (result + t * TMath::Binomial(degree, i) 
                 * static_cast<RooAbsReal &>(_coefList[i]).getVal()) * s;
@@ -154,19 +154,19 @@ Int_t RooBernstein::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVar
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBernstein::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooBernstein::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   R__ASSERT(code==1) ;
 
   double xmax,xmin;
   std::tie(xmin, xmax) = _x->getRange(_refRangeName.empty() ? nullptr : _refRangeName.c_str());
-  const Double_t xlo = (_x.min(rangeName) - xmin) / (xmax - xmin);
-  const Double_t xhi = (_x.max(rangeName) - xmin) / (xmax - xmin);
+  const double xlo = (_x.min(rangeName) - xmin) / (xmax - xmin);
+  const double xhi = (_x.max(rangeName) - xmin) / (xmax - xmin);
 
   Int_t degree= _coefList.getSize()-1; // n+1 polys of degree n
-  Double_t norm(0) ;
+  double norm(0) ;
 
-  Double_t temp=0;
+  double temp=0;
   for (int i=0; i<=degree; ++i){
     // for each of the i Bernstein basis polynomials
     // represent it in the 'power basis' (the naive polynomial basis)

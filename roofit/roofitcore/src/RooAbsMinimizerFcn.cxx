@@ -147,9 +147,9 @@ bool RooAbsMinimizerFcn::synchronizeParameterSettings(std::vector<ROOT::Fit::Par
       if (!par)
          continue;
 
-      Double_t pstep(0);
-      Double_t pmin(0);
-      Double_t pmax(0);
+      double pstep(0);
+      double pmin(0);
+      double pmax(0);
 
       if (!par->isConstant()) {
 
@@ -223,10 +223,10 @@ bool RooAbsMinimizerFcn::synchronizeParameterSettings(std::vector<ROOT::Fit::Par
       }
 
       bool oldFixed = parameters[index].IsFixed();
-      Double_t oldVar = parameters[index].Value();
-      Double_t oldVerr = parameters[index].StepSize();
-      Double_t oldVlo = parameters[index].LowerLimit();
-      Double_t oldVhi = parameters[index].UpperLimit();
+      double oldVar = parameters[index].Value();
+      double oldVerr = parameters[index].StepSize();
+      double oldVlo = parameters[index].LowerLimit();
+      double oldVhi = parameters[index].UpperLimit();
 
       if (par->isConstant() && !oldFixed) {
 
@@ -322,7 +322,7 @@ RooAbsMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &param
 }
 
 /// Modify PDF parameter error by ordinal index (needed by MINUIT)
-void RooAbsMinimizerFcn::SetPdfParamErr(Int_t index, Double_t value)
+void RooAbsMinimizerFcn::SetPdfParamErr(Int_t index, double value)
 {
    static_cast<RooRealVar*>(_floatParamList->at(index))->setError(value);
 }
@@ -334,7 +334,7 @@ void RooAbsMinimizerFcn::ClearPdfParamAsymErr(Int_t index)
 }
 
 /// Modify PDF parameter error by ordinal index (needed by MINUIT)
-void RooAbsMinimizerFcn::SetPdfParamErr(Int_t index, Double_t loVal, Double_t hiVal)
+void RooAbsMinimizerFcn::SetPdfParamErr(Int_t index, double loVal, double hiVal)
 {
    static_cast<RooRealVar*>(_floatParamList->at(index))->setAsymError(loVal, hiVal);
 }
@@ -343,15 +343,15 @@ void RooAbsMinimizerFcn::SetPdfParamErr(Int_t index, Double_t loVal, Double_t hi
 void RooAbsMinimizerFcn::BackProp(const ROOT::Fit::FitResult &results)
 {
    for (unsigned int index = 0; index < _nDim; index++) {
-      Double_t value = results.Value(index);
+      double value = results.Value(index);
       SetPdfParamVal(index, value);
 
       // Set the parabolic error
-      Double_t err = results.Error(index);
+      double err = results.Error(index);
       SetPdfParamErr(index, err);
 
-      Double_t eminus = results.LowerError(index);
-      Double_t eplus = results.UpperError(index);
+      double eminus = results.LowerError(index);
+      double eplus = results.UpperError(index);
 
       if (eplus > 0 || eminus < 0) {
          // Store the asymmetric error, if it is available
@@ -472,7 +472,7 @@ void RooAbsMinimizerFcn::SetPrintEvalErrors(Int_t numEvalErrors)
    _printEvalErrors = numEvalErrors;
 }
 
-Double_t &RooAbsMinimizerFcn::GetMaxFCN()
+double &RooAbsMinimizerFcn::GetMaxFCN()
 {
    return _maxFCN;
 }

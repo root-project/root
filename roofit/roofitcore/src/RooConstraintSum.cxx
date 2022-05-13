@@ -81,9 +81,9 @@ RooConstraintSum::RooConstraintSum(const RooConstraintSum& other, const char* na
 ////////////////////////////////////////////////////////////////////////////////
 /// Return sum of -log of constraint p.d.f.s.
 
-Double_t RooConstraintSum::evaluate() const
+double RooConstraintSum::evaluate() const
 {
-  Double_t sum(0);
+  double sum(0);
 
   for (const auto comp : _set1) {
     sum -= static_cast<RooAbsPdf*>(comp)->getLogVal(&_paramSet);

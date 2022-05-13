@@ -26,7 +26,7 @@ class Roo2DKeysPdf : public RooAbsPdf
 {
 public:
   Roo2DKeysPdf(const char *name, const char *title,
-             RooAbsReal& xx, RooAbsReal &yy, RooDataSet& data, TString options = "a", Double_t widthScaleFactor = 1.0);
+             RooAbsReal& xx, RooAbsReal &yy, RooDataSet& data, TString options = "a", double widthScaleFactor = 1.0);
   Roo2DKeysPdf(const Roo2DKeysPdf& other, const char* name=0);
   TObject* clone(const char* newname) const override { return new Roo2DKeysPdf(*this,newname); }
 
@@ -53,7 +53,7 @@ public:
 //           ***********
 //           *IMPORTANT* The kernel is proportional to 1/widthScaleFactor.
 //           ***********
-  inline void     setWidthScaleFactor(Double_t widthScaleFactor);
+  inline void     setWidthScaleFactor(double widthScaleFactor);
 
 // choose the kernel bandwith to use.  The default is 0
 //    0 = use adaptive kernel estimator (uses local population to vary with of kernels)
@@ -61,8 +61,8 @@ public:
   Int_t    calculateBandWidth(Int_t kernel = -999);
 
   Int_t    getBandWidthType() const;
-  Double_t getMean(const char * axis) const;
-  Double_t getSigma(const char * axis) const;
+  double getMean(const char * axis) const;
+  double getSigma(const char * axis) const;
 
 // print content and basic information about the data
   void     PrintInfo(std::ostream &) const;
@@ -78,38 +78,38 @@ public:
   RooRealProxy x;
   RooRealProxy y;
 
-  Double_t evaluate() const override;
+  double evaluate() const override;
 
 protected:
 
 private:
   // these are used in calculating bandwidths for x and y
-  Double_t evaluateFull(Double_t thisX, Double_t thisY) const;
-  Double_t g(Double_t var1, Double_t * _var1, Double_t sigma1, Double_t var2,
-        Double_t * _var2, Double_t sigma2) const;
+  double evaluateFull(double thisX, double thisY) const;
+  double g(double var1, double * _var1, double sigma1, double var2,
+        double * _var2, double sigma2) const;
 
   //mirror corrections for the boundaries
-  Double_t highBoundaryCorrection(Double_t thisVar, Double_t thisH, Double_t high, Double_t tVar) const;
-  Double_t lowBoundaryCorrection(Double_t thisVar, Double_t thisH, Double_t low, Double_t tVar) const;
+  double highBoundaryCorrection(double thisVar, double thisH, double high, double tVar) const;
+  double lowBoundaryCorrection(double thisVar, double thisH, double low, double tVar) const;
 
-  Double_t * _x;
-  Double_t * _hx;
-  Double_t * _y;
-  Double_t * _hy;
-  Double_t   _norm;
-  Double_t   _xMean;    // the (x,y) mean and sigma are properties of the data, not of the PDF
-  Double_t   _xSigma;
-  Double_t   _yMean;
-  Double_t   _ySigma;
-  Double_t   _n;         //coefficient of the kernel estimation sum
-  Double_t   _n16;       //pow(_nEvents, -1/6)
-  Double_t   _sqrt2pi;
-  Double_t   _2pi;       // = M_PI*2
-  Double_t   _lox,_hix;
-  Double_t   _loy,_hiy;
-  Double_t   _xoffset;
-  Double_t   _yoffset;
-  Double_t   _widthScaleFactor; //allow manipulation of the bandwidth by a scale factor
+  double * _x;
+  double * _hx;
+  double * _y;
+  double * _hy;
+  double   _norm;
+  double   _xMean;    // the (x,y) mean and sigma are properties of the data, not of the PDF
+  double   _xSigma;
+  double   _yMean;
+  double   _ySigma;
+  double   _n;         //coefficient of the kernel estimation sum
+  double   _n16;       //pow(_nEvents, -1/6)
+  double   _sqrt2pi;
+  double   _2pi;       // = M_PI*2
+  double   _lox,_hix;
+  double   _loy,_hiy;
+  double   _xoffset;
+  double   _yoffset;
+  double   _widthScaleFactor; //allow manipulation of the bandwidth by a scale factor
 
   Int_t      _nEvents;
   Int_t      _BandWidthType;
@@ -121,6 +121,6 @@ private:
   ClassDefOverride(Roo2DKeysPdf,0) // Two-dimensional kernel estimation p.d.f.
 };
 
-inline void  Roo2DKeysPdf::setWidthScaleFactor(Double_t widthScaleFactor) { _widthScaleFactor = widthScaleFactor; }
+inline void  Roo2DKeysPdf::setWidthScaleFactor(double widthScaleFactor) { _widthScaleFactor = widthScaleFactor; }
 
 #endif

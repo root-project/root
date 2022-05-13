@@ -51,10 +51,10 @@ public:
   void generateEvent(Int_t code) override;
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
 protected:
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
   void changeBasis(RooFormulaVar* basis) override ;
 
   ClassDefOverride(RooTruthModel,1) // Truth resolution model (delta function)

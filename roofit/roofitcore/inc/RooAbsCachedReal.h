@@ -29,7 +29,7 @@ public:
   RooAbsCachedReal(const RooAbsCachedReal& other, const char* name=0) ;
   ~RooAbsCachedReal() override ;
 
-  Double_t getValV(const RooArgSet* set=0) const override ;
+  double getValV(const RooArgSet* set=0) const override ;
   virtual bool selfNormalized() const {
     // Declares function self normalized
     return true ;
@@ -47,7 +47,7 @@ public:
   }
 
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=0) const override ;
-  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
+  double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
 
   void disableCache(bool flag) {
     // Switch to disable caching mechanism

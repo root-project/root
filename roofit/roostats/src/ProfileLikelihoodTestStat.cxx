@@ -53,7 +53,7 @@ void RooStats::ProfileLikelihoodTestStat::SetAlwaysReuseNLL(bool flag) { fgAlway
 /// -  type = 1 find only unconditional NLL minimum,
 /// -  type = 2 conditional MLL
 
-Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, RooAbsData& data, RooArgSet& paramsOfInterest) {
+double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, RooAbsData& data, RooArgSet& paramsOfInterest) {
 
        if( fDetailedOutputEnabled && fDetailedOutput ) {
           delete fDetailedOutput;

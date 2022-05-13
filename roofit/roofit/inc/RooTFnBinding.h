@@ -30,7 +30,7 @@ protected:
   RooListProxy _plist ;
   TF1* _func ;
 
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
 
 private:
 

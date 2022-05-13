@@ -439,7 +439,7 @@ void RooStats::HistFactory::RooBarlowBeestonLL::FactorizePdf(const RooArgSet &ob
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooStats::HistFactory::RooBarlowBeestonLL::evaluate() const
+double RooStats::HistFactory::RooBarlowBeestonLL::evaluate() const
 {
   /*
   // Loop over the cached bins and channels

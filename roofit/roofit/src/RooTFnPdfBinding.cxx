@@ -41,11 +41,11 @@ RooTFnPdfBinding::RooTFnPdfBinding(const RooTFnPdfBinding& other, const char* na
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooTFnPdfBinding::evaluate() const
+double RooTFnPdfBinding::evaluate() const
 {
-  Double_t x = _list.at(0) ? ((RooAbsReal*)_list.at(0))->getVal() : 0 ;
-  Double_t y = _list.at(1) ? ((RooAbsReal*)_list.at(1))->getVal() : 0 ;
-  Double_t z = _list.at(2) ? ((RooAbsReal*)_list.at(2))->getVal() : 0 ;
+  double x = _list.at(0) ? ((RooAbsReal*)_list.at(0))->getVal() : 0 ;
+  double y = _list.at(1) ? ((RooAbsReal*)_list.at(1))->getVal() : 0 ;
+  double z = _list.at(2) ? ((RooAbsReal*)_list.at(2))->getVal() : 0 ;
   return _func->Eval(x,y,z) ;
 }
 

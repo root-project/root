@@ -85,7 +85,7 @@ RooAbsCachedReal::~RooAbsCachedReal()
 /// rather than return value of evaluate() which is undefined
 /// for RooAbsCachedReal
 
-Double_t RooAbsCachedReal::getValV(const RooArgSet* nset) const
+double RooAbsCachedReal::getValV(const RooArgSet* nset) const
 {
   if (_disableCache) {
     return RooAbsReal::getValV(nset) ;
@@ -351,7 +351,7 @@ Int_t RooAbsCachedReal::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& a
 ////////////////////////////////////////////////////////////////////////////////
 /// Forward call to implementation in relevant RooHistFunc instance
 
-Double_t RooAbsCachedReal::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const
+double RooAbsCachedReal::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const
 {
   if (code==0) {
     return getVal(normSet) ;

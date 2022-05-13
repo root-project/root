@@ -37,7 +37,7 @@ public:
 
    /// Main interface to evaluate the test statistic on a dataset given the
    /// values for the Null Parameters Of Interest.
-   virtual Double_t Evaluate(RooAbsData& data, RooArgSet& nullPOI) = 0;
+   virtual double Evaluate(RooAbsData& data, RooArgSet& nullPOI) = 0;
 
    virtual const TString GetVarName() const = 0;
 

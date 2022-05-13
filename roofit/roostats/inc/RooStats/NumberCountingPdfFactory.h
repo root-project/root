@@ -26,21 +26,21 @@ namespace RooStats{
       NumberCountingPdfFactory();
       virtual ~NumberCountingPdfFactory();
 
-      void AddModel(Double_t* sigExp, Int_t nchan, RooWorkspace* ws,
+      void AddModel(double* sigExp, Int_t nchan, RooWorkspace* ws,
                     const char* pdfName = "CombinedPdf", const char* masterSignalName = "masterSignal") ;
 
-      void AddData(Double_t* mainMeas, Double_t* bkgMeas, Double_t* db,
+      void AddData(double* mainMeas, double* bkgMeas, double* db,
                    Int_t nbins, RooWorkspace* ws, const char* dsName = "NumberCountingData");
-      void AddExpData(Double_t* sigExp, Double_t* bkgExp, Double_t* db,
+      void AddExpData(double* sigExp, double* bkgExp, double* db,
                       Int_t nbins, RooWorkspace* ws, const char* dsName = "ExpectedNumberCountingData");
-      void AddExpDataWithSideband(Double_t* sigExp, Double_t* bkgExp, Double_t* tau,
+      void AddExpDataWithSideband(double* sigExp, double* bkgExp, double* tau,
                                   Int_t nbins, RooWorkspace* ws, const char* dsName = "NumberCountingData");
-      void AddDataWithSideband(Double_t* mainMeas, Double_t* sideband, Double_t* tau,
+      void AddDataWithSideband(double* mainMeas, double* sideband, double* tau,
                                Int_t nbins, RooWorkspace* ws, const char* dsName = "ExpectedNumberCountingData");
 
    private:
-      RooRealVar* SafeObservableCreation(RooWorkspace* ws, const char* varName, Double_t value) ;
-      RooRealVar* SafeObservableCreation(RooWorkspace* ws, const char* varName, Double_t value, Double_t maximum) ;
+      RooRealVar* SafeObservableCreation(RooWorkspace* ws, const char* varName, double value) ;
+      RooRealVar* SafeObservableCreation(RooWorkspace* ws, const char* varName, double value, double maximum) ;
 
 
    protected:

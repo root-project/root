@@ -325,8 +325,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     if (!proto->var(fObsNameVec[idx])) {
       const TAxis *axis = (idx == 0) ? hist->GetXaxis() : (idx == 1 ? hist->GetYaxis() : hist->GetZaxis());
       Int_t nbins = axis->GetNbins();
-      Double_t xmin = axis->GetXmin();
-      Double_t xmax = axis->GetXmax();
+      double xmin = axis->GetXmin();
+      double xmax = axis->GetXmax();
       // create observable
       auto obs = static_cast<RooRealVar*>(proto->factory(
           Form("%s[%f,%f]", fObsNameVec[idx].c_str(), xmin, xmax)));
@@ -1339,8 +1339,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
             // Create the list of terms to
             // control the bin heights:
             std::string ParamSetPrefix  = "gamma_stat_" + channel_name;
-            Double_t gammaMin = 0.0;
-            Double_t gammaMax = 10.0;
+            double gammaMin = 0.0;
+            double gammaMax = 10.0;
             RooArgList statFactorParams = ParamHistFunc::createParamSet(*proto,
                 ParamSetPrefix.c_str(),
                 theObservables,
@@ -1523,7 +1523,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
               systype = Constraint::Poisson;
             }
 
-            Double_t minShapeUncertainty = 0.0;
+            double minShapeUncertainty = 0.0;
             RooArgList shapeConstraints = createStatConstraintTerms(proto, constraintTermNames,
                 *paramHist, shapeErrorHist,
                 systype,
@@ -1810,27 +1810,27 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
     for (int i=1; i<=ax->GetNbins(); ++i) { // 1 or more dimension
 
-      Double_t xval = ax->GetBinCenter(i);
+      double xval = ax->GetBinCenter(i);
       proto->var( ObsNameVec[0] )->setVal( xval );
 
       if(ObsNameVec.size()==1) {
-   Double_t fval = mnominal->GetBinContent(i);
+   double fval = mnominal->GetBinContent(i);
    obsDataUnbinned->add( *proto->set("obsAndWeight"), fval );
       } else { // 2 or more dimensions
 
    for(int j=1; j<=ay->GetNbins(); ++j) {
-     Double_t yval = ay->GetBinCenter(j);
+     double yval = ay->GetBinCenter(j);
      proto->var( ObsNameVec[1] )->setVal( yval );
 
      if(ObsNameVec.size()==2) {
-       Double_t fval = mnominal->GetBinContent(i,j);
+       double fval = mnominal->GetBinContent(i,j);
        obsDataUnbinned->add( *proto->set("obsAndWeight"), fval );
      } else { // 3 dimensions
 
        for(int k=1; k<=az->GetNbins(); ++k) {
-         Double_t zval = az->GetBinCenter(k);
+         double zval = az->GetBinCenter(k);
          proto->var( ObsNameVec[2] )->setVal( zval );
-         Double_t fval = mnominal->GetBinContent(i,j,k);
+         double fval = mnominal->GetBinContent(i,j,k);
          obsDataUnbinned->add( *proto->set("obsAndWeight"), fval );
        }
      }
@@ -2160,7 +2160,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
    binNumber++;
       }
 
-      Double_t histError = Nominal->GetBinError( binNumber );
+      double histError = Nominal->GetBinError( binNumber );
 
       // Check that histError != NAN
       if( histError != histError ) {
@@ -2249,8 +2249,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
       //Int_t binNumber = i_bins + 1;
 
-      Double_t histValue  = nominal->GetBinContent( binNumber );
-      Double_t histError  = error->GetBinContent( binNumber );
+      double histValue  = nominal->GetBinContent( binNumber );
+      double histError  = error->GetBinContent( binNumber );
       /*
       std::cout << " Getting Bin content for Stat Uncertainty"
       << " Nom name: " << nominal->GetName()
@@ -2288,8 +2288,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       binNumber++;
     }
 
-    Double_t ErrorsSqr = HistErrorsSqr.at(i);
-    Double_t TotalVal  = TotalBinContent.at(i);
+    double ErrorsSqr = HistErrorsSqr.at(i);
+    double TotalVal  = TotalBinContent.at(i);
 
     if( TotalVal <= 0 ) {
       cxcoutW(HistFactory) << "Warning: Sum of histograms for bin: " << binNumber
@@ -2300,7 +2300,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       continue;
     }
 
-    Double_t RelativeError = sqrt(ErrorsSqr) / TotalVal;
+    double RelativeError = sqrt(ErrorsSqr) / TotalVal;
 
     // If we otherwise get a NAN
     // it's an error
@@ -2335,7 +2335,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
   RooArgList HistoToWorkspaceFactoryFast::
   createStatConstraintTerms( RooWorkspace* proto, vector<string>& constraintTermNames,
               ParamHistFunc& paramHist, const TH1* uncertHist,
-              Constraint::Type type, Double_t minSigma ) {
+              Constraint::Type type, double minSigma ) {
 
 
   // Take a RooArgList of RooAbsReal's and
@@ -2434,7 +2434,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       gamma.setError(sigmaRel);
     } else if( type == Constraint::Poisson ) {
 
-      Double_t tau = 1/sigmaRel/sigmaRel; // this is correct Poisson equivalent to a Gaussian with mean 1 and stdev sigma
+      double tau = 1/sigmaRel/sigmaRel; // this is correct Poisson equivalent to a Gaussian with mean 1 and stdev sigma
 
       // Make nominal "observed" value
       RooRealVar constrNom(nomName.c_str(), nomName.c_str(), tau);

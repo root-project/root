@@ -36,8 +36,8 @@ protected:
     void addPoint(Int_t ix) ;
 
     RooNumRunningInt* _self ;
-    Double_t* _ax ;
-    Double_t* _ay ;
+    double* _ax ;
+    double* _ay ;
     RooRealVar* _xx ;
 
   } ;
@@ -49,7 +49,7 @@ protected:
   RooArgSet* actualObservables(const RooArgSet& nset) const override ;
   RooArgSet* actualParameters(const RooArgSet& nset) const override ;
   void fillCacheObject(FuncCacheElem& cacheFunc) const override ;
-  Double_t evaluate() const override ;
+  double evaluate() const override ;
 
   const char* payloadUniqueSuffix() const override { return func.arg().aggregateCacheUniqueSuffix() ; }
 

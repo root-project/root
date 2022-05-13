@@ -44,7 +44,7 @@ public:
   const TH1* GetHisto() const;
   // set histogram for this sample
   void SetHisto( TH1* histo ) { fhNominal = histo; fHistoName=histo->GetName(); }
-  void SetValue( Double_t Val ) ;
+  void SetValue( double Val ) ;
 
   // Some helper functions
   // Note that histogram name should not include the path of the histogram in the file.
@@ -53,10 +53,10 @@ public:
   void ActivateStatError();
   void ActivateStatError( std::string HistoName, std::string InputFile, std::string HistoPath="" );
 
-  void AddOverallSys( std::string Name, Double_t Low, Double_t High );
+  void AddOverallSys( std::string Name, double Low, double High );
   void AddOverallSys( const OverallSys& Sys );
 
-  void AddNormFactor( std::string Name, Double_t Val, Double_t Low, Double_t High, bool Const=false );
+  void AddNormFactor( std::string Name, double Val, double Low, double High, bool Const=false );
   void AddNormFactor( const NormFactor& Factor );
 
   void AddHistoSys(    std::string Name, std::string HistoNameLow,  std::string HistoFileLow,  std::string HistoPathLow,

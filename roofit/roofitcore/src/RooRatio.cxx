@@ -45,7 +45,7 @@ RooRatio::RooRatio(const char *name, const char *title, RooAbsReal &nr,
       _denominator("denominator", "denominator", this, dr){TRACE_CREATE}
 
       RooRatio::RooRatio(const char *name, const char *title, RooAbsReal &nr,
-                         Double_t dr)
+                         double dr)
     : RooAbsReal(name, title), _numerator("numerator", "numerator", this, nr),
       _denominator("denominator", "denominator", this) {
   auto drvar = new RooRealVar(Form("%s_dr", name), Form("%s_dr", name), dr);
@@ -54,7 +54,7 @@ RooRatio::RooRatio(const char *name, const char *title, RooAbsReal &nr,
   TRACE_CREATE
 }
 
-RooRatio::RooRatio(const char *name, const char *title, Double_t nr,
+RooRatio::RooRatio(const char *name, const char *title, double nr,
                    RooAbsReal &dr)
     : RooAbsReal(name, title), _numerator("numerator", "numerator", this),
       _denominator("denominator", "denominator", this, dr) {
@@ -64,8 +64,8 @@ RooRatio::RooRatio(const char *name, const char *title, Double_t nr,
   TRACE_CREATE
 }
 
-RooRatio::RooRatio(const char *name, const char *title, Double_t nr,
-                   Double_t dr)
+RooRatio::RooRatio(const char *name, const char *title, double nr,
+                   double dr)
     : RooAbsReal(name, title), _numerator("numerator", "numerator", this),
       _denominator("denominator", "denominator", this) {
   auto nrvar = new RooRealVar(Form("%s_nr", name), Form("%s_nr", name), nr);
@@ -96,7 +96,7 @@ RooRatio::RooRatio(const RooRatio &other, const char *name)
     : RooAbsReal(other, name), _numerator("numerator", this, other._numerator),
       _denominator("denominator", this, other._denominator){TRACE_CREATE}
 
-      Double_t RooRatio::evaluate() const {
+      double RooRatio::evaluate() const {
 
   if (_denominator == 0.0) {
     if (_numerator == 0.0)
