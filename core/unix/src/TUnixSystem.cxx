@@ -4923,7 +4923,7 @@ static void GetDarwinMemInfo(MemInfo_t *meminfo)
 /// http://www.opensource.apple.com/source/top/top-15/libtop.c
 /// The virtual memory usage is slightly over estimated as we don't
 /// subtract shared regions, but the value makes more sense
-/// then pure vsize, which is useless on 64-bit machines.
+/// than pure vsize, which is useless on 64-bit machines.
 
 static void GetDarwinProcInfo(ProcInfo_t *procinfo)
 {
@@ -4964,9 +4964,9 @@ static void GetDarwinProcInfo(ProcInfo_t *procinfo)
       mach_port_t object_name;
       vm_address_t address;
       vm_region_top_info_data_t info;
-      vm_size_t vsize, vprvt, rsize, size;
+      vm_size_t /*vsize,*/ vprvt, rsize, size;
       rsize = ti.resident_size;
-      vsize = ti.virtual_size;
+      //vsize = ti.virtual_size;
       vprvt = 0;
       for (address = 0; ; address += size) {
          // get memory region
@@ -4994,10 +4994,10 @@ static void GetDarwinProcInfo(ProcInfo_t *procinfo)
                   break;
                }
 
-               if (b_info.reserved) {
-                  vsize -= (SHARED_TEXT_REGION_SIZE + SHARED_DATA_REGION_SIZE);
+               //if (b_info.reserved) {
+                  //vsize -= (SHARED_TEXT_REGION_SIZE + SHARED_DATA_REGION_SIZE);
                   //break;  // only for vsize
-               }
+               //}
             }
             // Short circuit the loop if this isn't a shared
             // private region, since that's the only region

@@ -1532,9 +1532,11 @@ void TPad::DrawCrosshair()
    canvas->FeedbackMode(kTRUE);
 
    //erase old position and draw a line at current position
-   Int_t pxmin,pxmax,pymin,pymax,pxold,pyold,px,py;
-   pxold = fCrosshairPos%10000;
-   pyold = fCrosshairPos/10000;
+   Int_t pxmin,pxmax,pymin,pymax,px,py;
+#ifndef R__HAS_COCOA
+   Int_t pxold = fCrosshairPos%10000;
+   Int_t pyold = fCrosshairPos/10000;
+#endif // R__HAS_COCOA
    px    = cpad->GetEventX();
    py    = cpad->GetEventY()+1;
    if (canvas->GetCrosshair() > 1) {  //crosshair only in the current pad
