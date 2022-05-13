@@ -38,7 +38,7 @@ class RRawFile;
 }
 
 namespace Experimental {
-class RNTuple;
+class RNTuple; // for making RPageSourceFile a friend of RNTuple
 
 namespace Detail {
 
