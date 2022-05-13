@@ -465,9 +465,9 @@ void TGView::ScrollCanvas(Int_t new_top, Int_t direction)
 {
    Point_t points[4];
    Int_t xsrc, ysrc, xdest, ydest;
-   #ifndef R__HAS_COCOA
+#ifndef R__HAS_COCOA
    Int_t cpyheight = 0, cpywidth = 0;
-   #endif
+#endif
 
    if (new_top < 0) {
       return;
