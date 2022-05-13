@@ -119,10 +119,7 @@ public:
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TRefArrayIter : public TIterator,
-                      public std::iterator<std::bidirectional_iterator_tag, // TODO: ideally it should be a  randomaccess_iterator_tag
-                                           TObject*, std::ptrdiff_t,
-                                           const TObject**, const TObject*&> {
+class TRefArrayIter : public TIterator {
 
 private:
    const TRefArray  *fArray;      //array being iterated
@@ -133,6 +130,13 @@ private:
    TRefArrayIter() : fArray(0), fCurCursor(0), fCursor(0), fDirection(kIterForward) { }
 
 public:
+   using iterator_category = std::bidirectional_iterator_tag; // TODO: ideally it should be a randomaccess_iterator_tag
+   using value_type = TObject *;
+   using difference_type = std::ptrdiff_t;
+   using pointer = TObject **;
+   using const_pointer = const TObject **;
+   using reference = const TObject *&;
+
    TRefArrayIter(const TRefArray *arr, Bool_t dir = kIterForward);
    TRefArrayIter(const TRefArrayIter &iter);
    ~TRefArrayIter() { }

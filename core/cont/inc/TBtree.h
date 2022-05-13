@@ -331,10 +331,7 @@ public:
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TBtreeIter : public TIterator,
-                   public std::iterator<std::bidirectional_iterator_tag,
-                                        TObject*, std::ptrdiff_t,
-                                        const TObject**, const TObject*&> {
+class TBtreeIter : public TIterator {
 
 private:
    const TBtree  *fTree;      //btree being iterated
@@ -345,6 +342,13 @@ private:
    TBtreeIter() : fTree(0), fCurCursor(0), fCursor(0), fDirection(kIterForward) { }
 
 public:
+   using iterator_category = std::bidirectional_iterator_tag;
+   using value_type = TObject *;
+   using difference_type = std::ptrdiff_t;
+   using pointer = TObject **;
+   using const_pointer = const TObject **;
+   using reference = const TObject *&;
+
    TBtreeIter(const TBtree *t, Bool_t dir = kIterForward);
    TBtreeIter(const TBtreeIter &iter);
    ~TBtreeIter() { }
@@ -360,7 +364,6 @@ public:
 
    ClassDef(TBtreeIter,0)  //B-tree iterator
 };
-
 
 //----- TBtree inlines ---------------------------------------------------------
 
