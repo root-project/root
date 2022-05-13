@@ -533,9 +533,9 @@ void TGView::ScrollCanvas(Int_t new_top, Int_t direction)
       } else {
          xdest = 0;
          xsrc =  Int_t(new_top - fVisible.fX);
-         #ifndef R__HAS_COCOA
+#ifndef R__HAS_COCOA
          cpywidth = xsrc;
-         #endif
+#endif
          if (xsrc > (Int_t)fCanvas->GetWidth()) {
             xsrc = fCanvas->GetWidth();
          }
