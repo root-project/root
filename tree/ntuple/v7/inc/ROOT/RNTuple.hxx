@@ -523,7 +523,7 @@ public:
    /// Merge this NTuple with the input list entries
    Long64_t Merge(TCollection *input, TFileMergeInfo *mergeInfo);
 
-   ClassDefNV(RNTuple, 1);
+   ClassDefNV(RNTuple, 3);
 };
 
 } // namespace Experimental

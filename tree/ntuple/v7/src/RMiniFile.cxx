@@ -839,7 +839,7 @@ struct RTFFile {
 /// A streamed RNTuple class
 struct RTFNTuple {
    RUInt32BE fByteCount{0x40000000 | (sizeof(RTFNTuple) - sizeof(fByteCount))};
-   RUInt16BE fVersionClass{1};
+   RUInt16BE fVersionClass{3};
    RInt32BE fChecksum{ChecksumRNTupleClass()};
    RUInt32BE fVersionInternal{0};
    RUInt32BE fSize{sizeof(ROOT::Experimental::Internal::RFileNTupleAnchor)};
