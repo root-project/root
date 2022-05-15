@@ -4923,7 +4923,7 @@ static void GetDarwinMemInfo(MemInfo_t *meminfo)
 /// http://www.opensource.apple.com/source/top/top-15/libtop.c
 /// The virtual memory usage is slightly over estimated as we don't
 /// subtract shared regions, but the value makes more sense
-/// than pure vsize, which is useless on 64-bit machines.
+/// than using `virtual_size`, which is useless on 64-bit machines.
 
 static void GetDarwinProcInfo(ProcInfo_t *procinfo)
 {
