@@ -4964,9 +4964,8 @@ static void GetDarwinProcInfo(ProcInfo_t *procinfo)
       mach_port_t object_name;
       vm_address_t address;
       vm_region_top_info_data_t info;
-      vm_size_t /*vsize,*/ vprvt, rsize, size;
+      vm_size_t vprvt, rsize, size;
       rsize = ti.resident_size;
-      //vsize = ti.virtual_size;
       vprvt = 0;
       for (address = 0; ; address += size) {
          // get memory region
@@ -4993,11 +4992,6 @@ static void GetDarwinProcInfo(ProcInfo_t *procinfo)
                                 &object_name) != KERN_SUCCESS) {
                   break;
                }
-
-               //if (b_info.reserved) {
-                  //vsize -= (SHARED_TEXT_REGION_SIZE + SHARED_DATA_REGION_SIZE);
-                  //break;  // only for vsize
-               //}
             }
             // Short circuit the loop if this isn't a shared
             // private region, since that's the only region
@@ -5025,7 +5019,6 @@ static void GetDarwinProcInfo(ProcInfo_t *procinfo)
       }
 
       procinfo->fMemResident = (Long_t)(rsize / 1024);
-      //procinfo->fMemVirtual  = (Long_t)(vsize / 1024);
       procinfo->fMemVirtual  = (Long_t)(vprvt / 1024);
    }
 }
