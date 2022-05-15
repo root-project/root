@@ -86,16 +86,16 @@ public:
    Bool_t         GetAdd() const { return fAdd; }
    Int_t          GetDimension() const { return fDimension; }
    Bool_t         GetShouldDraw() const { return fShouldDraw; }
-   TString        GetExp() const { return fExp; }
+   TString const& GetExp() const { return fExp; }
    Double_t       GetIfSpecified(Int_t num, Double_t def) const;
    Int_t          GetNoParameters() const { return fNoParameters; }
    Double_t       GetParameter(int num) const;
    TString        GetProofSelectorName() const;
-   TString        GetObjectName() const { return fName; }
+   TString const& GetObjectName() const { return fName; }
    TString        GetObjectTitle() const;
    Bool_t         GetOptionSame() const { return fOptionSame; }
    TObject       *GetOriginal() const { return fOriginal; }
-   TString        GetSelection() const { return fSelection; }
+   TString const& GetSelection() const { return fSelection; }
    TString        GetVarExp(Int_t num) const;
    TString        GetVarExp() const;
    Bool_t         IsSpecified(int num) const;
