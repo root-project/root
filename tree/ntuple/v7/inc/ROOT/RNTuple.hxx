@@ -488,7 +488,7 @@ auto reader = RNTupleReader::Open(ntpl);
 // clang-format on
 class RNTuple final {
    friend class ROOT::Experimental::Internal::RNTupleFileWriter;
-   friend class ROOT::Experimental::Internal::RNTupleTester;
+   friend struct ROOT::Experimental::Internal::RNTupleTester;
 
 private:
    /// Persistent data members need to be identical to the ones from RFileNTupleAnchor
