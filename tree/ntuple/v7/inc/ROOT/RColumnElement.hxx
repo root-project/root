@@ -32,9 +32,9 @@
 #ifndef R__LITTLE_ENDIAN
 #ifdef R__BYTESWAP
 // `R__BYTESWAP` is defined in RConfig.hxx for little-endian architectures; undefined otherwise
-# define R__LITTLE_ENDIAN 1
+#define R__LITTLE_ENDIAN 1
 #else
-# define R__LITTLE_ENDIAN 0
+#define R__LITTLE_ENDIAN 0
 #endif
 #endif /* R__LITTLE_ENDIAN */
 
@@ -44,7 +44,8 @@ namespace {
 /// Used on big-endian architectures for packing/unpacking elements whose column type requires
 /// a little-endian on-disk representation.
 template <std::size_t N>
-static void CopyElementsBswap(void *destination, const void *source, std::size_t count) {
+static void CopyElementsBswap(void *destination, const void *source, std::size_t count)
+{
    auto dst = reinterpret_cast<typename RByteSwap<N>::value_type *>(destination);
    auto src = reinterpret_cast<const typename RByteSwap<N>::value_type *>(source);
    for (std::size_t i = 0; i < count; ++i) {
@@ -271,7 +272,6 @@ public:
    explicit RColumnElement(RColumnSwitch *value) : RColumnElementBase(value, kSize) {}
 };
 
-
 template <>
 class RColumnElement<float, EColumnType::kReal32> : public RColumnElementLE<float> {
 public:
@@ -336,7 +336,7 @@ public:
    std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
 };
 
-template<>
+template <>
 class RColumnElement<std::int16_t, EColumnType::kInt16> : public RColumnElementLE<std::int16_t> {
 public:
    static constexpr std::size_t kSize = sizeof(std::int16_t);
@@ -346,7 +346,7 @@ public:
    std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
 };
 
-template<>
+template <>
 class RColumnElement<std::uint16_t, EColumnType::kInt16> : public RColumnElementLE<std::uint16_t> {
 public:
    static constexpr std::size_t kSize = sizeof(std::uint16_t);
