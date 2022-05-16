@@ -31,7 +31,7 @@ ROOTTEST_ADD_TEST(execpragmasTest
                   MACRO execpragmasTest.C+
                   OUTREF execpragmasTest.ref)
 
-ROOTTEST_GENERATE_EXECUTABLE(loadernotapp loadernotapp.cxx LIBRARIES ROOT::Core ROOT::Hist)
+ROOTTEST_GENERATE_EXECUTABLE(loadernotapp loadernotapp.cxx LIBRARIES Core Hist)
 
 ROOTTEST_ADD_TEST(loadernotapp
                   EXEC ${CMAKE_CURRENT_BINARY_DIR}/loadernotapp

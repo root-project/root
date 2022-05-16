@@ -1,1 +1,1 @@
-ROOT_ADD_GTEST(testRVecIO testRVecIO.cxx LIBRARIES ROOT::RIO ROOT::TreePlayer ROOT::ROOTVecOps)
+ROOT_ADD_GTEST(testRVecIO testRVecIO.cxx LIBRARIES RIO TreePlayer ROOTVecOps)
