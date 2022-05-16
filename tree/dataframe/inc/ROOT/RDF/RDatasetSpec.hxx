@@ -38,33 +38,39 @@ struct RDatasetSpec {
       }
    };
 
-   std::string fDatasetName{}; ///< The name of the dataset to process.
-   /**
-    * A list of file names.
-    * They can contain the globbing characters supported by TChain. See TChain::Add for more information.
-    */
-   std::vector<std::string> fFileNameGlobs{};
-   ULong64_t fStartEntry{}; ///< The entry where the dataset processing should start (inclusive).
-   ULong64_t fEndEntry{};   ///< The entry where the dataset processing should end (exclusive).
-
    /**
     * A list of names of trees.
     * This list should go in lockstep with fFileNameGlobs, only in case this dataset is a TChain where each file
     * contains its own tree with a different name from the global name of the dataset.
     */
-   std::vector<std::string> fSubTreeNames{};
+   std::vector<std::string> fTreeNames{};
 
-   RDatasetSpec(const std::string &datasetName, const std::string &fileName, REntryRange entryRange = {},
-                const std::vector<std::string> &subTreenames = {})
-      : fDatasetName(datasetName), fFileNameGlobs(std::vector<std::string>{fileName}),
-        fStartEntry(entryRange.fStartEntry), fEndEntry(entryRange.fEndEntry), fSubTreeNames(subTreenames)
+   /**
+    * A list of file names.
+    * They can contain the globbing characters supported by TChain. See TChain::Add for more information.
+    */
+
+   std::vector<std::string> fFileNameGlobs{};
+
+   ULong64_t fStartEntry{}; ///< The entry where the dataset processing should start (inclusive).
+   ULong64_t fEndEntry{};   ///< The entry where the dataset processing should end (exclusive).
+
+   RDatasetSpec(const std::string &treeName, const std::string &fileName, REntryRange entryRange = {})
+      : fTreeNames(std::vector<std::string>{treeName}), fFileNameGlobs(std::vector<std::string>{fileName}),
+        fStartEntry(entryRange.fStartEntry), fEndEntry(entryRange.fEndEntry)
    {
    }
 
-   RDatasetSpec(const std::string &datasetName, const std::vector<std::string> &fileNames, REntryRange entryRange = {},
-                const std::vector<std::string> &subTreenames = {})
-      : fDatasetName(datasetName), fFileNameGlobs(fileNames), fStartEntry(entryRange.fStartEntry),
-        fEndEntry(entryRange.fEndEntry), fSubTreeNames(subTreenames)
+   RDatasetSpec(const std::string &treeName, const std::vector<std::string> &fileNames, REntryRange entryRange = {})
+      : fTreeNames(std::vector<std::string>{treeName}), fFileNameGlobs(fileNames), fStartEntry(entryRange.fStartEntry),
+        fEndEntry(entryRange.fEndEntry)
+   {
+   }
+
+   RDatasetSpec(const std::vector<std::string> &treeNames, const std::vector<std::string> &fileNames,
+                REntryRange entryRange = {})
+      : fTreeNames(treeNames), fFileNameGlobs(fileNames), fStartEntry(entryRange.fStartEntry),
+        fEndEntry(entryRange.fEndEntry)
    {
    }
 };

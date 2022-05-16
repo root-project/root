@@ -8,6 +8,8 @@
 using namespace ROOT;
 using namespace ROOT::RDF;
 
+using namespace std::literals; // remove ambiguity of using std::vector<std::string>-s and std::string-s
+
 TEST(RDFDatasetSpec, SingleFileSingleColConstructor)
 {
    auto dfWriter = RDataFrame(5).Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"});
@@ -46,24 +48,16 @@ TEST(RDFDatasetSpec, SingleFileSingleColConstructor)
    const auto dfRDS1 = RDataFrame(RDatasetSpec("tree", "file.root", {2, 4})).Display<int>({"x"})->AsString();
    EXPECT_EQ(dfRDS1, dfRange0);
 
-   // specify the treename as fourth argument => the first argument becomes the name of the chain of trees
-   const auto dfRDS4 = RDataFrame(RDatasetSpec("chain", "file.root", {2, 4}, {"tree"})).Display<int>({"x"})->AsString();
-   EXPECT_EQ(dfRDS4, dfRange0);
-
-   // specify the chain to have the same name as the tree
-   const auto dfRDS5 = RDataFrame(RDatasetSpec("tree", "file.root", {2, 4}, {"tree"})).Display<int>({"x"})->AsString();
-   EXPECT_EQ(dfRDS5, dfRange0);
-
    // specify 2 trees, second tree is irrelevant, this is correct
    const auto dfRDS6 =
-      RDataFrame(RDatasetSpec("chain", "file.root", {2, 4}, {"tree", "nottree"})).Display<int>({"x"})->AsString();
+      RDataFrame(RDatasetSpec({"tree"s, "nottree"s}, {"file.root"s}, {2, 4})).Display<int>({"x"})->AsString();
    EXPECT_EQ(dfRDS6, dfRange0);
 
    // specify 2 trees, first tree is irrelevant, this is wrong, emitting C++ error and ROOT error
    EXPECT_THROW(
       try {
          ROOT_EXPECT_ERROR(
-            RDataFrame(RDatasetSpec("chain", "file.root", {2, 4}, {"nottree", "tree"})).Display<int>({"x"})->AsString(),
+            RDataFrame(RDatasetSpec({"nottree"s, "tree"s}, {"file.root"s}, {2, 4})).Display<int>({"x"})->AsString(),
             "TChain::LoadTree", "Cannot find tree with name nottree in file file.root");
       } catch (const std::runtime_error &err) {
          EXPECT_EQ(std::string(err.what()),
@@ -101,8 +95,6 @@ TEST(RDFDatasetSpec, SingleFileSingleColConstructor)
    ROOT_EXPECT_ERROR(dfRDS10AsString = dfRDS10->AsString(), "TTreeReader::SetEntriesRange()",
                      "first entry out of range 0..5");
    EXPECT_EQ(dfRDS10AsString, dfSimple);
-
-   using namespace std::literals; // remove ambiguity of using std::vector<std::string>-s and std::string-s
 
    // test the second constructor, second argument is now a vector
    const auto dfRDS13 = RDataFrame(RDatasetSpec("tree", {"file.root"s})).Display<int>({"x"})->AsString();
@@ -189,8 +181,6 @@ TEST(RDFDatasetSpec, SingleFileMultiColsConstructor)
       },
       std::logic_error);
 
-   using namespace std::literals; // remove ambiguity of using std::vector<std::string>-s and std::string-s
-
    // test the second constructor, second argument is now a vector
    const auto dfRDS12 = RDataFrame(RDatasetSpec("tree", {"file.root"s})).Display()->AsString();
    EXPECT_EQ(dfRDS12, dfSimple);
@@ -217,36 +207,28 @@ TEST(RDFDatasetSpec, MultipleFiles)
    const auto dfRange2 = RDataFrame(ch0).Range(2).Display<int, int>({"x", "y"})->AsString();
    const auto dfEmpty = "+-----+---+---+\n| Row | x | y | \n|     |   |   | \n+-----+---+---+\n";
 
-   using namespace std::literals;
-
-   // both files have the same tree, do not ask for chain
    const auto dfRDS0 = RDataFrame(RDatasetSpec("treeA", {"file0.root"s, "file1.root"s})).Display()->AsString();
    EXPECT_EQ(dfRDS0, dfSimple);
 
-   // both files have the same tree, but ask for chain
-   const auto dfRDS1 = RDataFrame(RDatasetSpec("chain", {"file0.root"s, "file1.root"s}, {0, 5}, {"treeA", "treeA"}))
-                          .Display()
-                          ->AsString();
+   const auto dfRDS1 =
+      RDataFrame(RDatasetSpec({"treeA"s, "treeA"s}, {"file0.root"s, "file1.root"s}, {0, 5})).Display()->AsString();
    EXPECT_EQ(dfRDS1, dfSimple);
 
    // files have different chain name => need a chain
-   const auto dfRDS2 = RDataFrame(RDatasetSpec("chain", {"file1.root"s, "file2.root"s}, {0, 5}, {"treeA", "treeB"}))
-                          .Display()
-                          ->AsString();
+   const auto dfRDS2 =
+      RDataFrame(RDatasetSpec({"treeA"s, "treeB"s}, {"file1.root"s, "file2.root"s}, {0, 5})).Display()->AsString();
    EXPECT_EQ(dfRDS2, dfSimple);
 
    // cases similar to above, but now range is applied, note that the range is global (i.e. not per tree, but per chain)
    const auto dfRDS3 = RDataFrame(RDatasetSpec("treeA", {"file0.root"s, "file1.root"s}, {1, 2})).Display()->AsString();
    EXPECT_EQ(dfRDS3, dfRange);
 
-   const auto dfRDS4 = RDataFrame(RDatasetSpec("chain", {"file0.root"s, "file1.root"s}, {1, 2}, {"treeA", "treeA"}))
-                          .Display()
-                          ->AsString();
+   const auto dfRDS4 =
+      RDataFrame(RDatasetSpec({"treeA"s, "treeA"s}, {"file0.root"s, "file1.root"s}, {1, 2})).Display()->AsString();
    EXPECT_EQ(dfRDS4, dfRange);
 
-   const auto dfRDS5 = RDataFrame(RDatasetSpec("chain", {"file1.root"s, "file2.root"s}, {1, 2}, {"treeA", "treeB"}))
-                          .Display()
-                          ->AsString();
+   const auto dfRDS5 =
+      RDataFrame(RDatasetSpec({"treeA"s, "treeB"s}, {"file1.root"s, "file2.root"s}, {1, 2})).Display()->AsString();
    EXPECT_EQ(dfRDS5, dfRange);
 
    // specify irregular range [6, 7) (similar to above)

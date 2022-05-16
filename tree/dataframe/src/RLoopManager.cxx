@@ -364,25 +364,22 @@ RLoopManager::RLoopManager(const ROOT::RDF::RDatasetSpec &spec)
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
      fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots)
 {
-   // A TChain has a global name
-   auto chain = std::make_shared<TChain>(spec.fDatasetName.c_str());
-
-   if (spec.fSubTreeNames.empty()){
-      // The global name of the chain is also the name of each tree in the list
-      // of files that make the chain.
+   if (spec.fTreeNames.size() == 1) { // a single tree (might be multiple files)
+      auto chain = std::make_shared<TChain>(spec.fTreeNames[0].c_str());
       for (const auto &f : spec.fFileNameGlobs)
          chain->Add(f.c_str());
+      SetTree(chain);
    } else {
       // Some other times, each different file has its own tree name, we need to
       // reconstruct the full path to the tree in each file and pass that to
       // TChain::Add
-      auto nfiles = spec.fFileNameGlobs.size();
-      for (decltype(nfiles) i = 0; i < nfiles; i++){
-         const auto fullpath = spec.fFileNameGlobs[i] + "?#" + spec.fSubTreeNames[i];
+      auto chain = std::make_shared<TChain>();
+      for (auto i = 0u; i < spec.fFileNameGlobs.size(); ++i) {
+         const auto fullpath = spec.fFileNameGlobs[i] + "?#" + spec.fTreeNames[i];
          chain->Add(fullpath.c_str());
       }
+      SetTree(chain);
    }
-   SetTree(chain);
 }
 
 struct RSlotRAII {
