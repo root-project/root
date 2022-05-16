@@ -3635,7 +3635,7 @@ void TPad::PaintDate()
          tdate.Paint();
       }
       if (gStyle->GetOptFile() && gFile) {
-         TText tfile(0.99,0.01,gFile->GetName());
+         TText tfile(1. - gStyle->GetDateX(),gStyle->GetDateY(),gFile->GetName());
          tfile.SetTextSize( gStyle->GetAttDate()->GetTextSize());
          tfile.SetTextFont( gStyle->GetAttDate()->GetTextFont());
          tfile.SetTextColor(gStyle->GetAttDate()->GetTextColor());
