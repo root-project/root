@@ -598,7 +598,7 @@ double ParamHistFunc::evaluate() const
 /// the associated parameters.
 /// \param[in,out] evalData Input/output data for evaluating the ParamHistFunc.
 /// \param[in] normSet Normalisation set passed on to objects that are serving values to us.
-void ParamHistFunc::computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap& dataMap) const {
+void ParamHistFunc::computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const& dataMap) const {
   std::vector<double> oldValues;
   std::vector<RooSpan<const double>> data;
 
@@ -606,7 +606,7 @@ void ParamHistFunc::computeBatch(cudaStream_t*, double* output, size_t size, Roo
   for (auto arg : _dataVars) {
     const auto* var = static_cast<RooRealVar*>(arg);
     oldValues.push_back(var->getVal());
-    data.push_back(dataMap[var]);
+    data.push_back(dataMap.at(var));
   }
 
   // Run computation for each entry in the dataset

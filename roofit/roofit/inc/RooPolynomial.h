@@ -50,7 +50,7 @@ protected:
 
   /// Evaluation
   double evaluate() const override;
-  //void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const;
+  //void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::DataMap&) const;
   //inline bool canComputeBatchWithCuda() const { return true; }
 
   ClassDefOverride(RooPolynomial,1) // Polynomial PDF

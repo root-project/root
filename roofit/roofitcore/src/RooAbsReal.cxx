@@ -4840,7 +4840,7 @@ RooSpan<double> RooAbsReal::evaluateSpan(RooBatchCompute::RunContext& evalData, 
 \param nEvents The number of events to be processed
 \param dataMap A std::map containing the input data for the computations
 **/
-void RooAbsReal::computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const {
+void RooAbsReal::computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const {
 
   // Find all servers that are serving real numbers to us, retrieve their batch data,
   // and switch them into "always clean" operating mode, so they return always the last-set value.
@@ -4864,7 +4864,7 @@ void RooAbsReal::computeBatch(cudaStream_t*, double* output, size_t nEvents, Roo
       // clients.
       server->setOperMode(hasOtherValueClients ? RooAbsArg::Auto : RooAbsArg::AClean);
       ourServers.push_back({server,
-          dataMap[server],
+          dataMap.at(server),
           dynamic_cast<RooAbsCategory const*>(server) ? static_cast<RooAbsCategory const*>(server)->getCurrentIndex() : static_cast<RooAbsReal const*>(server)->_value,
           oldOperMode,
           hasOtherValueClients});

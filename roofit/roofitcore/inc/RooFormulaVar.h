@@ -73,7 +73,7 @@ public:
   // Function evaluation
   double evaluate() const override ;
   RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const override;
-  inline void computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const override
+  inline void computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const override
   {
     formula().computeBatch(stream, output, nEvents, dataMap);
   }

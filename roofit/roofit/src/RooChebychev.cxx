@@ -183,7 +183,7 @@ double RooChebychev::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Chebychev.
-void RooChebychev::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+void RooChebychev::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
   RooBatchCompute::ArgVector extraArgs;
   for (auto* coef:_coefList)
@@ -191,7 +191,7 @@ void RooChebychev::computeBatch(cudaStream_t* stream, double* output, size_t nEv
   extraArgs.push_back( _x.min(_refRangeName?_refRangeName->GetName() : nullptr) );
   extraArgs.push_back( _x.max(_refRangeName?_refRangeName->GetName() : nullptr) );
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::Chebychev, output, nEvents, dataMap, {&*_x}, extraArgs);
+  dispatch->compute(stream, RooBatchCompute::Chebychev, output, nEvents, {dataMap.at(_x)}, extraArgs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -488,20 +488,20 @@ double RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, bool /*verbose*
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate product of PDFs in batch mode.
-void RooProdPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+void RooProdPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
   RooBatchCompute::VarVector pdfs;
   for (const RooAbsArg* i:_pdfList) {
-    auto pdf = static_cast<const RooAbsPdf*>(i);
+    auto span = dataMap.at(i);
     // If the pdf doesn't depend on any observable (detected by it getting evaluated in scalar mode),
     // it corresponds to a parameter constraint and should not be evaluated.
     // These pdfs are evaluated in the RooConstraintSum that gets added to the likelihood in the end.
-    if(dataMap[pdf].size() == 1) continue;
-    pdfs.push_back(pdf);
+    if(span.size() == 1) continue;
+    pdfs.push_back(span);
   }
   RooBatchCompute::ArgVector special{ static_cast<double>(pdfs.size()) };
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::ProdPdf, output, nEvents, dataMap, pdfs, special);
+  dispatch->compute(stream, RooBatchCompute::ProdPdf, output, nEvents, pdfs, special);
 }
 
 namespace {

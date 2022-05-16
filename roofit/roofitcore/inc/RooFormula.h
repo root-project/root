@@ -19,8 +19,9 @@
 #include "RooPrintable.h"
 #include "RooArgList.h"
 #include "RooArgSet.h"
-
+#include "RooFit/Detail/DataMap.h"
 #include "RooBatchComputeTypes.h"
+
 #include "TFormula.h"
 
 #include <memory>
@@ -58,7 +59,7 @@ public:
   /// Evalute all parameters/observables, and then evaluate formula.
   double eval(const RooArgSet* nset=0) const;
   RooSpan<double> evaluateSpan(const RooAbsReal* dataOwner, RooBatchCompute::RunContext& inputData, const RooArgSet* nset = nullptr) const;
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const;
 
   /// DEBUG: Dump state information
   void dump() const;

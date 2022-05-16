@@ -386,7 +386,7 @@ double RooProduct::evaluate() const
 }
 
 
-void RooProduct::computeBatch(cudaStream_t* /*stream*/, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+void RooProduct::computeBatch(cudaStream_t* /*stream*/, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
   for (unsigned int i = 0; i < nEvents; ++i) {
     output[i] = 1.;
@@ -394,7 +394,7 @@ void RooProduct::computeBatch(cudaStream_t* /*stream*/, double* output, size_t n
 
   for (const auto item : _compRSet) {
     auto rcomp = static_cast<const RooAbsReal*>(item);
-    auto componentValues = dataMap[rcomp];
+    auto componentValues = dataMap.at(rcomp);
 
     for (unsigned int i = 0; i < nEvents; ++i) {
       output[i] *= componentValues.size() == 1 ? componentValues[0] : componentValues[i];

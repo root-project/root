@@ -406,7 +406,7 @@ double RooAbsCachedPdf::analyticalIntegralWN(int code, const RooArgSet* normSet,
 }
 
 
-void RooAbsCachedPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+void RooAbsCachedPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
   auto * cachePdf = getCachePdf(_normSet);
   cachePdf->computeBatch(stream, output, nEvents, dataMap);
