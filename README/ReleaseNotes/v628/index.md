@@ -114,6 +114,8 @@ In the unlikely case that this causes any problem for you, please open a GitHub 
 
 ## 2D Graphics Libraries
 
+- Implement the option "File": The current file name is painted on the bottom right of each plot
+  if the option `File` is set on via `gStyle->SetOptFile()`.
 
 ## 3D Graphics Libraries
 
