@@ -6518,6 +6518,19 @@ bool TCling::LibraryLoadingFailed(const std::string& errmessage, const std::stri
 /// Autoload a library based on a missing symbol.
 
 void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
+   std::string dlsym_mangled_name = mangled_name;
+
+#ifdef R__MACOSX
+   // The JIT gives us a mangled name which has only two leading underscores on
+   // osx, for instance __ZN8TRandom34RndmEv. However, on dlsym OSX requres
+   // single _ (eg. __ZN8TRandom34RndmEv, dropping the extra _).
+   if (llvm::StringRef(mangled_name).startswith("__"))
+      dlsym_mangled_name.erase(0, 1);
+#endif //R__MACOSX
+
+   // We have already loaded the library.
+   if (void* Addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(dlsym_mangled_name))
+      return Addr;
 
    const cling::DynamicLibraryManager &DLM = *GetInterpreterImpl()->getDynamicLibraryManager();
    R__LOCKGUARD(gInterpreterMutex);
@@ -6531,17 +6544,8 @@ void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
      return true; //success.
    };
 
-#ifdef R__MACOSX
-   // The JIT gives us a mangled name which has only one leading underscore on
-   // all platforms, for instance _ZN8TRandom34RndmEv. However, on OSX the
-   // linker stores this symbol as __ZN8TRandom34RndmEv (adding an extra _).
-   assert(!llvm::StringRef(mangled_name).startswith("__") && "Already added!");
-   std::string libName = DLM.searchLibrariesForSymbol('_' + mangled_name,
-                                                      /*searchSystem=*/ true);
-#else
    std::string libName = DLM.searchLibrariesForSymbol(mangled_name,
                                                       /*searchSystem=*/ true);
-#endif //R__MACOSX
 
    assert(!llvm::StringRef(libName).startswith("libNew") &&
           "We must not resolve symbols from libNew!");
@@ -6552,7 +6556,7 @@ void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
    if (!LibLoader(libName))
       return nullptr;
 
-   return llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(mangled_name);
+   return llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(dlsym_mangled_name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
