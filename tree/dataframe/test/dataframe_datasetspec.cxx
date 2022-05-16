@@ -88,13 +88,16 @@ TEST(RDFDatasetSpec, SingleFileSingleColConstructor)
       },
       std::logic_error);
 
-   // specify range [5, 6) (neither is a valid index, but 5 < 6) => despite the ROOT error, assignment is made
-   // disregarding the range
-   auto dfRDS10 = RDataFrame(RDatasetSpec("tree", "file.root", {5, 6})).Display<int>({"x"});
-   std::string dfRDS10AsString;
-   ROOT_EXPECT_ERROR(dfRDS10AsString = dfRDS10->AsString(), "TTreeReader::SetEntriesRange()",
-                     "first entry out of range 0..5");
-   EXPECT_EQ(dfRDS10AsString, dfSimple);
+   // specify range [5, 6) (neither is a valid index, but 5 < 6) => error out
+   auto h = RDataFrame(RDatasetSpec("tree", "file.root", {5, 6})).Display<int>({"x"});
+   EXPECT_THROW(
+      try {
+         ROOT_EXPECT_ERROR(h->AsString(), "TTreeReader::SetEntriesRange()", "first entry out of range 0..5");
+      } catch (const std::runtime_error &err) {
+         EXPECT_EQ(std::string(err.what()), "RLoopManager: fStartEntry cannot be larger than the number of entries.");
+         throw;
+      },
+      std::runtime_error);
 
    // test the second constructor, second argument is now a vector
    const auto dfRDS13 = RDataFrame(RDatasetSpec("tree", {"file.root"s})).Display<int>({"x"})->AsString();
@@ -132,12 +135,16 @@ TEST(RDFDatasetSpec, SingleFileMultiColsConstructor)
    const auto dfRDS4 = RDataFrame(RDatasetSpec("tree", "file.root", {2, 4})).Display()->AsString();
    EXPECT_EQ(dfRDS4, dfRange0);
 
-   // specify irregular range [5, 6) (similar to above)
-   auto dfRDS8 = RDataFrame(RDatasetSpec("tree", "file.root", {5, 6})).Display();
-   std::string dfRDS8AsString;
-   ROOT_EXPECT_ERROR(dfRDS8AsString = dfRDS8->AsString(), "TTreeReader::SetEntriesRange()",
-                     "first entry out of range 0..5");
-   EXPECT_EQ(dfRDS8AsString, dfSimple);
+   // specify range [5, 6) (neither is a valid index, but 5 < 6) => error out
+   auto h = RDataFrame(RDatasetSpec("tree", "file.root", {5, 6})).Display<int>({"x"});
+   EXPECT_THROW(
+      try {
+         ROOT_EXPECT_ERROR(h->AsString(), "TTreeReader::SetEntriesRange()", "first entry out of range 0..5");
+      } catch (const std::runtime_error &err) {
+         EXPECT_EQ(std::string(err.what()), "RLoopManager: fStartEntry cannot be larger than the number of entries.");
+         throw;
+      },
+      std::runtime_error);
 
    // specify irrelgular ranges (similar to above): [2, 2), [7, 7), [2, 6), [2, 0), [9, 7), [9, 2)
    const auto dfRDS9 = RDataFrame(RDatasetSpec("tree", "file.root", {2, 2})).Display()->AsString();
