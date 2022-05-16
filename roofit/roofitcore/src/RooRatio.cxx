@@ -110,8 +110,8 @@ RooRatio::RooRatio(const RooRatio &other, const char *name)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate in batch mode.
-void RooRatio::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+void RooRatio::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::Ratio, output, nEvents, dataMap, {&*_numerator, &*_denominator});
+  dispatch->compute(stream, RooBatchCompute::Ratio, output, nEvents, {dataMap.at(_numerator), dataMap.at(_denominator)});
 }

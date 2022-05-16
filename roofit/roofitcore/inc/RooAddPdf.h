@@ -131,7 +131,7 @@ protected:
       return getValV(nullptr);
   }
   double getValV(const RooArgSet* set=nullptr) const override ;
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const override;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
 

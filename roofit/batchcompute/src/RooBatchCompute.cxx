@@ -72,11 +72,10 @@ public:
    \param computer An enum specifying the compute function to be used.
    \param output The array where the computation results are stored.
    \param nEvents The number of events to be processed.
-   \param varData A std::map containing the values of the variables involved in the computation.
    \param vars A std::vector containing pointers to the variables involved in the computation.
    \param extraArgs An optional std::vector containing extra double values that may participate in the computation. **/
-   void compute(cudaStream_t *, Computer computer, RestrictArr output, size_t nEvents, const DataMap &varData,
-                const VarVector &vars, const ArgVector &extraArgs) override
+   void compute(cudaStream_t *, Computer computer, RestrictArr output, size_t nEvents, const VarVector &vars,
+                const ArgVector &extraArgs) override
    {
       std::vector<double> buffer(vars.size() * bufferSize);
       ROOT::Internal::TExecutor ex;
@@ -85,8 +84,7 @@ public:
       auto task = [&](std::size_t idx) -> int {
          // Fill a std::vector<Batches> with the same object and with ~nEvents/nThreads
          // Then advance every object but the first to split the work between threads
-         Batches batches(output, nEvents / nThreads + (nEvents % nThreads > 0), varData, vars, extraArgs,
-                         buffer.data());
+         Batches batches(output, nEvents / nThreads + (nEvents % nThreads > 0), vars, extraArgs, buffer.data());
          batches.advance(batches.getNEvents() * idx);
 
          // Set the number of events of the last Btches object as the remaining events
@@ -128,20 +126,18 @@ static RooBatchComputeClass computeObj;
 /** Construct a Batches object
 \param output The array where the computation results are stored.
 \param nEvents The number of events to be processed.
-\param varData A std::map containing the values of the variables involved in the computation.
 \param vars A std::vector containing pointers to the variables involved in the computation.
 \param extraArgs An optional std::vector containing extra double values that may participate in the computation.
 \param buffer A 2D array that is used as a buffer for scalar variables.
 For every scalar parameter a buffer (one row of the buffer) is filled with copies of the scalar
 value, so that it behaves as a batch and facilitates auto-vectorization. The Batches object can be
 passed by value to a compute function to perform efficient computations. **/
-Batches::Batches(RestrictArr output, size_t nEvents, const DataMap &varData, const VarVector &vars,
-                 const ArgVector &extraArgs, double *buffer)
+Batches::Batches(RestrictArr output, size_t nEvents, const VarVector &vars, const ArgVector &extraArgs, double *buffer)
    : _nEvents(nEvents), _nBatches(vars.size()), _nExtraArgs(extraArgs.size()), _output(output)
 {
    _arrays.resize(vars.size());
    for (size_t i = 0; i < vars.size(); i++) {
-      const RooSpan<const double> &span = varData.at(vars[i]);
+      const RooSpan<const double> &span = vars[i];
       if (span.size() > 1)
          _arrays[i].set(span.data()[0], span.data(), true);
       else {

@@ -105,7 +105,7 @@ protected:
   Int_t addParamSet( const RooArgList& params );
   static Int_t GetNumBins( const RooArgSet& vars );
   double evaluate() const override;
-  void computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap&) const override;
+  void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
 
 private:
   static NumBins getNumBinsPerDim(RooArgSet const& vars);

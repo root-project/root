@@ -59,7 +59,7 @@ public:
    }
 
 protected:
-   void computeBatch(cudaStream_t *, double *output, size_t size, RooBatchCompute::DataMap &) const override;
+   void computeBatch(cudaStream_t *, double *output, size_t size, RooFit::Detail::DataMap const&) const override;
    double evaluate() const override
    {
       // The RooNormalizedPdf overloads RooAbsReal::getValV() directly, so evaluate() should not be called.

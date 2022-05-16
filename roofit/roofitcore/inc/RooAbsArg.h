@@ -24,7 +24,6 @@
 #include "RooAbsCache.h"
 #include "RooNameReg.h"
 #include "RooLinkedListIter.h"
-#include <RooBatchCompute/DataKey.h>
 #include <RooStringView.h>
 
 #include <deque>
@@ -600,8 +599,6 @@ public:
   virtual bool isReducerNode() const { return false; }
 
   virtual void applyWeightSquared(bool flag);
-
-  operator RooBatchCompute::DataKey() const { return RooBatchCompute::DataKey::create(this->namePtr()); }
 
   virtual void fillNormSetForServer(RooArgSet const& normSet, RooAbsArg const& server, RooArgSet& serverNormSet) const;
 

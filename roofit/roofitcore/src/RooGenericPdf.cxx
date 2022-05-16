@@ -136,7 +136,7 @@ RooSpan<double> RooGenericPdf::evaluateSpan(RooBatchCompute::RunContext& inputDa
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void RooGenericPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+void RooGenericPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
   formula().computeBatch(stream, output, nEvents, dataMap);
 }

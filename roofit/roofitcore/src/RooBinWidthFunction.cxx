@@ -63,7 +63,7 @@ double RooBinWidthFunction::evaluate() const {
 /// Compute bin index for all values of the observable(s) in `evalData`, and return their volumes or inverse volumes, depending
 /// on the configuration chosen in the constructor.
 /// If a bin is not valid, return a volume of 1.
-void RooBinWidthFunction::computeBatch(cudaStream_t*, double* output, size_t, RooBatchCompute::DataMap& dataMap) const {
+void RooBinWidthFunction::computeBatch(cudaStream_t*, double* output, size_t, RooFit::Detail::DataMap const& dataMap) const {
   const RooDataHist& dataHist = _histFunc->dataHist();
   std::vector<Int_t> bins = _histFunc->getBins(dataMap);
   auto volumes = dataHist.binVolumes(0, dataHist.numEntries());

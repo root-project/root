@@ -202,12 +202,12 @@ double RooHistFunc::evaluate() const
 }
 
 
-void RooHistFunc::computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap& dataMap) const {
+void RooHistFunc::computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const& dataMap) const {
   std::vector<RooSpan<const double>> inputValues;
   for (const auto& obs : _depList) {
     auto realObs = dynamic_cast<const RooAbsReal*>(obs);
     if (realObs) {
-      auto inputs = dataMap[realObs];
+      auto inputs = dataMap.at(realObs);
       inputValues.push_back(std::move(inputs));
     } else {
       inputValues.emplace_back();
@@ -597,12 +597,12 @@ Int_t RooHistFunc::getBin() const {
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute bin numbers corresponding to all coordinates in `evalData`.
 /// \return Vector of bin numbers. If a bin is not in the current range of the observables, return -1.
-std::vector<Int_t> RooHistFunc::getBins(RooBatchCompute::DataMap& dataMap) const {
+std::vector<Int_t> RooHistFunc::getBins(RooFit::Detail::DataMap const& dataMap) const {
   std::vector<RooSpan<const double>> depData;
   for (const auto dep : _depList) {
     auto real = dynamic_cast<const RooAbsReal*>(dep);
     if (real) {
-      depData.push_back(dataMap[real]);
+      depData.push_back(dataMap.at(real));
     } else {
       depData.emplace_back(nullptr, 0);
     }

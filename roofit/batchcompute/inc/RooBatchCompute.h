@@ -61,7 +61,7 @@ enum Computer{AddPdf, ArgusBG, Bernstein, BifurGauss, BreitWigner, Bukin, CBShap
 class RooBatchComputeInterface {
   public:
     virtual ~RooBatchComputeInterface() = default;
-    virtual void   compute(cudaStream_t*, Computer, RestrictArr, size_t, const DataMap&, const VarVector&, const ArgVector& ={}) = 0;
+    virtual void   compute(cudaStream_t*, Computer, RestrictArr, size_t, const VarVector&, const ArgVector& ={}) = 0;
     virtual double sumReduce(cudaStream_t*, InputArr input, size_t n) = 0;
     virtual Architecture architecture() const = 0;
     virtual std::string architectureName() const = 0;

@@ -86,7 +86,7 @@ public:
 
 
   Int_t getBin() const;
-  std::vector<Int_t> getBins(RooBatchCompute::DataMap& dataMap) const;
+  std::vector<Int_t> getBins(RooFit::Detail::DataMap const& dataMap) const;
 
 protected:
 
@@ -94,7 +94,7 @@ protected:
   bool areIdentical(const RooDataHist& dh1, const RooDataHist& dh2) ;
 
   double evaluate() const override;
-  void computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap&) const override;
+  void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
   friend class RooAbsCachedReal ;
 
   void ioStreamerPass2() override ;
