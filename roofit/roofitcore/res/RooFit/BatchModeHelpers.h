@@ -42,16 +42,6 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, std::uni
 
 void logArchitectureInfo(RooFit::BatchModeOption batchMode);
 
-// Little wrapper to use a TNamed directly as a RooBatchCompute DataKey.
-class NamePtrWrapper {
-public:
-   NamePtrWrapper(TNamed const *namePtr) : _namePtr(namePtr) {}
-   operator RooBatchCompute::DataKey() const { return RooBatchCompute::DataKey::create(_namePtr); }
-
-private:
-   TNamed const *_namePtr;
-};
-
 } // namespace BatchModeHelpers
 } // namespace RooFit
 

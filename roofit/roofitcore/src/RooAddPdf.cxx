@@ -784,7 +784,7 @@ double RooAddPdf::getValV(const RooArgSet* normSet) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute addition of PDFs in batches.
-void RooAddPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+void RooAddPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
   RooBatchCompute::VarVector pdfs;
   RooBatchCompute::ArgVector coefs;
@@ -794,13 +794,13 @@ void RooAddPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvent
     auto pdf = static_cast<RooAbsPdf*>(&_pdfList[pdfNo]);
     if (pdf->isSelectedComp())
     {
-      pdfs.push_back(pdf);
+      pdfs.push_back(dataMap.at(pdf));
       coefs.push_back(_coefCache[pdfNo] / (cache->_needSupNorm ?
         static_cast<RooAbsReal*>(cache->_suppNormList.at(pdfNo))->getVal() : 1) );
     }
   }
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::AddPdf, output, nEvents, dataMap, pdfs, coefs);
+  dispatch->compute(stream, RooBatchCompute::AddPdf, output, nEvents, pdfs, coefs);
 }
 
 

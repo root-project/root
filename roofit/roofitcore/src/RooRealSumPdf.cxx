@@ -257,7 +257,7 @@ double RooRealSumPdf::evaluate() const
 }
 
 
-void RooRealSumPdf::computeBatch(cudaStream_t* /*stream*/, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const {
+void RooRealSumPdf::computeBatch(cudaStream_t* /*stream*/, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const {
   // Do running sum of coef/func pairs, calculate lastCoef.
   for (unsigned int j = 0; j < nEvents; ++j) {
     output[j] = 0.0;
@@ -270,7 +270,7 @@ void RooRealSumPdf::computeBatch(cudaStream_t* /*stream*/, double* output, size_
     const double coefVal = coef != nullptr ? coef->getVal() : (1. - sumCoeff);
 
     if (func->isSelectedComp()) {
-      auto funcValues = dataMap[func];
+      auto funcValues = dataMap.at(func);
       if(funcValues.size() == 1) {
         for (unsigned int j = 0; j < nEvents; ++j) {
           output[j] += funcValues[0] * coefVal;
