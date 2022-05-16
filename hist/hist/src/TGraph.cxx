@@ -142,6 +142,25 @@ TGraph::TGraph(Int_t n, const Float_t *x, const Float_t *y)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Default X-Points constructor. The points along the x-axis get the default
+/// values `start`, `start+1`, `start+2`, `start+3`, etc ...
+
+TGraph::TGraph(Int_t n, const Double_t *y, Double_t start)
+   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(0, 1000), TAttMarker()
+{
+   if (!y) {
+      fNpoints = 0;
+   } else {
+      fNpoints = n;
+   }
+   if (!CtorAllocate()) return;
+   for (Int_t i = 0; i < n; i++) {
+      fX[i] = start+i;
+      fY[i] = y[i];
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Graph normal constructor with doubles.
 
 TGraph::TGraph(Int_t n, const Double_t *x, const Double_t *y)

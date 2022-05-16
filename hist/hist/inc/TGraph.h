@@ -80,6 +80,7 @@ public:
    TGraph(Int_t n, const Int_t *x, const Int_t *y);
    TGraph(Int_t n, const Float_t *x, const Float_t *y);
    TGraph(Int_t n, const Double_t *x, const Double_t *y);
+   TGraph(Int_t n, const Double_t *y, Double_t start=0.);
    TGraph(const TGraph &gr);
    TGraph& operator=(const TGraph&);
    TGraph(const TVectorF &vx, const TVectorF &vy);
