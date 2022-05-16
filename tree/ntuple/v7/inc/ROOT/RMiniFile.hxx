@@ -62,7 +62,7 @@ is thus fully interoperable (same on-disk information).
 // clang-format on
 struct RFileNTupleAnchor {
    /// The ROOT streamer info checksum. Older RNTuple versions used class version 0 and a serialized checksum,
-   /// now we use class version 1 and "promote" the checksum as a class member
+   /// now we use class version 3 and "promote" the checksum as a class member
    std::int32_t fChecksum = 0;
    /// Allows for evolving the struct in future versions
    std::uint32_t fVersion = 0;
