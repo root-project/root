@@ -141,6 +141,44 @@ TEST(RNTuple, WriteRead)
    EXPECT_STREQ("abc", rdKlass->s.c_str());
 }
 
+TEST(RNTuple, FileAnchor)
+{
+   FileRaii fileGuard("test_ntuple_file_anchor.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      model->MakeField<int>("a", 42);
+      auto writer = RNTupleWriter::Recreate(std::move(model), "A", fileGuard.GetPath());
+      writer->Fill();
+   }
+
+   {
+      auto model = RNTupleModel::Create();
+      model->MakeField<int>("b", 137);
+      auto f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+      {
+         auto writer = RNTupleWriter::Append(std::move(model), "B", *f);
+         writer->Fill();
+      }
+      f->Close();
+   }
+
+   auto readerB = RNTupleReader::Open("B", fileGuard.GetPath());
+
+   auto f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
+   auto readerA = RNTupleReader::Open(f->Get<RNTuple>("A"));
+
+   EXPECT_EQ(1U, readerA->GetNEntries());
+   EXPECT_EQ(1U, readerB->GetNEntries());
+
+   auto a = readerA->GetModel()->Get<int>("a");
+   auto b = readerB->GetModel()->Get<int>("b");
+   readerA->LoadEntry(0);
+   readerB->LoadEntry(0);
+   EXPECT_EQ(42, *a);
+   EXPECT_EQ(137, *b);
+}
+
 TEST(RNTuple, Clusters)
 {
    FileRaii fileGuard("test_ntuple_clusters.root");
