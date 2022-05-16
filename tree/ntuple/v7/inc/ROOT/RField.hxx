@@ -36,9 +36,7 @@
 #include <string>
 #include <type_traits>
 #include <typeinfo>
-#if __cplusplus >= 201703L
 #include <variant>
-#endif
 #include <vector>
 #include <utility>
 
@@ -433,7 +431,6 @@ public:
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
-#if __cplusplus >= 201703L
 /// The generic field for std::variant types
 class RVariantField : public Detail::RFieldBase {
 private:
@@ -470,7 +467,6 @@ public:
    size_t GetAlignment() const final { return fMaxAlignment; }
    void CommitCluster() final;
 };
-#endif
 
 
 /// Classes with dictionaries that can be inspected by TClass
@@ -1240,7 +1236,6 @@ public:
 };
 
 
-#if __cplusplus >= 201703L
 template <typename... ItemTs>
 class RField<std::variant<ItemTs...>> : public RVariantField {
    using ContainerT = typename std::variant<ItemTs...>;
@@ -1283,7 +1278,6 @@ public:
       return GenerateValue(where, ContainerT());
    }
 };
-#endif
 
 template <typename ItemT>
 class RField<std::vector<ItemT>> : public RVectorField {

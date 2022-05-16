@@ -46,9 +46,7 @@
 #include <string>
 #include <thread>
 #include <utility>
-#if __cplusplus >= 201703L
 #include <variant>
-#endif
 #include <vector>
 
 using ClusterSize_t = ROOT::Experimental::ClusterSize_t;
