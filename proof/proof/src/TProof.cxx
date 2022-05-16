@@ -1044,7 +1044,9 @@ void TProof::ParseConfigField(const char *config)
 {
    TString sconf(config), opt;
    Ssiz_t from = 0;
+   #ifdef R__LINUX
    Bool_t cpuPin = kFALSE;
+   #endif
 
    // Analysise the field
    const char *cq = (IsLite()) ? "\"" : "";
@@ -1225,7 +1227,9 @@ void TProof::ParseConfigField(const char *config)
          }
          opt.ReplaceAll("_", "");
          TProof::AddEnvVar("PROOF_SLAVE_CPUPIN_ORDER", opt);
+         #ifdef R__LINUX
          cpuPin = kTRUE;
+         #endif
       } else if (opt.BeginsWith("workers=")) {
 
          // Request for a given number of workers (within the max) or worker
