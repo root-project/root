@@ -699,7 +699,7 @@ public:
    }
 
    /// \brief Register systematic variations for an existing column.
-   /// \param[in] colNames names of the columns for which varied values are provided.
+   /// \param[in] colName name of the column for which varied values are provided.
    /// \param[in] expression a callable that evaluates the varied values for the specified columns. The callable can
    ///            take any column values as input, similarly to what happens with Filter and Define calls. It must
    ///            return an RVec of varied values, one for each variation tag, in the same order as the tags.
@@ -732,6 +732,20 @@ public:
    /// ~~~
    template <typename F>
    RInterface<Proxied, DS_t> Vary(std::string_view colName, F &&expression, const ColumnNames_t &inputColumns,
+                                  const std::vector<std::string> &variationTags, std::string_view variationName = "")
+   {
+      std::vector<std::string> colNames{{std::string(colName)}};
+      const std::string theVariationName{variationName.empty() ? colName : variationName};
+
+      return Vary(std::move(colNames), std::forward<F>(expression), inputColumns, variationTags, theVariationName);
+   }
+
+   /// \brief Register systematic variations for an existing columns using auto-generated variation tags.
+   /// This overload of Vary takes a nVariations parameter instead of a list of tag names. Tag names
+   /// will be auto-generated as the sequence 0...nVariations-1.
+   /// See the documentation of the previous overload for more information.
+   template <typename F>
+   RInterface<Proxied, DS_t> Vary(std::string_view colName, F &&expression, const ColumnNames_t &inputColumns,
                                   std::size_t nVariations, std::string_view variationName = "")
    {
       R__ASSERT(nVariations > 0 && "Must have at least one variation.");
@@ -744,20 +758,6 @@ public:
       const std::string theVariationName{variationName.empty() ? colName : variationName};
 
       return Vary(colName, std::forward<F>(expression), inputColumns, std::move(variationTags), theVariationName);
-   }
-
-   /// \brief Register systematic variations for an existing columns using auto-generated variation tags.
-   /// This overload of Vary takes a nVariations parameter instead of a list of tag names. Tag names
-   /// will be auto-generated as the sequence 0...nVariations-1.
-   /// See the documentation of the previous overload for more information.
-   template <typename F>
-   RInterface<Proxied, DS_t> Vary(std::string_view colName, F &&expression, const ColumnNames_t &inputColumns,
-                                  const std::vector<std::string> &variationTags, std::string_view variationName = "")
-   {
-      std::vector<std::string> colNames{{std::string(colName)}};
-      const std::string theVariationName{variationName.empty() ? colName : variationName};
-
-      return Vary(std::move(colNames), std::forward<F>(expression), inputColumns, variationTags, theVariationName);
    }
 
    /// \brief Register a systematic variation that affects multiple columns simultaneously.
