@@ -24,6 +24,7 @@
 #include "RooGlobalFunc.h"
 #include "RooSpan.h"
 #include "RooBatchComputeTypes.h"
+#include "RooFit/Detail/DataMap.h"
 
 class RooArgList ;
 class RooDataSet ;
@@ -393,8 +394,8 @@ protected:
  public:
   const RooAbsReal* createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars, RooArgSet*& cloneSet) const ;
   const RooAbsReal *createPlotProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
-				         RooArgSet *&cloneSet, const char* rangeName=0, const RooArgSet* condObs=0) const;
-  virtual void computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap&) const;
+                     RooArgSet *&cloneSet, const char* rangeName=0, const RooArgSet* condObs=0) const;
+  virtual void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const;
 
  protected:
 

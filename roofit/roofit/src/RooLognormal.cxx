@@ -81,11 +81,12 @@ Double_t RooLognormal::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute multiple values of Lognormal distribution.  
-void RooLognormal::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+/// Compute multiple values of Lognormal distribution.
+void RooLognormal::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::Lognormal, output, nEvents, dataMap, {&*x,&*m0,&*k});
+  dispatch->compute(stream, RooBatchCompute::Lognormal, output, nEvents,
+          {dataMap.at(x), dataMap.at(m0), dataMap.at(k)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

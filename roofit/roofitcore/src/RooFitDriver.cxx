@@ -35,7 +35,6 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 #include <RooBatchCompute.h>
 #include <RooMsgService.h>
 #include <RooBatchCompute/Initialisation.h>
-#include <RooBatchCompute/DataKey.h>
 #include <RooFit/BatchModeDataHelpers.h>
 #include <RooFit/BatchModeHelpers.h>
 #include <RooFit/CUDAHelpers.h>
@@ -182,10 +181,8 @@ void RooFitDriver::setData(DataSpansMap const &dataSpans)
    // they are used in the computation graph. If yes, add the span to the data
    // map and set the node info accordingly.
    for (auto const &span : dataSpans) {
-      using RooFit::BatchModeHelpers::NamePtrWrapper;
-      NamePtrWrapper dataKey{span.first};
-      _dataMapCPU[dataKey] = span.second;
-      auto found = _nodeInfos.find(dataKey);
+      _dataMapCPU[span.first] = span.second;
+      auto found = _nodeInfos.find(span.first);
       if (found != _nodeInfos.end()) {
          auto &argInfo = found->second;
          argInfo.outputSize = span.second.size();

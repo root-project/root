@@ -49,8 +49,8 @@ protected:
   mutable std::vector<Double_t> _wksp; //! do not persist
 
   /// Evaluation
-  Double_t evaluate() const;
-  //void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const;
+  double evaluate() const;
+  //void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::DataMap&) const;
   //inline bool canComputeBatchWithCuda() const { return true; }
 
   ClassDef(RooPolynomial,1) // Polynomial PDF

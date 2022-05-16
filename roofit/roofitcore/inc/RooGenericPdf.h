@@ -50,10 +50,10 @@ protected:
   RooFormula& formula() const ;
 
   // Function evaluation
-  RooListProxy _actualVars ; 
-  virtual Double_t evaluate() const ;
+  RooListProxy _actualVars ;
+  double evaluate() const;
   RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& inputData, const RooArgSet* normSet) const;
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const;
 
   Bool_t setFormula(const char* formula) ;
 

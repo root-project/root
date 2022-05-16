@@ -14,7 +14,7 @@
 #ifndef RooFit_RooFitDriver_h
 #define RooFit_RooFitDriver_h
 
-#include <RooBatchCompute/DataKey.h>
+#include <RooFit/Detail/DataMap.h>
 #include <RooGlobalFunc.h>
 #include <RooHelpers.h>
 
@@ -79,9 +79,9 @@ private:
    double *_cudaMemDataset = nullptr;
 
    // used for preserving static info about the computation graph
-   RooBatchCompute::DataMap _dataMapCPU;
-   RooBatchCompute::DataMap _dataMapCUDA;
-   std::map<RooBatchCompute::DataKey, NodeInfo> _nodeInfos;
+   RooFit::Detail::DataMap _dataMapCPU;
+   RooFit::Detail::DataMap _dataMapCUDA;
+   std::map<RooFit::Detail::DataKey, NodeInfo> _nodeInfos;
 
    // the ordered computation graph
    RooArgList _orderedNodes;

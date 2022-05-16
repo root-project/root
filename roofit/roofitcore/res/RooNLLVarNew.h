@@ -42,7 +42,7 @@ public:
    double defaultErrorLevel() const override { return 0.5; }
 
    inline RooAbsPdf *getPdf() const { return &*_pdf; }
-   void computeBatch(cudaStream_t *, double *output, size_t nOut, RooBatchCompute::DataMap &) const override;
+   void computeBatch(cudaStream_t *, double *output, size_t nOut, RooFit::Detail::DataMap const&) const override;
    inline bool isReducerNode() const override { return true; }
 
    RooArgSet prefixObservableAndWeightNames(std::string const &prefix);
