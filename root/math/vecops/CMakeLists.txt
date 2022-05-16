@@ -1,1 +1,5 @@
-ROOT_ADD_GTEST(testRVecIO testRVecIO.cxx LIBRARIES RIO TreePlayer ROOTVecOps)
+if(MSVC)
+  ROOT_ADD_GTEST(testRVecIO testRVecIO.cxx LIBRARIES RIO TreePlayer ROOTVecOps)
+else()
+  ROOT_ADD_GTEST(testRVecIO testRVecIO.cxx LIBRARIES ROOT::RIO ROOT::TreePlayer ROOT::ROOTVecOps)
+endif()
