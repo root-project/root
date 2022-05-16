@@ -2197,8 +2197,6 @@ void TASImage::GetZoomPosition(UInt_t &x, UInt_t &y, UInt_t &w, UInt_t &h) const
 
 Bool_t TASImage::InitVisual()
 {
-   Display *disp;
-
    Bool_t inbatch = fgVisual && (fgVisual->dpy == (void*)1); // was in batch
    Bool_t noX = gROOT->IsBatch() || gVirtualX->InheritsFrom("TGWin32");
 
@@ -2214,7 +2212,6 @@ Bool_t TASImage::InitVisual()
 
    // batch or win32 mode
    if (!fgVisual && noX) {
-      disp = 0;
       fgVisual = create_asvisual(0, 0, 0, 0);
       fgVisual->dpy = (Display*)1; //fake (not used)
       return kTRUE;
@@ -2225,7 +2222,7 @@ Bool_t TASImage::InitVisual()
    fgVisual = create_asvisual(0, 0, 0, 0);
    fgVisual->dpy = (Display*)1; //fake (not used)
 #else
-   disp = (Display*) gVirtualX->GetDisplay();
+   Display *disp = (Display*) gVirtualX->GetDisplay();
    Int_t screen  = gVirtualX->GetScreen();
    Int_t depth   = gVirtualX->GetDepth();
    Visual *vis   = (Visual*) gVirtualX->GetVisual();
