@@ -35,7 +35,9 @@ TEST(Packing, Bitfield)
 
 TEST(Packing, RColumnSwitch)
 {
-   ROOT::Experimental::Detail::RColumnElement<ROOT::Experimental::RColumnSwitch, ROOT::Experimental::EColumnType::kSwitch> element(nullptr);
+   ROOT::Experimental::Detail::RColumnElement<ROOT::Experimental::RColumnSwitch,
+                                              ROOT::Experimental::EColumnType::kSwitch>
+      element(nullptr);
    element.Pack(nullptr, nullptr, 0);
    element.Unpack(nullptr, nullptr, 0);
 

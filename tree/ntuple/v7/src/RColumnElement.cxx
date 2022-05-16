@@ -116,23 +116,23 @@ std::string ROOT::Experimental::Detail::RColumnElementBase::GetTypeName(EColumnT
 }
 
 void ROOT::Experimental::Detail::RColumnElement<ROOT::Experimental::RColumnSwitch,
-                                                ROOT::Experimental::EColumnType::kSwitch>::Pack(
-  void *dst, void *src, std::size_t count) const
+                                                ROOT::Experimental::EColumnType::kSwitch>::Pack(void *dst, void *src,
+                                                                                                std::size_t count) const
 {
    auto srcArray = reinterpret_cast<ROOT::Experimental::RColumnSwitch *>(src);
    auto uint64Array = reinterpret_cast<std::uint64_t *>(dst);
    for (std::size_t i = 0; i < count; ++i) {
-      uint64Array[i] = (static_cast<std::uint64_t>(srcArray[i].GetTag()) << 44)
-                       | (srcArray[i].GetIndex() & 0x0fffffffffff);
+      uint64Array[i] =
+         (static_cast<std::uint64_t>(srcArray[i].GetTag()) << 44) | (srcArray[i].GetIndex() & 0x0fffffffffff);
 #if R__LITTLE_ENDIAN == 0
       uint64Array[i] = RByteSwap<8>::bswap(uint64Array[i]);
 #endif
    }
 }
 
-void ROOT::Experimental::Detail::RColumnElement<ROOT::Experimental::RColumnSwitch,
-                                                ROOT::Experimental::EColumnType::kSwitch>::Unpack(
-  void *dst, void *src, std::size_t count) const
+void ROOT::Experimental::Detail::RColumnElement<
+   ROOT::Experimental::RColumnSwitch, ROOT::Experimental::EColumnType::kSwitch>::Unpack(void *dst, void *src,
+                                                                                        std::size_t count) const
 {
    auto uint64Array = reinterpret_cast<std::uint64_t *>(src);
    auto dstArray = reinterpret_cast<ROOT::Experimental::RColumnSwitch *>(dst);
@@ -142,11 +142,10 @@ void ROOT::Experimental::Detail::RColumnElement<ROOT::Experimental::RColumnSwitc
 #else
       const auto value = RByteSwap<8>::bswap(uint64Array[i]);
 #endif
-      dstArray[i] = ROOT::Experimental::RColumnSwitch(ClusterSize_t{static_cast<RClusterSize::ValueType>(value & 0x0fffffffffff)},
-                                                      (value >> 44));
+      dstArray[i] = ROOT::Experimental::RColumnSwitch(
+         ClusterSize_t{static_cast<RClusterSize::ValueType>(value & 0x0fffffffffff)}, (value >> 44));
    }
 }
-
 
 void ROOT::Experimental::Detail::RColumnElement<bool, ROOT::Experimental::EColumnType::kBit>::Pack(
   void *dst, void *src, std::size_t count) const
