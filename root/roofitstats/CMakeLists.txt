@@ -14,21 +14,21 @@ if(ROOT_roofit_FOUND)
                     POSTCMD diff ${CMAKE_CURRENT_SOURCE_DIR}/ASCII-in-out_data.txt ./ASCII-in-out_result.txt)
 
   if(MSVC)
-    ROOT_ADD_GTEST(stabilityTests stabilityTests.cxx LIBRARIES libCore libTree libRIO libRooFitCore libRooFit
+    ROOT_ADD_GTEST(stabilityTests stabilityTests.cxx LIBRARIES Core Tree RIO RooFitCore RooFit
                    COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/stabilityTests_data_1.root)
   else()
-    ROOT_ADD_GTEST(stabilityTests stabilityTests.cxx LIBRARIES ROOT::RooFit
+    ROOT_ADD_GTEST(stabilityTests stabilityTests.cxx LIBRARIES RooFit
                    COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/stabilityTests_data_1.root)
   endif()
 
-  ROOT_ADD_GTEST(loadOldWorkspace loadOldWorkspace.cxx LIBRARIES ROOT::RooFit
+  ROOT_ADD_GTEST(loadOldWorkspace loadOldWorkspace.cxx LIBRARIES RooFit
                  COPY_TO_BUILDDIR
                  ${CMAKE_CURRENT_SOURCE_DIR}/rf502_workspace_v5.34.root
                  ${CMAKE_CURRENT_SOURCE_DIR}/rf502_workspace_v6.04.root
                  ${CMAKE_CURRENT_SOURCE_DIR}/rf502_workspace_v6.14.root
                  )
 
-  ROOT_ADD_GTEST(testRooWorkspace testRooWorkspace.cxx LIBRARIES ROOT::RooFit
+  ROOT_ADD_GTEST(testRooWorkspace testRooWorkspace.cxx LIBRARIES RooFit
                  COPY_TO_BUILDDIR
                  ${CMAKE_CURRENT_SOURCE_DIR}/data/test_workspace_01.root
                  )
