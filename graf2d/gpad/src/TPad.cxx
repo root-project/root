@@ -19,6 +19,7 @@
 #include "TMath.h"
 #include "TSystem.h"
 #include "TStyle.h"
+#include "TFile.h"
 #include "TH1.h"
 #include "TH2.h"
 #include "TH3.h"
@@ -3603,33 +3604,46 @@ void TPad::PaintBorderPS(Double_t xl,Double_t yl,Double_t xt,Double_t yt,Int_t b
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Paint the current date and time if the option date is on.
+/// Paint the current date and time if the option `Date` is set on via `gStyle->SetOptDate()`
+/// Paint the current file name if the option `File` is set on via `gStyle->SetOptFile()`
 
 void TPad::PaintDate()
 {
-   if (fCanvas == this && gStyle->GetOptDate()) {
-      TDatime dt;
-      const char *dates;
-      char iso[16];
-      if (gStyle->GetOptDate() < 10) {
-         //by default use format like "Wed Sep 25 17:10:35 2002"
-         dates = dt.AsString();
-      } else if (gStyle->GetOptDate() < 20) {
-         //use ISO format like 2002-09-25
-         strlcpy(iso,dt.AsSQLString(),16);
-         dates = iso;
-      } else {
-         //use ISO format like 2002-09-25 17:10:35
-         dates = dt.AsSQLString();
+   if (fCanvas == this) {
+      if (gStyle->GetOptDate()) {
+         TDatime dt;
+         const char *dates;
+         char iso[16];
+         if (gStyle->GetOptDate() < 10) {
+            //by default use format like "Wed Sep 25 17:10:35 2002"
+            dates = dt.AsString();
+         } else if (gStyle->GetOptDate() < 20) {
+            //use ISO format like 2002-09-25
+            strlcpy(iso,dt.AsSQLString(),16);
+            dates = iso;
+         } else {
+            //use ISO format like 2002-09-25 17:10:35
+            dates = dt.AsSQLString();
+         }
+         TText tdate(gStyle->GetDateX(),gStyle->GetDateY(),dates);
+         tdate.SetTextSize( gStyle->GetAttDate()->GetTextSize());
+         tdate.SetTextFont( gStyle->GetAttDate()->GetTextFont());
+         tdate.SetTextColor(gStyle->GetAttDate()->GetTextColor());
+         tdate.SetTextAlign(gStyle->GetAttDate()->GetTextAlign());
+         tdate.SetTextAngle(gStyle->GetAttDate()->GetTextAngle());
+         tdate.SetNDC();
+         tdate.Paint();
       }
-      TText tdate(gStyle->GetDateX(),gStyle->GetDateY(),dates);
-      tdate.SetTextSize( gStyle->GetAttDate()->GetTextSize());
-      tdate.SetTextFont( gStyle->GetAttDate()->GetTextFont());
-      tdate.SetTextColor(gStyle->GetAttDate()->GetTextColor());
-      tdate.SetTextAlign(gStyle->GetAttDate()->GetTextAlign());
-      tdate.SetTextAngle(gStyle->GetAttDate()->GetTextAngle());
-      tdate.SetNDC();
-      tdate.Paint();
+      if (gStyle->GetOptFile() && gFile) {
+         TText tfile(0.99,0.01,gFile->GetName());
+         tfile.SetTextSize( gStyle->GetAttDate()->GetTextSize());
+         tfile.SetTextFont( gStyle->GetAttDate()->GetTextFont());
+         tfile.SetTextColor(gStyle->GetAttDate()->GetTextColor());
+         tfile.SetTextAlign(31);
+         tfile.SetTextAngle(gStyle->GetAttDate()->GetTextAngle());
+         tfile.SetNDC();
+         tfile.Paint();
+      }
    }
 }
 
