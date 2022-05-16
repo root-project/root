@@ -40,11 +40,10 @@ protected:
 
 public:
    using iterator_category = std::random_access_iterator_tag;
-   using value_type = REFERENCE;
-   using difference_type = POINTER;
+   using value_type = typename std::remove_reference<REFERENCE>::type;
+   using difference_type = std::ptrdiff_t;
    using pointer = POINTER;
-   using const_pointer = const POINTER;
-   using reference = REFERENCE &;
+   using reference = REFERENCE;
 
    RIndexIter(size_t idx): fIndex(idx) {}
 
