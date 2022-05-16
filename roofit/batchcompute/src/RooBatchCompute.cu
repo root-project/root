@@ -75,13 +75,12 @@ public:
    \param computer An enum specifying the compute function to be used.
    \param output The array where the computation results are stored.
    \param nEvents The number of events to be processed.
-   \param varData A std::map containing the values of the variables involved in the computation.
    \param vars A std::vector containing pointers to the variables involved in the computation.
    \param extraArgs An optional std::vector containing extra double values that may participate in the computation. **/
-   void compute(cudaStream_t *stream, Computer computer, RestrictArr output, size_t nEvents, const DataMap &varData,
-                const VarVector &vars, const ArgVector &extraArgs) override
+   void compute(cudaStream_t *stream, Computer computer, RestrictArr output, size_t nEvents, const VarVector &vars,
+                const ArgVector &extraArgs) override
    {
-      Batches batches(output, nEvents, varData, vars, extraArgs);
+      Batches batches(output, nEvents, vars, extraArgs);
       _computeFunctions[computer]<<<128, 512, 0, *stream>>>(batches);
    }
    /// Return the sum of an input array
@@ -173,14 +172,12 @@ static RooBatchComputeClass computeObj;
 /** Construct a Batches object
 \param output The array where the computation results are stored.
 \param nEvents The number of events to be processed.
-\param varData A std::map containing the values of the variables involved in the computation.
 \param vars A std::vector containing pointers to the variables involved in the computation.
 \param extraArgs An optional std::vector containing extra double values that may participate in the computation.
 For every scalar parameter a `Batch` object inside the `Batches` object is set accordingly;
 a data member of type double gets assigned the scalar value. This way, when the cuda kernel
 is launched this scalar value gets copied automatically and thus no call to cudaMemcpy is needed **/
-Batches::Batches(RestrictArr output, size_t nEvents, const DataMap &varData, const VarVector &vars,
-                 const ArgVector &extraArgs, double *)
+Batches::Batches(RestrictArr output, size_t nEvents, const VarVector &vars, const ArgVector &extraArgs, double *)
    : _nEvents(nEvents), _nBatches(vars.size()), _nExtraArgs(extraArgs.size()), _output(output)
 {
    if (vars.size() > maxParams) {
@@ -193,7 +190,7 @@ Batches::Batches(RestrictArr output, size_t nEvents, const DataMap &varData, con
    }
 
    for (int i = 0; i < vars.size(); i++) {
-      const RooSpan<const double> &span = varData.at(vars[i]);
+      const RooSpan<const double> &span = vars[i];
       size_t size = span.size();
       if (size == 1)
          _arrays[i].set(span[0], nullptr, false);

@@ -27,7 +27,6 @@ functions from `RooBatchCompute` library to provide faster computation times.
 #include <RooAddition.h>
 #include <RooFormulaVar.h>
 #include <RooNaNPacker.h>
-#include <RooFit/BatchModeHelpers.h>
 #include <RooFit/Detail/Buffers.h>
 
 #include <ROOT/StringUtils.hxx>
@@ -39,7 +38,6 @@ functions from `RooBatchCompute` library to provide faster computation times.
 #include <vector>
 
 using namespace ROOT::Experimental;
-using RooFit::BatchModeHelpers::NamePtrWrapper;
 
 // Declare constexpr static members to make them available if odr-used in C++14.
 constexpr const char *RooNLLVarNew::weightVarName;
@@ -102,18 +100,18 @@ RooNLLVarNew::RooNLLVarNew(const RooNLLVarNew &other, const char *name)
 \param dataMap A map containing spans with the input data for the computation
 **/
 void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_t /*nOut*/,
-                                RooBatchCompute::DataMap &dataMap) const
+                                RooFit::Detail::DataMap const& dataMap) const
 {
-   std::size_t nEvents = dataMap[&*_pdf].size();
-   auto probas = dataMap[&*_pdf];
+   std::size_t nEvents = dataMap.at(_pdf).size();
+   auto probas = dataMap.at(_pdf);
 
    auto logProbasBuffer = ROOT::Experimental::Detail::makeCpuBuffer(nEvents);
    RooSpan<double> logProbas{logProbasBuffer->cpuWritePtr(), nEvents};
    (*_pdf).getLogProbabilities(probas, logProbas.data());
 
    auto &nameReg = RooNameReg::instance();
-   auto weights = dataMap.at(NamePtrWrapper(nameReg.constPtr((_prefix + weightVarName).c_str())));
-   auto weightsSumW2 = dataMap.at(NamePtrWrapper(nameReg.constPtr((_prefix + weightVarNameSumW2).c_str())));
+   auto weights = dataMap.at(nameReg.constPtr((_prefix + weightVarName).c_str()));
+   auto weightsSumW2 = dataMap.at(nameReg.constPtr((_prefix + weightVarNameSumW2).c_str()));
    auto weightSpan = _weightSquared ? weightsSumW2 : weights;
 
    if ((_isExtended || _rangeNormTerm) && _sumWeight == 0.0) {
@@ -123,7 +121,7 @@ void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_
       _sumWeight2 = weights.size() == 1 ? weightsSumW2[0] * nEvents : kahanSum(weightsSumW2);
    }
    if (_rangeNormTerm) {
-      auto rangeNormTermSpan = dataMap[&**_rangeNormTerm];
+      auto rangeNormTermSpan = dataMap.at(*_rangeNormTerm);
       if (rangeNormTermSpan.size() == 1) {
          _sumCorrectionTerm = (_weightSquared ? _sumWeight2 : _sumWeight) * rangeNormTermSpan[0];
       } else {

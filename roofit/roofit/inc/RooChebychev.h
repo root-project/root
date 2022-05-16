@@ -44,11 +44,11 @@ private:
   RooListProxy _coefList ;
   mutable TNamed* _refRangeName ; 
 
-  Double_t evaluate() const;
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const;
+  double evaluate() const;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const;
   inline bool canComputeBatchWithCuda() const { return true; }
-  
-  Double_t evalAnaInt(const Double_t a, const Double_t b) const;
+
+  double evalAnaInt(const double a, const double b) const;
 
   ClassDef(RooChebychev,2) // Chebychev polynomial PDF
 };

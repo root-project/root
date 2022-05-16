@@ -141,8 +141,8 @@ Double_t RooBernstein::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute multiple values of Bernstein distribution.  
-void RooBernstein::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+/// Compute multiple values of Bernstein distribution.
+void RooBernstein::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
   const int nCoef = _coefList.size();
   std::vector<double> extraArgs(nCoef+2);
@@ -152,7 +152,7 @@ void RooBernstein::computeBatch(cudaStream_t* stream, double* output, size_t nEv
   extraArgs[nCoef+1] = _x.max();
 
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::Bernstein, output, nEvents, dataMap, {&*_x}, extraArgs);
+  dispatch->compute(stream, RooBatchCompute::Bernstein, output, nEvents, {dataMap.at(_x)}, extraArgs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

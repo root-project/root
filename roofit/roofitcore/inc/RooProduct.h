@@ -75,9 +75,10 @@ protected:
   mutable RooObjCacheManager _cacheMgr ; //! The cache manager
                                                                                                                                                              
 
-  Double_t calculate(const RooArgList& partIntList) const;
-  Double_t evaluate() const;
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const;
+
+  double calculate(const RooArgList& partIntList) const;
+  double evaluate() const;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const;
 
   const char* makeFPName(const char *pfx,const RooArgSet& terms) const ;
   ProdMap* groupProductTerms(const RooArgSet&) const;

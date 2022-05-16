@@ -20,10 +20,10 @@
  */
 
 void RooNormalizedPdf::computeBatch(cudaStream_t * /*stream*/, double *output, size_t nEvents,
-                                    RooBatchCompute::DataMap &dataMap) const
+                                    RooFit::Detail::DataMap const& dataMap) const
 {
-   auto nums = dataMap[*_pdf];
-   auto integralSpan = dataMap[*_normIntegral];
+   auto nums = dataMap.at(_pdf);
+   auto integralSpan = dataMap.at(_normIntegral);
 
    if (integralSpan.size() == 1) {
       for (std::size_t i = 0; i < nEvents; ++i) {

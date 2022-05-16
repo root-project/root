@@ -83,8 +83,8 @@ private:
 public:
    RestrictArr _output = nullptr;
 
-   Batches(RestrictArr output, size_t nEvents, const DataMap &varData, const VarVector &vars,
-           const ArgVector &extraArgs = {}, double *buffer = nullptr);
+   Batches(RestrictArr output, size_t nEvents, const VarVector &vars, const ArgVector &extraArgs = {},
+           double *buffer = nullptr);
 
 #ifdef __CUDACC__
 #else

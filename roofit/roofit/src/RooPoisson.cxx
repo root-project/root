@@ -63,11 +63,12 @@ Double_t RooPoisson::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute multiple values of the Poisson distribution.  
-void RooPoisson::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+/// Compute multiple values of the Poisson distribution.
+void RooPoisson::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::Poisson, output, nEvents, dataMap, {&*x,&*mean},
+  dispatch->compute(stream, RooBatchCompute::Poisson, output, nEvents,
+    {dataMap.at(x), dataMap.at(mean)},
     {static_cast<double>(_protectNegative), static_cast<double>(_noRounding)});
 }
 

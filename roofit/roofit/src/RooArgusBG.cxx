@@ -88,10 +88,11 @@ Double_t RooArgusBG::evaluate() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooArgusBG::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+void RooArgusBG::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::ArgusBG, output, nEvents, dataMap, {&*m,&*m0,&*c,&*p});
+  dispatch->compute(stream, RooBatchCompute::ArgusBG, output, nEvents,
+          {dataMap.at(m), dataMap.at(m0), dataMap.at(c), dataMap.at(p)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
