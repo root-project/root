@@ -1,6 +1,5 @@
 #include "ntuple_test.hxx"
 
-#if __cplusplus >= 201703L
 TEST(RNTuple, ReconstructModel)
 {
    FileRaii fileGuard("test_ntuple_reconstruct.root");
@@ -38,7 +37,6 @@ TEST(RNTuple, ReconstructModel)
       std::variant<double, std::variant<std::string, double>>>("variant");
    EXPECT_TRUE(variant != nullptr);
 }
-#endif // __cplusplus >= 201703L
 
 TEST(RNTuple, MultipleInFile)
 {

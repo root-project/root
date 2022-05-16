@@ -202,7 +202,6 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       auto itemField = Create(GetNormalizedType(arrayDef[0]), arrayDef[0]);
       result = std::make_unique<RArrayField>(fieldName, itemField.Unwrap(), arrayLength);
    }
-#if __cplusplus >= 201703L
    if (normalizedType.substr(0, 13) == "std::variant<") {
       auto innerTypes = TokenizeTypeList(normalizedType.substr(13, normalizedType.length() - 14));
       std::vector<RFieldBase *> items;
@@ -211,7 +210,6 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       }
       result = std::make_unique<RVariantField>(fieldName, items);
    }
-#endif
    // TODO: create an RCollectionField?
    if (normalizedType == ":Collection:")
      result = std::make_unique<RField<ClusterSize_t>>(fieldName);
@@ -1302,7 +1300,6 @@ void ROOT::Experimental::RArrayField::AcceptVisitor(Detail::RFieldVisitor &visit
 
 //------------------------------------------------------------------------------
 
-#if __cplusplus >= 201703L
 std::string ROOT::Experimental::RVariantField::GetTypeList(const std::vector<Detail::RFieldBase *> &itemFields)
 {
    std::string result;
@@ -1429,7 +1426,6 @@ void ROOT::Experimental::RVariantField::CommitCluster()
 {
    std::fill(fNWritten.begin(), fNWritten.end(), 0);
 }
-#endif
 
 
 //------------------------------------------------------------------------------
