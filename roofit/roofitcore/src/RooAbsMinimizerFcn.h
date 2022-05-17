@@ -117,6 +117,8 @@ protected:
 
    void printEvalErrors() const;
 
+   void finishDoEval() const;
+
    // members
    RooMinimizer *_context;
 

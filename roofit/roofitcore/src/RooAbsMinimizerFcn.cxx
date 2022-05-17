@@ -25,6 +25,7 @@
 #include "RooAbsArg.h"
 #include "RooAbsPdf.h"
 #include "RooArgSet.h"
+#include "RooDataSet.h"
 #include "RooRealVar.h"
 #include "RooAbsRealLValue.h"
 #include "RooMsgService.h"
@@ -441,6 +442,23 @@ void RooAbsMinimizerFcn::printEvalErrors() const {
   RooAbsReal::printEvalErrors(msg, _printEvalErrors);
   ooccoutW(_context,Minimization) << msg.str() << endl;
 }
+
+
+void RooAbsMinimizerFcn::finishDoEval() const {
+
+   if(_context->_loggingToDataSet) {
+
+      if(!_context->_logDataSet) {
+          const char* name = "minimizer_log_dataset";
+         _context->_logDataSet = std::make_unique<RooDataSet>(name, name, *_floatParamList);
+      }
+
+      _context->_logDataSet->add(*_floatParamList);
+   }
+
+   _evalCounter++;
+}
+
 
 void RooAbsMinimizerFcn::setOptimizeConst(Int_t flag)
 {

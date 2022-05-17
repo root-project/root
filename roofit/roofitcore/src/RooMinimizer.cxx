@@ -45,6 +45,7 @@ automatic PDF optimization.
 #include "RooArgList.h"
 #include "RooAbsReal.h"
 #include "RooAbsRealLValue.h"
+#include "RooDataSet.h"
 #include "RooRealVar.h"
 #include "RooSentinel.h"
 #include "RooMsgService.h"
