@@ -267,7 +267,7 @@ void RooRealSumPdf::computeBatch(cudaStream_t* /*stream*/, double* output, size_
   for (unsigned int i = 0; i < _funcList.size(); ++i) {
     const auto func = static_cast<RooAbsReal*>(&_funcList[i]);
     const auto coef = static_cast<RooAbsReal*>(i < _coefList.size() ? &_coefList[i] : nullptr);
-    const double coefVal = coef != nullptr ? coef->getVal() : (1. - sumCoeff);
+    const double coefVal = coef != nullptr ? dataMap.at(coef)[0] : (1. - sumCoeff);
 
     if (func->isSelectedComp()) {
       auto funcValues = dataMap.at(func);
