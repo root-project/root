@@ -139,6 +139,25 @@ In the unlikely case that this causes any problem for you, please open a GitHub 
 - Implement the option "File": The current file name is painted on the bottom right of each plot
   if the option `File` is set on via `gStyle->SetOptFile()`.
 
+- In matplolib one can use the "Default X-Points" feature to plot X/Y graphs: If one doesn't
+  specify the points in the x-axis, they will get the default values 0, 1, 2, 3, (etc. depending
+  on the length of the y-points). The matplotlib script will be:
+```
+   import matplotlib.pyplot as plt
+   import numpy as np
+   points = np.array([3, 8, 1, 10, 5, 7])
+   plt.plot(ypoints)
+   plt. show()
+```
+It is now possible to do the same with the ROOT TGraph:
+```
+   double y[6] = {3, 8, 1, 10, 5, 7};
+   auto g = new TGraph(6,y);
+   g->Draw();
+```
+
+So, if we take the same example as above, and leave out the x-points, the diagram will look like this:
+
 ## 3D Graphics Libraries
 
 
