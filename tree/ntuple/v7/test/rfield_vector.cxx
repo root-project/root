@@ -8,6 +8,9 @@ TEST(RNTuple, ClassVector)
    auto wrKlassVec = modelWrite->MakeField<std::vector<CustomStruct>>("klassVec");
    CustomStruct klass;
    klass.a = 42.0;
+   klass.v1.emplace_back(1.0);
+   wrKlassVec->emplace_back(klass);
+   klass.a = 137.0;
    klass.v1.emplace_back(2.0);
    wrKlassVec->emplace_back(klass);
 
@@ -24,10 +27,22 @@ TEST(RNTuple, ClassVector)
    auto viewKlass = viewKlassVec.GetView<CustomStruct>("_0");
    auto viewKlassA = viewKlassVec.GetView<float>("_0.a");
 
-   for (auto entryId : ntuple.GetEntryRange()) {
-      EXPECT_EQ(42.0, viewKlass(entryId).a);
-      EXPECT_EQ(2.0, viewKlass(entryId).v1[0]);
-      EXPECT_EQ(42.0, viewKlassA(entryId));
+   // Loop over all the elements of the vector in all the entries
+   for (auto elementId : viewKlassVec.GetFieldRange()) {
+      if (elementId == 0) {
+         EXPECT_EQ(42.0, viewKlass(elementId).a);
+         EXPECT_EQ(1u, viewKlass(elementId).v1.size());
+         EXPECT_EQ(1.0, viewKlass(elementId).v1[0]);
+         EXPECT_EQ(42.0, viewKlassA(elementId));
+      } else if (elementId == 1) {
+         EXPECT_EQ(137.0, viewKlass(elementId).a);
+         EXPECT_EQ(2u, viewKlass(elementId).v1.size());
+         EXPECT_EQ(1.0, viewKlass(elementId).v1[0]);
+         EXPECT_EQ(2.0, viewKlass(elementId).v1[1]);
+         EXPECT_EQ(137.0, viewKlassA(elementId));
+      } else {
+         EXPECT_TRUE(false);
+      }
    }
 }
 
