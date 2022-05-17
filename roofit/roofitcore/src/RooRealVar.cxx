@@ -1220,7 +1220,6 @@ void RooRealVar::fillTreeBranch(TTree& t)
 void RooRealVar::copyCache(const RooAbsArg* source, Bool_t valueOnly, Bool_t setValDirty)
 {
   // Follow usual procedure for valueklog
-  RooAbsReal::copyCache(source,valueOnly,setValDirty) ;
   double oldVal = _value;
   RooAbsReal::copyCache(source,valueOnly,setValDirty) ;
   if(_value != oldVal) {
