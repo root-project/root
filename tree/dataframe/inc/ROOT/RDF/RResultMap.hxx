@@ -97,6 +97,9 @@ class RResultMap {
    }
 
 public:
+   using iterator       = typename decltype(fMap)::iterator;
+   using const_iterator = typename decltype(fMap)::const_iterator;
+
    // TODO: can we use a std::string_view here without having to create a temporary std::string anyway?
    T &operator[](const std::string &key)
    {
@@ -108,6 +111,24 @@ public:
          fLoopManager->Run();
       return *it->second;
    }
+
+   /// Iterator to walk through key-value pairs of all variations for a given object.
+   /// Runs the event loop before returning if necessary.
+   iterator begin()
+   {
+      if (!fAction->HasRun())
+         fLoopManager->Run();
+      return fMap.begin();
+   }
+   const_iterator cbegin()
+   {
+      if (!fAction->HasRun())
+         fLoopManager->Run();
+      return fMap.cbegin();
+   }
+   iterator end() { return fMap.end(); }
+   const_iterator end() const { return fMap.cend(); }
+   const_iterator cend() const { return fMap.cend(); }
 
    const std::vector<std::string> &GetKeys() const { return fKeys; }
 };
