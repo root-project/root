@@ -57,6 +57,8 @@ public:
 
   void enableOffsetting(bool) override ;
 
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
+
 protected:
 
   RooArgList   _ownedList ;      ///< List of owned components

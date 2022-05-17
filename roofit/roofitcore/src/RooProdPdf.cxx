@@ -2312,7 +2312,8 @@ void RooProdPdf::writeCacheToStream(std::ostream& os, RooArgSet const* nset) con
   getCacheElem(nset)->writeToStream(os);
 }
 
-std::unique_ptr<RooArgSet> RooProdPdf::fillNormSetForServer(RooArgSet const& /*normSet*/, RooAbsArg const& server) const {
+std::unique_ptr<RooArgSet> RooProdPdf::fillNormSetForServer(RooArgSet const& normSet, RooAbsArg const& server) const {
+  if(normSet.empty()) return nullptr;
   auto * pdfNset = findPdfNSet(static_cast<RooAbsPdf const&>(server));
   if (pdfNset && !pdfNset->empty()) {
     return std::make_unique<RooArgSet>(*pdfNset);

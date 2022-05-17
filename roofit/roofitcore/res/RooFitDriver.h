@@ -85,6 +85,7 @@ private:
 
    // the ordered computation graph
    RooArgList _orderedNodes;
+   std::vector<NodeInfo *> _orderedNodeInfos;
 
    // used for preserving resources
    std::stack<std::vector<double>> _vectorBuffers;

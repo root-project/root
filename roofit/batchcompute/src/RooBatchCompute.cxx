@@ -77,20 +77,45 @@ public:
    void compute(cudaStream_t *, Computer computer, RestrictArr output, size_t nEvents, const VarVector &vars,
                 const ArgVector &extraArgs) override
    {
-      std::vector<double> buffer(vars.size() * bufferSize);
-      ROOT::Internal::TExecutor ex;
-      unsigned int nThreads = ROOT::IsImplicitMTEnabled() ? ex.GetPoolSize() : 1u;
+      static std::vector<double> buffer;
+      buffer.resize(vars.size() * bufferSize);
 
-      auto task = [&](std::size_t idx) -> int {
+      if (ROOT::IsImplicitMTEnabled()) {
+         ROOT::Internal::TExecutor ex;
+         unsigned int nThreads = ex.GetPoolSize();
+
+         auto task = [&](std::size_t idx) -> int {
+            // Fill a std::vector<Batches> with the same object and with ~nEvents/nThreads
+            // Then advance every object but the first to split the work between threads
+            Batches batches(output, nEvents / nThreads + (nEvents % nThreads > 0), vars, extraArgs, buffer.data());
+            batches.advance(batches.getNEvents() * idx);
+
+            // Set the number of events of the last Batches object as the remaining events
+            if (idx == nThreads - 1) {
+               batches.setNEvents(nEvents - idx * batches.getNEvents());
+            }
+
+            int events = batches.getNEvents();
+            batches.setNEvents(bufferSize);
+            while (events > bufferSize) {
+               _computeFunctions[computer](batches);
+               batches.advance(bufferSize);
+               events -= bufferSize;
+            }
+            batches.setNEvents(events);
+            _computeFunctions[computer](batches);
+            return 0;
+         };
+
+         std::vector<std::size_t> indices(nThreads);
+         for (unsigned int i = 1; i < nThreads; i++) {
+            indices[i] = i;
+         }
+         ex.Map(task, indices);
+      } else {
          // Fill a std::vector<Batches> with the same object and with ~nEvents/nThreads
          // Then advance every object but the first to split the work between threads
-         Batches batches(output, nEvents / nThreads + (nEvents % nThreads > 0), vars, extraArgs, buffer.data());
-         batches.advance(batches.getNEvents() * idx);
-
-         // Set the number of events of the last Btches object as the remaining events
-         if (idx == nThreads - 1) {
-            batches.setNEvents(nEvents - idx * batches.getNEvents());
-         }
+         Batches batches(output, nEvents, vars, extraArgs, buffer.data());
 
          int events = batches.getNEvents();
          batches.setNEvents(bufferSize);
@@ -101,14 +126,7 @@ public:
          }
          batches.setNEvents(events);
          _computeFunctions[computer](batches);
-         return 0;
-      };
-
-      std::vector<std::size_t> indices(nThreads);
-      for (unsigned int i = 1; i < nThreads; i++) {
-         indices[i] = i;
       }
-      ex.Map(task, indices);
    }
    /// Return the sum of an input array
    double sumReduce(cudaStream_t *, InputArr input, size_t n) override

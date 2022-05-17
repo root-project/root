@@ -42,7 +42,7 @@ public:
    double defaultErrorLevel() const override { return 0.5; }
 
    inline RooAbsPdf *getPdf() const { return &*_pdf; }
-   void computeBatch(cudaStream_t *, double *output, size_t nOut, RooFit::Detail::DataMap const&) const override;
+   void computeBatch(cudaStream_t *, double *output, size_t nOut, RooFit::Detail::DataMap const &) const override;
    inline bool isReducerNode() const override { return true; }
 
    RooArgSet prefixObservableAndWeightNames(std::string const &prefix);
@@ -51,7 +51,10 @@ public:
 
    std::unique_ptr<RooArgSet> fillNormSetForServer(RooArgSet const &normSet, RooAbsArg const &server) const override;
 
-protected:
+private:
+   double evaluate() const override;
+   void resetWeightVarNames();
+
    RooTemplateProxy<RooAbsPdf> _pdf;
    RooArgSet _observables;
    mutable double _sumWeight = 0.0;         //!
@@ -60,10 +63,10 @@ protected:
    bool _weightSquared = false;
    bool _binnedL = false;
    std::string _prefix;
+   TNamed const *_weightName = nullptr;
+   TNamed const *_weightSquaredName = nullptr;
    std::unique_ptr<RooTemplateProxy<RooAbsReal>> _fractionInRange;
    mutable std::vector<double> _binw; //!
-
-   double evaluate() const override;
 
 }; // end class RooNLLVar
 
