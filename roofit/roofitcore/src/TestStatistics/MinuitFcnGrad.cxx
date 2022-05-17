@@ -131,7 +131,7 @@ double MinuitFcnGrad::DoEval(const double *x) const
       std::cout.flush();
    }
 
-   _evalCounter++;
+   finishDoEval();
    return fvalue;
 }
 
