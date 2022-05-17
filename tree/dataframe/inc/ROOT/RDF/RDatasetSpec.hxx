@@ -17,6 +17,7 @@
 #include <stdexcept> // std::logic_error
 
 #include <RtypesCore.h>
+#include <ROOT/InternalTreeUtils.hxx>
 
 namespace ROOT {
 
@@ -49,11 +50,12 @@ struct RDatasetSpec {
     * A list of file names.
     * They can contain the globbing characters supported by TChain. See TChain::Add for more information.
     */
-
    std::vector<std::string> fFileNameGlobs{};
 
    ULong64_t fStartEntry{}; ///< The entry where the dataset processing should start (inclusive).
    ULong64_t fEndEntry{};   ///< The entry where the dataset processing should end (exclusive).
+
+   ROOT::Internal::TreeUtils::RFriendInfo fFriendInfo{}; ///< List of friends
 
    RDatasetSpec(const std::string &treeName, const std::string &fileName, REntryRange entryRange = {})
       : fTreeNames(std::vector<std::string>{treeName}), fFileNameGlobs(std::vector<std::string>{fileName}),
@@ -71,10 +73,36 @@ struct RDatasetSpec {
                 REntryRange entryRange = {})
       : fTreeNames(
            fileNames.size() != treeNames.size() && treeNames.size() != 1
-              ? throw std::runtime_error("RDatasetSpec exepcts either N trees and N files, or 1 tree and N files.")
+              ? throw std::logic_error("RDatasetSpec exepcts either N trees and N files, or 1 tree and N files.")
               : treeNames),
         fFileNameGlobs(fileNames), fStartEntry(entryRange.fStartEntry), fEndEntry(entryRange.fEndEntry)
    {
+   }
+
+   void AddFriend(const std::string &treeName, const std::string &fileName)
+   {
+      fFriendInfo.fFriendNames.emplace_back(
+         treeName, treeName); // TODO: user might specify alias, now it is the tree name by default
+      fFriendInfo.fFriendFileNames.emplace_back(std::vector<std::string>{fileName});
+      fFriendInfo.fFriendChainSubNames.emplace_back(std::vector<std::string>{}); // this is a tree
+   }
+
+   void AddFriend(const std::string &treeName, const std::vector<std::string> &fileNames)
+   {
+      fFriendInfo.fFriendNames.emplace_back(
+         treeName, treeName); // TODO: user might specify alias, now it is the tree name by default
+      fFriendInfo.fFriendFileNames.emplace_back(fileNames);
+      fFriendInfo.fFriendChainSubNames.emplace_back(std::vector<std::string>{treeName}); // now this is a chain
+   }
+
+   void AddFriend(const std::vector<std::string> &treeNames, const std::vector<std::string> &fileNames)
+   {
+      if (fileNames.size() != treeNames.size() && treeNames.size() != 1)
+         throw std::logic_error("RDatasetSpec's friend exepcts either N trees and N files, or 1 tree and N files.");
+      fFriendInfo.fFriendNames.emplace_back(
+         treeNames[0], treeNames[0]); // TODO: user might specify alias, now it is the FIRST tree name by default
+      fFriendInfo.fFriendFileNames.emplace_back(fileNames);
+      fFriendInfo.fFriendChainSubNames.emplace_back(treeNames); // now this is a chain
    }
 };
 

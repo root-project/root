@@ -362,14 +362,60 @@ RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t 
 RLoopManager::RLoopManager(const ROOT::RDF::RDatasetSpec &spec)
    : fStartEntry(spec.fStartEntry), fEndEntry(spec.fEndEntry), fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
-     fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots)
+     fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots), fFriendInfo(spec.fFriendInfo)
 {
-   auto chain = std::make_shared<TChain>();
-   for (auto i = 0u; i < spec.fFileNameGlobs.size(); ++i) {
-      const auto fullpath = spec.fFileNameGlobs[i] + "?#" + spec.fTreeNames[spec.fTreeNames.size() == 1 ? 0 : i];
-      chain->Add(fullpath.c_str());
+   // A TChain has a global name
+   auto chain = std::make_shared<TChain>(spec.fTreeNames[0].c_str()); // use the first tree name (FOR NOW)
+
+   if (spec.fTreeNames.size() == 1) {
+      // The global name of the chain is also the name of each tree in the list
+      // of files that make the chain.
+      for (const auto &f : spec.fFileNameGlobs)
+         chain->Add(f.c_str());
+   } else {
+      // Some other times, each different file has its own tree name, we need to
+      // reconstruct the full path to the tree in each file and pass that to
+      // TChain::Add
+      for (auto i = 0u; i < spec.fFileNameGlobs.size(); i++) {
+         const auto fullpath = spec.fFileNameGlobs[i] + "?#" + spec.fTreeNames[i];
+         chain->Add(fullpath.c_str());
+      }
    }
    SetTree(chain);
+
+   const auto &friendNames = fFriendInfo.fFriendNames;
+   const auto &friendFileNames = fFriendInfo.fFriendFileNames;
+   const auto &friendChainSubNames = fFriendInfo.fFriendChainSubNames;
+   const auto nFriends = friendNames.size();
+
+   for (auto i = 0u; i < nFriends; ++i) {
+      const auto &thisFriendNameAlias = friendNames[i];
+      const auto &thisFriendName = thisFriendNameAlias.first;
+      const auto &thisFriendAlias = thisFriendNameAlias.second;
+      const auto &thisFriendFiles = friendFileNames[i];
+      const auto &thisFriendChainSubNames = friendChainSubNames[i];
+
+      // Build a friend chain
+      auto frChain = std::make_unique<TChain>(thisFriendName.c_str());
+      const auto nFileNames = friendFileNames[i].size();
+      if (thisFriendChainSubNames.empty()) {
+         // If there are no chain subnames, the friend was a TTree. It's safe
+         // to add to the chain the filename directly.
+         for (auto j = 0u; j < nFileNames; ++j) {
+            frChain->Add(thisFriendFiles[j].c_str());
+         }
+      } else {
+         // Otherwise, the new friend chain needs to be built using the nomenclature
+         // "filename/treename" as argument to `TChain::Add`
+         for (auto j = 0u; j < nFileNames; ++j) {
+            frChain->Add((thisFriendFiles[j] + "?#" + thisFriendChainSubNames[j]).c_str());
+         }
+      }
+
+      // Make it friends with the main chain
+      fTree->AddFriend(frChain.get(), thisFriendAlias.c_str());
+      fFriends.emplace_back(std::move(frChain));
+   }
 }
 
 struct RSlotRAII {

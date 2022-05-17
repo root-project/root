@@ -52,11 +52,11 @@ TEST(RDFDatasetSpec, SingleFileSingleColConstructor)
    EXPECT_THROW(
       try {
          RDatasetSpec({"tree"s, "anothertree"s}, {"file.root"s}, {2, 4});
-      } catch (const std::runtime_error &err) {
+      } catch (const std::logic_error &err) {
          EXPECT_EQ(std::string(err.what()), "RDatasetSpec exepcts either N trees and N files, or 1 tree and N files.");
          throw;
       },
-      std::runtime_error);
+      std::logic_error);
 
    // specify range [2, 2) (3 is a valid index) => range is disregarded
    const auto dfRDS7 = RDataFrame(RDatasetSpec("tree", "file.root", {2, 2})).Display<int>({"x"})->AsString();
@@ -281,3 +281,22 @@ TEST(RDFDatasetSpec, MultipleFiles)
 
    gSystem->Exec("rm file0.root file1.root file2.root");
 }
+
+// TODO: test the friends
+/*
+TEST(RDFDatasetSpec, FriendTrees)
+{
+   auto dfWriter0 = RDataFrame(3)
+                       .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
+                       .Define("y", [](ULong64_t e) { return int(e) + 1; }, {"rdfentry_"});
+   dfWriter0.Snapshot<int, int>("treeA", "file0.root", {"x", "y"});
+   dfWriter0.Snapshot<int, int>("treeA", "file1.root", {"x", "y"});
+   dfWriter0.Snapshot<int, int>("treeB", "file2.root", {"x", "y"}); // different tree's name
+   auto dfWriter1 = RDataFrame(2)
+                       .Define("x", [](ULong64_t e) { return int(e) + 2; }, {"rdfentry_"})
+                       .Define("y", [](ULong64_t e) { return int(e) + 3; }, {"rdfentry_"});
+   dfWriter0.Snapshot<int, int>("treeA", "file3.root", {"x", "y"});
+   dfWriter0.Snapshot<int, int>("treeB", "file4.root", {"x", "y"});
+   dfWriter0.Snapshot<int, int>("treeC", "file5.root", {"x", "y"});
+}
+*/
