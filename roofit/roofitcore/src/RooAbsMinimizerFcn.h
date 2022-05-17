@@ -48,27 +48,27 @@ public:
    /// but Synchronize can be overridden to e.g. also include gradient strategy synchronization in subclasses.
    virtual bool Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameters, bool optConst, bool verbose);
 
-   RooArgList *GetFloatParamList();
-   RooArgList *GetConstParamList();
-   RooArgList *GetInitFloatParamList();
-   RooArgList *GetInitConstParamList();
-   Int_t GetNumInvalidNLL() const;
+   RooArgList *GetFloatParamList() { return _floatParamList.get(); }
+   RooArgList *GetConstParamList() { return _constParamList.get(); }
+   RooArgList *GetInitFloatParamList() { return _initFloatParamList.get(); }
+   RooArgList *GetInitConstParamList() { return _initConstParamList.get(); }
+   Int_t GetNumInvalidNLL() const { return _numBadNLL; }
 
    // need access from Minimizer:
-   void SetEvalErrorWall(bool flag);
+   void SetEvalErrorWall(bool flag) { _doEvalErrorWall = flag; }
    /// Try to recover from invalid function values. When invalid function values are encountered,
    /// a penalty term is returned to the minimiser to make it back off. This sets the strength of this penalty.
    /// \note A strength of zero is equivalent to a constant penalty (= the gradient vanishes, ROOT < 6.24).
    /// Positive values lead to a gradient pointing away from the undefined regions. Use ~10 to force the minimiser
    /// away from invalid function values.
    void SetRecoverFromNaNStrength(double strength) { _recoverFromNaNStrength = strength; }
-   void SetPrintEvalErrors(Int_t numEvalErrors);
-   double &GetMaxFCN();
-   Int_t evalCounter() const;
-   void zeroEvalCount();
+   void SetPrintEvalErrors(Int_t numEvalErrors) { _printEvalErrors = numEvalErrors; }
+   double &GetMaxFCN() { return _maxFCN; }
+   Int_t evalCounter() const {return _evalCounter; }
+   void zeroEvalCount() { _evalCounter = 0; }
    /// Return a possible offset that's applied to the function to separate invalid function values from valid ones.
    double getOffset() const { return _funcOffset; }
-   void SetVerbose(bool flag = true);
+   void SetVerbose(bool flag = true) { _verbose = flag; }
 
    /// Put Minuit results back into RooFit objects.
    void BackProp(const ROOT::Fit::FitResult &results);
@@ -94,7 +94,7 @@ public:
 
    void setOptimizeConst(Int_t flag);
 
-   bool getOptConst();
+   bool getOptConst() { return _optConst; }
    std::vector<double> getParameterValues() const;
 
    bool SetPdfParamVal(int index, double value) const;
