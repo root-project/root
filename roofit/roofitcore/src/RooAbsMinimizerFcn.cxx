@@ -25,6 +25,7 @@
 #include "RooAbsArg.h"
 #include "RooAbsPdf.h"
 #include "RooArgSet.h"
+#include "RooDataSet.h"
 #include "RooRealVar.h"
 #include "RooAbsRealLValue.h"
 #include "RooMsgService.h"
@@ -442,7 +443,17 @@ void RooAbsMinimizerFcn::printEvalErrors() const {
   ooccoutW(_context,Minimization) << msg.str() << endl;
 }
 
-void RooAbsMinimizerFcn::incrementEvalCounter() const {
+void RooAbsMinimizerFcn::finishDoEval() const {
+
+   if(_context->_loggingToDataSet) {
+
+      if(!_context->_logDataSet) {
+         _context->_logDataSet = std::make_unique<RooDataSet>("minimizer_path", "minimizer_path", *_floatParamList);
+      }
+
+      _context->_logDataSet->add(*_floatParamList);
+   }
+
    // The counters in the RooMinimizer and in the RooAbsMinimizerFcn are not
    // redundant! Every time the ROOT::Fit::Fitter is invoked with this
    // RooAbsMinimizerFcn, it is copied. Therefore, only the counter in a copy

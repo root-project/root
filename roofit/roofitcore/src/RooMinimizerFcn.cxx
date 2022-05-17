@@ -121,7 +121,7 @@ double RooMinimizerFcn::DoEval(const double *x) const {
     cout.flush() ;
   }
 
-  incrementEvalCounter();
+  finishDoEval();
 
   return fvalue;
 }

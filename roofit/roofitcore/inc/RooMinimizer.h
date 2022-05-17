@@ -38,6 +38,7 @@ class RooArgList ;
 class RooRealVar ;
 class RooArgSet ;
 class RooPlot ;
+class RooDataSet ;
 
 class RooMinimizer : public TObject {
 public:
@@ -85,6 +86,9 @@ public:
   void setProfile(bool flag=true) { _profile = flag ; }
   bool setLogFile(const char* logf=nullptr) ;
 
+  void setLoggingToDataSet(bool flag=true) { _loggingToDataSet = flag ; }
+  RooDataSet * getLogDataSet() const { return _logDataSet.get(); }
+
   int getPrintLevel() const { return _printLevel; }
 
   void setMinimizerType(const char* type) ;
@@ -128,11 +132,12 @@ private:
   int _printLevel = 1;
   int _status = -99;
   bool _profile = false;
-
+  bool _loggingToDataSet = false;
   bool _verbose = false;
+  bool _profileStart = false;
+
   TStopwatch _timer;
   TStopwatch _cumulTimer;
-  bool _profileStart = false;
 
   std::unique_ptr<TMatrixDSym> _extV;
 
@@ -144,6 +149,8 @@ private:
 
   std::vector<std::pair<std::string,int> > _statusHistory ;
   int _evalCounter = 0;
+
+  std::unique_ptr<RooDataSet> _logDataSet;
 
   ClassDefOverride(RooMinimizer,0) // RooFit interface to ROOT::Fit::Fitter
 } ;

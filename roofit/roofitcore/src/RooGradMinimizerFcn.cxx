@@ -137,7 +137,7 @@ double RooGradMinimizerFcn::DoEval(const double *x) const
       std::cout.flush();
    }
 
-   incrementEvalCounter();
+   finishDoEval();
    return fvalue;
 }
 
