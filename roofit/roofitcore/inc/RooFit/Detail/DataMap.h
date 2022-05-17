@@ -38,10 +38,12 @@ namespace Detail {
 
 class DataKey {
 public:
-   inline DataKey(RooAbsArg const* arg) : _ptr{arg->namePtr()} {}
-   inline DataKey(TNamed const* arg) : _ptr{arg} {}
+   inline DataKey(RooAbsArg const *arg) : _ptr{arg->namePtr()} {}
+   inline DataKey(TNamed const *arg) : _ptr{arg} {}
    template <class T>
-   inline DataKey(RooTemplateProxy<T> const& proxy) : DataKey{&*proxy} {}
+   inline DataKey(RooTemplateProxy<T> const &proxy) : DataKey{&*proxy}
+   {
+   }
 
    // Comparison operators that wrap the pointer comparisons.
    friend inline bool operator==(const DataKey &k1, const DataKey &k2) { return k1._ptr == k2._ptr; }
@@ -56,8 +58,6 @@ private:
    TObject const *_ptr;
 };
 
-using DataMap = std::map<DataKey, RooSpan<const double>>;
-
 } // namespace Detail
 } // namespace RooFit
 
@@ -69,5 +69,13 @@ struct hash<RooFit::Detail::DataKey> {
 };
 
 } // namespace std
+
+namespace RooFit {
+namespace Detail {
+
+using DataMap = std::map<DataKey, RooSpan<const double>>;
+
+} // namespace Detail
+} // namespace RooFit
 
 #endif

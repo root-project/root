@@ -128,11 +128,14 @@ RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, 
          std::make_unique<RooTemplateProxy<RooAbsReal>>("_fractionInRange", "_fractionInRange", this, *term);
       addOwnedComponents(std::move(term));
    }
+
+   resetWeightVarNames();
 }
 
 RooNLLVarNew::RooNLLVarNew(const RooNLLVarNew &other, const char *name)
    : RooAbsReal(other, name), _pdf{"pdf", this, other._pdf}, _observables{other._observables},
-     _isExtended{other._isExtended}, _weightSquared{other._weightSquared}, _binnedL{other._binnedL}
+     _isExtended{other._isExtended}, _weightSquared{other._weightSquared}, _binnedL{other._binnedL},
+     _prefix{other._prefix}, _weightName{other._weightName}, _weightSquaredName{other._weightSquaredName}
 {
    if (other._fractionInRange)
       _fractionInRange =
@@ -151,9 +154,8 @@ void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_
 {
    std::size_t nEvents = dataMap.at(_pdf).size();
 
-   auto &nameReg = RooNameReg::instance();
-   auto weights = dataMap.at(nameReg.constPtr((_prefix + weightVarName).c_str()));
-   auto weightsSumW2 = dataMap.at(nameReg.constPtr((_prefix + weightVarNameSumW2).c_str()));
+   auto weights = dataMap.at(_weightName);
+   auto weightsSumW2 = dataMap.at(_weightSquaredName);
    auto weightSpan = _weightSquared ? weightsSumW2 : weights;
 
    if (_binnedL) {
@@ -296,7 +298,16 @@ RooArgSet RooNLLVarNew::prefixObservableAndWeightNames(std::string const &prefix
 
    addOwnedComponents(std::move(obsClones));
 
+   resetWeightVarNames();
+
    return newObservables;
+}
+
+void RooNLLVarNew::resetWeightVarNames()
+{
+   auto &nameReg = RooNameReg::instance();
+   _weightName = nameReg.constPtr((_prefix + weightVarName).c_str());
+   _weightSquaredName = nameReg.constPtr((_prefix + weightVarNameSumW2).c_str());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

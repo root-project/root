@@ -94,6 +94,7 @@ struct NodeInfo {
    std::size_t outputSize = 1;
    std::size_t lastSetValCount = 9999999;
    double scalarBuffer;
+   std::vector<NodeInfo *> serverInfos;
 
    ~NodeInfo()
    {
@@ -142,11 +143,19 @@ RooFitDriver::RooFitDriver(const RooAbsReal &absReal, RooArgSet const &normSet, 
    for (RooAbsArg *arg : serverSet) {
       _orderedNodes.add(*arg);
       auto &nodeInfo = _nodeInfos[arg];
+      _orderedNodeInfos.emplace_back(&nodeInfo);
       if (dynamic_cast<RooRealVar const *>(arg)) {
          nodeInfo.isVariable = true;
       }
       if (dynamic_cast<RooAbsCategory const *>(arg)) {
          nodeInfo.isCategory = true;
+      }
+   }
+
+   for (RooAbsArg *arg : _orderedNodes) {
+      auto &nodeInfo = _nodeInfos.at(arg);
+      for (RooAbsArg *server : arg->servers()) {
+         nodeInfo.serverInfos.emplace_back(&_nodeInfos.at(server));
       }
    }
 
@@ -280,7 +289,10 @@ void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
    const std::size_t nOut = info.outputSize;
 
    if (nOut == 1) {
-      _dataMapCPU[node] = _dataMapCUDA[node] = RooSpan<const double>(&info.scalarBuffer, nOut);
+      _dataMapCPU[node] = RooSpan<const double>(&info.scalarBuffer, nOut);
+      if (_batchMode == RooFit::BatchModeOption::Cuda) {
+         _dataMapCUDA[node] = RooSpan<const double>(&info.scalarBuffer, nOut);
+      }
       nodeAbsReal->computeBatch(nullptr, &info.scalarBuffer, nOut, _dataMapCPU);
    } else {
       info.buffer = info.copyAfterEvaluation ? makePinnedBuffer(nOut, info.stream) : makeCpuBuffer(nOut);
@@ -315,7 +327,7 @@ double RooFitDriver::getVal()
 
    for (std::size_t iNode = 0; iNode < _orderedNodes.size(); ++iNode) {
       RooAbsArg *node = _orderedNodes.at(iNode);
-      auto &nodeInfo = _nodeInfos.at(node);
+      auto &nodeInfo = *_orderedNodeInfos.at(iNode);
       if (!nodeInfo.fromDataset) {
          if (nodeInfo.isVariable) {
             auto *var = static_cast<RooRealVar const *>(node);
@@ -326,8 +338,8 @@ double RooFitDriver::getVal()
             if (nodeInfo.isDirty)
                computeCPUNode(node, nodeInfo);
          } else {
-            for (RooAbsArg *server : node->servers()) {
-               if (_nodeInfos.at(server).isDirty) {
+            for (NodeInfo *serverInfo : nodeInfo.serverInfos) {
+               if (serverInfo->isDirty) {
                   nodeInfo.isDirty = true;
                   break;
                }
@@ -339,8 +351,8 @@ double RooFitDriver::getVal()
       }
    }
 
-   for (auto &node : _nodeInfos) {
-      node.second.isDirty = false;
+   for (auto &info : _orderedNodeInfos) {
+      info->isDirty = false;
    }
 
    // return the final value

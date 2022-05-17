@@ -38,6 +38,7 @@ in the two sets.
 #include "RooNLLVarNew.h"
 #include "RooChi2Var.h"
 #include "RooMsgService.h"
+#include "RooBatchCompute.h"
 
 #include <algorithm>
 #include <cmath>
@@ -177,6 +178,24 @@ Double_t RooAddition::evaluate() const
   }
 //   cout << " = " << sum << endl ;
   return sum ;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compute addition of PDFs in batches.
+void RooAddition::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+{
+  RooBatchCompute::VarVector pdfs;
+  RooBatchCompute::ArgVector coefs;
+  pdfs.reserve(_set.size());
+  coefs.reserve(_set.size());
+  for (const auto arg : _set)
+  {
+    pdfs.push_back(dataMap.at(arg));
+    coefs.push_back(1.0);
+  }
+  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+  dispatch->compute(stream, RooBatchCompute::AddPdf, output, nEvents, pdfs, coefs);
 }
 
 

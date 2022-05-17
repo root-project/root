@@ -601,6 +601,8 @@ Double_t ParamHistFunc::evaluate() const
 void ParamHistFunc::computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const& dataMap) const {
   std::vector<double> oldValues;
   std::vector<RooSpan<const double>> data;
+  oldValues.reserve(_dataVars.size());
+  data.reserve(_dataVars.size());
 
   // Retrieve data for all variables
   for (auto arg : _dataVars) {
