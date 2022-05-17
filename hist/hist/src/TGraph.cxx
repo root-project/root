@@ -67,21 +67,36 @@ class. All details about the various painting options are given in this class.
     TGraph was a light weight object to start with, like TPolyline or TPolyMarker.
     That’s why it did not have any title and name parameters in the constructors.
 
+#### Example
+
 The picture below gives an example:
 
 Begin_Macro(source)
 {
-   TCanvas *c1 = new TCanvas("c1","A Simple Graph Example",200,10,500,300);
-   Double_t x[100], y[100];
-   Int_t n = 20;
-   for (Int_t i=0;i<n;i++) {
+   double x[100], y[100];
+   int n = 20;
+   for (int i=0;i<n;i++) {
      x[i] = i*0.1;
      y[i] = 10*sin(x[i]+0.2);
    }
-   TGraph* gr = new TGraph(n,x,y);
-   gr->Draw("AC*");
+   auto g = new TGraph(n,x,y);
+   g->Draw("AC*");
 }
 End_Macro
+
+#### Default X-Points
+
+If one doesn't specify the points in the x-axis, they will get the default values 0, 1, 2, 3, (etc. depending
+on the length of the y-points):
+
+Begin_Macro(source)
+{
+   double y[6] = {3, 8, 1, 10, 5, 7};
+   auto g = new TGraph(6,y);
+   g->Draw();
+}
+End_Macro
+
 */
 
 ////////////////////////////////////////////////////////////////////////////////
