@@ -1274,8 +1274,9 @@ public:
 
 A RVec is a container designed to make analysis of values' collections fast and easy.
 Its storage is contiguous in memory and its interface is designed such to resemble to the one
-of the stl vector. In addition the interface features methods and external functions to ease
-the manipulation and analysis of the data in the RVec.
+of the stl vector. In addition the interface features methods and
+[external functions](https://root.cern/doc/master/namespaceROOT_1_1VecOps.html) to ease the manipulation and analysis
+of the data in the RVec.
 
 \note ROOT::VecOps::RVec can also be spelled simply ROOT::RVec. Shorthand aliases such as ROOT::RVecI or ROOT::RVecD
 are also available as template instantiations of RVec of fundamental types. The full list of available aliases:
@@ -1306,8 +1307,7 @@ to make RVec a drop-in replacement for `std::vector`.
 - [Sorting and manipulation of indices](\ref sorting)
 - [Usage in combination with RDataFrame](\ref usagetdataframe)
 - [Reference for the RVec class](\ref RVecdoxyref)
-
-Also see the [reference for RVec helper functions](https://root.cern/doc/master/namespaceROOT_1_1VecOps.html).
+- [Reference for RVec helper functions](https://root.cern/doc/master/namespaceROOT_1_1VecOps.html)
 
 \anchor example
 ## Example
