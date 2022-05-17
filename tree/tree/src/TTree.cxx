@@ -8283,16 +8283,19 @@ Long64_t TTree::GetMedianClusterSize()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function may be called at the start of a program to change
-/// the default value for fAutoSave (and for SetAutoSave) is -300000000, ie 300 MBytes.
-/// When filling the Tree the branch buffers as well as the Tree header
-/// will be flushed to disk when the watermark is reached.
-/// If fAutoSave is positive the watermark is reached when a multiple of fAutoSave
-/// entries have been written.
-/// If fAutoSave is negative the watermark is reached when -fAutoSave bytes
-/// have been written to the file.
-/// In case of a program crash, it will be possible to recover the data in the Tree
-/// up to the last AutoSave point.
+/// In case of a program crash, it will be possible to recover the data in the
+/// tree up to the last AutoSave point.
+/// This function may be called before filling a TTree to specify the when the
+/// branch buffers and TTree header are flushed to disk as part of
+/// TTree::Fill().
+/// The default is -300000000, ie the TTree will write data to disk once it
+/// exceeds 300 MBytes.
+/// CASE 1: If fAutoSave is positive the watermark is reached when a multiple of
+/// fAutoSave entries have been filled.
+/// CASE 2: If fAutoSave is negative the watermark is reached when -fAutoSave
+/// bytes can be written to the file.
+/// CASE 3: If fAutoSave is 0, AutoSave() will never be called automatically
+/// as part of TTree::Fill().
 
 void TTree::SetAutoSave(Long64_t autos)
 {
