@@ -48,20 +48,12 @@ TEST(RDFDatasetSpec, SingleFileSingleColConstructor)
    const auto dfRDS1 = RDataFrame(RDatasetSpec("tree", "file.root", {2, 4})).Display<int>({"x"})->AsString();
    EXPECT_EQ(dfRDS1, dfRange0);
 
-   // specify 2 trees, second tree is irrelevant, this is correct
-   const auto dfRDS6 =
-      RDataFrame(RDatasetSpec({"tree"s, "nottree"s}, {"file.root"s}, {2, 4})).Display<int>({"x"})->AsString();
-   EXPECT_EQ(dfRDS6, dfRange0);
-
-   // specify 2 trees, first tree is irrelevant, this is wrong, emitting C++ error and ROOT error
+   // specify 2 trees, this is wrong, emitting C++ error
    EXPECT_THROW(
       try {
-         ROOT_EXPECT_ERROR(
-            RDataFrame(RDatasetSpec({"nottree"s, "tree"s}, {"file.root"s}, {2, 4})).Display<int>({"x"})->AsString(),
-            "TChain::LoadTree", "Cannot find tree with name nottree in file file.root");
+         RDatasetSpec({"tree"s, "anothertree"s}, {"file.root"s}, {2, 4});
       } catch (const std::runtime_error &err) {
-         EXPECT_EQ(std::string(err.what()),
-                   "Column \"x\" is not in a dataset and is not a custom column been defined.");
+         EXPECT_EQ(std::string(err.what()), "RDatasetSpec exepcts either N trees and N files, or 1 tree and N files.");
          throw;
       },
       std::runtime_error);

@@ -364,22 +364,12 @@ RLoopManager::RLoopManager(const ROOT::RDF::RDatasetSpec &spec)
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
      fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots)
 {
-   if (spec.fTreeNames.size() == 1) { // a single tree (might be multiple files)
-      auto chain = std::make_shared<TChain>(spec.fTreeNames[0].c_str());
-      for (const auto &f : spec.fFileNameGlobs)
-         chain->Add(f.c_str());
-      SetTree(chain);
-   } else {
-      // Some other times, each different file has its own tree name, we need to
-      // reconstruct the full path to the tree in each file and pass that to
-      // TChain::Add
-      auto chain = std::make_shared<TChain>();
-      for (auto i = 0u; i < spec.fFileNameGlobs.size(); ++i) {
-         const auto fullpath = spec.fFileNameGlobs[i] + "?#" + spec.fTreeNames[i];
-         chain->Add(fullpath.c_str());
-      }
-      SetTree(chain);
+   auto chain = std::make_shared<TChain>();
+   for (auto i = 0u; i < spec.fFileNameGlobs.size(); ++i) {
+      const auto fullpath = spec.fFileNameGlobs[i] + "?#" + spec.fTreeNames[spec.fTreeNames.size() == 1 ? 0 : i];
+      chain->Add(fullpath.c_str());
    }
+   SetTree(chain);
 }
 
 struct RSlotRAII {

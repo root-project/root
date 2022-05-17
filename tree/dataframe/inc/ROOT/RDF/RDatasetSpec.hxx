@@ -69,8 +69,11 @@ struct RDatasetSpec {
 
    RDatasetSpec(const std::vector<std::string> &treeNames, const std::vector<std::string> &fileNames,
                 REntryRange entryRange = {})
-      : fTreeNames(treeNames), fFileNameGlobs(fileNames), fStartEntry(entryRange.fStartEntry),
-        fEndEntry(entryRange.fEndEntry)
+      : fTreeNames(
+           fileNames.size() != treeNames.size() && treeNames.size() != 1
+              ? throw std::runtime_error("RDatasetSpec exepcts either N trees and N files, or 1 tree and N files.")
+              : treeNames),
+        fFileNameGlobs(fileNames), fStartEntry(entryRange.fStartEntry), fEndEntry(entryRange.fEndEntry)
    {
    }
 };
