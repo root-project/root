@@ -442,59 +442,6 @@ void RooAbsMinimizerFcn::printEvalErrors() const {
   ooccoutW(_context,Minimization) << msg.str() << endl;
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Logistics
-
-RooArgList *RooAbsMinimizerFcn::GetFloatParamList()
-{
-   return _floatParamList.get();
-}
-RooArgList *RooAbsMinimizerFcn::GetConstParamList()
-{
-   return _constParamList.get();
-}
-RooArgList *RooAbsMinimizerFcn::GetInitFloatParamList()
-{
-   return _initFloatParamList.get();
-}
-RooArgList *RooAbsMinimizerFcn::GetInitConstParamList()
-{
-   return _initConstParamList.get();
-}
-
-void RooAbsMinimizerFcn::SetEvalErrorWall(bool flag)
-{
-   _doEvalErrorWall = flag;
-}
-void RooAbsMinimizerFcn::SetPrintEvalErrors(Int_t numEvalErrors)
-{
-   _printEvalErrors = numEvalErrors;
-}
-
-double &RooAbsMinimizerFcn::GetMaxFCN()
-{
-   return _maxFCN;
-}
-Int_t RooAbsMinimizerFcn::GetNumInvalidNLL() const
-{
-   return _numBadNLL;
-}
-
-Int_t RooAbsMinimizerFcn::evalCounter() const
-{
-   return _evalCounter;
-}
-void RooAbsMinimizerFcn::zeroEvalCount()
-{
-   _evalCounter = 0;
-}
-
-void RooAbsMinimizerFcn::SetVerbose(bool flag)
-{
-   _verbose = flag;
-}
-
 void RooAbsMinimizerFcn::setOptimizeConst(Int_t flag)
 {
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
@@ -533,11 +480,6 @@ void RooAbsMinimizerFcn::optimizeConstantTerms(bool constStatChange, bool constV
    }
 
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
-}
-
-bool RooAbsMinimizerFcn::getOptConst()
-{
-   return _optConst;
 }
 
 std::vector<double> RooAbsMinimizerFcn::getParameterValues() const
