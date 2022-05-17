@@ -158,9 +158,9 @@ TGraph::TGraph(Int_t n, const Float_t *x, const Float_t *y)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default X-Points constructor. The points along the x-axis get the default
-/// values `start`, `start+1`, `start+2`, `start+3`, etc ...
+/// values `start`, `start+step`, `start+2*step`, `start+3*step`, etc ...
 
-TGraph::TGraph(Int_t n, const Double_t *y, Double_t start)
+TGraph::TGraph(Int_t n, const Double_t *y, Double_t start, Double_t step)
    : TNamed("Graph", "Graph"), TAttLine(), TAttFill(0, 1000), TAttMarker()
 {
    if (!y) {
@@ -170,7 +170,7 @@ TGraph::TGraph(Int_t n, const Double_t *y, Double_t start)
    }
    if (!CtorAllocate()) return;
    for (Int_t i = 0; i < n; i++) {
-      fX[i] = start+i;
+      fX[i] = start+i*step;
       fY[i] = y[i];
    }
 }
