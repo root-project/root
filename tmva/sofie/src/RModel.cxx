@@ -1,4 +1,6 @@
 #include <limits>
+#include <algorithm>
+#include <cctype>
 
 #include "TMVA/RModel.hxx"
 
@@ -174,6 +176,12 @@ namespace SOFIE{
       fUseSession = useSession;  // session flag is used in operator initialize
       Initialize();
       fGC += ("//Code generated automatically by TMVA for Inference of Model file [" + fFileName + "] at [" + fParseTime.substr(0, fParseTime.length()-1) +"] \n");
+      // add header guards
+      std::string hgname = fName;
+      std::transform(hgname.begin(), hgname.end(), hgname.begin(), [](unsigned char c){ return std::toupper(c);} );
+      hgname = "TMVA_SOFIE_" + hgname;
+      fGC += "\n#ifndef " + hgname + "\n";
+      fGC += "#define " + hgname + "\n\n";
       for (auto& i: fNeededStdLib) {
          fGC += "#include<" + i + ">\n";
       }
@@ -182,7 +190,7 @@ namespace SOFIE{
       fGC += "#include \"TMVA/SOFIE_common.hxx\"\n";
       if (useWeightFile)
          fGC += "#include <fstream>\n";
-      
+
       fGC += "\nnamespace TMVA_SOFIE_" + fName + "{\n";
       if (!fNeededBlasRoutines.empty()) {
          fGC += ("namespace BLAS{\n");
@@ -227,7 +235,7 @@ namespace SOFIE{
                fGC += "std::vector<float> fTensor_" + i.first + " = std::vector<float>(" + std::to_string(length) + ");\n";
                fGC += "float * tensor_" + i.first + " = fTensor_" + i.first + ".data();\n";
             }
-          
+
          }
       }
       for (auto&i: fIntermediateTensorInfos){
@@ -309,8 +317,8 @@ namespace SOFIE{
       }
       if (outputSize == 1) {
          size_t outputLength = ConvertShapeToLength(GetTensorShape(fOutputTensorNames[0]));
-         
-         fGC += "\tstd::vector<float> ret (tensor_" + fOutputTensorNames[0] + ", tensor_" + fOutputTensorNames[0] + " + " + 
+
+         fGC += "\tstd::vector<float> ret (tensor_" + fOutputTensorNames[0] + ", tensor_" + fOutputTensorNames[0] + " + " +
                std::to_string(outputLength) + ");\n";
       } else {
          for (size_t i = 0; i < outputSize; i++) {
@@ -318,7 +326,7 @@ namespace SOFIE{
                size_t outputLength = ConvertShapeToLength(GetTensorShape(fOutputTensorNames[i]));
                fGC += "\tstd::vector<float> ret_";
                fGC += std::to_string(i);
-               fGC += " (tensor_" + fOutputTensorNames[i] + ", tensor_" + fOutputTensorNames[i] + " + " + 
+               fGC += " (tensor_" + fOutputTensorNames[i] + ", tensor_" + fOutputTensorNames[i] + " + " +
                std::to_string(outputLength) + ");\n";
             }
          }
@@ -342,6 +350,7 @@ namespace SOFIE{
          fGC += "};\n";
       }
       fGC += ("} //TMVA_SOFIE_" + fName + "\n");
+      fGC += "\n#endif  // " + hgname + "\n";
    }
 
    void RModel::ReadInitializedTensorsFromFile() {
@@ -353,7 +362,7 @@ namespace SOFIE{
       fGC += "   }\n";
       fGC += "   std::string tensor_name;\n";
       fGC += "   int length;\n";
-      
+
       //loop on tensors and parse the file
       for (auto& i: fInitializedTensors){
          if (i.second.fType == ETensorType::FLOAT){
@@ -370,7 +379,7 @@ namespace SOFIE{
             fGC += "      throw std::runtime_error(err_msg);\n";
             fGC += "    }\n";
             fGC += "   if (length != " + slength + ") {\n";
-            fGC += "      std::string err_msg = \"TMVA-SOFIE failed to read the correct tensor size; expected size is " + 
+            fGC += "      std::string err_msg = \"TMVA-SOFIE failed to read the correct tensor size; expected size is " +
                    slength + " , read \" + std::to_string(length) ;\n";
             fGC += "      throw std::runtime_error(err_msg);\n";
             fGC += "    }\n";
@@ -382,7 +391,7 @@ namespace SOFIE{
    }
 
    void RModel::WriteInitializedTensorsToFile(std::string filename) {
-      // write the initialized tensors in a text file 
+      // write the initialized tensors in a text file
       if (filename == ""){
          filename = fName + ".data";
       }
