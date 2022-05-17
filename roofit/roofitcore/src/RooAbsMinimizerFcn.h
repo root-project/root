@@ -64,8 +64,6 @@ public:
    void SetRecoverFromNaNStrength(double strength) { _recoverFromNaNStrength = strength; }
    void SetPrintEvalErrors(Int_t numEvalErrors) { _printEvalErrors = numEvalErrors; }
    double &GetMaxFCN() { return _maxFCN; }
-   Int_t evalCounter() const {return _evalCounter; }
-   void zeroEvalCount() { _evalCounter = 0; }
    /// Return a possible offset that's applied to the function to separate invalid function values from valid ones.
    double getOffset() const { return _funcOffset; }
    void SetVerbose(bool flag = true) { _verbose = flag; }
@@ -116,6 +114,8 @@ protected:
    void SetPdfParamErr(Int_t index, double loVal, double hiVal);
 
    void printEvalErrors() const;
+
+   void incrementEvalCounter() const;
 
    // members
    RooMinimizer *_context;

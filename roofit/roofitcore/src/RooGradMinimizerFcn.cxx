@@ -137,11 +137,7 @@ double RooGradMinimizerFcn::DoEval(const double *x) const
       std::cout.flush();
    }
 
-   _evalCounter++;
-   //#ifndef NDEBUG
-   //  std::cout << "RooGradMinimizerFcn " << this << " evaluations (in DoEval): " << _evalCounter <<
-   //  std::endl;
-   //#endif
+   incrementEvalCounter();
    return fvalue;
 }
 

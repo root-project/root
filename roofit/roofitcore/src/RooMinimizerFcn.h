@@ -15,22 +15,14 @@
 #ifndef ROO_MINIMIZER_FCN
 #define ROO_MINIMIZER_FCN
 
-#include "Math/IFunction.h"
-#include "Fit/ParameterSettings.h"
-#include "Fit/FitResult.h"
-
-#include "RooAbsReal.h"
-#include "RooArgList.h"
+#include <Math/IFunction.h>
 
 #include <fstream>
 #include <vector>
 
 #include "RooAbsMinimizerFcn.h"
 
-template<typename T> class TMatrixTSym;
-using TMatrixDSym = TMatrixTSym<double>;
-
-// forward declaration
+class RooAbsReal;
 class RooMinimizer;
 
 class RooMinimizerFcn : public RooAbsMinimizerFcn, public ROOT::Math::IBaseFunctionMultiDim {

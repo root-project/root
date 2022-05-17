@@ -95,8 +95,8 @@ public:
 
   void saveStatus(const char* label, int status) { _statusHistory.push_back(std::pair<std::string,int>(label,status)) ; }
 
-  int evalCounter() const ;
-  void zeroEvalCount() ;
+  int evalCounter() const {return _evalCounter; }
+  void zeroEvalCount() { _evalCounter = 0; }
 
   ROOT::Fit::Fitter* fitter() ;
   const ROOT::Fit::Fitter* fitter() const ;
@@ -108,6 +108,10 @@ public:
   void applyCovarianceMatrix(TMatrixDSym const& V) ;
 
 private:
+
+  friend class RooAbsMinimizerFcn;
+
+  void incrementEvalCounter() { _evalCounter++; }
 
   void profileStart() ;
   void profileStop() ;
@@ -139,6 +143,7 @@ private:
   static std::unique_ptr<ROOT::Fit::Fitter> _theFitter ;
 
   std::vector<std::pair<std::string,int> > _statusHistory ;
+  int _evalCounter = 0;
 
   ClassDefOverride(RooMinimizer,0) // RooFit interface to ROOT::Fit::Fitter
 } ;

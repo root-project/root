@@ -442,6 +442,18 @@ void RooAbsMinimizerFcn::printEvalErrors() const {
   ooccoutW(_context,Minimization) << msg.str() << endl;
 }
 
+void RooAbsMinimizerFcn::incrementEvalCounter() const {
+   // The counters in the RooMinimizer and in the RooAbsMinimizerFcn are not
+   // redundant! Every time the ROOT::Fit::Fitter is invoked with this
+   // RooAbsMinimizerFcn, it is copied. Therefore, only the counter in a copy
+   // unknown to the RooMinimizer context is incremented. To give the
+   // RooMinimizer information on the total number of function evaluations, we
+   // also have to increment the counter of the RooMinimizer.
+
+   _context->incrementEvalCounter();
+   _evalCounter++;
+}
+
 void RooAbsMinimizerFcn::setOptimizeConst(Int_t flag)
 {
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);

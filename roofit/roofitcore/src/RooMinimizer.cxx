@@ -932,9 +932,6 @@ void RooMinimizer::setPrintEvalErrors(Int_t numEvalErrors) { _fcn->SetPrintEvalE
 void RooMinimizer::setVerbose(bool flag) { _verbose = flag ; _fcn->SetVerbose(flag); }
 bool RooMinimizer::setLogFile(const char* logf) { return _fcn->SetLogFile(logf); }
 
-int RooMinimizer::evalCounter() const { return _fcn->evalCounter() ; }
-void RooMinimizer::zeroEvalCount() { _fcn->zeroEvalCount() ; }
-
 int RooMinimizer::getNPar() const { return _fcn->getNDim() ; }
 
 std::ofstream* RooMinimizer::logfile() { return _fcn->GetLogFile(); }
