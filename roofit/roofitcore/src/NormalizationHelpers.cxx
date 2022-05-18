@@ -16,6 +16,8 @@
 #include <RooAbsPdf.h>
 #include <RooAbsReal.h>
 #include <RooAddition.h>
+#include <RooConstraintSum.h>
+#include <RooProdPdf.h>
 
 #include "RooNormalizedPdf.h"
 
@@ -25,13 +27,64 @@ void treeNodeServerListAndNormSets(const RooAbsArg &arg, RooAbsCollection &list,
                                    std::unordered_map<RooAbsArg const *, RooArgSet *> &normSets)
 {
    list.add(arg, true);
-   normSets.insert({&arg, new RooArgSet{normSet}});
+
+   // normalization sets only need to be added for pdfs
+   if (dynamic_cast<RooAbsPdf const *>(&arg)) {
+      normSets.insert({&arg, new RooArgSet{normSet}});
+   }
 
    // Recurse if current node is derived
    if (arg.isDerived() && !arg.isFundamental()) {
       for (const auto server : arg.servers()) {
+
+         if (!server->isValueServer(arg)) {
+            continue;
+         }
+
+         {
+            // If this is a RooProdPdf server that is also serving a
+            // RooConstraintSum, it should be skipped because it is not
+            // evaluated by the RooProdPdf. It was only part of the RooPdfPdf
+            // to be extracted for the constraint sum.
+            bool skip = false;
+            if (dynamic_cast<RooProdPdf const *>(&arg)) {
+               for (auto *client : server->clients()) {
+                  if (dynamic_cast<RooConstraintSum const *>(client)) {
+                     skip = true;
+                     break;
+                  }
+               }
+            }
+            if (skip) {
+               continue;
+            }
+         }
+
          RooArgSet serverNormSet;
          arg.fillNormSetForServer(normSet, *server, serverNormSet);
+         // The norm sets are sorted to compare them for equality more easliy
+         serverNormSet.sort();
+
+         // Make sure that the server is not already part of the computation
+         // graph with a different normalization set.
+         auto found = normSets.find(server);
+         if (found != normSets.end()) {
+            if (found->second->size() != serverNormSet.size() || !serverNormSet.hasSameLayout(*found->second)) {
+               std::stringstream ss;
+               ss << server->IsA()->GetName() << "::" << server->GetName()
+                  << " is requested to be evaluated with two different normalization sets in the same model!";
+               ss << " This is not supported yet. The conflicting norm sets are:\n    RooArgSet";
+               serverNormSet.printValue(ss);
+               ss << " requested by " << arg.IsA()->GetName() << "::" << arg.GetName() << "\n    RooArgSet";
+               found->second->printValue(ss);
+               ss << " first requested by other client";
+               auto errMsg = ss.str();
+               oocoutE(server, Minimization) << errMsg << std::endl;
+               throw std::runtime_error(errMsg);
+            }
+            continue;
+         }
+
          treeNodeServerListAndNormSets(*server, list, serverNormSet, normSets);
       }
    }
@@ -47,7 +100,10 @@ std::vector<std::unique_ptr<RooAbsArg>> unfoldIntegrals(RooAbsArg const &topNode
       return newNodes;
 
    RooArgSet nodes;
-   treeNodeServerListAndNormSets(topNode, nodes, normSet, normSets);
+   // The norm sets are sorted to compare them for equality more easliy
+   RooArgSet normSetSorted{normSet};
+   normSetSorted.sort();
+   treeNodeServerListAndNormSets(topNode, nodes, normSetSorted, normSets);
 
    for (RooAbsArg *node : nodes) {
 
