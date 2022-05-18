@@ -800,7 +800,7 @@ public:
       using RetType = typename TTraits::CallableTraits<F_t>::ret_type;
       static_assert(RDFInternal::IsRVec<RetType>::value, "Vary expressions must return an RVec.");
 
-      if (colNames.size() > 1) {
+      if (colNames.size() > 1) { // we are varying multiple columns simultaneously, RetType is RVec<RVec<T>>
          constexpr bool hasInnerRVec = RDFInternal::IsRVec<typename RetType::value_type>::value;
          if (!hasInnerRVec)
             throw std::runtime_error("This Vary call is varying multiple columns simultaneously but the expression "
@@ -824,7 +824,7 @@ public:
                                         RDFInternal::TypeID2TypeName(innerTypeID) + ") than the nominal value (" +
                                         colTypes[i] + ").");
          }
-      } else {
+      } else { // we are varying a single column, RetType is RVec<T>
          const auto &retTypeID = typeid(typename RetType::value_type);
          const auto &colName = colNames[0]; // we have only one element in there
          const auto &definesMap = fColRegister.GetColumns();
