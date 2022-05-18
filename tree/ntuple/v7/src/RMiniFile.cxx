@@ -1004,7 +1004,14 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view 
    ReadBuffer(&key, sizeof(key), key.GetSeekKey());
    offset = key.GetSeekKey() + key.fKeyLen;
    RTFNTuple ntuple;
-   ReadBuffer(&ntuple, sizeof(ntuple), offset);
+   if (key.fObjLen > sizeof(ntuple)) {
+      return R__FAIL("invalid anchor size: " + std::to_string(key.fObjLen) + " > " + std::to_string(sizeof(ntuple)));
+   }
+   ReadBuffer(&ntuple, key.fObjLen, offset);
+   if (sizeof(ntuple) != key.fObjLen) {
+      ROOT::Experimental::Detail::RNTupleDecompressor decompressor;
+      decompressor.Unzip(&ntuple, sizeof(ntuple), key.fObjLen);
+   }
    return ntuple.ToAnchor();
 }
 
