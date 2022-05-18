@@ -65,7 +65,7 @@ private:
    std::chrono::microseconds simulateFit(std::chrono::microseconds h2dTime, std::chrono::microseconds d2hTime,
                                          std::chrono::microseconds diffThreshold);
    void markGPUNodes();
-   void assignToGPU(const RooAbsArg *node);
+   void assignToGPU(NodeInfo &info);
    void computeCPUNode(const RooAbsArg *node, NodeInfo &info);
    void setOperMode(RooAbsArg *arg, RooAbsArg::OperMode opMode);
    void determineOutputSizes();
@@ -84,8 +84,7 @@ private:
    std::map<RooFit::Detail::DataKey, NodeInfo> _nodeInfos;
 
    // the ordered computation graph
-   RooArgList _orderedNodes;
-   std::vector<NodeInfo *> _orderedNodeInfos;
+   std::vector<NodeInfo *> _nodes;
 
    // used for preserving resources
    std::stack<std::vector<double>> _vectorBuffers;
