@@ -767,7 +767,7 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
    , fClass(classp)
 {
    if (fClass == nullptr) {
-      throw std::runtime_error("RField: no I/O support for type " + std::string(className));
+      throw RException(R__FAIL("RField: no I/O support for type " + std::string(className)));
    }
    // Avoid accidentally supporting std types through TClass.
    if (fClass->Property() & kIsDefinedInStd) {
