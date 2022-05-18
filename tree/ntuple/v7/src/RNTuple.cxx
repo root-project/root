@@ -399,7 +399,7 @@ ROOT::Experimental::RCollectionNTupleWriter::RCollectionNTupleWriter(std::unique
 void ROOT::Experimental::RNTuple::Streamer(TBuffer &buf)
 {
    static TClassRef RNTupleAnchorClass = []() {
-      TClassRef classRef("ROOT::Experimental::RNTupleAnchor");
+      TClassRef classRef("ROOT::Experimental::RNTuple");
       classRef = new TClass("ROOT::Experimental::Internal::RFileNTupleAnchor");
       return classRef;
    }();
