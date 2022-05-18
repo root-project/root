@@ -929,26 +929,26 @@ void TGeoVolume::cd(Int_t inode) const
 /// Add a TGeoNode to the list of nodes. This is the usual method for adding
 /// daughters inside the container volume.
 
-void TGeoVolume::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t * /*option*/)
+TGeoNode *TGeoVolume::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t * /*option*/)
 {
    TGeoMatrix *matrix = mat;
    if (matrix==0) matrix = gGeoIdentity;
    else           matrix->RegisterYourself();
    if (!vol) {
       Error("AddNode", "Volume is NULL");
-      return;
+      return 0;
    }
    if (!vol->IsValid()) {
       Error("AddNode", "Won't add node with invalid shape");
       printf("### invalid volume was : %s\n", vol->GetName());
-      return;
+      return 0;
    }
    if (!fNodes) fNodes = new TObjArray();
 
    if (fFinder) {
       // volume already divided.
       Error("AddNode", "Cannot add node %s_%i into divided volume %s", vol->GetName(), copy_no, GetName());
-      return;
+      return 0;
    }
 
    TGeoNodeMatrix *node = 0;
@@ -962,6 +962,7 @@ void TGeoVolume::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option
    node->SetNumber(copy_no);
    fRefCount++;
    vol->Grab();
+   return node;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2452,9 +2453,9 @@ void TGeoVolumeMulti::AddVolume(TGeoVolume *vol)
 /// Add a new node to the list of nodes. This is the usual method for adding
 /// daughters inside the container volume.
 
-void TGeoVolumeMulti::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
+TGeoNode *TGeoVolumeMulti::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
 {
-   TGeoVolume::AddNode(vol, copy_no, mat, option);
+   TGeoNode *n = TGeoVolume::AddNode(vol, copy_no, mat, option);
    Int_t nvolumes = fVolumes->GetEntriesFast();
    TGeoVolume *volume = 0;
    for (Int_t ivo=0; ivo<nvolumes; ivo++) {
@@ -2465,7 +2466,8 @@ void TGeoVolumeMulti::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, O
       volume->SetVisibility(IsVisible());
       volume->AddNode(vol, copy_no, mat, option);
    }
-//   printf("--- vmulti %s : node %s added to %i components\n", GetName(), vol->GetName(), nvolumes);
+   //   printf("--- vmulti %s : node %s added to %i components\n", GetName(), vol->GetName(), nvolumes);
+   return n;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2802,11 +2804,12 @@ TGeoVolumeAssembly::~TGeoVolumeAssembly()
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a component to the assembly.
 
-void TGeoVolumeAssembly::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
+TGeoNode *TGeoVolumeAssembly::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
 {
-   TGeoVolume::AddNode(vol,copy_no,mat,option);
-//   ((TGeoShapeAssembly*)fShape)->RecomputeBoxLast();
+   TGeoNode *node = TGeoVolume::AddNode(vol, copy_no, mat, option);
+   //   ((TGeoShapeAssembly*)fShape)->RecomputeBoxLast();
    ((TGeoShapeAssembly*)fShape)->NeedsBBoxRecompute();
+   return node;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

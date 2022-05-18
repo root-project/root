@@ -113,7 +113,8 @@ public:
    virtual Bool_t  IsFolder() const;
    Bool_t          IsRunTime() const {return fShape->IsRunTimeShape();}
    virtual Bool_t  IsVolumeMulti() const {return kFALSE;}
-   virtual void    AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat=0, Option_t *option="");       // most general case
+   virtual TGeoNode *
+   AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat = 0, Option_t *option = ""); // most general case
    void            AddNodeOffset(TGeoVolume *vol, Int_t copy_no, Double_t offset=0, Option_t *option="");
    virtual void    AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat=0, Option_t *option="");
 
@@ -272,7 +273,8 @@ public:
 
    void            AddVolume(TGeoVolume *vol);
    TGeoVolume     *GetVolume(Int_t id) const {return (TGeoVolume*)fVolumes->At(id);}
-   virtual void    AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option="");       // most general case
+   virtual TGeoNode *
+   AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option = ""); // most general case
    virtual void    AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option="");
    virtual TGeoVolume *Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step, Int_t numed=0, Option_t *option="");
    TGeoShape      *GetLastShape() const;
@@ -329,7 +331,7 @@ public:
    TGeoVolumeAssembly(const char *name);
    virtual ~TGeoVolumeAssembly();
 
-   virtual void    AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat=0, Option_t *option="");
+   virtual TGeoNode *AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat = 0, Option_t *option = "");
    virtual void    AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option);
    virtual TGeoVolume *CloneVolume() const;
    virtual TGeoVolume *Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step, Int_t numed=0, Option_t *option="");
