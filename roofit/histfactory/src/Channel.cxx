@@ -134,6 +134,9 @@ void RooStats::HistFactory::Channel::PrintXML( std::string const& directory, std
   xml << "  <Channel Name=\"" << fName << "\" InputFile=\"" << fInputFile << "\" >" << std::endl << std::endl;
 
   fData.PrintXML( xml );
+  for(auto const& data : fAdditionalData) {
+    data.PrintXML(xml);
+  }
 
   fStatErrorConfig.PrintXML( xml );
   /*
