@@ -2,6 +2,7 @@
 #define RDF_TEST_SIMPLEFILLER
 
 #include <TH1D.h>
+#include <TList.h>
 
 class SimpleFiller {
    TH1D fHisto;
