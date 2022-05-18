@@ -28,6 +28,8 @@
 #include <ROOT/RSpan.hxx>
 #include <ROOT/RStringView.hxx>
 
+#include <TClassRef.h>
+
 #include <iterator>
 #include <memory>
 #include <sstream>
@@ -486,30 +488,18 @@ auto reader = RNTupleReader::Open(ntpl);
 ~~~
 */
 // clang-format on
-class RNTuple final {
+class RNTuple final : protected ROOT::Experimental::Internal::RFileNTupleAnchor {
    friend class ROOT::Experimental::Internal::RNTupleFileWriter;
    friend struct ROOT::Experimental::Internal::RNTupleTester;
 
 private:
-   /// Persistent data members need to be identical to the ones from RFileNTupleAnchor
-   /// TODO(jblomer): Remove unneeded fChecksum, fVersion, fSize, fReserved once RNTuple moves out of experimental
-
-   std::int32_t fChecksum = 0;
-   std::uint32_t fVersion = 0;
-   std::uint32_t fSize = sizeof(ROOT::Experimental::Internal::RFileNTupleAnchor);
-   std::uint64_t fSeekHeader = 0;
-   std::uint32_t fNBytesHeader = 0;
-   std::uint32_t fLenHeader = 0;
-   std::uint64_t fSeekFooter = 0;
-   std::uint32_t fNBytesFooter = 0;
-   std::uint32_t fLenFooter = 0;
-   std::uint64_t fReserved = 0;
+   // Only add transient members. The on-disk layout must be identical to RFileNTupleAnchor
 
    TFile *fFile = nullptr; ///<! The file from which the ntuple was streamed, registered in the custom streamer
 
    // Conversion between low-level anchor and RNTuple UI class
-   RNTuple(const Internal::RFileNTupleAnchor &a);
-   Internal::RFileNTupleAnchor GetAnchor() const;
+   explicit RNTuple(const Internal::RFileNTupleAnchor &a) : Internal::RFileNTupleAnchor(a) {}
+   Internal::RFileNTupleAnchor GetAnchor() const { return *this; }
 
 public:
    RNTuple() = default;
@@ -523,6 +513,7 @@ public:
    /// Merge this NTuple with the input list entries
    Long64_t Merge(TCollection *input, TFileMergeInfo *mergeInfo);
 
+   // The version must match the RFileNTupleAnchor version in the LinkDef.h
    ClassDefNV(RNTuple, 3);
 };
 
