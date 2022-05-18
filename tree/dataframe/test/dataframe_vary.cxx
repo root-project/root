@@ -1270,8 +1270,8 @@ TEST_P(RDFVary, VaryReport)
    EXPECT_EQ(report["after"].GetAll(), 4);
    EXPECT_FLOAT_EQ(report["after"].GetEff(), 50.);
    EXPECT_EQ(report["after"].GetPass(), 2);
-
-   EXPECT_THROW(VariationsFor(h), std::runtime_error); // FIXME not (yet) implemented
+   // Varying Reports is not implemented yet, tracked by https://github.com/root-project/root/issues/10551
+   EXPECT_THROW(VariationsFor(h), std::logic_error);
 }
 
 TEST_P(RDFVary, VaryStats)
