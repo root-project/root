@@ -83,7 +83,7 @@ struct NodeInfo {
    int nServers = 0;
    int remClients = 0;
    int remServers = 0;
-   bool computeInScalarMode = false;
+   bool isScalar = false;
    bool computeInGPU = false;
    bool copyAfterEvaluation = false;
    bool fromDataset = false;
@@ -195,15 +195,15 @@ void RooFitDriver::setData(DataSpansMap const &dataSpans)
    for (auto *arg : _orderedNodes) {
       auto &info = _nodeInfos.at(arg);
 
-      // If the node evaluation doesn't involve a loop over entries, we can
-      // always use the scalar mode.
-      info.computeInScalarMode = info.outputSize == 1 && !arg->isReducerNode();
+      // If the node has an output of size 1
+      info.isScalar = info.outputSize == 1;
 
-      // We don't need dirty flag propagation for nodes evaluated in batch
-      // mode, because the driver takes care of deciding which node needs to be
-      // re-evaluated. However, dirty flag propagation must be kept for reducer
-      // nodes, because their clients are evaluated in scalar mode.
-      if (!info.computeInScalarMode && !arg->isReducerNode()) {
+      // In principle we don't need dirty flag propagation because the driver
+      // takes care of deciding which node needs to be re-evaluated. However,
+      // disabling it also for scalar mode results in very long fitting times
+      // for specific models (test 14 in stressRooFit), which still needs to be
+      // understood. TODO.
+      if (!info.isScalar) {
          setOperMode(arg, RooAbsArg::ADirty);
       }
    }
@@ -455,7 +455,7 @@ std::chrono::microseconds RooFitDriver::simulateFit(std::chrono::microseconds h2
    std::size_t nNodes = _nodeInfos.size();
    // launch scalar nodes (assume they are computed in 0 time)
    for (auto &it : _nodeInfos) {
-      if (it.second.computeInScalarMode) {
+      if (it.second.isScalar) {
          nNodes--;
          it.second.timeLaunched = microseconds{0};
       } else
@@ -469,7 +469,8 @@ std::chrono::microseconds RooFitDriver::simulateFit(std::chrono::microseconds h2
       microseconds minDiff = microseconds::max(), maxDiff = -minDiff; // diff = cpuTime - cudaTime
       RooAbsArg const *cpuCandidate = nullptr;
       RooAbsArg const *cudaCandidate = nullptr;
-      microseconds cpuDelay, cudaDelay;
+      microseconds cpuDelay{};
+      microseconds cudaDelay{};
       for (auto &it : _nodeInfos) {
          RooAbsArg const *absArg = it.second.absArg;
          if (it.second.timeLaunched >= microseconds{0})
@@ -480,7 +481,7 @@ std::chrono::microseconds RooFitDriver::simulateFit(std::chrono::microseconds h2
             if (_nodeInfos.count(server) == 0)
                continue;
             auto &info = _nodeInfos.at(server);
-            if (info.computeInScalarMode)
+            if (info.isScalar)
                continue;
 
             // dependencies not computed yet
@@ -561,7 +562,7 @@ void RooFitDriver::markGPUNodes()
    } else if (_getValInvocations == 2) {
       // compute (and time) as much as possible in gpu
       for (auto &item : _nodeInfos) {
-         item.second.computeInGPU = !item.second.computeInScalarMode && item.second.absArg->canComputeBatchWithCuda();
+         item.second.computeInGPU = !item.second.isScalar && item.second.absArg->canComputeBatchWithCuda();
       }
    } else {
       // Assign nodes to gpu using a greedy algorithm: for the number of bytes
@@ -574,15 +575,17 @@ void RooFitDriver::markGPUNodes()
 
       microseconds h2dTime = transferTimes.first;
       microseconds d2hTime = transferTimes.second;
-      ooccoutD(static_cast<RooAbsArg *>(nullptr), FastEvaluations) << "------Copying times------\n";
-      ooccoutD(static_cast<RooAbsArg *>(nullptr), FastEvaluations)
-         << "h2dTime=" << h2dTime.count() << "us\td2hTime=" << d2hTime.count() << "us\n";
+      ooccoutD(static_cast<TObject*>(nullptr), FastEvaluations) << "------Copying times------\n";
+      ooccoutD(static_cast<TObject*>(nullptr), FastEvaluations) << "h2dTime=" << h2dTime.count() << "us\td2hTime=" << d2hTime.count()
+                                         << "us\n";
 
       std::vector<microseconds> diffTimes;
       for (auto &item : _nodeInfos)
-         if (!item.second.computeInScalarMode)
+         if (!item.second.isScalar)
             diffTimes.push_back(item.second.cpuTime - item.second.cudaTime);
-      microseconds bestTime = microseconds::max(), bestThreshold, ret;
+      microseconds bestTime = microseconds::max();
+      microseconds bestThreshold{};
+      microseconds ret;
       for (auto &threshold : diffTimes)
          if ((ret = simulateFit(h2dTime, d2hTime, microseconds{std::abs(threshold.count())})) < bestTime) {
             bestTime = ret;
@@ -590,8 +593,7 @@ void RooFitDriver::markGPUNodes()
          }
       // finalize the marking of the best configuration
       simulateFit(h2dTime, d2hTime, microseconds{std::abs(bestThreshold.count())});
-      ooccoutD(static_cast<RooAbsArg *>(nullptr), FastEvaluations)
-         << "Best threshold=" << bestThreshold.count() << "us" << std::endl;
+      ooccoutD(static_cast<TObject*>(nullptr), FastEvaluations) << "Best threshold=" << bestThreshold.count() << "us" << std::endl;
 
       // deletion of the timing events (to be replaced later by non-timing events)
       for (auto &item : _nodeInfos) {
@@ -604,7 +606,7 @@ void RooFitDriver::markGPUNodes()
 
    for (auto &item : _nodeInfos) {
       // scalar nodes don't need copying
-      if (!item.second.computeInScalarMode) {
+      if (!item.second.isScalar) {
          for (auto *client : item.second.absArg->clients()) {
             if (_nodeInfos.count(client) == 0)
                continue;
@@ -623,10 +625,9 @@ void RooFitDriver::markGPUNodes()
          if (item.second.computeInGPU || item.second.copyAfterEvaluation)
             item.second.event = RooBatchCompute::dispatchCUDA->newCudaEvent(false);
 
-      ooccoutD(static_cast<RooAbsArg *>(nullptr), FastEvaluations)
-         << "------Nodes------\t\t\t\tCpu time: \t Cuda time\n";
+      ooccoutD(static_cast<TObject*>(nullptr), FastEvaluations) << "------Nodes------\t\t\t\tCpu time: \t Cuda time\n";
       for (auto &item : _nodeInfos)
-         ooccoutD(static_cast<RooAbsArg *>(nullptr), FastEvaluations)
+         ooccoutD(static_cast<TObject*>(nullptr), FastEvaluations)
             << std::setw(20) << item.first->GetName() << "\t" << item.second.absArg << "\t"
             << (item.second.computeInGPU ? "CUDA" : "CPU") << "\t" << item.second.cpuTime.count() << "us\t"
             << item.second.cudaTime.count() << "us\n";
