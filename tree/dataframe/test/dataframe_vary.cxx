@@ -126,7 +126,6 @@ TEST(RDFVary, RequireNVariationsIsConsistent)
 
    std::cerr.rdbuf(oldCerrStreamBuf);
    EXPECT_EQ(strCerr.str(), "RDataFrame::Run: event loop was interrupted\n");
-
 }
 
 TEST(RDFVary, VariationsForDoesNotTriggerRun)
@@ -190,7 +189,6 @@ TEST(RDFVary, GetVariations)
                variations.AsString() ==
                   "Variations {x:0, x:1} affect column x\nVariations {xy:0, xy:1} affect columns {x, y}\n");
 }
-
 
 TEST(RDFVary, VaryDefinePerSample)
 {
@@ -805,8 +803,14 @@ TEST_P(RDFVary, VaryRedefine)
 TEST_P(RDFVary, RedefineVariedColumn)
 {
    // first vary and then redefine --> not legal
-   auto h = ROOT::RDataFrame(10).Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
-                                .Vary("x", [](int x) { return ROOT::RVecI{x - 1, x + 1}; }, {"x"}, 2);
+   auto h = ROOT::RDataFrame(10)
+               .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
+               .Vary(
+                  "x",
+                  [](int x) {
+                     return ROOT::RVecI{x - 1, x + 1};
+                  },
+                  {"x"}, 2);
    EXPECT_THROW(h.Redefine("x", [] { return 25; }), std::runtime_error);
 }
 
@@ -836,8 +840,9 @@ struct MyCounter : public ROOT::Detail::RDF::RActionImpl<MyCounter> {
 
    MyCounter(unsigned int nSlots) : fPerThreadResults(nSlots) {}
 
-   MyCounter(const std::shared_ptr<int> &myc, const unsigned int nSlots)
-   : fFinalResult(myc), fPerThreadResults(nSlots) {}
+   MyCounter(const std::shared_ptr<int> &myc, const unsigned int nSlots) : fFinalResult(myc), fPerThreadResults(nSlots)
+   {
+   }
 
    std::shared_ptr<int> GetResultPtr() const { return fFinalResult; }
 
@@ -853,7 +858,7 @@ struct MyCounter : public ROOT::Detail::RDF::RActionImpl<MyCounter> {
 
    MyCounter MakeNew(void *newResult)
    {
-      auto &result = *static_cast<std::shared_ptr<int>*>(newResult);
+      auto &result = *static_cast<std::shared_ptr<int> *>(newResult);
       return MyCounter(result, fPerThreadResults.size());
    }
 };
@@ -1004,17 +1009,17 @@ struct CustomFiller {
 TEST_P(RDFVary, VaryCustomObject)
 {
    auto h = ROOT::RDataFrame(10)
-                   .Define("Jet",
-                           [] {
-                              return Jet{1., 2.};
-                           })
-                   .Vary(
-                      "Jet",
-                      [] {
-                         return ROOT::RVec<Jet>{{}, {4., 5.}};
-                      },
-                      {}, 2)
-                   .Fill<Jet>(CustomFiller{}, {"Jet"});
+               .Define("Jet",
+                       [] {
+                          return Jet{1., 2.};
+                       })
+               .Vary(
+                  "Jet",
+                  [] {
+                     return ROOT::RVec<Jet>{{}, {4., 5.}};
+                  },
+                  {}, 2)
+               .Fill<Jet>(CustomFiller{}, {"Jet"});
    auto hs = VariationsFor(h);
 
    EXPECT_DOUBLE_EQ(h->GetMeanX(), 1.);
@@ -1214,8 +1219,7 @@ TEST_P(RDFVary, VaryProfiles)
                    {}, 2);
    auto h1 = df.Profile1D<ROOT::RVecI, ROOT::RVecI>({"", "", 100, 0, 100, 0, 100}, "x", "x");
    auto h1s = VariationsFor(h1);
-   auto h2 =
-      df.Profile2D<ROOT::RVecI, ROOT::RVecI, ROOT::RVecI>({"", "", 100, 0, 100, 100, 0, 100}, "x", "x", "x");
+   auto h2 = df.Profile2D<ROOT::RVecI, ROOT::RVecI, ROOT::RVecI>({"", "", 100, 0, 100, 100, 0, 100}, "x", "x", "x");
    auto h2s = VariationsFor(h2);
 
    EXPECT_DOUBLE_EQ(h1->GetMean(), 2.);
