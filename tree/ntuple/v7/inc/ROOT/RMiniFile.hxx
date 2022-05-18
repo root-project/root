@@ -58,6 +58,8 @@ The RFileNTupleAnchor is the low-level entry point of an RNTuple in a ROOT file 
 The ROOT::Experimental::RNTuple object has the same on-disk layout as the RFileNTupleAnchor.
 It only adds methods and transient members. Reading and writing RNTuple anchors with TFile and the minifile writer
 is thus fully interoperable (same on-disk information).
+TODO(jblomer): Remove unneeded fChecksum, fVersion, fSize, fReserved once ROOT::Experimetnal::RNTuple moves out of
+the experimental namespace.
 */
 // clang-format on
 struct RFileNTupleAnchor {

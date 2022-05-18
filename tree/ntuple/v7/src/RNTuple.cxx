@@ -398,43 +398,19 @@ ROOT::Experimental::RCollectionNTupleWriter::RCollectionNTupleWriter(std::unique
 
 void ROOT::Experimental::RNTuple::Streamer(TBuffer &buf)
 {
+   static TClassRef RNTupleAnchorClass = []() {
+      TClassRef classRef("ROOT::Experimental::RNTupleAnchor");
+      classRef = new TClass("ROOT::Experimental::Internal::RFileNTupleAnchor");
+      return classRef;
+   }();
+
    if (buf.IsReading()) {
-      RNTuple::Class()->ReadBuffer(buf, this);
+      RNTupleAnchorClass->ReadBuffer(buf, static_cast<Internal::RFileNTupleAnchor *>(this));
       R__ASSERT(buf.GetParent() && buf.GetParent()->InheritsFrom("TFile"));
       fFile = reinterpret_cast<TFile *>(buf.GetParent());
    } else {
-      RNTuple::Class()->WriteBuffer(buf, this);
+      RNTupleAnchorClass->WriteBuffer(buf, static_cast<Internal::RFileNTupleAnchor *>(this));
    }
-}
-
-ROOT::Experimental::RNTuple::RNTuple(const Internal::RFileNTupleAnchor &a)
-{
-   fChecksum = a.fChecksum;
-   fVersion = a.fVersion;
-   fSize = a.fSize;
-   fSeekHeader = a.fSeekHeader;
-   fNBytesHeader = a.fNBytesHeader;
-   fLenHeader = a.fLenHeader;
-   fSeekFooter = a.fSeekFooter;
-   fNBytesFooter = a.fNBytesFooter;
-   fLenFooter = a.fLenFooter;
-   fReserved = a.fReserved;
-}
-
-ROOT::Experimental::Internal::RFileNTupleAnchor ROOT::Experimental::RNTuple::GetAnchor() const
-{
-   Internal::RFileNTupleAnchor a;
-   a.fChecksum = fChecksum;
-   a.fVersion = fVersion;
-   a.fSize = fSize;
-   a.fSeekHeader = fSeekHeader;
-   a.fNBytesHeader = fNBytesHeader;
-   a.fLenHeader = fLenHeader;
-   a.fSeekFooter = fSeekFooter;
-   a.fNBytesFooter = fNBytesFooter;
-   a.fLenFooter = fLenFooter;
-   a.fReserved = fReserved;
-   return a;
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RPageSource>
