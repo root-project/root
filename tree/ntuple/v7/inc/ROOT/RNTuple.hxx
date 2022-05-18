@@ -482,9 +482,9 @@ For instance, for an RNTuple called "Events" in a ROOT file, usage can be
 auto f = TFile::Open("data.root");
 auto ntpl = f->Get<ROOT::Experimental::RNTuple>("Events");
 
-auto pageSource = ntpl->MakePageSource();
-// or
 auto reader = RNTupleReader::Open(ntpl);
+or
+auto pageSource = ntpl->MakePageSource();
 ~~~
 */
 // clang-format on
