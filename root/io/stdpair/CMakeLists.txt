@@ -10,11 +10,11 @@ ROOT_GENERATE_DICTIONARY(G__CmsPair ${CMAKE_CURRENT_SOURCE_DIR}/cmspair.h LINKDE
 ROOTTEST_LINKER_LIBRARY(CmsPair G__CmsPair.cxx LIBRARIES ${ROOT_LIBRARIES})
 
 ROOT_ADD_TEST(roottest-root-io-stdpair-collection-build 
-              COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config $<CONFIG> --target CmsPairCollection${fast}
+              COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config $<CONFIG> --target G__CmsPairCollection${fast}  CmsPairCollection${fast} -- ${always-make}
               FIXTURES_SETUP InputFiles)
 
 ROOT_ADD_TEST(roottest-root-io-stdpair-pair-build 
-              COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config $<CONFIG> --target CmsPair${fast}
+              COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config $<CONFIG> --target G__CmsPair${fast}  CmsPair${fast} -- ${always-make}
               FIXTURES_SETUP InputFiles)
 
 ROOTTEST_ADD_TEST(CopyRootFiles
