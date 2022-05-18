@@ -52,10 +52,10 @@ std::unique_ptr<RooAbsReal> createRangeNormTerm(RooAbsPdf const &pdf, RooArgSet 
    RooArgSet observablesInPdf;
    pdf.getObservables(&observables, observablesInPdf);
 
-   std::unique_ptr<RooAbsReal> integral{pdf.createIntegral(observablesInPdf,
-                                                           &observablesInPdf,
-                                                           pdf.getIntegratorConfig(), rangeNames.c_str())};
-   auto out = std::make_unique<RooFormulaVar>((baseName + "_correctionTerm").c_str(), "(log(x[0]))", RooArgList(*integral));
+   std::unique_ptr<RooAbsReal> integral{
+      pdf.createIntegral(observablesInPdf, &observablesInPdf, pdf.getIntegratorConfig(), rangeNames.c_str())};
+   auto out =
+      std::make_unique<RooFormulaVar>((baseName + "_correctionTerm").c_str(), "(log(x[0]))", RooArgList(*integral));
    out->addOwnedComponents(std::move(integral));
    return out;
 }
@@ -100,7 +100,7 @@ RooNLLVarNew::RooNLLVarNew(const RooNLLVarNew &other, const char *name)
 \param dataMap A map containing spans with the input data for the computation
 **/
 void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_t /*nOut*/,
-                                RooFit::Detail::DataMap const& dataMap) const
+                                RooFit::Detail::DataMap const &dataMap) const
 {
    std::size_t nEvents = dataMap.at(_pdf).size();
    auto probas = dataMap.at(_pdf);
@@ -185,12 +185,6 @@ void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_
       nll += _sumCorrectionTerm;
    }
    output[0] = nll;
-
-   // Since the output of this node is always of size one, it is possible that it is
-   // evaluated in scalar mode. We need to set the cached value and clear
-   // the dirty flag.
-   const_cast<RooNLLVarNew *>(this)->setCachedValue(nll);
-   const_cast<RooNLLVarNew *>(this)->clearValueDirty();
 }
 
 double RooNLLVarNew::evaluate() const
