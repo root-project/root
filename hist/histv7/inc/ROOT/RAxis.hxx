@@ -123,11 +123,16 @@ public:
     Random const_iterator through bins. Represents the bin index, not a bin
     content: the axis has no notion of any content.
     */
-   class const_iterator: public std::iterator<std::random_access_iterator_tag, int /*value*/, int /*distance*/,
-                                              const int * /*pointer*/, const int & /*ref*/> {
+   class const_iterator {
       int fCursor = 0; ///< Current iteration position
 
    public:
+      using iterator_category = std::random_access_iterator_tag;
+      using value_type = int;
+      using difference_type = int;
+      using pointer = const int *;
+      using reference = const int &;
+
       const_iterator() = default;
 
       /// Initialize a const_iterator with its position
