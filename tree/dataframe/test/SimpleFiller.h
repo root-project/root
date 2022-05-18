@@ -21,6 +21,9 @@ public:
       fHisto.Merge(&l);
    }
 
+   // needed for VariationsFor
+   void Reset() { fHisto.Reset(); }
+
    TH1D &GetHisto() { return fHisto; }
 };
 
