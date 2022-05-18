@@ -1722,32 +1722,24 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     proto->import(dynamic_cast<RooDataSet&>(*asimov_dataset), Rename("asimovData"));
 
     // GHL: Determine to use data if the hist isn't 'NULL'
-    if(channel.GetData().GetHisto() != NULL) {
-
-      Data& data = channel.GetData();
-      TH1* mnominal = data.GetHisto();
-      if( !mnominal ) {
-        cxcoutF(HistFactory) << "Error: Data histogram for channel: " << channel.GetName()
-                << " is NULL" << std::endl;
-        throw hf_exc();
-      }
-
-      // THis works and is natural, but the memory size of the simultaneous dataset grows exponentially with channels
-      auto obsDataUnbinned = make_unique<RooDataSet>("obsData","",*proto->set("obsAndWeight"),weightName);
-
-
-      ConfigureHistFactoryDataset( *obsDataUnbinned, *mnominal,
-          *proto, fObsNameVec );
-
-      proto->import(*obsDataUnbinned);
+    if(TH1 const* mnominal = channel.GetData().GetHisto()) {
+      // This works and is natural, but the memory size of the simultaneous
+      // dataset grows exponentially with channels.
+      RooDataSet dataset{"obsData","",*proto->set("obsAndWeight"),weightName};
+      ConfigureHistFactoryDataset( dataset, *mnominal, *proto, fObsNameVec );
+      proto->import(dataset);
     } // End: Has non-null 'data' entry
 
 
-    for(unsigned int i=0; i < channel.GetAdditionalData().size(); ++i) {
-
-      Data& data = channel.GetAdditionalData().at(i);
-      std::string dataName = data.GetName();
-      TH1* mnominal = data.GetHisto();
+    for(auto const& data : channel.GetAdditionalData()) {
+      if(data.GetName().empty()) {
+        cxcoutF(HistFactory) << "Error: Additional Data histogram for channel: " << channel.GetName()
+                << " has no name! The name always needs to be set for additional datasets, "
+                << "either via the \"Name\" tag in the XML or via RooStats::HistFactory::Data::SetName()." << std::endl;
+        throw hf_exc();
+      }
+      std::string const& dataName = data.GetName();
+      TH1 const* mnominal = data.GetHisto();
       if( !mnominal ) {
         cxcoutF(HistFactory) << "Error: Additional Data histogram for channel: " << channel.GetName()
                 << " with name: " << dataName << " is NULL" << std::endl;
@@ -1755,15 +1747,11 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       }
 
       // THis works and is natural, but the memory size of the simultaneous dataset grows exponentially with channels
-      auto obsDataUnbinned = make_unique<RooDataSet>(dataName.c_str(), dataName.c_str(),
-          *proto->set("obsAndWeight"), weightName);
+      RooDataSet dataset{dataName.c_str(), "", *proto->set("obsAndWeight"), weightName};
+      ConfigureHistFactoryDataset( dataset, *mnominal, *proto, fObsNameVec );
+      proto->import(dataset);
 
-      ConfigureHistFactoryDataset( *obsDataUnbinned, *mnominal,
-          *proto, fObsNameVec );
-
-      proto->import(*obsDataUnbinned);
-
-    } // End: Has non-null 'data' entry
+    }
 
     if (RooMsgService::instance().isActive(static_cast<TObject*>(nullptr), RooFit::HistFactory, RooFit::INFO))
       proto->Print();
@@ -1941,8 +1929,12 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     delete asimov_combined;
 
     // Now merge the observable datasets across the channels
-    if(chs[0]->data("obsData") != NULL) {
-      MergeDataSets(combined, chs, ch_names, "obsData", obsList, channelCat);
+    for(RooAbsData * data : chs[0]->allData()) {
+      // Only include RooDataSets where a data with the same name doesn't only
+      // exist in the merged workspace (like the "asimovData").
+      if(dynamic_cast<RooDataSet*>(data) && !combined->data(data->GetName())) {
+        MergeDataSets(combined, chs, ch_names, data->GetName(), obsList, channelCat);
+      }
     }
 
 
