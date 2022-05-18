@@ -260,17 +260,11 @@ void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
 {
    using namespace Detail;
 
-   auto nodeAbsReal = dynamic_cast<RooAbsReal const *>(node);
-   auto nodeAbsCategory = dynamic_cast<RooAbsCategory const *>(node);
-   assert(nodeAbsReal || nodeAbsCategory);
+   auto nodeAbsReal = static_cast<RooAbsReal const *>(node);
 
    const std::size_t nOut = info.outputSize;
 
-   if (info.computeInScalarMode) {
-      // compute in scalar mode
-      _nonDerivedValues.push_back(nodeAbsCategory ? nodeAbsCategory->getIndex() : nodeAbsReal->getVal());
-      _dataMapCPU[node] = _dataMapCUDA[node] = RooSpan<const double>(&_nonDerivedValues.back(), nOut);
-   } else if (nOut == 1) {
+   if (nOut == 1) {
       _nonDerivedValues.push_back(0.0);
       _dataMapCPU[node] = _dataMapCUDA[node] = RooSpan<const double>(&_nonDerivedValues.back(), nOut);
       nodeAbsReal->computeBatch(nullptr, &_nonDerivedValues.back(), nOut, _dataMapCPU);

@@ -93,6 +93,28 @@ double RooConstraintSum::evaluate() const
 }
 
 
+void RooConstraintSum::computeBatch(cudaStream_t *, double *output, size_t /*size*/,
+                                    RooFit::Detail::DataMap const &dataMap) const
+{
+   double sum(0);
+
+   for (const auto comp : _set1) {
+      sum -= std::log(dataMap.at(comp)[0]);
+   }
+
+   output[0] = sum;
+}
+
+
+void RooConstraintSum::fillNormSetForServer(RooArgSet const & /*normSet*/, RooAbsArg const &server,
+                                            RooArgSet &serverNormSet) const
+{
+   for (auto *arg : _paramSet)
+      if (server.dependsOn(*arg))
+         serverNormSet.add(*arg);
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Replace the variables in this RooConstraintSum with the global observables
 /// in the dataset if they match by name. This function will do nothing if this
