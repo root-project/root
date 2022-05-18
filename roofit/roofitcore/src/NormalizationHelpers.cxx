@@ -114,6 +114,10 @@ std::vector<std::unique_ptr<RooAbsArg>> unfoldIntegrals(RooAbsArg const &topNode
          if (currNormSet.empty())
             continue;
 
+         // The call to getVal() sets up cached states for this normalization
+         // set, which is important in case this pdf is also used by clients
+         // using the getVal() interface (without this, test 28 in stressRooFit
+         // is failing for example).
          pdf->getVal(currNormSet);
 
          if (pdf->selfNormalized() && !dynamic_cast<RooAbsCachedPdf *>(pdf))
