@@ -8285,7 +8285,7 @@ Long64_t TTree::GetMedianClusterSize()
 ////////////////////////////////////////////////////////////////////////////////
 /// In case of a program crash, it will be possible to recover the data in the
 /// tree up to the last AutoSave point.
-/// This function may be called before filling a TTree to specify the when the
+/// This function may be called before filling a TTree to specify when the
 /// branch buffers and TTree header are flushed to disk as part of
 /// TTree::Fill().
 /// The default is -300000000, ie the TTree will write data to disk once it
