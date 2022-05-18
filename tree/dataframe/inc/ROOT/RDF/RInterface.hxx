@@ -779,63 +779,15 @@ public:
    Vary(const std::vector<std::string> &colNames, F &&expression, const ColumnNames_t &inputColumns,
         const std::vector<std::string> &variationTags, std::string_view variationName)
    {
-      /* SANITY CHECKS BEGIN */
-      R__ASSERT(variationTags.size() > 0 && "Must have at least one variation.");
-      R__ASSERT(colNames.size() > 0 && "Must have at least one varied column.");
-      R__ASSERT(!variationName.empty() && "Must provide a variation name.");
-
-      for (auto &colName : colNames) {
-         RDFInternal::CheckValidCppVarName(colName, "Vary");
-         RDFInternal::CheckForDefinition("Vary", colName, fColRegister, fLoopManager->GetBranchNames(),
-                                         fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
-      }
-      RDFInternal::CheckValidCppVarName(variationName, "Vary");
-
       using F_t = std::decay_t<F>;
       using ColTypes_t = typename TTraits::CallableTraits<F_t>::arg_types;
+      using RetType = typename TTraits::CallableTraits<F_t>::ret_type;
       constexpr auto nColumns = ColTypes_t::list_size;
+
+      SanityChecksForVary<RetType>(colNames, variationTags, variationName);
+
       const auto validColumnNames = GetValidatedColumnNames(nColumns, inputColumns);
       CheckAndFillDSColumns(validColumnNames, ColTypes_t{});
-
-      using RetType = typename TTraits::CallableTraits<F_t>::ret_type;
-      static_assert(RDFInternal::IsRVec<RetType>::value, "Vary expressions must return an RVec.");
-
-      if (colNames.size() > 1) { // we are varying multiple columns simultaneously, RetType is RVec<RVec<T>>
-         constexpr bool hasInnerRVec = RDFInternal::IsRVec<typename RetType::value_type>::value;
-         if (!hasInnerRVec)
-            throw std::runtime_error("This Vary call is varying multiple columns simultaneously but the expression "
-                                     "does not return an RVec of RVecs.");
-
-         auto colTypes = GetColumnTypeNamesList(colNames);
-         auto allColTypesEqual =
-            std::all_of(colTypes.begin() + 1, colTypes.end(), [&](const std::string &t) { return t == colTypes[0]; });
-         if (!allColTypesEqual)
-            throw std::runtime_error("Cannot simultaneously vary multiple columns of different types.");
-
-         const auto &innerTypeID = typeid(RDFInternal::InnerValueType_t<RetType>);
-
-         const auto &definesMap = fColRegister.GetColumns();
-         for (auto i = 0u; i < colTypes.size(); ++i) {
-            const auto it = definesMap.find(colNames[i]);
-            const auto &expectedTypeID =
-               it == definesMap.end() ? RDFInternal::TypeName2TypeID(colTypes[i]) : it->second->GetTypeId();
-            if (innerTypeID != expectedTypeID)
-               throw std::runtime_error("Varied values for column \"" + colNames[i] + "\" have a different type (" +
-                                        RDFInternal::TypeID2TypeName(innerTypeID) + ") than the nominal value (" +
-                                        colTypes[i] + ").");
-         }
-      } else { // we are varying a single column, RetType is RVec<T>
-         const auto &retTypeID = typeid(typename RetType::value_type);
-         const auto &colName = colNames[0]; // we have only one element in there
-         const auto &definesMap = fColRegister.GetColumns();
-         const auto it = definesMap.find(colName);
-         const auto &expectedTypeID =
-            it == definesMap.end() ? RDFInternal::TypeName2TypeID(GetColumnType(colName)) : it->second->GetTypeId();
-         if (retTypeID != expectedTypeID)
-            throw std::runtime_error("Varied values for column \"" + colName + "\" have a different type (" +
-                                     RDFInternal::TypeID2TypeName(retTypeID) + ") than the nominal value (" +
-                                     GetColumnType(colName) + ").");
-      }
 
       auto retTypeName = RDFInternal::TypeID2TypeName(typeid(RetType));
       if (retTypeName.empty()) {
@@ -844,14 +796,6 @@ public:
          const auto demangledType = RDFInternal::DemangleTypeIdName(typeid(RetType));
          retTypeName = "CLING_UNKNOWN_TYPE_" + demangledType;
       }
-
-      // when varying multiple columns, they must be different columns
-      if (colNames.size() > 1) {
-         std::set<std::string> uniqueCols(colNames.begin(), colNames.end());
-         if (uniqueCols.size() != colNames.size())
-            throw std::logic_error("A column name was passed to the same Vary invocation multiple times.");
-      }
-      /* SANITY CHECKS END */
 
       auto variation = std::make_shared<RDFInternal::RVariation<F_t>>(
          colNames, variationName, std::forward<F>(expression), variationTags, retTypeName, fColRegister, *fLoopManager,
@@ -3379,6 +3323,68 @@ private:
                                          "columns! The action helper type was ") +
                              typeid(Helper).name());
       return {};
+   }
+
+   template <typename RetType>
+   void SanityChecksForVary(const std::vector<std::string> &colNames, const std::vector<std::string> &variationTags,
+                            std::string_view variationName)
+   {
+      R__ASSERT(variationTags.size() > 0 && "Must have at least one variation.");
+      R__ASSERT(colNames.size() > 0 && "Must have at least one varied column.");
+      R__ASSERT(!variationName.empty() && "Must provide a variation name.");
+
+      for (auto &colName : colNames) {
+         RDFInternal::CheckValidCppVarName(colName, "Vary");
+         RDFInternal::CheckForDefinition("Vary", colName, fColRegister, fLoopManager->GetBranchNames(),
+                                         fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+      }
+      RDFInternal::CheckValidCppVarName(variationName, "Vary");
+
+      static_assert(RDFInternal::IsRVec<RetType>::value, "Vary expressions must return an RVec.");
+
+      if (colNames.size() > 1) { // we are varying multiple columns simultaneously, RetType is RVec<RVec<T>>
+         constexpr bool hasInnerRVec = RDFInternal::IsRVec<typename RetType::value_type>::value;
+         if (!hasInnerRVec)
+            throw std::runtime_error("This Vary call is varying multiple columns simultaneously but the expression "
+                                     "does not return an RVec of RVecs.");
+
+         auto colTypes = GetColumnTypeNamesList(colNames);
+         auto allColTypesEqual =
+            std::all_of(colTypes.begin() + 1, colTypes.end(), [&](const std::string &t) { return t == colTypes[0]; });
+         if (!allColTypesEqual)
+            throw std::runtime_error("Cannot simultaneously vary multiple columns of different types.");
+
+         const auto &innerTypeID = typeid(RDFInternal::InnerValueType_t<RetType>);
+
+         const auto &definesMap = fColRegister.GetColumns();
+         for (auto i = 0u; i < colTypes.size(); ++i) {
+            const auto it = definesMap.find(colNames[i]);
+            const auto &expectedTypeID =
+               it == definesMap.end() ? RDFInternal::TypeName2TypeID(colTypes[i]) : it->second->GetTypeId();
+            if (innerTypeID != expectedTypeID)
+               throw std::runtime_error("Varied values for column \"" + colNames[i] + "\" have a different type (" +
+                                        RDFInternal::TypeID2TypeName(innerTypeID) + ") than the nominal value (" +
+                                        colTypes[i] + ").");
+         }
+      } else { // we are varying a single column, RetType is RVec<T>
+         const auto &retTypeID = typeid(typename RetType::value_type);
+         const auto &colName = colNames[0]; // we have only one element in there
+         const auto &definesMap = fColRegister.GetColumns();
+         const auto it = definesMap.find(colName);
+         const auto &expectedTypeID =
+            it == definesMap.end() ? RDFInternal::TypeName2TypeID(GetColumnType(colName)) : it->second->GetTypeId();
+         if (retTypeID != expectedTypeID)
+            throw std::runtime_error("Varied values for column \"" + colName + "\" have a different type (" +
+                                     RDFInternal::TypeID2TypeName(retTypeID) + ") than the nominal value (" +
+                                     GetColumnType(colName) + ").");
+      }
+
+      // when varying multiple columns, they must be different columns
+      if (colNames.size() > 1) {
+         std::set<std::string> uniqueCols(colNames.begin(), colNames.end());
+         if (uniqueCols.size() != colNames.size())
+            throw std::logic_error("A column name was passed to the same Vary invocation multiple times.");
+      }
    }
 
 protected:
