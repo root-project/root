@@ -65,7 +65,10 @@ void RooStats::HistFactory::Data::PrintXML( std::ostream& xml ) const {
 
   xml << "    <Data HistoName=\"" << GetHistoName() << "\" "
       << "InputFile=\"" << GetInputFile() << "\" "
-      << "HistoPath=\"" << GetHistoPath() << "\" "
-      << " /> " << std::endl << std::endl;  
-  
+      << "HistoPath=\"" << GetHistoPath() << "\" ";
+  if(!GetName().empty()) {
+     xml << "Name=\"" << GetName() << "\" ";
+  }
+  xml << " /> " << std::endl << std::endl;
+
 }
