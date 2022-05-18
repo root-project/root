@@ -14,6 +14,8 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
+// The RNTuple and RFileNTupleAnchor class versions must match
+#pragma link C++ options=version(3) class ROOT::Experimental::Internal::RFileNTupleAnchor + ;
 #pragma link C++ class ROOT::Experimental::RNTuple - ;
 
 #endif
