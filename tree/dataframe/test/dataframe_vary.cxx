@@ -1021,10 +1021,10 @@ TEST_P(RDFVary, VaryCustomObject)
    EXPECT_DOUBLE_EQ(h->GetMeanY(), 2.);
    EXPECT_DOUBLE_EQ(hs["nominal"].GetMeanX(), 1.);
    EXPECT_DOUBLE_EQ(hs["nominal"].GetMeanY(), 2.);
-   EXPECT_DOUBLE_EQ(hs["x:0"].GetMeanX(), 0.);
-   EXPECT_DOUBLE_EQ(hs["x:0"].GetMeanY(), 0.);
-   EXPECT_DOUBLE_EQ(hs["x:1"].GetMeanX(), 4.);
-   EXPECT_DOUBLE_EQ(hs["x:1"].GetMeanY(), 5.);
+   EXPECT_DOUBLE_EQ(hs["Jet:0"].GetMeanX(), 0.);
+   EXPECT_DOUBLE_EQ(hs["Jet:0"].GetMeanY(), 0.);
+   EXPECT_DOUBLE_EQ(hs["Jet:1"].GetMeanX(), 4.);
+   EXPECT_DOUBLE_EQ(hs["Jet:1"].GetMeanY(), 5.);
 }
 
 TEST_P(RDFVary, VaryFill)
