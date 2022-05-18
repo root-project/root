@@ -53,9 +53,9 @@ public:
     return setData(static_cast<RooAbsData const&>(data), cloneData);
   }
 
-  void fillNormSetForServer(RooArgSet const& /*normSet*/, RooAbsArg const& server, RooArgSet& serverNormSet) const override {
-    for(auto * arg : _paramSet) if(server.dependsOn(*arg)) serverNormSet.add(*arg);
-  }
+  void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
+
+  void fillNormSetForServer(RooArgSet const& /*normSet*/, RooAbsArg const& server, RooArgSet& serverNormSet) const override;
 
 protected:
 
