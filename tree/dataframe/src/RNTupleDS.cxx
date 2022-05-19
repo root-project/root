@@ -178,23 +178,22 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
    // AddField() will be called from the constructor with the RNTuple root field (ENTupleStructure::kRecord).
    // From there, we recurse into the "event" sub field (also ENTupleStructure::kRecord) and further down the
    // tree of sub fields and expose the following RDF columns:
-   // TODO(jblomer): Collections should be exposed as RVec<T> instead of std::vector<T>
    //
    // "event"                             [Event]
    // "event.id"                          [int]
-   // "event.tracks"                      [std::vector<Track>]
+   // "event.tracks"                      [RVec<Track>]
    // "R_rdf_sizeof_event.tracks"         [unsigned int]
-   // "event.tracks.hits"                 [std::vector<std::vector<Hit>>]
-   // "R_rdf_sizeof_event.tracks.hits"    [std::vector<unsigned int>]
-   // "event.tracks.hits.x"               [std::vector<std::vector<float>>]
-   // "R_rdf_sizeof_event.tracks.hits.x"  [std::vector<unsigned int>]
-   // "event.tracks.hits.y"               [std::vector<std::vector<float>>]
-   // "R_rdf_sizeof_event.tracks.hits.y"  [std::vector<unsigned int>]
+   // "event.tracks.hits"                 [RVec<RVec<Hit>>]
+   // "R_rdf_sizeof_event.tracks.hits"    [RVec<unsigned int>]
+   // "event.tracks.hits.x"               [RVec<RVec<float>>]
+   // "R_rdf_sizeof_event.tracks.hits.x"  [RVec<unsigned int>]
+   // "event.tracks.hits.y"               [RVec<RVec<float>>]
+   // "R_rdf_sizeof_event.tracks.hits.y"  [RVec<unsigned int>]
 
    const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
    if (fieldDesc.GetStructure() == ENTupleStructure::kCollection) {
       // Inner fields of collections are provided as projected collections of only that inner field,
-      // E.g. we provide a projected collection vector<vector<float>> for "event.tracks.hits.x" in the example
+      // E.g. we provide a projected collection RVec<RVec<float>> for "event.tracks.hits.x" in the example
       // above.
 
       // We open a new collection scope with fieldID being the inner most collection. E.g. for "event.tracks.hits",
@@ -215,7 +214,7 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
             AddField(desc, std::string(colName) + "." + f.GetFieldName(), f.GetId(), skeinIDs);
          }
       } else {
-         // std::vector or ROOT::RVec with exactly one sub field
+         // ROOT::RVec with exactly one sub field
          const auto &f = *desc.GetFieldIterable(fieldDesc.GetId()).begin();
          AddField(desc, colName, f.GetId(), skeinIDs);
       }
@@ -245,11 +244,11 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
    }
 
    for (auto i = skeinIDs.rbegin(); i != skeinIDs.rend(); ++i) {
-      valueField = std::make_unique<ROOT::Experimental::RVectorField>("", std::move(valueField));
+      valueField = std::make_unique<ROOT::Experimental::RRVecField>("", std::move(valueField));
       valueField->SetOnDiskId(*i);
       // Skip the inner-most collection level to construct the cardinality column
       if (i != skeinIDs.rbegin()) {
-         cardinalityField = std::make_unique<ROOT::Experimental::RVectorField>("", std::move(cardinalityField));
+         cardinalityField = std::make_unique<ROOT::Experimental::RRVecField>("", std::move(cardinalityField));
          cardinalityField->SetOnDiskId(*i);
       }
    }
