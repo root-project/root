@@ -849,7 +849,7 @@ public:
       if (colNames.size() > 1) {
          std::set<std::string> uniqueCols(colNames.begin(), colNames.end());
          if (uniqueCols.size() != colNames.size())
-            throw std::logic_error("The same column was passed multiple times the same column twice: ");
+            throw std::logic_error("A column name was passed to the same Vary invocation multiple times.");
       }
       /* SANITY CHECKS END */
 
@@ -994,7 +994,7 @@ public:
       if (colNames.size() > 1) {
          std::set<std::string> uniqueCols(colNames.begin(), colNames.end());
          if (uniqueCols.size() != colNames.size())
-            throw std::logic_error("The same column was passed multiple times the same column twice: ");
+            throw std::logic_error("A column name was passed to the same Vary invocation multiple times.");
       }
 
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
