@@ -209,7 +209,6 @@ protected:
 
    friend class HypoTestInverter;
    friend class HypoTestInverterPlot;
-   friend class HypoTestInverterOriginal;
 
    ClassDefOverride(HypoTestInverterResult,5)  // HypoTestInverterResult class
 };
