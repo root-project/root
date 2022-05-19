@@ -194,7 +194,7 @@ TEST(RDFVary, VaryDefinePerSample)
 {
    auto df = ROOT::RDataFrame(10).DefinePerSample("x", [](unsigned int, const ROOT::RDF::RSampleInfo &) { return 1; });
    auto s = df.Vary("x", SimpleVariation, {}, 2).Sum<int>("x");
-   auto ss = ROOT::RDF::Experimental::VariationsFor(s);
+   auto ss = VariationsFor(s);
    EXPECT_EQ(ss["nominal"], 1 * 10);
    EXPECT_EQ(ss["x:0"], -1 * 10);
    EXPECT_EQ(ss["x:1"], 2 * 10);
@@ -211,7 +211,7 @@ TEST(RDFVary, SaveGraph)
                   },
                   {}, 2)
                .Count();
-   auto cs = ROOT::RDF::Experimental::VariationsFor(c);
+   auto cs = VariationsFor(c);
    const auto s = ROOT::RDF::SaveGraph(df);
    // currently, Vary nodes are not shown in SaveGraph, but varied actions are
    EXPECT_EQ(s,
@@ -976,7 +976,7 @@ TEST(RDFVary, VaryDisplay) // TEST instead of TEST_P because Display is single-t
    // Display ignores variations, only displays the nominal values
    EXPECT_EQ(d->AsString(), "+-----+---+\n| Row | x | \n+-----+---+\n| 0   | 0 | \n|     |   | \n+-----+---+\n");
    // cannot vary a Display
-   EXPECT_THROW(ROOT::RDF::Experimental::VariationsFor(d), std::logic_error);
+   EXPECT_THROW(VariationsFor(d), std::logic_error);
 
    // must update this test when https://github.com/root-project/root/issues/9894 is addressed
 }
@@ -1276,20 +1276,6 @@ TEST_P(RDFVary, VaryReport)
    EXPECT_EQ(report["after"].GetPass(), 2);
    // Varying Reports is not implemented yet, tracked by https://github.com/root-project/root/issues/10551
    EXPECT_THROW(VariationsFor(h), std::logic_error);
-}
-
-TEST_P(RDFVary, VaryStats)
-{
-   auto h = ROOT::RDataFrame(10)
-               .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
-               .Vary(
-                  "x",
-                  [](int x) {
-                     return ROOT::RVecI{x - 1, x + 1};
-                  },
-                  {"x"}, 2)
-               .Stats<int>("x");
-   EXPECT_THROW(VariationsFor(h), std::runtime_error); // FIXME not (yet) implemented
 }
 
 TEST_P(RDFVary, VaryStdDev)
