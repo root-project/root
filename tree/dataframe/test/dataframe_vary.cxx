@@ -34,49 +34,92 @@ auto SimpleVariation()
 TEST(RDFVary, RequireExistingColumn)
 {
    ROOT::RDataFrame df(10);
-   EXPECT_THROW(df.Vary("x", SimpleVariation, {}, 2), std::runtime_error);
+   EXPECT_THROW(
+      try { df.Vary("x", SimpleVariation, {}, 2); } catch (const std::runtime_error &err) {
+         const auto msg = "RDataFrame::Vary: cannot redefine or vary column \"x\". "
+                          "No column with that name was found in the dataset. "
+                          "Use Define to create a new column.";
+         EXPECT_STREQ(err.what(), msg);
+         throw;
+      },
+      std::runtime_error);
 }
 
 TEST(RDFVary, VaryTwiceTheSameColumn)
 {
    auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; });
-   EXPECT_THROW(df.Vary(
-                   {"x", "x"},
-                   [] {
-                      return ROOT::RVec<ROOT::RVecI>{{0}, {0}};
-                   },
-                   {}, 1, "broken"),
-                std::logic_error);
+   EXPECT_THROW(
+      try {
+         df.Vary(
+            {"x", "x"},
+            [] {
+               return ROOT::RVec<ROOT::RVecI>{{0}, {0}};
+            },
+            {}, 1, "broken");
+      } catch (const std::logic_error &err) {
+         const auto msg = "A column name was passed to the same Vary invocation multiple times.";
+         EXPECT_STREQ(err.what(), msg);
+         throw;
+      },
+      std::logic_error);
 
    // and now the jitted version
-   EXPECT_THROW(df.Vary({"x", "x"}, "ROOT::RVec<ROOT::RVecI>{{0}, {0}}", 1, "broken"), std::logic_error);
+   EXPECT_THROW(
+      try {
+         df.Vary({"x", "x"}, "ROOT::RVec<ROOT::RVecI>{{0}, {0}}", 1, "broken");
+      } catch (const std::logic_error &err) {
+         const auto msg = "A column name was passed to the same Vary invocation multiple times.";
+         EXPECT_STREQ(err.what(), msg);
+         throw;
+      },
+      std::logic_error);
 }
 
 TEST(RDFVary, RequireVariationsHaveConsistentType)
 {
-   auto df = ROOT::RDataFrame(10).Define("x", [] { return 1.f; });
+   auto df1 = ROOT::RDataFrame(10).Define("x", [] { return 1.f; });
    // x is float, variation expression cannot return RVec<int>, must be RVec<float>
-   EXPECT_THROW(df.Vary("x", SimpleVariation, {}, 2), std::runtime_error);
+   EXPECT_THROW(
+      try { df1.Vary("x", SimpleVariation, {}, 2); } catch (const std::runtime_error &err) {
+         const auto msg = "Varied values for column \"x\" have a different type (int) than the nominal value (float).";
+         EXPECT_STREQ(err.what(), msg);
+         throw;
+      },
+      std::runtime_error);
 
-   auto df3 = df.Define("z", [] { return 0.f; });
+   auto df2 = df1.Define("z", [] { return 0.f; });
    // now with multiple columns: x and z are float, variation expression cannot return RVec<RVecI>, must be RVec<RVecF>
-   EXPECT_THROW(df3.Vary(
-                   {"x", "z"},
-                   [] {
-                      return ROOT::RVec<ROOT::RVecI>{{0}, {1}};
-                   },
-                   {}, 1, "broken"),
-                std::runtime_error);
+   EXPECT_THROW(
+      try {
+         df2.Vary(
+            {"x", "z"},
+            [] {
+               return ROOT::RVec<ROOT::RVecI>{{0}, {1}};
+            },
+            {}, 1, "broken");
+      } catch (const std::runtime_error &err) {
+         const auto msg = "Varied values for column \"x\" have a different type (int) than the nominal value (float).";
+         EXPECT_STREQ(err.what(), msg);
+         throw;
+      },
+      std::runtime_error);
 
-   auto df2 = df.Define("y", [] { return 1; });
+   auto df3 = df1.Define("y", [] { return 1; });
    // cannot simultaneously vary x and y if they don't have the same type
-   EXPECT_THROW(df2.Vary(
-                   {"x", "y"},
-                   [] {
-                      return ROOT::RVec<ROOT::RVecF>{{0.f}, {1.f}};
-                   },
-                   {}, 1, "broken"),
-                std::runtime_error);
+   EXPECT_THROW(
+      try {
+         df3.Vary(
+            {"x", "y"},
+            [] {
+               return ROOT::RVec<ROOT::RVecF>{{0.f}, {1.f}};
+            },
+            {}, 1, "broken");
+      } catch (const std::runtime_error &err) {
+         const auto msg = "Cannot simultaneously vary multiple columns of different types.";
+         EXPECT_STREQ(err.what(), msg);
+         throw;
+      },
+      std::runtime_error);
 }
 
 // throwing exceptions from jitted code cause problems on windows and MacOS+M1
@@ -89,7 +132,14 @@ TEST(RDFVary, RequireVariationsHaveConsistentTypeJitted)
       auto s = df.Vary("x", "ROOT::RVecD{x*0.1}", 1).Sum<float>("x");
       auto ss = VariationsFor(s);
       // before starting the event loop, we jit and notice the mismatch in types
-      EXPECT_THROW(ss["nominal"], std::runtime_error);
+      EXPECT_THROW(
+         try { ss["nominal"]; } catch (const std::runtime_error &err) {
+            const auto msg = "RVariationReader: type mismatch: column \"x\" is being used as float but the "
+                             "Define or Vary node advertises it as double";
+            EXPECT_STREQ(err.what(), msg);
+            throw;
+         },
+         std::runtime_error);
    }
 
    {
@@ -98,7 +148,14 @@ TEST(RDFVary, RequireVariationsHaveConsistentTypeJitted)
                    .Sum("y");
       auto ss2 = VariationsFor(s2);
       // before starting the event loop, we jit and notice the mismatch in types
-      EXPECT_THROW(ss2["nominal"], std::runtime_error);
+      EXPECT_THROW(
+         try { ss2["nominal"]; } catch (const std::runtime_error &err) {
+            const auto msg = "RVariationReader: type mismatch: column \"y\" is being used as int but the Define "
+                             "or Vary node advertises it as double";
+            EXPECT_STREQ(err.what(), msg);
+            throw;
+         },
+         std::runtime_error);
    }
 }
 #endif
@@ -107,7 +164,14 @@ TEST(RDFVary, RequireVariationsHaveConsistentTypeJitted)
 TEST(RDFVary, RequireReturnTypeIsRVec)
 {
    auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; });
-   EXPECT_THROW(df.Vary("x", "0", /*nVariations=*/2), std::runtime_error);
+   EXPECT_THROW(
+      try { df.Vary("x", "0", /*nVariations=*/2); } catch (const std::runtime_error &err) {
+         const auto msg = "Jitted Vary expressions must return an RVec object. "
+                          "The following expression returns a int instead:\n0";
+         EXPECT_STREQ(err.what(), msg);
+         throw;
+      },
+      std::runtime_error);
 }
 
 TEST(RDFVary, RequireNVariationsIsConsistent)
@@ -122,7 +186,14 @@ TEST(RDFVary, RequireNVariationsIsConsistent)
    std::cerr.rdbuf(strCerr.rdbuf());
 
    // now, when evaluating `SimpleVariation`, we should notice that it returns 2 values, not 3, and throw
-   EXPECT_THROW(all_s["nominal"], std::runtime_error);
+   EXPECT_THROW(
+      try { all_s["nominal"]; } catch (const std::runtime_error &err) {
+         const auto msg =
+            "The evaluation of the expression for variation \"x\" resulted in 2 values, but 3 were expected.";
+         EXPECT_STREQ(err.what(), msg);
+         throw;
+      },
+      std::runtime_error);
 
    std::cerr.rdbuf(oldCerrStreamBuf);
    EXPECT_EQ(strCerr.str(), "RDataFrame::Run: event loop was interrupted\n");
@@ -134,33 +205,6 @@ TEST(RDFVary, VariationsForDoesNotTriggerRun)
    auto h = df.Define("x", [] { return 1; }).Histo1D<int>("x");
    auto hs = VariationsFor(h);
    EXPECT_EQ(df.GetNRuns(), 0);
-}
-
-TEST(RDFVary, InvalidQueries)
-{
-   auto df = ROOT::RDataFrame(10).Define("x", [] { return 1.f; });
-   // x is float, variation expression cannot return RVec<int>, must be RVec<float>
-   EXPECT_THROW(df.Vary("x", SimpleVariation, {}, 2), std::runtime_error);
-
-   auto df3 = df.Define("z", [] { return 0.f; });
-   // now with multiple columns: x and z are float, variation expression cannot return RVec<RVecI>, must be RVec<RVecF>
-   EXPECT_THROW(df3.Vary(
-                   {"x", "z"},
-                   [] {
-                      return ROOT::RVec<ROOT::RVecI>{{0}, {1}};
-                   },
-                   {}, 1, "broken"),
-                std::runtime_error);
-
-   auto df2 = df.Define("y", [] { return 1; });
-   // cannot simultaneously vary x and y if they don't have the same type
-   EXPECT_THROW(df2.Vary(
-                   {"x", "y"},
-                   [] {
-                      return ROOT::RVec<ROOT::RVecF>{{0.f}, {1.f}};
-                   },
-                   {}, 1, "broken"),
-                std::runtime_error);
 }
 
 TEST(RDFVary, VariationsForWithNoVariations)
@@ -811,7 +855,15 @@ TEST_P(RDFVary, RedefineVariedColumn)
                      return ROOT::RVecI{x - 1, x + 1};
                   },
                   {"x"}, 2);
-   EXPECT_THROW(h.Redefine("x", [] { return 25; }), std::runtime_error);
+   EXPECT_THROW(
+      try { h.Redefine("x", [] { return 25; }); } catch (const std::runtime_error &err) {
+         const auto msg = "RDataFrame::Redefine: cannot redefine column \"x\". "
+                          "The column depends on one or more systematic variations "
+                          "and re-defining varied columns is not supported.";
+         EXPECT_STREQ(err.what(), msg);
+         throw;
+      },
+      std::runtime_error);
 }
 
 TEST_P(RDFVary, VaryAggregate)
@@ -920,7 +972,14 @@ TEST_P(RDFVary, VaryClassWithoutMakeNew)
                   {"x"}, 2);
    auto h = d.Filter([](int x) { return x > 24; }, {"x"}).Book<>(CounterWithoutVariations{10u}, {});
    EXPECT_EQ(*h, 10);
-   EXPECT_THROW(VariationsFor(h), std::logic_error);
+   EXPECT_THROW(
+      try { VariationsFor(h); } catch (const std::logic_error &err) {
+         const auto msg = "The MakeNew method is not implemented for this action helper (CounterWithoutVariations). "
+                          "Cannot Vary its result.";
+         EXPECT_STREQ(err.what(), msg);
+         throw;
+      },
+      std::logic_error);
 }
 
 TEST_P(RDFVary, VaryCache)
@@ -962,6 +1021,7 @@ TEST_P(RDFVary, VaryCount)
    EXPECT_EQ(hs["x:1"], 2);
 }
 
+// must update this test when https://github.com/root-project/root/issues/9894 is addressed
 TEST(RDFVary, VaryDisplay) // TEST instead of TEST_P because Display is single-thread only
 {
    auto d = ROOT::RDataFrame(1)
@@ -976,9 +1036,14 @@ TEST(RDFVary, VaryDisplay) // TEST instead of TEST_P because Display is single-t
    // Display ignores variations, only displays the nominal values
    EXPECT_EQ(d->AsString(), "+-----+---+\n| Row | x | \n+-----+---+\n| 0   | 0 | \n|     |   | \n+-----+---+\n");
    // cannot vary a Display
-   EXPECT_THROW(VariationsFor(d), std::logic_error);
-
-   // must update this test when https://github.com/root-project/root/issues/9894 is addressed
+   EXPECT_THROW(
+      try { VariationsFor(d); } catch (const std::logic_error &err) {
+         const auto msg = "The MakeNew method is not implemented for this action helper (Display). "
+                          "Cannot Vary its result.";
+         EXPECT_STREQ(err.what(), msg);
+         throw;
+      },
+      std::logic_error);
 }
 
 struct Jet {
@@ -1253,6 +1318,7 @@ TEST(RDFVary, VaryReduce)
    EXPECT_EQ(hs["x:1"], 55);
 }
 
+// Varying Reports is not implemented yet, tracked by https://github.com/root-project/root/issues/10551
 TEST_P(RDFVary, VaryReport)
 {
    auto h = ROOT::RDataFrame(10)
@@ -1274,8 +1340,14 @@ TEST_P(RDFVary, VaryReport)
    EXPECT_EQ(report["after"].GetAll(), 4);
    EXPECT_FLOAT_EQ(report["after"].GetEff(), 50.);
    EXPECT_EQ(report["after"].GetPass(), 2);
-   // Varying Reports is not implemented yet, tracked by https://github.com/root-project/root/issues/10551
-   EXPECT_THROW(VariationsFor(h), std::logic_error);
+   EXPECT_THROW(
+      try { VariationsFor(h); } catch (const std::logic_error &err) {
+         const auto msg = "The MakeNew method is not implemented for this action helper (Report). "
+                          "Cannot Vary its result.";
+         EXPECT_STREQ(err.what(), msg);
+         throw;
+      },
+      std::logic_error);
 }
 
 TEST_P(RDFVary, VaryStdDev)
@@ -1353,7 +1425,14 @@ TEST_P(RDFVary, VarySnapshot)
                   },
                   {"x"}, 2)
                .Snapshot<int>("t", fname, {"x"});
-   EXPECT_THROW(VariationsFor(h), std::logic_error); // not (yet) implemented
+   EXPECT_THROW(
+      try { VariationsFor(h); } catch (const std::logic_error &err) {
+         const auto msg = "The MakeNew method is not implemented for this action helper (Snapshot). "
+                          "Cannot Vary its result.";
+         EXPECT_STREQ(err.what(), msg);
+         throw;
+      },
+      std::logic_error);
 }
 
 // instantiate single-thread tests
