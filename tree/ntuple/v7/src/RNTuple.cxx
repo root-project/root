@@ -398,11 +398,7 @@ ROOT::Experimental::RCollectionNTupleWriter::RCollectionNTupleWriter(std::unique
 
 void ROOT::Experimental::RNTuple::Streamer(TBuffer &buf)
 {
-   static TClassRef RNTupleAnchorClass = []() {
-      TClassRef classRef("ROOT::Experimental::RNTuple");
-      classRef = new TClass("ROOT::Experimental::Internal::RFileNTupleAnchor");
-      return classRef;
-   }();
+   static TClassRef RNTupleAnchorClass("ROOT::Experimental::Internal::RFileNTupleAnchor");
 
    if (buf.IsReading()) {
       RNTupleAnchorClass->ReadBuffer(buf, static_cast<Internal::RFileNTupleAnchor *>(this));
