@@ -31,24 +31,27 @@ if (ROOT.gSystem.AccessPathName(modelFile)) :
 # parse the input Keras model into RModel object
 model = ROOT.TMVA.Experimental.SOFIE.PyKeras.Parse(modelFile)
 
-#generatedFile = modelFile
-generatedFile = modelFile.replace(".h5",".hxx")
-print(modelFile, generatedFile)
+generatedHeaderFile = modelFile.replace(".h5",".hxx")
+print("Generating inference code for the Keras model from ",modelFile,"in the header ", generatedHeaderFile)
 #Generating inference code
 model.Generate()
-model.OutputGenerated(generatedFile)
+model.OutputGenerated(generatedHeaderFile)
 model.PrintGenerated()
 
 # now compile using ROOT JIT trained model
+modelName = modelFile.replace(".h5","")
+print("compiling SOFIE model ", modelName)
+ROOT.gInterpreter.Declare('#include "' + generatedHeaderFile + '"')
+
+
+generatedHeaderFile = modelFile.replace(".h5",".hxx")
+print("Generating inference code for the Keras model from ",modelFile,"in the header ", generatedHeaderFile)
+#Generating inference
 
 inputFileName = "Higgs_data.root"
 inputFile = "http://root.cern.ch/files/" + inputFileName
 
 
-print("compiling SOFIE model and functor....")
-
-modelName = "Higgs_trained_model"
-ROOT.gInterpreter.Declare('#include "' + generatedFile + '"')
 
 
 
@@ -58,14 +61,17 @@ df1 = ROOT.RDataFrame("sig_tree", inputFile)
 sigData = df1.AsNumpy(columns=['m_jj', 'm_jjj', 'm_lv', 'm_jlv', 'm_bb', 'm_wbb', 'm_wwbb'])
 #print(sigData)
 
-dataset_size = len(list(sigData.values())[0])
+# stack all the 7 numpy array in a single array (nevents x nvars)
+xsig = np.column_stack(list(sigData.values()))
+dataset_size = xsig.shape[0]
+print("size of data", dataset_size)
 
+#instantiate SOFIE session class 
 session = ROOT.TMVA_SOFIE_Higgs_trained_model.Session()
 
 hs = ROOT.TH1D("hs","Signal result",100,0,1)
 for i in range(0,dataset_size):
-    xsig = np.array([sigData[x][i] for x in sigData.keys()])
-    result = session.infer(xsig)
+    result = session.infer(xsig[i,:])
     hs.Fill(result[0])
 
 
@@ -73,11 +79,12 @@ for i in range(0,dataset_size):
 df2 = ROOT.RDataFrame("bkg_tree", inputFile)
 bkgData = df2.AsNumpy(columns=['m_jj', 'm_jjj', 'm_lv', 'm_jlv', 'm_bb', 'm_wbb', 'm_wwbb'])
 
+xbkg = np.column_stack(list(bkgData.values()))
+dataset_size = xbkg.shape[0]
+
 hb = ROOT.TH1D("hb","Background result",100,0,1)
-dataset_size = len(list(bkgData.values())[0])
 for i in range(0,dataset_size):
-    xbkg = np.array([bkgData[x][i] for x in bkgData.keys()])
-    result = session.infer(xbkg)
+    result = session.infer(xbkg[i,:])
     hb.Fill(result[0])
 
 
@@ -87,6 +94,8 @@ hs.SetLineColor(ROOT.kRed)
 hs.Draw()
 hb.SetLineColor(ROOT.kBlue)
 hb.Draw("SAME")
+c1.BuildLegend()
+c1.Draw()
 
 
 print("Number of signal entries",hs.GetEntries())
