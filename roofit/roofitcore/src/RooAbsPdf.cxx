@@ -205,6 +205,35 @@ bool interpretExtendedCmdArg(RooAbsPdf const& pdf, int extendedCmdArg) {
   return extendedCmdArg;
 }
 
+inline double getLog(double prob, RooAbsReal const *caller)
+{
+
+   if (std::abs(prob) > 1e6) {
+      oocoutW(caller, Eval) << "RooAbsPdf::getLogVal(" << caller->GetName()
+                            << ") WARNING: top-level pdf has a large value: " << prob << std::endl;
+   }
+
+   if (prob < 0) {
+      caller->logEvalError("getLogVal() top-level p.d.f evaluates to a negative number");
+      return RooNaNPacker::packFloatIntoNaN(-prob);
+   }
+
+   if (prob == 0) {
+      caller->logEvalError("getLogVal() top-level p.d.f evaluates to zero");
+
+      return -std::numeric_limits<double>::infinity();
+   }
+
+   if (TMath::IsNaN(prob)) {
+      caller->logEvalError("getLogVal() top-level p.d.f evaluates to NaN");
+
+      return prob;
+   }
+
+   return std::log(prob);
+}
+
+
 } // namespace
 
 using namespace std;
@@ -641,30 +670,7 @@ void RooAbsPdf::setTraceCounter(Int_t value, bool allNodes)
 
 double RooAbsPdf::getLogVal(const RooArgSet* nset) const
 {
-  double prob = getVal(nset) ;
-
-  if (fabs(prob)>1e6) {
-    coutW(Eval) << "RooAbsPdf::getLogVal(" << GetName() << ") WARNING: top-level pdf has a large value: " << prob << endl ;
-  }
-
-  if(prob < 0) {
-    logEvalError("getLogVal() top-level p.d.f evaluates to a negative number") ;
-    return RooNaNPacker::packFloatIntoNaN(-prob);
-  }
-
-  if(prob == 0) {
-    logEvalError("getLogVal() top-level p.d.f evaluates to zero") ;
-
-    return -std::numeric_limits<double>::infinity();
-  }
-
-  if (TMath::IsNaN(prob)) {
-    logEvalError("getLogVal() top-level p.d.f evaluates to NaN") ;
-
-    return prob;
-  }
-
-  return log(prob);
+  return getLog(getVal(nset), this);
 }
 
 
@@ -730,30 +736,8 @@ RooSpan<const double> RooAbsPdf::getLogProbabilities(RooBatchCompute::RunContext
 
 
 void RooAbsPdf::getLogProbabilities(RooSpan<const double> pdfValues, double * output) const {
-
-  if (checkInfNaNNeg(pdfValues)) {
-    logBatchComputationErrors(pdfValues, 0);
-
-    for (std::size_t i = 0; i < pdfValues.size(); ++i) {
-      const double prob = pdfValues[i];
-      double theLog = RooBatchCompute::fast_log(prob);
-
-      if (prob <= 0.) {
-        // Pass magnitude of undershoot to minimiser:
-        theLog = RooNaNPacker::packFloatIntoNaN(-prob);
-      } else if (std::isnan(prob)) {
-        theLog = prob;
-      }
-
-      output[i] = theLog;
-    }
-
-    return;
-  }
-
-  for (std::size_t i = 0; i < pdfValues.size(); ++i) { //CHECK_VECTORISE
-    const double prob = pdfValues[i];
-    output[i] = RooBatchCompute::fast_log(prob);;
+  for (std::size_t i = 0; i < pdfValues.size(); ++i) {
+     output[i] = getLog(pdfValues[i], this);
   }
 }
 

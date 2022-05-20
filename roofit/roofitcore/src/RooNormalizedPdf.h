@@ -62,9 +62,9 @@ protected:
    void computeBatch(cudaStream_t *, double *output, size_t size, RooFit::Detail::DataMap const&) const override;
    double evaluate() const override
    {
-      // The RooNormalizedPdf overloads RooAbsReal::getValV() directly, so evaluate() should not be called.
-      throw std::bad_function_call();
-      return 0.0;
+      // Evaluate() should not be called in the BatchMode, but we still need it
+      // to support printing of the object.
+      return getValV(nullptr);
    }
    double getValV(const RooArgSet * /*normSet*/) const override
    {
