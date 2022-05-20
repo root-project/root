@@ -1406,7 +1406,7 @@ if(vc AND NOT Vc_FOUND AND NO_CONNECTION)
 endif()
 
 if(vc AND NOT Vc_FOUND)
-  set(Vc_VERSION "1.4.1")
+  set(Vc_VERSION "1.4.3")
   set(Vc_PROJECT "Vc-${Vc_VERSION}")
   set(Vc_SRC_URI "${lcgpackages}/${Vc_PROJECT}.tar.gz")
   set(Vc_DESTDIR "${CMAKE_BINARY_DIR}/externals")
@@ -1414,14 +1414,9 @@ if(vc AND NOT Vc_FOUND)
   set(Vc_LIBNAME "${CMAKE_STATIC_LIBRARY_PREFIX}Vc${CMAKE_STATIC_LIBRARY_SUFFIX}")
   set(Vc_LIBRARY "${Vc_ROOTDIR}/lib/${Vc_LIBNAME}")
 
-  if(UNIX)
-    set(VC_PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/cmake/patches/vc-deprecated-and-bit-scan-forward.patch)
-  endif()
-
   ExternalProject_Add(VC
     URL     ${Vc_SRC_URI}
-    URL_HASH SHA256=68e609a735326dc3625e98bd85258e1329fb2a26ce17f32c432723b750a4119f
-    PATCH_COMMAND ${VC_PATCH_COMMAND}
+    URL_HASH SHA256=988ea0053f3fbf17544ca776a2749c097b3139089408b0286fa4e9e8513e037f
     BUILD_IN_SOURCE 0
     BUILD_BYPRODUCTS ${Vc_LIBRARY}
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
