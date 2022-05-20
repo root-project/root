@@ -107,9 +107,9 @@ private:
    }
 
    virtual double DoDerivative(const double * /* x */, unsigned int /*icoord*/) const  {
-   //    // not used
-      assert(false);
-       return 0;
+      // not used
+      throw std::runtime_error("FitTransformFunction::DoDerivative");
+      return 0;
    }
 
    bool fOwnTransformation;
@@ -124,9 +124,6 @@ private:
 // GSLNLSMinimizer implementation
 
 GSLNLSMinimizer::GSLNLSMinimizer( int type )
-   //fNFree(0),
-   //fSize(0),
-   //fChi2Func(0)
 {
    // Constructor implementation : create GSLMultiFit wrapper object
    const gsl_multifit_fdfsolver_type * gsl_type = 0; // use default type defined in GSLMultiFit
@@ -180,10 +177,8 @@ bool GSLNLSMinimizer::Minimize() {
       return false;
    }
    // check type of function (if it provides gradient)
-   const ROOT::Math::FitMethodFunction * fitFunc = (!fUseGradFunction) ?
-      dynamic_cast<const ROOT::Math::FitMethodFunction *>(ObjFunction()) : nullptr;
-   const ROOT::Math::FitMethodGradFunction * fitGradFunc = (fUseGradFunction) ?
-      dynamic_cast<const ROOT::Math::FitMethodGradFunction *>(ObjFunction()) : nullptr;
+   auto fitFunc = (!fUseGradFunction) ? dynamic_cast<const ROOT::Math::FitMethodFunction *>(ObjFunction()) : nullptr;
+   auto fitGradFunc = (fUseGradFunction) ? dynamic_cast<const ROOT::Math::FitMethodGradFunction *>(ObjFunction()) : nullptr;
    if (fitFunc == nullptr && fitGradFunc == nullptr) {
       if (PrintLevel() > 0) std::cout << "GSLNLSMinimizer: Invalid function set - only FitMethodFunction types are supported" << std::endl;
       return false;
@@ -223,7 +218,7 @@ bool GSLNLSMinimizer::DoMinimize(const Func & fitFunc) {
    std::unique_ptr<MultiNumGradFunction> gradFunction;
    std::unique_ptr<MinimTransformFunction> trFuncRaw;
    if (!fUseGradFunction) {
-      gradFunction.reset(new MultiNumGradFunction(fitFunc));
+      gradFunction = std::make_unique<MultiNumGradFunction>(fitFunc);
       trFuncRaw.reset(CreateTransformation(startValues, gradFunction.get()));
    }
    else {
@@ -234,14 +229,14 @@ bool GSLNLSMinimizer::DoMinimize(const Func & fitFunc) {
    std::unique_ptr<FitTransformFunction<Func>> trFunc;
    if (trFuncRaw) {
       //pass ownership of trFuncRaw to FitTransformFunction
-      trFunc.reset(new FitTransformFunction<Func>(fitFunc, std::move(trFuncRaw)));
+      trFunc = std::make_unique<FitTransformFunction<Func>>(fitFunc, std::move(trFuncRaw));
       assert(npar == trFunc->NTot() );
       for (unsigned int ires = 0; ires < size; ++ires) {
-         residualFuncs.push_back(LSResidualFunc<Func>(*trFunc, ires));
+         residualFuncs.emplace_back(LSResidualFunc<Func>(*trFunc, ires));
       }
    }  else {
       for (unsigned int ires = 0; ires < size; ++ires) {
-        residualFuncs.push_back( LSResidualFunc<Func>(fitFunc, ires) );
+        residualFuncs.emplace_back( LSResidualFunc<Func>(fitFunc, ires) );
       }
    }
 

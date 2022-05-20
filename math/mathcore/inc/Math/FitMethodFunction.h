@@ -94,28 +94,12 @@ public:
     */
    virtual void ResetNCalls() { fNCalls = 0; }
 
-
-
-public:
-
-  /* traits for knowing if is a function supporting gradient*/
-  static bool IsAGradFCN() {
-     return ObjFCNTrait<FunctionType>::IsGrad();
+   /**
+      Static function to indicate if a function is supporting gradient
+   */
+   static bool IsAGradFCN() {
+     return false;
   }
-
-
-protected:
-
-  // need to use partial specialization since
-  // full specialization is not allowed for nested classes
-  template<class F, bool Dummy = true>
-  struct ObjFCNTrait {
-   static bool IsGrad() { return false; }
-  };
-  template<bool Dummy>
-  struct ObjFCNTrait<ROOT::Math::IMultiGradFunction, Dummy> {
-     static bool IsGrad() { return true;}
-  };
 
 private:
 
@@ -126,29 +110,18 @@ private:
 
 };
 
-      // define the normal and gradient function
-      typedef BasicFitMethodFunction<ROOT::Math::IMultiGenFunction>  FitMethodFunction;
-      typedef BasicFitMethodFunction<ROOT::Math::IMultiGradFunction> FitMethodGradFunction;
+template<>
+inline bool BasicFitMethodFunction<ROOT::Math::IMultiGradFunction>::IsAGradFCN() {
+   return true;
+}
+
+// define the normal and gradient function
+typedef BasicFitMethodFunction<ROOT::Math::IMultiGenFunction>  FitMethodFunction;
+typedef BasicFitMethodFunction<ROOT::Math::IMultiGradFunction> FitMethodGradFunction;
 
 
-      // useful template definition to use these interface in
-      // generic programming
-      // (comment them out since they are not used anymore)
-/*
-      template<class FunType>
-      struct ParamFunctionTrait {
-         typedef  IParamMultiFunction PFType;
-      };
 
-      // specialization for the gradient param functions
-      template<>
-      struct ParamFunctionTrait<ROOT::Math::IMultiGradFunction>  {
-         typedef  IParamMultiGradFunction PFType;
-      };
-*/
-
-
-   } // end namespace Math
+} // end namespace Math
 
 } // end namespace ROOT
 

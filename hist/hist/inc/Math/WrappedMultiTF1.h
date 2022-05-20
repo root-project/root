@@ -54,7 +54,7 @@ namespace ROOT {
          /**
             constructor from a function pointer to a TF1
             If dim = 0 dimension is taken from TF1::GetNdim().
-            IN case of multi-dimensional function created using directly TF1 object the dimension
+            In case of multi-dimensional function created using directly TF1 object the dimension
             returned by TF1::GetNdim is always 1. The user must then pass the correct value of dim
          */
          WrappedMultiTF1Templ(TF1 &f, unsigned int dim = 0);
