@@ -77,7 +77,7 @@ ClassImp(TFormula);
     - `gaus(x, [0..2])` is a more explicit way of writing `gaus(0)`
     - `expo(y, [3..4])` is a substitute for `exp([3]+[4]*y)`
 
-    See below the [full list of predefined functions](\ref FormulaFuncs) which can be used as shortcuts in 
+    See below the [full list of predefined functions](\ref FormulaFuncs) which can be used as shortcuts in
     TFormula.
 
     `TMath` functions can be part of the expression, eg:
@@ -163,24 +163,24 @@ ClassImp(TFormula);
     \anchor FormulaFuncs
     ### List of predefined functions
 
-    The list of available predefined functions which can be used as shortcuts is the following: 
-    1. One Dimensional functions: 
+    The list of available predefined functions which can be used as shortcuts is the following:
+    1. One Dimensional functions:
       - `gaus`  is a substitute for `[Constant]*exp(-0.5*((x-[Mean])/[Sigma])*((x-[Mean])/[Sigma]))`
       - `landau` is a substitute for `[Constant]*TMath::Landau (x,[MPV],[Sigma],false)`
       - `expo`  is a substitute for `exp([Constant]+[Slope]*x)`
       - `crystalball` is substitute for `[Constant]*ROOT::Math::crystalball_function (x,[Alpha],[N],[Sigma],[Mean])`
       - `breitwigner` is a substitute for `[p0]*ROOT::Math::breitwigner_pdf (x,[p2],[p1])`
-      - `pol0,1,2,...N` is a substitute for a polynomial of degree `N` : 
+      - `pol0,1,2,...N` is a substitute for a polynomial of degree `N` :
          `([p0]+[p1]*x+[p2]*pow(x,2)+....[pN]*pow(x,N)`
       - `cheb0,1,2,...N` is a substitute for a Chebyshev polynomial of degree `N`:
          `ROOT::Math::Chebyshev10(x,[p0],[p1],[p2],...[pN])`. Note the maximum N allowed here is 10.
-    2. Two Dimensional functions: 
+    2. Two Dimensional functions:
       - `xygaus` is a substitute for `[Constant]*exp(-0.5*pow(((x-[MeanX])/[SigmaX]),2 )- 0.5*pow(((y-[MeanY])/[SigmaY]),2))`, a 2d Gaussian without correlation.
       - `bigaus` is a substitute for `[Constant]*ROOT::Math::bigaussian_pdf (x,y,[SigmaX],[SigmaY],[Rho],[MeanX],[MeanY])`, a 2d gaussian including a correlation parameter.
-    3. Three Dimensional functions: 
-      - `xyzgaus` is for a 3d Gaussians without correlations: 
+    3. Three Dimensional functions:
+      - `xyzgaus` is for a 3d Gaussians without correlations:
       `[Constant]*exp(-0.5*pow(((x-[MeanX])/[SigmaX]),2 )- 0.5*pow(((y-[MeanY])/[SigmaY]),2 )- 0.5*pow(((z-[MeanZ])/[SigmaZ]),2))`
-      
+
 
     ### An expanded note on variables and parameters
 
@@ -3274,6 +3274,9 @@ bool TFormula::GenerateGradientPar() {
    return true;
 }
 
+// Compute the gradient with respect to the parameter passing
+/// a CladStorageObject, i.e. a std::vector, which has the size as the nnumber of parameters.
+/// Note that the result buffer needs to be initialized to zero before passing it to this function.
 void TFormula::GradientPar(const Double_t *x, TFormula::CladStorage& result)
 {
    if (DoEval(x) == TMath::QuietNaN())
@@ -3298,7 +3301,9 @@ void TFormula::GradientPar(const Double_t *x, TFormula::CladStorage& result)
    }
    GradientPar(x, result.data());
 }
-
+/// Compute the gradient with respect to the parameter passing
+/// a buffer with a size at least equal to the number of parameters.
+/// Note that the result buffer needs to be initialized to zero before passed to this function.
 void TFormula::GradientPar(const Double_t *x, Double_t *result) {
    const Double_t *vars = (x) ? x : fClingVariables.data();
    const Double_t *pars = (fNpar <= 0) ? nullptr : fClingParameters.data();
