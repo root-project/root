@@ -622,9 +622,6 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
          //case function provides gradient
          if (!useBinIntegral ) {
             gfunc->ParameterGradient(  x , p, g);
-            // std::cout << "compute analytical gradient for model func at " << x[0] << " ";
-            // for (unsigned ip = 0; ip < npar; ip++) std::cout << "(" << p[ip] << ", " << g[ip] << ") " ;
-            // std::cout << std::endl;
          }
          else {
             // needs to calculate the integral for each partial derivative
@@ -635,9 +632,6 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
          SimpleGradientCalculator  gc( npar, func);
          if (!useBinIntegral ) {
             gc.ParameterGradient(x, p, fval, g);
-            // std::cout << "compute numerical gradient for model func at " << x[0] << " ";
-            // for (unsigned int ip = 0; ip < npar; ip++) std::cout << "(" << p[ip] << ", " << g[ip] << ") " ;
-            // std::cout << std::endl;
          } else {
             // needs to calculate the integral for each partial derivative
             CalculateGradientIntegral( gc, x1, x2, p, g);
