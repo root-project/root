@@ -47,6 +47,9 @@ public:
   }
   void print(std::ostream& os, bool addContents=false) const override ;
 
+  /// Returns the owner of this proxy.
+  RooAbsArg* owner() const { return _owner; }
+
 protected:
 
   friend class RooSimultaneous ;

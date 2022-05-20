@@ -34,11 +34,6 @@
 #include <stack>
 #include <string>
 
-#ifndef R__LESS_INCLUDES
-#include "TClass.h"
-#include "THashList.h"
-#endif
-
 
 class TTree ;
 class RooArgSet ;
@@ -725,6 +720,12 @@ private:
  public:
   void setLocalNoDirtyInhibit(bool flag) const { _localNoInhibitDirty = flag ; }
   bool localNoDirtyInhibit() const { return _localNoInhibitDirty ; }
+
+  /// Returns the token for retrieving results in the BatchMode. For internal use only.
+  std::size_t dataToken() const { return _dataToken; }
+
+  /// Sets the token for retrieving results in the BatchMode. For internal use only.
+  void setDataToken(std::size_t index) { _dataToken = index; }
  protected:
 
 
@@ -751,6 +752,8 @@ private:
 /*   RooArgSet _branchNodeCache //! Cached branch nodes     */
 
   mutable RooWorkspace *_myws; //! In which workspace do I live, if any
+  
+  std::size_t _dataToken; //! Set by the RooFitDriver for this arg to retrieve its result in the run context
 
   /// \cond Internal
   // Legacy streamers need the following statics:

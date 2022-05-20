@@ -20,6 +20,8 @@
 #include <TObject.h>
 
 #include <map>
+#include <stdexcept>
+#include <sstream>
 
 template <class T>
 class RooTemplateProxy;
@@ -73,7 +75,42 @@ struct hash<RooFit::Detail::DataKey> {
 namespace RooFit {
 namespace Detail {
 
-using DataMap = std::map<DataKey, RooSpan<const double>>;
+class DataMap {
+public:
+   auto empty() const { return _dataMap.empty(); }
+   auto begin() { return _dataMap.begin(); }
+   auto end() { return _dataMap.end(); }
+   auto begin() const { return _dataMap.begin(); }
+   auto end() const { return _dataMap.end(); }
+   auto size() const { return _dataMap.size(); }
+   auto resize(std::size_t n) { return _dataMap.resize(n); }
+
+   inline auto &at(RooAbsArg const *arg, RooAbsArg const * /*caller*/ = nullptr)
+   {
+      std::size_t idx = arg->dataToken();
+      return _dataMap[idx];
+   }
+
+   inline auto &at(RooAbsArg const *arg, RooAbsArg const *caller = nullptr) const
+   {
+      return const_cast<DataMap *>(this)->at(arg, caller);
+   }
+
+   template <class T>
+   inline auto &at(RooTemplateProxy<T> const &proxy)
+   {
+      return at(&proxy.arg(), proxy.owner());
+   }
+
+   template <class T>
+   inline auto &at(RooTemplateProxy<T> const &proxy) const
+   {
+      return at(&proxy.arg(), proxy.owner());
+   }
+
+private:
+   std::vector<RooSpan<const double>> _dataMap;
+};
 
 } // namespace Detail
 } // namespace RooFit
