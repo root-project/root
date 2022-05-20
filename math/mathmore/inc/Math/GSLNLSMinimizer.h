@@ -40,7 +40,6 @@
 #include "Math/MinimTransformVariable.h"
 
 #include <vector>
-#include <cassert>
 
 namespace ROOT {
 
@@ -116,7 +115,7 @@ private:
 
    double DoDerivative(const double * /* x */, unsigned int /* icoord */) const override {
       //this function should not be called by GSL
-      assert(false);
+      throw std::runtime_error("LSRESidualFunc::DoDerivative");
       return 0;
    }
 
@@ -223,17 +222,14 @@ private:
 
    bool fUseGradFunction = false; // flag to indicate if using external gradients
    unsigned int fNFree;      // dimension of the internal function to be minimized
-   //unsigned int fSize;        // number of fit points (residuals)
    unsigned int fNCalls;        // number of function calls
 
    ROOT::Math::GSLMultiFit * fGSLMultiFit;        // pointer to GSL multi fit solver
-   //const ROOT::Math::FitMethodFunction * fChi2Func;      // pointer to Least square function
 
    double fEdm;                                   // edm value
    double fLSTolerance;                           // Line Search Tolerance
    std::vector<double> fErrors;
    std::vector<double> fCovMatrix;              //  cov matrix (stored as cov[ i * dim + j]
-   //std::vector<LSResidualFunc> fResiduals;   //! transient Vector of the residual functions
 
 
 
