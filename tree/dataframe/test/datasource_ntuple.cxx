@@ -86,9 +86,9 @@ void ReadTest(const std::string &name, const std::string &fname) {
    auto count = df.Count();
    auto sumpt = df.Sum<float>("pt");
    auto tag = df.Take<std::string>("tag");
-   auto njets = df.Take<ROOT::Experimental::ClusterSize_t::ValueType>("R_rdf_sizeof_jets");
+   auto njets = df.Take<std::size_t>("R_rdf_sizeof_jets");
    auto sumjets = df.Sum<ROOT::RVec<float>>("jets");
-   auto sumnnlosize = df.Sum<ROOT::RVec<ROOT::Experimental::ClusterSize_t::ValueType>>("R_rdf_sizeof_nnlo");
+   auto sumnnlosize = df.Sum<ROOT::RVec<std::size_t>>("R_rdf_sizeof_nnlo");
    auto sumvec = [](float red, const ROOT::RVec<ROOT::RVec<float>> &nnlo) {
       auto sum = 0.f;
       for (auto &v : nnlo)
