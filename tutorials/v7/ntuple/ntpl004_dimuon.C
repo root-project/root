@@ -46,22 +46,7 @@ using RNTupleDS = ROOT::Experimental::RNTupleDS;
 
 constexpr char const* kNTupleFileName = "http://root.cern.ch/files/tutorials/ntpl004_dimuon_v1rc1.root";
 
-
-/// A wrapper for ROOT's InvariantMass function that takes std::vector instead of RVecs
-template <typename T>
-T InvariantMassStdVector(std::vector<T>& pt, std::vector<T>& eta, std::vector<T>& phi, std::vector<T>& mass)
-{
-   assert(pt.size() == 2 && eta.size() == 2 && phi.size() == 2 && mass.size() == 2);
-
-   // We adopt the memory here, no copy
-   ROOT::RVec<float> rvPt(pt);
-   ROOT::RVec<float> rvEta(eta);
-   ROOT::RVec<float> rvPhi(phi);
-   ROOT::RVec<float> rvMass(mass);
-
-   return InvariantMass(rvPt, rvEta, rvPhi, rvMass);
-}
-
+using namespace ROOT::VecOps;
 
 void ntpl004_dimuon() {
    // Use all available CPU cores
@@ -77,8 +62,7 @@ void ntpl004_dimuon() {
    auto df_os = df_2mu.Filter("Muon.charge[0] != Muon.charge[1]", "Muons with opposite charge");
 
    // Compute invariant mass of the dimuon system
-   auto df_mass = df_os.Define("Dimuon_mass", InvariantMassStdVector<float>, {"Muon.pt", "Muon.eta", "Muon.phi", "Muon.mass"});
-   auto df_size = df_os.Define("eta_size", "Muon.mass.size()");
+   auto df_mass = df_os.Define("Dimuon_mass", InvariantMass<float>, {"Muon.pt", "Muon.eta", "Muon.phi", "Muon.mass"});
 
    // Make histogram of dimuon mass spectrum
    auto h = df_mass.Histo1D({"Dimuon_mass", "Dimuon_mass", 30000, 0.25, 300}, "Dimuon_mass");
