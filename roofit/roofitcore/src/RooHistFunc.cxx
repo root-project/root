@@ -32,7 +32,6 @@ discrete dimensions and may have negative values.
 #include "RooWorkspace.h"
 #include "RooHistPdf.h"
 #include "RooHelpers.h"
-#include "RunContext.h"
 
 #include "TError.h"
 #include "TBuffer.h"

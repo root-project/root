@@ -42,7 +42,7 @@ public:
    Bool_t forceAnalyticalInt(const RooAbsArg & /*dep*/) const override { return true; }
    /// Forward determination of analytical integration capabilities to input p.d.f
    Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &analVars, const RooArgSet * /*normSet*/,
-                                 const char *rangeName = 0) const override
+                                 const char *rangeName = nullptr) const override
    {
       return _pdf->getAnalyticalIntegralWN(allVars, analVars, &_normSet, rangeName);
    }

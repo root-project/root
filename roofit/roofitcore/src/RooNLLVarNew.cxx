@@ -34,6 +34,7 @@ functions from `RooBatchCompute` library to provide faster computation times.
 
 #include <ROOT/StringUtils.hxx>
 
+#include <TClass.h>
 #include <TMath.h>
 #include <Math/Util.h>
 #include <TMath.h>
@@ -81,7 +82,17 @@ RooArgSet getObservablesInPdf(RooAbsPdf const &pdf, RooArgSet const &observables
 RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables,
                            bool isExtended, std::string const &rangeName)
    : RooAbsReal(name, title), _pdf{"pdf", "pdf", this, pdf}, _observables{getObservablesInPdf(pdf, observables)},
-     _isExtended{isExtended}
+     _isExtended{isExtended}, _weightVar{"weightVar", "weightVar",
+                                         this,        *new RooRealVar(weightVarName, weightVarName, 1.0),
+                                         true,        false,
+                                         true},
+     _weightSquaredVar{weightVarNameSumW2,
+                       weightVarNameSumW2,
+                       this,
+                       *new RooRealVar("weightSquardVar", "weightSquaredVar", 1.0),
+                       true,
+                       false,
+                       true}
 {
    RooAbsPdf *actualPdf = &pdf;
 
@@ -135,7 +146,9 @@ RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, 
 RooNLLVarNew::RooNLLVarNew(const RooNLLVarNew &other, const char *name)
    : RooAbsReal(other, name), _pdf{"pdf", this, other._pdf}, _observables{other._observables},
      _isExtended{other._isExtended}, _weightSquared{other._weightSquared}, _binnedL{other._binnedL},
-     _prefix{other._prefix}, _weightName{other._weightName}, _weightSquaredName{other._weightSquaredName}
+     _prefix{other._prefix}, _weightVar{"weightVar", this, other._weightVar}, _weightSquaredVar{"weightSquaredVar",
+                                                                                                this,
+                                                                                                other._weightSquaredVar}
 {
    if (other._fractionInRange)
       _fractionInRange =
@@ -154,8 +167,8 @@ void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_
 {
    std::size_t nEvents = dataMap.at(_pdf).size();
 
-   auto weights = dataMap.at(_weightName);
-   auto weightsSumW2 = dataMap.at(_weightSquaredName);
+   auto weights = dataMap.at(_weightVar);
+   auto weightsSumW2 = dataMap.at(_weightSquaredVar);
    auto weightSpan = _weightSquared ? weightsSumW2 : weights;
 
    if (_binnedL) {
@@ -271,6 +284,7 @@ void RooNLLVarNew::getParametersHook(const RooArgSet * /*nset*/, RooArgSet *para
 {
    // strip away the observables and weights
    params->remove(_observables, true, true);
+   params->remove(RooArgList{*_weightVar, *_weightSquaredVar}, true, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -305,9 +319,8 @@ RooArgSet RooNLLVarNew::prefixObservableAndWeightNames(std::string const &prefix
 
 void RooNLLVarNew::resetWeightVarNames()
 {
-   auto &nameReg = RooNameReg::instance();
-   _weightName = nameReg.constPtr((_prefix + weightVarName).c_str());
-   _weightSquaredName = nameReg.constPtr((_prefix + weightVarNameSumW2).c_str());
+   _weightVar->SetName((_prefix + weightVarName).c_str());
+   _weightSquaredVar->SetName((_prefix + weightVarNameSumW2).c_str());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

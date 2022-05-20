@@ -63,8 +63,8 @@ private:
    bool _weightSquared = false;
    bool _binnedL = false;
    std::string _prefix;
-   TNamed const *_weightName = nullptr;
-   TNamed const *_weightSquaredName = nullptr;
+   RooTemplateProxy<RooAbsReal> _weightVar;
+   RooTemplateProxy<RooAbsReal> _weightSquaredVar;
    std::unique_ptr<RooTemplateProxy<RooAbsReal>> _fractionInRange;
    mutable std::vector<double> _binw; //!
 
