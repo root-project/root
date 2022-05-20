@@ -13,7 +13,7 @@ if(ROOT_roofit_FOUND)
                     ${WILLFAIL_ON_WIN32}
                     POSTCMD diff ${CMAKE_CURRENT_SOURCE_DIR}/ASCII-in-out_data.txt ./ASCII-in-out_result.txt)
 
-  if(MSVC)
+  if(MSVC AND DEFINED ROOT_SOURCE_DIR)
     ROOT_ADD_GTEST(stabilityTests stabilityTests.cxx LIBRARIES Core Tree RIO RooFitCore RooFit
                    COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/stabilityTests_data_1.root)
   else()
@@ -21,7 +21,7 @@ if(ROOT_roofit_FOUND)
                    COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/stabilityTests_data_1.root)
   endif()
 
-  if(MSVC)
+  if(MSVC AND DEFINED ROOT_SOURCE_DIR)
     ROOT_ADD_GTEST(loadOldWorkspace loadOldWorkspace.cxx LIBRARIES RooFit
                    COPY_TO_BUILDDIR
                    ${CMAKE_CURRENT_SOURCE_DIR}/rf502_workspace_v5.34.root

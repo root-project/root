@@ -10,7 +10,7 @@ endif()
 
 add_library(ROOT10426 SHARED
    ROOT10426.cxx)
-if(MSVC)
+if(MSVC AND DEFINED ROOT_SOURCE_DIR)
   target_link_libraries(ROOT10426 PUBLIC Core)
 else()
   target_link_libraries(ROOT10426 PUBLIC ROOT::Core)
