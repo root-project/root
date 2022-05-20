@@ -29,7 +29,6 @@ A RooProduct represents the product of a given set of RooAbsReal objects.
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
 #include "RooMsgService.h"
-#include "RunContext.h"
 #include "RooTrace.h"
 
 #include <cmath>
