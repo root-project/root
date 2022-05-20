@@ -32,6 +32,7 @@ functions from `RooBatchCompute` library to provide faster computation times.
 #include <ROOT/StringUtils.hxx>
 
 #include <Math/Util.h>
+#include <TMath.h>
 
 #include <numeric>
 #include <stdexcept>
@@ -138,53 +139,34 @@ void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_
       }
    }
 
-   std::vector<double> nlls(nEvents);
-   nlls.reserve(nEvents);
-   double nll = 0.0;
+   ROOT::Math::KahanSum<double> kahanProb;
+   RooNaNPacker packedNaN(0.f);
 
-   if (weightSpan.size() > 1) {
-      for (std::size_t i = 0; i < nEvents; ++i) {
-         // Explicitely add zero if zero weight to get rid of eventual NaNs in
-         // logProbas that have no weight anyway.
-         nlls.push_back(weightSpan[i] == 0.0 ? 0.0 : -logProbas[i] * weightSpan[i]);
-      }
-      nll = kahanSum(nlls);
-   } else {
-      for (auto const &p : logProbas) {
-         nlls.push_back(-p);
-      }
-      nll = weightSpan[0] * kahanSum(nlls);
+   for (std::size_t i = 0; i < nEvents; ++i) {
+
+      double eventWeight = weightSpan.size() > 1 ? weightSpan[i] : weightSpan[0];
+      if (0. == eventWeight * eventWeight)
+         continue;
+
+      const double term = -eventWeight * logProbas[i];
+
+      kahanProb.Add(term);
+      packedNaN.accumulate(term);
    }
 
-   if (std::isnan(nll)) {
-      // Special handling of evaluation errors.
-      // We can recover if the bin/event that results in NaN has a weight of zero:
-      RooNaNPacker nanPacker;
-      for (std::size_t i = 0; i < probas.size(); ++i) {
-         if (weightSpan.size() > 1) {
-            if (std::isnan(logProbas[i]) && weightSpan[i] != 0.0) {
-               nanPacker.accumulate(logProbas[i]);
-            }
-         }
-         if (std::isnan(logProbas[i])) {
-            nanPacker.accumulate(logProbas[i]);
-         }
-      }
-
+   if (packedNaN.getPayload() != 0.) {
       // Some events with evaluation errors. Return "badness" of errors.
-      if (nanPacker.getPayload() > 0.) {
-         nll = nanPacker.getNaNWithPayload();
-      }
+      kahanProb = packedNaN.getNaNWithPayload();
    }
 
    if (_isExtended) {
       assert(_sumWeight != 0.0);
-      nll += _pdf->extendedTerm(_sumWeight, &_observables, _weightSquared ? _sumWeight2 : 0.0);
+      kahanProb += _pdf->extendedTerm(_sumWeight, &_observables, _weightSquared ? _sumWeight2 : 0.0);
    }
    if (_rangeNormTerm) {
-      nll += _sumCorrectionTerm;
+      kahanProb += _sumCorrectionTerm;
    }
-   output[0] = nll;
+   output[0] = kahanProb.Sum();
 }
 
 double RooNLLVarNew::evaluate() const
