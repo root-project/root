@@ -45,6 +45,9 @@ public:
   }
   virtual void print(std::ostream& os, Bool_t addContents=kFALSE) const ;
 
+  /// Returns the owner of this proxy.
+  RooAbsArg* owner() const { return _owner; }
+
 protected:
 
   friend class RooSimultaneous ;
