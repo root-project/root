@@ -1611,6 +1611,12 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
 
    // Enable ClinG's DefinitionShadower for ROOT.
    fInterpreter->getRuntimeOptions().AllowRedefinition = 1;
+   auto &Policy = const_cast<clang::PrintingPolicy &>(fInterpreter->getCI()->getASTContext().getPrintingPolicy());
+   // Print 'a<b<c> >' rather than 'a<b<c>>'.
+   // FIXME: We should probably switch to the default printing policy setting
+   // after adjusting tons of reference files.
+   Policy.SplitTemplateClosers = true;
+
 
    // Attach cling callbacks last; they might need TROOT::fInterpreter
    // and should thus not be triggered during the equivalent of
