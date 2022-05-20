@@ -23,8 +23,6 @@
 
 #include <TClass.h>
 
-#include <unordered_set>
-
 namespace {
 
 using RooFit::Detail::DataKey;
