@@ -31,7 +31,7 @@ ROOTTEST_ADD_TEST(execpragmasTest
                   MACRO execpragmasTest.C+
                   OUTREF execpragmasTest.ref)
 
-if(MSVC)
+if(MSVC AND DEFINED ROOT_SOURCE_DIR)
   ROOTTEST_GENERATE_EXECUTABLE(loadernotapp loadernotapp.cxx LIBRARIES Core Hist)
 else()
   ROOTTEST_GENERATE_EXECUTABLE(loadernotapp loadernotapp.cxx LIBRARIES ROOT::Core ROOT::Hist)
