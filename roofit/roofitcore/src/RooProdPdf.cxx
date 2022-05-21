@@ -499,6 +499,7 @@ Double_t RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, Bool_t /*verb
 void RooProdPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
   RooBatchCompute::VarVector pdfs;
+  pdfs.reserve(_pdfList.size());
   for (const RooAbsArg* i:_pdfList) {
     auto span = dataMap.at(i);
     // If the pdf doesn't depend on any observable (detected by it getting evaluated in scalar mode),
