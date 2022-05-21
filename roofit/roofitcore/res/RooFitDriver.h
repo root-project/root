@@ -69,7 +69,6 @@ private:
    void computeCPUNode(const RooAbsArg *node, NodeInfo &info);
    void setOperMode(RooAbsArg *arg, RooAbsArg::OperMode opMode);
    void determineOutputSizes();
-   bool isInComputationGraph(RooAbsArg const *arg) const;
 
    ///////////////////////////
    // Private member variables
@@ -81,10 +80,9 @@ private:
    // used for preserving static info about the computation graph
    RooFit::Detail::DataMap _dataMapCPU;
    RooFit::Detail::DataMap _dataMapCUDA;
-   std::map<RooFit::Detail::DataKey, NodeInfo> _nodeInfos;
 
    // the ordered computation graph
-   std::vector<NodeInfo *> _nodes;
+   std::vector<NodeInfo> _nodes;
 
    // used for preserving resources
    std::stack<std::vector<double>> _vectorBuffers;
