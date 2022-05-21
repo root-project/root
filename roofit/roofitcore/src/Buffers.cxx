@@ -213,21 +213,21 @@ using CPUBuffer = BufferImpl<CPUBufferContainer>;
 using GPUBuffer = BufferImpl<GPUBufferContainer>;
 using PinnedBuffer = BufferImpl<PinnedBufferContainer>;
 
-std::unique_ptr<AbsBuffer> makeScalarBuffer()
+AbsBuffer* makeScalarBuffer()
 {
-   return std::make_unique<ScalarBuffer>(1);
+   return new ScalarBuffer{1};
 }
-std::unique_ptr<AbsBuffer> makeCpuBuffer(std::size_t size)
+AbsBuffer* makeCpuBuffer(std::size_t size)
 {
-   return std::make_unique<CPUBuffer>(size);
+   return new CPUBuffer{size};
 }
-std::unique_ptr<AbsBuffer> makeGpuBuffer(std::size_t size)
+AbsBuffer* makeGpuBuffer(std::size_t size)
 {
-   return std::make_unique<GPUBuffer>(size);
+   return new GPUBuffer{size};
 }
-std::unique_ptr<AbsBuffer> makePinnedBuffer(std::size_t size, cudaStream_t *stream)
+AbsBuffer* makePinnedBuffer(std::size_t size, cudaStream_t *stream)
 {
-   auto out = std::make_unique<PinnedBuffer>(size);
+   auto out = new PinnedBuffer{size};
    out->_vec.setCudaStream(stream);
    return out;
 }
