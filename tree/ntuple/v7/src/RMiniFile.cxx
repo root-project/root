@@ -836,6 +836,15 @@ struct RTFFile {
    }
 };
 
+/// A zero UUID stored at the end of the TFile record
+struct RTFUUID {
+   RUInt16BE fVersionClass{1};
+   unsigned char fUUID[16] = {0};
+
+   RTFUUID() = default;
+   std::uint32_t GetSize() const { return sizeof(RTFUUID); }
+};
+
 /// A streamed RNTuple class
 struct RTFNTuple {
    RUInt32BE fByteCount{0x40000000 | (sizeof(RTFNTuple) - sizeof(fByteCount))};
@@ -1394,9 +1403,12 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileSkeleton(int def
 
    fFileSimple.fControlBlock->fHeader = RTFHeader(defaultCompression);
 
+   RTFUUID uuid;
+
    // First record of the file: the TFile object at offset 100
    RTFKey keyRoot(100, 0, strTFile, strFileName, strEmpty,
-                  fFileSimple.fControlBlock->fFileRecord.GetSize() + strFileName.GetSize() + strEmpty.GetSize());
+                  fFileSimple.fControlBlock->fFileRecord.GetSize() + strFileName.GetSize() + strEmpty.GetSize() +
+                     uuid.GetSize());
    std::uint32_t nbytesName = keyRoot.fKeyLen + strFileName.GetSize() + 1;
    fFileSimple.fControlBlock->fFileRecord.fNBytesName = nbytesName;
    fFileSimple.fControlBlock->fHeader.SetNbytesName(nbytesName);
@@ -1410,4 +1422,5 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileSkeleton(int def
    // Will be overwritten on commit
    fFileSimple.fControlBlock->fSeekFileRecord = fFileSimple.fFilePos;
    fFileSimple.Write(&fFileSimple.fControlBlock->fFileRecord, fFileSimple.fControlBlock->fFileRecord.GetSize());
+   fFileSimple.Write(&uuid, uuid.GetSize());
 }
