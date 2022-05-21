@@ -76,6 +76,7 @@ void splitByCategory(std::map<const TNamed *, RooSpan<const double>> &dataSpans,
 // Spans with the weights and squared weights will be also stored in the map,
 // keyed with the names `_weight` and the `_weight_sumW2`. If the dataset is
 // unweighted, these weight spans will only contain the single value `1.0`.
+// Entries with zero weight will be skipped.
 //
 // \return A `std::map` with spans keyed to name pointers.
 // \param[in] data The input dataset.
@@ -109,13 +110,70 @@ RooFit::BatchModeDataHelpers::getDataSpans(RooAbsData const &data, std::string_v
 
    auto &nameReg = RooNameReg::instance();
 
+   auto weight = data.getWeightBatch(0, nEvents, /*sumW2=*/false);
+   auto weightSumW2 = data.getWeightBatch(0, nEvents, /*sumW2=*/true);
+
+   std::vector<bool> hasZeroWeight;
+   hasZeroWeight.resize(nEvents);
+   std::size_t nNonZeroWeight = 0;
+
+   // Add weights to the datamap. They should have the names expected by the
+   // RooNLLVarNew. We also add the sumW2 weights here under a different name,
+   // so we can apply the sumW2 correction by easily swapping the spans.
+   {
+      buffers.emplace();
+      auto &buffer = buffers.top();
+      buffers.emplace();
+      auto &bufferSumW2 = buffers.top();
+      if (weight.empty()) {
+         // If the dataset has no weight, we fill the data spans with a scalar
+         // unity weight so we don't need to check for the existance of weights
+         // later in the likelihood.
+         buffer.push_back(1.0);
+         bufferSumW2.push_back(1.0);
+         weight = RooSpan<const double>(buffer.data(), 1);
+         weightSumW2 = RooSpan<const double>(bufferSumW2.data(), 1);
+         nNonZeroWeight = nEvents;
+      } else {
+         buffer.reserve(nEvents);
+         bufferSumW2.reserve(nEvents);
+         for (std::size_t i = 0; i < nEvents; ++i) {
+            if (weight[i] != 0) {
+               buffer.push_back(weight[i]);
+               bufferSumW2.push_back(weightSumW2[i]);
+               ++nNonZeroWeight;
+            } else {
+               hasZeroWeight[i] = true;
+            }
+         }
+         weight = RooSpan<const double>(buffer.data(), nNonZeroWeight);
+         weightSumW2 = RooSpan<const double>(bufferSumW2.data(), nNonZeroWeight);
+      }
+      using namespace ROOT::Experimental;
+      dataSpans[nameReg.constPtr(RooNLLVarNew::weightVarName)] = weight;
+      dataSpans[nameReg.constPtr(RooNLLVarNew::weightVarNameSumW2)] = weightSumW2;
+   }
+
    // fill the RunContext with the observable data and map the observables
    // by namePtr in order to replace their memory addresses later, with
    // the ones from the variables that are actually in the computation graph.
    RooBatchCompute::RunContext evalData;
    data.getBatches(evalData, 0, nEvents);
    for (auto const &item : evalData.spans) {
-      dataSpans[item.first->namePtr()] = item.second;
+
+      const TNamed *namePtr = nameReg.constPtr(item.first->GetName());
+      RooSpan<const double> span{item.second};
+
+      buffers.emplace();
+      auto &buffer = buffers.top();
+      buffer.reserve(nNonZeroWeight);
+
+      for (std::size_t i = 0; i < nEvents; ++i) {
+         if (!hasZeroWeight[i]) {
+            buffer.push_back(span[i]);
+         }
+      }
+      dataSpans[namePtr] = RooSpan<const double>(buffer.data(), buffer.size());
    }
 
    // Get the category batches and cast the also to double branches to put in
@@ -125,36 +183,19 @@ RooFit::BatchModeDataHelpers::getDataSpans(RooAbsData const &data, std::string_v
       const TNamed *namePtr = nameReg.constPtr(item.first.c_str());
       RooSpan<const RooAbsCategory::value_type> intSpan{item.second};
 
-      buffers.emplace(nEvents);
-      double *buffer = buffers.top().data();
+      buffers.emplace();
+      auto &buffer = buffers.top();
+      buffer.reserve(nNonZeroWeight);
 
       for (std::size_t i = 0; i < nEvents; ++i) {
-         buffer[i] = static_cast<double>(intSpan[i]);
+         if (!hasZeroWeight[i]) {
+            buffer.push_back(static_cast<double>(intSpan[i]));
+         }
       }
-      dataSpans[namePtr] = RooSpan<const double>(buffer, nEvents);
+      dataSpans[namePtr] = RooSpan<const double>(buffer.data(), buffer.size());
    }
 
-   // Add weights to the datamap. They should have the names expected by the
-   // RooNLLVarNew. We also add the sumW2 weights here under a different name,
-   // so we can apply the sumW2 correction by easily swapping the spans.
-   {
-      auto weight = data.getWeightBatch(0, nEvents, /*sumW2=*/false);
-      auto weightSumW2 = data.getWeightBatch(0, nEvents, /*sumW2=*/true);
-      if (weight.empty()) {
-         // If the dataset has no weight, we fill the data spans with a scalar
-         // unity weight so we don't need to check for the existance of weights
-         // later in the likelihood.
-         buffers.emplace();
-         auto &buffer = buffers.top();
-         buffer.push_back(1.0);
-         buffer.push_back(1.0);
-         weight = RooSpan<const double>(buffer.data(), 1);
-         weightSumW2 = RooSpan<const double>(buffer.data() + 1, 1);
-      }
-      using namespace ROOT::Experimental;
-      dataSpans[nameReg.constPtr(RooNLLVarNew::weightVarName)] = weight;
-      dataSpans[nameReg.constPtr(RooNLLVarNew::weightVarNameSumW2)] = weightSumW2;
-   }
+   nEvents = nNonZeroWeight;
 
    // Now we have do do the range selection
    if (!rangeName.empty()) {
