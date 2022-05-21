@@ -1335,17 +1335,18 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileKeysList()
    RTFString strEmpty;
    RTFString strRNTupleClass{"ROOT::Experimental::RNTuple"};
    RTFString strRNTupleName{fNTupleName};
+   RTFString strFileName{fFileName};
 
    RTFKey keyRNTuple(fFileSimple.fControlBlock->fSeekNTuple, 100, strRNTupleClass, strRNTupleName, strEmpty,
                      RTFNTuple().GetSize());
 
    fFileSimple.fControlBlock->fFileRecord.fInfoShort.fSeekKeys = fFileSimple.fFilePos;
    RTFKeyList keyList{1};
-   RTFKey keyKeyList(fFileSimple.fControlBlock->fFileRecord.GetSeekKeys(), 100, strEmpty, strEmpty, strEmpty,
+   RTFKey keyKeyList(fFileSimple.fControlBlock->fFileRecord.GetSeekKeys(), 100, strEmpty, strFileName, strEmpty,
                      keyList.GetSize() + keyRNTuple.fKeyLen);
    fFileSimple.Write(&keyKeyList, keyKeyList.fKeyHeaderSize, fFileSimple.fControlBlock->fFileRecord.GetSeekKeys());
    fFileSimple.Write(&strEmpty, strEmpty.GetSize());
-   fFileSimple.Write(&strEmpty, strEmpty.GetSize());
+   fFileSimple.Write(&strFileName, strFileName.GetSize());
    fFileSimple.Write(&strEmpty, strEmpty.GetSize());
    fFileSimple.Write(&keyList, keyList.GetSize());
    fFileSimple.Write(&keyRNTuple, keyRNTuple.fKeyHeaderSize);
@@ -1360,13 +1361,14 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileFreeList()
 {
    fFileSimple.fControlBlock->fHeader.SetSeekFree(fFileSimple.fFilePos);
    RTFString strEmpty;
+   RTFString strFileName{fFileName};
    RTFFreeEntry freeEntry;
-   RTFKey keyFreeList(fFileSimple.fControlBlock->fHeader.GetSeekFree(), 100, strEmpty, strEmpty, strEmpty,
+   RTFKey keyFreeList(fFileSimple.fControlBlock->fHeader.GetSeekFree(), 100, strEmpty, strFileName, strEmpty,
                       freeEntry.GetSize());
    std::uint64_t firstFree = fFileSimple.fControlBlock->fHeader.GetSeekFree() + keyFreeList.GetSize();
    freeEntry.Set(firstFree, std::max(2000000000ULL, ((firstFree / 1000000000ULL) + 1) * 1000000000ULL));
    fFileSimple.WriteKey(&freeEntry, freeEntry.GetSize(), freeEntry.GetSize(),
-                        fFileSimple.fControlBlock->fHeader.GetSeekFree(), 100, "", "", "");
+                        fFileSimple.fControlBlock->fHeader.GetSeekFree(), 100, "", fFileName, "");
    fFileSimple.fControlBlock->fHeader.SetNbytesFree(fFileSimple.fFilePos -
                                                     fFileSimple.fControlBlock->fHeader.GetSeekFree());
    fFileSimple.fControlBlock->fHeader.SetEnd(fFileSimple.fFilePos);
