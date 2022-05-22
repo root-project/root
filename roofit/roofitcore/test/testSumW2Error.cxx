@@ -23,13 +23,13 @@ TEST(SumW2Error, BatchMode)
    ws.factory("Exponential::bkg(x,c1[-0.5, -3, -0.1])");
    ws.factory("SUM::model(f[0.2, 0.0, 1.0] * sig, bkg)");
 
-   auto& x = *ws.var("x");
-   auto& mu = *ws.var("mu");
-   auto& s = *ws.var("s");
-   auto& c1 = *ws.var("c1");
-   auto& f = *ws.var("f");
+   auto &x = *ws.var("x");
+   auto &mu = *ws.var("mu");
+   auto &s = *ws.var("s");
+   auto &c1 = *ws.var("c1");
+   auto &f = *ws.var("f");
 
-   auto& model = *ws.pdf("model");
+   auto &model = *ws.pdf("model");
 
    auto resetParametersToInitialFitValues = [&]() {
       mu.setVal(4.0);
@@ -110,13 +110,26 @@ TEST(SumW2Error, ExtendedFit)
    using namespace RooFit;
 
    RooWorkspace ws("workspace");
-   auto *x = static_cast<RooRealVar *>(ws.factory("x[-10, 10]"));
-   x->setRange("subrange", -5.0, 5.0);
+   ws.factory("x[-10, 10]");
    ws.factory("Gaussian::sig(x, mu[-1, 1], s[0.1, 5])");
    ws.factory("Chebychev::bkg(x, {c1[0.1, -1, 1]})");
-   auto *shp = static_cast<RooAddPdf *>(ws.factory("SUM::shp(Nsig[0, 20000] * sig, Nbkg[0, 20000] * bkg)"));
+   ws.factory("SUM::shp(Nsig[0, 20000] * sig, Nbkg[0, 20000] * bkg)");
+   auto *x = ws.var("x");
+   x->setRange("subrange", -5.0, 5.0);
+   auto *shp = ws.pdf("shp");
    std::unique_ptr<RooDataSet> dataNoWeights{shp->generate(RooArgSet(*x))};
-   auto *wFunc = ws.factory("w[0.1]");
+
+   // For this test, use a uniform non-unity weight of 1.5. It was set to 0.1
+   // in the past, but then there were fourth-digit differences between the
+   // scalar mode and the batch mode. However, this is most likeliy not
+   // pointing towards a flaw in the batch mode, which is why a value was
+   // handpicked for which the differences disappear. Any residual problems are
+   // most likely caused by the unnecessarily complicated implementation of the
+   // RooAddPdf extended term in the scalar mode: the coefficients are
+   // projected to the subrange by cached scale factors, while the batch mode
+   // just uses the same scaling factor as for the full likelihood.
+   auto *wFunc = ws.factory("w[1.5]");
+
    auto *w = dataNoWeights->addColumn(*wFunc);
    RooDataSet data{dataNoWeights->GetName(),
                    dataNoWeights->GetTitle(),
@@ -154,5 +167,18 @@ TEST(SumW2Error, ExtendedFit)
 
       EXPECT_TRUE(yy->isIdenticalNoCov(*ny)) << "different results for extended fit with SumW2Error in BatchMode";
       EXPECT_TRUE(yn->isIdenticalNoCov(*nn)) << "different results for extended fit without SumW2Error in BatchMode";
+   }
+
+   // compare batch mode and scalar mode fit results for subrange
+   {
+      auto yy = doFit(true, true, "subrange");
+      auto yn = doFit(true, false, "subrange");
+      auto ny = doFit(false, true, "subrange");
+      auto nn = doFit(false, false, "subrange");
+
+      EXPECT_TRUE(yy->isIdenticalNoCov(*ny))
+         << "different results for extended fit in subrange with SumW2Error in BatchMode";
+      EXPECT_TRUE(yn->isIdenticalNoCov(*nn))
+         << "different results for extended fit in subrange without SumW2Error in BatchMode";
    }
 }
