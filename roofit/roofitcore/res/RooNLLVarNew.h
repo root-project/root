@@ -60,11 +60,10 @@ protected:
    RooArgSet _observables;
    mutable double _sumWeight = 0.0;         //!
    mutable double _sumWeight2 = 0.0;        //!
-   mutable double _sumCorrectionTerm = 0.0; //!
    bool _isExtended;
    bool _weightSquared = false;
    std::string _prefix;
-   std::unique_ptr<RooTemplateProxy<RooAbsReal>> _rangeNormTerm;
+   std::unique_ptr<RooTemplateProxy<RooAbsReal>> _fractionInRange;
 
    double evaluate() const override;
 

@@ -783,8 +783,12 @@ void RooAbsPdf::getLogProbabilities(RooSpan<const double> pdfValues, double * ou
 /// See also RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared),
 /// which takes a dataset to extract \f$N_\mathrm{observed}\f$ and the
 /// normalization set.
+double RooAbsPdf::extendedTerm(double sumEntries, RooArgSet const* nset, double sumEntriesW2) const
+{
+  return extendedTerm(sumEntries, expectedEvents(nset), sumEntriesW2);
+}
 
-double RooAbsPdf::extendedTerm(double sumEntries, const RooArgSet* nset, double sumEntriesW2) const
+double RooAbsPdf::extendedTerm(double sumEntries, double expected, double sumEntriesW2) const
 {
   // check if this PDF supports extended maximum likelihood fits
   if(!canBeExtended()) {
@@ -793,7 +797,6 @@ double RooAbsPdf::extendedTerm(double sumEntries, const RooArgSet* nset, double 
     return 0;
   }
 
-  double expected = expectedEvents(nset);
   if(expected < 0) {
     coutE(InputArguments) << fName << ": calculated negative expected events: " << expected
          << endl;

@@ -46,19 +46,15 @@ constexpr const char *RooNLLVarNew::weightVarNameSumW2;
 
 namespace {
 
-std::unique_ptr<RooAbsReal> createRangeNormTerm(RooAbsPdf const &pdf, RooArgSet const &observables,
-                                                std::string const &baseName, std::string const &rangeNames)
+std::unique_ptr<RooAbsReal>
+createFractionInRange(RooAbsPdf const &pdf, RooArgSet const &observables, std::string const &rangeNames)
 {
 
    RooArgSet observablesInPdf;
    pdf.getObservables(&observables, observablesInPdf);
 
-   std::unique_ptr<RooAbsReal> integral{
+   return std::unique_ptr<RooAbsReal>{
       pdf.createIntegral(observablesInPdf, &observablesInPdf, pdf.getIntegratorConfig(), rangeNames.c_str())};
-   auto out =
-      std::make_unique<RooFormulaVar>((baseName + "_correctionTerm").c_str(), "(log(x[0]))", RooArgList(*integral));
-   out->addOwnedComponents(std::move(integral));
-   return out;
 }
 
 template <class Input>
@@ -80,8 +76,9 @@ RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, 
    : RooAbsReal(name, title), _pdf{"pdf", "pdf", this, pdf}, _observables{observables}, _isExtended{isExtended}
 {
    if (!rangeName.empty()) {
-      auto term = createRangeNormTerm(pdf, observables, pdf.GetName(), rangeName);
-      _rangeNormTerm = std::make_unique<RooTemplateProxy<RooAbsReal>>("_rangeNormTerm", "_rangeNormTerm", this, *term);
+      auto term = createFractionInRange(pdf, observables, rangeName);
+      _fractionInRange =
+         std::make_unique<RooTemplateProxy<RooAbsReal>>("_fractionInRange", "_fractionInRange", this, *term);
       this->addOwnedComponents(std::move(term));
    }
 }
@@ -89,8 +86,9 @@ RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, 
 RooNLLVarNew::RooNLLVarNew(const RooNLLVarNew &other, const char *name)
    : RooAbsReal(other, name), _pdf{"pdf", this, other._pdf}, _observables{other._observables}
 {
-   if (other._rangeNormTerm)
-      _rangeNormTerm = std::make_unique<RooTemplateProxy<RooAbsReal>>("_rangeNormTerm", this, *other._rangeNormTerm);
+   if (other._fractionInRange)
+      _fractionInRange =
+         std::make_unique<RooTemplateProxy<RooAbsReal>>("_fractionInRange", this, *other._fractionInRange);
 }
 
 /** Compute multiple negative logs of propabilities
@@ -115,25 +113,30 @@ void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_
    auto weightsSumW2 = dataMap.at(nameReg.constPtr((_prefix + weightVarNameSumW2).c_str()));
    auto weightSpan = _weightSquared ? weightsSumW2 : weights;
 
-   if ((_isExtended || _rangeNormTerm) && _sumWeight == 0.0) {
+   if ((_isExtended || _fractionInRange) && _sumWeight == 0.0) {
       _sumWeight = weights.size() == 1 ? weights[0] * nEvents : kahanSum(weights);
    }
-   if ((_isExtended || _rangeNormTerm) && _weightSquared && _sumWeight2 == 0.0) {
+   if ((_isExtended || _fractionInRange) && _weightSquared && _sumWeight2 == 0.0) {
       _sumWeight2 = weights.size() == 1 ? weightsSumW2[0] * nEvents : kahanSum(weightsSumW2);
    }
-   if (_rangeNormTerm) {
-      auto rangeNormTermSpan = dataMap.at(*_rangeNormTerm);
-      if (rangeNormTermSpan.size() == 1) {
-         _sumCorrectionTerm = (_weightSquared ? _sumWeight2 : _sumWeight) * rangeNormTermSpan[0];
+   double sumCorrectionTerm = 0;
+   if (_fractionInRange) {
+      auto fractionInRangeSpan = dataMap.at(*_fractionInRange);
+      if (fractionInRangeSpan.size() == 1) {
+         sumCorrectionTerm = (_weightSquared ? _sumWeight2 : _sumWeight) * std::log(fractionInRangeSpan[0]);
       } else {
          if (weightSpan.size() == 1) {
-            _sumCorrectionTerm = weightSpan[0] * kahanSum(rangeNormTermSpan);
+            double fractionInRangeLogSum = 0.0;
+            for (std::size_t i = 0; i < fractionInRangeSpan.size(); ++i) {
+               fractionInRangeLogSum += std::log(fractionInRangeSpan[i]);
+            }
+            sumCorrectionTerm = weightSpan[0] * fractionInRangeLogSum;
          } else {
             // We don't need to use the library for now because the weights and
             // correction term integrals are always in the CPU map.
-            _sumCorrectionTerm = 0.0;
+            sumCorrectionTerm = 0.0;
             for (std::size_t i = 0; i < nEvents; ++i) {
-               _sumCorrectionTerm += weightSpan[i] * rangeNormTermSpan[i];
+               sumCorrectionTerm += weightSpan[i] * std::log(fractionInRangeSpan[i]);
             }
          }
       }
@@ -161,10 +164,14 @@ void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_
 
    if (_isExtended) {
       assert(_sumWeight != 0.0);
-      kahanProb += _pdf->extendedTerm(_sumWeight, &_observables, _weightSquared ? _sumWeight2 : 0.0);
+      double expected = _pdf->expectedEvents(&_observables);
+      if (_fractionInRange) {
+         expected *= dataMap.at(*_fractionInRange)[0];
+      }
+      kahanProb += _pdf->extendedTerm(_sumWeight, expected, _weightSquared ? _sumWeight2 : 0.0);
    }
-   if (_rangeNormTerm) {
-      kahanProb += _sumCorrectionTerm;
+   if (_fractionInRange) {
+      kahanProb += sumCorrectionTerm;
    }
    output[0] = kahanProb.Sum();
 }
