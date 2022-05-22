@@ -1305,7 +1305,7 @@ size_t ROOT::Experimental::RRVecField::EvalValueSize() const
 
    // mimic the logic of RVecInlineStorageSize, but at runtime
    const auto inlineStorageSz = [&] {
-#ifdef __cpp_lib_hardware_interference_size
+#ifdef R__HAS_HARDWARE_INTERFERENCE_SIZE
       // hardware_destructive_interference_size is a C++17 feature but many compilers do not implement it yet
       constexpr unsigned cacheLineSize = std::hardware_destructive_interference_size;
 #else
