@@ -1036,7 +1036,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
               gROOT->ProcessLine(exec.str().c_str());
            }
 
-           CheckPadModified(Canvas());
+           CheckPadModified(Canvas(), 2); // in any case increase version
         }
      }
 
@@ -1094,7 +1094,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 /// Returns true if any pad in the canvas were modified
 /// Reset modified flags, increment canvas version (if inc_version is true)
 
-Bool_t TWebCanvas::CheckPadModified(TPad *pad, Bool_t inc_version)
+Bool_t TWebCanvas::CheckPadModified(TPad *pad, Int_t inc_version)
 {
    Bool_t modified = kFALSE;
 
@@ -1106,11 +1106,11 @@ Bool_t TWebCanvas::CheckPadModified(TPad *pad, Bool_t inc_version)
    TIter iter(pad->GetListOfPrimitives());
    TObject *obj = nullptr;
    while ((obj = iter()) != nullptr) {
-      if (obj->InheritsFrom(TPad::Class()) && CheckPadModified(static_cast<TPad *>(obj), kFALSE))
+      if (obj->InheritsFrom(TPad::Class()) && CheckPadModified(static_cast<TPad *>(obj), 0))
          modified = kTRUE;
    }
 
-   if (inc_version && modified)
+   if ((inc_version > 1) || ((inc_version > 0) && modified))
       fCanvVersion++;
 
    return modified;
