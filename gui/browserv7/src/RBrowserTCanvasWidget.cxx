@@ -59,6 +59,23 @@ class RBrowserTCanvasWidget : public RBrowserWidget {
       } else {
          printf("ERROR: Cannot set TCanvas::fMother data member\n");
       }
+
+      offset = TCanvas::Class()->GetDataMemberOffset("fCw");
+      if (offset > 0) {
+         UInt_t *cw = (UInt_t *)((char*) fCanvas.get() + offset);
+         if (*cw == fCanvas->GetWw()) *cw = on_init ? 800 : 0;
+      } else {
+         printf("ERROR: Cannot set TCanvas::fCw data member\n");
+      }
+
+      offset = TCanvas::Class()->GetDataMemberOffset("fCh");
+      if (offset > 0) {
+         UInt_t *ch = (UInt_t *)((char*) fCanvas.get() + offset);
+         if (*ch == fCanvas->GetWh()) *ch = on_init ? 600 : 0;
+      } else {
+         printf("ERROR: Cannot set TCanvas::fCw data member\n");
+      }
+
    }
 
 public:
@@ -145,6 +162,7 @@ public:
       if (!append) {
          fCanvas->GetListOfPrimitives()->Clear();
          fObjects.clear();
+         fCanvas->Range(0,0,1,1);  // set default range
       }
 
       if (Browsable::RProvider::Draw6(fCanvas.get(), obj, opt)) {
