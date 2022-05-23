@@ -812,9 +812,6 @@ struct RTFFile {
          RUInt32BE fSeekDir{100};
          RUInt32BE fSeekParent{0};
          RUInt32BE fSeekKeys{0};
-         RUInt32BE fPadding1{0};
-         RUInt32BE fPadding2{0};
-         RUInt32BE fPadding3{0};
       } fInfoShort;
       struct {
          RUInt64BE fSeekDir{100};
@@ -825,6 +822,7 @@ struct RTFFile {
 
    RTFFile() : fInfoShort() {}
 
+   // In case of a short TFile record (<2G), 3 padding ints are written after the UUID
    std::uint32_t GetSize() const { return sizeof(RTFFile); }
 
    std::uint64_t GetSeekKeys() const
@@ -1436,4 +1434,9 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileSkeleton(int def
    fFileSimple.fControlBlock->fSeekFileRecord = fFileSimple.fFilePos;
    fFileSimple.Write(&fFileSimple.fControlBlock->fFileRecord, fFileSimple.fControlBlock->fFileRecord.GetSize());
    fFileSimple.Write(&uuid, uuid.GetSize());
+
+   // Padding bytes to allow the TFile record to grow for a big file
+   RUInt32BE padding{0};
+   for (int i = 0; i < 3; ++i)
+      fFileSimple.Write(&padding, sizeof(padding));
 }
