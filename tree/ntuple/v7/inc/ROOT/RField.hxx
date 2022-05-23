@@ -585,7 +585,7 @@ private:
    static std::string GetTypeList(const std::vector<std::unique_ptr<Detail::RFieldBase>> &itemFields);
 
 protected:
-   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
+   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const override;
 
    RPairField(std::string_view fieldName, std::vector<std::unique_ptr<Detail::RFieldBase>> &&itemFields,
               const std::vector<std::size_t> &offsets);
@@ -1517,16 +1517,26 @@ private:
       return result;
    }
 
+protected:
+   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final
+   {
+      std::vector<std::unique_ptr<Detail::RFieldBase>> items;
+      items.push_back(fSubFields[0]->Clone(fSubFields[0]->GetName()));
+      items.push_back(fSubFields[1]->Clone(fSubFields[1]->GetName()));
+      return std::make_unique<RField<std::pair<T1, T2>>>(newName, std::move(items));
+   }
+
 public:
    static std::string TypeName() {
       return "std::pair<" + RField<T1>::TypeName() + "," + RField<T2>::TypeName() + ">";
    }
-   explicit RField(std::string_view name)
-      : RPairField(name, BuildItemFields<T1, T2>(), {offsetof(ContainerT, first), offsetof(ContainerT, second)})
+   explicit RField(std::string_view name, std::vector<std::unique_ptr<Detail::RFieldBase>> &&itemFields)
+      : RPairField(name, std::move(itemFields), {offsetof(ContainerT, first), offsetof(ContainerT, second)})
    {
       fMaxAlignment = alignof(ContainerT);
       fSize = sizeof(ContainerT);
    }
+   explicit RField(std::string_view name) : RField(name, BuildItemFields<T1, T2>()) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
