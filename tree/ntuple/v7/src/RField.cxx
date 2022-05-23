@@ -902,6 +902,7 @@ ROOT::Experimental::RRecordField::RRecordField(
    : ROOT::Experimental::Detail::RFieldBase(fieldName, "", ENTupleStructure::kRecord, false /* isSimple */)
 {
    for (auto &item : itemFields) {
+      fOffsets.push_back(fSize);
       fMaxAlignment = std::max(fMaxAlignment, item->GetAlignment());
       fSize += GetItemPadding(fSize, item->GetAlignment()) + item->GetValueSize();
       Attach(std::move(item));
@@ -930,52 +931,42 @@ ROOT::Experimental::RRecordField::CloneImpl(std::string_view newName) const
 
 std::size_t ROOT::Experimental::RRecordField::AppendImpl(const Detail::RFieldValue &value) {
    std::size_t nbytes = 0;
-   std::size_t offset = 0;
-   for (auto &item : fSubFields) {
-      auto memberValue = item->CaptureValue(value.Get<unsigned char>() + offset);
-      nbytes += item->Append(memberValue);
-      offset += GetItemPadding(offset, item->GetAlignment()) + item->GetValueSize();
+   for (unsigned i = 0; i < fSubFields.size(); ++i) {
+      auto memberValue = fSubFields[i]->CaptureValue(value.Get<unsigned char>() + fOffsets[i]);
+      nbytes += fSubFields[i]->Append(memberValue);
    }
    return nbytes;
 }
 
 void ROOT::Experimental::RRecordField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
 {
-   std::size_t offset = 0;
-   for (auto &item : fSubFields) {
-      auto memberValue = item->CaptureValue(value->Get<unsigned char>() + offset);
-      item->Read(globalIndex, &memberValue);
-      offset += GetItemPadding(offset, item->GetAlignment()) + item->GetValueSize();
+   for (unsigned i = 0; i < fSubFields.size(); ++i) {
+      auto memberValue = fSubFields[i]->CaptureValue(value->Get<unsigned char>() + fOffsets[i]);
+      fSubFields[i]->Read(globalIndex, &memberValue);
    }
 }
 
 void ROOT::Experimental::RRecordField::ReadInClusterImpl(const RClusterIndex &clusterIndex, Detail::RFieldValue *value)
 {
-   std::size_t offset = 0;
-   for (auto &item : fSubFields) {
-      auto memberValue = item->CaptureValue(value->Get<unsigned char>() + offset);
-      item->Read(clusterIndex, &memberValue);
-      offset += GetItemPadding(offset, item->GetAlignment()) + item->GetValueSize();
+   for (unsigned i = 0; i < fSubFields.size(); ++i) {
+      auto memberValue = fSubFields[i]->CaptureValue(value->Get<unsigned char>() + fOffsets[i]);
+      fSubFields[i]->Read(clusterIndex, &memberValue);
    }
 }
 
 ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RRecordField::GenerateValue(void *where)
 {
-   std::size_t offset = 0;
-   for (auto &item : fSubFields) {
-      item->GenerateValue(static_cast<unsigned char *>(where) + offset);
-      offset += GetItemPadding(offset, item->GetAlignment()) + item->GetValueSize();
+   for (unsigned i = 0; i < fSubFields.size(); ++i) {
+      fSubFields[i]->GenerateValue(static_cast<unsigned char *>(where) + fOffsets[i]);
    }
    return Detail::RFieldValue(true /* captureFlag */, this, where);
 }
 
 void ROOT::Experimental::RRecordField::DestroyValue(const Detail::RFieldValue& value, bool dtorOnly)
 {
-   std::size_t offset = 0;
-   for (auto &item : fSubFields) {
-      auto memberValue = item->CaptureValue(value.Get<unsigned char>() + offset);
-      item->DestroyValue(memberValue, true /* dtorOnly */);
-      offset += GetItemPadding(offset, item->GetAlignment()) + item->GetValueSize();
+   for (unsigned i = 0; i < fSubFields.size(); ++i) {
+      auto memberValue = fSubFields[i]->CaptureValue(value.Get<unsigned char>() + fOffsets[i]);
+      fSubFields[i]->DestroyValue(memberValue, true /* dtorOnly */);
    }
 
    if (!dtorOnly)
@@ -991,11 +982,9 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RRecordField::Captur
 std::vector<ROOT::Experimental::Detail::RFieldValue>
 ROOT::Experimental::RRecordField::SplitValue(const Detail::RFieldValue &value) const
 {
-   std::size_t offset = 0;
    std::vector<Detail::RFieldValue> result;
-   for (auto &item : fSubFields) {
-      result.emplace_back(item->CaptureValue(value.Get<unsigned char>() + offset));
-      offset += GetItemPadding(offset, item->GetAlignment()) + item->GetValueSize();
+   for (unsigned i = 0; i < fSubFields.size(); ++i) {
+      result.emplace_back(fSubFields[i]->CaptureValue(value.Get<unsigned char>() + fOffsets[i]));
    }
    return result;
 }
