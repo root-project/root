@@ -823,7 +823,12 @@ struct RTFFile {
    RTFFile() : fInfoShort() {}
 
    // In case of a short TFile record (<2G), 3 padding ints are written after the UUID
-   std::uint32_t GetSize() const { return sizeof(RTFFile); }
+   std::uint32_t GetSize() const
+   {
+      if (fClassVersion >= 1000)
+         return sizeof(RTFFile);
+      return 18 + sizeof(fInfoShort);
+   }
 
    std::uint64_t GetSeekKeys() const
    {
@@ -1418,8 +1423,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileSkeleton(int def
 
    // First record of the file: the TFile object at offset 100
    RTFKey keyRoot(100, 0, strTFile, strFileName, strEmpty,
-                  fFileSimple.fControlBlock->fFileRecord.GetSize() + strFileName.GetSize() + strEmpty.GetSize() +
-                     uuid.GetSize());
+                  sizeof(RTFFile) + strFileName.GetSize() + strEmpty.GetSize() + uuid.GetSize());
    std::uint32_t nbytesName = keyRoot.fKeyLen + strFileName.GetSize() + 1;
    fFileSimple.fControlBlock->fFileRecord.fNBytesName = nbytesName;
    fFileSimple.fControlBlock->fHeader.SetNbytesName(nbytesName);
