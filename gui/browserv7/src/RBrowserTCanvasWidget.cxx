@@ -17,6 +17,7 @@
 #include "TCanvas.h"
 #include "TROOT.h"
 #include "TClass.h"
+#include "TEnv.h"
 #include "TWebCanvas.h"
 
 #include <vector>
@@ -74,12 +75,13 @@ public:
       fCanvas->SetBatch(kTRUE); // mark canvas as batch
       fCanvas->SetEditable(kTRUE); // ensure fPrimitives are created
 
+      Bool_t readonly = gEnv->GetValue("WebGui.FullCanvas", (Int_t) 0) == 0;
+
       // create implementation
-      fWebCanvas = new TWebCanvas(fCanvas.get(), "title", 0, 0, 800, 600);
+      fWebCanvas = new TWebCanvas(fCanvas.get(), "title", 0, 0, 800, 600, readonly);
 
       // assign implementation
       fCanvas->SetCanvasImp(fWebCanvas);
-
       SetPrivateCanvasFields(true);
       fCanvas->cd();
    }
@@ -89,8 +91,10 @@ public:
       fCanvas = std::move(canv);
       fCanvas->SetBatch(kTRUE); // mark canvas as batch
 
+      Bool_t readonly = gEnv->GetValue("WebGui.FullCanvas", (Int_t) 0) == 0;
+
       // create implementation
-      fWebCanvas = new TWebCanvas(fCanvas.get(), "title", 0, 0, 800, 600);
+      fWebCanvas = new TWebCanvas(fCanvas.get(), "title", 0, 0, 800, 600, readonly);
 
       // assign implementation
       fCanvas->SetCanvasImp(fWebCanvas);
