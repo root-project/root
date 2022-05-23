@@ -801,8 +801,7 @@ struct RTFKeyList {
 
 /// A streamed TFile object
 struct RTFFile {
-   char fModified{0};
-   char fWritable{1};
+   RUInt16BE fClassVersion{5};
    RTFDatetime fDateC;
    RTFDatetime fDateM;
    RUInt32BE fNBytesKeys{0};
@@ -813,6 +812,9 @@ struct RTFFile {
          RUInt32BE fSeekDir{100};
          RUInt32BE fSeekParent{0};
          RUInt32BE fSeekKeys{0};
+         RUInt32BE fPadding1{0};
+         RUInt32BE fPadding2{0};
+         RUInt32BE fPadding3{0};
       } fInfoShort;
       struct {
          RUInt64BE fSeekDir{100};
@@ -823,16 +825,27 @@ struct RTFFile {
 
    RTFFile() : fInfoShort() {}
 
-   std::uint32_t GetSize(std::uint32_t versionKey = 0) const {
-      if (versionKey >= 1000)
-         return 18 + sizeof(fInfoLong);
-      return 18 + sizeof(fInfoShort);
-   }
+   std::uint32_t GetSize() const { return sizeof(RTFFile); }
 
-   std::uint64_t GetSeekKeys(std::uint32_t versionKey = 0) const {
-      if (versionKey >= 1000)
+   std::uint64_t GetSeekKeys() const
+   {
+      if (fClassVersion >= 1000)
          return fInfoLong.fSeekKeys;
       return fInfoShort.fSeekKeys;
+   }
+
+   void SetSeekKeys(std::uint64_t seekKeys)
+   {
+      if (seekKeys > static_cast<unsigned int>(std::numeric_limits<std::int32_t>::max())) {
+         std::uint32_t seekDir = fInfoShort.fSeekDir;
+         std::uint32_t seekParent = fInfoShort.fSeekParent;
+         fInfoLong.fSeekDir = seekDir;
+         fInfoLong.fSeekParent = seekParent;
+         fInfoLong.fSeekKeys = seekKeys;
+         fClassVersion = fClassVersion + 1000;
+      } else {
+         fInfoShort.fSeekKeys = seekKeys;
+      }
    }
 };
 
@@ -979,7 +992,7 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view 
    ReadBuffer(&file, sizeof(file), offset);
 
    RUInt32BE nKeys;
-   offset = file.GetSeekKeys(key.fVersion);
+   offset = file.GetSeekKeys();
    ReadBuffer(&key, sizeof(key), offset);
    offset += key.fKeyLen;
    ReadBuffer(&nKeys, sizeof(nKeys), offset);
@@ -1349,7 +1362,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileKeysList()
    RTFKey keyRNTuple(fFileSimple.fControlBlock->fSeekNTuple, 100, strRNTupleClass, strRNTupleName, strEmpty,
                      RTFNTuple().GetSize());
 
-   fFileSimple.fControlBlock->fFileRecord.fInfoShort.fSeekKeys = fFileSimple.fFilePos;
+   fFileSimple.fControlBlock->fFileRecord.SetSeekKeys(fFileSimple.fFilePos);
    RTFKeyList keyList{1};
    RTFKey keyKeyList(fFileSimple.fControlBlock->fFileRecord.GetSeekKeys(), 100, strEmpty, strFileName, strEmpty,
                      keyList.GetSize() + keyRNTuple.fKeyLen);
