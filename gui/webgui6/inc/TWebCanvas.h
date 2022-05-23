@@ -95,7 +95,7 @@ protected:
    void CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObject *obj, const char *opt, TWebPS *masterps = nullptr);
    void CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t version, PadPaintingReady_t func);
 
-   Bool_t CheckPadModified(TPad *pad, Bool_t inc_version = kTRUE);
+   Bool_t CheckPadModified(TPad *pad, Int_t inc_version = 1);
 
    Bool_t AddToSendQueue(unsigned connid, const std::string &msg);
 
