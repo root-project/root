@@ -60,7 +60,7 @@ namespace RooStats {
 /// - Parameters of interest: empty,
 /// - Nuisance parameters: all parameters except parameters of interest
 ///
-/// We use NULL to mean not set, so we don't want to fill
+/// We use nullptr to mean not set, so we don't want to fill
 /// with empty RooArgSets.
 
 void ModelConfig::GuessObsAndNuisance(const RooAbsData& data, bool printModelConfig) {
@@ -197,7 +197,7 @@ RooWorkspace * ModelConfig::GetWS() const {
    RooWorkspace *ws = dynamic_cast<RooWorkspace *>(fRefWS.GetObject() );
    if(!ws) {
       coutE(ObjectHandling) << "workspace not set" << endl;
-      return NULL;
+      return nullptr;
    }
    return ws;
 }

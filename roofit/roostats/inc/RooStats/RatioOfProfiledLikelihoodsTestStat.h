@@ -28,10 +28,10 @@ namespace RooStats {
       RatioOfProfiledLikelihoodsTestStat() :
          fNullProfile(),
          fAltProfile(),
-         fAltPOI(NULL),
+         fAltPOI(nullptr),
          fSubtractMLE(true),
          fDetailedOutputEnabled(false),
-         fDetailedOutput(NULL)
+         fDetailedOutput(nullptr)
       {
          // Proof constructor. Don't use.
       }
@@ -42,7 +42,7 @@ namespace RooStats {
          fAltProfile(altPdf),
          fSubtractMLE(true),
          fDetailedOutputEnabled(false),
-         fDetailedOutput(NULL)
+         fDetailedOutput(nullptr)
       {
          //  Calculates the ratio of profiled likelihoods.
 

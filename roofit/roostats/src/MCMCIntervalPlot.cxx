@@ -64,26 +64,26 @@ using namespace RooStats;
 
 MCMCIntervalPlot::MCMCIntervalPlot()
 {
-   fInterval = NULL;
-   fParameters = NULL;
-   fPosteriorHist = NULL;
-   fPosteriorKeysPdf = NULL;
-   fPosteriorKeysProduct = NULL;
+   fInterval = nullptr;
+   fParameters = nullptr;
+   fPosteriorHist = nullptr;
+   fPosteriorKeysPdf = nullptr;
+   fPosteriorKeysProduct = nullptr;
    fDimension = 0;
    fLineColor = kBlack;
    fShadeColor = kGray;
    fLineWidth = 1;
    //fContourColor = kBlack;
    fShowBurnIn = true;
-   fWalk = NULL;
-   fBurnIn = NULL;
-   fFirst = NULL;
-   fParamGraph = NULL;
-   fNLLGraph = NULL;
-   fNLLHist = NULL;
-   fWeightHist = NULL;
-   fPosteriorHistHistCopy = NULL;
-   fPosteriorHistTFCopy = NULL;
+   fWalk = nullptr;
+   fBurnIn = nullptr;
+   fFirst = nullptr;
+   fParamGraph = nullptr;
+   fNLLGraph = nullptr;
+   fNLLHist = nullptr;
+   fWeightHist = nullptr;
+   fPosteriorHistHistCopy = nullptr;
+   fPosteriorHistTFCopy = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -91,23 +91,23 @@ MCMCIntervalPlot::MCMCIntervalPlot()
 MCMCIntervalPlot::MCMCIntervalPlot(MCMCInterval& interval)
 {
    SetMCMCInterval(interval);
-   fPosteriorHist = NULL;
-   fPosteriorKeysPdf = NULL;
-   fPosteriorKeysProduct = NULL;
+   fPosteriorHist = nullptr;
+   fPosteriorKeysPdf = nullptr;
+   fPosteriorKeysProduct = nullptr;
    fLineColor = kBlack;
    fShadeColor = kGray;
    fLineWidth = 1;
    //fContourColor = kBlack;
    fShowBurnIn = true;
-   fWalk = NULL;
-   fBurnIn = NULL;
-   fFirst = NULL;
-   fParamGraph = NULL;
-   fNLLGraph = NULL;
-   fNLLHist = NULL;
-   fWeightHist = NULL;
-   fPosteriorHistHistCopy = NULL;
-   fPosteriorHistTFCopy = NULL;
+   fWalk = nullptr;
+   fBurnIn = nullptr;
+   fFirst = nullptr;
+   fParamGraph = nullptr;
+   fNLLGraph = nullptr;
+   fNLLHist = nullptr;
+   fWeightHist = nullptr;
+   fPosteriorHistHistCopy = nullptr;
+   fPosteriorHistTFCopy = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -164,18 +164,18 @@ void MCMCIntervalPlot::DrawPosterior(const Option_t* options)
 void* MCMCIntervalPlot::DrawPosteriorHist(const Option_t* /*options*/,
       const char* title, bool scale)
 {
-   if (fPosteriorHist == NULL)
+   if (fPosteriorHist == nullptr)
       fPosteriorHist = fInterval->GetPosteriorHist();
 
-   if (fPosteriorHist == NULL) {
+   if (fPosteriorHist == nullptr) {
       coutE(InputArguments) << "MCMCIntervalPlot::DrawPosteriorHist: "
          << "Couldn't get posterior histogram." << endl;
-      return NULL;
+      return nullptr;
    }
 
    // kbelasco: annoying hack because histogram drawing fails when it sees
    // an un-recognized option like POSTERIOR_HIST, etc.
-   //const Option_t* myOpt = NULL;
+   //const Option_t* myOpt = nullptr;
 
    //TString tmpOpt(options);
    //if (tmpOpt.Contains("same"))
@@ -202,13 +202,13 @@ void* MCMCIntervalPlot::DrawPosteriorHist(const Option_t* /*options*/,
 
 void* MCMCIntervalPlot::DrawPosteriorKeysPdf(const Option_t* options)
 {
-   if (fPosteriorKeysPdf == NULL)
+   if (fPosteriorKeysPdf == nullptr)
       fPosteriorKeysPdf = fInterval->GetPosteriorKeysPdf();
 
-   if (fPosteriorKeysPdf == NULL) {
+   if (fPosteriorKeysPdf == nullptr) {
       coutE(InputArguments) << "MCMCIntervalPlot::DrawPosteriorKeysPdf: "
          << "Couldn't get posterior Keys PDF." << endl;
-      return NULL;
+      return nullptr;
    }
 
    TString title(GetTitle());
@@ -217,10 +217,10 @@ void* MCMCIntervalPlot::DrawPosteriorKeysPdf(const Option_t* options)
    if (fDimension == 1) {
       RooRealVar* v = (RooRealVar*)fParameters->first();
       RooPlot* frame = v->frame();
-      if (frame == NULL) {
+      if (frame == nullptr) {
          coutE(InputArguments) << "MCMCIntervalPlot::DrawPosteriorKeysPdf: "
                                << "Invalid parameter" << endl;
-         return NULL;
+         return nullptr;
       }
       if (isEmpty)
          frame->SetTitle(Form("Posterior Keys PDF for %s", v->GetName()));
@@ -246,9 +246,9 @@ void* MCMCIntervalPlot::DrawPosteriorKeysPdf(const Option_t* options)
 
       keysHist->Draw(options);
       delete axes;
-      return NULL;
+      return nullptr;
    }
-   return NULL;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -300,10 +300,10 @@ void MCMCIntervalPlot::DrawKeysPdfInterval(const Option_t* options)
       double ul = fInterval->UpperLimitByKeys(*p);
       double ll = fInterval->LowerLimitByKeys(*p);
 
-      if (frame != NULL && fPosteriorKeysPdf != NULL) {
+      if (frame != nullptr && fPosteriorKeysPdf != nullptr) {
          // draw shading in interval
          if (isEmpty)
-            frame->SetTitle(NULL);
+            frame->SetTitle(nullptr);
          else
             frame->SetTitle(GetTitle());
          frame->GetYaxis()->SetTitle(Form("Posterior for parameter %s",
@@ -335,10 +335,10 @@ void MCMCIntervalPlot::DrawKeysPdfInterval(const Option_t* options)
       llLine->Draw(options);
       ulLine->Draw(options);
    } else if (fDimension == 2) {
-      if (fPosteriorKeysPdf == NULL)
+      if (fPosteriorKeysPdf == nullptr)
          fPosteriorKeysPdf = fInterval->GetPosteriorKeysPdf();
 
-      if (fPosteriorKeysPdf == NULL) {
+      if (fPosteriorKeysPdf == nullptr) {
          coutE(InputArguments) << "MCMCIntervalPlot::DrawKeysPdfInterval: "
             << "Couldn't get posterior Keys PDF." << endl;
          return;
@@ -357,7 +357,7 @@ void MCMCIntervalPlot::DrawKeysPdfInterval(const Option_t* options)
       if (!isEmpty)
          contHist->SetTitle(GetTitle());
       else
-         contHist->SetTitle(NULL);
+         contHist->SetTitle(nullptr);
 
       contHist->SetStats(false);
 
@@ -392,10 +392,10 @@ void MCMCIntervalPlot::DrawHistInterval(const Option_t* options)
       // Draw the posterior histogram as well so the user can see where the
       // limit bars line up
       // fDimension == 1, so we know will get a TH1F*
-      TH1F* hist = (TH1F*)DrawPosteriorHist(options, NULL, false);
-      if (hist == NULL) return;
+      TH1F* hist = (TH1F*)DrawPosteriorHist(options, nullptr, false);
+      if (hist == nullptr) return;
       if (isEmpty)
-         hist->SetTitle(NULL);
+         hist->SetTitle(nullptr);
       else
          hist->SetTitle(GetTitle());
       hist->GetYaxis()->SetTitle(Form("Posterior for parameter %s",
@@ -437,10 +437,10 @@ void MCMCIntervalPlot::DrawHistInterval(const Option_t* options)
       ulLine->Draw(options);
 
    } else if (fDimension == 2) {
-      if (fPosteriorHist == NULL)
+      if (fPosteriorHist == nullptr)
          fPosteriorHist = fInterval->GetPosteriorHist();
 
-      if (fPosteriorHist == NULL) {
+      if (fPosteriorHist == nullptr) {
          coutE(InputArguments) << "MCMCIntervalPlot::DrawHistInterval: "
             << "Couldn't get posterior histogram." << endl;
          return;
@@ -456,7 +456,7 @@ void MCMCIntervalPlot::DrawHistInterval(const Option_t* options)
       if (!isEmpty)
          fPosteriorHist->SetTitle(GetTitle());
       else
-         fPosteriorHist->SetTitle(NULL);
+         fPosteriorHist->SetTitle(nullptr);
       delete axes;
 
       fPosteriorHist->SetStats(false);
@@ -489,10 +489,10 @@ void MCMCIntervalPlot::DrawTailFractionInterval(const Option_t* options)
       double ul = fInterval->UpperLimitTailFraction(*p);
       double ll = fInterval->LowerLimitTailFraction(*p);
 
-      TH1F* hist = (TH1F*)DrawPosteriorHist(options, NULL, false);
-      if (hist == NULL) return;
+      TH1F* hist = (TH1F*)DrawPosteriorHist(options, nullptr, false);
+      if (hist == nullptr) return;
       if (isEmpty)
-         hist->SetTitle(NULL);
+         hist->SetTitle(nullptr);
       else
          hist->SetTitle(GetTitle());
       hist->GetYaxis()->SetTitle(Form("Posterior for parameter %s",
@@ -540,13 +540,13 @@ void MCMCIntervalPlot::DrawTailFractionInterval(const Option_t* options)
 
 void* MCMCIntervalPlot::DrawPosteriorKeysProduct(const Option_t* options)
 {
-   if (fPosteriorKeysProduct == NULL)
+   if (fPosteriorKeysProduct == nullptr)
       fPosteriorKeysProduct = fInterval->GetPosteriorKeysProduct();
 
-   if (fPosteriorKeysProduct == NULL) {
+   if (fPosteriorKeysProduct == nullptr) {
       coutE(InputArguments) << "MCMCIntervalPlot::DrawPosteriorKeysProduct: "
          << "Couldn't get posterior Keys product." << endl;
-      return NULL;
+      return nullptr;
    }
 
    RooArgList* axes = fInterval->GetAxes();
@@ -556,7 +556,7 @@ void* MCMCIntervalPlot::DrawPosteriorKeysProduct(const Option_t* options)
 
    if (fDimension == 1) {
       RooPlot* frame = ((RooRealVar*)fParameters->first())->frame();
-      if (!frame) return NULL;
+      if (!frame) return nullptr;
       if (isEmpty)
          frame->SetTitle(Form("Posterior Keys PDF * Heaviside product for %s",
                   axes->at(0)->GetName()));
@@ -579,10 +579,10 @@ void* MCMCIntervalPlot::DrawPosteriorKeysProduct(const Option_t* options)
       else
          productHist->SetTitle(GetTitle());
       productHist->Draw(options);
-      return NULL;
+      return nullptr;
    }
    delete axes;
-   return NULL;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -600,8 +600,8 @@ void MCMCIntervalPlot::DrawChainScatter(RooRealVar& xVar, RooRealVar& yVar)
 
    double* x = new double[size - burnInSteps];
    double* y = new double[size - burnInSteps];
-   double* burnInX = NULL;
-   double* burnInY = NULL;
+   double* burnInX = nullptr;
+   double* burnInY = nullptr;
    if (burnInSteps > 0) {
       burnInX = new double[burnInSteps];
       burnInY = new double[burnInSteps];
@@ -641,8 +641,8 @@ void MCMCIntervalPlot::DrawChainScatter(RooRealVar& xVar, RooRealVar& yVar)
    walk->SetMarkerColor(kViolet);
    walk->Draw("A,L,P,same");
 
-   TGraph* burnIn = NULL;
-   if (burnInX != NULL && burnInY != NULL) {
+   TGraph* burnIn = nullptr;
+   if (burnInX != nullptr && burnInY != nullptr) {
       burnIn = new TGraph(burnInSteps - 1, burnInX, burnInY);
       burnIn->SetLineColor(kPink);
       burnIn->SetMarkerStyle(6);
@@ -660,8 +660,8 @@ void MCMCIntervalPlot::DrawChainScatter(RooRealVar& xVar, RooRealVar& yVar)
    //walkCanvas->Update();
    delete [] x;
    delete [] y;
-   if (burnInX != NULL) delete [] burnInX;
-   if (burnInY != NULL) delete [] burnInY;
+   if (burnInX != nullptr) delete [] burnInX;
+   if (burnInY != nullptr) delete [] burnInY;
    //delete walk;
    //delete burnIn;
    //delete first;
@@ -749,7 +749,7 @@ void MCMCIntervalPlot::DrawNLLVsTime()
 
 void MCMCIntervalPlot::DrawNLLHist(const Option_t* options)
 {
-   if (fNLLHist == NULL) {
+   if (fNLLHist == nullptr) {
       const MarkovChain* markovChain = fInterval->GetChain();
       // find the max NLL value
       double maxNLL = 0;
@@ -775,7 +775,7 @@ void MCMCIntervalPlot::DrawNLLHist(const Option_t* options)
 
 void MCMCIntervalPlot::DrawWeightHist(const Option_t* options)
 {
-   if (fWeightHist == NULL) {
+   if (fWeightHist == nullptr) {
       const MarkovChain* markovChain = fInterval->GetChain();
       // find the max weight value
       double maxWeight = 0;

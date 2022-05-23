@@ -111,7 +111,7 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    const_cast<ModelConfig*>(fAltModel)->GuessObsAndNuisance(*fData);
 
    const RooArgSet * nullSnapshot = fNullModel->GetSnapshot();
-   if(nullSnapshot == NULL) {
+   if(nullSnapshot == nullptr) {
       oocoutE(nullptr,Generation) << "Null model needs a snapshot. Set using modelconfig->SetSnapshot(poi)." << endl;
       return 0;
    }
@@ -143,7 +143,7 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    RooArgSet nullP(*nullSnapshot);
    double obsTestStat;
 
-   RooArgList* allTS = NULL;
+   RooArgList* allTS = nullptr;
    if( toymcs ) {
       allTS = toymcs->EvaluateAllTestStatistics(*const_cast<RooAbsData*>(fData), nullP);
       if (!allTS) return 0;
@@ -173,8 +173,8 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    if(PreNullHook(&paramPointNull, obsTestStat) != 0) {
       oocoutE(nullptr,Generation) << "PreNullHook did not return 0." << endl;
    }
-   SamplingDistribution* samp_null = NULL;
-   RooDataSet* detOut_null = NULL;
+   SamplingDistribution* samp_null = nullptr;
+   RooDataSet* detOut_null = nullptr;
    if(toymcs) {
       detOut_null = toymcs->GetSamplingDistributions(paramPointNull);
       if( detOut_null ) {
@@ -195,8 +195,8 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    if(PreAltHook(&paramPointAlt, obsTestStat) != 0) {
       oocoutE(nullptr,Generation) << "PreAltHook did not return 0." << endl;
    }
-   SamplingDistribution* samp_alt = NULL;
-   RooDataSet* detOut_alt = NULL;
+   SamplingDistribution* samp_alt = nullptr;
+   RooDataSet* detOut_alt = nullptr;
    if(toymcs) {
 
       // case of re-using same toys for every points
@@ -236,7 +236,7 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    res->SetAllTestStatisticsData( allTS );
 
    const RooArgSet *aset = GetFitInfo();
-   if (aset != NULL) {
+   if (aset != nullptr) {
       RooDataSet *dset = new RooDataSet("", "", *aset);
       dset->add(*aset);
       res->SetFitInfo( dset );

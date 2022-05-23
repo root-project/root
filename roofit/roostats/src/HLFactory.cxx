@@ -117,13 +117,13 @@ HLFactory::HLFactory():
 /// destructor
 
 HLFactory::~HLFactory(){
-    if (fComboSigBkgPdf!=NULL)
+    if (fComboSigBkgPdf!=nullptr)
         delete fComboSigBkgPdf;
-    if (fComboBkgPdf!=NULL)
+    if (fComboBkgPdf!=nullptr)
         delete fComboBkgPdf;
-    if (fComboDataset!=NULL)
+    if (fComboDataset!=nullptr)
         delete fComboDataset;
-    if (fComboCat!=NULL)
+    if (fComboCat!=nullptr)
         delete fComboCat;
 
     if (fOwnWs)
@@ -149,7 +149,7 @@ int HLFactory::AddChannel(const char* label,
         }
 
     if (SigBkgPdfName!=0){
-        if (fWs->pdf(SigBkgPdfName)==NULL){
+        if (fWs->pdf(SigBkgPdfName)==nullptr){
             std::cerr << "Pdf " << SigBkgPdfName << " not found in workspace!\n";
             return -1;
             }
@@ -158,7 +158,7 @@ int HLFactory::AddChannel(const char* label,
         }
 
     if (BkgPdfName!=0){
-        if (fWs->pdf(BkgPdfName)==NULL){
+        if (fWs->pdf(BkgPdfName)==nullptr){
             std::cerr << "Pdf " << BkgPdfName << " not found in workspace!\n";
             return -1;
             }
@@ -167,7 +167,7 @@ int HLFactory::AddChannel(const char* label,
         }
 
     if (DatasetName!=0){
-        if (fWs->data(DatasetName)==NULL){
+        if (fWs->data(DatasetName)==nullptr){
             std::cerr << "Dataset " << DatasetName << " not found in workspace!\n";
             return -1;
             }
@@ -191,11 +191,11 @@ RooAbsPdf* HLFactory::GetTotSigBkgPdf(){
     if (fSigBkgPdfNames.GetSize()==0)
         return 0;
 
-    if (fComboSigBkgPdf!=NULL)
+    if (fComboSigBkgPdf!=nullptr)
         return fComboSigBkgPdf;
 
     if (!fNamesListsConsistent())
-        return NULL;
+        return nullptr;
 
     if (fSigBkgPdfNames.GetSize()==1){
         TString name(((TObjString*)fSigBkgPdfNames.At(0))->String());
@@ -235,18 +235,18 @@ RooAbsPdf* HLFactory::GetTotSigBkgPdf(){
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the combination of the background only channels.
-/// If no background channel is specified a NULL pointer is returned.
+/// If no background channel is specified a nullptr pointer is returned.
 /// The factory owns the object.
 
 RooAbsPdf* HLFactory::GetTotBkgPdf(){
     if (fBkgPdfNames.GetSize()==0)
         return 0;
 
-    if (fComboBkgPdf!=NULL)
+    if (fComboBkgPdf!=nullptr)
         return fComboBkgPdf;
 
     if (!fNamesListsConsistent())
-        return NULL;
+        return nullptr;
 
     if (fBkgPdfNames.GetSize()==1){
         fComboBkgPdf=fWs->pdf(((TObjString*)fBkgPdfNames.First())->String());
@@ -284,18 +284,18 @@ RooAbsPdf* HLFactory::GetTotBkgPdf(){
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the combination of the datasets.
-/// If no dataset is specified a NULL pointer is returned.
+/// If no dataset is specified a nullptr pointer is returned.
 /// The factory owns the object.
 
 RooDataSet* HLFactory::GetTotDataSet(){
     if (fDatasetsNames.GetSize()==0)
         return 0;
 
-    if (fComboDataset!=NULL)
+    if (fComboDataset!=nullptr)
         return fComboDataset;
 
     if (!fNamesListsConsistent())
-        return NULL;
+        return nullptr;
 
     if (fDatasetsNames.GetSize()==1){
         fComboDataset=(RooDataSet*)fWs->data(((TObjString*)fDatasetsNames.First())->String());
@@ -311,7 +311,7 @@ RooDataSet* HLFactory::GetTotDataSet(){
     TObject* obj = it->Next();
     ostring = (TObjString*) obj;
     fComboDataset = (RooDataSet*) fWs->data(ostring->String()) ;
-    if (!fComboDataset) return NULL;
+    if (!fComboDataset) return nullptr;
     fComboDataset->Print();
     TString dataname(GetName());
     fComboDataset = new RooDataSet(*fComboDataset,dataname+"_TotData");
@@ -322,7 +322,7 @@ RooDataSet* HLFactory::GetTotDataSet(){
         ostring=(TObjString*) obj;
         catindex++;
         RooDataSet * data = (RooDataSet*)fWs->data(ostring->String());
-        if (!data) return NULL;
+        if (!data) return nullptr;
         RooDataSet* dummy = new RooDataSet(*data,"");
         fComboCat->setIndex(catindex);
         fComboCat->Print();
@@ -341,11 +341,11 @@ RooDataSet* HLFactory::GetTotDataSet(){
 /// The factory owns the object.
 
 RooCategory* HLFactory::GetTotCategory(){
-    if (fComboCat!=NULL)
+    if (fComboCat!=nullptr)
         return fComboCat;
 
     if (!fNamesListsConsistent())
-        return NULL;
+        return nullptr;
 
     if (!fCombinationDone)
         fCreateCategory();

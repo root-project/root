@@ -155,8 +155,8 @@ MCMCInterval* MCMCCalculator::GetInterval() const
 
    if (fSize < 0) {
       coutE(InputArguments) << "MCMCCalculator::GetInterval: "
-         << "Test size/Confidence level not set.  Returning NULL." << endl;
-      return NULL;
+         << "Test size/Confidence level not set.  Returning nullptr." << endl;
+      return nullptr;
    }
 
    // if a proposal function has not been specified create a default one
@@ -182,7 +182,7 @@ MCMCInterval* MCMCCalculator::GetInterval() const
       SetBins(fPOI, fNumBins);
       if (dynamic_cast<PdfProposal*>(fPropFunc)) {
          RooArgSet* proposalVars = ((PdfProposal*)fPropFunc)->GetPdf()->
-                                               getParameters((RooAbsData*)NULL);
+                                               getParameters((RooAbsData*)nullptr);
          SetBins(*proposalVars, fNumBins);
       }
    }
@@ -200,7 +200,7 @@ MCMCInterval* MCMCCalculator::GetInterval() const
 
    TString name = TString("MCMCInterval_") + TString(GetName() );
    MCMCInterval* interval = new MCMCInterval(name, fPOI, *chain);
-   if (fAxes != NULL)
+   if (fAxes != nullptr)
       interval->SetAxes(*fAxes);
    if (fNumBurnInSteps > 0)
       interval->SetNumBurnInSteps(fNumBurnInSteps);

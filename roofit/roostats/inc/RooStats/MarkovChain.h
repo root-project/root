@@ -61,10 +61,10 @@ namespace RooStats {
       virtual double NLL() const;
 
       /// get this MarkovChain as a RooDataSet whose entries contain the values
-      /// of whichVars.  Call with whichVars = NULL (default) to get values of
+      /// of whichVars.  Call with whichVars = nullptr (default) to get values of
       /// all variables (including NLL value and weight);
       /// Note: caller owns the returned data set
-      virtual RooDataSet* GetAsDataSet(RooArgSet* whichVars = NULL) const;
+      virtual RooDataSet* GetAsDataSet(RooArgSet* whichVars = nullptr) const;
 
       /// Get a clone of the markov chain on which this interval is based
       /// as a RooDataSet.  You own the returned RooDataSet*
@@ -77,10 +77,10 @@ namespace RooStats {
       virtual const RooDataSet* GetAsConstDataSet() const { return fChain; }
 
       /// get this MarkovChain as a RooDataHist whose entries contain the values
-      /// of whichVars.  Call with whichVars = NULL (default) to get values of
+      /// of whichVars.  Call with whichVars = nullptr (default) to get values of
       /// all variables (including NLL value and weight);
       /// Note: caller owns the returned data hist
-      virtual RooDataHist* GetAsDataHist(RooArgSet* whichVars = NULL) const;
+      virtual RooDataHist* GetAsDataHist(RooArgSet* whichVars = nullptr) const;
 
       /// Get a clone of the markov chain on which this interval is based
       /// as a RooDataHist.  You own the returned RooDataHist*
@@ -92,7 +92,7 @@ namespace RooStats {
 
       /// Get a clone of the markov chain on which this interval is based
       /// as a sparse histogram.  You own the returned THnSparse*
-      virtual THnSparse* GetAsSparseHist(RooAbsCollection* whichVars = NULL) const;
+      virtual THnSparse* GetAsSparseHist(RooAbsCollection* whichVars = nullptr) const;
       virtual THnSparse* GetAsSparseHist(RooAbsCollection& whichVars) const
       { return GetAsSparseHist(&whichVars); }
 

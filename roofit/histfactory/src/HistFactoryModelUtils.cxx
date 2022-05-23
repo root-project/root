@@ -44,7 +44,7 @@ namespace HistFactory{
     // ie the channel WITHOUT constraints
     std::string realSumPdfName = ChannelName + "_model";
 
-    RooAbsPdf* sum_pdf = NULL;
+    RooAbsPdf* sum_pdf = nullptr;
     bool FoundSumPdf=false;
     for (auto *sum_pdf_arg : *sim_channel->getComponents()) {
         std::string NodeClassName = sum_pdf_arg->ClassName();
@@ -59,7 +59,7 @@ namespace HistFactory{
    std::cout << "Failed to find RooRealSumPdf for channel: " << sim_channel->GetName() << std::endl;
    sim_channel->getComponents()->Print("V");
       }
-      sum_pdf=NULL;
+      sum_pdf=nullptr;
       //throw std::runtime_error("Failed to find RooRealSumPdf for channel");
     }
     else {
@@ -111,7 +111,7 @@ namespace HistFactory{
 
       // Loop through the child nodes of the sim pdf
       // and find the channel nodes
-      RooAbsArg* sim_channel_arg = NULL;
+      RooAbsArg* sim_channel_arg = nullptr;
       while(( sim_channel = (RooAbsArg*) simServerItr->Next() )) {
 
    RooAbsPdf* sim_channel = (RooAbsPdf*) sim_channel_arg;
@@ -136,10 +136,10 @@ namespace HistFactory{
 
    std::string realSumPdfName = ChannelName + "_model";
 
-   RooAbsPdf* sum_pdf = NULL;
+   RooAbsPdf* sum_pdf = nullptr;
    TIterator* iter_sum_pdf = sim_channel->getComponents()->createIterator(); //serverIterator();
    bool FoundSumPdf=false;
-   RooAbsArg* sum_pdf_arg=NULL;
+   RooAbsArg* sum_pdf_arg=nullptr;
    while((sum_pdf_arg=(RooAbsArg*)iter_sum_pdf->Next())) {
 
      std::string NodeClassName = sum_pdf_arg->ClassName();
@@ -155,7 +155,7 @@ namespace HistFactory{
      throw std::runtime_error("Failed to find RooRealSumPdf for channel");
    }
    delete iter_sum_pdf;
-   iter_sum_pdf = NULL;
+   iter_sum_pdf = nullptr;
    * /
 
    // Okay, now add to the arg sets
@@ -213,7 +213,7 @@ namespace HistFactory{
     RooSimultaneous* simPdf = (RooSimultaneous*) pdf;
 
     // get category label
-    RooCategory* cat = NULL;
+    RooCategory* cat = nullptr;
     for (auto* temp : *data->get()) {
       if( strcmp(temp->ClassName(),"RooCategory")==0){
           cat = static_cast<RooCategory*>(temp);
@@ -295,7 +295,7 @@ namespace HistFactory{
     // and look for the gamma_stat name as well as '_constraint'
 
     bool FoundConstraintTerm=false;
-    RooAbsPdf* constraintTerm=NULL;
+    RooAbsPdf* constraintTerm=nullptr;
     for (auto *term_constr : *constraints) {
       std::string TermName = term_constr->GetName();
       if( term_constr->dependsOn( *gamma_stat) ) {
@@ -316,7 +316,7 @@ namespace HistFactory{
 
     /*
     RooAbsPdf* constraintTerm = (RooAbsPdf*) constraints->find( constraintTermName.c_str() );
-    if( constraintTerm == NULL ) {
+    if( constraintTerm == nullptr ) {
       std::cout << "Error: Couldn't find constraint term: " << constraintTermName
       << " for parameter: " << gamma_stat->GetName()
       << std::endl;
@@ -351,7 +351,7 @@ namespace HistFactory{
     // the "mean" which is the product: gamma*tau
     // Then, from that mean, find tau
     TIter iter_constr = constraintTerm->serverIterator(); //constraint_args
-    RooAbsArg* pois_mean_arg=NULL;
+    RooAbsArg* pois_mean_arg=nullptr;
     bool FoundPoissonMean = false;
     while(( pois_mean_arg = (RooAbsArg*) iter_constr.Next() )) {
       std::string serverName = pois_mean_arg->GetName();

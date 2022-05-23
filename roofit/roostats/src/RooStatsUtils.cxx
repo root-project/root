@@ -161,10 +161,10 @@ namespace RooStats {
          for (int i = 0, n = list.getSize(); i < n; ++i) {
             RooAbsPdf *pdfi = (RooAbsPdf *) list.at(i);
             RooAbsPdf *newPdfi = StripConstraints(*pdfi, observables);
-            if(newPdfi != NULL) newList.add(*newPdfi);
+            if(newPdfi != nullptr) newList.add(*newPdfi);
          }
 
-         if(newList.empty()) return NULL; // only constraints in product
+         if(newList.empty()) return nullptr; // only constraints in product
          // return single component (no longer a product)
          else if(newList.getSize() == 1) return dynamic_cast<RooAbsPdf *>(newList.at(0)->clone(TString::Format("%s_unconstrained",
                                                                                                                newList.at(0)->GetName())));
@@ -182,23 +182,23 @@ namespace RooStats {
          assert(iter == pdf.servers().end());
 
          RooAbsPdf *newUPdf = StripConstraints(*uPdf, observables);
-         if(newUPdf == NULL) return NULL; // only constraints in underlying pdf
+         if(newUPdf == nullptr) return nullptr; // only constraints in underlying pdf
          else return new RooExtendPdf(TString::Format("%s_unconstrained", pdf.GetName()).Data(),
             TString::Format("%s without constraints", pdf.GetTitle()).Data(), *newUPdf, *extended_term);
 
       } else if (auto sim = dynamic_cast<RooSimultaneous *>(&pdf)) {  //|| dynamic_cast<RooSimultaneousOpt *>(&pdf)) {
 
          assert(sim != nullptr);
-         RooAbsCategoryLValue *cat = (RooAbsCategoryLValue *) sim->indexCat().Clone(); assert(cat != NULL);
+         RooAbsCategoryLValue *cat = (RooAbsCategoryLValue *) sim->indexCat().Clone(); assert(cat != nullptr);
          RooArgList pdfList;
 
-         for (int ic = 0, nc = cat->numBins((const char *)NULL); ic < nc; ++ic) {
+         for (int ic = 0, nc = cat->numBins((const char *)nullptr); ic < nc; ++ic) {
             cat->setBin(ic);
             RooAbsPdf* catPdf = sim->getPdf(cat->getCurrentLabel());
-            RooAbsPdf* newPdf = NULL;
+            RooAbsPdf* newPdf = nullptr;
             // it is possible that a pdf is not defined for every category
-            if (catPdf != NULL) newPdf = StripConstraints(*catPdf, observables);
-            if (newPdf == NULL) { delete cat; return NULL; } // all channels must have observables
+            if (catPdf != nullptr) newPdf = StripConstraints(*catPdf, observables);
+            if (newPdf == nullptr) { delete cat; return nullptr; } // all channels must have observables
             pdfList.add(*newPdf);
          }
 
@@ -209,7 +209,7 @@ namespace RooStats {
          return (RooAbsPdf *) pdf.clone(TString::Format("%s_unconstrained", pdf.GetName()).Data());
       }
 
-      return NULL; // just  a constraint term
+      return nullptr; // just  a constraint term
    }
 
    RooAbsPdf * MakeUnconstrainedPdf(RooAbsPdf &pdf, const RooArgSet &observables, const char *name) {
@@ -219,7 +219,7 @@ namespace RooStats {
          oocoutE(nullptr, InputArguments) << "RooStats::MakeUnconstrainedPdf - invalid observable list passed (observables not found in original pdf) or invalid pdf passed (without observables)" << endl;
          return nullptr;
       }
-      if(name != NULL) unconstrainedPdf->SetName(name);
+      if(name != nullptr) unconstrainedPdf->SetName(name);
       return unconstrainedPdf;
    }
 
@@ -275,7 +275,7 @@ namespace RooStats {
       }
       vector <TString> V;
       for (auto *rvar : dynamic_range_cast<RooRealVar *>(* data.get(0))) {
-         if (rvar == NULL)
+         if (rvar == nullptr)
             continue;
          V.push_back(rvar->GetName());
          if (rvar->hasAsymError()) {
@@ -296,7 +296,7 @@ namespace RooStats {
       for(int entry = 0;entry<data.numEntries();entry++) {
          bs->ResetValues(); 
          for (auto const *rvar : dynamic_range_cast<RooRealVar *>(*data.get(entry))) {
-            if (rvar == NULL)
+            if (rvar == nullptr)
                continue;
             bs->fVarVals[rvar->GetName()] = rvar->getValV();
             if (rvar->hasAsymError()) {
@@ -361,7 +361,7 @@ namespace RooStats {
       std::vector<TString> nplist;
       std::vector<TString> obslist;
       std::vector<TString> globobslist;
-      RooAbsPdf *pdf = NULL;
+      RooAbsPdf *pdf = nullptr;
       if (oldMC) {
         pdf = oldMC->GetPdf();
         ::getParameterNames(oldMC->GetParametersOfInterest(), poilist);
@@ -374,7 +374,7 @@ namespace RooStats {
           pdf = origPdf;
       }
       if (!pdf) {
-        return NULL;
+        return nullptr;
       }
 
       // create them anew

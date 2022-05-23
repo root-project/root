@@ -38,7 +38,7 @@ namespace RooStats {
 class NuisanceParametersSampler {
 
    public:
-      NuisanceParametersSampler(RooAbsPdf *prior=NULL, const RooArgSet *parameters=NULL, Int_t nToys=1000, bool asimov=false) :
+      NuisanceParametersSampler(RooAbsPdf *prior=nullptr, const RooArgSet *parameters=nullptr, Int_t nToys=1000, bool asimov=false) :
          fPrior(prior),
          fParams(parameters),
          fNToys(nToys),
@@ -88,10 +88,10 @@ class ToyMCSampler: public TestStatSampler {
       );
 
 
-      /// The pdf can be NULL in which case the density from SetPdf()
+      /// The pdf can be nullptr in which case the density from SetPdf()
       /// is used. The snapshot and TestStatistic is also optional.
-      virtual void AddTestStatistic(TestStatistic* t = NULL) {
-         if( t == NULL ) {
+      virtual void AddTestStatistic(TestStatistic* t = nullptr) {
+         if( t == nullptr ) {
             oocoutI(nullptr,InputArguments) << "No test statistic given. Doing nothing." << std::endl;
             return;
          }
@@ -125,7 +125,7 @@ class ToyMCSampler: public TestStatSampler {
 
 
       virtual TestStatistic* GetTestStatistic(unsigned int i) const {
-         if( fTestStatistics.size() <= i ) return NULL;
+         if( fTestStatistics.size() <= i ) return nullptr;
          return fTestStatistics[i];
       }
       TestStatistic* GetTestStatistic(void) const override { return GetTestStatistic(0); }
@@ -153,12 +153,12 @@ class ToyMCSampler: public TestStatSampler {
 
       void SetPdf(RooAbsPdf& pdf) override { fPdf = &pdf; ClearCache(); }
 
-      /// How to randomize the prior. Set to NULL to deactivate randomization.
+      /// How to randomize the prior. Set to nullptr to deactivate randomization.
       void SetPriorNuisance(RooAbsPdf* pdf) override {
          fPriorNuisance = pdf;
          if (fNuisanceParametersSampler) {
             delete fNuisanceParametersSampler;
-            fNuisanceParametersSampler = NULL;
+            fNuisanceParametersSampler = nullptr;
          }
       }
       /// specify the nuisance parameters (eg. the rest of the parameters)
@@ -223,8 +223,8 @@ class ToyMCSampler: public TestStatSampler {
          fAdaptiveLowLimit = low_threshold;
       }
 
-      /// calling with argument or NULL deactivates proof
-      void SetProofConfig(ProofConfig *pc = NULL) { fProofConfig = pc; }
+      /// calling with argument or nullptr deactivates proof
+      void SetProofConfig(ProofConfig *pc = nullptr) { fProofConfig = pc; }
 
       void SetProtoData(const RooDataSet* d) { fProtoData = d; }
 
@@ -233,7 +233,7 @@ class ToyMCSampler: public TestStatSampler {
       const RooArgList* EvaluateAllTestStatistics(RooAbsData& data, const RooArgSet& poi, DetailedOutputAggregator& detOutAgg);
 
       /// helper for GenerateToyData
-      RooAbsData* Generate(RooAbsPdf &pdf, RooArgSet &observables, const RooDataSet *protoData=NULL, int forceEvents=0) const;
+      RooAbsData* Generate(RooAbsPdf &pdf, RooArgSet &observables, const RooDataSet *protoData=nullptr, int forceEvents=0) const;
 
       /// helper method for clearing  the cache
       virtual void ClearCache();

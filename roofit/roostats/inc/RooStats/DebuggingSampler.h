@@ -64,8 +64,8 @@ namespace RooStats {
 
       /// Get the TestStatistic
       TestStatistic* GetTestStatistic()  const override {
-         std::cout << "GetTestStatistic() IS NOT IMPLEMENTED FOR THIS SAMPLER. Returning NULL." << std::endl;
-         return NULL; /*fTestStatistic;*/
+         std::cout << "GetTestStatistic() IS NOT IMPLEMENTED FOR THIS SAMPLER. Returning nullptr." << std::endl;
+         return nullptr; /*fTestStatistic;*/
       }
 
       /// Get the Confidence level for the test

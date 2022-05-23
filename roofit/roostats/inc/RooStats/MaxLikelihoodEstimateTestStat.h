@@ -40,7 +40,7 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
 
    //__________________________________
    MaxLikelihoodEstimateTestStat() :
-   fPdf(NULL),fParameter(NULL), fUpperLimit(true)
+   fPdf(nullptr),fParameter(nullptr), fUpperLimit(true)
    {
      /// constructor
      ///      fPdf = pdf;

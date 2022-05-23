@@ -45,32 +45,32 @@ static const char* DEFAULT_TITLE = "Markov Chain";
 MarkovChain::MarkovChain() :
    TNamed(DEFAULT_NAME, DEFAULT_TITLE)
 {
-   fParameters = NULL;
-   fDataEntry = NULL;
-   fChain = NULL;
-   fNLL = NULL;
-   fWeight = NULL;
+   fParameters = nullptr;
+   fDataEntry = nullptr;
+   fChain = nullptr;
+   fNLL = nullptr;
+   fWeight = nullptr;
 }
 
 MarkovChain::MarkovChain(RooArgSet& parameters) :
    TNamed(DEFAULT_NAME, DEFAULT_TITLE)
 {
-   fParameters = NULL;
-   fDataEntry = NULL;
-   fChain = NULL;
-   fNLL = NULL;
-   fWeight = NULL;
+   fParameters = nullptr;
+   fDataEntry = nullptr;
+   fChain = nullptr;
+   fNLL = nullptr;
+   fWeight = nullptr;
    SetParameters(parameters);
 }
 
 MarkovChain::MarkovChain(const char* name, const char* title,
       RooArgSet& parameters) : TNamed(name, title)
 {
-   fParameters = NULL;
-   fDataEntry = NULL;
-   fChain = NULL;
-   fNLL = NULL;
-   fWeight = NULL;
+   fParameters = nullptr;
+   fDataEntry = nullptr;
+   fChain = nullptr;
+   fNLL = nullptr;
+   fWeight = nullptr;
    SetParameters(parameters);
 }
 
@@ -101,7 +101,7 @@ void MarkovChain::SetParameters(RooArgSet& parameters)
 
 void MarkovChain::Add(RooArgSet& entry, double nllValue, double weight)
 {
-   if (fParameters == NULL)
+   if (fParameters == nullptr)
       SetParameters(entry);
    RooStats::SetParameters(&entry, fDataEntry);
    fNLL->setVal(nllValue);
@@ -115,7 +115,7 @@ void MarkovChain::AddWithBurnIn(MarkovChain& otherChain, Int_t burnIn)
 {
    // Discards the first n accepted points.
 
-   if(fParameters == NULL) SetParameters(*(RooArgSet*)otherChain.Get());
+   if(fParameters == nullptr) SetParameters(*(RooArgSet*)otherChain.Get());
    int counter = 0;
    for( int i=0; i < otherChain.Size(); i++ ) {
       RooArgSet* entry = (RooArgSet*)otherChain.Get(i);
@@ -131,7 +131,7 @@ void MarkovChain::Add(MarkovChain& otherChain, double discardEntries)
    // burn-in used in the Bayesian calculator where the first n accepted
    // terms from the proposal function are discarded.
 
-   if(fParameters == NULL) SetParameters(*(RooArgSet*)otherChain.Get());
+   if(fParameters == nullptr) SetParameters(*(RooArgSet*)otherChain.Get());
    double counter = 0.0;
    for( int i=0; i < otherChain.Size(); i++ ) {
       RooArgSet* entry = (RooArgSet*)otherChain.Get(i);
@@ -155,7 +155,7 @@ void MarkovChain::AddFast(RooArgSet& entry, double nllValue, double weight)
 RooDataSet* MarkovChain::GetAsDataSet(RooArgSet* whichVars) const
 {
    RooArgSet args;
-   if (whichVars == NULL) {
+   if (whichVars == nullptr) {
       //args.add(*fParameters);
       //args.add(*fNLL);
       args.add(*fDataEntry);
@@ -182,7 +182,7 @@ RooDataSet* MarkovChain::GetAsDataSet(const RooCmdArg& arg1, const RooCmdArg& ar
 RooDataHist* MarkovChain::GetAsDataHist(RooArgSet* whichVars) const
 {
    RooArgSet args;
-   if (whichVars == NULL) {
+   if (whichVars == nullptr) {
       args.add(*fParameters);
       //args.add(*fNLL);
       //args.add(*fDataEntry);
@@ -213,7 +213,7 @@ RooDataHist* MarkovChain::GetAsDataHist(const RooCmdArg& arg1, const RooCmdArg& 
 THnSparse* MarkovChain::GetAsSparseHist(RooAbsCollection* whichVars) const
 {
    RooArgList axes;
-   if (whichVars == NULL)
+   if (whichVars == nullptr)
       axes.add(*fParameters);
    else
       axes.add(*whichVars);

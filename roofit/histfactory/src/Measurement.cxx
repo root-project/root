@@ -479,7 +479,7 @@ void RooStats::HistFactory::Measurement::writeToFile( TFile* file )
     // for this channel
 
     TDirectory* chanDir = file->mkdir( (chanName + "_hists").c_str() );
-    if( chanDir == NULL ) {
+    if( chanDir == nullptr ) {
       cxcoutEHF << "Error: Cannot create channel " << (chanName + "_hists")
       << std::endl;
       throw hf_exc();
@@ -488,7 +488,7 @@ void RooStats::HistFactory::Measurement::writeToFile( TFile* file )
 
     // Save the data:
     TDirectory* dataDir = chanDir->mkdir( "data" );
-    if( dataDir == NULL ) {
+    if( dataDir == nullptr ) {
       cxcoutEHF << "Error: Cannot make directory " << chanDir << std::endl;
       throw hf_exc();
     }
@@ -521,7 +521,7 @@ void RooStats::HistFactory::Measurement::writeToFile( TFile* file )
       file->cd();
       chanDir->cd();
       TDirectory* sampleDir = chanDir->mkdir( sampName.c_str() );
-      if( sampleDir == NULL ) {
+      if( sampleDir == nullptr ) {
    cxcoutEHF << "Error: Directory " << sampName << " not created properly" << std::endl;
    throw hf_exc();
       }

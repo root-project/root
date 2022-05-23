@@ -163,7 +163,7 @@ bool AsymptoticCalculator::Initialize() const {
 
    // This will set the poi value to the null snapshot value in the ModelConfig
    const RooArgSet * nullSnapshot = GetNullModel()->GetSnapshot();
-   if(nullSnapshot == NULL || nullSnapshot->empty()) {
+   if(nullSnapshot == nullptr || nullSnapshot->empty()) {
       oocoutE(nullptr,InputArguments) << "AsymptoticCalculator::Initialize - Null model needs a snapshot. Set using modelconfig->SetSnapshot(poi)." << endl;
       return false;
    }
@@ -201,7 +201,7 @@ bool AsymptoticCalculator::Initialize() const {
 
    // compute Asimov data set for the background (alt poi ) value
    const RooArgSet * altSnapshot = GetAlternateModel()->GetSnapshot();
-   if(altSnapshot == NULL || altSnapshot->empty()) {
+   if(altSnapshot == nullptr || altSnapshot->empty()) {
       oocoutE(nullptr,InputArguments) << "Alt (Background)  model needs a snapshot. Set using modelconfig->SetSnapshot(poi)." << endl;
       return false;
    }
@@ -330,7 +330,7 @@ double AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   co
        // This for more than one POI (not yet supported)
        //
        // RooLinkedListIter it = poiSet->iterator();
-       // RooRealVar* tmpPar = NULL, *tmpParA=NULL;
+       // RooRealVar* tmpPar = nullptr, *tmpParA=nullptr;
        // while((tmpPar = (RooRealVar*)it.Next())){
        //    tmpParA =  ((RooRealVar*)attachedSet->find(tmpPar->GetName()));
        //    tmpParA->setVal( tmpPar->getVal() );
@@ -478,13 +478,13 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    // re-initialized the calculator in case it is needed (pdf or data modified)
    if (!fIsInitialized) {
       if (!Initialize() ) {
-         oocoutE(nullptr,InputArguments) << "AsymptoticCalculator::GetHypoTest - Error initializing Asymptotic calculator - return NULL result " << endl;
+         oocoutE(nullptr,InputArguments) << "AsymptoticCalculator::GetHypoTest - Error initializing Asymptotic calculator - return nullptr result " << endl;
          return 0;
       }
    }
 
    if (!fAsimovData) {
-       oocoutE(nullptr,InputArguments) << "AsymptoticCalculator::GetHypoTest - Asimov data set has not been generated - return NULL result " << endl;
+       oocoutE(nullptr,InputArguments) << "AsymptoticCalculator::GetHypoTest - Asimov data set has not been generated - return nullptr result " << endl;
        return 0;
    }
 
@@ -1143,7 +1143,7 @@ RooAbsData * AsymptoticCalculator::GenerateAsimovData(const RooAbsPdf & pdf, con
    unique_ptr<RooRealVar> weightVar (new RooRealVar("binWeightAsimov", "binWeightAsimov", 1, 0, 1.E30 ));
 
    if (printLevel > 1) cout <<" Generate Asimov data for observables"<<endl;
-  //RooDataSet* simData=NULL;
+  //RooDataSet* simData=nullptr;
    const RooSimultaneous* simPdf = dynamic_cast<const RooSimultaneous*>(&pdf);
    if (!simPdf) {
       // generate data for non sim pdf

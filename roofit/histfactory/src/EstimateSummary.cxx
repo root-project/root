@@ -31,7 +31,7 @@ namespace RooStats {
       IncludeStatError = false;
       StatConstraintType=Gaussian;
       RelErrorThreshold=0.0;
-      relStatError=NULL;
+      relStatError=nullptr;
       shapeFactorName="";
     }
     EstimateSummary::~EstimateSummary(){}

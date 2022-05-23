@@ -199,7 +199,7 @@ namespace RooStats {
 
       /// Get a clone of the markov chain on which this interval is based
       /// as a RooDataSet.  You own the returned RooDataSet*
-      virtual RooDataSet* GetChainAsDataSet(RooArgSet* whichVars = NULL)
+      virtual RooDataSet* GetChainAsDataSet(RooArgSet* whichVars = nullptr)
       { return fChain->GetAsDataSet(whichVars); }
 
       /// Get the markov chain on which this interval is based
@@ -209,12 +209,12 @@ namespace RooStats {
 
       /// Get a clone of the markov chain on which this interval is based
       /// as a RooDataHist.  You own the returned RooDataHist*
-      virtual RooDataHist* GetChainAsDataHist(RooArgSet* whichVars = NULL)
+      virtual RooDataHist* GetChainAsDataHist(RooArgSet* whichVars = nullptr)
       { return fChain->GetAsDataHist(whichVars); }
 
       /// Get a clone of the markov chain on which this interval is based
       /// as a THnSparse.  You own the returned THnSparse*
-      virtual THnSparse* GetChainAsSparseHist(RooArgSet* whichVars = NULL)
+      virtual THnSparse* GetChainAsSparseHist(RooArgSet* whichVars = nullptr)
       { return fChain->GetAsSparseHist(whichVars); }
 
       /// Get a clone of the NLL variable from the markov chain
