@@ -44,7 +44,7 @@ RooStats::HistFactory::Sample::Sample(const Sample& other) :
     if( other.fhCountingHist ) {
       SetValue( other.fhCountingHist->GetBinContent(1) );
     }else{
-      fhCountingHist = NULL;
+      fhCountingHist = nullptr;
     }
   }
 
@@ -72,7 +72,7 @@ RooStats::HistFactory::Sample& RooStats::HistFactory::Sample::operator=(const Sa
   if( other.fhCountingHist ) {
     SetValue( other.fhCountingHist->GetBinContent(1) );
   } else {
-    fhCountingHist = NULL;
+    fhCountingHist = nullptr;
   }
 
   return *this;

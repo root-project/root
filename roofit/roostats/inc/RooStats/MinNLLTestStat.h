@@ -64,7 +64,7 @@ Internally it operates by delegating to a MinNLLTestStat object.
         if (this == &rhs) return *this;
         RooAbsPdf * pdf = rhs.fProflts->GetPdf();
         if (fProflts) delete fProflts;
-        fProflts = NULL;
+        fProflts = nullptr;
         if (pdf)  fProflts = new ProfileLikelihoodTestStat(*pdf);
         return *this;
      }

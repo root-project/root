@@ -45,7 +45,7 @@ public:
    virtual  bool PValueIsRightTail(void) const { return true; }
 
    /// return detailed output: for fits this can be pulls, processing time, ... The returned pointer will not loose validity until another call to Evaluate.
-   virtual const RooArgSet* GetDetailedOutput() const { return NULL; }
+   virtual const RooArgSet* GetDetailedOutput() const { return nullptr; }
 
    /// interface to set conditional observables. If a test statistics needs them it will re-implement this function
    virtual void SetConditionalObservables(const RooArgSet& ) {}

@@ -35,7 +35,7 @@ namespace RooStats {
    _label_print_width(20), _bin_print_width(12) {
 
       if( !mc ) {
-   std::cout << "Error: The supplied ModelConfig is NULL " << std::endl;
+   std::cout << "Error: The supplied ModelConfig is nullptr " << std::endl;
    throw hf_exc();
       }
 
@@ -43,7 +43,7 @@ namespace RooStats {
       RooAbsPdf* pdf_in_mc = mc->GetPdf();
       if( !pdf_in_mc ) {
    std::cout << "Error: The pdf found in the ModelConfig: " << mc->GetName()
-        << " is NULL" << std::endl;
+        << " is nullptr" << std::endl;
    throw hf_exc();
       }
 
@@ -54,7 +54,7 @@ namespace RooStats {
       RooArgSet* observables_in_mc = const_cast<RooArgSet*>(mc->GetObservables());
       if( !observables_in_mc ) {
    std::cout << "Error: Observable set in the ModelConfig: " << mc->GetName()
-        << " is NULL" << std::endl;
+        << " is nullptr" << std::endl;
    throw hf_exc();
       }
       if( observables_in_mc->empty() ) {
@@ -108,7 +108,7 @@ namespace RooStats {
       RooAbsPdf* pdf_in_mc = mc->GetPdf();
       if( !pdf_in_mc ) {
    std::cout << "Error: The pdf found in the ModelConfig: " << ModelConfigName
-        << " is NULL" << std::endl;
+        << " is nullptr" << std::endl;
    throw hf_exc();
       }
 
@@ -119,7 +119,7 @@ namespace RooStats {
       RooArgSet* observables_in_mc = const_cast<RooArgSet*>(mc->GetObservables());
       if( !observables_in_mc ) {
    std::cout << "Error: Observable set in the ModelConfig: " << ModelConfigName
-        << " is NULL" << std::endl;
+        << " is nullptr" << std::endl;
    throw hf_exc();
       }
       if( observables_in_mc->empty() ) {
@@ -146,7 +146,7 @@ namespace RooStats {
 
       // Save the model pointer
       if( !model ) {
-   std::cout << "Error: The supplied pdf is NULL" << std::endl;
+   std::cout << "Error: The supplied pdf is nullptr" << std::endl;
    throw hf_exc();
       }
 
@@ -156,7 +156,7 @@ namespace RooStats {
 
       // Get the observables
       if( !observables ) {
-   std::cout << "Error: Supplied Observable set is NULL" << std::endl;
+   std::cout << "Error: Supplied Observable set is nullptr" << std::endl;
    throw hf_exc();
       }
       if( observables->empty() ) {
@@ -202,14 +202,14 @@ namespace RooStats {
       if( itr == fChannelPdfMap.end() ) {
    std::cout << "Warning: Could not find channel: " << channel
         << " in pdf: " << fModel->GetName() << std::endl;
-   return NULL;
+   return nullptr;
       }
 
       RooAbsPdf* pdf = itr->second;
-      if( pdf == NULL ) {
+      if( pdf == nullptr ) {
    std::cout << "Warning: Pdf associated with channel: " << channel
-        << " is NULL" << std::endl;
-   return NULL;
+        << " is nullptr" << std::endl;
+   return nullptr;
       }
 
       return pdf;
@@ -403,7 +403,7 @@ namespace RooStats {
       // Loop over the parameters and print their values, etc
       for (auto const *param : static_range_cast<RooRealVar *>(*params)) {
         if( !IncludeConstantParams && param->isConstant() ) continue;
-        if( findChild(param->GetName(), channel_pdf)==NULL ) continue;
+        if( findChild(param->GetName(), channel_pdf)==nullptr ) continue;
         std::cout << std::setw(30) << param->GetName();
         std::cout << std::setw(15) << param->getVal();
         if( !param->isConstant() ) {
@@ -437,7 +437,7 @@ namespace RooStats {
       // Loop over the parameters and print their values, etc
       for (auto const *param : static_range_cast<RooRealVar *>(*params)) {
         if( !IncludeConstantParams && param->isConstant() ) continue;
-        if( findChild(param->GetName(), sample_func)==NULL ) continue;
+        if( findChild(param->GetName(), sample_func)==nullptr ) continue;
         std::cout << std::setw(30) << param->GetName();
         std::cout << std::setw(15) << param->getVal();
         if( !param->isConstant() ) {
@@ -660,7 +660,7 @@ namespace RooStats {
 
       int dim = vars.getSize();
 
-      TH1* hist = NULL;
+      TH1* hist = nullptr;
 
       if (!data) {
    std::cout << "Error: To Create Histogram from RooDataSet" << std::endl;
@@ -718,7 +718,7 @@ namespace RooStats {
 
       stack->Draw();
 
-      if( data!=NULL ) {
+      if( data!=nullptr ) {
    TH1* data_hist = GetDataHist(data, channel, channel+"_data_tmp");
    data_hist->Draw("SAME");
       }
@@ -870,7 +870,7 @@ namespace RooStats {
 
     RooAbsArg* HistFactoryNavigation::findChild(const std::string& name, RooAbsReal* parent) const {
 
-      RooAbsArg* term=NULL;
+      RooAbsArg* term=nullptr;
 
       // Check if it is a "component",
       // ie a sub node:
@@ -882,7 +882,7 @@ namespace RooStats {
          }
       }
 
-      if( term != NULL ) return term;
+      if( term != nullptr ) return term;
 
       // If that failed,
       // Check if it's a Parameter
@@ -898,11 +898,11 @@ namespace RooStats {
       delete args;
 
       /* Not sure if we want to be silent
-    But since we're returning a pointer which can be NULL,
+    But since we're returning a pointer which can be nullptr,
     I think it's the user's job to do checks on it.
     A dereference will always cause a crash, so it won't
     be silent for long...
-    if( term==NULL ) {
+    if( term==nullptr ) {
     std::cout << "Error: Failed to find node: " << name
     << " as a child of: " << parent->GetName()
     << std::endl;
@@ -921,10 +921,10 @@ namespace RooStats {
       // First, as a sanity check, let's see if the parameter
       // itself actually exists and if the model depends on it:
       RooRealVar* param = dynamic_cast<RooRealVar*>(findChild(parameter, fModel));
-      if( param==NULL ) {
+      if( param==nullptr ) {
    std::cout << "Error: Couldn't Find parameter: " << parameter << " in model."
         << std::endl;
-   return NULL;
+   return nullptr;
       }
 
       // The "gamma"'s use a different constraint term name
@@ -935,10 +935,10 @@ namespace RooStats {
       // Now, get the constraint itself
       RooAbsReal* term = dynamic_cast<RooAbsReal*>(findChild(ConstraintTermName, fModel));
 
-      if( term==NULL ) {
+      if( term==nullptr ) {
    std::cout << "Error: Couldn't Find constraint term for parameter: " << parameter
         << " (Looked for '" << ConstraintTermName << "')" << std::endl;
-   return NULL;
+   return nullptr;
       }
 
       return term;
@@ -949,7 +949,7 @@ namespace RooStats {
     double HistFactoryNavigation::GetConstraintUncertainty(const std::string& parameter) {
 
       RooAbsReal* constraintTerm = GetConstraintTerm(parameter);
-      if( constraintTerm==NULL ) {
+      if( constraintTerm==nullptr ) {
    std::cout << "Error: Cannot get uncertainty because parameter: " << parameter
         << " has no constraint term" << std::endl;
    throw hf_exc();
@@ -985,7 +985,7 @@ namespace RooStats {
 
    // Get the sigma and its value
    RooAbsReal* sigmaVar = dynamic_cast<RooAbsReal*>(constraintTerm->findServer(sigmaName.c_str()));
-   if( sigmaVar==NULL ) {
+   if( sigmaVar==nullptr ) {
      std::cout << "Error: Failed to find the 'sigma' node: " << sigmaName
           << " in the RooGaussian: " << constraintTerm->GetName() << std::endl;
      throw hf_exc();
@@ -997,7 +997,7 @@ namespace RooStats {
    // Poisson errors are given by inverting: tau = 1 / (sigma*sigma)
    std::string tauName = "nom_" + parameter;
    RooAbsReal* tauVar = dynamic_cast<RooAbsReal*>( constraintTerm->findServer(tauName.c_str()) );
-   if( tauVar==NULL ) {
+   if( tauVar==nullptr ) {
      std::cout << "Error: Failed to find the nominal 'tau' node: " << tauName
           << " for the RooPoisson: " << constraintTerm->GetName() << std::endl;
      throw hf_exc();
@@ -1019,7 +1019,7 @@ namespace RooStats {
 
       // First, check that the node to replace is actually a node:
       RooAbsArg* nodeToReplace = findChild(ToReplace, fModel);
-      if( nodeToReplace==NULL ) {
+      if( nodeToReplace==nullptr ) {
         std::cout << "Error: Cannot replace node: " << ToReplace
             << " because this node wasn't found in: " << fModel->GetName()
             << std::endl;
@@ -1109,7 +1109,7 @@ namespace RooStats {
         // annoying messages from being printed
         RooFit::MsgLevel levelBefore = RooMsgService::instance().globalKillBelow();
         RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
-        TH1* hist=NULL;
+        TH1* hist=nullptr;
         try {
           hist = MakeHistFromRooFunction( component, observable_list, NodeName+"_tmp");
         } catch(...) {
@@ -1164,7 +1164,7 @@ namespace RooStats {
 
       int dim = vars.getSize();
 
-      TH1* hist=NULL;
+      TH1* hist=nullptr;
 
       if( dim==1 ) {
    RooRealVar* varX = (RooRealVar*) vars.at(0);
@@ -1242,7 +1242,7 @@ namespace RooStats {
     RooRealVar* HistFactoryNavigation::var(const std::string& varName) const {
 
       RooAbsArg* arg = findChild(varName, fModel);
-      if( !arg ) return NULL;
+      if( !arg ) return nullptr;
 
       RooRealVar* var_obj = dynamic_cast<RooRealVar*>(arg);
       return var_obj;

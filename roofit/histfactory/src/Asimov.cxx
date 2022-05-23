@@ -68,7 +68,7 @@ void RooStats::HistFactory::Asimov::ConfigureWorkspace(RooWorkspace* wspace) {
     }
 
     // Check that the desired value is in the range of the variable
-    double inRange = var->inRange(val, NULL);
+    double inRange = var->inRange(val, nullptr);
     if( !inRange ) {
       std::cout << "Error: Attempting to set variable: " << var
       << " to value: " << val << ", however it appears"

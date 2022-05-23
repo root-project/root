@@ -146,7 +146,7 @@ SamplingDistribution::~SamplingDistribution()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Merge SamplingDistributions (does nothing if NULL is given).
+/// Merge SamplingDistributions (does nothing if nullptr is given).
 /// If variable name was not set before, it is copied from the added
 /// SamplingDistribution.
 

@@ -32,8 +32,8 @@ namespace RooStats {
       static RooArgSet *GetAsArgSet(RooFitResult *result, TString prefix="", bool withErrorsAndPulls=false);
 
       DetailedOutputAggregator() {
-         fResult = NULL;
-         fBuiltSet = NULL;
+         fResult = nullptr;
+         fBuiltSet = nullptr;
       }
 
       /// For each variable in aset, prepend prefix to its name and add

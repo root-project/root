@@ -196,7 +196,7 @@ public:
             first = false;
          }
          if (!it)
-            text += "NULL";
+            text += "nullptr";
          else
             text += it->GetName();
       }
@@ -211,7 +211,7 @@ public:
       // iterate over strings in list
       for (auto it : *items) {
          if (!it)
-            names.push_back("NULL");
+            names.push_back("nullptr");
          else
             names.push_back(it->GetName());
       }

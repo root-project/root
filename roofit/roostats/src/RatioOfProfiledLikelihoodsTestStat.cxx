@@ -96,9 +96,9 @@ double  RooStats::RatioOfProfiledLikelihoodsTestStat::Evaluate(RooAbsData& data,
    double altNLL = fAltProfile.EvaluateProfileLikelihood(type, data, *fAltPOI);
    const RooArgSet *altset = fAltProfile.GetDetailedOutput();
 
-   if (fDetailedOutput != NULL) {
+   if (fDetailedOutput != nullptr) {
       delete fDetailedOutput;
-      fDetailedOutput = NULL;
+      fDetailedOutput = nullptr;
    }
    if (fDetailedOutputEnabled) {
       fDetailedOutput = new RooArgSet();

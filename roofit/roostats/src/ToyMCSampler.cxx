@@ -149,11 +149,11 @@ void ToyMCSampler::SetAlwaysUseMultiGen(bool flag) { fgAlwaysUseMultiGen = flag 
 ToyMCSampler::ToyMCSampler() : fSamplingDistName("SD"), fNToys(1)
 {
 
-   fPdf = NULL;
-   fPriorNuisance = NULL;
-   fNuisancePars = NULL;
-   fObservables = NULL;
-   fGlobalObservables = NULL;
+   fPdf = nullptr;
+   fPriorNuisance = nullptr;
+   fNuisancePars = nullptr;
+   fObservables = nullptr;
+   fGlobalObservables = nullptr;
 
    fSize = 0.05;
    fNEvents = 0;
@@ -167,10 +167,10 @@ ToyMCSampler::ToyMCSampler() : fSamplingDistName("SD"), fNToys(1)
    fAdaptiveLowLimit = -RooNumber::infinity();
    fAdaptiveHighLimit = RooNumber::infinity();
 
-   fProtoData = NULL;
+   fProtoData = nullptr;
 
-   fProofConfig = NULL;
-   fNuisanceParametersSampler = NULL;
+   fProofConfig = nullptr;
+   fNuisanceParametersSampler = nullptr;
 
    //suppress messages for num integration of Roofit
    RooMsgService::instance().getStream(1).removeTopic(RooFit::NumIntegration);
@@ -182,11 +182,11 @@ ToyMCSampler::ToyMCSampler() : fSamplingDistName("SD"), fNToys(1)
 
 ToyMCSampler::ToyMCSampler(TestStatistic &ts, Int_t ntoys) : fSamplingDistName(ts.GetVarName().Data()), fNToys(ntoys)
 {
-   fPdf = NULL;
-   fPriorNuisance = NULL;
-   fNuisancePars = NULL;
-   fObservables = NULL;
-   fGlobalObservables = NULL;
+   fPdf = nullptr;
+   fPriorNuisance = nullptr;
+   fNuisancePars = nullptr;
+   fObservables = nullptr;
+   fGlobalObservables = nullptr;
 
    fSize = 0.05;
    fNEvents = 0;
@@ -200,10 +200,10 @@ ToyMCSampler::ToyMCSampler(TestStatistic &ts, Int_t ntoys) : fSamplingDistName(t
    fAdaptiveLowLimit = -RooNumber::infinity();
    fAdaptiveHighLimit = RooNumber::infinity();
 
-   fProtoData = NULL;
+   fProtoData = nullptr;
 
-   fProofConfig = NULL;
-   fNuisanceParametersSampler = NULL;
+   fProofConfig = nullptr;
+   fNuisanceParametersSampler = nullptr;
 
    //suppress messages for num integration of Roofit
    RooMsgService::instance().getStream(1).removeTopic(RooFit::NumIntegration);
@@ -228,7 +228,7 @@ ToyMCSampler::~ToyMCSampler() {
 bool ToyMCSampler::CheckConfig(void) {
    bool goodConfig = true;
 
-   if(fTestStatistics.size() == 0 || fTestStatistics[0] == NULL) { ooccoutE(nullptr,InputArguments) << "Test statistic not set." << endl; goodConfig = false; }
+   if(fTestStatistics.size() == 0 || fTestStatistics[0] == nullptr) { ooccoutE(nullptr,InputArguments) << "Test statistic not set." << endl; goodConfig = false; }
    if(!fObservables) { ooccoutE(nullptr,InputArguments) << "Observables not set." << endl; goodConfig = false; }
    if(!fParametersForTestStat) { ooccoutE(nullptr,InputArguments) << "Parameter values used to evaluate the test statistic are not set." << endl; goodConfig = false; }
    if(!fPdf) { ooccoutE(nullptr,InputArguments) << "Pdf not set." << endl; goodConfig = false; }
@@ -255,7 +255,7 @@ const RooArgList* ToyMCSampler::EvaluateAllTestStatistics(RooAbsData& data, cons
    RooArgSet *allVars = fPdf ? fPdf->getVariables() : nullptr;
    RooArgSet *saveAll = allVars ? allVars->snapshot() : nullptr;
    for( unsigned int i = 0; i < fTestStatistics.size(); i++ ) {
-      if( fTestStatistics[i] == NULL ) continue;
+      if( fTestStatistics[i] == nullptr ) continue;
       TString name( TString::Format("%s_TS%u", fSamplingDistName.c_str(), i) );
       std::unique_ptr<RooArgSet> parForTS(poi.snapshot());
       RooRealVar ts( name, fTestStatistics[i]->GetVarName(), fTestStatistics[i]->Evaluate( data, *parForTS ) );
@@ -286,9 +286,9 @@ SamplingDistribution* ToyMCSampler::GetSamplingDistribution(RooArgSet& paramPoin
    }
 
    RooDataSet* r = GetSamplingDistributions(paramPointIn);
-   if(r == NULL || r->numEntries() == 0) {
+   if(r == nullptr || r->numEntries() == 0) {
       oocoutW(nullptr, Generation) << "no sampling distribution generated" << endl;
-      return NULL;
+      return nullptr;
    }
 
    SamplingDistribution* samp = new SamplingDistribution( r->GetName(), r->GetTitle(), *r );
@@ -592,7 +592,7 @@ RooAbsData* ToyMCSampler::Generate(RooAbsPdf &pdf, RooArgSet &observables, const
     forceEvents = protoData->numEntries();
   }
 
-  RooAbsData *data = NULL;
+  RooAbsData *data = nullptr;
   int events = forceEvents;
   if(events == 0) events = fNEvents;
 

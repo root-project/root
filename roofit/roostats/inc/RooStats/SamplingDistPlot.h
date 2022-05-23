@@ -47,11 +47,11 @@ namespace RooStats {
     double AddSamplingDistributionShaded(const SamplingDistribution *samplingDist, double minShaded, double maxShaded, Option_t *drawOptions="NORMALIZE HIST");
 
     /// add a line
-    void AddLine(double x1, double y1, double x2, double y2, const char* title = NULL);
+    void AddLine(double x1, double y1, double x2, double y2, const char* title = nullptr);
     /// add a TH1
     void AddTH1(TH1* h, Option_t *drawOptions="");
     /// add a TF1
-    void AddTF1(TF1* f, const char* title = NULL, Option_t *drawOptions="SAME");
+    void AddTF1(TF1* f, const char* title = nullptr, Option_t *drawOptions="SAME");
     /// set legend
     void SetLegend(TLegend* l){ fLegend = l; }
 
@@ -80,8 +80,8 @@ namespace RooStats {
     /// Intended use: Access to member functions of TH1F like GetMean(),
     /// GetRMS() etc.
     /// The return objects is managed by  SamplingDistPlot
-    TH1F* GetTH1F(const SamplingDistribution *samplDist = NULL);
-    TH1 * GetHistogram(const SamplingDistribution *samplDist = NULL) { return GetTH1F(samplDist); }
+    TH1F* GetTH1F(const SamplingDistribution *samplDist = nullptr);
+    TH1 * GetHistogram(const SamplingDistribution *samplDist = nullptr) { return GetTH1F(samplDist); }
 
     /// return plotter class used to draw the sampling distribution histograms
     /// object is managed by SamplingDistPlot

@@ -74,11 +74,11 @@ using namespace std;
 
 PdfProposal::PdfProposal() : ProposalFunction()
 {
-   fPdf = NULL;
+   fPdf = nullptr;
    fOwnsPdf = false;
    fCacheSize = 1;
    fCachePosition = 0;
-   fCache = NULL;
+   fCache = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -91,7 +91,7 @@ PdfProposal::PdfProposal(RooAbsPdf& pdf) : ProposalFunction()
    fOwnsPdf = false;
    fCacheSize = 1;
    fCachePosition = 0;
-   fCache = NULL;
+   fCache = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -195,8 +195,8 @@ double PdfProposal::GetProposalDensity(RooArgSet& x1, RooArgSet& x2)
 
 void PdfProposal::AddMapping(RooRealVar& proposalParam, RooAbsReal& update)
 {
-   fMaster.add(*update.getParameters((RooAbsData*)NULL));
-   if (update.getParameters((RooAbsData*)NULL)->empty())
+   fMaster.add(*update.getParameters(static_cast<RooAbsData const*>(nullptr)));
+   if (update.getParameters(static_cast<RooAbsData const*>(nullptr))->empty())
       fMaster.add(update);
    fMap.insert(pair<RooRealVar*, RooAbsReal*>(&proposalParam, &update));
 }

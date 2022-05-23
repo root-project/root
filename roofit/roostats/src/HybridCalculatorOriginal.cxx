@@ -420,7 +420,7 @@ void HybridCalculatorOriginal::RunToys(std::vector<double>& bVals, std::vector<d
 
       /// work-around in case of an empty dataset (TO DO: need a debug in RooFit?)
       bool bIsEmpty = false;
-      if (bData==NULL) {
+      if (bData==nullptr) {
          bIsEmpty = true;
          // if ( _verbose ) std::cout << "empty B-only dataset!\n";
          RooDataSet* bDataDummy=new RooDataSet("bDataDummy","empty dataset",*fObservables);
@@ -439,7 +439,7 @@ void HybridCalculatorOriginal::RunToys(std::vector<double>& bVals, std::vector<d
 
       /// work-around in case of an empty dataset (TO DO: need a debug in RooFit?)
       bool sbIsEmpty = false;
-      if (sbData==NULL) {
+      if (sbData==nullptr) {
          sbIsEmpty = true;
          // if ( _verbose ) std::cout << "empty S+B dataset!\n";
          RooDataSet* sbDataDummy=new RooDataSet("sbDataDummy","empty dataset",*fObservables);
@@ -585,7 +585,7 @@ HybridResult* HybridCalculatorOriginal::GetHypoTest() const {
    if (!DoCheckInputs()) return 0;
    RooAbsData * treeData = dynamic_cast<RooAbsData *> (fData);
    if (!treeData) {
-      std::cerr << "Error in HybridCalculatorOriginal::GetHypoTest - invalid data type - return NULL" << std::endl;
+      std::cerr << "Error in HybridCalculatorOriginal::GetHypoTest - invalid data type - return nullptr" << std::endl;
       return 0;
    }
    bool usePrior = (fUsePriorPdf && fPriorPdf );
