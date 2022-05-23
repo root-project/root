@@ -333,21 +333,29 @@ public:
 /// The field for an untyped record. The subfields are stored consequitively in a memory block, i.e.
 /// the memory layout is identical to one that a C++ struct would have
 class RRecordField : public Detail::RFieldBase {
-private:
+protected:
    std::size_t fMaxAlignment = 1;
    std::size_t fSize = 0;
    std::vector<std::size_t> fOffsets;
 
    std::size_t GetItemPadding(std::size_t baseOffset, std::size_t itemAlignment) const;
 
-protected:
-   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
+   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const override;
    std::size_t AppendImpl(const Detail::RFieldValue& value) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
    void ReadInClusterImpl(const RClusterIndex &clusterIndex, Detail::RFieldValue *value) final;
 
+   RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<Detail::RFieldBase>> &&itemFields,
+                const std::vector<std::size_t> &offsets, std::string_view typeName = "");
+
 public:
-   RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<Detail::RFieldBase>> &itemFields);
+   /// Construct a RRecordField based on a vector of child fields. The ownership of the child fields is transferred
+   /// to the RRecordField instance.
+   RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<Detail::RFieldBase>> &&itemFields);
+   RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<Detail::RFieldBase>> &itemFields)
+      : RRecordField(fieldName, std::move(itemFields))
+   {
+   }
    RRecordField(RRecordField&& other) = default;
    RRecordField& operator =(RRecordField&& other) = default;
    ~RRecordField() = default;
@@ -355,8 +363,8 @@ public:
    void GenerateColumnsImpl() final {}
    void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue GenerateValue(void* where) final;
-   void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final;
+   Detail::RFieldValue GenerateValue(void* where) override;
+   void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) override;
    Detail::RFieldValue CaptureValue(void *where) final;
    std::vector<Detail::RFieldValue> SplitValue(const Detail::RFieldValue &value) const final;
    size_t GetValueSize() const final { return fSize; }
