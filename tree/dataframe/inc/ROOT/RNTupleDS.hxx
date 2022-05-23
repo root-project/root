@@ -30,6 +30,7 @@
 namespace ROOT {
 namespace Experimental {
 
+class RNTuple;
 class RNTupleDescriptor;
 
 namespace Detail {
@@ -93,6 +94,7 @@ protected:
 };
 
 RDataFrame MakeNTupleDataFrame(std::string_view ntupleName, std::string_view fileName);
+RDataFrame MakeNTupleDataFrame(RNTuple *ntuple);
 
 } // ns Experimental
 } // ns ROOT
