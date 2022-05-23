@@ -1158,6 +1158,8 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::RFileProper::Writ
 {
    std::uint64_t offsetKey;
    RKeyBlob keyBlob(fFile);
+   // Since it is unknown beforehand if offsetKey is beyond the 2GB limit or not,
+   // RKeyBlob will always reserve space for a big key (version >= 1000)
    keyBlob.Reserve(nbytes, &offsetKey);
 
    auto offset = offsetKey;
@@ -1165,6 +1167,7 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::RFileProper::Writ
    RTFString strObject;
    RTFString strTitle;
    RTFKey keyHeader(offset, offset, strClass, strObject, strTitle, len, nbytes);
+   // Follow the fact that RKeyBlob is a big key unconditionally (see above)
    keyHeader.MakeBigKey();
 
    Write(&keyHeader, keyHeader.fKeyHeaderSize, offset);
