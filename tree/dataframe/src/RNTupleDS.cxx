@@ -17,6 +17,7 @@
 #include <ROOT/RDF/RColumnReaderBase.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldValue.hxx>
+#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleDS.hxx>
 #include <ROOT/RNTupleUtil.hxx>
@@ -359,5 +360,11 @@ ROOT::RDataFrame ROOT::Experimental::MakeNTupleDataFrame(std::string_view ntuple
 {
    auto pageSource = ROOT::Experimental::Detail::RPageSource::Create(ntupleName, fileName);
    ROOT::RDataFrame rdf(std::make_unique<RNTupleDS>(std::move(pageSource)));
+   return rdf;
+}
+
+ROOT::RDataFrame ROOT::Experimental::MakeNTupleDataFrame(RNTuple *ntuple)
+{
+   ROOT::RDataFrame rdf(std::make_unique<RNTupleDS>(ntuple->MakePageSource()));
    return rdf;
 }
