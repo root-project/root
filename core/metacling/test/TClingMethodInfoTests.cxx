@@ -504,8 +504,8 @@ namespace BUG6578 {
     using Base1::Base1; // Base1(int), Base1(Base1&, string)
   public: // This is irrelevant - access of used ctors is defined by access of base class!
     using Base2::Base2; // Base2(int, int)
+    Derived() = delete;
     Derived(const Derived&) = delete;
-    // Derived()
   };
 }
 )CODE");
