@@ -37,7 +37,8 @@ TEST(RNTuple, RDF)
    }
 
    ROOT::EnableImplicitMT();
-   auto rdf = ROOT::Experimental::MakeNTupleDataFrame("myNTuple", fileGuard.GetPath());
+   auto f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
+   auto rdf = ROOT::Experimental::MakeNTupleDataFrame(f->Get<RNTuple>("myNTuple"));
    EXPECT_EQ(42.0, *rdf.Min("pt"));
    EXPECT_EQ(17.0, *rdf.Max("tracks.energy"));
    EXPECT_EQ(2U, *rdf.Max("R_rdf_sizeof_tracks"));
