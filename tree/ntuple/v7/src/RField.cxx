@@ -897,8 +897,21 @@ void ROOT::Experimental::RClassField::AcceptVisitor(Detail::RFieldVisitor &visit
 
 //------------------------------------------------------------------------------
 
-ROOT::Experimental::RRecordField::RRecordField(
-   std::string_view fieldName, std::vector<std::unique_ptr<Detail::RFieldBase>> &itemFields)
+ROOT::Experimental::RRecordField::RRecordField(std::string_view fieldName,
+                                               std::vector<std::unique_ptr<Detail::RFieldBase>> &&itemFields,
+                                               const std::vector<std::size_t> &offsets, std::string_view typeName)
+   : ROOT::Experimental::Detail::RFieldBase(fieldName, typeName, ENTupleStructure::kRecord, false /* isSimple */),
+     fOffsets(offsets)
+{
+   for (auto &item : itemFields) {
+      fMaxAlignment = std::max(fMaxAlignment, item->GetAlignment());
+      fSize += GetItemPadding(fSize, item->GetAlignment()) + item->GetValueSize();
+      Attach(std::move(item));
+   }
+}
+
+ROOT::Experimental::RRecordField::RRecordField(std::string_view fieldName,
+                                               std::vector<std::unique_ptr<Detail::RFieldBase>> &&itemFields)
    : ROOT::Experimental::Detail::RFieldBase(fieldName, "", ENTupleStructure::kRecord, false /* isSimple */)
 {
    for (auto &item : itemFields) {
@@ -926,7 +939,7 @@ ROOT::Experimental::RRecordField::CloneImpl(std::string_view newName) const
    std::vector<std::unique_ptr<Detail::RFieldBase>> cloneItems;
    for (auto &item : fSubFields)
       cloneItems.emplace_back(item->Clone(item->GetName()));
-   return std::make_unique<RRecordField>(newName, cloneItems);
+   return std::unique_ptr<RRecordField>(new RRecordField(newName, std::move(cloneItems), fOffsets, GetType()));
 }
 
 std::size_t ROOT::Experimental::RRecordField::AppendImpl(const Detail::RFieldValue &value) {
