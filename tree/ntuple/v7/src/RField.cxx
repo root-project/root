@@ -227,10 +227,10 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    if (normalizedType.substr(0, 10) == "std::pair<") {
       auto innerTypes = TokenizeTypeList(normalizedType.substr(10, normalizedType.length() - 11));
       R__ASSERT(innerTypes.size() == 2);
-      auto items = std::make_pair(
-         Create("first", innerTypes[0]).Unwrap().release(),
-         Create("second", innerTypes[1]).Unwrap().release()
-      );
+      std::vector<std::unique_ptr<RFieldBase>> items;
+      for (unsigned int i = 0; i < innerTypes.size(); ++i) {
+         items.emplace_back(Create("_" + std::to_string(i), innerTypes[i]).Unwrap());
+      }
       result = std::make_unique<RPairField>(fieldName, items);
    }
    // TODO: create an RCollectionField?
@@ -932,8 +932,7 @@ ROOT::Experimental::RRecordField::RRecordField(std::string_view fieldName,
    }
 }
 
-
-std::size_t ROOT::Experimental::RRecordField::GetItemPadding(std::size_t baseOffset, std::size_t itemAlignment)
+std::size_t ROOT::Experimental::RRecordField::GetItemPadding(std::size_t baseOffset, std::size_t itemAlignment) const
 {
    if (itemAlignment > 1) {
       auto remainder = baseOffset % itemAlignment;
@@ -1684,90 +1683,57 @@ void ROOT::Experimental::RVariantField::CommitCluster()
 //------------------------------------------------------------------------------
 
 std::string ROOT::Experimental::RPairField::RPairField::GetTypeList(
-   const std::pair<Detail::RFieldBase*, Detail::RFieldBase*> &itemFields)
+   const std::vector<std::unique_ptr<Detail::RFieldBase>> &itemFields)
 {
-   return itemFields.first->GetType() + "," + itemFields.second->GetType();
+   return itemFields[0]->GetType() + "," + itemFields[1]->GetType();
 }
 
 ROOT::Experimental::RPairField::RPairField(std::string_view fieldName,
-   const std::pair<Detail::RFieldBase*, Detail::RFieldBase*> &itemFields)
-   : ROOT::Experimental::Detail::RFieldBase(fieldName,
-      "std::pair<" + GetTypeList(itemFields) + ">", ENTupleStructure::kRecord, false /* isSimple */)
+                                           std::vector<std::unique_ptr<Detail::RFieldBase>> &&itemFields,
+                                           const std::vector<std::size_t> &offsets)
+   : ROOT::Experimental::RRecordField(fieldName, std::move(itemFields), offsets,
+                                      "std::pair<" + GetTypeList(itemFields) + ">")
 {
-   for (const auto &item : {itemFields.first, itemFields.second}) {
-      fMaxAlignment = std::max(fMaxAlignment, item->GetAlignment());
-      fSize += RRecordField::GetItemPadding(fSize, item->GetAlignment()) + item->GetValueSize();
-      Attach(std::unique_ptr<Detail::RFieldBase>(item));
-   }
+   R__ASSERT(itemFields.size() == 2);
+}
+
+ROOT::Experimental::RPairField::RPairField(std::string_view fieldName,
+                                           std::vector<std::unique_ptr<Detail::RFieldBase>> &itemFields)
+   : ROOT::Experimental::RRecordField(fieldName, std::move(itemFields), {},
+                                      "std::pair<" + GetTypeList(itemFields) + ">")
+{
+   R__ASSERT(itemFields.size() == 2);
+
+   // ISO C++ does not guarantee any specific layout for `std::pair`; query TClass for the member offsets
+   fClass = TClass::GetClass(GetType().c_str());
+   R__ASSERT(fClass != nullptr);
+   fSize = fClass->Size();
+   fOffsets.push_back(fClass->GetDataMemberOffset("first"));
+   fOffsets.push_back(fClass->GetDataMemberOffset("second"));
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::RPairField::CloneImpl(std::string_view newName) const
 {
-   return std::make_unique<RPairField>(newName, std::make_pair(
-      fSubFields[0]->Clone(fSubFields[0]->GetName()).release(),
-      fSubFields[1]->Clone(fSubFields[1]->GetName()).release()
-   ));
-}
+   std::vector<std::unique_ptr<Detail::RFieldBase>> items;
+   items.push_back(fSubFields[0]->Clone(fSubFields[0]->GetName()));
+   items.push_back(fSubFields[1]->Clone(fSubFields[1]->GetName()));
 
-std::size_t ROOT::Experimental::RPairField::AppendImpl(const Detail::RFieldValue& value)
-{
-   std::size_t nbytes = 0;
-   std::size_t offset = 0;
-   for (auto &item : fSubFields) {
-      auto memberValue = item->CaptureValue(value.Get<unsigned char>() + offset);
-      nbytes += item->Append(memberValue);
-      offset += RRecordField::GetItemPadding(offset, item->GetAlignment()) + item->GetValueSize();
-   }
-   return nbytes;
-}
-
-void ROOT::Experimental::RPairField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
-{
-   std::size_t offset = 0;
-   for (auto &item : fSubFields) {
-      auto memberValue = item->CaptureValue(value->Get<unsigned char>() + offset);
-      item->Read(globalIndex, &memberValue);
-      offset += RRecordField::GetItemPadding(offset, item->GetAlignment()) + item->GetValueSize();
-   }
-}
-
-void ROOT::Experimental::RPairField::ReadInClusterImpl(const RClusterIndex &clusterIndex, Detail::RFieldValue *value)
-{
-   std::size_t offset = 0;
-   for (auto &item : fSubFields) {
-      auto memberValue = item->CaptureValue(value->Get<unsigned char>() + offset);
-      item->Read(clusterIndex, &memberValue);
-      offset += RRecordField::GetItemPadding(offset, item->GetAlignment()) + item->GetValueSize();
-   }
+   std::unique_ptr<RPairField> result(new RPairField(newName, std::move(items), fOffsets));
+   result->fClass = fClass;
+   return result;
 }
 
 ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RPairField::GenerateValue(void *where)
 {
-   std::size_t offset = 0;
-   for (auto &item : fSubFields) {
-      item->GenerateValue(static_cast<unsigned char *>(where) + offset);
-      offset += RRecordField::GetItemPadding(offset, item->GetAlignment()) + item->GetValueSize();
-   }
-   return Detail::RFieldValue(true /* captureFlag */, this, where);
+   return Detail::RFieldValue(true /* captureFlag */, this, fClass->New(where));
 }
 
 void ROOT::Experimental::RPairField::DestroyValue(const Detail::RFieldValue& value, bool dtorOnly)
 {
-   std::size_t offset = 0;
-   for (auto &item : fSubFields) {
-      auto memberValue = item->CaptureValue(value.Get<unsigned char>() + offset);
-      item->DestroyValue(memberValue, true /* dtorOnly */);
-      offset += RRecordField::GetItemPadding(offset, item->GetAlignment()) + item->GetValueSize();
-   }
-
+   fClass->Destructor(value.GetRawPtr(), true /* dtorOnly */);
    if (!dtorOnly)
       free(value.GetRawPtr());
-}
-
-ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RPairField::CaptureValue(void *where)
-{
-   return Detail::RFieldValue(true /* captureFlag */, this, where);
 }
 
 //------------------------------------------------------------------------------
