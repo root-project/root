@@ -336,6 +336,7 @@ class RRecordField : public Detail::RFieldBase {
 private:
    std::size_t fMaxAlignment = 1;
    std::size_t fSize = 0;
+   std::vector<std::size_t> fOffsets;
 
    std::size_t GetItemPadding(std::size_t baseOffset, std::size_t itemAlignment) const;
 
