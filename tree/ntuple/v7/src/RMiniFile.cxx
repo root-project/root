@@ -217,6 +217,19 @@ struct RTFKey {
       fNbytes = fKeyLen + ((szObjOnDisk == 0) ? szObjInMem : szObjOnDisk);
    }
 
+   void MakeBigKey()
+   {
+      if (fVersion >= 1000)
+         return;
+      std::uint32_t seekKey = fInfoShort.fSeekKey;
+      std::uint32_t seekPdir = fInfoShort.fSeekPdir;
+      fInfoLong.fSeekKey = seekKey;
+      fInfoLong.fSeekPdir = seekPdir;
+      fKeyHeaderSize = fKeyHeaderSize + sizeof(fInfoLong) - sizeof(fInfoShort);
+      fNbytes = fNbytes + sizeof(fInfoLong) - sizeof(fInfoShort);
+      fVersion = fVersion + 1000;
+   }
+
    std::uint32_t GetSize() const {
       // Negative size indicates a gap in the file
       if (fNbytes < 0)
@@ -931,7 +944,8 @@ class RKeyBlob : public TKey {
 public:
    explicit RKeyBlob(TFile *file) : TKey(file) {
       fClassName = kBlobClassName;
-      fKeylen += strlen(kBlobClassName);
+      fVersion += 1000;
+      fKeylen = Sizeof();
    }
 
    /// Register a new key for a data record of size nbytes
@@ -1151,6 +1165,7 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::RFileProper::Writ
    RTFString strObject;
    RTFString strTitle;
    RTFKey keyHeader(offset, offset, strClass, strObject, strTitle, len, nbytes);
+   keyHeader.MakeBigKey();
 
    Write(&keyHeader, keyHeader.fKeyHeaderSize, offset);
    offset += keyHeader.fKeyHeaderSize;
