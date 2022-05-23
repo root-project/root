@@ -986,7 +986,7 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view 
    RTFKey key;
    RTFString name;
    ReadBuffer(&key, sizeof(key), fileHeader.fBEGIN);
-   auto offset = fileHeader.fBEGIN + key.fKeyLen;
+   std::uint64_t offset = fileHeader.fBEGIN + key.fKeyLen;
    ReadBuffer(&name, 1, offset);
    offset += name.GetSize();
    ReadBuffer(&name, 1, offset);
