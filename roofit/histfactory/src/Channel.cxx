@@ -328,12 +328,12 @@ void RooStats::HistFactory::Channel::CollectHistograms() {
 bool RooStats::HistFactory::Channel::CheckHistograms() const {
 
   // Check that all internal histogram pointers
-  // are properly configured (ie that they're not NULL)
+  // are properly configured (ie that they're not nullptr)
 
   try {
 
-    if( fData.GetHisto() == NULL && fData.GetInputFile() != "" ) {
-      cxcoutEHF << "Error: Data Histogram for channel " << GetName() << " is NULL." << std::endl;
+    if( fData.GetHisto() == nullptr && fData.GetInputFile() != "" ) {
+      cxcoutEHF << "Error: Data Histogram for channel " << GetName() << " is nullptr." << std::endl;
       throw hf_exc();
     }
 
@@ -343,8 +343,8 @@ bool RooStats::HistFactory::Channel::CheckHistograms() const {
       const RooStats::HistFactory::Sample& sample = fSamples.at( sampItr );
 
       // Get the nominal histogram:
-      if( sample.GetHisto() == NULL ) {
-   cxcoutEHF << "Error: Nominal Histogram for sample " << sample.GetName() << " is NULL." << std::endl;
+      if( sample.GetHisto() == nullptr ) {
+   cxcoutEHF << "Error: Nominal Histogram for sample " << sample.GetName() << " is nullptr." << std::endl;
    throw hf_exc();
       }
       else {
@@ -374,8 +374,8 @@ bool RooStats::HistFactory::Channel::CheckHistograms() const {
 
       // Get the StatError Histogram (if necessary)
       if( sample.GetStatError().GetUseHisto() ) {
-   if( sample.GetStatError().GetErrorHist() == NULL ) {
-     cxcoutEHF << "Error: Statistical Error Histogram for sample " << sample.GetName() << " is NULL." << std::endl;
+   if( sample.GetStatError().GetErrorHist() == nullptr ) {
+     cxcoutEHF << "Error: Statistical Error Histogram for sample " << sample.GetName() << " is nullptr." << std::endl;
      throw hf_exc();
    }
       }
@@ -386,14 +386,14 @@ bool RooStats::HistFactory::Channel::CheckHistograms() const {
 
    const RooStats::HistFactory::HistoSys& histoSys = sample.GetHistoSysList().at( histoSysItr );
 
-   if( histoSys.GetHistoLow() == NULL ) {
+   if( histoSys.GetHistoLow() == nullptr ) {
      cxcoutEHF << "Error: HistoSyst Low for Systematic " << histoSys.GetName()
-          << " in sample " << sample.GetName() << " is NULL." << std::endl;
+          << " in sample " << sample.GetName() << " is nullptr." << std::endl;
      throw hf_exc();
    }
-   if( histoSys.GetHistoHigh() == NULL ) {
+   if( histoSys.GetHistoHigh() == nullptr ) {
      cxcoutEHF << "Error: HistoSyst High for Systematic " << histoSys.GetName()
-          << " in sample " << sample.GetName() << " is NULL." << std::endl;
+          << " in sample " << sample.GetName() << " is nullptr." << std::endl;
      throw hf_exc();
    }
 
@@ -405,14 +405,14 @@ bool RooStats::HistFactory::Channel::CheckHistograms() const {
 
    const RooStats::HistFactory::HistoFactor& histoFactor = sample.GetHistoFactorList().at( histoFactorItr );
 
-   if( histoFactor.GetHistoLow() == NULL ) {
+   if( histoFactor.GetHistoLow() == nullptr ) {
      cxcoutEHF << "Error: HistoSyst Low for Systematic " << histoFactor.GetName()
-          << " in sample " << sample.GetName() << " is NULL." << std::endl;
+          << " in sample " << sample.GetName() << " is nullptr." << std::endl;
      throw hf_exc();
    }
-   if( histoFactor.GetHistoHigh() == NULL ) {
+   if( histoFactor.GetHistoHigh() == nullptr ) {
      cxcoutEHF << "Error: HistoSyst High for Systematic " << histoFactor.GetName()
-          << " in sample " << sample.GetName() << " is NULL." << std::endl;
+          << " in sample " << sample.GetName() << " is nullptr." << std::endl;
      throw hf_exc();
    }
 
@@ -424,9 +424,9 @@ bool RooStats::HistFactory::Channel::CheckHistograms() const {
 
    const RooStats::HistFactory::ShapeSys& shapeSys = sample.GetShapeSysList().at( shapeSysItr );
 
-   if( shapeSys.GetErrorHist() == NULL ) {
+   if( shapeSys.GetErrorHist() == nullptr ) {
      cxcoutEHF << "Error: HistoSyst High for Systematic " << shapeSys.GetName()
-          << " in sample " << sample.GetName() << " is NULL." << std::endl;
+          << " in sample " << sample.GetName() << " is nullptr." << std::endl;
      throw hf_exc();
    }
 

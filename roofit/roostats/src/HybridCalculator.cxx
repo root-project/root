@@ -59,7 +59,7 @@ int HybridCalculator::PreNullHook(RooArgSet* /*parameterPoint*/, double obsTestS
       // Setup Priors for ad hoc Hybrid
       fTestStatSampler->SetPriorNuisance(fPriorNuisanceNull);
    } else if(
-      fNullModel->GetNuisanceParameters() == NULL ||
+      fNullModel->GetNuisanceParameters() == nullptr ||
       fNullModel->GetNuisanceParameters()->empty()
    ) {
       oocoutI(nullptr,InputArguments)
@@ -108,7 +108,7 @@ int HybridCalculator::PreAltHook(RooArgSet* /*parameterPoint*/, double obsTestSt
      // Setup Priors for ad hoc Hybrid
      fTestStatSampler->SetPriorNuisance(fPriorNuisanceAlt);
    } else if (
-      fAltModel->GetNuisanceParameters()==NULL ||
+      fAltModel->GetNuisanceParameters()==nullptr ||
       fAltModel->GetNuisanceParameters()->empty()
    ) {
       oocoutI(nullptr,InputArguments)

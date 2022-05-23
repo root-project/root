@@ -76,7 +76,7 @@ namespace RooStats {
       THStack* GetChannelStack(const std::string& channel, const std::string& name="");
 
       /// Draw a stack of the channel, and include data if the pointer is supplied
-      void DrawChannel(const std::string& channel, RooDataSet* data=NULL);
+      void DrawChannel(const std::string& channel, RooDataSet* data=nullptr);
 
       /// Get the RooAbsReal function for a given sample in a given channel
       RooAbsReal* SampleFunction(const std::string& channel, const std::string& sample);
@@ -115,13 +115,13 @@ namespace RooStats {
       std::vector< std::string > GetChannelSampleList(const std::string& channel);
 
       // Return the RooRealVar by the same name used in the model
-      // If not found, return NULL
+      // If not found, return nullptr
       RooRealVar* var(const std::string& varName) const;
 
       /*
       // Add a channel to the pdf
       // Combine the data if it is provided
-      void AddChannel(const std::string& channel, RooAbsPdf* pdf, RooDataSet* data=NULL);
+      void AddChannel(const std::string& channel, RooAbsPdf* pdf, RooDataSet* data=nullptr);
       */
 
       /*

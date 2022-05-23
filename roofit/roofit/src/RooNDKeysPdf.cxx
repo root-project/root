@@ -293,8 +293,8 @@ RooNDKeysPdf::RooNDKeysPdf(const RooNDKeysPdf &other, const char *name)
      _nSigma(other._nSigma), _rotate(other._rotate), _sortInput(other._sortInput),
      _nAdpt(other._nAdpt)
 {
-   _tracker = (other._tracker != NULL ? new RooChangeTracker(*other._tracker) : NULL);
-   // if (_tracker!=NULL) { _tracker->hasChanged(true); }
+   _tracker = (other._tracker != nullptr ? new RooChangeTracker(*other._tracker) : nullptr);
+   // if (_tracker!=nullptr) { _tracker->hasChanged(true); }
 
    _fixedShape = other._fixedShape;
    _mirror = other._mirror;

@@ -32,13 +32,13 @@ namespace RooStats {
                         TestStatSampler* sampler=0
       ) :
          HypoTestCalculatorGeneric(data, altModel, nullModel, sampler),
-         fConditionalMLEsNull(NULL),
-         fConditionalMLEsAlt(NULL),
+         fConditionalMLEsNull(nullptr),
+         fConditionalMLEsAlt(nullptr),
          fNToysNull(-1),
          fNToysAlt(-1),
          fNToysNullTail(0),
          fNToysAltTail(0),
-    fFitInfo(NULL),
+    fFitInfo(nullptr),
     fStoreFitInfo(false)
       {
       }
@@ -62,7 +62,7 @@ namespace RooStats {
          if( fConditionalMLEsNull ) delete fConditionalMLEsNull;
 
          if( c ) fConditionalMLEsNull = (const RooArgSet*)c->snapshot();
-         else fConditionalMLEsNull = NULL;
+         else fConditionalMLEsNull = nullptr;
       }
 
       /// set given nuisance parameters to a specific value that will be used instead of their
@@ -71,7 +71,7 @@ namespace RooStats {
          if( fConditionalMLEsAlt ) delete fConditionalMLEsAlt;
 
          if( c ) fConditionalMLEsAlt = (const RooArgSet*)c->snapshot();
-         else fConditionalMLEsAlt = NULL;
+         else fConditionalMLEsAlt = nullptr;
       }
 
       void StoreFitInfo(bool val = true) {

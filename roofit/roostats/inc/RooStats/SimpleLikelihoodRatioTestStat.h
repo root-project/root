@@ -26,16 +26,16 @@ namespace RooStats {
 
       /// Constructor for proof. Do not use.
       SimpleLikelihoodRatioTestStat() :
-         fNullPdf(NULL), fAltPdf(NULL)
+         fNullPdf(nullptr), fAltPdf(nullptr)
       {
          fFirstEval = true;
          fDetailedOutputEnabled = false;
-         fDetailedOutput = NULL;
-         fNullParameters = NULL;
-         fAltParameters = NULL;
+         fDetailedOutput = nullptr;
+         fNullParameters = nullptr;
+         fAltParameters = nullptr;
          fReuseNll=false ;
-         fNllNull=NULL ;
-         fNllAlt=NULL ;
+         fNllNull=nullptr ;
+         fNllAlt=nullptr ;
       }
 
       /// Takes null and alternate parameters from PDF. Can be overridden.
@@ -57,11 +57,11 @@ namespace RooStats {
          delete allAltVars;
 
          fDetailedOutputEnabled = false;
-         fDetailedOutput = NULL;
+         fDetailedOutput = nullptr;
 
          fReuseNll=false ;
-         fNllNull=NULL ;
-         fNllAlt=NULL ;
+         fNllNull=nullptr ;
+         fNllAlt=nullptr ;
       }
 
       /// Takes null and alternate parameters from values in nullParameters
@@ -81,11 +81,11 @@ namespace RooStats {
          fAltParameters = (RooArgSet*) altParameters.snapshot();
 
          fDetailedOutputEnabled = false;
-         fDetailedOutput = NULL;
+         fDetailedOutput = nullptr;
 
          fReuseNll=false ;
-         fNllNull=NULL ;
-         fNllAlt=NULL ;
+         fNllNull=nullptr ;
+         fNllAlt=nullptr ;
       }
 
       ~SimpleLikelihoodRatioTestStat() override {
@@ -140,7 +140,7 @@ namespace RooStats {
 
       double Evaluate(RooAbsData& data, RooArgSet& nullPOI) override;
 
-      virtual void EnableDetailedOutput( bool e=true ) { fDetailedOutputEnabled = e; fDetailedOutput = NULL; }
+      virtual void EnableDetailedOutput( bool e=true ) { fDetailedOutputEnabled = e; fDetailedOutput = nullptr; }
       const RooArgSet* GetDetailedOutput(void) const override { return fDetailedOutput; }
 
       const TString GetVarName() const override {

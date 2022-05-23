@@ -184,7 +184,7 @@ std::vector< RooStats::HistFactory::Measurement > ConfigParser::GetMeasurementsF
 
     }
 
-    TXMLNode* node = NULL;
+    TXMLNode* node = nullptr;
 
     // Get the list of channel XML files to combine
     // Do this first so we can quickly exit
@@ -193,7 +193,7 @@ std::vector< RooStats::HistFactory::Measurement > ConfigParser::GetMeasurementsF
     node = rootNode->GetChildren();
     while( node != 0 ) {
       if( node->GetNodeName() == TString( "Input" ) ) {
-   if( node->GetText() == NULL ) {
+   if( node->GetText() == nullptr ) {
      cxcoutEHF << "Error: node: " << node->GetName()
           << " has no text." << std::endl;
      throw hf_exc();

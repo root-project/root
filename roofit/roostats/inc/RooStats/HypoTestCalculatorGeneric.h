@@ -54,7 +54,7 @@ namespace RooStats {
       void SetNullModel(const ModelConfig &nullModel) override { fNullModel = &nullModel; }
       const RooAbsData * GetData(void) const { return fData; }
       const ModelConfig* GetNullModel(void) const { return fNullModel; }
-      virtual const RooArgSet* GetFitInfo() const { return NULL; }
+      virtual const RooArgSet* GetFitInfo() const { return nullptr; }
       /// Set the model for the alternate hypothesis  (S+B)
       void SetAlternateModel(const ModelConfig &altModel) override { fAltModel = &altModel; }
       const ModelConfig* GetAlternateModel(void) const { return fAltModel; }
@@ -95,8 +95,8 @@ namespace RooStats {
       SamplingDistribution* GenerateSamplingDistribution(
          ModelConfig *thisModel,
          double obsTestStat,
-         RooAbsPdf *impDens=NULL,
-         const RooArgSet *impSnapshot=NULL
+         RooAbsPdf *impDens=nullptr,
+         const RooArgSet *impSnapshot=nullptr
       ) const;
 
 

@@ -59,7 +59,7 @@ used for coverage studies, the Neyman Construction, etc.
       /// Set the Pdf, add to the the workspace if not already there
       virtual void SetPdf(RooAbsPdf&) = 0;
 
-      /// How to randomize the prior. Set to NULL to deactivate randomization.
+      /// How to randomize the prior. Set to nullptr to deactivate randomization.
       virtual void SetPriorNuisance(RooAbsPdf*) = 0;
 
       /// specify the values of parameters used when evaluating test statistic

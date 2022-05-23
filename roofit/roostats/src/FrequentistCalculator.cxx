@@ -35,9 +35,9 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 
 void FrequentistCalculator::PreHook() const {
-   if (fFitInfo != NULL) {
+   if (fFitInfo != nullptr) {
       delete fFitInfo;
-      fFitInfo = NULL;
+      fFitInfo = nullptr;
    }
    if (fStoreFitInfo) {
       fFitInfo = new RooArgSet();

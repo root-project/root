@@ -110,10 +110,10 @@ void RooStats::HistFactory::HistogramUncertaintyBase::writeToFile( const std::st
   // changes the name of the local file and histograms
 
   auto histLow = GetHistoLow();
-  if( histLow==NULL ) {
+  if( histLow==nullptr ) {
     std::cout << "Error: Cannot write " << GetName()
          << " to file: " << FileName
-         << " HistoLow is NULL"
+         << " HistoLow is nullptr"
          << std::endl;
     throw hf_exc();
   }
@@ -123,10 +123,10 @@ void RooStats::HistFactory::HistogramUncertaintyBase::writeToFile( const std::st
   fHistoNameLow = histLow->GetName();
 
   auto histHigh = GetHistoHigh();
-  if( histHigh==NULL ) {
+  if( histHigh==nullptr ) {
     std::cout << "Error: Cannot write " << GetName()
          << " to file: " << FileName
-         << " HistoHigh is NULL"
+         << " HistoHigh is nullptr"
          << std::endl;
     throw hf_exc();
   }
@@ -177,10 +177,10 @@ void RooStats::HistFactory::ShapeSys::writeToFile( const std::string& FileName,
                      const std::string& DirName ) {
 
   auto histError = GetErrorHist();
-  if( histError==NULL ) {
+  if( histError==nullptr ) {
     std::cout << "Error: Cannot write " << GetName()
          << " to file: " << FileName
-         << " ErrorHist is NULL"
+         << " ErrorHist is nullptr"
          << std::endl;
     throw hf_exc();
   }
@@ -235,10 +235,10 @@ void RooStats::HistFactory::ShapeFactor::writeToFile( const std::string& FileNam
 
   if( HasInitialShape() ) {
     auto histInitialShape = GetInitialShape();
-    if( histInitialShape==NULL ) {
+    if( histInitialShape==nullptr ) {
       std::cout << "Error: Cannot write " << GetName()
       << " to file: " << FileName
-      << " InitialShape is NULL"
+      << " InitialShape is nullptr"
       << std::endl;
       throw hf_exc();
     }
@@ -313,8 +313,8 @@ void RooStats::HistFactory::StatError::writeToFile( const std::string& OutputFil
     std::string statErrorHistName = "statisticalErrors";
 
     auto hStatError = GetErrorHist();
-    if( hStatError == NULL ) {
-      std::cout << "Error: Stat Error error hist is NULL" << std::endl;
+    if( hStatError == nullptr ) {
+      std::cout << "Error: Stat Error error hist is nullptr" << std::endl;
       throw hf_exc();
     }
     hStatError->Write(statErrorHistName.c_str());

@@ -54,37 +54,37 @@ static const double SIGMA_RANGE_DIVISOR = 5;
 ProposalHelper::ProposalHelper()
 {
    fPdfProp = new PdfProposal();
-   fVars = NULL;
+   fVars = nullptr;
    fOwnsPdfProp = true;
    fOwnsPdf = false;
    fOwnsCluesPdf = false;
    fOwnsVars = false;
    fUseUpdates = false;
-   fPdf = NULL;
+   fPdf = nullptr;
    fSigmaRangeDivisor = SIGMA_RANGE_DIVISOR;
-   fCluesPdf = NULL;
-   fUniformPdf = NULL;
-   fClues = NULL;
-   fCovMatrix = NULL;
+   fCluesPdf = nullptr;
+   fUniformPdf = nullptr;
+   fClues = nullptr;
+   fCovMatrix = nullptr;
    fCluesFrac = -1;
    fUniFrac = -1;
    fCacheSize = -1;
-   fCluesOptions = NULL;
+   fCluesOptions = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 ProposalFunction* ProposalHelper::GetProposalFunction()
 {
-   if (fPdf == NULL)
+   if (fPdf == nullptr)
       CreatePdf();
    // kbelasco: check here for memory leaks: does RooAddPdf make copies or
    // take ownership of components, coeffs
    RooArgList* components = new RooArgList();
    RooArgList* coeffs = new RooArgList();
-   if (fCluesPdf == NULL)
+   if (fCluesPdf == nullptr)
       CreateCluesPdf();
-   if (fCluesPdf != NULL) {
+   if (fCluesPdf != nullptr) {
       if (fCluesFrac < 0)
          fCluesFrac = DEFAULT_CLUES_FRAC;
       printf("added clues from dataset %s with fraction %g\n",
@@ -115,7 +115,7 @@ void ProposalHelper::CreatePdf()
    // kbelasco: check here for memory leaks:
    // does RooMultiVarGaussian make copies of xVec and muVec?
    // or should we delete them?
-   if (fVars == NULL) {
+   if (fVars == nullptr) {
       coutE(InputArguments) << "ProposalHelper::CreatePdf(): " <<
          "Variables to create proposal function for are not set." << endl;
       return;
@@ -131,7 +131,7 @@ void ProposalHelper::CreatePdf()
       if (fUseUpdates)
          fPdfProp->AddMapping(*clone, *r);
    }
-   if (fCovMatrix == NULL)
+   if (fCovMatrix == nullptr)
       CreateCovMatrix(*xVec);
    fPdf = new RooMultiVarGaussian("mvg", "MVG Proposal", *xVec, *muVec,
                                   *fCovMatrix);
@@ -157,8 +157,8 @@ void ProposalHelper::CreateCovMatrix(RooArgList& xVec)
 
 void ProposalHelper::CreateCluesPdf()
 {
-   if (fClues != NULL) {
-      if (fCluesOptions == NULL)
+   if (fClues != nullptr) {
+      if (fCluesOptions == nullptr)
          fCluesPdf = new RooNDKeysPdf("cluesPdf", "Clues PDF", *fVars, *fClues);
       else
          fCluesPdf = new RooNDKeysPdf("cluesPdf", "Clues PDF", *fVars, *fClues,

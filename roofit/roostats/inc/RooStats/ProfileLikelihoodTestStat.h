@@ -42,7 +42,7 @@ namespace RooStats {
    fSigned = false;
         fDetailedOutputWithErrorsAndPulls = false;
         fDetailedOutputEnabled = false;
-        fDetailedOutput = NULL;
+        fDetailedOutput = nullptr;
    fLOffset = RooStats::IsNLLOffset() ;
 
         fVarName = "Profile Likelihood Ratio";
@@ -62,7 +62,7 @@ namespace RooStats {
        fSigned = false;
        fDetailedOutputWithErrorsAndPulls = false;
        fDetailedOutputEnabled = false;
-       fDetailedOutput = NULL;
+       fDetailedOutput = nullptr;
        fLOffset = RooStats::IsNLLOffset() ;
 
        fVarName = "Profile Likelihood Ratio";
@@ -109,7 +109,7 @@ namespace RooStats {
         fDetailedOutputEnabled = e;
         fDetailedOutputWithErrorsAndPulls = withErrorsAndPulls;
         delete fDetailedOutput;
-        fDetailedOutput = NULL;
+        fDetailedOutput = nullptr;
      }
      /// Returns detailed output. The value returned by this function is updated after each call to Evaluate().
      /// The returned RooArgSet contains the following:

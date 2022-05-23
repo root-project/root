@@ -98,9 +98,9 @@ using namespace RooFit;
 RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::HistFactory::Measurement& measurement, HistoToWorkspaceFactoryFast::Configuration const& cfg)
 {
   // This will be returned
-  RooWorkspace* ws = NULL;
-  TFile* outFile = NULL;
-  FILE*  tableFile=NULL;
+  RooWorkspace* ws = nullptr;
+  TFile* outFile = nullptr;
+  FILE*  tableFile=nullptr;
 
   auto& msgSvc = RooMsgService::instance();
   msgSvc.getStream(1).removeTopic(RooFit::ObjectHandling);
@@ -248,7 +248,7 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
     ws->writeToFile( CombinedFileName.c_str() );
     cxcoutPHF << "Writing combined measurement to file: " << CombinedFileName << std::endl;
     TFile* combFile = TFile::Open( CombinedFileName.c_str(), "UPDATE" );
-    if( combFile == NULL ) {
+    if( combFile == nullptr ) {
       cxcoutEHF << "Error: Failed to open file " << CombinedFileName << std::endl;
       throw hf_exc();
     }
@@ -301,18 +301,18 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
                    std::string data_name,
                    TFile* outFile, FILE* tableFile  ) {
 
-  if( outFile == NULL ) {
-    cxcoutEHF << "Error: Output File in FitModelAndPlot is NULL" << std::endl;
+  if( outFile == nullptr ) {
+    cxcoutEHF << "Error: Output File in FitModelAndPlot is nullptr" << std::endl;
     throw hf_exc();
   }
 
-  if( tableFile == NULL ) {
-    cxcoutEHF << "Error: tableFile in FitModelAndPlot is NULL" << std::endl;
+  if( tableFile == nullptr ) {
+    cxcoutEHF << "Error: tableFile in FitModelAndPlot is nullptr" << std::endl;
     throw hf_exc();
   }
 
-  if( combined == NULL ) {
-    cxcoutEHF << "Error: Supplied workspace in FitModelAndPlot is NULL" << std::endl;
+  if( combined == nullptr ) {
+    cxcoutEHF << "Error: Supplied workspace in FitModelAndPlot is nullptr" << std::endl;
     throw hf_exc();
   }
 
@@ -339,7 +339,7 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
   }
 
   RooAbsPdf* model = combined_config->GetPdf();
-  if( model==NULL ) {
+  if( model==nullptr ) {
     cxcoutEHF << "Error: Failed to find pdf in ModelConfig: " << combined_config->GetName()
          << std::endl;
     throw hf_exc();
@@ -385,7 +385,7 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
   // Make the Profile Likelihood Plot
   RooAbsReal* nll = model->createNLL(*simData);
   RooAbsReal* profile = nll->createProfile(*poi);
-  if( profile==NULL ) {
+  if( profile==nullptr ) {
     cxcoutEHF << "Error: Failed to make ProfileLikelihood for: " << poi->GetName()
          << " using model: " << model->GetName()
          << " and data: " << simData->GetName()
@@ -394,7 +394,7 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
   }
 
   RooPlot* frame = poi->frame();
-  if( frame == NULL ) {
+  if( frame == nullptr ) {
     cxcoutEHF << "Error: Failed to create RooPlot frame for: " << poi->GetName() << std::endl;
     throw hf_exc();
   }
@@ -418,12 +418,12 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
 
   // Save to the output file
   TDirectory* channel_dir = outFile->mkdir(channel.c_str());
-  if( channel_dir == NULL ) {
+  if( channel_dir == nullptr ) {
     cxcoutEHF << "Error: Failed to make channel directory: " << channel << std::endl;
     throw hf_exc();
   }
   TDirectory* summary_dir = channel_dir->mkdir("Summary");
-  if( summary_dir == NULL ) {
+  if( summary_dir == nullptr ) {
     cxcoutEHF << "Error: Failed to make Summary directory for channel: "
          << channel << std::endl;
     throw hf_exc();
@@ -538,7 +538,7 @@ std::vector<RooStats::HistFactory::EstimateSummary> RooStats::HistFactory::GetCh
       data_es.name = "Data";
       data_es.channel = channel.GetName();
       TH1* data_hist = (TH1*) channel.GetData().GetHisto();
-      if( data_hist != NULL ) {
+      if( data_hist != nullptr ) {
    //data_es.nominal = (TH1*) channel.GetData().GetHisto()->Clone();
    data_es.nominal = data_hist;
    channel_estimateSummary.push_back( data_es );
@@ -621,7 +621,7 @@ std::vector<RooStats::HistFactory::EstimateSummary> RooStats::HistFactory::GetCh
      sample_es.relStatError      = (TH1*) sample.GetStatError().GetErrorHist()->Clone();
    }
    else {
-     sample_es.relStatError    = NULL;
+     sample_es.relStatError    = nullptr;
    }
 
 

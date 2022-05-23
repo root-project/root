@@ -662,7 +662,7 @@ RooFitResult* RooMCStudy::doFit(RooAbsData* genSample)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Redo fit on 'current' toy sample, or if genSample is not NULL
+/// Redo fit on 'current' toy sample, or if genSample is not nullptr
 /// do fit on given sample instead
 
 RooFitResult* RooMCStudy::refit(RooAbsData* genSample)

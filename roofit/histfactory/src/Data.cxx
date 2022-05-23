@@ -45,7 +45,7 @@ void RooStats::HistFactory::Data::writeToFile( std::string OutputFileName, std::
 
   TH1* histData = GetHisto();
 
-  if( histData != NULL) {
+  if( histData != nullptr) {
 
     histData->Write();
 

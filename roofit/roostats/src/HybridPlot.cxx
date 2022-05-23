@@ -47,10 +47,10 @@ HybridPlot::HybridPlot(const char* name,
                        int n_bins,
                        bool verbosity):
   TNamed(name,title),
-  fSb_histo(NULL),
-  fSb_histo_shaded(NULL),
-  fB_histo(NULL),
-  fB_histo_shaded(NULL),
+  fSb_histo(nullptr),
+  fSb_histo_shaded(nullptr),
+  fB_histo(nullptr),
+  fB_histo_shaded(nullptr),
   fData_testStat_line(0),
   fLegend(0),
   fPad(0),
@@ -206,7 +206,7 @@ void HybridPlot::DumpToFile (const char* RootFileName, const char* options)
    fB_histo->Write();
 
    // The shaded histos
-   if (fB_histo_shaded!=NULL && fSb_histo_shaded!=NULL){
+   if (fB_histo_shaded!=nullptr && fSb_histo_shaded!=nullptr){
       fB_histo_shaded->Write();
       fSb_histo_shaded->Write();
    }
@@ -303,7 +303,7 @@ double* HybridPlot::GetHistoPvals (TH1* histo, double percentage){
 
    if (percentage>1){
       std::cerr << "Percentage greater or equal to 1!\n";
-      return NULL;
+      return nullptr;
    }
 
    // Get the integral of the histo

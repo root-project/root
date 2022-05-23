@@ -121,7 +121,7 @@ TEST(Polling, doublePoll)
       memset(&sa, '\0', sizeof(sa));
       sa.sa_handler = handle_sigterm;
 
-      if (sigaction(SIGTERM, &sa, NULL) < 0) {
+      if (sigaction(SIGTERM, &sa, nullptr) < 0) {
          std::perror("sigaction failed");
          std::exit(1);
       }

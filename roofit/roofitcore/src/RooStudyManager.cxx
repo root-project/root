@@ -155,7 +155,7 @@ void RooStudyManager::closeProof(Option_t *option)
       gROOT->ProcessLineFast("delete gProof ;") ;
     }
   } else {
-    ooccoutI((TObject*)NULL,Generation) << "RooStudyManager: No global Proof objects. No connections closed." << endl ;
+    ooccoutI(nullptr,Generation) << "RooStudyManager: No global Proof objects. No connections closed." << endl ;
   }
 }
 

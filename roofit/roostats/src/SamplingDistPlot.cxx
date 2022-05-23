@@ -47,10 +47,10 @@ using namespace std;
 
 SamplingDistPlot::SamplingDistPlot(Int_t nbins) :
    fHist(0),
-   fLegend(NULL),
+   fLegend(nullptr),
    fItems(),
    fOtherItems(),
-   fRooPlot(NULL),
+   fRooPlot(nullptr),
    fLogXaxis(false),
    fLogYaxis(false),
    fXMin(NaN), fXMax(NaN), fYMin(NaN), fYMax(NaN),
@@ -69,10 +69,10 @@ SamplingDistPlot::SamplingDistPlot(Int_t nbins) :
 
 SamplingDistPlot::SamplingDistPlot(Int_t nbins, double min, double max) :
    fHist(0),
-   fLegend(NULL),
+   fLegend(nullptr),
    fItems(),
    fOtherItems(),
-   fRooPlot(NULL),
+   fRooPlot(nullptr),
    fLogXaxis(false),
    fLogYaxis(false),
    fXMin(NaN), fXMax(NaN), fYMin(NaN), fYMax(NaN),
@@ -349,7 +349,7 @@ void SamplingDistPlot::Draw(Option_t * /*options */) {
    }
 
    TIterator *otherIt = fOtherItems.MakeIterator();
-   TObject *otherObj = NULL;
+   TObject *otherObj = nullptr;
    while ((otherObj = otherIt->Next())) {
       TObject * cloneObj = otherObj->Clone();
       fRooPlot->addObject(cloneObj, otherIt->GetOption());
@@ -578,7 +578,7 @@ void SamplingDistPlot::SetMarkerSize(Size_t size, const SamplingDistribution *sa
 
 TH1F* SamplingDistPlot::GetTH1F(const SamplingDistribution *samplDist)
 {
-  if(samplDist == NULL){
+  if(samplDist == nullptr){
     return fHist;
   }else{
     fIterator->Reset();
@@ -590,7 +590,7 @@ TH1F* SamplingDistPlot::GetTH1F(const SamplingDistribution *samplDist)
     }
   }
 
-  return NULL;
+  return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

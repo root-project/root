@@ -40,13 +40,13 @@ namespace RooStats {
       void SetShadeColor(Color_t color) {fShadeColor = color;}
       void SetShowBurnIn(bool showBurnIn) { fShowBurnIn = showBurnIn; }
 
-      void Draw(const Option_t* options = NULL) override;
+      void Draw(const Option_t* options = nullptr) override;
 
       void DrawChainScatter(RooRealVar& xVar, RooRealVar& yVar);
       void DrawParameterVsTime(RooRealVar& param);
       void DrawNLLVsTime();
-      void DrawNLLHist(const Option_t* options = NULL);
-      void DrawWeightHist(const Option_t* options = NULL);
+      void DrawNLLHist(const Option_t* options = nullptr);
+      void DrawWeightHist(const Option_t* options = nullptr);
 
    private:
 
@@ -71,17 +71,17 @@ namespace RooStats {
       TGraph* fNLLGraph;
 
    protected:
-      void DrawPosterior(const Option_t* options = NULL);
-      void* DrawPosteriorHist(const Option_t* options = NULL,
-            const char* title = NULL, bool scale = true);
-      void* DrawPosteriorKeysPdf(const Option_t* options = NULL);
-      void* DrawPosteriorKeysProduct(const Option_t* options = NULL);
+      void DrawPosterior(const Option_t* options = nullptr);
+      void* DrawPosteriorHist(const Option_t* options = nullptr,
+            const char* title = nullptr, bool scale = true);
+      void* DrawPosteriorKeysPdf(const Option_t* options = nullptr);
+      void* DrawPosteriorKeysProduct(const Option_t* options = nullptr);
 
-      void DrawInterval(const Option_t* options = NULL);
-      void DrawShortestInterval(const Option_t* options = NULL);
-      void DrawHistInterval(const Option_t* options = NULL);
-      void DrawKeysPdfInterval(const Option_t* options = NULL);
-      void DrawTailFractionInterval(const Option_t* options = NULL);
+      void DrawInterval(const Option_t* options = nullptr);
+      void DrawShortestInterval(const Option_t* options = nullptr);
+      void DrawHistInterval(const Option_t* options = nullptr);
+      void DrawKeysPdfInterval(const Option_t* options = nullptr);
+      void DrawTailFractionInterval(const Option_t* options = nullptr);
 
       ClassDefOverride(MCMCIntervalPlot,1)  // Class containing the results of the MCMCCalculator
    };

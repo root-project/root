@@ -63,7 +63,7 @@ namespace RooStats {
       virtual void Reset()
       {
          delete fCache;
-         fCache = NULL;
+         fCache = nullptr;
          fCachePosition = 0;
          fLastX.removeAll();
       }

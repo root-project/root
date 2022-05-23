@@ -395,7 +395,7 @@ RooAbsBinning& RooRealVar::getBinning(const char* name, bool verbose, bool creat
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get a list of all binning names. An empty name implies the default binning and
-/// a NULL pointer should be passed to getBinning in this case.
+/// a nullptr pointer should be passed to getBinning in this case.
 
 std::list<std::string> RooRealVar::getBinningNames() const
 {

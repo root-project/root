@@ -159,8 +159,8 @@ void FeldmanCousins::CreateParameterPoints() const{
     }
 
     // get dataset for POI scan
-    //     RooDataHist* parameterScan = NULL;
-    RooAbsData* parameterScan = NULL;
+    //     RooDataHist* parameterScan = nullptr;
+    RooAbsData* parameterScan = nullptr;
     if(fPOIToTest)
       parameterScan = fPOIToTest;
     else
