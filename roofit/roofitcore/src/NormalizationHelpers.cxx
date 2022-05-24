@@ -12,6 +12,7 @@
 
 #include "NormalizationHelpers.h"
 
+#include <TClass.h>
 #include <RooAbsCachedPdf.h>
 #include <RooAbsPdf.h>
 #include <RooAbsReal.h>
