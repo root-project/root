@@ -140,11 +140,13 @@ public:
 private:
    friend class RooAbsMinimizerFcn;
 
-   void profileStart();
-   void profileStop();
+   bool synchronizeParameterSettings() const;
 
    std::ofstream *logfile();
    double &maxFCN();
+
+   void profileStart();
+   void profileStop();
 
    bool fitFcn() const;
 

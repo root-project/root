@@ -119,9 +119,9 @@ RooMinimizer::RooMinimizer(RooAbsReal &function, Config const &cfg) : _cfg(cfg)
                static_cast<RooFit::TestStatistics::LikelihoodMode>(int(_cfg.parallelLikelihood))},
             RooFit::TestStatistics::LikelihoodGradientMode::multiprocess);
 #else
-         throw std::logic_error(
-            "Parallel likelihood or gradient evaluation requested, but ROOT was not compiled with multiprocessing enabled, "
-            "please recompile with -Droofit_multiprocess=ON for parallel evaluation");
+         throw std::logic_error("Parallel likelihood or gradient evaluation requested, but ROOT was not compiled with "
+                                "multiprocessing enabled, "
+                                "please recompile with -Droofit_multiprocess=ON for parallel evaluation");
 #endif
       } else { // new test statistic non parallel
          _fcn = std::make_unique<RooMinimizerFcn>(&function, this);
@@ -163,7 +163,7 @@ void RooMinimizer::initMinimizerFcnDependentPart(double defaultErrorLevel)
    setErrorLevel(defaultErrorLevel);
 
    // Declare our parameters to MINUIT
-   _fcn->Synchronize(_theFitter->Config().ParamsSettings());
+   synchronizeParameterSettings();
 
    // Now set default verbosity
    if (RooMsgService::instance().silentMode()) {
@@ -185,6 +185,13 @@ void RooMinimizer::initMinimizerFcnDependentPart(double defaultErrorLevel)
 /// Destructor
 
 RooMinimizer::~RooMinimizer() = default;
+
+////////////////////////////////////////////////////////////////////////////////
+/// Informs Minuit of RooFit parameter properties.
+bool RooMinimizer::synchronizeParameterSettings() const
+{
+   return _fcn->Synchronize(_theFitter->Config().ParamsSettings());
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change MINUIT strategy to istrat. Accepted codes
@@ -295,7 +302,7 @@ bool RooMinimizer::fitFcn() const
 /// \param[in] alg  Fit algorithm to use. (Optional)
 int RooMinimizer::minimize(const char *type, const char *alg)
 {
-   _fcn->Synchronize(_theFitter->Config().ParamsSettings());
+   synchronizeParameterSettings();
 
    setMinimizerType(type);
    _theFitter->Config().SetMinimizer(type, alg);
@@ -324,7 +331,7 @@ int RooMinimizer::minimize(const char *type, const char *alg)
 
 int RooMinimizer::migrad()
 {
-   _fcn->Synchronize(_theFitter->Config().ParamsSettings());
+   synchronizeParameterSettings();
    profileStart();
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
    RooAbsReal::clearEvalErrorLog();
@@ -355,7 +362,7 @@ int RooMinimizer::hesse()
       _status = -1;
    } else {
 
-      _fcn->Synchronize(_theFitter->Config().ParamsSettings());
+      synchronizeParameterSettings();
       profileStart();
       RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
       RooAbsReal::clearEvalErrorLog();
@@ -387,7 +394,7 @@ int RooMinimizer::minos()
       _status = -1;
    } else {
 
-      _fcn->Synchronize(_theFitter->Config().ParamsSettings());
+      synchronizeParameterSettings();
       profileStart();
       RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
       RooAbsReal::clearEvalErrorLog();
@@ -419,7 +426,7 @@ int RooMinimizer::minos(const RooArgSet &minosParamList)
       _status = -1;
    } else if (!minosParamList.empty()) {
 
-      _fcn->Synchronize(_theFitter->Config().ParamsSettings());
+      synchronizeParameterSettings();
       profileStart();
       RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
       RooAbsReal::clearEvalErrorLog();
@@ -463,7 +470,7 @@ int RooMinimizer::minos(const RooArgSet &minosParamList)
 
 int RooMinimizer::seek()
 {
-   _fcn->Synchronize(_theFitter->Config().ParamsSettings());
+   synchronizeParameterSettings();
    profileStart();
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
    RooAbsReal::clearEvalErrorLog();
@@ -489,7 +496,7 @@ int RooMinimizer::seek()
 
 int RooMinimizer::simplex()
 {
-   _fcn->Synchronize(_theFitter->Config().ParamsSettings());
+   synchronizeParameterSettings();
    profileStart();
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
    RooAbsReal::clearEvalErrorLog();
@@ -515,7 +522,7 @@ int RooMinimizer::simplex()
 
 int RooMinimizer::improve()
 {
-   _fcn->Synchronize(_theFitter->Config().ParamsSettings());
+   synchronizeParameterSettings();
    profileStart();
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
    RooAbsReal::clearEvalErrorLog();
@@ -757,6 +764,9 @@ void RooMinimizer::profileStop()
 
 ROOT::Math::IMultiGenFunction *RooMinimizer::getMultiGenFcn() const
 {
+   // Before the user gets a pointer to the internal function object, make sure
+   // the parameter settings are synchronized.
+   synchronizeParameterSettings();
    auto *fitterFcn = fitter()->GetFCN();
    return fitterFcn ? fitterFcn : _fcn->getMultiGenFcn();
 }
