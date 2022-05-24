@@ -268,7 +268,6 @@ class RFramePainter extends RObjectPainter {
      * @desc Must be used only for v6 objects, see TFramePainter for more details
      * @private */
    createXY(opts) {
-
       if (this.self_drawaxes) return;
 
       this.cleanXY(); // remove all previous configurations
@@ -1055,11 +1054,8 @@ class RFramePainter extends RObjectPainter {
       if (value === undefined) return this[fld];
 
       if (value === 'unzoom') {
-         // special handling of unzoom
-         if (this[fld])
-            delete this[fld];
-         else
-            this[fld] = true;
+         // special handling of unzoom, only if was never changed before flag set to true
+         this[fld] = (this[fld] === undefined);
          return;
       }
 

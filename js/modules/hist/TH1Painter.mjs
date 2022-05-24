@@ -1,6 +1,6 @@
 /// 3D TH1 drawing
 
-import { settings } from '../core.mjs';
+import { settings, gStyle } from '../core.mjs';
 
 import { assignFrame3DMethods, drawBinsLego } from './hist3d.mjs';
 
@@ -19,7 +19,8 @@ class TH1Painter extends TH1Painter2D {
       let main = this.getFramePainter(), // who makes axis drawing
           is_main = this.isMainPainter(), // is main histogram
           histo = this.getHisto(),
-          pr = Promise.resolve(true);
+          pr = Promise.resolve(true),
+          zmult = 1 + 2*gStyle.fHistTopMargin;
 
       if (reason == "resize")  {
 
@@ -36,7 +37,7 @@ class TH1Painter extends TH1Painter2D {
             main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale);
             main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, 0, 0);
             main.set3DOptions(this.options);
-            main.drawXYZ(main.toplevel, TAxisPainter, { use_y_for_z: true, zmult: 1.1, zoom: settings.Zooming, ndim: 1, draw: this.options.Axis !== -1 });
+            main.drawXYZ(main.toplevel, TAxisPainter, { use_y_for_z: true, zmult, zoom: settings.Zooming, ndim: 1, draw: this.options.Axis !== -1 });
          }
 
          if (main.mode3d) {

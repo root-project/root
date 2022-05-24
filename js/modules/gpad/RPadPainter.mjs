@@ -287,8 +287,8 @@ class RPadPainter extends RObjectPainter {
 
          let render_to = this.selectDom();
 
-         if (render_to.style('position')=='static')
-            render_to.style('position','relative');
+         if (render_to.style('position') == 'static')
+            render_to.style('position', 'relative');
 
          svg = render_to.append("svg")
              .attr("class", "jsroot root_canvas")
@@ -309,8 +309,8 @@ class RPadPainter extends RObjectPainter {
                  .on("mouseenter", () => this.showObjectStatus())
                  .on("contextmenu", settings.ContextMenu ? evnt => this.padContextMenu(evnt) : null);
 
-         svg.append("svg:g").attr("class","primitives_layer");
-         svg.append("svg:g").attr("class","info_layer");
+         svg.append("svg:g").attr("class", "primitives_layer");
+         svg.append("svg:g").attr("class", "info_layer");
          if (!isBatchMode())
             btns = svg.append("svg:g")
                       .attr("class","btns_layer")
@@ -360,6 +360,8 @@ class RPadPainter extends RObjectPainter {
            .style("right", 0)
            .style("bottom", 0);
       }
+
+      svg.style("filter", settings.DarkMode ? "invert(100%)" : null);
 
       svg.attr("viewBox", `0 0 ${rect.width} ${rect.height}`)
          .attr("preserveAspectRatio", "none")  // we do not preserve relative ratio
@@ -654,10 +656,9 @@ class RPadPainter extends RObjectPainter {
       if (this.enlargeMain() || (this.has_canvas && this.hasObjectsToDraw()))
          menu.addchk((this.enlargeMain('state')=='on'), "Enlarge " + (this.iscan ? "canvas" : "pad"), () => this.enlargePad());
 
-      let fname = this.this_pad_name;
-      if (!fname) fname = this.iscan ? "canvas" : "pad";
-      menu.add("Save as "+fname+".png", fname+".png", () => this.saveAs("png", false));
-      menu.add("Save as "+fname+".svg", fname+".svg", () => this.saveAs("svg", false));
+      let fname = this.this_pad_name || (this.iscan ? "canvas" : "pad");
+      menu.add(`Save as ${fname}.png`, fname+".png", arg => this.saveAs("png", false, arg));
+      menu.add(`Save as ${fname}.svg`, fname+".svg", arg => this.saveAs("svg", false, arg));
 
       return true;
    }
@@ -666,10 +667,9 @@ class RPadPainter extends RObjectPainter {
      * @private */
    padContextMenu(evnt) {
       if (evnt.stopPropagation) {
+         let pos = d3_pointer(evnt, this.svg_this_pad().node());
          // this is normal event processing and not emulated jsroot event
          // for debug purposes keep original context menu for small region in top-left corner
-         let pos = d3_pointer(evnt, this.svg_this_pad().node());
-
          if ((pos.length==2) && (pos[0] >= 0) && (pos[0] < 10) && (pos[1] >= 0) && (pos[1] < 10)) return;
 
          evnt.stopPropagation(); // disable main context menu
@@ -1099,12 +1099,13 @@ class RPadPainter extends RObjectPainter {
             this.painters.splice(k--,1);
             sub.cleanup(); // cleanup such painter
             isanyremove = true;
+            if (this.main_painter_ref === sub)
+               delete this.main_painter_ref;
          }
       }
 
-      if (isanyremove) {
+      if (isanyremove)
          delete this.pads_cache;
-      }
 
       if (!isanyfound) {
          let fp = this.getFramePainter();
@@ -1195,12 +1196,14 @@ class RPadPainter extends RObjectPainter {
    /** @summary Save pad in specified format
      * @desc Used from context menu */
    saveAs(kind, full_canvas, filename) {
-      if (!filename) {
-         filename = this.this_pad_name;
-         if (filename.length === 0) filename = this.iscan ? "canvas" : "pad";
-         filename += "." + kind;
-      }
+      if (!filename)
+         filename = (this.this_pad_name || (this.iscan ? "canvas" : "pad")) + "." + kind;
+      console.log('saveAs', kind, full_canvas, filename);
+
       this.produceImage(full_canvas, kind).then(imgdata => {
+         if (!imgdata)
+            return console.error(`Fail to produce image ${filename}`);
+
          let a = document.createElement('a');
          a.download = filename;
          a.href = (kind != "svg") ? imgdata : "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(imgdata);
@@ -1214,15 +1217,13 @@ class RPadPainter extends RObjectPainter {
      * @returns {Promise} with created image */
    produceImage(full_canvas, file_format) {
 
-      let use_frame = (full_canvas === "frame");
+      let use_frame = (full_canvas === "frame"),
+          elem = use_frame ? this.getFrameSvg(this.this_pad_name) : (full_canvas ? this.getCanvSvg() : this.svg_this_pad()),
+          painter = (full_canvas && !use_frame) ? this.getCanvPainter() : this,
+          items = []; // keep list of replaced elements, which should be moved back at the end
 
-      let elem = use_frame ? this.getFrameSvg() : (full_canvas ? this.getCanvSvg() : this.svg_this_pad());
-
-      if (elem.empty()) return Promise.resolve("");
-
-      let painter = (full_canvas && !use_frame) ? this.getCanvPainter() : this;
-
-      let items = []; // keep list of replaced elements, which should be moved back at the end
+      if (elem.empty())
+         return Promise.resolve("");
 
       if (!use_frame) // do not make transformations for the frame
       painter.forEachPainterInPad(pp => {
@@ -1246,10 +1247,11 @@ class RPadPainter extends RObjectPainter {
 
          if ((can3d !== constants.Embed3D.Overlay) && (can3d !== constants.Embed3D.Embed)) return;
 
-         let sz2 = main.getSizeFor3d(constants.Embed3D.Embed); // get size and position of DOM element as it will be embed
+         let sz2 = main.getSizeFor3d(constants.Embed3D.Embed), // get size and position of DOM element as it will be embed
+             canvas = main.renderer.domElement;
 
-         let canvas = main.renderer.domElement;
          main.render3D(0); // WebGL clears buffers, therefore we should render scene and convert immediately
+
          let dataUrl = canvas.toDataURL("image/png");
 
          // remove 3D drawings
@@ -1276,17 +1278,15 @@ class RPadPainter extends RObjectPainter {
 
       }, "pads");
 
-      function reEncode(data) {
+      const reEncode = data => {
          data = encodeURIComponent(data);
          data = data.replace(/%([0-9A-F]{2})/g, function(match, p1) {
            let c = String.fromCharCode('0x'+p1);
            return c === '%' ? '%25' : c;
          });
          return decodeURIComponent(data);
-      }
-
-      function reconstruct() {
-         for (let k=0;k<items.length;++k) {
+      }, reconstruct = () => {
+         for (let k = 0; k < items.length; ++k) {
             let item = items[k];
 
             if (item.img)
@@ -1303,7 +1303,7 @@ class RPadPainter extends RObjectPainter {
             if (item.btns_node) // reinsert buttons
                item.btns_prnt.insertBefore(item.btns_node, item.btns_next);
          }
-      }
+      };
 
       let width = elem.property('draw_width'), height = elem.property('draw_height');
       if (use_frame) {
@@ -1312,9 +1312,7 @@ class RPadPainter extends RObjectPainter {
          height = fp.getFrameHeight();
       }
 
-      let svg = '<svg width="' + width + '" height="' + height + '" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">' +
-                 elem.node().innerHTML +
-                 '</svg>';
+      let svg = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">${elem.node().innerHTML}</svg>`;
 
       if (internals.processSvgWorkarounds)
          svg = internals.processSvgWorkarounds(svg);
@@ -1326,9 +1324,8 @@ class RPadPainter extends RObjectPainter {
          return Promise.resolve(svg); // return SVG file as is
       }
 
-      let doctype = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
-
-      let image = new Image();
+      let doctype = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">',
+          image = new Image();
 
       return new Promise(resolveFunc => {
          image.onload = function() {
@@ -1356,11 +1353,14 @@ class RPadPainter extends RObjectPainter {
    /** @summary Process pad button click */
    clickPadButton(funcname, evnt) {
 
-      if (funcname == "CanvasSnapShot") return this.saveAs("png", true);
+      if (funcname == "CanvasSnapShot")
+         return this.saveAs("png", true);
 
-      if (funcname == "enlargePad") return this.enlargePad();
+      if (funcname == "enlargePad")
+         return this.enlargePad();
 
-      if (funcname == "PadSnapShot") return this.saveAs("png", false);
+      if (funcname == "PadSnapShot")
+         return this.saveAs("png", false);
 
       if (funcname == "PadContextMenus") {
 

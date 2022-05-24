@@ -12,6 +12,8 @@ import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
 
 import { getSvgLineStyle } from '../base/TAttLineHandler.mjs';
 
+import { FontHandler } from '../base/FontHandler.mjs';
+
 /** @summary Produce exec string for WebCanas to set color value
   * @desc Color can be id or string, but should belong to list of known colors
   * For higher color numbers TColor::GetColor(r,g,b) will be invoked to ensure color is exists
@@ -59,10 +61,12 @@ class JSRootMenu {
       this.cnt = 0;
    }
 
+   native() { return false; }
+
    load() { return Promise.resolve(this); }
 
    /** @summary Returns object with mouse event position when context menu was actiavted
-    * @desc Return object will have members "clientX" and "clientY" */
+     * @desc Return object will have members "clientX" and "clientY" */
    getEventPosition() { return this.show_evnt; }
 
    add(/*name, arg, func, title*/) {
@@ -93,14 +97,15 @@ class JSRootMenu {
      * @param {boolean} flag - flag
      * @param {string} name - item name
      * @param {function} func - func called when item is selected */
-   addchk(flag, name, arg, func) {
+   addchk(flag, name, arg, func, title) {
       let handler = func;
       if (typeof arg == 'function') {
+         title = func;
          func = arg;
          handler = res => func(res=="1");
          arg = flag ? "0" : "1";
       }
-      this.add((flag ? "chk:" : "unk:") + name, arg, handler);
+      this.add((flag ? "chk:" : "unk:") + name, arg, handler, title);
    }
 
    /** @summary Add draw sub-menu with draw options
@@ -164,20 +169,35 @@ class JSRootMenu {
             set_func(useid ? id : col);
          });
       });
-      for (let n = -1; n < 11; ++n) {
-         if ((n < 0) && useid) continue;
-         if ((n == 10) && (fill_kind !== 1)) continue;
-         let col = (n < 0) ? 'none' : getColor(n);
-         if ((n == 0) && (fill_kind == 1)) col = 'none';
-         let svg = "<svg width='100' height='18' style='margin:0px;background-color:" + col + "'><text x='4' y='12' style='font-size:12px' fill='" + (n == 1 ? "white" : "black") + "'>" + col + "</text></svg>";
-         this.addchk((value == (useid ? n : col)), svg, (useid ? n : col), res => set_func(useid ? parseInt(res) : res));
+
+      for(let ncolumn = 0; ncolumn < 5; ++ncolumn) {
+         this.add("column:");
+
+         for (let nrow = 0; nrow < 10; nrow++) {
+            let n = ncolumn*10 + nrow;
+            if (!useid) --n; // use -1 as none color
+
+            let col = (n < 0) ? 'none' : getColor(n);
+            if ((n == 0) && (fill_kind == 1)) col = 'none';
+            let lbl = (n <= 0) || (col[0] != '#') ? col : `col ${n}`,
+                fill = (n == 1) ? "white" : "black",
+                stroke = (n == 1) ? "red" : "black",
+                rect = (value == (useid ? n : col)) ? `<rect width="50" height="18" style="fill:none;stroke-width:3px;stroke:${stroke}"></rect>` : "",
+                svg = `<svg width="50" height="18" style="margin:0px;background-color:${col}">${rect}<text x="4" y="12" style='font-size:12px' fill="${fill}">${lbl}</text></svg>`;
+
+            this.add(svg, (useid ? n : col), res => set_func(useid ? parseInt(res) : res), "Select color " + col);
+         }
+
+         this.add("endcolumn:");
+         if (!this.native()) break;
       }
+
       this.add("endsub:");
    }
 
    /** @summary Add size selection menu entries
      * @protected */
-   addSizeMenu(name, min, max, step, size_value, set_func) {
+   addSizeMenu(name, min, max, step, size_value, set_func, title) {
       if (size_value === undefined) return;
 
       this.add("sub:" + name, () => {
@@ -185,7 +205,7 @@ class JSRootMenu {
          if (step >= 0.1) entry = size_value.toFixed(2);
          if (step >= 1) entry = size_value.toFixed(0);
          this.input("Enter value of " + name, entry, (step >= 1) ? "int" : "float").then(set_func);
-      });
+      }, title);
       for (let sz = min; sz <= max; sz += step) {
          let entry = sz.toFixed(2);
          if (step >= 0.1) entry = sz.toFixed(1);
@@ -199,27 +219,106 @@ class JSRootMenu {
    /** @summary Add palette menu entries
      * @protected */
    addPaletteMenu(curr, set_func) {
-      const add = (id, name, more) => this.addchk((id === curr) || more, '<nobr>' + name + '</nobr>', id, set_func);
+      const add = (id, name, title, more) => {
+         if (!name)
+            name = `pal ${id}`;
+         else if (!title)
+            title = name;
+         if (title) title += `, code ${id}`;
+         this.addchk((id === curr) || more, '<nobr>' + name + '</nobr>', id, set_func, title || name);
+      };
 
       this.add("sub:Palette", () => this.input("Enter palette code [1..113]", curr, "int", 1, 113).then(set_func));
 
-      add(50, "ROOT 5", (curr >= 10) && (curr < 51));
-      add(51, "Deep Sea");
-      add(52, "Grayscale", (curr > 0) && (curr < 10));
-      add(53, "Dark body radiator");
-      add(54, "Two-color hue");
+      this.add("column:");
+
+      add(57, "Bird", "Default color palette", (curr > 113));
       add(55, "Rainbow");
-      add(56, "Inverted dark body radiator");
-      add(57, "Bird", (curr > 113));
+      add(51, "Deep Sea");
+      add(52, "Grayscale", "New gray scale");
+      add(1,  "", "Old gray scale", (curr > 0) && (curr < 10));
+      add(50, "ROOT 5", "Default color palette in ROOT 5", (curr >= 10) && (curr < 51));
+      add(53, "", "Dark body radiator");
+      add(54, "", "Two-color hue");
+      add(56, "", "Inverted dark body radiator");
       add(58, "Cubehelix");
-      add(59, "Green Red Violet");
-      add(60, "Blue Red Yellow");
+      add(59, "", "Green Red Violet");
+      add(60, "", "Blue Red Yellow");
       add(61, "Ocean");
-      add(62, "Color Printable On Grey");
+
+      this.add("endcolumn:");
+
+      if (!this.native())
+         return this.add("endsub:");
+
+      this.add("column:");
+
+      add(62, "", "Color Printable On Grey");
       add(63, "Alpine");
       add(64, "Aquamarine");
       add(65, "Army");
       add(66, "Atlantic");
+      add(67, "Aurora");
+      add(68, "Avocado");
+      add(69, "Beach");
+      add(70, "Black Body");
+      add(71, "", "Blue Green Yellow");
+      add(72, "Brown Cyan");
+      add(73, "CMYK");
+      add(74, "Candy");
+
+      this.add("endcolumn:");
+      this.add("column:");
+
+      add(75, "Cherry");
+      add(76, "Coffee");
+      add(77, "", "Dark Rain Bow");
+      add(78, "", "Dark Terrain");
+      add(79, "Fall");
+      add(80, "Fruit Punch");
+      add(81, "Fuchsia");
+      add(82, "Grey Yellow");
+      add(83, "", "Green Brown Terrain");
+      add(84, "Green Pink");
+      add(85, "Island");
+      add(86, "Lake");
+      add(87, "", "Light Temperature");
+
+      this.add("endcolumn:");
+      this.add("column:");
+
+      add(88, "", "Light Terrain");
+      add(89, "Mint");
+      add(90, "Neon");
+      add(91, "Pastel");
+      add(92, "Pearl");
+      add(93, "Pigeon");
+      add(94, "Plum");
+      add(95, "Red Blue");
+      add(96, "Rose");
+      add(97, "Rust");
+      add(98, "", "Sandy Terrain");
+      add(99, "Sienna");
+      add(100, "Solar");
+
+      this.add("endcolumn:");
+      this.add("column:");
+
+      add(101, "", "South West");
+      add(102, "", "Starry Night");
+      add(103, "", "Sunset");
+      add(104, "", "Temperature Map");
+      add(105, "", "Thermometer");
+      add(106, "Valentine");
+      add(107, "", "Visible Spectrum");
+      add(108, "", "Water Melon");
+      add(109, "Cool");
+      add(110, "Copper");
+      add(111, "", "Gist Earth");
+      add(112, "Viridis");
+      add(113, "Cividis");
+
+      this.add("endcolumn:");
 
       this.add("endsub:");
    }
@@ -322,13 +421,82 @@ class JSRootMenu {
       }
       this.add("endsub:");
 
-      this.add("sub:font");
-      for (let n = 1; n < 16; ++n) {
-         this.addchk(n == Math.floor(obj.fTextFont / 10), n, n,
-            function(arg) { this.getObject().fTextFont = parseInt(arg) * 10 + 2; this.interactiveRedraw(true, "exec:SetTextFont(" + this.getObject().fTextFont + ")"); }.bind(painter));
+      this.addFontMenu("font", obj.fTextFont, function(fnt) {
+         this.getObject().fTextFont = fnt; this.interactiveRedraw(true, `exec:SetTextFont(${fnt})`); }.bind(painter)
+      );
+
+      this.add("endsub:");
+   }
+
+   /** @summary Add line style menu
+     * @private */
+   addLineStyleMenu(name, value, set_func) {
+      this.add("sub:"+name, () => this.input("Enter line style id (1-solid)", value, "int", 1, 11).then(val => {
+         if (getSvgLineStyle(val)) set_func(val);
+      }));
+      for (let n = 1; n < 11; ++n) {
+         let dash = getSvgLineStyle(n),
+             svg = "<svg width='100' height='18'><text x='1' y='12' style='font-size:12px'>" + n + "</text><line x1='30' y1='8' x2='100' y2='8' stroke='black' stroke-width='3' stroke-dasharray='" + dash + "'></line></svg>";
+
+         this.addchk((value == n), svg, n, arg => set_func(parseInt(arg)));
       }
       this.add("endsub:");
+   }
 
+   /** @summary Add fill style menu
+     * @private */
+   addFillStyleMenu(name, value, color_index, painter, set_func) {
+      this.add("sub:" + name, () => {
+         this.input("Enter fill style id (1001-solid, 3000..3010)", value, "int", 0, 4000).then(id => {
+            if ((id >= 0) && (id <= 4000)) set_func(id);
+         });
+      });
+
+      let supported = [1, 1001, 3001, 3002, 3003, 3004, 3005, 3006, 3007, 3010, 3021, 3022];
+
+      for (let n = 0; n < supported.length; ++n) {
+         let svg = supported[n];
+         if (painter) {
+            let sample = painter.createAttFill({ std: false, pattern: supported[n], color: color_index || 1 });
+            svg = "<svg width='100' height='18'><text x='1' y='12' style='font-size:12px'>" + supported[n].toString() + "</text><rect x='40' y='0' width='60' height='18' stroke='none' fill='" + sample.getFillColor() + "'></rect></svg>";
+         }
+         this.addchk(value == supported[n], svg, supported[n], arg => set_func(parseInt(arg)));
+      }
+      this.add("endsub:");
+   }
+
+   /** @summary Add font selection menu
+     * @private */
+   addFontMenu(name, value, set_func) {
+      this.add("sub:" + name, () => {
+         this.input("Enter font id from [0..20]", Math.floor(value/10), "int", 0, 20).then(id => {
+            if ((id >= 0) && (id <= 20)) set_func(id*10 + 2);
+         });
+      });
+
+      this.add("column:");
+
+      for (let n = 1; n < 20; ++n) {
+         let handler = new FontHandler(n*10+2, 14),
+             txt = d3_select(document.createElementNS("http://www.w3.org/2000/svg", "text")),
+             fullname = handler.getFontName(),
+             name = " " + fullname.split(" ")[0] + " ";
+         if (handler.weight) { name = "b" + name; fullname += " " + handler.weight; }
+         if (handler.style) { name = handler.style[0] + name; fullname += " " + handler.style; }
+         txt.attr("x", 1).attr("y",15).text(name);
+         handler.setFont(txt);
+
+         let rect = (value != n*10+2) ? "" : "<rect width='90' height='18' style='fill:none;stroke:black'></rect>",
+             svg = "<svg width='90' height='18'>" + txt.node().outerHTML + rect + "</svg>";
+         this.add(svg, n, arg => set_func(parseInt(arg)*10+2), fullname);
+
+         if (n == 10) {
+            this.add("endcolumn:");
+            this.add("column:");
+         }
+      }
+
+      this.add("endcolumn:");
       this.add("endsub:");
    }
 
@@ -347,20 +515,10 @@ class JSRootMenu {
             arg => { painter.lineatt.change(undefined, arg); painter.interactiveRedraw(true, `exec:SetLineWidth(${arg})`); });
          this.addColorMenu("color", painter.lineatt.color,
             arg => { painter.lineatt.change(arg); painter.interactiveRedraw(true, getColorExec(arg, "SetLineColor")); });
-         this.add("sub:style", () => {
-            this.input("Enter line style id (1-solid)", painter.lineatt.style, "int", 1, 11).then(id => {
-               if (!getSvgLineStyle(id)) return;
-               painter.lineatt.change(undefined, undefined, id);
-               painter.interactiveRedraw(true, `exec:SetLineStyle(${id})`);
-            });
+         this.addLineStyleMenu("style", painter.lineatt.style, id => {
+            painter.lineatt.change(undefined, undefined, id);
+            painter.interactiveRedraw(true, `exec:SetLineStyle(${id})`);
          });
-         for (let n = 1; n < 11; ++n) {
-            let dash = getSvgLineStyle(n),
-                svg = "<svg width='100' height='18'><text x='1' y='12' style='font-size:12px'>" + n + "</text><line x1='30' y1='8' x2='100' y2='8' stroke='black' stroke-width='3' stroke-dasharray='" + dash + "'></line></svg>";
-
-            this.addchk((painter.lineatt.style == n), svg, n, arg => { painter.lineatt.change(undefined, undefined, parseInt(arg)); painter.interactiveRedraw(true, `exec:SetLineStyle(${arg})`); });
-         }
-         this.add("endsub:");
          this.add("endsub:");
 
          if (('excl_side' in painter.lineatt) && (painter.lineatt.excl_side !== 0)) {
@@ -382,27 +540,14 @@ class JSRootMenu {
 
       if (painter.fillatt && painter.fillatt.used) {
          this.add("sub:" + preffix + "Fill att");
-         this.addColorMenu("color", painter.fillatt.colorindx,
-            arg => { painter.fillatt.change(arg, undefined, painter.getCanvSvg()); painter.interactiveRedraw(true, getColorExec(arg, "SetFillColor")); }, painter.fillatt.kind);
-         this.add("sub:style", () => {
-            this.input("Enter fill style id (1001-solid, 3000..3010)", painter.fillatt.pattern, "int", 0, 4000).then(id => {
-               if ((id < 0) || (id > 4000)) return;
-               painter.fillatt.change(undefined, id, painter.getCanvSvg());
-               painter.interactiveRedraw(true, "exec:SetFillStyle(" + id + ")");
-            });
+         this.addColorMenu("color", painter.fillatt.colorindx, arg => {
+            painter.fillatt.change(arg, undefined, painter.getCanvSvg());
+            painter.interactiveRedraw(true, getColorExec(arg, "SetFillColor"));
+         }, painter.fillatt.kind);
+         this.addFillStyleMenu("style", painter.fillatt.pattern, painter.fillatt.colorindx, painter, id => {
+            painter.fillatt.change(undefined, id, painter.getCanvSvg());
+            painter.interactiveRedraw(true, `exec:SetFillStyle(${id})`);
          });
-
-         let supported = [1, 1001, 3001, 3002, 3003, 3004, 3005, 3006, 3007, 3010, 3021, 3022];
-
-         for (let n = 0; n < supported.length; ++n) {
-            let sample = painter.createAttFill({ std: false, pattern: supported[n], color: painter.fillatt.colorindx || 1 }),
-                svg = "<svg width='100' height='18'><text x='1' y='12' style='font-size:12px'>" + supported[n].toString() + "</text><rect x='40' y='0' width='60' height='18' stroke='none' fill='" + sample.getFillColor() + "'></rect></svg>";
-            this.addchk(painter.fillatt.pattern == supported[n], svg, supported[n], arg => {
-               painter.fillatt.change(undefined, parseInt(arg), painter.getCanvSvg());
-               painter.interactiveRedraw(true, `exec:SetFillStyle(${arg})`);
-            });
-         }
-         this.add("endsub:");
          this.add("endsub:");
       }
 
@@ -600,8 +745,8 @@ class JSRootMenu {
           main_content = '<form> <fieldset style="padding:0; border:0">';
 
       for (let n = 0; n < args.length; ++n)
-         main_content += `<label for="${dlg_id}_inp${n}">arg${n+1}</label>
-                          <input type="text" id="${dlg_id}_inp${n}" value="${args[n]}" style="width:100%;display:block"/>`;
+         main_content += `<label for="${dlg_id}_inp${n}">arg${n+1}</label>`+
+                         `<input type="text" id="${dlg_id}_inp${n}" value="${args[n]}" style="width:100%;display:block"/>`;
 
       main_content += '</fieldset></form>';
 
@@ -639,8 +784,10 @@ class StandaloneMenu extends JSRootMenu {
       this.stack = [ this.code ];
    }
 
-  /** @summary Load required modules, noop for that menu class */
-  load() { return Promise.resolve(this); }
+   native() { return true; }
+
+   /** @summary Load required modules, noop for that menu class */
+   load() { return Promise.resolve(this); }
 
    /** @summary Add menu item
      * @param {string} name - item name
@@ -651,15 +798,23 @@ class StandaloneMenu extends JSRootMenu {
       if (name == "separator")
          return curr.push({ divider: true });
 
-      if (name.indexOf("header:")==0)
+      if (name.indexOf("header:") == 0)
          return curr.push({ text: name.slice(7), header: true });
 
-      if (name=="endsub:") return this.stack.pop();
+      if ((name == "endsub:") || (name == "endcolumn:"))
+         return this.stack.pop();
 
       if (typeof arg == 'function') { title = func; func = arg; arg = name; }
 
       let elem = {};
       curr.push(elem);
+
+      if (name == "column:") {
+         elem.column = true;
+         elem.sub = [];
+         this.stack.push(elem.sub);
+         return;
+      }
 
       if (name.indexOf("sub:")==0) {
          name = name.slice(4);
@@ -696,14 +851,27 @@ class StandaloneMenu extends JSRootMenu {
          outer.style.position = 'fixed';
          outer.style.left = left + 'px';
          outer.style.top = top + 'px';
+      } else if ((left < 0) && (top == left)) {
+         // column
+         outer.className = "jsroot_ctxt_column";
+         outer.style.width = (100/-left).toFixed(1) + "%";
       } else {
          outer.style.left = -loc.offsetLeft + loc.offsetWidth + 'px';
       }
 
-      let need_check_area = false;
-      menu.forEach(d => { if (d.checked !== undefined) need_check_area = true; });
+      let need_check_area = false, ncols = 0;
+      menu.forEach(d => {
+         if (d.checked) need_check_area = true;
+         if (d.column) ncols++;
+      });
 
       menu.forEach(d => {
+         if (ncols > 0) {
+            outer.style.display = "flex";
+            if (d.column) this._buildContextmenu(d.sub, -ncols, -ncols, outer);
+            return;
+         }
+
          if (d.divider) {
             let hr = document.createElement('hr');
             hr.className = "jsroot_ctxt_divider";
@@ -735,8 +903,24 @@ class StandaloneMenu extends JSRootMenu {
 
          let text = document.createElement('div');
          text.className = "jsroot_ctxt_text";
+
          if (d.text.indexOf("<svg") >= 0) {
-            text.innerHTML = d.text;
+            if (need_check_area) {
+               text.style.display = 'flex';
+
+               let chk = document.createElement('span');
+               chk.innerHTML = d.checked ? "\u2713" : "";
+               chk.style.display = "inline-block";
+               chk.style.width = "1em";
+               text.appendChild(chk);
+
+               let sub = document.createElement('div');
+               sub.innerHTML = d.text;
+               text.appendChild(sub);
+            } else {
+               text.innerHTML = d.text;
+            }
+
          } else {
             if (need_check_area) {
                let chk = document.createElement('span');
@@ -752,7 +936,9 @@ class StandaloneMenu extends JSRootMenu {
             else
                sub.textContent = d.text;
             text.appendChild(sub);
+
          }
+
          hovArea.appendChild(text);
 
          if (d.hasOwnProperty('extraText') || d.sub) {
@@ -794,7 +980,6 @@ class StandaloneMenu extends JSRootMenu {
 
       //Now determine where the contextmenu will be
       if (loc === document.body) {
-
          if (left + outer.offsetWidth > docWidth) {
             //Does sub-contextmenu overflow window width?
             outer.style.left = docWidth - outer.offsetWidth + 'px';
@@ -806,13 +991,12 @@ class StandaloneMenu extends JSRootMenu {
             outer.style.overflowY = 'scroll';
             outer.style.overflowX = 'hidden';
             outer.style.height = docHeight + 'px';
-         }
-         else if (top + outer.offsetHeight > docHeight) {
+         } else if (top + outer.offsetHeight > docHeight) {
             //Does contextmenu overflow window height?
             outer.style.top = docHeight - outer.offsetHeight + 'px';
          }
 
-      } else {
+      } else if (outer.className != "jsroot_ctxt_column") {
 
          //if its sub-contextmenu
 
@@ -862,7 +1046,7 @@ class StandaloneMenu extends JSRootMenu {
       let oldmenu = document.getElementById(this.menuname);
       if (oldmenu) oldmenu.remove();
 
-      this.element = this._buildContextmenu(this.code, event.clientX + window.pageXOffset, event.clientY + window.pageYOffset, document.body);
+      this.element = this._buildContextmenu(this.code, (event?.clientX || 0) + window.pageXOffset, (event?.clientY || 0) + window.pageYOffset, document.body);
 
       injectStyle(`
 .jsroot_ctxt_container {
@@ -881,37 +1065,34 @@ class StandaloneMenu extends JSRootMenu {
    font-size: 13px;
    color: rgb(0, 0, 0, 0.8);
 }
-
+.jsroot_ctxt_column {
+   float: left;
+}
 .jsroot_ctxt_divider {
    width: 85%;
    margin: 3px auto;
    border: 1px solid rgb(0, 0, 0, 0.15);
 }
-
 .jsroot_ctxt_header {
    background-color: lightblue;
    padding: 3px 7px;
    font-weight: bold;
    border-bottom: 1px;
 }
-
 .jsroot_ctxt_text {
    margin: 0;
    padding: 3px 7px;
    pointer-events: none;
    white-space: nowrap;
 }
-
 .jsroot_ctxt_extraText {
    margin: 0;
    padding: 3px 7px;
    color: rgb(0, 0, 0, 0.6);
 }
-
 .jsroot_ctxt_focus {
    background-color: rgb(220, 220, 220);
 }
-
 .jsroot_ctxt_item:hover {
    background-color: rgb(235, 235, 235);
 }`, this.element);
@@ -956,14 +1137,12 @@ class StandaloneMenu extends JSRootMenu {
    opacity: 0.2;
    background-color: white;
 }
-
 .jsroot_dialog {
    z-index: 100001;
    position: absolute;
    left: 50%;
    top: 50%;
 }
-
 .jsroot_dialog_body {
    position: relative;
    left: -50%;
@@ -974,28 +1153,22 @@ class StandaloneMenu extends JSRootMenu {
    flex-flow: column;
    background-color: white;
 }
-
 .jsroot_dialog_header {
    flex: 0 1 auto;
    padding: 5px;
 }
-
 .jsroot_dialog_content {
    flex: 1 1 auto;
    padding: 5px;
 }
-
 .jsroot_dialog_footer {
    flex: 0 1 auto;
    padding: 5px;
 }
-
 .jsroot_dialog_button {
    float: right;
    margin-right: 1em;
 }`, element.node());
-
-
 
       return new Promise(resolveFunc => {
          element.on("keyup", evnt => {
@@ -1067,6 +1240,9 @@ class BootstrapMenu extends JSRootMenu {
          this.code += '<hr class="dropdown-divider">';
          return;
       }
+
+      if ((name=="column:") || (name == "endcolumn:"))
+         return;
 
       if (name.indexOf("header:")==0) {
          this.code += `<h6 class="dropdown-header">${name.slice(7)}</h6>`;
@@ -1216,21 +1392,19 @@ class BootstrapMenu extends JSRootMenu {
          let close_btn = args.btns ? '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>' : '';
 
          myModalEl.innerHTML =
-            `<div class="modal-dialog">
-              <div class="modal-content">
-               <div class="modal-header">
-                <h5 class="modal-title">${title}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-               </div>
-               <div class="modal-body">
-                  ${main_content}
-               </div>
-               <div class="modal-footer">
-                  ${close_btn}
-                  <button type="button" class="btn btn-primary jsroot_okbtn" data-bs-dismiss="modal">Ok</button>
-               </div>
-              </div>
-             </div>`;
+            `<div class="modal-dialog">`+
+              `<div class="modal-content">`+
+               `<div class="modal-header">`+
+                `<h5 class="modal-title">${title}</h5>`+
+                `<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>`+
+               `</div>`+
+               `<div class="modal-body">${main_content}</div>`+
+               `<div class="modal-footer">`+
+                  `${close_btn}`+
+                  `<button type="button" class="btn btn-primary jsroot_okbtn" data-bs-dismiss="modal">Ok</button>`+
+               `</div>`+
+              `</div>`+
+             `</div>`;
 
          document.body.appendChild(myModalEl);
 

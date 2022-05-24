@@ -2,7 +2,7 @@ import { decodeUrl, settings, constants, gStyle, internals, findFunction, parse 
 
 import { select as d3_select } from './d3.mjs';
 
-import { HierarchyPainter, readSettings } from './gui/HierarchyPainter.mjs';
+import { HierarchyPainter, readSettings, readStyle } from './gui/HierarchyPainter.mjs';
 
 /** @summary Read style and settings from URL
   * @private */
@@ -10,8 +10,16 @@ function readStyleFromURL(url) {
 
    // first try to read settings from coockies
    readSettings();
+   readStyle();
 
    let d = decodeUrl(url);
+
+   function get_bool(name, field) {
+      if (d.has(name)) {
+         let val = d.get(name);
+         settings[field] = (val != "0") && (val != "false") && (val != "off");
+      }
+   }
 
    if (d.has("optimize")) {
       settings.OptimizeDraw = 2;
@@ -22,13 +30,9 @@ function readStyleFromURL(url) {
       }
    }
 
-   if (d.has("lastcycle")) {
-      let val = d.get("lastcycle");
-      settings.OnlyLastCycle = (val != "0") && (val != "false");
-   }
-
-   let usestamp = d.get('usestamp')
-   settings.UseStamp = (usestamp != "0") && (usestamp != "false");
+   get_bool("lastcycle", "OnlyLastCycle");
+   get_bool("usestamp", "UseStamp");
+   get_bool("dark", "DarkMode");
 
    if (d.has('wrong_http_response'))
       settings.HandleWrongHttpResponse = true;
@@ -58,11 +62,7 @@ function readStyleFromURL(url) {
       }
    }
 
-   let tt = d.get("tooltip");
-   if ((tt == "off") || (tt == "false") || (tt == "0"))
-      settings.Tooltip = false;
-   else if (d.has("tooltip"))
-      settings.Tooltip = true;
+   get_bool("tooltip", "Tooltip");
 
    if (d.has("bootstrap") || d.has("bs"))
       settings.Bootstrap = true;
@@ -78,12 +78,6 @@ function readStyleFromURL(url) {
    if (d.has("notouch")) browser.touches = false;
    if (d.has("adjframe")) settings.CanAdjustFrame = true;
 
-   let optstat = d.get("optstat"), optfit = d.get("optfit");
-   if (optstat) gStyle.fOptStat = parseInt(optstat);
-   if (optfit) gStyle.fOptFit = parseInt(optfit);
-   gStyle.fStatFormat = d.get("statfmt", gStyle.fStatFormat);
-   gStyle.fFitFormat = d.get("fitfmt", gStyle.fFitFormat);
-
    if (d.has("toolbar")) {
       let toolbar = d.get("toolbar", ""), val = null;
       if (toolbar.indexOf('popup') >= 0) val = 'popup';
@@ -94,8 +88,8 @@ function readStyleFromURL(url) {
       settings.ToolBar = val || ((toolbar.indexOf("0") < 0) && (toolbar.indexOf("false") < 0) && (toolbar.indexOf("off") < 0));
    }
 
-   if (d.has("skipsi") || d.has("skipstreamerinfos"))
-      settings.SkipStreamerInfos = true;
+   get_bool("skipsi", "SkipStreamerInfos");
+   get_bool("skipstreamerinfos", "SkipStreamerInfos");
 
    if (d.has("nodraggraphs"))
       settings.DragGraphs = false;
@@ -105,16 +99,35 @@ function readStyleFromURL(url) {
       if (Number.isInteger(palette) && (palette > 0) && (palette < 113)) settings.Palette = palette;
    }
 
-   let render3d = d.get("render3d"), embed3d = d.get("embed3d"),
-       geosegm = d.get("geosegm"), geocomp = d.get("geocomp");
+   let render3d = d.get("render3d"), embed3d = d.get("embed3d"), geosegm = d.get("geosegm");
    if (render3d) settings.Render3D = constants.Render3D.fromString(render3d);
    if (embed3d) settings.Embed3D = constants.Embed3D.fromString(embed3d);
    if (geosegm) settings.GeoGradPerSegm = Math.max(2, parseInt(geosegm));
-   if (geocomp) settings.GeoCompressComp = (geocomp !== '0') && (geocomp !== 'false') && (geocomp !== 'off');
+   get_bool("geocomp", "GeoCompressComp");
 
    if (d.has("hlimit")) settings.HierarchyLimit = parseInt(d.get("hlimit"));
-}
 
+   function get_int_style(name, field, dflt) {
+      if (!d.has(name)) return;
+      let val = d.get(name);
+      if (!val || (val == "true") || (val == "on"))
+         gStyle[field] = dflt;
+      else if ((val == "false") || (val == "off"))
+         gStyle[field] = 0;
+      else
+         gStyle[field] = parseInt(val);
+   }
+
+   if (d.has("histzero")) gStyle.fHistMinimumZero = true;
+   if (d.has("histmargin")) gStyle.fHistTopMargin = parseFloat(d.get("histmargin"));
+   get_int_style("optstat", "fOptStat", 1111);
+   get_int_style("optfit", "fOptFit", 0);
+   get_int_style("optdate", "fOptDate", 1);
+   get_int_style("optfile", "fOptFile", 1);
+   get_int_style("opttitle", "fOptTitle", 1);
+   gStyle.fStatFormat = d.get("statfmt", gStyle.fStatFormat);
+   gStyle.fFitFormat = d.get("fitfmt", gStyle.fFitFormat);
+}
 
 
 /** @summary Build main GUI

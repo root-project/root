@@ -2,7 +2,7 @@
 
 import { select as d3_select, drag as d3_drag } from '../d3.mjs';
 
-import { browser, internals, toJSON } from '../core.mjs';
+import { browser, internals, toJSON, settings } from '../core.mjs';
 
 import { compressSVG, BasePainter } from '../base/BasePainter.mjs';
 
@@ -12,6 +12,19 @@ import { createMenu } from './menu.mjs';
 
 import { detectRightButton, injectStyle } from './utils.mjs';
 
+
+/** @summary Current hierarchy painter
+  * @desc Instance of {@link HierarchyPainter} object
+  * @private */
+let first_hpainter = null;
+
+/** @summary Returns current hierarchy painter object
+  * @private */
+function getHPainter() { return first_hpainter; }
+
+/** @summary Set hierarchy painter object
+  * @private */
+function setHPainter(hp) { first_hpainter = hp; }
 
 /**
  * @summary Base class to manage multiple document interface for drawings
@@ -1098,16 +1111,12 @@ class BrowserLayout {
       }
    }
 
-   /** @summary method used to create basic elements
-     * @desc should be called only once */
-   create(with_browser) {
-      let main = this.main();
-
-      main.append("div").attr("id", this.drawing_divid())
-                        .classed("jsroot_draw_area", true)
-                        .style('position',"absolute").style('left',0).style('top',0).style('bottom',0).style('right',0);
-
-      if (with_browser) main.append("div").classed("jsroot_browser", true);
+   /** @summary Create or update CSS style */
+   createStyle() {
+      let bkgr_color = settings.DarkMode ? 'black' : "#E6E6FA",
+          title_color = settings.DarkMode ? '#ccc' : "inherit",
+          text_color = settings.DarkMode ? '#ddd' : "inherit",
+          input_style = settings.DarkMode ? `background-color: #222; color: ${text_color}` : "";
 
       injectStyle(`
 .jsroot_browser {
@@ -1122,14 +1131,25 @@ class BrowserLayout {
    overflow: hidden;
 }
 .jsroot_draw_area {
-   background-color: #E6E6FA;
+   background-color: ${bkgr_color};
    overflow: hidden;
    margin: 0;
    border: 0;
 }
+.jsroot_browser_area {
+   color: ${text_color};
+   background-color: ${bkgr_color};
+   font-size: 12px;
+   font-family: Verdana;
+   pointer-events: all;
+   box-sizing: initial;
+}
+.jsroot_browser_area input { ${input_style} }
+.jsroot_browser_area select { ${input_style} }
 .jsroot_browser_title {
    font-family: Verdana;
    font-size: 20px;
+   color: ${title_color};
 }
 .jsroot_browser_btns {
    pointer-events: all;
@@ -1139,13 +1159,6 @@ class BrowserLayout {
 }
 .jsroot_browser_btns:hover {
    opacity: 0.3;
-}
-.jsroot_browser_area {
-   background-color: #E6E6FA;
-   font-size: 12px;
-   font-family: Verdana;
-   pointer-events: all;
-   box-sizing: initial;
 }
 .jsroot_browser_area p {
    margin-top: 5px;
@@ -1157,7 +1170,7 @@ class BrowserLayout {
    margin-top: 2px;
 }
 .jsroot_status_area {
-   background-color: #E6E6FA;
+   background-color: ${bkgr_color};
    overflow: hidden;
    font-size: 12px;
    font-family: Verdana;
@@ -1196,7 +1209,21 @@ class BrowserLayout {
    vertical-align: middle;
    white-space: nowrap;
 }
-`, main.node());
+`, this.main().node(), "browser_layout_style");
+   }
+
+   /** @summary method used to create basic elements
+     * @desc should be called only once */
+   create(with_browser) {
+      let main = this.main();
+
+      main.append("div").attr("id", this.drawing_divid())
+                        .classed("jsroot_draw_area", true)
+                        .style('position',"absolute").style('left',0).style('top',0).style('bottom',0).style('right',0);
+
+      if (with_browser) main.append("div").classed("jsroot_browser", true);
+
+      this.createStyle();
    }
 
    /** @summary Create buttons in the layout */
@@ -1265,8 +1292,9 @@ class BrowserLayout {
      * @desc Title also used for dragging of the float browser */
    setBrowserTitle(title) {
       let main = d3_select("#" + this.gui_div + " .jsroot_browser");
-      if (!main.empty())
-         main.select(".jsroot_browser_title").text(title).style('cursor',this.browser_kind == 'flex' ? "move" : null);
+      let elem = !main.empty() ? main.select(".jsroot_browser_title") : null;
+      if (elem) elem.text(title).style('cursor',this.browser_kind == 'flex' ? "move" : null);
+      return elem;
    }
 
    /** @summary Toggle browser kind
@@ -1662,4 +1690,5 @@ class BrowserLayout {
 
 } // class BrowserLayout
 
-export { MDIDisplay, CustomDisplay, BatchDisplay, GridDisplay, FlexibleDisplay, BrowserLayout };
+export { MDIDisplay, CustomDisplay, BatchDisplay, GridDisplay, FlexibleDisplay, BrowserLayout,
+         getHPainter, setHPainter };

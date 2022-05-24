@@ -344,16 +344,23 @@ function addMoveHandler(painter, enabled) {
 /** @summary Inject style
   * @param {String} code - css string
   * @private */
-function injectStyle(code, node) {
+function injectStyle(code, node, tag) {
    if (isBatchMode() || !code || (typeof document === 'undefined'))
       return true;
 
    let styles = (node || document).getElementsByTagName('style');
-   for (let n = 0; n < styles.length; ++n)
+   for (let n = 0; n < styles.length; ++n) {
+      if (tag && styles[n].getAttribute("tag") == tag) {
+         styles[n].innerHTML = code;
+         return true;
+      }
+
       if (styles[n].innerHTML == code)
          return true;
+   }
 
    let element = document.createElement("style");
+   if (tag) element.setAttribute("tag", tag);
    element.innerHTML = code;
    (node || document.head).appendChild(element);
    return true;

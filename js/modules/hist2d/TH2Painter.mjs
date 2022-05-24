@@ -1245,7 +1245,7 @@ class TH2Painter extends THistPainter {
          return dy ? `v${dy}` : "";
       };
 
-      for (let loop = 0;loop < 2; ++loop)
+      for (let loop = 0; loop < 2; ++loop)
          for (i = handle.i1; i < handle.i2; ++i)
             for (j = handle.j1; j < handle.j2; ++j) {
 
@@ -1282,7 +1282,7 @@ class TH2Painter extends THistPainter {
                      cmd += "M"+Math.round(x1)+","+Math.round(y1) + makeLine(dx,dy);
 
                      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
-                        anr = Math.sqrt(2/(dx*dx + dy*dy));
+                        anr = Math.sqrt(9/(dx*dx + dy*dy));
                         si  = Math.round(anr*(dx + dy));
                         co  = Math.round(anr*(dx - dy));
                         if (si || co)

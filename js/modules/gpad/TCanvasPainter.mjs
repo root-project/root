@@ -6,7 +6,7 @@ import { select as d3_select } from '../d3.mjs';
 
 import { closeCurrentWindow, showProgress, loadOpenui5, ToolbarIcons } from '../gui/utils.mjs';
 
-import { GridDisplay } from '../gui/display.mjs';
+import { GridDisplay, getHPainter } from '../gui/display.mjs';
 
 import { cleanup, resize, selectActivePad } from '../base/ObjectPainter.mjs';
 
@@ -375,16 +375,26 @@ class TCanvasPainter extends TPadPainter {
 
    /** @summary Returns true if event status shown in the canvas */
    hasEventStatus() {
-      if (this.testUI5()) return false;
-      return this.brlayout ? this.brlayout.hasStatus() : false;
+      if (this.testUI5())
+         return false;
+      if (this.brlayout)
+         return this.brlayout.hasStatus();
+      let hp = getHPainter();
+      if (hp)
+         return hp.hasStatusLine();
+      return false;
    }
 
    /** @summary Show/toggle event status bar
      * @private */
    activateStatusBar(state) {
       if (this.testUI5()) return;
-      if (this.brlayout)
+      if (this.brlayout) {
          this.brlayout.createStatusLine(23, state);
+      } else {
+         let hp = getHPainter();
+         if (hp) hp.createStatusLine(23, state);
+      }
       this.processChanges("sbits", this);
    }
 
@@ -489,7 +499,7 @@ class TCanvasPainter extends TPadPainter {
       if (this.testUI5())
          return Promise.resolve(false);
 
-      console.log('Show section ' + that + ' flag = ' + on);
+      console.log(`Show section ${that} flag = ${on}`);
 
       switch(that) {
          case "Menu": break;

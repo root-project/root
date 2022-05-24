@@ -21,6 +21,7 @@ const root_fonts_aver_width = [0.5778,0.5314,
  */
 
 class FontHandler {
+
    /** @summary constructor */
    constructor(fontIndex, size, scale, name, style, weight) {
       this.name = "Arial";
@@ -77,10 +78,8 @@ class FontHandler {
       if (arg != 'without-size')
          selection.attr("font-size", this.size)
                   .attr("xml:space", "preserve");
-      if (this.weight)
-         selection.attr("font-weight", this.weight);
-      if (this.style)
-         selection.attr("font-style", this.style);
+      selection.attr("font-weight", this.weight || null);
+      selection.attr("font-style", this.style || null);
    }
 
    /** @summary Set font size (optional) */
@@ -129,6 +128,11 @@ class FontHandler {
       if (this.weight) res += " " + this.weight;
       if (this.style) res += " " + this.style;
       return res;
+   }
+
+   /** @summary Returns font name */
+   getFontName() {
+      return this.isSymbol || this.name || "none";
    }
 
 } // class FontHandler

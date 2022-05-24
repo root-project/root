@@ -5,7 +5,7 @@ let version_id = "dev";
 
 /** @summary version date
   * @desc Release date in format day/month/year like "19/11/2021" */
-let version_date = "4/05/2022";
+let version_date = "24/05/2022";
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -244,7 +244,9 @@ let settings = {
    /** @summary Skip streamer infos from the GUI */
    SkipStreamerInfos: false,
    /** @summary Show only last cycle for objects in TFile */
-   OnlyLastCycle: false
+   OnlyLastCycle: false,
+   /** @summary Configures dark mode for the GUI */
+   DarkMode: false
 };
 
 
@@ -258,6 +260,7 @@ if (nodejs)
   * or can be load from the file providing style=itemname in the URL
   * See [TStyle docu]{@link https://root.cern/doc/master/classTStyle.html} "Private attributes" section for more detailed info about each value */
 let gStyle = {
+   fName: "Modern",
    /** @summary Default log x scale */
    fOptLogx: 0,
    /** @summary Default log y scale */
@@ -266,8 +269,14 @@ let gStyle = {
    fOptLogz: 0,
    fOptDate: 0,
    fOptFile: 0,
+   fDateX: 0.01,
+   fDateY: 0.01,
    /** @summary Draw histogram title */
    fOptTitle: 1,
+   /** @summary Canvas fill color */
+   fCanvasColor: 0,
+   /** @summary Pad fill color */
+   fPadColor: 0,
    fPadBottomMargin: 0.1,
    fPadTopMargin: 0.1,
    fPadLeftMargin: 0.1,
@@ -278,14 +287,18 @@ let gStyle = {
    fPadGridY: false,
    fPadTickX: 0,
    fPadTickY: 0,
-   /** @summary Default color of stat box */
+   /** @summary fill color for stat box */
    fStatColor: 0,
-   /** @summary Default color of text in stat box */
+   /** @summary fill style for stat box */
+   fStatStyle: 1000,
+   /** @summary text color in stat box */
    fStatTextColor: 1,
-   fStatBorderSize: 1,
-   fStatFont: 42,
+   /** @summary text size in stat box */
    fStatFontSize: 0,
-   fStatStyle: 1001,
+   /** @summary stat text font */
+   fStatFont: 42,
+   /** @summary Stat border size */
+   fStatBorderSize: 1,
    /** @summary Printing format for stats */
    fStatFormat: "6.4g",
    fStatX: 0.98,
@@ -328,12 +341,24 @@ let gStyle = {
    fErrorX: 0.5,
    /** @summary when true, BAR and LEGO drawing using base = 0  */
    fHistMinimumZero: false,
+   /** @summary Margin between histogram's top and pad's top */
+   fHistTopMargin: 0.05,
+   fHistFillColor: 0,
+   fHistFillStyle: 1001,
+   fHistLineColor: 602,
+   fHistLineStyle: 1,
+   fHistLineWidth: 1,
    /** @summary format for bin content */
    fPaintTextFormat: "g",
    /** @summary default time offset, UTC time at 01/01/95   */
-   fTimeOffset: 788918400
+   fTimeOffset: 788918400,
+   fLegendBorderSize: 1,
+   fLegendFont: 42,
+   fLegendTextSize: 0,
+   fLegendFillColor: 0,
+   fHatchesLineWidth: 1,
+   fHatchesSpacing: 1
 };
-
 
 /** @summary Method returns current document in use
   * @private */
@@ -349,7 +374,7 @@ function getDocument() {
 
 /** @summary Inject javascript code
   * @desc Replacement for eval
-  * @returns {Promise}
+  * @returns {Promise} when code is injected
   * @private */
 function injectCode(code) {
    if (nodejs) {
@@ -362,7 +387,8 @@ function injectCode(code) {
          fs.writeFileSync(name, code);
          return import("file://" + name);
       }).finally(() => fs.unlinkSync(name));
-   } if (typeof document !== 'undefined') {
+   }
+   if (typeof document !== 'undefined') {
 
       // check if code already loaded - to avoid duplication
       let scripts = document.getElementsByTagName('script');
@@ -370,11 +396,17 @@ function injectCode(code) {
          if (scripts[n].innerHTML == code)
             return Promise.resolve(true);
 
-      let element = document.createElement("script");
-      element.setAttribute("type", "text/javascript");
-      element.innerHTML = code;
-      document.head.appendChild(element);
-      return Promise.resolve(true);
+      let promise = code.indexOf("JSROOT.require") >= 0 ? _ensureJSROOT() : Promise.resolve(true);
+
+      return promise.then(() => {
+         return new Promise(resolve => {
+            let element = document.createElement("script");
+            element.setAttribute("type", "text/javascript");
+            element.innerHTML = code;
+            document.head.appendChild(element);
+            setTimeout(() => resolve(true), 10); // while onload event not fired, just postpone resolve
+         });
+      });
    }
 
    return Promise.resolve(false);
@@ -739,8 +771,8 @@ function toJSON(obj, spacing) {
 function decodeUrl(url) {
    let res = {
       opts: {},
-      has: function(opt) { return this.opts[opt] !== undefined; },
-      get: function(opt,dflt) { let v = this.opts[opt]; return v!==undefined ? v : dflt; }
+      has(opt) { return this.opts[opt] !== undefined; },
+      get(opt,dflt) { let v = this.opts[opt]; return v!==undefined ? v : dflt; }
    };
 
    if (!url || (typeof url !== 'string')) {
@@ -939,7 +971,7 @@ function create(typename, target) {
          break;
       case 'TList':
       case 'THashList':
-         extend(obj, { name: typename, arr : [], opt : [] });
+         extend(obj, { name: typename, arr: [], opt: [] });
          break;
       case 'TAttAxis':
          extend(obj, { fNdivisions: 510, fAxisColor: 1,
@@ -976,7 +1008,7 @@ function create(typename, target) {
          create("TBox", obj);
          extend(obj, { fX1NDC : 0., fY1NDC: 0, fX2NDC: 1, fY2NDC: 1,
                        fBorderSize: 0, fInit: 1, fShadowColor: 1,
-                       fCornerRadius: 0, fOption: "blNDC", fName: "title" });
+                       fCornerRadius: 0, fOption: "brNDC", fName: "title" });
          break;
       case 'TAttText':
          extend(obj, { fTextAngle: 0, fTextSize: 0, fTextAlign: 22, fTextColor: 1, fTextFont: 42});
@@ -988,12 +1020,16 @@ function create(typename, target) {
          break;
       case 'TPaveStats':
          create("TPaveText", obj);
-         extend(obj, { fOptFit: 0, fOptStat: 0, fFitFormat: "", fStatFormat: "", fParent: null });
+         extend(obj, { fFillColor: gStyle.fStatColor, fFillStyle: gStyle.fStatStyle,
+                       fTextFont: gStyle.fStatFont, fTextSize: gStyle.fStatFontSize, fTextColor: gStyle.fStatTextColor,
+                       fBorderSize: gStyle.fStatBorderSize,
+                       fOptFit: 0, fOptStat: 0, fFitFormat: "", fStatFormat: "", fParent: null });
          break;
       case 'TLegend':
          create("TPave", obj);
          create("TAttText", obj);
-         extend(obj, { fColumnSeparation: 0, fEntrySeparation: 0.1, fMargin: 0.25, fNColumns: 1, fPrimitives: create("TList") });
+         extend(obj, { fColumnSeparation: 0, fEntrySeparation: 0.1, fMargin: 0.25, fNColumns: 1, fPrimitives: create("TList"),
+                       fBorderSize: gStyle.fLegendBorderSize, fTextFont: gStyle.fLegendFont, fTextSize: gStyle.fLegendTextSize, fFillColor: gStyle.fLegendFillColor });
          break;
       case 'TLegendEntry':
          create("TObject", obj);
@@ -1024,6 +1060,8 @@ function create(typename, target) {
          create("TAttMarker", obj);
          extend(obj, { fBits: 8, fNcells: 0,
                        fXaxis: create("TAxis"), fYaxis: create("TAxis"), fZaxis: create("TAxis"),
+                       fFillColor: gStyle.fHistFillColor, fFillStyle: gStyle.fHistFillStyle,
+                       fLineColor: gStyle.fHistLineColor, fLineStyle: gStyle.fHistLineStyle, fLineWidth: gStyle.fHistLineWidth,
                        fBarOffset: 0, fBarWidth: 1000, fEntries: 0.,
                        fTsumw: 0., fTsumw2: 0., fTsumwx: 0., fTsumwx2: 0.,
                        fMaximum: -1111., fMinimum: -1111, fNormFactor: 0., fContour: [],
@@ -1129,7 +1167,8 @@ function create(typename, target) {
          create("TAttLine", obj);
          create("TAttFill", obj);
          create("TAttPad", obj);
-         extend(obj, { fX1: 0, fY1: 0, fX2: 1, fY2: 1, fXtoAbsPixelk: 1, fXtoPixelk: 1,
+         extend(obj, { fFillColor: gStyle.fPadColor, fFillStyle: 1001,
+                       fX1: 0, fY1: 0, fX2: 1, fY2: 1, fXtoAbsPixelk: 1, fXtoPixelk: 1,
                        fXtoPixel: 1, fYtoAbsPixelk: 1, fYtoPixelk: 1, fYtoPixel: 1,
                        fUtoAbsPixelk: 1, fUtoPixelk: 1, fUtoPixel: 1, fVtoAbsPixelk: 1,
                        fVtoPixelk: 1, fVtoPixel: 1, fAbsPixeltoXk: 1, fPixeltoXk: 1,
@@ -1138,12 +1177,10 @@ function create(typename, target) {
                        fAbsXlowNDC: 0, fAbsYlowNDC: 0, fAbsWNDC: 1, fAbsHNDC: 1,
                        fUxmin: 0, fUymin: 0, fUxmax: 0, fUymax: 0, fTheta: 30, fPhi: 30, fAspectRatio: 0,
                        fNumber: 0, fLogx: gStyle.fOptLogx, fLogy: gStyle.fOptLogy, fLogz: gStyle.fOptLogz,
-                       fTickx: gStyle.fPadTickX,
-                       fTicky: gStyle.fPadTickY,
+                       fTickx: gStyle.fPadTickX, fTicky: gStyle.fPadTickY,
                        fPadPaint: 0, fCrosshair: 0, fCrosshairPos: 0, fBorderSize: 2,
                        fBorderMode: 0, fModified: false,
-                       fGridx: gStyle.fPadGridX,
-                       fGridy: gStyle.fPadGridY,
+                       fGridx: gStyle.fPadGridX, fGridy: gStyle.fPadGridY,
                        fAbsCoord: false, fEditable: true, fFixedAspectRatio: false,
                        fPrimitives: create("TList"), fExecs: null,
                        fName: "pad", fTitle: "canvas" });
@@ -1155,7 +1192,8 @@ function create(typename, target) {
          break;
       case 'TCanvas':
          create("TPad", obj);
-         extend(obj, { fNumPaletteColor: 0, fNextPaletteColor: 0, fDISPLAY: "$DISPLAY",
+         extend(obj, { fFillColor: gStyle.fCanvasColor, fFillStyle: 1001,
+                       fNumPaletteColor: 0, fNextPaletteColor: 0, fDISPLAY: "$DISPLAY",
                        fDoubleBuffer: 0, fRetained: true, fXsizeUser: 0,
                        fYsizeUser: 0, fXsizeReal: 20, fYsizeReal: 10,
                        fWindowTopX: 0, fWindowTopY: 0, fWindowWidth: 0, fWindowHeight: 0,
@@ -1622,41 +1660,9 @@ function _ensureJSROOT() {
    }).then(() => globalThis.JSROOT);
 }
 
-export {
-version_id,
-version_date,
-version,
-source_dir,
-isNodeJs,
-isBatchMode,
-setBatchMode,
-browser,
-internals,
-constants,
-settings,
-gStyle,
-isArrayProto,
-getDocument,
-BIT,
-clone,
-addMethods,
-parse,
-parseMulti,
-toJSON,
-decodeUrl,
-findFunction,
-createHttpRequest,
-httpRequest,
-loadScript,
-injectCode,
-create,
-createHistogram,
-createTPolyLine,
-createTGraph,
-createTHStack,
-createTMultiGraph,
-getMethods,
-registerMethods,
-isRootCollection,
-isPromise,
-_ensureJSROOT };
+export { version_id, version_date, version, source_dir, isNodeJs, isBatchMode, setBatchMode,
+         browser, internals, constants, settings, gStyle,
+         isArrayProto, getDocument, BIT, clone, addMethods, parse, parseMulti, toJSON,
+         decodeUrl, findFunction, createHttpRequest, httpRequest, loadScript, injectCode,
+         create, createHistogram, createTPolyLine, createTGraph, createTHStack, createTMultiGraph,
+         getMethods, registerMethods, isRootCollection, isPromise, _ensureJSROOT };

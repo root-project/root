@@ -868,6 +868,17 @@ class TPavePainter extends ObjectPainter {
             this.interactiveRedraw(true, "pave_moved")
          });
 
+         menu.add("Save to gStyle", function() {
+            gStyle.fStatX = pave.fX2NDC;
+            gStyle.fStatW = pave.fX2NDC - pave.fX1NDC;
+            gStyle.fStatY = pave.fY2NDC;
+            gStyle.fStatH = pave.fY2NDC - pave.fY1NDC;
+            if (this.fillatt) this.fillatt.saveToStyle("fStatColor", "fStatStyle");
+            gStyle.fStatTextColor = pave.fTextColor;
+            gStyle.fStatFontSize = pave.fTextSize;
+            gStyle.fStatFont = pave.fTextFont;
+         });
+
          menu.add("SetStatFormat", () => {
             menu.input("Enter StatFormat", pave.fStatFormat).then(fmt => {
                if (!fmt) return;
@@ -930,15 +941,25 @@ class TPavePainter extends ObjectPainter {
          menu.add("endsub:");
 
          menu.add("separator");
-      } else if (pave.fName === "title")
+      } else if (pave.fName === "title") {
          menu.add("Default position", function() {
-            pave.fX1NDC = 0.28;
-            pave.fY1NDC = 0.94;
-            pave.fX2NDC = 0.72;
-            pave.fY2NDC = 0.99;
+            pave.fX1NDC = gStyle.fTitleW > 0 ? gStyle.fTitleX - gStyle.fTitleW/2 : gStyle.fPadLeftMargin;
+            pave.fY1NDC = gStyle.fTitleY - Math.min(gStyle.fTitleFontSize*1.1, 0.06);
+            pave.fX2NDC = gStyle.fTitleW > 0 ? gStyle.fTitleX + gStyle.fTitleW/2 : 1 - gStyle.fPadRightMargin;
+            pave.fY2NDC = gStyle.fTitleY;
             pave.fInit = 1;
             this.interactiveRedraw(true, "pave_moved");
          });
+
+         menu.add("Save to gStyle", function() {
+            gStyle.fTitleX = (pave.fX2NDC + pave.fX1NDC)/2;
+            gStyle.fTitleY = pave.fY2NDC;
+            if (this.fillatt) this.fillatt.saveToStyle("fTitleColor", "fTitleStyle");
+            gStyle.fTitleTextColor = pave.fTextColor;
+            gStyle.fTitleFontSize = pave.fTextSize;
+            gStyle.fTitleFont = pave.fTextFont;
+         });
+      }
 
       if (this.UseTextColor)
          menu.addTextAttributesMenu(this);
