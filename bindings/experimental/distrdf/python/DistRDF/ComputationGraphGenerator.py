@@ -225,64 +225,29 @@ def trigger_computation_graph(graph: Dict[int, "Node"], starting_node: ROOT.RDF.
     # `SnapshotResult`
     return actions
 
-# TODO: revisit CppWorkflow part, currently untested
 
-
-def get_callable_optimized(self):
+def run_with_cppworkflow(graph: Dict[int, "Node"], starting_node: ROOT.RDF.RNode, range_id: int) -> Tuple[List, List[str]]:
     """
-    Converts a given graph into a callable and returns the same.
-    The callable is optimized to execute the graph with compiled C++
-    performance.
+    The callable that traverses the DistRDF graph nodes, generates the
+    code to create the same graph in C++, compiles it and runs it.
+    This function triggers the event loop via the CppWorkflow class.
+
+    Args:
+        rdf_node (ROOT.RDF.RNode): The RDataFrame node that will serve as
+            the root of the computation graph.
+        range_id (int): Id of the current range. Needed to assign a name
+            to a partial Snapshot output file.
 
     Returns:
-        function: The callable that takes in a PyROOT RDataFrame object
-        and executes all operations from the DistRDF graph
-        on it, recursively.
+        tuple[list, list]: the first element is the list of results of the actions
+            in the C++ workflow, the second element is the list of
+            result types corresponding to those actions.
     """
 
-    def run_computation_graph(rdf_node, range_id):
-        """
-        The callable that traverses the DistRDF graph nodes, generates the
-        code to create the same graph in C++, compiles it and runs it.
-        This function triggers the event loop via the CppWorkflow class.
+    # Generate the code of the C++ workflow
+    cpp_workflow = CppWorkflow(graph, starting_node, range_id)
 
-        Args:
-            rdf_node (ROOT.RDF.RNode): The RDataFrame node that will serve as
-                the root of the computation graph.
-            range_id (int): Id of the current range. Needed to assign a name
-                to a partial Snapshot output file.
+    logger.debug(f"Generated C++ workflow is:\n{cpp_workflow}")
 
-        Returns:
-            tuple[list, list]: the first element is the list of results of the actions
-                in the C++ workflow, the second element is the list of
-                result types corresponding to those actions.
-        """
-
-        # Generate the code of the C++ workflow
-        cpp_workflow = CppWorkflow(self.headnode, range_id)
-
-        logger.debug("Generated C++ workflow is:\n{}".format(cpp_workflow))
-
-        # Compile and run the C++ workflow on the received RDF head node
-        return cpp_workflow.execute(ROOT.RDF.AsRNode(rdf_node))
-
-    def explore_graph(py_node, cpp_workflow, range_id, parent_idx):
-        """
-        Recursively traverses the DistRDF graph nodes in DFS order and,
-        for each of them, adds a new node to the C++ workflow.
-
-        Args:
-            py_node (Node): Object that contains the information to add the
-                corresponding node to the C++ workflow.
-            cpp_workflow (CppWorkflow): Object that encapsulates the creation
-                of the C++ workflow graph.
-            range_id (int): Id of the current range. Needed to assign a name to a
-                partial Snapshot output file.
-            parent_idx (int): Index of the parent node in the C++ workflow.
-        """
-        node_idx = cpp_workflow.add_node(py_node.operation, range_id, parent_idx)
-
-        for child_node in py_node.children:
-            explore_graph(child_node, cpp_workflow, range_id, node_idx)
-
-    return run_computation_graph
+    # Compile and run the C++ workflow on the received RDF head node
+    return cpp_workflow.execute()
