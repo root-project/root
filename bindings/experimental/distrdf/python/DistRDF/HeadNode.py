@@ -156,7 +156,8 @@ class HeadNode(Node, ABC):
         optimized = ROOT.RDF.Experimental.Distributed.optimized
 
         if optimized:
-            computation_graph_callable = ComputationGraphGenerator.get_callable_optimized()
+            computation_graph_callable = partial(
+                ComputationGraphGenerator.run_with_cppworkflow, self._generate_graph_dict())
         else:
             computation_graph_callable = partial(
                 ComputationGraphGenerator.trigger_computation_graph, self._generate_graph_dict())
