@@ -1616,6 +1616,8 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    // FIXME: We should probably switch to the default printing policy setting
    // after adjusting tons of reference files.
    Policy.SplitTemplateClosers = true;
+   // Keep default templare arguments, required for dictionary generation.
+   Policy.SuppressDefaultTemplateArgs = false;
 
 
    // Attach cling callbacks last; they might need TROOT::fInterpreter
