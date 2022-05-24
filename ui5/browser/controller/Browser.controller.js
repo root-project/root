@@ -537,6 +537,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          let menu = await this._getSettingsMenu();
 
          this._oSettingsModel.setProperty("/AppendToCanvas", this.model.isAppendToCanvas());
+         this._oSettingsModel.setProperty("/OnlyLastCycle", (this.model.getOnlyLastCycle() > 0));
          this._oSettingsModel.setProperty("/ShowHiddenFiles", this.model.isShowHidden());
          this._oSettingsModel.setProperty("/SortMethod", this.model.getSortMethod());
          this._oSettingsModel.setProperty("/ReverseOrder", this.model.isReverseOrder());
@@ -551,6 +552,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       handleSeetingsConfirm: function() {
          let append = this._oSettingsModel.getProperty("/AppendToCanvas"),
+             lastcycle = this._oSettingsModel.getProperty("/OnlyLastCycle"),
              hidden = this._oSettingsModel.getProperty("/ShowHiddenFiles"),
              sort = this._oSettingsModel.getProperty("/SortMethod"),
              reverse = this._oSettingsModel.getProperty("/ReverseOrder"),
@@ -558,6 +560,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          if (append != this.model.isAppendToCanvas())
             this.model.setAppendToCanvas(append);
+
+         if (lastcycle != (this.model.getOnlyLastCycle() > 0)) {
+            changed = true;
+            this.model.setOnlyLastCycle(lastcycle ? 1 : -1);
+         }
 
          if (hidden != this.model.isShowHidden()) {
             changed = true;

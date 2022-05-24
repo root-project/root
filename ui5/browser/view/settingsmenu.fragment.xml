@@ -26,6 +26,7 @@
                  </ComboBox>
               </HBox>
               <CheckBox text="Append to canvas (use SAME)" selected="{/AppendToCanvas}"/>
+              <CheckBox text="Show only last TKey cycle" selected="{/OnlyLastCycle}"/>
           </VBox>
         </content>
       </ViewSettingsCustomTab>
