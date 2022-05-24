@@ -126,10 +126,13 @@ class ObjectPainter extends BasePainter {
      * @private */
    setItemName(name, opt, hpainter) {
       super.setItemName(name, opt, hpainter);
-      if (this.no_default_title || (name == "")) return;
+      if (this.no_default_title || !name) return;
       let can = this.getCanvSvg();
       if (!can.empty()) can.select("title").text(name);
                    else this.selectDom().attr("title", name);
+      let cp = this.getCanvPainter();
+      if (cp && (cp === this) || (this.isMainPainter() && (cp === this.getPadPainter())))
+         cp.drawItemNameOnCanvas(name);
    }
 
    /** @summary Store actual this.options together with original string
@@ -517,8 +520,8 @@ class ObjectPainter extends BasePainter {
 
    /** @summary Returns svg element for the frame in current pad
      * @protected */
-   getFrameSvg() {
-      let layer = this.getLayerSvg("primitives_layer");
+   getFrameSvg(pad_name) {
+      let layer = this.getLayerSvg("primitives_layer", pad_name);
       if (layer.empty()) return layer;
       let node = layer.node().firstChild;
       while (node) {
@@ -720,13 +723,16 @@ class ObjectPainter extends BasePainter {
    interactiveRedraw(arg, info, subelem) {
 
       let reason, res;
-      if ((typeof info == "string") && (info.indexOf("exec:") != 0)) reason = info;
+      if ((typeof info == "string") && (info.indexOf("exec:") != 0))
+         reason = info;
+
       if (arg == "pad")
          res = this.redrawPad(reason);
       else if (arg !== false)
          res = this.redraw(reason);
 
-      if (!isPromise(res)) res = Promise.resolve(false);
+      if (!isPromise(res))
+         res = Promise.resolve(false);
 
       return res.then(() => {
          // inform GED that something changes
@@ -1261,7 +1267,7 @@ class ObjectPainter extends BasePainter {
 
       let canvp = this.getCanvPainter();
 
-      if (!this.snapid || !canvp || canvp._readonly || !canvp._websocket)
+      if (!this.snapid || !canvp || canvp?._readonly || !canvp?._websocket)
          return Promise.resolve(menu);
 
       function DoExecMenu(arg) {
@@ -1286,16 +1292,24 @@ class ObjectPainter extends BasePainter {
          if (!execp.args_menu_id) return;
 
           if (!item.fArgs)
-             return execp.submitCanvExec(item.fExec, execp.args_menu_id);
+             if (cp?.v7canvas)
+                return cp.submitExec(execp, item.fExec, kind);
+             else
+                return execp.submitCanvExec(item.fExec, execp.args_menu_id);
 
          item.fClassName = execp.getClassName();
-         if ((execp.args_menu_id.indexOf("#x") > 0) || (execp.args_menu_id.indexOf("#y") > 0) || (execp.args_menu_id.indexOf("#z") > 0)) item.fClassName = "TAxis";
+         if ((execp.args_menu_id.indexOf("#x") > 0) || (execp.args_menu_id.indexOf("#y") > 0) || (execp.args_menu_id.indexOf("#z") > 0))
+            item.fClassName = "TAxis";
 
           menu.showMethodArgsDialog(item).then(args => {
              if (!args) return;
              if (execp.executeMenuCommand(item, args)) return;
+
              let exec = item.fExec.slice(0, item.fExec.length-1) + args + ')';
-             if (cp) cp.sendWebsocket('OBJEXEC:' + execp.args_menu_id + ":" + exec);
+             if (cp?.v7canvas)
+                cp.submitExec(execp, exec, kind);
+             else if (cp)
+                cp.sendWebsocket('OBJEXEC:' + execp.args_menu_id + ":" + exec);
          });
       }
 
@@ -1512,7 +1526,7 @@ function drawRawText(dom, txt /*, opt*/) {
       }
 
       let frame = this.selectDom(),
-         main = frame.select("div");
+          main = frame.select("div");
       if (main.empty())
          main = frame.append("div").attr('style', 'max-width:100%;max-height:100%;overflow:auto');
       main.html(txt);

@@ -113,6 +113,17 @@ function getColor(indx) {
    return gbl_colors_list[indx];
 }
 
+/** @summary Search for specified color in the list of colors
+  * @returns Color index or -1 if fails
+  * @private */
+function findColor(name) {
+   if (!name) return -1;
+   for (let indx = 0; indx < gbl_colors_list.length; ++indx)
+      if (gbl_colors_list[indx] == name)
+         return indx;
+   return -1;
+}
+
 /** @summary Add new color
   * @param {string} rgb - color name or just string with rgb value
   * @param {array} [lst] - optional colors list, to which add colors
@@ -158,6 +169,6 @@ class ColorPalette {
 
 createRootColors();
 
-export { ColorPalette, getColor, addColor, adoptRootColors, getRootColors, extendRootColors, getRGBfromTColor, createRootColors, toHex };
+export { ColorPalette, getColor, findColor, addColor, adoptRootColors, getRootColors, extendRootColors, getRGBfromTColor, createRootColors, toHex };
 
 

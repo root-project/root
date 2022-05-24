@@ -384,6 +384,8 @@ class TGraphPainter extends ObjectPainter {
       lines.push(this.getObjectHint());
 
       if (d && funcs) {
+         if (d.indx !== undefined)
+            lines.push("p = " + d.indx);
          lines.push("x = " + funcs.axisAsText("x", d.x));
          lines.push("y = " + funcs.axisAsText("y", d.y));
 
@@ -893,7 +895,7 @@ class TGraphPainter extends ObjectPainter {
           height = pmain.getFrameHeight(),
           esz = this.error_size,
           isbar1 = (this.options.Bar === 1),
-          funcs = isbar1 ? pmain.getGrFuncs(painter.options.second_x, painter.options.second_y) : null,
+          funcs = isbar1 ? pmain.getGrFuncs(this.options.second_x, this.options.second_y) : null,
           findbin = null, best_dist2 = 1e10, best = null,
           msize = this.marker_size ? Math.round(this.marker_size/2 + 1.5) : 0;
 

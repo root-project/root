@@ -1,6 +1,8 @@
+import { gStyle } from '../core.mjs';
+
 import { color as d3_color, rgb as d3_rgb, select as d3_select } from '../d3.mjs';
 
-import { getColor } from './colors.mjs';
+import { getColor, findColor } from './colors.mjs';
 
 /**
   * @summary Handle for fill attributes
@@ -95,7 +97,8 @@ class TAttFillHandler {
    verifyDirectChange(painter) {
       if (typeof this.pattern == 'string')
          this.pattern = parseInt(this.pattern);
-      if (!Number.isInteger(this.pattern)) this.pattern = 0;
+      if (!Number.isInteger(this.pattern))
+         this.pattern = 0;
 
       this.change(this.color, this.pattern, painter ? painter.getCanvSvg() : null, true, painter);
    }
@@ -213,12 +216,13 @@ class TAttFillHandler {
             }
 
             let code = this.pattern % 1000,
-               k = code % 10,
-               j = ((code - k) % 100) / 10,
-               i = (code - j * 10 - k) / 100;
+                k = code % 10,
+                j = ((code - k) % 100) / 10,
+                i = (code - j * 10 - k) / 100;
             if (!i) break;
 
-            let sz = i * 12, pos, step, x1, x2, y1, y2, max;  // axis distance between lines
+            let hatches_spacing = Math.round(Math.max(0.5, gStyle.fHatchesSpacing)*2) * 6,
+                sz = i * hatches_spacing, pos, step, x1, x2, y1, y2, max;  // axis distance between lines
 
             w = h = 6 * sz; // we use at least 6 steps
 
@@ -226,7 +230,8 @@ class TAttFillHandler {
                pos = []; step = sz; y1 = 0; max = h;
 
                // reduce step for smaller angles to keep normal distance approx same
-               if (Math.abs(dy) < 3) step = Math.round(sz / 12 * 9);
+               if (Math.abs(dy) < 3)
+                  step = Math.round(sz / 12 * 9);
                if (dy == 0) {
                   step = Math.round(sz / 12 * 8);
                   y1 = step / 2;
@@ -303,7 +308,7 @@ class TAttFillHandler {
          patt.append("svg:path").attr("d", fills2).style("fill", col);
       }
       if (fills) patt.append("svg:path").attr("d", fills).style("fill", this.color);
-      if (lines) patt.append("svg:path").attr("d", lines).style('stroke', this.color).style("stroke-width", 1).style("fill", lfill);
+      if (lines) patt.append("svg:path").attr("d", lines).style('stroke', this.color).style("stroke-width", gStyle.fHatchesLineWidth).style("fill", lfill);
 
       return true;
    }
@@ -320,6 +325,19 @@ class TAttFillHandler {
         .attr("d", `M0,0h${width}v${height}h${-width}z`)
         .call(sample.func);
    }
+
+   /** @summary Save fill attributes to style
+     * @private */
+   saveToStyle(name_color, name_pattern) {
+      if (name_color) {
+         let indx = this.colorindx ?? findColor(this.color);
+         if (indx >= 0) gStyle[name_color] = indx;
+      }
+      if (name_pattern)
+         gStyle[name_pattern] = this.pattern;
+   }
+
+
 
 } // class TAttFillHandler
 

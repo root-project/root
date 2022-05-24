@@ -1,4 +1,4 @@
-import { create } from '../core.mjs';
+import { create, gStyle } from '../core.mjs';
 
 import { DrawOptions, buildSvgPath } from '../base/BasePainter.mjs';
 
@@ -178,8 +178,8 @@ class TF1Painter extends ObjectPainter {
             ymax = Math.max(bin.y, ymax);
          });
 
-         if (ymax > 0.0) ymax *= 1.05;
-         if (ymin < 0.0) ymin *= 1.05;
+         if (ymax > 0.0) ymax *= (1 + gStyle.fHistTopMargin);
+         if (ymin < 0.0) ymin *= (1 + gStyle.fHistTopMargin);
       }
 
       let histo = create("TH1I"),

@@ -6,7 +6,7 @@ import { select as d3_select, rgb as d3_rgb } from '../d3.mjs';
 
 import { closeCurrentWindow, showProgress, loadOpenui5, ToolbarIcons } from '../gui/utils.mjs';
 
-import { GridDisplay } from '../gui/display.mjs';
+import { GridDisplay, getHPainter } from '../gui/display.mjs';
 
 import { selectActivePad, cleanup, resize } from '../base/ObjectPainter.mjs';
 
@@ -387,12 +387,15 @@ class RCanvasPainter extends RPadPainter {
 
    /** @summary Submit executable command for given painter */
    submitExec(painter, exec, subelem) {
-      console.log('SubmitExec', exec, painter.snapid, subelem);
-
       // snapid is intentionally ignored - only painter.snapid has to be used
       if (!this._websocket) return;
 
-      if (subelem) {
+      if (subelem && (typeof subelem == 'string')) {
+         let len = subelem.length;
+         if ((len > 2) && (subelem.indexOf("#x") == len - 2)) subelem = "x"; else
+         if ((len > 2) && (subelem.indexOf("#y") == len - 2)) subelem = "y"; else
+         if ((len > 2) && (subelem.indexOf("#z") == len - 2)) subelem = "z";
+
          if ((subelem == "x") || (subelem == "y") || (subelem == "z"))
             exec = subelem + "axis#" + exec;
          else
@@ -485,15 +488,24 @@ class RCanvasPainter extends RPadPainter {
    /** @summary returns true when event status area exist for the canvas */
    hasEventStatus() {
       if (this.testUI5()) return false;
-      return this.brlayout ? this.brlayout.hasStatus() : false;
+      if (this.brlayout)
+         return this.brlayout.hasStatus();
+      let hp = getHPainter();
+      if (hp)
+         return hp.hasStatusLine();
+      return false;
    }
 
    /** @summary Show/toggle event status bar
      * @private */
    activateStatusBar(state) {
       if (this.testUI5()) return;
-      if (this.brlayout)
+      if (this.brlayout) {
          this.brlayout.createStatusLine(23, state);
+      } else {
+         let hp = getHPainter();
+         if (hp) hp.createStatusLine(23, state);
+      }
       this.processChanges("sbits", this);
    }
 

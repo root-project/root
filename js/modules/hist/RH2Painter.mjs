@@ -1,6 +1,6 @@
 /// ROOT7 histogram 3D graphics
 
-import { settings } from '../core.mjs';
+import { settings, gStyle } from '../core.mjs';
 
 import { RH2Painter as RH2Painter2D } from '../hist2d/RH2Painter.mjs';
 
@@ -42,7 +42,7 @@ class RH2Painter extends RH2Painter2D {
          return Promise.resolve(this);
       }
 
-      let zmult = 1.1;
+      let zmult = 1 + 2*gStyle.fHistTopMargin;
 
       this.zmin = main.logz ? this.gminposbin * 0.3 : this.gminbin;
       this.zmax = this.gmaxbin;
@@ -57,7 +57,7 @@ class RH2Painter extends RH2Painter2D {
          main.create3DScene(this.options.Render3D);
          main.setAxesRanges(this.getAxis("x"), this.xmin, this.xmax, this.getAxis("y"), this.ymin, this.ymax, null, this.zmin, this.zmax);
          main.set3DOptions(this.options);
-         main.drawXYZ(main.toplevel, RAxisPainter, { zmult: zmult, zoom: settings.Zooming, ndim: 2, draw: true, v7: true });
+         main.drawXYZ(main.toplevel, RAxisPainter, { zmult, zoom: settings.Zooming, ndim: 2, draw: true, v7: true });
       }
 
       if (!main.mode3d)

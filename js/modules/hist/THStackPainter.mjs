@@ -1,4 +1,4 @@
-import { clone, create, createHistogram } from '../core.mjs';
+import { clone, create, createHistogram, gStyle } from '../core.mjs';
 
 import { DrawOptions } from '../base/BasePainter.mjs';
 
@@ -132,7 +132,7 @@ class THStackPainter extends ObjectPainter {
       }
 
       if (stack.fMaximum != -1111) res.max = stack.fMaximum;
-      res.max *= 1.05;
+      res.max *= (1 + gStyle.fHistTopMargin);
       if (stack.fMinimum != -1111) res.min = stack.fMinimum;
 
       if (pad && (this.options.ndim == 1 ? pad.fLogy : pad.fLogz)) {

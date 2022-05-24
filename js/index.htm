@@ -26,26 +26,30 @@ Several URL parameters could be specified when opening page:
    items     - object names in the file to display
    opt       - draw option for the item
    opts      - draw options for the items
-   layout    - can be 'simple', 'flex', 'collapsible', 'tabs' or gridNxM where N and M are integer values
+   layout    - can be 'simple', 'flex' or gridNxM where N and M are integer values
    nobrowser - only file item(s) will be displayed, browser will be disabled
    load      - name of JavaScript(s), automatically loaded at the beginning
    mathjax   - use MathJax for Latex output (automatically loaded for TMathText objects)
    palette   - id of default color palette, 51..123 - new ROOT6 palette  (default 57)
    style     - TStyle object itemname or JSON file name
    toolbar   - configure position and orientation of pad toolbar, combine 'right','vert','off'
+   dark      - enables dark mode
 
 Example:
-   https://root.cern/js/latest/?file=../files/hsimple.root&layout=grid2x2&item=[hpx;1,hpxpy;1]&opts=[,colz]
+
+    https://root.cern/js/latest/?file=../files/hsimple.root&layout=grid2x2&item=[hpx;1,hpxpy;1]&opts=[,colz]
 
 Page can be used to open files from other web servers like:
-   https://root.cern/js/latest/?file=https://jsroot.gsi.de/files/hsimple.root
+
+    https://root.cern/js/latest/?file=https://jsroot.gsi.de/files/hsimple.root
 
 But one should be aware about Cross-Origin Request blocking.
 Read https://developer.mozilla.org/en/http_access_control for more details.
 
 To avoid problem at all, one can copy only index.htm on the web server where data files are located.
-And specify full path to the JSRoot.core.js script like
-   <script type="text/javascript" src="https://root.cern/js/latest/scripts/JSRoot.core.js"></script>
+And specify full path to the use module like:
+
+    import { buildGUI } from 'https://root.cern/js/latest/modules/gui.mjs';
 
 If necessary, complete JSROOT can be installed on the web server.
 Project repository: https://github.com/root-project/jsroot.
