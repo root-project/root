@@ -1319,13 +1319,15 @@ const FrameInteractive = {
 
             fp = this;
 
-            if (tch.length === 1) pnt = { x: tch[0][0], y: tch[0][1], touch: true }; else
-            if (ms.length === 2) pnt = { x: ms[0], y: ms[1], touch: false };
+            if (tch.length === 1)
+               pnt = { x: tch[0][0], y: tch[0][1], touch: true };
+            else if (ms.length === 2)
+               pnt = { x: ms[0], y: ms[1], touch: false };
 
             if ((pnt !== null) && (pp !== null)) {
                pnt.painters = true; // assign painter for every tooltip
                let hints = pp.processPadTooltipEvent(pnt), bestdist = 1000;
-               for (let n=0;n<hints.length;++n)
+               for (let n = 0; n < hints.length; ++n)
                   if (hints[n] && hints[n].menu) {
                      let dist = ('menu_dist' in hints[n]) ? hints[n].menu_dist : 7;
                      if (dist < bestdist) { sel = hints[n].painter; bestdist = dist; }
@@ -1334,11 +1336,14 @@ const FrameInteractive = {
 
             if (sel) menu_painter = sel; else kind = "frame";
 
-            if (pnt) frame_corner = (pnt.x>0) && (pnt.x<20) && (pnt.y>0) && (pnt.y<20);
+            if (pnt) frame_corner = (pnt.x > 0) && (pnt.x < 20) && (pnt.y > 0) && (pnt.y < 20);
 
             fp.setLastEventPos(pnt);
-         } else if (!this.v7_frame && ((kind=="x") || (kind=="y") || (kind=="z"))) {
-            exec_painter = this.getMainPainter(); // histogram painter delivers items for axis menu
+         } else if ((kind == "x") || (kind == "y") || (kind == "z")) {
+            exec_painter = this.getMainPainter(true); // histogram painter delivers items for axis menu
+
+            if (this.v7_frame && exec_painter && typeof exec_painter.v7EvalAttr === 'function')
+               exec_painter = null;
          }
       } else if (kind == 'painter' && obj) {
          // this is used in 3D context menu to show special painter
@@ -1661,7 +1666,6 @@ class TFramePainter extends ObjectPainter {
      *    this.gr[x,y]  converts root scale into graphical value
      * @private */
    createXY(opts) {
-
       this.cleanXY(); // remove all previous configurations
 
       if (!opts) opts = { ndim: 1 };
@@ -2411,11 +2415,11 @@ class TFramePainter extends ObjectPainter {
    /** @summary Fill context menu for the frame
      * @desc It could be appended to the histogram menus */
    fillContextMenu(menu, kind, obj) {
-      let main = this.getMainPainter(),
+      let main = this.getMainPainter(true),
           pp = this.getPadPainter(),
           pad = pp ? pp.getRootPad(true) : null;
 
-      if ((kind=="x") || (kind=="y") || (kind=="z") || (kind == "x2") || (kind == "y2")) {
+      if ((kind == "x") || (kind == "y") || (kind == "z") || (kind == "x2") || (kind == "y2")) {
          let faxis = obj || this[kind+'axis'];
          menu.add("header: " + kind.toUpperCase() + " axis");
          menu.add("Unzoom", () => this.unzoom(kind));
@@ -2483,6 +2487,15 @@ class TFramePainter extends ObjectPainter {
 
       menu.addchk(this.isTooltipAllowed(), "Show tooltips", () => this.setTooltipAllowed("toggle"));
       menu.addAttributesMenu(this, alone ? "" : "Frame ");
+      menu.add("Save to gStyle", function() {
+         gStyle.fPadBottomMargin = this.fY1NDC;
+         gStyle.fPadTopMargin = 1 - this.fY2NDC;
+         gStyle.fPadLeftMargin = this.fX1NDC;
+         gStyle.fPadRightMargin = 1 - this.fX2NDC;
+         if (this.fillatt) this.fillatt.saveToStyle("fFrameFillColor", "fFrameFillStyle");
+         if (this.lineatt) this.lineatt.saveToStyle("fFrameLineColor", "fFrameLineWidth", "fFrameLineStyle");
+      });
+
       menu.add("separator");
       menu.add("Save as frame.png", () => pp.saveAs("png", 'frame', 'frame.png'));
       menu.add("Save as frame.svg", () => pp.saveAs("svg", 'frame', 'frame.svg'));
@@ -2633,14 +2646,13 @@ class TFramePainter extends ObjectPainter {
             if (pp && pp.painters)
                pp.painters.forEach(painter => {
                   if (painter && (typeof painter.unzoomUserRange == 'function'))
-                     if (painter.unzoomUserRange(unzoom_x, unzoom_y, unzoom_z)) changed = true;
+                     if (painter.unzoomUserRange(unzoom_x, unzoom_y, unzoom_z))
+                        changed = true;
             });
          }
       }
 
-      if (!changed) return Promise.resolve(false);
-
-      return this.interactiveRedraw("pad", "zoom").then(() => true);
+      return changed ? this.interactiveRedraw("pad", "zoom").then(() => true) : Promise.resolve(false);
    }
 
    /** @summary Provide zooming of single axis
@@ -2731,18 +2743,17 @@ class TFramePainter extends ObjectPainter {
       if ((axis !== 'x') && (axis !== 'y') && (axis !== 'z')) return;
 
       let fld = "zoom_changed_" + axis;
-      if (value === undefined) return this[fld];
+      if (value === undefined)
+         return this[fld] ? true : false;
 
       if (value === 'unzoom') {
-         // special handling of unzoom
-         if (this[fld])
-            delete this[fld];
-         else
-            this[fld] = true;
+         // special handling of unzoom, only if was never changed before flag set to true
+         this[fld] = (this[fld] === undefined);
          return;
       }
 
-      if (value) this[fld] = true;
+      if (value)
+         this[fld] = true;
    }
 
    /** @summary Convert graphical coordinate into axis value */

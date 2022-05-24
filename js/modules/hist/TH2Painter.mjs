@@ -1,6 +1,6 @@
 /// 3D TH2 drawing
 
-import { settings } from '../core.mjs';
+import { settings, gStyle } from '../core.mjs';
 
 import { Vector2, BufferGeometry, BufferAttribute, Mesh, MeshBasicMaterial, ShapeUtils } from '../three.mjs';
 
@@ -223,7 +223,8 @@ class TH2Painter extends TH2Painter2D {
 
       } else {
 
-         let pad = this.getPadPainter().getRootPad(true), zmult = 1.1;
+         let pad = this.getPadPainter().getRootPad(true),
+             zmult = 1 + 2*gStyle.fHistTopMargin;
 
          this.zmin = pad && pad.fLogz ? this.gminposbin * 0.3 : this.gminbin;
          this.zmax = this.gmaxbin;
@@ -231,7 +232,7 @@ class TH2Painter extends TH2Painter2D {
          if (this.options.minimum !== -1111) this.zmin = this.options.minimum;
          if (this.options.maximum !== -1111) { this.zmax = this.options.maximum; zmult = 1; }
 
-         if (pad && pad.fLogz && (this.zmin<=0)) this.zmin = this.zmax * 1e-5;
+         if (pad && pad.fLogz && (this.zmin <= 0)) this.zmin = this.zmax * 1e-5;
 
          this.deleteAttr();
 
@@ -240,7 +241,7 @@ class TH2Painter extends TH2Painter2D {
             main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale);
             main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, this.zmin, this.zmax);
             main.set3DOptions(this.options);
-            main.drawXYZ(main.toplevel, TAxisPainter, { zmult: zmult, zoom: settings.Zooming, ndim: 2, draw: this.options.Axis !== -1 });
+            main.drawXYZ(main.toplevel, TAxisPainter, { zmult, zoom: settings.Zooming, ndim: 2, draw: this.options.Axis !== -1 });
          }
 
          if (main.mode3d) {
@@ -264,8 +265,8 @@ class TH2Painter extends TH2Painter2D {
 
       //  (re)draw palette by resize while canvas may change dimension
       if (is_main)
-         pr = this.drawColorPalette(this.options.Zscale && ((this.options.Lego===12) || (this.options.Lego===14) ||
-                                     (this.options.Surf===11) || (this.options.Surf===12))).then(() => this.drawHistTitle());
+         pr = this.drawColorPalette(this.options.Zscale && ((this.options.Lego == 12) || (this.options.Lego == 14) ||
+                                     (this.options.Surf == 11) || (this.options.Surf == 12))).then(() => this.drawHistTitle());
 
       return pr.then(() => this);
    }

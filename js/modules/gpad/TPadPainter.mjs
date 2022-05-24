@@ -404,7 +404,7 @@ class TPadPainter extends ObjectPainter {
    /** @summary Create SVG element for canvas */
    createCanvasSvg(check_resize, new_size) {
 
-      let factor = null, svg = null, lmt = 5, rect = null, btns, frect;
+      let factor = null, svg = null, lmt = 5, rect = null, btns, info, frect;
 
       if (check_resize > 0) {
 
@@ -423,6 +423,7 @@ class TPadPainter extends ObjectPainter {
          if (!isBatchMode())
             btns = this.getLayerSvg("btns_layer", this.this_pad_name);
 
+         info = this.getLayerSvg("info_layer", this.this_pad_name);
          frect = svg.select(".canvas_fillrect");
 
       } else {
@@ -458,7 +459,7 @@ class TPadPainter extends ObjectPainter {
                  .on("contextmenu", settings.ContextMenu ? evnt => this.padContextMenu(evnt) : null);
 
          svg.append("svg:g").attr("class","primitives_layer");
-         svg.append("svg:g").attr("class","info_layer");
+         info = svg.append("svg:g").attr("class", "info_layer");
          if (!isBatchMode())
             btns = svg.append("svg:g")
                       .attr("class","btns_layer")
@@ -509,6 +510,8 @@ class TPadPainter extends ObjectPainter {
            .style("bottom", 0);
       }
 
+      svg.style("filter", settings.DarkMode ? "invert(100%)" : null);
+
       svg.attr("viewBox", `0 0 ${rect.width} ${rect.height}`)
          .attr("preserveAspectRatio", "none")  // we do not preserve relative ratio
          .property('height_factor', factor)
@@ -533,7 +536,45 @@ class TPadPainter extends ObjectPainter {
       if (this.alignButtons && btns)
          this.alignButtons(btns, rect.width, rect.height);
 
+      let dt = info.select(".canvas_date");
+      if (!gStyle.fOptDate) {
+         dt.remove();
+      } else {
+         if (dt.empty()) dt = info.append("text").attr("class", "canvas_date");
+         let date = new Date(),
+             posx = Math.round(rect.width * gStyle.fDateX),
+             posy = Math.round(rect.height * (1 - gStyle.fDateY));
+         if (!isBatchMode() && (posx < 25)) posx = 25;
+         if (gStyle.fOptDate > 1) date.setTime(gStyle.fOptDate*1000);
+         dt.attr("transform", `translate(${posx}, ${posy})`)
+           .style("text-anchor", "start")
+           .text(date.toLocaleString('en-GB'));
+      }
+
+      if (!gStyle.fOptFile || !this.getItemName())
+         info.select(".canvas_item").remove();
+      else
+         this.drawItemNameOnCanvas(this.getItemName());
+
       return true;
+   }
+
+   /** @summary Draw item name on canvas if gStyle.fOptFile is configured
+     * @private */
+   drawItemNameOnCanvas(item_name) {
+      let info = this.getLayerSvg("info_layer", this.this_pad_name),
+          df = info.select(".canvas_item");
+      if (!gStyle.fOptFile || !item_name) {
+         df.remove();
+      } else {
+         if (df.empty()) df = info.append("text").attr("class", "canvas_item");
+         let rect = this.getPadRect(),
+             posx = Math.round(rect.width * (1 - gStyle.fDateX)),
+             posy = Math.round(rect.height * (1 - gStyle.fDateY));
+         df.attr("transform", `translate(${posx}, ${posy})`)
+           .style("text-anchor", "end")
+           .text(item_name);
+      }
    }
 
    /** @summary Enlarge pad draw element when possible */
@@ -929,7 +970,8 @@ class TPadPainter extends ObjectPainter {
       // first count - how many processors are there
       if (this.painters !== null)
          this.painters.forEach(obj => {
-            if (typeof obj.processTooltipEvent == 'function') painters.push(obj);
+            if (typeof obj.processTooltipEvent == 'function')
+               painters.push(obj);
          });
 
       if (pnt) pnt.nproc = painters.length;
@@ -949,9 +991,9 @@ class TPadPainter extends ObjectPainter {
    fillContextMenu(menu) {
 
       if (this.pad)
-         menu.add("header: " + this.pad._typename + "::" + this.pad.fName);
+         menu.add("header:" + this.pad._typename + "::" + this.pad.fName);
       else
-         menu.add("header: Canvas");
+         menu.add("header:Canvas");
 
       menu.addchk(this.isTooltipAllowed(), "Show tooltips", () => this.setTooltipAllowed("toggle"));
 
@@ -976,6 +1018,16 @@ class TPadPainter extends ObjectPainter {
          menu.add("endsub:");
 
          menu.addAttributesMenu(this);
+         menu.add("Save to gStyle", function() {
+            if (this.fillatt) this.fillatt.saveToStyle(this.iscan ? "fCanvasColor" : "fPadColor");
+            gStyle.fPadGridX = this.pad.fGridX;
+            gStyle.fPadGridY = this.pad.fGridX;
+            gStyle.fPadTickX = this.pad.fTickx;
+            gStyle.fPadTickY = this.pad.fTicky;
+            gStyle.fOptLogx = this.pad.fLogx;
+            gStyle.fOptLogy = this.pad.fLogy;
+            gStyle.fOptLogz = this.pad.fLogz;
+         });
       }
 
       menu.add("separator");
@@ -989,11 +1041,9 @@ class TPadPainter extends ObjectPainter {
       if (this.enlargeMain() || (this.has_canvas && this.hasObjectsToDraw()))
          menu.addchk((this.enlargeMain('state')=='on'), "Enlarge " + (this.iscan ? "canvas" : "pad"), () => this.enlargePad());
 
-      let fname = this.this_pad_name;
-      if (fname.length===0) fname = this.iscan ? "canvas" : "pad";
-
-      menu.add("Save as "+ fname+".png", fname+".png", () => this.saveAs("png", false));
-      menu.add("Save as "+ fname+".svg", fname+".svg", () => this.saveAs("svg", false));
+      let fname = this.this_pad_name || (this.iscan ? "canvas" : "pad");
+      menu.add(`Save as ${fname}.png`, fname+".png", arg => this.saveAs("png", this.iscan, arg));
+      menu.add(`Save as ${fname}.svg`, fname+".svg", arg => this.saveAs("svg", this.iscan, arg));
 
       return true;
    }
@@ -1007,7 +1057,7 @@ class TPadPainter extends ObjectPainter {
          // for debug purposes keep original context menu for small region in top-left corner
          let pos = d3_pointer(evnt, this.svg_this_pad().node());
 
-         if (pos && (pos.length==2) && (pos[0] >= 0) && (pos[0] < 10) && (pos[1] >= 0) && (pos[1] < 10)) return;
+         if ((pos.length == 2) && (pos[0] >= 0) && (pos[0] < 10) && (pos[1] >= 0) && (pos[1] < 10)) return;
 
          evnt.stopPropagation(); // disable main context menu
          evnt.preventDefault();  // disable browser context menu
@@ -1033,7 +1083,7 @@ class TPadPainter extends ObjectPainter {
       }
 
       let showsubitems = true;
-      let redrawNext = indx => {
+      const redrawNext = indx => {
          while (indx < this.painters.length) {
             let sub = this.painters[indx++], res = 0;
             if (showsubitems || sub.this_pad_name)
@@ -1046,11 +1096,10 @@ class TPadPainter extends ObjectPainter {
       };
 
       return sync_promise.then(() => {
-         if (this.iscan) {
+         if (this.iscan)
             this.createCanvasSvg(2);
-         } else {
+         else
             showsubitems = this.createPadSvg(true);
-         }
          return redrawNext(0);
       }).then(() => {
          this.confirmDraw();
@@ -1456,17 +1505,18 @@ class TPadPainter extends ObjectPainter {
             if (snap.fPrimitives[i].fObjectID === sub.snapid) { sub = null; isanyfound = true; break; }
 
          if (sub) {
-            // console.log(`Remove painter ${k} from ${this.painters.length} class ${sub.getClassName()}`);
+            // console.log(`Remove painter ${k} from ${this.painters.length} class ${sub.getClassName()} ismain ${sub.isMainPainter()}`);
             // remove painter which does not found in the list of snaps
             this.painters.splice(k--,1);
             sub.cleanup(); // cleanup such painter
             isanyremove = true;
+            if (this.main_painter_ref === sub)
+               delete this.main_painter_ref;
          }
       }
 
-      if (isanyremove) {
+      if (isanyremove)
          delete this.pads_cache;
-      }
 
       if (!isanyfound) {
          // TODO: maybe just remove frame painter?
@@ -1668,12 +1718,12 @@ class TPadPainter extends ObjectPainter {
    /** @summary Save pad in specified format
      * @desc Used from context menu */
    saveAs(kind, full_canvas, filename) {
-      if (!filename) {
-         filename = this.this_pad_name;
-         if (filename.length === 0) filename = this.iscan ? "canvas" : "pad";
-         filename += "." + kind;
-      }
+      if (!filename)
+         filename = (this.this_pad_name || (this.iscan ? "canvas" : "pad")) + "." + kind;
       this.produceImage(full_canvas, kind).then(imgdata => {
+         if (!imgdata)
+            return console.error(`Fail to produce image ${filename}`);
+
          let a = document.createElement('a');
          a.download = filename;
          a.href = (kind != "svg") ? imgdata : "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(imgdata);
@@ -1688,13 +1738,13 @@ class TPadPainter extends ObjectPainter {
    produceImage(full_canvas, file_format) {
 
       let use_frame = (full_canvas === "frame"),
-          elem = use_frame ? this.getFrameSvg() : (full_canvas ? this.getCanvSvg() : this.svg_this_pad());
-
-      if (elem.empty()) return Promise.resolve("");
-
-      let painter = (full_canvas && !use_frame) ? this.getCanvPainter() : this,
+          elem = use_frame ? this.getFrameSvg(this.this_pad_name) : (full_canvas ? this.getCanvSvg() : this.svg_this_pad()),
+          painter = (full_canvas && !use_frame) ? this.getCanvPainter() : this,
           items = [], // keep list of replaced elements, which should be moved back at the end
           active_pp = null;
+
+      if (elem.empty())
+         return Promise.resolve("");
 
       painter.forEachPainterInPad(pp => {
 
@@ -1753,16 +1803,14 @@ class TPadPainter extends ObjectPainter {
 
       }, "pads");
 
-      let reEncode = data => {
+      const reEncode = data => {
          data = encodeURIComponent(data);
          data = data.replace(/%([0-9A-F]{2})/g, (match, p1) => {
            let c = String.fromCharCode('0x'+p1);
            return c === '%' ? '%25' : c;
          });
          return decodeURIComponent(data);
-      };
-
-      let reconstruct = () => {
+      }, reconstruct = () => {
          // reactivate border
          if (active_pp)
             active_pp.drawActiveBorder(null, true);
@@ -1793,9 +1841,7 @@ class TPadPainter extends ObjectPainter {
          height = fp.getFrameHeight();
       }
 
-      let svg = '<svg width="' + width + '" height="' + height + '" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">' +
-                 elem.node().innerHTML +
-                 '</svg>';
+      let svg = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">${elem.node().innerHTML}</svg>`;
 
       if (internals.processSvgWorkarounds)
          svg = internals.processSvgWorkarounds(svg);
@@ -1807,9 +1853,8 @@ class TPadPainter extends ObjectPainter {
          return Promise.resolve(svg); // return SVG file as is
       }
 
-      let doctype = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
-
-      let image = new Image();
+      let doctype = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">',
+          image = new Image();
 
       return new Promise(resolveFunc => {
          image.onload = function() {
@@ -1836,11 +1881,14 @@ class TPadPainter extends ObjectPainter {
    /** @summary Process pad button click */
    clickPadButton(funcname, evnt) {
 
-      if (funcname == "CanvasSnapShot") return this.saveAs("png", true);
+      if (funcname == "CanvasSnapShot")
+         return this.saveAs("png", true);
 
-      if (funcname == "enlargePad") return this.enlargePad();
+      if (funcname == "enlargePad")
+         return this.enlargePad();
 
-      if (funcname == "PadSnapShot") return this.saveAs("png", false);
+      if (funcname == "PadSnapShot")
+         return this.saveAs("png", false);
 
       if (funcname == "PadContextMenus") {
 

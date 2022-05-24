@@ -1,6 +1,8 @@
 import { select as d3_select } from '../d3.mjs';
 
-import { getColor } from './colors.mjs';
+import { gStyle } from '../core.mjs';
+
+import { getColor, findColor } from './colors.mjs';
 
 const root_line_styles = [
       "", "", "3,3", "1,2",
@@ -31,12 +33,14 @@ class TAttLineHandler {
      * @param {number} args.width - line width */
    setArgs(args) {
       if (args.attr) {
-         args.color = args.color0 || (args.painter ? args.painter.getColor(args.attr.fLineColor) : getColor(args.attr.fLineColor));
+         this.color_index = args.attr.fLineColor;
+         args.color = args.color0 || (args.painter ? args.painter.getColor(this.color_index) : getColor(this.color_index));
          if (args.width === undefined) args.width = args.attr.fLineWidth;
          if (args.style === undefined) args.style = args.attr.fLineStyle;
       } else if (typeof args.color == 'string') {
          if ((args.color !== 'none') && !args.width) args.width = 1;
       } else if (typeof args.color == 'number') {
+         this.color_index = args.color;
          args.color = args.painter ? args.painter.getColor(args.color) : getColor(args.color);
       }
 
@@ -116,8 +120,13 @@ class TAttLineHandler {
 
    /** @summary Change line attributes */
    change(color, width, style) {
-      if (color !== undefined) this.color = color;
-      if (width !== undefined) this.width = width;
+      if (color !== undefined) {
+         if (this.color !== color)
+            delete this.color_index;
+         this.color = color;
+      }
+      if (width !== undefined)
+         this.width = width;
       if (style !== undefined) {
          this.style = style;
          this.pattern = root_line_styles[this.style] || null;
@@ -131,6 +140,18 @@ class TAttLineHandler {
       svg.append("path")
          .attr("d", `M0,${height/2}h${width}`)
          .call(this.func);
+   }
+
+   saveToStyle(name_color, name_width, name_style) {
+      if (name_color) {
+         let indx = (this.color_index !== undefined) ? this.color_index : findColor(this.color);
+         if (indx >= 0)
+            gStyle[name_color] = indx;
+      }
+      if (name_width)
+        gStyle[name_width] = this.width;
+      if (name_style)
+        gStyle[name_style] = this.style;
    }
 
 } // class TAttLineHandler

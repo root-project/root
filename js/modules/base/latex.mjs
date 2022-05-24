@@ -191,7 +191,7 @@ const extra_symbols_width = {945:1002,946:996,967:917,948:953,949:834,966:1149,9
 
 /** @ummary Calculate approximate labels width
   * @private */
-const approximateLabelWidth = (label, font, fsize) => {
+function approximateLabelWidth(label, font, fsize) {
    let len = label.length,
        symbol_width = (fsize || font.size) * font.aver_width;
    if (font.isMonospace())
@@ -207,7 +207,7 @@ const approximateLabelWidth = (label, font, fsize) => {
    }
 
    return sum/1000*symbol_width;
-};
+}
 
 /** @summary array defines features supported by latex parser, used by both old and new parsers
   * @private */

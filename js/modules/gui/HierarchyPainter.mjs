@@ -10,7 +10,7 @@ import { getRGBfromTColor } from '../base/colors.mjs';
 
 import { BasePainter, getElementRect, _loadJSDOM } from '../base/BasePainter.mjs';
 
-import { getElementMainPainter, cleanup, ObjectPainter } from '../base/ObjectPainter.mjs';
+import { getElementMainPainter, getElementCanvPainter, cleanup, ObjectPainter } from '../base/ObjectPainter.mjs';
 
 import { createMenu } from './menu.mjs';
 
@@ -18,7 +18,7 @@ import { produceLegend } from '../hist/TPavePainter.mjs';
 
 import { getDrawSettings, getDrawHandle, canDrawHandle, addDrawFunc, draw, redraw } from '../draw.mjs';
 
-import { BatchDisplay, GridDisplay, FlexibleDisplay, BrowserLayout } from './display.mjs';
+import { BatchDisplay, GridDisplay, FlexibleDisplay, BrowserLayout, getHPainter, setHPainter } from './display.mjs';
 
 import { showProgress, ToolbarIcons, registerForResize, injectStyle } from './utils.mjs';
 
@@ -39,8 +39,6 @@ function injectHStyle(node) {
 }
 .jsroot .h_tree img { border: 0px; vertical-align: middle; }
 .jsroot .h_tree a {
-    color: inherit;
-    white-space: nowrap;
     text-decoration: none;
     vertical-align: top;
     white-space: nowrap;
@@ -125,26 +123,15 @@ ${img("tf2",16,"png","iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAABGdBTUEAAL
 `, node);
 }
 
-function canExpandHandle(handle) {
-   return handle?.expand || handle?.get_expand || handle?.expand_item;
-}
-
-/** @summary Save JSROOT settings as specified cookie parameter
-  * @param {Number} expires - days when cookie will be removed by browser, negative - delete immediately
-  * @param {String} name - cookie parameter name
-  * @private */
-function saveSettings(expires = 365, name = "jsroot_settings") {
-   let arg = (expires <= 0) ? "" : btoa(JSON.stringify(settings)),
+function saveCookie(obj, expires, name) {
+   let arg = (expires <= 0) ? "" : btoa(JSON.stringify(obj)),
        d = new Date();
    d.setTime((expires <= 0) ? 0 : d.getTime() + expires*24*60*60*1000);
    document.cookie = `${name}=${arg}; expires=${d.toUTCString()}; SameSite=None; Secure; path=/;`;
 }
 
-/** @summary Read JSROOT settings from specified cookie parameter
-  * @param {Boolean} only_check - when true just checks if settings were stored before with provided name
-  * @param {String} name - cookie parameter name
-  * @private */
-function readSettings(only_check = false, name = "jsroot_settings") {
+function readCookie(name) {
+   if (typeof document == 'undefined') return null;
    let decodedCookie = decodeURIComponent(document.cookie),
        ca = decodedCookie.split(';');
    name += "=";
@@ -155,12 +142,72 @@ function readSettings(only_check = false, name = "jsroot_settings") {
       if (c.indexOf(name) == 0) {
          let s = JSON.parse(atob(c.substring(name.length, c.length)));
 
-         if (s && typeof s == 'object') {
-            if (!only_check)
-               Object.assign(settings, s);
-            return true;
-          }
-       }
+         return (s && typeof s == 'object') ? s : null;
+      }
+   }
+   return null;
+}
+
+/** @summary Save JSROOT settings as specified cookie parameter
+  * @param {Number} expires - days when cookie will be removed by browser, negative - delete immediately
+  * @param {String} name - cookie parameter name
+  * @private */
+function saveSettings(expires = 365, name = "jsroot_settings") {
+   saveCookie(settings, expires, name);
+}
+
+/** @summary Read JSROOT settings from specified cookie parameter
+  * @param {Boolean} only_check - when true just checks if settings were stored before with provided name
+  * @param {String} name - cookie parameter name
+  * @private */
+function readSettings(only_check = false, name = "jsroot_settings") {
+   let s = readCookie(name);
+   if (!s) return false;
+   if (!only_check)
+      Object.assign(settings, s);
+   return true;
+}
+
+/** @summary Save JSROOT gStyle object as specified cookie parameter
+  * @param {Number} expires - days when cookie will be removed by browser, negative - delete immediately
+  * @param {String} name - cookie parameter name
+  * @private */
+function saveStyle(expires = 365, name = "jsroot_style") {
+   saveCookie(gStyle, expires, name);
+}
+
+/** @summary Read JSROOT gStyle object specified cookie parameter
+  * @param {Boolean} only_check - when true just checks if settings were stored before with provided name
+  * @param {String} name - cookie parameter name
+  * @private */
+function readStyle(only_check = false, name = "jsroot_style") {
+   let s = readCookie(name);
+   if (!s) return false;
+   if (!only_check)
+      Object.assign(gStyle, s);
+   return true;
+}
+
+/** @summary Select predefined style
+  * @private */
+function selectStyle(name) {
+   gStyle.fName = name;
+   switch (name) {
+      case "Modern": Object.assign(gStyle, {
+         fFrameBorderMode: 0, fFrameFillColor: 0, fCanvasBorderMode: 0,
+         fCanvasColor: 0, fPadBorderMode: 0, fPadColor: 0, fStatColor: 0,
+         fTitleAlign: 23, fTitleX: 0.5, fTitleBorderSize: 0, fTitleColor: 0, fTitleStyle: 0,
+         fOptStat: 1111, fStatY: 0.935,
+         fLegendBorderSize: 1, fLegendFont: 42, fLegendTextSize: 0, fLegendFillColor: 0 }); break;
+      case "Plain": Object.assign(gStyle, {
+         fFrameBorderMode: 0, fCanvasBorderMode: 0, fPadBorderMode: 0,
+         fPadColor: 0, fCanvasColor: 0,
+         fTitleColor: 0, fTitleBorderSize: 0, fStatColor: 0, fStatBorderSize: 1, fLegendBorderSize: 1 }); break;
+      case "Bold": Object.assign(gStyle, {
+         fCanvasColor: 10, fCanvasBorderMode: 0,
+         fFrameLineWidth: 3, fFrameFillColor: 10,
+         fPadColor: 10, fPadTickX: 1, fPadTickY: 1, fPadBottomMargin: 0.15, fPadLeftMargin: 0.15,
+         fTitleColor: 10, fTitleTextColor: 600, fStatColor: 10 }); break;
    }
 }
 
@@ -663,7 +710,7 @@ function createStreamerInfoContent(lst) {
          info += ";";
          if (elem.fTitle) info += " // " + elem.fTitle;
 
-         item._childs.push({ _name : info, _title: title, _kind: elem.fTypeName, _icon: (elem.fTypeName == 'BASE') ? "img_class" : "img_member" });
+         item._childs.push({ _name: info, _title: title, _kind: elem.fTypeName, _icon: (elem.fTypeName == 'BASE') ? "img_class" : "img_member" });
       }
       if (!item._childs.length) delete item._childs;
    }
@@ -760,7 +807,6 @@ let parseAsArray = val => {
 }
 
 
-
 /** @summary central function for expand of all online items
   * @private */
 function onlineHierarchy(node, obj) {
@@ -778,14 +824,9 @@ function onlineHierarchy(node, obj) {
    return false;
 }
 
-// ==============================================================
-
-/** @summary Current hierarchy painter
-  * @desc Instance of {@link HierarchyPainter} object
-  * @private */
-let first_hpainter = null;
-
-function getHPainter() { return first_hpainter; }
+function canExpandHandle(handle) {
+   return handle?.expand || handle?.get_expand || handle?.expand_item;
+}
 
 /**
   * @summary Painter of hierarchical structures
@@ -815,8 +856,8 @@ class HierarchyPainter extends BasePainter {
       this.nobrowser = (frameid === null);
 
       // remember only very first instance
-      if (!first_hpainter)
-         first_hpainter = this;
+      if (!getHPainter())
+         setHPainter(this);
    }
 
    /** @summary Cleanup hierarchy painter
@@ -826,8 +867,8 @@ class HierarchyPainter extends BasePainter {
 
       super.cleanup();
 
-      if (first_hpainter === this)
-         first_hpainter = null;
+      if (getHPainter() === this)
+         setHPainter(null);
    }
 
    /** @summary Create file hierarchy
@@ -1723,8 +1764,11 @@ class HierarchyPainter extends BasePainter {
 
    /** @summary Fills settings menu items
      * @private */
-   fillSettingsMenu(menu) {
-      menu.add("sub:Settings");
+   fillSettingsMenu(menu, alone) {
+      if (alone)
+         menu.add("header:Settings");
+      else
+         menu.add("sub:Settings");
 
       menu.add("sub:Files");
 
@@ -1795,16 +1839,137 @@ class HierarchyPainter extends BasePainter {
       menu.add("endsub:");
 
       menu.add("Hierarchy limit:  " + settings.HierarchyLimit, () => menu.input("Max number of items in hierarchy", settings.HierarchyLimit, "int", 10, 100000).then(val => { settings.HierarchyLimit = val; }));
+      menu.add("Dark mode: " + (settings.DarkMode ? "On" : "Off"), () => this.toggleDarkMode());
+
+      function setStyleField(arg) { gStyle[arg.slice(1)] = parseInt(arg[0]); }
+      function addStyleIntField(name, field, arr) {
+         menu.add("sub:" + name);
+         for (let v = 0; v < arr.length; ++v)
+            menu.addchk(gStyle[field] == v, arr[v], `${v}${field}`, setStyleField);
+         menu.add("endsub:");
+      }
+
+      menu.add("sub:gStyle");
+
+      menu.add("sub:Canvas");
+      menu.addColorMenu("Color", gStyle.fCanvasColor, col => { gStyle.fCanvasColor = col; });
+      menu.addchk(gStyle.fOptDate, "Draw date", flag => { gStyle.fOptDate = flag ? 1 : 0; });
+      menu.addchk(gStyle.fOptFile, "Draw item", flag => { gStyle.fOptFile = flag ? 1 : 0; });
+      menu.addSizeMenu("Date X", 0.01, 0.1, 0.01, gStyle.fDateX, x => { gStyle.fDateX = x; }, "configure gStyle.fDateX for date/item name drawings");
+      menu.addSizeMenu("Date Y", 0.01, 0.1, 0.01, gStyle.fDateY, y => { gStyle.fDateY = y; }, "configure gStyle.fDateY for date/item name drawings");
+      menu.add("endsub:");
+
+      menu.add("sub:Pad");
+      menu.addColorMenu("Color", gStyle.fPadColor, col => { gStyle.fPadColor = col; });
+      menu.add("sub:Grid");
+      menu.addchk(gStyle.fPadGridX, "X", flag => { gStyle.fPadGridX = flag; });
+      menu.addchk(gStyle.fPadGridY, "Y", flag => { gStyle.fPadGridY = flag; });
+      menu.addColorMenu("Color", gStyle.fGridColor, col => { gStyle.fGridColor = col; });
+      menu.addSizeMenu("Width", 1, 10, 1, gStyle.fGridWidth, w => { gStyle.fGridWidth = w; });
+      menu.addLineStyleMenu("Style", gStyle.fGridStyle, st => { gStyle.fGridStyle = st; });
+      menu.add("endsub:");
+      addStyleIntField("Ticks X", "fPadTickX", ["normal", "ticks on both sides", "labels on both sides"]);
+      addStyleIntField("Ticks Y", "fPadTickY", ["normal", "ticks on both sides", "labels on both sides"]);
+      addStyleIntField("Log X", "fOptLogx", ["off", "on", "log 2"]);
+      addStyleIntField("Log Y", "fOptLogy", ["off", "on", "log 2"]);
+      addStyleIntField("Log Z", "fOptLogz", ["off", "on", "log 2"]);
+      menu.addchk(gStyle.fOptTitle == 1, "Hist title", flag => { gStyle.fOptTitle = flag ? 1 : 0; });
+      menu.add("endsub:");
+
+      menu.add("sub:Frame");
+      menu.addColorMenu("Fill color", gStyle.fFrameFillColor, col => { gStyle.fFrameFillColor = col; });
+      menu.addFillStyleMenu("Fill style", gStyle.fFrameFillStyle, gStyle.fFrameFillColor, null, id => { gStyle.fFrameFillStyle = id; });
+      menu.addColorMenu("Line color", gStyle.fFrameLineColor, col => { gStyle.fFrameLineColor = col; });
+      menu.addSizeMenu("Line width", 1, 10, 1, gStyle.fFrameLineWidth, w => { gStyle.fFrameLineWidth = w; });
+      menu.addLineStyleMenu("Line style", gStyle.fFrameLineStyle, st => { gStyle.fFrameLineStyle = st; });
+      menu.addSizeMenu("Border size", 0, 10, 1, gStyle.fFrameBorderSize, sz => { gStyle.fFrameBorderSize = sz; });
+      // fFrameBorderMode: 0,
+      menu.add("sub:Margins");
+      menu.addSizeMenu("Bottom", 0, 0.5, 0.05, gStyle.fPadBottomMargin, v => { gStyle.fPadBottomMargin = v; });
+      menu.addSizeMenu("Top", 0, 0.5, 0.05, gStyle.fPadTopMargin, v => { gStyle.fPadTopMargin = v; });
+      menu.addSizeMenu("Left", 0, 0.5, 0.05, gStyle.fPadLeftMargin, v => { gStyle.fPadLeftMargin = v; });
+      menu.addSizeMenu("Right", 0, 0.5, 0.05, gStyle.fPadRightMargin, v => { gStyle.fPadRightMargin = v; });
+      menu.add("endsub:");
+      menu.add("endsub:");
+
+      menu.add("sub:Title");
+      menu.addColorMenu("Fill color", gStyle.fTitleColor, col => { gStyle.fTitleColor = col; });
+      menu.addFillStyleMenu("Fill style", gStyle.fTitleStyle, gStyle.fTitleColor, null, id => { gStyle.fTitleStyle = id; });
+      menu.addColorMenu("Text color", gStyle.fTitleTextColor, col => { gStyle.fTitleTextColor = col; });
+      menu.addSizeMenu("Border size", 0, 10, 1, gStyle.fTitleBorderSize, sz => { gStyle.fTitleBorderSize = sz; });
+      menu.addSizeMenu("Font size", 0.01, 0.1, 0.01, gStyle.fTitleFontSize, sz => { gStyle.fTitleFontSize = sz; });
+      menu.addFontMenu("Font", gStyle.fTitleFont, fnt => { gStyle.fTitleFont = fnt; });
+      menu.addSizeMenu("X: " + gStyle.fTitleX.toFixed(2), 0., 1., 0.1, gStyle.fTitleX, v => { gStyle.fTitleX = v; });
+      menu.addSizeMenu("Y: " + gStyle.fTitleY.toFixed(2), 0., 1., 0.1, gStyle.fTitleY, v => { gStyle.fTitleY = v; });
+      menu.addSizeMenu("W: " + gStyle.fTitleW.toFixed(2), 0., 1., 0.1, gStyle.fTitleW, v => { gStyle.fTitleW = v; });
+      menu.addSizeMenu("H: " + gStyle.fTitleH.toFixed(2), 0., 1., 0.1, gStyle.fTitleH, v => { gStyle.fTitleH = v; });
+      menu.add("endsub:");
+
+      menu.add("sub:Stat box");
+      menu.addColorMenu("Fill color", gStyle.fStatColor, col => { gStyle.fStatColor = col; });
+      menu.addFillStyleMenu("Fill style", gStyle.fStatStyle, gStyle.fStatColor, null, id => { gStyle.fStatStyle = id; });
+      menu.addColorMenu("Text color", gStyle.fStatTextColor, col => { gStyle.fStatTextColor = col; });
+      menu.addSizeMenu("Border size", 0, 10, 1, gStyle.fStatBorderSize, sz => { gStyle.fStatBorderSize = sz; });
+      menu.addSizeMenu("Font size", 0, 30, 5, gStyle.fStatFontSize, sz => { gStyle.fStatFontSize = sz; });
+      menu.addFontMenu("Font", gStyle.fStatFont, fnt => { gStyle.fStatFont = fnt; });
+      menu.add("Stat format", () => menu.input("Stat format", gStyle.fStatFormat).then(fmt => { gStyle.fStatFormat = fmt; }));
+      menu.addSizeMenu("X: " + gStyle.fStatX.toFixed(2), 0.2, 1., 0.1, gStyle.fStatX, v => { gStyle.fStatX = v; });
+      menu.addSizeMenu("Y: " + gStyle.fStatY.toFixed(2), 0.2, 1., 0.1, gStyle.fStatY, v => { gStyle.fStatY = v; });
+      menu.addSizeMenu("Width: " + gStyle.fStatW.toFixed(2), 0.1, 1., 0.1, gStyle.fStatW, v => { gStyle.fStatW = v; });
+      menu.addSizeMenu("Height: " + gStyle.fStatH.toFixed(2), 0.1, 1., 0.1, gStyle.fStatH, v => { gStyle.fStatH = v; });
+      menu.add("endsub:");
+
+      menu.add("sub:Legend");
+      menu.addColorMenu("Fill color", gStyle.fLegendFillColor, col => { gStyle.fLegendFillColor = col; });
+      menu.addSizeMenu("Border size", 0, 10, 1, gStyle.fLegendBorderSize, sz => { gStyle.fLegendBorderSize = sz; });
+      menu.addFontMenu("Font", gStyle.fLegendFont, fnt => { gStyle.fLegendFont = fnt; });
+      menu.addSizeMenu("Text size", 0, 0.1, 0.01, gStyle.fLegendTextSize, v => { gStyle.fLegendTextSize = v; }, "legend text size, when 0 - auto adjustment is used");
+      menu.add("endsub:");
+
+      menu.add("sub:Histogram");
+      menu.addchk(gStyle.fHistMinimumZero, "Base0", flag => { gStyle.fHistMinimumZero = flag; }, "when true, BAR and LEGO drawing using base = 0");
+      menu.add("Text format", () => menu.input("Paint text format", gStyle.fPaintTextFormat).then(fmt => { gStyle.fPaintTextFormat = fmt; }));
+      menu.add("Time offset", () => menu.input("Time offset in seconds, default is 788918400 for 1/1/1995", gStyle.fTimeOffset, "int").then(ofset => { gStyle.fTimeOffset = ofset; }));
+      menu.addSizeMenu("ErrorX: " + gStyle.fErrorX.toFixed(2), 0., 1., 0.1, gStyle.fErrorX, v => { gStyle.fErrorX = v; });
+      menu.addSizeMenu("End error", 0, 12, 1, gStyle.fEndErrorSize, v => { gStyle.fEndErrorSize = v; }, "size in pixels of end error for E1 draw options, gStyle.fEndErrorSize");
+      menu.addSizeMenu("Top margin", 0., 0.5, 0.05, gStyle.fHistTopMargin, v => { gStyle.fHistTopMargin = v; }, "Margin between histogram's top and frame's top");
+      menu.addColorMenu("Fill color", gStyle.fHistFillColor, col => { gStyle.fHistFillColor = col; });
+      menu.addFillStyleMenu("Fill style", gStyle.fHistFillStyle, gStyle.fHistFillColor, null, id => { gStyle.fHistFillStyle = id; });
+      menu.addColorMenu("Line color", gStyle.fHistLineColor, col => { gStyle.fHistLineColor = col; });
+      menu.addSizeMenu("Line width", 1, 10, 1, gStyle.fHistLineWidth, w => { gStyle.fHistLineWidth = w; });
+      menu.addLineStyleMenu("Line style", gStyle.fHistLineStyle, st => { gStyle.fHistLineStyle = st; });
+      menu.add("endsub:");
+
+      menu.add("separator");
+      menu.add("sub:Predefined");
+      ["Modern", "Plain", "Bold"].forEach(name => menu.addchk((gStyle.fName == name), name, () => selectStyle.bind(this, name)()));
+      menu.add("endsub:");
+      menu.add("endsub:");
 
       menu.add("separator");
 
       menu.add("Save settings", () => {
          let promise = readSettings(true) ? Promise.resolve(true) : menu.confirm("Save settings", "Pressing OK one agreess that JSROOT will store settings as browser cookies");
-         promise.then(res => { if (res) saveSettings(); });
+         promise.then(res => { if (res) { saveSettings(); saveStyle(); } });
       });
-      menu.add("Delete settings", () => saveSettings(-1));
+      menu.add("Delete settings", () => { saveSettings(-1); saveStyle(-1); });
 
-      menu.add("endsub:");
+      if (!alone) menu.add("endsub:");
+   }
+
+   /** @summary Toggle dark mode
+     * @private */
+   toggleDarkMode() {
+      settings.DarkMode = !settings.DarkMode;
+      if (this.brlayout)
+         this.brlayout.createStyle();
+      if (this.disp)
+         this.disp.forEachFrame(frame => {
+            let canvp = getElementCanvPainter(frame),
+                svg = canvp ? canvp.getCanvSvg() : null;
+
+            if (svg) svg.style("filter", settings.DarkMode ? "invert(100%)" : null);
+          });
    }
 
    /** @summary Handle context menu in the hieararchy
@@ -3513,6 +3678,13 @@ class HierarchyPainter extends BasePainter {
       this.setDisplay(layout, this.brlayout.drawing_divid());
    }
 
+   /** @summary Returns trus if status is exists */
+   hasStatusLine() {
+      if (this.status_disabled || !this.gui_div || !this.brlayout)
+         return false;
+      return this.brlayout.hasStatus();
+   }
+
    /** @summary Create status line
      * @param {number} [height] - size of the status line
      * @param [mode] - false / true / "toggle"
@@ -3597,10 +3769,14 @@ class HierarchyPainter extends BasePainter {
 
       this.brlayout.setBrowserContent(guiCode);
 
-      if (this.is_online)
-          this.brlayout.setBrowserTitle('ROOT online server');
-       else
-          this.brlayout.setBrowserTitle('Read a ROOT file');
+      let title_elem = this.brlayout.setBrowserTitle(this.is_online ? 'ROOT online server' : 'Read a ROOT file');
+      if (title_elem) title_elem.on("contextmenu", evnt => {
+         evnt.preventDefault();
+         createMenu(evnt).then(menu => {
+            this.fillSettingsMenu(menu, true);
+            menu.show();
+         });
+      });
 
       let localfile_read_callback = null;
 
@@ -3830,5 +4006,5 @@ function drawInspector(dom, obj) {
 internals.drawInspector = drawInspector;
 
 export { getHPainter, HierarchyPainter,
-         drawInspector, drawStreamerInfo, drawList, markAsStreamerInfo, readSettings,
+         drawInspector, drawStreamerInfo, drawList, markAsStreamerInfo, readSettings, readStyle,
          folderHierarchy, taskHierarchy, listHierarchy, objectHierarchy, keysHierarchy };
