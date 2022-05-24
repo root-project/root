@@ -155,7 +155,7 @@ sap.ui.define([
                   if (value[value.length-1] != '"') value += '"';
                }
 
-               args += (k>0 ? "," : "") + value;
+               args += (k > 0 ? "," : "") + value;
             }
          }
 
@@ -170,9 +170,12 @@ sap.ui.define([
             // invoked only when user press Ok button
             console.log('execute method for object ' + menu_obj_id + ' exec= ' + exec);
 
-            let canvp = this.getCanvasPainter();
+            let canvp = this.getCanvasPainter(),
+                p = menu_obj_id.indexOf("#");
 
-            if (canvp)
+            if (canvp?.v7canvas)
+               canvp.submitExec(painter, exec, (p > 0) ? menu_obj_id.slice(p+1) : "");
+            else if (canvp)
                canvp.sendWebsocket('OBJEXEC:' + menu_obj_id + ":" + exec);
          }
       },
@@ -181,11 +184,12 @@ sap.ui.define([
 
          // TODO: deliver class name together with menu items
          method.fClassName = painter.getClassName();
-         if ((menu_obj_id.indexOf("#x")>0) || (menu_obj_id.indexOf("#y")>0) || (menu_obj_id.indexOf("#z")>0)) method.fClassName = "TAxis";
+         if ((menu_obj_id.indexOf("#x") > 0) || (menu_obj_id.indexOf("#y") > 0) || (menu_obj_id.indexOf("#z") > 0))
+            method.fClassName = "TAxis";
 
          let items = [];
 
-         for (let n=0;n<method.fArgs.length;++n) {
+         for (let n = 0; n < method.fArgs.length; ++n) {
             let arg = method.fArgs[n];
             arg.fValue = arg.fDefault;
             if (arg.fValue == '\"\"') arg.fValue = "";
