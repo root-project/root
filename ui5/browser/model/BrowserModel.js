@@ -28,6 +28,7 @@ sap.ui.define([
             this.itemsFilter = "";
             this.showHidden = false;
             this.appendToCanvas = false;
+            this.onlyLastCycle = 0; // 0 - not changed, -1 off , +1 on
 
             this.threshold = 100; // default threshold to prefetch items
         },
@@ -53,6 +54,10 @@ sap.ui.define([
 
         /** @summary Is show hidden flag set */
         isAppendToCanvas: function() { return this.appendToCanvas; },
+
+        getOnlyLastCycle: function() { return this.onlyLastCycle; },
+
+        setOnlyLastCycle: function(v) { this.onlyLastCycle = v; },
 
         /** @summary Set reverse order */
         setReverseOrder: function(on) { this.reverseOrder = on; },
@@ -190,7 +195,7 @@ sap.ui.define([
                  return -1;
               }
 
-              for (let k=0;k<curr.childs.length;++k) {
+              for (let k = 0; k < curr.childs.length; ++k) {
                  if (curr.childs[k].name == name) {
                     this.reset_nodes = true;
                     curr.expanded = true;
@@ -257,8 +262,9 @@ sap.ui.define([
               sort: this.sortMethod || "",
               reverse: this.reverseOrder || false,
               hidden: this.showHidden ? true : false,
+              lastcycle: this.onlyLastCycle,
               reload: force_reload ? true : false,  // rescan items by server even when path was not changed
-              regex: this.itemsFilter ? "^(" + this.itemsFilter + ".*)$" : ""
+              regex: this.itemsFilter ? "^(" + this.itemsFilter + ".*)$" : "",
            };
            this._websocket.send("BRREQ:" + JSON.stringify(request));
         },

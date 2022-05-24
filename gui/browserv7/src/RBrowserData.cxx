@@ -24,6 +24,7 @@
 #include "TFolder.h"
 #include "TROOT.h"
 #include "TBufferJSON.h"
+#include "TEnv.h"
 
 #include <algorithm>
 #include <regex>
@@ -228,6 +229,11 @@ bool RBrowserData::ProcessBrowserRequest(const RBrowserRequest &request, RBrowse
 
 std::string RBrowserData::ProcessRequest(const RBrowserRequest &request)
 {
+   if (request.lastcycle < 0)
+      gEnv->SetValue("WebGui.LastCycle", "no");
+   else if (request.lastcycle > 0)
+      gEnv->SetValue("WebGui.LastCycle", "yes");
+
    RBrowserReply reply;
 
    reply.path = request.path;
