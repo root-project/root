@@ -331,7 +331,7 @@ RooSimWSTool::ObjBuildConfig* RooSimWSTool::validateConfig(BuildConfig& bc)
 
     }
     // Need to add clause here for SplitRules without any split (which can happen in MultiBuildConfigs)
-    if (sr._paramSplitMap.size()==0) {
+    if (sr._paramSplitMap.empty()) {
 
       if (obc->_masterCat) {
    list<string>::iterator misi ;

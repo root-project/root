@@ -139,7 +139,7 @@ RooAbsCategory::value_type RooMultiCategory::evaluate() const
   value_type multiplier = 1;
   for (const auto arg : _catSet) {
     auto cat = static_cast<const RooAbsCategory*>(arg);
-    if (cat->size() == 0) {
+    if (cat->empty()) {
       coutW(InputArguments) << __func__ << " Trying to build a multi-category state based on "
           "a category with zero states. Fix '" << cat->GetName() << "'." << std::endl;
       continue;

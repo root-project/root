@@ -220,7 +220,7 @@ struct CompareVectorIndices {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// kbelasco: for this method, consider running DetermineInterval() if
-/// fKeysPdf==nullptr, fSparseHist==nullptr, fDataHist==nullptr, or fVector.size()==0
+/// fKeysPdf==nullptr, fSparseHist==nullptr, fDataHist==nullptr, or fVector.empty()
 /// rather than just returning false.  Though this should not be an issue
 /// because nobody should be able to get an MCMCInterval that has their interval
 /// or posterior representation nullptr/empty since they should only get this
@@ -267,7 +267,7 @@ bool MCMCInterval::IsInInterval(const RooArgSet& point) const
          }
       }
    } else if (fIntervalType == kTailFraction) {
-      if (fVector.size() == 0)
+      if (fVector.empty())
          return false;
 
       // return whether value of point is within the range
@@ -639,13 +639,13 @@ void MCMCInterval::DetermineTailFractionInterval()
    // also make changes so that calling GetPosterior...() returns nullptr
    // when fIntervalType == kTailFraction, since there really
    // is no posterior for this type of interval determination
-   if (fVector.size() == 0)
+   if (fVector.empty())
       CreateVector(fAxes[0]);
 
-   if (fVector.size() == 0 || fVecWeight == 0) {
+   if (fVector.empty() || fVecWeight == 0) {
       // if size is still 0, then creation failed.
       // if fVecWeight == 0, then there are no entries (indicates the same
-      // error as fVector.size() == 0 because that only happens when
+      // error as fVector.empty() because that only happens when
       // fNumBurnInSteps >= fChain->Size())
       // either way, reset and return
       fVector.clear();

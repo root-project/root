@@ -119,7 +119,7 @@ class ToyMCImportanceSampler: public ToyMCSampler {
          ToyMCSampler::SetPdf(pdf);
 
          if( fNullDensities.size() == 1 ) { fNullDensities[0] = &pdf; }
-         else if( fNullDensities.size() == 0) AddNullDensity( &pdf );
+         else if( fNullDensities.empty()) AddNullDensity( &pdf );
          else{
             oocoutE(nullptr,InputArguments) << "Cannot use SetPdf() when already multiple null densities are specified. Please use AddNullDensity()." << std::endl;
          }
@@ -127,7 +127,7 @@ class ToyMCImportanceSampler: public ToyMCSampler {
       /// overwrite from ToyMCSampler
       void SetParametersForTestStat(const RooArgSet& nullpoi) override {
          ToyMCSampler::SetParametersForTestStat(nullpoi);
-         if( fNullSnapshots.size() == 0 ) AddNullDensity( nullptr, &nullpoi );
+         if( fNullSnapshots.empty() ) AddNullDensity( nullptr, &nullpoi );
          else if( fNullSnapshots.size() == 1 ) {
             oocoutI(nullptr,InputArguments) << "Overwriting snapshot for the only defined null density." << std::endl;
             if( fNullSnapshots[0] ) delete fNullSnapshots[0];

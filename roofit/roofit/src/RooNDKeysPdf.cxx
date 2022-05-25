@@ -691,7 +691,7 @@ void RooNDKeysPdf::mirrorDataSet()
 
     vector<Int_t>& mjdx0 = mjdcs[0];
     // no mirror point(s) for this event
-    if (size==1 && mjdx0.size()==0) continue;
+    if (size==1 && mjdx0.empty()) continue;
 
     // 2.
     // generate all mirror points for event i

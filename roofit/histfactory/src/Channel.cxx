@@ -87,7 +87,7 @@ void RooStats::HistFactory::Channel::Print( std::ostream& stream ) {
   fStatErrorConfig.Print( stream );
 
 
-  if( fSamples.size() != 0 ) {
+  if( !fSamples.empty() ) {
 
     stream << "\t Samples: " << std::endl;
     for( unsigned int i = 0; i < fSamples.size(); ++i ) {

@@ -282,7 +282,7 @@ std::vector< RooStats::HistFactory::Measurement > ConfigParser::GetMeasurementsF
 
     cxcoutIHF << "Done Processing Measurements" << std::endl;
 
-    if( measurement_list.size() == 0 ) {
+    if( measurement_list.empty() ) {
       cxcoutEHF << "Error: No Measurements found in XML Driver File" << std::endl;
       throw hf_exc();
     }
