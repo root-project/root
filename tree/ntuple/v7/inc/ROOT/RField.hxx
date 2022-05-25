@@ -1533,7 +1533,7 @@ public:
    explicit RField(std::string_view name, std::vector<std::unique_ptr<Detail::RFieldBase>> &&itemFields)
       : RPairField(name, std::move(itemFields), {offsetof(ContainerT, first), offsetof(ContainerT, second)})
    {
-      fMaxAlignment = alignof(ContainerT);
+      fMaxAlignment = std::max(alignof(T1), alignof(T2));
       fSize = sizeof(ContainerT);
    }
    explicit RField(std::string_view name) : RField(name, BuildItemFields<T1, T2>()) {}
