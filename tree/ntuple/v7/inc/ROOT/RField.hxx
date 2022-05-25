@@ -1552,10 +1552,9 @@ public:
    }
    void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final
    {
-      if (dtorOnly)
-         reinterpret_cast<ContainerT *>(value.GetRawPtr())->~pair();
-      else
-         delete reinterpret_cast<ContainerT *>(value.GetRawPtr());
+      reinterpret_cast<ContainerT *>(value.GetRawPtr())->~pair();
+      if (!dtorOnly)
+         free(reinterpret_cast<ContainerT *>(value.GetRawPtr()));
    }
 };
 
