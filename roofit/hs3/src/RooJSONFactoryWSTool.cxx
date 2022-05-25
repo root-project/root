@@ -1285,7 +1285,7 @@ RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &namec
 {
    if (!n.is_map())
       RooJSONFactoryWSTool::error("data is not a map");
-   if (varlist.size() == 0) {
+   if (varlist.empty()) {
       std::string obsname = "obs_x_" + namecomp;
       varlist.add(*(_workspace->factory((obsname + "[0.]").c_str())));
    }

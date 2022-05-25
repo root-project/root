@@ -349,7 +349,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
 
   // Try CINT interface
   pair<list<string>,unsigned int> ca = ctorArgs(className,_args.size()+2) ;
-  if (ca.first.size()==0) {
+  if (ca.first.empty()) {
     coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR no suitable constructor found for class " << className << endl ;
     logError() ;
     return 0 ;

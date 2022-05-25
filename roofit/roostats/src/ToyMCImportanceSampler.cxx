@@ -145,7 +145,7 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
       return nullptr;
    }
 
-   if( fNullDensities.size() == 0  &&  fPdf ) {
+   if( fNullDensities.empty()  &&  fPdf ) {
       ooccoutI(nullptr,InputArguments) << "No explicit null densities specified. Going to add one based on the given paramPoint and the global fPdf. ... but cannot do that inside const function." << endl;
       //AddNullDensity( fPdf, &paramPoint );
    }
@@ -189,7 +189,7 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
       return nullptr;
    }
 
-   if( fNullDensities.size() == 0  &&  fPdf ) {
+   if( fNullDensities.empty()  &&  fPdf ) {
       ooccoutI(nullptr,InputArguments) << "No explicit null densities specified. Going to add one based on the given paramPoint and the global fPdf. ... but cannot do that inside const function." << endl;
       //AddNullDensity( fPdf, &paramPoint );
    }
@@ -252,16 +252,16 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
       return nullptr;
    }
 
-   if( fNullDensities.size() == 0 ) {
+   if( fNullDensities.empty() ) {
       oocoutE(nullptr,InputArguments) << "ToyMCImportanceSampler: Need to specify the null density explicitly." << endl;
       return nullptr;
    }
 
    // catch the case when NLLs are not created (e.g. when ToyMCSampler was streamed for Proof)
-   if( fNullNLLs.size() == 0  &&  fNullDensities.size() > 0 ) {
+   if( fNullNLLs.empty()  &&  fNullDensities.size() > 0 ) {
       for( unsigned int i = 0; i < fNullDensities.size(); i++ ) fNullNLLs.push_back( nullptr );
    }
-   if( fImpNLLs.size() == 0  &&  fImportanceDensities.size() > 0 ) {
+   if( fImpNLLs.empty()  &&  fImportanceDensities.size() > 0 ) {
       for( unsigned int i = 0; i < fImportanceDensities.size(); i++ ) fImpNLLs.push_back( nullptr );
    }
 

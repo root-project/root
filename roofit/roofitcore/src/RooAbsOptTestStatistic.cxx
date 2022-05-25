@@ -761,7 +761,7 @@ bool RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, bool cloneData, bo
 
   if (cloneData) {
     // Cloning input dataset
-    if (_rangeName.size()==0) {
+    if (_rangeName.empty()) {
       _dataClone = (RooAbsData*) indata.reduce(*indata.get()) ;
     } else {
       _dataClone = ((RooAbsData&)indata).reduce(RooFit::SelectVars(*indata.get()),RooFit::CutRange(_rangeName.c_str())) ;

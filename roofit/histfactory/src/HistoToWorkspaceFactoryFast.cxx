@@ -124,7 +124,7 @@ namespace HistFactory{
     }
 
     std::vector<std::string> poi_list = measurement.GetPOIList();
-    if( poi_list.size()==0 ) {
+    if( poi_list.empty() ) {
       cxcoutWHF << "No Parametetrs of interest are set" << std::endl;
     }
 
@@ -1116,7 +1116,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       fObsNameVec.push_back( fObsName );
     }
 
-    if (fObsNameVec.size() == 0 || fObsNameVec.size() >= 3) {
+    if (fObsNameVec.empty() || fObsNameVec.size() >= 3) {
       throw hf_exc("HistFactory is limited to 1- to 3-dimensional histograms.");
     }
 
@@ -1217,7 +1217,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       RooHistFunc* nominalHistFunc = MakeExpectedHistFunc(sample.GetHisto(), proto, expPrefix, observables);
       assert(nominalHistFunc);
 
-      if(sample.GetHistoSysList().size() == 0) {
+      if(sample.GetHistoSysList().empty()) {
         // If no HistoSys
         cxcoutI(HistFactory) << sample.GetName() + "_" + channel_name + " has no variation histograms " << endl;
 
@@ -1434,7 +1434,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       // Create a ShapeSys for this channel //
       ////////////////////////////////////////
 
-      if( sample.GetShapeSysList().size() != 0 ) {
+      if( !sample.GetShapeSysList().empty() ) {
 
         if( fObsNameVec.size() > 3 ) {
           cxcoutF(HistFactory) << "Cannot include Stat Error for histograms of more than 3 dimensions."
@@ -1527,7 +1527,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
         } // End: NumObsVar == 1
 
-      } // End: GetShapeSysList.size() != 0
+      } // End: !GetShapeSysList.empty()
 
 
       // GHL: This was pretty confusing before,

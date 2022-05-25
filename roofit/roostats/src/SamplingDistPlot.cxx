@@ -246,7 +246,7 @@ void SamplingDistPlot::SetSampleWeights(const SamplingDistribution* samplingDist
 {
   fIsWeighted = false;
 
-  if(samplingDist->GetSampleWeights().size() != 0){
+  if(!samplingDist->GetSampleWeights().empty()){
     fIsWeighted = true;
     fSampleWeights = samplingDist->GetSampleWeights();
   }

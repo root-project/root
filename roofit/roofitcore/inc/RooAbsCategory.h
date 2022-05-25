@@ -104,6 +104,10 @@ public:
   std::size_t size() const {
     return stateNames().size();
   }
+  /// If there are no states defined
+  bool empty() const {
+    return stateNames().empty();
+  }
 
 
   /// \name Legacy interface
