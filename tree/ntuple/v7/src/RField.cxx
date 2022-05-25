@@ -226,7 +226,8 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    }
    if (normalizedType.substr(0, 10) == "std::pair<") {
       auto innerTypes = TokenizeTypeList(normalizedType.substr(10, normalizedType.length() - 11));
-      R__ASSERT(innerTypes.size() == 2);
+      if (innerTypes.size() != 2)
+         return R__FAIL("the type list for std::pair must have exactly two elements");
       std::vector<std::unique_ptr<RFieldBase>> items;
       for (unsigned int i = 0; i < innerTypes.size(); ++i) {
          items.emplace_back(Create("_" + std::to_string(i), innerTypes[i]).Unwrap());
@@ -1706,7 +1707,8 @@ ROOT::Experimental::RPairField::RPairField(std::string_view fieldName,
 
    // ISO C++ does not guarantee any specific layout for `std::pair`; query TClass for the member offsets
    fClass = TClass::GetClass(GetType().c_str());
-   R__ASSERT(fClass != nullptr);
+   if (!fClass)
+      throw RException(R__FAIL("cannot get type information for " + GetType()));
    fSize = fClass->Size();
    fOffsets.push_back(fClass->GetDataMemberOffset("first"));
    fOffsets.push_back(fClass->GetDataMemberOffset("second"));
