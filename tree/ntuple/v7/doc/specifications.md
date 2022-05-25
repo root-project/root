@@ -591,6 +591,11 @@ Variants are stored in $n+1$ fields:
 A pair is stored using an empty mother field with two subfields, one of type `T1` and one of type `T2`. `T1` and `T2` must be types with RNTuple I/O support.
 The child fileds are named `_0` and `_1`.
 
+#### std::tuple<T1, T2, ..., Tn>
+
+A tuple is stored using an empty mother field with $n$ subfields of type `T1`, `T2`, ..., `Tn`. All types must have RNTuple I/O support.
+The child fileds are named `_0`, `_1`, ...
+
 ### User-defined classes
 
 User defined C++ classes are supported with the following limitations
