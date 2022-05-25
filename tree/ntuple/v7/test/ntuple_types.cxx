@@ -15,6 +15,9 @@ TEST(RNTuple, TypeName) {
 
    EXPECT_STREQ("std::pair<std::pair<float,CustomStruct>,std::int32_t>", (ROOT::Experimental::RField<
                  std::pair<std::pair<float,CustomStruct>,int>>::TypeName().c_str()));
+   EXPECT_STREQ(
+      "std::tuple<std::tuple<char,CustomStruct,char>,std::int32_t>",
+      (ROOT::Experimental::RField<std::tuple<std::tuple<char, CustomStruct, char>, int>>::TypeName().c_str()));
 }
 
 
@@ -72,6 +75,58 @@ TEST(RNTuple, StdPair)
 
       EXPECT_EQ(static_cast<double>(i + 1), viewPair2(i).first);
       EXPECT_EQ(std::to_string(i + 1), viewPair2(i).second);
+   }
+}
+
+TEST(RNTuple, StdTuple)
+{
+   auto field = RField<std::tuple<char, int64_t, char>>("tupleField");
+   EXPECT_STREQ("std::tuple<char,std::int64_t,char>", field.GetType().c_str());
+   auto otherField = RFieldBase::Create("test", "std::tuple<char, int64_t, char>").Unwrap();
+   EXPECT_STREQ(field.GetType().c_str(), otherField->GetType().c_str());
+   EXPECT_EQ((sizeof(std::tuple<char, int64_t, char>)), field.GetValueSize());
+   EXPECT_EQ((sizeof(std::tuple<char, int64_t, char>)), otherField->GetValueSize());
+   EXPECT_EQ((alignof(std::tuple<char, int64_t, char>)), field.GetAlignment());
+   EXPECT_EQ((alignof(std::tuple<char, int64_t, char>)), otherField->GetAlignment());
+
+   auto tupleTupleField =
+      RField<std::tuple<std::tuple<int64_t, float, char, float>, std::vector<std::tuple<char, char, char>>>>(
+         "tupleTupleField");
+   EXPECT_STREQ("std::tuple<std::tuple<std::int64_t,float,char,float>,std::vector<std::tuple<char,char,char>>>",
+                tupleTupleField.GetType().c_str());
+
+   FileRaii fileGuard("test_ntuple_rfield_stdtuple.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto tuple_field = model->MakeField<std::tuple<char, float, std::string, char>>({"myTuple", "4-tuple"});
+      auto myTuple2 = RFieldBase::Create("myTuple2", "std::tuple<char, float, std::string, char>").Unwrap();
+      model->AddField(std::move(myTuple2));
+
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "tuple_ntuple", fileGuard.GetPath());
+      auto tuple_field2 =
+         ntuple->GetModel()->GetDefaultEntry()->Get<std::tuple<char, float, std::string, char>>("myTuple2");
+      for (int i = 0; i < 2; i++) {
+         *tuple_field = {'A' + i, static_cast<float>(i), std::to_string(i), '0' + i};
+         *tuple_field2 = {'B' + i, static_cast<float>(i), std::to_string(i), '1' + i};
+         ntuple->Fill();
+      }
+   }
+
+   auto ntuple = RNTupleReader::Open("tuple_ntuple", fileGuard.GetPath());
+   EXPECT_EQ(2, ntuple->GetNEntries());
+
+   auto viewTuple = ntuple->GetView<std::tuple<char, float, std::string, char>>("myTuple");
+   auto viewTuple2 = ntuple->GetView<std::tuple<char, float, std::string, char>>("myTuple2");
+   for (auto i : ntuple->GetEntryRange()) {
+      EXPECT_EQ(static_cast<char>('A' + i), std::get<0>(viewTuple(i)));
+      EXPECT_EQ(static_cast<double>(i), std::get<1>(viewTuple(i)));
+      EXPECT_EQ(std::to_string(i), std::get<2>(viewTuple(i)));
+      EXPECT_EQ(static_cast<char>('0' + i), std::get<3>(viewTuple(i)));
+
+      EXPECT_EQ(static_cast<char>('B' + i), std::get<0>(viewTuple2(i)));
+      EXPECT_EQ(static_cast<double>(i), std::get<1>(viewTuple2(i)));
+      EXPECT_EQ(std::to_string(i), std::get<2>(viewTuple2(i)));
+      EXPECT_EQ(static_cast<char>('1' + i), std::get<3>(viewTuple2(i)));
    }
 }
 
