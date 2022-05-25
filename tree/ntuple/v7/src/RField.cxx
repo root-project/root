@@ -924,9 +924,10 @@ ROOT::Experimental::RRecordField::RRecordField(std::string_view fieldName,
    : ROOT::Experimental::Detail::RFieldBase(fieldName, "", ENTupleStructure::kRecord, false /* isSimple */)
 {
    for (auto &item : itemFields) {
+      fSize += GetItemPadding(fSize, item->GetAlignment());
       fOffsets.push_back(fSize);
       fMaxAlignment = std::max(fMaxAlignment, item->GetAlignment());
-      fSize += GetItemPadding(fSize, item->GetAlignment()) + item->GetValueSize();
+      fSize += item->GetValueSize();
       Attach(std::move(item));
    }
 }
