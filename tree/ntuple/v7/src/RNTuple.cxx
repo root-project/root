@@ -25,6 +25,7 @@
 #include <ROOT/TTaskGroup.hxx>
 #endif
 
+#include <TBuffer.h>
 #include <TError.h>
 #include <TFile.h>
 #include <TROOT.h> // for IsImplicitMTEnabled()
