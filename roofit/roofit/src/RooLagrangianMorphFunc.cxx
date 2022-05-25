@@ -1274,7 +1274,7 @@ FormulaList createFormulas(const char *name, const RooLagrangianMorphFunc::Param
       ::collectPolynomials(morphfuncpattern, d);
    }
    FormulaList retval = buildFormulas(name, inputs, inputFlags, morphfuncpattern, couplings, flags, nonInterfering);
-   if (retval.size() == 0) {
+   if (retval.empty()) {
       std::stringstream errorMsgStream;
       errorMsgStream
          << "no formulas are non-zero, check if any if your couplings is floating and missing from your param_cards!"
@@ -1567,7 +1567,7 @@ public:
                               {func->_nonInterfering.begin(), func->_nonInterfering.end()}, func->_flags);
 
       cache->buildMatrix(func->_config.paramCards, func->_config.flagValues, func->_flags);
-      if (obsName.size() == 0) {
+      if (obsName.empty()) {
          std::cerr << "Matrix inversion succeeded, but no observable was "
                       "supplied. quitting..."
                    << std::endl;

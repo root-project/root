@@ -933,7 +933,7 @@ void RooAbsArg::setValueDirty(const RooAbsArg* source)
   if (_operMode!=Auto || _inhibitDirty) return ;
 
   // Handle no-propagation scenarios first
-  if (_clientListValue.size() == 0) {
+  if (_clientListValue.empty()) {
     _valueDirty = true ;
     return ;
   }

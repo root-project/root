@@ -55,7 +55,7 @@ class BracketAdapter {
 class BracketAdapterWithMask {
   public:
     /// Construct adapter from a fallback value and a batch of values.
-    /// - If `batch.size() == 0`, always return `payload`.
+    /// - If `batch.empty()`, always return `payload`.
     /// - Else, return `batch[i]`.
     BracketAdapterWithMask(double payload, const RooSpan<const double>& batch) noexcept :
     _isBatch(!batch.empty()),

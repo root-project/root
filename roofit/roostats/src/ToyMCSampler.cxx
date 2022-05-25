@@ -228,7 +228,7 @@ ToyMCSampler::~ToyMCSampler() {
 bool ToyMCSampler::CheckConfig(void) {
    bool goodConfig = true;
 
-   if(fTestStatistics.size() == 0 || fTestStatistics[0] == nullptr) { ooccoutE(nullptr,InputArguments) << "Test statistic not set." << endl; goodConfig = false; }
+   if(fTestStatistics.empty() || fTestStatistics[0] == nullptr) { ooccoutE(nullptr,InputArguments) << "Test statistic not set." << endl; goodConfig = false; }
    if(!fObservables) { ooccoutE(nullptr,InputArguments) << "Observables not set." << endl; goodConfig = false; }
    if(!fParametersForTestStat) { ooccoutE(nullptr,InputArguments) << "Parameter values used to evaluate the test statistic are not set." << endl; goodConfig = false; }
    if(!fPdf) { ooccoutE(nullptr,InputArguments) << "Pdf not set." << endl; goodConfig = false; }
@@ -474,7 +474,7 @@ void ToyMCSampler::GenerateGlobalObservables(RooAbsPdf& pdf) const {
 
       } else {
 
-         if (_pdfList.size() == 0) {
+         if (_pdfList.empty()) {
             RooCategory& channelCat = (RooCategory&)simPdf->indexCat();
             int nCat = channelCat.numTypes();
             for (int i=0; i < nCat; ++i){

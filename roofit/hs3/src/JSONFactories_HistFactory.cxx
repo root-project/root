@@ -375,7 +375,7 @@ public:
                                                   RooArgList &constraints, const RooArgSet &observables,
                                                   double statErrorThreshold, const std::string &statErrorType) const
    {
-      if (sumW.size() == 0)
+      if (sumW.empty())
          return nullptr;
 
       RooArgList gammas;
@@ -741,7 +741,7 @@ public:
                norms.append_child() << e->GetName();
             } else if (e->InheritsFrom(RooHistFunc::Class())) {
                const RooHistFunc *hf = static_cast<const RooHistFunc *>(e);
-               if (varnames.size() == 0) {
+               if (varnames.empty()) {
                   varnames = getVarnames(hf);
                }
                if (!hist) {
@@ -761,7 +761,7 @@ public:
             if (!hist) {
                hist = histFunc2TH1(dynamic_cast<const RooHistFunc *>(pip->nominalHist()));
             }
-            if (varnames.size() == 0) {
+            if (varnames.empty()) {
                varnames = getVarnames(dynamic_cast<const RooHistFunc *>(pip->nominalHist()));
             }
             for (size_t i = 0; i < pip->paramList().size(); ++i) {

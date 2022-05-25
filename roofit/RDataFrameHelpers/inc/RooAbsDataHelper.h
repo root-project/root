@@ -157,7 +157,7 @@ private:
   /// No matching by name is performed.
   /// \param eventSize Size of a single event.
   void FillDataSet(const std::vector<double>& events, unsigned int eventSize) {
-    if (events.size() == 0)
+    if (events.empty())
       return;
 
     const RooArgSet& argSet = *_dataset->get();
