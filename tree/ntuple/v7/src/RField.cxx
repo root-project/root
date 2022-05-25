@@ -127,6 +127,7 @@ std::string GetNormalizedType(const std::string &typeName) {
    if (normalizedType.substr(0, 6) == "array<") normalizedType = "std::" + normalizedType;
    if (normalizedType.substr(0, 8) == "variant<") normalizedType = "std::" + normalizedType;
    if (normalizedType.substr(0, 5) == "pair<") normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 8) == "tuple<") normalizedType = "std::" + normalizedType;
 
    return normalizedType;
 }
@@ -231,6 +232,14 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       std::array<std::unique_ptr<RFieldBase>, 2> items{Create("_0", innerTypes[0]).Unwrap(),
                                                        Create("_1", innerTypes[1]).Unwrap()};
       result = std::make_unique<RPairField>(fieldName, items);
+   }
+   if (normalizedType.substr(0, 11) == "std::tuple<") {
+      auto innerTypes = TokenizeTypeList(normalizedType.substr(11, normalizedType.length() - 12));
+      std::vector<std::unique_ptr<RFieldBase>> items;
+      for (unsigned int i = 0; i < innerTypes.size(); ++i) {
+         items.emplace_back(Create("_" + std::to_string(i), innerTypes[i]).Unwrap());
+      }
+      result = std::make_unique<RTupleField>(fieldName, items);
    }
    // TODO: create an RCollectionField?
    if (normalizedType == ":Collection:")
@@ -1717,7 +1726,6 @@ ROOT::Experimental::RPairField::CloneImpl(std::string_view newName) const
                                                             fSubFields[1]->Clone(fSubFields[1]->GetName())};
 
    std::unique_ptr<RPairField> result(new RPairField(newName, std::move(items), {fOffsets[0], fOffsets[1]}));
-
    result->fClass = fClass;
    return result;
 }
@@ -1728,6 +1736,75 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RPairField::Generate
 }
 
 void ROOT::Experimental::RPairField::DestroyValue(const Detail::RFieldValue& value, bool dtorOnly)
+{
+   fClass->Destructor(value.GetRawPtr(), true /* dtorOnly */);
+   if (!dtorOnly)
+      free(value.GetRawPtr());
+}
+
+//------------------------------------------------------------------------------
+
+std::string ROOT::Experimental::RTupleField::RTupleField::GetTypeList(
+   const std::vector<std::unique_ptr<Detail::RFieldBase>> &itemFields)
+{
+   std::string result;
+   for (size_t i = 0; i < itemFields.size(); ++i) {
+      result += itemFields[i]->GetType() + ",";
+   }
+   R__ASSERT(!result.empty()); // there is always at least one type
+   result.pop_back();          // remove trailing comma
+   return result;
+}
+
+ROOT::Experimental::RTupleField::RTupleField(std::string_view fieldName,
+                                             std::vector<std::unique_ptr<Detail::RFieldBase>> &&itemFields,
+                                             const std::vector<std::size_t> &offsets)
+   : ROOT::Experimental::RRecordField(fieldName, std::move(itemFields), offsets,
+                                      "std::tuple<" + GetTypeList(itemFields) + ">")
+{
+}
+
+ROOT::Experimental::RTupleField::RTupleField(std::string_view fieldName,
+                                             std::vector<std::unique_ptr<Detail::RFieldBase>> &itemFields)
+   : ROOT::Experimental::RRecordField(fieldName, std::move(itemFields), {},
+                                      "std::tuple<" + GetTypeList(itemFields) + ">")
+{
+   // ISO C++ does not guarantee neither specific layout nor member names for `std::tuple`.  Therefore, we guess the
+   // offsets assuming that most implementations store it as a standard-layout type with members reversed w.r.t. the
+   // type list.
+   // TODO(jalopezg): check if there is a better way for computing the offsets
+   std::size_t offset = 0;
+   for (auto I = fSubFields.rbegin(); I != fSubFields.rend(); ++I) {
+      offset += GetItemPadding(offset, (*I)->GetAlignment());
+      fOffsets.insert(fOffsets.begin(), offset);
+      offset += (*I)->GetValueSize();
+   }
+
+   fClass = TClass::GetClass(GetType().c_str());
+   if (!fClass)
+      throw RException(R__FAIL("cannot get type information for " + GetType()));
+   fSize = fClass->Size();
+
+}
+
+std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
+ROOT::Experimental::RTupleField::CloneImpl(std::string_view newName) const
+{
+   std::vector<std::unique_ptr<Detail::RFieldBase>> items;
+   for (const auto &item : fSubFields)
+      items.push_back(item->Clone(item->GetName()));
+
+   std::unique_ptr<RTupleField> result(new RTupleField(newName, std::move(items), fOffsets));
+   result->fClass = fClass;
+   return result;
+}
+
+ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RTupleField::GenerateValue(void *where)
+{
+   return Detail::RFieldValue(true /* captureFlag */, this, fClass->New(where));
+}
+
+void ROOT::Experimental::RTupleField::DestroyValue(const Detail::RFieldValue &value, bool dtorOnly)
 {
    fClass->Destructor(value.GetRawPtr(), true /* dtorOnly */);
    if (!dtorOnly)
