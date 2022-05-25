@@ -186,7 +186,7 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins = false, bool doMCMC = true)
 
    // plot the likelihood function
    dataCanvas->cd(3);
-   std::unique_ptr<RooAbsReal> nll{model.createNLL(*data, Extended)};
+   std::unique_ptr<RooAbsReal> nll{model.createNLL(*data, Extended(true))};
    RooProfileLL pll("pll", "", *nll, RooArgSet(deltaMSq, sinSq2theta));
    //  TH1* hhh = nll.createHistogram("hhh",sinSq2theta,Binning(40),YVar(deltaMSq,Binning(40))) ;
    TH1 *hhh = pll.createHistogram("hhh", sinSq2theta, Binning(40), YVar(deltaMSq, Binning(40)), Scaling(kFALSE));
@@ -257,7 +257,7 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins = false, bool doMCMC = true)
    // first plot a small dot for every point tested
    if (doFeldmanCousins) {
       RooDataHist *parameterScan = (RooDataHist *)fc.GetPointsToScan();
-      TH2F *hist = (TH2F *)parameterScan->createHistogram("sinSq2theta:deltaMSq", 30, 30);
+      TH2F *hist = parameterScan->createHistogram(deltaMSq,sinSq2theta, 30, 30);
       //  hist->Draw();
       TH2F *forContour = (TH2F *)hist->Clone();
 
