@@ -601,6 +601,16 @@ public:
       : fKeys{std::move(keys)}, fValues{std::move(values)}
    {
    }
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Add an entry for the "nominal" value.
+   ///
+   /// The way client code is structured, the nominal value is provided separately from the others.
+   void AddNominal(std::unique_ptr<RMergeableValueBase> value)
+   {
+      fKeys.insert(fKeys.begin(), "nominal");
+      fValues.insert(fValues.begin(), std::move(value));
+   }
 };
 
 /**

@@ -155,10 +155,10 @@ public:
    std::unique_ptr<RActionBase> MakeVariedAction(std::vector<void *> &&results) final
    {
       const auto nVariations = GetVariations().size();
-      assert(results.size() == nVariations + 1);
+      assert(results.size() == nVariations);
 
       std::vector<Helper> helpers;
-      helpers.reserve(nVariations + 1);
+      helpers.reserve(nVariations);
 
       for (auto &&res : results)
          helpers.emplace_back(fHelper.CallMakeNew(res));
