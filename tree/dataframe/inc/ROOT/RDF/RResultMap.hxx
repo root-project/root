@@ -14,6 +14,7 @@
 #include "ROOT/RDF/RActionBase.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/RMergeableValue.hxx"
+#include "ROOT/RDF/Utils.hxx" // Union
 
 #include <stdexcept>
 #include <string>
@@ -42,10 +43,13 @@ namespace Internal {
 namespace RDF {
 template <typename T>
 ROOT::RDF::Experimental::RResultMap<T>
-MakeResultMap(std::vector<std::shared_ptr<T>> &&results, std::vector<std::string> &&keys, RLoopManager &lm,
-              std::shared_ptr<ROOT::Internal::RDF::RActionBase> actionPtr)
+MakeResultMap(std::shared_ptr<T> nominalResult, std::vector<std::shared_ptr<T>> &&variedResults,
+              std::vector<std::string> &&keys, RLoopManager &lm,
+              std::shared_ptr<ROOT::Internal::RDF::RActionBase> nominalAction,
+              std::shared_ptr<ROOT::Internal::RDF::RActionBase> variedAction)
 {
-   return ROOT::RDF::Experimental::RResultMap<T>(std::move(results), std::move(keys), lm, std::move(actionPtr));
+   return ROOT::RDF::Experimental::RResultMap<T>(std::move(nominalResult), std::move(variedResults), std::move(keys),
+                                                 lm, std::move(nominalAction), std::move(variedAction));
 }
 } // namespace RDF
 } // namespace Internal
@@ -60,25 +64,32 @@ class RResultMap {
    std::vector<std::string> fKeys;                            // values are the keys available in fMap
    std::unordered_map<std::string, std::shared_ptr<T>> fMap;  // shared_ptrs are never null
    ROOT::Detail::RDF::RLoopManager *fLoopManager;             // never null
-   std::shared_ptr<ROOT::Internal::RDF::RActionBase> fAction; // never null
+   std::shared_ptr<ROOT::Internal::RDF::RActionBase> fNominalAction; // never null
+   std::shared_ptr<ROOT::Internal::RDF::RActionBase> fVariedAction;  // never null
 
-   friend RResultMap ROOT::Internal::RDF::MakeResultMap<T>(std::vector<std::shared_ptr<T>> &&results,
-                                                           std::vector<std::string> &&keys,
-                                                           ROOT::Detail::RDF::RLoopManager &lm,
-                                                           std::shared_ptr<ROOT::Internal::RDF::RActionBase> actionPtr);
+   friend RResultMap
+   ROOT::Internal::RDF::MakeResultMap<T>(std::shared_ptr<T> nominalResult,
+                                         std::vector<std::shared_ptr<T>> &&variedResults,
+                                         std::vector<std::string> &&keys, ROOT::Detail::RDF::RLoopManager &lm,
+                                         std::shared_ptr<ROOT::Internal::RDF::RActionBase> nominalAction,
+                                         std::shared_ptr<ROOT::Internal::RDF::RActionBase> variedAction);
 
    friend std::unique_ptr<ROOT::Detail::RDF::RMergeableVariations<T>>
    ROOT::Detail::RDF::GetMergeableValue<T>(RResultMap<T> &rmap);
 
    // The preconditions are that results and keys have the same size, are ordered the same way, and keys are unique.
-   RResultMap(std::vector<std::shared_ptr<T>> &&results, std::vector<std::string> &&keys,
-              ROOT::Detail::RDF::RLoopManager &lm, std::shared_ptr<ROOT::Internal::RDF::RActionBase> actionPtr)
-      : fKeys{keys}, fLoopManager(&lm), fAction(std::move(actionPtr))
+   RResultMap(std::shared_ptr<T> &&nominalResult, std::vector<std::shared_ptr<T>> &&variedResults,
+              std::vector<std::string> &&keys, ROOT::Detail::RDF::RLoopManager &lm,
+              std::shared_ptr<ROOT::Internal::RDF::RActionBase> nominalAction,
+              std::shared_ptr<ROOT::Internal::RDF::RActionBase> variedAction)
+      : fKeys{ROOT::Internal::RDF::Union({"nominal"}, keys)}, fLoopManager(&lm),
+        fNominalAction(std::move(nominalAction)), fVariedAction(std::move(variedAction))
    {
-      R__ASSERT(results.size() == keys.size() && "Keys and values have different sizes!");
+      R__ASSERT(variedResults.size() == keys.size() && "Keys and values have different sizes!");
       std::size_t i = 0u;
+      fMap.insert({"nominal", std::move(nominalResult)});
       for (const auto &k : keys) {
-         auto it = fMap.insert({k, results[i++]});
+         auto it = fMap.insert({k, variedResults[i++]});
          R__ASSERT(it.second &&
                    "Failed to insert an element in RResultMap, maybe a duplicated key? This should never happen.");
       }
@@ -92,7 +103,7 @@ public:
       if (it == fMap.end())
          throw std::runtime_error("RResultMap: no result with key \"" + key + "\".");
 
-      if (!fAction->HasRun())
+      if (!fVariedAction->HasRun())
          fLoopManager->Run();
       return *it->second;
    }
@@ -127,12 +138,16 @@ namespace RDF {
 template <typename T>
 std::unique_ptr<RMergeableVariations<T>> GetMergeableValue(ROOT::RDF::Experimental::RResultMap<T> &rmap)
 {
-   if (!rmap.fAction->HasRun())
+   if (!rmap.fVariedAction->HasRun())
       rmap.fLoopManager->Run(); // Prevents from using `const` specifier in parameter
 
-   auto mValueBase = rmap.fAction->GetMergeableValue();
+   auto mValueBase = rmap.fVariedAction->GetMergeableValue();
+
    std::unique_ptr<RMergeableVariationsBase> mVariationsBase{
       static_cast<RMergeableVariationsBase *>(mValueBase.release())};
+
+   mVariationsBase->AddNominal(rmap.fNominalAction->GetMergeableValue());
+
    return std::make_unique<RMergeableVariations<T>>(std::move(*mVariationsBase));
 }
 } // namespace RDF
