@@ -28,7 +28,7 @@ RJittedFilter::RJittedFilter(RLoopManager *lm, std::string_view name, const std:
    // So RJittedFilters register themselves with RLoopManager at construction time and deregister themselves
    // in SetFilter, i.e. when they are sure that the concrete filter has been instantiated in jitted code and it has
    // been registered with RLoopManager, making the RJittedFilter registration redundant.
-   fLoopManager->Book(this);
+   fLoopManager->Register(this);
 }
 
 RJittedFilter::~RJittedFilter()
