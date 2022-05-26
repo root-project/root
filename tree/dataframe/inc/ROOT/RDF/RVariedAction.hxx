@@ -82,7 +82,7 @@ public:
       : RActionBase(prevNode->GetLoopManagerUnchecked(), columns, colRegister, prevNode->GetVariations()),
         fHelpers(std::move(helpers)), fPrevNodes(MakePrevFilters(prevNode)), fInputValues(GetNSlots())
    {
-      fLoopManager->Book(this);
+      fLoopManager->Register(this);
 
       const auto &defines = colRegister.GetColumns();
       for (auto i = 0u; i < columns.size(); ++i) {

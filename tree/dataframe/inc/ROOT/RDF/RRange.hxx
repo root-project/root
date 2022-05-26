@@ -51,7 +51,7 @@ public:
                    pd->GetVariations()),
         fPrevNodePtr(std::move(pd)), fPrevNode(*fPrevNodePtr)
    {
-      fLoopManager->Book(this);
+      fLoopManager->Register(this);
    }
 
    RRange(const RRange &) = delete;

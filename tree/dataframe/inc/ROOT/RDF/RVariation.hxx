@@ -150,7 +150,7 @@ public:
         fExpression(std::move(expression)), fLastResults(lm.GetNSlots() * RDFInternal::CacheLineStep<ret_type>()),
         fValues(lm.GetNSlots())
    {
-      fLoopManager->Book(this);
+      fLoopManager->Register(this);
 
       for (auto i = 0u; i < lm.GetNSlots(); ++i)
          fLastResults[i * RDFInternal::CacheLineStep<ret_type>()].resize(fVariationNames.size());

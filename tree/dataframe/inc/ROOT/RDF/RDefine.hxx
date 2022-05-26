@@ -108,7 +108,7 @@ public:
       : RDefineBase(name, type, colRegister, lm, columns, variationName), fExpression(std::move(expression)),
         fLastResults(lm.GetNSlots() * RDFInternal::CacheLineStep<ret_type>()), fValues(lm.GetNSlots())
    {
-      fLoopManager->Book(this);
+      fLoopManager->Register(this);
    }
 
    RDefine(const RDefine &) = delete;

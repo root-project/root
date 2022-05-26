@@ -169,15 +169,15 @@ public:
    ::TDirectory *GetDirectory() const;
    ULong64_t GetNEmptyEntries() const { return fNEmptyEntries; }
    RDataSource *GetDataSource() const { return fDataSource.get(); }
-   void Book(RDFInternal::RActionBase *actionPtr);
+   void Register(RDFInternal::RActionBase *actionPtr);
    void Deregister(RDFInternal::RActionBase *actionPtr);
-   void Book(RFilterBase *filterPtr);
+   void Register(RFilterBase *filterPtr);
    void Deregister(RFilterBase *filterPtr);
-   void Book(RRangeBase *rangePtr);
+   void Register(RRangeBase *rangePtr);
    void Deregister(RRangeBase *rangePtr);
-   void Book(RDefineBase *definePtr);
+   void Register(RDefineBase *definePtr);
    void Deregister(RDefineBase *definePtr);
-   void Book(RDFInternal::RVariationBase *varPtr);
+   void Register(RDFInternal::RVariationBase *varPtr);
    void Deregister(RDFInternal::RVariationBase *varPtr);
    bool CheckFilters(unsigned int, Long64_t) final;
    unsigned int GetNSlots() const { return fNSlots; }

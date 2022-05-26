@@ -68,7 +68,7 @@ public:
       : RActionBase(pd->GetLoopManagerUnchecked(), columns, colRegister, pd->GetVariations()),
         fHelper(std::forward<Helper>(h)), fPrevNodePtr(std::move(pd)), fPrevNode(*fPrevNodePtr), fValues(GetNSlots())
    {
-      fLoopManager->Book(this);
+      fLoopManager->Register(this);
 
       const auto nColumns = columns.size();
       const auto &customCols = GetColRegister();
