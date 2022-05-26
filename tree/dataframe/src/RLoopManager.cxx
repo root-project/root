@@ -783,7 +783,7 @@ TTree *RLoopManager::GetTree() const
    return fTree.get();
 }
 
-void RLoopManager::Book(RDFInternal::RActionBase *actionPtr)
+void RLoopManager::Register(RDFInternal::RActionBase *actionPtr)
 {
    fBookedActions.emplace_back(actionPtr);
 }
@@ -794,7 +794,7 @@ void RLoopManager::Deregister(RDFInternal::RActionBase *actionPtr)
    RDFInternal::Erase(actionPtr, fBookedActions);
 }
 
-void RLoopManager::Book(RFilterBase *filterPtr)
+void RLoopManager::Register(RFilterBase *filterPtr)
 {
    fBookedFilters.emplace_back(filterPtr);
    if (filterPtr->HasName()) {
@@ -809,7 +809,7 @@ void RLoopManager::Deregister(RFilterBase *filterPtr)
    RDFInternal::Erase(filterPtr, fBookedNamedFilters);
 }
 
-void RLoopManager::Book(RRangeBase *rangePtr)
+void RLoopManager::Register(RRangeBase *rangePtr)
 {
    fBookedRanges.emplace_back(rangePtr);
 }
@@ -819,7 +819,7 @@ void RLoopManager::Deregister(RRangeBase *rangePtr)
    RDFInternal::Erase(rangePtr, fBookedRanges);
 }
 
-void RLoopManager::Book(RDefineBase *ptr)
+void RLoopManager::Register(RDefineBase *ptr)
 {
    fBookedDefines.emplace_back(ptr);
 }
@@ -829,7 +829,7 @@ void RLoopManager::Deregister(RDefineBase *ptr)
    RDFInternal::Erase(ptr, fBookedDefines);
 }
 
-void RLoopManager::Book(RDFInternal::RVariationBase *v)
+void RLoopManager::Register(RDFInternal::RVariationBase *v)
 {
    fBookedVariations.emplace_back(v);
 }

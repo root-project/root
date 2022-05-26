@@ -78,7 +78,7 @@ public:
         fFilter(std::move(f)), fValues(pd->GetLoopManagerUnchecked()->GetNSlots()), fPrevNodePtr(std::move(pd)),
         fPrevNode(*fPrevNodePtr)
    {
-      fLoopManager->Book(this);
+      fLoopManager->Register(this);
    }
 
    RFilter(const RFilter &) = delete;
