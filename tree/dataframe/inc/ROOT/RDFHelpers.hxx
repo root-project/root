@@ -205,9 +205,6 @@ namespace Experimental {
 ///       \ref ROOT::RDF::RInterface::Report() "Report" and \ref ROOT::RDF::RInterface::Snapshot() "Snapshot"
 ///       actions is not supported.
 //
-// TODO The current implementation duplicates work for the nominal value. In principle we could rewire things
-// so that the nominal value is calculated only once, either in the original action or in the varied action.
-//
 // An overview of how systematic variations work internally. Given N variations (including the nominal):
 //
 // RResultMap   owns    RVariedAction
@@ -216,8 +213,6 @@ namespace Experimental {
 //                       N*#input_cols column readers
 //
 // ...and each RFilter and RDefine knows for what universe it needs to construct column readers ("nominal" by default).
-//
-//
 template <typename T>
 RResultMap<T> VariationsFor(RResultPtr<T> resPtr)
 {
@@ -227,11 +222,10 @@ RResultMap<T> VariationsFor(RResultPtr<T> resPtr)
    // RJittedFilters
    resPtr.fLoopManager->Jit();
 
-   std::shared_ptr<RDFInternal::RActionBase> action = resPtr.fActionPtr;
+   std::shared_ptr<RDFInternal::RActionBase> nominalAction = resPtr.fActionPtr;
 
    // clone the result once for each variation
-   std::vector<std::string> variations = action->GetVariations();
-   variations.insert(variations.begin(), "nominal");
+   std::vector<std::string> variations = nominalAction->GetVariations();
    const auto nVariations = variations.size();
    std::vector<std::shared_ptr<T>> results;
    results.reserve(nVariations);
@@ -249,8 +243,8 @@ RResultMap<T> VariationsFor(RResultPtr<T> resPtr)
    std::unique_ptr<RDFInternal::RActionBase> variedAction{
       resPtr.fActionPtr->MakeVariedAction(std::move(typeErasedResults))};
 
-   return RDFInternal::MakeResultMap<T>(std::move(results), std::move(variations), *resPtr.fLoopManager,
-                                        std::move(variedAction));
+   return RDFInternal::MakeResultMap<T>(resPtr.fObjPtr, std::move(results), std::move(variations), *resPtr.fLoopManager,
+                                        std::move(nominalAction), std::move(variedAction));
 }
 
 } // namespace Experimental

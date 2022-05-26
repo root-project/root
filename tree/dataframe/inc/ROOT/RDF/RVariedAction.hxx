@@ -56,11 +56,10 @@ class R__CLING_PTRCHECK(off) RVariedAction final : public RActionBase {
    {
       const auto &variations = GetVariations();
       std::vector<std::shared_ptr<PrevNodeType>> prevFilters;
-      prevFilters.reserve(variations.size() + 1);
-      prevFilters.emplace_back(nominal);
+      prevFilters.reserve(variations.size());
       if (static_cast<RNodeBase *>(nominal.get()) == fLoopManager) {
          // just fill this with the RLoopManager N times
-         prevFilters.resize(variations.size() + 1, nominal);
+         prevFilters.resize(variations.size(), nominal);
       } else {
          // create varied versions of the previous filter node
          const auto &prevVariations = nominal->GetVariations();
@@ -108,8 +107,7 @@ public:
       RDFInternal::RColumnReadersInfo info{GetColumnNames(), GetColRegister(), fIsDefine.data(),
                                            fLoopManager->GetDSValuePtrs(), fLoopManager->GetDataSource()};
 
-      // get readers for the nominal case + each systematic variation
-      fInputValues[slot].emplace_back(MakeColumnReaders(slot, r, ColumnTypes_t{}, info /*, "nominal"*/));
+      // get readers for each systematic variation
       for (const auto &variation : GetVariations())
          fInputValues[slot].emplace_back(MakeColumnReaders(slot, r, ColumnTypes_t{}, info, variation));
 
@@ -126,7 +124,7 @@ public:
 
    void Run(unsigned int slot, Long64_t entry) final
    {
-      for (auto varIdx = 0u; varIdx < GetVariations().size() + 1; ++varIdx) {
+      for (auto varIdx = 0u; varIdx < GetVariations().size(); ++varIdx) {
          if (fPrevNodes[varIdx]->CheckFilters(slot, entry))
             CallExec(slot, varIdx, entry, ColumnTypes_t{}, TypeInd_t{});
       }
@@ -184,7 +182,6 @@ public:
    std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
    {
       std::vector<std::string> keys{GetVariations()};
-      keys.insert(keys.begin(), "nominal");
 
       std::vector<std::unique_ptr<RDFDetail::RMergeableValueBase>> values;
       values.reserve(fHelpers.size());
