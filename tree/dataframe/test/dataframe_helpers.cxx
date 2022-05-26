@@ -117,55 +117,55 @@ public:
 
    std::string GetRealRepresentationFromRoot()
    {
-      return std::string("digraph {\n\t8 [label=<Mean") +
+      return std::string("digraph {\n\t7 [label=<Count") +
              (hasLoopRun ? "<BR/><FONT POINT-SIZE=\"10.0\">Already Run</FONT>" : "") +
              ">, style=\"filled\", fillcolor=\"" + (hasLoopRun ? "#e6e5e6" : "#e47c7e") +
              "\", shape=\"box\"];\n"
-             "\t6 [label=<Filter>, style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
-             "\t7 [label=<Define<BR/>Branch_1_1_def>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
              "\t3 [label=<Filter>, style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
-             "\t4 [label=<Define<BR/>Branch_1_def>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-             "\t5 [label=<Define<BR/>Root_def2>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+             "\t4 [label=<Define<BR/>Branch_1_2_def>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+             "\t5 [label=<Define<BR/>Branch_1_def>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+             "\t6 [label=<Define<BR/>Root_def2>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
              "\t1 [label=<Filter>, style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
              "\t2 [label=<Define<BR/>Root_def1>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
              "\t0 [label=<Empty source<BR/>Entries: 8>, style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n"
-             "\t11 [label=<Count" +
+             "\t8 [label=<Count" +
              (hasLoopRun ? "<BR/><FONT POINT-SIZE=\"10.0\">Already Run</FONT>" : "") +
              ">, style=\"filled\", fillcolor=\"" + (hasLoopRun ? "#e6e5e6" : "#e47c7e") +
              "\", shape=\"box\"];\n"
-             "\t9 [label=<Filter>, style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
-             "\t10 [label=<Define<BR/>Branch_1_2_def>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-             "\t17 [label=<Max" +
+             "\t9 [label=<Define<BR/>Branch_2_def>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+             "\t13 [label=<Mean" +
              (hasLoopRun ? "<BR/><FONT POINT-SIZE=\"10.0\">Already Run</FONT>" : "") +
              ">, style=\"filled\", fillcolor=\"" + (hasLoopRun ? "#e6e5e6" : "#e47c7e") +
              "\", shape=\"box\"];\n"
+             "\t11 [label=<Filter>, style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
+             "\t12 [label=<Define<BR/>Branch_1_1_def>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+             "\t10 [label=<Filter>, style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
+             "\t18 [label=<Max" +
+             (hasLoopRun ? "<BR/><FONT POINT-SIZE=\"10.0\">Already Run</FONT>" : "") +
+             ">, style=\"filled\", fillcolor=\"" + (hasLoopRun ? "#e6e5e6" : "#e47c7e") +
+             "\", shape=\"box\"];\n"
+             "\t15 [label=<Filter>, style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
+             "\t16 [label=<Define<BR/>Branch_2_2_def>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+             "\t17 [label=<Define<BR/>Branch_2_1_def>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
              "\t14 [label=<Filter>, style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
-             "\t15 [label=<Define<BR/>Branch_2_2_def>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-             "\t16 [label=<Define<BR/>Branch_2_1_def>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-             "\t12 [label=<Filter>, style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
-             "\t13 [label=<Define<BR/>Branch_2_def>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-             "\t18 [label=<Count" +
-             (hasLoopRun ? "<BR/><FONT POINT-SIZE=\"10.0\">Already Run</FONT>" : "") +
-             ">, style=\"filled\", fillcolor=\"" + (hasLoopRun ? "#e6e5e6" : "#e47c7e") +
-             "\", shape=\"box\"];\n"
-             "\t6 -> 8;\n"
-             "\t7 -> 6;\n"
              "\t3 -> 7;\n"
              "\t4 -> 3;\n"
              "\t5 -> 4;\n"
-             "\t1 -> 5;\n"
+             "\t6 -> 5;\n"
+             "\t1 -> 6;\n"
              "\t2 -> 1;\n"
              "\t0 -> 2;\n"
-             "\t9 -> 11;\n"
-             "\t10 -> 9;\n"
-             "\t4 -> 10;\n"
-             "\t14 -> 17;\n"
-             "\t15 -> 14;\n"
+             "\t9 -> 8;\n"
+             "\t6 -> 9;\n"
+             "\t11 -> 13;\n"
+             "\t12 -> 11;\n"
+             "\t10 -> 12;\n"
+             "\t5 -> 10;\n"
+             "\t15 -> 18;\n"
              "\t16 -> 15;\n"
-             "\t12 -> 16;\n"
-             "\t13 -> 12;\n"
-             "\t5 -> 13;\n"
-             "\t13 -> 18;\n}";
+             "\t17 -> 16;\n"
+             "\t14 -> 17;\n"
+             "\t9 -> 14;\n}";
    }
 
    std::string GetRepresentationFromAction() { return SaveGraph(branch1_1); }
