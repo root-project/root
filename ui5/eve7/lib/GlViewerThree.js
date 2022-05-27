@@ -509,7 +509,7 @@ sap.ui.define([
       }
 
       remoteToolTip(msg) {
-         if (this.ttip_text)
+         if (this.ttip_text && this.ttip_text.innerHTML)
             this.ttip_text.innerHTML = msg;
          if (this.highlighted_scene && this.ttip)
             this.ttip.style.display = "block";

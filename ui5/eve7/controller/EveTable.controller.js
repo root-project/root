@@ -212,20 +212,9 @@ sap.ui.define([
          // row definition
          let rowData = this.eveTable.body;
 
-         // parse to float -- AMT in future data should be streamed as floats
-         for (let r = 0; r < rowData.length; r++) {
-            let xr = rowData[r];
-            for (let xri = 0; xri < xr.length; xri++) {
-               let nv = parseFloat(xr[i]);
-               if (!isNaN(nv)) {
-                  rowData[r][ri] = nv;
-               }
-            }
-         }
-
          let itemList = this.collection.childs[0].items;
-         for (let i = 0; i < itemList.length; i++) {
-            rowData[i].Name = this.collection.fName + " " + i;
+         for (var i = 0; i < itemList.length; i++) {
+            rowData[i].Idx = i;
             rowData[i].Filtered = itemList[i].fFiltered === true ? 0 : 1;
          }
 
@@ -233,7 +222,7 @@ sap.ui.define([
             // column definition
             let columnData = [];
 
-            columnData.push({ columnName: "Name" });
+            columnData.push({ columnName: "Idx" });
             columnData.push({ columnName: "Filtered" });
 
             let eveColumns = this.eveTable.childs;
