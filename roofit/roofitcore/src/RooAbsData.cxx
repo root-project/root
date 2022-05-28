@@ -625,6 +625,11 @@ RooPlot* RooAbsData::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
 /// use the createHistogram() method below with named arguments
 ///
 /// The caller takes ownership of the returned histogram
+///
+/// \deprecated This function is deprecated and will be removed in ROOT v6.30.
+/// Use the overload
+/// RooAbsData::createHistogram(const char*, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&)
+/// that takes RooFit command arguments.
 
 TH1 *RooAbsData::createHistogram(const char* varNameList, Int_t xbins, Int_t ybins, Int_t zbins) const
 {
