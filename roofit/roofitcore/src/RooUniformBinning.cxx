@@ -135,7 +135,7 @@ double RooUniformBinning::binCenter(Int_t i) const
     return 0 ;
   }
 
-  return _xlo + (i + 0.5)*averageBinWidth() ;
+  return _xlo + (i + 0.5) * _binw;
 }
 
 
