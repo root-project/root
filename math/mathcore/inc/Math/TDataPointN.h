@@ -62,8 +62,9 @@ private:
    value_type    m_fWeight;
 };
 
-template<> UInt_t TDataPointN<Float_t>::kDimension = 0;
-template<> UInt_t TDataPointN<Double_t>::kDimension = 0;
+// Defined in TDataPointN.cxx
+extern template class TDataPointN<float>;
+extern template class TDataPointN<double>;
 
 }//namespace Math
 }//namespace ROOT

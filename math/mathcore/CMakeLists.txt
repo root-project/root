@@ -179,6 +179,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
     src/SpecFuncMathCore.cxx
     src/StdEngine.cxx
     src/TComplex.cxx
+    src/TDataPointN.cxx
     src/TKDTree.cxx
     src/TKDTreeBinning.cxx
     src/TMath.cxx
