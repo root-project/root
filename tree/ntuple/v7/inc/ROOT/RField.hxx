@@ -594,16 +594,16 @@ public:
 class RPairField : public RRecordField {
 private:
    TClass *fClass = nullptr;
-   static std::string GetTypeList(const std::vector<std::unique_ptr<Detail::RFieldBase>> &itemFields);
+   static std::string GetTypeList(const std::array<std::unique_ptr<Detail::RFieldBase>, 2> &itemFields);
 
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const override;
 
-   RPairField(std::string_view fieldName, std::vector<std::unique_ptr<Detail::RFieldBase>> &&itemFields,
-              const std::vector<std::size_t> &offsets);
+   RPairField(std::string_view fieldName, std::array<std::unique_ptr<Detail::RFieldBase>, 2> &&itemFields,
+              const std::array<std::size_t, 2> &offsets);
 
 public:
-   RPairField(std::string_view fieldName, std::vector<std::unique_ptr<Detail::RFieldBase>> &itemFields);
+   RPairField(std::string_view fieldName, std::array<std::unique_ptr<Detail::RFieldBase>, 2> &itemFields);
    RPairField(RPairField &&other) = default;
    RPairField &operator=(RPairField &&other) = default;
    ~RPairField() = default;
@@ -1518,23 +1518,19 @@ public:
 
 template <typename T1, typename T2>
 class RField<std::pair<T1, T2>> : public RPairField {
-private:
    using ContainerT = typename std::pair<T1,T2>;
+private:
    template <typename Ty1, typename Ty2>
-   static std::vector<std::unique_ptr<Detail::RFieldBase>> BuildItemFields()
+   static std::array<std::unique_ptr<Detail::RFieldBase>, 2> BuildItemFields()
    {
-      std::vector<std::unique_ptr<Detail::RFieldBase>> result;
-      result.emplace_back(new RField<Ty1>("_0"));
-      result.emplace_back(new RField<Ty2>("_1"));
-      return result;
+      return {std::make_unique<RField<Ty1>>("_0"), std::make_unique<RField<Ty2>>("_1")};
    }
 
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final
    {
-      std::vector<std::unique_ptr<Detail::RFieldBase>> items;
-      items.push_back(fSubFields[0]->Clone(fSubFields[0]->GetName()));
-      items.push_back(fSubFields[1]->Clone(fSubFields[1]->GetName()));
+      std::array<std::unique_ptr<Detail::RFieldBase>, 2> items{fSubFields[0]->Clone(fSubFields[0]->GetName()),
+                                                               fSubFields[1]->Clone(fSubFields[1]->GetName())};
       return std::make_unique<RField<std::pair<T1, T2>>>(newName, std::move(items));
    }
 
@@ -1542,7 +1538,7 @@ public:
    static std::string TypeName() {
       return "std::pair<" + RField<T1>::TypeName() + "," + RField<T2>::TypeName() + ">";
    }
-   explicit RField(std::string_view name, std::vector<std::unique_ptr<Detail::RFieldBase>> &&itemFields)
+   explicit RField(std::string_view name, std::array<std::unique_ptr<Detail::RFieldBase>, 2> &&itemFields)
       : RPairField(name, std::move(itemFields), {offsetof(ContainerT, first), offsetof(ContainerT, second)})
    {
       fMaxAlignment = std::max(alignof(T1), alignof(T2));
