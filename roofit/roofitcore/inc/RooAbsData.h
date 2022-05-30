@@ -362,13 +362,13 @@ protected:
   RooArgSet _vars;         ///< Dimensions of this data set
   RooArgSet _cachedVars ;  ///<! External variables cached with this data set
 
-  RooAbsDataStore* _dstore ; ///< Data storage implementation
+  RooAbsDataStore* _dstore = nullptr; ///< Data storage implementation
 
   std::map<std::string,RooAbsData*> _ownedComponents ; ///< Owned external components
 
   std::unique_ptr<RooArgSet> _globalObservables; ///< Snapshot of global observables
 
-  mutable const TNamed * _namePtr ; ///<! De-duplicated name pointer. This will be equal for all objects with the same name.
+  mutable const TNamed * _namePtr = nullptr; ///<! De-duplicated name pointer. This will be equal for all objects with the same name.
 
 private:
   void copyGlobalObservables(const RooAbsData& other);
