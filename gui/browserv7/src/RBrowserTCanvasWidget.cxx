@@ -101,6 +101,9 @@ public:
       fCanvas->SetCanvasImp(fWebCanvas);
       SetPrivateCanvasFields(true);
       fCanvas->cd();
+
+      R__LOCKGUARD(gROOTMutex);
+      gROOT->GetListOfCleanups()->Add(fCanvas.get());
    }
 
    RBrowserTCanvasWidget(const std::string &name, std::unique_ptr<TCanvas> &canv) : RBrowserWidget(name)
@@ -117,10 +120,18 @@ public:
       fCanvas->SetCanvasImp(fWebCanvas);
       SetPrivateCanvasFields(true);
       fCanvas->cd();
+
+      R__LOCKGUARD(gROOTMutex);
+      gROOT->GetListOfCleanups()->Add(fCanvas.get());
    }
 
    virtual ~RBrowserTCanvasWidget()
    {
+      {
+         R__LOCKGUARD(gROOTMutex);
+         gROOT->GetListOfCleanups()->Remove(fCanvas.get());
+      }
+
       SetPrivateCanvasFields(false);
 
       gROOT->GetListOfCanvases()->Remove(fCanvas.get());
