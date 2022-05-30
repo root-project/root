@@ -260,7 +260,7 @@ RooSpan<const double> RooRealVar::getValues(RooBatchCompute::RunContext& inputDa
 
   for (const auto& var_span : inputData.spans) {
     auto var = var_span.first;
-    if (var->namePtr() == namePtr()) {
+    if (var == RooFit::Detail::DataKey{this}) {
       // A variable with the same name exists in the input data. Use their values as ours.
       inputData.spans[this] = var_span.second;
       return var_span.second;

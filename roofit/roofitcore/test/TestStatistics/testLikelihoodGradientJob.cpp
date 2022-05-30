@@ -26,7 +26,6 @@
 #include "RooFit/MultiProcess/JobManager.h"
 #include "RooFit/MultiProcess/Config.h"
 #include "RooStats/ModelConfig.h"
-#include "RunContext.h" // complete RooBatchCompute::RunContext type used in RooUnbinnedL
 
 #include <TFile.h>
 

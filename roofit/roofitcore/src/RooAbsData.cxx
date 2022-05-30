@@ -2683,15 +2683,12 @@ double RooAbsData::sumEntriesW2() const {
 /// The key to retrieve an item is the pointer of the variable that owns the data.
 /// \param begin Index of first event that ends up in the batch.
 /// \param len   Number of events in each batch.
-void RooAbsData::getBatches(RooBatchCompute::RunContext& evalData, std::size_t begin, std::size_t len) const {
-  for (auto&& batch : store()->getBatches(begin, len).spans) {
-    evalData.spans[batch.first] = std::move(batch.second);
-  }
+RooAbsData::RealSpans RooAbsData::getBatches(std::size_t begin, std::size_t len) const {
+  return store()->getBatches(begin, len);
 }
 
 
-std::map<const std::string, RooSpan<const RooAbsCategory::value_type>> RooAbsData::getCategoryBatches(
-        std::size_t first, std::size_t len) const {
+RooAbsData::CategorySpans RooAbsData::getCategoryBatches(std::size_t first, std::size_t len) const {
   return store()->getCategoryBatches(first, len);
 }
 
