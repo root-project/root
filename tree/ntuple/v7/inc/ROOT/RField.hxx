@@ -349,6 +349,18 @@ protected:
    RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<Detail::RFieldBase>> &&itemFields,
                 const std::vector<std::size_t> &offsets, std::string_view typeName = "");
 
+   template <std::size_t N>
+   RRecordField(std::string_view fieldName, std::array<std::unique_ptr<Detail::RFieldBase>, N> &&itemFields,
+                const std::array<std::size_t, N> &offsets, std::string_view typeName = "")
+      : ROOT::Experimental::Detail::RFieldBase(fieldName, typeName, ENTupleStructure::kRecord, false /* isSimple */)
+   {
+      for (unsigned i = 0; i < N; ++i) {
+         fOffsets.push_back(offsets[i]);
+         fMaxAlignment = std::max(fMaxAlignment, itemFields[i]->GetAlignment());
+         fSize += GetItemPadding(fSize, itemFields[i]->GetAlignment()) + itemFields[i]->GetValueSize();
+         Attach(std::move(itemFields[i]));
+      }
+   }
 public:
    /// Construct a RRecordField based on a vector of child fields. The ownership of the child fields is transferred
    /// to the RRecordField instance.
