@@ -49,9 +49,14 @@ TEST(RNTuple, StdPair)
       auto pair_field = model->MakeField<std::pair<double, std::string>>(
          {"myPair", "a very cool field"}
       );
+      auto myPair2 = RFieldBase::Create("myPair2", "std::pair<double, std::string>").Unwrap();
+      model->AddField(std::move(myPair2));
+
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "pair_ntuple", fileGuard.GetPath());
+      auto pair_field2 = ntuple->GetModel()->GetDefaultEntry()->Get<std::pair<double, std::string>>("myPair2");
       for (int i = 0; i < 2; i++) {
          *pair_field = {static_cast<double>(i), std::to_string(i)};
+         *pair_field2 = {static_cast<double>(i + 1), std::to_string(i + 1)};
          ntuple->Fill();
       }
    }
@@ -60,9 +65,13 @@ TEST(RNTuple, StdPair)
    EXPECT_EQ(2, ntuple->GetNEntries());
 
    auto viewPair = ntuple->GetView<std::pair<double, std::string>>("myPair");
+   auto viewPair2 = ntuple->GetView<std::pair<double, std::string>>("myPair2");
    for (auto i : ntuple->GetEntryRange()) {
       EXPECT_EQ(static_cast<double>(i), viewPair(i).first);
       EXPECT_EQ(std::to_string(i), viewPair(i).second);
+
+      EXPECT_EQ(static_cast<double>(i + 1), viewPair2(i).first);
+      EXPECT_EQ(std::to_string(i + 1), viewPair2(i).second);
    }
 }
 
