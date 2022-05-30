@@ -17,7 +17,6 @@
 #define ROO_COMPOSITE_DATA_STORE
 
 #include "RooAbsDataStore.h"
-#include "RunContext.h"
 
 #include <map>
 #include <string>
@@ -104,7 +103,7 @@ public:
 
   void forceCacheUpdate() override ;
 
-  RooBatchCompute::RunContext getBatches(std::size_t first, std::size_t len) const override {
+  RooAbsData::RealSpans getBatches(std::size_t first, std::size_t len) const override {
     //TODO
     std::cerr << "This functionality is not yet implemented for composite data stores." << std::endl;
     throw std::logic_error("getBatches() not implemented for RooCompositeDataStore.");
