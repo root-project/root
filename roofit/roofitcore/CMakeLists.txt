@@ -244,6 +244,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFit/TestStatistics/RooUnbinnedL.h
     RooFit/TestStatistics/optional_parameter_types.h
     RooFit/TestStatistics/buildLikelihood.h
+    RunContext.h
   SOURCES
     src/BatchModeHelpers.cxx
     src/BatchModeDataHelpers.cxx
@@ -461,6 +462,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooFitLegacy/RooCatTypeLegacy.cxx
     src/RooFitLegacy/RooMinuit.cxx
     src/RooFitLegacy/RooMultiCatIter.cxx
+    src/RunContext.cxx
     src/TestStatistics/ConstantTermsOptimizer.cxx
     src/TestStatistics/LikelihoodGradientWrapper.cxx
     src/TestStatistics/LikelihoodWrapper.cxx

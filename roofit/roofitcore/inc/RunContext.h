@@ -14,10 +14,11 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-#ifndef ROOFIT_BATCHCOMPUTE_RUNCONTEXT_H
-#define ROOFIT_BATCHCOMPUTE_RUNCONTEXT_H
+#ifndef ROOFIT_ROOFITCORE_RUNCONTEXT_H
+#define ROOFIT_ROOFITCORE_RUNCONTEXT_H
 
 #include "RooSpan.h"
+#include "RooFit/Detail/DataMap.h"
 
 #include <map>
 #include <vector>
@@ -49,12 +50,12 @@ struct RunContext {
   void clear();
 
   /// Once an object has computed its value(s), the span pointing to the results is registered here.
-  std::map<const RooAbsArg*, RooSpan<const double>> spans;
-  std::map<const RooAbsArg*, const double*> spansCuda;
+  std::map<RooFit::Detail::DataKey, RooSpan<const double>> spans;
+  std::map<RooFit::Detail::DataKey, const double*> spansCuda;
 
   /// Memory owned by this struct. It is associated to nodes in the computation graph using their pointers.
-  std::map<const RooAbsArg*, std::vector<double>> ownedMemory;
-  std::map<const RooAbsArg*, double*> ownedMemoryCuda;
+  std::map<RooFit::Detail::DataKey, std::vector<double>> ownedMemory;
+  std::map<RooFit::Detail::DataKey, double*> ownedMemoryCuda;
 
   const char* rangeName{nullptr};       ///< If evaluation should only occur in a range, the range name can be passed here.
   std::vector<double> logProbabilities; ///< Possibility to register log probabilities.

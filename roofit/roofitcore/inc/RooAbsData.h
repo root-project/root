@@ -23,6 +23,7 @@
 #include "RooSpan.h"
 #include "RooNameReg.h"
 #include "RooFit/UniqueId.h"
+#include "RooFit/Detail/DataMap.h"
 
 #include <ROOT/RConfig.hxx> // R__DEPRECATED
 #include "TNamed.h"
@@ -132,9 +133,11 @@ public:
 
   virtual const RooArgSet* get(Int_t index) const ;
 
-  virtual void getBatches(RooBatchCompute::RunContext& evalData,
-      std::size_t first = 0, std::size_t len = std::numeric_limits<std::size_t>::max()) const;
-  virtual std::map<const std::string, RooSpan<const RooAbsCategory::value_type>> getCategoryBatches(std::size_t first = 0, std::size_t len = std::numeric_limits<std::size_t>::max()) const;
+  using RealSpans = std::map<RooFit::Detail::DataKey, RooSpan<const double>>;
+  using CategorySpans = std::map<RooFit::Detail::DataKey, RooSpan<const RooAbsCategory::value_type>>;
+
+  RealSpans getBatches(std::size_t first = 0, std::size_t len = std::numeric_limits<std::size_t>::max()) const;
+  CategorySpans getCategoryBatches(std::size_t first = 0, std::size_t len = std::numeric_limits<std::size_t>::max()) const;
 
   ////////////////////////////////////////////////////////////////////////////////
   /// Return event weights of all events in range [first, first+len).

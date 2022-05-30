@@ -7,7 +7,6 @@
 #include "RooRealVar.h"
 #include "RooHelpers.h"
 #include "RooCategory.h"
-#include "RunContext.h"
 #include "RooHistFunc.h"
 #include "RooHistPdf.h"
 
@@ -281,14 +280,11 @@ TEST(RooDataHist, BatchDataAccess) {
   ASSERT_STREQ(xp->GetName(), "x");
   ASSERT_STREQ(yp->GetName(), "y");
 
-  RooBatchCompute::RunContext evalDataShort{};
-  dataHist.getBatches(evalDataShort, 0, 100);
-  RooBatchCompute::RunContext evalData{};
-  dataHist.getBatches(evalData, 0, numEntries);
+  auto evalData = dataHist.getBatches(0, numEntries);
 
-  auto xBatchShort = xp->getValues(evalDataShort);
-  auto xBatch = xp->getValues(evalData);
-  auto yBatch = yp->getValues(evalData);
+  auto xBatchShort = dataHist.getBatches(0, 100)[xp];
+  auto xBatch = evalData[xp];
+  auto yBatch = evalData[yp];
 
   ASSERT_FALSE(xBatchShort.empty());
   ASSERT_FALSE(xBatch.empty());
@@ -338,13 +334,8 @@ TEST(RooDataHist, BatchDataAccessWithCategories) {
   ASSERT_STREQ(catp->GetName(), "cat");
   ASSERT_STREQ(xp->GetName(), "x");
 
-  RooBatchCompute::RunContext evalDataShort{};
-  dataHist.getBatches(evalDataShort, 0, 10);
-  RooBatchCompute::RunContext evalData{};
-  dataHist.getBatches(evalData, 0, numEntries);
-
-  auto xBatchShort = xp->getValues(evalDataShort);
-  auto xBatch      = xp->getValues(evalData);
+  auto xBatchShort = dataHist.getBatches(0, 10)[xp];
+  auto xBatch      = dataHist.getBatches(0, numEntries)[xp];
 
   ASSERT_FALSE(xBatchShort.empty());
   ASSERT_FALSE(xBatch.empty());
@@ -387,13 +378,8 @@ TEST(RooDataHist, BatchDataAccessWithCategoriesAndFitRange) {
   ASSERT_STREQ(catp->GetName(), "cat");
   ASSERT_STREQ(xp->GetName(), "x");
 
-  RooBatchCompute::RunContext evalDataShort{};
-  dataHist.getBatches(evalDataShort, 0, 10);
-  RooBatchCompute::RunContext evalData{};
-  dataHist.getBatches(evalData, 0, numEntries);
-
-  auto xBatchShort = xp->getValues(evalDataShort);
-  auto xBatch      = xp->getValues(evalData);
+  auto xBatchShort = dataHist.getBatches(0, 10)[xp];
+  auto xBatch      = dataHist.getBatches(0, numEntries)[xp];
 
   ASSERT_FALSE(xBatchShort.empty());
   ASSERT_FALSE(xBatch.empty());

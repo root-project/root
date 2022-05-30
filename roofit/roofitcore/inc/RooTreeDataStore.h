@@ -74,7 +74,7 @@ public:
   void weightError(double& lo, double& hi, RooAbsData::ErrorType etype=RooAbsData::Poisson) const override ;
   bool isWeighted() const override { return (_wgtVar!=0||_extWgtArray!=0) ; }
 
-  RooBatchCompute::RunContext getBatches(std::size_t first, std::size_t len) const override {
+  RooAbsData::RealSpans getBatches(std::size_t first, std::size_t len) const override {
     //TODO
     std::cerr << "This functionality is not yet implemented for tree data stores." << std::endl;
     throw std::logic_error("getBatches() not implemented in RooTreeDataStore.");

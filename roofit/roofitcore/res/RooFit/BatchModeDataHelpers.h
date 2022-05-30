@@ -14,6 +14,7 @@
 #define RooFit_BatchModeDataHelpers_h
 
 #include <RooSpan.h>
+#include <RooFit/Detail/DataMap.h>
 
 #include <ROOT/RStringView.hxx>
 
@@ -29,9 +30,10 @@ class TNamed;
 namespace RooFit {
 namespace BatchModeDataHelpers {
 
-std::map<const TNamed *, RooSpan<const double>> getDataSpans(RooAbsData const &data, std::string_view rangeName,
-                                                             RooAbsCategory const *indexCat,
-                                                             std::stack<std::vector<double>> &buffers);
+std::map<RooFit::Detail::DataKey, RooSpan<const double>> getDataSpans(RooAbsData const &data,
+                                                                      std::string_view rangeName,
+                                                                      RooAbsCategory const *indexCat,
+                                                                      std::stack<std::vector<double>> &buffers);
 
 } // namespace BatchModeDataHelpers
 } // namespace RooFit
