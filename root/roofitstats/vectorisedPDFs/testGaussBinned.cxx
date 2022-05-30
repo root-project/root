@@ -17,87 +17,13 @@
 #include "RooRealVar.h"
 #include "RooDataHist.h"
 #include "RooGaussian.h"
-#include "RunContext.h"
 #include "RooHelpers.h"
 #include "RooRandom.h"
 
 #include "gtest/gtest.h"
 
-TEST(GaussBinned, RetrieveBatches) {
-  RooRealVar x("x", "x", 0, -10, 10);
-  x.setBins(50);
-  RooRealVar m("m", "m", 1., -10., 10);
-  RooRealVar s("s", "s", 5, 0.01, 10);
-
-  RooGaussian gaus("gaus", "gaus", x, m, s);
-  auto dataHist = gaus.generateBinned(x, 10000);
-
-  RooBatchCompute::RunContext evalData;
-  dataHist->getBatches(evalData, 0, dataHist->numEntries());
-
-  auto batchVals = gaus.getValues(evalData, nullptr);
-  ASSERT_FALSE(batchVals.empty());
-  EXPECT_EQ(batchVals.size(), static_cast<unsigned int>(x.getBins()));
-  EXPECT_TRUE(std::none_of(batchVals.begin(), batchVals.end(), [](double val){return val <= 0.;}));
-  std::vector<double> savedProbs(batchVals.begin(), batchVals.end());
-
-  RooBatchCompute::RunContext evalDataWithNorm;
-  dataHist->getBatches(evalDataWithNorm, 0, dataHist->numEntries());
-  RooArgSet normSet(x);
-  auto batchValsNorm = gaus.getValues(evalDataWithNorm, &normSet);
-  ASSERT_FALSE(batchValsNorm.empty());
-  EXPECT_EQ(batchValsNorm.size(), static_cast<unsigned int>(x.getBins()));
-  EXPECT_TRUE(std::none_of(batchValsNorm.begin(), batchValsNorm.end(), [](double val){return val <= 0.;}));
-  std::vector<double> savedProbsNorm(batchValsNorm.begin(), batchValsNorm.end());
-  EXPECT_NE(batchVals[0], batchValsNorm[0]);
-
-
-  auto logVals = gaus.getLogProbabilities(evalData, nullptr);
-  ASSERT_FALSE(logVals.empty());
-  EXPECT_EQ(logVals.size(), static_cast<unsigned int>(x.getBins()));
-  EXPECT_TRUE(std::all_of(logVals.begin(), logVals.end(), [](double val){return val <= 0.;}));
-  std::vector<double> savedLogVals(logVals.begin(), logVals.end());
-
-  auto logValsNorm = gaus.getLogProbabilities(evalDataWithNorm, &normSet);
-  ASSERT_FALSE(logValsNorm.empty());
-  EXPECT_EQ(logValsNorm.size(), static_cast<unsigned int>(x.getBins()));
-  EXPECT_TRUE(std::all_of(logValsNorm.begin(), logValsNorm.end(), [](double val){return val <= 0.;}));
-  EXPECT_NE(logVals[0], logValsNorm[0]);
-  std::vector<double> savedLogValsNorm(logValsNorm.begin(), logValsNorm.end());
-
-  EXPECT_TRUE(std::equal(batchVals.begin(), batchVals.end(), savedProbs.begin()));
-  EXPECT_TRUE(std::equal(batchValsNorm.begin(), batchValsNorm.end(), savedProbsNorm.begin()));
-  EXPECT_TRUE(std::equal(logVals.begin(), logVals.end(), savedLogVals.begin()));
-  EXPECT_TRUE(std::equal(logValsNorm.begin(), logValsNorm.end(), savedLogValsNorm.begin()));
-
-  m.setVal(1.1);
-  RooBatchCompute::RunContext evalDataUpdated;
-  dataHist->getBatches(evalDataUpdated, 0, dataHist->numEntries());
-  auto batchValsNew = gaus.getValues(evalDataUpdated, nullptr);
-  EXPECT_FALSE(std::equal(batchValsNew.begin(), batchValsNew.end(), savedProbs.begin()));
-}
-
-
-TEST(GaussBinned, AskForLargerBatch) {
-  RooRealVar x("x", "x", 0, -10, 10);
-  x.setBins(50);
-  RooRealVar m("m", "m", 1., -10., 10);
-  RooRealVar s("s", "s", 1.5, 0.01, 10);
-
-  RooGaussian gaus("gaus", "gaus", x, m, s);
-  auto dataHist = gaus.generateBinned(x, 10000);
-
-  {
-    RooHelpers::HijackMessageStream hijack(RooFit::ERROR, RooFit::DataHandling);
-    RooBatchCompute::RunContext evalData;
-    dataHist->getBatches(evalData, 30, 21);
-
-    EXPECT_FALSE(hijack.str().empty()) << "Asking for too large batch should issue error message.";
-    EXPECT_TRUE(evalData.spans.begin()->second.size() == 20);
-  }
-}
-
 #include <chrono>
+
 class MyTimer {
   public:
     MyTimer(std::string&& name)
