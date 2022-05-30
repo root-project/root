@@ -228,10 +228,8 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       auto innerTypes = TokenizeTypeList(normalizedType.substr(10, normalizedType.length() - 11));
       if (innerTypes.size() != 2)
          return R__FAIL("the type list for std::pair must have exactly two elements");
-      std::vector<std::unique_ptr<RFieldBase>> items;
-      for (unsigned int i = 0; i < innerTypes.size(); ++i) {
-         items.emplace_back(Create("_" + std::to_string(i), innerTypes[i]).Unwrap());
-      }
+      std::array<std::unique_ptr<RFieldBase>, 2> items{Create("_0", innerTypes[0]).Unwrap(),
+                                                       Create("_1", innerTypes[1]).Unwrap()};
       result = std::make_unique<RPairField>(fieldName, items);
    }
    // TODO: create an RCollectionField?
@@ -1684,44 +1682,41 @@ void ROOT::Experimental::RVariantField::CommitCluster()
 //------------------------------------------------------------------------------
 
 std::string ROOT::Experimental::RPairField::RPairField::GetTypeList(
-   const std::vector<std::unique_ptr<Detail::RFieldBase>> &itemFields)
+   const std::array<std::unique_ptr<Detail::RFieldBase>, 2> &itemFields)
 {
    return itemFields[0]->GetType() + "," + itemFields[1]->GetType();
 }
 
 ROOT::Experimental::RPairField::RPairField(std::string_view fieldName,
-                                           std::vector<std::unique_ptr<Detail::RFieldBase>> &&itemFields,
-                                           const std::vector<std::size_t> &offsets)
+                                           std::array<std::unique_ptr<Detail::RFieldBase>, 2> &&itemFields,
+                                           const std::array<std::size_t, 2> &offsets)
    : ROOT::Experimental::RRecordField(fieldName, std::move(itemFields), offsets,
                                       "std::pair<" + GetTypeList(itemFields) + ">")
 {
-   R__ASSERT(itemFields.size() == 2);
 }
 
 ROOT::Experimental::RPairField::RPairField(std::string_view fieldName,
-                                           std::vector<std::unique_ptr<Detail::RFieldBase>> &itemFields)
+                                           std::array<std::unique_ptr<Detail::RFieldBase>, 2> &itemFields)
    : ROOT::Experimental::RRecordField(fieldName, std::move(itemFields), {},
                                       "std::pair<" + GetTypeList(itemFields) + ">")
 {
-   R__ASSERT(itemFields.size() == 2);
-
    // ISO C++ does not guarantee any specific layout for `std::pair`; query TClass for the member offsets
    fClass = TClass::GetClass(GetType().c_str());
    if (!fClass)
       throw RException(R__FAIL("cannot get type information for " + GetType()));
    fSize = fClass->Size();
-   fOffsets.push_back(fClass->GetDataMemberOffset("first"));
-   fOffsets.push_back(fClass->GetDataMemberOffset("second"));
+   fOffsets[0] = fClass->GetDataMember("first")->GetOffset();
+   fOffsets[1] = fClass->GetDataMember("second")->GetOffset();
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::RPairField::CloneImpl(std::string_view newName) const
 {
-   std::vector<std::unique_ptr<Detail::RFieldBase>> items;
-   items.push_back(fSubFields[0]->Clone(fSubFields[0]->GetName()));
-   items.push_back(fSubFields[1]->Clone(fSubFields[1]->GetName()));
+   std::array<std::unique_ptr<Detail::RFieldBase>, 2> items{fSubFields[0]->Clone(fSubFields[0]->GetName()),
+                                                            fSubFields[1]->Clone(fSubFields[1]->GetName())};
 
-   std::unique_ptr<RPairField> result(new RPairField(newName, std::move(items), fOffsets));
+   std::unique_ptr<RPairField> result(new RPairField(newName, std::move(items), {fOffsets[0], fOffsets[1]}));
+
    result->fClass = fClass;
    return result;
 }
