@@ -37,11 +37,48 @@ ROOT::Experimental::RLogChannel &ROOT::Experimental::BrowserLog() {
    return sLog;
 }
 
+namespace ROOT {
+namespace Experimental {
+
+class RBrowserDataCleanup : public TObject {
+
+   RBrowserData &fData;
+
+public:
+   RBrowserDataCleanup(RBrowserData &_data) : fData(_data) {}
+
+   void RecursiveRemove(TObject *obj) override
+   {
+      fData.RemoveFromCache(obj);
+   }
+};
+}
+}
+
 
 /** \class ROOT::Experimental::RBrowserData
 \ingroup rbrowser
 \brief Way to browse (hopefully) everything in %ROOT
 */
+
+
+/////////////////////////////////////////////////////////////////////
+/// Default constructor
+
+RBrowserData::RBrowserData()
+{
+   fCleanupHandle = std::make_unique<RBrowserDataCleanup>(*this);
+   gROOT->GetListOfCleanups()->Add(fCleanupHandle.get());
+}
+
+/////////////////////////////////////////////////////////////////////
+/// Destructor
+
+RBrowserData::~RBrowserData()
+{
+   // should be here because of fCleanupHandle destructor
+   gROOT->GetListOfCleanups()->Remove(fCleanupHandle.get());
+}
 
 /////////////////////////////////////////////////////////////////////
 /// set top element for browsing
@@ -328,4 +365,52 @@ std::shared_ptr<Browsable::RElement> RBrowserData::GetSubElement(const Browsable
 void RBrowserData::ClearCache()
 {
    fCache.clear();
+}
+
+/////////////////////////////////////////////////////////////////////////
+/// Remove object from cache
+/// Returns true if any element was removed
+
+bool RBrowserData::RemoveFromCache(void *obj)
+{
+   unsigned pos = 0;
+
+   bool isany = false;
+
+   while (pos < fCache.size()) {
+      if (!fCache[pos].second->IsObject(obj)) {
+         pos++;
+         continue;
+      }
+
+      isany = true;
+      auto path = fCache[pos].first;
+      fCache.erase(fCache.begin() + pos);
+      if (RemoveFromCache(path))
+         pos = 0; // start scan from the beginning
+   }
+
+   return isany;
+}
+
+/////////////////////////////////////////////////////////////////////////
+/// Remove path (and all sub-paths) from cache
+/// Returns true if any element was removed
+
+bool RBrowserData::RemoveFromCache(const Browsable::RElementPath_t &path)
+{
+   if (path.size() == 0)
+      return false;
+
+   bool isany = false;
+   unsigned pos = 0;
+   while (pos < fCache.size()) {
+      if (Browsable::RElement::ComparePaths(path, fCache[pos].first) == (int) path.size()) {
+         fCache.erase(fCache.begin() + pos);
+         isany = true;
+      } else {
+         pos++;
+      }
+   }
+   return isany;
 }

@@ -301,6 +301,10 @@ public:
       return std::make_unique<RAnyObjectHolder>(obj_class, obj, true);
    }
 
+   bool IsObject(void *obj) override
+   {
+      return obj == fDir;
+   }
 
    EActionKind GetDefaultAction() const override
    {
@@ -421,6 +425,11 @@ public:
       auto dir = GetDir();
 
       return dir ? std::make_unique<TDirectoryLevelIter>(dir) : nullptr;
+   }
+
+   bool IsObject(void *obj) override
+   {
+      return obj == fDir;
    }
 
    /** Get default action - browsing for the TFile/TDirectory*/

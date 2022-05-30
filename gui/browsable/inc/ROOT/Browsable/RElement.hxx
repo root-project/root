@@ -79,6 +79,8 @@ public:
    /** Access object */
    virtual std::unique_ptr<RHolder> GetObject() { return nullptr; }
 
+   virtual bool IsObject(void *) { return false; }
+
    /** Get default action */
    virtual EActionKind GetDefaultAction() const { return kActNone; }
 
