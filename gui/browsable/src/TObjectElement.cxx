@@ -299,7 +299,7 @@ TObjectElement::TObjectElement(std::unique_ptr<RHolder> &obj, const std::string 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check if object still exsists
+/// Check if object still exists
 
 bool TObjectElement::CheckObject() const
 {
@@ -356,7 +356,7 @@ std::unique_ptr<RLevelIter> TObjectElement::GetChildsIter()
 
    auto dupl = imp->IsDuplicated();
 
-   delete br; // also will destroy implementaion
+   delete br; // also will destroy implementation
 
    if (dupl || (iter->NumElements() == 0)) return nullptr;
 
@@ -375,13 +375,20 @@ std::unique_ptr<RHolder> TObjectElement::GetObject()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns true if holding specified object
+
+bool TObjectElement::IsObject(void *obj)
+{
+   return fObject && (fObject->get_object<TObject>() == obj);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Returns class for contained object
 
 const TClass *TObjectElement::GetClass() const
 {
    return CheckObject() ? fObj->IsA() : nullptr;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Provides default action which can be performed with the object

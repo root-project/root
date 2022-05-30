@@ -64,6 +64,8 @@ public:
    /** Return copy of TObject holder - if possible */
    std::unique_ptr<RHolder> GetObject() override;
 
+   bool IsObject(void *) override;
+
    const TClass *GetClass() const;
 
    EActionKind GetDefaultAction() const override;
