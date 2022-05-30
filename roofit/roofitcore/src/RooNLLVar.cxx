@@ -381,7 +381,7 @@ RooNLLVar::ComputeResult RooNLLVar::computeBatchedFunc(const RooAbsPdf *pdfClone
     evalData.reset(new RooBatchCompute::RunContext);
   }
   evalData->clear();
-  dataClone->getBatches(*evalData, firstEvent, nEvents);
+  evalData->spans = dataClone->getBatches(firstEvent, nEvents);
 
   auto results = pdfClone->getLogProbabilities(*evalData, normSet);
 

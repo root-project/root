@@ -15,7 +15,6 @@
 #include <RooAbsCategory.h>
 #include <RooAbsData.h>
 #include <RooNLLVarNew.h>
-#include <RunContext.h>
 
 #include <ROOT/StringUtils.hxx>
 
@@ -23,7 +22,7 @@
 
 namespace {
 
-void splitByCategory(std::map<const TNamed *, RooSpan<const double>> &dataSpans, RooAbsCategory const &category,
+void splitByCategory(std::map<RooFit::Detail::DataKey, RooSpan<const double>> &dataSpans, RooAbsCategory const &category,
                      std::stack<std::vector<double>> &buffers)
 {
    std::stack<std::vector<double>> oldBuffers;
@@ -31,7 +30,7 @@ void splitByCategory(std::map<const TNamed *, RooSpan<const double>> &dataSpans,
 
    auto catVals = dataSpans.at(category.namePtr());
 
-   std::map<const TNamed *, RooSpan<const double>> dataMapSplit;
+   std::map<RooFit::Detail::DataKey, RooSpan<const double>> dataMapSplit;
 
    for (auto const &dataMapItem : dataSpans) {
 
@@ -91,11 +90,11 @@ void splitByCategory(std::map<const TNamed *, RooSpan<const double>> &dataSpans,
 //            be used as memory for the data if the memory in the dataset
 //            object can't be used directly (e.g. because you used the range
 //            selection or the splitting by categories).
-std::map<const TNamed *, RooSpan<const double>>
+std::map<RooFit::Detail::DataKey, RooSpan<const double>>
 RooFit::BatchModeDataHelpers::getDataSpans(RooAbsData const &data, std::string_view rangeName,
                                            RooAbsCategory const *indexCat, std::stack<std::vector<double>> &buffers)
 {
-   std::map<const TNamed *, RooSpan<const double>> dataSpans; // output variable
+   std::map<RooFit::Detail::DataKey, RooSpan<const double>> dataSpans; // output variable
 
    std::size_t nEvents = static_cast<size_t>(data.numEntries());
 
@@ -154,12 +153,9 @@ RooFit::BatchModeDataHelpers::getDataSpans(RooAbsData const &data, std::string_v
       dataSpans[nameReg.constPtr(RooNLLVarNew::weightVarNameSumW2)] = weightSumW2;
    }
 
-   // fill the RunContext with the observable data and map the observables
-   // by namePtr in order to replace their memory addresses later, with
-   // the ones from the variables that are actually in the computation graph.
-   RooBatchCompute::RunContext evalData;
-   data.getBatches(evalData, 0, nEvents);
-   for (auto const &item : evalData.spans) {
+   // Get the real-valued batches and cast the also to double branches to put in
+   // the data map
+   for (auto const &item : data.getBatches(0, nEvents)) {
 
       const TNamed *namePtr = nameReg.constPtr(item.first->GetName());
       RooSpan<const double> span{item.second};
@@ -180,7 +176,7 @@ RooFit::BatchModeDataHelpers::getDataSpans(RooAbsData const &data, std::string_v
    // the data map
    for (auto const &item : data.getCategoryBatches(0, nEvents)) {
 
-      const TNamed *namePtr = nameReg.constPtr(item.first.c_str());
+      const TNamed *namePtr = nameReg.constPtr(item.first->GetName());
       RooSpan<const RooAbsCategory::value_type> intSpan{item.second};
 
       buffers.emplace();

@@ -317,9 +317,9 @@ RooSpan<const double> RooAbsReal::getValues(RooBatchCompute::RunContext& evalDat
 
   normSet = normSet ? normSet : _lastNSet;
 
-  std::map<const TNamed *, RooSpan<const double>> dataSpans;
+  std::map<RooFit::Detail::DataKey, RooSpan<const double>> dataSpans;
   for (auto const &evalDataItem : evalData.spans) {
-    dataSpans[evalDataItem.first->namePtr()] = evalDataItem.second;
+    dataSpans[evalDataItem.first] = evalDataItem.second;
   }
 
   ROOT::Experimental::RooFitDriver driver(*this, normSet ? *normSet : RooArgSet{});

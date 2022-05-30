@@ -41,7 +41,6 @@ which returns spans pointing directly to the data.
 #include "RooCategory.h"
 #include "RooHistError.h"
 #include "RooTrace.h"
-#include "RunContext.h"
 #include "RooHelpers.h"
 
 #include "Math/Util.h"
@@ -1311,14 +1310,13 @@ void RooVectorDataStore::RealFullVector::Streamer(TBuffer &R__b)
 /// Return batches of the data columns for the requested events.
 /// \param[in] first First event in the batches.
 /// \param[in] len   Number of events in batches.
-/// \return RunContext object whose member `spans` maps RooAbsReal pointers to spans with
-/// the associated data.
-RooBatchCompute::RunContext RooVectorDataStore::getBatches(std::size_t first, std::size_t len) const {
-  RooBatchCompute::RunContext evalData;
+/// \return Spans with the associated data.
+RooAbsData::RealSpans RooVectorDataStore::getBatches(std::size_t first, std::size_t len) const {
+  RooAbsData::RealSpans evalData;
 
   auto emplace = [this,&evalData,first,len](const RealVector* realVec) {
     auto span = realVec->getRange(first, first + len);
-    auto result = evalData.spans.emplace(realVec->_nativeReal, span);
+    auto result = evalData.emplace(realVec->_nativeReal, span);
     if (result.second == false || result.first->second.size() != len) {
       const auto size = result.second ? result.first->second.size() : 0;
       coutE(DataHandling) << "A batch of data for '" << realVec->_nativeReal->GetName()
@@ -1328,7 +1326,7 @@ RooBatchCompute::RunContext RooVectorDataStore::getBatches(std::size_t first, st
     if (realVec->_real) {
       // If a buffer is attached, i.e. we are ready to load into a RooAbsReal outside of our dataset,
       // we can directly map our spans to this real.
-      evalData.spans.emplace(realVec->_real, std::move(span));
+      evalData.emplace(realVec->_real, std::move(span));
     }
   };
 
@@ -1352,12 +1350,12 @@ RooBatchCompute::RunContext RooVectorDataStore::getBatches(std::size_t first, st
 }
 
 
-std::map<const std::string, RooSpan<const RooAbsCategory::value_type>> RooVectorDataStore::getCategoryBatches(std::size_t first, std::size_t len) const {
-  std::map<const std::string, RooSpan<const RooAbsCategory::value_type>> evalData;
+RooAbsData::CategorySpans RooVectorDataStore::getCategoryBatches(std::size_t first, std::size_t len) const {
+  RooAbsData::CategorySpans evalData;
 
   auto emplace = [this,&evalData,first,len](const CatVector* catVec) {
     auto span = catVec->getRange(first, first + len);
-    auto result = evalData.emplace(catVec->_cat->GetName(), span);
+    auto result = evalData.emplace(catVec->_cat, span);
     if (result.second == false || result.first->second.size() != len) {
       const auto size = result.second ? result.first->second.size() : 0;
       coutE(DataHandling) << "A batch of data for '" << catVec->_cat->GetName()
