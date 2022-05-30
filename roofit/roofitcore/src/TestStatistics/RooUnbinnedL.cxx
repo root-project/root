@@ -30,7 +30,7 @@ In extended mode, a
 #include "RooAbsPdf.h"
 #include "RooAbsDataStore.h"
 #include "RooNLLVar.h"  // RooNLLVar::ComputeScalar
-#include "RunContext.h" // complete type BatchCompute::RunContext
+#include "RunContext.h"
 
 #include "Math/Util.h" // KahanSum
 
@@ -86,7 +86,8 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
    data_->store()->recalculateCache(nullptr, events.begin(N_events_), events.end(N_events_), 1, kTRUE);
 
    if (useBatchedEvaluations_) {
-      std::tie(result, sumWeight) = RooNLLVar::computeBatchedFunc(pdf_.get(), data_.get(), evalData_, normSet_.get(), apply_weight_squared,
+      std::unique_ptr<RooBatchCompute::RunContext> evalData;
+      std::tie(result, sumWeight) = RooNLLVar::computeBatchedFunc(pdf_.get(), data_.get(), evalData, normSet_.get(), apply_weight_squared,
                                                                   1, events.begin(N_events_), events.end(N_events_));
    } else {
       std::tie(result, sumWeight) = RooNLLVar::computeScalarFunc(pdf_.get(), data_.get(), normSet_.get(), apply_weight_squared,
