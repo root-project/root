@@ -1951,8 +1951,8 @@ class HierarchyPainter extends BasePainter {
       menu.add("Save settings", () => {
          let promise = readSettings(true) ? Promise.resolve(true) : menu.confirm("Save settings", "Pressing OK one agreess that JSROOT will store settings as browser cookies");
          promise.then(res => { if (res) { saveSettings(); saveStyle(); } });
-      });
-      menu.add("Delete settings", () => { saveSettings(-1); saveStyle(-1); });
+      }, "Store settings and gStyle as cookies");
+      menu.add("Delete settings", () => { saveSettings(-1); saveStyle(-1); }, "Delete settings and gStyle from cookies");
 
       if (!alone) menu.add("endsub:");
    }
