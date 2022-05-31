@@ -193,6 +193,20 @@ struct HasBeginAndEnd {
    static constexpr bool const value = Check<T>(0);
 };
 
+#ifdef __cpp_lib_is_invocable
+// can use std::invoke_result_t (a C++17 feature)
+#define INVOKE_RESULT(x, ...) std::invoke_result_t<x, __VA_ARGS__>
+#else
+// must use std::result_of_t (e.g. because we are using C++14)
+#define INVOKE_RESULT(x, ...) std::result_of_t<x(__VA_ARGS__)>
+#endif
+
+/// An adapter for std::invoke_result that falls back to std::result_of if the former is not available.
+template <typename F, typename... Args>
+using InvokeResult_t = INVOKE_RESULT(F, Args...);
+
+#undef INVOKE_RESULT
+
 } // ns TypeTraits
 } // ns ROOT
 #endif // ROOT_TTypeTraits
