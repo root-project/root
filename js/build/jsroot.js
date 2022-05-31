@@ -11,7 +11,7 @@ let version_id = "dev";
 
 /** @summary version date
   * @desc Release date in format day/month/year like "19/11/2021" */
-let version_date = "24/05/2022";
+let version_date = "31/05/2022";
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -64677,9 +64677,7 @@ class TH1Painter$2 extends THistPainter {
             yerr1 = yerr2 = 20;
          }
          return true;
-      };
-
-      let draw_errbin = () => {
+      }, draw_errbin = () => {
          let edx = 5;
          if (this.options.errorX > 0) {
             edx = Math.round((mx2-mx1)*this.options.errorX);
@@ -64696,9 +64694,7 @@ class TH1Painter$2 extends THistPainter {
             path_err += `M${midx},${my-yerr1+dend}v${yerr1+yerr2-2*dend}`;
          if (hints_err !== null)
             hints_err += `M${midx-edx},${my-yerr1}h${2*edx}v${yerr1+yerr2}h${-2*edx}z`;
-      };
-
-      const draw_bin = bin => {
+      }, draw_bin = bin => {
          if (extract_bin(bin)) {
             if (show_text) {
                let cont = text_profile ? histo.fBinEntries[bin+1] : bincont;
@@ -64714,7 +64710,7 @@ class TH1Painter$2 extends THistPainter {
             }
 
             if (show_line && (path_line !== null))
-               path_line += ((path_line.length===0) ? "M" : "L") + midx + "," + my;
+               path_line += ((path_line.length===0) ? "M" : "L") + `${midx},${my}`;
 
             if (draw_markers) {
                if ((my >= -yerr1) && (my <= height + yerr2)) {
@@ -65442,9 +65438,9 @@ class TH2Painter$2 extends THistPainter {
          // this is when projection should be created on the server side
          let exec = "EXECANDSEND:D" + this.is_projection + "PROJ:" + this.snapid + ":";
          if (this.is_projection == "X")
-            exec += 'ProjectionX("_projx",' + (jj1+1) + ',' + jj2 + ',"")';
+            exec += `ProjectionX("_projx",${jj1+1},${jj2},"")`;
          else
-            exec += 'ProjectionY("_projy",' + (ii1+1) + ',' + ii2 + ',"")';
+            exec += `ProjectionY("_projy",${ii1+1},${ii2},"")`;
          canp.sendWebsocket(exec);
          return;
       }
@@ -66200,7 +66196,7 @@ class TH2Painter$2 extends THistPainter {
           palette = this.getHistPalette(),
           func = main.getProjectionFunc();
 
-      const BuildPath = (xp,yp,iminus,iplus,do_close) => {
+      const buildPath = (xp,yp,iminus,iplus,do_close) => {
          let cmd = "", lastx, lasty, x0, y0, isany = false, matched, x, y;
          for (let i = iminus; i <= iplus; ++i) {
             if (func) {
@@ -66264,11 +66260,11 @@ class TH2Painter$2 extends THistPainter {
           t = t_numer / denom;
           return { x: Math.round(segm1.x1 + (t * s10_x)), y: Math.round(segm1.y1 + (t * s10_y)) };
 
-      }, BuildPathOutside = (xp,yp,iminus,iplus,side) => {
+      }, buildPathOutside = (xp,yp,iminus,iplus,side) => {
 
          // try to build path which fills area to outside borders
 
-         const points = [{ x: 0, y: 0 }, { x: frame_w, y: 0 }, { x: frame_w, y: frame_h }, { x: 0, y: frame_h }];
+         const points = [{x: 0, y: 0}, {x: frame_w, y: 0}, {x: frame_w, y: frame_h}, {x: 0, y: frame_h}];
 
          const get_intersect = (i,di) => {
             let segm = { x1: xp[i], y1: yp[i], x2: 2*xp[i] - xp[i+di], y2: 2*yp[i] - yp[i+di] };
@@ -66293,7 +66289,7 @@ class TH2Painter$2 extends THistPainter {
 
          // TODO: now side is always same direction, could be that side should be checked more precise
 
-         let dd = BuildPath(xp,yp,iminus,iplus),
+         let dd = buildPath(xp,yp,iminus,iplus),
              indx = pnt2.indx, step = side*0.5;
 
          dd += `L${pnt2.x},${pnt2.y}`;
@@ -66317,7 +66313,7 @@ class TH2Painter$2 extends THistPainter {
                xd[i+sz] = handle.origx[handle.i2];
                yd[i+sz] = (handle.origy[handle.j2]*(i+0.5) + handle.origy[handle.j1]*(sz-0.5-i))/sz;
             }
-            dd = BuildPath(xd,yd,0,2*sz-1, true);
+            dd = buildPath(xd,yd,0,2*sz-1, true);
          }
 
          this.draw_g
@@ -66337,16 +66333,16 @@ class TH2Painter$2 extends THistPainter {
             case 13: fillcolor = 'none'; lineatt = this.lineatt; break;
          }
 
-         let dd = BuildPath(xp, yp, iminus, iplus, fillcolor != 'none');
+         let dd = buildPath(xp, yp, iminus, iplus, fillcolor != 'none');
          if (dd == "<failed>")
-            dd = BuildPathOutside(xp, yp, iminus, iplus, 1);
+            dd = buildPathOutside(xp, yp, iminus, iplus, 1);
          if (!dd) return;
 
          let elem = this.draw_g
-                       .append("svg:path")
-                       .attr("class","th2_contour")
-                       .attr("d", dd)
-                       .style("fill", fillcolor);
+                        .append("svg:path")
+                        .attr("class","th2_contour")
+                        .attr("d", dd)
+                        .style("fill", fillcolor);
 
          if (lineatt)
             elem.call(lineatt.func);
@@ -66382,7 +66378,7 @@ class TH2Painter$2 extends THistPainter {
       };
 
       for (ngr = 0; ngr < ngraphs; ++ ngr) {
-         if (!gr || (ngr>0)) gr = bin.fPoly.fGraphs.arr[ngr];
+         if (!gr || (ngr > 0)) gr = bin.fPoly.fGraphs.arr[ngr];
 
          const x = gr.fX, y = gr.fY;
          let n, nextx, nexty, npnts = gr.fNpoints, dx, dy,
@@ -66532,7 +66528,7 @@ class TH2Painter$2 extends THistPainter {
           rotate = -1*this.options.TextAngle,
           draw_g = this.draw_g.append("svg:g").attr("class","th2_text"),
           text_size = 20, text_offset = 0,
-          profile2d = this.matchObjectType('TProfile2D') && (typeof histo.getBinEntries=='function'),
+          profile2d = this.matchObjectType('TProfile2D') && (typeof histo.getBinEntries == 'function'),
           show_err = (this.options.TextKind == "E"),
           latex = (show_err && !this.options.TextLine) ? 1 : 0;
 
@@ -66607,20 +66603,19 @@ class TH2Painter$2 extends THistPainter {
          for (i = handle.i1; i < handle.i2; ++i)
             for (j = handle.j1; j < handle.j2; ++j) {
 
-               if (i === handle.i1) {
+               if (i === handle.i1)
                   dx = histo.getBinContent(i+2, j+1) - histo.getBinContent(i+1, j+1);
-               } else if (i === handle.i2-1) {
+               else if (i === handle.i2-1)
                   dx = histo.getBinContent(i+1, j+1) - histo.getBinContent(i, j+1);
-               } else {
+               else
                   dx = 0.5*(histo.getBinContent(i+2, j+1) - histo.getBinContent(i, j+1));
-               }
-               if (j === handle.j1) {
+
+               if (j === handle.j1)
                   dy = histo.getBinContent(i+1, j+2) - histo.getBinContent(i+1, j+1);
-               } else if (j === handle.j2-1) {
+               else if (j === handle.j2-1)
                   dy = histo.getBinContent(i+1, j+1) - histo.getBinContent(i+1, j);
-               } else {
+               else
                   dy = 0.5*(histo.getBinContent(i+1, j+2) - histo.getBinContent(i+1, j));
-               }
 
                if (loop === 0) {
                   dn = Math.max(dn, Math.abs(dx), Math.abs(dy));
@@ -66666,7 +66661,7 @@ class TH2Painter$2 extends THistPainter {
           handle = this.prepareDraw({ rounding: false }),
           main = this.getMainPainter();
 
-      if (main===this) {
+      if (main === this) {
          if (main.maxbin === main.minbin) {
             main.maxbin = main.gmaxbin;
             main.minbin = main.gminbin;
@@ -67024,15 +67019,13 @@ class TH2Painter$2 extends THistPainter {
             lines += make_path(pnt.x1,pnt.y0,'H',pnt.x2);
          else if (isOption(kMedianNotched))
             lines += make_path(x1d,pnt.y0,'H',x2d);
-         else if (isOption(kMedianCircle)) {
+         else if (isOption(kMedianCircle))
             make_cmarker(center, pnt.y0);
-         }
 
-         if (isOption(kMeanCircle)) {
+         if (isOption(kMeanCircle))
             make_cmarker(center, y0m);
-         } else if (isOption(kMeanLine)) {
+         else if (isOption(kMeanLine))
             dashed_lines += make_path(pnt.x1,y0m,'H',pnt.x2);
-         }
 
          if (isOption(kBox))
             if (isOption(kMedianNotched))
@@ -67261,8 +67254,8 @@ class TH2Painter$2 extends THistPainter {
       // limit filling factor, do not try to produce as many points as filled area;
       if (this.maxbin > 0.7) factor = 0.7/this.maxbin;
 
-      let nlevels = Math.round(handle.max - handle.min);
-      let cntr = this.createContour((nlevels > 50) ? 50 : nlevels, this.minposbin, this.maxbin, this.minposbin);
+      let nlevels = Math.round(handle.max - handle.min),
+          cntr = this.createContour((nlevels > 50) ? 50 : nlevels, this.minposbin, this.maxbin, this.minposbin);
 
       // now start build
       for (i = handle.i1; i < handle.i2; ++i) {
@@ -75310,8 +75303,8 @@ class HierarchyPainter extends BasePainter {
       menu.add("Save settings", () => {
          let promise = readSettings(true) ? Promise.resolve(true) : menu.confirm("Save settings", "Pressing OK one agreess that JSROOT will store settings as browser cookies");
          promise.then(res => { if (res) { saveSettings(); saveStyle(); } });
-      });
-      menu.add("Delete settings", () => { saveSettings(-1); saveStyle(-1); });
+      }, "Store settings and gStyle as cookies");
+      menu.add("Delete settings", () => { saveSettings(-1); saveStyle(-1); }, "Delete settings and gStyle from cookies");
 
       if (!alone) menu.add("endsub:");
    }
