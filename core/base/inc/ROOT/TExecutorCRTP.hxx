@@ -13,11 +13,12 @@
 #define ROOT_TExecutorCRTP
 
 #include "ROOT/TSeq.hxx"
+#include "ROOT/TypeTraits.hxx" // InvokeResult_t
 #include "TError.h"
 #include "TList.h"
 
 #include <initializer_list>
-#include <type_traits> //std::enable_if, std::result_of
+#include <type_traits> //std::enable_if
 #include <utility> //std::move
 #include <vector>
 
@@ -100,43 +101,47 @@ namespace ROOT {
 
 template<class SubC>
 class TExecutorCRTP {
-public:
 
+   template <typename F, typename... Args>
+   using InvokeResult_t = ROOT::TypeTraits::InvokeResult_t<F, Args...>;
+
+public:
    TExecutorCRTP() = default;
    TExecutorCRTP(const TExecutorCRTP &) = delete;
    TExecutorCRTP &operator=(const TExecutorCRTP &) = delete;
 
    /// type definition in used in templated functions for not allowing mapping functions that return references.
    /// The resulting vector elements must be assignable, references aren't.
-   template< class F, class... T>
-   using noReferenceCond = typename std::enable_if<"Function can't return a reference" && !(std::is_reference<typename std::result_of<F(T...)>::type>::value)>::type;
+   template <class F, class... T>
+   using noReferenceCond =
+      std::enable_if_t<"Function can't return a reference" && !std::is_reference<InvokeResult_t<F, T...>>::value>;
 
    // Map
    // These trailing return types allow for a compile time check of compatibility between function signatures and args
-   template<class F, class Cond = noReferenceCond<F>>
-   auto Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
-   template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
-   auto Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
-   template<class F, class T, class Cond = noReferenceCond<F, T>>
-   auto Map(F func, std::initializer_list<T> args) -> std::vector<typename std::result_of<F(T)>::type>;
-   template<class F, class T, class Cond = noReferenceCond<F, T>>
-   auto Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
-   template<class F, class T, class Cond = noReferenceCond<F, T>>
-   auto Map(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
+   template <class F, class Cond = noReferenceCond<F>>
+   auto Map(F func, unsigned nTimes) -> std::vector<InvokeResult_t<F>>;
+   template <class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
+   auto Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<InvokeResult_t<F, INTEGER>>;
+   template <class F, class T, class Cond = noReferenceCond<F, T>>
+   auto Map(F func, std::initializer_list<T> args) -> std::vector<InvokeResult_t<F, T>>;
+   template <class F, class T, class Cond = noReferenceCond<F, T>>
+   auto Map(F func, std::vector<T> &args) -> std::vector<InvokeResult_t<F, T>>;
+   template <class F, class T, class Cond = noReferenceCond<F, T>>
+   auto Map(F func, const std::vector<T> &args) -> std::vector<InvokeResult_t<F, T>>;
 
    // MapReduce
    // The trailing return types check at compile time that func is compatible with the type of the arguments.
    // A static_assert check in TExecutorCRTP<SubC>::Reduce is used to check that redfunc is compatible with the type returned by func
-   template<class F, class R, class Cond = noReferenceCond<F>>
-   auto MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type;
-   template<class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
-   auto MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc) -> typename std::result_of<F(INTEGER)>::type;
-   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
-   auto MapReduce(F func, std::initializer_list<T> args, R redfunc) -> typename std::result_of<F(T)>::type;
-   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
-   auto MapReduce(F func, const std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type;
-   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
-   auto MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type;
+   template <class F, class R, class Cond = noReferenceCond<F>>
+   auto MapReduce(F func, unsigned nTimes, R redfunc) -> InvokeResult_t<F>;
+   template <class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
+   auto MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc) -> InvokeResult_t<F, INTEGER>;
+   template <class F, class T, class R, class Cond = noReferenceCond<F, T>>
+   auto MapReduce(F func, std::initializer_list<T> args, R redfunc) -> InvokeResult_t<F, T>;
+   template <class F, class T, class R, class Cond = noReferenceCond<F, T>>
+   auto MapReduce(F func, const std::vector<T> &args, R redfunc) -> InvokeResult_t<F, T>;
+   template <class F, class T, class R, class Cond = noReferenceCond<F, T>>
+   auto MapReduce(F func, std::vector<T> &args, R redfunc) -> InvokeResult_t<F, T>;
    template<class F, class T,class Cond = noReferenceCond<F, T>>
    T* MapReduce(F func, std::vector<T*> &args);
    template<class F, class T,class Cond = noReferenceCond<F, T>>
@@ -153,18 +158,17 @@ private:
    }
 
    /// Implementation of the Map method, left to the derived classes
-   template<class F, class Cond = noReferenceCond<F>>
-   auto MapImpl(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type> = delete;
+   template <class F, class Cond = noReferenceCond<F>>
+   auto MapImpl(F func, unsigned nTimes) -> std::vector<InvokeResult_t<F>> = delete;
    /// Implementation of the Map method, left to the derived classes
-   template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
-   auto MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type> = delete;
+   template <class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
+   auto MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<InvokeResult_t<F, INTEGER>> = delete;
    /// Implementation of the Map method, left to the derived classes
-   template<class F, class T, class Cond = noReferenceCond<F, T>>
-   auto MapImpl(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type> = delete;
+   template <class F, class T, class Cond = noReferenceCond<F, T>>
+   auto MapImpl(F func, std::vector<T> &args) -> std::vector<InvokeResult_t<F, T>> = delete;
    /// Implementation of the Map method, left to the derived classes
-   template<class F, class T, class Cond = noReferenceCond<F, T>>
-   auto MapImpl(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type> = delete;
-
+   template <class F, class T, class Cond = noReferenceCond<F, T>>
+   auto MapImpl(F func, const std::vector<T> &args) -> std::vector<InvokeResult_t<F, T>> = delete;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -175,8 +179,9 @@ private:
 /// \return A vector with the results of the function calls.
 /// Functions that take arguments can be executed (with
 /// fixed arguments) by wrapping them in a lambda or with std::bind.
-template<class SubC> template<class F, class Cond>
-auto TExecutorCRTP<SubC>::Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>
+template <class SubC>
+template <class F, class Cond>
+auto TExecutorCRTP<SubC>::Map(F func, unsigned nTimes) -> std::vector<InvokeResult_t<F>>
 {
    return Derived().MapImpl(func, nTimes);
 }
@@ -187,8 +192,9 @@ auto TExecutorCRTP<SubC>::Map(F func, unsigned nTimes) -> std::vector<typename s
 /// \param func Function to be executed. Must take an element of the sequence passed assecond argument as a parameter.
 /// \param args Sequence of indexes to execute `func` on.
 /// \return A vector with the results of the function calls.
-template<class SubC> template<class F, class INTEGER, class Cond>
-auto TExecutorCRTP<SubC>::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>
+template <class SubC>
+template <class F, class INTEGER, class Cond>
+auto TExecutorCRTP<SubC>::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<InvokeResult_t<F, INTEGER>>
 {
    return Derived().MapImpl(func, args);
 }
@@ -199,8 +205,9 @@ auto TExecutorCRTP<SubC>::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<t
 /// \param func Function to be executed on the elements of the initializer_list passed as second parameter.
 /// \param args initializer_list for a vector to apply `func` on.
 /// \return A vector with the results of the function calls.
-template<class SubC> template<class F, class T, class Cond>
-auto TExecutorCRTP<SubC>::Map(F func, std::initializer_list<T> args) -> std::vector<typename std::result_of<F(T)>::type>
+template <class SubC>
+template <class F, class T, class Cond>
+auto TExecutorCRTP<SubC>::Map(F func, std::initializer_list<T> args) -> std::vector<InvokeResult_t<F, T>>
 {
    std::vector<T> vargs(std::move(args));
    const auto &reslist = Map(func, vargs);
@@ -213,8 +220,9 @@ auto TExecutorCRTP<SubC>::Map(F func, std::initializer_list<T> args) -> std::vec
 /// \param func Function to be executed on the elements of the vector passed as second parameter.
 /// \param args Vector of elements passed as an argument to `func`.
 /// \return A vector with the results of the function calls.
-template<class SubC> template<class F, class T, class Cond>
-auto TExecutorCRTP<SubC>::Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>
+template <class SubC>
+template <class F, class T, class Cond>
+auto TExecutorCRTP<SubC>::Map(F func, std::vector<T> &args) -> std::vector<InvokeResult_t<F, T>>
 {
    return Derived().MapImpl(func, args);
 }
@@ -226,8 +234,9 @@ auto TExecutorCRTP<SubC>::Map(F func, std::vector<T> &args) -> std::vector<typen
 /// \param func Function to be executed on the elements of the vector passed as second parameter.
 /// \param args Vector of elements passed as an argument to `func`.
 /// \return A vector with the results of the function calls.
-template<class SubC> template<class F, class T, class Cond>
-auto TExecutorCRTP<SubC>::Map(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>
+template <class SubC>
+template <class F, class T, class Cond>
+auto TExecutorCRTP<SubC>::Map(F func, const std::vector<T> &args) -> std::vector<InvokeResult_t<F, T>>
 {
    return Derived().MapImpl(func, args);
 }
@@ -240,8 +249,9 @@ auto TExecutorCRTP<SubC>::Map(F func, const std::vector<T> &args) -> std::vector
 /// \return A vector with the results of the function calls.
 /// \param redfunc Reduction function to combine the results of the calls to `func`. Must return the same type as `func`.
 /// \return A value result of "reducing" the vector returned by the Map operation into a single object.
-template<class SubC> template<class F, class R, class Cond>
-auto TExecutorCRTP<SubC>::MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type
+template <class SubC>
+template <class F, class R, class Cond>
+auto TExecutorCRTP<SubC>::MapReduce(F func, unsigned nTimes, R redfunc) -> InvokeResult_t<F>
 {
    return Reduce(Map(func, nTimes), redfunc);
 }
@@ -253,8 +263,9 @@ auto TExecutorCRTP<SubC>::MapReduce(F func, unsigned nTimes, R redfunc) -> typen
 /// \param args Sequence of indexes to execute `func` on.
 /// \param redfunc Reduction function to combine the results of the calls to `func`. Must return the same type as `func`.
 /// \return A value result of "reducing" the vector returned by the Map operation into a single object.
-template<class SubC> template<class F, class INTEGER, class R, class Cond>
-auto TExecutorCRTP<SubC>::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc) -> typename std::result_of<F(INTEGER)>::type
+template <class SubC>
+template <class F, class INTEGER, class R, class Cond>
+auto TExecutorCRTP<SubC>::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc) -> InvokeResult_t<F, INTEGER>
 {
    return Reduce(Map(func, args), redfunc);
 }
@@ -266,8 +277,9 @@ auto TExecutorCRTP<SubC>::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc)
 /// \param args initializer_list for a vector to apply `func` on.
 /// \param redfunc Reduction function to combine the results of the calls to `func`. Must return the same type as `func`.
 /// \return A value result of "reducing" the vector returned by the Map operation into a single object.
-template<class SubC> template<class F, class T, class R, class Cond>
-auto TExecutorCRTP<SubC>::MapReduce(F func, std::initializer_list<T> args, R redfunc) -> typename std::result_of<F(T)>::type
+template <class SubC>
+template <class F, class T, class R, class Cond>
+auto TExecutorCRTP<SubC>::MapReduce(F func, std::initializer_list<T> args, R redfunc) -> InvokeResult_t<F, T>
 {
    std::vector<T> vargs(std::move(args));
    return Reduce(Map(func, vargs), redfunc);
@@ -280,8 +292,9 @@ auto TExecutorCRTP<SubC>::MapReduce(F func, std::initializer_list<T> args, R red
 /// \param args Vector of elements passed as an argument to `func`.
 /// \param redfunc Reduction function to combine the results of the calls to `func`. Must return the same type as `func`.
 /// \return A value result of "reducing" the vector returned by the Map operation into a single object.
-template<class SubC> template<class F, class T, class R, class Cond>
-auto TExecutorCRTP<SubC>::MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type
+template <class SubC>
+template <class F, class T, class R, class Cond>
+auto TExecutorCRTP<SubC>::MapReduce(F func, std::vector<T> &args, R redfunc) -> InvokeResult_t<F, T>
 {
    return Reduce(Map(func, args), redfunc);
 }
@@ -293,8 +306,9 @@ auto TExecutorCRTP<SubC>::MapReduce(F func, std::vector<T> &args, R redfunc) -> 
 /// \param args Immutable vector of elements passed as an argument to `func`.
 /// \param redfunc Reduction function to combine the results of the calls to `func`. Must return the same type as `func`.
 /// \return A value result of "reducing" the vector returned by the Map operation into a single object.
-template<class SubC> template<class F, class T, class R, class Cond>
-auto TExecutorCRTP<SubC>::MapReduce(F func, const std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type
+template <class SubC>
+template <class F, class T, class R, class Cond>
+auto TExecutorCRTP<SubC>::MapReduce(F func, const std::vector<T> &args, R redfunc) -> InvokeResult_t<F, T>
 {
    return Reduce(Map(func, args), redfunc);
 }

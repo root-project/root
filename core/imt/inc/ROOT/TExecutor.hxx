@@ -15,6 +15,7 @@
 #include "ROOT/TExecutorCRTP.hxx"
 #include "ROOT/TSeq.hxx"
 #include "ROOT/TSequentialExecutor.hxx"
+#include "ROOT/TypeTraits.hxx" // InvokeResult_t
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
 #endif
@@ -27,7 +28,7 @@
 #include <initializer_list>
 #include <memory>
 #include <thread>
-#include <type_traits> //std::enable_if, std::result_of
+#include <type_traits> //std::enable_if
 #include <stdexcept> //std::invalid_argument
 #include <utility> //std::move
 
@@ -36,6 +37,10 @@ namespace ROOT{
 namespace Internal{
 class TExecutor: public TExecutorCRTP<TExecutor> {
    friend TExecutorCRTP;
+
+   template <typename F, typename... Args>
+   using InvokeResult_t = ROOT::TypeTraits::InvokeResult_t<F, Args...>;
+
 public:
 
    /// \brief Class constructor. Sets the default execution policy and initializes the corresponding executor.
@@ -64,16 +69,16 @@ public:
    // other than checking that func is compatible with the type of arguments.
    // a static_assert check in TExecutor::Reduce is used to check that redfunc is compatible with the type returned by func
    using TExecutorCRTP<TExecutor>::MapReduce;
-   template<class F, class R, class Cond = noReferenceCond<F>>
-   auto MapReduce(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> typename std::result_of<F()>::type;
-   template<class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
-   auto MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> typename std::result_of<F(INTEGER)>::type;
-   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
-   auto MapReduce(F func, std::initializer_list<T> args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type;
-   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
-   auto MapReduce(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type;
-   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
-   auto MapReduce(F func, const std::vector<T> &args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type;
+   template <class F, class R, class Cond = noReferenceCond<F>>
+   auto MapReduce(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> InvokeResult_t<F>;
+   template <class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
+   auto MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> InvokeResult_t<F, INTEGER>;
+   template <class F, class T, class R, class Cond = noReferenceCond<F, T>>
+   auto MapReduce(F func, std::initializer_list<T> args, R redfunc, unsigned nChunks) -> InvokeResult_t<F, T>;
+   template <class F, class T, class R, class Cond = noReferenceCond<F, T>>
+   auto MapReduce(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> InvokeResult_t<F, T>;
+   template <class F, class T, class R, class Cond = noReferenceCond<F, T>>
+   auto MapReduce(F func, const std::vector<T> &args, R redfunc, unsigned nChunks) -> InvokeResult_t<F, T>;
 
    // Reduce
    //
@@ -84,14 +89,14 @@ public:
 private:
    // Implementation of the Map functions declared in the parent class (TExecutorCRTP)
    //
-   template<class F, class Cond = noReferenceCond<F>>
-   auto MapImpl(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
-   template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
-   auto MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
-   template<class F, class T, class Cond = noReferenceCond<F, T>>
-   auto MapImpl(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
-   template<class F, class T, class Cond = noReferenceCond<F, T>>
-   auto MapImpl(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
+   template <class F, class Cond = noReferenceCond<F>>
+   auto MapImpl(F func, unsigned nTimes) -> std::vector<InvokeResult_t<F>>;
+   template <class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
+   auto MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<InvokeResult_t<F, INTEGER>>;
+   template <class F, class T, class Cond = noReferenceCond<F, T>>
+   auto MapImpl(F func, std::vector<T> &args) -> std::vector<InvokeResult_t<F, T>>;
+   template <class F, class T, class Cond = noReferenceCond<F, T>>
+   auto MapImpl(F func, const std::vector<T> &args) -> std::vector<InvokeResult_t<F, T>>;
 
    ROOT::EExecutionPolicy fExecPolicy;
 
@@ -120,12 +125,12 @@ private:
    /// necessary to infer the ResolveExecutorAndMap function type
    template<class F, class CONTAINER>
    struct MapRetType {
-      using type = typename std::result_of<F(typename CONTAINER::value_type)>::type;
+      using type = InvokeResult_t<F, typename CONTAINER::value_type>;
    };
 
    template<class F>
    struct MapRetType<F, unsigned> {
-      using type = typename std::result_of<F()>::type;
+      using type = InvokeResult_t<F>;
    };
 
 
@@ -157,8 +162,9 @@ private:
 /// Implementation of the Map method.
 ///
 /// \copydetails TExecutorCRTP::Map(F func,unsigned nTimes)
-template<class F, class Cond>
-auto TExecutor::MapImpl(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type> {
+template <class F, class Cond>
+auto TExecutor::MapImpl(F func, unsigned nTimes) -> std::vector<InvokeResult_t<F>>
+{
    return ResolveExecutorAndMap(func, nTimes);
 }
 
@@ -167,8 +173,9 @@ auto TExecutor::MapImpl(F func, unsigned nTimes) -> std::vector<typename std::re
 /// Implementation of the Map method.
 ///
 /// \copydetails TExecutorCRTP::Map(F func,ROOT::TSeq<INTEGER> args)
-template<class F, class INTEGER, class Cond>
-auto TExecutor::MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type> {
+template <class F, class INTEGER, class Cond>
+auto TExecutor::MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<InvokeResult_t<F, INTEGER>>
+{
    return ResolveExecutorAndMap(func, args);
 }
 
@@ -177,8 +184,9 @@ auto TExecutor::MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typenam
 /// Implementation of the Map method.
 ///
 /// \copydetails TExecutorCRTP::Map(F func,std::vector<T> &args)
-template<class F, class T, class Cond>
-auto TExecutor::MapImpl(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type> {
+template <class F, class T, class Cond>
+auto TExecutor::MapImpl(F func, std::vector<T> &args) -> std::vector<InvokeResult_t<F, T>>
+{
    return ResolveExecutorAndMap(func, args);
 }
 
@@ -187,8 +195,9 @@ auto TExecutor::MapImpl(F func, std::vector<T> &args) -> std::vector<typename st
 /// Implementation of the Map method.
 ///
 /// \copydetails TExecutorCRTP::Map(F func,const std::vector<T> &args)
-template<class F, class T, class Cond>
-auto TExecutor::MapImpl(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type> {
+template <class F, class T, class Cond>
+auto TExecutor::MapImpl(F func, const std::vector<T> &args) -> std::vector<InvokeResult_t<F, T>>
+{
    return ResolveExecutorAndMap(func, args);
 }
 
@@ -203,8 +212,9 @@ auto TExecutor::MapImpl(F func, const std::vector<T> &args) -> std::vector<typen
 /// into a final result. Must return the same type as `func`.
 /// \param nChunks Number of chunks to split the input data for processing.
 /// \return A value result of "reducing" the vector returned by the Map operation into a single object.
-template<class F, class R, class Cond>
-auto TExecutor::MapReduce(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> typename std::result_of<F()>::type {
+template <class F, class R, class Cond>
+auto TExecutor::MapReduce(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> InvokeResult_t<F>
+{
    if (fExecPolicy == ROOT::EExecutionPolicy::kMultiThread) {
       return fThreadExecutor->MapReduce(func, nTimes, redfunc, nChunks);
    }
@@ -222,8 +232,9 @@ auto TExecutor::MapReduce(F func, unsigned nTimes, R redfunc, unsigned nChunks) 
 /// into a final result. Must return the same type as `func`.
 /// \param nChunks Number of chunks to split the input data for processing.
 /// \return A value result of "reducing" the vector returned by the Map operation into a single object.
-template<class F, class INTEGER, class R, class Cond>
-auto TExecutor::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> typename std::result_of<F(INTEGER)>::type {
+template <class F, class INTEGER, class R, class Cond>
+auto TExecutor::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> InvokeResult_t<F, INTEGER>
+{
    if (fExecPolicy == ROOT::EExecutionPolicy::kMultiThread) {
       return fThreadExecutor->MapReduce(func, args, redfunc, nChunks);
    }
@@ -241,8 +252,9 @@ auto TExecutor::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned 
 /// into a final result. Must return the same type as `func`.
 /// \param nChunks Number of chunks to split the input data for processing.
 /// \return A value result of "reducing" the vector returned by the Map operation into a single object.
-template<class F, class T, class R, class Cond>
-auto TExecutor::MapReduce(F func, std::initializer_list<T> args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type {
+template <class F, class T, class R, class Cond>
+auto TExecutor::MapReduce(F func, std::initializer_list<T> args, R redfunc, unsigned nChunks) -> InvokeResult_t<F, T>
+{
    if (fExecPolicy == ROOT::EExecutionPolicy::kMultiThread) {
       return fThreadExecutor->MapReduce(func, args, redfunc, nChunks);
    }
@@ -260,8 +272,9 @@ auto TExecutor::MapReduce(F func, std::initializer_list<T> args, R redfunc, unsi
 /// into a final result. Must return the same type as `func`.
 /// \param nChunks Number of chunks to split the input data for processing.
 /// \return A value result of "reducing" the vector returned by the Map operation into a single object.
-template<class F, class T, class R, class Cond>
-auto TExecutor::MapReduce(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type {
+template <class F, class T, class R, class Cond>
+auto TExecutor::MapReduce(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> InvokeResult_t<F, T>
+{
    if (fExecPolicy == ROOT::EExecutionPolicy::kMultiThread) {
       return fThreadExecutor->MapReduce(func, args, redfunc, nChunks);
    }
@@ -279,8 +292,9 @@ auto TExecutor::MapReduce(F func, std::vector<T> &args, R redfunc, unsigned nChu
 /// into a final result. Must return the same type as `func`.
 /// \param nChunks Number of chunks to split the input data for processing.
 /// \return A value result of "reducing" the vector returned by the Map operation into a single object.
-template<class F, class T, class R, class Cond>
-auto TExecutor::MapReduce(F func, const std::vector<T> &args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type {
+template <class F, class T, class R, class Cond>
+auto TExecutor::MapReduce(F func, const std::vector<T> &args, R redfunc, unsigned nChunks) -> InvokeResult_t<F, T>
+{
    if (fExecPolicy == ROOT::EExecutionPolicy::kMultiThread) {
       return fThreadExecutor->MapReduce(func, args, redfunc, nChunks);
    }
