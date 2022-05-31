@@ -1618,15 +1618,19 @@ private:
    }
 
    template <unsigned Index, typename HeadT, typename... TailTs>
+   static void _BuildItemOffsets(std::vector<std::size_t> &offsets, const ContainerT &tuple)
+   {
+      auto offset =
+         reinterpret_cast<std::uintptr_t>(&std::get<Index>(tuple)) - reinterpret_cast<std::uintptr_t>(&tuple);
+      offsets.emplace_back(offset);
+      if constexpr (sizeof...(TailTs) > 0)
+         _BuildItemOffsets<Index + 1, TailTs...>(offsets, tuple);
+   }
+   template <typename... Ts>
    static std::vector<std::size_t> BuildItemOffsets()
    {
       std::vector<std::size_t> result;
-      auto offset = reinterpret_cast<std::uintptr_t>(&std::get<Index>(*reinterpret_cast<ContainerT *>(0)));
-      result.emplace_back(offset);
-      if constexpr (sizeof...(TailTs) > 0) {
-         auto tailOffsets = BuildItemOffsets<Index + 1, TailTs...>();
-         result.insert(result.end(), tailOffsets.begin(), tailOffsets.end());
-      }
+      _BuildItemOffsets<0, Ts...>(result, ContainerT());
       return result;
    }
 
@@ -1642,7 +1646,7 @@ protected:
 public:
    static std::string TypeName() { return "std::tuple<" + BuildItemTypes<ItemTs...>() + ">"; }
    explicit RField(std::string_view name, std::vector<std::unique_ptr<Detail::RFieldBase>> &&itemFields)
-      : RTupleField(name, std::move(itemFields), BuildItemOffsets<0, ItemTs...>())
+      : RTupleField(name, std::move(itemFields), BuildItemOffsets<ItemTs...>())
    {
       fMaxAlignment = std::max({alignof(ItemTs)...});
       fSize = sizeof(ContainerT);
