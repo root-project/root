@@ -20,7 +20,6 @@
 #include <memory> //unique_ptr
 #include <string>
 #include <sstream>
-#include <type_traits> //std::result_of
 #include <unistd.h> //pid_t
 
 class TMPWorker {
