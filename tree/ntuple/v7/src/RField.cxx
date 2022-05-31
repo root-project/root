@@ -31,6 +31,7 @@
 #include <TDataMember.h>
 #include <TError.h>
 #include <TList.h>
+#include <TRealData.h>
 
 #include <algorithm>
 #include <cctype> // for isspace
@@ -1769,22 +1770,21 @@ ROOT::Experimental::RTupleField::RTupleField(std::string_view fieldName,
    : ROOT::Experimental::RRecordField(fieldName, std::move(itemFields), {},
                                       "std::tuple<" + GetTypeList(itemFields) + ">")
 {
-   // ISO C++ does not guarantee neither specific layout nor member names for `std::tuple`.  Therefore, we guess the
-   // offsets assuming that most implementations store it as a standard-layout type with members reversed w.r.t. the
-   // type list.
-   // TODO(jalopezg): check if there is a better way for computing the offsets
-   std::size_t offset = 0;
-   for (auto I = fSubFields.rbegin(); I != fSubFields.rend(); ++I) {
-      offset += GetItemPadding(offset, (*I)->GetAlignment());
-      fOffsets.insert(fOffsets.begin(), offset);
-      offset += (*I)->GetValueSize();
-   }
-
    fClass = TClass::GetClass(GetType().c_str());
    if (!fClass)
       throw RException(R__FAIL("cannot get type information for " + GetType()));
    fSize = fClass->Size();
 
+   // ISO C++ does not guarantee neither specific layout nor member names for `std::tuple`.  However, most
+   // implementations including libstdc++ (gcc), libc++ (llvm), and MSVC name members as `_0`, `_1`, ..., `_N-1`,
+   // following the order of the type list.
+   // Use TClass to get their offsets; in case a particular `std::tuple` implementation does not define such
+   // members, the assertion below will fail.
+   for (unsigned i = 0; i < fSubFields.size(); ++i) {
+      auto member = fClass->GetRealData(("_" + std::to_string(i)).c_str());
+      R__ASSERT(member != nullptr);
+      fOffsets.push_back(member->GetThisOffset());
+   }
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
