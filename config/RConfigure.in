@@ -24,7 +24,11 @@
 
 #define ROOT__cplusplus @__cplusplus@
 #if defined(__cplusplus) && (__cplusplus != ROOT__cplusplus)
-# warning "The C++ standard in this build does not match ROOT configuration (@__cplusplus@); this might cause unexpected issues"
+# if defined(_MSC_VER)
+#  pragma message("The C++ standard in this build does not match ROOT configuration (@__cplusplus@); this might cause unexpected issues. And please make sure you are using the -Zc:__cplusplus compilation flag")
+# else
+#  warning "The C++ standard in this build does not match ROOT configuration (@__cplusplus@); this might cause unexpected issues"
+# endif
 #endif
 
 #@setresuid@ R__HAS_SETRESUID   /**/
