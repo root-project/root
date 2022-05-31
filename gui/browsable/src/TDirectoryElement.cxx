@@ -306,6 +306,11 @@ public:
       return obj == fDir;
    }
 
+   bool CheckValid() override
+   {
+      return fDir && !fDir->IsZombie();
+   }
+
    EActionKind GetDefaultAction() const override
    {
       if (fElement)
@@ -368,6 +373,7 @@ Element representing TDirectory
 class TDirectoryElement : public RElement {
    std::string fFileName;       ///<!   file name
    TDirectory *fDir{nullptr};   ///<!   sub-directory (if any)
+   bool fIsFile{false};         ///<!   is TFile instance registered in global list of files
 
    ///////////////////////////////////////////////////////////////////
    /// Get TDirectory. Checks if parent file is still there. If not, means it was closed outside ROOT
@@ -375,7 +381,9 @@ class TDirectoryElement : public RElement {
    TDirectory *GetDir()
    {
       if (fDir) {
-         if (fDir->IsZombie())
+         if (fIsFile && !gROOT->GetListOfFiles()->FindObject(fDir))
+            fDir = nullptr;
+         else if (fDir->IsZombie())
             fDir = nullptr;
          else if (!gROOT->GetListOfFiles()->FindObject(fDir->GetFile()))
             fDir = nullptr;
@@ -388,10 +396,13 @@ class TDirectoryElement : public RElement {
 
 public:
 
-   TDirectoryElement(const std::string &fname, TDirectory *dir = nullptr)
+   TDirectoryElement(const std::string &fname, TDirectory *dir = nullptr, bool isfile = false)
    {
       fFileName = fname;
       fDir = dir;
+      fIsFile = isfile;
+      if (fIsFile && !gROOT->GetListOfFiles()->FindObject(fDir))
+         fIsFile = false;
    }
 
    virtual ~TDirectoryElement() = default;
@@ -430,6 +441,11 @@ public:
    bool IsObject(void *obj) override
    {
       return obj == fDir;
+   }
+
+   bool CheckValid() override
+   {
+      return GetDir() != nullptr;
    }
 
    /** Get default action - browsing for the TFile/TDirectory*/
@@ -490,11 +506,11 @@ public:
          auto f = dynamic_cast<TFile *> (gROOT->GetListOfFiles()->FindObject(fullname.c_str()));
          if (!f) f = TFile::Open(fullname.c_str());
          if (!f) return nullptr;
-         return std::make_shared<TDirectoryElement>(fullname, f);
+         return std::make_shared<TDirectoryElement>(fullname, f, true);
       });
 
       RegisterBrowse(TFile::Class(), [](std::unique_ptr<RHolder> &object) -> std::shared_ptr<RElement> {
-         return std::make_shared<TDirectoryElement>("", const_cast<TFile*>(object->Get<TFile>()));
+         return std::make_shared<TDirectoryElement>("", const_cast<TFile*>(object->Get<TFile>()), true);
       });
 
       RegisterBrowse(TDirectory::Class(), [](std::unique_ptr<RHolder> &object) -> std::shared_ptr<RElement> {

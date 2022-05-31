@@ -310,6 +310,9 @@ std::shared_ptr<Browsable::RElement> RBrowserData::GetSubElement(const Browsable
    if (path.empty())
       return fTopElement;
 
+   // validate cache - removes no longer actual elements
+   RemoveFromCache(nullptr);
+
    // first check direct match in cache
    for (auto &entry : fCache)
       if (entry.first == path)
@@ -371,6 +374,7 @@ void RBrowserData::ClearCache()
 
 /////////////////////////////////////////////////////////////////////////
 /// Remove object from cache
+/// If nullptr specified - removes no-longer-valid elements
 /// Returns true if any element was removed
 
 bool RBrowserData::RemoveFromCache(void *obj)
@@ -380,7 +384,7 @@ bool RBrowserData::RemoveFromCache(void *obj)
    bool isany = false;
 
    while (pos < fCache.size()) {
-      if (!fCache[pos].second->IsObject(obj)) {
+      if (obj ? !fCache[pos].second->IsObject(obj) : fCache[pos].second->CheckValid()) {
          pos++;
          continue;
       }

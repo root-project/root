@@ -79,7 +79,11 @@ public:
    /** Access object */
    virtual std::unique_ptr<RHolder> GetObject() { return nullptr; }
 
+   /** Check if element contains provided pointer */
    virtual bool IsObject(void *) { return false; }
+
+   /** Check if element still contains valid content */
+   virtual bool CheckValid() { return true; }
 
    /** Get default action */
    virtual EActionKind GetDefaultAction() const { return kActNone; }
