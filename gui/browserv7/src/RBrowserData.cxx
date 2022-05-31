@@ -68,6 +68,7 @@ public:
 RBrowserData::RBrowserData()
 {
    fCleanupHandle = std::make_unique<RBrowserDataCleanup>(*this);
+   R__LOCKGUARD(gROOTMutex);
    gROOT->GetListOfCleanups()->Add(fCleanupHandle.get());
 }
 
@@ -77,6 +78,7 @@ RBrowserData::RBrowserData()
 RBrowserData::~RBrowserData()
 {
    // should be here because of fCleanupHandle destructor
+   R__LOCKGUARD(gROOTMutex);
    gROOT->GetListOfCleanups()->Remove(fCleanupHandle.get());
 }
 
