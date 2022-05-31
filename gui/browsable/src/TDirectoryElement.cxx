@@ -447,30 +447,6 @@ public:
 
 };
 
-
-class TObjectIndDirElement : public TObjectElement {
-protected:
-   TDirectory   *fDir{nullptr};
-
-   bool CheckObject() const override
-   {
-      if (!fDir || !fObj)
-        return false;
-
-      if (!fDir->IsZombie() || !fDir->FindObject(fObj)) {
-         auto self = const_cast<TObjectIndDirElement *>(this);
-         self->fDir = nullptr;
-         self->fObj = nullptr;
-         self->fObject.reset();
-         return false;
-      }
-      return true;
-   }
-
-public:
-   TObjectIndDirElement(TDirectory *dir, TObject *obj) : TObjectElement(obj), fDir(dir) {}
-};
-
 // ==============================================================================================
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -504,7 +480,6 @@ std::shared_ptr<RElement> TDirectoryLevelIter::GetElement()
 Provides access to ROOT files with extension "root"
 Other extensions can be registered
 */
-
 
 class RTFileProvider : public RProvider {
 
