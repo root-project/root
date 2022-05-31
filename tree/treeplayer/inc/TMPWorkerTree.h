@@ -12,6 +12,7 @@
 #ifndef ROOT_TMPWorkerTree
 #define ROOT_TMPWorkerTree
 
+#include "ROOT/TypeTraits.hxx" // InvokeResult_t
 #include "TMPWorker.h"
 #include "TFile.h"
 #include "TEntryList.h"
@@ -26,7 +27,7 @@
 #include <memory> //unique_ptr
 #include <string>
 #include <sstream>
-#include <type_traits> //std::result_of
+#include <type_traits> //std::enable_if_t
 #include <unistd.h> //pid_t
 #include <vector>
 
@@ -97,7 +98,7 @@ private:
 
    F  fProcFunc; ///< copy the function to be executed
    /// the results of the executions of fProcFunc merged together
-   std::result_of_t<F(std::reference_wrapper<TTreeReader>)> fReducedResult;
+   ROOT::TypeTraits::InvokeResult_t<F, std::reference_wrapper<TTreeReader>> fReducedResult;
    /// true if fReducedResult can be reduced with a new result, false until we have produced one result
    bool fCanReduce;
 };

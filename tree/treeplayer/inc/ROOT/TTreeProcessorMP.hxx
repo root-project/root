@@ -16,6 +16,7 @@
 #include "MPCode.h"
 #include "MPSendRecv.h"
 #include "PoolUtils.h"
+#include "ROOT/TypeTraits.hxx" // InvokeResult_t
 #include "TChain.h"
 #include "TChainElement.h"
 #include "TError.h"
@@ -29,13 +30,15 @@
 #include <algorithm> //std::generate
 #include <numeric> //std::iota
 #include <string>
-#include <type_traits> //std::result_of, std::enable_if
 #include <functional> //std::reference_wrapper
 #include <vector>
 
 namespace ROOT {
 
 class TTreeProcessorMP : private TMPClient {
+   template <typename F, typename... Args>
+   using InvokeResult_t = ROOT::TypeTraits::InvokeResult_t<F, Args...>;
+
 public:
    explicit TTreeProcessorMP(UInt_t nWorkers = 0); //default number of workers is the number of processors
    ~TTreeProcessorMP() = default;
@@ -61,19 +64,19 @@ public:
    ///
    template<class F> auto Process(const std::vector<std::string>& fileNames, F procFunc, TEntryList &entries,
                                   const std::string& treeName = "", ULong64_t nToProcess = 0, ULong64_t jFirst = 0)
-                                  -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
+                                  -> InvokeResult_t<F, std::reference_wrapper<TTreeReader>>;
    template<class F> auto Process(const std::string& fileName, F procFunc, TEntryList &entries,
                                   const std::string& treeName = "", ULong64_t nToProcess = 0, ULong64_t jFirst = 0)
-                                  -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
+                                  -> InvokeResult_t<F, std::reference_wrapper<TTreeReader>>;
    template<class F> auto Process(TFileCollection& collection, F procFunc, TEntryList &entries,
                                   const std::string& treeName = "", ULong64_t nToProcess = 0, ULong64_t jFirst = 0)
-                                  -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
+                                  -> InvokeResult_t<F, std::reference_wrapper<TTreeReader>>;
    template<class F> auto Process(TChain& chain, F procFunc, TEntryList &entries,
                                   const std::string& treeName = "", ULong64_t nToProcess = 0, ULong64_t jFirst = 0)
-                                  -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
+                                  -> InvokeResult_t<F, std::reference_wrapper<TTreeReader>>;
    template<class F> auto Process(TTree& tree, F procFunc, TEntryList &entries,
                                   ULong64_t nToProcess = 0, ULong64_t jFirst = 0)
-                                  -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
+                                  -> InvokeResult_t<F, std::reference_wrapper<TTreeReader>>;
 
    /// \brief Process a TTree dataset with a functor: version without entry list
    /// \tparam F functor returning a pointer to TObject or inheriting classes and
@@ -92,18 +95,18 @@ public:
    ///
    template<class F> auto Process(const std::vector<std::string>& fileNames, F procFunc,
                                   const std::string& treeName = "", ULong64_t nToProcess = 0, ULong64_t jFirst = 0)
-                                  -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
+                                  -> InvokeResult_t<F, std::reference_wrapper<TTreeReader>>;
    template<class F> auto Process(const std::string& fileName, F procFunc,
                                   const std::string& treeName = "", ULong64_t nToProcess = 0, ULong64_t jFirst = 0)
-                                  -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
+                                  -> InvokeResult_t<F, std::reference_wrapper<TTreeReader>>;
    template<class F> auto Process(TFileCollection& files, F procFunc,
                                   const std::string& treeName = "", ULong64_t nToProcess = 0, ULong64_t jFirst = 0)
-                                  -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
+                                  -> InvokeResult_t<F, std::reference_wrapper<TTreeReader>>;
    template<class F> auto Process(TChain& files, F procFunc,
                                   const std::string& treeName = "", ULong64_t nToProcess = 0, ULong64_t jFirst = 0)
-                                  -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
+                                  -> InvokeResult_t<F, std::reference_wrapper<TTreeReader>>;
    template<class F> auto Process(TTree& tree, F procFunc, ULong64_t nToProcess = 0, ULong64_t jFirst = 0)
-                                  -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
+                                  -> InvokeResult_t<F, std::reference_wrapper<TTreeReader>>;
 
 
    /// \brief Process a TTree dataset with a selector
@@ -188,9 +191,9 @@ private:
 template<class F>
 auto TTreeProcessorMP::Process(const std::vector<std::string>& fileNames, F procFunc,  TEntryList &entries,
                                const std::string& treeName, ULong64_t nToProcess, ULong64_t jFirst)
-                               -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
+                               -> InvokeResult_t<F, std::reference_wrapper<TTreeReader>>
 {
-   using retType = typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
+   using retType = InvokeResult_t<F, std::reference_wrapper<TTreeReader>>;
    static_assert(std::is_constructible<TObject*, retType>::value,
                  "procFunc must return a pointer to a class inheriting from TObject,"
                  " and must take a reference to TTreeReader as the only argument");
@@ -255,7 +258,7 @@ auto TTreeProcessorMP::Process(const std::vector<std::string>& fileNames, F proc
 template<class F>
 auto TTreeProcessorMP::Process(const std::string& fileName, F procFunc,  TEntryList &entries,
                                const std::string& treeName, ULong64_t nToProcess, ULong64_t jFirst)
-                               -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
+                               -> InvokeResult_t<F, std::reference_wrapper<TTreeReader>>
 {
    std::vector<std::string> singleFileName(1, fileName);
    return Process(singleFileName, procFunc, entries, treeName, nToProcess, jFirst);
@@ -265,7 +268,7 @@ auto TTreeProcessorMP::Process(const std::string& fileName, F procFunc,  TEntryL
 template<class F>
 auto TTreeProcessorMP::Process(TFileCollection& files, F procFunc, TEntryList &entries,
                                const std::string& treeName, ULong64_t nToProcess, ULong64_t jFirst)
-                               -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
+                               -> InvokeResult_t<F, std::reference_wrapper<TTreeReader>>
 {
    std::vector<std::string> fileNames(files.GetNFiles());
    unsigned count = 0;
@@ -279,7 +282,7 @@ auto TTreeProcessorMP::Process(TFileCollection& files, F procFunc, TEntryList &e
 template<class F>
 auto TTreeProcessorMP::Process(TChain& files, F procFunc, TEntryList &entries,
                                const std::string& treeName, ULong64_t nToProcess, ULong64_t jFirst)
-                               -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
+                               -> InvokeResult_t<F, std::reference_wrapper<TTreeReader>>
 {
    TObjArray* filelist = files.GetListOfFiles();
    std::vector<std::string> fileNames(filelist->GetEntries());
@@ -294,9 +297,9 @@ auto TTreeProcessorMP::Process(TChain& files, F procFunc, TEntryList &entries,
 template<class F>
 auto TTreeProcessorMP::Process(TTree& tree, F procFunc, TEntryList &entries,
                                ULong64_t nToProcess, ULong64_t jFirst)
-                               -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
+                               -> InvokeResult_t<F, std::reference_wrapper<TTreeReader>>
 {
-   using retType = typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
+   using retType = InvokeResult_t<F, std::reference_wrapper<TTreeReader>>;
    static_assert(std::is_constructible<TObject*, retType>::value, "procFunc must return a pointer to a class inheriting from TObject, and must take a reference to TTreeReader as the only argument");
 
    // Warn for yet unimplemented functionality
@@ -352,7 +355,7 @@ auto TTreeProcessorMP::Process(TTree& tree, F procFunc, TEntryList &entries,
 template<class F>
 auto TTreeProcessorMP::Process(const std::vector<std::string>& fileNames, F procFunc,
                                const std::string& treeName, ULong64_t nToProcess, ULong64_t jFirst)
-                               -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
+                               -> InvokeResult_t<F, std::reference_wrapper<TTreeReader>>
 {
    TEntryList noelist;
    return Process(fileNames, procFunc, noelist, treeName, nToProcess, jFirst);
@@ -362,7 +365,7 @@ auto TTreeProcessorMP::Process(const std::vector<std::string>& fileNames, F proc
 template<class F>
 auto TTreeProcessorMP::Process(const std::string& fileName, F procFunc,
                                const std::string& treeName, ULong64_t nToProcess, ULong64_t jFirst)
-                               -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
+                               -> InvokeResult_t<F, std::reference_wrapper<TTreeReader>>
 {
    TEntryList noelist;
    return Process(fileName, procFunc, noelist, treeName, nToProcess, jFirst);
@@ -372,7 +375,7 @@ auto TTreeProcessorMP::Process(const std::string& fileName, F procFunc,
 template<class F>
 auto TTreeProcessorMP::Process(TFileCollection& files, F procFunc,
                                const std::string& treeName, ULong64_t nToProcess, ULong64_t jFirst)
-                               -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
+                               -> InvokeResult_t<F, std::reference_wrapper<TTreeReader>>
 {
    TEntryList noelist;
    return Process(files, procFunc, noelist, treeName, nToProcess, jFirst);
@@ -382,7 +385,7 @@ auto TTreeProcessorMP::Process(TFileCollection& files, F procFunc,
 template<class F>
 auto TTreeProcessorMP::Process(TChain& files, F procFunc,
                                const std::string& treeName, ULong64_t nToProcess, ULong64_t jFirst)
-                               -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
+                               -> InvokeResult_t<F, std::reference_wrapper<TTreeReader>>
 {
    TEntryList noelist;
    return Process(files, procFunc, noelist, treeName, nToProcess, jFirst);
@@ -392,7 +395,7 @@ auto TTreeProcessorMP::Process(TChain& files, F procFunc,
 template<class F>
 auto TTreeProcessorMP::Process(TTree& tree, F procFunc,
                                ULong64_t nToProcess, ULong64_t jFirst)
-                               -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
+                               -> InvokeResult_t<F, std::reference_wrapper<TTreeReader>>
 {
    TEntryList noelist;
    return Process(tree, procFunc, noelist, nToProcess, jFirst);
