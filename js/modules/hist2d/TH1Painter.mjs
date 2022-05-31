@@ -525,9 +525,7 @@ class TH1Painter extends THistPainter {
             yerr1 = yerr2 = 20;
          }
          return true;
-      };
-
-      let draw_errbin = () => {
+      }, draw_errbin = () => {
          let edx = 5;
          if (this.options.errorX > 0) {
             edx = Math.round((mx2-mx1)*this.options.errorX);
@@ -544,9 +542,7 @@ class TH1Painter extends THistPainter {
             path_err += `M${midx},${my-yerr1+dend}v${yerr1+yerr2-2*dend}`;
          if (hints_err !== null)
             hints_err += `M${midx-edx},${my-yerr1}h${2*edx}v${yerr1+yerr2}h${-2*edx}z`;
-      };
-
-      const draw_bin = bin => {
+      }, draw_bin = bin => {
          if (extract_bin(bin)) {
             if (show_text) {
                let cont = text_profile ? histo.fBinEntries[bin+1] : bincont;
@@ -562,7 +558,7 @@ class TH1Painter extends THistPainter {
             }
 
             if (show_line && (path_line !== null))
-               path_line += ((path_line.length===0) ? "M" : "L") + midx + "," + my;
+               path_line += ((path_line.length===0) ? "M" : "L") + `${midx},${my}`;
 
             if (draw_markers) {
                if ((my >= -yerr1) && (my <= height + yerr2)) {

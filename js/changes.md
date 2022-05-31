@@ -2,7 +2,7 @@
 
 ## Changes in dev
 1. Let change `settings` and `gStyle` parameters via "Settings" menu of the top hierarchy item
-2. Settings and gStyle can be stored as cookies, automatically read with every next load of website
+2. Settings and gStyle can be stored as cookies, automatically read when loading webpage with jsroot
 3. `settings.OnlyLastCycle` defines if only last object version show in TFile (also as `&lastcycle` URL parameter)
 4. `settings.DarkMode` configures dark mode for GUI and drawings (also as `&dark` URL parameter)
 5. Support new `TGraph2DAsymmErrors` class
@@ -13,7 +13,6 @@
 
 
 ## Changes in 7.0.1
-
 1. Fix problem with irregular axis labels
 2. Correctly scale and tilt large number of axes labels
 
