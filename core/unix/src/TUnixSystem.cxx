@@ -328,7 +328,7 @@ struct TUtmpContent {
          fclose(utmp);
 
       free(fUtmpContents);
-      fUtmpContents = 0;
+      fUtmpContents = nullptr;
       return 0;
    }
 
@@ -1158,7 +1158,7 @@ Int_t TUnixSystem::Select(TList *act, Long_t to)
    TFdSet rd, wr;
    Int_t mxfd = -1;
    TIter next(act);
-   TFileHandler *h = 0;
+   TFileHandler *h = nullptr;
    while ((h = (TFileHandler *) next())) {
       Int_t fd = h->GetFd();
       if (fd > -1) {
@@ -1764,15 +1764,15 @@ needshell:
             *q++ = *p++;
          *q = '\0';
          hd = UnixHomedirectory(name);
-         if (hd == 0)
+         if (!hd)
             cmd += stuffedPat;
          else {
             cmd += hd;
             cmd += p;
          }
       } else {
-         hd = UnixHomedirectory(0);
-         if (hd == 0) {
+         hd = UnixHomedirectory(nullptr);
+         if (!hd) {
             GetLastErrorString() = GetError();
             return kTRUE;
          }
