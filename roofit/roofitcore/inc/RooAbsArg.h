@@ -597,6 +597,8 @@ public:
 
   virtual std::unique_ptr<RooArgSet> fillNormSetForServer(RooArgSet const& normSet, RooAbsArg const& server) const;
 
+  virtual bool isCategory() const { return false; }
+
 protected:
    void graphVizAddConnections(std::set<std::pair<RooAbsArg*,RooAbsArg*> >&) ;
 
@@ -734,7 +736,7 @@ private:
   mutable bool _allBatchesDirty{true}; //! Mark batches as dirty (only meaningful for RooAbsReal).
 
   mutable OperMode _operMode ; // Dirty state propagation mode
-  mutable bool _fast ; // Allow fast access mode in getVal() and proxies
+  mutable bool _fast = false; // Allow fast access mode in getVal() and proxies
 
   // Owned components
   RooArgSet* _ownedComponents ; //! Set of owned component
