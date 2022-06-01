@@ -16,6 +16,7 @@
 #include "ROOT/RDF/RMergeableValue.hxx"
 #include "ROOT/RDF/Utils.hxx" // Union
 
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
