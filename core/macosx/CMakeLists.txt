@@ -12,7 +12,7 @@ if(NOT APPLE)
   return()
 endif()
 
-set(Macosx_dict_headers TMacOSXSystem.h PARENT_SCOPE)
+set_property(TARGET Core APPEND PROPERTY DICT_HEADERS TMacOSXSystem.h)
 
 target_include_directories(Core PRIVATE inc)
 

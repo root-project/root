@@ -8,9 +8,11 @@
 # CMakeLists.txt file for building ROOT core/clib package
 ############################################################################
 
-set(Clib_dict_headers strlcpy.h
-                      snprintf.h
-                      strtok.h PARENT_SCOPE)
+set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
+  strlcpy.h
+  snprintf.h
+  strtok.h
+)
 
 ROOT_OBJECT_LIBRARY(Clib
   src/Demangle.c

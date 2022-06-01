@@ -8,10 +8,7 @@
 # CMakeLists.txt file for building ROOT core/textinout package
 ############################################################################
 
-set(TextInput_dict_headers
-  Getline.h
-  PARENT_SCOPE
-)
+set_property(TARGET Core APPEND PROPERTY DICT_HEADERS Getline.h)
 
 ROOT_OBJECT_LIBRARY(TextInput
   src/Getline_color.cxx
