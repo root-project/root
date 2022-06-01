@@ -57,7 +57,7 @@ class RResultMap {
    std::unordered_map<std::string, std::shared_ptr<T>> fMap;  // shared_ptrs are never null
    ROOT::Detail::RDF::RLoopManager *fLoopManager;             // never null
    std::shared_ptr<ROOT::Internal::RDF::RActionBase> fNominalAction; // never null
-   std::shared_ptr<ROOT::Internal::RDF::RActionBase> fVariedAction;  // never null
+   std::shared_ptr<ROOT::Internal::RDF::RActionBase> fVariedAction;  // might be null if there are no variations
 
    friend RResultMap
    ROOT::Internal::RDF::MakeResultMap<T>(std::shared_ptr<T> nominalResult,
@@ -92,7 +92,7 @@ public:
       if (it == fMap.end())
          throw std::runtime_error("RResultMap: no result with key \"" + key + "\".");
 
-      if (!fVariedAction->HasRun())
+      if ((fVariedAction != nullptr && !fVariedAction->HasRun()) || !fNominalAction->HasRun())
          fLoopManager->Run();
       return *it->second;
    }
