@@ -36,10 +36,20 @@ ROOT_OBJECT_LIBRARY(Clib
   src/strlcpy.c
 )
 
-target_include_directories(Clib PRIVATE
-   ${CMAKE_SOURCE_DIR}/core/clib/res
-   ${CMAKE_SOURCE_DIR}/core/foundation/inc
-   ${CMAKE_BINARY_DIR}/ginclude
+target_include_directories(Clib
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+  PRIVATE
+    ${CMAKE_BINARY_DIR}/ginclude
+    ${CMAKE_CURRENT_SOURCE_DIR}/res
+    ${CMAKE_CURRENT_SOURCE_DIR}/../foundation/inc # for RConfig.hxx
 )
+
+target_include_directories(Core
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+)
+
+target_sources(Core PRIVATE $<TARGET_OBJECTS:Clib>)
 
 ROOT_INSTALL_HEADERS()
