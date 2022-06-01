@@ -104,6 +104,7 @@ public:
     return stateNames().size();
   }
 
+  bool isCategory() const { return true; }
 
   /// \name Legacy interface
   /// Previous versions of RooAbsCategory were based on RooCatType, a class containing a state and a label.
