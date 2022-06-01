@@ -152,7 +152,7 @@ public:
    virtual void          Scale(Double_t c1=1., Option_t *option="z"); // *MENU*
    virtual void          Set(Int_t n);
    virtual void          SetDirectory(TDirectory *dir);
-   virtual void          SetHistogram(TH2 *h);
+   virtual void          SetHistogram(TH2 *h, Option_t *option="");
    void                  SetMargin(Double_t m=0.1); // *MENU*
    void                  SetMarginBinsContent(Double_t z=0.); // *MENU*
    void                  SetMaximum(Double_t maximum=-1111); // *MENU*
