@@ -134,8 +134,8 @@ void Fitter::SetFunction(const IGradModel1DFunction & func, bool useGradient)
 }
 
 
-bool Fitter::SetFCN(const ROOT::Math::IMultiGenFunction & fcn, const double * params, unsigned int dataSize, bool chi2fit) {
-   // set the objective function for the fit
+bool Fitter::DoSetFCN(bool extFcn, const ROOT::Math::IMultiGenFunction & fcn, const double * params, unsigned int dataSize, bool chi2fit) {
+   // set the objective function for the fit. Firs tparameter specifies if function is external or internal
    // if params is not NULL create the parameter settings
    fUseGradient = false;
    unsigned int npar  = fcn.NDim();
@@ -157,8 +157,16 @@ bool Fitter::SetFCN(const ROOT::Math::IMultiGenFunction & fcn, const double * pa
 
    // store external provided FCN without cloning it
    // it will be cloned in fObjFunc after the fit
-   fExtObjFunction = &fcn;
-   fObjFunction.reset();
+   if (extFcn) {
+      fExtObjFunction = &fcn;
+      fObjFunction.reset();
+   }
+   else {
+      // case FCN is built from Minuit interface so funciton object is created internally in Fitter class 
+      // and needs to be cloned and managed 
+      fExtObjFunction = nullptr;
+      fObjFunction.reset(fcn.Clone());
+   }
 
    // in case a model function and data exists from a previous fit - reset shared-ptr
    if (fResult && fResult->FittedFunction() == 0 && fFunc)  fFunc.reset();
@@ -166,7 +174,10 @@ bool Fitter::SetFCN(const ROOT::Math::IMultiGenFunction & fcn, const double * pa
 
    return true;
 }
-
+bool Fitter::SetFCN(const ROOT::Math::IMultiGenFunction & fcn, const double * params, unsigned int dataSize, bool chi2fit) {
+   // set the objective function for the fit
+   return DoSetFCN(true, fcn, params, dataSize, chi2fit);
+}
 bool Fitter::SetFCN(const ROOT::Math::IMultiGenFunction &fcn, const IModelFunction & func, const double *params, unsigned int dataSize, bool chi2fit) {
    // set the objective function for the fit and a model function
    if (!SetFCN(fcn, params, dataSize, chi2fit) ) return false;
@@ -267,7 +278,7 @@ bool Fitter::SetFCN(MinuitFCN_t fcn, int npar, const double *params, unsigned in
    }
 
    ROOT::Fit::FcnAdapter newFcn(fcn, npar);
-   return SetFCN(newFcn, params, dataSize, chi2fit);
+   return DoSetFCN(false,newFcn, params, dataSize, chi2fit);
 }
 
 bool Fitter::FitFCN(MinuitFCN_t fcn, int npar, const double *params, unsigned int dataSize, bool chi2fit)
@@ -285,7 +296,7 @@ bool Fitter::FitFCN()
    // fit using the previously set  FCN function
 
 
-   if (!fExtObjFunction) {
+   if (!fExtObjFunction && !fObjFunction) {
       MATH_ERROR_MSG("Fitter::FitFCN", "Objective function has not been set");
       return false;
    }
