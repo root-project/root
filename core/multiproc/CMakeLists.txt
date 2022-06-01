@@ -8,6 +8,10 @@
 # CMakeLists.txt file for building ROOT core/multiproc package
 ############################################################################
 
+if(WIN32)
+  return()
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(MultiProc STAGE1
   HEADERS
     MPCode.h

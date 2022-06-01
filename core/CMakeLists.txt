@@ -62,16 +62,6 @@ set_source_files_properties(${CMAKE_BINARY_DIR}/include/RGitCommit.h
 install(FILES ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-if(WIN32)
-  set(corelinklibs shell32.lib WSock32.lib Oleaut32.lib Iphlpapi.lib)
-elseif(APPLE)
-  if(cocoa)
-     set(corelinklibs "-framework Cocoa -F/System/Library/PrivateFrameworks -framework CoreSymbolication")
-  else()
-     set(corelinklibs "-F/System/Library/PrivateFrameworks -framework CoreSymbolication")
-  endif()
-endif()
-
 ROOT_LINKER_LIBRARY(Core base/src/TROOT.cxx BUILTINS LZMA)
 
 add_dependencies(Core CLING gitcommit rconfigure)
@@ -90,40 +80,29 @@ target_link_libraries(Core
     ${CMAKE_DL_LIBS}
     ${CMAKE_THREAD_LIBS_INIT}
     ${ROOT_ATOMIC_LIBS}
-    ${corelinklibs}
 )
 
+add_subdirectory(base)
 add_subdirectory(clib)
 add_subdirectory(clingutils)
 add_subdirectory(cont)
 add_subdirectory(dictgen)
 add_subdirectory(foundation)
 add_subdirectory(gui)
+add_subdirectory(imt)
 add_subdirectory(meta)
 add_subdirectory(metacling)
-if(NOT WIN32)
 add_subdirectory(multiproc)
-endif()
+add_subdirectory(newdelete)
 add_subdirectory(rint)
+add_subdirectory(sanitizer)
+add_subdirectory(testsupport)
 add_subdirectory(textinput)
 add_subdirectory(thread)
-add_subdirectory(imt)
 add_subdirectory(zip)
 add_subdirectory(lzma)
 add_subdirectory(lz4)
 add_subdirectory(zstd)
-if(testing)
-  add_subdirectory(testsupport)
-endif()
-if(asan)
-  add_subdirectory(sanitizer)
-endif()
-
-if(NOT WIN32)
-  add_subdirectory(newdelete)
-endif()
-
-add_subdirectory(base)
 
 target_sources(Core PRIVATE
   $<TARGET_OBJECTS:Base>
@@ -139,18 +118,9 @@ target_sources(Core PRIVATE
   $<TARGET_OBJECTS:TextInput>
 )
 
-if(UNIX)
-  add_subdirectory(unix)
-  target_sources(Core PRIVATE $<TARGET_OBJECTS:Unix>)
-endif()
-if(WIN32)
-  add_subdirectory(winnt)
-  target_sources(Core PRIVATE $<TARGET_OBJECTS:Winnt>)
-endif()
-if(cocoa)
-  add_subdirectory(macosx)
-  target_sources(Core PRIVATE $<TARGET_OBJECTS:Macosx>)
-endif()
+add_subdirectory(macosx)
+add_subdirectory(unix)
+add_subdirectory(winnt)
 
 if(CMAKE_CXX_STANDARD GREATER 11)
   set(dict_v7dirs base/v7/inc)
@@ -211,15 +181,6 @@ target_include_directories(Core PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/co
 if(root7 OR CMAKE_CXX_STANDARD GREATER 11)
   target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/base/v7/inc>)
   target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/foundation/v7/inc>)
-endif()
-
-
-if(ROOT_ARCHITECTURE MATCHES macosx)
-  target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/unix/inc> $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/macosx/inc>)
-elseif(ROOT_ARCHITECTURE MATCHES win32 OR ROOT_ARCHITECTURE MATCHES win64)
-  target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/winnt/inc>)
-else()
-  target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/unix/inc>)
 endif()
 
 if (runtime_cxxmodules)

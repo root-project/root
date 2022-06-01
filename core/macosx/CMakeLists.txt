@@ -8,29 +8,30 @@
 # CMakeLists.txt file for building ROOT core/macosx package
 ############################################################################
 
-set(Macosx_dict_headers
-  TMacOSXSystem.h
-  PARENT_SCOPE
+if(NOT APPLE)
+  return()
+endif()
+
+set(Macosx_dict_headers TMacOSXSystem.h PARENT_SCOPE)
+
+target_include_directories(Core PRIVATE inc)
+
+target_link_libraries(Core PRIVATE
+  "-F/System/Library/PrivateFrameworks -framework CoreSymbolication"
 )
 
-ROOT_OBJECT_LIBRARY(Macosx
-  src/CocoaUtils.mm
-  src/TMacOSXSystem.mm
-)
+if(cocoa)
+  target_link_libraries(Core PRIVATE "-framework Cocoa")
 
-target_compile_options(Macosx PRIVATE -ObjC++)
+  ROOT_OBJECT_LIBRARY(Macosx
+    src/CocoaUtils.mm
+    src/TMacOSXSystem.mm
+  )
 
-target_include_directories(Macosx PRIVATE
-   ${CMAKE_SOURCE_DIR}/core/unix/inc
-   ${CMAKE_SOURCE_DIR}/core/base/inc
-   ${CMAKE_SOURCE_DIR}/core/clib/inc
-   ${CMAKE_SOURCE_DIR}/core/meta/inc
-   ${CMAKE_SOURCE_DIR}/core/cont/inc
-   ${CMAKE_SOURCE_DIR}/core/thread/inc
-   ${CMAKE_SOURCE_DIR}/core/foundation/inc
-   ${CMAKE_SOURCE_DIR}/core/textinput/inc
-   ${CMAKE_SOURCE_DIR}/core/gui/inc
-   ${CMAKE_BINARY_DIR}/ginclude
-)
+  target_compile_options(Macosx PRIVATE -ObjC++)
+
+  target_sources(Core PRIVATE $<TARGET_OBJECTS:Macosx>)
+
+endif()
 
 ROOT_INSTALL_HEADERS()
