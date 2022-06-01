@@ -1534,14 +1534,21 @@ void TGraph2D::SetDirectory(TDirectory *dir)
 /// 5. Call h->SetDirectory(0)
 /// 6. Call g->SetHistogram(h) again
 /// 7. Carry on as normal
+///
+/// By default use the new interpolation routine based on Triangles
+/// If the option "old" the old interpolation is used
 
-void TGraph2D::SetHistogram(TH2 *h)
+void TGraph2D::SetHistogram(TH2 *h, Option_t *option)
 {
+   TString opt = option;
+   opt.ToLower();
+   Bool_t oldInterp = opt.Contains("old");
+
    fUserHisto = kTRUE;
    fHistogram = (TH2D*)h;
    fNpx       = h->GetNbinsX();
    fNpy       = h->GetNbinsY();
-   CreateInterpolator(kTRUE);
+   CreateInterpolator(oldInterp);
 }
 
 
