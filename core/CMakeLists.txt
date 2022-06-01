@@ -62,6 +62,37 @@ set_source_files_properties(${CMAKE_BINARY_DIR}/include/RGitCommit.h
 install(FILES ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
+if(WIN32)
+  set(corelinklibs shell32.lib WSock32.lib Oleaut32.lib Iphlpapi.lib)
+elseif(APPLE)
+  if(cocoa)
+     set(corelinklibs "-framework Cocoa -F/System/Library/PrivateFrameworks -framework CoreSymbolication")
+  else()
+     set(corelinklibs "-F/System/Library/PrivateFrameworks -framework CoreSymbolication")
+  endif()
+endif()
+
+ROOT_LINKER_LIBRARY(Core base/src/TROOT.cxx BUILTINS LZMA)
+
+add_dependencies(Core CLING gitcommit rconfigure)
+
+# For FoundationUtils.hxx
+target_include_directories(Core PRIVATE foundation/res)
+
+target_link_libraries(Core
+  PRIVATE
+    PCRE::PCRE
+    ${LIBLZMA_LIBRARIES}
+    xxHash::xxHash
+    LZ4::LZ4
+    ZLIB::ZLIB
+    ${ZSTD_LIBRARIES}
+    ${CMAKE_DL_LIBS}
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${ROOT_ATOMIC_LIBS}
+    ${corelinklibs}
+)
+
 add_subdirectory(clib)
 add_subdirectory(clingutils)
 add_subdirectory(cont)
@@ -94,72 +125,40 @@ endif()
 
 add_subdirectory(base)
 
+target_sources(Core PRIVATE
+  $<TARGET_OBJECTS:Base>
+  $<TARGET_OBJECTS:Clib>
+  $<TARGET_OBJECTS:Cont>
+  $<TARGET_OBJECTS:Foundation>
+  $<TARGET_OBJECTS:Lzma>
+  $<TARGET_OBJECTS:Lz4>
+  $<TARGET_OBJECTS:Zip>
+  $<TARGET_OBJECTS:Zstd>
+  $<TARGET_OBJECTS:Meta>
+  $<TARGET_OBJECTS:GuiCore>
+  $<TARGET_OBJECTS:TextInput>
+)
+
 if(UNIX)
   add_subdirectory(unix)
-  set(unix_objects $<TARGET_OBJECTS:Unix>)
+  target_sources(Core PRIVATE $<TARGET_OBJECTS:Unix>)
 endif()
 if(WIN32)
   add_subdirectory(winnt)
-  set(winnt_objects $<TARGET_OBJECTS:Winnt>)
+  target_sources(Core PRIVATE $<TARGET_OBJECTS:Winnt>)
 endif()
 if(cocoa)
   add_subdirectory(macosx)
-  set(macosx_objects $<TARGET_OBJECTS:Macosx>)
+  target_sources(Core PRIVATE $<TARGET_OBJECTS:Macosx>)
 endif()
 
 if(CMAKE_CXX_STANDARD GREATER 11)
   set(dict_v7dirs base/v7/inc)
 endif()
 
-#---G__Core--------------------------------------------------------------------
-
-# Uses includes path as defined by Core module.
-
-set(objectlibs $<TARGET_OBJECTS:Base>
-               $<TARGET_OBJECTS:Clib>
-               $<TARGET_OBJECTS:Cont>
-               $<TARGET_OBJECTS:Foundation>
-               $<TARGET_OBJECTS:Lzma>
-               $<TARGET_OBJECTS:Lz4>
-               $<TARGET_OBJECTS:Zstd>
-               $<TARGET_OBJECTS:Zip>
-               $<TARGET_OBJECTS:Meta>
-               $<TARGET_OBJECTS:GuiCore>
-               $<TARGET_OBJECTS:TextInput>
-               ${macosx_objects}
-               ${unix_objects}
-               ${winnt_objects})
-
-ROOT_OBJECT_LIBRARY(BaseTROOT ${CMAKE_SOURCE_DIR}/core/base/src/TROOT.cxx ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h)
-target_include_directories(BaseTROOT PRIVATE
-   ${CMAKE_SOURCE_DIR}/core/foundation/res
-   ${CMAKE_SOURCE_DIR}/core/base/inc
-   ${CMAKE_SOURCE_DIR}/core/clib/inc
-   ${CMAKE_SOURCE_DIR}/core/meta/inc
-   ${CMAKE_SOURCE_DIR}/core/cont/inc
-   ${CMAKE_SOURCE_DIR}/core/foundation/inc
-   ${CMAKE_SOURCE_DIR}/core/thread/inc
-   ${CMAKE_SOURCE_DIR}/core/gui/inc
-   ${CMAKE_BINARY_DIR}/ginclude
-)
-
-add_dependencies(BaseTROOT gitcommit rconfigure)
-#----------------------------------------------------------------------------------------
-
-if(WIN32)
-  set(corelinklibs shell32.lib WSock32.lib Oleaut32.lib Iphlpapi.lib)
-elseif(APPLE)
-  if(cocoa)
-     set(corelinklibs "-framework Cocoa -F/System/Library/PrivateFrameworks -framework CoreSymbolication")
-  else()
-     set(corelinklibs "-F/System/Library/PrivateFrameworks -framework CoreSymbolication")
-  endif()
-endif()
-
 add_subdirectory(rootcling_stage1)
 
 #-------------------------------------------------------------------------------
-ROOT_LINKER_LIBRARY(Core $<TARGET_OBJECTS:BaseTROOT> ${objectlibs} BUILTINS LZMA)
 
 if (libcxx AND NOT APPLE)
   # In case we use libcxx and glibc together there is a mismatch of the
@@ -217,13 +216,10 @@ endif()
 
 if(ROOT_ARCHITECTURE MATCHES macosx)
   target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/unix/inc> $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/macosx/inc>)
-  target_include_directories(BaseTROOT PRIVATE ${CMAKE_SOURCE_DIR}/core/unix/inc ${CMAKE_SOURCE_DIR}/core/macosx/inc)
 elseif(ROOT_ARCHITECTURE MATCHES win32 OR ROOT_ARCHITECTURE MATCHES win64)
   target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/winnt/inc>)
-  target_include_directories(BaseTROOT PRIVATE ${CMAKE_SOURCE_DIR}/core/winnt/inc)
 else()
   target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/unix/inc>)
-  target_include_directories(BaseTROOT PRIVATE ${CMAKE_SOURCE_DIR}/core/unix/inc)
 endif()
 
 if (runtime_cxxmodules)
@@ -258,20 +254,3 @@ ROOT_GENERATE_DICTIONARY(G__Core
   LINKDEF
     base/inc/LinkDef.h
 )
-
-target_include_directories(G__Core PRIVATE ${CMAKE_SOURCE_DIR}/core/clingutils/inc)
-
-target_link_libraries(Core
-  PRIVATE
-    PCRE::PCRE
-    ${LIBLZMA_LIBRARIES}
-    xxHash::xxHash
-    LZ4::LZ4
-    ZLIB::ZLIB
-    ${ZSTD_LIBRARIES}
-    ${CMAKE_DL_LIBS}
-    ${CMAKE_THREAD_LIBS_INIT}
-    ${ROOT_ATOMIC_LIBS}
-    ${corelinklibs}
-)
-add_dependencies(Core CLING)
