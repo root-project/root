@@ -204,7 +204,7 @@ void RooFitDriver::setData(DataSpansMap const &dataSpans)
          _dataMapCPU.at(info.absArg) = found->second;
          info.outputSize = found->second.size();
          info.fromDataset = true;
-         info.isDirty = true;
+         info.isDirty = false;
          totalSize += info.outputSize;
       }
    }
@@ -325,27 +325,23 @@ double RooFitDriver::getVal()
          if (nodeInfo.isVariable) {
             auto *var = static_cast<RooRealVar const *>(node);
             if (nodeInfo.lastSetValCount != var->valueResetCounter()) {
-               nodeInfo.isDirty = true;
                nodeInfo.lastSetValCount = var->valueResetCounter();
-            }
-            if (nodeInfo.isDirty)
-               computeCPUNode(node, nodeInfo);
-         } else {
-            for (NodeInfo *serverInfo : nodeInfo.serverInfos) {
-               if (serverInfo->isDirty) {
-                  nodeInfo.isDirty = true;
-                  break;
+               for (NodeInfo *clientInfo : nodeInfo.clientInfos) {
+                  clientInfo->isDirty = true;
                }
-            }
-            if (nodeInfo.isDirty) {
                computeCPUNode(node, nodeInfo);
+               nodeInfo.isDirty = false;
+            }
+         } else {
+            if (nodeInfo.isDirty) {
+               for (NodeInfo *clientInfo : nodeInfo.clientInfos) {
+                  clientInfo->isDirty = true;
+               }
+               computeCPUNode(node, nodeInfo);
+               nodeInfo.isDirty = false;
             }
          }
       }
-   }
-
-   for (auto &info : _nodes) {
-      info.isDirty = false;
    }
 
    // return the final value
