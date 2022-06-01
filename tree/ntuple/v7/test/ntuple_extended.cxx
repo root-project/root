@@ -109,10 +109,10 @@ TEST(RNTuple, RandomAccess)
 
 
 #if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
-TEST(RNTuple, LargeFile)
+TEST(RNTuple, LargeFile1)
 {
    ROOT::EnableImplicitMT();
-   FileRaii fileGuard("test_large_file.root");
+   FileRaii fileGuard("test_large_file1.root");
 
    auto modelWrite = RNTupleModel::Create();
    auto& wrEnergy  = *modelWrite->MakeField<double>("energy");
@@ -143,17 +143,119 @@ TEST(RNTuple, LargeFile)
 #endif
    fclose(file);
 
-   auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
-   auto rdEnergy  = ntuple->GetView<double>("energy");
-   double chksumRead = 0.0;
+   {
+      auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+      auto rdEnergy  = reader->GetView<double>("energy");
 
-   for (auto i : ntuple->GetEntryRange()) {
-      chksumRead += rdEnergy(i);
+      double chksumRead = 0.0;
+      for (auto i : reader->GetEntryRange()) {
+         chksumRead += rdEnergy(i);
+      }
+      EXPECT_EQ(chksumRead, chksumWrite);
    }
 
-   EXPECT_EQ(chksumRead, chksumWrite);
-   auto f = TFile::Open(fileGuard.GetPath().c_str(), "READ");
-   EXPECT_TRUE(f != nullptr);
-   delete f;
+   {
+      auto f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "READ"));
+      EXPECT_TRUE(f);
+      auto reader = RNTupleReader::Open(f->Get<RNTuple>("myNTuple"));
+      auto rdEnergy  = reader->GetView<double>("energy");
+
+      double chksumRead = 0.0;
+      for (auto i : reader->GetEntryRange()) {
+         chksumRead += rdEnergy(i);
+      }
+      EXPECT_EQ(chksumRead, chksumWrite);
+   }
+}
+
+
+TEST(RNTuple, LargeFile2)
+{
+   ROOT::EnableImplicitMT();
+   FileRaii fileGuard("test_large_file2.root");
+
+   // Start out with a mini-file created small file
+   auto model = RNTupleModel::Create();
+   auto pt = model->MakeField<float>("pt", 42.0);
+   auto writer = RNTupleWriter::Recreate(std::move(model), "small", fileGuard.GetPath());
+   writer->Fill();
+   writer = nullptr;
+
+   // Update the file with another object
+   auto f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+   std::string str = "one";
+   f->WriteObject(&str, "s1");
+
+   // Turn it into a large file
+   model = RNTupleModel::Create();
+   auto E = model->MakeField<double>("E");
+   RNTupleWriteOptions options;
+   options.SetCompression(0);
+   writer = RNTupleWriter::Append(std::move(model), "large", *f, options);
+
+   TRandom3 rnd(42);
+   double chksumWrite = 0.0;
+   constexpr unsigned long nEvents = 1024 * 1024 * 256; // Exceed 2GB file size
+   for (unsigned int i = 0; i < nEvents; ++i) {
+      *E = rnd.Rndm();
+      chksumWrite += *E;
+      writer->Fill();
+   }
+
+   // Add one more object before the ntuple writer commits the footer
+   str = "two";
+   f->WriteObject(&str, "s2");
+   writer = nullptr;
+   f->Close();
+   f = nullptr;
+
+#ifdef R__SEEK64
+   FILE *file = fopen64(fileGuard.GetPath().c_str(), "rb");
+   ASSERT_TRUE(file != nullptr);
+   EXPECT_EQ(0, fseeko64(file, 0, SEEK_END));
+   EXPECT_GT(ftello64(file), 2048LL * 1024LL * 1024LL);
+#else
+   FILE *file = fopen(fileGuard.GetPath().c_str(), "rb");
+   ASSERT_TRUE(file != nullptr);
+   EXPECT_EQ(0, fseek(file, 0, SEEK_END));
+   EXPECT_GT(ftell(file), 2048LL * 1024LL * 1024LL);
+#endif
+   fclose(file);
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
+   {
+      auto reader = RNTupleReader::Open("small", fileGuard.GetPath());
+      reader->LoadEntry(0);
+      EXPECT_EQ(42.0f, *reader->GetModel()->GetDefaultEntry()->Get<float>("pt"));
+
+      reader = RNTupleReader::Open("large", fileGuard.GetPath());
+      auto viewE = reader->GetView<double>("E");
+      double chksumRead = 0.0;
+      for (auto i : reader->GetEntryRange()) {
+         chksumRead += viewE(i);
+      }
+      EXPECT_EQ(chksumRead, chksumWrite);
+   }
+
+   {
+      f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "READ"));
+      EXPECT_TRUE(f);
+      auto s1 = f->Get<std::string>("s1");
+      EXPECT_EQ("one", *s1);
+      auto s2 = f->Get<std::string>("s2");
+      EXPECT_EQ("two", *s2);
+
+      auto reader = RNTupleReader::Open(f->Get<RNTuple>("small"));
+      reader->LoadEntry(0);
+      EXPECT_EQ(42.0f, *reader->GetModel()->GetDefaultEntry()->Get<float>("pt"));
+
+      reader = RNTupleReader::Open(f->Get<RNTuple>("large"));
+      auto viewE = reader->GetView<double>("E");
+      double chksumRead = 0.0;
+      for (auto i : reader->GetEntryRange()) {
+         chksumRead += viewE(i);
+      }
+      EXPECT_EQ(chksumRead, chksumWrite);
+   }
 }
 #endif
