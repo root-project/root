@@ -823,7 +823,7 @@ GetUrlForDataMember(const TString &scopeName, const TString &dataMemberName, TDa
    // We create a TString with the name of the scope and the enumeration from which the enumerator is.
    TString scopeEnumeration = dataMember->GetTrueTypeName();
    TString md5EnumClass;
-   if (scopeEnumeration.Contains("(anonymous)")) {
+   if (scopeEnumeration.Contains("(unnamed)")) {
       // FIXME: need to investigate the numbering scheme.
       md5EnumClass.Append(scopeName);
       md5EnumClass.Append("::@1@1");

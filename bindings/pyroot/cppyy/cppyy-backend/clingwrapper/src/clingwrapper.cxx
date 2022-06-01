@@ -448,7 +448,7 @@ std::string Cppyy::ResolveEnum(const std::string& enum_type)
 
 // desugar the type before resolving
     std::string et_short = TClassEdit::ShortType(enum_type.c_str(), 1);
-    if (et_short.find("(anonymous") == std::string::npos) {
+    if (et_short.find("(unnamed") == std::string::npos) {
         std::ostringstream decl;
     // TODO: now presumed fixed with https://sft.its.cern.ch/jira/browse/ROOT-6988
         for (auto& itype : {"unsigned int"}) {
@@ -2123,7 +2123,7 @@ bool Cppyy::IsEnumData(TCppScope_t scope, TCppIndex_t idata)
         std::string ti = m->GetTypeName();
 
     // can't check anonymous enums by type name, so just accept them as enums
-        if (ti.rfind("(anonymous)") != std::string::npos)
+        if (ti.rfind("(unnamed)") != std::string::npos)
             return m->Property() & kIsEnum;
 
     // since there seems to be no distinction between data of enum type and enum values,

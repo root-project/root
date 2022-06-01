@@ -1380,7 +1380,7 @@ void ROOT::TMetaUtils::GetQualifiedName(std::string &qual_name, const clang::Nam
    cl.getNameForDiagnostic(stream,policy,true);
    stream.flush(); // flush to string.
 
-   if ( qual_name ==  "(anonymous " ) {
+   if ( qual_name ==  "(anonymous " || qual_name ==  "(unnamed" ) {
       size_t pos = qual_name.find(':');
       qual_name.erase(0,pos+2);
    }
