@@ -15,6 +15,11 @@ set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
   root_std_complex.h
 )
 
+target_include_directories(Core PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>
+)
+
 ROOT_OBJECT_LIBRARY(ClingUtils
   src/RStl.cxx
   src/TClingUtils.cxx
