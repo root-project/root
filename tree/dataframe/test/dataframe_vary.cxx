@@ -1034,7 +1034,7 @@ TEST(RDFVary, VaryDisplay) // TEST instead of TEST_P because Display is single-t
                      return ROOT::RVecI{-1, 2};
                   },
                   {}, 2)
-               .Display("x");
+               .Display<int>({"x"});
    // Display ignores variations, only displays the nominal values
    EXPECT_EQ(d->AsString(), "+-----+---+\n| Row | x | \n+-----+---+\n| 0   | 0 | \n|     |   | \n+-----+---+\n");
    // cannot vary a Display
