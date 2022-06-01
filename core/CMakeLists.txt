@@ -65,7 +65,12 @@ set_source_files_properties(${CMAKE_BINARY_DIR}/include/RGitCommit.h
 install(FILES ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-ROOT_LINKER_LIBRARY(Core base/src/TROOT.cxx BUILTINS LZMA)
+ROOT_LINKER_LIBRARY(Core BUILTINS LZMA)
+
+generateHeader(Core
+  ${CMAKE_SOURCE_DIR}/core/base/src/root-argparse.py
+  ${CMAKE_BINARY_DIR}/ginclude/TApplicationCommandLineOptionsHelp.h
+)
 
 add_dependencies(Core CLING gitcommit rconfigure)
 
@@ -74,7 +79,6 @@ target_include_directories(Core PRIVATE foundation/res)
 
 target_link_libraries(Core
   PRIVATE
-    PCRE::PCRE
     ${LIBLZMA_LIBRARIES}
     xxHash::xxHash
     LZ4::LZ4
@@ -108,7 +112,6 @@ add_subdirectory(lz4)
 add_subdirectory(zstd)
 
 target_sources(Core PRIVATE
-  $<TARGET_OBJECTS:Base>
   $<TARGET_OBJECTS:Clib>
   $<TARGET_OBJECTS:Cont>
   $<TARGET_OBJECTS:Foundation>
@@ -124,10 +127,6 @@ target_sources(Core PRIVATE
 add_subdirectory(macosx)
 add_subdirectory(unix)
 add_subdirectory(winnt)
-
-if(CMAKE_CXX_STANDARD GREATER 11)
-  set(dict_v7dirs base/v7/inc)
-endif()
 
 add_subdirectory(rootcling_stage1)
 
@@ -167,7 +166,6 @@ target_compile_definitions(Core PRIVATE
 
 target_include_directories(Core PUBLIC
    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/ginclude>
-   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/base/inc>
    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/foundation/inc>
    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/cont/inc>
    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/gui/inc>
@@ -182,7 +180,6 @@ target_include_directories(Core PUBLIC
 target_include_directories(Core PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/clingutils/inc>)
 
 if(root7 OR CMAKE_CXX_STANDARD GREATER 11)
-  target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/base/v7/inc>)
   target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/foundation/v7/inc>)
 endif()
 

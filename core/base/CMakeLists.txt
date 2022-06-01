@@ -165,6 +165,7 @@ set(BASE_SOURCES
   src/TRef.cxx
   src/TRegexp.cxx
   src/TRemoteObject.cxx
+  src/TROOT.cxx
   src/TStopwatch.cxx
   src/TStorage.cxx
   src/TString.cxx
@@ -200,41 +201,20 @@ if(root7)
   list(APPEND BASE_HEADERS
       ROOT/RDirectoryEntry.hxx
       ROOT/RIndexIter.hxx)
-  set(BASE_V7_INC ${CMAKE_SOURCE_DIR}/core/base/v7/inc)
-  set(BASE_HEADER_DIRS inc/ v7/inc/)
-  list(APPEND BASE_SOURCES
-      RDirectory.cxx)
+  target_sources(Core PRIVATE v7/src/RDirectory.cxx)
 endif()
 
 # only here complete list of headers can be propogated to parent cmake file
 set_property(TARGET Core APPEND PROPERTY DICT_HEADERS ${BASE_HEADERS})
 
-ROOT_OBJECT_LIBRARY(Base ${BASE_SOURCES})
+target_sources(Core PRIVATE ${BASE_SOURCES})
 
-target_include_directories(Base PRIVATE
-   ${BASE_V7_INC}
-   ${PCRE_INCLUDE_DIR}
-   res
-   ${CMAKE_SOURCE_DIR}/core/foundation/res
-   ${CMAKE_SOURCE_DIR}/core/clib/inc
-   ${CMAKE_SOURCE_DIR}/core/meta/inc
-   ${CMAKE_SOURCE_DIR}/core/cont/inc
-   ${CMAKE_SOURCE_DIR}/core/thread/inc
-   ${CMAKE_SOURCE_DIR}/core/gui/inc
-   ${CMAKE_SOURCE_DIR}/core/foundation/inc
-   ${CMAKE_BINARY_DIR}/ginclude
+target_include_directories(Core PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/v7/inc>
 )
 
-if(MSVC)
-   target_include_directories(Base PRIVATE ${CMAKE_SOURCE_DIR}/core/winnt/inc)
-endif()
-
-
-#---CreateTApplicationCommandLineOptions------------------------------------------------------------------
-generateHeader(Base
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/root-argparse.py
-  ${CMAKE_BINARY_DIR}/ginclude/TApplicationCommandLineOptionsHelp.h
-)
+target_link_libraries(Core PRIVATE PCRE::PCRE)
 
 ROOT_INSTALL_HEADERS(${BASE_HEADER_DIRS})
 
