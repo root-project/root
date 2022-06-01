@@ -89,6 +89,8 @@ target_link_libraries(Core
     ${ROOT_ATOMIC_LIBS}
 )
 
+add_subdirectory(rootcling_stage1)
+
 add_subdirectory(base)
 add_subdirectory(clib)
 add_subdirectory(clingutils)
@@ -127,8 +129,6 @@ target_sources(Core PRIVATE
 add_subdirectory(macosx)
 add_subdirectory(unix)
 add_subdirectory(winnt)
-
-add_subdirectory(rootcling_stage1)
 
 #-------------------------------------------------------------------------------
 
