@@ -1029,22 +1029,22 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
       hxmax = xmax + fMargin * (xmax - xmin);
       hymax = ymax + fMargin * (ymax - ymin);
       Double_t epsilon = 1e-9;
-      if (TMath::Abs(hxmax - hxmin) < epsilon) {
+      if (TMath::AreEqualRel(hxmax,hxmin,epsilon)) {
          if (TMath::Abs(hxmin) < epsilon) {
             hxmin = -0.001;
             hxmax =  0.001;
          } else {
-            hxmin = hxmin-TMath::Abs(hxmin)*epsilon;
-            hxmax = hxmax+TMath::Abs(hxmax)*epsilon;
+            hxmin = hxmin-TMath::Abs(hxmin)*(epsilon/2.);
+            hxmax = hxmax+TMath::Abs(hxmax)*(epsilon/2.);
          }
       }
-      if (TMath::Abs(hymax - hymin) < epsilon) {
+      if (TMath::AreEqualRel(hymax, hymin, epsilon)) {
          if (TMath::Abs(hymin) < epsilon) {
             hymin = -0.001;
             hymax =  0.001;
          } else {
-            hymin = hymin-TMath::Abs(hymin)*epsilon;
-            hymax = hymax+TMath::Abs(hymax)*epsilon;
+            hymin = hymin-TMath::Abs(hymin)*(epsilon/2.);
+            hymax = hymax+TMath::Abs(hymax)*(epsilon/2.);
          }
       }
       if (fHistogram) {
