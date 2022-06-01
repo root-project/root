@@ -31,9 +31,9 @@ In extended mode, a
 #include "RooAbsDataStore.h"
 #include "RooRealSumPdf.h"
 #include "RooRealVar.h"
+#include "RooChangeTracker.h"
 
 #include "TMath.h"
-#include "Math/Util.h" // KahanSum
 
 namespace RooFit {
 namespace TestStatistics {
@@ -51,7 +51,11 @@ RooBinnedL::RooBinnedL(RooAbsPdf *pdf, RooAbsData *data)
    // The Active label will disable pdf integral calculations
    pdf->setAttribute("BinnedLikelihoodActive");
 
-   RooArgSet *obs = pdf->getObservables(data);
+   RooArgSet params;
+   pdf->getParameters(data->get(), params) ;
+   paramTracker_ = std::make_unique<RooChangeTracker>("chtracker","change tracker",params,true);
+
+   std::unique_ptr<RooArgSet> obs(pdf->getObservables(data));
    if (obs->getSize() != 1) {
       throw std::logic_error(
          "RooBinnedL can only be created from combination of pdf and data which has exactly one observable!");
@@ -72,6 +76,8 @@ RooBinnedL::RooBinnedL(RooAbsPdf *pdf, RooAbsData *data)
    }
 }
 
+RooBinnedL::~RooBinnedL() = default;
+
 //////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return likelihood on subset of data from firstEvent to lastEvent
 /// processed with a step size of 'stepSize'. If this an extended likelihood and
@@ -86,6 +92,9 @@ RooBinnedL::evaluatePartition(Section bins, std::size_t /*components_begin*/, st
    // straight addition, but since evaluating the PDF is usually much more
    // expensive than that, we tolerate the additional cost...
    ROOT::Math::KahanSum<double> result;
+
+   // Do not reevaluate likelihood if parameters have not changed
+   if (!paramTracker_->hasChanged(true) & (cachedResult_ != 0)) return cachedResult_;
 
 //   data->store()->recalculateCache(_projDeps, firstEvent, lastEvent, stepSize, (_binnedPdf?false:true));
    // TODO: check when we might need _projDeps (it seems to be mostly empty); ties in with TODO below
@@ -137,6 +146,7 @@ RooBinnedL::evaluatePartition(Section bins, std::size_t /*components_begin*/, st
       pdf_->wireAllCaches();
    }
 
+   cachedResult_ = result;
    return result;
 }
 
