@@ -649,17 +649,13 @@ void TUnixSystem::SetDisplay()
          STRUCT_UTMP *utmp_entry = utmp.SearchUtmpEntry(tty);
          if (utmp_entry) {
             if (utmp_entry->ut_host[0]) {
-               if (strchr(utmp_entry->ut_host, ':')) {
-                  Setenv("DISPLAY", utmp_entry->ut_host);
-                  Warning("SetDisplay", "DISPLAY not set, setting it to %s",
-                          utmp_entry->ut_host);
-               } else {
-                  char disp[260];
-                  snprintf(disp, sizeof(disp), "%s:0.0", utmp_entry->ut_host);
-                  Setenv("DISPLAY", disp);
-                  Warning("SetDisplay", "DISPLAY not set, setting it to %s",
-                          disp);
-               }
+               TString disp;
+               for (unsigned n = 0; (n < sizeof(utmp_entry->ut_host)) && utmp_entry->ut_host[n]; n++)
+                  disp.Append(utmp_entry->ut_host[n]);
+               if (disp.First(':') == kNPOS)
+                  disp.Append(":0.0");
+               Setenv("DISPLAY", disp.Data());
+               Warning("SetDisplay", "DISPLAY not set, setting it to %s", disp.Data());
             }
 #ifndef UTMP_NO_ADDR
             else if (utmp_entry->ut_addr) {
