@@ -8,7 +8,7 @@
 # CMakeLists.txt file for building ROOT core/meta package
 ############################################################################
 
-set(Meta_dict_headers
+set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
   TBaseClass.h
   TClassGenerator.h
   TClass.h
@@ -50,7 +50,6 @@ set(Meta_dict_headers
   TVirtualStreamerInfo.h
   TVirtualArray.h
   TVirtualObject.h
-  PARENT_SCOPE
 )
 
 ROOT_OBJECT_LIBRARY(Meta

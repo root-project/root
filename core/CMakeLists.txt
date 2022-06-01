@@ -194,18 +194,10 @@ if (runtime_cxxmodules)
   list(APPEND core_implicit_modules "-mByproduct" "ROOT_Rtypes")
 endif(runtime_cxxmodules)
 
+get_target_property(CORE_DICT_HEADERS Core DICT_HEADERS)
+
 ROOT_GENERATE_DICTIONARY(G__Core
-  ${Core_dict_headers}
-  ${Clib_dict_headers}
-  ${Cont_dict_headers}
-  ${Foundation_dict_headers}
-  ${Macosx_dict_headers}
-  ${Unix_dict_headers}
-  ${Winnt_dict_headers}
-  ${ClingUtils_dict_headers}
-  ${GuiCore_dict_headers}
-  ${Meta_dict_headers}
-  ${TextInput_dict_headers}
+  ${CORE_DICT_HEADERS}
   STAGE1
   MODULE
     Core

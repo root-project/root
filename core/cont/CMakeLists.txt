@@ -8,7 +8,7 @@
 # CMakeLists.txt file for building ROOT core/cont package
 ############################################################################
 
-set(Cont_dict_headers
+set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
   ROOT/TSeq.hxx
   TArrayC.h
   TArrayD.h
@@ -38,7 +38,6 @@ set(Cont_dict_headers
   TSeqCollection.h
   TSortedList.h
   TVirtualCollectionProxy.h
-  PARENT_SCOPE
 )
 
 ROOT_OBJECT_LIBRARY(Cont

@@ -12,7 +12,7 @@ if(NOT WIN32)
   return()
 endif()
 
-set(Winnt_dict_headers TWinNTSystem.h PARENT_SCOPE)
+set_property(TARGET Core APPEND PROPERTY DICT_HEADERS TWinNTSystem.h)
 
 target_sources(Core PRIVATE
   src/TWin32SplashThread.cxx

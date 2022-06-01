@@ -8,7 +8,7 @@
 # CMakeLists.txt file for building ROOT core/meta package
 ############################################################################
 
-set(GuiCore_dict_headers
+set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
   GuiTypes.h
   TApplicationImp.h
   TBrowser.h
@@ -23,7 +23,6 @@ set(GuiCore_dict_headers
   TObjectSpy.h
   TToggleGroup.h
   TToggle.h
-  PARENT_SCOPE
 )
 
 ROOT_OBJECT_LIBRARY(GuiCore

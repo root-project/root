@@ -12,7 +12,7 @@ if(NOT UNIX)
   return()
 endif()
 
-set(Unix_dict_headers TUnixSystem.h PARENT_SCOPE)
+set_property(TARGET Core APPEND PROPERTY DICT_HEADERS TUnixSystem.h)
 target_sources(Core PRIVATE src/TUnixSystem.cxx)
 target_include_directories(Core PRIVATE inc ../clib/res)
 
