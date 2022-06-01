@@ -467,6 +467,9 @@ protected:
    bool DoUnbinnedLikelihoodFit( bool extended = false, const ROOT::EExecutionPolicy &executionPolicy = ROOT::EExecutionPolicy::kSequential);
    /// linear least square fit
    bool DoLinearFit();
+   /// Set Objective function
+   bool DoSetFCN(bool useExtFCN, const ROOT::Math::IMultiGenFunction &fcn, const double *params, unsigned int dataSize,
+                 bool chi2fit);
 
    // initialize the minimizer
    bool DoInitMinimizer();
