@@ -145,7 +145,6 @@ target_compile_definitions(Core PRIVATE
 
 target_include_directories(Core PUBLIC
    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/ginclude>
-   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/rint/inc>
    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/thread/inc>
 )
 
