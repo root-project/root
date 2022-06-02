@@ -5122,9 +5122,7 @@ static bool EvaluateUnaryTypeTrait(Sema &Self, TypeTrait UTT,
 
       bool FoundConstructor = false;
       unsigned FoundTQs;
-      llvm::SmallVector<NamedDecl*, 4> Ctors;
-      Self.LookupConstructors(RD, Ctors);
-      for (const auto *ND : Ctors) {
+      for (const auto *ND : Self.LookupConstructors(RD)) {
         // A template constructor is never a copy constructor.
         // FIXME: However, it may actually be selected at the actual overload
         // resolution point.
@@ -5164,9 +5162,7 @@ static bool EvaluateUnaryTypeTrait(Sema &Self, TypeTrait UTT,
         return true;
 
       bool FoundConstructor = false;
-      llvm::SmallVector<NamedDecl*, 4> Ctors;
-      Self.LookupConstructors(RD, Ctors);
-      for (const auto *ND : Ctors) {
+      for (const auto *ND : Self.LookupConstructors(RD)) {
         // FIXME: In C++0x, a constructor template can be a default constructor.
         if (isa<FunctionTemplateDecl>(ND->getUnderlyingDecl()))
           continue;

@@ -12270,9 +12270,7 @@ NamedDecl *Sema::BuildUsingDeclaration(
         UsingName.setName(Context.DeclarationNames.getCXXConstructorName(
             Context.getCanonicalType(Context.getRecordType(CurClass))));
         UsingName.setNamedTypeInfo(nullptr);
-        llvm::SmallVector<NamedDecl*, 4> Ctors;
-        LookupConstructors(RD, Ctors);
-        for (auto *Ctor : Ctors)
+        for (auto *Ctor : LookupConstructors(RD))
           R.addDecl(Ctor);
         R.resolveKind();
       } else {
