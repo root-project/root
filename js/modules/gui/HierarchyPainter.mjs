@@ -2158,8 +2158,7 @@ class HierarchyPainter extends BasePainter {
      * @param {string} [drawopt] - draw option for the item
      * @returns {Promise} with created painter object */
    display(itemname, drawopt) {
-      let h = this,
-          painter = null,
+      let painter = null,
           updating = false,
           item = null,
           display_itemname = itemname,
@@ -2172,27 +2171,27 @@ class HierarchyPainter extends BasePainter {
          drawopt = drawopt.slice(0, p);
       }
 
-      function complete(respainter, err) {
+      const complete = (respainter, err) => {
          if (err) console.log('When display ', itemname, 'got', err);
 
          if (updating && item) delete item._doing_update;
          if (!updating) showProgress();
          if (respainter && (typeof respainter === 'object') && (typeof respainter.setItemName === 'function')) {
-            respainter.setItemName(display_itemname, updating ? null : drawopt, h); // mark painter as created from hierarchy
+            respainter.setItemName(display_itemname, updating ? null : drawopt, this); // mark painter as created from hierarchy
             if (item && !item._painter) item._painter = respainter;
          }
 
          return respainter || painter;
-      }
+      };
 
-      return h.createDisplay().then(mdi => {
+      return this.createDisplay().then(mdi => {
 
          if (!mdi) return complete();
 
-         item = h.findItem(display_itemname);
+         item = this.findItem(display_itemname);
 
          if (item && ('_player' in item))
-            return h.player(display_itemname, drawopt).then(res => complete(res));
+            return this.player(display_itemname, drawopt).then(res => complete(res));
 
          updating = (typeof drawopt == 'string') && (drawopt.indexOf("update:")==0);
 
@@ -2202,7 +2201,7 @@ class HierarchyPainter extends BasePainter {
             item._doing_update = true;
          }
 
-         if (item && !h.canDisplay(item, drawopt)) return complete();
+         if (item && !this.canDisplay(item, drawopt)) return complete();
 
          let divid = "", use_dflt_opt = false;
          if ((typeof drawopt == 'string') && (drawopt.indexOf("divid:") >= 0)) {
@@ -2218,7 +2217,7 @@ class HierarchyPainter extends BasePainter {
 
          if (!updating) showProgress("Loading " + display_itemname);
 
-         return h.getObject(display_itemname, drawopt).then(result => {
+         return this.getObject(display_itemname, drawopt).then(result => {
 
             if (!updating) showProgress();
 

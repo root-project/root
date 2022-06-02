@@ -11,7 +11,7 @@ let version_id = "dev";
 
 /** @summary version date
   * @desc Release date in format day/month/year like "19/11/2021" */
-let version_date = "31/05/2022";
+let version_date = "2/06/2022";
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -1389,6 +1389,7 @@ function getMethods(typename, obj) {
       m.AddText = function(txt) {
          let line = create$1("TLatex");
          line.fTitle = txt;
+         line.fTextAlign = this.fTextAlign;
          this.fLines.Add(line);
       };
       m.Clear = function() {
@@ -8315,6 +8316,7 @@ const symbols_map = {
    '#beta': '\u03B2',
    '#chi': '\u03C7',
    '#delta': '\u03B4',
+   '#digamma': '\u03DD',
    '#varepsilon': '\u03B5',
    '#phi': '\u03C6',
    '#gamma': '\u03B3',
@@ -8322,6 +8324,8 @@ const symbols_map = {
    '#iota': '\u03B9',
    '#varphi': '\u03C6',
    '#kappa': '\u03BA',
+   '#koppa': '\u03DF',
+   '#sampi': '\u03E1',
    '#lambda': '\u03BB',
    '#mu': '\u03BC',
    '#nu': '\u03BD',
@@ -8330,9 +8334,13 @@ const symbols_map = {
    '#theta': '\u03B8',
    '#rho': '\u03C1',
    '#sigma': '\u03C3',
+   '#stigma': '\u03DB',
+   '#san': '\u03FB',
+   '#sho': '\u03F8',
    '#tau': '\u03C4',
    '#upsilon': '\u03C5',
    '#varomega': '\u03D6',
+   '#varcoppa': '\u03D9',
    '#omega': '\u03C9',
    '#xi': '\u03BE',
    '#psi': '\u03C8',
@@ -8341,6 +8349,7 @@ const symbols_map = {
    '#Beta': '\u0392',
    '#Chi': '\u03A7',
    '#Delta': '\u0394',
+   '#Digamma': '\u03DC',
    '#Epsilon': '\u0395',
    '#Phi': '\u03A6',
    '#Gamma': '\u0393',
@@ -8348,6 +8357,9 @@ const symbols_map = {
    '#Iota': '\u0399',
    '#vartheta': '\u03D1',
    '#Kappa': '\u039A',
+   '#Koppa': '\u03DE',
+   '#varKoppa': '\u03D8',
+   '#Sampi': '\u03E0',
    '#Lambda': '\u039B',
    '#Mu': '\u039C',
    '#Nu': '\u039D',
@@ -8356,6 +8368,9 @@ const symbols_map = {
    '#Theta': '\u0398',
    '#Rho': '\u03A1',
    '#Sigma': '\u03A3',
+   '#Stigma': '\u03DA',
+   '#San': '\u03FA',
+   '#Sho': '\u03F7',
    '#Tau': '\u03A4',
    '#Upsilon': '\u03A5',
    '#varsigma': '\u03C2',
@@ -8365,6 +8380,7 @@ const symbols_map = {
    '#Zeta': '\u0396',
    '#varUpsilon': '\u03D2',
    '#epsilon': '\u03B5',
+   '#P': '\u00B6',
 
    // only required for MathJax to provide correct replacement
    '#sqrt': '\u221A',
@@ -9330,12 +9346,115 @@ const math_symbols_map = {
    'openclubsuit': "clubsuit",
    'openspadesuit': "spadesuit",
    'dasharrow': "dashrightarrow",
-   'downuparrows': "updownarrow"
+   'comp': "circ",
+   'iiintop': "iiint",
+   'iintop': "iint",
+   'ointop': "oint"
  };
+
+ const mathjax_unicode = {
+   'Digamma': 0x3DC,
+   'upDigamma': 0x3DC,
+   'digamma': 0x3DD,
+   'updigamma': 0x3DD,
+   'Koppa': 0x3DE,
+   'koppa': 0x3DF,
+   'upkoppa': 0x3DF,
+   'upKoppa': 0x3DE,
+   'VarKoppa': 0x3D8,
+   'upVarKoppa': 0x3D8,
+   'varkoppa': 0x3D9,
+   'upvarkoppa': 0x3D9,
+   'varkappa': 0x3BA, // not found archaic kappa - use normal
+   'upvarkappa': 0x3BA,
+   'varbeta': 0x3D0, // not found archaic beta - use normal
+   'upvarbeta': 0x3D0,
+   'Sampi': 0x3E0,
+   'upSampi': 0x3E0,
+   'sampi': 0x3E1,
+   'upsampi': 0x3E1,
+   'Stigma': 0x3DA,
+   'upStigma': 0x3DA,
+   'stigma': 0x3DB,
+   'upstigma': 0x3DB,
+   'San': 0x3FA,
+   'upSan': 0x3FA,
+   'san': 0x3FB,
+   'upsan': 0x3FB,
+   'Sho': 0x3F7,
+   'upSho': 0x3F7,
+   'sho': 0x3F8,
+   'upsho': 0x3F8,
+   'P': 0xB6,
+   'aa': 0xB0,
+   'bulletdashcirc': 0x22B7,
+   'circdashbullet': 0x22B6,
+   'downuparrows': 0x21F5,
+   'updownarrows': 0x21C5,
+   'dashdownarrow': 0x21E3,
+   'dashuparrow': 0x21E1,
+   'complement': 0x2201,
+   'dbar': 0x18C,
+   'ddddot': 0x22EF,
+   'dddot': 0x22EF,
+   'ddots': 0x22F1,
+   'defineequal': 0x225D,
+   'defineeq': 0x225D,
+   'downdownharpoons': 0x2965,
+   'downupharpoons': 0x296F,
+   'updownharpoons': 0x296E,
+   'upupharpoons': 0x2963,
+   'hateq': 0x2259,
+   'ldbrack': 0x27E6,
+   'rdbrack': 0x27E7,
+   'leadsfrom': 0x219C,
+   'leftsquigarrow': 0x21DC,
+   'lightning': 0x2607,
+   'napprox': 0x2249,
+   'nasymp': 0x226D,
+   'nequiv': 0x2262,
+   'nsimeq': 0x2244,
+   'nsubseteq': 0x2288,
+   'nsubset': 0x2284,
+   'notapprox': 0x2249,
+   'notasymp': 0x226D,
+   'notequiv': 0x2262,
+   'notni': 0x220C,
+   'notsimeq': 0x2244,
+   'notsubseteq': 0x2288,
+   'notsubset': 0x2284,
+   'notsupseteq': 0x2289,
+   'notsupset': 0x2285,
+   'nsupset': 0x2285,
+   'setdif': 0x2216,
+   'simarrow': 0x2972,
+   't': 0x2040,
+   'u': 0x2C7,
+   'v': 0x2C7,
+   'undercurvearrowright': 0x293B,
+   'updbar': 0x18C,
+   'wwbar': 0x2015,
+   'awointop': 0x2232,
+   'awoint': 0x2233,
+   'barintop': 0x2A1C,
+   'barint': 0x2A1B,
+   'cwintop': 0x2231, // no opposite direction, use same
+   'cwint': 0x2231,
+   'cwointop': 0x2233,
+   'cwoint': 0x2232,
+   'oiiintop': 0x2230,
+   'oiiint': 0x2230,
+   'oiintop': 0x222F,
+   'oiint': 0x222F,
+   'slashintop': 0x2A0F,
+   'slashint': 0x2A0F
+ };
+
+const mathjax_asis = ['"', "'", "`", "=", "~"];
 
 /** @summary Function translates ROOT TLatex into MathJax format
   * @private */
-const translateMath = (str, kind, color, painter) => {
+function translateMath(str, kind, color, painter) {
 
    if (kind != 2) {
       for (let x in math_symbols_map)
@@ -9378,9 +9497,15 @@ const translateMath = (str, kind, color, painter) => {
 
       str = clean;
    } else {
-      str = str.replace(/\\\^/g, "\\hat");
+      if (str == "\\^") str = "\\unicode{0x5E}";
+      if (str == "\\vec") str = "\\unicode{0x2192}";
+      str = str.replace(/\\\./g, "\\unicode{0x2E}").replace(/\\\^/g, "\\hat");
+      for (let x in mathjax_unicode)
+         str = str.replace(new RegExp(`\\\\\\b${x}\\b`, 'g'), `\\unicode{0x${mathjax_unicode[x].toString(16)}}`);
+      for(let x in mathjax_asis)
+         str = str.replace(new RegExp(`(\\\\${mathjax_asis[x]})`, 'g'), `\\unicode{0x${mathjax_asis[x].charCodeAt(0).toString(16)}}`);
       for (let x in mathjax_remap)
-         str = str.replace(new RegExp('\\\\' + x, 'g'), '\\' + mathjax_remap[x]);
+         str = str.replace(new RegExp(`\\\\\\b${x}\\b`, 'g'), `\\${mathjax_remap[x]}`);
    }
 
    if (typeof color != 'string') return str;
@@ -9391,7 +9516,7 @@ const translateMath = (str, kind, color, painter) => {
    //                .replace(/\(/g, '{')
    //                .replace(/\)/g, '}');
    return "\\color{" + color + '}{' + str + "}";
-};
+}
 
 /** @summary Workaround to fix size attributes in MathJax SVG
   * @private */
@@ -53403,6 +53528,10 @@ function addDragHandler(_painter, arg) {
       return change_size || change_pos;
    };
 
+   // add interactive styles when frame painter not there
+   if (_painter && !_painter.getFramePainter())
+      injectFrameStyle(_painter.draw_g);
+
    let drag_move = drag().subject(Object);
 
    drag_move
@@ -53882,6 +54011,15 @@ const TooltipHandler = {
 }; // TooltipHandler
 
 
+function injectFrameStyle(draw_g) {
+   injectStyle(`
+.jsroot rect.h1bin { stroke: #4572A7; fill: #4572A7; opacity: 0; }
+.jsroot rect.zoom { stroke: steelblue; fill-opacity: 0.1; }
+.jsroot path.zoom { stroke: steelblue; fill-opacity: 0.1; }
+.jsroot svg:not(:root) { overflow: hidden; }`, draw_g.node());
+}
+
+
 const FrameInteractive = {
 
    addBasicInteractivity() {
@@ -53892,11 +54030,7 @@ const FrameInteractive = {
          addDragHandler(this, { obj: this, x: this._frame_x, y: this._frame_y, width: this.getFrameWidth(), height: this.getFrameHeight(),
                                 only_resize: true, minwidth: 20, minheight: 20, redraw: () => this.sizeChanged() });
 
-      injectStyle(`
-.jsroot rect.h1bin { stroke: #4572A7; fill: #4572A7; opacity: 0; }
-.jsroot rect.zoom { stroke: steelblue; fill-opacity: 0.1; }
-.jsroot path.zoom { stroke: steelblue; fill-opacity: 0.1; }
-.jsroot svg:not(:root) { overflow: hidden; }`, this.draw_g.node());
+      injectFrameStyle(this.draw_g);
 
       let main_svg = this.draw_g.select(".main_layer");
 
@@ -60784,7 +60918,7 @@ class TPavePainter extends ObjectPainter {
          rect.style("pointer-events", "visibleFill")
              .on("mouseenter", () => this.showObjectStatus());
 
-         addDragHandler(this, { obj: pt, x: this._pave_x, y: this._pave_y, width: width, height: height,
+         addDragHandler(this, { obj: pt, x: this._pave_x, y: this._pave_y, width, height,
                                       minwidth: 10, minheight: 20, canselect: true,
                         redraw: () => { this.interactiveRedraw(false, "pave_moved"); this.drawPave(); },
                         ctxmenu: browser$1.touches && settings.ContextMenu && this.UseContextMenu });
@@ -60931,43 +61065,38 @@ class TPavePainter extends ObjectPainter {
 
       let pt = this.getObject(),
           tcolor = this.getColor(pt.fTextColor),
-          nlines = 0, lines = [],
+          arr = pt?.fLines?.arr || [],
+          nlines = arr.length,
           pp = this.getPadPainter(),
           pad_height = pp.getPadHeight(),
-          individual_positioning = false,
           draw_header = (pt.fLabel.length > 0),
-          promises = [];
+          promises = [],
+          stepy = height / (nlines || 1),
+          margin_x = pt.fMargin * width, max_font_size = 0;
+
+      // for single line (typically title) limit font size
+      if ((nlines == 1) && (pt.fTextSize > 0)) {
+         max_font_size = Math.round(pt.fTextSize * pad_height);
+         if (max_font_size < 3) max_font_size = 3;
+      }
 
       if (!text_g) text_g = this.draw_g;
 
-      // first check how many text lines in the list
-      pt.fLines.arr.forEach(entry => {
-         if ((entry._typename == "TText") || (entry._typename == "TLatex")) {
-            nlines++; // count lines
-            if ((entry.fX > 0) || (entry.fY > 0)) individual_positioning = true;
-         }
-      });
+      let fast = (nlines == 1) && pp && pp._fast_drawing, num_default = 0;
 
-      let fast_draw = (nlines==1) && pp && pp._fast_drawing, nline = 0;
+      for(let nline = 0; nline < nlines; ++nline) {
+         let entry = arr[nline], texty = nline*stepy;
 
-      // now draw TLine and TBox objects
-      pt.fLines.arr.forEach(entry => {
-         let ytext = (nlines > 0) ? Math.round((1-(nline-0.5)/nlines)*height) : 0;
-         switch (entry._typename) {
-            case "TText":
-            case "TLatex":
-               nline++; // just count line number
-               if (individual_positioning) {
-                  // each line should be drawn and scaled separately
-
-                  let lx = entry.fX, ly = entry.fY;
-
-                  lx = ((lx > 0) && (lx < 1)) ? Math.round(lx*width) : pt.fMargin * width;
-                  ly = ((ly > 0) && (ly < 1)) ? Math.round((1-ly)*height) : ytext;
-
-                  let jcolor = entry.fTextColor ? this.getColor(entry.fTextColor) : "";
-                  if (!jcolor) {
-                     jcolor = tcolor;
+         switch(entry._typename) {
+            case 'TText':
+            case 'TLatex':
+               if (entry.fX || entry.fY) {
+                  // individual positioning
+                  let x = entry.fX ? entry.fX*width : margin_x,
+                      y = entry.fY ? (1 - entry.fY)*height : texty,
+                      color = entry.fTextColor ? this.getColor(entry.fTextColor) : "";
+                  if (!color) {
+                     color = tcolor;
                      this.UseTextColor = true;
                   }
 
@@ -60975,72 +61104,61 @@ class TPavePainter extends ObjectPainter {
 
                   this.startTextDrawing(pt.fTextFont, (entry.fTextSize || pt.fTextSize) * pad_height, sub_g);
 
-                  this.drawText({ align: entry.fTextAlign || pt.fTextAlign, x: lx, y: ly, text: entry.fTitle, color: jcolor,
-                                  latex: (entry._typename == "TText") ? 0 : 1,  draw_g: sub_g, fast: fast_draw });
+                  this.drawText({ align: entry.fTextAlign || pt.fTextAlign, x, y, text: entry.fTitle, color,
+                                  latex: (entry._typename == "TText") ? 0 : 1,  draw_g: sub_g, fast });
 
                   promises.push(this.finishTextDrawing(sub_g));
                } else {
-                  lines.push(entry); // make as before
+                  // default position
+                  if (num_default++ === 0)
+                     this.startTextDrawing(pt.fTextFont, height/(nlines * 1.2), text_g, max_font_size);
+
+                  let arg = null;
+
+                  if (nlines == 1) {
+                     arg = { x: 0, y: 0, width, height };
+                  } else {
+                     arg = { x: margin_x, y: texty, width: width - 2*margin_x, height: stepy };
+                     if (entry.fTextColor) arg.color = this.getColor(entry.fTextColor);
+                     if (entry.fTextSize) arg.font_size = Math.round(entry.fTextSize * pad_height);
+                  }
+
+                  arg.align = entry.fTextAlign || pt.fTextAlign;
+                  arg.draw_g = text_g;
+                  arg.latex = (entry._typename == "TText" ? 0 : 1);
+                  arg.text = entry.fTitle;
+                  arg.fast = fast;
+                  if (!arg.color) { this.UseTextColor = true; arg.color = tcolor; }
+                  this.drawText(arg);
                }
                break;
-            case "TLine":
-            case "TBox":
-               let lx1 = entry.fX1, lx2 = entry.fX2,
-                   ly1 = entry.fY1, ly2 = entry.fY2;
-               if (lx1!==0) lx1 = Math.round(lx1*width);
-               lx2 = lx2 ? Math.round(lx2*width) : width;
-               ly1 = ly1 ? Math.round((1-ly1)*height) : ytext;
-               ly2 = ly2 ? Math.round((1-ly2)*height) : ytext;
 
-               if (entry._typename == "TLine") {
-                  let lineatt = new TAttLineHandler(entry);
-                  text_g.append("svg:path")
-                        .attr("d", `M${lx1},${ly1}L${lx2},${ly2}`)
-                        .call(lineatt.func);
-               } else {
-                  let fillatt = this.createAttFill(entry);
+            case 'TLine':
+               let lx1 = entry.fX1 ? Math.round(entry.fX1*width) : 0,
+                   lx2 = entry.fX2 ? Math.round(entry.fX2*width) : width,
+                   ly1 = entry.fY1 ? Math.round((1 - entry.fY1)*height) : Math.round(texty + stepy*0.5),
+                   ly2 = entry.fY2 ? Math.round((1 - entry.fY2)*height) : Math.round(texty + stepy*0.5);
+               let lineatt = new TAttLineHandler(entry);
+               text_g.append("svg:path")
+                     .attr("d", `M${lx1},${ly1}L${lx2},${ly2}`)
+                     .call(lineatt.func);
+               break;
 
-                  text_g.append("svg:path")
-                      .attr("d", `M${lx1},${ly1}H${lx2}V${ly2}H${lx1}Z`)
-                      .call(fillatt.func);
-               }
+            case 'TBox':
+               let bx1 = entry.fX1 ? Math.round(entry.fX1*width) : 0,
+                   bx2 = entry.fX2 ? Math.round(entry.fX2*width) : width,
+                   by1 = entry.fY1 ? Math.round((1 - entry.fY1)*height) : Math.round(texty),
+                   by2 = entry.fY2 ? Math.round((1 - entry.fY2)*height) : Math.round(texty + stepy);
+               let fillatt = this.createAttFill(entry);
+               text_g.append("svg:path")
+                     .attr("d", `M${bx1},${by1}H${bx2}V${by2}H${bx1}Z`)
+                     .call(fillatt.func);
                break;
          }
-      });
-
-      if (!individual_positioning) {
-         // for characters like 'p' or 'y' several more pixels required to stay in the box when drawn in last line
-         let stepy = height / nlines, margin_x = pt.fMargin * width, max_font_size = 0;
-
-         // for single line (typically title) limit font size
-         if ((nlines == 1) && (pt.fTextSize > 0)) {
-            max_font_size = Math.round(pt.fTextSize * pad_height);
-            if (max_font_size < 3) max_font_size = 3;
-         }
-
-         this.startTextDrawing(pt.fTextFont, height/(nlines * 1.2), text_g, max_font_size);
-
-         for (let j = 0; j < nlines; ++j) {
-            let arg = null, lj = lines[j];
-
-            if (nlines == 1) {
-               arg = { x:0, y:0, width: width, height: height };
-            } else {
-               arg = { x: margin_x, y: j*stepy, width: width-2*margin_x, height: stepy };
-               if (lj.fTextColor) arg.color = this.getColor(lj.fTextColor);
-               if (lj.fTextSize) arg.font_size = Math.round(lj.fTextSize * pad_height);
-            }
-
-            arg.align = pt.fTextAlign;
-            arg.draw_g = text_g;
-            arg.latex = (lj._typename == "TText" ? 0 : 1);
-            arg.text = lj.fTitle;
-            arg.fast = fast_draw;
-            if (!arg.color) { this.UseTextColor = true; arg.color = tcolor; }
-            this.drawText(arg);
-         }
-         promises.push(this.finishTextDrawing(text_g, nlines > 1));
       }
+
+      if (num_default > 0)
+         promises.push(this.finishTextDrawing(text_g, num_default > 1));
 
       if (draw_header) {
          let x = Math.round(width*0.25),
@@ -61063,7 +61181,7 @@ class TPavePainter extends ObjectPainter {
          this.UseTextColor = true;
       }
 
-      return Promise.all(promises).then(() => { return this; });
+      return Promise.all(promises).then(() => this);
    }
 
    /** @summary Method used to convert value to string according specified format
@@ -63335,7 +63453,7 @@ class THistPainter extends ObjectPainter {
 
    /** @summary Check if such function should be drawn directly */
    needDrawFunc(histo, func) {
-      if (func._typename === 'TPaveText' || func._typename === 'TPaveStats')
+      if (func._typename === 'TPaveStats')
           return !histo.TestBit(TH1StatusBits.kNoStats) && !this.options.NoStat;
 
        if (func._typename === 'TF1')
@@ -64307,7 +64425,7 @@ class TH1Painter$2 extends THistPainter {
           stat_sumw = 0, stat_sumwx = 0, stat_sumwx2 = 0, stat_sumwy = 0, stat_sumwy2 = 0,
           i, xx = 0, w = 0, xmax = null, wmax = null,
           fp = this.getFramePainter(),
-          res = { name: histo.fName, meanx: 0, meany: 0, rmsx: 0, rmsy: 0, integral: 0, entries: this.stat_entries, xmax:0, wmax:0 };
+          res = { name: histo.fName, meanx: 0, meany: 0, rmsx: 0, rmsy: 0, integral: 0, entries: this.stat_entries, xmax: 0, wmax: 0 };
 
       for (i = left; i < right; ++i) {
          xx = xaxis.GetBinCoord(i + 0.5);
@@ -65254,7 +65372,6 @@ class TH1Painter$2 extends THistPainter {
 
       if ((axis=="y") && (Math.abs(max-min) > Math.abs(this.ymax-this.ymin)*1e-6)) return true;
 
-      // check if it makes sense to zoom inside specified axis range
       return false;
    }
 
@@ -68940,7 +69057,6 @@ class TH3Painter extends THistPainter {
 
    /** @summary Checks if it makes sense to zoom inside specified axis range */
    canZoomInside(axis,min,max) {
-      // check if it makes sense to zoom inside specified axis range
       let obj = this.getHisto();
       if (obj) obj = obj["f"+axis.toUpperCase()+"axis"];
       return !obj || (obj.FindBin(max,0.5) - obj.FindBin(min,0) > 1);
@@ -75510,8 +75626,7 @@ class HierarchyPainter extends BasePainter {
      * @param {string} [drawopt] - draw option for the item
      * @returns {Promise} with created painter object */
    display(itemname, drawopt) {
-      let h = this,
-          painter = null,
+      let painter = null,
           updating = false,
           item = null,
           display_itemname = itemname,
@@ -75524,27 +75639,27 @@ class HierarchyPainter extends BasePainter {
          drawopt = drawopt.slice(0, p);
       }
 
-      function complete(respainter, err) {
+      const complete = (respainter, err) => {
          if (err) console.log('When display ', itemname, 'got', err);
 
          if (updating && item) delete item._doing_update;
          if (!updating) showProgress();
          if (respainter && (typeof respainter === 'object') && (typeof respainter.setItemName === 'function')) {
-            respainter.setItemName(display_itemname, updating ? null : drawopt, h); // mark painter as created from hierarchy
+            respainter.setItemName(display_itemname, updating ? null : drawopt, this); // mark painter as created from hierarchy
             if (item && !item._painter) item._painter = respainter;
          }
 
          return respainter || painter;
-      }
+      };
 
-      return h.createDisplay().then(mdi => {
+      return this.createDisplay().then(mdi => {
 
          if (!mdi) return complete();
 
-         item = h.findItem(display_itemname);
+         item = this.findItem(display_itemname);
 
          if (item && ('_player' in item))
-            return h.player(display_itemname, drawopt).then(res => complete(res));
+            return this.player(display_itemname, drawopt).then(res => complete(res));
 
          updating = (typeof drawopt == 'string') && (drawopt.indexOf("update:")==0);
 
@@ -75554,7 +75669,7 @@ class HierarchyPainter extends BasePainter {
             item._doing_update = true;
          }
 
-         if (item && !h.canDisplay(item, drawopt)) return complete();
+         if (item && !this.canDisplay(item, drawopt)) return complete();
 
          let divid = "", use_dflt_opt = false;
          if ((typeof drawopt == 'string') && (drawopt.indexOf("divid:") >= 0)) {
@@ -75570,7 +75685,7 @@ class HierarchyPainter extends BasePainter {
 
          if (!updating) showProgress("Loading " + display_itemname);
 
-         return h.getObject(display_itemname, drawopt).then(result => {
+         return this.getObject(display_itemname, drawopt).then(result => {
 
             if (!updating) showProgress();
 
@@ -104331,11 +104446,10 @@ class RH1Painter$2 extends RHistPainter {
    canZoomInside(axis,min,max) {
       let xaxis = this.getAxis("x");
 
-      if ((axis=="x") && (xaxis.FindBin(max,0.5) - xaxis.FindBin(min,0) > 1)) return true;
+      if ((axis == "x") && (xaxis.FindBin(max,0.5) - xaxis.FindBin(min,0) > 1)) return true;
 
-      if ((axis=="y") && (Math.abs(max-min) > Math.abs(this.ymax-this.ymin)*1e-6)) return true;
+      if ((axis == "y") && (Math.abs(max-min) > Math.abs(this.ymax-this.ymin)*1e-6)) return true;
 
-      // check if it makes sense to zoom inside specified axis range
       return false;
    }
 
