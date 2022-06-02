@@ -100,7 +100,7 @@ public:
          throw std::runtime_error("TMVA SOFIE" + Name() + "Op Shape inference only accept tensor with at least 3 dimensions");
       }
       // for the time being support only 3,4,5 dimens
-      if (input[0].size() < 3 && input[0].size() >  5) {
+      if (input[0].size() < 3 || input[0].size() >  5) {
          throw std::runtime_error("TMVA SOFIE" + Name() + "Op : tensors with dimension " + std::to_string(input[0].size()) + " are not yet supported");
       }
 
@@ -175,7 +175,7 @@ public:
       size_t output1 = (input1 + pad1 - fAttrKernelShape[0]) / fAttrStrides[0] + 1;
 
       size_t batch_size = input[0][0];        // first element in input tensor
-      size_t output_channels = input[1][0];   // first element in weight tensor
+      size_t output_channels = input[0][1];   // first element in output tensor
 
       std::vector<std::vector<size_t>> ret({{ batch_size, output_channels, output1 }});
 
@@ -310,7 +310,7 @@ public:
       }
       out << SP << "constexpr int hsize = " << fShapeX[2] << ";\n";
       out << SP << "constexpr int wsize = " << fShapeX[3] << ";\n";
-      out << SP << "constexpr int wsize = " << fShapeX[4] << ";\n";
+      out << SP << "constexpr int dsize = " << fShapeX[4] << ";\n";
       out << SP << "constexpr int hmin = " << hmin << ";\n";
       out << SP << "constexpr int hmax = " << hmax << ";\n";
       out << SP << "constexpr int wmin = " << wmin << ";\n";
