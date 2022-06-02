@@ -76,8 +76,6 @@ add_dependencies(Core CLING gitcommit rconfigure)
 
 target_link_libraries(Core
   PRIVATE
-    ZLIB::ZLIB
-    ${ZSTD_LIBRARIES}
     ${CMAKE_DL_LIBS}
     ${CMAKE_THREAD_LIBS_INIT}
     ${ROOT_ATOMIC_LIBS}
@@ -108,8 +106,6 @@ add_subdirectory(lz4)
 add_subdirectory(zstd)
 
 target_sources(Core PRIVATE
-  $<TARGET_OBJECTS:Zip>
-  $<TARGET_OBJECTS:Zstd>
   $<TARGET_OBJECTS:Meta>
   $<TARGET_OBJECTS:GuiCore>
   $<TARGET_OBJECTS:TextInput>
@@ -158,7 +154,6 @@ target_include_directories(Core PUBLIC
    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/gui/inc>
    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/meta/inc>
    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/rint/inc>
-   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/zip/inc>
    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/thread/inc>
    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/textinput/inc>
 )
