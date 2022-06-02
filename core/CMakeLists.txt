@@ -106,7 +106,6 @@ add_subdirectory(lz4)
 add_subdirectory(zstd)
 
 target_sources(Core PRIVATE
-  $<TARGET_OBJECTS:Meta>
   $<TARGET_OBJECTS:GuiCore>
   $<TARGET_OBJECTS:TextInput>
 )
@@ -152,7 +151,6 @@ target_compile_definitions(Core PRIVATE
 target_include_directories(Core PUBLIC
    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/ginclude>
    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/gui/inc>
-   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/meta/inc>
    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/rint/inc>
    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/thread/inc>
    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/textinput/inc>
