@@ -7,12 +7,10 @@
 find_package(LZ4 REQUIRED)
 find_package(xxHash REQUIRED)
 
-ROOT_OBJECT_LIBRARY(Lz4 src/ZipLZ4.cxx)
-target_include_directories(Lz4 PRIVATE
-   ${LZ4_INCLUDE_DIR}
-   ${xxHash_INCLUDE_DIR}
-   ${CMAKE_SOURCE_DIR}/core/foundation/inc
-   ${CMAKE_BINARY_DIR}/ginclude
+target_sources(Core PRIVATE src/ZipLZ4.cxx)
+target_link_libraries(Core PRIVATE xxHash::xxHash LZ4::LZ4)
+target_include_directories(Core PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
 )
 
 ROOT_INSTALL_HEADERS()
