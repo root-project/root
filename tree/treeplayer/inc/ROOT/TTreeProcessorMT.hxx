@@ -49,7 +49,8 @@ namespace ROOT {
 namespace Internal {
 
 class TTreeView {
-private:
+   ROOT::Internal::TreeUtils::RNoCleanupNotifier fNoCleanupNotifier;
+
    std::vector<std::unique_ptr<TChain>> fFriends; ///< Friends of the tree/chain, if present
    std::unique_ptr<TEntryList> fEntryList;        ///< TEntryList for fChain, if present
    // NOTE: fFriends and fEntryList MUST come before fChain to be deleted after it, because neither friend trees nor
