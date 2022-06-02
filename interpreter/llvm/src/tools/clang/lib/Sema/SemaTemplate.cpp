@@ -2551,9 +2551,7 @@ void Sema::DeclareImplicitDeductionGuides(TemplateDecl *Template,
   // for which some class template parameter without a default argument never
   // appears in a deduced context).
   bool AddedAny = false;
-  llvm::SmallVector<NamedDecl*, 4> Ctors;
-  LookupConstructors(Transform.Primary, Ctors);
-  for (NamedDecl *D : Ctors) {
+  for (NamedDecl *D : LookupConstructors(Transform.Primary)) {
     D = D->getUnderlyingDecl();
     if (D->isInvalidDecl() || D->isImplicit())
       continue;

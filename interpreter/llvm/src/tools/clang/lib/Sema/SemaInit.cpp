@@ -3926,7 +3926,7 @@ ResolveConstructorOverload(Sema &S, SourceLocation DeclLoc,
                            MultiExprArg Args,
                            OverloadCandidateSet &CandidateSet,
                            QualType DestType,
-                           const llvm::SmallVectorImpl<NamedDecl*>& Ctors,
+                           DeclContext::lookup_result Ctors,
                            OverloadCandidateSet::iterator &Best,
                            bool CopyInitializing, bool AllowExplicit,
                            bool OnlyListConstructors, bool IsListInit,
@@ -4101,8 +4101,7 @@ static void TryConstructorInitialization(Sema &S,
   //   - Otherwise, if T is a class type, constructors are considered. The
   //     applicable constructors are enumerated, and the best one is chosen
   //     through overload resolution.
-  llvm::SmallVector<NamedDecl*, 4> Ctors;
-  S.LookupConstructors(DestRecordDecl, Ctors);
+  DeclContext::lookup_result Ctors = S.LookupConstructors(DestRecordDecl);
 
   OverloadingResult Result = OR_No_Viable_Function;
   OverloadCandidateSet::iterator Best;
@@ -4586,9 +4585,7 @@ static OverloadingResult TryRefInitWithConversionFunction(
     // to see if there is a suitable conversion.
     CXXRecordDecl *T1RecordDecl = cast<CXXRecordDecl>(T1RecordType->getDecl());
 
-    llvm::SmallVector<NamedDecl*, 4> Ctors;
-    S.LookupConstructors(T1RecordDecl, Ctors);
-    for (NamedDecl *D : Ctors) {
+    for (NamedDecl *D : S.LookupConstructors(T1RecordDecl)) {
       auto Info = getConstructorInfo(D);
       if (!Info.Constructor)
         continue;
@@ -5257,9 +5254,7 @@ static void TryUserDefinedConversion(Sema &S,
 
     // Try to complete the type we're converting to.
     if (S.isCompleteType(Kind.getLocation(), DestType)) {
-      llvm::SmallVector<NamedDecl*, 4> Ctors;
-      S.LookupConstructors(DestRecordDecl, Ctors);
-      for (NamedDecl *D : Ctors) {
+      for (NamedDecl *D : S.LookupConstructors(DestRecordDecl)) {
         auto Info = getConstructorInfo(D);
         if (!Info.Constructor)
           continue;
@@ -6257,8 +6252,7 @@ static ExprResult CopyObject(Sema &S,
   // C++11 [dcl.init]p16, second bullet for class types, this initialization
   // is direct-initialization.
   OverloadCandidateSet CandidateSet(Loc, OverloadCandidateSet::CSK_Normal);
-  llvm::SmallVector<NamedDecl*, 4> Ctors;
-  S.LookupConstructors(Class, Ctors);
+  DeclContext::lookup_result Ctors = S.LookupConstructors(Class);
 
   OverloadCandidateSet::iterator Best;
   switch (ResolveConstructorOverload(
@@ -6401,8 +6395,8 @@ static void CheckCXX98CompatAccessibleCopy(Sema &S,
 
   // Find constructors which would have been considered.
   OverloadCandidateSet CandidateSet(Loc, OverloadCandidateSet::CSK_Normal);
-  llvm::SmallVector<NamedDecl*, 4> Ctors;
-  S.LookupConstructors(cast<CXXRecordDecl>(Record->getDecl()), Ctors);
+  DeclContext::lookup_result Ctors =
+      S.LookupConstructors(cast<CXXRecordDecl>(Record->getDecl()));
 
   // Perform overload resolution.
   OverloadCandidateSet::iterator Best;
