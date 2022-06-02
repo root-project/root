@@ -196,7 +196,6 @@ set(BASE_SOURCES
 )
 
 if(root7)
-  set(BASE_V7_INC ${CMAKE_SOURCE_DIR}/core/base/v7/inc)
   set(BASE_HEADER_DIRS inc/ v7/inc/)
   list(APPEND BASE_HEADERS
       ROOT/RDirectoryEntry.hxx

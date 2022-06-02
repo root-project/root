@@ -54,8 +54,6 @@ endif()
    target_include_directories(emitFromPyTorch PRIVATE
                               ${CMAKE_SOURCE_DIR}/tmva/sofie/inc
                               ${CMAKE_SOURCE_DIR}/tmva/inc
-                              ${CMAKE_SOURCE_DIR}/core/foundation/inc
-                              ${CMAKE_BINARY_DIR}/ginclude   # this is for RConfigure.h
                )
    set_target_properties(emitFromPyTorch PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
    add_custom_target(SofieCompileModels_PyTorch)
@@ -119,8 +117,6 @@ endif()
    target_include_directories(emitFromKeras PRIVATE
                  ${CMAKE_SOURCE_DIR}/tmva/sofie/inc
                  ${CMAKE_SOURCE_DIR}/tmva/inc
-                 ${CMAKE_SOURCE_DIR}/core/foundation/inc
-                 ${CMAKE_BINARY_DIR}/ginclude   # this is for RConfigure.h
                )
    set_target_properties(emitFromKeras PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
    add_custom_target(SofieCompileModels_Keras)
