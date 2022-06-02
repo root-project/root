@@ -159,6 +159,7 @@ static ClustersAndEntries MakeClusters(const std::vector<std::string> &treeNames
 
       // Avoid calling TROOT::RecursiveRemove for this tree, it takes the read lock and we don't need it.
       t->ResetBit(kMustCleanup);
+      ROOT::Internal::TreeUtils::ClearMustCleanupBits(*t->GetListOfBranches());
       auto clusterIter = t->GetClusterIterator(0);
       Long64_t start = 0ll, end = 0ll;
       const Long64_t entries = t->GetEntries();
@@ -312,6 +313,7 @@ void TTreeView::MakeChain(const std::vector<std::string> &treeNames, const std::
       fChain->Add((fileNames[i] + "?#" + treeNames[i]).c_str(), nEntries[i]);
    }
    fChain->ResetBit(TObject::kMustCleanup);
+   fNoCleanupNotifier.RegisterChain(*fChain.get());
 
    fFriends.clear();
    const auto nFriends = friendNames.size();
