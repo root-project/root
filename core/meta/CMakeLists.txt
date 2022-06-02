@@ -52,7 +52,7 @@ set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
   TVirtualObject.h
 )
 
-ROOT_OBJECT_LIBRARY(Meta
+target_sources(Core PRIVATE
   src/TBaseClass.cxx
   src/TClass.cxx
   src/TClassGenerator.cxx
@@ -88,24 +88,10 @@ ROOT_OBJECT_LIBRARY(Meta
   src/TVirtualStreamerInfo.cxx
 )
 
-target_include_directories(Meta PRIVATE
-  ${CMAKE_SOURCE_DIR}/core/meta/res
-  ${CMAKE_SOURCE_DIR}/core/foundation/res
-  ${CMAKE_SOURCE_DIR}/core/base/inc
-  ${CMAKE_SOURCE_DIR}/core/clib/inc
-  ${CMAKE_SOURCE_DIR}/core/cont/inc
-  ${CMAKE_SOURCE_DIR}/core/thread/inc
-  ${CMAKE_SOURCE_DIR}/core/gui/inc
-  ${CMAKE_SOURCE_DIR}/core/foundation/inc
-  ${CMAKE_BINARY_DIR}/ginclude
+target_include_directories(Core
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
 )
-
-if(MSVC)
-   target_include_directories(Meta PRIVATE
-      ${CMAKE_SOURCE_DIR}/core/winnt/inc
-   )
-endif()
-
 
 ROOT_INSTALL_HEADERS()
 ROOT_ADD_TEST_SUBDIRECTORY(test)
