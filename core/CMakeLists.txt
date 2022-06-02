@@ -105,10 +105,6 @@ add_subdirectory(lzma)
 add_subdirectory(lz4)
 add_subdirectory(zstd)
 
-target_sources(Core PRIVATE
-  $<TARGET_OBJECTS:TextInput>
-)
-
 add_subdirectory(macosx)
 add_subdirectory(unix)
 add_subdirectory(winnt)
@@ -151,7 +147,6 @@ target_include_directories(Core PUBLIC
    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/ginclude>
    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/rint/inc>
    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/thread/inc>
-   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/textinput/inc>
 )
 
 target_include_directories(Core PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/clingutils/inc>)
