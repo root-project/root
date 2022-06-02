@@ -74,9 +74,6 @@ generateHeader(Core
 
 add_dependencies(Core CLING gitcommit rconfigure)
 
-# For FoundationUtils.hxx
-target_include_directories(Core PRIVATE foundation/res)
-
 target_link_libraries(Core
   PRIVATE
     ${LIBLZMA_LIBRARIES}
@@ -114,7 +111,6 @@ add_subdirectory(lz4)
 add_subdirectory(zstd)
 
 target_sources(Core PRIVATE
-  $<TARGET_OBJECTS:Foundation>
   $<TARGET_OBJECTS:Lzma>
   $<TARGET_OBJECTS:Lz4>
   $<TARGET_OBJECTS:Zip>
@@ -164,7 +160,6 @@ target_compile_definitions(Core PRIVATE
 
 target_include_directories(Core PUBLIC
    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/ginclude>
-   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/foundation/inc>
    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/gui/inc>
    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/meta/inc>
    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/rint/inc>
@@ -174,10 +169,6 @@ target_include_directories(Core PUBLIC
 )
 
 target_include_directories(Core PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/clingutils/inc>)
-
-if(root7 OR CMAKE_CXX_STANDARD GREATER 11)
-  target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/foundation/v7/inc>)
-endif()
 
 if (runtime_cxxmodules)
   if(MSVC)
