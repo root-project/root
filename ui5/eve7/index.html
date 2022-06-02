@@ -25,9 +25,9 @@
 
    <script type='module'>
 
-      import { source_dir } from '/jsrootsys/modules/core.mjs';
-      import { connectWebWindow } from '/jsrootsys/modules/webwindow.mjs';
-      import { initEVE } from '/rootui5sys/eve7/eve.mjs';
+      import { source_dir } from './jsrootsys/modules/core.mjs';
+      import { connectWebWindow } from './jsrootsys/modules/webwindow.mjs';
+      import { initEVE } from './rootui5sys/eve7/eve.mjs';
 
       initEVE(source_dir).then(() => connectWebWindow({
          // socket_kind: "file",  // used for offline

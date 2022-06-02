@@ -389,9 +389,9 @@ sap.ui.define([
 
          let can_elem = this.getView().byId("MainPanel");
 
-         let imp = [ import('/jsrootsys/modules/main.mjs') ];
+         let imp = [ import('./jsrootsys/modules/main.mjs') ];
          if (panel_name == "Ged")
-            imp.push(import('/jsrootsys/modules/base/colors.mjs'), import('/jsrootsys/modules/gpad/TAxisPainter.mjs'), import('/jsrootsys/modules/d3.mjs'));
+            imp.push(import('./jsrootsys/modules/base/colors.mjs'), import('./jsrootsys/modules/gpad/TAxisPainter.mjs'), import('./jsrootsys/modules/d3.mjs'));
 
          return Promise.all(imp).then(arr => XMLView.create({
                      viewName: viewName,
@@ -489,7 +489,7 @@ sap.ui.define([
             size      : "200px"
          });
 
-         return import('/jsrootsys/modules/main.mjs').then(imp_main =>
+         return import('./jsrootsys/modules/main.mjs').then(imp_main =>
          XMLView.create({
             viewName : "rootui5.canv.view.Panel",
             viewData: { jsroot: imp_main },
