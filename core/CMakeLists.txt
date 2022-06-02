@@ -81,6 +81,10 @@ target_link_libraries(Core
     ${ROOT_ATOMIC_LIBS}
 )
 
+target_include_directories(Core PUBLIC
+   $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/ginclude>
+)
+
 add_subdirectory(rootcling_stage1)
 
 add_subdirectory(base)
@@ -140,15 +144,6 @@ target_compile_definitions(Core PRIVATE
 
   __CLANG_STDATOMIC_H
  )
-
-#while basic libs do not depend on Core, we have to add includes directly
-
-target_include_directories(Core PUBLIC
-   $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/ginclude>
-   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/thread/inc>
-)
-
-target_include_directories(Core PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/clingutils/inc>)
 
 if (runtime_cxxmodules)
   if(MSVC)

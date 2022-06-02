@@ -42,8 +42,6 @@ target_include_directories(emitFromONNX PRIVATE
    ${SOFIE_PARSERS_DIR}/inc
    ${CMAKE_SOURCE_DIR}/tmva/inc
    ${CMAKE_CURRENT_BINARY_DIR}   # this is for the protobuf headerfile
-   ${CMAKE_SOURCE_DIR}/core/foundation/inc
-   ${CMAKE_BINARY_DIR}/ginclude   # this is for RConfigure.h
 )
 
 target_link_libraries(emitFromONNX ${Protobuf_LIBRARIES} ROOTTMVASofie ROOTTMVASofieParser)
@@ -85,8 +83,6 @@ target_include_directories(emitFromROOT PRIVATE
    ${SOFIE_PARSERS_DIR}/inc
    ${CMAKE_SOURCE_DIR}/tmva/inc
    ${CMAKE_CURRENT_BINARY_DIR}
-   ${CMAKE_SOURCE_DIR}/core/foundation/inc
-   ${CMAKE_BINARY_DIR}/ginclude   # this is for RConfigure.h
 )
 target_link_libraries(emitFromROOT ${Protobuf_LIBRARIES} ROOTTMVASofie ROOTTMVASofieParser)
 set_target_properties(emitFromROOT PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
