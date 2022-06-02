@@ -18,6 +18,10 @@
 #ifndef ROOT_INTERNAL_TREEUTILS_H
 #define ROOT_INTERNAL_TREEUTILS_H
 
+#include "TChain.h"
+#include "TNotifyLink.h"
+#include "TObjArray.h"
+
 #include <utility> // std::pair
 #include <vector>
 #include <string>
@@ -60,6 +64,38 @@ struct RFriendInfo {
 std::vector<std::string> GetFileNamesFromTree(const TTree &tree);
 RFriendInfo GetFriendInfo(const TTree &tree);
 std::vector<std::string> GetTreeFullPaths(const TTree &tree);
+
+void ClearMustCleanupBits(TObjArray &arr);
+
+class RNoCleanupNotifierHelper {
+   TChain *fChain = nullptr;
+
+public:
+   bool Notify()
+   {
+      TTree *t = fChain->GetTree();
+      TObjArray *branches = t->GetListOfBranches();
+      ClearMustCleanupBits(*branches);
+      return true;
+   }
+
+   void RegisterChain(TChain *c) { fChain = c; }
+};
+
+class RNoCleanupNotifier : public TNotifyLink<RNoCleanupNotifierHelper> {
+   RNoCleanupNotifierHelper fNoCleanupNotifierHelper;
+
+public:
+   RNoCleanupNotifier() : TNotifyLink<RNoCleanupNotifierHelper>(&fNoCleanupNotifierHelper) {}
+
+   void RegisterChain(TChain &c)
+   {
+      fNoCleanupNotifierHelper.RegisterChain(&c);
+      this->PrependLink(c);
+   }
+
+   ClassDef(RNoCleanupNotifier, 0);
+};
 
 } // namespace TreeUtils
 } // namespace Internal
