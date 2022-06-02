@@ -1462,7 +1462,7 @@ class THistPainter extends ObjectPainter {
 
    /** @summary Check if such function should be drawn directly */
    needDrawFunc(histo, func) {
-      if (func._typename === 'TPaveText' || func._typename === 'TPaveStats')
+      if (func._typename === 'TPaveStats')
           return !histo.TestBit(TH1StatusBits.kNoStats) && !this.options.NoStat;
 
        if (func._typename === 'TF1')

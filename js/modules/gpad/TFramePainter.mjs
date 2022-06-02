@@ -111,6 +111,10 @@ function addDragHandler(_painter, arg) {
       return change_size || change_pos;
    };
 
+   // add interactive styles when frame painter not there
+   if (_painter && !_painter.getFramePainter())
+      injectFrameStyle(_painter.draw_g);
+
    let drag_move = d3_drag().subject(Object);
 
    drag_move
@@ -590,6 +594,15 @@ const TooltipHandler = {
 } // TooltipHandler
 
 
+function injectFrameStyle(draw_g) {
+   injectStyle(`
+.jsroot rect.h1bin { stroke: #4572A7; fill: #4572A7; opacity: 0; }
+.jsroot rect.zoom { stroke: steelblue; fill-opacity: 0.1; }
+.jsroot path.zoom { stroke: steelblue; fill-opacity: 0.1; }
+.jsroot svg:not(:root) { overflow: hidden; }`, draw_g.node());
+}
+
+
 const FrameInteractive = {
 
    addBasicInteractivity() {
@@ -600,11 +613,7 @@ const FrameInteractive = {
          addDragHandler(this, { obj: this, x: this._frame_x, y: this._frame_y, width: this.getFrameWidth(), height: this.getFrameHeight(),
                                 only_resize: true, minwidth: 20, minheight: 20, redraw: () => this.sizeChanged() });
 
-      injectStyle(`
-.jsroot rect.h1bin { stroke: #4572A7; fill: #4572A7; opacity: 0; }
-.jsroot rect.zoom { stroke: steelblue; fill-opacity: 0.1; }
-.jsroot path.zoom { stroke: steelblue; fill-opacity: 0.1; }
-.jsroot svg:not(:root) { overflow: hidden; }`, this.draw_g.node());
+      injectFrameStyle(this.draw_g);
 
       let main_svg = this.draw_g.select(".main_layer");
 
