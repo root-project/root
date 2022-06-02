@@ -53,9 +53,12 @@ protected:
 
       auto version = fWindow.GetClientVersion();
       if (!version.empty()) {
-         std::string search = "jsrootsys/scripts/JSRoot.core."s;
-         std::string replace = version + "/jsrootsys/scripts/JSRoot.core."s;
-         // replace link to JSROOT main script to emulate new version
+         // replace link to JSROOT main module emulating new version for browser
+         std::string search = "jsrootsys/modules/core.mjs"s;
+         std::string replace = version + "/jsrootsys/modules/core.mjs"s;
+         arg->ReplaceAllinContent(search, replace, true);
+         search = "jsrootsys/modules/webwindow.mjs"s;
+         replace = version + "/jsrootsys/modules/webwindow.mjs"s;
          arg->ReplaceAllinContent(search, replace, true);
          arg->AddNoCacheHeader();
       }
