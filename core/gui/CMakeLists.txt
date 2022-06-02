@@ -25,7 +25,7 @@ set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
   TToggle.h
 )
 
-ROOT_OBJECT_LIBRARY(GuiCore
+target_sources(Core PRIVATE
   src/InitGui.cxx
   src/TApplicationImp.cxx
   src/TBrowser.cxx
@@ -42,14 +42,8 @@ ROOT_OBJECT_LIBRARY(GuiCore
   src/TToggleGroup.cxx
 )
 
-target_include_directories(GuiCore PRIVATE 
-   ${CMAKE_SOURCE_DIR}/core/base/inc
-   ${CMAKE_SOURCE_DIR}/core/clib/inc
-   ${CMAKE_SOURCE_DIR}/core/meta/inc
-   ${CMAKE_SOURCE_DIR}/core/cont/inc
-   ${CMAKE_SOURCE_DIR}/core/thread/inc
-   ${CMAKE_SOURCE_DIR}/core/foundation/inc
-   ${CMAKE_BINARY_DIR}/ginclude
+target_include_directories(Core PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
 )
 
 ROOT_INSTALL_HEADERS()
