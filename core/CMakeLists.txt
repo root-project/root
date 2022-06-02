@@ -76,8 +76,6 @@ add_dependencies(Core CLING gitcommit rconfigure)
 
 target_link_libraries(Core
   PRIVATE
-    xxHash::xxHash
-    LZ4::LZ4
     ZLIB::ZLIB
     ${ZSTD_LIBRARIES}
     ${CMAKE_DL_LIBS}
@@ -110,7 +108,6 @@ add_subdirectory(lz4)
 add_subdirectory(zstd)
 
 target_sources(Core PRIVATE
-  $<TARGET_OBJECTS:Lz4>
   $<TARGET_OBJECTS:Zip>
   $<TARGET_OBJECTS:Zstd>
   $<TARGET_OBJECTS:Meta>
