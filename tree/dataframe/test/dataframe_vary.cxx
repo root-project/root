@@ -234,6 +234,28 @@ TEST(RDFVary, GetVariations)
                   "Variations {x:0, x:1} affect column x\nVariations {xy:0, xy:1} affect columns {x, y}\n");
 }
 
+TEST(RDFVary, ResultMapIteration)
+{
+   auto df = ROOT::RDataFrame(10).Define("x", [] { return 0; }).Vary("x", SimpleVariation, {}, 2);
+   auto s = df.Sum<int>("x");
+   auto ss = VariationsFor(s);
+   const std::vector<std::string> expected_keys{"nominal", "x:0", "x:1"};
+   const std::vector<int> expected_values{-10, 0, 20};
+
+   std::vector<std::string> keys;
+   keys.reserve(3);
+   std::vector<int> values;
+   values.reserve(3);
+   for (auto &kv : ss) {
+      keys.emplace_back(kv.first);
+      values.emplace_back(*kv.second);
+   }
+   std::sort(keys.begin(), keys.end());
+   std::sort(values.begin(), values.end());
+   EXPECT_EQ(keys, expected_keys);
+   EXPECT_EQ(values, expected_values);
+}
+
 TEST(RDFVary, VaryDefinePerSample)
 {
    auto df = ROOT::RDataFrame(10).DefinePerSample("x", [](unsigned int, const ROOT::RDF::RSampleInfo &) { return 1; });
