@@ -96,8 +96,14 @@ class RResultMap {
       }
    }
 
+   void RunEventLoopIfNeeded()
+   {
+      if ((fVariedAction != nullptr && !fVariedAction->HasRun()) || !fNominalAction->HasRun())
+         fLoopManager->Run();
+   }
+
 public:
-   using iterator       = typename decltype(fMap)::iterator;
+   using iterator = typename decltype(fMap)::iterator;
    using const_iterator = typename decltype(fMap)::const_iterator;
 
    // TODO: can we use a std::string_view here without having to create a temporary std::string anyway?
@@ -107,8 +113,7 @@ public:
       if (it == fMap.end())
          throw std::runtime_error("RResultMap: no result with key \"" + key + "\".");
 
-      if ((fVariedAction != nullptr && !fVariedAction->HasRun()) || !fNominalAction->HasRun())
-         fLoopManager->Run();
+      RunEventLoopIfNeeded();
       return *it->second;
    }
 
@@ -116,14 +121,12 @@ public:
    /// Runs the event loop before returning if necessary.
    iterator begin()
    {
-      if (!fAction->HasRun())
-         fLoopManager->Run();
+      RunEventLoopIfNeeded();
       return fMap.begin();
    }
    const_iterator cbegin()
    {
-      if (!fAction->HasRun())
-         fLoopManager->Run();
+      RunEventLoopIfNeeded();
       return fMap.cbegin();
    }
    iterator end() { return fMap.end(); }
@@ -160,8 +163,7 @@ namespace RDF {
 template <typename T>
 std::unique_ptr<RMergeableVariations<T>> GetMergeableValue(ROOT::RDF::Experimental::RResultMap<T> &rmap)
 {
-   if ((rmap.fVariedAction != nullptr && !rmap.fVariedAction->HasRun()) || !rmap.fNominalAction->HasRun())
-      rmap.fLoopManager->Run(); // Prevents from using `const` specifier in parameter
+   rmap.RunEventLoopIfNeeded();
 
    std::unique_ptr<RMergeableVariationsBase> mVariationsBase;
    if (rmap.fVariedAction != nullptr) {
