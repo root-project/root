@@ -19,10 +19,18 @@ namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
 
+enum class GenerateOption : int8_t {
+   kDefault = 0x0,
+   kNoSession = 0x1,
+   kNoWeightFile = 0x2,
+};
+
+int8_t operator|(GenerateOption opA, GenerateOption opB);
+int8_t operator|(int8_t opA, GenerateOption opB);
+
 class RModel: public TObject{
 
 private:
-
    std::unordered_map<std::string, InputTensorInfo> fInputTensorInfos; //graph input only; not including operator input (intermediate tensors)
    std::unordered_map<std::string, TensorInfo> fReadyInputTensorInfos;
    std::unordered_map<std::string, InitializedTensor> fInitializedTensors;
@@ -42,10 +50,8 @@ private:
 
    const std::unordered_set<std::string> fAllowedStdLib = {"vector", "algorithm", "cmath"};
    std::unordered_set<std::string> fNeededStdLib = {"vector"};
-   bool fUseWeightFile = false;
-   bool fUseSession = false;
-
-
+   bool fUseWeightFile = true;
+   bool fUseSession = true;
 
 public:
 
@@ -87,7 +93,10 @@ public:
 
 
    void Initialize(int batchSize=1);
-   void Generate(bool useSession = true, bool useWeightFile = true, int batchSize = 1);
+   void Generate(int8_t options, int batchSize = 1);
+   void Generate(GenerateOption options = GenerateOption::kDefault, int batchSize = 1) {
+      Generate(static_cast<int8_t>(options), batchSize);
+   }
 
    void ReadInitializedTensorsFromFile();
    void WriteInitializedTensorsToFile(std::string filename = "");

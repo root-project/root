@@ -11,6 +11,13 @@ namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
 
+   int8_t operator|(GenerateOption opA, GenerateOption opB) {
+      return static_cast<int8_t>(opA) | static_cast<int8_t>(opB);
+   }
+   int8_t operator|(int8_t opA, GenerateOption opB) {
+      return opA | static_cast<int8_t>(opB);
+   }
+
    RModel::RModel(RModel&& other){
       fInputTensorInfos = std::move(other.fInputTensorInfos);
       fReadyInputTensorInfos = std::move(other.fReadyInputTensorInfos);
@@ -199,8 +206,12 @@ namespace SOFIE{
       }
    }
 
-   void RModel::Generate(bool useSession, bool useWeightFile, int batchSize){
-      fUseSession = useSession;  // session flag is used in operator initialize
+   void RModel::Generate(int8_t options, int batchSize){
+      // session flag is used in operator initialize
+      if (static_cast<int8_t>(GenerateOption::kNoSession) & options)
+         fUseSession = false;
+      if (static_cast<int8_t>(GenerateOption::kNoWeightFile) & options)
+         fUseWeightFile = false;
       Initialize(batchSize);
       fGC += ("//Code generated automatically by TMVA for Inference of Model file [" + fFileName + "] at [" + fParseTime.substr(0, fParseTime.length()-1) +"] \n");
       // add header guards
@@ -215,7 +226,7 @@ namespace SOFIE{
       // for the session we need to include SOFIE_Common functions
       //needed for convolution operator (need to add a flag)
       fGC += "#include \"TMVA/SOFIE_common.hxx\"\n";
-      if (useWeightFile)
+      if (fUseWeightFile)
          fGC += "#include <fstream>\n";
 
       fGC += "\nnamespace TMVA_SOFIE_" + fName + "{\n";
@@ -238,7 +249,7 @@ namespace SOFIE{
          }
          fGC += ("}//BLAS\n");
       }
-      if (useSession) {
+      if (fUseSession) {
          fGC += "struct Session {\n";
       }
       for (auto& i: fInitializedTensors){
@@ -247,7 +258,7 @@ namespace SOFIE{
             for (auto & dim: i.second.fShape){
                length *= dim;
             }
-            if (!useWeightFile) {
+            if (!fUseWeightFile) {
                fGC += "float tensor_" + i.first + "[" + std::to_string(length) + "] = {";
                std::shared_ptr<float> data = std::static_pointer_cast<float>(i.second.fData);
                std::stringstream floats;
@@ -276,7 +287,7 @@ namespace SOFIE{
             fGC += "float * tensor_" + i.first + " = fTensor_" + i.first  + ".data();\n";
          }
       }
-      if (useSession) {
+      if (fUseSession) {
          // add here specific operator code that needs to define session data members
          fGC += "\n";
          for (size_t id = 0; id < fOperators.size(); id++) {
@@ -286,10 +297,10 @@ namespace SOFIE{
          fGC += "\n";
          fGC += "Session(std::string filename =\"\") {\n";
          // here add initialization and reading of weight tensors
-         if (useWeightFile) {
+         if (fUseWeightFile) {
             fGC += "   if (filename.empty()) filename = \"" + fName + ".dat\";\n";
             ReadInitializedTensorsFromFile();
-            fUseWeightFile = useWeightFile;
+            //fUseWeightFile = fUseWeightFile;
          }
          // add here initialization code
          for (size_t id = 0; id < fOperators.size() ; id++){
@@ -373,7 +384,7 @@ namespace SOFIE{
       }
       fGC += "\treturn ret;\n";
       fGC += "}\n";
-      if (useSession) {
+      if (fUseSession) {
          fGC += "};\n";
       }
       fGC += ("} //TMVA_SOFIE_" + fName + "\n");
