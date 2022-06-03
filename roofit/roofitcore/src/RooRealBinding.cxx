@@ -171,7 +171,7 @@ void RooRealBinding::restoreXVec() const
 void RooRealBinding::loadValues(const double xvector[]) const
 {
   _xvecValid = true ;
-  const char* range = RooNameReg::instance().constStr(_rangeName) ;
+  const char* range = RooNameReg::str(_rangeName) ;
   for(UInt_t index= 0; index < _dimension; index++) {
     if (_clipInvalid && !_vars[index]->isValidReal(xvector[index])) {
       _xvecValid = false ;
@@ -218,7 +218,7 @@ RooSpan<const double> RooRealBinding::getValues(std::vector<RooSpan<const double
   } else {
     _evalData->clear();
   }
-  _evalData->rangeName = RooNameReg::instance().constStr(_rangeName);
+  _evalData->rangeName = RooNameReg::str(_rangeName);
 
   for (unsigned int dim=0; dim < coordinates.size(); ++dim) {
     const RooSpan<const double>& values = coordinates[dim];
