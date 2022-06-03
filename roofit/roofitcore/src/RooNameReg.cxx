@@ -75,17 +75,6 @@ const TNamed* RooNameReg::constPtr(const char* inStr)
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return C++ string corresponding to given TNamed pointer
-
-const char* RooNameReg::constStr(const TNamed* namePtr)
-{
-  if (namePtr) return namePtr->GetName() ;
-  return 0 ;
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a unique TNamed pointer for given C++ string
 
@@ -93,16 +82,6 @@ const TNamed* RooNameReg::ptr(const char* stringPtr)
 {
   if (stringPtr==0) return 0 ;
   return instance().constPtr(stringPtr) ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return C++ string corresponding to given TNamed pointer
-
-const char* RooNameReg::str(const TNamed* ptr)
-{
-  if (ptr==0) return 0 ;
-  return instance().constStr(ptr) ;
 }
 
 
