@@ -1472,6 +1472,24 @@ TEST_P(RDFVary, VarySnapshot)
       std::logic_error);
 }
 
+// this is a regression test, we used to read from wrong addresses in this case
+TEST_P(RDFVary, MoreVariedColumnsThanVariations)
+{
+   auto d = ROOT::RDataFrame(10)
+               .Define("x", [] { return 0; })
+               .Define("y", [] { return 0; })
+               .Vary(
+                  {"x", "y"},
+                  [] {
+                     return ROOT::RVec<ROOT::RVecI>{{1}, {2}};
+                  },
+                  {}, 1, "syst");
+   auto h = d.Sum<int>("y");
+   auto hs = ROOT::RDF::Experimental::VariationsFor(h);
+
+   EXPECT_EQ(hs["syst:0"], 20);
+}
+
 // instantiate single-thread tests
 INSTANTIATE_TEST_SUITE_P(Seq, RDFVary, ::testing::Values(false));
 
