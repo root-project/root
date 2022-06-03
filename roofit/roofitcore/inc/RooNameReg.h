@@ -28,9 +28,15 @@ public:
   static RooNameReg& instance() ;
   ~RooNameReg() override;
   const TNamed* constPtr(const char* stringPtr) ;
-  const char* constStr(const TNamed* namePtr) ;
+  /// Return C++ string corresponding to given TNamed pointer.
+  inline static const char* constStr(const TNamed* ptr) {
+    return ptr ? ptr->GetName() : nullptr;
+  }
   static const TNamed* ptr(const char* stringPtr) ;
-  static const char* str(const TNamed* ptr) ;
+  /// Return C++ string corresponding to given TNamed pointer.
+  inline static const char* str(const TNamed* ptr) {
+    return ptr ? ptr->GetName() : nullptr;
+  }
   static const TNamed* known(const char* stringPtr) ;
   static const std::size_t& renameCounter() ;
 
