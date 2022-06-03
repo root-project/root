@@ -63,7 +63,7 @@ Double_t TMath::Hypot(Double_t x, Double_t y)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the area hyperbolic sine of `x`.
-.
+
 Double_t TMath::ASinH(Double_t x)
 {
 #if defined(WIN32)
