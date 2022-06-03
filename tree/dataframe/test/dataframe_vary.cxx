@@ -127,6 +127,7 @@ TEST(RDFVary, RequireVariationsHaveConsistentType)
 #if !(defined(R__MACOSX) && defined(__arm64__))
 TEST(RDFVary, RequireVariationsHaveConsistentTypeJitted)
 {
+   // non-jitted Define, jitted Vary with incompatible type
    auto df = ROOT::RDataFrame(10).Define("x", [] { return 1.f; });
    {
       auto s = df.Vary("x", "ROOT::RVecD{x*0.1}", 1).Sum<float>("x");
@@ -142,6 +143,7 @@ TEST(RDFVary, RequireVariationsHaveConsistentTypeJitted)
          std::runtime_error);
    }
 
+   // non-jitted Define, jitted Vary with incompatible type (multiple columns varied simultaneously
    {
       auto s2 = df.Define("y", [] { return 1; })
                    .Vary({"x", "y"}, "ROOT::RVec<ROOT::RVecD>{{x*0.1}, {y*0.1}}", 1, "broken")
@@ -153,6 +155,39 @@ TEST(RDFVary, RequireVariationsHaveConsistentTypeJitted)
             const auto msg = "RVariationReader: type mismatch: column \"y\" is being used as int but the Define "
                              "or Vary node advertises it as double";
             EXPECT_STREQ(err.what(), msg);
+            throw;
+         },
+         std::runtime_error);
+   }
+
+   {
+      auto d2 = df.Define("z", "42");
+
+      // Jitted Define, non-jitted Vary with incompatible type
+      EXPECT_THROW(
+         try {
+            d2.Vary(
+               "z",
+               [] {
+                  return ROOT::RVecF{-1.f, 2.f};
+               },
+               {}, 2, "broken");
+         } catch (const std::runtime_error &err) {
+            const auto expected =
+               "Varied values for column \"z\" have a different type (float) than the nominal value (int).";
+            EXPECT_STREQ(err.what(), expected);
+            throw;
+         },
+         std::runtime_error);
+
+      // Jitted Define, jitted Vary with incompatible type
+      auto s = d2.Vary("z", "ROOT::RVecF{-1.f, 2.f}", 2, "broken").Sum<int>("z");
+      auto ss = ROOT::RDF::Experimental::VariationsFor(s);
+      EXPECT_THROW(
+         try { ss["broken:0"]; } catch (const std::runtime_error &err) {
+            const auto expected = "RVariationReader: type mismatch: column \"z\" is being used as int but the Define "
+                                  "or Vary node advertises it as float";
+            EXPECT_STREQ(err.what(), expected);
             throw;
          },
          std::runtime_error);
