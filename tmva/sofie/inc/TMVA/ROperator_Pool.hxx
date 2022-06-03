@@ -17,7 +17,7 @@ namespace Experimental {
 namespace SOFIE {
 
 struct RAttributes_Pool {
-   // structure conatin Pool attributes
+   // structure contain Pool attributes
    std::string auto_pad = "NOTSET";
    int ceil_mode = 0;
    int count_include_pad = 0;     // not for MaxPool
@@ -292,9 +292,13 @@ public:
       int hmin = - fAttrPads[0];   // minimum lower bound value of filter area
       int hmax = fShapeX[2] + fAttrPads[1] - fAttrKernelShape[0] +1;  // maximum lower bound value + 1 
       int wmin,wmax,dmin,dmax;
+      if(fDim==1){
+         fShapeX[3]=fShapeX[4]=1;
+      }
       if(fDim==2){
          wmin = - fAttrPads[2];   // minimum lower bound value of filter area  
          wmax = fShapeX[3] + fAttrPads[3] - fAttrKernelShape[1] +1;  // maximum lower bound value + 1 
+         fShapeX[4]=1;
       }
       else{
          wmin=1;
@@ -302,7 +306,7 @@ public:
       }
       if(fDim==3){
          dmin = - fAttrPads[4];   // minimum lower bound value of filter area  
-         dmax = fShapeX[5] + fAttrPads[5] - fAttrKernelShape[2] +1;  // maximum lower bound value + 1 
+         dmax = fShapeX[4] + fAttrPads[5] - fAttrKernelShape[2] +1;  // maximum lower bound value + 1 
       }
       else{
          dmin=1;
