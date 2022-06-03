@@ -88,6 +88,29 @@ std::enable_if_t<IsRVec<Value_t>::value, const std::type_info &> GetInnerValueTy
       return typeid(typename Value_t::value_type);
 }
 
+// This overload is for the case of a single column and ret_type != RVec<RVec<...>>
+template <typename T>
+std::enable_if_t<!IsRVec<T>::value, void>
+ResizeResults(ROOT::RVec<T> &results, std::size_t /*nCols*/, std::size_t nVariations)
+{
+   results.resize(nVariations);
+}
+
+// This overload is for the case of ret_type == RVec<RVec<...>>
+template <typename T>
+std::enable_if_t<IsRVec<T>::value, void>
+ResizeResults(ROOT::RVec<T> &results, std::size_t nCols, std::size_t nVariations)
+{
+   if (nCols == 1) {
+      results.resize(nVariations);
+   } else {
+      results.resize(nCols);
+      for (auto &rvecOverVariations : results) {
+         rvecOverVariations.resize(nVariations);
+      }
+   }
+}
+
 template <typename F>
 class R__CLING_PTRCHECK(off) RVariation final : public RVariationBase {
    using ColumnTypes_t = typename CallableTraits<F>::arg_types;
@@ -151,7 +174,7 @@ public:
         fValues(lm.GetNSlots())
    {
       for (auto i = 0u; i < lm.GetNSlots(); ++i)
-         fLastResults[i * RDFInternal::CacheLineStep<ret_type>()].resize(fVariationNames.size());
+         ResizeResults(fLastResults[i * RDFInternal::CacheLineStep<ret_type>()], colNames.size(), variationTags.size());
    }
 
    RVariation(const RVariation &) = delete;
