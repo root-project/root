@@ -35,13 +35,13 @@ namespace TMVA {
 /// Base Executor class
 class Executor {
 
+   template <typename F, typename... Args>
+   using InvokeResult_t = ROOT::TypeTraits::InvokeResult_t<F, Args...>;
+
 public:
-
-   template< class F, class... T>
-   using noReferenceCond = typename std::enable_if<"Function can't return a reference" &&
-                                                   !(std::is_reference<typename std::result_of<F(T...)>::type>::value)>::type;
-
-
+   template <class F, class... T>
+   using noReferenceCond = typename std::enable_if_t<"Function can't return a reference" &&
+                                                     !(std::is_reference<InvokeResult_t<F, T...>>::value)>;
 
    //////////////////////////////////////
    /// Default constructor of TMVA Executor class
@@ -130,25 +130,29 @@ public:
 #endif
 
    /// Wrap TExecutor::Map functions
-   template<class F, class Cond = noReferenceCond<F>>
-   auto Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>  {
+   template <class F, class Cond = noReferenceCond<F>>
+   auto Map(F func, unsigned nTimes) -> std::vector<InvokeResult_t<F>>
+   {
       if (fMTExecImpl) return fMTExecImpl->Map(func,nTimes);
       else return fSeqExecImpl->Map(func, nTimes);
    }
-   template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
-   auto Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type> {
+   template <class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
+   auto Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<InvokeResult_t<F, INTEGER>>
+   {
       if (fMTExecImpl) return fMTExecImpl->Map(func,args);
       else return fSeqExecImpl->Map(func, args);
    }
 
    /// Wrap TExecutor::MapReduce functions
-   template<class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
-   auto MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc) -> typename std::result_of<F(INTEGER)>::type {
+   template <class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
+   auto MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc) -> InvokeResult_t<F, INTEGER>
+   {
       if (fMTExecImpl) return fMTExecImpl->MapReduce(func, args, redfunc);
       else return fSeqExecImpl->MapReduce(func, args, redfunc);
    }
-   template<class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
-   auto MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> typename std::result_of<F(INTEGER)>::type {
+   template <class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
+   auto MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> InvokeResult_t<F, INTEGER>
+   {
       if (fMTExecImpl) return fMTExecImpl->MapReduce(func, args, redfunc, nChunks);
       else return fSeqExecImpl->MapReduce(func, args, redfunc);
    }
