@@ -341,25 +341,6 @@ private:
   /// yet.
   std::map<StringRef, GlobalDecl> DeferredDecls;
 
-  /// Decls that were DeferredDecls and have now been emitted.
-  std::map<StringRef, GlobalDecl> EmittedDeferredDecls;
-  void addEmittedDeferredDecl(GlobalDecl GD, StringRef MangledName) {
-    bool IsAFunction = isa<FunctionDecl>(GD.getDecl());
-    const VarDecl* VD = IsAFunction ? nullptr : dyn_cast<VarDecl>(GD.getDecl());
-    assert((IsAFunction || VD) && "Unexpected Decl type!");
-    bool ExcludeCtor = false; // FIXME: this is too simple!
-    llvm::GlobalValue::LinkageTypes L
-      = IsAFunction ? getFunctionLinkage(GD) :
-      getLLVMLinkageVarDefinition(VD, isTypeConstant(VD->getType(),
-                                                     ExcludeCtor));
-    if (llvm::GlobalValue::isLinkOnceLinkage(L)
-        || llvm::GlobalValue::isWeakLinkage(L)) {
-      if (MangledName.empty())
-        MangledName = getMangledName(GD);
-      EmittedDeferredDecls[MangledName] = GD;
-    }
-  }
-
   /// This is a list of deferred decls which we have seen that *are* actually
   /// referenced. These get code generated when the module is done.
   struct DeferredGlobal {
@@ -371,7 +352,6 @@ private:
   void addDeferredDeclToEmit(llvm::GlobalValue *GV, GlobalDecl GD,
                              StringRef MangledName) {
     DeferredDeclsToEmit.emplace_back(GV, GD);
-    addEmittedDeferredDecl(GD, MangledName);
   }
 
   /// List of alias we have emitted. Used to make sure that what they point to

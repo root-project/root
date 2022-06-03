@@ -149,9 +149,6 @@ namespace clang {
              && "Newly created module should not have deferred decls");
       Builder->DeferredDecls.swap(OldBuilder->DeferredDecls);
 
-      assert(OldBuilder->EmittedDeferredDecls.empty()
-             && "Still have (unmerged) EmittedDeferredDecls deferred decls");
-
       assert(Builder->DeferredVTables.empty()
              && "Newly created module should not have deferred vtables");
       Builder->DeferredVTables.swap(OldBuilder->DeferredVTables);
