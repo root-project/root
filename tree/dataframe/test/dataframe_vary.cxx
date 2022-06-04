@@ -700,6 +700,33 @@ TEST_P(RDFVary, MoreVariedColumnsThanVariations)
    EXPECT_EQ(hs["syst:0"], 20);
 }
 
+// this is a regression test for an issue that was hidden by RVec's small buffer optimization
+// when the variations don't fit in the smalll buffer and we are varying multiple columns simultaneously,
+// RVariation was changing the address of the varied values between entries, resulting in invalid reads
+// on the part of the RVariationReader.
+TEST_P(RDFVary, ManyVariationsManyColumns)
+{
+   auto d = ROOT::RDataFrame(10)
+               .Define("x", [] { return 0; })
+               .Define("y", [] { return 0; })
+               .Vary(
+                  {"x", "y"},
+                  [] {
+                     return ROOT::RVec<ROOT::RVecI>{ROOT::RVecI(100, 42), ROOT::RVecI(100, 8)};
+                  },
+                  {}, 100, "syst");
+
+   auto sx = d.Sum<int>("x");
+   auto sxs = ROOT::RDF::Experimental::VariationsFor(sx);
+   auto sy = d.Sum<int>("y");
+   auto sys = ROOT::RDF::Experimental::VariationsFor(sy);
+
+   for (int i = 0; i < 100; ++i) {
+      EXPECT_EQ(sxs["syst:" + std::to_string(i)], 420);
+      EXPECT_EQ(sys["syst:" + std::to_string(i)], 80);
+   }
+}
+
 // instantiate single-thread tests
 INSTANTIATE_TEST_SUITE_P(Seq, RDFVary, ::testing::Values(false));
 
