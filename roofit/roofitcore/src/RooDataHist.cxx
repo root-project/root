@@ -1263,8 +1263,18 @@ double RooDataHist::weightInterpolated(const RooArgSet& bin, int intOrder, bool 
     auto idxMultY = _idxMult[varInfo.realVarIdx2];
     auto offsetIdx = centralIdx - idxMultY * ybinC;
 
-    std::vector<double> yarr(intOrder+1);
-    std::vector<double> xarr(intOrder+1);
+    // Optimization for small interpolation orders (intOrder <= 2) that avoids
+    // heap allocations by using a small buffer on the stack instead of a vector.
+    double smallBuffer[6];
+    double * yarr = smallBuffer;
+    double * xarr = yarr + 3;
+    std::vector<double> buffer;
+    if(intOrder > 2) {
+      buffer.resize(2 * intOrder + 2);
+      yarr = buffer.data();
+      xarr = yarr + intOrder + 1;
+    }
+
     for (int i=ybinLo ; i<=intOrder+ybinLo ; i++) {
       int ibin ;
       if (i>=0 && i<ybinM) {
@@ -1292,7 +1302,7 @@ double RooDataHist::weightInterpolated(const RooArgSet& bin, int intOrder, bool 
       for (int q=0; q<=intOrder ; q++) cout << yarr[q] << " " ;
       cout << endl ;
     }
-    wInt = RooMath::interpolate(xarr.data(),yarr.data(),intOrder+1,yval) ;
+    wInt = RooMath::interpolate(xarr,yarr,intOrder+1,yval) ;
 
   } else {
 
@@ -1400,8 +1410,18 @@ double RooDataHist::interpolateDim(int iDim, double xval, size_t centralIdx, int
   auto idxMult = _idxMult[iDim];
   auto offsetIdx = centralIdx - idxMult * fbinC;
 
-  std::vector<double> yarr(intOrder+1) ;
-  std::vector<double> xarr(intOrder+1);
+  // Optimization for small interpolation orders (intOrder <= 2) that avoids
+  // heap allocations by using a small buffer on the stack instead of a vector.
+  double smallBuffer[6];
+  double * yarr = smallBuffer;
+  double * xarr = yarr + 3;
+  std::vector<double> buffer;
+  if(intOrder > 2) {
+    buffer.resize(2 * intOrder + 2);
+    yarr = buffer.data();
+    xarr = yarr + intOrder + 1;
+  }
+
   for (int i=fbinLo ; i<=intOrder+fbinLo ; i++) {
     int ibin ;
     if (i>=0 && i<fbinM) {
@@ -1439,7 +1459,7 @@ double RooDataHist::interpolateDim(int iDim, double xval, size_t centralIdx, int
       }
     }
   }
-  return RooMath::interpolate(xarr.data(),yarr.data(),intOrder+1,xval) ;
+  return RooMath::interpolate(xarr,yarr,intOrder+1,xval) ;
 }
 
 
