@@ -58,13 +58,10 @@ RooDataProjBinding::RooDataProjBinding(const RooAbsReal &real, const RooAbsData&
   _superCat(0), _catTable(0)
 {
   // Determine if dataset contains only categories
-  TIterator* iter = data.get()->createIterator() ;
   bool allCat(true) ;
-  RooAbsArg* arg ;
-  while((arg=(RooAbsArg*)iter->Next())) {
+  for(RooAbsArg * arg : *data.get()) {
     if (!dynamic_cast<RooCategory*>(arg)) allCat = false ;
   }
-  delete iter ;
 
   // Determine weights of various super categories fractions
   if (allCat) {
