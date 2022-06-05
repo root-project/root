@@ -211,11 +211,8 @@ double RooAddition::defaultErrorLevel() const
   RooAbsReal* nllArg(0) ;
   RooAbsReal* chi2Arg(0) ;
 
-  RooAbsArg* arg ;
-
   RooArgSet* comps = getComponents() ;
-  TIterator* iter = comps->createIterator() ;
-  while((arg=(RooAbsArg*)iter->Next())) {
+  for(RooAbsArg * arg : *comps) {
     if (dynamic_cast<RooNLLVar*>(arg) || dynamic_cast<ROOT::Experimental::RooNLLVarNew*>(arg)) {
       nllArg = (RooAbsReal*)arg ;
     }
@@ -223,7 +220,6 @@ double RooAddition::defaultErrorLevel() const
       chi2Arg = (RooAbsReal*)arg ;
     }
   }
-  delete iter ;
   delete comps ;
 
   if (nllArg && !chi2Arg) {

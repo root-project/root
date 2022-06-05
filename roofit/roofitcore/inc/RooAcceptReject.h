@@ -28,7 +28,7 @@ class RooNumGenFactory ;
 
 class RooAcceptReject : public RooAbsNumGenerator {
 public:
-  RooAcceptReject() : _nextCatVar(0), _nextRealVar(0) {
+  RooAcceptReject() {
     // coverity[UNINIT_CTOR]
   } ;
   RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig& config, bool verbose=false, const RooAbsReal* maxFuncVal=0);
@@ -36,7 +36,6 @@ public:
              const RooNumGenConfig& config, bool verbose=false, const RooAbsReal* maxFuncVal=0) const override {
     return new RooAcceptReject(func,genVars,config,verbose,maxFuncVal) ;
   }
-  ~RooAcceptReject() override;
 
   const RooArgSet *generateEvent(UInt_t remaining, double& resampleRatio) override;
   double getFuncMax() override ;
@@ -60,8 +59,6 @@ protected:
   UInt_t _minTrials;                    ///< Minimum number of max.finding trials, total number of samples
   UInt_t _totalEvents;                  ///< Total number of function samples
   UInt_t _eventsUsed;                   ///< Accepted number of function samples
-  TIterator *_nextCatVar;               ///< Iterator of categories to be generated
-  TIterator *_nextRealVar;              ///< Iterator over variables to be generated
 
   UInt_t _minTrialsArray[4];            ///< Minimum number of trials samples for 1,2,3 dimensional problems
 

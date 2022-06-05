@@ -42,17 +42,6 @@ using namespace std;
 ClassImp(RooFracRemainder);
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooFracRemainder::RooFracRemainder()
-{
-  _setIter1 = _set1.createIterator() ;
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with given set of input fractions. All arguments in sumSet must be of type RooAbsReal.
 
@@ -60,11 +49,7 @@ RooFracRemainder::RooFracRemainder(const char* name, const char* title, const Ro
   RooAbsReal(name, title),
   _set1("set1","First set of components",this)
 {
-  _setIter1 = _set1.createIterator() ;
-
-  TIterator* inputIter = sumSet.createIterator() ;
-  RooAbsArg* comp ;
-  while((comp = (RooAbsArg*)inputIter->Next())) {
+  for(RooAbsArg * comp : sumSet) {
     if (!dynamic_cast<RooAbsReal*>(comp)) {
       coutE(InputArguments) << "RooFracRemainder::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
              << " is not of type RooAbsReal" << endl ;
@@ -72,11 +57,7 @@ RooFracRemainder::RooFracRemainder(const char* name, const char* title, const Ro
     }
     _set1.add(*comp) ;
   }
-
-  delete inputIter ;
 }
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -86,21 +67,8 @@ RooFracRemainder::RooFracRemainder(const RooFracRemainder& other, const char* na
   RooAbsReal(other, name),
   _set1("set1",this,other._set1)
 {
-  _setIter1 = _set1.createIterator() ;
-
   // Member _ownedList is intentionally not copy-constructed -- ownership is not transferred
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooFracRemainder::~RooFracRemainder()
-{
-  if (_setIter1) delete _setIter1 ;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -109,15 +77,11 @@ RooFracRemainder::~RooFracRemainder()
 double RooFracRemainder::evaluate() const
 {
   double sum(1);
-  RooAbsReal* comp ;
   const RooArgSet* nset = _set1.nset() ;
 
-  _setIter1->Reset() ;
-
-  while((comp=(RooAbsReal*)_setIter1->Next())) {
+  for (auto * comp : static_range_cast<RooAbsReal*>(_set1)) {
     sum -= comp->getVal(nset) ;
   }
 
   return sum ;
 }
-
