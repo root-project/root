@@ -1475,7 +1475,7 @@ void DeclContext::removeDecl(Decl *D) {
       StoredDeclsMap *Map = DC->getPrimaryContext()->LookupPtr;
       if (Map) {
         StoredDeclsMap::iterator Pos = Map->find(ND->getDeclName());
-        assert((DC->hasExternalVisibleStorage() || Pos != Map->end()) && "no lookup entry for decl");
+        assert(Pos != Map->end() && "no lookup entry for decl");
         if (Pos != Map->end()) {
           // Remove the decl only if it is contained.
           StoredDeclsList::DeclsTy *Vec = Pos->second.getAsVector();
