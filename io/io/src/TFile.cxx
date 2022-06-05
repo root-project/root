@@ -396,9 +396,12 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    Bool_t devnull = kFALSE;
 
    if (!fname1 || !fname1[0]) {
-      strstr(fname1, "://") ?
-      Error("TFile", "To open a file with an explicit remote protocol (\"%s\") please use TFile::Open", fname1):
-      Error("TFile", "file name is not specified");
+      if (strstr(fname1, "://")){
+         Error("TFile", "To open a file with an explicit remote protocol (\"%s\") please use TFile::Open", fname1):
+      };
+      else{
+         Error("TFile", "file name is not specified");
+      };
       goto zombie;
    }
 
