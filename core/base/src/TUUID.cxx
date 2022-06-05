@@ -135,6 +135,7 @@ system clock catches up.
 #define random() rand()
 #else
 #include <unistd.h>
+#include <sys/socket.h>
 #include <sys/time.h>
 #if defined(R__LINUX) && !defined(R__WINGCC)
 #include <sys/sysinfo.h>
