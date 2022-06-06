@@ -75,7 +75,7 @@ generate_ND_gaussian_pdf_nll(RooWorkspace &w, unsigned int n, unsigned long N_ev
        << "(x" << ix << "[-10,10],"
        << "m" << ix << "[" << mean[ix] << ",-10,10],"
        << "s" << ix << "[" << sigma[ix] << ",0.1,10])";
-    w.factory(os.str().c_str());
+    w.factory(os.str());
   }
 
   // create uniform background signals on each observable
@@ -83,7 +83,7 @@ generate_ND_gaussian_pdf_nll(RooWorkspace &w, unsigned int n, unsigned long N_ev
     {
       std::ostringstream os;
       os << "Uniform::u" << ix << "(x" << ix << ")";
-      w.factory(os.str().c_str());
+      w.factory(os.str());
     }
 
     // gather the observables in a list for data generation below
