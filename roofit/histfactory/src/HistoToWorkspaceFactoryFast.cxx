@@ -376,7 +376,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       std::stringstream command;
       command << "Gaussian::" << constraintName << "(" << paramName << ",nom_" << paramName << "[0.,-10,10],"
               << gaussSigma << ")";
-      constraintTermNames.emplace_back(proto.factory( command.str().c_str() )->GetName());
+      constraintTermNames.emplace_back(proto.factory(command.str())->GetName());
       auto * normParam = proto.var(std::string("nom_") + paramName);
       normParam->setConstant();
       const_cast<RooArgSet*>(proto.set("globalObservables"))->add(*normParam);
@@ -393,7 +393,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       const std::string histoSysName = histoSys.GetName();
       RooRealVar* temp = proto.var("alpha_" + histoSysName);
       if(!temp){
-        temp = (RooRealVar*) proto.factory(("alpha_" + histoSysName + range).c_str());
+        temp = (RooRealVar*) proto.factory("alpha_" + histoSysName + range);
       }
       params.add(* temp );
     }
@@ -483,7 +483,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
         if( proto->obj(varname) == nullptr) {
           cxcoutI(HistFactory) << "making normFactor: " << norm.GetName() << endl;
           // remove "doRatio" and name can be changed when ws gets imported to the combined model.
-          proto->factory((varname + range.str()).c_str());
+          proto->factory(varname + range.str());
         }
 
         if(norm.GetConst()) {
@@ -587,7 +587,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       else {
          RooRealVar* alpha = (RooRealVar*) proto->var(prefix + sys.GetName());
          if(!alpha) {
-            alpha = (RooRealVar*) proto->factory((prefix + sys.GetName() + range).c_str());
+            alpha = (RooRealVar*) proto->factory(prefix + sys.GetName() + range);
          }
          // add the Gaussian constraint part
          const bool isUniform = meas.GetUniformSyst().count(sys.GetName()) > 0;
@@ -735,7 +735,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       str<<"_"<<i;
       //string command("Poisson::"+prefix+str.str()+"("+obsPrefix+str.str()+","+expPrefix+str.str()+")");
       string command("Poisson::"+prefix+str.str()+"("+obsPrefix+str.str()+","+expPrefix+str.str()+",1)");//for no rounding
-      RooAbsArg* temp = (proto->factory( command.c_str() ) );
+      RooAbsArg* temp = proto->factory(command);
 
       // output
       cout << "Poisson Term " << command << endl;
@@ -788,7 +788,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       double scale = 1/sqrt((1+1/pow(relativeUncertainty,2)));
 
       // this is the Gamma PDF and in a form that doesn't have roundoff problems like the Poisson does
-      proto->factory(Form("beta_%s[1,0,10]",it->first.c_str()));
+      proto->factory("beta_" + it->first + "[1,0,10]");
       proto->factory(Form("y_%s[%f]",it->first.c_str(),1./pow(relativeUncertainty,2))) ;
       proto->factory(Form("theta_%s[%f]",it->first.c_str(),pow(relativeUncertainty,2))) ;
       proto->factory(Form("Gamma::beta_%sConstraint(beta_%s,sum::k_%s(y_%s,one[1]),theta_%s,zero[0])",
@@ -843,7 +843,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
    editList=""; // reset edit list
    precede="";
    cout << "Going to issue this edit command\n" << edit<< endl;
-   proto->factory( edit.c_str() );
+   proto->factory(edit);
    RooAbsPdf* newOne = proto->pdf(lastPdf);
    if(!newOne)
      cxcoutWHF << "---------------------\n WARNING: failed to make EDIT\n\n" << endl;
@@ -862,7 +862,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       numReplacements++;
 
       // this is the Uniform PDF
-      proto->factory(Form("beta_%s[1,0,10]",it->first.c_str()));
+      proto->factory("beta_" + it->first + "[1,0,10]");
       proto->factory(Form("Uniform::beta_%sConstraint(beta_%s)",it->first.c_str(),it->first.c_str()));
       proto->factory(Form("PolyVar::alphaOfBeta_%s(beta_%s,{-1,1})",it->first.c_str(),it->first.c_str()));
 
@@ -893,7 +893,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
    editList=""; // reset edit list
    precede="";
    cout << edit<< endl;
-   proto->factory( edit.c_str() );
+   proto->factory(edit);
    RooAbsPdf* newOne = proto->pdf(lastPdf);
    if(!newOne)
      cxcoutWHF <<  "---------------------\n WARNING: failed to make EDIT\n\n" << endl;
@@ -961,7 +961,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
    editList=""; // reset edit list
    precede="";
    cout << edit<< endl;
-   proto->factory( edit.c_str() );
+   proto->factory(edit);
    RooAbsPdf* newOne = proto->pdf(lastPdf);
    if(!newOne)
      cxcoutWHF << "\n\n ---------------------\n WARNING: failed to make EDIT\n\n" << endl;
@@ -1006,7 +1006,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
    editList=""; // reset edit list
    precede="";
    cout << edit << endl;
-   proto->factory( edit.c_str() );
+   proto->factory(edit);
    RooAbsPdf* newOne = proto->pdf(lastPdf);
    if(!newOne) {
      cxcoutWHF << "---------------------\n WARNING: failed to make EDIT\n\n" << endl;
@@ -1019,7 +1019,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     // commit last bunch of edits
     edit="EDIT::newSimPdf("+lastPdf+","+editList+")";
     cout << edit<< endl;
-    proto->factory( edit.c_str() );
+    proto->factory(edit);
     //    proto->writeToFile(("results/model_"+fRowTitle+"_edited.root").c_str());
     RooAbsPdf* newOne = proto->pdf("newSimPdf");
     if(newOne){
@@ -1136,7 +1136,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     vector<string>::iterator funcIter = fPreprocessFunctions.begin();
     for(;funcIter!= fPreprocessFunctions.end(); ++funcIter){
       cxcoutI(HistFactory) << "will preprocess this line: " << *funcIter <<endl;
-      proto->factory(funcIter->c_str());
+      proto->factory(*funcIter);
       proto->Print();
     }
 
@@ -1158,19 +1158,19 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     std::stringstream lumiStr;
     // lumi range
     lumiStr << "Lumi[" << fNomLumi << ",0," << 10.*fNomLumi << "]";
-    proto->factory(lumiStr.str().c_str());
+    proto->factory(lumiStr.str());
     cxcoutI(HistFactory) << "lumi str = " << lumiStr.str() << endl;
 
     std::stringstream lumiErrorStr;
     lumiErrorStr << "nominalLumi["<<fNomLumi << ",0,"<<fNomLumi+10*fLumiError<<"]," << fLumiError ;
-    proto->factory(("Gaussian::lumiConstraint(Lumi,"+lumiErrorStr.str()+")").c_str());
+    proto->factory("Gaussian::lumiConstraint(Lumi,"+lumiErrorStr.str()+")");
     proto->var("nominalLumi")->setConstant();
     proto->defineSet("globalObservables","nominalLumi");
     //likelihoodTermNames.push_back("lumiConstraint");
     constraintTermNames.push_back("lumiConstraint");
     cxcoutI(HistFactory) << "lumi Error str = " << lumiErrorStr.str() << endl;
 
-    //proto->factory((string("SigXsecOverSM[1.,0.5,1..8]").c_str()));
+    //proto->factory("SigXsecOverSM[1.,0.5,1..8]");
     ///////////////////////////////////
     // loop through estimates, add expectation, floating bin predictions,
     // and terms that constrain floating to expectation via uncertainties
@@ -1889,7 +1889,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     //    RooWorkspace* combined = chs[0];
 
 
-    RooCategory* channelCat = dynamic_cast<RooCategory*>( combined->factory(channelString.str().c_str()) );
+    RooCategory* channelCat = dynamic_cast<RooCategory*>( combined->factory(channelString.str()) );
     if (!channelCat) throw std::runtime_error("Unable to construct a category from string " + channelString.str());
 
     RooSimultaneous * simPdf= new RooSimultaneous("simPdf","",pdfMap, *channelCat);

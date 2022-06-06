@@ -180,7 +180,7 @@ RooAbsReal *RooJSONFactoryWSTool::request<RooAbsReal>(const std::string &objname
    if (retval)
       return retval;
    if (isNumber(objname))
-      return dynamic_cast<RooAbsReal *>(this->workspace()->factory(objname.c_str()));
+      return dynamic_cast<RooAbsReal *>(this->workspace()->factory(objname));
    if (irootnode().has_child("pdfs")) {
       const JSONNode &pdfs = irootnode()["pdfs"];
       if (pdfs.has_child(objname)) {
@@ -958,7 +958,7 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool isPdf)
          auto expr = isPdf ? pdfFactoryExpressions.find(functype) : funcFactoryExpressions.find(functype);
          if (expr != (isPdf ? pdfFactoryExpressions.end() : funcFactoryExpressions.end())) {
             std::string expression = ::generate(expr->second, p, this);
-            if (!_workspace->factory(expression.c_str())) {
+            if (!_workspace->factory(expression)) {
                std::stringstream ss;
                ss << "RooJSONFactoryWSTool() failed to create " << expr->second.tclass->GetName() << " '" << name
                   << "', skipping. expression was\n"
@@ -1033,7 +1033,7 @@ RooRealVar *RooJSONFactoryWSTool::getWeightVar(const char *weightName)
 {
    RooRealVar *weightVar = _workspace->var(weightName);
    if (!weightVar) {
-      _workspace->factory(TString::Format("%s[0.,0.,10000000]", weightName).Data());
+      _workspace->factory(std::string(weightName) + "[0.,0.,10000000]");
    }
    weightVar = _workspace->var(weightName);
    return weightVar;
@@ -1268,7 +1268,7 @@ void RooJSONFactoryWSTool::clearScope()
 // create an observable
 RooRealVar *RooJSONFactoryWSTool::createObservable(const std::string &name, const RooJSONFactoryWSTool::Var &var)
 {
-   _workspace->factory(TString::Format("%s[%f]", name.c_str(), var.min));
+   _workspace->factory(name + "[" + std::to_string(var.min) + "]");
    RooRealVar *rrv = _workspace->var(name);
    rrv->setMin(var.min);
    rrv->setMax(var.max);
@@ -1287,7 +1287,7 @@ RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &namec
       RooJSONFactoryWSTool::error("data is not a map");
    if (varlist.empty()) {
       std::string obsname = "obs_x_" + namecomp;
-      varlist.add(*(_workspace->factory((obsname + "[0.]").c_str())));
+      varlist.add(*(_workspace->factory(obsname + "[0.]")));
    }
    auto bins = RooJSONFactoryWSTool::generateBinIndices(varlist);
    if (!n.has_child("counts"))

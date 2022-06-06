@@ -147,7 +147,7 @@ public:
 
   // Tools management
   RooFactoryWSTool& factory() ;
-  RooAbsArg* factory(const char* expr) ;
+  RooAbsArg* factory(RooStringView expr) ;
 
   // RooStudyManager modules
   bool addStudy(RooAbsStudy& study) ;
