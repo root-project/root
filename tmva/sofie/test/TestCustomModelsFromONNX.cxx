@@ -33,6 +33,9 @@
 #include "ConvWithAsymmetricPadding_FromONNX.hxx"
 #include "input_models/references/ConvWithAsymmetricPadding.ref.hxx"
 
+#include "MaxPool1d_FromONNX.hxx"
+#include "input_models/references/MaxPool1d.ref.hxx"
+
 #include "RNNBatchwise_FromONNX.hxx"
 #include "input_models/references/RNNBatchwise.ref.hxx"
 
@@ -328,6 +331,37 @@ TEST(DISABLED_ONNX, ConvWithAsymmetricPadding)
    for (size_t i = 0; i < output.size(); ++i) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
+}
+
+TEST(ONNX, MaxPool1d){
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard  input
+   std::vector<float> input({0.2646, -0.4906,  0.4325, -1.4387,  0.0288,  0.4101, -0.7804,
+          -2.0166, -1.0664,
+         -2.0875, -0.6094,  0.8781,  1.6268,  1.0704, -0.2105, -1.1823,
+           1.2189, -0.4998,
+          1.2655, -0.2931, -0.6675,  1.4832, -1.1457, -1.1577, -0.4458,
+           2.3473, -1.9734,
+          2.2969,  1.5223, -1.2300,  0.1943, -0.3540,  0.7769,  0.3484,
+          -1.0099, -2.3900,
+          0.9311, -0.5840,  0.0269, -0.8765,  0.8124,  0.2872, -1.4553,
+           0.8423,  0.6722,
+         -1.8700,  0.6322,  1.4728,  1.5329, -1.4054,  0.7254,  0.9081,
+           1.3033,  0.8285});
+   
+   TMVA_SOFIE_MaxPool1d::Session s("MaxPool1d_FromONNX.dat");
+   std::vector<std::vector<float>> output = s.infer(input.data());
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(MaxPool1d_ExpectedOutput::output) / sizeof(float));
+   
+   float *correct = MaxPool1d_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+
 }
 
 TEST(ONNX, RNNBatchwise)
