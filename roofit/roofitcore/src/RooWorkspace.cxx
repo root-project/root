@@ -2164,7 +2164,7 @@ RooFactoryWSTool& RooWorkspace::factory()
 /// Short-hand function for `factory()->process(expr);`
 ///
 /// \copydoc RooFactoryWSTool::process(const char*)
-RooAbsArg* RooWorkspace::factory(const char* expr)
+RooAbsArg* RooWorkspace::factory(RooStringView expr)
 {
   return factory().process(expr) ;
 }
