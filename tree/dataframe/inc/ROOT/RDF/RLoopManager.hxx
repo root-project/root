@@ -131,7 +131,6 @@ class RLoopManager : public RNodeBase {
    std::vector<ROOT::RDF::SampleCallback_t> fSampleCallbacks;
    RDFInternal::RNewSampleNotifier fNewSampleNotifier;
    std::vector<ROOT::RDF::RSampleInfo> fSampleInfos;
-   ROOT::Internal::TreeUtils::RFriendInfo fFriendInfo{};
    std::vector<std::unique_ptr<TTree>> fFriends; ///< Friends of the tree/chain, if present
    unsigned int fNRuns{0}; ///< Number of event loops run
 

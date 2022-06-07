@@ -362,7 +362,7 @@ RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t 
 RLoopManager::RLoopManager(const ROOT::RDF::RDatasetSpec &spec)
    : fStartEntry(spec.fStartEntry), fEndEntry(spec.fEndEntry), fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
-     fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots), fFriendInfo(spec.fFriendInfo)
+     fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots)
 {
    // A TChain has a global name
    auto chain = std::make_shared<TChain>(spec.fTreeNames[0].c_str()); // use the first tree name (FOR NOW)
@@ -383,9 +383,9 @@ RLoopManager::RLoopManager(const ROOT::RDF::RDatasetSpec &spec)
    }
    SetTree(chain);
 
-   const auto &friendNames = fFriendInfo.fFriendNames;
-   const auto &friendFileNames = fFriendInfo.fFriendFileNames;
-   const auto &friendChainSubNames = fFriendInfo.fFriendChainSubNames;
+   const auto &friendNames = spec.fFriendInfo.fFriendNames;
+   const auto &friendFileNames = spec.fFriendInfo.fFriendFileNames;
+   const auto &friendChainSubNames = spec.fFriendInfo.fFriendChainSubNames;
    const auto nFriends = friendNames.size();
 
    for (auto i = 0u; i < nFriends; ++i) {
