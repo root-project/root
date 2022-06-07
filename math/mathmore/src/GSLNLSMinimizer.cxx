@@ -119,6 +119,80 @@ private:
 
 };
 
+//________________________________________________________________________________
+/**
+    LSResidualFunc class description.
+    Internal class used for accessing the residuals of the Least Square function
+    and their derivatives which are estimated numerically using GSL numerical derivation.
+    The class contains a pointer to the fit method function and an index specifying
+    the i-th residual and wraps it in a multi-dim gradient function interface
+    ROOT::Math::IGradientFunctionMultiDim.
+    The class is used by ROOT::Math::GSLNLSMinimizer (GSL non linear least square fitter)
+
+    @ingroup MultiMin
+*/
+template<class Func>
+class LSResidualFunc : public IMultiGradFunction {
+public:
+
+   //default ctor (required by CINT)
+   LSResidualFunc() : fIndex(0), fChi2(0)
+   {}
+
+
+   LSResidualFunc(const Func & func, unsigned int i) :
+      fIndex(i),
+      fChi2(&func)
+   {}
+
+
+   // copy ctor
+   LSResidualFunc(const LSResidualFunc<Func> & rhs) :
+      IMultiGenFunction(),
+      IMultiGradFunction()
+   {
+      operator=(rhs);
+   }
+
+   // assignment
+   LSResidualFunc<Func> & operator= (const LSResidualFunc<Func> & rhs)
+   {
+      fIndex = rhs.fIndex;
+      fChi2 = rhs.fChi2;
+      return *this;
+   }
+
+   IMultiGenFunction * Clone() const override {
+      return new LSResidualFunc<Func>(*fChi2,fIndex);
+   }
+
+   unsigned int NDim() const override { return fChi2->NDim(); }
+
+   void Gradient( const double * x, double * g) const override {
+      double f0 = 0;
+      FdF(x,f0,g);
+   }
+
+   void FdF (const double * x, double & f, double * g) const override {
+      f = fChi2->DataElement(x,fIndex,g);
+   }
+
+
+private:
+
+   double DoEval (const double * x) const override {
+      return fChi2->DataElement(x, fIndex, nullptr);
+   }
+
+   double DoDerivative(const double * /* x */, unsigned int /* icoord */) const override {
+      //this function should not be called by GSL
+      throw std::runtime_error("LSRESidualFunc::DoDerivative");
+      return 0;
+   }
+
+   unsigned int fIndex;
+   const Func * fChi2;
+};
 
 
 // GSLNLSMinimizer implementation
