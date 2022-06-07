@@ -52,7 +52,7 @@ ROOT_ADD_GTEST(ntuple_extended ntuple_extended.cxx LIBRARIES ROOTDataFrame ROOTN
 if(daos OR daos_mock)
   # UUID of the DAOS pool used for testing, if not provided (may be any for libdaos_mock).
   if(NOT daos_test_pool)
-    set(daos_test_pool 1b245c52-765e-449d-80b1-8dce93bafc4b)
+    set(daos_test_pool ntuple-daos-test-pool)
   endif()
   set_property(SOURCE ntuple_storage_daos.cxx
                APPEND PROPERTY COMPILE_DEFINITIONS R__DAOS_TEST_POOL="${daos_test_pool}")
