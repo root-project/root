@@ -100,7 +100,7 @@ private:
    std::unique_ptr<RDaosContainer> fDaosContainer;
    /// OID for the next committed page; it is automatically incremented in `CommitSealedPageImpl()`
    std::atomic<std::uint64_t> fOid{0};
-   /// \brief A URI to a DAOS pool of the form 'daos://pool-uuid:svc_replicas/container-uuid'
+   /// \brief A URI to a DAOS pool of the form 'daos://pool-label/container-label'
    std::string fURI;
    /// Tracks the number of bytes committed to the current cluster
    std::uint64_t fNBytesCurrentCluster{0};
@@ -169,7 +169,7 @@ private:
    RCluster *fCurrentCluster = nullptr;
    /// A container that stores object data (header/footer, pages, etc.)
    std::unique_ptr<RDaosContainer> fDaosContainer;
-   /// A URI to a DAOS pool of the form 'daos://pool-uuid:svc_replicas/container-uuid'
+   /// A URI to a DAOS pool of the form 'daos://pool-label/container-label'
    std::string fURI;
    /// The cluster pool asynchronously preloads the next few clusters
    std::unique_ptr<RClusterPool> fClusterPool;
