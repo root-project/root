@@ -29,11 +29,10 @@ public:
    // The names for the weight variables that the RooNLLVarNew expects
    static constexpr const char *weightVarName = "_weight";
    static constexpr const char *weightVarNameSumW2 = "_weight_sumW2";
-   static constexpr const char *weightVarNameSumW2Suffix = "_sumW2";
 
    RooNLLVarNew(){};
-   RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables, RooAbsReal *weight,
-                bool isExtended, std::string const &rangeName);
+   RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables, bool isExtended,
+                std::string const &rangeName);
    RooNLLVarNew(const RooNLLVarNew &other, const char *name = 0);
    TObject *clone(const char *newname) const override { return new RooNLLVarNew(*this, newname); }
 
@@ -43,7 +42,7 @@ public:
    double defaultErrorLevel() const override { return 0.5; }
 
    inline RooAbsPdf *getPdf() const { return &*_pdf; }
-   void computeBatch(cudaStream_t *, double *output, size_t nOut, RooBatchCompute::DataMap &) const override;
+   void computeBatch(cudaStream_t *, double *output, size_t nOut, RooFit::Detail::DataMap const&) const override;
    inline bool isReducerNode() const override { return true; }
 
    RooArgSet prefixObservableAndWeightNames(std::string const &prefix);
@@ -59,11 +58,12 @@ protected:
 
    RooTemplateProxy<RooAbsPdf> _pdf;
    RooArgSet _observables;
-   std::unique_ptr<RooTemplateProxy<RooAbsReal>> _weight;
    mutable double _sumWeight = 0.0;         //!
-   mutable double _sumCorrectionTerm = 0.0; //!
+   mutable double _sumWeight2 = 0.0;        //!
    bool _isExtended;
-   std::unique_ptr<RooTemplateProxy<RooAbsReal>> _rangeNormTerm;
+   bool _weightSquared = false;
+   std::string _prefix;
+   std::unique_ptr<RooTemplateProxy<RooAbsReal>> _fractionInRange;
 
    double evaluate() const override;
 

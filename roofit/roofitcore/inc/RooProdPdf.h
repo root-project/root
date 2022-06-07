@@ -93,14 +93,16 @@ public:
 
   RooArgSet* getConnectedParameters(const RooArgSet& observables) const ;
 
-  RooArgSet* findPdfNSet(RooAbsPdf& pdf) const ; 
-  
+  RooArgSet* findPdfNSet(RooAbsPdf const& pdf) const ;
+
   void writeCacheToStream(std::ostream& os, RooArgSet const* nset) const;
+
+  void fillNormSetForServer(RooArgSet const& normSet, RooAbsArg const& server, RooArgSet& serverNormSet) const;
 
 private:
 
-  Double_t evaluate() const ;
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const;
+  double evaluate() const;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const;
   inline bool canComputeBatchWithCuda() const { return true; }
 
   RooAbsReal* makeCondPdfRatioCorr(RooAbsReal& term, const RooArgSet& termNset, const RooArgSet& termImpSet, const char* normRange, const char* refRange) const ;

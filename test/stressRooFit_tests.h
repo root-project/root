@@ -1541,7 +1541,11 @@ public:
     RooDataSet* data = lxg.generate(t,10000) ;
 
     // Fit gxlx to data
-    lxg.fitTo(*data,BatchMode(_batchMode)) ;
+    {
+      // Get rid of the caching info prints
+    RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::Caching, true};
+      lxg.fitTo(*data,BatchMode(_batchMode)) ;
+    }
 
     // Plot data, landau pdf, landau (X) gauss pdf
     RooPlot* frame = t.frame(Title("landau (x) gauss convolution")) ;
@@ -5529,7 +5533,11 @@ public:
 
   // Fit pdf to toy data
   lmorph.setCacheAlpha(kTRUE) ;
-  lmorph.fitTo(*data,BatchMode(_batchMode)) ;
+  {
+    // Get rid of the caching info prints
+    RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::Caching, true};
+    lmorph.fitTo(*data,BatchMode(_batchMode)) ;
+  }
 
   // Plot fitted pdf and data overlaid
   RooPlot* frame2 = x.frame(Bins(100)) ;
@@ -6075,7 +6083,7 @@ public:
   // to speed up the study at the expemse of some precision
 
   RooMCStudy* mcstudy = new RooMCStudy(model,x,Binned(kTRUE),Silence(),Extended(),
-                                       FitOptions(Save(kTRUE),PrintEvalErrors(0))) ;
+                                       FitOptions(Save(kTRUE),PrintEvalErrors(0),BatchMode(_batchMode))) ;
 
 
   // G e n e r a t e   a n d   f i t   e v e n t s
@@ -6295,7 +6303,7 @@ public:
   // Configure manager to perform binned extended likelihood fits (Binned(),Extended()) on data generated
   // with a Poisson fluctuation on Nobs (Extended())
   RooMCStudy* mcs = new RooMCStudy(model,mjjj,Binned(),Silence(),Extended(kTRUE),
-                                   FitOptions(Extended(kTRUE),PrintEvalErrors(-1))) ;
+                                   FitOptions(Extended(kTRUE),PrintEvalErrors(-1),BatchMode(_batchMode))) ;
 
 
 

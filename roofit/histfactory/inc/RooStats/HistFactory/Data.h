@@ -26,24 +26,24 @@ class Data {
 public:
   //friend class Channel;
 
-  Data();
+  Data() {}
   /// constructor from name, file and path. Name of the histogram should not include the path
   Data( std::string HistoName, std::string InputFile, std::string HistoPath="" );
 
-  std::string GetName() const { return fName; }
+  std::string const& GetName() const { return fName; }
   void SetName(const std::string& name) { fName=name; }
   
   void SetInputFile(const std::string& InputFile) { fInputFile = InputFile; }
-  std::string GetInputFile() const { return fInputFile; }
+  std::string const& GetInputFile() const { return fInputFile; }
 
   void SetHistoName(const std::string& HistoName) { fHistoName = HistoName; }
-  std::string GetHistoName() const { return fHistoName; }
+  std::string const& GetHistoName() const { return fHistoName; }
 
   void SetHistoPath(const std::string& HistoPath) { fHistoPath = HistoPath; }
-  std::string GetHistoPath() const { return fHistoPath; }
+  std::string const& GetHistoPath() const { return fHistoPath; }
 
   void Print(std::ostream& = std::cout);
-  void PrintXML( std::ostream& );
+  void PrintXML( std::ostream& ) const;
   void writeToFile( std::string FileName, std::string DirName );
 
   TH1* GetHisto();

@@ -150,7 +150,7 @@ Double_t RooPolynomial::evaluate() const
 
 //////////////////////////////////////////////////////////////////////////////////
 ///// Compute multiple values of Polynomial.
-//void RooPolynomial::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+//void RooPolynomial::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::DataMap& dataMap) const
 //{
   //RooBatchCompute::ArgVector extraArgs;
   //for (auto* coef:_coefList)

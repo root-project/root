@@ -38,7 +38,7 @@ public:
   ~Sample();
 
   void Print(std::ostream& = std::cout) const;
-  void PrintXML( std::ofstream& xml );
+  void PrintXML( std::ofstream& xml ) const;
   void writeToFile( std::string FileName, std::string DirName );
 
   const TH1* GetHisto() const;

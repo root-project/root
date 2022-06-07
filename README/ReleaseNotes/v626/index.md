@@ -967,9 +967,30 @@ Published on April 12, 2022
 * [[#10282](https://github.com/root-project/root/issues/10282)] - [RF] Crash in reading some RooWorkspaces after recent TStreamerInfo update
 * [[#10357](https://github.com/root-project/root/issues/10357)] - [I/O] Race condition when reading vectors with custom allocators with TTreeProcessorMT
 * [[#9112](https://github.com/root-project/root/issues/9112)] - Only add cling nullptr checks in TRint
+* [[#10353](https://github.com/root-project/root/issues/10353)] - Thread-safety issue in TClassEdit (StdLen)?  [6.24.06]
+
+
+## Release 6.26/04
+
+Published on June 7, 2022
+
+### Bugs and Issues fixed in this release
+
+* [[#9127](https://github.com/root-project/root/issues/9127)] - roofit `plotOn`  issue
+* [[#10390](https://github.com/root-project/root/issues/10390)] - Wrong file names created in distributed Snapshot
+* [[#10351](https://github.com/root-project/root/issues/10351)] - macOS 12: `TViewPubDataMembers` uses deprecated `std::iterator`
+* [[#10473](https://github.com/root-project/root/issues/10473)] - [RooFit] Crash when `RooSimultaneous` does not contain a pdf for each value of the index category
+* [[#9070](https://github.com/root-project/root/issues/9070)] - Inconsistent behavior when editing constraint terms in HistFactory models
+* [[#9406](https://github.com/root-project/root/issues/9406)] - Low-statistics fits terminate with BatchMode and NumCPU arguments
+* [[#10548](https://github.com/root-project/root/issues/10548)] - Use of undeclared identifier on Mac ARM
+* [[#10478](https://github.com/root-project/root/issues/10478)] - `runtime_cxxmodules` fails to build with GCC12
+* [[#10586](https://github.com/root-project/root/issues/10586)] - [TMVA][SOFIE]Generated headers are missing include guards
+* [[#10538](https://github.com/root-project/root/issues/10538)] - AdditionalData is not exported to XML
+* [[#10578](https://github.com/root-project/root/issues/10578)] - SHA-256 Hash Mismatch for xrootd
+
 
 ## HEAD of the v6-26-00-patches branch
 
-These changes will be part of a future 6.26/04.
+These changes will be part of a future 6.26/06.
 
 - None so far.

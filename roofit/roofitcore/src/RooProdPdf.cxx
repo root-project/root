@@ -496,21 +496,20 @@ Double_t RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, Bool_t /*verb
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate product of PDFs in batch mode.
-void RooProdPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+void RooProdPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
   RooBatchCompute::VarVector pdfs;
   for (const RooAbsArg* i:_pdfList) {
-    auto pdf = static_cast<const RooAbsPdf*>(i);
+    auto span = dataMap.at(i);
     // If the pdf doesn't depend on any observable (detected by it getting evaluated in scalar mode),
     // it corresponds to a parameter constraint and should not be evaluated.
     // These pdfs are evaluated in the RooConstraintSum that gets added to the likelihood in the end.
-    if(dataMap[pdf].size() == 1) continue;
-    pdfs.push_back(pdf);
+    if(span.size() == 1) continue;
+    pdfs.push_back(span);
   }
   RooBatchCompute::ArgVector special{ static_cast<double>(pdfs.size()) };
-  pdfs.push_back(&*_norm);
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::ProdPdf, output, nEvents, dataMap, pdfs, special);
+  dispatch->compute(stream, RooBatchCompute::ProdPdf, output, nEvents, pdfs, special);
 }
 
 namespace {
@@ -2000,7 +1999,7 @@ Bool_t RooProdPdf::isDirectGenSafe(const RooAbsArg& arg) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Look up user specified normalization set for given input PDF component
 
-RooArgSet* RooProdPdf::findPdfNSet(RooAbsPdf& pdf) const
+RooArgSet* RooProdPdf::findPdfNSet(RooAbsPdf const& pdf) const
 {
   Int_t idx = _pdfList.index(&pdf) ;
   if (idx<0) return 0 ;
@@ -2273,7 +2272,7 @@ void RooProdPdf::printMetaArgs(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Implement support for node removal
 
-Bool_t RooProdPdf::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t nameChange, Bool_t /*isRecursive*/)
+Bool_t RooProdPdf::redirectServersHook(const RooAbsCollection& newServerList, Bool_t /*mustReplaceAll*/, Bool_t nameChange, Bool_t /*isRecursive*/)
 {
   if (nameChange && _pdfList.find("REMOVAL_DUMMY")) {
 
@@ -2288,6 +2287,23 @@ Bool_t RooProdPdf::redirectServersHook(const RooAbsCollection& /*newServerList*/
     // Clear caches
     _cacheMgr.reset() ;
   }
+
+  // If the replaced server is an observable that is used in any of the
+  // normalization sets for conditional fits, replace the element in the
+  // normalization set too.
+  for(std::unique_ptr<RooArgSet> const& normSet : _pdfNSetList) {
+    for(RooAbsArg * arg : *normSet) {
+      if(RooAbsArg * newArg = arg->findNewServer(newServerList, nameChange)) {
+        // Need to do some tricks here because it's not possible to replace in
+        // an owning RooAbsCollection.
+        normSet->releaseOwnership();
+        normSet->replace(*arg, *newArg->cloneTree());
+        normSet->takeOwnership();
+        delete arg;
+      }
+    }
+  }
+
   return kFALSE ;
 }
 
@@ -2323,4 +2339,13 @@ void RooProdPdf::CacheElem::writeToStream(std::ostream& os) const {
 
 void RooProdPdf::writeCacheToStream(std::ostream& os, RooArgSet const* nset) const {
   getCacheElem(nset)->writeToStream(os);
+}
+
+void RooProdPdf::fillNormSetForServer(RooArgSet const& normSet, RooAbsArg const& server, RooArgSet& serverNormSet) const {
+  auto * pdfNset = findPdfNSet(static_cast<RooAbsPdf const&>(server));
+  if (pdfNset && !pdfNset->empty()) {
+    for(auto * arg : *pdfNset) if(server.dependsOn(*arg)) serverNormSet.add(*arg);
+  } else {
+    for(auto * arg : normSet) if(server.dependsOn(*arg)) serverNormSet.add(*arg);
+  }
 }

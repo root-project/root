@@ -77,9 +77,9 @@ public:
   std::vector< RooStats::HistFactory::Sample >& GetSamples() { return fSamples; }
   const std::vector< RooStats::HistFactory::Sample >& GetSamples() const { return fSamples; }
 
-  void Print(std::ostream& = std::cout);  
-  void PrintXML( std::string Directory, std::string Prefix="" );
-  
+  void Print(std::ostream& = std::cout);
+  void PrintXML( std::string const& directory, std::string const& prefix="" ) const;
+
   void CollectHistograms();
   bool CheckHistograms() const;
 

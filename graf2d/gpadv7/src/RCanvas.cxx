@@ -90,7 +90,7 @@ public:
    virtual ~RCanvasCleanup()
    {
       gInstance = nullptr;
-      ROOT::Experimental::RCanvas::ReleaseHeldCanvases();
+      // ROOT::Experimental::RCanvas::ReleaseHeldCanvases();
    }
 };
 
@@ -111,6 +111,7 @@ std::shared_ptr<ROOT::Experimental::RCanvas> ROOT::Experimental::RCanvas::Create
 
    if (!RCanvasCleanup::gInstance) {
       auto cleanup = new RCanvasCleanup();
+      TDirectory::TContext ctxt(nullptr);
       TDirectory *dummydir = new TDirectory("rcanvas_cleanup_dummydir","title");
       dummydir->GetList()->Add(cleanup);
       gROOT->GetListOfClosedObjects()->Add(dummydir);

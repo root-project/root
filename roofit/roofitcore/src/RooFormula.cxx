@@ -413,7 +413,7 @@ RooSpan<double> RooFormula::evaluateSpan(const RooAbsReal* dataOwner, RooBatchCo
   return output;
 }
 
-void RooFormula::computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+void RooFormula::computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
   const int nPars=_origList.size();
   std::vector<RooSpan<const double>> inputSpans(nPars);

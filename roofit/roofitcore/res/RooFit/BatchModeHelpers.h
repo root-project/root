@@ -23,15 +23,26 @@ class RooAbsPdf;
 class RooAbsReal;
 class RooArgSet;
 
+namespace ROOT {
+namespace Experimental {
+class RooFitDriver;
+}
+} // namespace ROOT
+
 namespace RooFit {
 namespace BatchModeHelpers {
+
+std::unique_ptr<RooAbsReal>
+makeDriverAbsRealWrapper(std::unique_ptr<ROOT::Experimental::RooFitDriver> driver, RooArgSet const &observables);
 
 std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, std::unique_ptr<RooAbsReal> &&constraints,
                                       std::string const &rangeName, std::string const &addCoefRangeName,
                                       RooArgSet const &projDeps, bool isExtended, double integrateOverBinsPrecision,
                                       RooFit::BatchModeOption batchMode);
 
-}
+void logArchitectureInfo(RooFit::BatchModeOption batchMode);
+
+} // namespace BatchModeHelpers
 } // namespace RooFit
 
 #endif

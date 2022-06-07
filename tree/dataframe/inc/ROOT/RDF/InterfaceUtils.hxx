@@ -311,6 +311,8 @@ void CheckForRedefinition(const std::string &where, std::string_view definedCol,
 void CheckForDefinition(const std::string &where, std::string_view definedColView, const RColumnRegister &customCols,
                         const ColumnNames_t &treeColumns, const ColumnNames_t &dataSourceColumns);
 
+void CheckForNoVariations(const std::string &where, std::string_view definedColView, const RColumnRegister &customCols);
+
 std::string PrettyPrintAddr(const void *const addr);
 
 std::shared_ptr<RJittedFilter> BookFilterJit(std::shared_ptr<RNodeBase> *prevNodeOnHeap, std::string_view name,

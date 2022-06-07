@@ -38,7 +38,7 @@ enum class Architecture { AVX512, AVX2, AVX, SSE4, GENERIC, CUDA };
 
 enum Computer{AddPdf, ArgusBG, Bernstein, BifurGauss, BreitWigner, Bukin, CBShape, Chebychev,
               ChiSquare, DstD0BG, Exponential, Gamma, Gaussian, Johnson, Landau, Lognormal,
-              NegativeLogarithms, Novosibirsk, Poisson, Polynomial, ProdPdf, Voigtian};
+              NegativeLogarithms, Novosibirsk, Poisson, Polynomial, ProdPdf, Ratio, Voigtian};
 
 /**
  * \class RooBatchComputeInterface
@@ -61,7 +61,7 @@ enum Computer{AddPdf, ArgusBG, Bernstein, BifurGauss, BreitWigner, Bukin, CBShap
 class RooBatchComputeInterface {
   public:
     virtual ~RooBatchComputeInterface() = default;
-    virtual void   compute(cudaStream_t*, Computer, RestrictArr, size_t, const DataMap&, const VarVector&, const ArgVector& ={}) = 0;
+    virtual void   compute(cudaStream_t*, Computer, RestrictArr, size_t, const VarVector&, const ArgVector& ={}) = 0;
     virtual double sumReduce(cudaStream_t*, InputArr input, size_t n) = 0;
     virtual Architecture architecture() const = 0;
     virtual std::string architectureName() const = 0;

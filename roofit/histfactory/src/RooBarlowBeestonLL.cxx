@@ -233,7 +233,8 @@ void RooStats::HistFactory::RooBarlowBeestonLL::initializeBarlowCache() {
       BarlowCache cache;
 
       // Get the gamma for this bin, and skip if it's constant
-      RooRealVar* gamma_stat = &(param_func->getParameter(bin_index));
+      RooRealVar* gamma_stat = dynamic_cast<RooRealVar*>(&(param_func->getParameter(bin_index)));
+      if(!gamma_stat) throw std::runtime_error("ParamHistFunc contains non-RooRealVar, not supported in RooBarlowBeestonLL");
       if( gamma_stat->isConstant() ) {
 	if(verbose) std::cout << "Ignoring constant gamma: " << gamma_stat->GetName() << std::endl;
 	continue;

@@ -22,17 +22,17 @@ transfered away to other classes, like the `RooFitDriver`. This class also calls
 functions from `RooBatchCompute` library to provide faster computation times.
 **/
 
-#include "RooNLLVarNew.h"
+#include <RooNLLVarNew.h>
 
-#include "RooAddition.h"
-#include "RooFormulaVar.h"
-#include "RooNaNPacker.h"
+#include <RooAddition.h>
+#include <RooFormulaVar.h>
+#include <RooNaNPacker.h>
+#include <RooFit/Detail/Buffers.h>
 
-#include "RooFit/Detail/Buffers.h"
+#include <ROOT/StringUtils.hxx>
 
-#include "ROOT/StringUtils.hxx"
-
-#include "Math/Util.h"
+#include <Math/Util.h>
+#include <TMath.h>
 
 #include <numeric>
 #include <stdexcept>
@@ -43,31 +43,18 @@ using namespace ROOT::Experimental;
 // Declare constexpr static members to make them available if odr-used in C++14.
 constexpr const char *RooNLLVarNew::weightVarName;
 constexpr const char *RooNLLVarNew::weightVarNameSumW2;
-constexpr const char *RooNLLVarNew::weightVarNameSumW2Suffix;
 
 namespace {
 
-std::unique_ptr<RooAbsReal> createRangeNormTerm(RooAbsPdf const &pdf, RooArgSet const &observables,
-                                                std::string const &baseName, std::string const &rangeNames)
+std::unique_ptr<RooAbsReal>
+createFractionInRange(RooAbsPdf const &pdf, RooArgSet const &observables, std::string const &rangeNames)
 {
 
    RooArgSet observablesInPdf;
    pdf.getObservables(&observables, observablesInPdf);
 
-   RooArgList termList;
-
-   auto pdfIntegralCurrent = pdf.createIntegral(observablesInPdf, &observablesInPdf, nullptr, rangeNames.c_str());
-   auto term =
-      new RooFormulaVar((baseName + "_correctionTerm").c_str(), "(log(x[0]))", RooArgList(*pdfIntegralCurrent));
-   termList.add(*term);
-
-   auto integralFull = pdf.createIntegral(observablesInPdf, &observablesInPdf, nullptr);
-   auto fullRangeTerm = new RooFormulaVar((baseName + "_foobar").c_str(), "-(log(x[0]))", RooArgList(*integralFull));
-   termList.add(*fullRangeTerm);
-
-   auto out =
-      std::unique_ptr<RooAbsReal>{new RooAddition((baseName + "_correction").c_str(), "correction", termList, true)};
-   return out;
+   return std::unique_ptr<RooAbsReal>{
+      pdf.createIntegral(observablesInPdf, &observablesInPdf, pdf.getIntegratorConfig(), rangeNames.c_str())};
 }
 
 template <class Input>
@@ -82,19 +69,16 @@ double kahanSum(Input const &input)
 
 \param pdf The pdf for which the nll is computed for
 \param observables The observabes of the pdf
-\param weight A pointer to the weight variable (if exists)
 \param isExtended Set to true if this is an extended fit
 **/
 RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables,
-                           RooAbsReal *weight, bool isExtended, std::string const &rangeName)
+                           bool isExtended, std::string const &rangeName)
    : RooAbsReal(name, title), _pdf{"pdf", "pdf", this, pdf}, _observables{observables}, _isExtended{isExtended}
-//_rangeNormTerm{rangeName.empty() ? nullptr : createRangeNormTerm(pdf, observables, pdf.GetName(), rangeName)}
 {
-   if (weight)
-      _weight = std::make_unique<RooTemplateProxy<RooAbsReal>>("_weight", "_weight", this, *weight);
    if (!rangeName.empty()) {
-      auto term = createRangeNormTerm(pdf, observables, pdf.GetName(), rangeName);
-      _rangeNormTerm = std::make_unique<RooTemplateProxy<RooAbsReal>>("_rangeNormTerm", "_rangeNormTerm", this, *term);
+      auto term = createFractionInRange(pdf, observables, rangeName);
+      _fractionInRange =
+         std::make_unique<RooTemplateProxy<RooAbsReal>>("_fractionInRange", "_fractionInRange", this, *term);
       this->addOwnedComponents(std::move(term));
    }
 }
@@ -102,10 +86,9 @@ RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, 
 RooNLLVarNew::RooNLLVarNew(const RooNLLVarNew &other, const char *name)
    : RooAbsReal(other, name), _pdf{"pdf", this, other._pdf}, _observables{other._observables}
 {
-   if (other._weight)
-      _weight = std::make_unique<RooTemplateProxy<RooAbsReal>>("_weight", this, *other._weight);
-   if (other._rangeNormTerm)
-      _rangeNormTerm = std::make_unique<RooTemplateProxy<RooAbsReal>>("_rangeNormTerm", this, *other._rangeNormTerm);
+   if (other._fractionInRange)
+      _fractionInRange =
+         std::make_unique<RooTemplateProxy<RooAbsReal>>("_fractionInRange", this, *other._fractionInRange);
 }
 
 /** Compute multiple negative logs of propabilities
@@ -116,104 +99,85 @@ RooNLLVarNew::RooNLLVarNew(const RooNLLVarNew &other, const char *name)
 \param dataMap A map containing spans with the input data for the computation
 **/
 void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_t /*nOut*/,
-                                RooBatchCompute::DataMap &dataMap) const
+                                RooFit::Detail::DataMap const &dataMap) const
 {
-   std::size_t nEvents = dataMap[&*_pdf].size();
-   auto probas = dataMap[&*_pdf];
+   std::size_t nEvents = dataMap.at(_pdf).size();
+   auto probas = dataMap.at(_pdf);
 
    auto logProbasBuffer = ROOT::Experimental::Detail::makeCpuBuffer(nEvents);
    RooSpan<double> logProbas{logProbasBuffer->cpuWritePtr(), nEvents};
    (*_pdf).getLogProbabilities(probas, logProbas.data());
 
-   std::vector<double> nlls(nEvents);
-   nlls.reserve(nEvents);
+   auto &nameReg = RooNameReg::instance();
+   auto weights = dataMap.at(nameReg.constPtr((_prefix + weightVarName).c_str()));
+   auto weightsSumW2 = dataMap.at(nameReg.constPtr((_prefix + weightVarNameSumW2).c_str()));
+   auto weightSpan = _weightSquared ? weightsSumW2 : weights;
 
-   if (_weight) {
-      double const *weights = dataMap[&**_weight].data();
-      for (std::size_t i = 0; i < nEvents; ++i) {
-         // Explicitely add zero if zero weight to get rid of eventual NaNs in
-         // logProbas that have no weight anyway.
-         nlls.push_back(weights[i] == 0.0 ? 0.0 : -logProbas[i] * weights[i]);
-      }
-   } else {
-      for (auto const &p : logProbas)
-         nlls.push_back(-p);
+   if ((_isExtended || _fractionInRange) && _sumWeight == 0.0) {
+      _sumWeight = weights.size() == 1 ? weights[0] * nEvents : kahanSum(weights);
    }
-
-   if ((_isExtended || _rangeNormTerm) && _sumWeight == 0.0) {
-      if (!_weight) {
-         _sumWeight = nEvents;
-      } else {
-         auto weightSpan = dataMap[&**_weight];
-         _sumWeight = weightSpan.size() == 1 ? weightSpan[0] * nEvents : kahanSum(dataMap[&**_weight]);
-      }
+   if ((_isExtended || _fractionInRange) && _weightSquared && _sumWeight2 == 0.0) {
+      _sumWeight2 = weights.size() == 1 ? weightsSumW2[0] * nEvents : kahanSum(weightsSumW2);
    }
-   if (_rangeNormTerm) {
-      auto rangeNormTermSpan = dataMap[&**_rangeNormTerm];
-      if (rangeNormTermSpan.size() == 1) {
-         _sumCorrectionTerm = _sumWeight * rangeNormTermSpan[0];
+   double sumCorrectionTerm = 0;
+   if (_fractionInRange) {
+      auto fractionInRangeSpan = dataMap.at(*_fractionInRange);
+      if (fractionInRangeSpan.size() == 1) {
+         sumCorrectionTerm = (_weightSquared ? _sumWeight2 : _sumWeight) * std::log(fractionInRangeSpan[0]);
       } else {
-         if (!_weight) {
-            _sumCorrectionTerm = kahanSum(rangeNormTermSpan);
+         if (weightSpan.size() == 1) {
+            double fractionInRangeLogSum = 0.0;
+            for (std::size_t i = 0; i < fractionInRangeSpan.size(); ++i) {
+               fractionInRangeLogSum += std::log(fractionInRangeSpan[i]);
+            }
+            sumCorrectionTerm = weightSpan[0] * fractionInRangeLogSum;
          } else {
-            auto weightSpan = dataMap[&**_weight];
-            if (weightSpan.size() == 1) {
-               _sumCorrectionTerm = weightSpan[0] * kahanSum(rangeNormTermSpan);
-            } else {
-               // We don't need to use the library for now because the weights and
-               // correction term integrals are always in the CPU map.
-               _sumCorrectionTerm = 0.0;
-               for (std::size_t i = 0; i < nEvents; ++i) {
-                  _sumCorrectionTerm += weightSpan[i] * rangeNormTermSpan[i];
-               }
+            // We don't need to use the library for now because the weights and
+            // correction term integrals are always in the CPU map.
+            sumCorrectionTerm = 0.0;
+            for (std::size_t i = 0; i < nEvents; ++i) {
+               sumCorrectionTerm += weightSpan[i] * std::log(fractionInRangeSpan[i]);
             }
          }
       }
    }
 
-   double nll = kahanSum(nlls);
+   ROOT::Math::KahanSum<double> kahanProb;
+   RooNaNPacker packedNaN(0.f);
 
-   if (std::isnan(nll)) {
-      // Special handling of evaluation errors.
-      // We can recover if the bin/event that results in NaN has a weight of zero:
-      RooNaNPacker nanPacker;
-      for (std::size_t i = 0; i < probas.size(); ++i) {
-         if (_weight) {
-            double const *weights = dataMap[&**_weight].data();
-            if (std::isnan(logProbas[i]) && weights[i] != 0.0) {
-               nanPacker.accumulate(logProbas[i]);
-            }
-         }
-         if (std::isnan(logProbas[i])) {
-            nanPacker.accumulate(logProbas[i]);
-         }
-      }
+   for (std::size_t i = 0; i < nEvents; ++i) {
 
+      double eventWeight = weightSpan.size() > 1 ? weightSpan[i] : weightSpan[0];
+      if (0. == eventWeight * eventWeight)
+         continue;
+
+      const double term = -eventWeight * logProbas[i];
+
+      kahanProb.Add(term);
+      packedNaN.accumulate(term);
+   }
+
+   if (packedNaN.getPayload() != 0.) {
       // Some events with evaluation errors. Return "badness" of errors.
-      if (nanPacker.getPayload() > 0.) {
-         nll = nanPacker.getNaNWithPayload();
-      }
+      kahanProb = packedNaN.getNaNWithPayload();
    }
 
    if (_isExtended) {
       assert(_sumWeight != 0.0);
-      nll += _pdf->extendedTerm(_sumWeight, &_observables);
+      double expected = _pdf->expectedEvents(&_observables);
+      if (_fractionInRange) {
+         expected *= dataMap.at(*_fractionInRange)[0];
+      }
+      kahanProb += _pdf->extendedTerm(_sumWeight, expected, _weightSquared ? _sumWeight2 : 0.0);
    }
-   if (_rangeNormTerm) {
-      nll += _sumCorrectionTerm;
+   if (_fractionInRange) {
+      kahanProb += sumCorrectionTerm;
    }
-   output[0] = nll;
-
-   // Since the output of this node is always of size one, it is possible that it is
-   // evaluated in scalar mode. We need to set the cached value and clear
-   // the dirty flag.
-   const_cast<RooNLLVarNew *>(this)->setCachedValue(nll);
-   const_cast<RooNLLVarNew *>(this)->clearValueDirty();
+   output[0] = kahanProb.Sum();
 }
 
 double RooNLLVarNew::evaluate() const
 {
-   throw std::runtime_error("RooNLLVarNew::evaluate was called directly which should not happen!");
    return _value;
 }
 
@@ -221,8 +185,6 @@ void RooNLLVarNew::getParametersHook(const RooArgSet * /*nset*/, RooArgSet *para
 {
    // strip away the observables and weights
    params->remove(_observables, true, true);
-   if (_weight)
-      params->remove(**_weight, true, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -232,9 +194,9 @@ void RooNLLVarNew::getParametersHook(const RooArgSet * /*nset*/, RooArgSet *para
 /// \param[in] prefix The prefix to add to the observables and weight names.
 RooArgSet RooNLLVarNew::prefixObservableAndWeightNames(std::string const &prefix)
 {
+   _prefix = prefix;
+
    RooArgSet obsSet{_observables};
-   if (_weight)
-      obsSet.add(**_weight);
    RooArgSet obsClones;
    obsSet.snapshot(obsClones);
    for (RooAbsArg *arg : obsClones) {
@@ -244,9 +206,6 @@ RooArgSet RooNLLVarNew::prefixObservableAndWeightNames(std::string const &prefix
    recursiveRedirectServers(obsClones, false, true);
 
    RooArgSet newObservables{obsClones};
-   if (_weight) {
-      newObservables.remove(**_weight);
-   }
 
    setObservables(obsClones);
    addOwnedComponents(std::move(obsClones));
@@ -254,36 +213,9 @@ RooArgSet RooNLLVarNew::prefixObservableAndWeightNames(std::string const &prefix
    return newObservables;
 }
 
-namespace {
-
-inline bool endsWith(std::string const &value, std::string_view ending)
-{
-   if (ending.size() > value.size())
-      return false;
-   return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
-}
-
-} // namespace
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Toggles the weight square correction by changing the name of the weight
-/// variable to get different weights from the RooFitDriver data map. The
-/// RooNLLVarNew::weightVarNameSumW2Suffix is either added or removed from the
-/// weight variable name.
+/// Toggles the weight square correction.
 void RooNLLVarNew::applyWeightSquared(bool flag)
 {
-   if (!_weight)
-      return;
-   auto &w = **_weight;
-
-   const std::string name = w.GetName();
-   const std::string suffix = weightVarNameSumW2Suffix;
-
-   bool isAlreadyWeightSquared = endsWith(name, suffix);
-
-   if (isAlreadyWeightSquared && !flag) {
-      w.SetName(name.substr(0, name.length() - suffix.length()).c_str());
-   } else if (!isAlreadyWeightSquared && flag) {
-      w.SetName((name + suffix).c_str());
-   }
+   _weightSquared = flag;
 }

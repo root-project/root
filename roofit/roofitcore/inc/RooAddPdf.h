@@ -127,8 +127,11 @@ protected:
                                const RooArgSet* auxProto=0, bool verbose= false) const override;
 
 
-  Double_t evaluate() const override;
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const override;
+  Double_t evaluate() const override {
+      return getValV(nullptr);
+  }
+  double getValV(const RooArgSet* set=nullptr) const override ;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
 
@@ -152,9 +155,9 @@ protected:
   }
 
 private:
-  std::pair<const RooArgSet*, CacheElem*> getNormAndCache(const RooArgSet* defaultNorm = nullptr) const;
-  mutable RooFit::UniqueId<RooArgSet>::Value_t _idOfLastUsedNormSet = RooFit::UniqueId<RooArgSet>::nullval; //!
-  mutable std::unique_ptr<const RooArgSet> _copyOfLastNormSet = nullptr; //!
+  std::pair<const RooArgSet*, CacheElem*> getNormAndCache(const RooArgSet* nset) const;
+  mutable RooFit::UniqueId<RooArgSet>::Value_t _idOfLastUsedNormSet = RooFit::UniqueId<RooArgSet>::nullval; ///<!
+  mutable std::unique_ptr<const RooArgSet> _copyOfLastNormSet = nullptr; ///<!
 
   void finalizeConstruction();
 

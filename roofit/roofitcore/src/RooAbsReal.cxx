@@ -317,7 +317,13 @@ RooSpan<const double> RooAbsReal::getValues(RooBatchCompute::RunContext& evalDat
 
   normSet = normSet ? normSet : _lastNSet;
 
-  ROOT::Experimental::RooFitDriver driver(evalData, *this, normSet ? *normSet : RooArgSet{});
+  std::map<const TNamed *, RooSpan<const double>> dataSpans;
+  for (auto const &evalDataItem : evalData.spans) {
+    dataSpans[evalDataItem.first->namePtr()] = evalDataItem.second;
+  }
+
+  ROOT::Experimental::RooFitDriver driver(*this, normSet ? *normSet : RooArgSet{});
+  driver.setData(dataSpans);
   auto& results = evalData.ownedMemory[this];
   results = driver.getValues(); // the compiler should use the move assignment here
   evalData.spans[this] = results;
@@ -327,7 +333,8 @@ RooSpan<const double> RooAbsReal::getValues(RooBatchCompute::RunContext& evalDat
 ////////////////////////////////////////////////////////////////////////////////
 
 std::vector<double> RooAbsReal::getValues(RooAbsData const& data, RooFit::BatchModeOption batchMode) const {
-  ROOT::Experimental::RooFitDriver driver(data, *this, *data.get(), batchMode, "");
+  ROOT::Experimental::RooFitDriver driver(*this, *data.get(), batchMode);
+  driver.setData(data, "");
   return driver.getValues();
 }
 
@@ -4897,8 +4904,8 @@ RooSpan<double> RooAbsReal::evaluateSpan(RooBatchCompute::RunContext& evalData, 
 \param output The array where the results are stored
 \param nEvents The number of events to be processed
 \param dataMap A std::map containing the input data for the computations
-**/ 
-void RooAbsReal::computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const {
+**/
+void RooAbsReal::computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const {
 
   // Find all servers that are serving real numbers to us, retrieve their batch data,
   // and switch them into "always clean" operating mode, so they return always the last-set value.
@@ -4907,7 +4914,6 @@ void RooAbsReal::computeBatch(cudaStream_t*, double* output, size_t nEvents, Roo
     RooSpan<const double> batch;
     double oldValue;
     RooAbsArg::OperMode oldOperMode;
-    bool hasOtherValueClients;
   };
   std::vector<ServerData> ourServers;
   std::size_t dataSize = 1;
@@ -4916,16 +4922,14 @@ void RooAbsReal::computeBatch(cudaStream_t*, double* output, size_t nEvents, Roo
     if (server->isValueServer(*this)) {
       // maybe we are still missing inhibit dirty here
       auto oldOperMode = server->operMode();
-      bool hasOtherValueClients = server->valueClients().size() > 1;
       // See note at the bottom of this function to learn why we can only set
       // the operation mode to "always clean" if there are no other value
       // clients.
-      server->setOperMode(hasOtherValueClients ? RooAbsArg::Auto : RooAbsArg::AClean);
+      server->setOperMode(RooAbsArg::AClean);
       ourServers.push_back({server,
-          dataMap[server],
+          dataMap.at(server),
           dynamic_cast<RooAbsCategory const*>(server) ? static_cast<RooAbsCategory const*>(server)->getCurrentIndex() : static_cast<RooAbsReal const*>(server)->_value,
-          oldOperMode,
-          hasOtherValueClients});
+          oldOperMode});
       // Prevent the server from evaluating; just return cached result, which we will side load:
       dataSize = std::max(dataSize, ourServers.back().batch.size());
     }
@@ -4960,27 +4964,7 @@ void RooAbsReal::computeBatch(cudaStream_t*, double* output, size_t nEvents, Roo
 
   for (std::size_t i=0; i < nEvents; ++i) {
     for (auto& serv : ourServers) {
-      // When we set the cached Value, we must be careful with the false
-      // conclusion that notifying the clients is not necessary even if we will
-      // forcibly call `evaluate()` a few lines below anyway! There are classes
-      // like the `RooAbsAnaConvPdf` that have an internal computation graph,
-      // and if we don't notify the clients these internal nodes don't get
-      // re-evaluated. Therefore, not notifying the clients is only safe if
-      // there are no other clients not evaluated in batch mode. One might
-      // thing that notifying the clients is expensive because the notification
-      // will recurse up through all the computation graph, but for this reason
-      // the RooFitDriver sets the operation mode of all nodes it evaluates to
-      // `ADirty` such that the propagation of the dirty flag is prevented.
-      //
-      // Possible optimization here: right now, we check if there are other
-      // clients besides us as a heuristic to tell if there are no other
-      // clients not evaluated in batch mode. The assumption that all other
-      // clients are not evaluated by the RooFitDriver is of course wrong. The
-      // computation graph can be analyzed more thoroughly to only enable the
-      // client notification is this case. This will require some interface
-      // extension of the RooFit batch mode functions, so it's only worth to
-      // implement it if this client notification turns out to be a bottleneck.
-      serv.server->setCachedValue(serv.batch[std::min(i, serv.batch.size()-1)], /*notifyClients=*/ serv.hasOtherValueClients);
+      serv.server->setCachedValue(serv.batch[std::min(i, serv.batch.size()-1)], false);
     }
 
     output[i] = evaluate();

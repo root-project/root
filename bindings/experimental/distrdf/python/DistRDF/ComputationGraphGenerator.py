@@ -12,6 +12,8 @@
 
 import logging
 
+from copy import deepcopy
+
 import ROOT
 
 from DistRDF.CppWorkflow import CppWorkflow
@@ -70,39 +72,54 @@ class ComputationGraphGenerator(object):
 
         return return_nodes
 
-    def _make_op_lazy_if_needed(self, operation, range_id):
+    def _create_lazy_op_if_needed(self, operation, range_id):
         """
         We may need to change the attributes of some operations (currently
         Snapshot and AsNumpy), to make them lazy before triggering
         the computation graph.
+
+        Note:
+        For the Snapshot operation, since the file name from the original
+        operation needs to be changed, this function makes a deep copy of it and
+        returns the modified copy. This is needed in order to avoid that a task
+        may receive as input an operation that was previously modified by
+        another task. In that case, the file name would contain the range id
+        from the other task, thus leading to create a wrong file name in this
+        function.
         """
 
         if operation.name == "Snapshot":
+            modified_op = deepcopy(operation)
             # Retrieve filename and append range boundaries
-            filename = operation.args[1].partition(".root")[0]
+            filename = modified_op.args[1].partition(".root")[0]
             path_with_range = "{}_{}.root".format(filename, range_id)
             # Create a partial snapshot on the current range
-            operation.args[1] = path_with_range
+            modified_op.args[1] = path_with_range
 
-            if len(operation.args) == 2:
+            if len(modified_op.args) == 2:
                 # Only the first two mandatory arguments were passed
                 # Only the following overload is possible
                 # Snapshot(std::string_view treename, std::string_view filename, std::string_view columnNameRegexp = "")
-                operation.args.append("")  # Append empty regex
+                modified_op.args.append("")  # Append empty regex
 
-            if len(operation.args) == 4:
+            if len(modified_op.args) == 4:
                 # An RSnapshotOptions instance was passed as fourth argument
                 # Make it lazy and keep the other options
-                operation.args[3].fLazy = True
+                modified_op.args[3].fLazy = True
             else:
                 # We already appended an empty regex for the 2 mandatory arguments overload
                 # All other overloads have 3 mandatory arguments
                 # We just need to append a lazy RSnapshotOptions now
                 lazy_options = ROOT.RDF.RSnapshotOptions()
                 lazy_options.fLazy = True
-                operation.args.append(lazy_options)  # Append RSnapshotOptions
+                modified_op.args.append(lazy_options)  # Append RSnapshotOptions
+
+            return modified_op
+
         elif operation.name == "AsNumpy":
             operation.kwargs["lazy"] = True  # Make it lazy
+
+        return operation
 
     def generate_computation_graph(self, previous_node, range_id, distrdf_node=None):
         """
@@ -143,9 +160,8 @@ class ComputationGraphGenerator(object):
             # Execute the current operation using the output of the previous
             # node
             RDFOperation = getattr(previous_node, distrdf_node.operation.name)
-            operation = distrdf_node.operation
-            self._make_op_lazy_if_needed(operation, range_id)
-            pyroot_node = RDFOperation(*operation.args, **operation.kwargs)
+            in_task_op = self._create_lazy_op_if_needed(distrdf_node.operation, range_id)
+            pyroot_node = RDFOperation(*in_task_op.args, **in_task_op.kwargs)
 
             # The result is a pyroot object which is stored together with
             # the DistRDF node. This binds the pyroot object lifetime to the
@@ -157,9 +173,9 @@ class ComputationGraphGenerator(object):
             # we just retrieved
             previous_node = pyroot_node
 
-            if (operation.is_action() or operation.is_instant_action()):
-                if operation.name == "Snapshot":
-                    future_results.append(SnapshotResult(operation.args[0], [operation.args[1]]))
+            if (in_task_op.is_action() or in_task_op.is_instant_action()):
+                if in_task_op.name == "Snapshot":
+                    future_results.append(SnapshotResult(in_task_op.args[0], [in_task_op.args[1]]))
                 else:
                     future_results.append(pyroot_node)
 

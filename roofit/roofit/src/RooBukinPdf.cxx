@@ -141,9 +141,10 @@ Double_t RooBukinPdf::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute multiple values of Bukin distribution.  
-void RooBukinPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+/// Compute multiple values of Bukin distribution.
+void RooBukinPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::Bukin, output, nEvents, dataMap, {&*x,&*Xp,&*sigp,&*xi,&*rho1,&*rho2,&*_norm});
+  dispatch->compute(stream, RooBatchCompute::Bukin, output, nEvents,
+          {dataMap.at(x), dataMap.at(Xp), dataMap.at(sigp), dataMap.at(xi), dataMap.at(rho1), dataMap.at(rho2)});
 }

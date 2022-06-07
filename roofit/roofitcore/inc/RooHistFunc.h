@@ -86,15 +86,15 @@ public:
 
 
   Int_t getBin() const;
-  std::vector<Int_t> getBins(RooBatchCompute::DataMap& dataMap) const;
+  std::vector<Int_t> getBins(RooFit::Detail::DataMap const& dataMap) const;
 
 protected:
 
   Bool_t importWorkspaceHook(RooWorkspace& ws) ;
   Bool_t areIdentical(const RooDataHist& dh1, const RooDataHist& dh2) ;
 
-  Double_t evaluate() const;
-  void computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap&) const;
+  double evaluate() const;
+  void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const;
   friend class RooAbsCachedReal ;
 
   virtual void ioStreamerPass2() ;

@@ -206,6 +206,35 @@ bool interpretExtendedCmdArg(RooAbsPdf const& pdf, int extendedCmdArg) {
   return extendedCmdArg;
 }
 
+inline double getLog(double prob, RooAbsReal const *caller)
+{
+
+   if (std::abs(prob) > 1e6) {
+      oocoutW(caller, Eval) << "RooAbsPdf::getLogVal(" << caller->GetName()
+                            << ") WARNING: top-level pdf has a large value: " << prob << std::endl;
+   }
+
+   if (prob < 0) {
+      caller->logEvalError("getLogVal() top-level p.d.f evaluates to a negative number");
+      return RooNaNPacker::packFloatIntoNaN(-prob);
+   }
+
+   if (prob == 0) {
+      caller->logEvalError("getLogVal() top-level p.d.f evaluates to zero");
+
+      return -std::numeric_limits<double>::infinity();
+   }
+
+   if (TMath::IsNaN(prob)) {
+      caller->logEvalError("getLogVal() top-level p.d.f evaluates to NaN");
+
+      return prob;
+   }
+
+   return std::log(prob);
+}
+
+
 } // namespace
 
 using namespace std;
@@ -642,30 +671,7 @@ void RooAbsPdf::setTraceCounter(Int_t value, Bool_t allNodes)
 
 Double_t RooAbsPdf::getLogVal(const RooArgSet* nset) const
 {
-  Double_t prob = getVal(nset) ;
-
-  if (fabs(prob)>1e6) {
-    coutW(Eval) << "RooAbsPdf::getLogVal(" << GetName() << ") WARNING: top-level pdf has a large value: " << prob << endl ;
-  }
-
-  if(prob < 0) {
-    logEvalError("getLogVal() top-level p.d.f evaluates to a negative number") ;
-    return RooNaNPacker::packFloatIntoNaN(-prob);
-  }
-
-  if(prob == 0) {
-    logEvalError("getLogVal() top-level p.d.f evaluates to zero") ;
-
-    return -std::numeric_limits<double>::infinity();
-  }
-
-  if (TMath::IsNaN(prob)) {
-    logEvalError("getLogVal() top-level p.d.f evaluates to NaN") ;
-
-    return prob;
-  }
-
-  return log(prob);
+  return getLog(getVal(nset), this);
 }
 
 
@@ -731,30 +737,8 @@ RooSpan<const double> RooAbsPdf::getLogProbabilities(RooBatchCompute::RunContext
 
 
 void RooAbsPdf::getLogProbabilities(RooSpan<const double> pdfValues, double * output) const {
-
-  if (checkInfNaNNeg(pdfValues)) {
-    logBatchComputationErrors(pdfValues, 0);
-
-    for (std::size_t i = 0; i < pdfValues.size(); ++i) {
-      const double prob = pdfValues[i];
-      double theLog = RooBatchCompute::fast_log(prob);
-
-      if (prob <= 0.) {
-        // Pass magnitude of undershoot to minimiser:
-        theLog = RooNaNPacker::packFloatIntoNaN(-prob);
-      } else if (std::isnan(prob)) {
-        theLog = prob;
-      }
-
-      output[i] = theLog;
-    }
-
-    return;
-  }
-
-  for (std::size_t i = 0; i < pdfValues.size(); ++i) { //CHECK_VECTORISE
-    const double prob = pdfValues[i];
-    output[i] = RooBatchCompute::fast_log(prob);;
+  for (std::size_t i = 0; i < pdfValues.size(); ++i) {
+     output[i] = getLog(pdfValues[i], this);
   }
 }
 
@@ -766,11 +750,45 @@ void RooAbsPdf::getLogProbabilities(RooSpan<const double> pdfValues, double * ou
 /// it is extendable by overloading `canBeExtended()`, and must
 /// implement the `expectedEvents()` function.
 ///
+/// \param[in] observed The number of observed events.
+/// \param[in] nset The normalization set when asking the pdf for the expected
+///            number of events.
+/// \param[in] observedSumW2 The number of observed events when weighting with
+///            squared weights. If non-zero, the weight-squared error
+///            correction is applied to the extended term.
+///
+/// The weight-squared error correction works as follows:
+/// adjust poisson such that
+/// estimate of \f$N_\mathrm{expect}\f$ stays at the same value, but has a different variance, rescale
+/// both the observed and expected count of the Poisson with a factor \f$ \sum w_{i} / \sum w_{i}^2 \f$
+/// (the effective weight of the Poisson term),
+/// i.e., change \f$\mathrm{Poisson}(N_\mathrm{observed} = \sum w_{i} | N_\mathrm{expect} )\f$
+/// to \f$ \mathrm{Poisson}(\sum w_{i} \cdot \sum w_{i} / \sum w_{i}^2 | N_\mathrm{expect} \cdot \sum w_{i} / \sum w_{i}^2 ) \f$,
+/// weighted by the effective weight \f$ \sum w_{i}^2 / \sum w_{i} \f$ in the likelihood.
+/// Since here we compute the likelihood with the weight square, we need to multiply by the
+/// square of the effective weight:
+///   - \f$ W_\mathrm{expect}   = N_\mathrm{expect} \cdot \sum w_{i} / \sum w_{i}^2 \f$ : effective expected entrie
+///   - \f$ W_\mathrm{observed} = \sum w_{i} \cdot \sum w_{i} / \sum w_{i}^2 \f$        : effective observed entries
+///
+/// The extended term for the likelihood weighted by the square of the weight will be then:
+///
+///  \f$ \left(\sum w_{i}^2 / \sum w_{i}\right)^2 \cdot W_\mathrm{expect} - (\sum w_{i}^2 / \sum w_{i})^2 \cdot W_\mathrm{observed} \cdot \log{W_\mathrm{expect}} \f$
+///
+///  aund this is using the previous expressions for \f$ W_\mathrm{expect} \f$ and \f$ W_\mathrm{observed} \f$:
+///
+///  \f$ \sum w_{i}^2 / \sum w_{i} \cdot N_\mathrm{expect} - \sum w_{i}^2 \cdot \log{W_\mathrm{expect}} \f$
+///
+///  Since the weights are constants in the likelihood we can use \f$\log{N_\mathrm{expect}}\f$ instead of \f$\log{W_\mathrm{expect}}\f$.
+///
 /// See also RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared),
-/// which takes a dataset to extract (\f$N_\mathrm{observed}\f$) and the
+/// which takes a dataset to extract \f$N_\mathrm{observed}\f$ and the
 /// normalization set.
+double RooAbsPdf::extendedTerm(double sumEntries, RooArgSet const* nset, double sumEntriesW2) const
+{
+  return extendedTerm(sumEntries, expectedEvents(nset), sumEntriesW2);
+}
 
-double RooAbsPdf::extendedTerm(double observed, const RooArgSet* nset) const
+double RooAbsPdf::extendedTerm(double sumEntries, double expected, double sumEntriesW2) const
 {
   // check if this PDF supports extended maximum likelihood fits
   if(!canBeExtended()) {
@@ -779,7 +797,6 @@ double RooAbsPdf::extendedTerm(double observed, const RooArgSet* nset) const
     return 0;
   }
 
-  Double_t expected= expectedEvents(nset);
   if(expected < 0) {
     coutE(InputArguments) << fName << ": calculated negative expected events: " << expected
          << endl;
@@ -789,7 +806,7 @@ double RooAbsPdf::extendedTerm(double observed, const RooArgSet* nset) const
 
 
   // Explicitly handle case Nobs=Nexp=0
-  if (fabs(expected)<1e-10 && fabs(observed)<1e-10) {
+  if (std::abs(expected)<1e-10 && std::abs(sumEntries)<1e-10) {
     return 0 ;
   }
 
@@ -799,37 +816,12 @@ double RooAbsPdf::extendedTerm(double observed, const RooArgSet* nset) const
     return TMath::QuietNaN() ;
   }
 
-  // calculate and return the negative log-likelihood of the Poisson
-  // factor for this dataset, dropping the constant log(observed!)
-  //   Double_t extra=0;
-  //   if(observed<1000000) {
-  //     Double_t Delta1 = (expected-observed);
-  //     Double_t Delta2 = observed*(log(expected)-log(observed+1));
-  //     Double_t Const3 = 0.5*log(observed+1);
-  //     extra= Delta1 - Delta2 + Const3;
+  double extra = expected - sumEntries*log(expected);
 
-  //     cout << " extra obs = " << observed << " exp = " << expected << endl ;
-  //     cout << " extra orig = " << expected - observed*log(expected) << endl ;
-  //     cout << " extra orig fix = " << expected - observed*log(expected) + log(TMath::Gamma(observed+1)) << endl ;
-  //     cout << " extra new  = " << extra << endl ;
-
-  //   } else {
-  //     Double_t sigma_square=expected;
-  //     Double_t diff=observed-expected;
-  //     extra=-log(sigma_square)/2 + (diff*diff)/(2*sigma_square);
-  //   }
-
-  Double_t extra= expected - observed*log(expected);
-
-//   cout << "RooAbsPdf::extendedTerm(" << GetName() << ") observed = " << observed << " expected = " << expected << endl ;
-
-  Bool_t trace(kFALSE) ;
-  if(trace) {
-    cxcoutD(Tracing) << fName << "::extendedTerm: expected " << expected << " events, got "
-		     << observed << " events. extendedTerm = " << extra << endl;
+  if(sumEntriesW2 != 0.0) {
+    extra *= sumEntriesW2 / sumEntries;
   }
 
-//   cout << "RooAbsPdf::extendedTerm(" << GetName() << ") nExp = " << expected << " nObs = " << observed << endl ;
   return extra;
 }
 
@@ -850,7 +842,7 @@ double RooAbsPdf::extendedTerm(double observed, const RooArgSet* nset) const
 ///            number of expected events.
 /// \param[in] weightSquared If set to `true`, the extended term will be scaled by
 ///            the ratio of squared event weights over event weights:
-///            (\f$ \sum w_{i}^2 / \sum w_{i} \f$).
+///            \f$ \sum w_{i}^2 / \sum w_{i} \f$.
 ///            Indended to be used by fits with the `SumW2Error()` option that
 ///            can be passed to
 ///            RooAbsPdf::fitTo(RooAbsData&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&)
@@ -859,29 +851,11 @@ double RooAbsPdf::extendedTerm(double observed, const RooArgSet* nset) const
 
 double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared) const {
   double sumW = data.sumEntries();
-  double term = extendedTerm(sumW, data.get());
+  double sumW2 = 0.0;
   if (weightSquared) {
-
-    // Adjust calculation of extended term with W^2 weighting: adjust poisson such that
-    // estimate of Nexpected stays at the same value, but has a different variance, rescale
-    // both the observed and expected count of the Poisson with a factor sum[w] / sum[w^2] which is
-    // the effective weight of the Poisson term.
-    // i.e. change Poisson(Nobs = sum[w]| Nexp ) --> Poisson( sum[w] * sum[w] / sum[w^2] | Nexp * sum[w] / sum[w^2] )
-    // weighted by the effective weight  sum[w^2]/ sum[w] in the likelihood.
-    // Since here we compute the likelihood with the weight square we need to multiply by the
-    // square of the effective weight
-    // expectedW = expected * sum[w] / sum[w^2]   : effective expected entries
-    // observedW =  sum[w]  * sum[w] / sum[w^2]   : effective observed entries
-    // The extended term for the likelihood weighted by the square of the weight will be then:
-    //  (sum[w^2]/ sum[w] )^2 * expectedW -  (sum[w^2]/ sum[w] )^2 * observedW * log (expectedW)  and this is
-    //  using the previous expressions for expectedW and observedW
-    //  sum[w^2] / sum[w] * expected - sum[w^2] * log (expectedW)
-    //  and since the weights are constants in the likelihood we can use log(expected) instead of log(expectedW)
-
-    double sumW2 = data.sumEntriesW2();
-    term *= sumW2 / sumW;
+    sumW2 = data.sumEntriesW2();
   }
-  return term;
+  return extendedTerm(sumW, data.get(), sumW2);
 }
 
 
@@ -3607,32 +3581,5 @@ void RooAbsPdf::setNormRangeOverride(const char* rangeName)
   if (_norm) {
     _normMgr.sterilize() ;
     _norm = 0 ;
-  }
-}
-
-
-/** Base function for computing multiple values of a RooAbsPdf.
-First, the RooAbsReal base function is called to compute the raw values of the
-pdf. After that, divide by the normalization values found in the dataMap.
-\param output The array where the results are stored
-\param nEvents The number of events to be processed
-\param dataMap A std::map containing the input data for the computations
-**/ 
-void RooAbsPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
-{
-  RooAbsReal::computeBatch(stream, output, nEvents, dataMap);
-
-  auto integralSpan = dataMap.at(_norm);
-
-  if(integralSpan.size() == 1) {
-    double oneOverNorm = 1. / integralSpan[0];
-    for (std::size_t i=0; i < nEvents; ++i) {
-      output[i] *= oneOverNorm;
-    }
-  } else {
-    assert(integralSpan.size() == nEvents);
-    for (std::size_t i=0; i < nEvents; ++i) {
-      output[i] = normalizeWithNaNPacking(output[i], integralSpan[i]);
-    }
   }
 }

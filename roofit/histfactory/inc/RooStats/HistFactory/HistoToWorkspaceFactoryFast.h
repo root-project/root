@@ -87,9 +87,6 @@ namespace RooStats{
             std::map<std::string,double> logNormSyst,
             std::map<std::string,double> noSyst);
 
-      RooAbsArg* MakeLinInterpWithConstraint(RooHistFunc* nominalHistFunc, RooWorkspace* proto, const std::vector<HistoSys>&,
-               const std::string& prefix, std::vector<std::string>& likelihoodTermNames, const RooArgList& observables) const;
-
       RooWorkspace* MakeSingleChannelWorkspace(Measurement& measurement, Channel& channel);
 
       void MakeTotalExpected(RooWorkspace* proto, const std::string& totName,
@@ -98,8 +95,8 @@ namespace RooStats{
 
       RooDataSet* MergeDataSets(RooWorkspace* combined,
             std::vector<std::unique_ptr<RooWorkspace>>& wspace_vec,
-            std::vector<std::string> channel_names,
-            std::string dataSetName,
+            std::vector<std::string> const& channel_names,
+            std::string const& dataSetName,
             RooArgList obsList,
             RooCategory* channelCat);
 
@@ -119,8 +116,8 @@ namespace RooStats{
                    ParamHistFunc& paramHist, const TH1* uncertHist,
                    Constraint::Type type, Double_t minSigma );
 
-      void ConfigureHistFactoryDataset(RooDataSet* obsData, TH1* nominal, RooWorkspace* proto,
-                   std::vector<std::string> obsNameVec);
+      void ConfigureHistFactoryDataset(RooDataSet& obsData, TH1 const& nominal, RooWorkspace& proto,
+                   std::vector<std::string> const& obsNameVec);
 
       std::vector<std::string> fSystToFix;
       std::map<std::string, double> fParamValues;

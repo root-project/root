@@ -34,8 +34,13 @@ void *RJittedDefine::GetValuePtr(unsigned int slot)
 
 const std::type_info &RJittedDefine::GetTypeId() const
 {
-   assert(fConcreteDefine != nullptr);
-   return fConcreteDefine->GetTypeId();
+   if (fConcreteDefine)
+      return fConcreteDefine->GetTypeId();
+   else if (fTypeId)
+      return *fTypeId;
+   else
+      throw std::runtime_error("RDataFrame: Type info was requested for a Defined column type, but could not be "
+                               "retrieved. This should never happen, please report this as a bug.");
 }
 
 void RJittedDefine::Update(unsigned int slot, Long64_t entry)

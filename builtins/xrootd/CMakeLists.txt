@@ -10,7 +10,8 @@ find_package(OpenSSL REQUIRED)
 
 set(XROOTD_VERSION "5.4.2")
 set(XROOTD_VERSIONNUM 500040002 CACHE INTERNAL "" FORCE)
-set(XROOTD_SRC_URI https://github.com/xrootd/xrootd/archive/v${XROOTD_VERSION}.tar.gz)
+set(lcgpackages http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources)
+set(XROOTD_SRC_URI ${lcgpackages}/xrootd-${XROOTD_VERSION}.tar.gz)
 set(XROOTD_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/XROOTD-prefix)
 message(STATUS "Downloading and building XROOTD version ${XROOTD_VERSION}")
 

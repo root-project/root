@@ -18,6 +18,7 @@
 #include "RooNLLVar.h"
 #include "RooNLLVarNew.h"
 #include "RooFitDriver.h"
+#include "RooFit/BatchModeHelpers.h"
 #include "RooGaussian.h"
 #include "RooMinimizer.h"
 #include "RooFitResult.h"
@@ -83,11 +84,15 @@ TEST(testRooFitDriver, SimpleLikelihoodFit)
    resetGraph();
 
    // ...and now the new way with RooFitDriver
-   ROOT::Experimental::RooNLLVarNew nll("nll", "nll", model, *data->get(), nullptr, false, "");
-   ROOT::Experimental::RooFitDriver driver(*data, nll, x, RooFit::BatchModeOption::Cpu, "");
-   auto resultBatchNew = doFit(*driver.makeAbsRealWrapper());
-   if (verbose)
+   using namespace ROOT::Experimental;
+   RooNLLVarNew nll("nll", "nll", model, *data->get(), false, "");
+   auto driver = std::make_unique<RooFitDriver>(nll, x, RooFit::BatchModeOption::Cpu);
+   driver->setData(*data);
+   auto wrapper = RooFit::BatchModeHelpers::makeDriverAbsRealWrapper(std::move(driver), *data->get());
+   auto resultBatchNew = doFit(*wrapper);
+   if (verbose) {
       std::cout << "-  batch mode fit took " << resultBatchNew.elapsedTime << " ms" << std::endl;
+   }
 
    // make sure the fit result is the same and that there were the same number
    // of evaluations

@@ -15,6 +15,7 @@ endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
   HEADERS
+    RooFit/Detail/DataMap.h
     RooFit/Floats.h
     Roo1DTable.h
     RooAbsAnaConvPdf.h
@@ -249,9 +250,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFit/TestStatistics/buildLikelihood.h
   SOURCES
     src/BatchModeHelpers.cxx
+    src/BatchModeDataHelpers.cxx
+    src/CUDAHelpers.cxx
     src/Buffers.cxx
     src/BidirMMapPipe.cxx
     src/BidirMMapPipe.h
+    src/NormalizationHelpers.cxx
     src/Roo1DTable.cxx
     src/RooAbsAnaConvPdf.cxx
     src/RooAbsArg.cxx
@@ -386,6 +390,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooNLLVar.cxx
     src/RooNLLVarNew.cxx
     src/RooNormSetCache.cxx
+    src/RooNormalizedPdf.cxx
     src/RooNumber.cxx
     src/RooNumCdf.cxx
     src/RooNumConvolution.cxx

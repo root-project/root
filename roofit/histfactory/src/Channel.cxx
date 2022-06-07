@@ -102,14 +102,14 @@ void RooStats::HistFactory::Channel::Print( std::ostream& stream ) {
 }  
 
 
-void RooStats::HistFactory::Channel::PrintXML( std::string directory, std::string prefix ) {
+void RooStats::HistFactory::Channel::PrintXML( std::string const& directory, std::string const& prefix ) const {
 
   // Create an XML file for this channel
   cxcoutPHF << "Printing XML Files for channel: " << GetName() << std::endl;
   
   std::string XMLName = prefix + fName + ".xml";
-  if( directory != "" ) XMLName = directory + "/" + XMLName;
-  
+  if(!directory.empty()) XMLName = directory + "/" + XMLName;
+
   ofstream xml( XMLName.c_str() );
 
   // Add the time
@@ -134,12 +134,9 @@ void RooStats::HistFactory::Channel::PrintXML( std::string directory, std::strin
   xml << "  <Channel Name=\"" << fName << "\" InputFile=\"" << fInputFile << "\" >" << std::endl << std::endl;
 
   fData.PrintXML( xml );
-  /*
-  xml << "    <Data HistoName=\"" << fData.GetHistoName() << "\" "
-      << "InputFile=\"" << fData.GetInputFile() << "\" "
-      << "HistoPath=\"" << fData.GetHistoPath() << "\" "
-      << " /> " << std::endl << std::endl;  
-  */
+  for(auto const& data : fAdditionalData) {
+    data.PrintXML(xml);
+  }
 
   fStatErrorConfig.PrintXML( xml );
   /*
@@ -148,8 +145,8 @@ void RooStats::HistFactory::Channel::PrintXML( std::string directory, std::strin
       << "/> " << std::endl << std::endl;            
   */
 
-  for( unsigned int i = 0; i < fSamples.size(); ++i ) {
-    fSamples.at(i).PrintXML( xml );
+  for(auto const& sample : fSamples) {
+    sample.PrintXML( xml );
     xml << std::endl << std::endl;
   }
 
@@ -233,8 +230,7 @@ void RooStats::HistFactory::Channel::CollectHistograms() {
   }
 
   // Collect any histograms for additional Datasets
-  for( unsigned int i=0; i < fAdditionalData.size(); ++i) {
-    RooStats::HistFactory::Data& data = fAdditionalData.at(i);
+  for(auto& data : fAdditionalData) {
     if( data.GetInputFile() != "" ) {
       data.SetHisto( GetHistogram(data.GetInputFile(), data.GetHistoPath(), data.GetHistoName(), fileHandles) );
     }

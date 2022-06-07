@@ -61,22 +61,71 @@ TEST(RDFVary, RequireVariationsHaveConsistentType)
 #if !(defined(R__MACOSX) && defined(__arm64__))
 TEST(RDFVary, RequireVariationsHaveConsistentTypeJitted)
 {
-     auto df = ROOT::RDataFrame(10).Define("x", [] { return 1.f; });
-     {
-        auto s = df.Vary("x", "ROOT::RVecD{x*0.1}", 1).Sum<float>("x");
-        auto ss = VariationsFor(s);
-        // before starting the event loop, we jit and notice the mismatch in types
-        EXPECT_THROW(ss["nominal"], std::runtime_error);
-     }
+   // non-jitted Define, jitted Vary with incompatible type
+   auto df = ROOT::RDataFrame(10).Define("x", [] { return 1.f; });
+   {
+      auto s = df.Vary("x", "ROOT::RVecD{x*0.1}", 1).Sum<float>("x");
+      auto ss = VariationsFor(s);
+      // before starting the event loop, we jit and notice the mismatch in types
+      EXPECT_THROW(
+         try { ss["nominal"]; } catch (const std::runtime_error &err) {
+            const auto msg = "RVariationReader: type mismatch: column \"x\" is being used as float but the "
+                             "Define or Vary node advertises it as double";
+            EXPECT_STREQ(err.what(), msg);
+            throw;
+         },
+         std::runtime_error);
+   }
 
-     {
-        auto s2 = df.Define("y", [] { return 1; })
-                     .Vary({"x", "y"}, "ROOT::RVec<ROOT::RVecD>{{x*0.1}, {y*0.1}}", 1, "broken")
-                     .Sum("y");
-        auto ss2 = VariationsFor(s2);
-        // before starting the event loop, we jit and notice the mismatch in types
-        EXPECT_THROW(ss2["nominal"], std::runtime_error);
-     }
+   // non-jitted Define, jitted Vary with incompatible type (multiple columns varied simultaneously
+   {
+      auto s2 = df.Define("y", [] { return 1; })
+                   .Vary({"x", "y"}, "ROOT::RVec<ROOT::RVecD>{{x*0.1}, {y*0.1}}", 1, "broken")
+                   .Sum("y");
+      auto ss2 = VariationsFor(s2);
+      // before starting the event loop, we jit and notice the mismatch in types
+      EXPECT_THROW(
+         try { ss2["nominal"]; } catch (const std::runtime_error &err) {
+            const auto msg = "RVariationReader: type mismatch: column \"y\" is being used as int but the Define "
+                             "or Vary node advertises it as double";
+            EXPECT_STREQ(err.what(), msg);
+            throw;
+         },
+         std::runtime_error);
+   }
+
+   {
+      auto d2 = df.Define("z", "42");
+
+      // Jitted Define, non-jitted Vary with incompatible type
+      EXPECT_THROW(
+         try {
+            d2.Vary(
+               "z",
+               [] {
+                  return ROOT::RVecF{-1.f, 2.f};
+               },
+               {}, 2, "broken");
+         } catch (const std::runtime_error &err) {
+            const auto expected =
+               "Varied values for column \"z\" have a different type (float) than the nominal value (int).";
+            EXPECT_STREQ(err.what(), expected);
+            throw;
+         },
+         std::runtime_error);
+
+      // Jitted Define, jitted Vary with incompatible type
+      auto s = d2.Vary("z", "ROOT::RVecF{-1.f, 2.f}", 2, "broken").Sum<int>("z");
+      auto ss = ROOT::RDF::Experimental::VariationsFor(s);
+      EXPECT_THROW(
+         try { ss["broken:0"]; } catch (const std::runtime_error &err) {
+            const auto expected = "RVariationReader: type mismatch: column \"z\" is being used as int but the Define "
+                                  "or Vary node advertises it as float";
+            EXPECT_STREQ(err.what(), expected);
+            throw;
+         },
+         std::runtime_error);
+   }
 }
 #endif
 #endif
@@ -631,6 +680,51 @@ TEST_P(RDFVary, VariedHistosMustHaveNoDirectory)
    EXPECT_EQ(hs["nominal"].GetDirectory(), nullptr);
    EXPECT_EQ(hs["x:0"].GetDirectory(), nullptr);
    EXPECT_EQ(hs["x:1"].GetDirectory(), nullptr);
+}
+
+// this is a regression test, we used to read from wrong addresses in this case
+TEST_P(RDFVary, MoreVariedColumnsThanVariations)
+{
+   auto d = ROOT::RDataFrame(10)
+               .Define("x", [] { return 0; })
+               .Define("y", [] { return 0; })
+               .Vary(
+                  {"x", "y"},
+                  [] {
+                     return ROOT::RVec<ROOT::RVecI>{{1}, {2}};
+                  },
+                  {}, 1, "syst");
+   auto h = d.Sum<int>("y");
+   auto hs = ROOT::RDF::Experimental::VariationsFor(h);
+
+   EXPECT_EQ(hs["syst:0"], 20);
+}
+
+// this is a regression test for an issue that was hidden by RVec's small buffer optimization
+// when the variations don't fit in the smalll buffer and we are varying multiple columns simultaneously,
+// RVariation was changing the address of the varied values between entries, resulting in invalid reads
+// on the part of the RVariationReader.
+TEST_P(RDFVary, ManyVariationsManyColumns)
+{
+   auto d = ROOT::RDataFrame(10)
+               .Define("x", [] { return 0; })
+               .Define("y", [] { return 0; })
+               .Vary(
+                  {"x", "y"},
+                  [] {
+                     return ROOT::RVec<ROOT::RVecI>{ROOT::RVecI(100, 42), ROOT::RVecI(100, 8)};
+                  },
+                  {}, 100, "syst");
+
+   auto sx = d.Sum<int>("x");
+   auto sxs = ROOT::RDF::Experimental::VariationsFor(sx);
+   auto sy = d.Sum<int>("y");
+   auto sys = ROOT::RDF::Experimental::VariationsFor(sy);
+
+   for (int i = 0; i < 100; ++i) {
+      EXPECT_EQ(sxs["syst:" + std::to_string(i)], 420);
+      EXPECT_EQ(sys["syst:" + std::to_string(i)], 80);
+   }
 }
 
 // instantiate single-thread tests

@@ -79,11 +79,12 @@ Double_t RooBifurGauss::evaluate() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute multiple values of BifurGauss distribution.  
-void RooBifurGauss::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+/// Compute multiple values of BifurGauss distribution.
+void RooBifurGauss::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::BifurGauss, output, nEvents, dataMap, {&*x,&*mean,&*sigmaL,&*sigmaR,&*_norm});
+  dispatch->compute(stream, RooBatchCompute::BifurGauss, output, nEvents,
+          {dataMap.at(x),dataMap.at(mean),dataMap.at(sigmaL),dataMap.at(sigmaR)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

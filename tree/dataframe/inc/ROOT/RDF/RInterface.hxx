@@ -563,6 +563,7 @@ public:
       RDFInternal::CheckValidCppVarName(name, where);
       RDFInternal::CheckForDefinition(where, name, fColRegister, fLoopManager->GetBranchNames(),
                                       fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+      RDFInternal::CheckForNoVariations(where, name, fColRegister);
 
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
       auto jittedDefine = RDFInternal::BookDefineJit(name, expression, *fLoopManager, fDataSource, fColRegister,
@@ -802,8 +803,12 @@ public:
 
          const auto &innerTypeID = typeid(RDFInternal::InnerValueType_t<RetType>);
 
+         const auto &definesMap = fColRegister.GetColumns();
          for (auto i = 0u; i < colTypes.size(); ++i) {
-            if (innerTypeID != RDFInternal::TypeName2TypeID(colTypes[i]))
+            const auto it = definesMap.find(colNames[i]);
+            const auto &expectedTypeID =
+               it == definesMap.end() ? RDFInternal::TypeName2TypeID(colTypes[i]) : it->second->GetTypeId();
+            if (innerTypeID != expectedTypeID)
                throw std::runtime_error("Varied values for column \"" + colNames[i] + "\" have a different type (" +
                                         RDFInternal::TypeID2TypeName(innerTypeID) + ") than the nominal value (" +
                                         colTypes[i] + ").");
@@ -811,7 +816,11 @@ public:
       } else {
          const auto &retTypeID = typeid(typename RetType::value_type);
          const auto &colName = colNames[0]; // we have only one element in there
-         if (retTypeID != RDFInternal::TypeName2TypeID(GetColumnType(colName)))
+         const auto &definesMap = fColRegister.GetColumns();
+         const auto it = definesMap.find(colName);
+         const auto &expectedTypeID =
+            it == definesMap.end() ? RDFInternal::TypeName2TypeID(GetColumnType(colName)) : it->second->GetTypeId();
+         if (retTypeID != expectedTypeID)
             throw std::runtime_error("Varied values for column \"" + colName + "\" have a different type (" +
                                      RDFInternal::TypeID2TypeName(retTypeID) + ") than the nominal value (" +
                                      GetColumnType(colName) + ").");
@@ -3179,6 +3188,7 @@ private:
       } else {
          RDFInternal::CheckForDefinition(where, name, fColRegister, fLoopManager->GetBranchNames(),
                                          fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+         RDFInternal::CheckForNoVariations(where, name, fColRegister);
       }
 
       using ArgTypes_t = typename TTraits::CallableTraits<F>::arg_types;

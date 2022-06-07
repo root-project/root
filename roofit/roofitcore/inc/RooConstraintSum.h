@@ -53,6 +53,10 @@ public:
     return setData(static_cast<RooAbsData const&>(data), cloneData);
   }
 
+  void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
+
+  void fillNormSetForServer(RooArgSet const& /*normSet*/, RooAbsArg const& server, RooArgSet& serverNormSet) const override;
+
 protected:
 
   RooListProxy _set1 ;    // Set of constraint terms

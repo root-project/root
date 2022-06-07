@@ -1,17 +1,16 @@
 // Tests for the SumW2Error correction
 // Author: Jonas Rembser, CERN  10/2021
 
-#include "RooFitResult.h"
-#include "RooAbsPdf.h"
-#include "RooGaussian.h"
-#include "RooExponential.h"
-#include "RooAddPdf.h"
-#include "RooRandom.h"
-#include "RooDataHist.h"
-#include "RooDataSet.h"
-#include "RooRealVar.h"
+#include <RooFitResult.h>
+#include <RooAbsPdf.h>
+#include <RooAddPdf.h>
+#include <RooRandom.h>
+#include <RooDataHist.h>
+#include <RooDataSet.h>
+#include <RooRealVar.h>
+#include <RooWorkspace.h>
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 // GitHub issue 9118: Problem running weighted binned fit in batch mode
 TEST(SumW2Error, BatchMode)
@@ -19,15 +18,18 @@ TEST(SumW2Error, BatchMode)
    auto &msg = RooMsgService::instance();
    msg.setGlobalKillBelow(RooFit::WARNING);
 
-   RooRealVar x{"x", "x", 0, 0, 10};
-   RooRealVar mu{"mu", "mu", 3, 0, 10};
-   RooRealVar s{"s", "s", 1.0, 0.1, 5};
-   RooRealVar c1{"c1", "c1", -0.5, -3, -0.1};
-   RooRealVar f{"f", "f", 0.2, 0.0, 1.0};
+   RooWorkspace ws{"workspace"};
+   ws.factory("Gaussian::sig(x[0,0,10],mu[3,0,10],s[1, 0.1, 5])");
+   ws.factory("Exponential::bkg(x,c1[-0.5, -3, -0.1])");
+   ws.factory("SUM::model(f[0.2, 0.0, 1.0] * sig, bkg)");
 
-   RooGaussian sig{"sig", "sig", x, mu, s};
-   RooExponential bkg{"bkg", "bkg", x, c1};
-   RooAddPdf model{"model", "model", {sig, bkg}, {f}};
+   auto &x = *ws.var("x");
+   auto &mu = *ws.var("mu");
+   auto &s = *ws.var("s");
+   auto &c1 = *ws.var("c1");
+   auto &f = *ws.var("f");
+
+   auto &model = *ws.pdf("model");
 
    auto resetParametersToInitialFitValues = [&]() {
       mu.setVal(4.0);
@@ -101,4 +103,82 @@ TEST(SumW2Error, BatchMode)
       << " different results for Minuit2 fit to weighted RooDataSet with SumW2Error correction.";
    EXPECT_TRUE(fit(dataHistWeighted, 1, 0, "Minuit2")->isIdenticalNoCov(*fit(dataHistWeighted, 1, 1, "Minuit2")))
       << " different results for Minuit2 fit to weighted RooDataHist with SumW2Error correction.";
+}
+
+TEST(SumW2Error, ExtendedFit)
+{
+   using namespace RooFit;
+
+   RooWorkspace ws("workspace");
+   ws.factory("x[-10, 10]");
+   ws.factory("Gaussian::sig(x, mu[-1, 1], s[0.1, 5])");
+   ws.factory("Chebychev::bkg(x, {c1[0.1, -1, 1]})");
+   ws.factory("SUM::shp(Nsig[0, 20000] * sig, Nbkg[0, 20000] * bkg)");
+   auto *x = ws.var("x");
+   x->setRange("subrange", -5.0, 5.0);
+   auto *shp = ws.pdf("shp");
+   std::unique_ptr<RooDataSet> dataNoWeights{shp->generate(RooArgSet(*x))};
+
+   // For this test, use a uniform non-unity weight of 1.5. It was set to 0.1
+   // in the past, but then there were fourth-digit differences between the
+   // scalar mode and the batch mode. However, this is most likeliy not
+   // pointing towards a flaw in the batch mode, which is why a value was
+   // handpicked for which the differences disappear. Any residual problems are
+   // most likely caused by the unnecessarily complicated implementation of the
+   // RooAddPdf extended term in the scalar mode: the coefficients are
+   // projected to the subrange by cached scale factors, while the batch mode
+   // just uses the same scaling factor as for the full likelihood.
+   auto *wFunc = ws.factory("w[1.5]");
+
+   auto *w = dataNoWeights->addColumn(*wFunc);
+   RooDataSet data{dataNoWeights->GetName(),
+                   dataNoWeights->GetTitle(),
+                   dataNoWeights.get(),
+                   *dataNoWeights->get(),
+                   "",
+                   w->GetName()};
+   RooDataHist datahist{"datahist", "datahist", *data.get(), data};
+
+   std::vector<std::pair<std::string, double>> inVals;
+   for (auto const *v : ws.allVars()) {
+      inVals.emplace_back(v->GetName(), static_cast<RooRealVar const *>(v)->getVal());
+   }
+
+   auto resetVals = [&]() {
+      for (auto const &item : inVals) {
+         ws.var(item.first.c_str())->setError(0.0);
+         ws.var(item.first.c_str())->setVal(item.second);
+      }
+   };
+
+   auto doFit = [&](bool batchMode, bool sumW2Error, const char *range) {
+      resetVals();
+      return std::unique_ptr<RooFitResult>{shp->fitTo(datahist, Extended(), Range(range), Save(),
+                                                      SumW2Error(sumW2Error), Strategy(1), PrintLevel(-1),
+                                                      BatchMode(batchMode), Minimizer("Minuit2", "migrad"))};
+   };
+
+   // compare batch mode and scalar mode fit results for full range
+   {
+      auto yy = doFit(true, true, nullptr);
+      auto yn = doFit(true, false, nullptr);
+      auto ny = doFit(false, true, nullptr);
+      auto nn = doFit(false, false, nullptr);
+
+      EXPECT_TRUE(yy->isIdenticalNoCov(*ny)) << "different results for extended fit with SumW2Error in BatchMode";
+      EXPECT_TRUE(yn->isIdenticalNoCov(*nn)) << "different results for extended fit without SumW2Error in BatchMode";
+   }
+
+   // compare batch mode and scalar mode fit results for subrange
+   {
+      auto yy = doFit(true, true, "subrange");
+      auto yn = doFit(true, false, "subrange");
+      auto ny = doFit(false, true, "subrange");
+      auto nn = doFit(false, false, "subrange");
+
+      EXPECT_TRUE(yy->isIdenticalNoCov(*ny))
+         << "different results for extended fit in subrange with SumW2Error in BatchMode";
+      EXPECT_TRUE(yn->isIdenticalNoCov(*nn))
+         << "different results for extended fit in subrange without SumW2Error in BatchMode";
+   }
 }

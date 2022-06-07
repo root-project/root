@@ -80,11 +80,12 @@ Double_t RooDstD0BG::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute multiple values of D*-D0 mass difference distribution. 
-void RooDstD0BG::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+/// Compute multiple values of D*-D0 mass difference distribution.
+void RooDstD0BG::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::DstD0BG, output, nEvents, dataMap, {&*dm,&*dm0,&*C,&*A,&*B,&*_norm});
+  dispatch->compute(stream, RooBatchCompute::DstD0BG, output, nEvents,
+          {dataMap.at(dm), dataMap.at(dm0), dataMap.at(C), dataMap.at(A), dataMap.at(B)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

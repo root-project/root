@@ -235,23 +235,11 @@ public:
   RooSpan<const double> getLogProbabilities(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet = nullptr) const;
   void getLogProbabilities(RooSpan<const double> pdfValues, double * output) const;
 
-  void computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap&) const;
-
   /// \copydoc getNorm(const RooArgSet*) const
   Double_t getNorm(const RooArgSet& nset) const { 
     return getNorm(&nset) ; 
   }
   virtual Double_t getNorm(const RooArgSet* set=0) const ;
-  inline RooAbsReal* getIntegral(RooArgSet const& set) const {
-    syncNormalization(&set,true) ;
-    getVal(set);
-    assert(_norm != nullptr);
-    return _norm;
-  }
-  const RooAbsReal* getCachedLastIntegral() const {
-    return _norm;
-  }
-
 
   virtual void resetErrorCounters(Int_t resetValue=10) ;
   void setTraceCounter(Int_t value, Bool_t allNodes=kFALSE) ;
@@ -296,7 +284,8 @@ public:
   static void verboseEval(Int_t stat) ;
   static int verboseEval() ;
 
-  double extendedTerm(double observedEvents, const RooArgSet* nset=0) const;
+  double extendedTerm(double sumEntries, double expected, double sumEntriesW2=0.0) const;
+  double extendedTerm(double sumEntries, RooArgSet const* nset, double sumEntriesW2=0.0) const;
   double extendedTerm(RooAbsData const& data, bool weightSquared) const;
 
   void setNormRange(const char* rangeName) ;

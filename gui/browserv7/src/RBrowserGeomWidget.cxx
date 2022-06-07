@@ -89,6 +89,12 @@ public:
          return true;
       }
 
+      auto node = fObject->Get<TGeoNode>();
+      if (node) {
+         fViewer.SetGeometry(node->GetVolume()->GetGeoManager(), node->GetVolume()->GetName());
+         return true;
+      }
+
       // only handle TGeoManager now
       auto mgr = fObject->Get<TGeoManager>();
       if (!mgr) {

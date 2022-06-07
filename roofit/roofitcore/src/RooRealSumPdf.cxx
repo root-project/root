@@ -257,32 +257,7 @@ Double_t RooRealSumPdf::evaluate() const
 }
 
 
-void RooRealSumPdf::computeBatch(cudaStream_t* /*stream*/, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const {
-
-  // To evaluate this RooRealSumPdf, we have to undo the normalization of the
-  // pdf servers by convention. TODO: find a less hacky solution for this,
-  // which should be easy once the integrals are treated like separate nodes in
-  // the computation queue of the RooFit driver.
-
-  // remember copying a data map is cheap, because it only contains non-owning spans
-  RooBatchCompute::DataMap dataMapCopy = dataMap;
-
-  std::vector<std::vector<double>> buffers;
-
-  for(RooAbsArg const* func : _funcList) {
-      if(auto pdf = dynamic_cast<RooAbsPdf const*>(func)) {
-          auto pdfSpan = dataMapCopy.at(pdf);
-          std::size_t nEntries = pdfSpan.size();
-          auto integralSpan = dataMapCopy.at(pdf->getCachedLastIntegral());
-          buffers.emplace_back(nEntries);
-          auto& buffer = buffers.back();
-          for(std::size_t i = 0; i < nEntries; ++i) {
-            buffer[i] = pdfSpan[i] * integralSpan[integralSpan.size() == 1 ? 0 : i];
-          }
-          dataMapCopy[pdf] = RooSpan<const double>{buffer.begin(), buffer.end()};
-      }
-  }
-
+void RooRealSumPdf::computeBatch(cudaStream_t* /*stream*/, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const {
   // Do running sum of coef/func pairs, calculate lastCoef.
   for (unsigned int j = 0; j < nEvents; ++j) {
     output[j] = 0.0;
@@ -295,7 +270,7 @@ void RooRealSumPdf::computeBatch(cudaStream_t* /*stream*/, double* output, size_
     const double coefVal = coef != nullptr ? coef->getVal() : (1. - sumCoeff);
 
     if (func->isSelectedComp()) {
-      auto funcValues = dataMapCopy[func];
+      auto funcValues = dataMap.at(func);
       if(funcValues.size() == 1) {
         for (unsigned int j = 0; j < nEvents; ++j) {
           output[j] += funcValues[0] * coefVal;
@@ -326,21 +301,6 @@ void RooRealSumPdf::computeBatch(cudaStream_t* /*stream*/, double* output, size_
   if (_doFloor || _doFloorGlobal) {
     for (unsigned int j = 0; j < nEvents; ++j) {
       output[j] += std::max(0., output[j]);
-    }
-  }
-
-  // normalize
-  auto integralSpan = dataMap.at(_norm);
-
-  if(integralSpan.size() == 1) {
-    double oneOverNorm = 1. / integralSpan[0];
-    for (std::size_t i=0; i < nEvents; ++i) {
-      output[i] *= oneOverNorm;
-    }
-  } else {
-    assert(integralSpan.size() == nEvents);
-    for (std::size_t i=0; i < nEvents; ++i) {
-      output[i] = normalizeWithNaNPacking(output[i], integralSpan[i]);
     }
   }
 }

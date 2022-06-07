@@ -45,11 +45,11 @@ protected:
 
   RooRealProxy x ;
   RooRealProxy mean ;
-  Bool_t  _noRounding ;
-  Bool_t  _protectNegative{true};
-  
-  Double_t evaluate() const override;
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const override;
+  bool  _noRounding ;
+  bool  _protectNegative{true};
+
+  double evaluate() const override;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
   ClassDefOverride(RooPoisson,3) // A Poisson PDF
