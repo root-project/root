@@ -20,9 +20,6 @@
 #include <ROOT/TypeTraits.hxx>
 
 #include <daos.h>
-// Avoid depending on `gurt/common.h` as the only required declaration is `d_rank_list_free()`.
-// Also, this header file is known to provide macros that conflict with std::min()/std::max().
-extern "C" void d_rank_list_free(d_rank_list_t *rank_list);
 
 #include <functional>
 #include <memory>
@@ -44,11 +41,11 @@ class RDaosPool {
    friend class RDaosContainer;
 private:
    daos_handle_t fPoolHandle{};
-   uuid_t fPoolUuid{};
+   std::string fPoolLabel{};
 
 public:
    RDaosPool(const RDaosPool&) = delete;
-   RDaosPool(std::string_view poolUuid, std::string_view serviceReplicas);
+   RDaosPool(std::string_view poolLabel);
    ~RDaosPool();
 
    RDaosPool& operator=(const RDaosPool&) = delete;
@@ -107,7 +104,7 @@ public:
 
    RDaosObject() = delete;
    /// Provides low-level access to an object. If `cid` is OC_UNKNOWN, the user is responsible for
-   /// calling `daos_obj_generate_id()` to fill the reserved bits in `oid` before calling this constructor.
+   /// calling `daos_obj_generate_oid()` to fill the reserved bits in `oid` before calling this constructor.
    RDaosObject(RDaosContainer &container, daos_obj_id_t oid, ObjClassId cid = OC_UNKNOWN);
    ~RDaosObject();
 
@@ -152,7 +149,7 @@ private:
    };
 
    daos_handle_t fContainerHandle{};
-   uuid_t fContainerUuid{};
+   std::string fContainerLabel{};
    std::shared_ptr<RDaosPool> fPool;
    ObjClassId_t fDefaultObjectClass{OC_SX};
 
@@ -183,7 +180,7 @@ private:
    }
 
 public:
-   RDaosContainer(std::shared_ptr<RDaosPool> pool, std::string_view containerUuid, bool create = false);
+   RDaosContainer(std::shared_ptr<RDaosPool> pool, std::string_view containerLabel, bool create = false);
    ~RDaosContainer();
 
    ObjClassId_t GetDefaultObjectClass() const { return fDefaultObjectClass; }
