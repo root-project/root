@@ -97,14 +97,13 @@ struct RDatasetSpec {
    void
    AddFriend(const std::vector<std::pair<std::string, std::string>> &treeAndFileNames, const std::string &alias = "")
    {
-      std::vector<std::string> treeNames;
+      std::vector<std::string> treeNames, fileNames;
       treeNames.reserve(treeAndFileNames.size());
-      std::transform(begin(treeAndFileNames), end(treeAndFileNames), std::back_inserter(treeNames),
-                     [](auto const &pair) { return std::move(pair.first); });
-      std::vector<std::string> fileNames;
-      treeNames.reserve(treeAndFileNames.size());
-      std::transform(begin(treeAndFileNames), end(treeAndFileNames), std::back_inserter(fileNames),
-                     [](auto const &pair) { return std::move(pair.second); });
+      fileNames.reserve(treeAndFileNames.size());
+      for (auto &p : treeAndFileNames) {
+         treeNames.emplace_back(std::move(p.first));
+         fileNames.emplace_back(std::move(p.second));
+      }
       fFriendInfo.fFriendNames.emplace_back("", alias);
       fFriendInfo.fFriendFileNames.emplace_back(fileNames);
       fFriendInfo.fFriendChainSubNames.emplace_back(treeNames);
