@@ -2487,7 +2487,8 @@ void TGLUtil::DrawReferenceMarker(const TGLCamera  & camera,
 
 void TGLUtil::DrawSimpleAxes(const TGLCamera      & camera,
                              const TGLBoundingBox & bbox,
-                                   Int_t            axesType)
+                                   Int_t            axesType,
+                                   Float_t          labelScale)
 {
    if (axesType == kAxesNone)
       return;
@@ -2608,8 +2609,8 @@ void TGLUtil::DrawSimpleAxes(const TGLCamera      & camera,
       maxPos -= camera.ViewportDeltaToWorld(maxPos, padPixels*axisViewport.X()/axisViewport.Mag(),
                                                     padPixels*axisViewport.Y()/axisViewport.Mag());
 
-      DrawNumber(Form("%.0f", min[k]), minPos, kTRUE); // Min value
-      DrawNumber(Form("%.0f", max[k]), maxPos, kTRUE); // Max value
+      DrawNumber(Form("%.0f", labelScale * min[k]), minPos, kTRUE); // Min value
+      DrawNumber(Form("%.0f", labelScale * max[k]), maxPos, kTRUE); // Max value
 
       // Axis name beside max value
       TGLVertex3 namePos = maxPos -
