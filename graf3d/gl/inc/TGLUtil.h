@@ -1040,7 +1040,8 @@ public:
                                    const UChar_t    * rgba   = 0);
    static void DrawSimpleAxes(const TGLCamera      & camera,
                               const TGLBoundingBox & bbox,
-                                    Int_t            axesType);
+                                    Int_t            axesType,
+                                    Float_t          labelScale = 1);
    static void DrawNumber(const TString    & num,
                           const TGLVertex3 & pos,
                                 Bool_t       center = kFALSE);

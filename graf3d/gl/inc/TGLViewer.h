@@ -160,7 +160,7 @@ protected:
 
    static TGLColorSet fgDefaultColorSet;                 //! a shared, default color-set
    static Bool_t      fgUseDefaultColorSetForNewViewers; //! name says it all
-
+   static Float_t     fgAxisLabelScale; //! allow simple guide axes labels to be scaled relative to scene units
 
    ///////////////////////////////////////////////////////////////////////
    // Methods
@@ -245,6 +245,7 @@ public:
    static TGLColorSet& GetDefaultColorSet();
    static void         UseDefaultColorSetForNewViewers(Bool_t x);
    static Bool_t       IsUsingDefaultColorSetForNewViewers();
+   static void         SetAxisLabelScale(Float_t als);
 
    const TGLRect& RefViewport()      const { return fViewport; }
    Int_t          ViewportDiagonal() const { return fViewport.Diagonal(); }
