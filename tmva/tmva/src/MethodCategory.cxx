@@ -629,9 +629,9 @@ Double_t TMVA::MethodCategory::GetMvaValue( Double_t* err, Double_t* errUpper )
    Double_t mvaValue = dynamic_cast<MethodBase*>(fMethods[methodToUse])->GetMvaValue(ev,err,errUpper);
    ev->SetVariableArrangement(0);
 
-   std::cout << "Event  is for method " << methodToUse << " spectator is " << ev->GetSpectator(0) << "  "
+   Log() << kDEBUG << "Event  is for method " << methodToUse << " spectator is " << ev->GetSpectator(0) << "  "
              << fVarMaps[0][0] << " classID " << DataInfo().IsSignal(ev) << " value " <<  mvaValue
-             << " type " << Data()->GetCurrentType() << std::endl;
+             << " type " << Data()->GetCurrentType() << Endl;
 
    return mvaValue;
 }
@@ -671,7 +671,6 @@ TMVA::MethodCategory::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t l
 
    for (UInt_t iev = firstEvt; iev < lastEvt; ++iev)
    {
-      //std::cout << "Loop on event " << iev << " of " << DataInfo().GetName() << std::endl;
       data->SetCurrentEvent(iev);
       UInt_t methodToUse = 0;
       const Event *ev = GetEvent(data->GetEvent());
@@ -698,10 +697,6 @@ TMVA::MethodCategory::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t l
 
 
       result[iev - firstEvt] = mvaValues[methodToUse][iev - firstEvt];
-
-      // std::cout << "Event " << iev << " is for method " << methodToUse << " spectator is " << ev->GetSpectator(0)
-      //           << "  " << fVarMaps[0][0] << " classID " << DataInfo().IsSignal(ev) << " value "
-      //           << result[iev - firstEvt] << " type " << data->GetCurrentType() << std::endl;
 
       // reset variable map which was set it before
       ev->SetVariableArrangement(nullptr);
