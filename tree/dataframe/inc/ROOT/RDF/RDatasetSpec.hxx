@@ -15,6 +15,7 @@
 #include <vector>
 #include <limits>
 #include <stdexcept> // std::logic_error
+#include <algorithm> // std::transform
 
 #include <RtypesCore.h>
 #include <ROOT/InternalTreeUtils.hxx>
@@ -79,30 +80,34 @@ struct RDatasetSpec {
    {
    }
 
-   void AddFriend(const std::string &treeName, const std::string &fileName)
+   void AddFriend(const std::string &treeName, const std::string &fileName, const std::string &alias = "")
    {
-      fFriendInfo.fFriendNames.emplace_back(
-         treeName, treeName); // TODO: user might specify alias, now it is the tree name by default
+      fFriendInfo.fFriendNames.emplace_back(treeName, alias);
       fFriendInfo.fFriendFileNames.emplace_back(std::vector<std::string>{fileName});
-      fFriendInfo.fFriendChainSubNames.emplace_back(std::vector<std::string>{}); // this is a tree
+      fFriendInfo.fFriendChainSubNames.emplace_back(); // this is a tree
    }
 
-   void AddFriend(const std::string &treeName, const std::vector<std::string> &fileNames)
+   void AddFriend(const std::string &treeName, const std::vector<std::string> &fileNames, const std::string &alias = "")
    {
-      fFriendInfo.fFriendNames.emplace_back(
-         treeName, treeName); // TODO: user might specify alias, now it is the tree name by default
+      fFriendInfo.fFriendNames.emplace_back(treeName, alias);
       fFriendInfo.fFriendFileNames.emplace_back(fileNames);
-      fFriendInfo.fFriendChainSubNames.emplace_back(std::vector<std::string>{treeName}); // now this is a chain
+      fFriendInfo.fFriendChainSubNames.emplace_back(std::vector<std::string>(fileNames.size(), treeName));
    }
 
-   void AddFriend(const std::vector<std::string> &treeNames, const std::vector<std::string> &fileNames)
+   void
+   AddFriend(const std::vector<std::pair<std::string, std::string>> &treeAndFileNames, const std::string &alias = "")
    {
-      if (fileNames.size() != treeNames.size() && treeNames.size() != 1)
-         throw std::logic_error("RDatasetSpec's friend exepcts either N trees and N files, or 1 tree and N files.");
-      fFriendInfo.fFriendNames.emplace_back(
-         treeNames[0], treeNames[0]); // TODO: user might specify alias, now it is the FIRST tree name by default
+      std::vector<std::string> treeNames;
+      treeNames.reserve(treeAndFileNames.size());
+      std::transform(begin(treeAndFileNames), end(treeAndFileNames), std::back_inserter(treeNames),
+                     [](auto const &pair) { return std::move(pair.first); });
+      std::vector<std::string> fileNames;
+      treeNames.reserve(treeAndFileNames.size());
+      std::transform(begin(treeAndFileNames), end(treeAndFileNames), std::back_inserter(fileNames),
+                     [](auto const &pair) { return std::move(pair.second); });
+      fFriendInfo.fFriendNames.emplace_back("", alias);
       fFriendInfo.fFriendFileNames.emplace_back(fileNames);
-      fFriendInfo.fFriendChainSubNames.emplace_back(treeNames); // now this is a chain
+      fFriendInfo.fFriendChainSubNames.emplace_back(treeNames);
    }
 };
 
