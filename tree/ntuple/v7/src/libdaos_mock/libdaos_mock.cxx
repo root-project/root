@@ -28,7 +28,7 @@
 #include <type_traits>
 #include <unordered_map>
 
-using Uuid_t = std::array<unsigned char, 16>;
+using label_t = std::string;
 namespace std {
 // Required by `std::unordered_map<daos_obj_id, ...>`. Based on boost::hash_combine().
 template <>
@@ -38,16 +38,6 @@ struct hash<daos_obj_id_t> {
       auto seed = std::hash<uint64_t>{}(oid.lo);
       seed ^= std::hash<uint64_t>{}(oid.hi) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
       return seed;
-   }
-};
-
-// Required by `std::unordered_map<Uuid_t, ...>`; forward to std::hash<std::string_view>{}()
-template <>
-struct hash<Uuid_t> {
-   std::size_t operator()(const Uuid_t &u) const
-   {
-      return std::hash<std::string_view>{}(
-         std::string_view(reinterpret_cast<std::string_view::const_pointer>(u.data()), u.size()));
    }
 };
 } // namespace std
@@ -149,9 +139,8 @@ public:
    RDaosFakeContainer() = default;
    ~RDaosFakeContainer() = default;
 
-   RDaosFakeObject *GetObject(daos_obj_id_t oid, unsigned int mode)
+   RDaosFakeObject *GetObject(daos_obj_id_t oid, unsigned int /*mode*/)
    {
-      (void)mode;
       std::lock_guard<std::mutex> lock(fMutexObjects);
       auto &obj = fObjects[oid];
       if (!obj)
@@ -169,18 +158,18 @@ public:
 class RDaosFakePool {
 private:
    static std::mutex fMutexPools;
-   static std::unordered_map<Uuid_t, std::unique_ptr<RDaosFakePool>> fPools;
+   static std::unordered_map<label_t, std::unique_ptr<RDaosFakePool>> fPools;
 
    std::mutex fMutexContainers;
-   std::unordered_map<Uuid_t, std::unique_ptr<RDaosFakeContainer>> fContainers;
+   std::unordered_map<label_t, std::unique_ptr<RDaosFakeContainer>> fContainers;
 
 public:
    /// \brief Get a pointer to a RDaosFakePool object associated to the given UUID.
    /// Non-existent pools shall be created on-demand.
-   static RDaosFakePool *GetPool(const Uuid_t uuid)
+   static RDaosFakePool *GetPool(const label_t &label)
    {
       std::lock_guard<std::mutex> lock(fMutexPools);
-      auto &pool = fPools[uuid];
+      auto &pool = fPools[label];
       if (!pool)
          pool = std::make_unique<RDaosFakePool>();
       return pool.get();
@@ -189,22 +178,22 @@ public:
    RDaosFakePool() = default;
    ~RDaosFakePool() = default;
 
-   void CreateContainer(const Uuid_t uuid)
+   void CreateContainer(const label_t &label)
    {
       std::lock_guard<std::mutex> lock(fMutexContainers);
-      fContainers.emplace(uuid, std::make_unique<RDaosFakeContainer>());
+      fContainers.emplace(label, std::make_unique<RDaosFakeContainer>());
    }
 
-   RDaosFakeContainer *GetContainer(const Uuid_t uuid)
+   RDaosFakeContainer *GetContainer(const label_t &label)
    {
       std::lock_guard<std::mutex> lock(fMutexContainers);
-      auto it = fContainers.find(uuid);
+      auto it = fContainers.find(label);
       return (it != fContainers.end()) ? it->second.get() : nullptr;
    }
 };
 
 std::mutex RDaosFakePool::fMutexPools;
-std::unordered_map<Uuid_t, std::unique_ptr<RDaosFakePool>> RDaosFakePool::fPools;
+std::unordered_map<label_t, std::unique_ptr<RDaosFakePool>> RDaosFakePool::fPools;
 
 // clang-format off
 /**
@@ -258,18 +247,6 @@ int daos_fini(void)
    return 0;
 }
 
-d_rank_list_t *daos_rank_list_parse(const char *str, const char *sep)
-{
-   (void)str;
-   (void)sep;
-   return nullptr;
-}
-
-void d_rank_list_free(d_rank_list_t *rank_list)
-{
-   (void)rank_list;
-}
-
 const char *d_errstr(int rc)
 {
    return rc ? "DER_INVAL" : "Success";
@@ -299,91 +276,86 @@ int daos_oclass_id2name(daos_oclass_id_t oc_id, char *name)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int daos_cont_create(daos_handle_t poh, const uuid_t uuid, daos_prop_t *cont_prop, daos_event_t *ev)
+int daos_cont_create(daos_handle_t poh, uuid_t uuid, daos_prop_t * /*cont_prop*/, daos_event_t * /*ev*/)
 {
-   (void)cont_prop;
-   (void)ev;
-
    auto pool = RDaosHandle::ToPointer<RDaosFakePool>(poh);
+
    if (!pool)
       return -DER_INVAL;
-   Uuid_t u;
-   std::copy_n(uuid, std::tuple_size<Uuid_t>::value, std::begin(u));
-   pool->CreateContainer(u);
+
+   pool->CreateContainer(label_t(reinterpret_cast<char *>(uuid)));
    return 0;
 }
 
-int daos_cont_open(daos_handle_t poh, const uuid_t uuid, unsigned int flags, daos_handle_t *coh, daos_cont_info_t *info,
-                   daos_event_t *ev)
+int daos_cont_create_with_label(daos_handle_t poh, const char *label, daos_prop_t * /*cont_prop*/, uuid_t * /*uuid*/,
+                                daos_event_t * /*ev*/)
 {
-   (void)flags;
-   (void)info;
-   (void)ev;
-
    auto pool = RDaosHandle::ToPointer<RDaosFakePool>(poh);
    if (!pool)
       return -DER_INVAL;
 
-   Uuid_t u;
-   std::copy_n(uuid, std::tuple_size<Uuid_t>::value, std::begin(u));
-   auto cont = pool->GetContainer(u);
+   if (!daos_label_is_valid(label))
+      return -DER_INVAL;
+
+   pool->CreateContainer(label_t(label));
+   return 0;
+}
+
+int daos_cont_open(daos_handle_t poh, const char *label, unsigned int /*flags*/, daos_handle_t *coh,
+                   daos_cont_info_t * /*info*/, daos_event_t * /*ev*/)
+{
+   auto pool = RDaosHandle::ToPointer<RDaosFakePool>(poh);
+   if (!pool)
+      return -DER_INVAL;
+
+   if (!daos_label_is_valid(label))
+      return -DER_INVAL;
+
+   auto cont = pool->GetContainer(label_t(label));
    if (!cont)
       return -DER_INVAL;
    *coh = RDaosHandle::ToHandle(cont);
    return 0;
 }
 
-int daos_cont_close(daos_handle_t coh, daos_event_t *ev)
+int daos_cont_close(daos_handle_t coh, daos_event_t * /*ev*/)
 {
-   (void)ev;
    RDaosHandle::Invalidate(coh);
    return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int daos_eq_create(daos_handle_t *eqh)
+int daos_eq_create(daos_handle_t * /*eqh*/)
 {
-   (void)eqh;
    return 0;
 }
 
-int daos_eq_destroy(daos_handle_t eqh, int flags)
+int daos_eq_destroy(daos_handle_t /*eqh*/, int /*flags*/)
 {
-   (void)eqh;
-   (void)flags;
    return 0;
 }
 
-int daos_eq_poll(daos_handle_t eqh, int wait_running, int64_t timeout, unsigned int nevents, daos_event_t **events)
+int daos_eq_poll(daos_handle_t /*eqh*/, int /*wait_running*/, int64_t /*timeout*/, unsigned int nevents,
+                 daos_event_t ** /*events*/)
 {
-   (void)eqh;
-   (void)wait_running;
-   (void)timeout;
-   (void)events;
    return nevents;
 }
 
-int daos_event_init(daos_event_t *ev, daos_handle_t eqh, daos_event_t *parent)
+int daos_event_init(daos_event_t * /*ev*/, daos_handle_t /*eqh*/, daos_event_t * /*parent*/)
 {
-   (void)ev;
-   (void)eqh;
-   (void)parent;
    return 0;
 }
 
-int daos_event_fini(daos_event_t *ev)
+int daos_event_fini(daos_event_t * /*ev*/)
 {
-   (void)ev;
    return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int daos_obj_open(daos_handle_t coh, daos_obj_id_t oid, unsigned int mode, daos_handle_t *oh, daos_event_t *ev)
+int daos_obj_open(daos_handle_t coh, daos_obj_id_t oid, unsigned int mode, daos_handle_t *oh, daos_event_t * /*ev*/)
 {
-   (void)ev;
-
    auto cont = RDaosHandle::ToPointer<RDaosFakeContainer>(coh);
    if (!cont)
       return -DER_INVAL;
@@ -392,34 +364,47 @@ int daos_obj_open(daos_handle_t coh, daos_obj_id_t oid, unsigned int mode, daos_
    return 0;
 }
 
-int daos_obj_close(daos_handle_t oh, daos_event_t *ev)
+int daos_obj_close(daos_handle_t oh, daos_event_t * /*ev*/)
 {
-   (void)ev;
    RDaosHandle::Invalidate(oh);
    return 0;
 }
 
-int daos_obj_fetch(daos_handle_t oh, daos_handle_t th, uint64_t flags, daos_key_t *dkey, unsigned int nr,
-                   daos_iod_t *iods, d_sg_list_t *sgls, daos_iom_t *ioms, daos_event_t *ev)
+int daos_obj_generate_oid(daos_handle_t /*coh*/, daos_obj_id_t *oid, enum daos_otype_t type, daos_oclass_id_t cid,
+                          daos_oclass_hints_t /*hints*/, uint32_t /*args*/)
 {
-   (void)th;
-   (void)flags;
-   (void)ioms;
-   (void)ev;
+   uint64_t hdr;
 
+   /* Validate user-specified bits are not reserved by DAOS */
+   if (!daos_otype_t_is_valid(type))
+      return -DER_INVAL;
+
+   oid->hi &= (1ULL << OID_FMT_INTR_BITS) - 1;
+   // | Upper bits contain
+   // | OID_FMT_TYPE_BITS (object type)
+   // | OID_FMT_META_BITS (object class metadata)
+   // | OID_FMT_CLASS_BITS (object class)
+   // | 96-bit for upper layer
+   hdr = ((uint64_t)type << OID_FMT_TYPE_SHIFT);
+   hdr |= ((uint64_t)0 << OID_FMT_META_SHIFT);
+   hdr |= ((uint64_t)cid << OID_FMT_CLASS_SHIFT);
+   oid->hi |= hdr;
+
+   return 0;
+}
+
+int daos_obj_fetch(daos_handle_t oh, daos_handle_t /*th*/, uint64_t /*flags*/, daos_key_t *dkey, unsigned int nr,
+                   daos_iod_t *iods, d_sg_list_t *sgls, daos_iom_t * /*ioms*/, daos_event_t * /*ev*/)
+{
    auto obj = RDaosHandle::ToPointer<RDaosFakeObject>(oh);
    if (!obj)
       return -DER_INVAL;
    return obj->Fetch(dkey, nr, iods, sgls);
 }
 
-int daos_obj_update(daos_handle_t oh, daos_handle_t th, uint64_t flags, daos_key_t *dkey, unsigned int nr,
-                    daos_iod_t *iods, d_sg_list_t *sgls, daos_event_t *ev)
+int daos_obj_update(daos_handle_t oh, daos_handle_t /*th*/, uint64_t /*flags*/, daos_key_t *dkey, unsigned int nr,
+                    daos_iod_t *iods, d_sg_list_t *sgls, daos_event_t * /*ev*/)
 {
-   (void)th;
-   (void)flags;
-   (void)ev;
-
    auto obj = RDaosHandle::ToPointer<RDaosFakeObject>(oh);
    if (!obj)
       return -DER_INVAL;
@@ -428,24 +413,16 @@ int daos_obj_update(daos_handle_t oh, daos_handle_t th, uint64_t flags, daos_key
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int daos_pool_connect(const uuid_t uuid, const char *grp, const d_rank_list_t *svc, unsigned int flags,
-                      daos_handle_t *poh, daos_pool_info_t *info, daos_event_t *ev)
+int daos_pool_connect(const char *label, const char * /*grp*/, unsigned int /*flags*/, daos_handle_t *poh,
+                      daos_pool_info_t * /*info*/, daos_event_t * /*ev*/)
 {
-   (void)grp;
-   (void)svc;
-   (void)flags;
-   (void)info;
-   (void)ev;
 
-   Uuid_t u;
-   std::copy_n(uuid, std::tuple_size<Uuid_t>::value, std::begin(u));
-   *poh = RDaosHandle::ToHandle(RDaosFakePool::GetPool(u));
+   *poh = RDaosHandle::ToHandle(RDaosFakePool::GetPool(label_t(label)));
    return 0;
 }
 
-int daos_pool_disconnect(daos_handle_t poh, daos_event_t *ev)
+int daos_pool_disconnect(daos_handle_t poh, daos_event_t * /*ev*/)
 {
-   (void)ev;
    RDaosHandle::Invalidate(poh);
    return 0;
 }
