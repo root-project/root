@@ -282,21 +282,72 @@ TEST(RDFDatasetSpec, MultipleFiles)
    gSystem->Exec("rm file0.root file1.root file2.root");
 }
 
-// TODO: test the friends
-/*
-TEST(RDFDatasetSpec, FriendTrees)
+TEST(RDatasetSpecTest, Friends)
 {
-   auto dfWriter0 = RDataFrame(3)
-                       .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
-                       .Define("y", [](ULong64_t e) { return int(e) + 1; }, {"rdfentry_"});
-   dfWriter0.Snapshot<int, int>("treeA", "file0.root", {"x", "y"});
-   dfWriter0.Snapshot<int, int>("treeA", "file1.root", {"x", "y"});
-   dfWriter0.Snapshot<int, int>("treeB", "file2.root", {"x", "y"}); // different tree's name
-   auto dfWriter1 = RDataFrame(2)
-                       .Define("x", [](ULong64_t e) { return int(e) + 2; }, {"rdfentry_"})
-                       .Define("y", [](ULong64_t e) { return int(e) + 3; }, {"rdfentry_"});
-   dfWriter0.Snapshot<int, int>("treeA", "file3.root", {"x", "y"});
-   dfWriter0.Snapshot<int, int>("treeB", "file4.root", {"x", "y"});
-   dfWriter0.Snapshot<int, int>("treeC", "file5.root", {"x", "y"});
+   auto dfWriter0 = RDataFrame(5)
+                       .Define("x", [](ULong64_t e) { return e; }, {"rdfentry_"})
+                       .Define("y", [](ULong64_t e) { return e + 10; }, {"rdfentry_"})
+                       .Define("z", [](ULong64_t e) { return e + 100; }, {"rdfentry_"});
+   dfWriter0.Snapshot<ULong64_t>("tree", "file0.root", {"x"});
+   dfWriter0.Range(4).Snapshot<ULong64_t>("tree", "file1.root", {"y"});
+   dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree", "file2.root", {"z"});
+   dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree", "file3.root", {"z"});
+   dfWriter0.Range(4, 5).Snapshot<ULong64_t>("subTree", "file4.root", {"z"});
+   dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree1", "file5.root", {"z"});
+   dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree2", "file6.root", {"z"});
+
+   std::vector<RDatasetSpec> specs;
+   specs.reserve(6);
+   specs.emplace_back(RDatasetSpec{"tree", "file0.root"});
+   specs.emplace_back(RDatasetSpec{"tree", "file0.root", {1, 3}});
+   specs.emplace_back(RDatasetSpec{"tree", "file1.root"});
+   specs.emplace_back(RDatasetSpec{"tree", "file1.root", {1, 3}});
+   specs.emplace_back(RDatasetSpec{"subTree", {"file2.root"s, "file3.root"s, "file4.root"s}});
+   specs.emplace_back(RDatasetSpec{"subTree", {"file2.root"s, "file3.root"s, "file4.root"s}, {1, 3}});
+   specs.emplace_back(RDatasetSpec{"subTree", {"file2.root"s, "file3.root"s}});
+   specs.emplace_back(RDatasetSpec{"subTree", {"file2.root"s, "file3.root"s}, {1, 3}});
+   specs.emplace_back(
+      RDatasetSpec{{"subTree1"s, "subTree2"s, "subTree"s}, {"file5.root"s, "file6.root"s, "file4.root"s}});
+   specs.emplace_back(
+      RDatasetSpec{{"subTree1"s, "subTree2"s, "subTree"s}, {"file5.root"s, "file6.root"s, "file4.root"s}, {1, 3}});
+   specs.emplace_back(RDatasetSpec{{"subTree1"s, "subTree2"s}, {"file5.root"s, "file6.root"s}});
+   specs.emplace_back(RDatasetSpec{{"subTree1"s, "subTree2"s}, {"file5.root"s, "file6.root"s}, {1, 3}});
+
+   for (auto &sp : specs) {
+      sp.AddFriend("tree", "file0.root", "friendTree");
+      sp.AddFriend("tree", "file1.root", "friendShortTree");
+      sp.AddFriend("subTree", {"file2.root"s, "file3.root"s, "file4.root"s}, "friendChain1");
+      sp.AddFriend("subTree", {"file2.root"s, "file3.root"s}, "friendShortChain1");
+      sp.AddFriend({{"subTree1"s, "file5.root"s}, {"subTree2"s, "file6.root"s}, {"subTree"s, "file4.root"s}},
+                   "friendChainN");
+      sp.AddFriend({{"subTree1"s, "file5.root"s}, {"subTree2"s, "file6.root"s}}, "friendShortChainN");
+
+      auto df = RDataFrame(sp);
+      auto friendTree = df.Take<ULong64_t>("friendTree.x");
+      auto friendShortTree = df.Take<ULong64_t>("friendShortTree.y");
+      auto friendChain1 = df.Take<ULong64_t>("friendChain1.z");
+      auto friendShortChain1 = df.Take<ULong64_t>("friendShortChain1.z");
+      auto friendChainN = df.Take<ULong64_t>("friendChainN.z");
+      auto friendShortChainN = df.Take<ULong64_t>("friendShortChainN.z");
+
+      for (ULong64_t i = 0u; i < (*friendTree).size(); i++)
+         EXPECT_EQ((*friendTree)[i], (*friendTree).size() == 2 ? i + 1 : i);
+
+      for (ULong64_t i = 0u; i < (*friendChain1).size(); i++)
+         EXPECT_EQ((*friendChain1)[i], (*friendChain1).size() == 2 ? i + 101 : i + 100);
+
+      for (ULong64_t i = 0u; i < (*friendChainN).size(); i++)
+         EXPECT_EQ((*friendChainN)[i], (*friendChainN).size() == 2 ? i + 101 : i + 100);
+
+      for (ULong64_t i = 0u; i < (*friendShortTree).size(); i++)
+         EXPECT_EQ((*friendShortTree)[i], ((*friendShortTree).size() == 2) ? (i + 11) : (i == 4 ? 13 : i + 10));
+
+      for (ULong64_t i = 0u; i < (*friendShortChain1).size(); i++)
+         EXPECT_EQ((*friendShortChain1)[i], ((*friendShortChain1).size() == 2) ? (i + 101) : (i == 4 ? 103 : i + 100));
+
+      for (ULong64_t i = 0u; i < (*friendShortChainN).size(); i++)
+         EXPECT_EQ((*friendShortChainN)[i], ((*friendShortChainN).size() == 2) ? (i + 101) : (i == 4 ? 103 : i + 100));
+   }
+
+   gSystem->Exec("rm file*.root");
 }
-*/

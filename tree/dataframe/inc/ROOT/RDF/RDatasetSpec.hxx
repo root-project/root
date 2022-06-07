@@ -82,14 +82,14 @@ struct RDatasetSpec {
 
    void AddFriend(const std::string &treeName, const std::string &fileName, const std::string &alias = "")
    {
-      fFriendInfo.fFriendNames.emplace_back(treeName, alias);
+      fFriendInfo.fFriendNames.emplace_back(std::make_pair(treeName, alias));
       fFriendInfo.fFriendFileNames.emplace_back(std::vector<std::string>{fileName});
       fFriendInfo.fFriendChainSubNames.emplace_back(); // this is a tree
    }
 
    void AddFriend(const std::string &treeName, const std::vector<std::string> &fileNames, const std::string &alias = "")
    {
-      fFriendInfo.fFriendNames.emplace_back(treeName, alias);
+      fFriendInfo.fFriendNames.emplace_back(std::make_pair(treeName, alias));
       fFriendInfo.fFriendFileNames.emplace_back(fileNames);
       fFriendInfo.fFriendChainSubNames.emplace_back(std::vector<std::string>(fileNames.size(), treeName));
    }
@@ -104,7 +104,7 @@ struct RDatasetSpec {
          treeNames.emplace_back(std::move(p.first));
          fileNames.emplace_back(std::move(p.second));
       }
-      fFriendInfo.fFriendNames.emplace_back("", alias);
+      fFriendInfo.fFriendNames.emplace_back(std::make_pair("", alias));
       fFriendInfo.fFriendFileNames.emplace_back(fileNames);
       fFriendInfo.fFriendChainSubNames.emplace_back(treeNames);
    }
