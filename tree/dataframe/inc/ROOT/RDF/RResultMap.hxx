@@ -124,14 +124,24 @@ public:
       RunEventLoopIfNeeded();
       return fMap.begin();
    }
+
    const_iterator cbegin()
    {
       RunEventLoopIfNeeded();
       return fMap.cbegin();
    }
-   iterator end() { return fMap.end(); }
-   const_iterator end() const { return fMap.cend(); }
-   const_iterator cend() const { return fMap.cend(); }
+
+   iterator end()
+   {
+      RunEventLoopIfNeeded();
+      return fMap.end();
+   }
+
+   const_iterator cend() const
+   {
+      RunEventLoopIfNeeded();
+      return fMap.cend();
+   }
 
    const std::vector<std::string> &GetKeys() const { return fKeys; }
 };
