@@ -50,7 +50,7 @@ PyObject *TClassDynamicCastPyz(CPPInstance *self, PyObject *args)
    if (CPPInstance_Check(pyobject)) {
       address = ((CPPInstance *)pyobject)->GetObject();
    } else if (PyInt_Check(pyobject) || PyLong_Check(pyobject)) {
-      address = (void *)PyLong_AsLong(pyobject);
+      address = (void *)PyLong_AsLongLong(pyobject);
    } else {
       Utility::GetBuffer(pyobject, '*', 1, address, false);
    }
