@@ -100,7 +100,7 @@ unsigned long long GetDataPointerFromArrayInterface(PyObject *obj)
       PyErr_SetString(PyExc_RuntimeError, "Object not convertible: __array_interface__['data'] does not exist.");
       return 0;
    }
-   return PyLong_AsLong(PyTuple_GetItem(pydata, 0));
+   return PyLong_AsLongLong(PyTuple_GetItem(pydata, 0));
 }
 
 ////////////////////////////////////////////////////////////////////////////
