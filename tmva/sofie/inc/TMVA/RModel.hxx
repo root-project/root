@@ -1,6 +1,7 @@
 #ifndef TMVA_SOFIE_RMODEL
 #define TMVA_SOFIE_RMODEL
 
+#include <type_traits>
 #include <unordered_set>
 #include <vector>
 #include <unordered_map>
@@ -19,14 +20,14 @@ namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
 
-enum class GenerateOption : int8_t {
+enum class Options {
    kDefault = 0x0,
    kNoSession = 0x1,
    kNoWeightFile = 0x2,
 };
 
-int8_t operator|(GenerateOption opA, GenerateOption opB);
-int8_t operator|(int8_t opA, GenerateOption opB);
+std::underlying_type_t<Options> operator|(Options opA, Options opB);
+std::underlying_type_t<Options> operator|(std::underlying_type_t<Options> opA, Options opB);
 
 class RModel: public TObject{
 
@@ -93,9 +94,9 @@ public:
 
 
    void Initialize(int batchSize=1);
-   void Generate(int8_t options, int batchSize = 1);
-   void Generate(GenerateOption options = GenerateOption::kDefault, int batchSize = 1) {
-      Generate(static_cast<int8_t>(options), batchSize);
+   void Generate(std::underlying_type_t<Options> options, int batchSize = 1);
+   void Generate(Options options = Options::kDefault, int batchSize = 1) {
+      Generate(static_cast<std::underlying_type_t<Options>>(options), batchSize);
    }
 
    void ReadInitializedTensorsFromFile();

@@ -11,11 +11,11 @@ namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
 
-   int8_t operator|(GenerateOption opA, GenerateOption opB) {
-      return static_cast<int8_t>(opA) | static_cast<int8_t>(opB);
+   std::underlying_type_t<Options> operator|(Options opA, Options opB) {
+      return static_cast<std::underlying_type_t<Options>>(opA) | static_cast<std::underlying_type_t<Options>>(opB);
    }
-   int8_t operator|(int8_t opA, GenerateOption opB) {
-      return opA | static_cast<int8_t>(opB);
+   std::underlying_type_t<Options> operator|(std::underlying_type_t<Options> opA, Options opB) {
+      return opA | static_cast<std::underlying_type_t<Options>>(opB);
    }
 
    RModel::RModel(RModel&& other){
@@ -206,11 +206,11 @@ namespace SOFIE{
       }
    }
 
-   void RModel::Generate(int8_t options, int batchSize){
+   void RModel::Generate(std::underlying_type_t<Options> options, int batchSize){
       // session flag is used in operator initialize
-      if (static_cast<int8_t>(GenerateOption::kNoSession) & options)
+      if (static_cast<std::underlying_type_t<Options>>(Options::kNoSession) & options)
          fUseSession = false;
-      if (static_cast<int8_t>(GenerateOption::kNoWeightFile) & options)
+      if (static_cast<std::underlying_type_t<Options>>(Options::kNoWeightFile) & options)
          fUseWeightFile = false;
       Initialize(batchSize);
       fGC += ("//Code generated automatically by TMVA for Inference of Model file [" + fFileName + "] at [" + fParseTime.substr(0, fParseTime.length()-1) +"] \n");
