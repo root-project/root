@@ -274,6 +274,7 @@ TEST(RDFDatasetSpec, MultipleFiles)
 
 TEST(RDatasetSpecTest, Friends)
 {
+   // write some columns to files
    auto dfWriter0 = RDataFrame(5)
                        .Define("x", [](ULong64_t e) { return e; }, {"rdfentry_"})
                        .Define("y", [](ULong64_t e) { return e + 10; }, {"rdfentry_"})
@@ -286,8 +287,13 @@ TEST(RDatasetSpecTest, Friends)
    dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree1", "file5.root", {"z"});
    dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree2", "file6.root", {"z"});
 
+   // test all possible cases for specs, that are:
+   // a. tree; chain where all trees have the same names; chain with different tree names
+   // b. shorter and longer columns (to test cases when the friend has different size than the main change)
+   // c. with and without range specified
+   // hence, there are 3*2*2=12 (3 from a, 2 from b, 2 from c) cases to test in total
    std::vector<RDatasetSpec> specs;
-   specs.reserve(6);
+   specs.reserve(12);
    specs.emplace_back(RDatasetSpec{"tree", "file0.root"});
    specs.emplace_back(RDatasetSpec{"tree", "file0.root", {1, 3}});
    specs.emplace_back(RDatasetSpec{"tree", "file1.root"});
@@ -302,6 +308,8 @@ TEST(RDatasetSpecTest, Friends)
    specs.emplace_back(RDatasetSpec{{{"subTree1"s, "file5.root"s}, {"subTree2"s, "file6.root"s}}});
    specs.emplace_back(RDatasetSpec{{{"subTree1"s, "file5.root"s}, {"subTree2"s, "file6.root"s}}, {1, 3}});
 
+   // for each spec, add all possible types of friends
+   // friends cannot take range, hence valid cases are a. and b., or 3*2=6 possible friends
    for (auto &sp : specs) {
       sp.AddFriend("tree", "file0.root", "friendTree");
       sp.AddFriend("tree", "file1.root", "friendShortTree");
@@ -311,7 +319,10 @@ TEST(RDatasetSpecTest, Friends)
                    "friendChainN");
       sp.AddFriend({{"subTree1"s, "file5.root"s}, {"subTree2"s, "file6.root"s}}, "friendShortChainN");
 
+      // important is to construct the dataframe after all friends are added
       auto df = RDataFrame(sp);
+
+      // lazily ask to get each column that came from a friend
       auto friendTree = df.Take<ULong64_t>("friendTree.x");
       auto friendShortTree = df.Take<ULong64_t>("friendShortTree.y");
       auto friendChain1 = df.Take<ULong64_t>("friendChain1.z");
@@ -319,23 +330,28 @@ TEST(RDatasetSpecTest, Friends)
       auto friendChainN = df.Take<ULong64_t>("friendChainN.z");
       auto friendShortChainN = df.Take<ULong64_t>("friendShortChainN.z");
 
-      for (ULong64_t i = 0u; i < (*friendTree).size(); i++)
-         EXPECT_EQ((*friendTree)[i], (*friendTree).size() == 2 ? i + 1 : i);
+      // invoke the event loop; each friend column has the same number of entries
+      auto nEntries = (*friendTree).size();
 
-      for (ULong64_t i = 0u; i < (*friendChain1).size(); i++)
-         EXPECT_EQ((*friendChain1)[i], (*friendChain1).size() == 2 ? i + 101 : i + 100);
+      // entries being 2 correspond to application of the {1, 3} range
+      for (ULong64_t i = 0u; i < nEntries; i++)
+         EXPECT_EQ((*friendTree)[i], nEntries == 2 ? i + 1 : i);
 
-      for (ULong64_t i = 0u; i < (*friendChainN).size(); i++)
-         EXPECT_EQ((*friendChainN)[i], (*friendChainN).size() == 2 ? i + 101 : i + 100);
+      for (ULong64_t i = 0u; i < nEntries; i++)
+         EXPECT_EQ((*friendChain1)[i], nEntries == 2 ? i + 101 : i + 100);
 
-      for (ULong64_t i = 0u; i < (*friendShortTree).size(); i++)
-         EXPECT_EQ((*friendShortTree)[i], ((*friendShortTree).size() == 2) ? (i + 11) : (i == 4 ? 13 : i + 10));
+      for (ULong64_t i = 0u; i < nEntries; i++)
+         EXPECT_EQ((*friendChainN)[i], nEntries == 2 ? i + 101 : i + 100);
 
-      for (ULong64_t i = 0u; i < (*friendShortChain1).size(); i++)
-         EXPECT_EQ((*friendShortChain1)[i], ((*friendShortChain1).size() == 2) ? (i + 101) : (i == 4 ? 103 : i + 100));
+      // the short trees/chains are repeating their last element, hence the extra case handling
+      for (ULong64_t i = 0u; i < nEntries; i++)
+         EXPECT_EQ((*friendShortTree)[i], (nEntries == 2) ? (i + 11) : (i == 4 ? 13 : i + 10));
 
-      for (ULong64_t i = 0u; i < (*friendShortChainN).size(); i++)
-         EXPECT_EQ((*friendShortChainN)[i], ((*friendShortChainN).size() == 2) ? (i + 101) : (i == 4 ? 103 : i + 100));
+      for (ULong64_t i = 0u; i < nEntries; i++)
+         EXPECT_EQ((*friendShortChain1)[i], (nEntries == 2) ? (i + 101) : (i == 4 ? 103 : i + 100));
+
+      for (ULong64_t i = 0u; i < nEntries; i++)
+         EXPECT_EQ((*friendShortChainN)[i], (nEntries == 2) ? (i + 101) : (i == 4 ? 103 : i + 100));
    }
 
    gSystem->Exec("rm file*.root");
