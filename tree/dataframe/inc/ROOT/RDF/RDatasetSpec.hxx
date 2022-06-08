@@ -65,8 +65,8 @@ struct RDatasetSpec {
    }
 
    RDatasetSpec(const std::string &treeName, const std::vector<std::string> &fileNames, REntryRange entryRange = {})
-      : fTreeNames(std::vector<std::string>{treeName}), fFileNameGlobs(fileNames), fStartEntry(entryRange.fStartEntry),
-        fEndEntry(entryRange.fEndEntry)
+      : fTreeNames(std::vector<std::string>{treeName}), fFileNameGlobs(std::move(fileNames)),
+        fStartEntry(entryRange.fStartEntry), fEndEntry(entryRange.fEndEntry)
    {
    }
 
@@ -75,8 +75,8 @@ struct RDatasetSpec {
       : fTreeNames(
            fileNames.size() != treeNames.size() && treeNames.size() != 1
               ? throw std::logic_error("RDatasetSpec exepcts either N trees and N files, or 1 tree and N files.")
-              : treeNames),
-        fFileNameGlobs(fileNames), fStartEntry(entryRange.fStartEntry), fEndEntry(entryRange.fEndEntry)
+              : std::move(treeNames)),
+        fFileNameGlobs(std::move(fileNames)), fStartEntry(entryRange.fStartEntry), fEndEntry(entryRange.fEndEntry)
    {
    }
 
@@ -90,7 +90,7 @@ struct RDatasetSpec {
    void AddFriend(const std::string &treeName, const std::vector<std::string> &fileNames, const std::string &alias = "")
    {
       fFriendInfo.fFriendNames.emplace_back(std::make_pair(treeName, alias));
-      fFriendInfo.fFriendFileNames.emplace_back(fileNames);
+      fFriendInfo.fFriendFileNames.emplace_back(std::move(fileNames));
       fFriendInfo.fFriendChainSubNames.emplace_back(std::vector<std::string>(fileNames.size(), treeName));
    }
 
@@ -105,8 +105,8 @@ struct RDatasetSpec {
          fileNames.emplace_back(std::move(p.second));
       }
       fFriendInfo.fFriendNames.emplace_back(std::make_pair("", alias));
-      fFriendInfo.fFriendFileNames.emplace_back(fileNames);
-      fFriendInfo.fFriendChainSubNames.emplace_back(treeNames);
+      fFriendInfo.fFriendFileNames.emplace_back(std::move(fileNames));
+      fFriendInfo.fFriendChainSubNames.emplace_back(std::move(treeNames));
    }
 };
 
