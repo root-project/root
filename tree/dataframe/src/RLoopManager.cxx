@@ -364,24 +364,25 @@ RLoopManager::RLoopManager(const ROOT::RDF::RDatasetSpec &spec)
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
      fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots)
 {
-   // A TChain has a global name
-   auto chain = std::make_shared<TChain>(spec.fTreeNames[0].c_str()); // use the first tree name (FOR NOW)
-
    if (spec.fTreeNames.size() == 1) {
+      // A TChain has a global name, that is the name of single tree
+      auto chain = std::make_shared<TChain>(spec.fTreeNames[0].c_str());
       // The global name of the chain is also the name of each tree in the list
       // of files that make the chain.
       for (const auto &f : spec.fFileNameGlobs)
          chain->Add(f.c_str());
+      SetTree(chain);
    } else {
       // Some other times, each different file has its own tree name, we need to
       // reconstruct the full path to the tree in each file and pass that to
       // TChain::Add
+      auto chain = std::make_shared<TChain>();
       for (auto i = 0u; i < spec.fFileNameGlobs.size(); i++) {
          const auto fullpath = spec.fFileNameGlobs[i] + "?#" + spec.fTreeNames[i];
          chain->Add(fullpath.c_str());
       }
+      SetTree(chain);
    }
-   SetTree(chain);
 
    const auto &friendNames = spec.fFriendInfo.fFriendNames;
    const auto &friendFileNames = spec.fFriendInfo.fFriendFileNames;
