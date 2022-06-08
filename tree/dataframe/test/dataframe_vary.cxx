@@ -269,6 +269,31 @@ TEST(RDFVary, GetVariations)
                   "Variations {x:0, x:1} affect column x\nVariations {xy:0, xy:1} affect columns {x, y}\n");
 }
 
+TEST(RDFVary, VaryFriend)
+{
+   int x = 0;
+   TTree main("main", "main");
+   main.Branch("x", &x);
+   main.Fill();
+
+   x = 42;
+   TTree fr("friend", "friend");
+   fr.Branch("x", &x);
+   fr.Fill();
+
+   main.AddFriend(&fr);
+
+   auto df = ROOT::RDataFrame(main);
+
+   auto sum = df.Vary(
+                   "friend.x", [](int _x) { return ROOT::RVecI{_x + 1}; }, {"friend.x"}, 1, "var")
+                 .Sum<int>("friend.x");
+   auto sums = ROOT::RDF::Experimental::VariationsFor(sum);
+
+   EXPECT_EQ(sums["nominal"], 42);
+   EXPECT_EQ(sums["var:0"], 43);
+}
+
 TEST(RDFVary, ResultMapIteration)
 {
    auto df = ROOT::RDataFrame(10).Define("x", [] { return 0; }).Vary("x", SimpleVariation, {}, 2);
