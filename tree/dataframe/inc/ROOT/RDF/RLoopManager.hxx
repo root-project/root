@@ -160,7 +160,7 @@ public:
    RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
    RLoopManager(ULong64_t nEmptyEntries);
    RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t &defaultBranches);
-   RLoopManager(const ROOT::RDF::RDatasetSpec spec);
+   RLoopManager(ROOT::RDF::RDatasetSpec spec);
    RLoopManager(const RLoopManager &) = delete;
    RLoopManager &operator=(const RLoopManager &) = delete;
 

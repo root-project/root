@@ -91,7 +91,7 @@ struct RDatasetSpec {
 
    void AddFriend(const std::string &treeName, const std::vector<std::string> &fileNames, const std::string &alias = "")
    {
-      fFriendInfo.fFriendNames.emplace_back(std::make_pair(std::move(treeName), std::move(alias)));
+      fFriendInfo.fFriendNames.emplace_back(std::make_pair("", std::move(alias)));
       fFriendInfo.fFriendFileNames.emplace_back(std::move(fileNames));
       fFriendInfo.fFriendChainSubNames.emplace_back(std::vector<std::string>(fileNames.size(), std::move(treeName)));
    }

@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 #include <ROOT/RDataFrame.hxx>
+#include <ROOT/RVec.hxx>
+#include <ROOT/RDFHelpers.hxx>
 #include <ROOT/TestSupport.hxx>
 #include <TSystem.h>
 
@@ -355,4 +357,162 @@ TEST(RDatasetSpecTest, Friends)
    }
 
    gSystem->Exec("rm file*.root");
+}
+
+template <typename COLL>
+void CheckBins(const TAxis *axis, const COLL &v)
+{
+   auto nBins = axis->GetNbins();
+   auto nBinsp1 = nBins + 1;
+   auto nBinsm1 = nBins - 1;
+   EXPECT_EQ(nBinsp1, (int)v.size());
+   for (auto i : ROOT::TSeqI(1, nBinsp1)) {
+      EXPECT_DOUBLE_EQ(axis->GetBinLowEdge(i), (double)v[i - 1]);
+   }
+   EXPECT_DOUBLE_EQ(axis->GetBinUpEdge(nBinsm1), (double)v[nBinsm1]);
+}
+
+TEST(RDatasetSpecTest, Histo1D)
+{
+   // want to construct a chain with different tree names with such a friend chain
+   auto dfWriter0 = RDataFrame(10)
+                       .Define("x", [](ULong64_t e) { return double(e); }, {"rdfentry_"})
+                       .Define("w", [](ULong64_t e) { return e + 1.; }, {"rdfentry_"});
+   dfWriter0.Range(5).Snapshot<double>("subTree0", "file0.root", {"x"});
+   dfWriter0.Range(5, 10).Snapshot<double>("subTree1", "file1.root", {"x"});
+   dfWriter0.Range(5).Snapshot<double>("subTree2", "file2.root", {"w"});
+   dfWriter0.Range(5, 10).Snapshot<double>("subTree3", "file3.root", {"w"});
+
+   RDatasetSpec spec({{"subTree0"s, "file0.root"s}, {"subTree1"s, "file1.root"s}}); // vertical concatenation
+   spec.AddFriend({{"subTree2"s, "file2.root"s}, {"subTree3"s, "file3.root"s}});    // horizontal concatenation
+
+   ROOT::RDataFrame d(spec);
+   auto h1 = d.Histo1D(::TH1D("h1", "h1", 10, 0, 10), "x");
+   auto h2 = d.Histo1D({"h2", "h2", 10, 0, 10}, "x");
+   auto h1w = d.Histo1D(::TH1D("h0w", "h0w", 10, 0, 10), "x", "w");
+   auto h2w = d.Histo1D({"h2w", "h2w", 10, 0, 10}, "x", "w");
+   std::vector<float> edgesf{1, 2, 3, 4, 5, 6, 10};
+   auto h1edgesf = d.Histo1D(::TH1D("h1edgesf", "h1edgesf", (int)edgesf.size() - 1, edgesf.data()), "x");
+   auto h2edgesf = d.Histo1D({"h2edgesf", "h2edgesf", (int)edgesf.size() - 1, edgesf.data()}, "x");
+   std::vector<double> edgesd{1, 2, 3, 4, 5, 6, 10};
+   auto h1edgesd = d.Histo1D(::TH1D("h1edgesd", "h1edgesd", (int)edgesd.size() - 1, edgesd.data()), "x");
+   auto h2edgesd = d.Histo1D({"h2edgesd", "h2edgesd", (int)edgesd.size() - 1, edgesd.data()}, "x");
+
+   TH1DModel m0("m0", "m0", 10, 0, 10);
+   TH1DModel m1(::TH1D("m1", "m1", 10, 0, 10));
+
+   auto hm0 = d.Histo1D(m0, "x");
+   auto hm1 = d.Histo1D(m1, "x");
+   auto hm0w = d.Histo1D(m0, "x", "w");
+   auto hm1w = d.Histo1D(m1, "x", "w");
+
+   std::vector<double> ref({0., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10.});
+
+   CheckBins(h1->GetXaxis(), ref);
+   CheckBins(h2->GetXaxis(), ref);
+   CheckBins(hm0->GetXaxis(), ref);
+   CheckBins(hm1->GetXaxis(), ref);
+
+   CheckBins(h1edgesf->GetXaxis(), edgesf);
+   CheckBins(h2edgesf->GetXaxis(), edgesf);
+   CheckBins(h1edgesd->GetXaxis(), edgesd);
+   CheckBins(h2edgesd->GetXaxis(), edgesd);
+}
+
+TEST(RDatasetSpecTest, FilterDependingOnVariation)
+{
+   // want to construct a chain with different tree names with such a friend chain
+   auto dfWriter0 = RDataFrame(10)
+                       .Define("x", [](ULong64_t e) { return double(e); }, {"rdfentry_"})
+                       .Define("w", [](ULong64_t e) { return e + 1.; }, {"rdfentry_"});
+   dfWriter0.Range(5).Snapshot<double>("subTree0", "file0.root", {"x"});
+   dfWriter0.Range(5, 10).Snapshot<double>("subTree1", "file1.root", {"x"});
+   dfWriter0.Range(5).Snapshot<double>("subTree2", "file2.root", {"w"});
+   dfWriter0.Range(5, 10).Snapshot<double>("subTree3", "file3.root", {"w"});
+
+   RDatasetSpec spec({{"subTree0"s, "file0.root"s}, {"subTree1"s, "file1.root"s}}); // vertical concatenation
+   spec.AddFriend({{"subTree2"s, "file2.root"s}, {"subTree3"s, "file3.root"s}});    // horizontal concatenation
+
+   auto df = ROOT::RDataFrame(spec);
+
+   auto sum = df.Vary(
+                   "x",
+                   [](double x) {
+                      return ROOT::RVecD{x - 1., x + 2.};
+                   },
+                   {"x"}, 2)
+                 .Filter([](double x) { return x > 5.; }, {"x"})
+                 .Sum<double>("x");
+   auto fr_sum = df.Vary(
+                      "w",
+                      [](double w) {
+                         return ROOT::RVecD{w - 1., w + 2.};
+                      },
+                      {"w"}, 2)
+                    .Filter([](double w) { return w > 5.; }, {"w"})
+                    .Sum<double>("w");
+   EXPECT_EQ(*sum, 30);
+   EXPECT_EQ(*fr_sum, 40);
+
+   auto sums = ROOT::RDF::Experimental::VariationsFor(sum);
+   auto fr_sums = ROOT::RDF::Experimental::VariationsFor(fr_sum);
+
+   EXPECT_EQ(sums["nominal"], 30);
+   EXPECT_EQ(sums["x:0"], 21);
+   EXPECT_EQ(sums["x:1"], 51);
+   EXPECT_EQ(fr_sums["nominal"], 40);
+   EXPECT_EQ(fr_sums["w:0"], 30);
+   EXPECT_EQ(fr_sums["w:1"], 63);
+}
+
+TEST(RDatasetSpecTest, SaveGraph)
+{
+   // want to construct a chain with different tree names with such a friend chain
+   auto dfWriter0 = RDataFrame(10)
+                       .Define("x", [](ULong64_t e) { return double(e); }, {"rdfentry_"})
+                       .Define("w", [](ULong64_t e) { return e + 1.; }, {"rdfentry_"});
+   dfWriter0.Range(5).Snapshot<double>("subTree0", "file0.root", {"x"});
+   dfWriter0.Range(5, 10).Snapshot<double>("subTree1", "file1.root", {"x"});
+   dfWriter0.Range(5).Snapshot<double>("subTree2", "file2.root", {"w"});
+   dfWriter0.Range(5, 10).Snapshot<double>("subTree3", "file3.root", {"w"});
+
+   RDatasetSpec spec({{"subTree0"s, "file0.root"s}, {"subTree1"s, "file1.root"s}}); // vertical concatenation
+   spec.AddFriend({{"subTree2"s, "file2.root"s}, {"subTree3"s, "file3.root"s}});    // horizontal concatenation
+
+   // actions to be shown in SaveGraph and Describe
+   auto df = ROOT::RDataFrame(spec);
+   auto res0 = df.Sum<double>("x");
+   auto res1 = df.Sum<double>("w");
+
+   std::string graph = ROOT::RDF::SaveGraph(df);
+   static const std::string expectedGraph(
+      "digraph {\n"
+      "\t1 [label=<Sum>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
+      "\t0 [label=<>, style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n"
+      "\t2 [label=<Sum>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
+      "\t0 -> 1;\n"
+      "\t0 -> 2;\n"
+      "}");
+   EXPECT_EQ(expectedGraph, graph);
+
+   static const std::string expectedDescribe("Dataframe from TChain  in files\n"
+                                             "  file0.root\n"
+                                             "  file1.root\n"
+                                             "with friend\n"
+                                             "  \n"
+                                             "    subTree2 file2.root\n"
+                                             "    subTree3 file3.root\n"
+                                             "\n"
+                                             "Property                Value\n"
+                                             "--------                -----\n"
+                                             "Columns in total            2\n"
+                                             "Columns from defines        0\n"
+                                             "Event loops run             0\n"
+                                             "Processing slots            1\n"
+                                             "\n"
+                                             "Column  Type            Origin\n"
+                                             "------  ----            ------\n"
+                                             "w       Double_t        Dataset\n"
+                                             "x       Double_t        Dataset");
+   EXPECT_EQ(expectedDescribe, df.Describe().AsString());
 }
