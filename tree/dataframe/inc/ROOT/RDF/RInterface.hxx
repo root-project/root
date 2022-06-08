@@ -3182,8 +3182,8 @@ private:
    std::enable_if_t<std::is_default_constructible<RetType>::value, RInterface<Proxied, DS_t>>
    DefineImpl(std::string_view name, F &&expression, const ColumnNames_t &columns, const std::string &where)
    {
-      RDFInternal::CheckValidCppVarName(name, where);
       if (where.compare(0, 8, "Redefine") != 0) { // not a Redefine
+         RDFInternal::CheckValidCppVarName(name, where);
          RDFInternal::CheckForRedefinition(where, name, fColRegister, fLoopManager->GetBranchNames(),
                                            fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
       } else {
@@ -3319,7 +3319,6 @@ private:
       R__ASSERT(!variationName.empty() && "Must provide a variation name.");
 
       for (auto &colName : colNames) {
-         RDFInternal::CheckValidCppVarName(colName, "Vary");
          RDFInternal::CheckForDefinition("Vary", colName, fColRegister, fLoopManager->GetBranchNames(),
                                          fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
       }
