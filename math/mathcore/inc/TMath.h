@@ -33,28 +33,28 @@ namespace TMath {
 // Fundamental constants
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \f[ \pi\f]
+/// \f$ \pi\f$
 constexpr Double_t Pi()
 {
    return 3.14159265358979323846;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \f[ 2\pi\f]
+/// \f$ 2\pi\f$
 constexpr Double_t TwoPi()
 {
    return 2.0 * Pi();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \f[ \frac{\pi}{2} \f]
+/// \f$ \frac{\pi}{2} \f$
 constexpr Double_t PiOver2()
 {
    return Pi() / 2.0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \f[ \frac{\pi}{4} \f]
+/// \f$ \frac{\pi}{4} \f$
 constexpr Double_t PiOver4()
 {
    return Pi() / 4.0;
@@ -68,31 +68,28 @@ constexpr Double_t InvPi()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Conversion from radian to degree:
-/// \f[ \frac{180}{\pi} \f]
+/// Conversion from radian to degree: \f$ \frac{180}{\pi} \f$
 constexpr Double_t RadToDeg()
 {
    return 180.0 / Pi();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Conversion from degree to radian:
-/// \f[ \frac{\pi}{180} \f]
+/// Conversion from degree to radian: \f$ \frac{\pi}{180} \f$
 constexpr Double_t DegToRad()
 {
    return Pi() / 180.0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \f[ \sqrt{2} \f]
+/// \f$ \sqrt{2} \f$
 constexpr Double_t Sqrt2()
 {
    return 1.4142135623730950488016887242097;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Base of natural log:
-///  \f[ e \f]
+/// Base of natural log: \f$ e \f$
 constexpr Double_t E()
 {
    return 2.71828182845904523536;
@@ -187,8 +184,7 @@ constexpr Double_t GnUncertainty()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Planck's constant in \f$ J s \f$
-/// \f[ h \f]
+/// Planck's constant in \f$ J s \f$: \f$ h \f$
 constexpr Double_t H()
 {
    return 6.62607015e-34;
@@ -211,8 +207,7 @@ constexpr Double_t HUncertainty()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \f$ \hbar \f$ in \f$ J s \f$
-/// \f[ \hbar = \frac{h}{2\pi} \f]
+/// \f$ \hbar \f$ in \f$ J s \f$: \f$ \hbar = \frac{h}{2\pi} \f$
 constexpr Double_t Hbar()
 {
    return 1.054571817e-34;
@@ -248,8 +243,7 @@ constexpr Double_t HCcgs()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Boltzmann's constant in \f$ J K^{-1} \f$
-/// \f[ k \f]
+/// Boltzmann's constant in \f$ J K^{-1} \f$: \f$ k \f$
 constexpr Double_t K()
 {
    return 1.380649e-23;
@@ -272,8 +266,7 @@ constexpr Double_t KUncertainty()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Stefan-Boltzmann constant in \f$ W m^{-2} K^{-4}\f$
-/// \f[ \sigma \f]
+/// Stefan-Boltzmann constant in \f$ W m^{-2} K^{-4}\f$: \f$ \sigma \f$
 constexpr Double_t Sigma()
 {
    return 5.670373e-8;
@@ -528,9 +521,9 @@ struct Limits {
    template <typename Iterator> Double_t RMS(Iterator first, Iterator last);
    template <typename Iterator, typename WeightIterator> Double_t RMS(Iterator first, Iterator last, WeightIterator wfirst);
 
-   template <typename T> Double_t StdDev(Long64_t n, const T *a, const Double_t * w = 0) { return RMS<T>(n,a,w); }
-   template <typename Iterator> Double_t StdDev(Iterator first, Iterator last) { return RMS<Iterator>(first,last); }
-   template <typename Iterator, typename WeightIterator> Double_t StdDev(Iterator first, Iterator last, WeightIterator wfirst) { return RMS<Iterator,WeightIterator>(first,last,wfirst); }
+   template <typename T> Double_t StdDev(Long64_t n, const T *a, const Double_t * w = 0) { return RMS<T>(n,a,w); } /// Same as RMS
+   template <typename Iterator> Double_t StdDev(Iterator first, Iterator last) { return RMS<Iterator>(first,last); } /// Same as RMS
+   template <typename Iterator, typename WeightIterator> Double_t StdDev(Iterator first, Iterator last, WeightIterator wfirst) { return RMS<Iterator,WeightIterator>(first,last,wfirst); } /// Same as RMS
 
    template <typename T> Double_t Median(Long64_t n, const T *a,  const Double_t *w=0, Long64_t *work=0);
 
@@ -547,12 +540,12 @@ struct Limits {
    Double_t BetaIncomplete(Double_t x, Double_t a, Double_t b);
 
    // Bessel functions
-   Double_t BesselI(Int_t n,Double_t x);  /// integer order modified Bessel function I_n(x)
-   Double_t BesselK(Int_t n,Double_t x);  /// integer order modified Bessel function K_n(x)
-   Double_t BesselI0(Double_t x);         /// modified Bessel function I_0(x)
-   Double_t BesselK0(Double_t x);         /// modified Bessel function K_0(x)
-   Double_t BesselI1(Double_t x);         /// modified Bessel function I_1(x)
-   Double_t BesselK1(Double_t x);         /// modified Bessel function K_1(x)
+   Double_t BesselI(Int_t n,Double_t x);  /// Integer order modified Bessel function I_n(x)
+   Double_t BesselK(Int_t n,Double_t x);  /// Integer order modified Bessel function K_n(x)
+   Double_t BesselI0(Double_t x);         /// Modified Bessel function I_0(x)
+   Double_t BesselK0(Double_t x);         /// Modified Bessel function K_0(x)
+   Double_t BesselI1(Double_t x);         /// Modified Bessel function I_1(x)
+   Double_t BesselK1(Double_t x);         /// Modified Bessel function K_1(x)
    Double_t BesselJ0(Double_t x);         /// Bessel function J0(x) for any real x
    Double_t BesselJ1(Double_t x);         /// Bessel function J1(x) for any real x
    Double_t BesselY0(Double_t x);         /// Bessel function Y0(x) for positive x
@@ -631,7 +624,7 @@ inline Double_t TMath::ASin(Double_t x)
    }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns the principal value of the arc cosine of `x, expressed in radians.
+/// Returns the principal value of the arc cosine of `x`, expressed in radians.
 
 inline Double_t TMath::ACos(Double_t x)
    {

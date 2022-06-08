@@ -1899,7 +1899,8 @@ Double_t TMath::StruveH1(Double_t x)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Modified Struve Function of Order 0.
-/// By Kirill Filimonov.
+///
+/// \author Kirill Filimonov.
 
 Double_t TMath::StruveL0(Double_t x)
 {
@@ -1945,7 +1946,8 @@ Double_t TMath::StruveL0(Double_t x)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Modified Struve Function of Order 1.
-/// By Kirill Filimonov.
+///
+/// \author Kirill Filimonov.
 
 Double_t TMath::StruveL1(Double_t x)
 {
@@ -2104,13 +2106,15 @@ Double_t TMath::Binomial(Int_t n,Int_t k)
 /// Suppose an event occurs with probability _p_ per trial
 /// Then the probability P of its occurring _k_ or more times
 /// in _n_ trials is termed a cumulative binomial probability
-/// the formula is P = sum_from_j=k_to_n(TMath::Binomial (n, j)*
-/// *TMath::Power (p, j)*TMath::Power (1-p, n-j)
+/// the formula is:
+/// ~~~ {cpp}
+/// P = sum_from_j=k_to_n(TMath::Binomial (n, j)**TMath::Power (p, j)*TMath::Power (1-p, n-j)
+/// ~~~
 /// For _n_ larger than 12 BetaIncomplete is a much better way
 /// to evaluate the sum than would be the straightforward sum calculation
-/// for _n_ smaller than 12 either method is acceptable
-/// ("Numerical Recipes")
-///     --implementation by Anna Kreshuk
+/// for _n_ smaller than 12 either method is acceptable ("Numerical Recipes")
+///
+/// \author Anna Kreshuk
 
 Double_t TMath::BinomialI(Double_t p, Int_t n, Int_t k)
 {
@@ -2135,7 +2139,6 @@ Double_t TMath::BinomialI(Double_t p, Int_t n, Int_t k)
 /// does a single point.
 /// The formula was taken from "Engineering Statistics Handbook" on site
 /// http://www.itl.nist.gov/div898/handbook/eda/section3/eda3663.htm
-/// Implementation by Anna Kreshuk.
 ///
 /// Example:
 ///
@@ -2144,6 +2147,8 @@ Double_t TMath::BinomialI(Double_t p, Int_t n, Int_t k)
 ///    fc->SetParameters(0, 1);
 ///    fc->Draw();
 /// ~~~
+///
+/// \author Anna Kreshuk
 
 Double_t TMath::CauchyDist(Double_t x, Double_t t, Double_t s)
 {
@@ -2155,11 +2160,13 @@ Double_t TMath::CauchyDist(Double_t x, Double_t t, Double_t s)
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate the quantiles of the chi-squared probability distribution function.
 /// Algorithm AS 91   Appl. Statist. (1975) Vol.24, P.35
-/// implemented by Anna Kreshuk.
+/// .
 /// Incorporates the suggested changes in AS R85 (vol.40(1), pp.233-5, 1991)
 ///
 /// \param[in] p     the probability value, at which the quantile is computed
 /// \param[in] ndf   number of degrees of freedom
+///
+/// \author Anna Kreshuk
 
 Double_t TMath::ChisquareQuantile(Double_t p, Double_t ndf)
 {
@@ -2242,7 +2249,8 @@ Double_t TMath::ChisquareQuantile(Double_t p, Double_t ndf)
 /// distributions, with N and M degrees of freedom respectively,
 /// where each chi-square is first divided by it's number of degrees
 /// of freedom.
-/// Implementation by Anna Kreshuk.
+///
+/// \author Anna Kreshuk
 
 Double_t TMath::FDist(Double_t F, Double_t N, Double_t M)
 {
@@ -2261,7 +2269,7 @@ Double_t TMath::FDist(Double_t F, Double_t N, Double_t M)
 /// rejection, in turn implying high confidence in the hypothesis
 /// "1 has variance greater than 2".
 ///
-/// Implementation by Anna Kreshuk.
+/// \author Anna Kreshuk
 
 Double_t TMath::FDistI(Double_t F, Double_t N, Double_t M)
 {
@@ -2587,7 +2595,7 @@ Bool_t TMath::Permute(Int_t n, Int_t *a)
 /// As the number of degrees of freedom grows, t-distribution approaches
 /// Normal(0,1) distribution.
 ///
-/// Implementation by Anna Kreshuk.
+/// \author Anna Kreshuk
 
 Double_t TMath::Student(Double_t T, Double_t ndf)
 {
@@ -2609,7 +2617,7 @@ Double_t TMath::Student(Double_t T, Double_t ndf)
 /// if x has Student's t-distribution, the function returns the probability of
 /// x being less than T.
 ///
-/// Implementation by Anna Kreshuk.
+/// \author Anna Kreshuk
 
 Double_t TMath::StudentI(Double_t T, Double_t ndf)
 {
