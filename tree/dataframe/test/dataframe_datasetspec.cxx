@@ -48,16 +48,6 @@ TEST(RDFDatasetSpec, SingleFileSingleColConstructor)
    const auto dfRDS1 = RDataFrame(RDatasetSpec("tree", "file.root", {2, 4})).Display<int>({"x"})->AsString();
    EXPECT_EQ(dfRDS1, dfRange0);
 
-   // specify 2 trees, this is wrong, emitting C++ error
-   EXPECT_THROW(
-      try {
-         RDatasetSpec({"tree"s, "anothertree"s}, {"file.root"s}, {2, 4});
-      } catch (const std::logic_error &err) {
-         EXPECT_EQ(std::string(err.what()), "RDatasetSpec exepcts either N trees and N files, or 1 tree and N files.");
-         throw;
-      },
-      std::logic_error);
-
    // specify range [2, 2) (3 is a valid index) => range is disregarded
    const auto dfRDS7 = RDataFrame(RDatasetSpec("tree", "file.root", {2, 2})).Display<int>({"x"})->AsString();
    EXPECT_EQ(dfRDS7, dfEmpty);
@@ -210,12 +200,12 @@ TEST(RDFDatasetSpec, MultipleFiles)
    EXPECT_EQ(dfRDS0, dfSimple);
 
    const auto dfRDS1 =
-      RDataFrame(RDatasetSpec({"treeA"s, "treeA"s}, {"file0.root"s, "file1.root"s}, {0, 5})).Display()->AsString();
+      RDataFrame(RDatasetSpec({{"treeA"s, "file0.root"s}, {"treeA"s, "file1.root"s}}, {0, 5})).Display()->AsString();
    EXPECT_EQ(dfRDS1, dfSimple);
 
    // files have different chain name => need a chain
    const auto dfRDS2 =
-      RDataFrame(RDatasetSpec({"treeA"s, "treeB"s}, {"file1.root"s, "file2.root"s}, {0, 5})).Display()->AsString();
+      RDataFrame(RDatasetSpec({{"treeA"s, "file1.root"s}, {"treeB"s, "file2.root"s}}, {0, 5})).Display()->AsString();
    EXPECT_EQ(dfRDS2, dfSimple);
 
    // cases similar to above, but now range is applied, note that the range is global (i.e. not per tree, but per chain)
@@ -223,11 +213,11 @@ TEST(RDFDatasetSpec, MultipleFiles)
    EXPECT_EQ(dfRDS3, dfRange);
 
    const auto dfRDS4 =
-      RDataFrame(RDatasetSpec({"treeA"s, "treeA"s}, {"file0.root"s, "file1.root"s}, {1, 2})).Display()->AsString();
+      RDataFrame(RDatasetSpec({{"treeA"s, "file0.root"s}, {"treeA"s, "file1.root"s}}, {1, 2})).Display()->AsString();
    EXPECT_EQ(dfRDS4, dfRange);
 
    const auto dfRDS5 =
-      RDataFrame(RDatasetSpec({"treeA"s, "treeB"s}, {"file1.root"s, "file2.root"s}, {1, 2})).Display()->AsString();
+      RDataFrame(RDatasetSpec({{"treeA"s, "file1.root"s}, {"treeB"s, "file2.root"s}}, {1, 2})).Display()->AsString();
    EXPECT_EQ(dfRDS5, dfRange);
 
    // specify irregular range [6, 7) (similar to above)
@@ -307,11 +297,10 @@ TEST(RDatasetSpecTest, Friends)
    specs.emplace_back(RDatasetSpec{"subTree", {"file2.root"s, "file3.root"s}});
    specs.emplace_back(RDatasetSpec{"subTree", {"file2.root"s, "file3.root"s}, {1, 3}});
    specs.emplace_back(
-      RDatasetSpec{{"subTree1"s, "subTree2"s, "subTree"s}, {"file5.root"s, "file6.root"s, "file4.root"s}});
-   specs.emplace_back(
-      RDatasetSpec{{"subTree1"s, "subTree2"s, "subTree"s}, {"file5.root"s, "file6.root"s, "file4.root"s}, {1, 3}});
-   specs.emplace_back(RDatasetSpec{{"subTree1"s, "subTree2"s}, {"file5.root"s, "file6.root"s}});
-   specs.emplace_back(RDatasetSpec{{"subTree1"s, "subTree2"s}, {"file5.root"s, "file6.root"s}, {1, 3}});
+      RDatasetSpec{{{"subTree1"s, "file5.root"s}, {"subTree2"s, "file6.root"s}, {"subTree"s, "file4.root"s}}});
+   specs.emplace_back(RDatasetSpec{{{"subTree1"s, "file5.root"s}, {"subTree2"s, "file6.root"s}}});
+   specs.emplace_back(RDatasetSpec{{{"subTree1"s, "file5.root"s}, {"subTree2"s, "file6.root"s}}});
+   specs.emplace_back(RDatasetSpec{{{"subTree1"s, "file5.root"s}, {"subTree2"s, "file6.root"s}}, {1, 3}});
 
    for (auto &sp : specs) {
       sp.AddFriend("tree", "file0.root", "friendTree");

@@ -70,14 +70,15 @@ struct RDatasetSpec {
    {
    }
 
-   RDatasetSpec(const std::vector<std::string> &treeNames, const std::vector<std::string> &fileNames,
-                REntryRange entryRange = {})
-      : fTreeNames(
-           fileNames.size() != treeNames.size() && treeNames.size() != 1
-              ? throw std::logic_error("RDatasetSpec exepcts either N trees and N files, or 1 tree and N files.")
-              : std::move(treeNames)),
-        fFileNameGlobs(std::move(fileNames)), fStartEntry(entryRange.fStartEntry), fEndEntry(entryRange.fEndEntry)
+   RDatasetSpec(const std::vector<std::pair<std::string, std::string>> &treeAndFileNames, REntryRange entryRange = {})
+      : fStartEntry(entryRange.fStartEntry), fEndEntry(entryRange.fEndEntry)
    {
+      fTreeNames.reserve(treeAndFileNames.size());
+      fFileNameGlobs.reserve(treeAndFileNames.size());
+      for (auto &p : treeAndFileNames) {
+         fTreeNames.emplace_back(std::move(p.first));
+         fFileNameGlobs.emplace_back(std::move(p.second));
+      }
    }
 
    void AddFriend(const std::string &treeName, const std::string &fileName, const std::string &alias = "")
@@ -97,16 +98,14 @@ struct RDatasetSpec {
    void
    AddFriend(const std::vector<std::pair<std::string, std::string>> &treeAndFileNames, const std::string &alias = "")
    {
-      std::vector<std::string> treeNames, fileNames;
-      treeNames.reserve(treeAndFileNames.size());
-      fileNames.reserve(treeAndFileNames.size());
-      for (auto &p : treeAndFileNames) {
-         treeNames.emplace_back(std::move(p.first));
-         fileNames.emplace_back(std::move(p.second));
-      }
       fFriendInfo.fFriendNames.emplace_back(std::make_pair("", alias));
-      fFriendInfo.fFriendFileNames.emplace_back(std::move(fileNames));
-      fFriendInfo.fFriendChainSubNames.emplace_back(std::move(treeNames));
+      const auto lastIdx = fFriendInfo.fFriendFileNames.size();
+      fFriendInfo.fFriendFileNames.emplace_back();
+      fFriendInfo.fFriendChainSubNames.emplace_back();
+      for (auto &p : treeAndFileNames) {
+         fFriendInfo.fFriendChainSubNames[lastIdx].emplace_back(std::move(p.first));
+         fFriendInfo.fFriendFileNames[lastIdx].emplace_back(std::move(p.second));
+      }
    }
 };
 
