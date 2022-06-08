@@ -6165,7 +6165,7 @@ public:
   // ----------------------------------------------------------------------------
 
   // Create study manager for binned likelihood fits of a Gaussian pdf in 10 bins
-  RooMCStudy* mcs = new RooMCStudy(gauss,x,Silence(),Binned()) ;
+  RooMCStudy* mcs = new RooMCStudy(gauss,x,Silence(),Binned(),FitOptions(BatchMode(_batchMode))) ;
 
   // Add chi^2 calculator module to mcs
   RooChi2MCSModule chi2mod ;
@@ -6198,7 +6198,7 @@ public:
   // Create study manager with separate generation and fit model. This configuration
   // is set up to generate bad fits as the fit and generator model have different means
   // and the mean parameter is not floating in the fit
-  RooMCStudy* mcs2 = new RooMCStudy(gauss2,x,FitModel(gauss),Silence(),Binned()) ;
+  RooMCStudy* mcs2 = new RooMCStudy(gauss2,x,FitModel(gauss),Silence(),Binned(),FitOptions(BatchMode(_batchMode))) ;
 
   // Add chi^2 calculator module to mcs
   RooChi2MCSModule chi2mod2 ;
@@ -6434,7 +6434,7 @@ public:
 
   // Perform toy study with internal constraint on f
   //RooMCStudy mcs(sumc,x,Constrain(f),Silence(),Binned(),FitOptions(PrintLevel(-1))) ;
-  RooMCStudy mcs(sumc,x,Constrain(f),Binned()) ;
+  RooMCStudy mcs(sumc,x,Constrain(f),Binned(),FitOptions(BatchMode(_batchMode))) ;
 
   // Run 50 toys of 2000 events.
   // Before each toy is generated, a value for the f is sampled from the constraint pdf and
