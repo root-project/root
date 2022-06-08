@@ -291,7 +291,7 @@ TEST(RDFVary, ResultMapIteration)
    EXPECT_EQ(values, expected_values);
 }
 
-TEST(RDFVary, VaryDefinePerSample)
+TEST_P(RDFVary, VaryDefinePerSample)
 {
    auto df = ROOT::RDataFrame(10).DefinePerSample("x", [](unsigned int, const ROOT::RDF::RSampleInfo &) { return 1; });
    auto s = df.Vary("x", SimpleVariation, {}, 2).Sum<int>("x");
@@ -974,7 +974,7 @@ struct MyCounter : public ROOT::Detail::RDF::RActionImpl<MyCounter> {
    }
 };
 
-TEST(RDFVary, VaryBook)
+TEST_P(RDFVary, VaryBook)
 {
    auto d = ROOT::RDataFrame(10)
                .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
@@ -1359,7 +1359,7 @@ TEST_P(RDFVary, VaryProfiles)
    EXPECT_DOUBLE_EQ(h2s["x:1"].GetMean(), 4.5);
 }
 
-TEST(RDFVary, VaryReduce)
+TEST_P(RDFVary, VaryReduce)
 {
    auto h = ROOT::RDataFrame(10)
                .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
