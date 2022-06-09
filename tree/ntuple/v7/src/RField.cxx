@@ -833,6 +833,8 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
       Attach(std::move(subField),
 	     RSubFieldInfo{kDataMember, static_cast<std::size_t>(dataMember->GetOffset())});
    }
+   for (const auto &f : fSubFields)
+      fTraits &= f->GetTraits();
 }
 
 void ROOT::Experimental::RClassField::Attach(std::unique_ptr<Detail::RFieldBase> child, RSubFieldInfo info)
@@ -1101,6 +1103,7 @@ ROOT::Experimental::RRecordField::RRecordField(std::string_view fieldName,
    for (auto &item : itemFields) {
       fMaxAlignment = std::max(fMaxAlignment, item->GetAlignment());
       fSize += GetItemPadding(fSize, item->GetAlignment()) + item->GetValueSize();
+      fTraits &= item->GetTraits();
       Attach(std::move(item));
    }
 }
@@ -1221,6 +1224,7 @@ ROOT::Experimental::RVectorField::RVectorField(
       fieldName, "std::vector<" + itemField->GetType() + ">", ENTupleStructure::kCollection, false /* isSimple */)
    , fItemSize(itemField->GetValueSize()), fNWritten(0)
 {
+   fTraits = 0;
    Attach(std::move(itemField));
 }
 
@@ -1338,6 +1342,7 @@ ROOT::Experimental::RRVecField::RRVecField(std::string_view fieldName, std::uniq
                                             ENTupleStructure::kCollection, false /* isSimple */),
      fItemSize(itemField->GetValueSize()), fNWritten(0)
 {
+   fTraits = 0;
    Attach(std::move(itemField));
    fValueSize = EvalValueSize(); // requires fSubFields to be populated
 }
@@ -1567,6 +1572,7 @@ ROOT::Experimental::RField<std::vector<bool>>::RField(std::string_view name)
    : ROOT::Experimental::Detail::RFieldBase(name, "std::vector<bool>", ENTupleStructure::kCollection,
                                             false /* isSimple */)
 {
+   fTraits = 0;
    Attach(std::make_unique<RField<bool>>("_0"));
 }
 
@@ -1657,6 +1663,7 @@ ROOT::Experimental::RArrayField::RArrayField(
       ENTupleStructure::kLeaf, false /* isSimple */, arrayLength)
    , fItemSize(itemField->GetValueSize()), fArrayLength(arrayLength)
 {
+   fTraits = itemField->GetTraits();
    Attach(std::move(itemField));
 }
 
@@ -1770,6 +1777,7 @@ ROOT::Experimental::RVariantField::RVariantField(
    for (unsigned int i = 0; i < nFields; ++i) {
       fMaxItemSize = std::max(fMaxItemSize, itemFields[i]->GetValueSize());
       fMaxAlignment = std::max(fMaxAlignment, itemFields[i]->GetAlignment());
+      fTraits &= itemFields[i]->GetTraits();
       Attach(std::unique_ptr<Detail::RFieldBase>(itemFields[i]));
    }
    fTagOffset = (fMaxItemSize < fMaxAlignment) ? fMaxAlignment : fMaxItemSize;
@@ -1889,6 +1897,7 @@ ROOT::Experimental::RPairField::RPairField(std::string_view fieldName,
    : ROOT::Experimental::RRecordField(fieldName, std::move(itemFields), offsets,
                                       "std::pair<" + GetTypeList(itemFields) + ">")
 {
+   fTraits = itemFields[0]->GetTraits() & itemFields[1]->GetTraits();
 }
 
 ROOT::Experimental::RPairField::RPairField(std::string_view fieldName,
@@ -1896,6 +1905,7 @@ ROOT::Experimental::RPairField::RPairField(std::string_view fieldName,
    : ROOT::Experimental::RRecordField(fieldName, std::move(itemFields), {},
                                       "std::pair<" + GetTypeList(itemFields) + ">")
 {
+   fTraits = itemFields[0]->GetTraits() & itemFields[1]->GetTraits();
    // ISO C++ does not guarantee any specific layout for `std::pair`; query TClass for the member offsets
    fClass = TClass::GetClass(GetType().c_str());
    if (!fClass)
@@ -2008,6 +2018,7 @@ ROOT::Experimental::RCollectionField::RCollectionField(
    : RFieldBase(name, "", ENTupleStructure::kCollection, true /* isSimple */)
    , fCollectionNTuple(collectionNTuple)
 {
+   fTraits = 0;
    for (unsigned i = 0; i < collectionModel->GetFieldZero()->fSubFields.size(); ++i) {
       auto& subField = collectionModel->GetFieldZero()->fSubFields[i];
       Attach(std::move(subField));
