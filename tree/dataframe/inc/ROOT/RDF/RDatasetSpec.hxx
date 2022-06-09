@@ -59,57 +59,59 @@ struct RDatasetSpec {
 
    ROOT::Internal::TreeUtils::RFriendInfo fFriendInfo{}; ///< List of friends
 
-   RDatasetSpec(const std::string &treeName, const std::string &fileName, const REntryRange &entryRange = {})
+   RDatasetSpec(const std::string &treeName, const std::string &fileNameGlob, const REntryRange &entryRange = {})
       : fTreeNames(std::vector<std::string>{std::move(treeName)}),
-        fFileNameGlobs(std::vector<std::string>{std::move(fileName)}), fStartEntry(entryRange.fStartEntry),
+        fFileNameGlobs(std::vector<std::string>{std::move(fileNameGlob)}), fStartEntry(entryRange.fStartEntry),
         fEndEntry(entryRange.fEndEntry)
    {
    }
 
-   RDatasetSpec(const std::string &treeName, const std::vector<std::string> &fileNames,
+   RDatasetSpec(const std::string &treeName, const std::vector<std::string> &fileNameGlobs,
                 const REntryRange &entryRange = {})
-      : fTreeNames(std::vector<std::string>{std::move(treeName)}), fFileNameGlobs(std::move(fileNames)),
+      : fTreeNames(std::vector<std::string>{std::move(treeName)}), fFileNameGlobs(std::move(fileNameGlobs)),
         fStartEntry(entryRange.fStartEntry), fEndEntry(entryRange.fEndEntry)
    {
    }
 
-   RDatasetSpec(const std::vector<std::pair<std::string, std::string>> &treeAndFileNames,
+   RDatasetSpec(const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
                 const REntryRange &entryRange = {})
       : fStartEntry(entryRange.fStartEntry), fEndEntry(entryRange.fEndEntry)
    {
-      fTreeNames.reserve(treeAndFileNames.size());
-      fFileNameGlobs.reserve(treeAndFileNames.size());
-      for (auto &p : treeAndFileNames) {
+      fTreeNames.reserve(treeAndFileNameGlobs.size());
+      fFileNameGlobs.reserve(treeAndFileNameGlobs.size());
+      for (auto &p : treeAndFileNameGlobs) {
          fTreeNames.emplace_back(std::move(p.first));
          fFileNameGlobs.emplace_back(std::move(p.second));
       }
    }
 
-   void AddFriend(const std::string &treeName, const std::string &fileName, const std::string &alias = "")
+   void AddFriend(const std::string &treeName, const std::string &fileNameGlob, const std::string &alias = "")
    {
       fFriendInfo.fFriendNames.emplace_back(std::make_pair(std::move(treeName), std::move(alias)));
-      fFriendInfo.fFriendFileNames.emplace_back(std::vector<std::string>{std::move(fileName)});
+      fFriendInfo.fFriendFileNames.emplace_back(std::vector<std::string>{std::move(fileNameGlob)});
       fFriendInfo.fFriendChainSubNames.emplace_back(); // this is a tree
    }
 
-   void AddFriend(const std::string &treeName, const std::vector<std::string> &fileNames, const std::string &alias = "")
+   void
+   AddFriend(const std::string &treeName, const std::vector<std::string> &fileNameGlobs, const std::string &alias = "")
    {
       fFriendInfo.fFriendNames.emplace_back(std::make_pair("", std::move(alias)));
-      fFriendInfo.fFriendFileNames.emplace_back(std::move(fileNames));
-      fFriendInfo.fFriendChainSubNames.emplace_back(std::vector<std::string>(fileNames.size(), std::move(treeName)));
+      fFriendInfo.fFriendFileNames.emplace_back(std::move(fileNameGlobs));
+      fFriendInfo.fFriendChainSubNames.emplace_back(
+         std::vector<std::string>(fileNameGlobs.size(), std::move(treeName)));
    }
 
-   void
-   AddFriend(const std::vector<std::pair<std::string, std::string>> &treeAndFileNames, const std::string &alias = "")
+   void AddFriend(const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
+                  const std::string &alias = "")
    {
       fFriendInfo.fFriendNames.emplace_back(std::make_pair("", std::move(alias)));
       fFriendInfo.fFriendFileNames.emplace_back();
       fFriendInfo.fFriendChainSubNames.emplace_back();
       auto &fileNames = fFriendInfo.fFriendFileNames.back();
       auto &chainSubNames = fFriendInfo.fFriendChainSubNames.back();
-      fileNames.reserve(treeAndFileNames.size());
-      chainSubNames.reserve(treeAndFileNames.size());
-      for (auto &p : treeAndFileNames) {
+      fileNames.reserve(treeAndFileNameGlobs.size());
+      chainSubNames.reserve(treeAndFileNameGlobs.size());
+      for (auto &p : treeAndFileNameGlobs) {
          chainSubNames.emplace_back(std::move(p.first));
          fileNames.emplace_back(std::move(p.second));
       }
