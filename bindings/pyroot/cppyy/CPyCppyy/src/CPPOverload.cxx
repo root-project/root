@@ -1,10 +1,10 @@
 // Bindings
 #include "CPyCppyy.h"
 #include "structmember.h"    // from Python
-#if PY_VERSION_HEX >= 0x02050000
-#include "code.h"            // from Python
-#else
+#if PY_VERSION_HEX < 0x02050000
 #include "compile.h"         // from Python
+#elif PY_VERSION_HEX < 0x030b0000
+#include "code.h"            // from Python
 #endif
 #ifndef CO_NOFREE
 // python2.2 does not have CO_NOFREE defined
