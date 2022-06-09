@@ -67,7 +67,9 @@ TEST(RDFDatasetSpec, SingleFileSingleColConstructor)
       try {
          RDatasetSpec("tree", "file.root", {9, 7});
       } catch (const std::logic_error &err) {
-         EXPECT_EQ(std::string(err.what()), "RDatasetSpec: fStartEntry cannot be larger than fEndEntry.");
+         EXPECT_EQ(
+            std::string(err.what()),
+            "The starting entry cannot be larger than the ending entry in the creation of a dataset specification.");
          throw;
       },
       std::logic_error);
@@ -77,11 +79,13 @@ TEST(RDFDatasetSpec, SingleFileSingleColConstructor)
    EXPECT_THROW(
       try {
          ROOT_EXPECT_ERROR(h->AsString(), "TTreeReader::SetEntriesRange()", "first entry out of range 0..5");
-      } catch (const std::runtime_error &err) {
-         EXPECT_EQ(std::string(err.what()), "RLoopManager: fStartEntry cannot be larger than the number of entries.");
+      } catch (const std::logic_error &err) {
+         EXPECT_EQ(std::string(err.what()),
+                   "A range of entries was passed in the creation of the RDataFrame, but the starting entry is larger "
+                   "than the total number of entries in the dataset.");
          throw;
       },
-      std::runtime_error);
+      std::logic_error);
 
    // test the second constructor, second argument is now a vector
    const auto dfRDS13 = RDataFrame(RDatasetSpec("tree", {"file.root"s})).Display<int>({"x"})->AsString();
@@ -124,11 +128,13 @@ TEST(RDFDatasetSpec, SingleFileMultiColsConstructor)
    EXPECT_THROW(
       try {
          ROOT_EXPECT_ERROR(h->AsString(), "TTreeReader::SetEntriesRange()", "first entry out of range 0..5");
-      } catch (const std::runtime_error &err) {
-         EXPECT_EQ(std::string(err.what()), "RLoopManager: fStartEntry cannot be larger than the number of entries.");
+      } catch (const std::logic_error &err) {
+         EXPECT_EQ(std::string(err.what()),
+                   "A range of entries was passed in the creation of the RDataFrame, but the starting entry is larger "
+                   "than the total number of entries in the dataset.");
          throw;
       },
-      std::runtime_error);
+      std::logic_error);
 
    // specify irrelgular ranges (similar to above): [2, 2), [7, 7), [2, 6), [2, 0), [9, 7), [9, 2)
    const auto dfRDS9 = RDataFrame(RDatasetSpec("tree", "file.root", {2, 2})).Display()->AsString();
@@ -159,7 +165,9 @@ TEST(RDFDatasetSpec, SingleFileMultiColsConstructor)
       try {
          RDatasetSpec("tree", "file.root", {9, 7});
       } catch (const std::logic_error &err) {
-         EXPECT_EQ(std::string(err.what()), "RDatasetSpec: fStartEntry cannot be larger than fEndEntry.");
+         EXPECT_EQ(
+            std::string(err.what()),
+            "The starting entry cannot be larger than the ending entry in the creation of a dataset specification.");
          throw;
       },
       std::logic_error);
@@ -167,7 +175,9 @@ TEST(RDFDatasetSpec, SingleFileMultiColsConstructor)
       try {
          RDatasetSpec("tree", "file.root", {9, 2});
       } catch (const std::logic_error &err) {
-         EXPECT_EQ(std::string(err.what()), "RDatasetSpec: fStartEntry cannot be larger than fEndEntry.");
+         EXPECT_EQ(
+            std::string(err.what()),
+            "The starting entry cannot be larger than the ending entry in the creation of a dataset specification.");
          throw;
       },
       std::logic_error);
@@ -258,7 +268,9 @@ TEST(RDFDatasetSpec, MultipleFiles)
       try {
          RDatasetSpec("treeA", {"file0.root"s, "file1.root"s}, {9, 7});
       } catch (const std::logic_error &err) {
-         EXPECT_EQ(std::string(err.what()), "RDatasetSpec: fStartEntry cannot be larger than fEndEntry.");
+         EXPECT_EQ(
+            std::string(err.what()),
+            "The starting entry cannot be larger than the ending entry in the creation of a dataset specification.");
          throw;
       },
       std::logic_error);
@@ -266,7 +278,9 @@ TEST(RDFDatasetSpec, MultipleFiles)
       try {
          RDatasetSpec("treeA", {"file0.root"s, "file1.root"s}, {9, 2});
       } catch (const std::logic_error &err) {
-         EXPECT_EQ(std::string(err.what()), "RDatasetSpec: fStartEntry cannot be larger than fEndEntry.");
+         EXPECT_EQ(
+            std::string(err.what()),
+            "The starting entry cannot be larger than the ending entry in the creation of a dataset specification.");
          throw;
       },
       std::logic_error);

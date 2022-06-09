@@ -35,7 +35,8 @@ struct RDatasetSpec {
          : fStartEntry(startEntry),
            fEndEntry(endEntry >= startEntry
                         ? endEntry
-                        : throw std::logic_error("RDatasetSpec: fStartEntry cannot be larger than fEndEntry."))
+                        : throw std::logic_error("The starting entry cannot be larger than the ending entry in the "
+                                                 "creation of a dataset specification."))
       {
       }
    };

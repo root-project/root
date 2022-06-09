@@ -540,7 +540,8 @@ void RLoopManager::RunTreeReader()
    TTreeReader r(fTree.get(), fTree->GetEntryList());
 
    if (r.SetEntriesRange(fStartEntry, fEndEntry)) // returning > 0 indicates invalid fStartEntry
-      throw std::runtime_error("RLoopManager: fStartEntry cannot be larger than the number of entries.");
+      throw std::logic_error("A range of entries was passed in the creation of the RDataFrame, but the starting entry "
+                             "is larger than the total number of entries in the dataset.");
 
    if (0 == fTree->GetEntriesFast())
       return;
