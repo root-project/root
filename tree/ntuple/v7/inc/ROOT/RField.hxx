@@ -72,6 +72,12 @@ The field knows based on its type and the field name the type(s) and name(s) of 
 class RFieldBase {
    friend class ROOT::Experimental::RCollectionField; // to move the fields from the collection model
 
+public:
+   /// No constructor needs to be called, i.e. any bit pattern in the allocated memory represents a valid type
+   static constexpr int kTraitTriviallyConstructible = 0x01;
+   /// The type is cleaned up just by freeing its memory
+   static constexpr int kTraitTriviallyDestructible = 0x02;
+
 private:
    /// The field name relative to its parent field
    std::string fName;
@@ -101,6 +107,8 @@ protected:
    RColumn* fPrincipalColumn;
    /// The columns are connected either to a sink or to a source (not to both); they are owned by the field.
    std::vector<std::unique_ptr<RColumn>> fColumns;
+   /// Properties of the type that allow for optimizations of collections of that type
+   int fTraits = kTraitTriviallyConstructible | kTraitTriviallyDestructible;
 
    /// Creates the backing columns corresponsing to the field type for writing
    virtual void GenerateColumnsImpl() = 0;
@@ -195,6 +203,7 @@ public:
    virtual size_t GetValueSize() const = 0;
    /// For many types, the alignment requirement is equal to the size; otherwise override.
    virtual size_t GetAlignment() const { return GetValueSize(); }
+   int GetTraits() const { return fTraits; }
 
    /// Write the given value into columns. The value object has to be of the same type as the field.
    /// Returns the number of uncompressed bytes written.
@@ -1421,8 +1430,11 @@ private:
 public:
    static std::string TypeName() { return "std::string"; }
    explicit RField(std::string_view name)
-      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, false /* isSimple */)
-      , fIndex(0), fElemIndex(&fIndex) {}
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, false /* isSimple */), fIndex(0),
+        fElemIndex(&fIndex)
+   {
+      fTraits = 0;
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
