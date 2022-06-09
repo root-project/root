@@ -16,6 +16,12 @@
 using namespace ROOT::Experimental;
 
 
+std::string customTooltip(const ROOT::Experimental::REveDigitSet *digitSet, int n)
+{
+   auto d = digitSet->GetDigit(n);
+   return TString::Format("Custom tooltip:\n value %d idx %d\n", d->fValue, n).Data();
+}
+
 REveBoxSet* boxset(Int_t num=100)
 {
    auto eveMng = REveManager::Create();
@@ -23,6 +29,8 @@ REveBoxSet* boxset(Int_t num=100)
    TRandom r(0);
 
    auto pal = new REveRGBAPalette(0, 130);
+   pal->SetMin(80);
+
 
    auto q = new REveBoxSet("BoxSet");
    q->SetPalette(pal);
@@ -56,6 +64,8 @@ REveBoxSet* boxset(Int_t num=100)
    // Uncomment these two lines to get internal highlight / selection.
    q->SetPickable(1);
    q->SetAlwaysSecSelect(1);
+
+   q->SetTooltipCBFoo(customTooltip);
 
    eveMng->GetEventScene()->AddElement(q);
 

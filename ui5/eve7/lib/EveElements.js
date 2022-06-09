@@ -64,8 +64,9 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(/*EveManager*/) {
 
    class BoxSetControl extends EveElemControl {
 
-      DrawForSelection(sec_idcs, res)
+      DrawForSelection(atom_idcs, res, extra)
       {
+         let sec_idcs = extra.shape_idcs;
          let geobox = new THREE.BufferGeometry();
          geobox.setAttribute( 'position', this.obj3d.geometry.getAttribute("position") );
 
@@ -113,19 +114,27 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(/*EveManager*/) {
          return t + " idx=" + idx;
       }
 
-      elementSelected(indx)
+      elementSelectedSendMIR(idx, selectionId)
       {
-         if (this.obj3d.eve_el.fDetIdsAsSecondaryIndices) {
-            let N = this.obj3d.eve_el.render_data.idxBuff.length / 2;
-            indx = this.obj3d.eve_el.render_data.idxBuff[N + indx];
-         }
+         let boxset = this.obj3d.eve_el;
+         let scene = this.obj3d.scene;
+         let multi = this.event?.ctrlKey ? true : false;
 
-         this.invokeSceneMethod("processElementSelected", indx);
+         let boxIdx = idx;
+
+         let fcall = "NewShapePicked(" + boxIdx + ", " + selectionId + ", " + multi + ")"
+         scene.mgr.SendMIR(fcall, boxset.fElementId, "ROOT::Experimental::REveDigitSet");
+         return true;
       }
 
-      elementHighlighted(indx)
+      elementSelected(idx)
       {
-         this.invokeSceneMethod("processElementHighlighted", indx);
+         return this.elementSelectedSendMIR(idx, this.obj3d.scene.mgr.global_selection_id);
+      }
+
+      elementHighlighted(idx)
+      {
+         return this.elementSelectedSendMIR(idx, this.obj3d.scene.mgr.global_highlight_id);
       }
 
       checkHighlightIndex(indx)

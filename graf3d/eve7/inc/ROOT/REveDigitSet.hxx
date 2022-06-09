@@ -42,8 +42,8 @@ class REveDigitSet : public REveElement,
 public:
    enum ERenderMode_e { kRM_AsIs, kRM_Line, kRM_Fill };
 
-   typedef void (*Callback_foo)(REveDigitSet*, Int_t, TObject*);
-   typedef TString (*TooltipCB_foo)(REveDigitSet*, Int_t);
+   typedef void (*Callback_foo)(const REveDigitSet*, Int_t, TObject*);
+   typedef std::string (*TooltipCB_foo)(const REveDigitSet*, Int_t);
 
    struct DigitBase_t
    {
@@ -56,12 +56,14 @@ public:
    };
 
 protected:
-   std::vector<int>  fDigitIds;       //  Array holding references to external objects.
+   TRefArray        *fDigitIds{nullptr};  //  Array holding references to external objects.
 
    Int_t             fDefaultValue;   //  Default signal value.
    Bool_t            fValueIsColor;   //  Interpret signal value as RGBA color.
    Bool_t            fSingleColor;    //  Use the same color for all digits.
    Bool_t            fAntiFlick;      // Make extra render pass to avoid flickering when quads are too small.
+
+   Bool_t            fOwnIds{false};  //  Flag specifying if id-objects are owned by the TEveDigitSet.
    Bool_t            fDetIdsAsSecondaryIndices;         //  Flag specifying if id-objects are owned by the REveDigitSet.
    REveChunkManager  fPlex;           //  Container of digit data.
    DigitBase_t*      fLastDigit;      //! The last / current digit added to collection.
@@ -97,10 +99,9 @@ public:
    /*
    virtual void UnSelected();
    virtual void UnHighlighted();
-
+*/
    using REveElement::GetHighlightTooltip;
-   virtual TString GetHighlightTooltip();
-   */
+   std::string GetHighlightTooltip(const std::set<int>& secondary_idcs) const override;
 
    // Implemented in sub-classes:
    // virtual void Reset(EQuadType_e quadType, Bool_t valIsCol, Int_t chunkSize);
@@ -118,13 +119,14 @@ public:
    void DigitColor(UChar_t r, UChar_t g, UChar_t b, UChar_t a=255);
    void DigitColor(UChar_t* rgba);
 
-   void   DigitId(Int_t n);
+   void   DigitId(TObject* id);
+   void   DigitId(Int_t n, TObject* id);
    
    Bool_t GetDetIdsAsSecondaryIndices() const     { return fDetIdsAsSecondaryIndices; }
    void   SetDetIdsAsSecondaryIndices(Bool_t o)   { fDetIdsAsSecondaryIndices = o; }
 
    DigitBase_t* GetDigit(Int_t n) const { return (DigitBase_t*) fPlex.Atom(n); }
-   Int_t  GetId(Int_t n) const;
+   TObject*  GetId(Int_t n) const;
 
    // --------------------------------
 
@@ -172,6 +174,16 @@ public:
 
    TooltipCB_foo GetTooltipCBFoo()          const { return fTooltipCBFoo; }
    void          SetTooltipCBFoo(TooltipCB_foo f) { fTooltipCBFoo = f; }
+
+   bool    IsDigitVisible(const DigitBase_t*) const;
+   int     GetAtomIdxFromShapeIdx(int) const;
+   int     GetShapeIdxFromAtomIdx(int) const;
+
+   void    NewShapePicked(int shapeId, Int_t selectionId, bool multi);
+
+   
+   bool    RequiresExtraSelectionData() const override { return true; };
+   void    FillExtraSelectionData(nlohmann::json& j, const std::set<int>& secondary_idcs) const override;
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
 };
