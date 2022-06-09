@@ -64,6 +64,7 @@ protected:
    Bool_t            fDrawConeCap;
 
    static Int_t SizeofAtom(EBoxType_e bt);
+   void WriteShapeData(REveDigitSet::DigitBase_t &digit);
 
 public:
    REveBoxSet(const char* n="REveBoxSet", const char* t="");
