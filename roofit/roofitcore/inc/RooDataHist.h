@@ -283,9 +283,10 @@ private:
 
   void _adjustBinning(RooRealVar &theirVar, const TAxis &axis, RooRealVar *ourVar, Int_t *offset);
   void registerWeightArraysToDataStore() const;
+  VarInfo const& getVarInfo();
 
   VarInfo _varInfo; ///<!
-  VarInfo const& getVarInfo();
+  std::vector<double> _interpolationBuffer; ///<! Buffer to contain values used for weight interpolation
 
   ClassDefOverride(RooDataHist, 8) // Binned data set
 };
