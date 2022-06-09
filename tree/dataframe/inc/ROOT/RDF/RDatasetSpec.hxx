@@ -59,20 +59,22 @@ struct RDatasetSpec {
 
    ROOT::Internal::TreeUtils::RFriendInfo fFriendInfo{}; ///< List of friends
 
-   RDatasetSpec(const std::string &treeName, const std::string &fileName, REntryRange entryRange = {})
+   RDatasetSpec(const std::string &treeName, const std::string &fileName, const REntryRange &entryRange = {})
       : fTreeNames(std::vector<std::string>{std::move(treeName)}),
         fFileNameGlobs(std::vector<std::string>{std::move(fileName)}), fStartEntry(entryRange.fStartEntry),
         fEndEntry(entryRange.fEndEntry)
    {
    }
 
-   RDatasetSpec(const std::string &treeName, const std::vector<std::string> &fileNames, REntryRange entryRange = {})
+   RDatasetSpec(const std::string &treeName, const std::vector<std::string> &fileNames,
+                const REntryRange &entryRange = {})
       : fTreeNames(std::vector<std::string>{std::move(treeName)}), fFileNameGlobs(std::move(fileNames)),
         fStartEntry(entryRange.fStartEntry), fEndEntry(entryRange.fEndEntry)
    {
    }
 
-   RDatasetSpec(const std::vector<std::pair<std::string, std::string>> &treeAndFileNames, REntryRange entryRange = {})
+   RDatasetSpec(const std::vector<std::pair<std::string, std::string>> &treeAndFileNames,
+                const REntryRange &entryRange = {})
       : fStartEntry(entryRange.fStartEntry), fEndEntry(entryRange.fEndEntry)
    {
       fTreeNames.reserve(treeAndFileNames.size());
