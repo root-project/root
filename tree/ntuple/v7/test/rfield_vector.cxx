@@ -6,9 +6,9 @@ template <typename T>
 using Vector_t = std::vector<T>;
 
 template <template <typename> class Coll_t>
-void TestClassVector()
+void TestClassVector(const char *fname)
 {
-   FileRaii fileGuard("test_ntuple_classvector.root");
+   FileRaii fileGuard(fname);
 
    auto modelWrite = RNTupleModel::Create();
    auto wrKlassVec = modelWrite->MakeField<Coll_t<CustomStruct>>("klassVec");
@@ -87,12 +87,12 @@ void TestClassVector()
 
 TEST(RNTuple, ClassVector)
 {
-   TestClassVector<Vector_t>();
+   TestClassVector<Vector_t>("test_ntuple_classvector.root");
 }
 
 TEST(RNTuple, ClassRVec)
 {
-   TestClassVector<ROOT::RVec>();
+   TestClassVector<ROOT::RVec>("test_ntuple_classrvec.root");
 }
 
 TEST(RNTuple, InsideCollection)
