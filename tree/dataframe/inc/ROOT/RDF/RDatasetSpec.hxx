@@ -103,11 +103,13 @@ struct RDatasetSpec {
       fFriendInfo.fFriendNames.emplace_back(std::make_pair("", std::move(alias)));
       fFriendInfo.fFriendFileNames.emplace_back();
       fFriendInfo.fFriendChainSubNames.emplace_back();
-      fFriendInfo.fFriendFileNames.back().reserve(treeAndFileNames.size());
-      fFriendInfo.fFriendChainSubNames.back().reserve(treeAndFileNames.size());
+      auto &fileNames = fFriendInfo.fFriendFileNames.back();
+      auto &chainSubNames = fFriendInfo.fFriendChainSubNames.back();
+      fileNames.reserve(treeAndFileNames.size());
+      chainSubNames.reserve(treeAndFileNames.size());
       for (auto &p : treeAndFileNames) {
-         fFriendInfo.fFriendChainSubNames.back().emplace_back(std::move(p.first));
-         fFriendInfo.fFriendFileNames.back().emplace_back(std::move(p.second));
+         chainSubNames.emplace_back(std::move(p.first));
+         fileNames.emplace_back(std::move(p.second));
       }
    }
 };
