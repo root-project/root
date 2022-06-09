@@ -295,7 +295,9 @@ void checkSnapshotArrayFile(RResultPtr<RInterface<RLoopManager>> &df, unsigned i
       EXPECT_EQ(thisSize, bv.size());
       for (auto j = 0u; j < thisSize; ++j) {
          EXPECT_DOUBLE_EQ(dv[j], i * j);
-         EXPECT_EQ(bv[j], j % 2 == 0);
+         const bool value = bv[j];
+         const bool expected = j % 2 == 0;
+         EXPECT_EQ(value, expected);
       }
    }
 }
