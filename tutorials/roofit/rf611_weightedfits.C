@@ -108,7 +108,11 @@ int rf611_weightedfits(int acceptancemodel=2) {
 
   //number of pseudoexperiments (toys) and number of events per pseudoexperiment
   constexpr unsigned int ntoys = 500;
+#if defined(_WIN32) && !defined(__x86_64__)
+  constexpr unsigned int nstats = 2500;
+#else
   constexpr unsigned int nstats = 5000;
+#endif
   //parameters used in the generation
   constexpr double c0gen = 0.0;
   constexpr double c1gen = 0.0;
