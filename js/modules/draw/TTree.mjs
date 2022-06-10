@@ -1,20 +1,13 @@
 import { internals, httpRequest, isBatchMode, create, toJSON } from '../core.mjs';
-
 import { select as d3_select } from '../d3.mjs';
-
 import { kTString, kObject, kAnyP } from '../io.mjs';
-
 import { kClonesNode, kSTLNode, treeDraw, treeIOTest, TDrawSelector } from '../tree.mjs';
-
 import { BasePainter } from '../base/BasePainter.mjs';
-
 import { cleanup, resize, drawRawText, ObjectPainter } from '../base/ObjectPainter.mjs';
-
 import { TH1Painter } from '../hist/TH1Painter.mjs';
 import { TH2Painter } from '../hist/TH2Painter.mjs';
 import { TH3Painter } from '../hist/TH3Painter.mjs';
 import { TGraphPainter } from '../hist/TGraphPainter.mjs';
-
 import { showProgress, registerForResize } from '../gui/utils.mjs';
 
 

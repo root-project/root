@@ -1,8 +1,7 @@
 import { gStyle } from '../core.mjs';
-
 import { color as d3_color, rgb as d3_rgb, select as d3_select } from '../d3.mjs';
-
 import { getColor, findColor } from './colors.mjs';
+
 
 /**
   * @summary Handle for fill attributes

@@ -1,19 +1,10 @@
-/// more ROOT classes
-
 import { BIT, isBatchMode } from '../core.mjs';
-
 import { rgb as d3_rgb } from '../d3.mjs';
-
 import { BasePainter } from '../base/BasePainter.mjs';
-
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
-
 import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
-
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
-
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
-
 import { addMoveHandler } from '../gui/utils.mjs';
 
 

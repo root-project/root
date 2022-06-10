@@ -1,7 +1,6 @@
-
 import { select as d3_select } from '../d3.mjs';
-
 import { settings, internals, isNodeJs } from '../core.mjs';
+
 
 /** @summary Returns visible rect of element
   * @param {object} elem - d3.select object with element
@@ -71,13 +70,13 @@ function floatToString(value, fmt, ret_fmt) {
 
    fmt = fmt.trim();
    let len = fmt.length;
-   if (len<2)
+   if (len < 2)
       return ret_fmt ? [value.toFixed(4), "6.4f"] : value.toFixed(4);
    let last = fmt[len-1];
    fmt = fmt.slice(0,len-1);
    let isexp, prec = fmt.indexOf(".");
-   prec = (prec<0) ? 4 : parseInt(fmt.slice(prec+1));
-   if (!Number.isInteger(prec) || (prec <=0)) prec = 4;
+   prec = (prec < 0) ? 4 : parseInt(fmt.slice(prec+1));
+   if (!Number.isInteger(prec) || (prec <= 0)) prec = 4;
 
    let significance = false;
    if ((last=='e') || (last=='E')) { isexp = true; } else
@@ -179,7 +178,7 @@ class DrawOptions {
       val = val ? parseFloat(val) : Number.NaN;
       return !Number.isFinite(val) ? (dflt || 0) : val + (offset || 0);
    }
-}
+} // class DrawOptions
 
 
 /** @summary Simple random generator with controlled seed
@@ -207,8 +206,7 @@ class TRandom {
       result /= 4294967296;
       return result + 0.5;
    }
-}
-
+} // class TRandom
 
 
 /** @summary Function used to provide svg:path for the smoothed curves.
@@ -440,8 +438,8 @@ class BasePainter {
       if (!res || res.empty() || (is_direct === 'origin')) return res;
 
       let use_enlarge = res.property('use_enlarge'),
-         layout = res.property('layout') || 'simple',
-         layout_selector = (layout == 'simple') ? "" : res.property('layout_selector');
+          layout = res.property('layout') || 'simple',
+          layout_selector = (layout == 'simple') ? "" : res.property('layout_selector');
 
       if (layout_selector) res = res.select(layout_selector);
 
@@ -454,8 +452,7 @@ class BasePainter {
    /** @summary Access/change top painter
      * @private */
    _accessTopPainter(on) {
-      let main = this.selectDom().node(),
-          chld = main ? main.firstChild : null;
+      let chld = this.selectDom().node()?.firstChild;
       if (!chld) return null;
       if (on === true) {
          chld.painter = this;
@@ -513,9 +510,9 @@ class BasePainter {
    testMainResize(check_level, new_size, height_factor) {
 
       let enlarge = this.enlargeMain('state'),
-         main_origin = this.selectDom('origin'),
-         main = this.selectDom(),
-         lmt = 5; // minimal size
+          main_origin = this.selectDom('origin'),
+          main = this.selectDom(),
+          lmt = 5; // minimal size
 
       if (enlarge !== 'on') {
          if (new_size && new_size.width && new_size.height)
@@ -545,8 +542,8 @@ class BasePainter {
       }
 
       let rect = getElementRect(main),
-         old_h = main.property('draw_height'),
-         old_w = main.property('draw_width');
+          old_h = main.property('draw_height'),
+          old_w = main.property('draw_width');
 
       rect.changed = false;
 
@@ -574,13 +571,11 @@ class BasePainter {
    enlargeMain(action, skip_warning) {
 
       let main = this.selectDom(true),
-         origin = this.selectDom('origin');
+          origin = this.selectDom('origin');
 
       if (main.empty() || !settings.CanEnlarge || (origin.property('can_enlarge') === false)) return false;
 
-      if (action === undefined) return true;
-
-      if (action === 'verify') return true;
+      if ((action === undefined) || (action === 'verify')) return true;
 
       let state = origin.property('use_enlarge') ? "on" : "off";
 
@@ -605,7 +600,7 @@ class BasePainter {
          if ((rect2.width <= rect1.width) || (rect2.height <= rect1.height))
             if (rect2.width * rect2.height < rect1.width * rect1.height) {
                if (!skip_warning)
-                  console.log('Enlarged area ' + rect2.width + "x" + rect2.height + ' smaller then original drawing ' + rect1.width + "x" + rect1.height);
+                  console.log(`Enlarged area ${rect2.width} x ${rect2.height} smaller then original drawing ${rect1.width} x ${rect1.height}`);
                enlarge.remove();
                return false;
             }
@@ -646,11 +641,11 @@ class BasePainter {
 
    /** @summary Returns assigned item name
      * @desc Used with {@link HierarchyPainter} to identify drawn item name */
-   getItemName() { return ('_hitemname' in this) ? this._hitemname : null; }
+   getItemName() { return this._hitemname ?? null; }
 
    /** @summary Returns assigned item draw option
      * @desc Used with {@link HierarchyPainter} to identify drawn item option */
-   getItemDrawOpt() { return this._hdrawopt || ""; }
+   getItemDrawOpt() { return this._hdrawopt ?? ""; }
 
 } // class BasePainter
 

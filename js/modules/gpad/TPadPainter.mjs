@@ -1,22 +1,12 @@
-/// TPad painting
-
 import { gStyle, settings, constants, internals,
          create, toJSON, isBatchMode, loadScript, injectCode, isPromise } from '../core.mjs';
-
 import { color as d3_color, pointer as d3_pointer, select as d3_select } from '../d3.mjs';
-
 import { ColorPalette, adoptRootColors, extendRootColors, getRGBfromTColor } from '../base/colors.mjs';
-
 import { getElementRect, getAbsPosInCanvas, DrawOptions, compressSVG } from '../base/BasePainter.mjs';
-
 import { ObjectPainter, selectActivePad, getActivePad  } from '../base/ObjectPainter.mjs';
-
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
-
 import { createMenu, closeMenu } from '../gui/menu.mjs';
-
 import { ToolbarIcons, registerForResize } from '../gui/utils.mjs';
-
 import { BrowserLayout } from '../gui/display.mjs';
 
 
@@ -510,7 +500,7 @@ class TPadPainter extends ObjectPainter {
            .style("bottom", 0);
       }
 
-      svg.style("filter", settings.DarkMode ? "invert(100%)" : null);
+      svg.style("filter", settings.DarkMode || this.pad?.$dark ? "invert(100%)" : null);
 
       svg.attr("viewBox", `0 0 ${rect.width} ${rect.height}`)
          .attr("preserveAspectRatio", "none")  // we do not preserve relative ratio
@@ -986,6 +976,12 @@ class TPadPainter extends ObjectPainter {
       return hints;
    }
 
+   /** @summary Changes canvas dark mode
+     * @private */
+   changeDarkMode(mode) {
+      this.getCanvSvg().style("filter", (mode ?? settings.DarkMode) ? "invert(100%)" : null);
+   }
+
    /** @summary Fill pad context menu
      * @private */
    fillContextMenu(menu) {
@@ -1027,7 +1023,12 @@ class TPadPainter extends ObjectPainter {
             gStyle.fOptLogx = this.pad.fLogx;
             gStyle.fOptLogy = this.pad.fLogy;
             gStyle.fOptLogz = this.pad.fLogz;
-         });
+         }, "Store pad fill attributes, grid, tick and log scale settings to gStyle");
+
+         if (this.iscan)
+            menu.addSettingsMenu(false, false, arg => {
+               if (arg == "dark") this.changeDarkMode();
+            });
       }
 
       menu.add("separator");

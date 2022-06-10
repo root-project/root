@@ -1,9 +1,6 @@
 import { gStyle, settings, isBatchMode } from '../core.mjs';
-
 import { rgb as d3_rgb } from '../d3.mjs';
-
 import { floatToString, buildSvgPath } from '../base/BasePainter.mjs';
-
 import { THistPainter } from './THistPainter.mjs';
 
 /**
@@ -61,9 +58,11 @@ class TH1Painter extends THistPainter {
          value = histo.getBinContent(i + 1);
          hsum += profile ? histo.fBinEntries[i + 1] : value;
 
-         if ((i<left) || (i>=right)) continue;
+         if ((i < left) || (i >= right))
+            continue;
 
-         if ((value > 0) && ((hmin_nz == 0) || (value < hmin_nz))) hmin_nz = value;
+         if ((value > 0) && ((hmin_nz == 0) || (value < hmin_nz)))
+            hmin_nz = value;
 
          if (first) {
             hmin = hmax = value;
@@ -97,9 +96,13 @@ class TH1Painter extends THistPainter {
 
       if (this.draw_content) {
          if (hmin >= hmax) {
-            if (hmin == 0) { this.ymin = 0; this.ymax = 1; }
-            else if (hmin < 0) { this.ymin = 2 * hmin; this.ymax = 0; }
-            else { this.ymin = 0; this.ymax = hmin * 2; }
+            if (hmin == 0) {
+               this.ymin = 0; this.ymax = 1;
+            } else if (hmin < 0) {
+               this.ymin = 2 * hmin; this.ymax = 0;
+            } else {
+               this.ymin = 0; this.ymax = hmin * 2;
+            }
          } else {
             let dy = (hmax - hmin) * gStyle.fHistTopMargin;
             this.ymin = hmin - dy;
@@ -666,8 +669,8 @@ class TH1Painter extends THistPainter {
             }
             // end of use_minmax
          } else if ((gry !== curry) || lastbin) {
-            if (grx !== currx) res += "h"+(grx-currx);
-            if (gry !== curry) res += "v"+(gry-curry);
+            if (grx !== currx) res += `h${grx-currx}`;
+            if (gry !== curry) res += `v${gry-curry}`;
             curry = gry;
             currx = grx;
          }
@@ -916,12 +919,14 @@ class TH1Painter extends THistPainter {
 
       if (findbin !== null) {
          // if bin on boundary found, check that x position is ok
-         if ((findbin === left) && (grx1 > pnt_x + gapx))  findbin = null; else
-         if ((findbin === right-1) && (grx2 < pnt_x - gapx)) findbin = null; else
-         // if bars option used check that bar is not match
-         if ((pnt_x < grx1 - gapx) || (pnt_x > grx2 + gapx)) findbin = null; else
-         // exclude empty bin if empty bins suppressed
-         if (!this.options.Zero && (histo.getBinContent(findbin+1)===0)) findbin = null;
+         if ((findbin === left) && (grx1 > pnt_x + gapx))
+            findbin = null;
+         else if ((findbin === right-1) && (grx2 < pnt_x - gapx))
+            findbin = null;
+         else if ((pnt_x < grx1 - gapx) || (pnt_x > grx2 + gapx))
+            findbin = null; // if bars option used check that bar is not match
+         else if (!this.options.Zero && (histo.getBinContent(findbin+1) === 0))
+            findbin = null; // exclude empty bin if empty bins suppressed
       }
 
       let ttrect = this.draw_g.select(".tooltip_bin");
@@ -1072,7 +1077,8 @@ class TH1Painter extends THistPainter {
    autoZoom() {
       let left = this.getSelectIndex("x", "left", -1),
           right = this.getSelectIndex("x", "right", 1),
-          dist = right - left, histo = this.getHisto();
+          dist = right - left,
+          histo = this.getHisto();
 
       if ((dist == 0) || !histo) return;
 
@@ -1098,9 +1104,9 @@ class TH1Painter extends THistPainter {
    canZoomInside(axis,min,max) {
       let histo = this.getHisto();
 
-      if ((axis=="x") && histo && (histo.fXaxis.FindBin(max,0.5) - histo.fXaxis.FindBin(min,0) > 1)) return true;
+      if ((axis == "x") && histo && (histo.fXaxis.FindBin(max,0.5) - histo.fXaxis.FindBin(min,0) > 1)) return true;
 
-      if ((axis=="y") && (Math.abs(max-min) > Math.abs(this.ymax-this.ymin)*1e-6)) return true;
+      if ((axis == "y") && (Math.abs(max-min) > Math.abs(this.ymax-this.ymin)*1e-6)) return true;
 
       return false;
    }

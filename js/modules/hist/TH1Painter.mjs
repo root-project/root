@@ -1,15 +1,12 @@
-/// 3D TH1 drawing
-
 import { settings, gStyle } from '../core.mjs';
-
 import { assignFrame3DMethods, drawBinsLego } from './hist3d.mjs';
-
 import { TAxisPainter } from '../gpad/TAxisPainter.mjs';
-
 import { TH1Painter as TH1Painter2D  } from '../hist2d/TH1Painter.mjs';
+
 
 /** @summary Draw 1-D histogram in 3D
   * @private */
+
 class TH1Painter extends TH1Painter2D {
 
    draw3D(reason) {

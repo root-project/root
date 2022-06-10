@@ -1,4 +1,3 @@
-
 const root_fonts = ['Arial', 'iTimes New Roman',
       'bTimes New Roman', 'biTimes New Roman', 'Arial',
       'oArial', 'bArial', 'boArial', 'Courier New',

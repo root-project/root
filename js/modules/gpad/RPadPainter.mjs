@@ -1,23 +1,14 @@
-import { gStyle, settings, constants, internals,
-         addMethods, isPromise, isBatchMode } from '../core.mjs';
-
+import { gStyle, settings, constants, internals, addMethods, isPromise, isBatchMode } from '../core.mjs';
 import { pointer as d3_pointer } from '../d3.mjs';
-
 import { ColorPalette, addColor, getRootColors } from '../base/colors.mjs';
-
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
-
 import { getElementRect, getAbsPosInCanvas, DrawOptions, compressSVG } from '../base/BasePainter.mjs';
-
 import { selectActivePad, getActivePad } from '../base/ObjectPainter.mjs';
-
 import { registerForResize } from '../gui/utils.mjs';
-
 import { BrowserLayout } from '../gui/display.mjs';
-
 import { createMenu, closeMenu } from '../gui/menu.mjs';
-
 import { PadButtonsHandler } from './TPadPainter.mjs';
+
 
 /**
  * @summary Painter class for RPad
@@ -337,7 +328,7 @@ class RPadPainter extends RObjectPainter {
 
       if ((rect.width <= lmt) || (rect.height <= lmt)) {
          svg.style("display", "none");
-         console.warn("Hide canvas while geometry too small w=",rect.width," h=",rect.height);
+         console.warn(`Hide canvas while geometry too small w=${rect.width} h=${rect.height}`);
          rect.width = 200; rect.height = 100; // just to complete drawing
       } else {
          svg.style("display", null);
@@ -631,6 +622,12 @@ class RPadPainter extends RObjectPainter {
       return hints;
    }
 
+   /** @summary Changes canvas dark mode
+     * @private */
+   changeDarkMode(mode) {
+      this.getCanvSvg().style("filter", (mode ?? settings.DarkMode)  ? "invert(100%)" : null);
+   }
+
    /** @summary Fill pad context menu
      * @private */
    fillContextMenu(menu) {
@@ -642,8 +639,13 @@ class RPadPainter extends RObjectPainter {
 
       menu.addchk(this.isTooltipAllowed(), "Show tooltips", () => this.setTooltipAllowed("toggle"));
 
-      if (!this._websocket)
+      if (!this._websocket) {
          menu.addAttributesMenu(this);
+         if (this.iscan)
+            menu.addSettingsMenu(false, false, arg => {
+               if (arg == "dark") this.changeDarkMode();
+            });
+      }
 
       menu.add("separator");
 

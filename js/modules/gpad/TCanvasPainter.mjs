@@ -1,19 +1,10 @@
-/// TCanvas painting
-
 import { BIT, settings, create, parse, toJSON, isBatchMode } from '../core.mjs';
-
 import { select as d3_select } from '../d3.mjs';
-
 import { closeCurrentWindow, showProgress, loadOpenui5, ToolbarIcons } from '../gui/utils.mjs';
-
 import { GridDisplay, getHPainter } from '../gui/display.mjs';
-
 import { cleanup, resize, selectActivePad } from '../base/ObjectPainter.mjs';
-
 import { TAxisPainter } from './TAxisPainter.mjs';
-
 import { TFramePainter } from './TFramePainter.mjs';
-
 import { TPadPainter } from './TPadPainter.mjs';
 
 
@@ -721,14 +712,12 @@ function ensureTCanvas(painter, frame_kind) {
       return Promise.reject(Error('Painter not provided in ensureTCanvas'));
 
    // simple check - if canvas there, can use painter
-   let svg_c = painter.getCanvSvg(),
-       noframe = (frame_kind === false) || (frame_kind == "3d") ? "noframe" : "",
-       pr = Promise.resolve(true);
+   let noframe = (frame_kind === false) || (frame_kind == "3d") ? "noframe" : "",
+       promise = painter.getCanvSvg().empty()
+                 ? TCanvasPainter.draw(painter.getDom(), null, noframe)
+                 : Promise.resolve(true);
 
-   if (svg_c.empty())
-      pr = TCanvasPainter.draw(painter.getDom(), null, noframe);
-
-   return pr.then(() => {
+   return promise.then(() => {
       if ((frame_kind !== false) &&  painter.getFrameSvg().select(".main_layer").empty() && !painter.getFramePainter())
          directDrawTFrame(painter.getDom(), null, frame_kind);
 

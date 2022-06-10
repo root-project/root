@@ -1,8 +1,7 @@
 import { select as d3_select } from '../d3.mjs';
-
 import { gStyle } from '../core.mjs';
-
 import { getColor, findColor } from './colors.mjs';
+
 
 const root_line_styles = [
       "", "", "3,3", "1,2",

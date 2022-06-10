@@ -1,12 +1,9 @@
 import { create, gStyle } from '../core.mjs';
-
 import { DrawOptions, buildSvgPath } from '../base/BasePainter.mjs';
-
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
-
 import { TH1Painter } from '../hist2d/TH1Painter.mjs';
-
 import * as jsroot_math from '../base/math.mjs';
+
 
 function proivdeEvalPar(obj) {
 

@@ -2,7 +2,9 @@ import { decodeUrl, settings, constants, gStyle, internals, findFunction, parse 
 
 import { select as d3_select } from './d3.mjs';
 
-import { HierarchyPainter, readSettings, readStyle } from './gui/HierarchyPainter.mjs';
+import { HierarchyPainter } from './gui/HierarchyPainter.mjs';
+
+import { readSettings, readStyle } from './gui/utils.mjs';
 
 /** @summary Read style and settings from URL
   * @private */

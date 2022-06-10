@@ -1,11 +1,7 @@
 import { gStyle, settings, constants, isBatchMode } from '../core.mjs';
-
 import { rgb as d3_rgb } from '../d3.mjs';
-
 import { floatToString, DrawOptions, buildSvgPath } from '../base/BasePainter.mjs';
-
 import { RHistPainter } from './RHistPainter.mjs';
-
 import { ensureRCanvas } from '../gpad/RCanvasPainter.mjs';
 
 /**

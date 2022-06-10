@@ -1,13 +1,7 @@
-/// 3D TH2 drawing
-
 import { settings, gStyle } from '../core.mjs';
-
 import { Vector2, BufferGeometry, BufferAttribute, Mesh, MeshBasicMaterial, ShapeUtils } from '../three.mjs';
-
 import { assignFrame3DMethods, drawBinsLego, drawBinsError3D, drawBinsContour3D, drawBinsSurf3D } from './hist3d.mjs';
-
 import { TAxisPainter } from '../gpad/TAxisPainter.mjs';
-
 import { TH2Painter as TH2Painter2D  } from '../hist2d/TH2Painter.mjs';
 
 
@@ -277,6 +271,5 @@ class TH2Painter extends TH2Painter2D {
    }
 
 } // class TH2Painter
-
 
 export { TH2Painter };

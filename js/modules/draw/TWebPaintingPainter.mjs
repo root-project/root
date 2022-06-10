@@ -1,5 +1,4 @@
 import { getColor } from '../base/colors.mjs';
-
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 
 
@@ -167,6 +166,6 @@ class TWebPaintingPainter extends ObjectPainter {
       return painter.redraw();
    }
 
-}
+} // class TWebPaintingPainter
 
 export { TWebPaintingPainter };

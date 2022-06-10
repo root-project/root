@@ -1,18 +1,11 @@
-/// more ROOT classes
-
 import { settings, create, isBatchMode } from '../core.mjs';
-
 import { scaleLinear, select as d3_select, pointer as d3_pointer } from '../d3.mjs';
-
 import { DrawOptions, buildSvgPath } from '../base/BasePainter.mjs';
-
 import { ObjectPainter, getElementMainPainter } from '../base/ObjectPainter.mjs';
-
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
-
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
-
 import { TooltipHandler } from '../gpad/TFramePainter.mjs';
+
 
 /**
  * @summary Painter for TGraphPolargram objects.

@@ -1,21 +1,16 @@
 /// 3D TH2 drawing
 
 import { constants, isBatchMode, getDocument } from '../core.mjs';
-
 import { rgb as d3_rgb } from '../d3.mjs';
-
 import { REVISION, DoubleSide, Object3D, Color, Vector2, Vector3, Matrix4, Line3,
          BufferGeometry, BufferAttribute, Mesh, MeshBasicMaterial, MeshLambertMaterial,
          LineSegments, LineDashedMaterial, LineBasicMaterial,
          TextGeometry, Plane, Scene, PerspectiveCamera, PointLight, ShapeUtils } from '../three.mjs';
-
 import { EAxisBits } from '../gpad/TAxisPainter.mjs';
-
 import { assign3DHandler, disposeThreejsObject, createOrbitControl,
          createLineSegments, Box3D,
          createRender3D, beforeRender3D, afterRender3D, getRender3DKind,
          cleanupRender3D, HelveticerRegularFont, createSVGRenderer, create3DLineMaterial } from '../base/base3d.mjs';
-
 import { translateLaTeX } from '../base/latex.mjs';
 
 

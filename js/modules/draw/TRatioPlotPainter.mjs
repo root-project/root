@@ -1,11 +1,6 @@
-/// more ROOT classes
-
 import { create } from '../core.mjs';
-
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
-
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
-
 import { drawTLine } from './more.mjs';
 
 

@@ -1,19 +1,15 @@
 import { select as d3_select } from '../d3.mjs';
-
 import { HelveticerRegularJson, Font, WebGLRenderer, WebGLRenderTarget,
          CanvasTexture, TextureLoader,
          BufferGeometry, BufferAttribute, Float32BufferAttribute,
          Vector2, Vector3, Color, Points, PointsMaterial,
          LineSegments, LineDashedMaterial, LineBasicMaterial,
          OrbitControls, Raycaster, SVGRenderer } from '../three.mjs';
-
 import { browser, settings, constants, internals, isBatchMode, isNodeJs, getDocument } from '../core.mjs';
-
 import { getElementRect, getAbsPosInCanvas } from './BasePainter.mjs';
-
 import { TAttMarkerHandler } from './TAttMarkerHandler.mjs';
-
 import { getSvgLineStyle } from './TAttLineHandler.mjs';
+
 
 const HelveticerRegularFont = new Font(HelveticerRegularJson);
 

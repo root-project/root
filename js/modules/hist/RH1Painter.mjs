@@ -1,9 +1,6 @@
 import { settings, gStyle } from '../core.mjs';
-
 import { RH1Painter as RH1Painter2D } from '../hist2d/RH1Painter.mjs';
-
 import { RAxisPainter } from '../gpad/RAxisPainter.mjs';
-
 import { assignFrame3DMethods, drawBinsLego } from './hist3d.mjs';
 
 class RH1Painter extends RH1Painter2D {

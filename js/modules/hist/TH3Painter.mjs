@@ -1,24 +1,15 @@
-/// 3D TH3 drawing
-
 import { gStyle, settings } from '../core.mjs';
-
 import { REVISION, Matrix4,
          BufferGeometry, BufferAttribute, Mesh, MeshBasicMaterial, MeshLambertMaterial,
          LineBasicMaterial, SphereGeometry } from '../three.mjs';
-
 import { TRandom, floatToString } from '../base/BasePainter.mjs';
-
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
-
 import { TAxisPainter } from '../gpad/TAxisPainter.mjs';
-
 import { createLineSegments, PointsCreator, Box3D } from '../base/base3d.mjs';
-
 import { TPavePainter } from '../hist/TPavePainter.mjs';
-
 import { THistPainter } from '../hist2d/THistPainter.mjs';
-
 import { assignFrame3DMethods } from './hist3d.mjs';
+
 
 /**
  * @summary Painter for TH3 classes

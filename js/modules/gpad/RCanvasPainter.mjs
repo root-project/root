@@ -1,26 +1,15 @@
-/// JavaScript ROOT graphics for ROOT v7 classes
-
 import { settings, create, parse, registerMethods, isBatchMode } from '../core.mjs';
-
 import { select as d3_select, rgb as d3_rgb } from '../d3.mjs';
-
 import { closeCurrentWindow, showProgress, loadOpenui5, ToolbarIcons } from '../gui/utils.mjs';
-
 import { GridDisplay, getHPainter } from '../gui/display.mjs';
-
 import { selectActivePad, cleanup, resize } from '../base/ObjectPainter.mjs';
-
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
-
 import { RAxisPainter } from './RAxisPainter.mjs';
-
 import { RFramePainter } from './RFramePainter.mjs';
-
 import { RPadPainter } from './RPadPainter.mjs';
-
 import { addDragHandler } from './TFramePainter.mjs';
-
 import { WebWindowHandle } from '../webwindow.mjs';
+
 
 /**
  * @summary Painter class for RCanvas
@@ -632,6 +621,7 @@ class RCanvasPainter extends RPadPainter {
    }
 
 } // class RCanvasPainter
+
 
 /** @summary draw RPadSnapshot object
   * @private */

@@ -1,15 +1,9 @@
 import { gStyle, internals, createHistogram, createTPolyLine, isBatchMode } from '../core.mjs';
-
 import { rgb as d3_rgb, chord as d3_chord, arc as d3_arc, ribbon as d3_ribbon } from '../d3.mjs';
-
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
-
 import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
-
 import { TRandom, floatToString } from '../base/BasePainter.mjs';
-
 import { EAxisBits } from '../gpad/TAxisPainter.mjs';
-
 import { THistPainter } from './THistPainter.mjs';
 
 /**
