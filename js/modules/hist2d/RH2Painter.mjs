@@ -1,15 +1,8 @@
-/// JavaScript ROOT v7 graphics for histogram classes
-
 import { gStyle, internals, createTPolyLine } from '../core.mjs';
-
 import { rgb as d3_rgb } from '../d3.mjs';
-
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
-
 import { floatToString, TRandom } from '../base/BasePainter.mjs';
-
 import { RHistPainter } from './RHistPainter.mjs';
-
 import { ensureRCanvas } from '../gpad/RCanvasPainter.mjs';
 
 /**

@@ -1,4 +1,4 @@
-// https://root.cern/js/ v7.0.99
+// https://root.cern/js/ v7.1.99
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -11,7 +11,7 @@ let version_id = "dev";
 
 /** @summary version date
   * @desc Release date in format day/month/year like "19/11/2021" */
-let version_date = "2/06/2022";
+let version_date = "10/06/2022";
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -3651,6 +3651,30 @@ function select(selector) {
       ? new Selection$1([[document.querySelector(selector)]], [document.documentElement])
       : new Selection$1([[selector]], root$1);
 }
+
+var nextId = 0;
+
+function Local() {
+  this._ = "@" + (++nextId).toString(36);
+}
+
+Local.prototype = {
+  constructor: Local,
+  get: function(node) {
+    var id = this._;
+    while (!(id in node)) if (!(node = node.parentNode)) return;
+    return node[id];
+  },
+  set: function(node, value) {
+    return node[this._] = value;
+  },
+  remove: function(node) {
+    return this._ in node && delete node[this._];
+  },
+  toString: function() {
+    return this._;
+  }
+};
 
 function sourceEvent(event) {
   let sourceEvent;
@@ -7571,13 +7595,13 @@ function floatToString(value, fmt, ret_fmt) {
 
    fmt = fmt.trim();
    let len = fmt.length;
-   if (len<2)
+   if (len < 2)
       return ret_fmt ? [value.toFixed(4), "6.4f"] : value.toFixed(4);
    let last = fmt[len-1];
    fmt = fmt.slice(0,len-1);
    let isexp, prec = fmt.indexOf(".");
-   prec = (prec<0) ? 4 : parseInt(fmt.slice(prec+1));
-   if (!Number.isInteger(prec) || (prec <=0)) prec = 4;
+   prec = (prec < 0) ? 4 : parseInt(fmt.slice(prec+1));
+   if (!Number.isInteger(prec) || (prec <= 0)) prec = 4;
 
    let significance = false;
    if ((last=='e') || (last=='E')) { isexp = true; } else
@@ -7679,7 +7703,7 @@ class DrawOptions {
       val = val ? parseFloat(val) : Number.NaN;
       return !Number.isFinite(val) ? (dflt || 0) : val + (offset || 0);
    }
-}
+} // class DrawOptions
 
 
 /** @summary Simple random generator with controlled seed
@@ -7707,8 +7731,7 @@ class TRandom {
       result /= 4294967296;
       return result + 0.5;
    }
-}
-
+} // class TRandom
 
 
 /** @summary Function used to provide svg:path for the smoothed curves.
@@ -7940,8 +7963,8 @@ class BasePainter {
       if (!res || res.empty() || (is_direct === 'origin')) return res;
 
       let use_enlarge = res.property('use_enlarge'),
-         layout = res.property('layout') || 'simple',
-         layout_selector = (layout == 'simple') ? "" : res.property('layout_selector');
+          layout = res.property('layout') || 'simple',
+          layout_selector = (layout == 'simple') ? "" : res.property('layout_selector');
 
       if (layout_selector) res = res.select(layout_selector);
 
@@ -7954,8 +7977,7 @@ class BasePainter {
    /** @summary Access/change top painter
      * @private */
    _accessTopPainter(on) {
-      let main = this.selectDom().node(),
-          chld = main ? main.firstChild : null;
+      let chld = this.selectDom().node()?.firstChild;
       if (!chld) return null;
       if (on === true) {
          chld.painter = this;
@@ -8013,9 +8035,9 @@ class BasePainter {
    testMainResize(check_level, new_size, height_factor) {
 
       let enlarge = this.enlargeMain('state'),
-         main_origin = this.selectDom('origin'),
-         main = this.selectDom(),
-         lmt = 5; // minimal size
+          main_origin = this.selectDom('origin'),
+          main = this.selectDom(),
+          lmt = 5; // minimal size
 
       if (enlarge !== 'on') {
          if (new_size && new_size.width && new_size.height)
@@ -8045,8 +8067,8 @@ class BasePainter {
       }
 
       let rect = getElementRect(main),
-         old_h = main.property('draw_height'),
-         old_w = main.property('draw_width');
+          old_h = main.property('draw_height'),
+          old_w = main.property('draw_width');
 
       rect.changed = false;
 
@@ -8074,13 +8096,11 @@ class BasePainter {
    enlargeMain(action, skip_warning) {
 
       let main = this.selectDom(true),
-         origin = this.selectDom('origin');
+          origin = this.selectDom('origin');
 
       if (main.empty() || !settings.CanEnlarge || (origin.property('can_enlarge') === false)) return false;
 
-      if (action === undefined) return true;
-
-      if (action === 'verify') return true;
+      if ((action === undefined) || (action === 'verify')) return true;
 
       let state = origin.property('use_enlarge') ? "on" : "off";
 
@@ -8105,7 +8125,7 @@ class BasePainter {
          if ((rect2.width <= rect1.width) || (rect2.height <= rect1.height))
             if (rect2.width * rect2.height < rect1.width * rect1.height) {
                if (!skip_warning)
-                  console.log('Enlarged area ' + rect2.width + "x" + rect2.height + ' smaller then original drawing ' + rect1.width + "x" + rect1.height);
+                  console.log(`Enlarged area ${rect2.width} x ${rect2.height} smaller then original drawing ${rect1.width} x ${rect1.height}`);
                enlarge.remove();
                return false;
             }
@@ -8146,11 +8166,11 @@ class BasePainter {
 
    /** @summary Returns assigned item name
      * @desc Used with {@link HierarchyPainter} to identify drawn item name */
-   getItemName() { return ('_hitemname' in this) ? this._hitemname : null; }
+   getItemName() { return this._hitemname ?? null; }
 
    /** @summary Returns assigned item draw option
      * @desc Used with {@link HierarchyPainter} to identify drawn item option */
-   getItemDrawOpt() { return this._hdrawopt || ""; }
+   getItemDrawOpt() { return this._hdrawopt ?? ""; }
 
 } // class BasePainter
 
@@ -8307,8 +8327,6 @@ class FontHandler {
    }
 
 } // class FontHandler
-
-/// latex parsing and rendering
 
 const symbols_map = {
    // greek letters
@@ -10670,11 +10688,7 @@ class ObjectPainter extends BasePainter {
    getObject() { return this.draw_object; }
 
    /** @summary Returns drawn object class name */
-   getClassName() {
-      let obj = this.getObject(),
-          clname = obj ? obj._typename : "";
-      return clname || "";
-   }
+   getClassName() { return this.getObject()?._typename || ""; }
 
    /** @summary Checks if drawn object matches with provided typename
      * @param {string|object} arg - typename (or object with _typename member)
@@ -10744,7 +10758,6 @@ class ObjectPainter extends BasePainter {
       let sett = pp.getObjectDrawSettings('ROOT.' + obj._typename, 'nosame');
       return sett?.opts;
    }
-
 
    /** @summary Central place to update objects drawing
      * @param {object} obj - new version of object, values will be updated in original object
@@ -10842,7 +10855,6 @@ class ObjectPainter extends BasePainter {
    checkResize(arg) {
       let p = this.getCanvPainter();
       if (!p) return false;
-
       // only canvas should be checked
       p.checkCanvasResize(arg);
       return true;
@@ -11195,8 +11207,6 @@ class ObjectPainter extends BasePainter {
          handler.setArgs(args);
 
       if (args.std) this.markeratt = handler;
-
-      // handler.used = false; // mark that line handler is not yet used
       return handler;
    }
 
@@ -11223,8 +11233,6 @@ class ObjectPainter extends BasePainter {
          handler.setArgs(args);
 
       if (args.std) this.lineatt = handler;
-
-      // handler.used = false; // mark that line handler is not yet used
       return handler;
    }
 
@@ -11261,9 +11269,6 @@ class ObjectPainter extends BasePainter {
          handler.setArgs(args);
 
       if (args.std) this.fillatt = handler;
-
-      // handler.used = false; // mark that fill handler is not yet used
-
       return handler;
    }
 
@@ -11327,10 +11332,9 @@ class ObjectPainter extends BasePainter {
      * @private */
    executeMenuCommand(method) {
 
-      if (method.fName == "Inspect") {
+      if (method.fName == "Inspect")
          // primitve inspector, keep it here
          return this.showInspector();
-      }
 
       return false;
    }
@@ -11677,7 +11681,8 @@ class ObjectPainter extends BasePainter {
      * @protected */
    drawText(arg) {
 
-      if (!arg.text) arg.text = "";
+      if (!arg.text)
+         arg.text = "";
 
       arg.draw_g = arg.draw_g || this.draw_g;
       if (!arg.draw_g || arg.draw_g.empty()) return;
@@ -11780,8 +11785,7 @@ class ObjectPainter extends BasePainter {
          return this._postprocessDrawText(arg, arg.txt_node);
       }
 
-      arg.mj_node = arg.draw_g.append("svg:g")
-                           .attr('visibility', 'hidden'); // hide text until drawing is finished
+      arg.mj_node = arg.draw_g.append("svg:g").attr('visibility', 'hidden'); // hide text until drawing is finished
 
       produceMathjax(this, arg.mj_node, arg).then(() => {
          arg.ready = true;
@@ -11885,7 +11889,7 @@ class ObjectPainter extends BasePainter {
          this._got_menu = true;
 
          if (reply && (_reqid !== reply.fId))
-            console.error('missmatch between request ' + _reqid + ' and reply ' + reply.fId + ' identifiers');
+            console.error(`missmatch between request ${_reqid} and reply ${reply.fId}  identifiers`);
 
          let items = reply ? reply.fItems : null;
 
@@ -12160,7 +12164,6 @@ function selectActivePad(args) {
 function getActivePad() {
    return $active_pp;
 }
-
 
 /** @summary Check resize of drawn element
   * @param {string|object} dom - id or DOM element
@@ -35191,7 +35194,7 @@ function cureLocalIntersections(start, triangles, dim) {
 		const a = p.prev,
 					b = p.next.next;
 
-		if (!equals(a, b) && intersects$1(a, p, p.next, b) && locallyInside(a, b) && locallyInside(b, a)) {
+		if (!equals(a, b) && intersects(a, p, p.next, b) && locallyInside(a, b) && locallyInside(b, a)) {
 			triangles.push(a.i / dim);
 			triangles.push(p.i / dim);
 			triangles.push(b.i / dim); // remove two nodes involved
@@ -35463,7 +35466,7 @@ function equals(p1, p2) {
 } // check if two segments intersect
 
 
-function intersects$1(p1, q1, p2, q2) {
+function intersects(p1, q1, p2, q2) {
 	const o1 = sign(area(p1, q1, p2));
 	const o2 = sign(area(p1, q1, q2));
 	const o3 = sign(area(p2, q2, p1));
@@ -35495,7 +35498,7 @@ function intersectsPolygon(a, b) {
 	let p = a;
 
 	do {
-		if (p.i !== a.i && p.next.i !== a.i && p.i !== b.i && p.next.i !== b.i && intersects$1(p, p.next, a, b)) return true;
+		if (p.i !== a.i && p.next.i !== a.i && p.i !== b.i && p.next.i !== b.i && intersects(p, p.next, a, b)) return true;
 		p = p.next;
 	} while (p !== a);
 
@@ -44810,8 +44813,6 @@ if (typeof window !== 'undefined') {
 	}
 }
 
-/// TCanvas painting
-
 const EAxisBits = {
    kDecimals: BIT(7),
    kTickPlus: BIT(9),
@@ -45372,7 +45373,8 @@ class TAxisPainter extends ObjectPainter {
    /** @summary Creates array with minor/middle/major ticks */
    createTicks(only_major_as_array, optionNoexp, optionNoopt, optionInt) {
 
-      if (optionNoopt && this.nticks && (this.kind == "normal")) this.noticksopt = true;
+      if (optionNoopt && this.nticks && (this.kind == "normal"))
+         this.noticksopt = true;
 
       let handle = { nminor: 0, nmiddle: 0, nmajor: 0, func: this.func }, ticks;
 
@@ -45415,7 +45417,8 @@ class TAxisPainter extends ObjectPainter {
             handle.minor = handle.middle = handle.major;
          } else if ((this.nticks3 > 1) && !this.log)  {
             handle.minor = this.produceTicks(handle.middle.length, this.nticks3);
-            if ((handle.minor.length <= handle.middle.length) || (handle.minor.length > gr_range/1.7)) handle.minor = handle.middle;
+            if ((handle.minor.length <= handle.middle.length) || (handle.minor.length > gr_range/1.7))
+               handle.minor = handle.middle;
          }
       }
 
@@ -45497,7 +45500,7 @@ class TAxisPainter extends ObjectPainter {
             }
 
             // for order==0 we should virtually remove "0." and extra label on top
-            if (!order && (this.ndig<4)) totallen-=(handle.major.length*2+3);
+            if (!order && (this.ndig < 4)) totallen -= (handle.major.length*2+3);
 
             if (totallen < bestlen) {
                bestlen = totallen;
@@ -45510,8 +45513,8 @@ class TAxisPainter extends ObjectPainter {
          this.ndig = bestndig;
 
          if (optionInt) {
-            if (this.order) console.warn('Axis painter - integer labels are configured, but axis order ' + this.order + ' is preferable');
-            if (this.ndig) console.warn('Axis painter - integer labels are configured, but ' + this.ndig + ' decimal digits are required');
+            if (this.order) console.warn(`Axis painter - integer labels are configured, but axis order ${this.order} is preferable`);
+            if (this.ndig) console.warn(`Axis painter - integer labels are configured, but ${this.ndig} decimal digits are required`);
             this.ndig = 0;
             this.order = 0;
          }
@@ -45591,8 +45594,8 @@ class TAxisPainter extends ObjectPainter {
                acc_x += evnt.dx;
                acc_y += evnt.dy;
 
-               let set_x, set_y,
-                   p = vertical ? acc_y : acc_x, besti = 0;
+               let set_x, set_y, besti = 0,
+                   p = vertical ? acc_y : acc_x;
 
                for (let i=1; i<3; ++i)
                   if (Math.abs(p - alt_pos[i]) < Math.abs(p - alt_pos[besti])) besti = i;
@@ -45607,7 +45610,7 @@ class TAxisPainter extends ObjectPainter {
 
                if (sign_0 === (vertical ? (set_x > 0) : (set_y > 0))) {
                   new_x = set_x; new_y = set_y; curr_indx = besti;
-                  title_g.attr('transform', 'translate(' + new_x + ',' + new_y +  ')');
+                  title_g.attr('transform', `translate(${new_x},${new_y})`);
                }
 
           }).on("end", evnt => {
@@ -45644,7 +45647,7 @@ class TAxisPainter extends ObjectPainter {
 
    /** @summary Produce svg path for axis ticks */
    produceTicksPath(handle, side, tickSize, ticksPlusMinus, secondShift, real_draw) {
-      let res = "", res2 = "", lastpos = 0, lasth = 0;
+      let path1 = "", path2 = "";
       this.ticks = [];
 
       while (handle.next(true)) {
@@ -45667,24 +45670,13 @@ class TAxisPainter extends ObjectPainter {
             h2 = -h1; h1 = 0;
          }
 
-         if (res.length == 0) {
-            res = this.vertical ? `M${h1},${handle.grpos}` : `M${handle.grpos},${-h1}`;
-            res2 = this.vertical ? `M${secondShift-h1},${handle.grpos}` : `M${handle.grpos},${secondShift+h1}`;
-         } else {
-            res += this.vertical ? `m${h1-lasth},${handle.grpos-lastpos}` : `m${handle.grpos-lastpos},${lasth-h1}`;
-            res2 += this.vertical ? `m${lasth-h1},${handle.grpos-lastpos}` : `m${handle.grpos-lastpos},${h1-lasth}`;
-         }
+         path1 += this.vertical ? `M${h1},${handle.grpos}H${h2}` : `M${handle.grpos},${-h1}V${-h2}`;
 
-         res += this.vertical ? `h${h2-h1}` : `v${h1-h2}`;
-         res2 += this.vertical ? `h${h1-h2}` : `v${h2-h1}`;
-
-         lastpos = handle.grpos;
-         lasth = h2;
+         if (secondShift)
+            path2 += this.vertical ? `M${secondShift-h1},${handle.grpos}H${secondShift-h2}` : `M${handle.grpos},${secondShift+h1}V${secondShift+h2}`;
       }
 
-      if (secondShift !== 0) res += res2;
-
-      return real_draw ? res  : "";
+      return real_draw ? path1 + path2  : "";
    }
 
    /** @summary Returns modifier for axis label */
@@ -45902,9 +45894,13 @@ class TAxisPainter extends ObjectPainter {
       if (is_gaxis && axis.TestBit(EAxisBits.kTickPlus)) optionPlus = true;
       if (is_gaxis && axis.TestBit(EAxisBits.kTickMinus)) optionMinus = true;
 
-      if (optionPlus && optionMinus) { side = 1; ticksPlusMinus = 1; } else
-      if (optionMinus) { side = (swap_side ^ vertical) ? 1 : -1; } else
-      if (optionPlus) { side = (swap_side ^ vertical) ? -1 : 1; }
+      if (optionPlus && optionMinus) {
+         side = 1; ticksPlusMinus = 1;
+      } else if (optionMinus) {
+         side = (swap_side ^ vertical) ? 1 : -1;
+      } else if (optionPlus) {
+         side = (swap_side ^ vertical) ? -1 : 1;
+      }
 
       tickSize = Math.round((optionSize ? tickSize : 0.03) * scaling_size);
       if (this.max_tick_size && (tickSize > this.max_tick_size)) tickSize = this.max_tick_size;
@@ -49502,8 +49498,6 @@ function drawBinsSurf3D(painter, is_v7 = false) {
    }
 }
 
-/// Special mathematical functions
-
 /**
  * A math namespace - all functions can be exported from base/math.mjs.
  * Also all these functions can be used with TFormula calcualtions
@@ -51992,7 +51986,93 @@ function injectStyle(code, node, tag) {
    return true;
 }
 
-/// context menu
+/** @summary Select predefined style
+  * @private */
+function selectgStyle(name) {
+   gStyle.fName = name;
+   switch (name) {
+      case "Modern": Object.assign(gStyle, {
+         fFrameBorderMode: 0, fFrameFillColor: 0, fCanvasBorderMode: 0,
+         fCanvasColor: 0, fPadBorderMode: 0, fPadColor: 0, fStatColor: 0,
+         fTitleAlign: 23, fTitleX: 0.5, fTitleBorderSize: 0, fTitleColor: 0, fTitleStyle: 0,
+         fOptStat: 1111, fStatY: 0.935,
+         fLegendBorderSize: 1, fLegendFont: 42, fLegendTextSize: 0, fLegendFillColor: 0 }); break;
+      case "Plain": Object.assign(gStyle, {
+         fFrameBorderMode: 0, fCanvasBorderMode: 0, fPadBorderMode: 0,
+         fPadColor: 0, fCanvasColor: 0,
+         fTitleColor: 0, fTitleBorderSize: 0, fStatColor: 0, fStatBorderSize: 1, fLegendBorderSize: 1 }); break;
+      case "Bold": Object.assign(gStyle, {
+         fCanvasColor: 10, fCanvasBorderMode: 0,
+         fFrameLineWidth: 3, fFrameFillColor: 10,
+         fPadColor: 10, fPadTickX: 1, fPadTickY: 1, fPadBottomMargin: 0.15, fPadLeftMargin: 0.15,
+         fTitleColor: 10, fTitleTextColor: 600, fStatColor: 10 }); break;
+   }
+}
+
+function saveCookie(obj, expires, name) {
+   let arg = (expires <= 0) ? "" : btoa(JSON.stringify(obj)),
+       d = new Date();
+   d.setTime((expires <= 0) ? 0 : d.getTime() + expires*24*60*60*1000);
+   document.cookie = `${name}=${arg}; expires=${d.toUTCString()}; SameSite=None; Secure; path=/;`;
+}
+
+function readCookie(name) {
+   if (typeof document == 'undefined') return null;
+   let decodedCookie = decodeURIComponent(document.cookie),
+       ca = decodedCookie.split(';');
+   name += "=";
+   for(let i = 0; i < ca.length; i++) {
+      let c = ca[i];
+      while (c.charAt(0) == ' ')
+        c = c.substring(1);
+      if (c.indexOf(name) == 0) {
+         let s = JSON.parse(atob(c.substring(name.length, c.length)));
+
+         return (s && typeof s == 'object') ? s : null;
+      }
+   }
+   return null;
+}
+
+/** @summary Save JSROOT settings as specified cookie parameter
+  * @param {Number} expires - days when cookie will be removed by browser, negative - delete immediately
+  * @param {String} name - cookie parameter name
+  * @private */
+function saveSettings(expires = 365, name = "jsroot_settings") {
+   saveCookie(settings, expires, name);
+}
+
+/** @summary Read JSROOT settings from specified cookie parameter
+  * @param {Boolean} only_check - when true just checks if settings were stored before with provided name
+  * @param {String} name - cookie parameter name
+  * @private */
+function readSettings(only_check = false, name = "jsroot_settings") {
+   let s = readCookie(name);
+   if (!s) return false;
+   if (!only_check)
+      Object.assign(settings, s);
+   return true;
+}
+
+/** @summary Save JSROOT gStyle object as specified cookie parameter
+  * @param {Number} expires - days when cookie will be removed by browser, negative - delete immediately
+  * @param {String} name - cookie parameter name
+  * @private */
+function saveStyle(expires = 365, name = "jsroot_style") {
+   saveCookie(gStyle, expires, name);
+}
+
+/** @summary Read JSROOT gStyle object specified cookie parameter
+  * @param {Boolean} only_check - when true just checks if settings were stored before with provided name
+  * @param {String} name - cookie parameter name
+  * @private */
+function readStyle(only_check = false, name = "jsroot_style") {
+   let s = readCookie(name);
+   if (!s) return false;
+   if (!only_check)
+      Object.assign(gStyle, s);
+   return true;
+}
 
 /** @summary Produce exec string for WebCanas to set color value
   * @desc Color can be id or string, but should belong to list of known colors
@@ -52607,6 +52687,202 @@ class JSRootMenu {
                   arg => { faxis.fTickLength = arg; painter.interactiveRedraw("pad", `exec:SetTickLength(${arg})`, kind); });
       }
       this.add("endsub:");
+   }
+
+   /** @summary Fill menu to edit settings properties
+     * @private */
+   addSettingsMenu(with_hierarchy, alone, handle_func) {
+      if (alone)
+         this.add("header:Settings");
+      else
+         this.add("sub:Settings");
+
+      this.add("sub:Files");
+
+      if (with_hierarchy) {
+         this.addchk(settings.OnlyLastCycle, "Last cycle", flag => {
+            settings.OnlyLastCycle = flag;
+            if (handle_func) handle_func("refresh");
+         });
+
+         this.addchk(!settings.SkipStreamerInfos, "Streamer infos", flag => {
+            settings.SkipStreamerInfos = !flag;
+            if (handle_func) handle_func("refresh");
+         });
+      }
+
+      this.addchk(settings.UseStamp, "Use stamp arg", flag => { settings.UseStamp = flag; });
+
+      this.addchk(settings.HandleWrongHttpResponse, "Handle wrong http response", flag => { settings.HandleWrongHttpResponse = flag; });
+
+      this.add("endsub:");
+
+      this.add("sub:Toolbar");
+      this.addchk(settings.ToolBar === false, "Off", flag => { settings.ToolBar = !flag; });
+      this.addchk(settings.ToolBar === true, "On", flag => { settings.ToolBar = flag; });
+      this.addchk(settings.ToolBar === "popup", "Popup", flag => { settings.ToolBar = flag ? "popup" : false; });
+      this.add("separator");
+      this.addchk(settings.ToolBarSide == "left", "Left side", flag => { settings.ToolBarSide = flag ? "left" : "right"; });
+      this.addchk(settings.ToolBarVert, "Vertical", flag => { settings.ToolBarVert = flag; });
+      this.add("endsub:");
+
+      this.add("sub:Interactive");
+      this.addchk(settings.Tooltip, "Tooltip", flag => { settings.Tooltip = flag; });
+      this.addchk(settings.ContextMenu, "Context menus", flag => { settings.ContextMenu = flag; });
+      this.add("sub:Zooming");
+      this.addchk(settings.Zooming, "Global", flag => { settings.Zooming = flag; });
+      this.addchk(settings.ZoomMouse, "Mouse", flag => { settings.ZoomMouse = flag; });
+      this.addchk(settings.ZoomWheel, "Wheel", flag => { settings.ZoomWheel = flag; });
+      this.addchk(settings.ZoomTouch, "Touch", flag => { settings.ZoomTouch = flag; });
+      this.add("endsub:");
+      this.addchk(settings.HandleKeys, "Keypress handling", flag => { settings.HandleKeys = flag; });
+      this.addchk(settings.MoveResize, "Move and resize", flag => { settings.MoveResize = flag; });
+      this.addchk(settings.DragAndDrop, "Drag and drop", flag => { settings.DragAndDrop = flag; });
+      this.addchk(settings.DragGraphs, "Drag graph points", flag => { settings.DragGraphs = flag; });
+      this.addchk(settings.ProgressBox, "Progress box", flag => { settings.ProgressBox = flag; });
+      this.add("endsub:");
+
+      this.add("sub:Drawing");
+      this.addSelectMenu("Optimize", ["None", "Smart", "Always"], settings.OptimizeDraw, value => { settings.OptimizeDraw = value; });
+      this.addPaletteMenu(settings.Palette, pal => { settings.Palette = pal; });
+      this.addchk(settings.AutoStat, "Auto stat box", flag => { settings.AutoStat = flag; });
+      this.addSelectMenu("Latex", ["Off", "Symbols", "Normal", "MathJax", "Force MathJax"], settings.Latex, value => { settings.Latex = value; });
+      this.addSelectMenu("3D rendering", ["Default", "WebGL", "Image"], settings.Render3D, value => { settings.Render3D = value; });
+      this.addSelectMenu("WebGL embeding", ["Default", "Overlay", "Embed"], settings.Embed3D, value => { settings.Embed3D = value; });
+
+      this.add("endsub:");
+
+      this.add("sub:Geometry");
+      this.add("Grad per segment:  " + settings.GeoGradPerSegm, () => this.input("Grad per segment in geometry", settings.GeoGradPerSegm, "int", 1, 60).then(val => { settings.GeoGradPerSegm = val; }));
+      this.addchk(settings.GeoCompressComp, "Compress composites", flag => { settings.GeoCompressComp = flag; });
+      this.add("endsub:");
+
+      if (with_hierarchy)
+         this.add("Hierarchy limit:  " + settings.HierarchyLimit, () => this.input("Max number of items in hierarchy", settings.HierarchyLimit, "int", 10, 100000).then(val => {
+            settings.HierarchyLimit = val;
+            if (handle_func) handle_func("refresh");
+         }));
+
+      this.add("Dark mode: " + (settings.DarkMode ? "On" : "Off"), () => {
+         settings.DarkMode = !settings.DarkMode;
+         if (handle_func) handle_func("dark");
+      });
+
+      const setStyleField = arg => { gStyle[arg.slice(1)] = parseInt(arg[0]); },
+            addStyleIntField = (name, field, arr) => {
+         this.add("sub:" + name);
+         for (let v = 0; v < arr.length; ++v)
+            this.addchk(gStyle[field] == v, arr[v], `${v}${field}`, setStyleField);
+         this.add("endsub:");
+      };
+
+      this.add("sub:gStyle");
+
+      this.add("sub:Canvas");
+      this.addColorMenu("Color", gStyle.fCanvasColor, col => { gStyle.fCanvasColor = col; });
+      this.addchk(gStyle.fOptDate, "Draw date", flag => { gStyle.fOptDate = flag ? 1 : 0; });
+      this.addchk(gStyle.fOptFile, "Draw item", flag => { gStyle.fOptFile = flag ? 1 : 0; });
+      this.addSizeMenu("Date X", 0.01, 0.1, 0.01, gStyle.fDateX, x => { gStyle.fDateX = x; }, "configure gStyle.fDateX for date/item name drawings");
+      this.addSizeMenu("Date Y", 0.01, 0.1, 0.01, gStyle.fDateY, y => { gStyle.fDateY = y; }, "configure gStyle.fDateY for date/item name drawings");
+      this.add("endsub:");
+
+      this.add("sub:Pad");
+      this.addColorMenu("Color", gStyle.fPadColor, col => { gStyle.fPadColor = col; });
+      this.add("sub:Grid");
+      this.addchk(gStyle.fPadGridX, "X", flag => { gStyle.fPadGridX = flag; });
+      this.addchk(gStyle.fPadGridY, "Y", flag => { gStyle.fPadGridY = flag; });
+      this.addColorMenu("Color", gStyle.fGridColor, col => { gStyle.fGridColor = col; });
+      this.addSizeMenu("Width", 1, 10, 1, gStyle.fGridWidth, w => { gStyle.fGridWidth = w; });
+      this.addLineStyleMenu("Style", gStyle.fGridStyle, st => { gStyle.fGridStyle = st; });
+      this.add("endsub:");
+      addStyleIntField("Ticks X", "fPadTickX", ["normal", "ticks on both sides", "labels on both sides"]);
+      addStyleIntField("Ticks Y", "fPadTickY", ["normal", "ticks on both sides", "labels on both sides"]);
+      addStyleIntField("Log X", "fOptLogx", ["off", "on", "log 2"]);
+      addStyleIntField("Log Y", "fOptLogy", ["off", "on", "log 2"]);
+      addStyleIntField("Log Z", "fOptLogz", ["off", "on", "log 2"]);
+      this.addchk(gStyle.fOptTitle == 1, "Hist title", flag => { gStyle.fOptTitle = flag ? 1 : 0; });
+      this.add("endsub:");
+
+      this.add("sub:Frame");
+      this.addColorMenu("Fill color", gStyle.fFrameFillColor, col => { gStyle.fFrameFillColor = col; });
+      this.addFillStyleMenu("Fill style", gStyle.fFrameFillStyle, gStyle.fFrameFillColor, null, id => { gStyle.fFrameFillStyle = id; });
+      this.addColorMenu("Line color", gStyle.fFrameLineColor, col => { gStyle.fFrameLineColor = col; });
+      this.addSizeMenu("Line width", 1, 10, 1, gStyle.fFrameLineWidth, w => { gStyle.fFrameLineWidth = w; });
+      this.addLineStyleMenu("Line style", gStyle.fFrameLineStyle, st => { gStyle.fFrameLineStyle = st; });
+      this.addSizeMenu("Border size", 0, 10, 1, gStyle.fFrameBorderSize, sz => { gStyle.fFrameBorderSize = sz; });
+      // fFrameBorderMode: 0,
+      this.add("sub:Margins");
+      this.addSizeMenu("Bottom", 0, 0.5, 0.05, gStyle.fPadBottomMargin, v => { gStyle.fPadBottomMargin = v; });
+      this.addSizeMenu("Top", 0, 0.5, 0.05, gStyle.fPadTopMargin, v => { gStyle.fPadTopMargin = v; });
+      this.addSizeMenu("Left", 0, 0.5, 0.05, gStyle.fPadLeftMargin, v => { gStyle.fPadLeftMargin = v; });
+      this.addSizeMenu("Right", 0, 0.5, 0.05, gStyle.fPadRightMargin, v => { gStyle.fPadRightMargin = v; });
+      this.add("endsub:");
+      this.add("endsub:");
+
+      this.add("sub:Title");
+      this.addColorMenu("Fill color", gStyle.fTitleColor, col => { gStyle.fTitleColor = col; });
+      this.addFillStyleMenu("Fill style", gStyle.fTitleStyle, gStyle.fTitleColor, null, id => { gStyle.fTitleStyle = id; });
+      this.addColorMenu("Text color", gStyle.fTitleTextColor, col => { gStyle.fTitleTextColor = col; });
+      this.addSizeMenu("Border size", 0, 10, 1, gStyle.fTitleBorderSize, sz => { gStyle.fTitleBorderSize = sz; });
+      this.addSizeMenu("Font size", 0.01, 0.1, 0.01, gStyle.fTitleFontSize, sz => { gStyle.fTitleFontSize = sz; });
+      this.addFontMenu("Font", gStyle.fTitleFont, fnt => { gStyle.fTitleFont = fnt; });
+      this.addSizeMenu("X: " + gStyle.fTitleX.toFixed(2), 0., 1., 0.1, gStyle.fTitleX, v => { gStyle.fTitleX = v; });
+      this.addSizeMenu("Y: " + gStyle.fTitleY.toFixed(2), 0., 1., 0.1, gStyle.fTitleY, v => { gStyle.fTitleY = v; });
+      this.addSizeMenu("W: " + gStyle.fTitleW.toFixed(2), 0., 1., 0.1, gStyle.fTitleW, v => { gStyle.fTitleW = v; });
+      this.addSizeMenu("H: " + gStyle.fTitleH.toFixed(2), 0., 1., 0.1, gStyle.fTitleH, v => { gStyle.fTitleH = v; });
+      this.add("endsub:");
+
+      this.add("sub:Stat box");
+      this.addColorMenu("Fill color", gStyle.fStatColor, col => { gStyle.fStatColor = col; });
+      this.addFillStyleMenu("Fill style", gStyle.fStatStyle, gStyle.fStatColor, null, id => { gStyle.fStatStyle = id; });
+      this.addColorMenu("Text color", gStyle.fStatTextColor, col => { gStyle.fStatTextColor = col; });
+      this.addSizeMenu("Border size", 0, 10, 1, gStyle.fStatBorderSize, sz => { gStyle.fStatBorderSize = sz; });
+      this.addSizeMenu("Font size", 0, 30, 5, gStyle.fStatFontSize, sz => { gStyle.fStatFontSize = sz; });
+      this.addFontMenu("Font", gStyle.fStatFont, fnt => { gStyle.fStatFont = fnt; });
+      this.add("Stat format", () => this.input("Stat format", gStyle.fStatFormat).then(fmt => { gStyle.fStatFormat = fmt; }));
+      this.addSizeMenu("X: " + gStyle.fStatX.toFixed(2), 0.2, 1., 0.1, gStyle.fStatX, v => { gStyle.fStatX = v; });
+      this.addSizeMenu("Y: " + gStyle.fStatY.toFixed(2), 0.2, 1., 0.1, gStyle.fStatY, v => { gStyle.fStatY = v; });
+      this.addSizeMenu("Width: " + gStyle.fStatW.toFixed(2), 0.1, 1., 0.1, gStyle.fStatW, v => { gStyle.fStatW = v; });
+      this.addSizeMenu("Height: " + gStyle.fStatH.toFixed(2), 0.1, 1., 0.1, gStyle.fStatH, v => { gStyle.fStatH = v; });
+      this.add("endsub:");
+
+      this.add("sub:Legend");
+      this.addColorMenu("Fill color", gStyle.fLegendFillColor, col => { gStyle.fLegendFillColor = col; });
+      this.addSizeMenu("Border size", 0, 10, 1, gStyle.fLegendBorderSize, sz => { gStyle.fLegendBorderSize = sz; });
+      this.addFontMenu("Font", gStyle.fLegendFont, fnt => { gStyle.fLegendFont = fnt; });
+      this.addSizeMenu("Text size", 0, 0.1, 0.01, gStyle.fLegendTextSize, v => { gStyle.fLegendTextSize = v; }, "legend text size, when 0 - auto adjustment is used");
+      this.add("endsub:");
+
+      this.add("sub:Histogram");
+      this.addchk(gStyle.fHistMinimumZero, "Base0", flag => { gStyle.fHistMinimumZero = flag; }, "when true, BAR and LEGO drawing using base = 0");
+      this.add("Text format", () => this.input("Paint text format", gStyle.fPaintTextFormat).then(fmt => { gStyle.fPaintTextFormat = fmt; }));
+      this.add("Time offset", () => this.input("Time offset in seconds, default is 788918400 for 1/1/1995", gStyle.fTimeOffset, "int").then(ofset => { gStyle.fTimeOffset = ofset; }));
+      this.addSizeMenu("ErrorX: " + gStyle.fErrorX.toFixed(2), 0., 1., 0.1, gStyle.fErrorX, v => { gStyle.fErrorX = v; });
+      this.addSizeMenu("End error", 0, 12, 1, gStyle.fEndErrorSize, v => { gStyle.fEndErrorSize = v; }, "size in pixels of end error for E1 draw options, gStyle.fEndErrorSize");
+      this.addSizeMenu("Top margin", 0., 0.5, 0.05, gStyle.fHistTopMargin, v => { gStyle.fHistTopMargin = v; }, "Margin between histogram's top and frame's top");
+      this.addColorMenu("Fill color", gStyle.fHistFillColor, col => { gStyle.fHistFillColor = col; });
+      this.addFillStyleMenu("Fill style", gStyle.fHistFillStyle, gStyle.fHistFillColor, null, id => { gStyle.fHistFillStyle = id; });
+      this.addColorMenu("Line color", gStyle.fHistLineColor, col => { gStyle.fHistLineColor = col; });
+      this.addSizeMenu("Line width", 1, 10, 1, gStyle.fHistLineWidth, w => { gStyle.fHistLineWidth = w; });
+      this.addLineStyleMenu("Line style", gStyle.fHistLineStyle, st => { gStyle.fHistLineStyle = st; });
+      this.add("endsub:");
+
+      this.add("separator");
+      this.add("sub:Predefined");
+      ["Modern", "Plain", "Bold"].forEach(name => this.addchk((gStyle.fName == name), name, name, selectgStyle));
+      this.add("endsub:");
+
+      this.add("endsub:"); // gStyle
+
+      this.add("separator");
+
+      this.add("Save settings", () => {
+         let promise = readSettings(true) ? Promise.resolve(true) : this.confirm("Save settings", "Pressing OK one agreess that JSROOT will store settings as browser cookies");
+         promise.then(res => { if (res) { saveSettings(); saveStyle(); } });
+      }, "Store settings and gStyle as cookies");
+      this.add("Delete settings", () => { saveSettings(-1); saveStyle(-1); }, "Delete settings and gStyle from cookies");
+
+      if (!alone) this.add("endsub:");
    }
 
    /** @summary Run modal dialog
@@ -53432,8 +53708,6 @@ function closeMenu(menuname) {
    if (x) { x.parentNode.removeChild(x); return true; }
    return false;
 }
-
-/// TCanvas painting
 
 function setPainterTooltipEnabled(painter, on) {
    if (!painter) return;
@@ -55920,7 +56194,7 @@ class TFramePainter extends ObjectPainter {
          gStyle.fPadRightMargin = 1 - this.fX2NDC;
          if (this.fillatt) this.fillatt.saveToStyle("fFrameFillColor", "fFrameFillStyle");
          if (this.lineatt) this.lineatt.saveToStyle("fFrameLineColor", "fFrameLineWidth", "fFrameLineStyle");
-      });
+      }, "Store frame position and graphical attributes to gStyle");
 
       menu.add("separator");
       menu.add("Save as frame.png", () => pp.saveAs("png", 'frame', 'frame.png'));
@@ -56222,9 +56496,6 @@ class TFramePainter extends ObjectPainter {
    }
 
 } // class TFramePainter
-
-/// different display kinds and browser layout
-
 
 /** @summary Current hierarchy painter
   * @desc Instance of {@link HierarchyPainter} object
@@ -57903,9 +58174,6 @@ class BrowserLayout {
 
 } // class BrowserLayout
 
-/// TPad painting
-
-
 function getButtonSize(handler, fact) {
    return Math.round((fact || 1) * (handler.iscan || !handler.has_canvas ? 16 : 12));
 }
@@ -58396,7 +58664,7 @@ class TPadPainter extends ObjectPainter {
            .style("bottom", 0);
       }
 
-      svg.style("filter", settings.DarkMode ? "invert(100%)" : null);
+      svg.style("filter", settings.DarkMode || this.pad?.$dark ? "invert(100%)" : null);
 
       svg.attr("viewBox", `0 0 ${rect.width} ${rect.height}`)
          .attr("preserveAspectRatio", "none")  // we do not preserve relative ratio
@@ -58872,6 +59140,12 @@ class TPadPainter extends ObjectPainter {
       return hints;
    }
 
+   /** @summary Changes canvas dark mode
+     * @private */
+   changeDarkMode(mode) {
+      this.getCanvSvg().style("filter", (mode ?? settings.DarkMode) ? "invert(100%)" : null);
+   }
+
    /** @summary Fill pad context menu
      * @private */
    fillContextMenu(menu) {
@@ -58913,7 +59187,12 @@ class TPadPainter extends ObjectPainter {
             gStyle.fOptLogx = this.pad.fLogx;
             gStyle.fOptLogy = this.pad.fLogy;
             gStyle.fOptLogz = this.pad.fLogz;
-         });
+         }, "Store pad fill attributes, grid, tick and log scale settings to gStyle");
+
+         if (this.iscan)
+            menu.addSettingsMenu(false, false, arg => {
+               if (arg == "dark") this.changeDarkMode();
+            });
       }
 
       menu.add("separator");
@@ -59979,9 +60258,6 @@ TPadPainter: TPadPainter,
 PadButtonsHandler: PadButtonsHandler
 });
 
-/// TCanvas painting
-
-
 /** @summary direct draw of TFrame object,
   * @desc pad or canvas should already exist
   * @private */
@@ -60686,14 +60962,12 @@ function ensureTCanvas(painter, frame_kind) {
       return Promise.reject(Error('Painter not provided in ensureTCanvas'));
 
    // simple check - if canvas there, can use painter
-   let svg_c = painter.getCanvSvg(),
-       noframe = (frame_kind === false) || (frame_kind == "3d") ? "noframe" : "",
-       pr = Promise.resolve(true);
+   let noframe = (frame_kind === false) || (frame_kind == "3d") ? "noframe" : "",
+       promise = painter.getCanvSvg().empty()
+                 ? TCanvasPainter.draw(painter.getDom(), null, noframe)
+                 : Promise.resolve(true);
 
-   if (svg_c.empty())
-      pr = TCanvasPainter.draw(painter.getDom(), null, noframe);
-
-   return pr.then(() => {
+   return promise.then(() => {
       if ((frame_kind !== false) &&  painter.getFrameSvg().select(".main_layer").empty() && !painter.getFramePainter())
          directDrawTFrame(painter.getDom(), null, frame_kind);
 
@@ -60915,8 +61189,9 @@ class TPavePainter extends ObjectPainter {
          if (isBatchMode() || (pt._typename === "TPave")) return this;
 
          // here all kind of interactive settings
-         rect.style("pointer-events", "visibleFill")
-             .on("mouseenter", () => this.showObjectStatus());
+         if (rect)
+            rect.style("pointer-events", "visibleFill")
+                .on("mouseenter", () => this.showObjectStatus());
 
          addDragHandler(this, { obj: pt, x: this._pave_x, y: this._pave_y, width, height,
                                       minwidth: 10, minheight: 20, canselect: true,
@@ -60944,7 +61219,7 @@ class TPavePainter extends ObjectPainter {
 
       if (pave && pave.fInit) {
          res.fcust = "pave";
-         res.fopt = [pave.fX1NDC,pave.fY1NDC,pave.fX2NDC,pave.fY2NDC];
+         res.fopt = [pave.fX1NDC, pave.fY1NDC, pave.fX2NDC, pave.fY2NDC];
       }
 
       return res;
@@ -60952,9 +61227,11 @@ class TPavePainter extends ObjectPainter {
 
    /** @summary draw TPaveLabel object */
    drawPaveLabel(width, height) {
-      this.UseTextColor = true;
-
       let pave = this.getObject();
+      if (!pave.fLabel || !pave.fLabel.trim())
+         return Promise.resolve(this);
+
+      this.UseTextColor = true;
 
       this.startTextDrawing(pave.fTextFont, height/1.2);
 
@@ -60969,13 +61246,13 @@ class TPavePainter extends ObjectPainter {
       if (this.isStats()) this.fillStatistic();
 
       let pt = this.getObject(), lines = [],
-          tcolor = this.getColor(pt.fTextColor),
+          color = this.getColor(pt.fTextColor),
           first_stat = 0, num_cols = 0, maxlen = 0;
 
       // now draw TLine and TBox objects
       for (let j = 0; j < pt.fLines.arr.length; ++j) {
          let entry = pt.fLines.arr[j];
-         if ((entry._typename=="TText") || (entry._typename=="TLatex"))
+         if ((entry._typename == "TText") || (entry._typename == "TLatex"))
             lines.push(entry.fTitle);
       }
 
@@ -61000,17 +61277,17 @@ class TPavePainter extends ObjectPainter {
       this.UseTextColor = true;
 
       if (nlines == 1) {
-         this.drawText({ align: pt.fTextAlign, width, height, text: lines[0], color: tcolor, latex: 1 });
+         this.drawText({ align: pt.fTextAlign, width, height, text: lines[0], color, latex: 1 });
       } else
       for (let j = 0; j < nlines; ++j) {
-         let posy = j*stepy;
+         let y = j*stepy;
          this.UseTextColor = true;
 
          if (first_stat && (j >= first_stat)) {
             let parts = lines[j].split("|");
             for (let n = 0; n < parts.length; ++n)
-               this.drawText({ align: "middle", x: width * n / num_cols, y: posy, latex: 0,
-                               width: width/num_cols, height: stepy, text: parts[n], color: tcolor });
+               this.drawText({ align: "middle", x: width * n / num_cols, y, latex: 0,
+                               width: width/num_cols, height: stepy, text: parts[n], color });
          } else if (lines[j].indexOf('=') < 0) {
             if (j == 0) {
                has_head = true;
@@ -61018,15 +61295,15 @@ class TPavePainter extends ObjectPainter {
                if (lines[j].length > max_hlen + 5)
                   lines[j] = lines[j].slice(0,max_hlen+2) + "...";
             }
-            this.drawText({ align: (j == 0) ? "middle" : "start", x: margin_x, y: posy,
-                            width: width-2*margin_x, height: stepy, text: lines[j], color: tcolor });
+            this.drawText({ align: (j == 0) ? "middle" : "start", x: margin_x, y,
+                            width: width-2*margin_x, height: stepy, text: lines[j], color });
          } else {
             let parts = lines[j].split("="), args = [];
 
             for (let n = 0; n < 2; ++n) {
                let arg = {
-                  align: (n == 0) ? "start" : "end", x: margin_x, y: posy,
-                  width: width-2*margin_x, height: stepy, text: parts[n], color: tcolor,
+                  align: (n == 0) ? "start" : "end", x: margin_x, y,
+                  width: width-2*margin_x, height: stepy, text: parts[n], color,
                   _expected_width: width-2*margin_x, _args: args,
                   post_process: function(painter) {
                     if (this._args[0].ready && this._args[1].ready)
@@ -61090,6 +61367,8 @@ class TPavePainter extends ObjectPainter {
          switch(entry._typename) {
             case 'TText':
             case 'TLatex':
+               if (!entry.fTitle || !entry.fTitle.trim()) continue;
+
                if (entry.fX || entry.fY) {
                   // individual positioning
                   let x = entry.fX ? entry.fX*width : margin_x,
@@ -61137,8 +61416,8 @@ class TPavePainter extends ObjectPainter {
                let lx1 = entry.fX1 ? Math.round(entry.fX1*width) : 0,
                    lx2 = entry.fX2 ? Math.round(entry.fX2*width) : width,
                    ly1 = entry.fY1 ? Math.round((1 - entry.fY1)*height) : Math.round(texty + stepy*0.5),
-                   ly2 = entry.fY2 ? Math.round((1 - entry.fY2)*height) : Math.round(texty + stepy*0.5);
-               let lineatt = new TAttLineHandler(entry);
+                   ly2 = entry.fY2 ? Math.round((1 - entry.fY2)*height) : Math.round(texty + stepy*0.5),
+                   lineatt = new TAttLineHandler(entry);
                text_g.append("svg:path")
                      .attr("d", `M${lx1},${ly1}L${lx2},${ly2}`)
                      .call(lineatt.func);
@@ -61148,8 +61427,8 @@ class TPavePainter extends ObjectPainter {
                let bx1 = entry.fX1 ? Math.round(entry.fX1*width) : 0,
                    bx2 = entry.fX2 ? Math.round(entry.fX2*width) : width,
                    by1 = entry.fY1 ? Math.round((1 - entry.fY1)*height) : Math.round(texty),
-                   by2 = entry.fY2 ? Math.round((1 - entry.fY2)*height) : Math.round(texty + stepy);
-               let fillatt = this.createAttFill(entry);
+                   by2 = entry.fY2 ? Math.round((1 - entry.fY2)*height) : Math.round(texty + stepy),
+                   fillatt = this.createAttFill(entry);
                text_g.append("svg:path")
                      .attr("d", `M${bx1},${by1}H${bx2}V${by2}H${bx1}Z`)
                      .call(fillatt.func);
@@ -61555,14 +61834,13 @@ class TPavePainter extends ObjectPainter {
                     .on("dblclick", () => this.getFramePainter().unzoom("z"));
 
       if (settings.ZoomWheel)
-            this.draw_g.on("wheel", evnt => {
-               let pos = pointer(evnt, this.draw_g.node()),
-                   coord = this._palette_vertical ? (1 - pos[1] / s_height) : pos[0] / s_width;
-
-               let item = this.z_handle.analyzeWheelEvent(evnt, coord);
-               if (item && item.changed)
-                  this.getFramePainter().zoom("z", item.min, item.max);
-            });
+         this.draw_g.on("wheel", evnt => {
+            let pos = pointer(evnt, this.draw_g.node()),
+                coord = this._palette_vertical ? (1 - pos[1] / s_height) : pos[0] / s_width,
+                item = this.z_handle.analyzeWheelEvent(evnt, coord);
+            if (item && item.changed)
+               this.getFramePainter().zoom("z", item.min, item.max);
+         });
    }
 
    /** @summary Fill context menu for the TPave object */
@@ -61580,7 +61858,7 @@ class TPavePainter extends ObjectPainter {
             this.interactiveRedraw(true, "pave_moved");
          });
 
-         menu.add("Save to gStyle", function() {
+         menu.add("Save to gStyle", () => {
             gStyle.fStatX = pave.fX2NDC;
             gStyle.fStatW = pave.fX2NDC - pave.fX1NDC;
             gStyle.fStatY = pave.fY2NDC;
@@ -61589,7 +61867,7 @@ class TPavePainter extends ObjectPainter {
             gStyle.fStatTextColor = pave.fTextColor;
             gStyle.fStatFontSize = pave.fTextSize;
             gStyle.fStatFont = pave.fTextFont;
-         });
+         }, "Store stats position and graphical attributes to gStyle");
 
          menu.add("SetStatFormat", () => {
             menu.input("Enter StatFormat", pave.fStatFormat).then(fmt => {
@@ -61616,9 +61894,9 @@ class TPavePainter extends ObjectPainter {
             let opt = (pos<10) ? pave.fOptStat : pave.fOptFit;
             opt = parseInt(parseInt(opt) / parseInt(Math.pow(10,pos % 10))) % 10;
             menu.addchk(opt, name, opt * 100 + pos, function(arg) {
-               let newopt = (arg % 100 < 10) ? pave.fOptStat : pave.fOptFit;
-               let oldopt = parseInt(arg / 100);
-               newopt -= (oldopt>0 ? oldopt : -1) * parseInt(Math.pow(10, arg % 10));
+               let newopt = (arg % 100 < 10) ? pave.fOptStat : pave.fOptFit,
+                   oldopt = parseInt(arg / 100);
+               newopt -= (oldopt > 0 ? oldopt : -1) * parseInt(Math.pow(10, arg % 10));
                if (arg % 100 < 10) {
                   pave.fOptStat = newopt;
                   this.interactiveRedraw(true, `exec:SetOptStat(${newopt})`);
@@ -61670,7 +61948,7 @@ class TPavePainter extends ObjectPainter {
             gStyle.fTitleTextColor = pave.fTextColor;
             gStyle.fTitleFontSize = pave.fTextSize;
             gStyle.fTitleFont = pave.fTextFont;
-         });
+         }, "Store title position and graphical attributes to gStyle");
       }
 
       if (this.UseTextColor)
@@ -61771,9 +62049,9 @@ class TPavePainter extends ObjectPainter {
 
       // adjust the size of the stats box with the number of lines
       let nlines = pave.fLines.arr.length,
-          stath = nlines * gStyle.StatFontSize;
-      if ((stath <= 0) || (gStyle.StatFont % 10 === 3)) {
-         stath = 0.25 * nlines * gStyle.StatH;
+          stath = nlines * gStyle.fStatFontSize;
+      if ((stath <= 0) || (gStyle.fStatFont % 10 === 3)) {
+         stath = 0.25 * nlines * gStyle.fStatH;
          pave.fY1NDC = pave.fY2NDC - stath;
       }
 
@@ -61984,7 +62262,7 @@ function produceLegend(dom, opt) {
 
    // no entries - no need to draw legend
    let szx = 0.4, szy = leg.fPrimitives.arr.length;
-   if (!szy) return;
+   if (!szy) return Promise.resolve(null);
    if (szy > 8) szy = 8;
    szy *= 0.1;
 
@@ -62002,9 +62280,6 @@ __proto__: null,
 TPavePainter: TPavePainter,
 produceLegend: produceLegend
 });
-
-/// histogram painter base class
-
 
 const CoordSystem = { kCARTESIAN: 1, kPOLAR: 2, kCYLINDRICAL: 3, kSPHERICAL: 4, kRAPIDITY: 5 };
 
@@ -64235,7 +64510,7 @@ class THistPainter extends ObjectPainter {
       if (handle.kind === 'time')
          return funcs.axisAsText(name, (x1+x2)/2);
 
-      return "[" + funcs.axisAsText(name, x1) + ", " + funcs.axisAsText(name, x2) + ")";
+      return `[${funcs.axisAsText(name, x1)}, ${funcs.axisAsText(name, x2)})`;
    }
 
    /** @summary generic draw function for histograms
@@ -64331,9 +64606,11 @@ class TH1Painter$2 extends THistPainter {
          value = histo.getBinContent(i + 1);
          hsum += profile ? histo.fBinEntries[i + 1] : value;
 
-         if ((i<left) || (i>=right)) continue;
+         if ((i < left) || (i >= right))
+            continue;
 
-         if ((value > 0) && ((hmin_nz == 0) || (value < hmin_nz))) hmin_nz = value;
+         if ((value > 0) && ((hmin_nz == 0) || (value < hmin_nz)))
+            hmin_nz = value;
 
          if (first) {
             hmin = hmax = value;
@@ -64367,9 +64644,13 @@ class TH1Painter$2 extends THistPainter {
 
       if (this.draw_content) {
          if (hmin >= hmax) {
-            if (hmin == 0) { this.ymin = 0; this.ymax = 1; }
-            else if (hmin < 0) { this.ymin = 2 * hmin; this.ymax = 0; }
-            else { this.ymin = 0; this.ymax = hmin * 2; }
+            if (hmin == 0) {
+               this.ymin = 0; this.ymax = 1;
+            } else if (hmin < 0) {
+               this.ymin = 2 * hmin; this.ymax = 0;
+            } else {
+               this.ymin = 0; this.ymax = hmin * 2;
+            }
          } else {
             let dy = (hmax - hmin) * gStyle.fHistTopMargin;
             this.ymin = hmin - dy;
@@ -64936,8 +65217,8 @@ class TH1Painter$2 extends THistPainter {
             }
             // end of use_minmax
          } else if ((gry !== curry) || lastbin) {
-            if (grx !== currx) res += "h"+(grx-currx);
-            if (gry !== curry) res += "v"+(gry-curry);
+            if (grx !== currx) res += `h${grx-currx}`;
+            if (gry !== curry) res += `v${gry-curry}`;
             curry = gry;
             currx = grx;
          }
@@ -65186,12 +65467,14 @@ class TH1Painter$2 extends THistPainter {
 
       if (findbin !== null) {
          // if bin on boundary found, check that x position is ok
-         if ((findbin === left) && (grx1 > pnt_x + gapx))  findbin = null; else
-         if ((findbin === right-1) && (grx2 < pnt_x - gapx)) findbin = null; else
-         // if bars option used check that bar is not match
-         if ((pnt_x < grx1 - gapx) || (pnt_x > grx2 + gapx)) findbin = null; else
-         // exclude empty bin if empty bins suppressed
-         if (!this.options.Zero && (histo.getBinContent(findbin+1)===0)) findbin = null;
+         if ((findbin === left) && (grx1 > pnt_x + gapx))
+            findbin = null;
+         else if ((findbin === right-1) && (grx2 < pnt_x - gapx))
+            findbin = null;
+         else if ((pnt_x < grx1 - gapx) || (pnt_x > grx2 + gapx))
+            findbin = null; // if bars option used check that bar is not match
+         else if (!this.options.Zero && (histo.getBinContent(findbin+1) === 0))
+            findbin = null; // exclude empty bin if empty bins suppressed
       }
 
       let ttrect = this.draw_g.select(".tooltip_bin");
@@ -65342,7 +65625,8 @@ class TH1Painter$2 extends THistPainter {
    autoZoom() {
       let left = this.getSelectIndex("x", "left", -1),
           right = this.getSelectIndex("x", "right", 1),
-          dist = right - left, histo = this.getHisto();
+          dist = right - left,
+          histo = this.getHisto();
 
       if ((dist == 0) || !histo) return;
 
@@ -65368,9 +65652,9 @@ class TH1Painter$2 extends THistPainter {
    canZoomInside(axis,min,max) {
       let histo = this.getHisto();
 
-      if ((axis=="x") && histo && (histo.fXaxis.FindBin(max,0.5) - histo.fXaxis.FindBin(min,0) > 1)) return true;
+      if ((axis == "x") && histo && (histo.fXaxis.FindBin(max,0.5) - histo.fXaxis.FindBin(min,0) > 1)) return true;
 
-      if ((axis=="y") && (Math.abs(max-min) > Math.abs(this.ymax-this.ymin)*1e-6)) return true;
+      if ((axis == "y") && (Math.abs(max-min) > Math.abs(this.ymax-this.ymin)*1e-6)) return true;
 
       return false;
    }
@@ -65425,10 +65709,9 @@ class TH1Painter$2 extends THistPainter {
 
 } // class TH1Painter
 
-/// 3D TH1 drawing
-
 /** @summary Draw 1-D histogram in 3D
   * @private */
+
 class TH1Painter extends TH1Painter$2 {
 
    draw3D(reason) {
@@ -68172,9 +68455,6 @@ class TH2Painter$2 extends THistPainter {
 
 } // class TH2Painter
 
-/// 3D TH2 drawing
-
-
 /** @summary Draw TH2Poly histogram as lego
   * @private */
 function drawTH2PolyLego(painter) {
@@ -68446,8 +68726,6 @@ var TH2Painter$1 = /*#__PURE__*/Object.freeze({
 __proto__: null,
 TH2Painter: TH2Painter
 });
-
-/// 3D TH3 drawing
 
 /**
  * @summary Painter for TH3 classes
@@ -73593,94 +73871,6 @@ ${img("tf2",16,"png","iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAABGdBTUEAAL
 `, node);
 }
 
-function saveCookie(obj, expires, name) {
-   let arg = (expires <= 0) ? "" : btoa(JSON.stringify(obj)),
-       d = new Date();
-   d.setTime((expires <= 0) ? 0 : d.getTime() + expires*24*60*60*1000);
-   document.cookie = `${name}=${arg}; expires=${d.toUTCString()}; SameSite=None; Secure; path=/;`;
-}
-
-function readCookie(name) {
-   if (typeof document == 'undefined') return null;
-   let decodedCookie = decodeURIComponent(document.cookie),
-       ca = decodedCookie.split(';');
-   name += "=";
-   for(let i = 0; i < ca.length; i++) {
-      let c = ca[i];
-      while (c.charAt(0) == ' ')
-        c = c.substring(1);
-      if (c.indexOf(name) == 0) {
-         let s = JSON.parse(atob(c.substring(name.length, c.length)));
-
-         return (s && typeof s == 'object') ? s : null;
-      }
-   }
-   return null;
-}
-
-/** @summary Save JSROOT settings as specified cookie parameter
-  * @param {Number} expires - days when cookie will be removed by browser, negative - delete immediately
-  * @param {String} name - cookie parameter name
-  * @private */
-function saveSettings(expires = 365, name = "jsroot_settings") {
-   saveCookie(settings, expires, name);
-}
-
-/** @summary Read JSROOT settings from specified cookie parameter
-  * @param {Boolean} only_check - when true just checks if settings were stored before with provided name
-  * @param {String} name - cookie parameter name
-  * @private */
-function readSettings(only_check = false, name = "jsroot_settings") {
-   let s = readCookie(name);
-   if (!s) return false;
-   if (!only_check)
-      Object.assign(settings, s);
-   return true;
-}
-
-/** @summary Save JSROOT gStyle object as specified cookie parameter
-  * @param {Number} expires - days when cookie will be removed by browser, negative - delete immediately
-  * @param {String} name - cookie parameter name
-  * @private */
-function saveStyle(expires = 365, name = "jsroot_style") {
-   saveCookie(gStyle, expires, name);
-}
-
-/** @summary Read JSROOT gStyle object specified cookie parameter
-  * @param {Boolean} only_check - when true just checks if settings were stored before with provided name
-  * @param {String} name - cookie parameter name
-  * @private */
-function readStyle(only_check = false, name = "jsroot_style") {
-   let s = readCookie(name);
-   if (!s) return false;
-   if (!only_check)
-      Object.assign(gStyle, s);
-   return true;
-}
-
-/** @summary Select predefined style
-  * @private */
-function selectStyle(name) {
-   gStyle.fName = name;
-   switch (name) {
-      case "Modern": Object.assign(gStyle, {
-         fFrameBorderMode: 0, fFrameFillColor: 0, fCanvasBorderMode: 0,
-         fCanvasColor: 0, fPadBorderMode: 0, fPadColor: 0, fStatColor: 0,
-         fTitleAlign: 23, fTitleX: 0.5, fTitleBorderSize: 0, fTitleColor: 0, fTitleStyle: 0,
-         fOptStat: 1111, fStatY: 0.935,
-         fLegendBorderSize: 1, fLegendFont: 42, fLegendTextSize: 0, fLegendFillColor: 0 }); break;
-      case "Plain": Object.assign(gStyle, {
-         fFrameBorderMode: 0, fCanvasBorderMode: 0, fPadBorderMode: 0,
-         fPadColor: 0, fCanvasColor: 0,
-         fTitleColor: 0, fTitleBorderSize: 0, fStatColor: 0, fStatBorderSize: 1, fLegendBorderSize: 1 }); break;
-      case "Bold": Object.assign(gStyle, {
-         fCanvasColor: 10, fCanvasBorderMode: 0,
-         fFrameLineWidth: 3, fFrameFillColor: 10,
-         fPadColor: 10, fPadTickX: 1, fPadTickY: 1, fPadBottomMargin: 0.15, fPadLeftMargin: 0.15,
-         fTitleColor: 10, fTitleTextColor: 600, fStatColor: 10 }); break;
-   }
-}
-
 /** @summary draw list content
   * @desc used to draw all items from TList or TObjArray inserted into the TCanvas list of primitives
   * @private */
@@ -75233,211 +75423,27 @@ class HierarchyPainter extends BasePainter {
    /** @summary Fills settings menu items
      * @private */
    fillSettingsMenu(menu, alone) {
-      if (alone)
-         menu.add("header:Settings");
-      else
-         menu.add("sub:Settings");
-
-      menu.add("sub:Files");
-
-      menu.addchk(settings.OnlyLastCycle, "Last cycle", flag => {
-         settings.OnlyLastCycle = flag;
-         this.forEachRootFile(folder => keysHierarchy(folder, folder._file.fKeys, folder._file, ""));
-         this.refreshHtml();
+      menu.addSettingsMenu(true, alone, arg => {
+         if (arg == "refresh") {
+            this.forEachRootFile(folder => keysHierarchy(folder, folder._file.fKeys, folder._file, ""));
+            this.refreshHtml();
+         } else if (arg == "dark") {
+            if (this.brlayout)
+               this.brlayout.createStyle();
+            if (this.disp)
+               this.disp.forEachFrame(frame => {
+                  let canvp = getElementCanvPainter(frame);
+                  if (typeof canvp?.changeDarkMode == 'function')
+                     canvp.changeDarkMode();
+               });
+         }
       });
-
-      menu.addchk(!settings.SkipStreamerInfos, "Streamer infos", flag => {
-         settings.SkipStreamerInfos = !flag;
-         this.forEachRootFile(folder => keysHierarchy(folder, folder._file.fKeys, folder._file, ""));
-         this.refreshHtml();
-      });
-
-      menu.addchk(settings.UseStamp, "Use stamp arg", flag => { settings.UseStamp = flag; });
-
-      menu.addchk(settings.HandleWrongHttpResponse, "Handle wrong http response", flag => { settings.HandleWrongHttpResponse = flag; });
-
-      menu.add("endsub:");
-
-      menu.add("sub:Toolbar");
-      menu.addchk(settings.ToolBar === false, "Off", flag => { settings.ToolBar = !flag; });
-      menu.addchk(settings.ToolBar === true, "On", flag => { settings.ToolBar = flag; });
-      menu.addchk(settings.ToolBar === "popup", "Popup", flag => { settings.ToolBar = flag ? "popup" : false; });
-      menu.add("separator");
-      menu.addchk(settings.ToolBarSide == "left", "Left side", flag => { settings.ToolBarSide = flag ? "left" : "right"; });
-      menu.addchk(settings.ToolBarVert, "Vertical", flag => { settings.ToolBarVert = flag; });
-      menu.add("endsub:");
-
-      menu.add("sub:Interactive");
-      menu.addchk(settings.Tooltip, "Tooltip", flag => { settings.Tooltip = flag; });
-      menu.addchk(settings.ContextMenu, "Context menus", flag => { settings.ContextMenu = flag; });
-      menu.add("sub:Zooming");
-      menu.addchk(settings.Zooming, "Global", flag => { settings.Zooming = flag; });
-      menu.addchk(settings.ZoomMouse, "Mouse", flag => { settings.ZoomMouse = flag; });
-      menu.addchk(settings.ZoomWheel, "Wheel", flag => { settings.ZoomWheel = flag; });
-      menu.addchk(settings.ZoomTouch, "Touch", flag => { settings.ZoomTouch = flag; });
-      menu.add("endsub:");
-      menu.addchk(settings.HandleKeys, "Keypress handling", flag => { settings.HandleKeys = flag; });
-      menu.addchk(settings.MoveResize, "Move and resize", flag => { settings.MoveResize = flag; });
-      menu.addchk(settings.DragAndDrop, "Drag and drop", flag => { settings.DragAndDrop = flag; });
-      menu.addchk(settings.DragGraphs, "Drag graph points", flag => { settings.DragGraphs = flag; });
-      menu.addchk(settings.ProgressBox, "Progress box", flag => { settings.ProgressBox = flag; });
-      menu.add("endsub:");
-
-      menu.add("sub:Drawing");
-      menu.addSelectMenu("Optimize", ["None", "Smart", "Always"], settings.OptimizeDraw, value => {
-          settings.OptimizeDraw = value;
-      });
-      menu.addPaletteMenu(settings.Palette, pal => { settings.Palette = pal; });
-      menu.addchk(settings.AutoStat, "Auto stat box", flag => { settings.AutoStat = flag; });
-      menu.addSelectMenu("Latex", ["Off", "Symbols", "Normal", "MathJax", "Force MathJax"], settings.Latex, value => {
-          settings.Latex = value;
-      });
-      menu.addSelectMenu("3D rendering", ["Default", "WebGL", "Image"], settings.Render3D, value => {
-          settings.Render3D = value;
-      });
-      menu.addSelectMenu("WebGL embeding", ["Default", "Overlay", "Embed"], settings.Embed3D, value => {
-          settings.Embed3D = value;
-      });
-
-      menu.add("endsub:");
-
-      menu.add("sub:Geometry");
-      menu.add("Grad per segment:  " + settings.GeoGradPerSegm, () => menu.input("Grad per segment in geometry", settings.GeoGradPerSegm, "int", 1, 60).then(val => { settings.GeoGradPerSegm = val; }));
-      menu.addchk(settings.GeoCompressComp, "Compress composites", flag => { settings.GeoCompressComp = flag; });
-      menu.add("endsub:");
-
-      menu.add("Hierarchy limit:  " + settings.HierarchyLimit, () => menu.input("Max number of items in hierarchy", settings.HierarchyLimit, "int", 10, 100000).then(val => { settings.HierarchyLimit = val; }));
-      menu.add("Dark mode: " + (settings.DarkMode ? "On" : "Off"), () => this.toggleDarkMode());
-
-      function setStyleField(arg) { gStyle[arg.slice(1)] = parseInt(arg[0]); }
-      function addStyleIntField(name, field, arr) {
-         menu.add("sub:" + name);
-         for (let v = 0; v < arr.length; ++v)
-            menu.addchk(gStyle[field] == v, arr[v], `${v}${field}`, setStyleField);
-         menu.add("endsub:");
-      }
-
-      menu.add("sub:gStyle");
-
-      menu.add("sub:Canvas");
-      menu.addColorMenu("Color", gStyle.fCanvasColor, col => { gStyle.fCanvasColor = col; });
-      menu.addchk(gStyle.fOptDate, "Draw date", flag => { gStyle.fOptDate = flag ? 1 : 0; });
-      menu.addchk(gStyle.fOptFile, "Draw item", flag => { gStyle.fOptFile = flag ? 1 : 0; });
-      menu.addSizeMenu("Date X", 0.01, 0.1, 0.01, gStyle.fDateX, x => { gStyle.fDateX = x; }, "configure gStyle.fDateX for date/item name drawings");
-      menu.addSizeMenu("Date Y", 0.01, 0.1, 0.01, gStyle.fDateY, y => { gStyle.fDateY = y; }, "configure gStyle.fDateY for date/item name drawings");
-      menu.add("endsub:");
-
-      menu.add("sub:Pad");
-      menu.addColorMenu("Color", gStyle.fPadColor, col => { gStyle.fPadColor = col; });
-      menu.add("sub:Grid");
-      menu.addchk(gStyle.fPadGridX, "X", flag => { gStyle.fPadGridX = flag; });
-      menu.addchk(gStyle.fPadGridY, "Y", flag => { gStyle.fPadGridY = flag; });
-      menu.addColorMenu("Color", gStyle.fGridColor, col => { gStyle.fGridColor = col; });
-      menu.addSizeMenu("Width", 1, 10, 1, gStyle.fGridWidth, w => { gStyle.fGridWidth = w; });
-      menu.addLineStyleMenu("Style", gStyle.fGridStyle, st => { gStyle.fGridStyle = st; });
-      menu.add("endsub:");
-      addStyleIntField("Ticks X", "fPadTickX", ["normal", "ticks on both sides", "labels on both sides"]);
-      addStyleIntField("Ticks Y", "fPadTickY", ["normal", "ticks on both sides", "labels on both sides"]);
-      addStyleIntField("Log X", "fOptLogx", ["off", "on", "log 2"]);
-      addStyleIntField("Log Y", "fOptLogy", ["off", "on", "log 2"]);
-      addStyleIntField("Log Z", "fOptLogz", ["off", "on", "log 2"]);
-      menu.addchk(gStyle.fOptTitle == 1, "Hist title", flag => { gStyle.fOptTitle = flag ? 1 : 0; });
-      menu.add("endsub:");
-
-      menu.add("sub:Frame");
-      menu.addColorMenu("Fill color", gStyle.fFrameFillColor, col => { gStyle.fFrameFillColor = col; });
-      menu.addFillStyleMenu("Fill style", gStyle.fFrameFillStyle, gStyle.fFrameFillColor, null, id => { gStyle.fFrameFillStyle = id; });
-      menu.addColorMenu("Line color", gStyle.fFrameLineColor, col => { gStyle.fFrameLineColor = col; });
-      menu.addSizeMenu("Line width", 1, 10, 1, gStyle.fFrameLineWidth, w => { gStyle.fFrameLineWidth = w; });
-      menu.addLineStyleMenu("Line style", gStyle.fFrameLineStyle, st => { gStyle.fFrameLineStyle = st; });
-      menu.addSizeMenu("Border size", 0, 10, 1, gStyle.fFrameBorderSize, sz => { gStyle.fFrameBorderSize = sz; });
-      // fFrameBorderMode: 0,
-      menu.add("sub:Margins");
-      menu.addSizeMenu("Bottom", 0, 0.5, 0.05, gStyle.fPadBottomMargin, v => { gStyle.fPadBottomMargin = v; });
-      menu.addSizeMenu("Top", 0, 0.5, 0.05, gStyle.fPadTopMargin, v => { gStyle.fPadTopMargin = v; });
-      menu.addSizeMenu("Left", 0, 0.5, 0.05, gStyle.fPadLeftMargin, v => { gStyle.fPadLeftMargin = v; });
-      menu.addSizeMenu("Right", 0, 0.5, 0.05, gStyle.fPadRightMargin, v => { gStyle.fPadRightMargin = v; });
-      menu.add("endsub:");
-      menu.add("endsub:");
-
-      menu.add("sub:Title");
-      menu.addColorMenu("Fill color", gStyle.fTitleColor, col => { gStyle.fTitleColor = col; });
-      menu.addFillStyleMenu("Fill style", gStyle.fTitleStyle, gStyle.fTitleColor, null, id => { gStyle.fTitleStyle = id; });
-      menu.addColorMenu("Text color", gStyle.fTitleTextColor, col => { gStyle.fTitleTextColor = col; });
-      menu.addSizeMenu("Border size", 0, 10, 1, gStyle.fTitleBorderSize, sz => { gStyle.fTitleBorderSize = sz; });
-      menu.addSizeMenu("Font size", 0.01, 0.1, 0.01, gStyle.fTitleFontSize, sz => { gStyle.fTitleFontSize = sz; });
-      menu.addFontMenu("Font", gStyle.fTitleFont, fnt => { gStyle.fTitleFont = fnt; });
-      menu.addSizeMenu("X: " + gStyle.fTitleX.toFixed(2), 0., 1., 0.1, gStyle.fTitleX, v => { gStyle.fTitleX = v; });
-      menu.addSizeMenu("Y: " + gStyle.fTitleY.toFixed(2), 0., 1., 0.1, gStyle.fTitleY, v => { gStyle.fTitleY = v; });
-      menu.addSizeMenu("W: " + gStyle.fTitleW.toFixed(2), 0., 1., 0.1, gStyle.fTitleW, v => { gStyle.fTitleW = v; });
-      menu.addSizeMenu("H: " + gStyle.fTitleH.toFixed(2), 0., 1., 0.1, gStyle.fTitleH, v => { gStyle.fTitleH = v; });
-      menu.add("endsub:");
-
-      menu.add("sub:Stat box");
-      menu.addColorMenu("Fill color", gStyle.fStatColor, col => { gStyle.fStatColor = col; });
-      menu.addFillStyleMenu("Fill style", gStyle.fStatStyle, gStyle.fStatColor, null, id => { gStyle.fStatStyle = id; });
-      menu.addColorMenu("Text color", gStyle.fStatTextColor, col => { gStyle.fStatTextColor = col; });
-      menu.addSizeMenu("Border size", 0, 10, 1, gStyle.fStatBorderSize, sz => { gStyle.fStatBorderSize = sz; });
-      menu.addSizeMenu("Font size", 0, 30, 5, gStyle.fStatFontSize, sz => { gStyle.fStatFontSize = sz; });
-      menu.addFontMenu("Font", gStyle.fStatFont, fnt => { gStyle.fStatFont = fnt; });
-      menu.add("Stat format", () => menu.input("Stat format", gStyle.fStatFormat).then(fmt => { gStyle.fStatFormat = fmt; }));
-      menu.addSizeMenu("X: " + gStyle.fStatX.toFixed(2), 0.2, 1., 0.1, gStyle.fStatX, v => { gStyle.fStatX = v; });
-      menu.addSizeMenu("Y: " + gStyle.fStatY.toFixed(2), 0.2, 1., 0.1, gStyle.fStatY, v => { gStyle.fStatY = v; });
-      menu.addSizeMenu("Width: " + gStyle.fStatW.toFixed(2), 0.1, 1., 0.1, gStyle.fStatW, v => { gStyle.fStatW = v; });
-      menu.addSizeMenu("Height: " + gStyle.fStatH.toFixed(2), 0.1, 1., 0.1, gStyle.fStatH, v => { gStyle.fStatH = v; });
-      menu.add("endsub:");
-
-      menu.add("sub:Legend");
-      menu.addColorMenu("Fill color", gStyle.fLegendFillColor, col => { gStyle.fLegendFillColor = col; });
-      menu.addSizeMenu("Border size", 0, 10, 1, gStyle.fLegendBorderSize, sz => { gStyle.fLegendBorderSize = sz; });
-      menu.addFontMenu("Font", gStyle.fLegendFont, fnt => { gStyle.fLegendFont = fnt; });
-      menu.addSizeMenu("Text size", 0, 0.1, 0.01, gStyle.fLegendTextSize, v => { gStyle.fLegendTextSize = v; }, "legend text size, when 0 - auto adjustment is used");
-      menu.add("endsub:");
-
-      menu.add("sub:Histogram");
-      menu.addchk(gStyle.fHistMinimumZero, "Base0", flag => { gStyle.fHistMinimumZero = flag; }, "when true, BAR and LEGO drawing using base = 0");
-      menu.add("Text format", () => menu.input("Paint text format", gStyle.fPaintTextFormat).then(fmt => { gStyle.fPaintTextFormat = fmt; }));
-      menu.add("Time offset", () => menu.input("Time offset in seconds, default is 788918400 for 1/1/1995", gStyle.fTimeOffset, "int").then(ofset => { gStyle.fTimeOffset = ofset; }));
-      menu.addSizeMenu("ErrorX: " + gStyle.fErrorX.toFixed(2), 0., 1., 0.1, gStyle.fErrorX, v => { gStyle.fErrorX = v; });
-      menu.addSizeMenu("End error", 0, 12, 1, gStyle.fEndErrorSize, v => { gStyle.fEndErrorSize = v; }, "size in pixels of end error for E1 draw options, gStyle.fEndErrorSize");
-      menu.addSizeMenu("Top margin", 0., 0.5, 0.05, gStyle.fHistTopMargin, v => { gStyle.fHistTopMargin = v; }, "Margin between histogram's top and frame's top");
-      menu.addColorMenu("Fill color", gStyle.fHistFillColor, col => { gStyle.fHistFillColor = col; });
-      menu.addFillStyleMenu("Fill style", gStyle.fHistFillStyle, gStyle.fHistFillColor, null, id => { gStyle.fHistFillStyle = id; });
-      menu.addColorMenu("Line color", gStyle.fHistLineColor, col => { gStyle.fHistLineColor = col; });
-      menu.addSizeMenu("Line width", 1, 10, 1, gStyle.fHistLineWidth, w => { gStyle.fHistLineWidth = w; });
-      menu.addLineStyleMenu("Line style", gStyle.fHistLineStyle, st => { gStyle.fHistLineStyle = st; });
-      menu.add("endsub:");
-
-      menu.add("separator");
-      menu.add("sub:Predefined");
-      ["Modern", "Plain", "Bold"].forEach(name => menu.addchk((gStyle.fName == name), name, () => selectStyle.bind(this, name)()));
-      menu.add("endsub:");
-      menu.add("endsub:");
-
-      menu.add("separator");
-
-      menu.add("Save settings", () => {
-         let promise = readSettings(true) ? Promise.resolve(true) : menu.confirm("Save settings", "Pressing OK one agreess that JSROOT will store settings as browser cookies");
-         promise.then(res => { if (res) { saveSettings(); saveStyle(); } });
-      }, "Store settings and gStyle as cookies");
-      menu.add("Delete settings", () => { saveSettings(-1); saveStyle(-1); }, "Delete settings and gStyle from cookies");
-
-      if (!alone) menu.add("endsub:");
    }
 
    /** @summary Toggle dark mode
      * @private */
    toggleDarkMode() {
       settings.DarkMode = !settings.DarkMode;
-      if (this.brlayout)
-         this.brlayout.createStyle();
-      if (this.disp)
-         this.disp.forEachFrame(frame => {
-            let canvp = getElementCanvPainter(frame),
-                svg = canvp ? canvp.getCanvSvg() : null;
-
-            if (svg) svg.style("filter", settings.DarkMode ? "invert(100%)" : null);
-          });
    }
 
    /** @summary Handle context menu in the hieararchy
@@ -77479,8 +77485,6 @@ drawInspector: drawInspector,
 drawStreamerInfo: drawStreamerInfo,
 drawList: drawList,
 markAsStreamerInfo: markAsStreamerInfo,
-readSettings: readSettings,
-readStyle: readStyle,
 folderHierarchy: folderHierarchy,
 taskHierarchy: taskHierarchy,
 listHierarchy: listHierarchy,
@@ -77685,9 +77689,6 @@ var _rollup_plugin_ignore_empty_module_placeholder$1 = /*#__PURE__*/Object.freez
 __proto__: null,
 'default': _rollup_plugin_ignore_empty_module_placeholder
 });
-
-/// more ROOT classes
-
 
 /** @summary Draw TText
   * @private */
@@ -79264,8 +79265,6 @@ function createNormal(axis_name, pos, size) {
    return new Geometry(node);
 }
 
-/// Basic functions for work with TGeo classes
-
 function JSROOT_BIT(n) { return 1 << n; }
 
 let cfg = {
@@ -79828,16 +79827,16 @@ function create8edgesBuffer( v, faces_limit ) {
 
    let creator = (faces_limit > 0) ? new PolygonsCreator : new GeometryCreator(12);
 
-   for (let n=0;n<indicies.length;n+=4) {
+   for (let n = 0; n < indicies.length; n += 4) {
       let i1 = indicies[n]*3,
           i2 = indicies[n+1]*3,
           i3 = indicies[n+2]*3,
           i4 = indicies[n+3]*3;
       creator.addFace4(v[i1], v[i1+1], v[i1+2], v[i2], v[i2+1], v[i2+2],
                        v[i3], v[i3+1], v[i3+2], v[i4], v[i4+1], v[i4+2]);
-      if (n===0)
+      if (n === 0)
          creator.setNormal(0,0,1);
-      else if (n===20)
+      else if (n === 20)
          creator.setNormal(0,0,-1);
       else
          creator.calcNormal();
@@ -79931,7 +79930,7 @@ function createArb8Buffer( shape, faces_limit ) {
    let map = [], // list of existing faces (with all rotations)
        numfaces = 0;
 
-   for (let k=0;k<indicies.length;k+=3) {
+   for (let k = 0; k < indicies.length; k += 3) {
       let id1 = indicies[k]*100   + indicies[k+1]*10 + indicies[k+2],
           id2 = indicies[k+1]*100 + indicies[k+2]*10 + indicies[k],
           id3 = indicies[k+2]*100 + indicies[k]*10   + indicies[k+1];
@@ -80052,9 +80051,8 @@ function createSphereBuffer( shape, faces_limit ) {
    if (Math.abs(_sint[0]) <= epsilon) { numoutside -= widthSegments; numtop = 0; }
    if (Math.abs(_sint[heightSegments]) <= epsilon) { numoutside -= widthSegments; numbottom = 0; }
 
-   let numfaces = numoutside * (noInside ? 1 : 2) + numtop + numbottom + numcut;
-
-   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
+   let numfaces = numoutside * (noInside ? 1 : 2) + numtop + numbottom + numcut,
+       creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
 
    for (let side = 0; side < 2; ++side) {
       if ((side===1) && noInside) break;
@@ -80066,9 +80064,7 @@ function createSphereBuffer( shape, faces_limit ) {
       // use direct algorithm for the sphere - here normals and position can be calculated directly
       for (let k = 0; k < heightSegments; ++k) {
 
-         let k1 = k + d1, k2 = k + d2;
-
-         let skip = 0;
+         let k1 = k + d1, k2 = k + d2, skip = 0;
          if (Math.abs(_sint[k1]) <= epsilon) skip = 1; else
          if (Math.abs(_sint[k2]) <= epsilon) skip = 2;
 
@@ -80177,12 +80173,10 @@ function createTubeBuffer( shape, faces_limit) {
 
    let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
 
-   let calcZ;
-   if (shape._typename == "TGeoCtub")
-      calcZ = (x,y,z) => {
-         let arr = (z < 0) ? shape.fNlow : shape.fNhigh;
-         return ((z < 0) ? -shape.fDz : shape.fDz) - (x*arr[0] + y*arr[1]) / arr[2];
-      };
+   const calcZ = (shape._typename !== "TGeoCtub") ? null : (x,y,z) => {
+      let arr = (z < 0) ? shape.fNlow : shape.fNhigh;
+      return ((z < 0) ? -shape.fDz : shape.fDz) - (x*arr[0] + y*arr[1]) / arr[2];
+   };
 
    // create outer/inner tube
    for (let side = 0; side < 2; ++side) {
@@ -80198,11 +80192,7 @@ function createTubeBuffer( shape, faces_limit) {
       }
 
       if (side === 1) { nxy *= -1; nz *= -1; }
-      let reduce = 0;
-      if (R[0] <= 0)
-         reduce = 2;
-      else if (R[1] <= 0)
-         reduce = 1;
+      let reduce = (R[0] <= 0) ? 2 : ((R[1] <= 0) ? 1 : 0);
 
       for (let seg = 0; seg < radiusSegments; ++seg) {
          creator.addFace4(
@@ -80227,8 +80217,8 @@ function createTubeBuffer( shape, faces_limit) {
       let d1 = side, d2 = 1- side,
           sign = (side == 0) ? 1 : -1,
           reduce = (innerR[side] <= 0) ? 2 : 0;
-      if ((reduce==2) && (thetaLength === 360) && !calcZ) creator.startPolygon(side===0);
-      for (let seg=0;seg<radiusSegments;++seg) {
+      if ((reduce === 2) && (thetaLength === 360) && !calcZ) creator.startPolygon(side===0);
+      for (let seg = 0; seg < radiusSegments; ++seg) {
          creator.addFace4(
                innerR[side] * _cos[seg+d1], innerR[side] * _sin[seg+d1], sign*shape.fDZ,
                outerR[side] * _cos[seg+d1], outerR[side] * _sin[seg+d1], sign*shape.fDZ,
@@ -80252,7 +80242,7 @@ function createTubeBuffer( shape, faces_limit) {
                        outerR[1] * _cos[0], outerR[1] * _sin[0], -shape.fDZ,
                        outerR[0] * _cos[0], outerR[0] * _sin[0],  shape.fDZ,
                        innerR[0] * _cos[0], innerR[0] * _sin[0],  shape.fDZ,
-                       (outerR[0] === innerR[0]) ? 2 : ((innerR[1]===outerR[1]) ? 1 : 0) );
+                       (outerR[0] === innerR[0]) ? 2 : ((innerR[1]===outerR[1]) ? 1 : 0));
       if (calcZ) creator.recalcZ(calcZ);
       creator.calcNormal();
 
@@ -80289,7 +80279,7 @@ function createEltuBuffer( shape , faces_limit ) {
        nx1, ny1, nx2 = 1, ny2 = 0;
 
    // create tube faces
-   for (let seg=0; seg<radiusSegments; ++seg) {
+   for (let seg = 0; seg < radiusSegments; ++seg) {
       creator.addFace4(x[seg],   y[seg],   +shape.fDZ,
                        x[seg],   y[seg],   -shape.fDZ,
                        x[seg+1], y[seg+1], -shape.fDZ,
@@ -80306,7 +80296,7 @@ function createEltuBuffer( shape , faces_limit ) {
    }
 
    // create top/bottom sides
-   for (let side=0;side<2;++side) {
+   for (let side = 0; side < 2; ++side) {
       let sign = (side===0) ? 1 : -1, d1 = side, d2 = 1 - side;
       for (let seg=0; seg<radiusSegments; ++seg) {
          creator.addFace3(0,          0,          sign*shape.fDZ,
@@ -80351,10 +80341,9 @@ function createTorusBuffer( shape, faces_limit ) {
       _cost[t] = Math.cos(angle);
    }
 
-   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
-
-   // use vectors for normals calculation
-   let p1 = new Vector3(), p2 = new Vector3(), p3 = new Vector3(), p4 = new Vector3(),
+   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces),
+       // use vectors for normals calculation
+       p1 = new Vector3(), p2 = new Vector3(), p3 = new Vector3(), p4 = new Vector3(),
        n1 = new Vector3(), n2 = new Vector3(), n3 = new Vector3(), n4 = new Vector3(),
        center1 = new Vector3(), center2 = new Vector3();
 
@@ -80395,9 +80384,9 @@ function createTorusBuffer( shape, faces_limit ) {
    if (shape.fDphi !== 360)
       for (let t=0;t<=tubularSegments;t+=tubularSegments) {
          let tube1 = shape.fRmax, tube2 = shape.fRmin,
-             d1 = (t>0) ? 0 : 1, d2 = 1 - d1,
+             d1 = (t > 0) ? 0 : 1, d2 = 1 - d1,
              skip = (shape.fRmin) > 0 ?  0 : 1,
-             nsign = t>0 ? 1 : -1;
+             nsign = (t > 0) ? 1 : -1;
          for (let n=0;n<radialSegments;++n) {
             creator.addFace4((radius + tube1 * _cosr[n+d1]) * _cost[t], (radius + tube1 * _cosr[n+d1]) * _sint[t], tube1*_sinr[n+d1],
                              (radius + tube2 * _cosr[n+d1]) * _cost[t], (radius + tube2 * _cosr[n+d1]) * _sint[t], tube2*_sinr[n+d1],
@@ -80479,7 +80468,7 @@ function createPolygonBuffer( shape, faces_limit ) {
 
    let cut_faces = null;
 
-   if (pnts!==null) {
+   if (pnts !== null) {
       if (pnts.length === shape.fNz * 2) {
          // special case - all layers are there, create faces ourself
          cut_faces = [];
@@ -80529,9 +80518,9 @@ function createPolygonBuffer( shape, faces_limit ) {
             nz = Math.sin(angle);
          }
 
-         if (side>0) { nxy*=-1; nz*=-1; }
+         if (side > 0) { nxy*=-1; nz*=-1; }
 
-         for (let seg=0;seg < radiusSegments;++seg) {
+         for (let seg = 0; seg < radiusSegments; ++seg) {
             creator.addFace4(r1 * _cos[seg+d1], r1 * _sin[seg+d1], z1,
                              r2 * _cos[seg+d1], r2 * _sin[seg+d1], z2,
                              r2 * _cos[seg+d2], r2 * _sin[seg+d2], z2,
@@ -80626,11 +80615,11 @@ function createXtruBuffer( shape, faces_limit ) {
       }
    }
 
-   for (let layer = 0; layer <= shape.fNz-1; layer+=(shape.fNz-1)) {
+   for (let layer = 0; layer <= shape.fNz-1; layer += (shape.fNz-1)) {
       let z = shape.fZ[layer], scale = shape.fScale[layer],
           x0 = shape.fX0[layer], y0 = shape.fY0[layer];
 
-      for (let n=0;n<faces.length;++n) {
+      for (let n = 0; n < faces.length; ++n) {
          let face = faces[n],
              pnt1 = pnts[face[0]],
              pnt2 = pnts[face[(layer===0) ? 2 : 1]],
@@ -80673,8 +80662,8 @@ function createParaboloidBuffer( shape, faces_limit ) {
    let ttmin = Math.atan2(zmin, rmin), ttmax = Math.atan2(zmax, rmax);
 
    let numfaces = (heightSegments+1)*radiusSegments*2;
-   if (rmin===0) numfaces -= radiusSegments*2; // complete layer
-   if (rmax===0) numfaces -= radiusSegments*2; // complete layer
+   if (rmin === 0) numfaces -= radiusSegments*2; // complete layer
+   if (rmax === 0) numfaces -= radiusSegments*2; // complete layer
 
    if (faces_limit < 0) return numfaces;
 
@@ -80694,7 +80683,7 @@ function createParaboloidBuffer( shape, faces_limit ) {
 
       let layerz = 0, radius = 0, nxy = 0, nz = -1;
 
-      if ((layer === 0) && (rmin===0)) continue;
+      if ((layer === 0) && (rmin === 0)) continue;
 
       if ((layer === heightSegments + 1) && (lastr === 0)) break;
 
@@ -80714,11 +80703,7 @@ function createParaboloidBuffer( shape, faces_limit ) {
       nxy = shape.fA * radius;
       nz = (shape.fA > 0) ? -1 : 1;
 
-      let skip = 0;
-      if (lastr === 0)
-         skip = 1;
-      else if (radius === 0)
-         skip = 2;
+      let skip = (lastr === 0) ? 1 : ((radius === 0) ? 2 : 0);
 
       for (let seg = 0; seg < radiusSegments; ++seg) {
          creator.addFace4(radius*_cos[seg],   radius*_sin[seg], layerz,
@@ -80728,7 +80713,7 @@ function createParaboloidBuffer( shape, faces_limit ) {
 
          // use analytic normal values when open/closing paraboloid around 0
          // cut faces (top or bottom) set with simple normal
-         if ((skip===0) || ((layer===1) && (rmin===0)) || ((layer===heightSegments+1) && (rmax===0)))
+         if ((skip === 0) || ((layer === 1) && (rmin === 0)) || ((layer === heightSegments+1) && (rmax === 0)))
             creator.setNormal4(nxy*_cos[seg],       nxy*_sin[seg],       nz,
                                lastnxy*_cos[seg],   lastnxy*_sin[seg],   lastnz,
                                lastnxy*_cos[seg+1], lastnxy*_sin[seg+1], lastnz,
@@ -80781,13 +80766,13 @@ function createHypeBuffer( shape, faces_limit ) {
           d1 = 1- side, d2 = 1 - d1;
 
       // vertical layers
-      for (let layer=0;layer<heightSegments;++layer) {
+      for (let layer = 0; layer < heightSegments; ++layer) {
          let z1 = -shape.fDz + layer/heightSegments*2*shape.fDz,
              z2 = -shape.fDz + (layer+1)/heightSegments*2*shape.fDz,
              r1 = Math.sqrt(r0*r0+tsq*z1*z1),
              r2 = Math.sqrt(r0*r0+tsq*z2*z2);
 
-         for (let seg=0; seg<radiusSegments; ++seg) {
+         for (let seg = 0; seg < radiusSegments; ++seg) {
             creator.addFace4(r1 * _cos[seg+d1], r1 * _sin[seg+d1], z1,
                              r2 * _cos[seg+d1], r2 * _sin[seg+d1], z2,
                              r2 * _cos[seg+d2], r2 * _sin[seg+d2], z2,
@@ -80992,7 +80977,7 @@ function geomBoundingBox(geom) {
    else if (geom.polygons)
       polygons = geom.polygons;
 
-   if (polygons!==null) {
+   if (polygons !== null) {
       let box = new Box3();
       for (let n = 0; n < polygons.length; ++n) {
          let polygon = polygons[n], nvert = polygon.vertices.length;
@@ -81024,8 +81009,6 @@ function createHalfSpace(shape, geom) {
       let box = geomBoundingBox(geom);
       if (box) sz = box.getSize(new Vector3()).length() * 1000;
    }
-
-   // console.log('normal', normal, 'vertex', vertex, 'size', sz);
 
    let v0 = new Vector3(-sz, -sz/2, 0),
        v1 = new Vector3(0, sz, 0),
@@ -81140,8 +81123,8 @@ function createComposite( shape, faces_limit ) {
 
    if (countGeometryFaces(bsp1) === 0) {
       geoWarn('Zero faces in comp shape'
-            + ' left: ' + shape.fNode.fLeft._typename +  ' ' + countGeometryFaces(geom1) + ' faces'
-            + ' right: ' + shape.fNode.fRight._typename + ' ' + countGeometryFaces(geom2) + ' faces'
+            + ` left: ${shape.fNode.fLeft._typename} ${countGeometryFaces(geom1)} faces`
+            + ` right: ${shape.fNode.fRight._typename} ${countGeometryFaces(geom2)} faces`
             + '  use first');
       bsp1 = new Geometry(geom1, matrix1);
    }
@@ -81261,64 +81244,66 @@ function provideObjectInfo(obj) {
    }
 
    let sz = Math.max(shape.fDX, shape.fDY, shape.fDZ),
-       useexp = (sz>1e7) || (sz<1e-7),
+       useexp = (sz > 1e7) || (sz < 1e-7),
        conv = (v) => {
           if (v===undefined) return "???";
-          if ((v==Math.round(v) && v<1e7)) return Math.round(v);
+          if ((v == Math.round(v) && v < 1e7)) return Math.round(v);
           return useexp ? v.toExponential(4) : v.toPrecision(7);
        };
 
    info.push(shape._typename);
 
-   info.push("DX="+conv(shape.fDX) + " DY="+conv(shape.fDY) + " DZ="+conv(shape.fDZ));
+   info.push(`DX=${conv(shape.fDX)} DY=${conv(shape.fDY)} DZ=${conv(shape.fDZ)}`);
 
    switch (shape._typename) {
       case "TGeoBBox": break;
-      case "TGeoPara": info.push("Alpha=" + shape.fAlpha + " Phi=" + shape.fPhi + " Theta=" + shape.fTheta); break;
-      case "TGeoTrd2": info.push("Dy1=" + conv(shape.fDy1) + " Dy2=" + conv(shape.fDy1));
-      case "TGeoTrd1": info.push("Dx1=" + conv(shape.fDx1) + " Dx2=" + conv(shape.fDx1)); break;
+      case "TGeoPara": info.push(`Alpha=${shape.fAlpha} Phi=${shape.fPhi} Theta=${shape.fTheta}`); break;
+      case "TGeoTrd2": info.push(`Dy1=${conv(shape.fDy1)} Dy2=${conv(shape.fDy1)}`); // no break
+      case "TGeoTrd1": info.push(`Dx1=${conv(shape.fDx1)} Dx2=${conv(shape.fDx1)}`); break;
       case "TGeoArb8": break;
       case "TGeoTrap": break;
       case "TGeoGtra": break;
       case "TGeoSphere":
-         info.push("Rmin=" + conv(shape.fRmin) + " Rmax=" + conv(shape.fRmax));
-         info.push("Phi1=" + shape.fPhi1 + " Phi2=" + shape.fPhi2);
-         info.push("Theta1=" + shape.fTheta1 + " Theta2=" + shape.fTheta2);
+         info.push(`Rmin=${conv(shape.fRmin)} Rmax=${conv(shape.fRmax)}`);
+         info.push(`Phi1=${shape.fPhi1} Phi2=${shape.fPhi2}`);
+         info.push(`Theta1=${shape.fTheta1} Theta2=${shape.fTheta2}`);
          break;
       case "TGeoConeSeg":
-         info.push("Phi1=" + shape.fPhi1 + " Phi2=" + shape.fPhi2);
+         info.push(`Phi1=${shape.fPhi1} Phi2=${shape.fPhi2}`);
+         // no break;
       case "TGeoCone":
-         info.push("Rmin1=" + conv(shape.fRmin1) + " Rmax1=" + conv(shape.fRmax1));
-         info.push("Rmin2=" + conv(shape.fRmin2) + " Rmax2=" + conv(shape.fRmax2));
+         info.push(`Rmin1=${conv(shape.fRmin1)} Rmax1=${conv(shape.fRmax1)}`);
+         info.push(`Rmin2=${conv(shape.fRmin2)} Rmax2=${conv(shape.fRmax2)}`);
          break;
       case "TGeoCtub":
       case "TGeoTubeSeg":
-         info.push("Phi1=" + shape.fPhi1 + " Phi2=" + shape.fPhi2);
+         info.push(`Phi1=${shape.fPhi1} Phi2=${shape.fPhi2}`);
+         // no break
       case "TGeoEltu":
       case "TGeoTube":
-         info.push("Rmin=" + conv(shape.fRmin) + " Rmax=" + conv(shape.fRmax));
+         info.push(`Rmin=${conv(shape.fRmin)} Rmax=${conv(shape.fRmax)}`);
          break;
       case "TGeoTorus":
-         info.push("Rmin=" + conv(shape.fRmin) + " Rmax=" + conv(shape.fRmax));
-         info.push("Phi1=" + shape.fPhi1 + " Dphi=" + shape.fDphi);
+         info.push(`Rmin=${conv(shape.fRmin)} Rmax=${conv(shape.fRmax)}`);
+         info.push(`Phi1=${shape.fPhi1} Dphi=${shape.fDphi}`);
          break;
       case "TGeoPcon":
       case "TGeoPgon": break;
       case "TGeoXtru": break;
       case "TGeoParaboloid":
-         info.push("Rlo=" + conv(shape.fRlo) + " Rhi=" + conv(shape.fRhi));
-         info.push("A=" + conv(shape.fA) + " B=" + conv(shape.fB));
+         info.push(`Rlo=${conv(shape.fRlo)} Rhi=${conv(shape.fRhi)}`);
+         info.push(`A=${conv(shape.fA)} B=${conv(shape.fB)}`);
          break;
       case "TGeoHype":
-         info.push("Rmin=" + conv(shape.fRmin) + " Rmax=" + conv(shape.fRmax));
-         info.push("StIn=" + conv(shape.fStIn) + " StOut=" + conv(shape.fStOut));
+         info.push(`Rmin=${conv(shape.fRmin)} Rmax=${conv(shape.fRmax)}`);
+         info.push(`StIn=${conv(shape.fStIn)} StOut=${conv(shape.fStOut)}`);
          break;
       case "TGeoCompositeShape": break;
       case "TGeoShapeAssembly": break;
       case "TGeoScaledShape":
          info = provideObjectInfo(shape.fShape);
          if (shape.fScale)
-            info.unshift('Scale X=' + shape.fScale.fScale[0] + " Y=" + shape.fScale.fScale[1] + " Z=" + shape.fScale.fScale[2]);
+            info.unshift(`Scale X=${shape.fScale.fScale[0]} Y=${shape.fScale.fScale[1]} Z=${shape.fScale.fScale[2]}`);
          break;
    }
 
@@ -81480,21 +81465,21 @@ class ClonedNodes {
    cleanup(drawnodes, drawshapes) {
 
       if (drawnodes) {
-         for (let n=0;n<drawnodes.length;++n) {
+         for (let n = 0;n < drawnodes.length; ++n) {
             delete drawnodes[n].stack;
             drawnodes[n] = undefined;
          }
       }
 
       if (drawshapes) {
-         for (let n=0;n<drawshapes.length;++n) {
+         for (let n = 0; n < drawshapes.length; ++n) {
             delete drawshapes[n].geom;
             drawshapes[n] = undefined;
          }
       }
 
       if (this.nodes) {
-         for (let n=0;n<this.nodes.length;++n) {
+         for (let n = 0; n < this.nodes.length; ++n) {
             if (this.nodes[n])
                delete this.nodes[n].chlds;
          }
@@ -81630,11 +81615,9 @@ class ClonedNodes {
 
    /** @summary Count all visisble nodes */
    countVisibles() {
-      let cnt = 0;
-      if (this.nodes)
-         for (let k = 0; k < this.nodes.length; ++k)
-            if (this.nodes[k].vis)
-               cnt++;
+      let cnt = 0, len = this.nodes?.length || 0;
+      for (let k = 0; k < len; ++k)
+          if (this.nodes[k].vis) cnt++;
       return cnt;
    }
 
@@ -81646,9 +81629,8 @@ class ClonedNodes {
 
       let res = 0;
 
-      for (let n=0;n<this.nodes.length;++n) {
-         let clone = this.nodes[n],
-             obj = this.origin[n];
+      for (let n = 0; n < this.nodes.length; ++n) {
+         let clone = this.nodes[n], obj = this.origin[n];
 
          clone.vis = 0; // 1 - only with last level
          delete clone.nochlds;
@@ -81659,13 +81641,15 @@ class ClonedNodes {
                   // on screen bits used always, childs always checked
                   clone.vis = testGeoBit(obj.fVolume, geoBITS.kVisOnScreen) ? 99 : 0;
 
-                  if ((n==0) && clone.vis && hide_top_volume) clone.vis = 0;
+                  if ((n == 0) && clone.vis && hide_top_volume) clone.vis = 0;
 
                   if (copy_bits) {
                      setGeoBit(obj.fVolume, geoBITS.kVisNone, false);
                      setGeoBit(obj.fVolume, geoBITS.kVisThis, (clone.vis > 0));
                      setGeoBit(obj.fVolume, geoBITS.kVisDaughters, true);
+                     setGeoBit(obj, geoBITS.kVisDaughters, true);
                   }
+
                } else {
                   clone.vis = !testGeoBit(obj.fVolume, geoBITS.kVisNone) &&
                                testGeoBit(obj.fVolume, geoBITS.kVisThis) ? 99 : 0;
@@ -81677,7 +81661,7 @@ class ClonedNodes {
                   if ((clone.vis > 0) && clone.chlds && !clone.nochlds) clone.vis = 1;
 
                   // special handling for top node
-                  if (n==0) {
+                  if (n === 0) {
                      if (hide_top_volume) clone.vis = 0;
                      delete clone.nochlds;
                   }
@@ -81687,7 +81671,7 @@ class ClonedNodes {
             clone.vis = obj.fRnrSelf ? 99 : 0;
 
             // when the only node is selected, draw it
-            if ((n===0) && (this.nodes.length===1)) clone.vis = 99;
+            if ((n === 0) && (this.nodes.length === 1)) clone.vis = 99;
 
             this.vislevel = 9999; // automatically take all volumes
          }
@@ -81854,7 +81838,7 @@ class ClonedNodes {
       //   res.name = this.getNodeName(0);
 
       if (stack)
-         for(let lvl=0;lvl<stack.length;++lvl) {
+         for(let lvl = 0; lvl < stack.length; ++lvl) {
             res.id = res.node.chlds[stack[lvl]];
             res.node = this.nodes[res.id];
 
@@ -81863,7 +81847,7 @@ class ClonedNodes {
 
             let subname = this.getNodeName(res.id);
             if (subname) {
-               if (res.name) res.name+="/";
+               if (res.name) res.name += "/";
                res.name += subname;
             }
 
@@ -81886,12 +81870,12 @@ class ClonedNodes {
 
       let node = this.nodes[0], stack = [];
 
-      for (let k=1;k<ids.length;++k) {
+      for (let k = 1; k < ids.length; ++k) {
          let nodeid = ids[k];
          if (!node) return null;
          let chindx = node.chlds.indexOf(nodeid);
          if (chindx < 0) {
-            console.error('wrong nodes ids ' + ids[k] + ' is not child of ' + ids[k-1]);
+            console.error(`wrong nodes ids ${ids[k]} is not child of ${ids[k-1]}`);
             return null;
          }
 
@@ -81906,7 +81890,7 @@ class ClonedNodes {
    buildIdsByStack(stack) {
       if (!stack) return null;
       let node = this.nodes[0], ids = [0];
-      for (let k=0;k<stack.length;++k) {
+      for (let k = 0; k < stack.length; ++k) {
          let id = node.chlds[stack[k]];
          ids.push(id);
          node = this.nodes[id];
@@ -81958,9 +81942,9 @@ class ClonedNodes {
       this.use_dflt_colors = on;
       if (this.use_dflt_colors && !this.dflt_table) {
 
-         let dflt = { kWhite:0,  kBlack:1, kGray:920,
-               kRed:632, kGreen:416, kBlue:600, kYellow:400, kMagenta:616, kCyan:432,
-               kOrange:800, kSpring:820, kTeal:840, kAzure:860, kViolet:880, kPink:900 };
+         let dflt = { kWhite: 0,  kBlack: 1, kGray: 920,
+                      kRed: 632, kGreen: 416, kBlue: 600, kYellow: 400, kMagenta: 616, kCyan: 432,
+                      kOrange: 800, kSpring: 820, kTeal: 840, kAzure: 860, kViolet: 880, kPink: 900 };
 
          let nmax = 110, col = [];
          for (let i=0;i<nmax;i++) col.push(dflt.kGray);
@@ -81994,7 +81978,7 @@ class ClonedNodes {
       if (clone.kind === kindShape) {
          let prop = { name: clone.name, nname: clone.name, shape: null, material: null, chlds: null },
             _opacity = entry.opacity || 1;
-         prop.fillcolor = new Color$1( entry.color ? "rgb(" + entry.color + ")" : "blue" );
+         prop.fillcolor = new Color$1( entry.color ? `rgb(${entry.color})` : "blue" );
          prop.material = new MeshLambertMaterial( { transparent: _opacity < 1,
                           opacity: _opacity, wireframe: false, color: prop.fillcolor,
                           side: FrontSide, vertexColors: false,
@@ -82024,7 +82008,7 @@ class ClonedNodes {
             prop.material = new MeshLambertMaterial( { transparent: _opacity < 1,
                              opacity: _opacity, wireframe: false, color: prop.fillcolor,
                              side: FrontSide, vertexColors: false,
-                             depthWrite: _opacity == 1 } );
+                             depthWrite:  _opacity == 1 } );
             prop.material.inherentOpacity = _opacity;
          }
 
@@ -82052,14 +82036,14 @@ class ClonedNodes {
          else if (volume.fLineColor >= 0)
             prop.fillcolor = root_colors[volume.fLineColor];
 
-         if (volume.fMedium && volume.fMedium.fMaterial) {
-            let mat = volume.fMedium.fMaterial,
-                fillstyle = mat.fFillStyle,
-                transparency = (fillstyle < 3000 || fillstyle > 3100) ? 0 : fillstyle - 3000;
+         let mat = volume?.fMedium?.fMaterial;
+
+         if (mat) {
+            let fillstyle = mat.fFillStyle,
+                transparency = (fillstyle >= 3000 && fillstyle <= 3100) ? fillstyle - 3000 : 0;
 
             if (this.use_dflt_colors) {
-               let matZ = Math.round(mat.fZ),
-                   icol = this.dflt_table[matZ];
+               let matZ = Math.round(mat.fZ), icol = this.dflt_table[matZ];
                prop.fillcolor = root_colors[icol];
                if (mat.fDensity < 0.1) transparency = 60;
             }
@@ -82072,10 +82056,10 @@ class ClonedNodes {
          if (prop.fillcolor === undefined)
             prop.fillcolor = "lightgrey";
 
-         prop.material = new MeshLambertMaterial( { transparent: _opacity < 1,
+         prop.material = new MeshLambertMaterial({ transparent: _opacity < 1,
                               opacity: _opacity, wireframe: false, color: prop.fillcolor,
                               side: FrontSide, vertexColors: false,
-                              depthWrite: _opacity == 1 } );
+                              depthWrite: _opacity == 1 });
          prop.material.inherentOpacity = _opacity;
       }
 
@@ -82093,7 +82077,7 @@ class ClonedNodes {
       for(let lvl=0; lvl<=stack.length; ++lvl) {
          let nchld = (lvl > 0) ? stack[lvl-1] : 0;
          // extract current node
-         if (lvl>0)  node = this.nodes[node.chlds[nchld]];
+         if (lvl > 0)  node = this.nodes[node.chlds[nchld]];
 
          let obj3d = undefined;
 
@@ -82145,7 +82129,7 @@ class ClonedNodes {
       if ((options === 'mesh') || (options === 'delete_mesh')) {
          let mesh = null;
          if (three_prnt)
-            for (let n=0; (n<three_prnt.children.length) && !mesh;++n) {
+            for (let n = 0; (n < three_prnt.children.length) && !mesh; ++n) {
                let chld = three_prnt.children[n];
                if ((chld.type === 'Mesh') && (chld.nchld === undefined)) mesh = chld;
             }
@@ -82436,7 +82420,7 @@ class ClonedNodes {
           tm1 = new Date().getTime(),
           res = { done: false, shapes: 0, faces: 0, notusedshapes: 0 };
 
-      for (let n=0;n<lst.length;++n) {
+      for (let n = 0; n < lst.length; ++n) {
          let item = lst[n];
 
          // if enough faces are produced, nothing else is required
@@ -82618,7 +82602,7 @@ function produceRenderOrder(toplevel, origin, method, clones) {
 
    function setdefaults(top) {
       if (!top) return;
-      top.traverse(function(obj) {
+      top.traverse(obj => {
          obj.renderOrder = 0;
          if (obj.material) obj.material.depthWrite = true; // by default depthWriting enabled
       });
@@ -82630,7 +82614,7 @@ function produceRenderOrder(toplevel, origin, method, clones) {
 
       if (!obj.children) return;
 
-      for (let k=0;k<obj.children.length;++k) {
+      for (let k = 0; k < obj.children.length; ++k) {
          let chld = obj.children[k];
          if (chld.$jsroot_order === lvl) {
             if (chld.material) {
@@ -82651,9 +82635,10 @@ function produceRenderOrder(toplevel, origin, method, clones) {
       // resort meshes using ray caster and camera position
       // idea to identify meshes which are in front or behind
 
-      if (arr.length > 300) {
+      if (arr.length > 1000) {
          // too many of them, just set basic level and exit
-         for (let i=0;i<arr.length;++i) arr[i].renderOrder = (minorder + maxorder)/2;
+         for (let i = 0; i < arr.length; ++i)
+            arr[i].renderOrder = (minorder + maxorder)/2;
          return false;
       }
 
@@ -82662,7 +82647,7 @@ function produceRenderOrder(toplevel, origin, method, clones) {
       // first calculate distance to the camera
       // it gives preliminary order of volumes
 
-      for (let i=0;i<arr.length;++i) {
+      for (let i = 0; i < arr.length; ++i) {
          let mesh = arr[i],
              box3 = mesh.$jsroot_box3;
 
@@ -82679,21 +82664,18 @@ function produceRenderOrder(toplevel, origin, method, clones) {
             continue;
          }
 
-         let dist = Math.min(origin.distanceTo(box3.min), origin.distanceTo(box3.max));
+         let dist = Math.min(origin.distanceTo(box3.min), origin.distanceTo(box3.max)),
+             pnt = new Vector3(box3.min.x, box3.min.y, box3.max.z);
 
-         let pnt = new Vector3(box3.min.x, box3.min.y, box3.max.z);
          dist = Math.min(dist, origin.distanceTo(pnt));
          pnt.set(box3.min.x, box3.max.y, box3.min.z);
          dist = Math.min(dist, origin.distanceTo(pnt));
          pnt.set(box3.max.x, box3.min.y, box3.min.z);
          dist = Math.min(dist, origin.distanceTo(pnt));
-
          pnt.set(box3.max.x, box3.max.y, box3.min.z);
          dist = Math.min(dist, origin.distanceTo(pnt));
-
          pnt.set(box3.max.x, box3.min.y, box3.max.z);
          dist = Math.min(dist, origin.distanceTo(pnt));
-
          pnt.set(box3.min.x, box3.max.y, box3.max.z);
          dist = Math.min(dist, origin.distanceTo(pnt));
 
@@ -82710,54 +82692,53 @@ function produceRenderOrder(toplevel, origin, method, clones) {
       }
 
       if (method==="ray")
-      for (let i=arr.length - 1; i >= 0; --i) {
-         let mesh = arr[i],
-             box3 = mesh.$jsroot_box3,
-             direction = box3.getCenter(tmp_vect);
+         for (let i=arr.length - 1; i >= 0; --i) {
+            let mesh = arr[i], intersects,
+                box3 = mesh.$jsroot_box3,
+                direction = box3.getCenter(tmp_vect);
 
-         for(let ntry=0; ntry<2;++ntry) {
+            for(let ntry = 0; ntry < 2; ++ntry) {
 
-            direction.sub(origin).normalize();
+               direction.sub(origin).normalize();
 
-            raycast.set( origin, direction );
+               raycast.set( origin, direction );
 
-            let intersects = raycast.intersectObjects(arr, false); // only plain array
+               intersects = raycast.intersectObjects(arr, false) || []; // only plain array
+               let unique = [];
 
-            let unique = [];
+               for (let k1 = 0; k1 < intersects.length; ++k1) {
+                  if (unique.indexOf(intersects[k1].object) < 0)
+                     unique.push(intersects[k1].object);
+                  // if (intersects[k1].object === mesh) break; // trace until object itself
+               }
 
-            for (let k1 = 0; k1 < intersects.length; ++k1) {
-               if (unique.indexOf(intersects[k1].object)<0) unique.push(intersects[k1].object);
-               // if (intersects[k1].object === mesh) break; // trace until object itself
+               intersects = unique;
+
+               if ((intersects.indexOf(mesh) < 0) && (ntry > 0))
+                  console.log('MISS', clones ? clones.resolveStack(mesh.stack).name : "???");
+
+               if ((intersects.indexOf(mesh) >= 0) || (ntry > 0)) break;
+
+               let pos = mesh.geometry.attributes.position.array;
+
+               direction = new Vector3((pos[0]+pos[3]+pos[6])/3, (pos[1]+pos[4]+pos[7])/3, (pos[2]+pos[5]+pos[8])/3);
+
+               direction.applyMatrix4(mesh.matrixWorld);
             }
 
-            intersects = unique;
-
-            if ((intersects.indexOf(mesh)<0) && (ntry>0))
-               console.log('MISS', clones ? clones.resolveStack(mesh.stack).name : "???");
-
-            if ((intersects.indexOf(mesh)>=0) || (ntry>0)) break;
-
-            let pos = mesh.geometry.attributes.position.array;
-
-            direction = new Vector3((pos[0]+pos[3]+pos[6])/3, (pos[1]+pos[4]+pos[7])/3, (pos[2]+pos[5]+pos[8])/3);
-
-            direction.applyMatrix4(mesh.matrixWorld);
-         }
-
-         // now push first object in intersects to the front
-         for (let k1 = 0; k1 < intersects.length - 1; ++k1) {
-            let mesh1 = intersects[k1], mesh2 = intersects[k1+1],
-                i1 = mesh1.$jsroot_index, i2 = mesh2.$jsroot_index;
-            if (i1<i2) continue;
-            for (let ii=i2;ii<i1;++ii) {
-               resort[ii] = resort[ii+1];
-               resort[ii].$jsroot_index = ii;
+            // now push first object in intersects to the front
+            for (let k1 = 0; k1 < intersects.length - 1; ++k1) {
+               let mesh1 = intersects[k1], mesh2 = intersects[k1+1],
+                   i1 = mesh1.$jsroot_index, i2 = mesh2.$jsroot_index;
+               if (i1 < i2) continue;
+               for (let ii = i2; ii < i1; ++ii) {
+                  resort[ii] = resort[ii+1];
+                  resort[ii].$jsroot_index = ii;
+               }
+               resort[i1] = mesh2;
+               mesh2.$jsroot_index = i1;
             }
-            resort[i1] = mesh2;
-            mesh2.$jsroot_index = i1;
          }
-
-      }
 
       for (let i = 0; i < resort.length; ++i) {
          resort[i].renderOrder = maxorder - (i+1) / (resort.length+1) * (maxorder-minorder);
@@ -82795,13 +82776,11 @@ function produceRenderOrder(toplevel, origin, method, clones) {
       }
    }
 
-   if (!method || (method==="dflt"))
+   if (!method || (method == "dflt"))
       setdefaults(toplevel);
    else
       process(toplevel, 0, 1, 1000000);
 }
-
-/// 3D geometry painter
 
 const _ENTIRE_SCENE = 0, _BLOOM_SCENE = 1;
 
@@ -83208,6 +83187,9 @@ class GeoDrawingControl extends InteractiveControl {
 } // class GeoDrawingControl
 
 
+const stageInit = 0, stageCollect = 1, stageWorkerCollect = 2, stageAnalyze = 3, stageCollShapes = 4,
+      stageStartBuild = 5, stageWorkerBuild = 6, stageBuild = 7, stageBuildReady = 8, stageWaitMain = 9, stageBuildProj = 10;
+
 /**
  * @summary Painter class for geometries drawing
  *
@@ -83236,7 +83218,8 @@ class TGeoPainter extends ObjectPainter {
 
       this.no_default_title = true; // do not set title to main DIV
       this.mode3d = true; // indication of 3D mode
-      this.drawing_stage = 0; //
+      this.drawing_stage = stageInit; //
+      this.drawing_log = "Init";
       this.ctrl = {
          clipIntersect: true,
          clip: [{ name:"x", enabled: false, value: 0, min: -100, max: 100}, { name:"y", enabled: false, value: 0, min: -100, max: 100}, { name:"z", enabled: false, value: 0, min: -100, max: 100}],
@@ -83255,24 +83238,49 @@ class TGeoPainter extends ObjectPainter {
       };
 
       this.ctrl.depthMethodItems = [
-         {name: 'Default', value: "dflt"},
-         {name: 'Raytraicing', value: "ray"},
-         {name: 'Boundary box', value: "box"},
-         {name: 'Mesh size', value: "size"},
-         {name: 'Central point', value: "pnt" }
+         { name: 'Default', value: "dflt" },
+         { name: 'Raytraicing', value: "ray" },
+         { name: 'Boundary box', value: "box" },
+         { name: 'Mesh size', value: "size" },
+         { name: 'Central point', value: "pnt" }
        ];
 
       this.ctrl.ssao.outputItems = [
-         {name: 'Default', value: SSAOPass.OUTPUT.Default},
-         {name: 'SSAO Only', value: SSAOPass.OUTPUT.SSAO},
-         {name: 'SSAO Only + Blur', value: SSAOPass.OUTPUT.Blur},
-         {name: 'Beauty', value: SSAOPass.OUTPUT.Beauty},
-         {name: 'Depth', value: SSAOPass.OUTPUT.Depth},
-         {name: 'Normal', value: SSAOPass.OUTPUT.Normal}
+         { name: 'Default', value: SSAOPass.OUTPUT.Default },
+         { name: 'SSAO Only', value: SSAOPass.OUTPUT.SSAO },
+         { name: 'SSAO Only + Blur', value: SSAOPass.OUTPUT.Blur },
+         { name: 'Beauty', value: SSAOPass.OUTPUT.Beauty },
+         { name: 'Depth', value: SSAOPass.OUTPUT.Depth },
+         { name: 'Normal', value: SSAOPass.OUTPUT.Normal }
       ];
 
       this.cleanup(true);
    }
+
+   /** @summary Change drawing stage
+     * @private */
+   changeStage(value, msg) {
+      this.drawing_stage = value;
+      if (!msg)
+         switch(value) {
+            case stageInit: msg = "Building done"; break;
+            case stageCollect: msg = "collect visibles"; break;
+            case stageWorkerCollect: msg = "worker collect visibles"; break;
+            case stageAnalyze: msg = "Analyse visibles"; break;
+            case stageCollShapes: msg = "collect shapes for building"; break;
+            case stageStartBuild: msg = "Start build shapes"; break;
+            case stageWorkerBuild: msg = "Worker build shapes"; break;
+            case stageBuild: msg = "Build shapes"; break;
+            case stageBuildReady: msg = "Build ready"; break;
+            case stageWaitMain: msg = "Wait for main painter"; break;
+            case stageBuildProj: msg = "Build projection"; break;
+            default: msg = `stage ${value}`;
+         }
+      this.drawing_log = msg;
+   }
+
+   /** @summary Check drawing stage */
+   isStage(value) { return value === this.drawing_stage; }
 
    /** @summary Create toolbar */
    createToolbar() {
@@ -84237,14 +84245,14 @@ class TGeoPainter extends ObjectPainter {
 
                let wireframe = this.accessObjectWireFrame(obj);
 
-               if (wireframe!==undefined)
+               if (wireframe !== undefined)
                   menu.addchk(wireframe, "Wireframe", n, function(indx) {
                      let m = intersects[indx].object.material;
                      m.wireframe = !m.wireframe;
                      this.render3D();
                   });
 
-               if (++cnt>1)
+               if (++cnt > 1)
                   menu.add("Manifest", n, function(indx) {
 
                      if (this._last_manifest)
@@ -84275,7 +84283,6 @@ class TGeoPainter extends ObjectPainter {
                if (!this._geom_viewer)
                menu.add("Hide", n, function(indx) {
                   let resolve = menu.painter._clones.resolveStack(intersects[indx].object.stack);
-                  const kindGeo = 0, kindEve = 1;
                   if (resolve.obj && (resolve.node.kind === kindGeo) && resolve.obj.fVolume) {
                      setGeoBit(resolve.obj.fVolume, geoBITS.kVisThis, false);
                      updateBrowserIcons(resolve.obj.fVolume, this._hpainter);
@@ -84316,7 +84323,7 @@ class TGeoPainter extends ObjectPainter {
 
          if (obj.jsroot_special) unique = false;
 
-         for (let k = 0; (k<n) && unique;++k)
+         for (let k = 0; (k < n) && unique;++k)
             if (intersects[k].object === obj) unique = false;
 
          if (!unique) intersects.splice(n,1);
@@ -84434,7 +84441,7 @@ class TGeoPainter extends ObjectPainter {
       // check if selections are the same
       if (curr_mesh && active_mesh && (curr_mesh.length == active_mesh.length)) {
          same = true;
-         for (let k = 0;( k < curr_mesh.length) && same; ++k) {
+         for (let k = 0; (k < curr_mesh.length) && same; ++k) {
             if ((curr_mesh[k] !== active_mesh[k]) || get_ctrl(curr_mesh[k]).checkHighlightIndex(geo_index)) same = false;
          }
       }
@@ -84483,7 +84490,7 @@ class TGeoPainter extends ObjectPainter {
    }
 
    /** @summary Configure depth method, used for render order production.
-    * @param {string} method - Allowed values: "ray", "box","pnt", "size", "dflt" */
+     * @param {string} method - Allowed values: "ray", "box","pnt", "size", "dflt" */
    setDepthMethod(method) {
       if (this.ctrl)
          this.ctrl.depthMethod = method;
@@ -84521,7 +84528,7 @@ class TGeoPainter extends ObjectPainter {
             if (obj.stack) info = painter.getStackFullName(obj.stack);
             if (!info) continue;
 
-            if (info.indexOf("<prnt>")==0)
+            if (info.indexOf("<prnt>") == 0)
                info = painter.getItemName() + info.slice(6);
 
             names.push(info);
@@ -84578,11 +84585,11 @@ class TGeoPainter extends ObjectPainter {
    addTransformControl() {
       if (this._tcontrols) return;
 
-      if ( !this.ctrl._debug && !this.ctrl._grid ) return;
+      if (!this.ctrl._debug && !this.ctrl._grid) return;
 
-      this._tcontrols = new TransformControls( this._camera, this._renderer.domElement );
-      this._scene.add( this._tcontrols );
-      this._tcontrols.attach( this._toplevel );
+      this._tcontrols = new TransformControls(this._camera, this._renderer.domElement);
+      this._scene.add(this._tcontrols);
+      this._tcontrols.attach(this._toplevel);
       //this._tcontrols.setSize( 1.1 );
 
       window.addEventListener( 'keydown', event => {
@@ -84626,20 +84633,20 @@ class TGeoPainter extends ObjectPainter {
    }
 
    /** @summary Main function in geometry creation loop
-     * @desc Return false when nothing todo
-     * return true if one could perform next action immediately
-     * return 1 when call after short timeout required
-     * return 2 when call must be done from processWorkerReply
-     * @returns {number} next operation kind, see desc */
+     * @desc Returns:
+     * - false when nothing todo
+     * - true if one could perform next action immediately
+     * - 1 when call after short timeout required
+     * - 2 when call must be done from processWorkerReply */
    nextDrawAction() {
 
-      if (!this._clones || (this.drawing_stage == 0)) return false;
+      if (!this._clones || this.isStage(stageInit)) return false;
 
-      if (this.drawing_stage == 1) {
+      if (this.isStage(stageCollect)) {
 
          if (this._geom_viewer) {
             this._draw_all_nodes = false;
-            this.drawing_stage = 3;
+            this.changeStage(stageAnalyze);
             return true;
          }
 
@@ -84650,8 +84657,11 @@ class TGeoPainter extends ObjectPainter {
          }
 
          // first copy visibility flags and check how many unique visible nodes exists
-         let numvis = this._clones.countVisibles() || this._clones.markVisibles(),
+         let numvis = this._first_drawing ? this._clones.countVisibles() : 0,
              matrix = null, frustum = null;
+
+         if (!numvis)
+            numvis = this._clones.markVisibles(false, false, !!this.geo_manager && !this.ctrl.showtop);
 
          if (this.ctrl.select_in_view && !this._first_drawing) {
             // extract camera projection matrix for selection
@@ -84668,7 +84678,7 @@ class TGeoPainter extends ObjectPainter {
          }
 
          this._current_face_limit = this.ctrl.maxlimit;
-         if (matrix) this._current_face_limit*=1.25;
+         if (matrix) this._current_face_limit *= 1.25;
 
          // here we decide if we need worker for the drawings
          // main reason - too large geometry and large time to scan all camera positions
@@ -84690,7 +84700,7 @@ class TGeoPainter extends ObjectPainter {
             this._draw_all_nodes = res.complete;
             // let tm2 = new Date().getTime();
             // console.log('Collect visibles', this._new_draw_nodes.length, 'takes', tm2-tm1);
-            this.drawing_stage = 3;
+            this.changeStage(stageAnalyze);
             return true;
          }
 
@@ -84702,26 +84712,19 @@ class TGeoPainter extends ObjectPainter {
 
          this.submitToWorker(job);
 
-         this.drawing_stage = 2;
-
-         this.drawing_log = "Worker select visibles";
+         this.changeStage(stageWorkerCollect);
 
          return 2; // we now waiting for the worker reply
       }
 
-      if (this.drawing_stage == 2) {
+      if (this.isStage(stageWorkerCollect)) {
          // do nothing, we are waiting for worker reply
-
-         this.drawing_log = "Worker select visibles";
-
          return 2;
       }
 
-      if (this.drawing_stage == 3) {
+      if (this.isStage(stageAnalyze)) {
          // here we merge new and old list of nodes for drawing,
-         // normally operation is fast and can be implemented with one call
-
-         this.drawing_log = "Analyse visibles";
+         // normally operation is fast and can be implemented with one c
 
          if (this._new_append_nodes) {
 
@@ -84747,13 +84750,11 @@ class TGeoPainter extends ObjectPainter {
 
          this._draw_nodes = this._new_draw_nodes;
          delete this._new_draw_nodes;
-         this.drawing_stage = 4;
+         this.changeStage(stageCollShapes);
          return true;
       }
 
-      if (this.drawing_stage === 4) {
-
-         this.drawing_log = "Collect shapes";
+      if (this.isStage(stageCollShapes)) {
 
          // collect shapes
          let shapes = this._clones.collectShapes(this._draw_nodes);
@@ -84761,11 +84762,11 @@ class TGeoPainter extends ObjectPainter {
          // merge old and new list with produced shapes
          this._build_shapes = this._clones.mergeShapesLists(this._build_shapes, shapes);
 
-         this.drawing_stage = 5;
+         this.changeStage(stageStartBuild);
          return true;
       }
 
-      if (this.drawing_stage === 5) {
+      if (this.isStage(stageStartBuild)) {
          // this is building of geometries,
          // one can ask worker to build them or do it ourself
 
@@ -84788,28 +84789,27 @@ class TGeoPainter extends ObjectPainter {
             if (cnt > 0) {
                /// only if some geom missing, submit job to the worker
                this.submitToWorker(job);
-               this.drawing_log = "Worker build shapes";
-               this.drawing_stage = 6;
+               this.changeStage(stageWorkerBuild);
                return 2;
             }
          }
 
-         this.drawing_stage = 7;
+         this.changeStage(stageBuild);
       }
 
-      if (this.drawing_stage === 6) {
+      if (this.isStage(stageWorkerBuild)) {
          // waiting shapes from the worker, worker should activate our code
          return 2;
       }
 
-      if ((this.drawing_stage === 7) || (this.drawing_stage === 8)) {
+      if (this.isStage(stageBuild) || this.isStage(stageBuildReady)) {
 
-         if (this.drawing_stage === 7) {
+         if (this.isStage(stageBuild)) {
             // building shapes
             let res = this._clones.buildShapes(this._build_shapes, this._current_face_limit, 500);
             if (res.done) {
                this.ctrl.info.num_shapes = this._build_shapes.length;
-               this.drawing_stage = 8;
+               this.changeStage(stageBuildReady);
             } else {
                this.ctrl.info.num_shapes = res.shapes;
                this.drawing_log = "Creating: " + res.shapes + " / " + this._build_shapes.length + " shapes,  "  + res.faces + " faces";
@@ -84829,7 +84829,7 @@ class TGeoPainter extends ObjectPainter {
             /// shape can be provided with entry itself
             let shape = entry.server_shape || this._build_shapes[entry.shapeid];
             if (!shape.ready) {
-               if (this.drawing_stage === 8) console.warn('shape marked as not ready when should');
+               if (this.isStage(stageBuildReady)) console.warn('shape marked as not ready when should');
                ready = false;
                continue;
             }
@@ -84848,42 +84848,37 @@ class TGeoPainter extends ObjectPainter {
 
          if (ready) {
             if (this.ctrl.project) {
-               this.drawing_log = "Build projection";
-               this.drawing_stage = 10;
+               this.changeStage(stageBuildProj);
                return true;
             }
-
-            this.drawing_log = "Building done";
-            this.drawing_stage = 0;
+            this.changeStage(stageInit);
             return false;
          }
 
-         if (this.drawing_stage > 7)
-            this.drawing_log = "Building meshes " + this.ctrl.info.num_meshes + " / " + this.ctrl.info.num_faces;
+         if (!this.isStage(stageBuild))
+            this.drawing_log = `Building meshes ${this.ctrl.info.num_meshes} / ${this.ctrl.info.num_faces}`;
          return true;
       }
 
-      if (this.drawing_stage === 9) {
+      if (this.isStage(stageWaitMain)) {
          // wait for main painter to be ready
 
          if (!this._main_painter) {
-            console.warn('MAIN PAINTER DISAPPER');
-            this.drawing_stage = 0;
+            this.changeStage(stageInit, "Lost main painter");
             return false;
          }
          if (!this._main_painter._drawing_ready) return 1;
 
-         this.drawing_stage = 10; // just do projection
+         this.changeStage(stageBuildProj); // just do projection
       }
 
-      if (this.drawing_stage === 10) {
+      if (this.isStage(stageBuildProj)) {
          this.doProjection();
-         this.drawing_log = "Building done";
-         this.drawing_stage = 0;
+         this.changeStage(stageInit);
          return false;
       }
 
-      console.error('never come here stage = ' + this.drawing_stage);
+      console.error(`never come here, stage ${this.drawing_stage}`);
 
       return false;
    }
@@ -84956,7 +84951,8 @@ class TGeoPainter extends ObjectPainter {
      * @desc These nodes excluded from selection logic and always inserted into the model
      * Shape already should be created and assigned to the node */
    appendMoreNodes(nodes, from_drawing) {
-      if (this.drawing_stage && !from_drawing) {
+
+      if (!this.isStage(stageInit) && !from_drawing) {
          this._provided_more_nodes = nodes;
          return;
       }
@@ -85238,7 +85234,7 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Start geometry drawing */
    startDrawGeometry(force) {
 
-      if (!force && (this.drawing_stage!==0)) {
+      if (!force && !this.isStage(stageInit)) {
          this._draw_nodes_again = true;
          return;
       }
@@ -85249,9 +85245,8 @@ class TGeoPainter extends ObjectPainter {
       this._startm = new Date().getTime();
       this._last_render_tm = this._startm;
       this._last_render_meshes = 0;
-      this.drawing_stage = 1;
+      this.changeStage(stageCollect);
       this._drawing_ready = false;
-      this.drawing_log = "collect visible";
       this.ctrl.info.num_meshes = 0;
       this.ctrl.info.num_faces = 0;
       this.ctrl.info.num_shapes = 0;
@@ -85260,15 +85255,12 @@ class TGeoPainter extends ObjectPainter {
       if (this.ctrl.project) {
          if (this._clones_owner) {
             if (this._full_geom) {
-               this.drawing_stage = 10;
-               this.drawing_log = "build projection";
+               this.changeStage(stageBuildProj);
             } else {
                this._full_geom = new Object3D();
             }
-
          } else {
-            this.drawing_stage = 9;
-            this.drawing_log = "wait for main painter";
+            this.changeStage(stageWaitMain);
          }
       }
 
@@ -86235,7 +86227,7 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Prepare drawings
      * @desc Return value used as promise for painter */
-   prepareObjectDraw(draw_obj, name_prefix, first_time) {
+   prepareObjectDraw(draw_obj, name_prefix) {
 
       // if did cleanup - ignore all kind of activity
       if (this.did_cleanup)
@@ -86256,7 +86248,7 @@ class TGeoPainter extends ObjectPainter {
 
          this._clones = this._main_painter._clones;
 
-         console.log('Reuse clones', this._clones.nodes.length, 'from main painter');
+         console.log(`Reuse clones ${this._clones.nodes.length} from main painter`);
 
       } else if (!draw_obj) {
 
@@ -86298,7 +86290,7 @@ class TGeoPainter extends ObjectPainter {
          let spent = new Date().getTime() - this._start_drawing_time;
 
          if (!this._scene)
-            console.log('Creating clones', this._clones.nodes.length, 'takes', spent, 'uniquevis', uniquevis);
+            console.log(`Creating clones ${this._clones.nodes.length} takes ${spent} ms uniquevis ${uniquevis}`);
 
          if (this.options._count)
             return this.drawCount(uniquevis, spent);
@@ -86392,7 +86384,7 @@ class TGeoPainter extends ObjectPainter {
    continueDraw() {
 
       // nothing to do - exit
-      if (this.drawing_stage === 0) return;
+      if (this.isStage(stageInit)) return;
 
       let tm0 = new Date().getTime(),
           interval = this._first_drawing ? 1000 : 200,
@@ -86408,7 +86400,7 @@ class TGeoPainter extends ObjectPainter {
 
          // stop creation after 100 sec, render as is
          if (now - this._startm > 1e5) {
-            this.drawing_stage = 0;
+            this.changeStage(stageInit, "Abort build after 100s");
             break;
          }
 
@@ -86615,7 +86607,7 @@ class TGeoPainter extends ObjectPainter {
       if ('collect' in job) {
          this._new_draw_nodes = job.new_nodes;
          this._draw_all_nodes = job.complete;
-         this.drawing_stage = 3;
+         this.changeStage(stageAnalyze);
          // invoke methods immediately
          return this.continueDraw();
       }
@@ -86648,9 +86640,7 @@ class TGeoPainter extends ObjectPainter {
 
          job.tm4 = new Date().getTime();
 
-         // console.log('Get reply from worker', job.tm3-job.tm2, ' decode json in ', job.tm4-job.tm3);
-
-         this.drawing_stage = 7; // first check which shapes are used, than build meshes
+         this.changeStage(stageBuild); // first check which shapes are used, than build meshes
 
          // invoke methods immediately
          return this.continueDraw();
@@ -87237,7 +87227,7 @@ class TGeoPainter extends ObjectPainter {
       this.first_render_tm = 0; // time needed for first rendering
       this.last_render_tm = 0;
 
-      this.drawing_stage = 0;
+      this.changeStage(stageInit, "cleanup");
       delete this.drawing_log;
 
       delete this._datgui;
@@ -87273,7 +87263,7 @@ class TGeoPainter extends ObjectPainter {
          if (this._bloomComposer)
             this._bloomComposer.setSize( this._scene_width, this._scene_height );
 
-         if (!this.drawing_stage)
+         if (this.isStage(stageInit))
             this.render3D();
       }
 
@@ -87386,7 +87376,7 @@ class TGeoPainter extends ObjectPainter {
    }
 
    /** @summary Redraw TGeo object */
-   redrawObject(obj, opt) {
+   redrawObject(obj /*, opt */) {
       if (!this.updateObject(obj))
          return false;
 
@@ -87395,9 +87385,7 @@ class TGeoPainter extends ObjectPainter {
       let draw_obj = this.getGeometry(), name_prefix = "";
       if (this.geo_manager) name_prefix = draw_obj.fName;
 
-      this.prepareObjectDraw(draw_obj, name_prefix);
-
-      return true;
+      return this.prepareObjectDraw(draw_obj, name_prefix);
    }
 
   /** @summary draw TGeo object */
@@ -87455,7 +87443,7 @@ class TGeoPainter extends ObjectPainter {
          painter.addExtra(extras, extras_path);
       }
 
-      return painter.loadMacro(painter.ctrl.script_name).then(arg => painter.prepareObjectDraw(arg.obj, arg.prefix, true));
+      return painter.loadMacro(painter.ctrl.script_name).then(arg => painter.prepareObjectDraw(arg.obj, arg.prefix));
    }
 
 } // class TGeoPainter
@@ -87586,9 +87574,7 @@ function provideMenu(menu, item, hpainter) {
       }
 
       findItemWithPainter(item, 'testGeomChanges');
-
    }, ToggleMenuBit = arg => {
-
       toggleGeoBit(vol, arg);
       let newname = item._icon.split(" ")[0] + provideVisStyle(vol);
       hpainter.forEachItem(m => {
@@ -87601,7 +87587,6 @@ function provideMenu(menu, item, hpainter) {
 
       hpainter.updateTreeNode(item);
       findItemWithPainter(item, 'testGeomChanges');
-
    };
 
    if ((item._geoobj._typename.indexOf("TGeoNode")===0) && findItemWithPainter(item))
@@ -88123,8 +88108,6 @@ drawPolyMarker3D: drawPolyMarker3D,
 drawPolyLine3D: drawPolyLine3D
 });
 
-/// more ROOT classes
-
 /**
  * @summary Painter for TGraphTime object
  *
@@ -88274,8 +88257,6 @@ var TGraphTimePainter$1 = /*#__PURE__*/Object.freeze({
 __proto__: null,
 TGraphTimePainter: TGraphTimePainter
 });
-
-/// 3D TGraph2D drawing
 
 /**
  * @summary Painter for TGraph2D classes
@@ -88641,8 +88622,6 @@ var TGraph2DPainter$1 = /*#__PURE__*/Object.freeze({
 __proto__: null,
 TGraph2DPainter: TGraph2DPainter
 });
-
-/// more ROOT classes
 
 /**
  * @summary Painter for TGraphPolargram objects.
@@ -89185,9 +89164,6 @@ TGraphPolargramPainter: TGraphPolargramPainter,
 TGraphPolarPainter: TGraphPolarPainter
 });
 
-/// more ROOT classes
-
-
 const kNotEditable = BIT(18);   // bit set if graph is non editable
 
 /**
@@ -89237,7 +89213,7 @@ class TGraphPainter$1 extends ObjectPainter {
    /** @summary Returns object if this drawing TGraphMultiErrors object */
    get_gme() {
       let graph = this.getObject();
-      return graph._typename == "TGraphMultiErrors" ? graph : null;
+      return graph?._typename == "TGraphMultiErrors" ? graph : null;
    }
 
    /** @summary Decode options */
@@ -89444,9 +89420,10 @@ class TGraphPainter$1 extends ObjectPainter {
    }
 
    /** @summary Create histogram for graph
-     * @descgraph bins should be created when calling this function
+     * @desc graph bins should be created when calling this function
      * @param {object} histo - existing histogram instance
-     * @param {boolean} only_set_ranges - when specified, just assign ranges */
+     * @param {boolean} [set_x] - set X axis range
+     * @param {boolean} [set_y] - set Y axis range */
    createHistogram(histo, set_x, set_y) {
       let xmin = this.xmin, xmax = this.xmax, ymin = this.ymin, ymax = this.ymax;
 
@@ -89595,14 +89572,14 @@ class TGraphPainter$1 extends ObjectPainter {
           getFrameHeight: function() { return this.ph; },
           grx: function(value) {
              if (this.pad.fLogx)
-                value = (value>0) ? Math.log10(value) : this.pad.fUxmin;
+                value = (value > 0) ? Math.log10(value) : this.pad.fUxmin;
              else
                 value = (value - this.pad.fX1) / (this.pad.fX2 - this.pad.fX1);
              return value*this.pw;
           },
           gry: function(value) {
              if (this.pad.fLogy)
-                value = (value>0) ? Math.log10(value) : this.pad.fUymin;
+                value = (value > 0) ? Math.log10(value) : this.pad.fUymin;
              else
                 value = (value - this.pad.fY1) / (this.pad.fY2 - this.pad.fY1);
              return (1-value)*this.ph;
@@ -89937,7 +89914,7 @@ class TGraphPainter$1 extends ObjectPainter {
             draw_g.append("svg:path")
                   .attr("d", path)
                   .call(this.markeratt.func);
-            if ((nodes===null) && (this.draw_kind == "none") && main_block)
+            if ((nodes === null) && (this.draw_kind == "none") && main_block)
                this.draw_kind = (options.Mark == 101) ? "path" : "mark";
          }
          if (want_tooltip && hints_marker)
@@ -89955,18 +89932,18 @@ class TGraphPainter$1 extends ObjectPainter {
           yqmin = Math.max(funcs.scale_ymin, graph.fYq1),
           yqmax = Math.min(funcs.scale_ymax, graph.fYq2),
           path2 = "",
-          makeLine = (x1,y1,x2,y2) => `M${funcs.grx(x1)},${funcs.gry(y1)}L${funcs.grx(x2)},${funcs.gry(y2)}`;
+          makeLine = (x1,y1,x2,y2) => `M${funcs.grx(x1)},${funcs.gry(y1)}L${funcs.grx(x2)},${funcs.gry(y2)}`,
+          yxmin = (graph.fYq2 - graph.fYq1)*(funcs.scale_xmin-graph.fXq1)/(graph.fXq2-graph.fXq1) + graph.fYq1,
+          yxmax = (graph.fYq2-graph.fYq1)*(funcs.scale_xmax-graph.fXq1)/(graph.fXq2-graph.fXq1) + graph.fYq1;
 
-      let yxmin = (graph.fYq2 - graph.fYq1)*(funcs.scale_xmin-graph.fXq1)/(graph.fXq2-graph.fXq1) + graph.fYq1;
-      if (yxmin < funcs.scale_ymin){
+      if (yxmin < funcs.scale_ymin) {
          let xymin = (graph.fXq2 - graph.fXq1)*(funcs.scale_ymin-graph.fYq1)/(graph.fYq2-graph.fYq1) + graph.fXq1;
          path2 = makeLine(xymin, funcs.scale_ymin, xqmin, yqmin);
       } else {
          path2 = makeLine(funcs.scale_xmin, yxmin, xqmin, yqmin);
       }
 
-      let yxmax = (graph.fYq2-graph.fYq1)*(funcs.scale_xmax-graph.fXq1)/(graph.fXq2-graph.fXq1) + graph.fYq1;
-      if (yxmax > funcs.scale_ymax){
+      if (yxmax > funcs.scale_ymax) {
          let xymax = (graph.fXq2-graph.fXq1)*(funcs.scale_ymax-graph.fYq1)/(graph.fYq2-graph.fYq1) + graph.fXq1;
          path2 += makeLine(xqmax, yqmax, xymax, funcs.scale_ymax);
       } else {
@@ -89979,12 +89956,12 @@ class TGraphPainter$1 extends ObjectPainter {
       this.draw_g.append("path")
                  .attr("d", makeLine(xqmin,yqmin,xqmax,yqmax))
                  .call(latt1.func)
-                 .style("fill","none");
+                 .style("fill", "none");
 
       this.draw_g.append("path")
                  .attr("d", path2)
                  .call(latt2.func)
-                 .style("fill","none");
+                 .style("fill", "none");
    }
 
    drawBins3D(/*fp, graph*/) {
@@ -90114,7 +90091,7 @@ class TGraphPainter$1 extends ObjectPainter {
                   x: d.grx1, y: d.gry1,
                   color1: this.lineatt.color,
                   lines: this.getTooltips(d),
-                  rect: best, d3bin: findbin  };
+                  rect: best, d3bin: findbin };
 
        res.user_info = { obj: gr,  name: gr.fName, bin: d.indx, cont: d.y, grx: d.grx1, gry: d.gry1 };
 
@@ -90139,9 +90116,8 @@ class TGraphPainter$1 extends ObjectPainter {
 
       if (hint.usepath) return this.showTooltipForPath(hint);
 
-      let d = select(hint.d3bin).datum();
-
-      let ttrect = this.draw_g.select(".tooltip_bin");
+      let d = select(hint.d3bin).datum(),
+          ttrect = this.draw_g.select(".tooltip_bin");
 
       if (ttrect.empty())
          ttrect = this.draw_g.append("svg:rect")
@@ -90259,7 +90235,7 @@ class TGraphPainter$1 extends ObjectPainter {
    testEditable(arg) {
       let obj = this.getObject();
       if (!obj) return false;
-      if ((arg == "toggle") || ((arg!==undefined) && (!arg != obj.TestBit(kNotEditable))))
+      if ((arg == "toggle") || ((arg !== undefined) && (!arg != obj.TestBit(kNotEditable))))
          obj.InvertBit(kNotEditable);
       return !obj.TestBit(kNotEditable);
    }
@@ -90336,8 +90312,7 @@ class TGraphPainter$1 extends ObjectPainter {
       }
 
       if (ttbin.empty())
-         ttbin = this.draw_g.append("svg:g")
-                             .attr("class","tooltip_bin");
+         ttbin = this.draw_g.append("svg:g").attr("class","tooltip_bin");
 
       hint.changed = ttbin.property("current_bin") !== hint.bin;
 
@@ -90423,7 +90398,6 @@ class TGraphPainter$1 extends ObjectPainter {
       let exec = "";
 
       if (this.move_binindx === undefined) {
-
          this.draw_g.attr("transform", null);
 
          let pmain = this.getFramePainter(),
@@ -90433,16 +90407,16 @@ class TGraphPainter$1 extends ObjectPainter {
                let bin = this.bins[k];
                bin.x = funcs.revertAxis("x", funcs.grx(bin.x) + this.pos_dx);
                bin.y = funcs.revertAxis("y", funcs.gry(bin.y) + this.pos_dy);
-               exec += "SetPoint(" + bin.indx + "," + bin.x + "," + bin.y + ");;";
+               exec += `SetPoint(${bin.indx},${bin.x},${bin.y});;`;
                if ((bin.indx == 0) && this.matchObjectType('TCutG'))
-                  exec += "SetPoint(" + (this.getObject().fNpoints-1) + "," + bin.x + "," + bin.y + ");;";
+                  exec += `SetPoint(${this.getObject().fNpoints-1},${bin.x},${bin.y});;`;
             }
             this.drawGraph();
          }
       } else {
-         exec = "SetPoint(" + this.move_bin.indx + "," + this.move_bin.x + "," + this.move_bin.y + ")";
+         exec = `SetPoint(${this.move_bin.indx},${this.move_bin.x},${this.move_bin.y});;`;
          if ((this.move_bin.indx == 0) && this.matchObjectType('TCutG'))
-            exec += ";;SetPoint(" + (this.getObject().fNpoints-1) + "," + this.move_bin.x + "," + this.move_bin.y + ")";
+            exec += `SetPoint(${this.getObject().fNpoints-1},${this.move_bin.x},${this.move_bin.y});;`;
          delete this.move_binindx;
       }
 
@@ -90553,7 +90527,7 @@ class TGraphPainter$1 extends ObjectPainter {
    /** @summary Find TF1/TF2 in TGraph list of functions */
    findFunc() {
       let gr = this.getObject();
-      if (gr && gr.fFunctions)
+      if (gr?.fFunctions?.arr)
          for (let i = 0; i < gr.fFunctions.arr.length; ++i) {
             let func = gr.fFunctions.arr[i];
             if ((func._typename == 'TF1') || (func._typename == 'TF2')) return func;
@@ -90564,12 +90538,11 @@ class TGraphPainter$1 extends ObjectPainter {
    /** @summary Find stat box in TGraph list of functions */
    findStat() {
       let gr = this.getObject();
-      if (gr && gr.fFunctions)
+      if (gr?.fFunctions?.arr)
          for (let i = 0; i < gr.fFunctions.arr.length; ++i) {
             let func = gr.fFunctions.arr[i];
             if ((func._typename == 'TPaveStats') && (func.fName == 'stats')) return func;
          }
-
       return null;
    }
 
@@ -90589,13 +90562,10 @@ class TGraphPainter$1 extends ObjectPainter {
 
       this.create_stats = true;
 
-      let st = gStyle;
+      const st = gStyle;
 
       stats = create$1('TPaveStats');
-      Object.assign(stats, { fName : 'stats',
-                             fOptStat: 0,
-                             fOptFit: st.fOptFit || 111,
-                             fBorderSize : 1} );
+      Object.assign(stats, { fName : 'stats', fOptStat: 0, fOptFit: st.fOptFit || 111, fBorderSize: 1 });
 
       stats.fX1NDC = st.fStatX - st.fStatW;
       stats.fY1NDC = st.fStatY - st.fStatH;
@@ -90640,7 +90610,7 @@ class TGraphPainter$1 extends ObjectPainter {
 
       let graph = this.getObject();
 
-      if (!graph.fFunctions || (indx >= graph.fFunctions.arr.length))
+      if (indx >= (graph?.fFunctions?.arr?.length || 0))
          return Promise.resolve(this);
 
       let pp = this.getPadPainter(),
@@ -91069,9 +91039,6 @@ TF1Painter: TF1Painter,
 proivdeEvalPar: proivdeEvalPar
 });
 
-/// more ROOT classes
-
-
 const kIsBayesian       = BIT(14),  ///< Bayesian statistics are used
       kPosteriorMode    = BIT(15),  ///< Use posterior mean for best estimate (Bayesian statistics)
  //   kShortestInterval = BIT(16),  ///< Use shortest interval, not implemented - too complicated
@@ -91290,9 +91257,6 @@ var TEfficiencyPainter$1 = /*#__PURE__*/Object.freeze({
 __proto__: null,
 TEfficiencyPainter: TEfficiencyPainter
 });
-
-/// more ROOT classes
-
 
 /**
  * @summary Painter class for TRatioPlot
@@ -91744,6 +91708,8 @@ class TMultiGraphPainter$2 extends ObjectPainter {
 
 class TGraphPainter extends TGraphPainter$1 {
 
+   /** @summary Draw TGraph points in 3D
+     * @private */
    drawBins3D(fp, graph) {
 
       if (!fp.mode3d || !fp.grx || !fp.gry || !fp.grz || !fp.toplevel)
@@ -91783,14 +91749,14 @@ class TGraphPainter extends TGraphPainter$1 {
      * @private */
    drawAxisHisto() {
       let histo = this.createHistogram();
-      return TH1Painter.draw(this.getDom(), histo, this.options.Axis)
+      return TH1Painter.draw(this.getDom(), histo, this.options.Axis);
    }
 
    static draw(dom, graph, opt) {
       return TGraphPainter._drawGraph(new TGraphPainter(dom, graph), opt);
    }
 
-}
+} // class TGraphPainter
 
 class TMultiGraphPainter extends TMultiGraphPainter$2 {
 
@@ -91811,7 +91777,7 @@ class TMultiGraphPainter extends TMultiGraphPainter$2 {
       return TMultiGraphPainter._drawMG(new TMultiGraphPainter(dom, mgraph), opt);
    }
 
-}
+} // class TMultiGraphPainter
 
 var TMultiGraphPainter$1 = /*#__PURE__*/Object.freeze({
 __proto__: null,
@@ -91981,7 +91947,7 @@ class TWebPaintingPainter extends ObjectPainter {
       return painter.redraw();
    }
 
-}
+} // class TWebPaintingPainter
 
 var TWebPaintingPainter$1 = /*#__PURE__*/Object.freeze({
 __proto__: null,
@@ -92451,7 +92417,7 @@ __proto__: null,
 TSplinePainter: TSplinePainter
 });
 
-/** @summary Draw TArrow
+/** @summary Drawing TArrow
   * @private */
 class TArrowPainter extends ObjectPainter {
 
@@ -92463,7 +92429,7 @@ class TArrowPainter extends ObjectPainter {
          dx = -dx; dy = -dy;
       }
       res += `l${Math.round(dx)},${Math.round(dy)}`;
-      if (x0 && (y0===undefined)) res+="z";
+      if (x0 && (y0 === undefined)) res += "z";
       return res;
    }
 
@@ -92574,15 +92540,12 @@ class TArrowPainter extends ObjectPainter {
       return ensureTCanvas(painter, false).then(() => painter.redraw());
    }
 
-}
+} // class TArrowPainter
 
 var TArrowPainter$1 = /*#__PURE__*/Object.freeze({
 __proto__: null,
 TArrowPainter: TArrowPainter
 });
-
-/// more ROOT classes
-
 
 let node_canvas, btoa_func = globalThis?.btoa;
 
@@ -92927,7 +92890,6 @@ class TASImagePainter extends ObjectPainter {
                      return painter;
                  });
    }
-
 
 } // class TASImagePainter
 
@@ -97018,7 +96980,7 @@ class RAxisPainter extends RObjectPainter {
 
       this.handle.reset();
 
-      let res = "", ticks_plusminus = 0, lastpos = 0, lasth = 0;
+      let res = "", ticks_plusminus = 0;
       if (this.ticksSide == "both") {
          side = 1;
          ticks_plusminus = 1;
@@ -97042,19 +97004,15 @@ class RAxisPainter extends RObjectPainter {
             if (main_draw) this.ticks.push(grpos); // keep graphical positions of major ticks
          }
 
-         if (ticks_plusminus > 0) h2 = -h1; else
-         if (side < 0) { h2 = -h1; h1 = 0; } else { h2 = 0; }
-
-         if (res.length == 0) {
-            res = this.vertical ? "M"+h1+","+grpos : "M"+grpos+","+(-h1);
+         if (ticks_plusminus > 0) {
+            h2 = -h1;
+         } else if (side < 0) {
+            h2 = -h1; h1 = 0;
          } else {
-            res += this.vertical ? "m"+(h1-lasth)+","+(grpos-lastpos) : "m"+(grpos-lastpos)+","+(lasth-h1);
+            h2 = 0;
          }
 
-         res += this.vertical ? "h"+ (h2-h1) : "v"+ (h1-h2);
-
-         lastpos = grpos;
-         lasth = h2;
+         res += this.vertical ? `M${h1},${grpos}H${h2}` : `M${grpos},${-h1}V${-h2}`;
       }
 
       if (res)
@@ -99057,7 +99015,7 @@ class RPadPainter extends RObjectPainter {
 
       if ((rect.width <= lmt) || (rect.height <= lmt)) {
          svg.style("display", "none");
-         console.warn("Hide canvas while geometry too small w=",rect.width," h=",rect.height);
+         console.warn(`Hide canvas while geometry too small w=${rect.width} h=${rect.height}`);
          rect.width = 200; rect.height = 100; // just to complete drawing
       } else {
          svg.style("display", null);
@@ -99351,6 +99309,12 @@ class RPadPainter extends RObjectPainter {
       return hints;
    }
 
+   /** @summary Changes canvas dark mode
+     * @private */
+   changeDarkMode(mode) {
+      this.getCanvSvg().style("filter", (mode ?? settings.DarkMode)  ? "invert(100%)" : null);
+   }
+
    /** @summary Fill pad context menu
      * @private */
    fillContextMenu(menu) {
@@ -99362,8 +99326,13 @@ class RPadPainter extends RObjectPainter {
 
       menu.addchk(this.isTooltipAllowed(), "Show tooltips", () => this.setTooltipAllowed("toggle"));
 
-      if (!this._websocket)
+      if (!this._websocket) {
          menu.addAttributesMenu(this);
+         if (this.iscan)
+            menu.addSettingsMenu(false, false, arg => {
+               if (arg == "dark") this.changeDarkMode();
+            });
+      }
 
       menu.add("separator");
 
@@ -100928,8 +100897,6 @@ class WebWindowHandle {
 
 } // class WebWindowHandle
 
-/// JavaScript ROOT graphics for ROOT v7 classes
-
 /**
  * @summary Painter class for RCanvas
  *
@@ -101535,6 +101502,7 @@ class RCanvasPainter extends RPadPainter {
 
 } // class RCanvasPainter
 
+
 /** @summary draw RPadSnapshot object
   * @private */
 function drawRPadSnapshot(dom, snap /*, opt*/) {
@@ -101823,8 +101791,6 @@ RObjectPainter: RObjectPainter,
 RPadPainter: RPadPainter,
 RCanvasPainter: RCanvasPainter
 });
-
-/// JavaScript ROOT v7 graphics for different classes
 
 /** @summary draw RText object
   * @private */
@@ -104591,8 +104557,6 @@ __proto__: null,
 RH1Painter: RH1Painter
 });
 
-/// JavaScript ROOT v7 graphics for histogram classes
-
 /**
  * @summary Painter for RH2 classes
  *
@@ -106305,10 +106269,7 @@ class RH2Painter$2 extends RHistPainter {
 
 } //  class RH2Painter
 
-/// ROOT7 histogram 3D graphics
-
 class RH2Painter extends RH2Painter$2 {
-
 
    /** Draw histogram bins in 3D, using provided draw options */
    draw3DBins() {

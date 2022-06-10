@@ -1,6 +1,6 @@
 import { FontHandler } from './FontHandler.mjs';
-
 import { ObjectPainter } from './ObjectPainter.mjs';
+
 
 const kNormal = 1, /* kLessTraffic = 2, */ kOffline = 3;
 

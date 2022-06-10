@@ -1,16 +1,11 @@
-/// TCanvas painting
-
 import { gStyle, BIT, settings, constants, isBatchMode } from '../core.mjs';
-
 import { select as d3_select, drag as d3_drag, timeFormat as d3_timeFormat,
          scaleTime as d3_scaleTime, scaleSymlog as d3_scaleSymlog,
          scaleLog as d3_scaleLog, scaleLinear as d3_scaleLinear } from '../d3.mjs';
-
 import { floatToString } from '../base/BasePainter.mjs';
-
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
-
 import { FontHandler } from '../base/FontHandler.mjs';
+
 
 const EAxisBits = {
    kDecimals: BIT(7),
@@ -572,7 +567,8 @@ class TAxisPainter extends ObjectPainter {
    /** @summary Creates array with minor/middle/major ticks */
    createTicks(only_major_as_array, optionNoexp, optionNoopt, optionInt) {
 
-      if (optionNoopt && this.nticks && (this.kind == "normal")) this.noticksopt = true;
+      if (optionNoopt && this.nticks && (this.kind == "normal"))
+         this.noticksopt = true;
 
       let handle = { nminor: 0, nmiddle: 0, nmajor: 0, func: this.func }, ticks;
 
@@ -615,7 +611,8 @@ class TAxisPainter extends ObjectPainter {
             handle.minor = handle.middle = handle.major;
          } else if ((this.nticks3 > 1) && !this.log)  {
             handle.minor = this.produceTicks(handle.middle.length, this.nticks3);
-            if ((handle.minor.length <= handle.middle.length) || (handle.minor.length > gr_range/1.7)) handle.minor = handle.middle;
+            if ((handle.minor.length <= handle.middle.length) || (handle.minor.length > gr_range/1.7))
+               handle.minor = handle.middle;
          }
       }
 
@@ -697,7 +694,7 @@ class TAxisPainter extends ObjectPainter {
             }
 
             // for order==0 we should virtually remove "0." and extra label on top
-            if (!order && (this.ndig<4)) totallen-=(handle.major.length*2+3);
+            if (!order && (this.ndig < 4)) totallen -= (handle.major.length*2+3);
 
             if (totallen < bestlen) {
                bestlen = totallen;
@@ -710,8 +707,8 @@ class TAxisPainter extends ObjectPainter {
          this.ndig = bestndig;
 
          if (optionInt) {
-            if (this.order) console.warn('Axis painter - integer labels are configured, but axis order ' + this.order + ' is preferable');
-            if (this.ndig) console.warn('Axis painter - integer labels are configured, but ' + this.ndig + ' decimal digits are required');
+            if (this.order) console.warn(`Axis painter - integer labels are configured, but axis order ${this.order} is preferable`);
+            if (this.ndig) console.warn(`Axis painter - integer labels are configured, but ${this.ndig} decimal digits are required`);
             this.ndig = 0;
             this.order = 0;
          }
@@ -791,8 +788,8 @@ class TAxisPainter extends ObjectPainter {
                acc_x += evnt.dx;
                acc_y += evnt.dy;
 
-               let set_x, set_y,
-                   p = vertical ? acc_y : acc_x, besti = 0;
+               let set_x, set_y, besti = 0,
+                   p = vertical ? acc_y : acc_x;
 
                for (let i=1; i<3; ++i)
                   if (Math.abs(p - alt_pos[i]) < Math.abs(p - alt_pos[besti])) besti = i;
@@ -807,7 +804,7 @@ class TAxisPainter extends ObjectPainter {
 
                if (sign_0 === (vertical ? (set_x > 0) : (set_y > 0))) {
                   new_x = set_x; new_y = set_y; curr_indx = besti;
-                  title_g.attr('transform', 'translate(' + new_x + ',' + new_y +  ')');
+                  title_g.attr('transform', `translate(${new_x},${new_y})`);
                }
 
           }).on("end", evnt => {
@@ -844,7 +841,7 @@ class TAxisPainter extends ObjectPainter {
 
    /** @summary Produce svg path for axis ticks */
    produceTicksPath(handle, side, tickSize, ticksPlusMinus, secondShift, real_draw) {
-      let res = "", res2 = "", lastpos = 0, lasth = 0;
+      let path1 = "", path2 = "";
       this.ticks = [];
 
       while (handle.next(true)) {
@@ -867,24 +864,13 @@ class TAxisPainter extends ObjectPainter {
             h2 = -h1; h1 = 0;
          }
 
-         if (res.length == 0) {
-            res = this.vertical ? `M${h1},${handle.grpos}` : `M${handle.grpos},${-h1}`;
-            res2 = this.vertical ? `M${secondShift-h1},${handle.grpos}` : `M${handle.grpos},${secondShift+h1}`;
-         } else {
-            res += this.vertical ? `m${h1-lasth},${handle.grpos-lastpos}` : `m${handle.grpos-lastpos},${lasth-h1}`;
-            res2 += this.vertical ? `m${lasth-h1},${handle.grpos-lastpos}` : `m${handle.grpos-lastpos},${h1-lasth}`;
-         }
+         path1 += this.vertical ? `M${h1},${handle.grpos}H${h2}` : `M${handle.grpos},${-h1}V${-h2}`;
 
-         res += this.vertical ? `h${h2-h1}` : `v${h1-h2}`;
-         res2 += this.vertical ? `h${h1-h2}` : `v${h2-h1}`;
-
-         lastpos = handle.grpos;
-         lasth = h2;
+         if (secondShift)
+            path2 += this.vertical ? `M${secondShift-h1},${handle.grpos}H${secondShift-h2}` : `M${handle.grpos},${secondShift+h1}V${secondShift+h2}`;
       }
 
-      if (secondShift !== 0) res += res2;
-
-      return real_draw ? res  : "";
+      return real_draw ? path1 + path2  : "";
    }
 
    /** @summary Returns modifier for axis label */
@@ -1102,9 +1088,13 @@ class TAxisPainter extends ObjectPainter {
       if (is_gaxis && axis.TestBit(EAxisBits.kTickPlus)) optionPlus = true;
       if (is_gaxis && axis.TestBit(EAxisBits.kTickMinus)) optionMinus = true;
 
-      if (optionPlus && optionMinus) { side = 1; ticksPlusMinus = 1; } else
-      if (optionMinus) { side = (swap_side ^ vertical) ? 1 : -1; } else
-      if (optionPlus) { side = (swap_side ^ vertical) ? -1 : 1; }
+      if (optionPlus && optionMinus) {
+         side = 1; ticksPlusMinus = 1;
+      } else if (optionMinus) {
+         side = (swap_side ^ vertical) ? 1 : -1;
+      } else if (optionPlus) {
+         side = (swap_side ^ vertical) ? -1 : 1;
+      }
 
       tickSize = Math.round((optionSize ? tickSize : 0.03) * scaling_size);
       if (this.max_tick_size && (tickSize > this.max_tick_size)) tickSize = this.max_tick_size;

@@ -1,17 +1,9 @@
-/// histogram painter base class
-
 import { gStyle, BIT, settings, constants, internals, create } from '../core.mjs';
-
 import { ColorPalette, toHex, getColor } from '../base/colors.mjs';
-
 import { DrawOptions } from '../base/BasePainter.mjs';
-
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
-
 import { EAxisBits } from '../gpad/TAxisPainter.mjs';
-
 import { TPavePainter } from '../hist/TPavePainter.mjs';
-
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 
 
@@ -2244,7 +2236,7 @@ class THistPainter extends ObjectPainter {
       if (handle.kind === 'time')
          return funcs.axisAsText(name, (x1+x2)/2);
 
-      return "[" + funcs.axisAsText(name, x1) + ", " + funcs.axisAsText(name, x2) + ")";
+      return `[${funcs.axisAsText(name, x1)}, ${funcs.axisAsText(name, x2)})`;
    }
 
    /** @summary generic draw function for histograms
