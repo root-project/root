@@ -120,7 +120,37 @@ Bool_t TPython::Initialize()
 #if PY_VERSION_HEX < 0x03020000
       PyEval_InitThreads();
 #endif
+
+// set the command line arguments on python's sys.argv
+#if PY_VERSION_HEX < 0x03000000
+      char *argv[] = {const_cast<char *>("root")};
+#else
+      wchar_t *argv[] = {const_cast<wchar_t *>(L"root")};
+#endif
+      int argc = sizeof(argv) / sizeof(argv[0]);
+#if PY_VERSION_HEX < 0x030b0000
       Py_Initialize();
+#else
+      PyStatus status;
+      PyConfig config;
+
+      PyConfig_InitPythonConfig(&config);
+
+      status = PyConfig_SetArgv(&config, argc, argv);
+      if (PyStatus_Exception(status)) {
+         PyConfig_Clear(&config);
+         std::cerr << "Error when setting command line arguments." << std::endl;
+         return kFALSE;
+      }
+
+      status = Py_InitializeFromConfig(&config);
+      if (PyStatus_Exception(status)) {
+         PyConfig_Clear(&config);
+         std::cerr << "Error when initializing Python." << std::endl;
+         return kFALSE;
+      }
+      PyConfig_Clear(&config);
+#endif
 #if PY_VERSION_HEX >= 0x03020000
 #if PY_VERSION_HEX < 0x03090000
       PyEval_InitThreads();
@@ -134,13 +164,9 @@ Bool_t TPython::Initialize()
          return kFALSE;
       }
 
-// set the command line arguments on python's sys.argv
-#if PY_VERSION_HEX < 0x03000000
-      char *argv[] = {const_cast<char *>("root")};
-#else
-      wchar_t *argv[] = {const_cast<wchar_t *>(L"root")};
+#if PY_VERSION_HEX < 0x030b0000
+      PySys_SetArgv(argc, argv);
 #endif
-      PySys_SetArgv(sizeof(argv) / sizeof(argv[0]), argv);
 
       // force loading of the ROOT module
       const int ret = PyRun_SimpleString(const_cast<char *>("import ROOT"));
