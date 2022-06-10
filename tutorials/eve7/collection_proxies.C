@@ -811,10 +811,9 @@ public:
                          const std::set<int> &secondary_idcs)
    {
       if (el) {
-         printf("DEVIATE %s \n", el->GetCName());
          auto *colItems = dynamic_cast<REveDataItemList *>(el);
          if (colItems) {
-            std::cout << "Deviate RefSelected=" << colItems->RefSelectedSet().size() << " passed set " << secondary_idcs.size() << "\n";
+            // std::cout << "Deviate RefSelected=" << colItems->RefSelectedSet().size() << " passed set " << secondary_idcs.size() << "\n";
             ExecuteNewElementPicked(selection, colItems, multi, true, colItems->RefSelectedSet());
             return true;
          }
