@@ -1,16 +1,11 @@
 import { gStyle, settings, create, isBatchMode } from '../core.mjs';
-
 import { pointer as d3_pointer } from '../d3.mjs';
-
 import { getSvgLineStyle } from '../base/TAttLineHandler.mjs';
-
 import { TAxisPainter } from './TAxisPainter.mjs';
-
 import { RAxisPainter } from './RAxisPainter.mjs';
-
 import { FrameInteractive } from './TFramePainter.mjs';
-
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
+
 
 /**
  * @summary Painter class for RFrame, main handler for interactivity

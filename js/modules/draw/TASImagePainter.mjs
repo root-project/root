@@ -1,13 +1,7 @@
-/// more ROOT classes
-
 import { create, isNodeJs } from '../core.mjs';
-
 import { toHex } from '../base/colors.mjs';
-
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
-
 import { TPavePainter } from '../hist/TPavePainter.mjs';
-
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 
 
@@ -354,7 +348,6 @@ class TASImagePainter extends ObjectPainter {
                      return painter;
                  });
    }
-
 
 } // class TASImagePainter
 

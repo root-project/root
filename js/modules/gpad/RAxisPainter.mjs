@@ -1,17 +1,13 @@
 import { settings, isBatchMode } from '../core.mjs';
-
 import { select as d3_select, pointer as d3_pointer,
          drag as d3_drag, timeFormat as d3_timeFormat,
          scaleTime as d3_scaleTime, scaleSymlog as d3_scaleSymlog,
          scaleLog as d3_scaleLog, scaleLinear as d3_scaleLinear } from '../d3.mjs';
-
 import { AxisPainterMethods, chooseTimeFormat } from './TAxisPainter.mjs';
-
 import { createMenu } from '../gui/menu.mjs';
-
 import { addDragHandler } from './TFramePainter.mjs';
-
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
+
 
 /**
  * @summary Axis painter for v7
@@ -574,7 +570,7 @@ class RAxisPainter extends RObjectPainter {
 
       this.handle.reset();
 
-      let res = "", ticks_plusminus = 0, lastpos = 0, lasth = 0;
+      let res = "", ticks_plusminus = 0;
       if (this.ticksSide == "both") {
          side = 1;
          ticks_plusminus = 1;
@@ -598,19 +594,15 @@ class RAxisPainter extends RObjectPainter {
             if (main_draw) this.ticks.push(grpos); // keep graphical positions of major ticks
          }
 
-         if (ticks_plusminus > 0) h2 = -h1; else
-         if (side < 0) { h2 = -h1; h1 = 0; } else { h2 = 0; }
-
-         if (res.length == 0) {
-            res = this.vertical ? "M"+h1+","+grpos : "M"+grpos+","+(-h1);
+         if (ticks_plusminus > 0) {
+            h2 = -h1;
+         } else if (side < 0) {
+            h2 = -h1; h1 = 0;
          } else {
-            res += this.vertical ? "m"+(h1-lasth)+","+(grpos-lastpos) : "m"+(grpos-lastpos)+","+(lasth-h1);
+            h2 = 0;
          }
 
-         res += this.vertical ? "h"+ (h2-h1) : "v"+ (h1-h2);
-
-         lastpos = grpos;
-         lasth = h2;
+         res += this.vertical ? `M${h1},${grpos}H${h2}` : `M${grpos},${-h1}V${-h2}`;
       }
 
       if (res)

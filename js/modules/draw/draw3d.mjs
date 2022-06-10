@@ -1,10 +1,8 @@
 import { REVISION } from '../three.mjs';
-
 import { settings } from '../core.mjs';
-
 import { createLineSegments, PointsCreator, create3DLineMaterial } from '../base/base3d.mjs';
-
 import { drawDummy3DGeom } from '../geom/TGeoPainter.mjs';
+
 
 function before3DDraw(painter, obj) {
    let fp = painter.getFramePainter();
