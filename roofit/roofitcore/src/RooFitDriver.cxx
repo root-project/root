@@ -39,7 +39,6 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 #include <RooFit/BatchModeDataHelpers.h>
 #include <RooFit/BatchModeHelpers.h>
 #include <RooFit/CUDAHelpers.h>
-#include <RooFit/Detail/Buffers.h>
 
 #include "NormalizationHelpers.h"
 
@@ -288,7 +287,8 @@ void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
       nodeAbsReal->computeBatch(nullptr, &info.scalarBuffer, nOut, _dataMapCPU);
    } else {
       if (!info.buffer) {
-         info.buffer = info.copyAfterEvaluation ? makePinnedBuffer(nOut, info.stream) : makeCpuBuffer(nOut);
+         info.buffer = info.copyAfterEvaluation ? _bufferManager.makePinnedBuffer(nOut, info.stream)
+                                                : _bufferManager.makeCpuBuffer(nOut);
       }
       double *buffer = info.buffer->cpuWritePtr();
       _dataMapCPU.at(node) = RooSpan<const double>(buffer, nOut);
@@ -445,7 +445,8 @@ void RooFitDriver::assignToGPU(NodeInfo &info)
          RooBatchCompute::dispatchCUDA->cudaStreamWaitEvent(info.stream, infoServer->event);
    }
 
-   info.buffer = info.copyAfterEvaluation ? makePinnedBuffer(nOut, info.stream) : makeGpuBuffer(nOut);
+   info.buffer = info.copyAfterEvaluation ? _bufferManager.makePinnedBuffer(nOut, info.stream)
+                                          : _bufferManager.makeGpuBuffer(nOut);
    double *buffer = info.buffer->gpuWritePtr();
    _dataMapCUDA.at(node) = RooSpan<const double>(buffer, nOut);
    // measure launching overhead (add computation time later)
@@ -638,7 +639,7 @@ void RooFitDriver::markGPUNodes()
 
       // deletion of the timing events (to be replaced later by non-timing events)
       for (auto &info : _nodes) {
-        // If the copy mode is changed, the current buffer might not be appropriate anymore
+         // If the copy mode is changed, the current buffer might not be appropriate anymore
          if (info.copyAfterEvaluation) {
             delete info.buffer;
             info.buffer = nullptr;
