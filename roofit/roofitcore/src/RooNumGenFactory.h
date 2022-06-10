@@ -48,9 +48,6 @@ protected:
 
   RooNumGenFactory();
   RooNumGenFactory(const RooNumGenFactory& other) ;
-
-
-  ClassDefOverride(RooNumGenFactory,1) // Numeric Generator factory
 };
 
 #endif

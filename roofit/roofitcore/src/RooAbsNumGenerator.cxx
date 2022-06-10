@@ -40,8 +40,6 @@ implementations like RooAcceptReject and RooFoam
 
 using namespace std;
 
-ClassImp(RooAbsNumGenerator);
-  ;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -51,14 +49,14 @@ ClassImp(RooAbsNumGenerator);
 /// cloned and so will not be disturbed during the generation process.
 
 RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &genVars, bool verbose, const RooAbsReal* maxFuncVal) :
-  TNamed(func), _cloneSet(0), _funcClone(0), _funcMaxVal(maxFuncVal), _verbose(verbose), _funcValStore(0), _funcValPtr(0), _cache(0)
+  _cloneSet(0), _funcClone(0), _funcMaxVal(maxFuncVal), _verbose(verbose), _funcValStore(0), _funcValPtr(0), _cache(0)
 {
   // Clone the function and all nodes that it depends on so that this generator
   // is independent of any existing objects.
   RooArgSet nodes(func,func.GetName());
   _cloneSet= (RooArgSet*) nodes.snapshot(true);
   if (!_cloneSet) {
-    coutE(Generation) << "RooAbsNumGenerator::RooAbsNumGenerator(" << GetName() << ") Couldn't deep-clone function, abort," << endl ;
+    oocoutE(nullptr, Generation) << "RooAbsNumGenerator::RooAbsNumGenerator(" << func.GetName() << ") Couldn't deep-clone function, abort," << endl ;
     RooErrorHandler::softAbort() ;
   }
 
@@ -73,7 +71,7 @@ RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &
   const RooAbsArg *found = 0;
   for (RooAbsArg const* arg : genVars) {
     if(!arg->isFundamental()) {
-      coutE(Generation) << fName << "::" << ClassName() << ": cannot generate values for derived \""
+      oocoutE(nullptr, Generation) << func.GetName() << "::RooAbsNumGenerator: cannot generate values for derived \""
          << arg->GetName() << "\"" << endl;
       _isValid= false;
       continue;
@@ -98,19 +96,19 @@ RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &
    _realVars.add(*realVar);
       }
       else {
-   coutE(Generation) << fName << "::" << ClassName() << ": cannot generate values for \""
+   oocoutE(nullptr, Generation) << func.GetName() << "::RooAbsNumGenerator: cannot generate values for \""
            << realVar->GetName() << "\" with unbound range" << endl;
    _isValid= false;
       }
     }
     else {
-      coutE(Generation) << fName << "::" << ClassName() << ": cannot generate values for \""
+      oocoutE(nullptr, Generation) << func.GetName() << "::RooAbsNumGenerator" << ": cannot generate values for \""
          << arg->GetName() << "\" with unexpected type" << endl;
       _isValid= false;
     }
   }
   if(!_isValid) {
-    coutE(Generation) << fName << "::" << ClassName() << ": constructor failed with errors" << endl;
+    oocoutE(nullptr, Generation) << func.GetName() << "::RooAbsNumGenerator" << ": constructor failed with errors" << endl;
     return;
   }
 
@@ -163,46 +161,3 @@ void RooAbsNumGenerator::attachParameters(const RooArgSet& vars)
   newParams.remove(*_cache->get(),true,true) ;
   _funcClone->recursiveRedirectServers(newParams) ;
 }
-
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Print name of the generator
-
-void RooAbsNumGenerator::printName(ostream& os) const
-{
-  os << GetName() ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Print the title of the generator
-
-void RooAbsNumGenerator::printTitle(ostream& os) const
-{
-  os << GetTitle() ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Print the class name of the generator
-
-void RooAbsNumGenerator::printClassName(ostream& os) const
-{
-  os << ClassName() ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Print the arguments of the generator
-
-void RooAbsNumGenerator::printArgs(ostream& os) const
-{
-  os << "[ function=" << _funcClone->GetName() << " catobs=" << _catVars << " realobs=" << _realVars << " ]" ;
-}
-
