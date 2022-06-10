@@ -38,17 +38,6 @@
 #include <memory>
 #include <string>
 
-////////////////////////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// THttpTimer                                                           //
-//                                                                      //
-// Specialized timer for THttpServer                                    //
-// Provides regular calls of THttpServer::ProcessRequests() method      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 class THttpTimer : public TTimer {
 public:
    THttpServer &fServer; ///!< server processing requests
@@ -61,48 +50,47 @@ public:
    void Timeout() override { fServer.ProcessRequests(); }
 };
 
-//////////////////////////////////////////////////////////////////////////////////////////////////
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// THttpServer                                                          //
-//                                                                      //
-// Online http server for arbitrary ROOT application                    //
-//                                                                      //
-// Idea of THttpServer - provide remote http access to running          //
-// ROOT application and enable HTML/JavaScript user interface.          //
-// Any registered object can be requested and displayed in the browser. //
-// There are many benefits of such approach:                            //
-//     * standard http interface to ROOT application                    //
-//     * no any temporary ROOT files when access data                   //
-//     * user interface running in all browsers                         //
-//                                                                      //
-// Starting HTTP server                                                 //
-//                                                                      //
-// To start http server, at any time  create instance                   //
-// of the THttpServer class like:                                       //
-//    serv = new THttpServer("http:8080");                              //
-//                                                                      //
-// This will starts civetweb-based http server with http port 8080.     //
-// Than one should be able to open address "http://localhost:8080"      //
-// in any modern browser (IE, Firefox, Chrome) and browse objects,      //
-// created in application. By default, server can access files,         //
-// canvases and histograms via gROOT pointer. All such objects          //
-// can be displayed with JSROOT graphics.                               //
-//                                                                      //
-// At any time one could register other objects with the command:       //
-//                                                                      //
-// TGraph* gr = new TGraph(10);                                         //
-// gr->SetName("gr1");                                                  //
-// serv->Register("graphs/subfolder", gr);                              //
-//                                                                      //
-// If objects content is changing in the application, one could         //
-// enable monitoring flag in the browser - than objects view            //
-// will be regularly updated.                                           //
-//                                                                      //
-// More information: https://root.cern/root/htmldoc/guides/HttpServer/HttpServer.html  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class THttpServer
+\ingroup http
+
+Online http server for arbitrary ROOT application
+
+Idea of THttpServer - provide remote http access to running
+ROOT application and enable HTML/JavaScript user interface.
+Any registered object can be requested and displayed in the browser.
+There are many benefits of such approach:
+
+  * standard http interface to ROOT application
+  * no any temporary ROOT files when access data
+  * user interface running in all browsers
+
+Starting HTTP server
+
+To start http server, at any time  create instance
+ of the THttpServer class like:
+
+    serv = new THttpServer("http:8080");
+
+This will starts civetweb-based http server with http port 8080.
+Than one should be able to open address "http://localhost:8080"
+in any modern browser (IE, Firefox, Chrome) and browse objects,
+created in application. By default, server can access files,
+canvases and histograms via gROOT pointer. All such objects
+can be displayed with JSROOT graphics.
+
+At any time one could register other objects with the command:
+
+    TGraph* gr = new TGraph(10);
+    gr->SetName("gr1");
+    serv->Register("graphs/subfolder", gr);
+
+If objects content is changing in the application, one could
+enable monitoring flag in the browser - than objects view
+will be regularly updated.
+
+More information: https://root.cern/root/htmldoc/guides/HttpServer/HttpServer.html
+*/
 
 ClassImp(THttpServer);
 
@@ -113,8 +101,8 @@ ClassImp(THttpServer);
 /// created like "http:8080". One could specify several engines
 /// at once, separating them with semicolon (";"). Following engines are supported:
 ///
-///       http - TCivetweb, civetweb-based implementation of http protocol
-///       fastcgi - TFastCgi, special protocol for communicating with web servers
+///     http     - TCivetweb, civetweb-based implementation of http protocol
+///     fastcgi  - TFastCgi, special protocol for communicating with web servers
 ///
 /// For each created engine one should provide socket port number like "http:8080" or "fastcgi:9000".
 /// Additional engine-specific options can be supplied with URL syntax like "http:8080?thrds=10".
@@ -211,6 +199,7 @@ THttpServer::THttpServer(const char *engine) : TNamed("http", "ROOT http server"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
+///
 /// delete all http engines and sniffer
 
 THttpServer::~THttpServer()
@@ -232,6 +221,7 @@ THttpServer::~THttpServer()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set TRootSniffer to the server
+///
 /// Server takes ownership over sniffer
 
 void THttpServer::SetSniffer(TRootSniffer *sniff)
@@ -241,6 +231,7 @@ void THttpServer::SetSniffer(TRootSniffer *sniff)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set termination flag,
+///
 /// No any further requests will be processed, server only can be destroyed afterwards
 
 void THttpServer::SetTerminate()
@@ -258,6 +249,7 @@ Bool_t THttpServer::IsReadOnly() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set read-only mode for the server (default on)
+///
 /// In read-only server is not allowed to change any ROOT object, registered to the server
 /// Server also cannot execute objects method via exe.json request
 
@@ -269,6 +261,7 @@ void THttpServer::SetReadOnly(Bool_t readonly)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// returns true if only websockets are handled by the server
+///
 /// Typically used by WebGui
 
 Bool_t THttpServer::IsWSOnly() const
@@ -277,7 +270,9 @@ Bool_t THttpServer::IsWSOnly() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set websocket-only mode. If true, server will only handle websockets connection
+/// Set websocket-only mode.
+///
+/// If true, server will only handle websockets connection
 /// plus serving file requests to access jsroot/ui5 scripts
 
 void THttpServer::SetWSOnly(Bool_t on)
@@ -286,10 +281,13 @@ void THttpServer::SetWSOnly(Bool_t on)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// add files location, which could be used in the server
-/// one could map some system folder to the server like AddLocation("mydir/","/home/user/specials");
-/// Than files from this directory could be addressed via server like
-/// http://localhost:8080/mydir/myfile.root
+/// Add files location, which could be used in the server
+///
+/// One could map some system folder to the server like
+///
+///     serv->AddLocation("mydir/","/home/user/specials");
+///
+/// Than files from this directory could be addressed via server like `http://localhost:8080/mydir/myfile.root`
 
 void THttpServer::AddLocation(const char *prefix, const char *path)
 {
@@ -304,9 +302,12 @@ void THttpServer::AddLocation(const char *prefix, const char *path)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set location of JSROOT to use with the server
+///
 /// One could specify address like:
-///   https://root.cern.ch/js/5.6.3/
-///   http://jsroot.gsi.de/5.6.3/
+///
+/// * https://root.cern.ch/js/7.1.0/
+/// * http://jsroot.gsi.de/7.1.0/
+///
 /// This allows to get new JSROOT features with old server,
 /// reduce load on THttpServer instance, also startup time can be improved
 /// When empty string specified (default), local copy of JSROOT is used (distributed with ROOT)
@@ -317,8 +318,10 @@ void THttpServer::SetJSROOT(const char *location)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set file name of HTML page, delivered by the server when
-/// http address is opened in the browser.
+/// Set default HTML page
+///
+/// Sets file name, delivered by the server when http address is opened in the browser.
+///
 /// By default, $ROOTSYS/js/files/online.htm page is used
 /// When empty filename is specified, default page will be used
 
@@ -334,6 +337,8 @@ void THttpServer::SetDefaultPage(const std::string &filename)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set drawing HTML page
+///
 /// Set file name of HTML page, delivered by the server when
 /// objects drawing page is requested from the browser
 /// By default, $ROOTSYS/js/files/draw.htm page is used
@@ -351,14 +356,25 @@ void THttpServer::SetDrawPage(const std::string &filename)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// factory method to create different http engines
+/// Factory method to create different http engines
+///
 /// At the moment two engine kinds are supported:
-///   civetweb (default) and fastcgi
+///
+/// * civetweb or http (default)
+/// * fastcgi
+///
 /// Examples:
-///   "http:8080" or "civetweb:8080" or ":8080"  - creates civetweb web server with http port 8080
-///   "fastcgi:9000" - creates fastcgi server with port 9000
+///
+///     // creates civetweb web server with http port 8080
+///     serv->CreateEngine("http:8080");
+///     serv->CreateEngine("civetweb:8080");
+///     serv->CreateEngine(":8080");
+///     // creates fastcgi server with port 9000
+///     serv->CreateEngine("fastcgi:9000");
+///
 /// One could apply additional parameters, using URL syntax:
-///    "http:8080?thrds=10"
+///
+///     serv->CreateEngine("http:8080?thrds=10");
 
 Bool_t THttpServer::CreateEngine(const char *engine)
 {
@@ -407,7 +423,8 @@ Bool_t THttpServer::CreateEngine(const char *engine)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// create timer which will invoke ProcessRequests() function periodically
+/// Create timer which will invoke ProcessRequests() function periodically
+///
 /// Timer is required to perform all actions in main ROOT thread
 /// Method arguments are the same as for TTimer constructor
 /// By default, sync timer with 100 ms period is created
@@ -476,6 +493,7 @@ void THttpServer::CreateServerThread()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stop server thread
+///
 /// Normally called shortly before http server destructor
 
 void THttpServer::StopServerThread()
@@ -490,6 +508,7 @@ void THttpServer::StopServerThread()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Checked that filename does not contains relative path below current directory
+///
 /// Used to prevent access to files below current directory
 
 Bool_t THttpServer::VerifyFilePath(const char *fname)
@@ -536,6 +555,7 @@ Bool_t THttpServer::VerifyFilePath(const char *fname)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Verifies that request is just file name
+///
 /// File names typically contains prefix like "jsrootsys/"
 /// If true, method returns real name of the file,
 /// which should be delivered to the client
@@ -567,6 +587,7 @@ Bool_t THttpServer::IsFileRequested(const char *uri, TString &res) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Executes http request, specified in THttpCallArg structure
+///
 /// Method can be called from any thread
 /// Actual execution will be done in main ROOT thread, where analysis code is running.
 
@@ -594,13 +615,16 @@ Bool_t THttpServer::ExecuteHttp(std::shared_ptr<THttpCallArg> arg)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Submit http request, specified in THttpCallArg structure
+///
 /// Contrary to ExecuteHttp, it will not block calling thread.
-/// User should reimplement THttpCallArg::HttpReplied() method
+/// User should implement THttpCallArg::HttpReplied() method
 /// to react when HTTP request is executed.
+
 /// Method can be called from any thread
 /// Actual execution will be done in main ROOT thread, where analysis code is running.
 /// When called from main thread and can_run_immediately==kTRUE, will be
 /// executed immediately.
+///
 /// Returns kTRUE when was executed.
 
 Bool_t THttpServer::SubmitHttp(std::shared_ptr<THttpCallArg> arg, Bool_t can_run_immediately)
@@ -622,6 +646,7 @@ Bool_t THttpServer::SubmitHttp(std::shared_ptr<THttpCallArg> arg, Bool_t can_run
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Process requests, submitted for execution
+///
 /// Returns number of processed requests
 ///
 /// Normally invoked by THttpTimer, when somewhere in the code
@@ -689,6 +714,7 @@ Int_t THttpServer::ProcessRequests()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Method called when THttpServer cannot process request
+///
 /// By default such requests replied with 404 code
 /// One could overwrite with method in derived class to process all kinds of such non-standard requests
 
@@ -699,6 +725,7 @@ void THttpServer::MissedRequest(THttpCallArg *arg)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Process special http request for root_batch_holder.js script
+///
 /// This kind of requests used to hold web browser running in headless mode
 /// Intentionally requests does not replied immediately
 
@@ -745,6 +772,7 @@ std::string THttpServer::BuildWSEntryPage()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Replaces all references like "jsrootsys/..."
+///
 /// Either using pre-configured JSROOT installation from web or
 /// redirect to jsrootsys from the main server path to benefit from browser caching
 
@@ -781,9 +809,9 @@ void THttpServer::ReplaceJSROOTLinks(std::shared_ptr<THttpCallArg> &arg)
       arg->ReplaceAllinContent("=\"jsrootsys/", repl);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Process single http request
+///
 /// Depending from requested path and filename different actions will be performed.
 /// In most cases information is provided by TRootSniffer class
 
@@ -1189,28 +1217,37 @@ void THttpServer::Restrict(const char *path, const char *options)
 /// Register command which can be executed from web interface
 ///
 /// As method one typically specifies string, which is executed with
-/// gROOT->ProcessLine() method. For instance
-///    serv->RegisterCommand("Invoke","InvokeFunction()");
+/// gROOT->ProcessLine() method. For instance:
+///
+///     serv->RegisterCommand("Invoke","InvokeFunction()");
 ///
 /// Or one could specify any method of the object which is already registered
 /// to the server. For instance:
+///
 ///     serv->Register("/", hpx);
 ///     serv->RegisterCommand("/ResetHPX", "/hpx/->Reset()");
+///
 /// Here symbols '/->' separates item name from method to be executed
 ///
 /// One could specify additional arguments in the command with
 /// syntax like %arg1%, %arg2% and so on. For example:
+///
 ///     serv->RegisterCommand("/ResetHPX", "/hpx/->SetTitle(\"%arg1%\")");
 ///     serv->RegisterCommand("/RebinHPXPY", "/hpxpy/->Rebin2D(%arg1%,%arg2%)");
+///
 /// Such parameter(s) will be requested when command clicked in the browser.
 ///
 /// Once command is registered, one could specify icon which will appear in the browser:
+///
 ///     serv->SetIcon("/ResetHPX", "rootsys/icons/ed_execute.png");
 ///
 /// One also can set extra property '_fastcmd', that command appear as
 /// tool button on the top of the browser tree:
+///
 ///     serv->SetItemField("/ResetHPX", "_fastcmd", "true");
+///
 /// Or it is equivalent to specifying extra argument when register command:
+///
 ///     serv->RegisterCommand("/ResetHPX", "/hpx/->Reset()", "button;rootsys/icons/ed_delete.png");
 
 Bool_t THttpServer::RegisterCommand(const char *cmdname, const char *method, const char *icon)
@@ -1219,7 +1256,7 @@ Bool_t THttpServer::RegisterCommand(const char *cmdname, const char *method, con
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// hides folder or element from web gui
+/// Hides folder or element from web gui
 
 Bool_t THttpServer::Hide(const char *foldername, Bool_t hide)
 {
@@ -1227,7 +1264,7 @@ Bool_t THttpServer::Hide(const char *foldername, Bool_t hide)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// set name of icon, used in browser together with the item
+/// Set name of icon, used in browser together with the item
 ///
 /// One could use images from $ROOTSYS directory like:
 ///    serv->SetIcon("/ResetHPX","/rootsys/icons/ed_execute.png");
@@ -1238,6 +1275,7 @@ Bool_t THttpServer::SetIcon(const char *fullname, const char *iconname)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Create item in sniffer
 
 Bool_t THttpServer::CreateItem(const char *fullname, const char *title)
 {
@@ -1245,6 +1283,7 @@ Bool_t THttpServer::CreateItem(const char *fullname, const char *title)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set item field in sniffer
 
 Bool_t THttpServer::SetItemField(const char *fullname, const char *name, const char *value)
 {
@@ -1252,6 +1291,7 @@ Bool_t THttpServer::SetItemField(const char *fullname, const char *name, const c
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get item field from sniffer
 
 const char *THttpServer::GetItemField(const char *fullname, const char *name)
 {
@@ -1335,7 +1375,9 @@ const char *THttpServer::GetMimeType(const char *path)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \deprecated reads file content
+/// Reads file content
+///
+/// @deprecated
 
 char *THttpServer::ReadFileContent(const char *filename, Int_t &len)
 {
@@ -1361,7 +1403,7 @@ char *THttpServer::ReadFileContent(const char *filename, Int_t &len)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// reads file content, using std::string as container
+/// Reads file content, using std::string as container
 
 std::string THttpServer::ReadFileContent(const std::string &filename)
 {
