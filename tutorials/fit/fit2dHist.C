@@ -2,7 +2,7 @@
 /// \ingroup tutorial_fit
 /// \notebook
 ///
-/// Example to fit two histograms at the same time via TVirtualFitter
+/// Example to fit two histograms at the same time via the Fitter class
 ///
 /// To execute this tutorial, you can do:
 ///
@@ -44,7 +44,7 @@
 #include "TCanvas.h"
 #include "TStyle.h"
 #include "TRandom3.h"
-#include "TVirtualFitter.h"
+#include "Fit/Fitter.h"
 #include "TList.h"
 
 #include <iostream>
@@ -59,13 +59,18 @@ double my2Dfunc(double *x, double *par) {
 }
 
 
-// data need to be globals to be visible by fcn
-TRandom3 rndm;
-TH2D *h1, *h2;
-int npfits;
 
-void myFcn(int & /*nPar*/, double * /*grad*/ , double &fval, double *p, int /*iflag */  )
-{
+class MyFcn {
+ public:
+   TH2D *h1 = nullptr;
+   TH2D *h2 = nullptr;
+   int npfits = 0;
+
+   MyFcn(TH2D * _h1, TH2D * _h2) :
+    h1(_h1), h2(_h2) {}
+
+   double operator()(const double *p) {
+
    TAxis *xaxis1  = h1->GetXaxis();
    TAxis *yaxis1  = h1->GetYaxis();
    TAxis *xaxis2  = h2->GetXaxis();
@@ -85,7 +90,7 @@ void myFcn(int & /*nPar*/, double * /*grad*/ , double &fval, double *p, int /*if
       for (int iy = 1; iy <= nbinY1; ++iy) {
          if ( h1->GetBinError(ix,iy) > 0 ) {
          x[1] = yaxis1->GetBinCenter(iy);
-         tmp = (h1->GetBinContent(ix,iy) - my2Dfunc(x,p))/h1->GetBinError(ix,iy);
+         tmp = (h1->GetBinContent(ix,iy) - my2Dfunc(x,(double*) p))/h1->GetBinError(ix,iy);
          chi2 += tmp*tmp;
          npfits++;
          }
@@ -96,14 +101,15 @@ void myFcn(int & /*nPar*/, double * /*grad*/ , double &fval, double *p, int /*if
       for (int iy = 1; iy <= nbinY2; ++iy) {
          if ( h2->GetBinError(ix,iy) > 0 ) {
          x[1] = yaxis2->GetBinCenter(iy);
-         tmp = (h2->GetBinContent(ix,iy) - my2Dfunc(x,p))/h2->GetBinError(ix,iy);
+         tmp = (h2->GetBinContent(ix,iy) - my2Dfunc(x,(double *) p))/h2->GetBinError(ix,iy);
          chi2 += tmp*tmp;
          npfits++;
          }
       }
    }
-   fval = chi2;
+   return chi2;
 }
+};
 
 void FillHisto(TH2D * h, int n, double * p) {
 
@@ -122,9 +128,9 @@ void FillHisto(TH2D * h, int n, double * p) {
    double x, y;
    for (int i = 0; i < n; ++i) {
       // generate randoms with larger Gaussians
-      rndm.Rannor(x,y);
+      gRandom->Rannor(x,y);
 
-      double r = rndm.Rndm(1);
+      double r = gRandom->Rndm(1);
       if (r < w1) {
          x = x*sx1 + mx1;
          y = y*sy1 + my1;
@@ -158,8 +164,8 @@ int fit2dHist(int option=1) {
    double xup2 = 20.;
    double yup2 = 20.;
 
-   h1 = new TH2D("h1","core",nbx1,xlow1,xup1,nby1,ylow1,yup1);
-   h2 = new TH2D("h2","tails",nbx2,xlow2,xup2,nby2,ylow2,yup2);
+   auto h1 = new TH2D("h1","core",nbx1,xlow1,xup1,nby1,ylow1,yup1);
+   auto h2 = new TH2D("h2","tails",nbx2,xlow2,xup2,nby2,ylow2,yup2);
 
    double iniParams[10] = { 100, 6., 2., 7., 3, 100, 12., 3., 11., 2. };
    // create fit function
@@ -183,45 +189,45 @@ int fit2dHist(int option=1) {
 
    bool global = false;
    if (option > 10) global = true;
+   // do global combined fit
    if (global) {
       // fill data structure for fit (coordinates + values + errors)
       std::cout << "Do global fit" << std::endl;
       // fit now all the function together
 
+      ROOT::Fit::Fitter fitter;
       //The default minimizer is Minuit, you can also try Minuit2
-      if (option%10 == 2) TVirtualFitter::SetDefaultFitter("Minuit2");
-      else                TVirtualFitter::SetDefaultFitter("Minuit");
-      TVirtualFitter * minuit = TVirtualFitter::Fitter(0,10);
+
+      MyFcn myFcn(h1,h2);
+      fitter.SetFCN(10, myFcn);
+      if (option%10 == 2) fitter.Config().SetMinimizer("Minuit2");
+
+      // set parameter initial value, name and step size
       for (int i = 0; i < 10; ++i) {
-         minuit->SetParameter(i, func->GetParName(i), func->GetParameter(i), 0.01, 0,0);
+         fitter.Config().ParSettings(i) = ROOT::Fit::ParameterSettings(func->GetParName(i), func->GetParameter(i), 0.01);
       }
-      minuit->SetFCN(myFcn);
 
-      double arglist[100];
-      arglist[0] = 0;
-      // set print level
-      minuit->ExecuteCommand("SET PRINT",arglist,2);
-
-      // minimize
-      arglist[0] = 5000; // number of function calls
-      arglist[1] = 0.01; // tolerance
-      minuit->ExecuteCommand("MIGRAD",arglist,2);
+      bool ret = fitter.FitFCN();
+      if (!ret) {
+         Error("fit2DHist","Fit Failed to converge");
+         return -1;
+      }
 
       //get result
       double minParams[10];
       double parErrors[10];
       for (int i = 0; i < 10; ++i) {
-         minParams[i] = minuit->GetParameter(i);
-         parErrors[i] = minuit->GetParError(i);
+         minParams[i] = fitter.Result().Parameter(i);
+         parErrors[i] = fitter.Result().Error(i);
       }
-      double chi2, edm, errdef;
-      int nvpar, nparx;
-      minuit->GetStats(chi2,edm,errdef,nvpar,nparx);
+      double chi2 = fitter.Result().MinFcnValue();
+      double edm = fitter.Result().Edm();
+      int npfits = myFcn.npfits;
 
       func->SetParameters(minParams);
       func->SetParErrors(parErrors);
       func->SetChisquare(chi2);
-      int ndf = npfits-nvpar;
+      int ndf = npfits - fitter.Result().NFreeParameters();
       func->SetNDF(ndf);
 
       // add to list of functions
