@@ -580,7 +580,7 @@ PyObject* CPyCppyy::CPPMethod::ProcessKeywords(PyObject* self, PyObject* args, P
 // set all values to zero to be able to check them later (this also guarantees normal
 // cleanup by the tuple deallocation)
     for (Py_ssize_t i = 0; i < nArgs+nKeys; ++i)
-        PyTuple_SET_ITEM(newArgs, i, nullptr);
+        PyTuple_SET_ITEM(newArgs, i, static_cast<PyObject*>(nullptr));
 
 // next, insert the keyword values
     PyObject *key, *value;
