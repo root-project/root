@@ -480,7 +480,7 @@ int REveDigitSet::GetAtomIdxFromShapeIdx(int iShapeIdx) const
    }
 
    printf("REveDigitSet::GetAtomIdxFromShapeIdx Error locating atom idx from shape idx %d\n", iShapeIdx);
-   return 0;
+   return -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -505,7 +505,7 @@ int REveDigitSet::GetShapeIdxFromAtomIdx(int iAtomIdx) const
    }
 
    printf("REveDigitSet::GetShapeIdxFromAtomIdx:: Atom with idx %d dose not have a visible shape \n", iAtomIdx);
-   return 0;
+   return -1;
 }
 
 
@@ -516,11 +516,12 @@ void REveDigitSet::NewShapePicked(int shapeIdx, Int_t selectionId, bool multi)
 {
    int digitId = GetAtomIdxFromShapeIdx(shapeIdx);
    auto digit = GetDigit(digitId);
-   if (gDebug) printf("REveDigitSet::NewShapePicked shape ID = %d, atom ID = %d, value = %d\n", shapeIdx, digitId, digit->fValue);
+   if (gDebug) printf("REveDigitSet::NewShapePicked elementId %d shape ID = %d, atom ID = %d, value = %d\n", GetElementId(), shapeIdx, digitId, digit->fValue);
 
    REveSelection *selection = dynamic_cast<REveSelection *>(ROOT::Experimental::gEve->FindElementById(selectionId));
    std::set<int> sset = {digitId};
 
+   RefSelectedSet() = sset;
    selection->NewElementPicked(GetElementId(), multi, true, sset);
 }
 
@@ -530,7 +531,9 @@ void REveDigitSet::FillExtraSelectionData(nlohmann::json &j, const std::set<int>
 {
    j["shape_idcs"] = nlohmann::json::array();
    for (auto &i : secondary_idcs) {
-      j["shape_idcs"].push_back(GetShapeIdxFromAtomIdx(i));
+      int shapeIdx =  GetShapeIdxFromAtomIdx(i);
+      if (shapeIdx >= 0)
+         j["shape_idcs"].push_back(GetShapeIdxFromAtomIdx(i));
    }
 }
 
