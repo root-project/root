@@ -16,8 +16,6 @@
 #ifndef ROO_ABS_NUM_GENERATOR
 #define ROO_ABS_NUM_GENERATOR
 
-#include "TNamed.h"
-#include "RooPrintable.h"
 #include "RooArgSet.h"
 #include "RooArgList.h"
 
@@ -27,7 +25,7 @@ class RooDataSet;
 class RooRealBinding;
 class RooNumGenConfig ;
 
-class RooAbsNumGenerator : public TNamed, public RooPrintable {
+class RooAbsNumGenerator {
 public:
   RooAbsNumGenerator() : _cloneSet(nullptr), _funcClone(nullptr), _funcMaxVal(nullptr), _verbose(false), _isValid(false), _funcValStore(nullptr), _funcValPtr(nullptr), _cache(nullptr) {}
   RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &genVars, bool verbose=false, const RooAbsReal* maxFuncVal=nullptr);
@@ -38,7 +36,7 @@ public:
     // If true, generator is in a valid state
     return _isValid;
   }
-  ~RooAbsNumGenerator() override;
+  virtual ~RooAbsNumGenerator() ;
 
   inline void setVerbose(bool verbose= true) {
     // If flag is true, verbose messaging will be active during generation
@@ -52,21 +50,14 @@ public:
   virtual const RooArgSet *generateEvent(UInt_t remaining, double& resampleRatio) = 0;
   virtual double getFuncMax() { return 0 ; }
 
-   inline void Print(Option_t *options= nullptr) const override {
-     // ascii printing interface
-    printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
-  }
-
-  void printName(std::ostream& os) const override ;
-  void printTitle(std::ostream& os) const override ;
-  void printClassName(std::ostream& os) const override ;
-  void printArgs(std::ostream& os) const override ;
-
   void attachParameters(const RooArgSet& vars) ;
 
   // Advertisement of capabilities
   virtual bool canSampleCategories() const { return false ; }
   virtual bool canSampleConditional() const { return false ; } // Must implement getFuncMax()
+
+  /// Return unique name of generator implementation
+  virtual std::string const& generatorName() const = 0;
 
 protected:
 
@@ -78,8 +69,6 @@ protected:
   RooRealVar *_funcValStore,*_funcValPtr; ///< RRVs storing function value in context and in output dataset
 
   RooDataSet *_cache;                  ///< Dataset holding generared values of observables
-
-  ClassDefOverride(RooAbsNumGenerator,0) // Abstract base class for numeric event generator algorithms
 };
 
 #endif

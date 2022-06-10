@@ -45,9 +45,6 @@ the preference of the caller as encoded in the configuration object.
 
 using namespace std ;
 
-ClassImp(RooNumGenFactory);
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor. Register all known integrators by calling
@@ -117,7 +114,7 @@ RooNumGenFactory& RooNumGenFactory::instance()
 
 bool RooNumGenFactory::storeProtoSampler(RooAbsNumGenerator* proto, const RooArgSet& defConfig)
 {
-  TString name = proto->ClassName() ;
+  TString name = proto->generatorName() ;
 
   if (getProtoSampler(name)) {
     //cout << "RooNumGenFactory::storeSampler() ERROR: integrator '" << name << "' already registered" << endl ;

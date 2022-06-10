@@ -37,7 +37,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooAbsLValue.h
     RooAbsMCStudyModule.h
     RooAbsMoment.h
-    RooAbsNumGenerator.h
     RooAbsOptTestStatistic.h
     RooAbsPdf.h
     RooAbsProxy.h
@@ -49,7 +48,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooAbsString.h
     RooAbsStudy.h
     RooAbsTestStatistic.h
-    RooAcceptReject.h
     RooAdaptiveIntegratorND.h
     RooAddGenContext.h
     RooAddition.h
@@ -107,7 +105,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFirstMoment.h
     RooFit.h
     RooFitResult.h
-    RooFoamGenerator.h
     RooFormula.h
     RooFormulaVar.h
     RooFracRemainder.h
@@ -155,7 +152,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooNumConvolution.h
     RooNumConvPdf.h
     RooNumGenConfig.h
-    RooNumGenFactory.h
     RooNumIntConfig.h
     RooNumIntFactory.h
     RooNumRunningInt.h

@@ -35,19 +35,18 @@ do not define internal methods
 #include "RooDataSet.h"
 #include "RooRandom.h"
 #include "RooErrorHandler.h"
-
+#include "RooPrintable.h"
 #include "RooMsgService.h"
-#include "TFoam.h"
 #include "RooRealBinding.h"
 #include "RooNumGenFactory.h"
 #include "RooNumGenConfig.h"
 
+#include "TFoam.h"
+#include "TNamed.h"
+
 #include <assert.h>
 
 using namespace std;
-
-ClassImp(RooAcceptReject);
-  ;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -92,14 +91,14 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
 
     if(_realSampleDim > 3) {
       _minTrials= _minTrialsArray[3]*_catSampleMult;
-      coutW(Generation) << fName << "::" << ClassName() << ": WARNING: generating " << _realSampleDim
+      oocoutW(nullptr, Generation) << _funcClone->GetName() << "::RooAcceptReject" << ": WARNING: generating " << _realSampleDim
          << " variables with accept-reject may not be accurate" << endl;
     }
     else {
       _minTrials= _minTrialsArray[_realSampleDim]*_catSampleMult;
     }
     if (_realSampleDim > 1) {
-       coutW(Generation) << "RooAcceptReject::ctor(" << fName
+       oocoutW(nullptr, Generation) << "RooAcceptReject::ctor(" << _funcClone->GetName()
                          << ") WARNING: performing accept/reject sampling on a p.d.f in "
                          << _realSampleDim << " dimensions without prior knowledge on maximum value "
                          << "of p.d.f. Determining maximum value by taking " << _minTrials
@@ -114,27 +113,27 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
 
   // Need to fix some things here
   if (_minTrials>10000) {
-    coutW(Generation) << "RooAcceptReject::ctor(" << fName << "): WARNING: " << _minTrials << " trial samples requested by p.d.f for "
+    oocoutW(nullptr, Generation) << "RooAcceptReject::ctor(" << func.GetName() << "): WARNING: " << _minTrials << " trial samples requested by p.d.f for "
             << _realSampleDim << "-dimensional accept/reject sampling, this may take some time" << endl ;
   }
 
   // print a verbose summary of our configuration, if requested
   if(_verbose) {
-    coutI(Generation) << fName << "::" << ClassName() << ":" << endl
+    oocoutI(nullptr, Generation) << func.GetName() << "::RooAcceptReject" << ":" << endl
             << "  Initializing accept-reject generator for" << endl << "    ";
-    _funcClone->printStream(ccoutI(Generation),kName,kSingleLine);
+    _funcClone->printStream(ooccoutI(nullptr, Generation),RooPrintable::kName,RooPrintable::kSingleLine);
     if (_funcMaxVal) {
-      ccoutI(Generation) << "  Function maximum provided, no trial sampling performed" << endl ;
+      ooccoutI(nullptr, Generation) << "  Function maximum provided, no trial sampling performed" << endl ;
     } else {
-      ccoutI(Generation) << "  Real sampling dimension is " << _realSampleDim << endl;
-      ccoutI(Generation) << "  Category sampling multiplier is " << _catSampleMult << endl ;
-      ccoutI(Generation) << "  Min sampling trials is " << _minTrials << endl;
+      ooccoutI(nullptr, Generation) << "  Real sampling dimension is " << _realSampleDim << endl;
+      ooccoutI(nullptr, Generation) << "  Category sampling multiplier is " << _catSampleMult << endl ;
+      ooccoutI(nullptr, Generation) << "  Min sampling trials is " << _minTrials << endl;
     }
     if (_catVars.getSize()>0) {
-      ccoutI(Generation) << "  Will generate category vars "<< _catVars << endl ;
+      ooccoutI(nullptr, Generation) << "  Will generate category vars "<< _catVars << endl ;
     }
     if (_realVars.getSize()>0) {
-      ccoutI(Generation) << "  Will generate real vars " << _realVars << endl ;
+      ooccoutI(nullptr, Generation) << "  Will generate real vars " << _realVars << endl ;
     }
   }
 
@@ -168,7 +167,7 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining, double& resamp
 
       // Limit cache size to 1M events
       if (_cache->numEntries()>1000000) {
-   coutI(Generation) << "RooAcceptReject::generateEvent: resetting event cache" << endl ;
+   oocoutI(nullptr, Generation) << "RooAcceptReject::generateEvent: resetting event cache" << std::endl;
    _cache->reset() ;
    _eventsUsed = 0 ;
       }
@@ -179,7 +178,7 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining, double& resamp
     while(0 == event) {
       // Use any cached events first
       if (_maxFuncVal>oldMax2) {
-   cxcoutD(Generation) << "RooAcceptReject::generateEvent maxFuncVal has changed, need to resample already accepted events by factor"
+   oocxcoutD(static_cast<TObject*>(nullptr), Generation) << "RooAcceptReject::generateEvent maxFuncVal has changed, need to resample already accepted events by factor"
              << oldMax2 << "/" << _maxFuncVal << "=" << oldMax2/_maxFuncVal << endl ;
    resampleRatio=oldMax2/_maxFuncVal ;
       }
@@ -192,18 +191,18 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining, double& resamp
       // Calculate how many more events to generate using our best estimate of our efficiency.
       // Always generate at least one more event so we don't get stuck.
       if(_totalEvents*_maxFuncVal <= 0) {
-   coutE(Generation) << "RooAcceptReject::generateEvent: cannot estimate efficiency...giving up" << endl;
+   oocoutE(nullptr, Generation) << "RooAcceptReject::generateEvent: cannot estimate efficiency...giving up" << endl;
    return 0;
       }
 
       double eff= _funcSum/(_totalEvents*_maxFuncVal);
       Long64_t extra= 1 + (Long64_t)(1.05*remaining/eff);
-      cxcoutD(Generation) << "RooAcceptReject::generateEvent: adding " << extra << " events to the cache, eff = " << eff << endl;
+      oocxcoutD(static_cast<TObject*>(nullptr), Generation) << "RooAcceptReject::generateEvent: adding " << extra << " events to the cache, eff = " << eff << endl;
       double oldMax(_maxFuncVal);
       while(extra--) {
    addEventToCache();
    if((_maxFuncVal > oldMax)) {
-     cxcoutD(Generation) << "RooAcceptReject::generateEvent: estimated function maximum increased from "
+     oocxcoutD(static_cast<TObject*>(nullptr), Generation) << "RooAcceptReject::generateEvent: estimated function maximum increased from "
                << oldMax << " to " << _maxFuncVal << endl;
      oldMax = _maxFuncVal ;
      // Trim cache here
@@ -310,7 +309,7 @@ double RooAcceptReject::getFuncMax()
 
     // Limit cache size to 1M events
     if (_cache->numEntries()>1000000) {
-      coutI(Generation) << "RooAcceptReject::getFuncMax: resetting event cache" << endl ;
+      oocoutI(nullptr, Generation) << "RooAcceptReject::getFuncMax: resetting event cache" << endl ;
       _cache->reset() ;
       _eventsUsed = 0 ;
     }
@@ -319,3 +318,7 @@ double RooAcceptReject::getFuncMax()
   return _maxFuncVal ;
 }
 
+std::string const& RooAcceptReject::generatorName() const {
+   static const std::string name = "RooAcceptReject";
+   return name;
+}

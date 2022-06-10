@@ -65,7 +65,6 @@
 #pragma link C++ class RooAbsReal+ ;
 #pragma link C++ class RooAbsRealLValue+ ;
 #pragma link C++ class RooAbsRootFinder+ ;
-#pragma link C++ class RooAcceptReject+ ;
 #pragma link C++ class RooAddGenContext+ ;
 #pragma link C++ class RooAddition+ ;
 #pragma link C++ class RooAddModel+ ;
@@ -322,10 +321,7 @@
 #pragma link C++ class RooMultiGenFunction+ ;
 #pragma link C++ class RooTFoamBinding+ ;
 #pragma link C++ class RooAdaptiveIntegratorND+ ;
-#pragma link C++ class RooAbsNumGenerator+ ;
-#pragma link C++ class RooFoamGenerator+ ;
 #pragma link C++ class RooNumGenConfig+ ;
-#pragma link C++ class RooNumGenFactory+ ;
 #pragma link C++ class RooMultiVarGaussian+ ;
 #pragma link C++ class RooMultiVarGaussian::AnaIntData+ ;
 #pragma link C++ class RooMultiVarGaussian::GenData+ ;

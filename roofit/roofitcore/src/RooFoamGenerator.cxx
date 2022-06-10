@@ -55,9 +55,6 @@ Access those using:
 
 using namespace std;
 
-ClassImp(RooFoamGenerator);
-  ;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Register RooIntegrator1D, is parameters and capabilities with RooNumIntFactory
@@ -148,4 +145,9 @@ const RooArgSet *RooFoamGenerator::generateEvent(UInt_t /*remaining*/, double& /
     i++ ;
   }
   return &_realVars ;
+}
+
+std::string const& RooFoamGenerator::generatorName() const {
+   static const std::string name = "RooFoamGenerator";
+   return name;
 }
