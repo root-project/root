@@ -82,9 +82,9 @@ RooArgSet getObservablesInPdf(RooAbsPdf const &pdf, RooArgSet const &observables
 \param rangeName the range name
 **/
 RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables,
-                           bool isExtended, std::string const &rangeName)
+                           bool isExtended, std::string const &rangeName, bool doOffset)
    : RooAbsReal(name, title), _pdf{"pdf", "pdf", this, pdf}, _observables{getObservablesInPdf(pdf, observables)},
-     _isExtended{isExtended}, _weightVar{"weightVar", "weightVar",
+     _isExtended{isExtended}, _doOffset{doOffset}, _weightVar{"weightVar", "weightVar",
                                          this,        *new RooRealVar(weightVarName, weightVarName, 1.0),
                                          true,        false,
                                          true},
@@ -203,7 +203,21 @@ void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_
          }
       }
 
-      output[0] = result.Sum() + sumWeightKahanSum.Sum();
+      result += sumWeightKahanSum.Sum();
+
+      // Check if value offset flag is set.
+      if (_doOffset) {
+
+        // If no offset is stored enable this feature now
+        if (_offset==0 && result !=0 ) {
+          _offset = result ;
+        }
+
+        // Subtract offset
+        result -= _offset;
+      }
+
+      output[0] = result.Sum();
 
       return;
    }
@@ -273,6 +287,19 @@ void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_
    if (_fractionInRange) {
       kahanProb += sumCorrectionTerm;
    }
+
+   // Check if value offset flag is set.
+   if (_doOffset) {
+
+     // If no offset is stored enable this feature now
+     if (_offset==0 && kahanProb !=0 ) {
+       _offset = kahanProb ;
+     }
+
+     // Subtract offset
+     kahanProb -= _offset;
+   }
+
    output[0] = kahanProb.Sum();
 }
 

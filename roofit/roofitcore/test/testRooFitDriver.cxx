@@ -84,7 +84,7 @@ TEST(testRooFitDriver, SimpleLikelihoodFit)
 
    // ...and now the new way with RooFitDriver
    using namespace ROOT::Experimental;
-   RooNLLVarNew nll("nll", "nll", model, *data->get(), false, "");
+   RooNLLVarNew nll("nll", "nll", model, *data->get(), false, "", false);
    auto driver = std::make_unique<RooFitDriver>(nll, x, RooFit::BatchModeOption::Cpu);
    driver->setData(*data);
    auto wrapper = RooFit::BatchModeHelpers::makeDriverAbsRealWrapper(std::move(driver), *data->get());
