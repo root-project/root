@@ -18,6 +18,8 @@
 #include "RooAbsReal.h"
 #include "RooTemplateProxy.h"
 
+#include <Math/Util.h>
+
 #include "RooBatchComputeTypes.h"
 
 namespace ROOT {
@@ -32,7 +34,7 @@ public:
 
    RooNLLVarNew(){};
    RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables, bool isExtended,
-                std::string const &rangeName);
+                std::string const &rangeName, bool doOffset);
    RooNLLVarNew(const RooNLLVarNew &other, const char *name = 0);
    TObject *clone(const char *newname) const override { return new RooNLLVarNew(*this, newname); }
 
@@ -62,12 +64,14 @@ private:
    bool _isExtended;
    bool _weightSquared = false;
    bool _binnedL = false;
+   bool _doOffset = false;
    std::string _prefix;
    RooTemplateProxy<RooAbsReal> _weightVar;
    RooTemplateProxy<RooAbsReal> _weightSquaredVar;
    std::unique_ptr<RooTemplateProxy<RooAbsReal>> _fractionInRange;
-   mutable std::vector<double> _binw;            //!
-   mutable std::vector<double> _logProbasBuffer; //!
+   mutable std::vector<double> _binw;                  ///<!
+   mutable std::vector<double> _logProbasBuffer;       ///<!
+   mutable ROOT::Math::KahanSum<double> _offset = 0.0; ///<! Offset as KahanSum to avoid loss of precision
 
 }; // end class RooNLLVar
 
