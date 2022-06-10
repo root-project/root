@@ -19,13 +19,17 @@ if(NOT TARGET eventexe)
       if(MSVC AND DEFINED ROOT_SOURCE_DIR)
         ROOTTEST_LINKER_LIBRARY(EventTreeFormula TEST ${ROOT_EVENT_DIR}/Event.cxx EventDict.cxx
                     LIBRARIES Core Tree Hist MathCore)
+
+        ROOTTEST_GENERATE_EXECUTABLE(EventGenerate ${ROOT_EVENT_DIR}/MainEvent.cxx
+                    LIBRARIES Core RIO Net Tree Hist MathCore EventTreeFormula)
       else()
         ROOTTEST_LINKER_LIBRARY(EventTreeFormula TEST ${ROOT_EVENT_DIR}/Event.cxx EventDict.cxx
                     LIBRARIES ROOT::Core ROOT::Tree ROOT::Hist ROOT::MathCore)
+
+        ROOTTEST_GENERATE_EXECUTABLE(EventGenerate ${ROOT_EVENT_DIR}/MainEvent.cxx
+                    LIBRARIES ROOT::Core ROOT::RIO ROOT::Net ROOT::Tree ROOT::Hist ROOT::MathCore EventTreeFormula)
       endif()
 
-      ROOTTEST_GENERATE_EXECUTABLE(EventGenerate ${ROOT_EVENT_DIR}/MainEvent.cxx
-                  LIBRARIES Core RIO Net Tree Hist MathCore EventTreeFormula)
       if(MSVC)
         add_dependencies(EventGenerate EventTreeFormula)
       endif()

@@ -2,7 +2,11 @@
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 set(CMAKE_ROOTTEST_NOROOTMAP OFF)
 ROOT_GENERATE_DICTIONARY(base_cling ${CMAKE_CURRENT_SOURCE_DIR}/base.h MODULE base LINKDEF baseLinkDef.h)
-ROOTTEST_LINKER_LIBRARY(base base_cling.cxx testobject.cpp testobjectderived.cpp TEST LIBRARIES Core RIO)
+if(MSVC AND DEFINED ROOT_SOURCE_DIR)
+  ROOTTEST_LINKER_LIBRARY(base base_cling.cxx testobject.cpp testobjectderived.cpp TEST LIBRARIES Core RIO)
+else()
+  ROOTTEST_LINKER_LIBRARY(base base_cling.cxx testobject.cpp testobjectderived.cpp TEST LIBRARIES ROOT::Core ROOT::RIO)
+endif()
 
 set(RootExeOptions -e "gSystem->Load(\"libbase\")")   # Adding a ; to avoid the output is complicated
 
