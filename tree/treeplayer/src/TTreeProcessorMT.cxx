@@ -525,43 +525,43 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
                                                           fFileNames, clusterAndEntries.second);
    }
 
-   const auto &clusters = clusterAndEntries.first;
-   const auto &entries = clusterAndEntries.second;
-
    // Retrieve number of entries for each file for each friend tree
    const auto friendEntries = hasFriends ? GetFriendEntries(fFriendInfo) : std::vector<std::vector<Long64_t>>{};
 
    // Parent task, spawns tasks that process each of the entry clusters for each input file
-   // TODO: for readability we should have two versions of this lambda, for shouldRetrieveAllClusters == true/false
-   auto processFile = [&](std::size_t fileIdx) {
+   auto processFileRetrievingAllClusters = [&](std::size_t fileIdx) {
+      auto processCluster = [&](const EntryCluster &c) {
+         auto r = fTreeView->GetTreeReader(c.start, c.end, fTreeNames, fFileNames, fFriendInfo, fEntryList,
+                                           clusterAndEntries.second, friendEntries);
+         func(*r);
+      };
+      fPool.Foreach(processCluster, clusterAndEntries.first[fileIdx]);
+   };
+
+   auto processFileNotRetrievingAllClusters = [&](std::size_t fileIdx) {
       // theseFiles contains either all files or just the single file to process
-      const auto &theseFiles = shouldRetrieveAllClusters ? fFileNames : std::vector<std::string>({fFileNames[fileIdx]});
+      const auto &theseFiles = std::vector<std::string>({fFileNames[fileIdx]});
       // either all tree names or just the single tree to process
-      const auto &theseTrees = shouldRetrieveAllClusters ? fTreeNames : std::vector<std::string>({fTreeNames[fileIdx]});
+      const auto &theseTrees = std::vector<std::string>({fTreeNames[fileIdx]});
       // Evaluate clusters (with local entry numbers) and number of entries for this file, if needed
-      const auto theseClustersAndEntries =
-         shouldRetrieveAllClusters ? ClustersAndEntries{} : MakeClusters(theseTrees, theseFiles, maxTasksPerFile);
-
-      // All clusters for the file to process, either with global or local entry numbers
-      const auto &thisFileClusters = shouldRetrieveAllClusters ? clusters[fileIdx] : theseClustersAndEntries.first[0];
-
-      // Either all number of entries or just the ones for this file
-      const auto &theseEntries =
-         shouldRetrieveAllClusters ? entries : std::vector<Long64_t>({theseClustersAndEntries.second[0]});
+      const auto theseClustersAndEntries = MakeClusters(theseTrees, theseFiles, maxTasksPerFile);
 
       auto processCluster = [&](const EntryCluster &c) {
          auto r = fTreeView->GetTreeReader(c.start, c.end, theseTrees, theseFiles, fFriendInfo, fEntryList,
-                                           theseEntries, friendEntries);
+                                           std::vector<Long64_t>({theseClustersAndEntries.second[0]}), friendEntries);
          func(*r);
       };
 
-      fPool.Foreach(processCluster, thisFileClusters);
+      fPool.Foreach(processCluster, theseClustersAndEntries.first[0]);
    };
 
    std::vector<std::size_t> fileIdxs(fFileNames.size());
    std::iota(fileIdxs.begin(), fileIdxs.end(), 0u);
 
-   fPool.Foreach(processFile, fileIdxs);
+   if (shouldRetrieveAllClusters)
+      fPool.Foreach(processFileRetrievingAllClusters, fileIdxs);
+   else
+      fPool.Foreach(processFileNotRetrievingAllClusters, fileIdxs);
 
    // make sure TChains and TFiles are cleaned up since they are not globally tracked
    for (unsigned int islot = 0; islot < fTreeView.GetNSlots(); ++islot) {
