@@ -497,6 +497,8 @@ void RLoopManager::RunTreeProcessorMT()
    const auto &entryList = fTree->GetEntryList() ? *fTree->GetEntryList() : TEntryList();
    auto tp = std::make_unique<ROOT::TTreeProcessorMT>(*fTree, entryList, fNSlots);
 
+   tp->SetEntriesRange(fStartEntry, fEndEntry);
+
    std::atomic<ULong64_t> entryCount(0ull);
 
    tp->Process([this, &slotStack, &entryCount](TTreeReader &r) -> void {

@@ -88,6 +88,9 @@ private:
    std::vector<std::string> FindTreeNames();
    static unsigned int fgTasksPerWorkerHint;
 
+   ULong64_t fStartEntry{0};
+   ULong64_t fEndEntry{std::numeric_limits<ULong64_t>::max()};
+
 public:
    TTreeProcessorMT(std::string_view filename, std::string_view treename = "", UInt_t nThreads = 0u);
    TTreeProcessorMT(const std::vector<std::string_view> &filenames, std::string_view treename = "",
@@ -99,6 +102,12 @@ public:
 
    static void SetTasksPerWorkerHint(unsigned int m);
    static unsigned int GetTasksPerWorkerHint();
+
+   void SetEntriesRange(ULong64_t startEntry, ULong64_t endEntry)
+   {
+      fStartEntry = startEntry;
+      fEndEntry = endEntry;
+   }
 };
 
 } // End of namespace ROOT

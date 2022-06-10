@@ -129,7 +129,8 @@ using ClustersAndEntries = std::pair<std::vector<std::vector<EntryCluster>>, std
 ////////////////////////////////////////////////////////////////////////
 /// Return a vector of cluster boundaries for the given tree and files.
 static ClustersAndEntries MakeClusters(const std::vector<std::string> &treeNames,
-                                       const std::vector<std::string> &fileNames, const unsigned int maxTasksPerFile)
+                                       const std::vector<std::string> &fileNames, const unsigned int maxTasksPerFile,
+                                       Long64_t startEntry, Long64_t endEntry)
 {
    // Note that as a side-effect of opening all files that are going to be used in the
    // analysis once, all necessary streamers will be loaded into memory.
@@ -164,14 +165,22 @@ static ClustersAndEntries MakeClusters(const std::vector<std::string> &treeNames
       const Long64_t entries = t->GetEntries();
       // Iterate over the clusters in the current file
       std::vector<EntryCluster> clusters;
+      bool IsInRange = false;
       while ((start = clusterIter()) < entries) {
          end = clusterIter.GetNextEntry();
          // Add the current file's offset to start and end to make them (chain) global
-         clusters.emplace_back(EntryCluster{start + offset, end + offset});
+         const auto currentStart = std::max(start + offset, startEntry);
+         const auto currentEnd = std::min(end + offset, endEntry);
+         if (currentStart < currentEnd) {
+            clusters.emplace_back(EntryCluster{currentStart, currentEnd});
+            IsInRange = true;
+         }
       }
       offset += entries;
-      clustersPerFile.emplace_back(std::move(clusters));
-      entriesPerFile.emplace_back(entries);
+      if (IsInRange) {
+         clustersPerFile.emplace_back(std::move(clusters));
+         entriesPerFile.emplace_back(/*clusters.back().end - clusters[0].start*/ entries);
+      }
    }
 
    // Here we "fuse" clusters together if the number of clusters is too big with respect to
@@ -519,7 +528,7 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
    const bool shouldRetrieveAllClusters = hasFriends || hasEntryList;
    ClustersAndEntries clusterAndEntries{};
    if (shouldRetrieveAllClusters) {
-      clusterAndEntries = MakeClusters(fTreeNames, fFileNames, maxTasksPerFile);
+      clusterAndEntries = MakeClusters(fTreeNames, fFileNames, maxTasksPerFile, fStartEntry, fEndEntry);
       if (hasEntryList)
          clusterAndEntries.first = ConvertToElistClusters(std::move(clusterAndEntries.first), fEntryList, fTreeNames,
                                                           fFileNames, clusterAndEntries.second);
@@ -540,7 +549,8 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
       const auto &theseTrees = shouldRetrieveAllClusters ? fTreeNames : std::vector<std::string>({fTreeNames[fileIdx]});
       // Evaluate clusters (with local entry numbers) and number of entries for this file, if needed
       const auto theseClustersAndEntries =
-         shouldRetrieveAllClusters ? ClustersAndEntries{} : MakeClusters(theseTrees, theseFiles, maxTasksPerFile);
+         shouldRetrieveAllClusters ? ClustersAndEntries{}
+                                   : MakeClusters(theseTrees, theseFiles, maxTasksPerFile, fStartEntry, fEndEntry);
 
       // All clusters for the file to process, either with global or local entry numbers
       const auto &thisFileClusters = shouldRetrieveAllClusters ? clusters[fileIdx] : theseClustersAndEntries.first[0];
