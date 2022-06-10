@@ -17,6 +17,7 @@
 #include <RooFit/Detail/DataMap.h>
 #include <RooGlobalFunc.h>
 #include <RooHelpers.h>
+#include <RooFit/Detail/Buffers.h>
 
 #include <chrono>
 #include <memory>
@@ -72,6 +73,8 @@ private:
 
    ///////////////////////////
    // Private member variables
+
+   Detail::BufferManager _bufferManager; // The object managing the different buffers for the intermediate results
 
    const RooFit::BatchModeOption _batchMode = RooFit::BatchModeOption::Off;
    int _getValInvocations = 0;

@@ -25,8 +25,10 @@ namespace Detail {
 class ScalarBufferContainer {
 public:
    ScalarBufferContainer() {}
-   ScalarBufferContainer(std::size_t size) {
-      if (size != 1) throw std::runtime_error("ScalarBufferContainer can only be of size 1");
+   ScalarBufferContainer(std::size_t size)
+   {
+      if (size != 1)
+         throw std::runtime_error("ScalarBufferContainer can only be of size 1");
    }
    std::size_t size() const { return 1; }
 
@@ -69,7 +71,7 @@ public:
    GPUBufferContainer() {}
    GPUBufferContainer(std::size_t size)
    {
-      _data = static_cast<double*>(RooBatchCompute::dispatchCUDA->cudaMalloc(size * sizeof(double)));
+      _data = static_cast<double *>(RooBatchCompute::dispatchCUDA->cudaMalloc(size * sizeof(double)));
       _size = size;
    }
    ~GPUBufferContainer()
@@ -114,7 +116,7 @@ public:
    PinnedBufferContainer() {}
    PinnedBufferContainer(std::size_t size)
    {
-      _data = static_cast<double*>(RooBatchCompute::dispatchCUDA->cudaMallocHost(size * sizeof(double)));
+      _data = static_cast<double *>(RooBatchCompute::dispatchCUDA->cudaMallocHost(size * sizeof(double)));
       _size = size;
       _gpuBuffer = GPUBufferContainer{size};
    }
@@ -138,7 +140,8 @@ public:
    {
 
       if (_lastAccess == LastAccessType::GPU_WRITE) {
-         RooBatchCompute::dispatchCUDA->memcpyToCPU(_data, _gpuBuffer.gpuWritePtr(), _size * sizeof(double), _cudaStream);
+         RooBatchCompute::dispatchCUDA->memcpyToCPU(_data, _gpuBuffer.gpuWritePtr(), _size * sizeof(double),
+                                                    _cudaStream);
       }
 
       _lastAccess = LastAccessType::CPU_READ;
@@ -148,7 +151,8 @@ public:
    {
 
       if (_lastAccess == LastAccessType::CPU_WRITE) {
-         RooBatchCompute::dispatchCUDA->memcpyToCUDA(_gpuBuffer.gpuWritePtr(), _data, _size * sizeof(double), _cudaStream);
+         RooBatchCompute::dispatchCUDA->memcpyToCUDA(_gpuBuffer.gpuWritePtr(), _data, _size * sizeof(double),
+                                                     _cudaStream);
       }
 
       _lastAccess = LastAccessType::GPU_READ;
@@ -179,25 +183,20 @@ private:
 template <class Container>
 class BufferImpl : public AbsBuffer {
 public:
-   using QueuesMap = std::map<std::size_t, std::queue<Container>>;
+   using Queue = std::queue<Container>;
+   using QueuesMap = std::map<std::size_t, Queue>;
 
-   BufferImpl(std::size_t size)
+   BufferImpl(std::size_t size, QueuesMap &queuesMap) : _queue{queuesMap[size]}
    {
-      std::queue<Container> &q = queues()[size];
-      if (q.empty()) {
+      if (_queue.empty()) {
          _vec = Container(size);
       } else {
-         _vec = std::move(q.front());
-         q.pop();
+         _vec = std::move(_queue.front());
+         _queue.pop();
       }
    }
 
-   static QueuesMap& queues() {
-      static QueuesMap queuesMap;
-      return queuesMap;
-   }
-
-   ~BufferImpl() override { queues().at(_vec.size()).emplace(std::move(_vec)); }
+   ~BufferImpl() override { _queue.emplace(std::move(_vec)); }
 
    double const *cpuReadPtr() const override { return _vec.cpuReadPtr(); }
    double const *gpuReadPtr() const override { return _vec.gpuReadPtr(); }
@@ -205,7 +204,11 @@ public:
    double *cpuWritePtr() override { return _vec.cpuWritePtr(); }
    double *gpuWritePtr() override { return _vec.gpuWritePtr(); }
 
+   Container &vec() { return _vec; }
+
+private:
    Container _vec;
+   Queue &_queue;
 };
 
 using ScalarBuffer = BufferImpl<ScalarBufferContainer>;
@@ -213,22 +216,39 @@ using CPUBuffer = BufferImpl<CPUBufferContainer>;
 using GPUBuffer = BufferImpl<GPUBufferContainer>;
 using PinnedBuffer = BufferImpl<PinnedBufferContainer>;
 
-AbsBuffer* makeScalarBuffer()
+struct BufferQueuesMaps {
+   ScalarBuffer::QueuesMap scalarBufferQueuesMap;
+   CPUBuffer::QueuesMap cpuBufferQueuesMap;
+   GPUBuffer::QueuesMap gpuBufferQueuesMap;
+   PinnedBuffer::QueuesMap pinnedBufferQueuesMap;
+};
+
+BufferManager::BufferManager()
 {
-   return new ScalarBuffer{1};
+   _queuesMaps = new BufferQueuesMaps;
 }
-AbsBuffer* makeCpuBuffer(std::size_t size)
+
+BufferManager::~BufferManager()
 {
-   return new CPUBuffer{size};
+   delete _queuesMaps;
 }
-AbsBuffer* makeGpuBuffer(std::size_t size)
+
+AbsBuffer *BufferManager::makeScalarBuffer()
 {
-   return new GPUBuffer{size};
+   return new ScalarBuffer{1, _queuesMaps->scalarBufferQueuesMap};
 }
-AbsBuffer* makePinnedBuffer(std::size_t size, cudaStream_t *stream)
+AbsBuffer *BufferManager::makeCpuBuffer(std::size_t size)
 {
-   auto out = new PinnedBuffer{size};
-   out->_vec.setCudaStream(stream);
+   return new CPUBuffer{size, _queuesMaps->cpuBufferQueuesMap};
+}
+AbsBuffer *BufferManager::makeGpuBuffer(std::size_t size)
+{
+   return new GPUBuffer{size, _queuesMaps->gpuBufferQueuesMap};
+}
+AbsBuffer *BufferManager::makePinnedBuffer(std::size_t size, cudaStream_t *stream)
+{
+   auto out = new PinnedBuffer{size, _queuesMaps->pinnedBufferQueuesMap};
+   out->vec().setCudaStream(stream);
    return out;
 }
 

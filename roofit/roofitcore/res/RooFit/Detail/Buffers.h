@@ -30,10 +30,22 @@ public:
    virtual double *gpuWritePtr() = 0;
 };
 
-AbsBuffer* makeScalarBuffer();
-AbsBuffer* makeCpuBuffer(std::size_t size);
-AbsBuffer* makeGpuBuffer(std::size_t size);
-AbsBuffer* makePinnedBuffer(std::size_t size, cudaStream_t *stream = nullptr);
+struct BufferQueuesMaps;
+
+class BufferManager {
+
+public:
+   BufferManager();
+   ~BufferManager();
+
+   AbsBuffer *makeScalarBuffer();
+   AbsBuffer *makeCpuBuffer(std::size_t size);
+   AbsBuffer *makeGpuBuffer(std::size_t size);
+   AbsBuffer *makePinnedBuffer(std::size_t size, cudaStream_t *stream = nullptr);
+
+private:
+   BufferQueuesMaps *_queuesMaps;
+};
 
 } // end namespace Detail
 } // end namespace Experimental
