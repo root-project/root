@@ -78,7 +78,8 @@ TEST(RDFDatasetSpec, SingleFileSingleColConstructor)
    auto h = RDataFrame(RDatasetSpec("tree", "file.root", {5, 6})).Display<int>({"x"});
    EXPECT_THROW(
       try {
-         ROOT_EXPECT_ERROR(h->AsString(), "TTreeReader::SetEntriesRange()", "first entry out of range 0..5");
+         ROOT_EXPECT_ERROR(h->AsString(), "TTreeReader::SetEntriesRange()",
+                           "Start entry (5) must be lower than the available entries (5).");
       } catch (const std::logic_error &err) {
          EXPECT_EQ(std::string(err.what()),
                    "A range of entries was passed in the creation of the RDataFrame, but the starting entry is larger "
@@ -127,7 +128,8 @@ TEST(RDFDatasetSpec, SingleFileMultiColsConstructor)
    auto h = RDataFrame(RDatasetSpec("tree", "file.root", {5, 6})).Display<int>({"x"});
    EXPECT_THROW(
       try {
-         ROOT_EXPECT_ERROR(h->AsString(), "TTreeReader::SetEntriesRange()", "first entry out of range 0..5");
+         ROOT_EXPECT_ERROR(h->AsString(), "TTreeReader::SetEntriesRange()",
+                           "Start entry (5) must be lower than the available entries (5).");
       } catch (const std::logic_error &err) {
          EXPECT_EQ(std::string(err.what()),
                    "A range of entries was passed in the creation of the RDataFrame, but the starting entry is larger "
