@@ -35,7 +35,7 @@ using ROOT::Experimental::RooNLLVarNew;
 namespace {
 
 std::unique_ptr<RooAbsArg> prepareSimultaneousModelForBatchMode(RooSimultaneous &simPdf, RooArgSet &observables,
-                                                                bool isExtended, std::string const &rangeName)
+                                                                bool isExtended, std::string const &rangeName, bool doOffset)
 {
    // Prepare the NLLTerms for each component
    RooArgList nllTerms;
@@ -44,7 +44,7 @@ std::unique_ptr<RooAbsArg> prepareSimultaneousModelForBatchMode(RooSimultaneous 
       auto const &catName = catItem.first;
       if (RooAbsPdf *pdf = simPdf.getPdf(catName.c_str())) {
          auto nllName = std::string("nll_") + pdf->GetName();
-         auto *nll = new RooNLLVarNew(nllName.c_str(), nllName.c_str(), *pdf, observables, isExtended, rangeName);
+         auto *nll = new RooNLLVarNew(nllName.c_str(), nllName.c_str(), *pdf, observables, isExtended, rangeName, doOffset);
          // Rename the observables and weights
          newObservables.add(nll->prefixObservableAndWeightNames(std::string("_") + catName + "_"));
          nllTerms.add(*nll);
@@ -64,7 +64,7 @@ std::unique_ptr<RooAbsReal>
 RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data, std::unique_ptr<RooAbsReal> &&constraints,
                                     std::string const &rangeName, std::string const &addCoefRangeName,
                                     RooArgSet const &projDeps, bool isExtended, double integrateOverBinsPrecision,
-                                    RooFit::BatchModeOption batchMode)
+                                    RooFit::BatchModeOption batchMode, bool doOffset)
 {
    std::unique_ptr<RooFitDriver> driver;
 
@@ -99,10 +99,10 @@ RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data, std::uniqu
       auto *simPdfClone = static_cast<RooSimultaneous *>(simPdf->cloneTree());
       simPdfClone->wrapPdfsInBinSamplingPdfs(data, integrateOverBinsPrecision);
       // Warning! This mutates "observables"
-      nllTerms.addOwned(prepareSimultaneousModelForBatchMode(*simPdfClone, observables, isExtended, rangeName));
+      nllTerms.addOwned(prepareSimultaneousModelForBatchMode(*simPdfClone, observables, isExtended, rangeName, doOffset));
    } else {
       nllTerms.addOwned(
-         std::make_unique<RooNLLVarNew>("RooNLLVarNew", "RooNLLVarNew", finalPdf, observables, isExtended, rangeName));
+         std::make_unique<RooNLLVarNew>("RooNLLVarNew", "RooNLLVarNew", finalPdf, observables, isExtended, rangeName, doOffset));
    }
    if (constraints) {
       nllTerms.addOwned(std::move(constraints));

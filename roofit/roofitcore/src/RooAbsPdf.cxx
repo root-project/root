@@ -1113,7 +1113,8 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
                                                projDeps,
                                                ext,
                                                pc.getDouble("IntegrateBins"),
-                                               batchMode).release();
+                                               batchMode,
+                                               doOffset).release();
   }
 
   // Construct NLL
