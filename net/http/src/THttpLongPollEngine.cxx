@@ -17,14 +17,13 @@
 #include <cstring>
 #include <cstdlib>
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// THttpLongPollEngine                                                  //
-//                                                                      //
-// Emulation of websocket with long poll requests                       //
-// Allows to send data from server to client without explicit request   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class THttpLongPollEngine
+\ingroup http
+
+Emulation of websocket with long poll requests
+
+Allows to send data from server to client without explicit request
+*/
 
 const std::string THttpLongPollEngine::gLongPollNope = "<<nope>>";
 
@@ -36,7 +35,7 @@ THttpLongPollEngine::THttpLongPollEngine(bool raw) : THttpWSEngine(), fRaw(raw)
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// returns ID of the engine, created from this pointer
+/// Returns ID of the engine, created from this pointer
 
 UInt_t THttpLongPollEngine::GetId() const
 {
@@ -45,7 +44,9 @@ UInt_t THttpLongPollEngine::GetId() const
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// clear request, normally called shortly before destructor
+/// Clear request
+///
+/// normally called shortly before destructor
 
 void THttpLongPollEngine::ClearHandle(Bool_t)
 {
@@ -64,6 +65,7 @@ void THttpLongPollEngine::ClearHandle(Bool_t)
 
 //////////////////////////////////////////////////////////////////////////
 /// Create raw buffer which should be send as reply
+///
 /// For the raw mode all information must be send via binary response
 
 std::string THttpLongPollEngine::MakeBuffer(const void *buf, int len, const char *hdr)
@@ -156,6 +158,7 @@ void THttpLongPollEngine::SendHeader(const char *hdr, const void *buf, int len)
 
 //////////////////////////////////////////////////////////////////////////
 /// Send const char data
+///
 /// Either do it immediately or keep in internal buffer
 
 void THttpLongPollEngine::SendCharStar(const char *buf)
@@ -188,6 +191,7 @@ void THttpLongPollEngine::SendCharStar(const char *buf)
 
 //////////////////////////////////////////////////////////////////////////////
 /// Preview data for given socket
+///
 /// Method called by WS handler before processing websocket data
 /// Returns kTRUE when user should ignore such http request - it is for internal use
 
@@ -225,6 +229,8 @@ Bool_t THttpLongPollEngine::PreProcess(std::shared_ptr<THttpCallArg> &arg)
 }
 
 //////////////////////////////////////////////////////////////////////////////
+/// Post process http request
+///
 /// Normally requests from client does not replied directly for longpoll socket
 /// Therefore one can use such request to send data, which was submitted before to the queue
 
