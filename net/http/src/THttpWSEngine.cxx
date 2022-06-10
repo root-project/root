@@ -13,14 +13,14 @@
 
 #include "THttpCallArg.h"
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// THttpWSEngine                                                        //
-//                                                                      //
-// Internal instance used to exchange WS functionality between          //
-// THttpServer and THttpWSHandler. Normally should not be used directly //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class THttpWSEngine
+
+Internal instance used to exchange WS functionality between
+THttpServer and THttpWSHandler.
+
+Normally should not be used directly
+
+*/
 
 
 ////////////////////////////////////////////////////////////////////////////////

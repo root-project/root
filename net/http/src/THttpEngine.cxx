@@ -11,18 +11,16 @@
 
 #include "THttpEngine.h"
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// THttpEngine                                                          //
-//                                                                      //
-// Abstract class for implementing http protocol for THttpServer        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class THttpEngine
+\ingroup http
+
+Abstract class for implementing http protocol for THttpServer
+*/
 
 ClassImp(THttpEngine);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// normal constructor
+/// constructor
 
 THttpEngine::THttpEngine(const char *name, const char *title) : TNamed(name, title)
 {

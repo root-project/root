@@ -41,13 +41,14 @@
 #include <cstdlib>
 #include <cstring>
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootSnifferFull                                                     //
-//                                                                      //
-// Subclass of TRootSniffer, which provides access to different         //
-// ROOT collections and containers like TTree, TCanvas, ...             //
-//////////////////////////////////////////////////////////////////////////
+/** \class TRootSnifferFull
+\ingroup http
+
+Extends TRootSniffer for many ROOT classes
+
+Provides access to different ROOT collections and containers
+like TTree, TCanvas, TFile, ...
+*/
 
 ClassImp(TRootSnifferFull);
 
@@ -87,10 +88,13 @@ Bool_t TRootSnifferFull::IsDrawableClass(TClass *cl)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// scans object properties
-/// here such fields as _autoload or _icon properties depending on class or object name could be assigned
+/// Scans object properties
+///
+/// here such fields as `_autoload` or `_icon` properties depending on class or object name could be assigned
 /// By default properties, coded in the Class title are scanned. Example:
-///   ClassDef(UserClassName, 1) //  class comments *SNIFF*  _field1=value _field2="string value"
+///
+///     ClassDef(UserClassName, 1) //  class comments *SNIFF*  _field1=value _field2="string value"
+///
 /// Here *SNIFF* mark is important. After it all expressions like field=value are parsed
 /// One could use double quotes to code string values with spaces.
 /// Fields separated from each other with spaces
@@ -109,7 +113,8 @@ void TRootSnifferFull::ScanObjectProperties(TRootSnifferScanRec &rec, TObject *o
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// scans key properties
+/// Scans TKey properties
+///
 /// in special cases load objects from the file
 
 void TRootSnifferFull::ScanKeyProperties(TRootSnifferScanRec &rec, TKey *key, TObject *&obj, TClass *&obj_class)
@@ -135,7 +140,8 @@ void TRootSnifferFull::ScanKeyProperties(TRootSnifferScanRec &rec, TKey *key, TO
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// scans object childs (if any)
+/// Scans object childs (if any)
+///
 /// here one scans collection, branches, trees and so on
 
 void TRootSnifferFull::ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj)
@@ -156,6 +162,7 @@ void TRootSnifferFull::ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns hash value for streamer infos
+///
 /// At the moment - just number of items in streamer infos list.
 
 ULong_t TRootSnifferFull::GetStreamerInfoHash()
@@ -176,7 +183,8 @@ Bool_t TRootSnifferFull::IsStreamerInfoItem(const char *itemname)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get hash function for specified item
-/// used to detect any changes in the specified object
+///
+/// Used to detect any changes in the specified object
 
 ULong_t TRootSnifferFull::GetItemHash(const char *itemname)
 {
@@ -188,6 +196,7 @@ ULong_t TRootSnifferFull::GetItemHash(const char *itemname)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates TMemFile instance, which used for objects streaming
+///
 /// One could not use TBufferFile directly,
 /// while one also require streamer infos list
 
@@ -238,7 +247,9 @@ void TRootSnifferFull::CreateMemFile()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Search element with specified path
+///
 /// Returns pointer on element
+///
 /// Optionally one could obtain element class, member description
 /// and number of childs. When chld!=0, not only element is searched,
 /// but also number of childs are counted. When member!=0, any object
@@ -258,7 +269,8 @@ void *TRootSnifferFull::FindInHierarchy(const char *path, TClass **cl, TDataMemb
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// produce binary data for specified item
+/// Produce binary data for specified item
+///
 /// if "zipped" option specified in query, buffer will be compressed
 
 Bool_t TRootSnifferFull::ProduceBinary(const std::string &path, const std::string & /*query*/, std::string &res)
@@ -316,20 +328,21 @@ Bool_t TRootSnifferFull::ProduceBinary(const std::string &path, const std::strin
 ////////////////////////////////////////////////////////////////////////////////
 /// Method to produce image from specified object
 ///
-/// Parameters:
-///    kind - image kind TImage::kPng, TImage::kJpeg, TImage::kGif
-///    path - path to object
-///    options - extra options
+///  @param kind  image kind TImage::kPng, TImage::kJpeg, TImage::kGif
+///  @param path  path to object
+///  @param options extra options
+///  @param res std::string with binary data
 ///
 /// By default, image 300x200 is produced
 /// In options string one could provide following parameters:
-///    w - image width
-///    h - image height
-///    opt - draw options
-///  For instance:
-///     http://localhost:8080/Files/hsimple.root/hpx/get.png?w=500&h=500&opt=lego1
 ///
-///  Return is std::string with binary data
+/// * w - image width
+/// * h - image height
+/// * opt - draw options
+///
+///  For instance:
+///
+///       http://localhost:8080/Files/hsimple.root/hpx/get.png?w=500&h=500&opt=lego1
 
 Bool_t TRootSnifferFull::ProduceImage(Int_t kind, const std::string &path, const std::string &options, std::string &res)
 {
@@ -424,7 +437,8 @@ Bool_t TRootSnifferFull::ProduceImage(Int_t kind, const std::string &path, const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// produce XML data for specified item
+/// Produce XML data for specified item
+///
 /// For object conversion TBufferXML is used
 
 Bool_t TRootSnifferFull::ProduceXml(const std::string &path, const std::string & /*options*/, std::string &res)
@@ -447,10 +461,11 @@ Bool_t TRootSnifferFull::ProduceXml(const std::string &path, const std::string &
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// execute command for specified object
+/// Execute command for specified object
+///
 /// options include method and extra list of parameters
 /// sniffer should be not-readonly to allow execution of the commands
-/// reskind defines kind of result 0 - debug, 1 - json, 2 - binary
+/// @param reskind defines kind of result 0 - debug, 1 - json, 2 - binary
 
 Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &options, Int_t reskind, std::string &res_str)
 {
