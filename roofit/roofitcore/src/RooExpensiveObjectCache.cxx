@@ -70,23 +70,6 @@ RooExpensiveObjectCache& RooExpensiveObjectCache::instance()
 
 bool RooExpensiveObjectCache::registerObject(const char* ownerName, const char* objectName, TObject& cacheObject, const RooArgSet& params)
 {
-  TIterator* parIter = params.createIterator() ;
-  bool ret = registerObject(ownerName,objectName,cacheObject,parIter) ;
-  delete parIter ;
-
-  return ret ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Register object associated with given name and given associated parameters with given values in cache.
-/// The cache will take _ownership_of_object_ and is indexed under the given name (which does not
-/// need to be the name of cacheObject and with given set of dependent parameters with validity for the
-/// current values of those parameters. It can be retrieved later by callin retrieveObject()
-
-bool RooExpensiveObjectCache::registerObject(const char* ownerName, const char* objectName, TObject& cacheObject, TIterator* parIter)
-{
   // Delete any previous object
   ExpensiveObject* eo = _map[objectName] ;
   Int_t olduid(-1) ;
@@ -95,7 +78,7 @@ bool RooExpensiveObjectCache::registerObject(const char* ownerName, const char* 
     delete eo ;
   }
   // Install new object
-  _map[objectName] = new ExpensiveObject(olduid!=-1?olduid:_nextUID++, ownerName,cacheObject,parIter) ;
+  _map[objectName] = new ExpensiveObject(olduid!=-1?olduid:_nextUID++, ownerName,cacheObject,params) ;
 
   return false ;
 }
@@ -192,16 +175,14 @@ void RooExpensiveObjectCache::clearAll()
 /// Construct ExpensiveObject oject for inPayLoad and store reference values
 /// for all RooAbsReal and RooAbsCategory parameters in params.
 
-RooExpensiveObjectCache::ExpensiveObject::ExpensiveObject(Int_t uidIn, const char* inOwnerName, TObject& inPayload, TIterator* parIter)
+RooExpensiveObjectCache::ExpensiveObject::ExpensiveObject(Int_t uidIn, const char* inOwnerName, TObject& inPayload, RooArgSet const& params)
 {
   _uid = uidIn ;
   _ownerName = inOwnerName;
 
   _payload = &inPayload ;
 
-  RooAbsArg* arg ;
-  parIter->Reset() ;
-  while((arg=(RooAbsArg*)parIter->Next() )) {
+  for(RooAbsArg * arg : params) {
     RooAbsReal* real = dynamic_cast<RooAbsReal*>(arg) ;
     if (real) {
       _realRefParams[real->GetName()] = real->getVal() ;
@@ -253,26 +234,21 @@ bool RooExpensiveObjectCache::ExpensiveObject::matches(TClass* tc, const RooArgS
   }
 
   // Check parameters
-  TIterator* iter = params.createIterator() ;
-  RooAbsArg* arg ;
-  while((arg=(RooAbsArg*)iter->Next() )) {
+  for(RooAbsArg * arg : params) {
     RooAbsReal* real = dynamic_cast<RooAbsReal*>(arg) ;
     if (real) {
       if (fabs(real->getVal()-_realRefParams[real->GetName()])>1e-12) {
-   delete iter ;
    return false ;
       }
     } else {
       RooAbsCategory* cat = dynamic_cast<RooAbsCategory*>(arg) ;
       if (cat) {
    if (cat->getCurrentIndex() != _catRefParams[cat->GetName()]) {
-     delete iter ;
      return false ;
    }
       }
     }
   }
-  delete iter ;
 
   return true ;
 

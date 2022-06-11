@@ -138,9 +138,7 @@ RooMinuit::RooMinuit(RooAbsReal& function)
   _constParamList->setName("constParamList") ;
 
   // Remove all non-RooRealVar parameters from list (MINUIT cannot handle them)
-  TIterator* pIter = _floatParamList->createIterator() ;
-  RooAbsArg* arg ;
-  while((arg=(RooAbsArg*)pIter->Next())) {
+  for (RooAbsArg * arg : *_floatParamList) {
     if (!arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
       coutW(Minimization) << "RooMinuit::RooMinuit: removing parameter " << arg->GetName()
            << " from list because it is not of type RooRealVar" << endl ;
@@ -148,7 +146,6 @@ RooMinuit::RooMinuit(RooAbsReal& function)
     }
   }
   _nPar      = _floatParamList->getSize() ;
-  delete pIter ;
 
   updateFloatVec() ;
 
@@ -420,9 +417,7 @@ Int_t RooMinuit::minos(const RooArgSet& minosParamList)
   double* arglist = new double[_nPar+1];
 
   if (minosParamList.getSize()>0) {
-    TIterator* aIter = minosParamList.createIterator() ;
-    RooAbsArg* arg ;
-    while((arg=(RooAbsArg*)aIter->Next())) {
+    for(RooAbsArg * arg : minosParamList) {
       RooAbsArg* par = _floatParamList->find(arg->GetName());
       if (par && !par->isConstant()) {
    Int_t index = _floatParamList->index(par);
@@ -430,7 +425,6 @@ Int_t RooMinuit::minos(const RooArgSet& minosParamList)
         arglist[nMinosPar]=index+1;
       }
     }
-    delete aIter ;
   }
   arglist[0]= _maxEvalMult*_nPar; // maximum iterations
 
@@ -1229,15 +1223,12 @@ void RooMinuitGlue(Int_t& /*np*/, double* /*gin*/,
    oocoutW(context,Minimization) << "RooMinuitGlue: Minimized function has error status but is ignored" << endl ;
       }
 
-      TIterator* iter = context->_floatParamList->createIterator() ;
-      RooRealVar* var ;
       bool first(true) ;
       ooccoutW(context,Minimization) << "Parameter values: " ;
-      while((var=(RooRealVar*)iter->Next())) {
+      for(auto * var : static_range_cast<RooRealVar*>(*context->_floatParamList)) {
    if (first) { first = false ; } else ooccoutW(context,Minimization) << ", " ;
    ooccoutW(context,Minimization) << var->GetName() << "=" << var->getVal() ;
       }
-      delete iter ;
       ooccoutW(context,Minimization) << endl ;
 
       RooAbsReal::printEvalErrors(ooccoutW(context,Minimization),context->_printEvalErrors) ;

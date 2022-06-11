@@ -81,8 +81,6 @@ protected:
 
    RooListProxy _funcList; ///<  List of component FUNCs
    RooListProxy _coefList; ///<  List of coefficients
-   TIterator *_funcIter;   ///<! Iterator over FUNC list
-   TIterator *_coefIter;   ///<! Iterator over coefficient list
 
    bool _doFloor;              ///< Introduce floor at zero in pdf
    static bool _doFloorGlobal; ///< Global flag for introducing floor at zero in pdf

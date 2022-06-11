@@ -279,18 +279,13 @@ void RooGenProdProj::operModeHook()
 {
   // WVE use cache manager here!
 
-  RooAbsArg* arg ;
-  TIterator* nIter = _compSetOwnedN->createIterator() ;
-  while((arg=(RooAbsArg*)nIter->Next())) {
+  for(RooAbsArg * arg : *_compSetOwnedN) {
     arg->setOperMode(_operMode) ;
   }
-  delete nIter ;
 
-  TIterator* dIter = _compSetOwnedD->createIterator() ;
-  while((arg=(RooAbsArg*)dIter->Next())) {
+  for(RooAbsArg * arg : *_compSetOwnedD) {
     arg->setOperMode(_operMode) ;
   }
-  delete dIter ;
 
   _intList.at(0)->setOperMode(_operMode) ;
   if (_haveD) _intList.at(1)->setOperMode(Auto) ; // Denominator always stays in Auto mode (normalization integral)

@@ -1051,9 +1051,7 @@ void RooTreeDataStore::attachBuffers(const RooArgSet& extObs)
 
 void RooTreeDataStore::resetBuffers()
 {
-  RooFIter iter = _varsww.fwdIterator() ;
-  RooAbsArg* arg ;
-  while((arg=iter.next())) {
+  for(RooAbsArg * arg : _varsww) {
     arg->attachToTree(*_tree) ;
   }
 }
@@ -1064,9 +1062,7 @@ void RooTreeDataStore::resetBuffers()
 
 void RooTreeDataStore::restoreAlternateBuffers()
 {
-  RooFIter iter = _attachedBuffers.fwdIterator() ;
-  RooAbsArg* arg ;
-  while((arg=iter.next())) {
+  for(RooAbsArg * arg : _attachedBuffers) {
     arg->attachToTree(*_tree) ;
   }
 }
