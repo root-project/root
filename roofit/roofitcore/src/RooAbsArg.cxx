@@ -806,11 +806,9 @@ bool RooAbsArg::recursiveCheckObservables(const RooArgSet* nset) const
 {
   RooArgSet nodeList ;
   treeNodeServerList(&nodeList) ;
-  RooFIter iter = nodeList.fwdIterator() ;
 
-  RooAbsArg* arg ;
   bool ret(false) ;
-  while((arg=iter.next())) {
+  for(RooAbsArg * arg : nodeList) {
     if (arg->getAttribute("ServerDied")) {
       coutE(LinkStateMgmt) << "RooAbsArg::recursiveCheckObservables(" << GetName() << "): ERROR: one or more servers of node "
             << arg->GetName() << " no longer exists!" << endl ;
@@ -1661,9 +1659,7 @@ void RooAbsArg::printDirty(bool depth) const
 
     RooArgSet branchList ;
     branchNodeServerList(&branchList) ;
-    RooFIter bIter = branchList.fwdIterator() ;
-    RooAbsArg* branch ;
-    while((branch=bIter.next())) {
+    for(RooAbsArg * branch : branchList) {
       branch->printDirty(false) ;
     }
 
@@ -1798,9 +1794,7 @@ bool RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cache
   // Check if node depends on any non-constant parameter
   bool canOpt(true) ;
   RooArgSet* paramSet = getParameters(observables) ;
-  RooFIter iter = paramSet->fwdIterator() ;
-  RooAbsArg* param ;
-  while((param = iter.next())) {
+  for(RooAbsArg * param : *paramSet) {
     if (!param->isConstant()) {
       canOpt=false ;
       break ;
@@ -2132,11 +2126,9 @@ void RooAbsArg::graphVizTree(ostream& os, const char* delimiter, bool useTitle, 
   // First list all the tree nodes
   RooArgSet nodeSet ;
   treeNodeServerList(&nodeSet) ;
-  RooFIter iter = nodeSet.fwdIterator() ;
-  RooAbsArg* node ;
 
   // iterate over nodes
-  while((node=iter.next())) {
+  for(RooAbsArg * node : nodeSet) {
     string nodeName = node->GetName();
     string nodeTitle = node->GetTitle();
     string nodeLabel = (useTitle && !nodeTitle.empty()) ? nodeTitle : nodeName;
@@ -2287,9 +2279,7 @@ const char* RooAbsArg::aggregateCacheUniqueSuffix() const
 
   RooArgSet branches ;
   branchNodeServerList(&branches) ;
-  RooFIter iter = branches.fwdIterator();
-  RooAbsArg* arg ;
-  while((arg=iter.next())) {
+  for(RooAbsArg * arg : branches) {
     const char* tmp = arg->cacheUniqueSuffix() ;
     if (tmp) suffix += tmp ;
   }

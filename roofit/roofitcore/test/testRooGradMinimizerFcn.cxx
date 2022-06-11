@@ -403,8 +403,8 @@ TEST(GradMinimizer, BranchingPDF)
    RooArgSet all_values{most_values, *param_set, "all_values"};
 
    // set parameter values randomly so that they actually need to do some fitting
-   auto it = all_values.fwdIterator();
-   while (auto *val = dynamic_cast<RooRealVar *>(it.next())) {
+   for (auto *val : dynamic_range_cast<RooRealVar *>(all_values)) {
+      if(!val) break;
       val->setVal(RooRandom::randomGenerator()->Uniform(val->getMin(), val->getMax()));
    }
 

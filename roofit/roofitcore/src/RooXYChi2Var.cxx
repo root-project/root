@@ -64,7 +64,6 @@ namespace {
 RooXYChi2Var::RooXYChi2Var()
 {
   _funcInt = 0 ;
-  _rrvIter = _rrvArgs.createIterator() ;
 }
 
 
@@ -216,19 +215,14 @@ RooXYChi2Var::RooXYChi2Var(const RooXYChi2Var& other, const char* name) :
 
 void RooXYChi2Var::initialize()
 {
-  TIterator* iter = _funcObsSet->createIterator() ;
-  RooAbsArg* arg ;
-  while((arg=(RooAbsArg*)iter->Next())) {
-    RooRealVar* var = dynamic_cast<RooRealVar*>(arg) ;
-    if (var) {
+  for(RooAbsArg * arg : *_funcObsSet) {
+    if (auto* var = dynamic_cast<RooRealVar*>(arg)) {
       _rrvArgs.add(*var) ;
     }
   }
   if (_yvar) {
     _rrvArgs.add(*_yvar) ;
   }
-  delete iter ;
-  _rrvIter = _rrvArgs.createIterator() ;
 
   // Define alternate numeric integrator configuration for bin integration
   // We expect bin contents to very only very slowly so a non-adaptive
@@ -253,9 +247,7 @@ void RooXYChi2Var::initIntegrator()
 {
   if (!_funcInt) {
     _funcInt = _funcClone->createIntegral(_rrvArgs,_rrvArgs,_intConfig,"bin") ;
-    _rrvIter->Reset() ;
-    RooRealVar* x ;
-    while((x=(RooRealVar*)_rrvIter->Next())) {
+    for(auto * x : static_range_cast<RooRealVar*>(_rrvArgs)) {
       _binList.push_back(&x->getBinning("bin",false,true)) ;
     }
   }
@@ -269,7 +261,6 @@ void RooXYChi2Var::initIntegrator()
 
 RooXYChi2Var::~RooXYChi2Var()
 {
-  delete _rrvIter ;
   if (_funcInt) delete _funcInt ;
 }
 
@@ -282,11 +273,9 @@ RooXYChi2Var::~RooXYChi2Var()
 
 double RooXYChi2Var::xErrorContribution(double ydata) const
 {
-  RooRealVar* var ;
   double ret(0) ;
 
-  _rrvIter->Reset() ;
-  while((var=(RooRealVar*)_rrvIter->Next())) {
+  for(auto * var : static_range_cast<RooRealVar*>(_rrvArgs)) {
 
     if (var->hasAsymError()) {
 
@@ -369,14 +358,15 @@ double RooXYChi2Var::fy() const
     yfunc = _funcClone->getVal(_dataClone->get()) ;
   } else {
     double volume(1) ;
-    _rrvIter->Reset() ;
-    for (list<RooAbsBinning*>::const_iterator iter = _binList.begin() ; iter != _binList.end() ; ++iter) {
-      RooRealVar* x = (RooRealVar*) _rrvIter->Next() ;
+    auto rrvIter = _rrvArgs.begin();
+    for (auto iter = _binList.begin() ; iter != _binList.end() ; ++iter) {
+      auto* x = static_cast<RooRealVar*>(*rrvIter);
       double xmin = x->getVal() + x->getErrorLo() ;
       double xmax = x->getVal() + x->getErrorHi() ;
       (*iter)->setRange(xmin,xmax) ;
       x->setShapeDirty() ;
       volume *= (xmax - xmin) ;
+      ++rrvIter;
     }
     double ret = _funcInt->getVal() ;
     return ret / volume ;

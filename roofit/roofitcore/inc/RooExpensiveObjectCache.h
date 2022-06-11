@@ -28,7 +28,6 @@ public:
   RooExpensiveObjectCache(const RooExpensiveObjectCache& other) : TObject(other) {}
   ~RooExpensiveObjectCache() override ;
 
-  bool registerObject(const char* ownerName, const char* objectName, TObject& cacheObject, TIterator* paramIter) ;
   bool registerObject(const char* ownerName, const char* objectName, TObject& cacheObject, const RooArgSet& params) ;
   const TObject* retrieveObject(const char* name, TClass* tclass, const RooArgSet& params) ;
 
@@ -48,7 +47,7 @@ public:
   class ExpensiveObject {
   public:
     ExpensiveObject() { _uid = 0 ; _payload = 0 ; } ;
-    ExpensiveObject(Int_t uid, const char* ownerName, TObject& payload, TIterator* paramIter) ;
+    ExpensiveObject(Int_t uid, const char* ownerName, TObject& payload, RooArgSet const& params) ;
     ExpensiveObject(Int_t uid, const ExpensiveObject& other) ;
     virtual ~ExpensiveObject() ;
     bool matches(TClass* tc, const RooArgSet& params) ;
