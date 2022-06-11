@@ -70,12 +70,9 @@ RooMultiCatIter::RooMultiCatIter(const RooMultiCatIter& other) : TIterator(other
 void RooMultiCatIter::initialize(const RooArgSet& catList)
 {
   // Copy RooCategory list into internal argset
-  TIterator* catIter = catList.createIterator() ;
-  TObject* obj ;
-  while ((obj = catIter->Next())) {
+  for(TObject * obj : catList) {
     _catList.add((RooAbsArg&)*obj) ;
   }
-  delete catIter ;
 
   // Allocate storage for component iterators
   _nIter = catList.getSize() ;
@@ -86,9 +83,7 @@ void RooMultiCatIter::initialize(const RooArgSet& catList)
   // Construct component iterators
   _curIter = 0 ;
   _curItem = 0 ;
-  TIterator* cIter = _catList.createIterator() ;
-  RooAbsCategoryLValue* cat ;
-  while((cat=(RooAbsCategoryLValue*)cIter->Next())) {
+  for(auto * cat : static_range_cast<RooAbsCategoryLValue*>(_catList)) {
     _catPtrList[_curIter] = cat ;
     _iterList[_curIter] = cat->typeIterator() ;
     _iterList[_curIter]->Next() ;
@@ -98,7 +93,6 @@ void RooMultiCatIter::initialize(const RooArgSet& catList)
 //     _iterList[_curIter]->Reset() ;
     _curIter++ ;
   }
-  delete cIter ;
 
   Reset() ;
 }

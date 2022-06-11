@@ -432,19 +432,6 @@ void RooStats::HistFactory::RooBarlowBeestonLL::FactorizePdf(const RooArgSet &ob
 
 double RooStats::HistFactory::RooBarlowBeestonLL::evaluate() const
 {
-  /*
-  // Loop over the cached bins and channels
-  RooArgSet* channels = new RooArgSet();
-  RooArgSet* channelsWithConstraints = new RooArgSet();
-  RooStats::getChannelsFromModel( _pdf, channels, channelsWithConstraints );
-
-  // Loop over channels
-  TIterator* iter_channels = channelsWithConstraints->createIterator();
-  RooAbsPdf* channelPdf=nullptr;
-  while(( channelPdf=(RooAbsPdf*)iter_channels->Next()  )) {
-    std::string channel_name = channelPdf->GetName(); //RooStats::channelNameFromPdf( channelPdf );
-  */
-
   // Loop over the channels (keys to the map)
   //clock_t time_before_setVal, time_after_setVal;
   //time_before_setVal=clock();

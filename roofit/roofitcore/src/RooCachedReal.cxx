@@ -129,10 +129,10 @@ void RooCachedReal::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cache) cons
 {
   unsigned nDim = cache.hist()->get()->getSize();
   if (nDim>1) {
-    RooFIter iter = cache.hist()->get()->fwdIterator();
-    RooAbsArg* arg ;
     unsigned nCat(0);
-    while((arg=iter.next())) if (dynamic_cast<RooAbsCategory*>(arg)) ++nCat;
+    for(RooAbsArg * arg : *cache.hist()->get()) {
+      if (dynamic_cast<RooAbsCategory*>(arg)) ++nCat;
+    }
     if (nDim>nCat+1) {
         coutP(Eval) << "RooCachedReal::fillCacheObject(" << GetName() << ") filling "
                     << nCat << " + " << nDim-nCat <<" dimensional cache (" << cache.hist()->numEntries() << " points)" <<endl;

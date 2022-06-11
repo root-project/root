@@ -113,7 +113,9 @@ public:
   RooAbsArg* arg(RooStringView name) const ;
   RooAbsArg* fundArg(RooStringView name) const ;
   RooArgSet argSet(RooStringView nameList) const ;
-  TIterator* componentIterator() const { return _allOwnedNodes.createIterator() ; }
+  TIterator* componentIterator() const
+  R__SUGGEST_ALTERNATIVE("Better iterate over RooWorkspace::components() with range-based loop instead of using RooWorkspace::componentIterator().")
+  { return _allOwnedNodes.createIterator() ; }
   const RooArgSet& components() const { return _allOwnedNodes ; }
   TObject* genobj(RooStringView name) const ;
   TObject* obj(RooStringView name) const ;

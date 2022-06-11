@@ -343,10 +343,8 @@ std::list<double>* RooAddition::binBoundaries(RooAbsRealLValue& obs, double xlo,
   std::list<double>* sumBinB = 0 ;
   bool needClean(false) ;
 
-  RooFIter iter = _set.fwdIterator() ;
-  RooAbsReal* func ;
   // Loop over components pdf
-  while((func=(RooAbsReal*)iter.next())) {
+  for(auto * func : static_range_cast<RooAbsReal*>(_set)) {
 
     std::list<double>* funcBinB = func->binBoundaries(obs,xlo,xhi) ;
 

@@ -63,8 +63,6 @@ RooRealSumFunc::RooRealSumFunc() : _normIntMgr(this, 10)
 {
    // Default constructor
    // coverity[UNINIT_CTOR]
-   _funcIter = _funcList.createIterator();
-   _coefIter = _coefList.createIterator();
    _doFloor = false;
    TRACE_CREATE
 }
@@ -76,8 +74,6 @@ RooRealSumFunc::RooRealSumFunc(const char *name, const char *title)
      _doFloor(false)
 {
    // Constructor with name and title
-   _funcIter = _funcList.createIterator();
-   _coefIter = _coefList.createIterator();
    TRACE_CREATE
 }
 
@@ -93,8 +89,6 @@ RooRealSumFunc::RooRealSumFunc(const char *name, const char *title, RooAbsReal &
    // but the resulting sum is not, which is enforced at runtime
 
    // Special constructor with two functions and one coefficient
-   _funcIter = _funcList.createIterator();
-   _coefIter = _coefList.createIterator();
 
    _funcList.add(func1);
    _funcList.add(func2);
@@ -123,59 +117,44 @@ RooRealSumFunc::RooRealSumFunc(const char *name, const char *title, const RooArg
       assert(0);
    }
 
-   _funcIter = _funcList.createIterator();
-   _coefIter = _coefList.createIterator();
-
    // Constructor with N functions and N or N-1 coefs
-   TIterator *funcIter = inFuncList.createIterator();
-   TIterator *coefIter = inCoefList.createIterator();
-   RooAbsArg *func;
-   RooAbsArg *coef;
 
    std::string funcName;
-   while ((coef = (RooAbsArg *)coefIter->Next())) {
-      func = (RooAbsArg *)funcIter->Next();
-      if (!func) {
-         funcName = "undefined";
-         coutW(InputArguments) << "RooRealSumFunc::RooRealSumFunc(" << ownName << ") func " << funcName
-                               << " does not exist, ignored"
-                               << "\n";
-         continue;
-      }
+   for (unsigned int i = 0; i < inCoefList.size(); ++i) {
+      const auto& func = inFuncList[i];
+      const auto& coef = inCoefList[i];
 
-      if (!dynamic_cast<RooAbsReal *>(coef)) {
-         const std::string coefName(coef->GetName() ? coef->GetName() : "");
+      if (!dynamic_cast<RooAbsReal const*>(&coef)) {
+         const std::string coefName(coef.GetName() ? coef.GetName() : "");
          coutW(InputArguments) << "RooRealSumFunc::RooRealSumFunc(" << ownName << ") coefficient " << coefName
                                << " is not of type RooAbsReal, ignored"
                                << "\n";
          continue;
       }
-      if (!dynamic_cast<RooAbsReal *>(func)) {
-         funcName = (func->GetName() ? func->GetName() : "");
+      if (!dynamic_cast<RooAbsReal const*>(&func)) {
+         funcName = (func.GetName() ? func.GetName() : "");
          coutW(InputArguments) << "RooRealSumFunc::RooRealSumFunc(" << ownName << ") func " << funcName
                                << " is not of type RooAbsReal, ignored"
                                << "\n";
          continue;
       }
-      _funcList.add(*func);
-      _coefList.add(*coef);
+      _funcList.add(func);
+      _coefList.add(coef);
    }
 
-   func = (RooAbsArg *)funcIter->Next();
-   if (func) {
-      if (!dynamic_cast<RooAbsReal *>(func)) {
-         funcName = (func->GetName() ? func->GetName() : "");
+   if (inFuncList.size() == inCoefList.size() + 1) {
+      const auto& func = inFuncList[inFuncList.size()-1];
+      if (!dynamic_cast<RooAbsReal const*>(&func)) {
+         funcName = (func.GetName() ? func.GetName() : "");
          coutE(InputArguments) << "RooRealSumFunc::RooRealSumFunc(" << ownName << ") last func " << funcName
                                << " is not of type RooAbsReal, fatal error\n";
-         assert(0);
+         throw std::invalid_argument("RooRealSumFunc: Function passed as is not of type RooAbsReal.");
       }
-      _funcList.add(*func);
+      _funcList.add(func);
    } else {
       _haveLastCoef = true;
    }
 
-   delete funcIter;
-   delete coefIter;
    TRACE_CREATE
 }
 
@@ -187,18 +166,12 @@ RooRealSumFunc::RooRealSumFunc(const RooRealSumFunc &other, const char *name)
 {
    // Copy constructor
 
-   _funcIter = _funcList.createIterator();
-   _coefIter = _coefList.createIterator();
    TRACE_CREATE
 }
 
 //_____________________________________________________________________________
 RooRealSumFunc::~RooRealSumFunc()
 {
-   // Destructor
-   delete _funcIter;
-   delete _coefIter;
-
    TRACE_DESTROY
 }
 
@@ -269,21 +242,19 @@ bool RooRealSumFunc::checkObservables(const RooArgSet *nset) const
 
    bool ret(false);
 
-   _funcIter->Reset();
-   _coefIter->Reset();
-   RooAbsReal *coef;
-   RooAbsReal *func;
-   while ((coef = (RooAbsReal *)_coefIter->Next())) {
-      func = (RooAbsReal *)_funcIter->Next();
-      if (func->observableOverlaps(nset, *coef)) {
+   for (unsigned int i=0; i < _coefList.size(); ++i) {
+      const auto& coef = _coefList[i];
+      const auto& func = _funcList[i];
+
+      if (func.observableOverlaps(nset, coef)) {
          coutE(InputArguments) << "RooRealSumFunc::checkObservables(" << GetName() << "): ERROR: coefficient "
-                               << coef->GetName() << " and FUNC " << func->GetName()
+                               << coef.GetName() << " and FUNC " << func.GetName()
                                << " have one or more observables in common" << endl;
          ret = true;
       }
-      if (coef->dependsOn(*nset)) {
+      if (coef.dependsOn(*nset)) {
          coutE(InputArguments) << "RooRealPdf::checkObservables(" << GetName() << "): ERROR coefficient "
-                               << coef->GetName() << " depends on one or more of the following observables";
+                               << coef.GetName() << " depends on one or more of the following observables";
          nset->Print("1");
          ret = true;
       }
@@ -325,9 +296,8 @@ Int_t RooRealSumFunc::getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &ana
    cache = new CacheElem;
 
    // Make list of function projection and normalization integrals
-   _funcIter->Reset();
-   RooAbsReal *func;
-   while ((func = (RooAbsReal *)_funcIter->Next())) {
+  for (const auto elm : _funcList) {
+    const auto func = static_cast<RooAbsReal*>(elm);
       RooAbsReal *funcInt = func->createIntegral(analVars, rangeName);
      if(funcInt->InheritsFrom(RooRealIntegral::Class())) ((RooRealIntegral*)funcInt)->setAllowComponentSelection(true);
       cache->_funcIntList.addOwned(*funcInt);
@@ -569,29 +539,27 @@ void RooRealSumFunc::printMetaArgs(ostream &os) const
    // Customized printing of arguments of a RooRealSumFuncy to more intuitively reflect the contents of the
    // product operator construction
 
-   _funcIter->Reset();
-   _coefIter->Reset();
-
    bool first(true);
 
-   RooAbsArg *coef, *func;
-   if (_coefList.getSize() != 0) {
-      while ((coef = (RooAbsArg *)_coefIter->Next())) {
+   if (_coefList.getSize()!=0) {
+       auto funcIter = _funcList.begin();
+
+       for (const auto coef : _coefList) {
          if (!first) {
             os << " + ";
          } else {
             first = false;
          }
-         func = (RooAbsArg *)_funcIter->Next();
+         const auto func = *(funcIter++);
          os << coef->GetName() << " * " << func->GetName();
-      }
-      func = (RooAbsArg *)_funcIter->Next();
-      if (func) {
-         os << " + [%] * " << func->GetName();
-      }
+       }
+
+       if (funcIter != _funcList.end()) {
+         os << " + [%] * " << (*funcIter)->GetName() ;
+       }
    } else {
 
-      while ((func = (RooAbsArg *)_funcIter->Next())) {
+      for (const auto func : _funcList) {
          if (!first) {
             os << " + ";
          } else {

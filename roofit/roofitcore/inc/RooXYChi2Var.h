@@ -72,7 +72,6 @@ protected:
 
   RooRealVar* _yvar ; ///< Y variable if so designated
   RooArgSet _rrvArgs ; ///< Set of real-valued observables
-  TIterator* _rrvIter ; ///<! Iterator over set of real-valued observables
 
   void initialize() ;
   void initIntegrator() ;
