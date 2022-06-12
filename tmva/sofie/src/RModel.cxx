@@ -355,6 +355,8 @@ namespace SOFIE{
 
    void RModel::ReadInitializedTensorsFromFile() {
       // generate the code to read initialized tensors from a text data file
+      if (fInitializedTensors.empty()) return;
+      
       fGC += "   std::ifstream f;\n";
       fGC += "   f.open(filename);\n";
       fGC += "   if (!f.is_open()){\n";
