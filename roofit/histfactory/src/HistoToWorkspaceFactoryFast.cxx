@@ -1404,8 +1404,6 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
               << " to be include a ShapeFactor."
               << std::endl;
 
-          std::vector<ParamHistFunc*> paramHistFuncList;
-
           for(unsigned int i=0; i < sample.GetShapeFactorList().size(); ++i) {
 
             ShapeFactor& shapeFactor = sample.GetShapeFactorList().at(i);
@@ -1455,22 +1453,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
             } // End: Create ShapeFactor ParamHistFunc
 
-            paramHistFuncList.push_back(paramHist);
+            sampleHistFuncs.push_back(paramHist);
           } // End loop over ShapeFactor Systematics
-
-          // Now that we have the right ShapeFactor,
-          // we multiply the expected function
-
-          // Append to product of functions
-          for (auto paramHistFunc : paramHistFuncList) {
-            proto->import(*paramHistFunc, RecycleConflictNodes());
-            auto paramHFinWS = proto->arg(paramHistFunc->GetName());
-            assert(paramHFinWS);
-            delete paramHistFunc;
-
-            sampleHistFuncs.push_back(paramHFinWS);
-          }
-
         }
       } // End: if ShapeFactorName!=""
 
