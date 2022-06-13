@@ -248,18 +248,6 @@ inline void cartesian_product(vector<vector<T>> &out, vector<vector<T>> &in)
 //_____________________________________________________________________________
 void RooMomentMorphND::initialize()
 {
-   // TIterator* pdfItr = _referenceGrid._pdfList.createIterator() ;
-   // RooAbsPdf* pdf ;
-   // for (int i=0; (pdf = dynamic_cast<RooAbsPdf*>(pdfItr->Next())); ++i) {
-   //   if (!pdf) {
-   //     coutE(InputArguments) << "RooMomentMorph::ctor(" << GetName() << ") ERROR: pdf " << pdf->GetName() << " is not
-   //     of type RooAbsPdf" << endl ;
-   //     throw string("RooPolyMorh::ctor() ERROR pdf is not of type RooAbsPdf") ;
-   //   }
-   //   _pdfList.addClone(*pdf) ;
-   // }
-   // delete pdfItr ;
-
    for (vector<RooAbsBinning *>::iterator itr = _referenceGrid._grid.begin(); itr != _referenceGrid._grid.end();
         ++itr) {
       _referenceGrid._nnuis.push_back((*itr)->numBins() + 1);
