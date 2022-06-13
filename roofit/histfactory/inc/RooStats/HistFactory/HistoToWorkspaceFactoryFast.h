@@ -47,6 +47,7 @@ namespace RooStats{
 
       struct Configuration {
         bool binnedFitOptimization = true;
+	bool storeDataError = false;
       };
 
       HistoToWorkspaceFactoryFast() {}
@@ -60,6 +61,7 @@ namespace RooStats{
       RooWorkspace* MakeSingleChannelModel( Measurement& measurement, Channel& channel );
       RooWorkspace*  MakeCombinedModel(std::vector<std::string>, std::vector<std::unique_ptr<RooWorkspace>>&);
 
+      static RooWorkspace* MakeCombinedModel( Measurement& measurement, const Configuration& config);      
       static RooWorkspace* MakeCombinedModel( Measurement& measurement );
       static void PrintCovarianceMatrix(RooFitResult* result, RooArgSet* params,
                std::string filename);
