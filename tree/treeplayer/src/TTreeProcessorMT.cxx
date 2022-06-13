@@ -517,43 +517,48 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
    const bool hasFriends = !fFriendInfo.fFriendNames.empty();
    const bool hasEntryList = fEntryList.GetN() > 0;
    const bool shouldRetrieveAllClusters = hasFriends || hasEntryList;
-   ClustersAndEntries clusterAndEntries{};
+   ClustersAndEntries allClusterAndEntries{};
+   auto &allClusters = allClusterAndEntries.first;
+   const auto &allEntries = allClusterAndEntries.second;
    if (shouldRetrieveAllClusters) {
-      clusterAndEntries = MakeClusters(fTreeNames, fFileNames, maxTasksPerFile);
+      allClusterAndEntries = MakeClusters(fTreeNames, fFileNames, maxTasksPerFile);
       if (hasEntryList)
-         clusterAndEntries.first = ConvertToElistClusters(std::move(clusterAndEntries.first), fEntryList, fTreeNames,
-                                                          fFileNames, clusterAndEntries.second);
+         allClusters = ConvertToElistClusters(std::move(allClusters), fEntryList, fTreeNames, fFileNames, allEntries);
    }
 
-   // Parent task, spawns tasks that process each of the entry clusters for each input file
-   auto processFileRetrievingAllClusters = [&](std::size_t fileIdx) {
+   // Per-file processing in case we retrieved all cluster info upfront
+   auto processFileUsingGlobalClusters = [&](std::size_t fileIdx) {
       auto processCluster = [&](const EntryCluster &c) {
-         auto r = fTreeView->GetTreeReader(c.start, c.end, fTreeNames, fFileNames, fFriendInfo, fEntryList,
-                                           clusterAndEntries.second, GetFriendEntries(fFriendInfo));
+         auto r = fTreeView->GetTreeReader(c.start, c.end, fTreeNames, fFileNames, fFriendInfo, fEntryList, allEntries,
+                                           GetFriendEntries(fFriendInfo));
          func(*r);
       };
-      fPool.Foreach(processCluster, clusterAndEntries.first[fileIdx]);
+      fPool.Foreach(processCluster, allClusters[fileIdx]);
    };
 
-   auto processFileNotRetrievingAllClusters = [&](std::size_t fileIdx) {
+   // Per-file processing that also retrieves cluster info for a file
+   auto processFileRetrievingClusters = [&](std::size_t fileIdx) {
       // Evaluate clusters (with local entry numbers) and number of entries for this file
-      const auto theseClustersAndEntries = MakeClusters({fTreeNames[fileIdx]}, {fFileNames[fileIdx]}, maxTasksPerFile);
+      const auto &treeNames = std::vector<std::string>({fTreeNames[fileIdx]});
+      const auto &fileNames = std::vector<std::string>({fFileNames[fileIdx]});
+      const auto clustersAndEntries = MakeClusters(treeNames, fileNames, maxTasksPerFile);
+      const auto &clusters = clustersAndEntries.first[0];
+      const auto &entries = clustersAndEntries.second[0];
       auto processCluster = [&](const EntryCluster &c) {
-         auto r =
-            fTreeView->GetTreeReader(c.start, c.end, {fTreeNames[fileIdx]}, {fFileNames[fileIdx]}, fFriendInfo,
-                                     fEntryList, {theseClustersAndEntries.second[0]}, GetFriendEntries(fFriendInfo));
+         auto r = fTreeView->GetTreeReader(c.start, c.end, treeNames, fileNames, fFriendInfo, fEntryList, {entries},
+                                           std::vector<std::vector<Long64_t>>{});
          func(*r);
       };
-      fPool.Foreach(processCluster, theseClustersAndEntries.first[0]);
+      fPool.Foreach(processCluster, clusters);
    };
 
    std::vector<std::size_t> fileIdxs(fFileNames.size());
    std::iota(fileIdxs.begin(), fileIdxs.end(), 0u);
 
    if (shouldRetrieveAllClusters)
-      fPool.Foreach(processFileRetrievingAllClusters, fileIdxs);
+      fPool.Foreach(processFileUsingGlobalClusters, fileIdxs);
    else
-      fPool.Foreach(processFileNotRetrievingAllClusters, fileIdxs);
+      fPool.Foreach(processFileRetrievingClusters, fileIdxs);
 
    // make sure TChains and TFiles are cleaned up since they are not globally tracked
    for (unsigned int islot = 0; islot < fTreeView.GetNSlots(); ++islot) {
