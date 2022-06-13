@@ -539,19 +539,13 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
    };
 
    auto processFileNotRetrievingAllClusters = [&](std::size_t fileIdx) {
-      // theseFiles contains either all files or just the single file to process
-      const auto &theseFiles = std::vector<std::string>({fFileNames[fileIdx]});
-      // either all tree names or just the single tree to process
-      const auto &theseTrees = std::vector<std::string>({fTreeNames[fileIdx]});
-      // Evaluate clusters (with local entry numbers) and number of entries for this file, if needed
-      const auto theseClustersAndEntries = MakeClusters(theseTrees, theseFiles, maxTasksPerFile);
-
+      // Evaluate clusters (with local entry numbers) and number of entries for this file
+      const auto theseClustersAndEntries = MakeClusters({fTreeNames[fileIdx]}, {fFileNames[fileIdx]}, maxTasksPerFile);
       auto processCluster = [&](const EntryCluster &c) {
-         auto r = fTreeView->GetTreeReader(c.start, c.end, theseTrees, theseFiles, fFriendInfo, fEntryList,
-                                           std::vector<Long64_t>({theseClustersAndEntries.second[0]}), friendEntries);
+         auto r = fTreeView->GetTreeReader(c.start, c.end, {fTreeNames[fileIdx]}, {fFileNames[fileIdx]}, fFriendInfo,
+                                           fEntryList, {theseClustersAndEntries.second[0]}, friendEntries);
          func(*r);
       };
-
       fPool.Foreach(processCluster, theseClustersAndEntries.first[0]);
    };
 
