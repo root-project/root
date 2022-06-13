@@ -188,25 +188,19 @@ namespace HistFactory{
 
       cxcoutPHF << "Generating additional Asimov Dataset: " << AsimovName << std::endl;
       asimov.ConfigureWorkspace(ws_single);
-      RooDataSet* asimov_dataset =
-   (RooDataSet*) AsymptoticCalculator::GenerateAsimovData(*pdf, *observables);
+      std::unique_ptr<RooDataSet> asimov_dataset{static_cast<RooDataSet*>(AsymptoticCalculator::GenerateAsimovData(*pdf, *observables))};
 
       cxcoutPHF << "Importing Asimov dataset" << std::endl;
       bool failure = ws_single->import(*asimov_dataset, Rename(AsimovName.c_str()));
       if( failure ) {
         std::cout << "Error: Failed to import Asimov dataset: " << AsimovName
         << std::endl;
-        delete asimov_dataset;
    throw hf_exc();
       }
 
       // Load the snapshot at the end of every loop iteration
       // so we start each loop with a "clean" snapshot
       ws_single->loadSnapshot(SnapShotName.c_str());
-
-      // we can now deleted the data set after having imported it
-      delete asimov_dataset;
-
     }
 
     // Cool, we're done
@@ -1146,8 +1140,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     std::vector<std::vector<RooAbsArg*>> allSampleHistFuncs;
     std::vector<RooProduct*> sampleScaleFactors;
 
-    vector< pair<string,string> >   statNamePairs;
-    vector< pair<const TH1*, const TH1*> > statHistPairs; // <nominal, error>
+    std::vector< pair<string,string> >   statNamePairs;
+    std::vector< pair<const TH1*, std::unique_ptr<TH1>> > statHistPairs; // <nominal, error>
     const std::string statFuncName = "mc_stat_" + channel_name;
 
     string prefix, range;
@@ -1262,7 +1256,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
               << std::endl;
 
           string UncertName  = sample.GetName() + "_" + channel_name + "_StatAbsolUncert";
-          TH1* statErrorHist = nullptr;
+          std::unique_ptr<TH1> statErrorHist;
 
           if( sample.GetStatError().GetErrorHist() == nullptr ) {
             // Make the absolute stat error
@@ -1270,12 +1264,12 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
                 << " Channel: " << channel_name
                 << " Sample: "  << sample.GetName()
                 << std::endl;
-            statErrorHist = MakeAbsolUncertaintyHist( UncertName, nominal );
+            statErrorHist.reset(MakeAbsolUncertaintyHist( UncertName, nominal));
           } else {
             // clone the error histograms because in case the sample has not error hist
             // it is created in MakeAbsolUncertainty
             // we need later to clean statErrorHist
-            statErrorHist = (TH1*) sample.GetStatError().GetErrorHist()->Clone();
+            statErrorHist.reset(static_cast<TH1*>(sample.GetStatError().GetErrorHist()->Clone()));
             // We assume the (relative) error is provided.
             // We must turn it into an absolute error
             // using the nominal histogram
@@ -1291,7 +1285,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
           // Save the nominal and error hists
           // for the building of constraint terms
-          statHistPairs.push_back( std::make_pair(nominal, statErrorHist) );
+          statHistPairs.emplace_back(nominal, std::move(statErrorHist));
 
           // To do the 'conservative' version, we would need to do some
           // intervention here.  We would probably need to create a different
@@ -1543,7 +1537,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
     // If a non-zero number of samples call for
     // Stat Uncertainties, create the statFactor functions
-    if( statHistPairs.size() > 0 ) {
+    if(!statHistPairs.empty()) {
 
       // Create the histogram of (binwise)
       // stat uncertainties:
@@ -1581,13 +1575,6 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
           *chanStatUncertFunc, fracStatError.get(),
           statConstraintType,
           statRelErrorThreshold);
-
-
-      // clean stat hist pair (need to delete second histogram)
-      for (unsigned int i = 0; i < statHistPairs.size() ; ++i )
-        delete statHistPairs[i].second;
-
-      statHistPairs.clear();
 
     } // END: Loop over stat Hist Pairs
 
@@ -1876,8 +1863,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     RooCategory* channelCat = dynamic_cast<RooCategory*>( combined->factory(channelString.str()) );
     if (!channelCat) throw std::runtime_error("Unable to construct a category from string " + channelString.str());
 
-    RooSimultaneous * simPdf= new RooSimultaneous("simPdf","",pdfMap, *channelCat);
-    ModelConfig * combined_config = new ModelConfig("ModelConfig", combined);
+    auto simPdf= std::make_unique<RooSimultaneous>("simPdf","",pdfMap, *channelCat);
+    auto combined_config = std::make_unique<ModelConfig>("ModelConfig", combined);
     combined_config->SetWorkspace(*combined);
     //    combined_config->SetNuisanceParameters(*constrainedParams);
 
@@ -1900,8 +1887,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     obsList.add(*combined->var("weightVar"));
 
     // Create Asimov data for the combined dataset
-    RooDataSet* asimov_combined = (RooDataSet*) AsymptoticCalculator::GenerateAsimovData(*simPdf,
-                                  obsList);
+    std::unique_ptr<RooDataSet> asimov_combined{static_cast<RooDataSet*>(AsymptoticCalculator::GenerateAsimovData(*simPdf,
+                                  obsList))};
     if( asimov_combined ) {
       combined->import( *asimov_combined, Rename("asimovData"));
     }
@@ -1909,7 +1896,6 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       std::cout << "Error: Failed to create combined asimov dataset" << std::endl;
       throw hf_exc();
     }
-    delete asimov_combined;
 
     // Now merge the observable datasets across the channels
     for(RooAbsData * data : chs[0]->allData()) {
@@ -1942,8 +1928,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       std::string paramName = param_itr->first;
       double paramVal = param_itr->second;
 
-      RooRealVar* temp = combined->var( paramName );
-      if(temp) {
+      if(RooRealVar* temp = combined->var( paramName )) {
         temp->setVal( paramVal );
         cxcoutI(HistFactory) <<"setting " << paramName << " to the value: " << paramVal <<  endl;
       } else
@@ -1953,8 +1938,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
     for(unsigned int i=0; i<fSystToFix.size(); ++i){
       // make sure they are fixed
-      RooRealVar* temp = combined->var(fSystToFix[i]);
-      if(temp) {
+      if(RooRealVar* temp = combined->var(fSystToFix[i])) {
         temp->setConstant();
         cxcoutI(HistFactory) <<"setting " << fSystToFix.at(i) << " constant" << endl;
       } else
@@ -1973,10 +1957,6 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     combined->importClassCode();
     //    combined->writeToFile("results/model_combined.root");
 
-    //clean up
-    delete combined_config;
-    delete simPdf;
-
     return combined;
   }
 
@@ -1989,7 +1969,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
                       RooCategory* channelCat) {
 
     // Create the total dataset
-    RooDataSet* simData=nullptr;
+    std::unique_ptr<RooDataSet> simData;
 
     // Loop through channels, get their individual datasets,
     // and add them to the combined dataset
@@ -2006,16 +1986,15 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       }
 
       // Create the new Dataset
-      RooDataSet * tempData = new RooDataSet(channel_names[i].c_str(),"",
+      auto tempData = std::make_unique<RooDataSet>(channel_names[i].c_str(),"",
                     obsList, Index(*channelCat),
                     WeightVar("weightVar"),
                     Import(channel_names[i].c_str(),*obsDataInChannel));
       if(simData) {
    simData->append(*tempData);
-   delete tempData;
       }
       else {
-   simData = tempData;
+   simData = std::move(tempData);
       }
     } // End Loop Over Channels
 
@@ -2023,16 +2002,13 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     // and import it into the workspace
     if(simData) {
       combined->import(*simData, Rename(dataSetName.c_str()));
-      delete simData;
-      simData = (RooDataSet*) combined->data(dataSetName.c_str() );
+      return static_cast<RooDataSet*>(combined->data(dataSetName));
     }
     else {
       std::cout << "Error: Unable to merge observable datasets" << std::endl;
       throw hf_exc();
+      return nullptr;
     }
-
-    return simData;
-
   }
 
 
@@ -2096,7 +2072,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
   // Total(bin i)        = Sum: Value
   //
   // TotalFracError(bin i) = Sqrt( UncertInQuad(i) ) / TotalBin(i)
-  std::unique_ptr<TH1> HistoToWorkspaceFactoryFast::MakeScaledUncertaintyHist( const std::string& Name, std::vector< std::pair<const TH1*, const TH1*> > HistVec ) const {
+  std::unique_ptr<TH1> HistoToWorkspaceFactoryFast::MakeScaledUncertaintyHist( const std::string& Name, std::vector< std::pair<const TH1*, std::unique_ptr<TH1>> > const& HistVec ) const {
 
 
     unsigned int numHists = HistVec.size();
@@ -2114,7 +2090,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
   for( unsigned int i = 0; i < HistVec.size(); ++i ) {
 
     const TH1* nominal = HistVec.at(i).first;
-    const TH1* error   = HistVec.at(i).second;
+    const TH1* error   = HistVec.at(i).second.get();
 
     if( nominal->GetNbinsX()*nominal->GetNbinsY()*nominal->GetNbinsZ() != numBins ) {
       cxcoutE(HistFactory) << "Error: Provided hists have unequal bins" << std::endl;
@@ -2142,7 +2118,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     for( unsigned int i_hist = 0; i_hist < numHists; ++i_hist ) {
 
       const TH1* nominal = HistVec.at(i_hist).first;
-      const TH1* error   = HistVec.at(i_hist).second;
+      const TH1* error   = HistVec.at(i_hist).second.get();
 
       //Int_t binNumber = i_bins + 1;
 
