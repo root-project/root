@@ -149,9 +149,7 @@ bool RooLinearVar::isJacobianOK(const RooArgSet& depList) const
   }
 
   // Check if jacobian has no real-valued dependents
-  RooAbsArg* arg ;
-  TIter dIter = depList.createIterator() ;
-  while ((arg=(RooAbsArg*)dIter.Next())) {
+  for(RooAbsArg* arg : depList) {
     if (arg->IsA()->InheritsFrom(RooAbsReal::Class())) {
       if (_slope.arg().dependsOnValue(*arg)) {
 //    cout << "RooLinearVar::isJacobianOK(" << GetName() << ") return false because slope depends on value of " << arg->GetName() << endl ;

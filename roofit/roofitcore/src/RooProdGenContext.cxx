@@ -46,7 +46,7 @@ ClassImp(RooProdGenContext);
 
 RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &vars,
                  const RooDataSet *prototype, const RooArgSet* auxProto, bool verbose) :
-  RooAbsGenContext(model,vars,prototype,auxProto,verbose), _uniIter(0), _pdf(&model)
+  RooAbsGenContext(model,vars,prototype,auxProto,verbose), _pdf(&model)
 {
   // Constructor of optimization generator context for RooProdPdf objects
 
@@ -87,7 +87,6 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
   bool go=true ;
   while(go) {
 
-    RooAbsPdf* pdf ;
     RooArgSet* term ;
     RooArgSet* impDeps ;
     RooArgSet* termDeps ;
@@ -121,7 +120,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
       RooArgSet neededDeps(*impDeps) ;
       neededDeps.remove(genDeps,true,true) ;
 
-      if (neededDeps.getSize()>0) {
+      if (!neededDeps.empty()) {
    if (!anyPrevAction) {
      cxcoutD(Generation) << "RooProdGenContext::ctor() no convergence in single term analysis loop, terminating loop and process remainder of terms as single unit " << endl ;
      go=false ;
@@ -145,44 +144,38 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
    continue ;
       }
 
-      TIterator* pdfIter = term->createIterator() ;
-      if (term->getSize()==1) {
+      if (term->size()==1) {
    // Simple term
 
-   pdf = (RooAbsPdf*) pdfIter->Next() ;
-   RooArgSet* pdfDep = pdf->getObservables(termDeps) ;
-   if (pdfDep->getSize()>0) {
+   auto pdf = static_cast<RooAbsPdf*>((*term)[0]);
+   std::unique_ptr<RooArgSet> pdfDep{pdf->getObservables(termDeps)};
+   if (!pdfDep->empty()) {
      coutI(Generation) << "RooProdGenContext::ctor() creating subcontext for generation of observables " << *pdfDep << " from model " << pdf->GetName() << endl ;
-     RooArgSet* auxProto2 = pdf->getObservables(impDeps) ;
-     RooAbsGenContext* cx = pdf->genContext(*pdfDep,prototype,auxProto2,verbose) ;
-     delete auxProto2 ;
-     _gcList.push_back(cx) ;
+     std::unique_ptr<RooArgSet> auxProto2{pdf->getObservables(impDeps)};
+     _gcList.push_back(pdf->genContext(*pdfDep,prototype,auxProto2.get(),verbose)) ;
    }
 
 //    cout << "adding following dependents to list of generated observables: " ; pdfDep->Print("1") ;
    genDeps.add(*pdfDep) ;
 
-   delete pdfDep ;
-
       } else {
 
    // Composite term
-   if (termDeps->getSize()>0) {
+   if (!termDeps->empty()) {
      const std::string name = model.makeRGPPName("PRODGEN_",*term,RooArgSet(),RooArgSet(),0) ;
 
      // Construct auxiliary PDF expressing product of composite terms,
      // following Conditional component specification of input model
      RooLinkedList cmdList ;
      RooLinkedList pdfSetList ;
-     pdfIter->Reset() ;
      RooArgSet fullPdfSet ;
-     while((pdf=(RooAbsPdf*)pdfIter->Next())) {
+     for(auto * pdf : static_range_cast<RooAbsPdf*>(*term)) {
 
        RooArgSet* pdfnset = model.findPdfNSet(*pdf) ;
        RooArgSet* pdfSet = new RooArgSet(*pdf) ;
        pdfSetList.Add(pdfSet) ;
 
-       if (pdfnset && pdfnset->getSize()>0) {
+       if (pdfnset && !pdfnset->empty()) {
          // This PDF requires a Conditional() construction
          cmdList.Add(RooFit::Conditional(*pdfSet,*pdfnset).Clone()) ;
 //          cout << "Conditional " << pdf->GetName() << " " ; pdfnset->Print("1") ;
@@ -209,10 +202,6 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
    }
       }
 
-      delete pdfIter ;
-
-//        cout << "added generator for this term, removing from list" << endl ;
-
       termList.Remove(term) ;
       depsList.Remove(termDeps) ;
       impDepList.Remove(impDeps) ;
@@ -229,7 +218,6 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 
     cxcoutD(Generation) << "RooProdGenContext::ctor() there are left-over terms that need to be generated separately" << endl ;
 
-    RooAbsPdf* pdf ;
     RooArgSet* term ;
 
     // Concatenate remaining terms
@@ -251,8 +239,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
     RooLinkedList pdfSetList ;
     RooArgSet fullPdfSet ;
 
-    TIterator* pdfIter = trailerTerm.createIterator() ;
-    while((pdf=(RooAbsPdf*)pdfIter->Next())) {
+    for(auto * pdf : static_range_cast<RooAbsPdf*>(trailerTerm)) {
 
       RooArgSet* pdfnset = model.findPdfNSet(*pdf) ;
       RooArgSet* pdfSet = new RooArgSet(*pdf) ;
@@ -286,7 +273,6 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
   _uniObs.add(vars) ;
   _uniObs.remove(genDeps,true,true) ;
   if (_uniObs.getSize()>0) {
-    _uniIter = _uniObs.createIterator() ;
     coutI(Generation) << "RooProdGenContext(" << model.GetName() << "): generating uniform distribution for non-dependent observable(s) " << _uniObs << endl ;
   }
 
@@ -312,7 +298,6 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 
 RooProdGenContext::~RooProdGenContext()
 {
-  delete _uniIter ;
   for (list<RooAbsGenContext*>::iterator iter=_gcList.begin() ; iter!=_gcList.end() ; ++iter) {
     delete (*iter) ;
   }
@@ -359,11 +344,8 @@ void RooProdGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
   }
 
   // Generate uniform variables (non-dependents)
-  if (_uniIter) {
-    _uniIter->Reset() ;
-    RooAbsArg* uniVar ;
-    while((uniVar=(RooAbsArg*)_uniIter->Next())) {
-      RooAbsLValue* arglv = dynamic_cast<RooAbsLValue*>(uniVar) ;
+  if (!_uniObs.empty()) {
+    for(auto * arglv : dynamic_range_cast<RooAbsLValue*>(_uniObs)) {
       if (arglv) {
    arglv->randomize() ;
       }

@@ -24,8 +24,8 @@
 class RooExpensiveObjectCache : public TObject {
 public:
 
-  RooExpensiveObjectCache() ;
-  RooExpensiveObjectCache(const RooExpensiveObjectCache&) ;
+  RooExpensiveObjectCache() {}
+  RooExpensiveObjectCache(const RooExpensiveObjectCache& other) : TObject(other) {}
   ~RooExpensiveObjectCache() override ;
 
   bool registerObject(const char* ownerName, const char* objectName, TObject& cacheObject, TIterator* paramIter) ;
@@ -75,7 +75,7 @@ public:
 
 protected:
 
-  Int_t _nextUID ;
+  Int_t _nextUID = 0;
 
   std::map<TString,ExpensiveObject*> _map ;
 

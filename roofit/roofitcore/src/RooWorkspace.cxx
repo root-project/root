@@ -195,9 +195,8 @@ RooWorkspace::RooWorkspace(const RooWorkspace& other) :
   // Copy named sets
   for (map<string,RooArgSet>::const_iterator iter3 = other._namedSets.begin() ; iter3 != other._namedSets.end() ; ++iter3) {
     // Make RooArgSet with equivalent content of this workspace
-    RooArgSet* tmp = (RooArgSet*) _allOwnedNodes.selectCommon(iter3->second) ;
+    std::unique_ptr<RooArgSet> tmp{static_cast<RooArgSet*>(_allOwnedNodes.selectCommon(iter3->second))};
     _namedSets[iter3->first].add(*tmp) ;
-    delete tmp ;
   }
 
   // Copy generic objects
@@ -318,10 +317,8 @@ bool RooWorkspace::import(const RooArgSet& args,
              const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6,
              const RooCmdArg& arg7, const RooCmdArg& arg8, const RooCmdArg& arg9)
 {
-  unique_ptr<TIterator> iter(args.createIterator()) ;
-  RooAbsArg* oneArg ;
   bool ret(false) ;
-  while((oneArg=(RooAbsArg*)iter->Next())) {
+  for(RooAbsArg * oneArg : args) {
     ret |= import(*oneArg,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9) ;
   }
   return ret ;
@@ -804,15 +801,12 @@ bool RooWorkspace::import(RooAbsData& inData,
   }
 
   // Now import the dataset observables, unless dataset is embedded
-  RooAbsArg* carg ;
   if (!embedded) {
-    TIterator* iter = clone->get()->createIterator() ;
-    while((carg=(RooAbsArg*)iter->Next())) {
+    for(RooAbsArg* carg : *clone->get()) {
       if (!arg(carg->GetName())) {
    import(*carg) ;
       }
     }
-    delete iter ;
   }
 
   dataList.Add(clone) ;
@@ -824,8 +818,7 @@ bool RooWorkspace::import(RooAbsData& inData,
   }
 
   // Set expensive object cache of dataset internal buffers to that of workspace
-  RooFIter iter2 = clone->get()->fwdIterator() ;
-  while ((carg=iter2.next())) {
+  for(RooAbsArg* carg : *clone->get()) {
     carg->setExpensiveObjectCache(expensiveObjectCache()) ;
   }
 
@@ -852,9 +845,7 @@ bool RooWorkspace::defineSet(const char* name, const RooArgSet& aset, bool impor
   RooArgSet wsargs ;
 
   // Check all constituents of provided set
-  TIter iter = aset.createIterator() ;
-  RooAbsArg* sarg ;
-  while((sarg=(RooAbsArg*)iter.Next())) {
+  for (RooAbsArg* sarg : aset) {
     // If missing, either import or report error
     if (!arg(sarg->GetName())) {
       if (importMissing) {
@@ -1056,12 +1047,9 @@ bool RooWorkspace::cancelTransaction()
   }
 
   // Delete all objects in the sandbox
-  TIterator* iter = _sandboxNodes.createIterator() ;
-  RooAbsArg* tmpArg ;
-  while((tmpArg=(RooAbsArg*)iter->Next())) {
+  for(RooAbsArg * tmpArg : _sandboxNodes) {
     _allOwnedNodes.remove(*tmpArg) ;
   }
-  delete iter ;
   _sandboxNodes.removeAll() ;
 
   // Mark transaction as finished
@@ -1081,9 +1069,7 @@ bool RooWorkspace::commitTransaction()
   }
 
   // Publish sandbox nodes in directory and/or CINT if requested
-  TIterator* iter = _sandboxNodes.createIterator() ;
-  RooAbsArg* sarg ;
-  while((sarg=(RooAbsArg*)iter->Next())) {
+  for(RooAbsArg* sarg : _sandboxNodes) {
     if (_dir && sarg->IsA() != RooConstVar::Class()) {
       _dir->InternalAppend(sarg) ;
     }
@@ -1091,7 +1077,6 @@ bool RooWorkspace::commitTransaction()
       exportObj(sarg) ;
     }
   }
-  delete iter ;
 
   // Remove all committed objects from the sandbox
   _sandboxNodes.removeAll() ;
@@ -1376,14 +1361,11 @@ RooArgSet RooWorkspace::allVars() const
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
-  TIterator* iter = _allOwnedNodes.createIterator() ;
-  RooAbsArg* parg ;
-  while((parg=(RooAbsArg*)iter->Next())) {
+  for(RooAbsArg* parg : _allOwnedNodes) {
     if (parg->IsA()->InheritsFrom(RooRealVar::Class())) {
       ret.add(*parg) ;
     }
   }
-  delete iter ;
 
   return ret ;
 }
@@ -1397,14 +1379,11 @@ RooArgSet RooWorkspace::allCats() const
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
-  TIterator* iter = _allOwnedNodes.createIterator() ;
-  RooAbsArg* parg ;
-  while((parg=(RooAbsArg*)iter->Next())) {
+  for(RooAbsArg* parg : _allOwnedNodes) {
     if (parg->IsA()->InheritsFrom(RooCategory::Class())) {
       ret.add(*parg) ;
     }
   }
-  delete iter ;
 
   return ret ;
 }
@@ -1419,9 +1398,7 @@ RooArgSet RooWorkspace::allFunctions() const
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
-  TIter iter = _allOwnedNodes.createIterator() ;
-  RooAbsArg* parg ;
-  while((parg=(RooAbsArg*)iter.Next())) {
+  for(RooAbsArg* parg : _allOwnedNodes) {
     if (parg->IsA()->InheritsFrom(RooAbsReal::Class()) &&
    !parg->IsA()->InheritsFrom(RooAbsPdf::Class()) &&
    !parg->IsA()->InheritsFrom(RooConstVar::Class()) &&
@@ -1442,9 +1419,7 @@ RooArgSet RooWorkspace::allCatFunctions() const
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
-  TIter iter = _allOwnedNodes.createIterator() ;
-  RooAbsArg* parg ;
-  while((parg=(RooAbsArg*)iter.Next())) {
+  for(RooAbsArg* parg : _allOwnedNodes) {
     if (parg->IsA()->InheritsFrom(RooAbsCategory::Class()) &&
    !parg->IsA()->InheritsFrom(RooCategory::Class())) {
       ret.add(*parg) ;
@@ -1463,9 +1438,7 @@ RooArgSet RooWorkspace::allResolutionModels() const
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
-  TIter iter = _allOwnedNodes.createIterator() ;
-  RooAbsArg* parg ;
-  while((parg=(RooAbsArg*)iter.Next())) {
+  for(RooAbsArg* parg : _allOwnedNodes) {
     if (parg->IsA()->InheritsFrom(RooResolutionModel::Class())) {
       if (!((RooResolutionModel*)parg)->isConvolved()) {
    ret.add(*parg) ;
@@ -1484,9 +1457,7 @@ RooArgSet RooWorkspace::allPdfs() const
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
-  TIter iter = _allOwnedNodes.createIterator() ;
-  RooAbsArg* parg ;
-  while((parg=(RooAbsArg*)iter.Next())) {
+  for(RooAbsArg* parg : _allOwnedNodes) {
     if (parg->IsA()->InheritsFrom(RooAbsPdf::Class()) &&
    !parg->IsA()->InheritsFrom(RooResolutionModel::Class())) {
       ret.add(*parg) ;
@@ -2188,8 +2159,6 @@ void RooWorkspace::Print(Option_t* opts) const
 
   cout << endl << "RooWorkspace(" << GetName() << ") " << GetTitle() << " contents" << endl << endl  ;
 
-  RooAbsArg* parg ;
-
   RooArgSet pdfSet ;
   RooArgSet funcSet ;
   RooArgSet varSet ;
@@ -2199,8 +2168,7 @@ void RooWorkspace::Print(Option_t* opts) const
 
 
   // Split list of components in pdfs, functions and variables
-  TIterator* iter = _allOwnedNodes.createIterator() ;
-  while((parg=(RooAbsArg*)iter->Next())) {
+  for(RooAbsArg* parg : _allOwnedNodes) {
 
     //---------------
 
@@ -2268,7 +2236,6 @@ void RooWorkspace::Print(Option_t* opts) const
     }
 
   }
-  delete iter ;
 
 
   RooFit::MsgLevel oldLevel = RooMsgService::instance().globalKillBelow() ;
@@ -2286,15 +2253,13 @@ void RooWorkspace::Print(Option_t* opts) const
     cout << "p.d.f.s" << endl ;
     cout << "-------" << endl ;
     pdfSet.sort() ;
-    iter = pdfSet.createIterator() ;
-    while((parg=(RooAbsArg*)iter->Next())) {
+    for(RooAbsArg* parg : pdfSet) {
       if (treeMode) {
    parg->printComponentTree() ;
       } else {
    parg->Print() ;
       }
     }
-    delete iter ;
     cout << endl ;
   }
 
@@ -2303,16 +2268,9 @@ void RooWorkspace::Print(Option_t* opts) const
       cout << "analytical resolution models" << endl ;
       cout << "----------------------------" << endl ;
       resoSet.sort() ;
-      iter = resoSet.createIterator() ;
-      while((parg=(RooAbsArg*)iter->Next())) {
+      for(RooAbsArg* parg : resoSet) {
    parg->Print() ;
       }
-      delete iter ;
-      //     iter = convResoSet.createIterator() ;
-      //     while((parg=(RooAbsArg*)iter->Next())) {
-      //       parg->Print() ;
-      //     }
-      //     delete iter ;
       cout << endl ;
     }
   }
@@ -2321,15 +2279,13 @@ void RooWorkspace::Print(Option_t* opts) const
     cout << "functions" << endl ;
     cout << "--------" << endl ;
     funcSet.sort() ;
-    iter = funcSet.createIterator() ;
-    while((parg=(RooAbsArg*)iter->Next())) {
+    for(RooAbsArg * parg : funcSet) {
       if (treeMode) {
    parg->printComponentTree() ;
       } else {
    parg->Print() ;
       }
     }
-    delete iter ;
     cout << endl ;
   }
 
@@ -2337,22 +2293,20 @@ void RooWorkspace::Print(Option_t* opts) const
     cout << "category functions" << endl ;
     cout << "------------------" << endl ;
     catfuncSet.sort() ;
-    iter = catfuncSet.createIterator() ;
-    while((parg=(RooAbsArg*)iter->Next())) {
+    for(RooAbsArg* parg : catfuncSet) {
       if (treeMode) {
    parg->printComponentTree() ;
       } else {
    parg->Print() ;
       }
     }
-    delete iter ;
     cout << endl ;
   }
 
   if (_dataList.GetSize()>0) {
     cout << "datasets" << endl ;
     cout << "--------" << endl ;
-    iter = _dataList.MakeIterator() ;
+    auto iter = _dataList.MakeIterator() ;
     RooAbsData* data2 ;
     while((data2=(RooAbsData*)iter->Next())) {
       cout << data2->ClassName() << "::" << data2->GetName() << *data2->get() << endl ;
@@ -2364,7 +2318,7 @@ void RooWorkspace::Print(Option_t* opts) const
   if (_embeddedDataList.GetSize()>0) {
     cout << "embedded datasets (in pdfs and functions)" << endl ;
     cout << "-----------------------------------------" << endl ;
-    iter = _embeddedDataList.MakeIterator() ;
+    auto iter = _embeddedDataList.MakeIterator() ;
     RooAbsData* data2 ;
     while((data2=(RooAbsData*)iter->Next())) {
       cout << data2->ClassName() << "::" << data2->GetName() << *data2->get() << endl ;
@@ -2376,14 +2330,12 @@ void RooWorkspace::Print(Option_t* opts) const
   if (_snapshots.GetSize()>0) {
     cout << "parameter snapshots" << endl ;
     cout << "-------------------" << endl ;
-    iter = _snapshots.MakeIterator() ;
+    auto iter = _snapshots.MakeIterator() ;
     RooArgSet* snap ;
     while((snap=(RooArgSet*)iter->Next())) {
       cout << snap->GetName() << " = (" ;
-      TIterator* aiter = snap->createIterator() ;
-      RooAbsArg* a ;
       bool first(true) ;
-      while((a=(RooAbsArg*)aiter->Next())) {
+      for(RooAbsArg* a : *snap) {
    if (first) { first=false ; } else { cout << "," ; }
    cout << a->GetName() << "=" ;
    a->printValue(cout) ;
@@ -2392,7 +2344,6 @@ void RooWorkspace::Print(Option_t* opts) const
    }
       }
       cout << ")" << endl ;
-      delete aiter ;
     }
     delete iter ;
     cout << endl ;
@@ -2415,7 +2366,7 @@ void RooWorkspace::Print(Option_t* opts) const
   if (_genObjects.GetSize()>0) {
     cout << "generic objects" << endl ;
     cout << "---------------" << endl ;
-    iter = _genObjects.MakeIterator() ;
+    auto iter = _genObjects.MakeIterator() ;
     TObject* gobj ;
     while((gobj=(TObject*)iter->Next())) {
       if (gobj->IsA()==RooTObjWrap::Class()) {
@@ -2432,7 +2383,7 @@ void RooWorkspace::Print(Option_t* opts) const
   if (_studyMods.GetSize()>0) {
     cout << "study modules" << endl ;
     cout << "-------------" << endl ;
-    iter = _studyMods.MakeIterator() ;
+    auto iter = _studyMods.MakeIterator() ;
     TObject* smobj ;
     while((smobj=(TObject*)iter->Next())) {
       cout << smobj->ClassName() << "::" << smobj->GetName() << endl ;
@@ -2579,17 +2530,14 @@ void RooWorkspace::Streamer(TBuffer &R__b)
       R__b.ReadClassBuffer(RooWorkspace::Class(),this);
 
       // Perform any pass-2 schema evolution here
-      RooFIter fiter = _allOwnedNodes.fwdIterator() ;
-      RooAbsArg* node ;
-      while((node=fiter.next())) {
+      for(RooAbsArg* node : _allOwnedNodes) {
    node->ioStreamerPass2() ;
       }
       RooAbsArg::ioStreamerPass2Finalize() ;
 
       // Make expensive object cache of all objects point to intermal copy.
       // Somehow this doesn't work OK automatically
-      TIterator* iter = _allOwnedNodes.createIterator() ;
-      while((node=(RooAbsArg*)iter->Next())) {
+      for(RooAbsArg* node : _allOwnedNodes) {
    node->setExpensiveObjectCache(_eocache) ;
    node->setWorkspace(*this);
    if (node->IsA()->InheritsFrom(RooAbsOptTestStatistic::Class())) {
@@ -2600,8 +2548,6 @@ void RooWorkspace::Streamer(TBuffer &R__b)
       }
    }
       }
-      delete iter ;
-
 
    } else {
 
@@ -2609,9 +2555,7 @@ void RooWorkspace::Streamer(TBuffer &R__b)
 
      map<RooAbsArg*,vector<RooAbsArg *> > extClients, extValueClients, extShapeClients ;
 
-     TIterator* iter = _allOwnedNodes.createIterator() ;
-     RooAbsArg* tmparg ;
-     while((tmparg=(RooAbsArg*)iter->Next())) {
+     for(RooAbsArg* tmparg : _allOwnedNodes) {
 
        // Loop over client list of this arg
        std::vector<RooAbsArg *> clientsTmp{tmparg->_clientList.begin(), tmparg->_clientList.end()};
@@ -2657,7 +2601,6 @@ void RooWorkspace::Streamer(TBuffer &R__b)
        }
 
      }
-     delete iter ;
 
      R__b.WriteClassBuffer(RooWorkspace::Class(),this);
 
@@ -3049,13 +2992,11 @@ void RooWorkspace::exportToCint(const char* nsname)
          << ") INFO: references to all objects in this workspace will be created in CINT in 'namespace " << _exportNSName << "'" << endl ;
 
   // Export present contents of workspace to CINT
-  TIterator* iter = _allOwnedNodes.createIterator() ;
-  TObject* wobj ;
-  while((wobj=iter->Next())) {
+  for(TObject * wobj : _allOwnedNodes) {
     exportObj(wobj) ;
   }
-  delete iter ;
-  iter = _dataList.MakeIterator() ;
+  auto iter = _dataList.MakeIterator() ;
+  TObject* wobj;
   while((wobj=iter->Next())) {
     exportObj(wobj) ;
   }
@@ -3117,15 +3058,12 @@ bool RooWorkspace::isValidCPPID(const char* name)
 void RooWorkspace::unExport()
 {
    char buf[64000];
-   TIterator *iter = _allOwnedNodes.createIterator();
-   TObject *wobj;
-   while ((wobj = iter->Next())) {
+   for(TObject* wobj : _allOwnedNodes) {
       if (isValidCPPID(wobj->GetName())) {
          strlcpy(buf, Form("%s::%s", _exportNSName.c_str(), wobj->GetName()), 64000);
          gInterpreter->DeleteVariable(buf);
       }
   }
-  delete iter ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

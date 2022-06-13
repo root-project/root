@@ -26,6 +26,7 @@ the object is valid, so that other instances can, at a later moment
 retrieve these precalculated objects.
 **/
 
+#include "RooExpensiveObjectCache.h"
 
 #include "TClass.h"
 #include "RooAbsReal.h"
@@ -33,31 +34,9 @@ retrieve these precalculated objects.
 #include "RooArgSet.h"
 #include "RooMsgService.h"
 #include <iostream>
-using namespace std ;
-
-#include "RooExpensiveObjectCache.h"
 
 ClassImp(RooExpensiveObjectCache);
 ClassImp(RooExpensiveObjectCache::ExpensiveObject);
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor
-
-RooExpensiveObjectCache::RooExpensiveObjectCache() : _nextUID(0)
-{
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor
-
-RooExpensiveObjectCache::RooExpensiveObjectCache(const RooExpensiveObjectCache& other) :
-  TObject(other), _nextUID(0)
-{
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -231,7 +210,7 @@ RooExpensiveObjectCache::ExpensiveObject::ExpensiveObject(Int_t uidIn, const cha
       if (cat) {
    _catRefParams[cat->GetName()] = cat->getCurrentIndex() ;
       } else {
-   oocoutW(&inPayload,Caching) << "RooExpensiveObject::registerObject() WARNING: ignoring non-RooAbsReal/non-RooAbsCategory reference parameter " << arg->GetName() << endl ;
+   oocoutW(&inPayload,Caching) << "RooExpensiveObject::registerObject() WARNING: ignoring non-RooAbsReal/non-RooAbsCategory reference parameter " << arg->GetName() << std::endl ;
       }
     }
   }
@@ -305,12 +284,9 @@ bool RooExpensiveObjectCache::ExpensiveObject::matches(TClass* tc, const RooArgS
 
 void RooExpensiveObjectCache::print() const
 {
-  map<TString,ExpensiveObject*>::const_iterator iter = _map.begin() ;
-
-  while(iter!=_map.end()) {
-    cout << "uid = " << iter->second->uid() << " key=" << iter->first << " value=" ;
-    iter->second->print() ;
-    ++iter ;
+  for(auto const& item : _map) {
+    std::cout << "uid = " << item.second->uid() << " key=" << item.first << " value=" ;
+    item.second->print() ;
   }
 }
 
@@ -320,22 +296,22 @@ void RooExpensiveObjectCache::print() const
 
 void RooExpensiveObjectCache::ExpensiveObject::print() const
 {
-  cout << _payload->ClassName() << "::" << _payload->GetName() ;
+  std::cout << _payload->ClassName() << "::" << _payload->GetName() ;
   if (_realRefParams.size()>0 || _catRefParams.size()>0) {
-    cout << " parameters=( " ;
+    std::cout << " parameters=( " ;
     auto iter = _realRefParams.begin() ;
     while(iter!=_realRefParams.end()) {
-      cout << iter->first << "=" << iter->second << " " ;
+      std::cout << iter->first << "=" << iter->second << " " ;
       ++iter ;
     }
     auto iter2 = _catRefParams.begin() ;
     while(iter2!=_catRefParams.end()) {
-      cout << iter2->first << "=" << iter2->second << " " ;
+      std::cout << iter2->first << "=" << iter2->second << " " ;
       ++iter2 ;
     }
-    cout << ")" ;
+    std::cout << ")" ;
   }
-  cout << endl ;
+  std::cout << std::endl ;
 }
 
 
@@ -345,16 +321,14 @@ void RooExpensiveObjectCache::ExpensiveObject::print() const
 
 void RooExpensiveObjectCache::importCacheObjects(RooExpensiveObjectCache& other, const char* ownerName, bool verbose)
 {
-  map<TString,ExpensiveObject*>::const_iterator iter = other._map.begin() ;
-  while(iter!=other._map.end()) {
-    if (string(ownerName)==iter->second->ownerName()) {
-      _map[iter->first.Data()] = new ExpensiveObject(_nextUID++, *iter->second) ;
+  for(auto const& item : other._map) {
+    if (std::string(ownerName)==item.second->ownerName()) {
+      _map[item.first.Data()] = new ExpensiveObject(_nextUID++, *item.second) ;
       if (verbose) {
-   oocoutI(iter->second->payload(),Caching) << "RooExpensiveObjectCache::importCache() importing cache object "
-                   << iter->first << " associated with object " << iter->second->ownerName() << endl ;
+   oocoutI(item.second->payload(),Caching) << "RooExpensiveObjectCache::importCache() importing cache object "
+                   << item.first << " associated with object " << item.second->ownerName() << std::endl ;
       }
     }
-    ++iter ;
   }
 
 }
