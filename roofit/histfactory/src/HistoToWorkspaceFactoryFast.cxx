@@ -259,10 +259,27 @@ namespace HistFactory{
     // This is a static function (for now) to make
     // it a one-liner
 
-      RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::INFO, 0u, RooFit::ObjectHandling, false);
+
+    Configuration config;
+    return MakeCombinedModel(measurement,config);
+  }
+
+  RooFit::OwningPtr<RooWorkspace> HistoToWorkspaceFactoryFast::MakeCombinedModel( Measurement& measurement, const Configuration& config) {
+
+    // This function takes a fully configured measurement
+    // which may contain several channels and returns
+    // a workspace holding the combined model
+    //
+    // This can be used, for example, within a script to produce
+    // a combined workspace on-the-fly
+    //
+    // This is a static function (for now) to make
+    // it a one-liner
+
+    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::INFO, 0u, RooFit::ObjectHandling, false);
 
     // First, we create an instance of a HistFactory
-    HistoToWorkspaceFactoryFast histFactory( measurement );
+    HistoToWorkspaceFactoryFast histFactory(measurement, config);
 
     // Loop over the channels and create the individual workspaces
     vector<std::unique_ptr<RooWorkspace>> channel_workspaces;
@@ -1343,9 +1360,16 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     if(TH1 const* mnominal = channel.GetData().GetHisto()) {
       // This works and is natural, but the memory size of the simultaneous
       // dataset grows exponentially with channels.
-      RooDataSet dataset{"obsData","",*proto.set("observables"), RooFit::WeightVar("weightVar")};
-      ConfigureHistFactoryDataset( dataset, *mnominal, proto, fObsNameVec );
-      proto.import(dataset);
+      std::unique_ptr<RooDataSet> dataset;
+      if(!fCfg.storeDataError){
+        dataset = std::make_unique<RooDataSet>("obsData","",*proto.set("observables"), RooFit::WeightVar("weightVar"));
+      } else {
+        const char* weightErrName="weightErr";
+        proto.factory(TString::Format("%s[0,-1e10,1e10]",weightErrName));
+        dataset = std::make_unique<RooDataSet>("obsData","",*proto.set("observables"), RooFit::WeightVar("weightVar"), RooFit::StoreError(*proto.var(weightErrName)));
+      }
+      ConfigureHistFactoryDataset( *dataset, *mnominal, proto, fObsNameVec );
+      proto.import(*dataset);
     } // End: Has non-null 'data' entry
 
 
@@ -1397,6 +1421,9 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     TAxis const* ay = mnominal.GetYaxis();
     TAxis const* az = mnominal.GetZaxis();
 
+    // check whether the dataset needs the errors stored explicitly
+    const bool storeWeightErr = obsDataUnbinned.weightVar()->getAttribute("StoreError");
+
     for (int i=1; i<=ax->GetNbins(); ++i) { // 1 or more dimension
 
       double xval = ax->GetBinCenter(i);
@@ -1404,7 +1431,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
       if(obsNameVec.size()==1) {
    double fval = mnominal.GetBinContent(i);
-   obsDataUnbinned.add( *proto.set("observables"), fval );
+   double ferr = storeWeightErr ? mnominal.GetBinError(i) : 0.;
+   obsDataUnbinned.add( *proto.set("observables"), fval, ferr );
       } else { // 2 or more dimensions
 
    for(int j=1; j<=ay->GetNbins(); ++j) {
@@ -1413,14 +1441,16 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
      if(obsNameVec.size()==2) {
        double fval = mnominal.GetBinContent(i,j);
-       obsDataUnbinned.add( *proto.set("observables"), fval );
+       double ferr = storeWeightErr ? mnominal.GetBinError(i, j) : 0.;
+       obsDataUnbinned.add( *proto.set("observables"), fval, ferr );
      } else { // 3 dimensions
 
        for(int k=1; k<=az->GetNbins(); ++k) {
          double zval = az->GetBinCenter(k);
          proto.var( obsNameVec[2] )->setVal( zval );
          double fval = mnominal.GetBinContent(i,j,k);
-         obsDataUnbinned.add( *proto.set("observables"), fval );
+         double ferr = storeWeightErr ? mnominal.GetBinError(i, j, k) : 0.;
+         obsDataUnbinned.add( *proto.set("observables"), fval, ferr );
        }
      }
    }
