@@ -56,8 +56,6 @@ ClassImp(RooStats::HistFactory::RooBarlowBeestonLL);
 {
   // Default constructor
   // Should only be used by proof.
-  //  _piter = _par.createIterator() ;
-  //  _oiter = _obs.createIterator() ;
 }
 
 
@@ -86,9 +84,6 @@ RooStats::HistFactory::RooBarlowBeestonLL::RooBarlowBeestonLL(const char *name, 
 
   delete actualObs ;
   delete actualPars ;
-
-  _piter = _par.createIterator() ;
-  _oiter = _obs.createIterator() ;
   */
 }
 
@@ -105,9 +100,6 @@ RooStats::HistFactory::RooBarlowBeestonLL::RooBarlowBeestonLL(const RooBarlowBee
   _paramFixed(other._paramFixed)
 {
   // Copy constructor
-
-  //  _piter = _par.createIterator() ;
-  //  _oiter = _obs.createIterator() ;
 
   // _paramAbsMin.addClone(other._paramAbsMin) ;
   // _obsAbsMin.addClone(other._obsAbsMin) ;

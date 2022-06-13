@@ -507,13 +507,9 @@ bool RooMCStudy::run(bool doGenerate, bool DoFit, Int_t nSamples, Int_t nEvtPerS
   _canAddFitResults = false ;
 
   if (_genParData) {
-    const RooArgSet* genPars = _genParData->get() ;
-    TIterator* iter2 = genPars->createIterator() ;
-    RooAbsArg* arg ;
-    while((arg=(RooAbsArg*)iter2->Next())) {
+    for(RooAbsArg * arg : *_genParData->get()) {
       _genParData->changeObservableName(arg->GetName(),Form("%s_gen",arg->GetName())) ;
     }
-    delete iter2 ;
 
     _fitParData->merge(_genParData) ;
   }
