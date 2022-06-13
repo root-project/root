@@ -90,16 +90,14 @@ std::enable_if_t<IsRVec<Value_t>::value, const std::type_info &> GetInnerValueTy
 
 // This overload is for the case of a single column and ret_type != RVec<RVec<...>>
 template <typename T>
-std::enable_if_t<!IsRVec<T>::value, void>
-ResizeResults(ROOT::RVec<T> &results, std::size_t /*nCols*/, std::size_t nVariations)
+void ResizeResults(ROOT::RVec<T> &results, std::size_t /*nCols*/, std::size_t nVariations)
 {
    results.resize(nVariations);
 }
 
 // This overload is for the case of ret_type == RVec<RVec<...>>
 template <typename T>
-std::enable_if_t<IsRVec<T>::value, void>
-ResizeResults(ROOT::RVec<T> &results, std::size_t nCols, std::size_t nVariations)
+void ResizeResults(ROOT::RVec<ROOT::RVec<T>> &results, std::size_t nCols, std::size_t nVariations)
 {
    if (nCols == 1) {
       results.resize(nVariations);
@@ -115,8 +113,7 @@ ResizeResults(ROOT::RVec<T> &results, std::size_t nCols, std::size_t nVariations
 // GetValuePtr)
 // This overload is for the case of a single column and ret_type != RVec<RVec<...>>
 template <typename T>
-std::enable_if_t<!IsRVec<T>::value, void>
-AssignResults(ROOT::RVec<T> &resStorage, ROOT::RVec<T> &&tmpResults, std::size_t /*nCols*/)
+void AssignResults(ROOT::RVec<T> &resStorage, ROOT::RVec<T> &&tmpResults, std::size_t /*nCols*/)
 {
    const auto nVariations = resStorage.size(); // we have already checked that tmpResults has the same size
 
@@ -126,8 +123,7 @@ AssignResults(ROOT::RVec<T> &resStorage, ROOT::RVec<T> &&tmpResults, std::size_t
 
 // This overload is for the case of ret_type == RVec<RVec<...>>
 template <typename T>
-std::enable_if_t<IsRVec<T>::value, void>
-AssignResults(ROOT::RVec<T> &resStorage, ROOT::RVec<T> &&tmpResults, std::size_t nCols)
+void AssignResults(ROOT::RVec<ROOT::RVec<T>> &resStorage, ROOT::RVec<ROOT::RVec<T>> &&tmpResults, std::size_t nCols)
 {
    // we have already checked that tmpResults has the same inner size
    const auto nVariations = nCols == 1 ? resStorage.size() : resStorage[0].size();
