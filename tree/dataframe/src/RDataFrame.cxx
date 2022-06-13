@@ -1356,9 +1356,9 @@ RDataFrame::RDataFrame(std::string_view treeName, std::string_view filenameglob,
 {
    const std::string treeNameInt(treeName);
    const std::string filenameglobInt(filenameglob);
-   auto chain = std::make_shared<TChain>(treeNameInt.c_str());
+   auto chain = std::make_shared<TChain>(treeNameInt.c_str(), "", TChain::kWithoutGlobalRegistration);
    chain->Add(filenameglobInt.c_str());
-   GetProxiedPtr()->SetTree(chain);
+   GetProxiedPtr()->SetTree(std::move(chain));
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -1377,10 +1377,10 @@ RDataFrame::RDataFrame(std::string_view treeName, const std::vector<std::string>
    : RInterface(std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultColumns))
 {
    std::string treeNameInt(treeName);
-   auto chain = std::make_shared<TChain>(treeNameInt.c_str());
+   auto chain = std::make_shared<TChain>(treeNameInt.c_str(), "", TChain::kWithoutGlobalRegistration);
    for (auto &f : fileglobs)
       chain->Add(f.c_str());
-   GetProxiedPtr()->SetTree(chain);
+   GetProxiedPtr()->SetTree(std::move(chain));
 }
 
 ////////////////////////////////////////////////////////////////////////////
