@@ -550,10 +550,10 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
       std::vector<RDaosContainer::RWOperation> readRequests;
       auto buffer = new unsigned char[szPayload];
       for (auto &s : onDiskPages) {
+         std::vector<RDaosContainer::AttributeKey_t> akeys{kAttributeKey};
          std::vector<d_iov_t> iovs(1);
          d_iov_set(&iovs[0], buffer + s.fBufPos, s.fSize);
-         readRequests.emplace_back(daos_obj_id_t{s.fObjectId, 0},
-                                   kDistributionKey, kAttributeKey, iovs);
+         readRequests.emplace_back(daos_obj_id_t{s.fObjectId, 0}, kDistributionKey, std::move(akeys), std::move(iovs));
       }
       fCounters->fSzReadPayload.Add(szPayload);
 

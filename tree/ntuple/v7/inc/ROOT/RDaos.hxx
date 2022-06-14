@@ -87,7 +87,6 @@ private:
 public:
    using DistributionKey_t = std::uint64_t;
    using AttributeKey_t = std::uint64_t;
-
    /// \brief Wrap around a `daos_oclass_id_t`. An object class describes the schema of data distribution
    /// and protection.
    struct ObjClassId {
@@ -111,20 +110,21 @@ public:
       FetchUpdateArgs() = default;
       FetchUpdateArgs(const FetchUpdateArgs&) = delete;
       FetchUpdateArgs(FetchUpdateArgs&& fua);
-      FetchUpdateArgs(DistributionKey_t &d, AttributeKey_t &a, std::vector<d_iov_t> &v, bool is_async = false);
+      FetchUpdateArgs(DistributionKey_t &d, std::vector<AttributeKey_t> &&as, std::vector<d_iov_t> &&vs,
+                      bool is_async = false);
       FetchUpdateArgs &operator=(const FetchUpdateArgs &) = delete;
       daos_event_t *GetEventPointer();
 
       /// \brief A `daos_key_t` is a type alias of `d_iov_t`. This type stores a pointer and a length.
       /// In order for `fDistributionKey` and `fIods` to point to memory that we own, `fDkey` and
-      /// `fAkey` store a copy of the distribution and attribute key, respectively.
+      /// `fAkeys` store a copy of the single distribution key and multiple attribute keys, respectively.
       DistributionKey_t fDkey{};
-      AttributeKey_t fAkey{};
+      std::vector<AttributeKey_t> fAkeys{};
 
       /// \brief The distribution key, as used by the `daos_obj_{fetch,update}` functions.
       daos_key_t fDistributionKey{};
-      daos_iod_t fIods[1] = {};
-      d_sg_list_t fSgls[1] = {};
+      std::vector<daos_iod_t> fIods{};
+      std::vector<d_sg_list_t> fSgls{};
       std::vector<d_iov_t> fIovs{};
       std::optional<daos_event_t> fEvent{};
    };
@@ -153,11 +153,11 @@ public:
    /// \brief Describes a read/write operation on multiple objects; see the `ReadV`/`WriteV` functions.
    struct RWOperation {
       RWOperation() = default;
-      RWOperation(daos_obj_id_t o, DistributionKey_t d, AttributeKey_t a, std::vector<d_iov_t> &v)
-         : fOid(o), fDistributionKey(d), fAttributeKey(a), fIovs(v) {};
+      RWOperation(daos_obj_id_t o, DistributionKey_t d, std::vector<AttributeKey_t> &&as, std::vector<d_iov_t> &&vs)
+         : fOid(o), fDistributionKey(d), fAttributeKeys(std::move(as)), fIovs(std::move(vs)){};
       daos_obj_id_t fOid{};
       DistributionKey_t fDistributionKey{};
-      AttributeKey_t fAttributeKey{};
+      std::vector<AttributeKey_t> fAttributeKeys{};
       std::vector<d_iov_t> fIovs{};
    };
 
