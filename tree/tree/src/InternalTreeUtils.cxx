@@ -7,11 +7,12 @@
  *************************************************************************/
 
 #include "ROOT/InternalTreeUtils.hxx"
-#include "TCollection.h" // TRangeStaticCast
-#include "TTree.h"
+#include "TBranch.h" // Usage of TBranch in ClearMustCleanupBits
 #include "TChain.h"
+#include "TCollection.h" // TRangeStaticCast
 #include "TFile.h"
 #include "TFriendElement.h"
+#include "TTree.h"
 
 #include <utility> // std::pair
 #include <vector>
