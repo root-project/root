@@ -27,15 +27,38 @@
 #include <type_traits>
 #include <vector>
 #include <optional>
+#include <map>
 
 #ifndef DAOS_UUID_STR_SIZE
 #define DAOS_UUID_STR_SIZE 37
 #endif
 
+namespace std {
+// Required by `std::unordered_map<daos_obj_id, ...>`. Based on boost::hash_combine().
+template <>
+struct hash<daos_obj_id_t> {
+   std::size_t operator()(const daos_obj_id_t &oid) const
+   {
+      auto seed = std::hash<uint64_t>{}(oid.lo);
+      seed ^= std::hash<uint64_t>{}(oid.hi) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+      return seed;
+   }
+};
+inline bool operator==(const daos_obj_id_t &lhs, const daos_obj_id_t &rhs)
+{
+   return (lhs.lo == rhs.lo) && (lhs.hi == rhs.hi);
+}
+} // namespace std
+
 namespace ROOT {
 
 namespace Experimental {
 namespace Detail {
+
+inline bool operator!=(daos_obj_id_t &lhs, daos_obj_id_t &rhs)
+{
+   return !((lhs.lo == rhs.lo) && (lhs.hi == rhs.hi));
+}
 
 struct RDaosEventQueue {
    daos_handle_t fQueue;
@@ -149,7 +172,7 @@ public:
    using DistributionKey_t = RDaosObject::DistributionKey_t;
    using AttributeKey_t = RDaosObject::AttributeKey_t;
    using ObjClassId_t = RDaosObject::ObjClassId;
-  
+
    /// \brief Describes a read/write operation on multiple objects; see the `ReadV`/`WriteV` functions.
    struct RWOperation {
       RWOperation() = default;
@@ -159,6 +182,26 @@ public:
       DistributionKey_t fDistributionKey{};
       std::vector<AttributeKey_t> fAttributeKeys{};
       std::vector<d_iov_t> fIovs{};
+
+      /// \brief Inserts a new pair of attribute key and I/O operation vector, provided that the object ID and
+      /// distribution key match the structure's. Initializes object ID and distribution key if there are none.
+      /// \return 0 on successful insertion, otherwise -1
+      int insert(daos_obj_id_t oid, DistributionKey_t dist, AttributeKey_t attr, d_iov_t &vec)
+      {
+         // Initialize oid and dkey if this is the first attribute key
+         if (fAttributeKeys.empty()) {
+            fOid = oid;
+            fDistributionKey = dist;
+         }
+
+         // Enforce single oid and dkey per `RWOperation`
+         if (fOid != oid || fDistributionKey != dist)
+            return -1;
+
+         fAttributeKeys.emplace_back(attr);
+         fIovs.emplace_back(vec);
+         return 0;
+      }
    };
 
    std::string GetContainerUuid();
@@ -172,13 +215,14 @@ private:
 
    /**
      \brief Perform a vector read/write operation on different objects.
-     \param vec A `std::vector<RWOperation>` that describes read/write operations to perform.
+     \param map A `std::unordered_map<std::pair<daos_obj_id_t, DistributionKey_t>, RWOperation>` that describes
+     read/write operations to perform.
      \param cid The `daos_oclass_id_t` used to qualify OIDs.
      \param fn Either `&RDaosObject::Fetch` (read) or `&RDaosObject::Update` (write).
      \return 0 if the operation succeeded; a negative DAOS error number otherwise.
      */
-   int VectorReadWrite(std::vector<RWOperation> &vec, ObjClassId_t cid,
-                       int (RDaosObject::*fn)(RDaosObject::FetchUpdateArgs &));
+   int VectorReadWrite(std::unordered_map<std::pair<daos_obj_id_t, DistributionKey_t>, RWOperation> &map,
+                       ObjClassId_t cid, int (RDaosObject::*fn)(RDaosObject::FetchUpdateArgs &));
 
 public:
    RDaosContainer(std::shared_ptr<RDaosPool> pool, std::string_view containerId, bool create = false);
@@ -220,30 +264,54 @@ public:
    { return WriteSingleAkey(buffer, length, oid, dkey, akey, fDefaultObjectClass); }
 
    /**
-     \brief Perform a vector read operation on (possibly) multiple objects.
-     \param vec A `std::vector<RWOperation>` that describes read operations to perform.
+     \brief Perform a vector read operation on multiple objects.
+     \param map A `std::unordered_map<std::pair<daos_obj_id_t, DistributionKey_t>, RWOperation>` that describes read
+     operations to perform.
      \param cid An object class ID.
      \return Number of operations that could not complete.
      */
-   int ReadV(std::vector<RWOperation> &vec, ObjClassId_t cid) { return VectorReadWrite(vec, cid, &RDaosObject::Fetch); }
-   int ReadV(std::vector<RWOperation> &vec) { return ReadV(vec, fDefaultObjectClass); }
+   int ReadV(std::unordered_map<std::pair<daos_obj_id_t, DistributionKey_t>, RWOperation> &map, ObjClassId_t cid)
+   {
+      return VectorReadWrite(map, cid, &RDaosObject::Fetch);
+   }
+   int ReadV(std::unordered_map<std::pair<daos_obj_id_t, DistributionKey_t>, RWOperation> &map)
+   {
+      return ReadV(map, fDefaultObjectClass);
+   }
 
    /**
-     \brief Perform a vector write operation on (possibly) multiple objects.
-     \param vec A `std::vector<RWOperation>` that describes write operations to perform.
+     \brief Perform a vector write operation on multiple objects.
+     \param map A `std::unordered_map<std::pair<daos_obj_id_t, DistributionKey_t>, RWOperation>` that describes write
+     operations to perform.
      \param cid An object class ID.
      \return Number of operations that could not complete.
      */
-   int WriteV(std::vector<RWOperation> &vec, ObjClassId_t cid)
+   int WriteV(std::unordered_map<std::pair<daos_obj_id_t, DistributionKey_t>, RWOperation> &map, ObjClassId_t cid)
    {
-      return VectorReadWrite(vec, cid, &RDaosObject::Update);
+      return VectorReadWrite(map, cid, &RDaosObject::Update);
    }
-   int WriteV(std::vector<RWOperation> &vec) { return WriteV(vec, fDefaultObjectClass); }
+   int WriteV(std::unordered_map<std::pair<daos_obj_id_t, DistributionKey_t>, RWOperation> &map)
+   {
+      return WriteV(map, fDefaultObjectClass);
+   }
 };
 
 } // namespace Detail
 
 } // namespace Experimental
 } // namespace ROOT
+
+namespace std {
+template <>
+struct hash<std::pair<daos_obj_id_t, ROOT::Experimental::Detail::RDaosObject::DistributionKey_t>> {
+   std::size_t
+   operator()(std::pair<daos_obj_id_t, ROOT::Experimental::Detail::RDaosObject::DistributionKey_t> const &pair) const
+   {
+      using std::hash;
+      return hash<daos_obj_id_t>{}(pair.first) ^
+             (hash<ROOT::Experimental::Detail::RDaosObject::DistributionKey_t>{}(pair.second) << 1);
+   }
+};
+} // namespace std
 
 #endif
