@@ -567,7 +567,7 @@ Cppyy::TCppType_t Cppyy::GetActualClass(TCppType_t klass, TCppObject_t obj)
     TClassRef& cr = type_from_handle(klass);
     if (!cr.GetClass() || !obj) return klass;
 
-#if 0 // def _WIN64
+#ifdef _WIN64
 // Cling does not provide a consistent ImageBase address for calculating relative addresses
 // as used in Windows 64b RTTI. So, check for our own RTTI extension instead. If that fails,
 // see whether the unmangled raw_name is available (e.g. if this is an MSVC compiled rather
@@ -597,7 +597,7 @@ Cppyy::TCppType_t Cppyy::GetActualClass(TCppType_t klass, TCppObject_t obj)
     // if the raw name is the empty string (no guarantees that this is so as truly, the
     // address is corrupt, but it is common to be empty), then there is no accessible RTTI
     // and getting the unmangled name will crash ...
-        if (!raw || raw[0] == '\0')
+        if (!raw)
             return klass;
     } catch (std::bad_typeid) {
         return klass;        // can't risk passing to ROOT/meta as it may do RTTI
