@@ -1,0 +1,23 @@
+/* XPM */
+static char *cursorv_xpm[] = {
+/* width height num_colors chars_per_pixel */
+"    14    11      5            2",
+/* colors */
+"`` c None s None",
+"`. c #000000",
+"`# c #ffffff",
+"`a c #c0c0c0",
+"`b c #808080",
+/* pixels */
+"`#`#`#`#`#`#`#`#`#``````````",
+"`#`a`a`a`a`a`a`a`a`#````````",
+"`#`#`a`a`a`#`a`a`a`a`#``````",
+"`#`a`.`a`a`a`.`a`a`a`a`#````",
+"`#`a`a`#`a`a`a`a`a`a`a`a`#``",
+"`#`a`a`a`.`a`a`a`a`a`a`a`a`.",
+"`#`#`a`a`a`#`a`a`a`a`a`b`.``",
+"`#`a`.`a`a`a`.`a`a`a`b`.````",
+"`#`a`a`a`a`a`a`a`a`b`.``````",
+"`#`b`b`b`b`b`b`b`b`.````````",
+"`.`.`.`.`.`.`.`.`.``````````"
+};

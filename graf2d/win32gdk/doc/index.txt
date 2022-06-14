@@ -1,0 +1,5 @@
+BEGIN_HTML
+This directory contains the Win32 implementation of the TVirtualX abstract class.
+All Win32 drawing and interaction goes via this class. The implementation uses the
+Win32 version of the gdk package.
+END_HTML

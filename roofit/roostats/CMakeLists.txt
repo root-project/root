@@ -1,0 +1,145 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
+############################################################################
+# CMakeLists.txt file for building ROOT roostats package
+# @author Pere Mato, CERN
+############################################################################
+
+ROOT_STANDARD_LIBRARY_PACKAGE(RooStats
+  HEADERS
+    RooStats/AsymptoticCalculator.h
+    RooStats/BayesianCalculator.h
+    RooStats/BernsteinCorrection.h
+    RooStats/CombinedCalculator.h
+    RooStats/ConfidenceBelt.h
+    RooStats/ConfInterval.h
+    RooStats/DebuggingSampler.h
+    RooStats/DebuggingTestStat.h
+    RooStats/DetailedOutputAggregator.h
+    RooStats/FeldmanCousins.h
+    RooStats/FrequentistCalculator.h
+    RooStats/Heaviside.h
+    RooStats/HLFactory.h
+    RooStats/HybridCalculator.h
+    RooStats/HybridCalculatorOriginal.h
+    RooStats/HybridPlot.h
+    RooStats/HybridResult.h
+    RooStats/HypoTestCalculatorGeneric.h
+    RooStats/HypoTestCalculator.h
+    RooStats/HypoTestInverter.h
+    RooStats/HypoTestInverterOriginal.h
+    RooStats/HypoTestInverterPlot.h
+    RooStats/HypoTestInverterResult.h
+    RooStats/HypoTestPlot.h
+    RooStats/HypoTestResult.h
+    RooStats/IntervalCalculator.h
+    RooStats/LikelihoodInterval.h
+    RooStats/LikelihoodIntervalPlot.h
+    RooStats/MarkovChain.h
+    RooStats/MaxLikelihoodEstimateTestStat.h
+    RooStats/MCMCCalculator.h
+    RooStats/MCMCInterval.h
+    RooStats/MCMCIntervalPlot.h
+    RooStats/MetropolisHastings.h
+    RooStats/MinNLLTestStat.h
+    RooStats/ModelConfig.h
+    RooStats/NeymanConstruction.h
+    RooStats/NumberCountingPdfFactory.h
+    RooStats/NumberCountingUtils.h
+    RooStats/NumEventsTestStat.h
+    RooStats/PdfProposal.h
+    RooStats/PointSetInterval.h
+    RooStats/ProfileInspector.h
+    RooStats/ProfileLikelihoodCalculator.h
+    RooStats/ProfileLikelihoodTestStat.h
+    RooStats/ProofConfig.h
+    RooStats/ProposalFunction.h
+    RooStats/ProposalHelper.h
+    RooStats/RatioOfProfiledLikelihoodsTestStat.h
+    RooStats/RooStatsUtils.h
+    RooStats/SamplingDistPlot.h
+    RooStats/SamplingDistribution.h
+    RooStats/SequentialProposal.h
+    RooStats/SimpleInterval.h
+    RooStats/SimpleLikelihoodRatioTestStat.h
+    RooStats/SPlot.h
+    RooStats/TestStatistic.h
+    RooStats/TestStatSampler.h
+    RooStats/ToyMCImportanceSampler.h
+    RooStats/ToyMCSampler.h
+    RooStats/ToyMCStudy.h
+    RooStats/UniformProposal.h
+    RooStats/UpperLimitMCSModule.h
+  SOURCES
+    src/AsymptoticCalculator.cxx
+    src/BayesianCalculator.cxx
+    src/BernsteinCorrection.cxx
+    src/ConfidenceBelt.cxx
+    src/DetailedOutputAggregator.cxx
+    src/FeldmanCousins.cxx
+    src/FrequentistCalculator.cxx
+    src/Heaviside.cxx
+    src/HLFactory.cxx
+    src/HybridCalculator.cxx
+    src/HybridCalculatorOriginal.cxx
+    src/HybridPlot.cxx
+    src/HybridResult.cxx
+    src/HypoTestCalculatorGeneric.cxx
+    src/HypoTestInverter.cxx
+    src/HypoTestInverterOriginal.cxx
+    src/HypoTestInverterPlot.cxx
+    src/HypoTestInverterResult.cxx
+    src/HypoTestPlot.cxx
+    src/HypoTestResult.cxx
+    src/LikelihoodInterval.cxx
+    src/LikelihoodIntervalPlot.cxx
+    src/MarkovChain.cxx
+    src/MCMCCalculator.cxx
+    src/MCMCInterval.cxx
+    src/MCMCIntervalPlot.cxx
+    src/MetropolisHastings.cxx
+    src/ModelConfig.cxx
+    src/NeymanConstruction.cxx
+    src/NumberCountingPdfFactory.cxx
+    src/NumberCountingUtils.cxx
+    src/PdfProposal.cxx
+    src/PointSetInterval.cxx
+    src/ProfileInspector.cxx
+    src/ProfileLikelihoodCalculator.cxx
+    src/ProfileLikelihoodTestStat.cxx
+    src/ProposalHelper.cxx
+    src/RatioOfProfiledLikelihoodsTestStat.cxx
+    src/RooStatsUtils.cxx
+    src/SamplingDistPlot.cxx
+    src/SamplingDistribution.cxx
+    src/SequentialProposal.cxx
+    src/SimpleInterval.cxx
+    src/SimpleLikelihoodRatioTestStat.cxx
+    src/SPlot.cxx
+    src/ToyMCImportanceSampler.cxx
+    src/ToyMCSampler.cxx
+    src/ToyMCStudy.cxx
+    src/UniformProposal.cxx
+    src/UpperLimitMCSModule.cxx
+  DICTIONARY_OPTIONS
+    "-writeEmptyRootPCM"
+  DEPENDENCIES
+    Core
+    RooFit
+    RooFitCore
+    Tree
+    RIO
+    Hist
+    Matrix
+    MathCore
+    Minuit
+    Foam
+    Graf
+    Gpad
+)
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)

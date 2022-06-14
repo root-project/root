@@ -1,0 +1,10 @@
+This directory contains all the thread classes.
+BEGIN_HTML
+ See:
+<ul>
+<li><a href="ftp://root.cern.ch/root/doc/23Threads.pdf">The Chapter about the Thread classes in the Users Guide
+    </a></li>
+<li><a href="http://root.cern.ch/root/HowtoThread.html">How to use the ROOT Thread classes
+    </a></li>
+</ul>
+END_HTML

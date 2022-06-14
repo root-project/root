@@ -1,0 +1,172 @@
+<!-- DOCTYPE HTML --
+  -- SYSTEM><html><head><title>graf3d</title></head><body -->
+
+<br>
+<hr>
+<a name="graf3d"></a>
+
+
+<h3>OpenGL</h3>
+
+<h4>Major changes</h4>
+
+<ul>
+
+<li> GLEW - The OpenGL Extension Wrangler Library - has been added to
+facilitate detection of OpenGL version and available extensions at
+run-time. This will allow usage of advanced visualization techniques
+while still allowing fall-back solutions to be used on systems not
+supporting the required functionality. If GLEW and GLEW-devel packages
+are detected during configure, the ROOT provided GLEW is not
+built. See also:
+<a href="http://glew.sourceforge.net/">http://glew.sourceforge.net/</a>.
+
+<li> Latest (1.3.3) version of gl2ps has been imported (we had 1.2.6
+before). See <a href="http://www.geuz.org/gl2ps/">http://www.geuz.org/gl2ps/</a>
+for detailed change-log.
+
+<li> New implementation of GL-in-TPad - instead of mixture of GL and
+non-GL graphics in a pixmap all pad graphics (2D/3D) is now
+done by OpenGL.
+
+<br> To make this possible new <tt>TVirtualPadPainter</tt>,
+<tt>TPadPainter</tt>, <tt>TGLPadPainter</tt> classes were introduced
+and painting operations inside <tt>TPad</tt> class were modified to
+use <tt>TVirtualPadPainter</tt> instead of <tt>TVirtualX</tt>.
+<tt>TVirtualPadPainter</tt> is an abstract base class, interface for
+drawing 2D primitives and pixmap management. <tt>TPadPainter</tt> is
+a default, non-GL implementation, based on <tt>TVirtualX</tt>
+(<tt>gVirtualX</tt>). <tt>TGLPadPainter</tt> is a GL
+implementation. Currently, <tt>TGLPadPainter</tt> does not support
+off-screen rendering (support for frame-buffer objects is planned).
+
+<br> Current limitations:
+<ol>
+<li> The glpad can be saved only as PS now.
+<li> Several sub-pads with complex 3d geometry can be slow due to lack
+of off-screen rendering which would allow for caching of resulting images.
+</ol>
+Future directions:
+<ol>
+<li> Use frame-buffer objects for off-screen rendering.
+<li> Support "Save as" png, jpg, pdf, etc.
+<li> With GLEW and GL-shading-language, use of hardware anti-aliasing and
+  shaders is possible.
+</ol>
+
+<li> Prototype visualization of 5-dimensional distributions:
+<ol>
+<li> New option for TTree::Draw - "gl5d", for the case you have 5 and
+  more dimensional dataset.
+<li> Set of iso-surfaces created, 4-th dimension is used to select iso-level.
+<li> "gl5d" is now very similar to "gliso" option, but instead of
+  filling TH3 object (very primitive and rude "density estimator"),
+  points are fed directly to the kernel density estimator, based on
+  Fast Gauss Transform.
+</ol>
+See <tt>TGL5D*</tt> classes.
+
+<br> Limitations: 5-th dimension is not shown correctly at the moment
+(lacks sofisticated algorithms, we do not have in a ROOT's math
+library now). Because of this limitation, GUI is just a toy now, must
+be changed.
+
+<br> Future directions:
+<ol>
+<li> GUI improvements.
+<li> Support several different density estimators.
+<li> Implement regression tools.
+</ol>
+
+</ul>
+
+
+<h4>Minor changes, fixes and improvements</h4>
+
+<ul>
+
+<li> It is now possible to draw a histogram with the "GLBOX" in the
+GL-viewer.
+
+<li> New class <tt>TGLColor</tt> has been introduced to simplify color
+management in <tt>TGLViewer</tt> and <tt>TGLRnrCtx</tt>.
+
+<li> Add support for several color-sets (class <tt>TGLColorSet</tt> -
+each defines colors for background, foreground, outline, markup and
+for outlines of selected and highlighted objects.
+
+This also allows for independent changing of background color and
+outline mode in the GL viewer - the <tt>e</tt> key now toggles between
+dark / light background.
+
+<li> New class <tt>TGLAnnotation</tt> - it allows display of
+annotation-text on top of displayed objects.
+
+The annotation can be created from the <tt>TGLViewer</tt> editor
+("Guides" tab). After that it can be dragged around the screen, edited
+or closed.
+
+<li> <tt>TGLAxisPainter</tt> - reimplemented to completely separate
+label and tick-mark positioning code from the rendering itself.
+
+<li> <tt>TGLSAViewer</tt> - when exporting an image properly take into
+account image extension if it was typed by the user.
+
+<li> <tt>TGLFont</tt> now uses the same font-naming scheme as the rest
+of ROOT (had to specify font-file names before).
+
+<li> Overlay-object management has been improved.
+
+<li> Allow clipping object to be fixed by user - until now it was updated
+on every redraw. See <tt>TGLViewer::SetClipAutoUpdate()</tt>.
+
+</ul>
+
+
+<!------------------------------------------------------------------------------>
+
+
+<br>
+<hr>
+<h3>Eve</h3>
+
+<ul>
+
+<li> <tt>TEveElement</tt> - add context-menu functions allowing the
+source-object to be printed, dumped or exported to CINT.
+
+<li> <tt>TEveTrack</tt> - added flag for locking of current
+track-points - the track will not be re-extrapolated automatically
+even when the extrapolation parameters are changed.
+
+<li> <tt>TEveTrack</tt> - removed ALICE specific <tt>ImportXyzz()</tt>
+functions for loading of kinematics, hits and clusters associated with
+a track. These were calling macros that were not available in ROOT.
+
+<li> Several improvements in rendering of coordinate axes
+in <tt>TEveCaloLego</tt> and <tt>TEveProjectionAxes</tt>.
+
+<li> New class <tt>TEveJetCone</tt> for display of circular and
+elliptic jet-cones clipped to the calorimeter's inner surface.
+
+<li> Add support for extraction of composite-shape tesselations. A new
+class <tt>TEveGeoPolyShape</tt> has been introduced to make this
+tesselation serializable. See example
+in <tt>tutorials/eve/csgdemo.C</tt>.
+
+<li> Generalize representation of EVE-window title-bar - it can be
+modified to display user-provided icons, menus or buttons.
+
+<li> <tt>TEveWindowPack</tt> now supports registration of sub-frames
+with weights that determine relative sub-frame length along the pack's
+major direction.
+
+<li> <tt>TEveUtil::SetColorBrightnes()</tt> now scales colors
+according to screen-gamma transformation formula.
+
+<li> Some examples using the GUI recorder have been added to the
+tutorials. See macros <tt>tutorials/eve/*_playback.C</tt>.
+
+</ul>
+
+<!-- /body></html -->

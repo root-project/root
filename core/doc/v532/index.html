@@ -1,0 +1,140 @@
+<br/>
+<hr/>
+<h3>Build System</h3>
+
+<h4>MacOS X</h4>
+<ul>
+<li>
+On MacOS X move to a more secure way of building. We will now always use
+the --enable-explicitlink ./configure option which will cause a shared lib
+or executable to be linked with all its dependent libraries. The OSX linker
+is quite good and processing this extended set of libraries for each link
+does cost only 3s extra time for all 100+ shared libs (13s instead of 10s).
+Not much for the extra security. In addition we went back to the default
+linker option "-undefined error", so you will get an error if symbols
+are unresolved. Shared libs are also linked with the option
+"-Wl,-dead_strip_dylibs" which tells the linker to remove any shared lib
+which is not used to resolve any symbols (this should
+solve the long standing issue of ACliC linking all previously created
+shared libs even when not needed).
+</li>
+</ul>
+
+<h4>Linux</h4>
+<ul>
+<li>
+Make --enable-explictlink the default on linux too (was already the case for:
+macosx, freebsd, openbsd, aix and win32). This adds some extra time to
+the link stage, which can be recuperated by using the newer, much faster,
+gold linker. In addition we added the linker option "-Wl,--no-undefined",
+so you will get an error if symbols are unresolved.
+Explicit linking is required by newer distributions, like Ubuntu 11.10,
+that require all dependent shared libs to be specified when linking. They
+also have default options set to dead strip shared libs that don't resolve
+any symbols (equivalent to the MacOS X build changes described above).
+</li>
+</ul>
+
+<a name="core"></a>
+<h3>Core Libraries</h3>
+
+
+<h4>TClonesArray</h4>
+
+<ul>
+<li>Introduce <tt>TClonesArray::ConstructedAt</tt> which
+always returns an already constructed object.   If the slot is being used for the
+first time, it calls the default constructor otherwise it returns the object as
+is (unless a string is passed as the 2nd argument to the function in which case,
+it also calls Clear(second_argument) on the object).
+This allows to replace code like:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   for (int i = 0; i &lt; ev-&gt;Ntracks; i++) {
+       new(a[i]) TTrack(x,y,z,...);
+       ...
+       ...
+   }
+   ...
+   a.Delete(); // or a.Clear("C")
+</pre>
+with the simpler and more efficient:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   for (int i = 0; i &lt; ev-&gt;Ntracks; i++) {
+       TTrack *track = (TTrack*)a.ConstructedAt(i);
+       track->Set(x,y,z,....);
+       ...
+       ...
+   }
+   ...
+   a.Clear();
+</pre>
+even in case where the TTrack class allocates memory.
+</li>
+<li>TClonesArray: update ExpandCreateFast to also reset the non-used slots
+so that calling Clear (which does too much) is no longer necessary
+when using ExpandCreateFast.
+</li>
+</ul>
+
+<h4>New Thread Pool class</h4>
+<ul>
+<li>
+A first version of TThreadPool class has been introduced.
+This class implements <a href="http://en.wikipedia.org/wiki/Thread_pool_pattern">a Thread Pool pattern</a>.
+So far it supports only one type of queue - FIFO.
+</li>
+</ul>
+
+<h4>Thread library</h4>
+
+<ul>
+<li>Reduces risk of internal dead lock by using a private internal lock to protect the internals of TThread, rather than using TThread::Lock
+</li>
+<li>New header TThreadSlots.h to centralize and formalize the use of the TThread local memory slots amongst the ROOT packages.
+</li>
+</ul>
+
+<h4>Global Variables</h4>
+<ul>
+<li>The global values gPad, gVirtualX, gInterpreter, gDirectory and gFile
+are now all accessed via a static function of their respective class.  The
+access is made transparent via a CPP macro.</li>
+<li>The access is now also made transparent from the CINT and python prompt.</li>
+<li>gPad, gVirtualX and gInterpreter are now accessible even when their value
+is zero and they now properly support tab completion.</li>
+<li>See the important note in the I/O section on gDirectory and gFile which
+are now thread local.</li>
+</ul>
+
+<h4>Meta</h4>
+<ul>
+<li>The new interface <tt>TDictionary::GetDictionary(const char*)</tt> offers a
+single entry point to query the type based on its name, conveniently combining
+TDataType and TClass queries. It does name normalization (removing std etc).
+</li>
+<li>Add the ability to explicitly forbid (or allow) the splitting of a class
+(<tt>TClass::SetSplit</tt>) so that user can inforce the use of a custom streamer in all possible split cases.
+</li>
+<li>Resolve several issues with the creation of StreamerInfo for abstract classes.
+</li>
+
+<li>When looking for the value corresponding to an enum type, skip global that are not enums. (This improves the speed of TFile::Open by 60%).
+</li>
+</ul>
+
+<h4>TStyle</h4>
+<ul>
+<li>
+The Modern style has now a transparent background for the histogram title.
+</li>
+</ul>
+
+<h4>Misc.</h4>
+<ul>
+<li>In the root executable, auto-detect command line arguments that are local root files even if their name does not end with ".root"
+</li>
+<li>If home directory is not correctly set in pw file or user is not known, use the HOME shell variable to find the desired home directory.
+</li>
+</ul>
+
+

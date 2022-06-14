@@ -1,0 +1,23 @@
+#!/bin/sh
+
+#
+# $Id$
+#
+# Template for the xproofd wrapper script.
+# The xproofd wrapper script is used uniformy the interface to xproofd after the modifications
+# occured in XRootD version 4, when export for the XRootD main has been suppressed and the 
+# possibility to load a different default protocol in 'xrootd' added.
+#
+# The wrapper runs xrootd prepending to the standard xrootd commands the switches
+#                    '-P xproofd -L <path>/libXrdProofd'
+#
+
+XRDEXEC=`which xrootd`
+if [ "x$XRDEXEC" != "x" ]; then
+   $XRDEXEC -P xproofd -p 1093 -L @libdir@/libXrdProofd.so "$@"
+else
+   echo "xrootd not found!"
+   exit 1
+fi
+
+exit 0

@@ -1,0 +1,32 @@
+From 646608f2daa3941d59d863bc9806da3f2f86b80e Mon Sep 17 00:00:00 2001
+From: Enric Tejedor Saavedra <enric.tejedor.saavedra@cern.ch>
+Date: Tue, 18 Jan 2022 15:10:22 +0100
+Subject: [PATCH] [PyROOT] For MacOs12 with soversion, try to load library with
+ absolute path
+
+---
+ .../cppyy-backend/cling/python/cppyy_backend/loader.py    | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/bindings/pyroot/cppyy/cppyy-backend/cling/python/cppyy_backend/loader.py b/bindings/pyroot/cppyy/cppyy-backend/cling/python/cppyy_backend/loader.py
+index 986f993ea1..4cce950c31 100644
+--- a/bindings/pyroot/cppyy/cppyy-backend/cling/python/cppyy_backend/loader.py
++++ b/bindings/pyroot/cppyy/cppyy-backend/cling/python/cppyy_backend/loader.py
+@@ -25,6 +25,14 @@ def _load_helper(bkname):
+     except OSError:
+          pass
+ 
++ # failed ... try absolute path
++ # needed on MacOS12 with soversion
++    try:
++        libpath = os.path.dirname(os.path.dirname(__file__))
++        return ctypes.CDLL(os.path.join(libpath, bkname), ctypes.RTLD_GLOBAL)
++    except OSError:
++        pass
++
+  # failed ... load dependencies explicitly
+     try:
+         pkgpath = os.path.dirname(bkname)
+-- 
+2.17.1
+

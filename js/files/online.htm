@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <!--  this file used by THttpServer to display objects hierarchy -->
+      <meta charset="utf-8">
+      <title>Online server</title>
+      <link rel="shortcut icon" href="jsrootsys/img/RootIcon.ico"/>
+   </head>
+
+   <body>
+      <div id="onlineGUI">
+         loading ...
+      </div>
+
+   </body>
+
+   <script type="module">
+      import { buildGUI, internals } from './jsrootsys/modules/gui.mjs';
+
+      internals.getCachedHierarchy = function() { return "$$$h.json$$$"; }
+
+      buildGUI("onlineGUI", "online");
+   </script>
+
+</html>

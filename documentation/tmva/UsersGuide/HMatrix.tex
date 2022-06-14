@@ -1,0 +1,63 @@
+\subsection{H-Matrix discriminant}
+\label{sec:hmatrix}
+
+The origins of the H-Matrix\index{H-Matrix} approach dates back to works 
+of Fisher and Mahalanobis in the context of Gaussian 
+classifiers~\cite{Fisher,Mahalanobis}. 
+It discriminates one class (signal) of a feature vector from another 
+(background). The correlated elements of the vector are assumed to be 
+Gaussian distributed, and the inverse of the covariance matrix is 
+the {\em H-Matrix}. A multivariate $\chi^2$ estimator\index{Chi-squared estimator} 
+is built that exploits differences in the mean values of the vector elements 
+between the two classes for the purpose of discrimination.
+
+The H-Matrix classifier as it is implemented in TMVA is equal or less performing
+than the Fisher discriminant (see Sec.~\ref{sec:fisher}), and has been only  
+included for completeness. 
+
+\subsubsection{Booking options}
+
+The H-Matrix discriminant is booked via the command:
+\begin{codeexample}
+\begin{tmvacode}
+factory->BookMethod( Types::kHMatrix, "HMatrix", "<options>" );
+\end{tmvacode}
+\caption[.]{\codeexampleCaptionSize Booking of the H-Matrix classifier: the first argument is 
+		   a predefined enumerator, the second argument is a user-defined 
+		   string identifier, and the third argument is the configuration options string.
+         Individual options are separated by a ':'. 
+         See Sec.~\ref{sec:usingtmva:booking} for more information on the booking.}
+\end{codeexample}
+
+No specific options are defined for this method beyond those shared with all the other 
+methods (\cf Option Table~\ref{opt:mva::methodbase} on page~\pageref{opt:mva::methodbase}).
+
+\subsubsection{Description and implementation}
+
+For an event $i$, each one $\chi^2$ estimator ($\chi^2_{S(B)}$) is computed for 
+signal ($S$) and background ($B$), using estimates for the sample means 
+($\overline x_{S(B),k}$) and covariance matrices ($C_{S(B)}$) obtained 
+from the training data
+\beq
+  \chi^2_U(i)=\sum_{k,\ell=1}^{\Nvar}
+            \left(x_k(i) - \overline x_{U,k}\right)
+            C^{-1}_{U,k\ell}
+            \left(x_\ell(i) - \overline x_{U,\ell}\right)\,,
+\eeq
+where $U=S,B$. From this, the discriminant
+\beq
+   \HMATRIX(i) = \frac{\chi^2_B(i)-\chi^2_S(i)}{\chi^2_B(i)+\chi^2_S(i)}\,,
+\eeq
+is computed to discriminate between the signal and background classes.
+
+\subsubsection{Variable ranking}
+
+The present implementation of the H-Matrix discriminant does not provide a ranking 
+of the input variables.
+
+\subsubsection{Performance}
+
+The TMVA implementation of the H-Matrix classifier has been shown to underperform 
+in comparison with the corresponding Fisher discriminant (\cf\  Sec.~\ref{sec:fisher}),
+when using similar assumptions and complexity. It might therefore be considered to be depreciated.
+

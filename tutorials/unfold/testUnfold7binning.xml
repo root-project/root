@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE TUnfoldBinning SYSTEM "tunfoldbinning.dtd">
+<TUnfoldBinning>
+<BinningNode name="fine" firstbin="1" factor="1">
+  <Axis name="pt" lowEdge="0.">
+   <Bin repeat="20" width="1."/>
+   <Bin repeat="12" width="2.5"/>
+   <Bin location="overflow" width="10"/>
+  </Axis>
+</BinningNode>
+<BinningNode name="coarse" firstbin="1" factor="1">
+  <Axis name="pt" lowEdge="0.">
+   <Bin repeat="10" width="2"/>
+   <Bin repeat="6" width="5"/>
+   <Bin location="overflow" width="10"/>
+  </Axis>
+</BinningNode>
+</TUnfoldBinning>

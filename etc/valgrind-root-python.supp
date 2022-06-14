@@ -1,0 +1,154 @@
+{
+   a
+   Memcheck:Addr4
+   fun:PyObject_Free
+}
+{
+   a
+   Memcheck:Addr4
+   fun:PyMem_Free
+}
+{
+   b
+   Memcheck:Cond
+   fun:PyObject_Free
+}
+{
+   b
+   Memcheck:Cond
+   fun:PyMem_Free
+}
+{
+   c
+   Memcheck:Value8
+   fun:PyObject_Free
+}
+{
+   c
+   Memcheck:Value8
+   fun:PyMem_Free
+}
+{
+   d
+   Memcheck:Addr4
+   fun:PyObject_Realloc
+}
+{
+   d
+   Memcheck:Addr4
+   fun:PyMem_Realloc
+}
+{
+   e
+   Memcheck:Cond
+   fun:PyObject_Realloc
+}
+{
+   e
+   Memcheck:Cond
+   fun:PyMem_Realloc
+}
+{
+   f
+   Memcheck:Value8
+   fun:PyObject_Realloc
+}
+{
+   f
+   Memcheck:Value8
+   fun:PyMem_Realloc
+}
+{
+   g
+   Memcheck:Addr4
+   fun:PyMarshal_ReadObjectFromString
+}
+{
+   h
+   Memcheck:Addr4
+   fun:PyGrammar_RemoveAccelerators
+}
+{
+   i
+   Memcheck:Addr4
+   obj:*python*
+}
+{
+   j
+   Memcheck:Value8
+   obj:*python*
+}
+{
+   j
+   Memcheck:Cond
+   obj:*python*
+}
+
+######### PyROOT intentionally not freed memory
+
+{
+   DataMember
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN5Cppyy17GetDatamemberNameEll
+}
+
+{
+   Scope name
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZL19BuildScopeProxyDictlP7_object
+   fun:_ZN6PyROOT16CreateScopeProxyERKSsP7_object
+}
+
+{
+   Scope pythonize
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN6PyROOT9PythonizeEP7_objectRKSs
+   fun:_ZN6PyROOT16CreateScopeProxyERKSsP7_object
+}
+
+{
+   Scope pythonize
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   ...
+   fun:_ZN6PyROOT9PythonizeEP7_objectRKSs
+   fun:_ZN6PyROOT16CreateScopeProxyERKSsP7_object
+}
+
+{
+   Convert arguments.
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN6PyROOT17TCStringConverter6SetArgEP7_objectRNS_10TParameterEPNS_12TCallContextE
+   fun:_ZN6PyROOT13TMethodHolder17ConvertAndSetArgsEP7_objectPNS_12TCallContextE
+}
+
+{
+   Python GC
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   fun:PyObject_Realloc
+   fun:_PyObject_GC_Resize
+}
+
+{
+   Python variable
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   fun:_PyObject_GC_Malloc
+   fun:_PyObject_GC_NewVar
+}

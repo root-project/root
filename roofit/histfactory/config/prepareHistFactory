@@ -1,0 +1,50 @@
+#!/bin/sh
+
+# HistFactory workplace setup script
+ROOTETCDIR=`root-config --etcdir`
+echo "Using etcdir "$ROOTETCDIR
+ROOTTUTDIR=`root-config --tutdir`
+echo "Using tutorials dir" $ROOTTUTDIR
+
+if [ $# -eq 1 ]
+then
+  DIR=$1
+  echo "HistFactory workplace will be created in: " $DIR
+else
+  DIR=.
+  echo "HistFactory workplace will be created in the current directory"
+fi
+
+echo "Creating directory structure..."
+mkdir -p $DIR/config
+mkdir -p $DIR/config/examples
+mkdir -p $DIR/data
+mkdir -p $DIR/results
+
+echo "Copying skeleton configuration files..."
+cp $ROOTETCDIR/HistFactorySchema.dtd $DIR/config/
+cp $ROOTTUTDIR/histfactory/example.xml $DIR/config/
+cp $ROOTTUTDIR/histfactory/example_channel.xml $DIR/config/
+
+cp $ROOTETCDIR/HistFactorySchema.dtd $DIR/config/examples
+cp $ROOTTUTDIR/histfactory/example_Expression.xml $DIR/config/examples/
+cp $ROOTTUTDIR/histfactory/example_Expression_channel.xml $DIR/config/examples/
+cp $ROOTTUTDIR/histfactory/example_ShapeSys.xml $DIR/config/examples/
+cp $ROOTTUTDIR/histfactory/example_ShapeSys_channel.xml $DIR/config/examples/
+cp $ROOTTUTDIR/histfactory/example_ShapeSys2D.xml $DIR/config/examples/
+cp $ROOTTUTDIR/histfactory/example_ShapeSys2D_channel.xml $DIR/config/examples/
+cp $ROOTTUTDIR/histfactory/example_DataDriven.xml $DIR/config/examples/
+cp $ROOTTUTDIR/histfactory/example_DataDriven_signalRegion.xml $DIR/config/examples/
+cp $ROOTTUTDIR/histfactory/example_DataDriven_controlRegion.xml $DIR/config/examples/
+
+
+#echo "Making skeleton data files..."
+# There is no root binary on Mac OSX for C++ modules (root depends on Cocoa, which is still not modularized),
+# we will switch here to use root.exe as it is done for the whole ROOT.
+root.exe -b -q $ROOTTUTDIR/histfactory/makeExample.C
+mv ShapeSys.root ShapeSys2D.root StatError.root  dataDriven.root example.root $DIR/data
+
+echo "Done!"
+#echo "You can run the example with: hist2workspace $DIR/config/example.xml"
+
+exit

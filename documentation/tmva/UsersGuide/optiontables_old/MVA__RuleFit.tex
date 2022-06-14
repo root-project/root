@@ -1,0 +1,21 @@
+\begin{optiontableAuto}
+                    GDTau  &  \mc{1}{c}{--}  &               -1  &  \mc{1}{l}{--}  &  Gradient-directed (GD) path: default fit cut-off \\
+                GDTauPrec  &  \mc{1}{c}{--}  &             0.01  &  \mc{1}{l}{--}  &  GD path: precision of tau \\
+                   GDStep  &  \mc{1}{c}{--}  &             0.01  &  \mc{1}{l}{--}  &  GD path: step size \\
+                 GDNSteps  &  \mc{1}{c}{--}  &            10000  &  \mc{1}{l}{--}  &  GD path: number of steps \\
+               GDErrScale  &  \mc{1}{c}{--}  &              1.1  &  \mc{1}{l}{--}  &  Stop scan when error $>$ scale*errmin \\
+              LinQuantile  &  \mc{1}{c}{--}  &            0.025  &  \mc{1}{l}{--}  &  Quantile of linear terms (removes outliers) \\
+            GDPathEveFrac  &  \mc{1}{c}{--}  &              0.5  &  \mc{1}{l}{--}  &  Fraction of events used for the path search \\
+           GDValidEveFrac  &  \mc{1}{c}{--}  &              0.5  &  \mc{1}{l}{--}  &  Fraction of events used for the validation \\
+               fEventsMin  &  \mc{1}{c}{--}  &              0.1  &  \mc{1}{l}{--}  &  Minimum fraction of events in a splittable node \\
+               fEventsMax  &  \mc{1}{c}{--}  &              0.9  &  \mc{1}{l}{--}  &  Maximum fraction of events in a splittable node \\
+                   nTrees  &  \mc{1}{c}{--}  &               20  &  \mc{1}{l}{--}  &  Number of trees in forest. \\
+               ForestType  &  \mc{1}{c}{--}  &         AdaBoost  &  AdaBoost, Random  &  Method to use for forest generation (AdaBoost or RandomForest) \\
+              RuleMinDist  &  \mc{1}{c}{--}  &            0.001  &  \mc{1}{l}{--}  &  Minimum distance between rules \\
+                   MinImp  &  \mc{1}{c}{--}  &             0.01  &  \mc{1}{l}{--}  &  Minimum rule importance accepted \\
+                    Model  &  \mc{1}{c}{--}  &    ModRuleLinear  &  ModRule, ModRuleLinear, ModLinear  &  Model to be used \\
+            RuleFitModule  &  \mc{1}{c}{--}  &           RFTMVA  &  RFTMVA, RFFriedman  &  Which RuleFit module to use \\
+                RFWorkDir  &  \mc{1}{c}{--}  &        ./rulefit  &  \mc{1}{l}{--}  &  Friedman's RuleFit module (RFF): working dir \\
+                 RFNrules  &  \mc{1}{c}{--}  &             2000  &  \mc{1}{l}{--}  &  RFF: Mximum number of rules \\
+              RFNendnodes  &  \mc{1}{c}{--}  &                4  &  \mc{1}{l}{--}  &  RFF: Average number of end nodes 
+\end{optiontableAuto}

@@ -1,0 +1,108 @@
+<mvc:View height="100%" class="sapUiSizeCompact" 
+          controllerName="rootui5.eve7.controller.Main"
+          xmlns="sap.m"
+          xmlns:mvc="sap.ui.core.mvc"
+          xmlns:l="sap.ui.layout"
+          xmlns:commons="sap.ui.commons">
+   <Page title="" showNavButton="false" showFooter="false"
+      showSubHeader="false" id="CanvasMainPage" >
+      <customHeader>
+         <Bar id="otb1">
+            <!--  Button id="newEvent" icon="sap-icon://step" type="Transparent"
+               tooltip="New event" press="newEvent" visible="false "/-->
+              <!--
+            <Button icon="sap-icon://user-edit" type="Transparent"
+               tooltip="Toggle GED editor" press="toggleGedEditor" enabled="false" />
+            <MenuButton text="File"  enabled="false">
+               <menu>
+                  <Menu itemSelected="onFileMenuAction">
+                     <items>
+                        <MenuItem text="Open" icon="sap-icon://open-folder" />
+                        <MenuItem text="Close canvas" icon="sap-icon://decline" />
+                        <MenuItem text="Save" startsSection="true"
+                           icon="sap-icon://save">
+                           <items>
+                              <MenuItem text="Canvas.png" />
+                              <MenuItem text="Canvas.svg" />
+                              <MenuItem text="Canvas.jpeg" />
+                           </items>
+                        </MenuItem>
+                        <MenuItem text="Save as ..." icon="sap-icon://save" />
+                        <MenuItem text="Interrupt"
+                           startsSection="true" icon="sap-icon://stop" />
+                        <MenuItem text="Quit ROOT" icon="sap-icon://system-exit" />
+
+                     </items>
+                  </Menu>
+               </menu>
+            </MenuButton>
+            <Button text="Edit" type="Transparent" enabled="false" ></Button>
+              -->
+
+              <contentLeft>
+            <MenuButton text="View" type="Transparent"  enabled="true">
+              <menu>
+                <Menu itemSelected="onViewMenuAction" id="menuViewId"/>
+              </menu>
+            </MenuButton>
+            <!--MenuButton text="Tools" type="Transparent"  enabled="true">
+              <menu>
+                <Menu itemSelected="onToolsMenuAction">
+                  <items>
+                    <MenuItem text="GED Editor" icon="{/GedIcon}" />
+                    <MenuItem text="Common Preferences" enabled="false" />
+                  </items>
+                </Menu>
+              </menu>
+            </MenuButton-->
+            <ToolbarSpacer />
+            
+              </contentLeft>
+              <contentMiddle>
+                <FormattedText id="centerTitle" htmlText="ROOT Event Visalization Environment"/>
+              </contentMiddle>
+              <contentRight>
+            <MenuButton text="Help" type="Default"  enabled="true">
+              <menu>
+                <Menu >
+                  <items>
+                    <MenuItem text="User Guide" press="showUserURL" />
+                    <MenuItem text="Contact"  press="showHelp"  />
+                  </items>
+                </Menu>
+              </menu>
+            </MenuButton>
+              </contentRight>
+         </Bar>
+      </customHeader>
+      <subHeader>
+         <OverflowToolbar>
+            <Button icon="sap-icon://open-folder" type="Transparent" />
+            <Button icon="sap-icon://decline" type="Transparent"
+               press="onCloseCanvasPress" />
+            <Button icon="sap-icon://stop" type="Transparent"
+               press="onInterruptPress" />
+            <Button icon="sap-icon://system-exit" type="Transparent"
+               tooltip="Quit ROOT session" press="onQuitRootPress" />
+         </OverflowToolbar>
+      </subHeader>
+      <content>
+        <l:Splitter orientation="Horizontal" id="MainAreaSplitter">
+          <l:contentAreas>
+             <mvc:XMLView id="Summary" viewName="rootui5.eve7.view.Summary" height="100%">
+                <mvc:layoutData><l:SplitterLayoutData size="25%"/></mvc:layoutData>
+             </mvc:XMLView>
+          </l:contentAreas>
+        </l:Splitter>
+      </content>
+      <footer>
+        <OverflowToolbar>
+          <Label text="{/StatusLbl1}" id="FooterLbl1" />
+          <Label text="{/StatusLbl2}" id="FooterLbl2" />
+          <Label text="{/StatusLbl3}" id="FooterLbl3" />
+          <Label text="{/StatusLbl4}" id="FooterLbl4" />
+        </OverflowToolbar>
+      </footer>
+    </Page>
+  </mvc:View>
+

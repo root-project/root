@@ -1,0 +1,76 @@
+#include <winver.h>
+
+GTK_ICON                ICON                    "gtk.ico"
+X_cursor                CURSOR  DISCARDABLE     "X-cursor.cur"
+arrow                   CURSOR  DISCARDABLE     "right-ptr.cur"
+bottom_left_corner      CURSOR  DISCARDABLE     "top-right-corner.cur"
+bottom_right_corner     CURSOR  DISCARDABLE     "top-left-corner.cur"
+bottom_side             CURSOR  DISCARDABLE     "sb-v-double-arrow.cur"
+busy                    CURSOR  DISCARDABLE     "busy.cur"
+center_ptr              CURSOR  DISCARDABLE     "center-ptr.cur"
+circle                  CURSOR  DISCARDABLE     "circle.cur"
+kr                      CURSOR  DISCARDABLE     "crosshair.cur"
+dot                     CURSOR  DISCARDABLE     "dot.cur"
+dotbox                  CURSOR  DISCARDABLE     "dotbox.cur"
+double_arrow            CURSOR  DISCARDABLE     "sb-v-double-arrow.cur"
+exchange                CURSOR  DISCARDABLE     "exchange.cur"
+fleur                   CURSOR  DISCARDABLE     "fleur.cur"
+gobbler                 CURSOR  DISCARDABLE     "gobbler.cur"
+gumby                   CURSOR  DISCARDABLE     "gumby.cur"
+hand1                   CURSOR  DISCARDABLE     "hand1.cur"
+hand2                   CURSOR  DISCARDABLE     "hand2.cur"
+heart                   CURSOR  DISCARDABLE     "heart.cur"
+left_ptr                CURSOR  DISCARDABLE     "left-ptr.cur"
+left_side               CURSOR  DISCARDABLE     "sb-h-double-arrow.cur"
+pencil                  CURSOR  DISCARDABLE     "pencil.cur"
+pirate                  CURSOR  DISCARDABLE     "pirate.cur"
+plus                    CURSOR  DISCARDABLE     "plus.cur"
+question_arrow          CURSOR  DISCARDABLE     "question-arrow.cur"
+right_ptr               CURSOR  DISCARDABLE     "right-ptr.cur"
+right_side              CURSOR  DISCARDABLE     "sb-h-double-arrow.cur"
+sb_down_arrow           CURSOR  DISCARDABLE     "sb-down-arrow.cur"
+sb_h_double_arrow       CURSOR  DISCARDABLE     "sb-h-double-arrow.cur"
+sb_left_arrow           CURSOR  DISCARDABLE     "sb-left-arrow.cur"
+sb_right_arrow          CURSOR  DISCARDABLE     "sb-right-arrow.cur"
+sb_up_arrow             CURSOR  DISCARDABLE     "sb-up-arrow.cur"
+sb_v_double_arrow       CURSOR  DISCARDABLE     "sb-v-double-arrow.cur"
+shuttle                 CURSOR  DISCARDABLE     "shuttle.cur"
+spider                  CURSOR  DISCARDABLE     "spider.cur"
+spraycan                CURSOR  DISCARDABLE     "spraycan.cur"
+star                    CURSOR  DISCARDABLE     "star.cur"
+top_left_arrow          CURSOR  DISCARDABLE     "top-left-corner.cur"
+top_left_corner         CURSOR  DISCARDABLE     "top-left-corner.cur"
+top_right_corner        CURSOR  DISCARDABLE     "top-right-corner.cur"
+top_side                CURSOR  DISCARDABLE     "sb-v-double-arrow.cur"
+umbrella                CURSOR  DISCARDABLE     "umbrella.cur"
+xterm                   CURSOR  DISCARDABLE     "xterm.cur"
+watch                   CURSOR  DISCARDABLE     "left-ptr-watch.cur"
+
+VS_VERSION_INFO VERSIONINFO
+  FILEVERSION 1,3,0,BUILDNUMBER
+  PRODUCTVERSION 1,3,0,0
+  FILEFLAGSMASK 0
+  FILEFLAGS 0
+  FILEOS VOS__WINDOWS32
+  FILETYPE VFT_DLL
+  FILESUBTYPE VFT2_UNKNOWN
+  BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+      BLOCK "040904B0"
+      BEGIN
+        VALUE "CompanyName", "The GTk+ developer community"
+        VALUE "FileDescription", "GIMP Drawing Kit"
+        VALUE "FileVersion", "1.3.0.BUILDNUMBER"
+        VALUE "InternalName", "gdk-1.3"
+        VALUE "LegalCopyright", "Copyright (c) 1995-1997 Peter Mattis, Spencer Kimball and Josh MacDonald. Modified by the GTK+ Team and others 1997-2000."
+        VALUE "OriginalFilename", "gdk-1.3.dll"
+        VALUE "ProductName", "GTk+"
+        VALUE "ProductVersion", "1.3.0"
+      END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+      VALUE "Translation", 0x409, 1200
+    END
+  END

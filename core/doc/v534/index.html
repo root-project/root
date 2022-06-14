@@ -1,0 +1,33 @@
+<br/>
+<hr/>
+<a name="core"></a>
+<h3>Core Libraries</h3>
+
+<h4>ROOT Error Handlers</h4>
+<p>There is a new rootrc variable which allows to control the
+installation of the ROOT error handlers. By default the handlers
+are activated:</p>
+<pre>
+   Root.ErrorHandlers:      1
+</pre>
+<p>but setting the value to 0 result in no error handlers being installed
+and the originals remaining in place. This can be useful if ROOT is used in
+conjunction with other frameworks that already installed their own handlers.
+</p>
+
+<h4>TString</h4>
+<p>TString::Hash() and thus also TMath::Hash() now use <tt>MurmurHash3_x64_128</tt>
+from <a href="http://code.google.com/p/smhasher/">http://code.google.com/p/smhasher/</a> which is public domain.
+To accelerate the hash in the case of pointers even further, pointers (and same-sized texts) are hashed using a simple bitwise xor.
+This dramatically increases the hash performance for long texts, and still by a factor 5 for pointers.
+The pointer case is most visible for certain I/O operations (TExMap).</p>
+
+<h4>TColor</h4>
+<p>Add the method <tt>SetAlpha()</tt> to set the alpha value (transparency
+level) for an existing color.
+</p>
+
+<h4>TStyle</h4>
+<p>
+The default font set by <tt>gStyle->SetLegendFont()</tt> was ignored.
+</p>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="utf-8">
+   <title>Custom HTML page for THttpServer</title>
+
+   <style>
+     table, td {
+        border: 1px solid black;
+     }
+
+     #draw_hpx , #draw_hpxpy {
+        width:600px;
+        height:400px;
+     }
+   </style>
+
+</head>
+
+<body>
+
+  <table>
+     <tbody>
+       <tr>
+         <td style='text-align:center'>
+           <input id="btn_hpx" type="button" title="Read hpx from server" value="Read HPX"/>
+         </td>
+         <td style='text-align:center'>
+           <input id="btn_hpxpy" type="button" title="Read hpxpy from server" value="Read HPXPY"/>
+         </td>
+       </tr>
+       <tr>
+         <td><div id="draw_hpx"></div></td>
+         <td><div id="draw_hpxpy"></div></td>
+       </tr>
+       <tr>
+         <td style='text-align:center' colspan='2'>
+            <input id="btn_both" type="button" title="Read both histograms from server" value="Read both"/>
+            <input id="btn_clear" type="button" title="Clear histograms drawing" value="Clear both"/>
+         </td>
+       </tr>
+       <tr>
+         <td style='text-align:center' colspan='2'>
+            <a href="default.htm" title="Normal JSROOT UI webpage">Default UI</a>
+         </td>
+       </tr>
+     </tbody>
+  </table>
+
+</body>
+
+<script type='module'>
+
+   import { httpRequest, redraw, cleanup } from './jsrootsys/modules/main.mjs';
+
+   document.getElementById('btn_hpx').onclick = function() {
+      httpRequest("hpx/root.json", 'object')
+            .then(obj => redraw("draw_hpx", obj));
+   }
+
+   document.getElementById('btn_hpxpy').onclick = function() {
+      httpRequest("hpxpy/root.json", 'object')
+            .then(obj => redraw("draw_hpxpy", obj, "col"));
+   }
+
+   // here both objects requested with signle multi.json request
+   document.getElementById('btn_both').onclick = function() {
+      httpRequest("multi.json?number=2", "multi", "hpx/root.json\nhpxpy/root.json\n")
+            .then(arr => {
+                redraw("draw_hpx", arr[0]);
+                redraw("draw_hpxpy", arr[1], "col");
+             });
+   }
+
+   document.getElementById('btn_clear').onclick = function() {
+      cleanup("draw_hpx");
+      cleanup("draw_hpxpy");
+   }
+
+</script>
+
+</html>

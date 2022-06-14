@@ -1,0 +1,28 @@
+This directory contains all the Linear and Quadratic Programming
+classes
+BEGIN_HTML
+ Several documents describing these classes are listed below:
+<ul>
+
+<li><a href="http://en.wikipedia.org/wiki/Linear_programming">Wikipedia
+entry on Linear Programming
+    </a></li>
+<li><a
+href="http://en.wikipedia.org/wiki/Quadratic_programming">Wikipedia
+entry on Quadratic Programming
+    </a></li>
+<li><a
+href="http://www.princeton.edu/~rvdb/LPbook/onlinebook.pdf">On-line
+book about Linear/Quadratic Programming
+    </a></li><li><a
+href="http://pages.cs.wisc.edu/~swright/ooqp/ooqp-paper.pdf">Description
+of Object-Oriented Software for Quadatric Programmin
+g (OOQP) in ROOT
+    </a></li>
+<li><a
+href="tutorials/quadp/portfolio.C.html">Markowitz
+stock portfolio allocation
+    </a></li>
+</ul>
+END_HTML
+

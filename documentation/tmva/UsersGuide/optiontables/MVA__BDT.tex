@@ -1,0 +1,37 @@
+\begin{optiontableAuto}
+                   NTrees  &  \mc{1}{c}{--}  &              800  &  \mc{1}{l}{--}  &  Number of trees in the forest \\
+                 MaxDepth  &  \mc{1}{c}{--}  &                3  &  \mc{1}{l}{--}  &  Max depth of the decision tree allowed \\
+              MinNodeSize  &  \mc{1}{c}{--}  &              5\%  &  \mc{1}{l}{--}  &  Minimum percentage of training events required in a leaf node (default: Classification: 5\%, Regression: 0.2\%) \\
+                    nCuts  &  \mc{1}{c}{--}  &               20  &  \mc{1}{l}{--}  &  Number of grid points in variable range used in finding optimal cut in node splitting \\
+                BoostType  &  \mc{1}{c}{--}  &         AdaBoost  &  AdaBoost, RealAdaBoost, Bagging, AdaBoostR2, Grad  &  Boosting type for the trees in the forest (note: AdaCost is still experimental) \\
+           AdaBoostR2Loss  &  \mc{1}{c}{--}  &        Quadratic  &  Linear, Quadratic, Exponential  &  Type of Loss function in AdaBoostR2 \\
+            UseBaggedGrad  &  \mc{1}{c}{--}  &            False  &  \mc{1}{l}{--}  &  Use only a random subsample of all events for growing the trees in each iteration. (Only valid for GradBoost) \\
+                Shrinkage  &  \mc{1}{c}{--}  &                1  &  \mc{1}{l}{--}  &  Learning rate for GradBoost algorithm \\
+             AdaBoostBeta  &  \mc{1}{c}{--}  &              0.5  &  \mc{1}{l}{--}  &  Learning rate  for AdaBoost algorithm \\
+       UseRandomisedTrees  &  \mc{1}{c}{--}  &            False  &  \mc{1}{l}{--}  &  Determine at each node splitting the cut variable only as the best out of a random subset of variables (like in RandomForests) \\
+                 UseNvars  &  \mc{1}{c}{--}  &                2  &  \mc{1}{l}{--}  &  Size of the subset of variables used with RandomisedTree option \\
+          UsePoissonNvars  &  \mc{1}{c}{--}  &             True  &  \mc{1}{l}{--}  &  Interpret UseNvars not as fixed number but as mean of a Possion distribution in each split with RandomisedTree option \\
+     BaggedSampleFraction  &  \mc{1}{c}{--}  &              0.6  &  \mc{1}{l}{--}  &  Relative size of bagged event sample to original size of the data sample (used whenever bagging is used (i.e. UseBaggedGrad, Bagging,) \\
+             UseYesNoLeaf  &  \mc{1}{c}{--}  &             True  &  \mc{1}{l}{--}  &  Use Sig or Bkg categories, or the purity=S/(S+B) as classification of the leaf node -$>$ Real-AdaBoost \\
+       NegWeightTreatment  &  \mc{1}{c}{--}  &  InverseBoostNegWeights  &  InverseBoostNegWeights, IgnoreNegWeightsInTraining, PairNegWeightsGlobal, Pray  &  How to treat events with negative weights in the BDT training (particular the boosting) : IgnoreInTraining;  Boost With inverse boostweight; Pair events with negative and positive weights in traning sample and *annihilate* them (experimental!) \\
+%                      Css  &  \mc{1}{c}{--}  &                1  &  \mc{1}{l}{--}  &  AdaCost: cost of true signal selected signal \\
+%                   Cts\_sb  &  \mc{1}{c}{--}  &                1  &  \mc{1}{l}{--}  &  AdaCost: cost of true signal selected bkg \\
+%                   Ctb\_ss  &  \mc{1}{c}{--}  &                1  &  \mc{1}{l}{--}  &  AdaCost: cost of true bkg    selected signal \\
+%                      Cbb  &  \mc{1}{c}{--}  &                1  &  \mc{1}{l}{--}  &  AdaCost: cost of true bkg    selected bkg  \\
+          NodePurityLimit  &  \mc{1}{c}{--}  &              0.5  &  \mc{1}{l}{--}  &  In boosting/pruning, nodes with purity $>$ NodePurityLimit are signal; background otherwise. \\
+           SeparationType  &  \mc{1}{c}{--}  &        GiniIndex  &  CrossEntropy, GiniIndex, GiniIndexWithLaplace, MisClassificationError, SDivSqrtSPlusB, RegressionVariance  &  Separation criterion for node splitting \\
+           DoBoostMonitor  &  \mc{1}{c}{--}  &            False  &  \mc{1}{l}{--}  &  Create control plot with ROC integral vs tree number \\
+            UseFisherCuts  &  \mc{1}{c}{--}  &            False  &  \mc{1}{l}{--}  &  Use multivariate splits using the Fisher criterion \\
+      MinLinCorrForFisher  &  \mc{1}{c}{--}  &              0.8  &  \mc{1}{l}{--}  &  The minimum linear correlation between two variables demanded for use in Fisher criterion in node splitting \\
+         UseExclusiveVars  &  \mc{1}{c}{--}  &            False  &  \mc{1}{l}{--}  &  Variables already used in fisher criterion are not anymore analysed individually for node splitting \\
+           DoPreselection  &  \mc{1}{c}{--}  &            False  &  \mc{1}{l}{--}  &  and and apply automatic pre-selection for 100\% efficient signal (bkg) cuts prior to training \\
+            RenormByClass  &  \mc{1}{c}{--}  &            False  &  \mc{1}{l}{--}  &  Individually re-normalize each event class to the original size after boosting \\
+         SigToBkgFraction  &  \mc{1}{c}{--}  &                1  &  \mc{1}{l}{--}  &  Sig to Bkg ratio used in Training (similar to NodePurityLimit, which cannot be used in real adaboost \\
+              PruneMethod  &  \mc{1}{c}{--}  &        NoPruning  &  NoPruning, ExpectedError, CostComplexity  &  Note: for BDTs use small trees (e.g.MaxDepth=3) and NoPruning:  Pruning: Method used for pruning (removal) of statistically insignificant branches  \\
+            PruneStrength  &  \mc{1}{c}{--}  &                0  &  \mc{1}{l}{--}  &  Pruning strength \\
+       PruningValFraction  &  \mc{1}{c}{--}  &              0.5  &  \mc{1}{l}{--}  &  Fraction of events to use for optimizing automatic pruning. \\
+               nEventsMin  &  \mc{1}{c}{--}  &                0  &  \mc{1}{l}{--}  &  deprecated: Use MinNodeSize (in \% of training events) instead \\
+      GradBaggingFraction  &  \mc{1}{c}{--}  &              0.6  &  \mc{1}{l}{--}  &  deprecated: Use *BaggedSampleFraction* instead: Defines the fraction of events to be used in each iteration, e.g. when UseBaggedGrad=kTRUE.  \\
+          UseNTrainEvents  &  \mc{1}{c}{--}  &                0  &  \mc{1}{l}{--}  &  deprecated: Use *BaggedSampleFraction* instead: Number of randomly picked training events used in randomised (and bagged) trees \\
+                NNodesMax  &  \mc{1}{c}{--}  &                0  &  \mc{1}{l}{--}  &  deprecated: Use MaxDepth instead to limit the tree size 
+\end{optiontableAuto}

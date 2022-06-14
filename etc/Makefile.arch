@@ -1,0 +1,407 @@
+# -*- mode: makefile -*-
+#
+# Makefile containing platform dependencies for ROOT based projects.
+#
+# Copyright (c) 2000 Rene Brun and Fons Rademakers
+#
+# Author: Fons Rademakers, 29/2/2000
+
+RC           := root-config
+ifneq ($(shell which $(RC) 2>&1 | sed -ne "s@.*/$(RC)@$(RC)@p"),$(RC))
+ifneq ($(ROOTSYS),)
+RC1          := $(ROOTSYS)/bin/root-config
+ifneq ($(shell which $(RC1) 2>&1 | sed -ne "s@.*/$(RC)@$(RC)@p"),$(RC))
+$(error Please make sure $(RC1) can be found in path)
+else
+RC           := $(RC1)
+endif
+else
+$(error Please make sure $(RC) can be found in path)
+endif
+endif
+
+ARCH         := $(shell $(RC) --arch)
+PLATFORM     := $(shell $(RC) --platform)
+ALTCC        := $(shell $(RC) --cc)
+ALTCXX       := $(shell $(RC) --cxx)
+ALTF77       := $(shell $(RC) --f77)
+ALTLD        := $(shell $(RC) --ld)
+
+#CXX           =
+ObjSuf        = o
+SrcSuf        = cxx
+ExeSuf        =
+DllSuf        = so
+OutPutOpt     = -o # keep whitespace after "-o"
+
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = -g
+OPT2          = -g
+else
+OPT           = -O
+OPT2          = -O2
+endif
+
+ROOTCFLAGS   := $(shell $(RC) --cflags)
+ROOTLDFLAGS  := $(shell $(RC) --ldflags)
+ROOTLIBS     := $(shell $(RC) --libs)
+ROOTGLIBS    := $(shell $(RC) --glibs)
+ROOTCLING    := rootcling
+
+ifeq ($(PLATFORM),macosx)
+ROOTLIBDIR   := $(shell $(RC) --libdir)
+MACOSX_MAJOR := $(strip $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 1))
+MACOSX_MINOR := $(strip $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2))
+ifeq ($(MACOSX_DEPLOYMENT_TARGET),)
+MACOSXTARGET := $(MACOSX_MAJOR).$(MACOSX_MINOR)
+else
+MACOSXTARGET := $(MACOSX_DEPLOYMENT_TARGET)
+endif
+endif
+
+ifeq ($(ARCH),hpuxacc)
+# HP-UX 10.x with aCC
+CXX           = aCC
+CXXFLAGS      = $(OPT) +Z
+LD            = aCC
+LDFLAGS       = $(OPT) -z
+SOFLAGS       = -b
+endif
+
+ifeq ($(ARCH),hpuxia64acc)
+# HP-UX 11i 1.5 (IA-64) with aCC
+CXX           = aCC
+CXXFLAGS      = +DD64 $(OPT) +Z
+LD            = aCC
+LDFLAGS       = +DD64 $(OPT) -z
+SOFLAGS       = -b
+endif
+
+ifeq ($(ARCH),hpuxgcc)
+# HP-UX 10.x with g++
+CXXFLAGS      = $(OPT) -fPIC
+CXX           = g++
+LD            = g++
+LDFLAGS       = $(OPT)
+SOFLAGS       = -fPIC -shared
+endif
+
+ifeq ($(ARCH),hurddeb)
+# GNU/Hurd
+CXX           = g++
+CXXFLAGS      = $(OPT2) -Wall -fPIC
+LD            = g++
+LDFLAGS       = $(OPT2)
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),aix5)
+# IBM AIX >5.x xlC
+CXX           = xlC
+CXXFLAGS      = $(OPT)
+LD            = xlC
+LDFLAGS       = $(OPT)
+SOFLAGS       =
+DllSuf        = a
+endif
+
+ifeq ($(ARCH),aixgcc)
+# IBM AIX >5.x with GCC
+CXX           = g++
+CXXFLAGS      = $(OPT)
+LD            = g++
+LDFLAGS       = $(OPT)
+SOFLAGS       = -shared
+DllSuf        = a
+EXPLLINKLIBS  = $(ROOTGLIBS)
+endif
+
+ifeq ($(ARCH),solaris)
+# Solaris CC
+CXX           = /opt/SUNWspro/bin/CC
+CXXFLAGS      = $(OPT) -KPIC
+LD            = /opt/SUNWspro/bin/CC
+LDFLAGS       = $(OPT)
+SOFLAGS       = -G
+endif
+
+ifeq ($(ARCH),solarisCC5)
+# Solaris CC 5.0
+CXX           = CC
+CXXFLAGS      = $(OPT) -KPIC
+LD            = CC
+LDFLAGS       = $(OPT)
+SOFLAGS       = -G
+endif
+
+ifeq ($(ARCH),solaris64CC5)
+# Solaris CC 5.0 64-bit
+CXX           = CC
+CXXFLAGS      = $(OPT) -KPIC
+LD            = CC
+LDFLAGS       = $(OPT)
+SOFLAGS       = -G
+endif
+
+ifeq ($(ARCH),linux)
+# Linux with egcs, gcc 2.9x, gcc 3.x
+CXX           = g++
+CXXFLAGS      = $(OPT2) -Wall -fPIC
+LD            = g++
+LDFLAGS       = $(OPT2)
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),linuxicc)
+# Linux with Intel icc compiler
+ICC_MAJOR    := $(shell icc -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \
+                cut -d'.' -f1)
+ICC_MINOR    := $(shell icc -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \
+                cut -d'.' -f2)
+CXX           = icc
+CXXFLAGS      = $(OPT) -fPIC -wd1476
+LD            = icpc
+LDFLAGS       = $(OPT)
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),linuxppcgcc)
+# PPC Linux with gcc and glibc
+CXX           = g++
+CXXFLAGS      = $(OPT2) -Wall -fPIC
+LD            = g++
+LDFLAGS       = $(OPT2)
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),linuxia64gcc)
+# Itanium Linux with gcc 2.9x
+CXX           = g++
+CXXFLAGS      = $(OPT2) -Wall -fPIC
+LD            = g++
+LDFLAGS       = $(OPT2)
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),linuxia64ecc)
+# Itanium Linux with Intel icc (was ecc)
+ICC_MAJOR    := $(shell icc -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \
+                cut -d'.' -f1)
+ICC_MINOR    := $(shell icc -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \
+                cut -d'.' -f2)
+CXX           = icc
+CXXFLAGS      = $(OPT) -fPIC -wd1476 -ftz
+LD            = icpc
+LDFLAGS       = $(OPT)
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),linuxx8664gcc)
+# AMD Opteron and Intel EM64T (64 bit mode) Linux with gcc 3.x
+CXX           = g++
+CXXFLAGS      = $(OPT2) -Wall -fPIC
+LD            = g++
+LDFLAGS       = $(OPT2)
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),linuxppc64gcc)
+# PPC64 Linux with gcc 3.x
+CXX           = g++
+CXXFLAGS      = $(OPT) -Wall -fPIC
+LD            = g++
+LDFLAGS       = $(OPT)
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),linuxx8664icc)
+# AMD Opteron and Intel EM64T (64 bit mode) Linux with Intel icc compiler
+CXX           = icc
+CXXFLAGS      = $(OPT) -fPIC -wd1476 -wd1572
+LD            = icpc
+LDFLAGS       = $(OPT)
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),linuxhppa)
+# GNU/Linux on hppa with gcc
+CXX           = g++
+CXXFLAGS      = $(OPT2) -Wall -fPIC
+LD            = g++
+LDFLAGS       = $(OPT2)
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),linuxarm)
+# ARM Linux with egcs
+CXX           = g++
+CXXFLAGS      = $(OPT) -Wall -fPIC
+LD            = g++
+LDFLAGS       = $(OPT)
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),linuxarm64)
+# ARMv8-A (AArch64) Linux with gcc and glibc
+CXX           = g++
+CXXFLAGS      = $(OPT) -Wall -fPIC
+LD            = g++
+LDFLAGS       = $(OPT)
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),freebsd4)
+# FreeBSD with glibc
+CXX           = g++
+CXXFLAGS      = $(OPT) -W -Wall -fPIC
+LD            = $(CXX)
+LDFLAGS       = $(OPT)
+SOFLAGS       = -shared -Wl,-x
+endif
+
+ifeq ($(ARCH),freebsd5)
+# FreeBSD with glibc
+CXX           = g++
+CXXFLAGS      = $(OPT) -W -Wall -fPIC
+LD            = $(CXX)
+LDFLAGS       = $(OPT)
+SOFLAGS       = -shared -Wl,-x
+endif
+
+ifeq ($(ARCH),freebsd7)
+# FreeBSD with libc
+CXX           = g++
+CXXFLAGS      = $(OPT) -W -Wall -fPIC
+LD            = $(CXX)
+LDFLAGS       = $(OPT)
+SOFLAGS       = -shared -Wl,-x
+endif
+
+ifeq ($(ARCH),openbsd)
+# OpenBSD with libc
+CXX           = g++
+CXXFLAGS      = $(OPT) -pipe -W -Wall -fPIC
+LD            = g++
+LDFLAGS       = $(OPT)
+SOFLAGS       = -shared -Wl,-x
+endif
+
+ifeq ($(ARCH),macosx)
+# MacOS X with cc (GNU cc 2.95.2 and gcc 3.3)
+CXX           = g++
+CXXFLAGS      = $(OPT2) -pipe -Wall -W -Woverloaded-virtual
+LD            = g++
+LDFLAGS       = $(OPT2) -mmacosx-version-min=$(MACOSXTARGET)
+EXPLLINKLIBS  = $(ROOTGLIBS)
+DllSuf        = so
+SOFLAGS       = -dynamiclib -single_module -install_name $(CURDIR)/
+endif
+
+ifeq ($(ARCH),macosxicc)
+# MacOS X with Intel icc compiler
+CXX           = icc
+CXXFLAGS      = $(OPT) -fPIC -wd1476
+LD            = icpc
+LDFLAGS       = $(OPT2) -mmacosx-version-min=$(MACOSXTARGET)
+EXPLLINKLIBS  = $(ROOTGLIBS)
+DllSuf        = so
+SOFLAGS       = -dynamiclib -single_module -install_name $(CURDIR)/
+endif
+
+ifeq ($(ARCH),macosx64)
+# MacOS X >= 10.4 with gcc 64 bit mode (GNU gcc 4.*)
+# Only specific option (-m64) comes from root-config
+CXX           = g++
+CXXFLAGS      = $(OPT2) -pipe -Wall -W -Woverloaded-virtual
+LD            = g++
+LDFLAGS       = $(OPT2) -mmacosx-version-min=$(MACOSXTARGET) -Wl,-rpath,$(ROOTLIBDIR)
+EXPLLINKLIBS  = $(ROOTGLIBS)
+DllSuf        = so
+SOFLAGS       = -dynamiclib -single_module -install_name $(CURDIR)/
+endif
+
+ifeq ($(ARCH),macosxarm64)
+# Apple Silicon running macOS 11.x.
+CXX           = g++
+CXXFLAGS      = $(OPT2) -pipe -Wall -W -Woverloaded-virtual
+LD            = g++
+LDFLAGS       = $(OPT2) -mmacosx-version-min=$(MACOSXTARGET)  -Wl,-rpath,$(ROOTLIBDIR)
+EXPLLINKLIBS  = $(ROOTGLIBS)
+DllSuf        = so
+SOFLAGS       = -dynamiclib -single_module -install_name $(CURDIR)/
+endif
+
+ifeq ($(ARCH),win32)
+# Windows with the VC++ compiler
+VC_MAJOR     := $(shell unset VS_UNICODE_OUTPUT; cl.exe 2>&1 | awk '{ if (NR==1) print $$(NF-2) }' | \
+                cut -d'.' -f1)
+ObjSuf        = obj
+SrcSuf        = cxx
+ExeSuf        = .exe
+DllSuf        = dll
+OutPutOpt     = -out:
+CXX           = cl
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+CXXOPT        = -Z7
+LDOPT         = -debug
+else
+CXXOPT        = -O2
+LDOPT         = -opt:ref
+endif
+ROOTINCDIR   := -I$(shell cygpath -m `$(RC) --incdir`)
+CXXFLAGS      = $(CXXOPT) -nologo $(ROOTINCDIR) -FIw32pragma.h
+LD            = link
+LDFLAGS       = $(LDOPT) -nologo
+SOFLAGS       = -DLL
+
+EXPLLINKLIBS  = $(ROOTGLIBS)
+ifneq (,$(findstring $(VC_MAJOR),14 15))
+MT_EXE        = mt -nologo -manifest $@.manifest -outputresource:$@\;1; rm -f $@.manifest
+MT_DLL        = mt -nologo -manifest $@.manifest -outputresource:$@\;2; rm -f $@.manifest
+else
+MT_EXE        =
+MT_DLL        =
+endif
+endif
+
+ifeq ($(ARCH),win32gcc)
+# Windows with gcc
+DllSuf        = dll
+ExeSuf        = .exe
+CXX           = g++
+CXXFLAGS      = $(OPT) -pipe -Wall -Woverloaded-virtual -I/usr/X11R6/include
+LD            = g++
+LDFLAGS       = $(OPT) -Wl,--enable-auto-import \
+                -Wl,--enable-runtime-pseudo-reloc \
+		-L/usr/X11R6/lib
+SOFLAGS       = -shared -Wl,--enable-auto-image-base \
+                -Wl,--export-all-symbols
+EXPLLINKLIBS  = $(ROOTGLIBS)
+endif
+
+ifeq ($(CXX),)
+$(error $(ARCH) invalid architecture)
+endif
+
+CXXFLAGS     += $(ROOTCFLAGS)
+LDFLAGS      += $(ROOTLDFLAGS)
+LIBS          = $(ROOTLIBS)
+GLIBS         = $(ROOTGLIBS)
+
+ifneq ($(ALTCC),)
+   CC  = $(ALTCC)
+endif
+ifneq ($(ALTCXX),)
+   CXX = $(ALTCXX)
+endif
+ifneq ($(ALTF77),)
+   F77 = $(ALTF77)
+endif
+ifneq ($(ALTLD),)
+   LD  = $(ALTLD)
+endif
+
+ifneq ($(findstring g++, $(CXX)),)
+GCC_MAJOR := $(shell $(CXX) -dumpversion 2>&1 | cut -d'.' -f1)
+GCC_MINOR := $(shell $(CXX) -dumpversion 2>&1 | cut -d'.' -f2)
+endif

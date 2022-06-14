@@ -1,0 +1,92 @@
+<!-- DOCTYPE HTML SYSTEM><html><head><title>graf3d</title></head><body -->
+
+<br>
+<hr>
+<a name="graf3d"></a>
+
+<h3>OpenGL</h3>
+
+<ul>
+
+<li> Add support for showing tooltips for objects shown in
+<tt>TGLViewer</tt>. See <tt>TGLEventHandler::TriggerTooltip(const
+char* text)</tt> and <tt>RemoveTooltip()</tt>. Usage example is in
+class <tt>TEveViewerList</tt>.
+
+<li> Add new overlay element <tt>TGLCameraOverlay</tt> that allows to
+display: a) coordinate axes for orthographic mode; b) intersection of
+center of screen with a given plane.
+
+<li> Add suport for fading in/out of the viewer contents.
+
+<li> Many improvements in text and axis rendering for orthographic
+view markup.
+
+<li> In <tt>TGLSceneBase</tt> add data-member <tt>Bool_t
+fSelectable</tt> allowing one to preventing any of its elements to be
+selected. Useful when given scene is used as background to help guid
+the eye.
+
+</ul>
+
+
+<!------------------------------------------------------------------------------>
+
+
+<br>
+<hr>
+<h3>Eve</h3>
+
+<ul>
+
+<li> Added support for internal window management. Windows can be
+arranged in horizontal/vertical stacks, tabs and main windows.
+The containers and individaul windows can be moved to arbitrary
+window-slot.
+
+See classes <tt>TEveWindow</tt> and <tt>TEveWindowManager</tt>.
+
+See tutorial <tt>tutorials/eve/test_windows.C</tt>.
+
+<li> <tt>TEveQuadSet</tt> -- Add flag 'Bool_t fAntiFlick'. If on (now the
+default) it causes each quad to be also rendered as a pixel, thus
+preventing it from disappearing when zoomed away.
+
+This is needed for visualization of small quads, e.g. silicon
+detectors digits.
+
+<li> <tt>TEveCalo</tt> classes -- Add support for automatic rebinning
+of 3D views (only supported for 2D views before). In 2D mode support
+automatic determination of the cell color based on the most energetic
+contribution from available calo slices.
+
+Add support for enumerative registration of calorimeter towers. Before
+one had to provide THStack as input. See <tt>TEveCaloDataVec</tt>
+class.
+
+<li> <tt>TEveTrackList</tt> -- Generalized API for finding of momentum
+limits.
+
+<li> <tt>TEveTrackPropagator</tt> now supports propagation of charged
+particles in arbitrary / external magnetic field. Propagation can be
+done with the helix-stepper or with the Runge-Kutta method.
+
+New abstract interface to magnetic field <tt>TEveMagField</tt> to get
+field vector at given position. Implement two interfaces:
+<tt>TEveMagFieldConst</tt> for constant magnetic field and
+<tt>TEveMagFieldDuo</tt> (two constant magnetic fields, chosen by
+cylindrical radius).
+
+See examples in <tt>tutorials/eve/track.C</tt>.
+
+<li> <tt>TEvePointSetArray</tt> -- Added underflow and overflow bins.
+
+<li> Many improvements in text and axis rendering for axes in
+non-linear projections and for the dedicated lego view.
+
+<li> New tutorial <tt>tutorials/eve/lineset_test.py</tt> showing how
+tu run Eve from python.
+
+</ul>
+
+<!-- /body></html -->

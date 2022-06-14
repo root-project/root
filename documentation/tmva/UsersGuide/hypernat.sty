@@ -1,0 +1,127 @@
+%% hypernat.sty v1.0b (C) 2001 Jens Berger
+%%
+%%  This packages makes the hyperref package and the natbib package
+%%  with options `numbers' and `sort&compress' work together. This
+%%  means, that the citations (e.g [3,2,1]) will be compressed to
+%%  [1-3], where the `1' and the `3' are (color-)linked to the
+%%  bibliography.
+%%
+%%  The changes I made here are suggested (in August 2000) for the
+%%  next natbib release.
+%%
+%%  This package will disappear from CTAN, when natbib will do
+%%  the job by himself.
+%%
+%%  Load this package after natbib and hyperref!
+%%
+%%  Please make sure that you are using at least natbib v7.0!
+%%
+%% Changes
+%%
+%%   v1.0b 2001/07/09 anchor for all citations in the list added 
+%%                    to make backref options working (bug reported by Günter Keusen)
+%%   v1.0a 2001/01/22 \noexpand for some \hyper@natlinkend added 
+%%                    (bug reported by Frank Meißen), hypernat.sty 
+%%                    is working now for `dvips --> ps2pdf' or `dvips -> Distiller'
+%%
+\ProvidesPackage{hypernat}[2001/07/09 v1.0b hyperref and natbib compatibility (jb)]
+\AtBeginDocument{\def\NAT@sort{2}}
+\def\NAT@citexnum[#1][#2]#3{%
+  \NAT@sort@cites{#3}%
+  \let\@citea\@empty
+   \@cite{\def\NAT@num{-1}\let\NAT@last@yr\relax\let\NAT@nm\@empty
+    \@for\@citeb:=\NAT@cite@list\do
+    {\edef\@citeb{\expandafter\@firstofone\@citeb}%
+     \if@filesw\immediate\write\@auxout{\string\citation{\@citeb}}\fi
+     \@ifundefined{b@\@citeb\@extra@b@citeb}{%
+       {\reset@font\bfseries?}
+        \NAT@citeundefined\PackageWarning{natbib}%
+       {Citation `\@citeb' on page \thepage \space undefined}}%
+     {\let\NAT@last@num\NAT@num\let\NAT@last@nm\NAT@nm
+      \NAT@parse{\@citeb}%
+      \ifNAT@longnames\@ifundefined{bv@\@citeb\@extra@b@citeb}{%
+        \let\NAT@name=\NAT@all@names
+        \global\@namedef{bv@\@citeb\@extra@b@citeb}{}}{}%
+      \fi
+      \ifNAT@full\let\NAT@nm\NAT@all@names\else
+        \let\NAT@nm\NAT@name\fi
+      \ifNAT@swa
+       \ifnum\NAT@ctype>1\relax\@citea
+        \hyper@natlinkstart{\@citeb\@extra@b@citeb}%
+            \ifnum\NAT@ctype=2\relax\NAT@test{\NAT@ctype}%
+            \else\NAT@alias
+            \fi\hyper@natlinkend\else
+       \ifnum\NAT@sort>1
+         \begingroup\catcode`\_=8
+            \ifcat _\ifnum\z@<0\NAT@num _\else A\fi
+              \global\let\NAT@nm=\NAT@num \else \gdef\NAT@nm{-2}\fi
+            \ifcat _\ifnum\z@<0\NAT@last@num _\else A\fi
+              \global\@tempcnta=\NAT@last@num \global\advance\@tempcnta by\@ne
+              \else \global\@tempcnta\m@ne\fi
+         \endgroup
+% v0.1b anchor added to make backref's working, watch for errors!
+         \ifnum\NAT@nm=\@tempcnta
+         \ifHy@backref\hyper@natlinkstart{\@citeb\@extra@b@citeb}\hyper@natlinkend\fi
+           \ifx\NAT@last@yr\relax
+%             \edef\NAT@last@yr{\@citea \mbox{\noexpand\citenumfont{\NAT@num}}}%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+               \edef\NAT@last@yr{\@citea \mbox{\noexpand%
+                    \hyper@natlinkstart{\@citeb\@extra@b@citeb}%
+                      \noexpand\citenumfont{\NAT@num}%
+                    \noexpand\hyper@natlinkend}%
+               }%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+           \else
+%             \edef\NAT@last@yr{--\penalty\@m\mbox{\noexpand\citenumfont{\NAT@num}}}%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+             \edef\NAT@last@yr{--\penalty\@m\mbox{\noexpand%
+                  \hyper@natlinkstart{\@citeb\@extra@b@citeb}%
+                    \noexpand\citenumfont{\NAT@num}%
+                  \noexpand\hyper@natlinkend}%
+             }%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+           \fi
+         \else
+%           \NAT@last@yr \@citea \mbox{\citenumfont{\NAT@num}}%
+           %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+           \NAT@last@yr \@citea \mbox{%
+                \hyper@natlinkstart{\@citeb\@extra@b@citeb}%
+                    \citenumfont{\NAT@num}%
+                \hyper@natlinkend}%
+           %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+           \let\NAT@last@yr\relax
+         \fi
+       \else
+         \@citea \mbox{\hyper@natlinkstart{\@citeb\@extra@b@citeb}%
+           {\citenumfont{\NAT@num}}\hyper@natlinkend}%
+       \fi
+       \fi
+       \def\@citea{\NAT@sep\penalty\@m\NAT@space}%
+      \else
+        \ifcase\NAT@ctype\relax
+          \ifx\NAT@last@nm\NAT@nm \NAT@yrsep\penalty\@m\NAT@space\else
+          \@citea \NAT@test{1}\ \NAT@@open
+          \if*#1*\else#1\ \fi\fi \NAT@mbox{%
+          \hyper@natlinkstart{\@citeb\@extra@b@citeb}%
+          {\citenumfont{\NAT@num}}\hyper@natlinkend}%
+          \def\@citea{\NAT@@close\NAT@sep\penalty\@m\ }%
+        \or\@citea
+          \hyper@natlinkstart{\@citeb\@extra@b@citeb}%
+           \NAT@test{\NAT@ctype}\hyper@natlinkend
+          \def\@citea{\NAT@sep\penalty\@m\ }%
+        \or\@citea
+          \hyper@natlinkstart{\@citeb\@extra@b@citeb}%
+           \NAT@test{\NAT@ctype}\hyper@natlinkend
+          \def\@citea{\NAT@sep\penalty\@m\ }%
+        \or\@citea
+          \hyper@natlinkstart{\@citeb\@extra@b@citeb}%
+           \NAT@alias\hyper@natlinkend
+          \def\@citea{\NAT@sep\penalty\@m\ }%
+        \fi
+      \fi
+      }}%
+      \ifnum\NAT@sort>1\relax\NAT@last@yr\fi
+      \ifNAT@swa\else\ifnum\NAT@ctype=0\if*#2*\else
+      \NAT@cmt#2\fi \NAT@@close\fi\fi}{#1}{#2}%
+}
+\endinput

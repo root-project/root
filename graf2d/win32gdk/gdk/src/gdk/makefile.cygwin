@@ -1,0 +1,53 @@
+## Makefile for building the GDK DLL with gcc-2.95 or later on cygwin
+## Use: make -f makefile.cygwin
+
+## You must first build the Win32-dependent sources in the win32 subdirectory.
+
+## There is no install target, you have to decide where and 
+## how to install for yourself.
+
+OPTIMIZE = -O
+
+TOP = ../..
+
+include $(TOP)/build/win32/make.mingw
+
+################################################################
+
+# Nothing much configurable below
+
+INCLUDES = -I . -I ..
+DEFINES = -DG_ENABLE_DEBUG -DHAVE_CONFIG_H -DGDK_VERSION=\"$(GTK_VER)\" -DGDK_COMPILATION -DG_LOG_DOMAIN=\"Gdk\"
+DEPCFLAGS = $(GLIB_CFLAGS)
+
+all: \
+	../config.h \
+	gdkconfig.h \
+	gdk-$(GTK_VER).dll \
+	testgdk.exe
+
+gdk_OBJECTS = \
+	gdk.o		\
+	gdkcolor.o	\
+	gdkcursor.o	\
+	gdkdraw.o	\
+	gdkevents.o     \
+	gdkfont.o	\
+	gdkgc.o		\
+	gdkglobals.o	\
+	gdkimage.o	\
+	gdkrgb.o	\
+	gdkrectangle.o	\
+	gdkwindow.o
+
+../config.h : ../config.h.win32
+	cp ../config.h.win32 ../config.h
+
+gdkconfig.h : gdkconfig.h.win32
+	cp gdkconfig.h.win32 gdkconfig.h
+
+gdk-$(GTK_VER).dll : $(gdk_OBJECTS) gdk.def win32/libgdk-win32.a win32/gdk-win32res.o
+	$(GLIB)/build-dll gdk $(GTK_VER) gdk.def $(gdk_OBJECTS) -L win32 -lgdk-win32 -lwntab32x $(GLIB_LIBS) -lgdi32 -luser32 -limm32 -lshell32 -lole32 -luuid $(LDFLAGS) win32/gdk-win32res.o 
+
+testgdk.exe : testgdk.o gdk-$(GTK_VER).dll
+	$(CC) -o $@ testgdk.o -L . -lgdk-$(GTK_VER) $(GLIB_LIBS)

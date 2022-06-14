@@ -1,0 +1,25 @@
+[Section1]
+# Comments lines start with a hash 
+f =  0.52727 +/- 0.021516 L(0 - 1)
+m =  0.033901 +/- 0.054520 L(-10 - 10)
+p0 =  0.0069868 +/- 0.0082025 L(0 - 1)
+s =  0.99523 +/- 0.053043 L(-10 - 10)
+
+[Section2]
+# Here we provide different values for the same parameters
+f =  0.45 +/- 0.03 L(0 - 1)
+m =  0.025 +/- 0.02 L(-10 - 10)
+p0 =  0.0022 +/- 0.0001 L(0 - 1)
+s =  0.98 +/- 0.03 L(-10 - 10)
+
+[Section3]
+# It is also OK to supply a partial list
+# Here we declare f and m as constant as well
+f =  0.372 C
+m =  0.195 C
+
+[Section 4]
+# You can include other files as well
+include rf505_asciicfg_example.txt
+
+

@@ -1,0 +1,68 @@
+# This file annotates code ownership within ROOT.
+# It's not meant to be a strict - or comprehensive - file, but
+# helpful guidance on who to coordinate with for various areas.
+# This should also help provide suggested reviewers for PRs.
+
+# For more information, see:
+#
+#   - https://github.com/blog/2392-introducing-code-owners
+
+# Coarse-grained ownership
+* @Axel-Naumann
+/bindings/ @etejedor
+/core/ @Axel-Naumann @pcanal
+/documentation/ @couet
+/fonts/ @bellenot
+/geom/ @agheata
+/graf2d/ @couet
+/graf3d/ @couet
+/gui/ @bellenot
+/hist/ @lmoneta
+/html/ @Axel-Naumann
+/icons/ @bellenot
+/interpreter/ @Axel-Naumann
+/interpreter/llvm/ @vgvassilev
+/io/ @pcanal
+/io/xml/ @pcanal @linev
+/main/ @pcanal
+/math/ @lmoneta
+/math/vecops @eguiraud
+/misc/ @Axel-Naumann
+/montecarlo/ @Axel-Naumann
+/net/ @gganis
+/proof/ @gganis
+/roofit/ @lmoneta @guitargeek @hageboeck
+/rootx/ @Axel-Naumann
+/sql/ @pcanal @linev
+/tmva/ @lmoneta @sitongan
+/tree/ @pcanal
+/tutorials/ @couet
+/tree/dataframe @eguiraud
+/tree/ntuple/v7/ @jblomer
+
+# Projects that span over several code modules:
+/bindings/r/ @omazapa
+/core/imt/ @eguiraud
+/core/multiproc/ @eguiraud
+/graf2d/cocoa/ @TimurP
+/graf3d/eve/ @osschar
+/graf3d/eve7/ @osschar @linev
+
+#different http/webgui components
+/net/http/ @linev
+/net/httpsniff/ @linev
+/tutorials/http/ @linev
+/js/ @linev
+/gui/webdisplay/ @linev
+/gui/cefdisplay/ @linev
+/gui/qt5webdisplay/ @linev
+/gui/webgui6/ @linev
+/gui/fitpanelv7/ @linev
+/gui/browserv7/ @bellenot @linev
+/gui/canvaspainter/ @Axel-Naumann @linev
+/ui5/ @linev
+
+/cmake/ @bellenot
+*.cmake @bellenot
+*/CMakeLists.txt @bellenot
+CMakeLists.txt @bellenot

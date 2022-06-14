@@ -1,0 +1,132 @@
+<br>
+<hr>
+<a name="graf2d"></a>
+
+
+<h3>Graphical Output</h3>
+
+<h4>PDF</h4>
+<ul>
+<li> The PDF file produced by the following macro was not readable by Acrobat
+     reader:
+     <pre>
+     {
+        TCanvas* can = new TCanvas("can");
+        double margin = 1e-10;
+        can->Divide(2, 2, margin, margin);
+        TH1D* hist = new TH1D("hist" , "", 1, 0, 1);
+        hist->Draw();
+        can->SaveAs("can.pdf");
+     }
+     </pre>
+     because Acrobat does not work when a PDF file contains reals with
+     exponents, which is the cavse with the file "can.pdf". This problem is
+     now fixed. Note that "can.pdf" could be read by "ghostview" and printed.
+<li> PDF file now use the fonts encoding <tt>WinAnsiEncoding</tt>. This allows
+     to print any characters with accent etc.. like on the screen. An similar
+     modification was done in the previous release for PostScript.
+</ul>
+
+<h4>SVG</h4>
+<ul>
+<li> Some SVG viewer need a more complete header: &quot;width&quot; and
+     &quot;height&quot; attributes
+     in the svg tag and a &quot;xml&quot; tag to start the file.
+     (Found by Hubert Degaudenzi &lt;Hubert.Degaudenzi@cern.ch&gt;)
+</ul>
+
+<h4>PostScript</h4>
+<ul>
+<li> Since the new font endocing (June release) the hyphen was longer than
+     before. Now fixed.
+<li> When drawn with an angle, the "tilde" character as an acceent was not
+     correctly placed in a PostScript file. For instance:
+<pre>
+   {
+      TCanvas *c1 = new TCanvas("c1", "c1",15,49,700,530);
+      TLatex *tex1 = new TLatex(0.5,0.5,"#tilde{C}");
+      tex1->SetTextSize(0.2);
+      tex1->SetTextAngle(90);
+      tex1->Draw();
+      c1->Print("tilde.ps");
+   }
+</pre>
+</ul>
+
+<h4>TASImage / libAfterImage</h4>
+<ul>
+<li> Synchronizing libAfterImage with Sasha'a latest version.
+<li> <tt>TASImage::Merge (const TImage im, const char op, Int_t x, Int_t y) </tt>
+     with x and/or y not equal 0 did not clip the overlayed picture correctly.
+<li> Make sure a rectangle drawn will <tt>TAsimage::DrawRectangle</tt> appears
+     after calling <tt>gPad->Modified()</tt>.
+<li> Images can be saved (canvas->Print) from within threads.
+</ul>
+
+<h3>Miscellaneous</h3>
+
+<h4>TColor</h4>
+<ul>
+<li> <tt>CreateGradientColorTable</tt> now calls
+     <tt>TColor::InitializeColors()</tt>. This is needed because is some cases
+     <tt>TColor::InitializeColors()</tt> has not been called before and the
+     following erro messages were issued:
+     <pre>
+     Warning in <TColor::TColor>: color 1 already defined
+     Warning in <TColor::TColor>: color 2 already defined
+     Warning in <TColor::TColor>: color 3 already defined
+     [...]
+     </pre>
+<li> <tt>TColor::AsHexString</tt> was not returning the proper value in case
+     of gray scale mode. Before this change gray scale mode did not work in
+     pictures generated in batch.
+</ul>
+
+<h4>TLatex</h4>
+
+TLatex in now centered vertically like TText. When centered vertically, TLatex
+was not aligned on the control box. Some additionnal tiny adjustment of one
+pixel was also needed in order to look better when the text is enclosed in a box
+like in TPaveText.
+
+<h4>TPaveText</h4>
+
+The vertical text aligment is now done using the text alignment attributes
+instead of the trick used before. Histograms' titles are look much better
+centered vertically after this modification.
+
+<h4>TGraph</h4>
+
+<tt>TGraph::DrawPanel</tt> is now implemented.
+
+<h4>TGraphErrors</h4>
+
+The drawing option &quot;[]&quot; has been change to &quot;||&quot;. The new
+option &quot;[]&quot; is the same as &quot;||&quot; except that some ticks are
+drawn at the end of the horizontal and vertical lines at the end of the error
+bars. This new way of drawing the option "[]" shows better to which error
+bar the additional tick marks belong. The following example, which has been
+provided by Thomas Ullrich <thomas.ullrich@bnl.gov>, shows it clearly.
+<center>
+<img alt="example of option []" src="graf2d_01.gif">
+</center>
+
+<h4>TGraphPolargram.cxx</h4>
+
+An extra empty canvas was created each time a <tt>TGraphPolar</tt> was painted
+in "Not Editable" mode.
+
+<h4>TPad</h4>
+
+Improvments in <tt>TPad::BuildLegend</tt>: If the pad contains some
+<tt>TMultiGraph</tt> or <tt>THStack</tt> the individual graphs or histograms
+in them are automatically added to the <tt>TLegend</tt> produced by
+<tt>TPad::BuildLegend</tt>.
+
+<h4>TGaxis</h4>
+
+When drawn with the option
+X+ or Y+ the histogram axis were wrong in
+case of alphanumeric labels. The tick marks were in the right
+place but the labels were not.
+

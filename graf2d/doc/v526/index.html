@@ -1,0 +1,230 @@
+<br/>
+<hr/>
+<a name="graf2d"></a>
+
+
+<h3>Graphical Output</h3>
+
+<h4>PostScript and PDF</h4>
+<ul>
+<li> In the following macro the minus sign was not correct:
+   <pre>
+   {
+      TCanvas *c = new TCanvas;
+      TLatex *l = new TLatex(0.5, 0.5, "#font[122]{a = b + c - d #pm e}");
+      l-&gt;Draw();
+      c-&gt;SaveAs("c.eps");
+    }
+    </pre>
+    The font 122 is the greek one. With a such TLatex "a" becomes "alpha",
+    "b" becomes " beta" etc ... It is not the recommended way to do greek
+    characters with TLatex, but it should work anyway.</li>
+<li> In TPostScript::DrawPolyMarker: do not draw the markers is the marker size
+     is 0.</li>
+<li> Right aligned or centered text was not correctly positioned when rotated.</li>
+</ul>
+
+<h4>TASImage</h4>
+<ul>
+<li> The text size adjustment applied <tt>TASImage::DrawText</tt>
+  was not valid (scale factor of 1.044). The text size was wrong and the
+  following macro produced a wrong title when ran in batch:
+  <pre>
+  {
+     TCanvas *canvas = new TCanvas("c5","c5",900,900);
+     TH1F *histo = new TH1F("Histo","123456x_{i}abcdefy^{2}",100,0,20);
+     canvas-&gt;Print("drawing.gif");
+  }
+  </pre></li>
+<li> Suppress annoying messages like:
+    <pre>
+    root : looking for image "filename" in path [/home/username/icons]
+    </pre>
+    printed by libAfterImage when using <tt>TImage::Open("filename")</tt></li>
+<li> In <tt>TImageDump</tt> the hollow filled areas were not correct:
+    <ol>
+    <li> they used the line attributes,</li>
+    <li> a line was drawn around the polygons filled with patterns.</li>
+    </ol>
+    This fixes the problem mentionned here:
+    https://savannah.cern.ch/bugs/index.php?59263
+    as well as the test #22 in stressGraphics (no need to change
+    the reference file).</li>
+</ul>
+
+<h3>Interface to <em>graphviz</em></h3>
+
+Thanks to three new classes (<tt>TGraphStruct</tt>, <tt>TGraphNode</tt> and
+<tt>TGraphEdge</tt>) ROOT provides
+an interface to the graphs visualization package <em>graphviz</em>. Graph
+visualization is a way of representing structural information as diagrams of
+abstract graphs and networks.
+<br/>
+Example:
+<center>
+<img alt="Example of TGraphStruct" src="graphstruct.gif"/>
+</center>
+The previous image is produced by the following ROOT macro:
+   <pre>
+   // Draw a simple graph structure.
+   // The graph layout is made using graphviz. This macro creates some
+   // nodes and edges and change a few graphical attributes on some of them.
+   // Author: Olivier Couet
+   {
+      TGraphStruct *gs = new TGraphStruct();
+
+      // create some nodes and put them in the graph in one go ...
+      TGraphNode *n0 = gs-&gt;AddNode("n0","Node 0");
+      TGraphNode *n1 = gs-&gt;AddNode("n1","First node");
+      TGraphNode *n2 = gs-&gt;AddNode("n2","Second node");
+      TGraphNode *n3 = gs-&gt;AddNode("n3","Third node");
+      TGraphNode *n4 = gs-&gt;AddNode("n4","Fourth node");
+      TGraphNode *n5 = gs-&gt;AddNode("n5","5th node");
+      TGraphNode *n6 = gs-&gt;AddNode("n6","Node number six");
+      TGraphNode *n7 = gs-&gt;AddNode("n7","Node 7");
+      TGraphNode *n8 = gs-&gt;AddNode("n8","Node 8");
+      TGraphNode *n9 = gs-&gt;AddNode("n9","Node 9");
+
+      n4-&gt;SetTextSize(0.03);
+      n6-&gt;SetTextSize(0.03);
+      n2-&gt;SetTextSize(0.04);
+
+      n3-&gt;SetTextFont(132);
+
+      n0-&gt;SetTextColor(kRed);
+
+      n9-&gt;SetFillColor(kRed-10);
+      n0-&gt;SetFillColor(kYellow-9);
+      n7-&gt;SetFillColor(kViolet-9);
+
+      // some edges ...
+      gs-&gt;AddEdge(n0,n1)-&gt;SetLineColor(kRed);
+      TGraphEdge *e06 = gs-&gt;AddEdge(n0,n6);
+      e06-&gt;SetLineColor(kRed-3);
+      e06-&gt;SetLineWidth(4);
+      gs-&gt;AddEdge(n1,n7);
+      gs-&gt;AddEdge(n4,n6);
+      gs-&gt;AddEdge(n3,n9);
+      gs-&gt;AddEdge(n6,n8);
+      gs-&gt;AddEdge(n7,n2);
+      gs-&gt;AddEdge(n8,n3);
+      gs-&gt;AddEdge(n2,n3);
+      gs-&gt;AddEdge(n9,n0);
+      gs-&gt;AddEdge(n1,n4);
+      gs-&gt;AddEdge(n1,n6);
+      gs-&gt;AddEdge(n2,n5);
+      gs-&gt;AddEdge(n3,n6);
+      gs-&gt;AddEdge(n4,n5);
+
+      TCanvas *c = new TCanvas("c","c",800,600);
+      c-&gt;SetFillColor(38);
+      gs-&gt;Draw();
+      return c;
+   }
+   </pre>
+
+This new funtionnality relies on the <em>graphivz</em> package.
+This package can be downloaded from
+<a href="http://www.graphviz.org/">http://www.graphviz.org/</a>.
+<p>
+At installation time, to find <em>graphviz</em>, the ROOT's configure file looks in
+standard locations. It is possible to define a specific location using the
+configure flags:</p>
+<pre>
+--with-gviz-incdir="the directory where gvc.h is"
+--with-gviz-libdir="the directory where the libgvc library is"
+</pre>
+<p>To install <em>graphviz</em> (if needed) it is recommended to use the following configure flags:</p>
+<pre>
+--enable-static=yes --enable-shared=no --with-pic --prefix="graphviz installed here"
+</pre>
+<p>On 64 bits machines, the ROOT sources are compiled with the option -m64. In
+that case graphviz should be also compiled in 64 bits mode. It might be the
+default option, but on some machine it is not. In that case the environment
+variable CC should be defined as:</p>
+<pre>
+CC="gcc -m64"
+</pre>
+<p>before doing configure.</p>
+<p>
+On Windows machines it recommended to not install graphviz but to download the
+pre-installed version from http://www.graphviz.org/. The ROOT configure command
+remains the same.</p>
+
+
+<h3>Graphics Primitives</h3>
+
+<h4>New class TGraphTime</h4>
+TGraphTime is used to draw a set of objects evolving with nsteps in time between tmin and tmax.
+each time step has a new list of objects. This list can be identical to
+the list of objects in the previous steps, but with different attributes.
+   see example of use in $ROOTSYS/tutorials/graphs/gtime.C
+
+<h4>TLatex</h4>
+<ul>
+<li> In the following macro the <tt>#int</tt> and <tt>#sum</tt> symbols had
+     wrong limits placement if the character just before started with "#".
+   <pre>
+   {
+      TCanvas *c1 = new TCanvas("c1","c1",500,500);
+      TLatex l;
+      l.SetTextSize(0.1);
+
+      l.DrawLatex(0.1,0.6,"#nu#int^{1-x}_{2#pi}");
+      l.DrawLatex(0.1,0.2,"a#int^{1-x}_{2#pi}");
+
+      l.DrawLatex(0.5,0.6,"#nu#sum^{1-x}_{2#pi}");
+      l.DrawLatex(0.5,0.2,"a#sum^{1-x}_{2#pi}");
+   }
+   </pre>
+
+   This problem is there since the 1st version of TLatex. It is fixed by:
+   <ol>
+   <li>Giving "^" and "_" a lower precedence than special and greek characters.</li>
+   <li>Making a special case for #int and #sum and giving them even
+      lower precedence than "^" and "_".</li>
+   </ol>
+   Oleksandr Grebenyuk <tt>&lt;ogrebenyuk@lbl.gov&gt;</tt> helped a lot solving this
+   issue.</li>
+</ul>
+
+<h4>TMarker</h4>
+<ul>
+<li> The markers picking now takes into account the marker size. This is
+     useful for big markers, because there is no need to pick exactly the
+     marker's center.</li>
+</ul>
+
+<h4>TPad</h4>
+<ul>
+<li> It is now possible to zoom and unzoom axis using the mouse wheel.</li>
+</ul>
+
+<h4>TCanvas</h4>
+<ul>
+<li> In <tt>DrawClonePad</tt> make sure that the cloned pad has the correct
+     size even when the original pad has a toolbar and/or a status bar.</li>
+</ul>
+
+<h4>TPie</h4>
+<ul>
+<li> <tt>TPie::GetEntryVal(i)</tt> returned <tt>GetSlice(i)-&gt;GetRadiusOffset()</tt>
+instead of <tt>GetSlice(i)-&gt;GetValue()</tt>. Very likely the code was
+copied/pasted from the method <tt>TPie::GetEntryRadiusOffset(i)</tt>.</li>
+</ul>
+
+<h4>TGaxis</h4>
+<ul>
+<li>An axis with a custom scale defined by a function did not display ticks all
+  the way along the axis, only between the lowest and the highest major tick.
+  This behaviour could be seen with:
+  <pre>
+  {
+     TF1* f = new TF1("f", "exp(x)", 0.467, 2.1345);
+     TGaxis* a = new TGaxis(0.1,0.4,0.9,0.4, "f", 50510, "-");
+     a-&gt;Draw();
+     TGaxis* b = new TGaxis(0.1,0.7,0.9,0.7, 0.4356, 1.56789, 50510, "-");
+     b-&gt;Draw();
+  }
+  </pre></li>
+</ul>

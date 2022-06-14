@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+
+echo ""
+echo "  ROOT is built with CMake, see https://root.cern/building-root"
+echo "  Please run"
+echo "      mkdir obj; cd obj; cmake ..; make -j 4"
+echo ""
+
+exit 1

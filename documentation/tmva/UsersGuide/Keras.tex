@@ -1,0 +1,63 @@
+\subsection{Keras}
+\label{sec:keras}
+
+Keras (\url{www.keras.io}) is a high-level wrapper for the machine learning frameworks Theano (\url{www.deeplearning.net/software/theano/}) and TensorFlow (\url{www.tensorflow.org}), which are mainly used to set up deep neural networks.
+
+\subsubsection{Training and Testing Data}
+
+Please note that data defined as testing data in the dataloader is used for validation of the model after each epoch. Such as stated in section \ref{sec:dnn_test_and_evaluation_set}, a proper evaluation of the performance should be done on a completely independent dataset.
+
+\subsubsection{Booking Options}
+
+The Keras method is booked mainly similar to other TMVA methods such as shown in Code Example \ref{example:keras_booking}. The different part is the definition of the neural network model itself. These options are not set in the options string of TMVA, but these are defined in Python and exported to a model file, which is later on loaded by the method. The definition of such a model using the Keras API is explained in detail in section \ref{sec:keras_model_definition}. The settings in the method's option string manage the training process.
+
+The full list of possible settings that can be used in the option string is presented in Table \ref{opt:mva:keras:options}.
+
+\begin{codeexample}
+\begin{tmvacode}
+factory->BookMethod(dataloader, TMVA::Types::kPyKeras, "Keras", <options>);
+\end{tmvacode}
+\caption[.]{\codeexampleCaptionSize Booking of the \textit{PyKeras} method}
+\label{example:keras_booking}
+\end{codeexample}
+
+\begin{option}[h]
+\input optiontables/MVA__Keras.tex
+\caption[.]{\optionCaptionSize
+     Configuration options reference for PyMVA method \textit{PyKeras}.
+}
+\label{opt:mva:keras:options}
+\end{option}
+
+\subsubsection{Model Definition}
+\label{sec:keras_model_definition}
+
+The model of the neural network is defined in Python using the Keras API, stored to a file and then loaded by the Keras method of PyMVA. This section gives an detailed example how this can be done for a classification task. The final reference to build a Keras model is the Keras documentation itself (\url{www.keras.io}). As well, ROOT ships with TMVA tutorials, which include examples for the usage of the PyKeras method for binary classification, multiclass classification and regression.
+
+Code Example \ref{example:keras_model} shows as an example a simple three-layer neural network, which can be applied for any classification task. After running this script, the model file, e.g. \code{model.h5} in this example, has to be set as the option \texttt{FilenameModel} of the method.
+
+\begin{codeexample}
+\begin{tmvacode}
+from keras.models import Sequential
+from keras.layers.core import Dense
+
+# Define model architecture
+model = Sequential()
+model.add(Dense(64, init='glorot_normal', activation='relu',
+        input_dim=num_input_variables))
+model.add(Dense(num_output_classes, init='glorot_uniform',
+        activation='softmax'))
+
+# Set loss function and optimizer algorithm
+model.compile(loss='categorical_crossentropy', optimizer='Adam',
+        metrics=['accuracy',])
+
+# Store model to file
+model.save('model.h5')
+\end{tmvacode}
+\caption[.]{\codeexampleCaptionSize Definition of a classification model in Python using Keras. The placeholders \code{num_input_variables} and \code{num_output_classes} have to be set accordingly to the specific task.}
+\label{example:keras_model}
+\end{codeexample}
+
+\subsubsection{Variable Ranking}
+A variable ranking is not supported.

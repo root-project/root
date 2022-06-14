@@ -1,0 +1,54 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
+project(LZ4 C)
+
+find_package(xxHash REQUIRED)
+
+set(LZ4_PUBLIC_HEADERS
+  lz4.h
+  lz4frame.h
+  lz4hc.h
+)
+
+set(LZ4_PRIVATE_HEADERS
+  lz4frame_static.h
+)
+
+set(LZ4_SOURCES
+  lz4.c
+  lz4frame.c
+  lz4hc.c
+)
+
+unset(LZ4_FOUND CACHE)
+unset(LZ4_FOUND PARENT_SCOPE)
+set(LZ4_FOUND TRUE CACHE BOOL "" FORCE)
+
+file(STRINGS "lz4.h" LZ4_H REGEX "^#define LZ4_VERSION_[A-Z]+[ ]+[0-9]+.*$")
+string(REGEX REPLACE ".+LZ4_VERSION_MAJOR[ ]+([0-9]+).*$"   "\\1" LZ4_VERSION_MAJOR "${LZ4_H}")
+string(REGEX REPLACE ".+LZ4_VERSION_MINOR[ ]+([0-9]+).*$"   "\\1" LZ4_VERSION_MINOR "${LZ4_H}")
+string(REGEX REPLACE ".+LZ4_VERSION_RELEASE[ ]+([0-9]+).*$" "\\1" LZ4_VERSION_PATCH "${LZ4_H}")
+set(LZ4_VERSION_STRING "${LZ4_VERSION_MAJOR}.${LZ4_VERSION_MINOR}.${LZ4_VERSION_PATCH}")
+unset(LZ4_H)
+
+set(LZ4_VERSION ${LZ4_VERSION_STRING} CACHE INTERNAL "" FORCE)
+set(LZ4_VERSION_STRING ${LZ4_VERSION_STRING} CACHE INTERNAL "" FORCE)
+
+set(LZ4_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "" FORCE)
+set(LZ4_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "" FORCE)
+
+add_library(lz4 STATIC ${LZ4_PUBLIC_HEADERS} ${LZ4_PRIVATE_HEADERS} ${LZ4_SOURCES})
+set_target_properties(lz4 PROPERTIES C_VISIBILITY_PRESET hidden POSITION_INDEPENDENT_CODE ON)
+target_include_directories(lz4 INTERFACE $<BUILD_INTERFACE:${LZ4_INCLUDE_DIR}>)
+target_link_libraries(lz4 PRIVATE xxHash::xxHash)
+
+add_library(LZ4::LZ4 ALIAS lz4)
+
+set(LZ4_LIBRARY $<TARGET_FILE:lz4> CACHE INTERNAL "")
+set(LZ4_LIBRARIES LZ4::LZ4 CACHE INTERNAL "")
+
+set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS LZ4::LZ4)

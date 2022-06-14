@@ -1,0 +1,27 @@
+<!--  this file used by THttpServer to display single element -->
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="utf-8">
+      <title>Draw of single element</title>
+      <link rel="shortcut icon" href="jsrootsys/img/RootIcon.ico"/>
+   </head>
+
+   <body>
+      <div id="drawGUI">
+         loading ...
+      </div>
+
+   </body>
+
+   <script type='module'>
+
+      import { buildGUI, internals } from './jsrootsys/modules/gui.mjs';
+
+      internals.getCachedHierarchy = function() { return "$$$h.json$$$"; }
+      internals.getCachedObject = function() { return "$$$root.json$$$"; }
+
+      buildGUI("drawGUI", "draw");
+   </script>
+
+</html>

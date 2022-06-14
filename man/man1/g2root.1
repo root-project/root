@@ -1,0 +1,151 @@
+.\"
+.\" $Id: g2root.1,v 1.1 2001/08/15 13:30:48 rdm Exp $
+.\"
+.TH G2ROOT 1 "Version 3" "ROOT"
+.\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
+.\" other parms are allowed: see man(7), man(1)
+.SH NAME
+g2root \- convert GEANT geometry files to ROOT files
+.SH SYNOPSIS
+.B g2rootd
+.I [-f map_name] geant_name macro_name
+.SH "DESCRIPTION"
+You can convert a
+.B GEANT
+(see
+.I http://geant.cern.ch/
+fore more on
+.BR GEANT )
+geometry to
+.B ROOT
+geometry with the following steps
+.TP
+1
+Run the interactive version of
+.B GEANT
+and produce a Zebra RZ file
+.IR detector.geom ,
+by typing the command:
+.sp 1
+.RS
+Geant > rz/file 21 \fIdetector.geom\fR on
+.RE
+.sp 1
+.TP
+2
+Run the
+.B g2root
+program to convert the Zebra RZ file into a
+.B ROOT
+macro
+.I detector.C:
+.sp 1
+.RS
+g2root \fIdetector.geom\fR \fIdetector.C\fR
+.RE
+.sp 1
+.TP
+3
+Run the following
+.B ROOT
+session;
+.sp 1
+.RS
+.nf
+root [1] .x detector.C
+root [2] detector.Draw()
+root [3] c1.x3d()   // (this invokes the 3-d Root viewer)
+root [4] TFile f("detector.root","NEW") //open a new root file
+root [5] detector.Write() //Write the geometry structure
+root [6] f.Write()
+.fi
+.RE
+.sp 1
+Note that the
+.I TNode
+structure currently in
+.B ROOT
+was not designed as a replacement for a true geometry package. The
+idea was mainly to draw simple geometries in event display
+programs. We are currently investigating several alternatives for a
+true & efficient geometry package supporting;
+.TP
+-
+a disk data base with storage of multiple geometry versions
+.TP
+-
+an interactive editor and viewer
+.TP
+-
+with 3-d views
+.TP
+-
+but also 2-d cut views
+.TP
+-
+with interfaces to existing or future MC such as
+.B GEANT3
+or
+.B GEANT4
+.PP
+A second program called
+.B gh2root
+(see
+.IR http://root.cern.ch/root/gh2root.html )
+generates automatically C++ code corresponding to the
+.B GEANT3 Zebra
+structures
+.IR JSET ,
+.IR JVERTX ,
+.IR JKINE ,
+.I JHITS
+and
+.I JDIGI.
+.SH "SEE ALSO"
+.RS
+.IR root(1) ,
+.IR h2root(1) ,
+.RE
+and
+.RS
+.I The ROOT Users Guide
+.RE
+available from the main
+.B ROOT
+website:
+.RS
+.I http://root.cern.ch
+.RE
+.SH "ORIGINAL AUTHORS"
+The ROOT team (see web page above):
+.RS
+\fBRene Brun\fR and \fBFons Rademakers\fR
+.RE
+.SH "COPYRIGHT"
+This library is free software; you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation; either version 2.1 of the
+License, or (at your option) any later version.
+.P
+This library is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+.P
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+.SH AUTHOR
+This manual page was written by Christian Holm Christensen
+<cholm@nbi.dk>, for the Debian GNU/Linux system (but may be used by
+others).
+.\"
+.\" $Log: g2root.1,v $
+.\" Revision 1.1  2001/08/15 13:30:48  rdm
+.\" move man files to new subdir man1. This makes it possible to add
+.\" $ROOTSYS/man to MANPATH and have "man root" work.
+.\"
+.\" Revision 1.1  2000/12/08 17:41:00  rdm
+.\" man pages of all ROOT executables provided by Christian Holm.
+.\"
+.\"

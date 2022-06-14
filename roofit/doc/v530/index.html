@@ -1,0 +1,114 @@
+<br/> 
+<hr/> 
+<a name="roofit"></a> 
+<h3>RooFit</h3>
+
+
+
+<a name="histfactory"></a> 
+<h3>HistFactory</h3>
+
+One of the core classes used by HistFactory models (RooRealSumPdf) was modified leading to substantial speed improvements (for models that use the default -standard_form option).  
+
+This new version supports a few types of interpolation for the normalization of the histograms:
+<ul>
+<li> code = 0: piece-wise linear (old default)</li>
+<li> code = 1: piece-wise log (new default)</li>
+<li> code = 2: parabolic interp with linear extrap ( common at tevatron, avoids kink for asymmetric uncert)</li>
+</ul>
+The piece-wise logarithmic interpolation paired with a Gaussian constraint is equivalent to a log-normal constraint in a transformed version of the nuisance parameter.  The benifit of this approach is that it is easy to avoid the normalization from taking on unphysical negative values.  This is the prescription used by the CMS Higgs group, and agreed upon by the LHC Higgs Combination Group.
+
+There is not yet XML-based steering for the different interpolation types, but there is a simple script to modify it. 
+<pre>
+results/example_combined_GaussExample_model.root 
+</pre>
+
+<h4>Near term goals for HistFactory</h4>
+
+<ul>
+  <li>Utilities for dealing with Monte Carlo statistical uncertainty in the template histograms</li>
+  <li>Support for N-D histograms</li>
+  <li>A new style of histogram variations without a constraint term attached (for shapes determined from control samples)</li>
+  <li>XML steering for interpolation types</li>
+</ul>
+
+<a name="roostats"></a> 
+<h3>RooStats</h3>
+
+<h4>General Improvements</h4>
+
+This release brings several speed improvements to the RooStats tools and improved stability and performance with PROOF.  This comes mainly through changes to the <tt>ToyMCSampler</tt>.  In addition the <tt>HypoTestInverter</tt> tool has been rewritten, leading to some changes in the <tt>HypoTestResult</tt>.  Finally, a new hypothesis test new called <tt>FrequentistCalculator</tt> was written, which plays the same role as the <tt>HybridCalculator</tt> but eliminates nuisance parameters in a frequentist way.
+
+<h4>ToyMCSampler</h4>
+
+The primary interface for this class is to return a <tt>SamplingDistribution</tt> of a given <tt>TestStatistic</tt>.
+The <tt>ToyMCSampler</tt> had a number of internal changes for improved performance with PROOF.  These should be transparent.  In addition, a new method was added <tt>RooAbsData* GenerateToyData(RooArgSet& paramPoint)</tt> that gives public access to the generation of toy data with all the same options for the treatment of nuisance parameters, binned or unbinned data, treatment of the global observables, importance sampling, etc.  This is new method particularly useful for producing the expected limit bands where one needs to generate background-only pseudo-experiments in the same way that was used for the primary limit calculation.
+
+<h4>HypoTestResult</h4>
+
+In the process of writing the new HypoTestInverter the conventions for p-values, CLb, CLs+b, and CLs were revisited.  The situation is complicated by the fact that when performing a hypothesis test for discovery the null is background-only, but when performing an inverted hypothesis test the null is a signal+background model.  The new convention is that the p-value for both the null and the alternate are taken from the same tail (as specified by the test statistic).  Both CLs+b and CLb are equivalent to these p-values, and the HypoTestResult has a simple switch <tt>SetBackgroundIsAlt()</tt> to specify the pairing between (null p-value, alternate p-value) and (CLb, CLs+b).
+
+<h4>HypoTestInverter, HypoTestInverterResult, HypoTestInverterPlot</h4>
+
+These classes have been rewritten for using them with the new hypothesis test calculators. The <tt>HypoTestInverter</tt>
+class can now be constructed by any generic <tt>HypoTestCalculator</tt>, and both the <tt>HybridCalculator</tt> and the new
+<tt>FrequentistCalculator</tt> are supported.
+
+The <tt>HypoTestInverter</tt> class can be constructed in two ways: either passing an
+<tt>HypoTestCalculator</tt> and a data set or by passing the model for the signal, for the background and a data set.
+In the first case the user configure the <tt>HypoTestCalculator</tt> before passing to the <tt>HypoTestInverter</tt>.
+It must be configured using as null model the signal plus background model as alternate model the background
+model. Optionally the user can pass the parameter to scan, if it is not passed, the first parameter of interest of the
+null model will be used. In the second case (when passing directly the model and the data) the <tt>HypoTestInverter</tt>
+can be configured to use either the frequentist or the hybrid calculator. The user can then configure the class
+afterwards. For example set the test statistic to use via the method <tt>SetTestStatistic</tt>, number of toys to run
+for each hypothesis, by retrieving the contained HypoTestCalculator:
+<pre>
+HypoTestInverter inverter(obsData, model_B, model_SB, parameterToScan, HypoTestInverter::kFrequentist);
+ProfileLikelihoodRatioTestStat profLR( *model_SB->GetPdf() );
+inverter.SetTestStatistic(&profLR);
+FrequentistCalculator * htcalc = (FrequentistCalculator*) inverter.GetHypoTestCalculator();
+htcalc->SetToys( ntoySB, ntoyB);
+</pre>
+
+The Inverter can then run using a fixed grid of npoint between xmin and xmax or by using an automatic scan, where a
+bisection algorithm is used.
+For running a fixed grid one needs to call <tt>SetFixedScan(npoints, xmin, xmax)</tt>, while for running an autoscan use
+the function <tt>SetAutoScan</tt>. The result is returned in the <tt>GetInterval</tt> function as an
+<tt>HypoTestInverterResult</tt> class. If a fixed grid is used the upper limit is obtained by using a interpolation on
+the scanned points. The interpolation can be linear or a spline (if
+<tt>result.SetInterpolationOption(HypoTestInverterResult::kSpline)</tt> is called).
+The upper limit, the expected P value distributions and also the upper limit distributions can be obtained from the
+result class. 
+<pre>
+HypoTestInverterResult * result = inverter.GetInterval();
+double upperLimit = result->UpperLimit();
+double expectedLimit = result->GetExpectedUpperLimit(0);
+</pre>
+
+The limit values, p values and bands can be drawn using the <tt>HypoTestInverterPlot</tt> class. Example:
+
+<pre>
+HypoTestInverterPlot * plot = new HypoTestInverterPlot("Result","POI Scan Result",result);
+plot->Draw("2CL CLb");
+</pre>
+
+<p>
+Where the Draw option "2CL CLb" draws in addition to the observed limit and bands, the observed CLs+b and CLb.
+The result is shown  in this figure:
+
+<pre>
+<img src="scan_cls.pdf">
+</pre>
+
+
+<h4>FrequentistCalculator</h4>
+This is a <tt>HypoTestCalculator</tt> that returns a <tt>HypoTestResult</tt> similar to the <tt>HybridCalculator</tt>.  The primary difference is that this tool profiles the nuisance parameters for the null model and uses those fixed values of the nuisance parameters for generating the pseudo-experiments, where the <tt>HybridCalculator</tt> smears/randomizes/marginalizes the nuisance parameters.
+
+<h4>BayesianCalculator</h4>
+Several improvements have been put in the class. In particular the possibility to set different integration types. One
+can set the different integration types available in the ROOT integration routines
+(ADAPTIVE, VEGAS, MISER, PLAIN for multi-dimension). In addition one can use an integration types by generating nuisance
+toy MC (method TOYMC). If the nuisance parameters are uncorrelated, this last method can scale up for a large number of
+nuisance parameters. It has been tested to work up to 50-100 parameters.   
+ 

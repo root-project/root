@@ -1,0 +1,9 @@
+This directory contains classes that provide Input/Output to
+a file via MPI communications.
+BEGIN_HTML
+<ul>
+<li>The MPI-based file is documented in class TMPIFile.</li>
+<li><a href="https://www.mpich.org/">More information for MPICH </a></li>
+<li><a href="https://www.open-mpi.org/">More information for Open MPI </a></li>
+</ul>
+END_HTML

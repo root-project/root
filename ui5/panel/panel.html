@@ -1,0 +1,68 @@
+<!--  this file used for display different panels in ROOT7 -->
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="utf-8">
+      <title>ROOT7 web panel</title>
+   </head>
+
+   <style>
+      html { height: 100%; }
+      body { min-height: 100%; margin: 0; overflow: hidden }
+      #PanelDiv {
+         position: absolute;
+         left: 0;
+         top: 0;
+         bottom: 0;
+         right: 0;
+         padding: 1
+      }
+   </style>
+
+   <body>
+      <div id="PanelDiv">
+      </div>
+   </body>
+
+   <script type='module'>
+
+      import { connectWebWindow } from './jsrootsys/modules/webwindow.mjs';
+      import { source_dir } from './jsrootsys/modules/core.mjs';
+
+      connectWebWindow({
+         first_recv: "SHOWPANEL:",
+         ui5: true // components which can be loaded during connection establishing
+      }).then(handle => {
+
+         if (!handle || !sap) return false;
+
+         let viewName = handle.first_msg;
+         if (!viewName) return false;
+
+         if ((viewName.indexOf("rootui5.") !== 0) && (viewName.indexOf("jsroot.") !== 0) && (viewName.indexOf("sap.") !== 0)) {
+            let p = viewName.indexOf(".");
+            if ((p > 1) && (p < viewName.length - 1)) {
+               let tgtpath = "/currentdir/";
+               let pp = source_dir.indexOf("/jsrootsys/");
+               if (pp > 0) tgtpath = source_dir.slice(0, pp) + tgtpath;
+               let _paths = {};
+               _paths[viewName.slice(0,p)] = tgtpath;
+               console.log('Register module path', viewName.slice(0,p), ' as ', tgtpath);
+               sap.ui.loader.config({ paths: _paths });
+            }
+         }
+
+         sap.ui.require(["sap/ui/core/mvc/XMLView"], XMLView => {
+            XMLView.create({
+               id: "TopPanelId",
+               viewName: viewName,
+               viewData: { handle: handle }
+            }).then(oView => oView.placeAt("PanelDiv"));
+
+         });
+
+      });
+
+   </script>
+
+</html>

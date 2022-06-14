@@ -1,0 +1,21 @@
+# Set default behaviour, in case users don't have core.autocrlf set.
+* text=auto
+
+# Declare files that will always have CRLF line endings on checkout.
+*.sln eol=crlf
+*.dsp eol=crlf
+*.dsw eol=crlf
+*.bat eol=crlf
+*.cs  eol=crlf
+*.csproj eol=crlf
+*.vsct  eol=crlf
+*.resx  eol=crlf
+*.vsixmanifest  eol=crlf
+tree/dataframe/test/RCsvDS_test_win.csv  eol=crlf
+
+# Denote all files that are truly binary and should not be modified.
+*.png binary
+*.jpg binary
+*.pdf binary
+*.root binary
+*.fits binary

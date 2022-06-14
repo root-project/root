@@ -1,0 +1,32 @@
+/* XPM */
+static char *embedcanvas[] = {
+/* width height num_colors chars_per_pixel */
+"    21    21        4            1",
+/* colors */
+". c #000000",
+"# c #7b7b7b",
+"a c #ffffff",
+"b c #bfbfbf",
+/* pixels */
+"bbbbbbbbbbbbbbbbbbbbb",
+"bbbbbbbbbbbbbbbbbbbbb",
+"bb#################bb",
+"bb#aaa#aaa#aaa#a..#bb",
+"bb#aaa#aaa#aaa...a#bb",
+"bb#aaa#aaa#a...aaa#bb",
+"bb########...######bb",
+"bb#aaa#aa..aaa#aaa#bb",
+"bb#aaa#a..#aaa#aaa#bb",
+"bb#aaa#..a#aaa#aaa#bb",
+"bb####..###########bb",
+"bb#aaa.aaa#aaa#aaa#bb",
+"bb#aa.#aaa#aaa#aaa#bb",
+"bb#aa.#aaa#aaa#aaa#bb",
+"bb##..#############bb",
+"bb#a.a#aaa#aaa#aaa#bb",
+"bb#..a#aaa#aaa#aaa#bb",
+"bb#.aa#aaa#aaa#aaa#bb",
+"bb#################bb",
+"bbbbbbbbbbbbbbbbbbbbb",
+"bbbbbbbbbbbbbbbbbbbbb"
+};

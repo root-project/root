@@ -1,0 +1,102 @@
+<br/>
+<hr/>
+<a name="graf2d"></a>
+<h3>2D Graphics Libraries</h3>
+
+<h4>TPDF</h4>
+<ul>
+   <li>
+      The table of content entries were not correct if there was and extra option
+      before "Title:".
+   </li>
+   <li>
+      After a title was once set, this title will be used for all following
+      additions to the PDF file, instead of "Page ###".
+   </li>
+   <li>
+      Better sizes matching with the screen output for markers 6 and 7 (dots).
+   </li>
+   <li>
+      Implement the transparency in PDF files. To make a graphics object transparent
+      it is enough to set its color to a transparent one. The color transparency
+      is defined via its alpha component. The alpha value varies from 0. to 1.
+      0. makes an object fully transparent, and 1. makes it fully opaque. To set the
+      alpha value of an existing color it is enough to do:
+      <pre>
+         TColor *col26 = gROOT->GetColor(26);
+         col26->SetAlpha(0.01);
+      </pre>
+      A new color can be created transparent the following way:
+      <pre>
+         Int_t ci = 1756;
+         TColor *color = new TColor(ci, 0.1, 0.2, 0.3, 0.5); // alpha = 0.5
+      </pre>
+      An example of tranparency usage with parallel coordinates can be found
+      in <tt>$ROOTSYS/tutorials/tree/parallelcoordtrans.C</tt>
+   </li>
+</ul>
+
+<h4>TSVG</h4>
+<ul>
+   <li>
+      Implement the transparency in SVG files (cf TPDF).
+   </li>
+</ul>
+
+<h4>TLegend</h4>
+<ul>
+   <li>
+      The option E, to draw the error bar on a legend entry, does not need
+      anymore the option L to be active. It is now possible to draw the error
+      bar only using the option E alone. The combination of the options E and L
+      still works as before.
+   </li>
+   <li>
+      The text attributes were not properly initialized by the default
+      constructor.
+   </li>
+</ul>
+
+<h4>TLatex</h4>
+<ul>
+   <li>
+      Implement <tt>#mp</tt>.
+   </li>
+</ul>
+
+<h4>TPad</h4>
+<ul>
+   <li>
+      New method DivideSquare a canvas in to  n sub-pads. The number of sub-pads
+      along the X and Y axis are computed according to the square root of n.
+      Example:
+   <pre>
+      void divsquare(int w, int h, int n)
+      {
+         TCanvas *c = new TCanvas ("c","c",0,0,w,h);
+         c->DivideSquare(n);
+         for (int i=1; i&lt;=n; i++) {
+            c->cd(i);
+            gPad->DrawFrame(0,0,1,1);
+         }
+      }
+   </pre>
+   </li>
+   <li> TPad::Print always use TImageDump to print gif, png and jpeg files, in
+      interactive and batch mode (previously it was used in the batch case only).
+      This allows to generate output transparent colors in these formats even in
+      interactive mode. The generation of gif, png and jpeg files from the
+      graphics window in interactive mode is kept for OpenGL canvases.
+   </li>
+</ul>
+<h4>New graphical back-end for MacOSX</h4>
+<p align="justify">
+TGCocoa/TGQuartz classes are the implementation of TVirtualX based on Cocoa and Quartz 2D.
+They let to use ROOT's GUI and graphics on MacOS X without installing X11.app and also give an access to Apple's native
+graphics and GUI frameworks. Window management, event loop, event dispatching, etc. are implemented on top of <a href="http://en.wikipedia.org/wiki/Cocoa_(API)">Cocoa</a>.
+Graphics (GUI rendering and non-GUI) is done by <a href="http://en.wikipedia.org/wiki/Quartz_2D">Quartz 2D (Core Graphics)</a>.
+An example of a TCanvas with a THStack object, transparency, anti-aliasing, gradient fill, shadows:
+</p>
+<img alt="Transparency and gradients" width="750" height="484" title="Transparency and gradients" src="quartz2d.gif"/>
+<br />ROOT must be configured with <strong>--enable-cocoa</strong> parameter to use Cocoa back-end instead of X11 version.
+<strong>Please note</strong>, this is still a work in progress.

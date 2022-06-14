@@ -1,0 +1,23 @@
+/* XPM */
+static char * checkmark_t_xpm[] = {
+"16 16 4 1",
+" 	c None",
+".	c #808080",
+"+ c #ffffff",
+"X	c Black",
+"                ",
+"                ",
+"                ",
+"                ",
+"           +    ",
+"          +X+   ",
+"     +   +XX+   ",
+"    +X+ +XXX+   ",
+"    +XX+XXX+    ",
+"    +XXXXX+     ",
+"     +XXX+      ",
+"      +X+       ",
+"       +        ",
+"                ",
+"                ",
+"                "};

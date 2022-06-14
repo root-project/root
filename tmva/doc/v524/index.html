@@ -1,0 +1,237 @@
+<br> 
+<hr> 
+<a name="tmva"></a> 
+<h3>TMVA</h3>
+
+    TMVA version 4.0.1 is included in this root release:
+
+    <h4>Main changes and new features introduced with TMVA 4</h4>
+    
+    <ul>
+      <li> Reorganisation of internal data handling and constructors
+      of methods to allow to build arbitrary composite MVA methods,
+      and to deal with multi-class classification and multi-target
+      regression
+        
+      <li> Extended TMVA to multivariate multi-target regression
+        
+      <li> Any TMVA method can now be boosted (linearly or
+      non-linearly)
+        
+      <li> Transformation of input variables can be chained as wished
+        
+      <li> Weight files are now in XML format
+        
+      <li> New MVA methods "PDE-Foam" and "LD", both featuring
+      classification and regression
+        
+    </ul>
+
+
+    <h5>Comments</h5>
+
+    <p>
+      <em>On XML format:</em><br>
+      
+      The old text format is obsolete though still readable in the
+      application. Backward compatibility is NOT guaranteed. Please
+      contact the authors if you require the reading of old text weight
+      files in TMVA 4.
+      
+    <p>
+      <em>Standard macros:</em><br>
+      
+      The structure of the standard macros has changed: macros are
+      still in the "$ROOTSYS/tmva/test" directory, but distinguished for
+      classification and regression examples:
+      
+    <pre>TMVAClassification.C, TMVAClassificationApplication.C TMVARegression.C, TMVARegressionApplication.C</pre>
+    
+    Classification and regression analysis (training) is analysed as
+    usual via standard macros that can be called from dedicated
+    GUIs.
+    
+    <p>
+      <em>Regression:</em><br> 
+
+    <ul>
+      <li>Not yet available for all MVA methods. It exists for:
+      PDE-RS, PDE-Foam, K-NN, LD, FDA, MLP, BDT for single targets
+      (1D), and MLP for multiple targets (nD).
+      
+      <li>Not all transformation of input variables are available
+      (only "Norm" so far).
+
+      <li>Regression requires specific evaluation tools:
+
+        <ul>
+          <li> During the training we provide a ranking of input
+            variables, using various criteria: correlations, transposed
+            correlation, correlation ratio, and "mutual information" between
+            input variables and regression target.  (Correlation ratio and
+            mutual information implmentations provided by Moritz Backes,
+            Geneva U)
+            
+          <li> After the training, the trained MVA methods are ranked wrt.
+            the deviations between regression target and estimate.
+            
+          <li> Macros plot various deviation and correlation quantities.
+            A new GUI (macros/TMVARegGui.C) collects these macros.
+        </ul>
+    </ul>
+
+
+    <h4> Improvements of / new features for MVA methods </h4>
+    <menu>
+    <li> <em>Linear Discriminant:</em>
+      Re-implementation of "Fisher" method as general linear discriminant ("LD"),
+      which is also regression capable (so far: single-target only)
+
+    <li> <em>PDEFoam:</em>
+      PDE-Foam is a variation of the PDE-RS method using a self-adapting binning
+      method to divide the multi-dimensional variable space into a finite number
+      of hyper-rectangles (cells). The binning algorithm adjusts the size and
+      position of a predefined number of cells such that the variance of the
+      signal and background densities inside the cells reaches a minimum.
+
+    <li> <em>BDT:</em>
+      Introduced gradient boosting and stochastic gradient boosting for 
+      classification with BDT (as desribed by Friedman 1999). See "BDTG" 
+      example in TMVAClassification.C/cxx.
+
+      A new option allows to restrict the maximum tree depth. This may be used to
+      avoid overtraining and often gives better performance than pruning. (The
+      pruning mechanism needs to be revisited)
+
+    <li> <em>MLP:</em>
+      Introduced recognition of convergence via general ConvergenceTest-class for
+      interrupting computations when convergence is reached. This feature has is
+      used now in MethodMLP. Improved treatment of event-weights in BFGS training.
+
+      Implemented random and importance sampling of events in DataSet. Implemented
+      the usage of this feature for MLP.
+  
+    <li> <em>TMlpANN</em> (interface to TMultiLayerPerceptron) now also uses event weights
+      and writes standalone C++ class.
+
+    <li> <em>k-NN:</em>
+      A new global knn search function has been added to NodekNN that searches for
+      k-nearest neighbor using event weights instead of raw event counts. ModulekNN
+      has been modified to allow searches using "weight" or "count" option, where
+      "count" is default. Added UseWeight option to MethodKNN to allow using of
+      "weight" or "count". 
+      (Work by Rustem Ospanov, CERN). 
+
+    <li> <em>Likelihood</em> (and general PDF treatment):
+      Adaptive smoothing the PDF class, allowing it to smooth between MinSmoothNum 
+      (for regions with more signal) and MaxSmoothNum (for regions with less signal). 
+
+      Configuration of the PDF parameters from the option string moved to PDF class,
+      allowing the user to define all the PDF functionalities in every classifier
+      the PDF is used (i.e., also for the MVA PDFs). The reading of these variables
+      was removed from MethodBase and MethodLikelihood. This also allows improved 
+      (full) PDF configuration of MVA output via the "CreateMvaPdf" option.
+      (Work by Or Cohen, CERN & Weizmann)
+ 
+    <li> <em>New generalisation methods</em>:
+
+        <ul>
+          <li> <em>MethodCompositeBase:</em> combines more than one
+          classifier within one.
+
+          <li> <em>MethodBoost:</em> boosts/bags any classifier
+          type. A special booking procedure for it was added to
+          Factory class.
+
+          <li> <em>MethodDT:</em> a classifier composed of a single
+          decision tree, boosted using MethodBoost. Results are
+          compatible with BDT, but BDT remains the default for boosted
+          decision trees, because it has pruning (among other
+          additional features).
+
+        </ul>
+    </menu>
+
+    <h5> Other improvements </h5>
+
+    <ul>
+      <li> Improved handling of small Likelihood values such that
+      Likelihood performance increases in analyses with many variables
+      (~>10). Thanks to Ralph Schaefer (Bonn U.) for reporting this.
+
+      <li> Nicer plotting: custom variable titles and units can be
+      assigned in "AddVariable" call.
+
+      <li> Introduced the inverse transformation InverseTransform for
+      the variable transformations into the framework. While this is
+      not necessary for classification, it is necessary for
+      regression. The inverse transformation of the normalization
+      transformation has been implemented.
+
+      <li> Started to extend the variable transformations to the
+      regression targets as well.
+
+      <li> MethodCuts now produces the 'optimal-cut' histograms needed
+      by macro mvaeffs.C. (macro 5a of TMVAGui.C)
+ 
+      <li> MsgLogger can be silenced in order to prevent excess output
+      during boosting.
+
+      <li> Third dataset type added centrally (Training, Validation
+      and Testing). The validation data is split off the original
+      training data set.
+
+      <li> Update of GUI and other Macros according to the new
+      features of PDF and the addition of MethodBoost.
+    </ul>
+
+
+
+
+    <h4>Updates in TMVA 4.0.1</h4>
+
+
+    <ul>
+      
+      <li> "Spectator" variables can be defined now which are computed
+      just as the input variables and which are written out into the
+      TestTree, but which don't participate in any MVA calculation
+      (useful for correlation studies).
+        
+      <li> New booking option "IgnoreNegWeightsInTraining" to test the
+      effect of events with negative weights on the training. This is
+      especially useful for methods, which do not properly deal with
+      such events. Note that this new option is not available for all
+      methods (a training interrupt is issued if not available).
+
+    </ul>
+
+    <h5>Bug fixes:</h5>
+    <ul>
+      <li> Fixed regression bug in VariableNormalizeTransform (Use
+      number of targets from Event instead of DataSet)
+            
+      <li> Fixed Multitarget-Regression in PDEFoam, foam dimensions
+      were miscalculated
+
+      <li> Added writing of targets to the weight files in regression
+      mode to fix problems in RegressionApplication
+
+      <li> Added missing standard C++ header files missing to some
+      classes, which lead to compilation failures on some
+      architectures (thanks to Lucian Ancu, Nijmegen, for reporting
+      these).
+
+      <li> Added checks for unused options to Factory and
+      DataSetFactory configuration options interpretation. Will now
+      complain if wrong option labels are used.
+
+      <li> Fixed standard creation of correlation matrix plots
+
+      <li> Fixed internal mapping problem giving a fatal error message
+      when destroying and recreating the Factory.
+
+    </ul>
+
+
+

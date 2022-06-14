@@ -1,0 +1,390 @@
+<br>
+<hr>
+<a name="roofit"></a>
+<h3>RooFit</h3>
+
+ <h4>New tutorial macros available</h4>
+
+      A set of seventeen new tutorial macros has been added to <tt>$ROOTSYS/tutorials/roofit</tt>
+      <ul>
+      <li><tt> rf01_basics.C</tt> - Basic fitting, plotting and event generation
+      <li><tt> rf02_composite.C</tt> - How to construct composite p.d.fs (sig plus bkg etc)
+      <li><tt> rf03_multidim.C</tt> - How to construct multi-dimensional p.d.f.s
+      <li><tt> rf04_composition.C</tt> - Using composition techniques to adjust p.d.f building blocks
+      <li><tt> rf05_conditional.C</tt> - Construction of productions with conditional p.d.f.s
+      <li><tt> rf06_convolution.C</tt> - Convolution of p.d.fs f(x) (X) g(x)
+      <li><tt> rf07_bphysics.C</tt> - B physics p.d.f.s with analytical convolution
+      <li><tt> rf08_intminuit.C</tt> - Interactive MINUIT demonstration
+      <li><tt> rf09_constraints.C</tt> - How to specify and use parameter constraints in fits
+      <li><tt> rf10_ranges.C</tt> - Working with sub ranges in observables in fitting and plotting
+      <li><tt> rf11_plotbinning.C</tt> - Variable and other non-uniform binnign specifications
+      <li><tt> rf12_mcstudy.C</tt> - Managing toy Monte Carlo studie
+      <li><tt> rf13_wspacewrite.C</tt> - Creating and persisting workspaces
+      <li><tt> rf14_wspaceread.C</tt> - Reading and using workspaces
+      <li><tt> rf15_simwstool.C</tt> - Automated tools for building of simulateneous p.d.f.s
+      <li><tt> rf16_normandint.C</tt> - Normalization, integration and cumulative distribution functions (1d)
+      <li><tt> rf16_normandint2d.C</tt> - Normalization, integration and cumulative distribution functions (1d)
+      </ul> 
+
+ <h4>Update of class documentation</h4>
+  
+      The documentation in the code itself that is extracted by <tt>THtml</tt> to construct
+      the online class documentation has been updated for all classes. Now <i>all</i> classes
+      have (again) a short class description, as well as a (short) description of each member function
+      and most data members. An update to the users manual is foreseen shortly after the 5.20
+      release.
+
+ <h4>RooWorkspace</h4>
+
+      A new feature has been added that allows to persist source code of RooFit classes that
+      are not in ROOT distribution inside a <tt>RooWorkspace</tt> to facilitate sharing
+      of custom code with others. To import code of custom classes call
+<pre>
+         RooWorkspace::importClassCode()
+</pre>
+      after importing the objects themselves into the workspace. For all classes
+      that are compiled with ACliC <tt>RooWorkspace</tt> can automatically find the source
+      code using the ROOT <tt>TClass</tt> interface. For custom classes that are compiled
+      externally and loaded into ROOT as shared library it might be necessary to
+      provide the location of the source files manually using the static RooWorkspace
+      member functions <tt>addClassDeclImportDir()</tt> and <tt>addClassImplImportDir()</tt>.<br><br>
+      
+      When a <tt>TFile</tt> with a <tt>RooWorkspace</tt> containing source code is opened in a ROOT
+      session that does not have the class code already loaded for the classes
+      contained in the workspace, the code in the workspace is written to file,
+      compiled and loaded into the ROOT session on the fly.<br><br>
+
+      The code repository of <tt>RooWorkspace</tt> is designed to handle classes that
+      have either their own implementation and header file, or are part of a group
+      of classes that share a common header and implementation file. More complicated
+      structuring of source code into files is not supported. <br><br>
+  
+      Also new accessors have been added for discrete-valued functions <tt>catfunc()</tt>
+      and stored category functions are now also printed under their own heading in <tt>Print()</tt>    
+
+  <h4>Parameterized ranges</h4>
+
+      It is now possible to use <tt>RooAbsReal</tt> derived functions as range definition for variables
+      to construct ranges that vary as function of another variable. For example
+<pre>
+         RooRealVar x("x","x",-10,10) ; // variable with fixed range [-10,10] 
+         RooRealVar y("y","y",0,20) ; // variable with fixed range [-10,10] 
+   
+         RooFormulaVar x_lo("x_lo","y-20",y) ;      
+         RooFormulaVar x_hi("x_hi","sin(y)*5",y) ;      
+         x.setRange(x_lo,x_hi) ;  // Change x to have variable range depending on y
+</pre>  
+      It is also possible to define parameterized named ranges in the same way
+<pre>
+         x.setRange("signalRegion",x_lo,x_hi) ;
+</pre>
+      There are no fundamental limits to the complexity of the parameterized ranges
+      that can be defined as long as the problem is uniquely defined. For example, given three observables 
+      x, y and z, one can define a parameterized named range 'R' of x in terms of y and of y in terms of z
+      and ask to calculate the three dimensional integral of any function or p.d.f in terms of (x,y,z)
+      over that range 'R' and it will be calculated correctly, taking recursive range dependencies into
+      account. A definition of a range 'R' on the other hand where the bounds of x depend on y <i>and</i>
+      the bounds of y depend on x is not allowed, and an error message will be printed to complain about
+      the ambiguity of the problem definition. Integrals over non-rectangular regions are created the
+      same way as integrals over rectangular regions using the <tt>RooAbsReal::createIntegral()</tt> function, the
+      chosen mode of operation depends on the shape of the requestion integration range.<br><br>
+
+      Note that in general integration over non (hyper)rectangular regions will be more computationally
+      intensive as only a subset of the observables can be integrated analytically (all of those that do not
+      have parameterized ranges plus those that have parameterized ranges but are not involved in the
+      parameterization of others (e.g. x and y in the example above)
+
+<h4>Running integrals and Cumulative distribution functions</h4>
+
+     It is now possible to create running integrals from any <tt>RooAbsReal</tt> function and
+     to create cumulative distribution functions from any <tt>RooAbsPdf</tt> using the following
+     methods:
+<pre>
+        // Create int[xlo,x] f(x') dx' from f(x)
+        RooAbsReal* runInt = func.createRunningIntegral(x) ;
+
+        // Create int[xlo,x] f(x') dx' from p.d.f f(x) normalized over x
+        RooAbsReal* cdf = pdf.createCdf(x) ;
+
+        // Create int[xlo,x] f(x',y) dx' from p.d.f f(x,y) normalized over (x,y)
+        RooAbsReal* cdf = pdf.createCdf(x,y) ;
+</pre>
+  
+     As with the similarly styled function <tt>createIntegral</tt> running integrals and c.d.f. can be created
+     over any number of observables, e.g <tt>createCdf(RooArgSet(x,y,z))</tt> will create a three-dimensional
+     cumulative distribution function. C.d.f and running integrals that are calculated from p.d.fs that have
+     support for analytical integration are constructed from an appropriately reconnected <tt>RooRealIntegral</tt>.
+     If numeric integration is required, the c.d.f or running integral is calculated by a dedicated class
+     <tt>RooRunningIntegral</tt> that precalculates results for all observable values, which is more efficient
+     in most use cases. Cumulative distributions functions that are calculated numerically are handled slightly differently
+     that standard running integrals: their values is constructed to converge to exactly zero at the lower bound
+     and exactly 1 at the upper bound so that algorithms that make use of that property of c.d.f can do so reliably.
+
+ <h4>Constraints management</h4>
+
+      New tools have been added to simplify studies with fits involving (external) constraints on parameters.
+      The general philosophy is that constraints on parameters can be represented as probability density functions
+      and can thus be modeled by <tt>RooAbsPdf</tt> classes (e.g. a <tt>RooGaussian</tt> for a simple Gaussian constraint on a parameter).
+      There are two modes of operation: you can add parameter constraints to your problem definition by multiplying
+      the constraint p.d.f.s with your 'master' p.d.f. or you specify them externally in each operation. The
+      first mode of operation keeps all information in your master p.d.f and may make the logistics of non-trivial
+      fitting problems easier. It works as follows: first you define your regular p.d.f, then you define your
+      constraint p.d.f and you multiply them with <tt>RooProdPdf</tt>.
+<pre>
+        // Construct constraint
+        RooGaussian fconstraint("fconstraint","fconstraint",f,RooConst(0.8),RooConst(0.1)) ;
+
+        // Multiply constraint with p.d.f
+        RooProdPdf pdfc("pdfc","p.d.f with constraint",RooArgSet(p.d.f,fconstraint)) ;
+</pre>
+      If your top level p.d.f is already a <tt>RooProdPdf</tt> it also fine to multiply all terms together in one go.
+      Constraints do not need to be specified a the top-level <tt>RooProdPdf</tt>, constraint p.d.f.s in any component
+      <tt>RooProdPdf</tt> lower in the expression tree are used as well. Constraints are <i>not</i> used by default in fitting
+      if present in a p.d.f. To activate the use of a constraint in fitting, use the <tt>Constrain()</tt> argument in <tt>fitTo()</tt>
+<pre>
+        // Fit with internal constraint
+        RooFitResult* r2 = pdfc.fitTo(*d,Constrain(f)) ;
+</pre> 
+      This will instruct <tt>RooAbsPdf::fitTo()</tt> to included any constraint p.d.f on parameter f in the
+      definition of the likelihood. It is possible to add multiple constraints on the same parameter
+      to the 'master' p.d.f. If so, all constraints on a given parameter will be added to the likelihood.<br><br>
+
+      The <tt>RooMCStudy</tt> class has been extended to accept the <tt>Constrain()</tt> argument as well in its constructor.
+      If specified it will do two things: 1) it will pass the constrain argument to the fitting pass of
+      the toy study and 2) it will modify the generation step into a two-step procedure: for each toy
+      in the study it will first sample a value of each constrained parameter from the joint constraints
+      p.d.f and it will then generate the observables for that experiment with the thus obtained parameter values.
+      In this mode of operation the parameter values for each toy may thus be different. The actual parameter
+      for each toy can be obtained with the newly added <tt>RooMCStudy::genParDataSet()</tt> member function. The calculation
+      of the pull values for each parameter has been modified accordingly.<br><br>
+
+      Alternatively, it is possible to specify constraints to both <tt>RooAbsPdf::fitTo()</tt> and the <tt>RooMCStudy</tt> constructor
+      using the <tt>ExternalConstraint()</tt> named argument to supply constraint p.d.f.s that are not part of the 'master'
+      p.d.f but rather an ad-hoc supplied external constraint. The argument supplied to <tt>ExternalConstraint()</tt> should
+      be (a set of) constraint p.d.f(s), rather than (a set of) parameters for which internal constraint p.d.f.s should
+      be picked up.
+
+
+<h4>New operator class <tt>RooLinearMorph</tt></h4>
+
+    A new numeric operator class <tt>RooLinearMorph</tt> has been added that provides a continuous
+    transformation between two p.d.f.s shapes in terms of a linear parameter alpha. The algorithm 
+    for histograms is described in the paper by Alex Read in NUM A 425 (1999) 357-369 
+    'Linear interpolation of histograms'. The implementation in <tt>RooLinearMorph</tt> is for
+    continuous functions. 
+
+<pre>
+        // Observable and sampling binning to be used by RooLinearMorph ("cache")
+        RooRealVar x("x","x",-20,20) ;
+        x.setBins(1000,"cache") ;
+
+        // End point shapes : a gaussian on one end, a polynomial on the other
+        RooGaussian f1("f1","f1",x,RooConst(-10),RooConst(2)) ;
+        RooPolynomial f2("f2","f2",x,RooArgSet(RooConst(-0.03),RooConst(-0.001))) ;
+
+        // Interpolation parameter: rlm=f1 at alpha=0, rlm=f2 at alpha=1
+        RooRealVar alpha("alpha","alpha",0,1.0) ;
+        RooLinearMorph rlm("rlm","rlm",g1,g2,x,alpha) ;
+
+        // Plot halfway shape
+        alpha=0.5
+        RooPlot* frame = x.frame() ;
+        rlm.plotOn(frame) ;
+</pre>
+
+    In short the algorithm works as follows: for both f1(x) and f2(x), the cumulative distribution
+    functions F1(x) and F2(x) are calculated. One finds takes a value 'y' of both c.d.fs and 
+    determines the corresponding x values x1,x2 at which F1(x1)=F2(x2)=y. The value of the interpolated 
+    p.d.f fbar(x) is then calculated as fbar(alpha*x1+(1-alpha)*x2) = f1(x1)*f2(x2) / ( alpha*f2(x2) + 
+    (1-alpha)*f1(x1) ). Given that it is not easily possible to calculate the value of RooLinearMorph
+    at a given value of x, the value for all values of x are calculated in one by (through a scan over y)
+    and stored in a cache. NB: The range of the interpolation parameter does not need to be [0,1], it can
+    be anything.
+
+
+<h4>New workspace tool <tt>RooSimWSTool</tt></h4>
+
+    A new tool to clone and customize p.d.f.s into a <tt>RooSimultaneous</tt> p.d.f has been added. This new
+    tool succeeds the original <tt>RooSimPdfBuilder</tt> tool which had a similar functionality but
+    has a much cleaner interface, partly thanks to its use of the <tt>RooWorkspace</tt> class for both input
+    of prototype p.d.fs and output of built p.d.f.s<br><br>
+
+    The simplest use case to to take a workspace p.d.f as prototype and 'split' a parameter of that p.d.f 
+    into two specialized parameters  depending on a category in the dataset. 
+     For example, given a Gaussian p.d.f <tt>G(x,m,s)</tt> we want to construct a <tt>G_a(x,m_a,s)</tt> and a <tt>G_b(x,m_b,s)</tt>
+    with different mean parameters to be fit to a dataset with observables
+    <tt>(x,c)</tt> where c is a category with states <tt>'a'</tt> and <tt>'b'</tt>.
+    Using <tt>RooSimWSTool</tt> one can create a simultaneous p.d.f from <tt>G_a</tt> and <tt>G_b</tt>
+    from <tt>G</tt> with the following command
+
+<pre>
+        RooSimWSTool wst(wspace) ;
+        wst.build("G_sim","G",SplitParam("m","c")) ;
+</pre>
+
+    From this simple example one can go to builds of arbitrary complexity
+    by specifying multiple <tt>SplitParam</tt> arguments on multiple parameters
+    involving multiple splitting categories. Splits can also be performed
+    in the product multiple categories, e.g. 
+
+<pre>
+        SplitParam("m","c,d")) ;
+</pre>
+
+ splits parameter m in the product of states of c and d. Another possibility
+ is the 'constrained' split which clones the parameter for all but one state
+ and insert a formula specialization in a chosen state that evaluates
+ to <tt>1 - sum_i(a_i)</tt> where a_i are all other specializations. For example,
+ given a category c with state "A","B","C","D" the specification
+
+<pre>
+     SplitParamConstrained("m","c","D")
+</pre>
+
+ will result in parameters <tt>m_A,m_B,m_C</tt> and a formula expression <tt>m_D</tt>
+ that evaluates to (1-(m_A+m_B+m_C)). Constrained split can also be
+ specified in product of categories. In that case the name of the
+ remainder state follows the syntax <tt>{State1;State2}</tt> where <tt>State1</tt>
+ and <tt>State2</tt> are the state names of the two spitting categories. Additional
+ functionality exists to work with multiple prototype p.d.f.s simultaneously.
+
+      
+<h4>Improved infrastructure for caching p.d.f and functions</h4>
+
+ The infrastructure that exists for caching p.d.f.s, i.e. p.d.f that precalculate their value
+ for all observable values at one and cache those in a histogram that is returned as p.d.f shape
+ (with optional interpolation), has been expanded. This infrastructure comprises <tt>RooAbsCached</tt>
+ the base class for all caching p.d.fs, <tt>RooAbsSelfCachedPdf</tt> a base class for end-user
+ caching p.d.f implementations that simply cache the result of <tt>evaluate()</tt> and <tt>RooCachedPdf</tt>
+ that can wrap and cache any input p.d.f specified in its constructor.<br><br> 
+
+ By default a p.d.f is sampled and cached in all observables in any
+ given use context, with no need to specify what those are in advance.
+ The internal code has also been changed such that all cache
+ histograms now store pre-normalized p.d.f, which is more efficient
+ than 'raw' p.d.f histograms that are explicitly post-normalized
+ through integration.  Multiple different use cases (e.g. definitions
+ of what are observables vs parameters) can be cached
+ simultaneously. Now it is also possible to specify that p.d.f.s
+ should be sampled and cached in one or more parameter dimensionsal
+ <i>in addition</i> to the automatically determined set of observables.
+ as well.
+<br><br>
+ Also a complete new line of classes with similar functionality has been added inheriting from RooAbsReal.
+ These are <tt>RooAbsCachedReal</tt>,<tt>RooAbsSelfCachedReal</tt> and <tt>RooCachedReal</tt>. A newly
+ added class <tt>RooHistFunc</tt> presents these shapes and is capable of handling negative entries.
+
+ <h4>New PDF error handling structure</h4>
+
+      New infrastructure has been put into place to propagate and process p.d.f evaluation errors during fitting.
+      Previously evaluation errors were marked with a zero p.d.f value and propagated as a special condition
+      in <tt>RooAddPdf</tt>, <tt>RooProdPdf</tt> etc to result in a zero top-level p.d.f value that was caught by the RooFit minuit
+      interface as a special condition. Summary information on the value of the parameters and the observables
+      was printed for the first 10 occurrences of such conditions. <br><br>
+
+      Now, each p.d.f component that generates an error
+      in its evaluation logs the error into a separate facility during fitting and the the RooFit minuit interface
+      polls this error logging facility for problems. This allows much more detailed and accurate warning messages
+      during the minimization phase. The level of verbosity of this new error facility can be controlled with
+      a new 
+<pre>
+        PrintEvalErrors(Int_t code)
+</pre>
+      argument to <tt>fitTo()</tt>. <br><br>
+      <ul>
+      <li>With code of -1, no errors are printed at all.
+      <li>With a
+      code of zero, <i>one line</i> is printed for each p.d.f component with problems summarizing the number of times
+      problems occured during the likelihood evaluation. 
+
+<pre>
+        [#0] WARNING:Minization -- RooFitGlue: Minimized function has error status. 
+        Returning maximum FCN so far (-1e+30) to force MIGRAD to back out of this region. Error log follows
+        Parameter values: m=-7.397
+        RooGaussian::gx[ x=x mean=m sigma=sx ] has 3 errors
+</pre>
+
+      <li>A code greater than zero will generate even more detail and
+      print the details of each evaluation error as provided by the p.d.f (zero value, not-a-number, normalization zero etc..)
+      and show the observable values at which this error occurred. At most N detailed messages per p.d.f component
+      are shown where N is the integral value of the 'code' argument. 
+
+<pre>
+        [#0] WARNING:Minization -- RooFitGlue: Minimized function has error status.
+        Returning maximum FCN so far (-1e+30) to force MIGRAD to back out of this region. Error log follows
+        Parameter values: m=-7.397
+        RooGaussian::gx[ x=x mean=m sigma=sx ]
+             getLogVal() top-level p.d.f evaluates to zero or negative number @ x=x=9.09989, mean=m=-7.39713, sigma=sx=0.1
+             getLogVal() top-level p.d.f evaluates to zero or negative number @ x=x=6.04652, mean=m=-7.39713, sigma=sx=0.1
+             getLogVal() top-level p.d.f evaluates to zero or negative number @ x=x=2.48563, mean=m=-7.39713, sigma=sx=0.1
+</pre>
+
+
+
+      </ul>
+      The new-style error logging is active whenever MINUIT is operating on such a p.d.f. The default value for N is 3.
+      Outside the MINUIT context the evaluation error each evualuation error will generate a separate message through
+      <tt>RooMsgService</tt>
+
+  <h4> Other new features</h4>
+  <ul>
+  <li>The <tt>RooAddPdf</tt> constructor has been augmented with an additional boolean argument that allows to
+      interpret the supplied fraction parameters as recursive fractions rather than plain fractions.
+      If activated, an example <tt>RooAddPdf</tt> with three input p.d.f. A,B,C and two fractions fA and fB will
+      result in the expression<br><br>
+ 
+        <tt>fA*A + (1-fA)(fB*B + 1-fB*C)</tt>  rather than <tt>fA*A + fB*B + (1-fA-fB)*C</tt><br><br>
+
+      Recursive fraction have the advantage that all fraction can be defined to be in the range [0-1]
+      without resulting in configuration where the sum of all fractions exceeds 1.<br><br>
+     
+  <li>The low-level object printing interface <tt>printToStream()</tt> has been deprecated in favor of a new
+      <tt>printStream()</tt> method which allows much greater control over the information printed. 
+      The printing of almost all RooFit objects has been reworked to present a more uniform look and feel.
+      The standard one-line result of the high-level <tt>Print()</tt> method without option now looks like
+
+<pre>
+        // Variable
+        x.Print() ;
+        RooRealVar::x = 0 L(-10 - 10) 
+
+        // Function or p.d.f
+        gx.Print() ;
+        RooGaussian::gx[ x=x mean=m sigma=sx ] = 1
+
+        // Dataset
+        d.Print() ;
+        RooDataSet::gData[x,y] = 1000 entries
+
+        // RooPlot
+        frame.Print() ;
+        framex[x] = (RooHist::h_gData,RooCurve::g_Int[y]_Norm[x,y]_Comp[g])
+</pre>
+
+      Inside class <tt>RooPlot</tt> the default name of contained curves and histograms has been 
+      reworked in something more self descriptive as is shown in the above example. A usual,
+      a user supplied name can always be set by supplying the <tt>Name(const char*)</tt> argument
+      to <tt>plotOn()</tt>
+
+      Verbose printing with "v" options is mostly unchanged except for <tt>RooPlot</tt>. In addition
+      printing with the "s" option will show the 'old' standard printing mode, option "t" will show
+      tree structure printing (only for RooAbsArg), and option "1" will invoke inline printing, i.e
+      a one-line description without a trailing <tt>endl</tt>.<br><br>
+
+
+  <li>Data weighted projections of p.d.fs using the <tt>ProjWData()</tt> argument in <tt>RooAbsPdf::plotOn()</tt> are now calculated
+      with a new classes that derives from <tt>RooAbsOptTestStatistic</tt> and can thus implement the same evaluation
+      optimizations as are done for <tt>RooNLLVar</tt> and <tt>RooChi2Var</tt>. <b>Specifically it is now possible to calculate projections
+      involving <tt>ProjWData()</tt> in parallel on multi-core hosts </b>by adding the <tt>NumCPU(Int_t)</tt> argument to <tt>plotOn()</tt>.
+      <br><br>
+
+  <li> A new utility function has been added to allow cloning of entire tree expressions of
+       <tt>RooAbsArg</tt> objects, such as a composite p.d.f including component p.d.fs and
+       all its variables:
+<pre>
+       RooAbsArg* clonedTree = pdf.cloneTree() ;
+</pre>
+       All cloned leaf and branch nodes are owned by the returned head node of the expression.<br><br>
+
+  <li>Assorted minor fixes
+  </ul>

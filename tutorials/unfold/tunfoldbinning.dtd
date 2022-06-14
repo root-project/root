@@ -1,0 +1,16 @@
+<!-- TUnfold Version V17.6 -->
+<!ELEMENT TUnfoldBinning (BinningNode)+ >
+<!ELEMENT BinningNode (BinningNode+|(Binfactorlist?,Axis)|Bins) >
+<!ATTLIST BinningNode name ID #REQUIRED firstbin CDATA "-1"
+    factor CDATA "1.">
+<!ELEMENT Axis ((Bin+,Axis?)|(Axis)) >
+<!ATTLIST Axis name CDATA #REQUIRED lowEdge CDATA #REQUIRED>
+<!ELEMENT Binfactorlist (#PCDATA)>
+<!ATTLIST Binfactorlist length CDATA #REQUIRED>
+<!ELEMENT Bin EMPTY>
+<!ATTLIST Bin width CDATA #REQUIRED location CDATA #IMPLIED
+    center CDATA #IMPLIED repeat CDATA #IMPLIED>
+<!ELEMENT Bins (BinLabel)* >
+<!ATTLIST Bins nbin CDATA #REQUIRED>
+<!ELEMENT BinLabel EMPTY>
+<!ATTLIST BinLabel index CDATA #REQUIRED name CDATA #REQUIRED>

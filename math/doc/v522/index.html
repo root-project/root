@@ -1,0 +1,77 @@
+<br>
+<hr>
+<a name="math"></a>
+<h3>Math Libraries</h3>
+<hr>
+<h4>MathCore</h4>
+<ul>
+ <li><b><tt>TKDTree</tt></b>: new class for representing a kd-tree (a k-dimensional tree). See the <a href="http://root.cern.ch/root/htmldoc/TKDTree.html">TKDTree class documentation</a> for a detailed description of the method.
+  </li>
+  <li><b><tt>TMath</tt></b>: change slightly the signature of <tt>TMath::Sort(n,x,w)</tt>. Now the type of the index array (w) and the type of the size (n) have to be the same. Before the type of (n) was not templated and was a Long64_t, therefore, due to automatic compiler conversion one could instantiate for example a TMath::Sort by having as unsigned int for the size for the array and int for the array. Now this is not possible anymore and one must pass the same type. This is now consistent with other similar TMath functions.  Now in the CINT dictionary contains also the instantiations for both cases of Long64_t and Int_t for the size (and index array) types.
+  </li>
+  <li>
+  Fixed a bug in the <tt>ROOT::Math::landau_pdf</tt> function. Now it evaluates to the correct normalized distribution when the scale factor is different than 1.</li>
+  <li><b><tt>TVirtualFitter</tt></b>: move TVirtualFitter from base to mathcore. Setting the minimizer parameters is done via the new class <tt>ROOT::Math::MinimizerOptions</tt>. Fixed also a bug in the TVirtualFitter destructor, which was preventing the deletion of the static instance and causing in same cases memory leaks.
+  <li><b><tt>ROOT::Math::MinimizerOptions</tt></b>: new class keeping the minimizer control parameters, minimizer name and algorithms. Static values of the parameter exist and can be set and retrieved via corresponding static methods.
+  <li><b>Fitting Classes</b>: improve in general all classes in view of using them in the histogram and graph fitting routines. Few bugs have been as well fixed (see the <a href="http://root.cern.ch/viewcvs?rev=25486&root=root&view=rev">cvs log</a> for details). The fitter class, <tt>ROOT::Fit::Fitter</tt> is used now to implement the fit functionality of the Hist library (i.e. <tt>TH1::Fit</tt>, <tt>TGraph::Fit</tt>/
+  <br>
+  The Fitter class has been changed to retain a pointer to the Minimizer and Objective function of the last fit. The objective function depends on a reference to the data and the model function, therefore the objective function pointer is valid as far the data and the model function are maintained alive.
+  <br>
+  The library provides the implementation of standard objective function like the Chi2 function, the Poisson likelihood function (for binned likelihood fits) and the loh likelihood function (for unbinned fits). These standard objective functions can be created with or without gradient functionality. In the first case the minimization will be performed using the gradient provided by the function. These functions can also be used in specialized fitting methods like Fumili or the GSL non-linear least square.
+ </li>
+  </ul>
+
+  <h4>MathCore</h4>
+<ul>
+ <li>Fixed a bug in setting the VEGAS integration mode in the <tt>GSLMCIntegrator</tt> class.
+  </li>
+  </ul>
+
+  <h4>Fumili</h4>
+  <ul>
+ <li> Add implementation of Minimizer interface using TFumili.
+    </ul>
+  <h4>Minuit</h4>
+  <ul>
+    <li>
+  In  <tt>TMinuitMinimizer</tt>: do not delete the contained TMinuit reference, but maintain it alive, and accessible outside as gMinuit. It can then be used after fitting, for example for drawing contour plots. Add also support for Scan and Contour plots.
+ <li>
+<tt>    TLinearMinimizer</tt>: add support for robust fitting
+    </li>
+    </ul>
+<h4>Minuit2</h4>
+    <ul>
+      <li>Add support to perform parallel minimization using a thread for each gradient calculation  with openMP. In the ROOT environment the Minuit2 library can be built using openMP ( <em>-fopenmp</em> compilation flag for gcc) if the environment variables <em>USE_PARALLEL_MINUIT2</em> and <em>USE_OPENMP</em> are set.
+      In the Minuit2 standalone built libraries (using autoconf) support for openMP is automatically enabled, whenever the compiler supports it (for example for gcc version >= 4.2). Some small changes have been applied in Minuit2 to make it thread safe. For example, when transforming from internal to external values, the parameter values are not cached anymore in MnUserTransformation class.
+ <li><tt>DavidonErrorUpdator</tt>: add an additional check to avoid a division by zero.
+ <li>In <tt>Minuit2Minimizer</tt> fill the status information according to the minimizer result
+      <li>Add Scan and Contour methods in the Minuit2Minimizer class
+      </ul>
+
+  <h4>GenVector</h4>
+<ul>
+  <li>Change the way the exception are thrown in the package (class <tt>GenVector_exception</tt>). Now, the GenVector_exception class is created only when the throwing of exception is enabled. This avoids the allocation of an un-needed <tt>std::string</tt>. This problem was observed in CMS when converting from 4D-vectors based on mass  to standard (x,y,z,t) vectors, when the mass is zero. In this case, a numerical error creates artificially small negative masses returned by the (x,y,z,t) vector. Eventually a protection could be added when calculating M2(), to avoid negative values due to numerical rounding.
+  </li>
+ <li>Fix a problem in the assignment operator of the <tt>ROOT::Math::PxPyPzM4D</tt> class. Avoid having nan when converting for example from PxPyPzME4D to PxPyPzM4D when the mass is negative. </li>
+<li>Throw always exception in the non-supported setters (i.e. SetPt on a PxPyPzEVector) methods, which are generated only for the CINT dictionary. These methods flag a compiled-error when running in C++ mode.</li>
+</ul>
+
+<h4>SMatrix</h4>
+<ul>
+ <li>Change implementation of the <tt>SMatrix::Invert</tt> and <tt>SMatrix::Inverse</tt> methods. Now the optimized method based on the Cramer rule is used only for matrix up to sizes 2x2. The standard methods based on LU  (for ordinary square matrix) or Bunch-Kaufman factorization (for square matrix) are used. The factorization method, although slower for small size matrices, they suffer much less from numerical precision problems.
+  <li>New methods  <tt>SMatrix::Invert</tt> and  <tt>SMatrix::InverseFast</tt> are added for using the Cramer rule for up to matrix of sizes 5x5. This method has exactly the same implementation as the Invert and Inverse of the previous ROOT version.
+  </ul>
+
+<h4>Physics</h4>
+<ul>
+  <li>
+  <bf><tt>TLorentzVector</tt></bf>:Change in the implementation of the function SetPtEtaPhi and SetPtEtaPhiM the algorithm to calculate z from pt and eta. Use now, as in the GenVector package, the expression <em>z = pt * sinh(eta)</em> instead of using the tangent and the arc-tangent. This is is more efficient and avoids a problem found on 64 bit machines when eta=0. by Dariusz Miskowiec.
+</li>
+</ul>
+
+<h4>Unuran</h4>
+<ul>
+  <li>New version (1.3) from Josef Leydold  fixing some warnings on Windows Visual Studio 9.</li>
+  </ul>
+
+

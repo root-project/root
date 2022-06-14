@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Geom help</title>
+  </head>
+
+    <style>
+       body { margin: 2px; }
+       p { margin: 2px; }
+     </style>
+
+  <body>
+     This is help text
+  </body>
+
+  <script type="module">
+
+     import { connectWebWindow } from './jsrootsys/modules/webwindow.mjs';
+
+     connectWebWindow({
+       receiver: {
+          // method with new message from server
+          onWebsocketMsg(handle, msg, offset) {
+             document.body.innerHTML = msg;
+          },
+
+          // method called when connection is gone
+          onWebsocketClosed(handle) {
+             if (window) window.close();
+          }
+       }
+    });
+
+  </script>
+
+</html>

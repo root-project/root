@@ -1,0 +1,132 @@
+<br/>
+<hr/>
+<a name="io"></a>
+<h3>I/O</h3>
+<ul>
+<li>Add support for the Chirp filesystem.  To configure and build, chirp 3.2.2 must be installed.</li>
+
+<li>When a <tt>TFile</tt> object is deleted, make sure that CINT also 'removes' any global variables that might point to it.</li>
+<li>Fix support for the automatic addition to the current directory (for <tt>TTree</tt> and <tt>TH1</tt> for example) in <tt>TKey::Read(TObject*).</tt></li>
+<li>In <tt>TKey</tt>, properly handle error in the I/O routines.</li>
+<li>Explicitly check the validity of the zipped buffer before calling <tt>R__unzip</tt>, this allow for better error recovery.</li>
+<li>When double checking whether a checksum difference is sustantial, ignore the std namespace.   Use <tt>CompareContent</tt> also in the case of where
+the class is versioned but the 'current' streamerInfo has not yet been built.</li>
+<li>Prevent the I/O engine from mistakenly applying schema evolution to the <tt>TObject::fBits.</tt></li>
+<li>Make sure that when a streamer info of a base class is used to stream memberwise that is always not-optimized. If the StreamerInfo on file
+has the same version as the StreamerInfo in memory but the one on file need to be 'not optimized' while the one in memory is not yet built, make
+sure it will not be optimized.</li>
+<li>Fix the reading of empty collection of object when reading without the library.</li>
+<li>If the sequence of actions for streaming member-wise is not created correctly (i.e. where <tt>fReadMemberWise</tt> was null previously),
+we now explicitly issue a Fatal error:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+Fatal in &lt;ReadSequence&gt;: The sequence of actions to read AliESDVertex:7 member-wise was not initialized.
+aborting
+</pre></li>
+<li>Add new optional parameter maxbuf to <tt>TXMLEngine::ParseFile()</tt> allowing the specification of the XML file size to be parsed. This fixes issue <a href="https://savannah.cern.ch/bugs/?78864">#78864</a>.</li>
+<li>Add function <tt>TBuffer::AutoExpand</tt> to centralize the automatic buffer extension policy.  This enable the ability to tweak it later (for example instead of always doubling the size, increasing by only at most 2Mb or take hints from the number of entries already
+in a TBasket).</li>
+<li>Migrate the class <tt>TFileMerger</tt> from the proofplayer library to ROOT I/O library and update <tt>hadd</tt> to rely on
+ <tt>TFileMerger</tt> for everything but the command line argument parsing.</li>
+<li>Fix support for schema evolution from:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">   TParameter&lt;Int_t&gt;* MyInt; //-&gt; version 1</pre>to
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">   TParameter&lt;Int_t&gt; MyInt; // version 2</pre>
+</li>
+<li>The TZIPFile compressed archive reader now supports the Zip64 format for
+archives and file members greater than 2 and 4 GB, respectively.</li>
+</ul>
+<h4>MakeProject</h4>
+ <ul>
+ <li>Add support for the case when the requested project/files in path that in not under the current directory</li>
+ <li>Generate the code/dictonary only for pair type that do not already have a dictionary</li>
+</ul>
+
+<h4>Object Merging</h4>
+We introduced a new explicit interface for providing merging
+capability.  If a class has a method with the name and
+signature:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   Long64_t Merge(TCollection *input, TFileMergeInfo*);
+</pre>
+it will be used by a <tt>TFileMerger</tt> (and thus by PROOF) to merge one or more
+other objects into the current object.   <tt>Merge</tt> should
+return a negative value if the merging failed.
+<p/>
+If this method does not exist, the <tt>TFileMerger</tt> will use
+a method with the name and signature:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   Long64_t Merge(TCollection *input);
+</pre>
+TClass now provides a quick access to these merging
+function via <tt>TClass::GetMerge</tt>.   The wrapper function
+is automatically created by rootcint and can be installed
+via <tt>TClass::SetMerge</tt>.   The wrapper function should have
+the signature/type ROOT::MergeFunc_t:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   Long64_t (*)(void *thisobj, TCollection *input, TFileMergeInfo*);
+</pre>
+We added the  new <tt>Merge</tt> function to <tt>TTree</tt> and <tt>THStack</tt>.
+We also added the new <tt>Merge</tt> function to <tt>TQCommand</tt> as the
+existing <tt>TQCommand::Merge</tt> does <b>not</b> have the right
+semantic (in part because <tt>TQCommand</tt> is a collection).
+<p/>
+In <tt>TFileMerger</tt>, we added a <tt>PrintLevel</tt> to allow hadd to request
+more output than regular <tt>TFileMerger</tt>.
+<p/>
+We removed all hard dependencies of <tt>TFileMerger</tt> on <tt>TH1</tt> and <tt>TTree</tt>.
+(Soft dependencies still exist to be able to disable the
+merging of <tt>TTrees</tt> and to be able to disable the <tt>AutoAdd</tt>
+behavior of <tt>TH1</tt>).
+<p/>
+The object <tt>TFileMergeInfo</tt> can be used inside the <tt>Merge</tt>
+function to pass information between runs of the <tt>Merge</tt>
+(see below).  In particular it contains:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   TDirectory  *fOutputDirectory;  // Target directory where the merged object will be written.
+   Bool_t       fIsFirst;          // True if this is the first call to Merge for this series of object.
+   TString      fOptions;          // Additional text based option being passed down to customize the merge.
+   TObject     *fUserData;         // Place holder to pass extra information.  This object will be deleted at the end of each series of objects.
+</pre>
+The default in <tt>TFileMerger</tt> is to call <tt>Merge</tt> for every object
+in the series (i.e the collection has exactly one element) in
+order to save memory (by not having all the object in memory
+at the same time).
+<p/>
+However for histograms, the default is to first load all the
+objects and then merge them in one go ; this is customizable
+when creating the <tt>TFileMerger</tt> object.
+
+<h4>Asynchronous Prefetching</h4>
+The prefetching mechanism uses two new classes (<tt>TFilePrefetch</tt>
+and <tt>TFPBlock</tt>) to prefetch in advance a block of tree entries. There
+is a thread which takes care of actually transferring the blocks and
+making them available to the main requesting thread. Therefore, the time
+spent by the main thread waiting for the data before processing considerably
+decreases. Besides the prefetching mechanisms there is also a local
+caching option which can be enabled by the user. Both capabilities are
+disabled by default and must be explicitly enabled by the user.
+<p/>
+In order to enable the prefetching the user must set the rootrc environment
+variable <tt>TFile.AsyncPrefetching</tt> as follows:
+<tt>gEnv->SetValue("TFile.AsyncPrefetching", 1)</tt>. Only when the
+prefetching is enabled can the user set the local cache directory in
+which the file transferred will be saved. For subsequent reads of the
+same file the system will use the local copy of the file from cache.
+To set up a local cache directory, the client can use the following commands:
+
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+TString cachedir="file:/tmp/xcache/";
+// or using xrootd on port 2000
+// TString cachedir="root://localhost:2000//tmp/xrdcache1/";
+gEnv->SetValue("Cache.Directory", cachedir.Data());
+</pre>
+
+The <tt>TFilePrefetch</tt> class is responsible for actually reading
+and storing the requests received from the main thread. It also creates
+the working thread which will transfer all the information. Apart from
+managing the block requests, it also deals with caching the blocks on
+the local machine and retrieving them when necessary.
+<p/>
+The <tt>TFPBlock</tt> class represents the encapsulation of a block
+request. It contains the chunks to be prefetched and also serves as a
+container for the information read.
+<p/>

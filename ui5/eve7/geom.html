@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="utf-8">
+      <title>Geometry viewer</title>
+      <style>
+         html { height: 100%; }
+         body { min-height: 100%; margin: 0; overflow: hidden }
+         #GeomDiv {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            padding: 1
+         }
+
+         .geomColorBox {                /* style the CSS class that has been written by the renderer method */
+            display: inline-block;      /* enable squares to appear next to each other within one line */
+            border: 1px solid white;    /* add some border, so the square can actually be seen */
+            background-color: #000;
+            padding: 1px;
+            width: 12px;
+            height: 12px;
+            text-align: center;
+            -moz-box-sizing: border-box; /* consider padding+border part of the width/height */
+            box-sizing: border-box;
+         }
+
+         /* this is style for IconTabBar header - by default is uses too large space for header */
+
+         .sapMITBHead {
+             margin: 0 !important;
+         }
+
+       </style>
+
+   </head>
+
+   <body>
+      <div id="GeomDiv">
+      </div>
+
+      <script type='module'>
+
+        import { connectWebWindow } from './jsrootsys/modules/webwindow.mjs';
+        import { parse, decodeUrl, toJSON, source_dir } from './jsrootsys/modules/core.mjs';
+        import { initEVE } from './rootui5sys/eve7/eve.mjs';
+
+        // create global EVE and THREE handles
+
+        initEVE(source_dir).then(() => connectWebWindow({
+           ui5: true,
+           openui5libs: "sap.m, sap.ui.layout, sap.ui.unified, sap.ui.table" // customize openui5 libs later
+        })).then(handle => {
+            sap.ui.require(["sap/ui/core/mvc/XMLView"], XMLView => {
+                XMLView.create({
+                   viewName: "rootui5.eve7.view.GeomViewer",
+                   viewData: { conn_handle: handle, jsroot: { parse, decodeUrl, toJSON, source_dir } }
+                }).then(oView => oView.placeAt("GeomDiv"));
+             });
+        });
+
+      </script>
+
+   </body>
+
+</html>

@@ -1,0 +1,402 @@
+# ROOT mime types
+# Actions beginning with ! will be executed in the shell
+# Actions beginning with -> are member functions of the selected
+# object's class (not yet implemented, still hard coded in the
+# class Browse() method).
+# All other actions will be handed "as is" to the interpreter
+
+[application/postscript]
+pattern = *.e?ps *.E?PS
+icon = ps_s.xpm ps_t.xpm
+action = TImage::Open("%s")->Draw("nxxx")
+
+[application/pdf]
+pattern = *.pdf
+icon = pdf.xpm
+action = TImage::Open("%s")->Draw("nxxx")
+
+[application/x-deb]
+pattern = *.deb
+icon = deb_s.xpm deb_t.xpm
+action = !xterm -e dpkg -I %s
+
+[application/x-rpm]
+pattern = *.rpm
+icon = rpm_s.xpm rpm_t.xpm
+action = !xterm -e rpm -qip %s
+
+[audio/x-wav]
+pattern = *.wave?
+icon = audio_s.xpm
+action = !vplay -s 22500 %s
+
+[audio/basic]
+pattern = *.snd *.au
+icon = audio_s.xpm
+action = !cat %s /dev/audio
+
+[audio/midi]
+pattern = *.midi?
+icon = midi_s.xpm
+action = !cat %s /dev/midi
+
+[video/mpeg]
+pattern = *.mpeg? *.mpg
+icon = video_s.xpm
+action = !xanim %s
+
+[image/gif]
+pattern = *.gif *.GIF
+icon = psp_s.xpm psp_t.xpm
+action = TImage::Open("%s")->Draw("nxxx")
+
+[image/jpeg]
+pattern = *.jpeg *.jp[ge] *.JPEG *.JP[GE]
+icon = psp_s.xpm psp_t.xpm
+action = TImage::Open("%s")->Draw("nxxx")
+
+[image/png]
+pattern = *.png *.PNG
+icon = psp_s.xpm psp_t.xpm
+action = TImage::Open("%s")->Draw("nxxx")
+
+[image/tiff]
+pattern = *.tiff? *.TIFF?
+icon = psp_s.xpm psp_t.xpm
+action = TImage::Open("%s")->Draw("nxxx")
+
+[image/x-xpixmap]
+pattern = *.x[bp]m *.X[PB]M 
+icon = psp_s.xpm psp_t.xpm
+action =  TImage::Open("%s")->Draw("nxxx")
+
+[image/bmp]
+pattern = *.bmp *.BMP
+icon = psp_s.xpm psp_t.xpm
+action = TImage::Open("%s")->Draw("nxxx")
+
+[image/ico]
+pattern = *.ico
+icon = psp_s.xpm psp_t.xpm
+action =  TImage::Open("%s")->Draw("nxxx")
+
+[image/cur]
+pattern = *.cur
+icon = psp_s.xpm psp_t.xpm
+action =  TImage::Open("%s")->Draw("nxxx")
+
+[image/xcf]
+pattern = *.xcf *XCF
+icon = psp_s.xpm psp_t.xpm
+action = TImage::Open("%s")->Draw("nxxx")
+
+[image/ppm]
+pattern = *.p[n]m *.P[N]M
+icon = psp_s.xpm psp_t.xpm
+action = TImage::Open("%s")->Draw("nxxx")
+
+[image/tga]
+pattern = *.tga *.TGA
+icon = psp_s.xpm psp_t.xpm
+action = TImage::Open("%s")->Draw("nxxx")
+
+[text/html]
+pattern = *.html
+icon = netscape.xpm
+action = !netscape %s
+
+[text/plain]
+pattern = *.te?xt *.TE?XT
+icon = emacs.xpm
+action =
+
+[text/tex]
+pattern = *.tex
+icon = tex.xpm
+action =
+
+[settings/executable]
+pattern = .bash_profile .bashrc .profile .login .kshrc .cshrc .xsession
+icon = run_config.xpm
+action = 
+
+[settings/config]
+pattern = .*rc *.conf
+icon = settings.xpm
+action =
+
+[text/source-c]
+pattern = *.c
+icon = c_src_s.xpm c_src_t.xpm
+action =
+
+[text/source-h]
+pattern = *.h *.H
+icon = h_src_s.xpm h_src_t.xpm
+action =
+
+[text/source-c++]
+pattern = *.cxx *.cpp *.cc
+icon = cpp_src_s.xpm cpp_src_t.xpm
+action =
+
+[text/source-h++]
+pattern = *.hxx *.hpp
+icon = hpp_src_s.xpm hpp_src_t.xpm
+action =
+
+[root/script]
+pattern = *.C
+icon = macro_s.xpm macro_t.xpm
+action = .x %s
+
+[root/file]
+pattern = *.root
+icon = rootdb_s.xpm rootdb_t.xpm
+action = TFile *ftmp = new TFile("%s")
+
+[hbook/file]
+pattern = *.hbook
+icon = rootdb_s.xpm rootdb_t.xpm
+action = THbookFile *ftmp = new THbookFile("%s")
+
+[root/tfile]
+pattern = TFile TNetFile TWebFile
+icon = rootdb_s.xpm rootdb_t.xpm
+action = ->Browse()
+
+[root/th1]
+pattern = TH1[CSFDIK]
+icon = h1_s.xpm h1_t.xpm
+action = ->Draw()
+
+[root/th2]
+pattern = TH2[CSFDI]
+icon = h2_s.xpm h2_t.xpm
+action = ->Draw()
+
+[root/th3]
+pattern = TH3[CSFDI]
+icon = h3_s.xpm h3_t.xpm
+action = ->Draw()
+
+[root/thnsparse]
+pattern = ROOT::THnSparseBrowsable
+icon = h1_s.xpm h1_t.xpm
+action = ->Draw()
+
+[root/tf1]
+pattern = TF1
+icon = f1_s.xpm f1_t.xpm
+action = ->Draw()
+
+[root/tf2]
+pattern = TF2
+icon = f2_s.xpm f2_t.xpm
+action = ->Draw()
+
+[root/tprofile]
+pattern = TProfile
+icon = profile_s.xpm profile_t.xpm
+action = ->Draw()
+
+[root/ttree]
+pattern = TTree
+icon = tree_s.xpm tree_t.xpm
+action = ->Browse()
+
+[root/tntuple]
+pattern = TNtuple
+icon = ntuple_s.xpm ntuple_t.xpm
+action = ->Browse()
+
+[root/tchain]
+pattern = TChain
+icon = chain_s.xpm chain_t.xpm
+action = ->Browse()
+
+[root/tbranchelement-folder]
+pattern = TBranchElement-folder
+icon = branch_folder_s.xpm branch_folder_t.xpm
+action = ->Browse()
+
+[root/tbranchelement-leaf]
+pattern = TBranchElement-leaf
+icon = leaf_s.xpm leaf_t.xpm
+action = ->Browse()
+
+[root/tleaf]
+pattern = TLeaf*
+icon = leaf_s.xpm leaf_t.xpm
+action = ->Browse()
+
+[root/tmethodbrowsable-leaf]
+pattern = TMethodBrowsable-leaf
+icon = leaf_method_s.xpm leaf_method_t.xpm
+action = ->Browse()
+
+[root/tmethodbrowsable-branch]
+pattern = TMethodBrowsable-branch
+icon = return_object_s.xpm return_object_t.xpm
+action = ->Browse()
+
+# actions used by GuiBuilder
+[root/textbutton]
+pattern = TGTextButton
+icon = bld_textbutton.xpm bld_textbutton.xpm
+action = new TGuiBldTextDialog("%s")
+
+[root/radiobutton]
+pattern = TGRadioButton
+icon = bld_radiobutton.xpm bld_radiobutton.xpm
+action = new TGuiBldTextDialog("%s")
+
+[root/checkbutton]
+pattern = TGCheckButton
+icon = bld_checkbutton.xpm bld_checkbutton.xpm
+action = new TGuiBldTextDialog("%s")
+
+[root/label]
+pattern = TGLabel
+icon = bld_label.xpm bld_label.xpm
+action = new TGuiBldTextDialog("%s")
+
+[root/textentry]
+pattern = TGTextEntry
+icon = bld_entry.xpm bld_entry.xpm
+action = new TGuiBldTextDialog("%s")
+
+[root/groupframe]
+pattern = TGGroupFrame
+icon = bld_groupframe.xpm bld_groupframe.xpm
+action = new TGuiBldTextDialog("%s")
+
+[root/tgeoarb8]
+pattern = TGeoArb8
+icon = geoarb8_s.xpm geoarb8_t.xpm
+action = ->Browse()
+
+[root/tgeobbox]
+pattern = TGeoBBox
+icon = geobbox_s.xpm geobbox_t.xpm
+action = ->Browse()
+
+[root/tgeocone]
+pattern = TGeoCone
+icon = geocone_s.xpm geocone_t.xpm
+action = ->Browse()
+
+[root/tgeoconeseg]
+pattern = TGeoConeSeg
+icon = geoconeseg_s.xpm geoconeseg_t.xpm
+action = ->Browse()
+
+[root/tgeoctub]
+pattern = TGeoCtub
+icon = geoctub_s.xpm geoctub_t.xpm
+action = ->Browse()
+
+[root/tgeoeltu]
+pattern = TGeoEltu
+icon = geoeltu_s.xpm geoeltu_t.xpm
+action = ->Browse()
+
+[root/tgeoxtru]
+pattern = TGeoXtru
+icon = geoxtru_s.xpm geoxtru_t.xpm
+action = ->Browse()
+
+[root/tgeohype]
+pattern = TGeoHype
+icon = geohype_s.xpm geohype_t.xpm
+action = ->Browse()
+
+[root/tgeoparaboloid]
+pattern = TGeoParaboloid
+icon = geoparaboloid_s.xpm geoparaboloid_t.xpm
+action = ->Browse()
+
+[root/tgeopcon]
+pattern = TGeoPcon
+icon = geopcon_s.xpm geopcon_t.xpm
+action = ->Browse()
+
+[root/tgeopgon]
+pattern = TGeoPgon
+icon = geopcon_s.xpm geopcon_t.xpm
+action = ->Browse()
+
+[root/tgeopara]
+pattern = TGeoPara
+icon = geopara_s.xpm geopara_t.xpm
+action = ->Browse()
+
+[root/tgeosphere]
+pattern = TGeoSphere
+icon = geosphere_s.xpm geosphere_t.xpm
+action = ->Browse()
+
+[root/tgeotrd1]
+pattern = TGeoTrd1
+icon = geotrd1_s.xpm geotrd1_t.xpm
+action = ->Browse()
+
+[root/tgeotrd2]
+pattern = TGeoTrd2
+icon = geotrd2_s.xpm geotrd2_t.xpm
+action = ->Browse()
+
+[root/tgeotrap]
+pattern = TGeoTrap
+icon = geotrap_s.xpm geotrap_t.xpm
+action = ->Browse()
+
+[root/tgeotorus]
+pattern = TGeoTorus
+icon = geotorus_s.xpm geotorus_t.xpm
+action = ->Browse()
+
+[root/tgeotube]
+pattern = TGeoTube
+icon = geotube_s.xpm geotube_t.xpm
+action = ->Browse()
+
+[root/tgeotubeseg]
+pattern = TGeoTubeSeg
+icon = geotubeseg_s.xpm geotubeseg_t.xpm
+action = ->Browse()
+
+[root/tgeogtra]
+pattern = TGeoGtra
+icon = geogtra_s.xpm geogtra_t.xpm
+action = ->Browse()
+
+[root/tgeocompositeshape]
+pattern = TGeoCompositeShape
+icon = geocomposite_s.xpm geocomposite_t.xpm
+action = ->Browse()
+
+#[root/tgeohalfspace]
+#pattern = TGeoHalfSpace
+#icon = geohalfspace_s.xpm geohalfspace_t.xpm
+#action = ->Browse()
+
+#[root/tgeoshapeassembly]
+#pattern = TGeoShapeAssembly
+#icon = geoshapeassembly_s.xpm geoshapeassembly_t.xpm
+#action = ->Browse()
+
+[root/tmacro]
+pattern = TMacro
+icon = tmacro_s.xpm tmacro_t.xpm
+action =
+
+[alien/file]
+pattern = TAlienDirectoryEntry
+icon = rootdb_s.xpm rootdb_t.xpm
+action = ->Browse()
+
+[alien/file]
+pattern = TAlienFile
+icon = rootdb_s.xpm rootdb_t.xpm
+action = ->Browse()

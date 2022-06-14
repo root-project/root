@@ -1,0 +1,69 @@
+sudo: false
+
+language: cpp
+os: linux
+compiler: clang
+
+cache:
+  ccache: true
+
+# Do not build our sync branch.
+branches:
+  only:
+    - master
+    - Travis*
+
+# Without the top-level env, no job will be allowed to fail.
+env:
+
+matrix:
+  # Abort all builds on a single failing matrix entry.
+  fast_finish: true
+
+  include:
+    - env: TOOL=clang-format
+      script: &format_script
+        - |
+          if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
+            export BASE_COMMIT=$(git rev-parse $TRAVIS_BRANCH)
+            .ci/format_script.sh
+          fi
+
+    - env: TOOL=clang-tidy-analyzer
+      before_script: &copy_headers
+        - echo "Copying and generating header files."
+        - echo -en "travis_fold:start:install.headers"
+        - .ci/copy_headers.sh
+        - echo -en 'travis_fold:end:install.headers\\r'
+
+      script: &tidy_script
+        - |
+          if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
+            .ci/tidy_script.sh
+          fi
+
+    - env: TOOL=clang-tidy-modernize
+      before_script: *copy_headers
+      script: *tidy_script
+
+    - env: TOOL=minuit2-standalone
+      script: cd math/minuit2 && .ci/make_and_test.sh
+
+  allow_failures:
+    # clang-tidy-modernize is still experimental
+    - env: TOOL=clang-tidy-modernize
+    # a lot of code doesn't follow clang-format yet
+    - env: TOOL=clang-format
+
+
+# This will never run since there is not a clang-tidy only TOOL
+#  elif [[ "$TRAVIS_EVENT_TYPE" = "cron" ]] && [[ $TOOL == 'clang-tidy' ]]; then
+#    # We need to ignore our vendor drops.
+#    FILES_REGEX='^.*root\/(?!interpreter\/|core\/clib)'
+#
+#    echo "Running clang-tidy-3.9 against branch $TRAVIS_BRANCH."
+#    echo "run-clang-tidy-3.9.py -j4 -clang-tidy-binary $(which clang-tidy-3.9) -checks=-*,clang-analyzer-* $FILES_REGEX"
+#    run-clang-tidy-3.9.py -j4 -clang-tidy-binary $(which clang-tidy-3.9) -checks=-*,clang-analyzer-* $FILES_REGEX
+#  fi
+  
+on_failure: echo "Showing current directory contents" && ls -la

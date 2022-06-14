@@ -1,0 +1,9 @@
+# Sample ~/.rootnetrc file. This file must be available on all nodes
+# in the PROOF cluster so that the PROOF servers can open files via TNetFile
+# without having to prompt for passwords. The file must be mode 0600
+# otherwise it will be considered compromised. If you are security conscious
+# you install this file only via a secure ssh link.
+
+machine node1.cern.ch login rdm password secretpasswd
+machine node2.cern.ch login rdm password secretpasswd
+machine fileserv1.cern.ch login rdm password filesrvpasswd

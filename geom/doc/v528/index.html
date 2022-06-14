@@ -1,0 +1,29 @@
+<br/>
+<hr/>
+<a name="geom"></a>
+<h3>Geometry
+  <br/>
+  <br/>
+  <br/>
+</h3>
+<h4>TGeoElement, TGeoIsotope</h4> <br/>
+ New class TGeoIsotope inside the file TGeoElement.h/.cxx. This is done for compatibility with GEANT4 isotopes and elements. TGeoElement class now contains the number of nucleons and an array of possible isotopes (as in GEANT4). One can make isotopes of the same element:
+<br/>
+
+
+<br/>
+TGeoIsotope *iso1 = new TGeoIsotope("U235", Z,N1,A1);
+<br/>
+TGeoIsotope *iso2 = new TGeoIsotope("U238", Z,N2,A2);
+<br/>
+<br/>
+ then an element containing the 2 isotopes: <br/>
+<br/>
+TGeoElement *elem = new TGeoElement("U_nat", "U", 2); elem-&gt;AddIsotope(iso1,abundance1_percent); elem-&gt;AddIsotope(iso2,abundance2_percent);
+<br/>
+<br/>
+Then one can make normal materials based on such elements. Added getters for isotopes from elements, as well as an isotope table within TGeoElementTable with search method by name (and not supporting several isotopes with the same name). Existing material table updated to use the number of nucleons. Everything backward compatible.
+<br/>
+<h4>TGDMLParser</h4> <br/>
+Several fixes and support for new features:
+Support for reading isotopes via the GDML parser. Interaction length now automatically computed using the algorithm from GEANT4. Fixed parsing of composite shapes. G4Ellipsoid is now supported in conversions.

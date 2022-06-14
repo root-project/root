@@ -1,0 +1,32 @@
+/* XPM */
+static char *bld_break_d[] = {
+/* width height num_colors chars_per_pixel */
+"    21    21        4            1",
+/* colors */
+". c #cccccc",
+"# c #979797",
+"a c #d6d6d6",
+"b c #999999",
+/* pixels */
+"....................#",
+".aaaaaaaaaaaaaaaaaab#",
+".aaaaaaaaaaaaaaaaaab#",
+".a.....#aaaaaaaaaaab#",
+".a.aaab#aaaaaaaaaaab#",
+".a.aaab#aaaa.....#ab#",
+".a.bbbb#aaaa.aaab#ab#",
+".a######aaaa.aaab#ab#",
+".aaaaaaaaaaa.bbbb#ab#",
+".aaaaaaaaaaa######ab#",
+".aaaaaaaaaaaaaaaaaab#",
+".aaaa.....#aaaaaaaab#",
+".aaaa.aaab#aaaaaaaab#",
+".aaaa.aaab#aaaaaaaab#",
+".aaaa.bbbb#aaaaaaaab#",
+".aaaa######aaaaaaaab#",
+".aaaaaaaaaaaaaaaaaab#",
+".aaaaaaaaaaaaaaaaaab#",
+".aaaaaaaaaaaaaaaaaab#",
+".bbbbbbbbbbbbbbbbbbb#",
+"#####################"
+};

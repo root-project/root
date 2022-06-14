@@ -1,0 +1,42 @@
+% Usage: \documentstyle[refmerge]{article}
+%
+\def\fileversion{v1.0}
+\def\filedate{15 Oct 1997}
+
+\typeout{Document-style option `refmerge' \fileversion \space\space
+         <\filedate>}
+
+% BIBLIOGRAPHY
+%\def\thebibliography#1{\section*{REFERENCES}\list{\arabic{enumi}.}
+%  {\settowidth\labelwidth{#1.}\leftmargin=1.67em
+%   \labelsep\leftmargin \advance\labelsep-\labelwidth
+%   \itemsep\z@ \parsep\z@
+%   \usecounter{enumi}}\def\makelabel##1{\rlap{##1}\hss}%
+%   \def\newblock{\hskip 0.11em plus 0.33em minus -0.07em}
+%   \sloppy \clubpenalty=4000 \widowpenalty=4000 \sfcode`\.=1000\relax}
+
+% Collapse citation numbers to ranges.  
+\newcount\@tempcntc
+\def\@citex[#1]#2{\if@filesw\immediate\write\@auxout{\string\citation{#2}}\fi
+  \@tempcnta\z@\@tempcntb\m@ne\def\@citea{}\@cite{\@for\@citeb:=#2\do
+    {\@ifundefined
+       {b@\@citeb}{\@citeo\@tempcntb\m@ne\@citea
+        \def\@citea{,\penalty\@m\ }{\bf ?}\@warning
+       {Citation `\@citeb' on page \thepage \space undefined}}%
+    {\setbox\z@\hbox{\global\@tempcntc0\csname b@\@citeb\endcsname\relax}%
+     \ifnum\@tempcntc=\z@ \@citeo\@tempcntb\m@ne
+       \@citea\def\@citea{,\penalty\@m}
+       \hbox{\csname b@\@citeb\endcsname}%
+     \else
+      \advance\@tempcntb\@ne
+      \ifnum\@tempcntb=\@tempcntc
+      \else\advance\@tempcntb\m@ne\@citeo
+      \@tempcnta\@tempcntc\@tempcntb\@tempcntc\fi\fi}}\@citeo}{#1}}
+
+\def\@citeo{\ifnum\@tempcnta>\@tempcntb\else\@citea
+  \def\@citea{,\penalty\@m}%
+  \ifnum\@tempcnta=\@tempcntb\the\@tempcnta\else
+   {\advance\@tempcnta\@ne\ifnum\@tempcnta=\@tempcntb \else
+\def\@citea{--}\fi
+    \advance\@tempcnta\m@ne\the\@tempcnta\@citea\the\@tempcntb}\fi\fi}
+

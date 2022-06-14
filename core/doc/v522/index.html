@@ -1,0 +1,58 @@
+<br>
+<hr>
+<a name="core"></a>
+<h3>Core</h3>
+<h4>Collections</h4>
+<ul>
+<li>Improve the output of the call to Print for ROOT Collections.  In TCollection replace Print() methods:
+<pre>     virtual void       Print(Option_t *wildcard="") const;
+     virtual void       Print(Option_t *wildcard, Option_t *option) const;</pre>
+with
+<pre>     virtual void       Print(Option_t *option="") const;
+     virtual void       Print(Option_t *option, Int_t recurse) const;
+     virtual void       Print(Option_t *option, const char* wildcard,
+                              Int_t recurse=1) const;
+     virtual void       Print(Option_t *option, TPRegexp& regexp,
+                              Int_t recurse=1) const;
+</pre>
+   Introduce three new protected methods used to print out collection details.
+   These are called from the Print() methods and make overriding of what
+   is printed for a collection / entries easier.
+<pre>     virtual void        PrintCollectionHeader(Option_t* option) const;
+     virtual const char* GetCollectionEntryName(TObject* entry) const;
+     virtual void        PrintCollectionEntry(TObject* entry, Option_t* option,
+                                              Int_t recurse) const;
+</pre>
+<li>Improve performance of reading TExMap object (50 times faster) using an updated,
+slightly larger (16%) on file format for the TExMap object.
+</li>
+</ul>
+<h4>ACLiC</h4>
+<ul><li>Fix problem finding rootcint in the --prefix configuration.</li>
+<li>Change the naming convention for the temporary files created by ACLiC, instead of randomly named ACLiC now uses:<pre>scriptname_scriptextension_ACLiC_function.extension</pre></li>
+<li>When ACLiC need to revert to the temp directory for storing the library, it now create the directory
+structure under a directory named after the userid.
+</li>
+<li>Allow white space in the name of the directory where a script to be compiled by ACLiC resides.</li>
+<li>Add optional 5th argument to <tt>CompileMacro</tt> to allow set the file bit
+   mode of the directory created.</li>
+<li>Avoid looking for Microsoft's link.exe when we already have it (and hence avoid complaining about cygpath when cygwin is not even installed.</li>
+</ul>
+<h4>Meta</h4>
+<ul>
+<li>Insure that the TClass list of methods is refreshed when new functions are added to the dictionary.
+</li>
+</ul>
+
+<h4>TStyle</h4>
+<ul>
+<li> In <tt>TStyle::Reset</tt>, the Frame
+     Fill Color default value did not match the TFrame
+     Fill Color default value.
+</ul>
+<h4>TSystem</h4>
+<ul>
+<li><tt>DirName</tt> now properly handle
+   repeated '/'; this allow <tt>mkdir("a/b//c",true);</tt> to succeed.</li>
+<li>Extended the support for UNIX sockets on a generic path</li>
+</ul>

@@ -1,0 +1,220 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>RWebWindow latency test</title>
+  </head>
+
+  <body>
+     <button id="halt_btn">Halt</button>
+     <button id="toggle_btn">Draw</button>
+     <p>Main: <b id="output">Msg</b></p>
+     <div id="clients"></div>
+     <div id="draw" style="position: absolute; left: 0px; right: 0px; bottom: 0px; height: 50%; overflow:hidden"></div>
+  </body>
+
+  <script type="module">
+
+    import { connectWebWindow } from './jsrootsys/modules/webwindow.mjs';
+
+    import { redraw, cleanup } from './jsrootsys/modules/draw.mjs';
+
+    import { createHistogram } from './jsrootsys/modules/core.mjs';
+
+    class PingPongHandler {
+       constructor(is_main, out_id) {
+          this.is_main = is_main;
+          this.out_id = out_id || "output";
+          this.handle = null;
+          this.last_show = this.last_ping = new Date().getTime();
+          this.sum = [0, 0, 0];
+          this.cnt = 0;
+       }
+
+       setOutput(msg) {
+          let elem = document.getElementById(this.out_id);
+          if (elem) elem.innerHTML = msg;
+       }
+
+       // method called when connection established
+       onWebsocketOpened(handle) {
+          this.handle = handle;
+          this.setOutput("Connected");
+          if (this.is_main)
+             this.handle.send("first"); // request for configuration
+          this.sendPing();
+          this.configInterval(500);
+       }
+
+       // method with new message from server
+       onWebsocketMsg(handle, msg, offset) {
+          if (typeof msg != "string") {
+             // let arr = new Float32Array(msg, offset);
+             // AddOutput("bin: " + arr.toString());
+          } else if (msg.indexOf("PING:") == 0) {
+             this.processPing(msg.substr(5));
+          } else if (msg.indexOf("CLIENTS:") == 0) {
+             let nclients = parseInt(msg.substr(8));
+             if (this.is_main && (nclients > 1))
+                this.startMoreClients(nclients-1);
+           }
+       }
+
+       // method called when connection is gone
+       onWebsocketClosed(handle) {
+          this.handle = null;
+          this.configInterval(0);
+          // when connection closed, close panel as well
+          if (window) window.close();
+       }
+
+       // configure periodic handler
+       configInterval(msec) {
+          if (this.interval) {
+             clearInterval(this.interval);
+             this.interval = null;
+          }
+          if (!msec) return;
+
+          this.interval = setInterval(() => {
+             let tm = new Date().getTime();
+             if (tm - this.last_ping > 2000) {
+                this.setBug(`Miss reply for ${this.cnt}`);
+                this.sendPing();
+             }
+             if (this.is_main && this.handle && this.last_output && (tm - this.last_show > 2000)) {
+                this.handle.send("SHOW:" + this.last_output.replace("&plusmn;","+-"));
+                this.last_show = tm;
+             }
+
+             if (this.is_main && this.hist)
+                redraw("draw", this.hist);
+
+          }, msec);
+       }
+
+       setBug(msg) {
+          if (!this.bug) console.log(msg);
+          this.bug = true;
+       }
+
+       // send ping message
+       sendPing() {
+          let tm1 = new Date().getTime();
+          this.cnt++;
+          this.last_ping = tm1;
+          if (this.handle)
+             this.handle.send("PING:" + tm1 + ":" + this.cnt);
+       }
+
+       // process reply on ping message
+       processPing(msg) {
+          // calculate time difference
+          let tm2 = new Date().getTime();
+          let p = msg.indexOf(":");
+          if (p>0) {
+             let cnt0 = parseInt(msg.substr(p+1));
+             if (cnt0 != this.cnt)
+                this.setBug(`Send/reply mismatch ${cnt0} ${this.cnt}`);
+             msg = msg.substr(0,p);
+          }
+
+
+          let tm1 = parseInt(msg);
+          let diff = tm2 - tm1;
+
+          // fill histogram if created
+          if (this.hist)
+             this.hist.Fill(diff);
+
+          // account statistic
+          this.sum[0] += 1;
+          this.sum[1] += diff;
+          this.sum[2] += diff*diff;
+
+          let mean = this.sum[1] / this.sum[0], dev = "";
+
+          if (this.sum[0] > 5) {
+             dev = this.sum[2] / this.sum[0] - mean*mean;
+             dev = (dev > 0) ? Math.sqrt(dev) : 0;
+          }
+
+          let v = "Cnt: " + this.sum[0];
+          v += " round-trip: " + mean.toFixed(1);
+          if (dev > 0) v += "&plusmn;" + dev.toFixed(0);
+          v += " ms";
+          this.last_output = v;
+
+          this.setOutput(v);
+
+          // send new ping message
+          this.sendPing();
+       }
+
+       startMoreClients(nclients) {
+          let html  = "";
+          for (let n = 0; n < nclients; ++n)
+             html += `<p>Client${n+1}:  <b id='out${n}'>output</b></p>`;
+          document.getElementById("clients").innerHTML = html;
+
+          this.clients = [];
+
+          for (let n = 0; n < nclients; ++n) {
+             let sub_handler = new PingPongHandler(false, "out" + n);
+             sub_handler.cnt = 10000*(n+1);
+             connectWebWindow( { receiver: sub_handler, socket_kind: this.handle.kind } );
+             this.clients.push(sub_handler);
+          }
+       }
+
+       createHistogram() {
+          let mean = this.sum[0] > 10 ? this.sum[1] / this.sum[0] : 50;
+
+          this.hist = createHistogram("TH1I", 100);
+          this.hist.fTitle = "Roundtrip time";
+          this.hist.fXaxis.fTitle = "ms";
+          this.hist.fXaxis.fXmax = 100;
+
+          if (mean > 1000)
+             this.hist.fXaxis.fXmax = 5000;
+          else if (mean > 100)
+             this.hist.fXaxis.fXmax = 500;
+       }
+
+       clearHistogram() {
+          delete this.hist;
+       }
+    }
+
+    let main_handler = new PingPongHandler(true);
+
+    document.getElementById('halt_btn').onclick = () => {
+       if (main_handler && main_handler.handle)
+            main_handler.handle.send('halt');
+    };
+
+    document.getElementById('toggle_btn').onclick = () => {
+
+       let draw = document.getElementById("draw");
+       if (!draw) return;
+
+       if (main_handler.hist) {
+          cleanup(draw);
+          main_handler.clearHistogram();
+          draw.style.display = "none";
+          return;
+       }
+
+       main_handler.createHistogram();
+       draw.style.display = "";
+    };
+
+    // important this line, which need to be specially handled
+    // line MUST always end with "({" symbols
+    connectWebWindow({
+       receiver: main_handler
+    });
+
+  </script>
+
+</html>

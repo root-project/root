@@ -1,0 +1,20 @@
+<br/>
+<hr/>
+<a name="graf3d"></a>
+<h3>3D Graphics Libraries</h3>
+
+<h4>EVE</h4>
+<ul>
+<li> <b>TEveRGBAPalette:</b>
+Add support for displaying palette values in UI elements (GUI, overlay) as
+real values, mapped with a linear function. This is enabled by calling: <pre>
+  TEveRGBAPalette::SetUIDoubleRep(Bool_t b, Double_t f=1, Double_t c=0);
+</pre> and the mapping between integer 'i' and real 'r' values is: <pre>
+  r = f*i + c;
+</pre>
+</li>
+<li> <b>TEveRGBAPaletteOverlay</b>
+New class - an overlay element showing TEveRGBAPalette legend in GL
+overlay. See tutorials/eve/overlay_palette.C.
+</li>
+</ul>

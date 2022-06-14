@@ -1,0 +1,40 @@
+# roottest & rootbench are their own repos
+roottest
+rootbench
+
+# MacOS Xcode
+xcuserdata
+project.xcworkspace
+
+# MacOS metadata
+.DS_Store
+
+# VS Code
+.vs/
+.vscode
+.build
+
+# CLion
+.idea/*
+cmake-build-*/
+
+# QtCreator
+CMakeLists.txt.user
+*.autosave
+
+# Eclipse
+.settings/*
+.cproject
+.project
+.externalToolBuilders
+.pydevproject
+
+# Vim
+*.swp
+
+# Other Stuff
+tags
+*.d
+.cache
+.gdb_history
+compile_commands.json

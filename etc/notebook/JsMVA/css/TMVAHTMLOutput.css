@@ -1,0 +1,126 @@
+/**
+ * This file contains the CSS for the HTML formatted output.
+ * Author: Attila Bagoly <battila93@gmail.com>
+ * Created: 8/25/16
+ */
+
+.tmva_output_table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid white !important;
+}
+
+.tmva_output_table td {
+    border-top: 1px solid white;
+    border-left: 1px solid white;
+    border-right: 1px solid white;
+    border-bottom: 1px solid #595959;
+    word-break: break-all;
+}
+
+.tmva_output_table tbody:last-child tr:first-child td:first-child, .tmva_output_table tbody:last-child tr:last-child td {
+    border-bottom: 1px solid white;
+}
+
+.tmva_output_table tbody tr:first-child td:first-child {
+    border-right: 1px solid #595959;
+}
+
+.tmva_output_table tbody.tmva_output_tbody_multiple_row tr:not(:last-child) td{
+    border-bottom: 1px solid #a6a6a6;
+}
+
+.tmva_output_table tbody:not(:last-child).tmva_output_tbody_multiple_row tr:first-child td:first-child {
+    border-bottom: 1px solid #595959;
+}
+
+.tmva_output_table tbody:hover {
+    background-color:#f5f5f5;
+}
+
+.tmva_output_table tbody:hover tr:hover td:last-child {
+     background-color: rgba(0 ,179, 0, 0.15);
+}
+
+.tmva_output_table tr td.tmva_output_header {
+    vertical-align: top;
+    width: 160px !important;
+    font-family: Arial;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.tmva_output_dataset {
+    border-collapse: collapse;
+}
+
+.tmva_output_dataset tr:first-child td:first-child {
+    font-size: 16px;
+    font-weight: bold;
+    color: rgb(0, 0, 179);
+}
+
+.tmva_output_dataset td {
+    border: 1px solid #ddd !important;
+    vertical-align: top;
+}
+
+.tmva_output_dataset tbody:hover {
+    //background-color: rgba(0, 150, 179, 0.4);
+    background-color: rgba(0, 179, 0, 0.4);
+}
+
+.tmva_output_dataset tbody:hover tr:hover td {
+    background-color: rgba(0, 0, 179, 0.1);
+}
+
+.tmva_output_traintestevents td {
+    border-top: 1px solid white !important;
+    border-left: 1px solid white !important;
+    border-right: 1px solid white !important;
+    border-bottom: 1px solid #ddd !important;
+}
+
+.tmva_output_traintestevents tbody:hover {
+    background-color: rgba(0, 179, 0, 0.4);
+}
+
+.tmva_output_varmeanrms td {
+    border: 1px solid #000066 !important;
+}
+
+.tmva_output_varmeanrms tbody:hover tr {
+    background-color: rgba(0, 179, 0, 0.4);
+}
+
+.tmva_output_hidden_td {
+    display: none;
+}
+
+.tmva_output_corrmat_link {
+    cursor: pointer;
+}
+
+.tmva_output_warning {
+    background-color: rgba(179, 0, 0, 0.2);
+}
+
+.tmva_output_error {
+    background-color: rgba(179, 0, 0, 0.5);
+}
+
+.tmva_output_fatal {
+    background-color: rgba(179, 0, 0, 0.9);
+}
+
+.tmva_output_silent {
+    background-color: rgba(0, 179, 0, 0.2);
+}
+
+.tmva_output_debug {
+    background-color: rgba(0, 0, 179, 0.2);
+}
+
+.tmva_output_imphead {
+    background-color: rgba(0, 179, 0, 0.3);
+}

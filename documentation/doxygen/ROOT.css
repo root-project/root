@@ -1,0 +1,31 @@
+/* ROOT doxygen HTML_EXTRA_STYLESHEET */
+
+div.contents {
+    max-width: 100em;
+    margin-right: 5em;
+    margin-left: 5em;
+}
+
+.ui-resizable-e {
+  background-image:url("splitbar.png");
+  background-size:100%;
+  background-repeat:repeat-y;
+  background-attachment: scroll;
+  cursor:ew-resize;
+  height:100%;
+  right:0;
+  top:0;
+  width:1px;
+}
+
+.pyrootbox {
+  border: 1px solid #879ecb;
+  background-color: #f9fafc;
+  padding: 15px;
+}
+
+.legacybox {
+  border: 3px solid #879ecb;
+  background-color: #fdf06b;
+  padding: 15px;
+}

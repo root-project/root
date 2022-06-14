@@ -1,0 +1,289 @@
+<mvc:View class="sapUiSizeCompact" height="100%" width="100%"
+   xmlns:mvc="sap.ui.core.mvc" xmlns:core="sap.ui.core" xmlns="sap.m"
+   xmlns:fitpanel="rootui5.fitpanel.controller"
+   xmlns:l="sap.ui.layout" controllerName="rootui5.fitpanel.controller.FitPanel">
+   <Page title="Simple Fit Panel" showHeader="false">
+      <VBox class="sapUiSizeCompact sapUiSmallMarginStart" width="100%">
+         <l:Grid class="sapUiSizeCompact" hSpacing="0.5" vSpacing="0">
+           <Text text="Data:">
+               <layoutData>
+                  <l:GridData span="XL4 L4 M4 S4" />
+               </layoutData>
+           </Text>
+           <ComboBox selectedKey="{/fSelectedData}"
+               items="{ path: '/fDataSet', sorter: { path: 'group', group: true, descending: false } }"
+               change="onSelectedDataChange">
+               <core:Item key="{id}" text="{name}" />
+               <layoutData>
+                  <l:GridData span="XL8 L8 M8 S8" />
+               </layoutData>
+           </ComboBox>
+           <Text text="Func:">
+               <layoutData>
+                  <l:GridData span="XL4 L4 M4 S4" />
+               </layoutData>
+           </Text>
+           <ComboBox selectedKey="{/fSelectedFunc}"
+               items="{ path: '/fFuncList', sorter: { path: 'group', group: true, descending: false } }"
+               change="onSelectedFuncChange">
+               <core:Item key="{id}" text="{name}" />
+               <layoutData>
+                  <l:GridData span="XL8 L8 M8 S8" />
+               </layoutData>
+           </ComboBox>
+         </l:Grid>
+         <IconTabBar expandable="false" headerMode="Inline" selectedKey="{/fSelectedTab}">
+            <items>
+               <IconTabFilter key="General" text="General">
+                  <VBox>
+                     <Title level="H3" text="Method" />
+                     <l:Grid defaultSpan="XL6 L6 M6 S6" class="sapUiSizeCompact"
+                        hSpacing="0.5" vSpacing="0">
+                        <ComboBox selectedKey="{/fFitMethod}"
+                           items="{ path: '/fFitMethods' }">
+                           <core:Item key="{id}" text="{text}" />
+                           <layoutData>
+                              <l:GridData span="XL12 L12 M12 S12" />
+                           </layoutData>
+                        </ComboBox>
+                        <CheckBox text="Linear fit" selected="{/fLinearFit}" />
+                        <HBox>
+                           <CheckBox text="Robust"
+                              enabled="{= ${/fLinearFit} === true}"
+                              selected="{/fRobust}"
+                              tooltip="Perform Linear Robust fitter if selected" />
+                           <StepInput value="{/fRobustLevel}" min="0.01"
+                              max="1" step="0.01" displayValuePrecision="2"
+                              enabled="{= ${/fRobust} === true}"
+                              tooltip="Available only for graphs" />
+                        </HBox>
+                     </l:Grid>
+                     <Title level="H3" text="Fit Options" />
+                     <l:Grid defaultSpan="XL6 L6 M6 S6" class="sapUiSizeCompact"
+                        hSpacing="0.5" vSpacing="0">
+                        <CheckBox text="Integral"  selected="{/fIntegral}"
+                           tooltip="'I'-use integral of function instead of value in bin center" />
+                        <CheckBox text="Use range" selected="{/fUseRange}"
+                           tooltip="'R'-fit only data..." />
+                        <CheckBox text="Best errors" selected="{/fBestErrors}"
+                           enabled="{= ${/fLinearFit} !== true}" tooltip="'E'-better ..." />
+                        <CheckBox text="Improve fit results" selected="{/fImproveFitResults}"
+                           enabled="{= ${/fLinearFit} !== true}" tooltip="'M'-after medium is found ..." />
+                        <CheckBox text="All weights = 1"
+                           selected="{/fAllWeights1}" enabled="true"
+                           tooltip="'W'-all weights=1 for non-empty bins; eroors bars ignored" />
+                        <CheckBox text="Add to list" selected="{/fAddToList}"
+                           tooltip="'+'-add function to the list without deleting the previous" />
+                        <CheckBox text="Empty bins, weights=1"
+                           selected="{/fEmptyBins1}" enabled="true"
+                           tooltip="'WW'-all weights=1 including empty bins; errors bars ignored" />
+                        <CheckBox text="Use Gradient" selected="{/fUseGradient}"
+                           tooltip="'G'-Use gradient" />
+                     </l:Grid>
+                     <Title level="H3" text="Draw Options" />
+                     <l:Grid class="sapUiSizeCompact" hSpacing="0.5"
+                        vSpacing="0">
+                        <CheckBox text="SAME" selected="{/fSame}"
+                                  tooltip="Superimpose on previous picture in the same pad"/>
+                        <CheckBox text="No Drawing" selected="{/fNoDrawing}"
+                                  tooltip="'O'-do not draw graphic function">
+                           <layoutData>
+                              <l:GridData linebreak="true" />
+                           </layoutData>
+                        </CheckBox>
+                        <CheckBox text="Do not store/draw"
+                           selected="{/fNoStoreDraw}"
+                           tooltip="'N'-do not store function, do not draw it">
+                           <layoutData>
+                              <l:GridData linebreak="true"
+                                 span="XL6 L6 M6 S6" />
+                           </layoutData>
+                        </CheckBox>
+                     </l:Grid>
+                     <RangeSlider visible="{= ${/fDim} > 0}"  showAdvancedTooltip="true"
+                        min="{/fMinRangeX}" max="{/fMaxRangeX}" step="{/fStepX}" range="{/fRangeX}"
+                        width="100%" showHandleTooltip="false"
+                        inputsAsTooltips="true" class="sapUiSmallMarginBottom" />
+                     <RangeSlider visible="{= ${/fDim} > 1}" showAdvancedTooltip="true"
+                        min="{/fMinRangeY}" max="{/fMaxRangeY}" step="{/fStepY}" range="{/fRangeY}"
+                        width="100%" showHandleTooltip="false"
+                        inputsAsTooltips="true" class="sapUiSmallMarginBottom"/>
+                  </VBox>
+               </IconTabFilter>
+               <IconTabFilter key="Minimization" text="Minimization">
+                  <VBox>
+                     <Title level="H3" text="Library" />
+                     <RadioButtonGroup columns="3" width="100%" selectedIndex="{/fLibrary}"
+                        select="selectMinimizationLibrary">
+                        <buttons>
+                           <RadioButton text="Minuit" />
+                           <RadioButton text="Minuit2" />
+                           <RadioButton text="Fumili" />
+                           <RadioButton text="GSL" />
+                           <RadioButton text="Genetics" enabled="{/fHasGenetics}"/>
+                        </buttons>
+                     </RadioButtonGroup>
+                     <Title level="H3" text="Method" />
+                     <ComboBox id="MethodMin" selectedKey="{/fSelectMethodMin}"
+                        items="{ path: '/fMethodMinAll', filters: { path: 'lib', operator: 'EQ', value1: 0 } }">
+                        <core:Item key="{id}" text="{text}" />
+                     </ComboBox>
+                     <Title level="H3" text="Settings" />
+                     <l:Grid class="sapUiSizeCompact" hSpacing="0.5" vSpacing="0">
+                        <Text
+                           text="Use ENTER key to validate a new value or click on Reset button to set the defaults.">
+                           <layoutData>
+                              <l:GridData span="XL12 L12 M12 S12" />
+                           </layoutData>
+                        </Text>
+                        <Text text="Error Definition (default = 1)">
+                           <layoutData>
+                              <l:GridData span="XL8 L8 M8 S8" />
+                           </layoutData>
+                        </Text>
+                        <Input type="Number" value="{/fErrorDef}" placeholder="1.00">
+                           <layoutData>
+                              <l:GridData span="XL4 L4 M4 S4" />
+                           </layoutData>
+                        </Input>
+                        <Text text="Max tolerance (precision)">
+                           <layoutData>
+                              <l:GridData span="XL8 L8 M8 S8" />
+                           </layoutData>
+                        </Text>
+                        <Input type="Number" value="{/fMaxTolerance}" placeholder="0.01">
+                           <layoutData>
+                              <l:GridData span="XL4 L4 M4 S4" />
+                           </layoutData>
+                        </Input>
+                        <Text text="Max number of iterations:">
+                           <layoutData>
+                              <l:GridData span="XL8 L8 M8 S8" />
+                           </layoutData>
+                        </Text>
+                        <Input type="Number" value="{/fMaxIterations}"  placeholder="0">
+                           <layoutData>
+                              <l:GridData span="XL4 L4 M4 S4" />
+                           </layoutData>
+                        </Input>
+                     </l:Grid>
+                     <Title level="H3" text="Print Options" />
+                     <RadioButtonGroup columns="3"
+                        width="100%" selectedIndex="{/fPrint}">
+                        <buttons>
+                           <RadioButton text="Default" />
+                           <RadioButton text="Verbose" />
+                           <RadioButton text="Quiet" />
+                        </buttons>
+                     </RadioButtonGroup>
+                  </VBox>
+               </IconTabFilter>
+               <IconTabFilter key="Pars" text="Pars" enabled="{/fFuncPars/haspars}">
+                   <Text text="Func: {/fFuncPars/name}"/>
+                   <Table items="{ path: '/fFuncPars/pars' }">
+                      <columns>
+                         <Column width="75px"><Text text="Name"/></Column>
+                         <Column width="45px"><Text text="Fix"/></Column>
+                         <Column width="75px"><Text text="Value"/></Column>
+                         <Column width="75px"><Text text="Min"/></Column>
+                         <Column width="75px"><Text text="Max"/></Column>
+                         <Column width="75px"><Text text="Error"/></Column>
+                      </columns>
+                      <items>
+                         <ColumnListItem>
+                            <cells>
+                               <Text text="{name}"/>
+                               <CheckBox selected="{fixed}"/>
+                               <Input value="{value}" type="Number" tooltip="{name}.value = {value}"/>
+                               <Input value="{min}" type="Number" tooltip="{name}.min = {min}"/>
+                               <Input value="{max}" type="Number" tooltip="{name}.max = {max}"/>
+                               <Input value="{error}" type="Number" tooltip="{name}.error = {error}"/>
+                            </cells>
+                         </ColumnListItem>
+                      </items>
+                   </Table>
+               </IconTabFilter>
+               <IconTabFilter key="Advanced" text="Advanced" enabled="{/fHasAdvanced}">
+                  <IconTabBar headerMode="Inline" expandable="false" selectedKey="{/fAdvancedTab}">
+                     <items>
+                        <IconTabFilter key="Contour" text="Contour">
+                           <l:Grid defaultSpan="XL6 L6 M6 S6"
+                              class="sapUiSizeCompact" hSpacing="0.5"
+                              vSpacing="0">
+                              <Text text="Number of Points:" />
+                              <StepInput min="0" max="1000" step="1" value="{/fContourPoints}" editable="true" />
+                              <Text text="Parameter 1:" />
+                              <ComboBox selectedKey="{/fContourPar1Id}"
+                                 change="onContourPar1Change"
+                                 items="{ path: '/fAdvancedPars' }">
+                                 <core:Item key="{key}" text="{value}" />
+                              </ComboBox>
+                              <Text text="Parameter 2:" />
+                              <ComboBox selectedKey="{/fContourPar2Id}"
+                                 change="onContourPar2Change"
+                                 items="{ path: '/fAdvancedPars' }">
+                                 <core:Item key="{key}" text="{value}" />
+                              </ComboBox>
+                              <Text text="Confidence Level:" />
+                              <StepInput min="0.000" max="1.000" step="0.001"
+                                 value="{/fConfidenceLevel}"
+                                 editable="true" displayValuePrecision="3" />
+                              <HBox alignItems="Center">
+                                 <Text text="Fill Colour:"/>
+                                 <fitpanel:ColorButton width="50px" color="{/fContourColor}" tooltip="Fill color for contour plot"/>
+                              </HBox>
+                              <CheckBox text="Super impose" selected="{/fContourSuperImpose}" />
+                           </l:Grid>
+                        </IconTabFilter>
+                        <IconTabFilter key="Scan" text="Scan">
+                           <l:Grid defaultSpan="XL6 L6 M6 S6"
+                              class="sapUiSizeCompact" hSpacing="0.5"
+                              vSpacing="0">
+                              <Text text="Number of Points:" />
+                              <StepInput min="0" max="1000" step="1" value="{/fScanPoints}" editable="true" />
+                              <Text text="Parameter:" />
+                              <ComboBox selectedKey="{/fScanId}"
+                                 items="{ path: '/fAdvancedPars' }">
+                                 <core:Item key="{key}" text="{value}" />
+                              </ComboBox>
+                              <Text text="Min:" />
+                              <StepInput value="{/fScanMin}"
+                                 min="0.0001" max="100.0000" step="0.0001"
+                                 editable="true" displayValuePrecision="4" />
+                              <Text text="Max:" />
+                              <StepInput value="{/fScanMax}"
+                                 min="0.0001" max="100.0000" step="0.0001"
+                                 editable="true" displayValuePrecision="4" />
+                              <Text text="Line color:" />
+                              <fitpanel:ColorButton width="50px" color="{/fScanColor}" tooltip="Line color for scan plot"/>
+                           </l:Grid>
+                        </IconTabFilter>
+                        <IconTabFilter key="Confidence" text="Conf Intervals">
+                           <l:Grid defaultSpan="XL6 L6 M6 S6"
+                              class="sapUiSizeCompact" hSpacing="0.5"
+                              vSpacing="0">
+                              <Text text="Confidence Level:"/>
+                              <StepInput min="0.000" max="1.000" step="0.001"
+                                 value="{/fConfidenceLevel}" editable="true" displayValuePrecision="3" />
+                              <Text text="Fill color:" />
+                              <fitpanel:ColorButton width="50px" color="{/fConfidenceColor}" tooltip="Fill color for confidence plot"/>
+                           </l:Grid>
+                        </IconTabFilter>
+                     </items>
+                  </IconTabBar>
+               </IconTabFilter>
+            </items>
+         </IconTabBar>
+      </VBox>
+      <footer>
+         <Toolbar>
+            <Button text="Update" press="doUpdate" tooltip="Update panel content from server" />
+            <ToolbarSpacer/>
+            <Button press="pressApplyPars" text="SetPars" visible="{= ${/fSelectedTab} === 'Pars'}" tooltip="Set function parameters"/>
+            <Button text="Fit" press="doFit" visible="{= ${/fSelectedTab} !== 'Advanced'}" tooltip="Fit the histogram" />
+            <Button text="Draw" press="doDraw" tooltip="Draw histogram and selected function" />
+            <Button text="Close" press="closePanel" tooltip="Close the Fit Panel" />
+         </Toolbar>
+      </footer>
+   </Page>
+</mvc:View>

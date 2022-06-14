@@ -1,0 +1,13 @@
+\begin{optiontableAuto}
+                SplitMode  &  \mc{1}{c}{--}  &           Random  &  Random, Alternate, Block  &  Method of picking training and testing events (default: random) \\
+                  MixMode  &  \mc{1}{c}{--}  &  SameAsSplitMode  &  SameAsSplitMode, Random, Alternate, Block  &  Method of mixing events of differnt classes into one dataset (default: SameAsSplitMode) \\
+                SplitSeed  &  \mc{1}{c}{--}  &              100  &  \mc{1}{l}{--}  &  Seed for random event shuffling \\
+                 NormMode  &  \mc{1}{c}{--}  &   EqualNumEvents  &  None, NumEvents, EqualNumEvents  &  Overall renormalisation of  event-by-event weights used in the training (NumEvents: average weight of 1 per event, independently for signal and background; EqualNumEvents: average weight of 1 per event for signal, and sum of weights for background equal to sum of weights for signal) \\
+            nTrain\_Signal  &  \mc{1}{c}{--}  &                0  &  \mc{1}{l}{--}  &  Number of training events of class Signal (default: 0 = all) \\
+             nTest\_Signal  &  \mc{1}{c}{--}  &                0  &  \mc{1}{l}{--}  &  Number of test events of class Signal (default: 0 = all) \\
+        nTrain\_Background  &  \mc{1}{c}{--}  &                0  &  \mc{1}{l}{--}  &  Number of training events of class Background (default: 0 = all) \\
+         nTest\_Background  &  \mc{1}{c}{--}  &                0  &  \mc{1}{l}{--}  &  Number of test events of class Background (default: 0 = all) \\
+                        V  &  \mc{1}{c}{--}  &            False  &  \mc{1}{l}{--}  &  Verbosity (default: true) \\
+             VerboseLevel  &  \mc{1}{c}{--}  &             Info  &  Debug, Verbose, Info  &  VerboseLevel (Debug/Verbose/Info) \\
+             Correlations  &  \mc{1}{c}{--}  &            True   &  \mc{1}{l}{--}  &  Whether to show variable correlations output (default: true)
+\end{optiontableAuto}

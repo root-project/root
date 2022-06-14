@@ -1,0 +1,10 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:mvc="sap.ui.core.mvc">
+   <Dialog title="Inspect" contentWidth="75%">
+      <content>
+          <mvc:XMLView id="object_inspector" viewName="rootui5.canv.view.Inspector"></mvc:XMLView>
+      </content>
+      <endButton>
+          <Button text="Close It" press="closeInspector" />
+      </endButton>
+   </Dialog>
+</core:FragmentDefinition>

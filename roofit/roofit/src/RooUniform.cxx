@@ -1,0 +1,156 @@
+/*****************************************************************************
+ * Project: RooFit                                                           *
+ * Package: RooFitModels                                                     *
+ * @(#)root/roofit:$Id$
+ * Authors:                                                                  *
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
+ *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
+ *                                                                           *
+ * Copyright (c) 2000-2005, Regents of the University of California          *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
+ *****************************************************************************/
+
+/** \class RooUniform
+    \ingroup Roofit
+
+Flat p.d.f. in N dimensions
+**/
+
+#include "RooAbsReal.h"
+#include "RooArgSet.h"
+#include "RooRealVar.h"
+#include "RooUniform.h"
+#include "RunContext.h"
+
+
+ClassImp(RooUniform);
+
+////////////////////////////////////////////////////////////////////////////////
+
+RooUniform::RooUniform(const char *name, const char *title, const RooArgSet& _x) :
+  RooAbsPdf(name,title),
+  x("x","Observables",this,true,false)
+{
+  x.add(_x) ;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+RooUniform::RooUniform(const RooUniform& other, const char* name) :
+  RooAbsPdf(other,name), x("x",this,other.x)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+double RooUniform::evaluate() const
+{
+  return 1 ;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///Compute multiple values of the uniform distribution (effectively return a span with ones)
+RooSpan<double> RooUniform::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* /*normSet*/) const
+{
+  size_t nEvents = 1;
+  for (auto elm : x) {
+    size_t nEventsCurrent = static_cast<const RooAbsReal*>(elm)->getValues(evalData).size();
+    if(nEventsCurrent != 1 && nEvents != 1 && nEventsCurrent != nEvents) {
+      auto errorMsg = std::string("RooUniform::evaluateSpan(): number of entries for input variables does not match")
+                      + "in RooUniform with name \"" + GetName() + "\".";
+      coutE(FastEvaluations) << errorMsg << std::endl ;
+      throw std::runtime_error(errorMsg);
+    }
+    nEvents = std::max(nEvents, nEventsCurrent);
+  }
+  RooSpan<double> values = evalData.makeBatch(this, nEvents);
+  for (size_t i=0; i<nEvents; i++) {
+    values[i] = 1.0;
+  }
+  return values;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Advertise analytical integral
+
+Int_t RooUniform::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
+{
+  Int_t nx = x.getSize() ;
+  if (nx>31) {
+    // Warn that analytical integration is only provided for the first 31 observables
+    coutW(Integration) << "RooUniform::getAnalyticalIntegral(" << GetName() << ") WARNING: p.d.f. has " << x.getSize()
+             << " observables, analytical integration is only implemented for the first 31 observables" << std::endl ;
+    nx=31 ;
+  }
+
+  Int_t code(0) ;
+  for (int i=0 ; i<x.getSize() ; i++) {
+    if (allVars.find(x.at(i)->GetName())) {
+      code |= (1<<i) ;
+      analVars.add(*allVars.find(x.at(i)->GetName())) ;
+    }
+  }
+  return code ;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Implement analytical integral
+
+double RooUniform::analyticalIntegral(Int_t code, const char* rangeName) const
+{
+  double ret(1) ;
+  for (int i=0 ; i<32 ; i++) {
+    if (code&(1<<i)) {
+      RooAbsRealLValue* var = (RooAbsRealLValue*)x.at(i) ;
+      ret *= (var->getMax(rangeName) - var->getMin(rangeName)) ;
+    }
+  }
+  return ret ;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Advertise internal generator
+
+Int_t RooUniform::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool /*staticInitOK*/) const
+{
+  Int_t nx = x.getSize() ;
+  if (nx>31) {
+    // Warn that analytical integration is only provided for the first 31 observables
+    coutW(Integration) << "RooUniform::getGenerator(" << GetName() << ") WARNING: p.d.f. has " << x.getSize()
+             << " observables, internal integrator is only implemented for the first 31 observables" << std::endl ;
+    nx=31 ;
+  }
+
+  Int_t code(0) ;
+  for (int i=0 ; i<x.getSize() ; i++) {
+    if (directVars.find(x.at(i)->GetName())) {
+      code |= (1<<i) ;
+      generateVars.add(*directVars.find(x.at(i)->GetName())) ;
+    }
+  }
+  return code ;
+  return 0 ;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Implement internal generator
+
+void RooUniform::generateEvent(Int_t code)
+{
+  // Fast-track handling of one-observable case
+  if (code==1) {
+    ((RooAbsRealLValue*)x.at(0))->randomize() ;
+    return ;
+  }
+
+  for (int i=0 ; i<32 ; i++) {
+    if (code&(1<<i)) {
+      RooAbsRealLValue* var = (RooAbsRealLValue*)x.at(i) ;
+      var->randomize() ;
+    }
+  }
+}

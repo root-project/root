@@ -1,0 +1,19 @@
+<lcgdict>
+
+
+
+
+
+ <class name ="TrackD">
+</class>
+ <class name ="TrackD32">
+  <field name="fVec" iotype="ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<Double32_t> >" />
+  <field name="fPos" iotype="ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<Double32_t>,ROOT::Math::DefaultCoordinateSystemTag>" />
+</class>
+<class pattern="std::vector<ROOT::Math::PositionVector*>" />
+<class pattern="std::vector<TrackD*>" />
+<class name="VecTrackD" />
+<class name="ClusterD" />
+
+
+</lcgdict>

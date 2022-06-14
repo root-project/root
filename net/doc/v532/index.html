@@ -1,0 +1,15 @@
+<br/>
+<hr/>
+<a name="net"></a>
+<h3>Networking Libraries</h3>
+
+<h4>New TSSLSocket class</h4>
+The new TSSLSocket class wraps a TSocket with SSL encryption. This class
+is used to provide support for reading TWebFiles over https.
+
+<h4>New TUDPSocket class</h4>
+The new TUDPSocket uses UDP as protocol where TSocket uses TCP. This class
+can be used to talk to UDP servers.
+
+<h4>XROOTD</h4>
+Starting with this version (5.32/00) Xrootd is no longer distributed with ROOT. The package is still needed to build the modules 'netx', 'proofx' and 'proofd' and must be provided as external. Xrootd can be downloaded from the main web site and its installation is straightforward. A script to automatize the installation process is provided at build/unix/installxrootd.sh ; scripts to set-up the environment at bin/setxrd.sh and bin/setxrd.csh . <span style="font-weight: bold;">Note that the Xrootd team has dropped support for Windows</span>, so the Xrootd-related components of ROOT will only be built on Unices (Linux, Solaris, MacOsX). See also <a href="http://root.cern.ch/drupal/content/installing-xrootd">this page</a>.

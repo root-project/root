@@ -1,0 +1,34 @@
+\section{Combining MVA Methods}\index{Combining}
+\label{sec:combine}
+
+In challenging classification or regression problems with a high demand for 
+optimisation, or when treating feature spaces with strongly varying properties, 
+it can be useful to combined MVA methods. There is large room for creativity 
+inherent in such combinations. For TMVA we distinguish three classes of 
+combinations:
+\begin{enumerate}
+
+\item {\em Boosting} MVA methods,\index{Boosting method}
+
+\item {\em Categorising} MVA methods,\index{Category method}
+
+\item Building {\em committees} of MVA methods.\index{Committee method}
+
+\end{enumerate}
+While the first two combined methods are available since TMVA~4.1, the third one is still 
+under development. The MVA {\em booster} is a generalisation of the Boosted Decision 
+Trees approach (see Sec.~\ref{sec:bdt})
+to any method in TMVA. {\em Category methods} allow the user to specify
+sub-regions of phase space, which are assigned by requirements on input 
+or spectator variables, and which define disjoint sub-populations of the training 
+sample, thus improving the modelling of the training data. Finally, {\em Committee methods} 
+allow one to input MVA methods into other MVA methods, a procedure that can be arbitrarily 
+chained. 
+
+All of these combined methods are of course MVA methods themselves, treated just like 
+any other method in TMVA for training, testing, evaluation and application. This also 
+allows to categorise a committee method, for example. 
+
+\input Boosting
+
+\input Category
