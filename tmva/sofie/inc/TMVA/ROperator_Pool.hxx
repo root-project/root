@@ -292,13 +292,10 @@ public:
       int hmin = - fAttrPads[0];   // minimum lower bound value of filter area
       int hmax = fShapeX[2] + fAttrPads[1] - fAttrKernelShape[0] +1;  // maximum lower bound value + 1 
       int wmin,wmax,dmin,dmax;
-      if(fDim==1){
-         fShapeX[3]=fShapeX[4]=1;
-      }
+
       if(fDim==2){
          wmin = - fAttrPads[2];   // minimum lower bound value of filter area  
          wmax = fShapeX[3] + fAttrPads[3] - fAttrKernelShape[1] +1;  // maximum lower bound value + 1 
-         fShapeX[4]=1;
       }
       else{
          wmin=1;
@@ -313,8 +310,10 @@ public:
          dmax=1;
       }
       out << SP << "constexpr int hsize = " << fShapeX[2] << ";\n";
-      out << SP << "constexpr int wsize = " << fShapeX[3] << ";\n";
-      out << SP << "constexpr int dsize = " << fShapeX[4] << ";\n";
+      size_t wsize = (fDim > 1) ? fShapeX[3] : 1;
+      out << SP << "constexpr int wsize = " << wsize << ";\n";
+      size_t dsize = (fDim > 1) ? fShapeX[4] : 1;
+      out << SP << "constexpr int dsize = " << dsize << ";\n";
       out << SP << "constexpr int hmin = " << hmin << ";\n";
       out << SP << "constexpr int hmax = " << hmax << ";\n";
       out << SP << "constexpr int wmin = " << wmin << ";\n";
