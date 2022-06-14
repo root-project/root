@@ -242,13 +242,13 @@ if(ROOT_roofit_FOUND)
     ROOT_EXECUTABLE(stressRooFit stressRooFit.cxx LIBRARIES RooFit )
   endif()  
   configure_file(stressRooFit_ref.root stressRooFit_ref.root COPYONLY)
-  ROOT_ADD_TEST(test-stressroofit COMMAND stressRooFit FAILREGEX "FAILED|Error in" LABELS longtest)
-  ROOT_ADD_TEST(test-stressroofit-batchmode-cpu COMMAND stressRooFit -b cpu FAILREGEX "FAILED|Error in" LABELS longtest)
+  ROOT_ADD_TEST(test-stressroofit COMMAND stressRooFit FAILREGEX "FAILED|Error in")
+  ROOT_ADD_TEST(test-stressroofit-batchmode-cpu COMMAND stressRooFit -b cpu FAILREGEX "FAILED|Error in")
   if(CUDA_FOUND)
-    ROOT_ADD_TEST(test-stressroofit-batchmode-cuda COMMAND stressRooFit -b cuda FAILREGEX "FAILED|Error in" LABELS longtest)
+    ROOT_ADD_TEST(test-stressroofit-batchmode-cuda COMMAND stressRooFit -b cuda FAILREGEX "FAILED|Error in")
   endif()
   ROOT_ADD_TEST(test-stressroofit-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressRooFit.cxx
-                FAILREGEX "FAILED|Error in" DEPENDS test-stressroofit )
+                FAILREGEX "FAILED|Error in" DEPENDS test-stressroofit LABELS longtest)
 
   # Test that the user can still include RooMath.h themselves from the
   # interpreter. We test this case explicitely, because RooMath.h was moved
