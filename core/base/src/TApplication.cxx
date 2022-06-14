@@ -49,11 +49,13 @@ TApplication (see TRint).
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
+#include <mutex>
 
 TApplication *gApplication = nullptr;
 Bool_t TApplication::fgGraphNeeded = kFALSE;
 Bool_t TApplication::fgGraphInit = kFALSE;
 TList *TApplication::fgApplications = nullptr;  // List of available applications
+std::once_flag gRegisterEndOfProcessCleanupsFlag;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -89,6 +91,15 @@ static void CallEndOfProcessCleanups()
       gROOT->SetBit(kInvalidObject);
       gROOT->EndOfProcessCleanups();
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Register an atexit function that calls TROOT::EndOfProcessCleanups.
+///
+/// The registration is done only once in the program by using an std::once_flag.
+void TApplication::RegisterEndOfProcessCleanups()
+{
+   std::call_once(gRegisterEndOfProcessCleanupsFlag, []{ std::atexit(CallEndOfProcessCleanups); });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -156,12 +167,8 @@ TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
    if (!gSystem)
       ::Fatal("TApplication::TApplication", "gSystem not initialized");
 
-   static Bool_t hasRegisterAtExit(kFALSE);
-   if (!hasRegisterAtExit) {
-      // If we are the first TApplication register the atexit)
-      atexit(CallEndOfProcessCleanups);
-      hasRegisterAtExit = kTRUE;
-   }
+   TApplication::RegisterEndOfProcessCleanups();
+
    gROOT->SetName(appClassName);
 
    // copy command line arguments, can be later accessed via Argc() and Argv()

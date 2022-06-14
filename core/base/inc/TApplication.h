@@ -158,6 +158,7 @@ public:
    static TList   *GetApplications();
    static void     CreateApplication();
    static void     NeedGraphicsLibs();
+   static void     RegisterEndOfProcessCleanups();
 
    ClassDefOverride(TApplication,0)  //GUI application singleton
 };
