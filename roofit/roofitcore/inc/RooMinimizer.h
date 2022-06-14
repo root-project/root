@@ -73,7 +73,7 @@ public:
   int simplex() ;
   int improve() ;
 
-  int minimize(const char* type, const char* alg=0) ;
+  int minimize(const char* type, const char* alg=nullptr) ;
 
   RooFitResult* save(const char* name=0, const char* title=0) ;
   RooPlot* contour(RooRealVar& var1, RooRealVar& var2,
@@ -100,7 +100,7 @@ public:
 
   int getPrintLevel() const { return _printLevel; }
 
-  void setMinimizerType(const char* type) ;
+  void setMinimizerType(std::string const& type) ;
 
   static void cleanup() ;
   static RooFitResult* lastMinuitFit() ;
@@ -149,7 +149,14 @@ private:
   std::unique_ptr<TMatrixDSym> _extV;
 
   RooAbsMinimizerFcn *_fcn;
-  std::string _minimizerType = "Minuit";
+
+  /// The default minimizer type. This should be the almost the only place in
+  /// the RooFit implementation where a minimizer type is specified directly,
+  /// and other parts should use RooMinimizer::defaultMinimizerType to get
+  /// consistent defaults.
+  static constexpr const char* defaultMinimizerType = "Minuit";
+
+  std::string _minimizerType;
   FcnMode _fcnMode;
 
   static std::unique_ptr<ROOT::Fit::Fitter> _theFitter ;

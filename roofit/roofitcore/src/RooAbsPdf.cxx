@@ -1675,7 +1675,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   cfg.doSumW2 = pc.getInt("doSumW2");
   cfg.doAsymptotic = pc.getInt("doAsymptoticError");
   cfg.minosSet = static_cast<RooArgSet*>(pc.getObject("minosSet"));
-  cfg.minType = pc.getString("mintype","Minuit");
+  cfg.minType = pc.getString("mintype","");
   cfg.minAlg = pc.getString("minalg","minuit");
 
   return minimizeNLL(*nll, data, cfg).release();

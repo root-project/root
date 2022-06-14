@@ -71,6 +71,9 @@ using namespace std;
 ClassImp(RooMinimizer);
 ;
 
+// Declare constexpr static members to make them available if odr-used in C++14.
+constexpr const char *RooMinimizer::defaultMinimizerType;
+
 std::unique_ptr<ROOT::Fit::Fitter> RooMinimizer::_theFitter = {};
 
 
@@ -141,6 +144,7 @@ RooMinimizer::RooMinimizer(std::shared_ptr<RooFit::TestStatistics::RooAbsL> like
 void RooMinimizer::initMinimizerFirstPart()
 {
    RooSentinel::activate();
+   setMinimizerType("");
 
    _theFitter = std::make_unique<ROOT::Fit::Fitter>();
    _theFitter->Config().SetMinimizer(_minimizerType.c_str());
@@ -258,10 +262,18 @@ void RooMinimizer::setOffsetting(bool flag)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Choose the minimizer algorithm.
+///
+/// Passing an empty string selects the default type specified by the
+/// `RooMinimizer::defaultMinimizerType` variable.
 
-void RooMinimizer::setMinimizerType(const char* type)
+void RooMinimizer::setMinimizerType(std::string const& type)
 {
-  if (_fcnMode != FcnMode::classic && strcmp(type, "Minuit2") != 0) {
+  if(type.empty()) {
+    _minimizerType = defaultMinimizerType;
+    return;
+  }
+
+  if (_fcnMode != FcnMode::classic && type != "Minuit2") {
     throw std::invalid_argument("In RooMinimizer::setMinimizerType: only Minuit2 is supported when not using classic function mode!");
   }
   _minimizerType = type;
@@ -295,7 +307,10 @@ bool RooMinimizer::fitFcn() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Minimise the function passed in the constructor.
-/// \param[in] type Type of fitter to use, e.g. "Minuit" "Minuit2".
+/// \param[in] type Type of fitter to use, e.g. "Minuit" "Minuit2". Passing an
+///                 empty string will select the default minimizer type of the
+///                 RooMinimizer, as specified in the the
+///                 `RooMinimizer::defaultMinimizerType` variable.
 /// \attention This overrides the default fitter of this RooMinimizer.
 /// \param[in] alg  Fit algorithm to use. (Optional)
 int RooMinimizer::minimize(const char* type, const char* alg)
@@ -303,7 +318,7 @@ int RooMinimizer::minimize(const char* type, const char* alg)
   _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
           _fcn->getOptConst(),_verbose) ;
 
-  _minimizerType = type;
+  setMinimizerType(type);
   _theFitter->Config().SetMinimizer(type,alg);
 
   profileStart() ;
