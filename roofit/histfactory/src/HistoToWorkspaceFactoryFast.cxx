@@ -1872,44 +1872,21 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     combined->defineSet("globalObservables",globalObs);
     combined_config->SetGlobalObservables(*combined->set("globalObservables"));
 
-
-    ////////////////////////////////////////////
-    // Make toy simultaneous dataset
-    cxcoutP(HistFactory) << "\n-----------------------------------------\n"
-        << "\tcreate toy data for " << channelString.str()
-        << "\n-----------------------------------------\n" << endl;
-
-
-    // now with weighted datasets
-    // First Asimov
-    //RooDataSet * simData=nullptr;
     combined->factory("weightVar[0,-1e10,1e10]");
     obsList.add(*combined->var("weightVar"));
+    combined->defineSet("observables",{obsList, *channelCat}, /*importMissing=*/true);
+    combined_config->SetObservables(*combined->set("observables"));
 
-    // Create Asimov data for the combined dataset
-    std::unique_ptr<RooDataSet> asimov_combined{static_cast<RooDataSet*>(AsymptoticCalculator::GenerateAsimovData(*simPdf,
-                                  obsList))};
-    if( asimov_combined ) {
-      combined->import( *asimov_combined, Rename("asimovData"));
-    }
-    else {
-      std::cout << "Error: Failed to create combined asimov dataset" << std::endl;
-      throw hf_exc();
-    }
 
     // Now merge the observable datasets across the channels
     for(RooAbsData * data : chs[0]->allData()) {
-      // Only include RooDataSets where a data with the same name doesn't only
-      // exist in the merged workspace (like the "asimovData").
-      if(dynamic_cast<RooDataSet*>(data) && !combined->data(data->GetName())) {
+      // We are excluding the Asimov data, because it needs to be regenerated
+      // later after the parameter values are set.
+      if(std::string("asimovData") != data->GetName()) {
         MergeDataSets(combined, chs, ch_names, data->GetName(), obsList, channelCat);
       }
     }
 
-
-    obsList.add(*channelCat);
-    combined->defineSet("observables",obsList);
-    combined_config->SetObservables(*combined->set("observables"));
 
     if (RooMsgService::instance().isActive(static_cast<TObject*>(nullptr), RooFit::HistFactory, RooFit::INFO))
       combined->Print();
@@ -1918,9 +1895,6 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
             << "\tImporting combined model"
             << "\n-----------------------------------------\n" << endl;
     combined->import(*simPdf,RecycleConflictNodes());
-    //combined->import(*simPdf, RenameVariable("SigXsecOverSM","SigXsecOverSM_comb"));
-    // cout << "check pointer " << simPdf << endl;
-    //    cout << "check val " << simPdf->getVal() << endl;
 
     std::map< std::string, double>::iterator param_itr = fParamValues.begin();
     for( ; param_itr != fParamValues.end(); ++param_itr ){
@@ -1957,6 +1931,29 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     combined->importClassCode();
     //    combined->writeToFile("results/model_combined.root");
 
+
+    ////////////////////////////////////////////
+    // Make toy simultaneous dataset
+    cxcoutP(HistFactory) << "\n-----------------------------------------\n"
+        << "\tcreate toy data for " << channelString.str()
+        << "\n-----------------------------------------\n" << endl;
+
+
+    // now with weighted datasets
+    // First Asimov
+
+    // Create Asimov data for the combined dataset
+    std::unique_ptr<RooDataSet> asimov_combined{static_cast<RooDataSet*>(AsymptoticCalculator::GenerateAsimovData(
+                                  *combined->pdf("simPdf"),
+                                  obsList))};
+    if( asimov_combined ) {
+      combined->import( *asimov_combined, Rename("asimovData"));
+    }
+    else {
+      std::cout << "Error: Failed to create combined asimov dataset" << std::endl;
+      throw hf_exc();
+    }
+
     return combined;
   }
 
@@ -1965,7 +1962,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
                       std::vector<std::unique_ptr<RooWorkspace>>& wspace_vec,
                       std::vector<std::string> const& channel_names,
                       std::string const& dataSetName,
-                      RooArgList obsList,
+                      RooArgList const& obsList,
                       RooCategory* channelCat) {
 
     // Create the total dataset
