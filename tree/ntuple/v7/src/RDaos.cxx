@@ -228,25 +228,26 @@ int ROOT::Experimental::Detail::RDaosContainer::WriteSingleAkey(const void *buff
    return RDaosObject(*this, oid, cid.fCid).Update(args);
 }
 
-int ROOT::Experimental::Detail::RDaosContainer::VectorReadWrite(std::vector<RWOperation> &vec, ObjClassId_t cid,
-                                                                int (RDaosObject::*fn)(RDaosObject::FetchUpdateArgs &))
+int ROOT::Experimental::Detail::RDaosContainer::VectorReadWrite(
+   std::unordered_map<std::pair<daos_obj_id_t, DistributionKey_t>, RWOperation> &map, ObjClassId_t cid,
+   int (RDaosObject::*fn)(RDaosObject::FetchUpdateArgs &))
 {
    using request_t = std::tuple<std::unique_ptr<RDaosObject>, RDaosObject::FetchUpdateArgs>;
 
    int ret;
    std::vector<request_t> requests{};
-   requests.reserve(vec.size());
+   requests.reserve(map.size());
 
    // Initialize parent event used for grouping and waiting for completion of all requests
    daos_event_t parent_event{};
    if ((ret = fPool->fEventQueue->InitializeEvent(&parent_event)) < 0)
       return ret;
 
-   for (size_t i = 0; i < vec.size(); ++i) {
+   for (auto &[key, batch] : map) {
       requests.push_back(
-         std::make_tuple(std::make_unique<RDaosObject>(*this, vec[i].fOid, cid.fCid),
-                         RDaosObject::FetchUpdateArgs{vec[i].fDistributionKey, std::move(vec[i].fAttributeKeys),
-                                                      std::move(vec[i].fIovs), /*is_async=*/true}));
+         std::make_tuple(std::make_unique<RDaosObject>(*this, batch.fOid, cid.fCid),
+                         RDaosObject::FetchUpdateArgs{batch.fDistributionKey, std::move(batch.fAttributeKeys),
+                                                      std::move(batch.fIovs), /*is_async=*/true}));
 
       if ((ret = fPool->fEventQueue->InitializeEvent(std::get<1>(requests.back()).GetEventPointer(), &parent_event)) <
           0)
