@@ -446,6 +446,24 @@ Double_t TMath::BreitWigner(Double_t x, Double_t mean, Double_t gamma)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Calculates a Relativistic Breit Wigner function with median and gamma.
+// \f$ BW(E) = \frac{2\sqrt{2}}{\pi}\frac{M^{2}\gamma\sqrt{M^{2} + \gamma^{2}}}{\left(\sqrt{M^{2}+M\sqrt{M^{2} + \gamma^{2}}}\right)\left(\left(E^{2} - M^{2}\right)^{2} + M^{2}\gamma^{2}\right)} \f$
+
+Double_t TMath::BreitWignerRelativistic(Double_t x, Double_t median, Double_t gamma)
+{
+  Double_t mm = median*median;
+  Double_t gg = gamma*gamma;
+  Double_t mg = median*gamma;
+  Double_t xxMinusmm = x*x - mm;
+
+  Double_t y = sqrt(mm * (mm + gg));
+  Double_t k = (0.90031631615710606*mg*y)/(sqrt(mm+y)); //2*sqrt(2)/pi = 0.90031631615710606
+
+  Double_t bw = k/(xxMinusmm*xxMinusmm + mg*mg);
+  return bw;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Calculates a gaussian function with mean and sigma.
 /// If norm=kTRUE (default is kFALSE) the result is divided
 /// by sqrt(2*Pi)*sigma.

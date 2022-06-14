@@ -482,6 +482,7 @@ struct Limits {
    Double_t Binomial(Int_t n,Int_t k);  // Calculate the binomial coefficient n over k
    Double_t BinomialI(Double_t p, Int_t n, Int_t k);
    Double_t BreitWigner(Double_t x, Double_t mean=0, Double_t gamma=1);
+   Double_t BreitWignerRelativistic(Double_t x, Double_t median=0, Double_t gamma=1);
    Double_t CauchyDist(Double_t x, Double_t t=0, Double_t s=1);
    Double_t ChisquareQuantile(Double_t p, Double_t ndf);
    Double_t FDist(Double_t F, Double_t N, Double_t M);
