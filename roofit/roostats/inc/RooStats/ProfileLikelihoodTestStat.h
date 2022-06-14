@@ -47,7 +47,6 @@ namespace RooStats {
 
         fVarName = "Profile Likelihood Ratio";
         fReuseNll = false;
-   fMinimizer=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
    fStrategy=::ROOT::Math::MinimizerOptions::DefaultStrategy();
         fTolerance=TMath::Max(1.,::ROOT::Math::MinimizerOptions::DefaultTolerance());
    fPrintLevel=::ROOT::Math::MinimizerOptions::DefaultPrintLevel();
@@ -67,7 +66,6 @@ namespace RooStats {
 
        fVarName = "Profile Likelihood Ratio";
        fReuseNll = false;
-       fMinimizer=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
        fStrategy=::ROOT::Math::MinimizerOptions::DefaultStrategy();
        // avoid default tolerance to be too small (1. is default in RooMinimizer)
        fTolerance=TMath::Max(1.,::ROOT::Math::MinimizerOptions::DefaultTolerance());

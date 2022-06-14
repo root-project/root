@@ -101,6 +101,7 @@ public:
   int getPrintLevel() const { return _printLevel; }
 
   void setMinimizerType(std::string const& type) ;
+  std::string const& minimizerType() const { return _minimizerType; }
 
   static void cleanup() ;
   static RooFitResult* lastMinuitFit() ;
