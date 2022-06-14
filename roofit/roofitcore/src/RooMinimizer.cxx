@@ -71,9 +71,6 @@ using namespace std;
 ClassImp(RooMinimizer);
 ;
 
-// Declare constexpr static members to make them available if odr-used in C++14.
-constexpr const char *RooMinimizer::defaultMinimizerType;
-
 std::unique_ptr<ROOT::Fit::Fitter> RooMinimizer::_theFitter = {};
 
 
@@ -263,20 +260,16 @@ void RooMinimizer::setOffsetting(bool flag)
 ////////////////////////////////////////////////////////////////////////////////
 /// Choose the minimizer algorithm.
 ///
-/// Passing an empty string selects the default type specified by the
-/// `RooMinimizer::defaultMinimizerType` variable.
+/// Passing an empty string selects the default minimizer type returned by
+/// ROOT::Math::MinimizerOptions::DefaultMinimizerType().
 
 void RooMinimizer::setMinimizerType(std::string const& type)
 {
-  if(type.empty()) {
-    _minimizerType = defaultMinimizerType;
-    return;
-  }
+  _minimizerType = type.empty() ? ROOT::Math::MinimizerOptions::DefaultMinimizerType() : type;
 
-  if (_fcnMode != FcnMode::classic && type != "Minuit2") {
+  if (_fcnMode != FcnMode::classic && _minimizerType != "Minuit2") {
     throw std::invalid_argument("In RooMinimizer::setMinimizerType: only Minuit2 is supported when not using classic function mode!");
   }
-  _minimizerType = type;
 }
 
 
@@ -309,8 +302,8 @@ bool RooMinimizer::fitFcn() const {
 /// Minimise the function passed in the constructor.
 /// \param[in] type Type of fitter to use, e.g. "Minuit" "Minuit2". Passing an
 ///                 empty string will select the default minimizer type of the
-///                 RooMinimizer, as specified in the the
-///                 `RooMinimizer::defaultMinimizerType` variable.
+///                 RooMinimizer, as returned by
+///                 ROOT::Math::MinimizerOptions::DefaultMinimizerType().
 /// \attention This overrides the default fitter of this RooMinimizer.
 /// \param[in] alg  Fit algorithm to use. (Optional)
 int RooMinimizer::minimize(const char* type, const char* alg)

@@ -151,12 +151,6 @@ private:
 
   RooAbsMinimizerFcn *_fcn;
 
-  /// The default minimizer type. This should be the almost the only place in
-  /// the RooFit implementation where a minimizer type is specified directly,
-  /// and other parts should use RooMinimizer::defaultMinimizerType to get
-  /// consistent defaults.
-  static constexpr const char* defaultMinimizerType = "Minuit";
-
   std::string _minimizerType;
   FcnMode _fcnMode;
 
