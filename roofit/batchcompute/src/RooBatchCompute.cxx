@@ -81,12 +81,18 @@ public:
 
       if (ROOT::IsImplicitMTEnabled()) {
          ROOT::Internal::TExecutor ex;
-         unsigned int nThreads = ex.GetPoolSize();
+         std::size_t nThreads = ex.GetPoolSize();
+
+         std::size_t nEventsPerThread = nEvents / nThreads + (nEvents % nThreads > 0);
+
+         // Reset the number of threads to the number we actually need given nEventsPerThread
+         nThreads = nEvents / nEventsPerThread + (nEvents % nEventsPerThread > 0);
 
          auto task = [&](std::size_t idx) -> int {
+
             // Fill a std::vector<Batches> with the same object and with ~nEvents/nThreads
             // Then advance every object but the first to split the work between threads
-            Batches batches(output, nEvents / nThreads + (nEvents % nThreads > 0), vars, extraArgs, buffer.data());
+            Batches batches(output, nEventsPerThread, vars, extraArgs, buffer.data());
             batches.advance(batches.getNEvents() * idx);
 
             // Set the number of events of the last Batches object as the remaining events
