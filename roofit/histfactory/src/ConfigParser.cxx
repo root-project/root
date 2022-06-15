@@ -1026,9 +1026,6 @@ HistFactory::NormFactor ConfigParser::MakeNormFactor( TXMLNode* node ) {
     else if( curAttr->GetName() == TString( "High" ) ) {
       norm.SetHigh( atof(attrVal.c_str()) );
     }
-    else if( curAttr->GetName() == TString( "Const" ) ) {
-      norm.SetConst( CheckTrueFalse(attrVal,"NormFactor") );
-    }
 
     else {
       cxcoutEHF << "Error: Encountered Element in NormFactor with unknown name: "

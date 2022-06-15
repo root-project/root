@@ -86,9 +86,6 @@ namespace HistFactory {
     void SetVal( double Val ) { fVal = Val; }
     double GetVal() const { return fVal; }
 
-    void SetConst( bool Const=true ) { fConst = Const; }
-    bool GetConst() const { return fConst; }
-
     void SetLow( double Low )   { fLow  = Low; }
     void SetHigh( double High ) { fHigh = High; }
     double GetLow() const { return fLow; }
@@ -103,7 +100,6 @@ namespace HistFactory {
     double fVal;
     double fLow;
     double fHigh;
-    bool fConst;
 
   };
 

@@ -178,9 +178,6 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
                v["value"] << norm.GetVal();
                v["min"] << norm.GetLow();
                v["max"] << norm.GetHigh();
-               if (norm.GetConst()) {
-                  v["const"] << true;
-               }
             }
          }
          for (const auto &sys : s.GetOverallSysList()) {
