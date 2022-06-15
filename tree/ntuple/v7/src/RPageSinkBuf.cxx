@@ -62,11 +62,11 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitPageImpl(ColumnHandle_t columnHa
    // compression buffer.
    zipItem->AllocateSealedPageBuf();
    R__ASSERT(zipItem->fBuf);
-   fTaskScheduler->AddTask([this, zipItem, colId = columnHandle.fId] {
-      zipItem->fSealedPage = SealPage(zipItem->fPage,
-         *fBufferedColumns.at(colId).GetHandle().fColumn->GetElement(),
-         GetWriteOptions().GetCompression(), zipItem->fBuf.get()
-      );
+   auto sealedPage = fBufferedColumns.at(columnHandle.fId).RegisterSealedPage();
+   fTaskScheduler->AddTask([this, zipItem, sealedPage, colId = columnHandle.fId] {
+      *sealedPage = SealPage(zipItem->fPage, *fBufferedColumns.at(colId).GetHandle().fColumn->GetElement(),
+                             GetWriteOptions().GetCompression(), zipItem->fBuf.get());
+      zipItem->fSealedPage = &(*sealedPage);
    });
 
    // we're feeding bad locators to fOpenPageRanges but it should not matter
@@ -93,9 +93,20 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::
    }
 
    for (auto &bufColumn : fBufferedColumns) {
-      for (auto &bufPage : bufColumn.DrainBufferedPages()) {
+      auto hasSealedPagesOnly = bufColumn.HasSealedPagesOnly();
+      auto drained = bufColumn.DrainBufferedPages();
+      if (hasSealedPagesOnly) {
+         const auto &sealedPages = std::get<RPageStorage::SealedPageSequence_t>(drained);
+         fInnerSink->CommitSealedPages(std::vector<RPageStorage::RSealedPageRange>{
+            RSealedPageRange(bufColumn.GetHandle().fId, sealedPages.cbegin(), sealedPages.cend())});
+         continue;
+      }
+
+      // Slow path: if the buffered column contains both sealed and unsealed pages, commit them one by one.
+      // TODO(jalopezg): coalesce contiguous sealed pages and commit via `CommitSealedPages()`.
+      for (auto &bufPage : std::get<std::deque<RColumnBuf::RPageZipItem>>(drained)) {
          if (bufPage.IsSealed()) {
-            fInnerSink->CommitSealedPage(bufColumn.GetHandle().fId, bufPage.fSealedPage);
+            fInnerSink->CommitSealedPage(bufColumn.GetHandle().fId, *bufPage.fSealedPage);
          } else {
             fInnerSink->CommitPage(bufColumn.GetHandle(), bufPage.fPage);
          }
