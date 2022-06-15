@@ -40,6 +40,48 @@
 #include <regex>
 
 namespace {
+using AttributeKey_t = ROOT::Experimental::Detail::RDaosContainer::AttributeKey_t;
+using DistributionKey_t = ROOT::Experimental::Detail::RDaosContainer::DistributionKey_t;
+
+/// \brief RNTuple page-DAOS mappings
+enum EDaosMapping { kOidPerCluster, kOidPerPage };
+
+struct RDaosKey {
+   daos_obj_id_t fOid;
+   DistributionKey_t fDkey;
+   AttributeKey_t fAkey;
+};
+
+/// \brief Pre-defined keys for object store. `kDistributionKeyDefault` is the distribution key for metadata and
+/// pagelist values; optionally it can be used for ntuple pages (if under the `kOidPerPage` mapping strategy).
+/// `kAttributeKeyDefault` is the attribute key for ntuple pages under `kOidPerPage`.
+/// `kAttributeKey{Anchor,Header,Footer}` are the respective attribute keys for anchor/header/footer metadata elements.
+static constexpr DistributionKey_t kDistributionKeyDefault = 0x5a3c69f0cafe4a11;
+static constexpr AttributeKey_t kAttributeKeyDefault = 0x4243544b53444229;
+static constexpr AttributeKey_t kAttributeKeyAnchor = 0x4243544b5344422a;
+static constexpr AttributeKey_t kAttributeKeyHeader = 0x4243544b5344422b;
+static constexpr AttributeKey_t kAttributeKeyFooter = 0x4243544b5344422c;
+
+/// \brief Pre-defined object IDs for metadata (holds anchor/header/footer) and clusters' pagelists.
+static constexpr daos_obj_id_t kOidMetadata{std::uint64_t(-1), 0};
+static constexpr daos_obj_id_t kOidPageList{std::uint64_t(-2), 0};
+
+static constexpr daos_oclass_id_t kCidMetadata = OC_SX;
+
+static constexpr EDaosMapping kDefaultDaosMapping = kOidPerCluster;
+
+template <EDaosMapping mapping>
+RDaosKey GetPageDaosKey(long unsigned clusterId, long unsigned columnId, long unsigned pageCount)
+{
+   if constexpr (mapping == kOidPerCluster) {
+      return RDaosKey{daos_obj_id_t{static_cast<decltype(daos_obj_id_t::lo)>(clusterId), 0},
+                      static_cast<DistributionKey_t>(columnId), static_cast<AttributeKey_t>(pageCount)};
+   } else if constexpr (mapping == kOidPerPage) {
+      return RDaosKey{daos_obj_id_t{static_cast<decltype(daos_obj_id_t::lo)>(pageCount), 0}, kDistributionKeyDefault,
+                      kAttributeKeyDefault};
+   }
+}
+
 struct RDaosURI {
    /// \brief Label of the DAOS pool
    std::string fPoolLabel;
@@ -58,22 +100,10 @@ RDaosURI ParseDaosURI(std::string_view uri)
       throw ROOT::Experimental::RException(R__FAIL("Invalid DAOS pool URI."));
    return {m[1], m[2]};
 }
-
-/// \brief Some random distribution/attribute key.  TODO: apply recommended schema, i.e.
-/// an OID for each cluster + a dkey for each page.
-static constexpr std::uint64_t kDistributionKey = 0x5a3c69f0cafe4a11;
-static constexpr std::uint64_t kAttributeKey = 0x4243544b5344422d;
-
-static constexpr daos_obj_id_t kOidAnchor{std::uint64_t(-1), 0};
-static constexpr daos_obj_id_t kOidHeader{std::uint64_t(-2), 0};
-static constexpr daos_obj_id_t kOidFooter{std::uint64_t(-3), 0};
-
-static constexpr daos_oclass_id_t kCidMetadata = OC_SX;
 } // namespace
 
 
 ////////////////////////////////////////////////////////////////////////////////
-
 
 std::uint32_t
 ROOT::Experimental::Detail::RDaosNTupleAnchor::Serialize(void *buffer) const
@@ -171,16 +201,17 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitPageImpl(ColumnHandle_t columnH
    return CommitSealedPageImpl(columnHandle.fId, sealedPage);
 }
 
-
 ROOT::Experimental::RNTupleLocator
-ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageImpl(
-   DescriptorId_t /*columnId*/, const RPageStorage::RSealedPage &sealedPage)
+ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageImpl(DescriptorId_t columnId,
+                                                                const RPageStorage::RSealedPage &sealedPage)
 {
-   auto offsetData = fOid.fetch_add(1);
+   auto offsetData = fPageId.fetch_add(1);
+   DescriptorId_t clusterId = fDescriptorBuilder.GetDescriptor().GetNClusters();
+
    {
       RNTupleAtomicTimer timer(fCounters->fTimeWallWrite, fCounters->fTimeCpuWrite);
-      fDaosContainer->WriteSingleAkey(sealedPage.fBuffer, sealedPage.fSize,
-                                      {offsetData, 0}, kDistributionKey, kAttributeKey);
+      RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(clusterId, columnId, offsetData);
+      fDaosContainer->WriteSingleAkey(sealedPage.fBuffer, sealedPage.fSize, daosKey.fOid, daosKey.fDkey, daosKey.fAkey);
    }
 
    RNTupleLocator result;
@@ -207,9 +238,9 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitClusterGroupImpl(unsigned char 
    auto szPageListZip = fCompressor->Zip(serializedPageList, length, GetWriteOptions().GetCompression(),
                                          RNTupleCompressor::MakeMemCopyWriter(bufPageListZip.get()));
 
-   auto offsetData = fOid.fetch_add(1);
-   fDaosContainer->WriteSingleAkey(bufPageListZip.get(), szPageListZip, {offsetData, 0}, kDistributionKey,
-                                   kAttributeKey, kCidMetadata);
+   auto offsetData = fClusterGroupId.fetch_add(1);
+   fDaosContainer->WriteSingleAkey(bufPageListZip.get(), szPageListZip, kOidPageList, kDistributionKeyDefault,
+                                   offsetData, kCidMetadata);
    RNTupleLocator result;
    result.fPosition = offsetData;
    result.fBytesOnStorage = szPageListZip;
@@ -229,8 +260,8 @@ void ROOT::Experimental::Detail::RPageSinkDaos::CommitDatasetImpl(unsigned char 
 void ROOT::Experimental::Detail::RPageSinkDaos::WriteNTupleHeader(
 		const void *data, size_t nbytes, size_t lenHeader)
 {
-   fDaosContainer->WriteSingleAkey(data, nbytes, kOidHeader, kDistributionKey,
-                                   kAttributeKey, kCidMetadata);
+   fDaosContainer->WriteSingleAkey(data, nbytes, kOidMetadata, kDistributionKeyDefault, kAttributeKeyHeader,
+                                   kCidMetadata);
    fNTupleAnchor.fLenHeader = lenHeader;
    fNTupleAnchor.fNBytesHeader = nbytes;
 }
@@ -238,8 +269,8 @@ void ROOT::Experimental::Detail::RPageSinkDaos::WriteNTupleHeader(
 void ROOT::Experimental::Detail::RPageSinkDaos::WriteNTupleFooter(
 		const void *data, size_t nbytes, size_t lenFooter)
 {
-   fDaosContainer->WriteSingleAkey(data, nbytes, kOidFooter, kDistributionKey,
-                                   kAttributeKey, kCidMetadata);
+   fDaosContainer->WriteSingleAkey(data, nbytes, kOidMetadata, kDistributionKeyDefault, kAttributeKeyFooter,
+                                   kCidMetadata);
    fNTupleAnchor.fLenFooter = lenFooter;
    fNTupleAnchor.fNBytesFooter = nbytes;
 }
@@ -248,8 +279,8 @@ void ROOT::Experimental::Detail::RPageSinkDaos::WriteNTupleAnchor() {
    const auto ntplSize = RDaosNTupleAnchor::GetSize();
    auto buffer = std::make_unique<unsigned char[]>(ntplSize);
    fNTupleAnchor.Serialize(buffer.get());
-   fDaosContainer->WriteSingleAkey(buffer.get(), ntplSize, kOidAnchor, kDistributionKey,
-                                   kAttributeKey, kCidMetadata);
+   fDaosContainer->WriteSingleAkey(buffer.get(), ntplSize, kOidMetadata, kDistributionKeyDefault, kAttributeKeyAnchor,
+                                   kCidMetadata);
 }
 
 ROOT::Experimental::Detail::RPage
@@ -312,8 +343,8 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceDao
    RDaosNTupleAnchor ntpl;
    const auto ntplSize = RDaosNTupleAnchor::GetSize();
    auto buffer = std::make_unique<unsigned char[]>(ntplSize);
-   fDaosContainer->ReadSingleAkey(buffer.get(), ntplSize, kOidAnchor, kDistributionKey,
-                                  kAttributeKey, kCidMetadata);
+   fDaosContainer->ReadSingleAkey(buffer.get(), ntplSize, kOidMetadata, kDistributionKeyDefault, kAttributeKeyAnchor,
+                                  kCidMetadata);
    ntpl.Deserialize(buffer.get(), ntplSize).Unwrap();
 
    auto oclass = RDaosObject::ObjClassId(ntpl.fObjClass);
@@ -324,16 +355,16 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceDao
    descBuilder.SetOnDiskHeaderSize(ntpl.fNBytesHeader);
    buffer = std::make_unique<unsigned char[]>(ntpl.fLenHeader);
    auto zipBuffer = std::make_unique<unsigned char[]>(ntpl.fNBytesHeader);
-   fDaosContainer->ReadSingleAkey(zipBuffer.get(), ntpl.fNBytesHeader, kOidHeader, kDistributionKey,
-                                  kAttributeKey, kCidMetadata);
+   fDaosContainer->ReadSingleAkey(zipBuffer.get(), ntpl.fNBytesHeader, kOidMetadata, kDistributionKeyDefault,
+                                  kAttributeKeyHeader, kCidMetadata);
    fDecompressor->Unzip(zipBuffer.get(), ntpl.fNBytesHeader, ntpl.fLenHeader, buffer.get());
    Internal::RNTupleSerializer::DeserializeHeaderV1(buffer.get(), ntpl.fLenHeader, descBuilder);
 
    descBuilder.AddToOnDiskFooterSize(ntpl.fNBytesFooter);
    buffer = std::make_unique<unsigned char[]>(ntpl.fLenFooter);
    zipBuffer = std::make_unique<unsigned char[]>(ntpl.fNBytesFooter);
-   fDaosContainer->ReadSingleAkey(zipBuffer.get(), ntpl.fNBytesFooter, kOidFooter, kDistributionKey,
-                                  kAttributeKey, kCidMetadata);
+   fDaosContainer->ReadSingleAkey(zipBuffer.get(), ntpl.fNBytesFooter, kOidMetadata, kDistributionKeyDefault,
+                                  kAttributeKeyFooter, kCidMetadata);
    fDecompressor->Unzip(zipBuffer.get(), ntpl.fNBytesFooter, ntpl.fLenFooter, buffer.get());
    Internal::RNTupleSerializer::DeserializeFooterV1(buffer.get(), ntpl.fLenFooter, descBuilder);
 
@@ -342,10 +373,8 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceDao
    for (const auto &cgDesc : ntplDesc.GetClusterGroupIterable()) {
       buffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLength());
       zipBuffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLocator().fBytesOnStorage);
-      fDaosContainer->ReadSingleAkey(
-         zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage,
-         {static_cast<decltype(daos_obj_id_t::lo)>(cgDesc.GetPageListLocator().fPosition), 0}, kDistributionKey,
-         kAttributeKey, kCidMetadata);
+      fDaosContainer->ReadSingleAkey(zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage, kOidPageList,
+                                     kDistributionKeyDefault, cgDesc.GetPageListLocator().fPosition, kCidMetadata);
       fDecompressor->Unzip(zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage, cgDesc.GetPageListLength(),
                            buffer.get());
 
@@ -382,9 +411,9 @@ void ROOT::Experimental::Detail::RPageSourceDaos::LoadSealedPage(
    sealedPage.fSize = bytesOnStorage;
    sealedPage.fNElements = pageInfo.fNElements;
    if (sealedPage.fBuffer) {
-      fDaosContainer->ReadSingleAkey(const_cast<void *>(sealedPage.fBuffer), bytesOnStorage,
-                                     {static_cast<decltype(daos_obj_id_t::lo)>(pageInfo.fLocator.fPosition), 0},
-                                     kDistributionKey, kAttributeKey);
+      RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(clusterId, columnId, pageInfo.fLocator.fPosition);
+      fDaosContainer->ReadSingleAkey(const_cast<void *>(sealedPage.fBuffer), bytesOnStorage, daosKey.fOid,
+                                     daosKey.fDkey, daosKey.fAkey);
    }
 }
 
@@ -406,9 +435,9 @@ ROOT::Experimental::Detail::RPageSourceDaos::PopulatePageFromCluster(ColumnHandl
 
    if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kOff) {
       directReadBuffer = std::make_unique<unsigned char[]>(bytesOnStorage);
-      fDaosContainer->ReadSingleAkey(directReadBuffer.get(), bytesOnStorage,
-                                     {static_cast<decltype(daos_obj_id_t::lo)>(pageInfo.fLocator.fPosition), 0},
-                                     kDistributionKey, kAttributeKey);
+      RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(clusterId, columnId, pageInfo.fLocator.fPosition);
+      fDaosContainer->ReadSingleAkey(directReadBuffer.get(), bytesOnStorage, daosKey.fOid, daosKey.fDkey,
+                                     daosKey.fAkey);
       fCounters->fNPageLoaded.Inc();
       fCounters->fNRead.Inc();
       fCounters->fSzReadPayload.Add(bytesOnStorage);
@@ -518,7 +547,9 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
       struct RDaosSealedPageLocator {
          RDaosSealedPageLocator() = default;
          RDaosSealedPageLocator(DescriptorId_t c, NTupleSize_t p, std::uint64_t o, std::uint64_t s, std::size_t b)
-            : fColumnId(c), fPageNo(p), fObjectId(o), fSize(s), fBufPos(b) {}
+            : fColumnId(c), fPageNo(p), fObjectId(o), fSize(s), fBufPos(b)
+         {
+         }
          DescriptorId_t fColumnId = 0;
          NTupleSize_t fPageNo = 0;
          std::uint64_t fObjectId = 0;
@@ -546,7 +577,8 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
          }
       }
 
-      // Prepare the input map for the RDaosContainer::ReadV() call
+      // Prepare input dictionary for the RDaosContainer::ReadV() call, mapped by object ID and distribution key
+      // according to the mapping strategy
       RDaosContainer::MultiObjectRWOperation_t readRequests;
       std::vector<d_iov_t> iovs(onDiskPages.size());
       auto buffer = new unsigned char[szPayload];
@@ -554,14 +586,15 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
       for (unsigned i = 0; i < onDiskPages.size(); ++i) {
          auto &s = onDiskPages[i];
          d_iov_set(&iovs[i], buffer + s.fBufPos, s.fSize);
-         auto od_key = RDaosContainer::ROidDkeyPair{daos_obj_id_t{s.fObjectId, 0}, kDistributionKey};
-         auto [it, ret] = readRequests.emplace(od_key, RDaosContainer::RWOperation(od_key));
-         it->second.insert(kAttributeKey, iovs[i]);
+         RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(clusterId, s.fColumnId, s.fObjectId);
+         auto odPair = RDaosContainer::ROidDkeyPair{daosKey.fOid, daosKey.fDkey};
+         auto [it, ret] = readRequests.emplace(odPair, RDaosContainer::RWOperation(odPair));
+         it->second.insert(daosKey.fAkey, iovs[i]);
       }
       fCounters->fSzReadPayload.Add(szPayload);
 
       // Register the on disk pages in a page map
-      auto pageMap = std::make_unique<ROnDiskPageMapHeap>(std::unique_ptr<unsigned char []>(buffer));
+      auto pageMap = std::make_unique<ROnDiskPageMapHeap>(std::unique_ptr<unsigned char[]>(buffer));
       for (const auto &s : onDiskPages) {
          ROnDiskPage::Key key(s.fColumnId, s.fPageNo);
          pageMap->Register(key, ROnDiskPage(buffer + s.fBufPos, s.fSize));
