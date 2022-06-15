@@ -174,7 +174,6 @@ static ClustersAndEntries MakeClusters(const std::vector<std::string> &treeNames
          const auto currentEnd = std::min(end + offset, endEntry);
          if (currentStart < currentEnd)
             clusters.emplace_back(EntryCluster{currentStart, currentEnd});
-            //clusters.emplace_back(EntryCluster{start + offset, end + offset});
          else
             IsInRange = false;
       }
@@ -182,8 +181,7 @@ static ClustersAndEntries MakeClusters(const std::vector<std::string> &treeNames
       if (IsInRange) {
          clustersPerFile.emplace_back(std::move(clusters));
          entriesPerFile.emplace_back(/*clusters.back().end - clusters[0].start*/ entries);
-      }
-      else {
+      } else {
          clustersPerFile.emplace_back();
          entriesPerFile.emplace_back(entries);
       }
@@ -532,7 +530,8 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
    // sub-entrylists.
    const bool hasFriends = !fFriendInfo.fFriendNames.empty();
    const bool hasEntryList = fEntryList.GetN() > 0;
-   const bool shouldRetrieveAllClusters = hasFriends || hasEntryList || (fStartEntry && fEndEntry != std::numeric_limits<Long64_t>::max());
+   const bool shouldRetrieveAllClusters =
+      hasFriends || hasEntryList || (fStartEntry || fEndEntry != std::numeric_limits<Long64_t>::max());
    ClustersAndEntries allClusterAndEntries{};
    auto &allClusters = allClusterAndEntries.first;
    const auto &allEntries = allClusterAndEntries.second;
