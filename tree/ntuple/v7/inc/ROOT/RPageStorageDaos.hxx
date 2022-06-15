@@ -40,7 +40,6 @@ class RPagePool;
 class RDaosPool;
 class RDaosContainer;
 
-
 // clang-format off
 /**
 \class ROOT::Experimental::Detail::RDaosNTupleAnchor
@@ -86,7 +85,8 @@ struct RDaosNTupleAnchor {
 \ingroup NTuple
 \brief Storage provider that writes ntuple pages to into a DAOS container
 
-Currently, an object is allocated for each page + 3 additional objects (anchor/header/footer).
+Currently, an object is allocated for ntuple metadata (anchor/header/footer). 
+Objects can correspond to pages or clusters of pages depending on the RNTuple-DAOS mapping strategy.
 */
 // clang-format on
 class RPageSinkDaos : public RPageSink {
@@ -98,8 +98,10 @@ private:
    /// (which calls `daos_cont_close()`; the destructor for the `std::shared_ptr<RDaosPool>` is invoked
    /// after (which calls `daos_pool_disconect()`).
    std::unique_ptr<RDaosContainer> fDaosContainer;
-   /// OID for the next committed page; it is automatically incremented in `CommitSealedPageImpl()`
-   std::atomic<std::uint64_t> fOid{0};
+   /// Page identifier for the next committed page; it is automatically incremented in `CommitSealedPageImpl()`
+   std::atomic<std::uint64_t> fPageId{0};
+   /// Cluster group counter for the next committed cluster pagelist; incremented in `CommitClusterGroupImpl()`
+   std::atomic<std::uint64_t> fClusterGroupId{0};
    /// \brief A URI to a DAOS pool of the form 'daos://pool-label/container-label'
    std::string fURI;
    /// Tracks the number of bytes committed to the current cluster
@@ -200,7 +202,6 @@ public:
    /// Return the object class used for user data OIDs in this ntuple.
    std::string GetObjectClass() const;
 };
-
 
 } // namespace Detail
 
