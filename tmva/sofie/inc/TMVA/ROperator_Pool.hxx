@@ -360,6 +360,7 @@ public:
                // compute number of elements used for the average
                out << SP << SP << SP << SP << SP << SP << "nsum++;\n";
          }
+          out << SP << SP << SP << SP << SP << "}\n"; // end loop on region elements
          if (fPoolMode == AveragePool) {
          // compute average
          out << SP << SP << SP << SP << "value /= float(nsum);\n";
