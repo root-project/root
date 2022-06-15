@@ -27,11 +27,11 @@ namespace RDF {
 struct RDatasetSpec {
 
    struct REntryRange {
-      ULong64_t fStartEntry{0};
-      ULong64_t fEndEntry{std::numeric_limits<ULong64_t>::max()};
+      Long64_t fStartEntry{0};
+      Long64_t fEndEntry{std::numeric_limits<Long64_t>::max()};
       REntryRange() {}
-      REntryRange(ULong64_t endEntry) : fEndEntry(endEntry) {}
-      REntryRange(ULong64_t startEntry, ULong64_t endEntry)
+      REntryRange(Long64_t endEntry) : fEndEntry(endEntry) {}
+      REntryRange(Long64_t startEntry, Long64_t endEntry)
          : fStartEntry(startEntry),
            fEndEntry(endEntry >= startEntry
                         ? endEntry
@@ -54,8 +54,8 @@ struct RDatasetSpec {
     */
    std::vector<std::string> fFileNameGlobs{};
 
-   ULong64_t fStartEntry{}; ///< The entry where the dataset processing should start (inclusive).
-   ULong64_t fEndEntry{};   ///< The entry where the dataset processing should end (exclusive).
+   Long64_t fStartEntry{}; ///< The entry where the dataset processing should start (inclusive).
+   Long64_t fEndEntry{};   ///< The entry where the dataset processing should end (exclusive).
 
    ROOT::Internal::TreeUtils::RFriendInfo fFriendInfo{}; ///< List of friends
 

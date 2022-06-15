@@ -117,8 +117,8 @@ class RLoopManager : public RNodeBase {
    /// argument to RDataFrame's ctor (in which case we let users retain ownership).
    std::shared_ptr<TTree> fTree{nullptr};
    const ColumnNames_t fDefaultColumns;
-   ULong64_t fStartEntry{0};
-   ULong64_t fEndEntry{std::numeric_limits<ULong64_t>::max()};
+   Long64_t fStartEntry{0};
+   Long64_t fEndEntry{std::numeric_limits<Long64_t>::max()};
    const ULong64_t fNEmptyEntries{0};
    const unsigned int fNSlots{1};
    bool fMustRunNamedFilters{true};

@@ -532,3 +532,152 @@ TEST(RDatasetSpecTest, SaveGraph)
                                              "x       Double_t        Dataset");
    EXPECT_EQ(expectedDescribe, df.Describe().AsString());
 }
+
+TEST(RDatasetSpecTest, FriendsRangesMT) // gotta catch them all!!!!!!!!!!!
+{
+
+   // write some columns to files
+   auto dfWriter0 = RDataFrame(5)
+                       .Define("x", [](ULong64_t e) { return e; }, {"rdfentry_"})
+                       .Define("y", [](ULong64_t e) { return e + 10; }, {"rdfentry_"})
+                       .Define("z", [](ULong64_t e) { return e + 100; }, {"rdfentry_"});
+   dfWriter0.Snapshot<ULong64_t>("tree", "file0.root", {"x"});
+   dfWriter0.Range(4).Snapshot<ULong64_t>("tree", "file1.root", {"y"});
+   dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree", "file2.root", {"z"});
+   dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree", "file3.root", {"z"});
+   dfWriter0.Range(4, 5).Snapshot<ULong64_t>("subTree", "file4.root", {"z"});
+   dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree1", "file5.root", {"z"});
+   dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree2", "file6.root", {"z"});
+
+   // test all possible cases for specs, that are:
+   // a. tree; chain where all trees have the same names; chain with different tree names
+   // b. shorter and longer columns (to test cases when the friend has different size than the main change)
+   // c. with and without range specified
+   // hence, there are 3*2*2=12 (3 from a, 2 from b, 2 from c) cases to test in total
+   std::vector<RDatasetSpec> specs;
+   specs.reserve(12);
+   specs.emplace_back(RDatasetSpec{"tree", "file0.root"});
+   specs.emplace_back(RDatasetSpec{"tree", "file0.root", {1, 3}});
+   specs.emplace_back(RDatasetSpec{"tree", "file1.root"});
+   specs.emplace_back(RDatasetSpec{"tree", "file1.root", {1, 3}});
+   specs.emplace_back(RDatasetSpec{"subTree", {"file2.root"s, "file3.root"s, "file4.root"s}});
+   specs.emplace_back(RDatasetSpec{"subTree", {"file2.root"s, "file3.root"s, "file4.root"s}, {1, 3}});
+   specs.emplace_back(RDatasetSpec{"subTree", {"file2.root"s, "file3.root"s}});
+   specs.emplace_back(RDatasetSpec{"subTree", {"file2.root"s, "file3.root"s}, {1, 3}});
+   specs.emplace_back(
+      RDatasetSpec{{{"subTree1"s, "file5.root"s}, {"subTree2"s, "file6.root"s}, {"subTree"s, "file4.root"s}}});
+   specs.emplace_back(RDatasetSpec{{{"subTree1"s, "file5.root"s}, {"subTree2"s, "file6.root"s}}});
+   specs.emplace_back(RDatasetSpec{{{"subTree1"s, "file5.root"s}, {"subTree2"s, "file6.root"s}}});
+   specs.emplace_back(RDatasetSpec{{{"subTree1"s, "file5.root"s}, {"subTree2"s, "file6.root"s}}, {1, 3}});
+
+   ROOT::EnableImplicitMT(4);
+
+   std::vector<std::vector<ULong64_t>> colsMT{};
+
+   // check the datasets and ranges without friends
+   for (auto j = 0u; j < specs.size(); ++j) {
+      auto df = RDataFrame(specs[j]);
+      if (j < 2) {
+         std::vector<ULong64_t> tmp = *(df.Take<ULong64_t>("x"));
+         // need to sort, as Take does not respect the original order
+         std::sort(tmp.begin(), tmp.end());
+         colsMT.push_back(tmp);
+      } else if (j >= 2 && j < 4) {
+         std::vector<ULong64_t> tmp = *(df.Take<ULong64_t>("y"));
+         std::sort(tmp.begin(), tmp.end());
+         colsMT.push_back(tmp);
+      } else {
+         std::vector<ULong64_t> tmp = *(df.Take<ULong64_t>("z"));
+         std::sort(tmp.begin(), tmp.end());
+         colsMT.push_back(tmp);
+      }
+      // std::sort(col.begin(), col.end());
+   }
+
+   ROOT::DisableImplicitMT();
+
+   std::vector<std::vector<ULong64_t>> cols{};
+
+   // check the datasets and ranges without friends
+   for (auto j = 0u; j < specs.size(); ++j) {
+      auto df = RDataFrame(specs[j]);
+      if (j < 2) {
+         std::vector<ULong64_t> tmp = *(df.Take<ULong64_t>("x"));
+         cols.push_back(tmp);
+      } else if (j >= 2 && j < 4) {
+         std::vector<ULong64_t> tmp = *(df.Take<ULong64_t>("y"));
+         cols.push_back(tmp);
+      } else {
+         std::vector<ULong64_t> tmp = *(df.Take<ULong64_t>("z"));
+         cols.push_back(tmp);
+      }
+   }
+
+   for (auto j = 0u; j < cols.size(); ++j)
+      for (auto i = 0u; i < cols[j].size(); ++i)
+         EXPECT_EQ(cols[j][i], colsMT[j][i]);
+
+   // for each spec, add all possible types of friends
+   // friends cannot take range, hence valid cases are a. and b., or 3*2=6 possible friends
+   for (auto &sp : specs) {
+      sp.AddFriend("tree", "file0.root", "friendTree");
+      sp.AddFriend("tree", "file1.root", "friendShortTree");
+      sp.AddFriend("subTree", {"file2.root"s, "file3.root"s, "file4.root"s}, "friendChain1");
+      sp.AddFriend("subTree", {"file2.root"s, "file3.root"s}, "friendShortChain1");
+      sp.AddFriend({{"subTree1"s, "file5.root"s}, {"subTree2"s, "file6.root"s}, {"subTree"s, "file4.root"s}},
+                   "friendChainN");
+      sp.AddFriend({{"subTree1"s, "file5.root"s}, {"subTree2"s, "file6.root"s}}, "friendShortChainN");
+
+      ROOT::EnableImplicitMT(4);
+
+      // important is to construct the dataframe after all friends are added
+      auto dfMT = RDataFrame(sp);
+
+      // lazily ask to get each column that came from a friend
+      auto friendTreeMT = dfMT.Take<ULong64_t>("friendTree.x");
+      auto friendShortTreeMT = dfMT.Take<ULong64_t>("friendShortTree.y");
+      auto friendChain1MT = dfMT.Take<ULong64_t>("friendChain1.z");
+      auto friendShortChain1MT = dfMT.Take<ULong64_t>("friendShortChain1.z");
+      auto friendChainNMT = dfMT.Take<ULong64_t>("friendChainN.z");
+      auto friendShortChainNMT = dfMT.Take<ULong64_t>("friendShortChainN.z");
+
+      std::sort((*friendTreeMT).begin(), (*friendTreeMT).end());
+      std::sort((*friendShortTreeMT).begin(), (*friendShortTreeMT).end());
+      std::sort((*friendChain1MT).begin(), (*friendChain1MT).end());
+      std::sort((*friendShortChain1MT).begin(), (*friendShortChain1MT).end());
+      std::sort((*friendChainNMT).begin(), (*friendChainNMT).end());
+      std::sort((*friendShortChainNMT).begin(), (*friendShortChainNMT).end());
+
+      ROOT::DisableImplicitMT();
+
+      // same work but on single thread
+      auto df = RDataFrame(sp);
+      auto friendTree = df.Take<ULong64_t>("friendTree.x");
+      auto friendShortTree = df.Take<ULong64_t>("friendShortTree.y");
+      auto friendChain1 = df.Take<ULong64_t>("friendChain1.z");
+      auto friendShortChain1 = df.Take<ULong64_t>("friendShortChain1.z");
+      auto friendChainN = df.Take<ULong64_t>("friendChainN.z");
+      auto friendShortChainN = df.Take<ULong64_t>("friendShortChainN.z");
+
+      // invoke the event loop; each friend column has the same number of entries
+      auto nEntries = (*friendTree).size();
+
+      // entries being 2 correspond to application of the {1, 3} range
+      for (ULong64_t i = 0u; i < nEntries; i++) {
+         EXPECT_EQ((*friendTree)[i], (*friendTreeMT)[i]);
+         EXPECT_EQ((*friendChain1)[i], (*friendChain1MT)[i]);
+         EXPECT_EQ((*friendChainN)[i], (*friendChainNMT)[i]);
+
+         // the single thread run fills the missing values with the last value
+         // the MT will fills with 0s, in both cases this is garbage
+         // hence we are not interested in these cases
+         if ((*friendShortTree)[nEntries - 1] != (*friendShortTree)[nEntries - 2]) {
+            EXPECT_EQ((*friendShortTree)[i], (*friendShortTreeMT)[i]);
+            EXPECT_EQ((*friendShortChain1)[i], (*friendShortChain1MT)[i]);
+            EXPECT_EQ((*friendShortChainN)[i], (*friendShortChainNMT)[i]);
+         }
+      }
+   }
+
+   gSystem->Exec("rm file*.root");
+}

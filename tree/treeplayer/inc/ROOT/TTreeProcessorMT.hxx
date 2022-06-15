@@ -88,8 +88,8 @@ private:
    std::vector<std::string> FindTreeNames();
    static unsigned int fgTasksPerWorkerHint;
 
-   ULong64_t fStartEntry{0};
-   ULong64_t fEndEntry{std::numeric_limits<ULong64_t>::max()};
+   Long64_t fStartEntry{0};
+   Long64_t fEndEntry{std::numeric_limits<Long64_t>::max()};
 
 public:
    TTreeProcessorMT(std::string_view filename, std::string_view treename = "", UInt_t nThreads = 0u);
