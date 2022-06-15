@@ -100,14 +100,14 @@ namespace RooStats{
             std::vector<std::unique_ptr<RooWorkspace>>& wspace_vec,
             std::vector<std::string> const& channel_names,
             std::string const& dataSetName,
-            RooArgList obsList,
+            RooArgList const& obsList,
             RooCategory* channelCat);
 
       RooHistFunc* MakeExpectedHistFunc(const TH1* hist, RooWorkspace* proto, std::string prefix,
           const RooArgList& observables) const;
 
       std::unique_ptr<TH1> MakeScaledUncertaintyHist(const std::string& Name,
-                 std::vector< std::pair<const TH1*, const TH1*> > HistVec ) const;
+                 std::vector< std::pair<const TH1*, std::unique_ptr<TH1>> > const& HistVec ) const;
 
       TH1* MakeAbsolUncertaintyHist( const std::string& Name, const TH1* Hist );
 

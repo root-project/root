@@ -135,7 +135,8 @@ void Fitter::SetFunction(const IGradModel1DFunction & func, bool useGradient)
 
 
 bool Fitter::DoSetFCN(bool extFcn, const ROOT::Math::IMultiGenFunction & fcn, const double * params, unsigned int dataSize, bool chi2fit) {
-   // set the objective function for the fit. Firs tparameter specifies if function is external or internal
+   // Set the objective function for the fit. First parameter specifies if function object is managed external or internal.
+   // In case of an internal function object we need to clone because it is a temporary one
    // if params is not NULL create the parameter settings
    fUseGradient = false;
    unsigned int npar  = fcn.NDim();
@@ -162,8 +163,8 @@ bool Fitter::DoSetFCN(bool extFcn, const ROOT::Math::IMultiGenFunction & fcn, co
       fObjFunction.reset();
    }
    else {
-      // case FCN is built from Minuit interface so funciton object is created internally in Fitter class 
-      // and needs to be cloned and managed 
+      // case FCN is built from Minuit interface so function object is created internally in Fitter class
+      // and needs to be cloned and managed
       fExtObjFunction = nullptr;
       fObjFunction.reset(fcn.Clone());
    }

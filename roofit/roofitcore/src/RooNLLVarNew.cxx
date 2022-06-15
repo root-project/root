@@ -210,9 +210,8 @@ void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_
 
    auto probas = dataMap.at(_pdf);
 
-   auto logProbasBuffer = ROOT::Experimental::Detail::makeCpuBuffer(nEvents);
-   RooSpan<double> logProbas{logProbasBuffer->cpuWritePtr(), nEvents};
-   (*_pdf).getLogProbabilities(probas, logProbas.data());
+   _logProbasBuffer.resize(nEvents);
+   (*_pdf).getLogProbabilities(probas, _logProbasBuffer.data());
 
    if ((_isExtended || _fractionInRange) && _sumWeight == 0.0) {
       _sumWeight = weights.size() == 1 ? weights[0] * nEvents : kahanSum(weights);
@@ -252,7 +251,7 @@ void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_
       if (0. == eventWeight * eventWeight)
          continue;
 
-      const double term = -eventWeight * logProbas[i];
+      const double term = -eventWeight * _logProbasBuffer[i];
 
       kahanProb.Add(term);
       packedNaN.accumulate(term);

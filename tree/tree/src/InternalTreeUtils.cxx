@@ -7,10 +7,12 @@
  *************************************************************************/
 
 #include "ROOT/InternalTreeUtils.hxx"
-#include "TTree.h"
+#include "TBranch.h" // Usage of TBranch in ClearMustCleanupBits
 #include "TChain.h"
+#include "TCollection.h" // TRangeStaticCast
 #include "TFile.h"
 #include "TFriendElement.h"
+#include "TTree.h"
 
 #include <utility> // std::pair
 #include <vector>
@@ -220,6 +222,29 @@ std::vector<std::string> GetTreeFullPaths(const TTree &tree)
 
    // We do our best and return the name of the tree
    return {tree.GetName()};
+}
+
+/// Reset the kMustCleanup bit of a TObjArray of TBranch objects (e.g. returned by TTree::GetListOfBranches).
+///
+/// In some rare cases, all branches in a TTree can have their kMustCleanup bit set, which causes a large amount
+/// of contention at teardown due to concurrent calls to RecursiveRemove (which needs to take the global lock).
+/// This helper function checks the first branch of the array and if it has the kMustCleanup bit set, it resets
+/// it for all branches in the array, recursively going through sub-branches and leaves.
+void ClearMustCleanupBits(TObjArray &branches)
+{
+   if (branches.GetEntries() == 0 || branches.At(0)->TestBit(kMustCleanup) == false)
+      return; // we assume either no branches have the bit set, or all do. we never encountered an hybrid case
+
+   for (auto *branch : ROOT::Detail::TRangeStaticCast<TBranch>(branches)) {
+      branch->ResetBit(kMustCleanup);
+      TObjArray *subBranches = branch->GetListOfBranches();
+      ClearMustCleanupBits(*subBranches);
+      TObjArray *leaves = branch->GetListOfLeaves();
+      if (leaves->GetEntries() > 0 && leaves->At(0)->TestBit(kMustCleanup) == true) {
+         for (TObject *leaf : *leaves)
+            leaf->ResetBit(kMustCleanup);
+      }
+   }
 }
 
 } // namespace TreeUtils

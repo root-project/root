@@ -1343,6 +1343,7 @@ def get_win_dep():
     zip.extractall(tmp_bin_dir)
     print('Remove file: ' + os.path.join(TMP_PREFIX, 'cmake-3.6.2.zip'))
 
+    cmakeDir = TMP_PREFIX + "\\bin\\cmake"
     if is_os_64bit():
         os.rename(os.path.join(tmp_bin_dir, 'cmake-3.6.2-win64-x64'), cmakeDir)
     else:
@@ -2251,6 +2252,7 @@ if args['last_stable']:
     args["with_binary_llvm"] = True
 
     if args["with_binary_llvm"]:
+        download_llvm_binary()
         compile = compile_for_binary
         install_prefix = install_prefix_for_binary
         fetch_clang(llvm_revision)

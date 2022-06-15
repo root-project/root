@@ -12,6 +12,7 @@
 #define ROOT_RLOOPMANAGER
 
 #include "ROOT/RDF/RDatasetSpec.hxx"
+#include "ROOT/InternalTreeUtils.hxx" // RNoCleanupNotifier
 #include "ROOT/RDF/RNodeBase.hxx"
 #include "ROOT/RDF/RNewSampleNotifier.hxx"
 #include "ROOT/RDF/RSampleInfo.hxx"
@@ -140,6 +141,8 @@ class RLoopManager : public RNodeBase {
    /// Cache of the tree/chain branch names. Never access directy, always use GetBranchNames().
    ColumnNames_t fValidBranchNames;
 
+   ROOT::Internal::TreeUtils::RNoCleanupNotifier fNoCleanupNotifier;
+
    void RunEmptySourceMT();
    void RunEmptySource();
    void RunTreeProcessorMT();
@@ -188,7 +191,7 @@ public:
    void Report(ROOT::RDF::RCutFlowReport &rep) const final;
    /// End of recursive chain of calls, does nothing
    void PartialReport(ROOT::RDF::RCutFlowReport &) const final {}
-   void SetTree(const std::shared_ptr<TTree> &tree) { fTree = tree; }
+   void SetTree(std::shared_ptr<TTree> tree);
    void IncrChildrenCount() final { ++fNChildren; }
    void StopProcessing() final { ++fNStopsReceived; }
    void ToJitExec(const std::string &) const;

@@ -57,8 +57,8 @@ private:
 
    RooTemplateProxy<RooAbsPdf> _pdf;
    RooArgSet _observables;
-   mutable double _sumWeight = 0.0;         //!
-   mutable double _sumWeight2 = 0.0;        //!
+   mutable double _sumWeight = 0.0;  //!
+   mutable double _sumWeight2 = 0.0; //!
    bool _isExtended;
    bool _weightSquared = false;
    bool _binnedL = false;
@@ -66,7 +66,8 @@ private:
    RooTemplateProxy<RooAbsReal> _weightVar;
    RooTemplateProxy<RooAbsReal> _weightSquaredVar;
    std::unique_ptr<RooTemplateProxy<RooAbsReal>> _fractionInRange;
-   mutable std::vector<double> _binw; //!
+   mutable std::vector<double> _binw;            //!
+   mutable std::vector<double> _logProbasBuffer; //!
 
 }; // end class RooNLLVar
 

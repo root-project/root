@@ -116,25 +116,25 @@ RooRealVar *getNP(RooJSONFactoryWSTool *tool, const char *parname)
 {
    RooRealVar *par = tool->workspace()->var(parname);
    if (!tool->workspace()->var(parname)) {
-      par = (RooRealVar *)tool->workspace()->factory(TString::Format("%s[0.,-5,5]", parname).Data());
+      par = (RooRealVar *)tool->workspace()->factory(std::string(parname) + "[0.,-5,5]");
    }
    if (par) {
       par->setAttribute("np");
    }
-   TString globname = TString::Format("nom_%s", parname);
-   RooRealVar *nom = tool->workspace()->var(globname.Data());
+   std::string globname = std::string("nom_") + parname;
+   RooRealVar *nom = tool->workspace()->var(globname);
    if (!nom) {
-      nom = (RooRealVar *)tool->workspace()->factory((globname + "[0.]").Data());
+      nom = (RooRealVar *)tool->workspace()->factory(globname + "[0.]");
    }
    if (nom) {
       nom->setAttribute("glob");
       nom->setRange(-5, 5);
       nom->setConstant(true);
    }
-   TString constrname = TString::Format("sigma_%s", parname);
-   RooRealVar *sigma = tool->workspace()->var(constrname.Data());
+   std::string constrname = std::string("sigma_") + parname;
+   RooRealVar *sigma = tool->workspace()->var(constrname);
    if (!sigma) {
-      sigma = (RooRealVar *)tool->workspace()->factory((constrname + "[1.]").Data());
+      sigma = (RooRealVar *)tool->workspace()->factory(constrname + "[1.]");
    }
    if (sigma) {
       sigma->setRange(sigma->getVal(), sigma->getVal());
@@ -212,8 +212,7 @@ public:
                if (r) {
                   normElems.add(*r);
                } else {
-                  normElems.add(
-                     *(RooRealVar *)tool->workspace()->factory(TString::Format("%s[1.]", nfname.c_str()).Data()));
+                  normElems.add(*static_cast<RooRealVar *>(tool->workspace()->factory(nfname + "[1.]")));
                }
             }
          }
@@ -291,7 +290,7 @@ public:
             RooProduct norm((name + "_norm").c_str(), (name + "_norm").c_str(), normElems);
             tool->workspace()->import(norm, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
          } else {
-            tool->workspace()->factory(("RooConstVar::" + name + "_norm(1.)").c_str());
+            tool->workspace()->factory("RooConstVar::" + name + "_norm(1.)");
          }
       } catch (const std::runtime_error &e) {
          RooJSONFactoryWSTool::error("function '" + name +

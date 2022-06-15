@@ -624,12 +624,14 @@ void Fitter::SetFunction(const IGradModelFunction_v &func, bool useGradient)
 template<class Function>
 bool ROOT::Fit::Fitter::FitFCN(unsigned int npar, Function & f, const double * par, unsigned int datasize,bool chi2fit) {
    ROOT::Math::WrappedMultiFunction<Function &> wf(f,npar);
-   return FitFCN(wf,par,datasize,chi2fit);
+   if (!DoSetFCN(false, wf, par, datasize, chi2fit))
+      return false;
+   return FitFCN();
 }
 template<class Function>
 bool ROOT::Fit::Fitter::SetFCN(unsigned int npar, Function & f, const double * par, unsigned int datasize,bool chi2fit) {
    ROOT::Math::WrappedMultiFunction<Function &> wf(f,npar);
-   return SetFCN(wf,par,datasize,chi2fit);
+   return DoSetFCN(false, wf, par, datasize, chi2fit);
 }
 
 

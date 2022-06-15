@@ -922,6 +922,15 @@ void RLoopManager::Report(ROOT::RDF::RCutFlowReport &rep) const
       fPtr->FillReport(rep);
 }
 
+void RLoopManager::SetTree(std::shared_ptr<TTree> tree)
+{
+   fTree = std::move(tree);
+
+   TChain *ch = nullptr;
+   if ((ch = dynamic_cast<TChain *>(fTree.get())))
+      fNoCleanupNotifier.RegisterChain(*ch);
+}
+
 void RLoopManager::ToJitExec(const std::string &code) const
 {
    R__LOCKGUARD(gROOTMutex);
