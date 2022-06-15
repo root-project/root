@@ -480,13 +480,6 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
           proto->factory(varname + range.str());
         }
 
-        if(norm.GetConst()) {
-          //     proto->var(varname)->setConstant();
-          //     cout <<"setting " << varname << " constant"<<endl;
-          cxcoutW(HistFactory) << "Const attribute to <NormFactor> tag is deprecated, will ignore." <<
-              " Instead, add \n\t<ParamSetting Const=\"True\"> " << varname << " </ParamSetting>\n" <<
-              " to your top-level XML's <Measurement> entry" << endl;
-        }
         prodNames.push_back(varname);
         rangeNames.push_back(range.str());
         normFactorNames.push_back(varname);
