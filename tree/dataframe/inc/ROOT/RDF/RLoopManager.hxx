@@ -1,7 +1,7 @@
 // Author: Enrico Guiraud, Danilo Piparo CERN  03/2017
 
 /*************************************************************************
- * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,6 +12,7 @@
 #define ROOT_RLOOPMANAGER
 
 #include "ROOT/InternalTreeUtils.hxx" // RNoCleanupNotifier
+#include "ROOT/RDF/RColumnReaderBase.hxx"
 #include "ROOT/RDF/RNodeBase.hxx"
 #include "ROOT/RDF/RNewSampleNotifier.hxx"
 #include "ROOT/RDF/RSampleInfo.hxx"
@@ -131,8 +132,8 @@ class RLoopManager : public RNodeBase {
    std::vector<ROOT::RDF::RSampleInfo> fSampleInfos;
    unsigned int fNRuns{0}; ///< Number of event loops run
 
-   /// Registry of per-slot value pointers for booked data-source columns
-   std::map<std::string, std::vector<void *>> fDSValuePtrMap;
+   /// Readers for TTree/RDataSource columns (one per slot), shared by all nodes in the computation graph.
+   std::vector<std::unordered_map<std::string, std::shared_ptr<RColumnReaderBase>>> fDatasetColumnReaders;
 
    /// Cache of the tree/chain branch names. Never access directy, always use GetBranchNames().
    ColumnNames_t fValidBranchNames;
@@ -192,9 +193,9 @@ public:
    void ToJitExec(const std::string &) const;
    void RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f);
    unsigned int GetNRuns() const { return fNRuns; }
-   bool HasDSValuePtrs(const std::string &col) const;
-   const std::map<std::string, std::vector<void *>> &GetDSValuePtrs() const { return fDSValuePtrMap; }
-   void AddDSValuePtrs(const std::string &col, const std::vector<void *> ptrs);
+   bool HasDataSourceColumnReaders(const std::string &col) const;
+   void AddDataSourceColumnReaders(const std::string &col, std::vector<std::unique_ptr<RColumnReaderBase>> &&readers);
+   std::shared_ptr<RColumnReaderBase> GetDatasetColumnReader(unsigned int slot, const std::string &col) const;
 
    /// End of recursive chain of calls, does nothing
    void AddFilterName(std::vector<std::string> &) {}
