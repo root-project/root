@@ -28,6 +28,7 @@
 
 #include <atomic>
 #include <cstddef>
+#include <deque>
 #include <functional>
 #include <memory>
 #include <shared_mutex>
@@ -93,6 +94,19 @@ public:
       RSealedPage& operator =(const RSealedPage &other) = delete;
       RSealedPage(RSealedPage &&other) = default;
       RSealedPage& operator =(RSealedPage &&other) = default;
+   };
+
+   using SealedPageSequence_t = std::deque<RSealedPage>;
+   /// A range of sealed pages referring to the same column that can be used for vector commit
+   struct RSealedPageRange {
+      DescriptorId_t fColumnId;
+      SealedPageSequence_t::const_iterator fFirst;
+      SealedPageSequence_t::const_iterator fLast;
+
+      RSealedPageRange(DescriptorId_t d, SealedPageSequence_t::const_iterator b, SealedPageSequence_t::const_iterator e)
+         : fColumnId(d), fFirst(b), fLast(e)
+      {
+      }
    };
 
 protected:
@@ -192,6 +206,13 @@ protected:
    virtual RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) = 0;
    virtual RNTupleLocator CommitSealedPageImpl(DescriptorId_t columnId,
                                                const RPageStorage::RSealedPage &sealedPage) = 0;
+   /// Vector commit of preprocessed pages. The `ranges` vector specifies a range of sealed pages to be
+   /// committed for each column.  The returned vector contains, in order, the RNTupleLocator for each
+   /// page on each range in `ranges`, i.e. the first N entries refer to the N pages in `ranges[0]`,
+   /// followed by M entries that refer to the M pages in `ranges[1]`, etc.
+   /// The default is to call `CommitSealedPageImpl` for each page; derived classes may provide an
+   /// optimized implementation though.
+   virtual std::vector<RNTupleLocator> CommitSealedPagesImpl(const std::vector<RPageStorage::RSealedPageRange> &ranges);
    /// Returns the number of bytes written to storage (excluding metadata)
    virtual std::uint64_t CommitClusterImpl(NTupleSize_t nEntries) = 0;
    /// Returns the locator of the page list envelope of the given buffer that contains the serialized page list.
@@ -247,8 +268,9 @@ public:
    /// Write a page to the storage. The column must have been added before.
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page);
    /// Write a preprocessed page to storage. The column must have been added before.
-   /// TODO(jblomer): allow for vector commit of sealed pages
    void CommitSealedPage(DescriptorId_t columnId, const RPageStorage::RSealedPage &sealedPage);
+   /// Write a vector of preprocessed pages to storage. The column must have been added before.
+   void CommitSealedPages(const std::vector<RPageStorage::RSealedPageRange> &ranges);
    /// Finalize the current cluster and create a new one for the following data.
    /// Returns the number of bytes written to storage (excluding meta-data).
    std::uint64_t CommitCluster(NTupleSize_t nEntries);
