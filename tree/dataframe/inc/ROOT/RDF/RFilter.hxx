@@ -65,7 +65,7 @@ class R__CLING_PTRCHECK(off) RFilter final : public RFilterBase {
 
    FilterF fFilter;
    /// Column readers per slot and per input column
-   std::vector<std::array<std::unique_ptr<RColumnReaderBase>, ColumnTypes_t::list_size>> fValues;
+   std::vector<std::array<std::shared_ptr<RColumnReaderBase>, ColumnTypes_t::list_size>> fValues;
    const std::shared_ptr<PrevNode_t> fPrevNodePtr;
    PrevNode_t &fPrevNode;
 
@@ -118,8 +118,7 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      RDFInternal::RColumnReadersInfo info{fColumnNames, fColRegister, fIsDefine.data(), fLoopManager->GetDSValuePtrs(),
-                                           fLoopManager->GetDataSource()};
+      RDFInternal::RColumnReadersInfo info{fColumnNames, fColRegister, fIsDefine.data(), *fLoopManager};
       fValues[slot] = RDFInternal::MakeColumnReaders(slot, r, ColumnTypes_t{}, info, fVariation);
       fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = -1;
    }

@@ -386,15 +386,25 @@ std::vector<bool> FindUndefinedDSColumns(const ColumnNames_t &requestedCols, con
 template <typename T>
 void AddDSColumnsHelper(const std::string &colName, RLoopManager &lm, RDataSource &ds, RColumnRegister &colRegister)
 {
-   if (colRegister.IsDefineOrAlias(colName) || !ds.HasColumn(colName) || lm.HasDSValuePtrs(colName))
+   if (colRegister.IsDefineOrAlias(colName) || !ds.HasColumn(colName) || lm.HasDataSourceColumnReaders(colName))
       return;
 
+   const auto nSlots = lm.GetNSlots();
+   std::vector<std::unique_ptr<RColumnReaderBase>> colReaders;
+   colReaders.reserve(nSlots);
+
    const auto valuePtrs = ds.GetColumnReaders<T>(colName);
-   if (!valuePtrs.empty()) {
-      // we are using the old GetColumnReaders mechanism
-      std::vector<void*> typeErasedValuePtrs(valuePtrs.begin(), valuePtrs.end());
-      lm.AddDSValuePtrs(colName, std::move(typeErasedValuePtrs));
+   if (!valuePtrs.empty()) { // we are using the old GetColumnReaders mechanism in this RDataSource
+      for (auto *ptr : valuePtrs)
+         colReaders.emplace_back(new RDSColumnReader<T>(ptr));
+
+   } else { // using the new GetColumnReaders mechanism
+      // TODO consider changing the interface so we return all of these for all slots in one go
+      for (auto slot = 0u; slot < lm.GetNSlots(); ++slot)
+         colReaders.emplace_back(ds.GetColumnReaders(slot, colName, typeid(T)));
    }
+
+   lm.AddDataSourceColumnReaders(colName, std::move(colReaders));
 }
 
 /// Take list of column names that must be defined, current map of custom columns, current list of defined column names,

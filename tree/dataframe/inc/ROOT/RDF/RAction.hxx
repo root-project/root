@@ -58,7 +58,7 @@ class R__CLING_PTRCHECK(off) RAction : public RActionBase {
    const std::shared_ptr<PrevNode> fPrevNodePtr;
    PrevNode &fPrevNode;
    /// Column readers per slot and per input column
-   std::vector<std::array<std::unique_ptr<RColumnReaderBase>, ColumnTypes_t::list_size>> fValues;
+   std::vector<std::array<std::shared_ptr<RColumnReaderBase>, ColumnTypes_t::list_size>> fValues;
 
    /// The nth flag signals whether the nth input column is a custom column or not.
    std::array<bool, ColumnTypes_t::list_size> fIsDefine;
@@ -95,8 +95,7 @@ public:
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
       RDFInternal::RColumnReadersInfo info{RActionBase::GetColumnNames(), RActionBase::GetColRegister(),
-                                           fIsDefine.data(), fLoopManager->GetDSValuePtrs(),
-                                           fLoopManager->GetDataSource()};
+                                           fIsDefine.data(), *fLoopManager};
       fValues[slot] = RDFInternal::MakeColumnReaders(slot, r, ColumnTypes_t{}, info);
       fHelper.InitTask(r, slot);
    }

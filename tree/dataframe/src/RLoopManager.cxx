@@ -340,21 +340,21 @@ RLoopManager::RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)
    : fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})), fDefaultColumns(defaultBranches),
      fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
-     fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots)
+     fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots)
 {
 }
 
 RLoopManager::RLoopManager(ULong64_t nEmptyEntries)
    : fNEmptyEntries(nEmptyEntries), fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kNoFilesMT : ELoopType::kNoFiles), fNewSampleNotifier(fNSlots),
-     fSampleInfos(fNSlots)
+     fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots)
 {
 }
 
 RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t &defaultBranches)
    : fDefaultColumns(defaultBranches), fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kDataSourceMT : ELoopType::kDataSource),
-     fDataSource(std::move(ds)), fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots)
+     fDataSource(std::move(ds)), fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots)
 {
    fDataSource->SetNSlots(fNSlots);
 }
@@ -934,14 +934,33 @@ const ColumnNames_t &RLoopManager::GetBranchNames()
    return fValidBranchNames;
 }
 
-bool RLoopManager::HasDSValuePtrs(const std::string &col) const
+/// Return true if AddDataSourceColumnReaders was called for column name col.
+bool RLoopManager::HasDataSourceColumnReaders(const std::string &col) const
 {
-   return fDSValuePtrMap.find(col) != fDSValuePtrMap.end();
+   assert(fDataSource != nullptr);
+   // since data source column readers are always added for all slots at the same time,
+   // if the reader is present for slot 0 we have it for all other slots as well.
+   return fDatasetColumnReaders[0].find(col) != fDatasetColumnReaders[0].end();
 }
 
-void RLoopManager::AddDSValuePtrs(const std::string &col, const std::vector<void *> ptrs)
+void RLoopManager::AddDataSourceColumnReaders(const std::string &col,
+                                              std::vector<std::unique_ptr<RColumnReaderBase>> &&readers)
 {
-   fDSValuePtrMap[col] = ptrs;
+   assert(fDataSource != nullptr && !HasDataSourceColumnReaders(col));
+   assert(readers.size() == fNSlots);
+
+   for (auto slot = 0u; slot < fNSlots; ++slot) {
+      fDatasetColumnReaders[slot][col] = std::move(readers[slot]);
+   }
+}
+
+std::shared_ptr<RColumnReaderBase> RLoopManager::GetDatasetColumnReader(unsigned int slot, const std::string &col) const
+{
+   auto it = fDatasetColumnReaders[slot].find(col);
+   if (it != fDatasetColumnReaders[slot].end())
+      return it->second;
+   else
+      return nullptr;
 }
 
 void RLoopManager::AddSampleCallback(SampleCallback_t &&callback)

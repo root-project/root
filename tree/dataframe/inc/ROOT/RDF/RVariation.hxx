@@ -148,7 +148,7 @@ class R__CLING_PTRCHECK(off) RVariation final : public RVariationBase {
    std::vector<ret_type> fLastResults;
 
    /// Column readers per slot and per input column
-   std::vector<std::array<std::unique_ptr<RColumnReaderBase>, ColumnTypes_t::list_size>> fValues;
+   std::vector<std::array<std::shared_ptr<RColumnReaderBase>, ColumnTypes_t::list_size>> fValues;
 
    template <typename... ColTypes, std::size_t... S>
    void UpdateHelper(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>)
@@ -212,8 +212,7 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      RColumnReadersInfo info{fInputColumns, fColumnRegister, fIsDefine.data(), fLoopManager->GetDSValuePtrs(),
-                              fLoopManager->GetDataSource()};
+      RColumnReadersInfo info{fInputColumns, fColumnRegister, fIsDefine.data(), *fLoopManager};
       fValues[slot] = MakeColumnReaders(slot, r, ColumnTypes_t{}, info);
       fLastCheckedEntry[slot * CacheLineStep<Long64_t>()] = -1;
    }
