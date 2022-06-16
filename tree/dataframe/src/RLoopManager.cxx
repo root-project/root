@@ -493,6 +493,8 @@ void RLoopManager::RunEmptySource()
 void RLoopManager::RunTreeProcessorMT()
 {
 #ifdef R__USE_IMT
+   if (fEndEntry == fStartEntry) // empty range => no work needed
+      return;
    RSlotStack slotStack(fNSlots);
    const auto &entryList = fTree->GetEntryList() ? *fTree->GetEntryList() : TEntryList();
    auto tp = std::make_unique<ROOT::TTreeProcessorMT>(*fTree, entryList, fNSlots);
