@@ -293,7 +293,7 @@ public:
       int hmax = fShapeX[2] + fAttrPads[1] - fAttrKernelShape[0] +1;  // maximum lower bound value + 1 
       int wmin,wmax,dmin,dmax;
 
-      if(fDim==2){
+      if(fDim >= 2){
          wmin = - fAttrPads[2];   // minimum lower bound value of filter area  
          wmax = fShapeX[3] + fAttrPads[3] - fAttrKernelShape[1] +1;  // maximum lower bound value + 1 
       }
@@ -301,7 +301,7 @@ public:
          wmin=1;
          wmax=1;
       }
-      if(fDim==3){
+      if(fDim == 3){
          dmin = - fAttrPads[4];   // minimum lower bound value of filter area  
          dmax = fShapeX[4] + fAttrPads[5] - fAttrKernelShape[2] +1;  // maximum lower bound value + 1 
       }
@@ -312,7 +312,7 @@ public:
       out << SP << "constexpr int hsize = " << fShapeX[2] << ";\n";
       size_t wsize = (fDim > 1) ? fShapeX[3] : 1;
       out << SP << "constexpr int wsize = " << wsize << ";\n";
-      size_t dsize = (fDim > 1) ? fShapeX[4] : 1;
+      size_t dsize = (fDim > 2) ? fShapeX[4] : 1;
       out << SP << "constexpr int dsize = " << dsize << ";\n";
       out << SP << "constexpr int hmin = " << hmin << ";\n";
       out << SP << "constexpr int hmax = " << hmax << ";\n";
@@ -378,6 +378,16 @@ public:
          out << SP << SP << "size_t inputOffset = n*" << fShapeX[2]*fShapeX[3] << ";\n";
          out << SP << SP << "for (int i = hmin; i < hmax; i+=" << fAttrStrides[0] << ") {\n";
          out << SP << SP << SP << "for (int j = wmin; j < wmax; j+=" << fAttrStrides[1] << ") {\n";
+         // loop on elements of filter region to compute maximum
+         if (fPoolMode == MaxPool)
+            out << SP << SP << SP << SP << "float value = -INFINITY;\n";
+         else if (fPoolMode == AveragePool) {
+            out << SP << SP << SP << SP << "float value = 0;\n";
+            if (fAttrCountIncludePad == 0 && doPadding) 
+               out << SP << SP << SP << SP << "int nsum = 0;\n";
+            else // in case we count the pad values in average
+               out << SP << SP << SP << SP << "constexpr int nsum = kw*kh*kd;\n";
+         }
          // loop on rows of filtered region
          out << SP << SP << SP << SP << "for (int l = i;  l < i + kh; l++) {\n"; 
          out << SP << SP << SP << SP << SP << "if (l < 0 || l >= hsize) continue;\n"; 
