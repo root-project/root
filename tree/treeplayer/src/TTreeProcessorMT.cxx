@@ -166,7 +166,6 @@ static ClustersAndEntries MakeClusters(const std::vector<std::string> &treeNames
       const Long64_t entries = t->GetEntries();
       // Iterate over the clusters in the current file
       std::vector<EntryCluster> clusters;
-      bool IsInRange = true;
       while ((start = clusterIter()) < entries) {
          end = clusterIter.GetNextEntry();
          // Add the current file's offset to start and end to make them (chain) global
@@ -174,17 +173,12 @@ static ClustersAndEntries MakeClusters(const std::vector<std::string> &treeNames
          const auto currentEnd = std::min(end + offset, endEntry);
          if (currentStart < currentEnd)
             clusters.emplace_back(EntryCluster{currentStart, currentEnd});
-         else
-            IsInRange = false;
+         if (currentEnd == endEntry) // if the desired end is reached, stop reading further
+            break;
       }
       offset += entries;
-      if (IsInRange) {
-         clustersPerFile.emplace_back(std::move(clusters));
-         entriesPerFile.emplace_back(/*clusters.back().end - clusters[0].start*/ entries);
-      } else {
-         clustersPerFile.emplace_back();
-         entriesPerFile.emplace_back(entries);
-      }
+      clustersPerFile.emplace_back(std::move(clusters));
+      entriesPerFile.emplace_back(entries);
    }
 
    // Here we "fuse" clusters together if the number of clusters is too big with respect to
