@@ -128,7 +128,7 @@ std::string GetNormalizedType(const std::string &typeName) {
    if (normalizedType.substr(0, 6) == "array<") normalizedType = "std::" + normalizedType;
    if (normalizedType.substr(0, 8) == "variant<") normalizedType = "std::" + normalizedType;
    if (normalizedType.substr(0, 5) == "pair<") normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 8) == "tuple<") normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 6) == "tuple<") normalizedType = "std::" + normalizedType;
 
    return normalizedType;
 }
