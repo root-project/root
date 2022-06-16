@@ -19,6 +19,8 @@
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RPageSinkBuf.hxx>
 
+#include <algorithm>
+
 ROOT::Experimental::Detail::RPageSinkBuf::RPageSinkBuf(std::unique_ptr<RPageSink> inner)
    : RPageSink(inner->GetNTupleName(), inner->GetWriteOptions())
    , fMetrics("RPageSinkBuf")
@@ -92,6 +94,24 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::
       fTaskScheduler->Reset();
    }
 
+   // If we have only sealed pages in all buffered columns, commit them in a single `CommitSealedPages()` call
+   bool singleCommitCall = std::all_of(fBufferedColumns.begin(), fBufferedColumns.end(),
+                                       [](auto &bufColumn) { return bufColumn.HasSealedPagesOnly(); });
+   if (singleCommitCall) {
+      std::vector<RSealedPageRange> toCommit;
+      toCommit.reserve(fBufferedColumns.size());
+      for (auto &bufColumn : fBufferedColumns) {
+         const auto &sealedPages = bufColumn.GetSealedPages();
+         toCommit.emplace_back(bufColumn.GetHandle().fId, sealedPages.cbegin(), sealedPages.cend());
+      }
+      fInnerSink->CommitSealedPages(toCommit);
+
+      for (auto &bufColumn : fBufferedColumns)
+         bufColumn.DrainBufferedPages();
+      return fInnerSink->CommitCluster(nEntries);
+   }
+
+   // Otherwise, try to do it per column
    for (auto &bufColumn : fBufferedColumns) {
       auto hasSealedPagesOnly = bufColumn.HasSealedPagesOnly();
       auto drained = bufColumn.DrainBufferedPages();
