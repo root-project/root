@@ -100,7 +100,7 @@ namespace RooStats{
             std::vector<std::unique_ptr<RooWorkspace>>& wspace_vec,
             std::vector<std::string> const& channel_names,
             std::string const& dataSetName,
-            RooArgList obsList,
+            RooArgList const& obsList,
             RooCategory* channelCat);
 
       RooHistFunc* MakeExpectedHistFunc(const TH1* hist, RooWorkspace* proto, std::string prefix,
