@@ -80,7 +80,7 @@ protected:
   double evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const override ;
 
   RooNumIntConfig   _intConfig ; ///< Numeric integrator configuration for integration of function over bin
-  RooAbsReal*       _funcInt ; ///<! Function integral
+  RooAbsReal*       _funcInt = nullptr; ///<! Function integral
   std::list<RooAbsBinning*> _binList ; ///<! Bin ranges
 
   ClassDefOverride(RooXYChi2Var,1) // Chi^2 function of p.d.f w.r.t a unbinned dataset with X and Y values
