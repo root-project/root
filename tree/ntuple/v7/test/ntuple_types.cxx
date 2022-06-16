@@ -100,14 +100,19 @@ TEST(RNTuple, StdTuple)
       auto model = RNTupleModel::Create();
       auto tuple_field = model->MakeField<std::tuple<char, float, std::string, char>>({"myTuple", "4-tuple"});
       auto myTuple2 = RFieldBase::Create("myTuple2", "std::tuple<char, float, std::string, char>").Unwrap();
+      auto myTuple3 = RFieldBase::Create("myTuple3", "std::tuple<int32_t, std::tuple<std::string, char>>").Unwrap();
       model->AddField(std::move(myTuple2));
+      model->AddField(std::move(myTuple3));
 
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "tuple_ntuple", fileGuard.GetPath());
       auto tuple_field2 =
          ntuple->GetModel()->GetDefaultEntry()->Get<std::tuple<char, float, std::string, char>>("myTuple2");
+      auto tuple_field3 =
+         ntuple->GetModel()->GetDefaultEntry()->Get<std::tuple<int32_t, std::tuple<std::string, char>>>("myTuple3");
       for (int i = 0; i < 2; i++) {
          *tuple_field = {'A' + i, static_cast<float>(i), std::to_string(i), '0' + i};
          *tuple_field2 = {'B' + i, static_cast<float>(i), std::to_string(i), '1' + i};
+         *tuple_field3 = {i, {std::to_string(i), '2' + i}};
          ntuple->Fill();
       }
    }
@@ -117,6 +122,7 @@ TEST(RNTuple, StdTuple)
 
    auto viewTuple = ntuple->GetView<std::tuple<char, float, std::string, char>>("myTuple");
    auto viewTuple2 = ntuple->GetView<std::tuple<char, float, std::string, char>>("myTuple2");
+   auto viewTuple3 = ntuple->GetView<std::tuple<int32_t, std::tuple<std::string, char>>>("myTuple3");
    for (auto i : ntuple->GetEntryRange()) {
       EXPECT_EQ(static_cast<char>('A' + i), std::get<0>(viewTuple(i)));
       EXPECT_EQ(static_cast<double>(i), std::get<1>(viewTuple(i)));
@@ -127,6 +133,11 @@ TEST(RNTuple, StdTuple)
       EXPECT_EQ(static_cast<double>(i), std::get<1>(viewTuple2(i)));
       EXPECT_EQ(std::to_string(i), std::get<2>(viewTuple2(i)));
       EXPECT_EQ(static_cast<char>('1' + i), std::get<3>(viewTuple2(i)));
+
+      EXPECT_EQ(static_cast<int32_t>(i), std::get<0>(viewTuple3(i)));
+      const auto &nested = std::get<1>(viewTuple3(i));
+      EXPECT_EQ(std::to_string(i), std::get<0>(nested));
+      EXPECT_EQ(static_cast<char>('2' + i), std::get<1>(nested));
    }
 }
 
