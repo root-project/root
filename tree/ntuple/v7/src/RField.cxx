@@ -1749,10 +1749,11 @@ std::string ROOT::Experimental::RTupleField::RTupleField::GetTypeList(
    const std::vector<std::unique_ptr<Detail::RFieldBase>> &itemFields)
 {
    std::string result;
+   if (itemFields.empty())
+      throw RException(R__FAIL("the type list for std::tuple must have at least one element"));
    for (size_t i = 0; i < itemFields.size(); ++i) {
       result += itemFields[i]->GetType() + ",";
    }
-   R__ASSERT(!result.empty()); // there is always at least one type
    result.pop_back();          // remove trailing comma
    return result;
 }
@@ -1781,8 +1782,10 @@ ROOT::Experimental::RTupleField::RTupleField(std::string_view fieldName,
    // Use TClass to get their offsets; in case a particular `std::tuple` implementation does not define such
    // members, the assertion below will fail.
    for (unsigned i = 0; i < fSubFields.size(); ++i) {
-      auto member = fClass->GetRealData(("_" + std::to_string(i)).c_str());
-      R__ASSERT(member != nullptr);
+      std::string memberName("_" + std::to_string(i));
+      auto member = fClass->GetRealData(memberName.c_str());
+      if (!member)
+         throw RException(R__FAIL(memberName + ": no such member"));
       fOffsets.push_back(member->GetThisOffset());
    }
 }
