@@ -358,7 +358,13 @@ FileManager::getFileRef(StringRef Filename, bool openFile, bool CacheFailure) {
   if (StaleFileEntry) {
     // Find occurrences of old FileEntry; update with new one:
     for (auto& fe: SeenFileEntries) {
-      fe.setValue(FileEntryRef::MapValue(UFE, DirInfo));
+      if (fe.getValue()) {
+        FileEntryRef::MapValue Value = *fe.getValue();
+        if (Value.V.is<FileEntry *>()
+            && Value.V.get<FileEntry*>() == StaleFileEntry) {
+          fe.setValue(FileEntryRef::MapValue(UFE, DirInfo));
+        }
+      }
     }
   }
 
