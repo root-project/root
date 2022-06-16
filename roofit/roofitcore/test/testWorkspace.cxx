@@ -22,6 +22,8 @@ using namespace RooStats;
 ///
 TEST(RooWorkspace, CloneModelConfig_ROOT_9777)
 {
+   constexpr bool verbose = false;
+
    const char* filename = "ROOT-9777.root";
 
    RooRealVar x("x", "x", 1, 0, 10);
@@ -56,17 +58,17 @@ TEST(RooWorkspace, CloneModelConfig_ROOT_9777)
       delete w;
    }
 
-   w2->Print();
+   if(verbose) w2->Print();
 
    ModelConfig *mc = dynamic_cast<ModelConfig*>(w2->genobj("ModelConfig"));
    ASSERT_TRUE(mc) << "ModelConfig not retrieved.";
    mc->Print();
 
    ASSERT_TRUE(mc->GetGlobalObservables()) << "GlobalObsevables in mc broken.";
-   mc->GetGlobalObservables()->Print();
+   if(verbose) mc->GetGlobalObservables()->Print();
 
    ASSERT_TRUE(mc->GetParametersOfInterest()) << "ParametersOfInterest in mc broken.";
-   mc->GetParametersOfInterest()->Print();
+   if(verbose) mc->GetParametersOfInterest()->Print();
 
    gSystem->Unlink(filename);
 }
@@ -233,4 +235,14 @@ TEST_F(TestRooWorkspaceWithGaussian, HashLookupInWorkspace) {
   EXPECT_TRUE(model_constrained_orig->dependsOn(*ws->var("mu")));
   EXPECT_FALSE(model_constrained_orig->dependsOn(*ws->var("mu2")));
   EXPECT_NE(ws->pdf("Gauss_editPdf_orig"), nullptr);
+}
+
+/// Covers an issue about a RooAddPdf constructor not properly picked up by
+/// RooFactoryWSTool.
+TEST(RooWorkspace, Issue_7965)
+{
+   RooWorkspace ws{"ws"};
+   ws.factory("RooAddPdf::addPdf({})");
+
+   ASSERT_NE(ws.pdf("addPdf"), nullptr);
 }

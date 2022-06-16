@@ -241,7 +241,7 @@ namespace {
     return false;
   }
 
-  static pair<list<string>,unsigned int> ctorArgs(const char* classname, UInt_t nMinArg) {
+  static pair<list<string>,unsigned int> ctorArgs(const char* classname, std::size_t nPassedArgs) {
     // Utility function for RooFactoryWSTool. Return arguments of 'first' non-default, non-copy constructor of any RooAbsArg
     // derived class. Only constructors that start with two `const char*` arguments (for name and title) are considered
     // The returned object contains
@@ -269,7 +269,8 @@ namespace {
 
       // Skip default constructor
       int nargs = gInterpreter->MethodInfo_NArg(func);
-      if (nargs==0 || nargs==gInterpreter->MethodInfo_NDefaultArg(func)) {
+      int nDefaultArgs = gInterpreter->MethodInfo_NDefaultArg(func);
+      if (nargs == nDefaultArgs) {
         continue;
       }
 
@@ -287,12 +288,12 @@ namespace {
       }
       gInterpreter->MethodArgInfo_Delete(arg);
 
-      // Check that the number of required arguments is at least nMinArg
-      if (ret.size()<nMinArg) {
-        continue;
+      // If the number of passed args (plus 2 for name and title) is somewhere
+      // between the number of minimum and maximum arguments that the
+      // constructor can take, it's a match!
+      if(static_cast<int>(nPassedArgs) >= nargs - nDefaultArgs && static_cast<int>(nPassedArgs) <= nargs) {
+        break;
       }
-
-      break;
     }
     gInterpreter->MethodInfo_Delete(func);
     gInterpreter->ClassInfo_Delete(cls);
