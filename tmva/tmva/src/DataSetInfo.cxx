@@ -250,13 +250,13 @@ void TMVA::DataSetInfo::AddVariablesArray(const TString &expression, Int_t size,
 
       // move "external" pointer to the next variable in the array
       if (varType == 'F') {
-         float* ptr = (float*) external;
+         float* ptr = (float *)external;
          ++ptr;
-         external = (void*) ptr;
+         external = (void *) ptr;
       } else if (varType == 'I') {
-         int* ptr = (int*) external;
+         int* ptr = (int *)external;
          ++ptr;
-         external = (void*) ptr;
+         external = (void *)ptr;
       } else {
          Error("TMVA::DataSetInfo::AddVariablesArray", "'%c' variable type is not supported", varType);
       }
