@@ -392,7 +392,7 @@
 #   ifndef WIN64
 #      define WIN64
 #   endif
-#   define __x86_64__ 1
+#   define R__x86_64__ 1
 #   define R__B64      /* enable when 64 bit machine */
 #endif
 
