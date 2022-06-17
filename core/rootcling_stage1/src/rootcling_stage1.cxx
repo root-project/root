@@ -11,6 +11,7 @@
 #include "rootcling_impl.h"
 #include "RConfigure.h"
 #include <ROOT/RConfig.hxx>
+#include <cassert>
 #include <cstdlib>
 #include <string>
 
