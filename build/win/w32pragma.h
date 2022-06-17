@@ -67,7 +67,7 @@
 #define G__WIN32 1
 
 #ifdef _WIN64
-#define __x86_64__ 1
+#define R__x86_64__ 1
 #define WIN64 1
 #define G__WIN64 1
 #else
