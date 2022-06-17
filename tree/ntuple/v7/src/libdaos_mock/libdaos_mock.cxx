@@ -276,17 +276,6 @@ int daos_oclass_id2name(daos_oclass_id_t oc_id, char *name)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int daos_cont_create(daos_handle_t poh, uuid_t uuid, daos_prop_t * /*cont_prop*/, daos_event_t * /*ev*/)
-{
-   auto pool = RDaosHandle::ToPointer<RDaosFakePool>(poh);
-
-   if (!pool)
-      return -DER_INVAL;
-
-   pool->CreateContainer(label_t(reinterpret_cast<char *>(uuid)));
-   return 0;
-}
-
 int daos_cont_create_with_label(daos_handle_t poh, const char *label, daos_prop_t * /*cont_prop*/, uuid_t * /*uuid*/,
                                 daos_event_t * /*ev*/)
 {

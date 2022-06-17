@@ -239,36 +239,10 @@ typedef struct {
 
 #define DAOS_PROP_LABEL_MAX_LEN (127)
 #define DAOS_PROP_MAX_LABEL_BUF_LEN (DAOS_PROP_LABEL_MAX_LEN + 1)
+#define DAOS_UUID_STR_SIZE (37) // 36 + 1 for '\0'
 
-/**
- * Check if DAOS (pool or container property) label string is valid.
- * DAOS labels must consist only of alphanumeric characters, colon ':',
- * period '.', hyphen '-' or underscore '_', and must be of length
- * [1 - DAOS_PROP_LABEL_MAX_LEN].
- * Unlike in libdaos, UUIDs are deemed valid labels for libdaos_mock.
- * \param[in] label	    Label string
- * \return	  true      Label meets length/format requirements
- *			  false     Label is not valid length or format
- */
-static inline bool daos_label_is_valid(const char *label)
+static inline bool daos_label_is_valid(const char * /*label*/)
 {
-   int len;
-   int i;
-
-   if (label == NULL)
-      return false;
-
-   len = strnlen(label, DAOS_PROP_LABEL_MAX_LEN + 1);
-   if (len == 0 || len > DAOS_PROP_LABEL_MAX_LEN)
-      return false;
-
-   // Verify that it contains only alphanumeric characters or :.-_
-   for (i = 0; i < len; i++) {
-      char c = label[i];
-      if (isalnum(c) || c == '.' || c == '_' || c == ':' || c == '-')
-         continue;
-      return false;
-   }
    return true;
 }
 
@@ -280,10 +254,9 @@ static inline bool daos_label_is_valid(const char *label)
 
 /** Container information */
 typedef struct {
-	char		unused; // silence [-Wextern-c-compat]
+   uuid_t ci_uuid;
 } daos_cont_info_t;
 
-int daos_cont_create(daos_handle_t poh, uuid_t uuid, daos_prop_t *cont_prop, daos_event_t *ev);
 int daos_cont_create_with_label(daos_handle_t poh, const char *label, daos_prop_t *cont_prop, uuid_t *uuid,
                                 daos_event_t *ev);
 int daos_cont_open(daos_handle_t poh, const char *uuid, unsigned int flags, daos_handle_t *coh, daos_cont_info_t *info,
@@ -295,7 +268,7 @@ int daos_cont_close(daos_handle_t coh, daos_event_t *ev);
 
 /** Storage pool */
 typedef struct {
-	char		unused; // silence [-Wextern-c-compat]
+   uuid_t pi_uuid;
 } daos_pool_info_t;
 
 int daos_pool_connect(const char *pool, const char *grp, unsigned int flags, daos_handle_t *poh, daos_pool_info_t *info,
