@@ -27,6 +27,10 @@
 #include <type_traits>
 #include <vector>
 
+#ifndef DAOS_UUID_STR_SIZE
+#define DAOS_UUID_STR_SIZE 37
+#endif
+
 namespace ROOT {
 
 namespace Experimental {
@@ -41,14 +45,16 @@ class RDaosPool {
    friend class RDaosContainer;
 private:
    daos_handle_t fPoolHandle{};
+   uuid_t fPoolUuid{};
    std::string fPoolLabel{};
 
 public:
    RDaosPool(const RDaosPool&) = delete;
-   RDaosPool(std::string_view poolLabel);
+   RDaosPool(std::string_view poolId);
    ~RDaosPool();
 
    RDaosPool& operator=(const RDaosPool&) = delete;
+   std::string GetPoolUuid();
 };
 
 /**
@@ -134,6 +140,8 @@ public:
       std::vector<d_iov_t> fIovs{};
    };
 
+   std::string GetContainerUuid();
+
 private:
    struct DaosEventQueue {
       std::size_t fSize;
@@ -149,6 +157,7 @@ private:
    };
 
    daos_handle_t fContainerHandle{};
+   uuid_t fContainerUuid{};
    std::string fContainerLabel{};
    std::shared_ptr<RDaosPool> fPool;
    ObjClassId_t fDefaultObjectClass{OC_SX};
@@ -180,7 +189,7 @@ private:
    }
 
 public:
-   RDaosContainer(std::shared_ptr<RDaosPool> pool, std::string_view containerLabel, bool create = false);
+   RDaosContainer(std::shared_ptr<RDaosPool> pool, std::string_view containerId, bool create = false);
    ~RDaosContainer();
 
    ObjClassId_t GetDefaultObjectClass() const { return fDefaultObjectClass; }
