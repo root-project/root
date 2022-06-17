@@ -19,7 +19,7 @@
 #include <numeric>
 #include <stdexcept>
 
-ROOT::Experimental::Detail::RDaosPool::RDaosPool(std::string_view poolLabel)
+ROOT::Experimental::Detail::RDaosPool::RDaosPool(std::string_view poolId)
 {
    {
       static struct RDaosRAII {
@@ -28,17 +28,27 @@ ROOT::Experimental::Detail::RDaosPool::RDaosPool(std::string_view poolLabel)
       } RAII = {};
    }
 
-   fPoolLabel = poolLabel;
-
    daos_pool_info_t poolInfo{};
-   if (int err = daos_pool_connect(fPoolLabel.data(), nullptr, DAOS_PC_RW, &fPoolHandle, &poolInfo, nullptr)) {
+
+   if (daos_label_is_valid(poolId.data()))
+      fPoolLabel = std::string(poolId);
+
+   if (int err = daos_pool_connect(poolId.data(), nullptr, DAOS_PC_RW, &fPoolHandle, &poolInfo, nullptr)) {
       throw RException(R__FAIL("daos_pool_connect: error: " + std::string(d_errstr(err))));
    }
+   uuid_copy(fPoolUuid, poolInfo.pi_uuid);
 }
 
 ROOT::Experimental::Detail::RDaosPool::~RDaosPool()
 {
    daos_pool_disconnect(fPoolHandle, nullptr);
+}
+
+std::string ROOT::Experimental::Detail::RDaosPool::GetPoolUuid()
+{
+   char id[DAOS_UUID_STR_SIZE];
+   uuid_unparse(fPoolUuid, id);
+   return std::string(id);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -142,27 +152,38 @@ int ROOT::Experimental::Detail::RDaosContainer::DaosEventQueue::Poll() {
 ////////////////////////////////////////////////////////////////////////////////
 
 ROOT::Experimental::Detail::RDaosContainer::RDaosContainer(std::shared_ptr<RDaosPool> pool,
-                                                           std::string_view containerLabel, bool create)
+                                                           std::string_view containerId, bool create)
    : fPool(pool)
 {
    daos_cont_info_t containerInfo{};
 
-   fContainerLabel = containerLabel;
-
-   if (create) {
+   // Creating containers supported only with a valid label (not UUID).
+   if (create && daos_label_is_valid(containerId.data())) {
+      fContainerLabel = std::string(containerId);
       if (int err =
              daos_cont_create_with_label(fPool->fPoolHandle, fContainerLabel.data(), nullptr, nullptr, nullptr)) {
+         // Ignore error for re-creating existing container.
          if (err != -DER_EXIST)
             throw RException(R__FAIL("daos_cont_create_with_label: error: " + std::string(d_errstr(err))));
       }
    }
-   if (int err = daos_cont_open(fPool->fPoolHandle, fContainerLabel.data(), DAOS_COO_RW, &fContainerHandle,
-                                &containerInfo, nullptr))
+
+   // Opening containers is supported by valid label or UUID
+   if (int err = daos_cont_open(fPool->fPoolHandle, containerId.data(), DAOS_COO_RW, &fContainerHandle, &containerInfo,
+                                nullptr))
       throw RException(R__FAIL("daos_cont_open: error: " + std::string(d_errstr(err))));
+   uuid_copy(fContainerUuid, containerInfo.ci_uuid);
 }
 
 ROOT::Experimental::Detail::RDaosContainer::~RDaosContainer() {
    daos_cont_close(fContainerHandle, nullptr);
+}
+
+std::string ROOT::Experimental::Detail::RDaosContainer::GetContainerUuid()
+{
+   char id[DAOS_UUID_STR_SIZE];
+   uuid_unparse(fContainerUuid, id);
+   return std::string(id);
 }
 
 int ROOT::Experimental::Detail::RDaosContainer::ReadSingleAkey(void *buffer, std::size_t length, daos_obj_id_t oid,
