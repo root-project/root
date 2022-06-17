@@ -25,21 +25,17 @@ ROOT::Internal::RootCling::TROOTSYSSetter gROOTSYSSetter;
 
 static const char *GetIncludeDir() {
    const char *rootsys = getenv("ROOTSYS");
-   static std::string incdir;
-   if (rootsys != nullptr)
-      incdir = std::string(rootsys) + "/include";
-   else
-      incdir = "/include";
+   // The environment variable ROOTSYS is expected to be set by SetRootSys().
+   assert(rootsys != nullptr);
+   static std::string incdir = std::string(rootsys) + "/include";
    return incdir.c_str();
 }
 
 static const char *GetEtcDir() {
    const char *rootsys = getenv("ROOTSYS");
-   static std::string etcdir;
-   if (rootsys != nullptr)
-      etcdir = std::string(rootsys) + "/etc";
-   else
-      etcdir = "/etc";
+   // The environment variable ROOTSYS is expected to be set by SetRootSys().
+   assert(rootsys != nullptr);
+   static std::string etcdir = std::string(rootsys) + "/etc";
    return etcdir.c_str();
 }
 
