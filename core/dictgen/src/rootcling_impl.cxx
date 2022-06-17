@@ -59,6 +59,10 @@
 #include <unistd.h>
 #endif
 
+#if defined(__FreeBSD__)
+#include <sys/sysctl.h>
+#include <sys/types.h>
+#endif
 
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/InterpreterCallbacks.h"
@@ -203,6 +207,22 @@ const char *GetExePath()
     if (ret > 0 && ret < 1024) {
       buf[ret] = 0;
       exepath = buf;
+    }
+#endif
+#if defined(__FreeBSD__)
+    int name[4];
+    size_t len;
+    name[0] = CTL_KERN;
+    name[1] = KERN_PROC;
+    name[2] = KERN_PROC_PATHNAME;
+    name[3] = -1;
+    int ret = sysctl(name, 4, nullptr, &len, nullptr, 0);
+    if (ret == 0) {
+       char *buf = new char[len];
+       ret = sysctl(name, 4, buf, &len, nullptr, 0);
+       if (ret == 0)
+          exepath = buf;
+       delete[] buf;
     }
 #endif
 #ifdef _WIN32
@@ -471,7 +491,7 @@ void SetRootSys()
 #if !defined(_WIN32)
       char *ep = new char[PATH_MAX];
       if (!realpath(exepath, ep)) {
-         fprintf(stderr, "rootcling: error getting realpath of rootcling!");
+         fprintf(stderr, "rootcling: error getting realpath of rootcling!\n");
          strlcpy(ep, exepath, PATH_MAX);
       }
 #else
@@ -525,6 +545,8 @@ void SetRootSys()
       putenv(env);
       // intentionally not call delete [] env, while GLIBC keep use pointer
       delete [] ep;
+   } else {
+      fprintf(stderr, "rootcling: cannot set ROOTSYS because executable path is unknown.\n");
    }
 }
 
