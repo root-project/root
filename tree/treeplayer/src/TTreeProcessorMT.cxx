@@ -168,16 +168,24 @@ static ClustersAndEntries MakeClusters(const std::vector<std::string> &treeNames
       std::vector<EntryCluster> clusters;
       while ((start = clusterIter()) < entries) {
          end = clusterIter.GetNextEntry();
-         // Add the current file's offset to start and end to make them (chain) global
+         // Currently, if a user specified a range, the clusters will be only globally obtained
+         // Hence, the guarantee that currentStart and currentEnd are always as expected
+         // That are: the cluster start must be at least startEntry, and at most the endEntry
+         // The current file's offset to start and end is added to make them (chain) global
          const auto currentStart = std::max(start + offset, startEntry);
          const auto currentEnd = std::min(end + offset, endEntry);
+         // This is not satified if the desired start is larger than the last entry of some cluster
+         // In this case, this cluster is not going to be processes further
          if (currentStart < currentEnd)
             clusters.emplace_back(EntryCluster{currentStart, currentEnd});
          if (currentEnd == endEntry) // if the desired end is reached, stop reading further
             break;
       }
-      offset += entries;
+      offset += entries; // consistently keep track of the total number of entries
       clustersPerFile.emplace_back(std::move(clusters));
+      // The clusters might be empty, but their entries are needed to properly handle the global range
+      // This can happen if a cluster had last entry smaller than the desired start. The position of the
+      // desired start must remain globally the same.
       entriesPerFile.emplace_back(entries);
    }
    if (startEntry >= offset)

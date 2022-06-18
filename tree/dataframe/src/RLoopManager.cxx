@@ -384,6 +384,7 @@ RLoopManager::RLoopManager(const ROOT::RDF::RDatasetSpec &&spec)
       SetTree(chain);
    }
 
+   // Create the friends from the list of friends
    const auto &friendNames = spec.fFriendInfo.fFriendNames;
    const auto &friendFileNames = spec.fFriendInfo.fFriendFileNames;
    const auto &friendChainSubNames = spec.fFriendInfo.fFriendChainSubNames;
@@ -415,6 +416,7 @@ RLoopManager::RLoopManager(const ROOT::RDF::RDatasetSpec &&spec)
 
       // Make it friends with the main chain
       fTree->AddFriend(frChain.get(), thisFriendAlias.c_str());
+      // fFriends are needed to preserve the friends alive after the end of the ctor call
       fFriends.emplace_back(std::move(frChain));
    }
 }
@@ -499,6 +501,7 @@ void RLoopManager::RunTreeProcessorMT()
    const auto &entryList = fTree->GetEntryList() ? *fTree->GetEntryList() : TEntryList();
    auto tp = std::make_unique<ROOT::TTreeProcessorMT>(*fTree, entryList, fNSlots);
 
+   // pass the information about the entries to the TTreeProcessorMT
    tp->SetEntriesRange(fStartEntry, fEndEntry);
 
    std::atomic<ULong64_t> entryCount(0ull);
