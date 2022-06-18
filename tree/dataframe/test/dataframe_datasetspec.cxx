@@ -12,6 +12,168 @@ using namespace ROOT::RDF;
 
 using namespace std::literals; // remove ambiguity of using std::vector<std::string>-s and std::string-s
 
+void EXPECT_VEC_EQ(const std::vector<ULong64_t> &vec1, const std::vector<ULong64_t> &vec2)
+{
+   ASSERT_EQ(vec1.size(), vec2.size());
+   for (auto i = 0u; i < vec1.size(); ++i)
+      EXPECT_EQ(vec1[i], vec2[i]);
+}
+
+// The helper class is also responsible for the creation and the deletion of the root files
+// Reasons: each tests needs (almost) all files; the Snapshot action is not available in MT
+class RDataSpecTest : public ::testing::TestWithParam<bool> {
+protected:
+   RDataSpecTest() : NSLOTS(GetParam() ? std::min(4u, std::thread::hardware_concurrency()) : 1u)
+   {
+      auto dfWriter0 = RDataFrame(5)
+                          .Define("x", [](ULong64_t e) { return e; }, {"rdfentry_"})
+                          .Define("y", [](ULong64_t e) { return e + 10; }, {"rdfentry_"})
+                          .Define("z", [](ULong64_t e) { return e + 100; }, {"rdfentry_"});
+      dfWriter0.Snapshot<ULong64_t>("tree", "file0.root", {"x"});
+      dfWriter0.Range(4).Snapshot<ULong64_t>("tree", "file1.root", {"y"});
+      dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree", "file2.root", {"z"});
+      dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree", "file3.root", {"z"});
+      dfWriter0.Range(4, 5).Snapshot<ULong64_t>("subTree", "file4.root", {"z"});
+      dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree1", "file5.root", {"z"});
+      dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree2", "file6.root", {"z"});
+      dfWriter0.Snapshot<ULong64_t>("anotherTree", "file7.root", {"z"});
+      if (GetParam())
+         ROOT::EnableImplicitMT(NSLOTS);
+   }
+   ~RDataSpecTest()
+   {
+      if (GetParam())
+         ROOT::DisableImplicitMT();
+      gSystem->Exec("rm file*.root");
+   }
+   const unsigned int NSLOTS;
+};
+
+// ensure that the chains are created as expected, no ranges, neither friends are passed
+TEST_P(RDataSpecTest, SimpleChainsCreation)
+{
+   // first constructor: 1 tree, 1 file; both passed as string directly
+   // advanced note: internally a TChain is created named the same as the tree provided
+   const auto dfRDSc1 = *(RDataFrame(RDatasetSpec("tree", "file0.root")).Take<ULong64_t>("x"));
+   EXPECT_VEC_EQ(dfRDSc1, {0u, 1u, 2u, 3u, 4u});
+
+   // second constructor: 1 tree, many files; files passed as a vector; testing with 1 file
+   // advanced note: internally a TChain is created named the same as the tree provided
+   const auto dfRDSc21 = *(RDataFrame(RDatasetSpec("tree", {"file0.root"s})).Take<ULong64_t>("x"));
+   EXPECT_VEC_EQ(dfRDSc21, {0u, 1u, 2u, 3u, 4u});
+
+   // second constructor: here with multiple files
+   auto dfRDSc2N =
+      *(RDataFrame(RDatasetSpec("subTree", {"file2.root"s, "file3.root"s, "file4.root"s})).Take<ULong64_t>("z"));
+   std::sort(dfRDSc2N.begin(), dfRDSc2N.end()); // the order is not necessary preserved by Take in MT
+   EXPECT_VEC_EQ(dfRDSc2N, {100u, 101u, 102u, 103u, 104u});
+
+   // third constructor: many trees, many files; trees and files passed in a vector of pairs; here 1 file
+   // advanced note: when using this constructor, the internal TChain will always have no name
+   const auto dfRDSc31 = *(RDataFrame(RDatasetSpec({{"tree"s}, {"file0.root"s}})).Take<ULong64_t>("x"));
+   EXPECT_VEC_EQ(dfRDSc31, {0u, 1u, 2u, 3u, 4u});
+
+   // third constructor: many trees and files
+   auto dfRDSc3N =
+      *(RDataFrame(
+           RDatasetSpec({{"subTree1"s, "file5.root"s}, {"subTree2"s, "file6.root"s}, {"subTree"s, "file4.root"s}}))
+           .Take<ULong64_t>("z"));
+   std::sort(dfRDSc3N.begin(), dfRDSc3N.end());
+   EXPECT_VEC_EQ(dfRDSc3N, {100u, 101u, 102u, 103u, 104u});
+}
+
+// ensure that ranges are properly handled, even if the ranges are invalid
+// let: start = desired start, end = desired end, last = actually last entry
+// possible cases: default: 0 = start < last < end = max (already implicitly tested above)
+// 0. start < end <= last
+// 1. similar to above but test the case the start is after the first tree)
+// *  In MT runs, there is the additional optimization: once the desired end is reached,
+//    stop processing further trees, i.e. range asked is [1, 3] and the df has 2 trees
+//    of 5 entries each -> the second tree is not open.
+// 2. 0 = start < last < end < max
+// 3. 0 < start < last < end < max
+// 4. start = end <= last -> enter the RLoopManager and do no work there (no sanity checks)
+// 5. start = end > last -> enter the RLoopManager and do no work there (no sanity checks)
+// 6. last = start < end -> error after getting the number of entries
+// 7. last + 1 = start < end -> error after getting the number of entries
+// 8. last < start < end -> error after getting the number of entries
+// start > end -> error in the spec directly
+// test all range cases for the 3 constructors
+TEST_P(RDataSpecTest, Ranges)
+{
+   std::vector<std::pair<Long64_t, Long64_t>> ranges = {{1, 4}, {3, 5},   {0, 100}, {1, 100}, {2, 2},
+                                                        {7, 7}, {5, 100}, {6, 100}, {42, 100}};
+   std::vector<std::vector<ULong64_t>> expectedRess = {{101, 102, 103},      {103, 104}, {100, 101, 102, 103, 104},
+                                                       {101, 102, 103, 104}, {},         {}};
+   std::vector<std::vector<RDatasetSpec>> specs;
+   // all entries across a column of specs should be the same, where each column tests all constructors
+   for (const auto &r : ranges) {
+      specs.push_back({});
+      specs.back().push_back(RDatasetSpec("anotherTree", "file7.root", {r.first, r.second}));
+      specs.back().push_back(
+         RDatasetSpec("subTree", {"file2.root"s, "file3.root"s, "file4.root"s}, {r.first, r.second}));
+      specs.back().push_back(
+         RDatasetSpec({{"subTree1"s, "file5.root"s}, {"subTree2"s, "file6.root"s}, {"subTree"s, "file4.root"s}},
+                      {r.first, r.second}));
+   }
+
+   // the first 6 ranges are "natural to handle"
+   for (auto i = 0u; i < ranges.size(); ++i) {
+      for (const auto &s : specs[i]) {
+         auto takeRes = RDataFrame(RDatasetSpec(s)).Take<ULong64_t>("z"); // lazy action
+         if (i < 6u) {
+            auto res = *(takeRes);
+            std::sort(res.begin(), res.end());
+            EXPECT_VEC_EQ(res, expectedRess[i]);
+         } else {
+            EXPECT_THROW(
+               try { *(takeRes); } catch (const std::logic_error &err) {
+                  EXPECT_EQ(std::string(err.what()), "A range of entries was passed in the creation of the RDataFrame, "
+                                                     "but the starting entry is larger "
+                                                     "than the total number of entries (5) in the dataset.");
+                  throw;
+               },
+               std::logic_error);
+         }
+      }
+   }
+
+   EXPECT_THROW(
+      try {
+         RDatasetSpec("anotherTree", "file7.root", {100, 7});
+      } catch (const std::logic_error &err) {
+         EXPECT_EQ(
+            std::string(err.what()),
+            "The starting entry cannot be larger than the ending entry in the creation of a dataset specification.");
+         throw;
+      },
+      std::logic_error);
+
+   EXPECT_THROW(
+      try {
+         RDatasetSpec("subTree", {"file2.root"s, "file3.root"s, "file4.root"s}, {100, 7});
+      } catch (const std::logic_error &err) {
+         EXPECT_EQ(
+            std::string(err.what()),
+            "The starting entry cannot be larger than the ending entry in the creation of a dataset specification.");
+         throw;
+      },
+      std::logic_error);
+
+   EXPECT_THROW(
+      try {
+         RDatasetSpec({{"subTree1"s, "file5.root"s}, {"subTree2"s, "file6.root"s}, {"subTree"s, "file4.root"s}},
+                      {100, 7});
+      } catch (const std::logic_error &err) {
+         EXPECT_EQ(
+            std::string(err.what()),
+            "The starting entry cannot be larger than the ending entry in the creation of a dataset specification.");
+         throw;
+      },
+      std::logic_error);
+}
+/*
+// test 1 single tree with various meaningful and non-meaningful ranges
 TEST(RDFDatasetSpec, SingleFileSingleColConstructor)
 {
    auto dfWriter = RDataFrame(5).Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"});
@@ -681,3 +843,12 @@ TEST(RDatasetSpecTest, FriendsRangesMT) // gotta catch them all!!!!!!!!!!!
 
    gSystem->Exec("rm file*.root");
 }
+*/
+
+// instantiate single-thread tests
+INSTANTIATE_TEST_SUITE_P(Seq, RDataSpecTest, ::testing::Values(false));
+
+// instantiate multi-thread tests
+#ifdef R__USE_IMT
+INSTANTIATE_TEST_SUITE_P(MT, RDataSpecTest, ::testing::Values(true));
+#endif

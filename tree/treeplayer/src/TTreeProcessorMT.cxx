@@ -180,6 +180,10 @@ static ClustersAndEntries MakeClusters(const std::vector<std::string> &treeNames
       clustersPerFile.emplace_back(std::move(clusters));
       entriesPerFile.emplace_back(entries);
    }
+   if (startEntry >= offset)
+      throw std::logic_error(std::string("A range of entries was passed in the creation of the RDataFrame, ") +
+                             "but the starting entry is larger than the total number of entries (" + offset +
+                             ") in the dataset.");
 
    // Here we "fuse" clusters together if the number of clusters is too big with respect to
    // the number of slots, otherwise we can incur in an overhead which is big enough

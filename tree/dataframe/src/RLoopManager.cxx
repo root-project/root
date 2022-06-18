@@ -538,17 +538,23 @@ void RLoopManager::RunTreeProcessorMT()
 /// Run event loop over one or multiple ROOT files, in sequence.
 void RLoopManager::RunTreeReader()
 {
-   if (fEndEntry == fStartEntry) // empty range => no work needed
+   if (fStartEntry == fEndEntry) // empty range => no work needed
       return;
 
    TTreeReader r(fTree.get(), fTree->GetEntryList());
 
-   if (r.SetEntriesRange(fStartEntry, fEndEntry)) // returning > 0 indicates invalid fStartEntry
-      throw std::logic_error("A range of entries was passed in the creation of the RDataFrame, but the starting entry "
-                             "is larger than the total number of entries in the dataset.");
-
    if (0 == fTree->GetEntriesFast())
       return;
+
+   // if `GetEntries` is not called, in case of chains, `SetEntriesRange` might not properly indicate that a
+   // start entry is too large, e.g. when start=last entry
+   // the `GetEntries` call can be removed once `https://github.com/root-project/root/issues/10774` is resolved
+   if (fStartEntry >= r.GetEntries(true))
+      throw std::logic_error(std::string("A range of entries was passed in the creation of the RDataFrame, ") +
+                             "but the starting entry is larger than the total number of entries (" +
+                             r.GetEntries(true) + ") in the dataset.");
+   r.SetEntriesRange(fStartEntry, fEndEntry);
+
    RCallCleanUpTask cleanup(*this, 0u, &r);
    InitNodeSlots(&r, 0);
    R__LOG_INFO(RDFLogChannel()) << LogRangeProcessing(TreeDatasetLogInfo(r, 0u));
