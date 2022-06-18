@@ -261,8 +261,7 @@ TEST_P(RDatasetSpecTest, FilterDependingOnVariation)
    EXPECT_EQ(fr_sums["w:1"], 63);
 }
 
-// as expected the chain has no name
-TEST_P(RDatasetSpecTest, SaveGraphDescribe)
+TEST_P(RDatasetSpecTest, SaveGraph)
 {
    RDatasetSpec spec({{"subTree0"s, "file8.root"s}, {"subTree1"s, "file9.root"s}}); // vertical concatenation
    spec.AddFriend({{"subTree2"s, "file10.root"s}, {"subTree3"s, "file11.root"s}});  // horizontal concatenation
@@ -271,6 +270,7 @@ TEST_P(RDatasetSpecTest, SaveGraphDescribe)
    auto res1 = df.Sum<double>("w");
 
    std::string graph = ROOT::RDF::SaveGraph(df);
+   // as expected the chain has no name
    static const std::string expectedGraph(
       "digraph {\n"
       "\t1 [label=<Sum>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
@@ -280,28 +280,45 @@ TEST_P(RDatasetSpecTest, SaveGraphDescribe)
       "\t0 -> 2;\n"
       "}");
    EXPECT_EQ(expectedGraph, graph);
+}
 
-   static const std::string expectedDescribe(std::string("Dataframe from TChain  in files\n"
-                                                         "  file8.root\n"
-                                                         "  file9.root\n"
-                                                         "with friend\n"
-                                                         "  \n"
-                                                         "    subTree2 file10.root\n"
-                                                         "    subTree3 file11.root\n"
-                                                         "\n"
-                                                         "Property                Value\n"
-                                                         "--------                -----\n"
-                                                         "Columns in total            2\n"
-                                                         "Columns from defines        0\n"
-                                                         "Event loops run             0\n"
-                                                         "Processing slots            ") +
-                                             this->NSLOTS +
-                                             "\n\n"
+TEST(RDatasetSpecTest, Describe)
+{
+   auto dfWriter1 = RDataFrame(10)
+                       .Define("x", [](ULong64_t e) { return double(e); }, {"rdfentry_"})
+                       .Define("w", [](ULong64_t e) { return e + 1.; }, {"rdfentry_"});
+   dfWriter1.Range(5).Snapshot<double>("subTree0", "file8.root", {"x"});
+   dfWriter1.Range(5, 10).Snapshot<double>("subTree1", "file9.root", {"x"});
+   dfWriter1.Range(5).Snapshot<double>("subTree2", "file10.root", {"w"});
+   dfWriter1.Range(5, 10).Snapshot<double>("subTree3", "file11.root", {"w"});
+
+   RDatasetSpec spec({{"subTree0"s, "file8.root"s}, {"subTree1"s, "file9.root"s}}); // vertical concatenation
+   spec.AddFriend({{"subTree2"s, "file10.root"s}, {"subTree3"s, "file11.root"s}});  // horizontal concatenation
+   auto df = ROOT::RDataFrame(spec);
+   auto res0 = df.Sum<double>("x");
+   auto res1 = df.Sum<double>("w");
+
+   static const std::string expectedDescribe("Dataframe from TChain  in files\n"
+                                             "  file8.root\n"
+                                             "  file9.root\n"
+                                             "with friend\n"
+                                             "  \n"
+                                             "    subTree2 file10.root\n"
+                                             "    subTree3 file11.root\n"
+                                             "\n"
+                                             "Property                Value\n"
+                                             "--------                -----\n"
+                                             "Columns in total            2\n"
+                                             "Columns from defines        0\n"
+                                             "Event loops run             0\n"
+                                             "Processing slots            1\n"
+                                             "\n"
                                              "Column  Type            Origin\n"
                                              "------  ----            ------\n"
                                              "w       Double_t        Dataset\n"
                                              "x       Double_t        Dataset");
    EXPECT_EQ(expectedDescribe, df.Describe().AsString());
+   gSystem->Exec("rm file*.root");
 }
 
 /*
