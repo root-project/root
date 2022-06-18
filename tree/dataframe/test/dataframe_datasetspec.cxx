@@ -21,9 +21,9 @@ void EXPECT_VEC_EQ(const std::vector<ULong64_t> &vec1, const std::vector<ULong64
 
 // The helper class is also responsible for the creation and the deletion of the root files
 // Reasons: each tests needs (almost) all files; the Snapshot action is not available in MT
-class RDataSpecTest : public ::testing::TestWithParam<bool> {
+class RDatasetSpecTest : public ::testing::TestWithParam<bool> {
 protected:
-   RDataSpecTest() : NSLOTS(GetParam() ? std::min(4u, std::thread::hardware_concurrency()) : 1u)
+   RDatasetSpecTest() : NSLOTS(GetParam() ? std::min(4u, std::thread::hardware_concurrency()) : 1u)
    {
       auto dfWriter0 = RDataFrame(5)
                           .Define("x", [](ULong64_t e) { return e; }, {"rdfentry_"})
@@ -37,10 +37,19 @@ protected:
       dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree1", "file5.root", {"z"});
       dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree2", "file6.root", {"z"});
       dfWriter0.Snapshot<ULong64_t>("anotherTree", "file7.root", {"z"});
+
+      auto dfWriter1 = RDataFrame(10)
+                          .Define("x", [](ULong64_t e) { return double(e); }, {"rdfentry_"})
+                          .Define("w", [](ULong64_t e) { return e + 1.; }, {"rdfentry_"});
+      dfWriter1.Range(5).Snapshot<double>("subTree0", "file8.root", {"x"});
+      dfWriter1.Range(5, 10).Snapshot<double>("subTree1", "file9.root", {"x"});
+      dfWriter1.Range(5).Snapshot<double>("subTree2", "file10.root", {"w"});
+      dfWriter1.Range(5, 10).Snapshot<double>("subTree3", "file11.root", {"w"});
+
       if (GetParam())
          ROOT::EnableImplicitMT(NSLOTS);
    }
-   ~RDataSpecTest()
+   ~RDatasetSpecTest()
    {
       if (GetParam())
          ROOT::DisableImplicitMT();
@@ -50,7 +59,7 @@ protected:
 };
 
 // ensure that the chains are created as expected, no ranges, neither friends are passed
-TEST_P(RDataSpecTest, SimpleChainsCreation)
+TEST_P(RDatasetSpecTest, SimpleChainsCreation)
 {
    // first constructor: 1 tree, 1 file; both passed as string directly
    // advanced note: internally a TChain is created named the same as the tree provided
@@ -99,7 +108,7 @@ TEST_P(RDataSpecTest, SimpleChainsCreation)
 // 8. last < start < end -> error after getting the number of entries
 // start > end -> error in the spec directly
 // test all range cases for the 3 constructors
-TEST_P(RDataSpecTest, Ranges)
+TEST_P(RDatasetSpecTest, Ranges)
 {
    std::vector<std::pair<Long64_t, Long64_t>> ranges = {{1, 4}, {3, 5},   {0, 100}, {1, 100}, {2, 2},
                                                         {7, 7}, {5, 100}, {6, 100}, {42, 100}};
@@ -172,6 +181,129 @@ TEST_P(RDataSpecTest, Ranges)
       },
       std::logic_error);
 }
+
+TEST_P(RDatasetSpecTest, Histo1D)
+{
+   RDatasetSpec spec({{"subTree0"s, "file8.root"s}, {"subTree1"s, "file9.root"s}}); // vertical concatenation
+   spec.AddFriend({{"subTree2"s, "file10.root"s}, {"subTree3"s, "file11.root"s}});  // horizontal concatenation
+   ROOT::RDataFrame d(spec);
+
+   auto h1 = d.Histo1D(::TH1D("h1", "h1", 10, 0, 10), "x");
+   auto h2 = d.Histo1D({"h2", "h2", 10, 0, 10}, "x");
+   auto h1w = d.Histo1D(::TH1D("h0w", "h0w", 10, 0, 10), "x", "w");
+   auto h2w = d.Histo1D({"h2w", "h2w", 10, 0, 10}, "x", "w");
+   std::vector<double> edgesd{1, 2, 3, 4, 5, 6, 10};
+   auto h1edgesd = d.Histo1D(::TH1D("h1edgesd", "h1edgesd", (int)edgesd.size() - 1, edgesd.data()), "x");
+   auto h2edgesd = d.Histo1D({"h2edgesd", "h2edgesd", (int)edgesd.size() - 1, edgesd.data()}, "x");
+
+   TH1DModel m0("m0", "m0", 10, 0, 10);
+   TH1DModel m1(::TH1D("m1", "m1", 10, 0, 10));
+
+   auto hm0 = d.Histo1D(m0, "x");
+   auto hm1 = d.Histo1D(m1, "x");
+   auto hm0w = d.Histo1D(m0, "x", "w");
+   auto hm1w = d.Histo1D(m1, "x", "w");
+
+   std::vector<double> ref({0., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10.});
+
+   auto CheckBins = [](const TAxis *axis, const std::vector<double> &v) {
+      auto nBins = axis->GetNbins();
+      auto nBinsp1 = nBins + 1;
+      auto nBinsm1 = nBins - 1;
+      EXPECT_EQ(nBinsp1, (int)v.size());
+      for (auto i : ROOT::TSeqI(1, nBinsp1)) {
+         EXPECT_DOUBLE_EQ(axis->GetBinLowEdge(i), (double)v[i - 1]);
+      }
+      EXPECT_DOUBLE_EQ(axis->GetBinUpEdge(nBinsm1), (double)v[nBinsm1]);
+   };
+
+   CheckBins(h1->GetXaxis(), ref);
+   CheckBins(h2->GetXaxis(), ref);
+   CheckBins(hm0->GetXaxis(), ref);
+   CheckBins(hm1->GetXaxis(), ref);
+   CheckBins(h1edgesd->GetXaxis(), edgesd);
+   CheckBins(h2edgesd->GetXaxis(), edgesd);
+}
+
+TEST_P(RDatasetSpecTest, FilterDependingOnVariation)
+{
+   RDatasetSpec spec({{"subTree0"s, "file8.root"s}, {"subTree1"s, "file9.root"s}}); // vertical concatenation
+   spec.AddFriend({{"subTree2"s, "file10.root"s}, {"subTree3"s, "file11.root"s}});  // horizontal concatenation
+   auto df = ROOT::RDataFrame(spec);
+
+   auto sum = df.Vary(
+                   "x",
+                   [](double x) {
+                      return ROOT::RVecD{x - 1., x + 2.};
+                   },
+                   {"x"}, 2)
+                 .Filter([](double x) { return x > 5.; }, {"x"})
+                 .Sum<double>("x");
+   auto fr_sum = df.Vary(
+                      "w",
+                      [](double w) {
+                         return ROOT::RVecD{w - 1., w + 2.};
+                      },
+                      {"w"}, 2)
+                    .Filter([](double w) { return w > 5.; }, {"w"})
+                    .Sum<double>("w");
+   EXPECT_EQ(*sum, 30);
+   EXPECT_EQ(*fr_sum, 40);
+
+   auto sums = ROOT::RDF::Experimental::VariationsFor(sum);
+   auto fr_sums = ROOT::RDF::Experimental::VariationsFor(fr_sum);
+
+   EXPECT_EQ(sums["nominal"], 30);
+   EXPECT_EQ(sums["x:0"], 21);
+   EXPECT_EQ(sums["x:1"], 51);
+   EXPECT_EQ(fr_sums["nominal"], 40);
+   EXPECT_EQ(fr_sums["w:0"], 30);
+   EXPECT_EQ(fr_sums["w:1"], 63);
+}
+
+// as expected the chain has no name
+TEST_P(RDatasetSpecTest, SaveGraphDescribe)
+{
+   RDatasetSpec spec({{"subTree0"s, "file8.root"s}, {"subTree1"s, "file9.root"s}}); // vertical concatenation
+   spec.AddFriend({{"subTree2"s, "file10.root"s}, {"subTree3"s, "file11.root"s}});  // horizontal concatenation
+   auto df = ROOT::RDataFrame(spec);
+   auto res0 = df.Sum<double>("x");
+   auto res1 = df.Sum<double>("w");
+
+   std::string graph = ROOT::RDF::SaveGraph(df);
+   static const std::string expectedGraph(
+      "digraph {\n"
+      "\t1 [label=<Sum>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
+      "\t0 [label=<>, style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n"
+      "\t2 [label=<Sum>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
+      "\t0 -> 1;\n"
+      "\t0 -> 2;\n"
+      "}");
+   EXPECT_EQ(expectedGraph, graph);
+
+   static const std::string expectedDescribe(std::string("Dataframe from TChain  in files\n"
+                                                         "  file8.root\n"
+                                                         "  file9.root\n"
+                                                         "with friend\n"
+                                                         "  \n"
+                                                         "    subTree2 file10.root\n"
+                                                         "    subTree3 file11.root\n"
+                                                         "\n"
+                                                         "Property                Value\n"
+                                                         "--------                -----\n"
+                                                         "Columns in total            2\n"
+                                                         "Columns from defines        0\n"
+                                                         "Event loops run             0\n"
+                                                         "Processing slots            ") +
+                                             this->NSLOTS +
+                                             "\n\n"
+                                             "Column  Type            Origin\n"
+                                             "------  ----            ------\n"
+                                             "w       Double_t        Dataset\n"
+                                             "x       Double_t        Dataset");
+   EXPECT_EQ(expectedDescribe, df.Describe().AsString());
+}
+
 /*
 // test 1 single tree with various meaningful and non-meaningful ranges
 TEST(RDFDatasetSpec, SingleFileSingleColConstructor)
@@ -846,9 +978,9 @@ TEST(RDatasetSpecTest, FriendsRangesMT) // gotta catch them all!!!!!!!!!!!
 */
 
 // instantiate single-thread tests
-INSTANTIATE_TEST_SUITE_P(Seq, RDataSpecTest, ::testing::Values(false));
+INSTANTIATE_TEST_SUITE_P(Seq, RDatasetSpecTest, ::testing::Values(false));
 
 // instantiate multi-thread tests
 #ifdef R__USE_IMT
-INSTANTIATE_TEST_SUITE_P(MT, RDataSpecTest, ::testing::Values(true));
+INSTANTIATE_TEST_SUITE_P(MT, RDatasetSpecTest, ::testing::Values(true));
 #endif
