@@ -83,6 +83,7 @@ protected:
    RooListProxy _coefList; ///<  List of coefficients
 
    bool _doFloor;              ///< Introduce floor at zero in pdf
+   mutable bool _haveWarned{false}; ///<!
    static bool _doFloorGlobal; ///< Global flag for introducing floor at zero in pdf
 
 private:

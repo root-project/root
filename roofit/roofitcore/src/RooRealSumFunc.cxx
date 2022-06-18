@@ -33,12 +33,9 @@
 ///   is computed automatically, unless the PDF is extended (see above).
 /// - RooRealSumFunc is a sum of functions. It is neither normalised, nor need it be positive.
 
-#include "Riostream.h"
-
-#include "TIterator.h"
-#include "TList.h"
-#include "TClass.h"
 #include "RooRealSumFunc.h"
+
+#include "RooRealSumPdf.h"
 #include "RooRealProxy.h"
 #include "RooPlot.h"
 #include "RooRealVar.h"
@@ -48,6 +45,8 @@
 #include "RooMsgService.h"
 #include "RooNameReg.h"
 #include "RooTrace.h"
+
+#include "Riostream.h"
 
 #include <algorithm>
 #include <memory>
@@ -178,89 +177,14 @@ RooRealSumFunc::~RooRealSumFunc()
 //_____________________________________________________________________________
 double RooRealSumFunc::evaluate() const
 {
-   // Calculate the current value
-
-   double value(0);
-
-   // Do running sum of coef/func pairs, calculate lastCoef.
-   RooFIter funcIter = _funcList.fwdIterator();
-   RooFIter coefIter = _coefList.fwdIterator();
-   RooAbsReal *coef;
-   RooAbsReal *func;
-
-   // N funcs, N-1 coefficients
-   double lastCoef(1);
-   while ((coef = (RooAbsReal *)coefIter.next())) {
-      func = (RooAbsReal *)funcIter.next();
-      double coefVal = coef->getVal();
-      if (coefVal) {
-         cxcoutD(Eval) << "RooRealSumFunc::eval(" << GetName() << ") coefVal = " << coefVal
-                       << " funcVal = " << func->ClassName() << "::" << func->GetName() << " = " << func->getVal()
-                       << endl;
-         if (func->isSelectedComp()) {
-            value += func->getVal() * coefVal;
-         }
-         lastCoef -= coef->getVal();
-      }
-   }
-
-   if (!_haveLastCoef) {
-      // Add last func with correct coefficient
-      func = (RooAbsReal *)funcIter.next();
-      if (func->isSelectedComp()) {
-         value += func->getVal() * lastCoef;
-      }
-
-      cxcoutD(Eval) << "RooRealSumFunc::eval(" << GetName() << ") lastCoef = " << lastCoef
-                    << " funcVal = " << func->getVal() << endl;
-
-      // Warn about coefficient degeneration
-      if (lastCoef < 0 || lastCoef > 1) {
-         coutW(Eval) << "RooRealSumFunc::evaluate(" << GetName()
-                     << " WARNING: sum of FUNC coefficients not in range [0-1], value=" << 1 - lastCoef << endl;
-      }
-   }
-
-   // Introduce floor if so requested
-   if (value < 0 && (_doFloor || _doFloorGlobal)) {
-      value = 0;
-   }
-
-   return value;
+  return RooRealSumPdf::evaluate(*this, _funcList, _coefList, _doFloor || _doFloorGlobal, _haveWarned);
 }
 
 
 //_____________________________________________________________________________
 bool RooRealSumFunc::checkObservables(const RooArgSet *nset) const
 {
-   // Check if FUNC is valid for given normalization set.
-   // Coeffient and FUNC must be non-overlapping, but func-coefficient
-   // pairs may overlap each other
-   //
-   // In the present implementation, coefficients may not be observables or derive
-   // from observables
-
-   bool ret(false);
-
-   for (unsigned int i=0; i < _coefList.size(); ++i) {
-      const auto& coef = _coefList[i];
-      const auto& func = _funcList[i];
-
-      if (func.observableOverlaps(nset, coef)) {
-         coutE(InputArguments) << "RooRealSumFunc::checkObservables(" << GetName() << "): ERROR: coefficient "
-                               << coef.GetName() << " and FUNC " << func.GetName()
-                               << " have one or more observables in common" << endl;
-         ret = true;
-      }
-      if (coef.dependsOn(*nset)) {
-         coutE(InputArguments) << "RooRealPdf::checkObservables(" << GetName() << "): ERROR coefficient "
-                               << coef.GetName() << " depends on one or more of the following observables";
-         nset->Print("1");
-         ret = true;
-      }
-   }
-
-   return ret;
+  return RooRealSumPdf::checkObservables(*this, nset, _funcList, _coefList);
 }
 
 //_____________________________________________________________________________
