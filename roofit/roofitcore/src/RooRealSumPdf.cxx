@@ -214,28 +214,28 @@ RooAbsPdf::ExtendMode RooRealSumPdf::extendMode() const
 }
 
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Calculate the current value
-
-double RooRealSumPdf::evaluate() const
+double RooRealSumPdf::evaluate(RooAbsReal const& caller,
+                               RooArgList const& funcList,
+                               RooArgList const& coefList,
+                               bool doFloor,
+                               bool & hasWarnedBefore)
 {
   // Do running sum of coef/func pairs, calculate lastCoef.
   double value = 0;
   double sumCoeff = 0.;
-  for (unsigned int i = 0; i < _funcList.size(); ++i) {
-    const auto func = static_cast<RooAbsReal*>(&_funcList[i]);
-    const auto coef = static_cast<RooAbsReal*>(i < _coefList.size() ? &_coefList[i] : nullptr);
+  for (unsigned int i = 0; i < funcList.size(); ++i) {
+    const auto func = static_cast<RooAbsReal*>(&funcList[i]);
+    const auto coef = static_cast<RooAbsReal*>(i < coefList.size() ? &coefList[i] : nullptr);
     const double coefVal = coef != nullptr ? coef->getVal() : (1. - sumCoeff);
 
     // Warn about degeneration of last coefficient
     if (coef == nullptr && (coefVal < 0 || coefVal > 1.)) {
-      if (!_haveWarned) {
-        coutW(Eval) << "RooRealSumPdf::evaluate(" << GetName()
+      if (!hasWarnedBefore) {
+        oocoutW(&caller, Eval) << caller.ClassName() << "::evaluate(" << caller.GetName()
             << ") WARNING: sum of FUNC coefficients not in range [0-1], value="
-            << sumCoeff << ". This means that the PDF is not properly normalised. If the PDF was meant to be extended, provide as many coefficients as functions." << endl ;
-        _haveWarned = true;
+            << sumCoeff << ". This means that the PDF is not properly normalised."
+            << " If the PDF was meant to be extended, provide as many coefficients as functions." << std::endl;
+        hasWarnedBefore = true;
       }
       // Signal that we are in an undefined region:
       value = RooNaNPacker::packFloatIntoNaN(100.f * (coefVal < 0. ? -coefVal : coefVal - 1.));
@@ -249,11 +249,16 @@ double RooRealSumPdf::evaluate() const
   }
 
   // Introduce floor if so requested
-  if (value<0 && (_doFloor || _doFloorGlobal)) {
-    value = 0 ;
-  }
+  return value < 0 && doFloor ? 0.0 : value;
+}
 
-  return value ;
+
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate the current value
+
+double RooRealSumPdf::evaluate() const
+{
+  return evaluate(*this, _funcList, _coefList, _doFloor || _doFloorGlobal, _haveWarned);
 }
 
 
@@ -306,6 +311,33 @@ void RooRealSumPdf::computeBatch(cudaStream_t* /*stream*/, double* output, size_
 }
 
 
+bool RooRealSumPdf::checkObservables(RooAbsReal const& caller, RooArgSet const* nset,
+                                     RooArgList const& funcList, RooArgList const& coefList)
+{
+  bool ret(false) ;
+
+  for (unsigned int i=0; i < coefList.size(); ++i) {
+    const auto& coef = coefList[i];
+    const auto& func = funcList[i];
+
+    if (func.observableOverlaps(nset, coef)) {
+      oocoutE(&caller, InputArguments) << caller.ClassName() << "::checkObservables(" << caller.GetName()
+             << "): ERROR: coefficient " << coef.GetName()
+             << " and FUNC " << func.GetName() << " have one or more observables in common" << std::endl;
+      ret = true ;
+    }
+    if (coef.dependsOn(*nset)) {
+      oocoutE(&caller, InputArguments) << caller.ClassName() << "::checkObservables(" << caller.GetName()
+             << "): ERROR coefficient " << coef.GetName()
+             << " depends on one or more of the following observables" ; nset->Print("1") ;
+      ret = true ;
+    }
+  }
+
+  return ret ;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if FUNC is valid for given normalization set.
 /// Coefficient and FUNC must be non-overlapping, but func-coefficient
@@ -316,28 +348,8 @@ void RooRealSumPdf::computeBatch(cudaStream_t* /*stream*/, double* output, size_
 
 bool RooRealSumPdf::checkObservables(const RooArgSet* nset) const
 {
-  bool ret(false) ;
-
-  for (unsigned int i=0; i < _coefList.size(); ++i) {
-    const auto& coef = _coefList[i];
-    const auto& func = _funcList[i];
-
-    if (func.observableOverlaps(nset, coef)) {
-      coutE(InputArguments) << "RooRealSumPdf::checkObservables(" << GetName() << "): ERROR: coefficient " << coef.GetName()
-             << " and FUNC " << func.GetName() << " have one or more observables in common" << endl ;
-      ret = true ;
-    }
-    if (coef.dependsOn(*nset)) {
-      coutE(InputArguments) << "RooRealPdf::checkObservables(" << GetName() << "): ERROR coefficient " << coef.GetName()
-             << " depends on one or more of the following observables" ; nset->Print("1") ;
-      ret = true ;
-    }
-  }
-
-  return ret ;
+  return checkObservables(*this, nset, _funcList, _coefList);
 }
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

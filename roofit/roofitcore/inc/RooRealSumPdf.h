@@ -95,6 +95,17 @@ protected:
 
 private:
 
+  friend class RooRealSumFunc;
+
+  static double evaluate(RooAbsReal const& caller,
+                         RooArgList const& funcList,
+                         RooArgList const& coefList,
+                         bool doFloor,
+                         bool & hasWarnedBefore);
+
+  static bool checkObservables(RooAbsReal const& caller, RooArgSet const* nset,
+                               RooArgList const& funcList, RooArgList const& coefList);
+
   bool haveLastCoef() const {
     return _funcList.size() == _coefList.size();
   }
