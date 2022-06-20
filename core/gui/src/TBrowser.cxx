@@ -34,6 +34,7 @@ Browser.Name:      TRootBrowser
 #include "TBrowser.h"
 #include "TGuiFactory.h"
 #include "TROOT.h"
+#include "TEnv.h"
 #include "TSystem.h"
 #include "TStyle.h"
 #include "TTimer.h"
@@ -97,11 +98,15 @@ Bool_t TBrowser::InitGraphics()
    TApplication::NeedGraphicsLibs();
    if (gApplication)
       gApplication->InitializeGraphics();
-   if (gROOT->IsBatch()) {
-      Warning("TBrowser", "The ROOT browser cannot run in batch mode");
-      return kFALSE;
-   }
-   return kTRUE;
+   if (!gROOT->IsBatch())
+      return kTRUE;
+
+   TString imp = gEnv->GetValue("Browser.Name", "---");
+   if ((imp == "ROOT::Experimental::RWebBrowserImp") && (gROOT->GetWebDisplay() == "server"))
+      return kTRUE;
+
+   Warning("TBrowser", "The ROOT browser cannot run in batch mode");
+   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -78,6 +78,7 @@ void RWebBrowserImp::ShowWarning()
                 "ROOT comes with a web-based browser, which is now being started. \n"
                 "Revert to TBrowser by setting \"Browser.Name: TRootBrowser\" in rootrc file or\n"
                 "by starting \"root --web=off\"\n"
+                "Web-based TBrowser can be used in batch mode when starting with \"root -b --web=server:8877\"\n"
                 "Find more info on https://root.cern/for_developers/root7/#rbrowser\n";
 }
 
