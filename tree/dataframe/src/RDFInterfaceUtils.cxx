@@ -115,7 +115,8 @@ static ColumnNames_t FindUsedColumns(const std::string &expr, const ColumnNames_
       // potential columns are sorted by length, so we search from the end
       auto isRDFColumn = [&](const std::string &columnOrAlias) {
          const auto &col = customColumns.ResolveAlias(columnOrAlias);
-         if (customColumns.HasName(col) || IsStrInVec(col, treeBranchNames) || IsStrInVec(col, dataSourceColNames))
+         if (customColumns.IsDefineOrAlias(col) || IsStrInVec(col, treeBranchNames) ||
+             IsStrInVec(col, dataSourceColNames))
             return true;
          return false;
       };
@@ -496,7 +497,7 @@ void CheckForRedefinition(const std::string &where, std::string_view definedColV
    if (customCols.IsAlias(definedCol))
       error = "An alias with that name, pointing to column \"" + customCols.ResolveAlias(definedCol) +
               "\", already exists in this branch of the computation graph.";
-   else if (customCols.HasName(definedCol))
+   else if (customCols.IsDefineOrAlias(definedCol))
       error = "A column with that name has already been Define'd. Use Redefine to force redefinition.";
    // else, check if definedCol is in the list of tree branches. This is a bit better than interrogating the TTree
    // directly because correct usage of GetBranch, FindBranch, GetLeaf and FindLeaf can be tricky; so let's assume we
@@ -527,7 +528,7 @@ void CheckForDefinition(const std::string &where, std::string_view definedColVie
    }
 
    if (error.empty()) {
-      const bool isAlreadyDefined = customCols.HasName(definedCol);
+      const bool isAlreadyDefined = customCols.IsDefineOrAlias(definedCol);
       // check if definedCol is in the list of tree branches. This is a bit better than interrogating the TTree
       // directly because correct usage of GetBranch, FindBranch, GetLeaf and FindLeaf can be tricky; so let's assume we
       // got it right when we collected the list of available branches.
@@ -605,7 +606,7 @@ ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, const Column
       const auto isBranch = std::find(datasetColumns.begin(), datasetColumns.end(), column) != datasetColumns.end();
       if (isBranch)
          continue;
-      if (definedCols.HasName(column))
+      if (definedCols.IsDefineOrAlias(column))
          continue;
       const auto isDataSourceColumn =
          std::find(dataSourceColumns.begin(), dataSourceColumns.end(), column) != dataSourceColumns.end();
@@ -929,7 +930,7 @@ std::vector<std::string> GetValidatedArgTypes(const ColumnNames_t &colNames, con
                                               bool vector2rvec)
 {
    auto toCheckedArgType = [&](const std::string &c) {
-      RDFDetail::RDefineBase *define = colRegister.HasName(c) ? colRegister.GetColumns().at(c).get() : nullptr;
+      RDFDetail::RDefineBase *define = colRegister.IsDefineOrAlias(c) ? colRegister.GetColumns().at(c).get() : nullptr;
       const auto colType = ColumnName2ColumnTypeName(c, tree, ds, define, vector2rvec);
       if (colType.rfind("CLING_UNKNOWN_TYPE", 0) == 0) { // the interpreter does not know this type
          const auto msg =

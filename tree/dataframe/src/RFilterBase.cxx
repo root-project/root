@@ -28,7 +28,7 @@ RFilterBase::RFilterBase(RLoopManager *implPtr, std::string_view name, const uns
 {
    const auto nColumns = fColumnNames.size();
    for (auto i = 0u; i < nColumns; ++i) {
-      fIsDefine[i] = fColRegister.HasName(fColumnNames[i]);
+      fIsDefine[i] = fColRegister.IsDefineOrAlias(fColumnNames[i]);
       if (fVariation != "nominal" && fIsDefine[i])
          fColRegister.GetColumns().at(fColumnNames[i])->MakeVariations({fVariation});
    }

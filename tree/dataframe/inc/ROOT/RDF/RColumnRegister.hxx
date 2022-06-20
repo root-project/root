@@ -96,12 +96,12 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Check if the provided name is tracked in the names list
-   bool HasName(std::string_view name) const;
+   bool IsDefineOrAlias(std::string_view name) const;
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Add a new booked column.
+   /// \brief Add a new defined column.
    /// Internally it recreates the map with the new column, and swaps it with the old one.
-   void AddColumn(const std::shared_ptr<RDFDetail::RDefineBase> &column);
+   void AddDefine(const std::shared_ptr<RDFDetail::RDefineBase> &column);
 
    /// \brief Add a new alias to the ledger.
    void AddAlias(std::string_view alias, std::string_view colName);

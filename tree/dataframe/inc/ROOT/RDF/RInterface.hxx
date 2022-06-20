@@ -477,7 +477,7 @@ public:
                                                      fLoopManager->GetBranchNames(), upcastNodeOnHeap);
 
       RDFInternal::RColumnRegister newCols(fColRegister);
-      newCols.AddColumn(jittedDefine);
+      newCols.AddDefine(jittedDefine);
 
       RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
 
@@ -567,7 +567,7 @@ public:
                                                      fLoopManager->GetBranchNames(), upcastNodeOnHeap);
 
       RDFInternal::RColumnRegister newCols(fColRegister);
-      newCols.AddColumn(jittedDefine);
+      newCols.AddDefine(jittedDefine);
 
       RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
 
@@ -628,7 +628,7 @@ public:
       fLoopManager->AddSampleCallback(std::move(updateDefinePerSample));
 
       RDFInternal::RColumnRegister newCols(fColRegister);
-      newCols.AddColumn(std::move(newColumn));
+      newCols.AddDefine(std::move(newColumn));
       RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
       return newInterface;
    }
@@ -687,7 +687,7 @@ public:
       fLoopManager->AddSampleCallback(std::move(updateDefinePerSample));
 
       RDFInternal::RColumnRegister newCols(fColRegister);
-      newCols.AddColumn(jittedDefine);
+      newCols.AddDefine(jittedDefine);
 
       RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
 
@@ -2603,7 +2603,8 @@ public:
    {
       const auto col = fColRegister.ResolveAlias(std::string(column));
 
-      RDFDetail::RDefineBase *define = fColRegister.HasName(col) ? fColRegister.GetColumns().at(col).get() : nullptr;
+      RDFDetail::RDefineBase *define =
+         fColRegister.IsDefineOrAlias(col) ? fColRegister.GetColumns().at(col).get() : nullptr;
 
       const bool convertVector2RVec = true;
       return RDFInternal::ColumnName2ColumnTypeName(col, fLoopManager->GetTree(), fLoopManager->GetDataSource(), define,
@@ -2776,7 +2777,7 @@ public:
    /// ~~~
    bool HasColumn(std::string_view columnName)
    {
-      if (fColRegister.HasName(columnName))
+      if (fColRegister.IsDefineOrAlias(columnName))
          return true;
 
       if (auto tree = fLoopManager->GetTree()) {
@@ -3088,7 +3089,7 @@ private:
 
       auto entryColumn = std::make_shared<NewColEntry_t>(entryColName, entryColType, std::move(entryColGen),
                                                          ColumnNames_t{}, fColRegister, *fLoopManager);
-      fColRegister.AddColumn(entryColumn);
+      fColRegister.AddDefine(entryColumn);
 
       // Slot number column
       const std::string slotColName = "rdfslot_";
@@ -3098,7 +3099,7 @@ private:
 
       auto slotColumn = std::make_shared<NewColSlot_t>(slotColName, slotColType, std::move(slotColGen), ColumnNames_t{},
                                                        fColRegister, *fLoopManager);
-      fColRegister.AddColumn(slotColumn);
+      fColRegister.AddDefine(slotColumn);
 
       fColRegister.AddAlias("tdfentry_", entryColName);
       fColRegister.AddAlias("tdfslot_", slotColName);
@@ -3220,7 +3221,7 @@ private:
                                                   fColRegister, *fLoopManager);
 
       RDFInternal::RColumnRegister newCols(fColRegister);
-      newCols.AddColumn(newColumn);
+      newCols.AddDefine(newColumn);
 
       RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
 

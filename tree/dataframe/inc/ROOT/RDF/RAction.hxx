@@ -73,7 +73,7 @@ public:
       const auto nColumns = columns.size();
       const auto &customCols = GetColRegister();
       for (auto i = 0u; i < nColumns; ++i)
-         fIsDefine[i] = customCols.HasName(columns[i]);
+         fIsDefine[i] = customCols.IsDefineOrAlias(columns[i]);
    }
 
    RAction(const RAction &) = delete;
