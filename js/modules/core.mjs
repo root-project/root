@@ -5,7 +5,7 @@ let version_id = "dev";
 
 /** @summary version date
   * @desc Release date in format day/month/year like "19/11/2021" */
-let version_date = "10/06/2022";
+let version_date = "20/06/2022";
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -49,11 +49,10 @@ function setBatchMode(on) { batch_mode = !!on; }
 /** @summary Indicates if running inside Node.js */
 function isNodeJs() { return nodejs; }
 
-
 let node_atob, node_xhr2;
 
 ///_begin_exclude_in_qt5web_
-if(isNodeJs()) { node_atob = await import('atob').then(h => h.default); node_xhr2 = await import('xhr2').then(h => h.default); } /// cutNodeJs
+if(isNodeJs() && process.env?.APP_ENV !== 'browser') { node_atob = await import('atob').then(h => h.default); node_xhr2 = await import('xhr2').then(h => h.default); } /// cutNodeJs
 ///_end_exclude_in_qt5web_
 
 let browser = { isOpera: false, isFirefox: true, isSafari: false, isChrome: false, isWin: false, touches: false  };
@@ -378,15 +377,19 @@ function getDocument() {
   * @private */
 function injectCode(code) {
    if (nodejs) {
-      let name, fs;
-      return import('tmp').then(tmp => {
-         name = tmp.tmpNameSync() + ".js";
-         return import('fs');
-      }).then(_fs => {
-         fs = _fs;
-         fs.writeFileSync(name, code);
-         return import("file://" + name);
-      }).finally(() => fs.unlinkSync(name));
+      if (process.env?.APP_ENV !== 'browser') {
+         let name, fs;
+         return import('tmp').then(tmp => {
+            name = tmp.tmpNameSync() + ".js";
+            return import('fs');
+         }).then(_fs => {
+            fs = _fs;
+            fs.writeFileSync(name, code);
+            return import("file://" + name);
+         }).finally(() => fs.unlinkSync(name));
+      } else {
+         return Promise.resolve(true); // dummy for webpack
+      }
    }
    if (typeof document !== 'undefined') {
 
@@ -440,12 +443,16 @@ function loadScript(url) {
    let element, isstyle = url.indexOf(".css") > 0;
 
    if (nodejs) {
-      if (isstyle)
-         return Promise.resolve(null);
-      if ((url.indexOf("http:") == 0) || (url.indexOf("https:") == 0))
-         return httpRequest(url, "text").then(code => injectCode(code));
+      if (process.env.APP_ENV !== 'browser') {
+         if (isstyle)
+            return Promise.resolve(null);
+         if ((url.indexOf("http:") == 0) || (url.indexOf("https:") == 0))
+            return httpRequest(url, "text").then(code => injectCode(code));
 
-      return import(url);
+         return import(url);
+      } else {
+         return Promise.resolve(null);
+      }
    }
 
    const match_url = src => {
@@ -976,7 +983,7 @@ function create(typename, target) {
       case 'TAttAxis':
          extend(obj, { fNdivisions: 510, fAxisColor: 1,
                        fLabelColor: 1, fLabelFont: 42, fLabelOffset: 0.005, fLabelSize: 0.035, fTickLength: 0.03,
-                       fTitleOffset: 1, fTitleSize: 0.035, fTitleColor: 1, fTitleFont : 42 });
+                       fTitleOffset: 1, fTitleSize: 0.035, fTitleColor: 1, fTitleFont: 42 });
          break;
       case 'TAxis':
          create("TNamed", obj);

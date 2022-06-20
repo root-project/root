@@ -38,12 +38,13 @@ class TPavePainter extends ObjectPainter {
          return Promise.resolve(this);
       }
 
-      let pt = this.getObject(), opt = pt.fOption.toUpperCase(), fp = this.getFramePainter();
+      let pt = this.getObject(), opt = pt.fOption.toUpperCase(),
+          fp = this.getFramePainter(), pp = this.getPadPainter();
 
       if (pt.fInit === 0) {
          this.stored = Object.assign({}, pt); // store coordinates to use them when updating
          pt.fInit = 1;
-         let pad = this.getPadPainter().getRootPad(true);
+         let pad = pp.getRootPad(true);
 
          if ((pt._typename == "TPaletteAxis") && !pt.fX1 && !pt.fX2 && !pt.fY1 && !pt.fY2) {
             if (fp) {
@@ -86,17 +87,39 @@ class TPavePainter extends ObjectPainter {
 
          if ((pt.fX1NDC == pt.fX2NDC) && (pt.fY1NDC == pt.fY2NDC) && (pt._typename == "TLegend")) {
             pt.fX1NDC = Math.max(pad ? pad.fLeftMargin : 0, pt.fX2NDC - 0.3);
-            pt.fX2NDC = Math.min(pt.fX1NDC + 0.3, pad ? 1-pad.fRightMargin : 1);
+            pt.fX2NDC = Math.min(pt.fX1NDC + 0.3, pad ? 1 - pad.fRightMargin : 1);
             let h0 = Math.max(pt.fPrimitives ? pt.fPrimitives.arr.length*0.05 : 0, 0.2);
-            pt.fY2NDC = Math.min(pad ? 1-pad.fTopMargin : 1, pt.fY1NDC + h0);
+            pt.fY2NDC = Math.min(pad ? 1 - pad.fTopMargin : 1, pt.fY1NDC + h0);
             pt.fY1NDC = Math.max(pt.fY2NDC - h0, pad ? pad.fBottomMargin : 0);
          }
       }
 
-      let pad_rect = this.getPadPainter().getPadRect(),
+      // fill stats before drawing to have coordinates early
+      if (this.isStats() && !(pp && pp._fast_drawing)) {
+
+         let main = pt.$main_painter || this.getMainPainter();
+
+         if (typeof main?.fillStatistic == 'function') {
+
+            let dostat = parseInt(pt.fOptStat), dofit = parseInt(pt.fOptFit);
+            if (!Number.isInteger(dostat)) dostat = gStyle.fOptStat;
+            if (!Number.isInteger(dofit)) dofit = gStyle.fOptFit;
+
+            // we take statistic from main painter
+            if (main.fillStatistic(this, dostat, dofit)) {
+
+               // adjust the size of the stats box with the number of lines
+               let nlines = pt.fLines?.arr.length || 0;
+               if ((nlines > 0) && !this.moved_interactive && ((gStyle.fStatFontSize <= 0) || (gStyle.fStatFont % 10 === 3)))
+                  pt.fY1NDC = pt.fY2NDC - nlines * 0.25 * gStyle.fStatH;
+            }
+         }
+      }
+
+      let pad_rect = pp.getPadRect(),
           brd = pt.fBorderSize,
-          dx = (opt.indexOf("L")>=0) ? -1 : ((opt.indexOf("R")>=0) ? 1 : 0),
-          dy = (opt.indexOf("T")>=0) ? -1 : ((opt.indexOf("B")>=0) ? 1 : 0);
+          dx = (opt.indexOf("L") >= 0) ? -1 : ((opt.indexOf("R") >= 0) ? 1 : 0),
+          dy = (opt.indexOf("T") >= 0) ? -1 : ((opt.indexOf("B") >= 0) ? 1 : 0);
 
       // container used to recalculate coordinates
       this.createG();
@@ -107,9 +130,6 @@ class TPavePainter extends ObjectPainter {
           height = Math.round((pt.fY2NDC - pt.fY1NDC) * pad_rect.height);
 
       this.draw_g.attr("transform", `translate(${this._pave_x},${this._pave_y})`);
-
-      //if (!this.lineatt)
-      //   this.lineatt = new TAttLineHandler(pt, brd>0 ? 1 : 0);
 
       this.createAttLine({ attr: pt, width: (brd > 0) ? pt.fLineWidth : 0 });
 
@@ -182,8 +202,8 @@ class TPavePainter extends ObjectPainter {
                 .on("mouseenter", () => this.showObjectStatus());
 
          addDragHandler(this, { obj: pt, x: this._pave_x, y: this._pave_y, width, height,
-                                      minwidth: 10, minheight: 20, canselect: true,
-                        redraw: () => { this.interactiveRedraw(false, "pave_moved"); this.drawPave(); },
+                                minwidth: 10, minheight: 20, canselect: true,
+                        redraw: () => { this.moved_interactive = true; this.interactiveRedraw(false, "pave_moved"); this.drawPave(); },
                         ctxmenu: browser.touches && settings.ContextMenu && this.UseContextMenu });
 
          if (this.UseContextMenu && settings.ContextMenu)
@@ -230,8 +250,6 @@ class TPavePainter extends ObjectPainter {
 
    /** @summary draw TPaveStats object */
    drawPaveStats(width, height) {
-
-      if (this.isStats()) this.fillStatistic();
 
       let pt = this.getObject(), lines = [],
           color = this.getColor(pt.fTextColor),
@@ -660,11 +678,11 @@ class TPavePainter extends ObjectPainter {
 
       if (this._palette_vertical) {
          this._swap_side = palette.fX2NDC < 0.5;
-         this.z_handle.configureAxis("zaxis", gzmin, gzmax, zmin, zmax, true, [0, s_height], { log: pad ? pad.fLogz : 0, fixed_ticks: cjust ? levels : null, max_tick_size: Math.round(s_width*0.7), swap_side: this._swap_side });
+         this.z_handle.configureAxis("zaxis", gzmin, gzmax, zmin, zmax, true, [0, s_height], { log: pad ? pad.fLogz : 0, fixed_ticks: cjust ? levels : null, maxTickSize: Math.round(s_width*0.7), swap_side: this._swap_side });
          axis_transform = this._swap_side ? "" : `translate(${s_width})`;
       } else {
          this._swap_side = palette.fY1NDC > 0.5;
-         this.z_handle.configureAxis("zaxis", gzmin, gzmax, zmin, zmax, false, [0, s_width], { log: pad ? pad.fLogz : 0, fixed_ticks: cjust ? levels : null, max_tick_size: Math.round(s_height*0.7), swap_side: this._swap_side });
+         this.z_handle.configureAxis("zaxis", gzmin, gzmax, zmin, zmax, false, [0, s_width], { log: pad ? pad.fLogz : 0, fixed_ticks: cjust ? levels : null, maxTickSize: Math.round(s_height*0.7), swap_side: this._swap_side });
          axis_transform = this._swap_side ? "" : `translate(0,${s_height})`;
       }
 
@@ -1012,36 +1030,6 @@ class TPavePainter extends ObjectPainter {
             else
                this.addText(parname + " = " + parvalue);
          }
-
-      return true;
-   }
-
-   /** @summary Fill statistic */
-   fillStatistic() {
-
-      let pp = this.getPadPainter();
-      if (pp && pp._fast_drawing) return false;
-
-      let pave = this.getObject(),
-          main = pave.$main_painter || this.getMainPainter();
-
-      if (pave.fName !== "stats") return false;
-      if (!main || (typeof main.fillStatistic !== 'function')) return false;
-
-      let dostat = parseInt(pave.fOptStat), dofit = parseInt(pave.fOptFit);
-      if (!Number.isInteger(dostat)) dostat = gStyle.fOptStat;
-      if (!Number.isInteger(dofit)) dofit = gStyle.fOptFit;
-
-      // we take statistic from main painter
-      if (!main.fillStatistic(this, dostat, dofit)) return false;
-
-      // adjust the size of the stats box with the number of lines
-      let nlines = pave.fLines.arr.length,
-          stath = nlines * gStyle.fStatFontSize;
-      if ((stath <= 0) || (gStyle.fStatFont % 10 === 3)) {
-         stath = 0.25 * nlines * gStyle.fStatH;
-         pave.fY1NDC = pave.fY2NDC - stath;
-      }
 
       return true;
    }
