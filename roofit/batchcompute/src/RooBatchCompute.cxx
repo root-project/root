@@ -26,6 +26,8 @@ This file contains the code for cpu computations using the RooBatchCompute libra
 #include "ROOT/TExecutor.hxx"
 
 #include <algorithm>
+#include <sstream>
+#include <stdexcept>
 
 #ifndef RF_ARCH
 #error "RF_ARCH should always be defined"
@@ -161,7 +163,11 @@ Batches::Batches(RestrictArr output, size_t nEvents, const VarVector &vars, cons
    _arrays.resize(vars.size());
    for (size_t i = 0; i < vars.size(); i++) {
       const RooSpan<const double> &span = vars[i];
-      if (span.size() > 1)
+      if (span.empty()) {
+         std::stringstream ss;
+         ss << "The span number " << i << " passed to Batches::Batches() is empty!";
+         throw std::runtime_error(ss.str());
+      } else if (span.size() > 1)
          _arrays[i].set(span.data()[0], span.data(), true);
       else {
          std::fill_n(&buffer[i * bufferSize], bufferSize, span.data()[0]);
