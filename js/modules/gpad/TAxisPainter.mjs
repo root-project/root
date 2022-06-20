@@ -394,7 +394,6 @@ class TAxisPainter extends ObjectPainter {
    /** @summary Use in GED to identify kind of axis */
    getAxisType() { return "TAxis"; }
 
-
    /** @summary Configure axis painter
      * @desc Axis can be drawn inside frame <g> group with offset to 0 point for the frame
      * Therefore one should distinguish when caclulated coordinates used for axis drawing itself or for calculation of frame coordinates
@@ -410,7 +409,7 @@ class TAxisPainter extends ObjectPainter {
       this.reverse = opts.reverse || false;
       this.swap_side = opts.swap_side || false;
       this.fixed_ticks = opts.fixed_ticks || null;
-      this.max_tick_size = opts.max_tick_size || 0;
+      this.maxTickSize = opts.maxTickSize || 0;
 
       let axis = this.getObject();
 
@@ -740,9 +739,7 @@ class TAxisPainter extends ObjectPainter {
             evnt.sourceEvent.stopPropagation();
 
             let box = title_g.node().getBBox(), // check that elements visible, request precise value
-                axis = this.getObject(),
-                title_length = vertical ? box.height : box.width,
-                opposite = axis.TestBit(EAxisBits.kOppositeTitle);
+                title_length = vertical ? box.height : box.width;
 
             new_x = acc_x = title_g.property('shift_x');
             new_y = acc_y = title_g.property('shift_y');
@@ -762,9 +759,9 @@ class TAxisPainter extends ObjectPainter {
                alt_pos[1] += off;
             }
 
-            if (axis.TestBit(EAxisBits.kCenterTitle))
+            if (this.titleCenter)
                curr_indx = 1;
-            else if (reverse ^ opposite)
+            else if (reverse ^ this.titleOpposite)
                curr_indx = 0;
             else
                curr_indx = 2;
@@ -791,7 +788,7 @@ class TAxisPainter extends ObjectPainter {
                let set_x, set_y, besti = 0,
                    p = vertical ? acc_y : acc_x;
 
-               for (let i=1; i<3; ++i)
+               for (let i = 1; i < 3; ++i)
                   if (Math.abs(p - alt_pos[i]) < Math.abs(p - alt_pos[besti])) besti = i;
 
                if (vertical) {
@@ -820,16 +817,18 @@ class TAxisPainter extends ObjectPainter {
 
                const set_bit = (bit, on) => { if (axis.TestBit(bit) != on) axis.InvertBit(bit); };
 
-               axis.fTitleOffset = (vertical ? new_x : new_y) / offset_k;
+               this.titleOffset = (vertical ? new_x : new_y) / offset_k;
+               axis.fTitleOffset = this.titleOffset / this.titleSize;
+
                if (curr_indx == 1) {
-                  set_bit(abits.kCenterTitle, true);
-                  set_bit(abits.kOppositeTitle, false);
+                  set_bit(abits.kCenterTitle, true); this.titleCenter = true;
+                  set_bit(abits.kOppositeTitle, false); this.titleOpposite = false;
                } else if (curr_indx == 0) {
-                  set_bit(abits.kCenterTitle, false);
-                  set_bit(abits.kOppositeTitle, true);
+                  set_bit(abits.kCenterTitle, false); this.titleCenter = false;
+                  set_bit(abits.kOppositeTitle, true); this.titleOpposite = true;
                } else {
-                  set_bit(abits.kCenterTitle, false);
-                  set_bit(abits.kOppositeTitle, false);
+                  set_bit(abits.kCenterTitle, false); this.titleCenter = false;
+                  set_bit(abits.kOppositeTitle, false); this.titleOpposite = false;
                }
 
                drag_rect.remove();
@@ -886,9 +885,8 @@ class TAxisPainter extends ObjectPainter {
 
    /** @summary Draw axis labels
      * @returns {Promise} with array label size and max width */
-   drawLabels(axis_g, axis, w, h, handle, side, labelSize, labeloffset, tickSize, ticksPlusMinus, max_text_width) {
-      let label_color = this.getColor(axis.fLabelColor),
-          center_lbls = this.isCenteredLabels(),
+   drawLabels(axis_g, axis, w, h, handle, side, labelsFont, labeloffset, tickSize, ticksPlusMinus, max_text_width) {
+      let center_lbls = this.isCenteredLabels(),
           rotate_lbls = axis.TestBit(EAxisBits.kLabelsVert),
           textscale = 1, maxtextlen = 0, applied_scale = 0,
           label_g = [ axis_g.append("svg:g").attr("class","axis_labels") ],
@@ -923,15 +921,13 @@ class TAxisPainter extends ObjectPainter {
          }
       }
 
-      const labelfont = new FontHandler(axis.fLabelFont, labelSize);
-
       for (let lcnt = 0; lcnt < label_g.length; ++lcnt) {
 
          if (lcnt > 0) side = -side;
 
          let lastpos = 0, fix_coord = this.vertical ? -labeloffset*side : (labeloffset+2)*side + ticksPlusMinus*tickSize;
 
-         this.startTextDrawing(labelfont, 'font', label_g[lcnt]);
+         this.startTextDrawing(labelsFont, 'font', label_g[lcnt]);
 
          for (let nmajor = 0; nmajor < lbl_pos.length; ++nmajor) {
 
@@ -943,9 +939,8 @@ class TAxisPainter extends ObjectPainter {
 
             if (mod && mod.fLabText) lbl = mod.fLabText;
 
-            let arg = { text: lbl, color: label_color, latex: 1, draw_g: label_g[lcnt], normal_side: (lcnt == 0) };
-
-            let pos = Math.round(this.func(lbl_pos[nmajor]));
+            let arg = { text: lbl, color: labelsFont.color, latex: 1, draw_g: label_g[lcnt], normal_side: (lcnt == 0) },
+                pos = Math.round(this.func(lbl_pos[nmajor]));
 
             if (mod && mod.fTextColor > 0) arg.color = this.getColor(mod.fTextColor);
 
@@ -979,16 +974,16 @@ class TAxisPainter extends ObjectPainter {
 
             this.drawText(arg);
 
-            if (lastpos && (pos!=lastpos) && ((this.vertical && !rotate_lbls) || (!this.vertical && rotate_lbls))) {
+            if (lastpos && (pos != lastpos) && ((this.vertical && !rotate_lbls) || (!this.vertical && rotate_lbls))) {
                let axis_step = Math.abs(pos-lastpos);
-               textscale = Math.min(textscale, 0.9*axis_step/labelSize);
+               textscale = Math.min(textscale, 0.9*axis_step/labelsFont.size);
             }
 
             lastpos = pos;
          }
 
          if (this.order)
-            this.drawText({ color: label_color,
+            this.drawText({ color: labelsFont.color,
                             x: this.vertical ? side*5 : w+5,
                             y: this.has_obstacle ? fix_coord : (this.vertical ? -3 : -3*side),
                             align: this.vertical ? ((side < 0) ? 30 : 10) : ( (this.has_obstacle ^ (side < 0)) ? 13 : 10 ),
@@ -1013,41 +1008,105 @@ class TAxisPainter extends ObjectPainter {
                txt.attr("transform", tr + " rotate(25)").style("text-anchor", "start");
             });
 
-         if (labelfont) labelSize = labelfont.size; // use real font size
-
-         return [ labelSize, max_textwidth ];
+         return max_textwidth;
       });
+   }
+
+   /** @summary Extract major draw attributes, which are also used in interactive operations
+     * @private  */
+   extractDrawAttributes(scalingSize, w, h) {
+      let axis = this.getObject(),
+          is_gaxis = axis?._typename === 'TGaxis',
+          pp = this.getPadPainter(),
+          pad_w = pp?.getPadWidth() || 10,
+          pad_h = pp?.getPadHeight() || 10,
+          tickSize = 0, tickScalingSize = 0, titleColor;
+
+      this.scalingSize = scalingSize || Math.max(Math.min(pad_w, pad_h), 10);
+
+      if (is_gaxis) {
+         let optionSize = axis.fChopt.indexOf("S") >= 0;
+         this.optionUnlab = axis.fChopt.indexOf("U") >= 0;
+         this.optionMinus = (axis.fChopt.indexOf("-") >= 0) || axis.TestBit(EAxisBits.kTickMinus);
+         this.optionPlus = (axis.fChopt.indexOf("+") >= 0) || axis.TestBit(EAxisBits.kTickPlus);
+         this.optionNoopt = (axis.fChopt.indexOf("N") >= 0);  // no ticks position optimization
+         this.optionInt = (axis.fChopt.indexOf("I") >= 0);  // integer labels
+
+         this.createAttLine({ attr: axis });
+         tickScalingSize = scalingSize || (this.vertical ? 1.7*h : 0.6*w);
+         tickSize = optionSize ? axis.fTickSize : 0.03;
+         titleColor = this.getColor(axis.fTextColor);
+      } else {
+         this.optionUnlab = false;
+         this.optionMinus = this.vertical ^ this.invert_side;
+         this.optionPlus = !this.optionMinus;
+         this.optionNoopt = false;  // no ticks position optimization
+         this.optionInt = false;  // integer labels
+         this.createAttLine({ color: axis.fAxisColor, width: 1, style: 1 });
+         tickScalingSize = scalingSize || (this.vertical ? pad_w : pad_h);
+         tickSize = axis.fTickLength;
+         titleColor = this.getColor(axis.fTitleColor);
+      }
+
+      this.optionNoexp = axis.TestBit(EAxisBits.kNoExponent);
+
+      this.ticksSize = Math.round(tickSize * tickScalingSize);
+      if (scalingSize && (this.ticksSize < 0))
+         this.ticksSize = -this.ticksSize;
+
+      if (this.maxTickSize && (this.ticksSize > this.maxTickSize)) this.ticksSize = this.maxTickSize;
+
+      // now used only in 3D drawing
+      this.ticksColor = this.lineatt.color;
+      this.ticksWidth = this.lineatt.width;
+
+      this.labelSize = Math.round((axis.fLabelSize < 1) ? axis.fLabelSize * this.scalingSize : axis.fLabelSize);
+      this.labelsOffset = Math.round(Math.abs(axis.fLabelOffset) * this.scalingSize);
+      this.labelsFont = new FontHandler(axis.fLabelFont, this.labelSize, scalingSize);
+      if ((this.labelSize <= 0) || (Math.abs(axis.fLabelOffset) > 1.1)) this.optionUnlab = true; // disable labels when size not specified
+      this.labelsFont.setColor(this.getColor(axis.fLabelColor));
+
+      this.fTitle = axis.fTitle;
+      if (this.fTitle) {
+         this.titleSize = (axis.fTitleSize >= 1) ? axis.fTitleSize : Math.round(axis.fTitleSize * this.scalingSize);
+         this.titleFont = new FontHandler(axis.fTitleFont, this.titleSize, scalingSize);
+         this.titleFont.setColor(titleColor);
+         this.titleOffset = axis.fTitleOffset * this.titleSize; // in pixels
+         this.titleCenter = axis.TestBit(EAxisBits.kCenterTitle);
+         this.titleOpposite = axis.TestBit(EAxisBits.kOppositeTitle);
+      } else {
+         delete this.titleSize;
+         delete this.titleFont;
+         delete this.titleOffset;
+         delete this.titleCenter;
+         delete this.titleOpposite;
+      }
+
    }
 
    /** @summary function draws TAxis or TGaxis object
      * @returns {Promise} for drawing ready */
    drawAxis(layer, w, h, transform, secondShift, disable_axis_drawing, max_text_width, calculate_position) {
 
-      let axis = this.getObject(), chOpt = "",
-          is_gaxis = (axis && axis._typename === 'TGaxis'),
-          axis_g = layer, tickSize,
-          scaling_size, draw_lines = true,
+      let axis = this.getObject(),
+          is_gaxis = axis?._typename === 'TGaxis',
+          axis_g = layer,
+          draw_lines = true,
           pp = this.getPadPainter(),
-          pad_w = pp ? pp.getPadWidth() : 10,
-          pad_h = pp ? pp.getPadHeight() : 10,
-          vertical = this.vertical,
+          pad_w = pp?.getPadWidth() || 10,
+          pad_h = pp?.getPadHeight() || 10,
           swap_side = this.swap_side || false;
 
       // shift for second ticks set (if any)
-      if (!secondShift) secondShift = 0; else
-      if (this.invert_side) secondShift = -secondShift;
+      if (!secondShift)
+         secondShift = 0;
+      else if (this.invert_side)
+         secondShift = -secondShift;
+
+      this.extractDrawAttributes(undefined, w, h);
 
       if (is_gaxis) {
-         this.createAttLine({ attr: axis });
-         draw_lines = (axis.fLineColor != 0);
-         chOpt = axis.fChopt;
-         tickSize = axis.fTickSize;
-         scaling_size = vertical ? 1.7*h : 0.6*w;
-      } else {
-         this.createAttLine({ color: axis.fAxisColor, width: 1, style: 1 });
-         chOpt = (vertical ^ this.invert_side) ? "-S" : "+S";
-         tickSize = axis.fTickLength;
-         scaling_size = vertical ? pad_w : pad_h;
+         draw_lines = axis.fLineColor != 0;
       }
 
       // indicate that attributes created not for TAttLine, therefore cannot be updated as TAttLine in GED
@@ -1063,81 +1122,54 @@ class TAxisPainter extends ObjectPainter {
 
       let axis_lines = "";
       if (draw_lines) {
-         axis_lines = "M0,0" + (vertical ? `v${h}` : `h${w}`);
-         if (secondShift !== 0)
-            axis_lines += vertical ? `M${secondShift},0v${h}` : `M0,${secondShift}h${w}`;
+         axis_lines = "M0,0" + (this.vertical ? `v${h}` : `h${w}`);
+         if (secondShift)
+            axis_lines += this.vertical ? `M${secondShift},0v${h}` : `M0,${secondShift}h${w}`;
       }
 
       axis_g.attr("transform", transform || null);
 
-      let side = 1, ticksPlusMinus = 0,
-          text_scaling_size = Math.min(pad_w, pad_h),
-          optionPlus = (chOpt.indexOf("+")>=0),
-          optionMinus = (chOpt.indexOf("-")>=0),
-          optionSize = (chOpt.indexOf("S")>=0),
-          // optionY = (chOpt.indexOf("Y")>=0),
-          // optionUp = (chOpt.indexOf("0")>=0),
-          // optionDown = (chOpt.indexOf("O")>=0),
-          optionUnlab = (chOpt.indexOf("U")>=0) || this.optionUnlab,  // no labels
-          optionNoopt = (chOpt.indexOf("N")>=0),  // no ticks position optimization
-          optionInt = (chOpt.indexOf("I")>=0),    // integer labels
-          optionNoexp = axis.TestBit(EAxisBits.kNoExponent);
+      let side = 1, ticksPlusMinus = 0;
 
-      if (text_scaling_size <= 0) text_scaling_size = 0.0001;
-
-      if (is_gaxis && axis.TestBit(EAxisBits.kTickPlus)) optionPlus = true;
-      if (is_gaxis && axis.TestBit(EAxisBits.kTickMinus)) optionMinus = true;
-
-      if (optionPlus && optionMinus) {
+      if (this.optionPlus && this.optionMinus) {
          side = 1; ticksPlusMinus = 1;
-      } else if (optionMinus) {
-         side = (swap_side ^ vertical) ? 1 : -1;
-      } else if (optionPlus) {
-         side = (swap_side ^ vertical) ? -1 : 1;
+      } else if (this.optionMinus) {
+         side = (swap_side ^ this.vertical) ? 1 : -1;
+      } else if (this.optionPlus) {
+         side = (swap_side ^ this.vertical) ? -1 : 1;
       }
-
-      tickSize = Math.round((optionSize ? tickSize : 0.03) * scaling_size);
-      if (this.max_tick_size && (tickSize > this.max_tick_size)) tickSize = this.max_tick_size;
 
       // first draw ticks
 
-      const handle = this.createTicks(false, optionNoexp, optionNoopt, optionInt);
+      const handle = this.createTicks(false, this.optionNoexp, this.optionNoopt, this.optionInt);
 
-      axis_lines += this.produceTicksPath(handle, side, tickSize, ticksPlusMinus, secondShift, draw_lines && !disable_axis_drawing && !this.disable_ticks);
+      axis_lines += this.produceTicksPath(handle, side, this.ticksSize, ticksPlusMinus, secondShift, draw_lines && !disable_axis_drawing && !this.disable_ticks);
 
       if (!disable_axis_drawing && axis_lines && !this.lineatt.empty())
-         axis_g.append("svg:path").attr("d", axis_lines)
+         axis_g.append("svg:path")
+               .attr("d", axis_lines)
                .call(this.lineatt.func);
 
-      let labelSize0 = Math.round( (axis.fLabelSize < 1) ? axis.fLabelSize * text_scaling_size : axis.fLabelSize),
-          labeloffset = Math.round(Math.abs(axis.fLabelOffset)*text_scaling_size);
+      let title_shift_x = 0, title_shift_y = 0, title_g = null, axis_rect = null, labelsMaxWidth = 0,
+          // draw labels (sometime on both sides)
+          pr = (disable_axis_drawing || this.optionUnlab) ? Promise.resolve(0) :
+                this.drawLabels(axis_g, axis, w, h, handle, side, this.labelsFont, this.labelsOffset, this.ticksSize, ticksPlusMinus, max_text_width);
 
-      if ((labelSize0 <= 0) || (Math.abs(axis.fLabelOffset) > 1.1)) optionUnlab = true; // disable labels when size not specified
+      return pr.then(maxw => {
 
-      let title_shift_x = 0, title_shift_y = 0, title_g = null, axis_rect = null,
-          title_fontsize = 0, pr = Promise.resolve([labelSize0, 0]), labelMaxWidth = 0;
-
-      // draw labels (sometime on both sides)
-      if (!disable_axis_drawing && !optionUnlab)
-         pr = this.drawLabels(axis_g, axis, w, h, handle, side, labelSize0, labeloffset, tickSize, ticksPlusMinus, max_text_width);
-
-      return pr.then(arr => {
-
-         labelMaxWidth = arr[1];
+         labelsMaxWidth = maxw;
 
          if (settings.Zooming && !this.disable_zooming && !isBatchMode()) {
-            let labelSize = Math.max(arr[0], 5),
+            let labelSize = Math.max(this.labelsFont.size, 5),
                 r = axis_g.append("svg:rect")
                           .attr("class", "axis_zoom")
                           .style("opacity", "0")
                           .style("cursor", "crosshair");
 
-            if (vertical) {
-               let rw = (labelMaxWidth || 2*labelSize) + 3;
-               r.attr("x", (side > 0) ? -rw : 0)
-                .attr("y", 0)
-                .attr("width", rw)
-                .attr("height", h);
+            if (this.vertical) {
+               let rw = (labelsMaxWidth || 2*labelSize) + 3;
+               r.attr("x", (side > 0) ? -rw : 0).attr("y", 0)
+                .attr("width", rw).attr("height", h);
             } else {
                r.attr("x", 0).attr("y", (side > 0) ? 0 : -labelSize - 3)
                 .attr("width", w).attr("height", labelSize + 3);
@@ -1158,53 +1190,50 @@ class TAxisPainter extends ObjectPainter {
                console.warn("Why PAD element missing when search for position");
          }
 
-         if (!axis.fTitle || disable_axis_drawing) return true;
+         if (!this.fTitle || disable_axis_drawing) return true;
 
          title_g = axis_g.append("svg:g").attr("class", "axis_title");
-         title_fontsize = (axis.fTitleSize >= 1) ? axis.fTitleSize : Math.round(axis.fTitleSize * text_scaling_size);
 
-         let title_offest_k = 1.6*((axis.fTitleSize < 1) ? axis.fTitleSize : axis.fTitleSize/(text_scaling_size || 10)),
-             center = axis.TestBit(EAxisBits.kCenterTitle),
-             opposite = axis.TestBit(EAxisBits.kOppositeTitle),
-             rotate = axis.TestBit(EAxisBits.kRotateTitle) ? -1 : 1,
-             title_color = this.getColor(is_gaxis ? axis.fTextColor : axis.fTitleColor);
+         let title_offest_k = 1.6 / this.scalingSize,
+             rotate = axis.TestBit(EAxisBits.kRotateTitle) ? -1 : 1;
 
-         this.startTextDrawing(axis.fTitleFont, title_fontsize, title_g);
+         this.startTextDrawing(this.titleFont, 'font', title_g);
 
-         let xor_reverse = swap_side ^ opposite, myxor = (rotate < 0) ^ xor_reverse;
+         let xor_reverse = swap_side ^ this.titleOpposite, myxor = (rotate < 0) ^ xor_reverse;
 
-         this.title_align = center ? "middle" : (myxor ? "begin" : "end");
+         this.title_align = this.titleCenter ? "middle" : (myxor ? "begin" : "end");
 
-         if (vertical) {
+         if (this.vertical) {
             title_offest_k *= -side*pad_w;
 
-            title_shift_x = Math.round(title_offest_k*axis.fTitleOffset);
+            title_shift_x = Math.round(title_offest_k * this.titleOffset);
 
             if ((this.name == "zaxis") && is_gaxis && ('getBoundingClientRect' in axis_g.node())) {
                // special handling for color palette labels - draw them always on right side
                let rect = axis_g.node().getBoundingClientRect();
-               if (title_shift_x < rect.width - tickSize) title_shift_x = Math.round(rect.width - tickSize);
+               if (title_shift_x < rect.width - this.ticksSize)
+                  title_shift_x = Math.round(rect.width - this.ticksSize);
             }
 
-            title_shift_y = Math.round(center ? h/2 : (xor_reverse ? h : 0));
+            title_shift_y = Math.round(this.titleCenter ? h/2 : (xor_reverse ? h : 0));
 
             this.drawText({ align: this.title_align+";middle",
                             rotate: (rotate < 0) ? 90 : 270,
-                            text: axis.fTitle, color: title_color, draw_g: title_g });
+                            text: this.fTitle, color: this.titleFont.color, draw_g: title_g });
          } else {
             title_offest_k *= side*pad_h;
 
-            title_shift_x = Math.round(center ? w/2 : (xor_reverse ? 0 : w));
-            title_shift_y = Math.round(title_offest_k*axis.fTitleOffset);
+            title_shift_x = Math.round(this.titleCenter ? w/2 : (xor_reverse ? 0 : w));
+            title_shift_y = Math.round(title_offest_k * this.titleOffset);
             this.drawText({ align: this.title_align+";middle",
                             rotate: (rotate < 0) ? 180 : 0,
-                            text: axis.fTitle, color: title_color, draw_g: title_g });
+                            text: this.fTitle, color: this.titleFont.color, draw_g: title_g });
          }
 
-         if (vertical && (axis.fTitleOffset == 0) && ('getBoundingClientRect' in axis_g.node()))
+         if (this.vertical && !this.titleOffset && ('getBoundingClientRect' in axis_g.node()))
             axis_rect = axis_g.node().getBoundingClientRect();
 
-         this.addTitleDrag(title_g, vertical, title_offest_k, swap_side, vertical ? h : w);
+         this.addTitleDrag(title_g, this.vertical, title_offest_k, swap_side, this.vertical ? h : w);
 
          return this.finishTextDrawing(title_g);
       }).then(() => {
@@ -1213,10 +1242,10 @@ class TAxisPainter extends ObjectPainter {
             if (axis_rect) {
                let title_rect = title_g.node().getBoundingClientRect();
                if ((axis_rect.left != axis_rect.right) && (title_rect.left != title_rect.right))
-                  title_shift_x = (side > 0) ? Math.round(axis_rect.left - title_rect.right - title_fontsize*0.3) :
-                                               Math.round(axis_rect.right - title_rect.left + title_fontsize*0.3);
+                  title_shift_x = (side > 0) ? Math.round(axis_rect.left - title_rect.right - this.titleFont.size*0.3) :
+                                               Math.round(axis_rect.right - title_rect.left + this.titleFont.size*0.3);
                else
-                  title_shift_x = -1 * Math.round(((side > 0) ? (labeloffset + labelMaxWidth) : 0) + title_fontsize*0.7);
+                  title_shift_x = -1 * Math.round(((side > 0) ? (this.labelsOffset + labelsMaxWidth) : 0) + this.titleFont.size*0.7);
             }
 
             title_g.attr('transform', `translate(${title_shift_x},${title_shift_y})`)
