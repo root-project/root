@@ -166,7 +166,7 @@ class RObjectPainter extends ObjectPainter {
       if (typeof dflts == "number") dflts = { size: dflts };
 
       let pp = this.getPadPainter(),
-          rfont = pp._dfltRFont || { fFamily: "Arial", fStyle: "", fWeight: "" },
+          rfont = pp?._dfltRFont || { fFamily: "Arial", fStyle: "", fWeight: "" },
           text_size   = this.v7EvalAttr(name + "_size", dflts.size || 12),
           text_angle  = this.v7EvalAttr(name + "_angle", 0),
           text_align  = this.v7EvalAttr(name + "_align", dflts.align || "none"),
@@ -177,7 +177,7 @@ class RObjectPainter extends ObjectPainter {
 
        if (typeof text_size == "string") text_size = parseFloat(text_size);
        if (!Number.isFinite(text_size) || (text_size <= 0)) text_size = 12;
-       if (!fontScale) fontScale = pp.getPadHeight() || 100;
+       if (!fontScale) fontScale = pp?.getPadHeight() || 100;
 
        let handler = new FontHandler(null, text_size, fontScale, font_family, font_style, font_weight);
 

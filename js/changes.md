@@ -1,5 +1,10 @@
 # JSROOT changelog
 
+## Changes in dev
+1. Use TAxis attributes in lego plots - ticks/labels/title colors, sizes, offsets
+2. Correctly resize stats box when number of lines changes
+
+
 ## Changes in 7.1.0
 1. Let change `settings` and `gStyle` parameters via "Settings" menu of the top hierarchy item
 2. Settings and gStyle can be stored as cookies, automatically read when next time loading webpage

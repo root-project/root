@@ -209,7 +209,7 @@ class RPalettePainter extends RObjectPainter {
             r.on("dblclick", () => framep.unzoom("z"));
       }
 
-      framep.z_handle.max_tick_size = Math.round(palette_width*0.3);
+      framep.z_handle.maxTickSize = Math.round(palette_width*0.3);
 
       let promise = framep.z_handle.drawAxis(this.draw_g, vertical ? `translate(${palette_width},${palette_height})` : `translate(0,${palette_height})`, vertical ? -1 : 1);
 

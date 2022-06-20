@@ -1040,6 +1040,56 @@ class StandaloneMenu extends JSRootMenu {
          outer.style.position = 'fixed';
          outer.style.left = left + 'px';
          outer.style.top = top + 'px';
+
+         injectStyle(`
+.jsroot_ctxt_container {
+   position: absolute;
+   top: 0;
+   user-select: none;
+   z-index: 100000;
+   background-color: rgb(250, 250, 250);
+   margin: 0;
+   padding: 0px;
+   width: auto;
+   min-width: 100px;
+   box-shadow: 0px 0px 10px rgb(0, 0, 0, 0.2);
+   border: 3px solid rgb(215, 215, 215);
+   font-family: Arial, helvetica, sans-serif, serif;
+   font-size: 13px;
+   color: rgb(0, 0, 0, 0.8);
+}
+.jsroot_ctxt_column {
+   float: left;
+}
+.jsroot_ctxt_divider {
+   width: 85%;
+   margin: 3px auto;
+   border: 1px solid rgb(0, 0, 0, 0.15);
+}
+.jsroot_ctxt_header {
+   background-color: lightblue;
+   padding: 3px 7px;
+   font-weight: bold;
+   border-bottom: 1px;
+}
+.jsroot_ctxt_text {
+   margin: 0;
+   padding: 3px 7px;
+   pointer-events: none;
+   white-space: nowrap;
+}
+.jsroot_ctxt_extraText {
+   margin: 0;
+   padding: 3px 7px;
+   color: rgb(0, 0, 0, 0.6);
+}
+.jsroot_ctxt_focus {
+   background-color: rgb(220, 220, 220);
+}
+.jsroot_ctxt_item:hover {
+   background-color: rgb(235, 235, 235);
+}`, this.element);
+
       } else if ((left < 0) && (top == left)) {
          // column
          outer.className = "jsroot_ctxt_column";
@@ -1171,7 +1221,7 @@ class StandaloneMenu extends JSRootMenu {
       if (loc === document.body) {
          if (left + outer.offsetWidth > docWidth) {
             //Does sub-contextmenu overflow window width?
-            outer.style.left = docWidth - outer.offsetWidth + 'px';
+            outer.style.left = (docWidth - outer.offsetWidth) + 'px';
          }
 
          if (outer.offsetHeight > docHeight) {
@@ -1182,7 +1232,7 @@ class StandaloneMenu extends JSRootMenu {
             outer.style.height = docHeight + 'px';
          } else if (top + outer.offsetHeight > docHeight) {
             //Does contextmenu overflow window height?
-            outer.style.top = docHeight - outer.offsetHeight + 'px';
+            outer.style.top = (docHeight - outer.offsetHeight) + 'px';
          }
 
       } else if (outer.className != "jsroot_ctxt_column") {
@@ -1193,7 +1243,7 @@ class StandaloneMenu extends JSRootMenu {
 
          //Does sub-contextmenu overflow window width?
          if (dimensionsOuter.left + dimensionsOuter.width > docWidth) {
-            outer.style.left = -loc.offsetLeft - dimensionsOuter.width + 'px'
+            outer.style.left = (-loc.offsetLeft - dimensionsOuter.width) + 'px'
          }
 
          if (dimensionsOuter.height > docHeight) {
@@ -1208,16 +1258,16 @@ class StandaloneMenu extends JSRootMenu {
             //is the sub-contextmenu height smaller than the window height AND larger than half of window height?
 
             if (dimensionsOuter.top - docHeight / 2 >= 0) { //If sub-contextmenu is closer to bottom of the screen
-               outer.style.top = -dimensionsOuter.top - dimensionsOuter.height + docHeight + 'px'
+               outer.style.top = (-dimensionsOuter.top - dimensionsOuter.height + docHeight) + 'px'
             }
             else { //If sub-contextmenu is closer to top of the screen
-               outer.style.top = -dimensionsOuter.top + 'px'
+               outer.style.top = (-dimensionsOuter.top) + 'px'
             }
 
          }
          else if (dimensionsOuter.top + dimensionsOuter.height > docHeight) {
             //Does sub-contextmenu overflow window height?
-            outer.style.top = -dimensionsOuter.height + dimensionsLoc.height + 'px'
+            outer.style.top = (-dimensionsOuter.height + dimensionsLoc.height) + 'px'
          }
 
       }
@@ -1236,55 +1286,6 @@ class StandaloneMenu extends JSRootMenu {
       if (oldmenu) oldmenu.remove();
 
       this.element = this._buildContextmenu(this.code, (event?.clientX || 0) + window.pageXOffset, (event?.clientY || 0) + window.pageYOffset, document.body);
-
-      injectStyle(`
-.jsroot_ctxt_container {
-   position: absolute;
-   top: 0;
-   user-select: none;
-   z-index: 100000;
-   background-color: rgb(250, 250, 250);
-   margin: 0;
-   padding: 0px;
-   width: auto;
-   min-width: 100px;
-   box-shadow: 0px 0px 10px rgb(0, 0, 0, 0.2);
-   border: 3px solid rgb(215, 215, 215);
-   font-family: Arial, helvetica, sans-serif, serif;
-   font-size: 13px;
-   color: rgb(0, 0, 0, 0.8);
-}
-.jsroot_ctxt_column {
-   float: left;
-}
-.jsroot_ctxt_divider {
-   width: 85%;
-   margin: 3px auto;
-   border: 1px solid rgb(0, 0, 0, 0.15);
-}
-.jsroot_ctxt_header {
-   background-color: lightblue;
-   padding: 3px 7px;
-   font-weight: bold;
-   border-bottom: 1px;
-}
-.jsroot_ctxt_text {
-   margin: 0;
-   padding: 3px 7px;
-   pointer-events: none;
-   white-space: nowrap;
-}
-.jsroot_ctxt_extraText {
-   margin: 0;
-   padding: 3px 7px;
-   color: rgb(0, 0, 0, 0.6);
-}
-.jsroot_ctxt_focus {
-   background-color: rgb(220, 220, 220);
-}
-.jsroot_ctxt_item:hover {
-   background-color: rgb(235, 235, 235);
-}`, this.element);
 
       this.element.setAttribute('id', this.menuname);
 
