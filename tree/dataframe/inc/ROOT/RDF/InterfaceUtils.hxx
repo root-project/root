@@ -268,7 +268,7 @@ BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperA
       std::vector<bool> isDef;
       isDef.reserve(sizeof...(ColTypes));
       for (auto i = 0u; i < sizeof...(ColTypes); ++i)
-         isDef[i] = colRegister.HasName(colNames[i]);
+         isDef[i] = colRegister.IsDefineOrAlias(colNames[i]);
       return isDef;
    };
    std::vector<bool> isDefine = makeIsDefine();
@@ -386,7 +386,7 @@ std::vector<bool> FindUndefinedDSColumns(const ColumnNames_t &requestedCols, con
 template <typename T>
 void AddDSColumnsHelper(const std::string &colName, RLoopManager &lm, RDataSource &ds, RColumnRegister &colRegister)
 {
-   if (colRegister.HasName(colName) || !ds.HasColumn(colName) || lm.HasDSValuePtrs(colName))
+   if (colRegister.IsDefineOrAlias(colName) || !ds.HasColumn(colName) || lm.HasDSValuePtrs(colName))
       return;
 
    const auto valuePtrs = ds.GetColumnReaders<T>(colName);

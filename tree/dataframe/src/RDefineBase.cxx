@@ -30,7 +30,7 @@ RDefineBase::RDefineBase(std::string_view name, std::string_view type, const RDF
 {
    const auto nColumns = fColumnNames.size();
    for (auto i = 0u; i < nColumns; ++i) {
-      fIsDefine[i] = fColRegister.HasName(fColumnNames[i]);
+      fIsDefine[i] = fColRegister.IsDefineOrAlias(fColumnNames[i]);
       if (fVariation != "nominal" && fIsDefine[i])
          fColRegister.GetColumns().at(fColumnNames[i])->MakeVariations({fVariation});
    }

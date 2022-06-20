@@ -30,13 +30,13 @@ RColumnRegister::~RColumnRegister()
    fColumnNames.reset();
 }
 
-bool RColumnRegister::HasName(std::string_view name) const
+bool RColumnRegister::IsDefineOrAlias(std::string_view name) const
 {
    const auto ccolnamesEnd = fColumnNames->end();
    return ccolnamesEnd != std::find(fColumnNames->begin(), ccolnamesEnd, name);
 }
 
-void RColumnRegister::AddColumn(const std::shared_ptr<RDFDetail::RDefineBase> &column)
+void RColumnRegister::AddDefine(const std::shared_ptr<RDFDetail::RDefineBase> &column)
 {
    auto newDefines = std::make_shared<DefinesMap_t>(*fDefines);
    const std::string &colName = column->GetName();
