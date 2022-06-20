@@ -28,6 +28,8 @@ batch mode directly using an instance of this base class.
 #include "TControlBarImp.h"
 #include "TInspectorImp.h"
 #include "TROOT.h"
+#include "TEnv.h"
+#include "TPluginManager.h"
 
 TGuiFactory *gGuiFactory = 0;
 TGuiFactory *gBatchGuiFactory = 0;
@@ -69,16 +71,36 @@ TCanvasImp *TGuiFactory::CreateCanvasImp(TCanvas *c, const char *title, Int_t x,
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a batch version of TBrowserImp.
 
-TBrowserImp *TGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, UInt_t width, UInt_t height, Option_t *)
+TBrowserImp *TGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, UInt_t width, UInt_t height, Option_t *opt)
 {
+   TString webclass = "ROOT::Experimental::RWebBrowserImp";
+   if ((gROOT->GetWebDisplay() == "server") && (webclass == gEnv->GetValue("Browser.Name", "---"))) {
+      TPluginHandler *ph = gROOT->GetPluginManager()->FindHandler("TBrowserImp", webclass);
+
+      if (ph && ph->LoadPlugin() != -1) {
+         TBrowserImp *imp = (TBrowserImp *)ph->ExecPlugin(5, b, title, width, height, opt);
+         if (imp) return imp;
+      }
+   }
+
    return new TBrowserImp(b, title, width, height);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a batch version of TBrowserImp.
 
-TBrowserImp *TGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height, Option_t *)
+TBrowserImp *TGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height, Option_t *opt)
 {
+   TString webclass = "ROOT::Experimental::RWebBrowserImp";
+   if ((gROOT->GetWebDisplay() == "server") && (webclass == gEnv->GetValue("Browser.Name", "---"))) {
+      TPluginHandler *ph = gROOT->GetPluginManager()->FindHandler("TBrowserImp", webclass);
+
+      if (ph && ph->LoadPlugin() != -1) {
+         TBrowserImp *imp = (TBrowserImp *)ph->ExecPlugin(7, b, title, x, y, width, height, opt);
+         if (imp) return imp;
+      }
+   }
+
    return new TBrowserImp(b, title, x, y, width, height);
 }
 
