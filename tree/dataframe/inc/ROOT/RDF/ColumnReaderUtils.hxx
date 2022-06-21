@@ -59,14 +59,18 @@ MakeColumnReader(unsigned int slot, RDefineBase *define, RLoopManager &lm, TTree
       return Ret_t{new RDefineReader(slot, *define, typeid(T))};
    }
 
-   auto dsColreader = lm.GetDatasetColumnReader(slot, colName);
-   if (dsColreader != nullptr)
-      return dsColreader;
+   // Check if we already inserted a reader for this column in the dataset column readers (RDataSource or Tree/TChain
+   // readers)
+   auto datasetColReader = lm.GetDatasetColumnReader(slot, colName, typeid(T));
+   if (datasetColReader != nullptr)
+      return datasetColReader;
 
    assert(r != nullptr && "We could not find a reader for this column, this should never happen at this point.");
 
-   // reading from a TTree
-   return Ret_t{new RTreeColumnReader<T>(*r, colName)};
+   // Make a RTreeColumnReader for this column and insert it in RLoopManager's map
+   auto treeColReader = std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>{new RTreeColumnReader<T>(*r, colName)};
+   lm.AddTreeColumnReader(slot, colName, std::move(treeColReader), typeid(T));
+   return lm.GetDatasetColumnReader(slot, colName, typeid(T));
 }
 
 /// This type aggregates some of the arguments passed to MakeColumnReaders.

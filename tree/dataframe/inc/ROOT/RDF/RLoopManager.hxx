@@ -86,9 +86,11 @@ public:
    }
 };
 
-} // ns RDF
-} // ns Internal
+} // namespace RDF
+} // namespace Internal
+} // namespace ROOT
 
+namespace ROOT {
 namespace Detail {
 namespace RDF {
 namespace RDFInternal = ROOT::Internal::RDF;
@@ -193,9 +195,13 @@ public:
    void ToJitExec(const std::string &) const;
    void RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f);
    unsigned int GetNRuns() const { return fNRuns; }
-   bool HasDataSourceColumnReaders(const std::string &col) const;
-   void AddDataSourceColumnReaders(const std::string &col, std::vector<std::unique_ptr<RColumnReaderBase>> &&readers);
-   std::shared_ptr<RColumnReaderBase> GetDatasetColumnReader(unsigned int slot, const std::string &col) const;
+   bool HasDataSourceColumnReaders(const std::string &col, const std::type_info &ti) const;
+   void AddDataSourceColumnReaders(const std::string &col, std::vector<std::unique_ptr<RColumnReaderBase>> &&readers,
+                                   const std::type_info &ti);
+   void AddTreeColumnReader(unsigned int slot, const std::string &col, std::unique_ptr<RColumnReaderBase> &&reader,
+                            const std::type_info &ti);
+   std::shared_ptr<RColumnReaderBase>
+   GetDatasetColumnReader(unsigned int slot, const std::string &col, const std::type_info &ti) const;
 
    /// End of recursive chain of calls, does nothing
    void AddFilterName(std::vector<std::string> &) {}
@@ -219,6 +225,6 @@ public:
 
 } // ns RDF
 } // ns Detail
-} // ns ROOT
+} // namespace ROOT
 
 #endif
