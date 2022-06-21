@@ -373,7 +373,7 @@ double AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   co
        minim.setPrintLevel(minimPrintLevel-1);
        int status = -1;
        minim.optimizeConst(2);
-       TString minimizer = ""; // empty string to take RooMinimizer default
+       TString minimizer = ""; // empty string to take RooMinimizer default initially
        TString algorithm = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo();
 
        if (verbose > 0 )

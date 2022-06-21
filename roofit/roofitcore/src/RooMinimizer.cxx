@@ -109,7 +109,6 @@ RooMinimizer::RooMinimizer(RooAbsReal &function, FcnMode fcnMode) : _fcnMode(fcn
    }
    case FcnMode::gradient: {
       _fcn = new RooGradMinimizerFcn(&function, this, _verbose);
-      setMinimizerType("Minuit2");
       break;
    }
    case FcnMode::generic_wrapper : {
@@ -268,7 +267,12 @@ void RooMinimizer::setMinimizerType(std::string const& type)
   _minimizerType = type.empty() ? ROOT::Math::MinimizerOptions::DefaultMinimizerType() : type;
 
   if (_fcnMode != FcnMode::classic && _minimizerType != "Minuit2") {
-    throw std::invalid_argument("In RooMinimizer::setMinimizerType: only Minuit2 is supported when not using classic function mode!");
+    std::stringstream ss;
+    ss << "In RooMinimizer::setMinimizerType: only Minuit2 is supported when not using classic function mode!";
+    if(type.empty()) {
+      ss << "\nPlease set it as your default minimizer via ROOT::Math::MinimizerOptions::SetDefaultMinimizer(\"Minuit2\").";
+    }
+    throw std::invalid_argument(ss.str());
   }
 }
 
