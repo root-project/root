@@ -119,7 +119,7 @@ public:
 
    void importFunctions(const RooFit::Detail::JSONNode &n);
    void importFunction(const RooFit::Detail::JSONNode &n, bool isPdf);
-   void exportObject(const RooAbsArg *func, RooFit::Detail::JSONNode &n);
+   RooFit::Detail::JSONNode *exportObject(const RooAbsArg *func);
 
    static std::unique_ptr<RooFit::Detail::JSONTree> createNewJSONTree();
 
@@ -188,11 +188,9 @@ private:
    void exportAttributes(const RooAbsArg *arg, RooFit::Detail::JSONNode &n);
    void exportVariable(const RooAbsArg *v, RooFit::Detail::JSONNode &n);
    void exportVariables(const RooArgSet &allElems, RooFit::Detail::JSONNode &n);
-   void exportFunctions(const RooArgSet &allElems, RooFit::Detail::JSONNode &n);
 
    void exportAllObjects(RooFit::Detail::JSONNode &n);
-   void exportDependants(const RooAbsArg *source, RooFit::Detail::JSONNode &n);
-   void exportDependants(const RooAbsArg *source, RooFit::Detail::JSONNode *n);
+   void exportDependants(const RooAbsArg *source);
 
    // member variables
    const RooFit::Detail::JSONNode *_rootnode_input = nullptr;
