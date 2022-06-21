@@ -74,6 +74,9 @@ public:
   bool import(TObject& object, bool replaceExisting=false) ;
   bool import(TObject& object, const char* aliasName, bool replaceExisting=false) ;
 
+  template<class T, class... Args_t>
+  T& emplace(Args_t &&... args);
+
   // Transaction management interface for multi-step import operations
   bool startTransaction() ;
   bool cancelTransaction() ;
@@ -283,5 +286,15 @@ public:
 
     ClassDefOverride(RooWorkspace, 8) // Persistable project container for (composite) pdfs, functions, variables and datasets
 } ;
+
+
+/// Directly create an object in the workspace without copying.
+template<class T, class... Args_t>
+T& RooWorkspace::emplace(Args_t &&... args) {
+   auto arg = new T(std::forward<Args_t>(args)...);
+   _allOwnedNodes.add(*arg);
+   return *arg;
+}
+
 
 #endif
