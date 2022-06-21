@@ -146,6 +146,9 @@ if(builtin_freetype)
     if(CMAKE_SYSTEM_NAME STREQUAL AIX)
       set(_freetype_zlib --without-zlib)
     endif()
+    if (APPLE)
+      set(_freetype_brotli "--with-brotli=no")
+    endif()
     if(CMAKE_OSX_SYSROOT)
       set(_freetype_cc "${_freetype_cc} -isysroot ${CMAKE_OSX_SYSROOT}")
     endif()
@@ -155,7 +158,7 @@ if(builtin_freetype)
       URL_HASH SHA256=0a3c7dfbda6da1e8fce29232e8e96d987ababbbf71ebc8c75659e4132c367014
       CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR> --with-pic
                          --disable-shared --with-png=no --with-bzip2=no
-                         --with-harfbuzz=no ${_freetype_zlib}
+                         --with-harfbuzz=no ${_freetype_brotli} ${_freetype_zlib}
                           "CC=${_freetype_cc}" CFLAGS=${_freetype_cflags}
       INSTALL_COMMAND ""
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
