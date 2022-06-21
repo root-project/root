@@ -607,9 +607,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
 
   // Now clone again with renaming effective
   RooArgSet cloneSet2;
-  cloneSet2.useHashMapForFind(true); // Faster finding
   RooArgSet(*cloneTop).snapshot(cloneSet2, !noRecursion);
-  RooAbsArg* cloneTop2 = cloneSet2.find(topName2.c_str()) ;
 
   // Make final check list of conflicting nodes
   RooArgSet conflictNodes2 ;
@@ -621,24 +619,23 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
   }
 
   // Terminate here if there are conflicts and no resolution protocol
-  if (conflictNodes2.getSize()) {
+  if (!conflictNodes2.empty()) {
     coutE(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") ERROR object named " << inArg.GetName() << ": component(s) "
         << conflictNodes2 << " cause naming conflict after conflict resolution protocol was executed" << endl ;
     return true ;
   }
 
-  // Perform any auxiliary imports at this point
+  RooArgSet recycledNodes ;
+  std::vector<std::unique_ptr<RooAbsArg>> nodesToBeDeleted ;
   for (const auto node : cloneSet2) {
+
+    // Perform any auxiliary imports at this point
     if (node->importWorkspaceHook(*this)) {
       coutE(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") ERROR object named " << node->GetName()
                  << " has an error in importing in one or more of its auxiliary objects, aborting" << endl ;
       return true ;
     }
-  }
 
-  RooArgSet recycledNodes ;
-  RooArgSet nodesToBeDeleted ;
-  for (const auto node : cloneSet2) {
     if (_autoClass) {
       if (!_classes.autoImportClass(node->IsA())) {
         coutW(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") WARNING: problems import class code of object "
@@ -652,22 +649,17 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
     _eocache.importCacheObjects(oldCache,node->GetName(),true) ;
 
     // Check if node is already in workspace (can only happen for variables or identical instances, unless RecycleConflictNodes is specified)
-    RooAbsArg* wsnode = _allOwnedNodes.find(node->GetName()) ;
-
-    if (wsnode) {
+    if (RooAbsArg* wsnode = _allOwnedNodes.find(node->GetName())) {
       // Do not import node, add not to list of nodes that require reconnection
       if (!silence && useExistingNodes) {
         coutI(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") using existing copy of " << node->ClassName()
-                   << "::" << node->GetName() << " for import of " << cloneTop2->ClassName() << "::"
-                   << cloneTop2->GetName() << endl ;
+                   << "::" << node->GetName() << " for import of " << cloneTop->ClassName() << "::"
+                   << topName2 << endl ;
       }
-      recycledNodes.add(*_allOwnedNodes.find(node->GetName())) ;
+      recycledNodes.add(*wsnode);
 
       // Delete clone of incoming node
-      nodesToBeDeleted.addOwned(*node) ;
-
-      //cout << "WV: recycling existing node " << existingNode << " = " << existingNode->GetName() << " for imported node " << node << endl ;
-
+      nodesToBeDeleted.emplace_back(node) ;
     } else {
       // Import node
       if (!silence) {
@@ -686,7 +678,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
   }
 
   // Reconnect any nodes that need to be
-  if (recycledNodes.getSize()>0) {
+  if (!recycledNodes.empty()) {
     for (const auto node : cloneSet2) {
       node->redirectServers(recycledNodes) ;
     }
