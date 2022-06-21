@@ -168,7 +168,7 @@ public:
   
   std::shared_ptr<RooRealVarSharedProperties> _sharedProp; //! Shared binnings associated with this instance
                                                            //
-  std::size_t _valueResetCounter; ///<! How many times the value of this variable was reset
+  std::size_t _valueResetCounter = 0; ///<! How many times the value of this variable was reset
 
   ClassDef(RooRealVar,8) // Real-valued variable
 };
