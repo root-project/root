@@ -53,9 +53,10 @@ public:
    }
 
    /// Copy constructor.
-   RooCollectionProxy(const char *inName, RooAbsArg *owner, const RooCollectionProxy &other)
-      : RooCollection_t(other, inName), _owner(owner), _defValueServer(other._defValueServer),
-        _defShapeServer(other._defShapeServer)
+   template<class Other_t>
+   RooCollectionProxy(const char *inName, RooAbsArg *owner, const Other_t &other)
+      : RooCollection_t(other, inName), _owner(owner), _defValueServer(other.defValueServer()),
+        _defShapeServer(other.defShapeServer())
    {
       _owner->registerProxy(*this);
    }
@@ -110,6 +111,9 @@ public:
       RooCollection_t::operator=(other);
       return *this;
    }
+
+   bool defValueServer() const { return _defValueServer; }
+   bool defShapeServer() const { return _defShapeServer; }
 
 private:
    RooAbsArg *_owner = nullptr;
