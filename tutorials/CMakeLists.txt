@@ -167,6 +167,7 @@ if(NOT xrootd)
                   dataframe/df102_NanoAODDimuonAnalysis.C
                   dataframe/df103_NanoAODHiggsAnalysis.C
                   tmva/tmva103_Application.C
+                  dataframe/df033_Describe.py
                   dataframe/df102_NanoAODDimuonAnalysis.py
                   dataframe/df103_NanoAODHiggsAnalysis.py
                   dataframe/df104_HiggsToTwoPhotons.py
