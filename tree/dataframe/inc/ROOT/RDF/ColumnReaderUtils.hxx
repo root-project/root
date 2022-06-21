@@ -84,7 +84,7 @@ MakeColumnReader(unsigned int slot, RDefineBase *define,
 /// incorrectly from a compiled MakeColumnReaders symbols when invoked from a jitted symbol.
 struct RColumnReadersInfo {
    const std::vector<std::string> &fColNames;
-   const RColumnRegister &fCustomCols;
+   const RColumnRegister &fColRegister;
    const bool *fIsDefine;
    const std::map<std::string, std::vector<void *>> &fDSValuePtrsMap;
    ROOT::RDF::RDataSource *fDataSource;
@@ -102,11 +102,11 @@ MakeColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, cons
 {
    // see RColumnReadersInfo for why we pass these arguments like this rather than directly as function arguments
    const auto &colNames = colInfo.fColNames;
-   const auto &defines = colInfo.fCustomCols.GetDefines();
+   const auto &defines = colInfo.fColRegister.GetDefines();
    const bool *isDefine = colInfo.fIsDefine;
    const auto &DSValuePtrsMap = colInfo.fDSValuePtrsMap;
    auto *ds = colInfo.fDataSource;
-   const auto &colRegister = colInfo.fCustomCols;
+   const auto &colRegister = colInfo.fColRegister;
 
    // the i-th element indicates whether variation variationName provides alternative values for the i-th column
    std::array<bool, sizeof...(ColTypes)> doesVariationApply;
