@@ -102,7 +102,7 @@ MakeColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, cons
 {
    // see RColumnReadersInfo for why we pass these arguments like this rather than directly as function arguments
    const auto &colNames = colInfo.fColNames;
-   const auto &defines = colInfo.fCustomCols.GetColumns();
+   const auto &defines = colInfo.fCustomCols.GetDefines();
    const bool *isDefine = colInfo.fIsDefine;
    const auto &DSValuePtrsMap = colInfo.fDSValuePtrsMap;
    auto *ds = colInfo.fDataSource;
