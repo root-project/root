@@ -386,7 +386,8 @@ std::vector<bool> FindUndefinedDSColumns(const ColumnNames_t &requestedCols, con
 template <typename T>
 void AddDSColumnsHelper(const std::string &colName, RLoopManager &lm, RDataSource &ds, RColumnRegister &colRegister)
 {
-   if (colRegister.IsDefineOrAlias(colName) || !ds.HasColumn(colName) || lm.HasDataSourceColumnReaders(colName))
+   if (colRegister.IsDefineOrAlias(colName) || !ds.HasColumn(colName) ||
+       lm.HasDataSourceColumnReaders(colName, typeid(T)))
       return;
 
    const auto nSlots = lm.GetNSlots();
@@ -404,7 +405,7 @@ void AddDSColumnsHelper(const std::string &colName, RLoopManager &lm, RDataSourc
          colReaders.emplace_back(ds.GetColumnReaders(slot, colName, typeid(T)));
    }
 
-   lm.AddDataSourceColumnReaders(colName, std::move(colReaders));
+   lm.AddDataSourceColumnReaders(colName, std::move(colReaders), typeid(T));
 }
 
 /// Take list of column names that must be defined, current map of custom columns, current list of defined column names,

@@ -301,6 +301,14 @@ DatasetLogInfo TreeDatasetLogInfo(const TTreeReader &r, unsigned int slot)
    return {std::move(what), static_cast<ULong64_t>(entryRange.first), end, slot};
 }
 
+static auto MakeDatasetColReadersKey(const std::string &colName, const std::type_info &ti)
+{
+   // We use a combination of column name and column type name as the key because in some cases we might end up
+   // with concrete readers that use different types for the same column, e.g. std::vector and RVec here:
+   //    df.Sum<vector<int>>("stdVectorBranch");
+   //    df.Sum<RVecI>("stdVectorBranch");
+   return colName + ':' + ti.name();
+}
 } // anonymous namespace
 
 namespace ROOT {
@@ -700,6 +708,13 @@ void RLoopManager::CleanUpTask(TTreeReader *r, unsigned int slot)
       ptr->FinalizeSlot(slot);
    for (auto &ptr : fBookedDefines)
       ptr->FinalizeSlot(slot);
+
+   if (fLoopType == ELoopType::kROOTFiles || fLoopType == ELoopType::kROOTFilesMT) {
+      // we are reading from a tree/chain and we need to re-create the RTreeColumnReaders at every task
+      // because the TTreeReader object changes at every task
+      for (auto &v : fDatasetColumnReaders[slot])
+         v.second.reset();
+   }
 }
 
 /// Add RDF nodes that require just-in-time compilation to the computation graph.
@@ -935,28 +950,44 @@ const ColumnNames_t &RLoopManager::GetBranchNames()
 }
 
 /// Return true if AddDataSourceColumnReaders was called for column name col.
-bool RLoopManager::HasDataSourceColumnReaders(const std::string &col) const
+bool RLoopManager::HasDataSourceColumnReaders(const std::string &col, const std::type_info &ti) const
 {
+   const auto key = MakeDatasetColReadersKey(col, ti);
    assert(fDataSource != nullptr);
    // since data source column readers are always added for all slots at the same time,
    // if the reader is present for slot 0 we have it for all other slots as well.
-   return fDatasetColumnReaders[0].find(col) != fDatasetColumnReaders[0].end();
+   return fDatasetColumnReaders[0].find(key) != fDatasetColumnReaders[0].end();
 }
 
 void RLoopManager::AddDataSourceColumnReaders(const std::string &col,
-                                              std::vector<std::unique_ptr<RColumnReaderBase>> &&readers)
+                                              std::vector<std::unique_ptr<RColumnReaderBase>> &&readers,
+                                              const std::type_info &ti)
 {
-   assert(fDataSource != nullptr && !HasDataSourceColumnReaders(col));
+   const auto key = MakeDatasetColReadersKey(col, ti);
+   assert(fDataSource != nullptr && !HasDataSourceColumnReaders(col, ti));
    assert(readers.size() == fNSlots);
 
    for (auto slot = 0u; slot < fNSlots; ++slot) {
-      fDatasetColumnReaders[slot][col] = std::move(readers[slot]);
+      fDatasetColumnReaders[slot][key] = std::move(readers[slot]);
    }
 }
 
-std::shared_ptr<RColumnReaderBase> RLoopManager::GetDatasetColumnReader(unsigned int slot, const std::string &col) const
+// Differently from AddDataSourceColumnReaders, this can be called from multiple threads concurrently
+void RLoopManager::AddTreeColumnReader(unsigned int slot, const std::string &col,
+                                       std::unique_ptr<RColumnReaderBase> &&reader, const std::type_info &ti)
 {
-   auto it = fDatasetColumnReaders[slot].find(col);
+   auto &readers = fDatasetColumnReaders[slot];
+   const auto key = MakeDatasetColReadersKey(col, ti);
+   // if a reader for this column and this slot was already there, we are doing something wrong
+   assert(readers.find(key) == readers.end() || readers[key] == nullptr);
+   readers[key] = std::move(reader);
+}
+
+std::shared_ptr<RColumnReaderBase>
+RLoopManager::GetDatasetColumnReader(unsigned int slot, const std::string &col, const std::type_info &ti) const
+{
+   const auto key = MakeDatasetColReadersKey(col, ti);
+   auto it = fDatasetColumnReaders[slot].find(key);
    if (it != fDatasetColumnReaders[slot].end())
       return it->second;
    else

@@ -65,12 +65,16 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public ROOT::Det
    /// Signal whether we ever checked that the branch we are reading with a TTreeReaderArray stores array elements
    /// in contiguous memory.
    EStorageType fStorageType = EStorageType::kUnknown;
+   Long64_t fLastEntry = -1;
 
    /// Whether we already printed a warning about performing a copy of the TTreeReaderArray contents
    bool fCopyWarningPrinted = false;
 
-   void *GetImpl(Long64_t) final
+   void *GetImpl(Long64_t entry) final
    {
+      if (entry == fLastEntry)
+         return &fRVec; // we already pointed our fRVec to the right address
+
       auto &readerArray = *fTreeArray;
       // We only use TTreeReaderArrays to read columns that users flagged as type `RVec`, so we need to check
       // that the branch stores the array as contiguous memory that we can actually wrap in an `RVec`.
@@ -122,6 +126,7 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public ROOT::Det
             swap(fRVec, emptyVec);
          }
       }
+      fLastEntry = entry;
       return &fRVec;
    }
 
