@@ -72,7 +72,7 @@ GraphDrawing::AddDefinesToGraph(std::shared_ptr<GraphNode> node, const RColumnRe
 {
    auto upmostNode = node;
    const auto &defineNames = colRegister.GetNames();
-   const auto &defineMap = colRegister.GetColumns();
+   const auto &defineMap = colRegister.GetDefines();
    for (auto i = int(defineNames.size()) - 1; i >= 0; --i) { // walk backwards through the names of defined columns
       const auto colName = defineNames[i];
       const bool isAlias = defineMap.find(colName) == defineMap.end();

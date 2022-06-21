@@ -88,7 +88,7 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Returns a map of pointers to the defined columns.
-   const DefinesMap_t &GetColumns() const { return *fDefines; }
+   const DefinesMap_t &GetDefines() const { return *fDefines; }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Returns the multimap of systematic variations, see fVariations.

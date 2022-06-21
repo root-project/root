@@ -83,7 +83,7 @@ public:
    {
       fLoopManager->Register(this);
 
-      const auto &defines = colRegister.GetColumns();
+      const auto &defines = colRegister.GetDefines();
       for (auto i = 0u; i < columns.size(); ++i) {
          auto it = defines.find(columns[i]);
          fIsDefine[i] = it != defines.end();

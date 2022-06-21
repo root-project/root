@@ -30,7 +30,7 @@ RFilterBase::RFilterBase(RLoopManager *implPtr, std::string_view name, const uns
    for (auto i = 0u; i < nColumns; ++i) {
       fIsDefine[i] = fColRegister.IsDefineOrAlias(fColumnNames[i]);
       if (fVariation != "nominal" && fIsDefine[i])
-         fColRegister.GetColumns().at(fColumnNames[i])->MakeVariations({fVariation});
+         fColRegister.GetDefines().at(fColumnNames[i])->MakeVariations({fVariation});
    }
 }
 
