@@ -3556,33 +3556,28 @@ public:
       regWS(w,"Basic11_ws") ;
 
       // Build Gaussian PDF in X
-      RooRealVar x("x","x",-10,10) ;
-      RooRealVar meanx("meanx","mean of gaussian",-1) ;
-      RooRealVar sigmax("sigmax","width of gaussian",3) ;
-      RooGaussian gaussx("gaussx","gaussian PDF",x,meanx,sigmax) ;
+      auto& x = w->emplace<RooRealVar>("x","x",-10,10);
+      auto& meanx = w->emplace<RooRealVar>("meanx","mean of gaussian",-1) ;
+      auto& sigmax = w->emplace<RooRealVar>("sigmax","width of gaussian",3) ;
+      auto& gaussx = w->emplace<RooGaussian>("gaussx","gaussian PDF",x,meanx,sigmax) ;
 
       // Build Gaussian PDF in Y
-      RooRealVar y("y","y",-10,10) ;
-      RooRealVar meany("meany","mean of gaussian",-1) ;
-      RooRealVar sigmay("sigmay","width of gaussian",3) ;
-      RooGaussian gaussy("gaussy","gaussian PDF",y,meany,sigmay) ;
+      auto& y = w->emplace<RooRealVar>("y","y",-10,10) ;
+      auto& meany = w->emplace<RooRealVar>("meany","mean of gaussian",-1) ;
+      auto& sigmay = w->emplace<RooRealVar>("sigmay","width of gaussian",3) ;
+      auto& gaussy = w->emplace<RooGaussian>("gaussy","gaussian PDF",y,meany,sigmay) ;
 
       // Make product of X and Y
-      RooProdPdf gaussxy("gaussxy","gaussx*gaussy",RooArgSet(gaussx,gaussy)) ;
+      auto& gaussxy = w->emplace<RooProdPdf>("gaussxy","gaussx*gaussy",RooArgSet(gaussx,gaussy)) ;
 
       // Make flat bkg in X and Y
-      RooPolynomial flatx("flatx","flatx",x) ;
-      RooPolynomial flaty("flaty","flaty",x) ;
-      RooProdPdf flatxy("flatxy","flatx*flaty",RooArgSet(flatx,flaty)) ;
+      auto& flatx = w->emplace<RooPolynomial>("flatx","flatx",x) ;
+      auto& flaty = w->emplace<RooPolynomial>("flaty","flaty",x) ;
+      auto& flatxy = w->emplace<RooProdPdf>("flatxy","flatx*flaty",RooArgSet(flatx,flaty)) ;
 
       // Make sum of gaussxy and flatxy
-      RooRealVar frac("frac","frac",0.5,0.,1.) ;
-      RooAddPdf sumxy("sumxy","sumxy",RooArgList(gaussxy,flatxy),frac) ;
-
-      // Store p.d.f in workspace
-      w->import(gaussx) ;
-      w->import(gaussxy,RenameConflictNodes("set2")) ;
-      w->import(sumxy,RenameConflictNodes("set3")) ;
+      auto& frac = w->emplace<RooRealVar>("frac","frac",0.5,0.,1.) ;
+      auto& sumxy = w->emplace<RooAddPdf>("sumxy","sumxy",RooArgList(gaussxy,flatxy),frac) ;
 
       // Make reference plot of GaussX
       RooPlot* frame1 = x.frame() ;

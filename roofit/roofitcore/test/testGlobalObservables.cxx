@@ -49,38 +49,38 @@ public:
       // silence log output
       RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
 
+      _workspace = std::make_unique<RooWorkspace>("workspace", "workspace");
+      auto& ws = *_workspace;
+
       // observables
-      RooRealVar x("x", "x", 0.0, 0.0, 20.0);
+      auto& x = ws.emplace<RooRealVar>("x", "x", 0.0, 0.0, 20.0);
 
       // global observables, always constant in fits
-      RooRealVar gm("gm", "gm", 11.0, 0.0, 20.0);
-      RooRealVar gs("gs", "gs", 1.0, 0.1, 10.0);
+      auto& gm = ws.emplace<RooRealVar>("gm", "gm", 11.0, 0.0, 20.0);
+      auto& gs = ws.emplace<RooRealVar>("gs", "gs", 1.0, 0.1, 10.0);
       gm.setConstant(true);
       gs.setConstant(true);
 
       // constrained parameters
-      RooRealVar f("f", "f", 0.5, 0.0, 1.0);
-
-      // other parameters
-      RooRealVar m("m", "m", 10.0, 0.0, 20.0);
-      RooRealVar s("s", "s", 2.0, 0.1, 10.0);
+      auto& m = ws.emplace<RooRealVar>("m", "m", 10.0, 0.0, 20.0);
+      auto& s = ws.emplace<RooRealVar>("s", "s", 2.0, 0.1, 10.0);
 
       // We use the global observable also in the model for the event
       // observables. It's unusual, but let's better do this to also cover the
       // corner case where the global observable is not only part of the
       // constraint term.
-      RooProduct sigma{"sigma", "sigma", {s, gs}};
+      auto& sigma = ws.emplace<RooProduct>("sigma", "sigma", RooArgSet{s, gs});
 
       // build the unconstrained model
-      RooGaussian model("model", "model", x, m, sigma);
+      auto& model = ws.emplace<RooGaussian>("model", "model", x, m, sigma);
 
       // the constraint pdfs, they are RooPoisson so we can't have tests that accidentally
       // pass because of the symmetry of normalizing over x or mu
-      RooPoisson mconstraint("mconstraint", "mconstraint", gm, m);
-      RooPoisson sconstraint("sconstraint", "sconstraint", gs, s);
+      auto& mconstraint = ws.emplace<RooPoisson>("mconstraint", "mconstraint", gm, m);
+      auto& sconstraint = ws.emplace<RooPoisson>("sconstraint", "sconstraint", gs, s);
 
       // the model multiplied with the constraint term
-      RooProdPdf modelc("modelc", "modelc", RooArgSet(model, mconstraint, sconstraint));
+      ws.emplace<RooProdPdf>("modelc", "modelc", RooArgSet(model, mconstraint, sconstraint));
 
       // generate small dataset for use in fitting below, also cloned versions
       // with one or two global observables attached
@@ -92,9 +92,6 @@ public:
 
       _dataWithMeanGlob.reset(static_cast<RooDataSet *>(_data->Clone((std::string(_data->GetName()) + "_gm").c_str())));
       _dataWithMeanGlob->setGlobalObservables(gm);
-
-      _workspace = std::make_unique<RooWorkspace>("workspace", "workspace");
-      _workspace->import(modelc);
    }
 
    // reset the parameter values to initial values before fits
