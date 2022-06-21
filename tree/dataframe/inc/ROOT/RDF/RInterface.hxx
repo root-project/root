@@ -2604,7 +2604,7 @@ public:
       const auto col = fColRegister.ResolveAlias(std::string(column));
 
       RDFDetail::RDefineBase *define =
-         fColRegister.IsDefineOrAlias(col) ? fColRegister.GetColumns().at(col).get() : nullptr;
+         fColRegister.IsDefineOrAlias(col) ? fColRegister.GetDefines().at(col).get() : nullptr;
 
       const bool convertVector2RVec = true;
       return RDFInternal::ColumnName2ColumnTypeName(col, fLoopManager->GetTree(), fLoopManager->GetDataSource(), define,
@@ -2734,7 +2734,7 @@ public:
    {
       ColumnNames_t definedColumns;
 
-      auto columns = fColRegister.GetColumns();
+      auto columns = fColRegister.GetDefines();
 
       for (const auto &column : columns) {
          if (!RDFInternal::IsInternalColumn(column.first))
@@ -3344,7 +3344,7 @@ private:
 
          const auto &innerTypeID = typeid(RDFInternal::InnerValueType_t<RetType>);
 
-         const auto &definesMap = fColRegister.GetColumns();
+         const auto &definesMap = fColRegister.GetDefines();
          for (auto i = 0u; i < colTypes.size(); ++i) {
             const auto it = definesMap.find(colNames[i]);
             const auto &expectedTypeID =
@@ -3357,7 +3357,7 @@ private:
       } else { // we are varying a single column, RetType is RVec<T>
          const auto &retTypeID = typeid(typename RetType::value_type);
          const auto &colName = colNames[0]; // we have only one element in there
-         const auto &definesMap = fColRegister.GetColumns();
+         const auto &definesMap = fColRegister.GetDefines();
          const auto it = definesMap.find(colName);
          const auto &expectedTypeID =
             it == definesMap.end() ? RDFInternal::TypeName2TypeID(GetColumnType(colName)) : it->second->GetTypeId();
