@@ -23,11 +23,9 @@ class RooArgList;
 class RooAbsData;
 class RooArgSet;
 class RooAbsArg;
-class RooAbsReal;
 class RooAbsPdf;
 class RooDataHist;
 class RooDataSet;
-class RooRealVar;
 class RooRealVar;
 class RooWorkspace;
 
@@ -50,8 +48,8 @@ public:
    template <class T>
    T *request(const std::string &objname, const std::string &requestAuthor);
 
-   RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace{&ws} {}
-   RooWorkspace *workspace() { return _workspace; }
+   RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace{ws} {}
+   RooWorkspace *workspace() { return &_workspace; }
 
    static void error(const char *s) { throw std::runtime_error(s); }
    static void error(const std::string &s) { throw std::runtime_error(s); }
@@ -188,7 +186,7 @@ private:
    void append(RooFit::Detail::JSONNode &n, const std::string &elem);
 
    void exportAttributes(const RooAbsArg *arg, RooFit::Detail::JSONNode &n);
-   void exportVariable(const RooAbsReal *v, RooFit::Detail::JSONNode &n);
+   void exportVariable(const RooAbsArg *v, RooFit::Detail::JSONNode &n);
    void exportVariables(const RooArgSet &allElems, RooFit::Detail::JSONNode &n);
    void exportFunctions(const RooArgSet &allElems, RooFit::Detail::JSONNode &n);
 
@@ -199,6 +197,6 @@ private:
    // member variables
    const RooFit::Detail::JSONNode *_rootnode_input = nullptr;
    RooFit::Detail::JSONNode *_rootnode_output = nullptr;
-   RooWorkspace *_workspace;
+   RooWorkspace &_workspace;
 };
 #endif
