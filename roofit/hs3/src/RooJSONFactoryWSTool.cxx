@@ -272,7 +272,7 @@ inline void genIndicesHelper(std::vector<std::vector<int>> &combinations, std::v
    }
 }
 
-std::string containerName(RooAbsArg *elem)
+std::string containerName(RooAbsArg const *elem)
 {
    std::string contname = "functions";
    if (elem->InheritsFrom(RooAbsPdf::Class()))
@@ -546,32 +546,34 @@ void RooJSONFactoryWSTool::exportVariables(const RooArgSet &allElems, JSONNode &
    }
 }
 
-void RooJSONFactoryWSTool::exportObject(const RooAbsArg *func, JSONNode &n)
+JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
 {
+   auto &n = orootnode()[containerName(func)];
+   n.set_map();
+
    auto const &exporters = RooFit::JSONIO::exporters();
    auto const &exportKeys = RooFit::JSONIO::exportKeys();
 
    // if this element already exists, skip
    if (n.has_child(func->GetName()))
-      return;
+      return &n[func->GetName()];
 
    if (func->InheritsFrom(RooConstVar::Class()) &&
        strcmp(func->GetName(), TString::Format("%g", ((RooConstVar *)func)->getVal()).Data()) == 0) {
       // for RooConstVar, if name and value are the same, we don't need to do anything
-      return;
+      return nullptr;
    } else if (func->InheritsFrom(RooAbsCategory::Class())) {
       // categories are created by the respective RooSimultaneous, so we're skipping the export here
-      return;
+      return nullptr;
    } else if (func->InheritsFrom(RooRealVar::Class()) || func->InheritsFrom(RooConstVar::Class())) {
       // for variables, call the variable exporter
       exportVariable(func, n);
-      return;
+      return nullptr;
    }
 
    TClass *cl = TClass::GetClass(func->ClassName());
 
    auto it = exporters.find(cl);
-   bool ok = false;
    if (it != exporters.end()) { // check if we have a specific exporter available
       for (auto &exp : it->second) {
          try {
@@ -581,92 +583,79 @@ void RooJSONFactoryWSTool::exportObject(const RooAbsArg *func, JSONNode &n)
                continue;
             }
             if (exp->autoExportDependants()) {
-               RooJSONFactoryWSTool::exportDependants(func, &orootnode());
+               RooJSONFactoryWSTool::exportDependants(func);
             }
             RooJSONFactoryWSTool::exportAttributes(func, elem);
-            ok = true;
+            return &elem;
          } catch (const std::exception &ex) {
             std::cerr << "error exporting " << func->Class()->GetName() << " " << func->GetName() << ": " << ex.what()
                       << ". skipping." << std::endl;
-            return;
-         }
-         if (ok)
-            break;
-      }
-   }
-   if (!ok) { // generic export using the factory expressions
-      const auto &dict = exportKeys.find(cl);
-      if (dict == exportKeys.end()) {
-         std::cerr << "unable to export class '" << cl->GetName() << "' - no export keys available!" << std::endl;
-         std::cerr << "there are several possible reasons for this:" << std::endl;
-         std::cerr << " 1. " << cl->GetName() << " is a custom class that you or some package you are using added."
-                   << std::endl;
-         std::cerr << " 2. " << cl->GetName()
-                   << " is a ROOT class that nobody ever bothered to write a serialization definition for."
-                   << std::endl;
-         std::cerr << " 3. something is wrong with your setup, e.g. you might have called "
-                      "RooJSONFactoryWSTool::clearExportKeys() and/or never successfully read a file defining these "
-                      "keys with RooJSONFactoryWSTool::loadExportKeys(filename)"
-                   << std::endl;
-         std::cerr << "either way, please make sure that:" << std::endl;
-         std::cerr << " 3: you are reading a file with export keys - call RooJSONFactoryWSTool::printExportKeys() to "
-                      "see what is available"
-                   << std::endl;
-         std::cerr << " 2 & 1: you might need to write a serialization definition yourself. check "
-                      "https://github.com/root-project/root/blob/master/roofit/hs3/README.md to "
-                      "see how to do this!"
-                   << std::endl;
-         return;
-      }
-
-      RooJSONFactoryWSTool::exportDependants(func, &orootnode());
-
-      auto &elem = n[func->GetName()];
-      elem.set_map();
-      elem["type"] << dict->second.type;
-
-      size_t nprox = func->numProxies();
-      for (size_t i = 0; i < nprox; ++i) {
-         RooAbsProxy *p = func->getProxy(i);
-
-         std::string pname(p->name());
-         if (pname[0] == '!')
-            pname.erase(0, 1);
-
-         auto k = dict->second.proxies.find(pname);
-         if (k == dict->second.proxies.end()) {
-            std::cerr << "failed to find key matching proxy '" << pname << "' for type '" << dict->second.type
-                      << "', skipping" << std::endl;
-            return;
-         }
-
-         RooListProxy *l = dynamic_cast<RooListProxy *>(p);
-         if (l) {
-            auto &items = elem[k->second];
-            items.set_seq();
-            for (auto e : *l) {
-               items.append_child() << e->GetName();
-            }
-         }
-         RooRealProxy *r = dynamic_cast<RooRealProxy *>(p);
-         if (r) {
-            elem[k->second] << r->arg().GetName();
+            return nullptr;
          }
       }
-      RooJSONFactoryWSTool::exportAttributes(func, elem);
    }
-}
 
-void RooJSONFactoryWSTool::exportFunctions(const RooArgSet &allElems, JSONNode &n)
-{
-   // export a list of functions
-   // note: this function assumes that all the dependants of these objects have already been exported
-   for (auto *arg : allElems) {
-      RooAbsReal *func = dynamic_cast<RooAbsReal *>(arg);
-      if (!func)
-         continue;
-      RooJSONFactoryWSTool::exportObject(func, n);
+   // generic export using the factory expressions
+   const auto &dict = exportKeys.find(cl);
+   if (dict == exportKeys.end()) {
+      std::cerr << "unable to export class '" << cl->GetName() << "' - no export keys available!" << std::endl;
+      std::cerr << "there are several possible reasons for this:" << std::endl;
+      std::cerr << " 1. " << cl->GetName() << " is a custom class that you or some package you are using added."
+                << std::endl;
+      std::cerr << " 2. " << cl->GetName()
+                << " is a ROOT class that nobody ever bothered to write a serialization definition for." << std::endl;
+      std::cerr << " 3. something is wrong with your setup, e.g. you might have called "
+                   "RooJSONFactoryWSTool::clearExportKeys() and/or never successfully read a file defining these "
+                   "keys with RooJSONFactoryWSTool::loadExportKeys(filename)"
+                << std::endl;
+      std::cerr << "either way, please make sure that:" << std::endl;
+      std::cerr << " 3: you are reading a file with export keys - call RooJSONFactoryWSTool::printExportKeys() to "
+                   "see what is available"
+                << std::endl;
+      std::cerr << " 2 & 1: you might need to write a serialization definition yourself. check "
+                   "https://github.com/root-project/root/blob/master/roofit/hs3/README.md to "
+                   "see how to do this!"
+                << std::endl;
+      return nullptr;
    }
+
+   RooJSONFactoryWSTool::exportDependants(func);
+
+   auto &elem = n[func->GetName()];
+   elem.set_map();
+   elem["type"] << dict->second.type;
+
+   size_t nprox = func->numProxies();
+   for (size_t i = 0; i < nprox; ++i) {
+      RooAbsProxy *p = func->getProxy(i);
+
+      std::string pname(p->name());
+      if (pname[0] == '!')
+         pname.erase(0, 1);
+
+      auto k = dict->second.proxies.find(pname);
+      if (k == dict->second.proxies.end()) {
+         std::cerr << "failed to find key matching proxy '" << pname << "' for type '" << dict->second.type
+                   << "', skipping" << std::endl;
+         return nullptr;
+      }
+
+      RooListProxy *l = dynamic_cast<RooListProxy *>(p);
+      if (l) {
+         auto &items = elem[k->second];
+         items.set_seq();
+         for (auto e : *l) {
+            items.append_child() << e->GetName();
+         }
+      }
+      RooRealProxy *r = dynamic_cast<RooRealProxy *>(p);
+      if (r) {
+         elem[k->second] << r->arg().GetName();
+      }
+   }
+   RooJSONFactoryWSTool::exportAttributes(func, elem);
+
+   return &elem;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1224,24 +1213,12 @@ void RooJSONFactoryWSTool::configureVariable(const JSONNode &p, RooRealVar &v)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // export all dependants (servers) of a RooAbsArg
-void RooJSONFactoryWSTool::exportDependants(const RooAbsArg *source, JSONNode *n)
-{
-   if (n) {
-      this->exportDependants(source, *n);
-   } else {
-      RooJSONFactoryWSTool::error(
-         "cannot export dependents without a valid root node, only call within the context of 'exportAllObjects'");
-   }
-}
-
-void RooJSONFactoryWSTool::exportDependants(const RooAbsArg *source, JSONNode &n)
+void RooJSONFactoryWSTool::exportDependants(const RooAbsArg *source)
 {
    // export all the servers of a given RooAbsArg
    auto servers(source->servers());
    for (auto s : servers) {
-      auto &container = n[containerName(s)];
-      container.set_map();
-      this->exportObject(s, container);
+      this->exportObject(s);
    }
 }
 
@@ -1353,7 +1330,7 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       auto &pdfs = n["pdfs"];
       pdfs.set_map();
       RooAbsPdf *pdf = mc->GetPdf();
-      RooJSONFactoryWSTool::exportObject(pdf, pdfs);
+      RooJSONFactoryWSTool::exportObject(pdf);
       auto &node = pdfs[pdf->GetName()];
       node.set_map();
       auto &tags = node["tags"];
@@ -1367,7 +1344,7 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    for (const auto &pdf : toplevel) {
       auto &pdfs = n["pdfs"];
       pdfs.set_map();
-      RooJSONFactoryWSTool::exportObject(pdf, pdfs);
+      RooJSONFactoryWSTool::exportObject(pdf);
       auto &node = pdfs[pdf->GetName()];
       node.set_map();
       auto &tags = node["tags"];
