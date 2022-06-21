@@ -58,8 +58,7 @@ TEST(SumW2Error, BatchMode)
       dataSetWeighted.add(*dataSet->get(), 0.5);
    }
 
-   auto fit = [&](RooAbsData &data, bool sumw2 = false, bool batchmode = false, std::string const &minimizer = "Minuit",
-                  int printLevel = -1) {
+   auto fit = [&](RooAbsData &data, bool sumw2, bool batchmode, std::string const &minimizer, int printLevel = -1) {
       using namespace RooFit;
 
       resetParametersToInitialFitValues();

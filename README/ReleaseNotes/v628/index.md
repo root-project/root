@@ -85,6 +85,11 @@ Please use their non-experimental counterparts `ROOT::TBufferMerger` and `ROOT::
 
 ## RooFit Libraries
 
+### Consistent definition of the default minimizer type for all of RooFit/RooStats
+
+In previous releases, the default minimizer type that RooFit used was hardcoded to be the original `Minuit`, while RooStats used the default minimizer specified by `ROOT::Math::MinimizerOptions::DefaultMinimizerType()`. Now it is possible to centrally define the global minimizer for all RooFit libraries via `ROOT::Math::MinimizerOptions::SetDefaultMinimizer()`, or alternatively in the `.rootrc` file by adding for example `Root.Fitter: Minuit2` to select Minuit2.
+
+
 ### Code modernization by using `std::string` in RooFit interfaces
 
 The following lesser-used RooFit functions now return a `std::string` instead of a `const char*`, potentially requiring the update of your code:

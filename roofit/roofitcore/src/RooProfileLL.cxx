@@ -174,11 +174,6 @@ double RooProfileLL::evaluate() const
 
   _minimizer->zeroEvalCount() ;
 
-  //TString minim=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
-  //TString algorithm = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str();
-  //if (algorithm == "Migrad") algorithm = "Minimize"; // prefer to use Minimize instead of Migrad
-  //_minimizer->minimize(minim.Data(),algorithm.Data());
-
   _minimizer->migrad() ;
   _neval = _minimizer->evalCounter() ;
 
@@ -242,10 +237,6 @@ void RooProfileLL::validateAbsMin() const
     // Find minimum with all observables floating
     const_cast<RooSetProxy&>(_obs).setAttribAll("Constant",false) ;
 
-    //TString minim=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
-    //TString algorithm = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str();
-    //if (algorithm == "Migrad") algorithm = "Minimize"; // prefer to use Minimize instead of Migrad
-    //_minimizer->minimize(minim.Data(),algorithm.Data());
     _minimizer->migrad() ;
 
     // Save value and remember

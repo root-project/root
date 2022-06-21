@@ -373,7 +373,7 @@ double AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   co
        minim.setPrintLevel(minimPrintLevel-1);
        int status = -1;
        minim.optimizeConst(2);
-       TString minimizer = ROOT::Math::MinimizerOptions::DefaultMinimizerType();
+       TString minimizer = ""; // empty string to take RooMinimizer default initially
        TString algorithm = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo();
 
        if (verbose > 0 )
@@ -1277,10 +1277,9 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
       RooArgSet globalObs;
       if (model.GetGlobalObservables()) globalObs.add(*model.GetGlobalObservables());
 
-      std::string minimizerType = ROOT::Math::MinimizerOptions::DefaultMinimizerType();
       std::string minimizerAlgo = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo();
       std::vector<RooCmdArg> args;
-      args.push_back(RooFit::Minimizer(minimizerType.c_str(),minimizerAlgo.c_str()));
+      args.push_back(RooFit::Minimizer("",minimizerAlgo.c_str())); // empty mimimizer type to select default
       args.push_back(RooFit::Strategy(ROOT::Math::MinimizerOptions::DefaultStrategy()));
       args.push_back(RooFit::PrintLevel(minimPrintLevel-1));
       args.push_back(RooFit::Hesse(false));

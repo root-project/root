@@ -62,7 +62,7 @@ TEST(testRooFitDriver, SimpleLikelihoodFit)
 
       RooMinimizer minimizer(absReal);
       minimizer.setPrintLevel(-1);
-      minimizer.minimize("Minuit", "minuit");
+      minimizer.minimize("", "minuit");
       std::unique_ptr<RooFitResult> result(minimizer.save());
 
       std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();

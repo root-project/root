@@ -109,7 +109,6 @@ RooMinimizer::RooMinimizer(RooAbsReal &function, FcnMode fcnMode) : _fcnMode(fcn
    }
    case FcnMode::gradient: {
       _fcn = new RooGradMinimizerFcn(&function, this, _verbose);
-      setMinimizerType("Minuit2");
       break;
    }
    case FcnMode::generic_wrapper : {
@@ -141,6 +140,7 @@ RooMinimizer::RooMinimizer(std::shared_ptr<RooFit::TestStatistics::RooAbsL> like
 void RooMinimizer::initMinimizerFirstPart()
 {
    RooSentinel::activate();
+   setMinimizerType("");
 
    _theFitter = std::make_unique<ROOT::Fit::Fitter>();
    _theFitter->Config().SetMinimizer(_minimizerType.c_str());
@@ -258,13 +258,22 @@ void RooMinimizer::setOffsetting(bool flag)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Choose the minimizer algorithm.
+///
+/// Passing an empty string selects the default minimizer type returned by
+/// ROOT::Math::MinimizerOptions::DefaultMinimizerType().
 
-void RooMinimizer::setMinimizerType(const char* type)
+void RooMinimizer::setMinimizerType(std::string const& type)
 {
-  if (_fcnMode != FcnMode::classic && strcmp(type, "Minuit2") != 0) {
-    throw std::invalid_argument("In RooMinimizer::setMinimizerType: only Minuit2 is supported when not using classic function mode!");
+  _minimizerType = type.empty() ? ROOT::Math::MinimizerOptions::DefaultMinimizerType() : type;
+
+  if (_fcnMode != FcnMode::classic && _minimizerType != "Minuit2") {
+    std::stringstream ss;
+    ss << "In RooMinimizer::setMinimizerType: only Minuit2 is supported when not using classic function mode!";
+    if(type.empty()) {
+      ss << "\nPlease set it as your default minimizer via ROOT::Math::MinimizerOptions::SetDefaultMinimizer(\"Minuit2\").";
+    }
+    throw std::invalid_argument(ss.str());
   }
-  _minimizerType = type;
 }
 
 
@@ -295,7 +304,10 @@ bool RooMinimizer::fitFcn() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Minimise the function passed in the constructor.
-/// \param[in] type Type of fitter to use, e.g. "Minuit" "Minuit2".
+/// \param[in] type Type of fitter to use, e.g. "Minuit" "Minuit2". Passing an
+///                 empty string will select the default minimizer type of the
+///                 RooMinimizer, as returned by
+///                 ROOT::Math::MinimizerOptions::DefaultMinimizerType().
 /// \attention This overrides the default fitter of this RooMinimizer.
 /// \param[in] alg  Fit algorithm to use. (Optional)
 int RooMinimizer::minimize(const char* type, const char* alg)
@@ -303,7 +315,7 @@ int RooMinimizer::minimize(const char* type, const char* alg)
   _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
           _fcn->getOptConst(),_verbose) ;
 
-  _minimizerType = type;
+  setMinimizerType(type);
   _theFitter->Config().SetMinimizer(type,alg);
 
   profileStart() ;

@@ -185,7 +185,7 @@ public:
       int doSumW2 = -1;
       int doAsymptotic = -1;
       const RooArgSet* minosSet = nullptr;
-      std::string minType = "Minuit";
+      std::string minType;
       std::string minAlg = "minuit";
   };
   std::unique_ptr<RooFitResult> minimizeNLL(RooAbsReal & nll, RooAbsData const& data, MinimizerConfig const& cfg);
