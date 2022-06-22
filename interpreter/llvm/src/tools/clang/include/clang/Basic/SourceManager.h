@@ -205,7 +205,7 @@ public:
   /// \param Loc If specified, is the location that invalid file diagnostics
   ///   will be emitted at.
   llvm::Optional<llvm::MemoryBufferRef>
-  getBufferOrNone(DiagnosticsEngine &Diag, const SourceManager &FM,
+  getBufferOrNone(DiagnosticsEngine &Diag, FileManager &FM,
                   SourceLocation Loc = SourceLocation()) const;
 
   /// Returns the size of the content encapsulated by this
@@ -1013,7 +1013,7 @@ public:
   getBufferOrNone(FileID FID, SourceLocation Loc = SourceLocation()) const {
     if (auto *Entry = getSLocEntryForFile(FID))
       return Entry->getFile().getContentCache().getBufferOrNone(
-          Diag, *this, Loc);
+          Diag, getFileManager(), Loc);
     return None;
   }
 
