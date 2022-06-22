@@ -2008,7 +2008,7 @@ void ASTWriter::WriteSourceManagerBlock(SourceManager &SourceMgr,
         // that is required by llvm::MemoryBuffer::getMemBuffer (on
         // the reader side).
         llvm::Optional<llvm::MemoryBufferRef> Buffer =
-            Content->getBufferOrNone(PP.getDiagnostics(), PP.getSourceManager());
+            Content->getBufferOrNone(PP.getDiagnostics(), PP.getFileManager());
         StringRef Name = Buffer ? Buffer->getBufferIdentifier() : "";
         Stream.EmitRecordWithBlob(SLocBufferAbbrv, Record,
                                   StringRef(Name.data(), Name.size() + 1));
@@ -2022,7 +2022,7 @@ void ASTWriter::WriteSourceManagerBlock(SourceManager &SourceMgr,
         // Include the implicit terminating null character in the on-disk buffer
         // if we're writing it uncompressed.
         llvm::Optional<llvm::MemoryBufferRef> Buffer =
-            Content->getBufferOrNone(PP.getDiagnostics(), PP.getSourceManager());
+            Content->getBufferOrNone(PP.getDiagnostics(), PP.getFileManager());
         if (!Buffer)
           Buffer = llvm::MemoryBufferRef("<<<INVALID BUFFER>>>", "");
         StringRef Blob(Buffer->getBufferStart(), Buffer->getBufferSize() + 1);
