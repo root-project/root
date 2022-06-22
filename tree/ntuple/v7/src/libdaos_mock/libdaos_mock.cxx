@@ -331,6 +331,18 @@ int daos_eq_poll(daos_handle_t /*eqh*/, int /*wait_running*/, int64_t /*timeout*
    return nevents;
 }
 
+int daos_event_test(daos_event * /*ev*/, int64_t /*timeout*/, bool *flag)
+{
+   if (flag != nullptr)
+      *flag = true;
+   return 0;
+}
+
+int daos_event_parent_barrier(daos_event_t * /*ev*/)
+{
+   return 0;
+}
+
 int daos_event_init(daos_event_t * /*ev*/, daos_handle_t /*eqh*/, daos_event_t * /*parent*/)
 {
    return 0;
