@@ -121,9 +121,6 @@ public:
                                            fLoopManager->GetDataSource()};
       fValues[slot] = RDFInternal::MakeColumnReaders(slot, r, ColumnTypes_t{}, info, fVariation);
       fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = -1;
-
-      for (auto &e : fVariedDefines)
-         e.second->InitSlot(r, slot);
    }
 
    /// Return the (type-erased) address of the Define'd value for the given processing slot.

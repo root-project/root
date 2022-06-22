@@ -212,8 +212,6 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      for (auto &define : fColumnRegister.GetDefines())
-         define.second->InitSlot(r, slot);
       RColumnReadersInfo info{fInputColumns, fColumnRegister, fIsDefine.data(), fLoopManager->GetDSValuePtrs(),
                               fLoopManager->GetDataSource()};
       fValues[slot] = MakeColumnReaders(slot, r, ColumnTypes_t{}, info);
