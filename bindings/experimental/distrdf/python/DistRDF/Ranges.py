@@ -2,7 +2,9 @@ import logging
 
 from bisect import bisect_left
 from dataclasses import dataclass, field
+from itertools import accumulate
 from math import floor
+
 from typing import Dict, List, Optional, Tuple
 
 import ROOT
@@ -105,13 +107,6 @@ class TreeRange(DataRange):
 
     filenames: List of files to be processed with this range.
 
-    treesnentries: List of total number of entries relative to each tree in this
-        range.
-
-    localstarts: List of starting entries relative to each tree in this range.
-
-    localends: List of ending entries relative to each tree in this range.
-
     globalstart: Starting entry relative to the TChain made with the trees in
         this range.
 
@@ -126,9 +121,6 @@ class TreeRange(DataRange):
     id: int
     treenames: List[str]
     filenames: List[str]
-    treesnentries: List[int]
-    localstarts: List[int]
-    localends: List[int]
     globalstart: int
     globalend: int
     friendinfo: Optional[ROOT.Internal.TreeUtils.RFriendInfo]
@@ -143,8 +135,10 @@ class TreeRangePerc(DataRange):
     id: int
     treenames: List[str]
     filenames: List[str]
-    first_tree_start_perc: int
-    last_tree_end_perc: int
+    first_file_idx: int
+    last_file_idx: int
+    first_tree_start_perc: float
+    last_tree_end_perc: float
     friendinfo: Optional[ROOT.Internal.TreeUtils.RFriendInfo]
 
 
@@ -220,12 +214,6 @@ def get_percentage_ranges(treenames: List[str], filenames: List[str], npartition
         for file_index, perc in zip(files_of_percentages[1:], percentages_wrt_files[1:])
     ]
 
-    # With the indexes created above, we can partition the lists of names of
-    # files and trees. Each task will get a number of trees dictated by the
-    # starting index (inclusive) and the ending index (exclusive)
-    tasktreenames = [treenames[s:e] for s, e in zip(start_sample_idxs, end_sample_idxs)]
-    taskfilenames = [filenames[s:e] for s, e in zip(start_sample_idxs, end_sample_idxs)]
-
     # Compute the starting percentage of the first tree and the ending percentage
     # of the last tree in each task.
     first_tree_start_perc_tasks = percentages_wrt_files[:-1]
@@ -234,11 +222,91 @@ def get_percentage_ranges(treenames: List[str], filenames: List[str], npartition
     # thus we set it to one.
     last_tree_end_perc_tasks = [perc if perc > 0 else 1 for perc in percentages_wrt_files[1:]]
 
-    return [
-        TreeRangePerc(rangeid, tasktreenames[rangeid], taskfilenames[rangeid],
-                      first_tree_start_perc_tasks[rangeid], last_tree_end_perc_tasks[rangeid], friendinfo)
-        for rangeid in range(npartitions)
-    ]
+    if friendinfo is not None:
+        # We need to transmit the full list of treenames and filenames to each
+        # task, in order to properly align the full dataset considering friends.
+        return [
+            TreeRangePerc(rangeid, treenames, filenames, start_sample_idxs[rangeid], end_sample_idxs[rangeid],
+                          first_tree_start_perc_tasks[rangeid], last_tree_end_perc_tasks[rangeid], friendinfo)
+            for rangeid in range(npartitions)
+        ]
+    else:
+        # With the indexes created above, we can partition the lists of names of
+        # files and trees. Each task will get a number of trees dictated by the
+        # starting index (inclusive) and the ending index (exclusive) computed
+        # from the full list of filenames.
+        tasktreenames = [treenames[s:e] for s, e in zip(start_sample_idxs, end_sample_idxs)]
+        taskfilenames = [filenames[s:e] for s, e in zip(start_sample_idxs, end_sample_idxs)]
+        # On the other hand, when creating the TreeRangePerc tasks below, the
+        # starting and ending indexes have to be task-local. In practice, the
+        # task always starts from file index 0 and it always ends at file index
+        # equal to the number of files assigned to that task.
+        return [
+            TreeRangePerc(
+                rangeid, tasktreenames[rangeid], taskfilenames[rangeid], 0, len(taskfilenames[rangeid]),
+                first_tree_start_perc_tasks[rangeid], last_tree_end_perc_tasks[rangeid], friendinfo
+            )
+            for rangeid in range(npartitions)
+        ]
+
+
+def get_entryrange_at_cluster_boundaries(percstart: float, percend: float,
+                                         entries: int, clusters: List[int]) -> Tuple[int, int, int]:
+    """
+    Computes the pair (start, end) entries of this tree, aligned at cluster
+    boundaries.
+
+    Args:
+        percstart: Starting percentage of the tree to be considered.
+
+        percend: Ending percentage of the tree to be considered.
+
+        entries: Total entries in this tree.
+
+        clusters: List of cluster boundaries in this tree. It is important that
+        both the start entry of the first cluster (0) as well as the end entry
+        of the last cluster (i.e. entries) are included in the list. For example,
+        in a tree with 100 entries and 10 clusters it could look like this:
+        [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+
+    Returns:
+        A tuple of three elements:
+            1. The starting entry in this tree aligned at the corresponding
+               cluster boundary.
+            2. The ending entry in this tree aligned at the corresponding
+               cluster boundary.
+            3. A number representing the entries that should be discarded after
+               computing the clusters corresponding to the input percentages.
+               This number is either 0 or the number of entries in the tree if
+               the computed start and end cluster indexes are the same.
+    """
+
+    startentry = int(percstart * entries)
+    endentry = int(percend * entries)
+    # Find the corresponding clusters for the above values.
+    # The startcluster index is inclusive. bisect_left returns the index
+    # corresponding to the correct starting cluster only if startentry is
+    # exactly at the cluster boundary. The endcluster index is exclusive.
+    # This logic relies on the specific representation of the list of
+    # clusters that includes the initial entry (0) as well as the last
+    # cluster boundary.
+    # Examples:
+    # cluster 1: [10, 20]
+    # cluster 2: [20, 30]
+    # startentry = 10, endentry = 13 --> startcluster = 1, endcluster = 2
+    # startentry = 13, endentry = 16 --> startcluster = 2, endcluster = 2
+    # startentry = 16, endentry = 19 --> startcluster = 2, endcluster = 2
+    # startentry = 19, endentry = 22 --> startcluster = 2, endcluster = 3
+    startcluster = bisect_left(clusters, startentry)
+    endcluster = bisect_left(clusters, endentry)
+
+    # Avoid creating tasks that will do nothing
+    entries_to_discard = entries if startcluster == endcluster else 0
+
+    tree_startentry_at_cluster_boundary = clusters[startcluster]
+    tree_endentry_at_cluster_boundary = clusters[endcluster]
+
+    return tree_startentry_at_cluster_boundary, tree_endentry_at_cluster_boundary, entries_to_discard
 
 
 def get_clustered_range_from_percs(percrange: TreeRangePerc) -> Tuple[Optional[TreeRange], TaskTreeEntries]:
@@ -247,122 +315,81 @@ def get_clustered_range_from_percs(percrange: TreeRangePerc) -> Tuple[Optional[T
     in a distributed task.
     """
 
-    treenames: List[str] = []
-    filenames: List[str] = []
-    treesnentries: List[int] = []
-    localstarts: List[int] = []
-    localends: List[int] = []
+    # first file index is inclusive
+    first_file_idx = percrange.first_file_idx
+    # last file index is exclusive
+    last_file_idx = percrange.last_file_idx
 
-    # Accumulate entries seen so far in the chain of this task, for:
-    # - Deciding whether this task has anything to do (zero entries means empty task).
-    # - Computing the ending entry w.r.t. the chain of this task.
-    chain_entries_so_far: int = 0
+    # Retrieve information from the trees assigned to this task. In case there
+    # are friends, all files in the dataset are opened and their number of
+    # entries are retrieved in order to ensure friend alignment.
+    all_clusters_entries = (
+        get_clusters_and_entries(treename, filename)
+        for treename, filename in zip(percrange.treenames, percrange.filenames)
+    )
+    all_clusters, all_entries = zip(*all_clusters_entries)
+    # Computing the offset of each tree is a cumulative sum over the entries in
+    # the dataset. The initial offset is zero, so we define it in the following
+    # tuple, since the 'accumulate' function does not accept an 'initial'
+    # keyword argument until Python 3.8. In general, the offsets should be
+    # lagging behind the list of tree entries by one, like so:
+    # entries = [10, 10, 10, 10]
+    # offsets = [0, 10, 20, 30]
+    initial = (0,)
+    all_offsets = tuple(accumulate(initial+all_entries[:-1]))
 
-    nfiles = len(percrange.filenames)
+    # Connect each tree in each file with its number of entries
+    trees_with_entries: Dict[str, int] = {
+        filename + "?#" + treename: entries
+        for filename, treename, entries
+        in zip(
+            percrange.filenames[first_file_idx:last_file_idx],
+            percrange.treenames[first_file_idx:last_file_idx],
+            all_entries[first_file_idx:last_file_idx]
+        )
+    }
 
-    # The starting entry w.r.t. to the chain created in this task. It is always
-    # zero, except if the first file in the list contributes to the task and it
-    # doesn't also start from zero.
-    globalstart = 0
+    # Compute the pair (start, end) entries aligned to cluster boundaries of the
+    # first and last tree in this task. These will be used to compute the
+    # globalstart and globalend values. If the computed starting cluster is
+    # equal to the ending cluster of a particular tree, it means that tree
+    # should not be processed.
+    if (last_file_idx - first_file_idx) == 1:
+        # Compute only once if there is only one file
+        first_tree_startentry, last_tree_endentry, first_tree_entries_to_discard = get_entryrange_at_cluster_boundaries(
+            percrange.first_tree_start_perc, percrange.last_tree_end_perc,
+            all_entries[first_file_idx], all_clusters[first_file_idx]
+        )
+        entries_to_discard = first_tree_entries_to_discard
+    else:
+        first_tree_startentry, _, first_tree_entries_to_discard = get_entryrange_at_cluster_boundaries(
+            percrange.first_tree_start_perc, 1, all_entries[first_file_idx], all_clusters[first_file_idx]
+        )
+        _, last_tree_endentry, last_tree_entries_to_discard = get_entryrange_at_cluster_boundaries(
+            0, percrange.last_tree_end_perc, all_entries[last_file_idx-1], all_clusters[last_file_idx-1]
+        )
+        entries_to_discard = first_tree_entries_to_discard + last_tree_entries_to_discard
 
-    # Lists of (start, end) percentages to be considered for each tree. The
-    # first starting percentage and the last ending percentage are stored in the
-    # input percrange object.
-    treepercstarts: List[int] = [0] * nfiles
-    treepercends: List[int] = [1] * nfiles
-    treepercstarts[0] = percrange.first_tree_start_perc
-    treepercends[-1] = percrange.last_tree_end_perc
+    # The number of entries of the trees that actually contribute to this task.
+    # It is equal to the sum of all entries of the trees that were assigned,
+    # eventually minus the entries of the trees that should be discarded
+    # according to the computation above.
+    total_entries_in_task_chain = sum(all_entries[first_file_idx:last_file_idx]) - entries_to_discard
 
-    # Entries in the last tree of this task that is actually processed (i.e.
-    # that is not empty).
-    last_available_entries: int = 0
-
-    # How many entries are in each tree that was assigned in this task.
-    trees_with_entries: Dict[str, int] = {}
-
-    for file_n, (treename, filename, thistreepercstart, thistreepercend) in enumerate(
-            zip(percrange.treenames, percrange.filenames, treepercstarts, treepercends)):
-
-        # clusters list contains cluster boundaries of the current file, e.g.:
-        # It is important that both the initial entry (0) as well as the last
-        # cluster boundary are included in the list. Example:
-        # [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-        clusters, entries = get_clusters_and_entries(treename, filename)
-
-        fullpath = filename + "?#" + treename
-        trees_with_entries[fullpath] = entries
-
-        if entries == 0:
-            # The tree is empty.
-            continue
-
-        # Estimate starting and ending entries that this task has to process
-        # in this tree.
-        startentry = int(thistreepercstart * entries)
-        endentry = int(thistreepercend * entries)
-
-        # Find the corresponding clusters for the above values.
-        # The startcluster index is inclusive. bisect_left returns the index
-        # corresponding to the correct starting cluster only if startentry is
-        # exactly at the cluster boundary. The endcluster index is exclusive.
-        # This logic relies on the specific representation of the list of
-        # clusters that includes the initial entry (0) as well as the last
-        # cluster boundary.
-        # Examples:
-        # cluster 1: [10, 20]
-        # cluster 2: [20, 30]
-        # startentry = 10, endentry = 13 --> startcluster = 1, endcluster = 2
-        # startentry = 13, endentry = 16 --> startcluster = 2, endcluster = 2
-        # startentry = 16, endentry = 19 --> startcluster = 2, endcluster = 2
-        # startentry = 19, endentry = 22 --> startcluster = 2, endcluster = 3
-        startcluster = bisect_left(clusters, startentry)
-        endcluster = bisect_left(clusters, endentry)
-        # Avoid creating tasks that will do nothing
-        if startcluster == endcluster:
-            continue
-
-        tree_startentry_at_cluster_boundary = clusters[startcluster]
-        tree_endentry_at_cluster_boundary = clusters[endcluster]
-
-        treenames.append(treename)
-        filenames.append(filename)
-        treesnentries.append(entries)
-
-        localstarts.append(tree_startentry_at_cluster_boundary)
-        localends.append(tree_endentry_at_cluster_boundary)
-
-        if file_n == 0:
-            # If we reach this point with the first file in the list, then
-            # compute the starting entry global w.r.t. the chain created in this
-            # task. It corresponds to the starting entry of the first cluster
-            # considered for the tree contained in this file.
-            globalstart = tree_startentry_at_cluster_boundary
-
-        chain_entries_so_far += entries
-        last_available_entries = entries
-
-    if chain_entries_so_far == 0:
-        # No chain should be constructed in this task. This can happen:
+    if total_entries_in_task_chain == 0:
+        # This is an empty task. This can happen:
         # - If all trees assigned to this task are empty.
         # - If the computed starting cluster is equal to the ending cluster.
         # These would effectively lead to creating a TChain with zero usable
         # entries.
-        return None, TaskTreeEntries()
+        return None, TaskTreeEntries(0, trees_with_entries)
 
-    # The ending entry w.r.t. the chain of this task is defined as:
-    # The total amount of entries in the chain minus the entries of the last tree
-    # in the chain plus the ending entry of the last cluster considered for the
-    # same tree. We need the first difference to put ourselves at the beginning
-    # of the last tree, then just adding up how many entries are actually
-    # processed in that tree.
-    globalend = chain_entries_so_far - last_available_entries + tree_endentry_at_cluster_boundary
+    globalstart = all_offsets[first_file_idx] + first_tree_startentry
+    globalend = all_offsets[last_file_idx-1] + last_tree_endentry
 
-    # Store information about entries of the trees in this task and
-    # the actual amount of entries that will be processed.
-    processed_entries = globalend - globalstart
-    entries_in_trees = TaskTreeEntries(processed_entries, trees_with_entries)
+    entries_in_trees = TaskTreeEntries(globalend - globalstart, trees_with_entries)
 
-    treerange = TreeRange(percrange.id, treenames, filenames, treesnentries, localstarts,
-                          localends, globalstart, globalend, percrange.friendinfo)
+    treerange = TreeRange(percrange.id, percrange.treenames, percrange.filenames,
+                            globalstart, globalend, percrange.friendinfo)
 
     return treerange, entries_in_trees
