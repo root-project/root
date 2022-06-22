@@ -83,15 +83,15 @@ public:
    ~RColumnRegister();
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Returns the list of the names of the defined columns (Defines + Aliases).
+   /// \brief Return the list of the names of the defined columns (Defines + Aliases).
    ColumnNames_t GetNames() const { return *fColumnNames; }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Returns a map of pointers to the defined columns.
+   /// \brief Return a map of pointers to the defined columns.
    const DefinesMap_t &GetDefines() const { return *fDefines; }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Returns the multimap of systematic variations, see fVariations.
+   /// \brief Return the multimap of systematic variations, see fVariations.
    const VariationsMap_t &GetVariations() const { return *fVariations; }
 
    ////////////////////////////////////////////////////////////////////////////
