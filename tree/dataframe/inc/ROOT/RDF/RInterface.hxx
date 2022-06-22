@@ -477,7 +477,7 @@ public:
                                                      fLoopManager->GetBranchNames(), upcastNodeOnHeap);
 
       RDFInternal::RColumnRegister newCols(fColRegister);
-      newCols.AddDefine(jittedDefine);
+      newCols.AddDefine(std::move(jittedDefine));
 
       RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
 
@@ -567,7 +567,7 @@ public:
                                                      fLoopManager->GetBranchNames(), upcastNodeOnHeap);
 
       RDFInternal::RColumnRegister newCols(fColRegister);
-      newCols.AddDefine(jittedDefine);
+      newCols.AddDefine(std::move(jittedDefine));
 
       RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
 
@@ -687,7 +687,7 @@ public:
       fLoopManager->AddSampleCallback(std::move(updateDefinePerSample));
 
       RDFInternal::RColumnRegister newCols(fColRegister);
-      newCols.AddDefine(jittedDefine);
+      newCols.AddDefine(std::move(jittedDefine));
 
       RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
 
@@ -798,7 +798,7 @@ public:
          validColumnNames);
 
       RDFInternal::RColumnRegister newCols(fColRegister);
-      newCols.AddVariation(variation);
+      newCols.AddVariation(std::move(variation));
 
       RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
 
@@ -3089,7 +3089,7 @@ private:
 
       auto entryColumn = std::make_shared<NewColEntry_t>(entryColName, entryColType, std::move(entryColGen),
                                                          ColumnNames_t{}, fColRegister, *fLoopManager);
-      fColRegister.AddDefine(entryColumn);
+      fColRegister.AddDefine(std::move(entryColumn));
 
       // Slot number column
       const std::string slotColName = "rdfslot_";
@@ -3099,7 +3099,7 @@ private:
 
       auto slotColumn = std::make_shared<NewColSlot_t>(slotColName, slotColType, std::move(slotColGen), ColumnNames_t{},
                                                        fColRegister, *fLoopManager);
-      fColRegister.AddDefine(slotColumn);
+      fColRegister.AddDefine(std::move(slotColumn));
 
       fColRegister.AddAlias("tdfentry_", entryColName);
       fColRegister.AddAlias("tdfslot_", slotColName);
@@ -3221,7 +3221,7 @@ private:
                                                   fColRegister, *fLoopManager);
 
       RDFInternal::RColumnRegister newCols(fColRegister);
-      newCols.AddDefine(newColumn);
+      newCols.AddDefine(std::move(newColumn));
 
       RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
 

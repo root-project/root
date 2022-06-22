@@ -41,18 +41,18 @@ bool RColumnRegister::IsDefineOrAlias(std::string_view name) const
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Add a new defined column.
 /// Internally it recreates the map with the new column, and swaps it with the old one.
-void RColumnRegister::AddDefine(const std::shared_ptr<RDFDetail::RDefineBase> &column)
+void RColumnRegister::AddDefine(std::shared_ptr<RDFDetail::RDefineBase> column)
 {
    auto newDefines = std::make_shared<DefinesMap_t>(*fDefines);
    const std::string &colName = column->GetName();
-   (*newDefines)[colName] = column;
+   (*newDefines)[colName] = std::move(column);
    fDefines = std::move(newDefines);
    AddName(colName);
 }
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Register a new systematic variation.
-void RColumnRegister::AddVariation(const std::shared_ptr<RVariationBase> &variation)
+void RColumnRegister::AddVariation(std::shared_ptr<RVariationBase> variation)
 {
    auto newVariations = std::make_shared<VariationsMap_t>(*fVariations);
    const std::vector<std::string> &colNames = variation->GetColumnNames();
