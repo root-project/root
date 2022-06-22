@@ -3236,7 +3236,7 @@ Bool_t TCling::IsLoaded(const char* filename) const
          return kFALSE;
       else {
          clang::SrcMgr::SLocEntry SLocE = SM.getSLocEntry(FID);
-         if (SLocE.isFile() && SLocE.getFile().getContentCache().getBufferDataIfLoaded())
+         if (SLocE.isFile() && !SLocE.getFile().getContentCache().getBufferIfLoaded())
             return kFALSE;
          if (!FID.isInvalid())
             return kTRUE;
