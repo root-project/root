@@ -89,12 +89,10 @@ void PopulateWindowMenu(NSMenu *aMenu)
 {
    assert(aMenu != nil && "PopulateWindowMenu, aMenu parameter is nil");
 
-   NSMenuItem *menuItem = [aMenu addItemWithTitle : NSLocalizedString(@"Minimize", nil)
-                           action : @selector(performMinimize:) keyEquivalent : @"m"];
-   menuItem = [aMenu addItemWithTitle : NSLocalizedString(@"Zoom", nil)
+   [aMenu addItemWithTitle : NSLocalizedString(@"Zoom", nil)
                action : @selector(performZoom:) keyEquivalent : @""];
    [aMenu addItem : [NSMenuItem separatorItem]];
-   menuItem = [aMenu addItemWithTitle : NSLocalizedString(@"Bring All to Front", nil)
+   [aMenu addItemWithTitle : NSLocalizedString(@"Bring All to Front", nil)
                action : @selector(arrangeInFront:) keyEquivalent : @""];
 }
 
