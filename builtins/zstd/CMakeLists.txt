@@ -91,7 +91,7 @@ set_target_properties(zstd PROPERTIES COMPILE_DEFINITIONS "ZSTD_HEAPMODE=0;_CRT_
 target_include_directories(zstd PRIVATE ${ZSTD_INCLUDE_DIR} INTERFACE $<BUILD_INTERFACE:${ZSTD_INCLUDE_DIR}>)
 target_link_libraries(zstd PRIVATE xxHash::xxHash)
 if(NOT MSVC)
-  target_compile_options(zstd PRIVATE -fPIC -Wno-unused-variable -O3)
+  target_compile_options(zstd PRIVATE -fPIC -w -O3)
 endif()
 add_library(ZSTD::ZSTD ALIAS zstd)
 
