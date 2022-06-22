@@ -28,18 +28,53 @@ this is not possible with non-parametric PDFs.
 The RooParametricStepFunction has Nbins-1 free parameters. Note that
 the limits of the dependent variable must match the low and hi bin limits.
 
-An example of usage is:
+Here is an example showing how to use the RooParametricStepFunction to fit toy
+data generated from a uniform distribution:
 
 ~~~ {.cpp}
-Int_t nbins(10);
-TArrayD limits(nbins+1);
-limits[0] = 0.0; //etc...
-RooArgList* list = new RooArgList("list");
-RooRealVar* binHeight0 = new RooRealVar("binHeight0","bin 0 Value",0.1,0.0,1.0);
-list->add(binHeight0); // up to binHeight8, ie. 9 parameters
+// Define some constant parameters
+const int nBins = 10;
+const double xMin = 0.0;
+const double xMax = 10.0;
+const double binWidth = (xMax - xMin) / nBins;
+const std::size_t nEvents = 10000;
 
-RooParametricStepFunction  aPdf = ("aPdf","PSF",*x,
-                                   *list,limits,nbins);
+// Fill the bin boundaries
+std::vector<double> binBoundaries(nBins + 1);
+
+for(int i = 0; i <= nBins; ++i) {
+  binBoundaries[i] = i * binWidth;
+}
+
+// The RooParametricStepFunction needs a TArrayD
+TArrayD binBoundariesTArr{int(binBoundaries.size()), binBoundaries.data()};
+
+RooRealVar x{"x", "x", xMin, xMax};
+
+// There are nBins-1 free coefficient parameters, whose sum must be <= 1.0.
+// We all set them to 0.1, such that the resulting step function pdf is
+// initially uniform.
+RooArgList coefList;
+for(int i = 0; i < nBins - 1; ++i) {
+  auto name = std::string("coef_") + std::to_string(i);
+  coefList.addOwned(std::make_unique<RooRealVar>(name.c_str(), name.c_str(), 0.1, 0.0, 1.0));
+}
+
+// Create the RooParametricStepFunction pdf
+RooParametricStepFunction pdf{"pdf", "pdf", x, coefList, binBoundariesTArr, int(nBins)};
+
+// Generate some toy data, following our uniform step function pdf
+std::unique_ptr<RooAbsData> data{pdf.generate(x, nEvents)};
+
+// Fit the step function to the toy data
+pdf.fitTo(*data);
+
+// Now we plot the data and the pdf, the latter should not be uniform
+// anymore because the coefficients were fit to the toy data
+RooPlot *xframe = x.frame(RooFit::Title("Fitting uniform toy data with a step function p.d.f."));
+data->plotOn(xframe);
+pdf.plotOn(xframe);
+xframe->Draw();
 ~~~
 */
 
@@ -53,8 +88,6 @@ RooParametricStepFunction  aPdf = ("aPdf","PSF",*x,
 #include "RooArgList.h"
 
 #include "TError.h"
-
-using namespace std;
 
 ClassImp(RooParametricStepFunction);
 
@@ -71,15 +104,15 @@ RooParametricStepFunction::RooParametricStepFunction(const char* name, const cha
 
   // Check lowest order
   if (_nBins<0) {
-    cout << "RooParametricStepFunction::ctor(" << GetName()
-    << ") WARNING: nBins must be >=0, setting value to 0" << endl ;
+    std::cout << "RooParametricStepFunction::ctor(" << GetName()
+              << ") WARNING: nBins must be >=0, setting value to 0" << std::endl ;
     _nBins=0 ;
   }
 
   for (auto *coef : coefList) {
     if (!dynamic_cast<RooAbsReal*>(coef)) {
-      cout << "RooParametricStepFunction::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName()
-      << " is not of type RooAbsReal" << endl ;
+      std::cout << "RooParametricStepFunction::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName()
+                << " is not of type RooAbsReal" << std::endl ;
       R__ASSERT(0) ;
     }
     _coefList.add(*coef) ;
@@ -204,17 +237,4 @@ double RooParametricStepFunction::evaluate() const
   }
   return value;
 
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-Int_t RooParametricStepFunction::getnBins(){
-  return _nBins;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-double* RooParametricStepFunction::getLimits(){
-  double* limoutput = _limits.GetArray();
-  return limoutput;
 }
