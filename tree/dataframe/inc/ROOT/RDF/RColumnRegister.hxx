@@ -90,7 +90,7 @@ public:
 
    bool IsDefineOrAlias(std::string_view name) const;
 
-   void AddDefine(const std::shared_ptr<RDFDetail::RDefineBase> &column);
+   void AddDefine(std::shared_ptr<RDFDetail::RDefineBase> column);
 
    void AddAlias(std::string_view alias, std::string_view colName);
 
@@ -98,7 +98,7 @@ public:
 
    std::string ResolveAlias(std::string_view alias) const;
 
-   void AddVariation(const std::shared_ptr<RVariationBase> &variation);
+   void AddVariation(std::shared_ptr<RVariationBase> variation);
 
    std::vector<std::string> GetVariationsFor(const std::string &column) const;
 
