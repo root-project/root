@@ -96,6 +96,8 @@ int daos_eq_create(daos_handle_t *eqh);
 int daos_eq_destroy(daos_handle_t eqh, int flags);
 int daos_eq_poll(daos_handle_t eqh, int wait_running, int64_t timeout, unsigned int nevents, daos_event_t **events);
 
+int daos_event_test(daos_event_t *ev, int64_t timeout, bool *flag);
+int daos_event_parent_barrier(daos_event_t *ev);
 int daos_event_init(daos_event_t *ev, daos_handle_t eqh, daos_event_t *parent);
 int daos_event_fini(daos_event_t *ev);
 
