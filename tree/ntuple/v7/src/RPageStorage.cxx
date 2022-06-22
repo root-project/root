@@ -338,7 +338,7 @@ void ROOT::Experimental::Detail::RPageSink::CommitSealedPage(
 }
 
 std::vector<ROOT::Experimental::RNTupleLocator>
-ROOT::Experimental::Detail::RPageSink::CommitSealedPagesImpl(const std::vector<RPageStorage::RSealedPageRange> &ranges)
+ROOT::Experimental::Detail::RPageSink::CommitSealedPageVImpl(const std::vector<RPageStorage::RSealedPageGroup> &ranges)
 {
    std::vector<ROOT::Experimental::RNTupleLocator> locators;
    for (auto &range : ranges) {
@@ -348,9 +348,9 @@ ROOT::Experimental::Detail::RPageSink::CommitSealedPagesImpl(const std::vector<R
    return locators;
 }
 
-void ROOT::Experimental::Detail::RPageSink::CommitSealedPages(const std::vector<RPageStorage::RSealedPageRange> &ranges)
+void ROOT::Experimental::Detail::RPageSink::CommitSealedPageV(const std::vector<RPageStorage::RSealedPageGroup> &ranges)
 {
-   auto locators = CommitSealedPagesImpl(ranges);
+   auto locators = CommitSealedPageVImpl(ranges);
    unsigned i = 0;
 
    for (auto &range : ranges) {
