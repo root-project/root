@@ -46,15 +46,6 @@ class RColumnRegister {
    /// See fVariations for more information on this type.
    using VariationsMap_t = std::unordered_multimap<std::string, std::shared_ptr<RVariationBase>>;
 
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Add a new name to the list returned by `GetNames` without booking a new column.
-   ///
-   /// This is needed because we abuse fColumnNames to also keep track of the aliases defined
-   /// in each branch of the computation graph.
-   /// Internally it recreates the vector with the new name, and swaps it with the old one.
-   void AddName(std::string_view name);
-
-private:
    std::shared_ptr<RDFDetail::RLoopManager> fLoopManager;
 
    /// Immutable map of Defines, can be shared among several nodes.
@@ -68,6 +59,14 @@ private:
    /// As a consequence, Variations that affect multiple columns are inserted multiple times, once per column.
    std::shared_ptr<const VariationsMap_t> fVariations;
    std::shared_ptr<const ColumnNames_t> fColumnNames; ///< Names of Defines and Aliases registered so far.
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Add a new name to the list returned by `GetNames` without booking a new column.
+   ///
+   /// This is needed because we abuse fColumnNames to also keep track of the aliases defined
+   /// in each branch of the computation graph.
+   /// Internally it recreates the vector with the new name, and swaps it with the old one.
+   void AddName(std::string_view name);
 
 public:
    RColumnRegister(const RColumnRegister &) = default;
