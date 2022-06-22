@@ -709,8 +709,15 @@ void TGraph::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double
       xmin = xmax = ymin = ymax = 0;
       return;
    }
-   xmin = xmax = fX[0];
-   ymin = ymax = fY[0];
+   if (fHistogram) {
+      xmin = fHistogram->GetXaxis()->GetXmin();
+      xmax = fHistogram->GetXaxis()->GetXmax();
+      ymin = fHistogram->GetYaxis()->GetXmin();
+      ymax = fHistogram->GetYaxis()->GetXmax();
+   } else {
+      xmin = xmax = fX[0];
+      ymin = ymax = fY[0];
+   }
 
    Double_t xminl = 0; // Positive minimum. Used in case of log scale along X axis.
    Double_t yminl = 0; // Positive minimum. Used in case of log scale along Y axis.
