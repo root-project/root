@@ -60,12 +60,6 @@ class RColumnRegister {
    std::shared_ptr<const VariationsMap_t> fVariations;
    std::shared_ptr<const ColumnNames_t> fColumnNames; ///< Names of Defines and Aliases registered so far.
 
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Add a new name to the list returned by `GetNames` without booking a new column.
-   ///
-   /// This is needed because we abuse fColumnNames to also keep track of the aliases defined
-   /// in each branch of the computation graph.
-   /// Internally it recreates the vector with the new name, and swaps it with the old one.
    void AddName(std::string_view name);
 
 public:
@@ -93,52 +87,24 @@ public:
    /// \brief Return the multimap of systematic variations, see fVariations.
    const VariationsMap_t &GetVariations() const { return *fVariations; }
 
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Check if the provided name is tracked in the names list
    bool IsDefineOrAlias(std::string_view name) const;
 
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Add a new defined column.
-   /// Internally it recreates the map with the new column, and swaps it with the old one.
    void AddDefine(const std::shared_ptr<RDFDetail::RDefineBase> &column);
 
-   /// \brief Add a new alias to the ledger.
    void AddAlias(std::string_view alias, std::string_view colName);
 
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return true if the given column name is an existing alias.
    bool IsAlias(const std::string &name) const;
 
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return the actual column name that the alias resolves to.
-   /// Drills through multiple levels of aliasing if needed.
-   /// Returns the input in case it's not an alias.
-   /// Expands `#%var` to `R_rdf_sizeof_var` (the #%var columns are implicitly-defined aliases).
    std::string ResolveAlias(std::string_view alias) const;
 
-   /// \brief Register a new systematic variation.
    void AddVariation(const std::shared_ptr<RVariationBase> &variation);
 
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Get the names of the variations that directly provide alternative values for this column.
    std::vector<std::string> GetVariationsFor(const std::string &column) const;
 
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Get the names of all variations that directly or indirectly affect a given column.
-   ///
-   /// This list includes variations applied to the column as well as variations applied to other
-   /// columns on which the value of this column depends (typically via a Define expression).
    std::vector<std::string> GetVariationDeps(const std::string &column) const;
 
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Get the names of all variations that directly or indirectly affect the specified columns.
-   ///
-   /// This list includes variations applied to the columns as well as variations applied to other
-   /// columns on which the value of any of these columns depend (typically via Define expressions).
    std::vector<std::string> GetVariationDeps(const ColumnNames_t &columns) const;
 
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return the RVariation object that handles the specified variation of the specified column.
    RVariationBase &FindVariation(const std::string &colName, const std::string &variationName) const;
 };
 
