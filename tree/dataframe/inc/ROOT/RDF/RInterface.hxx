@@ -647,8 +647,8 @@ public:
    ///
    /// ### Example usage:
    /// ~~~{.py}
-   /// df = ROOT.RDataFrame("mytree", ["sample1.root","sample2.root"])
-   /// df.DefinePerSample("weightbysample", "rdfsampleinfo_.Contains('sample1') ? 1.0f : 2.0f")
+   /// df = ROOT.RDataFrame('mytree', ['sample1.root','sample2.root'])
+   /// df.DefinePerSample('weightbysample', 'rdfsampleinfo_.Contains("sample1") ? 1.0f : 2.0f')
    /// ~~~
    ///
    /// \note
