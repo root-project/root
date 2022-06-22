@@ -106,7 +106,7 @@ private:
       // Using a deque guarantees that element iterators are never invalidated
       // by appends to the end of the iterator by BufferPage.
       std::deque<RPageZipItem> fBufferedPages;
-      // Pages that have been alredy sealed by a concurrent task. A vector commit can be issued if all
+      // Pages that have been already sealed by a concurrent task. A vector commit can be issued if all
       // buffered pages have been sealed.
       RPageStorage::SealedPageSequence_t fSealedPages;
    };

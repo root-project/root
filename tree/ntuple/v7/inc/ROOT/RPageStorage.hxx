@@ -269,7 +269,7 @@ public:
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page);
    /// Write a preprocessed page to storage. The column must have been added before.
    void CommitSealedPage(DescriptorId_t columnId, const RPageStorage::RSealedPage &sealedPage);
-   /// Write a vector of preprocessed pages to storage. The column must have been added before.
+   /// Write a vector of preprocessed pages to storage. The corresponding columns must have been added before.
    void CommitSealedPageV(const std::vector<RPageStorage::RSealedPageGroup> &ranges);
    /// Finalize the current cluster and create a new one for the following data.
    /// Returns the number of bytes written to storage (excluding meta-data).
