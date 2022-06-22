@@ -94,17 +94,17 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::
       fTaskScheduler->Reset();
    }
 
-   // If we have only sealed pages in all buffered columns, commit them in a single `CommitSealedPages()` call
+   // If we have only sealed pages in all buffered columns, commit them in a single `CommitSealedPageV()` call
    bool singleCommitCall = std::all_of(fBufferedColumns.begin(), fBufferedColumns.end(),
                                        [](auto &bufColumn) { return bufColumn.HasSealedPagesOnly(); });
    if (singleCommitCall) {
-      std::vector<RSealedPageRange> toCommit;
+      std::vector<RSealedPageGroup> toCommit;
       toCommit.reserve(fBufferedColumns.size());
       for (auto &bufColumn : fBufferedColumns) {
          const auto &sealedPages = bufColumn.GetSealedPages();
          toCommit.emplace_back(bufColumn.GetHandle().fId, sealedPages.cbegin(), sealedPages.cend());
       }
-      fInnerSink->CommitSealedPages(toCommit);
+      fInnerSink->CommitSealedPageV(toCommit);
 
       for (auto &bufColumn : fBufferedColumns)
          bufColumn.DrainBufferedPages();
@@ -117,13 +117,13 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::
       auto drained = bufColumn.DrainBufferedPages();
       if (hasSealedPagesOnly) {
          const auto &sealedPages = std::get<RPageStorage::SealedPageSequence_t>(drained);
-         fInnerSink->CommitSealedPages(std::vector<RPageStorage::RSealedPageRange>{
-            RSealedPageRange(bufColumn.GetHandle().fId, sealedPages.cbegin(), sealedPages.cend())});
+         fInnerSink->CommitSealedPageV(std::vector<RPageStorage::RSealedPageGroup>{
+            RSealedPageGroup(bufColumn.GetHandle().fId, sealedPages.cbegin(), sealedPages.cend())});
          continue;
       }
 
       // Slow path: if the buffered column contains both sealed and unsealed pages, commit them one by one.
-      // TODO(jalopezg): coalesce contiguous sealed pages and commit via `CommitSealedPages()`.
+      // TODO(jalopezg): coalesce contiguous sealed pages and commit via `CommitSealedPageV()`.
       for (auto &bufPage : std::get<std::deque<RColumnBuf::RPageZipItem>>(drained)) {
          if (bufPage.IsSealed()) {
             fInnerSink->CommitSealedPage(bufColumn.GetHandle().fId, *bufPage.fSealedPage);

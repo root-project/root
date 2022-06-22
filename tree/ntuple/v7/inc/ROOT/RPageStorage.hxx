@@ -98,12 +98,12 @@ public:
 
    using SealedPageSequence_t = std::deque<RSealedPage>;
    /// A range of sealed pages referring to the same column that can be used for vector commit
-   struct RSealedPageRange {
+   struct RSealedPageGroup {
       DescriptorId_t fColumnId;
       SealedPageSequence_t::const_iterator fFirst;
       SealedPageSequence_t::const_iterator fLast;
 
-      RSealedPageRange(DescriptorId_t d, SealedPageSequence_t::const_iterator b, SealedPageSequence_t::const_iterator e)
+      RSealedPageGroup(DescriptorId_t d, SealedPageSequence_t::const_iterator b, SealedPageSequence_t::const_iterator e)
          : fColumnId(d), fFirst(b), fLast(e)
       {
       }
@@ -212,7 +212,7 @@ protected:
    /// followed by M entries that refer to the M pages in `ranges[1]`, etc.
    /// The default is to call `CommitSealedPageImpl` for each page; derived classes may provide an
    /// optimized implementation though.
-   virtual std::vector<RNTupleLocator> CommitSealedPagesImpl(const std::vector<RPageStorage::RSealedPageRange> &ranges);
+   virtual std::vector<RNTupleLocator> CommitSealedPageVImpl(const std::vector<RPageStorage::RSealedPageGroup> &ranges);
    /// Returns the number of bytes written to storage (excluding metadata)
    virtual std::uint64_t CommitClusterImpl(NTupleSize_t nEntries) = 0;
    /// Returns the locator of the page list envelope of the given buffer that contains the serialized page list.
@@ -270,7 +270,7 @@ public:
    /// Write a preprocessed page to storage. The column must have been added before.
    void CommitSealedPage(DescriptorId_t columnId, const RPageStorage::RSealedPage &sealedPage);
    /// Write a vector of preprocessed pages to storage. The column must have been added before.
-   void CommitSealedPages(const std::vector<RPageStorage::RSealedPageRange> &ranges);
+   void CommitSealedPageV(const std::vector<RPageStorage::RSealedPageGroup> &ranges);
    /// Finalize the current cluster and create a new one for the following data.
    /// Returns the number of bytes written to storage (excluding meta-data).
    std::uint64_t CommitCluster(NTupleSize_t nEntries);
