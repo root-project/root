@@ -57,9 +57,10 @@ Several examples showing how to use this class are available in the
 ROOT tutorials: `$ROOTSYS/tutorials/image/`
 */
 
-#  include <ft2build.h>
-#  include FT_FREETYPE_H
-#  include FT_GLYPH_H
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_GLYPH_H
+
 #include "TASImage.h"
 #include "TASImagePlugin.h"
 #include "TROOT.h"
@@ -88,6 +89,8 @@ ROOT tutorials: `$ROOTSYS/tutorials/image/`
 #include "RConfigure.h"
 #include "TVirtualPadPainter.h"
 #include "snprintf.h"
+
+#include <memory>
 
 #ifndef WIN32
 #ifndef R__HAS_COCOA
@@ -1703,7 +1706,7 @@ Int_t TASImage::DistancetoPrimitive(Int_t px, Int_t py)
 
 void TASImage::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   static TBox *ZoomBox;
+   static std::unique_ptr<TBox> ZoomBox;
 
    if (!gPad) return;
 
@@ -1762,9 +1765,8 @@ void TASImage::ExecuteEvent(Int_t event, Int_t px, Int_t py)
                ZoomBox->SetY1(gPad->AbsPixeltoY(pyl));
                ZoomBox->SetX2(gPad->AbsPixeltoX(pxt));
                ZoomBox->SetY2(gPad->AbsPixeltoY(pyt));
-            }
-            else {
-               ZoomBox = new TBox(pxl, pyl, pxt, pyt);
+            } else {
+               ZoomBox = std::make_unique<TBox>(pxl, pyl, pxt, pyt);
                ZoomBox->SetFillStyle(0);
                ZoomBox->Draw("l*");
             }
@@ -1800,10 +1802,9 @@ void TASImage::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             Zoom((imgX1 < imgX2) ? imgX1 : imgX2, (imgY1 < imgY2) ? imgY1 : imgY2,
                  TMath::Abs(imgX1 - imgX2) + 1, TMath::Abs(imgY1 - imgY2) + 1);
 
-            if (ZoomBox) {
-               ZoomBox->Delete();
-               ZoomBox = 0;
-            }
+            if (ZoomBox)
+               ZoomBox.reset();
+               
             gPad->Modified(kTRUE);
             gPad->Update();
             break;
