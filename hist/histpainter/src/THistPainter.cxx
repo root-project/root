@@ -301,7 +301,6 @@ using `TH1::GetOption`:
 | "CONT2"      | Draw a contour plot using the same line style for all contours.|
 | "CONT3"      | Draw a contour plot using fill area colors.|
 | "CONT4"      | Draw a contour plot using surface colors (SURF option at theta = 0).|
-| "CONT5"      | (TGraph2D only) Draw a contour plot using Delaunay triangles.|
 | "LIST"       | Generate a list of TGraph objects for each contour.|
 | "SAME0"      | Same as "SAME" but do not use the z-axis range of the first plot. |
 | "SAMES0"     | Same as "SAMES" but do not use the z-axis range of the first plot. |
@@ -1738,8 +1737,6 @@ The following contour options are supported:
 | "CONT2"  | Draw a contour plot using the line styles (1 to 5) to distinguish contours. |
 | "CONT3"  | Draw a contour plot using the same line style for all contours.             |
 | "CONT4"  | Draw a contour plot using surface colors (`SURF` option at theta = 0).      |
-| "CONT5"  | Draw a contour plot using Delaunay triangles.                               |
-
 
 
 The following example shows a 2D histogram plotted with the option
