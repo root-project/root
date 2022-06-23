@@ -53,12 +53,34 @@ public:
    }
 
    /// Copy constructor.
-   template<class Other_t>
+   template <class Other_t>
    RooCollectionProxy(const char *inName, RooAbsArg *owner, const Other_t &other)
       : RooCollection_t(other, inName), _owner(owner), _defValueServer(other.defValueServer()),
         _defShapeServer(other.defShapeServer())
    {
-      _owner->registerProxy(*this);
+     _owner->registerProxy(*this);
+   }
+
+   /// Initializes this RooCollection proxy from another proxy. Should not be
+   /// considered part of the public interface, only to be used by IO.
+   template <class Other_t>
+   void initializeAfterIOConstructor(RooAbsArg *owner, const Other_t &other)
+   {
+
+      // Copy all attributes from "other"
+      _owner = owner;
+      _defValueServer = other.defValueServer();
+      _defShapeServer = other.defShapeServer();
+      RooCollection_t::setName(other.GetName());
+
+      // Add the elements. This should not be done with
+      // RooCollectionProxy::add(), but with the base class method. Otherwise,
+      // _owner->addServer() is called when adding each element, which we don't
+      // want for IO because the list of servers are already filled when
+      // reading the server list of the object in the file.
+      RooCollection_t::add(other);
+
+      // Don't do _owner->registerProxy(*this) here! The proxy list will also be copied separately.
    }
 
    ~RooCollectionProxy() override

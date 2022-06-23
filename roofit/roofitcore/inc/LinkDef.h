@@ -167,14 +167,10 @@
 #pragma link C++ class RooProdGenContext+ ;
 #pragma link C++ class RooProduct+ ;
 #pragma read sourceClass="RooProduct" targetClass="RooProduct" version="[1]"                      \
-             source="RooSetProxy _compRSet" target="_compRSet"                                    \
+             source="RooSetProxy _compRSet; RooSetProxy _compCSet" target="_compRSet, _compCSet"  \
              code="{                                                                              \
-                 _compRSet = RooListProxy(onfile._compRSet.GetName(), newObj, onfile._compRSet) ; \
-             }"
-#pragma read sourceClass="RooProduct" targetClass="RooProduct" version="[1]"                      \
-             source="RooSetProxy _compCSet" target="_compCSet"                                    \
-             code="{                                                                              \
-                 _compCSet = RooListProxy(onfile._compCSet.GetName(), newObj, onfile._compCSet) ; \
+                 _compRSet.initializeAfterIOConstructor(newObj, onfile._compRSet) ;               \
+                 _compCSet.initializeAfterIOConstructor(newObj, onfile._compCSet) ;               \
              }"
 #pragma link C++ class RooPullVar+ ;
 #pragma link C++ class RooQuasiRandomGenerator+ ;
