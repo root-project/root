@@ -57,8 +57,8 @@ protected:
    TPainter3dAlgorithms *fLego;              ///< Pointer to a TPainter3dAlgorithms object
    TGraph2DPainter      *fGraph2DPainter;    ///< Pointer to a TGraph2DPainter object
    TPie                 *fPie;               ///< Pointer to a TPie in case of option PIE
-   Double_t             *fXbuf;              ///< X buffer coordinates
-   Double_t             *fYbuf;              ///< Y buffer coordinates
+   std::vector<Double_t> fXbuf;              ///< X buffer coordinates
+   std::vector<Double_t> fYbuf;              ///< Y buffer coordinates
    Int_t                 fNcuts;             ///< Number of graphical cuts
    Int_t                 fCutsOpt[kMaxCuts]; ///< Sign of each cut
    TCutG                *fCuts[kMaxCuts];    ///< Pointers to graphical cuts

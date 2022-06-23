@@ -3192,21 +3192,19 @@ ClassImp(THistPainter);
 THistPainter::THistPainter()
 {
    fH = nullptr;
-   fXaxis = 0;
-   fYaxis = 0;
-   fZaxis = 0;
-   fFunctions = 0;
-   fXbuf  = 0;
-   fYbuf  = 0;
+   fXaxis = nullptr;
+   fYaxis = nullptr;
+   fZaxis = nullptr;
+   fFunctions = nullptr;
    fNcuts = 0;
    fStack = 0;
-   fLego  = 0;
+   fLego  = nullptr;
    fPie   = nullptr;
    fGraph2DPainter = nullptr;
    fShowProjection = 0;
    fShowOption = "";
    for (int i=0; i<kMaxCuts; i++) {
-      fCuts[i] = 0;
+      fCuts[i] = nullptr;
       fCutsOpt[i] = 0;
    }
    fXHighlightBin = -1;
@@ -4500,8 +4498,8 @@ void THistPainter::Paint(Option_t *option)
       fPie = nullptr;
    }
 
-   fXbuf  = new Double_t[kNMAX];
-   fYbuf  = new Double_t[kNMAX];
+   fXbuf.resize(kNMAX);
+   fYbuf.resize(kNMAX);
    if (fH->GetDimension() > 2) {
       PaintH3(option);
       fH->SetMinimum(minsav);
@@ -4514,7 +4512,8 @@ void THistPainter::Paint(Option_t *option)
          Hparam  = hparsave;
       }
       gCurrentHist = oldhist;
-      delete [] fXbuf; delete [] fYbuf;
+      fXbuf.clear();
+      fYbuf.clear();
       return;
    }
    TView *view = gPad->GetView();
@@ -4547,7 +4546,8 @@ void THistPainter::Paint(Option_t *option)
       }
       fH->SetMinimum(minsav);
       gCurrentHist = oldhist;
-      delete [] fXbuf; delete [] fYbuf;
+      fXbuf.clear();
+      fYbuf.clear();
       if (fH->GetDimension() == 1) {
          Hoption.Logy = logysav;
          Hoption.Logz = logzsav;
@@ -4557,14 +4557,16 @@ void THistPainter::Paint(Option_t *option)
 
    if (Hoption.Bar >= 20) {
       PaintBarH(option);
-      delete [] fXbuf; delete [] fYbuf;
+      fXbuf.clear();
+      fYbuf.clear();
       return;
    }
 
    gPad->RangeAxisChanged(); //emit RangeAxisChanged() signal to sync axes
    // fill Hparam structure with histo parameters
    if (!PaintInit()) {
-      delete [] fXbuf; delete [] fYbuf;
+      fXbuf.clear();
+      fYbuf.clear();
       return;
    }
 
@@ -4643,9 +4645,8 @@ paintstat:
    }
    fH->SetMinimum(minsav);
    gCurrentHist = oldhist;
-   delete [] fXbuf; fXbuf = 0;
-   delete [] fYbuf; fYbuf = 0;
-
+   fXbuf.clear();
+   fYbuf.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6630,7 +6631,7 @@ void THistPainter::Paint2DErrors(Option_t *)
    fYbuf[1] = Hparam.ymax;
    fXbuf[2] = Hparam.zmin;
    fYbuf[2] = Hparam.zmax*(1. + gStyle->GetHistTopMargin());
-   fLego = new TPainter3dAlgorithms(fXbuf, fYbuf);
+   fLego = new TPainter3dAlgorithms(fXbuf.data(), fYbuf.data());
    TView *view = gPad->GetView();
    if (!view) {
       Error("Paint2DErrors", "no TView in current pad");
@@ -6772,7 +6773,7 @@ void THistPainter::Paint2DErrors(Option_t *)
       delete axis;
    }
 
-   delete fLego; fLego = 0;
+   delete fLego; fLego = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7496,7 +7497,7 @@ void THistPainter::PaintH3Box(Int_t iopt)
    fXbuf[2] = zaxis->GetBinLowEdge(zaxis->GetFirst());
    fYbuf[2] = zaxis->GetBinUpEdge(zaxis->GetLast());
 
-   fLego = new TPainter3dAlgorithms(fXbuf, fYbuf);
+   fLego = new TPainter3dAlgorithms(fXbuf.data(), fYbuf.data());
 
    //       Set view
    TView *view = gPad->GetView();
@@ -7679,7 +7680,7 @@ void THistPainter::PaintH3BoxRaster()
    fXbuf[2] = zaxis->GetBinLowEdge(zaxis->GetFirst());
    fYbuf[2] = zaxis->GetBinUpEdge(zaxis->GetLast());
 
-   fLego = new TPainter3dAlgorithms(fXbuf, fYbuf);
+   fLego = new TPainter3dAlgorithms(fXbuf.data(), fYbuf.data());
 
    //       Set view
    TView *view = gPad->GetView();
@@ -7881,7 +7882,7 @@ void THistPainter::PaintH3Iso()
    s[1] = 0.5*s[0];
    s[2] = 1.5*s[0];
 
-   fLego = new TPainter3dAlgorithms(fXbuf, fYbuf);
+   fLego = new TPainter3dAlgorithms(fXbuf.data(), fYbuf.data());
 
    TView *view = gPad->GetView();
    if (!view) {
@@ -8013,7 +8014,7 @@ void THistPainter::PaintLego(Option_t *)
       raster  = 0;
    }
 
-   fLego = new TPainter3dAlgorithms(fXbuf, fYbuf, Hoption.System);
+   fLego = new TPainter3dAlgorithms(fXbuf.data(), fYbuf.data(), Hoption.System);
 
    Int_t nids = -1;
    TH1 * hid = NULL;
@@ -8477,7 +8478,7 @@ void THistPainter::PaintScatterPlot(Option_t *option)
          if (k > 0) {
             for (Int_t loop=0; loop<k; loop++) {
                if (k+marker >= kNMAX) {
-                  gPad->PaintPolyMarker(marker, fXbuf, fYbuf);
+                  gPad->PaintPolyMarker(marker, fXbuf.data(), fYbuf.data());
                   marker=0;
                }
                fXbuf[marker] = (random.Rndm()*xstep) + xk;
@@ -8499,7 +8500,7 @@ void THistPainter::PaintScatterPlot(Option_t *option)
          }
       }
    }
-   if (marker > 0) gPad->PaintPolyMarker(marker, fXbuf, fYbuf);
+   if (marker > 0) gPad->PaintPolyMarker(marker, fXbuf.data(), fYbuf.data());
 
    if (Hoption.Zscale) PaintPalette();
 }
@@ -9263,7 +9264,7 @@ void THistPainter::PaintSurface(Option_t *)
       fYbuf[2] = z2c;
    }
 
-   fLego = new TPainter3dAlgorithms(fXbuf, fYbuf, Hoption.System);
+   fLego = new TPainter3dAlgorithms(fXbuf.data(), fYbuf.data(), Hoption.System);
    fLego->SetEdgeAtt(fH->GetLineColor(),fH->GetLineStyle(),fH->GetLineWidth(),0);
    fLego->SetFillColor(fH->GetFillColor());
 
@@ -9490,7 +9491,7 @@ void THistPainter::PaintTriangles(Option_t *option)
       fYbuf[2] = Hparam.zmax;
    }
 
-   fLego = new TPainter3dAlgorithms(fXbuf, fYbuf);
+   fLego = new TPainter3dAlgorithms(fXbuf.data(), fYbuf.data());
    TView *view = gPad->GetView();
    if (!view) {
       Error("PaintTriangles", "no TView in current pad");
@@ -9902,7 +9903,7 @@ void THistPainter::PaintTH2PolyScatterPlot(Option_t *)
          loop = 0;
          while (loop<k) {
             if (k+marker >= kNMAX) {
-               gPad->PaintPolyMarker(marker, fXbuf, fYbuf);
+               gPad->PaintPolyMarker(marker, fXbuf.data(), fYbuf.data());
                marker=0;
             }
             xp = (random.Rndm()*xstep) + xk;
@@ -9914,7 +9915,7 @@ void THistPainter::PaintTH2PolyScatterPlot(Option_t *)
                loop++;
             }
          }
-         if (marker > 0) gPad->PaintPolyMarker(marker, fXbuf, fYbuf);
+         if (marker > 0) gPad->PaintPolyMarker(marker, fXbuf.data(), fYbuf.data());
       }
 
       // Paint the TMultiGraph bins.
@@ -9926,7 +9927,7 @@ void THistPainter::PaintTH2PolyScatterPlot(Option_t *)
          loop = 0;
          while (loop<k) {
             if (k+marker >= kNMAX) {
-               gPad->PaintPolyMarker(marker, fXbuf, fYbuf);
+               gPad->PaintPolyMarker(marker, fXbuf.data(), fYbuf.data());
                marker=0;
             }
             xp = (random.Rndm()*xstep) + xk;
@@ -9938,7 +9939,7 @@ void THistPainter::PaintTH2PolyScatterPlot(Option_t *)
                loop++;
             }
          }
-         if (marker > 0) gPad->PaintPolyMarker(marker, fXbuf, fYbuf);
+         if (marker > 0) gPad->PaintPolyMarker(marker, fXbuf.data(), fYbuf.data());
       }
    }
    PaintTH2PolyBins("l");
@@ -10118,7 +10119,7 @@ void THistPainter::PaintTF3()
    fXbuf[2] = zaxis->GetBinLowEdge(zaxis->GetFirst());
    fYbuf[2] = zaxis->GetBinUpEdge(zaxis->GetLast());
 
-   fLego = new TPainter3dAlgorithms(fXbuf, fYbuf);
+   fLego = new TPainter3dAlgorithms(fXbuf.data(), fYbuf.data());
 
    TView *view = gPad->GetView();
    if (!view) {
@@ -10140,7 +10141,7 @@ void THistPainter::PaintTF3()
 
    fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMode1);
 
-   fLego->ImplicitFunction(fCurrentF3, fXbuf, fYbuf, fH->GetNbinsX(),
+   fLego->ImplicitFunction(fCurrentF3, fXbuf.data(), fYbuf.data(), fH->GetNbinsX(),
                                        fH->GetNbinsY(),
                                        fH->GetNbinsZ(), "BF");
 
