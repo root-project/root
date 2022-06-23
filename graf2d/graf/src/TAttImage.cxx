@@ -92,7 +92,7 @@ This class provides a way to edit the palette via a GUI.
 #include "TColor.h"
 #include "TMath.h"
 #include "TStyle.h"
-
+#include <vector>
 
 ClassImp(TPaletteEditor);
 ClassImp(TAttImage);
@@ -171,10 +171,11 @@ public:
 
    Int_t *GetRootColors() override
    {
-      static Int_t *gRootColors = nullptr;
-      if (gRootColors) return gRootColors;
+      static std::vector<Int_t> gRootColors;
+      if (!gRootColors.empty())
+         return gRootColors.data();
 
-      gRootColors = new Int_t[216];
+      gRootColors.resize(216);
 
       int i = 0;
       for (int r = 0; r < 6; r++) {
@@ -185,7 +186,7 @@ public:
             }
          }
       }
-      return gRootColors;
+      return gRootColors.data();
    }
 };
 
@@ -508,15 +509,16 @@ Int_t TImagePalette::FindColor(UShort_t r, UShort_t g, UShort_t b)
 
 Int_t *TImagePalette::GetRootColors()
 {
-   static Int_t *gRootColors = 0;
-   if (gRootColors) return gRootColors;
+   static std::vector<Int_t> gRootColors;
+   if (!gRootColors.empty())
+      return gRootColors.data();
 
-   gRootColors = new Int_t[fNumPoints];
+   gRootColors.resize(fNumPoints);
 
-   for (UInt_t i = 0; i < fNumPoints; i++) {
+   for (UInt_t i = 0; i < fNumPoints; i++)
       gRootColors[i] = TColor::GetColor(fColorRed[i], fColorGreen[i], fColorBlue[i]);
-   }
-   return gRootColors;
+
+   return gRootColors.data();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
