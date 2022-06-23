@@ -14,7 +14,6 @@
 #include <cstdio>
 #include <cctype>
 #include <iostream>
-#include <memory>
 
 #include "TROOT.h"
 #include "TSystem.h"
@@ -3198,9 +3197,6 @@ THistPainter::THistPainter()
    fFunctions = nullptr;
    fNcuts = 0;
    fStack = 0;
-   fLego  = nullptr;
-   fPie   = nullptr;
-   fGraph2DPainter = nullptr;
    fShowProjection = 0;
    fShowOption = "";
    for (int i=0; i<kMaxCuts; i++) {
@@ -3235,11 +3231,10 @@ THistPainter::THistPainter()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default destructor.
+/// destructor.
 
 THistPainter::~THistPainter()
 {
-   if (fPie) delete fPie;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3259,7 +3254,8 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
    const Int_t big = 9999;
    const Int_t kMaxDiff = 7;
 
-   if (fPie) return fPie->DistancetoPrimitive(px, py);
+   if (fPie)
+      return fPie->DistancetoPrimitive(px, py);
 
    Double_t x  = gPad->AbsPixeltoX(px);
    Double_t x1 = gPad->AbsPixeltoX(px+1);
@@ -3714,10 +3710,8 @@ TList *THistPainter::GetContourList(Double_t contour) const
 
    gCurrentHist = fH;
 
-   if (!fGraph2DPainter) {
-      if (dt) ((THistPainter*)this)->fGraph2DPainter = new TGraph2DPainter(dt);
-      else ((THistPainter*)this)->fGraph2DPainter = new TGraph2DPainter(dtOld);
-   }
+   if (!fGraph2DPainter)
+      ((THistPainter*)this)->fGraph2DPainter = dt ? std::make_unique<TGraph2DPainter>(dt) : std::make_unique<TGraph2DPainter>(dtOld);
 
    return fGraph2DPainter->GetContourList(contour);
 }
@@ -4487,15 +4481,15 @@ void THistPainter::Paint(Option_t *option)
 
    if (Hoption.Pie) {
       if (fH->GetDimension() == 1) {
-         if (!fPie) fPie = new TPie(fH);
+         if (!fPie)
+            fPie = std::make_unique<TPie>(fH);
          fPie->Paint(option);
       } else {
          Error("Paint", "Option PIE is for 1D histograms only");
       }
       return;
    } else {
-      if (fPie) delete fPie;
-      fPie = nullptr;
+      fPie.reset();
    }
 
    fXbuf.resize(kNMAX);
@@ -4802,7 +4796,7 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
    Double_t axmax = gPad->GetUxmax();
    Double_t aymin = gPad->GetUymin();
    Double_t aymax = gPad->GetUymax();
-   char *cw = 0;
+   char *cw = nullptr;
    TGaxis axis;
 
    // In case of option 'cont4' or in case of option 'same' over a 'cont4 plot'
@@ -5960,10 +5954,8 @@ void THistPainter::PaintContour(Option_t *option)
       dt = (TGraphDelaunay2D*)hl->FindObject("TGraphDelaunay2D");
       if (!dt) dtOld = (TGraphDelaunay*)hl->FindObject("TGraphDelaunay");
       if (!dt && !dtOld) return;
-      if (!fGraph2DPainter) {
-         if (dt) fGraph2DPainter = new TGraph2DPainter(dt);
-         else fGraph2DPainter = new TGraph2DPainter(dtOld);
-      }
+      if (!fGraph2DPainter)
+         fGraph2DPainter = dt ? std::make_unique<TGraph2DPainter>(dt) : std::make_unique<TGraph2DPainter>(dtOld);
       fGraph2DPainter->Paint(option);
       return;
    }
@@ -6631,7 +6623,7 @@ void THistPainter::Paint2DErrors(Option_t *)
    fYbuf[1] = Hparam.ymax;
    fXbuf[2] = Hparam.zmin;
    fYbuf[2] = Hparam.zmax*(1. + gStyle->GetHistTopMargin());
-   fLego = new TPainter3dAlgorithms(fXbuf.data(), fYbuf.data());
+   fLego = std::make_unique<TPainter3dAlgorithms>(fXbuf.data(), fYbuf.data());
    TView *view = gPad->GetView();
    if (!view) {
       Error("Paint2DErrors", "no TView in current pad");
@@ -6768,12 +6760,11 @@ void THistPainter::Paint2DErrors(Option_t *)
 
    // Paint the Axis if needed
    if (!Hoption.Axis && !Hoption.Same && !Hoption.Lego && !Hoption.Surf) {
-      TGaxis *axis = new TGaxis();
-      PaintLegoAxis(axis, 90);
-      delete axis;
+      TGaxis axis;
+      PaintLegoAxis(&axis, 90);
    }
 
-   delete fLego; fLego = nullptr;
+   fLego.reset();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7036,9 +7027,11 @@ void THistPainter::PaintH3(Option_t *option)
    TSeqCollection *ol = view->GetOutline();
    if (ol && Hoption.BackBox && Hoption.FrontBox) ol->Paint(option);
    Hoption.System = kCARTESIAN;
-   TGaxis *axis = new TGaxis();
-   if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
-   delete axis;
+
+   if (!Hoption.Axis && !Hoption.Same) {
+      TGaxis axis;
+      PaintLegoAxis(&axis, 90);
+   }
 
    // Draw palette. In case of 4D plot with TTree::Draw() the palette should
    // be painted with the option colz.
@@ -7485,7 +7478,6 @@ void THistPainter::PaintH3Box(Int_t iopt)
                          {0,1,5,4}, {1,2,6,5}, {2,3,7,6}, {3,0,4,7} };
 
    //       Define dimensions of world space
-   TGaxis *axis = new TGaxis();
    TAxis *xaxis = fH->GetXaxis();
    TAxis *yaxis = fH->GetYaxis();
    TAxis *zaxis = fH->GetZaxis();
@@ -7497,7 +7489,7 @@ void THistPainter::PaintH3Box(Int_t iopt)
    fXbuf[2] = zaxis->GetBinLowEdge(zaxis->GetFirst());
    fYbuf[2] = zaxis->GetBinUpEdge(zaxis->GetLast());
 
-   fLego = new TPainter3dAlgorithms(fXbuf.data(), fYbuf.data());
+   fLego = std::make_unique<TPainter3dAlgorithms>(fXbuf.data(), fYbuf.data());
 
    //       Set view
    TView *view = gPad->GetView();
@@ -7627,7 +7619,10 @@ void THistPainter::PaintH3Box(Int_t iopt)
    if (Hoption.FrontBox) fLego->FrontBox(90);
 
    //       Draw axis and title
-   if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
+   if (!Hoption.Axis && !Hoption.Same) {
+      TGaxis axis;
+      PaintLegoAxis(&axis, 90);
+   }
    PaintTitle();
 
    // Draw palette. if needed.
@@ -7640,8 +7635,7 @@ void THistPainter::PaintH3Box(Int_t iopt)
       PaintPalette();
    }
 
-   delete axis;
-   delete fLego; fLego = 0;
+   fLego.reset();
 
    fH->SetFillStyle(fillsav);
    fH->SetFillColor(colsav);
@@ -7668,7 +7662,6 @@ void THistPainter::PaintH3BoxRaster()
    };
 
    //       Define dimensions of world space
-   TGaxis *axis = new TGaxis();
    TAxis *xaxis = fH->GetXaxis();
    TAxis *yaxis = fH->GetYaxis();
    TAxis *zaxis = fH->GetZaxis();
@@ -7680,7 +7673,7 @@ void THistPainter::PaintH3BoxRaster()
    fXbuf[2] = zaxis->GetBinLowEdge(zaxis->GetFirst());
    fYbuf[2] = zaxis->GetBinUpEdge(zaxis->GetLast());
 
-   fLego = new TPainter3dAlgorithms(fXbuf.data(), fYbuf.data());
+   fLego = std::make_unique<TPainter3dAlgorithms>(fXbuf.data(), fYbuf.data());
 
    //       Set view
    TView *view = gPad->GetView();
@@ -7827,11 +7820,13 @@ void THistPainter::PaintH3BoxRaster()
    if (Hoption.FrontBox) fLego->FrontBox(90);
 
    //       Draw axis and title
-   if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
+   if (!Hoption.Axis && !Hoption.Same) {
+      TGaxis axis;
+      PaintLegoAxis(&axis, 90);
+   }
    PaintTitle();
 
-   delete axis;
-   delete fLego; fLego = 0;
+   fLego.reset();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7853,7 +7848,6 @@ void THistPainter::PaintH3Iso()
    Int_t ic2 = ic1+nbcol;
    Int_t ic3 = ic2+nbcol;
 
-   TGaxis *axis = new TGaxis();
    TAxis *xaxis = fH->GetXaxis();
    TAxis *yaxis = fH->GetYaxis();
    TAxis *zaxis = fH->GetZaxis();
@@ -7882,7 +7876,7 @@ void THistPainter::PaintH3Iso()
    s[1] = 0.5*s[0];
    s[2] = 1.5*s[0];
 
-   fLego = new TPainter3dAlgorithms(fXbuf.data(), fYbuf.data());
+   fLego = std::make_unique<TPainter3dAlgorithms>(fXbuf.data(), fYbuf.data());
 
    TView *view = gPad->GetView();
    if (!view) {
@@ -7941,12 +7935,14 @@ void THistPainter::PaintH3Iso()
       fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove2);
       fLego->FrontBox(90);
    }
-   if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
+   if (!Hoption.Axis && !Hoption.Same) {
+      TGaxis axis;
+      PaintLegoAxis(&axis, 90);
+   }
 
    PaintTitle();
 
-   delete axis;
-   delete fLego; fLego = 0;
+   fLego.reset();
    delete [] x;
    delete [] y;
    delete [] z;
@@ -8014,7 +8010,7 @@ void THistPainter::PaintLego(Option_t *)
       raster  = 0;
    }
 
-   fLego = new TPainter3dAlgorithms(fXbuf.data(), fYbuf.data(), Hoption.System);
+   fLego = std::make_unique<TPainter3dAlgorithms>(fXbuf.data(), fYbuf.data(), Hoption.System);
 
    Int_t nids = -1;
    TH1 * hid = NULL;
@@ -8031,10 +8027,6 @@ void THistPainter::PaintLego(Option_t *)
       Hoption.Lego = 11;
       drawShadowsInLego1 = kFALSE;
    }
-
-   //          Create axis object
-
-   TGaxis *axis = new TGaxis();
 
    //                  Initialize the levels on the Z axis
    Int_t ndiv   = fH->GetContour();
@@ -8111,7 +8103,7 @@ void THistPainter::PaintLego(Option_t *)
       fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
       if (Hoption.BackBox)   fLego->BackBox(90);
       if (Hoption.FrontBox)  fLego->FrontBox(90);
-      if (!Hoption.Axis)     PaintLegoAxis(axis, 90);
+      if (!Hoption.Axis) { TGaxis axis; PaintLegoAxis(&axis, 90); }
       return;
    }
 
@@ -8163,10 +8155,12 @@ void THistPainter::PaintLego(Option_t *)
       fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove2);
       if (Hoption.FrontBox) fLego->FrontBox(90);
    }
-   if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
+   if (!Hoption.Axis && !Hoption.Same) {
+      TGaxis axis;
+      PaintLegoAxis(&axis, 90);
+   }
    if (Hoption.Zscale) PaintPalette();
-   delete axis;
-   delete fLego; fLego = 0;
+   fLego.reset();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9264,13 +9258,9 @@ void THistPainter::PaintSurface(Option_t *)
       fYbuf[2] = z2c;
    }
 
-   fLego = new TPainter3dAlgorithms(fXbuf.data(), fYbuf.data(), Hoption.System);
+   fLego = std::make_unique<TPainter3dAlgorithms>(fXbuf.data(), fYbuf.data(), Hoption.System);
    fLego->SetEdgeAtt(fH->GetLineColor(),fH->GetLineStyle(),fH->GetLineWidth(),0);
    fLego->SetFillColor(fH->GetFillColor());
-
-   //          Create axis object
-
-   TGaxis *axis = new TGaxis();
 
    //                  Initialize the levels on the Z axis
    Int_t ndiv   = fH->GetContour();
@@ -9436,12 +9426,14 @@ void THistPainter::PaintSurface(Option_t *)
       fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove2);
       if (Hoption.FrontBox) fLego->FrontBox(90);
    }
-   if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
+   if (!Hoption.Axis && !Hoption.Same) {
+      TGaxis axis;
+      PaintLegoAxis(&axis, 90);
+   }
 
    if (Hoption.Zscale) PaintPalette();
 
-   delete axis;
-   delete fLego; fLego = 0;
+   fLego.reset();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9460,10 +9452,8 @@ void THistPainter::PaintTriangles(Option_t *option)
    if (!dt && !dtOld) return;
 
    // If needed, create a TGraph2DPainter
-   if (!fGraph2DPainter) {
-      if (dt) fGraph2DPainter = new TGraph2DPainter(dt);
-      else fGraph2DPainter = new TGraph2DPainter(dtOld);
-   }
+   if (!fGraph2DPainter)
+      fGraph2DPainter = dt ? std::make_unique<TGraph2DPainter>(dt) : std::make_unique<TGraph2DPainter>(dtOld);
 
    // Define the 3D view
    if (Hparam.zmin == 0 && Hparam.zmax == 0) {Hparam.zmin = -1; Hparam.zmax = 1;}
@@ -9491,7 +9481,7 @@ void THistPainter::PaintTriangles(Option_t *option)
       fYbuf[2] = Hparam.zmax;
    }
 
-   fLego = new TPainter3dAlgorithms(fXbuf.data(), fYbuf.data());
+   fLego = std::make_unique<TPainter3dAlgorithms>(fXbuf.data(), fYbuf.data());
    TView *view = gPad->GetView();
    if (!view) {
       Error("PaintTriangles", "no TView in current pad");
@@ -9534,14 +9524,13 @@ void THistPainter::PaintTriangles(Option_t *option)
 
    // Paint the Axis if needed
    if (!Hoption.Axis && !Hoption.Same) {
-      TGaxis *axis = new TGaxis();
-      PaintLegoAxis(axis, 90);
-      delete axis;
+      TGaxis axis;
+      PaintLegoAxis(&axis, 90);
    }
 
    if (Hoption.Zscale) PaintPalette();
 
-   delete fLego; fLego = 0;
+   fLego.reset();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -10107,7 +10096,6 @@ void THistPainter::PaintTF3()
 
    Int_t irep;
 
-   TGaxis *axis = new TGaxis();
    TAxis *xaxis = fH->GetXaxis();
    TAxis *yaxis = fH->GetYaxis();
    TAxis *zaxis = fH->GetZaxis();
@@ -10119,7 +10107,7 @@ void THistPainter::PaintTF3()
    fXbuf[2] = zaxis->GetBinLowEdge(zaxis->GetFirst());
    fYbuf[2] = zaxis->GetBinUpEdge(zaxis->GetLast());
 
-   fLego = new TPainter3dAlgorithms(fXbuf.data(), fYbuf.data());
+   fLego = std::make_unique<TPainter3dAlgorithms>(fXbuf.data(), fYbuf.data());
 
    TView *view = gPad->GetView();
    if (!view) {
@@ -10150,15 +10138,17 @@ void THistPainter::PaintTF3()
       fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove2);
       fLego->FrontBox(90);
    }
-   if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
+   if (!Hoption.Axis && !Hoption.Same) {
+      TGaxis axis;
+      PaintLegoAxis(&axis, 90);
+   }
 
    PaintTitle();
 
-   delete axis;
-   delete fLego; fLego = 0;
+   fLego.reset();
 }
 
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////new TGaxis///////////////////
 /// Draw the histogram title
 ///
 /// The title is drawn according to the title alignment returned by

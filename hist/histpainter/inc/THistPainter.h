@@ -26,6 +26,7 @@
 
 #include <vector>
 #include <utility>
+#include <memory>
 
 
 class TH1;
@@ -49,25 +50,25 @@ struct THistRenderingRegion
 class THistPainter : public TVirtualHistPainter {
 
 protected:
-   TH1                  *fH;                 ///< Pointer to histogram to paint
-   TAxis                *fXaxis;             ///< Pointer to X axis
-   TAxis                *fYaxis;             ///< Pointer to Y axis
-   TAxis                *fZaxis;             ///< Pointer to Z axis
-   TList                *fFunctions;         ///< Pointer to histogram list of functions
-   TPainter3dAlgorithms *fLego;              ///< Pointer to a TPainter3dAlgorithms object
-   TGraph2DPainter      *fGraph2DPainter;    ///< Pointer to a TGraph2DPainter object
-   TPie                 *fPie;               ///< Pointer to a TPie in case of option PIE
-   std::vector<Double_t> fXbuf;              ///< X buffer coordinates
-   std::vector<Double_t> fYbuf;              ///< Y buffer coordinates
-   Int_t                 fNcuts;             ///< Number of graphical cuts
-   Int_t                 fCutsOpt[kMaxCuts]; ///< Sign of each cut
-   TCutG                *fCuts[kMaxCuts];    ///< Pointers to graphical cuts
-   TList                *fStack;             ///< Pointer to stack of histograms (if any)
-   Int_t                 fShowProjection;    ///< True if a projection must be drawn
-   TString               fShowOption;        ///< Option to draw the projection
-   Int_t                 fXHighlightBin;     ///< X highlight bin
-   Int_t                 fYHighlightBin;     ///< Y highlight bin
-   TF3                  *fCurrentF3;         ///< Current TF3 function
+   TH1                  *fH;                      ///< Pointer to histogram to paint
+   TAxis                *fXaxis;                  ///< Pointer to X axis
+   TAxis                *fYaxis;                  ///< Pointer to Y axis
+   TAxis                *fZaxis;                  ///< Pointer to Z axis
+   TList                *fFunctions;              ///< Pointer to histogram list of functions
+   std::unique_ptr<TPainter3dAlgorithms> fLego;   ///< Pointer to a TPainter3dAlgorithms object
+   std::unique_ptr<TGraph2DPainter> fGraph2DPainter; ///< Pointer to a TGraph2DPainter object
+   std::unique_ptr<TPie> fPie;                    ///< Pointer to a TPie in case of option PIE
+   std::vector<Double_t> fXbuf;                   ///< X buffer coordinates
+   std::vector<Double_t> fYbuf;                   ///< Y buffer coordinates
+   Int_t                 fNcuts;                  ///< Number of graphical cuts
+   Int_t                 fCutsOpt[kMaxCuts];      ///< Sign of each cut
+   TCutG                *fCuts[kMaxCuts];         ///< Pointers to graphical cuts
+   TList                *fStack;                  ///< Pointer to stack of histograms (if any)
+   Int_t                 fShowProjection;         ///< True if a projection must be drawn
+   TString               fShowOption;             ///< Option to draw the projection
+   Int_t                 fXHighlightBin;          ///< X highlight bin
+   Int_t                 fYHighlightBin;          ///< Y highlight bin
+   TF3                  *fCurrentF3;              ///< Current TF3 function
 
 private:
    mutable TString fObjectInfo;
