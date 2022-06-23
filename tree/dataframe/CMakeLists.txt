@@ -94,6 +94,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RDefineBase.cxx
     src/RCutFlowReport.cxx
     src/RDataFrame.cxx
+    src/RDatasetSpec.cxx
     src/RDFActionHelpers.cxx
     src/RDFColumnRegister.cxx
     src/RDFDisplay.cxx
