@@ -62,6 +62,8 @@ public:
 
 protected:
 
+  void ioStreamerPass2() override ;
+
   RooListProxy _compRSet ;
   RooListProxy _compCSet ;
 

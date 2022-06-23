@@ -533,7 +533,34 @@ void RooProduct::printMetaArgs(ostream& os) const
 }
 
 
+void RooProduct::ioStreamerPass2() {
+  RooAbsReal::ioStreamerPass2(); // call the baseclass method
 
+  if(numProxies() < 2) {
+    throw std::runtime_error("RooProduct::ioStreamerPass2(): the number of proxies in the proxy list should be at leat 2!");
+  }
+
+  // If the proxy data members are evolved by schema evolution, the proxy list
+  // that references them will contain null pointers because the evolved
+  // members are only created after the proxy list. That's why we have to set
+  // them manually in that case. But to make sure we don't overwrite valid
+  // proxies, an exception will be thrown if the proxy list constains
+  // unexpected values.
+  RooAbsProxy * p0 = getProxy(0);
+  if(p0 != &_compRSet) {
+    if(p0) {
+      throw std::runtime_error("RooProduct::ioStreamerPass2(): the first proxy unexpectedly wasn't the compRSet!");
+    }
+    _proxyList.AddAt(&_compRSet, 0);
+  }
+  RooAbsProxy * p1 = getProxy(1);
+  if(p1 != &_compCSet) {
+    if(p1) {
+      throw std::runtime_error("RooProduct::ioStreamerPass2(): the second proxy unexpectedly wasn't the compCSet!");
+    }
+    _proxyList.AddAt(&_compCSet, 1);
+  }
+}
 
 
 namespace {
@@ -564,7 +591,3 @@ void dump_map(ostream& os, RPPMIter i, RPPMIter end)
 }
 
 }
-
-
-
-
