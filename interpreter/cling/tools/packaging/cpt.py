@@ -232,9 +232,7 @@ def download_llvm_binary():
     box_draw("Fetching LLVM binary")
     print('Current working directory is: ' + workdir + '\n')
     if DIST=="Ubuntu":
-        subprocess.call(
-            "sudo -H {0} -m pip install lit".format(sys.executable), shell=True
-            )
+        os.system("sudo -H {0} -m pip install lit".format(sys.executable))
         llvm_config_path = exec_subprocess_check_output("which llvm-config-{0}".format(llvm_vers), workdir)
         if llvm_config_path != '' and tar_required is False:
             llvm_dir = os.path.join("/usr", "lib", "llvm-"+llvm_vers)
@@ -247,9 +245,7 @@ def download_llvm_binary():
         else:
             tar_required = True
     elif DIST == 'MacOSX':
-        subprocess.call(
-            "sudo -H {0} -m pip install lit".format(sys.executable), shell=True
-            )
+        os.system("sudo -H {0} -m pip install lit".format(sys.executable))
         if tar_required is False:
             llvm_dir = os.path.join("/opt", "local", "libexec", "llvm-"+llvm_vers)
             llvm_config_path = os.path.join(llvm_dir, "bin", "llvm-config")
@@ -282,7 +278,8 @@ def download_llvm_binary():
             exec_subprocess_call('tar xvf clang+llvm-5.0.2-x86_64-apple-darwin.tar.xz', workdir)
             exec_subprocess_call('sudo mv clang+llvm-5.0.2-x86_64-apple-darwin %s' % srcdir, workdir)
         else:
-            raise Exception("Building clang using LLVM binary not possible. Please invoke cpt without --with-binary-llvm and --with-llvm-tar flags")
+            pass
+            #raise Exception("Building clang using LLVM binary not possible. Please invoke cpt without --with-binary-llvm and --with-llvm-tar flags")
     # FIXME: Add Fedora and SUSE support
 
 # TODO Refactor all fetch_ functions to use this class will remove a lot of dup
@@ -562,8 +559,7 @@ def compile(arg):
     if TRAVIS_BUILD_DIR:
         ### Run cling once, dumping the include paths, helps debug issues
         try:
-            subprocess.check_call(os.path.join(workdir, 'builddir', 'bin', 'cling')
-                                  + ' -v ".I"', shell=True)
+            os.system(os.path.join(workdir, 'builddir', 'bin', 'cling') + ' -v ".I"')
         except Exception as e:
             print(e)
     travis_fold_end("compile")
@@ -601,8 +597,7 @@ def compile_for_binary(arg):
     if TRAVIS_BUILD_DIR:
         ### Run cling once, dumping the include paths, helps debug issues
         try:
-            subprocess.check_call(os.path.join(workdir, 'builddir', 'bin', 'cling')
-                                  + ' -v ".I"', shell=True)
+            os.system(os.path.join(workdir, 'builddir', 'bin', 'cling')+ ' -v ".I"')
         except Exception as e:
             print(e)
     travis_fold_end("compile")
@@ -706,7 +701,7 @@ def setup_tests():
     ).decode()
     commit = branch_ref[: branch_ref.find("\trefs/heads")]
     # We get zip instead of git clone to not download git history
-    subprocess.Popen(
+    os.popen(
         [
             'sudo wget https://github.com/llvm/llvm-project/archive/{0}.zip && sudo unzip {0}.zip "llvm-project-{0}/llvm/utils/*"'.format(
                 commit
@@ -718,7 +713,7 @@ def setup_tests():
         stdout=None,
         stderr=subprocess.STDOUT,
     ).communicate("yes".encode("utf-8"))
-    subprocess.Popen(
+    os.popen(
         ["sudo cp -r llvm-project-{0}/llvm/utils/FileCheck FileCheck".format(commit)],
         cwd=os.path.join(CLING_SRC_DIR, "tools"),
         shell=True,
@@ -737,7 +732,7 @@ def setup_tests():
                 llvm_dir = copy.copy(srcdir)
             else:
                 llvm_dir = os.path.join("/usr", "lib", "llvm-" + llvm_vers, "build")
-        subprocess.Popen(
+        os.popen(
             ["sudo mkdir {1}/utils/".format(commit, llvm_dir)],
             cwd=os.path.join(CLING_SRC_DIR, "tools"),
             shell=True,
@@ -745,7 +740,7 @@ def setup_tests():
             stdout=None,
             stderr=subprocess.STDOUT,
         ).communicate("yes".encode("utf-8"))
-        subprocess.Popen(
+        os.popen(
             [
                 "sudo mv llvm-project-{0}/llvm/utils/lit/ {1}/utils/".format(
                     commit, llvm_dir
@@ -1890,9 +1885,7 @@ elif OS == 'Linux':
             CPT will now attempt to install the distro package automatically.
             Do you want to continue? [yes/no]: ''', args['y']).lower()
         if choice in yes:
-            subprocess.call(
-                "sudo {0} -m pip install distro".format(sys.executable), shell=True
-            )
+            os.system("sudo {0} -m pip install distro".format(sys.executable))
             import distro
         else:
             print('Install/update the distro package from pip')
@@ -1999,12 +1992,12 @@ if args['check_requirements']:
             while True:
                 if choice in yes:
                     # Need to communicate values to the shell. Do not use exec_subprocess_call()
-                    subprocess.Popen(['sudo apt-get update'],
+                    os.popen(['sudo apt-get update'],
                                     shell=True,
                                     stdin=subprocess.PIPE,
                                     stdout=None,
                                     stderr=subprocess.STDOUT).communicate('yes'.encode('utf-8'))
-                    subprocess.Popen(['sudo apt-get install ' + install_line],
+                    os.popen(['sudo apt-get install ' + install_line],
                                     shell=True,
                                     stdin=subprocess.PIPE,
                                     stdout=None,
@@ -2023,7 +2016,7 @@ if args['check_requirements']:
                     continue
         if no_install is False and llvm_binary_name != "" and tar_required is False:
             try:
-                subprocess.Popen(['sudo apt-get install llvm-{0}-dev'.format(llvm_vers)],
+                os.popen(['sudo apt-get install llvm-{0}-dev'.format(llvm_vers)],
                                  shell=True,
                                  stdin=subprocess.PIPE,
                                  stdout=None,
@@ -2055,7 +2048,7 @@ Refer to the documentation of CPT for information on setting up your Windows env
             while True:
                 if choice in yes:
                     # Need to communicate values to the shell. Do not use exec_subprocess_call()
-                    subprocess.Popen(['sudo yum install ' + install_line],
+                    os.popen(['sudo yum install ' + install_line],
                                     shell=True,
                                     stdin=subprocess.PIPE,
                                     stdout=None,
@@ -2092,12 +2085,12 @@ Refer to the documentation of CPT for information on setting up your Windows env
             while True:
                 if choice in yes:
                     # Need to communicate values to the shell. Do not use exec_subprocess_call()
-                    subprocess.Popen(['sudo port -v selfupdate'],
+                    os.popen(['sudo port -v selfupdate'],
                                     shell=True,
                                     stdin=subprocess.PIPE,
                                     stdout=None,
                                     stderr=subprocess.STDOUT).communicate('yes'.encode('utf-8'))
-                    subprocess.Popen(['sudo port install ' + install_line],
+                    os.popen(['sudo port install ' + install_line],
                                     shell=True,
                                     stdin=subprocess.PIPE,
                                     stdout=None,
@@ -2115,7 +2108,7 @@ Refer to the documentation of CPT for information on setting up your Windows env
                     choice = custom_input("Please respond with 'yes' or 'no': ", args['y'])
                     continue
         if no_install is False and llvm_binary_name != "":
-            subprocess.Popen(['sudo port install {0}'.format(llvm_binary_name)],
+            os.popen(['sudo port install {0}'.format(llvm_binary_name)],
                              shell=True,
                              stdin=subprocess.PIPE,
                              stdout=None,
@@ -2251,6 +2244,7 @@ if args['last_stable']:
     args["with_binary_llvm"] = True
 
     if args["with_binary_llvm"]:
+        download_llvm_binary()
         compile = compile_for_binary
         install_prefix = install_prefix_for_binary
         fetch_clang(llvm_revision)
