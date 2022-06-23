@@ -37,6 +37,7 @@
 #include "TRegexp.h"
 #include "strlcpy.h"
 #include "snprintf.h"
+#include <vector>
 
 Double_t *gxwork, *gywork, *gxworkl, *gyworkl;
 Int_t TGraphPainter::fgMaxPointsPerLine = 50;
@@ -836,7 +837,7 @@ void TGraphPainter::ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, 
    static Int_t px1,px2,py1,py2;
    static Int_t pxold, pyold, px1old, py1old, px2old, py2old;
    static Int_t dpx, dpy;
-   static Int_t *x=0, *y=0;
+   static std::vector<Int_t> x, y;
    Bool_t opaque  = gPad->OpaqueMoving();
 
    if (!theGraph->IsEditable() || theGraph->InheritsFrom(TGraphPolar::Class())) {
@@ -861,9 +862,9 @@ void TGraphPainter::ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, 
       ipoint = -1;
 
 
-      if (x || y) break;
-      x = new Int_t[theNpoints+1];
-      y = new Int_t[theNpoints+1];
+      if (!x.empty() || !y.empty()) break;
+      x.resize(theNpoints+1);
+      y.resize(theNpoints+1);
       for (i=0;i<theNpoints;i++) {
          pxp = gPad->XtoAbsPixel(gPad->XtoPad(theX[i]));
          pyp = gPad->YtoAbsPixel(gPad->YtoPad(theY[i]));
@@ -1013,8 +1014,8 @@ void TGraphPainter::ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, 
             pyold = py;
             for(i=0;i<theNpoints;i++) {
                if (badcase) continue;  //do not update if big zoom and points moved
-               if (x) theX[i] = gPad->PadtoX(gPad->AbsPixeltoX(x[i]+dpx));
-               if (y) theY[i] = gPad->PadtoY(gPad->AbsPixeltoY(y[i]+dpy));
+               if (!x.empty()) theX[i] = gPad->PadtoX(gPad->AbsPixeltoX(x[i]+dpx));
+               if (!y.empty()) theY[i] = gPad->PadtoY(gPad->AbsPixeltoY(y[i]+dpy));
             }
          } else {
             pxold = px;
@@ -1047,8 +1048,8 @@ void TGraphPainter::ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, 
 
       if (gROOT->IsEscaped()) {
          gROOT->SetEscape(kFALSE);
-         delete [] x; x = 0;
-         delete [] y; y = 0;
+         x.clear();
+         y.clear();
          break;
       }
 
@@ -1074,8 +1075,8 @@ void TGraphPainter::ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, 
       if (middle) {
          for(i=0;i<theNpoints;i++) {
             if (badcase) continue;  //do not update if big zoom and points moved
-            if (x) theX[i] = gPad->PadtoX(gPad->AbsPixeltoX(x[i]+dpx));
-            if (y) theY[i] = gPad->PadtoY(gPad->AbsPixeltoY(y[i]+dpy));
+            if (!x.empty()) theX[i] = gPad->PadtoX(gPad->AbsPixeltoX(x[i]+dpx));
+            if (!y.empty()) theY[i] = gPad->PadtoY(gPad->AbsPixeltoY(y[i]+dpy));
          }
       } else {
          theX[ipoint] = gPad->PadtoX(gPad->AbsPixeltoX(pxold));
@@ -1093,8 +1094,8 @@ void TGraphPainter::ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, 
          }
       }
       badcase = kFALSE;
-      delete [] x; x = 0;
-      delete [] y; y = 0;
+      x.clear();
+      y.clear();
       gPad->Modified(kTRUE);
       gVirtualX->SetLineColor(-1);
    }
