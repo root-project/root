@@ -861,13 +861,13 @@ void collection_proxies(bool proj=true)
 
    // create event data from list
    auto collectionMng = new CollectionManager(event);
-/*
+
    REveDataCollection* trackCollection = new REveDataCollection("Tracks");
    trackCollection->SetItemClass(TParticle::Class());
    trackCollection->SetMainColor(kGreen);
    trackCollection->SetFilterExpr("i.Pt() > 4.1 && std::abs(i.Eta()) < 1");
    collectionMng->addCollection(trackCollection, new TParticleProxyBuilder(), true);
-*/
+
    REveDataCollection* jetCollection = new REveDataCollection("Jets");
    jetCollection->SetItemClass(Jet::Class());
    jetCollection->SetMainColor(kYellow);
@@ -879,7 +879,7 @@ void collection_proxies(bool proj=true)
    hitCollection->SetMainColor(kOrange + 7);
    hitCollection->SetFilterExpr("i.fPt > 5");
    collectionMng->addCollection(hitCollection, new RecHitProxyBuilder(), true);
-/*
+
    // add calorimeters
    auto calo3d = new REveCalo3D(event->fCaloData);
    calo3d->SetBarrelRadius(kR_max);
@@ -897,7 +897,7 @@ void collection_proxies(bool proj=true)
    hcalCollection->SetItemClass(RCaloTower::Class());
    hcalCollection->SetMainColor(kBlue);
    collectionMng->addCollection(hcalCollection, new CaloTowerProxyBuilder(event->fCaloData));
-*/
+
    // event navigation
    auto eventMng = new EventManager(event, collectionMng);
    eventMng->SetName("EventManager");
