@@ -12,6 +12,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <iostream>
+#include <memory>
 
 #include "TROOT.h"
 #include "TBuffer.h"
@@ -2293,7 +2294,7 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
    Int_t bin1, bin2, first, last;
    Double_t temp, xmin,xmax;
    Bool_t opaque  = gPad->OpaqueMoving();
-   static TBox *zoombox;
+   static std::unique_ptr<TBox> zoombox;
    Double_t zbx1=0,zbx2=0,zby1=0,zby2=0;
 
    // The CONT4 option, used to paint TH2, is a special case; it uses a 3D
@@ -2365,7 +2366,7 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
                zby1 = TMath::Power(10,zby1);
                zby2 = TMath::Power(10,zby2);
             }
-            zoombox = new TBox(zbx1, zby1, zbx2, zby2);
+            zoombox = std::make_unique<TBox>(zbx1, zby1, zbx2, zby2);
             Int_t ci = TColor::GetColor("#7d7dff");
             TColor *zoomcolor = gROOT->GetColor(ci);
             if (!TCanvas::SupportAlpha() || !zoomcolor) zoombox->SetFillStyle(3002);
@@ -2452,10 +2453,8 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
    case kButton1Up:
       if (gROOT->IsEscaped()) {
          gROOT->SetEscape(kFALSE);
-         if (opaque && zoombox) {
-            zoombox->Delete();
-            zoombox = 0;
-         }
+         if (opaque && zoombox)
+            zoombox.reset();
          break;
       }
 
@@ -2603,8 +2602,7 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
          gVirtualX->SetLineColor(-1);
       } else {
          if (zoombox) {
-            zoombox->Delete();
-            zoombox = 0;
+            zoombox.reset();
             gPad->Modified();
             gPad->Update();
          }
