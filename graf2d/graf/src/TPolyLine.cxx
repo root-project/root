@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include <iostream>
+#include <vector>
 #include "TROOT.h"
 #include "TBuffer.h"
 #include "TMath.h"
@@ -267,7 +268,7 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    static Int_t px1,px2,py1,py2;
    static Int_t pxold, pyold, px1old, py1old, px2old, py2old;
    static Int_t dpx, dpy;
-   static Int_t *x=0, *y=0;
+   static std::vector<Int_t> x, y;
    Bool_t opaque  = gPad->OpaqueMoving();
 
    if (!gPad->IsEditable()) return;
@@ -286,9 +287,9 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       ipoint = -1;
 
 
-      if (x || y) break;
-      x = new Int_t[np+1];
-      y = new Int_t[np+1];
+      if (!x.empty() || !y.empty()) break;
+      x.resize(np+1, 0);
+      y.resize(np+1, 0);
       for (i=0;i<np;i++) {
          pxp = gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
          pyp = gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
@@ -423,7 +424,7 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             pyold = TMath::Max(pyold, py2);
             pyold = TMath::Min(pyold, py1);
          }
-         if (x && y) {
+         if (!x.empty() && !y.empty()) {
             if (middle) {
                for(i=0;i<np;i++) {
                   fX[i] = gPad->PadtoX(gPad->AbsPixeltoX(x[i]+dpx));
@@ -458,7 +459,7 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
                      ymax + dyr*gPad->GetTopMargin());
          gPad->RangeAxis(xmin, ymin, xmax, ymax);
 
-      if (x && y) {
+      if (!x.empty() && !y.empty()) {
          if (middle) {
             for(i=0;i<np;i++) {
                fX[i] = gPad->PadtoX(gPad->AbsPixeltoX(x[i]+dpx));
@@ -468,8 +469,8 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             fX[ipoint] = gPad->PadtoX(gPad->AbsPixeltoX(pxold));
             fY[ipoint] = gPad->PadtoY(gPad->AbsPixeltoY(pyold));
          }
-         delete [] x; x = 0;
-         delete [] y; y = 0;
+         x.clear();
+         y.clear();
       }
       gPad->Modified(kTRUE);
       gVirtualX->SetLineColor(-1);
