@@ -3153,7 +3153,7 @@ For more complex demo please see for example `$ROOTSYS/tutorials/tree/temperatur
 
 */
 
-TH1 *gCurrentHist = 0;
+TH1 *gCurrentHist = nullptr;
 
 Hoption_t Hoption;
 Hparam_t  Hparam;
@@ -3163,8 +3163,7 @@ const Int_t kNMAX = 2000;
 const Int_t kMAXCONTOUR  = 104;
 const UInt_t kCannotRotate = BIT(11);
 
-static TBox *gXHighlightBox = 0;   // highlight X box
-static TBox *gYHighlightBox = 0;   // highlight Y box
+static std::unique_ptr<TBox> gXHighlightBox, gYHighlightBox;   // highlight X and Y box
 
 static TString gStringEntries;
 static TString gStringMean;
@@ -3195,8 +3194,7 @@ ClassImp(THistPainter);
 
 THistPainter::THistPainter()
 {
-
-   fH = 0;
+   fH = nullptr;
    fXaxis = 0;
    fYaxis = 0;
    fZaxis = 0;
@@ -3206,8 +3204,8 @@ THistPainter::THistPainter()
    fNcuts = 0;
    fStack = 0;
    fLego  = 0;
-   fPie   = 0;
-   fGraph2DPainter = 0;
+   fPie   = nullptr;
+   fGraph2DPainter = nullptr;
    fShowProjection = 0;
    fShowOption = "";
    for (int i=0; i<kMaxCuts; i++) {
@@ -3710,9 +3708,6 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 TList *THistPainter::GetContourList(Double_t contour) const
 {
-
-
-
    // Check if fH contains a TGraphDelaunay2D
    TList *hl = fH->GetListOfFunctions();
    TGraphDelaunay2D *dt = (TGraphDelaunay2D*)hl->FindObject("TGraphDelaunay2D");
@@ -3871,8 +3866,8 @@ void THistPainter::SetHighlight()
    fXHighlightBin = -1;
    fYHighlightBin = -1;
    // delete previous highlight box
-   if (gXHighlightBox) { gXHighlightBox->Delete(); gXHighlightBox = 0; }
-   if (gYHighlightBox) { gYHighlightBox->Delete(); gYHighlightBox = 0; }
+   if (gXHighlightBox) gXHighlightBox.reset();
+   if (gYHighlightBox) gYHighlightBox.reset();
    // emit Highlighted() signal (user can check on disabled)
    if (gPad->GetCanvas()) gPad->GetCanvas()->Highlighted(gPad, fH, fXHighlightBin, fYHighlightBin);
 }
@@ -3963,7 +3958,7 @@ void THistPainter::PaintHighlightBin(Option_t * /*option*/)
    }
 
    if (!gXHighlightBox) {
-      gXHighlightBox = new TBox(hbx1, hby1, hbx2, hby2);
+      gXHighlightBox = std::make_unique<TBox>(hbx1, hby1, hbx2, hby2);
       gXHighlightBox->SetBit(kCannotPick);
       gXHighlightBox->SetFillColor(TColor::GetColor("#9797ff"));
       if (!TCanvas::SupportAlpha()) gXHighlightBox->SetFillStyle(3001);
@@ -3986,7 +3981,7 @@ void THistPainter::PaintHighlightBin(Option_t * /*option*/)
    hby2 = fYaxis->GetBinUpEdge(fYHighlightBin);
 
    if (!gYHighlightBox) {
-      gYHighlightBox = new TBox(hbx1, hby1, hbx2, hby2);
+      gYHighlightBox = std::make_unique<TBox>(hbx1, hby1, hbx2, hby2);
       gYHighlightBox->SetBit(kCannotPick);
       gYHighlightBox->SetFillColor(gXHighlightBox->GetFillColor());
       gYHighlightBox->SetFillStyle(gXHighlightBox->GetFillStyle());
@@ -4505,7 +4500,7 @@ void THistPainter::Paint(Option_t *option)
       return;
    } else {
       if (fPie) delete fPie;
-      fPie = 0;
+      fPie = nullptr;
    }
 
    fXbuf  = new Double_t[kNMAX];
