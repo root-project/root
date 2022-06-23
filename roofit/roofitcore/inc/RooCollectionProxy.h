@@ -83,6 +83,15 @@ public:
       // Don't do _owner->registerProxy(*this) here! The proxy list will also be copied separately.
    }
 
+   // Assignment is deleted because it is not clear how it should behave.
+   // Should default assignment be used? But then, it will use the assignment
+   // operators of the RooFit collections, which actually don't do assignment,
+   // but value syncronization! Should it be re-implemented to be actual
+   // assignment? That would be inconsistent with the base class! So it's
+   // better to not support it at all.
+   RooCollectionProxy& operator=(RooCollectionProxy const& other) = delete;
+   RooCollectionProxy& operator=(RooCollectionProxy && other) = delete;
+
    ~RooCollectionProxy() override
    {
       if (_owner)
