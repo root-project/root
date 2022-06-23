@@ -165,24 +165,29 @@ static ClustersAndEntries MakeClusters(const std::vector<std::string> &treeNames
       Long64_t start = 0ll, end = 0ll;
       const Long64_t entries = t->GetEntries();
       // Iterate over the clusters in the current file
-      std::vector<EntryCluster> clusters;
+      std::vector<EntryCluster> entryRanges;
       while ((start = clusterIter()) < entries) {
          end = clusterIter.GetNextEntry();
          // Currently, if a user specified a range, the clusters will be only globally obtained
-         // Hence, the guarantee that currentStart and currentEnd are always as expected
-         // That are: the cluster start must be at least startEntry, and at most the endEntry
+         // Assume that there are 3 files with entries: [0, 100], [0, 150], [0, 200] (in this order)
+         // Since the cluster boundaries are obtained sequentially, applying the offsets, the boundaries
+         // would be: 0, 100, 250, 450. Now assume that the user provided the range (150, 300)
+         // Then, in the first iteration, nothing is going to be added to entryRanges since:
+         // std::max(0, 150) < std::min(100, max). Then, by the same logic only a subset of the second
+         // tree is added, i.e.: currentStart is now 200 and currentEnd is 250 (locally from 100 to 150).
+         // Lsatly, the last tree would take entries from 250 to 300 (or from 0 to 50 locally).
          // The current file's offset to start and end is added to make them (chain) global
          const auto currentStart = std::max(start + offset, startEntry);
          const auto currentEnd = std::min(end + offset, endEntry);
          // This is not satified if the desired start is larger than the last entry of some cluster
          // In this case, this cluster is not going to be processes further
          if (currentStart < currentEnd)
-            clusters.emplace_back(EntryCluster{currentStart, currentEnd});
+            entryRanges.emplace_back(EntryCluster{currentStart, currentEnd});
          if (currentEnd == endEntry) // if the desired end is reached, stop reading further
             break;
       }
       offset += entries; // consistently keep track of the total number of entries
-      clustersPerFile.emplace_back(std::move(clusters));
+      clustersPerFile.emplace_back(std::move(entryRanges));
       // The clusters might be empty, but their entries are needed to properly handle the global range
       // This can happen if a cluster had last entry smaller than the desired start. The position of the
       // desired start must remain globally the same.
