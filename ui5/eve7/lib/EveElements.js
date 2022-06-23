@@ -906,6 +906,9 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(/*EveManager*/) {
 
       makeBoxSet(boxset, rnr_data)
       {
+         if (!rnr_data.vtxBuff)
+           return new THREE.Mesh();
+
          let vBuff;
          if (boxset.boxType == 1) // free box
          {
