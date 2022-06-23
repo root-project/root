@@ -161,20 +161,6 @@ RooPolyFunc::RooPolyFunc(const RooPolyFunc &other, const char *name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Assignment operator
-
-RooPolyFunc &RooPolyFunc::operator=(const RooPolyFunc &other)
-{
-   RooAbsReal::operator=(other);
-   _vars = other._vars;
-
-   for (auto const &term : other._terms) {
-      _terms.emplace_back(std::make_unique<RooListProxy>(term->GetName(), this, *term));
-   }
-   return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Evaluate value of Polynomial.
 double RooPolyFunc::evaluate() const
 {
