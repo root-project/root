@@ -243,7 +243,7 @@ public:
 
   /// Set the buffer.
   void setBuffer(std::unique_ptr<llvm::MemoryBuffer> B) {
-    IsBufferInvalid = false;
+    IsBufferInvalid = !B;
     Buffer = std::move(B);
   }
 
