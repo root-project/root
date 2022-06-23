@@ -14,6 +14,7 @@
 #include <cstdio>
 #include <cctype>
 #include <iostream>
+#include <memory>
 
 #include "TROOT.h"
 #include "TSystem.h"
@@ -3471,7 +3472,7 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    if (!gPad) return;
 
    static Int_t bin, px1, py1, px2, py2, pyold;
-   static TBox *zoombox = nullptr;
+   static std::unique_ptr<TBox> zoombox;
    Double_t zbx1,zbx2,zby1,zby2;
 
    Int_t bin1, bin2;
@@ -3538,7 +3539,7 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             zby2 = TMath::Power(10,zby2);
          }
          if (zoombox) Error("ExecuteEvent", "Last zoom box was not deleted");
-         zoombox = new TBox(zbx1, zby1, zbx2, zby2);
+         zoombox = std::make_unique<TBox>(zbx1, zby1, zbx2, zby2);
          Int_t ci = TColor::GetColor("#7d7dff");
          TColor *zoomcolor = gROOT->GetColor(ci);
          if (!TCanvas::SupportAlpha() || !zoomcolor) zoombox->SetFillStyle(3002);
@@ -3678,8 +3679,7 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
                xaxis->SetRangeUser(x1, x2);
                yaxis->SetRangeUser(y1, y2);
             }
-            zoombox->Delete();
-            zoombox = nullptr;
+            zoombox.reset();
          }
       }
       gPad->Modified(kTRUE);
