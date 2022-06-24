@@ -5965,10 +5965,10 @@ void THistPainter::PaintContour(Option_t *option)
 
    gPad->SetBit(TGraph::kClipFrame);
 
-   Double_t *levels  = new Double_t[2*kMAXCONTOUR];
-   Double_t *xarr    = new Double_t[2*kMAXCONTOUR];
-   Double_t *yarr    = new Double_t[2*kMAXCONTOUR];
-   Int_t  *itarr     = new Int_t[2*kMAXCONTOUR];
+   std::vector<Double_t> levels(2*kMAXCONTOUR);
+   std::vector<Double_t> xarr(2*kMAXCONTOUR);
+   std::vector<Double_t> yarr(2*kMAXCONTOUR);
+   std::vector<Int_t>    itarr(2*kMAXCONTOUR);
 
    Int_t npmax = 0;
    for (i=0;i<2*kMAXCONTOUR;i++) itarr[i] = 0;
@@ -5993,19 +5993,17 @@ void THistPainter::PaintContour(Option_t *option)
       fH->TAttLine::Modify();
    }
 
-   TPolyLine **polys = 0;
-   TPolyLine *poly=0;
-   TObjArray *contours = 0;
-   TList *list = 0;
-   TGraph *graph = 0;
-   Int_t *np = 0;
+   std::vector<std::unique_ptr<TPolyLine>> polys;
+   TObjArray *contours = nullptr;
+   TList *list = nullptr;
+   TGraph *graph = nullptr;
+   std::vector<Int_t> np;
    if (Hoption.Contour == 1) {
-      np = new Int_t[ncontour];
-      for (i=0;i<ncontour;i++) np[i] = 0;
-      polys = new TPolyLine*[ncontour];
-      for (i=0;i<ncontour;i++) {
-         polys[i] = new TPolyLine(100);
-      }
+      np.resize(ncontour);
+      for (i=0;i<ncontour;i++)
+         np[i] = 0;
+      for (i=0;i<ncontour;i++)
+         polys.emplace_back(std::make_unique<TPolyLine>(100));
       if (Hoption.List == 1) {
          contours = (TObjArray*)gROOT->GetListOfSpecials()->FindObject("contours");
          if (contours) {
@@ -6052,7 +6050,7 @@ void THistPainter::PaintContour(Option_t *option)
             else             zc[3] = Hparam.zmin;
          }
          for (k=0;k<4;k++) {
-            ir[k] = TMath::BinarySearch(ncontour,levels,zc[k]);
+            ir[k] = TMath::BinarySearch(ncontour, levels.data(), zc[k]);
          }
          if (ir[0] != ir[1] || ir[1] != ir[2] || ir[2] != ir[3] || ir[3] != ir[0]) {
             x[0] = fXaxis->GetBinCenter(i);
@@ -6067,7 +6065,7 @@ void THistPainter::PaintContour(Option_t *option)
             for (ix=1;ix<=4;ix++) {
                m = n%4 + 1;
                ljfill = PaintContourLine(zc[n-1],ir[n-1],x[n-1],y[n-1],zc[m-1],
-                     ir[m-1],x[m-1],y[m-1],&xarr[lj-1],&yarr[lj-1],&itarr[lj-1], levels);
+                     ir[m-1],x[m-1],y[m-1], xarr.data()+lj-1,yarr.data()+lj-1,itarr.data()+lj-1, levels.data());
                lj += 2*ljfill;
                n = m;
             }
@@ -6081,7 +6079,7 @@ void THistPainter::PaintContour(Option_t *option)
                if (n == 1) m = 4;
                else        m = n-1;
                ljfill = PaintContourLine(zc[n-1],ir[n-1],x[n-1],y[n-1],zc[m-1],
-                     ir[m-1],x[m-1],y[m-1],&xarr[lj-1],&yarr[lj-1],&itarr[lj-1], levels);
+                     ir[m-1],x[m-1],y[m-1],xarr.data()+lj-1,yarr.data()+lj-1,itarr.data()+lj-1, levels.data());
                lj += 2*ljfill;
                n = m;
             }
@@ -6122,15 +6120,14 @@ void THistPainter::PaintContour(Option_t *option)
                }
                if (Hoption.Contour != 1) {
                   fH->TAttLine::Modify();
-                  gPad->PaintPolyLine(2,&xarr[ix-1],&yarr[ix-1]);
+                  gPad->PaintPolyLine(2,xarr.data()+ix-1,yarr.data()+ix-1);
                   continue;
                }
 
                ipoly = itarr[ix-1];
                if (ipoly >=0 && ipoly <ncontour) {
-                  poly = polys[ipoly];
-                  poly->SetPoint(np[ipoly]  ,xarr[ix-1],yarr[ix-1]);
-                  poly->SetPoint(np[ipoly]+1,xarr[ix],  yarr[ix]);
+                  polys[ipoly]->SetPoint(np[ipoly]  ,xarr[ix-1],yarr[ix-1]);
+                  polys[ipoly]->SetPoint(np[ipoly]+1,xarr[ix],  yarr[ix]);
                   np[ipoly] += 2;
                   if (npmax < np[ipoly]) npmax = np[ipoly];
                }
@@ -6140,12 +6137,11 @@ void THistPainter::PaintContour(Option_t *option)
    } //end of for (j
 
    Double_t xmin,ymin;
-   Double_t *xp, *yp;
+   std::vector<Double_t> xp, yp;
    Int_t nadd,iminus,iplus;
-   Double_t *xx, *yy;
    Int_t istart;
    Int_t first = ncontour;
-   Int_t *polysort = 0;
+   std::vector<Int_t> polysort;
    Int_t contListNb;
    if (Hoption.Contour != 1) goto theEND;
 
@@ -6155,9 +6151,9 @@ void THistPainter::PaintContour(Option_t *option)
    // in the form of TGraph objects in the ROOT list of special objects.
    xmin = gPad->GetUxmin();
    ymin = gPad->GetUymin();
-   xp = new Double_t[2*npmax];
-   yp = new Double_t[2*npmax];
-   polysort = new Int_t[ncontour];
+   xp.resize(2*npmax);
+   yp.resize(2*npmax);
+   polysort.resize(ncontour);
    //find first positive contour
    for (ipoly=0;ipoly<ncontour;ipoly++) {
       if (levels[ipoly] >= 0) {first = ipoly; break;}
@@ -6174,9 +6170,8 @@ void THistPainter::PaintContour(Option_t *option)
       if (np[ipoly] == 0) continue;
       if (Hoption.List) list = (TList*)contours->At(contListNb);
       contListNb++;
-      poly = polys[ipoly];
-      xx = poly->GetX();
-      yy = poly->GetY();
+      Double_t *xx = polys[ipoly]->GetX();
+      Double_t *yy = polys[ipoly]->GetY();
       istart = 0;
       while (1) {
          iminus = npmax;
@@ -6209,9 +6204,9 @@ void THistPainter::PaintContour(Option_t *option)
          icol = gStyle->GetColorPalette(theColor);
          if (ndivz > 1) fH->SetFillColor(icol);
          fH->TAttFill::Modify();
-         gPad->PaintFillArea(iplus-iminus+1,&xp[iminus],&yp[iminus]);
+         gPad->PaintFillArea(iplus-iminus+1,xp.data()+iminus,yp.data()+iminus);
          if (Hoption.List) {
-            graph = new TGraph(iplus-iminus+1,&xp[iminus],&yp[iminus]);
+            graph = new TGraph(iplus-iminus+1,xp.data()+iminus,yp.data()+iminus);
             graph->SetFillColor(icol);
             graph->SetLineWidth(fH->GetLineWidth());
             list->Add(graph);
@@ -6228,23 +6223,12 @@ void THistPainter::PaintContour(Option_t *option)
       }
    }
 
-   for (i=0;i<ncontour;i++) delete polys[i];
-   delete [] polys;
-   delete [] xp;
-   delete [] yp;
-   delete [] polysort;
-
 theEND:
    gPad->ResetBit(TGraph::kClipFrame);
    if (Hoption.Zscale) PaintPalette();
    fH->SetLineStyle(linesav);
    fH->SetLineColor(colorsav);
    fH->SetFillColor(fillsav);
-   if (np) delete [] np;
-   delete [] xarr;
-   delete [] yarr;
-   delete [] itarr;
-   delete [] levels;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
