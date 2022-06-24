@@ -27,17 +27,43 @@ RDatasetSpec::REntryRange::REntryRange(Long64_t startEntry, Long64_t endEntry)
                              "creation of a dataset specification.");
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// \brief Pass metadata specification to RDF
+/// \param[in] treeName Name of the tree contained in the directory
+/// \param[in] fileNameGlob Directories where the tree is stored
+/// \param[in] entryRange  Struct containg {the first (inclusive), the last (exclusive)} global entry range
+///
+/// The filename glob supports the same type of expressions as TChain::Add()
 RDatasetSpec::RDatasetSpec(const std::string &treeName, const std::string &fileNameGlob, const REntryRange &entryRange)
    : fTreeNames({treeName}), fFileNameGlobs({fileNameGlob}), fEntryRange(entryRange)
 {
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// \brief Pass metadata specification to RDF
+/// \param[in] treeName Name of the tree contained in the directory
+/// \param[in] fileNameGlobs A vector of directories where the tree is stored
+/// \param[in] entryRange  Struct containg {the first (inclusive), the last (exclusive)} global entry range
+///
+/// The filename glob supports the same type of expressions as TChain::Add()
 RDatasetSpec::RDatasetSpec(const std::string &treeName, const std::vector<std::string> &fileNameGlobs,
                            const REntryRange &entryRange)
    : fTreeNames({treeName}), fFileNameGlobs(fileNameGlobs), fEntryRange(entryRange)
 {
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// \brief Pass metadata specification to RDF
+/// \param[in] treeAndFileNameGlobs A vector of pairs of tree names and their corresponding directories
+/// \param[in] entryRange  Struct containg {the first (inclusive), the last (exclusive)} global entry range
+///
+/// The filename glob supports the same type of expressions as TChain::Add()
+///
+/// ### Example usage:
+/// ~~~{.py}
+/// spec = ROOT.RDF.RDatasetSpec([("tree1", "a.root"), ("tree2", "b.root")], (5, 10))
+/// df = ROOT.RDataFrame(spec)
+/// ~~~
 RDatasetSpec::RDatasetSpec(const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
                            const REntryRange &entryRange)
    : fEntryRange(entryRange)
@@ -50,6 +76,13 @@ RDatasetSpec::RDatasetSpec(const std::vector<std::pair<std::string, std::string>
    }
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// \brief Add a friend to the specification
+/// \param[in] treeName Name of the tree contained in the directory
+/// \param[in] fileNameGlob Directories where the tree is stored
+/// \param[in] alias  String to refer to the particular friend
+///
+/// The filename glob supports the same type of expressions as TChain::Add()
 void RDatasetSpec::AddFriend(const std::string &treeName, const std::string &fileNameGlob, const std::string &alias)
 {
    fFriendInfo.fFriendNames.emplace_back(std::make_pair(treeName, alias));
@@ -57,6 +90,13 @@ void RDatasetSpec::AddFriend(const std::string &treeName, const std::string &fil
    fFriendInfo.fFriendChainSubNames.emplace_back(); // this is a tree
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// \brief Add a friend to the specification
+/// \param[in] treeName Name of the tree contained in the directory
+/// \param[in] fileNameGlobs A vector of directories where the tree is stored
+/// \param[in] alias  String to refer to the particular friend
+///
+/// The filename glob supports the same type of expressions as TChain::Add()
 void RDatasetSpec::AddFriend(const std::string &treeName, const std::vector<std::string> &fileNameGlobs,
                              const std::string &alias)
 {
@@ -65,6 +105,19 @@ void RDatasetSpec::AddFriend(const std::string &treeName, const std::vector<std:
    fFriendInfo.fFriendChainSubNames.emplace_back(std::vector<std::string>(fileNameGlobs.size(), treeName));
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// \brief Add a friend to the specification
+/// \param[in] treeAndFileNameGlobs A vector of pairs of tree names and their corresponding directories
+/// \param[in] alias  String to refer to the particular friend
+///
+/// The filename glob supports the same type of expressions as TChain::Add()
+///
+/// ### Example usage:
+/// ~~~{.py}
+/// spec = ROOT.RDF.RDatasetSpec("tree", "file.root")
+/// spec.AddFriend([("tree1", "a.root"), ("tree2", "b.root")], "alias")
+/// df = ROOT.RDataFrame(spec)
+/// ~~~
 void RDatasetSpec::AddFriend(const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
                              const std::string &alias)
 {
