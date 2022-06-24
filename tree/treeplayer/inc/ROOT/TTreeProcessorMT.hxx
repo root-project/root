@@ -27,6 +27,7 @@
 #include <functional>
 #include <memory>
 #include <vector>
+#include <limits>
 
 /** \class TTreeView
     \brief A helper class that encapsulates a file and a tree.

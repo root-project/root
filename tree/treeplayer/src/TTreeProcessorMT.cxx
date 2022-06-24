@@ -130,7 +130,8 @@ using ClustersAndEntries = std::pair<std::vector<std::vector<EntryCluster>>, std
 /// Return a vector of cluster boundaries for the given tree and files.
 static ClustersAndEntries MakeClusters(const std::vector<std::string> &treeNames,
                                        const std::vector<std::string> &fileNames, const unsigned int maxTasksPerFile,
-                                       Long64_t startEntry, Long64_t endEntry)
+                                       Long64_t startEntry = 0,
+                                       Long64_t endEntry = std::numeric_limits<Long64_t>::max())
 {
    // Note that as a side-effect of opening all files that are going to be used in the
    // analysis once, all necessary streamers will be loaded into memory.
@@ -542,7 +543,7 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
    const bool hasFriends = !fFriendInfo.fFriendNames.empty();
    const bool hasEntryList = fEntryList.GetN() > 0;
    const bool shouldRetrieveAllClusters =
-      hasFriends || hasEntryList || (fStartEntry || fEndEntry != std::numeric_limits<Long64_t>::max());
+      hasFriends || hasEntryList || fStartEntry > 0 || fEndEntry != std::numeric_limits<Long64_t>::max();
    ClustersAndEntries allClusterAndEntries{};
    auto &allClusters = allClusterAndEntries.first;
    const auto &allEntries = allClusterAndEntries.second;
@@ -567,7 +568,7 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
       // Evaluate clusters (with local entry numbers) and number of entries for this file
       const auto &treeNames = std::vector<std::string>({fTreeNames[fileIdx]});
       const auto &fileNames = std::vector<std::string>({fFileNames[fileIdx]});
-      const auto clustersAndEntries = MakeClusters(treeNames, fileNames, maxTasksPerFile, fStartEntry, fEndEntry);
+      const auto clustersAndEntries = MakeClusters(treeNames, fileNames, maxTasksPerFile);
       const auto &clusters = clustersAndEntries.first[0];
       const auto &entries = clustersAndEntries.second[0];
       auto processCluster = [&](const EntryCluster &c) {
