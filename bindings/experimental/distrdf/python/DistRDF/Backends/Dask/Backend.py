@@ -194,8 +194,6 @@ class DaskBackend(Base.BaseBackend):
         """
         # Set the number of partitions for this dataframe, one of the following:
         # 1. User-supplied `npartitions` optional argument
-        # 2. An educated guess according to the backend, using the backend's
-        #    `optimize_npartitions` function
-        npartitions = kwargs.pop("npartitions", self.optimize_npartitions())
+        npartitions = kwargs.pop("npartitions", None)
         headnode = HeadNode.get_headnode(self, npartitions, *args)
         return DataFrame.RDataFrame(headnode)

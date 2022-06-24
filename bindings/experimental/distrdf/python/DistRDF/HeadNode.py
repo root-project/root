@@ -67,7 +67,7 @@ class HeadNode(Node, ABC):
             this head node, starting from zero.
     """
 
-    def __init__(self, backend: BaseBackend):
+    def __init__(self, backend: BaseBackend, npartitions: Optional[int]):
         super().__init__(lambda: self)
 
         self.backend = backend
@@ -83,6 +83,25 @@ class HeadNode(Node, ABC):
         # RDataFrame itself, then calling its direct children, their children
         # and so on. Thus, we need a top-down traversal.
         self.graph_nodes: Deque[Node] = deque([self])
+
+        # Internal attribute to keep track of the number of partitions. We also
+        # check whether it was specified by the user when creating the dataframe.
+        # If so, this attribute will not be updated when triggering.
+        self._npartitions = npartitions
+        self._user_specified_npartitions = True if npartitions is not None else False
+
+    @property
+    def npartitions(self) -> Optional[int]:
+        return self._npartitions
+
+    @npartitions.setter
+    def npartitions(self, value: int) -> None:
+        """
+        The number of partitions for this dataframe is updated only if the user
+        did not initially specify one when creating the dataframe.
+        """
+        if not self._user_specified_npartitions:
+            self._npartitions = value
 
     def _prune_graph(self):
         """
@@ -154,6 +173,12 @@ class HeadNode(Node, ABC):
         """
         # Check if the workflow must be generated in optimized mode
         optimized = ROOT.RDF.Experimental.Distributed.optimized
+
+        # Updates the number of partitions for this dataframe if the user did
+        # not specify one initially. This is done each time the computations are
+        # triggered, in case the user changed the resource configuration
+        # between runs (e.g. changing the number of available cores).
+        self.npartitions = self.backend.optimize_npartitions()
 
         if optimized:
             computation_graph_callable = partial(
@@ -229,7 +254,7 @@ class EmptySourceHeadNode(HeadNode):
             for distributed execution.
     """
 
-    def __init__(self, backend: BaseBackend, npartitions: int, nentries: int):
+    def __init__(self, backend: BaseBackend, npartitions: Optional[int], nentries: int):
         """
         Creates a new RDataFrame instance for the given arguments.
 
@@ -239,10 +264,9 @@ class EmptySourceHeadNode(HeadNode):
             npartitions (int): The number of partitions the dataset will be
                 split in for distributed execution.
         """
-        super().__init__(backend)
+        super().__init__(backend, npartitions)
 
         self.nentries = nentries
-        self.npartitions = npartitions
 
     def _build_ranges(self) -> List[Ranges.DataRange]:
         """Build the ranges for this dataset."""
@@ -321,7 +345,7 @@ class TreeHeadNode(HeadNode):
 
     """
 
-    def __init__(self, backend: BaseBackend, npartitions: int, *args):
+    def __init__(self, backend: BaseBackend, npartitions: Optional[int], *args):
         """
         Creates a new RDataFrame instance for the given arguments.
 
@@ -331,9 +355,7 @@ class TreeHeadNode(HeadNode):
             npartitions (int): The number of partitions the dataset will be
                 split in for distributed execution.
         """
-        super().__init__(backend)
-
-        self.npartitions = npartitions
+        super().__init__(backend, npartitions)
 
         self.defaultbranches = None
         self.friendinfo = None

@@ -64,7 +64,7 @@ class SparkBackend(Base.BaseBackend):
         else:
             self.sc = pyspark.SparkContext.getOrCreate()
 
-    def optimize_npartitions(self):
+    def optimize_npartitions(self) -> int:
         """
         The SparkContext.defaultParallelism property roughly translates to the
         available amount of logical cores on the cluster. Some examples:
@@ -155,9 +155,6 @@ class SparkBackend(Base.BaseBackend):
         """
         # Set the number of partitions for this dataframe, one of the following:
         # 1. User-supplied `npartitions` optional argument
-        # 2. An educated guess according to the backend, using the backend's
-        #    `optimize_npartitions` function
-        # 3. Set `npartitions` to 2
-        npartitions = kwargs.pop("npartitions", self.optimize_npartitions())
+        npartitions = kwargs.pop("npartitions", None)
         headnode = HeadNode.get_headnode(self, npartitions, *args)
         return DataFrame.RDataFrame(headnode)
