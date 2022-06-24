@@ -85,14 +85,14 @@ public:
    // return input type (defined abstract in ROperator class )
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) {
       // only one input in Pool operators
-      return input; 
+      return input;
    }
 
-   // function returning output shape given input 
+   // function returning output shape given input
    std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) {
-      // shape of pooling input has to be (according to ONNX): NxCxHxW  
+      // shape of pooling input has to be (according to ONNX): NxCxHxW
       // Where N is batch size, C : input  channels, H : input height, W = input width
-      // or it can be [N, C, F1,F2,....FN] . Minimum dimension is 3  
+      // or it can be [N, C, F1,F2,....FN] . Minimum dimension is 3
       if (input.size() != 1 ) {
          throw std::runtime_error("TMVA SOFIE" + Name() + "Op Shape inference need 1 input tensor");
       }
@@ -108,7 +108,7 @@ public:
          throw
             std::runtime_error("TMVA SOFIE Pool Op Shape inference - invalid inputs ");
       }
-       // kernel shape  
+       // kernel shape
       size_t k1 = ((fAttrKernelShape.empty())? input[0][2] : fAttrKernelShape[0]);
       size_t k2 = (fDim > 1) ? ((fAttrKernelShape.empty()) ? input[0][3] : fAttrKernelShape[1]) : 1;
       size_t k3 = (fDim > 2) ? ((fAttrKernelShape.empty()) ? input[0][4] : fAttrKernelShape[2]) : 1;
@@ -121,12 +121,12 @@ public:
       if (fAttrDilations.empty()) {
          fAttrDilations = {1, 1, 1};
       }
-      fAttrDilations.resize(3); 
+      fAttrDilations.resize(3);
       if (fDim < 3) {
          fAttrDilations.resize(3, 1);
       }
            // Shape of the kernel
-      fAttrKernelShape = {k1 + (fAttrDilations[0] - 1) * (k1 - 1), 
+      fAttrKernelShape = {k1 + (fAttrDilations[0] - 1) * (k1 - 1),
                           k2 + (fAttrDilations[1] - 1) * (k2 - 1),
                           k3 + (fAttrDilations[2] - 1) * (k3 - 1)};
 
@@ -179,7 +179,7 @@ public:
 
       std::vector<std::vector<size_t>> ret({{ batch_size, output_channels, output1 }});
 
-      if (fDim == 1) 
+      if (fDim == 1)
          return ret;
 
       size_t pad2 = fAttrPads[1] + fAttrPads[i2];
@@ -217,8 +217,10 @@ public:
          fPoolMode = AveragePool;
          fAttrKernelShape.resize(3);
          fAttrKernelShape[0] = fShapeX[2];
-         fAttrKernelShape[1] = fShapeX[3];
-         fAttrKernelShape[2] = fShapeX[4];
+         if (fDim > 1)
+            fAttrKernelShape[1] = fShapeX[3];
+         if (fDim > 2)
+            fAttrKernelShape[2] = fShapeX[4];
          fAttrAutopad = "VALID";
          fAttrPads = {0, 0, 0, 0, 0, 0 };
          assert(fAttrStrides.empty());
@@ -228,7 +230,7 @@ public:
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
 
       // need cmath for INFINITY when using MaxPool
-      if (fPoolMode == MaxPool) model.AddNeededStdLib("cmath"); 
+      if (fPoolMode == MaxPool) model.AddNeededStdLib("cmath");
 
    }
 
@@ -254,7 +256,7 @@ public:
       }
       else{ //dim is 3D
           out << "std::vector<" << fType << "> fVec_" << opName << "_xpad = std::vector<" << fType << ">("
-          << fShapeX[1] * (fShapeX[2] + fAttrPads[0] + fAttrPads[2]) * (fShapeX[3] + fAttrPads[1] + fAttrPads[3]) * 
+          << fShapeX[1] * (fShapeX[2] + fAttrPads[0] + fAttrPads[2]) * (fShapeX[3] + fAttrPads[1] + fAttrPads[3]) *
           (fShapeX[4] + fAttrPads[2] + fAttrPads[4]) << ");\n";
       }
 
@@ -283,52 +285,57 @@ public:
       // size_t kstride = fShapeW[1] * fShapeW[2] * fShapeW[3];
       // size_t kstrideDil = fShapeW[1] * dstrideDil;
 
-      
+
       assert(fShapeX[0] == fShapeY[0]);
       assert(fShapeX[1] == fShapeY[1]);
       assert(fAttrPads.size() == 6);
       assert(fAttrKernelShape.size() == 3);
       // find lower bounds of filtered area
       int hmin = - fAttrPads[0];   // minimum lower bound value of filter area
-      int hmax = fShapeX[2] + fAttrPads[1] - fAttrKernelShape[0] +1;  // maximum lower bound value + 1 
+      int hmax = fShapeX[2] + fAttrPads[1] - fAttrKernelShape[0] +1;  // maximum lower bound value + 1
       int wmin,wmax,dmin,dmax;
 
       if(fDim >= 2){
-         wmin = - fAttrPads[2];   // minimum lower bound value of filter area  
-         wmax = fShapeX[3] + fAttrPads[3] - fAttrKernelShape[1] +1;  // maximum lower bound value + 1 
+         wmin = - fAttrPads[2];   // minimum lower bound value of filter area
+         wmax = fShapeX[3] + fAttrPads[3] - fAttrKernelShape[1] +1;  // maximum lower bound value + 1
       }
       else{
          wmin=1;
          wmax=1;
       }
       if(fDim == 3){
-         dmin = - fAttrPads[4];   // minimum lower bound value of filter area  
-         dmax = fShapeX[4] + fAttrPads[5] - fAttrKernelShape[2] +1;  // maximum lower bound value + 1 
+         dmin = - fAttrPads[4];   // minimum lower bound value of filter area
+         dmax = fShapeX[4] + fAttrPads[5] - fAttrKernelShape[2] +1;  // maximum lower bound value + 1
       }
       else{
          dmin=1;
          dmax=1;
       }
       out << SP << "constexpr int hsize = " << fShapeX[2] << ";\n";
-      size_t wsize = (fDim > 1) ? fShapeX[3] : 1;
-      out << SP << "constexpr int wsize = " << wsize << ";\n";
-      size_t dsize = (fDim > 2) ? fShapeX[4] : 1;
-      out << SP << "constexpr int dsize = " << dsize << ";\n";
       out << SP << "constexpr int hmin = " << hmin << ";\n";
       out << SP << "constexpr int hmax = " << hmax << ";\n";
-      out << SP << "constexpr int wmin = " << wmin << ";\n";
-      out << SP << "constexpr int wmax = " << wmax << ";\n";
-      out << SP << "constexpr int dmin = " << dmin << ";\n";
-      out << SP << "constexpr int dmax = " << dmax << ";\n";
       out << SP << "constexpr int kh = " << fAttrKernelShape[0] << ";\n";
-      out << SP << "constexpr int kw = " << fAttrKernelShape[1] << ";\n";
-      out << SP << "constexpr int kd = " << fAttrKernelShape[2] << ";\n";
-      
+      if (fDim > 1) {
+         size_t wsize = fShapeX[3];
+         out << SP << "constexpr int wsize = " << wsize << ";\n";
+         out << SP << "constexpr int wmin = " << wmin << ";\n";
+         out << SP << "constexpr int wmax = " << wmax << ";\n";
+         out << SP << "constexpr int kw = " << fAttrKernelShape[1] << ";\n";
+      }
+      if (fDim > 2) {
+         size_t dsize = fShapeX[4];
+         out << SP << "constexpr int dsize = " << dsize << ";\n";
+         out << SP << "constexpr int dmin = " << dmin << ";\n";
+         out << SP << "constexpr int dmax = " << dmax << ";\n";
+         out << SP << "constexpr int kd = " << fAttrKernelShape[2] << ";\n";
+      }
+
+
       bool doPadding = false;
       for ( auto & e : fAttrPads)
          doPadding |= (e > 0);
 
-      
+
       if(fDim==1){
          // loop on batches and channels
          out << SP << "size_t outIndex = 0;\n";
@@ -340,14 +347,14 @@ public:
             out << SP << SP << SP << SP << "float value = -INFINITY;\n";
          else if (fPoolMode == AveragePool) {
             out << SP << SP << SP << SP << "float value = 0;\n";
-            if (fAttrCountIncludePad == 0 && doPadding) 
+            if (fAttrCountIncludePad == 0 && doPadding)
                out << SP << SP << SP << SP << "int nsum = 0;\n";
             else // in case we count the pad values in average
-               out << SP << SP << SP << SP << "constexpr int nsum = kw*kh*kd;\n";
+               out << SP << SP << SP << SP << "constexpr int nsum = kh;\n";
          }
          // loop on rows of filtered region
-         out << SP << SP << SP << SP  << "for (int l = i;  l < i + kh; l++) {\n"; 
-         out << SP << SP << SP << SP  << SP << "if (l < 0 || l >= hsize) continue;\n"; 
+         out << SP << SP << SP << SP  << "for (int l = i;  l < i + kh; l++) {\n";
+         out << SP << SP << SP << SP  << SP << "if (l < 0 || l >= hsize) continue;\n";
          out << SP << SP << SP << SP  << SP << SP <<  "int index = inputOffset + l;\n";
          if (fPoolMode == MaxPool) {
          out << SP << SP << SP << SP << SP << SP << "auto xval = tensor_" << fNX << "[index];\n";
@@ -356,7 +363,7 @@ public:
          else if (fPoolMode == AveragePool) {
             // compute sum of values
             out << SP << SP << SP << SP << SP << SP << "value += tensor_" << fNX << "[index];\n";
-            if (fAttrCountIncludePad == 0 && doPadding) 
+            if (fAttrCountIncludePad == 0 && doPadding)
                // compute number of elements used for the average
                out << SP << SP << SP << SP << SP << SP << "nsum++;\n";
          }
@@ -367,7 +374,7 @@ public:
          }
 
          out << SP << SP << SP << SP << "tensor_" << fNY << "[outIndex++] = value;\n";
-         
+
          out << SP << SP << "}\n";   // end loop on i (image rows)
          out << SP << "}\n";  // end loop on c*b
       }
@@ -383,14 +390,14 @@ public:
             out << SP << SP << SP << SP << "float value = -INFINITY;\n";
          else if (fPoolMode == AveragePool) {
             out << SP << SP << SP << SP << "float value = 0;\n";
-            if (fAttrCountIncludePad == 0 && doPadding) 
+            if (fAttrCountIncludePad == 0 && doPadding)
                out << SP << SP << SP << SP << "int nsum = 0;\n";
             else // in case we count the pad values in average
-               out << SP << SP << SP << SP << "constexpr int nsum = kw*kh*kd;\n";
+               out << SP << SP << SP << SP << "constexpr int nsum = kw*kh;\n";
          }
          // loop on rows of filtered region
-         out << SP << SP << SP << SP << "for (int l = i;  l < i + kh; l++) {\n"; 
-         out << SP << SP << SP << SP << SP << "if (l < 0 || l >= hsize) continue;\n"; 
+         out << SP << SP << SP << SP << "for (int l = i;  l < i + kh; l++) {\n";
+         out << SP << SP << SP << SP << SP << "if (l < 0 || l >= hsize) continue;\n";
          // loop on columns of filtered region
          out << SP << SP << SP << SP << SP << "for (int m = j; m < j + kw; m++) {\n";
          out << SP << SP << SP << SP << SP << SP << "if (m < 0 || m >= wsize) continue;\n";
@@ -402,11 +409,11 @@ public:
          else if (fPoolMode == AveragePool) {
             // compute sum of values
             out << SP << SP << SP << SP << SP << SP << "value += tensor_" << fNX << "[index];\n";
-            if (fAttrCountIncludePad == 0 && doPadding) 
+            if (fAttrCountIncludePad == 0 && doPadding)
                // compute number of elements used for the average
                out << SP << SP << SP << SP << SP << SP << "nsum++;\n";
          }
-         out << SP << SP << SP << SP << SP << SP << "}\n"; 
+         out << SP << SP << SP << SP << SP << SP << "}\n";
          out << SP << SP << SP << SP << SP << "}\n"; // end loop on region elements
          if (fPoolMode == AveragePool) {
             // compute average
@@ -430,14 +437,14 @@ public:
             out << SP << SP << SP << SP << "float value = -INFINITY;\n";
          else if (fPoolMode == AveragePool) {
             out << SP << SP << SP << SP << "float value = 0;\n";
-            if (fAttrCountIncludePad == 0 && doPadding) 
+            if (fAttrCountIncludePad == 0 && doPadding)
                out << SP << SP << SP << SP << "int nsum = 0;\n";
             else // in case we count the pad values in average
                out << SP << SP << SP << SP << "constexpr int nsum = kw*kh*kd;\n";
          }
          // loop on rows of filtered region
-         out << SP << SP << SP << SP  << "for (int l = i;  l < i + kh; l++) {\n"; 
-         out << SP << SP << SP << SP  << SP << "if (l < 0 || l >= hsize) continue;\n"; 
+         out << SP << SP << SP << SP  << "for (int l = i;  l < i + kh; l++) {\n";
+         out << SP << SP << SP << SP  << SP << "if (l < 0 || l >= hsize) continue;\n";
          // loop on columns of filtered region
          out << SP << SP << SP << SP << SP << "for (int m = j; m < j + kw; m++) {\n";
          out << SP << SP << SP << SP << SP << SP << "if (m < 0 || m >= wsize) continue;\n";
@@ -453,11 +460,11 @@ public:
          else if (fPoolMode == AveragePool) {
             // compute sum of values
             out << SP << SP << SP << SP << SP << SP << "value += tensor_" << fNX << "[index];\n";
-            if (fAttrCountIncludePad == 0 && doPadding) 
+            if (fAttrCountIncludePad == 0 && doPadding)
                // compute number of elements used for the average
                out << SP << SP << SP << SP << SP << SP << "nsum++;\n";
          }
-         out << SP << SP << SP << SP << SP << SP << "}\n"; 
+         out << SP << SP << SP << SP << SP << SP << "}\n";
          out << SP << SP << SP << SP << SP << "}\n";
          out << SP << SP << SP << SP << "}\n"; // end loop on region elements
          if (fPoolMode == AveragePool) {
@@ -472,7 +479,7 @@ public:
          out << SP << "}\n";  // end loop on c*b
       }
       // end scope
-      out << SP << "}\n"; 
+      out << SP << "}\n";
 
 
       return out.str();
