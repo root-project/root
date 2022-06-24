@@ -34,6 +34,9 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
             """Dummy make_dataframe"""
             pass
 
+        def optimize_npartitions(self):
+            pass
+
     class Temp(object):
         """A Class for mocking RDF CPP object."""
 
