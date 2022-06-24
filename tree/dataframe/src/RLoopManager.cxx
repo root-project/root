@@ -365,25 +365,22 @@ RLoopManager::RLoopManager(ROOT::RDF::RDatasetSpec &&spec)
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
      fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots)
 {
+   auto chain = std::make_shared<TChain>(spec.fTreeNames.size() == 1 ? spec.fTreeNames[0].c_str() : "");
    if (spec.fTreeNames.size() == 1) {
       // A TChain has a global name, that is the name of single tree
-      auto chain = std::make_shared<TChain>(spec.fTreeNames[0].c_str());
       // The global name of the chain is also the name of each tree in the list
       // of files that make the chain.
       for (const auto &f : spec.fFileNameGlobs)
          chain->Add(f.c_str());
-      SetTree(chain);
    } else {
       // Some other times, each different file has its own tree name, we need to
       // reconstruct the full path to the tree in each file and pass that to
-      // TChain::Add
-      auto chain = std::make_shared<TChain>();
       for (auto i = 0u; i < spec.fFileNameGlobs.size(); i++) {
          const auto fullpath = spec.fFileNameGlobs[i] + "?#" + spec.fTreeNames[i];
          chain->Add(fullpath.c_str());
       }
-      SetTree(chain);
    }
+   SetTree(std::move(chain));
 
    // Create the friends from the list of friends
    const auto &friendNames = spec.fFriendInfo.fFriendNames;
@@ -392,9 +389,8 @@ RLoopManager::RLoopManager(ROOT::RDF::RDatasetSpec &&spec)
    const auto nFriends = friendNames.size();
 
    for (auto i = 0u; i < nFriends; ++i) {
-      const auto &thisFriendNameAlias = friendNames[i];
-      const auto &thisFriendName = thisFriendNameAlias.first;
-      const auto &thisFriendAlias = thisFriendNameAlias.second;
+      const auto &thisFriendName = friendNames[i].first;
+      const auto &thisFriendAlias = friendNames[i].second;
       const auto &thisFriendFiles = friendFileNames[i];
       const auto &thisFriendChainSubNames = friendChainSubNames[i];
 
@@ -409,7 +405,7 @@ RLoopManager::RLoopManager(ROOT::RDF::RDatasetSpec &&spec)
          }
       } else {
          // Otherwise, the new friend chain needs to be built using the nomenclature
-         // "filename/treename" as argument to `TChain::Add`
+         // "filename?#treename" as argument to `TChain::Add`
          for (auto j = 0u; j < nFileNames; ++j) {
             frChain->Add((thisFriendFiles[j] + "?#" + thisFriendChainSubNames[j]).c_str());
          }
@@ -417,7 +413,7 @@ RLoopManager::RLoopManager(ROOT::RDF::RDatasetSpec &&spec)
 
       // Make it friends with the main chain
       fTree->AddFriend(frChain.get(), thisFriendAlias.c_str());
-      // fFriends are needed to preserve the friends alive after the end of the ctor call
+      // the friend trees must have same lifetime as fTree
       fFriends.emplace_back(std::move(frChain));
    }
 }
@@ -500,10 +496,7 @@ void RLoopManager::RunTreeProcessorMT()
       return;
    RSlotStack slotStack(fNSlots);
    const auto &entryList = fTree->GetEntryList() ? *fTree->GetEntryList() : TEntryList();
-   auto tp = std::make_unique<ROOT::TTreeProcessorMT>(*fTree, entryList, fNSlots);
-
-   // pass the information about the entries to the TTreeProcessorMT
-   tp->SetEntriesRange(fStartEntry, fEndEntry);
+   auto tp = std::make_unique<ROOT::TTreeProcessorMT>(*fTree, entryList, fNSlots, EntryCluster{fStartEntry, fEndEntry});
 
    std::atomic<ULong64_t> entryCount(0ull);
 
@@ -542,21 +535,21 @@ void RLoopManager::RunTreeProcessorMT()
 /// Run event loop over one or multiple ROOT files, in sequence.
 void RLoopManager::RunTreeReader()
 {
-   if (fStartEntry == fEndEntry) // empty range => no work needed
-      return;
-
    TTreeReader r(fTree.get(), fTree->GetEntryList());
 
-   if (0 == fTree->GetEntriesFast())
+   // If `GetEntries` is not called, in case of chains, `SetEntriesRange` might not properly indicate that a
+   // start entry is too large, e.g. when start=last entry
+   // The `GetEntries(true)` call can be substituted with the more efficient GetEntries(false) or GetEntriesFast()
+   // once `https://github.com/root-project/root/issues/10774` is resolved.
+   const auto nEntries = r.GetEntries(/*force=*/true);
+
+   if (fStartEntry == fEndEntry || 0 == nEntries)
       return;
 
-   // if `GetEntries` is not called, in case of chains, `SetEntriesRange` might not properly indicate that a
-   // start entry is too large, e.g. when start=last entry
-   // the `GetEntries` call can be removed once `https://github.com/root-project/root/issues/10774` is resolved
-   if (fStartEntry >= r.GetEntries(true))
+   if (fStartEntry >= nEntries)
       throw std::logic_error(std::string("A range of entries was passed in the creation of the RDataFrame, ") +
-                             "but the starting entry is larger than the total number of entries (" +
-                             r.GetEntries(true) + ") in the dataset.");
+                             "but the starting entry (" + fStartEntry + ") is larger than the total number of " +
+                             "entries (" + nEntries + ") in the dataset.");
    r.SetEntriesRange(fStartEntry, fEndEntry);
 
    RCallCleanUpTask cleanup(*this, 0u, &r);

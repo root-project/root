@@ -11,8 +11,8 @@
 #ifndef ROOT_RLOOPMANAGER
 #define ROOT_RLOOPMANAGER
 
-#include "ROOT/RDF/RDatasetSpec.hxx"
 #include "ROOT/InternalTreeUtils.hxx" // RNoCleanupNotifier
+#include "ROOT/RDF/RDatasetSpec.hxx"
 #include "ROOT/RDF/RNodeBase.hxx"
 #include "ROOT/RDF/RNewSampleNotifier.hxx"
 #include "ROOT/RDF/RSampleInfo.hxx"
@@ -119,9 +119,10 @@ class RLoopManager : public RNodeBase {
    /// Shared pointer to the input TTree. It does not delete the pointee if the TTree/TChain was passed directly as an
    /// argument to RDataFrame's ctor (in which case we let users retain ownership).
    std::shared_ptr<TTree> fTree{nullptr};
-   const ColumnNames_t fDefaultColumns;
    Long64_t fStartEntry{0};
    Long64_t fEndEntry{std::numeric_limits<Long64_t>::max()};
+   std::vector<std::unique_ptr<TTree>> fFriends; ///< Friends of the tree/chain, if present
+   const ColumnNames_t fDefaultColumns;
    const ULong64_t fNEmptyEntries{0};
    const unsigned int fNSlots{1};
    bool fMustRunNamedFilters{true};
@@ -134,7 +135,6 @@ class RLoopManager : public RNodeBase {
    std::vector<ROOT::RDF::SampleCallback_t> fSampleCallbacks;
    RDFInternal::RNewSampleNotifier fNewSampleNotifier;
    std::vector<ROOT::RDF::RSampleInfo> fSampleInfos;
-   std::vector<std::unique_ptr<TTree>> fFriends; ///< Friends of the tree/chain, if present
    unsigned int fNRuns{0}; ///< Number of event loops run
 
    /// Registry of per-slot value pointers for booked data-source columns

@@ -48,7 +48,7 @@ public:
    RDataFrame(TTree &tree, const ColumnNames_t &defaultBranches = {});
    RDataFrame(ULong64_t numEntries);
    RDataFrame(std::unique_ptr<ROOT::RDF::RDataSource>, const ColumnNames_t &defaultBranches = {});
-   RDataFrame(ROOT::RDF::RDatasetSpec spec); // hard copy of the spec
+   RDataFrame(ROOT::RDF::RDatasetSpec spec);
 };
 
 } // ns ROOT

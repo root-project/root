@@ -137,9 +137,12 @@ TEST_P(RDatasetSpecTest, Ranges)
          } else {
             EXPECT_THROW(
                try { *(takeRes); } catch (const std::logic_error &err) {
-                  EXPECT_EQ(std::string(err.what()), "A range of entries was passed in the creation of the RDataFrame, "
-                                                     "but the starting entry is larger "
-                                                     "than the total number of entries (5) in the dataset.");
+                  const auto msg = std::string("A range of entries was passed in the creation of the RDataFrame, "
+                                               "but the starting entry (") +
+                                   ranges[i].first +
+                                   ") is larger "
+                                   "than the total number of entries (5) in the dataset.";
+                  EXPECT_EQ(std::string(err.what()), msg);
                   throw;
                },
                std::logic_error);

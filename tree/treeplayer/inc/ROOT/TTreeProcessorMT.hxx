@@ -28,6 +28,7 @@
 #include <memory>
 #include <vector>
 #include <limits>
+#include <RtypesCore.h> // Long64_t
 
 /** \class TTreeView
     \brief A helper class that encapsulates a file and a tree.
@@ -47,6 +48,13 @@ the threaded object.
 */
 
 namespace ROOT {
+
+/// A cluster of entries
+struct EntryCluster {
+   Long64_t start;
+   Long64_t end;
+};
+
 namespace Internal {
 
 class TTreeView {
@@ -90,26 +98,22 @@ private:
    std::vector<std::string> FindTreeNames();
    static unsigned int fgTasksPerWorkerHint;
 
-   Long64_t fStartEntry{0};
-   Long64_t fEndEntry{std::numeric_limits<Long64_t>::max()};
+   EntryCluster fGlobalRange{};
 
 public:
-   TTreeProcessorMT(std::string_view filename, std::string_view treename = "", UInt_t nThreads = 0u);
+   TTreeProcessorMT(std::string_view filename, std::string_view treename = "", UInt_t nThreads = 0u,
+                    const EntryCluster &globalRange = {0, std::numeric_limits<Long64_t>::max()});
    TTreeProcessorMT(const std::vector<std::string_view> &filenames, std::string_view treename = "",
-                    UInt_t nThreads = 0u);
-   TTreeProcessorMT(TTree &tree, const TEntryList &entries, UInt_t nThreads = 0u);
-   TTreeProcessorMT(TTree &tree, UInt_t nThreads = 0u);
+                    UInt_t nThreads = 0u, const EntryCluster &globalRange = {0, std::numeric_limits<Long64_t>::max()});
+   TTreeProcessorMT(TTree &tree, const TEntryList &entries, UInt_t nThreads = 0u,
+                    const EntryCluster &globalRange = {0, std::numeric_limits<Long64_t>::max()});
+   TTreeProcessorMT(TTree &tree, UInt_t nThreads = 0u,
+                    const EntryCluster &globalRange = {0, std::numeric_limits<Long64_t>::max()});
 
    void Process(std::function<void(TTreeReader &)> func);
 
    static void SetTasksPerWorkerHint(unsigned int m);
    static unsigned int GetTasksPerWorkerHint();
-
-   void SetEntriesRange(ULong64_t startEntry, ULong64_t endEntry)
-   {
-      fStartEntry = startEntry;
-      fEndEntry = endEntry;
-   }
 };
 
 } // End of namespace ROOT
