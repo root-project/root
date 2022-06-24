@@ -29,17 +29,17 @@ class RLoopManager;
 
 namespace RDF {
 
-struct REntryRange {
-   Long64_t fStartEntry{0};
-   Long64_t fEndEntry{std::numeric_limits<Long64_t>::max()};
-   REntryRange();
-   REntryRange(Long64_t endEntry);
-   REntryRange(Long64_t startEntry, Long64_t endEntry);
-};
-
 class RDatasetSpec {
 
    friend class ROOT::Detail::RDF::RLoopManager;
+
+   struct REntryRange {
+      Long64_t fStartEntry{0};
+      Long64_t fEndEntry{std::numeric_limits<Long64_t>::max()};
+      REntryRange();
+      REntryRange(Long64_t endEntry);
+      REntryRange(Long64_t startEntry, Long64_t endEntry);
+   };
 
    /**
     * A list of names of trees.
@@ -55,9 +55,7 @@ class RDatasetSpec {
     */
    std::vector<std::string> fFileNameGlobs{};
 
-   Long64_t fStartEntry{}; ///< The entry where the dataset processing should start (inclusive).
-   Long64_t fEndEntry{};   ///< The entry where the dataset processing should end (exclusive).
-
+   REntryRange fEntryRange{}; ///< Start (inclusive) and end (exclusive) entry for the dataset processing
    ROOT::Internal::TreeUtils::RFriendInfo fFriendInfo{}; ///< List of friends
 
 public:

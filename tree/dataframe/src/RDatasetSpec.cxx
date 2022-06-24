@@ -15,11 +15,12 @@ namespace ROOT {
 
 namespace RDF {
 
-REntryRange::REntryRange() {}
+RDatasetSpec::REntryRange::REntryRange() {}
 
-REntryRange::REntryRange(Long64_t endEntry) : fEndEntry(endEntry) {}
+RDatasetSpec::REntryRange::REntryRange(Long64_t endEntry) : fEndEntry(endEntry) {}
 
-REntryRange::REntryRange(Long64_t startEntry, Long64_t endEntry) : fStartEntry(startEntry), fEndEntry(endEntry)
+RDatasetSpec::REntryRange::REntryRange(Long64_t startEntry, Long64_t endEntry)
+   : fStartEntry(startEntry), fEndEntry(endEntry)
 {
    if (fStartEntry > fEndEntry)
       throw std::logic_error("The starting entry cannot be larger than the ending entry in the "
@@ -27,21 +28,19 @@ REntryRange::REntryRange(Long64_t startEntry, Long64_t endEntry) : fStartEntry(s
 }
 
 RDatasetSpec::RDatasetSpec(const std::string &treeName, const std::string &fileNameGlob, const REntryRange &entryRange)
-   : fTreeNames({treeName}), fFileNameGlobs({fileNameGlob}), fStartEntry(entryRange.fStartEntry),
-     fEndEntry(entryRange.fEndEntry)
+   : fTreeNames({treeName}), fFileNameGlobs({fileNameGlob}), fEntryRange(entryRange)
 {
 }
 
 RDatasetSpec::RDatasetSpec(const std::string &treeName, const std::vector<std::string> &fileNameGlobs,
                            const REntryRange &entryRange)
-   : fTreeNames({treeName}), fFileNameGlobs(fileNameGlobs), fStartEntry(entryRange.fStartEntry),
-     fEndEntry(entryRange.fEndEntry)
+   : fTreeNames({treeName}), fFileNameGlobs(fileNameGlobs), fEntryRange(entryRange)
 {
 }
 
 RDatasetSpec::RDatasetSpec(const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
                            const REntryRange &entryRange)
-   : fStartEntry(entryRange.fStartEntry), fEndEntry(entryRange.fEndEntry)
+   : fEntryRange(entryRange)
 {
    fTreeNames.reserve(treeAndFileNameGlobs.size());
    fFileNameGlobs.reserve(treeAndFileNameGlobs.size());

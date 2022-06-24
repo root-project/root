@@ -360,7 +360,8 @@ RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t 
 }
 
 RLoopManager::RLoopManager(ROOT::RDF::RDatasetSpec &&spec)
-   : fStartEntry(spec.fStartEntry), fEndEntry(spec.fEndEntry), fNSlots(RDFInternal::GetNSlots()),
+   : fStartEntry(spec.fEntryRange.fStartEntry), fEndEntry(spec.fEntryRange.fEndEntry),
+     fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
      fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots)
 {
