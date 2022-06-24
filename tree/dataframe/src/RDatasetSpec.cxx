@@ -124,13 +124,12 @@ void RDatasetSpec::AddFriend(const std::vector<std::pair<std::string, std::strin
    fFriendInfo.fFriendNames.emplace_back(std::make_pair("", alias));
    fFriendInfo.fFriendFileNames.emplace_back();
    fFriendInfo.fFriendChainSubNames.emplace_back();
-   auto &fileNames = fFriendInfo.fFriendFileNames.back();
-   auto &chainSubNames = fFriendInfo.fFriendChainSubNames.back();
-   fileNames.reserve(treeAndFileNameGlobs.size());
-   chainSubNames.reserve(treeAndFileNameGlobs.size());
-   for (auto &p : treeAndFileNameGlobs) {
-      chainSubNames.emplace_back(p.first);
-      fileNames.emplace_back(p.second);
+   // transform the vector of pairs to 2 vectors
+   auto fSubNamesIt = std::back_inserter(fFriendInfo.fFriendChainSubNames.back());
+   auto fNamesIt = std::back_inserter(fFriendInfo.fFriendFileNames.back());
+   for (const auto &[subNames, names] : treeAndFileNameGlobs) {
+      *fSubNamesIt = subNames;
+      *fNamesIt = names;
    }
 }
 
