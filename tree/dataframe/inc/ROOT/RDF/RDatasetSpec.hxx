@@ -14,37 +14,38 @@
 #include <string>
 #include <vector>
 #include <limits>
-#include <stdexcept> // std::logic_error
-#include <algorithm> // std::transform
+#include <utility>
 
-#include <RtypesCore.h>
-#include <ROOT/InternalTreeUtils.hxx>
+#include <RtypesCore.h>               // Long64_t
+#include <ROOT/InternalTreeUtils.hxx> // ROOT::Internal::TreeUtils::RFriendInfo
 
 namespace ROOT {
 
+namespace Detail {
+namespace RDF {
+class RLoopManager;
+} // namespace RDF
+} // namespace Detail
+
 namespace RDF {
 
-struct RDatasetSpec {
+struct REntryRange {
+   Long64_t fStartEntry{0};
+   Long64_t fEndEntry{std::numeric_limits<Long64_t>::max()};
+   REntryRange();
+   REntryRange(Long64_t endEntry);
+   REntryRange(Long64_t startEntry, Long64_t endEntry);
+};
 
-   struct REntryRange {
-      Long64_t fStartEntry{0};
-      Long64_t fEndEntry{std::numeric_limits<Long64_t>::max()};
-      REntryRange() {}
-      REntryRange(Long64_t endEntry) : fEndEntry(endEntry) {}
-      REntryRange(Long64_t startEntry, Long64_t endEntry)
-         : fStartEntry(startEntry),
-           fEndEntry(endEntry >= startEntry
-                        ? endEntry
-                        : throw std::logic_error("The starting entry cannot be larger than the ending entry in the "
-                                                 "creation of a dataset specification."))
-      {
-      }
-   };
+class RDatasetSpec {
+
+   friend class ROOT::Detail::RDF::RLoopManager;
 
    /**
     * A list of names of trees.
     * This list should go in lockstep with fFileNameGlobs, only in case this dataset is a TChain where each file
     * contains its own tree with a different name from the global name of the dataset.
+    * Otherwise, fTreeNames contains 1 treename, that is common for all file globs.
     */
    std::vector<std::string> fTreeNames{};
 
@@ -59,6 +60,7 @@ struct RDatasetSpec {
 
    ROOT::Internal::TreeUtils::RFriendInfo fFriendInfo{}; ///< List of friends
 
+public:
    RDatasetSpec(const std::string &treeName, const std::string &fileNameGlob, const REntryRange &entryRange = {});
 
    RDatasetSpec(const std::string &treeName, const std::vector<std::string> &fileNameGlobs,

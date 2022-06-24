@@ -22,6 +22,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <limits>
 
 // forward declarations
 class TTree;
@@ -32,6 +33,7 @@ namespace ROOT {
 namespace RDF {
 class RCutFlowReport;
 class RDataSource;
+class RDatasetSpec;
 } // ns RDF
 
 namespace Internal {

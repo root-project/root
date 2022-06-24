@@ -9,10 +9,22 @@
  *************************************************************************/
 
 #include "ROOT/RDF/RDatasetSpec.hxx"
+#include <stdexcept> // std::logic_error
 
 namespace ROOT {
 
 namespace RDF {
+
+REntryRange::REntryRange() {}
+
+REntryRange::REntryRange(Long64_t endEntry) : fEndEntry(endEntry) {}
+
+REntryRange::REntryRange(Long64_t startEntry, Long64_t endEntry) : fStartEntry(startEntry), fEndEntry(endEntry)
+{
+   if (fStartEntry > fEndEntry)
+      throw std::logic_error("The starting entry cannot be larger than the ending entry in the "
+                             "creation of a dataset specification.");
+}
 
 RDatasetSpec::RDatasetSpec(const std::string &treeName, const std::string &fileNameGlob, const REntryRange &entryRange)
    : fTreeNames({treeName}), fFileNameGlobs({fileNameGlob}), fStartEntry(entryRange.fStartEntry),
