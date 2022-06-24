@@ -6010,6 +6010,8 @@ void THistPainter::PaintContour(Option_t *option)
                list = (TList*)contours->At(i);
                if (list) list->Delete();
             }
+            contours->Delete();
+            delete contours;
          }
          contours = new TObjArray(ncontour);
          contours->SetName("contours");
