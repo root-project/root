@@ -8,8 +8,11 @@
 
 #include "ROOT/RDF/RColumnRegister.hxx"
 #include "ROOT/RDF/RDefineBase.hxx"
+#include "ROOT/RDF/RDefineReader.hxx"
+#include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/RVariationBase.hxx"
 #include "ROOT/RDF/RVariationsDescription.hxx"
+#include "ROOT/RDF/RVariationReader.hxx"
 #include "ROOT/RDF/Utils.hxx" // IsStrInVec
 
 #include <cassert>
@@ -18,6 +21,54 @@
 namespace ROOT {
 namespace Internal {
 namespace RDF {
+
+RDefineAndReaders::RDefineAndReaders(std::shared_ptr<RDefineBase> define, unsigned int nSlots)
+   : fDefine(std::move(define)), fReadersPerVariation(nSlots)
+{
+   assert(fDefine != nullptr);
+}
+
+std::shared_ptr<RDFInternal::RDefineReader>
+RDefineAndReaders::GetReader(unsigned int slot, const std::string &variationName, const std::type_info &tid)
+{
+   auto &defineReaders = fReadersPerVariation[slot];
+
+   auto it = defineReaders.find(variationName);
+   if (it != defineReaders.end())
+      return it->second;
+
+   auto *define = fDefine.get();
+   if (variationName != "nominal")
+      define = &define->GetVariedDefine(variationName);
+
+   auto insertion = defineReaders.insert({variationName, std::make_shared<RDefineReader>(slot, *define, tid)});
+   return insertion.first->second;
+}
+
+RVariationAndReaders::RVariationAndReaders(std::shared_ptr<RVariationBase> variation, unsigned int nSlots)
+   : fVariation(std::move(variation)), fReadersPerVariation(nSlots)
+{
+   assert(fVariation != nullptr);
+}
+
+////////////////////////////////////////////////////////////////////////////
+/// Return a column reader for the given slot, column and variation, or a nullptr if not available.
+std::shared_ptr<RVariationReader> RVariationAndReaders::GetReader(unsigned int slot, const std::string &colName,
+                                                                  const std::string &variationName,
+                                                                  const std::type_info &tid)
+{
+   assert(IsStrInVec(variationName, fVariation->GetVariationNames())); // otherwise we should not be here
+
+   auto &varReaders = fReadersPerVariation[slot];
+
+   auto it = varReaders.find(variationName);
+   if (it != varReaders.end())
+      return it->second;
+
+   auto insertion = varReaders.insert(
+      {variationName, std::make_shared<RVariationReader>(slot, colName, variationName, *fVariation, tid)});
+   return insertion.first->second;
+}
 
 RColumnRegister::~RColumnRegister()
 {
@@ -48,7 +99,7 @@ ColumnNames_t RColumnRegister::BuildDefineNames() const
 RDFDetail::RDefineBase *RColumnRegister::GetDefine(const std::string &colName) const
 {
    auto it = fDefines->find(colName);
-   return it == fDefines->end() ? nullptr : (it->second).get();
+   return it == fDefines->end() ? nullptr : it->second->GetDefine();
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -62,11 +113,14 @@ bool RColumnRegister::IsDefineOrAlias(std::string_view name) const
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Add a new defined column.
 /// Internally it recreates the map with the new column, and swaps it with the old one.
-void RColumnRegister::AddDefine(std::shared_ptr<RDFDetail::RDefineBase> column)
+void RColumnRegister::AddDefine(std::shared_ptr<RDFDetail::RDefineBase> define)
 {
    auto newDefines = std::make_shared<DefinesMap_t>(*fDefines);
-   const std::string &colName = column->GetName();
-   (*newDefines)[colName] = std::move(column);
+   const std::string &colName = define->GetName();
+
+   // this will assign over a pre-exising element in case this AddDefine is due to a Redefine
+   (*newDefines)[colName] = std::make_shared<RDefineAndReaders>(define, fLoopManager->GetNSlots());
+
    fDefines = std::move(newDefines);
    AddName(colName);
 }
@@ -78,7 +132,7 @@ void RColumnRegister::AddVariation(std::shared_ptr<RVariationBase> variation)
    auto newVariations = std::make_shared<VariationsMap_t>(*fVariations);
    const std::vector<std::string> &colNames = variation->GetColumnNames();
    for (auto &colName : colNames)
-      newVariations->insert({colName, variation});
+      newVariations->insert({colName, std::make_shared<RVariationAndReaders>(variation, fLoopManager->GetNSlots())});
    fVariations = std::move(newVariations);
 }
 
@@ -89,7 +143,7 @@ std::vector<std::string> RColumnRegister::GetVariationsFor(const std::string &co
    std::vector<std::string> variations;
    auto range = fVariations->equal_range(column);
    for (auto it = range.first; it != range.second; ++it)
-      for (const auto &variationName : it->second->GetVariationNames())
+      for (const auto &variationName : it->second->GetVariation()->GetVariationNames())
          variations.emplace_back(variationName);
 
    return variations;
@@ -123,7 +177,7 @@ std::vector<std::string> RColumnRegister::GetVariationDeps(const ColumnNames_t &
       // For Define'd columns, add the systematic variations they depend on to the set
       auto defineIt = fDefines->find(col);
       if (defineIt != fDefines->end()) {
-         for (const auto &v : defineIt->second->GetVariations())
+         for (const auto &v : defineIt->second->GetDefine()->GetVariations())
             variationNames.insert(v);
       }
    }
@@ -138,17 +192,33 @@ RVariationBase &RColumnRegister::FindVariation(const std::string &colName, const
    auto range = fVariations->equal_range(colName);
    assert(range.first != fVariations->end() && "Could not find the variation you asked for. This should never happen.");
    auto it = range.first;
-   while (it != range.second && !IsStrInVec(variationName, it->second->GetVariationNames()))
+   while (it != range.second && !IsStrInVec(variationName, it->second->GetVariation()->GetVariationNames()))
       ++it;
    assert(it != range.second && "Could not find the variation you asked for. This should never happen.");
-   return *it->second;
+   return *it->second->GetVariation();
+}
+
+////////////////////////////////////////////////////////////////////////////
+/// \brief Return the RVariationAndReaders object that handles the specified variation of the specified column, or null.
+RVariationAndReaders *
+RColumnRegister::FindVariationAndReaders(const std::string &colName, const std::string &variationName)
+{
+   auto range = fVariations->equal_range(colName);
+   if (range.first == fVariations->end())
+      return nullptr;
+   for (auto it = range.first; it != range.second; ++it) {
+      if (IsStrInVec(variationName, it->second->GetVariation()->GetVariationNames()))
+         return it->second.get();
+   }
+
+   return nullptr;
 }
 
 ROOT::RDF::RVariationsDescription RColumnRegister::BuildVariationsDescription() const
 {
    std::set<const RVariationBase *> uniqueVariations;
    for (auto &e : *fVariations)
-      uniqueVariations.insert(e.second.get());
+      uniqueVariations.insert(e.second->GetVariation());
 
    const std::vector<const RVariationBase *> variations(uniqueVariations.begin(), uniqueVariations.end());
    return ROOT::RDF::RVariationsDescription{variations};
@@ -208,6 +278,25 @@ std::string RColumnRegister::ResolveAlias(std::string_view alias) const
       return it->second;
 
    return aliasStr; // not an alias, i.e. already resolved
+}
+
+std::shared_ptr<RDFDetail::RColumnReaderBase> RColumnRegister::GetReader(unsigned int slot, const std::string &colName,
+                                                                         const std::string &variationName,
+                                                                         const std::type_info &requestedType)
+{
+   // try variations first
+   if (variationName != "nominal") {
+      auto *variationAndReaders = FindVariationAndReaders(colName, variationName);
+      if (variationAndReaders != nullptr)
+         return variationAndReaders->GetReader(slot, colName, variationName, requestedType);
+   }
+
+   // otherwise try defines
+   auto it = fDefines->find(colName);
+   if (it != fDefines->end())
+      return it->second->GetReader(slot, variationName, requestedType);
+
+   return nullptr;
 }
 
 } // namespace RDF
