@@ -179,11 +179,6 @@ class BaseBackend(ABC):
     headers = set()
     shared_libraries = set()
 
-    # Define a minimum amount of partitions for any distributed RDataFrame.
-    # This is a safe lower limit, to account for backends that may not support
-    # the case where the distributed RDataFrame processes only one partition.
-    MIN_NPARTITIONS = 2
-
     @classmethod
     def register_initialization(cls, fun, *args, **kwargs):
         """
@@ -221,12 +216,13 @@ class BaseBackend(ABC):
         """
         pass
 
-    def optimize_npartitions(self):
+    @abstractmethod
+    def optimize_npartitions(self) -> int:
         """
-        Distributed backends may optimize the number of partitions of the
-        current dataset or leave it as it is.
+        Return a default number of partitions to split the dataframe in,
+        depending on the backend.
         """
-        return self.MIN_NPARTITIONS
+        pass
 
     def distribute_files(self, files_paths):
         """
