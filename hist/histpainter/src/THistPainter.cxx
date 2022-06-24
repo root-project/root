@@ -3445,8 +3445,8 @@ void THistPainter::DrawPanel()
    }
    TVirtualPadEditor *editor = TVirtualPadEditor::GetPadEditor();
    editor->Show();
-   gROOT->ProcessLine(Form("((TCanvas*)0x%zx)->Selected((TVirtualPad*)0x%zx,(TObject*)0x%zx,1)",
-                           (size_t)gPad->GetCanvas(), (size_t)gPad, (size_t)fH));
+   gROOT->ProcessLine(TString::Format("((TCanvas*)0x%zx)->Selected((TVirtualPad*)0x%zx,(TObject*)0x%zx,1)",
+                           (size_t)gPad->GetCanvas(), (size_t)gPad, (size_t)fH).Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3477,7 +3477,7 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    //     come here if we have a lego/surface in the pad
    TView *view = gPad->GetView();
 
-   if (!fShowProjection && view && view->TestBit(kCannotRotate) == 0) {
+   if (!fShowProjection && view && !view->TestBit(kCannotRotate)) {
       view->ExecuteRotateView(event, px, py);
       return;
    }
@@ -4469,8 +4469,8 @@ void THistPainter::Paint(Option_t *option)
    if (Hoption.Spec) {
       if (!TableInit()) return;
       if (!TClass::GetClass("TSpectrum2Painter")) gSystem->Load("libSpectrumPainter");
-      gROOT->ProcessLineFast(Form("TSpectrum2Painter::PaintSpectrum((TH2F*)0x%zx,\"%s\",%d)",
-                                  (size_t)fH, option, Hoption.Spec));
+      gROOT->ProcessLineFast(TString::Format("TSpectrum2Painter::PaintSpectrum((TH2F*)0x%zx,\"%s\",%d)",
+                                             (size_t)fH, option, Hoption.Spec).Data());
       return;
    }
 
@@ -4514,7 +4514,7 @@ void THistPainter::Paint(Option_t *option)
    if (view) {
       if (!Hoption.Lego && !Hoption.Surf && !Hoption.Tri) {
          delete view;
-         gPad->SetView(0);
+         gPad->SetView(nullptr);
       }
    }
    if (fH->GetDimension() > 1 || Hoption.Lego || Hoption.Surf) {
@@ -4678,7 +4678,7 @@ void THistPainter::PaintArrows(Option_t *)
          fH->SetContour(ndiv);
       }
       ndivz  = TMath::Abs(ndiv);
-      if (fH->TestBit(TH1::kUserContour) == 0) fH->SetContour(ndiv);
+      if (!fH->TestBit(TH1::kUserContour)) fH->SetContour(ndiv);
       scale = ndivz/(fH->GetMaximum()-fH->GetMinimum());
    }
 
@@ -4757,8 +4757,8 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
 
    // Repainting alphanumeric labels axis on a plot done with
    // the option HBAR (horizontal) needs some adjustments.
-   TAxis *xaxis = 0;
-   TAxis *yaxis = 0;
+   TAxis *xaxis = nullptr;
+   TAxis *yaxis = nullptr;
    if (Hoption.Same && Hoption.Axis) { // Axis repainted (TPad::RedrawAxis)
       if (fXaxis->GetLabels() || fYaxis->GetLabels()) { // One axis has alphanumeric labels
          TIter next(gPad->GetListOfPrimitives());
@@ -5132,10 +5132,10 @@ void THistPainter::PaintBarH(Option_t *)
    //    Draw box with histogram statistics and/or fit parameters
    if ((Hoption.Same%10) != 1 && !fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
       TIter next(fFunctions);
-      TObject *obj = 0;
+      TObject *obj = nullptr;
       while ((obj = next())) {
          if (obj->InheritsFrom(TF1::Class())) break;
-         obj = 0;
+         obj = nullptr;
       }
       PaintStat(gStyle->GetOptStat(),(TF1*)obj);
    }
@@ -5613,7 +5613,7 @@ void THistPainter::PaintColorLevelsFast(Option_t*)
    }
    std::vector<Double_t> colorBounds(ndiv);
    std::vector<Double_t> contours(ndiv, 0);
-   if (fH->TestBit(TH1::kUserContour) == 0) {
+   if (!fH->TestBit(TH1::kUserContour)) {
       fH->SetContour(ndiv);
    } else {
       fH->GetContour(contours.data());
@@ -5664,7 +5664,7 @@ void THistPainter::PaintColorLevelsFast(Option_t*)
        if (z > zmax) z = zmax;
        if (z < zmin) z = zmin;
 
-       if (fH->TestBit(TH1::kUserContour) == 1) {
+       if (fH->TestBit(TH1::kUserContour)) {
           // contours are absolute values
           auto index  = TMath::BinarySearch(contours.size(), contours.data(), z);
           z = colorBounds[index];
@@ -5806,7 +5806,7 @@ void THistPainter::PaintColorLevels(Option_t*)
       fH->SetContour(ndiv);
    }
    Int_t ndivz  = TMath::Abs(ndiv);
-   if (fH->TestBit(TH1::kUserContour) == 0) fH->SetContour(ndiv);
+   if (!fH->TestBit(TH1::kUserContour)) fH->SetContour(ndiv);
    Double_t scale = (dz ? ndivz / dz : 1.0);
 
    Int_t color;
@@ -5980,7 +5980,7 @@ void THistPainter::PaintContour(Option_t *option)
               kMAXCONTOUR, ncontour);
       ncontour = kMAXCONTOUR-1;
    }
-   if (fH->TestBit(TH1::kUserContour) == 0) fH->SetContour(ncontour);
+   if (!fH->TestBit(TH1::kUserContour)) fH->SetContour(ncontour);
 
    for (i=0;i<ncontour;i++) levels[i] = fH->GetContourLevelPad(i);
    Int_t linesav   = fH->GetLineStyle();
@@ -6786,7 +6786,7 @@ void THistPainter::PaintFunction(Option_t *)
       obj = lnk->GetObject();
       TVirtualPad *padsave = gPad;
       if (obj->InheritsFrom(TF2::Class())) {
-         if (obj->TestBit(TF2::kNotDraw) == 0) {
+         if (!obj->TestBit(TF2::kNotDraw)) {
             if (Hoption.Lego || Hoption.Surf || Hoption.Error >= 100) {
                TF2 *f2 = (TF2*)obj;
                f2->SetMinimum(fH->GetMinimum());
@@ -6798,7 +6798,7 @@ void THistPainter::PaintFunction(Option_t *)
             }
          }
       } else if (obj->InheritsFrom(TF1::Class())) {
-         if (obj->TestBit(TF1::kNotDraw) == 0) obj->Paint("lsame");
+         if (!obj->TestBit(TF1::kNotDraw)) obj->Paint("lsame");
       } else  {
          //Let's make this 'function' selectable on iOS device (for example, it can be TPaveStat).
          gPad->PushSelectableObject(obj);
@@ -6958,7 +6958,7 @@ void THistPainter::PaintHist(Option_t *)
 void THistPainter::PaintH3(Option_t *option)
 {
 
-   char *cmd;
+   TString cmd;
    TString opt = option;
    opt.ToLower();
    Int_t irep;
@@ -6984,7 +6984,7 @@ void THistPainter::PaintH3(Option_t *option)
       PaintTF3();
       return;
    } else {
-      cmd = Form("TPolyMarker3D::PaintH3((TH1 *)0x%zx,\"%s\");",(size_t)fH,option);
+      cmd.Form("TPolyMarker3D::PaintH3((TH1 *)0x%zx,\"%s\");",(size_t)fH,option);
    }
 
    if (strstr(opt,"fb")) Hoption.FrontBox = 0;
@@ -6998,7 +6998,7 @@ void THistPainter::PaintH3(Option_t *option)
    view->SetView(phideg, thedeg, psideg, irep);
 
    // Paint the data
-   gROOT->ProcessLine(cmd);
+   gROOT->ProcessLine(cmd.Data());
 
    if (Hoption.Same) return;
 
@@ -7028,10 +7028,9 @@ void THistPainter::PaintH3(Option_t *option)
    PaintTitle();
 
    //Draw stats and fit results
-   TF1 *fit  = 0;
+   TF1 *fit  = nullptr;
    TIter next(fFunctions);
-   TObject *obj;
-   while ((obj = next())) {
+   while (auto obj = next()) {
       if (obj->InheritsFrom(TF1::Class())) {
          fit = (TF1*)obj;
          break;
@@ -8006,7 +8005,7 @@ void THistPainter::PaintLego(Option_t *)
       fH->SetContour(ndiv);
    }
    Int_t ndivz  = TMath::Abs(ndiv);
-   if (fH->TestBit(TH1::kUserContour) == 0) fH->SetContour(ndiv);
+   if (!fH->TestBit(TH1::kUserContour)) fH->SetContour(ndiv);
 
    //     Initialize colors
    if (!fStack) {
@@ -8323,19 +8322,18 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 
 void THistPainter::PaintPalette()
 {
-
    TPaletteAxis *palette = (TPaletteAxis*)fFunctions->FindObject("palette");
    TView *view = gPad->GetView();
    if (palette) {
       if (view) {
          if (!palette->TestBit(TPaletteAxis::kHasView)) {
             fFunctions->Remove(palette);
-            delete palette; palette = 0;
+            delete palette; palette = nullptr;
          }
       } else {
          if (palette->TestBit(TPaletteAxis::kHasView)) {
             fFunctions->Remove(palette);
-            delete palette; palette = 0;
+            delete palette; palette = nullptr;
          }
       }
       // make sure the histogram member of the palette is setup correctly. It may not be after a Clone()
@@ -8516,13 +8514,11 @@ void THistPainter::PaintSpecialObjects(const TObject *obj, Option_t *option)
 
 void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
 {
-
    TString tt, tf;
    Int_t dofit;
-   TPaveStats *stats  = 0;
+   TPaveStats *stats  = nullptr;
    TIter next(fFunctions);
-   TObject *obj;
-   while ((obj = next())) {
+   while (auto obj = next()) {
       if (obj->InheritsFrom(TPaveStats::Class())) {
          stats = (TPaveStats*)obj;
          break;
@@ -8739,10 +8735,9 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
 
    TString tt, tf;
    Int_t dofit;
-   TPaveStats *stats  = 0;
+   TPaveStats *stats  = nullptr;
    TIter next(fFunctions);
-   TObject *obj;
-   while ((obj = next())) {
+   while (auto obj = next()) {
       if (obj->InheritsFrom(TPaveStats::Class())) {
          stats = (TPaveStats*)obj;
          break;
@@ -8956,10 +8951,9 @@ void THistPainter::PaintStat3(Int_t dostat, TF1 *fit)
 
    TString tt, tf;
    Int_t dofit;
-   TPaveStats *stats  = 0;
+   TPaveStats *stats  = nullptr;
    TIter next(fFunctions);
-   TObject *obj;
-   while ((obj = next())) {
+   while (auto obj = next()) {
       if (obj->InheritsFrom(TPaveStats::Class())) {
          stats = (TPaveStats*)obj;
          break;
@@ -9240,7 +9234,7 @@ void THistPainter::PaintSurface(Option_t *)
       fH->SetContour(ndiv);
    }
    Int_t ndivz  = TMath::Abs(ndiv);
-   if (fH->TestBit(TH1::kUserContour) == 0) fH->SetContour(ndiv);
+   if (!fH->TestBit(TH1::kUserContour)) fH->SetContour(ndiv);
 
    if (Hoption.Surf == 13 || Hoption.Surf == 15) fLego->SetMesh(3);
    if (Hoption.Surf == 12 || Hoption.Surf == 14 || Hoption.Surf == 17) fLego->SetMesh(0);
@@ -9593,10 +9587,9 @@ void THistPainter::PaintTable(Option_t *option)
    if (!Hoption.Lego && !Hoption.Surf &&
        !Hoption.Tri  && !(Hoption.Error >= 100)) PaintAxis(kFALSE);
 
-   TF1 *fit  = 0;
+   TF1 *fit  = nullptr;
    TIter next(fFunctions);
-   TObject *obj;
-   while ((obj = next())) {
+   while (auto obj = next()) {
       if (obj->InheritsFrom(TF1::Class())) {
          fit = (TF1*)obj;
          break;
@@ -9726,17 +9719,14 @@ void THistPainter::PaintTH2PolyColorLevels(Option_t *)
       fH->SetContour(ndiv);
    }
    Int_t ndivz  = TMath::Abs(ndiv);
-   if (fH->TestBit(TH1::kUserContour) == 0) fH->SetContour(ndiv);
+   if (!fH->TestBit(TH1::kUserContour)) fH->SetContour(ndiv);
    Double_t scale = ndivz/dz;
 
-   TH2PolyBin  *b;
-
    TIter next(((TH2Poly*)fH)->GetBins());
-   TObject *obj, *poly;
 
-   while ((obj=next())) {
-      b     = (TH2PolyBin*)obj;
-      poly  = b->GetPolygon();
+   while (auto obj = next()) {
+      TH2PolyBin  *b  = (TH2PolyBin*)obj;
+      TObject  *poly  = b->GetPolygon();
 
       z = b->GetContent();
       if (z==0 && Hoption.Zero) continue;
@@ -10140,13 +10130,13 @@ void THistPainter::PaintTitle()
    if (Hoption.Same) return;
    if (fH->TestBit(TH1::kNoTitle)) return;
    Int_t nt = strlen(fH->GetTitle());
-   TPaveText *title = 0;
+   TPaveText *title = nullptr;
    TObject *obj;
    TIter next(gPad->GetListOfPrimitives());
    while ((obj = next())) {
       if (!obj->InheritsFrom(TPaveText::Class())) continue;
       title = (TPaveText*)obj;
-      if (strcmp(title->GetName(),"title")) {title = 0; continue;}
+      if (strcmp(title->GetName(),"title")) {title = nullptr; continue;}
       break;
    }
    if (nt == 0 || gStyle->GetOptTitle() <= 0) {
@@ -10683,7 +10673,7 @@ void THistPainter::SetShowProjection(const char *option,Int_t nbins)
    else                fShowOption = option+2;
    fShowProjection = projection+100*nbins;
    gROOT->MakeDefCanvas();
-   gPad->SetName(Form("c_%zx_projection_%d", (size_t)fH, fShowProjection));
+   gPad->SetName(TString::Format("c_%zx_projection_%d", (size_t)fH, fShowProjection).Data());
    gPad->SetGrid();
 }
 
@@ -10718,8 +10708,8 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
 
    // Create or set the new canvas proj x
    TVirtualPad *padsav = gPad;
-   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(Form("c_%zx_projection_%d",
-                                                                              (size_t)fH, fShowProjection));
+   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(TString::Format("c_%zx_projection_%d",
+                                                                              (size_t)fH, fShowProjection).Data());
    if (c) {
       c->Clear();
    } else {
@@ -10801,8 +10791,8 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
 
    // Create or set the new canvas proj y
    TVirtualPad *padsav = gPad;
-   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(Form("c_%zx_projection_%d",
-                                                                              (size_t)fH, fShowProjection));
+   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(TString::Format("c_%zx_projection_%d",
+                                                                              (size_t)fH, fShowProjection).Data());
    if (c) {
       c->Clear();
    } else {
@@ -10905,8 +10895,8 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
    Double_t cx    = (pxmax-pxmin)/(uxmax-uxmin);
    Double_t cy    = (pymax-pymin)/(uymax-uymin);
    TVirtualPad *padsav = gPad;
-   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(Form("c_%zx_projection_%d",
-                                                                              (size_t)fH, fShowProjection));
+   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(TString::Format("c_%zx_projection_%d",
+                                                                              (size_t)fH, fShowProjection).Data());
    if (!c) {
       fShowProjection = 0;
       return;
