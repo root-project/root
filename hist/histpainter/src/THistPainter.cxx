@@ -6316,8 +6316,7 @@ void THistPainter::PaintErrors(Option_t *)
    static Float_t cxx[30] = {1.0,1.0,0.5,0.5,1.0,1.0,0.5,0.6,1.0,0.5,0.5,1.0,0.5,0.6,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0};
    static Float_t cyy[30] = {1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.5,0.5,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0};
 
-   Double_t *xline = 0;
-   Double_t *yline = 0;
+   std::vector<Double_t> xline, yline;
    option0 = option1 = option2 = option3 = option4 = optionE = optionEX0 = optionI0 = 0;
    if (Hoption.Error >= 40) {Hoption.Error -=40; option0 = 1;}
    if (Int_t(Hoption.Error/10) == 2) {optionEX0 = 1; Hoption.Error -= 10;}
@@ -6368,9 +6367,9 @@ void THistPainter::PaintErrors(Option_t *)
 
 
    if (option3) {
-      xline = new Double_t[2*npoints];
-      yline = new Double_t[2*npoints];
-      if (!xline || !yline) {
+      xline.resize(2*npoints);
+      yline.resize(2*npoints);
+      if ((npoints > 0) && (xline.empty() || yline.empty())) {
          Error("PaintErrors", "too many points, out of memory");
          return;
       }
@@ -6584,12 +6583,10 @@ L30:
          }
          npoints = if1-1;
       }
-      if (option4) graph.PaintGraph(2*npoints,xline,yline,"FC");
-      else         graph.PaintGraph(2*npoints,xline,yline,"F");
+      if (option4) graph.PaintGraph(2*npoints,xline.data(),yline.data(),"FC");
+      else         graph.PaintGraph(2*npoints,xline.data(),yline.data(),"F");
       gPad->SetLogx(logx);
       gPad->SetLogy(logy);
-      delete [] xline;
-      delete [] yline;
    }
 }
 
@@ -6851,13 +6848,12 @@ void THistPainter::PaintHist(Option_t *)
    last  = Hparam.xlast;
    nbins = last - first + 1;
 
-   Double_t *keepx = 0;
-   Double_t *keepy = 0;
+   std::vector<Double_t> keepx, keepy;
    if (fXaxis->GetXbins()->fN) fixbin = 0;
    else                        fixbin = 1;
-   if (fixbin) keepx = new Double_t[2];
-   else        keepx = new Double_t[nbins+1];
-   keepy = new Double_t[nbins];
+   if (fixbin) keepx.resize(2);
+   else        keepx.resize(nbins+1);
+   keepy.resize(nbins);
    Double_t logymin = 0;
    if (Hoption.Logy) logymin = TMath::Power(10,ymin);
 
@@ -6948,10 +6944,8 @@ void THistPainter::PaintHist(Option_t *)
    graph.SetMarkerColor(fH->GetMarkerColor());
    if (!Hoption.Same) graph.ResetBit(TGraph::kClipFrame);
 
-   graph.PaintGrapHist(nbins, keepx, keepy ,chopth);
+   graph.PaintGrapHist(nbins, keepx.data(), keepy.data() ,chopth);
 
-   delete [] keepx;
-   delete [] keepy;
    gStyle->SetBarOffset(baroffsetsave);
    gStyle->SetBarWidth(barwidthsave);
 
@@ -7842,9 +7836,9 @@ void THistPainter::PaintH3Iso()
    Int_t ny = fH->GetNbinsY();
    Int_t nz = fH->GetNbinsZ();
 
-   Double_t *x = new Double_t[nx];
-   Double_t *y = new Double_t[ny];
-   Double_t *z = new Double_t[nz];
+   std::vector<Double_t> x(nx);
+   std::vector<Double_t> y(ny);
+   std::vector<Double_t> z(nz);
 
    for (i=0; i<nx; i++) x[i] = xaxis->GetBinCenter(i+1);
    for (i=0; i<ny; i++) y[i] = yaxis->GetBinCenter(i+1);
@@ -7867,9 +7861,6 @@ void THistPainter::PaintH3Iso()
    TView *view = gPad->GetView();
    if (!view) {
       Error("PaintH3Iso", "no TView in current pad");
-      delete [] x;
-      delete [] y;
-      delete [] z;
       return;
    }
    Double_t thedeg =  90 - gPad->GetTheta();
@@ -7884,9 +7875,6 @@ void THistPainter::PaintH3Iso()
    Double_t dcol = 0.5/Double_t(nbcol);
    TColor *colref = gROOT->GetColor(fH->GetFillColor());
    if (!colref) {
-      delete [] x;
-      delete [] y;
-      delete [] z;
       return;
    }
    Float_t r, g, b, hue, light, satur;
@@ -7914,7 +7902,7 @@ void THistPainter::PaintH3Iso()
    fmax = ydiff*qa + (yligh1+0.1)*(qd+qs);
    fLego->SetIsoSurfaceParameters(fmin, fmax, nbcol, ic1, ic2, ic3);
 
-   fLego->IsoSurface(1, s, nx, ny, nz, x, y, z, "BF");
+   fLego->IsoSurface(1, s, nx, ny, nz, x.data(), y.data(), z.data(), "BF");
 
    if (Hoption.FrontBox) {
       fLego->InitMoveScreen(-1.1,1.1);
@@ -7929,9 +7917,6 @@ void THistPainter::PaintH3Iso()
    PaintTitle();
 
    fLego.reset();
-   delete [] x;
-   delete [] y;
-   delete [] z;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9532,8 +9517,8 @@ void THistPainter::DefineColorLevels(Int_t ndivz)
       Warning("PaintSurface", "too many color levels, %d >= 100, reset to 99", ndivz);
       ndivz = 99;
    }
-   Double_t *funlevel = new Double_t[ndivz+1];
-   Int_t *colorlevel = new Int_t[ndivz+1];
+   std::vector<Double_t> funlevel(ndivz+1);
+   std::vector<Int_t> colorlevel(ndivz+1);
    Int_t theColor;
    Int_t ncolors = gStyle->GetNumberOfColors();
    for (i = 0; i < ndivz; ++i) {
@@ -9542,9 +9527,7 @@ void THistPainter::DefineColorLevels(Int_t ndivz)
       colorlevel[i] = gStyle->GetColorPalette(theColor);
    }
    colorlevel[ndivz] = gStyle->GetColorPalette(ncolors-1);
-   fLego->ColorFunction(ndivz, funlevel, colorlevel, irep);
-   delete [] colorlevel;
-   delete [] funlevel;
+   fLego->ColorFunction(ndivz, funlevel.data(), colorlevel.data(), irep);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
