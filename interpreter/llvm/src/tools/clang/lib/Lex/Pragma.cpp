@@ -386,11 +386,9 @@ void Preprocessor::HandlePragmaOnce(Token &OnceTok) {
     return;
   }
 
-  if (getCurrentFileLexer()->getFileEntry()) {
-    // Get the current file lexer we're looking at.  Ignore _Pragma 'files' etc.
-    // Mark the file as a once-only file now.
-    HeaderInfo.MarkFileIncludeOnce(getCurrentFileLexer()->getFileEntry());
-  }
+  // Get the current file lexer we're looking at.  Ignore _Pragma 'files' etc.
+  // Mark the file as a once-only file now.
+  HeaderInfo.MarkFileIncludeOnce(getCurrentFileLexer()->getFileEntry());
 }
 
 void Preprocessor::HandlePragmaMark() {
