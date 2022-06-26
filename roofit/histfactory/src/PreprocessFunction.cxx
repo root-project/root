@@ -13,34 +13,52 @@
  * \ingroup HistFactory
  */
 
-#include "RooStats/HistFactory/PreprocessFunction.h"
+#include <RooStats/HistFactory/PreprocessFunction.h>
 
+#include <sstream>
 
-RooStats::HistFactory::PreprocessFunction::PreprocessFunction() {;}
+namespace {
 
-RooStats::HistFactory::PreprocessFunction::PreprocessFunction(std::string Name, std::string Expression, std::string Dependents) :
-  fName(Name), fExpression(Expression), fDependents(Dependents) {
-  fCommand = GetCommand(Name, Expression, Dependents);
+/// Replaces the XML special characters with their escape codes.
+std::string escapeXML(const std::string &src)
+{
+   std::stringstream dst;
+   for (char ch : src) {
+      switch (ch) {
+      case '&': dst << "&amp;"; break;
+      case '\'': dst << "&apos;"; break;
+      case '"': dst << "&quot;"; break;
+      case '<': dst << "&lt;"; break;
+      case '>': dst << "&gt;"; break;
+      default: dst << ch; break;
+      }
+   }
+   return dst.str();
 }
 
-std::string RooStats::HistFactory::PreprocessFunction::GetCommand(std::string Name, std::string Expression, std::string Dependents) {
-  std::string command = "expr::"+Name+"('"+Expression+"',{"+Dependents+"})";
-  return command;
+} // namespace
+
+RooStats::HistFactory::PreprocessFunction::PreprocessFunction(std::string const &name, std::string const &expression,
+                                                              std::string const &dependents)
+   : fName(name), fExpression(expression), fDependents(dependents)
+{
 }
 
-
-void RooStats::HistFactory::PreprocessFunction::Print( std::ostream& stream ) {
-
-  stream << "\t \t Name: " << fName
-    << "\t \t Expression: " << fExpression
-    << "\t \t Dependents: " << fDependents
-    << std::endl;
-
+std::string RooStats::HistFactory::PreprocessFunction::GetCommand() const
+{
+   return "expr::" + fName + "('" + fExpression + "',{" + fDependents + "})";
 }
 
-void RooStats::HistFactory::PreprocessFunction::PrintXML( std::ostream& xml ) {
-  xml << "<Function Name=\"" << GetName() << "\" "
-      << "Expression=\""     << GetExpression() << "\" "
-      << "Dependents=\""     << GetDependents() << "\" "
-      << "/>" << std::endl;
+void RooStats::HistFactory::PreprocessFunction::Print(std::ostream &stream) const
+{
+   stream << "\t \t Name: " << fName << "\t \t Expression: " << fExpression << "\t \t Dependents: " << fDependents
+          << std::endl;
+}
+
+void RooStats::HistFactory::PreprocessFunction::PrintXML(std::ostream &xml) const
+{
+   xml << "<Function Name=\"" << fName << "\" "
+       << "Expression=\"" << escapeXML(fExpression) << "\" "
+       << "Dependents=\"" << fDependents << "\" "
+       << "/>\n";
 }
