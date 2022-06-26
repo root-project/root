@@ -1159,24 +1159,9 @@ void CodeGenModule::EmitCtorList(CtorList &Fns, const char *GlobalName) {
   llvm::StructType *CtorStructTy = llvm::StructType::get(
       Int32Ty, CtorPFTy, VoidPtrTy);
 
-
   // Construct the constructor and destructor arrays.
   ConstantInitBuilder builder(*this);
   auto ctors = builder.beginArray(CtorStructTy);
-
-  SmallVector<llvm::Constant *, 8> CtorsConstants;
-  // Add existing ones:
-  if (llvm::GlobalVariable* OldGlobal
-      = TheModule.getGlobalVariable(GlobalName, true)) {
-    if (const llvm::ConstantArray* CArr =
-        llvm::dyn_cast<llvm::ConstantArray>(OldGlobal->getInitializer())) {
-      uint64_t OldSize = CArr->getType()->getNumElements();
-      for (uint64_t Idx = 0; Idx < OldSize; ++Idx) {
-        CtorsConstants.push_back(CArr->getAggregateElement(Idx));
-      }
-    }
-    OldGlobal->eraseFromParent();
-  }
 
   for (const auto &I : Fns) {
     auto ctor = ctors.beginStruct(CtorStructTy);
