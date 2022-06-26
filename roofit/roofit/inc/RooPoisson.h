@@ -41,6 +41,14 @@ public:
   /// Get the mean parameter.
   RooAbsReal const& getMean() const { return mean.arg(); }
 
+  // The RooPoisson is implemented with TMath::Poisson, which is normalized if
+  // x covers the full definition range of the Poisson distribution, which is
+  // zero to infinity. By correctly reporting this self-normalization in that
+  // case, the creation of a dummy integral object that returns one is avoided.
+  // The reduced overhead results in a significant speedup of HistFactory fits
+  // with gamma constraints between 10 and 15 % in the hf001 tutorial example.
+  bool selfNormalized() const override { return !x.hasMax() && x.min() <= 0.0; }
+
 protected:
 
   RooRealProxy x ;
