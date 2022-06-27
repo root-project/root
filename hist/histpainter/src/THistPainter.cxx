@@ -6607,7 +6607,7 @@ void THistPainter::Paint2DErrors(Option_t *)
    fXbuf[2] = Hparam.zmin;
    fYbuf[2] = Hparam.zmax*(1. + gStyle->GetHistTopMargin());
    fLego = std::make_unique<TPainter3dAlgorithms>(fXbuf.data(), fYbuf.data());
-   TView *view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("Paint2DErrors", "no TView in current pad");
       return;
@@ -6990,7 +6990,7 @@ void THistPainter::PaintH3(Option_t *option)
    if (strstr(opt,"fb")) Hoption.FrontBox = 0;
    if (strstr(opt,"bb")) Hoption.BackBox = 0;
 
-   TView *view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) return;
    Double_t thedeg =  90 - gPad->GetTheta();
    Double_t phideg = -90 - gPad->GetPhi();
@@ -7471,7 +7471,7 @@ void THistPainter::PaintH3Box(Int_t iopt)
    fLego = std::make_unique<TPainter3dAlgorithms>(fXbuf.data(), fYbuf.data());
 
    //       Set view
-   TView *view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("PaintH3", "no TView in current pad");
       return;
@@ -7655,7 +7655,7 @@ void THistPainter::PaintH3BoxRaster()
    fLego = std::make_unique<TPainter3dAlgorithms>(fXbuf.data(), fYbuf.data());
 
    //       Set view
-   TView *view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("PaintH3", "no TView in current pad");
       return;
@@ -7857,7 +7857,7 @@ void THistPainter::PaintH3Iso()
 
    fLego = std::make_unique<TPainter3dAlgorithms>(fXbuf.data(), fYbuf.data());
 
-   TView *view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("PaintH3Iso", "no TView in current pad");
       return;
@@ -8037,7 +8037,7 @@ void THistPainter::PaintLego(Option_t *)
    //     Now ready to draw the lego plot
    Int_t irep = 0;
 
-   TView *view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("PaintLego", "no TView in current pad");
       return;
@@ -8150,7 +8150,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
    Int_t ix1, ix2, iy1, iy2, iz1, iz2;
    Double_t rad;
 
-   TView *view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("PaintLegoAxis", "no TView in current pad");
       return;
@@ -8323,7 +8323,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 void THistPainter::PaintPalette()
 {
    TPaletteAxis *palette = (TPaletteAxis*)fFunctions->FindObject("palette");
-   TView *view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (palette) {
       if (view) {
          if (!palette->TestBit(TPaletteAxis::kHasView)) {
@@ -9245,7 +9245,7 @@ void THistPainter::PaintSurface(Option_t *)
 
    //     Now ready to draw the surface plot
 
-   TView *view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("PaintSurface", "no TView in current pad");
       return;
@@ -9423,7 +9423,7 @@ void THistPainter::PaintTriangles(Option_t *option)
    // Define the 3D view
    if (Hparam.zmin == 0 && Hparam.zmax == 0) {Hparam.zmin = -1; Hparam.zmax = 1;}
    if (Hoption.Same) {
-      TView *viewsame = gPad->GetView();
+      TView *viewsame = gPad ? gPad->GetView() : nullptr;
       if (!viewsame) {
          Error("PaintTriangles", "no TView in current pad, do not use option SAME");
          return;
@@ -9447,7 +9447,7 @@ void THistPainter::PaintTriangles(Option_t *option)
    }
 
    fLego = std::make_unique<TPainter3dAlgorithms>(fXbuf.data(), fYbuf.data());
-   TView *view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("PaintTriangles", "no TView in current pad");
       return;
@@ -10068,7 +10068,7 @@ void THistPainter::PaintTF3()
 
    fLego = std::make_unique<TPainter3dAlgorithms>(fXbuf.data(), fYbuf.data());
 
-   TView *view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("PaintTF3", "no TView in current pad");
       return;

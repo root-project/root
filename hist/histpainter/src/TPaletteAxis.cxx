@@ -584,7 +584,7 @@ void TPaletteAxis::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 
 void TPaletteAxis::UnZoom()
 {
-   TView *view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (view) {
       delete view;
       gPad->SetView(nullptr);
