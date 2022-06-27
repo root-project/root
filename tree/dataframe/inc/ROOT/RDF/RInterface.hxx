@@ -2756,10 +2756,7 @@ public:
    /// variations.Print();
    /// ~~~
    ///
-   RVariationsDescription GetVariations()
-   {
-      return {fColRegister.GetVariations()};
-   }
+   RVariationsDescription GetVariations() const { return {fColRegister.GetVariations()}; }
 
    /// \brief Checks if a column is present in the dataset.
    /// \return true if the column is available, false otherwise
