@@ -1800,15 +1800,15 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
          // coverity [Calling risky function]
          strlcat(choptaxis, "G",10);
       }
-      TGaxis *axis = new TGaxis();
-      axis->SetLineColor(gStyle->GetAxisColor("X"));
-      axis->SetTextColor(gStyle->GetLabelColor("X"));
-      axis->SetTextFont(gStyle->GetLabelFont("X"));
-      axis->SetLabelSize(gStyle->GetLabelSize("X"));
-      axis->SetLabelOffset(gStyle->GetLabelOffset("X"));
-      axis->SetTickSize(gStyle->GetTickLength("X"));
+      TGaxis axis;
+      axis.SetLineColor(gStyle->GetAxisColor("X"));
+      axis.SetTextColor(gStyle->GetLabelColor("X"));
+      axis.SetTextFont(gStyle->GetLabelFont("X"));
+      axis.SetLabelSize(gStyle->GetLabelSize("X"));
+      axis.SetLabelOffset(gStyle->GetLabelOffset("X"));
+      axis.SetTickSize(gStyle->GetTickLength("X"));
 
-      axis->PaintAxis(rwxmin,rwymin,rwxmax,rwymin,rwmin,rwmax,ndiv,choptaxis);
+      axis.PaintAxis(rwxmin,rwymin,rwxmax,rwymin,rwmin,rwmax,ndiv,choptaxis);
 
       choptaxis[0]  = 0;
       rwmin  = rwymin;
@@ -1831,15 +1831,14 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
          // coverity [Calling risky function]
          strlcat(choptaxis,"G",10);
       }
-      axis->SetLineColor(gStyle->GetAxisColor("Y"));
-      axis->SetTextColor(gStyle->GetLabelColor("Y"));
-      axis->SetTextFont(gStyle->GetLabelFont("Y"));
-      axis->SetLabelSize(gStyle->GetLabelSize("Y"));
-      axis->SetLabelOffset(gStyle->GetLabelOffset("Y"));
-      axis->SetTickSize(gStyle->GetTickLength("Y"));
+      axis.SetLineColor(gStyle->GetAxisColor("Y"));
+      axis.SetTextColor(gStyle->GetLabelColor("Y"));
+      axis.SetTextFont(gStyle->GetLabelFont("Y"));
+      axis.SetLabelSize(gStyle->GetLabelSize("Y"));
+      axis.SetLabelOffset(gStyle->GetLabelOffset("Y"));
+      axis.SetTickSize(gStyle->GetTickLength("Y"));
 
-      axis->PaintAxis(rwxmin,rwymin,rwxmin,rwymax,rwmin,rwmax,ndiv,choptaxis);
-      delete axis;
+      axis.PaintAxis(rwxmin,rwymin,rwxmin,rwymax,rwmin,rwmax,ndiv,choptaxis);
    }
 
 
@@ -2430,8 +2429,7 @@ do_cleanup:
 void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
 {
 
-   Double_t *xline = nullptr;
-   Double_t *yline = nullptr;
+   std::vector<Double_t> xline, yline;
    Int_t if1 = 0;
    Int_t if2 = 0;
    Double_t xb[4], yb[4];
@@ -2480,10 +2478,10 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
    if (strchr(option,'5')) {option2 = kTRUE; option5 = kTRUE;}
 
    if (option3) {
-      xline = new Double_t[2*theNpoints];
-      yline = new Double_t[2*theNpoints];
-      if (!xline || !yline) {
-         Error("Paint", "too many points, out of memory");
+      xline.resize(2*theNpoints);
+      yline.resize(2*theNpoints);
+      if (xline.empty() || yline.empty()) {
+         Error("PaintGraphAsymmErrors", "too many points, out of memory");
          return;
       }
       if1 = 1;
@@ -2661,12 +2659,10 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
       Int_t logy = gPad->GetLogy();
       gPad->SetLogx(0);
       gPad->SetLogy(0);
-      if (option4) PaintGraph(theGraph, 2*theNpoints, xline, yline,"FC");
-      else         PaintGraph(theGraph, 2*theNpoints, xline, yline,"F");
+      if (option4) PaintGraph(theGraph, 2*theNpoints, xline.data(), yline.data(),"FC");
+      else         PaintGraph(theGraph, 2*theNpoints, xline.data(), yline.data(),"F");
       gPad->SetLogx(logx);
       gPad->SetLogy(logy);
-      delete [] xline;
-      delete [] yline;
    }
 }
 
@@ -2714,7 +2710,7 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
    for (Int_t i = filled; i <= NYErrors; i++)
       options[i] = "";
 
-   Double_t *xline = nullptr;
+   std::vector<Double_t> xline;
    std::vector<Double_t *> yline(NYErrors);
    Int_t if1 = 0;
    Int_t if2 = 0;
@@ -2841,10 +2837,10 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
    }
 
    if (AnyOption3) {
-      xline = new Double_t[2 * NPointsInside];
+      xline.resize(2 * NPointsInside);
 
-      if (!xline) {
-         Error("Paint", "too many points, out of memory");
+      if (xline.empty()) {
+         Error("PaintGraphMultiErrors", "too many points, out of memory");
          return;
       }
 
@@ -2857,8 +2853,7 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
          yline[j] = new Double_t[2 * NPointsInside];
 
          if (!yline[j]) {
-            Error("Paint", "too many points, out of memory");
-            delete[] xline;
+            Error("PaintGraphMultiErrors", "too many points, out of memory");
             for (Int_t k = 0; k < j; k++)
                if (yline[k])
                   delete[] yline[k];
@@ -3109,16 +3104,16 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
       PaintGraphSimple(tg, options[0].Data());
    gPad->ResetBit(TGraph::kClipFrame);
 
-   auto tgDummy = new TGraph();
-   tg->TAttFill::Copy(*tgDummy);
-   tg->TAttLine::Copy(*tgDummy);
-   tg->TAttMarker::Copy(*tgDummy);
+   TGraph tgDummy;
+   tg->TAttFill::Copy(tgDummy);
+   tg->TAttLine::Copy(tgDummy);
+   tg->TAttMarker::Copy(tgDummy);
 
    for (Int_t j = 0; j < NYErrors; j++) {
       if (Option3[j] && DrawErrors[j]) {
          if (IndividualStyles) {
-            tg->GetAttFill(j)->Copy(*tgDummy);
-            tg->GetAttLine(j)->Copy(*tgDummy);
+            tg->GetAttFill(j)->Copy(tgDummy);
+            tg->GetAttLine(j)->Copy(tgDummy);
          }
 
          Int_t logx = gPad->GetLogx();
@@ -3126,19 +3121,15 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
          gPad->SetLogx(0);
          gPad->SetLogy(0);
          if (Option4[j])
-            PaintGraph(tgDummy, 2 * NPointsInside, xline, yline[j], "FC");
+            PaintGraph(&tgDummy, 2 * NPointsInside, xline.data(), yline[j], "FC");
          else
-            PaintGraph(tgDummy, 2 * NPointsInside, xline, yline[j], "F");
+            PaintGraph(&tgDummy, 2 * NPointsInside, xline.data(), yline[j], "F");
          gPad->SetLogx(logx);
          gPad->SetLogy(logy);
          delete[] yline[j];
       }
    }
 
-   delete tgDummy;
-
-   if (AnyOption3)
-      delete[] xline;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3147,8 +3138,7 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
 void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
 {
 
-   Double_t *xline = 0;
-   Double_t *yline = 0;
+   std::vector<Double_t> xline, yline;
    Int_t if1 = 0;
    Int_t if2 = 0;
    Double_t xb[4], yb[4];
@@ -3202,10 +3192,10 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
    if (strchr(option,'5')) {option2 = kTRUE; option5 = kTRUE;}
 
    if (option3) {
-      xline = new Double_t[2*theNpoints];
-      yline = new Double_t[2*theNpoints];
-      if (!xline || !yline) {
-         Error("Paint", "too many points, out of memory");
+      xline.resize(2*theNpoints);
+      yline.resize(2*theNpoints);
+      if (xline.empty() || yline.empty()) {
+         Error("PaintGraphBentErrors", "too many points, out of memory");
          return;
       }
       if1 = 1;
@@ -3387,12 +3377,10 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
       Int_t logy = gPad->GetLogy();
       gPad->SetLogx(0);
       gPad->SetLogy(0);
-      if (option4) PaintGraph(theGraph, 2*theNpoints, xline, yline,"FC");
-      else         PaintGraph(theGraph, 2*theNpoints, xline, yline,"F");
+      if (option4) PaintGraph(theGraph, 2*theNpoints, xline.data(), yline.data(),"FC");
+      else         PaintGraph(theGraph, 2*theNpoints, xline.data(), yline.data(),"F");
       gPad->SetLogx(logx);
       gPad->SetLogy(logy);
-      delete [] xline;
-      delete [] yline;
    }
 }
 
@@ -3403,8 +3391,7 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
 void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
 {
 
-   Double_t *xline = 0;
-   Double_t *yline = 0;
+   std::vector<Double_t> xline, yline;
    Int_t if1 = 0;
    Int_t if2 = 0;
    Double_t xb[4], yb[4];
@@ -3451,9 +3438,9 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
    if (strchr(option,'5')) {option2 = kTRUE; option5 = kTRUE;}
 
    if (option3) {
-      xline = new Double_t[2*theNpoints];
-      yline = new Double_t[2*theNpoints];
-      if (!xline || !yline) {
+      xline.resize(2*theNpoints);
+      yline.resize(2*theNpoints);
+      if (xline.empty() || yline.empty()) {
          Error("Paint", "too many points, out of memory");
          return;
       }
@@ -3634,12 +3621,10 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
       Int_t logy = gPad->GetLogy();
       gPad->SetLogx(0);
       gPad->SetLogy(0);
-      if (option4) PaintGraph(theGraph, 2*theNpoints, xline, yline,"FC");
-      else         PaintGraph(theGraph, 2*theNpoints, xline, yline,"F");
+      if (option4) PaintGraph(theGraph, 2*theNpoints, xline.data(), yline.data(),"FC");
+      else         PaintGraph(theGraph, 2*theNpoints, xline.data(), yline.data(),"F");
       gPad->SetLogx(logx);
       gPad->SetLogy(logy);
-      delete [] xline;
-      delete [] yline;
    }
 }
 
@@ -3871,14 +3856,13 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
 
    if (TestBit(TH1::kNoTitle)) return;
    Int_t nt = strlen(theGraph->GetTitle());
-   TPaveText *title = 0;
-   TObject *obj;
+   TPaveText *title = nullptr;
    TIter next(gPad->GetListOfPrimitives());
-   while ((obj = next())) {
+   while (auto obj = next()) {
       if (!obj->InheritsFrom(TPaveText::Class())) continue;
       title = (TPaveText*)obj;
       if (title->GetName())
-         if (strcmp(title->GetName(),"title")) {title = 0; continue;}
+         if (strcmp(title->GetName(),"title")) {title = nullptr; continue;}
       break;
    }
    if (nt == 0 || gStyle->GetOptTitle() <= 0) {
@@ -4203,10 +4187,10 @@ void TGraphPainter::PaintPolyLineHatches(TGraph *theGraph, Int_t n, const Double
    Int_t i,j,nf;
    Double_t w = (theGraph->GetLineWidth()/100)*0.005;
 
-   Double_t *xf = new Double_t[2*n];
-   Double_t *yf = new Double_t[2*n];
-   Double_t *xt = new Double_t[n];
-   Double_t *yt = new Double_t[n];
+   std::vector<Double_t> xf(2*n);
+   std::vector<Double_t> yf(2*n);
+   std::vector<Double_t> xt(n);
+   std::vector<Double_t> yt(n);
    Double_t x1, x2, y1, y2, x3, y3, xm, ym, a, a1, a2, a3;
 
    // Compute the gPad coordinates in TRUE normalized space (NDC)
@@ -4389,13 +4373,8 @@ void TGraphPainter::PaintPolyLineHatches(TGraph *theGraph, Int_t n, const Double
    }
 
    // Draw filled area
-   gPad->PaintFillArea(nf+1,xf,yf);
+   gPad->PaintFillArea(nf+1,xf.data(),yf.data());
    theGraph->TAttLine::Modify(); // In case of PaintFillAreaHatches
-
-   delete [] xf;
-   delete [] yf;
-   delete [] xt;
-   delete [] yt;
 }
 
 
@@ -4406,11 +4385,10 @@ void TGraphPainter::PaintStats(TGraph *theGraph, TF1 *fit)
 {
 
    Int_t dofit;
-   TPaveStats *stats  = 0;
+   TPaveStats *stats  = nullptr;
    TList *functions = theGraph->GetListOfFunctions();
    TIter next(functions);
-   TObject *obj;
-   while ((obj = next())) {
+   while (auto obj = next()) {
       if (obj->InheritsFrom(TPaveStats::Class())) {
          stats = (TPaveStats*)obj;
          break;
@@ -4551,9 +4529,9 @@ void TGraphPainter::Smooth(TGraph *theGraph, Int_t npoints, Double_t *x, Double_
    n2          = npointsMax-2;
    banksize    = n2;
 
-   Double_t *qlx = new Double_t[npointsMax];
-   Double_t *qly = new Double_t[npointsMax];
-   if (!qlx || !qly) {
+   std::vector<Double_t> qlx(npointsMax);
+   std::vector<Double_t> qly(npointsMax);
+   if (qlx.empty() || qly.empty()) {
       Error("Smooth", "not enough space in memory");
       return;
    }
@@ -4928,16 +4906,13 @@ L300:
    if (npt < banksize)  goto L320;
    if (drawtype >= 1000 || ktype > 1) {
       Int_t newsize = banksize + n2;
-      Double_t *qtemp = new Double_t[banksize];
+      std::vector<Double_t> qtemp(banksize);
       for (i=0;i<banksize;i++) qtemp[i] = qlx[i];
-      delete [] qlx;
-      qlx = new Double_t[newsize];
+      qlx.resize(newsize);
       for (i=0;i<banksize;i++) qlx[i]   = qtemp[i];
       for (i=0;i<banksize;i++) qtemp[i] = qly[i];
-      delete [] qly;
-      qly = new Double_t[newsize];
+      qly.resize(newsize);
       for (i=0;i<banksize;i++) qly[i] = qtemp[i];
-      delete [] qtemp;
       banksize = newsize;
       goto L320;
    }
@@ -4946,7 +4921,7 @@ L300:
 
 L310:
    if (drawtype >= 1000) {
-      gPad->PaintFillArea(npt,qlx,qly, "B");
+      gPad->PaintFillArea(npt,qlx.data(),qly.data(), "B");
    } else {
       if (ktype > 1) {
          if (!loptx) {
@@ -4960,10 +4935,10 @@ L310:
             qly[npt]   = qly[npt-1];
             qly[npt+1] = qly[0];
          }
-         gPad->PaintFillArea(npt+2,qlx,qly);
+         gPad->PaintFillArea(npt+2,qlx.data(),qly.data());
       }
-      if (TMath::Abs(theGraph->GetLineWidth())>99) PaintPolyLineHatches(theGraph, npt, qlx, qly);
-      gPad->PaintPolyLine(npt,qlx,qly);
+      if (TMath::Abs(theGraph->GetLineWidth())>99) PaintPolyLineHatches(theGraph, npt, qlx.data(), qly.data());
+      gPad->PaintPolyLine(npt,qlx.data(),qly.data());
    }
    npt = 1;
    qlx[0] = sxmin + xt/xratio;
@@ -4982,8 +4957,6 @@ L390:
       y[i] = symin + y[i]/yratio;
    }
 
-   delete [] qlx;
-   delete [] qly;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
