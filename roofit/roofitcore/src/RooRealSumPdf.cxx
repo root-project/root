@@ -140,11 +140,21 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title,
   RooRealSumPdf(name, title)
 {
   _extended = extended;
+  RooRealSumPdf::initializeFuncsAndCoefs(*this, inFuncList, inCoefList, _funcList, _coefList);
+}
 
-  if (!(inFuncList.getSize()==inCoefList.getSize()+1 || inFuncList.getSize()==inCoefList.getSize())) {
-    coutE(InputArguments) << "RooRealSumPdf::RooRealSumPdf(" << GetName()
-           << ") number of pdfs and coefficients inconsistent, must have Nfunc=Ncoef or Nfunc=Ncoef+1" << endl ;
-    throw std::invalid_argument("RooRealSumPdf: Number of PDFs and coefficients is inconsistent.");
+
+void RooRealSumPdf::initializeFuncsAndCoefs(RooAbsReal const& caller,
+                                            const RooArgList& inFuncList, const RooArgList& inCoefList,
+                                            RooArgList& funcList, RooArgList& coefList)
+{
+  const std::string className = caller.ClassName();
+  const std::string constructorName = className + "::" + className;
+
+  if (!(inFuncList.size()==inCoefList.size()+1 || inFuncList.size()==inCoefList.size())) {
+    oocoutE(&caller, InputArguments) << constructorName << "(" << caller.GetName()
+           << ") number of pdfs and coefficients inconsistent, must have Nfunc=Ncoef or Nfunc=Ncoef+1" << std::endl;
+    throw std::invalid_argument(className + ": Number of PDFs and coefficients is inconsistent.");
   }
 
   // Constructor with N functions and N or N-1 coefs
@@ -153,24 +163,24 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title,
     const auto& coef = inCoefList[i];
 
     if (!dynamic_cast<const RooAbsReal*>(&coef)) {
-      coutW(InputArguments) << "RooRealSumPdf::RooRealSumPdf(" << GetName() << ") coefficient " << coef.GetName() << " is not of type RooAbsReal, ignored" << endl ;
+      oocoutW(&caller, InputArguments) << constructorName << "(" << caller.GetName() << ") coefficient " << coef.GetName() << " is not of type RooAbsReal, ignored" << std::endl ;
       continue ;
     }
     if (!dynamic_cast<const RooAbsReal*>(&func)) {
-      coutW(InputArguments) << "RooRealSumPdf::RooRealSumPdf(" << GetName() << ") func " << func.GetName() << " is not of type RooAbsReal, ignored" << endl ;
+      oocoutW(&caller, InputArguments) << constructorName << "(" << caller.GetName() << ") func " << func.GetName() << " is not of type RooAbsReal, ignored" << std::endl ;
       continue ;
     }
-    _funcList.add(func) ;
-    _coefList.add(coef) ;
+    funcList.add(func) ;
+    coefList.add(coef) ;
   }
 
   if (inFuncList.size() == inCoefList.size() + 1) {
     const auto& func = inFuncList[inFuncList.size()-1];
     if (!dynamic_cast<const RooAbsReal*>(&func)) {
-      coutE(InputArguments) << "RooRealSumPdf::RooRealSumPdf(" << GetName() << ") last func " << func.GetName() << " is not of type RooAbsReal, fatal error" << endl ;
-      throw std::invalid_argument("RooRealSumPdf: Function passed as is not of type RooAbsReal.");
+      oocoutE(&caller, InputArguments) << constructorName << "(" << caller.GetName() << ") last func " << func.GetName() << " is not of type RooAbsReal, fatal error" << std::endl ;
+      throw std::invalid_argument(className + ": Function passed as is not of type RooAbsReal.");
     }
-    _funcList.add(func);
+    funcList.add(func);
   }
 
 }
@@ -586,7 +596,13 @@ std::list<double>* RooRealSumPdf::binBoundaries(RooArgList const& funcList, RooA
 /// Check if all components that depend on `obs` are binned.
 bool RooRealSumPdf::isBinnedDistribution(const RooArgSet& obs) const
 {
-  for (const auto elm : _funcList) {
+  return isBinnedDistribution(_funcList, obs);
+}
+
+
+bool RooRealSumPdf::isBinnedDistribution(RooArgList const& funcList, const RooArgSet& obs)
+{
+  for (const auto elm : funcList) {
     auto func = static_cast<RooAbsReal*>(elm);
 
     if (func->dependsOn(obs) && !func->isBinnedDistribution(obs)) {
@@ -596,8 +612,6 @@ bool RooRealSumPdf::isBinnedDistribution(const RooArgSet& obs) const
 
   return true  ;
 }
-
-
 
 
 
@@ -657,7 +671,13 @@ std::list<double>* RooRealSumPdf::plotSamplingHint(RooArgList const& funcList, R
 
 void RooRealSumPdf::setCacheAndTrackHints(RooArgSet& trackNodes)
 {
-  for (const auto sarg : _funcList) {
+  setCacheAndTrackHints(_funcList, trackNodes);
+}
+
+
+void RooRealSumPdf::setCacheAndTrackHints(RooArgList const& funcList, RooArgSet& trackNodes)
+{
+  for (const auto sarg : funcList) {
     if (sarg->canNodeBeCached()==Always) {
       trackNodes.add(*sarg) ;
       //cout << "tracking node RealSumPdf component " << sarg->ClassName() << "::" << sarg->GetName() << endl ;
