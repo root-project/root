@@ -275,17 +275,6 @@ public:
       out << "\n//----  operator " << Name() << "  " << OpName << "\n";
       out << "{\n"; // create a new scope to avoid name clash
 
-      // vectorize the (dilated)convolution kernels into a matrix
-      // no need to transpose the matrix
-      // size_t hstride = fShapeW[3];
-      // size_t hstrideDil = fAttrDilations[0] * fAttrKernelShape[1];  // stride dilated in the height
-      // size_t wstrideDil = fAttrDilations[1];
-      // size_t dstride = fShapeW[2] * fShapeW[3];
-      // size_t dstrideDil = fAttrKernelShape[0] * fAttrKernelShape[1];
-      // size_t kstride = fShapeW[1] * fShapeW[2] * fShapeW[3];
-      // size_t kstrideDil = fShapeW[1] * dstrideDil;
-
-
       assert(fShapeX[0] == fShapeY[0]);
       assert(fShapeX[1] == fShapeY[1]);
       assert(fAttrPads.size() == 6);
@@ -321,13 +310,14 @@ public:
          out << SP << "constexpr int wmin = " << wmin << ";\n";
          out << SP << "constexpr int wmax = " << wmax << ";\n";
          out << SP << "constexpr int kw = " << fAttrKernelShape[1] << ";\n";
-      }
-      if (fDim > 2) {
-         size_t dsize = fShapeX[4];
-         out << SP << "constexpr int dsize = " << dsize << ";\n";
-         out << SP << "constexpr int dmin = " << dmin << ";\n";
-         out << SP << "constexpr int dmax = " << dmax << ";\n";
-         out << SP << "constexpr int kd = " << fAttrKernelShape[2] << ";\n";
+         if (fDim > 2) {
+            size_t dsize = fShapeX[4];
+            out << SP << "constexpr int dsize = " << dsize << ";\n";
+            out << SP << "constexpr int dwsize = " << dsize*wsize << ";\n"; // hstride
+            out << SP << "constexpr int dmin = " << dmin << ";\n";
+            out << SP << "constexpr int dmax = " << dmax << ";\n";
+            out << SP << "constexpr int kd = " << fAttrKernelShape[2] << ";\n";
+         }
       }
 
 
@@ -401,17 +391,17 @@ public:
          // loop on columns of filtered region
          out << SP << SP << SP << SP << SP << "for (int m = j; m < j + kw; m++) {\n";
          out << SP << SP << SP << SP << SP << SP << "if (m < 0 || m >= wsize) continue;\n";
-         out << SP << SP << SP << SP << SP << SP << SP << SP << "int index = inputOffset + l*hsize + m;\n";
+         out << SP << SP << SP << SP << SP << SP << SP << "int index = inputOffset + l*wsize + m;\n";
          if (fPoolMode == MaxPool) {
-         out << SP << SP << SP << SP << SP << SP << "auto xval = tensor_" << fNX << "[index];\n";
-         out << SP << SP << SP << SP << SP << SP << "if (xval > value) value = xval;\n";
+         out << SP << SP << SP << SP << SP << SP << SP << "auto xval = tensor_" << fNX << "[index];\n";
+         out << SP << SP << SP << SP << SP << SP << SP << "if (xval > value) value = xval;\n";
          }
          else if (fPoolMode == AveragePool) {
             // compute sum of values
-            out << SP << SP << SP << SP << SP << SP << "value += tensor_" << fNX << "[index];\n";
+            out << SP << SP << SP << SP << SP << SP << SP << "value += tensor_" << fNX << "[index];\n";
             if (fAttrCountIncludePad == 0 && doPadding)
                // compute number of elements used for the average
-               out << SP << SP << SP << SP << SP << SP << "nsum++;\n";
+               out << SP << SP << SP << SP << SP << SP << SP << "nsum++;\n";
          }
          out << SP << SP << SP << SP << SP << SP << "}\n";
          out << SP << SP << SP << SP << SP << "}\n"; // end loop on region elements
@@ -451,18 +441,18 @@ public:
          // loop on layers of filtered region
          out << SP << SP << SP << SP << SP << SP << "for (int p = k; p < k + kd; p++) {\n";
          out << SP << SP << SP << SP << SP << SP << SP << "if (p < 0 || p >= dsize) continue;\n";
-         out << SP << SP << SP << SP << SP << SP << SP << SP << "int index = inputOffset + l*hsize + m*wsize + p;\n";
+         out << SP << SP << SP << SP << SP << SP << SP << SP << "int index = inputOffset + l*dwsize + m*dsize + p;\n";
 
          if (fPoolMode == MaxPool) {
-            out << SP << SP << SP << SP << SP << SP << "auto xval = tensor_" << fNX << "[index];\n";
-            out << SP << SP << SP << SP << SP << SP << "if (xval > value) value = xval;\n";
+            out << SP << SP << SP << SP << SP << SP << SP << SP << "auto xval = tensor_" << fNX << "[index];\n";
+            out << SP << SP << SP << SP << SP << SP << SP << SP << "if (xval > value) value = xval;\n";
          }
          else if (fPoolMode == AveragePool) {
             // compute sum of values
-            out << SP << SP << SP << SP << SP << SP << "value += tensor_" << fNX << "[index];\n";
+            out << SP << SP << SP << SP << SP << SP << SP << SP << "value += tensor_" << fNX << "[index];\n";
             if (fAttrCountIncludePad == 0 && doPadding)
                // compute number of elements used for the average
-               out << SP << SP << SP << SP << SP << SP << "nsum++;\n";
+               out << SP << SP << SP << SP << SP << SP << SP << SP << "nsum++;\n";
          }
          out << SP << SP << SP << SP << SP << SP << "}\n";
          out << SP << SP << SP << SP << SP << "}\n";
