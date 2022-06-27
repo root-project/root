@@ -595,7 +595,7 @@ void TGraph2DPainter::PaintErrors(Option_t * /* option */)
 {
    Double_t temp1[3],temp2[3];
 
-   TView *view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("PaintErrors", "No TView in current pad");
       return;
@@ -898,7 +898,7 @@ void TGraph2DPainter::PaintPolyMarker(Option_t *option)
 {
    Double_t temp1[3],temp2[3];
 
-   TView *view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("PaintPolyMarker", "No TView in current pad");
       return;
@@ -995,7 +995,7 @@ void TGraph2DPainter::PaintPolyLine(Option_t * /* option */)
 {
    Double_t temp1[3],temp2[3];
 
-   TView *view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("PaintPolyLine", "No TView in current pad");
       return;
@@ -1081,7 +1081,7 @@ void TGraph2DPainter::PaintTriangles_old(Option_t *option)
    std::vector<Int_t> order;
    std::vector<Double_t> dist;
 
-   TView *view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("PaintTriangles", "No TView in current pad");
       return;
@@ -1232,7 +1232,7 @@ void TGraph2DPainter::PaintTriangles_new(Option_t *option)
    Double_t x[4], y[4], temp1[3],temp2[3];
    Int_t p[3];
 
-   TView *view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("PaintTriangles", "No TView in current pad");
       return;
