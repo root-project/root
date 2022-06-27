@@ -85,7 +85,7 @@ std::vector<std::string> getVarnames(const RooHistFunc *hf)
 std::unique_ptr<TH1> histFunc2TH1(const RooHistFunc *hf)
 {
    const RooDataHist &dh = hf->dataHist();
-   RooArgList vars(*dh.get());
+   RooArgList vars(*hf->getVariables());
    auto varnames = RooJSONFactoryWSTool::names(&vars);
    std::unique_ptr<TH1> hist{hf->createHistogram(RooJSONFactoryWSTool::concat(&vars).c_str())};
    hist->SetDirectory(nullptr);
