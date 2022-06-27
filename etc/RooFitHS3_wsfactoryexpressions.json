@@ -57,5 +57,31 @@
             "slope",
             "power"
         ]
+    },
+    "BernsteinPolynomial": {
+        "class": "RooBernstein",
+        "arguments": [
+            "x",
+            "coefficients"
+        ]
+    },
+    "CrystalBallShape": {
+        "class": "RooCBShape",
+        "arguments": [
+            "m",
+            "m0",
+            "sigma",
+            "alpha",
+	    "n"
+        ]
+    },
+    "BifurkatedGaussian": {
+        "class": "RooBifurGauss",
+        "arguments": [
+            "x",
+            "mean",
+            "sigmaL",
+            "sigmaR"	    
+        ]
     }
 }
