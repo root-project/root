@@ -218,3 +218,39 @@ int ROOT::Experimental::Detail::RDaosContainer::WriteSingleAkey(const void *buff
    RDaosObject::FetchUpdateArgs args(dkey, akey, iovs);
    return RDaosObject(*this, oid, cid.fCid).Update(args);
 }
+
+int ROOT::Experimental::Detail::RDaosContainer::VectorReadWrite(std::vector<RWOperation> &vec, ObjClassId_t cid,
+                                                                int (RDaosObject::*fn)(RDaosObject::FetchUpdateArgs &))
+{
+   using request_t = std::tuple<std::unique_ptr<RDaosObject>, RDaosObject::FetchUpdateArgs>;
+
+   int ret;
+   std::vector<request_t> requests{};
+   requests.reserve(vec.size());
+
+   // Initialize parent event used for grouping and waiting for completion of all requests
+   daos_event_t parent_event{};
+   if ((ret = fPool->fEventQueue->InitializeEvent(&parent_event)) < 0)
+      return ret;
+
+   for (size_t i = 0; i < vec.size(); ++i) {
+      requests.push_back(std::make_tuple(
+         std::make_unique<RDaosObject>(*this, vec[i].fOid, cid.fCid),
+         RDaosObject::FetchUpdateArgs{vec[i].fDistributionKey, vec[i].fAttributeKey, vec[i].fIovs, /*is_async=*/true}));
+
+      if ((ret = fPool->fEventQueue->InitializeEvent(std::get<1>(requests.back()).GetEventPointer(), &parent_event)) <
+          0)
+         return ret;
+
+      // Launch operation
+      if ((ret = (std::get<0>(requests.back()).get()->*fn)(std::get<1>(requests.back()))) < 0)
+         ;
+      return ret;
+   }
+
+   // Sets parent barrier and waits for all children launched before it.
+   if ((ret = fPool->fEventQueue->WaitOnParentBarrier(&parent_event)) < 0)
+      return ret;
+
+   return fPool->fEventQueue->FinalizeEvent(&parent_event);
+}
