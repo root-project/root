@@ -13,8 +13,8 @@
 #define ROOT_TPainter3dAlgorithms
 
 #include "TAttLine.h"
-
 #include "TAttFill.h"
+#include <vector>
 
 const Int_t kCARTESIAN   = 1;
 const Int_t kPOLAR       = 2;
@@ -28,27 +28,27 @@ class TView;
 class TPainter3dAlgorithms : public TAttLine, public TAttFill {
 
 private:
-   Double_t     fRmin[3];          ///< Lower limits of lego
-   Double_t     fRmax[3];          ///< Upper limits of lego
-   Double_t     *fAphi;            ///<
-   Int_t        fNaphi;            ///< Size of fAphi
-   Int_t        fSystem;           ///< Coordinate system
-   Int_t       *fColorMain;        ///<
-   Int_t       *fColorDark;        ///<
-   Int_t        fColorTop;         ///<
-   Int_t        fColorBottom;      ///<
-   Int_t       *fEdgeColor;        ///<
-   Int_t       *fEdgeStyle;        ///<
-   Int_t       *fEdgeWidth;        ///<
-   Int_t        fEdgeIdx;          ///<
-   Int_t        fMesh;             ///< (=1 if mesh to draw, o otherwise)
-   Int_t        fNStack;           ///< Number of histograms in the stack to be painted
-   Double_t     fFmin;             ///< IsoSurface minimum function value
-   Double_t     fFmax;             ///< IsoSurface maximum function value
-   Int_t        fNcolor;           ///< Number of colours per Iso surface
-   Int_t        fIc1;              ///< Base colour for the 1st Iso Surface
-   Int_t        fIc2;              ///< Base colour for the 2nd Iso Surface
-   Int_t        fIc3;              ///< Base colour for the 3rd Iso Surface
+   Double_t              fRmin[3];          ///< Lower limits of lego
+   Double_t              fRmax[3];          ///< Upper limits of lego
+   std::vector<Double_t> fAphi;             ///<
+   Int_t                 fNaphi;            ///< Size of fAphi
+   Int_t                 fSystem;           ///< Coordinate system
+   std::vector<Int_t>    fColorMain;        ///<
+   std::vector<Int_t>    fColorDark;        ///<
+   Int_t                 fColorTop;         ///<
+   Int_t                 fColorBottom;      ///<
+   std::vector<Int_t>    fEdgeColor;        ///<
+   std::vector<Int_t>    fEdgeStyle;        ///<
+   std::vector<Int_t>    fEdgeWidth;        ///<
+   Int_t                 fEdgeIdx;          ///<
+   Int_t                 fMesh;             ///< (=1 if mesh to draw, o otherwise)
+   Int_t                 fNStack;           ///< Number of histograms in the stack to be painted
+   Double_t              fFmin;             ///< IsoSurface minimum function value
+   Double_t              fFmax;             ///< IsoSurface maximum function value
+   Int_t                 fNcolor;           ///< Number of colours per Iso surface
+   Int_t                 fIc1;              ///< Base colour for the 1st Iso Surface
+   Int_t                 fIc2;              ///< Base colour for the 2nd Iso Surface
+   Int_t                 fIc3;              ///< Base colour for the 3rd Iso Surface
 
 public:
    typedef void (TPainter3dAlgorithms::*DrawFaceFunc_t)(Int_t *, Double_t *, Int_t, Int_t *, Double_t *);
@@ -171,16 +171,16 @@ public:
    void    FillPolygonBorder(Int_t nn, Double_t *xy);
 
 private:
-   Double_t    fXrast;     ///< Minimal x
-   Double_t    fYrast;     ///< Minimal y
-   Double_t    fDXrast;    ///< X size
-   Double_t    fDYrast;    ///< Y size
-   Int_t       fNxrast;    ///< Number of pixels in x
-   Int_t       fNyrast;    ///< Number of pixels in y
-   Int_t       fIfrast;    ///< Flag, if it not zero them the algorithm is off
-   Int_t       *fRaster;   ///< Pointer to raster buffer
-   Int_t       fJmask[30]; ///< Indices of subsets of n-bit masks (n is from 1 to 30)
-   Int_t       fMask[465]; ///< Set of masks (30+29+28+...+1)=465
+   Double_t            fXrast;     ///< Minimal x
+   Double_t            fYrast;     ///< Minimal y
+   Double_t            fDXrast;    ///< X size
+   Double_t            fDYrast;    ///< Y size
+   Int_t               fNxrast;    ///< Number of pixels in x
+   Int_t               fNyrast;    ///< Number of pixels in y
+   Int_t               fIfrast;    ///< Flag, if it not zero them the algorithm is off
+   std::vector<Int_t>  fRaster;   ///< Pointer to raster buffer
+   Int_t               fJmask[30]; ///< Indices of subsets of n-bit masks (n is from 1 to 30)
+   Int_t               fMask[465]; ///< Set of masks (30+29+28+...+1)=465
 ///@}
 
 ///@{

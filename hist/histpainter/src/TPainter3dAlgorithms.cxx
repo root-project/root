@@ -51,16 +51,6 @@ const Int_t kF3FillColor1 = 201;
 const Int_t kF3FillColor2 = 202;
 const Int_t kF3LineColor  = 203;
 
-// Static arrays used to paint stacked lego plots.
-const Int_t kVSizeMax = 20;
-static Double_t gV[kVSizeMax];
-static Double_t gTT[4*kVSizeMax];
-static Int_t gColorMain[kVSizeMax+1];
-static Int_t gColorDark[kVSizeMax+1];
-static Int_t gEdgeColor[kVSizeMax+1];
-static Int_t gEdgeStyle[kVSizeMax+1];
-static Int_t gEdgeWidth[kVSizeMax+1];
-
 extern TH1  *gCurrentHist; //these 3 globals should be replaced by class members
 extern Hoption_t Hoption;
 extern Hparam_t  Hparam;
@@ -71,11 +61,9 @@ extern Hparam_t  Hparam;
 TPainter3dAlgorithms::TPainter3dAlgorithms(): TAttLine(1,1,1), TAttFill(1,0)
 {
    Int_t i;
-   fAphi            = nullptr;
    fNaphi           = 0;
    fIfrast          = 0;
    fMesh            = 1;
-   fRaster          = nullptr;
    fColorTop        = 1;
    fColorBottom     = 1;
    fEdgeIdx         = -1;
@@ -87,21 +75,12 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(): TAttLine(1,1,1), TAttFill(1,0)
 
    TList *stack = nullptr;
    if (gCurrentHist) stack = gCurrentHist->GetPainter()->GetStack();
-   fNStack = 0;
-   if (stack) fNStack = stack->GetSize();
-   if (fNStack > kVSizeMax) {
-      fColorMain  = new Int_t[fNStack+1];
-      fColorDark  = new Int_t[fNStack+1];
-      fEdgeColor  = new Int_t[fNStack+1];
-      fEdgeStyle  = new Int_t[fNStack+1];
-      fEdgeWidth  = new Int_t[fNStack+1];
-   } else {
-      fColorMain = &gColorMain[0];
-      fColorDark = &gColorDark[0];
-      fEdgeColor = &gEdgeColor[0];
-      fEdgeStyle = &gEdgeStyle[0];
-      fEdgeWidth = &gEdgeWidth[0];
-   }
+   fNStack = stack ? stack->GetSize() : 0;
+   fColorMain.resize(fNStack+1);
+   fColorDark.resize(fNStack+1);
+   fEdgeColor.resize(fNStack+1);
+   fEdgeStyle.resize(fNStack+1);
+   fEdgeWidth.resize(fNStack+1);
 
    for (i=0;i<fNStack;i++) { fColorMain[i] = 1; fColorDark[i] = 1; fEdgeColor[i] = 1; fEdgeStyle[i] = 1; fEdgeWidth[i] = 1; }
    for (i=0;i<3;i++)       { fRmin[i] = 0; fRmax[i] = 1; }
@@ -154,11 +133,9 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(Double_t *rmin, Double_t *rmax, Int_t
    Int_t i;
    Double_t psi;
 
-   fAphi         = nullptr;
    fNaphi        = 0;
    fIfrast       = 0;
    fMesh         = 1;
-   fRaster       = nullptr;
    fColorTop     = 1;
    fColorBottom  = 1;
    fEdgeIdx      = -1;
@@ -171,21 +148,13 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(Double_t *rmin, Double_t *rmax, Int_t
    fSurfaceFunction = 0;
 
    TList *stack = gCurrentHist->GetPainter()->GetStack();
-   fNStack = 0;
-   if (stack) fNStack = stack->GetSize();
-   if (fNStack > kVSizeMax) {
-      fColorMain  = new Int_t[fNStack+1];
-      fColorDark  = new Int_t[fNStack+1];
-      fEdgeColor  = new Int_t[fNStack+1];
-      fEdgeStyle  = new Int_t[fNStack+1];
-      fEdgeWidth  = new Int_t[fNStack+1];
-   } else {
-      fColorMain = &gColorMain[0];
-      fColorDark = &gColorDark[0];
-      fEdgeColor = &gEdgeColor[0];
-      fEdgeStyle = &gEdgeStyle[0];
-      fEdgeWidth = &gEdgeWidth[0];
-   }
+   fNStack = stack ? stack->GetSize() : 0;
+
+   fColorMain.resize(fNStack+1);
+   fColorDark.resize(fNStack+1);
+   fEdgeColor.resize(fNStack+1);
+   fEdgeStyle.resize(fNStack+1);
+   fEdgeWidth.resize(fNStack+1);
 
    for (i=0;i<fNStack;i++) { fColorMain[i] = 1; fColorDark[i] = 1; fEdgeColor[i] = 1; fEdgeStyle[i] = 1; fEdgeWidth[i] = 1; }
    for (i=0;i<3;i++)       { fRmin[i] = rmin[i]; fRmax[i] = rmax[i]; }
@@ -235,19 +204,10 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(Double_t *rmin, Double_t *rmax, Int_t
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Lego default destructor
+/// destructor
 
 TPainter3dAlgorithms::~TPainter3dAlgorithms()
 {
-   if (fAphi)   { delete [] fAphi; fAphi = 0; }
-   if (fRaster) { delete [] fRaster; fRaster = 0; }
-   if (fNStack > kVSizeMax) {
-      delete [] fColorMain;
-      delete [] fColorDark;
-      delete [] fEdgeColor;
-      delete [] fEdgeStyle;
-      delete [] fEdgeWidth;
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2054,7 +2014,7 @@ void TPainter3dAlgorithms::InitRaster(Double_t xmin, Double_t ymin, Double_t xma
 
    //  Create buffer for raster
    Int_t buffersize = nx*ny/30 + 1;
-   fRaster = new Int_t[buffersize];
+   fRaster.resize(buffersize);
 
    //          S E T   M A S K S
    k = 0;
@@ -2271,16 +2231,8 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t, Int_t nx, Int_t ny, const cha
    if (!tnorm) return;
 
    //          Allocate v and tt arrays
-   Double_t *v, *tt;
    Int_t vSize = fNStack+2;
-   if (vSize > kVSizeMax) {
-      v  = new Double_t[vSize];
-      tt = new Double_t[4*vSize];
-   } else {
-      vSize = kVSizeMax;
-      v  = &gV[0];
-      tt = &gTT[0];
-   }
+   std::vector<Double_t> v(vSize), tt(4*vSize);
 
    //          Define order of drawing
    Int_t incrx = (tnorm[8] < 0.) ? -1 : +1;
@@ -2312,7 +2264,7 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t, Int_t nx, Int_t ny, const cha
    for (Int_t iy = iy1; iy != iy2+incry; iy += incry) {
       for (Int_t ix = ix1; ix != ix2+incrx; ix += incrx) {
          if (!painter->IsInside(ix,iy)) continue;
-         (this->*fLegoFunction)(ix, iy, nv, xy, v, tt);
+         (this->*fLegoFunction)(ix, iy, nv, xy, v.data(), tt.data());
          if (nv < 2 || nv > vSize) continue;
          if (Hoption.Zero) {
             Double_t total_content = 0;
@@ -2396,10 +2348,6 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t, Int_t nx, Int_t ny, const cha
          }
       }
    }
-   if (vSize > kVSizeMax) {
-      delete [] v;
-      delete [] tt;
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2444,11 +2392,10 @@ void TPainter3dAlgorithms::LegoPolar(Int_t iordr, Int_t na, Int_t nb, const char
       nphi = na;
    }
    if (fNaphi < nphi + 3) {
-     if (fAphi) { delete [] fAphi; fAphi = 0; }
      fNaphi = nphi + 3;
-     fAphi = new Double_t[fNaphi];
+     fAphi.resize(fNaphi);
    }
-   if (fAphi == 0) {
+   if (fAphi.empty()) {
       Error("LegoPolar", "failed to allocate array fAphi[%d]", fNaphi);
       fNaphi = 0;
       return;
@@ -2457,16 +2404,8 @@ void TPainter3dAlgorithms::LegoPolar(Int_t iordr, Int_t na, Int_t nb, const char
    if (*chopt == 'B' || *chopt == 'b') iopt = 1;
 
     // Allocate v and tt arrays
-   Double_t *v, *tt;
    Int_t vSize = fNStack+2;
-   if (vSize > kVSizeMax) {
-      v  = new Double_t[vSize];
-      tt = new Double_t[4*vSize];
-   } else {
-      vSize = kVSizeMax;
-      v  = &gV[0];
-      tt = &gTT[0];
-   }
+   std::vector<Double_t> v(vSize), tt(4*vSize);
 
    //     P R E P A R E   P H I   A R R A Y
    //     F I N D    C R I T I C A L   S E C T O R S
@@ -2477,19 +2416,19 @@ void TPainter3dAlgorithms::LegoPolar(Int_t iordr, Int_t na, Int_t nb, const char
    for (i = 1; i <= nphi; ++i) {
       if (iordr == 0) ib = i;
       if (iordr != 0) ia = i;
-      (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+      (this->*fLegoFunction)(ia, ib, nv, ab, v.data(), tt.data());
       if (i == 1) fAphi[0] = ab[jphi - 1];
       fAphi[i - 1] = (fAphi[i - 1] + ab[jphi - 1]) / (float)2.;
       fAphi[i] = ab[jphi + 3];
    }
-   view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
+   view->FindPhiSectors(iopt, kphi, fAphi.data(), iphi1, iphi2);
 
    //      E N C O D E   V I S I B I L I T Y   O F   S I D E S
    //      A N D   O R D E R   A L O N G   R
    for (i = 1; i <= nphi; ++i) {
       if (!iordr) ib = i;
       if (iordr)  ia = i;
-      (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+      (this->*fLegoFunction)(ia, ib, nv, ab, v.data(), tt.data());
       SideVisibilityEncode(iopt, ab[jphi - 1]*kRad, ab[jphi + 3]*kRad, fAphi[i - 1]);
    }
 
@@ -2508,7 +2447,7 @@ L100:
    for (ir = ir1; incrr < 0 ? ir >= ir2 : ir <= ir2; ir += incrr) {
       if (iordr == 0) { ia = ir;   ib = iphi; }
       else            { ia = iphi; ib = ir; }
-      (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+      (this->*fLegoFunction)(ia, ib, nv, ab, v.data(), tt.data());
       if (nv < 2 || nv > vSize) continue;
       if (Hoption.Zero) {
          Double_t total_content=0;
@@ -2602,13 +2541,8 @@ L300:
    if (iphi == 0)      iphi = kphi;
    if (iphi > kphi)    iphi = 1;
    if (iphi != iphi2)  goto L100;
-   if (incr == 0) {
-      if (vSize > kVSizeMax) {
-         delete [] v;
-         delete [] tt;
-      }
+   if (incr == 0)
       return;
-   }
    if (incr < 0) {
       incr = 0;
       goto L100;
@@ -2663,11 +2597,10 @@ void TPainter3dAlgorithms::LegoCylindrical(Int_t iordr, Int_t na, Int_t nb, cons
       nphi = na;
    }
    if (fNaphi < nphi + 3) {
-     if (fAphi) { delete [] fAphi; fAphi = 0; }
      fNaphi = nphi + 3;
-     fAphi = new Double_t[fNaphi];
+     fAphi.resize(fNaphi);
    }
-   if (fAphi == 0) {
+   if (fAphi.empty()) {
       Error("LegoCylindrical", "failed to allocate array fAphi[%d]", fNaphi);
       fNaphi = 0;
       return;
@@ -2676,16 +2609,8 @@ void TPainter3dAlgorithms::LegoCylindrical(Int_t iordr, Int_t na, Int_t nb, cons
    if (*chopt == 'B' || *chopt == 'b') iopt = 1;
 
     // Allocate v and tt arrays
-   Double_t *v, *tt;
    Int_t vSize = fNStack+2;
-   if (vSize > kVSizeMax) {
-      v  = new Double_t[vSize];
-      tt = new Double_t[4*vSize];
-   } else {
-      vSize = kVSizeMax;
-      v  = &gV[0];
-      tt = &gTT[0];
-   }
+   std::vector<Double_t> v(vSize), tt(4*vSize);
 
    //       P R E P A R E   P H I   A R R A Y
    //       F I N D    C R I T I C A L   S E C T O R S
@@ -2696,19 +2621,19 @@ void TPainter3dAlgorithms::LegoCylindrical(Int_t iordr, Int_t na, Int_t nb, cons
    for (i = 1; i <= nphi; ++i) {
       if (iordr == 0) ib = i;
       if (iordr != 0) ia = i;
-      (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+      (this->*fLegoFunction)(ia, ib, nv, ab, v.data(), tt.data());
       if (i == 1)  fAphi[0] = ab[jphi - 1];
       fAphi[i - 1] = (fAphi[i - 1] + ab[jphi - 1]) / (float)2.;
       fAphi[i] = ab[jphi + 3];
    }
-   view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
+   view->FindPhiSectors(iopt, kphi, fAphi.data(), iphi1, iphi2);
 
    //      E N C O D E   V I S I B I L I T Y   O F   S I D E S
    //      A N D   O R D E R   A L O N G   R
    for (i = 1; i <= nphi; ++i) {
       if (iordr == 0) ib = i;
       if (iordr != 0) ia = i;
-      (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+      (this->*fLegoFunction)(ia, ib, nv, ab, v.data(), tt.data());
       SideVisibilityEncode(iopt, ab[jphi - 1]*kRad, ab[jphi + 3]*kRad, fAphi[i - 1]);
    }
 
@@ -2733,7 +2658,7 @@ L100:
    for (iz = iz1; incrz < 0 ? iz >= iz2 : iz <= iz2; iz += incrz) {
       if (iordr == 0) {ia = iz;   ib = iphi;}
       else            {ia = iphi; ib = iz;}
-      (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+      (this->*fLegoFunction)(ia, ib, nv, ab, v.data(), tt.data());
       if (nv < 2 || nv > vSize) continue;
       icodes[0] = ia;
       icodes[1] = ib;
@@ -2823,13 +2748,8 @@ L400:
    if (iphi == 0)     iphi = kphi;
    if (iphi > kphi)   iphi = 1;
    if (iphi != iphi2) goto L100;
-   if (incr == 0) {
-      if (vSize > kVSizeMax) {
-         delete [] v;
-         delete [] tt;
-      }
+   if (incr == 0)
       return;
-   }
    if (incr < 0) {
       incr = 0;
       goto L100;
@@ -2886,11 +2806,10 @@ void TPainter3dAlgorithms::LegoSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int
       nphi = na;
    }
    if (fNaphi < nth + 3 || fNaphi < nphi + 3) {
-     if (fAphi) { delete [] fAphi; fAphi = 0; }
      fNaphi = TMath::Max(nth, nphi) + 3;
-     fAphi = new Double_t[fNaphi];
+     fAphi.resize(fNaphi);
    }
-   if (fAphi == 0) {
+   if (fAphi.empty()) {
       Error("LegoSpherical", "failed to allocate array fAphi[%d]", fNaphi);
       fNaphi = 0;
       return;
@@ -2899,16 +2818,8 @@ void TPainter3dAlgorithms::LegoSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int
    if (*chopt == 'B' || *chopt == 'b') iopt = 1;
 
    // Allocate v and tt arrays
-   Double_t *v, *tt;
    Int_t vSize = fNStack+2;
-   if (vSize > kVSizeMax) {
-      v  = new Double_t[vSize];
-      tt = new Double_t[4*vSize];
-   } else {
-      vSize = kVSizeMax;
-      v  = &gV[0];
-      tt = &gTT[0];
-   }
+   std::vector<Double_t> v(vSize), tt(4*vSize);
 
    //       P R E P A R E   P H I   A R R A Y
    //       F I N D    C R I T I C A L   P H I   S E C T O R S
@@ -2921,12 +2832,12 @@ void TPainter3dAlgorithms::LegoSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int
    for (i = 1; i <= nphi; ++i) {
       if (iordr == 0) ib = i;
       if (iordr != 0) ia = i;
-      (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+      (this->*fLegoFunction)(ia, ib, nv, ab, v.data(), tt.data());
       if (i == 1)  fAphi[0] = ab[jphi - 1];
       fAphi[i - 1] = (fAphi[i - 1] + ab[jphi - 1]) / (float)2.;
       fAphi[i] = ab[jphi + 3];
    }
-   view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
+   view->FindPhiSectors(iopt, kphi, fAphi.data(), iphi1, iphi2);
 
    //       P R E P A R E   T H E T A   A R R A Y
    if (iordr == 0) ib = 1;
@@ -2934,7 +2845,7 @@ void TPainter3dAlgorithms::LegoSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int
    for (i = 1; i <= nth; ++i) {
       if (iordr == 0) ia = i;
       if (iordr != 0) ib = i;
-      (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+      (this->*fLegoFunction)(ia, ib, nv, ab, v.data(), tt.data());
       if (i == 1) fAphi[0] = ab[jth - 1];
       fAphi[i - 1] = (fAphi[i - 1] + ab[jth - 1]) / (float)2.;
       fAphi[i] = ab[jth + 3];
@@ -2949,18 +2860,18 @@ L100:
    if (iphi > nphi) goto L500;
 
    //      F I N D    C R I T I C A L   T H E T A   S E C T O R S
-   if (!iordr) {ia = mth;        ib = iphi; }
-   else        {ia = iphi;ib = mth;  }
-   (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+   if (!iordr) {ia = mth;  ib = iphi; }
+   else        {ia = iphi; ib = mth;  }
+   (this->*fLegoFunction)(ia, ib, nv, ab, v.data(), tt.data());
    phi = (ab[jphi - 1] + ab[jphi + 3]) / (float)2.;
-   view->FindThetaSectors(iopt, phi, kth, fAphi, ith1, ith2);
+   view->FindThetaSectors(iopt, phi, kth, fAphi.data(), ith1, ith2);
    incrth = 1;
    ith = ith1;
 L200:
    if (ith > nth)   goto L400;
    if (iordr == 0) ia = ith;
    if (iordr != 0) ib = ith;
-   (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+   (this->*fLegoFunction)(ia, ib, nv, ab, v.data(), tt.data());
    if (nv < 2 || nv > vSize) goto L400;
 
    //      D E F I N E   V I S I B I L I T Y   O F   S I D E S
@@ -3106,13 +3017,8 @@ L500:
    if (iphi == 0)     iphi = kphi;
    if (iphi > kphi)   iphi = 1;
    if (iphi != iphi2) goto L100;
-   if (incr == 0) {
-      if (vSize > kVSizeMax) {
-         delete [] v;
-         delete [] tt;
-      }
+   if (incr == 0)
       return;
-   }
    if (incr < 0) {
       incr = 0;
       goto L100;
@@ -3703,11 +3609,10 @@ void TPainter3dAlgorithms::SurfacePolar(Int_t iordr, Int_t na, Int_t nb, const c
       nphi = na;
    }
    if (fNaphi < nphi + 3) {
-     if (fAphi) { delete [] fAphi; fAphi = 0; }
-     fNaphi =nphi + 3;
-     fAphi = new Double_t[fNaphi];
+     fNaphi = nphi + 3;
+     fAphi.resize(fNaphi);
    }
-   if (fAphi == 0) {
+   if (fAphi.empty()) {
       Error("SurfacePolar", "failed to allocate array fAphi[%d]", fNaphi);
       fNaphi = 0;
       return;
@@ -3728,7 +3633,7 @@ void TPainter3dAlgorithms::SurfacePolar(Int_t iordr, Int_t na, Int_t nb, const c
       fAphi[i - 1] = (fAphi[i - 1] + f[jphi - 1]) / (float)2.;
       fAphi[i] = f[jphi + 5];
    }
-   view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
+   view->FindPhiSectors(iopt, kphi, fAphi.data(), iphi1, iphi2);
 
    //       D R A W   S U R F A C E
    icodes[2] = -1;   // -1 for data, 0 for front a back boxes
@@ -3833,11 +3738,10 @@ void TPainter3dAlgorithms::SurfaceCylindrical(Int_t iordr, Int_t na, Int_t nb, c
       nphi = na;
    }
    if (fNaphi < nphi + 3) {
-     if (fAphi) { delete [] fAphi; fAphi = 0; }
-     fNaphi =nphi + 3;
-     fAphi = new Double_t[fNaphi];
+     fNaphi = nphi + 3;
+     fAphi.resize(fNaphi);
    }
-   if (fAphi == 0) {
+   if (fAphi.empty()) {
       Error("SurfaceCylindrical", "failed to allocate array fAphi[%d]", fNaphi);
       fNaphi = 0;
       return;
@@ -3858,7 +3762,7 @@ void TPainter3dAlgorithms::SurfaceCylindrical(Int_t iordr, Int_t na, Int_t nb, c
       fAphi[i - 1] = (fAphi[i - 1] + f[jphi - 1]) / (float)2.;
       fAphi[i] = f[jphi + 5];
    }
-   view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
+   view->FindPhiSectors(iopt, kphi, fAphi.data(), iphi1, iphi2);
 
    //       F I N D   O R D E R   A L O N G   Z
    incrz = 1;
@@ -3955,11 +3859,10 @@ void TPainter3dAlgorithms::SurfaceSpherical(Int_t ipsdr, Int_t iordr, Int_t na, 
       nphi = na;
    }
    if (fNaphi < nth + 3 || fNaphi < nphi + 3) {
-     if (fAphi) { delete [] fAphi; fAphi = 0; }
      fNaphi = TMath::Max(nth, nphi) + 3;
-     fAphi = new Double_t[fNaphi];
+     fAphi.resize(fNaphi);
    }
-   if (fAphi == 0) {
+   if (fAphi.empty()) {
       Error("SurfaceSpherical", "failed to allocate array fAphi[%d]", fNaphi);
       fNaphi = 0;
       return;
@@ -3982,7 +3885,7 @@ void TPainter3dAlgorithms::SurfaceSpherical(Int_t ipsdr, Int_t iordr, Int_t na, 
       fAphi[i - 1] = (fAphi[i - 1] + f[jphi - 1]) / (float)2.;
       fAphi[i] = f[jphi + 5];
    }
-   view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
+   view->FindPhiSectors(iopt, kphi, fAphi.data(), iphi1, iphi2);
 
    //       P R E P A R E   T H E T A   A R R A Y
    if (iordr == 0) ib = 1;
@@ -4012,7 +3915,7 @@ L100:
 
    (this->*fSurfaceFunction)(ia, ib, f, tt);
    phi = (f[jphi - 1] + f[jphi + 5]) / (float)2.;
-   view->FindThetaSectors(iopt, phi, kth, fAphi, ith1, ith2);
+   view->FindThetaSectors(iopt, phi, kth, fAphi.data(), ith1, ith2);
    incrth = 1;
    ith = ith1;
 L200:
