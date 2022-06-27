@@ -174,42 +174,11 @@ private:
      \brief Perform a vector read/write operation on different objects.
      \param vec A `std::vector<RWOperation>` that describes read/write operations to perform.
      \param cid The `daos_oclass_id_t` used to qualify OIDs.
-     \param fn Either `std::mem_fn<&RDaosObject::Fetch>` (read) or `std::mem_fn<&RDaosObject::Update>` (write).
-     \return DAOS error code (< 0) in case of failure, 0 on success.
+     \param fn Either `&RDaosObject::Fetch` (read) or `&RDaosObject::Update` (write).
+     \return 0 if the operation succeeded; a negative DAOS error number otherwise.
      */
-   template <typename Fn>
-   int VectorReadWrite(std::vector<RWOperation> &vec, ObjClassId_t cid, Fn fn) {
-      using request_t = std::tuple<std::unique_ptr<RDaosObject>, RDaosObject::FetchUpdateArgs>;
-
-      int ret;
-      std::vector<request_t> requests{};
-      requests.reserve(vec.size());
-
-      // Initialize parent event used for grouping and waiting for completion of all requests
-      daos_event_t parent_event{};
-      if ((ret = fPool->fEventQueue->InitializeEvent(&parent_event)) < 0)
-         return ret;
-
-      for (size_t i = 0; i < vec.size(); ++i) {
-         requests.push_back(std::make_tuple(std::make_unique<RDaosObject>(*this, vec[i].fOid, cid.fCid),
-                                            RDaosObject::FetchUpdateArgs{vec[i].fDistributionKey, vec[i].fAttributeKey,
-                                                                         vec[i].fIovs, /*is_async=*/true}));
-
-         if ((ret = fPool->fEventQueue->InitializeEvent(std::get<1>(requests.back()).GetEventPointer(),
-                                                        &parent_event)) < 0)
-            return ret;
-
-         // Launch operation
-         if ((ret = fn(std::get<0>(requests.back()).get(), std::get<1>(requests.back()))) < 0)
-            return ret;
-      }
-
-      // Sets parent barrier and waits for all children launched before it.
-      if ((ret = fPool->fEventQueue->WaitOnParentBarrier(&parent_event)) < 0)
-         return ret;
-
-      return fPool->fEventQueue->FinalizeEvent(&parent_event);
-   }
+   int VectorReadWrite(std::vector<RWOperation> &vec, ObjClassId_t cid,
+                       int (RDaosObject::*fn)(RDaosObject::FetchUpdateArgs &));
 
 public:
    RDaosContainer(std::shared_ptr<RDaosPool> pool, std::string_view containerId, bool create = false);
@@ -256,8 +225,7 @@ public:
      \param cid An object class ID.
      \return Number of operations that could not complete.
      */
-   int ReadV(std::vector<RWOperation> &vec, ObjClassId_t cid)
-   { return VectorReadWrite(vec, cid, std::mem_fn(&RDaosObject::Fetch)); }
+   int ReadV(std::vector<RWOperation> &vec, ObjClassId_t cid) { return VectorReadWrite(vec, cid, &RDaosObject::Fetch); }
    int ReadV(std::vector<RWOperation> &vec) { return ReadV(vec, fDefaultObjectClass); }
 
    /**
@@ -267,7 +235,9 @@ public:
      \return Number of operations that could not complete.
      */
    int WriteV(std::vector<RWOperation> &vec, ObjClassId_t cid)
-   { return VectorReadWrite(vec, cid, std::mem_fn(&RDaosObject::Update)); }
+   {
+      return VectorReadWrite(vec, cid, &RDaosObject::Update);
+   }
    int WriteV(std::vector<RWOperation> &vec) { return WriteV(vec, fDefaultObjectClass); }
 };
 
