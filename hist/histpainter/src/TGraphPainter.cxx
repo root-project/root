@@ -2711,7 +2711,7 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
       options[i] = "";
 
    std::vector<Double_t> xline;
-   std::vector<Double_t *> yline(NYErrors);
+   std::vector<std::vector<Double_t>> yline(NYErrors);
    Int_t if1 = 0;
    Int_t if2 = 0;
    Double_t xb[4], yb[4];
@@ -2850,13 +2850,10 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
 
    for (Int_t j = 0; j < NYErrors; j++) {
       if (Option3[j] && DrawErrors[j]) {
-         yline[j] = new Double_t[2 * NPointsInside];
+         yline[j].resize(2 * NPointsInside);
 
-         if (!yline[j]) {
+         if (yline[j].empty()) {
             Error("PaintGraphMultiErrors", "too many points, out of memory");
-            for (Int_t k = 0; k < j; k++)
-               if (yline[k])
-                  delete[] yline[k];
             return;
          }
       }
@@ -3109,7 +3106,7 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
    tg->TAttLine::Copy(tgDummy);
    tg->TAttMarker::Copy(tgDummy);
 
-   for (Int_t j = 0; j < NYErrors; j++) {
+   for (Int_t j = 0; j < NYErrors; j++)
       if (Option3[j] && DrawErrors[j]) {
          if (IndividualStyles) {
             tg->GetAttFill(j)->Copy(tgDummy);
@@ -3121,14 +3118,12 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
          gPad->SetLogx(0);
          gPad->SetLogy(0);
          if (Option4[j])
-            PaintGraph(&tgDummy, 2 * NPointsInside, xline.data(), yline[j], "FC");
+            PaintGraph(&tgDummy, 2 * NPointsInside, xline.data(), yline[j].data(), "FC");
          else
-            PaintGraph(&tgDummy, 2 * NPointsInside, xline.data(), yline[j], "F");
+            PaintGraph(&tgDummy, 2 * NPointsInside, xline.data(), yline[j].data(), "F");
          gPad->SetLogx(logx);
          gPad->SetLogy(logy);
-         delete[] yline[j];
       }
-   }
 
 }
 
