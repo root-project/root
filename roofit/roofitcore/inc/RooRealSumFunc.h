@@ -16,10 +16,12 @@
 #ifndef ROO_REAL_SUM_FUNC
 #define ROO_REAL_SUM_FUNC
 
+#include "RooRealSumPdf.h"
 #include "RooAbsPdf.h"
 #include "RooListProxy.h"
 #include "RooAICRegistry.h"
 #include "RooObjCacheManager.h"
+
 #include <list>
 
 class RooRealSumFunc : public RooAbsReal {
@@ -62,19 +64,7 @@ public:
    }
 
 protected:
-   class CacheElem : public RooAbsCacheElement {
-   public:
-      CacheElem(){};
-      ~CacheElem() override{};
-      RooArgList containedArgs(Action) override
-      {
-         RooArgList ret(_funcIntList);
-         ret.add(_funcNormList);
-         return ret;
-      }
-      RooArgList _funcIntList;
-      RooArgList _funcNormList;
-   };
+   using CacheElem = RooRealSumPdf::CacheElem;
    mutable RooObjCacheManager _normIntMgr; //! The integration cache manager
 
    bool _haveLastCoef;
@@ -82,9 +72,9 @@ protected:
    RooListProxy _funcList; ///<  List of component FUNCs
    RooListProxy _coefList; ///<  List of coefficients
 
-   bool _doFloor;              ///< Introduce floor at zero in pdf
+   bool _doFloor = false;           ///< Introduce floor at zero in pdf
    mutable bool _haveWarned{false}; ///<!
-   static bool _doFloorGlobal; ///< Global flag for introducing floor at zero in pdf
+   static bool _doFloorGlobal;      ///< Global flag for introducing floor at zero in pdf
 
 private:
    ClassDefOverride(RooRealSumFunc, 4) // PDF constructed from a sum of (non-pdf) functions
