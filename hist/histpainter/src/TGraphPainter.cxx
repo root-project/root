@@ -37,13 +37,13 @@
 #include "TRegexp.h"
 #include "strlcpy.h"
 #include "snprintf.h"
-#include <vector>
+#include <memory>
 
 Int_t TGraphPainter::fgMaxPointsPerLine = 50;
 
 static Int_t    gHighlightPoint  = -1;         // highlight point of graph
 static TGraph  *gHighlightGraph  = nullptr;    // pointer to graph with highlight point
-static TMarker *gHighlightMarker = nullptr;    // highlight marker
+static std::unique_ptr<TMarker> gHighlightMarker;    // highlight marker
 
 ClassImp(TGraphPainter);
 
@@ -1128,7 +1128,7 @@ void TGraphPainter::SetHighlight(TGraph *theGraph)
    if (theGraph->IsHighlight()) return;
 
    // delete previous highlight marker
-   if (gHighlightMarker) { gHighlightMarker->Delete(); gHighlightMarker = nullptr; }
+   if (gHighlightMarker) gHighlightMarker.reset(nullptr);
    // emit Highlighted() signal (user can check on disabled)
    if (gPad->GetCanvas()) gPad->GetCanvas()->Highlighted(gPad, theGraph, gHighlightPoint, -1);
 }
@@ -1175,7 +1175,7 @@ void TGraphPainter::PaintHighlightPoint(TGraph *theGraph, Option_t * /*option*/)
    Double_t hx, hy;
    if (theGraph->GetPoint(gHighlightPoint, hx, hy) == -1) {
       // special case, e.g. after interactive remove last point
-      if (gHighlightMarker) { gHighlightMarker->Delete(); gHighlightMarker = 0; }
+      if (gHighlightMarker) gHighlightMarker.reset(nullptr);
       return;
    }
    // testing specific possibility (after zoom, draw with "same", log, etc.)
@@ -1195,7 +1195,7 @@ void TGraphPainter::PaintHighlightPoint(TGraph *theGraph, Option_t * /*option*/)
    if ((hy < uymin) || (hy > uymax)) return;
 
    if (!gHighlightMarker) {
-      gHighlightMarker = new TMarker(hx, hy, 24);
+      gHighlightMarker = std::make_unique<TMarker>(hx, hy, 24);
       gHighlightMarker->SetBit(kCannotPick);
    }
    gHighlightMarker->SetX(hx);
@@ -1258,7 +1258,7 @@ void TGraphPainter::PaintHelper(TGraph *theGraph, Option_t *option)
       }
 
       // Paint the fit parameters if needed.
-      TF1 *fit = 0;
+      TF1 *fit = nullptr;
       TList *functions = theGraph->GetListOfFunctions();
       TObject *f;
       if (functions) {
@@ -2457,7 +2457,7 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
    Bool_t endLines = kTRUE;
    if (strchr(option,'z')) endLines = kFALSE;
    if (strchr(option,'Z')) endLines = kFALSE;
-   const char *arrowOpt = 0;
+   const char *arrowOpt = nullptr;
    if (strchr(option,'>'))  arrowOpt = ">";
    if (strstr(option,"|>")) arrowOpt = "|>";
 
@@ -3166,7 +3166,7 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
    Bool_t endLines = kTRUE;
    if (strchr(option,'z')) endLines = kFALSE;
    if (strchr(option,'Z')) endLines = kFALSE;
-   const char *arrowOpt = 0;
+   const char *arrowOpt = nullptr;
    if (strchr(option,'>'))  arrowOpt = ">";
    if (strstr(option,"|>")) arrowOpt = "|>";
 
@@ -3412,7 +3412,7 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
    Bool_t endLines = kTRUE;
    if (strchr(option,'z')) endLines = kFALSE;
    if (strchr(option,'Z')) endLines = kFALSE;
-   const char *arrowOpt = 0;
+   const char *arrowOpt = nullptr;
    if (strchr(option,'>'))  arrowOpt = ">";
    if (strstr(option,"|>")) arrowOpt = "|>";
 
