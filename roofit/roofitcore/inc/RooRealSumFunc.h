@@ -16,7 +16,6 @@
 #ifndef ROO_REAL_SUM_FUNC
 #define ROO_REAL_SUM_FUNC
 
-#include "RooRealSumPdf.h"
 #include "RooAbsPdf.h"
 #include "RooListProxy.h"
 #include "RooAICRegistry.h"
@@ -30,7 +29,7 @@ public:
    RooRealSumFunc(const char *name, const char *title);
    RooRealSumFunc(const char *name, const char *title, const RooArgList &funcList, const RooArgList &coefList);
    RooRealSumFunc(const char *name, const char *title, RooAbsReal &func1, RooAbsReal &func2, RooAbsReal &coef1);
-   RooRealSumFunc(const RooRealSumFunc &other, const char *name = 0);
+   RooRealSumFunc(const RooRealSumFunc &other, const char *name = nullptr);
    TObject *clone(const char *newname) const override { return new RooRealSumFunc(*this, newname); }
    ~RooRealSumFunc() override;
 
@@ -39,8 +38,8 @@ public:
 
    bool forceAnalyticalInt(const RooAbsArg &arg) const override { return arg.isFundamental(); }
    Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &numVars, const RooArgSet *normSet,
-                                 const char *rangeName = 0) const override;
-   double analyticalIntegralWN(Int_t code, const RooArgSet *normSet, const char *rangeName = 0) const override;
+                                 const char *rangeName = nullptr) const override;
+   double analyticalIntegralWN(Int_t code, const RooArgSet *normSet, const char *rangeName = nullptr) const override;
 
    const RooArgList &funcList() const { return _funcList; }
    const RooArgList &coefList() const { return _coefList; }
@@ -64,7 +63,6 @@ public:
    }
 
 protected:
-   using CacheElem = RooRealSumPdf::CacheElem;
    mutable RooObjCacheManager _normIntMgr; //! The integration cache manager
 
    bool _haveLastCoef;

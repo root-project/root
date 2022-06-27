@@ -97,6 +97,10 @@ private:
 
   friend class RooRealSumFunc;
 
+  static void initializeFuncsAndCoefs(RooAbsReal const& caller,
+                                      const RooArgList& inFuncList, const RooArgList& inCoefList,
+                                      RooArgList& funcList, RooArgList& coefList);
+
   static double evaluate(RooAbsReal const& caller,
                          RooArgList const& funcList,
                          RooArgList const& coefList,
@@ -118,8 +122,11 @@ private:
           RooArgList const& funcList, RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/);
   static std::list<double>* plotSamplingHint(
           RooArgList const& funcList, RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/);
+  static bool isBinnedDistribution(RooArgList const& funcList, const RooArgSet& obs);
 
   static void printMetaArgs(RooArgList const& funcList, RooArgList const& coefList, std::ostream& os);
+
+  static void setCacheAndTrackHints(RooArgList const& funcList, RooArgSet& trackNodes);
 
   ClassDefOverride(RooRealSumPdf, 5) // PDF constructed from a sum of (non-pdf) functions
 };
