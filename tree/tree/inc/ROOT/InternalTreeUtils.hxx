@@ -59,6 +59,14 @@ struct RFriendInfo {
       vector with a single empty string.
    */
    std::vector<std::vector<std::string>> fFriendChainSubNames;
+
+   void AddFriend(const std::string &treeName, const std::string &fileNameGlob, const std::string &alias = "");
+
+   void
+   AddFriend(const std::string &treeName, const std::vector<std::string> &fileNameGlobs, const std::string &alias = "");
+
+   void AddFriend(const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
+                  const std::string &alias = "");
 };
 
 std::vector<std::string> GetFileNamesFromTree(const TTree &tree);
