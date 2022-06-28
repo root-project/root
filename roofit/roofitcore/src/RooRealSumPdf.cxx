@@ -602,8 +602,7 @@ bool RooRealSumPdf::isBinnedDistribution(const RooArgSet& obs) const
 
 bool RooRealSumPdf::isBinnedDistribution(RooArgList const& funcList, const RooArgSet& obs)
 {
-  for (const auto elm : funcList) {
-    auto func = static_cast<RooAbsReal*>(elm);
+  for (auto* func : static_range_cast<RooAbsReal*>(funcList)) {
 
     if (func->dependsOn(obs) && !func->isBinnedDistribution(obs)) {
       return false ;
@@ -624,7 +623,7 @@ std::list<double>* RooRealSumPdf::plotSamplingHint(RooAbsRealLValue& obs, double
 
 std::list<double>* RooRealSumPdf::plotSamplingHint(RooArgList const& funcList, RooAbsRealLValue& obs, double xlo, double xhi)
 {
-  std::list<double>* sumHint = 0 ;
+  std::list<double>* sumHint = nullptr;
   bool needClean(false) ;
 
   // Loop over components pdf
@@ -642,7 +641,7 @@ std::list<double>* RooRealSumPdf::plotSamplingHint(RooArgList const& funcList, R
 
       } else {
 
-   list<double>* newSumHint = new list<double>(sumHint->size()+funcHint->size()) ;
+   auto* newSumHint = new std::list<double>(sumHint->size()+funcHint->size()) ;
 
    // Merge hints into temporary array
    merge(funcHint->begin(),funcHint->end(),sumHint->begin(),sumHint->end(),newSumHint->begin()) ;
