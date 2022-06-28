@@ -186,19 +186,6 @@ std::vector<std::string> RColumnRegister::GetVariationDeps(const ColumnNames_t &
 }
 
 ////////////////////////////////////////////////////////////////////////////
-/// \brief Return the RVariation object that handles the specified variation of the specified column.
-RVariationBase &RColumnRegister::FindVariation(const std::string &colName, const std::string &variationName) const
-{
-   auto range = fVariations->equal_range(colName);
-   assert(range.first != fVariations->end() && "Could not find the variation you asked for. This should never happen.");
-   auto it = range.first;
-   while (it != range.second && !IsStrInVec(variationName, it->second->GetVariation()->GetVariationNames()))
-      ++it;
-   assert(it != range.second && "Could not find the variation you asked for. This should never happen.");
-   return *it->second->GetVariation();
-}
-
-////////////////////////////////////////////////////////////////////////////
 /// \brief Return the RVariationAndReaders object that handles the specified variation of the specified column, or null.
 RVariationAndReaders *
 RColumnRegister::FindVariationAndReaders(const std::string &colName, const std::string &variationName)
