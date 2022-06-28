@@ -553,12 +553,18 @@ std::string RCsvDS::GetLabel()
    return "RCsv";
 }
 
-RDataFrame MakeCsvDataFrame(std::string_view fileName, bool readHeaders, char delimiter, Long64_t linesChunkSize,
-                            std::unordered_map<std::string, char> &&colTypes)
+RDataFrame FromCSV(std::string_view fileName, bool readHeaders, char delimiter, Long64_t linesChunkSize,
+                   std::unordered_map<std::string, char> &&colTypes)
 {
    ROOT::RDataFrame rdf(
       std::make_unique<RCsvDS>(fileName, readHeaders, delimiter, linesChunkSize, std::move(colTypes)));
    return rdf;
+}
+
+RDataFrame MakeCsvDataFrame(std::string_view fileName, bool readHeaders, char delimiter, Long64_t linesChunkSize,
+                            std::unordered_map<std::string, char> &&colTypes)
+{
+   return FromCSV(fileName, readHeaders, delimiter, linesChunkSize, std::move(colTypes));
 }
 
 } // ns RDF
