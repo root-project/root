@@ -40,10 +40,9 @@ class R__CLING_PTRCHECK(off) RVariationReader final : public ROOT::Detail::RDF::
 
 public:
    RVariationReader(unsigned int slot, const std::string &colName, const std::string &variationName,
-                    RVariationBase &variation, const std::type_info &tid)
+                    RVariationBase &variation)
       : fVariation(&variation), fValuePtr(variation.GetValuePtr(slot, colName, variationName)), fSlot(slot)
    {
-      CheckReaderTypeMatches(variation.GetTypeId(), tid, colName, "RVariationReader");
    }
 };
 

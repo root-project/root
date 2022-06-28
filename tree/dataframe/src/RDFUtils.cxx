@@ -382,7 +382,7 @@ unsigned int GetColumnWidth(const std::vector<std::string>& names, const unsigne
 }
 
 void CheckReaderTypeMatches(const std::type_info &colType, const std::type_info &requestedType,
-                            const std::string &colName, const std::string &where)
+                            const std::string &colName)
 {
    // Here we compare names and not typeinfos since they may come from two different contexts: a compiled
    // and a jitted one.
@@ -395,7 +395,7 @@ void CheckReaderTypeMatches(const std::type_info &colType, const std::type_info 
    if (diffTypes && !inheritedType()) {
       const auto tName = TypeID2TypeName(requestedType);
       const auto colTypeName = TypeID2TypeName(colType);
-      std::string errMsg = where + ": type mismatch: column \"" + colName + "\" is being used as ";
+      std::string errMsg = "RDataFrame: type mismatch: column \"" + colName + "\" is being used as ";
       if (tName.empty()) {
          errMsg += requestedType.name();
          errMsg += " (extracted from type info)";
