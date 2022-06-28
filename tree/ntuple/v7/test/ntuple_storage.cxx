@@ -1,5 +1,54 @@
 #include "ntuple_test.hxx"
 
+namespace {
+/// An RPageSink that keeps counters of (vector) commit of (sealed) pages; used to test RPageSinkBuf
+class RPageSinkMock : public RPageSink {
+public:
+   struct {
+      size_t fNCommitPage = 0;
+      size_t fNCommitSealedPage = 0;
+      size_t fNCommitSealedPageV = 0;
+   } fCounters{};
+
+protected:
+   RPageAllocatorHeap fPageAllocator{};
+
+   void CreateImpl(const RNTupleModel &, unsigned char *, std::uint32_t) final {}
+   RNTupleLocator CommitPageImpl(ColumnHandle_t /*columnHandle*/, const RPage & /*page*/) final
+   {
+      fCounters.fNCommitPage++;
+      return {};
+   }
+   RNTupleLocator CommitSealedPageImpl(ROOT::Experimental::DescriptorId_t, const RPageStorage::RSealedPage &) final
+   {
+      fCounters.fNCommitSealedPage++;
+      return {};
+   }
+   std::vector<RNTupleLocator> CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges)
+   {
+      fCounters.fNCommitSealedPageV++;
+      auto nLocators =
+         std::accumulate(ranges.begin(), ranges.end(), 0, [](size_t c, const RPageStorage::RSealedPageGroup &r) {
+            return c + std::distance(r.fFirst, r.fLast);
+         });
+      return std::vector<RNTupleLocator>(nLocators);
+   }
+   std::uint64_t CommitClusterImpl(NTupleSize_t) final { return 0; }
+   RNTupleLocator CommitClusterGroupImpl(unsigned char *, std::uint32_t) final { return {}; }
+   void CommitDatasetImpl(unsigned char *, std::uint32_t) final {}
+
+   RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final
+   {
+      auto elementSize = columnHandle.fColumn->GetElement()->GetSize();
+      return fPageAllocator.NewPage(columnHandle.fId, elementSize, nElements);
+   }
+   void ReleasePage(RPage &page) final { fPageAllocator.DeletePage(page); }
+
+public:
+   RPageSinkMock(const ROOT::Experimental::RNTupleWriteOptions &options) : RPageSink("test", options) {}
+};
+} // namespace
+
 TEST(RNTuple, Basics)
 {
    FileRaii fileGuard("test_ntuple_barefile.ntuple");
@@ -362,6 +411,48 @@ TEST(RPageSinkBuf, ParallelZip) {
       EXPECT_EQ(std::vector<float>{fi}, viewKlassVec(i).at(0).v1);
       EXPECT_EQ((std::vector<float>(3, fi)), viewKlassVec(i).at(0).v2.at(0));
       EXPECT_EQ("hi" + std::to_string(i), viewKlassVec(i).at(0).s);
+   }
+}
+
+TEST(RPageSinkBuf, CommitSealedPageV)
+{
+   RNTupleWriteOptions options;
+   options.SetApproxUnzippedPageSize(8);
+
+   ROOT::DisableImplicitMT();
+   {
+      std::unique_ptr<RPageSink> sink(new RPageSinkMock(options));
+      auto &counters = static_cast<RPageSinkMock *>(sink.get())->fCounters;
+
+      auto model = RNTupleModel::Create();
+      auto u32Field = model->MakeField<std::uint32_t>("u32");
+      auto u16Field = model->MakeField<std::uint16_t>("u16");
+      auto ntuple = std::make_unique<RNTupleWriter>(std::move(model), std::make_unique<RPageSinkBuf>(std::move(sink)));
+      ntuple->Fill();
+      ntuple->Fill();
+      ntuple->Fill();
+      ntuple->CommitCluster();
+      // Parallel zip not available; all pages committed separately
+      EXPECT_EQ(3, counters.fNCommitPage);
+      EXPECT_EQ(0, counters.fNCommitSealedPage);
+      EXPECT_EQ(0, counters.fNCommitSealedPageV);
+   }
+   ROOT::EnableImplicitMT();
+   {
+      std::unique_ptr<RPageSink> sink(new RPageSinkMock(options));
+      auto &counters = static_cast<RPageSinkMock *>(sink.get())->fCounters;
+
+      auto model = RNTupleModel::Create();
+      auto u32Field = model->MakeField<std::uint32_t>("u32");
+      auto u16Field = model->MakeField<std::uint16_t>("u16");
+      auto ntuple = std::make_unique<RNTupleWriter>(std::move(model), std::make_unique<RPageSinkBuf>(std::move(sink)));
+      ntuple->Fill();
+      ntuple->Fill();
+      ntuple->CommitCluster();
+      // All pages in all columns committed via a single call to `CommitSealedPageV()`
+      EXPECT_EQ(0, counters.fNCommitPage);
+      EXPECT_EQ(0, counters.fNCommitSealedPage);
+      EXPECT_EQ(1, counters.fNCommitSealedPageV);
    }
 }
 
