@@ -84,10 +84,11 @@ std::vector<std::string> getVarnames(const RooHistFunc *hf)
 
 std::unique_ptr<TH1> histFunc2TH1(const RooHistFunc *hf)
 {
+   if(!hf) RooJSONFactoryWSTool::error("null pointer passed to histFunc2TH1");
    const RooDataHist &dh = hf->dataHist();
-   RooArgList vars(*hf->getVariables());
-   auto varnames = RooJSONFactoryWSTool::names(&vars);
-   std::unique_ptr<TH1> hist{hf->createHistogram(RooJSONFactoryWSTool::concat(&vars).c_str())};
+   RooArgSet* vars = hf->getVariables();
+   auto varnames = RooJSONFactoryWSTool::names(vars);
+   std::unique_ptr<TH1> hist{hf->createHistogram(RooJSONFactoryWSTool::concat(vars).c_str())};
    hist->SetDirectory(nullptr);
    auto volumes = dh.binVolumes(0, dh.numEntries());
    for (size_t i = 0; i < volumes.size(); ++i) {
@@ -673,7 +674,6 @@ public:
       if (chname.find("model_") == 0) {
          chname = chname.substr(6);
       }
-      elem["name"] << chname;
       RooRealSumPdf *sumpdf = nullptr;
       for (const auto &v : prodpdf->pdfList()) {
          if (v->InheritsFrom(RooRealSumPdf::Class())) {
@@ -686,10 +686,6 @@ public:
          if (!sample->InheritsFrom(RooProduct::Class()) && !sample->InheritsFrom(RooRealSumPdf::Class()))
             return false;
       }
-      // this seems to be ok
-      elem["type"] << key();
-      auto &samples = elem["samples"];
-      samples.set_map();
 
       bool has_poisson_constraints = false;
       bool has_gauss_constraints = false;
@@ -709,9 +705,7 @@ public:
          auto end = samplename.find("_" + chname);
          if (end < samplename.size())
             samplename = samplename.substr(0, end);
-         auto &s = samples[samplename];
-         s.set_map();
-         s["type"] << "hist-sample";
+
          RooArgSet elems;
          if (func->InheritsFrom(RooProduct::Class())) {
             collectElements(elems, (RooProduct *)func);
@@ -726,18 +720,16 @@ public:
          std::unique_ptr<TH1> hist;
          std::vector<ParamHistFunc *> phfs;
          PiecewiseInterpolation *pip = nullptr;
+	 std::vector<const RooAbsArg*> norms;
+ 
          RooStats::HistFactory::FlexibleInterpVar *fip = nullptr;
          for (const auto &e : elems) {
             if (e->InheritsFrom(RooConstVar::Class())) {
                if (((RooConstVar *)e)->getVal() == 1.)
                   continue;
-               auto &norms = s["normFactors"];
-               norms.set_seq();
-               norms.append_child() << e->GetName();
+	       norms.push_back(e);
             } else if (e->InheritsFrom(RooRealVar::Class())) {
-               auto &norms = s["normFactors"];
-               norms.set_seq();
-               norms.append_child() << e->GetName();
+	       norms.push_back(e);
             } else if (e->InheritsFrom(RooHistFunc::Class())) {
                const RooHistFunc *hf = static_cast<const RooHistFunc *>(e);
                if (varnames.empty()) {
@@ -755,14 +747,35 @@ public:
             }
          }
          if (pip) {
+            if (!hist && pip->nominalHist()->InheritsFrom(RooHistFunc::Class())){
+	      hist = histFunc2TH1(static_cast<const RooHistFunc *>(pip->nominalHist()));
+            }
+            if (varnames.empty() && pip->nominalHist()->InheritsFrom(RooHistFunc::Class())){
+	      varnames = getVarnames(dynamic_cast<const RooHistFunc *>(pip->nominalHist()));
+            }
+         }
+         if (!hist) {
+            return false;
+         }
+
+	 elem["name"] << chname;
+	 elem["type"] << key();
+ 
+	 auto &samples = elem["samples"];
+	 samples.set_map();
+         auto &s = samples[samplename];
+         s.set_map();
+         s["type"] << "hist-sample";	 
+
+	 for(const auto& norm:norms){
+	   auto &nfs = s["normFactors"];
+	   nfs.set_seq();
+	   nfs.append_child() << norm->GetName();
+	 }
+	 
+         if (pip) {
             auto &systs = s["histogramSystematics"];
             systs.set_map();
-            if (!hist) {
-               hist = histFunc2TH1(dynamic_cast<const RooHistFunc *>(pip->nominalHist()));
-            }
-            if (varnames.empty()) {
-               varnames = getVarnames(dynamic_cast<const RooHistFunc *>(pip->nominalHist()));
-            }
             for (size_t i = 0; i < pip->paramList().size(); ++i) {
                std::string sysname(pip->paramList().at(i)->GetName());
                if (sysname.find("alpha_") == 0) {
@@ -771,18 +784,18 @@ public:
                auto &sys = systs[sysname];
                sys.set_map();
                auto &dataLow = sys["dataLow"];
-               auto histLow = histFunc2TH1(dynamic_cast<RooHistFunc *>(pip->lowList().at(i)));
-               RooJSONFactoryWSTool::exportHistogram(*histLow, dataLow, varnames, 0, false, false);
-               auto &dataHigh = sys["dataHigh"];
-               auto histHigh = histFunc2TH1(dynamic_cast<RooHistFunc *>(pip->highList().at(i)));
-               RooJSONFactoryWSTool::exportHistogram(*histHigh, dataHigh, varnames, 0, false, false);
+	       if(pip->lowList().at(i)->InheritsFrom(RooHistFunc::Class())){
+		 auto histLow = histFunc2TH1(static_cast<RooHistFunc *>(pip->lowList().at(i)));
+		 RooJSONFactoryWSTool::exportHistogram(*histLow, dataLow, varnames, 0, false, false);
+	       }
+	       auto &dataHigh = sys["dataHigh"];
+	       if(pip->highList().at(i)->InheritsFrom(RooHistFunc::Class())){	       
+		 auto histHigh = histFunc2TH1(static_cast<RooHistFunc *>(pip->highList().at(i)));
+		 RooJSONFactoryWSTool::exportHistogram(*histHigh, dataHigh, varnames, 0, false, false);
+	       }
             }
          }
-         if (!hist) {
-            RooJSONFactoryWSTool::error(
-               TString::Format("cannot find histogram in HistFactory-style pdf '%s'", prodpdf->GetName()));
-            return false;
-         }
+	 
          if (fip) {
             auto &systs = s["overallSystematics"];
             systs.set_map();
@@ -862,6 +875,8 @@ public:
          ns.set_seq();
          ns.append_child() << chname;
       }
+
+      auto &samples = elem["samples"];
       for (const auto &hist : nonbb_histograms) {
          auto &s = samples[hist.first];
          auto &data = s["data"];
