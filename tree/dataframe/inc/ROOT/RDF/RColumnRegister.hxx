@@ -68,7 +68,7 @@ public:
    RColumnRegister(RColumnRegister &&) = default;
    RColumnRegister &operator=(const RColumnRegister &) = default;
 
-   RColumnRegister(std::shared_ptr<RDFDetail::RLoopManager> lm)
+   explicit RColumnRegister(std::shared_ptr<RDFDetail::RLoopManager> lm)
       : fLoopManager(lm), fDefines(std::make_shared<DefinesMap_t>()),
         fAliases(std::make_shared<std::unordered_map<std::string, std::string>>()),
         fVariations(std::make_shared<VariationsMap_t>()), fColumnNames(std::make_shared<ColumnNames_t>())
