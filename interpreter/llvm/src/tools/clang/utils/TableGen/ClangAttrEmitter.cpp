@@ -447,12 +447,13 @@ namespace {
     }
 
     void writeValue(raw_ostream &OS) const override {
-      OS << "\\\"\" << get" << getUpperName() << "() << \"\\\"";
+      OS << R"(\"" << get)" << getUpperName() << R"(() << "\")";
     }
 
     void writeDump(raw_ostream &OS) const override {
-      OS << "    OS << \" \\\"\" << SA->get" << getUpperName()
-         << "() << \"\\\"\";\n";
+      OS << R"(    OS << " \"" << SA->get)" << getUpperName()
+         << R"(() << "\"";
+)";
     }
   };
 
