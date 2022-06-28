@@ -46,24 +46,23 @@ class RDefinesWithReaders {
 
    std::shared_ptr<RDefineBase> fDefine; // cannot be null
    // Column readers per variation (in the map) per slot (in the vector).
-   std::vector<std::unordered_map<std::string, std::shared_ptr<RDefineReader>>> fReadersPerVariation;
+   std::vector<std::unordered_map<std::string, std::unique_ptr<RDefineReader>>> fReadersPerVariation;
 
 public:
    RDefinesWithReaders(std::shared_ptr<RDefineBase> define, unsigned int nSlots);
    RDefineBase &GetDefine() const { return *fDefine; }
-   std::shared_ptr<RDefineReader> GetReader(unsigned int slot, const std::string &variationName);
+   RDefineReader *GetReader(unsigned int slot, const std::string &variationName);
 };
 
 class RVariationsWithReaders {
    std::shared_ptr<RVariationBase> fVariation; // cannot be null
    // Column readers for this RVariation for a given variation (map key) and a given slot (vector element).
-   std::vector<std::unordered_map<std::string, std::shared_ptr<RVariationReader>>> fReadersPerVariation;
+   std::vector<std::unordered_map<std::string, std::unique_ptr<RVariationReader>>> fReadersPerVariation;
 
 public:
    RVariationsWithReaders(std::shared_ptr<RVariationBase> variation, unsigned int nSlots);
    RVariationBase &GetVariation() const { return *fVariation; }
-   std::shared_ptr<RVariationReader>
-   GetReader(unsigned int slot, const std::string &colName, const std::string &variationName);
+   RVariationReader *GetReader(unsigned int slot, const std::string &colName, const std::string &variationName);
 };
 
 /**
@@ -112,12 +111,7 @@ public:
    RColumnRegister(RColumnRegister &&) = default;
    RColumnRegister &operator=(const RColumnRegister &) = default;
 
-   explicit RColumnRegister(std::shared_ptr<RDFDetail::RLoopManager> lm)
-      : fLoopManager(lm), fDefines(std::make_shared<DefinesMap_t>()),
-        fAliases(std::make_shared<std::unordered_map<std::string, std::string>>()),
-        fVariations(std::make_shared<VariationsMap_t>()), fColumnNames(std::make_shared<ColumnNames_t>())
-   {
-   }
+   explicit RColumnRegister(std::shared_ptr<RDFDetail::RLoopManager> lm);
    ~RColumnRegister();
 
    ////////////////////////////////////////////////////////////////////////////
@@ -148,8 +142,8 @@ public:
 
    ROOT::RDF::RVariationsDescription BuildVariationsDescription() const;
 
-   std::shared_ptr<RDFDetail::RColumnReaderBase> GetReader(unsigned int slot, const std::string &colName,
-                                                           const std::string &variationName, const std::type_info &tid);
+   RDFDetail::RColumnReaderBase *GetReader(unsigned int slot, const std::string &colName,
+                                           const std::string &variationName, const std::type_info &tid);
 };
 
 } // Namespace RDF

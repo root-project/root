@@ -65,7 +65,7 @@ class R__CLING_PTRCHECK(off) RFilter final : public RFilterBase {
 
    FilterF fFilter;
    /// Column readers per slot and per input column
-   std::vector<std::array<std::shared_ptr<RColumnReaderBase>, ColumnTypes_t::list_size>> fValues;
+   std::vector<std::array<RColumnReaderBase *, ColumnTypes_t::list_size>> fValues;
    const std::shared_ptr<PrevNode_t> fPrevNodePtr;
    PrevNode_t &fPrevNode;
 
@@ -161,11 +161,7 @@ public:
    }
 
    /// Clean-up operations to be performed at the end of a task.
-   void FinalizeSlot(unsigned int slot) final
-   {
-      for (auto &v : fValues[slot])
-         v.reset();
-   }
+   void FinalizeSlot(unsigned int slot) final { fValues[slot].fill(nullptr); }
 
    std::shared_ptr<RDFGraphDrawing::GraphNode>
    GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap)
