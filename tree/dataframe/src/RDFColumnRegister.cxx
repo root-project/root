@@ -29,7 +29,7 @@ RDefinesWithReaders::RDefinesWithReaders(std::shared_ptr<RDefineBase> define, un
 }
 
 std::shared_ptr<RDFInternal::RDefineReader>
-RDefinesWithReaders::GetReader(unsigned int slot, const std::string &variationName, const std::type_info &tid)
+RDefinesWithReaders::GetReader(unsigned int slot, const std::string &variationName)
 {
    auto &defineReaders = fReadersPerVariation[slot];
 
@@ -41,7 +41,7 @@ RDefinesWithReaders::GetReader(unsigned int slot, const std::string &variationNa
    if (variationName != "nominal")
       define = &define->GetVariedDefine(variationName);
 
-   auto insertion = defineReaders.insert({variationName, std::make_shared<RDefineReader>(slot, *define, tid)});
+   auto insertion = defineReaders.insert({variationName, std::make_shared<RDefineReader>(slot, *define)});
    return insertion.first->second;
 }
 
@@ -53,9 +53,8 @@ RVariationsWithReaders::RVariationsWithReaders(std::shared_ptr<RVariationBase> v
 
 ////////////////////////////////////////////////////////////////////////////
 /// Return a column reader for the given slot, column and variation, or a nullptr if not available.
-std::shared_ptr<RVariationReader> RVariationsWithReaders::GetReader(unsigned int slot, const std::string &colName,
-                                                                    const std::string &variationName,
-                                                                    const std::type_info &tid)
+std::shared_ptr<RVariationReader>
+RVariationsWithReaders::GetReader(unsigned int slot, const std::string &colName, const std::string &variationName)
 {
    assert(IsStrInVec(variationName, fVariation->GetVariationNames())); // otherwise we should not be here
 
@@ -65,8 +64,8 @@ std::shared_ptr<RVariationReader> RVariationsWithReaders::GetReader(unsigned int
    if (it != varReaders.end())
       return it->second;
 
-   auto insertion = varReaders.insert(
-      {variationName, std::make_shared<RVariationReader>(slot, colName, variationName, *fVariation, tid)});
+   auto insertion =
+      varReaders.insert({variationName, std::make_shared<RVariationReader>(slot, colName, variationName, *fVariation)});
    return insertion.first->second;
 }
 
@@ -275,14 +274,20 @@ std::shared_ptr<RDFDetail::RColumnReaderBase> RColumnRegister::GetReader(unsigne
    // try variations first
    if (variationName != "nominal") {
       auto *variationAndReaders = FindVariationAndReaders(colName, variationName);
-      if (variationAndReaders != nullptr)
-         return variationAndReaders->GetReader(slot, colName, variationName, requestedType);
+      if (variationAndReaders != nullptr) {
+         const auto &actualType = variationAndReaders->GetVariation().GetTypeId();
+         CheckReaderTypeMatches(actualType, requestedType, colName);
+         return variationAndReaders->GetReader(slot, colName, variationName);
+      }
    }
 
    // otherwise try defines
    auto it = fDefines->find(colName);
-   if (it != fDefines->end())
-      return it->second->GetReader(slot, variationName, requestedType);
+   if (it != fDefines->end()) {
+      const auto &actualType = it->second->GetDefine().GetTypeId();
+      CheckReaderTypeMatches(actualType, requestedType, colName);
+      return it->second->GetReader(slot, variationName);
+   }
 
    return nullptr;
 }
