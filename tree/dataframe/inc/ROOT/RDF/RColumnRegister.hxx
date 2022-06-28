@@ -149,8 +149,6 @@ public:
 
    ROOT::RDF::RVariationsDescription BuildVariationsDescription() const;
 
-   RVariationBase &FindVariation(const std::string &colName, const std::string &variationName) const;
-
    std::shared_ptr<RDFDetail::RColumnReaderBase> GetReader(unsigned int slot, const std::string &colName,
                                                            const std::string &variationName, const std::type_info &tid);
 };
