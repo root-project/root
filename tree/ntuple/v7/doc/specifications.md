@@ -43,7 +43,7 @@ followed by the characters.
 Strings are ASCII encoded; every character is a signed 8bit integer.
 
 _Compression settings_: A 32bit integer containing both a compression algorithm and the compression level.
-The compression settings are encoded according to this forumlar: $$ settings = algorithm * 100 + level $$
+The compression settings are encoded according to this formula: $$ settings = algorithm * 100 + level $$
 See Compression.[h/cxx] for details and available algorithms.
 
 The meta-data envelope defines additional basic types (see below).
