@@ -550,7 +550,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
       }
 
       // Prepare the input map for the RDaosContainer::ReadV() call
-      std::unordered_map<std::pair<daos_obj_id_t, RDaosContainer::DistributionKey_t>, RDaosContainer::RWOperation>
+      std::unordered_map<RDaosContainer::ROidDkeyPair, RDaosContainer::RWOperation, RDaosContainer::ROidDkeyPair::Hash>
          readRequests;
       std::vector<d_iov_t> iovs(onDiskPages.size());
       auto buffer = new unsigned char[szPayload];
@@ -558,10 +558,9 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
       for (unsigned i = 0; i < onDiskPages.size(); ++i) {
          auto &s = onDiskPages[i];
          d_iov_set(&iovs[i], buffer + s.fBufPos, s.fSize);
-         auto key = std::make_pair(daos_obj_id_t{s.fObjectId, 0}, kDistributionKey);
-
-         if (int err = readRequests[key].insert(key.first, key.second, kAttributeKey, iovs[i]))
-            throw ROOT::Experimental::RException(R__FAIL("RWOperation insert: error " + std::to_string(err)));
+         auto od_key = RDaosContainer::ROidDkeyPair{daos_obj_id_t{s.fObjectId, 0}, kDistributionKey};
+         auto [it, ret] = readRequests.emplace(od_key, RDaosContainer::RWOperation(od_key));
+         it->second.insert(kAttributeKey, iovs[i]);
       }
       fCounters->fSzReadPayload.Add(szPayload);
 
