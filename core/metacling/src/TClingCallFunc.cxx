@@ -131,78 +131,18 @@ namespace {
    returnType sv_to(const cling::Value &val)
    {
       QualType QT = val.getType().getCanonicalType();
-      if (const BuiltinType *BT =
-               dyn_cast<BuiltinType>(&*QT)) {
-         //
-         //  WARNING!!!
-         //
-         //  This switch is organized in order-of-declaration
-         //  so that the produced assembly code is optimal.
-         //  Do not reorder!
-         //
-         switch (BT->getKind()) {
-            case BuiltinType::Void:
-               // CINT used to expect a result of 0.
-               return (returnType) 0;
-               break;
-               //
-               //  Unsigned Types
-               //
-            case BuiltinType::Bool:
-            case BuiltinType::Char_U: // char on targets where it is unsigned
-            case BuiltinType::UChar:
-               return (returnType) val.getULL();
-               break;
+      if (QT->isSignedIntegerOrEnumerationType())
+        return val.getLL();
+      else if (QT->isUnsignedIntegerOrEnumerationType())
+        return val.getULL();
+      else if (QT->isNullPtrType())
+        return 0;
 
-            case BuiltinType::WChar_U:
-               // wchar_t on targets where it is unsigned
-               // The standard doesn't allow to specify signednedd of wchar_t
-               // thus this maps simply to wchar_t.
-               return (returnType)(wchar_t) val.getULL();
-               break;
-
-            case BuiltinType::Char16:
-            case BuiltinType::Char32:
-            case BuiltinType::UShort:
-            case BuiltinType::UInt:
-            case BuiltinType::ULong:
-            case BuiltinType::ULongLong:
-               return (returnType) val.getULL();
-               break;
-
-            case BuiltinType::UInt128:
-               // __uint128_t
-               break;
-
-               //
-               //  Signed Types
-               //
-            case BuiltinType::Char_S: // char on targets where it is signed
-            case BuiltinType::SChar:
-               return (returnType) val.getLL();
-               break;
-
-            case BuiltinType::WChar_S:
-               // wchar_t on targets where it is signed
-               // The standard doesn't allow to specify signednedd of wchar_t
-               // thus this maps simply to wchar_t.
-               return (returnType)(wchar_t) val.getLL();
-               break;
-
-            case BuiltinType::Short:
-            case BuiltinType::Int:
-            case BuiltinType::Long:
-            case BuiltinType::LongLong:
-               return (returnType) val.getLL();
-               break;
-
-            case BuiltinType::Int128:
-               break;
-
+      if (const BuiltinType *BT = dyn_cast<BuiltinType>(&*QT)) {
+        switch (BT->getKind()) {
             case BuiltinType::Half:
                // half in OpenCL, __fp16 in ARM NEON
                break;
-
             case BuiltinType::Float:
                return (returnType) val.getFloat();
                break;
@@ -212,24 +152,13 @@ namespace {
             case BuiltinType::LongDouble:
                return (returnType) val.getLongDouble();
                break;
-
-            case BuiltinType::NullPtr:
-               return (returnType) 0;
-               break;
-
             default:
                break;
-         }
+        }
       }
       if (QT->isPointerType() || QT->isArrayType() || QT->isRecordType() ||
             QT->isReferenceType()) {
          return (returnType)(Longptr_t) val.getPtr();
-      }
-      if (const EnumType *ET = dyn_cast<EnumType>(&*QT)) {
-         if (ET->getDecl()->getIntegerType()->hasSignedIntegerRepresentation())
-            return (returnType) val.getLL();
-         else
-            return (returnType) val.getULL();
       }
       if (QT->isMemberPointerType()) {
          const MemberPointerType *MPT = QT->getAs<MemberPointerType>();
@@ -246,12 +175,12 @@ namespace {
    static
    long long sv_to_long_long(const cling::Value &val)
    {
-      return sv_to<long long>(val);
+      return val.getAs<long long>();
    }
    static
    unsigned long long sv_to_ulong_long(const cling::Value &val)
    {
-      return sv_to<unsigned long long>(val);
+     return val.getAs<unsigned long long>();
    }
 
 } // unnamed namespace.
@@ -1575,238 +1504,71 @@ void TClingCallFunc::exec(void *address, void *ret)
             Ty = fArgVals[i].getType();
          }
          QualType QT = Ty.getCanonicalType();
-         if (const BuiltinType *BT =
-                    dyn_cast<BuiltinType>(&*QT)) {
-            //
-            //  WARNING!!!
-            //
-            //  This switch is organized in order-of-declaration
-            //  so that the produced assembly code is optimal.
-            //  Do not reorder!
-            //
+         if (const BuiltinType *BT = dyn_cast<BuiltinType>(QT.getTypePtr())) {
+            ValHolder vh;
             switch (BT->getKind()) {
-                  //
-                  //  Builtin Types
-                  //
-               case BuiltinType::Void: {
-                     // void
-                     ::Error("TClingCallFunc::exec(void*)",
-                           "Invalid type 'Void'!");
-                     return;
-                  }
+               //  Unsigned Types
+               case BuiltinType::Bool: vh.u.b = (bool) sv_to_ulong_long(fArgVals[i]);
                   break;
-                  //
-                  //  Unsigned Types
-                  //
-               case BuiltinType::Bool: {
-                     // bool
-                     ValHolder vh;
-                     vh.u.b = (bool) sv_to_ulong_long(fArgVals[i]);
-                     vh_ary.push_back(vh);
-                     vp_ary.push_back(&vh_ary.back());
-                  }
+               case BuiltinType::Char_U: vh.u.c = (char) sv_to_ulong_long(fArgVals[i]);
                   break;
-               case BuiltinType::Char_U: {
-                     // char on targets where it is unsigned
-                     ValHolder vh;
-                     vh.u.c = (char) sv_to_ulong_long(fArgVals[i]);
-                     vh_ary.push_back(vh);
-                     vp_ary.push_back(&vh_ary.back());
-                  }
+               case BuiltinType::UChar: vh.u.uc = (unsigned char) sv_to_ulong_long(fArgVals[i]);
                   break;
-               case BuiltinType::UChar: {
-                     // unsigned char
-                     ValHolder vh;
-                     vh.u.uc = (unsigned char) sv_to_ulong_long(fArgVals[i]);
-                     vh_ary.push_back(vh);
-                     vp_ary.push_back(&vh_ary.back());
-                  }
+               case BuiltinType::WChar_U: vh.u.wc = (wchar_t) sv_to_ulong_long(fArgVals[i]);
                   break;
-               case BuiltinType::WChar_U: {
-                     // wchar_t on targets where it is unsigned.
-                     // The standard doesn't allow to specify signednedd of wchar_t
-                     // thus this maps simply to wchar_t.
-                     ValHolder vh;
-                     vh.u.wc = (wchar_t) sv_to_ulong_long(fArgVals[i]);
-                     vh_ary.push_back(vh);
-                     vp_ary.push_back(&vh_ary.back());
-                  }
+               case BuiltinType::Char16: //vh.u.c16 = (char16_t) sv_to_ulong_long(fArgVals[i]);
                   break;
-               case BuiltinType::Char16: {
-                     // char16_t
-                     //ValHolder vh;
-                     //vh.u.c16 = (char16_t) sv_to_ulong_long(fArgVals[i]);
-                     //vh_ary.push_back(vh);
-                     //vp_ary.push_back(&vh_ary.back());
-                  }
+               case BuiltinType::Char32: //vh.u.c32 = (char32_t) sv_to_ulong_long(fArgVals[i]);
                   break;
-               case BuiltinType::Char32: {
-                     // char32_t
-                     //ValHolder vh;
-                     //vh.u.c32 = (char32_t) sv_to_ulong_long(fArgVals[i]);
-                     //vh_ary.push_back(vh);
-                     //vp_ary.push_back(&vh_ary.back());
-                  }
+               case BuiltinType::UShort: vh.u.us = (unsigned short) sv_to_ulong_long(fArgVals[i]);
                   break;
-               case BuiltinType::UShort: {
-                     // unsigned short
-                     ValHolder vh;
-                     vh.u.us = (unsigned short) sv_to_ulong_long(fArgVals[i]);
-                     vh_ary.push_back(vh);
-                     vp_ary.push_back(&vh_ary.back());
-                  }
+               case BuiltinType::UInt: vh.u.ui = (unsigned int) sv_to_ulong_long(fArgVals[i]);
                   break;
-               case BuiltinType::UInt: {
-                     // unsigned int
-                     ValHolder vh;
-                     vh.u.ui = (unsigned int) sv_to_ulong_long(fArgVals[i]);
-                     vh_ary.push_back(vh);
-                     vp_ary.push_back(&vh_ary.back());
-                  }
+               case BuiltinType::ULong: vh.u.ul = (unsigned long) sv_to_ulong_long(fArgVals[i]);
                   break;
-               case BuiltinType::ULong: {
-                     // unsigned long
-                     ValHolder vh;
-                     vh.u.ul = (unsigned long) sv_to_ulong_long(fArgVals[i]);
-                     vh_ary.push_back(vh);
-                     vp_ary.push_back(&vh_ary.back());
-                  }
-                  break;
-               case BuiltinType::ULongLong: {
-                     // unsigned long long
-                     ValHolder vh;
-                     vh.u.ull = (unsigned long long) sv_to_ulong_long(fArgVals[i]);
-                     vh_ary.push_back(vh);
-                     vp_ary.push_back(&vh_ary.back());
-                  }
+               case BuiltinType::ULongLong: vh.u.ull = (unsigned long long) sv_to_ulong_long(fArgVals[i]);
                   break;
                case BuiltinType::UInt128: {
                      // __uint128_t
                   }
                   break;
-                  //
                   //  Signed Types
-                  //
-                  //
-                  //  Signed Types
-                  //
-               case BuiltinType::Char_S: {
-                     // char on targets where it is signed
-                     ValHolder vh;
-                     vh.u.c = (char) sv_to_long_long(fArgVals[i]);
-                     vh_ary.push_back(vh);
-                     vp_ary.push_back(&vh_ary.back());
-                  }
+               case BuiltinType::Char_S: vh.u.c = (char) sv_to_long_long(fArgVals[i]);
                   break;
-               case BuiltinType::SChar: {
-                     // signed char
-                     ValHolder vh;
-                     vh.u.sc = (signed char) sv_to_long_long(fArgVals[i]);
-                     vh_ary.push_back(vh);
-                     vp_ary.push_back(&vh_ary.back());
-                  }
+               case BuiltinType::SChar: vh.u.sc = (signed char) sv_to_long_long(fArgVals[i]);
                   break;
-               case BuiltinType::WChar_S: {
-                     // wchar_t on targets where it is signed.
-                     // The standard doesn't allow to specify signednedd of wchar_t
-                     // thus this maps simply to wchar_t.
-                     ValHolder vh;
-                     vh.u.wc = (wchar_t) sv_to_long_long(fArgVals[i]);
-                     vh_ary.push_back(vh);
-                     vp_ary.push_back(&vh_ary.back());
-                  }
+               case BuiltinType::WChar_S: vh.u.wc = (wchar_t) sv_to_long_long(fArgVals[i]);
                   break;
-               case BuiltinType::Short: {
-                     // short
-                     ValHolder vh;
-                     vh.u.s = (short) sv_to_long_long(fArgVals[i]);
-                     vh_ary.push_back(vh);
-                     vp_ary.push_back(&vh_ary.back());
-                  }
+               case BuiltinType::Short: vh.u.s = (short) sv_to_long_long(fArgVals[i]);
                   break;
-               case BuiltinType::Int: {
-                     // int
-                     ValHolder vh;
-                     vh.u.i = (int) sv_to_long_long(fArgVals[i]);
-                     vh_ary.push_back(vh);
-                     vp_ary.push_back(&vh_ary.back());
-                  }
+               case BuiltinType::Int: vh.u.i = (int) sv_to_long_long(fArgVals[i]);
                   break;
-               case BuiltinType::Long: {
-                     // long
-                     ValHolder vh;
-                     vh.u.l = (long) sv_to_long_long(fArgVals[i]);
-                     vh_ary.push_back(vh);
-                     vp_ary.push_back(&vh_ary.back());
-                  }
+               case BuiltinType::Long: vh.u.l = (long) sv_to_long_long(fArgVals[i]);
                   break;
-               case BuiltinType::LongLong: {
-                     // long long
-                     ValHolder vh;
-                     vh.u.ll = (long long) sv_to_long_long(fArgVals[i]);
-                     vh_ary.push_back(vh);
-                     vp_ary.push_back(&vh_ary.back());
-                  }
+               case BuiltinType::LongLong: vh.u.ll = (long long) sv_to_long_long(fArgVals[i]);
                   break;
-               case BuiltinType::Int128: {
-                     // __int128_t
-                     ::Error("TClingCallFunc::exec(void*)",
-                           "Invalid type 'Int128'!");
-                     return;
-                  }
+               case BuiltinType::Float: vh.u.flt = sv_to<float>(fArgVals[i]);
                   break;
-               case BuiltinType::Half: {
-                     // half in OpenCL, __fp16 in ARM NEON
-                     ::Error("TClingCallFunc::exec(void*)",
-                           "Invalid type 'Half'!");
-                     return;
-                  }
+               case BuiltinType::Double: vh.u.dbl = sv_to<double>(fArgVals[i]);
                   break;
-               case BuiltinType::Float: {
-                     // float
-                     ValHolder vh;
-                     vh.u.flt = sv_to<float>(fArgVals[i]);
-                     vh_ary.push_back(vh);
-                     vp_ary.push_back(&vh_ary.back());
-                  }
+               case BuiltinType::LongDouble: vh.u.ldbl = sv_to<long double>(fArgVals[i]);
                   break;
-               case BuiltinType::Double: {
-                     // double
-                     ValHolder vh;
-                     vh.u.dbl = sv_to<double>(fArgVals[i]);
-                     vh_ary.push_back(vh);
-                     vp_ary.push_back(&vh_ary.back());
-                  }
-                  break;
-               case BuiltinType::LongDouble: {
-                     // long double
-                     ValHolder vh;
-                     vh.u.ldbl = sv_to<long double>(fArgVals[i]);
-                     vh_ary.push_back(vh);
-                     vp_ary.push_back(&vh_ary.back());
-                  }
-                  break;
-                  //
-                  //  Language-Specific Types
-                  //
-               case BuiltinType::NullPtr: {
-                     // C++11 nullptr
-                     ValHolder vh;
-                     vh.u.vp = fArgVals[i].getPtr();
-                     vh_ary.push_back(vh);
-                     vp_ary.push_back(&vh_ary.back());
-                  }
+               // C++11 nullptr
+               case BuiltinType::NullPtr: vh.u.vp = fArgVals[i].getPtr();
                   break;
                default: {
                      // There should be no others.  This is here in case
                      // this changes in the future.
                      ::Error("TClingCallFunc::exec(void*)",
-                           "Unhandled builtin type!");
+                             "Unhandled builtin type '%s'",
+                             BT->getTypeClassName());
                      QT->dump();
                      return;
                   }
                   break;
             }
+            vh_ary.push_back(vh);
+            vp_ary.push_back(&vh_ary.back());
          } else if (QT->isReferenceType()) {
             // the argument is already a pointer value (point to the same thing
             // as the reference.
