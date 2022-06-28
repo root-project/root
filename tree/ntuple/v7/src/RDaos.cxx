@@ -229,7 +229,7 @@ int ROOT::Experimental::Detail::RDaosContainer::WriteSingleAkey(const void *buff
 }
 
 int ROOT::Experimental::Detail::RDaosContainer::VectorReadWrite(
-   std::unordered_map<std::pair<daos_obj_id_t, DistributionKey_t>, RWOperation> &map, ObjClassId_t cid,
+   std::unordered_map<ROidDkeyPair, RWOperation, ROidDkeyPair::Hash> &map, ObjClassId_t cid,
    int (RDaosObject::*fn)(RDaosObject::FetchUpdateArgs &))
 {
    using request_t = std::tuple<std::unique_ptr<RDaosObject>, RDaosObject::FetchUpdateArgs>;
