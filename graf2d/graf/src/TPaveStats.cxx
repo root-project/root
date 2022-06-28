@@ -228,7 +228,7 @@ const UInt_t kTakeStyle = BIT(17); //see TStyle::SetOptFit/Stat
 
 TPaveStats::TPaveStats(): TPaveText()
 {
-   fParent  = 0;
+   fParent  = nullptr;
    fOptFit  = gStyle->GetOptFit();
    fOptStat = gStyle->GetOptStat();
 }
@@ -239,7 +239,7 @@ TPaveStats::TPaveStats(): TPaveText()
 TPaveStats::TPaveStats(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Option_t *option)
            :TPaveText(x1,y1,x2,y2,option)
 {
-   fParent = 0;
+   fParent  = nullptr;
    fOptFit  = gStyle->GetOptFit();
    fOptStat = gStyle->GetOptStat();
    SetFitFormat(gStyle->GetFitFormat());
@@ -349,7 +349,7 @@ void TPaveStats::Paint(Option_t *option)
    TIter next(fLines);
    Double_t longest = 0, titlelength = 0;
    Double_t w, wtok[2];
-   char *st, *sl=0;
+   char *st, *sl = nullptr;
    if (textsize == 0)  {
       textsize = 0.92*yspace/(y2 - y1);
       titlesize = textsize;
@@ -385,7 +385,7 @@ void TPaveStats::Paint(Option_t *option)
                if (titlelength > 0.98*dx) titlesize *= 0.98*dx/titlelength;
                latex->SetTextFont(tfont);
             }
-            delete [] sl; sl = 0;
+            delete [] sl; sl = nullptr;
          }
       }
       longest = wtok[0]+wtok[1]+2.*margin;
