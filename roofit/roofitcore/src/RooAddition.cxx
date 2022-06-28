@@ -27,6 +27,8 @@ in the two sets.
 
 #include "Riostream.h"
 #include "RooAddition.h"
+#include "RooRealSumFunc.h"
+#include "RooRealSumPdf.h"
 #include "RooProduct.h"
 #include "RooAbsReal.h"
 #include "RooErrorHandler.h"
@@ -41,18 +43,7 @@ in the two sets.
 #include <algorithm>
 #include <cmath>
 
-using namespace std;
-
 ClassImp(RooAddition);
-;
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Empty constructor
-RooAddition::RooAddition() : _cacheMgr(this,10)
-{
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -70,7 +61,7 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
   for (const auto comp : sumSet) {
     if (!dynamic_cast<RooAbsReal*>(comp)) {
       coutE(InputArguments) << "RooAddition::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
-             << " is not of type RooAbsReal" << endl ;
+             << " is not of type RooAbsReal" << std::endl;
       RooErrorHandler::softAbort() ;
     }
     _set.add(*comp) ;
@@ -101,7 +92,7 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
     , _cacheMgr(this,10)
 {
   if (sumSet1.getSize() != sumSet2.getSize()) {
-    coutE(InputArguments) << "RooAddition::ctor(" << GetName() << ") ERROR: input lists should be of equal length" << endl ;
+    coutE(InputArguments) << "RooAddition::ctor(" << GetName() << ") ERROR: input lists should be of equal length" << std::endl;
     RooErrorHandler::softAbort() ;
   }
 
@@ -111,13 +102,13 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
 
     if (!dynamic_cast<RooAbsReal*>(comp1)) {
       coutE(InputArguments) << "RooAddition::ctor(" << GetName() << ") ERROR: component " << comp1->GetName()
-             << " in first list is not of type RooAbsReal" << endl ;
+             << " in first list is not of type RooAbsReal" << std::endl;
       RooErrorHandler::softAbort() ;
     }
 
     if (!dynamic_cast<RooAbsReal*>(comp2)) {
       coutE(InputArguments) << "RooAddition::ctor(" << GetName() << ") ERROR: component " << comp2->GetName()
-             << " in first list is not of type RooAbsReal" << endl ;
+             << " in first list is not of type RooAbsReal" << std::endl;
       RooErrorHandler::softAbort() ;
     }
     // TODO: add flag to RooProduct c'tor to make it assume ownership...
@@ -150,14 +141,6 @@ RooAddition::RooAddition(const RooAddition& other, const char* name)
   // Member _ownedList is intentionally not copy-constructed -- ownership is not transferred
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-
-RooAddition::~RooAddition()
-{ // Destructor
-
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return current value of self
 
@@ -166,15 +149,10 @@ double RooAddition::evaluate() const
   double sum(0);
   const RooArgSet* nset = _set.nset() ;
 
-//   cout << "RooAddition::eval sum = " ;
-
-  for (const auto arg : _set) {
-    const auto comp = static_cast<RooAbsReal*>(arg);
+  for (auto* comp : static_range_cast<RooAbsReal*>(_set)) {
     const double tmp = comp->getVal(nset);
-//     cout << tmp << " " ;
     sum += tmp ;
   }
-//   cout << " = " << sum << endl ;
   return sum ;
 }
 
@@ -211,7 +189,7 @@ double RooAddition::defaultErrorLevel() const
   RooAbsReal* nllArg(0) ;
   RooAbsReal* chi2Arg(0) ;
 
-  RooArgSet* comps = getComponents() ;
+  std::unique_ptr<RooArgSet> comps{getComponents()};
   for(RooAbsArg * arg : *comps) {
     if (dynamic_cast<RooNLLVar*>(arg) || dynamic_cast<ROOT::Experimental::RooNLLVarNew*>(arg)) {
       nllArg = (RooAbsReal*)arg ;
@@ -220,22 +198,21 @@ double RooAddition::defaultErrorLevel() const
       chi2Arg = (RooAbsReal*)arg ;
     }
   }
-  delete comps ;
 
   if (nllArg && !chi2Arg) {
     coutI(Fitting) << "RooAddition::defaultErrorLevel(" << GetName()
-         << ") Summation contains a RooNLLVar, using its error level" << endl ;
+         << ") Summation contains a RooNLLVar, using its error level" << std::endl;
     return nllArg->defaultErrorLevel() ;
   } else if (chi2Arg && !nllArg) {
     coutI(Fitting) << "RooAddition::defaultErrorLevel(" << GetName()
-         << ") Summation contains a RooChi2Var, using its error level" << endl ;
+         << ") Summation contains a RooChi2Var, using its error level" << std::endl;
     return chi2Arg->defaultErrorLevel() ;
   } else if (!nllArg && !chi2Arg) {
     coutI(Fitting) << "RooAddition::defaultErrorLevel(" << GetName() << ") WARNING: "
-         << "Summation contains neither RooNLLVar nor RooChi2Var server, using default level of 1.0" << endl ;
+         << "Summation contains neither RooNLLVar nor RooChi2Var server, using default level of 1.0" << std::endl;
   } else {
     coutI(Fitting) << "RooAddition::defaultErrorLevel(" << GetName() << ") WARNING: "
-         << "Summation contains BOTH RooNLLVar and RooChi2Var server, using default level of 1.0" << endl ;
+         << "Summation contains BOTH RooNLLVar and RooChi2Var server, using default level of 1.0" << std::endl;
   }
 
   return 1.0 ;
@@ -267,18 +244,11 @@ bool RooAddition::setData(RooAbsData& data, bool cloneData)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooAddition::printMetaArgs(ostream& os) const
+void RooAddition::printMetaArgs(std::ostream& os) const
 {
-  bool first(true) ;
-  for (const auto arg : _set) {
-    if (!first) {
-      os << " + " ;
-    } else {
-      first = false ;
-    }
-    os << arg->GetName() ;
-  }
-  os << " " ;
+  // We can use the implementation of RooRealSumPdf with an empy coefficient list.
+  static const RooArgList coefs{};
+  RooRealSumPdf::printMetaArgs(_set, coefs, os);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -335,128 +305,23 @@ double RooAddition::analyticalIntegral(Int_t code, const char* rangeName) const
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 std::list<double>* RooAddition::binBoundaries(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
-  std::list<double>* sumBinB = 0 ;
-  bool needClean(false) ;
-
-  // Loop over components pdf
-  for(auto * func : static_range_cast<RooAbsReal*>(_set)) {
-
-    std::list<double>* funcBinB = func->binBoundaries(obs,xlo,xhi) ;
-
-    // Process hint
-    if (funcBinB) {
-      if (!sumBinB) {
-   // If this is the first hint, then just save it
-   sumBinB = funcBinB ;
-      } else {
-
-   std::list<double>* newSumBinB = new std::list<double>(sumBinB->size()+funcBinB->size()) ;
-
-   // Merge hints into temporary array
-   merge(funcBinB->begin(),funcBinB->end(),sumBinB->begin(),sumBinB->end(),newSumBinB->begin()) ;
-
-   // Copy merged array without duplicates to new sumBinBArrau
-   delete sumBinB ;
-   delete funcBinB ;
-   sumBinB = newSumBinB ;
-   needClean = true ;
-      }
-    }
-  }
-
-  // Remove consecutive duplicates
-  if (needClean) {
-    std::list<double>::iterator new_end = unique(sumBinB->begin(),sumBinB->end()) ;
-    sumBinB->erase(new_end,sumBinB->end()) ;
-  }
-
-  return sumBinB ;
+  return RooRealSumPdf::binBoundaries(_set, obs, xlo, xhi);
 }
 
 
-//_____________________________________________________________________________B
 bool RooAddition::isBinnedDistribution(const RooArgSet& obs) const
 {
-  // If all components that depend on obs are binned that so is the product
-
-  RooFIter iter = _set.fwdIterator() ;
-  RooAbsReal* func ;
-  while((func=(RooAbsReal*)iter.next())) {
-    if (func->dependsOn(obs) && !func->isBinnedDistribution(obs)) {
-      return false ;
-    }
-  }
-
-  return true  ;
+  return RooRealSumPdf::isBinnedDistribution(_set, obs);
 }
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
 std::list<double>* RooAddition::plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
-  std::list<double>* sumHint = 0 ;
-  bool needClean(false) ;
-
-  RooFIter iter = _set.fwdIterator() ;
-  RooAbsReal* func ;
-  // Loop over components pdf
-  while((func=(RooAbsReal*)iter.next())) {
-
-    std::list<double>* funcHint = func->plotSamplingHint(obs,xlo,xhi) ;
-
-    // Process hint
-    if (funcHint) {
-      if (!sumHint) {
-
-   // If this is the first hint, then just save it
-   sumHint = funcHint ;
-
-      } else {
-
-   std::list<double>* newSumHint = new std::list<double>(sumHint->size()+funcHint->size()) ;
-
-   // Merge hints into temporary array
-   merge(funcHint->begin(),funcHint->end(),sumHint->begin(),sumHint->end(),newSumHint->begin()) ;
-
-   // Copy merged array without duplicates to new sumHintArrau
-   delete sumHint ;
-   sumHint = newSumHint ;
-   needClean = true ;
-      }
-    }
-  }
-
-  // Remove consecutive duplicates
-  if (needClean) {
-    std::list<double>::iterator new_end = unique(sumHint->begin(),sumHint->end()) ;
-    sumHint->erase(new_end,sumHint->end()) ;
-  }
-
-  return sumHint ;
+  return RooRealSumPdf::plotSamplingHint(_set, obs, xlo, xhi);
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return list of all RooAbsArgs in cache element
-
-RooArgList RooAddition::CacheElem::containedArgs(Action)
-{
-  RooArgList ret(_I) ;
-  return ret ;
-}
-
-RooAddition::CacheElem::~CacheElem()
-{
-  // Destructor
-}
-
-
