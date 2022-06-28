@@ -27,10 +27,9 @@ class RooArgList ;
 class RooAddition : public RooAbsReal {
 public:
 
-  RooAddition() ;
+  RooAddition() : _cacheMgr(this,10) {}
   RooAddition(const char *name, const char *title, const RooArgList& sumSet, bool takeOwnerShip=false) ;
   RooAddition(const char *name, const char *title, const RooArgList& sumSet1, const RooArgList& sumSet2, bool takeOwnerShip=false) ;
-  ~RooAddition() override ;
 
   RooAddition(const RooAddition& other, const char* name = 0);
   TObject* clone(const char* newname) const override { return new RooAddition(*this, newname); }
@@ -66,10 +65,9 @@ protected:
 
   class CacheElem : public RooAbsCacheElement {
   public:
-      ~CacheElem() override;
       // Payload
       RooArgList _I ;
-      RooArgList containedArgs(Action) override ;
+      RooArgList containedArgs(Action) override { return _I; }
   };
   mutable RooObjCacheManager _cacheMgr ; ///<! The cache manager
 

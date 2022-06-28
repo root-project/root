@@ -95,6 +95,8 @@ protected:
 
 private:
 
+  friend class RooAddPdf;
+  friend class RooAddition;
   friend class RooRealSumFunc;
 
   static void initializeFuncsAndCoefs(RooAbsReal const& caller,
