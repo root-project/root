@@ -91,10 +91,6 @@ struct RColumnReadersInfo {
 };
 
 /// Create a group of column readers, one per type in the parameter pack.
-/// colInfo.fColNames and colInfo.fIsDefine are expected to have size equal to the parameter pack, and elements ordered
-/// accordingly, i.e. fIsDefine[0] refers to fColNames[0] which is of type "ColTypes[0]".
-///
-/// Pre-condition: colInfo.isDefine must not be null.
 template <typename... ColTypes>
 std::array<std::unique_ptr<RDFDetail::RColumnReaderBase>, sizeof...(ColTypes)>
 MakeColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, const RColumnReadersInfo &colInfo,
@@ -102,8 +98,6 @@ MakeColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, cons
 {
    // see RColumnReadersInfo for why we pass these arguments like this rather than directly as function arguments
    const auto &colNames = colInfo.fColNames;
-   const auto &defines = colInfo.fColRegister.GetDefines();
-   const bool *isDefine = colInfo.fIsDefine;
    const auto &DSValuePtrsMap = colInfo.fDSValuePtrsMap;
    auto *ds = colInfo.fDataSource;
    const auto &colRegister = colInfo.fColRegister;
@@ -119,10 +113,10 @@ MakeColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, cons
 
    int i = -1;
    std::array<std::unique_ptr<RDFDetail::RColumnReaderBase>, sizeof...(ColTypes)> ret{
-      {{(++i, MakeColumnReader<ColTypes>(
-                 slot, isDefine[i] ? defines.at(colNames[i]).get() : nullptr, DSValuePtrsMap, r, ds, colNames[i],
-                 doesVariationApply[i] ? &colRegister.FindVariation(colNames[i], variationName) : nullptr,
-                 variationName))}...}};
+      {{(++i, MakeColumnReader<ColTypes>(slot, colRegister.GetDefine(colNames[i]), DSValuePtrsMap, r, ds, colNames[i],
+                                         doesVariationApply[i] ? &colRegister.FindVariation(colNames[i], variationName)
+                                                               : nullptr,
+                                         variationName))}...}};
    return ret;
 
    // avoid bogus "unused variable" warnings

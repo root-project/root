@@ -31,6 +31,26 @@ RColumnRegister::~RColumnRegister()
 }
 
 ////////////////////////////////////////////////////////////////////////////
+/// \brief Return the list of the names of defined columns (no aliases).
+ColumnNames_t RColumnRegister::GetDefineNames() const
+{
+   ColumnNames_t names;
+   names.reserve(fDefines->size());
+   for (auto &kv : *fDefines) {
+      names.emplace_back(kv.first);
+   }
+   return names;
+}
+
+////////////////////////////////////////////////////////////////////////////
+/// \brief Return the RDefine for the requested column name, or nullptr.
+RDFDetail::RDefineBase *RColumnRegister::GetDefine(const std::string &colName) const
+{
+   auto it = fDefines->find(colName);
+   return it == fDefines->end() ? nullptr : (it->second).get();
+}
+
+////////////////////////////////////////////////////////////////////////////
 /// \brief Check if the provided name is tracked in the names list
 bool RColumnRegister::IsDefineOrAlias(std::string_view name) const
 {

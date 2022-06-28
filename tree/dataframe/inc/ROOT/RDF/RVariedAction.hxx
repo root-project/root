@@ -83,12 +83,11 @@ public:
    {
       fLoopManager->Register(this);
 
-      const auto &defines = colRegister.GetDefines();
       for (auto i = 0u; i < columns.size(); ++i) {
-         auto it = defines.find(columns[i]);
-         fIsDefine[i] = it != defines.end();
+         auto *define = colRegister.GetDefine(columns[i]);
+         fIsDefine[i] = define != nullptr;
          if (fIsDefine[i])
-            (it->second)->MakeVariations(GetVariations());
+            define->MakeVariations(GetVariations());
       }
    }
 

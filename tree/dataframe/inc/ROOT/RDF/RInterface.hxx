@@ -2603,8 +2603,7 @@ public:
    {
       const auto col = fColRegister.ResolveAlias(std::string(column));
 
-      RDFDetail::RDefineBase *define =
-         fColRegister.IsDefineOrAlias(col) ? fColRegister.GetDefines().at(col).get() : nullptr;
+      RDFDetail::RDefineBase *define = fColRegister.GetDefine(col);
 
       const bool convertVector2RVec = true;
       return RDFInternal::ColumnName2ColumnTypeName(col, fLoopManager->GetTree(), fLoopManager->GetDataSource(), define,
@@ -2734,11 +2733,10 @@ public:
    {
       ColumnNames_t definedColumns;
 
-      auto columns = fColRegister.GetDefines();
-
+      const auto columns = fColRegister.GetDefineNames();
       for (const auto &column : columns) {
-         if (!RDFInternal::IsInternalColumn(column.first))
-            definedColumns.emplace_back(column.first);
+         if (!RDFInternal::IsInternalColumn(column))
+            definedColumns.emplace_back(column);
       }
 
       return definedColumns;
@@ -3341,11 +3339,9 @@ private:
 
          const auto &innerTypeID = typeid(RDFInternal::InnerValueType_t<RetType>);
 
-         const auto &definesMap = fColRegister.GetDefines();
          for (auto i = 0u; i < colTypes.size(); ++i) {
-            const auto it = definesMap.find(colNames[i]);
-            const auto &expectedTypeID =
-               it == definesMap.end() ? RDFInternal::TypeName2TypeID(colTypes[i]) : it->second->GetTypeId();
+            const auto *define = fColRegister.GetDefine(colNames[i]);
+            const auto &expectedTypeID = define ? define->GetTypeId() : RDFInternal::TypeName2TypeID(colTypes[i]);
             if (innerTypeID != expectedTypeID)
                throw std::runtime_error("Varied values for column \"" + colNames[i] + "\" have a different type (" +
                                         RDFInternal::TypeID2TypeName(innerTypeID) + ") than the nominal value (" +
@@ -3354,10 +3350,9 @@ private:
       } else { // we are varying a single column, RetType is RVec<T>
          const auto &retTypeID = typeid(typename RetType::value_type);
          const auto &colName = colNames[0]; // we have only one element in there
-         const auto &definesMap = fColRegister.GetDefines();
-         const auto it = definesMap.find(colName);
+         const auto *define = fColRegister.GetDefine(colName);
          const auto &expectedTypeID =
-            it == definesMap.end() ? RDFInternal::TypeName2TypeID(GetColumnType(colName)) : it->second->GetTypeId();
+            define ? define->GetTypeId() : RDFInternal::TypeName2TypeID(GetColumnType(colName));
          if (retTypeID != expectedTypeID)
             throw std::runtime_error("Varied values for column \"" + colName + "\" have a different type (" +
                                      RDFInternal::TypeID2TypeName(retTypeID) + ") than the nominal value (" +
