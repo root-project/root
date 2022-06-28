@@ -64,7 +64,7 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    ValuesPerSlot_t fLastResults;
 
    /// Column readers per slot and per input column
-   std::vector<std::array<std::shared_ptr<RColumnReaderBase>, ColumnTypes_t::list_size>> fValues;
+   std::vector<std::array<RColumnReaderBase *, ColumnTypes_t::list_size>> fValues;
 
    /// Define objects corresponding to systematic variations other than nominal for this defined column.
    /// The map key is the full variation name, e.g. "pt:up".
@@ -138,8 +138,7 @@ public:
    /// Clean-up operations to be performed at the end of a task.
    void FinalizeSlot(unsigned int slot) final
    {
-      for (auto &v : fValues[slot])
-         v.reset();
+      fValues[slot].fill(nullptr);
 
       for (auto &e : fVariedDefines)
          e.second->FinalizeSlot(slot);

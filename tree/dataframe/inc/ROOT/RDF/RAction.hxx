@@ -58,7 +58,7 @@ class R__CLING_PTRCHECK(off) RAction : public RActionBase {
    const std::shared_ptr<PrevNode> fPrevNodePtr;
    PrevNode &fPrevNode;
    /// Column readers per slot and per input column
-   std::vector<std::array<std::shared_ptr<RColumnReaderBase>, ColumnTypes_t::list_size>> fValues;
+   std::vector<std::array<RColumnReaderBase *, ColumnTypes_t::list_size>> fValues;
 
    /// The nth flag signals whether the nth input column is a custom column or not.
    std::array<bool, ColumnTypes_t::list_size> fIsDefine;
@@ -118,8 +118,7 @@ public:
    /// Clean-up operations to be performed at the end of a task.
    void FinalizeSlot(unsigned int slot) final
    {
-      for (auto &v : fValues[slot])
-         v.reset();
+      fValues[slot].fill(nullptr);
       fHelper.CallFinalizeTask(slot);
    }
 

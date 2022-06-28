@@ -41,16 +41,15 @@ using namespace ROOT::TypeTraits;
 namespace RDFDetail = ROOT::Detail::RDF;
 
 template <typename T>
-std::shared_ptr<RDFDetail::RColumnReaderBase>
-GetColumnReader(unsigned int slot, std::shared_ptr<RColumnReaderBase> defineOrVariationReader, RLoopManager &lm,
-                TTreeReader *r, const std::string &colName)
+RDFDetail::RColumnReaderBase *GetColumnReader(unsigned int slot, RColumnReaderBase *defineOrVariationReader,
+                                              RLoopManager &lm, TTreeReader *r, const std::string &colName)
 {
    if (defineOrVariationReader != nullptr)
       return defineOrVariationReader;
 
    // Check if we already inserted a reader for this column in the dataset column readers (RDataSource or Tree/TChain
    // readers)
-   auto datasetColReader = lm.GetDatasetColumnReader(slot, colName, typeid(T));
+   auto *datasetColReader = lm.GetDatasetColumnReader(slot, colName, typeid(T));
    if (datasetColReader != nullptr)
       return datasetColReader;
 
@@ -74,7 +73,7 @@ struct RColumnReadersInfo {
 
 /// Create a group of column readers, one per type in the parameter pack.
 template <typename... ColTypes>
-std::array<std::shared_ptr<RDFDetail::RColumnReaderBase>, sizeof...(ColTypes)>
+std::array<RDFDetail::RColumnReaderBase *, sizeof...(ColTypes)>
 GetColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, const RColumnReadersInfo &colInfo,
                  const std::string &variationName = "nominal")
 {
@@ -84,14 +83,14 @@ GetColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, const
    auto &colRegister = colInfo.fColRegister;
 
    int i = -1;
-   std::array<std::shared_ptr<RDFDetail::RColumnReaderBase>, sizeof...(ColTypes)> ret{
-      {{(++i, GetColumnReader<ColTypes>(slot, colRegister.GetReader(slot, colNames[i], variationName, typeid(ColTypes)),
-                                        lm, r, colNames[i]))}...}};
+   std::array<RDFDetail::RColumnReaderBase *, sizeof...(ColTypes)> ret{
+      (++i, GetColumnReader<ColTypes>(slot, colRegister.GetReader(slot, colNames[i], variationName, typeid(ColTypes)),
+                                      lm, r, colNames[i]))...};
    return ret;
 }
 
 // Shortcut overload for the case of no columns
-inline std::array<std::shared_ptr<RDFDetail::RColumnReaderBase>, 0>
+inline std::array<RDFDetail::RColumnReaderBase *, 0>
 GetColumnReaders(unsigned int, TTreeReader *, TypeList<>, const RColumnReadersInfo &, const std::string & = "nominal")
 {
    return {};

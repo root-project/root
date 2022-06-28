@@ -47,7 +47,7 @@ class R__CLING_PTRCHECK(off) RVariedAction final : public RActionBase {
    std::vector<std::shared_ptr<PrevNodeType>> fPrevNodes;
 
    /// Column readers per slot (outer dimension), per variation and per input column (inner dimension, std::array).
-   std::vector<std::vector<std::array<std::shared_ptr<RColumnReaderBase>, ColumnTypes_t::list_size>>> fInputValues;
+   std::vector<std::vector<std::array<RColumnReaderBase *, ColumnTypes_t::list_size>>> fInputValues;
 
    /// The nth flag signals whether the nth input column is a custom column or not.
    std::array<bool, ColumnTypes_t::list_size> fIsDefine;
