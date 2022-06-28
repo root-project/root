@@ -206,13 +206,13 @@ protected:
    virtual RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) = 0;
    virtual RNTupleLocator CommitSealedPageImpl(DescriptorId_t columnId,
                                                const RPageStorage::RSealedPage &sealedPage) = 0;
-   /// Vector commit of preprocessed pages. The `ranges` vector specifies a range of sealed pages to be
+   /// Vector commit of preprocessed pages. The `ranges` array specifies a range of sealed pages to be
    /// committed for each column.  The returned vector contains, in order, the RNTupleLocator for each
    /// page on each range in `ranges`, i.e. the first N entries refer to the N pages in `ranges[0]`,
    /// followed by M entries that refer to the M pages in `ranges[1]`, etc.
    /// The default is to call `CommitSealedPageImpl` for each page; derived classes may provide an
    /// optimized implementation though.
-   virtual std::vector<RNTupleLocator> CommitSealedPageVImpl(const std::vector<RPageStorage::RSealedPageGroup> &ranges);
+   virtual std::vector<RNTupleLocator> CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges);
    /// Returns the number of bytes written to storage (excluding metadata)
    virtual std::uint64_t CommitClusterImpl(NTupleSize_t nEntries) = 0;
    /// Returns the locator of the page list envelope of the given buffer that contains the serialized page list.
@@ -270,7 +270,7 @@ public:
    /// Write a preprocessed page to storage. The column must have been added before.
    void CommitSealedPage(DescriptorId_t columnId, const RPageStorage::RSealedPage &sealedPage);
    /// Write a vector of preprocessed pages to storage. The corresponding columns must have been added before.
-   void CommitSealedPageV(const std::vector<RPageStorage::RSealedPageGroup> &ranges);
+   void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges);
    /// Finalize the current cluster and create a new one for the following data.
    /// Returns the number of bytes written to storage (excluding meta-data).
    std::uint64_t CommitCluster(NTupleSize_t nEntries);

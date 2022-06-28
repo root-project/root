@@ -117,8 +117,9 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::
       auto drained = bufColumn.DrainBufferedPages();
       if (hasSealedPagesOnly) {
          const auto &sealedPages = std::get<RPageStorage::SealedPageSequence_t>(drained);
-         fInnerSink->CommitSealedPageV(std::vector<RPageStorage::RSealedPageGroup>{
-            RSealedPageGroup(bufColumn.GetHandle().fId, sealedPages.cbegin(), sealedPages.cend())});
+         RPageStorage::RSealedPageGroup toCommit[] = {
+            RSealedPageGroup(bufColumn.GetHandle().fId, sealedPages.cbegin(), sealedPages.cend())};
+         fInnerSink->CommitSealedPageV({std::begin(toCommit), std::end(toCommit)});
          continue;
       }
 
