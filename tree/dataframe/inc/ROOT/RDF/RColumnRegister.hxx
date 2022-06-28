@@ -80,13 +80,12 @@ public:
    /// \brief Return the list of the names of the defined columns (Defines + Aliases).
    ColumnNames_t GetNames() const { return *fColumnNames; }
 
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return a map of pointers to the defined columns.
-   const DefinesMap_t &GetDefines() const { return *fDefines; }
+   ColumnNames_t GetDefineNames() const;
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Return the multimap of systematic variations, see fVariations.
    const VariationsMap_t &GetVariations() const { return *fVariations; }
+   RDFDetail::RDefineBase *GetDefine(const std::string &colName) const;
 
    bool IsDefineOrAlias(std::string_view name) const;
 
