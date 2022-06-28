@@ -268,7 +268,7 @@ std::vector<std::string> GetTreeFullPaths(const TTree &tree)
       if (dynamic_cast<const TFile *>(treeDir)) {
          return {tree.GetName()};
       }
-      std::string fullPath = treeDir->GetPath();           // e.g. "file.root:/dir"
+      std::string fullPath = treeDir->GetPath();            // e.g. "file.root:/dir"
       fullPath = fullPath.substr(fullPath.rfind(":/") + 1); // e.g. "/dir"
       fullPath += "/";
       fullPath += tree.GetName(); // e.g. "/dir/tree"
