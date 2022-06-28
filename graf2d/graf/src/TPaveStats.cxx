@@ -344,8 +344,6 @@ void TPaveStats::Paint(Option_t *option)
    Float_t margin    = fMargin*dx;
    Double_t yspace   = dy/Double_t(nlines);
    Double_t textsave = textsize;
-   TObject *line;
-   TLatex *latex, *latex_tok;
    TIter next(fLines);
    Double_t longest = 0, titlelength = 0;
    Double_t w, wtok[2];
@@ -354,9 +352,9 @@ void TPaveStats::Paint(Option_t *option)
       textsize = 0.92*yspace/(y2 - y1);
       titlesize = textsize;
       wtok[0] = wtok[1] = 0;
-      while ((line = (TObject*) next())) {
+      while (auto line = (TObject*) next()) {
          if (line->IsA() == TLatex::Class()) {
-            latex = (TLatex*)line;
+            TLatex *latex = (TLatex*)line;
             Int_t nchs = strlen(latex->GetTitle());
             sl = new char[nchs+1];
             strlcpy(sl, latex->GetTitle(),nchs+1);
@@ -364,16 +362,15 @@ void TPaveStats::Paint(Option_t *option)
                st = strtok(sl, "=");
                Int_t itok = 0;
                while (( st != 0 ) && (itok < 2)) {
-                  latex_tok = new TLatex(0.,0.,st);
+                  TLatex latex_tok(0.,0.,st);
                   Style_t tfont = latex->GetTextFont();
                   if (tfont == 0) tfont = GetTextFont();
-                  latex_tok->SetTextFont(tfont);
-                  latex_tok->SetTextSize(textsize);
-                  w = latex_tok->GetXsize();
+                  latex_tok.SetTextFont(tfont);
+                  latex_tok.SetTextSize(textsize);
+                  w = latex_tok.GetXsize();
                   if (w > wtok[itok]) wtok[itok] = w;
                   st = strtok(0, "=");
                   ++itok;
-                  delete latex_tok;
                }
             } else if (strpbrk(sl, "|") !=0) {
             } else {
@@ -401,9 +398,9 @@ void TPaveStats::Paint(Option_t *option)
    // Iterate over all lines
    // Copy pavetext attributes to line attributes if line attributes not set
    next.Reset();
-   while ((line = (TObject*) next())) {
+   while (auto line = (TObject*) next()) {
       if (line->IsA() == TLatex::Class()) {
-         latex = (TLatex*)line;
+         TLatex *latex = (TLatex*)line;
          ytext -= yspace;
          Double_t xl    = latex->GetX();
          Double_t yl    = latex->GetY();
@@ -491,12 +488,11 @@ void TPaveStats::Paint(Option_t *option)
       x2 = x2ref - 0.25*dx;
       y1 = y2ref - 0.02*dy;
       y2 = y2ref + 0.02*dy;
-      TPaveLabel *title = new TPaveLabel(x1,y1,x2,y2,fLabel.Data(),GetDrawOption());
-      title->SetFillColor(GetFillColor());
-      title->SetTextColor(GetTextColor());
-      title->SetTextFont(GetTextFont());
-      title->Paint();
-      delete title;
+      TPaveLabel title(x1,y1,x2,y2,fLabel.Data(),GetDrawOption());
+      title.SetFillColor(GetFillColor());
+      title.SetTextColor(GetTextColor());
+      title.SetTextFont(GetTextFont());
+      title.Paint();
    }
 }
 
