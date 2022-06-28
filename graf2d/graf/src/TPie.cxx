@@ -145,9 +145,8 @@ TPie::TPie(const TPie &cpy) : TNamed(cpy), TAttText(cpy)
 {
    Init(cpy.fNvals, cpy.fAngularOffset, cpy.fX, cpy.fY, cpy.fRadius);
 
-   for (Int_t i=0;i<fNvals;++i) {
-      fPieSlices[i] = cpy.fPieSlices[i];
-   }
+   for (Int_t i=0;i<fNvals;++i)
+      cpy.fPieSlices[i]->Copy(*fPieSlices[i]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
