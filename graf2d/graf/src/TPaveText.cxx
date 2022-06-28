@@ -118,7 +118,7 @@ TPaveText::~TPaveText()
    if (!TestBit(kNotDeleted)) return;
    if (fLines) fLines->Delete();
    delete fLines;
-   fLines = 0;
+   fLines = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -131,7 +131,7 @@ TPaveText::TPaveText(const TPaveText &pavetext) : TPave(), TAttText()
    p->Streamer(b);
    b.SetReadMode();
    b.SetBufferOffset(0);
-   fLines = 0;
+   fLines = nullptr;
    Streamer(b);
 }
 
@@ -568,12 +568,11 @@ void TPaveText::PaintPrimitives(Int_t mode)
       x2 = fX2 - 0.25*dx;
       y1 = fY2 - 0.02*dy;
       y2 = fY2 + 0.02*dy;
-      TPaveLabel *title = new TPaveLabel(x1,y1,x2,y2,fLabel.Data(),GetDrawOption());
-      title->SetFillColor(GetFillColor());
-      title->SetTextColor(GetTextColor());
-      title->SetTextFont(GetTextFont());
-      title->Paint();
-      delete title;
+      TPaveLabel title(x1,y1,x2,y2,fLabel.Data(),GetDrawOption());
+      title.SetFillColor(GetFillColor());
+      title.SetTextColor(GetTextColor());
+      title.SetTextFont(GetTextFont());
+      title.Paint();
    }
 }
 
