@@ -772,6 +772,8 @@ void TPolyLine::Streamer(TBuffer &b)
       b.CheckByteCount(R__s, R__c, TPolyLine::IsA());
       //====end of old versions
 
+      delete [] x;
+      delete [] y;
    } else {
       b.WriteClassBuffer(TPolyLine::Class(),this);
    }
