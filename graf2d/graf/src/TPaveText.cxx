@@ -597,7 +597,6 @@ void TPaveText::ReadFile(const char *filename, Option_t *option, Int_t nlines, I
 {
    Int_t ival;
    Float_t val;
-   TText *lastline = 0;
    TString opt = option;
    if (!opt.Contains("+")) {
       Clear();
@@ -620,7 +619,7 @@ void TPaveText::ReadFile(const char *filename, Option_t *option, Int_t nlines, I
 
    const int linesize = 255;
    char currentline[linesize];
-   char *ss, *sclose, *s= 0;
+   char *ss, *sclose, *s = nullptr;
 
    Int_t kline = 0;
    while (1) {
@@ -633,7 +632,7 @@ void TPaveText::ReadFile(const char *filename, Option_t *option, Int_t nlines, I
             sclose = strstr(ss,")");
             if (!sclose) continue;
             *sclose = 0;
-            lastline = (TText*)fLines->Last();
+            TText *lastline = (TText*)fLines->Last();
             if (!lastline) continue;
             if (strstr(ss,"Color(")) {
                sscanf(ss+6,"%d",&ival);

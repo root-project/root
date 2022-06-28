@@ -403,7 +403,7 @@ TLatex::TLatex()
 {
    fFactorSize  = 1.5;
    fFactorPos   = 0.6;
-   fError       = 0;
+   fError       = nullptr;
    fShow        = kFALSE;
    fOriginSize  = 0.04;
    fItalic      = kFALSE;
@@ -419,7 +419,7 @@ TLatex::TLatex(Double_t x, Double_t y, const char *text)
 {
    fFactorSize  = 1.5;
    fFactorPos   = 0.6;
-   fError       = 0;
+   fError       = nullptr;
    fShow        = kFALSE;
    fOriginSize  = 0.04;
    fItalic      = kFALSE;
@@ -441,7 +441,7 @@ TLatex::TLatex(const TLatex &text) : TText(text), TAttLine(text)
 {
    fFactorSize  = 1.5;
    fFactorPos   = 0.6;
-   fError       = 0;
+   fError       = nullptr;
    fShow        = kFALSE;
    fOriginSize  = 0.04;
    fItalic      = kFALSE;
@@ -544,11 +544,11 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
 
    const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","tilde","slash"};
 
-   if (fError != 0) return TLatexFormSize(0,0,0);
+   if (fError) return TLatexFormSize(0,0,0);
 
-   Int_t nBlancDeb=0,nBlancFin=0,l_nBlancDeb=0,l_nBlancFin=0;
-   Int_t i,k;
-   Int_t min=0, max=0;
+   Int_t nBlancDeb = 0, nBlancFin = 0, l_nBlancDeb = 0, l_nBlancFin = 0;
+   Int_t i, k;
+   Int_t min = 0, max = 0;
    Bool_t cont = kTRUE;
    while(cont) {
       // count leading blanks
@@ -2151,13 +2151,13 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
    if( newText.Length() == 0) return 0;
    newText.ReplaceAll("#hbox","#mbox");
 
-   fError = 0 ;
+   fError = nullptr;
    if (CheckLatexSyntax(newText)) {
       std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
       std::cout<<"==> "<<text1<<std::endl;
       return 0;
    }
-   fError = 0 ;
+   fError = nullptr;
 
    // Do not use Latex if font is low precision.
    if (fTextFont%10 < 2) {
@@ -2219,7 +2219,7 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
    Short_t halign = fTextAlign/10;
    Short_t valign = fTextAlign - 10*halign;
    TextSpec_t newSpec = spec;
-   if (fError != 0) {
+   if (fError) {
       std::cout<<"*ERROR<TLatex>: "<<fError<<std::endl;
       std::cout<<"==> "<<text<<std::endl;
    } else {
@@ -2248,7 +2248,7 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
    SetLineWidth(lineW);
    SetLineColor(lineC);
    fTabSize.clear();
-   if (fError != 0) return 0;
+   if (fError) return 0;
    return 1;
 }
 
@@ -2518,13 +2518,13 @@ Double_t TLatex::GetXsize()
       return tm.GetXsize();
    }
 
-   fError = 0 ;
+   fError = nullptr;
    if (CheckLatexSyntax(newText)) {
       std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
       std::cout<<"==> "<<GetTitle()<<std::endl;
       return 0;
    }
-   fError = 0 ;
+   fError = nullptr;
 
    const Char_t *text = newText.Data() ;
    Double_t angle_old = GetTextAngle();
@@ -2550,13 +2550,13 @@ void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
       return;
    }
 
-   fError = 0 ;
+   fError = nullptr;
    if (CheckLatexSyntax(newText)) {
       std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
       std::cout<<"==> "<<GetTitle()<<std::endl;
       return;
    }
-   fError = 0 ;
+   fError = nullptr;
 
    if (angle) {
       Int_t cBoxX[4], cBoxY[4];
@@ -2606,15 +2606,15 @@ Double_t TLatex::GetYsize()
       return tm.GetYsize();
    }
 
-   fError = 0 ;
+   fError = nullptr;
    if (CheckLatexSyntax(newText)) {
       std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
       std::cout<<"==> "<<GetTitle()<<std::endl;
       return 0;
    }
-   fError = 0 ;
+   fError = nullptr;
 
-   const Char_t *text = newText.Data() ;
+   const Char_t *text = newText.Data();
    Double_t angsav = fTextAngle;
    TLatexFormSize fs = FirstParse(0,GetTextSize(),text);
    fTextAngle = angsav;

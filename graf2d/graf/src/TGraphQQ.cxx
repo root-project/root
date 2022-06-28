@@ -118,8 +118,8 @@ TGraphQQ::TGraphQQ(Int_t n, Double_t *x)
    TMath::Sort(n, x, index, kFALSE);
    for (Int_t i=0; i<fNpoints; i++)
       fY[i] = x[index[i]];
-   fF=0;
-   fY0=0;
+   fF = nullptr;
+   fY0 = nullptr;
    delete [] index;
 }
 
@@ -137,7 +137,7 @@ TGraphQQ::TGraphQQ(Int_t n, Double_t *x, TF1 *f)
       fY[i] = x[index[i]];
    delete [] index;
    fF = f;
-   fY0=0;
+   fY0 = nullptr;
    MakeFunctionQuantiles();
 }
 
@@ -152,10 +152,10 @@ TGraphQQ::TGraphQQ(Int_t nx, Double_t *x, Int_t ny, Double_t *y)
    fXq2 = 0.;
    fYq1 = 0.;
    fYq2 = 0.;
-   fF   = 0;
-   fY0  = 0;
+   fF   = nullptr;
+   fY0  = nullptr;
 
-   nx<=ny ? fNpoints=nx : fNpoints=ny;
+   fNpoints = (nx <= ny) ? nx : ny;
 
    if (!CtorAllocate()) return;
 
@@ -168,7 +168,7 @@ TGraphQQ::TGraphQQ(Int_t nx, Double_t *x, Int_t ny, Double_t *y)
       if (nx==ny){
          for (Int_t i=0; i<fNpoints; i++)
             fX[i] = y[index[i]];
-         fY0 = 0;
+         fY0 = nullptr;
          Quartiles();
       } else {
          fNy0 = ny;
@@ -188,7 +188,6 @@ TGraphQQ::TGraphQQ(Int_t nx, Double_t *x, Int_t ny, Double_t *y)
       MakeQuantiles();
    }
 
-
    delete [] index;
 }
 
@@ -200,7 +199,7 @@ TGraphQQ::~TGraphQQ()
    if (fY0)
       delete [] fY0;
    if (fF)
-      fF = 0;
+      fF = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
