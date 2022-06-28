@@ -813,9 +813,12 @@ TGaxis::TGaxis(const TGaxis& ax) :
   fTimeFormat(ax.fTimeFormat),
   fFunctionName(ax.fFunctionName),
   fFunction(ax.fFunction),
-  fAxis(ax.fAxis),
-  fModLabs(ax.fModLabs)
+  fAxis(ax.fAxis)
 {
+   if (ax.IsOwnedModLabs())
+      fModLabs = (TList *) ax.fModLabs->Clone();
+   else
+      fModLabs = ax.fModLabs;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -836,7 +839,6 @@ TGaxis& TGaxis::operator=(const TGaxis& ax)
       fTitleOffset=ax.fTitleOffset;
       fTitleSize=ax.fTitleSize;
       fNdiv=ax.fNdiv;
-      fModLabs=ax.fModLabs;
       fLabelColor=ax.fLabelColor;
       fLabelFont=ax.fLabelFont;
       fChopt=ax.fChopt;
@@ -847,6 +849,7 @@ TGaxis& TGaxis::operator=(const TGaxis& ax)
       fFunction=ax.fFunction;
       fAxis=ax.fAxis;
       fNModLabs=ax.fNModLabs;
+      fModLabs = ax.IsOwnedModLabs() ? (TList *) ax.fModLabs->Clone() : ax.fModLabs;
    }
    return *this;
 }
@@ -856,6 +859,29 @@ TGaxis& TGaxis::operator=(const TGaxis& ax)
 
 TGaxis::~TGaxis()
 {
+   CleanupModLabs();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE when fModLabs owned by TGaxis and should be cleaned up
+
+Bool_t TGaxis::IsOwnedModLabs() const
+{
+   if (!fModLabs) return kFALSE;
+   return !fAxis || (fAxis->GetModifiedLabels() != fModLabs);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Correctly cleanup fModLabs - delete content when owned by TGaxis
+
+void TGaxis::CleanupModLabs()
+{
+   if (IsOwnedModLabs()) {
+      fModLabs->Delete();
+      delete fModLabs;
+   }
+   fModLabs = nullptr;
+   fNModLabs = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -925,6 +951,8 @@ Int_t TGaxis::GetMaxDigits()
 
 void TGaxis::ImportAxisAttributes(TAxis *axis)
 {
+   // cleanup previously configured custom labels
+   CleanupModLabs();
 
    fAxis = axis;
    SetLineColor(axis->GetAxisColor());
@@ -2604,19 +2632,23 @@ void TGaxis::SetFunction(const char *funcname)
 ///  - If labText is not specified or is an empty string, the text label is not changed.
 
 void TGaxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
-                                Int_t labAlign, Int_t labColor, Int_t labFont,
-                                TString labText)
+                         Int_t labAlign, Int_t labColor, Int_t labFont,
+                         TString labText)
 {
-   fNModLabs++;
-   if (!fModLabs) fModLabs = new TList();
+   // special situation when mod labs taken from axis - one have to reset pointer
+   if (fModLabs && !IsOwnedModLabs()) {
+      fModLabs = nullptr;
+      fNModLabs = 0;
+   }
 
    // Reset the list of modified labels.
    if (labNum == 0) {
-      delete fModLabs;
-      fModLabs  = nullptr;
-      fNModLabs = 0;
+      CleanupModLabs();
       return;
    }
+
+   fNModLabs++;
+   if (!fModLabs) fModLabs = new TList();
 
    TAxisModLab *ml = new TAxisModLab();
    ml->SetLabNum(labNum);
@@ -2627,7 +2659,7 @@ void TGaxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
    ml->SetFont(labFont);
    ml->SetText(labText);
 
-   fModLabs->Add((TObject*)ml);
+   fModLabs->Add(ml);
 }
 
 static Double_t SavedTextAngle; ///< Global variable saving the current label's text angle. Used by TGaxis::ChangeLabelAttributes.

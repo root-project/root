@@ -54,6 +54,9 @@ protected:
    TGaxis(const TGaxis&);
    TGaxis& operator=(const TGaxis&);
 
+   Bool_t IsOwnedModLabs() const;
+   void CleanupModLabs();
+
 public:
 
    TGaxis();
