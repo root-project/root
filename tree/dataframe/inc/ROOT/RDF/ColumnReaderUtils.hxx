@@ -42,22 +42,11 @@ namespace RDFDetail = ROOT::Detail::RDF;
 
 template <typename T>
 std::shared_ptr<RDFDetail::RColumnReaderBase>
-MakeColumnReader(unsigned int slot, RDefineBase *define, RLoopManager &lm, TTreeReader *r, const std::string &colName,
-                 RVariationBase *variation, const std::string &variationName)
+MakeColumnReader(unsigned int slot, std::shared_ptr<RColumnReaderBase> defineOrVariationReader, RLoopManager &lm,
+                 TTreeReader *r, const std::string &colName)
 {
-   using Ret_t = std::shared_ptr<RDFDetail::RColumnReaderBase>;
-
-   // variations have precedence over everything else: if this is not null, it means we are in the
-   // universe where this variation applies.
-   if (variation != nullptr)
-      return Ret_t{new RVariationReader(slot, colName, variationName, *variation, typeid(T))};
-
-   // defines come second, so that Redefine'd columns have precedence over dataset columns
-   if (define != nullptr) {
-      if (variationName != "nominal" && IsStrInVec(variationName, define->GetVariations()))
-         define = &define->GetVariedDefine(variationName);
-      return Ret_t{new RDefineReader(slot, *define, typeid(T))};
-   }
+   if (defineOrVariationReader != nullptr)
+      return defineOrVariationReader;
 
    // Check if we already inserted a reader for this column in the dataset column readers (RDataSource or Tree/TChain
    // readers)
@@ -78,7 +67,7 @@ MakeColumnReader(unsigned int slot, RDefineBase *define, RLoopManager &lm, TTree
 /// incorrectly from a compiled MakeColumnReaders symbols when invoked from a jitted symbol.
 struct RColumnReadersInfo {
    const std::vector<std::string> &fColNames;
-   const RColumnRegister &fColRegister;
+   RColumnRegister &fColRegister;
    const bool *fIsDefine;
    RLoopManager &fLoopManager;
 };
@@ -86,35 +75,24 @@ struct RColumnReadersInfo {
 /// Create a group of column readers, one per type in the parameter pack.
 template <typename... ColTypes>
 std::array<std::shared_ptr<RDFDetail::RColumnReaderBase>, sizeof...(ColTypes)>
-MakeColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, const RColumnReadersInfo &colInfo,
+MakeColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, RColumnReadersInfo &colInfo,
                   const std::string &variationName = "nominal")
 {
    // see RColumnReadersInfo for why we pass these arguments like this rather than directly as function arguments
    const auto &colNames = colInfo.fColNames;
    auto &lm = colInfo.fLoopManager;
-   const auto &colRegister = colInfo.fColRegister;
-
-   // the i-th element indicates whether variation variationName provides alternative values for the i-th column
-   std::array<bool, sizeof...(ColTypes)> doesVariationApply;
-   if (variationName == "nominal")
-      doesVariationApply.fill(false);
-   else {
-      for (auto i = 0u; i < sizeof...(ColTypes); ++i)
-         doesVariationApply[i] = IsStrInVec(variationName, colRegister.GetVariationsFor(colNames[i]));
-   }
+   auto &colRegister = colInfo.fColRegister;
 
    int i = -1;
-   std::array<std::shared_ptr<RDFDetail::RColumnReaderBase>, sizeof...(ColTypes)> ret{
-      {{(++i, MakeColumnReader<ColTypes>(slot, colRegister.GetDefine(colNames[i]), lm, r, colNames[i],
-                                         doesVariationApply[i] ? &colRegister.FindVariation(colNames[i], variationName)
-                                                               : nullptr,
-                                         variationName))}...}};
+   std::array<std::shared_ptr<RDFDetail::RColumnReaderBase>, sizeof...(ColTypes)> ret{{{(
+      ++i, MakeColumnReader<ColTypes>(slot, colRegister.GetReader(slot, colNames[i], variationName, typeid(ColTypes)),
+                                      lm, r, colNames[i]))}...}};
    return ret;
 }
 
 // Shortcut overload for the case of no columns
 inline std::array<std::shared_ptr<RDFDetail::RColumnReaderBase>, 0>
-MakeColumnReaders(unsigned int, TTreeReader *, TypeList<>, const RColumnReadersInfo &, const std::string & = "nominal")
+MakeColumnReaders(unsigned int, TTreeReader *, TypeList<>, RColumnReadersInfo &, const std::string & = "nominal")
 {
    return {};
 }
