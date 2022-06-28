@@ -65,7 +65,7 @@ Int_t TPieSlice::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// return the value of the offset in radial direction for this slice.
 
-Double_t TPieSlice::GetRadiusOffset()
+Double_t TPieSlice::GetRadiusOffset() const
 {
    return fRadiusOffset;
 }
@@ -73,7 +73,7 @@ Double_t TPieSlice::GetRadiusOffset()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the value of this slice.
 
-Double_t TPieSlice::GetValue()
+Double_t TPieSlice::GetValue() const
 {
    return fValue;
 }
@@ -108,3 +108,19 @@ void TPieSlice::SetValue(Double_t val)
 
    fPie->MakeSlices(kTRUE);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy TPieSlice
+
+void TPieSlice::Copy(TObject &obj) const
+{
+   auto &slice = (TPieSlice&)obj;
+
+   TNamed::Copy(slice);
+   TAttLine::Copy(slice);
+   TAttFill::Copy(slice);
+
+   slice.SetValue(GetValue());
+   slice.SetRadiusOffset(GetRadiusOffset());
+}
+
