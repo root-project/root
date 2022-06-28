@@ -9,6 +9,7 @@
 #include "ROOT/RDF/RColumnRegister.hxx"
 #include "ROOT/RDF/RDefineBase.hxx"
 #include "ROOT/RDF/RVariationBase.hxx"
+#include "ROOT/RDF/RVariationsDescription.hxx"
 #include "ROOT/RDF/Utils.hxx" // IsStrInVec
 
 #include <cassert>
@@ -141,6 +142,16 @@ RVariationBase &RColumnRegister::FindVariation(const std::string &colName, const
       ++it;
    assert(it != fVariations->end() && "Could not find the variation you asked for. This should never happen.");
    return *it->second;
+}
+
+ROOT::RDF::RVariationsDescription RColumnRegister::GetVariationsDescription() const
+{
+   std::set<const RVariationBase *> uniqueVariations;
+   for (auto &e : *fVariations)
+      uniqueVariations.insert(e.second.get());
+
+   const std::vector<const RVariationBase *> variations(uniqueVariations.begin(), uniqueVariations.end());
+   return ROOT::RDF::RVariationsDescription{variations};
 }
 
 ////////////////////////////////////////////////////////////////////////////

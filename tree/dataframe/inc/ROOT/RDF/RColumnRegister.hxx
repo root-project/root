@@ -20,6 +20,9 @@
 #include <vector>
 
 namespace ROOT {
+namespace RDF {
+class RVariationsDescription;
+}
 namespace Detail {
 namespace RDF {
 class RDefineBase;
@@ -81,9 +84,6 @@ public:
 
    ColumnNames_t GetDefineNames() const;
 
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return the multimap of systematic variations, see fVariations.
-   const VariationsMap_t &GetVariations() const { return *fVariations; }
    RDFDetail::RDefineBase *GetDefine(const std::string &colName) const;
 
    bool IsDefineOrAlias(std::string_view name) const;
@@ -103,6 +103,8 @@ public:
    std::vector<std::string> GetVariationDeps(const std::string &column) const;
 
    std::vector<std::string> GetVariationDeps(const ColumnNames_t &columns) const;
+
+   ROOT::RDF::RVariationsDescription GetVariationsDescription() const;
 
    RVariationBase &FindVariation(const std::string &colName, const std::string &variationName) const;
 };
