@@ -158,7 +158,7 @@ class R__CLING_PTRCHECK(off) RVariation final : public RVariationBase {
    std::vector<Result_t> fLastResults;
 
    /// Column readers per slot and per input column
-   std::vector<std::array<std::shared_ptr<RColumnReaderBase>, ColumnTypes_t::list_size>> fValues;
+   std::vector<std::array<RColumnReaderBase *, ColumnTypes_t::list_size>> fValues;
 
    template <typename... ColTypes, std::size_t... S>
    void UpdateHelper(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>)
@@ -230,11 +230,7 @@ public:
    const std::type_info &GetTypeId() const { return typeid(VariedCol_t); }
 
    /// Clean-up operations to be performed at the end of a task.
-   void FinalizeSlot(unsigned int slot) final
-   {
-      for (auto &v : fValues[slot])
-         v.reset();
-   }
+   void FinalizeSlot(unsigned int slot) final { fValues[slot].fill(nullptr); }
 };
 
 } // namespace RDF

@@ -142,7 +142,7 @@ class RLoopManager : public RNodeBase {
    unsigned int fNRuns{0}; ///< Number of event loops run
 
    /// Readers for TTree/RDataSource columns (one per slot), shared by all nodes in the computation graph.
-   std::vector<std::unordered_map<std::string, std::shared_ptr<RColumnReaderBase>>> fDatasetColumnReaders;
+   std::vector<std::unordered_map<std::string, std::unique_ptr<RColumnReaderBase>>> fDatasetColumnReaders;
 
    /// Cache of the tree/chain branch names. Never access directy, always use GetBranchNames().
    ColumnNames_t fValidBranchNames;
@@ -206,11 +206,9 @@ public:
    bool HasDataSourceColumnReaders(const std::string &col, const std::type_info &ti) const;
    void AddDataSourceColumnReaders(const std::string &col, std::vector<std::unique_ptr<RColumnReaderBase>> &&readers,
                                    const std::type_info &ti);
-   std::shared_ptr<RColumnReaderBase> AddTreeColumnReader(unsigned int slot, const std::string &col,
-                                                          std::unique_ptr<RColumnReaderBase> &&reader,
-                                                          const std::type_info &ti);
-   std::shared_ptr<RColumnReaderBase>
-   GetDatasetColumnReader(unsigned int slot, const std::string &col, const std::type_info &ti) const;
+   RColumnReaderBase *AddTreeColumnReader(unsigned int slot, const std::string &col,
+                                          std::unique_ptr<RColumnReaderBase> &&reader, const std::type_info &ti);
+   RColumnReaderBase *GetDatasetColumnReader(unsigned int slot, const std::string &col, const std::type_info &ti) const;
 
    /// End of recursive chain of calls, does nothing
    void AddFilterName(std::vector<std::string> &) {}
