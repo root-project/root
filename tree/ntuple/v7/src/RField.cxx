@@ -945,6 +945,12 @@ ROOT::Experimental::RRecordField::RRecordField(std::string_view fieldName,
    fSize += GetItemPadding(fSize, fMaxAlignment);
 }
 
+ROOT::Experimental::RRecordField::RRecordField(std::string_view fieldName,
+                                               std::vector<std::unique_ptr<Detail::RFieldBase>> &itemFields)
+   : ROOT::Experimental::RRecordField(fieldName, std::move(itemFields))
+{
+}
+
 std::size_t ROOT::Experimental::RRecordField::GetItemPadding(std::size_t baseOffset, std::size_t itemAlignment) const
 {
    if (itemAlignment > 1) {
