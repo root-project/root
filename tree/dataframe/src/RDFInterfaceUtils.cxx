@@ -930,7 +930,7 @@ std::vector<std::string> GetValidatedArgTypes(const ColumnNames_t &colNames, con
                                               bool vector2rvec)
 {
    auto toCheckedArgType = [&](const std::string &c) {
-      RDFDetail::RDefineBase *define = colRegister.IsDefineOrAlias(c) ? colRegister.GetDefines().at(c).get() : nullptr;
+      RDFDetail::RDefineBase *define = colRegister.GetDefine(c);
       const auto colType = ColumnName2ColumnTypeName(c, tree, ds, define, vector2rvec);
       if (colType.rfind("CLING_UNKNOWN_TYPE", 0) == 0) { // the interpreter does not know this type
          const auto msg =
