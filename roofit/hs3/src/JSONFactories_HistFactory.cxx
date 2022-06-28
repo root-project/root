@@ -84,9 +84,10 @@ std::vector<std::string> getVarnames(const RooHistFunc *hf)
 
 std::unique_ptr<TH1> histFunc2TH1(const RooHistFunc *hf)
 {
-   if(!hf) RooJSONFactoryWSTool::error("null pointer passed to histFunc2TH1");
+   if (!hf)
+      RooJSONFactoryWSTool::error("null pointer passed to histFunc2TH1");
    const RooDataHist &dh = hf->dataHist();
-   RooArgSet* vars = hf->getVariables();
+   RooArgSet *vars = hf->getVariables();
    auto varnames = RooJSONFactoryWSTool::names(vars);
    std::unique_ptr<TH1> hist{hf->createHistogram(RooJSONFactoryWSTool::concat(vars).c_str())};
    hist->SetDirectory(nullptr);
@@ -720,16 +721,16 @@ public:
          std::unique_ptr<TH1> hist;
          std::vector<ParamHistFunc *> phfs;
          PiecewiseInterpolation *pip = nullptr;
-	 std::vector<const RooAbsArg*> norms;
- 
+         std::vector<const RooAbsArg *> norms;
+
          RooStats::HistFactory::FlexibleInterpVar *fip = nullptr;
          for (const auto &e : elems) {
             if (e->InheritsFrom(RooConstVar::Class())) {
                if (((RooConstVar *)e)->getVal() == 1.)
                   continue;
-	       norms.push_back(e);
+               norms.push_back(e);
             } else if (e->InheritsFrom(RooRealVar::Class())) {
-	       norms.push_back(e);
+               norms.push_back(e);
             } else if (e->InheritsFrom(RooHistFunc::Class())) {
                const RooHistFunc *hf = static_cast<const RooHistFunc *>(e);
                if (varnames.empty()) {
@@ -747,32 +748,32 @@ public:
             }
          }
          if (pip) {
-            if (!hist && pip->nominalHist()->InheritsFrom(RooHistFunc::Class())){
-	      hist = histFunc2TH1(static_cast<const RooHistFunc *>(pip->nominalHist()));
+            if (!hist && pip->nominalHist()->InheritsFrom(RooHistFunc::Class())) {
+               hist = histFunc2TH1(static_cast<const RooHistFunc *>(pip->nominalHist()));
             }
-            if (varnames.empty() && pip->nominalHist()->InheritsFrom(RooHistFunc::Class())){
-	      varnames = getVarnames(dynamic_cast<const RooHistFunc *>(pip->nominalHist()));
+            if (varnames.empty() && pip->nominalHist()->InheritsFrom(RooHistFunc::Class())) {
+               varnames = getVarnames(dynamic_cast<const RooHistFunc *>(pip->nominalHist()));
             }
          }
          if (!hist) {
             return false;
          }
 
-	 elem["name"] << chname;
-	 elem["type"] << key();
- 
-	 auto &samples = elem["samples"];
-	 samples.set_map();
+         elem["name"] << chname;
+         elem["type"] << key();
+
+         auto &samples = elem["samples"];
+         samples.set_map();
          auto &s = samples[samplename];
          s.set_map();
-         s["type"] << "hist-sample";	 
+         s["type"] << "hist-sample";
 
-	 for(const auto& norm:norms){
-	   auto &nfs = s["normFactors"];
-	   nfs.set_seq();
-	   nfs.append_child() << norm->GetName();
-	 }
-	 
+         for (const auto &norm : norms) {
+            auto &nfs = s["normFactors"];
+            nfs.set_seq();
+            nfs.append_child() << norm->GetName();
+         }
+
          if (pip) {
             auto &systs = s["histogramSystematics"];
             systs.set_map();
@@ -784,18 +785,18 @@ public:
                auto &sys = systs[sysname];
                sys.set_map();
                auto &dataLow = sys["dataLow"];
-	       if(pip->lowList().at(i)->InheritsFrom(RooHistFunc::Class())){
-		 auto histLow = histFunc2TH1(static_cast<RooHistFunc *>(pip->lowList().at(i)));
-		 RooJSONFactoryWSTool::exportHistogram(*histLow, dataLow, varnames, 0, false, false);
-	       }
-	       auto &dataHigh = sys["dataHigh"];
-	       if(pip->highList().at(i)->InheritsFrom(RooHistFunc::Class())){	       
-		 auto histHigh = histFunc2TH1(static_cast<RooHistFunc *>(pip->highList().at(i)));
-		 RooJSONFactoryWSTool::exportHistogram(*histHigh, dataHigh, varnames, 0, false, false);
-	       }
+               if (pip->lowList().at(i)->InheritsFrom(RooHistFunc::Class())) {
+                  auto histLow = histFunc2TH1(static_cast<RooHistFunc *>(pip->lowList().at(i)));
+                  RooJSONFactoryWSTool::exportHistogram(*histLow, dataLow, varnames, 0, false, false);
+               }
+               auto &dataHigh = sys["dataHigh"];
+               if (pip->highList().at(i)->InheritsFrom(RooHistFunc::Class())) {
+                  auto histHigh = histFunc2TH1(static_cast<RooHistFunc *>(pip->highList().at(i)));
+                  RooJSONFactoryWSTool::exportHistogram(*histHigh, dataHigh, varnames, 0, false, false);
+               }
             }
          }
-	 
+
          if (fip) {
             auto &systs = s["overallSystematics"];
             systs.set_map();
