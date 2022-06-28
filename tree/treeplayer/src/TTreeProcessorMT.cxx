@@ -134,7 +134,8 @@ static ClustersAndEntries MakeClusters(const std::vector<std::string> &treeNames
    std::vector<Long64_t> entriesPerFile;
    entriesPerFile.reserve(nFileNames);
    Long64_t offset = 0ll;
-   for (auto i = 0u; i < nFileNames; ++i) {
+   bool lastReached = true; // flag to break the outer loop
+   for (auto i = 0u; i < nFileNames && lastReached; ++i) {
       const auto &fileName = fileNames[i];
       const auto &treeName = treeNames[i];
 
@@ -160,7 +161,7 @@ static ClustersAndEntries MakeClusters(const std::vector<std::string> &treeNames
       const Long64_t entries = t->GetEntries();
       // Iterate over the clusters in the current file
       std::vector<EntryCluster> entryRanges;
-      while ((start = clusterIter()) < entries) {
+      while ((start = clusterIter()) < entries && lastReached) {
          end = clusterIter.GetNextEntry();
          // Currently, if a user specified a range, the clusters will be only globally obtained
          // Assume that there are 3 files with entries: [0, 100], [0, 150], [0, 200] (in this order)
@@ -169,7 +170,7 @@ static ClustersAndEntries MakeClusters(const std::vector<std::string> &treeNames
          // Then, in the first iteration, nothing is going to be added to entryRanges since:
          // std::max(0, 150) < std::min(100, max). Then, by the same logic only a subset of the second
          // tree is added, i.e.: currentStart is now 200 and currentEnd is 250 (locally from 100 to 150).
-         // Lsatly, the last tree would take entries from 250 to 300 (or from 0 to 50 locally).
+         // Lastly, the last tree would take entries from 250 to 300 (or from 0 to 50 locally).
          // The current file's offset to start and end is added to make them (chain) global
          const auto currentStart = std::max(start + offset, entry.start);
          const auto currentEnd = std::min(end + offset, entry.end);
@@ -178,7 +179,7 @@ static ClustersAndEntries MakeClusters(const std::vector<std::string> &treeNames
          if (currentStart < currentEnd)
             entryRanges.emplace_back(EntryCluster{currentStart, currentEnd});
          if (currentEnd == entry.end) // if the desired end is reached, stop reading further
-            break;
+            lastReached = false;
       }
       offset += entries; // consistently keep track of the total number of entries
       clustersPerFile.emplace_back(std::move(entryRanges));
@@ -581,8 +582,15 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
       fPool.Foreach(processCluster, clusters);
    };
 
-   std::vector<std::size_t> fileIdxs(fFileNames.size());
-   std::iota(fileIdxs.begin(), fileIdxs.end(), 0u);
+   auto firstNonEmpty = 0; // start from the first available entry
+   for (auto i = 0u; i < allClusters.size(); ++i) {
+      if (allClusters[i].empty()) {
+         firstNonEmpty = i;
+         break;
+      }
+   }
+   std::vector<std::size_t> fileIdxs(allEntries.empty() ? fFileNames.size() : allEntries.size() - firstNonEmpty);
+   std::iota(fileIdxs.begin(), fileIdxs.end(), firstNonEmpty);
 
    if (shouldRetrieveAllClusters)
       fPool.Foreach(processFileUsingGlobalClusters, fileIdxs);

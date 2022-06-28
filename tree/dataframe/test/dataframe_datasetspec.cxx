@@ -110,9 +110,9 @@ TEST_P(RDatasetSpecTest, SimpleChainsCreation)
 // test all range cases for the 3 constructors
 TEST_P(RDatasetSpecTest, Ranges)
 {
-   std::vector<std::pair<Long64_t, Long64_t>> ranges = {{1, 4}, {3, 5},   {0, 100}, {1, 100}, {2, 2},
+   std::vector<std::pair<Long64_t, Long64_t>> ranges = {{1, 4}, {2, 4},   {0, 100}, {1, 100}, {2, 2},
                                                         {7, 7}, {5, 100}, {6, 100}, {42, 100}};
-   std::vector<std::vector<ULong64_t>> expectedRess = {{101, 102, 103},      {103, 104}, {100, 101, 102, 103, 104},
+   std::vector<std::vector<ULong64_t>> expectedRess = {{101, 102, 103},      {102, 103}, {100, 101, 102, 103, 104},
                                                        {101, 102, 103, 104}, {},         {}};
    std::vector<std::vector<RDatasetSpec>> specs;
    // all entries across a column of specs should be the same, where each column tests all constructors
@@ -133,6 +133,7 @@ TEST_P(RDatasetSpecTest, Ranges)
          if (i < 6u) {
             auto res = *(takeRes);
             std::sort(res.begin(), res.end());
+            // std::cout << (res.empty() ? std::string(" ") : std::to_string(res[0])) << std::endl;
             EXPECT_VEC_EQ(res, expectedRess[i]);
          } else {
             EXPECT_THROW(
@@ -189,9 +190,9 @@ TEST_P(RDatasetSpecTest, Ranges)
 TEST_P(RDatasetSpecTest, Friends)
 {
    std::vector<std::pair<Long64_t, Long64_t>> ranges = {
-      {0, std::numeric_limits<Long64_t>::max()}, {1, 4}, {3, 5}, {0, 100}, {1, 100}, {2, 2}, {7, 7}};
+      {0, std::numeric_limits<Long64_t>::max()}, {1, 4}, {2, 4}, {0, 100}, {1, 100}, {2, 2}, {7, 7}};
    std::vector<std::vector<ULong64_t>> expectedRess = {
-      {100, 101, 102, 103, 104}, {101, 102, 103}, {103, 104}, {100, 101, 102, 103, 104}, {101, 102, 103, 104}, {}, {}};
+      {100, 101, 102, 103, 104}, {101, 102, 103}, {102, 103}, {100, 101, 102, 103, 104}, {101, 102, 103, 104}, {}, {}};
    std::vector<std::vector<RDatasetSpec>> specs;
    // all entries across a column of specs should be the same, where each column tests all constructors
    for (const auto &r : ranges) {
