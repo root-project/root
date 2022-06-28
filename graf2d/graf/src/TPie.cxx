@@ -200,7 +200,7 @@ Int_t TPie::DistancetoSlice(Int_t px, Int_t py)
    Double_t radX  = fRadius;
    Double_t radY  = fRadius;
    Double_t radXY = 1.;
-   if (fIs3D==kTRUE) {
+   if (fIs3D) {
       radXY = TMath::Sin(fAngle3D/180.*TMath::Pi());
       radY  = radXY*radX;
    }
@@ -305,7 +305,7 @@ void TPie::DrawGhost()
       radXY = TMath::Sin(fAngle3D/180.*TMath::Pi());
    }
 
-   for (Int_t i=0;i<fNvals&&fIs3D==kTRUE;++i) {
+   for (Int_t i = 0; i < fNvals && fIs3D;++i) {
       Float_t minphi = (fSlices[i*2]+gAngularOffset+.5)*TMath::Pi()/180.;
       Float_t avgphi = (fSlices[i*2+1]+gAngularOffset)*TMath::Pi()/180.;
       Float_t maxphi = (fSlices[i*2+2]+gAngularOffset-.5)*TMath::Pi()/180.;
@@ -428,7 +428,7 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    // XY metric
    Double_t radXY = 1.;
-   if (fIs3D==kTRUE) {
+   if (fIs3D) {
       radXY = TMath::Sin(fAngle3D/180.*TMath::Pi());
    }
 
@@ -593,7 +593,7 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          if (isResizing)    isResizing    = kFALSE;
          if (isRotating)    {
             isRotating = kFALSE;
-            // this is important mainly when OpaqueMoving==kTRUE
+            // this is important mainly when OpaqueMoving == kTRUE
             gCurrent_ang += gAngularOffset/180.*TMath::Pi();
          }
 
@@ -805,19 +805,19 @@ void TPie::Paint(Option_t *option)
 
    TString soption(option);
 
-   bool optionSame(kFALSE);
+   Bool_t optionSame = kFALSE;
 
    // if true the lines around the slices are drawn, if false not
-   Bool_t optionLine(kTRUE);
+   Bool_t optionLine = kTRUE;
 
    // if true the labels' colors are the same as the slices' colors
-   Bool_t optionSameColor(kFALSE);
+   Bool_t optionSameColor = kFALSE;
 
    // For the label orientation there are 3 possibilities:
    //   0: horizontal
    //   1: radial
    //   2: tangent
-   Int_t lblor(0);
+   Int_t lblor = 0;
 
    // Parse the options
    Int_t idx;
@@ -883,9 +883,9 @@ void TPie::Paint(Option_t *option)
    if (!gPad) return;
 
    // Objects useful to draw labels and slices
-   TLatex *textlabel = new TLatex();
-   TArc *arc = new TArc();
-   TLine *line = new TLine();
+   TLatex textlabel;
+   TArc arc;
+   TLine line;
 
    // XY metric
    Double_t radX  = fRadius;
@@ -899,22 +899,22 @@ void TPie::Paint(Option_t *option)
 
    // Draw the slices.
    Int_t pixelHeight = gPad->YtoPixel(0)-gPad->YtoPixel(fHeight);
-   for (Int_t pi=0;pi<pixelHeight&&fIs3D==kTRUE; ++pi) { // loop for pseudo-3d effect
+   for (Int_t pi = 0; pi < pixelHeight && fIs3D; ++pi) { // loop for pseudo-3d effect
       for (Int_t i=0;i<fNvals;++i) {
          // draw the arc
          // set the color of the next slice
          if (pi>0) {
-            arc->SetFillStyle(0);
-            arc->SetLineColor(TColor::GetColorDark((fPieSlices[i]->GetFillColor())));
+            arc.SetFillStyle(0);
+            arc.SetLineColor(TColor::GetColorDark((fPieSlices[i]->GetFillColor())));
          } else {
-            arc->SetFillStyle(0);
-            if (optionLine==kTRUE) {
-               arc->SetLineColor(fPieSlices[i]->GetLineColor());
-               arc->SetLineStyle(fPieSlices[i]->GetLineStyle());
-               arc->SetLineWidth(fPieSlices[i]->GetLineWidth());
+            arc.SetFillStyle(0);
+            if (optionLine) {
+               arc.SetLineColor(fPieSlices[i]->GetLineColor());
+               arc.SetLineStyle(fPieSlices[i]->GetLineStyle());
+               arc.SetLineWidth(fPieSlices[i]->GetLineWidth());
             } else {
-               arc->SetLineWidth(1);
-               arc->SetLineColor(TColor::GetColorDark((fPieSlices[i]->GetFillColor())));
+               arc.SetLineWidth(1);
+               arc.SetLineColor(TColor::GetColorDark((fPieSlices[i]->GetFillColor())));
             }
          }
          // Paint the slice
@@ -923,38 +923,38 @@ void TPie::Paint(Option_t *option)
          Double_t ax = fX+TMath::Cos(aphi)*fPieSlices[i]->GetRadiusOffset();
          Double_t ay = fY+TMath::Sin(aphi)*fPieSlices[i]->GetRadiusOffset()*radXY+gPad->PixeltoY(pixelHeight-pi);
 
-         arc->PaintEllipse(ax, ay, radX, radY, fSlices[2*i],
+         arc.PaintEllipse(ax, ay, radX, radY, fSlices[2*i],
                                                fSlices[2*i+2], 0.);
 
-         if (optionLine==kTRUE) {
-            line->SetLineColor(fPieSlices[i]->GetLineColor());
-            line->SetLineStyle(fPieSlices[i]->GetLineStyle());
-            line->SetLineWidth(fPieSlices[i]->GetLineWidth());
-            line->PaintLine(ax,ay,ax,ay);
+         if (optionLine) {
+            line.SetLineColor(fPieSlices[i]->GetLineColor());
+            line.SetLineStyle(fPieSlices[i]->GetLineStyle());
+            line.SetLineWidth(fPieSlices[i]->GetLineWidth());
+            line.PaintLine(ax,ay,ax,ay);
 
             Double_t x0, y0;
             x0 = ax+radX*TMath::Cos(fSlices[2*i]/180.*TMath::Pi());
             y0 = ay+radY*TMath::Sin(fSlices[2*i]/180.*TMath::Pi());
-            line->PaintLine(x0,y0,x0,y0);
+            line.PaintLine(x0,y0,x0,y0);
 
             x0 = ax+radX*TMath::Cos(fSlices[2*i+2]/180.*TMath::Pi());
             y0 = ay+radY*TMath::Sin(fSlices[2*i+2]/180.*TMath::Pi());
-            line->PaintLine(x0,y0,x0,y0);
+            line.PaintLine(x0,y0,x0,y0);
          }
       }
    } // end loop for pseudo-3d effect
 
    for (Int_t i=0;i<fNvals;++i) { // loop for the piechart
       // Set the color of the next slice
-      arc->SetFillColor(fPieSlices[i]->GetFillColor());
-      arc->SetFillStyle(fPieSlices[i]->GetFillStyle());
-      if (optionLine==kTRUE) {
-         arc->SetLineColor(fPieSlices[i]->GetLineColor());
-         arc->SetLineStyle(fPieSlices[i]->GetLineStyle());
-         arc->SetLineWidth(fPieSlices[i]->GetLineWidth());
+      arc.SetFillColor(fPieSlices[i]->GetFillColor());
+      arc.SetFillStyle(fPieSlices[i]->GetFillStyle());
+      if (optionLine) {
+         arc.SetLineColor(fPieSlices[i]->GetLineColor());
+         arc.SetLineStyle(fPieSlices[i]->GetLineStyle());
+         arc.SetLineWidth(fPieSlices[i]->GetLineWidth());
       } else {
-         arc->SetLineWidth(1);
-         arc->SetLineColor(fPieSlices[i]->GetFillColor());
+         arc.SetLineWidth(1);
+         arc.SetLineColor(fPieSlices[i]->GetFillColor());
       }
 
       // Paint the slice
@@ -962,16 +962,16 @@ void TPie::Paint(Option_t *option)
 
       Double_t ax = fX+TMath::Cos(aphi)*fPieSlices[i]->GetRadiusOffset();
       Double_t ay = fY+TMath::Sin(aphi)*fPieSlices[i]->GetRadiusOffset()*radXY;
-      arc->PaintEllipse(ax, ay, radX, radY, fSlices[2*i],
+      arc.PaintEllipse(ax, ay, radX, radY, fSlices[2*i],
                                             fSlices[2*i+2], 0.);
 
    } // end loop to draw the slices
 
 
    // Set the font
-   textlabel->SetTextFont(GetTextFont());
-   textlabel->SetTextSize(GetTextSize());
-   textlabel->SetTextColor(GetTextColor());
+   textlabel.SetTextFont(GetTextFont());
+   textlabel.SetTextSize(GetTextSize());
+   textlabel.SetTextColor(GetTextColor());
 
    // Loop to place the labels.
    for (Int_t i=0;i<fNvals;++i) {
@@ -989,9 +989,9 @@ void TPie::Paint(Option_t *option)
       tmptxt.ReplaceAll("%frac",Form(fFractionFormat.Data(),fPieSlices[i]->GetValue()/fSum));
       tmptxt.ReplaceAll("%perc",Form(Form("%s %s",fPercentFormat.Data(),"%s"),(fPieSlices[i]->GetValue()/fSum)*100,"%"));
 
-      textlabel->SetTitle(tmptxt.Data());
-      Double_t h = textlabel->GetYsize();
-      Double_t w = textlabel->GetXsize();
+      textlabel.SetTitle(tmptxt.Data());
+      Double_t h = textlabel.GetYsize();
+      Double_t w = textlabel.GetXsize();
 
       Float_t lx = fX+(fRadius+fPieSlices[i]->GetRadiusOffset()+label_off)*TMath::Cos(aphi);
       Float_t ly = fY+(fRadius+fPieSlices[i]->GetRadiusOffset()+label_off)*TMath::Sin(aphi)*radXY;
@@ -1037,22 +1037,17 @@ void TPie::Paint(Option_t *option)
       if (rphi < 0 && fIs3D && label_off>=0.)
          ly -= fHeight;
 
-      if (optionSameColor) textlabel->SetTextColor((fPieSlices[i]->GetFillColor()));
-      textlabel->PaintLatex(lx,ly,
-                            lblang*180/TMath::Pi()+GetTextAngle(),
-                            GetTextSize(), tmptxt.Data());
+      if (optionSameColor) textlabel.SetTextColor((fPieSlices[i]->GetFillColor()));
+      textlabel.PaintLatex(lx,ly,
+                           lblang*180/TMath::Pi()+GetTextAngle(),
+                           GetTextSize(), tmptxt.Data());
    }
-
-   delete arc;
-   delete line;
-   delete textlabel;
 
    if (optionSame) return;
 
    // Draw title
-   TPaveText *title = 0;
-   TObject *obj;
-   if ((obj = gPad->GetListOfPrimitives()->FindObject("title"))) {
+   TPaveText *title = nullptr;
+   if (auto obj = gPad->GetListOfPrimitives()->FindObject("title")) {
       title = dynamic_cast<TPaveText*>(obj);
    }
 
