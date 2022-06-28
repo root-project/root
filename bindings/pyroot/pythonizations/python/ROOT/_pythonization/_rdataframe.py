@@ -417,3 +417,175 @@ def pythonize_rdataframe(klass):
                                       HistoProfileWrapper,
                                       model_class)
         setattr(klass, method_name, getter)
+
+
+from . import pythonization
+from .._numbadeclare import _NumbaDeclareDecorator
+import re
+import warnings
+import numpy as np
+
+# Pythonizer 
+# def pythonize_define():
+    # @pythonization('RDataFrame', ns = 'ROOT')
+    # def pythonizer_rdf(klass):
+    #     klass._OriginalDefine =  klass.Define
+    #     klass.Define = _PyDefine
+
+
+@pythonization("RInterface<", ns="ROOT::RDF", is_prefix=True)
+def pythonize_rdataframeDefine(klass):
+    klass._OriginalDefine =  klass.Define
+    klass.PyDefine = _PyDefine
+
+# def pythonize_filter():
+    # @pythonization('RDataFrame', ns = 'ROOT')
+    # def pythonizer_rdf(klass):
+    #     klass._OriginalFilter =  klass.Filter
+    #     klass.Filter = _PyFilter
+
+@pythonization("RInterface<", ns="ROOT::RDF", is_prefix=True)
+def pythonize_rdataframeFilter(klass):
+    klass._OriginalFilter =  klass.Filter
+    klass.Filter = _PyFilter
+
+
+def _PyFilter(rdf, func, funcargs = {}, filter_name = ""):
+    if isinstance(func, str):
+        return rdf._OriginalFilter(func)
+    jitter = FunctionJitter(rdf)
+    func.__annotations__['return'] = 'bool' # return type for Filters is bool #Note. You can keep double and Filter still works.
+    func_call = jitter.jit_function(func, funcargs)
+    func_call = "Numba::"+func_call
+    return rdf._OriginalFilter(func_call, filter_name)
+    
+def _PyDefine(rdf, col_name, func, funcargs = {}):
+    if isinstance(func, str):
+        return rdf._OriginalDefine(col_name, func)
+    jitter = FunctionJitter(rdf)
+    func_call = jitter.jit_function(func, funcargs)
+    func_call = "Numba::"+func_call
+    return rdf._OriginalDefine(col_name, func_call)
+
+class FunctionJitter():
+    """
+    Class to jit a function. 
+    """
+    function_cache = {} # Variable to store previous functions so as to not rejit.
+    def __init__(self, rdf) -> None:
+        self.rdf = rdf
+        self.col_names = rdf.GetColumnNames()
+    
+
+    def find_type(self, x):
+        # Finds the type of x
+        if isinstance(x, str):
+            #Can be string constant or can be column name
+            x = x.replace('ROOT::', '').replace('VecOps::', '') # Normalising name
+            if x in self.col_names: # If x is a column
+                t = self.rdf.GetColumnType(x)
+                if t in map_tree_to_numbadeclares.keys():   
+                    return map_tree_to_numbadeclares[t]
+                elif '<' in  t:
+                    g = re.match('(.*)<(.*)>', t).groups(0)
+                    if g[1] in map_tree_to_numbadeclares.keys():
+                        return "RVec<" + map_tree_to_numbadeclares[g[1]] + ">"
+                    return "RVec<" + str(g[1]) + ">"
+                    
+                else:
+                    return t
+            else :
+                return 'str'
+                #! Numba Declare does not support "string" type. Check _numbadeclare.Thus, Cannot pass string constants to the filter/Defines..
+        elif isinstance(x, bool):
+            return 'bool'
+        elif isinstance(x, int):
+            return 'int'
+        elif isinstance(x, float):
+            return 'float'
+        elif isinstance(x, np.ndarray): #! Need to work out how to map things like tuples, dicts, lists...
+            raise Exception("Cannot pass arrays as input parameters.\nArrays hhave to be columns.")
+        else:
+            raise ValueError(f"Type of {type(x)}:  {x} is not supported to be jitted.")
+        
+    def find_function_signature(self, func, funcargs):
+        import inspect 
+        func_sign = inspect.signature(func)
+        # Return type
+        if func_sign.return_annotation is inspect._empty:
+            self.return_type = "double"
+        else:
+            self.return_type = str(func_sign.return_annotation)
+        
+        # List of imput parameters for function
+        self.params = list(func_sign.parameters.keys())
+        input_args = {}
+        type_args = {}
+
+        # if len(funcargs) != 0:
+        for p in self.params:
+            if p in funcargs.keys():
+                p_value = funcargs[p]
+                type_args[p] = self.find_type(p_value)
+                if type(p_value) == bool:
+                    if p_value: p_value = 'true'
+                    else: p_value = 'false'
+                input_args[p] = p_value
+                
+            else:
+                # It has to be a column
+                if p not in self.col_names:
+                    raise Exception(f"Unknown type of object {p}")
+                input_args[p] = p 
+                type_args[p] = self.find_type(p)
+        return input_args, type_args
+
+
+    def generate_function_call(self, func, funcargs):
+        input_args, type_args = self.find_function_signature(func, funcargs)
+        if func.__name__ == '<lambda>' : 
+            from uuid import uuid4
+            func.__name__ = "func_"+uuid4().__str__().split('-')[-1]
+        func_call = func.__name__ + "("
+        func_sign = []
+        for p in self.params:
+            func_call = func_call + str(input_args[p]) + ", "
+            func_sign.append(str(type_args[p]))
+        if len(self.params) != 0:
+            func_call = func_call[:-2] + ")"
+        else:
+            func_call = func_call + ")"
+        return func_call, func_sign
+            
+    def jit_function(self, func, funcargs):
+        if func.__name__ in FunctionJitter.function_cache.keys():
+            func_call, func_sign = FunctionJitter.function_cache[func.__name__]
+            warnings.warn(f"Trying to redefine function: {func}.\n Do not change function signature.")
+            return func_call
+        func_call, func_sign = self.generate_function_call(func, funcargs)
+        FunctionJitter.function_cache[func.__name__] = (func_call, func_sign)
+        # print(func_sign)
+        _NumbaDeclareDecorator(func_sign, self.return_type)(func)
+        return func_call
+
+map_tree_to_numbadeclares = {
+    'C': 'str', 
+    'Char_t': 'int',
+    'UChat_t': 'unsigned int',
+    'Short_t': 'int',
+    'UShort_t': 'unsigned int',
+    'Int_t': 'int',
+    'UInt_t': 'unsigned int',
+    'Float_t': 'float',
+    'Float16_t': 'float',
+    'Double_t': 'double',
+    'Double32_t': 'double',
+    'Long64_t': 'long',
+    'ULong64_t': 'unsigned long',
+    'Long_t': 'long',
+    'ULong_t': 'unsigned long',
+    'Bool_t': 'bool',
+    #TODO: Finish this
+    # "ROOT::VecOps::RVec<Double_t>": 'RVec<double>',  
+
+}
