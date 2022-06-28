@@ -55,7 +55,7 @@ def _convert_subprocess_cmd(cmd):
 
 
 def _perror(e):
-    print("subprocess.CalledProcessError: Command '%s' returned non-zero exit status %s" % (
+    print("OSError: Command '%s' returned non-zero exit status %s" % (
         ' '.join(e.cmd), str(e.returncode)))
     cleanup()
     # Communicate return code to the calling program if any
@@ -64,21 +64,25 @@ def _perror(e):
 
 def exec_subprocess_call(cmd, cwd, showCMD=False):
     if showCMD: print(cmd)
-    cmd = _convert_subprocess_cmd(cmd)
+    #cmd = _convert_subprocess_cmd(cmd)
     try:
-        subprocess.check_call(cmd, cwd=cwd, shell=False,
-                              stdin=subprocess.PIPE, stdout=None, stderr=subprocess.STDOUT)
-    except subprocess.CalledProcessError as e:
+        os.chdir(cwd)
+        os.system(cmd)
+        #subprocess.check_call(cmd, cwd=cwd, shell=False,
+        #                      stdin=subprocess.PIPE, stdout=None, stderr=subprocess.STDOUT)
+    except OSError as e:
         _perror(e)
 
 
 def exec_subprocess_check_output(cmd, cwd):
-    cmd = _convert_subprocess_cmd(cmd)
+    #cmd = _convert_subprocess_cmd(cmd)
     out = ''
     try:
-        out = subprocess.check_output(cmd, cwd=cwd, shell=False,
-                                      stdin=subprocess.PIPE, stderr=subprocess.STDOUT).decode('utf-8')
-    except subprocess.CalledProcessError as e:
+        os.chdir(cwd)
+        out = os.popen(cmd).read()
+        #out = subprocess.check_output(cmd, cwd=cwd, shell=False,
+        #                              stdin=subprocess.PIPE, stderr=subprocess.STDOUT).decode('utf-8')
+    except OSError as e:
         _perror(e)
     finally:
         return out
@@ -677,7 +681,7 @@ def runSingleTest(test, Idx = 2, Recurse = True):
         for flag in flags[Idx]:
             cmd = 'cat %s | %s --nologo 2>&1 %s' % (test, cling, flag)
             print('** %s **' % cmd)
-            subprocess.check_call(cmd, cwd=os.path.dirname(test), shell=True)
+            exec_subprocess_call(cmd, cwd=os.path.dirname(test))
 
     except Exception as err:
         print("Error running '%s': %s" % (test, err))
@@ -690,18 +694,12 @@ def setup_tests():
         'utf-8')
     assert llvm_revision[:-2] == "release_"
     branch_vers = llvm_revision[-2]
-    branch_ref = subprocess.check_output(
-        [
-            "git",
-            "ls-remote",
-            "https://github.com/llvm/llvm-project.git",
-            "release/{0}.x".format(branch_vers),
-        ],
-        stderr=subprocess.STDOUT,
-    ).decode()
+    branch_ref = exec_subprocess_check_output("git ls-remote https://github.com/llvm/llvm-project.git release/{0}.x".format(branch_vers), os.getcwd())
     commit = branch_ref[: branch_ref.find("\trefs/heads")]
     # We get zip instead of git clone to not download git history
-    os.popen(
+    #exec_subprocess_check_output('sudo wget https://github.com/llvm/llvm-project/archive/{0}.zip && sudo unzip {0}.zip "llvm-project-{0}/llvm/utils/*"'.format(commit), os.path.join(CLING_SRC_DIR, "tools"))
+    
+    subprocess.Popen(
         [
             'sudo wget https://github.com/llvm/llvm-project/archive/{0}.zip && sudo unzip {0}.zip "llvm-project-{0}/llvm/utils/*"'.format(
                 commit
@@ -713,7 +711,8 @@ def setup_tests():
         stdout=None,
         stderr=subprocess.STDOUT,
     ).communicate("yes".encode("utf-8"))
-    os.popen(
+    
+    subprocess.Popen(
         ["sudo cp -r llvm-project-{0}/llvm/utils/FileCheck FileCheck".format(commit)],
         cwd=os.path.join(CLING_SRC_DIR, "tools"),
         shell=True,
@@ -732,7 +731,7 @@ def setup_tests():
                 llvm_dir = copy.copy(srcdir)
             else:
                 llvm_dir = os.path.join("/usr", "lib", "llvm-" + llvm_vers, "build")
-        os.popen(
+        subprocess.Popen(
             ["sudo mkdir {1}/utils/".format(commit, llvm_dir)],
             cwd=os.path.join(CLING_SRC_DIR, "tools"),
             shell=True,
@@ -740,7 +739,7 @@ def setup_tests():
             stdout=None,
             stderr=subprocess.STDOUT,
         ).communicate("yes".encode("utf-8"))
-        os.popen(
+        subprocess.Popen(
             [
                 "sudo mv llvm-project-{0}/llvm/utils/lit/ {1}/utils/".format(
                     commit, llvm_dir
@@ -1992,12 +1991,12 @@ if args['check_requirements']:
             while True:
                 if choice in yes:
                     # Need to communicate values to the shell. Do not use exec_subprocess_call()
-                    os.popen(['sudo apt-get update'],
+                    subprocess.Popen(['sudo apt-get update'],
                                     shell=True,
                                     stdin=subprocess.PIPE,
                                     stdout=None,
                                     stderr=subprocess.STDOUT).communicate('yes'.encode('utf-8'))
-                    os.popen(['sudo apt-get install ' + install_line],
+                    subprocess.Popen(['sudo apt-get install ' + install_line],
                                     shell=True,
                                     stdin=subprocess.PIPE,
                                     stdout=None,
@@ -2016,7 +2015,7 @@ if args['check_requirements']:
                     continue
         if no_install is False and llvm_binary_name != "" and tar_required is False:
             try:
-                os.popen(['sudo apt-get install llvm-{0}-dev'.format(llvm_vers)],
+                subprocess.Popen(['sudo apt-get install llvm-{0}-dev'.format(llvm_vers)],
                                  shell=True,
                                  stdin=subprocess.PIPE,
                                  stdout=None,
@@ -2048,7 +2047,7 @@ Refer to the documentation of CPT for information on setting up your Windows env
             while True:
                 if choice in yes:
                     # Need to communicate values to the shell. Do not use exec_subprocess_call()
-                    os.popen(['sudo yum install ' + install_line],
+                    subprocess.Popen(['sudo yum install ' + install_line],
                                     shell=True,
                                     stdin=subprocess.PIPE,
                                     stdout=None,
@@ -2085,12 +2084,12 @@ Refer to the documentation of CPT for information on setting up your Windows env
             while True:
                 if choice in yes:
                     # Need to communicate values to the shell. Do not use exec_subprocess_call()
-                    os.popen(['sudo port -v selfupdate'],
+                    subprocess.Popen(['sudo port -v selfupdate'],
                                     shell=True,
                                     stdin=subprocess.PIPE,
                                     stdout=None,
                                     stderr=subprocess.STDOUT).communicate('yes'.encode('utf-8'))
-                    os.popen(['sudo port install ' + install_line],
+                    subprocess.Popen(['sudo port install ' + install_line],
                                     shell=True,
                                     stdin=subprocess.PIPE,
                                     stdout=None,
@@ -2108,7 +2107,7 @@ Refer to the documentation of CPT for information on setting up your Windows env
                     choice = custom_input("Please respond with 'yes' or 'no': ", args['y'])
                     continue
         if no_install is False and llvm_binary_name != "":
-            os.popen(['sudo port install {0}'.format(llvm_binary_name)],
+            subprocess.Popen(['sudo port install {0}'.format(llvm_binary_name)],
                              shell=True,
                              stdin=subprocess.PIPE,
                              stdout=None,
