@@ -868,7 +868,10 @@ TGaxis::~TGaxis()
 Bool_t TGaxis::IsOwnedModLabs() const
 {
    if (!fModLabs) return kFALSE;
-   return !fAxis || (fAxis->GetModifiedLabels() != fModLabs);
+   if (fAxis && (fAxis->GetModifiedLabels() == fModLabs)) return kFALSE;
+   // TList created by TGaxis configured with owner flag
+   // If TGaxis object from old ROOT file will be read, memory will be leaked
+   return fModLabs->IsOwner();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2648,7 +2651,10 @@ void TGaxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
    }
 
    fNModLabs++;
-   if (!fModLabs) fModLabs = new TList();
+   if (!fModLabs) {
+      fModLabs = new TList();
+      fModLabs->SetOwner(kTRUE);
+   }
 
    TAxisModLab *ml = new TAxisModLab();
    ml->SetLabNum(labNum);
@@ -2682,15 +2688,13 @@ void TGaxis::ChangeLabelAttributes(Int_t i, Int_t nlabels, TLatex* t, char* c)
    if (!fModLabs) return;
 
    TIter next(fModLabs);
-   TAxisModLab *ml;
-   Int_t labNum;
-   while ( (ml = (TAxisModLab*)next()) ) {
+   while (auto ml = (TAxisModLab*)next()) {
       SavedTextAngle = t->GetTextAngle();
       SavedTextSize  = t->GetTextSize();
       SavedTextAlign = t->GetTextAlign();
       SavedTextColor = t->GetTextColor();
       SavedTextFont  = t->GetTextFont();
-      labNum = ml->GetLabNum();
+      Int_t labNum = ml->GetLabNum();
       if (labNum < 0) {
          if (TestBit(TAxis::kMoreLogLabels)) {
             Error("ChangeLabelAttributes", "reverse numbering in ChangeLabel doesn't work when more log labels are requested");
