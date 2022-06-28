@@ -282,8 +282,7 @@ def download_llvm_binary():
             exec_subprocess_call('tar xvf clang+llvm-5.0.2-x86_64-apple-darwin.tar.xz', workdir)
             exec_subprocess_call('sudo mv clang+llvm-5.0.2-x86_64-apple-darwin %s' % srcdir, workdir)
         else:
-            pass
-            #raise Exception("Building clang using LLVM binary not possible. Please invoke cpt without --with-binary-llvm and --with-llvm-tar flags")
+            raise Exception("Building clang using LLVM binary not possible. Please invoke cpt without --with-binary-llvm and --with-llvm-tar flags")
     # FIXME: Add Fedora and SUSE support
 
 # TODO Refactor all fetch_ functions to use this class will remove a lot of dup
@@ -2243,7 +2242,6 @@ if args['last_stable']:
     args["with_binary_llvm"] = True
 
     if args["with_binary_llvm"]:
-        download_llvm_binary()
         compile = compile_for_binary
         install_prefix = install_prefix_for_binary
         fetch_clang(llvm_revision)
