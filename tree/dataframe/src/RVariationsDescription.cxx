@@ -11,21 +11,14 @@
 #include "ROOT/RDF/RVariationsDescription.hxx"
 
 #include <iostream>
-#include <unordered_set>
 
 namespace {
-static std::string GetStringRepr(
-   const std::unordered_multimap<std::string, std::shared_ptr<ROOT::Internal::RDF::RVariationBase>> &variationsMap)
+static std::string GetStringRepr(const std::vector<const ROOT::Internal::RDF::RVariationBase *> &variations)
 {
-   std::unordered_set<ROOT::Internal::RDF::RVariationBase*> uniqueVariations;
    std::string s;
 
-   for (const auto &e : variationsMap) {
-      const auto it = uniqueVariations.insert(e.second.get());
-      if (!it.second) // we have already seen this variation
-         continue;
-
-      const auto &variation = *e.second;
+   for (const auto &e : variations) {
+      const auto &variation = *e;
 
       s += "Variations {";
       for (const auto &tag : variation.GetVariationNames())
@@ -46,7 +39,7 @@ static std::string GetStringRepr(
    }
    return s;
 }
-} // namespace
+} // anonymous namespace
 
 namespace ROOT {
 namespace RDF {
