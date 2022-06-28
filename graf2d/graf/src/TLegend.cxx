@@ -200,7 +200,7 @@ End_Macro
 TLegend::TLegend(): TPave(0.3,0.15,0.3,0.15,4,"brNDC"),
                     TAttText(12,0,1,gStyle->GetLegendFont(),0)
 {
-   fPrimitives = 0;
+   fPrimitives = nullptr;
    SetDefaults();
    SetBorderSize(gStyle->GetLegendBorderSize());
    SetFillColor(gStyle->GetLegendFillColor());
@@ -276,7 +276,7 @@ TLegend::TLegend( Double_t w, Double_t h, const char *header, Option_t *option)
 /// Copy constructor.
 
 TLegend::TLegend( const TLegend &legend ) : TPave(legend), TAttText(legend),
-                                            fPrimitives(0)
+                                            fPrimitives(nullptr)
 {
   if (legend.fPrimitives) {
       fPrimitives = new TList();
@@ -310,9 +310,10 @@ TLegend& TLegend::operator=(const TLegend &lg)
 
 TLegend::~TLegend()
 {
-   if (fPrimitives) fPrimitives->Delete();
+   if (fPrimitives)
+      fPrimitives->Delete();
    delete fPrimitives;
-   fPrimitives = 0;
+   fPrimitives = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -516,15 +517,14 @@ TLegendEntry *TLegend::GetEntry() const
 
 const char *TLegend::GetHeader() const
 {
-   if ( !fPrimitives ) return 0;
+   if ( !fPrimitives ) return nullptr;
       TIter next(fPrimitives);
-   TLegendEntry *first;   // header is always the first entry
-   if ((  first = (TLegendEntry*)next()  )) {
+   if (auto first = (TLegendEntry*)next()) {
       TString opt = first->GetOption();
       opt.ToLower();
       if ( opt.Contains("h") ) return first->GetLabel();
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -637,8 +637,7 @@ void TLegend::PaintPrimitives()
       textsize = GetTextSize();
    }
    Bool_t autosize = kFALSE;
-   Double_t* columnWidths = new Double_t[fNColumns];
-   memset(columnWidths, 0, fNColumns*sizeof(Double_t));
+   std::vector<Double_t> columnWidths(fNColumns, 0.);
 
    if ( textsize == 0 ) {
       autosize = kTRUE;
@@ -691,10 +690,10 @@ void TLegend::PaintPrimitives()
    // don't want to ruin initialisation of these variables later on
    {
       TIter next(fPrimitives);
-      TLegendEntry *entry;
       Int_t iColumn = 0;
-      memset(columnWidths, 0, fNColumns*sizeof(Double_t));
-      while (( entry = (TLegendEntry *)next() )) {
+      for (Int_t k = 0; k < fNColumns; ++k)
+         columnWidths[k] = 0.;
+      while (auto entry = (TLegendEntry *)next()) {
          TLatex entrytex( 0, 0, entry->GetLabel() );
          entrytex.SetNDC();
          Style_t tfont = entry->GetTextFont();
@@ -1012,7 +1011,6 @@ void TLegend::PaintPrimitives()
       if ( opt.Contains("p"))  entrymarker.Paint();
    }
    SetTextSize(save_textsize);
-   delete [] columnWidths;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1030,9 +1028,9 @@ void TLegend::Print( Option_t* option ) const
 void TLegend::RecursiveRemove(TObject *obj)
 {
    TIter next(fPrimitives);
-   TLegendEntry *entry;
-   while (( entry = (TLegendEntry *)next() )) {
-      if (entry->GetObject() == obj) entry->SetObject((TObject*)0);
+   while (auto entry = (TLegendEntry *)next()) {
+      if (entry->GetObject() == obj)
+         entry->SetObject((TObject *)nullptr);
    }
 }
 
