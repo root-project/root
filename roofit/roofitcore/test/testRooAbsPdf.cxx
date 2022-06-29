@@ -2,6 +2,7 @@
 // Authors: Stephan Hageboeck, CERN 04/2020
 //          Jonas Rembser, CERN 04/2021
 
+#include <RooAddition.h>
 #include <RooAddPdf.h>
 #include <RooCategory.h>
 #include <RooConstVar.h>
@@ -327,4 +328,22 @@ TEST(RooAbsPdf, ProblemsWith2DSimultaneousFit)
    simPdf.addPdf(model, "cat1");
 
    simPdf.fitTo(data, PrintLevel(-1));
+}
+
+// Verifies that a server pdf gets correctly reevaluated when the normalization
+// set is changed.
+TEST(RooAbsPdf, NormSetChange)
+{
+   using namespace RooFit;
+
+   RooRealVar x("x", "x", 0, -10, 10);
+   RooGaussian gauss("gauss", "gauss", x, RooConst(0), RooConst(2));
+   RooAddition add("add", "add",  {gauss});
+
+   double v1 = add.getVal();
+   double v2 = add.getVal(x);
+
+   // The change of normalization set should trigger a recomputation of the
+   // value, so val2 should be different from val1. }
+   EXPECT_NE(v1, v2);
 }

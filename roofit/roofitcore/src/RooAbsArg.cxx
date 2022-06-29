@@ -1390,6 +1390,10 @@ void RooAbsArg::setProxyNormSet(const RooArgSet* nset)
   for ( auto& p : _proxyListCache.cache ) {
     p->changeNormSet(nset);
   }
+
+  // If the proxy normSet changed, we also have to set our value dirty flag.
+  // Otherwise, value for the new normalization set might not get recomputed!
+  setValueDirty();
 }
 
 
