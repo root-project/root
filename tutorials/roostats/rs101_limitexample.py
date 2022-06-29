@@ -9,7 +9,8 @@
 ## \macro_output
 ## \macro_code
 ##
-## \author Kyle Cranmer
+## \date June 2022
+## \authors Artem Busorgin, Kyle Cranmer (C++ version)
 
 import ROOT
 
@@ -24,49 +25,44 @@ t.Start()
 # The Model building stage
 # --------------------------------------
 wspace = ROOT.RooWorkspace()
-wspace.factory("Poisson::countingModel(obs[150,0,300], "
-               "sum(s[50,0,120]*ratioSigEff[1.,0,3.],b[100]*ratioBkgEff[1.,0.,3.]))") # counting model
-# wspace.factory("Gaussian::sigConstraint(ratioSigEff,1,0.05)") # 5% signal efficiency uncertainty
-# wspace.factory("Gaussian::bkgConstraint(ratioBkgEff,1,0.1)") #  10% background efficiency uncertainty
-wspace.factory("Gaussian::sigConstraint(gSigEff[1,0,3],ratioSigEff,0.05)") # 5% signal efficiency uncertainty
-wspace.factory("Gaussian::bkgConstraint(gSigBkg[1,0,3],ratioBkgEff,0.2)") # 10% background efficiency uncertainty
-wspace.factory("PROD::modelWithConstraints(countingModel,sigConstraint,bkgConstraint)") # product of terms
+wspace.factory(
+    "Poisson::countingModel(obs[150,0,300], " "sum(s[50,0,120]*ratioSigEff[1.,0,3.],b[100]*ratioBkgEff[1.,0.,3.]))"
+)  # counting model
+wspace.factory("Gaussian::sigConstraint(gSigEff[1,0,3],ratioSigEff,0.05)")  # 5% signal efficiency uncertainty
+wspace.factory("Gaussian::bkgConstraint(gSigBkg[1,0,3],ratioBkgEff,0.2)")  # 10% background efficiency uncertainty
+wspace.factory("PROD::modelWithConstraints(countingModel,sigConstraint,bkgConstraint)")  # product of terms
 wspace.Print()
 
-modelWithConstraints = wspace.pdf("modelWithConstraints") # get the model
-obs = wspace.var("obs") # get the observable
-s = wspace.var("s") # get the signal we care about
-b = wspace.var("b") # get the background and set it to a constant.  Uncertainty included in ratioBkgEff
+modelWithConstraints = wspace["modelWithConstraints"]  # get the model
+obs = wspace["obs"]  # get the observable
+s = wspace["s"]  # get the signal we care about
+b = wspace["b"]  # get the background and set it to a constant.  Uncertainty included in ratioBkgEff
 b.setConstant()
 
-ratioSigEff = wspace.var("ratioSigEff") # get uncertain parameter to constrain
-ratioBkgEff = wspace.var("ratioBkgEff") # get uncertain parameter to constrain
-constrainedParams = ROOT.RooArgSet(ratioSigEff, ratioBkgEff) # need to constrain these in the fit (should change default behavior)
+ratioSigEff = wspace["ratioSigEff"]  # get uncertain parameter to constrain
+ratioBkgEff = wspace["ratioBkgEff"]  # get uncertain parameter to constrain
+constrainedParams = {ratioSigEff, ratioBkgEff}  # need to constrain these in the fit (should change default behavior)
 
-gSigEff = wspace.var("gSigEff") # global observables for signal efficiency
-gSigBkg = wspace.var("gSigBkg") # global obs for background efficiency
+gSigEff = wspace["gSigEff"]  # global observables for signal efficiency
+gSigBkg = wspace["gSigBkg"]  # global obs for background efficiency
 gSigEff.setConstant()
 gSigBkg.setConstant()
 
 # Create an example dataset with 160 observed events
-obs.setVal(160.)
-data = ROOT.RooDataSet("exampleData", "exampleData", ROOT.RooArgSet(obs))
+obs.setVal(160.0)
+data = ROOT.RooDataSet("exampleData", "exampleData", {obs})
 data.add(obs)
 
-all = ROOT.RooArgSet(s, ratioBkgEff, ratioSigEff)
-
 # not necessary
-modelWithConstraints.fitTo(data, ROOT.RooFit.Constrain(ROOT.RooArgSet(ratioSigEff, ratioBkgEff)))
+modelWithConstraints.fitTo(data, Constrain=constrainedParams)
 
 # Now let's make some confidence intervals for s, our parameter of interest
-paramOfInterest = ROOT.RooArgSet(s)
-
 modelConfig = ROOT.RooStats.ModelConfig(wspace)
 modelConfig.SetPdf(modelWithConstraints)
-modelConfig.SetParametersOfInterest(paramOfInterest)
+modelConfig.SetParametersOfInterest({s})
 modelConfig.SetNuisanceParameters(constrainedParams)
 modelConfig.SetObservables(obs)
-modelConfig.SetGlobalObservables(ROOT.RooArgSet(gSigEff, gSigBkg))
+modelConfig.SetGlobalObservables({gSigEff, gSigBkg})
 modelConfig.SetName("ModelConfig")
 wspace.Import(modelConfig)
 wspace.Import(data)
@@ -74,10 +70,9 @@ wspace.SetName("w")
 wspace.writeToFile("rs101_ws.root")
 
 # First, let's use a Calculator based on the Profile Likelihood Ratio
-# plc = ROOT.RooStats.ProfileLikelihoodCalculator(data, modelWithConstraints, paramOfInterest)
 plc = ROOT.RooStats.ProfileLikelihoodCalculator(data, modelConfig)
-plc.SetTestSize(.05)
-lrinterval = plc.GetInterval() # that was easy.
+plc.SetTestSize(0.05)
+lrinterval = plc.GetInterval()  # that was easy.
 
 # Let's make a plot
 dataCanvas = ROOT.TCanvas("dataCanvas")
@@ -91,11 +86,11 @@ plotInt.Draw()
 # Second, use a Calculator based on the Feldman Cousins technique
 fc = ROOT.RooStats.FeldmanCousins(data, modelConfig)
 fc.UseAdaptiveSampling(True)
-fc.FluctuateNumDataEntries(False) # number counting analysis: dataset always has 1 entry with N events observed
-fc.SetNBins(100) # number of points to test per parameter
-fc.SetTestSize(.05)
+fc.FluctuateNumDataEntries(False)  # number counting analysis: dataset always has 1 entry with N events observed
+fc.SetNBins(100)  # number of points to test per parameter
+fc.SetTestSize(0.05)
 # fc.SaveBeltToFile(True) # optional
-fcint = fc.GetInterval() # that was easy
+fcint = fc.GetInterval()  # that was easy
 
 fit = modelWithConstraints.fitTo(data, Save=True)
 
@@ -107,14 +102,14 @@ ph.SetVariables(fit.floatParsFinal())
 ph.SetCovMatrix(fit.covarianceMatrix())
 ph.SetUpdateProposalParameters(True)
 ph.SetCacheSize(100)
-pdfProp = ph.GetProposalFunction() # that was easy
+pdfProp = ph.GetProposalFunction()  # that was easy
 
 mc = ROOT.RooStats.MCMCCalculator(data, modelConfig)
-mc.SetNumIters(20000) # steps to propose in the chain
-mc.SetTestSize(.05)  # 95% CL
-mc.SetNumBurnInSteps(40) # ignore first N steps in chain as "burn in"
+mc.SetNumIters(20000)  # steps to propose in the chain
+mc.SetTestSize(0.05)  # 95% CL
+mc.SetNumBurnInSteps(40)  # ignore first N steps in chain as "burn in"
 mc.SetProposalFunction(pdfProp)
-mc.SetLeftSideTailFraction(0.5) # find a "central" interval
+mc.SetLeftSideTailFraction(0.5)  # find a "central" interval
 mcInt = mc.GetInterval()  # that was easy
 
 # Get Lower and Upper limits from Profile Calculator
@@ -153,18 +148,15 @@ dataCanvas.cd(2)
 # also plot the points in the markov chain
 chainData = mcInt.GetChainAsDataSet()
 
-assert chainData
 print("plotting the chain data - nentries = ", chainData.numEntries())
 chain = ROOT.RooStats.GetAsTTree("chainTreeData", "chainTreeData", chainData)
-assert chain
 chain.SetMarkerStyle(6)
 chain.SetMarkerColor(ROOT.kRed)
 
-chain.Draw("s:ratioSigEff:ratioBkgEff", "nll_MarkovChain_local_", "box") # 3-d box proportional to posterior
+chain.Draw("s:ratioSigEff:ratioBkgEff", "nll_MarkovChain_local_", "box")  # 3-d box proportional to posterior
 
 # the points used in the profile construction
 parScanData = fc.GetPointsToScan()
-assert parScanData
 print("plotting the scanned points used in the frequentist construction - npoints = ", parScanData.numEntries())
 
 gr = ROOT.TGraph2D(parScanData.numEntries())
@@ -174,7 +166,6 @@ for ievt in range(parScanData.numEntries()):
     y = evt.getRealValue("ratioSigEff")
     z = evt.getRealValue("s")
     gr.SetPoint(ievt, x, y, z)
-    # print("{}  {}  {}  {}".format(ievt, x, y, z))
 
 gr.SetMarkerStyle(24)
 gr.Draw("P SAME")
@@ -184,3 +175,10 @@ t.Stop()
 t.Print()
 
 dataCanvas.SaveAs("rs101_limitexample.png")
+
+# TODO: The MCMCCalculator has to be destructed first. Otherwise, we can get
+# segmentation faults depending on the destruction order, which is random in
+# Python. Probably the issue is that some object has a non-owning pointer to
+# another object, which it uses in its destructor. This should be fixed either
+# in the design of RooStats in C++, or with phythonizations.
+del mc
