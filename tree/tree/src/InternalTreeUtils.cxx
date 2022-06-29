@@ -69,8 +69,8 @@ void RFriendInfo::AddFriend(const std::vector<std::pair<std::string, std::string
    theseFileNames.reserve(nPairs);
    theseChainSubNames.reserve(nPairs);
 
-   auto fSubNamesIt = std::back_inserter(theseFileNames);
-   auto fNamesIt = std::back_inserter(theseChainSubNames);
+   auto fSubNamesIt = std::back_inserter(theseChainSubNames);
+   auto fNamesIt = std::back_inserter(theseFileNames);
 
    for (const auto &names : treeAndFileNameGlobs) {
       *fSubNamesIt = names.first;
