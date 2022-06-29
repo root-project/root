@@ -1524,64 +1524,57 @@ void TClingCallFunc::exec(void *address, void *ret)
             ValHolder vh;
             switch (BT->getKind()) {
                //  Unsigned Types
-               case BuiltinType::Bool: vh.u.b = (bool) sv_to_ulong_long(fArgVals[i]);
-                  break;
-               case BuiltinType::Char_U: vh.u.c = (char) sv_to_ulong_long(fArgVals[i]);
-                  break;
-               case BuiltinType::UChar: vh.u.uc = (unsigned char) sv_to_ulong_long(fArgVals[i]);
-                  break;
-               case BuiltinType::WChar_U: vh.u.wc = (wchar_t) sv_to_ulong_long(fArgVals[i]);
-                  break;
-               case BuiltinType::Char16: //vh.u.c16 = (char16_t) sv_to_ulong_long(fArgVals[i]);
-                  break;
-               case BuiltinType::Char32: //vh.u.c32 = (char32_t) sv_to_ulong_long(fArgVals[i]);
-                  break;
-               case BuiltinType::UShort: vh.u.us = (unsigned short) sv_to_ulong_long(fArgVals[i]);
-                  break;
-               case BuiltinType::UInt: vh.u.ui = (unsigned int) sv_to_ulong_long(fArgVals[i]);
-                  break;
-               case BuiltinType::ULong: vh.u.ul = (unsigned long) sv_to_ulong_long(fArgVals[i]);
-                  break;
-               case BuiltinType::ULongLong: vh.u.ull = (unsigned long long) sv_to_ulong_long(fArgVals[i]);
-                  break;
-               case BuiltinType::UInt128: {
-                     // __uint128_t
-                  }
-                  break;
-                  //  Signed Types
-               case BuiltinType::Char_S: vh.u.c = (char) sv_to_long_long(fArgVals[i]);
-                  break;
-               case BuiltinType::SChar: vh.u.sc = (signed char) sv_to_long_long(fArgVals[i]);
-                  break;
-               case BuiltinType::WChar_S: vh.u.wc = (wchar_t) sv_to_long_long(fArgVals[i]);
-                  break;
-               case BuiltinType::Short: vh.u.s = (short) sv_to_long_long(fArgVals[i]);
-                  break;
-               case BuiltinType::Int: vh.u.i = (int) sv_to_long_long(fArgVals[i]);
-                  break;
-               case BuiltinType::Long: vh.u.l = (long) sv_to_long_long(fArgVals[i]);
-                  break;
-               case BuiltinType::LongLong: vh.u.ll = (long long) sv_to_long_long(fArgVals[i]);
-                  break;
-               case BuiltinType::Float: vh.u.flt = sv_to<float>(fArgVals[i]);
-                  break;
-               case BuiltinType::Double: vh.u.dbl = sv_to<double>(fArgVals[i]);
-                  break;
-               case BuiltinType::LongDouble: vh.u.ldbl = sv_to<long double>(fArgVals[i]);
-                  break;
-               // C++11 nullptr
-               case BuiltinType::NullPtr: vh.u.vp = fArgVals[i].getPtr();
-                  break;
-               default: {
-                     // There should be no others.  This is here in case
-                     // this changes in the future.
-                     ::Error("TClingCallFunc::exec(void*)",
-                             "Unhandled builtin type '%s'",
-                             BT->getTypeClassName());
-                     QT->dump();
-                     return;
-                  }
-                  break;
+            case BuiltinType::Bool: vh.u.b = fArgVals[i].simplisticCastAs<bool>();
+               break;
+            case BuiltinType::Char_U: vh.u.c = fArgVals[i].simplisticCastAs<char>();
+               break;
+            case BuiltinType::UChar: vh.u.uc = fArgVals[i].simplisticCastAs<unsigned char>();
+               break;
+            case BuiltinType::WChar_U: vh.u.wc = fArgVals[i].simplisticCastAs<wchar_t>();
+               break;
+            case BuiltinType::Char16: //vh.u.c16 = fArgVals[i].simplisticCastAs<char16_t>();
+               break;
+            case BuiltinType::Char32: //vh.u.c32 = fArgVals[i].simplisticCastAs<char32_t>();
+               break;
+            case BuiltinType::UShort: vh.u.us = fArgVals[i].simplisticCastAs<unsigned short>();
+               break;
+            case BuiltinType::UInt: vh.u.ui = fArgVals[i].simplisticCastAs<unsigned int>();
+               break;
+            case BuiltinType::ULong: vh.u.ul = fArgVals[i].simplisticCastAs<unsigned long>();
+               break;
+            case BuiltinType::ULongLong: vh.u.ull = fArgVals[i].simplisticCastAs<unsigned long long>();
+               break;
+               //  Signed Types
+            case BuiltinType::Char_S: vh.u.c = (char) fArgVals[i].simplisticCastAs<char>();
+               break;
+            case BuiltinType::SChar: vh.u.sc = fArgVals[i].simplisticCastAs<signed char>();
+               break;
+            case BuiltinType::WChar_S: vh.u.wc = fArgVals[i].simplisticCastAs<wchar_t>();
+               break;
+            case BuiltinType::Short: vh.u.s = fArgVals[i].simplisticCastAs<short>();
+               break;
+            case BuiltinType::Int: vh.u.i = fArgVals[i].simplisticCastAs<int>();
+               break;
+            case BuiltinType::Long: vh.u.l = fArgVals[i].simplisticCastAs<long>();
+               break;
+            case BuiltinType::LongLong: vh.u.ll = fArgVals[i].simplisticCastAs<long long>();
+               break;
+            case BuiltinType::Float: vh.u.flt = fArgVals[i].simplisticCastAs<float>();
+               break;
+            case BuiltinType::Double: vh.u.dbl = fArgVals[i].simplisticCastAs<double>();
+               break;
+            case BuiltinType::LongDouble: vh.u.ldbl = fArgVals[i].simplisticCastAs<long double>();
+               break;
+            case BuiltinType::NullPtr: vh.u.vp = fArgVals[i].getPtr();
+               break;
+            default:
+               // Thee should be no others.  This is here in case
+               // this changes in the future.
+               ::Error("TClingCallFunc::exec(void*)",
+                       "Unhandled builtin type '%s'",
+                       BT->getTypeClassName());
+                  QT->dump();
+               return;
             }
             vh_ary.push_back(vh);
             vp_ary.push_back(&vh_ary.back());
