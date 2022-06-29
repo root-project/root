@@ -29,6 +29,8 @@ class RLoopManager;
 
 namespace RDF {
 
+namespace Experimental {
+
 class RDatasetSpec {
 
    friend class ROOT::Detail::RDF::RLoopManager;
@@ -76,6 +78,7 @@ public:
                   const std::string &alias = "");
 };
 
+} // namespace Experimental
 } // namespace RDF
 } // namespace ROOT
 

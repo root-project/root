@@ -33,7 +33,10 @@ namespace ROOT {
 namespace RDF {
 class RCutFlowReport;
 class RDataSource;
+
+namespace Experimental {
 class RDatasetSpec;
+}
 } // ns RDF
 
 namespace Internal {
@@ -165,7 +168,7 @@ public:
    RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
    RLoopManager(ULong64_t nEmptyEntries);
    RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t &defaultBranches);
-   RLoopManager(ROOT::RDF::RDatasetSpec &&spec);
+   RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec);
    RLoopManager(const RLoopManager &) = delete;
    RLoopManager &operator=(const RLoopManager &) = delete;
 

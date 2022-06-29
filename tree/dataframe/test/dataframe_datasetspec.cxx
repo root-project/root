@@ -8,7 +8,7 @@
 #include <thread> // std::thread::hardware_concurrency
 
 using namespace ROOT;
-using namespace ROOT::RDF;
+using namespace ROOT::RDF::Experimental;
 
 using namespace std::literals; // remove ambiguity of using std::vector<std::string>-s and std::string-s
 
@@ -231,7 +231,7 @@ TEST_P(RDatasetSpecTest, Friends)
    for (auto i = 0u; i < ranges.size(); ++i) {
       for (const auto &s : specs[i]) {
          // nested structure so that the event loop is not called multiple times with different actions
-         std::vector<RResultPtr<std::vector<ULong64_t>>> friends;
+         std::vector<ROOT::RDF::RResultPtr<std::vector<ULong64_t>>> friends;
          friends.push_back(RDataFrame(RDatasetSpec(s)).Take<ULong64_t>("friendTree.z"));
          // friends.push_back(RDataFrame(RDatasetSpec(s)).Take<ULong64_t>("friendShortTree.y"));
          friends.push_back(RDataFrame(RDatasetSpec(s)).Take<ULong64_t>("friendChain1.z"));
@@ -261,8 +261,8 @@ TEST_P(RDatasetSpecTest, Histo1D)
    auto h1edgesd = d.Histo1D(::TH1D("h1edgesd", "h1edgesd", (int)edgesd.size() - 1, edgesd.data()), "x");
    auto h2edgesd = d.Histo1D({"h2edgesd", "h2edgesd", (int)edgesd.size() - 1, edgesd.data()}, "x");
 
-   TH1DModel m0("m0", "m0", 10, 0, 10);
-   TH1DModel m1(::TH1D("m1", "m1", 10, 0, 10));
+   ROOT::RDF::TH1DModel m0("m0", "m0", 10, 0, 10);
+   ROOT::RDF::TH1DModel m1(::TH1D("m1", "m1", 10, 0, 10));
 
    auto hm0 = d.Histo1D(m0, "x");
    auto hm1 = d.Histo1D(m1, "x");

@@ -359,7 +359,7 @@ RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t 
    fDataSource->SetNSlots(fNSlots);
 }
 
-RLoopManager::RLoopManager(ROOT::RDF::RDatasetSpec &&spec)
+RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
    : fStartEntry(spec.fEntryRange.fStartEntry), fEndEntry(spec.fEntryRange.fEndEntry),
      fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),

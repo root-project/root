@@ -15,6 +15,8 @@ namespace ROOT {
 
 namespace RDF {
 
+namespace Experimental {
+
 RDatasetSpec::REntryRange::REntryRange() {}
 
 RDatasetSpec::REntryRange::REntryRange(Long64_t endEntry) : fEndEntry(endEntry) {}
@@ -133,5 +135,6 @@ void RDatasetSpec::AddFriend(const std::vector<std::pair<std::string, std::strin
    }
 }
 
+} // namespace Experimental
 } // namespace RDF
 } // namespace ROOT

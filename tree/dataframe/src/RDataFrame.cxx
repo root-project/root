@@ -1390,7 +1390,7 @@ RDataFrame::RDataFrame(std::unique_ptr<ROOT::RDF::RDataSource> ds, const ColumnN
 {
 }
 
-RDataFrame::RDataFrame(ROOT::RDF::RDatasetSpec spec)
+RDataFrame::RDataFrame(ROOT::RDF::Experimental::RDatasetSpec spec)
    : RInterface(std::make_shared<RDFDetail::RLoopManager>(std::move(spec)))
 {
 }
