@@ -122,14 +122,14 @@ void waves( Double_t d = 3, Double_t lambda = 1, Double_t amp = 10)
    finter->SetContour(colNum-2);
    finter->Draw("samecol");
 
-   TArc *arc = new TArc();;
-   arc->SetFillStyle(0);
-   arc->SetLineWidth(2);
-   arc->SetLineColor(5);
+   TArc arc;
+   arc.SetFillStyle(0);
+   arc.SetLineWidth(2);
+   arc.SetLineColor(5);
    Float_t r = 0.5 * lambda, dr = lambda;
    for (Int_t i = 0; i < 16; i++) {
-      arc->DrawArc(0,  0.5*d, r, 0., 360., "only");
-      arc->DrawArc(0, -0.5*d, r, 0., 360., "only");
+      arc.DrawArc(0,  0.5*d, r, 0., 360., "only");
+      arc.DrawArc(0, -0.5*d, r, 0., 360., "only");
       r += dr;
    }
 
