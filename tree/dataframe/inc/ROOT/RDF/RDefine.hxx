@@ -111,7 +111,7 @@ public:
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
       RDFInternal::RColumnReadersInfo info{fColumnNames, fColRegister, fIsDefine.data(), *fLoopManager};
-      fValues[slot] = RDFInternal::MakeColumnReaders(slot, r, ColumnTypes_t{}, info, fVariation);
+      fValues[slot] = RDFInternal::GetColumnReaders(slot, r, ColumnTypes_t{}, info, fVariation);
       fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = -1;
    }
 
