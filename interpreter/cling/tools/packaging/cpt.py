@@ -706,6 +706,11 @@ def setup_tests():
     ).decode()
     commit = branch_ref[: branch_ref.find("\trefs/heads")]
     # We get zip instead of git clone to not download git history
+    os.chdir(os.path.join(CLING_SRC_DIR, "tools"))
+    os.popen('sudo wget https://github.com/llvm/llvm-project/archive/{0}.zip && sudo unzip {0}.zip "llvm-project-{0}/llvm/utils/*"'.format(
+                commit
+            )).read("yes".encode("utf-8"))
+    '''
     subprocess.Popen(
         [
             'sudo wget https://github.com/llvm/llvm-project/archive/{0}.zip && sudo unzip {0}.zip "llvm-project-{0}/llvm/utils/*"'.format(
@@ -718,6 +723,10 @@ def setup_tests():
         stdout=None,
         stderr=subprocess.STDOUT,
     ).communicate("yes".encode("utf-8"))
+    '''
+    os.chdir(os.path.join(CLING_SRC_DIR, "tools"))
+    os.popen("sudo cp -r llvm-project-{0}/llvm/utils/FileCheck FileCheck".format(commit)).read("yes".encode("utf-8"))
+    '''
     subprocess.Popen(
         ["sudo cp -r llvm-project-{0}/llvm/utils/FileCheck FileCheck".format(commit)],
         cwd=os.path.join(CLING_SRC_DIR, "tools"),
@@ -726,6 +735,7 @@ def setup_tests():
         stdout=None,
         stderr=subprocess.STDOUT,
     ).communicate("yes".encode("utf-8"))
+    '''
     with open(os.path.join(CLING_SRC_DIR, 'tools', 'CMakeLists.txt'), 'a') as file:
         file.writelines('add_subdirectory(\"FileCheck\")')
     exec_subprocess_call("cmake {0}".format(LLVM_OBJ_ROOT), CLING_SRC_DIR)
@@ -737,6 +747,9 @@ def setup_tests():
                 llvm_dir = copy.copy(srcdir)
             else:
                 llvm_dir = os.path.join("/usr", "lib", "llvm-" + llvm_vers, "build")
+        os.chdir(os.path.join(CLING_SRC_DIR, "tools"))
+        os.popen("sudo mkdir {1}/utils/".format(commit, llvm_dir)).read("yes".encode("utf-8"))
+        '''
         subprocess.Popen(
             ["sudo mkdir {1}/utils/".format(commit, llvm_dir)],
             cwd=os.path.join(CLING_SRC_DIR, "tools"),
@@ -745,6 +758,11 @@ def setup_tests():
             stdout=None,
             stderr=subprocess.STDOUT,
         ).communicate("yes".encode("utf-8"))
+        '''
+        os.chdir(os.path.join(CLING_SRC_DIR, "tools"))
+        os.popen("sudo mv llvm-project-{0}/llvm/utils/lit/ {1}/utils/".format(
+                    commit, llvm_dir)).read("yes".encode("utf-8"))
+        '''
         subprocess.Popen(
             [
                 "sudo mv llvm-project-{0}/llvm/utils/lit/ {1}/utils/".format(
@@ -757,7 +775,7 @@ def setup_tests():
             stdout=None,
             stderr=subprocess.STDOUT,
         ).communicate("yes".encode("utf-8"))
-
+        '''
 
 def test_cling():
     box_draw("Run Cling test suite")
@@ -1999,16 +2017,22 @@ if args['check_requirements']:
             while True:
                 if choice in yes:
                     # Need to communicate values to the shell. Do not use exec_subprocess_call()
+                    os.popen('sudo apt-get update').read('yes'.encode('utf-8'))
+                    '''
                     subprocess.Popen(['sudo apt-get update'],
                                     shell=True,
                                     stdin=subprocess.PIPE,
                                     stdout=None,
                                     stderr=subprocess.STDOUT).communicate('yes'.encode('utf-8'))
+                    '''
+                    os.popen('sudo apt-get install ' + install_line).read('yes'.encode('utf-8'))
+                    '''
                     subprocess.Popen(['sudo apt-get install ' + install_line],
                                     shell=True,
                                     stdin=subprocess.PIPE,
                                     stdout=None,
                                     stderr=subprocess.STDOUT).communicate('yes'.encode('utf-8'))
+                    '''
                     break
                 elif choice in no:
                     print('''
@@ -2023,11 +2047,14 @@ if args['check_requirements']:
                     continue
         if no_install is False and llvm_binary_name != "" and tar_required is False:
             try:
+                os.popen('sudo apt-get install llvm-{0}-dev'.format(llvm_vers)).read('yes'.encode('utf-8'))
+                '''
                 subprocess.Popen(['sudo apt-get install llvm-{0}-dev'.format(llvm_vers)],
                                  shell=True,
                                  stdin=subprocess.PIPE,
                                  stdout=None,
                                  stderr=subprocess.STDOUT).communicate('yes'.encode('utf-8'))
+                '''
             except:
                 tar_required = True
 
@@ -2055,11 +2082,14 @@ Refer to the documentation of CPT for information on setting up your Windows env
             while True:
                 if choice in yes:
                     # Need to communicate values to the shell. Do not use exec_subprocess_call()
+                    os.popen('sudo yum install ' + install_line).read('yes'.encode('utf-8'))
+                    '''
                     subprocess.Popen(['sudo yum install ' + install_line],
                                     shell=True,
                                     stdin=subprocess.PIPE,
                                     stdout=None,
                                     stderr=subprocess.STDOUT).communicate('yes'.encode('utf-8'))
+                    '''
                     break
                 elif choice in no:
                     print('''
@@ -2092,16 +2122,22 @@ Refer to the documentation of CPT for information on setting up your Windows env
             while True:
                 if choice in yes:
                     # Need to communicate values to the shell. Do not use exec_subprocess_call()
+                    os.popen('sudo port -v selfupdate').read('yes'.encode('utf-8'))
+                    '''
                     subprocess.Popen(['sudo port -v selfupdate'],
                                     shell=True,
                                     stdin=subprocess.PIPE,
                                     stdout=None,
                                     stderr=subprocess.STDOUT).communicate('yes'.encode('utf-8'))
+                    '''
+                    os.popen('sudo port install ' + install_line).read('yes'.encode('utf-8'))
+                    '''
                     subprocess.Popen(['sudo port install ' + install_line],
                                     shell=True,
                                     stdin=subprocess.PIPE,
                                     stdout=None,
                                     stderr=subprocess.STDOUT).communicate('yes'.encode('utf-8'))
+                    '''
                     break
                 elif choice in no:
                     print('''
@@ -2115,11 +2151,14 @@ Refer to the documentation of CPT for information on setting up your Windows env
                     choice = custom_input("Please respond with 'yes' or 'no': ", args['y'])
                     continue
         if no_install is False and llvm_binary_name != "":
+            os.popen('sudo port install {0}'.format(llvm_binary_name)).read('yes'.encode('utf-8'))
+            '''
             subprocess.Popen(['sudo port install {0}'.format(llvm_binary_name)],
                              shell=True,
                              stdin=subprocess.PIPE,
                              stdout=None,
                              stderr=subprocess.STDOUT).communicate('yes'.encode('utf-8'))
+            '''
 
 if args["with_llvm_tar"] or args["with_binary_llvm"]:
     download_llvm_binary()
