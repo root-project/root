@@ -109,13 +109,13 @@ void archi() {
    tstub2->SetTextAlign(22);
    tstub2->SetTextAngle(-90);
    tstub2->Draw();
-   TArrow *ar1 = new TArrow();
-   ar1->SetLineWidth(6);
-   ar1->SetLineColor(1);
-   ar1->SetFillStyle(1001);
-   ar1->SetFillColor(1);
-   ar1->DrawArrow(13.5,14,15,14,0.012,"|>");
-   ar1->DrawArrow(15.1,13,13.51,13,0.012,"|>");
+   TArrow ar1;
+   ar1.SetLineWidth(6);
+   ar1.SetLineColor(1);
+   ar1.SetFillStyle(1001);
+   ar1.SetFillColor(1);
+   ar1.DrawArrow(13.5,14,15,14,0.012,"|>");
+   ar1.DrawArrow(15.1,13,13.51,13,0.012,"|>");
 
    TPaveText *cint = new TPaveText(1.0,15.0,8.0,17.5);
    cint->SetFillColor(39);
@@ -173,14 +173,14 @@ void archi() {
    box2->SetLineStyle(3);
    box2->Draw();
 
-   ar1->DrawArrow(2.5,17.5,2.5,18.9,0.012,"|>");
-   ar1->DrawArrow(5.5,9.2,5.5,8.7,0.012,"|>");
-   ar1->DrawArrow(5.5,5,5.5,4.2,0.012,"|>");
-   ar1->DrawArrow(8.5,9.2,8.5,8.2,0.012,"|>");
-   ar1->DrawArrow(9.5,8.1,9.5,9.0,0.012,"|>");
-   ar1->DrawArrow(6.5,19,6.5,17.6,0.012,"|>");
-   ar1->DrawArrow(8.5,19,8.5,17.1,0.012,"|>");
-   ar1->DrawArrow(11.5,19,11.5,17.1,0.012,"|>");
+   ar1.DrawArrow(2.5,17.5,2.5,18.9,0.012,"|>");
+   ar1.DrawArrow(5.5,9.2,5.5,8.7,0.012,"|>");
+   ar1.DrawArrow(5.5,5,5.5,4.2,0.012,"|>");
+   ar1.DrawArrow(8.5,9.2,8.5,8.2,0.012,"|>");
+   ar1.DrawArrow(9.5,8.1,9.5,9.0,0.012,"|>");
+   ar1.DrawArrow(6.5,19,6.5,17.6,0.012,"|>");
+   ar1.DrawArrow(8.5,19,8.5,17.1,0.012,"|>");
+   ar1.DrawArrow(11.5,19,11.5,17.1,0.012,"|>");
 
 
    TPaveLabel *ootitle = new TPaveLabel(10.5,7.8,17,8.8,"Objects Data Base");
