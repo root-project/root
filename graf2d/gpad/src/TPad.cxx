@@ -505,19 +505,19 @@ TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    TLegend *leg = nullptr;
    TIter next(lop);
    TString mes;
-   TString opt("");
+   TString opt;
    while(auto o = next()) {
       if ((o->InheritsFrom(TAttLine::Class()) || o->InheritsFrom(TAttMarker::Class()) ||
           o->InheritsFrom(TAttFill::Class())) &&
          ( !(o->InheritsFrom(TFrame::Class())) && !(o->InheritsFrom(TPave::Class())) )) {
             if (!leg) leg = new TLegend(x1, y1, x2, y2, title);
-            if (o->InheritsFrom(TNamed::Class()) && strlen(((TNamed *)o)->GetTitle()))
-               mes = ((TNamed *)o)->GetTitle();
+            if (o->InheritsFrom(TNamed::Class()) && strlen(o->GetTitle()))
+               mes = o->GetTitle();
             else if (strlen(o->GetName()))
                mes = o->GetName();
             else
                mes = o->ClassName();
-            if (strlen(option)) {
+            if (option && strlen(option)) {
                opt = option;
             } else {
                if (o->InheritsFrom(TAttLine::Class()))   opt += "l";
@@ -536,7 +536,7 @@ TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
             if      (strlen(gr->GetTitle())) mes = gr->GetTitle();
             else if (strlen(gr->GetName()))  mes = gr->GetName();
             else                             mes = gr->ClassName();
-            if (strlen(option))              opt = option;
+            if (option && strlen(option))    opt = option;
             else                             opt = "lpf";
             leg->AddEntry( obj, mes.Data(), opt );
          }
@@ -544,14 +544,12 @@ TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
          if (!leg) leg = new TLegend(x1, y1, x2, y2, title);
          TList * hlist = ((THStack *)o)->GetHists();
          TIter nexthist(hlist);
-         TH1 * hist;
-         TObject * obj;
-         while ((obj = nexthist())) {
-            hist = (TH1*) obj;
+         while (auto obj = nexthist()) {
+            TH1 *hist = (TH1*) obj;
             if      (strlen(hist->GetTitle())) mes = hist->GetTitle();
             else if (strlen(hist->GetName()))  mes = hist->GetName();
             else                               mes = hist->ClassName();
-            if (strlen(option))                opt = option;
+            if (option && strlen(option))      opt = option;
             else                               opt = "lpf";
             leg->AddEntry( obj, mes.Data(), opt );
          }
@@ -6868,15 +6866,15 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
 {
    if (!gPad) return nullptr;
 
-   if (strlen(emode)) gROOT->SetEditorMode(emode);
-   if (gROOT->GetEditorMode() == 0 && strlen(pname) > 2) gROOT->SetEditorMode(&pname[1]);
+   if (emode && strlen(emode)) gROOT->SetEditorMode(emode);
+   if (gROOT->GetEditorMode() == 0 && pname && strlen(pname) > 2) gROOT->SetEditorMode(&pname[1]);
 
    if (!fPrimitives) fPrimitives = new TList;
    gSystem->ProcessEvents();
    TObject *oldlast = gPad->GetListOfPrimitives() ? gPad->GetListOfPrimitives()->Last() : nullptr;
    TObject *obj = nullptr;
    Bool_t testlast = kFALSE;
-   Bool_t hasname = strlen(pname) > 0;
+   Bool_t hasname = pname && (strlen(pname) > 0);
    if (!pname[0] && !emode[0]) testlast = kTRUE;
    if (testlast) gROOT->SetEditorMode();
    while (!gSystem->ProcessEvents() && gROOT->GetSelectedPad() && gPad) {
