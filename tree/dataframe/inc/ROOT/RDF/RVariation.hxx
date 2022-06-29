@@ -210,7 +210,7 @@ public:
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
       RColumnReadersInfo info{fInputColumns, fColumnRegister, fIsDefine.data(), *fLoopManager};
-      fValues[slot] = MakeColumnReaders(slot, r, ColumnTypes_t{}, info);
+      fValues[slot] = GetColumnReaders(slot, r, ColumnTypes_t{}, info);
       fLastCheckedEntry[slot * CacheLineStep<Long64_t>()] = -1;
    }
 
