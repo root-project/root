@@ -1005,19 +1005,19 @@ Begin_Macro(source)
    hf->Fill(5,23);
 
    auto hf_copy1 = hf->Clone("hf_copy1");
-   auto lt = new TLatex();
+   TLatex lt;
 
    auto cx = new TCanvas(); cx->Divide(2,1);
 
    cx->cd(1);
    h2->Draw("box");
    hf->Draw("text colz same");
-   lt->DrawLatexNDC(0.3,0.5,"SAME");
+   lt.DrawLatexNDC(0.3,0.5,"SAME");
 
    cx->cd(2);
    h2->Draw("box");
    hf_copy1->Draw("text colz same0");
-   lt->DrawLatexNDC(0.3,0.5,"SAME0");
+   lt.DrawLatexNDC(0.3,0.5,"SAME0");
 }
 End_Macro
 
