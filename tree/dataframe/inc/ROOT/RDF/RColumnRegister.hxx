@@ -44,7 +44,9 @@ class RVariationReader;
 class RDefinesWithReaders {
    using RDefineBase = RDFDetail::RDefineBase;
 
-   std::shared_ptr<RDefineBase> fDefine; // cannot be null
+   // this is a shared_ptr only because we have to track its lifetime with a weak_ptr that we pass to jitted code
+   // (see BookDefineJit). it is never null.
+   std::shared_ptr<RDefineBase> fDefine;
    // Column readers per variation (in the map) per slot (in the vector).
    std::vector<std::unordered_map<std::string, std::unique_ptr<RDefineReader>>> fReadersPerVariation;
 
@@ -55,7 +57,9 @@ public:
 };
 
 class RVariationsWithReaders {
-   std::shared_ptr<RVariationBase> fVariation; // cannot be null
+   // this is a shared_ptr only because we have to track its lifetime with a weak_ptr that we pass to jitted code
+   // (see BookVariationJit). it is never null.
+   std::shared_ptr<RVariationBase> fVariation;
    // Column readers for this RVariation for a given variation (map key) and a given slot (vector element).
    std::vector<std::unordered_map<std::string, std::unique_ptr<RVariationReader>>> fReadersPerVariation;
 
