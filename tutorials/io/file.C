@@ -17,7 +17,7 @@ void file(){
    title->SetFillColor(16);
    title->Draw();
 
-   // horizonthal file layout
+   // horizontal file layout
    TPave *file = new TPave(1,8.5,20,11);
    file->SetFillColor(11);
    file->Draw();
@@ -109,7 +109,7 @@ void file(){
    TPaveText *lrecord = new TPaveText(10,0.2,19.5,6.5);
    lrecord->SetFillColor(33);
    lrecord->Draw();
-   TText *tlrh=lrecord->AddText("Logical Record Header (TKEY)");
+   TText *tlrh = lrecord->AddText("Logical Record Header (TKEY)");
    tlrh->SetTextAlign(22);
    tlrh->SetTextSize(0.04);
    lrecord->SetTextSize(0.027);
