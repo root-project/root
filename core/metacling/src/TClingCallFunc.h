@@ -114,15 +114,7 @@ private:
    tcling_callfunc_dtor_Wrapper_t
    make_dtor_wrapper(const TClingClassInfo* info);
 
-   // Implemented in source file.
-   template <typename T>
-   void execWithLL(void* address, cling::Value* val);
-   template <typename T>
-   void execWithULL(void* address, cling::Value* val);
-   template <class T>
-   ExecWithRetFunc_t InitRetAndExecIntegral(clang::QualType QT, cling::Value &ret);
-
-   ExecWithRetFunc_t InitRetAndExecBuiltin(clang::QualType QT, const clang::BuiltinType *BT, cling::Value &ret);
+   ExecWithRetFunc_t InitRetAndExecBuiltin(clang::QualType QT, cling::Value &ret);
    ExecWithRetFunc_t InitRetAndExecNoCtor(clang::QualType QT, cling::Value &ret);
    ExecWithRetFunc_t InitRetAndExec(const clang::FunctionDecl *FD, cling::Value &ret);
 
