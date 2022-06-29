@@ -1546,41 +1546,30 @@ void TClingCallFunc::exec(void *address, void *ret)
    (*fWrapper)(address, (int)num_args, (void **)vp_ary.data(), ret);
 }
 
-// Handle builtin types.
-TClingCallFunc::ExecWithRetFunc_t
-TClingCallFunc::InitRetAndExecBuiltin(QualType QT, cling::Value &ret) {
-   const BuiltinType* BT = QT->castAs<BuiltinType>();
-   ret = cling::Value(QT, *fInterp);
-   if (BT->isVoidType())
-      return [this](void* address, cling::Value& ret) { exec(address, 0); };
-
-   if (BT->isUnsignedIntegerOrEnumerationType())
-      return [this](void* address, cling::Value& ret) { exec(address, &ret.getULL()); };
-
-   if (BT->isSignedIntegerOrEnumerationType())
-      return [this](void* address, cling::Value& ret) { exec(address, &ret.getLL()); };
-
-   switch (BT->getKind()) {
-   case BuiltinType::Float:
-      return [this](void* address, cling::Value& ret) { exec(address, &ret.getFloat()); };
-   case BuiltinType::Double:
-      return [this](void* address, cling::Value& ret) { exec(address, &ret.getDouble()); };
-   case BuiltinType::LongDouble:
-      return [this](void* address, cling::Value& ret) { exec(address, &ret.getLongDouble()); };
-   default:
-      break;
-   }
-
-   ::Error("TClingCallFunc::InitRetAndExecBuiltin",
-           "Invalid type '%s'!", BT->getTypeClassName());
-   return {};
-}
-
-
 TClingCallFunc::ExecWithRetFunc_t
 TClingCallFunc::InitRetAndExecNoCtor(clang::QualType QT, cling::Value &ret) {
-   if (QT->isBuiltinType())
-      return InitRetAndExecBuiltin(QT, ret);
+   if (auto BT = dyn_cast<const BuiltinType>(QT.getTypePtr())) {
+      ret = cling::Value(QT, *fInterp);
+      if (BT->isVoidType())
+         return [this](void* address, cling::Value& ret) { exec(address, 0); };
+
+      if (BT->isUnsignedIntegerOrEnumerationType())
+         return [this](void* address, cling::Value& ret) { exec(address, &ret.getULL()); };
+
+      if (BT->isSignedIntegerOrEnumerationType())
+         return [this](void* address, cling::Value& ret) { exec(address, &ret.getLL()); };
+
+      switch (BT->getKind()) {
+      case BuiltinType::Float:
+         return [this](void* address, cling::Value& ret) { exec(address, &ret.getFloat()); };
+      case BuiltinType::Double:
+         return [this](void* address, cling::Value& ret) { exec(address, &ret.getDouble()); };
+      case BuiltinType::LongDouble:
+         return [this](void* address, cling::Value& ret) { exec(address, &ret.getLongDouble()); };
+      default:
+         break;
+      }
+   }
 
    if (QT->isReferenceType() || QT->isMemberPointerType() || QT->isRecordType()) {
       ret = cling::Value(QT, *fInterp);
