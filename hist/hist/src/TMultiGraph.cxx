@@ -1132,7 +1132,7 @@ void TMultiGraph::Paint(Option_t *choptin)
 
    char option[128];
    strlcpy(option,choptin,128);
-   Int_t nch = strlen(choptin);
+   Int_t nch = choptin ? strlen(choptin) : 0;
    for (Int_t i=0;i<nch;i++) option[i] = toupper(option[i]);
 
    // Automatic color

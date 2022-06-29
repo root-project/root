@@ -191,7 +191,7 @@ TFormula::TFormula(const char *name,const char *expression) :
 
    //eliminate blanks in expression
    Int_t i,j,nch;
-   nch = strlen(expression);
+   nch = expression ? strlen(expression) : 0;
    char *expr = new char[nch+1];
    j = 0;
    for (i=0;i<nch;i++) {

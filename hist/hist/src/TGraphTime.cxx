@@ -174,7 +174,7 @@ void TGraphTime::Paint(Option_t *option)
 void TGraphTime::SaveAnimatedGif(const char *filename) const
 {
    TObject *frame = gPad->GetPrimitive("frame");
-   TList *list = 0;
+   TList *list = nullptr;
    TObjLink *lnk;
 
    for (Int_t s=0;s<fNsteps;s++) {
@@ -190,9 +190,12 @@ void TGraphTime::SaveAnimatedGif(const char *filename) const
             lnk = lnk->Next();
          }
          gPad->Update();
-         if (strlen(filename) > 0) gPad->Print(Form("%s+",filename));
-         else                      gPad->Print(Form("%s+",GetName()));
-         if (fSleepTime > 0) gSystem->Sleep(fSleepTime);
+         if (filename && strlen(filename) > 0)
+            gPad->Print(Form("%s+", filename));
+         else
+            gPad->Print(Form("%s+", GetName()));
+         if (fSleepTime > 0)
+            gSystem->Sleep(fSleepTime);
       }
    }
 }
