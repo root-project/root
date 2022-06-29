@@ -62,14 +62,14 @@ void event(){
    p6->SetFillColor(42);
    p6->AddText("10 bytes");
    p6->Draw();
-   TText *text = new TText();
-   text->SetTextAlign(12);
-   text->SetTextSize(0.04);
-   text->SetTextFont(72);
-   text->DrawText(6.2,11.5,"Header:Event_flag");
-   text->DrawText(7.2,9.5,"Trigger_Info");
-   text->DrawText(8.2,7.5,"Muon_Detector: TOF");
-   text->DrawText(9.2,5.5,"Calorimeters");
-   text->DrawText(10.2,3.5,"Forward_Detectors");
-   text->DrawText(11.2,1.5,"TPCs");
+   TText text;
+   text.SetTextAlign(12);
+   text.SetTextSize(0.04);
+   text.SetTextFont(72);
+   text.DrawText(6.2,11.5,"Header:Event_flag");
+   text.DrawText(7.2,9.5,"Trigger_Info");
+   text.DrawText(8.2,7.5,"Muon_Detector: TOF");
+   text.DrawText(9.2,5.5,"Calorimeters");
+   text.DrawText(10.2,3.5,"Forward_Detectors");
+   text.DrawText(11.2,1.5,"TPCs");
 }
