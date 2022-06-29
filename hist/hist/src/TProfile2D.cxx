@@ -1820,7 +1820,7 @@ TProfile2D * TProfile2D::Rebin2D(Int_t nxgroup ,Int_t nygroup,const char * newna
    }
    //nxgroup == nygroup == 1
    else{
-      if((newname) && (strlen(newname) > 0))
+      if(newname && (strlen(newname) > 0))
          return (TProfile2D*)Clone(newname);
       else
          return this;

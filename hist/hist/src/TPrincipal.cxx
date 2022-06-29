@@ -271,7 +271,7 @@ TPrincipal::TPrincipal(Int_t nVariables, Option_t *opt)
    fIsNormalised       = kFALSE;
    fNumberOfDataPoints = 0;
    fNumberOfVariables  = nVariables;
-   while (strlen(opt) > 0) {
+   while (opt && strlen(opt) > 0) {
       switch(*opt++) {
          case 'N':
          case 'n':
@@ -580,7 +580,7 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
    Bool_t makeE  = kFALSE;
    Bool_t makeS  = kFALSE;
 
-   Int_t len     = strlen(opt);
+   Int_t len     = opt ? strlen(opt) : 0;
    Int_t i,j,k;
    for (i = 0; i < len; i++) {
       switch (opt[i]) {
@@ -1090,7 +1090,7 @@ void TPrincipal::Print(Option_t *opt) const
    Bool_t printS = kFALSE;
    Bool_t printE = kFALSE;
 
-   Int_t len     = strlen(opt);
+   Int_t len     = opt ? strlen(opt) : 0;
    for (Int_t i = 0; i < len; i++) {
       switch (opt[i]) {
          case 'V':
