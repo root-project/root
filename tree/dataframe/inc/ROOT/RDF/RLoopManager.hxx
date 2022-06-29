@@ -13,11 +13,13 @@
 
 #include "ROOT/InternalTreeUtils.hxx" // RNoCleanupNotifier
 #include "ROOT/RDF/RColumnReaderBase.hxx"
+#include "ROOT/RDF/RDatasetSpec.hxx"
 #include "ROOT/RDF/RNodeBase.hxx"
 #include "ROOT/RDF/RNewSampleNotifier.hxx"
 #include "ROOT/RDF/RSampleInfo.hxx"
 
 #include <functional>
+#include <limits>
 #include <map>
 #include <memory>
 #include <string>
@@ -119,6 +121,9 @@ class RLoopManager : public RNodeBase {
    /// Shared pointer to the input TTree. It does not delete the pointee if the TTree/TChain was passed directly as an
    /// argument to RDataFrame's ctor (in which case we let users retain ownership).
    std::shared_ptr<TTree> fTree{nullptr};
+   Long64_t fStartEntry{0};
+   Long64_t fEndEntry{std::numeric_limits<Long64_t>::max()};
+   std::vector<std::unique_ptr<TTree>> fFriends; ///< Friends of the fTree. Only used if we constructed fTree ourselves.
    const ColumnNames_t fDefaultColumns;
    const ULong64_t fNEmptyEntries{0};
    const unsigned int fNSlots{1};
@@ -162,6 +167,7 @@ public:
    RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
    RLoopManager(ULong64_t nEmptyEntries);
    RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t &defaultBranches);
+   RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec);
    RLoopManager(const RLoopManager &) = delete;
    RLoopManager &operator=(const RLoopManager &) = delete;
 
