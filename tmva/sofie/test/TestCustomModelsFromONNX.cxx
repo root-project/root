@@ -36,6 +36,18 @@
 #include "ConvWithAsymmetricPadding_FromONNX.hxx"
 #include "input_models/references/ConvWithAsymmetricPadding.ref.hxx"
 
+#include "MaxPool1d_FromONNX.hxx"
+#include "input_models/references/MaxPool1d.ref.hxx"
+
+#include "MaxPool2d_FromONNX.hxx"
+#include "input_models/references/MaxPool2d.ref.hxx"
+
+#include "MaxPool3d_FromONNX.hxx"
+#include "input_models/references/MaxPool3d.ref.hxx"
+
+#include "AvgPool_FromONNX.hxx"
+#include "input_models/references/AvgPool.ref.hxx"
+
 #include "RNNBatchwise_FromONNX.hxx"
 #include "input_models/references/RNNBatchwise.ref.hxx"
 
@@ -358,6 +370,131 @@ TEST(DISABLED_ONNX, ConvWithAsymmetricPadding)
    for (size_t i = 0; i < output.size(); ++i) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
+}
+
+TEST(ONNX, MaxPool1d){
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard  input
+   std::vector<float> input({0.0907,  0.1029,  0.8143,  1.4497, -0.7785,  0.3825, -0.3764,
+           1.5785, -0.0835,  0.1622,
+          1.5867,  0.9823, -0.8821,  0.4439, -0.1378, -0.2273, -0.0198,
+          -2.0230,  0.0905,  0.6674,
+         -1.4290, -1.3100, -0.9439, -0.0833, -0.1919,  0.6886,  0.9389,
+          -1.2914, -1.3584, -2.0341,
+         -0.3269,  0.1704,  1.1776,  1.3972, -1.8874, -1.5334,  1.1541,
+           0.3011,  0.6569, -2.3504,
+          0.4033,  0.1142,  2.2846, -1.3948, -0.8573,  0.5756, -1.0864,
+           0.2283,  0.8947,  1.7627,
+         -0.1657,  0.0649, -1.6066,  0.4162, -1.1525, -0.8184,  1.1324,
+          -1.1086,  0.1061,  1.0071});
+   
+   TMVA_SOFIE_MaxPool1d::Session s("MaxPool1d_FromONNX.dat");
+   std::vector<float> output = s.infer(input.data());
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(MaxPool1d_ExpectedOutput::output) / sizeof(float));
+   
+   float *correct = MaxPool1d_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+
+}
+
+TEST(ONNX, MaxPool2d){
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard  input
+   std::vector<float> input({
+      0.6266,  0.1656,  0.2753, -0.4558, -1.4592,  0.9285, -1.3410,
+            1.3223, -0.5936, -1.3648,
+          -0.2989,  0.5901, -0.8845, -0.0433,  0.8314, -1.7159, -0.5765,
+            0.8678,  1.0257,  0.7847,
+          -0.3421, -1.2364, -0.5805,  0.4421,  1.2184,  0.5043,  1.6823,
+           -1.0483, -2.2798, -1.8927,
+           0.7716,  0.0405,  0.3121, -0.3011, -0.3266, -1.9660,  1.0837,
+            0.2317,  0.9084, -0.3285,
+          -0.9398, -0.2065, -0.9499, -0.9739, -0.1288, -0.1375, -1.2612,
+            0.8810,  0.8506,  0.4455
+   });
+   
+   TMVA_SOFIE_MaxPool2d::Session s("MaxPool2d_FromONNX.dat");
+   std::vector<float> output = s.infer(input.data());
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(MaxPool2d_ExpectedOutput::output) / sizeof(float));
+   
+   float *correct = MaxPool2d_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+
+}
+
+TEST(ONNX, MaxPool3d){
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard  input
+   std::vector<float> input({
+      -2.6496,  1.0476, -0.5153,
+            0.3771,  0.4129, -0.3077,
+           -0.8717, -0.8040, -0.3525,
+
+          -0.1765, -0.3364,  0.8737,
+           -0.2381, -0.8297,  0.4666,
+            0.6984, -0.6760,  0.6298,
+
+           1.3833,  0.1101,  0.2039,
+           -0.5477,  0.2341,  0.9181,
+            0.3842,  0.2428,  1.7924
+   });
+   
+   TMVA_SOFIE_MaxPool3d::Session s("MaxPool3d_FromONNX.dat");
+   std::vector<float> output = s.infer(input.data());
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(MaxPool3d_ExpectedOutput::output) / sizeof(float));
+   
+   float *correct = MaxPool3d_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+
+}
+
+TEST(ONNX, AvgPool){
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard  input
+   std::vector<float> input({
+      0.4764, -0.1976,  1.6506, -0.2421,  0.6412,  1.9985,  0.3938,
+            0.1347,  0.2204, -0.7503,
+           0.2139,  0.7285, -0.0210, -0.4585, -1.5333, -0.4772,  0.5560,
+            0.6323, -2.5372,  1.4906,
+          -1.1062, -0.9703,  0.2366, -0.9184,  0.3014,  0.7985, -0.6841,
+           -2.2854, -2.7728, -1.2806,
+          -1.0947, -0.5990, -0.3033, -1.9042, -0.5403,  0.2332,  0.9215,
+           -0.1549,  0.0557, -0.5567,
+          -1.4971,  0.5386, -0.2922,  0.4860, -0.3973, -0.4624,  0.4514,
+            0.2385,  0.3783, -1.0500
+   });
+   
+   TMVA_SOFIE_AvgPool::Session s("AvgPool_FromONNX.dat");
+   std::vector<float> output = s.infer(input.data());
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(AvgPool_ExpectedOutput::output) / sizeof(float));
+   
+   float *correct = AvgPool_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+
 }
 
 TEST(ONNX, RNNBatchwise)
