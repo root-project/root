@@ -215,18 +215,20 @@ void archi() {
          anal->Draw();
       }
    }
-   TText *daq = new TText();
-   daq->SetTextSize(0.07);
-   daq->SetTextAlign(22);
-   daq->DrawText(1.5,7.3,"DAQ");
-   daq->DrawText(6,7.3,"DST");
-   daq->DrawText(10.,7.3,"Physics Analysis");
-   daq->DrawText(1.5,0.7,"Events");
-   daq->DrawText(1.5,0.3,"Containers");
-   daq->DrawText(6,0.7,"Tracks/Hits");
-   daq->DrawText(6,0.3,"Containers");
-   daq->DrawText(10.,0.7,"Attributes");
-   daq->DrawText(10.,0.3,"Containers");
+
+   // just temporary object, used for common attributes
+   TText daq;
+   daq.SetTextSize(0.07);
+   daq.SetTextAlign(22);
+   daq.DrawText(1.5,7.3,"DAQ");
+   daq.DrawText(6,7.3,"DST");
+   daq.DrawText(10.,7.3,"Physics Analysis");
+   daq.DrawText(1.5,0.7,"Events");
+   daq.DrawText(1.5,0.3,"Containers");
+   daq.DrawText(6,0.7,"Tracks/Hits");
+   daq.DrawText(6,0.3,"Containers");
+   daq.DrawText(10.,0.7,"Attributes");
+   daq.DrawText(10.,0.3,"Containers");
 
    c1->cd();
 }
