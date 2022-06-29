@@ -4,7 +4,7 @@
 // Author: Vassil Vassilev   9/02/2013
 
 /*************************************************************************
- * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -127,65 +127,6 @@ EvaluateExpr(cling::Interpreter &interp, const Expr *E, cling::Value &V)
    // Evaluate() will set V to invalid if evaluation fails.
    interp.evaluate(buf, V);
 }
-
-namespace {
-   template <typename returnType>
-   returnType sv_to(const cling::Value &val)
-   {
-      QualType QT = val.getType().getCanonicalType();
-      if (QT->isSignedIntegerOrEnumerationType())
-        return val.getLL();
-      else if (QT->isUnsignedIntegerOrEnumerationType())
-        return val.getULL();
-      else if (QT->isNullPtrType())
-        return 0;
-
-      if (const BuiltinType *BT = dyn_cast<BuiltinType>(&*QT)) {
-        switch (BT->getKind()) {
-            case BuiltinType::Half:
-               // half in OpenCL, __fp16 in ARM NEON
-               break;
-            case BuiltinType::Float:
-               return (returnType) val.getFloat();
-               break;
-            case BuiltinType::Double:
-               return (returnType) val.getDouble();
-               break;
-            case BuiltinType::LongDouble:
-               return (returnType) val.getLongDouble();
-               break;
-            default:
-               break;
-        }
-      }
-      if (QT->isPointerType() || QT->isArrayType() || QT->isRecordType() ||
-            QT->isReferenceType()) {
-         return (returnType)(Longptr_t) val.getPtr();
-      }
-      if (QT->isMemberPointerType()) {
-         const MemberPointerType *MPT = QT->getAs<MemberPointerType>();
-         if (MPT && MPT->isMemberDataPointer()) {
-            return (returnType)(ptrdiff_t)val.getPtr();
-         }
-         return (returnType)(Longptr_t) val.getPtr();
-      }
-      ::Error("TClingCallFunc::sv_to", "Invalid Type!");
-      QT->dump();
-      return 0;
-   }
-
-   static
-   long long sv_to_long_long(const cling::Value &val)
-   {
-      return val.getAs<long long>();
-   }
-   static
-   unsigned long long sv_to_ulong_long(const cling::Value &val)
-   {
-     return val.getAs<unsigned long long>();
-   }
-
-} // unnamed namespace.
 
 size_t TClingCallFunc::CalculateMinRequiredArguments()
 {
@@ -1545,7 +1486,7 @@ void TClingCallFunc::exec(void *address, void *ret)
             case BuiltinType::ULongLong: vh.u.ull = fArgVals[i].simplisticCastAs<unsigned long long>();
                break;
                //  Signed Types
-            case BuiltinType::Char_S: vh.u.c = (char) fArgVals[i].simplisticCastAs<char>();
+            case BuiltinType::Char_S: vh.u.c = fArgVals[i].simplisticCastAs<char>();
                break;
             case BuiltinType::SChar: vh.u.sc = fArgVals[i].simplisticCastAs<signed char>();
                break;
@@ -1578,36 +1519,25 @@ void TClingCallFunc::exec(void *address, void *ret)
             }
             vh_ary.push_back(vh);
             vp_ary.push_back(&vh_ary.back());
-         } else if (QT->isReferenceType()) {
-            // the argument is already a pointer value (point to the same thing
-            // as the reference.
-            vp_ary.push_back((void *) sv_to_ulong_long(fArgVals[i]));
-         } else if (QT->isPointerType() || QT->isArrayType()) {
+         } else if (QT->isReferenceType() || QT->isRecordType()) {
+            // the argument is already a pointer value (points to the same thing
+            // as the reference or pointing to object passed by value.
+            vp_ary.push_back((void *) fArgVals[i].simplisticCastAs<unsigned long long>());
+         } else if (QT->isPointerType() || QT->isArrayType() || QT->isMemberPointerType()) {
             ValHolder vh;
-            vh.u.vp = (void *) sv_to_ulong_long(fArgVals[i]);
+            vh.u.vp = (void *) fArgVals[i].simplisticCastAs<unsigned long long>();
             vh_ary.push_back(vh);
             vp_ary.push_back(&vh_ary.back());
-         } else if (QT->isRecordType()) {
-            // the argument is already a pointer value (pointing to object passed
-            // by value).
-            vp_ary.push_back((void *) sv_to_ulong_long(fArgVals[i]));
-         } else if (const EnumType *ET =
-                    dyn_cast<EnumType>(&*QT)) {
-            // Note: We may need to worry about the underlying type
-            //       of the enum here.
-            (void) ET;
+         } else if (QT->isEnumeralType()) {
+            // FIXME: Handle isScopedEnumeralType ()
+            // FIXME:We may need to worry about the underlying type of the enum
             ValHolder vh;
-            vh.u.i = (int) sv_to_long_long(fArgVals[i]);
-            vh_ary.push_back(vh);
-            vp_ary.push_back(&vh_ary.back());
-         } else if (QT->isMemberPointerType()) {
-            ValHolder vh;
-            vh.u.vp = (void *) sv_to_ulong_long(fArgVals[i]);
+            vh.u.i = fArgVals[i].simplisticCastAs<int>();
             vh_ary.push_back(vh);
             vp_ary.push_back(&vh_ary.back());
          } else {
             ::Error("TClingCallFunc::exec(void*)",
-                  "Invalid type (unrecognized)!");
+                    "Invalid type '%s'", BT->getTypeClassName());
             QT->dump();
             return;
          }
@@ -1897,7 +1827,7 @@ T TClingCallFunc::ExecT(void *address)
 
    if (ret.needsManagedAllocation())
       ((TCling *)gCling)->RegisterTemporary(ret);
-   return sv_to<T>(ret);
+   return ret.simplisticCastAs<T>();
 }
 
 Longptr_t TClingCallFunc::ExecInt(void *address)
