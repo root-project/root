@@ -6202,8 +6202,10 @@ void TH1::Paint(Option_t *option)
    GetPainter(option);
 
    if (fPainter) {
-      if (strlen(option) > 0) fPainter->Paint(option);
-      else                    fPainter->Paint(fOption.Data());
+      if (option && strlen(option) > 0)
+         fPainter->Paint(option);
+      else
+         fPainter->Paint(fOption.Data());
    }
 }
 
