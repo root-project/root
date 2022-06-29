@@ -95,7 +95,7 @@ public:
    {
       RDFInternal::RColumnReadersInfo info{RActionBase::GetColumnNames(), RActionBase::GetColRegister(),
                                            fIsDefine.data(), *fLoopManager};
-      fValues[slot] = RDFInternal::MakeColumnReaders(slot, r, ColumnTypes_t{}, info);
+      fValues[slot] = RDFInternal::GetColumnReaders(slot, r, ColumnTypes_t{}, info);
       fHelper.InitTask(r, slot);
    }
 

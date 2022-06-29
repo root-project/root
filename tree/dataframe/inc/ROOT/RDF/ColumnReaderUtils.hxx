@@ -42,8 +42,8 @@ namespace RDFDetail = ROOT::Detail::RDF;
 
 template <typename T>
 std::shared_ptr<RDFDetail::RColumnReaderBase>
-MakeColumnReader(unsigned int slot, std::shared_ptr<RColumnReaderBase> defineOrVariationReader, RLoopManager &lm,
-                 TTreeReader *r, const std::string &colName)
+GetColumnReader(unsigned int slot, std::shared_ptr<RColumnReaderBase> defineOrVariationReader, RLoopManager &lm,
+                TTreeReader *r, const std::string &colName)
 {
    if (defineOrVariationReader != nullptr)
       return defineOrVariationReader;
@@ -61,10 +61,10 @@ MakeColumnReader(unsigned int slot, std::shared_ptr<RColumnReaderBase> defineOrV
    return lm.AddTreeColumnReader(slot, colName, std::move(treeColReader), typeid(T));
 }
 
-/// This type aggregates some of the arguments passed to MakeColumnReaders.
+/// This type aggregates some of the arguments passed to GetColumnReaders.
 /// We need to pass a single RColumnReadersInfo object rather than each argument separately because with too many
 /// arguments passed, gcc 7.5.0 and cling disagree on the ABI, which leads to the last function argument being read
-/// incorrectly from a compiled MakeColumnReaders symbols when invoked from a jitted symbol.
+/// incorrectly from a compiled GetColumnReaders symbols when invoked from a jitted symbol.
 struct RColumnReadersInfo {
    const std::vector<std::string> &fColNames;
    RColumnRegister &fColRegister;
@@ -75,8 +75,8 @@ struct RColumnReadersInfo {
 /// Create a group of column readers, one per type in the parameter pack.
 template <typename... ColTypes>
 std::array<std::shared_ptr<RDFDetail::RColumnReaderBase>, sizeof...(ColTypes)>
-MakeColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, RColumnReadersInfo &colInfo,
-                  const std::string &variationName = "nominal")
+GetColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, const RColumnReadersInfo &colInfo,
+                 const std::string &variationName = "nominal")
 {
    // see RColumnReadersInfo for why we pass these arguments like this rather than directly as function arguments
    const auto &colNames = colInfo.fColNames;
@@ -84,15 +84,15 @@ MakeColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, RCol
    auto &colRegister = colInfo.fColRegister;
 
    int i = -1;
-   std::array<std::shared_ptr<RDFDetail::RColumnReaderBase>, sizeof...(ColTypes)> ret{{{(
-      ++i, MakeColumnReader<ColTypes>(slot, colRegister.GetReader(slot, colNames[i], variationName, typeid(ColTypes)),
-                                      lm, r, colNames[i]))}...}};
+   std::array<std::shared_ptr<RDFDetail::RColumnReaderBase>, sizeof...(ColTypes)> ret{
+      {{(++i, GetColumnReader<ColTypes>(slot, colRegister.GetReader(slot, colNames[i], variationName, typeid(ColTypes)),
+                                        lm, r, colNames[i]))}...}};
    return ret;
 }
 
 // Shortcut overload for the case of no columns
 inline std::array<std::shared_ptr<RDFDetail::RColumnReaderBase>, 0>
-MakeColumnReaders(unsigned int, TTreeReader *, TypeList<>, RColumnReadersInfo &, const std::string & = "nominal")
+GetColumnReaders(unsigned int, TTreeReader *, TypeList<>, const RColumnReadersInfo &, const std::string & = "nominal")
 {
    return {};
 }
