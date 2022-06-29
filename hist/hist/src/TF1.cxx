@@ -618,11 +618,11 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       // Go char-by-char to split terms and define the relevant functions
       int parenCount = 0;
       int termStart = 0;
-      TObjArray *newFuncs = new TObjArray();
-      newFuncs->SetOwner(kTRUE);
-      TObjArray *coeffNames = new TObjArray();
-      coeffNames->SetOwner(kTRUE);
-      TString fullFormula("");
+      TObjArray newFuncs;
+      newFuncs.SetOwner(kTRUE);
+      TObjArray coeffNames;
+      coeffNames.SetOwner(kTRUE);
+      TString fullFormula;
       for (int i = 0; i < formDense.Length(); ++i) {
          if (formDense[i] == '(')
             parenCount++;
@@ -630,11 +630,11 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
             parenCount--;
          else if (formDense[i] == delimiter && parenCount == 0) {
             // term goes from termStart to i
-            DefineNSUMTerm(newFuncs, coeffNames, fullFormula, formDense, termStart, i, xmin, xmax);
+            DefineNSUMTerm(&newFuncs, &coeffNames, fullFormula, formDense, termStart, i, xmin, xmax);
             termStart = i + 1;
          }
       }
-      DefineNSUMTerm(newFuncs, coeffNames, fullFormula, formDense, termStart, formDense.Length(), xmin, xmax);
+      DefineNSUMTerm(&newFuncs, &coeffNames, fullFormula, formDense, termStart, formDense.Length(), xmin, xmax);
 
       TF1NormSum *normSum = new TF1NormSum(fullFormula, xmin, xmax);
 
@@ -651,9 +651,8 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
 
       // Parameter names
       for (int i = 0; i < fNpar; i++) {
-         if (coeffNames->At(i)) {
-            TString coeffName = ((TObjString *)coeffNames->At(i))->GetString();
-            this->SetParName(i, coeffName.Data());
+         if (coeffNames.At(i)) {
+            this->SetParName(i, coeffNames.At(i)->GetName());
          } else {
             this->SetParName(i, normSum->GetParName(i));
          }
