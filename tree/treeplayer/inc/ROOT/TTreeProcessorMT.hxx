@@ -27,6 +27,8 @@
 #include <functional>
 #include <memory>
 #include <vector>
+#include <limits>
+#include <RtypesCore.h> // Long64_t
 
 /** \class TTreeView
     \brief A helper class that encapsulates a file and a tree.
@@ -46,6 +48,7 @@ the threaded object.
 */
 
 namespace ROOT {
+
 namespace Internal {
 
 class TTreeView {
@@ -55,7 +58,7 @@ class TTreeView {
    std::unique_ptr<TEntryList> fEntryList;        ///< TEntryList for fChain, if present
    // NOTE: fFriends and fEntryList MUST come before fChain to be deleted after it, because neither friend trees nor
    // entrylists are deregistered from the main tree at destruction (ROOT-9283 tracks the issue for friends).
-   std::unique_ptr<TChain> fChain;                ///< Chain on which to operate
+   std::unique_ptr<TChain> fChain; ///< Chain on which to operate
 
    void MakeChain(const std::vector<std::string> &treeName, const std::vector<std::string> &fileNames,
                   const TreeUtils::RFriendInfo &friendInfo, const std::vector<Long64_t> &nEntries,
@@ -66,8 +69,9 @@ public:
    // no-op, we don't want to copy the local TChains
    TTreeView(const TTreeView &) {}
    std::unique_ptr<TTreeReader> GetTreeReader(Long64_t start, Long64_t end, const std::vector<std::string> &treeName,
-                                              const std::vector<std::string> &fileNames, const TreeUtils::RFriendInfo &friendInfo,
-                                              const TEntryList &entryList, const std::vector<Long64_t> &nEntries,
+                                              const std::vector<std::string> &fileNames,
+                                              const TreeUtils::RFriendInfo &friendInfo, const TEntryList &entryList,
+                                              const std::vector<Long64_t> &nEntries,
                                               const std::vector<std::vector<Long64_t>> &friendEntries);
    void Reset();
 };
@@ -89,12 +93,17 @@ private:
    std::vector<std::string> FindTreeNames();
    static unsigned int fgTasksPerWorkerHint;
 
+   std::pair<Long64_t, Long64_t> fGlobalRange{0, std::numeric_limits<Long64_t>::max()};
+
 public:
-   TTreeProcessorMT(std::string_view filename, std::string_view treename = "", UInt_t nThreads = 0u);
+   TTreeProcessorMT(std::string_view filename, std::string_view treename = "", UInt_t nThreads = 0u,
+                    const std::pair<Long64_t, Long64_t> &globalRange = {0, std::numeric_limits<Long64_t>::max()});
    TTreeProcessorMT(const std::vector<std::string_view> &filenames, std::string_view treename = "",
-                    UInt_t nThreads = 0u);
+                    UInt_t nThreads = 0u,
+                    const std::pair<Long64_t, Long64_t> &globalRange = {0, std::numeric_limits<Long64_t>::max()});
    TTreeProcessorMT(TTree &tree, const TEntryList &entries, UInt_t nThreads = 0u);
-   TTreeProcessorMT(TTree &tree, UInt_t nThreads = 0u);
+   TTreeProcessorMT(TTree &tree, UInt_t nThreads = 0u,
+                    const std::pair<Long64_t, Long64_t> &globalRange = {0, std::numeric_limits<Long64_t>::max()});
 
    void Process(std::function<void(TTreeReader &)> func);
 
