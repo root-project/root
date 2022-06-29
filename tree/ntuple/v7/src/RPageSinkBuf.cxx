@@ -113,18 +113,15 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::
 
    // Otherwise, try to do it per column
    for (auto &bufColumn : fBufferedColumns) {
-      auto hasSealedPagesOnly = bufColumn.HasSealedPagesOnly();
-      auto drained = bufColumn.DrainBufferedPages();
-      if (hasSealedPagesOnly) {
-         const auto &sealedPages = std::get<RPageStorage::SealedPageSequence_t>(drained);
-         RPageStorage::RSealedPageGroup toCommit[] = {
-            RSealedPageGroup(bufColumn.GetHandle().fId, sealedPages.cbegin(), sealedPages.cend())};
-         fInnerSink->CommitSealedPageV({std::begin(toCommit), std::end(toCommit)});
-         continue;
-      }
+      // In practice, either all (see above) or none of the buffered pages have been sealed, depending on whether
+      // a task scheduler is available. The rare condition of a few columns consisting only of sealed pages should
+      // not happen unless the API is misused.
+      if (bufColumn.HasSealedPagesOnly())
+         throw RException(R__FAIL("only a few columns have all pages sealed"));
 
       // Slow path: if the buffered column contains both sealed and unsealed pages, commit them one by one.
       // TODO(jalopezg): coalesce contiguous sealed pages and commit via `CommitSealedPageV()`.
+      auto drained = bufColumn.DrainBufferedPages();
       for (auto &bufPage : std::get<std::deque<RColumnBuf::RPageZipItem>>(drained)) {
          if (bufPage.IsSealed()) {
             fInnerSink->CommitSealedPage(bufColumn.GetHandle().fId, *bufPage.fSealedPage);

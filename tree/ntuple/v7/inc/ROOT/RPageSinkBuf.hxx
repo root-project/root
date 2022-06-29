@@ -80,7 +80,7 @@ private:
          return std::prev(fBufferedPages.end());
       }
       const RPageStorage::ColumnHandle_t &GetHandle() const { return fCol; }
-      bool HasSealedPagesOnly() const { return fBufferedPages.size() == fSealedPages.size(); }
+      bool HasSealedPagesOnly() const { return fBufferedPages.size() && fBufferedPages.size() == fSealedPages.size(); }
       const RPageStorage::SealedPageSequence_t &GetSealedPages() const { return fSealedPages; }
 
       using BufferedPages_t = std::tuple<std::deque<RPageZipItem>, RPageStorage::SealedPageSequence_t>;
