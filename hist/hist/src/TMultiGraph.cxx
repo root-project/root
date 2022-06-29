@@ -1366,17 +1366,17 @@ void TMultiGraph::Paint(Option_t *choptin)
 
 void TMultiGraph::PaintPads(Option_t *option)
 {
-   TIter next(fGraphs);
+   if (!gPad) return;
+
    Int_t neededPads = fGraphs->GetSize();
    Int_t existingPads = 0;
-   TString opt = (TString)option;
 
    TVirtualPad *curPad = gPad;
-   TObject *obj;
    TIter nextPad(curPad->GetListOfPrimitives());
 
-   while ((obj = nextPad())) {
-      if (obj->InheritsFrom(TVirtualPad::Class())) existingPads++;
+   while (auto obj = nextPad()) {
+      if (obj->InheritsFrom(TVirtualPad::Class()))
+         existingPads++;
    }
    if (existingPads < neededPads) {
       curPad->Clear();
@@ -1388,20 +1388,13 @@ void TMultiGraph::PaintPads(Option_t *option)
    }
    Int_t i = 0;
 
-   TObjOptLink *lnk = (TObjOptLink*)fGraphs->FirstLink();
-
-   while (lnk) {
-      TGraph *g = (TGraph*)lnk->GetObject();
-      i++;
-      curPad->cd(i);
-      TString apopt = lnk->GetOption();
-      if (strlen(apopt)) {
-         g->Draw((apopt.Append("A")).Data());
-      } else {
-         if (strlen(opt)) g->Draw(opt.Append("A"));
-         else             g->Draw("LA");
-      }
-      lnk = (TObjOptLink*)lnk->Next();
+   TIter nextGraph(fGraphs);
+   while (auto g = (TGraph *) nextGraph()) {
+      curPad->cd(++i);
+      TString apopt = nextGraph.GetOption();
+      if ((apopt.Length() == 0) && option) apopt = option;
+      if (apopt.Length() == 0) apopt = "L";
+      g->Draw(apopt.Append("A").Data());
    }
 
    curPad->cd();
