@@ -1546,149 +1546,33 @@ void TClingCallFunc::exec(void *address, void *ret)
    (*fWrapper)(address, (int)num_args, (void **)vp_ary.data(), ret);
 }
 
-template <typename T>
-void TClingCallFunc::execWithLL(void *address, cling::Value *val)
-{
-   T ret; // leave uninit for valgrind's sake!
-   exec(address, &ret);
-   val->getLL() = ret;
-}
-
-template <typename T>
-void TClingCallFunc::execWithULL(void *address, cling::Value *val)
-{
-   T ret; // leave uninit for valgrind's sake!
-   exec(address, &ret);
-   val->getULL() = ret;
-}
-
-// Handle integral types.
-template <class T>
-TClingCallFunc::ExecWithRetFunc_t TClingCallFunc::InitRetAndExecIntegral(QualType QT, cling::Value &ret)
-{
-   ret = cling::Value::Create<T>(QT.getAsOpaquePtr(), *fInterp);
-   static_assert(std::is_integral<T>::value, "Must be called with integral T");
-   if (std::is_signed<T>::value)
-      return [this](void* address, cling::Value& ret) { execWithLL<T>(address, &ret); };
-   else
-      return [this](void* address, cling::Value& ret) { execWithULL<T>(address, &ret); };
-}
-
 // Handle builtin types.
 TClingCallFunc::ExecWithRetFunc_t
-TClingCallFunc::InitRetAndExecBuiltin(QualType QT, const clang::BuiltinType *BT, cling::Value &ret) {
+TClingCallFunc::InitRetAndExecBuiltin(QualType QT, cling::Value &ret) {
+   const BuiltinType* BT = QT->castAs<BuiltinType>();
+   ret = cling::Value(QT, *fInterp);
+   if (BT->isVoidType())
+      return [this](void* address, cling::Value& ret) { exec(address, 0); };
+
+   if (BT->isUnsignedIntegerOrEnumerationType())
+      return [this](void* address, cling::Value& ret) { exec(address, &ret.getULL()); };
+
+   if (BT->isSignedIntegerOrEnumerationType())
+      return [this](void* address, cling::Value& ret) { exec(address, &ret.getLL()); };
+
    switch (BT->getKind()) {
-      case BuiltinType::Void: {
-         ret = cling::Value::Create<void>(QT.getAsOpaquePtr(), *fInterp);
-         return [this](void* address, cling::Value& ret) { exec(address, 0); };
-         break;
-      }
-
-         //
-         //  Unsigned Types
-         //
-      case BuiltinType::Bool:
-         return InitRetAndExecIntegral<bool>(QT, ret);
-         break;
-      case BuiltinType::Char_U: // char on targets where it is unsigned
-      case BuiltinType::UChar:
-         return InitRetAndExecIntegral<char>(QT, ret);
-         break;
-      case BuiltinType::WChar_U:
-         return InitRetAndExecIntegral<wchar_t>(QT, ret);
-         break;
-      case BuiltinType::Char16:
-         ::Error("TClingCallFunc::InitRetAndExecBuiltin",
-               "Invalid type 'char16_t'!");
-         return {};
-         break;
-      case BuiltinType::Char32:
-         ::Error("TClingCallFunc::InitRetAndExecBuiltin",
-               "Invalid type 'char32_t'!");
-         return {};
-         break;
-      case BuiltinType::UShort:
-         return InitRetAndExecIntegral<unsigned short>(QT, ret);
-         break;
-      case BuiltinType::UInt:
-         return InitRetAndExecIntegral<unsigned int>(QT, ret);
-         break;
-      case BuiltinType::ULong:
-         return InitRetAndExecIntegral<unsigned long>(QT, ret);
-         break;
-      case BuiltinType::ULongLong:
-         return InitRetAndExecIntegral<unsigned long long>(QT, ret);
-         break;
-      case BuiltinType::UInt128: {
-            ::Error("TClingCallFunc::InitRetAndExecBuiltin",
-                  "Invalid type '__uint128_t'!");
-            return {};
-         }
-         break;
-
-         //
-         //  Signed Types
-         //
-      case BuiltinType::Char_S: // char on targets where it is signed
-      case BuiltinType::SChar:
-         return InitRetAndExecIntegral<signed char>(QT, ret);
-         break;
-      case BuiltinType::WChar_S:
-         // wchar_t on targets where it is signed.
-         // The standard doesn't allow to specify signednedd of wchar_t
-         // thus this maps simply to wchar_t.
-         return InitRetAndExecIntegral<wchar_t>(QT, ret);
-         break;
-      case BuiltinType::Short:
-         return InitRetAndExecIntegral<short>(QT, ret);
-         break;
-      case BuiltinType::Int:
-         return InitRetAndExecIntegral<int>(QT, ret);
-         break;
-      case BuiltinType::Long:
-         return InitRetAndExecIntegral<long>(QT, ret);
-         break;
-      case BuiltinType::LongLong:
-         return InitRetAndExecIntegral<long long>(QT, ret);
-         break;
-      case BuiltinType::Int128:
-         ::Error("TClingCallFunc::InitRetAndExecBuiltin",
-               "Invalid type '__int128_t'!");
-         return {};
-         break;
-      case BuiltinType::Half:
-         // half in OpenCL, __fp16 in ARM NEON
-         ::Error("TClingCallFunc::InitRetAndExecBuiltin",
-               "Invalid type 'Half'!");
-         return {};
-         break;
-      case BuiltinType::Float: {
-         ret = cling::Value::Create<float>(QT.getAsOpaquePtr(), *fInterp);
-         return [this](void* address, cling::Value& ret) { exec(address, &ret.getFloat()); };
-         break;
-      }
-      case BuiltinType::Double: {
-         ret = cling::Value::Create<double>(QT.getAsOpaquePtr(), *fInterp);
-         return [this](void* address, cling::Value& ret) { exec(address, &ret.getDouble()); };
-         break;
-      }
-      case BuiltinType::LongDouble: {
-         ret = cling::Value::Create<long double>(QT.getAsOpaquePtr(), *fInterp);
-         return [this](void* address, cling::Value& ret) { exec(address, &ret.getLongDouble()); };
-         break;
-      }
-         //
-         //  Language-Specific Types
-         //
-      case BuiltinType::NullPtr:
-         // C++11 nullptr
-         ::Error("TClingCallFunc::InitRetAndExecBuiltin",
-               "Invalid type 'nullptr'!");
-         return {};
-         break;
-      default:
-         break;
+   case BuiltinType::Float:
+      return [this](void* address, cling::Value& ret) { exec(address, &ret.getFloat()); };
+   case BuiltinType::Double:
+      return [this](void* address, cling::Value& ret) { exec(address, &ret.getDouble()); };
+   case BuiltinType::LongDouble:
+      return [this](void* address, cling::Value& ret) { exec(address, &ret.getLongDouble()); };
+   default:
+      break;
    }
+
+   ::Error("TClingCallFunc::InitRetAndExecBuiltin",
+           "Invalid type '%s'!", BT->getTypeClassName());
    return {};
 }
 
@@ -1724,9 +1608,9 @@ TClingCallFunc::InitRetAndExecNoCtor(clang::QualType QT, cling::Value &ret) {
       //       of the enum here.
       (void) ET;
       ret = cling::Value(QT, *fInterp);
-      return [this](void* address, cling::Value& ret) { execWithLL<int>(address, &ret); };
-   } else if (const BuiltinType *BT = dyn_cast<BuiltinType>(&*QT)) {
-      return InitRetAndExecBuiltin(QT, BT, ret);
+      return [this](void* address, cling::Value& ret) { exec(address, &ret.getLL()); };
+   } else if (QT->isBuiltinType()) {
+      return InitRetAndExecBuiltin(QT, ret);
    }
    ::Error("TClingCallFunc::exec_with_valref_return",
          "Unrecognized return type!");
