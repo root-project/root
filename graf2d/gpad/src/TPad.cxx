@@ -183,7 +183,6 @@ TPad::TPad()
 
    fNumPaletteColor = 0;
    fNextPaletteColor = 0;
-   fCollideGrid = nullptr;
    fCGnx = 0;
    fCGny = 0;
 
@@ -316,7 +315,6 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
 
    fNumPaletteColor = 0;
    fNextPaletteColor = 0;
-   fCollideGrid = nullptr;
    fCGnx = 0;
    fCGny = 0;
 
@@ -395,7 +393,6 @@ TPad::~TPad()
    delete primitives;
    SafeDelete(fExecs);
    delete fViewer3D;
-   if (fCollideGrid) delete [] fCollideGrid;
 
    // Required since we overload TObject::Hash.
    ROOT::CallRecursiveRemoveIfNeeded(*this);
@@ -663,12 +660,9 @@ void TPad::Clear(Option_t *option)
    PaintBorder(GetFillColor(), kTRUE);
    fCrosshairPos = 0;
    fNumPaletteColor = 0;
-   if (fCollideGrid) {
-      delete [] fCollideGrid;
-      fCollideGrid = nullptr;
-      fCGnx = 0;
-      fCGny = 0;
-   }
+   fCollideGrid.clear();
+   fCGnx = 0;
+   fCGny = 0;
    ResetBit(TGraph::kClipFrame);
 }
 
@@ -3031,7 +3025,7 @@ Int_t TPad::NextPaletteColor()
 
 void TPad::FillCollideGrid(TObject *oi)
 {
-   Int_t const cellSize = 10; // Sive of an individual grid cell in pixels.
+   Int_t const cellSize = 10; // Size of an individual grid cell in pixels.
 
    if (fCGnx == 0 && fCGny == 0) {
       fCGnx = (Int_t)(gPad->GetWw())/cellSize;
@@ -3042,29 +3036,22 @@ void TPad::FillCollideGrid(TObject *oi)
       if (fCGnx != CGnx || fCGny != CGny) {
          fCGnx = CGnx;
          fCGny = CGny;
-         delete [] fCollideGrid;
-         fCollideGrid = nullptr;
       }
    }
 
    // Initialise the collide grid
-   if (!fCollideGrid) {
-      fCollideGrid = new Bool_t [fCGnx*fCGny];
-      for (int i = 0; i<fCGnx; i++) {
-         for (int j = 0; j<fCGny; j++) {
-            fCollideGrid[i + j*fCGnx] = kTRUE;
-         }
-      }
-   }
+   fCollideGrid.resize(fCGnx*fCGny);
+   for (int i = 0; i < fCGnx; i++)
+      for (int j = 0; j < fCGny; j++)
+         fCollideGrid[i + j * fCGnx] = kTRUE;
 
    // Fill the collide grid
    TList *l = GetListOfPrimitives();
    if (!l) return;
    Int_t np = l->GetSize();
-   TObject *o;
 
    for (int i=0; i<np; i++) {
-      o = (TObject *) l->At(i);
+      TObject *o = (TObject *) l->At(i);
       if (o!=oi) {
          if (o->InheritsFrom(TFrame::Class())) { FillCollideGridTFrame(o); continue;}
          if (o->InheritsFrom(TBox::Class()))   { FillCollideGridTBox(o);   continue;}

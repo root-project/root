@@ -14,6 +14,7 @@
 
 #include "TVirtualPad.h"
 #include "TAttBBox2D.h"
+#include <vector>
 
 class TVirtualViewer3D;
 class TVirtualPadPainter;
@@ -111,7 +112,7 @@ protected:
    static Int_t  fgMaxPickDistance; ///<  Maximum Pick Distance
    Int_t         fNumPaletteColor;  ///<  Number of objects with an automatic color
    Int_t         fNextPaletteColor; ///<  Next automatic color
-   Bool_t       *fCollideGrid;      ///<! Grid used to find empty space when adding a box (Legend) in a pad
+   std::vector<Bool_t> fCollideGrid;///<! Grid used to find empty space when adding a box (Legend) in a pad
    Int_t         fCGnx;             ///<! Size of the collide grid along x
    Int_t         fCGny;             ///<! Size of the collide grid along y
 
