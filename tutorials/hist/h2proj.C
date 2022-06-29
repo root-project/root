@@ -51,11 +51,11 @@ void h2proj()
    projh2Y->Draw("hbar");
 
    c1->cd();
-   TLatex *t = new TLatex();
-   t->SetTextFont(42);
-   t->SetTextSize(0.02);
-   t->DrawLatex(0.6,0.88,"This example demonstrates how to display");
-   t->DrawLatex(0.6,0.85,"a histogram and its two projections.");
+   TLatex t;
+   t.SetTextFont(42);
+   t.SetTextSize(0.02);
+   t.DrawLatex(0.6,0.88,"This example demonstrates how to display");
+   t.DrawLatex(0.6,0.85,"a histogram and its two projections.");
 
    auto ex = new TExec("zoom","ZoomExec()");
    h2->GetListOfFunctions()->Add(ex);

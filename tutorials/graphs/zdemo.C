@@ -59,13 +59,13 @@ void zdemo()
    pl->SetTextColor(49);
    pl->Draw();
 
-   TLatex *t = new TLatex();
-   t->SetTextFont(32);
-   t->SetTextColor(1);
-   t->SetTextSize(0.03);
-   t->SetTextAlign(12);
-   t->DrawLatex(3.1,15.5,"M.Tokarev, E.Potrebenikova ");
-   t->DrawLatex(14.,15.5,"JINR preprint E2-98-64, Dubna, 1998 ");
+   TLatex t0;
+   t0.SetTextFont(32);
+   t0.SetTextColor(1);
+   t0.SetTextSize(0.03);
+   t0.SetTextAlign(12);
+   t0.DrawLatex(3.1,15.5,"M.Tokarev, E.Potrebenikova ");
+   t0.DrawLatex(14.,15.5,"JINR preprint E2-98-64, Dubna, 1998 ");
 
    TPad *pad1 = new TPad("pad1","This is pad1",0.02,0.02,0.48,0.83,33);
    TPad *pad2 = new TPad("pad2","This is pad2",0.52,0.02,0.98,0.83,33);
@@ -92,32 +92,33 @@ void zdemo()
    // create a 2-d histogram to define the range
    pad1->DrawFrame(1,1e-18,110,1e-8);
    pad1->GetFrame()->SetFillColor(19);
-   t = new TLatex();
-   t->SetNDC();
-   t->SetTextFont(62);
-   t->SetTextColor(36);
-   t->SetTextSize(0.08);
-   t->SetTextAlign(12);
-   t->DrawLatex(0.6,0.85,"p - p");
 
-   t->SetTextSize(0.05);
-   t->DrawLatex(0.6,0.79,"Direct #gamma");
-   t->DrawLatex(0.6,0.75,"#theta = 90^{o}");
+   TLatex t1;
+   t1.SetNDC();
+   t1.SetTextFont(62);
+   t1.SetTextColor(36);
+   t1.SetTextSize(0.08);
+   t1.SetTextAlign(12);
+   t1.DrawLatex(0.6,0.85,"p - p");
 
-   t->DrawLatex(0.20,0.45,"Ed^{3}#sigma/dq^{3}");
-   t->DrawLatex(0.18,0.40,"(barn/Gev^{2})");
+   t1.SetTextSize(0.05);
+   t1.DrawLatex(0.6,0.79,"Direct #gamma");
+   t1.DrawLatex(0.6,0.75,"#theta = 90^{o}");
 
-   t->SetTextSize(0.045);
-   t->SetTextColor(kBlue);
-   t->DrawLatex(0.22,0.260,"#sqrt{s} = 63(GeV)");
-   t->SetTextColor(kRed);
-   t->DrawLatex(0.22,0.205,"#sqrt{s} = 200(GeV)");
-   t->SetTextColor(6);
-   t->DrawLatex(0.22,0.15,"#sqrt{s} = 500(GeV)");
+   t1.DrawLatex(0.20,0.45,"Ed^{3}#sigma/dq^{3}");
+   t1.DrawLatex(0.18,0.40,"(barn/Gev^{2})");
 
-   t->SetTextSize(0.05);
-   t->SetTextColor(1);
-   t->DrawLatex(0.6,0.06,"q_{T} (Gev/c)");
+   t1.SetTextSize(0.045);
+   t1.SetTextColor(kBlue);
+   t1.DrawLatex(0.22,0.260,"#sqrt{s} = 63(GeV)");
+   t1.SetTextColor(kRed);
+   t1.DrawLatex(0.22,0.205,"#sqrt{s} = 200(GeV)");
+   t1.SetTextColor(6);
+   t1.DrawLatex(0.22,0.15,"#sqrt{s} = 500(GeV)");
+
+   t1.SetTextSize(0.05);
+   t1.SetTextColor(1);
+   t1.DrawLatex(0.6,0.06,"q_{T} (Gev/c)");
 
    TGraph *gr1 = new TGraph(NLOOP,PT,INVSIG);
 
@@ -206,31 +207,31 @@ void zdemo()
    gr->SetMarkerSize(1.5);
    gr->Draw("LP");
 
-   t = new TLatex();
-   t->SetNDC();
-   t->SetTextFont(62);
-   t->SetTextColor(36);
-   t->SetTextSize(0.08);
-   t->SetTextAlign(12);
-   t->DrawLatex(0.6,0.85,"p - p");
+   TLatex t2;
+   t2.SetNDC();
+   t2.SetTextFont(62);
+   t2.SetTextColor(36);
+   t2.SetTextSize(0.08);
+   t2.SetTextAlign(12);
+   t2.DrawLatex(0.6,0.85,"p - p");
 
-   t->SetTextSize(0.05);
-   t->DrawLatex(0.6,0.79,"Direct #gamma");
-   t->DrawLatex(0.6,0.75,"#theta = 90^{o}");
+   t2.SetTextSize(0.05);
+   t2.DrawLatex(0.6,0.79,"Direct #gamma");
+   t2.DrawLatex(0.6,0.75,"#theta = 90^{o}");
 
-   t->DrawLatex(0.70,0.55,"H(z)");
-   t->DrawLatex(0.68,0.50,"(barn)");
+   t2.DrawLatex(0.70,0.55,"H(z)");
+   t2.DrawLatex(0.68,0.50,"(barn)");
 
-   t->SetTextSize(0.045);
-   t->SetTextColor(46);
-   t->DrawLatex(0.20,0.30,"#sqrt{s}, GeV");
-   t->DrawLatex(0.22,0.26,"63");
-   t->DrawLatex(0.22,0.22,"200");
-   t->DrawLatex(0.22,0.18,"500");
+   t2.SetTextSize(0.045);
+   t2.SetTextColor(46);
+   t2.DrawLatex(0.20,0.30,"#sqrt{s}, GeV");
+   t2.DrawLatex(0.22,0.26,"63");
+   t2.DrawLatex(0.22,0.22,"200");
+   t2.DrawLatex(0.22,0.18,"500");
 
-   t->SetTextSize(0.05);
-   t->SetTextColor(1);
-   t->DrawLatex(0.88,0.06,"z");
+   t2.SetTextSize(0.05);
+   t2.SetTextColor(1);
+   t2.DrawLatex(0.88,0.06,"z");
 
    c1->Modified();
    c1->Update();
