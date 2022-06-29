@@ -1632,12 +1632,12 @@ void TPad::DrawColorTable()
    gPad->Clear();
    gPad->Range(x1,y1,x2,y2);
 
-   TText *text = new TText(0,0,"");
-   text->SetTextFont(61);
-   text->SetTextSize(0.07);
-   text->SetTextAlign(22);
+   TText text(0,0,"");
+   text.SetTextFont(61);
+   text.SetTextSize(0.07);
+   text.SetTextAlign(22);
 
-   TBox *box = new TBox();
+   TBox box;
 
    // Draw color table boxes.
    hs = (y2-y1)/Double_t(5);
@@ -1649,15 +1649,15 @@ void TPad::DrawColorTable()
          ylow = y1 + hs*(Double_t(j)+0.1);
          yup  = y1 + hs*(Double_t(j)+0.9);
          color = 10*j + i;
-         box->SetFillStyle(1001);
-         box->SetFillColor(color);
-         box->DrawBox(xlow, ylow, xup, yup);
-         box->SetFillStyle(0);
-         box->SetLineColor(1);
-         box->DrawBox(xlow, ylow, xup, yup);
-         if (color == 1) text->SetTextColor(0);
-         else            text->SetTextColor(1);
-         text->DrawText(0.5*(xlow+xup), 0.5*(ylow+yup), Form("%d",color));
+         box.SetFillStyle(1001);
+         box.SetFillColor(color);
+         box.DrawBox(xlow, ylow, xup, yup);
+         box.SetFillStyle(0);
+         box.SetLineColor(1);
+         box.DrawBox(xlow, ylow, xup, yup);
+         if (color == 1) text.SetTextColor(0);
+         else            text.SetTextColor(1);
+         text.DrawText(0.5*(xlow+xup), 0.5*(ylow+yup), Form("%d",color));
       }
    }
 }
@@ -3311,8 +3311,8 @@ void TPad::FillCollideGridTH1(TObject *o)
 void TPad::DrawCollideGrid()
 {
    if (fCGnx==0||fCGny==0) return;
-   auto box = new TBox();
-   box->SetFillColorAlpha(kRed,0.5);
+   TBox box;
+   box.SetFillColorAlpha(kRed,0.5);
 
    Double_t xs   = (fX2-fX1)/fCGnx;
    Double_t ys   = (fY2-fY1)/fCGny;
@@ -3342,11 +3342,11 @@ void TPad::DrawCollideGrid()
             Y2L = Y2;
          }
          if (!fCollideGrid[i + j*fCGnx]) {
-            box->SetFillColorAlpha(kBlack,t);
-            box->DrawBox(X1L, Y1L, X2L, Y2L);
+            box.SetFillColorAlpha(kBlack,t);
+            box.DrawBox(X1L, Y1L, X2L, Y2L);
          } else {
-            box->SetFillColorAlpha(kRed,t);
-            box->DrawBox(X1L, Y1L, X2L, Y2L);
+            box.SetFillColorAlpha(kRed,t);
+            box.DrawBox(X1L, Y1L, X2L, Y2L);
          }
          Y1 = Y2;
          Y2 = Y1+ys;
