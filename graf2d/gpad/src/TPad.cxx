@@ -863,8 +863,7 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
    Int_t nc, nc2;
    Double_t x1, y1, x2, y2, slope; // Segment to be clipped
 
-   Double_t *xc2 = new Double_t[nn];
-   Double_t *yc2 = new Double_t[nn];
+   std::vector<Double_t> xc2(nn), yc2(nn);
 
    // Clip against the left boundary
    x1 = x[n-1]; y1 = y[n-1];
@@ -969,9 +968,6 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
          x1 = x2; y1 = y2;
       }
    }
-
-   delete [] xc2;
-   delete [] yc2;
 
    if (nc < 3) nc =0;
    return nc;
@@ -1165,7 +1161,6 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
 {
    if (!IsEditable()) return;
 
-
    if (gThreadXAR) {
       void *arr[7];
       arr[1] = this; arr[2] = (void*)&nx;arr[3] = (void*)& ny;
@@ -1177,14 +1172,10 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
    cd();
    if (nx <= 0) nx = 1;
    if (ny <= 0) ny = 1;
-   Int_t ix,iy;
-   Double_t x1,y1,x2,y2;
-   Double_t dx,dy;
+   Int_t ix, iy;
+   Double_t x1, y1, x2, y2, dx, dy;
    TPad *pad;
-   Int_t nchname  = strlen(GetName())+6;
-   Int_t nchtitle = strlen(GetTitle())+6;
-   char *name  = new char [nchname];
-   char *title = new char [nchtitle];
+   TString name, title;
    Int_t n = 0;
    if (color == 0) color = GetFillColor();
    if (xmargin > 0 && ymargin > 0) {
@@ -1201,8 +1192,8 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
             x2 = x1 +dx -2*xmargin;
             if (x1 > x2) continue;
             n++;
-            snprintf(name,nchname,"%s_%d",GetName(),n);
-            pad = new TPad(name,name,x1,y1,x2,y2,color);
+            name.Form("%s_%d", GetName(), n);
+            pad = new TPad(name.Data(), name.Data(), x1, y1, x2, y2, color);
             pad->SetNumber(n);
             pad->Draw();
          }
@@ -1235,9 +1226,9 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
             y1 = y2 - dy;
             if (j == 0)    y2 = 1-yt;
             if (j == ny-1) y1 = 0;
-            snprintf(name,nchname,"%s_%d",GetName(),number);
-            snprintf(title,nchtitle,"%s_%d",GetTitle(),number);
-            pad = new TPad(name,title,x1,y1,x2,y2);
+            name.Form("%s_%d", GetName(), number);
+            title.Form("%s_%d", GetTitle(), number);
+            pad = new TPad(name.Data(), title.Data(), x1, y1, x2, y2);
             pad->SetNumber(number);
             pad->SetBorderMode(0);
             if (i == 0)    pad->SetLeftMargin(xl*nx);
@@ -1250,8 +1241,6 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
          }
       }
    }
-   delete [] name;
-   delete [] title;
    Modified();
    if (padsav) padsav->cd();
 }
@@ -1594,7 +1583,7 @@ void TPad::DrawCrosshair()
 
 TH1F *TPad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, const char *title)
 {
-   if (!IsEditable()) return 0;
+   if (!IsEditable()) return nullptr;
    TPad *padsav = (TPad*)gPad;
    if (this !=  padsav) {
       Warning("DrawFrame","Must be called for the current pad only");
@@ -1612,13 +1601,12 @@ TH1F *TPad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax
       Double_t xminl = TMath::Log(xmin);
       Double_t xmaxl = TMath::Log(xmax);
       Double_t dx = (xmaxl-xminl)/nbins;
-      Double_t *xbins = new Double_t[nbins+1];
+      std::vector<Double_t> xbins(nbins+1);
       xbins[0] = xmin;
       for (Int_t i=1;i<=nbins;i++) {
          xbins[i] = TMath::Exp(xminl+i*dx);
       }
-      hframe = new TH1F("hframe",title,nbins,xbins);
-      delete [] xbins;
+      hframe = new TH1F("hframe",title,nbins,xbins.data());
    } else {
       hframe = new TH1F("hframe",title,nbins,xmin,xmax);
    }
@@ -3912,15 +3900,12 @@ void TPad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *)
 
 void TPad::PaintFillAreaNDC(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 {
-   auto xw = new Double_t[n];
-   auto yw = new Double_t[n];
+   std::vector<Double_t> xw(n), yw(n);
    for (int i=0; i<n; i++) {
       xw[i] = fX1 + x[i]*(fX2 - fX1);
       yw[i] = fY1 + y[i]*(fY2 - fY1);
    }
-   PaintFillArea(n, xw, yw, option);
-   delete [] xw;
-   delete [] yw;
+   PaintFillArea(n, xw.data(), yw.data(), option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4357,15 +4342,12 @@ void TPad::PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *)
       GetPainter()->DrawPolyLineNDC(n, x, y);
 
    if (gVirtualPS) {
-      Double_t *xw = new Double_t[n];
-      Double_t *yw = new Double_t[n];
+      std::vector<Double_t> xw(n), yw(n);
       for (Int_t i=0; i<n; i++) {
          xw[i] = fX1 + x[i]*(fX2 - fX1);
          yw[i] = fY1 + y[i]*(fY2 - fY1);
       }
-      gVirtualPS->DrawPS(n, xw, yw);
-      delete [] xw;
-      delete [] yw;
+      gVirtualPS->DrawPS(n, xw.data(), yw.data());
    }
    Modified();
 }
@@ -4646,13 +4628,11 @@ void TPad::Pop()
    if (this == fMother->GetListOfPrimitives()->Last()) return;
 
    TListIter next(fMother->GetListOfPrimitives());
-   TObject *obj;
-   while ((obj = next()))
+   while (auto obj = next())
       if (obj == this) {
-         char *opt = StrDup(next.GetOption());
+         TString opt = next.GetOption();
          fMother->GetListOfPrimitives()->Remove(this);
-         fMother->GetListOfPrimitives()->AddLast(this, opt);
-         delete [] opt;
+         fMother->GetListOfPrimitives()->AddLast(this, opt.Data());
          return;
       }
 }
