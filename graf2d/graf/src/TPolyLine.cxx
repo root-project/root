@@ -529,11 +529,11 @@ Int_t TPolyLine::Merge(TCollection *li)
 void TPolyLine::Paint(Option_t *option)
 {
    if (TestBit(kPolyLineNDC)) {
-      if (strlen(option) > 0) PaintPolyLineNDC(fLastPoint+1, fX, fY, option);
-      else                    PaintPolyLineNDC(fLastPoint+1, fX, fY, fOption.Data());
+      if (option && strlen(option)) PaintPolyLineNDC(fLastPoint+1, fX, fY, option);
+      else                          PaintPolyLineNDC(fLastPoint+1, fX, fY, fOption.Data());
    } else {
-      if (strlen(option) > 0) PaintPolyLine(fLastPoint+1, fX, fY, option);
-      else                    PaintPolyLine(fLastPoint+1, fX, fY, fOption.Data());
+      if (option && strlen(option)) PaintPolyLine(fLastPoint+1, fX, fY, option);
+      else                          PaintPolyLine(fLastPoint+1, fX, fY, fOption.Data());
    }
 }
 
@@ -545,8 +545,7 @@ void TPolyLine::Paint(Option_t *option)
 
 void TPolyLine::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 {
-   if (!gPad) return;
-   if (n <= 0) return;
+   if (!gPad || n <= 0) return;
    TAttLine::Modify();  //Change line attributes only if necessary
    TAttFill::Modify();  //Change fill area attributes only if necessary
    Double_t *xx = x;
@@ -559,10 +558,14 @@ void TPolyLine::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *optio
       yy = new Double_t[n];
       for (Int_t iy=0;iy<n;iy++) yy[iy] = gPad->YtoPad(y[iy]);
    }
-   if (*option == 'f' || *option == 'F') gPad->PaintFillArea(n,xx,yy,option);
-   else                                  gPad->PaintPolyLine(n,xx,yy,option);
-   if (x != xx) delete [] xx;
-   if (y != yy) delete [] yy;
+   if (option && (*option == 'f' || *option == 'F'))
+      gPad->PaintFillArea(n, xx, yy, option);
+   else
+      gPad->PaintPolyLine(n, xx, yy, option);
+   if (x != xx)
+      delete[] xx;
+   if (y != yy)
+      delete[] yy;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

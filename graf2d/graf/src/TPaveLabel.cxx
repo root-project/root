@@ -102,7 +102,7 @@ void TPaveLabel::Paint(Option_t *option)
    // Convert from NDC to pad coordinates
    TPave::ConvertNDCtoPad();
 
-   PaintPaveLabel(fX1, fY1, fX2, fY2, GetLabel(), strlen(option)?option:GetOption());
+   PaintPaveLabel(fX1, fY1, fX2, fY2, GetLabel(), option && strlen(option) ? option : GetOption());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -112,7 +112,7 @@ void TPaveLabel::PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  
                       const char *label ,Option_t *option)
 {
    if (!gPad) return;
-   Int_t nch = strlen(label);
+   Int_t nch = label ? strlen(label) : 0;
 
    // Draw the pave
    TPave::PaintPave(x1,y1,x2,y2,GetBorderSize(),option);

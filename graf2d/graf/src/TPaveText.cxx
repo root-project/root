@@ -187,7 +187,7 @@ TText *TPaveText::AddText(Double_t x1, Double_t y1, const char *text)
    newtext->SetTextColor(0);
    newtext->SetTextFont(0);
    newtext->SetTextSize(0);
-   Int_t nch = strlen(text);
+   Int_t nch = text ? strlen(text) : 0;
    if (nch > fLongest) fLongest = nch;
 
    if (!fLines) fLines = new TList;
@@ -603,16 +603,15 @@ void TPaveText::ReadFile(const char *filename, Option_t *option, Int_t nlines, I
    }
    SetTextAlign(12);
    // Get file name
-   Int_t nch = strlen(filename);
-   if (nch == 0) return;
+   TString fname = filename;
+   if (fname.EndsWith(";"))
+      fname.Resize(fname.Length() - 1);
+   if (fname.Length() == 0)
+      return;
 
-   char *fname = StrDup(filename);
-   if (fname[nch-1] == ';') { nch--; fname[nch]=0;}
-
-   std::ifstream file(fname,std::ios::in);
+   std::ifstream file(fname.Data(),std::ios::in);
    if (!file.good()) {
-      Error("ReadFile", "illegal file name");
-      delete [] fname;
+      Error("ReadFile", "illegal file name %s", fname.Data());
       return;
    }
 
@@ -664,7 +663,6 @@ void TPaveText::ReadFile(const char *filename, Option_t *option, Int_t nlines, I
       kline++;
    }
    file.close();
-   delete [] fname;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
