@@ -121,11 +121,11 @@ void TMVA::boostcontrolplots(TString dataset, TDirectory *boostdir ) {
          legend->Draw("same");
       }
       else {
-         TText* t = new TText();
-         t->SetTextSize( 0.056 );
-         t->SetTextColor( 2 );
-         t->DrawTextNDC( .2, 0.6, "Use MethodBoost option: \"Boost_DetailedMonitoring\" " );        
-         t->DrawTextNDC( .2, 0.51, "to fill this histograms" );        
+         TText t;
+         t.SetTextSize( 0.056 );
+         t.SetTextColor( 2 );
+         t.DrawTextNDC( .2, 0.6, "Use MethodBoost option: \"Boost_DetailedMonitoring\" " );        
+         t.DrawTextNDC( .2, 0.51, "to fill this histograms" );        
       }
 
       c->Update();
