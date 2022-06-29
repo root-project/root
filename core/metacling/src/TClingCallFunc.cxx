@@ -1579,41 +1579,25 @@ TClingCallFunc::InitRetAndExecBuiltin(QualType QT, cling::Value &ret) {
 
 TClingCallFunc::ExecWithRetFunc_t
 TClingCallFunc::InitRetAndExecNoCtor(clang::QualType QT, cling::Value &ret) {
-   if (QT->isReferenceType()) {
+   if (QT->isBuiltinType())
+      return InitRetAndExecBuiltin(QT, ret);
+
+   if (QT->isReferenceType() || QT->isMemberPointerType() || QT->isRecordType()) {
       ret = cling::Value(QT, *fInterp);
       return [this](void* address, cling::Value& ret) { exec(address, &ret.getPtr()); };
-   } else if (QT->isMemberPointerType()) {
-      const MemberPointerType *MPT = QT->getAs<MemberPointerType>();
-      if (MPT && MPT->isMemberDataPointer()) {
-         // A member data pointer is a actually a struct with one
-         // member of ptrdiff_t, the offset from the base of the object
-         // storage to the storage for the designated data member.
-         // But that's not relevant: we use it as a non-builtin, allocated
-         // type.
-         ret = cling::Value(QT, *fInterp);
-         return [this](void* address, cling::Value& ret) { exec(address, ret.getPtr()); };
-      }
-      // We are a function member pointer.
-      ret = cling::Value(QT, *fInterp);
-      return [this](void* address, cling::Value& ret) { exec(address, &ret.getPtr()); };
-   } else if (QT->isPointerType() || QT->isArrayType()) {
+   }
+
+   if (QT->isPointerType() || QT->isArrayType()) {
       // Note: ArrayType is an illegal function return value type.
+      // FIXME: Merge with the other cases above. We do not need to create
+      // a cling::Value passing explicitly void*, cling::Value's determineStorageType
+      // can find out what's required.
       ret = cling::Value::Create<void*>(QT.getAsOpaquePtr(), *fInterp);
       return [this](void* address, cling::Value& ret) { exec(address, &ret.getPtr()); };
-   } else if (QT->isRecordType()) {
-      ret = cling::Value(QT, *fInterp);
-      return [this](void* address, cling::Value& ret) { exec(address, ret.getPtr()); };
-   } else if (const EnumType *ET = dyn_cast<EnumType>(&*QT)) {
-      // Note: We may need to worry about the underlying type
-      //       of the enum here.
-      (void) ET;
-      ret = cling::Value(QT, *fInterp);
-      return [this](void* address, cling::Value& ret) { exec(address, &ret.getLL()); };
-   } else if (QT->isBuiltinType()) {
-      return InitRetAndExecBuiltin(QT, ret);
    }
+
    ::Error("TClingCallFunc::exec_with_valref_return",
-         "Unrecognized return type!");
+           "Unrecognized return type '%s'", QT->getTypeClassName());
    QT->dump();
    return {};
 }
