@@ -41,12 +41,12 @@ void Src5() {
    Double_t *PositionX = s->GetPositionX();
    Double_t *PositionY = s->GetPositionY();
    search->Draw("COL");
-   auto m = new TMarker();
-   m->SetMarkerStyle(23);
-   m->SetMarkerColor(kRed);
+   TMarker m;
+   m.SetMarkerStyle(23);
+   m.SetMarkerColor(kRed);
    for (i=0;i<nfound;i++) {
       printf("posx= %d, posy= %d, value=%d\n",(Int_t)(PositionX[i]+0.5), (Int_t)(PositionY[i]+0.5),
       (Int_t)source[(Int_t)(PositionX[i]+0.5)][(Int_t)(PositionY[i]+0.5)]);
-      m->DrawMarker(PositionX[i],PositionY[i]);
+      m.DrawMarker(PositionX[i],PositionY[i]);
    }
 }
