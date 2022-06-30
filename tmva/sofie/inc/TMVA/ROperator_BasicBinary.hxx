@@ -81,7 +81,8 @@ public:
       }
       auto shapeX1 = model.GetTensorShape(fNX1);
       auto shapeX2 = model.GetTensorShape(fNX2);
-      // assume same shape X1 and X2
+      // If the shape of 2 tensors are not same we perform multi-directional Broadcasting.
+      // We only support tensors with same length and the resultant output length should also be same.
       if (shapeX1 != shapeX2) {
          fShape = UTILITY::Multidirectional_broadcast(shapeX1,shapeX2);
          size_t length1 = ConvertShapeToLength(shapeX1);
@@ -91,6 +92,7 @@ public:
             throw std::runtime_error(std::string("TMVA SOFIE Binary Op does not support input tensors with different lengths. The output tensor should also have the same length as the input tensors."));
          }
       }
+      // If both the tensors have same shape then assign the same shape to resultant output.
       else if(shapeX1 == shapeX2){
          fShape = shapeX1;
       }   
@@ -105,10 +107,6 @@ public:
          throw std::runtime_error("TMVA SOFIE Binary Op called to Generate without being initialized first");
       }
       std::stringstream out;
-      // int length = 1;
-      // for(auto& i: fShape){
-      //    length *= i;
-      // }
       size_t length = ConvertShapeToLength(fShape);
       out << "\n//------ " + std::string(BinaryOperatorTrait<T,Op>::Name())+"\n";
       out << SP << "for (size_t id = 0; id < " << length << " ; id++){\n";

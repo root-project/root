@@ -23,7 +23,6 @@ namespace Experimental{
 namespace SOFIE{
 
 namespace INTERNAL{
-// enum EBasicBinaryOperator { Add, Sub, Mul, Div };
 
 std::unique_ptr<ROperator> make_ROperator_Transpose(const onnx::NodeProto& nodeproto, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type);
 std::unique_ptr<ROperator> make_ROperator_Relu(const onnx::NodeProto& nodeproto, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type);

@@ -23,7 +23,7 @@ std::unique_ptr<ROperator> make_ROperator(size_t idx, const onnx::GraphProto& gr
       return (find->second)(nodeproto, graphproto, tensor_type);
    }
 }
-// enum EBasicBinaryOperator { Add, Sub, Mul, Div };
+
 template<EBasicBinaryOperator Op1>
 std::unique_ptr<ROperator> make_ROperator_BasicBinary(const onnx::NodeProto& nodeproto, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type){
 
