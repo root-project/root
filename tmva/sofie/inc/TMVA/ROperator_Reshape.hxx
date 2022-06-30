@@ -43,7 +43,7 @@ public:
    }
    
    // for squeeze/unsqueezed operators following old ONNX version (< 10)
-   // IN this cases axes are passed as attribute values
+   // In this cases axes are passed as attribute values
    ROperator_Reshape(ReshapeOpMode opMode, std::vector<int64_t> attrAxes, std::string nameData, std::string nameOutput)
       : fOpMode(opMode), fNData(UTILITY::Clean_name(nameData)), fNOutput(UTILITY::Clean_name(nameOutput)),
         fAttrAxes(attrAxes)
@@ -67,7 +67,7 @@ public:
          auto output_shape = input[1]; // the provided shape
          size_t input_length = ConvertShapeToLength(input_shape);
          size_t output_length = ConvertShapeToLength(output_shape);
-         // input_length == output_length) is the easy case : (2,3,4) -> (2,12)
+         // (input_length == output_length) is the easy case : (2,3,4) -> (2,12)
          if (input_length != output_length) {
             if (output_shape.size() > 1 && ((output_length == 0 && fAllowZero == 0) || output_length > INT64_MAX)) {
                // in this case value 0 in shape are automatically corrected

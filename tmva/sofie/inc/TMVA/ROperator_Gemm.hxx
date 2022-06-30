@@ -207,7 +207,7 @@ namespace SOFIE{
          if (fNC != ""){
             size_t length = ConvertShapeToLength(fShapeY);
             if (fNC2 == fNC)
-               // case broadcasting was not needed or done otside of session
+               // case broadcasting was not needed or done outside of session
                assert(length == ConvertShapeToLength(fShapeC));
             out << SP << "std::copy(" << "tensor_" << fNC2 << ", " << "tensor_" << fNC2 << " + " << length << ", " << "tensor_" << fNY << ");\n";
          }

@@ -85,10 +85,10 @@ public:
       return {out};
    }
 
-   // funciton returning output shape given input 
+   // function returning output shape given input 
    std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) {
-      // shape of convolution input has to be (according to ONNX): NxCxHxW  
-      // Where N is batch size, C : input  channels, H : input height, W = input width
+      // shape of convolution input has to be (according to ONNX): N x C x H x W  
+      // Where N : batch size, C : input  channels, H : input height, W : input width
    
       if (input.size() > 3 ) {
          throw
@@ -139,7 +139,7 @@ public:
          else if (fDim == 3)
             fAttrPads = {fAttrKernelShape[0] / 2, fAttrKernelShape[1] / 2, fAttrKernelShape[2] / 2,
                          fAttrKernelShape[0] / 2, fAttrKernelShape[1] / 2, fAttrKernelShape[2] / 2};
-         // add extra padding at beginnig or end (depending if SAME_UPPER or SAME_LOWER)
+         // add extra padding at beginning or end (depending if SAME_UPPER or SAME_LOWER)
          // need to check this!
          if (fAttrKernelShape[0] % 2 == 1) {
             (fAttrAutopad == "SAME_UPPER") ? fAttrPads[0]++ : fAttrPads[i1]++;
@@ -174,7 +174,7 @@ public:
       size_t batch_size = input[0][0];        // first element in input tensor
       size_t output_channels = input[1][0];   // first element in weight tensor
 
-      std::vector<std::vector<size_t>> ret({{batch_size, output_channels, output1 }});
+      std::vector<std::vector<size_t>> ret({{ batch_size, output_channels, output1 }});
 
       if (fDim == 1) 
          return ret;
@@ -238,7 +238,7 @@ public:
             if (fType != "float")
                throw std::runtime_error("TMVA SOFIE Conv op: Broadcasting for non-float type tensors is not supported");
             
-            // here the acual broadcasting
+            // here is the actual broadcasting
             if (!fUseSession) {
 
                fShapeB.resize(fShapeY.size(), 1.);
@@ -263,7 +263,7 @@ public:
    std::string GenerateInitCode() {
 
       size_t oDepth = (fDim > 2) ? fShapeY[2] : 1; // output depth
-      size_t oHeight = (fDim > 1) ? fShapeY[fDim] : 1;  // ouput height
+      size_t oHeight = (fDim > 1) ? fShapeY[fDim] : 1;  // output height
       size_t oWidth = fShapeY[fDim+1]; // output width
 
       std::stringstream out;
@@ -282,7 +282,7 @@ public:
          out << "      float * newData_ptr = TMVA::Experimental::SOFIE::UTILITY::Unidirectional_broadcast<float>("
              << original_bias_tensor << ", oldShape, newShape);\n";
          // extend the new broadcasted bias tensor for the batch dimension
-         int length =  fShapeY[1]*oDepth*oHeight*oWidth; // output nc*h*w
+         int length =  fShapeY[1]*oDepth*oHeight*oWidth; // output N X C X H X W
          out << "      for (int i = 0; i < " << fShapeY[0] << " ; i++)\n";
          out << "         std::copy(newData_ptr, newData_ptr + " << length << ", "
              <<  new_bias_tensor << " + i * " << length << ");\n";
@@ -295,7 +295,7 @@ public:
    // generate code for Session data members (e.g. internal vectors)
    virtual std::string GenerateSessionMembersCode(std::string opName) {
 
-      size_t outputChannelSize = fShapeY[2];  // size/chanhel = D * H * W
+      size_t outputChannelSize = fShapeY[2];  // size/channel = D * H * W
       size_t kernelSize = fAttrKernelShape[0];
       for (size_t i = 1; i < fDim; i++) {
          outputChannelSize *= fShapeY[2 + i];
@@ -441,7 +441,7 @@ public:
       if (fAttrGroup == 1) {
          out << SP << SP << "size_t x_offset = n * " << fShapeX[1] * iHeight * iWidth << ";\n";
          out << SP << SP << "size_t out_offset = n * " << fShapeY[1] * oHeight * oWidth << ";\n";
-         // when using im2col - resulting matrix is transposed, is (input_c * filter_h * filter_y,  output_h *
+         // when using im2col - resulting matrix is transposed, the dimension is (input_c * filter_h * filter_y,  output_h *
          // output_w)
          if (fDim < 3) {
             out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::Im2col<float>(tensor_" << fNX
