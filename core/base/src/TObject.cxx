@@ -227,15 +227,19 @@ TObject *TObject::DrawClone(Option_t *option) const
    TObject *newobj = Clone();
    if (!newobj) return nullptr;
    if (pad) {
-      if (strlen(option)) pad->GetListOfPrimitives()->Add(newobj,option);
-      else                pad->GetListOfPrimitives()->Add(newobj,GetDrawOption());
+      if (option && strlen(option))
+         pad->GetListOfPrimitives()->Add(newobj, option);
+      else
+         pad->GetListOfPrimitives()->Add(newobj, GetDrawOption());
       pad->Modified(kTRUE);
       pad->Update();
       if (padsav) padsav->cd();
       return newobj;
    }
-   if (strlen(option))  newobj->Draw(option);
-   else                 newobj->Draw(GetDrawOption());
+   if (option && strlen(option))
+      newobj->Draw(option);
+   else
+      newobj->Draw(GetDrawOption());
    if (padsav) padsav->cd();
 
    return newobj;
@@ -345,9 +349,9 @@ Option_t *TObject::GetDrawOption() const
    if (!gPad) return "";
 
    TListIter next(gPad->GetListOfPrimitives());
-   TObject *obj;
-   while ((obj = next())) {
-      if (obj == this) return next.GetOption();
+   while (auto obj = next()) {
+      if (obj == this)
+         return next.GetOption();
    }
    return "";
 }
@@ -534,14 +538,12 @@ void TObject::Pop()
    if (this == gPad->GetListOfPrimitives()->Last()) return;
 
    TListIter next(gPad->GetListOfPrimitives());
-   TObject *obj;
-   while ((obj = next()))
+   while (auto obj = next())
       if (obj == this) {
-         char *opt = StrDup(next.GetOption());
+         TString opt = next.GetOption();
          gPad->GetListOfPrimitives()->Remove((TObject*)this);
-         gPad->GetListOfPrimitives()->AddLast(this, opt);
+         gPad->GetListOfPrimitives()->AddLast(this, opt.Data());
          gPad->Modified();
-         delete [] opt;
          return;
       }
 }
@@ -563,8 +565,9 @@ void TObject::Print(Option_t *) const
 
 Int_t TObject::Read(const char *name)
 {
-   if (gDirectory) return gDirectory->ReadTObject(this,name);
-   else            return 0;
+   if (gDirectory)
+      return gDirectory->ReadTObject(this,name);
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -682,8 +685,7 @@ void TObject::SetDrawOption(Option_t *option)
 
    TListIter next(gPad->GetListOfPrimitives());
    delete gPad->FindObject("Tframe");
-   TObject *obj;
-   while ((obj = next()))
+   while (auto obj = next())
       if (obj == this) {
          next.SetOption(option);
          return;
@@ -781,14 +783,12 @@ Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize) const
    if (option & kOverwrite)   opt += "OverWrite";
    if (option & kWriteDelete) opt += "WriteDelete";
 
-   if (gDirectory) return gDirectory->WriteTObject(this,name,opt.Data(),bufsize);
-   else {
-      const char *objname = "no name specified";
-      if (name) objname = name;
-      else objname = GetName();
-      Error("Write","The current directory (gDirectory) is null. The object (%s) has not been written.",objname);
-      return 0;
-   }
+   if (gDirectory)
+      return gDirectory->WriteTObject(this,name,opt.Data(),bufsize);
+
+   const char *objname = name ? name : GetName();
+   Error("Write","The current directory (gDirectory) is null. The object (%s) has not been written.",objname);
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1041,7 +1041,8 @@ void TObject::operator delete[](void *ptr, size_t size)
 ////////////////////////////////////////////////////////////////////////////////
 /// Print value overload
 
-std::string cling::printValue(TObject *val) {
+std::string cling::printValue(TObject *val)
+{
    std::ostringstream strm;
    strm << "Name: " << val->GetName() << " Title: " << val->GetTitle();
    return strm.str();
