@@ -135,6 +135,15 @@ class TestRooAbsCollection(unittest.TestCase):
         var0 = ROOT.RooRealVar("var0", "var0", 0)
         self.assertEqual(ROOT.RooArgSet(var0)["var0"], var0)
 
+    def test_clone_collection(self):
+        # Check explicitely that both overloads of addClone work.
+        x = ROOT.RooRealVar("x", "x", 1.0)
+        s1 = ROOT.RooArgSet(x)
+        s2 = ROOT.RooArgSet()
+        s3 = ROOT.RooArgSet()
+
+        s2.addClone(s1) # addClone(const RooAbsCollection& list)
+        s3.addClone(x) # addClone(const RooAbsArg& var)
 
 if __name__ == "__main__":
     unittest.main()
