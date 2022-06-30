@@ -1422,7 +1422,25 @@ void TClingCallFunc::exec(void *address, void *ret)
    SmallVector<ValHolder, 8> vh_ary;
    SmallVector<void *, 8> vp_ary;
 
-   unsigned num_args = fArgVals.size();
+   const unsigned num_args = fArgVals.size();
+   const unsigned num_params = FD->getNumParams();
+
+   if (num_args < GetMinRequiredArguments()) {
+      ::Error("TClingCallFunc::exec",
+              "Not enough arguments provided for %s (%d instead of the minimum %d)",
+              fMethod->Name(),
+              num_args, (int)GetMinRequiredArguments());
+      return;
+   }
+   if (address == 0 && dyn_cast<CXXMethodDecl>(FD)
+       && !(dyn_cast<CXXMethodDecl>(FD))->isStatic()
+       && !dyn_cast<CXXConstructorDecl>(FD)) {
+      ::Error("TClingCallFunc::exec",
+              "The method %s is called without an object.",
+              fMethod->Name());
+      return;
+   }
+
    {
       R__LOCKGUARD_CLING(gInterpreterMutex);
 
@@ -1433,34 +1451,11 @@ void TClingCallFunc::exec(void *address, void *ret)
       //  actual type and store them in a holder for passing to the
       //  wrapper function by pointer to value.
       //
-      unsigned num_params = FD->getNumParams();
-
-      if (num_args < GetMinRequiredArguments()) {
-         ::Error("TClingCallFunc::exec",
-               "Not enough arguments provided for %s (%d instead of the minimum %d)",
-               fMethod->Name(),
-               num_args, (int)GetMinRequiredArguments());
-         return;
-      }
-      if (address == 0 && dyn_cast<CXXMethodDecl>(FD)
-          && !(dyn_cast<CXXMethodDecl>(FD))->isStatic()
-          && !dyn_cast<CXXConstructorDecl>(FD)) {
-         ::Error("TClingCallFunc::exec",
-               "The method %s is called without an object.",
-               fMethod->Name());
-         return;
-      }
       vh_ary.reserve(num_args);
       vp_ary.reserve(num_args);
-      for (unsigned i = 0U; i < num_args; ++i) {
-         QualType Ty;
-         if (i < num_params) {
-            const ParmVarDecl *PVD = FD->getParamDecl(i);
-            Ty = PVD->getType();
-         } else {
-            Ty = fArgVals[i].getType();
-         }
-         QualType QT = Ty.getCanonicalType();
+      for (unsigned i = 0; i < num_args; ++i) {
+         QualType QT = FD->getParamDecl(i)->getType();
+         QT = QT.getCanonicalType();
          if (const BuiltinType *BT = dyn_cast<BuiltinType>(QT.getTypePtr())) {
             ValHolder vh;
             switch (BT->getKind()) {
