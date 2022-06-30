@@ -1431,7 +1431,7 @@ void TStyle::SetLabelSize(Float_t size, Option_t *axis)
 
 void TStyle::SetLineStyleString(Int_t i, const char *text)
 {
-
+   if (!text) text = "";
    char *l;
    Int_t nch = strlen(text);
    char *st = new char[nch+10];
@@ -1829,7 +1829,7 @@ void TStyle::SetStripDecimals(Bool_t strip)
 void TStyle::SaveSource(const char *filename, Option_t *option)
 {
    // Opens a file named filename or "Rootstyl.C"
-   TString ff = strlen(filename) ? filename : "Rootstyl.C";
+   TString ff = filename && strlen(filename) ? filename : "Rootstyl.C";
 
    // Computes the main method name.
    const char *fname = gSystem->BaseName(ff);
