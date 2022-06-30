@@ -45,14 +45,14 @@ public:
          throw std::runtime_error(std::string("TMVA SOFIE Add Op Input Tensor ") + fNX1 + "is not found in model");
       }
       if (model.CheckIfTensorAlreadyExist(fNX2) == false) {
-         throw std::runtime_error(std::string("TMVA SOFIE Add Op Input Tensor ") + fNX1 + "is not found in model");
+         throw std::runtime_error(std::string("TMVA SOFIE Add Op Input Tensor ") + fNX2 + "is not found in model");
       }
       auto shapeX1 = model.GetTensorShape(fNX1);
       auto shapeX2 = model.GetTensorShape(fNX2);
       // assume same shape X1 and X2 
       if (shapeX1 != shapeX2) {
          std::string msg = "TMVA SOFIE Add Op: Support only inputs with same shape, shape 1 is " +
-                           ConvertShapeToString(shapeX1) + "shape 2 is " + ConvertShapeToString(shapeX2);
+                           ConvertShapeToString(shapeX1) + "and shape 2 is " + ConvertShapeToString(shapeX2);
          throw std::runtime_error(msg);
       }
       fShape = shapeX1;
