@@ -815,7 +815,7 @@ void TGTextButton::DoRedraw()
 Bool_t TGTextButton::HandleKey(Event_t *event)
 {
    if (fState == kButtonDisabled || !(event->fState & kKeyMod1Mask)) return kFALSE;
-   
+
    Bool_t click = kFALSE;
    Bool_t was = !IsDown();   // kTRUE if button was off
 
@@ -1904,7 +1904,7 @@ void TGButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out << GetName() << "->SetToolTipText(" << quote
           << tiptext << quote << ");"  << std::endl;
    }
-   if (strlen(fCommand)) {
+   if (fCommand.Length() > 0) {
       out << "   " << GetName() << "->SetCommand(" << quote << fCommand
           << quote << ");" << std::endl;
    }
