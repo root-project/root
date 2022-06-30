@@ -51,8 +51,6 @@ private:
    std::string fNY;
    std::vector<size_t> fShape;
 
-   // template <typename T, EBasicBinaryOperator Op1>
-   // BinaryOperatorTrait<T,Op1> *s;
 
 public:
    ROperator_BasicBinary(){}
