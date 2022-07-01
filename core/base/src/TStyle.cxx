@@ -1829,7 +1829,7 @@ void TStyle::SetStripDecimals(Bool_t strip)
 void TStyle::SaveSource(const char *filename, Option_t *option)
 {
    // Opens a file named filename or "Rootstyl.C"
-   TString ff = filename && strlen(filename) ? filename : "Rootstyl.C";
+   TString ff = filename && *filename ? filename : "Rootstyl.C";
 
    // Computes the main method name.
    const char *fname = gSystem->BaseName(ff);

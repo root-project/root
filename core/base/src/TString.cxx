@@ -127,7 +127,7 @@ TString::TString(const std::string &s)
 TString::TString(const char *cs, Ssiz_t n)
 {
    if (!cs) {
-      Error("TString::TString", "Missing input string!");
+      Error("TString::TString", "NULL input string!");
       Zero();
       return;
    }
