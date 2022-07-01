@@ -292,7 +292,7 @@ Configuration example for lighttpd:
 
 When creating THttpServer, one should specify:
 
-     THttpServer* serv = new THttpServer("fastcgi:9000");
+    THttpServer* serv = new THttpServer("fastcgi:9000");
 
 In this case, requests to lighttpd server will be
 redirected to ROOT session. Like: `http://lighttpdhost/remote_scripts/root.cgi/`
@@ -300,8 +300,8 @@ redirected to ROOT session. Like: `http://lighttpdhost/remote_scripts/root.cgi/`
 Following additional options can be specified
 
     top=foldername - name of top folder, seen in the browser
-    thrds=N - run N worker threads to process requests, default 10
-    debug=1 - run fastcgi server in debug mode
+    thrds=N        - run N worker threads to process requests, default 10
+    debug=1        - run fastcgi server in debug mode
 
 Example:
 

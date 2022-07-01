@@ -1,3 +1,12 @@
+/// \file
+/// \ingroup tutorial_http
+///  This program demonstrate WebSocket usage with THttpServer
+///  Custom ws.htm page is loaded and regularly sends messages to server
+///
+/// \macro_code
+///
+/// \author Sergey Linev
+
 #include "THttpServer.h"
 #include "THttpWSHandler.h"
 #include "THttpCallArg.h"

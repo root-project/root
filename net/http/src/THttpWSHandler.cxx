@@ -35,8 +35,7 @@ Approximate how-to:
        server->Register("/subfolder", handler)
 
 3. Now server can accept web socket connection from outside.
-
-    For instance, from JavaScirpt one can connect to it with code:
+   For instance, from JavaScirpt one can connect to it with code:
 
        let ws = new WebSocket("ws://hostname:8090/subfolder/name1/root.websocket");
 
@@ -57,13 +56,13 @@ Approximate how-to:
         }
 
        if (arg->IsMethod("WS_DATA")) {
-            // received data stored as POST data
             std::string str((const char *)arg->GetPostData(), arg->GetPostDataLength());
             std::cout << "got string " << str << std::endl;
-            // immediately send data back using websocket id
             SendCharStarWS(fWSId, "our reply");
             return true;
         }
+
+5. See in `$ROOTSYS/tutorials/http/ws.C` and `$ROOTSYS/tutorials/http/ws.htm` functional example
 */
 
 
