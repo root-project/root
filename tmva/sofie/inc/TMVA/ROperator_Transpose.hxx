@@ -6,6 +6,7 @@
 #include "TMVA/RModel.hxx"
 
 #include <sstream>
+#include <cassert>
 
 namespace TMVA{
 namespace Experimental{
