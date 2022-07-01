@@ -33,7 +33,7 @@ RColumnRegister::~RColumnRegister()
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Return the list of the names of defined columns (no aliases).
-ColumnNames_t RColumnRegister::GetDefineNames() const
+ColumnNames_t RColumnRegister::BuildDefineNames() const
 {
    ColumnNames_t names;
    names.reserve(fDefines->size());
@@ -144,7 +144,7 @@ RVariationBase &RColumnRegister::FindVariation(const std::string &colName, const
    return *it->second;
 }
 
-ROOT::RDF::RVariationsDescription RColumnRegister::GetVariationsDescription() const
+ROOT::RDF::RVariationsDescription RColumnRegister::BuildVariationsDescription() const
 {
    std::set<const RVariationBase *> uniqueVariations;
    for (auto &e : *fVariations)
