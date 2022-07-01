@@ -421,10 +421,10 @@ Currently v1.15 from https://github.com/civetweb/civetweb is used
 
 Additional options can be specified:
 
-* top=foldername - name of top folder, seen in the browser
-*  thrds=N - use N threads to run civetweb server (default 5)
-*  auth_file - global authentication file
-*  auth_domain - domain name, used for authentication
+    top=foldername - name of top folder, seen in the browser
+    thrds=N        - use N threads to run civetweb server (default 5)
+    auth_file      - global authentication file
+    auth_domain    - domain name, used for authentication
 
 Example:
 
@@ -483,21 +483,21 @@ Int_t TCivetweb::ProcessLog(const char *message)
 /// Or one can provide combination of ipaddress and portnumber like 127.0.0.1:8090
 /// Extra parameters like in URL string could be specified after '?' mark:
 ///
-/// * thrds=N   - there N is number of threads used by the civetweb (default is 10)
-/// * top=name  - configure top name, visible in the web browser
-/// * ssl_certificate=filename - SSL certificate, see docs/OpenSSL.md from civetweb
-/// * auth_file=filename  - authentication file name, created with htdigets utility
-/// * auth_domain=domain   - authentication domain
-/// * websocket_timeout=tm  - set web sockets timeout in seconds (default 300)
-/// * websocket_disable - disable web sockets handling (default enabled)
-/// * bind - ip address to bind server socket
-/// * loopback  - bind specified port to loopback 127.0.0.1 address
-/// * debug   - enable debug mode, server always returns html page with request info
-/// * log=filename  - configure civetweb log file
-/// * max_age=value - configures "Cache-Control: max_age=value" http header for all file-related requests, default 3600
-/// * nocache - try to fully disable cache control for file requests
-/// * winsymlinks=no - do not resolve symbolic links on file system (Windows only), default true
-/// * dirlisting=no - enable/disable directory listing for browsing filesystem (default no)
+///     thrds=N               - there N is number of threads used by the civetweb (default is 10)
+///     top=name              - configure top name, visible in the web browser
+///     ssl_certificate=filename - SSL certificate, see docs/OpenSSL.md from civetweb
+///     auth_file=filename    - authentication file name, created with htdigets utility
+///     auth_domain=domain    - authentication domain
+///     websocket_timeout=tm  - set web sockets timeout in seconds (default 300)
+///     websocket_disable     - disable web sockets handling (default enabled)
+///     bind                  - ip address to bind server socket
+///     loopback              - bind specified port to loopback 127.0.0.1 address
+///     debug                 - enable debug mode, server always returns html page with request info
+///     log=filename          - configure civetweb log file
+///     max_age=value         - configures "Cache-Control: max_age=value" http header for all file-related requests, default 3600
+///     nocache               - try to fully disable cache control for file requests
+///     winsymlinks=no        - do not resolve symbolic links on file system (Windows only), default true
+///     dirlisting=no         - enable/disable directory listing for browsing filesystem (default no)
 ///
 /// Examples of valid args values:
 ///
@@ -521,7 +521,7 @@ Bool_t TCivetweb::Create(const char *args)
    Bool_t use_ws = kTRUE;
 
    // extract arguments
-   if (args && (strlen(args) > 0)) {
+   if (args && *args) {
 
       // first extract port number
       sport = "";
@@ -609,7 +609,7 @@ Bool_t TCivetweb::Create(const char *args)
    }
 
    const char *options[25];
-   int op(0);
+   int op = 0;
 
    Info("Create", "Starting HTTP server on port %s", sport.Data());
 
