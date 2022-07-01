@@ -2733,7 +2733,7 @@ public:
    {
       ColumnNames_t definedColumns;
 
-      const auto columns = fColRegister.GetDefineNames();
+      const auto columns = fColRegister.BuildDefineNames();
       for (const auto &column : columns) {
          if (!RDFInternal::IsInternalColumn(column))
             definedColumns.emplace_back(column);
@@ -2754,7 +2754,7 @@ public:
    /// variations.Print();
    /// ~~~
    ///
-   RVariationsDescription GetVariations() const { return fColRegister.GetVariationsDescription(); }
+   RVariationsDescription GetVariations() const { return fColRegister.BuildVariationsDescription(); }
 
    /// \brief Checks if a column is present in the dataset.
    /// \return true if the column is available, false otherwise

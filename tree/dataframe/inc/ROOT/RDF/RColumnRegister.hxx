@@ -82,7 +82,7 @@ public:
    /// \brief Return the list of the names of the defined columns (Defines + Aliases).
    ColumnNames_t GetNames() const { return *fColumnNames; }
 
-   ColumnNames_t GetDefineNames() const;
+   ColumnNames_t BuildDefineNames() const;
 
    RDFDetail::RDefineBase *GetDefine(const std::string &colName) const;
 
@@ -104,7 +104,7 @@ public:
 
    std::vector<std::string> GetVariationDeps(const ColumnNames_t &columns) const;
 
-   ROOT::RDF::RVariationsDescription GetVariationsDescription() const;
+   ROOT::RDF::RVariationsDescription BuildVariationsDescription() const;
 
    RVariationBase &FindVariation(const std::string &colName, const std::string &variationName) const;
 };
