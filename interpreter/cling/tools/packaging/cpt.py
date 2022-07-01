@@ -487,7 +487,7 @@ class Cpt:
             if triple:
                 self.EXTRA_CMAKE_FLAGS = ' -DLLVM_HOST_TRIPLE="%s" ' % triple.rstrip() + self.EXTRA_CMAKE_FLAGS
 
-        build = Cpt.Build()
+        build = self.Build()
         cmake_config_flags = (srcdir + ' -DLLVM_BUILD_TOOLS=Off -DCMAKE_BUILD_TYPE={0} -DCMAKE_INSTALL_PREFIX={1} '
                             .format(build.buildType, TMP_PREFIX) + ' -DLLVM_TARGETS_TO_BUILD="host;NVPTX" ' +
                             self.EXTRA_CMAKE_FLAGS)
@@ -1455,7 +1455,7 @@ class Cpt:
             print("Creating build directory: " + LLVM_OBJ_ROOT)
             os.makedirs(LLVM_OBJ_ROOT)
 
-        build = Cpt.Build()
+        build = self.Build()
         cmake_config_flags = (clangdir + ' -DCMAKE_BUILD_TYPE={0} -DCMAKE_INSTALL_PREFIX={1} '
                             .format(build.buildType, TMP_PREFIX) + llvm_flags +
                             ' -DLLVM_TARGETS_TO_BUILD=host;NVPTX -DCLING_CXX_HEADERS=ON -DCLING_INCLUDE_TESTS=ON' +
