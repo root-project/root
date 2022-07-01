@@ -117,9 +117,9 @@ RVariationBase &RColumnRegister::FindVariation(const std::string &colName, const
    auto range = fVariations->equal_range(colName);
    assert(range.first != fVariations->end() && "Could not find the variation you asked for. This should never happen.");
    auto it = range.first;
-   while (it != fVariations->end() && !IsStrInVec(variationName, it->second->GetVariationNames()))
+   while (it != range.second && !IsStrInVec(variationName, it->second->GetVariationNames()))
       ++it;
-   assert(it != fVariations->end() && "Could not find the variation you asked for. This should never happen.");
+   assert(it != range.second && "Could not find the variation you asked for. This should never happen.");
    return *it->second;
 }
 

@@ -55,10 +55,18 @@ struct RFriendInfo {
       Names of the subtrees of a friend TChain. fFriendChainSubNames[i] is the
       list of names of the trees that make a friend TChain whose information is
       stored at fFriendNames[i] and fFriendFileNames[i]. If instead the friend
-      tree at position `i` is a TTree, fFriendChainSubNames[i] will be just a
-      vector with a single empty string.
+      tree at position `i` is a TTree, fFriendChainSubNames[i] will be an empty
+      vector.
    */
    std::vector<std::vector<std::string>> fFriendChainSubNames;
+
+   void AddFriend(const std::string &treeName, const std::string &fileNameGlob, const std::string &alias = "");
+
+   void
+   AddFriend(const std::string &treeName, const std::vector<std::string> &fileNameGlobs, const std::string &alias = "");
+
+   void AddFriend(const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
+                  const std::string &alias = "");
 };
 
 std::vector<std::string> GetFileNamesFromTree(const TTree &tree);

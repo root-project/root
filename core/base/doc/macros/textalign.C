@@ -2,12 +2,13 @@
    auto *Ta = new TCanvas("Ta","Ta",0,0,500,200);
    Ta->Range(0,0,1,1);
 
-   auto *lv = new TLine;
-   lv->SetLineStyle(3); lv->SetLineColor(kBlue);
-   lv->DrawLine(0.33,0.0,0.33,1.0);
-   lv->DrawLine(0.6,0.165,1.,0.165);
-   lv->DrawLine(0.6,0.493,1.,0.493);
-   lv->DrawLine(0.6,0.823,1.,0.823);
+   TLine lv;
+   lv.SetLineStyle(3);
+   lv.SetLineColor(kBlue);
+   lv.DrawLine(0.33,0.0,0.33,1.0);
+   lv.DrawLine(0.6,0.165,1.,0.165);
+   lv.DrawLine(0.6,0.493,1.,0.493);
+   lv.DrawLine(0.6,0.823,1.,0.823);
 
    // Horizontal alignment.
    auto *th1 = new TText(0.33,0.165,"Left adjusted");

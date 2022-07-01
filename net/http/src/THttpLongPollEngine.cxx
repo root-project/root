@@ -23,6 +23,8 @@
 Emulation of websocket with long poll requests
 
 Allows to send data from server to client without explicit request
+
+Created automatically as fallback solution when normal WebSopcket connection cannot be established
 */
 
 const std::string THttpLongPollEngine::gLongPollNope = "<<nope>>";

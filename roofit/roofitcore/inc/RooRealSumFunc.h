@@ -20,6 +20,7 @@
 #include "RooListProxy.h"
 #include "RooAICRegistry.h"
 #include "RooObjCacheManager.h"
+
 #include <list>
 
 class RooRealSumFunc : public RooAbsReal {
@@ -28,7 +29,7 @@ public:
    RooRealSumFunc(const char *name, const char *title);
    RooRealSumFunc(const char *name, const char *title, const RooArgList &funcList, const RooArgList &coefList);
    RooRealSumFunc(const char *name, const char *title, RooAbsReal &func1, RooAbsReal &func2, RooAbsReal &coef1);
-   RooRealSumFunc(const RooRealSumFunc &other, const char *name = 0);
+   RooRealSumFunc(const RooRealSumFunc &other, const char *name = nullptr);
    TObject *clone(const char *newname) const override { return new RooRealSumFunc(*this, newname); }
    ~RooRealSumFunc() override;
 
@@ -37,8 +38,8 @@ public:
 
    bool forceAnalyticalInt(const RooAbsArg &arg) const override { return arg.isFundamental(); }
    Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &numVars, const RooArgSet *normSet,
-                                 const char *rangeName = 0) const override;
-   double analyticalIntegralWN(Int_t code, const RooArgSet *normSet, const char *rangeName = 0) const override;
+                                 const char *rangeName = nullptr) const override;
+   double analyticalIntegralWN(Int_t code, const RooArgSet *normSet, const char *rangeName = nullptr) const override;
 
    const RooArgList &funcList() const { return _funcList; }
    const RooArgList &coefList() const { return _coefList; }
@@ -62,19 +63,6 @@ public:
    }
 
 protected:
-   class CacheElem : public RooAbsCacheElement {
-   public:
-      CacheElem(){};
-      ~CacheElem() override{};
-      RooArgList containedArgs(Action) override
-      {
-         RooArgList ret(_funcIntList);
-         ret.add(_funcNormList);
-         return ret;
-      }
-      RooArgList _funcIntList;
-      RooArgList _funcNormList;
-   };
    mutable RooObjCacheManager _normIntMgr; //! The integration cache manager
 
    bool _haveLastCoef;
@@ -82,8 +70,9 @@ protected:
    RooListProxy _funcList; ///<  List of component FUNCs
    RooListProxy _coefList; ///<  List of coefficients
 
-   bool _doFloor;              ///< Introduce floor at zero in pdf
-   static bool _doFloorGlobal; ///< Global flag for introducing floor at zero in pdf
+   bool _doFloor = false;           ///< Introduce floor at zero in pdf
+   mutable bool _haveWarned{false}; ///<!
+   static bool _doFloorGlobal;      ///< Global flag for introducing floor at zero in pdf
 
 private:
    ClassDefOverride(RooRealSumFunc, 4) // PDF constructed from a sum of (non-pdf) functions

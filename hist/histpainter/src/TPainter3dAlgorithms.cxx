@@ -51,16 +51,6 @@ const Int_t kF3FillColor1 = 201;
 const Int_t kF3FillColor2 = 202;
 const Int_t kF3LineColor  = 203;
 
-// Static arrays used to paint stacked lego plots.
-const Int_t kVSizeMax = 20;
-static Double_t gV[kVSizeMax];
-static Double_t gTT[4*kVSizeMax];
-static Int_t gColorMain[kVSizeMax+1];
-static Int_t gColorDark[kVSizeMax+1];
-static Int_t gEdgeColor[kVSizeMax+1];
-static Int_t gEdgeStyle[kVSizeMax+1];
-static Int_t gEdgeWidth[kVSizeMax+1];
-
 extern TH1  *gCurrentHist; //these 3 globals should be replaced by class members
 extern Hoption_t Hoption;
 extern Hparam_t  Hparam;
@@ -71,37 +61,26 @@ extern Hparam_t  Hparam;
 TPainter3dAlgorithms::TPainter3dAlgorithms(): TAttLine(1,1,1), TAttFill(1,0)
 {
    Int_t i;
-   fAphi            = nullptr;
    fNaphi           = 0;
    fIfrast          = 0;
    fMesh            = 1;
-   fRaster          = nullptr;
    fColorTop        = 1;
    fColorBottom     = 1;
    fEdgeIdx         = -1;
    fNlevel          = 0;
    fSystem          = kCARTESIAN;
-   fDrawFace        = 0;
-   fLegoFunction    = 0;
-   fSurfaceFunction = 0;
+   fDrawFace        = nullptr;
+   fLegoFunction    = nullptr;
+   fSurfaceFunction = nullptr;
 
    TList *stack = nullptr;
    if (gCurrentHist) stack = gCurrentHist->GetPainter()->GetStack();
-   fNStack = 0;
-   if (stack) fNStack = stack->GetSize();
-   if (fNStack > kVSizeMax) {
-      fColorMain  = new Int_t[fNStack+1];
-      fColorDark  = new Int_t[fNStack+1];
-      fEdgeColor  = new Int_t[fNStack+1];
-      fEdgeStyle  = new Int_t[fNStack+1];
-      fEdgeWidth  = new Int_t[fNStack+1];
-   } else {
-      fColorMain = &gColorMain[0];
-      fColorDark = &gColorDark[0];
-      fEdgeColor = &gEdgeColor[0];
-      fEdgeStyle = &gEdgeStyle[0];
-      fEdgeWidth = &gEdgeWidth[0];
-   }
+   fNStack = stack ? stack->GetSize() : 0;
+   fColorMain.resize(fNStack+1);
+   fColorDark.resize(fNStack+1);
+   fEdgeColor.resize(fNStack+1);
+   fEdgeStyle.resize(fNStack+1);
+   fEdgeWidth.resize(fNStack+1);
 
    for (i=0;i<fNStack;i++) { fColorMain[i] = 1; fColorDark[i] = 1; fEdgeColor[i] = 1; fEdgeStyle[i] = 1; fEdgeWidth[i] = 1; }
    for (i=0;i<3;i++)       { fRmin[i] = 0; fRmax[i] = 1; }
@@ -154,11 +133,9 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(Double_t *rmin, Double_t *rmax, Int_t
    Int_t i;
    Double_t psi;
 
-   fAphi         = nullptr;
    fNaphi        = 0;
    fIfrast       = 0;
    fMesh         = 1;
-   fRaster       = nullptr;
    fColorTop     = 1;
    fColorBottom  = 1;
    fEdgeIdx      = -1;
@@ -166,26 +143,18 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(Double_t *rmin, Double_t *rmax, Int_t
    fSystem       = system;
    if (system == kCARTESIAN || system == kPOLAR) psi =  0;
    else                                          psi = 90;
-   fDrawFace        = 0;
-   fLegoFunction    = 0;
-   fSurfaceFunction = 0;
+   fDrawFace        = nullptr;
+   fLegoFunction    = nullptr;
+   fSurfaceFunction = nullptr;
 
    TList *stack = gCurrentHist->GetPainter()->GetStack();
-   fNStack = 0;
-   if (stack) fNStack = stack->GetSize();
-   if (fNStack > kVSizeMax) {
-      fColorMain  = new Int_t[fNStack+1];
-      fColorDark  = new Int_t[fNStack+1];
-      fEdgeColor  = new Int_t[fNStack+1];
-      fEdgeStyle  = new Int_t[fNStack+1];
-      fEdgeWidth  = new Int_t[fNStack+1];
-   } else {
-      fColorMain = &gColorMain[0];
-      fColorDark = &gColorDark[0];
-      fEdgeColor = &gEdgeColor[0];
-      fEdgeStyle = &gEdgeStyle[0];
-      fEdgeWidth = &gEdgeWidth[0];
-   }
+   fNStack = stack ? stack->GetSize() : 0;
+
+   fColorMain.resize(fNStack+1);
+   fColorDark.resize(fNStack+1);
+   fEdgeColor.resize(fNStack+1);
+   fEdgeStyle.resize(fNStack+1);
+   fEdgeWidth.resize(fNStack+1);
 
    for (i=0;i<fNStack;i++) { fColorMain[i] = 1; fColorDark[i] = 1; fEdgeColor[i] = 1; fEdgeStyle[i] = 1; fEdgeWidth[i] = 1; }
    for (i=0;i<3;i++)       { fRmin[i] = rmin[i]; fRmax[i] = rmax[i]; }
@@ -225,9 +194,9 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(Double_t *rmin, Double_t *rmax, Int_t
    fDYrast = 0.;
    fDX     = 0.;
 
-   TView *view = 0;
-   if (gPad) view = gPad->GetView();
-   if (!view) view = TView::CreateView(fSystem, rmin, rmax);
+   TView *view = gPad ? gPad->GetView() : nullptr;
+   if (!view)
+      view = TView::CreateView(fSystem, rmin, rmax);
    if (view) {
       view->SetView(gPad->GetPhi(), gPad->GetTheta(), psi, i);
       view->SetRange(rmin,rmax);
@@ -235,19 +204,10 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(Double_t *rmin, Double_t *rmax, Int_t
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Lego default destructor
+/// destructor
 
 TPainter3dAlgorithms::~TPainter3dAlgorithms()
 {
-   if (fAphi)   { delete [] fAphi; fAphi = 0; }
-   if (fRaster) { delete [] fRaster; fRaster = 0; }
-   if (fNStack > kVSizeMax) {
-      delete [] fColorMain;
-      delete [] fColorDark;
-      delete [] fEdgeColor;
-      delete [] fEdgeStyle;
-      delete [] fEdgeWidth;
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -260,8 +220,7 @@ void TPainter3dAlgorithms::BackBox(Double_t ang)
    static Int_t iface1[4] = { 1, 4, 8, 5 };
    static Int_t iface2[4] = { 4, 3, 7, 8 };
 
-   TView *view = 0;
-   if (gPad) view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("BackBox", "no TView in current pad");
       return;
@@ -304,8 +263,7 @@ void TPainter3dAlgorithms::FrontBox(Double_t ang)
    static Int_t iface1[4] = { 1, 2, 6, 5 };
    static Int_t iface2[4] = { 2, 3, 7, 6 };
 
-   TView *view = 0;
-   if (gPad) view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("FrontBox", "no TView in current pad");
       return;
@@ -407,8 +365,7 @@ void TPainter3dAlgorithms::ColorFunction(Int_t nl, Double_t *fl, Int_t *icl, Int
 
 void TPainter3dAlgorithms::DefineGridLevels(Int_t ndivz)
 {
-   TView *view = 0;
-   if (gPad) view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("GridLevels", "no TView in current pad");
       return;
@@ -448,8 +405,7 @@ void TPainter3dAlgorithms::DefineGridLevels(Int_t ndivz)
 
 void TPainter3dAlgorithms::DrawFaceMode1(Int_t *, Double_t *xyz, Int_t np, Int_t *iface, Double_t *)
 {
-   TView *view = 0;
-   if (gPad) view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) return;
 
    //          Transfer to normalised coordinates
@@ -498,8 +454,7 @@ void TPainter3dAlgorithms::DrawFaceMode1(Int_t *, Double_t *xyz, Int_t np, Int_t
 
 void TPainter3dAlgorithms::DrawFaceMode2(Int_t *, Double_t *xyz, Int_t np, Int_t *iface, Double_t *t)
 {
-   TView *view = 0;
-   if (gPad) view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) return;
 
    //          Transfer to normalised coordinates
@@ -554,8 +509,7 @@ void TPainter3dAlgorithms::DrawFaceMode2(Int_t *, Double_t *xyz, Int_t np, Int_t
 
 void TPainter3dAlgorithms::DrawFaceMode3(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *)
 {
-   TView *view = 0;
-   if (gPad) view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) return;
 
    //          Transfer to normalised coordinates
@@ -602,8 +556,7 @@ void TPainter3dAlgorithms::DrawFaceMode3(Int_t *icodes, Double_t *xyz, Int_t np,
 void TPainter3dAlgorithms::DrawFaceMove1(Int_t *icodes, Double_t *xyz, Int_t np,
                                          Int_t *iface, Double_t *tt)
 {
-   TView *view = 0;
-   if (gPad) view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) return;
 
    //          Copy points to array
@@ -691,8 +644,7 @@ void TPainter3dAlgorithms::DrawFaceMove1(Int_t *icodes, Double_t *xyz, Int_t np,
 
 void TPainter3dAlgorithms::DrawFaceMove2(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *)
 {
-   TView *view = 0;
-   if (gPad) view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) return;
 
    //          Copy points to array
@@ -753,8 +705,7 @@ void TPainter3dAlgorithms::DrawFaceMove2(Int_t *icodes, Double_t *xyz, Int_t np,
 void TPainter3dAlgorithms::DrawFaceMove3(Int_t *icodes, Double_t *xyz, Int_t np,
                                          Int_t *iface, Double_t *tt)
 {
-   TView *view = 0;
-   if (gPad) view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) return;
 
    //          Set graphics attributes
@@ -837,8 +788,7 @@ void TPainter3dAlgorithms::DrawFaceMove3(Int_t *icodes, Double_t *xyz, Int_t np,
 void TPainter3dAlgorithms::DrawLevelLines(Int_t *icodes, Double_t *xyz, Int_t np,
                                           Int_t *iface, Double_t *tt)
 {
-   TView *view = 0;
-   if (gPad) view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) return;
 
    //          Set graphics attributes
@@ -906,8 +856,7 @@ void TPainter3dAlgorithms::DrawLevelLines(Int_t *icodes, Double_t *xyz, Int_t np
 
 void TPainter3dAlgorithms::DrawFaceRaster1(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *tt)
 {
-   TView *view = 0;
-   if (gPad) view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) return;
 
    //          Copy vertices to array
@@ -995,8 +944,7 @@ void TPainter3dAlgorithms::DrawFaceRaster1(Int_t *icodes, Double_t *xyz, Int_t n
 
 void TPainter3dAlgorithms::DrawFaceRaster2(Int_t *, Double_t *xyz, Int_t np, Int_t *iface, Double_t *)
 {
-   TView *view = 0;
-   if (gPad) view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) return;
 
    //          Copy vertices to array
@@ -1578,9 +1526,8 @@ void TPainter3dAlgorithms::FindVisibleDraw(Double_t *r1, Double_t *r2)
    /* Parameter adjustments */
    --r2;
    --r1;
-   TView *view = 0;
+   TView *view = gPad ? gPad->GetView() : nullptr;
 
-   if (gPad) view = gPad->GetView();
    if (view) {
       tn = view->GetTN();
       if (tn) {
@@ -2054,7 +2001,7 @@ void TPainter3dAlgorithms::InitRaster(Double_t xmin, Double_t ymin, Double_t xma
 
    //  Create buffer for raster
    Int_t buffersize = nx*ny/30 + 1;
-   fRaster = new Int_t[buffersize];
+   fRaster.resize(buffersize);
 
    //          S E T   M A S K S
    k = 0;
@@ -2261,8 +2208,7 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t, Int_t nx, Int_t ny, const cha
    Double_t xy[4*2], xyz[8*3], tface[4];
    Int_t firstStackNumberDrawn=-1 ;  // necessary to compute fColorBottom when the 0 option is set and when the stack is seen from below (bottomview, theta<0.)
 
-   TView *view = 0;
-   if (gPad) view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("LegoCartesian", "no TView in current pad");
       return;
@@ -2271,16 +2217,8 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t, Int_t nx, Int_t ny, const cha
    if (!tnorm) return;
 
    //          Allocate v and tt arrays
-   Double_t *v, *tt;
    Int_t vSize = fNStack+2;
-   if (vSize > kVSizeMax) {
-      v  = new Double_t[vSize];
-      tt = new Double_t[4*vSize];
-   } else {
-      vSize = kVSizeMax;
-      v  = &gV[0];
-      tt = &gTT[0];
-   }
+   std::vector<Double_t> v(vSize), tt(4*vSize);
 
    //          Define order of drawing
    Int_t incrx = (tnorm[8] < 0.) ? -1 : +1;
@@ -2312,7 +2250,7 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t, Int_t nx, Int_t ny, const cha
    for (Int_t iy = iy1; iy != iy2+incry; iy += incry) {
       for (Int_t ix = ix1; ix != ix2+incrx; ix += incrx) {
          if (!painter->IsInside(ix,iy)) continue;
-         (this->*fLegoFunction)(ix, iy, nv, xy, v, tt);
+         (this->*fLegoFunction)(ix, iy, nv, xy, v.data(), tt.data());
          if (nv < 2 || nv > vSize) continue;
          if (Hoption.Zero) {
             Double_t total_content = 0;
@@ -2396,10 +2334,6 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t, Int_t nx, Int_t ny, const cha
          }
       }
    }
-   if (vSize > kVSizeMax) {
-      delete [] v;
-      delete [] tt;
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2423,10 +2357,9 @@ void TPainter3dAlgorithms::LegoPolar(Int_t iordr, Int_t na, Int_t nb, const char
    Int_t ir, jr, iv, nr, nv, icodes[4];
    Double_t xyz[24];     // was [3][8]
    ia = ib = 0;
-   TView *view = 0;
-   Int_t firstStackNumberDrawn=-1 ;  // necessary to compute fColorBottom when the 0 option is set and when the stack is seen from below (bottomview, theta<0.)
+   Int_t firstStackNumberDrawn = -1 ;  // necessary to compute fColorBottom when the 0 option is set and when the stack is seen from below (bottomview, theta<0.)
 
-   if (gPad) view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("LegoPolar", "no TView in current pad");
       return;
@@ -2444,11 +2377,10 @@ void TPainter3dAlgorithms::LegoPolar(Int_t iordr, Int_t na, Int_t nb, const char
       nphi = na;
    }
    if (fNaphi < nphi + 3) {
-     if (fAphi) { delete [] fAphi; fAphi = 0; }
      fNaphi = nphi + 3;
-     fAphi = new Double_t[fNaphi];
+     fAphi.resize(fNaphi);
    }
-   if (fAphi == 0) {
+   if (fAphi.empty()) {
       Error("LegoPolar", "failed to allocate array fAphi[%d]", fNaphi);
       fNaphi = 0;
       return;
@@ -2457,16 +2389,8 @@ void TPainter3dAlgorithms::LegoPolar(Int_t iordr, Int_t na, Int_t nb, const char
    if (*chopt == 'B' || *chopt == 'b') iopt = 1;
 
     // Allocate v and tt arrays
-   Double_t *v, *tt;
    Int_t vSize = fNStack+2;
-   if (vSize > kVSizeMax) {
-      v  = new Double_t[vSize];
-      tt = new Double_t[4*vSize];
-   } else {
-      vSize = kVSizeMax;
-      v  = &gV[0];
-      tt = &gTT[0];
-   }
+   std::vector<Double_t> v(vSize), tt(4*vSize);
 
    //     P R E P A R E   P H I   A R R A Y
    //     F I N D    C R I T I C A L   S E C T O R S
@@ -2477,19 +2401,19 @@ void TPainter3dAlgorithms::LegoPolar(Int_t iordr, Int_t na, Int_t nb, const char
    for (i = 1; i <= nphi; ++i) {
       if (iordr == 0) ib = i;
       if (iordr != 0) ia = i;
-      (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+      (this->*fLegoFunction)(ia, ib, nv, ab, v.data(), tt.data());
       if (i == 1) fAphi[0] = ab[jphi - 1];
       fAphi[i - 1] = (fAphi[i - 1] + ab[jphi - 1]) / (float)2.;
       fAphi[i] = ab[jphi + 3];
    }
-   view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
+   view->FindPhiSectors(iopt, kphi, fAphi.data(), iphi1, iphi2);
 
    //      E N C O D E   V I S I B I L I T Y   O F   S I D E S
    //      A N D   O R D E R   A L O N G   R
    for (i = 1; i <= nphi; ++i) {
       if (!iordr) ib = i;
       if (iordr)  ia = i;
-      (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+      (this->*fLegoFunction)(ia, ib, nv, ab, v.data(), tt.data());
       SideVisibilityEncode(iopt, ab[jphi - 1]*kRad, ab[jphi + 3]*kRad, fAphi[i - 1]);
    }
 
@@ -2508,7 +2432,7 @@ L100:
    for (ir = ir1; incrr < 0 ? ir >= ir2 : ir <= ir2; ir += incrr) {
       if (iordr == 0) { ia = ir;   ib = iphi; }
       else            { ia = iphi; ib = ir; }
-      (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+      (this->*fLegoFunction)(ia, ib, nv, ab, v.data(), tt.data());
       if (nv < 2 || nv > vSize) continue;
       if (Hoption.Zero) {
          Double_t total_content=0;
@@ -2602,13 +2526,8 @@ L300:
    if (iphi == 0)      iphi = kphi;
    if (iphi > kphi)    iphi = 1;
    if (iphi != iphi2)  goto L100;
-   if (incr == 0) {
-      if (vSize > kVSizeMax) {
-         delete [] v;
-         delete [] tt;
-      }
+   if (incr == 0)
       return;
-   }
    if (incr < 0) {
       incr = 0;
       goto L100;
@@ -2642,10 +2561,9 @@ void TPainter3dAlgorithms::LegoCylindrical(Int_t iordr, Int_t na, Int_t nb, cons
    Double_t sinphi[4];
    Double_t xyz[24];     // was [3][8]
    ia = ib = 0;
-   TView *view = 0;
    Int_t firstStackNumberDrawn=-1 ;  // necessary to compute fColorBottom when the 0 option is set and when the stack is seen from below (bottomview, theta<0.)
 
-   if (gPad) view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("LegoCylindrical", "no TView in current pad");
       return;
@@ -2663,11 +2581,10 @@ void TPainter3dAlgorithms::LegoCylindrical(Int_t iordr, Int_t na, Int_t nb, cons
       nphi = na;
    }
    if (fNaphi < nphi + 3) {
-     if (fAphi) { delete [] fAphi; fAphi = 0; }
      fNaphi = nphi + 3;
-     fAphi = new Double_t[fNaphi];
+     fAphi.resize(fNaphi);
    }
-   if (fAphi == 0) {
+   if (fAphi.empty()) {
       Error("LegoCylindrical", "failed to allocate array fAphi[%d]", fNaphi);
       fNaphi = 0;
       return;
@@ -2676,16 +2593,8 @@ void TPainter3dAlgorithms::LegoCylindrical(Int_t iordr, Int_t na, Int_t nb, cons
    if (*chopt == 'B' || *chopt == 'b') iopt = 1;
 
     // Allocate v and tt arrays
-   Double_t *v, *tt;
    Int_t vSize = fNStack+2;
-   if (vSize > kVSizeMax) {
-      v  = new Double_t[vSize];
-      tt = new Double_t[4*vSize];
-   } else {
-      vSize = kVSizeMax;
-      v  = &gV[0];
-      tt = &gTT[0];
-   }
+   std::vector<Double_t> v(vSize), tt(4*vSize);
 
    //       P R E P A R E   P H I   A R R A Y
    //       F I N D    C R I T I C A L   S E C T O R S
@@ -2696,19 +2605,19 @@ void TPainter3dAlgorithms::LegoCylindrical(Int_t iordr, Int_t na, Int_t nb, cons
    for (i = 1; i <= nphi; ++i) {
       if (iordr == 0) ib = i;
       if (iordr != 0) ia = i;
-      (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+      (this->*fLegoFunction)(ia, ib, nv, ab, v.data(), tt.data());
       if (i == 1)  fAphi[0] = ab[jphi - 1];
       fAphi[i - 1] = (fAphi[i - 1] + ab[jphi - 1]) / (float)2.;
       fAphi[i] = ab[jphi + 3];
    }
-   view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
+   view->FindPhiSectors(iopt, kphi, fAphi.data(), iphi1, iphi2);
 
    //      E N C O D E   V I S I B I L I T Y   O F   S I D E S
    //      A N D   O R D E R   A L O N G   R
    for (i = 1; i <= nphi; ++i) {
       if (iordr == 0) ib = i;
       if (iordr != 0) ia = i;
-      (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+      (this->*fLegoFunction)(ia, ib, nv, ab, v.data(), tt.data());
       SideVisibilityEncode(iopt, ab[jphi - 1]*kRad, ab[jphi + 3]*kRad, fAphi[i - 1]);
    }
 
@@ -2733,7 +2642,7 @@ L100:
    for (iz = iz1; incrz < 0 ? iz >= iz2 : iz <= iz2; iz += incrz) {
       if (iordr == 0) {ia = iz;   ib = iphi;}
       else            {ia = iphi; ib = iz;}
-      (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+      (this->*fLegoFunction)(ia, ib, nv, ab, v.data(), tt.data());
       if (nv < 2 || nv > vSize) continue;
       icodes[0] = ia;
       icodes[1] = ib;
@@ -2823,13 +2732,8 @@ L400:
    if (iphi == 0)     iphi = kphi;
    if (iphi > kphi)   iphi = 1;
    if (iphi != iphi2) goto L100;
-   if (incr == 0) {
-      if (vSize > kVSizeMax) {
-         delete [] v;
-         delete [] tt;
-      }
+   if (incr == 0)
       return;
-   }
    if (incr < 0) {
       incr = 0;
       goto L100;
@@ -2865,10 +2769,9 @@ void TPainter3dAlgorithms::LegoSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int
    Double_t xyz[24];     // was [3][8]
    Double_t phi1, phi2;
    ia = ib = 0;
-   TView *view = 0;
    Int_t firstStackNumberDrawn=-1 ;  // necessary to compute fColorBottom when the 0 option is set and when the stack is seen from below (bottomview, theta<0.)
 
-   if (gPad) view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("LegoSpherical", "no TView in current pad");
       return;
@@ -2886,11 +2789,10 @@ void TPainter3dAlgorithms::LegoSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int
       nphi = na;
    }
    if (fNaphi < nth + 3 || fNaphi < nphi + 3) {
-     if (fAphi) { delete [] fAphi; fAphi = 0; }
      fNaphi = TMath::Max(nth, nphi) + 3;
-     fAphi = new Double_t[fNaphi];
+     fAphi.resize(fNaphi);
    }
-   if (fAphi == 0) {
+   if (fAphi.empty()) {
       Error("LegoSpherical", "failed to allocate array fAphi[%d]", fNaphi);
       fNaphi = 0;
       return;
@@ -2899,16 +2801,8 @@ void TPainter3dAlgorithms::LegoSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int
    if (*chopt == 'B' || *chopt == 'b') iopt = 1;
 
    // Allocate v and tt arrays
-   Double_t *v, *tt;
    Int_t vSize = fNStack+2;
-   if (vSize > kVSizeMax) {
-      v  = new Double_t[vSize];
-      tt = new Double_t[4*vSize];
-   } else {
-      vSize = kVSizeMax;
-      v  = &gV[0];
-      tt = &gTT[0];
-   }
+   std::vector<Double_t> v(vSize), tt(4*vSize);
 
    //       P R E P A R E   P H I   A R R A Y
    //       F I N D    C R I T I C A L   P H I   S E C T O R S
@@ -2921,12 +2815,12 @@ void TPainter3dAlgorithms::LegoSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int
    for (i = 1; i <= nphi; ++i) {
       if (iordr == 0) ib = i;
       if (iordr != 0) ia = i;
-      (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+      (this->*fLegoFunction)(ia, ib, nv, ab, v.data(), tt.data());
       if (i == 1)  fAphi[0] = ab[jphi - 1];
       fAphi[i - 1] = (fAphi[i - 1] + ab[jphi - 1]) / (float)2.;
       fAphi[i] = ab[jphi + 3];
    }
-   view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
+   view->FindPhiSectors(iopt, kphi, fAphi.data(), iphi1, iphi2);
 
    //       P R E P A R E   T H E T A   A R R A Y
    if (iordr == 0) ib = 1;
@@ -2934,7 +2828,7 @@ void TPainter3dAlgorithms::LegoSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int
    for (i = 1; i <= nth; ++i) {
       if (iordr == 0) ia = i;
       if (iordr != 0) ib = i;
-      (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+      (this->*fLegoFunction)(ia, ib, nv, ab, v.data(), tt.data());
       if (i == 1) fAphi[0] = ab[jth - 1];
       fAphi[i - 1] = (fAphi[i - 1] + ab[jth - 1]) / (float)2.;
       fAphi[i] = ab[jth + 3];
@@ -2949,18 +2843,18 @@ L100:
    if (iphi > nphi) goto L500;
 
    //      F I N D    C R I T I C A L   T H E T A   S E C T O R S
-   if (!iordr) {ia = mth;        ib = iphi; }
-   else        {ia = iphi;ib = mth;  }
-   (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+   if (!iordr) {ia = mth;  ib = iphi; }
+   else        {ia = iphi; ib = mth;  }
+   (this->*fLegoFunction)(ia, ib, nv, ab, v.data(), tt.data());
    phi = (ab[jphi - 1] + ab[jphi + 3]) / (float)2.;
-   view->FindThetaSectors(iopt, phi, kth, fAphi, ith1, ith2);
+   view->FindThetaSectors(iopt, phi, kth, fAphi.data(), ith1, ith2);
    incrth = 1;
    ith = ith1;
 L200:
    if (ith > nth)   goto L400;
    if (iordr == 0) ia = ith;
    if (iordr != 0) ib = ith;
-   (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
+   (this->*fLegoFunction)(ia, ib, nv, ab, v.data(), tt.data());
    if (nv < 2 || nv > vSize) goto L400;
 
    //      D E F I N E   V I S I B I L I T Y   O F   S I D E S
@@ -3106,13 +3000,8 @@ L500:
    if (iphi == 0)     iphi = kphi;
    if (iphi > kphi)   iphi = 1;
    if (iphi != iphi2) goto L100;
-   if (incr == 0) {
-      if (vSize > kVSizeMax) {
-         delete [] v;
-         delete [] tt;
-      }
+   if (incr == 0)
       return;
-   }
    if (incr < 0) {
       incr = 0;
       goto L100;
@@ -3247,8 +3136,7 @@ void TPainter3dAlgorithms::ModifyScreen(Double_t *r1, Double_t *r2)
    --r2;
    --r1;
 
-   TView *view = 0;
-   if (gPad) view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
 
    if (view) {
       tn = view->GetTN();
@@ -3390,9 +3278,8 @@ void TPainter3dAlgorithms::SideVisibilityEncode(Int_t iopt, Double_t phi1, Doubl
    /* Local variables */
    Double_t zn, phi;
    Int_t k = 0;
-   TView *view = 0;
 
-   if (gPad) view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("SideVisibilityEncode", "no TView in current pad");
       return;
@@ -3486,8 +3373,7 @@ void TPainter3dAlgorithms::SurfaceCartesian(Double_t, Int_t nx, Int_t ny, const 
    Int_t icodes[3];
    Double_t f[4*3], tt[4], xyz[4*3];
 
-   TView *view = 0;
-   if (gPad) view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
      Error("SurfaceCartesian", "no TView in current pad");
      return;
@@ -3674,9 +3560,8 @@ void TPainter3dAlgorithms::SurfacePolar(Int_t iordr, Int_t na, Int_t nb, const c
 {
    /* Initialized data */
    static Int_t iface[4] = { 1,2,3,4 };
-   TView *view = 0;
 
-   if (gPad) view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("SurfacePolar", "no TView in current pad");
       return;
@@ -3703,11 +3588,10 @@ void TPainter3dAlgorithms::SurfacePolar(Int_t iordr, Int_t na, Int_t nb, const c
       nphi = na;
    }
    if (fNaphi < nphi + 3) {
-     if (fAphi) { delete [] fAphi; fAphi = 0; }
-     fNaphi =nphi + 3;
-     fAphi = new Double_t[fNaphi];
+     fNaphi = nphi + 3;
+     fAphi.resize(fNaphi);
    }
-   if (fAphi == 0) {
+   if (fAphi.empty()) {
       Error("SurfacePolar", "failed to allocate array fAphi[%d]", fNaphi);
       fNaphi = 0;
       return;
@@ -3728,7 +3612,7 @@ void TPainter3dAlgorithms::SurfacePolar(Int_t iordr, Int_t na, Int_t nb, const c
       fAphi[i - 1] = (fAphi[i - 1] + f[jphi - 1]) / (float)2.;
       fAphi[i] = f[jphi + 5];
    }
-   view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
+   view->FindPhiSectors(iopt, kphi, fAphi.data(), iphi1, iphi2);
 
    //       D R A W   S U R F A C E
    icodes[2] = -1;   // -1 for data, 0 for front a back boxes
@@ -3813,9 +3697,8 @@ void TPainter3dAlgorithms::SurfaceCylindrical(Int_t iordr, Int_t na, Int_t nb, c
    Double_t tt[4];
    Double_t ttt[4], xyz[12]        /* was [3][4] */;
    ia = ib = 0;
-   TView *view = 0;
 
-   if (gPad) view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("SurfaceCylindrical", "no TView in current pad");
       return;
@@ -3833,11 +3716,10 @@ void TPainter3dAlgorithms::SurfaceCylindrical(Int_t iordr, Int_t na, Int_t nb, c
       nphi = na;
    }
    if (fNaphi < nphi + 3) {
-     if (fAphi) { delete [] fAphi; fAphi = 0; }
-     fNaphi =nphi + 3;
-     fAphi = new Double_t[fNaphi];
+     fNaphi = nphi + 3;
+     fAphi.resize(fNaphi);
    }
-   if (fAphi == 0) {
+   if (fAphi.empty()) {
       Error("SurfaceCylindrical", "failed to allocate array fAphi[%d]", fNaphi);
       fNaphi = 0;
       return;
@@ -3858,7 +3740,7 @@ void TPainter3dAlgorithms::SurfaceCylindrical(Int_t iordr, Int_t na, Int_t nb, c
       fAphi[i - 1] = (fAphi[i - 1] + f[jphi - 1]) / (float)2.;
       fAphi[i] = f[jphi + 5];
    }
-   view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
+   view->FindPhiSectors(iopt, kphi, fAphi.data(), iphi1, iphi2);
 
    //       F I N D   O R D E R   A L O N G   Z
    incrz = 1;
@@ -3935,9 +3817,8 @@ void TPainter3dAlgorithms::SurfaceSpherical(Int_t ipsdr, Int_t iordr, Int_t na, 
    Double_t phi;
    Double_t ttt[4], xyz[12]        /* was [3][4] */;
    ia = ib = 0;
-   TView *view = 0;
 
-   if (gPad) view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("SurfaceSpherical", "no TView in current pad");
       return;
@@ -3955,11 +3836,10 @@ void TPainter3dAlgorithms::SurfaceSpherical(Int_t ipsdr, Int_t iordr, Int_t na, 
       nphi = na;
    }
    if (fNaphi < nth + 3 || fNaphi < nphi + 3) {
-     if (fAphi) { delete [] fAphi; fAphi = 0; }
      fNaphi = TMath::Max(nth, nphi) + 3;
-     fAphi = new Double_t[fNaphi];
+     fAphi.resize(fNaphi);
    }
-   if (fAphi == 0) {
+   if (fAphi.empty()) {
       Error("SurfaceSpherical", "failed to allocate array fAphi[%d]", fNaphi);
       fNaphi = 0;
       return;
@@ -3982,7 +3862,7 @@ void TPainter3dAlgorithms::SurfaceSpherical(Int_t ipsdr, Int_t iordr, Int_t na, 
       fAphi[i - 1] = (fAphi[i - 1] + f[jphi - 1]) / (float)2.;
       fAphi[i] = f[jphi + 5];
    }
-   view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
+   view->FindPhiSectors(iopt, kphi, fAphi.data(), iphi1, iphi2);
 
    //       P R E P A R E   T H E T A   A R R A Y
    if (iordr == 0) ib = 1;
@@ -4012,7 +3892,7 @@ L100:
 
    (this->*fSurfaceFunction)(ia, ib, f, tt);
    phi = (f[jphi - 1] + f[jphi + 5]) / (float)2.;
-   view->FindThetaSectors(iopt, phi, kth, fAphi, ith1, ith2);
+   view->FindThetaSectors(iopt, phi, kth, fAphi.data(), ith1, ith2);
    incrth = 1;
    ith = ith1;
 L200:
@@ -5580,9 +5460,7 @@ void TPainter3dAlgorithms::IsoSurface (Int_t ns, Double_t *s, Int_t nx,
       xyzn[i][2] = 0.;
    }
 
-   TView *view = 0;
-
-   if (gPad) view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("ImplicitFunction", "no TView in current pad");
       return;
@@ -5869,9 +5747,8 @@ void TPainter3dAlgorithms::DrawFaceGouraudShaded(Int_t *icodes,
 {
    Int_t i, k, irep;
    Double_t p3[12][3];
-   TView *view = 0;
 
-   if (gPad) view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("ImplicitFunction", "no TView in current pad");
       return;

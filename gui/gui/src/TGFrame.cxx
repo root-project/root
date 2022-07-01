@@ -2961,7 +2961,7 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
 
    TGMainFrame::SavePrimitive(out, option);
 
-   if (strlen(fClassName) || strlen(fResourceName)) {
+   if (fClassName.Length() || fResourceName.Length()) {
       out << "   " << GetName() << "->SetClassHints(" << quote << fClassName
           << quote << "," << quote << fResourceName << quote << ");" << std::endl;
    }
@@ -3128,14 +3128,14 @@ void TGMainFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    SavePrimitiveSubframes(out, option);
 
-   if (strlen(fWindowName)) {
+   if (fWindowName.Length()) {
       out << "   " << GetName() << "->SetWindowName(" << quote << GetWindowName()
           << quote << ");" << std::endl;
    }
-   if (strlen(fIconName)) {
+   if (fIconName.Length()) {
       out <<"   "<<GetName()<< "->SetIconName("<<quote<<GetIconName()<<quote<<");"<<std::endl;
    }
-   if (strlen(fIconPixmap)) {
+   if (fIconPixmap.Length()) {
       out << "   " << GetName() << "->SetIconPixmap(" << quote << GetIconPixmap()
           << quote << ");" << std::endl;
    }
@@ -3477,7 +3477,7 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
 
    TGTransientFrame::SavePrimitive(out, option);
 
-   if (strlen(fClassName) || strlen(fResourceName)) {
+   if (fClassName.Length() || fResourceName.Length()) {
       out<<"   "<<GetName()<< "->SetClassHints("<<quote<<fClassName<<quote
                                             <<"," <<quote<<fResourceName<<quote
                                             <<");"<<std::endl;
@@ -3637,14 +3637,14 @@ void TGTransientFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*
 
    SavePrimitiveSubframes(out, option);
 
-   if (strlen(fWindowName)) {
+   if (fWindowName.Length()) {
       out << "   " << GetName() << "->SetWindowName(" << quote << GetWindowName()
           << quote << ");" << std::endl;
    }
-   if (strlen(fIconName)) {
+   if (fIconName.Length()) {
       out <<"   "<<GetName()<< "->SetIconName("<<quote<<GetIconName()<<quote<<");"<<std::endl;
    }
-   if (strlen(fIconPixmap)) {
+   if (fIconPixmap.Length()) {
       out << "   " << GetName() << "->SetIconPixmap(" << quote << GetIconPixmap()
           << quote << ");" << std::endl;
    }

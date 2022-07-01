@@ -515,6 +515,7 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
         switch(fInputDType){
             case(ETensorType::FLOAT): {
                 rmodel.AddInputTensorInfo(fInputName, ETensorType::FLOAT, fInputShape);
+                rmodel.AddInputTensorName(fInputName);
                 break;
             }
             default:

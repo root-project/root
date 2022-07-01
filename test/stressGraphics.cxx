@@ -1532,22 +1532,22 @@ void tgaxis5()
 
    double f = 1.8;
 
-   TLatex* tex1 = new TLatex;
-   tex1->SetNDC();
-   tex1->SetTextFont(102);
-   tex1->SetTextSize(0.07*f);
+   TLatex tex1;
+   tex1.SetNDC();
+   tex1.SetTextFont(102);
+   tex1.SetTextSize(0.07*f);
 
-   TLatex* tex3 = new TLatex;
-   tex3->SetNDC();
-   tex3->SetTextFont(102);
-   tex3->SetTextSize(0.07*f);
-   tex3->SetTextColor(kBlue+2);
+   TLatex tex3;
+   tex3.SetNDC();
+   tex3.SetTextFont(102);
+   tex3.SetTextSize(0.07*f);
+   tex3.SetTextColor(kBlue+2);
 
-   TLatex* tex2 = new TLatex;
-   tex2->SetNDC();
-   tex2->SetTextFont(102);
-   tex2->SetTextSize(0.07*f);
-   tex2->SetTextColor(kOrange+3);
+   TLatex tex2;
+   tex2.SetNDC();
+   tex2.SetTextFont(102);
+   tex2.SetTextSize(0.07*f);
+   tex2.SetTextColor(kOrange+3);
 
    time_t offset[] = {0,                   0, 1325376000, 1341100800};
    time_t t[]      = {1331150400, 1336417200,          0, 36000};
@@ -1595,11 +1595,11 @@ void tgaxis5()
             sprintf(buf, "#splitline{%d h %d m %d s}{offset: %s, option %s}",
                     h, m, s, stime(offset + i, gmt).Data(), opt);
          }
-         tex1->DrawLatex(.01, .75, buf);
-         tex2->DrawLatex(.01, .50, offsettimeformat);
+         tex1.DrawLatex(.01, .75, buf);
+         tex2.DrawLatex(.01, .50, offsettimeformat);
          time_t t_ = t[i] + offset[i];
          sprintf(buf, "Expecting:    #color[2]{%s}", stime(&t_, gmt, false).Data());
-         tex3->DrawLatex(.01, .24, buf);
+         tex3.DrawLatex(.01, .24, buf);
          if(i > 0) l.DrawLine(0, 0.95, 1, 0.95);
       }
    }
@@ -2977,19 +2977,19 @@ void waves()
    finter->SetContour(colNum-2);
    finter->Draw("samecolorz");
 
-   TArc *arc = new TArc();;
-   arc->SetFillStyle(0);
-   arc->SetLineWidth(2);
-   arc->SetLineColor(5);
+   TArc arc;
+   arc.SetFillStyle(0);
+   arc.SetLineWidth(2);
+   arc.SetLineColor(5);
    Float_t r = 0.5 * lambda, dr = lambda;
-      for (Int_t i = 0; i < 15; i++) {
-      arc->DrawArc(0,  0.5*d, r, 0., 360., "only");
-      arc->DrawArc(0, -0.5*d, r, 0., 360., "only");
+   for (Int_t i = 0; i < 15; i++) {
+      arc.DrawArc(0,  0.5*d, r, 0., 360., "only");
+      arc.DrawArc(0, -0.5*d, r, 0., 360., "only");
       r += dr;
    }
 
-   pad ->cd();
-   TF2 * fresult = new TF2("result",result, 14, 15, -10, 10, 4);
+   pad->cd();
+   TF2 *fresult = new TF2("result",result, 14, 15, -10, 10, 4);
 
    fresult->SetParameters(amp, lambda, d, 1);
    fresult->SetNpx(300);

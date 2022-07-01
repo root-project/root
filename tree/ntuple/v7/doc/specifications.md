@@ -42,6 +42,10 @@ _String_: A string is stored as a 32bit unsigned integer indicating the length o
 followed by the characters.
 Strings are ASCII encoded; every character is a signed 8bit integer.
 
+_Compression settings_: A 32bit integer containing both a compression algorithm and the compression level.
+The compression settings are encoded according to this formula: $$ settings = algorithm * 100 + level $$
+See Compression.[h/cxx] for details and available algorithms.
+
 The meta-data envelope defines additional basic types (see below).
 
 
@@ -435,7 +439,7 @@ The order of items corresponds to the cluster IDs as defined by the cluster grou
 Every item of the top-most list frame consists of an outer list frame where every item corresponds to a column.
 Every item of the outer list frame is an inner list frame
 whose items correspond to the pages of the column in the cluster.
-The inner list is followed by a 64bit unsigned integer element offset and the 32bit compression settings.
+The inner list is followed by a 64bit unsigned integer element offset and the 32bit compression settings (see Section "Basic Types").
 Note that the size of the inner list frame includes the element offset and compression settings.
 The order of the outer items must match the order of the columns as specified in the cluster summary and column groups.
 For a complete cluster (covering all original columns), the order is given by the column IDs (small to large).

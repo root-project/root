@@ -56,7 +56,8 @@ class RColumnRegister {
    std::shared_ptr<const std::unordered_map<std::string, std::string>> fAliases;
    /// Immutable multimap of Variations, can be shared among several nodes.
    /// The key is the name of an existing column, the values are all variations that affect that column.
-   /// As a consequence, Variations that affect multiple columns are inserted multiple times, once per column.
+   /// Variations that affect multiple columns are inserted in the map multiple times, once per column,
+   /// and conversely each column (i.e. each key) can have several associated variations.
    std::shared_ptr<const VariationsMap_t> fVariations;
    std::shared_ptr<const ColumnNames_t> fColumnNames; ///< Names of Defines and Aliases registered so far.
 
@@ -67,7 +68,7 @@ public:
    RColumnRegister(RColumnRegister &&) = default;
    RColumnRegister &operator=(const RColumnRegister &) = default;
 
-   RColumnRegister(std::shared_ptr<RDFDetail::RLoopManager> lm)
+   explicit RColumnRegister(std::shared_ptr<RDFDetail::RLoopManager> lm)
       : fLoopManager(lm), fDefines(std::make_shared<DefinesMap_t>()),
         fAliases(std::make_shared<std::unordered_map<std::string, std::string>>()),
         fVariations(std::make_shared<VariationsMap_t>()), fColumnNames(std::make_shared<ColumnNames_t>())

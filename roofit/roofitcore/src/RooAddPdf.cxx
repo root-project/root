@@ -74,6 +74,7 @@ An (enforced) condition for this assumption is that each \f$ \mathrm{PDF}_i \f$ 
 #include "RooRealVar.h"
 #include "RooRealConstant.h"
 #include "RooRealIntegral.h"
+#include "RooRealSumPdf.h"
 #include "RooRecursiveFraction.h"
 
 #include <algorithm>
@@ -823,21 +824,7 @@ void RooAddPdf::resetErrorCounters(Int_t resetValue)
 
 bool RooAddPdf::checkObservables(const RooArgSet* nset) const
 {
-  bool ret(false) ;
-
-  // There may be fewer coefficients than PDFs.
-  std::size_t end = std::min(_pdfList.size(), _coefList.size());
-  for (std::size_t i = 0; i < end; ++i) {
-    auto pdf  = static_cast<const RooAbsPdf *>(_pdfList.at(i));
-    auto coef = static_cast<const RooAbsReal*>(_coefList.at(i));
-    if (pdf->observableOverlaps(nset,*coef)) {
-      coutE(InputArguments) << "RooAddPdf::checkObservables(" << GetName() << "): ERROR: coefficient " << coef->GetName()
-             << " and PDF " << pdf->GetName() << " have one or more dependents in common" << endl ;
-      ret = true ;
-    }
-  }
-
-  return ret ;
+  return RooRealSumPdf::checkObservables(*this, nset, _pdfList, _coefList);
 }
 
 
@@ -1079,41 +1066,7 @@ RooArgList RooAddPdf::CacheElem::containedArgs(Action)
 
 std::list<double>* RooAddPdf::plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
-  std::unique_ptr<std::list<double>> sumHint = nullptr ;
-  bool needClean = false;
-
-  // Loop over components pdf
-  for (const auto arg : _pdfList) {
-    auto pdf = static_cast<const RooAbsPdf*>(arg);
-
-    std::unique_ptr<std::list<double>> pdfHint{pdf->plotSamplingHint(obs,xlo,xhi)} ;
-
-    // Process hint
-    if (pdfHint) {
-      if (!sumHint) {
-
-   // If this is the first hint, then just save it
-   sumHint = std::move(pdfHint) ;
-
-      } else {
-
-   auto newSumHint = std::make_unique<std::list<double>>(sumHint->size()+pdfHint->size());
-
-   // Merge hints into temporary array
-   merge(pdfHint->begin(),pdfHint->end(),sumHint->begin(),sumHint->end(),newSumHint->begin()) ;
-
-   // Copy merged array without duplicates to new sumHintArrau
-   sumHint = std::move(newSumHint) ;
-   needClean = true ;
-
-      }
-    }
-  }
-  if (needClean) {
-    sumHint->erase(std::unique(sumHint->begin(),sumHint->end()), sumHint->end()) ;
-  }
-
-  return sumHint.release() ;
+  return RooRealSumPdf::plotSamplingHint(_pdfList, obs, xlo, xhi);
 }
 
 
@@ -1122,41 +1075,7 @@ std::list<double>* RooAddPdf::plotSamplingHint(RooAbsRealLValue& obs, double xlo
 
 std::list<double>* RooAddPdf::binBoundaries(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
-  std::unique_ptr<list<double>> sumBinB = nullptr ;
-  bool needClean = false;
-
-  // Loop over components pdf
-  for (auto arg : _pdfList) {
-    auto pdf = static_cast<const RooAbsPdf *>(arg);
-    std::unique_ptr<list<double>> pdfBinB{pdf->binBoundaries(obs,xlo,xhi)};
-
-    // Process hint
-    if (pdfBinB) {
-      if (!sumBinB) {
-
-   // If this is the first hint, then just save it
-   sumBinB = std::move(pdfBinB) ;
-
-      } else {
-
-   auto newSumBinB = std::make_unique<list<double>>(sumBinB->size()+pdfBinB->size()) ;
-
-   // Merge hints into temporary array
-   merge(pdfBinB->begin(),pdfBinB->end(),sumBinB->begin(),sumBinB->end(),newSumBinB->begin()) ;
-
-   // Copy merged array without duplicates to new sumBinBArrau
-   sumBinB = std::move(newSumBinB) ;
-   needClean = true ;
-      }
-    }
-  }
-
-  // Remove consecutive duplicates
-  if (needClean) {
-    sumBinB->erase(std::unique(sumBinB->begin(),sumBinB->end()), sumBinB->end()) ;
-  }
-
-  return sumBinB.release() ;
+  return RooRealSumPdf::binBoundaries(_pdfList, obs, xlo, xhi);
 }
 
 
@@ -1164,14 +1083,7 @@ std::list<double>* RooAddPdf::binBoundaries(RooAbsRealLValue& obs, double xlo, d
 /// If all components that depend on obs are binned, so is their sum.
 bool RooAddPdf::isBinnedDistribution(const RooArgSet& obs) const
 {
-  for (const auto arg : _pdfList) {
-    auto pdf = static_cast<const RooAbsPdf*>(arg);
-    if (pdf->dependsOn(obs) && !pdf->isBinnedDistribution(obs)) {
-      return false ;
-    }
-  }
-
-  return true  ;
+  return RooRealSumPdf::isBinnedDistribution(_pdfList, obs);
 }
 
 
@@ -1180,14 +1092,7 @@ bool RooAddPdf::isBinnedDistribution(const RooArgSet& obs) const
 
 void RooAddPdf::setCacheAndTrackHints(RooArgSet& trackNodes)
 {
-  RooFIter aiter = pdfList().fwdIterator() ;
-  RooAbsArg* aarg ;
-  while ((aarg=aiter.next())) {
-    if (aarg->canNodeBeCached()==Always) {
-      trackNodes.add(*aarg) ;
-      //cout << "tracking node RooAddPdf component " << aarg->ClassName() << "::" << aarg->GetName() << endl ;
-    }
-  }
+  RooRealSumPdf::setCacheAndTrackHints(_pdfList, trackNodes);
 }
 
 
@@ -1196,37 +1101,7 @@ void RooAddPdf::setCacheAndTrackHints(RooArgSet& trackNodes)
 /// Customized printing of arguments of a RooAddPdf to more intuitively reflect the contents of the
 /// product operator construction
 
-void RooAddPdf::printMetaArgs(ostream& os) const
+void RooAddPdf::printMetaArgs(std::ostream& os) const
 {
-  bool first(true) ;
-
-  if (!_coefList.empty()) {
-    for (std::size_t i = 0; i < _pdfList.size(); ++i ) {
-      const RooAbsArg * coef = _coefList.at(i);
-      const RooAbsArg * pdf  = _pdfList.at(i);
-      if (!first) {
-        os << " + " ;
-      } else {
-        first = false ;
-      }
-
-      if (i < _coefList.size()) {
-        os << coef->GetName() << " * " << pdf->GetName();
-      } else {
-        os << "[%] * " << pdf->GetName();
-      }
-    }
-  } else {
-
-    for (const auto pdf : _pdfList) {
-      if (!first) {
-        os << " + " ;
-      } else {
-        first = false ;
-      }
-      os << pdf->GetName() ;
-    }
-  }
-
-  os << " " ;
+  RooRealSumPdf::printMetaArgs(_pdfList, _coefList, os);
 }

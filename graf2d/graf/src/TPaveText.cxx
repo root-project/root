@@ -118,7 +118,7 @@ TPaveText::~TPaveText()
    if (!TestBit(kNotDeleted)) return;
    if (fLines) fLines->Delete();
    delete fLines;
-   fLines = 0;
+   fLines = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -131,7 +131,7 @@ TPaveText::TPaveText(const TPaveText &pavetext) : TPave(), TAttText()
    p->Streamer(b);
    b.SetReadMode();
    b.SetBufferOffset(0);
-   fLines = 0;
+   fLines = nullptr;
    Streamer(b);
 }
 
@@ -187,7 +187,7 @@ TText *TPaveText::AddText(Double_t x1, Double_t y1, const char *text)
    newtext->SetTextColor(0);
    newtext->SetTextFont(0);
    newtext->SetTextSize(0);
-   Int_t nch = strlen(text);
+   Int_t nch = text ? strlen(text) : 0;
    if (nch > fLongest) fLongest = nch;
 
    if (!fLines) fLines = new TList;
@@ -568,12 +568,11 @@ void TPaveText::PaintPrimitives(Int_t mode)
       x2 = fX2 - 0.25*dx;
       y1 = fY2 - 0.02*dy;
       y2 = fY2 + 0.02*dy;
-      TPaveLabel *title = new TPaveLabel(x1,y1,x2,y2,fLabel.Data(),GetDrawOption());
-      title->SetFillColor(GetFillColor());
-      title->SetTextColor(GetTextColor());
-      title->SetTextFont(GetTextFont());
-      title->Paint();
-      delete title;
+      TPaveLabel title(x1,y1,x2,y2,fLabel.Data(),GetDrawOption());
+      title.SetFillColor(GetFillColor());
+      title.SetTextColor(GetTextColor());
+      title.SetTextFont(GetTextFont());
+      title.Paint();
    }
 }
 
@@ -597,7 +596,6 @@ void TPaveText::ReadFile(const char *filename, Option_t *option, Int_t nlines, I
 {
    Int_t ival;
    Float_t val;
-   TText *lastline = 0;
    TString opt = option;
    if (!opt.Contains("+")) {
       Clear();
@@ -605,22 +603,21 @@ void TPaveText::ReadFile(const char *filename, Option_t *option, Int_t nlines, I
    }
    SetTextAlign(12);
    // Get file name
-   Int_t nch = strlen(filename);
-   if (nch == 0) return;
+   TString fname = filename;
+   if (fname.EndsWith(";"))
+      fname.Resize(fname.Length() - 1);
+   if (fname.Length() == 0)
+      return;
 
-   char *fname = StrDup(filename);
-   if (fname[nch-1] == ';') { nch--; fname[nch]=0;}
-
-   std::ifstream file(fname,std::ios::in);
+   std::ifstream file(fname.Data(),std::ios::in);
    if (!file.good()) {
-      Error("ReadFile", "illegal file name");
-      delete [] fname;
+      Error("ReadFile", "illegal file name %s", fname.Data());
       return;
    }
 
    const int linesize = 255;
    char currentline[linesize];
-   char *ss, *sclose, *s= 0;
+   char *ss, *sclose, *s = nullptr;
 
    Int_t kline = 0;
    while (1) {
@@ -633,7 +630,7 @@ void TPaveText::ReadFile(const char *filename, Option_t *option, Int_t nlines, I
             sclose = strstr(ss,")");
             if (!sclose) continue;
             *sclose = 0;
-            lastline = (TText*)fLines->Last();
+            TText *lastline = (TText*)fLines->Last();
             if (!lastline) continue;
             if (strstr(ss,"Color(")) {
                sscanf(ss+6,"%d",&ival);
@@ -666,7 +663,6 @@ void TPaveText::ReadFile(const char *filename, Option_t *option, Int_t nlines, I
       kline++;
    }
    file.close();
-   delete [] fname;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

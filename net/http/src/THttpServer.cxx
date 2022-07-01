@@ -61,22 +61,20 @@ ROOT application and enable HTML/JavaScript user interface.
 Any registered object can be requested and displayed in the browser.
 There are many benefits of such approach:
 
-  * standard http interface to ROOT application
-  * no any temporary ROOT files when access data
-  * user interface running in all browsers
+1. standard http interface to ROOT application
+2. no any temporary ROOT files when access data
+3. user interface running in all browsers
 
-Starting HTTP server
-
-To start http server, at any time  create instance
- of the THttpServer class like:
+To start http server simply create instance
+of the THttpServer class like:
 
     serv = new THttpServer("http:8080");
 
 This will starts civetweb-based http server with http port 8080.
 Than one should be able to open address "http://localhost:8080"
-in any modern browser (IE, Firefox, Chrome) and browse objects,
-created in application. By default, server can access files,
-canvases and histograms via gROOT pointer. All such objects
+in any modern web browser (Firefox, Chrome, Opera, ...) and browse objects,
+created in ROOT application. By default, server can access files,
+canvases and histograms via `gROOT` pointer. All such objects
 can be displayed with JSROOT graphics.
 
 At any time one could register other objects with the command:

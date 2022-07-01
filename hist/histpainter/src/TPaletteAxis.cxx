@@ -120,7 +120,7 @@ End_Macro
 
 TPaletteAxis::TPaletteAxis(): TPave()
 {
-   fH  = 0;
+   fH  = nullptr;
    SetName("");
 }
 
@@ -434,8 +434,8 @@ void TPaletteAxis::Paint(Option_t *)
    // import Attributes already here since we might need them for CJUST
    if (fH->GetDimension() == 2) fAxis.ImportAxisAttributes(fH->GetZaxis());
    // case option "CJUST": put labels directly at color boundaries
-   TLatex *label = NULL;
-   TLine *line = NULL;
+   TLatex *label = nullptr;
+   TLine *line = nullptr;
    Double_t prevlab = 0;
    TString opt(fH->GetDrawOption());
    if (opt.Contains("CJUST", TString::kIgnoreCase)) {
@@ -584,10 +584,10 @@ void TPaletteAxis::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 
 void TPaletteAxis::UnZoom()
 {
-   TView *view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (view) {
       delete view;
-      gPad->SetView(0);
+      gPad->SetView(nullptr);
    }
    fH->GetZaxis()->SetRange(0, 0);
    if (fH->GetDimension() == 2) {

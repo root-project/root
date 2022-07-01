@@ -402,10 +402,10 @@ Bool_t TRootSnifferScanRec::GoInside(TRootSnifferScanRec &super, TObject *obj, c
 Sniffer of ROOT objects, data provider for THttpServer
 
 Provides methods to scan different structures like folders,
-directories, files, trees, collections
-Can locate objects (or its data member) per name
-Can be extended to application-specific classes
+directories, files and collections. Can locate objects (or its data member) per name.
+Can be extended to application-specific classes.
 
+Normally TRootSnifferFull class is used which able to access data from trees, canvases, histograms.
 */
 
 ClassImp(TRootSniffer);

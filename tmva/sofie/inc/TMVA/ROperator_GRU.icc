@@ -82,7 +82,7 @@ void ROperator_GRU<T>::Initialize(RModel &model) {
                      for (size_t batch = 0; batch < batch_size; batch++) {
                         size_t bias_offset = direction * 6 * fAttrHiddenSize + i * fAttrHiddenSize;
                         size_t offset = direction * 6 * batch_size * seq_length * fAttrHiddenSize +
-                                       i * batch_size * seq_length * fAttrHiddenSize + 
+                                       i * batch_size * seq_length * fAttrHiddenSize +
                                        + seq *batch_size *fAttrHiddenSize + batch *fAttrHiddenSize;
                         std::copy(original_bias + bias_offset, original_bias + bias_offset + fAttrHiddenSize,
                                   new_bias + offset);
@@ -146,7 +146,9 @@ void ROperator_GRU<T>::Initialize(RModel &model) {
                                   activation + " not implemented");
       }
    }
+   if (fAttrDirection == "reverse") fAttrDirection = "backward";
    if (fAttrDirection != "forward" && fAttrDirection != "backward" &&
+       fAttrDirection != "reverse" &&
        fAttrDirection != "bidirectional") {
       throw std::runtime_error(
           "TMVA SOFIE - Invalid GRU direction fAttrDirection = " +
@@ -206,7 +208,7 @@ std::string ROperator_GRU<T>::GenerateSessionMembersCode(std::string opName)
    out << "std::vector<" << fType << "> fVec_" << opName << "_update_gate = std::vector<" << fType << ">(" << hs_size << ");\n";
    out << "std::vector<" << fType << "> fVec_" << opName << "_reset_gate = std::vector<" << fType << ">(" << hs_size << ");\n";
    out << "std::vector<" << fType << "> fVec_" << opName << "_hidden_gate = std::vector<" << fType << ">(" << hs_size << ");\n";
-   
+
    // feedback
    out << "std::vector<" << fType << "> fVec_" << opName << "_feedback = std::vector<" << fType << ">("
        << batch_size * fAttrHiddenSize << ");\n";
@@ -754,7 +756,7 @@ auto ROperator_GRU<T>::Generate(std::string OpName)
              << OpName << "_n, &" << OpName << "_m2, &" << OpName << "_n, &" << OpName << "_alpha, tensor_" << fNR
              << " + " << rh_offset << ", &" << OpName << "_n, " << OpName << "_hidden_state + previous_offset, &"
              << OpName << "_n, &" << OpName << "_beta, " << OpName << "_feedback, &" << OpName << "_n);\n";
-         // endif on seq 0 or not 
+         // endif on seq 0 or not
          out << SP << SP << "}\n";
          // Add the bias of the recurrence to feedback
          if (!fNB.empty()) {

@@ -95,12 +95,12 @@ Executing the macro above produces the following dialog canvas:
 
 TButton::TButton(): TPad()
 {
-   fFraming = 0;
+   fFraming = kFALSE;
    fMethod  = "";
    fLogx    = kFALSE;
    fLogy    = kFALSE;
    SetEditable(kFALSE);
-   fFocused = 0;
+   fFocused = kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -111,18 +111,18 @@ TButton::TButton(): TPad()
 TButton::TButton(const char *title, const char *method, Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
            :TPad("button",title,x1,y1,x2,y2,18,2,1), TAttText(22,0,1,61,0.65)
 {
-   fFraming=0;
+   fFraming = kFALSE;
    SetBit(kCanDelete);
    fModified = kTRUE;
    fMethod = method;
-   if (strlen(title)) {
-      TLatex *text = new TLatex(0.5*(fX1+fX2),0.5*(fY1+fY2),title);
+   if (title && strlen(title)) {
+      TLatex *text = new TLatex(0.5 * (fX1 + fX2), 0.5 * (fY1 + fY2), title);
       fPrimitives->Add(text);
    }
    fLogx    = kFALSE;
    fLogy    = kFALSE;
    SetEditable(kFALSE);
-   fFocused = 0;
+   fFocused = kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -167,7 +167,7 @@ void TButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kButton1Down:
       SetBorderMode(-1);
-      fFocused=1;
+      fFocused = kTRUE;
       Modified();
       Update();
       break;
@@ -181,14 +181,14 @@ void TButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
           py<YtoAbsPixel(0) && py>YtoAbsPixel(1)) {
          if (!fFocused) {
             SetBorderMode(-1);
-            fFocused=1;
+            fFocused = kTRUE;
             Modified();
             GetCanvas()->Modified();
             Update();
          }
       } else if (fFocused) {
          SetBorderMode(1);
-         fFocused=0;
+         fFocused = kFALSE;
          Modified();
          GetCanvas()->Modified();
          Update();
@@ -275,7 +275,7 @@ void TButton::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    } else {
       out<<"   TButton *";
    }
-   char *cm = (char*)GetMethod();
+   const char *cm = GetMethod();
    Int_t nch = strlen(cm);
    char *cmethod = new char[nch+10];
    Int_t i = 0;
@@ -333,7 +333,7 @@ void TButton::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 
 void TButton::SetFraming(Bool_t f)
 {
-   fFraming=f;
+   fFraming = f;
    if (f) SetBit(kFraming);
    else   ResetBit(kFraming);
 }

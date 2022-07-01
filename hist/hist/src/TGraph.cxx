@@ -822,7 +822,7 @@ void TGraph::Draw(Option_t *option)
 
    // If no option is specified, it is defined as "alp" in case there
    // no current pad or if the current pad as no axis defined.
-   if (!strlen(option)) {
+   if (!option || !strlen(option)) {
       if (gPad) {
          if (!gPad->GetListOfPrimitives()->FindObject("TFrame")) opt = "alp";
       } else {

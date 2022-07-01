@@ -77,6 +77,9 @@ class AttrReadTest(unittest.TestCase):
             """Dummy make_dataframe"""
             pass
 
+        def optimize_npartitions(self):
+            pass
+
     def test_attr_simple_action(self):
         """ActionProxy object reads the right input attribute."""
         node = create_dummy_headnode(1)

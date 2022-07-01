@@ -453,7 +453,8 @@ TFormula::TFormula()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-static bool IsReservedName(const char* name){
+static bool IsReservedName(const char* name)
+{
    if (strlen(name)!=1) return false;
    for (auto const & specialName : {"x","y","z","t"}){
       if (strcmp(name,specialName)==0) return true;
