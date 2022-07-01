@@ -65,6 +65,7 @@ echo "        ../../net/monalisa/              \\" >> Doxyfile_INPUT
 echo "        ../../net/net/                   \\" >> Doxyfile_INPUT
 echo "        ../../net/netx/                  \\" >> Doxyfile_INPUT
 echo "        ../../net/netxng/                \\" >> Doxyfile_INPUT
+echo "        ../../net/httpsniff/             \\" >> Doxyfile_INPUT
 echo "        ../../proof/                     \\" >> Doxyfile_INPUT
 echo "        ../../tmva/                      \\" >> Doxyfile_INPUT
 echo "        ../../roofit/                    \\" >> Doxyfile_INPUT
