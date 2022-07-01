@@ -24,7 +24,8 @@ std::unique_ptr<ROperator> make_ROperator(size_t idx, const onnx::GraphProto& gr
    }
 }
 
-std::unique_ptr<ROperator> make_ROperator_Add(const onnx::NodeProto& nodeproto, const onnx::GraphProto& /*graphproto */, std::unordered_map<std::string, ETensorType>& tensor_type){
+template<EBasicBinaryOperator Op1>
+std::unique_ptr<ROperator> make_ROperator_BasicBinary(const onnx::NodeProto& nodeproto, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type){
 
    ETensorType input_type = ETensorType::UNDEFINED;
 
@@ -37,7 +38,16 @@ std::unique_ptr<ROperator> make_ROperator_Add(const onnx::NodeProto& nodeproto, 
          else
             assert(it->second == input_type);
       } else {
-         throw std::runtime_error("TMVA::SOFIE ONNX Parser Add op has input tensor" + input_name + " but its type is not yet registered");
+         // check if input tensor is an initialized tensor
+         bool isInitializer = false;
+         for (int j=0; j < graphproto.initializer_size(); j++){
+            if (input_name == graphproto.initializer(j).name()) {
+               isInitializer = true;
+               break;
+            }
+         }
+         if (!isInitializer)
+         throw std::runtime_error("TMVA::SOFIE ONNX Parser Binary op has input tensor " + input_name + " but its type is not yet registered");
       }
    }
 
@@ -45,10 +55,10 @@ std::unique_ptr<ROperator> make_ROperator_Add(const onnx::NodeProto& nodeproto, 
 
    switch(input_type){
    case ETensorType::FLOAT:
-      op.reset(new ROperator_Add<float>(nodeproto.input(0), nodeproto.input(1), nodeproto.output(0)));
+      op.reset(new ROperator_BasicBinary<float,Op1>(nodeproto.input(0), nodeproto.input(1), nodeproto.output(0)));
       break;
    default:
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Add does not yet support input type " + std::to_string(static_cast<int>(input_type)));
+      throw std::runtime_error("TMVA::SOFIE - Unsupported - Binary Operator does not yet support input type " + std::to_string(static_cast<int>(input_type)));
    }
 
    ETensorType output_type = (op->TypeInference({input_type}))[0];
@@ -59,6 +69,7 @@ std::unique_ptr<ROperator> make_ROperator_Add(const onnx::NodeProto& nodeproto, 
 
    return op;
 }
+
 std::unique_ptr<ROperator> make_ROperator_Transpose(const onnx::NodeProto& nodeproto, const onnx::GraphProto& /*graphproto*/, std::unordered_map<std::string, ETensorType>& tensor_type){
 
    ETensorType input_type;
@@ -149,9 +160,9 @@ std::unique_ptr<ROperator> make_ROperator_LeakyRelu(const onnx::NodeProto& nodep
 
    for (int_t i = 0; i < nodeproto.attribute_size(); i++) {
          std::string attribute_name = nodeproto.attribute(i).name();
-         if (attribute_name == "alpha") 
+         if (attribute_name == "alpha")
             attr_alpha = nodeproto.attribute(i).f();
-   }   
+   }
    switch(input_type){
    case ETensorType::FLOAT:
          op.reset(new ROperator_LeakyRelu<float>(attr_alpha,nodeproto.input(0), nodeproto.output(0)));
@@ -474,7 +485,7 @@ std::unique_ptr<ROperator> make_ROperator_Pool(const onnx::NodeProto& nodeproto,
    RAttributes_Pool attr;
    // std::string attr_auto_pad = "NOTSET";
    // int attr_ceil_mode = 0;
-   // int attr_count_include_pad = 0;      
+   // int attr_count_include_pad = 0;
    // int attr_storage_order = 0;          // not for AveragePool
    // std::vector<size_t> attr_dilations;  // not for AveragePool
    // std::vector<size_t> attr_kernel_shape;
@@ -530,22 +541,22 @@ std::unique_ptr<ROperator> make_ROperator_Reshape(const onnx::NodeProto &nodepro
    // make Reshape operator
    ETensorType input_type = ETensorType::UNDEFINED;
 
-   
+
    ReshapeOpMode opMode = Reshape;
-   if (nodeproto.op_type() == "Flatten") 
+   if (nodeproto.op_type() == "Flatten")
       opMode = Flatten;
-   else if (nodeproto.op_type() == "Squeeze") 
+   else if (nodeproto.op_type() == "Squeeze")
       opMode = Squeeze;
    else if (nodeproto.op_type() == "Unsqueeze")
       opMode = Unsqueeze;
 
-  
+
    //bool hasShapeInput = (opMode == Reshape) ? true : false;
 
-   // reshape has as extra input shape tensor (int64) but 
+   // reshape has as extra input shape tensor (int64) but
    // it is not present for Flatten, Squeeze and Unsquueze
    auto input_name = nodeproto.input(0);
-   // for squeeze is optional ? 
+   // for squeeze is optional ?
    auto shape_name = (opMode == Reshape || opMode == Unsqueeze) ? nodeproto.input(1) : "";
    auto it = tensor_type.find(input_name);
    if (it != tensor_type.end()) {
@@ -559,7 +570,7 @@ std::unique_ptr<ROperator> make_ROperator_Reshape(const onnx::NodeProto &nodepro
    // Flatten is having one attribute: axis (int) (default=1)
    // old version of reshape and squeeze have axes as attributes
    std::unique_ptr<ROperator> op;
-   int attr_value = (opMode == Reshape) ? 0 : 1;     
+   int attr_value = (opMode == Reshape) ? 0 : 1;
    if (opMode == Reshape && nodeproto.attribute_size() > 0 )
       attr_value = nodeproto.attribute(0).i();
 
