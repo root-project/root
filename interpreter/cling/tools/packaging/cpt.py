@@ -393,7 +393,7 @@ class Cpt:
     Summary: Interactive C++ interpreter
     Name: cling
     Version: 0.2~dev
-    Release: ''' + REVISION[:7] + '''
+    Release: ''' + self.REVISION[:7] + '''
     License: LGPLv2+ or NCSA
     Group: Development/Languages/Other
     SOURCE0 : %{name}-%{version}.tar.bz2
@@ -544,7 +544,7 @@ class Cpt:
     VIAddVersionKey "CompanyName"  "${COMP_NAME}"
     VIAddVersionKey "LegalCopyright"  "${COPYRIGHT}"
     VIAddVersionKey "FileDescription"  "${DESCRIPTION}"
-    VIAddVersionKey "FileVersion"  "${VERSION}"
+    VIAddVersionKey "FileVersion"  "${self.VERSION}"
 
     ###############################################################################
 
@@ -554,7 +554,7 @@ class Cpt:
     OutFile "${INSTALLER_NAME}"
     BrandingText "${APP_NAME}"
     XPStyle on
-    InstallDir "C:\\Cling\\cling-${VERSION}"
+    InstallDir "C:\\Cling\\cling-${self.VERSION}"
 
     ###############################################################################
     ; MUI settings
@@ -967,7 +967,7 @@ class Cpt:
 
         print('Populate directory: ' + os.path.join(workdir, '%s.app' % (APP_NAME), 'Contents', 'MacOS'))
         shutil.copytree(
-            prefix,
+            self.prefix,
             os.path.join(workdir, '%s.app'%(APP_NAME), 'Contents', 'MacOS')
         )
 
