@@ -14,7 +14,7 @@ def emptysourceranges_to_tuples(ranges):
 
 def treeranges_to_tuples(ranges):
     """Convert TreeRange objects to tuples with the shape (start, end, filenames)."""
-    return [(r.globalstart, r.globalend, r.localstarts, r.localends, r.filenames) for r in ranges]
+    return [(r.globalstart, r.globalend, r.filenames) for r in ranges]
 
 
 class EmptySourceRanges(unittest.TestCase):
@@ -164,7 +164,7 @@ class TreeRanges(unittest.TestCase):
 
         self.assertEqual(len(ranges), npartitions)
 
-        ranges_reqd = [(0, 10, [0], [10], ["backend/Slimmed_ntuple.root"])]
+        ranges_reqd = [(0, 10, ["backend/Slimmed_ntuple.root"])]
 
         self.assertListEqual(ranges, ranges_reqd)
 
@@ -190,7 +190,7 @@ class TreeRanges(unittest.TestCase):
         self.assertEqual(len(actualtasks), 1)
 
         ranges = treeranges_to_tuples(actualtasks)
-        ranges_reqd = [(0, 10, [0], [10], ["backend/Slimmed_ntuple.root"])]
+        ranges_reqd = [(0, 10, ["backend/Slimmed_ntuple.root"])]
 
         self.assertListEqual(ranges, ranges_reqd)
 
@@ -209,8 +209,8 @@ class TreeRanges(unittest.TestCase):
         ranges = treeranges_to_tuples(clusteredranges)
 
         ranges_reqd = [
-            (0, 777, [0], [777], ["backend/2clusters.root"]),
-            (777, 1000, [777], [1000], ["backend/2clusters.root"])
+            (0, 777, ["backend/2clusters.root"]),
+            (777, 1000, ["backend/2clusters.root"])
         ]
 
         self.assertListEqual(ranges, ranges_reqd)
@@ -232,8 +232,8 @@ class TreeRanges(unittest.TestCase):
         ranges = treeranges_to_tuples(clusteredranges)
 
         ranges_reqd = [
-            (0, 777, [0], [777], expected_inputfiles),
-            (777, 1000, [777], [1000], expected_inputfiles)
+            (0, 777, expected_inputfiles),
+            (777, 1000, expected_inputfiles)
         ]
 
         self.assertListEqual(ranges, ranges_reqd)
@@ -263,8 +263,8 @@ class TreeRanges(unittest.TestCase):
         ranges = treeranges_to_tuples(clusteredranges)
 
         ranges_reqd = [
-            (0, 10, [0], [10], [filename1]),
-            (0, 10, [0], [10], [filename2])
+            (0, 10, [filename1]),
+            (0, 10, [filename2])
         ]
 
         os.remove(filename1)
@@ -287,10 +287,10 @@ class TreeRanges(unittest.TestCase):
         ranges = treeranges_to_tuples(clusteredranges)
 
         ranges_reqd = [
-            (0, 250, [0], [250], ["backend/4clusters.root"]),
-            (250, 500, [250], [500], ["backend/4clusters.root"]),
-            (500, 750, [500], [750], ["backend/4clusters.root"]),
-            (750, 1000, [750], [1000], ["backend/4clusters.root"])
+            (0, 250, ["backend/4clusters.root"]),
+            (250, 500, ["backend/4clusters.root"]),
+            (500, 750, ["backend/4clusters.root"]),
+            (750, 1000, ["backend/4clusters.root"])
         ]
 
         self.assertListEqual(ranges, ranges_reqd)
@@ -310,10 +310,10 @@ class TreeRanges(unittest.TestCase):
         ranges = treeranges_to_tuples(clusteredranges)
 
         ranges_reqd = [
-            (0, 250, [0], [250], ["backend/1000clusters.root"]),
-            (250, 500, [250], [500], ["backend/1000clusters.root"]),
-            (500, 750, [500], [750], ["backend/1000clusters.root"]),
-            (750, 1000, [750], [1000], ["backend/1000clusters.root"])
+            (0, 250, ["backend/1000clusters.root"]),
+            (250, 500, ["backend/1000clusters.root"]),
+            (500, 750, ["backend/1000clusters.root"]),
+            (750, 1000, ["backend/1000clusters.root"])
         ]
 
         self.assertListEqual(ranges, ranges_reqd)
@@ -336,7 +336,7 @@ class TreeRanges(unittest.TestCase):
         end = 1000
         step = 1
 
-        ranges_reqd = [(a, b, [a], [b], filenames) for a, b
+        ranges_reqd = [(a, b, filenames) for a, b
                        in zip(range(start, end, step), range(step, end + 1, step))]
 
         self.assertListEqual(ranges, ranges_reqd)
@@ -353,7 +353,7 @@ class TreeRanges(unittest.TestCase):
         clusteredranges = [Ranges.get_clustered_range_from_percs(percrange)[0] for percrange in percranges]
 
         ranges = treeranges_to_tuples(clusteredranges)
-        ranges_reqd = [(0, 1000, [0], [1000], [filename]) for filename in filenames]
+        ranges_reqd = [(0, 1000, [filename]) for filename in filenames]
 
         self.assertListEqual(ranges, ranges_reqd)
 
@@ -370,7 +370,7 @@ class TreeRanges(unittest.TestCase):
         clusteredranges = [Ranges.get_clustered_range_from_percs(percrange)[0] for percrange in percranges]
 
         ranges = treeranges_to_tuples(clusteredranges)
-        ranges_reqd = [(0, 300, [0, 0, 0], [100, 100, 100], filenames)]
+        ranges_reqd = [(0, 300, filenames)]
         self.assertListEqual(ranges, ranges_reqd)
 
     def test_three_files_one_partition_per_file(self):
@@ -386,7 +386,7 @@ class TreeRanges(unittest.TestCase):
         clusteredranges = [Ranges.get_clustered_range_from_percs(percrange)[0] for percrange in percranges]
 
         ranges = treeranges_to_tuples(clusteredranges)
-        ranges_reqd = [(0, 100, [0], [100], [filename]) for filename in filenames]
+        ranges_reqd = [(0, 100, [filename]) for filename in filenames]
 
         self.assertListEqual(ranges, ranges_reqd)
 
@@ -404,14 +404,14 @@ class TreeRanges(unittest.TestCase):
         ranges = treeranges_to_tuples(clusteredranges)
         ranges_reqd = [
             # File 0
-            (0, 50, [0], [50], [filenames[0]]),
-            (50, 100, [50], [100], [filenames[0]]),
+            (0, 50, [filenames[0]]),
+            (50, 100, [filenames[0]]),
             # File 1
-            (0, 50, [0], [50], [filenames[1]]),
-            (50, 100, [50], [100], [filenames[1]]),
+            (0, 50, [filenames[1]]),
+            (50, 100, [filenames[1]]),
             # File 2
-            (0, 50, [0], [50], [filenames[2]]),
-            (50, 100, [50], [100], [filenames[2]]),
+            (0, 50, [filenames[2]]),
+            (50, 100, [filenames[2]]),
         ]
 
         self.assertListEqual(ranges, ranges_reqd)
@@ -430,36 +430,36 @@ class TreeRanges(unittest.TestCase):
 
         ranges = treeranges_to_tuples(clusteredranges)
         ranges_reqd = [
-            (0, 10, [0], [10], [filenames[0]]),
-            (10, 20, [10], [20], [filenames[0]]),
-            (20, 30, [20], [30], [filenames[0]]),
-            (30, 40, [30], [40], [filenames[0]]),
-            (40, 50, [40], [50], [filenames[0]]),
-            (50, 60, [50], [60], [filenames[0]]),
-            (60, 70, [60], [70], [filenames[0]]),
-            (70, 80, [70], [80], [filenames[0]]),
-            (80, 90, [80], [90], [filenames[0]]),
-            (90, 100, [90], [100], [filenames[0]]),
-            (0, 10, [0], [10], [filenames[1]]),
-            (10, 20, [10], [20], [filenames[1]]),
-            (20, 30, [20], [30], [filenames[1]]),
-            (30, 40, [30], [40], [filenames[1]]),
-            (40, 50, [40], [50], [filenames[1]]),
-            (50, 60, [50], [60], [filenames[1]]),
-            (60, 70, [60], [70], [filenames[1]]),
-            (70, 80, [70], [80], [filenames[1]]),
-            (80, 90, [80], [90], [filenames[1]]),
-            (90, 100, [90], [100], [filenames[1]]),
-            (0, 10, [0], [10], [filenames[2]]),
-            (10, 20, [10], [20], [filenames[2]]),
-            (20, 30, [20], [30], [filenames[2]]),
-            (30, 40, [30], [40], [filenames[2]]),
-            (40, 50, [40], [50], [filenames[2]]),
-            (50, 60, [50], [60], [filenames[2]]),
-            (60, 70, [60], [70], [filenames[2]]),
-            (70, 80, [70], [80], [filenames[2]]),
-            (80, 90, [80], [90], [filenames[2]]),
-            (90, 100, [90], [100], [filenames[2]])
+            (0, 10, [filenames[0]]),
+            (10, 20, [filenames[0]]),
+            (20, 30, [filenames[0]]),
+            (30, 40, [filenames[0]]),
+            (40, 50, [filenames[0]]),
+            (50, 60, [filenames[0]]),
+            (60, 70, [filenames[0]]),
+            (70, 80, [filenames[0]]),
+            (80, 90, [filenames[0]]),
+            (90, 100, [filenames[0]]),
+            (0, 10, [filenames[1]]),
+            (10, 20, [filenames[1]]),
+            (20, 30, [filenames[1]]),
+            (30, 40, [filenames[1]]),
+            (40, 50, [filenames[1]]),
+            (50, 60, [filenames[1]]),
+            (60, 70, [filenames[1]]),
+            (70, 80, [filenames[1]]),
+            (80, 90, [filenames[1]]),
+            (90, 100, [filenames[1]]),
+            (0, 10, [filenames[2]]),
+            (10, 20, [filenames[2]]),
+            (20, 30, [filenames[2]]),
+            (30, 40, [filenames[2]]),
+            (40, 50, [filenames[2]]),
+            (50, 60, [filenames[2]]),
+            (60, 70, [filenames[2]]),
+            (70, 80, [filenames[2]]),
+            (80, 90, [filenames[2]]),
+            (90, 100, [filenames[2]])
         ]
 
         self.assertListEqual(ranges, ranges_reqd)
@@ -485,36 +485,36 @@ class TreeRanges(unittest.TestCase):
         # Same as previous test
         ranges = treeranges_to_tuples(actualtasks)
         ranges_reqd = [
-            (0, 10, [0], [10], [filenames[0]]),
-            (10, 20, [10], [20], [filenames[0]]),
-            (20, 30, [20], [30], [filenames[0]]),
-            (30, 40, [30], [40], [filenames[0]]),
-            (40, 50, [40], [50], [filenames[0]]),
-            (50, 60, [50], [60], [filenames[0]]),
-            (60, 70, [60], [70], [filenames[0]]),
-            (70, 80, [70], [80], [filenames[0]]),
-            (80, 90, [80], [90], [filenames[0]]),
-            (90, 100, [90], [100], [filenames[0]]),
-            (0, 10, [0], [10], [filenames[1]]),
-            (10, 20, [10], [20], [filenames[1]]),
-            (20, 30, [20], [30], [filenames[1]]),
-            (30, 40, [30], [40], [filenames[1]]),
-            (40, 50, [40], [50], [filenames[1]]),
-            (50, 60, [50], [60], [filenames[1]]),
-            (60, 70, [60], [70], [filenames[1]]),
-            (70, 80, [70], [80], [filenames[1]]),
-            (80, 90, [80], [90], [filenames[1]]),
-            (90, 100, [90], [100], [filenames[1]]),
-            (0, 10, [0], [10], [filenames[2]]),
-            (10, 20, [10], [20], [filenames[2]]),
-            (20, 30, [20], [30], [filenames[2]]),
-            (30, 40, [30], [40], [filenames[2]]),
-            (40, 50, [40], [50], [filenames[2]]),
-            (50, 60, [50], [60], [filenames[2]]),
-            (60, 70, [60], [70], [filenames[2]]),
-            (70, 80, [70], [80], [filenames[2]]),
-            (80, 90, [80], [90], [filenames[2]]),
-            (90, 100, [90], [100], [filenames[2]])
+            (0, 10, [filenames[0]]),
+            (10, 20, [filenames[0]]),
+            (20, 30, [filenames[0]]),
+            (30, 40, [filenames[0]]),
+            (40, 50, [filenames[0]]),
+            (50, 60, [filenames[0]]),
+            (60, 70, [filenames[0]]),
+            (70, 80, [filenames[0]]),
+            (80, 90, [filenames[0]]),
+            (90, 100, [filenames[0]]),
+            (0, 10, [filenames[1]]),
+            (10, 20, [filenames[1]]),
+            (20, 30, [filenames[1]]),
+            (30, 40, [filenames[1]]),
+            (40, 50, [filenames[1]]),
+            (50, 60, [filenames[1]]),
+            (60, 70, [filenames[1]]),
+            (70, 80, [filenames[1]]),
+            (80, 90, [filenames[1]]),
+            (90, 100, [filenames[1]]),
+            (0, 10, [filenames[2]]),
+            (10, 20, [filenames[2]]),
+            (20, 30, [filenames[2]]),
+            (30, 40, [filenames[2]]),
+            (40, 50, [filenames[2]]),
+            (50, 60, [filenames[2]]),
+            (60, 70, [filenames[2]]),
+            (70, 80, [filenames[2]]),
+            (80, 90, [filenames[2]]),
+            (90, 100, [filenames[2]])
         ]
 
         self.assertListEqual(ranges, ranges_reqd)
