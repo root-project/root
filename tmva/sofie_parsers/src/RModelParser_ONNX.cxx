@@ -1142,7 +1142,7 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose){
 
    std::fstream input(filename, std::ios::in | std::ios::binary);
    if (!model.ParseFromIstream(&input)){
-      throw std::runtime_error("TMVA::SOFIE - Failed to parse onnx file");
+      throw std::runtime_error("TMVA::SOFIE - Failed to parse onnx file " + filename);
    }
 
    const onnx::GraphProto& graph = model.graph(); //not a memory leak. model freed automatically at the end.
