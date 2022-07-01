@@ -105,6 +105,7 @@ ETensorType GetTemplatedType(T /*obj*/ ){
 namespace UTILITY{
 template<typename T>
 T* Unidirectional_broadcast(const T* original_data, const std::vector<size_t> original_shape, const std::vector<size_t> target_shape);
+std::vector<size_t> Multidirectional_broadcast(std::vector<size_t> input1_shape, std::vector<size_t> input2_shape);
 std::string Clean_name(std::string input_tensor_name);
 
 

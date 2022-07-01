@@ -135,6 +135,49 @@ T* UTILITY::Unidirectional_broadcast(const T* original_data, const std::vector<s
       return new_datavector;
 }
 
+
+
+std::vector<size_t>  UTILITY::Multidirectional_broadcast(std::vector<size_t> input1_shape, std::vector<size_t> input2_shape)
+{
+   std::vector<size_t> input_shape = (input1_shape.size() > input2_shape.size())?input1_shape:input2_shape;
+   std::vector<size_t> output_shape(input_shape);
+   
+   if(input1_shape.size() < input2_shape.size()){
+   // Check if input1_shape.size() < input2_shape.size() we insert in the shape vector values of 1 at the beginning of the tensor until input1_shape.size() == input2_shape.size()
+      auto it = input1_shape.begin();
+      while (input1_shape.size() < input2_shape.size()) {
+         it = input1_shape.insert(it, 1);
+      }
+   }
+   else if(input2_shape.size() < input1_shape.size()){
+   // Check if input2_shape.size() < input1_shape.size() we insert in the shape vector values of 1 at the beginning of the tensor until input1_shape.size() == input2_shape.size()
+      auto it = input2_shape.begin();
+      while (input2_shape.size() < input1_shape.size()) {
+         it = input2_shape.insert(it, 1);
+      }
+   }
+      //check if both the input have same shape, nothing to do directly return the output_shape as the same shape.
+   if(input1_shape.size() == input2_shape.size()){
+      if(input1_shape != input2_shape){
+         //Check the shape values, if input1[i] not equal to input2[i] we have the result shape equal to input1[i] if input2[i] = 1 or viceversa
+         for(size_t j = 0; j < input1_shape.size() ; j++){
+            if(input1_shape[j] == input2_shape[j]){
+               output_shape[j] = input1_shape[j];
+            }
+            else if(input1_shape[j] > input2_shape[j] && input2_shape[j] == 1){
+               output_shape[j] = input1_shape[j];
+            }
+            else if(input2_shape[j] > input1_shape[j] && input1_shape[j] == 1){
+               output_shape[j] = input2_shape[j];
+            }
+         }
+      }
+
+   }
+   return output_shape;
+
+}
+
 std::string UTILITY::Clean_name(std::string input_tensor_name){
    std::string s (input_tensor_name);
    s.erase(std::remove_if(s.begin(), s.end(), []( char const& c ) -> bool { return !std::isalnum(c); } ), s.end());

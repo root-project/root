@@ -12,6 +12,21 @@
 #include "LinearWithSelu_FromONNX.hxx"
 #include "input_models/references/LinearWithSelu.ref.hxx"
 
+#include "Sub_FromONNX.hxx"
+#include "input_models/references/Sub.ref.hxx"
+
+#include "Add_FromONNX.hxx"
+#include "input_models/references/Add.ref.hxx"
+
+#include "Add_broadcast_FromONNX.hxx"
+#include "input_models/references/Add_broadcast.ref.hxx"
+
+#include "Mul_FromONNX.hxx"
+#include "input_models/references/Mul.ref.hxx"
+
+#include "Div_FromONNX.hxx"
+#include "input_models/references/Div.ref.hxx"
+
 #include "LinearWithLeakyRelu_FromONNX.hxx"
 #include "input_models/references/LinearWithLeakyRelu.ref.hxx"
 
@@ -146,6 +161,137 @@ TEST(ONNX, Linear32)
    }
 }
 
+TEST(ONNX, Sub)
+   {
+      constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+      // Preparing the standard input
+      std::vector<float> input1({
+         1, 2
+      });
+      std::vector<float> input2({
+         0, 1
+      });
+      TMVA_SOFIE_Sub::Session s("Sub_FromONNX.dat");
+
+      std::vector<float> output = s.infer(input2.data(),input1.data());
+
+      // Checking output size
+      EXPECT_EQ(output.size(), sizeof(Sub_ExpectedOutput::outputs) / sizeof(float));
+
+      float *correct = Sub_ExpectedOutput::outputs;
+
+      // Checking every output value, one by one
+      for (size_t i = 0; i < output.size(); ++i) {
+         EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+      }
+   }
+
+TEST(ONNX, Add_broadcast)
+   {
+      constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+      // Preparing the standard input
+      std::vector<float> input1({
+         1, 2, 3,
+         3, 4, 5
+      });
+      std::vector<float> input2({
+         5, 6, 7,
+         8, 9, 10
+      });
+      TMVA_SOFIE_Add_broadcast::Session s("Add_broadcast_FromONNX.dat");
+
+      std::vector<float> output = s.infer(input2.data(),input1.data());
+
+      // Checking output size
+      EXPECT_EQ(output.size(), sizeof(Add_broadcast_ExpectedOutput::outputs) / sizeof(float));
+
+      float *correct = Add_broadcast_ExpectedOutput::outputs;
+
+      // Checking every output value, one by one
+      for (size_t i = 0; i < output.size(); ++i) {
+         EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+      }
+   }
+
+TEST(ONNX, Add)
+   {
+      constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+      // Preparing the standard input
+      std::vector<float> input1({
+         1, 2
+      });
+      std::vector<float> input2({
+         0, 1
+      });
+      TMVA_SOFIE_Add::Session s("Add_FromONNX.dat");
+
+      std::vector<float> output = s.infer(input1.data(),input2.data());
+
+      // Checking output size
+      EXPECT_EQ(output.size(), sizeof(Add_ExpectedOutput::outputs) / sizeof(float));
+
+      float *correct = Add_ExpectedOutput::outputs;
+
+      // Checking every output value, one by one
+      for (size_t i = 0; i < output.size(); ++i) {
+         EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+      }
+   }
+
+TEST(ONNX, Mul)
+   {
+      constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+      // Preparing the standard input
+      std::vector<float> input1({
+         1, 2
+      });
+      std::vector<float> input2({
+         0, 1
+      });
+      TMVA_SOFIE_Mul::Session s("Mul_FromONNX.dat");
+
+      std::vector<float> output = s.infer(input1.data(),input2.data());
+
+      // Checking output size
+      EXPECT_EQ(output.size(), sizeof(Mul_ExpectedOutput::outputs) / sizeof(float));
+
+      float *correct = Mul_ExpectedOutput::outputs;
+
+      // Checking every output value, one by one
+      for (size_t i = 0; i < output.size(); ++i) {
+         EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+      }
+   }
+
+TEST(ONNX, Div)
+   {
+      constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+      // Preparing the standard input
+      std::vector<float> input1({
+         4, 2
+      });
+      std::vector<float> input2({
+         2, 2
+      });
+      TMVA_SOFIE_Div::Session s("Div_FromONNX.dat");
+
+      std::vector<float> output = s.infer(input2.data(),input1.data());
+
+      // Checking output size
+      EXPECT_EQ(output.size(), sizeof(Div_ExpectedOutput::outputs) / sizeof(float));
+
+      float *correct = Div_ExpectedOutput::outputs;
+
+      // Checking every output value, one by one
+      for (size_t i = 0; i < output.size(); ++i) {
+         EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+      }
+   }
 
 TEST(ONNX, Linear64)
 {
