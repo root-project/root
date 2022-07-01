@@ -18,6 +18,7 @@
 
 #include <ROOT/RStringView.hxx>
 #include <ROOT/TypeTraits.hxx>
+#include <ROOT/RSpan.hxx>
 
 #include <daos.h>
 
@@ -27,7 +28,7 @@
 #include <type_traits>
 #include <vector>
 #include <optional>
-#include <map>
+#include <unordered_map>
 
 #ifndef DAOS_UUID_STR_SIZE
 #define DAOS_UUID_STR_SIZE 37
@@ -109,24 +110,24 @@ public:
    /// \brief Contains required information for a single fetch/update operation.
    struct FetchUpdateArgs {
       FetchUpdateArgs() = default;
-      FetchUpdateArgs(const FetchUpdateArgs&) = delete;
-      FetchUpdateArgs(FetchUpdateArgs&& fua);
-      FetchUpdateArgs(DistributionKey_t &d, std::vector<AttributeKey_t> &&as, std::vector<d_iov_t> &&vs,
+      FetchUpdateArgs(const FetchUpdateArgs &) = delete;
+      FetchUpdateArgs(FetchUpdateArgs &&fua);
+      FetchUpdateArgs(DistributionKey_t d, std::span<const AttributeKey_t> as, std::span<d_iov_t> vs,
                       bool is_async = false);
       FetchUpdateArgs &operator=(const FetchUpdateArgs &) = delete;
       daos_event_t *GetEventPointer();
 
       /// \brief A `daos_key_t` is a type alias of `d_iov_t`. This type stores a pointer and a length.
-      /// In order for `fDistributionKey` and `fIods` to point to memory that we own, `fDkey` and
-      /// `fAkeys` store a copy of the single distribution key and multiple attribute keys, respectively.
+      /// In order for `fDistributionKey` to point to memory that we own, `fDkey` holds the distribution key.
+      /// `fAkeys` and `fIovs` are sequential containers assumed to remain valid throughout the fetch/update operation.
       DistributionKey_t fDkey{};
-      std::vector<AttributeKey_t> fAkeys{};
+      std::span<const AttributeKey_t> fAkeys{};
+      std::span<d_iov_t> fIovs{};
 
       /// \brief The distribution key, as used by the `daos_obj_{fetch,update}` functions.
       daos_key_t fDistributionKey{};
       std::vector<daos_iod_t> fIods{};
       std::vector<d_sg_list_t> fSgls{};
-      std::vector<d_iov_t> fIovs{};
       std::optional<daos_event_t> fEvent{};
    };
 
@@ -179,20 +180,23 @@ public:
    /// \brief Describes a read/write operation on multiple objects; see the `ReadV`/`WriteV` functions.
    struct RWOperation {
       RWOperation() = default;
-      RWOperation(daos_obj_id_t o, DistributionKey_t d, std::vector<AttributeKey_t> &&as, std::vector<d_iov_t> &&vs)
-         : fOid(o), fDistributionKey(d), fAttributeKeys(std::move(as)), fIovs(std::move(vs)){};
+      RWOperation(daos_obj_id_t o, DistributionKey_t d, const std::vector<AttributeKey_t> &as,
+                  const std::vector<d_iov_t> &vs)
+         : fOid(o), fDistributionKey(d), fAttributeKeys(as), fIovs(vs){};
       RWOperation(ROidDkeyPair &k) : fOid(k.oid), fDistributionKey(k.dkey){};
       daos_obj_id_t fOid{};
       DistributionKey_t fDistributionKey{};
       std::vector<AttributeKey_t> fAttributeKeys{};
       std::vector<d_iov_t> fIovs{};
 
-      void insert(AttributeKey_t attr, d_iov_t &vec)
+      void insert(AttributeKey_t attr, const d_iov_t &vec)
       {
          fAttributeKeys.emplace_back(attr);
          fIovs.emplace_back(vec);
       }
    };
+
+   using MultiObjectRWOperation_t = std::unordered_map<ROidDkeyPair, RWOperation, ROidDkeyPair::Hash>;
 
    std::string GetContainerUuid();
 
@@ -205,13 +209,12 @@ private:
 
    /**
      \brief Perform a vector read/write operation on different objects.
-     \param map A `std::unordered_map<std::pair<daos_obj_id_t, DistributionKey_t>, RWOperation>` that describes
-     read/write operations to perform.
+     \param map A `MultiObjectRWOperation_t` that describes read/write operations to perform.
      \param cid The `daos_oclass_id_t` used to qualify OIDs.
      \param fn Either `&RDaosObject::Fetch` (read) or `&RDaosObject::Update` (write).
      \return 0 if the operation succeeded; a negative DAOS error number otherwise.
      */
-   int VectorReadWrite(std::unordered_map<ROidDkeyPair, RWOperation, ROidDkeyPair::Hash> &map, ObjClassId_t cid,
+   int VectorReadWrite(MultiObjectRWOperation_t &map, ObjClassId_t cid,
                        int (RDaosObject::*fn)(RDaosObject::FetchUpdateArgs &));
 
 public:
@@ -255,35 +258,24 @@ public:
 
    /**
      \brief Perform a vector read operation on multiple objects.
-     \param map A `std::unordered_map<ROidDkeyPair, RWOperation>` that describes read
-     operations to perform.
+     \param map A `MultiObjectRWOperation_t` that describes read operations to perform.
      \param cid An object class ID.
      \return Number of operations that could not complete.
      */
-   int ReadV(std::unordered_map<ROidDkeyPair, RWOperation, ROidDkeyPair::Hash> &map, ObjClassId_t cid)
-   {
-      return VectorReadWrite(map, cid, &RDaosObject::Fetch);
-   }
-   int ReadV(std::unordered_map<ROidDkeyPair, RWOperation, ROidDkeyPair::Hash> &map)
-   {
-      return ReadV(map, fDefaultObjectClass);
-   }
+   int ReadV(MultiObjectRWOperation_t &map, ObjClassId_t cid) { return VectorReadWrite(map, cid, &RDaosObject::Fetch); }
+   int ReadV(MultiObjectRWOperation_t &map) { return ReadV(map, fDefaultObjectClass); }
 
    /**
      \brief Perform a vector write operation on multiple objects.
-     \param map A `std::unordered_map<ROidDkeyPair, RWOperation>` that describes write
-     operations to perform.
+     \param map A `MultiObjectRWOperation_t` that describes write operations to perform.
      \param cid An object class ID.
      \return Number of operations that could not complete.
      */
-   int WriteV(std::unordered_map<ROidDkeyPair, RWOperation, ROidDkeyPair::Hash> &map, ObjClassId_t cid)
+   int WriteV(MultiObjectRWOperation_t &map, ObjClassId_t cid)
    {
       return VectorReadWrite(map, cid, &RDaosObject::Update);
    }
-   int WriteV(std::unordered_map<ROidDkeyPair, RWOperation, ROidDkeyPair::Hash> &map)
-   {
-      return WriteV(map, fDefaultObjectClass);
-   }
+   int WriteV(MultiObjectRWOperation_t &map) { return WriteV(map, fDefaultObjectClass); }
 };
 
 } // namespace Detail
