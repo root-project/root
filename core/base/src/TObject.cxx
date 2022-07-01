@@ -227,7 +227,7 @@ TObject *TObject::DrawClone(Option_t *option) const
    TObject *newobj = Clone();
    if (!newobj) return nullptr;
    if (pad) {
-      if (option && strlen(option))
+      if (option && *option)
          pad->GetListOfPrimitives()->Add(newobj, option);
       else
          pad->GetListOfPrimitives()->Add(newobj, GetDrawOption());
@@ -236,7 +236,7 @@ TObject *TObject::DrawClone(Option_t *option) const
       if (padsav) padsav->cd();
       return newobj;
    }
-   if (option && strlen(option))
+   if (option && *option)
       newobj->Draw(option);
    else
       newobj->Draw(GetDrawOption());
