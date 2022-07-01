@@ -17,8 +17,8 @@ static std::string GetStringRepr(const std::vector<const ROOT::Internal::RDF::RV
 {
    std::string s;
 
-   for (const auto &e : variations) {
-      const auto &variation = *e;
+   for (const auto *varPtr : variations) {
+      const auto &variation = *varPtr;
 
       s += "Variations {";
       for (const auto &tag : variation.GetVariationNames())
