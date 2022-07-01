@@ -82,8 +82,7 @@
          }
 
          std::string Generate(std::string OpName){
-             OpName = "op_"+OpName;
-             const std::string SP = "   ";
+            OpName = "op_"+OpName;
             if(fOutputShape.empty()){
                   throw std::runtime_error("TMVA SOFIE Concat called to Generate without being initialized first");
             }
@@ -99,10 +98,10 @@
 
                std::vector<size_t> outStride = UTILITY::ComputeStrideFromShape(fOutputShape);
                std::vector<std::vector<size_t>> inStrides(fInputs.size());
-               int i = 0;
+               int idx = 0;
                for ( auto &s : inStrides) {
-                  s = UTILITY::ComputeStrideFromShape(fInputShapes[i]);
-                  i++;
+                  s = UTILITY::ComputeStrideFromShape(fInputShapes[idx]);
+                  idx++;
                }
                for (int i = 0; i < fAxis; ++i) {
                   // loop on dimensions
