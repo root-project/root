@@ -44,6 +44,7 @@ static std::string GetStringRepr(const std::vector<const ROOT::Internal::RDF::RV
 namespace ROOT {
 namespace RDF {
 
+// Pre-condition: elements in variations are expected to be unique.
 RVariationsDescription::RVariationsDescription(const Variations_t &variations) : fStringRepr(GetStringRepr(variations))
 {
 }
