@@ -547,8 +547,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
       }
 
       // Prepare the input map for the RDaosContainer::ReadV() call
-      std::unordered_map<RDaosContainer::ROidDkeyPair, RDaosContainer::RWOperation, RDaosContainer::ROidDkeyPair::Hash>
-         readRequests;
+      RDaosContainer::MultiObjectRWOperation_t readRequests;
       std::vector<d_iov_t> iovs(onDiskPages.size());
       auto buffer = new unsigned char[szPayload];
 

@@ -64,16 +64,16 @@ std::string ROOT::Experimental::Detail::RDaosObject::ObjClassId::ToString() cons
 }
 
 ROOT::Experimental::Detail::RDaosObject::FetchUpdateArgs::FetchUpdateArgs(FetchUpdateArgs &&fua)
-   : fDkey(fua.fDkey), fAkeys(std::move(fua.fAkeys)), fIods(std::move(fua.fIods)), fSgls(std::move(fua.fSgls)),
-     fIovs(std::move(fua.fIovs)), fEvent(std::move(fua.fEvent))
+   : fDkey(fua.fDkey), fAkeys(fua.fAkeys), fIovs(fua.fIovs), fIods(std::move(fua.fIods)), fSgls(std::move(fua.fSgls)),
+     fEvent(std::move(fua.fEvent))
 {
    d_iov_set(&fDistributionKey, &fDkey, sizeof(fDkey));
 }
 
-ROOT::Experimental::Detail::RDaosObject::FetchUpdateArgs::FetchUpdateArgs(DistributionKey_t &d,
-                                                                          std::vector<AttributeKey_t> &&as,
-                                                                          std::vector<d_iov_t> &&vs, bool is_async)
-   : fDkey(d), fAkeys(std::move(as)), fIovs(std::move(vs))
+ROOT::Experimental::Detail::RDaosObject::FetchUpdateArgs::FetchUpdateArgs(DistributionKey_t d,
+                                                                          std::span<const AttributeKey_t> as,
+                                                                          std::span<d_iov_t> vs, bool is_async)
+   : fDkey(d), fAkeys(as), fIovs(vs)
 {
    if (is_async)
       fEvent.emplace();
@@ -88,7 +88,7 @@ ROOT::Experimental::Detail::RDaosObject::FetchUpdateArgs::FetchUpdateArgs(Distri
       iod.iod_size = fIovs[i].iov_len;
       iod.iod_recxs = nullptr;
       iod.iod_type = DAOS_IOD_SINGLE;
-      d_iov_set(&iod.iod_name, &(fAkeys[i]), sizeof(fAkeys[i]));
+      d_iov_set(&iod.iod_name, const_cast<AttributeKey_t *>(&(fAkeys[i])), sizeof(fAkeys[i]));
       fIods.push_back(iod);
 
       d_sg_list_t sgl;
@@ -210,10 +210,10 @@ int ROOT::Experimental::Detail::RDaosContainer::ReadSingleAkey(void *buffer, std
                                                                DistributionKey_t dkey, AttributeKey_t akey,
                                                                ObjClassId_t cid)
 {
-   std::vector<AttributeKey_t> akeys{akey};
-   std::vector<d_iov_t> iovs(1);
+   AttributeKey_t akeys[] = {akey};
+   d_iov_t iovs[1];
    d_iov_set(&iovs[0], buffer, length);
-   RDaosObject::FetchUpdateArgs args(dkey, std::move(akeys), std::move(iovs));
+   RDaosObject::FetchUpdateArgs args(dkey, akeys, iovs);
    return RDaosObject(*this, oid, cid.fCid).Fetch(args);
 }
 
@@ -221,16 +221,15 @@ int ROOT::Experimental::Detail::RDaosContainer::WriteSingleAkey(const void *buff
                                                                 daos_obj_id_t oid, DistributionKey_t dkey,
                                                                 AttributeKey_t akey, ObjClassId_t cid)
 {
-   std::vector<AttributeKey_t> akeys{akey};
-   std::vector<d_iov_t> iovs(1);
+   AttributeKey_t akeys[] = {akey};
+   d_iov_t iovs[1];
    d_iov_set(&iovs[0], const_cast<void *>(buffer), length);
-   RDaosObject::FetchUpdateArgs args(dkey, std::move(akeys), std::move(iovs));
+   RDaosObject::FetchUpdateArgs args(dkey, akeys, iovs);
    return RDaosObject(*this, oid, cid.fCid).Update(args);
 }
 
-int ROOT::Experimental::Detail::RDaosContainer::VectorReadWrite(
-   std::unordered_map<ROidDkeyPair, RWOperation, ROidDkeyPair::Hash> &map, ObjClassId_t cid,
-   int (RDaosObject::*fn)(RDaosObject::FetchUpdateArgs &))
+int ROOT::Experimental::Detail::RDaosContainer::VectorReadWrite(MultiObjectRWOperation_t &map, ObjClassId_t cid,
+                                                                int (RDaosObject::*fn)(RDaosObject::FetchUpdateArgs &))
 {
    using request_t = std::tuple<std::unique_ptr<RDaosObject>, RDaosObject::FetchUpdateArgs>;
 
@@ -244,10 +243,9 @@ int ROOT::Experimental::Detail::RDaosContainer::VectorReadWrite(
       return ret;
 
    for (auto &[key, batch] : map) {
-      requests.push_back(
-         std::make_tuple(std::make_unique<RDaosObject>(*this, batch.fOid, cid.fCid),
-                         RDaosObject::FetchUpdateArgs{batch.fDistributionKey, std::move(batch.fAttributeKeys),
-                                                      std::move(batch.fIovs), /*is_async=*/true}));
+      requests.push_back(std::make_tuple(
+         std::make_unique<RDaosObject>(*this, batch.fOid, cid.fCid),
+         RDaosObject::FetchUpdateArgs{batch.fDistributionKey, batch.fAttributeKeys, batch.fIovs, /*is_async=*/true}));
 
       if ((ret = fPool->fEventQueue->InitializeEvent(std::get<1>(requests.back()).GetEventPointer(), &parent_event)) <
           0)
