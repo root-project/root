@@ -114,7 +114,6 @@ private:
    tcling_callfunc_dtor_Wrapper_t
    make_dtor_wrapper(const TClingClassInfo* info);
 
-   ExecWithRetFunc_t InitRetAndExecNoCtor(clang::QualType QT, cling::Value &ret);
    ExecWithRetFunc_t InitRetAndExec(const clang::FunctionDecl *FD, cling::Value &ret);
 
    void exec(void* address, void* ret);
