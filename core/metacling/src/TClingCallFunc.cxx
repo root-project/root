@@ -1540,55 +1540,8 @@ void TClingCallFunc::exec(void *address, void *ret)
    (*fWrapper)(address, (int)num_args, (void **)vp_ary.data(), ret);
 }
 
-TClingCallFunc::ExecWithRetFunc_t
-TClingCallFunc::InitRetAndExecNoCtor(clang::QualType QT, cling::Value &ret) {
-   ret = cling::Value(QT, *fInterp);
-   if (QT->isVoidType())
-     return [this](void* address, cling::Value& ret) { exec(address, 0); };
-
-   if (QT->isUnsignedIntegerOrEnumerationType())
-     return [this](void* address, cling::Value& ret) { exec(address, &ret.getULL()); };
-
-   if (QT->isSignedIntegerOrEnumerationType())
-     return [this](void* address, cling::Value& ret) { exec(address, &ret.getLL()); };
-
-   if (auto BT = dyn_cast<const BuiltinType>(QT.getTypePtr())) {
-      switch (BT->getKind()) {
-      case BuiltinType::Float:
-         return [this](void* address, cling::Value& ret) { exec(address, &ret.getFloat()); };
-      case BuiltinType::Double:
-         return [this](void* address, cling::Value& ret) { exec(address, &ret.getDouble()); };
-      case BuiltinType::LongDouble:
-         return [this](void* address, cling::Value& ret) { exec(address, &ret.getLongDouble()); };
-      default:
-         break;
-      }
-   }
-
-   if (QT->isRecordType() || QT->isMemberDataPointerType())
-      return [this](void* address, cling::Value& ret) { exec(address, ret.getPtr()); };
-
-   if (QT->isReferenceType() || QT->isMemberPointerType()) {
-      //ret = cling::Value::Create<void>(QT.getAsOpaquePtr(), *fInterp);
-      //ret = cling::Value(QT, *fInterp);
-      return [this](void* address, cling::Value& ret) { exec(address, &ret.getPtr()); };
-   }
-
-   if (QT->isPointerType() || QT->isArrayType()) {
-      // Note: ArrayType is an illegal function return value type.
-      // FIXME: Merge with the other cases above. We do not need to create
-      // a cling::Value passing explicitly void*, cling::Value's determineStorageType
-      // can find out what's required.
-      ret = cling::Value::Create<void*>(QT.getAsOpaquePtr(), *fInterp);
-      return [this](void* address, cling::Value& ret) { exec(address, &ret.getPtr()); };
-   }
-
-   ::Error("TClingCallFunc::exec_with_valref_return",
-           "Unrecognized return type '%s'", QT->getTypeClassName());
-   QT->dump();
-   return {};
-}
-
+// FIXME: Inlining InitRetAndExec into exec_with_valref_return causes crashes
+// in roottest/root/treeformula/retobj/runretobjTest.C
 TClingCallFunc::ExecWithRetFunc_t
 TClingCallFunc::InitRetAndExec(const clang::FunctionDecl *FD, cling::Value &ret) {
    if (llvm::isa<CXXConstructorDecl>(FD)) {
@@ -1601,7 +1554,13 @@ TClingCallFunc::InitRetAndExec(const clang::FunctionDecl *FD, cling::Value &ret)
       return [this](void* address, cling::Value& ret) { exec(address, &ret.getPtr()); };
    } else {
       QualType QT = FD->getReturnType().getCanonicalType();
-      return InitRetAndExecNoCtor(QT, ret);
+      ret = cling::Value(QT, *fInterp);
+
+      if (QT->isRecordType() || QT->isMemberDataPointerType())
+        return [this](void* address, cling::Value& ret) { exec(address, ret.getPtr()); };
+
+      return [this](void* address, cling::Value& ret) { exec(address, &ret.getPtr()); };
+
    }
 }
 
