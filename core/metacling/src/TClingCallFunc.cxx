@@ -1424,11 +1424,17 @@ void TClingCallFunc::exec(void *address, void *ret)
 
    const FunctionDecl *FD = GetDecl();
    const unsigned num_args = fArgVals.size();
-   const unsigned num_params = FD->getNumParams();
 
+   // FIXME: Consider the implicit this
    if (num_args < GetMinRequiredArguments()) {
       ::Error("TClingCallFunc::exec",
               "Not enough arguments provided for %s (%d instead of the minimum %d)",
+              fMethod->Name(),
+              num_args, (int)GetMinRequiredArguments());
+      return;
+   } else if (!isa<CXXMethodDecl>(FD) && num_args > FD->getNumParams()) {
+      ::Error("TClingCallFunc::exec",
+              "Too many arguments provided for %s (%d instead of the minimum %d)",
               fMethod->Name(),
               num_args, (int)GetMinRequiredArguments());
       return;
@@ -1453,7 +1459,16 @@ void TClingCallFunc::exec(void *address, void *ret)
       vh_ary.reserve(num_args);
       vp_ary.reserve(num_args);
       for (unsigned i = 0; i < num_args; ++i) {
-         QualType QT = FD->getParamDecl(i)->getType();
+         QualType QT;
+         // Check if we provided a this parameter.
+         // FIXME: Currently we do not provide consistently the this pointer as
+         // in C++ we can still call member functions which do not use it. Eg:
+         // struct S {int Print() { return printf("a");} }; auto r1 = ((S*)0)->Print();
+         // This works just fine even though it might be UB...
+         if (i == 0 && isa<CXXMethodDecl>(FD) && num_args - FD->getNumParams() == 1)
+           QT = cast<CXXMethodDecl>(FD)->getThisType();
+         else
+           QT = FD->getParamDecl(i)->getType();
          QT = QT.getCanonicalType();
          if (const BuiltinType *BT = dyn_cast<BuiltinType>(QT.getTypePtr())) {
             ValHolder vh;
