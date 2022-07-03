@@ -762,23 +762,32 @@ double RooAddPdf::getValV(const RooArgSet* normSet) const
   const RooArgSet* nset = normAndCache.first;
   CacheElem* cache = normAndCache.second;
 
-  // Do running sum of coef/pdf pairs, calculate lastCoef.
-  double value(0);
-
-  for (unsigned int i=0; i < _pdfList.size(); ++i) {
-    const auto& pdf = static_cast<RooAbsPdf&>(_pdfList[i]);
-    double snormVal = 1.;
-    if (cache->_needSupNorm) {
-      snormVal = ((RooAbsReal*)cache->_suppNormList.at(i))->getVal();
-    }
-
-    double pdfVal = pdf.getVal(nset);
-    if (pdf.isSelectedComp()) {
-      value += pdfVal*_coefCache[i]/snormVal;
-    }
+  // Process change in last data set used
+  bool nsetChanged(false) ;
+  if (nset!=_normSet || _norm==0) {
+    nsetChanged = syncNormalization(nset) ;
   }
 
-  return value;
+  // Do running sum of coef/pdf pairs, calculate lastCoef.
+  if (isValueDirty() || nsetChanged) {
+    _value = 0.0;
+
+    for (unsigned int i=0; i < _pdfList.size(); ++i) {
+      const auto& pdf = static_cast<RooAbsPdf&>(_pdfList[i]);
+      double snormVal = 1.;
+      if (cache->_needSupNorm) {
+        snormVal = ((RooAbsReal*)cache->_suppNormList.at(i))->getVal();
+      }
+
+      double pdfVal = pdf.getVal(nset);
+      if (pdf.isSelectedComp()) {
+        _value += pdfVal*_coefCache[i]/snormVal;
+      }
+    }
+    clearValueAndShapeDirty();
+  }
+
+  return _value;
 }
 
 
