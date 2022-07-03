@@ -1779,6 +1779,7 @@ endfunction()
 #----------------------------------------------------------------------------
 # function ROOT_ADD_GTEST(<testsuite> source1 source2...
 #                        [WILLFAIL] Negate output of test
+#                        [TIMEOUT seconds]
 #                        [COPY_TO_BUILDDIR file1 file2] Copy listed files when ctest invokes the test.
 #                        [LIBRARIES lib1 lib2...] -- Libraries to link against
 #                        [LABELS label1 label2...] -- Labels to annotate the test
@@ -1790,7 +1791,7 @@ endfunction()
 function(ROOT_ADD_GTEST test_suite)
   cmake_parse_arguments(ARG
     "WILLFAIL"
-    "REPEATS;FAILREGEX"
+    "TIMEOUT;REPEATS;FAILREGEX"
     "COPY_TO_BUILDDIR;LIBRARIES;LABELS;INCLUDE_DIRS" ${ARGN})
 
   ROOT_GET_SOURCES(source_files . ${ARG_UNPARSED_ARGUMENTS})
@@ -1821,9 +1822,7 @@ function(ROOT_ADD_GTEST test_suite)
   if(ARG_WILLFAIL)
     set(willfail WILLFAIL)
   endif()
-  if(ARG_LABELS)
-    set(labels "LABELS ${ARG_LABELS}")
-  endif()
+
   if(ARG_REPEATS)
     set(extra_command --gtest_repeat=${ARG_REPEATS} --gtest_break_on_failure)
   endif()
@@ -1833,10 +1832,11 @@ function(ROOT_ADD_GTEST test_suite)
     gtest${mangled_name}
     COMMAND ${test_suite} ${extra_command}
     WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}
-    COPY_TO_BUILDDIR ${ARG_COPY_TO_BUILDDIR}
+    COPY_TO_BUILDDIR "${ARG_COPY_TO_BUILDDIR}"
     ${willfail}
-    ${labels}
-    FAILREGEX ${ARG_FAILREGEX}
+    TIMEOUT "${ARG_TIMEOUT}"
+    LABELS "${ARG_LABELS}"
+    FAILREGEX "${ARG_FAILREGEX}"
   )
 endfunction()
 

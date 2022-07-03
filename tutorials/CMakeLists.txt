@@ -593,7 +593,7 @@ foreach(t ${tutorials})
 
    # These tests on ARM64 need much more than 20 minutes - increase the timeout
    if(ROOT_ARCHITECTURE MATCHES arm64 OR ROOT_ARCHITECTURE MATCHES ppc64)
-     set(thisTestTimeout 2400) # 40m
+     set(thisTestTimeout 3000) # 50m
    else()
      set(thisTestTimeout 1200) # 20m
    endif()
@@ -627,7 +627,7 @@ foreach(t ${mpi_tutorials})
 
    # These tests on ARM64 need much more than 20 minutes - increase the timeout
    if(ROOT_ARCHITECTURE MATCHES arm64 OR ROOT_ARCHITECTURE MATCHES ppc64)
-     set(thisTestTimeout 2400) # 40m
+     set(thisTestTimeout 3000) # 50m
    else()
      set(thisTestTimeout 1200) # 20m
    endif()
