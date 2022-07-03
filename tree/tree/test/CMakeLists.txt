@@ -20,7 +20,7 @@ ROOT_ADD_GTEST(testBulkApi BulkApi.cxx LIBRARIES RIO Tree TreePlayer)
 #FIXME: tests are having timeout on 32bit CERN VM (in docker container everything is fine),
 # to be reverted after investigation.
 if(NOT CMAKE_SIZEOF_VOID_P EQUAL 4)
-  ROOT_ADD_GTEST(testBulkApiMultiple BulkApiMultiple.cxx LIBRARIES RIO Tree TreePlayer)
+  ROOT_ADD_GTEST(testBulkApiMultiple BulkApiMultiple.cxx LIBRARIES RIO Tree TreePlayer TIMEOUT 3000)
   ROOT_ADD_GTEST(testBulkApiVarLength BulkApiVarLength.cxx LIBRARIES RIO Tree TreePlayer)
   ROOT_ADD_GTEST(testBulkApiSillyStruct BulkApiSillyStruct.cxx LIBRARIES RIO Tree TreePlayer SillyStruct)
 endif()
