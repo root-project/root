@@ -293,12 +293,18 @@ void checkSnapshotArrayFile(RResultPtr<RInterface<RLoopManager>> &df, unsigned i
       const auto &bv = varSizeBoolArr->at(i);
       EXPECT_EQ(thisSize, dv.size());
       EXPECT_EQ(thisSize, bv.size());
+      std::cout << "bv: ";
+      for (auto j = 0u; j < thisSize; ++j)
+         std::cout << bv[j] << ' ';
+      std::cout << "\nexpected: ";
       for (auto j = 0u; j < thisSize; ++j) {
          EXPECT_DOUBLE_EQ(dv[j], i * j);
          const bool value = bv[j];
          const bool expected = j % 2 == 0;
+         std::cout << expected << ' ';
          EXPECT_EQ(value, expected);
       }
+      std::cout << '\n';
    }
 }
 
