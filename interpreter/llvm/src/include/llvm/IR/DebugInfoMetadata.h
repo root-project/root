@@ -541,7 +541,9 @@ public:
     return StringRefChecksum;
   }
   Optional<StringRef> getSource() const {
-    return Source ? Optional<StringRef>((*Source)->getString()) : None;
+    if (!Source || !*Source)
+      return None;
+    return Optional<StringRef>((*Source)->getString());
   }
 
   MDString *getRawFilename() const { return getOperandAs<MDString>(0); }
