@@ -288,14 +288,11 @@ void ROOT::Experimental::Detail::RPageAllocatorDaos::DeletePage(const RPage& pag
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
 ROOT::Experimental::Detail::RPageSourceDaos::RPageSourceDaos(std::string_view ntupleName, std::string_view uri,
-   const RNTupleReadOptions &options)
-   : RPageSource(ntupleName, options)
-   , fPageAllocator(std::make_unique<RPageAllocatorDaos>())
-   , fPagePool(std::make_shared<RPagePool>())
-   , fURI(uri)
-   , fClusterPool(std::make_unique<RClusterPool>(*this))
+                                                             const RNTupleReadOptions &options)
+   : RPageSource(ntupleName, options), fPageAllocator(std::make_unique<RPageAllocatorDaos>()),
+     fPagePool(std::make_shared<RPagePool>()), fURI(uri),
+     fClusterPool(std::make_unique<RClusterPool>(*this, options.GetClusterBunchSize()))
 {
    fDecompressor = std::make_unique<RNTupleDecompressor>();
    EnableDefaultMetrics("RPageSourceDaos");
