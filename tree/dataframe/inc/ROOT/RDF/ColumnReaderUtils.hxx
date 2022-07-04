@@ -110,10 +110,6 @@ MakeColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, cons
                                                                : nullptr,
                                          variationName))}...}};
    return ret;
-
-   // avoid bogus "unused variable" warnings
-   (void)slot;
-   (void)r;
 }
 
 // Shortcut overload for the case of no columns

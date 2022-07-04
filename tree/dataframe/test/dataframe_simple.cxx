@@ -576,15 +576,9 @@ TEST_P(RDFSimpleTests, Graph)
 
    // Create the graph from the Dataframe
    ROOT::RDataFrame d(NR_ELEMENTS);
-   auto dd = d.DefineSlotEntry("x1",
-                               [&source](unsigned int slot, ULong64_t entry) {
-                                  (void)slot;
-                                  return source[entry];
-                               })
-                .DefineSlotEntry("x2", [&source](unsigned int slot, ULong64_t entry) {
-                   (void)slot;
-                   return source[entry];
-                });
+   auto dd = d.DefineSlotEntry("x1", [&source](unsigned int /*slot*/, ULong64_t entry) {
+                 return source[entry];
+              }).DefineSlotEntry("x2", [&source](unsigned int /*slot*/, ULong64_t entry) { return source[entry]; });
 
    auto dfGraph = dd.Graph("x1", "x2");
    EXPECT_EQ(dfGraph->GetN(), NR_ELEMENTS);
@@ -663,12 +657,9 @@ public:
    double stdDevFromWelford()
    {
       ROOT::RDataFrame d(samples.size());
-      return *d.DefineSlotEntry("x",
-                                [this](unsigned int slot, ULong64_t entry) {
-                                   (void)slot;
-                                   return samples[entry];
-                                })
-                 .StdDev("x");
+      return *d.DefineSlotEntry("x", [this](unsigned int /*slot*/, ULong64_t entry) {
+                  return samples[entry];
+               }).StdDev("x");
    }
 };
 

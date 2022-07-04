@@ -155,6 +155,7 @@ class R__CLING_PTRCHECK(off) RVariation final : public RVariationBase {
    {
       // fExpression must return an RVec<T>
       auto &&results = fExpression(fValues[slot][S]->template Get<ColTypes>(entry)...);
+      (void)entry; // avoid unused parameter warnings (gcc 12.1)
 
       if (!ResultsSizeEq(results, fVariationNames.size(), fColNames.size())) {
          std::string variationName = fVariationNames[0].substr(0, fVariationNames[0].find_first_of(':'));
@@ -164,10 +165,6 @@ class R__CLING_PTRCHECK(off) RVariation final : public RVariationBase {
       }
 
       AssignResults(fLastResults[slot * CacheLineStep<ret_type>()], std::move(results), fColNames.size());
-
-      // silence "unused parameter" warnings in gcc
-      (void)slot;
-      (void)entry;
    }
 
    // This overload is for the case of a single column and ret_type != RVec<RVec<...>> -- the colIdx is ignored.
