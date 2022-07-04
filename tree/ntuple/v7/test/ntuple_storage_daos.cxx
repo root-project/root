@@ -65,7 +65,9 @@ TEST(RPageStorageDaos, Extended)
       }
    }
 
-   auto ntuple = RNTupleReader::Open("f", daosUri);
+   RNTupleReadOptions options;
+   options.SetClusterBunchSize(5);
+   auto ntuple = RNTupleReader::Open("f", daosUri, options);
    auto rdVector = ntuple->GetModel()->GetDefaultEntry()->Get<std::vector<double>>("vector");
 
    double chksumRead = 0.0;
@@ -105,8 +107,11 @@ TEST(RPageStorageDaos, Options)
       ntuple->CommitCluster();
    }
 
-   ROOT::Experimental::Detail::RPageSourceDaos source("ntuple", daosUri, RNTupleReadOptions());
+   auto readOptions = RNTupleReadOptions();
+   readOptions.SetClusterBunchSize(3);
+   ROOT::Experimental::Detail::RPageSourceDaos source("ntuple", daosUri, readOptions);
    source.Attach();
    EXPECT_STREQ("RP_XSF", source.GetObjectClass().c_str());
+   EXPECT_EQ(3U, source.GetReadOptions().GetClusterBunchSize());
    EXPECT_EQ(1U, source.GetNEntries());
 }
