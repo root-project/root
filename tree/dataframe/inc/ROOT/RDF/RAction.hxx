@@ -104,7 +104,7 @@ public:
    void CallExec(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>)
    {
       fHelper.Exec(slot, fValues[slot][S]->template Get<ColTypes>(entry)...);
-      (void)entry; // avoid "unused parameter" warnings
+      (void)entry; // avoid unused parameter warning (gcc 12.1)
    }
 
    void Run(unsigned int slot, Long64_t entry) final

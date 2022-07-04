@@ -75,9 +75,7 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    {
       fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()] =
          fExpression(fValues[slot][S]->template Get<ColTypes>(entry)...);
-      // silence "unused parameter" warnings in gcc
-      (void)slot;
-      (void)entry;
+      (void)entry; // avoid unused parameter warning (gcc 12.1)
    }
 
    template <typename... ColTypes, std::size_t... S>
@@ -85,9 +83,7 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    {
       fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()] =
          fExpression(slot, fValues[slot][S]->template Get<ColTypes>(entry)...);
-      // silence "unused parameter" warnings in gcc
-      (void)slot;
-      (void)entry;
+      (void)entry; // avoid unused parameter warning (gcc 12.1)
    }
 
    template <typename... ColTypes, std::size_t... S>
@@ -96,9 +92,6 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    {
       fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()] =
          fExpression(slot, entry, fValues[slot][S]->template Get<ColTypes>(entry)...);
-      // silence "unused parameter" warnings in gcc
-      (void)slot;
-      (void)entry;
    }
 
 public:
