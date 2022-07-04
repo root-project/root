@@ -69,8 +69,7 @@ MakeColumnReader(unsigned int slot, RDefineBase *define, RLoopManager &lm, TTree
 
    // Make a RTreeColumnReader for this column and insert it in RLoopManager's map
    auto treeColReader = std::make_unique<RTreeColumnReader<T>>(*r, colName);
-   lm.AddTreeColumnReader(slot, colName, std::move(treeColReader), typeid(T));
-   return lm.GetDatasetColumnReader(slot, colName, typeid(T));
+   return lm.AddTreeColumnReader(slot, colName, std::move(treeColReader), typeid(T));
 }
 
 /// This type aggregates some of the arguments passed to MakeColumnReaders.
