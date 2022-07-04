@@ -5,6 +5,7 @@ import pytest
 from check_backend import *
 from check_definepersample import *
 from check_friend_trees import *
+from check_friend_trees_alignment import *
 from check_histo_write import *
 from check_include_headers import *
 from check_inv_mass import *
