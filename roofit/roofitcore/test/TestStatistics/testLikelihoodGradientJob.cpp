@@ -422,12 +422,13 @@ TEST_F(LikelihoodSimBinnedConstrainedTest, ConstrainedAndOffset)
    // we cannot always expect exactly equal results for fits with likelihood
    // offsetting enabled. See also the LikelihoodSerialSimBinnedConstrainedTest.
    // ConstrainedAndOffset test case in testLikelihoodSerial.
-   EXPECT_FLOAT_EQ(minNll_nominal, minNll_GradientJob);
+#define EXPECT_NEAR_REL(a,b,c) EXPECT_NEAR(a, b, std::abs(a * c))
+   EXPECT_NEAR_REL(minNll_nominal, minNll_GradientJob, 1e-4);
    EXPECT_NEAR(edm_nominal, edm_GradientJob, 1e-5);
-   EXPECT_FLOAT_EQ(alpha_bkg_A_nominal, alpha_bkg_A_GradientJob);
-   EXPECT_FLOAT_EQ(alpha_bkg_A_error_nominal, alpha_bkg_A_error_GradientJob);
-   EXPECT_FLOAT_EQ(alpha_bkg_B_nominal, alpha_bkg_B_GradientJob);
-   EXPECT_FLOAT_EQ(alpha_bkg_B_error_nominal, alpha_bkg_B_error_GradientJob);
-   EXPECT_FLOAT_EQ(mu_sig_nominal, mu_sig_GradientJob);
-   EXPECT_FLOAT_EQ(mu_sig_error_nominal, mu_sig_error_GradientJob);
+   EXPECT_NEAR_REL(alpha_bkg_A_nominal, alpha_bkg_A_GradientJob, 1e-4);
+   EXPECT_NEAR_REL(alpha_bkg_A_error_nominal, alpha_bkg_A_error_GradientJob, 1e-4);
+   EXPECT_NEAR_REL(alpha_bkg_B_nominal, alpha_bkg_B_GradientJob, 1e-4);
+   EXPECT_NEAR_REL(alpha_bkg_B_error_nominal, alpha_bkg_B_error_GradientJob, 1e-4);
+   EXPECT_NEAR_REL(mu_sig_nominal, mu_sig_GradientJob, 1e-4);
+   EXPECT_NEAR_REL(mu_sig_error_nominal, mu_sig_error_GradientJob, 1e-4);
 }
