@@ -248,9 +248,7 @@ std::list<std::string> RooLinearVar::getBinningNames() const
 {
   std::list<std::string> binningNames(1, "");
 
-  RooFIter iter = _altBinning.fwdIterator();
-  const RooAbsArg* binning = 0;
-  while((binning = iter.next())) {
+  for (TObject const* binning : _altBinning) {
     const char* name = binning->GetName();
     binningNames.push_back(name);
   }

@@ -423,13 +423,12 @@ void RooRealMPFE::calculate() const
   if (_state==Client) {
     //     cout << "RooRealMPFE::calculate(" << GetName() << ") state is Client trigger remote calculation" << endl ;
     Int_t i(0) ;
-    RooFIter viter = _vars.fwdIterator() ;
-    RooFIter siter = _saveVars.fwdIterator() ;
 
     //for (i=0 ; i<_vars.getSize() ; i++) {
     RooAbsArg *var, *saveVar ;
-    while((var = viter.next())) {
-      saveVar = siter.next() ;
+    for (std::size_t j=0 ; j<_vars.size() ; j++) {
+      var = _vars.at(j);
+      saveVar = _saveVars.at(j);
 
       //bool valChanged = !(*var==*saveVar) ;
       bool valChanged,constChanged  ;

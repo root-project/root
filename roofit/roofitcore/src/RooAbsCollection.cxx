@@ -878,9 +878,7 @@ RooAbsCollection* RooAbsCollection::selectByName(const char* nameList, bool verb
       cxcoutD(ObjectHandling) << "RooAbsCollection::selectByName(" << GetName() << ") processing expression '" << wcExpr << "'" << std::endl;
     }
 
-    RooFIter iter = fwdIterator() ;
-    RooAbsArg* arg ;
-    while((arg=iter.next())) {
+    for (auto const* arg : *this) {
       if (TString(arg->GetName()).Index(rexp)>=0) {
    if (verbose) {
      cxcoutD(ObjectHandling) << "RooAbsCollection::selectByName(" << GetName() << ") selected element " << arg->GetName() << std::endl;
@@ -1427,19 +1425,16 @@ void RooAbsCollection::printLatex(std::ostream& ofs, Int_t ncol, const char* opt
   RooArgList* prevList = 0 ;
   for(auto * col : static_range_cast<RooAbsCollection*>(listList)) {
     RooArgList* list = new RooArgList ;
-    RooFIter iter = col->fwdIterator() ;
-    RooAbsArg* arg ;
-    while((arg=iter.next())) {
-
+    for (auto* arg : *col) {
       auto* rrv = dynamic_cast<RooRealVar*>(arg) ;
       if (rrv) {
-   list->add(*rrv) ;
+        list->add(*rrv) ;
       } else {
-   coutW(InputArguments) << "RooAbsCollection::printLatex: can only print RooRealVar in LateX, skipping non-RooRealVar object named "
+        coutW(InputArguments) << "RooAbsCollection::printLatex: can only print RooRealVar in LateX, skipping non-RooRealVar object named "
         << arg->GetName() << std::endl;
       }
       if (prevList && TString(rrv->GetName()).CompareTo(prevList->at(list->getSize()-1)->GetName())) {
-   coutW(InputArguments) << "RooAbsCollection::printLatex: WARNING: naming and/or ordering of sibling list is different" << std::endl;
+        coutW(InputArguments) << "RooAbsCollection::printLatex: WARNING: naming and/or ordering of sibling list is different" << std::endl;
       }
     }
     listListRRV.Add(list) ;

@@ -110,12 +110,10 @@ void RooRealBinding::saveXVec() const
   if (!_xsave) {
     _xsave = new double[getDimension()] ;
     RooArgSet* comps = _func->getComponents() ;
-    RooFIter iter = comps->fwdIterator() ;
-    RooAbsArg* arg ;
-    while ((arg=iter.next())) {
-      if (dynamic_cast<RooAbsReal*>(arg)) {
-   _compList.push_back((RooAbsReal*)(arg)) ;
-   _compSave.push_back(0) ;
+    for (auto* arg : dynamic_range_cast<RooAbsArg*>(*comps)) {
+      if (arg) {
+        _compList.push_back(static_cast<RooAbsReal*>(arg)) ;
+        _compSave.push_back(0) ;
       }
     }
     delete comps ;

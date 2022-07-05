@@ -147,7 +147,7 @@ std::list<std::string> RooErrorVar::getBinningNames() const
 {
   std::list<std::string> binningNames(1, "");
 
-  for(auto * binning : static_range_cast<RooAbsArg*>(_altBinning)) {
+  for(auto * binning : _altBinning) {
     const char* name = binning->GetName();
     binningNames.push_back(name);
   }

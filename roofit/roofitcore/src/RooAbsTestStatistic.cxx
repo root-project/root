@@ -507,9 +507,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
         binnedL = true ;
       } else if (pdf->IsA()->InheritsFrom(RooProdPdf::Class())) {
         // Default case: top-level pdf is a product of RRSP and other pdfs
-        RooFIter iter = ((RooProdPdf*)pdf)->pdfList().fwdIterator() ;
-        RooAbsArg* component ;
-        while ((component = iter.next())) {
+        for (auto const* component : static_cast<RooProdPdf*>(pdf)->pdfList()) {
           if (component->getAttribute("BinnedLikelihood") && component->IsA()->InheritsFrom(RooRealSumPdf::Class())) {
             binnedPdf = (RooAbsPdf*) component ;
             binnedL = true ;
