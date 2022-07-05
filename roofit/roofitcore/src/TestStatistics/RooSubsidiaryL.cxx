@@ -55,20 +55,20 @@ RooSubsidiaryL::RooSubsidiaryL(const std::string &parent_pdf_name, const RooArgS
    parameter_set_.add(parameter_set);
 }
 
+/// \note The subsidiary term is only calculated together with the last event.
+///       While this is meaningless for the subsidiary term itself (it has no
+///       events), it is useful when calculating RooSumLs by parts. The Section
+///       from each part is forwarded here if the component is a RooSubsidiaryL.
 ROOT::Math::KahanSum<double> RooSubsidiaryL::evaluatePartition(RooAbsL::Section events,
                                                                std::size_t /*components_begin*/,
                                                                std::size_t /*components_end*/)
 {
-   if (events.begin_fraction != 0 || events.end_fraction != 1) {
-      oocoutW(nullptr, InputArguments) << "RooSubsidiaryL::evaluatePartition can only calculate everything, so "
-                                               "section should be {0,1}, but it's not!"
-                                            << std::endl;
-   }
-
    ROOT::Math::KahanSum<double> sum;
 
-   for (const auto comp : subsidiary_pdfs_) {
-      sum += -((RooAbsPdf *)comp)->getLogVal(&parameter_set_);
+   if (events.end_fraction == 1) {
+      for (const auto comp : subsidiary_pdfs_) {
+         sum += -static_cast<RooAbsPdf*>(comp)->getLogVal(&parameter_set_);
+      }
    }
 
    return sum;

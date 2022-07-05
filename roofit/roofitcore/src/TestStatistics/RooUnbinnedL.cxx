@@ -103,7 +103,7 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
    }
 
    // include the extended maximum likelihood term, if requested
-   if (extended_) {
+   if (extended_ && events.begin(N_events_) == 0) {
       if (apply_weight_squared) {
 
          // TODO: the following should also be factored out into free/static functions like RooNLLVar::Compute*
