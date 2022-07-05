@@ -126,12 +126,11 @@ bool RooProduct::forceAnalyticalInt(const RooAbsArg& dep) const
   // Force internal handling of integration of given observable if any
   // of the product terms depend on it.
 
-  RooFIter compRIter = _compRSet.fwdIterator() ;
-  RooAbsReal* rcomp ;
   bool depends(false);
-  while((rcomp=(RooAbsReal*)compRIter.next())&&!depends) {
-        depends = rcomp->dependsOn(dep);
-  }
+  for (auto const* rcomp : static_range_cast<RooAbsReal*>(_compRSet)) {
+    if (depends) break;
+    depends = rcomp->dependsOn(dep);
+    }
   return depends ;
 }
 
@@ -147,10 +146,8 @@ RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) con
 
   // Do we have any terms which do not depend on the
   // on the variables we integrate over?
-  RooAbsReal* rcomp ;
-  RooFIter compRIter = _compRSet.fwdIterator() ;
   RooArgList *indep = new RooArgList();
-  while((rcomp=(RooAbsReal*) compRIter.next())) {
+  for (auto const* rcomp : static_range_cast<RooAbsReal*>(_compRSet)) {
     if( !rcomp->dependsOn(allVars) ) indep->add(*rcomp);
   }
   if (indep->getSize()!=0) {
@@ -160,15 +157,11 @@ RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) con
   }
 
   // Map observables -> functions ; start with individual observables
-  RooFIter allVarsIter = allVars.fwdIterator() ;
-  RooAbsReal* var ;
-  while((var=(RooAbsReal*)allVarsIter.next())) {
+  for (auto const* var : static_range_cast<RooAbsReal*>(allVars)) {
     RooArgSet *vars  = new RooArgSet(); vars->add(*var);
     RooArgList *comps = new RooArgList();
-    RooAbsReal* rcomp2 ;
 
-    compRIter = _compRSet.fwdIterator() ;
-    while((rcomp2=(RooAbsReal*) compRIter.next())) {
+    for (auto const* rcomp2 : static_range_cast<RooAbsReal*>(_compRSet)) {
       if( rcomp2->dependsOn(*var) ) comps->add(*rcomp2);
     }
     map->push_back( std::make_pair(vars,comps) );
@@ -183,12 +176,10 @@ RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) con
       i.first->first->add(*i.second->first);
 
       // In the merging step, make sure not to duplicate
-      RooFIter it = i.second->second->fwdIterator() ;
-      RooAbsArg* targ ;
-      while ((targ = it.next())) {
-   if (!i.first->second->find(*targ)) {
-     i.first->second->add(*targ) ;
-   }
+      for (auto const* targ : *(i.second->second)) {
+        if (!i.first->second->find(*targ)) {
+          i.first->second->add(*targ) ;
+        }
       }
       //i.first->second->add(*i.second->second);
 
@@ -260,8 +251,7 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
       cxcoutD(Integration) << "RooProduct::getPartIntList(" << GetName() << ") created subexpression " << term->GetName() << endl;
     } else {
       assert(i->second->getSize()==1);
-      RooFIter j = i->second->fwdIterator();
-      term = (RooAbsReal*)j.next();
+      term = static_cast<RooAbsReal*>(i->second->at(0));
     }
     assert(term!=0);
     if (i->first->empty()) { // check whether we need to integrate over this term or not...
@@ -351,10 +341,8 @@ const char* RooProduct::makeFPName(const char *pfx,const RooArgSet& terms) const
 {
   static TString pname;
   pname = pfx;
-  RooFIter i = terms.fwdIterator();
-  RooAbsArg *arg;
   bool first(true);
-  while((arg=(RooAbsArg*)i.next())) {
+  for (auto const* arg : terms) {
     if (first) { first=false;}
     else pname.Append("_X_");
     pname.Append(arg->GetName());
