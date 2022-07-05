@@ -18,6 +18,7 @@
 #ifndef ROOT_RFRIENDINFO_H
 #define ROOT_RFRIENDINFO_H
 
+#include <cstdint> // std::int64_t
 #include <string>
 #include <utility> // std::pair
 #include <vector>
@@ -33,8 +34,10 @@ namespace TreeUtils {
 */
 struct RFriendInfo {
 
-   std::vector<std::pair<std::string, std::string>>
-      fFriendNames; ///< Pairs of names and aliases of friend trees/chains.
+   /**
+    * Pairs of names and aliases of each friend tree/chain.
+    */
+   std::vector<std::pair<std::string, std::string>> fFriendNames;
    /**
    Names of the files where each friend is stored. fFriendFileNames[i] is the
    list of files for friend with name fFriendNames[i].
@@ -48,6 +51,12 @@ struct RFriendInfo {
       vector.
    */
    std::vector<std::vector<std::string>> fFriendChainSubNames;
+   /**
+    * Number of entries contained in each tree of each friend. The outer
+    * dimension of the vector tracks the n-th friend tree/chain, the inner
+    * dimension tracks the number of entries of each tree in the current friend.
+    */
+   std::vector<std::vector<std::int64_t>> fNEntriesPerTreePerFriend;
 
    void AddFriend(const std::string &treeName, const std::string &fileNameGlob, const std::string &alias = "");
 
