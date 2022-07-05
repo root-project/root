@@ -242,65 +242,6 @@ static ClustersAndEntries MakeClusters(const std::vector<std::string> &treeNames
    return std::make_pair(std::move(eventRangesPerFile), std::move(entriesPerFile));
 }
 
-////////////////////////////////////////////////////////////////////////
-/// Return a vector containing the number of entries of each file of each friend TChain
-static std::vector<std::vector<Long64_t>> GetFriendEntries(const ROOT::TreeUtils::RFriendInfo &friendInfo)
-{
-
-   const auto &friendNames = friendInfo.fFriendNames;
-   const auto &friendFileNames = friendInfo.fFriendFileNames;
-   const auto &friendChainSubNames = friendInfo.fFriendChainSubNames;
-
-   std::vector<std::vector<Long64_t>> friendEntries;
-   const auto nFriends = friendNames.size();
-   for (auto i = 0u; i < nFriends; ++i) {
-      std::vector<Long64_t> nEntries;
-      const auto &thisFriendName = friendNames[i].first;
-      const auto &thisFriendFiles = friendFileNames[i];
-      const auto &thisFriendChainSubNames = friendChainSubNames[i];
-      // If this friend has chain sub names, it means it's a TChain.
-      // In this case, we need to traverse all files that make up the TChain,
-      // retrieve the correct sub tree from each file and store the number of
-      // entries for that sub tree.
-      if (!thisFriendChainSubNames.empty()) {
-         // Traverse together filenames and respective treenames
-         for (auto fileidx = 0u; fileidx < thisFriendFiles.size(); ++fileidx) {
-            std::unique_ptr<TFile> curfile(
-               TFile::Open(thisFriendFiles[fileidx].c_str(), "READ_WITHOUT_GLOBALREGISTRATION"));
-            if (!curfile || curfile->IsZombie())
-               throw std::runtime_error("TTreeProcessorMT::GetFriendEntries: Could not open file \"" +
-                                        thisFriendFiles[fileidx] + "\"");
-            // thisFriendChainSubNames[fileidx] stores the name of the current
-            // subtree in the TChain stored in the current file.
-            TTree *curtree = curfile->Get<TTree>(thisFriendChainSubNames[fileidx].c_str());
-            if (!curtree)
-               throw std::runtime_error("TTreeProcessorMT::GetFriendEntries: Could not retrieve TTree \"" +
-                                        thisFriendChainSubNames[fileidx] + "\" from file \"" +
-                                        thisFriendFiles[fileidx] + "\"");
-            nEntries.emplace_back(curtree->GetEntries());
-         }
-         // Otherwise, if there are no sub names for the current friend, it means
-         // it's a TTree. We can safely use `thisFriendName` as the name of the tree
-         // to retrieve from the file in `thisFriendFiles`
-      } else {
-         for (const auto &fname : thisFriendFiles) {
-            std::unique_ptr<TFile> f(TFile::Open(fname.c_str(), "READ_WITHOUT_GLOBALREGISTRATION"));
-            if (!f || f->IsZombie())
-               throw std::runtime_error("TTreeProcessorMT::GetFriendEntries: Could not open file \"" + fname + "\"");
-            TTree *t = f->Get<TTree>(thisFriendName.c_str());
-            if (!t)
-               throw std::runtime_error("TTreeProcessorMT::GetFriendEntries: Could not retrieve TTree \"" +
-                                        thisFriendName + "\" from file \"" + fname + "\"");
-            nEntries.emplace_back(t->GetEntries());
-         }
-      }
-      // Store the vector with entries for each file in the current tree/chain.
-      friendEntries.emplace_back(std::move(nEntries));
-   }
-
-   return friendEntries;
-}
-
 } // anonymous namespace
 
 namespace ROOT {
@@ -317,14 +258,8 @@ namespace Internal {
 /// \param[in] nEntries Number of entries to be processed.
 /// \param[in] friendEntries Number of entries in each friend. Expected to have same ordering as friendInfo.
 void TTreeView::MakeChain(const std::vector<std::string> &treeNames, const std::vector<std::string> &fileNames,
-                          const ROOT::TreeUtils::RFriendInfo &friendInfo, const std::vector<Long64_t> &nEntries,
-                          const std::vector<std::vector<Long64_t>> &friendEntries)
+                          const ROOT::TreeUtils::RFriendInfo &friendInfo, const std::vector<Long64_t> &nEntries)
 {
-
-   const auto &friendNames = friendInfo.fFriendNames;
-   const auto &friendFileNames = friendInfo.fFriendFileNames;
-   const auto &friendChainSubNames = friendInfo.fFriendChainSubNames;
-
    fChain = ROOT::Internal::TreeUtils::MakeChainForMT();
    // Because of the range, we might have stopped reading entries earlier,
    // hence the size of nEntries can be smaller than the number of all files
@@ -336,36 +271,12 @@ void TTreeView::MakeChain(const std::vector<std::string> &treeNames, const std::
    }
    fNoCleanupNotifier.RegisterChain(*fChain.get());
 
-   fFriends.clear();
-   const auto nFriends = friendNames.size();
-   for (auto i = 0u; i < nFriends; ++i) {
-      const auto &thisFriendNameAlias = friendNames[i];
-      const auto &thisFriendName = thisFriendNameAlias.first;
-      const auto &thisFriendAlias = thisFriendNameAlias.second;
-      const auto &thisFriendFiles = friendFileNames[i];
-      const auto &thisFriendChainSubNames = friendChainSubNames[i];
-      const auto &thisFriendEntries = friendEntries[i];
-
-      // Build a friend chain
-      auto frChain = ROOT::Internal::TreeUtils::MakeChainForMT(thisFriendName);
-      const auto nFileNames = friendFileNames[i].size();
-      if (thisFriendChainSubNames.empty()) {
-         // If there are no chain subnames, the friend was a TTree. It's safe
-         // to add to the chain the filename directly.
-         for (auto j = 0u; j < nFileNames; ++j) {
-            frChain->Add(thisFriendFiles[j].c_str(), thisFriendEntries[j]);
-         }
-      } else {
-         // Otherwise, the new friend chain needs to be built using the nomenclature
-         // "filename/treename" as argument to `TChain::Add`
-         for (auto j = 0u; j < nFileNames; ++j) {
-            frChain->Add((thisFriendFiles[j] + "?#" + thisFriendChainSubNames[j]).c_str(), thisFriendEntries[j]);
-         }
-      }
-
-      // Make it friends with the main chain
-      fChain->AddFriend(frChain.get(), thisFriendAlias.c_str());
-      fFriends.emplace_back(std::move(frChain));
+   fFriends = ROOT::Internal::TreeUtils::MakeFriends(friendInfo);
+   const auto nFriends = friendInfo.fFriendNames.size();
+   R__ASSERT(nFriends == fFriends.size() && "Created the wrong number of friends from the available information.");
+   for (std::size_t i = 0ul; i < nFriends; i++) {
+      const auto &thisFriendAlias = friendInfo.fFriendNames[i].second;
+      fChain->AddFriend(fFriends[i].get(), thisFriendAlias.c_str());
    }
 }
 
@@ -374,8 +285,7 @@ void TTreeView::MakeChain(const std::vector<std::string> &treeNames, const std::
 std::unique_ptr<TTreeReader>
 TTreeView::GetTreeReader(Long64_t start, Long64_t end, const std::vector<std::string> &treeNames,
                          const std::vector<std::string> &fileNames, const ROOT::TreeUtils::RFriendInfo &friendInfo,
-                         const TEntryList &entryList, const std::vector<Long64_t> &nEntries,
-                         const std::vector<std::vector<Long64_t>> &friendEntries)
+                         const TEntryList &entryList, const std::vector<Long64_t> &nEntries)
 {
    const bool hasEntryList = entryList.GetN() > 0;
    const bool usingLocalEntries = friendInfo.fFriendNames.empty() && !hasEntryList;
@@ -383,7 +293,7 @@ TTreeView::GetTreeReader(Long64_t start, Long64_t end, const std::vector<std::st
       fChain == nullptr || (usingLocalEntries && (fileNames[0] != fChain->GetListOfFiles()->At(0)->GetTitle() ||
                                                   treeNames[0] != fChain->GetListOfFiles()->At(0)->GetName()));
    if (needNewChain) {
-      MakeChain(treeNames, fileNames, friendInfo, nEntries, friendEntries);
+      MakeChain(treeNames, fileNames, friendInfo, nEntries);
       if (hasEntryList) {
          fEntryList.reset(new TEntryList(entryList));
          if (fEntryList->GetLists() != nullptr) {
@@ -499,8 +409,10 @@ TTreeProcessorMT::TTreeProcessorMT(const std::vector<std::string_view> &filename
 ///                     the same as for TThreadExecutor.
 TTreeProcessorMT::TTreeProcessorMT(TTree &tree, const TEntryList &entries, UInt_t nThreads)
    : fFileNames(Internal::TreeUtils::GetFileNamesFromTree(tree)),
-     fTreeNames(Internal::TreeUtils::GetTreeFullPaths(tree)), fEntryList(entries),
-     fFriendInfo(Internal::TreeUtils::GetFriendInfo(tree)), fPool(nThreads)
+     fTreeNames(Internal::TreeUtils::GetTreeFullPaths(tree)),
+     fEntryList(entries),
+     fFriendInfo(Internal::TreeUtils::GetFriendInfo(tree, /*retrieveEntries*/ true)),
+     fPool(nThreads)
 {
    ROOT::EnableThreadSafety();
 }
@@ -513,8 +425,10 @@ TTreeProcessorMT::TTreeProcessorMT(TTree &tree, const TEntryList &entries, UInt_
 /// \param[in] globalRange Global entry range to process, {begin (inclusive), end (exclusive)}.
 TTreeProcessorMT::TTreeProcessorMT(TTree &tree, UInt_t nThreads, const EntryRange &globalRange)
    : fFileNames(Internal::TreeUtils::GetFileNamesFromTree(tree)),
-     fTreeNames(Internal::TreeUtils::GetTreeFullPaths(tree)), fFriendInfo(Internal::TreeUtils::GetFriendInfo(tree)),
-     fPool(nThreads), fGlobalRange(globalRange)
+     fTreeNames(Internal::TreeUtils::GetTreeFullPaths(tree)),
+     fFriendInfo(Internal::TreeUtils::GetFriendInfo(tree, /*retrieveEntries*/ true)),
+     fPool(nThreads),
+     fGlobalRange(globalRange)
 {
 }
 
@@ -562,8 +476,8 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
    // Per-file processing in case we retrieved all cluster info upfront
    auto processFileUsingGlobalClusters = [&](std::size_t fileIdx) {
       auto processCluster = [&](const EntryRange &c) {
-         auto r = fTreeView->GetTreeReader(c.first, c.second, fTreeNames, fFileNames, fFriendInfo, fEntryList,
-                                           allEntries, GetFriendEntries(fFriendInfo));
+         auto r =
+            fTreeView->GetTreeReader(c.first, c.second, fTreeNames, fFileNames, fFriendInfo, fEntryList, allEntries);
          func(*r);
       };
       fPool.Foreach(processCluster, allClusters[fileIdx]);
@@ -578,8 +492,7 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
       const auto &clusters = clustersAndEntries.first[0];
       const auto &entries = clustersAndEntries.second[0];
       auto processCluster = [&](const EntryRange &c) {
-         auto r = fTreeView->GetTreeReader(c.first, c.second, treeNames, fileNames, fFriendInfo, fEntryList, {entries},
-                                           std::vector<std::vector<Long64_t>>{});
+         auto r = fTreeView->GetTreeReader(c.first, c.second, treeNames, fileNames, fFriendInfo, fEntryList, {entries});
          func(*r);
       };
       fPool.Foreach(processCluster, clusters);
