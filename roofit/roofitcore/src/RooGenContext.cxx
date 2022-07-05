@@ -342,9 +342,7 @@ void RooGenContext::attach(const RooArgSet& args)
 
 void RooGenContext::initGenerator(const RooArgSet &theEvent)
 {
-  RooFIter iter = theEvent.fwdIterator() ;
-  RooAbsArg* arg ;
-  while((arg=iter.next())) {
+  for (auto* arg : theEvent) {
     arg->setOperMode(RooAbsArg::ADirty) ;
   }
 

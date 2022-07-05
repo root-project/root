@@ -771,10 +771,8 @@ Int_t RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, c
 
    // WVE we can skip this if the ref range is equal to the normalization range
    bool rangeIdentical(true);
-   RooFIter niter = termNSet.fwdIterator();
-   RooRealVar* normObs;
 //    cout << "_normRange = " << _normRange << " _refRangeName = " << RooNameReg::str(_refRangeName) << endl ;
-   while ((normObs = (RooRealVar*) niter.next())) {
+   for (auto const* normObs : static_range_cast<RooRealVar*>(termNSet)) {
      //FK: Here the refRange should be compared to _normRange, if it's set, and to the normObs range if it's not set
      if (_normRange.Length() > 0) {
        if (normObs->getMin(_normRange.Data()) != normObs->getMin(RooNameReg::str(_refRangeName))) rangeIdentical = false;
@@ -812,16 +810,14 @@ Int_t RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, c
 
      // WVE we can skip this if the ref range is equal to the normalization range
      bool rangeIdentical(true);
-     RooFIter niter = termNSet.fwdIterator();
-     RooRealVar* normObs;
      //FK: Here the refRange should be compared to _normRange, if it's set, and to the normObs range if it's not set
      if(_normRange.Length() > 0) {
-       while ((normObs = (RooRealVar*) niter.next())) {
+       for (auto const* normObs : static_range_cast<RooRealVar*>(termNSet)) {
          if (normObs->getMin(_normRange.Data()) != normObs->getMin(RooNameReg::str(_refRangeName))) rangeIdentical = false;
          if (normObs->getMax(_normRange.Data()) != normObs->getMax(RooNameReg::str(_refRangeName))) rangeIdentical = false;
        }
      } else {
-       while ((normObs = (RooRealVar*) niter.next())) {
+       for (auto const* normObs : static_range_cast<RooRealVar*>(termNSet)) {
          if (normObs->getMin() != normObs->getMin(RooNameReg::str(_refRangeName))) rangeIdentical = false;
          if (normObs->getMax() != normObs->getMax(RooNameReg::str(_refRangeName))) rangeIdentical = false;
        }
@@ -1073,7 +1069,7 @@ RooAbsReal* RooProdPdf::makeCondPdfRatioCorr(RooAbsReal& pdf, const RooArgSet& t
 
 void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
 {
-  RooAbsReal* part, *num, *den ;
+  RooAbsReal *part, *num, *den ;
   RooArgSet nomList ;
 
   list<string> rangeComps ;
@@ -1096,13 +1092,12 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
 
 //   cout << "THIS IS REARRANGEPRODUCT" << endl ;
 
-  RooFIter iterp = cache._partList.fwdIterator() ;
-  RooFIter iter1 = cache._numList.fwdIterator() ;
-  RooFIter iter2 = cache._denList.fwdIterator() ;
-  while((part=(RooAbsReal*)iterp.next())) {
+  for (std::size_t i = 0; i < cache._partList.size(); i++) {
 
-    num = (RooAbsReal*) iter1.next() ;
-    den = (RooAbsReal*) iter2.next() ;
+    part = static_cast<RooAbsReal*>(cache._partList.at(i));
+    num = static_cast<RooAbsReal*>(cache._numList.at(i));
+    den = static_cast<RooAbsReal*>(cache._denList.at(i));
+    i++;
 
 //     cout << "now processing part " << part->GetName() << " of type " << part->getStringAttribute("PROD_TERM_TYPE") << endl ;
 //     cout << "corresponding numerator = " << num->GetName() << endl ;
@@ -1188,10 +1183,7 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
 //    cout << "dentmp = " << dentmp->ClassName() << "::" << dentmp->GetName() << endl ;
 
 //    cout << "denominator components are " << dentmp->components() << endl ;
-   RooArgSet comps(dentmp->components()) ;
-   RooFIter piter = comps.fwdIterator() ;
-   RooAbsReal* parg ;
-   while((parg=(RooAbsReal*)piter.next())) {
+   for (auto* parg : static_range_cast<RooAbsReal*>(dentmp->components())) {
 //      cout << "now processing denominator component " << parg->ClassName() << "::" << parg->GetName() << endl ;
 
      if (ratio && parg->dependsOn(*ratio)) {
@@ -1583,19 +1575,15 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
 
   // CASE IVb: Normalized, non-integrated single PDF term
   // -----------------------------------------------------
-  RooFIter pIter = term->fwdIterator() ;
-  RooAbsPdf* pdf ;
-  while((pdf=(RooAbsPdf*)pIter.next())) {
+  for (auto* pdf : static_range_cast<RooAbsPdf*>(*term)) {
 
     if (forceWrap) {
 
       // Construct representative name of normalization wrapper
       TString name(pdf->GetName()) ;
       name.Append("_NORM[") ;
-      RooFIter nIter = termNSet.fwdIterator() ;
-      RooAbsArg* arg ;
       bool first(true) ;
-      while((arg=(RooAbsArg*)nIter.next())) {
+      for (auto const* arg : termNSet) {
    if (!first) {
      name.Append(",") ;
    } else {
@@ -1656,11 +1644,9 @@ std::string RooProdPdf::makeRGPPName(const char* pfx, const RooArgSet& term, con
   std::ostringstream os(pfx);
   os << "[";
 
-  RooFIter pIter = term.fwdIterator() ;
   // Encode component names
   bool first(true) ;
-  RooAbsPdf* pdf ;
-  while ((pdf=(RooAbsPdf*)pIter.next())) {
+  for (auto const* pdf : static_range_cast<RooAbsPdf*>(term)) {
     if (!first) os << "_X_";
     first = false;
     os << pdf->GetName();
@@ -1809,19 +1795,15 @@ Int_t RooProdPdf::getGenerator(const RooArgSet& directVars, RooArgSet &generateV
 
   // Find the subset directVars that only depend on a single PDF in the product
   RooArgSet directSafe ;
-  RooFIter dIter = directVars.fwdIterator() ;
-  RooAbsArg* arg ;
-  while((arg=(RooAbsArg*)dIter.next())) {
+  for (auto const* arg : directVars) {
     if (isDirectGenSafe(*arg)) directSafe.add(*arg) ;
   }
 
 
   // Now find direct integrator for relevant components ;
-  RooAbsPdf* pdf ;
   std::vector<Int_t> code;
   code.reserve(64);
-  RooFIter pdfIter = _pdfList.fwdIterator();
-  while((pdf=(RooAbsPdf*)pdfIter.next())) {
+  for (auto const* pdf : static_range_cast<RooAbsPdf*>(_pdfList)) {
     RooArgSet pdfDirect ;
     Int_t pdfCode = pdf->getGenerator(directSafe,pdfDirect,staticInitOK);
     code.push_back(pdfCode);
@@ -1850,10 +1832,8 @@ void RooProdPdf::initGenerator(Int_t code)
   if (!_useDefaultGen) return ;
 
   const std::vector<Int_t>& codeList = _genCode.retrieve(code-1) ;
-  RooAbsPdf* pdf ;
   Int_t i(0) ;
-  RooFIter pdfIter = _pdfList.fwdIterator();
-  while((pdf=(RooAbsPdf*)pdfIter.next())) {
+  for (auto* pdf : static_range_cast<RooAbsPdf*>(_pdfList)) {
     if (codeList[i]!=0) {
       pdf->initGenerator(codeList[i]) ;
     }
@@ -1873,10 +1853,8 @@ void RooProdPdf::generateEvent(Int_t code)
   if (!_useDefaultGen) return ;
 
   const std::vector<Int_t>& codeList = _genCode.retrieve(code-1) ;
-  RooAbsPdf* pdf ;
   Int_t i(0) ;
-  RooFIter pdfIter = _pdfList.fwdIterator();
-  while((pdf=(RooAbsPdf*)pdfIter.next())) {
+  for (auto* pdf : static_range_cast<RooAbsPdf*>(_pdfList)) {
     if (codeList[i]!=0) {
       pdf->generateEvent(codeList[i]) ;
     }
@@ -1934,9 +1912,8 @@ bool RooProdPdf::isDirectGenSafe(const RooAbsArg& arg) const
   if (!_useDefaultGen) return RooAbsPdf::isDirectGenSafe(arg) ;
 
   // Argument may appear in only one PDF component
-  RooAbsPdf* pdf, *thePdf(0) ;
-  RooFIter pdfIter = _pdfList.fwdIterator();
-  while((pdf=(RooAbsPdf*)pdfIter.next())) {
+  RooAbsPdf* thePdf(0) ;
+  for (auto* pdf : static_range_cast<RooAbsPdf*>(_pdfList)) {
 
     if (pdf->dependsOn(arg)) {
       // Found PDF depending on arg
@@ -2101,9 +2078,7 @@ void RooProdPdf::fixRefRange(const char* rangeName)
 
 std::list<double>* RooProdPdf::plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
-  RooAbsPdf* pdf ;
-  RooFIter pdfIter = _pdfList.fwdIterator();
-  while((pdf=(RooAbsPdf*)pdfIter.next())) {
+  for (auto const* pdf : static_range_cast<RooAbsPdf*>(_pdfList)) {
     list<double>* hint = pdf->plotSamplingHint(obs,xlo,xhi) ;
     if (hint) {
       return hint ;
@@ -2120,9 +2095,7 @@ std::list<double>* RooProdPdf::plotSamplingHint(RooAbsRealLValue& obs, double xl
 
 bool RooProdPdf::isBinnedDistribution(const RooArgSet& obs) const
 {
-  RooAbsPdf* pdf ;
-  RooFIter pdfIter = _pdfList.fwdIterator();
-  while((pdf=(RooAbsPdf*)pdfIter.next())) {
+  for (auto const* pdf : static_range_cast<RooAbsPdf*>(_pdfList)) {
     if (pdf->dependsOn(obs) && !pdf->isBinnedDistribution(obs)) {
       return false ;
     }
@@ -2141,9 +2114,7 @@ bool RooProdPdf::isBinnedDistribution(const RooArgSet& obs) const
 
 std::list<double>* RooProdPdf::binBoundaries(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
-  RooAbsPdf* pdf ;
-  RooFIter pdfIter = _pdfList.fwdIterator();
-  while((pdf=(RooAbsPdf*)pdfIter.next())) {
+  for (auto const* pdf : static_range_cast<RooAbsPdf*>(_pdfList)) {
     list<double>* hint = pdf->binBoundaries(obs,xlo,xhi) ;
     if (hint) {
       return hint ;
@@ -2202,10 +2173,8 @@ void RooProdPdf::printMetaArgs(ostream& os) const
    os << *ncset  ;
       } else {
    os << "|" ;
-   RooFIter nciter = ncset->fwdIterator() ;
-   RooAbsArg* arg ;
    bool first(true) ;
-   while((arg=(RooAbsArg*)nciter.next())) {
+   for (auto const* arg : *ncset) {
      if (!first) {
        os << "," ;
      } else {

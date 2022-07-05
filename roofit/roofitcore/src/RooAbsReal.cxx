@@ -2875,9 +2875,7 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
 
     // Strip out parameters with zero error
     RooArgList fpf_stripped;
-    RooFIter fi = fr.floatParsFinal().fwdIterator();
-    RooRealVar *frv;
-    while ((frv = (RooRealVar *)fi.next())) {
+    for (auto const* frv : static_range_cast<RooRealVar*>(fr.floatParsFinal())) {
        if (frv->getError() > 1e-20) {
           fpf_stripped.add(*frv);
        }
@@ -4669,10 +4667,8 @@ void RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::ErrorLoggingMode m)
 
 void RooAbsReal::setParameterizeIntegral(const RooArgSet& paramVars)
 {
-  RooFIter iter = paramVars.fwdIterator() ;
-  RooAbsArg* arg ;
   string plist ;
-  while((arg=iter.next())) {
+  for (auto const* arg : paramVars) {
     if (!dependsOnValue(*arg)) {
       coutW(InputArguments) << "RooAbsReal::setParameterizeIntegral(" << GetName()
              << ") function does not depend on listed parameter " << arg->GetName() << ", ignoring" << endl ;

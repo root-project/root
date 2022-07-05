@@ -150,9 +150,7 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
   cache = createCache(nset) ;
 
   // Set cache function data to ADirty since function will need update every time in cache update process
-  RooFIter iarg( cache->hist()->get()->fwdIterator() );
-  RooAbsArg *arg(0);
-  while ( (arg=iarg.next()) ) {
+  for (auto* arg : *(cache->hist()->get()) ) {
     arg->setOperMode(ADirty);
   }
 
