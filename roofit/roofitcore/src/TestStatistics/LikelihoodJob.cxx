@@ -138,9 +138,7 @@ void LikelihoodJob::updateWorkersParameters()
          zmq::message_t message(to_update.begin(), to_update.end());
          // always send Job id first! This is used in worker_loop to route the
          // update_state call to the correct Job.
-         get_manager()->messenger().publish_from_master_to_workers(id_, update_state_mode::parameters, state_id_);
-         // have to pass message separately to avoid copies from parameter pack to first parameter
-         get_manager()->messenger().publish_from_master_to_workers(std::move(message));
+         get_manager()->messenger().publish_from_master_to_workers(id_, update_state_mode::parameters, state_id_, std::move(message));
       }
    }
 }
@@ -165,6 +163,7 @@ void LikelihoodJob::evaluate()
       // wait for task results back from workers to master
       gather_worker_results();
 
+      result_ = 0;
       for (auto const &item : results_) {
          result_ += item;
       }
@@ -187,7 +186,6 @@ bool LikelihoodJob::receive_task_result_on_master(const zmq::message_t &message)
 {
    auto task_result = message.data<task_result_t>();
    results_.emplace_back(task_result->value, task_result->carry);
-   printf("result received: %f\n", task_result->value);
    --N_tasks_at_workers_;
    bool job_completed = (N_tasks_at_workers_ == 0);
    return job_completed;
@@ -213,6 +211,11 @@ void LikelihoodJob::evaluate_task(std::size_t task)
          {static_cast<double>(first) / N_events, static_cast<double>(last) / N_events}, 0, 0);
       break;
    }
+   case LikelihoodType::sum: {
+      result_ = likelihood_->evaluatePartition( {static_cast<double>(first) / N_events, static_cast<double>(last) / N_events}, 0, likelihood_->getNComponents());
+      break;
+   }
+
    default: {
       throw std::logic_error(
          "in LikelihoodJob::evaluate_task: likelihood types other than binned and unbinned not yet implemented!");
