@@ -56,7 +56,7 @@ public:
    ~RooFitDriver();
    std::vector<double> getValues();
    double getVal();
-   RooAbsReal const &topNode() const;
+   RooAbsReal &topNode() const;
 
 private:
    ///////////////////////////
