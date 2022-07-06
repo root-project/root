@@ -20,7 +20,10 @@
 #include "RooArgSet.h"
 #include "RooAddPdf.h"
 #include "RooAddModel.h"
+#include "RooGenContext.h"
+#include "RooMsgService.h"
 
+#include <memory>
 #include <vector>
 
 class RooDataSet;
@@ -37,6 +40,11 @@ public:
   void attach(const RooArgSet& params) override ;
 
   void printMultiline(std::ostream &os, Int_t content, bool verbose=false, TString indent="") const override ;
+
+  template<class Pdf_t>
+  static std::unique_ptr<RooAbsGenContext> create(const Pdf_t &pdf, const RooArgSet &vars,
+                                                  const RooDataSet *prototype,
+                                                  const RooArgSet* auxProto, bool verbose);
 
 protected:
 
@@ -58,5 +66,39 @@ protected:
 
   ClassDefOverride(RooAddGenContext,0) // Specialized context for generating a dataset from a RooAddPdf
 };
+
+
+/// Returns a RooAddGenContext if possible, or, if the RooAddGenContext doesn't
+/// support this particular RooAddPdf or RooAddModel because it has negative
+/// coefficients, returns a generic RooGenContext.
+///
+/// Templated function to support both RooAddPdf and RooAddModel without code
+/// duplication and without type checking at runtime.
+
+template<class Pdf_t>
+std::unique_ptr<RooAbsGenContext> RooAddGenContext::create(const Pdf_t &pdf, const RooArgSet &vars,
+                                                           const RooDataSet *prototype,
+                                                           const RooArgSet* auxProto, bool verbose)
+{
+  // Check if any coefficient is negative. We can use getVal() without the
+  // normalization set, as normalization doesn't change the coefficients sign.
+  auto hasNegativeCoefs = [&]() {
+    for(auto * coef : static_range_cast<RooAbsReal*>(pdf._coefList)) {
+      if(coef->getVal() < 0) return true;
+    }
+    return false;
+  };
+
+  // The RooAddGenContext doesn't support negative coefficients, so we create a
+  // generic RooGenContext.
+  if(hasNegativeCoefs()) {
+    oocxcoutI(&pdf, Generation) << pdf.ClassName() << "::genContext():"
+        << " using a generic generator context instead of the RooAddGenContext for the "
+        << pdf.ClassName() << " \"" << pdf.GetName() <<  "\", because the pdf has negative coefficients." << std::endl;
+    return std::make_unique<RooGenContext>(pdf, vars, prototype, auxProto, verbose);
+  }
+
+  return std::make_unique<RooAddGenContext>(pdf, vars, prototype, auxProto,verbose) ;
+}
 
 #endif

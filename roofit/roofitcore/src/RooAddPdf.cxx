@@ -1040,7 +1040,7 @@ void RooAddPdf::selectNormalizationRange(const char* rangeName, bool force)
 RooAbsGenContext* RooAddPdf::genContext(const RooArgSet &vars, const RooDataSet *prototype,
                const RooArgSet* auxProto, bool verbose) const
 {
-  return new RooAddGenContext(*this,vars,prototype,auxProto,verbose) ;
+  return RooAddGenContext::create(*this,vars,prototype,auxProto,verbose).release();
 }
 
 
