@@ -37,10 +37,8 @@ with a probability proportional to its associated coefficient.
 #include "RooRandom.h"
 #include "RooAddModel.h"
 
-using namespace std;
 
 ClassImp(RooAddGenContext);
-;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,11 +52,11 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
   cxcoutI(Generation) << "RooAddGenContext::ctor() setting up event special generator context for sum p.d.f. " << model.GetName()
          << " for generation of observable(s) " << vars ;
   if (prototype) ccxcoutI(Generation) << " with prototype data for " << *prototype->get() ;
-  if (auxProto && auxProto->getSize()>0)  ccxcoutI(Generation) << " with auxiliary prototypes " << *auxProto ;
-  ccxcoutI(Generation) << endl ;
+  if (auxProto && !auxProto->empty())  ccxcoutI(Generation) << " with auxiliary prototypes " << *auxProto ;
+  ccxcoutI(Generation) << std::endl;
 
   // Constructor. Build an array of generator contexts for each product component PDF
-  _pdfSet = (RooArgSet*) RooArgSet(model).snapshot(true) ;
+  _pdfSet.reset(static_cast<RooArgSet*>(RooArgSet(model).snapshot(true)));
   _pdf = (RooAddPdf*) _pdfSet->find(model.GetName()) ;
   _pdf->setOperMode(RooAbsArg::ADirty,true) ;
 
@@ -71,8 +69,8 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
     }
 
   _nComp = model._pdfList.getSize() ;
-  _coefThresh = new double[_nComp+1] ;
-  _vars = (RooArgSet*) vars.snapshot(false) ;
+  _coefThresh.resize(_nComp+1);
+  _vars.reset(static_cast<RooArgSet*>(vars.snapshot(false)));
 
   for (const auto arg : model._pdfList) {
     auto pdf = dynamic_cast<const RooAbsPdf *>(arg);
@@ -82,15 +80,11 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
       throw std::invalid_argument("Trying to generate events from on object that is not a PDF.");
     }
 
-    RooAbsGenContext* cx = pdf->genContext(vars,prototype,auxProto,verbose) ;
-    _gcList.push_back(cx) ;
+    _gcList.emplace_back(pdf->genContext(vars,prototype,auxProto,verbose));
   }
 
-  ((RooAddPdf*)_pdf)->getProjCache(_vars) ;
+  ((RooAddPdf*)_pdf)->getProjCache(_vars.get()) ;
   _pdf->recursiveRedirectServers(_theEvent) ;
-
-  _mcache = 0 ;
-  _pcache = 0 ;
 }
 
 
@@ -106,45 +100,25 @@ RooAddGenContext::RooAddGenContext(const RooAddModel &model, const RooArgSet &va
   cxcoutI(Generation) << "RooAddGenContext::ctor() setting up event special generator context for sum resolution model " << model.GetName()
          << " for generation of observable(s) " << vars ;
   if (prototype) ccxcoutI(Generation) << " with prototype data for " << *prototype->get() ;
-  if (auxProto && auxProto->getSize()>0)  ccxcoutI(Generation) << " with auxiliary prototypes " << *auxProto ;
-  ccxcoutI(Generation) << endl ;
+  if (auxProto && !auxProto->empty())  ccxcoutI(Generation) << " with auxiliary prototypes " << *auxProto ;
+  ccxcoutI(Generation) << std::endl;
 
   // Constructor. Build an array of generator contexts for each product component PDF
-  _pdfSet = (RooArgSet*) RooArgSet(model).snapshot(true) ;
+  _pdfSet.reset(static_cast<RooArgSet*>(RooArgSet(model).snapshot(true)));
   _pdf = (RooAbsPdf*) _pdfSet->find(model.GetName()) ;
 
   _nComp = model._pdfList.getSize() ;
-  _coefThresh = new double[_nComp+1] ;
-  _vars = (RooArgSet*) vars.snapshot(false) ;
+  _coefThresh.resize(_nComp+1);
+  _vars.reset(static_cast<RooArgSet*>(vars.snapshot(false)));
 
   for (const auto obj : model._pdfList) {
     auto pdf = static_cast<RooAbsPdf*>(obj);
-    RooAbsGenContext* cx = pdf->genContext(vars,prototype,auxProto,verbose) ;
-    _gcList.push_back(cx) ;
+    _gcList.emplace_back(pdf->genContext(vars,prototype,auxProto,verbose));
   }
 
-  ((RooAddModel*)_pdf)->getProjCache(_vars) ;
+  ((RooAddModel*)_pdf)->getProjCache(_vars.get()) ;
   _pdf->recursiveRedirectServers(_theEvent) ;
-
-  _mcache = 0 ;
-  _pcache = 0 ;
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor. Delete all owned subgenerator contexts
-
-RooAddGenContext::~RooAddGenContext()
-{
-  delete[] _coefThresh ;
-  for (vector<RooAbsGenContext*>::iterator iter=_gcList.begin() ; iter!=_gcList.end() ; ++iter) {
-    delete *iter ;
-  }
-  delete _vars ;
-  delete _pdfSet ;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -155,8 +129,8 @@ void RooAddGenContext::attach(const RooArgSet& args)
   _pdf->recursiveRedirectServers(args) ;
 
   // Forward initGenerator call to all components
-  for (vector<RooAbsGenContext*>::iterator iter=_gcList.begin() ; iter!=_gcList.end() ; ++iter) {
-    (*iter)->attach(args) ;
+  for(auto& gc : _gcList) {
+    gc->attach(args) ;
   }
 }
 
@@ -173,15 +147,15 @@ void RooAddGenContext::initGenerator(const RooArgSet &theEvent)
 
   if (_isModel) {
     RooAddModel* amod = (RooAddModel*) _pdf ;
-    _mcache = amod->getProjCache(_vars) ;
+    _mcache = amod->getProjCache(_vars.get()) ;
   } else {
     RooAddPdf* apdf = (RooAddPdf*) _pdf ;
-    _pcache = apdf->getProjCache(_vars,0,"FULL_RANGE_ADDGENCONTEXT") ;
+    _pcache = apdf->getProjCache(_vars.get(),nullptr,"FULL_RANGE_ADDGENCONTEXT") ;
   }
 
   // Forward initGenerator call to all components
-  for (vector<RooAbsGenContext*>::iterator iter=_gcList.begin() ; iter!=_gcList.end() ; ++iter) {
-    (*iter)->initGenerator(theEvent) ;
+  for(auto& gc : _gcList) {
+    gc->initGenerator(theEvent) ;
   }
 }
 
@@ -195,8 +169,7 @@ void RooAddGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
   // Throw a random number to determin which component to generate
   updateThresholds() ;
   double rand = RooRandom::uniform() ;
-  Int_t i=0 ;
-  for (i=0 ; i<_nComp ; i++) {
+  for (Int_t i=0 ; i<_nComp ; i++) {
     if (rand>_coefThresh[i] && rand<_coefThresh[i+1]) {
       _gcList[i]->generateEvent(theEvent,remaining) ;
       return ;
@@ -214,7 +187,7 @@ void RooAddGenContext::updateThresholds()
   if (_isModel) {
 
     RooAddModel* amod = (RooAddModel*) _pdf ;
-    amod->updateCoefficients(*_mcache,_vars) ;
+    amod->updateCoefficients(*_mcache,_vars.get()) ;
 
     _coefThresh[0] = 0. ;
     Int_t i ;
@@ -227,7 +200,7 @@ void RooAddGenContext::updateThresholds()
 
     RooAddPdf* apdf = (RooAddPdf*) _pdf ;
 
-    apdf->updateCoefficients(*_pcache,_vars) ;
+    apdf->updateCoefficients(*_pcache,_vars.get()) ;
 
     _coefThresh[0] = 0. ;
     Int_t i ;
@@ -248,8 +221,8 @@ void RooAddGenContext::updateThresholds()
 void RooAddGenContext::setProtoDataOrder(Int_t* lut)
 {
   RooAbsGenContext::setProtoDataOrder(lut) ;
-  for (vector<RooAbsGenContext*>::iterator iter=_gcList.begin() ; iter!=_gcList.end() ; ++iter) {
-    (*iter)->setProtoDataOrder(lut) ;
+  for(auto& gc : _gcList) {
+    gc->setProtoDataOrder(lut) ;
   }
 }
 
@@ -258,17 +231,17 @@ void RooAddGenContext::setProtoDataOrder(Int_t* lut)
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the details of the context
 
-void RooAddGenContext::printMultiline(ostream &os, Int_t content, bool verbose, TString indent) const
+void RooAddGenContext::printMultiline(std::ostream &os, Int_t content, bool verbose, TString indent) const
 {
   RooAbsGenContext::printMultiline(os,content,verbose,indent) ;
-  os << indent << "--- RooAddGenContext ---" << endl ;
+  os << indent << "--- RooAddGenContext ---" << std::endl;
   os << indent << "Using PDF ";
   _pdf->printStream(os,kName|kArgs|kClassName,kSingleLine,indent);
 
-  os << indent << "List of component generators" << endl ;
+  os << indent << "List of component generators" << std::endl;
   TString indent2(indent) ;
   indent2.Append("    ") ;
-  for (vector<RooAbsGenContext*>::const_iterator iter=_gcList.begin() ; iter!=_gcList.end() ; ++iter) {
-    (*iter)->printMultiline(os,content,verbose,indent2) ;
+  for(auto& gc : _gcList) {
+    gc->printMultiline(os,content,verbose,indent2) ;
   }
 }
