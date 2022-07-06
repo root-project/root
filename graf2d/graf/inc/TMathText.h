@@ -18,7 +18,7 @@ class TMathTextRenderer;
 
 class TMathText : public TText, public TAttFill {
 protected:
-      void *fRenderer; //!TMathText Painter
+      TMathTextRenderer *fRenderer; //!TMathText Painter
       TMathText &operator=(const TMathText &);
 
       void Render(const Double_t x, const Double_t y,
