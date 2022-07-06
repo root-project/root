@@ -296,6 +296,9 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     if(target_incdirs)
        foreach(dir ${target_incdirs})
           string(REGEX REPLACE "^[$]<BUILD_INTERFACE:(.+)>" "\\1" dir ${dir})
+          # BUILD_INTERFACE might contain space-separated paths. They are split by
+          # foreach, leaving a trailing 'include/something>'. Remove the trailing '>'.
+          string(REGEX REPLACE ">$" "" dir ${dir})
           # check that dir not a empty dir like $<BUILD_INTERFACE:>
           if(NOT ${dir} MATCHES "^[$]")
              list(APPEND incdirs ${dir})
