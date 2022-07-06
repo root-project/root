@@ -101,17 +101,39 @@ RooArgSet RooChi2Var::_emptySet ;
 ///  \param[in] hdata Data histogram
 ///  \param[in] arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9 Optional arguments according to table below.
 ///  <table>
-///  <tr><th> Argument  <th> Effect
+///  <tr><th> Type of CmdArg    <th>    Effect on \f$ \chi^2 \f$
 ///  <tr><td>
-///  DataError()  <td> Choose between Poisson errors and Sum-of-weights errors
+///  <tr><td> `DataError()`  <td>  Choose between:
+///  - RooAbsData::Expected: Expected Poisson error (\f$ \sqrt{n_\text{expected}} \f$ from the PDF).
+///  - RooAbsData::SumW2: The observed error from the square root of the sum of weights,
+///    i.e., symmetric errors calculated with the standard deviation of a Poisson distribution.
+///  - RooAbsData::Poisson: Asymmetric errors from the observed central poisson (68 %) interval.
+///    If for a given bin \f$ n_\text{expected} \f$ is lower than the \f$ n_\text{observed} \f$, the lower uncertainty is taken
+///    (e.g., the difference between the mean and the 16 % quantile of the Poisson distribution with with mean \f$ n_\text{observed} \f$).
+///    If \f$ n_\text{expected} \f$ is higher than \f$ n_\text{observed} \f$, the higher uncertainty is taken
+///    (e.g., the difference between the mean and the 84 % quantile of the Poisson distribution with with mean \f$ n_\text{observed} \f$).
+///  - RooAbsData::Auto (default): RooAbsData::Expected for unweighted data, RooAbsData::SumW2 for weighted data.
+///  <tr><td>
+///  `Extended()` <td>  Use expected number of events of an extended p.d.f as normalization
 ///  <tr><td>
 ///  NumCPU()     <td> Activate parallel processing feature
 ///  <tr><td>
-///  Range()      <td> Fit only selected region
+///  Range()      <td> Calculate \f$ \chi^2 \f$ only in selected region
 ///  <tr><td>
 ///  Verbose()    <td> Verbose output of GOF framework
 ///  <tr><td>
 ///  IntegrateBins()  <td> Integrate PDF within each bin. This sets the desired precision. Only useful for binned fits.
+/// <tr><td> `SumCoefRange()` <td>  Set the range in which to interpret the coefficients of RooAddPdf components
+/// <tr><td> `SplitRange()`   <td>  Fit ranges used in different categories get named after the category.
+/// Using `Range("range"), SplitRange()` as switches, different ranges could be set like this:
+/// ```
+/// myVariable.setRange("range_pi0", 135, 210);
+/// myVariable.setRange("range_gamma", 50, 210);
+/// ```
+/// <tr><td> `ConditionalObservables(Args_t &&... argsOrArgSet)`  <td>  Define projected observables.
+///                                Arguments can either be multiple RooRealVar or a single RooArgSet containing them.
+///
+/// </table>
 
 RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataHist& hdata,
              const RooCmdArg& arg1,const RooCmdArg& arg2,const RooCmdArg& arg3,
