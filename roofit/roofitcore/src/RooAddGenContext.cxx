@@ -27,15 +27,15 @@ randomly choose one of those context to generate an event,
 with a probability proportional to its associated coefficient.
 **/
 
+#include "RooAddGenContext.h"
+
 #include "Riostream.h"
 #include "TClass.h"
 
-#include "RooMsgService.h"
-#include "RooAddGenContext.h"
-#include "RooAddPdf.h"
 #include "RooDataSet.h"
 #include "RooRandom.h"
-#include "RooAddModel.h"
+
+#include <sstream>
 
 
 ClassImp(RooAddGenContext);
@@ -184,34 +184,29 @@ void RooAddGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
 
 void RooAddGenContext::updateThresholds()
 {
-  if (_isModel) {
-
-    RooAddModel* amod = (RooAddModel*) _pdf ;
-    amod->updateCoefficients(*_mcache,_vars.get()) ;
-
-    _coefThresh[0] = 0. ;
-    Int_t i ;
-    for (i=0 ; i<_nComp ; i++) {
-      _coefThresh[i+1] = amod->_coefCache[i] ;
-      _coefThresh[i+1] += _coefThresh[i] ;
-    }
-
-  } else {
-
-    RooAddPdf* apdf = (RooAddPdf*) _pdf ;
-
-    apdf->updateCoefficients(*_pcache,_vars.get()) ;
+  // Templated lambda to support RooAddModel and RooAddPdf
+  auto updateThresholdsImpl = [&](auto* pdf, auto * cache) {
+    pdf->updateCoefficients(*cache,_vars.get()) ;
 
     _coefThresh[0] = 0. ;
-    Int_t i ;
-    for (i=0 ; i<_nComp ; i++) {
-      _coefThresh[i+1] = apdf->_coefCache[i] ;
-      _coefThresh[i+1] += _coefThresh[i] ;
-//       cout << "RooAddGenContext::updateThresholds(" << GetName() << ") _coefThresh[" << i+1 << "] = " << _coefThresh[i+1] << endl ;
+    for (Int_t i=0 ; i<_nComp ; i++) {
+      double coef = pdf->_coefCache[i];
+      if(coef < 0.0) {
+        std::stringstream errMsgStream;
+        errMsgStream << "RooAddGenContext::updateThresholds(): coefficient number " << i << " of the "
+                     << pdf->ClassName() << " \"" << pdf->GetName() <<  "\"" << " is negative!"
+                     << " The current RooAddGenConext doesn't support negative coefficients."
+                     << " Please recreate a new generator context with " << pdf->ClassName() << "::genContext()";
+        auto const errMsg = errMsgStream.str();
+        cxcoutE(Generation) << errMsg << std::endl;
+        throw std::runtime_error(errMsg);
+      }
+      _coefThresh[i+1] = coef + _coefThresh[i];
     }
+  };
 
-  }
-
+  _isModel ? updateThresholdsImpl(static_cast<RooAddModel*>(_pdf), _mcache)
+           : updateThresholdsImpl(static_cast<RooAddPdf*>(_pdf), _pcache);
 }
 
 
