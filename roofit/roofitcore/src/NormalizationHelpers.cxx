@@ -18,6 +18,7 @@
 #include <RooAbsReal.h>
 #include <RooAddition.h>
 #include <RooConstraintSum.h>
+#include <RooProdPdf.h>
 
 #include "RooNormalizedPdf.h"
 
@@ -33,12 +34,18 @@ public:
    GraphChecker(RooAbsArg const &topNode)
    {
 
+      // To track the RooProdPdfs to figure out which ones are responsible for constraints.
+      std::vector<RooAbsArg *> prodPdfs;
+
       // Get the list of servers for each node by data key.
       {
          RooArgList nodes;
          topNode.treeNodeServerList(&nodes, nullptr, true, true, false, true);
          RooArgSet nodesSet{nodes};
          for (RooAbsArg *node : nodesSet) {
+            if (dynamic_cast<RooProdPdf *>(node)) {
+               prodPdfs.push_back(node);
+            }
             _serverLists[node];
             bool isConstraintSum = dynamic_cast<RooConstraintSum const *>(node);
             for (RooAbsArg *server : node->servers()) {
@@ -52,6 +59,33 @@ public:
          auto &l = item.second;
          std::sort(l.begin(), l.end());
          l.erase(std::unique(l.begin(), l.end()), l.end());
+      }
+
+      // Loop over the RooProdPdfs to figure out which ones are responsible for constraints.
+      for (auto *prodPdf : static_range_cast<RooProdPdf *>(prodPdfs)) {
+         std::size_t actualPdfIdx = 0;
+         std::size_t nNonConstraint = 0;
+         for (std::size_t i = 0; i < prodPdf->pdfList().size(); ++i) {
+            RooAbsArg &pdf = prodPdf->pdfList()[i];
+
+            // Heuristic for HistFactory models to find also the constraints
+            // that were not extracted for the RooConstraint sum, e.g. because
+            // they were constant. TODO: fix RooProdPdf such that is also
+            // extracts constraints for which the parameters is set constant.
+            bool isProbablyConstraint = std::string(pdf.GetName()).find("onstrain") != std::string::npos;
+
+            if (_constraints.find(&pdf) == _constraints.end() && !isProbablyConstraint) {
+               actualPdfIdx = i;
+               ++nNonConstraint;
+            }
+         }
+         if (nNonConstraint != prodPdf->pdfList().size()) {
+            if (nNonConstraint != 1) {
+               throw std::runtime_error("A RooProdPdf that multiplies a pdf with constraints should contain only one "
+                                        "pdf that is not a constraint!");
+            }
+            _prodPdfsWithConstraints[prodPdf] = actualPdfIdx;
+         }
       }
    }
 
@@ -77,7 +111,7 @@ public:
       }
 
       // If not, recurse
-      for (auto const& server : serverList) {
+      for (auto const &server : serverList) {
          bool t = dependsOn(server, testArg);
          _results.emplace(std::pair<DataKey, DataKey>{server, testArg}, t);
          if (t) {
@@ -95,8 +129,14 @@ public:
       return found != _constraints.end();
    }
 
+   std::unordered_map<RooAbsArg *, std::size_t> const &prodPdfsWithConstraints() const
+   {
+      return _prodPdfsWithConstraints;
+   }
+
 private:
    std::unordered_set<DataKey> _constraints;
+   std::unordered_map<RooAbsArg *, std::size_t> _prodPdfsWithConstraints;
    ServerLists _serverLists;
    std::map<std::pair<DataKey, DataKey>, bool> _results;
 };
@@ -161,8 +201,9 @@ void treeNodeServerListAndNormSets(const RooAbsArg &arg, RooAbsCollection &list,
    }
 }
 
-std::vector<std::unique_ptr<RooAbsArg>>
-unfoldIntegrals(RooAbsArg const &topNode, RooArgSet const &normSet, std::unordered_map<DataKey, RooArgSet *> &normSets)
+std::vector<std::unique_ptr<RooAbsArg>> unfoldIntegrals(RooAbsArg const &topNode, RooArgSet const &normSet,
+                                                        std::unordered_map<DataKey, RooArgSet *> &normSets,
+                                                        RooArgSet &replacedArgs)
 {
    std::vector<std::unique_ptr<RooAbsArg>> newNodes;
 
@@ -192,10 +233,45 @@ unfoldIntegrals(RooAbsArg const &topNode, RooArgSet const &normSet, std::unorder
       item.second = actualNormSet;
    }
 
+   // Function to `oldArg` with `newArg` in the computation graph.
+   auto replaceArg = [&](RooAbsArg &newArg, RooAbsArg const &oldArg) {
+      const std::string attrib = std::string("ORIGNAME:") + oldArg.GetName();
+
+      newArg.setAttribute(attrib.c_str());
+      newArg.setStringAttribute("_replaced_arg", oldArg.GetName());
+
+      RooArgList newServerList{newArg};
+
+      RooArgList originalClients;
+      for (auto *client : oldArg.clients()) {
+         originalClients.add(*client);
+      }
+      for (auto *client : originalClients) {
+         if (!nodes.containsInstance(*client))
+            continue;
+         if (dynamic_cast<RooAbsCachedPdf *>(client))
+            continue;
+         client->redirectServers(newServerList, false, true);
+      }
+      replacedArgs.add(oldArg);
+
+      newArg.setAttribute(attrib.c_str(), false);
+   };
+
+   // Replaces the RooProdPdfs that were used to wrap constraints with the actual pdf.
    for (RooAbsArg *node : nodes) {
+      if (auto prodPdf = dynamic_cast<RooProdPdf *>(node)) {
+         auto found = checker.prodPdfsWithConstraints().find(prodPdf);
+         if (found != checker.prodPdfsWithConstraints().end()) {
+            replaceArg(prodPdf->pdfList()[found->second], *prodPdf);
+         }
+      }
+   }
 
+   // Replace all pdfs that need to be normalized with a pdf wrapper that
+   // applies the right normalization.
+   for (RooAbsArg *node : nodes) {
       if (auto pdf = dynamic_cast<RooAbsPdf *>(node)) {
-
          RooArgSet const &currNormSet = *normSets.at(pdf);
 
          if (currNormSet.empty())
@@ -209,31 +285,10 @@ unfoldIntegrals(RooAbsArg const &topNode, RooArgSet const &normSet, std::unorder
 
          if (pdf->selfNormalized() && !dynamic_cast<RooAbsCachedPdf *>(pdf))
             continue;
-         if (pdf->getAttribute("_integral_unfolded"))
-            continue;
-
-         pdf->setAttribute("_integral_unfolded", true);
-
-         RooArgList originalClients;
-         for (auto *client : pdf->clients()) {
-            originalClients.add(*client);
-         }
 
          auto normalizedPdf = std::make_unique<RooNormalizedPdf>(*pdf, currNormSet);
 
-         normalizedPdf->setAttribute((std::string("ORIGNAME:") + pdf->GetName()).c_str());
-         normalizedPdf->setStringAttribute("_normalized_pdf", pdf->GetName());
-
-         RooArgList newServerList{*normalizedPdf};
-         for (auto *client : originalClients) {
-            if (!nodes.containsInstance(*client))
-               continue;
-            if (dynamic_cast<RooAbsCachedPdf *>(client))
-               continue;
-            client->redirectServers(newServerList, false, true);
-         }
-
-         normalizedPdf->setAttribute((std::string("ORIGNAME:") + pdf->GetName()).c_str(), false);
+         replaceArg(*normalizedPdf, *pdf);
 
          newNodes.emplace_back(std::move(normalizedPdf));
       }
@@ -242,26 +297,27 @@ unfoldIntegrals(RooAbsArg const &topNode, RooArgSet const &normSet, std::unorder
    return newNodes;
 }
 
-void foldIntegrals(RooAbsArg const &topNode)
+void foldIntegrals(RooAbsArg const &topNode, RooArgSet &replacedArgs)
 {
    RooArgSet nodes;
    topNode.treeNodeServerList(&nodes);
 
    for (RooAbsArg *normalizedPdf : nodes) {
 
-      if (normalizedPdf->getStringAttribute("_normalized_pdf")) {
+      if (auto const &replacedArgName = normalizedPdf->getStringAttribute("_replaced_arg")) {
 
-         auto pdf = &nodes[normalizedPdf->getStringAttribute("_normalized_pdf")];
+         auto pdf = &replacedArgs[replacedArgName];
 
          pdf->setAttribute((std::string("ORIGNAME:") + normalizedPdf->GetName()).c_str());
-         pdf->setAttribute("_integral_unfolded", false);
 
          RooArgList newServerList{*pdf};
          for (auto *client : normalizedPdf->clients()) {
-            if (!nodes.containsInstance(*client))
-               continue;
             client->redirectServers(newServerList, false, true);
          }
+
+         pdf->setAttribute((std::string("ORIGNAME:") + normalizedPdf->GetName()).c_str(), false);
+
+         normalizedPdf->setStringAttribute("_replaced_arg", nullptr);
       }
    }
 }
@@ -277,15 +333,22 @@ void foldIntegrals(RooAbsArg const &topNode)
 /// graph itself, rewiring the existing RooAbsArgs. When the unfolder goes out
 /// of scope, all changes to the computation graph will be reverted.
 ///
+/// It also performs some other optimizations of the computation graph that are
+/// reverted when the object goes out of scope:
+///
+///   1. Replacing RooProdPdfs that were used to bring constraints into the
+///      likelihood with the actual pdf that is not a constraint.
+///
 /// Note that for evaluation, the original topNode should not be used anymore,
 /// because if it is a pdf there is now a new normalized pdf wrapping it,
 /// serving as the new top node. This normalized top node can be retreived by
 /// NormalizationIntegralUnfolder::arg().
 
 RooFit::NormalizationIntegralUnfolder::NormalizationIntegralUnfolder(RooAbsArg const &topNode, RooArgSet const &normSet)
-   : _topNodeWrapper{std::make_unique<RooAddition>("_dummy", "_dummy", RooArgList{topNode})}
+   : _topNodeWrapper{std::make_unique<RooAddition>("_dummy", "_dummy", RooArgList{topNode})}, _normSetWasEmpty{
+                                                                                                 normSet.empty()}
 {
-   auto ownedArgs = unfoldIntegrals(*_topNodeWrapper, normSet, _normSets);
+   auto ownedArgs = unfoldIntegrals(*_topNodeWrapper, normSet, _normSets, _replacedArgs);
    for (std::unique_ptr<RooAbsArg> &arg : ownedArgs) {
       _topNodeWrapper->addOwnedComponents(std::move(arg));
    }
@@ -294,7 +357,12 @@ RooFit::NormalizationIntegralUnfolder::NormalizationIntegralUnfolder(RooAbsArg c
 
 RooFit::NormalizationIntegralUnfolder::~NormalizationIntegralUnfolder()
 {
-   foldIntegrals(*_topNodeWrapper);
+   // If there was no normalization set to compile the computation graph for,
+   // we also don't need to fold the integrals back in.
+   if (_normSetWasEmpty)
+      return;
+
+   foldIntegrals(*_topNodeWrapper, _replacedArgs);
 
    for (auto &item : _normSets) {
       delete item.second;
