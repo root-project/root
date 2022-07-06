@@ -49,6 +49,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/GraphUtils.hxx
     ROOT/RDF/HistoModels.hxx
     ROOT/RDF/InterfaceUtils.hxx
+    ROOT/RDF/InternalUtils.hxx
     ROOT/RDF/RActionBase.hxx
     ROOT/RDF/RAction.hxx
     ROOT/RDF/RActionImpl.hxx
@@ -101,6 +102,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RDFGraphUtils.cxx
     src/RDFHistoModels.cxx
     src/RDFInterfaceUtils.cxx
+    src/RDFInternalUtils.cxx
     src/RDFUtils.cxx
     src/RDFHelpers.cxx
     src/RFilterBase.cxx
