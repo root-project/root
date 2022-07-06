@@ -11,7 +11,7 @@
    m.DrawMarker(0.1,0.1);
    TArc a;
    a.SetFillStyle(0);
-   a.SetLineColor(kBlue); a->SetLineStyle(3);
+   a.SetLineColor(kBlue); a.SetLineStyle(3);
    a.DrawArc(0.1, 0.1, 0.2, 0.,45.,"only");
    auto *tt = new TText(0.1,0.1,"Text angle is 45 degrees");
    tt->SetTextAlign(11); tt->SetTextSize(0.1);
