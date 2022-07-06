@@ -275,30 +275,36 @@ void TPaveText::EditText()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get Pointer to line number in this pavetext.
+/// Ignore any TLine or TBox, they are not accounted
 
 TText *TPaveText::GetLine(Int_t number) const
 {
-   TText *line;
    TIter next(fLines);
    Int_t nlines = 0;
-   while ((line = (TText*) next())) {
-      if (nlines == number) return line;
-      nlines++;
+   while (auto obj = next()) {
+      if (!obj->InheritsFrom(TText::Class()))
+         continue;
+
+      if (nlines++ == number)
+         return (TText *) obj;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get Pointer to first containing string text in this pavetext.
+/// Ignore any TLine or TBox, they are not accounted
 
 TText *TPaveText::GetLineWith(const char *text) const
 {
-   TText *line;
+   if (!text)
+      return nullptr;
    TIter next(fLines);
-   while ((line = (TText*) next())) {
-      if (strstr(line->GetTitle(),text)) return line;
+   while (auto obj = next()) {
+      if (obj->InheritsFrom(TText::Class()) && strstr(obj->GetTitle(), text))
+         return (TText *) obj;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -306,9 +312,9 @@ TText *TPaveText::GetLineWith(const char *text) const
 
 TObject *TPaveText::GetObject(Double_t &ymouse, Double_t &yobj) const
 {
-   if (!fLines) return 0;
+   if (!fLines) return nullptr;
    Int_t nlines = GetSize();
-   if (nlines == 0) return 0;
+   if (nlines == 0) return nullptr;
 
    // Evaluate text size as a function of the number of lines
 
@@ -321,29 +327,26 @@ TObject *TPaveText::GetObject(Double_t &ymouse, Double_t &yobj) const
    // Iterate over all lines
    // Copy pavetext attributes to line attributes if line attributes not set
    dy = fY2 - fY1;
-   TObject *line;
-   TText *linet;
-   TLine *linel;
-   TBox  *lineb;
    TIter next(fLines);
-   while ((line = (TObject*) next())) {
-   // Next primitive is a line
+   while (auto line = next()) {
+      // Next primitive is a line
       if (line->IsA() == TLine::Class()) {
-         linel = (TLine*)line;
+         auto linel = (TLine *)line;
          y1 = linel->GetY1();   if (y1 == 0) y1 = ytext; else y1 = fY1 + y1*dy;
          if (TMath::Abs(y1-ymouse) < 0.2*yspace) {yobj = y1; return line;}
          continue;
       }
-   // Next primitive is a box
+      // Next primitive is a box
       if (line->IsA() == TBox::Class()) {
-         lineb = (TBox*)line;
-         y1 = lineb->GetY1();   if (y1 == 0) y1 = ytext; else y1 = fY1 + y1*dy;
+         auto lineb = (TBox *)line;
+         y1 = lineb->GetY1();
+         if (y1 == 0) y1 = ytext; else y1 = fY1 + y1*dy;
          if (TMath::Abs(y1-ymouse) < 0.4*yspace) {yobj = y1; return line;}
          continue;
       }
-   // Next primitive is a text
+      // Next primitive is a text
       if (line->InheritsFrom(TText::Class())) {
-         linet = (TText*)line;
+         auto linet = (TText *)line;
          ytext -= yspace;
          Double_t yl     = linet->GetY();
          if (yl > 0 && yl <1) {
@@ -357,7 +360,7 @@ TObject *TPaveText::GetObject(Double_t &ymouse, Double_t &yobj) const
          if (TMath::Abs(y-ymouse) < 0.5*yspace) {yobj = y; return line;}
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -367,8 +370,7 @@ Int_t TPaveText::GetSize() const
 {
    Int_t nlines = 0;
    TIter next(fLines);
-   TObject *line;
-   while ((line = (TObject*) next())) {
+   while (auto line = next()) {
       if (line->InheritsFrom(TText::Class())) nlines++;
    }
    return nlines;
