@@ -30,11 +30,11 @@ class TCollection;
 
 class TPolyMarker : public TObject, public TAttMarker {
 protected:
-   Int_t       fN;            ///< Number of points
-   Int_t       fLastPoint;    ///< The index of the last filled point
-   Double_t   *fX;            ///<[fN] Array of X coordinates
-   Double_t   *fY;            ///<[fN] Array of Y coordinates
-   TString     fOption;       ///< Options
+   Int_t       fN{0};             ///< Number of points
+   Int_t       fLastPoint{-1};    ///< The index of the last filled point
+   Double_t   *fX{nullptr};       ///<[fN] Array of X coordinates
+   Double_t   *fY{nullptr};       ///<[fN] Array of Y coordinates
+   TString     fOption;           ///< Options
 
    TPolyMarker& operator=(const TPolyMarker&);
 
