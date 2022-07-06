@@ -372,7 +372,6 @@ TMathText::~TMathText(void)
 TMathText::TMathText(const TMathText &text)
    : TText(text), TAttFill(text)
 {
-   ((TMathText &)text).Copy(*this);
    fRenderer = new TMathTextRenderer(this);
 }
 
@@ -382,8 +381,10 @@ TMathText::TMathText(const TMathText &text)
 TMathText &TMathText::operator=(const TMathText &rhs)
 {
    if (this != &rhs) {
-      TText::operator    = (rhs);
-      TAttFill::operator = (rhs);
+      TText::operator=(rhs);
+      TAttFill::operator=(rhs);
+      delete fRenderer;
+      fRenderer = new TMathTextRenderer(this);
    }
    return *this;
 }
@@ -393,9 +394,12 @@ TMathText &TMathText::operator=(const TMathText &rhs)
 
 void TMathText::Copy(TObject &obj) const
 {
-   ((TMathText &)obj).fRenderer = fRenderer;
-   TText::Copy(obj);
-   TAttFill::Copy((TAttFill &)obj);
+   TMathText &tgt = (TMathText &)obj;
+   delete tgt.fRenderer;
+   TText::Copy(tgt);
+   TAttFill::Copy(tgt);
+   tgt.fRenderer = new TMathTextRenderer(&tgt);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
