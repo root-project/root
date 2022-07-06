@@ -124,15 +124,13 @@ TPaveText::~TPaveText()
 ////////////////////////////////////////////////////////////////////////////////
 /// pavetext copy constructor.
 
-TPaveText::TPaveText(const TPaveText &pavetext) : TPave(), TAttText()
+TPaveText::TPaveText(const TPaveText &pavetext) : TPave(pavetext), TAttText(pavetext)
 {
-   TBufferFile b(TBuffer::kWrite);
-   TPaveText *p = (TPaveText*)(&pavetext);
-   p->Streamer(b);
-   b.SetReadMode();
-   b.SetBufferOffset(0);
-   fLines = nullptr;
-   Streamer(b);
+   fLabel = pavetext.fLabel;
+   fLongest = pavetext.fLongest;
+   fMargin = pavetext.fMargin;
+   if (pavetext.fLines)
+      fLines = (TList *) pavetext.fLines->Clone();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -140,13 +138,19 @@ TPaveText::TPaveText(const TPaveText &pavetext) : TPave(), TAttText()
 
 TPaveText& TPaveText::operator=(const TPaveText& pt)
 {
-   if(this!=&pt) {
+   if(this != &pt) {
       TPave::operator=(pt);
       TAttText::operator=(pt);
-      fLabel=pt.fLabel;
-      fLongest=pt.fLongest;
-      fMargin=pt.fMargin;
-      fLines=pt.fLines;
+      fLabel = pt.fLabel;
+      fLongest = pt.fLongest;
+      fMargin = pt.fMargin;
+      if (fLines) {
+         fLines->Delete();
+         delete fLines;
+         fLines = nullptr;
+      }
+      if (pt.fLines)
+         fLines = (TList *)pt.fLines->Clone();
    }
    return *this;
 }
