@@ -637,10 +637,9 @@ void TStyle::Copy(TObject &obj) const
    ((TStyle&)obj).fLegendFont       = fLegendFont;
    ((TStyle&)obj).fLegendTextSize   = fLegendTextSize;
 
-   Int_t i;
-   for (i=0;i<30;i++) {
+   for (Int_t i=0;i<30;i++)
       ((TStyle&)obj).fLineStyle[i]     = fLineStyle[i];
-   }
+
    ((TStyle&)obj).fHeaderPS       = fHeaderPS;
    ((TStyle&)obj).fTitlePS        = fTitlePS;
    ((TStyle&)obj).fLineScalePS    = fLineScalePS;
@@ -1543,9 +1542,8 @@ void TStyle::SetOptFit(Int_t mode)
 {
    fOptFit = mode;
    if (gPad) {
-      TObject *obj;
       TIter next(gPad->GetListOfPrimitives());
-      while ((obj = next())) {
+      while (auto obj = next()) {
          TObject *stats = obj->FindObject("stats");
          if (stats) stats->SetBit(kTakeStyle);
       }
@@ -1591,9 +1589,8 @@ void TStyle::SetOptStat(Int_t mode)
 {
    fOptStat = mode;
    if (gPad) {
-      TObject *obj;
       TIter next(gPad->GetListOfPrimitives());
-      while ((obj = next())) {
+      while (auto obj = next()) {
          TObject *stats = obj->FindObject("stats");
          if (stats) stats->SetBit(kTakeStyle);
       }
