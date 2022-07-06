@@ -84,7 +84,12 @@
 #pragma link C++ class RooCmdArg+ ;
 #pragma link C++ class RooCmdConfig+ ;
 #pragma link C++ class RooConstVar+ ;
-#pragma read sourceClass="RooConstVar" targetClass="RooConstVar" version="[1]" source="Double_t _value" target="" code="{ newObj->changeVal(onfile._value); }"
+#pragma read sourceClass="RooConstraintSum" targetClass="RooConstraintSum" version="[3]"   \
+             source="RooSetProxy _paramSet" target="_paramSet" code="{                     \
+                 for(RooAbsArg * arg : onfile._paramSet) {                                 \
+                    _paramSet.add(*arg);                                                   \
+                 }                                                                         \
+             }"
 #pragma link C++ class RooConvCoefVar+ ;
 #pragma link C++ class RooConvGenContext+ ;
 #pragma link C++ class RooConvIntegrandBinding+ ;
