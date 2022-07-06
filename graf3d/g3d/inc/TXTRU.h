@@ -58,16 +58,16 @@ protected:
    void            CheckOrdering();
    virtual void    SetPoints(Double_t *points) const;
 
-   Int_t       fNxy;       // number of x-y points in the cross section
-   Int_t       fNxyAlloc;  // number of x-y points allocated
-   Int_t       fNz;        // number of z planes
-   Int_t       fNzAlloc;   // number of z planes allocated
-   Float_t    *fXvtx;      //[fNxyAlloc] array of x positions
-   Float_t    *fYvtx;      //[fNxyAlloc] array of y positions
-   Float_t    *fZ;         //[fNzAlloc] array of z planes
-   Float_t    *fScale;     //[fNzAlloc] array of scale factors (for each z)
-   Float_t    *fX0;        //[fNzAlloc] array of x offsets (for each z)
-   Float_t    *fY0;        //[fNzAlloc] array of y offsets (for each z)
+   Int_t       fNxy{0};             // number of x-y points in the cross section
+   Int_t       fNxyAlloc{0};        // number of x-y points allocated
+   Int_t       fNz{0};              // number of z planes
+   Int_t       fNzAlloc{0};         // number of z planes allocated
+   Float_t    *fXvtx{nullptr};      //[fNxyAlloc] array of x positions
+   Float_t    *fYvtx{nullptr};      //[fNxyAlloc] array of y positions
+   Float_t    *fZ{nullptr};         //[fNzAlloc] array of z planes
+   Float_t    *fScale{nullptr};     //[fNzAlloc] array of scale factors (for each z)
+   Float_t    *fX0{nullptr};        //[fNzAlloc] array of x offsets (for each z)
+   Float_t    *fY0{nullptr};        //[fNzAlloc] array of y offsets (for each z)
 
    enum EXYChecked {kUncheckedXY, kMalformedXY,
                     kConvexCCW,   kConvexCW,
@@ -76,13 +76,13 @@ protected:
                     kConvexIncZ,  kConvexDecZ,
                     kConcaveIncZ, kConcaveDecZ};
 
-   EXYChecked  fPolygonShape;   // CCW vs. CW, convex vs. concave
-   EZChecked   fZOrdering;      // increasing or decreasing
+   EXYChecked  fPolygonShape{kUncheckedXY};   // CCW vs. CW, convex vs. concave
+   EZChecked   fZOrdering{kUncheckedZ};      // increasing or decreasing
 
    // Concave polygon division (into convex polygons) is not yet supported
    // but if split one gets correct solid rendering but extra lines
    // in wire mode; if not split....the converse.
-   Bool_t      fSplitConcave;
+   Bool_t      fSplitConcave{kFALSE};
 
 private:
    void DumpPoints(int npoints, float *pointbuff) const;

@@ -74,12 +74,7 @@ and thus it is left to the user to avoid this mistake.
 /// TXTRU shape - default constructor
 
 TXTRU::TXTRU()
-   : fNxy(0), fNxyAlloc(0), fNz(0), fNzAlloc(0), fXvtx(0), fYvtx(0),
-     fZ(0), fScale(0), fX0(0), fY0(0)
 {
-   fPolygonShape  = kUncheckedXY;
-   fZOrdering     = kUncheckedZ;
-   fSplitConcave  = kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -93,21 +88,6 @@ TXTRU::TXTRU(const char *name, const char *title, const char *material,
    : TShape (name,title,material)
 {
    // start in a known state even if "Error" is encountered
-   fNxy      = 0;
-   fNxyAlloc = 0;
-   fNz       = 0;
-   fNzAlloc  = 0;
-   fXvtx     = 0;
-   fYvtx     = 0;
-   fZ        = 0;
-   fScale    = 0;
-   fX0       = 0;
-   fY0       = 0;
-
-   fPolygonShape  = kUncheckedXY;
-   fZOrdering     = kUncheckedZ;
-   fSplitConcave  = kFALSE;
-
    if ( nxy < 3 ) {
       Error(name,"number of x-y points for %s must be at least three!",name);
       return;
@@ -123,10 +103,9 @@ TXTRU::TXTRU(const char *name, const char *title, const char *material,
    fXvtx      = new Float_t [fNxyAlloc];
    fYvtx      = new Float_t [fNxyAlloc];
    // zero out the vertex points
-   Int_t i = 0;
-   for (i = 0; i < fNxyAlloc; i++) {
-      fXvtx[i] = 0;
-      fYvtx[i] = 0;
+   for (Int_t i = 0; i < fNxyAlloc; i++) {
+      fXvtx[i] = 0.;
+      fYvtx[i] = 0.;
    }
 
    // allocate space for Nz sections
@@ -137,12 +116,11 @@ TXTRU::TXTRU(const char *name, const char *title, const char *material,
    fX0        = new Float_t [fNzAlloc];
    fY0        = new Float_t [fNzAlloc];
    // zero out the z points
-   Int_t j = 0;
-   for (j = 0; j < fNzAlloc; j++) {
-      fZ[j]     = 0;
-      fScale[j] = 0;
-      fX0[j]    = 0;
-      fY0[j]    = 0;
+   for (Int_t j = 0; j < fNzAlloc; j++) {
+      fZ[j]     = 0.;
+      fScale[j] = 0.;
+      fX0[j]    = 0.;
+      fY0[j]    = 0.;
    }
 
 }
@@ -152,9 +130,7 @@ TXTRU::TXTRU(const char *name, const char *title, const char *material,
 
 TXTRU::TXTRU(const TXTRU &xtru) : TShape(xtru)
 {
-   // patterned after other ROOT objects
-
-   ((TXTRU&)xtru).Copy(*this);
+   xtru.Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -164,8 +140,8 @@ TXTRU::~TXTRU()
 {
    if (fXvtx) delete [] fXvtx;
    if (fYvtx) delete [] fYvtx;
-   fXvtx     = 0;
-   fYvtx     = 0;
+   fXvtx     = nullptr;
+   fYvtx     = nullptr;
    fNxy      = 0;
    fNxyAlloc = 0;
 
@@ -173,10 +149,10 @@ TXTRU::~TXTRU()
    if (fScale) delete [] fScale;
    if (fX0)    delete [] fX0;
    if (fY0)    delete [] fY0;
-   fZ        = 0;
-   fScale    = 0;
-   fX0       = 0;
-   fY0       = 0;
+   fZ        = nullptr;
+   fScale    = nullptr;
+   fX0       = nullptr;
+   fY0       = nullptr;
    fNz       = 0;
    fNzAlloc  = 0;
 
@@ -190,19 +166,8 @@ TXTRU::~TXTRU()
 TXTRU& TXTRU::operator=(const TXTRU &rhs)
 {
    // protect against self-assignment
-   if (this == &rhs) return *this;
-
-   if (fNxyAlloc) {
-      delete [] fXvtx;
-      delete [] fYvtx;
-   }
-   if (fNzAlloc) {
-      delete [] fZ;
-      delete [] fScale;
-      delete [] fX0;
-      delete [] fY0;
-   }
-   ((TXTRU&)rhs).Copy(*this);
+   if (this != &rhs)
+      rhs.Copy(*this);
 
    return *this;
 }
@@ -212,35 +177,40 @@ TXTRU& TXTRU::operator=(const TXTRU &rhs)
 
 void TXTRU::Copy(TObject &obj) const
 {
-   // patterned after other ROOT objects
+   auto &tgt = static_cast<TXTRU &>(obj);
+
+   delete [] tgt.fXvtx;  tgt.fXvtx = nullptr;
+   delete [] tgt.fYvtx;  tgt.fYvtx = nullptr;
+   delete [] tgt.fZ;     tgt.fZ = nullptr;
+   delete [] tgt.fScale; tgt.fScale = nullptr;
+   delete [] tgt.fX0;    tgt.fX0 = nullptr;
+   delete [] tgt.fY0;    tgt.fY0 = nullptr;
 
    TObject::Copy(obj);
-   ((TXTRU&)obj).fNxy       = fNxy;
-   ((TXTRU&)obj).fNxyAlloc  = fNxyAlloc;
-   ((TXTRU&)obj).fXvtx = new Float_t [fNxyAlloc];
-   ((TXTRU&)obj).fYvtx = new Float_t [fNxyAlloc];
-   Int_t i = 0;
-   for (i = 0; i < fNxyAlloc; i++) {
-      ((TXTRU&)obj).fXvtx[i] = fXvtx[i];
-      ((TXTRU&)obj).fYvtx[i] = fYvtx[i];
+   tgt.fNxy       = fNxy;
+   tgt.fNxyAlloc  = fNxyAlloc;
+   tgt.fXvtx = new Float_t [fNxyAlloc];
+   tgt.fYvtx = new Float_t [fNxyAlloc];
+   for (Int_t i = 0; i < fNxyAlloc; i++) {
+      tgt.fXvtx[i] = fXvtx[i];
+      tgt.fYvtx[i] = fYvtx[i];
    }
 
-   ((TXTRU&)obj).fNz       = fNz;
-   ((TXTRU&)obj).fNzAlloc  = fNzAlloc;
-   ((TXTRU&)obj).fZ     = new Float_t [fNzAlloc];
-   ((TXTRU&)obj).fScale = new Float_t [fNzAlloc];
-   ((TXTRU&)obj).fX0    = new Float_t [fNzAlloc];
-   ((TXTRU&)obj).fY0    = new Float_t [fNzAlloc];
-   Int_t j = 0;
-   for (j = 0; j < fNzAlloc; j++) {
-      ((TXTRU&)obj).fZ[j]     = fZ[j];
-      ((TXTRU&)obj).fScale[j] = fScale[j];
-      ((TXTRU&)obj).fX0[j]    = fX0[j];
-      ((TXTRU&)obj).fY0[j]    = fY0[j];
+   tgt.fNz       = fNz;
+   tgt.fNzAlloc  = fNzAlloc;
+   tgt.fZ        = new Float_t [fNzAlloc];
+   tgt.fScale    = new Float_t [fNzAlloc];
+   tgt.fX0       = new Float_t [fNzAlloc];
+   tgt.fY0       = new Float_t [fNzAlloc];
+   for (Int_t j = 0; j < fNzAlloc; j++) {
+      tgt.fZ[j]     = fZ[j];
+      tgt.fScale[j] = fScale[j];
+      tgt.fX0[j]    = fX0[j];
+      tgt.fY0[j]    = fY0[j];
    }
 
-   ((TXTRU&)obj).fPolygonShape = fPolygonShape;
-   ((TXTRU&)obj).fZOrdering    = fZOrdering;
+   tgt.fPolygonShape = fPolygonShape;
+   tgt.fZOrdering    = fZOrdering;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
