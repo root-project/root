@@ -363,6 +363,7 @@ TMathText::TMathText(Double_t x, Double_t y, const char *text)
 
 TMathText::~TMathText(void)
 {
+   delete fRenderer;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
