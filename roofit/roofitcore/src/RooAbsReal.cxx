@@ -4343,14 +4343,8 @@ RooFitResult* RooAbsReal::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdL
 ///
 /// \param arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8 ordered arguments
 ///
-/// The following named arguments are supported
-///
-///  | | Options to control construction of the \f$ \chi^2 \f$
-///  |-|-----------------------------------------
-///  | `DataError(RooAbsData::ErrorType)`  | Choose between Poisson errors and Sum-of-weights errors
-///  | `NumCPU(Int_t)`                     | Activate parallel processing feature on N processes
-///  | `Range()`                           | Calculate \f$ \chi^2 \f$ only in selected region
-///  | `IntegrateBins()` | Integrate PDF within each bin. This sets the desired precision.
+/// The list of supported command arguments is given in the documentation for
+///     RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataHist& hdata, const RooCmdArg&,const RooCmdArg&,const RooCmdArg&, const RooCmdArg&,const RooCmdArg&,const RooCmdArg&, const RooCmdArg&,const RooCmdArg&,const RooCmdArg&).
 ///
 /// \param data Histogram with data
 /// \return \f$ \chi^2 \f$ variable
@@ -4402,7 +4396,7 @@ RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooLinkedList& cmdLi
 /// be well defined.
 ///
 /// <table>
-/// <tr><th><th> Options to control construction of the \f$ \chi^2 \f$
+/// <tr><th><th> Options to control construction of the chi-square
 /// <tr><td> `YVar(RooRealVar& yvar)`          <td>  Designate given column in dataset as Y value
 /// <tr><td> `Integrate(bool flag)`          <td>  Integrate function over range specified by X errors
 ///                                    rather than take value at bin center.
