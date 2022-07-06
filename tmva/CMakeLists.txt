@@ -4,6 +4,8 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
+find_package(LAPACK)
+
 add_subdirectory(tmva)
 add_subdirectory(tmvagui)
 

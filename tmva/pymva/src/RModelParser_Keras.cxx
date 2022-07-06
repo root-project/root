@@ -226,8 +226,9 @@ std::unique_ptr<ROperator> MakeKerasDense(PyObject* fLayer){
 /// extracted and appropriate function for adding the function is called.
 std::unique_ptr<ROperator> MakeKerasActivation(PyObject* fLayer){
       PyObject* fAttributes=PyDict_GetItemString(fLayer,"layerAttributes");
-      std::string fLayerActivation = PyStringAsString(PyDict_GetItemString(fAttributes,"activation"));
-
+      PyObject* fPActivation = PyDict_GetItemString(fAttributes,"activation");
+      std::string fLayerActivation = PyStringAsString(PyObject_GetAttrString(fPActivation,"__name__"));
+      
       auto findLayer = mapKerasLayer.find(fLayerActivation);
       if(findLayer == mapKerasLayer.end()){
          throw std::runtime_error("TMVA::SOFIE - Parsing Keras Activation layer " + fLayerActivation + " is not yet supported");
