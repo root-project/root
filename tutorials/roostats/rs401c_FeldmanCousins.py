@@ -26,7 +26,7 @@ t.Start()
 x = ROOT.RooRealVar("x", "", 1, 0, 50)
 mu = ROOT.RooRealVar("mu", "", 2.5, 0, 15)  # with a limit on mu>=0
 b = ROOT.RooConstVar("b", "", 3.0)
-mean = ROOT.RooAddition("mean", "", ROOT.RooArgList(mu, b))
+mean = ROOT.RooAddition("mean", "", [mu, b])
 pois = ROOT.RooPoisson("pois", "", x, mean)
 parameters = {mu}
 
