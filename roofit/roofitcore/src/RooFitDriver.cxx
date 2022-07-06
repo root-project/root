@@ -705,9 +705,9 @@ void RooFitDriver::setOperMode(RooAbsArg *arg, RooAbsArg::OperMode opMode)
    }
 }
 
-RooAbsReal const &RooFitDriver::topNode() const
+RooAbsReal &RooFitDriver::topNode() const
 {
-   return static_cast<RooAbsReal const &>(_integralUnfolder->arg());
+   return static_cast<RooAbsReal &>(_integralUnfolder->arg());
 }
 
 } // namespace Experimental
