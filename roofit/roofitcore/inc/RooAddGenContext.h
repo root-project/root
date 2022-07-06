@@ -18,24 +18,19 @@
 
 #include "RooAbsGenContext.h"
 #include "RooArgSet.h"
-#include <vector>
 #include "RooAddPdf.h"
 #include "RooAddModel.h"
 
-class RooAddPdf;
-class RooAddModel;
+#include <vector>
+
 class RooDataSet;
-class RooRealIntegral;
-class RooAcceptReject;
-class TRandom;
 
 class RooAddGenContext : public RooAbsGenContext {
 public:
-  RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
-                   const RooArgSet* auxProto=0, bool _verbose= false);
-  RooAddGenContext(const RooAddModel &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
-                   const RooArgSet* auxProto=0, bool _verbose= false);
-  ~RooAddGenContext() override;
+  RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars, const RooDataSet *prototype=nullptr,
+                   const RooArgSet* auxProto=nullptr, bool _verbose= false);
+  RooAddGenContext(const RooAddModel &model, const RooArgSet &vars, const RooDataSet *prototype=nullptr,
+                   const RooArgSet* auxProto=nullptr, bool _verbose= false);
 
   void setProtoDataOrder(Int_t* lut) override ;
 
@@ -51,15 +46,15 @@ protected:
 
   RooAddGenContext(const RooAddGenContext& other) ;
 
-  const RooArgSet* _vars ;
-  RooArgSet* _pdfSet ;              ///<  Set owned all nodes of internal clone of p.d.f
+  std::unique_ptr<RooArgSet> _vars ;
+  std::unique_ptr<RooArgSet> _pdfSet ;              ///<  Set owned all nodes of internal clone of p.d.f
   RooAbsPdf *_pdf ;                 ///<  Pointer to cloned p.d.f
-  std::vector<RooAbsGenContext*> _gcList ;  ///<  List of component generator contexts
+  std::vector<std::unique_ptr<RooAbsGenContext>> _gcList ;  ///<  List of component generator contexts
   Int_t  _nComp ;                   ///<  Number of PDF components
-  double* _coefThresh ;           ///<[_nComp] Array of coefficient thresholds
+  std::vector<double> _coefThresh ;           ///<[_nComp] Array of coefficient thresholds
   bool _isModel ;                 ///< Are we generating from a RooAddPdf or a RooAddModel
-  RooAddModel::CacheElem* _mcache ; ///<! RooAddModel cache element
-  RooAddPdf::CacheElem* _pcache ;   ///<! RooAddPdf cache element
+  RooAddModel::CacheElem* _mcache = nullptr; ///<! RooAddModel cache element
+  RooAddPdf::CacheElem* _pcache = nullptr;   ///<! RooAddPdf cache element
 
   ClassDefOverride(RooAddGenContext,0) // Specialized context for generating a dataset from a RooAddPdf
 };
