@@ -404,7 +404,7 @@ class TreeHeadNode(HeadNode):
                      "names of subtrees: %s\n"
                      "input files: %s\n", self.maintreename, self.subtreenames, self.inputfiles)
 
-        if logger.isEnabledFor(logging.WARNING):
+        if logger.isEnabledFor(logging.DEBUG):
             # Compute clusters and entries of the first tree in the dataset.
             # This will call once TFile::Open, but we pay this cost to get an estimate
             # on whether the number of requested partitions is reasonable.
@@ -416,7 +416,7 @@ class TreeHeadNode(HeadNode):
             if entries > 0:
                 partitionsperfile = self.npartitions / len(self.inputfiles)
                 if partitionsperfile > len(clusters):
-                    logger.warning(
+                    logger.debug(
                         "The number of requested partitions could be higher than the maximum amount of "
                         "chunks the dataset can be split in. Some tasks could be doing no work. Consider "
                         "setting the 'npartitions' parameter of the RDataFrame constructor to a lower value.")
