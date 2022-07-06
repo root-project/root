@@ -50,7 +50,6 @@ ClassImp(RooConstraintSum);
 RooConstraintSum::RooConstraintSum(const char* name, const char* title, const RooArgSet& constraintSet, const RooArgSet& normSet, bool takeGlobalObservablesFromData) :
   RooAbsReal(name, title),
   _set1("set1","First set of components",this),
-  _paramSet("paramSet","Set of parameters",this),
   _takeGlobalObservablesFromData{takeGlobalObservablesFromData}
 {
   for (const auto comp : constraintSet) {
@@ -72,7 +71,7 @@ RooConstraintSum::RooConstraintSum(const char* name, const char* title, const Ro
 RooConstraintSum::RooConstraintSum(const RooConstraintSum& other, const char* name) :
   RooAbsReal(other, name), 
   _set1("set1",this,other._set1),
-  _paramSet("paramSet",this,other._paramSet),
+  _paramSet(other._paramSet),
   _takeGlobalObservablesFromData{other._takeGlobalObservablesFromData}
 {
 }
