@@ -21,6 +21,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/ROperator_Conv.hxx
    TMVA/ROperator_Gemm.hxx
    TMVA/ROperator_Relu.hxx
+   TMVA/ROperator_Tanh.hxx
    TMVA/ROperator_LeakyRelu.hxx
    TMVA/ROperator_Reshape.hxx
    TMVA/ROperator_Selu.hxx
