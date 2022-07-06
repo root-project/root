@@ -225,8 +225,8 @@ TLegend::TLegend( Double_t x1, Double_t y1,Double_t x2, Double_t y2,
         :TPave(x1,y1,x2,y2,4,option), TAttText(12,0,1,gStyle->GetLegendFont(),0)
 {
    fPrimitives = new TList;
-   if ( header && strlen(header) > 0) {
-      TLegendEntry *headerEntry = new TLegendEntry( 0, header, "h" );
+   if (header && strlen(header) > 0) {
+      TLegendEntry *headerEntry = new TLegendEntry( nullptr, header, "h" );
       headerEntry->SetTextAlign(0);
       headerEntry->SetTextAngle(0);
       headerEntry->SetTextColor(0);
@@ -258,8 +258,8 @@ TLegend::TLegend( Double_t w, Double_t h, const char *header, Option_t *option)
         :TPave(w,h,w,h,4,option), TAttText(12,0,1,gStyle->GetLegendFont(),0)
 {
    fPrimitives = new TList;
-   if ( header && strlen(header) > 0) {
-      TLegendEntry *headerEntry = new TLegendEntry( 0, header, "h" );
+   if (header && strlen(header) > 0) {
+      TLegendEntry *headerEntry = new TLegendEntry(nullptr, header, "h");
       headerEntry->SetTextAlign(0);
       headerEntry->SetTextAngle(0);
       headerEntry->SetTextColor(0);
@@ -275,18 +275,16 @@ TLegend::TLegend( Double_t w, Double_t h, const char *header, Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
-TLegend::TLegend( const TLegend &legend ) : TPave(legend), TAttText(legend),
-                                            fPrimitives(nullptr)
+TLegend::TLegend(const TLegend &legend) : TPave(legend), TAttText(legend),
+                                           fPrimitives(nullptr)
 {
   if (legend.fPrimitives) {
       fPrimitives = new TList();
-      TListIter it(legend.fPrimitives);
-      while (TLegendEntry *e = (TLegendEntry *)it.Next()) {
-         TLegendEntry *newentry = new TLegendEntry(*e);
-         fPrimitives->Add(newentry);
-      }
+      TIter next(legend.fPrimitives);
+      while (auto entry = (TLegendEntry *) next())
+         fPrimitives->Add(new TLegendEntry(*entry));
    }
-   ((TLegend&)legend).Copy(*this);
+   legend.Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -297,10 +295,20 @@ TLegend& TLegend::operator=(const TLegend &lg)
    if(this!=&lg) {
       TPave::operator=(lg);
       TAttText::operator=(lg);
-      fPrimitives=lg.fPrimitives;
-      fEntrySeparation=lg.fEntrySeparation;
-      fMargin=lg.fMargin;
-      fNColumns=lg.fNColumns;
+      if (fPrimitives) {
+         fPrimitives->Delete();
+         delete fPrimitives;
+         fPrimitives = nullptr;
+      }
+      if (lg.fPrimitives) {
+         fPrimitives = new TList();
+         TIter next(lg.fPrimitives);
+         while (auto entry = (TLegendEntry *) next())
+            fPrimitives->Add(new TLegendEntry(*entry));
+      }
+      fEntrySeparation = lg.fEntrySeparation;
+      fMargin = lg.fMargin;
+      fNColumns = lg.fNColumns;
    }
    return *this;
 }
