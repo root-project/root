@@ -926,8 +926,6 @@ Bool_t RooAbsArg::observableOverlaps(const RooArgSet* nset, const RooAbsArg& tes
 
 void RooAbsArg::setValueDirty(const RooAbsArg* source)
 {
-  _allBatchesDirty = true;
-
   if (_operMode!=Auto || _inhibitDirty) return ;
 
   // Handle no-propagation scenarios first

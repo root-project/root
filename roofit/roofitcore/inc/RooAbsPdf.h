@@ -352,7 +352,6 @@ protected:
   mutable Double_t _rawValue ;
   mutable RooAbsReal* _norm = nullptr; //! Normalization integral (owned by _normMgr)
   mutable RooArgSet const* _normSet = nullptr; //! Normalization set with for above integral
-  inline const RooArgSet* getNormSet() { return _normSet; }
 
   class CacheElem : public RooAbsCacheElement {
   public:
