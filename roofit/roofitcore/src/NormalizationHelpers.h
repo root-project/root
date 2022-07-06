@@ -29,12 +29,14 @@ public:
    NormalizationIntegralUnfolder(RooAbsArg const &topNode, RooArgSet const &normSet);
    ~NormalizationIntegralUnfolder();
 
-   inline RooAbsArg const &arg() const { return *_arg; }
+   inline RooAbsArg &arg() const { return *_arg; }
 
 private:
    std::unique_ptr<RooAbsArg> _topNodeWrapper;
-   RooAbsArg const* _arg = nullptr;
-   std::unordered_map<RooFit::Detail::DataKey, RooArgSet*> _normSets;
+   RooAbsArg *_arg = nullptr;
+   std::unordered_map<RooFit::Detail::DataKey, RooArgSet *> _normSets;
+   RooArgSet _replacedArgs;
+   bool _normSetWasEmpty;
 };
 
 } // namespace RooFit
