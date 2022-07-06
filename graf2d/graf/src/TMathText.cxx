@@ -343,7 +343,7 @@ ClassImp(TMathText);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-TMathText::TMathText(void)
+TMathText::TMathText()
    : TAttFill(0, 1001)
 {
    fRenderer = new TMathTextRenderer(this);
@@ -361,7 +361,7 @@ TMathText::TMathText(Double_t x, Double_t y, const char *text)
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
-TMathText::~TMathText(void)
+TMathText::~TMathText()
 {
    delete fRenderer;
 }
@@ -405,43 +405,33 @@ void TMathText::Copy(TObject &obj) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Render the text.
 
-void TMathText::
-Render(const Double_t x, const Double_t y, const Double_t size,
-      const Double_t angle, const Char_t *t, const Int_t /*length*/)
+void TMathText::Render(const Double_t x, const Double_t y, const Double_t size,
+                       const Double_t angle, const Char_t *t, const Int_t /*length*/)
 {
    const mathtext::math_text_t math_text(t);
-   TMathTextRenderer *renderer = (TMathTextRenderer *)fRenderer;
 
-   renderer->set_parameter(x, y, size, angle);
-   renderer->text(0, 0, math_text);
+   fRenderer->set_parameter(x, y, size, angle);
+   fRenderer->text(0, 0, math_text);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the text bounding box.
 
-void TMathText::
-GetSize(Double_t &x0, Double_t &y0, Double_t &x1, Double_t &y1,
-      const Double_t size, const Double_t angle, const Char_t *t,
-      const Int_t /*length*/)
+void TMathText::GetSize(Double_t &x0, Double_t &y0, Double_t &x1, Double_t &y1,
+                        const Double_t size, const Double_t angle, const Char_t *t,
+                        const Int_t /*length*/)
 {
    const mathtext::math_text_t math_text(t);
-   TMathTextRenderer *renderer = (TMathTextRenderer *)fRenderer;
 
-   renderer->set_parameter(0, 0, size, angle);
+   fRenderer->set_parameter(0, 0, size, angle);
 
-   const mathtext::bounding_box_t bounding_box =
-      renderer->bounding_box(math_text);
-   double x[4];
-   double y[4];
+   const mathtext::bounding_box_t bounding_box = fRenderer->bounding_box(math_text);
+   double x[4], y[4];
 
-   renderer->transform_pad(
-      x[0], y[0], bounding_box.left(), bounding_box.bottom());
-   renderer->transform_pad(
-      x[1], y[1], bounding_box.right(), bounding_box.bottom());
-   renderer->transform_pad(
-      x[2], y[2], bounding_box.right(), bounding_box.top());
-   renderer->transform_pad(
-      x[3], y[3], bounding_box.left(), bounding_box.top());
+   fRenderer->transform_pad(x[0], y[0], bounding_box.left(), bounding_box.bottom());
+   fRenderer->transform_pad(x[1], y[1], bounding_box.right(), bounding_box.bottom());
+   fRenderer->transform_pad(x[2], y[2], bounding_box.right(), bounding_box.top());
+   fRenderer->transform_pad(x[3], y[3], bounding_box.left(), bounding_box.top());
 
    x0 = std::min(std::min(x[0], x[1]), std::min(x[2], x[3]));
    y0 = std::min(std::min(y[0], y[1]), std::min(y[2], y[3]));
@@ -452,21 +442,17 @@ GetSize(Double_t &x0, Double_t &y0, Double_t &x1, Double_t &y1,
 ////////////////////////////////////////////////////////////////////////////////
 /// Alignment.
 
-void TMathText::
-GetAlignPoint(Double_t &x0, Double_t &y0,
-           const Double_t size, const Double_t angle,
-           const Char_t *t, const Int_t /*length*/,
-           const Short_t align)
+void TMathText::GetAlignPoint(Double_t &x0, Double_t &y0,
+                              const Double_t size, const Double_t angle,
+                              const Char_t *t, const Int_t /*length*/,
+                              const Short_t align)
 {
    const mathtext::math_text_t math_text(t);
-   TMathTextRenderer *renderer = (TMathTextRenderer *)fRenderer;
 
-   renderer->set_parameter(0, 0, size, angle);
+   fRenderer->set_parameter(0, 0, size, angle);
 
-   const mathtext::bounding_box_t bounding_box =
-      renderer->bounding_box(math_text);
-   float x = 0;
-   float y = 0;
+   const mathtext::bounding_box_t bounding_box = fRenderer->bounding_box(math_text);
+   float x = 0, y = 0;
 
    Short_t halign = align / 10;
    Short_t valign = align - 10 * halign;
@@ -483,7 +469,7 @@ GetAlignPoint(Double_t &x0, Double_t &y0,
       case 2:   y = bounding_box.vertical_center();   break;
       case 3:   y = bounding_box.top();               break;
    }
-   renderer->transform_pad(x0, y0, x, y);
+   fRenderer->transform_pad(x0, y0, x, y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
