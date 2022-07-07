@@ -42,8 +42,8 @@ public:
       }
       fShape = model.GetTensorShape(fNX);
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShape);
-      //use the cmath library for the hyperbolic tan function
-      model.AddNeededStdLib("cmath");
+      //use the cmath library for the hyperbolic tan function which is added in the Parse function
+      // model.AddNeededStdLib("cmath");
    }
 
 
