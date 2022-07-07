@@ -278,13 +278,7 @@ TLegend::TLegend( Double_t w, Double_t h, const char *header, Option_t *option)
 TLegend::TLegend(const TLegend &legend) : TPave(legend), TAttText(legend),
                                            fPrimitives(nullptr)
 {
-  if (legend.fPrimitives) {
-      fPrimitives = new TList();
-      TIter next(legend.fPrimitives);
-      while (auto entry = (TLegendEntry *) next())
-         fPrimitives->Add(new TLegendEntry(*entry));
-   }
-   legend.Copy(*this);
+   legend.TLegend::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -292,24 +286,8 @@ TLegend::TLegend(const TLegend &legend) : TPave(legend), TAttText(legend),
 
 TLegend& TLegend::operator=(const TLegend &lg)
 {
-   if(this!=&lg) {
-      TPave::operator=(lg);
-      TAttText::operator=(lg);
-      if (fPrimitives) {
-         fPrimitives->Delete();
-         delete fPrimitives;
-         fPrimitives = nullptr;
-      }
-      if (lg.fPrimitives) {
-         fPrimitives = new TList();
-         TIter next(lg.fPrimitives);
-         while (auto entry = (TLegendEntry *) next())
-            fPrimitives->Add(new TLegendEntry(*entry));
-      }
-      fEntrySeparation = lg.fEntrySeparation;
-      fMargin = lg.fMargin;
-      fNColumns = lg.fNColumns;
-   }
+   if(this != &lg)
+      lg.TLegend::Copy(*this);
    return *this;
 }
 
@@ -373,9 +351,8 @@ TLegendEntry *TLegend::AddEntry(const char *name, const char *label, Option_t *o
    if (!obj) {
       TList *lop = gPad->GetListOfPrimitives();
       if (lop) {
-         TObject *o=0;
          TIter next(lop);
-         while( (o=next()) ) {
+         while(auto o = next()) {
             if ( o->InheritsFrom(TMultiGraph::Class() ) ) {
                TList * grlist = ((TMultiGraph *)o)->GetListOfGraphs();
                obj = grlist->FindObject(name);
@@ -405,13 +382,26 @@ void TLegend::Clear( Option_t *)
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy this legend into "obj".
 
-void TLegend::Copy( TObject &obj ) const
+void TLegend::Copy(TObject &obj) const
 {
-   TPave::Copy(obj);
-   TAttText::Copy((TLegend&)obj);
-   ((TLegend&)obj).fEntrySeparation = fEntrySeparation;
-   ((TLegend&)obj).fMargin = fMargin;
-   ((TLegend&)obj).fNColumns = fNColumns;
+   auto &tgt = static_cast<TLegend &> (obj);
+   TPave::Copy(tgt);
+   TAttText::Copy(tgt);
+   tgt.fEntrySeparation = fEntrySeparation;
+   tgt.fMargin = fMargin;
+   tgt.fNColumns = fNColumns;
+
+   if (tgt.fPrimitives) {
+      tgt.fPrimitives->Delete();
+      delete tgt.fPrimitives;
+      tgt.fPrimitives = nullptr;
+   }
+   if (fPrimitives) {
+      tgt.fPrimitives = new TList();
+      TIter next(fPrimitives);
+      while (auto entry = (TLegendEntry *) next())
+         tgt.fPrimitives->Add(new TLegendEntry(*entry));
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
