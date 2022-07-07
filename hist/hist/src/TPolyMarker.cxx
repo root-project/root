@@ -109,7 +109,7 @@ TPolyMarker::TPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 TPolyMarker& TPolyMarker::operator=(const TPolyMarker& pm)
 {
    if(this != &pm)
-      pm.Copy(*this);
+      pm.TPolyMarker::Copy(*this);
 
    return *this;
 }
@@ -132,7 +132,7 @@ TPolyMarker::TPolyMarker(const TPolyMarker &polymarker) : TObject(polymarker), T
    fN = 0;
    fX = fY = nullptr;
    fLastPoint = -1;
-   polymarker.Copy(*this);
+   polymarker.TPolyMarker::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -141,7 +141,7 @@ TPolyMarker::TPolyMarker(const TPolyMarker &polymarker) : TObject(polymarker), T
 void TPolyMarker::Copy(TObject &obj) const
 {
    TObject::Copy(obj);
-   TAttMarker::Copy(((TPolyMarker&)obj));
+   TAttMarker::Copy((TPolyMarker&)obj);
    ((TPolyMarker&)obj).fN = fN;
    // delete first previous existing fX and fY
    if (((TPolyMarker&)obj).fX) delete [] (((TPolyMarker&)obj).fX);
