@@ -1329,8 +1329,16 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
       // must construct the leaflist for the output branch and create the branch in the output tree
       auto *const leaf = static_cast<TLeaf *>(inputBranch->GetListOfLeaves()->UncheckedAt(0));
       const auto bname = leaf->GetName();
-      const auto counterStr =
-         leaf->GetLeafCount() ? std::string(leaf->GetLeafCount()->GetName()) : std::to_string(leaf->GetLenStatic());
+      auto *sizeLeaf = leaf->GetLeafCount();
+      const auto sizeLeafName = sizeLeaf ? std::string(sizeLeaf->GetName()) : std::to_string(leaf->GetLenStatic());
+      if (sizeLeaf && !outputBranches.Get(sizeLeafName)) { // we need a size branch but it's not there yet
+         const auto sizeTypeStr = TypeName2ROOTTypeName(sizeLeaf->GetTypeName());
+         const auto sizeBufSize = sizeLeaf->GetBranch()->GetBasketSize();
+         // the null address will be reset later when we call SetBranchesHelper for this branch
+         auto *sizeBranch = outputTree.Branch(sizeLeafName.c_str(), (void *)nullptr,
+                                              (sizeLeafName + '/' + sizeTypeStr).c_str(), sizeBufSize);
+         outputBranches.Insert(sizeLeafName, sizeBranch);
+      }
       const auto btype = leaf->GetTypeName();
       const auto rootbtype = TypeName2ROOTTypeName(btype);
       if (rootbtype == ' ') {
@@ -1339,7 +1347,7 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
                  "column will not be written out.",
                  bname);
       } else {
-         const auto leaflist = std::string(bname) + "[" + counterStr + "]/" + rootbtype;
+         const auto leaflist = std::string(bname) + "[" + sizeLeafName + "]/" + rootbtype;
          outputBranch = outputTree.Branch(outName.c_str(), dataPtr, leaflist.c_str());
          outputBranch->SetTitle(inputBranch->GetTitle());
          outputBranches.Insert(outName, outputBranch);
