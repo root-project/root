@@ -40,310 +40,333 @@
 #include "RooStats/HistFactory/ParamHistFunc.h"
 #include "RooStats/HistFactory/HistFactoryModelUtils.h"
 
-using namespace std;
+using namespace std ;
 
 ClassImp(RooStats::HistFactory::RooBarlowBeestonLL);
 
+
 ////////////////////////////////////////////////////////////////////////////////
 
-RooStats::HistFactory::RooBarlowBeestonLL::RooBarlowBeestonLL()
-   : RooAbsReal("RooBarlowBeestonLL", "RooBarlowBeestonLL"), _nll(),
-     //   _obs("paramOfInterest","Parameters of interest",this),
-     //  _par("nuisanceParam","Nuisance parameters",this,false,false),
-     _pdf(nullptr), _data(nullptr)
+ RooStats::HistFactory::RooBarlowBeestonLL::RooBarlowBeestonLL() :
+   RooAbsReal("RooBarlowBeestonLL","RooBarlowBeestonLL"),
+   _nll(),
+//   _obs("paramOfInterest","Parameters of interest",this),
+//  _par("nuisanceParam","Nuisance parameters",this,false,false),
+  _pdf(nullptr), _data(nullptr)
 {
-   // Default constructor
-   // Should only be used by proof.
+  // Default constructor
+  // Should only be used by proof.
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
 RooStats::HistFactory::RooBarlowBeestonLL::RooBarlowBeestonLL(const char *name, const char *title,
-                                                              RooAbsReal &nllIn /*, const RooArgSet& observables*/)
-   : RooAbsReal(name, title), _nll("input", "-log(L) function", this, nllIn),
-     //  _obs("paramOfInterest","Parameters of interest",this),
-     //  _par("nuisanceParam","Nuisance parameters",this,false,false),
-     _pdf(nullptr), _data(nullptr)
+                   RooAbsReal& nllIn /*, const RooArgSet& observables*/) :
+  RooAbsReal(name,title),
+  _nll("input","-log(L) function",this,nllIn),
+  //  _obs("paramOfInterest","Parameters of interest",this),
+  //  _par("nuisanceParam","Nuisance parameters",this,false,false),
+  _pdf(nullptr), _data(nullptr)
 {
-   // Constructor of profile likelihood given input likelihood nll w.r.t
-   // the given set of variables. The input log likelihood is minimized w.r.t
-   // to all other variables of the likelihood at each evaluation and the
-   // value of the global log likelihood minimum is always subtracted.
+  // Constructor of profile likelihood given input likelihood nll w.r.t
+  // the given set of variables. The input log likelihood is minimized w.r.t
+  // to all other variables of the likelihood at each evaluation and the
+  // value of the global log likelihood minimum is always subtracted.
 
-   // Determine actual parameters and observables
-   /*
-   RooArgSet* actualObs = nllIn.getObservables(observables) ;
-   RooArgSet* actualPars = nllIn.getParameters(observables) ;
+  // Determine actual parameters and observables
+  /*
+  RooArgSet* actualObs = nllIn.getObservables(observables) ;
+  RooArgSet* actualPars = nllIn.getParameters(observables) ;
 
-   _obs.add(*actualObs) ;
-   _par.add(*actualPars) ;
+  _obs.add(*actualObs) ;
+  _par.add(*actualPars) ;
 
-   delete actualObs ;
-   delete actualPars ;
-   */
+  delete actualObs ;
+  delete actualPars ;
+  */
 }
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooStats::HistFactory::RooBarlowBeestonLL::RooBarlowBeestonLL(const RooBarlowBeestonLL &other, const char *name)
-   : RooAbsReal(other, name), _nll("nll", this, other._nll),
-     //  _obs("obs",this,other._obs),
-     //  _par("par",this,other._par),
-     _pdf(nullptr), _data(nullptr), _paramFixed(other._paramFixed)
+RooStats::HistFactory::RooBarlowBeestonLL::RooBarlowBeestonLL(const RooBarlowBeestonLL& other, const char* name) :
+  RooAbsReal(other,name),
+  _nll("nll",this,other._nll),
+  //  _obs("obs",this,other._obs),
+  //  _par("par",this,other._par),
+  _pdf(nullptr), _data(nullptr),
+  _paramFixed(other._paramFixed)
 {
-   // Copy constructor
+  // Copy constructor
 
-   // _paramAbsMin.addClone(other._paramAbsMin) ;
-   // _obsAbsMin.addClone(other._obsAbsMin) ;
+  // _paramAbsMin.addClone(other._paramAbsMin) ;
+  // _obsAbsMin.addClone(other._obsAbsMin) ;
+
 }
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
 RooStats::HistFactory::RooBarlowBeestonLL::~RooBarlowBeestonLL()
 {
-   // Delete instance of minuit if it was ever instantiated
-   // if (_minuit) {
-   //   delete _minuit ;
-   // }
+  // Delete instance of minuit if it was ever instantiated
+  // if (_minuit) {
+  //   delete _minuit ;
+  // }
 
-   // delete _piter ;
-   // delete _oiter ;
+
+  //delete _piter ;
+  //delete _oiter ;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooStats::HistFactory::RooBarlowBeestonLL::BarlowCache::SetBinCenter() const
-{
-   for (auto const *var : static_range_cast<RooRealVar *>(*bin_center)) {
-      RooRealVar *target = (RooRealVar *)observables->find(var->GetName());
-      target->setVal(var->getVal());
-   }
+void RooStats::HistFactory::RooBarlowBeestonLL::BarlowCache::SetBinCenter() const {
+  for (auto const *var : static_range_cast<RooRealVar *>(*bin_center)) {
+    RooRealVar* target = (RooRealVar*) observables->find(var->GetName()) ;
+    target->setVal(var->getVal()) ;
+  }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooStats::HistFactory::RooBarlowBeestonLL::initializeBarlowCache()
-{
-   bool verbose = false;
+void RooStats::HistFactory::RooBarlowBeestonLL::initializeBarlowCache() {
+  bool verbose=false;
 
-   if (!_data) {
-      std::cout << "Error: Must initialize data before initializing cache" << std::endl;
-      throw std::runtime_error("Uninitialized Data");
-   }
-   if (!_pdf) {
-      std::cout << "Error: Must initialize model pdf before initializing cache" << std::endl;
-      throw std::runtime_error("Uninitialized model pdf");
-   }
+  if(!_data) {
+    std::cout << "Error: Must initialize data before initializing cache" << std::endl;
+    throw std::runtime_error("Uninitialized Data");
+  }
+  if(!_pdf) {
+    std::cout << "Error: Must initialize model pdf before initializing cache" << std::endl;
+    throw std::runtime_error("Uninitialized model pdf");
+  }
 
-   // Get the data bin values for all channels and bins
-   std::map<std::string, std::vector<double>> ChannelBinDataMap;
-   getDataValuesForObservables(ChannelBinDataMap, _data, _pdf);
+  // Get the data bin values for all channels and bins
+  std::map< std::string, std::vector<double> > ChannelBinDataMap;
+  getDataValuesForObservables( ChannelBinDataMap, _data, _pdf );
 
-   // Get a list of constraint terms
-   RooArgList obsTerms;
-   RooArgList constraints;
-   RooArgSet *obsSet = _pdf->getObservables(*_data);
-   FactorizeHistFactoryPdf(*obsSet, *_pdf, obsTerms, constraints);
+  // Get a list of constraint terms
+  RooArgList obsTerms;
+  RooArgList constraints;
+  RooArgSet* obsSet = _pdf->getObservables(*_data);
+  FactorizeHistFactoryPdf(*obsSet, *_pdf, obsTerms, constraints);
 
-   if (obsTerms.empty()) {
-      std::cout << "Error: Found no observable terms with pdf: " << _pdf->GetName()
-                << " using dataset: " << _data->GetName() << std::endl;
-      return;
-   }
-   if (constraints.empty()) {
-      std::cout << "Error: Found no constraint terms with pdf: " << _pdf->GetName()
-                << " using dataset: " << _data->GetName() << std::endl;
-      return;
-   }
+  if( obsTerms.empty() ) {
+    std::cout << "Error: Found no observable terms with pdf: " << _pdf->GetName()
+         << " using dataset: " << _data->GetName() << std::endl;
+    return;
+  }
+  if( constraints.empty() ) {
+    std::cout << "Error: Found no constraint terms with pdf: " << _pdf->GetName()
+         << " using dataset: " << _data->GetName() << std::endl;
+    return;
+  }
 
-   /*
-   // Get the channels for this pdf
-   RooArgSet* channels = new RooArgSet();
-   RooArgSet* channelsWithConstraints = new RooArgSet();
-   getChannelsFromModel( _pdf, channels, channelsWithConstraints );
-   */
+  /*
+  // Get the channels for this pdf
+  RooArgSet* channels = new RooArgSet();
+  RooArgSet* channelsWithConstraints = new RooArgSet();
+  getChannelsFromModel( _pdf, channels, channelsWithConstraints );
+  */
 
-   // Loop over the channels
-   RooSimultaneous *simPdf = (RooSimultaneous *)_pdf;
-   RooCategory *channelCat = (RooCategory *)(&simPdf->indexCat());
-   for (const auto &nameIdx : *channelCat) {
+  // Loop over the channels
+  RooSimultaneous* simPdf = (RooSimultaneous*) _pdf;
+  RooCategory* channelCat = (RooCategory*) (&simPdf->indexCat());
+  for (const auto& nameIdx : *channelCat) {
 
-      // Warning: channel cat name is not necesarily the same name
-      // as the pdf's (for example, if someone does edits)
-      RooAbsPdf *channelPdf = simPdf->getPdf(nameIdx.first.c_str());
-      std::string channel_name = channelPdf->GetName();
+    // Warning: channel cat name is not necesarily the same name
+    // as the pdf's (for example, if someone does edits)
+    RooAbsPdf* channelPdf = simPdf->getPdf(nameIdx.first.c_str());
+    std::string channel_name = channelPdf->GetName();
 
-      // First, we check if this channel uses Stat Uncertainties:
-      RooArgList *gammas = new RooArgList();
-      ParamHistFunc *param_func = nullptr;
-      bool hasStatUncert = getStatUncertaintyFromChannel(channelPdf, param_func, gammas);
-      if (!hasStatUncert) {
-         if (verbose) {
-            std::cout << "Channel: " << channel_name << " doesn't have statistical uncertainties" << std::endl;
-         }
-         continue;
-      } else {
-         if (verbose)
-            std::cout << "Found ParamHistFunc: " << param_func->GetName() << std::endl;
+    // First, we check if this channel uses Stat Uncertainties:
+    RooArgList* gammas = new RooArgList();
+    ParamHistFunc* param_func=nullptr;
+    bool hasStatUncert = getStatUncertaintyFromChannel( channelPdf, param_func, gammas );
+    if( ! hasStatUncert ) {
+      if(verbose) {
+   std::cout << "Channel: " << channel_name
+        << " doesn't have statistical uncertainties"
+        << std::endl;
+      }
+      continue;
+    }
+    else {
+      if(verbose) std::cout << "Found ParamHistFunc: " << param_func->GetName() << std::endl;
+    }
+
+    // Now, loop over the bins in this channel
+    // To Do: Check that the index convention
+    // still works for 2-d (ie matches the
+    // convention in ParamHistFunc, etc)
+    int num_bins = param_func->numBins();
+
+    // Initialize the vector to the number of bins, allowing
+    // us to skip gamma's if they are constant
+
+    std::vector<BarlowCache> temp_cache( num_bins );
+    bool channel_has_stat_uncertainty=false;
+
+    for( Int_t bin_index = 0; bin_index < num_bins; ++bin_index ) {
+
+      // Create a cache object
+      BarlowCache cache;
+
+      // Get the gamma for this bin, and skip if it's constant
+      RooRealVar* gamma_stat = dynamic_cast<RooRealVar*>(&(param_func->getParameter(bin_index)));
+      if(!gamma_stat) throw std::runtime_error("ParamHistFunc contains non-RooRealVar, not supported in RooBarlowBeestonLL");
+      if( gamma_stat->isConstant() ) {
+   if(verbose) std::cout << "Ignoring constant gamma: " << gamma_stat->GetName() << std::endl;
+   continue;
+      }
+      else {
+   cache.hasStatUncert=true;
+   channel_has_stat_uncertainty=true;
+   cache.gamma = gamma_stat;
+   _statUncertParams.insert( gamma_stat->GetName() );
       }
 
-      // Now, loop over the bins in this channel
-      // To Do: Check that the index convention
-      // still works for 2-d (ie matches the
-      // convention in ParamHistFunc, etc)
-      int num_bins = param_func->numBins();
+      // Store a snapshot of the bin center
+      RooArgSet* bin_center = (RooArgSet*) param_func->get( bin_index )->snapshot();
+      cache.bin_center = bin_center;
+      cache.observables = obsSet;
 
-      // Initialize the vector to the number of bins, allowing
-      // us to skip gamma's if they are constant
+      cache.binVolume = param_func->binVolume();
 
-      std::vector<BarlowCache> temp_cache(num_bins);
-      bool channel_has_stat_uncertainty = false;
+      // Delete this part, simply a comment
+      RooArgList obs_list( *(cache.bin_center) );
 
-      for (Int_t bin_index = 0; bin_index < num_bins; ++bin_index) {
-
-         // Create a cache object
-         BarlowCache cache;
-
-         // Get the gamma for this bin, and skip if it's constant
-         RooRealVar *gamma_stat = dynamic_cast<RooRealVar *>(&(param_func->getParameter(bin_index)));
-         if (!gamma_stat)
-            throw std::runtime_error("ParamHistFunc contains non-RooRealVar, not supported in RooBarlowBeestonLL");
-         if (gamma_stat->isConstant()) {
-            if (verbose)
-               std::cout << "Ignoring constant gamma: " << gamma_stat->GetName() << std::endl;
-            continue;
-         } else {
-            cache.hasStatUncert = true;
-            channel_has_stat_uncertainty = true;
-            cache.gamma = gamma_stat;
-            _statUncertParams.insert(gamma_stat->GetName());
-         }
-
-         // Store a snapshot of the bin center
-         RooArgSet *bin_center = (RooArgSet *)param_func->get(bin_index)->snapshot();
-         cache.bin_center = bin_center;
-         cache.observables = obsSet;
-
-         cache.binVolume = param_func->binVolume();
-
-         // Delete this part, simply a comment
-         RooArgList obs_list(*(cache.bin_center));
-
-         // Get the gamma's constraint term
-         RooAbsReal *pois_mean = nullptr;
-         RooRealVar *tau = nullptr;
-         getStatUncertaintyConstraintTerm(&constraints, gamma_stat, pois_mean, tau);
-         if (!tau || !pois_mean) {
-            std::cout << "Failed to find pois mean or tau parameter for " << gamma_stat->GetName() << std::endl;
-         } else {
-            if (verbose)
-               std::cout << "Found pois mean and tau for parameter: " << gamma_stat->GetName()
-                         << " tau: " << tau->GetName() << " " << tau->getVal() << " pois_mean: " << pois_mean->GetName()
-                         << " " << pois_mean->getVal() << std::endl;
-         }
-
-         cache.tau = tau;
-         cache.nom_pois_mean = pois_mean;
-
-         // Get the RooRealSumPdf
-         RooAbsPdf *sum_pdf = getSumPdfFromChannel(channelPdf);
-         if (sum_pdf == nullptr) {
-            std::cout << "Failed to find RooRealSumPdf in channel " << channel_name
-                      << ", therefor skipping this channel for analytic uncertainty minimization" << std::endl;
-            channel_has_stat_uncertainty = false;
-            break;
-         }
-         cache.sumPdf = sum_pdf;
-
-         // And set the data value for this bin
-         if (ChannelBinDataMap.find(channel_name) == ChannelBinDataMap.end()) {
-            std::cout << "Error: channel with name: " << channel_name << " not found in BinDataMap" << std::endl;
-            throw runtime_error("BinDataMap");
-         }
-         double nData = ChannelBinDataMap[channel_name].at(bin_index);
-         cache.nData = nData;
-
-         temp_cache.at(bin_index) = cache;
-         //_barlowCache[channel_name].at(bin_index) = cache;
-
-      } // End: Loop over bins
-
-      if (channel_has_stat_uncertainty) {
-         std::cout << "Adding channel: " << channel_name << " to the barlow cache" << std::endl;
-         _barlowCache[channel_name] = temp_cache;
+      // Get the gamma's constraint term
+      RooAbsReal* pois_mean = nullptr;
+      RooRealVar* tau = nullptr;
+      getStatUncertaintyConstraintTerm( &constraints, gamma_stat, pois_mean, tau );
+      if( !tau || !pois_mean ) {
+   std::cout << "Failed to find pois mean or tau parameter for " << gamma_stat->GetName() << std::endl;
+      }
+      else {
+   if(verbose) std::cout << "Found pois mean and tau for parameter: " << gamma_stat->GetName()
+               << " tau: " << tau->GetName() << " " << tau->getVal()
+               << " pois_mean: " << pois_mean->GetName() << " " << pois_mean->getVal()
+               << std::endl;
       }
 
-   } // End: Loop over channels
+      cache.tau = tau;
+      cache.nom_pois_mean = pois_mean;
 
-   // Successfully initialized the cache
-   // Printing some info
-   /*
-   std::map< std::string, std::vector< BarlowCache > >::iterator iter_cache;
-   for( iter_cache = _barlowCache.begin(); iter_cache != _barlowCache.end(); ++iter_cache ) {
+      // Get the RooRealSumPdf
+      RooAbsPdf* sum_pdf = getSumPdfFromChannel( channelPdf );
+      if( sum_pdf == nullptr )  {
+   std::cout << "Failed to find RooRealSumPdf in channel " <<  channel_name
+        << ", therefor skipping this channel for analytic uncertainty minimization"
+        << std::endl;
+   channel_has_stat_uncertainty=false;
+   break;
+      }
+      cache.sumPdf = sum_pdf;
 
-     std::string channel_name = (*iter_cache).first;
-     std::vector< BarlowCache >& channel_cache = (*iter_cache).second;
+      // And set the data value for this bin
+      if( ChannelBinDataMap.find(channel_name) == ChannelBinDataMap.end() ) {
+   std::cout << "Error: channel with name: " << channel_name
+        << " not found in BinDataMap" << std::endl;
+   throw runtime_error("BinDataMap");
+      }
+      double nData = ChannelBinDataMap[channel_name].at(bin_index);
+      cache.nData = nData;
+
+      temp_cache.at(bin_index) = cache;
+      //_barlowCache[channel_name].at(bin_index) = cache;
+
+    } // End: Loop over bins
+
+    if( channel_has_stat_uncertainty ) {
+      std::cout << "Adding channel: " << channel_name
+      << " to the barlow cache" << std::endl;
+      _barlowCache[channel_name] = temp_cache;
+    }
 
 
-     for( unsigned int i = 0; i < channel_cache.size(); ++i ) {
-       BarlowCache& bin_cache = channel_cache.at(i);
+  } // End: Loop over channels
 
 
-       RooRealVar* gamma = bin_cache.gamma;
-       RooRealVar* tau = bin_cache.tau;
-       RooAbsReal* pois_mean = bin_cache.nom_pois_mean;
-       RooAbsPdf* sum_pdf = (RooAbsPdf*) bin_cache.sumPdf;
-       double binVolume = bin_cache.binVolume;
+
+  // Successfully initialized the cache
+  // Printing some info
+  /*
+  std::map< std::string, std::vector< BarlowCache > >::iterator iter_cache;
+  for( iter_cache = _barlowCache.begin(); iter_cache != _barlowCache.end(); ++iter_cache ) {
+
+    std::string channel_name = (*iter_cache).first;
+    std::vector< BarlowCache >& channel_cache = (*iter_cache).second;
 
 
-       if( !bin_cache.hasStatUncert ) {
-    std::cout << "Barlow Cache for Channel: " << channel_name
-         << " Bin: " << i
-         << " NO STAT UNCERT"
-         << std::endl;
-       }
-       else {
-       std::cout << "Barlow Cache for Channel: " << channel_name
-       << " Bin: " << i
-       << " gamma: " << gamma->GetName()
-       << " tau: " << tau->GetName()
-       << " pois_mean: " << pois_mean->GetName()
-       << " sum_pdf: " << sum_pdf->GetName()
-       << " binVolume: " << binVolume
-       << std::endl;
-       }
+    for( unsigned int i = 0; i < channel_cache.size(); ++i ) {
+      BarlowCache& bin_cache = channel_cache.at(i);
 
-     }
-   }
-   */
+
+      RooRealVar* gamma = bin_cache.gamma;
+      RooRealVar* tau = bin_cache.tau;
+      RooAbsReal* pois_mean = bin_cache.nom_pois_mean;
+      RooAbsPdf* sum_pdf = (RooAbsPdf*) bin_cache.sumPdf;
+      double binVolume = bin_cache.binVolume;
+
+
+      if( !bin_cache.hasStatUncert ) {
+   std::cout << "Barlow Cache for Channel: " << channel_name
+        << " Bin: " << i
+        << " NO STAT UNCERT"
+        << std::endl;
+      }
+      else {
+      std::cout << "Barlow Cache for Channel: " << channel_name
+      << " Bin: " << i
+      << " gamma: " << gamma->GetName()
+      << " tau: " << tau->GetName()
+      << " pois_mean: " << pois_mean->GetName()
+      << " sum_pdf: " << sum_pdf->GetName()
+      << " binVolume: " << binVolume
+      << std::endl;
+      }
+
+    }
+  }
+  */
+
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool RooStats::HistFactory::RooBarlowBeestonLL::getParameters(const RooArgSet *depList, RooArgSet &outputSet,
-                                                              bool stripDisconnected) const
-{
-   bool errorInBaseCall = RooAbsArg::getParameters(depList, outputSet, stripDisconnected);
+bool RooStats::HistFactory::RooBarlowBeestonLL::getParameters(const RooArgSet* depList,
+                                                              RooArgSet& outputSet,
+                                                              bool stripDisconnected) const {
+  bool errorInBaseCall = RooAbsArg::getParameters( depList, outputSet, stripDisconnected );
 
-   RooArgSet toRemove;
-   toRemove.reserve(_statUncertParams.size());
+  RooArgSet toRemove;
+  toRemove.reserve( _statUncertParams.size());
+    
+  for (auto const& arg : outputSet) {
 
-   for (auto const &arg : outputSet) {
+    // If there is a gamma in the name,
+    // strip it from the list of dependencies
 
-      // If there is a gamma in the name,
-      // strip it from the list of dependencies
+    if( _statUncertParams.find(arg->GetName()) != _statUncertParams.end() ) {
+      toRemove.add( *arg );
+    }
+  }
+  
+  for( auto& arg : toRemove) outputSet.remove( *arg, true );
+  
+  return errorInBaseCall || false;
 
-      if (_statUncertParams.find(arg->GetName()) != _statUncertParams.end()) {
-         toRemove.add(*arg);
-      }
-   }
-
-   for (auto &arg : toRemove)
-      outputSet.remove(*arg, true);
-
-   return errorInBaseCall || false;
 }
+
 
 /*
 ////////////////////////////////////////////////////////////////////////////////
@@ -364,6 +387,8 @@ const RooArgSet& RooStats::HistFactory::RooBarlowBeestonLL::bestFitObs() const
 }
 */
 
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Optimized implementation of createProfile for profile likelihoods.
 /// Return profile of original function in terms of stated parameters
@@ -376,9 +401,9 @@ RooAbsReal* RooStats::HistFactory::RooBarlowBeestonLL::createProfile(const RooAr
 }
 */
 
+
 /*
-void RooStats::HistFactory::RooBarlowBeestonLL::FactorizePdf(const RooArgSet &observables, RooAbsPdf &pdf, RooArgList
-&obsTerms, RooArgList &constraints) const {
+void RooStats::HistFactory::RooBarlowBeestonLL::FactorizePdf(const RooArgSet &observables, RooAbsPdf &pdf, RooArgList &obsTerms, RooArgList &constraints) const {
   // utility function to factorize constraint terms from a pdf
   // (from G. Petrucciani)
   const std::type_info & id = typeid(pdf);
@@ -405,191 +430,194 @@ void RooStats::HistFactory::RooBarlowBeestonLL::FactorizePdf(const RooArgSet &ob
 }
 */
 
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 double RooStats::HistFactory::RooBarlowBeestonLL::evaluate() const
 {
-   // Loop over the channels (keys to the map)
-   // clock_t time_before_setVal, time_after_setVal;
-   // time_before_setVal=clock();
-   std::map<std::string, std::vector<BarlowCache>>::iterator iter_cache;
-   for (iter_cache = _barlowCache.begin(); iter_cache != _barlowCache.end(); ++iter_cache) {
+  // Loop over the channels (keys to the map)
+  //clock_t time_before_setVal, time_after_setVal;
+  //time_before_setVal=clock();
+  std::map< std::string, std::vector< BarlowCache > >::iterator iter_cache;
+  for( iter_cache = _barlowCache.begin(); iter_cache != _barlowCache.end(); ++iter_cache ) {
 
-      std::string channel_name = (*iter_cache).first;
-      std::vector<BarlowCache> &channel_cache = (*iter_cache).second;
+    std::string channel_name = (*iter_cache).first;
+    std::vector< BarlowCache >& channel_cache = (*iter_cache).second;
 
-      /* Slower way to find the channel vector:
-      // Get the vector of bin uncertainty caches for this channel
-      if( _barlowCache.find( channel_name ) == _barlowCache.end() ) {
-        std::cout << "Error: channel: " << channel_name
-        << " not found in barlow Cache" << std::endl;
-        throw runtime_error("Channel not in barlow cache");
+    /* Slower way to find the channel vector:
+    // Get the vector of bin uncertainty caches for this channel
+    if( _barlowCache.find( channel_name ) == _barlowCache.end() ) {
+      std::cout << "Error: channel: " << channel_name
+      << " not found in barlow Cache" << std::endl;
+      throw runtime_error("Channel not in barlow cache");
+    }
+
+    std::vector< BarlowCache >& channel_cache = _barlowCache[ channel_name ];
+    */
+
+    // Loop over the bins in the cache
+    // Set all gamma's to 0
+    for( unsigned int i = 0; i < channel_cache.size(); ++i ) {
+      BarlowCache& bin_cache = channel_cache.at(i);
+      if( !bin_cache.hasStatUncert ) continue;
+      RooRealVar* gamma = bin_cache.gamma;
+      gamma->setVal(0.0);
+    }
+    std::vector< double > nu_b_vec( channel_cache.size() );
+    for( unsigned int i = 0; i < channel_cache.size(); ++i ) {
+      BarlowCache& bin_cache = channel_cache.at(i);
+      if( !bin_cache.hasStatUncert ) continue;
+
+      RooAbsPdf* sum_pdf = (RooAbsPdf*) bin_cache.sumPdf;
+      RooArgSet* obsSet = bin_cache.observables;
+      double binVolume = bin_cache.binVolume;
+
+      bin_cache.SetBinCenter();
+      double nu_b = sum_pdf->getVal(*obsSet)*sum_pdf->expectedEvents(*obsSet)*binVolume;
+      nu_b_vec.at(i) = nu_b;
+    }
+
+    // Loop over the bins in the cache
+    // Set all gamma's to 1
+    for( unsigned int i = 0; i < channel_cache.size(); ++i ) {
+      BarlowCache& bin_cache = channel_cache.at(i);
+      if( !bin_cache.hasStatUncert ) continue;
+      RooRealVar* gamma = bin_cache.gamma;
+      gamma->setVal(1.0);
+    }
+    std::vector< double > nu_b_stat_vec( channel_cache.size() );
+    for( unsigned int i = 0; i < channel_cache.size(); ++i ) {
+      BarlowCache& bin_cache = channel_cache.at(i);
+      if( !bin_cache.hasStatUncert ) continue;
+
+      RooAbsPdf* sum_pdf = (RooAbsPdf*) bin_cache.sumPdf;
+      RooArgSet* obsSet = bin_cache.observables;
+      double binVolume = bin_cache.binVolume;
+
+      bin_cache.SetBinCenter();
+      double nu_b_stat = sum_pdf->getVal(*obsSet)*sum_pdf->expectedEvents(*obsSet)*binVolume - nu_b_vec.at(i);
+      nu_b_stat_vec.at(i) = nu_b_stat;
+    }
+    //time_after_setVal=clock();
+
+    // Done with the first loops.
+    // Now evaluating the function
+
+    //clock_t time_before_eval, time_after_eval;
+
+    // Loop over the bins in the cache
+    //time_before_eval=clock();
+    for( unsigned int i = 0; i < channel_cache.size(); ++i ) {
+
+      BarlowCache& bin_cache = channel_cache.at(i);
+
+      if( !bin_cache.hasStatUncert ) {
+   //std::cout << "Bin: " << i << " of " << channel_cache.size()
+   //   << " in channel: " << channel_name
+   //   << " doesn't have stat uncertainties" << std::endl;
+   continue;
       }
 
-      std::vector< BarlowCache >& channel_cache = _barlowCache[ channel_name ];
-      */
+      // Set the observable to the bin center
+      bin_cache.SetBinCenter();
 
-      // Loop over the bins in the cache
-      // Set all gamma's to 0
-      for (unsigned int i = 0; i < channel_cache.size(); ++i) {
-         BarlowCache &bin_cache = channel_cache.at(i);
-         if (!bin_cache.hasStatUncert)
-            continue;
-         RooRealVar *gamma = bin_cache.gamma;
-         gamma->setVal(0.0);
-      }
-      std::vector<double> nu_b_vec(channel_cache.size());
-      for (unsigned int i = 0; i < channel_cache.size(); ++i) {
-         BarlowCache &bin_cache = channel_cache.at(i);
-         if (!bin_cache.hasStatUncert)
-            continue;
+      // Get the cached objects
+      RooRealVar* gamma = bin_cache.gamma;
+      RooRealVar* tau = bin_cache.tau;
+      RooAbsReal* pois_mean = bin_cache.nom_pois_mean;
+      //RooAbsPdf* sum_pdf = (RooAbsPdf*) bin_cache.sumPdf;
+      //RooArgSet* obsSet = bin_cache.observables;
+      //double binVolume = bin_cache.binVolume;
 
-         RooAbsPdf *sum_pdf = (RooAbsPdf *)bin_cache.sumPdf;
-         RooArgSet *obsSet = bin_cache.observables;
-         double binVolume = bin_cache.binVolume;
+      // Get the values necessary for
+      // the analytic minimization
+      double nu_b = nu_b_vec.at(i);
+      double nu_b_stat = nu_b_stat_vec.at(i);
 
-         bin_cache.SetBinCenter();
-         double nu_b = sum_pdf->getVal(*obsSet) * sum_pdf->expectedEvents(*obsSet) * binVolume;
-         nu_b_vec.at(i) = nu_b;
-      }
+      double tau_val = tau->getVal();
+      double nData = bin_cache.nData;
+      double m_val = pois_mean->getVal();
 
-      // Loop over the bins in the cache
-      // Set all gamma's to 1
-      for (unsigned int i = 0; i < channel_cache.size(); ++i) {
-         BarlowCache &bin_cache = channel_cache.at(i);
-         if (!bin_cache.hasStatUncert)
-            continue;
-         RooRealVar *gamma = bin_cache.gamma;
-         gamma->setVal(1.0);
-      }
-      std::vector<double> nu_b_stat_vec(channel_cache.size());
-      for (unsigned int i = 0; i < channel_cache.size(); ++i) {
-         BarlowCache &bin_cache = channel_cache.at(i);
-         if (!bin_cache.hasStatUncert)
-            continue;
+      // Initialize the minimized value of gamma
+      double gamma_hat_hat = 1.0;
 
-         RooAbsPdf *sum_pdf = (RooAbsPdf *)bin_cache.sumPdf;
-         RooArgSet *obsSet = bin_cache.observables;
-         double binVolume = bin_cache.binVolume;
+      // Check that the quadratic term is > 0
+      if(nu_b_stat > 0.00000001) {
 
-         bin_cache.SetBinCenter();
-         double nu_b_stat = sum_pdf->getVal(*obsSet) * sum_pdf->expectedEvents(*obsSet) * binVolume - nu_b_vec.at(i);
-         nu_b_stat_vec.at(i) = nu_b_stat;
-      }
-      // time_after_setVal=clock();
+   double A = nu_b_stat*nu_b_stat + tau_val*nu_b_stat;
+   double B = nu_b*tau_val + nu_b*nu_b_stat - nData*nu_b_stat - m_val*nu_b_stat;
+   double C = -1*m_val*nu_b;
 
-      // Done with the first loops.
-      // Now evaluating the function
+   double discrim = B*B-4*A*C;
 
-      // clock_t time_before_eval, time_after_eval;
-
-      // Loop over the bins in the cache
-      // time_before_eval=clock();
-      for (unsigned int i = 0; i < channel_cache.size(); ++i) {
-
-         BarlowCache &bin_cache = channel_cache.at(i);
-
-         if (!bin_cache.hasStatUncert) {
-            // std::cout << "Bin: " << i << " of " << channel_cache.size()
-            //   << " in channel: " << channel_name
-            //   << " doesn't have stat uncertainties" << std::endl;
-            continue;
-         }
-
-         // Set the observable to the bin center
-         bin_cache.SetBinCenter();
-
-         // Get the cached objects
-         RooRealVar *gamma = bin_cache.gamma;
-         RooRealVar *tau = bin_cache.tau;
-         RooAbsReal *pois_mean = bin_cache.nom_pois_mean;
-         // RooAbsPdf* sum_pdf = (RooAbsPdf*) bin_cache.sumPdf;
-         // RooArgSet* obsSet = bin_cache.observables;
-         // double binVolume = bin_cache.binVolume;
-
-         // Get the values necessary for
-         // the analytic minimization
-         double nu_b = nu_b_vec.at(i);
-         double nu_b_stat = nu_b_stat_vec.at(i);
-
-         double tau_val = tau->getVal();
-         double nData = bin_cache.nData;
-         double m_val = pois_mean->getVal();
-
-         // Initialize the minimized value of gamma
-         double gamma_hat_hat = 1.0;
-
-         // Check that the quadratic term is > 0
-         if (nu_b_stat > 0.00000001) {
-
-            double A = nu_b_stat * nu_b_stat + tau_val * nu_b_stat;
-            double B = nu_b * tau_val + nu_b * nu_b_stat - nData * nu_b_stat - m_val * nu_b_stat;
-            double C = -1 * m_val * nu_b;
-
-            double discrim = B * B - 4 * A * C;
-
-            if (discrim < 0) {
-               std::cout << "Warning: Discriminant (B*B - 4AC) < 0" << std::endl;
-               std::cout << "Warning: Taking B*B - 4*A*C == 0" << std::endl;
-               discrim = 0;
-               // throw runtime_error("BarlowBeestonLL::evaluate() : B*B - 4AC < 0");
-            }
-            if (A <= 0) {
-               std::cout << "Warning: A <= 0" << std::endl;
-               throw runtime_error("BarlowBeestonLL::evaluate() : A < 0");
-            }
-
-            gamma_hat_hat = (-1 * B + TMath::Sqrt(discrim)) / (2 * A);
-         }
-
-         // If the quadratic term is 0, we simply
-         // use a linear equation
-         else {
-            gamma_hat_hat = m_val / tau_val;
-         }
-
-         // Check for NAN
-         if (TMath::IsNaN(gamma_hat_hat)) {
-            std::cout << "ERROR: gamma hat hat is NAN" << std::endl;
-            throw runtime_error("BarlowBeestonLL::evaluate() : gamma hat hat is NAN");
-         }
-
-         if (gamma_hat_hat <= 0) {
-            std::cout << "WARNING: gamma hat hat <= 0.  Setting to 0" << std::endl;
-            gamma_hat_hat = 0;
-         }
-
-         /*
-         std::cout << "n: " << bin_cache.nData << " "
-         << "nu_stat: " << nu_b_stat << " "
-         << "nu: " << nu_b << " "
-         << "tau: " << tau->getVal() << " "
-         << "m: " << pois_mean->getVal() << " "
-         << "A: " << A << " "
-         << "B: " << B << " "
-         << "C: " << C << " "
-         << "gamma hat hat: " << gamma_hat_hat
-         << std::endl;
-         */
-
-         gamma->setVal(gamma_hat_hat);
-      }
-
-      // time_after_eval=clock();
-
-      // float time_setVal = ((float) time_after_setVal - (float) time_before_setVal) / ((float) CLOCKS_PER_SEC);
-      // float time_eval   = ((float) time_after_eval - (float) time_before_eval) / ((float) CLOCKS_PER_SEC);
-
-      /*
-      std::cout << "Barlow timing for channel: " << channel_name
-           << " SetVal: " << time_setVal
-           << " Eval: " << time_eval
-           << std::endl;
-      */
+   if( discrim < 0 ) {
+     std::cout << "Warning: Discriminant (B*B - 4AC) < 0" << std::endl;
+     std::cout << "Warning: Taking B*B - 4*A*C == 0" << std::endl;
+     discrim=0;
+     //throw runtime_error("BarlowBeestonLL::evaluate() : B*B - 4AC < 0");
+   }
+   if( A <= 0 ) {
+     std::cout << "Warning: A <= 0" << std::endl;
+     throw runtime_error("BarlowBeestonLL::evaluate() : A < 0");
    }
 
-   return _nll;
+   gamma_hat_hat = ( -1*B + TMath::Sqrt(discrim) ) / (2*A);
+      }
+
+      // If the quadratic term is 0, we simply
+      // use a linear equation
+      else {
+   gamma_hat_hat = m_val/tau_val;
+      }
+
+      // Check for NAN
+      if( TMath::IsNaN(gamma_hat_hat) ) {
+   std::cout << "ERROR: gamma hat hat is NAN" << std::endl;
+   throw runtime_error("BarlowBeestonLL::evaluate() : gamma hat hat is NAN");
+      }
+
+      if( gamma_hat_hat <= 0 ) {
+   std::cout << "WARNING: gamma hat hat <= 0.  Setting to 0" << std::endl;
+   gamma_hat_hat = 0;
+      }
+
+      /*
+      std::cout << "n: " << bin_cache.nData << " "
+      << "nu_stat: " << nu_b_stat << " "
+      << "nu: " << nu_b << " "
+      << "tau: " << tau->getVal() << " "
+      << "m: " << pois_mean->getVal() << " "
+      << "A: " << A << " "
+      << "B: " << B << " "
+      << "C: " << C << " "
+      << "gamma hat hat: " << gamma_hat_hat
+      << std::endl;
+      */
+
+      gamma->setVal( gamma_hat_hat );
+
+    }
+
+    //time_after_eval=clock();
+
+    //float time_setVal = ((float) time_after_setVal - (float) time_before_setVal) / ((float) CLOCKS_PER_SEC);
+    //float time_eval   = ((float) time_after_eval - (float) time_before_eval) / ((float) CLOCKS_PER_SEC);
+
+    /*
+    std::cout << "Barlow timing for channel: " << channel_name
+         << " SetVal: " << time_setVal
+         << " Eval: " << time_eval
+         << std::endl;
+    */
+  }
+
+
+  return _nll;
+
 }
+
+
 
 /*
 ////////////////////////////////////////////////////////////////////////////////
@@ -605,8 +633,7 @@ void RooStats::HistFactory::RooBarlowBeestonLL::validateAbsMin() const
     RooAbsArg* par ;
     while((par=(RooAbsArg*)_piter->Next())) {
       if (_paramFixed[par->GetName()] != par->isConstant()) {
-   cxcoutI(Minimization) << "RooStats::HistFactory::RooBarlowBeestonLL::evaluate(" << GetName() << ") constant status of
-parameter " << par->GetName() << " has changed from "
+   cxcoutI(Minimization) << "RooStats::HistFactory::RooBarlowBeestonLL::evaluate(" << GetName() << ") constant status of parameter " << par->GetName() << " has changed from "
             << (_paramFixed[par->GetName()]?"fixed":"floating") << " to " << (par->isConstant()?"fixed":"floating")
             << ", recalculating absolute minimum" << endl ;
    _absMinValid = false ;
@@ -619,8 +646,7 @@ parameter " << par->GetName() << " has changed from "
   // If we don't have the absolute minimum w.r.t all observables, calculate that first
   if (!_absMinValid) {
 
-    cxcoutI(Minimization) << "RooStats::HistFactory::RooBarlowBeestonLL::evaluate(" << GetName() << ") determining
-minimum likelihood for current configurations w.r.t all observable" << endl ;
+    cxcoutI(Minimization) << "RooStats::HistFactory::RooBarlowBeestonLL::evaluate(" << GetName() << ") determining minimum likelihood for current configurations w.r.t all observable" << endl ;
 
 
     // Save current values of non-marginalized parameters
@@ -660,8 +686,7 @@ minimum likelihood for current configurations w.r.t all observable" << endl ;
     }
 
     if (dologI(Minimization)) {
-      cxcoutI(Minimization) << "RooStats::HistFactory::RooBarlowBeestonLL::evaluate(" << GetName() << ") minimum found
-at (" ;
+      cxcoutI(Minimization) << "RooStats::HistFactory::RooBarlowBeestonLL::evaluate(" << GetName() << ") minimum found at (" ;
 
       RooAbsReal* arg ;
       bool first=true ;
@@ -681,17 +706,19 @@ at (" ;
 }
 */
 
+
 ////////////////////////////////////////////////////////////////////////////////
 
-bool RooStats::HistFactory::RooBarlowBeestonLL::redirectServersHook(const RooAbsCollection & /*newServerList*/,
-                                                                    bool /*mustReplaceAll*/, bool /*nameChange*/,
-                                                                    bool /*isRecursive*/)
+bool RooStats::HistFactory::RooBarlowBeestonLL::redirectServersHook(const RooAbsCollection& /*newServerList*/, bool /*mustReplaceAll*/,
+                bool /*nameChange*/, bool /*isRecursive*/)
 {
-   /*
-   if (_minuit) {
-     delete _minuit ;
-     _minuit = 0 ;
-   }
-   */
-   return false;
+  /*
+  if (_minuit) {
+    delete _minuit ;
+    _minuit = 0 ;
+  }
+  */
+  return false ;
 }
+
+
