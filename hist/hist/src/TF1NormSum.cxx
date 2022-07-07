@@ -255,7 +255,7 @@ TF1NormSum::TF1NormSum(const TString &formula, Double_t xmin, Double_t xmax)
 
 TF1NormSum::TF1NormSum(const TF1NormSum &nsum)
 {
-   nsum.Copy((TObject &)*this);
+   nsum.TF1NormSum::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -264,7 +264,7 @@ TF1NormSum::TF1NormSum(const TF1NormSum &nsum)
 TF1NormSum &TF1NormSum::operator=(const TF1NormSum &rhs)
 {
    if (this != &rhs)
-      rhs.Copy(*this);
+      rhs.TF1NormSum::Copy(*this);
    return *this;
 }
 

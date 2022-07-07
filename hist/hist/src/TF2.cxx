@@ -184,9 +184,8 @@ TF2::TF2(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t x
 
 TF2& TF2::operator=(const TF2 &rhs)
 {
-   if (this != &rhs) {
-      rhs.Copy(*this);
-   }
+   if (this != &rhs)
+      rhs.TF2::Copy(*this);
    return *this;
 }
 
@@ -202,7 +201,7 @@ TF2::~TF2()
 
 TF2::TF2(const TF2 &f2) : TF1()
 {
-   ((TF2&)f2).Copy(*this);
+   f2.TF2::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
