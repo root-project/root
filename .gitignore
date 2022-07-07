@@ -43,6 +43,7 @@ AutoDict_*.cxx
 
 # Eclipse
 .project
+.pydevproject
 
 # /
 /root_version
