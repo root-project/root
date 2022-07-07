@@ -475,7 +475,7 @@ TLatex& TLatex::operator=(const TLatex& lt)
 void TLatex::Copy(TObject &obj) const
 {
    TText::Copy(obj);
-   TAttLine::Copy(((TAttLine&)obj));
+   TAttLine::Copy((TLatex &)obj);
    ((TLatex&)obj).fFactorSize  = fFactorSize;
    ((TLatex&)obj).fFactorPos   = fFactorPos;
    ((TLatex&)obj).fLimitFactorSize  = fLimitFactorSize;
