@@ -732,8 +732,8 @@ fPaintHisto(0),
 fWeight(kDefWeight)
 {
    // do not add new created histograms to gDirectory
-   {  
-      // use separate scope for TContext 
+   {
+      // use separate scope for TContext
       TDirectory::TContext ctx(nullptr);
       fTotalHistogram = new TH1D("total","total",nbins,xbins);
       fPassedHistogram = new TH1D("passed","passed",nbins,xbins);
@@ -979,22 +979,22 @@ fWeight(kDefWeight)
 ///      by calling Write().
 
 TEfficiency::TEfficiency(const TEfficiency& rEff):
-TNamed(),
-TAttLine(),
-TAttFill(),
-TAttMarker(),
-fBeta_alpha(rEff.fBeta_alpha),
-fBeta_beta(rEff.fBeta_beta),
-fBeta_bin_params(rEff.fBeta_bin_params),
-fConfLevel(rEff.fConfLevel),
-fDirectory(0),
-fFunctions(0),
-fPaintGraph(0),
-fPaintHisto(0),
-fWeight(rEff.fWeight)
+   TNamed(),
+   TAttLine(),
+   TAttFill(),
+   TAttMarker(),
+   fBeta_alpha(rEff.fBeta_alpha),
+   fBeta_beta(rEff.fBeta_beta),
+   fBeta_bin_params(rEff.fBeta_bin_params),
+   fConfLevel(rEff.fConfLevel),
+   fDirectory(0),
+   fFunctions(0),
+   fPaintGraph(0),
+   fPaintHisto(0),
+   fWeight(rEff.fWeight)
 {
    // copy TObject bits
-   ((TObject&)rEff).Copy(*this);
+   rEff.TObject::Copy(*this);
 
    // do not add cloned histograms to gDirectory
    {

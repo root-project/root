@@ -54,9 +54,9 @@ TAxis::TAxis(): TNamed(), TAttAxis()
    fXmax    = 1;
    fFirst   = 0;
    fLast    = 0;
-   fParent  = 0;
-   fLabels  = 0;
-   fModLabs = 0;
+   fParent  = nullptr;
+   fLabels  = nullptr;
+   fModLabs = nullptr;
    fBits2   = 0;
    fTimeDisplay = 0;
 }
@@ -66,9 +66,9 @@ TAxis::TAxis(): TNamed(), TAttAxis()
 
 TAxis::TAxis(Int_t nbins,Double_t xlow,Double_t xup): TNamed(), TAttAxis()
 {
-   fParent  = 0;
-   fLabels  = 0;
-   fModLabs = 0;
+   fParent  = nullptr;
+   fLabels  = nullptr;
+   fModLabs = nullptr;
    Set(nbins,xlow,xup);
 }
 
@@ -77,9 +77,9 @@ TAxis::TAxis(Int_t nbins,Double_t xlow,Double_t xup): TNamed(), TAttAxis()
 
 TAxis::TAxis(Int_t nbins,const Double_t *xbins): TNamed(), TAttAxis()
 {
-   fParent  = 0;
-   fLabels  = 0;
-   fModLabs = 0;
+   fParent  = nullptr;
+   fLabels  = nullptr;
+   fModLabs = nullptr;
    Set(nbins,xbins);
 }
 
@@ -91,29 +91,34 @@ TAxis::~TAxis()
    if (fLabels) {
       fLabels->Delete();
       delete fLabels;
-      fLabels = 0;
+      fLabels = nullptr;
    }
    if (fModLabs) {
       fModLabs->Delete();
       delete fModLabs;
-      fModLabs = 0;
+      fModLabs = nullptr;
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
-TAxis::TAxis(const TAxis &axis) : TNamed(axis), TAttAxis(axis), fLabels(0), fModLabs(0)
+TAxis::TAxis(const TAxis &axis) : TNamed(axis), TAttAxis(axis)
 {
-   axis.Copy(*this);
+   fParent  = nullptr;
+   fLabels  = nullptr;
+   fModLabs = nullptr;
+
+   axis.TAxis::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Assignment operator.
 
-TAxis& TAxis::operator=(const TAxis &orig)
+TAxis& TAxis::operator=(const TAxis &axis)
 {
-   orig.Copy( *this );
+   if (this != &axis)
+      axis.TAxis::Copy(*this);
    return *this;
 }
 
@@ -210,9 +215,9 @@ const char *TAxis::ChooseTimeFormat(Double_t axislength)
 
 void TAxis::Copy(TObject &obj) const
 {
-   TNamed::Copy(obj);
-   TAttAxis::Copy(((TAxis&)obj));
-   TAxis &axis( ((TAxis&)obj) );
+   TAxis &axis = static_cast<TAxis &>(obj);
+   TNamed::Copy(axis);
+   TAttAxis::Copy(axis);
    axis.fNbins  = fNbins;
    axis.fXmin   = fXmin;
    axis.fXmax   = fXmax;
@@ -246,7 +251,7 @@ void TAxis::Copy(TObject &obj) const
    if (fModLabs) {
       axis.fModLabs = new TList();
       TIter next(fModLabs);
-      while(auto modlabel=(TAxisModLab *)next()) {
+      while(auto modlabel = (TAxisModLab *)next()) {
          TAxisModLab *copyModLabel = new TAxisModLab(*modlabel);
          axis.fModLabs->Add(copyModLabel);
          copyModLabel->SetUniqueID(modlabel->GetUniqueID());
@@ -547,8 +552,8 @@ Double_t TAxis::GetBinWidth(Int_t bin) const
 
 void TAxis::GetCenter(Double_t *center) const
 {
-   Int_t bin;
-   for (bin=1; bin<=fNbins; bin++) *(center + bin-1) = GetBinCenter(bin);
+   for (Int_t bin = 1; bin <= fNbins; bin++)
+      *(center + bin - 1) = GetBinCenter(bin);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -556,8 +561,8 @@ void TAxis::GetCenter(Double_t *center) const
 
 void TAxis::GetLowEdge(Double_t *edge) const
 {
-   Int_t bin;
-   for (bin=1; bin<=fNbins; bin++) *(edge + bin-1) = GetBinLowEdge(bin);
+   for (Int_t bin = 1; bin <= fNbins; bin++)
+      *(edge + bin - 1) = GetBinLowEdge(bin);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -566,16 +571,16 @@ void TAxis::GetLowEdge(Double_t *edge) const
 /// It is sometimes useful to know the number of labels on an axis. For instance
 /// when changing the labels with TAxis::ChangeLabel. The number of labels is equal
 /// to `the_number_of_divisions + 1`. By default the number of divisions is
-/// optimised to show a coherent labelling of the main tick marks. After optimisation the
+/// optimised to show a coherent labeling of the main tick marks. After optimisation the
 /// real number of divisions will be smaller or equal to number of divisions requested.
-/// In order to turn off the labelling optimization, it is enough to give a negative
+/// In order to turn off the labeling optimization, it is enough to give a negative
 /// number of divisions to TAttAxis::SetNdivisions. The absolute value of this number will be use as
 /// the exact number of divisions. This method takes the two cases (optimised or not) into
 /// account.
 
 Int_t TAxis::GetNlabels() const
 {
-   if (fNdivisions>0) {
+   if (fNdivisions > 0) {
       Int_t divxo  = 0;
       Double_t x1o = 0.;
       Double_t x2o = 0.;

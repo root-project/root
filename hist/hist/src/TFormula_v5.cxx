@@ -294,7 +294,7 @@ TFormula::TFormula(const TFormula &formula) : TNamed()
    fOperOptimized  = 0;
    fOptimal = (ROOT::v5::TFormulaPrimitive::TFuncG)&TFormula::EvalParOld;
 
-   ((TFormula&)formula).TFormula::Copy(*this);
+   formula.TFormula::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -302,9 +302,8 @@ TFormula::TFormula(const TFormula &formula) : TNamed()
 
 TFormula& TFormula::operator=(const TFormula &rhs)
 {
-   if (this != &rhs) {
-      rhs.Copy(*this);
-   }
+   if (this != &rhs)
+      rhs.TFormula::Copy(*this);
    return *this;
 }
 

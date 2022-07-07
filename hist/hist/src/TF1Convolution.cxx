@@ -238,7 +238,7 @@ TF1Convolution::TF1Convolution(TString formula1, TString formula2,  Double_t xmi
 
 TF1Convolution::TF1Convolution(const TF1Convolution &conv)
 {
-   conv.Copy((TObject &)*this);
+   conv.TF1Convolution::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -247,7 +247,7 @@ TF1Convolution::TF1Convolution(const TF1Convolution &conv)
 TF1Convolution &TF1Convolution::operator=(const TF1Convolution &rhs)
 {
    if (this != &rhs)
-      rhs.Copy(*this);
+      rhs.TF1Convolution::Copy(*this);
    return *this;
 }
 
@@ -517,9 +517,9 @@ void TF1Convolution::Copy(TObject &obj) const
    ((TF1Convolution &)obj).fParNames = fParNames;
 
    // we need to copy the content of the  unique_ptr's
-   ((TF1Convolution &)obj).fFunction1 = std::unique_ptr<TF1>((TF1 *)new TF1() );
-   ((TF1Convolution &)obj).fFunction2 = std::unique_ptr<TF1>((TF1 *)new TF1() );
-   fFunction1->Copy(*(((TF1Convolution &)obj).fFunction1 ) );
-   fFunction2->Copy(*(((TF1Convolution &)obj).fFunction2 ) );
+   ((TF1Convolution &)obj).fFunction1 = std::make_unique<TF1>();
+   ((TF1Convolution &)obj).fFunction2 = std::make_unique<TF1>();
+   fFunction1->Copy(*(((TF1Convolution &)obj).fFunction1));
+   fFunction2->Copy(*(((TF1Convolution &)obj).fFunction2));
    // fGraphConv is transient anyway, so we don't bother to copy it
 }

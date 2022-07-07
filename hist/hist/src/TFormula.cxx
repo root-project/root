@@ -576,7 +576,7 @@ TFormula::TFormula(const char *name, const char *formula, int ndim, int npar, bo
 TFormula::TFormula(const TFormula &formula) :
    TNamed(formula.GetName(),formula.GetTitle())
 {
-   formula.Copy(*this);
+   formula.TFormula::Copy(*this);
 
    if (!TestBit(TFormula::kNotGlobal) && gROOT ) {
       R__LOCKGUARD(gROOTMutex);
@@ -597,10 +597,8 @@ TFormula::TFormula(const TFormula &formula) :
 
 TFormula& TFormula::operator=(const TFormula &rhs)
 {
-
-   if (this != &rhs) {
-      rhs.Copy(*this);
-   }
+   if (this != &rhs)
+      rhs.TFormula::Copy(*this);
    return *this;
 }
 
