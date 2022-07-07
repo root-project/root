@@ -583,7 +583,7 @@ OBJ: TList	TList	Doubly linked list : 0
  OBJ: TMethod	Multiply	*MENU* : 0
       Bool_t TH1::Multiply(const TH1* h1, const TH1* h2, Double_t c1 = 1, Double_t c2 = 1, Option_t* option = "")
  OBJ: TMethod	Rebin	*MENU* : 0
-      TH1* TH1::Rebin(Int_t ngroup = 2, const char* newname = "", const Double_t* xbins = 0)
+      TH1* TH1::Rebin(Int_t ngroup = 2, const char* newname = "", const Double_t* xbins = nullptr)
  OBJ: TMethod	SetHighlight	*TOGGLE* *GETTER=IsHighlight : 0
       void TH1::SetHighlight(Bool_t set = kTRUE)
  OBJ: TMethod	SetMaximum	*MENU* : 0
