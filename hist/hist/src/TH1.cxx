@@ -730,16 +730,6 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Private copy constructor.
-/// One should use the copy constructor of the derived classes (e.g. TH1D, TH1F ...).
-/// The list of functions is not copied. (Use Clone() if needed)
-
-TH1::TH1(const TH1 &h) : TNamed(), TAttLine(), TAttFill(), TAttMarker()
-{
-   h.TH1::Copy(*this);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Static function: cannot be inlined on Windows/NT.
 
 Bool_t TH1::AddDirectoryStatus()
