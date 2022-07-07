@@ -47,18 +47,28 @@ TPaveLabel::TPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Pavelabel default destructor.
+/// TPaveLabel default destructor.
 
 TPaveLabel::~TPaveLabel()
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Pavelabel copy constructor.
+/// TPaveLabel copy constructor.
 
 TPaveLabel::TPaveLabel(const TPaveLabel &pavelabel) : TPave(pavelabel), TAttText(pavelabel)
 {
-   ((TPaveLabel&)pavelabel).Copy(*this);
+   pavelabel.TPaveLabel::Copy(*this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// TPaveLabel assign operator
+
+TPaveLabel& TPaveLabel::operator=(const TPaveLabel &pavelabel)
+{
+   if (this != &pavelabel)
+      pavelabel.TPaveLabel::Copy(*this);
+   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -68,7 +78,7 @@ void TPaveLabel::Copy(TObject &obj) const
 {
    TPave::Copy(obj);
    TAttText::Copy(((TPaveLabel&)obj));
-   ((TPaveLabel&)obj).fLabel      = fLabel;
+   ((TPaveLabel &)obj).fLabel = fLabel;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,8 +87,8 @@ void TPaveLabel::Copy(TObject &obj) const
 void TPaveLabel::Draw(Option_t *option)
 {
    Option_t *opt;
-   if (option && strlen(option)) opt = option;
-   else                          opt = GetOption();
+   if (option && *option) opt = option;
+   else                   opt = GetOption();
 
    AppendPad(opt);
 }

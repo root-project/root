@@ -83,7 +83,7 @@ TMarker::TMarker(const TMarker &marker) : TObject(marker), TAttMarker(marker), T
 {
    fX = 0;
    fY = 0;
-   ((TMarker&)marker).Copy(*this);
+   marker.TMarker::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -92,9 +92,9 @@ TMarker::TMarker(const TMarker &marker) : TObject(marker), TAttMarker(marker), T
 void TMarker::Copy(TObject &obj) const
 {
    TObject::Copy(obj);
-   TAttMarker::Copy(((TMarker&)obj));
-   ((TMarker&)obj).fX = fX;
-   ((TMarker&)obj).fY = fY;
+   TAttMarker::Copy(((TMarker &)obj));
+   ((TMarker &)obj).fX = fX;
+   ((TMarker &)obj).fY = fY;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

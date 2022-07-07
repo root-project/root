@@ -99,7 +99,7 @@ TArrow::TArrow(const TArrow &arrow) : TLine(), TAttFill()
 {
    fAngle     = fgDefaultAngle;
    fArrowSize = 0.;
-   arrow.Copy(*this);
+   arrow.TArrow::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
