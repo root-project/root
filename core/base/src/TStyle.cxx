@@ -487,12 +487,13 @@ TStyle::~TStyle()
 
 TStyle::TStyle(const TStyle &style) : TNamed(style), TAttLine(style), TAttFill(style), TAttMarker(style), TAttText(style)
 {
-   style.Copy(*this);
+   style.TStyle::Copy(*this);
 }
 
 TStyle& TStyle::operator=(const TStyle& style)
 {
-   style.Copy(*this);
+   if (this != &style)
+      style.TStyle::Copy(*this);
    return *this;
 }
 
