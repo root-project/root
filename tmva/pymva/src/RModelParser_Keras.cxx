@@ -519,6 +519,9 @@ RModel Parse(std::string filename){
       // inference code.
       else if(fLayerType == "Dense")
          rmodel.AddBlasRoutines({"Gemm", "Gemv"});
+      else if (fLayerType == "BatchNormalization") 
+         rmodel.AddBlasRoutines({"Copy", "Axpy"});
+         
       INTERNAL::AddKerasLayer(rmodel,fLayer);
 
    }

@@ -40,15 +40,16 @@ def generateSequentialModel():
 
 def generateBatchNormModel():
     model=Sequential()
-    model.add(Dense(8,batch_size=4))
+    model.add(Dense(4,batch_size=2))
     model.add(BatchNormalization())
+    model.add(Dense(2))
 
     randomGenerator=np.random.RandomState(0)
-    x_train=randomGenerator.rand(4,8)
-    y_train=randomGenerator.rand(4,8)
+    x_train=randomGenerator.rand(4,4)
+    y_train=randomGenerator.rand(4,2)
 
     model.compile(loss='mean_squared_error', optimizer=SGD(learning_rate=0.01))
-    model.fit(x_train, y_train, epochs=10, batch_size=4)
+    model.fit(x_train, y_train, epochs=10, batch_size=2)
     model.save('KerasModelBatchNorm.h5')
 
 generateFunctionalModel()
