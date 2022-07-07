@@ -194,8 +194,8 @@ public:
    static  Bool_t   AddDirectoryStatus();
            void     Browse(TBrowser *b) override;
    virtual Bool_t   CanExtendAllAxes() const;
-   virtual Double_t Chi2Test(const TH1* h2, Option_t *option = "UU", Double_t *res = 0) const;
-   virtual Double_t Chi2TestX(const TH1* h2, Double_t &chi2, Int_t &ndf, Int_t &igood,Option_t *option = "UU",  Double_t *res = 0) const;
+   virtual Double_t Chi2Test(const TH1* h2, Option_t *option = "UU", Double_t *res = nullptr) const;
+   virtual Double_t Chi2TestX(const TH1* h2, Double_t &chi2, Int_t &ndf, Int_t &igood,Option_t *option = "UU",  Double_t *res = nullptr) const;
    virtual Double_t Chisquare(TF1 * f1, Option_t *option = "") const;
    virtual void     ClearUnderflowAndOverflow();
    virtual Double_t ComputeIntegral(Bool_t onlyPositive = false);
@@ -219,7 +219,7 @@ public:
    virtual Int_t    Fill(Double_t x, Double_t w);
    virtual Int_t    Fill(const char *name, Double_t w);
    virtual void     FillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stride=1);
-   virtual void     FillN(Int_t, const Double_t *, const Double_t *, const Double_t *, Int_t) {;}
+   virtual void     FillN(Int_t, const Double_t *, const Double_t *, const Double_t *, Int_t) {}
    virtual void     FillRandom(const char *fname, Int_t ntimes=5000, TRandom * rng = nullptr);
    virtual void     FillRandom(TH1 *h, Int_t ntimes=5000, TRandom * rng = nullptr);
    virtual Int_t    FindBin(Double_t x, Double_t y=0, Double_t z=0);
@@ -271,7 +271,7 @@ public:
    virtual EBinErrorOpt  GetBinErrorOption() const { return fBinStatErrOpt; }
    virtual Double_t GetBinLowEdge(Int_t bin) const;
    virtual Double_t GetBinWidth(Int_t bin) const;
-   virtual Double_t GetBinWithContent(Double_t c, Int_t &binx, Int_t firstx=0, Int_t lastx=0,Double_t maxdiff=0) const;
+   virtual Double_t GetBinWithContent(Double_t c, Int_t &binx, Int_t firstx = 0, Int_t lastx = 0,Double_t maxdiff = 0) const;
    virtual void     GetCenter(Double_t *center) const;
    static  Bool_t   GetDefaultSumw2();
    TDirectory      *GetDirectory() const {return fDirectory;}
@@ -302,7 +302,7 @@ public:
 
    TVirtualHistPainter *GetPainter(Option_t *option="");
 
-   virtual Int_t    GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum=0);
+   virtual Int_t    GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum = nullptr);
    virtual Double_t GetRandom(TRandom * rng = nullptr) const;
    virtual void     GetStats(Double_t *stats) const;
    virtual Double_t GetStdDev(Int_t axis=1) const;
@@ -315,7 +315,7 @@ public:
            Double_t GetRMSError(Int_t axis=1) const { return GetStdDevError(axis); }
 
    virtual Double_t GetSkewness(Int_t axis=1) const;
-           EStatOverflows GetStatOverflows() const {return fStatOverflows; }; ///< Get the behaviour adopted by the object about the statoverflows. See EStatOverflows for more information.
+           EStatOverflows GetStatOverflows() const { return fStatOverflows; } ///< Get the behaviour adopted by the object about the statoverflows. See EStatOverflows for more information.
            TAxis*   GetXaxis()  { return &fXaxis; }
            TAxis*   GetYaxis()  { return &fYaxis; }
            TAxis*   GetZaxis()  { return &fZaxis; }
@@ -345,7 +345,7 @@ public:
            void     Paint(Option_t *option = "") override;
            void     Print(Option_t *option = "") const override;
    virtual void     PutStats(Double_t *stats);
-   virtual TH1     *Rebin(Int_t ngroup = 2, const char *newname = "", const Double_t *xbins = 0);  // *MENU*
+   virtual TH1     *Rebin(Int_t ngroup = 2, const char *newname = "", const Double_t *xbins = nullptr);  // *MENU*
    virtual TH1     *RebinX(Int_t ngroup = 2, const char *newname = "") { return Rebin(ngroup,newname, (Double_t*) nullptr); }
    virtual void     Rebuild(Option_t *option = "");
            void     RecursiveRemove(TObject *obj) override;
@@ -376,12 +376,12 @@ public:
    virtual void     SetBuffer(Int_t buffersize, Option_t *option="");
    virtual UInt_t   SetCanExtend(UInt_t extendBitMask);
    virtual void     SetContent(const Double_t *content);
-   virtual void     SetContour(Int_t nlevels, const Double_t *levels=0);
+   virtual void     SetContour(Int_t nlevels, const Double_t *levels = nullptr);
    virtual void     SetContourLevel(Int_t level, Double_t value);
    static  void     SetDefaultBufferSize(Int_t buffersize=1000);
    static  void     SetDefaultSumw2(Bool_t sumw2=kTRUE);
    virtual void     SetDirectory(TDirectory *dir);
-   virtual void     SetEntries(Double_t n) {fEntries = n;};
+   virtual void     SetEntries(Double_t n) { fEntries = n; }
    virtual void     SetError(const Double_t *error);
    virtual void     SetHighlight(Bool_t set = kTRUE); // *TOGGLE* *GETTER=IsHighlight
    virtual void     SetLabelColor(Color_t color=1, Option_t *axis="X");
@@ -394,8 +394,8 @@ public:
     *   By default the maximum / minimum value used in drawing is the maximum / minimum value of the histogram
     * plus a margin of 10%. If these functions are called, the values are used without any extra margin.
     */
-   virtual void     SetMaximum(Double_t maximum = -1111) { fMaximum = maximum; }; // *MENU*
-   virtual void     SetMinimum(Double_t minimum = -1111) { fMinimum = minimum; }; // *MENU*
+   virtual void     SetMaximum(Double_t maximum = -1111) { fMaximum = maximum; } // *MENU*
+   virtual void     SetMinimum(Double_t minimum = -1111) { fMinimum = minimum; } // *MENU*
 
            void     SetName(const char *name) override; // *MENU*
            void     SetNameTitle(const char *name, const char *title) override;
@@ -407,7 +407,7 @@ public:
    virtual void     SetTitleFont(Style_t font=62, Option_t *axis="X");
    virtual void     SetTitleOffset(Float_t offset=1, Option_t *axis="X");
    virtual void     SetTitleSize(Float_t size=0.02, Option_t *axis="X");
-           void     SetStatOverflows(EStatOverflows statOverflows) {fStatOverflows = statOverflows;}; ///< See GetStatOverflows for more information.
+           void     SetStatOverflows(EStatOverflows statOverflows) { fStatOverflows = statOverflows; } ///< See GetStatOverflows for more information.
            void     SetTitle(const char *title) override;  // *MENU*
    virtual void     SetXTitle(const char *title) {fXaxis.SetTitle(title);}
    virtual void     SetYTitle(const char *title) {fYaxis.SetTitle(title);}
