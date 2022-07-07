@@ -192,9 +192,9 @@ TH3::TH3(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 /// One should use the copy constructor of the derived classes (e.g. TH3D, TH3F ...).
 /// The list of functions is not copied. (Use Clone() if needed)
 
-TH3::TH3(const TH3 &h) : TH1(), TAtt3D()
+TH3::TH3(const TH3 &h3) : TH1(), TAtt3D()
 {
-   ((TH3&)h).Copy(*this);
+   h3.TH3::Copy(*this);
 }
 
 
@@ -2359,7 +2359,7 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, const TAxis* projX,
 ///  With SetRange() you can have all bins except underflow/overflow only if you set the axis bit range as
 ///  following after having called SetRange:  axis->SetRange(1, axis->GetNbins());
 ///
-///  NOTE 5: If TH1::AddDirectory is set to false, a new histogram is always created and the ownership of the 
+///  NOTE 5: If TH1::AddDirectory is set to false, a new histogram is always created and the ownership of the
 ///  returned pointer is delegated to the user. Be sure in this case to call `delete` on it after it's no longer needed,
 ///  to avoid memory leaks.
 
@@ -3499,7 +3499,7 @@ TH3C::TH3C(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 TH3C::TH3C(const TH3C &h3c) : TH3(), TArrayC()
 {
-   ((TH3C&)h3c).Copy(*this);
+   h3c.TH3C::Copy(*this);
 }
 
 
@@ -3529,7 +3529,7 @@ void TH3C::AddBinContent(Int_t bin, Double_t w)
 
 void TH3C::Copy(TObject &newth3) const
 {
-   TH3::Copy((TH3C&)newth3);
+   TH3::Copy(newth3);
 }
 
 
@@ -3621,9 +3621,10 @@ void TH3C::Streamer(TBuffer &R__b)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator =
 
-TH3C& TH3C::operator=(const TH3C &h1)
+TH3C& TH3C::operator=(const TH3C &h3c)
 {
-   if (this != &h1)  ((TH3C&)h1).Copy(*this);
+   if (this != &h3c)
+      h3c.TH3C::Copy(*this);
    return *this;
 }
 
@@ -3631,9 +3632,9 @@ TH3C& TH3C::operator=(const TH3C &h1)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH3C operator*(Float_t c1, TH3C &h1)
+TH3C operator*(Float_t c1, TH3C &h3c)
 {
-   TH3C hnew = h1;
+   TH3C hnew = h3c;
    hnew.Scale(c1);
    hnew.SetDirectory(nullptr);
    return hnew;
@@ -3764,7 +3765,7 @@ TH3S::TH3S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 TH3S::TH3S(const TH3S &h3s) : TH3(), TArrayS()
 {
-   ((TH3S&)h3s).Copy(*this);
+   h3s.TH3S::Copy(*this);
 }
 
 
@@ -3794,7 +3795,7 @@ void TH3S::AddBinContent(Int_t bin, Double_t w)
 
 void TH3S::Copy(TObject &newth3) const
 {
-   TH3::Copy((TH3S&)newth3);
+   TH3::Copy(newth3);
 }
 
 
@@ -3857,9 +3858,10 @@ void TH3S::Streamer(TBuffer &R__b)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator =
 
-TH3S& TH3S::operator=(const TH3S &h1)
+TH3S& TH3S::operator=(const TH3S &h3s)
 {
-   if (this != &h1)  ((TH3S&)h1).Copy(*this);
+   if (this != &h3s)
+      h3s.TH3S::Copy(*this);
    return *this;
 }
 
@@ -3867,9 +3869,9 @@ TH3S& TH3S::operator=(const TH3S &h1)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH3S operator*(Float_t c1, TH3S &h1)
+TH3S operator*(Float_t c1, TH3S &h3s)
 {
-   TH3S hnew = h1;
+   TH3S hnew = h3s;
    hnew.Scale(c1);
    hnew.SetDirectory(nullptr);
    return hnew;
@@ -4000,7 +4002,7 @@ TH3I::TH3I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 TH3I::TH3I(const TH3I &h3i) : TH3(), TArrayI()
 {
-   ((TH3I&)h3i).Copy(*this);
+   h3i.TH3I::Copy(*this);
 }
 
 
@@ -4030,7 +4032,7 @@ void TH3I::AddBinContent(Int_t bin, Double_t w)
 
 void TH3I::Copy(TObject &newth3) const
 {
-   TH3::Copy((TH3I&)newth3);
+   TH3::Copy(newth3);
 }
 
 
@@ -4060,9 +4062,10 @@ void TH3I::SetBinsLength(Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator =
 
-TH3I& TH3I::operator=(const TH3I &h1)
+TH3I& TH3I::operator=(const TH3I &h3i)
 {
-   if (this != &h1)  ((TH3I&)h1).Copy(*this);
+   if (this != &h3i)
+      h3i.TH3I::Copy(*this);
    return *this;
 }
 
@@ -4070,9 +4073,9 @@ TH3I& TH3I::operator=(const TH3I &h1)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH3I operator*(Float_t c1, TH3I &h1)
+TH3I operator*(Float_t c1, TH3I &h3i)
 {
-   TH3I hnew = h1;
+   TH3I hnew = h3i;
    hnew.Scale(c1);
    hnew.SetDirectory(nullptr);
    return hnew;
@@ -4203,7 +4206,7 @@ TH3F::TH3F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 TH3F::TH3F(const TH3F &h3f) : TH3(), TArrayF()
 {
-   ((TH3F&)h3f).Copy(*this);
+   h3f.TH3F::Copy(*this);
 }
 
 
@@ -4212,7 +4215,7 @@ TH3F::TH3F(const TH3F &h3f) : TH3(), TArrayF()
 
 void TH3F::Copy(TObject &newth3) const
 {
-   TH3::Copy((TH3F&)newth3);
+   TH3::Copy(newth3);
 }
 
 
@@ -4275,9 +4278,10 @@ void TH3F::Streamer(TBuffer &R__b)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator =
 
-TH3F& TH3F::operator=(const TH3F &h1)
+TH3F& TH3F::operator=(const TH3F &h3f)
 {
-   if (this != &h1)  ((TH3F&)h1).Copy(*this);
+   if (this != &h3f)
+      h3f.TH3F::Copy(*this);
    return *this;
 }
 
@@ -4285,9 +4289,9 @@ TH3F& TH3F::operator=(const TH3F &h1)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH3F operator*(Float_t c1, TH3F &h1)
+TH3F operator*(Float_t c1, TH3F &h3f)
 {
-   TH3F hnew = h1;
+   TH3F hnew = h3f;
    hnew.Scale(c1);
    hnew.SetDirectory(nullptr);
    return hnew;
@@ -4418,7 +4422,7 @@ TH3D::TH3D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 TH3D::TH3D(const TH3D &h3d) : TH3(), TArrayD()
 {
-   ((TH3D&)h3d).Copy(*this);
+   h3d.TH3D::Copy(*this);
 }
 
 
@@ -4427,7 +4431,7 @@ TH3D::TH3D(const TH3D &h3d) : TH3(), TArrayD()
 
 void TH3D::Copy(TObject &newth3) const
 {
-   TH3::Copy((TH3D&)newth3);
+   TH3::Copy(newth3);
 }
 
 
@@ -4490,9 +4494,10 @@ void TH3D::Streamer(TBuffer &R__b)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator =
 
-TH3D& TH3D::operator=(const TH3D &h1)
+TH3D& TH3D::operator=(const TH3D &h3d)
 {
-   if (this != &h1)  ((TH3D&)h1).Copy(*this);
+   if (this != &h3d)
+      h3d.TH3D::Copy(*this);
    return *this;
 }
 
@@ -4500,9 +4505,9 @@ TH3D& TH3D::operator=(const TH3D &h1)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH3D operator*(Float_t c1, TH3D &h1)
+TH3D operator*(Float_t c1, TH3D &h3d)
 {
-   TH3D hnew = h1;
+   TH3D hnew = h3d;
    hnew.Scale(c1);
    hnew.SetDirectory(nullptr);
    return hnew;

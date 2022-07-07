@@ -218,9 +218,9 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 /// One should use the copy constructor of the derived classes (e.g. TH2D, TH2F ...).
 /// The list of functions is not copied. (Use Clone() if needed)
 
-TH2::TH2(const TH2 &h) : TH1()
+TH2::TH2(const TH2 &h2) : TH1()
 {
-   ((TH2&)h).Copy(*this);
+   h2.TH2::Copy(*this);
 }
 
 
@@ -2884,7 +2884,7 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 
 TH2C::TH2C(const TH2C &h2c) : TH2(), TArrayC()
 {
-   ((TH2C&)h2c).Copy(*this);
+   h2c.TH2C::Copy(*this);
 }
 
 
@@ -2914,7 +2914,7 @@ void TH2C::AddBinContent(Int_t bin, Double_t w)
 
 void TH2C::Copy(TObject &newth2) const
 {
-   TH2::Copy((TH2C&)newth2);
+   TH2::Copy(newth2);
 }
 
 
@@ -2978,9 +2978,10 @@ void TH2C::Streamer(TBuffer &R__b)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator =
 
-TH2C& TH2C::operator=(const TH2C &h1)
+TH2C& TH2C::operator=(const TH2C &h2c)
 {
-   if (this != &h1)  ((TH2C&)h1).Copy(*this);
+   if (this != &h2c)
+      h2c.TH2C::Copy(*this);
    return *this;
 }
 
@@ -3144,7 +3145,7 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 
 TH2S::TH2S(const TH2S &h2s) : TH2(), TArrayS()
 {
-   ((TH2S&)h2s).Copy(*this);
+   h2s.TH2S::Copy(*this);
 }
 
 
@@ -3174,7 +3175,7 @@ void TH2S::AddBinContent(Int_t bin, Double_t w)
 
 void TH2S::Copy(TObject &newth2) const
 {
-   TH2::Copy((TH2S&)newth2);
+   TH2::Copy(newth2);
 }
 
 
@@ -3238,9 +3239,10 @@ void TH2S::Streamer(TBuffer &R__b)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator =
 
-TH2S& TH2S::operator=(const TH2S &h1)
+TH2S& TH2S::operator=(const TH2S &h2s)
 {
-   if (this != &h1)  ((TH2S&)h1).Copy(*this);
+   if (this != &h2s)
+      h2s.TH2S::Copy(*this);
    return *this;
 }
 
@@ -3248,9 +3250,9 @@ TH2S& TH2S::operator=(const TH2S &h1)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH2S operator*(Float_t c1, TH2S &h1)
+TH2S operator*(Float_t c1, TH2S &h2s)
 {
-   TH2S hnew = h1;
+   TH2S hnew = h2s;
    hnew.Scale(c1);
    hnew.SetDirectory(nullptr);
    return hnew;
@@ -3404,7 +3406,7 @@ TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 
 TH2I::TH2I(const TH2I &h2i) : TH2(), TArrayI()
 {
-   ((TH2I&)h2i).Copy(*this);
+   h2i.TH2I::Copy(*this);
 }
 
 
@@ -3434,7 +3436,7 @@ void TH2I::AddBinContent(Int_t bin, Double_t w)
 
 void TH2I::Copy(TObject &newth2) const
 {
-   TH2::Copy((TH2I&)newth2);
+   TH2::Copy(newth2);
 }
 
 
@@ -3463,9 +3465,10 @@ void TH2I::SetBinsLength(Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator =
 
-TH2I& TH2I::operator=(const TH2I &h1)
+TH2I& TH2I::operator=(const TH2I &h2i)
 {
-   if (this != &h1)  ((TH2I&)h1).Copy(*this);
+   if (this != &h2i)
+      h2i.TH2I::Copy(*this);
    return *this;
 }
 
@@ -3473,9 +3476,9 @@ TH2I& TH2I::operator=(const TH2I &h1)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH2I operator*(Float_t c1, TH2I &h1)
+TH2I operator*(Float_t c1, TH2I &h2i)
 {
-   TH2I hnew = h1;
+   TH2I hnew = h2i;
    hnew.Scale(c1);
    hnew.SetDirectory(nullptr);
    return hnew;
@@ -3649,7 +3652,7 @@ TH2F::TH2F(const TMatrixFBase &m)
 
 TH2F::TH2F(const TH2F &h2f) : TH2(), TArrayF()
 {
-   ((TH2F&)h2f).Copy(*this);
+   h2f.TH2F::Copy(*this);
 }
 
 
@@ -3658,7 +3661,7 @@ TH2F::TH2F(const TH2F &h2f) : TH2(), TArrayF()
 
 void TH2F::Copy(TObject &newth2) const
 {
-   TH2::Copy((TH2F&)newth2);
+   TH2::Copy(newth2);
 }
 
 
@@ -3722,9 +3725,10 @@ void TH2F::Streamer(TBuffer &R__b)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator =
 
-TH2F& TH2F::operator=(const TH2F &h1)
+TH2F& TH2F::operator=(const TH2F &h2f)
 {
-   if (this != &h1)  ((TH2F&)h1).Copy(*this);
+   if (this != &h2f)
+      h2f.TH2F::Copy(*this);
    return *this;
 }
 
@@ -3921,7 +3925,7 @@ TH2D::TH2D(const TMatrixDBase &m)
 
 TH2D::TH2D(const TH2D &h2d) : TH2(), TArrayD()
 {
-   ((TH2D&)h2d).Copy(*this);
+   h2d.TH2D::Copy(*this);
 }
 
 
@@ -3930,7 +3934,7 @@ TH2D::TH2D(const TH2D &h2d) : TH2(), TArrayD()
 
 void TH2D::Copy(TObject &newth2) const
 {
-   TH2::Copy((TH2D&)newth2);
+   TH2::Copy(newth2);
 }
 
 
@@ -3994,9 +3998,10 @@ void TH2D::Streamer(TBuffer &R__b)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator =
 
-TH2D& TH2D::operator=(const TH2D &h1)
+TH2D& TH2D::operator=(const TH2D &h2d)
 {
-   if (this != &h1)  ((TH2D&)h1).Copy(*this);
+   if (this != &h2d)
+      h2d.TH2D::Copy(*this);
    return *this;
 }
 
@@ -4005,9 +4010,9 @@ TH2D& TH2D::operator=(const TH2D &h1)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH2D operator*(Float_t c1, TH2D &h1)
+TH2D operator*(Float_t c1, TH2D &h2d)
 {
-   TH2D hnew = h1;
+   TH2D hnew = h2d;
    hnew.Scale(c1);
    hnew.SetDirectory(nullptr);
    return hnew;
