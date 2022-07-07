@@ -25,4 +25,5 @@ if [ ! -s "${listOfClasses}" ]; then
    exit 0
 fi
 
+root -l -b -q -e ".L libs.C++g"
 xargs -L 1 -P ${NJOB:-1} ./modifyClassWebpage.sh < ${listOfClasses}
