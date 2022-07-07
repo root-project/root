@@ -130,7 +130,7 @@ TXTRU::TXTRU(const char *name, const char *title, const char *material,
 
 TXTRU::TXTRU(const TXTRU &xtru) : TShape(xtru)
 {
-   xtru.Copy(*this);
+   xtru.TXTRU::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -167,7 +167,7 @@ TXTRU& TXTRU::operator=(const TXTRU &rhs)
 {
    // protect against self-assignment
    if (this != &rhs)
-      rhs.Copy(*this);
+      rhs.TXTRU::Copy(*this);
 
    return *this;
 }
