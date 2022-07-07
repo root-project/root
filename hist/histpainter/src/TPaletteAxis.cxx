@@ -152,7 +152,7 @@ TPaletteAxis::~TPaletteAxis()
 
 TPaletteAxis::TPaletteAxis(const TPaletteAxis &palette) : TPave(palette)
 {
-   ((TPaletteAxis&)palette).Copy(*this);
+   palette.TPaletteAxis::Copy(*this);
 }
 
 
@@ -161,7 +161,8 @@ TPaletteAxis::TPaletteAxis(const TPaletteAxis &palette) : TPave(palette)
 
 TPaletteAxis& TPaletteAxis::operator=(const TPaletteAxis &orig)
 {
-   orig.Copy( *this );
+   if (this != &orig)
+      orig.TPaletteAxis::Copy(*this);
    return *this;
 }
 
