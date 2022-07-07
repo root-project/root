@@ -326,6 +326,14 @@ void TCling__PrintStackTrace() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Load a library.
+
+extern "C" int TCling__LoadLibrary(const char *library)
+{
+   return gSystem->Load(library, "", false);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Re-apply the lock count delta that TCling__ResetInterpreterMutex() caused.
 
 extern "C" void TCling__RestoreInterpreterMutex(void *delta)
@@ -679,14 +687,6 @@ static clang::ClassTemplateDecl* FindTemplateInNamespace(clang::Decl* decl)
    }
 
    return nullptr; // something went wrong.
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Autoload a library provided the mangled name of a missing symbol.
-
-void* llvmLazyFunctionCreator(const std::string& mangled_name)
-{
-   return ((TCling*)gCling)->LazyFunctionCreatorAutoload(mangled_name);
 }
 
 //______________________________________________________________________________
@@ -1639,9 +1639,8 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
          llvm::StringRef stem = llvm::sys::path::stem(FileName);
          return stem.startswith("libNew") || stem.startswith("libcppyy_backend");
       };
-      // Initialize the dyld for the llvmLazyFunctionCreator.
+      // Initialize the dyld for AutoloadLibraryGenerator.
       DLM.initializeDyld(ShouldPermanentlyIgnore);
-      fInterpreter->installLazyFunctionCreator(llvmLazyFunctionCreator);
    }
 }
 
@@ -6526,15 +6525,7 @@ bool TCling::LibraryLoadingFailed(const std::string& errmessage, const std::stri
 /// Autoload a library based on a missing symbol.
 
 void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
-   std::string dlsym_mangled_name = mangled_name;
-
-#ifdef R__MACOSX
-   // The JIT gives us a mangled name which has only two leading underscores on
-   // osx, for instance __ZN8TRandom34RndmEv. However, on dlsym OSX requres
-   // single _ (eg. __ZN8TRandom34RndmEv, dropping the extra _).
-   if (llvm::StringRef(mangled_name).startswith("__"))
-      dlsym_mangled_name.erase(0, 1);
-#endif //R__MACOSX
+   std::string dlsym_mangled_name = ROOT::TMetaUtils::DemangleNameForDlsym(mangled_name);
 
    // We have already loaded the library.
    if (void* Addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(dlsym_mangled_name))
