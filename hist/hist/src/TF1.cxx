@@ -124,12 +124,9 @@ public:
             SetBit(BIT(ibit));
 
       // copy the graph attributes
-      auto &fromLine = static_cast<TAttLine &>(from);
-      fromLine.Copy(*this);
-      auto &fromFill = static_cast<TAttFill &>(from);
-      fromFill.Copy(*this);
-      auto &fromMarker = static_cast<TAttMarker &>(from);
-      fromMarker.Copy(*this);
+      from.TAttLine::Copy(*this);
+      from.TAttFill::Copy(*this);
+      from.TAttMarker::Copy(*this);
    }
 };
 } // unnamed namespace
@@ -954,9 +951,8 @@ int TF1::TermCoeffLength(TString &term) {
 
 TF1 &TF1::operator=(const TF1 &rhs)
 {
-   if (this != &rhs) {
-      rhs.Copy(*this);
-   }
+   if (this != &rhs)
+      rhs.TF1::Copy(*this);
    return *this;
 }
 
@@ -985,7 +981,7 @@ TF1::TF1(const TF1 &f1) :
    TNamed(f1), TAttLine(f1), TAttFill(f1), TAttMarker(f1),
    fXmin(0), fXmax(0), fNpar(0), fNdim(0), fType(EFType::kFormula)
 {
-   ((TF1 &)f1).Copy(*this);
+   f1.TF1::Copy(*this);
 }
 
 

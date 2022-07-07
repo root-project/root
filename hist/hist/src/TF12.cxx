@@ -86,7 +86,7 @@ TF12::~TF12()
 
 TF12::TF12(const TF12 &f12) : TF1(f12)
 {
-   ((TF12&)f12).Copy(*this);
+   f12.TF12::Copy(*this);
 }
 
 
