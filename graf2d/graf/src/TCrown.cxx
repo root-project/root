@@ -82,8 +82,7 @@ TCrown::TCrown(Double_t x1, Double_t y1,Double_t radin, Double_t radout,Double_t
 
 TCrown::TCrown(const TCrown &crown) : TEllipse(crown)
 {
-
-   ((TCrown&)crown).Copy(*this);
+   crown.TCrown::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -98,7 +97,6 @@ TCrown::~TCrown()
 
 void TCrown::Copy(TObject &crown) const
 {
-
    TEllipse::Copy(crown);
 }
 
@@ -156,7 +154,6 @@ Int_t TCrown::DistancetoPrimitive(Int_t px, Int_t py)
 
 TCrown *TCrown::DrawCrown(Double_t x1, Double_t y1,Double_t radin,Double_t radout,Double_t phimin,Double_t phimax,Option_t *option)
 {
-
    TCrown *newcrown = new TCrown(x1, y1, radin, radout, phimin, phimax);
    TAttLine::Copy(*newcrown);
    TAttFill::Copy(*newcrown);
