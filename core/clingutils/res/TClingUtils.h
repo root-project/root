@@ -570,6 +570,24 @@ std::string GetModuleFileName(const char* moduleName);
 void GetCppName(std::string &output, const char *input);
 
 //______________________________________________________________________________
+// Demangle the input symbol name for dlsym.
+static inline std::string DemangleNameForDlsym(const std::string& name)
+{
+   std::string nameForDlsym = name;
+
+#ifdef R__MACOSX
+   // The JIT gives us a mangled name which has two leading underscores on
+   // osx, for instance __ZN8TRandom34RndmEv. However, on dlsym OSX requres
+   // single _ (eg. __ZN8TRandom34RndmEv, dropping the extra _).
+   // FIXME: get this information from the DataLayout via getGlobalPrefix()!
+   if (llvm::StringRef(nameForDlsym).startswith("__"))
+      nameForDlsym.erase(0, 1);
+#endif //R__MACOSX
+
+   return nameForDlsym;
+}
+
+//______________________________________________________________________________
 // Return the type with all parts fully qualified (most typedefs),
 // including template arguments, appended to name.
 void GetFullyQualifiedTypeName(std::string &name, const clang::QualType &type, const cling::Interpreter &interpreter);
