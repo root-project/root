@@ -4,7 +4,7 @@
 
 HTMLPATH=$DOXYGEN_OUTPUT_DIRECTORY/html
 DOXYGEN_LDD=${DOXYGEN_LDD:=ldd}
-dotFile=$(mktemp /tmp/libraries_XXXX.dot)
+dotFile=$(mktemp /tmp/libraries.dot.XXXX)
 
 test -d "$HTMLPATH" || { echo "HTMLPATH '$HTMLPATH' not found."; exit 1; }
 test -d "$ROOTSYS"  || { echo "ROOTSYS not set"; exit 1; }
