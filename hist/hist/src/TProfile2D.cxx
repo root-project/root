@@ -203,14 +203,15 @@ void TProfile2D::BuildOptions(Double_t zmin, Double_t zmax, Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
-TProfile2D::TProfile2D(const TProfile2D &profile) : TH2D()
+TProfile2D::TProfile2D(const TProfile2D &profile2d) : TH2D()
 {
-   ((TProfile2D&)profile).Copy(*this);
+   profile2d.TProfile2D::Copy(*this);
 }
 
-TProfile2D &TProfile2D::operator=(const TProfile2D &profile)
+TProfile2D &TProfile2D::operator=(const TProfile2D &profile2d)
 {
-   ((TProfile2D &)profile).Copy(*this);
+   if (this != &profile2d)
+      profile2d.TProfile2D::Copy(*this);
    return *this;
 }
 
@@ -385,7 +386,7 @@ Int_t TProfile2D::BufferFill(Double_t x, Double_t y, Double_t z, Double_t w)
 void TProfile2D::Copy(TObject &obj) const
 {
    try {
-      TProfile2D & pobj = dynamic_cast<TProfile2D&>(obj);
+      TProfile2D &pobj = dynamic_cast<TProfile2D &>(obj);
 
       TH2D::Copy(pobj);
       fBinEntries.Copy(pobj.fBinEntries);
