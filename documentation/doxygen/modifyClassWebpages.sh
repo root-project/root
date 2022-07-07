@@ -4,16 +4,7 @@
 
 # Finding the system we are running
 
-export DOXYGEN_LDD="ldd"
-listOfClasses=$(mktemp /tmp/listOfClasses_XXXXXX.txt)
-OS=`uname`
-
-case "$OS" in
-   "Linux") export DOXYGEN_LDD="ldd"
-   ;;
-   "Darwin")export DOXYGEN_LDD="otool -L"
-   ;;
-esac
+listOfClasses=$(mktemp /tmp/listOfClasses.XXXXXX)
 
 case "$1" in
    -j*)

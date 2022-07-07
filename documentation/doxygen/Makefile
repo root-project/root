@@ -1,7 +1,15 @@
 
 .PHONY: filter folders mathjax js images doxygen replaceCollaborationDiagrams
 
-NJOB ?= $(shell nproc)
+OS=$(shell uname)
+ifeq ($(UNAME), Darwin)
+   export DOXYGEN_LDD := otool -L
+   NJOB ?= $(shell sysctl -n hw.ncpu)
+else
+   export DOXYGEN_LDD := ldd
+   NJOB ?= $(shell nproc)
+endif
+
 PYTHON_EXECUTABLE ?= python3
 export PYTHON_EXECUTABLE
 export PYSPARK_PYTHON := $(PYTHON_EXECUTABLE)
