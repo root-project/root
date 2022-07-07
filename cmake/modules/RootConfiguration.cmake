@@ -847,7 +847,7 @@ else()
         "${libdir}" "-lCore" "-lRint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "${ROOTBUILD}")
 endif()
 
-#---Get the value of CMAKE_CXX_FLAGS provided by the user in the command line
+#---Get the values of ROOT_ALL_OPTIONS and CMAKE_CXX_FLAGS provided by the user in the command line
 set(all_features ${ROOT_ALL_OPTIONS})
 set(usercflags ${CMAKE_CXX_FLAGS-CACHED})
 file(REMOVE ${CMAKE_BINARY_DIR}/installtree/root-config)
