@@ -437,7 +437,7 @@ TLatex::~TLatex()
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
-TLatex::TLatex(const TLatex &text) : TText(text), TAttLine(text)
+TLatex::TLatex(const TLatex &latex) : TText(latex), TAttLine(latex)
 {
    fFactorSize  = 1.5;
    fFactorPos   = 0.6;
@@ -446,7 +446,7 @@ TLatex::TLatex(const TLatex &text) : TText(text), TAttLine(text)
    fOriginSize  = 0.04;
    fItalic      = kFALSE;
    fLimitFactorSize = 3;
-   ((TLatex&)text).Copy(*this);
+   latex.TLatex::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -474,6 +474,8 @@ TLatex& TLatex::operator=(const TLatex& lt)
 
 void TLatex::Copy(TObject &obj) const
 {
+   TText::Copy(obj);
+   TAttLine::Copy(((TAttLine&)obj));
    ((TLatex&)obj).fFactorSize  = fFactorSize;
    ((TLatex&)obj).fFactorPos   = fFactorPos;
    ((TLatex&)obj).fLimitFactorSize  = fLimitFactorSize;
@@ -482,8 +484,6 @@ void TLatex::Copy(TObject &obj) const
    ((TLatex&)obj).fTabSize     = fTabSize;
    ((TLatex&)obj).fOriginSize  = fOriginSize;
    ((TLatex&)obj).fItalic      = fItalic;
-   TText::Copy(obj);
-   TAttLine::Copy(((TAttLine&)obj));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
