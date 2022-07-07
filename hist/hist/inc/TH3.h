@@ -67,7 +67,7 @@ protected:
 
 private:
 
-   TH3(const TH3&);
+   TH3(const TH3&) = delete;
    TH3& operator=(const TH3&) = delete;
 
    using TH1::Integral;

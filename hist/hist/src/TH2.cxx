@@ -214,17 +214,6 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Private copy constructor.
-/// One should use the copy constructor of the derived classes (e.g. TH2D, TH2F ...).
-/// The list of functions is not copied. (Use Clone() if needed)
-
-TH2::TH2(const TH2 &h2) : TH1()
-{
-   h2.TH2::Copy(*this);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
 TH2::~TH2()

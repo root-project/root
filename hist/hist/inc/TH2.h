@@ -61,7 +61,7 @@ protected:
 
 private:
 
-   TH2(const TH2&);
+   TH2(const TH2&) = delete;
    TH2& operator=(const TH2&) = delete;
 
    // make private methods which have a TH1 signature and should not

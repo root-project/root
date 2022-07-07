@@ -122,7 +122,7 @@ public:
 private:
    void    Build();
 
-   TH1(const TH1&);
+   TH1(const TH1&) = delete;
    TH1& operator=(const TH1&) = delete;
 
 protected:

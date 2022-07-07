@@ -188,17 +188,6 @@ TH3::TH3(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Private copy constructor.
-/// One should use the copy constructor of the derived classes (e.g. TH3D, TH3F ...).
-/// The list of functions is not copied. (Use Clone() if needed)
-
-TH3::TH3(const TH3 &h3) : TH1(), TAtt3D()
-{
-   h3.TH3::Copy(*this);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
 TH3::~TH3()
