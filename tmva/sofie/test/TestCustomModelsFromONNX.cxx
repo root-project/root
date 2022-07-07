@@ -30,6 +30,9 @@
 #include "Neg_FromONNX.hxx"
 #include "input_models/references/Neg.ref.hxx"
 
+#include "Cast_FromONNX.hxx"
+#include "input_models/references/Cast.ref.hxx"
+
 #include "LinearWithLeakyRelu_FromONNX.hxx"
 #include "input_models/references/LinearWithLeakyRelu.ref.hxx"
 
@@ -322,6 +325,30 @@ TEST(ONNX, Neg)
          EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
       }
    }
+
+TEST(ONNX, Cast)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard  input
+   std::vector<int> input({
+      1,2,3,4,5,6
+   });
+
+   TMVA_SOFIE_Cast::Session s("Cast_FromONNX.dat");
+
+   std::vector<float> output = s.infer(input.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(Cast_ExpectedOutput::outputs) / sizeof(float));
+
+   float *correct = Cast_ExpectedOutput::outputs;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
 
 TEST(ONNX, Linear64)
 {
