@@ -3411,6 +3411,23 @@ void TH3::Streamer(TBuffer &R__b)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// static methdod performing the projection to 1D histogram
+
+TH1D *TH3::DoProject1D(const TH3 &h, const char *name, const char *title, const TAxis *projX, bool computeErrors,
+                       bool originalRange, bool useUF, bool useOF)
+{
+   return h.DoProject1D(name, title, projX, nullptr, nullptr, computeErrors, originalRange, useUF, useOF);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// static methdod performing the projection to 2D histogram
+
+TH2D *TH3::DoProject2D(const TH3 &h, const char *name, const char *title, const TAxis *projX, const TAxis *projY,
+                       bool computeErrors, bool originalRange, bool useUF, bool useOF)
+{
+   return h.DoProject2D(name, title, projX, projY, computeErrors, originalRange, useUF, useOF);
+}
 
 //______________________________________________________________________________
 //                     TH3C methods
