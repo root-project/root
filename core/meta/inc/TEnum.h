@@ -53,6 +53,9 @@ public:
 
    TEnum() : TDictionary()  {}
    TEnum(const char *name, DeclId_t declid, TClass *cls);
+   TEnum(const TEnum &);
+   TEnum& operator=(const TEnum &);
+
    virtual ~TEnum();
 
    void                  AddConstant(TEnumConstant *constant);
