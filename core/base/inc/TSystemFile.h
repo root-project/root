@@ -40,7 +40,7 @@ public:
    virtual void     Move(const char *to);          // *MENU*
    virtual void     Edit();                        // *MENU*
 
-   virtual Bool_t   IsDirectory(const char *dir = 0) const;
+   virtual Bool_t   IsDirectory(const char *dir = nullptr) const;
    virtual void     SetIconName(const char *name) { fIconName = name; }
    const char      *GetIconName() const override { return fIconName.Data(); }
 
