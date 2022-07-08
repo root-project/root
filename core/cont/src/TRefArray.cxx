@@ -130,6 +130,7 @@ TRefArray::TRefArray(Int_t s, TProcessID *pid)
 
    fPID  = pid ? pid : TProcessID::GetSessionProcessID();
    fUIDs = nullptr;
+   fSize = 0;
    Init(s, 0);
 }
 
@@ -147,6 +148,7 @@ TRefArray::TRefArray(Int_t s, Int_t lowerBound, TProcessID *pid)
 
    fPID  = pid ? pid : TProcessID::GetSessionProcessID();
    fUIDs = nullptr;
+   fSize = 0;
    Init(s, lowerBound);
 }
 
@@ -157,6 +159,7 @@ TRefArray::TRefArray(const TRefArray &a) : TSeqCollection()
 {
    fPID  = a.fPID;
    fUIDs = nullptr;
+   fSize = 0;
    Init(a.fSize, a.fLowerBound);
 
    for (Int_t i = 0; i < fSize; i++)
@@ -175,9 +178,7 @@ TRefArray& TRefArray::operator=(const TRefArray &a)
       // Copy this by hand because the assignment operator
       // of TCollection is private
       fName   = a.fName;
-      fSize   = a.fSize;
       fSorted = a.fSorted;
-
       fPID = a.fPID;
       Init(a.fSize, a.fLowerBound);
 
@@ -682,19 +683,20 @@ Int_t TRefArray::IndexOf(const TObject *obj) const
 
 void TRefArray::Init(Int_t s, Int_t lowerBound)
 {
-   if (fUIDs && fSize != s) {
-      delete [] fUIDs;
-      fUIDs = nullptr;
+   if (s != fSize) {
+      if (fUIDs) {
+         delete [] fUIDs;
+         fUIDs = nullptr;
+      }
+      fSize = s;
+
+      if (fSize) {
+         fUIDs = new UInt_t[fSize];
+         for (Int_t i=0;i<s;i++)
+            fUIDs[i] = 0;
+      }
    }
 
-   fSize = s;
-
-   if (fSize) {
-      fUIDs = new UInt_t[fSize];
-      for (Int_t i=0;i<s;i++) fUIDs[i] = 0;
-   } else {
-      fUIDs = nullptr;
-   }
    fLowerBound = lowerBound;
    fLast = -1;
    Changed();
