@@ -58,6 +58,49 @@ TEnum::TEnum(const char *name, DeclId_t declid, TClass *cls)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
+TEnum::TEnum(const TEnum &src) : TDictionary(src)
+{
+   fClass = src.fClass;
+   fInfo = src.fInfo ? gInterpreter->ClassInfo_Factory(src.fInfo) : nullptr;
+   fQualName = src.fQualName;
+   fUnderlyingType = src.fUnderlyingType;
+
+   Bool_t isowner = src.fConstantList.IsOwner();
+   fConstantList.SetOwner(isowner);
+   TIter next(&src.fConstantList);
+   while (auto c = (TEnumConstant *) next())
+      fConstantList.Add(isowner ? new TEnumConstant(*c) : c);
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Assign operator
+
+TEnum& TEnum::operator=(const TEnum &src)
+{
+   if (this != &src) {
+      if (fInfo)
+         gInterpreter->ClassInfo_Delete(fInfo);
+      fConstantList.Clear();
+
+      TDictionary::operator=(src);
+
+      fInfo = src.fInfo ? gInterpreter->ClassInfo_Factory(src.fInfo) : nullptr;
+      fQualName = src.fQualName;
+      fUnderlyingType = src.fUnderlyingType;
+
+      Bool_t isowner = src.fConstantList.IsOwner();
+      fConstantList.SetOwner(isowner);
+      TIter next(&src.fConstantList);
+      while (auto c = (TEnumConstant *) next())
+         fConstantList.Add(isowner ? new TEnumConstant(*c) : c);
+   }
+   return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
 TEnum::~TEnum()
