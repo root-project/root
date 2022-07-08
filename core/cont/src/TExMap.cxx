@@ -67,6 +67,7 @@ TExMap& TExMap::operator=(const TExMap &map)
       TObject::operator=(map);
       fSize  = map.fSize;
       fTally = map.fTally;
+      delete [] fTable;
       fTable = new Assoc_t [fSize];
       memcpy(fTable, map.fTable, fSize*sizeof(Assoc_t));
    }
@@ -78,7 +79,7 @@ TExMap& TExMap::operator=(const TExMap &map)
 
 TExMap::~TExMap()
 {
-   delete [] fTable; fTable = 0;
+   delete [] fTable; fTable = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
