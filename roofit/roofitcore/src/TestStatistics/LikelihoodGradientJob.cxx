@@ -131,8 +131,14 @@ void LikelihoodGradientJob::update_workers_state()
    zmq::message_t gradient_message(grad_.begin(), grad_.end());
    zmq::message_t minuit_internal_x_message(minuit_internal_x_.begin(), minuit_internal_x_.end());
    ++state_id_;
-   get_manager()->messenger().publish_from_master_to_workers(id_, state_id_, std::move(gradient_message),
+   get_manager()->messenger().publish_from_master_to_workers(id_, state_id_, isCalculating_, std::move(gradient_message),
                                                              std::move(minuit_internal_x_message));
+}
+
+void LikelihoodGradientJob::update_workers_state_isCalculating()
+{
+   ++state_id_;
+   get_manager()->messenger().publish_from_master_to_workers(id_, state_id_, isCalculating_);
 }
 
 void LikelihoodGradientJob::update_state()
@@ -141,22 +147,26 @@ void LikelihoodGradientJob::update_state()
 
    state_id_ = get_manager()->messenger().receive_from_master_on_worker<MultiProcess::State>(&more);
 
-   auto gradient_message = get_manager()->messenger().receive_from_master_on_worker<zmq::message_t>(&more);
-   assert(more);
-   auto gradient_message_begin = gradient_message.data<ROOT::Minuit2::DerivatorElement>();
-   auto gradient_message_end =
-      gradient_message_begin + gradient_message.size() / sizeof(ROOT::Minuit2::DerivatorElement);
-   std::copy(gradient_message_begin, gradient_message_end, grad_.begin());
+   isCalculating_ = get_manager()->messenger().receive_from_master_on_worker<bool>(&more);
 
-   auto minuit_internal_x_message = get_manager()->messenger().receive_from_master_on_worker<zmq::message_t>(&more);
-   assert(!more);
-   auto minuit_internal_x_message_begin = minuit_internal_x_message.data<double>();
-   auto minuit_internal_x_message_end =
-      minuit_internal_x_message_begin + minuit_internal_x_message.size() / sizeof(double);
-   std::copy(minuit_internal_x_message_begin, minuit_internal_x_message_end, minuit_internal_x_.begin());
+   if (more) {
+      auto gradient_message = get_manager()->messenger().receive_from_master_on_worker<zmq::message_t>(&more);
+      assert(more);
+      auto gradient_message_begin = gradient_message.data<ROOT::Minuit2::DerivatorElement>();
+      auto gradient_message_end =
+         gradient_message_begin + gradient_message.size() / sizeof(ROOT::Minuit2::DerivatorElement);
+      std::copy(gradient_message_begin, gradient_message_end, grad_.begin());
 
-   gradf_.SetupDifferentiate(minimizer_->getMultiGenFcn(), minuit_internal_x_.data(),
-                             minimizer_->fitter()->Config().ParamsSettings());
+      auto minuit_internal_x_message = get_manager()->messenger().receive_from_master_on_worker<zmq::message_t>(&more);
+      assert(!more);
+      auto minuit_internal_x_message_begin = minuit_internal_x_message.data<double>();
+      auto minuit_internal_x_message_end =
+         minuit_internal_x_message_begin + minuit_internal_x_message.size() / sizeof(double);
+      std::copy(minuit_internal_x_message_begin, minuit_internal_x_message_end, minuit_internal_x_.begin());
+
+      gradf_.SetupDifferentiate(minimizer_->getMultiGenFcn(), minuit_internal_x_.data(),
+                                minimizer_->fitter()->Config().ParamsSettings());
+   }
 }
 
 // END SYNCHRONIZATION FROM MASTER TO WORKERS (STATE)
@@ -174,6 +184,7 @@ void LikelihoodGradientJob::run_derivator(unsigned int i_component) const
 void LikelihoodGradientJob::calculate_all()
 {
    if (get_manager()->process_manager().is_master()) {
+      isCalculating_ = true;
       update_workers_state();
 
       // master fills queue with tasks
@@ -186,6 +197,8 @@ void LikelihoodGradientJob::calculate_all()
       gather_worker_results();
 
       calculation_is_clean_->gradient = true;
+      isCalculating_ = false;
+      update_workers_state_isCalculating();
    }
 }
 

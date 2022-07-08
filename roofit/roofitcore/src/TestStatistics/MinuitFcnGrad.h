@@ -80,7 +80,9 @@ private:
 
    // members
    std::shared_ptr<LikelihoodWrapper> likelihood;
+   std::shared_ptr<LikelihoodWrapper> likelihood_in_gradient;
    std::shared_ptr<LikelihoodGradientWrapper> gradient;
+   mutable bool calculating_gradient_ = false;
 
 public:
    mutable std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean;
