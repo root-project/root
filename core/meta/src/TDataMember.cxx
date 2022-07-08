@@ -315,6 +315,7 @@ TDataMember& TDataMember::operator=(const TDataMember& dm)
       fSTLCont=dm.fSTLCont;
       fProperty=dm.fProperty;
       fArrayDim = dm.fArrayDim;
+      delete [] fArrayMaxIndex;
       fArrayMaxIndex = dm.fArrayDim ? new Int_t[dm.fArrayDim] : nullptr;
       for(Int_t d = 0; d < fArrayDim; ++d)
          fArrayMaxIndex[d] = dm.fArrayMaxIndex[d];
