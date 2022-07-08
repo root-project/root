@@ -120,19 +120,20 @@ TTask::TTask(const char* name, const char *title)
 
 TTask& TTask::operator=(const TTask& tt)
 {
-   if(this!=&tt) {
+   if (this != &tt) {
       TNamed::operator=(tt);
-      fTasks->Delete();
+      if (fTasks)
+         fTasks->Delete();
+      else
+         fTasks = new TList;
       TIter next(tt.fTasks);
-      TTask *task;
-      while ((task = (TTask*)next())) {
+      while (auto task = (TTask *)next())
          fTasks->Add(new TTask(*task));
-      }
-      fOption=tt.fOption;
-      fBreakin=tt.fBreakin;
-      fBreakout=tt.fBreakout;
-      fHasExecuted=tt.fHasExecuted;
-      fActive=tt.fActive;
+      fOption = tt.fOption;
+      fBreakin = tt.fBreakin;
+      fBreakout = tt.fBreakout;
+      fHasExecuted = tt.fHasExecuted;
+      fActive = tt.fActive;
    }
    return *this;
 }
@@ -144,10 +145,8 @@ TTask::TTask(const TTask &other) : TNamed(other)
 {
    fTasks = new TList();
    TIter next(other.fTasks);
-   TTask *task;
-   while ((task = (TTask*)next())) {
+   while (auto task = (TTask *)next())
       fTasks->Add(new TTask(*task));
-   }
    fOption = other.fOption;
    fBreakin = other.fBreakin;
    fBreakout = other.fBreakout;
@@ -169,8 +168,10 @@ TTask::~TTask()
 ////////////////////////////////////////////////////////////////////////////////
 /// Add TTask to this.
 
-void  TTask::Add(TTask *task) 
+void  TTask::Add(TTask *task)
 {
+   if (!fTasks)
+      fTasks = new TList;
    fTasks->Add(task);
 }
 
@@ -202,7 +203,8 @@ void TTask::Abort()
 
 void TTask::Browse(TBrowser *b)
 {
-   fTasks->Browse(b);
+   if (fTasks)
+      fTasks->Browse(b);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -217,10 +219,8 @@ void TTask::CleanTasks()
    fHasExecuted = kFALSE;
    Clear();
    TIter next(fTasks);
-   TTask *task;
-   while((task=(TTask*)next())) {
+   while (auto task = (TTask *)next())
       task->CleanTasks();
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -307,8 +307,7 @@ void TTask::ExecuteTask(Option_t *option)
 void TTask::ExecuteTasks(Option_t *option)
 {
    TIter next(fTasks);
-   TTask *task;
-   while((task=(TTask*)next())) {
+   while(auto task = (TTask *)next()) {
       if (fgBreakPoint) return;
       if (!task->IsActive()) continue;
       if (task->fHasExecuted) {
@@ -355,9 +354,8 @@ void TTask::ls(Option_t *option) const
 
    TRegexp re(opt, kTRUE);
 
-   TObject *obj;
    TIter nextobj(fTasks);
-   while ((obj = (TObject *) nextobj())) {
+   while (auto obj = (TObject *) nextobj()) {
       TString s = obj->GetName();
       if (s.Index(re) == kNPOS) continue;
       obj->ls(option);
