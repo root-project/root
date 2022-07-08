@@ -104,6 +104,36 @@ public:
       fBranches.clear();
       fNames.clear();
    }
+
+   void AssertNoNullBranchAddresses()
+   {
+      std::vector<TBranch *> branchesWithNullAddress;
+      std::copy_if(fBranches.begin(), fBranches.end(), std::back_inserter(branchesWithNullAddress),
+                   [](TBranch *b) { return b->GetAddress() == nullptr; });
+
+      if (branchesWithNullAddress.empty())
+         return;
+
+      // otherwise build error message and throw
+      std::vector<std::string> missingBranchNames;
+      std::transform(branchesWithNullAddress.begin(), branchesWithNullAddress.end(),
+                     std::back_inserter(missingBranchNames), [](TBranch *b) { return b->GetName(); });
+      std::string msg = "RDataFrame::Snapshot:";
+      if (missingBranchNames.size() == 1) {
+         msg += " branch " + missingBranchNames[0] +
+                " is needed as it provides the size for one or more branches containing dynamically sized arrays, but "
+                "it is";
+      } else {
+         msg += " branches ";
+         for (const auto &bName : missingBranchNames)
+            msg += bName + ", ";
+         msg.resize(msg.size() - 2); // remove last ", "
+         msg +=
+            " are needed as they provide the size of other branches containing dynamically sized arrays, but they are";
+      }
+      msg += " not part of the set of branches that are being written out.";
+      throw std::runtime_error(msg);
+   }
 };
 
 /// The container type for each thread's partial result in an action helper
@@ -1529,6 +1559,7 @@ public:
                                            fBranches[S], fBranchAddresses[S], &values, fOutputBranches, fIsDefine[S]),
                          0)...,
                         0};
+      fOutputBranches.AssertNoNullBranchAddresses();
       (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
    }
 
@@ -1694,6 +1725,7 @@ public:
                                            &values, fOutputBranches[slot], fIsDefine[S]),
                          0)...,
                         0};
+      fOutputBranches[slot].AssertNoNullBranchAddresses();
       (void)expander; // avoid unused parameter warnings (gcc 12.1)
    }
 
