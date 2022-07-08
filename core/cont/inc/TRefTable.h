@@ -66,6 +66,10 @@ public:
    TRefTable();
    TRefTable(TObject *owner, Int_t size);
    virtual ~TRefTable();
+
+   TRefTable(const TRefTable&) = delete;
+   TRefTable &operator=(const TRefTable&) = delete;
+
    virtual Int_t      Add(Int_t uid, TProcessID* context = nullptr);
    void               Clear(Option_t * /*option*/ ="") override;
    virtual Int_t      Expand(Int_t pid, Int_t newsize);
