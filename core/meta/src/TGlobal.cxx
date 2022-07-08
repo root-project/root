@@ -58,6 +58,10 @@ TGlobal &TGlobal::operator=(const TGlobal &rhs)
          fInfo = gCling->DataMemberInfo_FactoryCopy(rhs.fInfo);
          SetName(gCling->DataMemberInfo_Name(fInfo));
          SetTitle(gCling->DataMemberInfo_Title(fInfo));
+      } else {
+         fInfo = nullptr;
+         SetName(rhs.GetName());
+         SetTitle(rhs.GetTitle());
       }
    }
    return *this;
