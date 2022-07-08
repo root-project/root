@@ -1052,6 +1052,39 @@ RooPlot* RooMCStudy::plotError(const RooRealVar& param, const RooCmdArg& arg1, c
   return frame ;
 }
 
+namespace {
+
+// Fits a Gaussian to the pull distribution, plots the fit and prints the fit
+// parameters on the canvas. Implementation detail of RooMCStudy::plotPull().
+void fitGaussToPulls(RooPlot& frame, RooDataSet& fitParData)
+{
+   // Build the Gaussian fit mode for the pulls, then fit it and plot it.
+   RooRealVar pullMean("pullMean","Mean of pull",0,-10,10) ;
+   RooRealVar pullSigma("pullSigma","Width of pull",1,0.1,5) ;
+   RooGenericPdf pullGauss("pullGauss","Gaussian of pull",
+            "exp(-0.5*(@0-@1)*(@0-@1)/(@2*@2))",
+            {*frame.getPlotVar(),pullMean,pullSigma}) ;
+   pullGauss.fitTo(fitParData, RooFit::Minos(0), RooFit::PrintLevel(-1)) ;
+   pullGauss.plotOn(&frame) ;
+
+   // Instead of using paramOn() without command arguments to plot the fit
+   // parameters, we are building the parameter label ourselves for more
+   // flexibility and pass this together with an appropriate layout
+   // parametrization to paramOn().
+   const int sigDigits = 2;
+   const char * options = "ELU";
+   std::stringstream ss;
+   ss << "Fit parameters:\n"
+      << "#mu: " << *std::unique_ptr<TString>{pullMean.format(sigDigits, options)}
+      << "\n#sigma: " << *std::unique_ptr<TString>{pullSigma.format(sigDigits, options)};
+   // We set the parameters constant to disable the default label. Still, we
+   // use param() on as a wrapper for the text box generation.
+   pullMean.setConstant(true);
+   pullSigma.setConstant(true);
+   pullGauss.paramOn(&frame, RooFit::Label(ss.str().c_str()), RooFit::Layout(0.60, 0.9, 0.9));
+}
+
+} // namespace
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1076,6 +1109,22 @@ RooPlot* RooMCStudy::plotError(const RooRealVar& param, const RooCmdArg& arg1, c
 ///
 /// If no frame specifications are given, the AutoSymRange() feature will be used to set a default range.
 /// Any other named argument is passed to the RooAbsData::plotOn(). See that function for allowed options.
+///
+/// If you want to have more control over the Gaussian fit to the pull
+/// distribution, you can also do it after the call to plotPull():
+///
+/// ~~~ {.cpp}
+/// RooPlot *frame = mcstudy->plotPull(myVariable, RooFit::Bins(40), RooFit::FitGauss(false));
+/// RooRealVar pullMean("pullMean","Mean of pull",0,-10,10) ;
+/// RooRealVar pullSigma("pullSigma","Width of pull",1,0.1,5) ;
+/// pullMean.setPlotLabel("pull #mu");     // optional (to get nicer plot labels if you want)
+/// pullSigma.setPlotLabel("pull #sigma"); // optional
+/// RooGaussian pullGauss("pullGauss","Gaussian of pull", *frame->getPlotVar(), pullMean, pullSigma);
+/// pullGauss.fitTo(const_cast<RooDataSet&>(mcstudy->fitParDataSet()),
+///                 RooFit::Minos(0), RooFit::PrintLevel(-1)) ;
+/// pullGauss.plotOn(frame) ;
+/// pullGauss.paramOn(frame, RooFit::Layout(0.65, 0.9, 0.9)); // optionally specify label position (xmin, xmax, ymax)
+/// ~~~
 
 RooPlot* RooMCStudy::plotPull(const RooRealVar& param, const RooCmdArg& arg1, const RooCmdArg& arg2,
                      const RooCmdArg& arg3, const RooCmdArg& arg4,
@@ -1116,14 +1165,7 @@ RooPlot* RooMCStudy::plotPull(const RooRealVar& param, const RooCmdArg& arg1, co
 
     // Add Gaussian fit if requested
     if (fitGauss) {
-      RooRealVar pullMean("pullMean","Mean of pull",0,-10,10) ;
-      RooRealVar pullSigma("pullSigma","Width of pull",1,0.1,5) ;
-      RooGenericPdf pullGauss("pullGauss","Gaussian of pull",
-               "exp(-0.5*(@0-@1)*(@0-@1)/(@2*@2))",
-               RooArgSet(pvar,pullMean,pullSigma)) ;
-      pullGauss.fitTo(*_fitParData,RooFit::Minos(0),RooFit::PrintLevel(-1)) ;
-      pullGauss.plotOn(frame) ;
-      pullGauss.paramOn(frame,_fitParData) ;
+      fitGaussToPulls(*frame, *_fitParData);
     }
   }
   return frame;
@@ -1258,14 +1300,7 @@ RooPlot* RooMCStudy::plotPull(const RooRealVar& param, double lo, double hi, Int
   }
 
   if (fitGauss) {
-    RooRealVar pullMean("pullMean","Mean of pull",0,lo,hi) ;
-    RooRealVar pullSigma("pullSigma","Width of pull",1,0,5) ;
-    RooGenericPdf pullGauss("pullGauss","Gaussian of pull",
-             "exp(-0.5*(@0-@1)*(@0-@1)/(@2*@2))",
-             RooArgSet(pvar,pullMean,pullSigma)) ;
-    pullGauss.fitTo(*_fitParData,RooFit::Minos(0),RooFit::PrintLevel(-1)) ;
-    pullGauss.plotOn(frame) ;
-    pullGauss.paramOn(frame,_fitParData) ;
+    fitGaussToPulls(*frame, *_fitParData);
   }
 
   return frame ;
