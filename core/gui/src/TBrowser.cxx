@@ -51,37 +51,53 @@ Called whenever timer times out.
 class TBrowserTimer : public TTimer {
 
 protected:
-   TBrowser *fBrowser;
-   Bool_t    fActivate;
+   TBrowser *fBrowser{nullptr};
+   Bool_t fActivate{kFALSE};
 
 public:
-   TBrowserTimer(TBrowser *b, Long_t ms = 1000)
-      : TTimer(ms, kTRUE), fBrowser(b), fActivate(kFALSE) { }
-   Bool_t Notify() override;
+   TBrowserTimer(TBrowser *b, Long_t ms = 1000) : TTimer(ms, kTRUE), fBrowser(b), fActivate(kFALSE) {}
+   Bool_t Notify() override
+   {
+      if (fBrowser) {
+         if (fBrowser->GetRefreshFlag()) {
+            fBrowser->SetRefreshFlag(kFALSE);
+            fActivate = kTRUE;
+         } else if (fActivate) {
+            fActivate = kFALSE;
+            fBrowser->Refresh();
+         }
+      }
+      Reset();
+
+      return kFALSE;
+   }
 };
 
 /** \class TBrowserObject
 This class is designed to wrap a Foreign object in order to inject it into the Browse sub-system.
 */
 
-class TBrowserObject : public TNamed
-{
+class TBrowserObject : public TNamed {
 
 public:
+   TBrowserObject(void *obj, TClass *cl, const char *brname)
+      : TNamed(brname, cl ? cl->GetName() : ""), fObj(obj), fClass(cl)
+   {
+      if (!cl)
+         Fatal("Constructor", "Class parameter should not be null");
+      SetBit(kCanDelete);
+   }
 
-   TBrowserObject(void *obj, TClass *cl, const char *brname);
-   ~TBrowserObject(){;}
+   ~TBrowserObject() {}
 
-   void    Browse(TBrowser* b) override;
-   Bool_t  IsFolder() const override;
+   void Browse(TBrowser *b) override { fClass->Browse(fObj, b); }
+   Bool_t IsFolder() const override { return fClass->IsFolder(fObj); }
    TClass *IsA() const override { return fClass; }
 
 private:
-   void     *fObj;   ///<! pointer to the foreign object
-   TClass   *fClass; ///<! pointer to class of the foreign object
-
+   void *fObj;     ///<! pointer to the foreign object
+   TClass *fClass; ///<! pointer to class of the foreign object
 };
-
 
 ClassImp(TBrowser);
 
@@ -412,47 +428,4 @@ void TBrowser::Refresh()
 void TBrowser::SetSelected(TObject *clickedObject)
 {
    fLastSelectedObject = clickedObject;
-}
-
-Bool_t TBrowserTimer::Notify()
-{
-   if (fBrowser) {
-      if (fBrowser->GetRefreshFlag()) {
-         fBrowser->SetRefreshFlag(kFALSE);
-         fActivate = kTRUE;
-      } else if (fActivate) {
-         fActivate = kFALSE;
-         fBrowser->Refresh();
-      }
-   }
-   Reset();
-
-   return kFALSE;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
-
-TBrowserObject::TBrowserObject(void *obj, TClass *cl, const char *brname)
-   : TNamed(brname, cl ? cl->GetName() : ""), fObj(obj), fClass(cl)
-{
-   if (cl==0) Fatal("Constructor","Class parameter should not be null");
-   SetBit(kCanDelete);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return kTRUE if the object is a folder (contains browsable objects).
-
-Bool_t TBrowserObject::IsFolder() const
-{
-   return fClass->IsFolder(fObj);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Browse the content of the underlying object.
-
-void TBrowserObject::Browse(TBrowser* b)
-{
-   fClass->Browse(fObj, b);
 }
