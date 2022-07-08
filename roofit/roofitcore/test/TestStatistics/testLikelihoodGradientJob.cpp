@@ -372,7 +372,7 @@ TEST_F(LikelihoodSimBinnedConstrainedTest, ConstrainedAndOffset)
    RooMinimizer m0(*nll, RooMinimizer::FcnMode::gradient);
 
    m0.setStrategy(0);
-   m0.setPrintLevel(1);
+   m0.setPrintLevel(-1);
 
    m0.migrad();
 
@@ -399,7 +399,7 @@ TEST_F(LikelihoodSimBinnedConstrainedTest, ConstrainedAndOffset)
    m1.setOffsetting(true);
 
    m1.setStrategy(0);
-   m1.setPrintLevel(1);
+   m1.setPrintLevel(-1);
    m1.optimizeConst(2);
 
    m1.migrad();
@@ -431,4 +431,69 @@ TEST_F(LikelihoodSimBinnedConstrainedTest, ConstrainedAndOffset)
    EXPECT_NEAR_REL(alpha_bkg_B_error_nominal, alpha_bkg_B_error_GradientJob, 1e-4);
    EXPECT_NEAR_REL(mu_sig_nominal, mu_sig_GradientJob, 1e-4);
    EXPECT_NEAR_REL(mu_sig_error_nominal, mu_sig_error_GradientJob, 1e-4);
+}
+
+TEST_P(LikelihoodGradientJob, Gaussian1DAlsoWithLikelihoodJob)
+{
+   // do a minimization, but now using GradMinimizer and its MP version
+
+   // parameters
+   std::size_t NWorkers = std::get<0>(GetParam());
+   std::size_t seed = std::get<1>(GetParam());
+
+   RooRandom::randomGenerator()->SetSeed(seed);
+
+   RooWorkspace w = RooWorkspace();
+
+   std::unique_ptr<RooAbsReal> nll;
+   std::unique_ptr<RooArgSet> values;
+   RooAbsPdf *pdf;
+   RooDataSet *data;
+   std::tie(nll, pdf, data, values) = generate_1D_gaussian_pdf_nll(w, 10000);
+   RooRealVar *mu = w.var("mu");
+
+   RooArgSet *savedValues = dynamic_cast<RooArgSet *>(values->snapshot());
+   if (savedValues == nullptr) {
+      throw std::runtime_error("params->snapshot() cannot be casted to RooArgSet!");
+   }
+
+   // --------
+
+   auto m0 = std::make_unique<RooMinimizer>(*nll, RooMinimizer::FcnMode::gradient);
+
+   m0->setStrategy(0);
+   m0->setPrintLevel(-1);
+   m0->setVerbose(false);
+
+   m0->migrad();
+
+   RooFitResult *m0result = m0->lastMinuitFit();
+   double minNll0 = m0result->minNll();
+   double edm0 = m0result->edm();
+   double mu0 = mu->getVal();
+   double muerr0 = mu->getError();
+
+   *values = *savedValues;
+
+   RooFit::MultiProcess::Config::setDefaultNWorkers(NWorkers);
+   auto likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data);
+   RooMinimizer m1(likelihood, RooFit::TestStatistics::LikelihoodMode::multiprocess,
+                   RooFit::TestStatistics::LikelihoodGradientMode::multiprocess);
+
+   m1.setStrategy(0);
+   m1.setPrintLevel(-1);
+   m1.setVerbose(false);
+
+   m1.migrad();
+
+   RooFitResult *m1result = m1.lastMinuitFit();
+   double minNll1 = m1result->minNll();
+   double edm1 = m1result->edm();
+   double mu1 = mu->getVal();
+   double muerr1 = mu->getError();
+
+   EXPECT_FLOAT_EQ(minNll0, minNll1);
+   EXPECT_FLOAT_EQ(mu0, mu1);
+   EXPECT_FLOAT_EQ(muerr0, muerr1);
+   EXPECT_NEAR_REL(edm0, edm1, 1e-5);
 }

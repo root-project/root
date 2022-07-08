@@ -71,6 +71,13 @@ public:
    /// with higher precision.
    virtual bool usesMinuitInternalValues() = 0;
 
+   /// Reports whether or not the gradient is currently being calculated.
+   ///
+   /// This is used in MinuitFcnGrad to switch between LikelihoodWrapper implementations
+   /// inside and outside of a LikelihoodGradientJob calculation when the LikelihoodWrapper
+   /// used is LikelihoodJob. This is to prevent Jobs from being started within Jobs.
+   virtual bool isCalculating() = 0;
+
 protected:
    std::shared_ptr<RooAbsL> likelihood_;
    RooMinimizer *minimizer_;

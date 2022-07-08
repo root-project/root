@@ -56,15 +56,26 @@ MinuitFcnGrad::MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAb
    calculation_is_clean = std::make_shared<WrapperCalculationCleanFlags>();
 
    likelihood = LikelihoodWrapper::create(likelihoodMode, _likelihood, calculation_is_clean);
+   if (likelihoodGradientMode == LikelihoodGradientMode::multiprocess) {
+      likelihood_in_gradient = LikelihoodWrapper::create(LikelihoodMode::serial, _likelihood, calculation_is_clean);
+   } else {
+      likelihood_in_gradient = likelihood;
+   }
    gradient =
       LikelihoodGradientWrapper::create(likelihoodGradientMode, _likelihood, calculation_is_clean, getNDim(), _context);
 
    likelihood->synchronizeParameterSettings(parameters);
+   if (likelihood != likelihood_in_gradient) {
+      likelihood_in_gradient->synchronizeParameterSettings(parameters);
+   }
    gradient->synchronizeParameterSettings(this, parameters);
 
    // Note: can be different than RooGradMinimizerFcn, where default options are passed
    // (ROOT::Math::MinimizerOptions::DefaultStrategy() and ROOT::Math::MinimizerOptions::DefaultErrorDef())
    likelihood->synchronizeWithMinimizer(ROOT::Math::MinimizerOptions());
+   if (likelihood != likelihood_in_gradient) {
+      likelihood_in_gradient->synchronizeWithMinimizer(ROOT::Math::MinimizerOptions());
+   }
    gradient->synchronizeWithMinimizer(ROOT::Math::MinimizerOptions());
 }
 
@@ -74,8 +85,9 @@ double MinuitFcnGrad::DoEval(const double *x) const
 
    // Calculate the function for these parameters
    //   RooAbsReal::setHideOffset(false);
-   likelihood->evaluate();
-   double fvalue = likelihood->getResult().Sum();
+   auto likelihood_here(gradient->isCalculating() ? likelihood_in_gradient : likelihood);
+   likelihood_here->evaluate();
+   double fvalue = likelihood_here->getResult().Sum();
    calculation_is_clean->likelihood = true;
    //   RooAbsReal::setHideOffset(true);
 
@@ -126,7 +138,7 @@ double MinuitFcnGrad::DoEval(const double *x) const
 
    // Optional logging
    if (_verbose) {
-      std::cout << "\nprevFCN" << (likelihood->isOffsetting() ? "-offset" : "") << " = " << std::setprecision(10)
+      std::cout << "\nprevFCN" << (likelihood_here->isOffsetting() ? "-offset" : "") << " = " << std::setprecision(10)
                 << fvalue << std::setprecision(4) << "  ";
       std::cout.flush();
    }
@@ -192,6 +204,9 @@ bool MinuitFcnGrad::syncParameterValuesFromMinuitCalls(const double *x, bool min
       if (a_parameter_has_been_updated) {
          calculation_is_clean->set_all(false);
          likelihood->updateMinuitInternalParameterValues(minuit_internal_x_);
+         if (likelihood != likelihood_in_gradient) {
+            likelihood_in_gradient->updateMinuitInternalParameterValues(minuit_internal_x_);
+         }
          gradient->updateMinuitInternalParameterValues(minuit_internal_x_);
       }
    } else {
@@ -216,6 +231,9 @@ bool MinuitFcnGrad::syncParameterValuesFromMinuitCalls(const double *x, bool min
       if (a_parameter_has_been_updated) {
          calculation_is_clean->set_all(false);
          likelihood->updateMinuitExternalParameterValues(minuit_external_x_);
+         if (likelihood != likelihood_in_gradient) {
+            likelihood_in_gradient->updateMinuitExternalParameterValues(minuit_external_x_);
+         }
          gradient->updateMinuitExternalParameterValues(minuit_external_x_);
       }
    }
@@ -224,15 +242,19 @@ bool MinuitFcnGrad::syncParameterValuesFromMinuitCalls(const double *x, bool min
 
 void MinuitFcnGrad::Gradient(const double *x, double *grad) const
 {
+   calculating_gradient_ = true;
    syncParameterValuesFromMinuitCalls(x, returnsInMinuit2ParameterSpace());
    gradient->fillGradient(grad);
+   calculating_gradient_ = false;
 }
 
 void MinuitFcnGrad::GradientWithPrevResult(const double *x, double *grad, double *previous_grad, double *previous_g2,
                                            double *previous_gstep) const
 {
+   calculating_gradient_ = true;
    syncParameterValuesFromMinuitCalls(x, returnsInMinuit2ParameterSpace());
    gradient->fillGradientWithPrevResult(grad, previous_grad, previous_g2, previous_gstep);
+   calculating_gradient_ = false;
 }
 
 double MinuitFcnGrad::DoDerivative(const double * /*x*/, unsigned int /*icoord*/) const
@@ -245,9 +267,14 @@ MinuitFcnGrad::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameters
 {
    bool returnee = synchronizeParameterSettings(parameters, optConst, verbose);
    likelihood->synchronizeParameterSettings(parameters);
+   if (likelihood != likelihood_in_gradient) {
+      likelihood_in_gradient->synchronizeParameterSettings(parameters);
+   }
    gradient->synchronizeParameterSettings(parameters);
 
-   likelihood->synchronizeWithMinimizer(_context->fitter()->Config().MinimizerOptions());
+   if (likelihood != likelihood_in_gradient) {
+      likelihood_in_gradient->synchronizeWithMinimizer(_context->fitter()->Config().MinimizerOptions());
+   }
    gradient->synchronizeWithMinimizer(_context->fitter()->Config().MinimizerOptions());
    return returnee;
 }
