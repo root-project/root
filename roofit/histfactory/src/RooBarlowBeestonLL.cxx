@@ -348,17 +348,21 @@ bool RooStats::HistFactory::RooBarlowBeestonLL::getParameters(const RooArgSet* d
                                                               bool stripDisconnected) const {
   bool errorInBaseCall = RooAbsArg::getParameters( depList, outputSet, stripDisconnected );
 
+  RooArgSet toRemove;
+  toRemove.reserve( _statUncertParams.size());
+    
   for (auto const& arg : outputSet) {
 
     // If there is a gamma in the name,
     // strip it from the list of dependencies
 
     if( _statUncertParams.find(arg->GetName()) != _statUncertParams.end() ) {
-      outputSet.remove( *arg, true );
+      toRemove.add( *arg );
     }
-
   }
-
+  
+  for( auto& arg : toRemove) outputSet.remove( *arg, true );
+  
   return errorInBaseCall || false;
 
 }
