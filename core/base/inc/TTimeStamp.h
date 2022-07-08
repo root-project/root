@@ -12,33 +12,6 @@
 #ifndef ROOT_TTimeStamp
 #define ROOT_TTimeStamp
 
-//////////////////////////////////////////////////////////////////////////
-//
-// The TTimeStamp encapsulates seconds and ns since EPOCH
-//
-// This extends (and isolates) struct timespec
-//    struct timespec
-//       {
-//          time_t   tv_sec;   /* seconds */
-//          long     tv_nsec;  /* nanoseconds */
-//       }
-//    time_t seconds is relative to Jan 1, 1970 00:00:00 UTC
-//
-// No accounting of leap seconds is made.
-//
-// Due to ROOT/CINT limitations TTimeStamp does not explicitly
-// hold a timespec struct; attempting to do so means the Streamer
-// must be hand written.  Instead we have chosen to simply contain
-// similar fields within the private area of this class.
-//
-// NOTE: the use of time_t (and its default implementation as a 32 int)
-//       implies overflow conditions occurs somewhere around
-//       Jan 18, 19:14:07, 2038.
-//       If this experiment is still going when it becomes significant
-//       someone will have to deal with it.
-//
-//////////////////////////////////////////////////////////////////////////
-
 #include "Rtypes.h"
 
 #include <ctime>
@@ -56,6 +29,7 @@ typedef struct tm       tm_t;
 
 class TVirtualMutex;
 class TTimeStamp;
+
 std::ostream &operator<<(std::ostream &os,  const TTimeStamp &ts);
 TBuffer &operator<<(TBuffer &buf, const TTimeStamp &ts);
 TBuffer &operator>>(TBuffer &buf, TTimeStamp &ts);
@@ -105,7 +79,7 @@ public:
    TTimeStamp(UInt_t date, UInt_t time, UInt_t nsec,
               Bool_t isUTC = kTRUE, Int_t secOffset = 0);
 
-   // compatability with time() and DOS date
+   // compatibility with time() and DOS date
    TTimeStamp(UInt_t tloc, Bool_t isUTC = kTRUE, Int_t secOffset = 0,
               Bool_t dosDate = kFALSE);
 
@@ -123,7 +97,7 @@ public:
    void Set(Int_t date,   Int_t time, Int_t nsec,
             Bool_t isUTC, Int_t secOffset);
 
-   // compatability with time() and DOS date
+   // compatibility with time() and DOS date
    void Set(UInt_t tloc, Bool_t isUTC, Int_t secOffset, Bool_t dosDate);
 
    // direct setters
@@ -148,11 +122,11 @@ public:
 
    void         Copy(TTimeStamp &ts) const;
    UInt_t       GetDate(Bool_t inUTC = kTRUE, Int_t secOffset = 0,
-                        UInt_t *year = 0, UInt_t *month = 0,
-                        UInt_t *day = 0) const;
+                        UInt_t *year = nullptr, UInt_t *month = nullptr,
+                        UInt_t *day = nullptr) const;
    UInt_t       GetTime(Bool_t inUTC = kTRUE, Int_t secOffset = 0,
-                        UInt_t *hour = 0, UInt_t *min = 0,
-                        UInt_t *sec = 0) const;
+                        UInt_t *hour = nullptr, UInt_t *min = nullptr,
+                        UInt_t *sec = nullptr) const;
    Int_t        GetDayOfYear(Bool_t inUTC = kTRUE, Int_t secOffset = 0) const;
    Int_t        GetDayOfWeek(Bool_t inUTC = kTRUE, Int_t secOffset = 0) const;
    Int_t        GetMonth(Bool_t inUTC = kTRUE, Int_t secOffset = 0) const;
