@@ -1970,10 +1970,14 @@ elif args['with_binary_llvm'] is False and args['with_llvm_url']:
     LLVM_GIT_URL = args['with_llvm_url']
 else:
     LLVM_GIT_URL = "http://root.cern.ch/git/llvm.git"
+    
+if args['with_binary_llvm'] and args['with_llvm_tar']:
+    raise Exception("Cannot specify flags --with-binary-llvm and --with-llvm-tar together")
 
 if args['with_llvm_tar']:
     tar_required = True
-
+if args['with_llvm_tar'] and args['with_llvm_url']:
+    raise Exception("Cannot specify flags --with-llvm-tar and --with-llvm-url together")
 if args['check_requirements']:
     llvm_binary_name = ""
     box_draw('Check availability of required softwares')
