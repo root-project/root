@@ -569,7 +569,9 @@ class TreeHeadNode(HeadNode):
         # Keys should be exactly the same
         if files_counts.keys() != entries_in_trees.trees_with_entries.keys():
             raise RuntimeError("The specified input files and the files that were "
-                               "actually processed are not the same.")
+                                "actually processed are not the same:\n"
+                                f"Input files: {list(files_counts.keys())}\n"
+                                f"Processed files: {list(entries_in_trees.trees_with_entries.keys())}")
 
         # Multiply the entries of each tree by the number of times it was
         # requested by the user
