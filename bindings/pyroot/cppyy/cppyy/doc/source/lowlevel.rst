@@ -237,7 +237,7 @@ C++ has three ways of allocating heap memory (``malloc``, ``new``, and
 Direct use of ``malloc`` and ``new`` should be avoided for C++ classes, as
 these may override ``operator new`` to control their allocation own.
 However these low-level allocators can be necessary for builtin types on
-occassion if the C++ side takes ownership (otherwise, prefer either
+occasion if the C++ side takes ownership (otherwise, prefer either
 ``array`` from the builtin module ``array`` or ``ndarray`` from Numpy).
 
 The low-level module adds the following functions:
