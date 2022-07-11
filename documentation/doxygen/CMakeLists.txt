@@ -4,7 +4,7 @@ project(ROOT_documentation)
 set(CMAKE_VERBOSE_MAKEFILE ON) # set to ON for debugging
 set (DOCU_QHG_LOCATION qhelpgenerator CACHE STRING "Path to qhelpgenerator")
 #Pass instead -DDOCU_QHG_LOCATION=/usr/lib/x86_64-linux-gnu/qt4/bin/qhelpgenerator if qt4dev-tools or qt5/ if qt5-assistant
-#Pass instead -DDOCU_QHG_LOCATION=/opt/Qt/5.15.2/gcc_64/bin/qhelpgenerator e.h. if custom installation
+#Pass instead -DDOCU_QHG_LOCATION=/opt/Qt/5.15.2/gcc_64/bin/qhelpgenerator e.g. if custom installation
 set (DOCU_LOCATION /tmp/rootdoc CACHE STRING "Documentation output directory")
 #Pass instead -DDOCU_LOCATION=$HOME/rootdoc if user-specific installation
 set (DOCU_THREADS 0 CACHE STRING "Number of threads for building the documentation (use 0 for maximum threads, N for specific number)")
