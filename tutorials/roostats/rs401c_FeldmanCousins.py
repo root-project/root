@@ -70,7 +70,7 @@ print("interval is [{}, {}]".format(interval.LowerLimit(mu), interval.UpperLimit
 
 # No dedicated plotting class yet, so do it by hand:
 parameterScan = fc.GetPointsToScan()
-hist = parameterScan.createHistogram("mu", 30)
+hist = parameterScan.createHistogram("mu", ROOT.RooFit.Binning(30))
 hist.Draw()
 
 marks = []
