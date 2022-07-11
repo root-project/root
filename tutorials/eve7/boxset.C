@@ -175,7 +175,7 @@ REveBoxSet* boxset_single_color(Float_t x=0, Float_t y=0, Float_t z=0,
    return q;
 }
 
-/*
+
 REveBoxSet* boxset_hex(Float_t x=0, Float_t y=0, Float_t z=0,
                        Int_t num=100, Bool_t registerSet=kTRUE)
 {
@@ -208,4 +208,4 @@ REveBoxSet* boxset_hex(Float_t x=0, Float_t y=0, Float_t z=0,
 
    return q;
 }
-*/
+
