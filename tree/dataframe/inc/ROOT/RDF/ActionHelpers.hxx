@@ -1361,14 +1361,19 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
       const auto bname = leaf->GetName();
       auto *sizeLeaf = leaf->GetLeafCount();
       const auto sizeLeafName = sizeLeaf ? std::string(sizeLeaf->GetName()) : std::to_string(leaf->GetLenStatic());
-      if (sizeLeaf && !outputBranches.Get(sizeLeafName)) { // we need a size branch but it's not there yet
+
+      if (sizeLeaf && !outputBranches.Get(sizeLeafName)) {
+         // The output array branch `bname` has dynamic size stored in leaf `sizeLeafName`, but that leaf has not been
+         // added to the output tree yet. However, the size leaf has to be available for the creation of the array
+         // branch to be successful. So we create the size leaf here.
          const auto sizeTypeStr = TypeName2ROOTTypeName(sizeLeaf->GetTypeName());
          const auto sizeBufSize = sizeLeaf->GetBranch()->GetBasketSize();
-         // the null address will be reset later when we call SetBranchesHelper for this branch
+         // The null branch address is a placeholder. It will be set when SetBranchesHelper is called for `sizeLeafName`
          auto *sizeBranch = outputTree.Branch(sizeLeafName.c_str(), (void *)nullptr,
                                               (sizeLeafName + '/' + sizeTypeStr).c_str(), sizeBufSize);
          outputBranches.Insert(sizeLeafName, sizeBranch);
       }
+
       const auto btype = leaf->GetTypeName();
       const auto rootbtype = TypeName2ROOTTypeName(btype);
       if (rootbtype == ' ') {
