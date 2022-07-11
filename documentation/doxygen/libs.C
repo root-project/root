@@ -16,9 +16,5 @@ void libs(TString classname)
    if (!libname)
       return;
 
-   // Print the library name in a external file
-   TString mainlib = libname;
-   mainlib.ReplaceAll(" ","");
-   mainlib.ReplaceAll(".so","");
    printf("mainlib=%s", libname);
 }

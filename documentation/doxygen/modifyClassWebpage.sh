@@ -24,7 +24,7 @@ if [ -z "${libname}" ]; then
 fi
 
 libname=${libname#mainlib=}
-libname=${libname%.so}
+libname=${libname%.*}
 
 # Picture name containing the "coll graph"
 PICNAME="$HTMLPATH/${libname}__coll__graph.svg"
