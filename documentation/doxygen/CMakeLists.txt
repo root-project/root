@@ -5,8 +5,8 @@ set(CMAKE_VERBOSE_MAKEFILE ON) # set to ON for debugging
 set (DOCU_QHG_LOCATION qhelpgenerator CACHE STRING "Path to qhelpgenerator")
 #Pass instead -DDOCU_QHG_LOCATION=/usr/lib/x86_64-linux-gnu/qt4/bin/qhelpgenerator if qt4dev-tools or qt5/ if qt5-assistant
 #Pass instead -DDOCU_QHG_LOCATION=/opt/Qt/5.15.2/gcc_64/bin/qhelpgenerator e.h. if custom installation
-set (DOCU_LOCATION ${HOME}/rootdoc CACHE STRING "Documentation output directory")
-#Pass instead -DDOCU_LOCATION=/tmp/rootdoc if temporary installation
+set (DOCU_LOCATION /tmp/rootdoc CACHE STRING "Documentation output directory")
+#Pass instead -DDOCU_LOCATION=$HOME/rootdoc if user-specific installation
 set (DOCU_THREADS 0 CACHE STRING "Number of threads for building the documentation (use 0 for maximum threads, N for specific number)")
 set (DOCU_LOGFILE "" CACHE STRING "File where to write warnings to (leave empty for printing into console)")
 
@@ -276,7 +276,10 @@ if(BUILD_DOCUMENTATION)
         #~ )
 
         add_custom_target(Finalization ALL
-            COMMAND cmake -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" NTHREADS=${DOCU_THREADS} ROOT_CMD=${ROOT_root_CMD} ./listlibs.sh WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            #COMMAND cmake -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" NTHREADS=${DOCU_THREADS} ROOT_CMD=${ROOT_root_CMD} ./listlibs.sh WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            COMMAND cmake -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" NTHREADS=${DOCU_THREADS} ROOT_CMD=${ROOT_root_CMD} bash ./makeCollaborationDiagrams.sh WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            COMMAND cmake -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" NTHREADS=${DOCU_THREADS} ROOT_CMD=${ROOT_root_CMD} bash ./replaceCollaborationDiagrams.sh -j${DOCU_THREADS} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            COMMAND cmake -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" NTHREADS=${DOCU_THREADS} ROOT_CMD=${ROOT_root_CMD} bash ./makeNotebooks.sh -j${DOCU_THREADS} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             COMMAND gzip -f ${DOCU_LOCATION}/html/ROOT.tag
             COMMAND gzip -f ${DOCU_LOCATION}/html/ROOT.qch
         )
@@ -285,7 +288,7 @@ if(BUILD_DOCUMENTATION)
         set_property(
           TARGET dox
           APPEND
-          PROPERTY ADDITIONAL_CLEAN_FILES Doxyfile.dox filter htmlfooter.html
+          PROPERTY ADDITIONAL_CLEAN_FILES Doxyfile.dox filter htmlfooter.html tutorialWorklist_py tutorialWorklist_root
         )
 
         #TODO cleaning:

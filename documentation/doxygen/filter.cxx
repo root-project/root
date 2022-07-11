@@ -309,9 +309,9 @@ void FilterTutorial(const int suffix)
 {
    // Use these to write out work that should be run in parallel after doxygen is done:
    // This executes python <work>
-   std::ofstream worklist_py("tutorialWorklist_py", ios_base::app);
+   std::ofstream worklist_py(CMAKE_BUILD_DIRECTORY "/tutorialWorklist_py", ios_base::app);
    // This executes root <work>
-   std::ofstream worklist_root("tutorialWorklist_root", ios_base::app);
+   std::ofstream worklist_root(CMAKE_BUILD_DIRECTORY "/tutorialWorklist_root", ios_base::app);
 
    // File for inline macros.
    FILE *m = 0;
