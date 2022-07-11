@@ -353,13 +353,13 @@ void TClingMethodInfo::Init(const clang::FunctionDecl *decl)
    fDecl = decl;
 }
 
-void *TClingMethodInfo::InterfaceMethod(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
+void *TClingMethodInfo::InterfaceMethod() const
 {
    if (!IsValid()) {
       return 0;
    }
    R__LOCKGUARD(gInterpreterMutex);
-   TClingCallFunc cf(fInterp,normCtxt);
+   TClingCallFunc cf(fInterp);
    cf.SetFunc(this);
    return cf.InterfaceMethod();
 }

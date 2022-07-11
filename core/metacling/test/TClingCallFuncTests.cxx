@@ -81,9 +81,9 @@ TEST(TClingCallFunc, FunctionWrapperReference)
 
    ASSERT_TRUE(gInterpreter->Declare(wrapper.c_str()));
    // Test that we cast this function to the right function type.
-   auto FirstCallPos = wrapper.find("((int& (&)(int*, float))FunctionWrapperFuncRef)");
+   auto FirstCallPos = wrapper.find("((int& (&)(int *, float))FunctionWrapperFuncRef)");
    ASSERT_TRUE(FirstCallPos != wrapper.npos);
-   auto SecondCallPos = wrapper.find("((int& (&)(int*, float))FunctionWrapperFuncRef)", FirstCallPos + 1);
+   auto SecondCallPos = wrapper.find("((int& (&)(int *, float))FunctionWrapperFuncRef)", FirstCallPos + 1);
    ASSERT_TRUE(SecondCallPos != wrapper.npos);
 }
 
@@ -228,4 +228,18 @@ TEST(TClingCallFunc, FunctionWrapperNodiscard)
       });
       ASSERT_TRUE(gInterpreter->Declare(wrapper.c_str()));
    }
+}
+
+TEST(TClingCallFunc, FunctionWrapperSharedPtr)
+{
+  gInterpreter->Declare(R"cpp(
+                          enum E { A=0, B };
+                          void add_sp(std::shared_ptr<std::vector<E>> vals) {
+                             vals->push_back(E::A);
+                          }
+                          )cpp");
+
+   CallFuncRAII CfRAII("");
+   std::string wrapper = CfRAII.SetProtoAndGetWrapper("add_sp", "std::shared_ptr<std::vector<E>>");
+   ASSERT_TRUE(gInterpreter->Declare(wrapper.c_str()));
 }

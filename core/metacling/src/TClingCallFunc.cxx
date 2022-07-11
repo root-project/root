@@ -26,11 +26,12 @@ C++ interpreter and the Clang C++ compiler, not CINT.
 
 #include "TClingClassInfo.h"
 #include "TClingMethodInfo.h"
-#include "TInterpreterValue.h"
 #include "TClingUtils.h"
 
 #include "TError.h"
 #include "TCling.h"
+
+#include "TInterpreter.h"
 
 #include "cling/Interpreter/CompilationOptions.h"
 #include "cling/Interpreter/Interpreter.h"
@@ -44,6 +45,7 @@ C++ interpreter and the Clang C++ compiler, not CINT.
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/GlobalDecl.h"
 #include "clang/AST/PrettyPrinter.h"
+#include "clang/AST/QualTypeNames.h"
 #include "clang/AST/RecordLayout.h"
 #include "clang/AST/Type.h"
 #include "clang/Frontend/CompilerInstance.h"
@@ -198,6 +200,18 @@ void *TClingCallFunc::compile_wrapper(const string &wrapper_name, const string &
                                    withAccessControl);
 }
 
+static void GetTypeAsString(QualType QT, string& type_name, ASTContext &C,
+                            PrintingPolicy Policy) {
+
+   // FIXME: Take the code here https://github.com/root-project/root/blob/550fb2644f3c07d1db72b9b4ddc4eba5a99ddc12/interpreter/cling/lib/Utils/AST.cpp#L316-L350
+   // to make hist/histdrawv7/test/histhistdrawv7testUnit work into
+   // QualTypeNames.h in clang
+   //type_name = clang::TypeName::getFullyQualifiedName(QT, C, Policy);
+   cling::utils::Transform::Config Config;
+   QT = cling::utils::Transform::GetPartiallyDesugaredType(C, QT, Config, /*fullyQualify=*/true);
+   QT.getAsStringInternal(type_name, Policy);
+}
+
 void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf, std::ostringstream &callbuf,
                                        string &type_name, EReferenceType &refType, bool &isPointer, int indent_level,
                                        bool forArgument)
@@ -207,10 +221,11 @@ void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf, 
    //  needed for building the wrapper function.
    //
    const FunctionDecl *FD = GetDecl();
-   PrintingPolicy Policy(FD->getASTContext().getPrintingPolicy());
+   ASTContext &C = FD->getASTContext();
+   PrintingPolicy Policy(C.getPrintingPolicy());
    refType = kNotReference;
    if (QT->isRecordType() && forArgument) {
-      ROOT::TMetaUtils::GetNormalizedName(type_name, QT, *fInterp, fNormCtxt);
+      GetTypeAsString(QT, type_name, C, Policy);
       return;
    }
    if (QT->isFunctionPointerType()) {
@@ -268,7 +283,7 @@ void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf, 
       typedefbuf << "typedef " << ar_typedef_name << ";\n";
       return;
    }
-   ROOT::TMetaUtils::GetNormalizedName(type_name, QT, *fInterp, fNormCtxt);
+   GetTypeAsString(QT, type_name, C, Policy);
 }
 
 void TClingCallFunc::make_narg_ctor(const unsigned N, ostringstream &typedefbuf,
@@ -360,7 +375,8 @@ void TClingCallFunc::make_narg_call(const std::string &return_type, const unsign
             QualType Ty = PVD->getType();
             QualType QT = Ty.getCanonicalType();
             std::string arg_type;
-            ROOT::TMetaUtils::GetNormalizedName(arg_type, QT, *fInterp, fNormCtxt);
+            ASTContext &C = FD->getASTContext();
+            GetTypeAsString(QT, arg_type, C, C.getPrintingPolicy());
             callbuf << arg_type;
          }
          if (FD->isVariadic())
@@ -532,7 +548,7 @@ int TClingCallFunc::get_wrapper_code(std::string &wrapper_name, std::string &wra
    if (const TypeDecl *TD = dyn_cast<TypeDecl>(DC)) {
       // This is a class, struct, or union member.
       QualType QT(TD->getTypeForDecl(), 0);
-      ROOT::TMetaUtils::GetNormalizedName(class_name, QT, *fInterp, fNormCtxt);
+      GetTypeAsString(QT, class_name, Context, Policy);
    } else if (const NamedDecl *ND = dyn_cast<NamedDecl>(DC)) {
       // This is a namespace member.
       raw_string_ostream stream(class_name);
@@ -1139,7 +1155,7 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
    if (const TypeDecl *TD = dyn_cast<TypeDecl>(info->GetDecl())) {
       // This is a class, struct, or union member.
       QualType QT(TD->getTypeForDecl(), 0);
-      ROOT::TMetaUtils::GetNormalizedName(class_name, QT, *fInterp, fNormCtxt);
+      GetTypeAsString(QT, class_name, Context, Policy);
    } else if (const NamedDecl *ND = dyn_cast<NamedDecl>(info->GetDecl())) {
       // This is a namespace member.
       raw_string_ostream stream(class_name);
@@ -1308,7 +1324,7 @@ TClingCallFunc::make_dtor_wrapper(const TClingClassInfo *info)
    if (const TypeDecl *TD = dyn_cast<TypeDecl>(info->GetDecl())) {
       // This is a class, struct, or union member.
       QualType QT(TD->getTypeForDecl(), 0);
-      ROOT::TMetaUtils::GetNormalizedName(class_name, QT, *fInterp, fNormCtxt);
+      GetTypeAsString(QT, class_name, Context, Policy);
    } else if (const NamedDecl *ND = dyn_cast<NamedDecl>(info->GetDecl())) {
       // This is a namespace member.
       raw_string_ostream stream(class_name);

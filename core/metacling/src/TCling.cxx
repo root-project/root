@@ -4522,7 +4522,7 @@ TClass *TCling::GenerateTClass(const char *classname, Bool_t emulation, Bool_t s
             if ((mi.Property() & kIsStatic)
                 && !fInterpreter->isInSyntaxOnlyMode()) {
                // This better be a static function.
-               TClingCallFunc callfunc(GetInterpreterImpl(), *fNormalizedCtxt);
+               TClingCallFunc callfunc(GetInterpreterImpl());
                callfunc.SetFunc(&mi);
                newvers = callfunc.ExecInt(0);
             } else {
@@ -4883,7 +4883,7 @@ TString TCling::GetMangledName(TClass* cl, const char* method,
                                const char* params, Bool_t objectIsConst /* = kFALSE */)
 {
    R__LOCKGUARD(gInterpreterMutex);
-   TClingCallFunc func(GetInterpreterImpl(), *fNormalizedCtxt);
+   TClingCallFunc func(GetInterpreterImpl());
    if (cl) {
       Longptr_t offset;
       func.SetFunc((TClingClassInfo*)cl->GetClassInfo(), method, params, objectIsConst,
@@ -4928,7 +4928,7 @@ void* TCling::GetInterfaceMethod(TClass* cl, const char* method,
                                  const char* params, Bool_t objectIsConst /* = kFALSE */)
 {
    R__LOCKGUARD(gInterpreterMutex);
-   TClingCallFunc func(GetInterpreterImpl(), *fNormalizedCtxt);
+   TClingCallFunc func(GetInterpreterImpl());
    if (cl) {
       Longptr_t offset;
       func.SetFunc((TClingClassInfo*)cl->GetClassInfo(), method, params, objectIsConst,
@@ -5036,11 +5036,11 @@ void* TCling::GetInterfaceMethodWithPrototype(TClass* cl, const char* method,
    void* f;
    if (cl) {
       f = ((TClingClassInfo*)cl->GetClassInfo())->
-         GetMethod(method, proto, objectIsConst, 0 /*poffset*/, mode).InterfaceMethod(*fNormalizedCtxt);
+         GetMethod(method, proto, objectIsConst, 0 /*poffset*/, mode).InterfaceMethod();
    }
    else {
       TClingClassInfo gcl(GetInterpreterImpl());
-      f = gcl.GetMethod(method, proto, objectIsConst, 0 /*poffset*/, mode).InterfaceMethod(*fNormalizedCtxt);
+      f = gcl.GetMethod(method, proto, objectIsConst, 0 /*poffset*/, mode).InterfaceMethod();
    }
    return f;
 }
@@ -5158,7 +5158,7 @@ void TCling::Execute(const char* function, const char* params, int* error)
    }
    TClingClassInfo cl(GetInterpreterImpl());
    Longptr_t offset = 0L;
-   TClingCallFunc func(GetInterpreterImpl(), *fNormalizedCtxt);
+   TClingCallFunc func(GetInterpreterImpl());
    func.SetFunc(&cl, function, params, &offset);
    func.Exec(0);
 }
@@ -5186,7 +5186,7 @@ void TCling::Execute(TObject* obj, TClass* cl, const char* method,
    // hence gInterpreter->Execute will improperly correct the offset.
    void* addr = cl->DynamicCast(TObject::Class(), obj, kFALSE);
    Longptr_t offset = 0L;
-   TClingCallFunc func(GetInterpreterImpl(), *fNormalizedCtxt);
+   TClingCallFunc func(GetInterpreterImpl());
    func.SetFunc((TClingClassInfo*)cl->GetClassInfo(), method, params, objectIsConst, &offset);
    void* address = (void*)((Longptr_t)addr + offset);
    func.Exec(address);
@@ -5288,7 +5288,7 @@ void TCling::Execute(TObject* obj, TClass* cl, TMethod* method,
    // 'obj' is unlikely to be the start of the object (as described by IsA()),
    // hence gInterpreter->Execute will improperly correct the offset.
    void* addr = cl->DynamicCast(TObject::Class(), obj, kFALSE);
-   TClingCallFunc func(GetInterpreterImpl(), *fNormalizedCtxt);
+   TClingCallFunc func(GetInterpreterImpl());
    TClingMethodInfo *minfo = (TClingMethodInfo*)method->fInfo;
    func.Init(*minfo);
    func.SetArgs(listpar);
@@ -5313,7 +5313,7 @@ void TCling::ExecuteWithArgsAndReturn(TMethod* method, void* address,
    }
 
    TClingMethodInfo* minfo = (TClingMethodInfo*) method->fInfo;
-   TClingCallFunc func(*minfo,*fNormalizedCtxt);
+   TClingCallFunc func(*minfo);
    func.ExecWithArgsAndReturn(address, args, nargs, ret);
 }
 
@@ -7811,7 +7811,7 @@ Double_t TCling::CallFunc_ExecDouble(CallFunc_t* func, void* address) const
 CallFunc_t* TCling::CallFunc_Factory() const
 {
    R__LOCKGUARD(gInterpreterMutex);
-   return (CallFunc_t*) new TClingCallFunc(GetInterpreterImpl(), *fNormalizedCtxt);
+   return (CallFunc_t*) new TClingCallFunc(GetInterpreterImpl());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -8951,7 +8951,7 @@ MethodInfo_t* TCling::MethodInfo_FactoryCopy(MethodInfo_t* minfo) const
 void* TCling::MethodInfo_InterfaceMethod(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
-   return info->InterfaceMethod(*fNormalizedCtxt);
+   return info->InterfaceMethod();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
