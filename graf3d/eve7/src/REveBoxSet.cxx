@@ -396,6 +396,15 @@ void REveBoxSet::WriteShapeData(REveDigitSet::DigitBase_t &digit)
 
       break;
    }
+
+    case REveBoxSet::kBT_Hex: {
+      REveBoxSet::BHex_t  &b = (REveBoxSet::BHex_t &)(digit);
+      fRenderData->PushV(b.fPos);
+      fRenderData->PushV(b.fR, b.fAngle, b.fDepth);
+
+      break;
+   }
+
    default: assert(false && "REveBoxSet::BuildRenderData only kBT_FreeBox type supported");
    }
 }

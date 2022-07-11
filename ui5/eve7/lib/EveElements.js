@@ -70,24 +70,23 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(/*EveManager*/) {
          let geobox = new THREE.BufferGeometry();
          geobox.setAttribute( 'position', this.obj3d.geometry.getAttribute("position") );
 
-         let protoIdcs = [0, 4, 5, 0, 5, 1, 1, 5, 6, 1, 6, 2, 2, 6, 7, 2, 7, 3, 3, 7, 4, 3, 4, 0, 1, 2, 3, 1, 3, 0, 4, 7, 6, 4, 6, 5];
-         let idxBuff = new Array(sec_idcs.length * protoIdcs.length);
+         let origIndices = this.obj3d.geometry.index.array;
+
+         let protoIdcsLen = 3 * 12;
+         let indicesPerDigit = 8;
+         if (this.obj3d.eve_el.boxType == 6) {
+            protoIdcsLen = 3 * 24;
+            indicesPerDigit = 14;
+         }
+
+         let idxBuff = new Array(sec_idcs.length * protoIdcsLen);
 
          let N = this.obj3d.eve_el.render_data.idxBuff.length / 2;
          for (let b = 0; b < sec_idcs.length; ++b) {
-            let idx = sec_idcs[b]
-            if (this.obj3d.eve_el.fDetIdsAsSecondaryIndices) {
-               for (let x = 0; x < N; ++x) {
-                  if (this.obj3d.eve_el.render_data.idxBuff[x + N] === idx)
-                  {
-                     idx=x;
-                     break;
-                  }
-               }
-            }
-            let idxOff = idx * 8;
-            for (let i = 0; i < protoIdcs.length; i++)
-               idxBuff.push(idxOff + protoIdcs[i]);
+            let idx = sec_idcs[b];
+            let idxOff = idx * indicesPerDigit;
+            for (let i = 0; i < protoIdcsLen; i++)
+               idxBuff.push(idxOff + origIndices[i]);
          }
 
          geobox.setIndex( idxBuff );
@@ -98,7 +97,11 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(/*EveManager*/) {
 
       extractIndex(intersect)
       {
-         let idx  = Math.floor(intersect.faceIndex/12);
+         let facesPerDigi = 12; // default box, AMT why this is not 24 ?
+         if (this.obj3d.eve_el.boxType == 6)
+            facesPerDigi = 24;
+
+         let idx = Math.floor(intersect.faceIndex / facesPerDigi);
          return idx;
       }
 
@@ -106,12 +109,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(/*EveManager*/) {
       {
          let t = this.obj3d.eve_el.fTitle || this.obj3d.eve_el.fName || "";
          let idx = this.extractIndex(intersect);
-         if (this.obj3d.eve_el.fDetIdsAsSecondaryIndices) {
-            let N = this.obj3d.eve_el.render_data.idxBuff.length / 2;
-            let id = this.obj3d.eve_el.render_data.idxBuff[N + idx];
-            return t + " idx=" + id;
-         }
-         return t + " idx=" + idx;
+         return t +" idx=" + idx;
       }
 
       elementSelectedSendMIR(idx, selectionId)
@@ -910,59 +908,129 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(/*EveManager*/) {
            return new THREE.Mesh();
 
          let vBuff;
-         if (boxset.boxType == 1) // free box
-         {
-            vBuff = rnr_data.vtxBuff;
-         }
-         else if (boxset.boxType == 2) // axis aligned
-         {
-            let N = rnr_data.vtxBuff.length/6;
-            vBuff = new Float32Array(N*8*3);
-
-            let off = 0;
-            for (let i = 0; i < N; ++i)
-            {
-               let rdoff = i*6;
-               let x  =  rnr_data.vtxBuff[rdoff];
-               let y  =  rnr_data.vtxBuff[rdoff + 1];
-               let z  =  rnr_data.vtxBuff[rdoff + 2];
-               let dx =  rnr_data.vtxBuff[rdoff + 3];
-               let dy =  rnr_data.vtxBuff[rdoff + 4];
-               let dz =  rnr_data.vtxBuff[rdoff + 5];
-
-               // top
-               vBuff[off  ] = x;      vBuff[off + 1] = y + dy; vBuff[off + 2] = z;
-               off += 3;
-               vBuff[off  ] = x + dx; vBuff[off + 1] = y + dy; vBuff[off + 2] = z;
-               off += 3;
-               vBuff[off  ] = x + dx; vBuff[off + 1] = y;      vBuff[off + 2] = z;
-               off += 3;
-               vBuff[off  ] = x;      vBuff[off + 1] = y;      vBuff[off + 2] = z;
-               off += 3;
-               // bottom
-               vBuff[off  ] = x;      vBuff[off + 1] = y + dy; vBuff[off + 2] = z + dz;
-               off += 3;
-               vBuff[off  ] = x + dx; vBuff[off + 1] = y + dy; vBuff[off + 2] = z + dz;
-               off += 3;
-               vBuff[off  ] = x + dx; vBuff[off + 1] = y;      vBuff[off + 2] = z + dz;
-               off += 3;
-               vBuff[off  ] = x;      vBuff[off + 1] = y;      vBuff[off + 2] = z + dz;
-               off += 3;
-            }
-         }
-
-         let protoSize = 6 * 2 * 3;
-         let protoIdcs = [0, 4, 5, 0, 5, 1, 1, 5, 6, 1, 6, 2, 2, 6, 7, 2, 7, 3, 3, 7, 4, 3, 4, 0, 1, 2, 3, 1, 3, 0, 4, 7, 6, 4, 6, 5];
-         let nBox = vBuff.length / 24;
          let idxBuff = [];
-         for (let i = 0; i < nBox; ++i)
+         let nVerticesPerDigit = 0;
+
+         if (boxset.boxType == 6) // hexagon
          {
-            for (let c = 0; c < protoSize; c++) {
-               let off = i * 8;
-               idxBuff.push(protoIdcs[c] + off);
+            nVerticesPerDigit = 14;
+            let stepAngle = Math.PI / 3;
+
+            let N_hex = rnr_data.vtxBuff.length / 6;
+            vBuff = new Float32Array(N_hex * 7 * 2 * 3);
+
+            for (let i = 0; i < N_hex; ++i) {
+               let rdoff = i * 6;
+               let R = rnr_data.vtxBuff[rdoff + 3];
+               let hexRotation = rnr_data.vtxBuff[rdoff + 4];
+               let hexHeight = rnr_data.vtxBuff[rdoff + 5];
+               let off = i* 3 * 7 * 2;
+
+               // position
+               let pos = [rnr_data.vtxBuff[rdoff], rnr_data.vtxBuff[rdoff + 1], rnr_data.vtxBuff[rdoff + 2]];
+
+               // center
+               vBuff[off]     = pos[0];
+               vBuff[off + 1] = pos[1];
+               vBuff[off + 2] = pos[2];
+
+               off += 3;
+
+               for (let j = 0; j < 6; ++j) {
+                  let angle = j*stepAngle + hexRotation;
+                  let x = R * Math.cos(angle) + pos[0];
+                  let y = R * Math.sin(angle) + pos[1];
+                  let z = pos[2];
+
+                  // write buffer
+                  vBuff[off]     = x;
+                  vBuff[off + 1] = y;
+                  vBuff[off + 2] = z;
+                  off += 3;
+               }
+
+               // copy for depth
+               let ro = i* 3 * 7 * 2;
+               for (let j = 0; j < 7; ++j)
+               {
+                  vBuff[ro + 21] = vBuff[ro];
+                  vBuff[ro + 22] = vBuff[ro+1];
+                  vBuff[ro + 23] = vBuff[ro+2] + hexHeight;
+                  ro += 3;
+               }
+            } // end loop vertex buffer
+
+
+            let nTriang = N_hex * 6;
+            let protoIdcs = [0,1,2, 0,2,3, 0,3,4, 0,4,5, 0,5,6, 0,6,1];
+            let sideIdcs = [2,1,8,8,9,2, 3,2,9,9,10,3,  4,3,10,10,11,4, 5,4,11,11,12,5, 13,6,5,12,13,5, 13,6,1,1,8,13 ];
+            for (let i = 0; i < N_hex; ++i) {
+               let off0 = i * 7 * 2;
+               for (let c = 0; c < protoIdcs.length; c++) {
+                  idxBuff.push(off0 + protoIdcs[c]);
+               }
+               for (let c = 0; c < protoIdcs.length; c++) {
+                  idxBuff.push(off0 + protoIdcs[c]+7);
+               }
+               for (let c = 0; c < sideIdcs.length; c++) {
+                  idxBuff.push(off0 + sideIdcs[c]);
+               }
+
+            }
+
+         }
+         else {
+            nVerticesPerDigit = 8;
+            if (boxset.boxType == 1) // free box
+            {
+               vBuff = rnr_data.vtxBuff;
+            }
+            else if (boxset.boxType == 2) // axis aligned
+            {
+               let N = rnr_data.vtxBuff.length / 6;
+               vBuff = new Float32Array(N * 8 * 3);
+
+               let off = 0;
+               for (let i = 0; i < N; ++i) {
+                  let rdoff = i * 6;
+                  let x = rnr_data.vtxBuff[rdoff];
+                  let y = rnr_data.vtxBuff[rdoff + 1];
+                  let z = rnr_data.vtxBuff[rdoff + 2];
+                  let dx = rnr_data.vtxBuff[rdoff + 3];
+                  let dy = rnr_data.vtxBuff[rdoff + 4];
+                  let dz = rnr_data.vtxBuff[rdoff + 5];
+
+                  // top
+                  vBuff[off] = x; vBuff[off + 1] = y + dy; vBuff[off + 2] = z;
+                  off += 3;
+                  vBuff[off] = x + dx; vBuff[off + 1] = y + dy; vBuff[off + 2] = z;
+                  off += 3;
+                  vBuff[off] = x + dx; vBuff[off + 1] = y; vBuff[off + 2] = z;
+                  off += 3;
+                  vBuff[off] = x; vBuff[off + 1] = y; vBuff[off + 2] = z;
+                  off += 3;
+                  // bottom
+                  vBuff[off] = x; vBuff[off + 1] = y + dy; vBuff[off + 2] = z + dz;
+                  off += 3;
+                  vBuff[off] = x + dx; vBuff[off + 1] = y + dy; vBuff[off + 2] = z + dz;
+                  off += 3;
+                  vBuff[off] = x + dx; vBuff[off + 1] = y; vBuff[off + 2] = z + dz;
+                  off += 3;
+                  vBuff[off] = x; vBuff[off + 1] = y; vBuff[off + 2] = z + dz;
+                  off += 3;
+               }
+            }
+
+            let protoSize = 6 * 2 * 3;
+            let protoIdcs = [0, 4, 5, 0, 5, 1, 1, 5, 6, 1, 6, 2, 2, 6, 7, 2, 7, 3, 3, 7, 4, 3, 4, 0, 1, 2, 3, 1, 3, 0, 4, 7, 6, 4, 6, 5];
+            let nBox = vBuff.length / 24;
+            for (let i = 0; i < nBox; ++i) {
+               for (let c = 0; c < protoSize; c++) {
+                  let off = i * 8;
+                  idxBuff.push(protoIdcs[c] + off);
+               }
             }
          }
-
          let body = new THREE.BufferGeometry();
          body.setAttribute('position', new THREE.BufferAttribute( vBuff, 3 ));
          body.setIndex( idxBuff );
@@ -973,14 +1041,14 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(/*EveManager*/) {
          if (!boxset.fSingleColor)
          {
             let ci = rnr_data.idxBuff;
-            let off = 0
-            let colBuff = new Float32Array( nBox * 8 *3 );
+            let off = 0;
+            let colBuff = new Float32Array( vBuff.length );
             for (let x = 0; x < ci.length; ++x)
             {
                let r = (ci[x] & 0x000000FF) >>  0;
                let g = (ci[x] & 0x0000FF00) >>  8;
                let b = (ci[x] & 0x00FF0000) >> 16;
-               for (let i = 0; i < 8; ++i)
+               for (let i = 0; i < nVerticesPerDigit; ++i)
                {
                   colBuff[off    ] = r/256;
                   colBuff[off + 1] = g/256;
@@ -1008,6 +1076,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(/*EveManager*/) {
          }
 
          let mesh = new THREE.Mesh(body, material);
+         mesh.material.side = THREE.DoubleSide;
          if (boxset.fSecondarySelect)
             mesh.get_ctrl = function() { return new BoxSetControl(mesh); };
          else
