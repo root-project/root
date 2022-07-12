@@ -41,6 +41,7 @@ public:
   static RooExpensiveObjectCache& instance() ;
 
   Int_t size() const { return _map.size() ; }
+  bool empty() const { return _map.empty() ; }
 
   void print() const ;
 
