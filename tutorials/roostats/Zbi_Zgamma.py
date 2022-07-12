@@ -8,7 +8,7 @@
 ## \macro_code
 ##
 ## \date July 2022
-## \authors Artem Busorgin, Kyle Cranmer & Wouter Verkerke (C++ version)
+## \authors Artem Busorgin, Kyle Cranmer and Wouter Verkerke (C++ version)
 
 import ROOT
 
