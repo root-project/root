@@ -82,6 +82,17 @@ and try reading again.
 #include <fstream>
 #include <cstring>
 
+namespace {
+
+// Infer from a RooArgSet name whether this set is used internally by
+// RooWorkspace to cache things.
+bool isCacheSet(std::string const& setName) {
+   // Check if the setName starts with CACHE_.
+   return setName.rfind("CACHE_", 0) == 0;
+}
+
+} // namespace
+
 using namespace std;
 
 ClassImp(RooWorkspace);
@@ -2354,7 +2365,7 @@ void RooWorkspace::Print(Option_t* opts) const
     cout << "named sets" << endl ;
     cout << "----------" << endl ;
     for (map<string,RooArgSet>::const_iterator it = _namedSets.begin() ; it != _namedSets.end() ; ++it) {
-       if (verbose || !TString(it->first.c_str()).BeginsWith("CACHE_")) {
+       if (verbose || !isCacheSet(it->first)) {
           cout << it->first << ":" << it->second << endl;
        }
     }
@@ -3084,8 +3095,24 @@ void RooWorkspace::RecursiveRemove(TObject *removedObj)
    _genObjects.RecursiveRemove(removedObj);
    _studyMods.RecursiveRemove(removedObj);
 
+   std::vector<std::string> invalidSets;
+
    for(auto &c : _namedSets) {
-      c.second.RecursiveRemove(removedObj);
+      auto const& setName = c.first;
+      auto& set = c.second;
+      std::size_t oldSize = set.size();
+      set.RecursiveRemove(removedObj);
+      // If the set is used internally by RooFit to cache parameters or
+      // constraints, it is invalidated by object removal. We will keep track
+      // of its name to remove the cache set later.
+      if(set.size() < oldSize && isCacheSet(setName)) {
+         invalidSets.emplace_back(setName);
+      }
+   }
+
+   // Remove the sets that got invalidated by the object removal
+   for(std::string const& setName : invalidSets) {
+      removeSet(setName.c_str());
    }
 
    _eocache.RecursiveRemove(removedObj); // RooExpensiveObjectCache
