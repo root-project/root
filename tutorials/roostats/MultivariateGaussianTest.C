@@ -161,8 +161,8 @@ void MultivariateGaussianTest(Int_t dim = 4, Int_t nPOI = 2)
       Double_t ll = mcInt->LowerLimit(*p0);
       Double_t ul = mcInt->UpperLimit(*p0);
       cout << "MCMC interval on p0: [" << ll << ", " << ul << "]" << endl;
-      ll = mcInt->LowerLimit(*p0);
-      ul = mcInt->UpperLimit(*p0);
+      ll = mcInt->LowerLimit(*p1);
+      ul = mcInt->UpperLimit(*p1);
       cout << "MCMC interval on p1: [" << ll << ", " << ul << "]" << endl;
 
       // MCMC interval on p0: [-0.2, 0.6]
