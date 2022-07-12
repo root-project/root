@@ -211,9 +211,7 @@ RooWorkspace::RooWorkspace(const RooWorkspace& other) :
   }
 
   // Copy generic objects
-  TIterator* iter4 = other._genObjects.MakeIterator() ;
-  TObject* gobj ;
-  while((gobj=iter4->Next())) {
+  for(TObject * gobj : other._genObjects) {
     TObject *theClone = gobj->Clone();
 
     auto handle = dynamic_cast<RooWorkspaceHandle*>(theClone);
@@ -223,8 +221,6 @@ RooWorkspace::RooWorkspace(const RooWorkspace& other) :
 
     _genObjects.Add(theClone);
   }
-  delete iter4 ;
-
 }
 
 
@@ -288,7 +284,7 @@ bool RooWorkspace::import(const char* fileSpec,
   TFile* f = TFile::Open(filename.c_str()) ;
   if (f==0) {
     coutE(InputArguments) << "RooWorkspace(" << GetName() << ") ERROR opening file " << filename << endl ;
-    return 0 ;
+    return false;
   }
 
   // That that file contains workspace
@@ -296,7 +292,7 @@ bool RooWorkspace::import(const char* fileSpec,
   if (w==0) {
     coutE(InputArguments) << "RooWorkspace(" << GetName() << ") ERROR: No object named " << wsname << " in file " << filename
            << " or object is not a RooWorkspace" << endl ;
-    return 0 ;
+    return false;
   }
 
   // Check that workspace contains object and forward to appropriate import method
@@ -773,7 +769,7 @@ bool RooWorkspace::import(RooAbsData& inData,
   }
 
   RooLinkedList& dataList = embedded ? _embeddedDataList : _dataList ;
-  if (dataList.GetSize() > 50 && dataList.getHashTableSize() == 0) {
+  if (dataList.size() > 50 && dataList.getHashTableSize() == 0) {
     // When the workspaces get larger, traversing the linked list becomes a bottleneck:
     dataList.setHashTableSize(200);
   }
@@ -1215,42 +1211,11 @@ const RooArgSet* RooWorkspace::getSnapshot(const char* name) const
   RooArgSet* snap = (RooArgSet*) _snapshots.find(name) ;
   if (!snap) {
     coutE(ObjectHandling) << "RooWorkspace::loadSnapshot(" << GetName() << ") no snapshot with name " << name << " is available" << endl ;
-    return 0 ;
+    return nullptr;
   }
 
   return snap ;
 }
-
-
-
-// //_____________________________________________________________________________
-// RooAbsPdf* RooWorkspace::joinPdf(const char* jointPdfName, const char* indexName, const char* inputMapping)
-// {
-//   // Join given list of p.d.f.s into a simultaneous p.d.f with given name. If the named index category
-//   // does not exist, it is created.
-//   //
-//   //  Example : joinPdf("simPdf","expIndex","A=pdfA,B=pdfB") ;
-//   //
-//   //            will return a RooSimultaneous named 'simPdf' with index category 'expIndex' with
-//   //            state names A and B. Pdf 'pdfA' will be associated with state A and pdf 'pdfB'
-//   //            will be associated with state B
-//   //
-//   return 0 ;
-// }
-
-// //_____________________________________________________________________________
-// RooAbsData* RooWorkspace::joinData(const char* jointDataName, const char* indexName, const char* inputMapping)
-// {
-//   // Join given list of dataset into a joint dataset for use with a simultaneous pdf
-//   // (as e.g. created by joingPdf"
-//   //
-//   //  Example : joinData("simData","expIndex","A=dataA,B=dataB") ;
-//   //
-//   //            will return a RooDataSet named 'simData' that consist of the entries of both
-//   //            dataA and dataB. An extra category column 'expIndex' is added that labels
-//   //            each entry with state 'A' and 'B' to indicate the originating dataset
-//   return 0 ;
-// }
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1337,9 +1302,9 @@ RooAbsArg* RooWorkspace::fundArg(RooStringView name) const
 {
   RooAbsArg* tmp = arg(name) ;
   if (!tmp) {
-    return 0 ;
+    return nullptr;
   }
-  return tmp->isFundamental() ? tmp : 0 ;
+  return tmp->isFundamental() ? tmp : nullptr;
 }
 
 
@@ -1482,15 +1447,12 @@ RooArgSet RooWorkspace::allPdfs() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return list of all dataset in the workspace
 
-list<RooAbsData*> RooWorkspace::allData() const
+std::list<RooAbsData*> RooWorkspace::allData() const
 {
-  list<RooAbsData*> ret ;
-  TIterator* iter = _dataList.MakeIterator() ;
-  RooAbsData* dat ;
-  while((dat=(RooAbsData*)iter->Next())) {
+  std::list<RooAbsData*> ret ;
+  for(auto * dat : static_range_cast<RooAbsData*>(_dataList)) {
     ret.push_back(dat) ;
   }
-  delete iter ;
   return ret ;
 }
 
@@ -1498,15 +1460,12 @@ list<RooAbsData*> RooWorkspace::allData() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return list of all dataset in the workspace
 
-list<RooAbsData*> RooWorkspace::allEmbeddedData() const
+std::list<RooAbsData*> RooWorkspace::allEmbeddedData() const
 {
-  list<RooAbsData*> ret ;
-  TIterator* iter = _embeddedDataList.MakeIterator() ;
-  RooAbsData* dat ;
-  while((dat=(RooAbsData*)iter->Next())) {
+  std::list<RooAbsData*> ret ;
+  for(auto * dat : static_range_cast<RooAbsData*>(_embeddedDataList)) {
     ret.push_back(dat) ;
   }
-  delete iter ;
   return ret ;
 }
 
@@ -1515,12 +1474,10 @@ list<RooAbsData*> RooWorkspace::allEmbeddedData() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return list of all generic objects in the workspace
 
-list<TObject*> RooWorkspace::allGenericObjects() const
+std::list<TObject*> RooWorkspace::allGenericObjects() const
 {
-  list<TObject*> ret ;
-  TIterator* iter = _genObjects.MakeIterator() ;
-  TObject* gobj ;
-  while((gobj=(RooAbsData*)iter->Next())) {
+  std::list<TObject*> ret ;
+  for(TObject * gobj : _genObjects) {
 
     // If found object is wrapper, return payload
     if (gobj->IsA()==RooTObjWrap::Class()) {
@@ -1529,7 +1486,6 @@ list<TObject*> RooWorkspace::allGenericObjects() const
       ret.push_back(gobj) ;
     }
   }
-  delete iter ;
   return ret ;
 }
 
@@ -1906,10 +1862,8 @@ bool RooWorkspace::CodeRepo::autoImportClass(TClass* tc, bool doReplace)
   // Make list of all immediate base classes of this class
   TString baseNameList ;
   TList* bl = tc->GetListOfBases() ;
-  TIter iter = bl->MakeIterator() ;
-  TBaseClass* base ;
-  list<TClass*> bases ;
-  while((base=(TBaseClass*)iter.Next())) {
+  std::list<TClass*> bases ;
+  for(auto * base : static_range_cast<TBaseClass*>(*bl)) {
     if (baseNameList.Length()>0) {
       baseNameList += "," ;
     }
@@ -1923,10 +1877,8 @@ bool RooWorkspace::CodeRepo::autoImportClass(TClass* tc, bool doReplace)
   _c2fmap[tc->GetName()]._fileBase = declfilebase ;
 
   // Recursive store all base classes.
-  list<TClass*>::iterator biter = bases.begin() ;
-  while(biter!=bases.end()) {
-    autoImportClass(*biter,doReplace) ;
-    ++biter ;
+  for(TClass* bclass : bases) {
+    autoImportClass(bclass,doReplace) ;
   }
 
   // Cleanup
@@ -2094,7 +2046,7 @@ TObject* RooWorkspace::genobj(RooStringView name)  const
   TObject* gobj = _genObjects.FindObject(name) ;
 
   // Exit here if not found
-  if (!gobj) return 0 ;
+  if (!gobj) return nullptr;
 
   // If found object is wrapper, return payload
   if (gobj->IsA()==RooTObjWrap::Class()) return ((RooTObjWrap*)gobj)->obj() ;
@@ -2314,36 +2266,28 @@ void RooWorkspace::Print(Option_t* opts) const
     cout << endl ;
   }
 
-  if (_dataList.GetSize()>0) {
+  if (!_dataList.empty()) {
     cout << "datasets" << endl ;
     cout << "--------" << endl ;
-    auto iter = _dataList.MakeIterator() ;
-    RooAbsData* data2 ;
-    while((data2=(RooAbsData*)iter->Next())) {
-      cout << data2->ClassName() << "::" << data2->GetName() << *data2->get() << endl ;
+    for(auto * data2 : static_range_cast<RooAbsData*>(_dataList)) {
+      std::cout << data2->ClassName() << "::" << data2->GetName() << *data2->get() << std::endl;
     }
-    delete iter ;
-    cout << endl ;
+    std::cout << std::endl ;
   }
 
-  if (_embeddedDataList.GetSize()>0) {
+  if (!_embeddedDataList.empty()) {
     cout << "embedded datasets (in pdfs and functions)" << endl ;
     cout << "-----------------------------------------" << endl ;
-    auto iter = _embeddedDataList.MakeIterator() ;
-    RooAbsData* data2 ;
-    while((data2=(RooAbsData*)iter->Next())) {
+    for(auto * data2 : static_range_cast<RooAbsData*>(_embeddedDataList)) {
       cout << data2->ClassName() << "::" << data2->GetName() << *data2->get() << endl ;
     }
-    delete iter ;
     cout << endl ;
   }
 
-  if (_snapshots.GetSize()>0) {
+  if (!_snapshots.empty()) {
     cout << "parameter snapshots" << endl ;
     cout << "-------------------" << endl ;
-    auto iter = _snapshots.MakeIterator() ;
-    RooArgSet* snap ;
-    while((snap=(RooArgSet*)iter->Next())) {
+    for(auto * snap : static_range_cast<RooArgSet*>(_snapshots)) {
       cout << snap->GetName() << " = (" ;
       bool first(true) ;
       for(RooAbsArg* a : *snap) {
@@ -2356,7 +2300,6 @@ void RooWorkspace::Print(Option_t* opts) const
       }
       cout << ")" << endl ;
     }
-    delete iter ;
     cout << endl ;
   }
 
@@ -2374,44 +2317,38 @@ void RooWorkspace::Print(Option_t* opts) const
   }
 
 
-  if (_genObjects.GetSize()>0) {
+  if (!_genObjects.empty()) {
     cout << "generic objects" << endl ;
     cout << "---------------" << endl ;
-    auto iter = _genObjects.MakeIterator() ;
-    TObject* gobj ;
-    while((gobj=(TObject*)iter->Next())) {
+    for(TObject* gobj : _genObjects) {
       if (gobj->IsA()==RooTObjWrap::Class()) {
    cout << ((RooTObjWrap*)gobj)->obj()->ClassName() << "::" << gobj->GetName() << endl ;
       } else {
    cout << gobj->ClassName() << "::" << gobj->GetName() << endl ;
       }
     }
-    delete iter ;
     cout << endl ;
 
   }
 
-  if (_studyMods.GetSize()>0) {
+  if (!_studyMods.empty()) {
     cout << "study modules" << endl ;
     cout << "-------------" << endl ;
-    auto iter = _studyMods.MakeIterator() ;
-    TObject* smobj ;
-    while((smobj=(TObject*)iter->Next())) {
+    for(TObject* smobj : _studyMods) {
       cout << smobj->ClassName() << "::" << smobj->GetName() << endl ;
     }
-    delete iter ;
     cout << endl ;
 
   }
 
-  if (_classes.listOfClassNames().size()>0) {
+  if (!_classes.listOfClassNames().empty()) {
     cout << "embedded class code" << endl ;
     cout << "-------------------" << endl ;
     cout << _classes.listOfClassNames() << endl ;
     cout << endl ;
   }
 
-  if (_eocache.size()>0) {
+  if (!_eocache.empty()) {
     cout << "embedded precalculated expensive components" << endl ;
     cout << "-------------------------------------------" << endl ;
     _eocache.print() ;
@@ -3006,12 +2943,9 @@ void RooWorkspace::exportToCint(const char* nsname)
   for(TObject * wobj : _allOwnedNodes) {
     exportObj(wobj) ;
   }
-  auto iter = _dataList.MakeIterator() ;
-  TObject* wobj;
-  while((wobj=iter->Next())) {
+  for(TObject * wobj : _dataList) {
     exportObj(wobj) ;
   }
-  delete iter ;
 }
 
 

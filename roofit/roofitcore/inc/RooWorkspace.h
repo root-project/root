@@ -98,10 +98,6 @@ public:
 
   void merge(const RooWorkspace& /*other*/) {} ;
 
-  // Join p.d.f.s and datasets for simultaneous analysis
-  //   RooAbsPdf* joinPdf(const char* jointPdfName, const char* indexName, const char* inputMapping) ;
-  //   RooAbsData* joinData(const char* jointDataName, const char* indexName, const char* inputMapping) ;
-
   // Accessor functions
   RooAbsPdf* pdf(RooStringView name) const ;
   RooAbsReal* function(RooStringView name) const ;
