@@ -77,7 +77,7 @@ nominal.fitTo(data, PrintLevel=0, Minimizer=minimType)
 nominal.plotOn(frame)
 
 # plot the best fit corrected model in red
-corrected = wks.pdf("corrected")
+corrected = wks["corrected"]
 if not corrected:
     sys.exit()
 
@@ -87,7 +87,7 @@ corrected.plotOn(frame, LineColor=ROOT.kRed)
 
 # plot the correction term (* norm constant) in dashed green
 # should make norm constant just be 1, not depend on binning of data
-poly = wks.pdf("poly")
+poly = wks["poly"]
 if poly:
     poly.plotOn(frame, LineColor=ROOT.kGreen, LineStyle=ROOT.kDashed)
 

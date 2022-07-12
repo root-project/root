@@ -26,8 +26,8 @@ hlf = ROOT.RooStats.HLFactory("HLFavtoryexample", card_name, False)
 w = hlf.GetWs()
 
 mes = w.arg("mes")
-sum = w.pdf("sum")
-argus = w.pdf("argus")
+sum = w["sum"]
+argus = w["argus"]
 
 # --- Generate a toyMC sample from composite PDF ---
 data = sum.generate(mes, 2000)
