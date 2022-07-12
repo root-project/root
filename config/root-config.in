@@ -758,15 +758,15 @@ while test $# -gt 0; do
       ;;
     --etcdir)
       ### output the etc directory
-      out="$out \"$etcdir\""
+      out="$out $etcdir"
       ;;
     --tutdir)
       ### output the tutorials directory
-      out="$out \"$tutdir\""
+      out="$out $tutdir"
       ;;
     --srcdir)
       ### output the src directory
-      out="$out \"$srcdir\""
+      out="$out $srcdir"
       ;;
     --config)
       ### output the configure arguments
