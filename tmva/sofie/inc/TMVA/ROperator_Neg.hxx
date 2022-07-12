@@ -57,7 +57,7 @@ public:
    std::string Generate(std::string OpName){
       OpName = "op_" + OpName;
       if (fShape.empty()) {
-         throw std::runtime_error("TMVA SOFIE Transpose Neg called to Generate without being initialized first");
+         throw std::runtime_error("TMVA SOFIE Neg Op called to Generate without being initialized first");
       }
       std::stringstream out;
       size_t length = ConvertShapeToLength(fShape);
