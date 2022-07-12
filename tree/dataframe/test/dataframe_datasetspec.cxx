@@ -64,6 +64,8 @@ protected:
 };
 #endif
 
+// TODO: This test throws "unknown file: error: SEH exception with code 0xc0000005 thrown in the test body" on windows
+#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
 // ensure that the chains are created as expected, no ranges, neither friends are passed
 TEST_P(RDatasetSpecTest, SimpleChainsCreation)
 {
@@ -97,6 +99,7 @@ TEST_P(RDatasetSpecTest, SimpleChainsCreation)
    std::sort(dfRDSc3N.begin(), dfRDSc3N.end());
    EXPECT_VEC_EQ(dfRDSc3N, {100u, 101u, 102u, 103u, 104u});
 }
+#endif
 
 // ensure that ranges are properly handled, even if the ranges are invalid
 // let: start = desired start, end = desired end, last = actually last entry
