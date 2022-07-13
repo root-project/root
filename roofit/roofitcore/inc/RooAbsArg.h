@@ -362,6 +362,7 @@ public:
   }
 
   void setStringAttribute(const Text_t* key, const Text_t* value) ;
+  void removeStringAttribute(const Text_t* key) ;
   const Text_t* getStringAttribute(const Text_t* key) const ;
   inline const std::map<std::string,std::string>& stringAttributes() const {
     // Returns std::map<string,string> with all string attributes defined
