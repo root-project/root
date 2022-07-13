@@ -1055,7 +1055,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   }
 
   // Clear possible range attributes from previous fits.
-  setStringAttribute("fitrange", nullptr);
+  removeStringAttribute("fitrange");
 
   if (pc.hasProcessed("Range")) {
     double rangeLo = pc.getDouble("rangeLo") ;
@@ -1740,7 +1740,7 @@ RooAbsReal* RooAbsPdf::createChi2(RooDataHist& data, const RooCmdArg& arg1,  con
   string baseName = Form("chi2_%s_%s",GetName(),data.GetName()) ;
 
   // Clear possible range attributes from previous fits.
-  setStringAttribute("fitrange", nullptr);
+  removeStringAttribute("fitrange");
 
   if (!rangeName || strchr(rangeName,',')==0) {
     // Simple case: default range, or single restricted range
@@ -2704,7 +2704,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
     coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") p.d.f was fitted in a subrange and no explicit "
           << (plotRange?"Range()":"") << ((plotRange&&normRange2)?" and ":"")
           << (normRange2?"NormRange()":"") << " was specified. Plotting / normalising in fit range. To override, do one of the following"
-          << "\n\t- Clear the automatic fit range attribute: <pdf>.setStringAttribute(\"fitrange\", nullptr);"
+          << "\n\t- Clear the automatic fit range attribute: <pdf>.removeStringAttribute(\"fitrange\");"
           << "\n\t- Explicitly specify the plotting range: Range(\"<rangeName>\")."
           << "\n\t- Explicitly specify where to compute the normalisation: NormRange(\"<rangeName>\")."
           << "\n\tThe default (full) range can be denoted with Range(\"\") / NormRange(\"\")."<< endl ;

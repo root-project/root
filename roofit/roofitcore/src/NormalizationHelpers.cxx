@@ -317,7 +317,7 @@ void foldIntegrals(RooAbsArg const &topNode, RooArgSet &replacedArgs)
 
          pdf->setAttribute((std::string("ORIGNAME:") + normalizedPdf->GetName()).c_str(), false);
 
-         normalizedPdf->setStringAttribute("_replaced_arg", nullptr);
+         normalizedPdf->removeStringAttribute("_replaced_arg");
       }
    }
 }

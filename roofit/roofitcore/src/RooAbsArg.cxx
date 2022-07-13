@@ -312,8 +312,16 @@ void RooAbsArg::setStringAttribute(const Text_t* key, const Text_t* value)
   if (value) {
     _stringAttrib[key] = value ;
   } else {
-    _stringAttrib.erase(key) ;
+    removeStringAttribute(key);
   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a string attribute with a given key.
+
+void RooAbsArg::removeStringAttribute(const Text_t* key)
+{
+  _stringAttrib.erase(key) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
