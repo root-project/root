@@ -481,7 +481,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, bool verbose)
 
    // Create a new clone
    RooAbsArg* clone = (RooAbsArg*) node->Clone(newName.Data()) ;
-   clone->setStringAttribute("factory_tag",0) ;
+   clone->removeStringAttribute("factory_tag") ;
    clone->SetTitle(newTitle) ;
 
    // Affix attribute with old name to clone to support name changing server redirect
@@ -572,7 +572,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, bool verbose)
 
     // Affix attribute with old name to clone to support name changing server redirect
     RooAbsArg* clone = (RooAbsArg*) branch->Clone(newName.Data()) ;
-    clone->setStringAttribute("factory_tag",0) ;
+    clone->removeStringAttribute("factory_tag") ;
     TString nameAttrib("ORIGNAME:") ;
     nameAttrib.Append(branch->GetName()) ;
     clone->setAttribute(nameAttrib) ;
