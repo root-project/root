@@ -824,7 +824,7 @@ const TString TUri::PctEncode(const TString &source)
          // reserved character -> encode to 2 digit hex
          // preceded by '%'
          char buffer[4];
-         sprintf(buffer, "%%%02X", source[i]);
+         snprintf(buffer, 4, "%%%02X", source[i]);
          sink = sink + buffer;
       }
    }
