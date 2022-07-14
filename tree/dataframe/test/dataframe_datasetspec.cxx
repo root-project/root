@@ -20,7 +20,6 @@ void EXPECT_VEC_EQ(const std::vector<ULong64_t> &vec1, const std::vector<ULong64
 }
 
 // The helper class is also responsible for the creation and the deletion of the root specTestFiles
-#ifdef R__USE_IMT
 class RDatasetSpecTest : public ::testing::TestWithParam<bool> {
 protected:
    RDatasetSpecTest() : NSLOTS(GetParam() ? std::min(4u, std::thread::hardware_concurrency()) : 1u)
@@ -62,7 +61,6 @@ protected:
          gSystem->Unlink(("specTestFile" + std::to_string(i) + ".root").c_str());
    }
 };
-#endif
 
 // TODO: This test throws "unknown file: error: SEH exception with code 0xc0000005 thrown in the test body" on windows
 #if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
