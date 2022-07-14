@@ -983,8 +983,9 @@ again:
       goto again;
    }
    if (level >= kSysError && level < kFatal) {
-      char *buf1 = new char[buf_size + strlen(gSystem->GetError()) + 5];
-      sprintf(buf1, "%s (%s)", buf, gSystem->GetError());
+      const std::size_t bufferSize = buf_size + strlen(gSystem->GetError()) + 5;
+      char *buf1 = new char[bufferSize];
+      snprintf(buf1, bufferSize, "%s (%s)", buf, gSystem->GetError());
       bp = buf1;
       delete [] buf;
    } else
@@ -1015,11 +1016,13 @@ void TThread::DoError(int level, const char *location, const char *fmt,
    char *loc = 0;
 
    if (location) {
-      loc = new char[strlen(location) + strlen(GetName()) + 32];
-      sprintf(loc, "%s %s:0x%lx", location, GetName(), fId);
+      const std::size_t bufferSize = strlen(location) + strlen(GetName()) + 32;
+      loc = new char[bufferSize];
+      snprintf(loc, bufferSize, "%s %s:0x%lx", location, GetName(), fId);
    } else {
-      loc = new char[strlen(GetName()) + 32];
-      sprintf(loc, "%s:0x%lx", GetName(), fId);
+      const std::size_t bufferSize = strlen(GetName()) + 32;
+      loc = new char[bufferSize];
+      snprintf(loc, bufferSize, "%s:0x%lx", GetName(), fId);
    }
 
    ErrorHandler(level, loc, fmt, va);

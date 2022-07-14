@@ -195,8 +195,9 @@ tryfile:
       // allow url of form: "proto://"
    } else {
       if (defaultIsFile) {
-         char *newu = new char [strlen("file:") + strlen(u0) + 1];
-         sprintf(newu, "file:%s", u0);
+         const std::size_t bufferSize = strlen("file:") + strlen(u0) + 1;
+         char *newu = new char [bufferSize];
+         snprintf(newu, bufferSize, "file:%s", u0);
          delete [] u0;
          u0 = newu;
          goto tryfile;
@@ -446,7 +447,7 @@ const char *TUrl::GetUrl(Bool_t withDeflt) const
 
       if (!deflt || withDeflt) {
          char p[10];
-         sprintf(p, "%d", fPort);
+         snprintf(p, 10, "%d", fPort);
          fUrl = fUrl + fHost + ":" + p + "/" + fFile;
       } else
          fUrl = fUrl + fHost + "/" + fFile;
