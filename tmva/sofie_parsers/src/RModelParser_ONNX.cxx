@@ -1306,6 +1306,39 @@ std::unique_ptr<ROperator> make_ROperator_Concat(const onnx::NodeProto &nodeprot
    return op;
 }
 
+std::unique_ptr<ROperator> make_ROperator_Shape(const onnx::NodeProto& nodeproto, const onnx::GraphProto& /*graphproto */, std::unordered_map<std::string, ETensorType>& tensor_type){
+
+   ETensorType input_type;
+
+   auto input_name =  nodeproto.input(0);
+   auto it = tensor_type.find(input_name);
+   if (it != tensor_type.end()){
+      input_type = it->second;
+   }else{
+      throw std::runtime_error("TMVA::SOFIE ONNX Parser Shape op has input tensor" + input_name + " but its type is not yet registered");
+   }
+
+   std::unique_ptr<ROperator> op;
+
+
+   switch(input_type){
+   case ETensorType::FLOAT:
+   case ETensorType::INT64:
+      op.reset(new ROperator_Shape<float>(nodeproto.input(0), nodeproto.output(0)));
+      break;
+   default:
+      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Shape does not yet support input type " + std::to_string(static_cast<int>(input_type)));
+   }
+
+   ETensorType output_type = ETensorType::INT64;
+   auto it2 = tensor_type.find(nodeproto.output(0));
+   if (it2 == tensor_type.end()){
+      tensor_type[nodeproto.output(0)] = output_type;
+   }
+
+   return op;
+}
+
 } // namespace INTERNAL
 
 RModel RModelParser_ONNX::Parse(std::string filename, bool verbose){
