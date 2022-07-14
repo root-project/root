@@ -228,11 +228,14 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPage
 {
    RDaosContainer::MultiObjectRWOperation_t writeRequests;
    std::vector<ROOT::Experimental::RNTupleLocator> locators;
-   locators.reserve(ranges.size());
+   size_t nPages =
+      std::accumulate(ranges.begin(), ranges.end(), 0, [](size_t c, const RPageStorage::RSealedPageGroup &r) {
+         return c + std::distance(r.fFirst, r.fLast);
+      });
+   locators.reserve(nPages);
 
    DescriptorId_t clusterId = fDescriptorBuilder.GetDescriptor().GetNClusters();
    std::size_t szPayload = 0;
-   unsigned numPages = 0;
 
    /// Aggregate batch of requests by object ID and distribution key, determined by the ntuple-DAOS mapping
    for (auto &range : ranges) {
@@ -247,22 +250,23 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPage
          auto [it, ret] = writeRequests.emplace(odPair, RDaosContainer::RWOperation(odPair));
          it->second.insert(daosKey.fAkey, pageIov);
 
-         RNTupleLocator result;
-         result.fPosition = offsetData;
-         result.fBytesOnStorage = s.fSize;
-         locators.push_back(result);
+         RNTupleLocator locator;
+         locator.fPosition = offsetData;
+         locator.fBytesOnStorage = s.fSize;
+         locators.push_back(locator);
 
          szPayload += s.fSize;
-         ++numPages;
       }
    }
    fNBytesCurrentCluster += szPayload;
 
-   RNTupleAtomicTimer timer(fCounters->fTimeWallWrite, fCounters->fTimeCpuWrite);
-   if (int err = fDaosContainer->WriteV(writeRequests))
-      throw ROOT::Experimental::RException(R__FAIL("WriteV: error" + std::string(d_errstr(err))));
+   {
+      RNTupleAtomicTimer timer(fCounters->fTimeWallWrite, fCounters->fTimeCpuWrite);
+      if (int err = fDaosContainer->WriteV(writeRequests))
+         throw ROOT::Experimental::RException(R__FAIL("WriteV: error" + std::string(d_errstr(err))));
+   }
 
-   fCounters->fNPageCommitted.Add(numPages);
+   fCounters->fNPageCommitted.Add(nPages);
    fCounters->fSzWritePayload.Add(szPayload);
 
    return locators;
