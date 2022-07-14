@@ -1975,6 +1975,7 @@ if args['with_llvm_tar']:
     tar_required = True
 
 if args['check_requirements']:
+    args['skip_cleanup'] = True
     llvm_binary_name = ""
     box_draw('Check availability of required softwares')
     if DIST == 'Ubuntu':
@@ -2449,7 +2450,7 @@ if args['create_dev_env']:
     fetch_llvm(llvm_revision)
     fetch_clang(llvm_revision)
     fetch_cling('master')
-
+    args['skip_cleanup'] = True
     set_version()
     if OS == 'Windows':
         get_win_dep()
