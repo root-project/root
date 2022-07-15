@@ -943,7 +943,7 @@ TestDialog::TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
    for (i = 0; i < 20; i++) {
       char tmp[20];
 
-      sprintf(tmp, "Entry %i", i+1);
+      snprintf(tmp, 20, "Entry %i", i+1);
       fCombo->AddEntry(tmp, i+1);
    }
 
@@ -1010,7 +1010,7 @@ TestDialog::TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
    for (i=0; i < 20; ++i) {
       char tmp[20];
 
-      sprintf(tmp, "Entry %i", i);
+      snprintf(tmp, 20, "Entry %i", i);
       fListBox->AddEntry(tmp, i);
    }
    fFirstEntry = 0;
@@ -1031,7 +1031,7 @@ TestDialog::TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
    char buff[100];
    int j;
    for (j = 0; j < 4; j++) {
-      sprintf(buff, "Module %i", j+1);
+      snprintf(buff, 100, "Module %i", j+1);
       fF6->AddFrame(new TGLabel(fF6, new TGHotString(buff)));
 
       TGTextBuffer *tbuf = new TGTextBuffer(10);
@@ -1146,7 +1146,8 @@ Bool_t TestDialog::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
 {
    // Process messages coming from widgets associated with the dialog.
 
-   char tmp[20];
+   constexpr std::size_t bufferSize = 20;
+   char tmp[bufferSize];
    static int newtab = 0;
 
    switch (GET_MSG(msg)) {
@@ -1170,7 +1171,7 @@ Bool_t TestDialog::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
                      break;
                   case 90:  // add one entry in list box
                      fLastEntry++;
-                     sprintf(tmp, "Entry %i", fLastEntry);
+                     snprintf(tmp, bufferSize, "Entry %i", fLastEntry);
                      fListBox->AddEntry(tmp, fLastEntry);
                      fListBox->MapSubwindows();
                      fListBox->Layout();
@@ -1211,7 +1212,7 @@ Bool_t TestDialog::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
                      }
                      break;
                   case 103:  // add tabs
-                     sprintf(tmp, "New Tab %d", ++newtab);
+                     snprintf(tmp, bufferSize, "New Tab %d", ++newtab);
                      fTab->AddTab(tmp);
                      fTab->MapSubwindows();
                      fTab->Layout();
@@ -1579,7 +1580,8 @@ Bool_t TestSliders::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t par
 {
    // Process slider messages.
 
-   char buf[10];
+   constexpr std::size_t bufferSize = 10;
+   char buf[bufferSize];
 
    switch (GET_MSG(msg)) {
       case kC_TEXTENTRY:
@@ -1607,7 +1609,7 @@ Bool_t TestSliders::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t par
       case kC_HSLIDER:
          switch (GET_SUBMSG(msg)) {
             case kSL_POS:
-               sprintf(buf, "%zd", (size_t)parm2);
+               snprintf(buf, bufferSize, "%zd", (size_t)parm2);
                switch (parm1) {
                   case HSId1:
                      fTbh1->Clear();
@@ -1632,7 +1634,7 @@ Bool_t TestSliders::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t par
                      fClient->NeedRedraw(fTeh2);
                      break;
                   case VSId2:
-                     sprintf(buf, "%f", fVslider2->GetMinPosition());
+                     snprintf(buf, bufferSize, "%f", fVslider2->GetMinPosition());
                      fTbv2->Clear();
                      fTbv2->AddText(0, buf);
                      fTev2->SetCursorPosition(fTev2->GetCursorPosition());
@@ -2352,9 +2354,9 @@ void Editor::SetTitle()
 
    char title[256];
    if (untitled)
-      sprintf(title, "ROOT Editor - Untitled");
+      snprintf(title, 256, "ROOT Editor - Untitled");
    else
-      sprintf(title, "ROOT Editor - %s", txt->GetFileName());
+      snprintf(title, 256, "ROOT Editor - %s", txt->GetFileName());
 
    SetWindowName(title);
    SetIconName(title);

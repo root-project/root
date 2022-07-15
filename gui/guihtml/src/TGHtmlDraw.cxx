@@ -378,7 +378,8 @@ void TGHtml::BlockDraw(TGHtmlBlock *pBlock, Drawable_t drawable,
       // We are dealing with a single TGHtmlElement which contains something
       // other than plain text.
       int cnt, w;
-      char zBuf[30];
+      constexpr std::size_t zBufSize = 30;
+      char zBuf[zBufSize];
       TGHtmlLi *li;
       TGHtmlImageMarkup *image;
       switch (src->fType) {
@@ -389,7 +390,7 @@ void TGHtml::BlockDraw(TGHtmlBlock *pBlock, Drawable_t drawable,
             switch (li->fLtype) {
                case LI_TYPE_Enum_1:
                   // coverity[secure_coding]: zBuf is large enough for an int
-                  sprintf(zBuf, "%d.", li->fCnt);
+                  snprintf(zBuf, zBufSize, "%d.", li->fCnt);
                   break;
                case LI_TYPE_Enum_A:
                   GetLetterIndex(zBuf, li->fCnt, 1);

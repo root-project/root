@@ -1493,7 +1493,7 @@ void TMinuit::mncont(Int_t ike1, Int_t ike2, Int_t nptu, Double_t *xptu, Double_
          fXpt[i-1] = xptu[i-2];
          fYpt[i-1] = yptu[i-2];
       }
-      sprintf(fChpt,"%s"," ABCD");
+      snprintf(fChpt, fMaxcpt+1, "%s", " ABCD");
       mnplot(fXpt, fYpt, fChpt, nall, fNpagwd, fNpagln);
    }
 

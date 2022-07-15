@@ -1367,7 +1367,7 @@ void TGTextLayout::ToPostscript(TString *result) const
             // Postscript as part of this sequence.
 
                // coverity[secure_coding]
-               sprintf(buf + used, "\\%03o", c);
+               snprintf(buf + used, MAXUSE + 10 - used, "\\%03o", c);
                used += 4;
             } else {
                buf[used++] = c;

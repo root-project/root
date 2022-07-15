@@ -612,7 +612,7 @@ XMLAttrPointer_t TXMLEngine::NewAttr(XMLNodePointer_t xmlnode, XMLNsPointer_t, c
 XMLAttrPointer_t TXMLEngine::NewIntAttr(XMLNodePointer_t xmlnode, const char *name, Int_t value)
 {
    char sbuf[30];
-   sprintf(sbuf, "%d", value);
+   snprintf(sbuf, 30, "%d", value);
    return NewAttr(xmlnode, 0, name, sbuf);
 }
 

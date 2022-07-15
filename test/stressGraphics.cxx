@@ -171,9 +171,12 @@ Bool_t    gOptionK;
 TH2F     *gH2;
 TFile    *gHsimple;
 TFile    *gCernstaff;
-char      gCfile[16];
-char      outfile[16];
-char      gLine[80];
+constexpr std::size_t gCfileSize = 16;
+constexpr std::size_t outfileSize = 16;
+constexpr std::size_t gLineSize = 80;
+char      gCfile[gCfileSize];
+char      outfile[outfileSize];
+char      gLine[gLineSize];
 
 
 #ifndef __CLING__
@@ -455,9 +458,9 @@ Int_t StatusPrint(TString &filename, Int_t id, const TString &title,
 {
    if (!gOptionR) {
       if (id>0) {
-         sprintf(gLine,"Test %2d: %s",id,title.Data());
+         snprintf(gLine, gLineSize, "Test %2d: %s",id,title.Data());
       } else {
-         sprintf(gLine,"       %s",title.Data());
+         snprintf(gLine, gLineSize, "       %s",title.Data());
       }
 
       const Int_t nch = strlen(gLine);
@@ -559,7 +562,7 @@ TCanvas *StartTest(Int_t w, Int_t h)
 void TestReport1(TCanvas *C, const TString &title, Int_t IPS)
 {
    gErrorIgnoreLevel = 9999;
-   sprintf(outfile,"sg1_%2.2d.ps",gTestNum);
+   snprintf(outfile, outfileSize, "sg1_%2.2d.ps",gTestNum);
 
    TPostScript *ps1 = new TPostScript(outfile, 111);
    C->Draw();
@@ -575,7 +578,7 @@ void TestReport1(TCanvas *C, const TString &title, Int_t IPS)
                                             gPS1ErrNb[gTestNum-1]);
    }
 
-   sprintf(outfile,"sg%2.2d.pdf",gTestNum);
+   snprintf(outfile, outfileSize, "sg%2.2d.pdf",gTestNum);
    C->cd(0);
    TPDF *pdf = new TPDF(outfile,111);
    C->Draw();
@@ -585,7 +588,7 @@ void TestReport1(TCanvas *C, const TString &title, Int_t IPS)
                                            gPDFRefNb[gTestNum-1],
                                            gPDFErrNb[gTestNum-1]);
 
-   sprintf(outfile,"sg%2.2d.gif",gTestNum);
+   snprintf(outfile, outfileSize, "sg%2.2d.gif",gTestNum);
    C->cd(0);
    C->SaveAs(outfile);
    TString giffile = outfile;
@@ -593,7 +596,7 @@ void TestReport1(TCanvas *C, const TString &title, Int_t IPS)
                                            gGIFRefNb[gTestNum-1],
                                            gGIFErrNb[gTestNum-1]);
 
-   sprintf(outfile,"sg%2.2d.jpg",gTestNum);
+   snprintf(outfile, outfileSize, "sg%2.2d.jpg",gTestNum);
    C->cd(0);
    C->SaveAs(outfile);
    TString jpgfile = outfile;
@@ -601,7 +604,7 @@ void TestReport1(TCanvas *C, const TString &title, Int_t IPS)
                                            gJPGRefNb[gTestNum-1],
                                            gJPGErrNb[gTestNum-1]);
 
-   sprintf(outfile,"sg%2.2d.png",gTestNum);
+   snprintf(outfile, outfileSize, "sg%2.2d.png",gTestNum);
    C->cd(0);
    C->SaveAs(outfile);
    TString pngfile = outfile;
@@ -622,7 +625,7 @@ void DoCcode(TCanvas *C)
 {
    gErrorIgnoreLevel = 9999;
 
-   sprintf(gCfile,"sg%2.2d.C",gTestNum);
+   snprintf(gCfile, gCfileSize, "sg%2.2d.C",gTestNum);
 
    if (C) {
       C->SaveAs(gCfile);
@@ -643,10 +646,10 @@ void DoCcode(TCanvas *C)
 
 void TestReport2(Int_t IPS)
 {
-   sprintf(outfile,"sg2_%2.2d.ps",gTestNum);
+   snprintf(outfile, outfileSize, "sg2_%2.2d.ps",gTestNum);
 
    gErrorIgnoreLevel = 9999;
-   sprintf(gCfile,".x sg%2.2d.C",gTestNum);
+   snprintf(gCfile, gCfileSize, ".x sg%2.2d.C",gTestNum);
    gROOT->ProcessLine(gCfile);
    gPad->SaveAs(outfile);
    gErrorIgnoreLevel = 0;
@@ -663,7 +666,7 @@ void TestReport2(Int_t IPS)
                                                     gPS2ErrNb[gTestNum-1]);
    }
 
-   sprintf(gCfile,"sg%2.2d.C",gTestNum);
+   snprintf(gCfile, gCfileSize, "sg%2.2d.C",gTestNum);
 #ifndef ClingWorkAroundDeletedSourceFile
    if (!gOptionK && !i) gSystem->Unlink(gCfile);
 #endif
@@ -1584,21 +1587,22 @@ void tgaxis5()
          a.SetTimeOffset(offset[i], opt);
          const char* offsettimeformat = a.GetTimeFormat();
 
-         char buf[256];
+         constexpr std::size_t bufSize = 256;
+         char buf[bufSize];
          if (offset[i] < t[i]) {
-            sprintf(buf, "#splitline{%s, %s}{offset: %ld, option %s}",
+            snprintf(buf, bufSize, "#splitline{%s, %s}{offset: %ld, option %s}",
                     stime(t+i).Data(), stime(t+i, true).Data(), (long) offset[i], opt);
          } else {
             int h = t[i] / 3600;
             int m = (t[i] - 3600 * h) / 60 ;
             int s = (t[i] - h * 3600 - m * 60);
-            sprintf(buf, "#splitline{%d h %d m %d s}{offset: %s, option %s}",
+            snprintf(buf, bufSize, "#splitline{%d h %d m %d s}{offset: %s, option %s}",
                     h, m, s, stime(offset + i, gmt).Data(), opt);
          }
          tex1.DrawLatex(.01, .75, buf);
          tex2.DrawLatex(.01, .50, offsettimeformat);
          time_t t_ = t[i] + offset[i];
-         sprintf(buf, "Expecting:    #color[2]{%s}", stime(&t_, gmt, false).Data());
+         snprintf(buf, bufSize, "Expecting:    #color[2]{%s}", stime(&t_, gmt, false).Data());
          tex3.DrawLatex(.01, .24, buf);
          if(i > 0) l.DrawLine(0, 0.95, 1, 0.95);
       }
