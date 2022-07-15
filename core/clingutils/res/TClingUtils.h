@@ -576,11 +576,11 @@ static inline std::string DemangleNameForDlsym(const std::string& name)
    std::string nameForDlsym = name;
 
 #ifdef R__MACOSX
-   // The JIT gives us a mangled name which has two leading underscores on
-   // osx, for instance __ZN8TRandom34RndmEv. However, on dlsym OSX requres
-   // single _ (eg. __ZN8TRandom34RndmEv, dropping the extra _).
+   // The JIT gives us a mangled name which has an additional leading underscore
+   // macOS, for instance __ZN8TRandom34RndmEv. However, dlsym requires us to
+   // remove it.
    // FIXME: get this information from the DataLayout via getGlobalPrefix()!
-   if (llvm::StringRef(nameForDlsym).startswith("__"))
+   if (nameForDlsym[0] == '_')
       nameForDlsym.erase(0, 1);
 #endif //R__MACOSX
 
