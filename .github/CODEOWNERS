@@ -22,6 +22,7 @@
 /icons/ @bellenot
 /interpreter/ @Axel-Naumann
 /interpreter/llvm/ @vgvassilev
+interpreter/cling/tools/packaging @vgvassilev
 /io/ @pcanal
 /io/xml/ @pcanal @linev
 /main/ @pcanal
@@ -44,7 +45,7 @@
 /bindings/r/ @omazapa
 /core/imt/ @eguiraud
 /core/multiproc/ @eguiraud
-/graf2d/cocoa/ @TimurP
+/graf2d/cocoa/ @couet
 /graf3d/eve/ @osschar
 /graf3d/eve7/ @osschar @linev
 
