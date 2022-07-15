@@ -223,6 +223,54 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageImpl(DescriptorId_t c
    return result;
 }
 
+std::vector<ROOT::Experimental::RNTupleLocator>
+ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges)
+{
+   RDaosContainer::MultiObjectRWOperation_t writeRequests;
+   std::vector<ROOT::Experimental::RNTupleLocator> locators;
+   size_t nPages =
+      std::accumulate(ranges.begin(), ranges.end(), 0, [](size_t c, const RPageStorage::RSealedPageGroup &r) {
+         return c + std::distance(r.fFirst, r.fLast);
+      });
+   locators.reserve(nPages);
+
+   DescriptorId_t clusterId = fDescriptorBuilder.GetDescriptor().GetNClusters();
+   std::size_t szPayload = 0;
+
+   /// Aggregate batch of requests by object ID and distribution key, determined by the ntuple-DAOS mapping
+   for (auto &range : ranges) {
+      for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
+         const RPageStorage::RSealedPage &s = *sealedPageIt;
+         d_iov_t pageIov;
+         d_iov_set(&pageIov, const_cast<void *>(s.fBuffer), s.fSize);
+         auto offsetData = fPageId.fetch_add(1);
+
+         RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(clusterId, range.fColumnId, offsetData);
+         auto odPair = RDaosContainer::ROidDkeyPair{daosKey.fOid, daosKey.fDkey};
+         auto [it, ret] = writeRequests.emplace(odPair, RDaosContainer::RWOperation(odPair));
+         it->second.insert(daosKey.fAkey, pageIov);
+
+         RNTupleLocator locator;
+         locator.fPosition = offsetData;
+         locator.fBytesOnStorage = s.fSize;
+         locators.push_back(locator);
+
+         szPayload += s.fSize;
+      }
+   }
+   fNBytesCurrentCluster += szPayload;
+
+   {
+      RNTupleAtomicTimer timer(fCounters->fTimeWallWrite, fCounters->fTimeCpuWrite);
+      if (int err = fDaosContainer->WriteV(writeRequests))
+         throw ROOT::Experimental::RException(R__FAIL("WriteV: error" + std::string(d_errstr(err))));
+   }
+
+   fCounters->fNPageCommitted.Add(nPages);
+   fCounters->fSzWritePayload.Add(szPayload);
+
+   return locators;
+}
 
 std::uint64_t
 ROOT::Experimental::Detail::RPageSinkDaos::CommitClusterImpl(ROOT::Experimental::NTupleSize_t /* nEntries */)
