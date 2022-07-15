@@ -139,7 +139,7 @@ TCandle::TCandle(const Double_t candlePos, const Double_t candleWidth, Long64_t 
    fNHistoPoints  = 0;
    fAxisMin       = 0.;
    fAxisMax       = 0.;
-   sprintf(fOptionStr," ");
+   snprintf(fOptionStr, sizeof(fOptionStr), " ");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -173,7 +173,7 @@ TCandle::TCandle(const Double_t candlePos, const Double_t candleWidth, TH1D *pro
    fNHistoPoints  = 0;
    fAxisMin       = 0.;
    fAxisMax       = 0.;
-   sprintf(fOptionStr," ");
+   snprintf(fOptionStr, sizeof(fOptionStr), " ");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
