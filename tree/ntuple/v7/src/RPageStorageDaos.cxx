@@ -540,85 +540,98 @@ std::vector<std::unique_ptr<ROOT::Experimental::Detail::RCluster>>
 ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RKey> clusterKeys)
 {
    std::vector<std::unique_ptr<ROOT::Experimental::Detail::RCluster>> result;
-   for (const auto &clusterKey : clusterKeys) {
+
+   struct RDaosSealedPageLocator {
+      RDaosSealedPageLocator() = default;
+      RDaosSealedPageLocator(DescriptorId_t cl, DescriptorId_t co, NTupleSize_t p, std::uint64_t o, std::uint64_t s,
+                             std::size_t b)
+         : fClusterId(cl), fColumnId(co), fPageNo(p), fObjectId(o), fSize(s), fBufPos(b)
+      {
+      }
+      DescriptorId_t fClusterId = 0;
+      DescriptorId_t fColumnId = 0;
+      NTupleSize_t fPageNo = 0;
+      std::uint64_t fObjectId = 0;
+      std::uint64_t fSize = 0;
+      std::size_t fBufPos = 0;
+   };
+
+   std::vector<unsigned char *> clusterBuffers(clusterKeys.size());
+   std::vector<std::unique_ptr<ROnDiskPageMapHeap>> pageMaps(clusterKeys.size());
+   RDaosContainer::MultiObjectRWOperation_t readRequests;
+
+   std::size_t szPayload = 0;
+   unsigned nPages = 0;
+
+   for (unsigned i = 0; i < clusterKeys.size(); ++i) {
+      const auto &clusterKey = clusterKeys[i];
       auto clusterId = clusterKey.fClusterId;
+      std::vector<RDaosSealedPageLocator> onDiskClusterPages;
+
+      unsigned clusterBufSz = 0;
       fCounters->fNClusterLoaded.Inc();
-
-      struct RDaosSealedPageLocator {
-         RDaosSealedPageLocator() = default;
-         RDaosSealedPageLocator(DescriptorId_t c, NTupleSize_t p, std::uint64_t o, std::uint64_t s, std::size_t b)
-            : fColumnId(c), fPageNo(p), fObjectId(o), fSize(s), fBufPos(b)
-         {
-         }
-         DescriptorId_t fColumnId = 0;
-         NTupleSize_t fPageNo = 0;
-         std::uint64_t fObjectId = 0;
-         std::uint64_t fSize = 0;
-         std::size_t fBufPos = 0;
-      };
-
-      std::vector<RDaosSealedPageLocator> onDiskPages;
-      std::size_t szPayload = 0;
       {
          auto descriptorGuard = GetSharedDescriptorGuard();
          const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterId);
 
-         // Collect the page necessary page meta-data and sum up the total size of the compressed and packed pages
+         // Collect the necessary page meta-data and sum up the total size of the compressed and packed pages
          for (auto columnId : clusterKey.fColumnSet) {
             const auto &pageRange = clusterDesc.GetPageRange(columnId);
-            NTupleSize_t pageNo = 0;
+            NTupleSize_t columnPageCount = 0;
             for (const auto &pageInfo : pageRange.fPageInfos) {
                const auto &pageLocator = pageInfo.fLocator;
-               onDiskPages.emplace_back(RDaosSealedPageLocator(columnId, pageNo, pageLocator.fPosition,
-                                                               pageLocator.fBytesOnStorage, szPayload));
-               szPayload += pageLocator.fBytesOnStorage;
-               ++pageNo;
+               onDiskClusterPages.push_back(RDaosSealedPageLocator(clusterId, columnId, columnPageCount,
+                                                                   pageLocator.fPosition, pageLocator.fBytesOnStorage,
+                                                                   clusterBufSz));
+               ++columnPageCount;
+               clusterBufSz += pageLocator.fBytesOnStorage;
             }
+            nPages += columnPageCount;
          }
       }
+      szPayload += clusterBufSz;
 
-      // Prepare input dictionary for the RDaosContainer::ReadV() call, mapped by object ID and distribution key
-      // according to the mapping strategy
-      RDaosContainer::MultiObjectRWOperation_t readRequests;
-      std::vector<d_iov_t> iovs(onDiskPages.size());
-      auto buffer = new unsigned char[szPayload];
+      clusterBuffers[i] = new unsigned char[clusterBufSz];
+      pageMaps[i] = std::make_unique<ROnDiskPageMapHeap>(std::unique_ptr<unsigned char[]>(clusterBuffers[i]));
 
-      for (unsigned i = 0; i < onDiskPages.size(); ++i) {
-         auto &s = onDiskPages[i];
-         d_iov_set(&iovs[i], buffer + s.fBufPos, s.fSize);
-         RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(clusterId, s.fColumnId, s.fObjectId);
+      // Fill the cluster page maps and the input dictionary for the RDaosContainer::ReadV() call
+      for (const auto &s : onDiskClusterPages) {
+         // Register the on disk pages in a page map
+         ROnDiskPage::Key key(s.fColumnId, s.fPageNo);
+         pageMaps[i]->Register(key, ROnDiskPage(clusterBuffers[i] + s.fBufPos, s.fSize));
+
+         // Prepare new read request batched up by object ID and distribution key
+         d_iov_t iov;
+         d_iov_set(&iov, clusterBuffers[i] + s.fBufPos, s.fSize);
+
+         RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(s.fClusterId, s.fColumnId, s.fObjectId);
          auto odPair = RDaosContainer::ROidDkeyPair{daosKey.fOid, daosKey.fDkey};
          auto [it, ret] = readRequests.emplace(odPair, RDaosContainer::RWOperation(odPair));
-         it->second.insert(daosKey.fAkey, iovs[i]);
+         it->second.insert(daosKey.fAkey, iov);
       }
-      fCounters->fSzReadPayload.Add(szPayload);
+   }
+   fCounters->fNPageLoaded.Add(nPages);
+   fCounters->fSzReadPayload.Add(szPayload);
 
-      // Register the on disk pages in a page map
-      auto pageMap = std::make_unique<ROnDiskPageMapHeap>(std::unique_ptr<unsigned char[]>(buffer));
-      for (const auto &s : onDiskPages) {
-         ROnDiskPage::Key key(s.fColumnId, s.fPageNo);
-         pageMap->Register(key, ROnDiskPage(buffer + s.fBufPos, s.fSize));
-      }
-      fCounters->fNPageLoaded.Add(onDiskPages.size());
+   {
+      RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
+      if (int err = fDaosContainer->ReadV(readRequests))
+         throw ROOT::Experimental::RException(R__FAIL("ReadV: error" + std::string(d_errstr(err))));
+   }
+   fCounters->fNReadV.Inc();
+   fCounters->fNRead.Add(nPages);
 
-      {
-         RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
-         if (int err = fDaosContainer->ReadV(readRequests))
-            throw ROOT::Experimental::RException(R__FAIL("ReadV: error" + std::string(d_errstr(err))));
-      }
-      fCounters->fNReadV.Inc();
-      fCounters->fNRead.Add(readRequests.size());
-
-      auto cluster = std::make_unique<RCluster>(clusterId);
-      cluster->Adopt(std::move(pageMap));
-      for (auto colId : clusterKey.fColumnSet)
+   // Assign each cluster its page map
+   for (unsigned i = 0; i < clusterKeys.size(); ++i) {
+      auto cluster = std::make_unique<RCluster>(clusterKeys[i].fClusterId);
+      cluster->Adopt(std::move(pageMaps[i]));
+      for (auto colId : clusterKeys[i].fColumnSet)
          cluster->SetColumnAvailable(colId);
 
       result.emplace_back(std::move(cluster));
    }
    return result;
 }
-
 
 void ROOT::Experimental::Detail::RPageSourceDaos::UnzipClusterImpl(RCluster *cluster)
 {
