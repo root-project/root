@@ -1,6 +1,7 @@
 /// \file
 /// \ingroup tutorial_fit
-/// \notebook                                                                                                                              /// Tutorial for creating a Vectorized TF1 function using a formunla expression and
+/// \notebook
+/// Tutorial for creating a Vectorized TF1 function using a formula expression and
 /// use it for fitting an histogram
 ///
 /// To create a vectorized function (if ROOT has been compiled with support for vectorization)
@@ -47,7 +48,7 @@ void vectorizedFit() {
 
    std::cout << "Doing Vectorized Gaussian Fit " << std::endl;
    auto f2 = new TF1("f2","gaus",-3,3,"VEC");
-   // alternativly you can also use the TF1::SetVectorized function
+   // alternatively you can also use the TF1::SetVectorized function
    //f2->SetVectorized(true); 
    w.Start();
    h1->Fit(f2);
@@ -61,7 +62,7 @@ void vectorizedFit() {
    ((TF1 *)h1->GetListOfFunctions()->At(1))->SetLineColor(kBlue);
    //c1->cd(1)->BuildLegend();
 
-   /// Do a polynomail fit now
+   /// Do a polynomial fit now
    c1->cd(2);
    auto f3 = new TF1("f3","[A]*x^2+[B]*x+[C]",0,10);
    f3->SetParameters(0.5,3,2);
