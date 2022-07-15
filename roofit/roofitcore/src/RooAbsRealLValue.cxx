@@ -129,7 +129,7 @@ void RooAbsRealLValue::inRange(std::span<const double> values, std::string const
   const bool infiniteMax = RooNumber::isInfinite(max);
 
   for(std::size_t i = 0; i < values.size(); ++i) {
-    out[i] = out[i] & ((infiniteMax | (values[i] <= (max+1e-6))) && (infiniteMin | (values[i] >= (min-1e-6))));
+    out[i] = out[i] && ((infiniteMax | (values[i] <= (max+1e-6))) && (infiniteMin | (values[i] >= (min-1e-6))));
   }
 
 }

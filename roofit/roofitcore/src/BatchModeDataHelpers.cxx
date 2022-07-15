@@ -206,7 +206,7 @@ RooFit::BatchModeDataHelpers::getDataSpans(RooAbsData const &data, std::string_v
             observable->inRange({dataSpans.at(observable->namePtr()).data(), nEvents}, range, isInSubRange);
          }
          for (std::size_t i = 0; i < isInSubRange.size(); ++i) {
-            isInRange[i] = isInRange[i] | isInSubRange[i];
+            isInRange[i] = isInRange[i] || isInSubRange[i];
          }
       }
 
