@@ -418,13 +418,14 @@ void TBufferXML::XmlWriteBlock(XMLNodePointer_t node)
    }
 
    TString res;
-   char sbuf[500];
+   constexpr std::size_t sbufSize = 500;
+   char sbuf[sbufSize];
    int block = 0;
    char *tgt = sbuf;
    int srcCnt = 0;
 
    while (srcCnt++ < srcSize) {
-      tgt += sprintf(tgt, " %02x", (unsigned char)*src);
+      tgt += snprintf(tgt, sbufSize - (tgt - sbuf), " %02x", (unsigned char)*src);
       src++;
       if (block++ == 100) {
          res += sbuf;
