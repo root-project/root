@@ -147,12 +147,28 @@ void AddKerasLayer(RModel& rmodel, PyObject* fLayer){
          PyObject* fInputs = PyDict_GetItemString(fLayer,"layerInput");
          std::string fActivationLayerOutput = PyStringAsString(PyList_GetItem(fOutputs,0));
 
+         if(fLayerType == "Conv2D"){
+            std::unique_ptr<ROperator> op_pre_transpose;
+            op_pre_transpose.reset(new ROperator_Transpose<float>({0,3,1,2}, PyStringAsString(PyList_GetItem(fInputs,0)), fLayerName+"_Trans"));
+            rmodel.AddOperator(std::move(op_pre_transpose));
+
+            PyList_SetItem(fInputs,0,PyUnicode_FromString((fLayerName+"_Trans").c_str()));
+            PyDict_SetItemString(fLayer,"layerInput",fOutputs);
+         }
+
          // Making changes in the names of the input and output tensor names
          PyList_SetItem(fOutputs,0,PyUnicode_FromString((fLayerName+fLayerType).c_str()));
          PyDict_SetItemString(fLayer,"layerOutput",fOutputs);
          rmodel.AddOperator((findLayer->second)(fLayer));
 
-         std::string fActivationLayerInput = PyStringAsString(PyList_GetItem(fOutputs,0));
+         std::string fActivationLayerInput = fLayerName+fLayerType;   
+         if(fLayerType == "Conv2D"){
+            std::unique_ptr<ROperator> op_post_transpose;
+            op_post_transpose.reset(new ROperator_Transpose<float>({0,2,3,1}, fLayerName+fLayerType, fLayerName+"_Trans"));
+            rmodel.AddOperator(std::move(op_post_transpose));
+            fActivationLayerInput = fLayerName+"_Trans";
+         }
+
          PyList_SetItem(fInputs,0,PyUnicode_FromString(fActivationLayerInput.c_str()));
          PyList_SetItem(fOutputs,0,PyUnicode_FromString(fActivationLayerOutput.c_str()));
          PyDict_SetItemString(fLayer,"layerInput",fInputs);
@@ -163,6 +179,7 @@ void AddKerasLayer(RModel& rmodel, PyObject* fLayer){
             throw std::runtime_error("TMVA::SOFIE - Parsing Keras Activation layer " + fLayerActivation + " is not yet supported");
          }
          rmodel.AddOperator((findActivationLayer->second)(fLayer));
+
       }
       else{
          rmodel.AddOperator((findLayer->second)(fLayer));
@@ -228,13 +245,13 @@ std::unique_ptr<ROperator> MakeKerasDense(PyObject* fLayer){
 ///
 /// For Keras's Conv layer, the names of the input tensor, output tensor, and
 /// weight tensors are extracted, along with attributes like dilation_rate,
-/// groups, kernel size, padding, strides. Padding attribute for
-/// is then computed for ROperator depending on Keras' attribute parameter.
+/// groups, kernel size, padding, strides. Padding attribute is then 
+/// computed for ROperator depending on Keras' attribute parameter.
 std::unique_ptr<ROperator> MakeKerasConv(PyObject* fLayer){
-      PyObject* fAttributes = PyDict_GetItemString(fLayer,"layerAttributes");
-      PyObject* fInputs  = PyDict_GetItemString(fLayer,"layerInput");
-      PyObject* fOutputs = PyDict_GetItemString(fLayer,"layerOutput");
-      std::string fLayerDType = PyStringAsString(PyDict_GetItemString(fLayer,"layerDType"));
+      PyObject* fAttributes = PyDict_GetItemWithError(fLayer,PyUnicode_FromString("layerAttributes"));
+      PyObject* fInputs  = PyDict_GetItemWithError(fLayer,PyUnicode_FromString("layerInput"));
+      PyObject* fOutputs = PyDict_GetItemWithError(fLayer,PyUnicode_FromString("layerOutput"));
+      std::string fLayerDType = PyStringAsString(PyDict_GetItemWithError(fLayer,PyUnicode_FromString("layerDType")));
 
       std::string fLayerInputName  = PyStringAsString(PyList_GetItem(fInputs,0));
       std::string fLayerOutputName = PyStringAsString(PyList_GetItem(fOutputs,0));
@@ -242,16 +259,16 @@ std::unique_ptr<ROperator> MakeKerasConv(PyObject* fLayer){
       // Extracting names of weight tensors
       // The names of Kernel weights and bias weights are found in the list
       // of weight tensors from fLayer.
-      PyObject* fWeightNames  = PyDict_GetItemString(fLayer,"layerWeight");
+      PyObject* fWeightNames  = PyDict_GetItemWithError(fLayer,PyUnicode_FromString("layerWeight"));
       std::string fKernelName = PyStringAsString(PyList_GetItem(fWeightNames,0));
       std::string fBiasName   = PyStringAsString(PyList_GetItem(fWeightNames,1));
 
       // Extracting the Conv Node Attributes
-      PyObject* fDilations       = PyDict_GetItemString(fAttributes,"dilation_rate");
-      PyObject* fGroup           = PyDict_GetItemString(fAttributes,"groups");
-      PyObject* fKernelShape     = PyDict_GetItemString(fAttributes,"kernel_size");
-      PyObject* fPads            = PyDict_GetItemString(fAttributes,"padding");
-      PyObject* fStrides         = PyDict_GetItemString(fAttributes,"strides");
+      PyObject* fDilations       = PyDict_GetItemWithError(fAttributes,PyUnicode_FromString("dilation_rate"));
+      PyObject* fGroup           = PyDict_GetItemWithError(fAttributes,PyUnicode_FromString("groups"));
+      PyObject* fKernelShape     = PyDict_GetItemWithError(fAttributes,PyUnicode_FromString("kernel_size"));
+      PyObject* fPads            = PyDict_GetItemWithError(fAttributes,PyUnicode_FromString("padding"));
+      PyObject* fStrides         = PyDict_GetItemWithError(fAttributes,PyUnicode_FromString("strides"));
 
       std::vector<size_t> fAttrDilations = GetDataFromTuple(fDilations);
 
@@ -266,28 +283,27 @@ std::unique_ptr<ROperator> MakeKerasConv(PyObject* fLayer){
       std::string fKerasPadding = PyStringAsString(fPads);
       if(fKerasPadding == "valid"){
          fAttrAutopad = "VALID";
-	      fAttrPads    = {0,0,0,0};
       }
       else if(fKerasPadding == "same"){
-         fAttrAutopad="NOTSET";
-         PyObject* fInputShape = PyDict_GetItemString(fAttributes,"batch_input_shape");
-         long inputHeight = PyLong_AsLong(PyTuple_GetItem(fInputShape,1));
-         long inputWidth = PyLong_AsLong(PyTuple_GetItem(fInputShape,2));
+         fAttrAutopad="SAME_UPPER";
+         // PyObject* fInputShape  = PyDict_GetItemString(fLayer,"layerInputShape");
+         // long inputHeight = PyLong_AsLong(PyTuple_GetItem(fInputShape,1));
+         // long inputWidth = PyLong_AsLong(PyTuple_GetItem(fInputShape,2));
 
-         long outputHeight = std::ceil(float(inputHeight) / float(fAttrStrides[0]));
-         long outputWidth  = std::ceil(float(inputWidth) / float(fAttrStrides[1]));
+         // long outputHeight = std::ceil(float(inputHeight) / float(fAttrStrides[0]));
+         // long outputWidth  = std::ceil(float(inputWidth) / float(fAttrStrides[1]));
 
-         long x1 = (outputHeight - 1) * fAttrStrides[0] + fAttrKernelShape[0] - inputHeight;
-         long x2 = (outputWidth - 1) * fAttrStrides[1] + fAttrKernelShape[1] - inputWidth;
+         // long x1 = (outputHeight - 1) * fAttrStrides[0] + fAttrKernelShape[0] - inputHeight;
+         // long x2 = (outputWidth - 1) * fAttrStrides[1] + fAttrKernelShape[1] - inputWidth;
 
-         if(x1 < 0) x1 = 0;
-         if(x2 < 0) x2 = 0;
+         // if(x1 < 0) x1 = 0;
+         // if(x2 < 0) x2 = 0;
 
-         size_t x1_begin = std::floor(x1/2);
-         size_t x1_end   = x1 - x1_begin;
-         size_t x2_begin = std::floor(x2/2);
-         size_t x2_end   = x2 - x2_begin;
-         fAttrPads = {x1_begin,x2_begin,x1_end,x2_end};
+         // size_t x1_begin = std::floor(x1/2);
+         // size_t x1_end   = x1 - x1_begin;
+         // size_t x2_begin = std::floor(x2/2);
+         // size_t x2_end   = x2 - x2_begin;
+         // fAttrPads = {x1_begin,x2_begin,x1_end,x2_end};
       }
       else{
          throw std::runtime_error("TMVA::SOFIE - RModel Keras Parser doesn't yet supports Convolution layer with padding " + fKerasPadding);
@@ -319,7 +335,11 @@ std::unique_ptr<ROperator> MakeKerasActivation(PyObject* fLayer){
       PyObject* fAttributes=PyDict_GetItemString(fLayer,"layerAttributes");
       PyObject* fPActivation = PyDict_GetItemString(fAttributes,"activation");
       std::string fLayerActivation = PyStringAsString(PyObject_GetAttrString(fPActivation,"__name__"));
+<<<<<<< HEAD
       
+=======
+
+>>>>>>> 4f8836d2f6 (feat: transpose op before and after conv for Keras NHWC)
       auto findLayer = mapKerasLayer.find(fLayerActivation);
       if(findLayer == mapKerasLayer.end()){
          throw std::runtime_error("TMVA::SOFIE - Parsing Keras Activation layer " + fLayerActivation + " is not yet supported");
@@ -580,7 +600,6 @@ RModel Parse(std::string filename){
    PyRunString("modelData=[]",fGlobalNS,fLocalNS);
    PyRunString("for idx in range(len(model.layers)):\n"
                "  layer=model.get_layer(index=idx)\n"
-               "  globals().update(locals())\n"
                "  layerData={}\n"
                "  layerData['layerType']=layer.__class__.__name__\n"
                "  layerData['layerAttributes']=layer.__dict__\n"
@@ -618,7 +637,7 @@ RModel Parse(std::string filename){
       INTERNAL::AddKerasLayer(rmodel,fLayer);
 
    }
-
+   
    //Extracting model's weights
    //For every initialized tensor, weightProp will have its name and dtype in string
    //and value in numpy array
@@ -742,6 +761,7 @@ RModel Parse(std::string filename){
          throw std::runtime_error("Type error: TMVA SOFIE does not yet support data type"+ConvertTypeToString(fInputDType));
 
       }
+   }
    }
 
 
