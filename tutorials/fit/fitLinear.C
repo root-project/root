@@ -37,7 +37,7 @@ void fitLinear()
    gre3->Draw("a*");
    //Fit the graph with the predefined "pol3" function
    gre3->Fit("pol3");
-   //Access the fit resuts
+   //Access the fit results
    TF1 *f3 = gre3->GetFunction("pol3");
    f3->SetLineWidth(1);
 

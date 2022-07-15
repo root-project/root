@@ -137,7 +137,7 @@ TF1 *langaufit(TH1F *his, double *fitrange, double *startvalues, double *parlimi
 
 int langaupro(double *params, double &maxx, double &FWHM) {
 
-   // Seaches for the location (x value) at the maximum of the
+   // Searches for the location (x value) at the maximum of the
    // Landau-Gaussian convolute and its full width at half-maximum.
    //
    // The search is probably not very efficient, but it's a first try.
