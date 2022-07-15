@@ -1135,11 +1135,11 @@ static GlobalModuleIndex *loadGlobalModuleIndex(cling::Interpreter &interp)
                if (TagDecl *TD = llvm::dyn_cast<TagDecl>(ND)) {
                   if (TD->isCompleteDefinition())
                      Register(TD);
-               } else if (NamespaceDecl *NSD = llvm::dyn_cast<NamespaceDecl>(ND)) {
-                  Register(NSD, /*AddSingleEntry=*/ false);
                }
                else if (TypedefNameDecl *TND = dyn_cast<TypedefNameDecl>(ND))
                   Register(TND);
+               else if (isa<FunctionDecl>(ND) && !isa<CXXMethodDecl>(ND))
+                  Register(ND);
                // FIXME: Add the rest...
                return true; // continue decending
             }
