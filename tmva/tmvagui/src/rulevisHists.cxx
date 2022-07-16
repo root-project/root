@@ -151,7 +151,7 @@ void TMVA::rulevisHists( TDirectory *rfdir, TDirectory *vardir, TDirectory *corr
          // create new canvas
          if ((c[countCanvas]==NULL) || (countPad>noPad)) {
             char cn[20];
-            sprintf( cn, "rulehist%d_", countCanvas+1 );
+            snprintf( cn, 20, "rulehist%d_", countCanvas+1 );
             TString cname(cn);
             cname += rfdir->GetName();
             c[countCanvas] = new TCanvas( cname, maintitle,

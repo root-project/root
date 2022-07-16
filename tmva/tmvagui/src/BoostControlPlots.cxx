@@ -43,7 +43,7 @@ void TMVA::boostcontrolplots(TString dataset, TDirectory *boostdir ) {
    Int_t height = 900;
    char cn[100];
    const TString titName = boostdir->GetName();
-   sprintf( cn, "cv_%s", titName.Data() );
+   snprintf( cn, 100, "cv_%s", titName.Data() );
    TCanvas *c = new TCanvas( cn,  Form( "%s Control Plots", titName.Data() ),
                              width, height ); 
    c->Divide(2,4);

@@ -170,7 +170,7 @@ void TMVA::rulevisCorr( TDirectory *rfdir, TDirectory *vardir, TDirectory *corrd
          // create new canvas
          if ((c[countCanvas]==NULL) || (countPad>noPad)) {
             char cn[20];
-            sprintf( cn, "rulecorr%d_", countCanvas+1 );
+            snprintf( cn, 20, "rulecorr%d_", countCanvas+1 );
             TString cname(cn);
             cname += rfdir->GetName();
             c[countCanvas] = new TCanvas( cname, maintitle,
