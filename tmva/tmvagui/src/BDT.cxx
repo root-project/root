@@ -187,9 +187,9 @@ void TMVA::StatDialogBDT::DrawNode( TMVA::DecisionTreeNode *n,
    t->SetFillColor(fColorOffset+Int_t(pur*100));
 
    char buffer[25];
-   sprintf( buffer, "N=%f", n->GetNEvents() );
+   snprintf( buffer, 25, "N=%f", n->GetNEvents() );
    if (n->GetNEvents()>0) t->AddText(buffer);
-   sprintf( buffer, "S/(S+B)=%4.3f", n->GetPurity() );
+   snprintf( buffer, 25, "S/(S+B)=%4.3f", n->GetPurity() );
    t->AddText(buffer);
 
    if (n->GetNodeType() == 0){
@@ -242,7 +242,7 @@ TMVA::DecisionTree* TMVA::StatDialogBDT::ReadTree( TString* &vars, Int_t itree )
 
       char buffer[20];
       char line[256];
-      sprintf(buffer,"Tree %d",itree);
+      snprintf(buffer, 20, "Tree %d",itree);
 
       while (!dummy.Contains(buffer)) {
          fin.getline(line,256);
