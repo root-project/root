@@ -1975,7 +1975,6 @@ if args['with_llvm_tar']:
     tar_required = True
 
 if args['check_requirements']:
-    args['skip_cleanup'] = True
     llvm_binary_name = ""
     box_draw('Check availability of required softwares')
     if DIST == 'Ubuntu':
