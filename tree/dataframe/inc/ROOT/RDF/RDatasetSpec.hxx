@@ -37,8 +37,8 @@ class RDatasetSpec {
 
 public:
    struct REntryRange {
-      Long64_t fStartEntry{0};
-      Long64_t fEndEntry{std::numeric_limits<Long64_t>::max()};
+      Long64_t fBegin{0};
+      Long64_t fEnd{std::numeric_limits<Long64_t>::max()};
       REntryRange();
       REntryRange(Long64_t endEntry);
       REntryRange(Long64_t startEntry, Long64_t endEntry);

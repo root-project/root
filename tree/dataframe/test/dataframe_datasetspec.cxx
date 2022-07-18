@@ -147,7 +147,7 @@ TEST_P(RDatasetSpecTest, Ranges)
                      const auto msg =
                         std::string("A range of entries was passed in the creation of the TTreeProcessorMT, "
                                     "but the starting entry (") +
-                        ranges[i].fStartEntry +
+                        ranges[i].fBegin +
                         ") is larger "
                         "than the total number of entries (5) in the dataset.";
                      EXPECT_EQ(std::string(err.what()), msg);
@@ -162,12 +162,12 @@ TEST_P(RDatasetSpecTest, Ranges)
                      try {
                         if (j == 0) { // tree (better error message, since number of all entries is already known)
                            ROOT_EXPECT_ERROR(*takeRes, "TTreeReader::SetEntriesRange()",
-                                             (std::string("Start entry (") + ranges[i].fStartEntry +
+                                             (std::string("Start entry (") + ranges[i].fBegin +
                                               ") must be lower than the available entries (5).")
                                                 .Data());
                         } else { // chain
                            ROOT_EXPECT_ERROR(*takeRes, "TTreeReader::SetEntriesRange()",
-                                             (std::string("Error setting first entry ") + ranges[i].fStartEntry +
+                                             (std::string("Error setting first entry ") + ranges[i].fBegin +
                                               ": one of the readers was not successfully initialized")
                                                 .Data());
                         }
@@ -469,8 +469,8 @@ TEST(RDatasetSpecTest, Clusters)
          std::sort(res.begin(), res.end());
          std::sort(friendRes.begin(), friendRes.end());
 
-         std::vector<ULong64_t> expected(std::min(200ll, range.fEndEntry - range.fStartEntry));
-         std::iota(expected.begin(), expected.end(), range.fStartEntry);
+         std::vector<ULong64_t> expected(std::min(200ll, range.fEnd - range.fBegin));
+         std::iota(expected.begin(), expected.end(), range.fBegin);
          EXPECT_VEC_EQ(expected, res);
          EXPECT_VEC_EQ(expected, friendRes);
       }

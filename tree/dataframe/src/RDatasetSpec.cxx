@@ -19,12 +19,11 @@ namespace Experimental {
 
 RDatasetSpec::REntryRange::REntryRange() {}
 
-RDatasetSpec::REntryRange::REntryRange(Long64_t endEntry) : fEndEntry(endEntry) {}
+RDatasetSpec::REntryRange::REntryRange(Long64_t end) : fEnd(end) {}
 
-RDatasetSpec::REntryRange::REntryRange(Long64_t startEntry, Long64_t endEntry)
-   : fStartEntry(startEntry), fEndEntry(endEntry)
+RDatasetSpec::REntryRange::REntryRange(Long64_t begin, Long64_t end) : fBegin(begin), fEnd(end)
 {
-   if (fStartEntry > fEndEntry)
+   if (fBegin > fEnd)
       throw std::logic_error("The starting entry cannot be larger than the ending entry in the "
                              "creation of a dataset specification.");
 }
@@ -39,7 +38,7 @@ RDatasetSpec::REntryRange::REntryRange(Long64_t startEntry, Long64_t endEntry)
 /// \brief Construct an RDatasetSpec for one or more samples with the same tree name.
 /// \param[in] treeName Name of the tree
 /// \param[in] fileNameGlob Single file name or glob expression for the files where the tree(s) are stored
-/// \param[in] entryRange The global entry range to be processed, {start (inclusive), end (exclusive)}
+/// \param[in] entryRange The global entry range to be processed, {begin (inclusive), end (exclusive)}
 ///
 /// The filename glob supports the same type of expressions as TChain::Add().
 RDatasetSpec::RDatasetSpec(const std::string &treeName, const std::string &fileNameGlob, const REntryRange &entryRange)
@@ -51,7 +50,7 @@ RDatasetSpec::RDatasetSpec(const std::string &treeName, const std::string &fileN
 /// \brief Construct an RDatasetSpec for one or more samples with the same tree name.
 /// \param[in] treeName Name of the tree
 /// \param[in] fileNameGlobs A vector of file names or glob expressions for the files where the trees are stored
-/// \param[in] entryRange The global entry range to be processed, {start (inclusive), end (exclusive)}
+/// \param[in] entryRange The global entry range to be processed, {begin (inclusive), end (exclusive)}
 ///
 /// The filename glob supports the same type of expressions as TChain::Add().
 RDatasetSpec::RDatasetSpec(const std::string &treeName, const std::vector<std::string> &fileNameGlobs,
@@ -63,7 +62,7 @@ RDatasetSpec::RDatasetSpec(const std::string &treeName, const std::vector<std::s
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Construct an RDatasetSpec for a chain of several trees (possibly having different names).
 /// \param[in] treeAndFileNameGlobs A vector of pairs of tree names and their corresponding file names/globs
-/// \param[in] entryRange The global entry range to be processed, {start (inclusive), end (exclusive)}
+/// \param[in] entryRange The global entry range to be processed, {begin (inclusive), end (exclusive)}
 ///
 /// The filename glob supports the same type of expressions as TChain::Add().
 ///
