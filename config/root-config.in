@@ -746,15 +746,15 @@ while test $# -gt 0; do
       ;;
     --bindir)
       ### output the executable directory
-      out="$out \"$bindir\""
+      out="$out $bindir"
       ;;
     --libdir)
       ### output the library directory
-      out="$out \"$libdir\""
+      out="$out $libdir"
       ;;
     --incdir)
       ### output the header directory
-      out="$out \"$incdir\""
+      out="$out $incdir"
       ;;
     --etcdir)
       ### output the etc directory
