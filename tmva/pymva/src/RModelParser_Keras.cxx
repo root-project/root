@@ -149,11 +149,11 @@ void AddKerasLayer(RModel& rmodel, PyObject* fLayer){
 
          if(fLayerType == "Conv2D"){
             std::unique_ptr<ROperator> op_pre_transpose;
-            op_pre_transpose.reset(new ROperator_Transpose<float>({0,3,1,2}, PyStringAsString(PyList_GetItem(fInputs,0)), fLayerName+"_Trans"));
+            op_pre_transpose.reset(new ROperator_Transpose<float>({0,3,1,2}, PyStringAsString(PyList_GetItem(fInputs,0)), fLayerName+"PreTrans"));
             rmodel.AddOperator(std::move(op_pre_transpose));
 
-            PyList_SetItem(fInputs,0,PyUnicode_FromString((fLayerName+"_Trans").c_str()));
-            PyDict_SetItemString(fLayer,"layerInput",fOutputs);
+            PyList_SetItem(fInputs,0,PyUnicode_FromString((fLayerName+"PreTrans").c_str()));
+            PyDict_SetItemString(fLayer,"layerInput",fInputs);
          }
 
          // Making changes in the names of the input and output tensor names
@@ -164,9 +164,9 @@ void AddKerasLayer(RModel& rmodel, PyObject* fLayer){
          std::string fActivationLayerInput = fLayerName+fLayerType;   
          if(fLayerType == "Conv2D"){
             std::unique_ptr<ROperator> op_post_transpose;
-            op_post_transpose.reset(new ROperator_Transpose<float>({0,2,3,1}, fLayerName+fLayerType, fLayerName+"_Trans"));
+            op_post_transpose.reset(new ROperator_Transpose<float>({0,2,3,1}, fLayerName+fLayerType, fLayerName+"PostTrans"));
             rmodel.AddOperator(std::move(op_post_transpose));
-            fActivationLayerInput = fLayerName+"_Trans";
+            fActivationLayerInput = fLayerName+"PostTrans";
          }
 
          PyList_SetItem(fInputs,0,PyUnicode_FromString(fActivationLayerInput.c_str()));
