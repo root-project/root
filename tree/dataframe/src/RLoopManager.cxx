@@ -368,8 +368,7 @@ RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t 
 }
 
 RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
-   : fStartEntry(spec.fEntryRange.fStartEntry), fEndEntry(spec.fEntryRange.fEndEntry),
-     fNSlots(RDFInternal::GetNSlots()),
+   : fBeginEntry(spec.fEntryRange.fBegin), fEndEntry(spec.fEntryRange.fEnd), fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
      fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots)
 {
@@ -500,12 +499,12 @@ void RLoopManager::RunEmptySource()
 void RLoopManager::RunTreeProcessorMT()
 {
 #ifdef R__USE_IMT
-   if (fEndEntry == fStartEntry) // empty range => no work needed
+   if (fEndEntry == fBeginEntry) // empty range => no work needed
       return;
    RSlotStack slotStack(fNSlots);
    const auto &entryList = fTree->GetEntryList() ? *fTree->GetEntryList() : TEntryList();
-   auto tp = (fStartEntry != 0 || fEndEntry != std::numeric_limits<Long64_t>::max())
-                ? std::make_unique<ROOT::TTreeProcessorMT>(*fTree, fNSlots, std::make_pair(fStartEntry, fEndEntry))
+   auto tp = (fBeginEntry != 0 || fEndEntry != std::numeric_limits<Long64_t>::max())
+                ? std::make_unique<ROOT::TTreeProcessorMT>(*fTree, fNSlots, std::make_pair(fBeginEntry, fEndEntry))
                 : std::make_unique<ROOT::TTreeProcessorMT>(*fTree, entryList, fNSlots);
 
    std::atomic<ULong64_t> entryCount(0ull);
@@ -546,13 +545,13 @@ void RLoopManager::RunTreeProcessorMT()
 void RLoopManager::RunTreeReader()
 {
    TTreeReader r(fTree.get(), fTree->GetEntryList());
-   if (0 == fTree->GetEntriesFast() || fStartEntry == fEndEntry)
+   if (0 == fTree->GetEntriesFast() || fBeginEntry == fEndEntry)
       return;
    // Apply the range if there is any
    // In case of a chain with a total of N entries, calling SetEntriesRange(N + 1, ...) does not error out
    // This is a bug, reported here: https://github.com/root-project/root/issues/10774
-   if (fStartEntry != 0 || fEndEntry != std::numeric_limits<Long64_t>::max())
-      if (r.SetEntriesRange(fStartEntry, fEndEntry) != TTreeReader::kEntryValid)
+   if (fBeginEntry != 0 || fEndEntry != std::numeric_limits<Long64_t>::max())
+      if (r.SetEntriesRange(fBeginEntry, fEndEntry) != TTreeReader::kEntryValid)
          throw std::logic_error("Something went wrong in initializing the TTreeReader.");
 
    RCallCleanUpTask cleanup(*this, 0u, &r);
