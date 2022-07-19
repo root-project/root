@@ -43,11 +43,11 @@ ROOTSYS=`dirname "$fullpath1"`
 
 arch=@architecture@
 platform=@platform@
-bindir="@bindir@"
-libdir="@libdir@"
-incdir="@incdir@"
-etcdir="@etcdir@"
-tutdir="@tutdir@"
+bindir=@bindir@
+libdir=@libdir@
+incdir=@incdir@
+etcdir=@etcdir@
+tutdir=@tutdir@
 all_features="@all_features@"
 features="@features@"
 configargs="@configargs@"
@@ -370,7 +370,7 @@ freebsd* | openbsd* | linux*)
 
    for f in $features ; do
       if test "x$f" = "xrpath" ; then
-         auxlibs="-Wl,-rpath,\"$libdir\" $auxlibs"
+         auxlibs="-Wl,-rpath,$libdir $auxlibs"
       fi
       if test "x$f" = "xlibcxx" ; then
          auxcflags="-stdlib=libc++ $auxcflags"
@@ -389,7 +389,7 @@ macosx*)
    for f in $features ; do
       if test "x$f" = "xrpath" ; then
          if [ \( $macosx_major -eq 10 -a $macosx_minor -ge 5 \) -o $macosx_major -gt 10  ]; then
-            auxlibs="-Wl,-rpath,\"$libdir\" $auxlibs"
+            auxlibs="-Wl,-rpath,$libdir $auxlibs"
          fi
       fi
       if test "x$f" = "xlibcxx" ; then
@@ -505,9 +505,9 @@ while test $# -gt 0; do
          optarg=`cygpath -u $optarg`
       fi
       prefix=$optarg
-      bindir="${prefix}/bin"
-      libdir="${prefix}/lib"
-      incdir="${prefix}/include"
+      bindir=${prefix}/bin
+      libdir=${prefix}/lib
+      incdir=${prefix}/include
       if test $exec_prefix_set = no ; then
          exec_prefix=$optarg
       fi
@@ -583,7 +583,7 @@ while test $# -gt 0; do
          if test "$platform" = "win32"; then
             includes=-I\'`cygpath -w ${incdir}`\'
          else
-            includes=-I"\"${incdir}\""
+            includes=-I${incdir}
          fi
       fi
       if test "x$noauxcflags" = "xyes" ; then
@@ -626,7 +626,7 @@ while test $# -gt 0; do
          done
       else
          if test "x$noldflags" = "xno" ; then
-            out="$out -L\"${libdir}\""
+            out="$out -L${libdir}"
          fi
       fi
       if test "x$noauxlibs" = "xyes" ; then
@@ -671,7 +671,7 @@ while test $# -gt 0; do
          done
       else
         if test "x$noldflags" = "xno" ; then
-           out="$out -L\"${libdir}\""
+           out="$out -L${libdir}"
         fi
       fi
       if test "x$glibsonly" = "xyes" ; then
@@ -725,7 +725,7 @@ while test $# -gt 0; do
          done
       else
         if test "x$noldflags" = "xno" ; then
-           out="$out -L\"${libdir}\""
+           out="$out -L${libdir}"
         fi
       fi
       if test "x$evelibsonly" = "xyes" ; then
