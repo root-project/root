@@ -189,15 +189,18 @@ namespace HistFactory{
       // get num events expected in bin for obsVal
       // double nu = expected * fracAtObsValue;
 
-      // an easier way to get n
-      TH1* histForN = dataForChan->createHistogram("HhstForN",*obs);
-      for(int i=1; i<=histForN->GetNbinsX(); ++i){
-   double n = histForN->GetBinContent(i);
-   if(verbose) std::cout << "n" <<  i << " = " << n  << std::endl;
-   ChannelBinDataMap[ ChannelName ].push_back( n );
-      }
-      delete histForN;
-
+      // multidimensional way to get n
+      // credit goes to P. Hamilton
+      for (int i = 0; i < dataForChan->numEntries(); i++) {
+        const RooArgSet *tmpargs = dataForChan->get(i);
+         if (verbose)
+           tmpargs->Print();
+         const double n = dataForChan->weight();
+         if (verbose)
+           std::cout << "n" << i << " = " << n << std::endl;
+         ChannelBinDataMap[ChannelName].push_back(n);
+       }
+      
     } // End Loop Over Categories
 
     dataByCategory->Delete();
