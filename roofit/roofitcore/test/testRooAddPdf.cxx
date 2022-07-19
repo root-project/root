@@ -7,6 +7,7 @@
 #include <RooGaussian.h>
 #include <RooMsgService.h>
 #include <RooProdPdf.h>
+#include <RooWorkspace.h>
 
 #include <RooStats/SPlot.h>
 
@@ -14,14 +15,13 @@
 
 #include <memory>
 
-
 /// Verify that sPlot does work with a RooAddPdf. This reproduces GitHub issue
 /// #10869, where creating an SPlot from a RooAdPdf unreasonably changed the
 /// parameter values because of RooAddPdf normalization issue. The reproducer
 /// is taken from the GitHub issue thread, with the plotting part removed.
 TEST(RooAddPdf, TestSPlot)
 {
-   auto& msg = RooMsgService::instance();
+   auto &msg = RooMsgService::instance();
    msg.setGlobalKillBelow(RooFit::WARNING);
 
    double lowRange = 0.;
@@ -108,4 +108,46 @@ TEST(RooAddPdf, TestSPlot)
 
    EXPECT_NEAR(valYieldAfter, valYieldBefore, 1e-1)
       << "Doing the SPlot should not change parameter values by orders of magnitudes!";
+}
+
+/// Test with the reproducer from GitHub issue #10988 that reported a caching
+/// issues of RooAddPdf integrals.
+TEST(RooAddPdf, Issue10988)
+{
+   auto &msg = RooMsgService::instance();
+   msg.setGlobalKillBelow(RooFit::WARNING);
+
+   using namespace RooFit;
+
+   RooWorkspace w1;
+   w1.factory("x[3., 0., 10.]");
+   w1.var("x")->setRange("range_int", 0., 4.);
+   w1.factory("AddPdf::sum(Gaussian(x, mean1[1.], sigma1[2., 0.1, 10.]),"
+                          "Gaussian(x, mean2[5.], sigma2[10., 0.1, 10.]), coef[0.3])");
+   RooWorkspace w2(w1);
+
+   auto &pdf1 = *static_cast<RooAddPdf *>(w1.pdf("sum"));
+   auto &pdf2 = *static_cast<RooAddPdf *>(w2.pdf("sum"));
+   auto &x1 = *w1.var("x");
+   auto &x2 = *w2.var("x");
+
+   // Call createIntegral on workspace w1 only. It's important that this
+   // integral lives longer than "interal1" to reproduce the problem.
+   std::unique_ptr<RooAbsReal> integral0{pdf1.createIntegral(x1, NormSet(x1), Range("range_int"))};
+   double val0 = integral0->getVal();
+
+   x1.setRange("fixCoefRange", 0., 1.);
+   pdf1.fixCoefRange("fixCoefRange");
+   x2.setRange("fixCoefRange", 0., 1.);
+   pdf2.fixCoefRange("fixCoefRange");
+
+   std::unique_ptr<RooAbsReal> integral1{pdf1.createIntegral(x1, NormSet(x1), Range("range_int"))};
+   double val1 = integral1->getVal();
+   std::unique_ptr<RooAbsReal> integral2{pdf2.createIntegral(x2, NormSet(x2), Range("range_int"))};
+   double val2 = integral2->getVal();
+
+   // Check that the integrals have differnt values, now that the coefficient
+   // range was fixed to a different one.
+   EXPECT_NE(val0, val1);
+   EXPECT_EQ(val1, val2);
 }

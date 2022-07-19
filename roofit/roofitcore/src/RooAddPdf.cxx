@@ -347,7 +347,11 @@ void RooAddPdf::fixCoefNormalization(const RooArgSet& refCoefNorm)
 
 void RooAddPdf::fixCoefRange(const char* rangeName)
 {
-  _refCoefRangeName = (TNamed*)RooNameReg::ptr(rangeName) ;
+  auto* newNamePtr = const_cast<TNamed*>(RooNameReg::ptr(rangeName));
+  if(newNamePtr != _refCoefRangeName) {
+    _projCacheMgr.reset() ;
+  }
+  _refCoefRangeName = newNamePtr;
   if (_refCoefRangeName) _projectCoefs = true ;
 }
 
