@@ -191,14 +191,15 @@ namespace HistFactory{
 
       // multidimensional way to get n
       // credit goes to P. Hamilton
-      for(int i=0; i<dataForChan->numEntries(); i++)
-      {
-        const RooArgSet* tmpargs=dataForChan->get(i);
-        if(verbose) tmpargs->Print();
-        const double n = dataForChan->weight();
-        if(verbose) std::cout << "n" << i << " = " << n << std::endl;
-        ChannelBinDataMap[ ChannelName ].push_back( n );
-      }
+      for (int i = 0; i < dataForChan->numEntries(); i++) {
+        const RooArgSet *tmpargs = dataForChan->get(i);
+         if (verbose)
+           tmpargs->Print();
+         const double n = dataForChan->weight();
+         if (verbose)
+           std::cout << "n" << i << " = " << n << std::endl;
+         ChannelBinDataMap[ChannelName].push_back(n);
+       }
       
     } // End Loop Over Categories
 
