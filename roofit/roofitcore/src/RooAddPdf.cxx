@@ -177,7 +177,20 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
   // Constructor with N PDFs and N or N-1 coefs
   RooArgList partinCoefList ;
 
-  bool first(true) ;
+  auto addRecursiveCoef = [this,&partinCoefList](RooAbsPdf& pdf, RooAbsReal& coef) -> RooAbsReal & {
+    partinCoefList.add(coef) ;
+    if(partinCoefList.size() == 1) {
+      // The first fraction is the first plain fraction
+      return coef;
+    }
+    // The i-th recursive fraction = (1-f1)*(1-f2)*...(fi) and is calculated from the list (f1,...,fi) by RooRecursiveFraction)
+    std::stringstream rfracName;
+    rfracName << GetName() << "_recursive_fraction_" << pdf.GetName() << "_" << partinCoefList.size();
+    auto rfrac = std::make_unique<RooRecursiveFraction>(rfracName.str().c_str(),"Recursive Fraction",partinCoefList) ;
+    auto & rfracRef = *rfrac;
+    addOwnedComponents(std::move(rfrac)) ;
+    return rfracRef;
+  };
 
   for (auto i = 0u; i < inCoefList.size(); ++i) {
     auto coef = dynamic_cast<RooAbsReal*>(inCoefList.at(i));
@@ -204,26 +217,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
     _pdfList.add(*pdf) ;
 
     // Process recursive fraction mode separately
-    if (recursiveFractions) {
-      partinCoefList.add(*coef) ;
-      if (first) {
-
-        // The first fraction is the first plain fraction
-        first = false ;
-        _coefList.add(*coef) ;
-
-      } else {
-
-        // The i-th recursive fraction = (1-f1)*(1-f2)*...(fi) and is calculated from the list (f1,...,fi) by RooRecursiveFraction)
-        RooAbsReal* rfrac = new RooRecursiveFraction(Form("%s_recursive_fraction_%s",GetName(),pdf->GetName()),"Recursive Fraction",partinCoefList) ;
-        addOwnedComponents(*rfrac) ;
-        _coefList.add(*rfrac) ;
-
-      }
-
-    } else {
-      _coefList.add(*coef) ;
-    }
+    _coefList.add(recursiveFractions ? addRecursiveCoef(*pdf, *coef) : *coef);
   }
 
   if (inPdfList.size() == inCoefList.size() + 1) {
@@ -237,13 +231,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
 
     // Process recursive fractions mode. Above, we verified that we don't have a last coefficient
     if (recursiveFractions) {
-
-      // The last recursive fraction = (1-f1)*(1-f2)*...(1-fN) and is calculated from the list (f1,...,fN,1) by RooRecursiveFraction
-      partinCoefList.add(RooFit::RooConst(1)) ;
-      RooAbsReal* rfrac = new RooRecursiveFraction(Form("%s_recursive_fraction_%s",GetName(),pdf->GetName()),"Recursive Fraction",partinCoefList) ;
-      addOwnedComponents(*rfrac) ;
-      _coefList.add(*rfrac) ;
-
+      _coefList.add(addRecursiveCoef(*pdf, RooFit::RooConst(1)));
       // In recursive mode we always have Ncoef=Npdf, since we added it just above
       _haveLastCoef=true ;
     }
