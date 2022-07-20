@@ -812,3 +812,21 @@ TEST(RDataFrameInterface, SnapshotWithDuplicateColumns)
       std::logic_error);
    EXPECT_THROW((ROOT::RDataFrame(1).Snapshot("t", "neverwritten.root", {"rdfentry_", "rdfentry_"})), std::logic_error);
 }
+
+// #11002
+TEST(RDataFrameUtils, RegexWithFriendsInJittedFilters)
+{
+   TTree t("t", "t");
+   int x = 42;
+   t.Branch("x", &x);
+   t.Fill();
+   TTree fr("fr", "fr");
+   x = -42;
+   fr.Branch("x", &x);
+   fr.Fill();
+   t.AddFriend(&fr);
+   ROOT::RDataFrame df(t);
+   // ensure that order of operations does not matter
+   EXPECT_EQ(df.Filter("fr.x < 0 && x > 0").Count().GetValue(), 1);
+   EXPECT_EQ(df.Filter("x > 0 && fr.x < 0").Count().GetValue(), 1);
+}
