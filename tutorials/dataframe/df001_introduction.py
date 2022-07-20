@@ -33,13 +33,15 @@ d = ROOT.RDataFrame(treeName, fileName)
 
 # Operations on the dataframe
 # We now review some *actions* which can be performed on the data frame.
-# All actions but ForEach return a TActionResultPtr<T>. The series of
-# operations on the data frame is not executed until one of those pointers
-# is accessed.
+# Actions can be divided into instant actions (e. g. Foreach()) and lazy
+# actions (e. g. Count()), depending on whether they trigger the event 
+# loop immediately or only when one of the results is accessed for the 
+# first time. Actions that return "something" either return their result 
+# wrapped in a RResultPtr or in a RDataFrame.
 # But first of all, let us we define now our cut-flow with two strings.
 # Filters can be expressed as strings. The content must be C++ code. The
 # name of the variables must be the name of the branches. The code is
-# just in time compiled.
+# just-in-time compiled.
 cutb1 = 'b1 < 5.'
 cutb1b2 = 'b2 % 2 && b1 < 4.'
 
@@ -97,7 +99,7 @@ print('Events passing both: {}'.format(evts_cutb1_cutb1b2_result.GetValue()))
 # Calculating quantities starting from existing columns
 # Often, operations need to be carried out on quantities calculated starting
 # from the ones present in the columns. We'll create in this example a third
-# column the values of which are the sum of the *b1* and *b2* ones, entry by
+# column, the values of which are the sum of the *b1* and *b2* ones, entry by
 # entry. The way in which the new quantity is defined is via a callable.
 # It is important to note two aspects at this point:
 # - The value is created on the fly only if the entry passed the existing
@@ -111,3 +113,4 @@ entries_sum = d.Define('sum', 'b2 + b1') \
                .Filter('sum > 4.2') \
                .Count()
 print(entries_sum.GetValue())
+
