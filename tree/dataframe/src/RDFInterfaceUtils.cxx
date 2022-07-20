@@ -142,7 +142,7 @@ static ParsedExpression ParseRDFExpression(std::string_view expr, const ColumnNa
       "(^|\\W)#(?!(ifdef|ifndef|if|else|elif|endif|pragma|define|undef|include|line))([a-zA-Z_][a-zA-Z0-9_]*)");
    colSizeReplacer.Substitute(preProcessedExpr, "$1R_rdf_sizeof_$3", "g");
 
-   const auto usedColsAndAliases =
+   auto usedColsAndAliases =
       FindUsedColumns(std::string(preProcessedExpr), treeBranchNames, customColumns, dataSourceColNames);
 
    auto escapeDots = [](const std::string &s) {
@@ -157,6 +157,14 @@ static ParsedExpression ParseRDFExpression(std::string_view expr, const ColumnNa
    // when we are done, exprWithVars willl be the same as preProcessedExpr but column names will be substituted with
    // the dummy variable names in varNames
    TString exprWithVars(preProcessedExpr);
+
+   // sort the vector usedColsAndAliases by decreasing length of its elements,
+   // so in case of friends we guarantee we never substitute a column name with another column containing it
+   // ex. without sorting when passing "x" and "fr.x", the replacer would output "var0" and "fr.var0",
+   // because it has already substituted "x", hence the "x" in "fr.x" would be recognized as "var0",
+   // whereas the desired behaviour is handling them as "var0" and "var1"
+   std::sort(usedColsAndAliases.begin(), usedColsAndAliases.end(),
+             [](const std::string &a, const std::string &b) { return a.size() > b.size(); });
    for (const auto &colOrAlias : usedColsAndAliases) {
       const auto col = customColumns.ResolveAlias(colOrAlias);
       unsigned int varIdx; // index of the variable in varName corresponding to col
