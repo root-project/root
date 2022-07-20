@@ -4,7 +4,7 @@
 ## Show how to work with non-flat data models, e.g. vectors of tracks.
 ##
 ## This tutorial shows the possibility to use data models which are more
-## complex than flat ntuples with RDataFrame
+## complex than flat ntuples with RDataFrame.
 ##
 ## \macro_code
 ## \macro_image
@@ -61,7 +61,7 @@ ROOT.fill_tree(fileName, treeName)
 # allows us to interact with the data contained in the tree.
 d = ROOT.RDataFrame(treeName, fileName)
 
-# Operating on branches which are collection of objects
+# Operating on branches which are collections of objects
 # Here we deal with the simplest of the cuts: we decide to accept the event
 # only if the number of tracks is greater than 8.
 n_cut = 'tracks.size() > 8'
