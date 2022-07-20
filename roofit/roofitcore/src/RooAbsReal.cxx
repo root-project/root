@@ -3418,16 +3418,15 @@ bool RooAbsReal::matchArgsByName(const RooArgSet &allArgs, RooArgSet &matchedArg
               const TList &nameList) const
 {
   RooArgSet matched("matched");
-  TIterator *iterator= nameList.MakeIterator();
-  TObjString *name = 0;
   bool isMatched(true);
-  while((isMatched && (name= (TObjString*)iterator->Next()))) {
+  for(auto * name : static_range_cast<TObjString*>(nameList)) {
     RooAbsArg *found= allArgs.find(name->String().Data());
     if(found) {
       matched.add(*found);
     }
     else {
       isMatched= false;
+      break;
     }
   }
 
@@ -3437,7 +3436,6 @@ bool RooAbsReal::matchArgsByName(const RooArgSet &allArgs, RooArgSet &matchedArg
     isMatched = false ;
   }
 
-  delete iterator;
   if(isMatched) matchedArgs.add(matched);
   return isMatched;
 }
@@ -4368,16 +4366,13 @@ RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooLinkedList& cmdLi
 {
   // Fill array of commands
   const RooCmdArg* cmds[8] ;
-  TIterator* iter = cmdList.MakeIterator() ;
   Int_t i(0) ;
-  RooCmdArg* arg ;
-  while((arg=(RooCmdArg*)iter->Next())) {
+  for(auto * arg : static_range_cast<RooCmdArg*>(cmdList)) {
     cmds[i++] = arg ;
   }
   for (;i<8 ; i++) {
     cmds[i] = &RooCmdArg::none() ;
   }
-  delete iter ;
 
   return createChi2(data,*cmds[0],*cmds[1],*cmds[2],*cmds[3],*cmds[4],*cmds[5],*cmds[6],*cmds[7]) ;
 

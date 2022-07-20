@@ -43,14 +43,11 @@ void RooProofDriverSelector::SlaveBegin(TTree * /*tree*/)
   // Retrieve study pack
   _pkg=0 ;
   if (fInput) {
-    TIter iter = fInput->MakeIterator() ;
-    TObject* obj ;
-    while((obj=iter.Next())) {
-      RooStudyPackage* tmp = dynamic_cast<RooStudyPackage*>(obj) ;
+    for (auto * tmp : dynamic_range_cast<RooStudyPackage*>(*fInput)) {
       if (tmp) {
-   _pkg = tmp ;
+        _pkg = tmp ;
       }
-     }
+    }
   }
   if (_pkg==0) {
     cout << "RooProofDriverSelector::SlaveBegin() no RooStudyPackage found, aborting process" << endl ;

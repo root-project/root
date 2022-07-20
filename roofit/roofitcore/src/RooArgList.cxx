@@ -95,9 +95,7 @@ RooArgList::RooArgList(const char *name) :
 RooArgList::RooArgList(const TCollection& tcoll, const char* name) :
   RooAbsCollection(name)
 {
-  TIterator* iter = tcoll.MakeIterator() ;
-  TObject* obj ;
-  while((obj=iter->Next())) {
+  for(TObject * obj : tcoll) {
     if (!dynamic_cast<RooAbsArg*>(obj)) {
       coutW(InputArguments) << "RooArgList::RooArgList(TCollection) element " << obj->GetName()
              << " is not a RooAbsArg, ignored" << endl ;
@@ -105,7 +103,6 @@ RooArgList::RooArgList(const TCollection& tcoll, const char* name) :
     }
     add(*(RooAbsArg*)obj) ;
   }
-  delete iter ;
   TRACE_CREATE
 }
 
