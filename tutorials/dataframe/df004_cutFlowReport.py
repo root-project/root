@@ -42,8 +42,8 @@ filtered3 = augmented1.Filter('b3 < .5','Cut3')
 # all named filters declared up to that point. When called on a stored chain
 # state (i.e. a chain/graph node), it retrieves stats for all named filters in
 # the section of the chain between the main RDataFrame and that node (included).
-# Stats are printed in the same order as named filters have been added to the
-# graph, and refer to the latest event-loop that has been run using the relevant
+# Stats are printed in the same order as named filters that have been added to the
+# graph, and refer to the latest event-loop that has been running using the relevant
 # RDataFrame.
 print('Cut3 stats:')
 filtered3.Report()
