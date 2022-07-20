@@ -754,7 +754,7 @@ private:
 /*   RooArgSet _branchNodeCache //! Cached branch nodes     */
 
   mutable RooWorkspace *_myws; //! In which workspace do I live, if any
-  
+
   std::size_t _dataToken = 0; //! Set by the RooFitDriver for this arg to retrieve its result in the run context
 
   /// \cond Internal

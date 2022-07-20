@@ -113,11 +113,9 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
   // Generate index category and all registered PDFS
   _proxyIter = model._pdfProxyList.MakeIterator() ;
   _allVarsPdf.add(allPdfVars) ;
-  RooRealProxy* proxy ;
-  RooAbsPdf* pdf ;
   Int_t i(1) ;
-  while((proxy=(RooRealProxy*)_proxyIter->Next())) {
-    pdf=(RooAbsPdf*)proxy->absArg() ;
+  for(auto * proxy : static_range_cast<RooRealProxy*>(model._pdfProxyList)) {
+    auto pdf = static_cast<RooAbsPdf*>(proxy->absArg());
 
     // Create generator context for this PDF
     RooArgSet* compVars = pdf->getObservables(pdfVars) ;

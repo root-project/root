@@ -325,12 +325,9 @@ RooSimultaneous::RooSimultaneous(const RooSimultaneous& other, const char* name)
   _numPdf(other._numPdf)
 {
   // Copy proxy list
-  TIterator* pIter = other._pdfProxyList.MakeIterator() ;
-  RooRealProxy* proxy ;
-  while ((proxy=(RooRealProxy*)pIter->Next())) {
+  for(auto* proxy : static_range_cast<RooRealProxy*>(other._pdfProxyList)) {
     _pdfProxyList.Add(new RooRealProxy(proxy->GetName(),this,*proxy)) ;
   }
-  delete pIter ;
 }
 
 
@@ -468,12 +465,9 @@ double RooSimultaneous::evaluate() const
     double nEvtCat = ((RooAbsPdf*)(proxy->absArg()))->expectedEvents(_normSet) ;
 
     double nEvtTot(0) ;
-    TIterator* iter = _pdfProxyList.MakeIterator() ;
-    RooRealProxy* proxy2 ;
-    while((proxy2=(RooRealProxy*)iter->Next())) {
+    for(auto * proxy2 : static_range_cast<RooRealProxy*>(_pdfProxyList)) {
       nEvtTot += ((RooAbsPdf*)(proxy2->absArg()))->expectedEvents(_normSet) ;
     }
-    delete iter ;
     catFrac=nEvtCat/nEvtTot ;
   }
 
@@ -495,12 +489,9 @@ double RooSimultaneous::expectedEvents(const RooArgSet* nset) const
 
     double sum(0) ;
 
-    TIterator* iter = _pdfProxyList.MakeIterator() ;
-    RooRealProxy* proxy ;
-    while((proxy=(RooRealProxy*)iter->Next())) {
+    for(auto * proxy : static_range_cast<RooRealProxy*>(_pdfProxyList)) {
       sum += ((RooAbsPdf*)(proxy->absArg()))->expectedEvents(nset) ;
     }
-    delete iter ;
 
     return sum ;
 
@@ -542,13 +533,10 @@ Int_t RooSimultaneous::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& an
   cache = new CacheElem ;
 
   // Create the partial integral set for this request
-  TIterator* iter = _pdfProxyList.MakeIterator() ;
-  RooRealProxy* proxy ;
-  while((proxy=(RooRealProxy*)iter->Next())) {
+  for(auto * proxy : static_range_cast<RooRealProxy*>(_pdfProxyList)) {
     RooAbsReal* pdfInt = proxy->arg().createIntegral(analVars,normSet,0,rangeName) ;
     cache->_partIntList.addOwned(*pdfInt) ;
   }
-  delete iter ;
 
   // Store the partial integral list and return the assigned code ;
   code = _partIntMgr.setObj(normSet,&analVars,cache,RooNameReg::ptr(rangeName)) ;
@@ -805,10 +793,8 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   RooArgList pdfCompList ;
   RooArgList wgtCompList ;
 //RooAbsPdf* pdf ;
-  RooRealProxy* proxy ;
-  TIter pIter = _pdfProxyList.MakeIterator() ;
   double sumWeight(0) ;
-  while((proxy=(RooRealProxy*)pIter.Next())) {
+  for(auto * proxy : static_range_cast<RooRealProxy*>(_pdfProxyList)) {
 
     idxCatClone->setLabel(proxy->name()) ;
 

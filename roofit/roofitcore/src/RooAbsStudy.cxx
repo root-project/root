@@ -127,9 +127,7 @@ void RooAbsStudy::aggregateSummaryOutput(TList* chunkList)
 {
   if (!chunkList) return ;
 
-  TIter iter = chunkList->MakeIterator() ;
-  TObject* obj ;
-  while((obj=iter.Next())) {
+  for(TObject * obj : *chunkList) {
 
     //cout << "RooAbsStudy::aggregateSummaryOutput(" << GetName() << ") processing object " << obj->GetName() << endl ;
 

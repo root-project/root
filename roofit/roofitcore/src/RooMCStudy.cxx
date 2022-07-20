@@ -600,12 +600,9 @@ bool RooMCStudy::fit(Int_t nSamples, TList& dataSetList)
   _fitParData->reset() ;
 
   // Load list of data sets
-  TIterator* iter = dataSetList.MakeIterator() ;
-  RooAbsData* gset ;
-  while((gset=(RooAbsData*)iter->Next())) {
+  for(auto * gset : static_range_cast<RooAbsData*>(dataSetList)) {
     _genDataList.Add(gset) ;
   }
-  delete iter ;
 
   return run(false,true,nSamples,0,true,0) ;
 }
@@ -631,9 +628,8 @@ RooFitResult* RooMCStudy::doFit(RooAbsData* genSample)
   // Optionally bin dataset before fitting
   RooAbsData* data ;
   if (_binGenData) {
-    RooArgSet* depList = _fitModel->getObservables(genSample) ;
+    std::unique_ptr<RooArgSet> depList{_fitModel->getObservables(genSample)};
     data = new RooDataHist(genSample->GetName(),genSample->GetTitle(),*depList,*genSample) ;
-    delete depList ;
   } else {
     data = genSample ;
   }
