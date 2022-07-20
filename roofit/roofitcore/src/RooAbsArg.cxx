@@ -2446,11 +2446,9 @@ void RooRefArray::Streamer(TBuffer &R__b)
 
      // Make a temporary refArray and write that to the streamer
      TRefArray refArray(GetEntriesFast());
-     TIterator* iter = MakeIterator() ;
-     TObject* tmpObj ; while ((tmpObj = iter->Next())) {
+     for(TObject * tmpObj : *this) {
        refArray.Add(tmpObj) ;
      }
-     delete iter ;
 
      refArray.Streamer(R__b) ;
      R__b.SetByteCount(R__c, true) ;

@@ -508,9 +508,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
                for (int icont = 0; icont < ncontours; ++icont) {
                   TList *  contourList = (TList*)contours->At(icont);
                   if (contourList && contourList->GetSize() > 0) {
-                     TIterator * itgr = contourList->MakeIterator();
-                     TGraph * gr = 0;
-                     while( (gr = dynamic_cast<TGraph*>(itgr->Next()) ) ){
+                     for(auto * gr : static_range_cast<TGraph*>(*contourList)) {
                         if (fLineColor) gr->SetLineColor(fLineColor);
                         gr->SetLineStyle(kDashed);
                         gr->SetLineWidth(3);
@@ -521,7 +519,6 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
                         else
                            gr->Draw("L");
                      }
-                     delete itgr;
                   }
                }
             }

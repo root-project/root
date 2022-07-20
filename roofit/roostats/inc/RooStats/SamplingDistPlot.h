@@ -119,7 +119,6 @@ namespace RooStats {
 
     TList fItems;       ///< holds TH1Fs only
     TList fOtherItems;  ///< other objects to be drawn like TLine etc.
-    TIterator* fIterator;
     RooPlot* fRooPlot;
     bool fLogXaxis;
     bool fLogYaxis;

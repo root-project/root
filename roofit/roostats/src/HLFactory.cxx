@@ -208,14 +208,9 @@ RooAbsPdf* HLFactory::GetTotSigBkgPdf(){
 
     RooArgList pdfs("pdfs");
 
-    TIterator* it=fSigBkgPdfNames.MakeIterator();
-    TObjString* ostring;
-    TObject* obj;
-    while ((obj = it->Next())){
-        ostring=(TObjString*) obj;
+    for(auto * ostring : static_range_cast<TObjString*>(fSigBkgPdfNames)) {
         pdfs.add( *(fWs->pdf(ostring->String())) );
-        }
-    delete it;
+    }
 
     TString name(GetName());
     name+="_sigbkg";
@@ -258,13 +253,9 @@ RooAbsPdf* HLFactory::GetTotBkgPdf(){
 
     RooArgList pdfs("pdfs");
 
-    TIter it = fBkgPdfNames.MakeIterator();
-    TObjString* ostring;
-    TObject* obj;
-    while ((obj = it.Next())){
-        ostring=(TObjString*) obj;
+    for(auto * ostring : static_range_cast<TObjString*>(fBkgPdfNames)) {
         pdfs.add( *(fWs->pdf(ostring->String())) );
-        }
+    }
 
     TString name(GetName());
     name+="_bkg";
@@ -306,10 +297,10 @@ RooDataSet* HLFactory::GetTotDataSet(){
         fCreateCategory();
 
 
-    TIterator* it = fDatasetsNames.MakeIterator();
+    auto it = fDatasetsNames.begin();
     TObjString* ostring;
-    TObject* obj = it->Next();
-    ostring = (TObjString*) obj;
+    ostring = static_cast<TObjString*>(*it);
+    ++it;
     fComboDataset = (RooDataSet*) fWs->data(ostring->String()) ;
     if (!fComboDataset) return nullptr;
     fComboDataset->Print();
@@ -318,8 +309,8 @@ RooDataSet* HLFactory::GetTotDataSet(){
     int catindex=0;
     fComboCat->setIndex(catindex);
     fComboDataset->addColumn(*fComboCat);
-    while ((obj = it->Next())){
-        ostring=(TObjString*) obj;
+    for(; it != fDatasetsNames.end() ; ++it) {
+        ostring = static_cast<TObjString*>(*it);
         catindex++;
         RooDataSet * data = (RooDataSet*)fWs->data(ostring->String());
         if (!data) return nullptr;
@@ -331,7 +322,6 @@ RooDataSet* HLFactory::GetTotDataSet(){
         delete dummy;
     }
 
-    delete it;
     return fComboDataset;
 
 }
@@ -423,15 +413,13 @@ int HLFactory::fReadFile(const char*fileName, bool is_included){
     // the comments.
     TString ifileContentStripped("");
 
-    TObjArray* lines_array = ifileContent.Tokenize("\n");
-    TIterator* lineIt=lines_array->MakeIterator();
+    std::unique_ptr<TObjArray> lines_array{ifileContent.Tokenize("\n")};
 
     bool in_comment=false;
-    TString line;
-    TObject* line_o;
 
-    while((line_o=(*lineIt)())){ // Start iteration on lines array
-        line = (static_cast<TObjString*>(line_o))->GetString();
+    // Start iteration on lines array
+    for(TObject * line_o : *lines_array) {
+        TString line = (static_cast<TObjString*>(line_o))->GetString();
 
         // Are we in a multiline comment?
         if (in_comment)
@@ -460,21 +448,17 @@ int HLFactory::fReadFile(const char*fileName, bool is_included){
         ifileContentStripped+=line+"\n";
         }
 
-    delete lines_array;
-    delete lineIt;
-
     // Now proceed with the parsing of the stripped file
 
-    lines_array = ifileContentStripped.Tokenize(";");
-    lineIt=lines_array->MakeIterator();
+    lines_array.reset(ifileContentStripped.Tokenize(";"));
     in_comment=false;
 
     const int nNeutrals=2;
     TString neutrals[nNeutrals]={"\t"," "};
 
-    while((line_o=(*lineIt)())){
+    for(TObject * line_o : *lines_array) {
 
-        line = (static_cast<TObjString*>(line_o))->GetString();
+        TString line = (static_cast<TObjString*>(line_o))->GetString();
 
         // Strip spaces at the beginning and the end of the line
         line.Strip(TString::kBoth,' ');
@@ -519,9 +503,6 @@ int HLFactory::fReadFile(const char*fileName, bool is_included){
         fParseLine(line);
         }
 
-    delete lineIt;
-    delete lines_array;
-
     return 0;
 }
 
@@ -542,11 +523,7 @@ void HLFactory::fCreateCategory(){
 
     fComboCat=new RooCategory(name,title);
 
-    TIter it = fLabelsNames.MakeIterator();
-    TObjString* ostring;
-    TObject* obj;
-    while ((obj = it.Next())){
-        ostring=(TObjString*) obj;
+    for (auto * ostring : static_range_cast<TObjString*>(fLabelsNames)) {
         fComboCat->defineType(ostring->String());
         }
 

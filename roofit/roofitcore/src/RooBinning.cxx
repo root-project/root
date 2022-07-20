@@ -348,10 +348,9 @@ void RooBinning::Streamer(TBuffer &R__b)
       TList tmp;
       tmp.Streamer(R__b);
       _boundaries.reserve(tmp.GetSize());
-      TIterator* it = tmp.MakeIterator();
-      for (RooDouble* el = (RooDouble*) it->Next(); el;
-          el = (RooDouble*) it->Next()) _boundaries.push_back(*el);
-      delete it;
+      for(auto * el : static_range_cast<RooDouble*>(tmp)) {
+        _boundaries.push_back(*el);
+      }
     }
     R__b.CheckByteCount(R__s, R__c, RooBinning::IsA());
     break;

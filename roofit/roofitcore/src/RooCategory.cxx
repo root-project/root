@@ -495,8 +495,7 @@ void RooCategory::installLegacySharedProp(const RooCategorySharedProperties* pro
       std::vector<value_type>& vec = rangesMap[olist->GetName()];
 
 
-      std::unique_ptr<TIterator> citer(olist->MakeIterator());
-      while (RooCatType* ctype = (RooCatType*)citer->Next()) {
+      for(auto * ctype : static_range_cast<RooCatType*>(*olist)) {
         vec.push_back(ctype->getVal());
       }
     }

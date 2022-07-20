@@ -1418,7 +1418,7 @@ void RooPlot::Streamer(TBuffer &R__b)
 ////////////////////////////////////////////////////////////////////////////////
 /// Build a legend that contains all objects that have been drawn on the plot.
 std::unique_ptr<TLegend> RooPlot::BuildLegend() const {
-  std::unique_ptr<TLegend> leg(new TLegend(0.5, 0.7, 0.9, 0.9));
+  auto leg = std::make_unique<TLegend>(0.5, 0.7, 0.9, 0.9);
   leg->SetBorderSize(0);
   leg->SetFillStyle(0);
   for (std::size_t i=0; i < _items.size(); ++i) {
@@ -1430,9 +1430,7 @@ std::unique_ptr<TLegend> RooPlot::BuildLegend() const {
 
 /// RooFit-internal function for backwards compatibility.
 void RooPlot::fillItemsFromTList(RooPlot::Items & items, TList const& tlist) {
-  std::unique_ptr<TIterator> iter(tlist.MakeIterator());
-  TObject *obj = nullptr;
-  while((obj= iter->Next())) {
-    items.emplace_back(obj, iter->GetOption());
+  for(TObject * obj : tlist) {
+    items.emplace_back(obj, obj->GetOption());
   }
 }

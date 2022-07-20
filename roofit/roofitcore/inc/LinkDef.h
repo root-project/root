@@ -8,7 +8,7 @@
 #pragma link C++ class stack<RooAbsArg*,deque<RooAbsArg*> > ;
 #pragma link C++ class RooRefArray- ;
 #pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[1-4]" source="TList _proxyList" target="_proxyList" \
-    code="{ TIterator* iter = onfile._proxyList.MakeIterator() ; TObject* tmpObj ; while ((tmpObj = iter->Next())) { _proxyList.Add(tmpObj) ; } delete iter ; }"
+    code="{ for (TObject * tmpObj : onfile._proxyList) { _proxyList.Add(tmpObj); } }"
 #pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[5]" source="TRefArray _proxyList" target="_proxyList" \
   code="{ _proxyList.GetSize() ; if (onfile._proxyList.GetSize()>0) { RooAbsArg::_ioEvoList[newObj] = std::make_unique<TRefArray>(onfile._proxyList); } }"
 #pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[1-6]"\
@@ -243,12 +243,9 @@
   source="RooCatType* _defCat; TSortedList _threshList" target="_defIndex,_threshList" \
   code="{const_cast<int&>(_defIndex) = onfile._defCat->getVal(); \
          class RooThreshEntry : public TObject { public: double _thresh; RooCatType _cat;}; \
-         RooThreshEntry* te; \
-         auto iter = onfile._threshList.MakeIterator();\
-         while( (te = (RooThreshEntry*)iter->Next()) ) { \
+         for(auto * te : static_range_cast<RooThreshEntry*>(onfile._threshList)) { \
            _threshList.emplace_back(te->_thresh, te->_cat.getVal()); \
          }\
-         delete iter;\
          }";
 #pragma read sourceClass="RooThresholdCategory" targetClass="RooThresholdCategory" version="[2]" \
   source="RooCatType* _defCat; std::vector<std::pair<double,RooCatType>> _threshList" target="_defIndex,_threshList" \

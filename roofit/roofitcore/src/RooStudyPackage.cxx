@@ -169,12 +169,9 @@ void RooStudyPackage::exportData(TList* olist, Int_t seqno)
       detailedData->SetName(Form("%s_%d",detailedData->GetName(),seqno)) ;
       cout << "registering detailed dataset " << detailedData->ClassName() << "::"
       << detailedData->GetName() << " with " << detailedData->GetSize() << " elements" << endl ;
-      TIterator* diter = detailedData->MakeIterator() ;
-      TNamed* dobj ;
-      while((dobj=(TNamed*)diter->Next())) {
-   dobj->SetName(Form("%s_%d",dobj->GetName(),seqno)) ;
+      for(auto dobj : static_range_cast<TNamed*>(*detailedData)) {
+        dobj->SetName(Form("%s_%d",dobj->GetName(),seqno)) ;
       }
-      delete diter ;
       olist->Add(detailedData) ;
       (*iter)->releaseDetailData() ;
     }

@@ -309,12 +309,12 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
       char tmp[64000];
       strlcpy(tmp, lnkSliceNames, 64000);
       char *token = strtok(tmp, ",");
-      TIterator *hiter = lnkSliceData.MakeIterator();
+      auto hiter = lnkSliceData.begin();
       while (token) {
-        hmap[token] = (RooAbsData *)hiter->Next();
+        hmap[token] = static_cast<RooAbsData *>(*hiter);
         token = strtok(0, ",");
+        ++hiter;
       }
-      delete hiter ;
     }
 
     // Lookup name of weight variable if it was specified by object reference
@@ -391,11 +391,11 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
     // Make import mapping if index category is specified
     map<string,RooDataSet*> hmap ;
     if (indexCat) {
-      TIterator* hiter = impSliceData.MakeIterator() ;
+      auto hiter = impSliceData.begin() ;
       for (const auto& token : ROOT::Split(impSliceNames, ",")) {
-        hmap[token] = (RooDataSet*) hiter->Next() ;
+        hmap[token] = static_cast<RooDataSet*>(*hiter);
+        ++hiter;
       }
-      delete hiter ;
     }
 
     // process StoreError requests

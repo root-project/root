@@ -226,17 +226,10 @@ void RooStudyManager::processBatchOutput(const char* filePat)
     coutP(DataHandling) << "RooStudyManager::processBatchOutput() now reading file " << *iter << endl ;
     TFile f(iter->c_str()) ;
 
-    TList* list = f.GetListOfKeys() ;
-    TIterator* kiter = list->MakeIterator();
-
-    TObject* obj ;
-    TKey* key ;
-    while((key=(TKey*)kiter->Next())) {
-      obj = f.Get(key->GetName()) ;
-      TObject* clone = obj->Clone(obj->GetName()) ;
-      olist.Add(clone) ;
+    for(auto * key : static_range_cast<TKey*>(*f.GetListOfKeys())) {
+      TObject * obj = f.Get(key->GetName()) ;
+      olist.Add(obj->Clone(obj->GetName())) ;
     }
-    delete kiter ;
   }
   aggregateData(&olist) ;
   olist.Delete() ;

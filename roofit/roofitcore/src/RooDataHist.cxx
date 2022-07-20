@@ -336,20 +336,22 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgLi
 
       // Initialize importing mapped set of TH1s
       std::map<std::string,TH1*> hmap ;
-      TIter hiter = impSliceHistos.MakeIterator() ;
+      auto hiter = impSliceHistos.begin() ;
       for (const auto& token : ROOT::Split(impSliceNames, ",")) {
-        auto histo = static_cast<TH1*>(hiter.Next());
+        auto histo = static_cast<TH1*>(*hiter);
         assert(histo);
         hmap[token] = histo;
+        ++hiter;
       }
       importTH1Set(vars,*indexCat,hmap,initWgt,false) ;
     } else {
 
       // Initialize importing mapped set of RooDataHists
       std::map<std::string,RooDataHist*> dmap ;
-      TIter hiter = impSliceDHistos.MakeIterator() ;
+      auto hiter = impSliceDHistos.begin() ;
       for (const auto& token : ROOT::Split(impSliceDNames, ",")) {
-        dmap[token] = (RooDataHist*) hiter.Next() ;
+        dmap[token] = static_cast<RooDataHist*>(*hiter);
+        ++hiter;
       }
       importDHistSet(vars,*indexCat,dmap,initWgt) ;
     }

@@ -72,8 +72,7 @@ namespace {
 
 void cloneList(TList const& inList, TList & outList) {
   outList.SetOwner(true);
-  std::unique_ptr<TIterator> iter{inList.MakeIterator()} ;
-  while(auto elem = iter->Next()) {
+  for(auto * elem : inList) {
     outList.Add(elem->Clone()) ;
   }
 }
@@ -111,8 +110,7 @@ std::string RooCmdConfig::missingArgs() const
   std::string ret = "";
 
   bool first = true;
-  std::unique_ptr<TIterator> iter{_rList.MakeIterator()};
-  while(auto const& s = iter->Next()) {
+  for(TObject * s : _rList) {
     if (first) {
       first=false ;
     } else {
