@@ -43,19 +43,19 @@ int df006_ranges()
    auto c_all = d.Count();
 
    // This is how you can express a range of the first 30 entries
-   auto d_0_30 = d.Range(0, 30);
+   auto d_0_30 = d.Range(0, 30);  // you can also get the first 30 entries with `d.Range(30)`
    auto c_0_30 = d_0_30.Count();
 
    // This is how you pick all entries from 15 onwards
    auto d_15_end = d.Range(15, 0);
    auto c_15_end = d_15_end.Count();
 
-   // We can use a stride too, in this case we pick an event every 3
+   // We can use a stride too, in this case we pick an event every 3 entries
    auto d_15_end_3 = d.Range(15, 0, 3);
    auto c_15_end_3 = d_15_end_3.Count();
 
-   // The Range is a 1st class citizen in the RDataFrame graph:
-   // not only actions (like Count) but also filters and new columns can be added to it.
+   // The Range here acts first on the (whole) RDataFrame graph:
+   // Not only actions (like Count) but also filters and new columns can be added to it.
    auto d_0_50 = d.Range(0, 50);
    auto c_0_50_odd_b1 = d_0_50.Filter("1 == b1 % 2").Count();
 
