@@ -37,6 +37,7 @@
 #endif
 
 #include <algorithm>
+#include <cassert>
 #include <unordered_set>
 #include <stdexcept>
 #include <string>
@@ -988,6 +989,44 @@ void CheckForDuplicateSnapshotColumns(const ColumnNames_t &cols)
 /// member of the input argument. It is intended for internal use only.
 void TriggerRun(ROOT::RDF::RNode &node){
    node.fLoopManager->Run();
+}
+
+/// Return copies of colsWithoutAliases and colsWithAliases with size branches for variable-sized array branches added
+/// in the right positions (i.e. before the array branches that need them).
+std::pair<std::vector<std::string>, std::vector<std::string>>
+AddSizeBranches(const std::vector<std::string> &branches, TTree *tree, std::vector<std::string> &&colsWithoutAliases,
+                std::vector<std::string> &&colsWithAliases)
+{
+   if (!tree) // nothing to do
+      return {std::move(colsWithoutAliases), std::move(colsWithAliases)};
+
+   assert(colsWithoutAliases.size() == colsWithAliases.size());
+
+   auto nCols = colsWithoutAliases.size();
+   for (std::size_t i = 0u; i < nCols; ++i) {
+      const auto &colName = colsWithoutAliases[i];
+      if (!IsStrInVec(colName, branches))
+         continue; // this column is not a TTree branch, nothing to do
+
+      auto *b = tree->GetBranch(colName.c_str());
+      if (!b) // try harder
+         b = tree->FindBranch(colName.c_str());
+      assert(b != nullptr);
+      auto *leaves = b->GetListOfLeaves();
+      if (b->IsA() != TBranch::Class() || leaves->GetEntries() != 1)
+         continue; // this branch is not a variable-sized array, nothing to do
+
+      TLeaf *countLeaf = static_cast<TLeaf *>(leaves->At(0))->GetLeafCount();
+      if (!countLeaf || IsStrInVec(countLeaf->GetName(), colsWithoutAliases))
+         continue; // not a variable-sized array or the size branch is already there, nothing to do
+
+      // otherwise we must insert the size in colsWithoutAliases _and_ colsWithAliases
+      colsWithoutAliases.insert(colsWithoutAliases.begin() + i, countLeaf->GetName());
+      colsWithAliases.insert(colsWithAliases.begin() + i, countLeaf->GetName());
+      ++nCols;
+   }
+
+   return {std::move(colsWithoutAliases), std::move(colsWithAliases)};
 }
 
 } // namespace RDF
