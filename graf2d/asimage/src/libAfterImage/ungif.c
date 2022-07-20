@@ -172,7 +172,7 @@ get_gif_image_desc( GifFileType *gif, SavedImage *im )
 #else
 			im->ImageDesc.ColorMap = MakeMapObject(gif->Image.ColorMap->ColorCount, NULL);
 #endif
-			fseek( gif->UserData, start_pos+9, SEEK_SET ); 
+			fseek( gif->UserData, start_pos+9, SEEK_SET );
 			if(fread( im->ImageDesc.ColorMap->Colors, 1, gif->Image.ColorMap->ColorCount*3, gif->UserData)){;};
 			fseek( gif->UserData, end_pos, SEEK_SET );
 			gif->Image.ColorMap = NULL ;
@@ -188,6 +188,7 @@ get_gif_saved_images( GifFileType *gif, int subimage, SavedImage **ret, int *ret
     GifByteType *ExtData;
 #if (GIFLIB_MAJOR>=5)
     int ExtCode;
+    size_t Len;
 #endif
     SavedImage temp_save;
 	int curr_image = 0, ret_count = *ret_images ;
@@ -229,8 +230,9 @@ get_gif_saved_images( GifFileType *gif, int subimage, SavedImage **ret, int *ret
 				{
             		/* Create an extension block with our data */
 #if (GIFLIB_MAJOR>=5)
+				      Len = EGifGCBToExtension(gif, ExtData);
             		if ((status = GifAddExtensionBlock(&temp_save.ExtensionBlockCount, &temp_save.ExtensionBlocks,
-                            ExtCode, sizeof(ExtData), ExtData)) == GIF_OK)
+                            ExtCode, Len, ExtData)) == GIF_OK)
                     status = DGifGetExtension(gif,&ExtCode,&ExtData);
 #else
             		if ((status = AddExtensionBlock(&temp_save, ExtData[0], (char*)&(ExtData[1]))) == GIF_OK)
