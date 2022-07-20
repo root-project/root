@@ -760,6 +760,10 @@ struct InnerValueType<ROOT::VecOps::RVec<ROOT::VecOps::RVec<Elem>>> {
 template <typename T>
 using InnerValueType_t = typename InnerValueType<T>::type;
 
+std::pair<std::vector<std::string>, std::vector<std::string>>
+AddSizeBranches(const std::vector<std::string> &branches, TTree *tree, std::vector<std::string> &&colsWithoutAliases,
+                std::vector<std::string> &&colsWithAliases);
+
 } // namespace RDF
 } // namespace Internal
 
