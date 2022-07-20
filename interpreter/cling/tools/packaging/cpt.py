@@ -2350,10 +2350,10 @@ if bool(args['last_stable']) or bool(args['last_stable_build']):
 
     args["with_llvm_binary"] = True
 
-    if args["with_binary_llvm"]:
-        download_llvm_binary()
-        compile = compile_for_binary
-        install_prefix = install_prefix_for_binary
+    if args["with_llvm_binary"]:
+        #download_llvm_binary()
+        #compile = compile_for_binary
+        #install_prefix = install_prefix_for_binary
         fetch_clang(llvm_revision)
         allow_clang_tool()
     else:
@@ -2610,8 +2610,8 @@ if args['make_proper']:
     with open(os.path.join(LLVM_OBJ_ROOT, 'config.log'), 'r') as log:
         for line in log:
             if re.match('^LLVM_PREFIX=', line):
-                prefix = re.sub('^LLVM_PREFIX=', '',
-                                line).replace("'", '').strip()
+                prefix = re.sub('^LLVM_PREFIX=',
+                                '', line).replace("'", '').strip()
 
     set_version()
     install_prefix()
