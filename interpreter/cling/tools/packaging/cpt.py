@@ -190,6 +190,11 @@ def fetch_llvm(llvm_revision):
     print('Last known good LLVM revision is: ' + llvm_revision)
     print('Current working directory is: ' + workdir + '\n')
 
+    if args['with_llvm_binary'] is False and args['with_llvm_url']:
+        LLVM_GIT_URL = args['with_llvm_url']
+    else:
+        LLVM_GIT_URL = "http://root.cern.ch/git/llvm.git"
+
     if "github.com" in LLVM_GIT_URL and args['create_dev_env'] is None and args['use_wget']:
         _, _, _, user, repo = LLVM_GIT_URL.split('/')
         print('Fetching LLVM ...')
@@ -314,6 +319,7 @@ class RepoCache(object):
 
 
 def fetch_clang(llvm_revision):
+    CLANG_GIT_URL = args['with_clang_url']
     if "github.com" in CLANG_GIT_URL and args['create_dev_env'] is None and args['use_wget']:
         _, _, _, user, repo = CLANG_GIT_URL.split('/')
         print('Fetching Clang ...')
@@ -378,6 +384,7 @@ def fetch_cling(arg):
         dir = srcdir
 
     def get_fresh_cling():
+        CLING_GIT_URL = args['with_cling_url']
         if CLING_BRANCH:
             exec_subprocess_call('git clone --depth=10 --branch %s %s cling'
                                  % (CLING_BRANCH, CLING_GIT_URL), os.path.join(dir, 'tools'))
@@ -546,6 +553,8 @@ def compile(arg):
     global prefix, EXTRA_CMAKE_FLAGS
     prefix = arg
 
+    EXTRA_CMAKE_FLAGS = args.get('with_cmake_flags')
+    
     # Cleanup previous installation directory if any
     if os.path.isdir(prefix):
         print("Remove directory: " + prefix)
@@ -594,6 +603,8 @@ def compile_for_binary(arg):
     global prefix, EXTRA_CMAKE_FLAGS
     prefix = arg
 
+    EXTRA_CMAKE_FLAGS = args.get('with_cmake_flags')
+    
     # Cleanup previous installation directory if any
     if os.path.isdir(prefix):
         print("Remove directory: " + prefix)
@@ -1886,10 +1897,10 @@ llvm_revision = urlopen(
                 "https://raw.githubusercontent.com/root-project/cling/master/LastKnownGoodLLVMSVNRevision.txt").readline().strip().decode(
                 'utf-8')
 llvm_vers = "{0}.{1}".format(llvm_revision[-2], llvm_revision[-1])
-LLVM_GIT_URL = ""
-CLANG_GIT_URL = args['with_clang_url']
-CLING_GIT_URL = args['with_cling_url']
-EXTRA_CMAKE_FLAGS = args.get('with_cmake_flags')
+# LLVM_GIT_URL = ""
+# CLANG_GIT_URL = args['with_clang_url']
+# CLING_GIT_URL = args['with_cling_url']
+# EXTRA_CMAKE_FLAGS = args.get('with_cmake_flags')
 CMAKE = os.environ.get('CMAKE', None)
 
 # llvm_revision = urlopen(
@@ -1973,7 +1984,7 @@ if not CMAKE:
         CMAKE = 'cmake'
 
 # logic is too confusing supporting both at the same time
-if args.get('with_stdlib') and EXTRA_CMAKE_FLAGS.find('-DLLVM_ENABLE_LIBCXX=') != -1:
+if args.get('with_stdlib') and args.get('with_cmake_flags').find('-DLLVM_ENABLE_LIBCXX=') != -1:
     print('use of --with-stdlib cannot be combined with -DLLVM_ENABLE_LIBCXX')
     parser.print_help()
     raise SystemExit
@@ -2006,11 +2017,7 @@ if not os.path.isdir(TMP_PREFIX):
 
 if args['with_llvm_binary'] and args['with_llvm_url']:
     raise Exception("Cannot specify flags --with-llvm-binary and --with-llvm-url together")
-elif args['with_llvm_binary'] is False and args['with_llvm_url']:
-    LLVM_GIT_URL = args['with_llvm_url']
-else:
-    LLVM_GIT_URL = "http://root.cern.ch/git/llvm.git"
-
+    
 if args['with_binary_llvm'] and args['with_llvm_tar']:
     raise Exception("Cannot specify flags --with-binary-llvm and --with-llvm-tar together")
 
