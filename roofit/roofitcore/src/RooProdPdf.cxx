@@ -1958,12 +1958,22 @@ RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, RooArgSet& c
     // A constraint term is a p.d.f that does not depend on any of the listed observables
     // but does depends on any of the parameters that should be constrained
     RooArgSet tmp;
-    if (!pdf->dependsOnValue(observables) && pdf->dependsOnValue(constrainedParams)) {
+    pdf->getParameters(nullptr, tmp);
+    // Before, there were calls to `pdf->dependsOn()` here, but they were very
+    // expensive for large computation graphs! Given that we have to traverse
+    // the computation graph with a call to `pdf->getParameters()` anyway, we
+    // can just check if the set of all variables operlaps with the observables
+    // or constraind parameters.
+    if (!tmp.overlaps(observables) && tmp.overlaps(constrainedParams)) {
       constraints.add(*pdf) ;
-      pdf->getParameters(&observables, tmp);
       conParams.add(tmp,true) ;
     } else {
-      pdf->getParameters(&observables, tmp);
+      // We only want to add parameter, not observables. Since a call like
+      // `pdf->getParameters(&observables)` would be expensive, we take the set
+      // of all variables and remove the ovservables, which is much cheaper. In
+      // a call to `pdf->getParameters(&observables)`, the observables are
+      // matched by name, so we have to pass the `matchByNameOnly` here.
+      tmp.remove(observables, /*silent=*/false, /*matchByNameOnly=*/true);
       pdfParams.add(tmp,true) ;
     }
   }
