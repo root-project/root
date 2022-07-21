@@ -49,6 +49,7 @@ private:
    mutable bool _first = true;                                     ///<!
    bool useBatchedEvaluations_ = false;
    std::unique_ptr<RooChangeTracker> paramTracker_;
+   Section lastSection_ = {0, 0};  // used for cache together with the parameter tracker
    mutable ROOT::Math::KahanSum<double> cachedResult_ = 0;
 };
 

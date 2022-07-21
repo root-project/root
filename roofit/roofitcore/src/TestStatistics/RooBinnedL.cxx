@@ -93,8 +93,8 @@ RooBinnedL::evaluatePartition(Section bins, std::size_t /*components_begin*/, st
    // expensive than that, we tolerate the additional cost...
    ROOT::Math::KahanSum<double> result;
 
-   // Do not reevaluate likelihood if parameters have not changed
-   if (!paramTracker_->hasChanged(true) & (cachedResult_ != 0)) return cachedResult_;
+   // Do not reevaluate likelihood if parameters nor event range have changed
+   if (!paramTracker_->hasChanged(true) && bins == lastSection_ && (cachedResult_ != 0)) return cachedResult_;
 
 //   data->store()->recalculateCache(_projDeps, firstEvent, lastEvent, stepSize, (_binnedPdf?false:true));
    // TODO: check when we might need _projDeps (it seems to be mostly empty); ties in with TODO below
@@ -147,6 +147,7 @@ RooBinnedL::evaluatePartition(Section bins, std::size_t /*components_begin*/, st
    }
 
    cachedResult_ = result;
+   lastSection_ = bins;
    return result;
 }
 

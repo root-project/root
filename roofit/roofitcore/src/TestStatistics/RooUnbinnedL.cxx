@@ -47,7 +47,8 @@ RooUnbinnedL::RooUnbinnedL(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended e
 
 RooUnbinnedL::RooUnbinnedL(const RooUnbinnedL &other)
    : RooAbsL(other), apply_weight_squared(other.apply_weight_squared), _first(other._first),
-     useBatchedEvaluations_(other.useBatchedEvaluations_)
+     useBatchedEvaluations_(other.useBatchedEvaluations_), lastSection_(other.lastSection_),
+     cachedResult_(other.cachedResult_)
 {
    paramTracker_ = std::make_unique<RooChangeTracker>(*other.paramTracker_);
 }
@@ -87,8 +88,8 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
    ROOT::Math::KahanSum<double> result;
    double sumWeight;
 
-   // Do not reevaluate likelihood if parameters have not changed
-   if (!paramTracker_->hasChanged(true) & (cachedResult_ != 0)) return cachedResult_;
+   // Do not reevaluate likelihood if parameters nor event range have changed
+   if (!paramTracker_->hasChanged(true) && events == lastSection_ && (cachedResult_ != 0)) return cachedResult_;
 
    data_->store()->recalculateCache(nullptr, events.begin(N_events_), events.end(N_events_), 1, true);
 
@@ -169,6 +170,7 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
    }
 
    cachedResult_ = result;
+   lastSection_ = events;
    return result;
 }
 
