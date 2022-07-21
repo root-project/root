@@ -905,7 +905,11 @@ void THStack::Paint(Option_t *choptin)
       }
    }
 
-   if (!lsame) fHistogram->Paint(loption.Data());
+   // Set fHistogram attributes and pain it.
+   if (!lsame) {
+      fHistogram->SetLineWidth(0);
+      fHistogram->Paint(loption.Data());
+   }
 
    if (fHistogram->GetDimension() > 1) SetDrawOption(loption.Data());
    if (loption.Index("lego")>=0) return;
