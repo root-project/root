@@ -15,11 +15,10 @@ import ROOT
 useBkg = True
 confLevel = 0.90
 
-w = ROOT.RooWorkspace("w", True)
+w = ROOT.RooWorkspace("w")
 w.factory("SUM::pdf(s[0.001,15]*Uniform(x[0,1]),b[1,0,2]*Uniform(x))")
 w.factory("Gaussian::prior_b(b,1,1)")
-w.factory("PROD::model(pdf,prior_b)")
-model = w["model"]  # pdf*priorNuisance
+model = w.factory("PROD::model(pdf,prior_b)") # pdf*priorNuisance
 nuisanceParameters = ROOT.RooArgSet(w["b"])
 
 POI = w["s"]

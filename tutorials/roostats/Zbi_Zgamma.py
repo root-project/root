@@ -15,7 +15,7 @@ import ROOT
 # Make model for prototype on/off problem
 # Pois(x | s+b) * Pois(y | tau b )
 # for Z_Gamma, use uniform prior on b.
-w1 = ROOT.RooWorkspace("w", True)
+w1 = ROOT.RooWorkspace("w")
 w1.factory("Poisson::px(x[150,0,500],sum::splusb(s[0,0,100],b[100,0,300]))")
 w1.factory("Poisson::py(y[100,0,500],prod::taub(tau[1.],b))")
 w1.factory("Uniform::prior_b(b)")

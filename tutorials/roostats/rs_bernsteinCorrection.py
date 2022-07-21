@@ -72,8 +72,7 @@ print("Correction based on Bernstein Poly of degree ", degree)
 frame = x.frame()
 data.plotOn(frame)
 # plot the best fit nominal model in blue
-minimType = ROOT.Math.MinimizerOptions.DefaultMinimizerType()
-nominal.fitTo(data, PrintLevel=0, Minimizer=minimType)
+nominal.fitTo(data, PrintLevel=0)
 nominal.plotOn(frame)
 
 # plot the best fit corrected model in red
@@ -82,14 +81,14 @@ if not corrected:
     sys.exit()
 
 # fit corrected model
-corrected.fitTo(data, PrintLevel=0, Minimizer=minimType)
-corrected.plotOn(frame, LineColor=ROOT.kRed)
+corrected.fitTo(data, PrintLevel=0)
+corrected.plotOn(frame, LineColor="r")
 
 # plot the correction term (* norm constant) in dashed green
 # should make norm constant just be 1, not depend on binning of data
 poly = wks["poly"]
 if poly:
-    poly.plotOn(frame, LineColor=ROOT.kGreen, LineStyle=ROOT.kDashed)
+    poly.plotOn(frame, LineColor="g", LineStyle="--")
 
 # this is a switch to check the sampling distribution
 # of -2 log LR for two comparisons:

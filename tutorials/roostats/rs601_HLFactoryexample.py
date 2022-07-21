@@ -26,20 +26,20 @@ hlf = ROOT.RooStats.HLFactory("HLFavtoryexample", card_name, False)
 w = hlf.GetWs()
 
 mes = w.arg("mes")
-sum = w["sum"]
+sumpdf = w["sum"]
 argus = w["argus"]
 
 # --- Generate a toyMC sample from composite PDF ---
-data = sum.generate(mes, 2000)
+data = sumpdf.generate(mes, 2000)
 
 # --- Perform extended ML fit of composite PDF to toy data ---
-sum.fitTo(data)
+sumpdf.fitTo(data)
 
 # --- Plot toy data and composite PDF overlaid ---
 mesframe = mes.frame()
 data.plotOn(mesframe)
-sum.plotOn(mesframe)
-sum.plotOn(mesframe, Components=argus, LineStyle=ROOT.kDashed)
+sumpdf.plotOn(mesframe)
+sumpdf.plotOn(mesframe, Components=argus, LineStyle="--")
 
 ROOT.gROOT.SetStyle("Plain")
 

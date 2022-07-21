@@ -115,11 +115,11 @@ mcPlot.Draw()
 plPlot = ROOT.RooStats.LikelihoodIntervalPlot(plInt)
 plPlot.Draw("same")
 
-if poiList.getSize() == 1:
+if len(poiList) == 1:
     p = poiList.at(0)
     print("MCMC interval: [{}, {}]".format(mcInt.LowerLimit(p), mcInt.UpperLimit(p)))
 
-if poiList.getSize() == 2:
+if len(poiList) == 2:
     p0 = poiList.at(0)
     p1 = poiList.at(1)
     scatter = ROOT.TCanvas()

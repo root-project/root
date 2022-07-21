@@ -236,7 +236,7 @@ if doFeldmanCousins:  # takes 7 minutes
 bc = ROOT.RooStats.BayesianCalculator(data, modelConfig)
 bc.SetConfidenceLevel(0.95)
 bInt = ROOT.RooStats.SimpleInterval()
-if doBayesian and wspace.set("poi").getSize() == 1:
+if doBayesian and len(wspace.set("poi")) == 1:
     bInt = bc.GetInterval()
 else:
     print("Bayesian Calc. only supports on parameter of interest")
@@ -278,7 +278,7 @@ elif doBayesian or doMCMC:
 lrplot = ROOT.RooStats.LikelihoodIntervalPlot(plInt)
 lrplot.Draw()
 
-if doBayesian and wspace.set("poi").getSize() == 1:
+if doBayesian and len(wspace.set("poi")) == 1:
     c1.cd(2)
     # the plot takes a long time and print lots of error
     # using a scan it is better
@@ -287,7 +287,7 @@ if doBayesian and wspace.set("poi").getSize() == 1:
     bplot.Draw()
 
 if doMCMC:
-    if doBayesian and wspace.set("poi").getSize() == 1:
+    if doBayesian and len(wspace.set("poi")) == 1:
         c1.cd(3)
     else:
         c1.cd(2)
@@ -301,7 +301,7 @@ print(
 )
 # Profile Likelihood interval on s = [12.1902, 88.6871]
 
-if doBayesian and wspace.set("poi").getSize() == 1:
+if doBayesian and len(wspace.set("poi")) == 1:
     print("Bayesian interval on s = [{}, {}]".format(bInt.LowerLimit(), bInt.UpperLimit()))
 
 if doFeldmanCousins:
@@ -319,9 +319,11 @@ t.Print()
 
 c1.SaveAs("FourBinInstructional.png")
 
-# TODO: The MCMCCalculator has to be destructed first. Otherwise, we can get
+# TODO: The calculators have to be destructed first. Otherwise, we can get
 # segmentation faults depending on the destruction order, which is random in
 # Python. Probably the issue is that some object has a non-owning pointer to
 # another object, which it uses in its destructor. This should be fixed either
 # in the design of RooStats in C++, or with phythonizations.
+del plc
+del bc
 del mc
