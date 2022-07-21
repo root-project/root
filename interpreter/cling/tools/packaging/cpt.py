@@ -199,13 +199,7 @@ def fetch_llvm(llvm_revision):
              out_dir=workdir)
 
         print('Extracting: ' + os.path.join(workdir, 'cling-patches-r%s.tar.gz' % llvm_revision))
-<<<<<<< HEAD
         extract_tar(workdir, 'cling-patches-r%s.tar.gz' % llvm_revision)
-=======
-        tar = tarfile.open(os.path.join(workdir, 'cling-patches-r%s.tar.gz' % llvm_revision))
-        tar.extractall(path=workdir)
-        tar.close()
->>>>>>> 6474f7386e (Revert "More splitting lines for getting rid of E501 error")
 
         os.rename(os.path.join(workdir, 'llvm-cling-patches-r%s' % llvm_revision), srcdir)
 
