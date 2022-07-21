@@ -63,8 +63,6 @@ public:
          }
       }
 
-      Section(const Section &section) = default;
-
       std::size_t begin(std::size_t N_total) const { return static_cast<std::size_t>(N_total * begin_fraction); }
 
       std::size_t end(std::size_t N_total) const
@@ -74,6 +72,10 @@ public:
          } else {
             return static_cast<std::size_t>(N_total * end_fraction);
          }
+      }
+
+      bool operator==(const Section& rhs) {
+         return begin_fraction == rhs.begin_fraction && end_fraction == rhs.end_fraction;
       }
 
       double begin_fraction;
