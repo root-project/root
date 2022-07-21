@@ -33,6 +33,9 @@
 #include "Cast_FromONNX.hxx"
 #include "input_models/references/Cast.ref.hxx"
 
+#include "ReduceMean_FromONNX.hxx"
+#include "input_models/references/ReduceMean.ref.hxx"
+
 #include "LinearWithLeakyRelu_FromONNX.hxx"
 #include "input_models/references/LinearWithLeakyRelu.ref.hxx"
 
@@ -780,6 +783,30 @@ TEST(ONNX, Pow_broadcast){
    }
 
 }
+
+   TEST(ONNX, ReduceMean){
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard  input
+   std::vector<float> input({
+      5, 2, 3,
+      5, 5, 4
+   });
+   
+   TMVA_SOFIE_ReduceMean::Session s("ReduceMean_FromONNX.dat");
+   std::vector<float> output = s.infer(input.data());
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(ReduceMean_ExpectedOutput::output) / sizeof(float));
+   
+   float *correct = ReduceMean_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+
+}
+
 
 TEST(ONNX, RNNBatchwise)
 {
