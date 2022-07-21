@@ -22,6 +22,7 @@
 #include <RooArgSet.h>
 #include <RooDataSet.h>
 #include <RooDataHist.h>
+#include <RooMsgService.h>
 
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDF/ActionHelpers.hxx>
@@ -71,6 +72,7 @@ public:
 private:
   std::shared_ptr<DataSet_t> _dataset;
   std::mutex _mutex_dataset;
+  std::size_t _numInvalid = 0;
 
   std::vector<std::vector<double>> _events; // One vector of values per data-processing slot
   const std::size_t _eventSize; // Number of variables in dataset
@@ -146,6 +148,11 @@ public:
       FillDataSet(vector, _eventSize);
       vector.clear();
     }
+
+    if (_numInvalid>0) {
+      const auto prefix = std::string(_dataset->ClassName()) + "Helper::Finalize(" + _dataset->GetName() + ") ";
+      oocoutW(static_cast<TObject*>(nullptr), DataHandling) << prefix << "Ignored " << _numInvalid << " out-of-range events\n";
+    }
   }
 
 
@@ -163,10 +170,37 @@ private:
     const RooArgSet& argSet = *_dataset->get();
 
     for (std::size_t i = 0; i < events.size(); i += eventSize) {
+
+      // Creating a RooDataSet from an RDataFrame should be consistent with the
+      // creation from a TTree. The construction from a TTree discards entries
+      // outside the variable definition range, so we have to do that too (see
+      // also RooTreeDataStore::loadValues).
+
+      bool allOK = true;
       for (std::size_t j=0; j < eventSize; ++j) {
-        static_cast<RooAbsRealLValue*>(argSet[j])->setVal(events[i+j]);
+        auto * destArg = static_cast<RooAbsRealLValue*>(argSet[j]);
+        double sourceVal = events[i+j];
+
+        if (!destArg->inRange(sourceVal, nullptr)) {
+          _numInvalid++ ;
+          allOK = false;
+          const auto prefix = std::string(_dataset->ClassName()) + "Helper::FillDataSet(" + _dataset->GetName() + ") ";
+          if (_numInvalid < 5) {
+            // Unlike in the TreeVectorStore case, we don't log the event
+            // number here because we don't know it anyway, because of
+            // RDataFrame slots and multithreading.
+            oocoutI(static_cast<TObject*>(nullptr), DataHandling) << prefix << "Skipping event because " << destArg->GetName()
+                << " cannot accommodate the value " << sourceVal << "\n";
+          } else if (_numInvalid == 5) {
+            oocoutI(static_cast<TObject*>(nullptr), DataHandling) << prefix << "Skipping ...\n";
+          }
+          break ;
+        }
+        destArg->setVal(sourceVal);
       }
-      _dataset->add(argSet);
+      if(allOK) {
+        _dataset->add(argSet);
+      }
     }
   }
 };
