@@ -1669,7 +1669,7 @@ inline void RooLagrangianMorphFunc::updateSampleWeights()
 {
    //#ifdef USE_MULTIPRECISION_LC
    int sampleidx = 0;
-   auto cache = this->getCache(_curNormSet);
+   auto cache = this->getCache();
    const size_t n(size(cache->_inverse));
    for (auto sampleit : this->_config.paramCards) {
       const std::string sample(sampleit.first);
@@ -1824,7 +1824,7 @@ RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *tit
    : RooAbsReal(name, title), _cacheMgr(this, 10, kTRUE, kTRUE),
      _operators("operators", "set of operators", this, kTRUE, kFALSE),
      _observables("observables", "morphing observables", this, kTRUE, kFALSE),
-     _binWidths("binWidths", "set of binWidth objects", this, kTRUE, kFALSE), _config(config), _curNormSet(0)
+     _binWidths("binWidths", "set of binWidth objects", this, kTRUE, kFALSE), _config(config)
 {
    this->init();
    this->disableInterferences(_config.nonInterfering);
@@ -1841,7 +1841,7 @@ RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *tit
    : RooAbsReal(name, title), _cacheMgr(this, 10, kTRUE, kTRUE),
      _operators("operators", "set of operators", this, kTRUE, kFALSE),
      _observables("observables", "morphing observables", this, kTRUE, kFALSE),
-     _binWidths("binWidths", "set of binWidth objects", this, kTRUE, kFALSE), _curNormSet(0)
+     _binWidths("binWidths", "set of binWidth objects", this, kTRUE, kFALSE)
 {
    this->_config.fileName = filename;
    this->_config.observableName = observableName;
@@ -1859,8 +1859,6 @@ RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *tit
 
 void RooLagrangianMorphFunc::setup(bool own)
 {
-   _ownParameters = own;
-
    if (_config.couplings.size() > 0) {
       RooArgList operators;
       std::vector<RooListProxy *> vertices;
@@ -1975,7 +1973,7 @@ RooLagrangianMorphFunc::RooLagrangianMorphFunc(const RooLagrangianMorphFunc &oth
      _operators(other._operators.GetName(), this, other._operators),
      _observables(other._observables.GetName(), this, other._observables),
      _binWidths(other._binWidths.GetName(), this, other._binWidths), _flags(other._flags.GetName(), this, other._flags),
-     _config(other._config), _curNormSet(0)
+     _config(other._config)
 {
    for (size_t j = 0; j < other._diagrams.size(); ++j) {
       std::vector<RooListProxy *> diagram;
@@ -2209,7 +2207,7 @@ std::vector<std::string> RooLagrangianMorphFunc::getSamples() const
 
 RooAbsReal *RooLagrangianMorphFunc::getSampleWeight(const char *name)
 {
-   auto cache = this->getCache(_curNormSet);
+   auto cache = this->getCache();
    auto wname = std::string("w_") + name + "_" + this->GetName();
    return dynamic_cast<RooAbsReal *>(cache->_weights.find(wname.c_str()));
 }
@@ -2227,8 +2225,8 @@ void RooLagrangianMorphFunc::printWeights() const
 
 void RooLagrangianMorphFunc::printSampleWeights() const
 {
-   auto *cache = this->getCache(this->_curNormSet);
-   for (const auto &sample : this->_sampleMap) {
+   auto *cache = this->getCache();
+   for (const auto &sample : _sampleMap) {
       auto weightName = std::string("w_") + sample.first + "_" + this->GetName();
       auto weight = static_cast<RooAbsReal *>(cache->_weights.find(weightName.c_str()));
       if (!weight)
@@ -2261,7 +2259,7 @@ void RooLagrangianMorphFunc::randomizeParameters(double z)
 
 bool RooLagrangianMorphFunc::updateCoefficients()
 {
-   auto cache = this->getCache(_curNormSet);
+   auto cache = this->getCache();
 
    std::string filename = this->_config.fileName;
    TDirectory *file = openFile(filename.c_str());
@@ -2329,7 +2327,7 @@ bool RooLagrangianMorphFunc::useCoefficients(const char *filename)
    cache = RooLagrangianMorphFunc::CacheElem::createCache(this, readMatrixFromFileT<Matrix>(filename));
    if (!cache)
       coutE(Caching) << "unable to create cache!" << std::endl;
-   this->_cacheMgr.setObj(0, 0, cache, 0);
+   _cacheMgr.setObj(nullptr, nullptr, cache, nullptr);
    return true;
 }
 
@@ -2338,7 +2336,7 @@ bool RooLagrangianMorphFunc::useCoefficients(const char *filename)
 
 bool RooLagrangianMorphFunc::writeCoefficients(const char *filename)
 {
-   auto cache = this->getCache(_curNormSet);
+   auto cache = this->getCache();
    if (!cache)
       return false;
    writeMatrixToFileT(cache->_inverse, filename);
@@ -2348,7 +2346,7 @@ bool RooLagrangianMorphFunc::writeCoefficients(const char *filename)
 ////////////////////////////////////////////////////////////////////////////////
 /// retrieve the cache object
 
-typename RooLagrangianMorphFunc::CacheElem *RooLagrangianMorphFunc::getCache(const RooArgSet * /*nset*/) const
+typename RooLagrangianMorphFunc::CacheElem *RooLagrangianMorphFunc::getCache() const
 {
    auto cache = static_cast<RooLagrangianMorphFunc::CacheElem *>(_cacheMgr.getObj(0, (RooArgSet *)0));
    if (!cache) {
@@ -2356,7 +2354,7 @@ typename RooLagrangianMorphFunc::CacheElem *RooLagrangianMorphFunc::getCache(con
       cxcoutP(Caching) << "current storage has size " << this->_sampleMap.size() << std::endl;
       cache = RooLagrangianMorphFunc::CacheElem::createCache(this);
       if (cache)
-         this->_cacheMgr.setObj(0, 0, cache, 0);
+         _cacheMgr.setObj(nullptr, nullptr, cache, nullptr);
       else
          coutE(Caching) << "unable to create cache!" << std::endl;
    }
@@ -2368,7 +2366,7 @@ typename RooLagrangianMorphFunc::CacheElem *RooLagrangianMorphFunc::getCache(con
 
 bool RooLagrangianMorphFunc::hasCache() const
 {
-   return (bool)(_cacheMgr.getObj(0, (RooArgSet *)0));
+   return (bool)(_cacheMgr.getObj(nullptr, static_cast<RooArgSet*>(nullptr)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2487,7 +2485,7 @@ double RooLagrangianMorphFunc::getParameterValue(const char *name) const
    if (param) {
       return param->getVal();
    }
-   return 0;
+   return 0.0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2690,7 +2688,7 @@ int RooLagrangianMorphFunc::nParameters() const
 int RooLagrangianMorphFunc::nPolynomials() const
 {
    // return the number of samples in this morphing function
-   auto cache = getCache(_curNormSet);
+   auto cache = getCache();
    return cache->_formulas.size();
 }
 
@@ -2735,7 +2733,7 @@ const RooArgSet *RooLagrangianMorphFunc::getParameterSet() const
 
 const RooArgList *RooLagrangianMorphFunc::getCouplingSet() const
 {
-   auto cache = getCache(_curNormSet);
+   auto cache = getCache();
    return &(cache->_couplings);
 }
 
@@ -2777,7 +2775,7 @@ void RooLagrangianMorphFunc::setParameters(const ParamSet &params)
 
 std::unique_ptr<RooWrapperPdf> RooLagrangianMorphFunc::createPdf() const
 {
-   auto cache = getCache(_curNormSet);
+   auto cache = getCache();
    auto func = std::make_unique<RooRealSumFunc>(*(cache->_sumFunc));
 
    // create a wrapper on the roorealsumfunc
@@ -2789,7 +2787,7 @@ std::unique_ptr<RooWrapperPdf> RooLagrangianMorphFunc::createPdf() const
 
 RooRealSumFunc *RooLagrangianMorphFunc::getFunc() const
 {
-   auto cache = getCache(_curNormSet);
+   auto cache = getCache();
    return cache->_sumFunc.get();
 }
 
@@ -2835,7 +2833,7 @@ Double_t RooLagrangianMorphFunc::expectedEvents(const RooArgSet &nset) const
 double RooLagrangianMorphFunc::expectedUncertainty() const
 {
    RooRealVar *observable = this->getObservable();
-   auto cache = this->getCache(_curNormSet);
+   auto cache = this->getCache();
    double unc2 = 0;
    for (const auto &sample : this->_sampleMap) {
       RooAbsArg *phys = this->_physics.at(sample.second);
@@ -2923,23 +2921,12 @@ std::list<Double_t> *RooLagrangianMorphFunc::plotSamplingHint(RooAbsRealLValue &
 ////////////////////////////////////////////////////////////////////////////////
 /// call getVal on the internal function
 
-Double_t RooLagrangianMorphFunc::getValV(const RooArgSet *set) const
-{
-   // cout << "XX RooLagrangianMorphFunc::getValV(" << this << ") set = " << set
-   // << std::endl ;
-   this->_curNormSet = set;
-   return RooAbsReal::getValV(set);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// call getVal on the internal function
-
-Double_t RooLagrangianMorphFunc::evaluate() const
+double RooLagrangianMorphFunc::evaluate() const
 {
    // call getVal on the internal function
    RooRealSumFunc *pdf = this->getFunc();
    if (pdf)
-      return this->_scale * pdf->getVal(_curNormSet);
+      return _scale * pdf->getVal(_lastNSet);
    else
       std::cerr << "unable to acquire in-built function!" << std::endl;
    return 0.;
@@ -3015,7 +3002,7 @@ void RooLagrangianMorphFunc::setCacheAndTrackHints(RooArgSet &arg)
 
 TMatrixD RooLagrangianMorphFunc::getMatrix() const
 {
-   auto cache = getCache(_curNormSet);
+   auto cache = getCache();
    if (!cache)
       coutE(Caching) << "unable to retrieve cache!" << std::endl;
    return makeRootMatrix(cache->_matrix);
@@ -3026,7 +3013,7 @@ TMatrixD RooLagrangianMorphFunc::getMatrix() const
 
 TMatrixD RooLagrangianMorphFunc::getInvertedMatrix() const
 {
-   auto cache = getCache(_curNormSet);
+   auto cache = getCache();
    if (!cache)
       coutE(Caching) << "unable to retrieve cache!" << std::endl;
    return makeRootMatrix(cache->_inverse);
@@ -3039,7 +3026,7 @@ TMatrixD RooLagrangianMorphFunc::getInvertedMatrix() const
 
 double RooLagrangianMorphFunc::getCondition() const
 {
-   auto cache = getCache(_curNormSet);
+   auto cache = getCache();
    if (!cache)
       coutE(Caching) << "unable to retrieve cache!" << std::endl;
    return cache->_condition;
