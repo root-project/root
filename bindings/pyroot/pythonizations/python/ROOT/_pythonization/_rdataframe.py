@@ -1,7 +1,7 @@
-# Author: Stefan Wunsch, Massimiliano Galli, Enric Tejedor  CERN  02/2019
+# Author: Stefan Wunsch, Massimiliano Galli, Enric Tejedor (02/2019), Pawan Johnson  CERN  07/2022
 
 ################################################################################
-# Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.                      #
+# Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.                      #
 # All rights reserved.                                                         #
 #                                                                              #
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
@@ -172,7 +172,7 @@ df2_transformed = ROOT.MyTransformation(ROOT.RDF.AsRNode(df2))
 \anchor reference
 */
 '''
-
+import sys
 from . import pythonization
 from ._pyz_utils import MethodTemplateGetter, MethodTemplateWrapper
 
@@ -417,3 +417,9 @@ def pythonize_rdataframe(klass):
                                       HistoProfileWrapper,
                                       model_class)
         setattr(klass, method_name, getter)
+    
+    # Pythonization for Filters only to be implemented in Python3
+    if sys.version_info >= (3, 7):
+        klass._OriginalFilter =  klass.Filter
+        from ._rdf_pyz import _PyFilter
+        klass.Filter = _PyFilter
