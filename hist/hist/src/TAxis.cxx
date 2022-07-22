@@ -226,16 +226,13 @@ void TAxis::Copy(TObject &obj) const
    if (axis.fLabels) {
       axis.fLabels->Delete();
       delete axis.fLabels;
-      axis.fLabels = 0;
+      axis.fLabels = nullptr;
    }
    if (fLabels) {
       //Properly handle case where not all bins have labels
+      axis.fLabels = new THashList(axis.fNbins, 3);
       TIter next(fLabels);
-      TObjString *label;
-      if(! axis.fLabels) {
-         axis.fLabels = new THashList(axis.fNbins, 3);
-      }
-      while( (label=(TObjString*)next()) ) {
+      while(auto label = (TObjString *)next()) {
          TObjString *copyLabel = new TObjString(*label);
          axis.fLabels->Add(copyLabel);
          copyLabel->SetUniqueID(label->GetUniqueID());
@@ -244,15 +241,12 @@ void TAxis::Copy(TObject &obj) const
    if (axis.fModLabs) {
       axis.fModLabs->Delete();
       delete axis.fModLabs;
-      axis.fModLabs = 0;
+      axis.fModLabs = nullptr;
    }
    if (fModLabs) {
+      axis.fModLabs = new TList();
       TIter next(fModLabs);
-      TAxisModLab *modlabel;
-      if(! axis.fModLabs) {
-         axis.fModLabs = new TList();
-      }
-      while( (modlabel=(TAxisModLab*)next()) ) {
+      while(auto modlabel=(TAxisModLab *)next()) {
          TAxisModLab *copyModLabel = new TAxisModLab(*modlabel);
          axis.fModLabs->Add(copyModLabel);
          copyModLabel->SetUniqueID(modlabel->GetUniqueID());

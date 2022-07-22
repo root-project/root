@@ -1,10 +1,8 @@
 import { gStyle, create } from '../core.mjs';
-
 import { DrawOptions, floatToString, buildSvgPath } from '../base/BasePainter.mjs';
-
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
-
 import { TH1Painter } from '../hist/TH1Painter.mjs';
+
 
 /**
  * @summary Painter for TSpline objects.

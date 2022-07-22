@@ -101,9 +101,9 @@ void AtlasExample()
       data[icut]->Draw("P");
    }
 
-   auto t = new TLatex; t->SetNDC();
-   t->DrawLatex(0.3,  0.85, "#sqrt{s}= 14 TeV");
-   t->DrawLatex(0.57, 0.85, "|#eta_{jet}|<0.5");
+   TLatex t; t.SetNDC();
+   t.DrawLatex(0.3,  0.85, "#sqrt{s}= 14 TeV");
+   t.DrawLatex(0.57, 0.85, "|#eta_{jet}|<0.5");
 
    auto l = new TLegend(0.45,0.65,0.8,0.8,"","NDC");
    l->SetBorderSize(0.);

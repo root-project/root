@@ -139,7 +139,7 @@ TCandle::TCandle(const Double_t candlePos, const Double_t candleWidth, Long64_t 
    fNHistoPoints  = 0;
    fAxisMin       = 0.;
    fAxisMax       = 0.;
-   sprintf(fOptionStr," ");
+   snprintf(fOptionStr, sizeof(fOptionStr), " ");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -173,7 +173,7 @@ TCandle::TCandle(const Double_t candlePos, const Double_t candleWidth, TH1D *pro
    fNHistoPoints  = 0;
    fAxisMin       = 0.;
    fAxisMax       = 0.;
-   sprintf(fOptionStr," ");
+   snprintf(fOptionStr, sizeof(fOptionStr), " ");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -392,7 +392,7 @@ void TCandle::Calculate() {
    Double_t max = -1e15;
 
    // Determining the quantiles
-   Double_t *prob = new Double_t[5];
+   Double_t prob[5];
 
    if (fWhiskerRange >= 1) {
       prob[0] = 1e-15;
@@ -402,7 +402,6 @@ void TCandle::Calculate() {
       prob[4] = 0.5 + fWhiskerRange/2.;
    }
 
-
    if (fBoxRange >= 1) {
       prob[1] = 1E-14;
       prob[3] = 1-1E-14;
@@ -411,9 +410,9 @@ void TCandle::Calculate() {
       prob[3] = 0.5 + fBoxRange/2.;
    }
 
-   prob[2]=0.5;
-   Double_t *quantiles = new Double_t[5];
-   quantiles[0]=0.; quantiles[1]=0.; quantiles[2] = 0.; quantiles[3] = 0.; quantiles[4] = 0.;
+   prob[2] = 0.5;
+
+   Double_t quantiles[5] = { 0., 0., 0., 0., 0. };
    if (!fIsRaw && fProj) { //Need a calculation for a projected histo
       if (((IsOption(kHistoLeft)) || (IsOption(kHistoRight)) || (IsOption(kHistoViolin))) && fProj->GetNbinsX() > 500) {
          // When using the histooption the number of bins of the projection is
@@ -432,8 +431,6 @@ void TCandle::Calculate() {
    // into account as well, we need to ignore this!
    if (quantiles[0] >= quantiles[4] ||
        quantiles[1] >= quantiles[3]) {
-      delete [] prob;
-      delete [] quantiles;
       return;
    }
 
@@ -486,9 +483,6 @@ void TCandle::Calculate() {
       fMean /= fNDatapoints;
       fMedianErr = 1.57*iqr/sqrt(fNDatapoints);
    }
-
-   delete [] prob;
-   delete [] quantiles;
 
    //Doing the outliers and other single points to show
    if (GetCandleOption(5) > 0) { //Draw outliers
@@ -659,7 +653,6 @@ void TCandle::Calculate() {
          fNHistoPoints *= 2;
       }
    }
-
 
    fIsCalculated = true;
 }

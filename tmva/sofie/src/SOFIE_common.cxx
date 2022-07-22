@@ -44,7 +44,7 @@ std::string ConvertShapeToString(std::vector<size_t> shape) {
    std::stringstream out;
    out << "{ ";
    for (size_t i = 0; i < shape.size(); i++) {
-      out << shape[i];  
+      out << shape[i];
       if (i < shape.size()-1) out << " , ";
    }
    out << " }";
@@ -86,7 +86,7 @@ T* UTILITY::Unidirectional_broadcast(const T* original_data, const std::vector<s
          throw std::runtime_error(
             "TMVA::SOFIE Error in Broadcasting Tensor : original array has more dimensions than target shape," + originalShape + ", " + targetShape);
       }
-      // if shape's sizes are different prepend 1 to get tensor with same shape size 
+      // if shape's sizes are different prepend 1 to get tensor with same shape size
       // since the broadcast is unidirectional we can only prepend
       std::vector<size_t> current_shape(original_shape);
       auto it = current_shape.begin();
@@ -95,7 +95,7 @@ T* UTILITY::Unidirectional_broadcast(const T* original_data, const std::vector<s
       }
       // this code below will work
       // when shape are not equal e.g. (3,4,5,6) and (3) and we add 1 in all missing positions
-      // since broadcasting is uni-directional we do not use it 
+      // since broadcasting is uni-directional we do not use it
       // std::vector<size_t> current_shape(target_shape.size(),1);
       // for (size_t i = 0; i < original_shape.size(); i++) {
       //    for (size_t j = 0; j < target_shape.size(); j++) {
@@ -135,6 +135,49 @@ T* UTILITY::Unidirectional_broadcast(const T* original_data, const std::vector<s
       return new_datavector;
 }
 
+
+
+std::vector<size_t>  UTILITY::Multidirectional_broadcast(std::vector<size_t> input1_shape, std::vector<size_t> input2_shape)
+{
+   std::vector<size_t> input_shape = (input1_shape.size() > input2_shape.size())?input1_shape:input2_shape;
+   std::vector<size_t> output_shape(input_shape);
+   
+   if(input1_shape.size() < input2_shape.size()){
+   // Check if input1_shape.size() < input2_shape.size() we insert in the shape vector values of 1 at the beginning of the tensor until input1_shape.size() == input2_shape.size()
+      auto it = input1_shape.begin();
+      while (input1_shape.size() < input2_shape.size()) {
+         it = input1_shape.insert(it, 1);
+      }
+   }
+   else if(input2_shape.size() < input1_shape.size()){
+   // Check if input2_shape.size() < input1_shape.size() we insert in the shape vector values of 1 at the beginning of the tensor until input1_shape.size() == input2_shape.size()
+      auto it = input2_shape.begin();
+      while (input2_shape.size() < input1_shape.size()) {
+         it = input2_shape.insert(it, 1);
+      }
+   }
+      //check if both the input have same shape, nothing to do directly return the output_shape as the same shape.
+   if(input1_shape.size() == input2_shape.size()){
+      if(input1_shape != input2_shape){
+         //Check the shape values, if input1[i] not equal to input2[i] we have the result shape equal to input1[i] if input2[i] = 1 or viceversa
+         for(size_t j = 0; j < input1_shape.size() ; j++){
+            if(input1_shape[j] == input2_shape[j]){
+               output_shape[j] = input1_shape[j];
+            }
+            else if(input1_shape[j] > input2_shape[j] && input2_shape[j] == 1){
+               output_shape[j] = input1_shape[j];
+            }
+            else if(input2_shape[j] > input1_shape[j] && input1_shape[j] == 1){
+               output_shape[j] = input2_shape[j];
+            }
+         }
+      }
+
+   }
+   return output_shape;
+
+}
+
 std::string UTILITY::Clean_name(std::string input_tensor_name){
    std::string s (input_tensor_name);
    s.erase(std::remove_if(s.begin(), s.end(), []( char const& c ) -> bool { return !std::isalnum(c); } ), s.end());
@@ -142,6 +185,17 @@ std::string UTILITY::Clean_name(std::string input_tensor_name){
 }
 
 template float* UTILITY::Unidirectional_broadcast(const float* original_data, const std::vector<size_t> original_shape, const std::vector<size_t> target_shape);
+
+std::vector<size_t> UTILITY::ComputeStrideFromShape(const std::vector<size_t> & shape) {
+   // assume row major layout
+   const auto size = shape.size();
+   std::vector<size_t> strides(size,1);
+   for (std::size_t i = 1; i < size; i++) {
+      strides[size - 1 - i] = strides[size - 1 - i + 1] * shape[size - 1 - i + 1];
+   }
+   return strides;
+}
+
 
 }//SOFIE
 }//Experimental

@@ -1,16 +1,10 @@
-/// JavaScript ROOT v7 graphics for different classes
-
 import { addMethods, settings, isBatchMode } from '../core.mjs';
-
 import { select as d3_select, rgb as d3_rgb, pointer as d3_pointer } from '../d3.mjs';
-
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
-
 import { addDragHandler } from '../gpad/TFramePainter.mjs';
-
 import { ensureRCanvas } from '../gpad/RCanvasPainter.mjs';
-
 import { createMenu } from '../gui/menu.mjs';
+
 
 /** @summary draw RText object
   * @private */
@@ -215,7 +209,7 @@ class RPalettePainter extends RObjectPainter {
             r.on("dblclick", () => framep.unzoom("z"));
       }
 
-      framep.z_handle.max_tick_size = Math.round(palette_width*0.3);
+      framep.z_handle.maxTickSize = Math.round(palette_width*0.3);
 
       let promise = framep.z_handle.drawAxis(this.draw_g, vertical ? `translate(${palette_width},${palette_height})` : `translate(0,${palette_height})`, vertical ? -1 : 1);
 
@@ -349,7 +343,5 @@ class RPalettePainter extends RObjectPainter {
    }
 
 } // class RPalettePainter
-
-
 
 export { RPalettePainter, drawText, drawLine, drawBox, drawMarker };

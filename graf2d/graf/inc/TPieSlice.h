@@ -30,13 +30,15 @@ public:
    TPieSlice(const char *, const char *, TPie*, Double_t val=0);
    virtual ~TPieSlice() {}
 
+   void           Copy(TObject &slice) const override;
    Int_t          DistancetoPrimitive(Int_t,Int_t) override;
-   Double_t       GetRadiusOffset();
-   Double_t       GetValue();
+   Double_t       GetRadiusOffset() const;
+   Double_t       GetValue() const;
    void           SavePrimitive(std::ostream &out, Option_t *opts="") override;
    void           SetIsActive(Bool_t is) { fIsActive = is; }
    void           SetRadiusOffset(Double_t);  // *MENU*
    void           SetValue(Double_t);         // *MENU*
+
 
    friend class TPie;
 

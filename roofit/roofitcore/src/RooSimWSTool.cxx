@@ -281,9 +281,7 @@ RooSimWSTool::ObjBuildConfig* RooSimWSTool::validateConfig(BuildConfig& bc)
       }
 
       // Check if composite splitCatSet does not contain category functions that depend on other categories used in the same split
-      TIterator* iter = splitCatSet.createIterator() ;
-      RooAbsArg* arg ;
-      while((arg=(RooAbsArg*)iter->Next())) {
+      for(RooAbsArg * arg : splitCatSet) {
    RooArgSet tmp(splitCatSet) ;
    tmp.remove(*arg) ;
    if (arg->dependsOnValue(tmp)) {
@@ -291,11 +289,9 @@ RooSimWSTool::ObjBuildConfig* RooSimWSTool::validateConfig(BuildConfig& bc)
             << " used in composite split " << splitCatSet << " of parameter " << farg->GetName() << " of pdf " << pdf->GetName()
             << " depends on one or more of the other splitting categories in the composite split" << endl ;
      delete obc ;
-     delete iter ;
      return 0 ;
    }
       }
-      delete iter ;
 
       // If a constrained split is specified, check that split parameter is a real-valued type
       if (pariter->second.second.size()>0) {
@@ -424,9 +420,7 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
   if (physCat) splitCatSet.add(*physCat) ;
 
   RooArgSet splitCatSetFund ;
-  TIterator* scsiter = splitCatSet.createIterator() ;
-  RooAbsCategory* scat ;
-  while((scat=(RooAbsCategory*)scsiter->Next())) {
+  for(auto * scat : static_range_cast<RooAbsCategory*>(splitCatSet)) {
     if (scat->isFundamental()) {
       splitCatSetFund.add(*scat) ;
     } else {
@@ -435,7 +429,6 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
       delete scatvars ;
     }
   }
-  delete scsiter ;
 
 
   RooAbsCategoryLValue* masterSplitCat ;
@@ -451,9 +444,7 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
   TList* customizerList = new TList ;
 
   // Loop over requested physics models and build components
-  TIter physMIter = physModelSet.createIterator() ;
-  RooAbsPdf* physModel ;
-  while((physModel=(RooAbsPdf*)physMIter.Next())) {
+  for(auto * physModel : static_range_cast<RooAbsPdf*>(physModelSet)) {
     if (verbose) coutI(ObjectHandling) << "RooSimPdfBuilder::executeBuild: processing prototype pdf " << physModel->GetName() << endl ;
 
     RooCustomizer* physCustomizer = new RooCustomizer(*physModel,*masterSplitCat,splitNodeListOwned,&splitNodeListAll) ;
@@ -536,20 +527,15 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
 
   // Add observables of splitCatSet members, rather than splitCatSet members directly
   // as there may be cat->cat functions in here
-  scsiter = splitCatSet.createIterator() ;
-  while((scat=(RooAbsCategory*)scsiter->Next())) {
+  for(auto * scat : static_range_cast<RooAbsCategory*>(splitCatSet)) {
     if (scat->isFundamental()) {
       fitCatList.add(*scat) ;
     } else {
-      RooArgSet* scatvars = scat->getVariables() ;
-      fitCatList.add(*scatvars) ;
-      delete scatvars ;
+      fitCatList.add(*std::unique_ptr<RooArgSet>{scat->getVariables()}) ;
     }
   }
-  delete scsiter ;
 
 
-  TIterator* fclIter = fitCatList.createIterator() ;
   string mcatname = string(simPdfName) + "_index" ;
   RooAbsCategoryLValue* fitCat = 0 ;
   if (fitCatList.getSize()>1) {
@@ -572,11 +558,9 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
     fitCat->setLabel(fcState->GetName()) ;
 
     // Check if this fitCat state is selected
-    fclIter->Reset() ;
-    RooAbsCategory* splitCat ;
     bool select(false) ;
     if (obc._restr.size()>0) {
-      while((splitCat=(RooAbsCategory*)fclIter->Next())) {
+      for(auto * splitCat : static_range_cast<RooAbsCategory*>(fitCatList)) {
    // Find selected state list
 
    list<const RooCatType*> slist = obc._restr[splitCat] ;
@@ -622,7 +606,6 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
   // Delete customizers
   customizerList->Delete() ;
   delete customizerList ;
-  delete fclIter ;
   return (RooSimultaneous*) _ws->pdf(simPdf->GetName()) ;
 }
 
@@ -633,12 +616,10 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
 
 std::string RooSimWSTool::makeSplitName(const RooArgSet& splitCatSet)
 {
-  string name ;
+  std::string name ;
 
-  TIterator* iter = splitCatSet.createIterator() ;
-  RooAbsArg* arg ;
   bool first=true ;
-  while((arg=(RooAbsArg*)iter->Next())) {
+  for(RooAbsArg * arg : splitCatSet) {
     if (first) {
       first=false;
     } else {
@@ -646,7 +627,6 @@ std::string RooSimWSTool::makeSplitName(const RooArgSet& splitCatSet)
     }
     name += arg->GetName() ;
   }
-  delete iter ;
 
   return name ;
 }

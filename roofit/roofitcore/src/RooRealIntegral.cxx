@@ -299,12 +299,8 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
   for (const auto arg : function.servers()) {
 
-    //cout << "considering server" << arg->GetName() << endl ;
-
     // Dependent or parameter?
     if (!arg->dependsOnValue(intDepList)) {
-
-      //cout << " server does not depend on observables, adding server as value server to integral" << endl ;
 
       if (function.dependsOnValue(*arg)) {
         addServer(*arg,true,false) ;
@@ -315,23 +311,28 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     } else {
 
       // Add final dependents of arg as shape servers
-      RooArgSet argLeafServers ;
-      arg->leafNodeServerList(&argLeafServers,0,false) ;
 
-      //arg->printCompactTree() ;
-      //cout << "leaf nodes of server are " << argLeafServers << " depList = " << depList << endl ;
+      // We keep track separately of all leaves and the leaves that are only
+      // value servers to `arg`, which in this code branch is always a value
+      // server of the original function. With the additional value-only server
+      // list, we can quicky check if a given leaf is also a value server to
+      // the top-level `function`, because if and only if `leaf` is a value
+      // server of `arg` is it also a value server of `function`. The expensive
+      // calls to `function.dependsOnValue(*leaf)` that were used before are
+      // avoided like this.
+      RooArgSet argLeafServers ;
+      RooArgSet argLeafValueServers ;
+      arg->treeNodeServerList(&argLeafServers,nullptr,false,true,/*valueOnly=*/false,false) ;
+      arg->treeNodeServerList(&argLeafValueServers,nullptr,false,true,/*valueOnly=*/true,false) ;
 
       // Skip arg if it is neither value or shape server
       if (!arg->isValueServer(function) && !arg->isShapeServer(function)) {
-        //cout << " server is neither value not shape server of function, ignoring" << endl ;
         continue ;
       }
 
       for (const auto leaf : argLeafServers) {
 
-        //cout << " considering leafnode " << leaf->GetName() << " of server " << arg->GetName() << endl ;
-
-        if (depList.find(leaf->GetName()) && function.dependsOnValue(*leaf)) {
+        if (depList.find(leaf->GetName()) && argLeafValueServers.contains(*leaf)) {
 
           RooAbsRealLValue* leaflv = dynamic_cast<RooAbsRealLValue*>(leaf) ;
           if (leaflv && leaflv->getBinning(rangeName).isParameterized()) {
@@ -349,7 +350,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
           }
         } else if (!depList.find(leaf->GetName())) {
 
-          if (function.dependsOnValue(*leaf)) {
+          if (argLeafValueServers.contains(*leaf)) {
             oocxcoutD(&function,Integration) << function.GetName() << ": Adding parameter " << leaf->GetName() << " of server " << arg->GetName() << " as value dependent" << endl ;
             addServer(*leaf,true,false) ;
           } else {
@@ -366,15 +367,10 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     bool depOK(false) ;
     // Check for integratable AbsRealLValue
 
-    //cout << "checking server " << arg->ClassName() << "::" << arg->GetName() << endl ;
-
     if (arg->isDerived()) {
       RooAbsRealLValue    *realArgLV = dynamic_cast<RooAbsRealLValue*>(arg) ;
       RooAbsCategoryLValue *catArgLV = dynamic_cast<RooAbsCategoryLValue*>(arg) ;
-      //cout << "realArgLV = " << realArgLV << " intDepList = " << intDepList << endl ;
       if ((realArgLV && intDepList.find(realArgLV->GetName()) && (realArgLV->isJacobianOK(intDepList)!=0)) || catArgLV) {
-
-   //cout  << " arg " << arg->GetName() << " is derived LValue with valid jacobian" << endl ;
 
    // Derived LValue with valid jacobian
    depOK = true ;
@@ -386,14 +382,10 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
      if (arg==otherArg) continue ;
      if (otherArg->IsA()==RooConstVar::Class()) continue ;
      if (arg->overlaps(*otherArg,true)) {
-       //cout << "arg " << arg->GetName() << " overlaps with " << otherArg->GetName() << endl ;
-       //overlapOK=false ;
      }
    }
    // coverity[DEADCODE]
    if (!overlapOK) depOK=false ;
-
-   //cout << "overlap check returns OK=" << (depOK?"T":"F") << endl ;
 
       }
     } else {

@@ -29,7 +29,7 @@ RVariationBase::RVariationBase(const std::vector<std::string> &colNames, std::st
 
    const auto nColumns = fInputColumns.size();
    for (auto i = 0u; i < nColumns; ++i)
-      fIsDefine[i] = fColumnRegister.HasName(fInputColumns[i]);
+      fIsDefine[i] = fColumnRegister.IsDefineOrAlias(fInputColumns[i]);
 }
 
 RVariationBase::~RVariationBase() = default;

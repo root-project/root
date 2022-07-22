@@ -253,7 +253,6 @@ TEST(RCsvDS, WindowsLinebreaks)
 
 TEST(RCsvDS, Remote)
 {
-   (void)url0; // silence -Wunused-const-variable
 #ifdef R__HAS_DAVIX
    auto tdf = ROOT::RDF::MakeCsvDataFrame(url0, false);
    EXPECT_EQ(1U, *tdf.Count());

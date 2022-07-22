@@ -1,13 +1,9 @@
-
 import { settings, isBatchMode, gStyle } from '../core.mjs';
-
 import { floatToString } from '../base/BasePainter.mjs';
-
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
-
 import { ensureRCanvas } from '../gpad/RCanvasPainter.mjs';
-
 import { addDragHandler } from '../gpad/TFramePainter.mjs';
+
 
 const ECorner = { kTopLeft: 1, kTopRight: 2, kBottomLeft: 3, kBottomRight: 4 };
 

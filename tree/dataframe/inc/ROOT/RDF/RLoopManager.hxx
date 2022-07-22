@@ -1,7 +1,7 @@
 // Author: Enrico Guiraud, Danilo Piparo CERN  03/2017
 
 /*************************************************************************
- * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,11 +12,14 @@
 #define ROOT_RLOOPMANAGER
 
 #include "ROOT/InternalTreeUtils.hxx" // RNoCleanupNotifier
+#include "ROOT/RDF/RColumnReaderBase.hxx"
+#include "ROOT/RDF/RDatasetSpec.hxx"
 #include "ROOT/RDF/RNodeBase.hxx"
 #include "ROOT/RDF/RNewSampleNotifier.hxx"
 #include "ROOT/RDF/RSampleInfo.hxx"
 
 #include <functional>
+#include <limits>
 #include <map>
 #include <memory>
 #include <string>
@@ -85,9 +88,11 @@ public:
    }
 };
 
-} // ns RDF
-} // ns Internal
+} // namespace RDF
+} // namespace Internal
+} // namespace ROOT
 
+namespace ROOT {
 namespace Detail {
 namespace RDF {
 namespace RDFInternal = ROOT::Internal::RDF;
@@ -116,6 +121,9 @@ class RLoopManager : public RNodeBase {
    /// Shared pointer to the input TTree. It does not delete the pointee if the TTree/TChain was passed directly as an
    /// argument to RDataFrame's ctor (in which case we let users retain ownership).
    std::shared_ptr<TTree> fTree{nullptr};
+   Long64_t fBeginEntry{0};
+   Long64_t fEndEntry{std::numeric_limits<Long64_t>::max()};
+   std::vector<std::unique_ptr<TTree>> fFriends; ///< Friends of the fTree. Only used if we constructed fTree ourselves.
    const ColumnNames_t fDefaultColumns;
    const ULong64_t fNEmptyEntries{0};
    const unsigned int fNSlots{1};
@@ -131,8 +139,8 @@ class RLoopManager : public RNodeBase {
    std::vector<ROOT::RDF::RSampleInfo> fSampleInfos;
    unsigned int fNRuns{0}; ///< Number of event loops run
 
-   /// Registry of per-slot value pointers for booked data-source columns
-   std::map<std::string, std::vector<void *>> fDSValuePtrMap;
+   /// Readers for TTree/RDataSource columns (one per slot), shared by all nodes in the computation graph.
+   std::vector<std::unordered_map<std::string, std::shared_ptr<RColumnReaderBase>>> fDatasetColumnReaders;
 
    /// Cache of the tree/chain branch names. Never access directy, always use GetBranchNames().
    ColumnNames_t fValidBranchNames;
@@ -159,6 +167,7 @@ public:
    RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
    RLoopManager(ULong64_t nEmptyEntries);
    RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t &defaultBranches);
+   RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec);
    RLoopManager(const RLoopManager &) = delete;
    RLoopManager &operator=(const RLoopManager &) = delete;
 
@@ -192,9 +201,14 @@ public:
    void ToJitExec(const std::string &) const;
    void RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f);
    unsigned int GetNRuns() const { return fNRuns; }
-   bool HasDSValuePtrs(const std::string &col) const;
-   const std::map<std::string, std::vector<void *>> &GetDSValuePtrs() const { return fDSValuePtrMap; }
-   void AddDSValuePtrs(const std::string &col, const std::vector<void *> ptrs);
+   bool HasDataSourceColumnReaders(const std::string &col, const std::type_info &ti) const;
+   void AddDataSourceColumnReaders(const std::string &col, std::vector<std::unique_ptr<RColumnReaderBase>> &&readers,
+                                   const std::type_info &ti);
+   std::shared_ptr<RColumnReaderBase> AddTreeColumnReader(unsigned int slot, const std::string &col,
+                                                          std::unique_ptr<RColumnReaderBase> &&reader,
+                                                          const std::type_info &ti);
+   std::shared_ptr<RColumnReaderBase>
+   GetDatasetColumnReader(unsigned int slot, const std::string &col, const std::type_info &ti) const;
 
    /// End of recursive chain of calls, does nothing
    void AddFilterName(std::vector<std::string> &) {}
@@ -218,6 +232,6 @@ public:
 
 } // ns RDF
 } // ns Detail
-} // ns ROOT
+} // namespace ROOT
 
 #endif

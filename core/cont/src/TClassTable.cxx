@@ -250,9 +250,9 @@ TClassTable::~TClassTable()
    for (UInt_t i = 0; i < fgSize; i++) {
       delete fgTable[i]; // Will delete all the elements in the chain.
    }
-   delete [] fgTable; fgTable = 0;
-   delete [] fgSortedTable; fgSortedTable = 0;
-   delete fgIdMap; fgIdMap = 0;
+   delete [] fgTable; fgTable = nullptr;
+   delete [] fgSortedTable; fgSortedTable = nullptr;
+   delete fgIdMap; fgIdMap = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -260,7 +260,8 @@ TClassTable::~TClassTable()
 /// If the table does not exist but the delayed list does, then
 /// create the table and return true.
 
-inline Bool_t TClassTable::CheckClassTableInit() {
+inline Bool_t TClassTable::CheckClassTableInit()
+{
    if (!gClassTable || !fgTable) {
       if (GetDelayedAddClass().size()) {
          new TClassTable;
@@ -286,6 +287,7 @@ void TClassTable::Print(Option_t *option) const
 
    int n = 0, ninit = 0, nl = 0;
 
+   if (!option) option = "";
    int nch = strlen(option);
    TRegexp re(option, kTRUE);
 
@@ -325,7 +327,7 @@ char *TClassTable::At(UInt_t index)
       TClassRec *r = fgSortedTable[index];
       if (r) return r->fName;
    }
-   return 0;
+   return nullptr;
 }
 
 //______________________________________________________________________________
@@ -490,7 +492,7 @@ void TClassTable::Remove(const char *cname)
    UInt_t slot = ROOT::ClassTableHash(cname,fgSize);
 
    TClassRec *r;
-   TClassRec *prev = 0;
+   TClassRec *prev = nullptr;
    for (r = fgTable[slot]; r; r = r->fNext) {
       if (!strcmp(r->fName, cname)) {
          if (prev)
@@ -498,7 +500,7 @@ void TClassTable::Remove(const char *cname)
          else
             fgTable[slot] = r->fNext;
          fgIdMap->Remove(r->fInfo->name());
-         r->fNext = 0; // Do not delete the others.
+         r->fNext = nullptr; // Do not delete the others.
          delete r;
          fgTally--;
          fgSorted = kFALSE;
@@ -520,7 +522,7 @@ TClassRec *TClassTable::FindElementImpl(const char *cname, Bool_t insert)
    for (TClassRec *r = fgTable[slot]; r; r = r->fNext)
       if (strcmp(cname,r->fName)==0) return r;
 
-   if (!insert) return 0;
+   if (!insert) return nullptr;
 
    fgTable[slot] = new TClassRec(fgTable[slot]);
 
@@ -580,7 +582,7 @@ DictFuncPtr_t TClassTable::GetDict(const char *cname)
 
    TClassRec *r = FindElement(cname);
    if (r) return r->fDict;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -598,7 +600,7 @@ DictFuncPtr_t TClassTable::GetDict(const std::type_info& info)
 
    TClassRec *r = fgIdMap->Find(info.name());
    if (r) return r->fDict;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -616,7 +618,7 @@ DictFuncPtr_t TClassTable::GetDictNorm(const char *cname)
 
    TClassRec *r = FindElementImpl(cname,kFALSE);
    if (r) return r->fDict;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -638,7 +640,7 @@ TProtoClass *TClassTable::GetProto(const char *cname)
 
    TClassRec *r = FindElement(cname);
    if (r) return r->fProto;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -659,7 +661,7 @@ TProtoClass *TClassTable::GetProtoNorm(const char *cname)
 
    TClassRec *r = FindElementImpl(cname,kFALSE);
    if (r) return r->fProto;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -683,8 +685,9 @@ char *TClassTable::Next()
    if (fgCursor < fgTally) {
       TClassRec *r = fgSortedTable[fgCursor++];
       return r->fName;
-   } else
-      return 0;
+   }
+
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -748,9 +751,9 @@ void TClassTable::Terminate()
       for (UInt_t i = 0; i < fgSize; i++)
          delete fgTable[i]; // Will delete all the elements in the chain.
 
-      delete [] fgTable; fgTable = 0;
-      delete [] fgSortedTable; fgSortedTable = 0;
-      delete fgIdMap; fgIdMap = 0;
+      delete [] fgTable; fgTable = nullptr;
+      delete [] fgSortedTable; fgSortedTable = nullptr;
+      delete fgIdMap; fgIdMap = nullptr;
       fgSize = 0;
       SafeDelete(gClassTable);
    }
@@ -880,7 +883,7 @@ TNamed *ROOT::RegisterClassTemplate(const char *name, const char *file,
       obj->SetUniqueID(line);
       table.Add(obj);
       return obj;
-   } else {
-      return (TNamed*)table.FindObject(classname);
    }
+
+   return (TNamed*)table.FindObject(classname);
 }

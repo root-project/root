@@ -1,6 +1,6 @@
 import { select as d3_select } from '../d3.mjs';
-
 import { getColor } from './colors.mjs';
+
 
 const root_markers = [
       0, 1, 2, 3, 4,           //  0..4

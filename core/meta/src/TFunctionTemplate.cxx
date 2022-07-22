@@ -57,6 +57,8 @@ TFunctionTemplate& TFunctionTemplate::operator=(const TFunctionTemplate &rhs)
          gCling->FuncTempInfo_Title(fInfo,fTitle);
       } else
          fInfo = nullptr;
+
+      fClass = rhs.fClass;
    }
    return *this;
 }

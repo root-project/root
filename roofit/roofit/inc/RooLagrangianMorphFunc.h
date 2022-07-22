@@ -96,7 +96,7 @@ public:
       RooArgList prodCouplings;
       RooArgList folders;
       std::vector<RooArgList *> vertices;
-      std::vector<RooArgList *> nonInterfering;
+      std::vector<std::vector<const char *>> nonInterfering;
       bool allowNegativeYields = true;
    };
 
@@ -108,10 +108,8 @@ public:
 
    ~RooLagrangianMorphFunc() override;
 
-   std::list<double> *
-   binBoundaries(RooAbsRealLValue & /*obs*/, double /*xlo*/, double /*xhi*/) const override;
-   std::list<double> *
-   plotSamplingHint(RooAbsRealLValue & /*obs*/, double /*xlo*/, double /*xhi*/) const override;
+   std::list<double> *binBoundaries(RooAbsRealLValue & /*obs*/, double /*xlo*/, double /*xhi*/) const override;
+   std::list<double> *plotSamplingHint(RooAbsRealLValue & /*obs*/, double /*xlo*/, double /*xhi*/) const override;
    bool isBinnedDistribution(const RooArgSet &obs) const override;
    double evaluate() const override;
    TObject *clone(const char *newname) const override;
@@ -120,9 +118,8 @@ public:
    bool checkObservables(const RooArgSet *nset) const override;
    bool forceAnalyticalInt(const RooAbsArg &arg) const override;
    Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &numVars, const RooArgSet *normSet,
-                                         const char *rangeName = 0) const override;
-   double
-   analyticalIntegralWN(Int_t code, const RooArgSet *normSet, const char *rangeName = 0) const override;
+                                 const char *rangeName = 0) const override;
+   double analyticalIntegralWN(Int_t code, const RooArgSet *normSet, const char *rangeName = 0) const override;
    void printMetaArgs(std::ostream &os) const override;
    RooAbsArg::CacheMode canNodeBeCached() const override;
    void setCacheAndTrackHints(RooArgSet &) override;
@@ -178,11 +175,13 @@ public:
    TH1 *createTH1(const std::string &name);
    TH1 *createTH1(const std::string &name, bool correlateErrors);
 
-protected:
+private:
    class CacheElem;
    void init();
    void setup(bool ownParams = true);
    bool _ownParameters = false;
+   void disableInterference(const std::vector<const char *> &nonInterfering);
+   void disableInterferences(const std::vector<std::vector<const char *>> &nonInterfering);
 
    mutable RooObjCacheManager _cacheMgr; //! The cache manager
 
@@ -206,7 +205,6 @@ public:
    int countSamples(std::vector<RooArgList *> &vertices);
    int countSamples(int nprod, int ndec, int nboth);
 
-   TPair *makeCrosssectionContainer(double xs, double unc);
    std::map<std::string, std::string>
    createWeightStrings(const ParamMap &inputs, const std::vector<std::vector<std::string>> &vertices);
    std::map<std::string, std::string>
@@ -252,7 +250,7 @@ public:
 
    static std::unique_ptr<RooRatio> makeRatio(const char *name, const char *title, RooArgList &nr, RooArgList &dr);
 
-protected:
+private:
    double _scale = 1;
    std::map<std::string, int> _sampleMap;
    RooListProxy _physics;
@@ -264,8 +262,6 @@ protected:
    std::vector<std::vector<RooListProxy *>> _diagrams;
    mutable const RooArgSet *_curNormSet = nullptr; //!
 
-   // TODO: the _nonInterfering is not filled anywhere and also not considered
-   // correctly in the copy constructor. Can it be removed?
    std::vector<RooListProxy *> _nonInterfering;
 
    ClassDefOverride(RooLagrangianMorphFunc, 1)

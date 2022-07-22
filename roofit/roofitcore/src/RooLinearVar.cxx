@@ -149,9 +149,7 @@ bool RooLinearVar::isJacobianOK(const RooArgSet& depList) const
   }
 
   // Check if jacobian has no real-valued dependents
-  RooAbsArg* arg ;
-  TIter dIter = depList.createIterator() ;
-  while ((arg=(RooAbsArg*)dIter.Next())) {
+  for(RooAbsArg* arg : depList) {
     if (arg->IsA()->InheritsFrom(RooAbsReal::Class())) {
       if (_slope.arg().dependsOnValue(*arg)) {
 //    cout << "RooLinearVar::isJacobianOK(" << GetName() << ") return false because slope depends on value of " << arg->GetName() << endl ;
@@ -250,9 +248,7 @@ std::list<std::string> RooLinearVar::getBinningNames() const
 {
   std::list<std::string> binningNames(1, "");
 
-  RooFIter iter = _altBinning.fwdIterator();
-  const RooAbsArg* binning = 0;
-  while((binning = iter.next())) {
+  for (TObject const* binning : _altBinning) {
     const char* name = binning->GetName();
     binningNames.push_back(name);
   }

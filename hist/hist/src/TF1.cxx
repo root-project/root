@@ -523,16 +523,16 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
    TNamed(name, formula), TAttLine(), TAttFill(), TAttMarker(), fType(EFType::kFormula)
 {
    if (xmin < xmax) {
-      fXmin      = xmin;
-      fXmax      = xmax;
+      fXmin = xmin;
+      fXmax = xmax;
    } else {
-      fXmin = xmax; //when called from TF2,TF3
+      fXmin = xmax; // when called from TF2,TF3
       fXmax = xmin;
    }
    // Create rep formula (no need to add to gROOT list since we will add the TF1 object)
-   const auto formulaLength = strlen(formula);
+   const auto formulaLength = formula ? strlen(formula) : 0;
    // First check if we are making a convolution
-   if (strncmp(formula, "CONV(", 5) == 0 && formula[formulaLength - 1] == ')') {
+   if (formulaLength > 5 && strncmp(formula, "CONV(", 5) == 0 && formula[formulaLength - 1] == ')') {
       // Look for single ',' delimiter
       int delimPosition = -1;
       int parenCount = 0;
@@ -559,15 +559,15 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       formula2.ReplaceAll(' ', "");
 
       TF1 *function1 = (TF1 *)(gROOT->GetListOfFunctions()->FindObject(formula1));
-      if (function1 == nullptr)
-         function1 = new TF1((const char *)formula1, (const char *)formula1, xmin, xmax);
+      if (!function1)
+         function1 = new TF1(formula1.Data(), formula1.Data(), xmin, xmax);
       TF1 *function2 = (TF1 *)(gROOT->GetListOfFunctions()->FindObject(formula2));
-      if (function2 == nullptr)
-         function2 = new TF1((const char *)formula2, (const char *)formula2, xmin, xmax);
+      if (!function2)
+         function2 = new TF1(formula2.Data(), formula2.Data(), xmin, xmax);
 
       // std::cout << "functions have been defined" << std::endl;
 
-      TF1Convolution *conv = new TF1Convolution(function1, function2,xmin,xmax);
+      TF1Convolution *conv = new TF1Convolution(function1, function2, xmin, xmax);
 
       // (note: currently ignoring `useFFT` option)
       fNpar = conv->GetNpar();
@@ -576,7 +576,7 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       fType = EFType::kCompositionFcn;
       fComposition = std::unique_ptr<TF1AbsComposition>(conv);
 
-      fParams = std::unique_ptr<TF1Parameters>(new TF1Parameters(fNpar)); // default to zeros (TF1Convolution has no GetParameters())
+      fParams = std::make_unique<TF1Parameters>(fNpar); // default to zeros (TF1Convolution has no GetParameters())
       // set parameter names
       for (int i = 0; i < fNpar; i++)
          this->SetParName(i, conv->GetParName(i));
@@ -605,7 +605,7 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       }
 
       // Then check if we need NSUM syntax:
-   } else if (strncmp(formula, "NSUM(", 5) == 0 && formula[formulaLength - 1] == ')') {
+   } else if (formulaLength > 5 && strncmp(formula, "NSUM(", 5) == 0 && formula[formulaLength - 1] == ')') {
       // using comma as delimiter
       char delimiter = ',';
       // first, remove "NSUM(" and ")" and spaces
@@ -618,11 +618,11 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       // Go char-by-char to split terms and define the relevant functions
       int parenCount = 0;
       int termStart = 0;
-      TObjArray *newFuncs = new TObjArray();
-      newFuncs->SetOwner(kTRUE);
-      TObjArray *coeffNames = new TObjArray();
-      coeffNames->SetOwner(kTRUE);
-      TString fullFormula("");
+      TObjArray newFuncs;
+      newFuncs.SetOwner(kTRUE);
+      TObjArray coeffNames;
+      coeffNames.SetOwner(kTRUE);
+      TString fullFormula;
       for (int i = 0; i < formDense.Length(); ++i) {
          if (formDense[i] == '(')
             parenCount++;
@@ -630,11 +630,11 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
             parenCount--;
          else if (formDense[i] == delimiter && parenCount == 0) {
             // term goes from termStart to i
-            DefineNSUMTerm(newFuncs, coeffNames, fullFormula, formDense, termStart, i, xmin, xmax);
+            DefineNSUMTerm(&newFuncs, &coeffNames, fullFormula, formDense, termStart, i, xmin, xmax);
             termStart = i + 1;
          }
       }
-      DefineNSUMTerm(newFuncs, coeffNames, fullFormula, formDense, termStart, formDense.Length(), xmin, xmax);
+      DefineNSUMTerm(&newFuncs, &coeffNames, fullFormula, formDense, termStart, formDense.Length(), xmin, xmax);
 
       TF1NormSum *normSum = new TF1NormSum(fullFormula, xmin, xmax);
 
@@ -646,21 +646,20 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       fType = EFType::kCompositionFcn;
       fComposition = std::unique_ptr<TF1AbsComposition>(normSum);
 
-      fParams = std::unique_ptr<TF1Parameters>(new TF1Parameters(fNpar));
+      fParams = std::make_unique<TF1Parameters>(fNpar);
       fParams->SetParameters(&(normSum->GetParameters())[0]); // inherit default parameters from normSum
 
       // Parameter names
       for (int i = 0; i < fNpar; i++) {
-         if (coeffNames->At(i) != nullptr) {
-            TString coeffName = ((TObjString *)coeffNames->At(i))->GetString();
-            this->SetParName(i, (const char *)coeffName);
+         if (coeffNames.At(i)) {
+            this->SetParName(i, coeffNames.At(i)->GetName());
          } else {
             this->SetParName(i, normSum->GetParName(i));
          }
       }
 
    } else { // regular TFormula
-      fFormula = std::unique_ptr<TFormula>(new TFormula(name, formula, false, vectorize));
+      fFormula = std::make_unique<TFormula>(name, formula, false, vectorize);
       fNpar = fFormula->GetNpar();
       // TFormula can have dimension zero, but since this is a TF1 minimal dim is 1
       fNdim = fFormula->GetNdim() == 0 ? 1 : fFormula->GetNdim();
@@ -679,7 +678,9 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
 
    DoInitialize(addToGlobList);
 }
-TF1::EAddToList GetGlobalListOption(Option_t * opt)  {
+
+TF1::EAddToList GetGlobalListOption(Option_t * opt)
+{
    if (opt == nullptr) return TF1::EAddToList::kDefault;
    TString option(opt);
    option.ToUpper();
@@ -687,13 +688,16 @@ TF1::EAddToList GetGlobalListOption(Option_t * opt)  {
    if (option.Contains("GL")) return TF1::EAddToList::kAdd;
    return TF1::EAddToList::kDefault;
 }
-bool GetVectorizedOption(Option_t * opt)  {
-   if (opt == nullptr) return false;
+
+bool GetVectorizedOption(Option_t * opt)
+{
+   if (!opt) return false;
    TString option(opt);
    option.ToUpper();
    if (option.Contains("VEC")) return true;
    return false;
 }
+
 TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, Option_t * opt) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Same constructor as above (for TFormula based function) but passing an option strings
@@ -705,6 +709,7 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, Op
 ///////////////////////////////////////////////////////////////////////////////////
    TF1(name, formula, xmin, xmax, GetGlobalListOption(opt), GetVectorizedOption(opt) )
 {}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// F1 constructor using name of an interpreted function.
 ///

@@ -26,6 +26,7 @@ class RooArgList;
 class RooBernstein : public RooAbsPdf {
 public:
 
+  RooBernstein() {}
   RooBernstein(const char *name, const char *title,
                RooAbsRealLValue& _x, const RooArgList& _coefList) ;
 

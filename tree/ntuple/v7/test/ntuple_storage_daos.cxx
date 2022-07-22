@@ -1,15 +1,16 @@
 #include "ntuple_test.hxx"
 #include <ROOT/RPageStorageDaos.hxx>
 #include "ROOT/TestSupport.hxx"
+#include <iostream>
 
 TEST(RPageStorageDaos, Basics)
 {
    ROOT::TestSupport::CheckDiagsRAII diags;
-   diags.requiredDiag(kWarning, "in int daos_init()", "This RNTuple build uses libdaos_mock. Use only for testing!");
+   diags.optionalDiag(kWarning, "in int daos_init()", "This RNTuple build uses libdaos_mock. Use only for testing!");
    diags.requiredDiag(kWarning, "ROOT::Experimental::Detail::RPageSinkDaos::RPageSinkDaos", "The DAOS backend is experimental and still under development.", false);
    diags.requiredDiag(kWarning, "[ROOT.NTuple]", "Pre-release format version: RC 1", false);
 
-   std::string daosUri("daos://" R__DAOS_TEST_POOL ":1/a947484e-e3bc-48cb-8f71-3292c19b59a4");
+   std::string daosUri("daos://" R__DAOS_TEST_POOL "/container-test-1");
 
    auto model = RNTupleModel::Create();
    auto wrPt = model->MakeField<float>("pt", 42.0);
@@ -39,7 +40,7 @@ TEST(RPageStorageDaos, Basics)
 
 TEST(RPageStorageDaos, Extended)
 {
-   std::string daosUri("daos://" R__DAOS_TEST_POOL ":1/a947484e-e3bc-48cb-8f71-3292c19b59a4");
+   std::string daosUri("daos://" R__DAOS_TEST_POOL "/container-test-2");
 
    auto model = RNTupleModel::Create();
    auto wrVector = model->MakeField<std::vector<double>>("vector");
@@ -64,7 +65,9 @@ TEST(RPageStorageDaos, Extended)
       }
    }
 
-   auto ntuple = RNTupleReader::Open("f", daosUri);
+   RNTupleReadOptions options;
+   options.SetClusterBunchSize(5);
+   auto ntuple = RNTupleReader::Open("f", daosUri, options);
    auto rdVector = ntuple->GetModel()->GetDefaultEntry()->Get<std::vector<double>>("vector");
 
    double chksumRead = 0.0;
@@ -78,7 +81,7 @@ TEST(RPageStorageDaos, Extended)
 
 TEST(RPageStorageDaos, Options)
 {
-   std::string daosUri("daos://" R__DAOS_TEST_POOL ":1/a947484e-e3bc-48cb-8f71-3292c19b59a4");
+   std::string daosUri("daos://" R__DAOS_TEST_POOL "/container-test-3");
 
    {
       auto model = RNTupleModel::Create();
@@ -104,8 +107,11 @@ TEST(RPageStorageDaos, Options)
       ntuple->CommitCluster();
    }
 
-   ROOT::Experimental::Detail::RPageSourceDaos source("ntuple", daosUri, RNTupleReadOptions());
+   auto readOptions = RNTupleReadOptions();
+   readOptions.SetClusterBunchSize(3);
+   ROOT::Experimental::Detail::RPageSourceDaos source("ntuple", daosUri, readOptions);
    source.Attach();
    EXPECT_STREQ("RP_XSF", source.GetObjectClass().c_str());
+   EXPECT_EQ(3U, source.GetReadOptions().GetClusterBunchSize());
    EXPECT_EQ(1U, source.GetNEntries());
 }

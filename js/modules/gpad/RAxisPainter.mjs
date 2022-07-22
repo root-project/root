@@ -1,17 +1,13 @@
 import { settings, isBatchMode } from '../core.mjs';
-
 import { select as d3_select, pointer as d3_pointer,
          drag as d3_drag, timeFormat as d3_timeFormat,
          scaleTime as d3_scaleTime, scaleSymlog as d3_scaleSymlog,
          scaleLog as d3_scaleLog, scaleLinear as d3_scaleLinear } from '../d3.mjs';
-
 import { AxisPainterMethods, chooseTimeFormat } from './TAxisPainter.mjs';
-
 import { createMenu } from '../gui/menu.mjs';
-
 import { addDragHandler } from './TFramePainter.mjs';
-
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
+
 
 /**
  * @summary Axis painter for v7
@@ -406,7 +402,7 @@ class RAxisPainter extends RObjectPainter {
             label_g.property('fix_offset', offset);
             let side = label_g.property('side') || 1;
             this.labelsOffset = offset / (this.vertical ? -side : side);
-            this.changeAxisAttr(1, "labels_offset", this.labelsOffset/this.scaling_size);
+            this.changeAxisAttr(1, "labels_offset", this.labelsOffset / this.scalingSize);
          }
       }
 
@@ -510,7 +506,7 @@ class RAxisPainter extends RObjectPainter {
                   this.titlePos = "right";
                }
 
-               this.changeAxisAttr(0, "title_position", this.titlePos, "title_offset", this.titleOffset/this.scaling_size);
+               this.changeAxisAttr(0, "title_position", this.titlePos, "title_offset", this.titleOffset / this.scalingSize);
 
                drag_rect.remove();
                drag_rect = null;
@@ -551,13 +547,9 @@ class RAxisPainter extends RObjectPainter {
              sz7 = Math.round(sz*0.7);
          sz = Math.round(sz);
          if (this.vertical)
-            ending = "l" + sz7 + "," + sz +
-                     "M0," + this.gr_range +
-                     "l" + (-sz7) + "," + sz;
+            ending = `l${sz7},${sz}M0,${this.gr_range}l${-sz7},${sz}`;
          else
-            ending = "l" + sz + "," + sz7 +
-                     "M" + this.gr_range + ",0" +
-                     "l" + sz + "," + (-sz7);
+            ending = `l${sz},${sz7}M${this.gr_range},0l${sz},${-sz7}`;
       }
 
       axis_g.append("svg:path")
@@ -574,7 +566,7 @@ class RAxisPainter extends RObjectPainter {
 
       this.handle.reset();
 
-      let res = "", ticks_plusminus = 0, lastpos = 0, lasth = 0;
+      let res = "", ticks_plusminus = 0;
       if (this.ticksSide == "both") {
          side = 1;
          ticks_plusminus = 1;
@@ -598,19 +590,15 @@ class RAxisPainter extends RObjectPainter {
             if (main_draw) this.ticks.push(grpos); // keep graphical positions of major ticks
          }
 
-         if (ticks_plusminus > 0) h2 = -h1; else
-         if (side < 0) { h2 = -h1; h1 = 0; } else { h2 = 0; }
-
-         if (res.length == 0) {
-            res = this.vertical ? "M"+h1+","+grpos : "M"+grpos+","+(-h1);
+         if (ticks_plusminus > 0) {
+            h2 = -h1;
+         } else if (side < 0) {
+            h2 = -h1; h1 = 0;
          } else {
-            res += this.vertical ? "m"+(h1-lasth)+","+(grpos-lastpos) : "m"+(grpos-lastpos)+","+(lasth-h1);
+            h2 = 0;
          }
 
-         res += this.vertical ? "h"+ (h2-h1) : "v"+ (h1-h2);
-
-         lastpos = grpos;
-         lasth = h2;
+         res += this.vertical ? `M${h1},${grpos}H${h2}` : `M${grpos},${-h1}V${-h2}`;
       }
 
       if (res)
@@ -628,7 +616,7 @@ class RAxisPainter extends RObjectPainter {
      * @returns {Promise} wwith gaps in both direction */
    drawLabels(axis_g, side, gaps) {
       let center_lbls = this.isCenteredLabels(),
-          rotate_lbls = false,
+          rotate_lbls = this.labelsFont.angle != 0,
           textscale = 1, maxtextlen = 0, lbls_tilt = false,
           label_g = axis_g.append("svg:g").attr("class","axis_labels").property('side', side),
           lbl_pos = this.handle.lbl_pos || this.handle.major,
@@ -657,13 +645,9 @@ class RAxisPainter extends RObjectPainter {
             painter.scaleTextDrawing(1/scale, label_g);
       }
 
-      this.labelsFont = this.v7EvalFont("labels", { size: 0.03 });
-      this.labelsFont.roundAngle(180);
-      if (this.labelsFont.angle) { this.labelsFont.angle = 270; rotate_lbls = true; }
-
       let lastpos = 0,
-          fix_offset = Math.round((this.vertical ? -side : side)*this.labelsOffset),
-          fix_coord = Math.round((this.vertical ? -side : side)*gaps[side]);
+          fix_offset = Math.round((this.vertical ? -side : side) * this.labelsOffset),
+          fix_coord = Math.round((this.vertical ? -side : side) * gaps[side]);
 
       if (fix_offset)
          label_g.attr('transform', this.vertical ? `translate(${fix_offset})` : `translate(0,${fix_offset})`);
@@ -672,17 +656,16 @@ class RAxisPainter extends RObjectPainter {
 
       this.startTextDrawing(this.labelsFont, 'font', label_g);
 
-      for (let nmajor=0;nmajor<lbl_pos.length;++nmajor) {
+      for (let nmajor = 0; nmajor < lbl_pos.length; ++nmajor) {
 
          let lbl = this.format(lbl_pos[nmajor], true);
          if (lbl === null) continue;
 
-         let pos = Math.round(this.func(lbl_pos[nmajor]));
+         let pos = Math.round(this.func(lbl_pos[nmajor])),
+             arg = { text: lbl, latex: 1, draw_g: label_g };
 
-         let arg = { text: lbl, latex: 1, draw_g: label_g };
-
-         arg.gap_before = (nmajor>0) ? Math.abs(Math.round(pos - this.func(lbl_pos[nmajor-1]))) : 0,
-         arg.gap_after = (nmajor<lbl_pos.length-1) ? Math.abs(Math.round(this.func(lbl_pos[nmajor+1])-pos)) : 0;
+         arg.gap_before = (nmajor > 0) ? Math.abs(Math.round(pos - this.func(lbl_pos[nmajor-1]))) : 0,
+         arg.gap_after = (nmajor < lbl_pos.length-1) ? Math.abs(Math.round(this.func(lbl_pos[nmajor+1])-pos)) : 0;
 
          if (center_lbls) {
             let gap = arg.gap_after || arg.gap_before;
@@ -721,7 +704,7 @@ class RAxisPainter extends RObjectPainter {
       if (this.order)
          this.drawText({ x: this.vertical ? side*5 : this.getGrRange(5),
                          y: this.has_obstacle ? fix_coord : (this.vertical ? this.getGrRange(3) : -3*side),
-                         align: this.vertical ? ((side<0) ? 30 : 10) : ((this.has_obstacle ^ (side < 0)) ? 13 : 10),
+                         align: this.vertical ? ((side < 0) ? 30 : 10) : ((this.has_obstacle ^ (side < 0)) ? 13 : 10),
                          latex: 1,
                          text: '#times' + this.formatExp(10, this.order),
                          draw_g: label_g
@@ -750,12 +733,11 @@ class RAxisPainter extends RObjectPainter {
    /** @summary Add zomming rect to axis drawing */
    addZoomingRect(axis_g, side, lgaps) {
       if (settings.Zooming && !this.disable_zooming && !isBatchMode()) {
-         let sz = Math.max(lgaps[side], 10);
-
-         let d = this.vertical ? "v" + this.gr_range + "h"+(-side*sz) + "v" + (-this.gr_range)
-                               : "h" + this.gr_range + "v"+(side*sz) + "h" + (-this.gr_range);
+         let sz = Math.max(lgaps[side], 10),
+             d = this.vertical ? `v${this.gr_range}h${-side*sz}v${-this.gr_range}`
+                               : `h${this.gr_range}v${side*sz}h${-this.gr_range}`;
          axis_g.append("svg:path")
-               .attr("d","M0,0" + d + "z")
+               .attr("d",`M0,0${d}z`)
                .attr("class", "axis_zoom")
                .style("opacity", "0")
                .style("cursor", "crosshair");
@@ -773,38 +755,29 @@ class RAxisPainter extends RObjectPainter {
          return Promise.resolve(this);
 
       let title_g = axis_g.append("svg:g").attr("class", "axis_title"),
-          title_position = this.v7EvalAttr("title_position", "right"),
-          center = (title_position == "center"),
-          opposite = (title_position == "left"),
           title_shift_x = 0, title_shift_y = 0, title_basepos = 0;
-
-      this.titleFont = this.v7EvalFont("title", { size: 0.03 }, this.getPadPainter().getPadHeight());
-      this.titleFont.roundAngle(180, this.vertical ? 270 : 0);
-
-      this.titleOffset = this.v7EvalLength("title_offset", this.scaling_size, 0);
-      this.titlePos = title_position;
 
       let rotated = this.isTitleRotated();
 
       this.startTextDrawing(this.titleFont, 'font', title_g);
 
-      this.title_align = center ? "middle" : (opposite ^ (this.isReverseAxis() || rotated) ? "begin" : "end");
+      this.title_align = this.titleCenter ? "middle" : (this.titleOpposite ^ (this.isReverseAxis() || rotated) ? "begin" : "end");
 
       if (this.vertical) {
          title_basepos = Math.round(-side*(lgaps[side]));
          title_shift_x = title_basepos + Math.round(-side*this.titleOffset);
-         title_shift_y = Math.round(center ? this.gr_range/2 : (opposite ? 0 : this.gr_range));
+         title_shift_y = Math.round(this.titleCenter ? this.gr_range/2 : (this.titleOpposite ? 0 : this.gr_range));
          this.drawText({ align: [this.title_align, ((side < 0) ^ rotated ? 'top' : 'bottom')],
                          text: this.fTitle, draw_g: title_g });
       } else {
-         title_shift_x = Math.round(center ? this.gr_range/2 : (opposite ? 0 : this.gr_range));
+         title_shift_x = Math.round(this.titleCenter ? this.gr_range/2 : (this.titleOpposite ? 0 : this.gr_range));
          title_basepos = Math.round(side*lgaps[side]);
          title_shift_y = title_basepos + Math.round(side*this.titleOffset);
          this.drawText({ align: [this.title_align, ((side > 0) ^ rotated ? 'top' : 'bottom')],
                          text: this.fTitle, draw_g: title_g });
       }
 
-      title_g.attr('transform', 'translate(' + title_shift_x + ',' + title_shift_y +  ')')
+      title_g.attr('transform', `translate(${title_shift_x},${title_shift_y})`)
              .property('basepos', title_basepos)
              .property('shift_x', title_shift_x)
              .property('shift_y', title_shift_y);
@@ -816,42 +789,71 @@ class RAxisPainter extends RObjectPainter {
 
    /** @summary Extract major draw attributes, which are also used in interactive operations
      * @private  */
-   extractDrawAttributes() {
-       this.createv7AttLine("line_");
+   extractDrawAttributes(scalingSize) {
+      let pp = this.getPadPainter(),
+          rect = pp?.getPadRect() || { width: 10, height: 10 };
+
+      this.scalingSize = scalingSize || (this.vertical ? rect.width : rect.height);
+
+      this.createv7AttLine("line_");
+
+      this.optionUnlab = this.v7EvalAttr("labels_hide", false);
 
       this.endingStyle = this.v7EvalAttr("ending_style", "");
-      this.endingSize = Math.round(this.v7EvalLength("ending_size", this.scaling_size, this.endingStyle ? 0.02 : 0));
-      this.startingSize = Math.round(this.v7EvalLength("starting_size", this.scaling_size, 0));
-      this.ticksSize = this.v7EvalLength("ticks_size", this.scaling_size, 0.02);
+      this.endingSize = Math.round(this.v7EvalLength("ending_size", this.scalingSize, this.endingStyle ? 0.02 : 0));
+      this.startingSize = Math.round(this.v7EvalLength("starting_size", this.scalingSize, 0));
+      this.ticksSize = this.v7EvalLength("ticks_size", this.scalingSize, 0.02);
       this.ticksSide = this.v7EvalAttr("ticks_side", "normal");
       this.ticksColor = this.v7EvalColor("ticks_color", "");
       this.ticksWidth = this.v7EvalAttr("ticks_width", 1);
-      this.labelsOffset = this.v7EvalLength("labels_offset", this.scaling_size, 0);
-      this.optionUnlab = this.v7EvalAttr("labels_hide", false);
+      if (scalingSize && (this.ticksSize < 0))
+         this.ticksSize = -this.ticksSize;
 
       this.fTitle = this.v7EvalAttr("title_value", "");
 
-      if (this.max_tick_size && (this.ticksSize > this.max_tick_size)) this.ticksSize = this.max_tick_size;
+      if (this.fTitle) {
+         this.titleFont = this.v7EvalFont("title", { size: 0.03 }, scalingSize || pp?.getPadHeight() || 10);
+         this.titleFont.roundAngle(180, this.vertical ? 270 : 0);
+
+         this.titleOffset = this.v7EvalLength("title_offset", this.scalingSize, 0);
+         this.titlePos = this.v7EvalAttr("title_position", "right");
+         this.titleCenter = (this.titlePos == "center");
+         this.titleOpposite = (this.titlePos == "left");
+      } else {
+         delete this.titleFont;
+         delete this.titleOffset;
+         delete this.titlePos;
+      }
+
+      // TODO: remove old scaling factors for labels and ticks
+      this.labelsFont = this.v7EvalFont("labels", { size: scalingSize ? 0.05 : 0.03 });
+      this.labelsFont.roundAngle(180);
+      if (this.labelsFont.angle) this.labelsFont.angle = 270;
+      this.labelsOffset = this.v7EvalLength("labels_offset", this.scalingSize, 0);
+
+      if (scalingSize) this.ticksSize = this.labelsFont.size*0.5; // old lego scaling factor
+
+      if (this.maxTickSize && (this.ticksSize > this.maxTickSize))
+         this.ticksSize = this.maxTickSize;
    }
 
    /** @summary Performs axis drawing
      * @returns {Promise} which resolved when drawing is completed */
    drawAxis(layer, transform, side) {
-      let axis_g = layer, rect = this.getPadPainter().getPadRect();
+      let axis_g = layer;
 
       if (side === undefined) side = 1;
 
       if (!this.standalone) {
          axis_g = layer.select("." + this.name + "_container");
          if (axis_g.empty())
-            axis_g = layer.append("svg:g").attr("class",this.name + "_container");
+            axis_g = layer.append("svg:g").attr("class", this.name + "_container");
          else
             axis_g.selectAll("*").remove();
       }
 
       axis_g.attr("transform", transform || null);
 
-      this.scaling_size = this.vertical ? rect.width : rect.height;
       this.extractDrawAttributes();
       this.axis_g = axis_g;
       this.side = side;
@@ -1069,13 +1071,13 @@ class RAxisPainter extends RObjectPainter {
 
       menu.add("sub:Ticks");
       menu.addRColorMenu("color", this.ticksColor, col => this.changeAxisAttr(1, "ticks_color", col));
-      menu.addSizeMenu("size", 0, 0.05, 0.01, this.ticksSize/this.scaling_size, sz => this.changeAxisAttr(1, "ticks_size", sz));
+      menu.addSizeMenu("size", 0, 0.05, 0.01, this.ticksSize/this.scalingSize, sz => this.changeAxisAttr(1, "ticks_size", sz));
       menu.addSelectMenu("side", ["normal", "invert", "both"], this.ticksSide, side => this.changeAxisAttr(1, "ticks_side", side));
       menu.add("endsub:");
 
       if (!this.optionUnlab && this.labelsFont) {
          menu.add("sub:Labels");
-         menu.addSizeMenu("offset", -0.05, 0.05, 0.01, this.labelsOffset/this.scaling_size,
+         menu.addSizeMenu("offset", -0.05, 0.05, 0.01, this.labelsOffset/this.scalingSize,
                          offset => this.changeAxisAttr(1, "labels_offset", offset));
          menu.addRAttrTextItems(this.labelsFont, { noangle: 1, noalign: 1 },
                change => this.changeAxisAttr(1, "labels_" + change.name, change.value));
@@ -1086,7 +1088,7 @@ class RAxisPainter extends RObjectPainter {
       menu.add("sub:Title", () => menu.input("Enter axis title", this.fTitle).then(t => this.changeAxisAttr(1, "title_value", t)));
 
       if (this.fTitle) {
-         menu.addSizeMenu("offset", -0.05, 0.05, 0.01, this.titleOffset/this.scaling_size,
+         menu.addSizeMenu("offset", -0.05, 0.05, 0.01, this.titleOffset/this.scalingSize,
                            offset => this.changeAxisAttr(1, "title_offset", offset));
 
          menu.addSelectMenu("position", ["left", "center", "right"], this.titlePos,

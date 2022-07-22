@@ -166,13 +166,14 @@ TProtoClass::~TProtoClass()
 /// if (fPRealData) fPRealData->Delete(opt);
 /// delete fPRealData; fPRealData = 0;
 
-void TProtoClass::Delete(Option_t* opt /*= ""*/) {
+void TProtoClass::Delete(Option_t* opt /*= ""*/)
+{
    if (fBase) fBase->Delete(opt);
    delete fBase; fBase = nullptr;
 
-   for (auto dm: fData) {
+   for (auto dm: fData)
       delete dm;
-   }
+   fData.clear();
 
    if (fEnums) fEnums->Delete(opt);
    delete fEnums; fEnums = nullptr;

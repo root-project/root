@@ -56,7 +56,7 @@ public:
   void AddOverallSys( std::string Name, double Low, double High );
   void AddOverallSys( const OverallSys& Sys );
 
-  void AddNormFactor( std::string Name, double Val, double Low, double High, bool Const=false );
+  void AddNormFactor( std::string const& Name, double Val, double Low, double High );
   void AddNormFactor( const NormFactor& Factor );
 
   void AddHistoSys(    std::string Name, std::string HistoNameLow,  std::string HistoFileLow,  std::string HistoPathLow,

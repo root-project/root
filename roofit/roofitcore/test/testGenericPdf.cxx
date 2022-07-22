@@ -1,11 +1,13 @@
 // Tests for the GenericPdf
-// Author: Stephan Hageboeck, CERN  05/2019
+// Authors: Stephan Hageboeck, CERN  05/2019
+//          Jonas Rembser, CERN 06/2022
 
-#include "RooRealVar.h"
-#include "RooGenericPdf.h"
-#include "RooWorkspace.h"
+#include <RooExponential.h>
+#include <RooRealVar.h>
+#include <RooGenericPdf.h>
+#include <RooWorkspace.h>
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #define MAKE_JOHNSON_AND_VARS RooRealVar mass("mass", "mass", 0., -200., 200.);\
 RooRealVar mu("mu", "Location parameter of normal distribution", 100., -200., 200.);\
@@ -52,4 +54,25 @@ TEST(GenericPdf, CrashWhenRenamingArguments) {
   auto impPdf = ws.pdf("genPdf");
   // Would crash:
   EXPECT_NEAR(impPdf->getVal(), 0.15, 1.E-6);
+}
+
+// ROOT-5101: Identity PDF affects normalization
+TEST(GenericPdf, IdentidyPdfNormalization) {
+  RooRealVar x{"x", "x", 0.0, 100.0};
+  RooRealVar s{"s", "s", -0.5, -10.0,  0.0};
+
+  RooExponential exp{"exp", "exp", x, s};
+
+  // This RooGenericPdf should behave exactly the same as the exponential, only
+  // that the integration will be done numerically.
+  RooGenericPdf pdf{"pdf", "pdf", "@0", {exp}};
+
+  RooArgSet normSet{x};
+
+  // Check that the values with and without normalization are almost identical.
+  // They are not exactly identical for the normalized case, because the
+  // RooGenericPdf doesn't do analytic integration.
+  constexpr double tol = 1e-6;
+  EXPECT_NEAR(exp.getVal(), pdf.getVal(), tol);
+  EXPECT_NEAR(exp.getVal(normSet), pdf.getVal(normSet), tol);
 }

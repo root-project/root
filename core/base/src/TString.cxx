@@ -126,6 +126,11 @@ TString::TString(const std::string &s)
 
 TString::TString(const char *cs, Ssiz_t n)
 {
+   if (!cs) {
+      Error("TString::TString", "NULL input string!");
+      Zero();
+      return;
+   }
    if (n < 0) {
       Error("TString::TString", "Negative length!");
       Zero();

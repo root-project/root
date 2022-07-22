@@ -16,14 +16,14 @@
 #include "RZip.h"
 #include "THttpWSEngine.h"
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// THttpCallArg                                                         //
-//                                                                      //
-// Contains arguments for single HTTP call                              //
-// Must be used in THttpEngine to process incoming http requests        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class THttpCallArg
+\ingroup http
+
+Contains arguments for single HTTP call
+
+Must be used in THttpEngine to process incoming http requests
+*/
+
 
 ClassImp(THttpCallArg);
 
@@ -36,9 +36,12 @@ THttpCallArg::~THttpCallArg()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// method used to get or set http header in the string buffer
+///
 /// Header has following format:
-///   field1 : value1\\r\\n
-///   field2 : value2\\r\\n
+///
+///    field1 : value1\\r\\n
+///    field2 : value2\\r\\n
+///
 /// Such format corresponds to header format in HTTP requests
 
 TString THttpCallArg::AccessHeader(TString &buf, const char *name, const char *value, Bool_t doing_set)
@@ -91,7 +94,7 @@ TString THttpCallArg::AccessHeader(TString &buf, const char *name, const char *v
 
 TString THttpCallArg::CountHeader(const TString &buf, Int_t number) const
 {
-   Int_t curr(0), cnt(0);
+   Int_t curr = 0, cnt = 0;
 
    while (curr < buf.Length() - 2) {
 
@@ -120,7 +123,9 @@ TString THttpCallArg::CountHeader(const TString &buf, Int_t number) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set content as text.
+///
 /// Content will be copied by THttpCallArg
+
 void THttpCallArg::SetContent(const char *cont)
 {
    if (cont)
@@ -148,7 +153,8 @@ void THttpCallArg::SetText()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set content type as "text/plain" and also assigns content
-/// After method call argument \param txt will be in undefined state
+///
+/// @param txt will be in undefined state after method call
 
 void THttpCallArg::SetTextContent(std::string &&txt)
 {
@@ -166,7 +172,8 @@ void THttpCallArg::SetXml()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set content type as "text/xml" and also assigns content
-/// After method call argument \param xml will be in undefined state
+///
+/// @param xml will be in undefined state after method call
 
 void THttpCallArg::SetXmlContent(std::string &&xml)
 {
@@ -184,7 +191,8 @@ void THttpCallArg::SetJson()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set content type as "application/json" and also assigns content
-/// After method call argument \param json will be in undefined state
+///
+/// @param json will be in undefined state after method call
 
 void THttpCallArg::SetJsonContent(std::string &&json)
 {
@@ -202,7 +210,8 @@ void THttpCallArg::SetBinary()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set content type as "application/x-binary" and also assigns content
-/// After method call argument \param bin will be in undefined state
+///
+/// @param bin will be in undefined state after method call
 
 void THttpCallArg::SetBinaryContent(std::string &&bin)
 {
@@ -211,9 +220,10 @@ void THttpCallArg::SetBinaryContent(std::string &&bin)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \deprecated  Use signature with std::string
-/// Set data, posted with the request
+///  Set data, posted with the request
+///
 /// If make_copy==kFALSE, data will be released with free(data) call
+/// @deprecated  Use signature with std::string
 
 void THttpCallArg::SetPostData(void *data, Long_t length, Bool_t make_copy)
 {
@@ -226,7 +236,8 @@ void THttpCallArg::SetPostData(void *data, Long_t length, Bool_t make_copy)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// set data, which is posted with the request
+/// Set data, which is posted with the request
+///
 /// Although std::string is used, not only text data can be assigned -
 /// std::string can contain any sequence of symbols
 
@@ -244,7 +255,8 @@ void THttpCallArg::AssignWSId()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// takeout websocket handle with HTTP call
+/// Takeout websocket handle with HTTP call
+///
 /// can be done only once
 
 std::shared_ptr<THttpWSEngine> THttpCallArg::TakeWSEngine()
@@ -255,9 +267,13 @@ std::shared_ptr<THttpWSEngine> THttpCallArg::TakeWSEngine()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Replace all occurrences of \param from by \param to in content
-/// \param once set to true to stop after first occurrence is replaced
-/// \note Used only internally
+/// Replace all occurrences of string in content
+///
+/// @param from that to replace
+/// @param to new content
+/// @param once set to true to stop after first occurrence is replaced
+
+/// Normally used only internally
 
 void THttpCallArg::ReplaceAllinContent(const std::string &from, const std::string &to, bool once)
 {
@@ -270,7 +286,8 @@ void THttpCallArg::ReplaceAllinContent(const std::string &from, const std::strin
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// set complete path of requested http element
+/// Set complete path of requested http element
+///
 /// For instance, it could be "/folder/subfolder/get.bin"
 /// Here "/folder/subfolder/" is element path and "get.bin" requested file.
 /// One could set path and file name separately
@@ -297,7 +314,7 @@ void THttpCallArg::SetPathAndFileName(const char *fullpath)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return specified header
+/// Return specified header
 
 TString THttpCallArg::GetHeader(const char *name)
 {
@@ -313,7 +330,8 @@ TString THttpCallArg::GetHeader(const char *name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set name: value pair to reply header
+/// Set `name: value` pair to reply header
+///
 /// Content-Type field handled separately - one should use SetContentType() method
 /// Content-Length field cannot be set at all;
 
@@ -337,8 +355,9 @@ void THttpCallArg::AddNoCacheHeader()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fills HTTP header, which can be send at the beggining of reply on the http request
-/// \param name is HTTP protocol name (default "HTTP/1.1")
+/// Fills HTTP header, which can be send at the beginning of reply on the http request
+///
+/// @param name is HTTP protocol name (default "HTTP/1.1")
 
 std::string THttpCallArg::FillHttpHeader(const char *name)
 {
@@ -360,7 +379,7 @@ std::string THttpCallArg::FillHttpHeader(const char *name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// compress reply data with gzip compression
+/// Compress reply data with gzip compression
 
 Bool_t THttpCallArg::CompressWithGzip()
 {
@@ -425,7 +444,8 @@ Bool_t THttpCallArg::CompressWithGzip()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// method used to notify condition which waiting when operation will complete
+/// Method used to notify condition which waiting when operation will complete
+///
 /// Condition notified only if not-postponed state is set
 
 void THttpCallArg::NotifyCondition()
@@ -438,6 +458,7 @@ void THttpCallArg::NotifyCondition()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// virtual method to inform object that http request is processed
+///
 /// Normally condition is notified and waiting thread will be awaked
 /// One could reimplement this method in sub-class
 

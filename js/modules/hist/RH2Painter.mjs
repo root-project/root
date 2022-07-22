@@ -1,15 +1,9 @@
-/// ROOT7 histogram 3D graphics
-
 import { settings, gStyle } from '../core.mjs';
-
 import { RH2Painter as RH2Painter2D } from '../hist2d/RH2Painter.mjs';
-
 import { RAxisPainter } from '../gpad/RAxisPainter.mjs';
-
 import { assignFrame3DMethods, drawBinsLego, drawBinsError3D, drawBinsContour3D, drawBinsSurf3D } from './hist3d.mjs';
 
 class RH2Painter extends RH2Painter2D {
-
 
    /** Draw histogram bins in 3D, using provided draw options */
    draw3DBins() {

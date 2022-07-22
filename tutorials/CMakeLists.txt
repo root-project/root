@@ -92,6 +92,7 @@ elseif(MSVC AND NOT win_broken_tests)
     if("${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64")
       list(APPEND dataframe_veto dataframe/df002_dataModel.py)
       list(APPEND dataframe_veto dataframe/df016_vecOps.py)
+      list(APPEND dataframe_veto dataframe/df017_vecOpsHEP.py)
     endif()
     if(CMAKE_CXX_STANDARD GREATER 14)
         list(APPEND dataframe_veto dataframe/df032_MakeNumpyDataFrame.py)
@@ -166,6 +167,7 @@ if(NOT xrootd)
                   dataframe/df102_NanoAODDimuonAnalysis.C
                   dataframe/df103_NanoAODHiggsAnalysis.C
                   tmva/tmva103_Application.C
+                  dataframe/df033_Describe.py
                   dataframe/df102_NanoAODDimuonAnalysis.py
                   dataframe/df103_NanoAODHiggsAnalysis.py
                   dataframe/df104_HiggsToTwoPhotons.py

@@ -60,7 +60,7 @@ void rf603_multicpu()
    // it back to MINUIT.
 
    // Use four processes and time results both in wall time and CPU time
-   model.fitTo(*data, NumCPU(4), Timer(kTRUE));
+   model.fitTo(*data, NumCPU(4), Timer(true));
 
    // P a r a l l e l   M C   p r o j e c t i o n s
    // ----------------------------------------------

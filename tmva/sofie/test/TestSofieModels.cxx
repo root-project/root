@@ -22,7 +22,7 @@ void ExecuteSofieParser(std::string modelName) {
    std::cout << "parsing file " << inputName << std::endl;
    SOFIE::RModel model = parser.Parse(inputName);
    std::cout << "generating model.....\n";
-   model.Generate(1, 1);
+   model.Generate();
    std::string outputName = modelName + ".hxx";
    std::cout << "writing model as header .....\n";
    model.OutputGenerated(); // outputName);

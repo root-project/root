@@ -597,7 +597,7 @@ Cppyy::TCppType_t Cppyy::GetActualClass(TCppType_t klass, TCppObject_t obj)
     // if the raw name is the empty string (no guarantees that this is so as truly, the
     // address is corrupt, but it is common to be empty), then there is no accessible RTTI
     // and getting the unmangled name will crash ...
-        if (!raw || raw[0] == '\0')
+        if (!raw)
             return klass;
     } catch (std::bad_typeid) {
         return klass;        // can't risk passing to ROOT/meta as it may do RTTI

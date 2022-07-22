@@ -1,12 +1,10 @@
 import { BIT, isBatchMode } from '../core.mjs';
-
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
-
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
-
 import { addMoveHandler } from '../gui/utils.mjs';
 
-/** @summary Draw TArrow
+
+/** @summary Drawing TArrow
   * @private */
 class TArrowPainter extends ObjectPainter {
 
@@ -18,7 +16,7 @@ class TArrowPainter extends ObjectPainter {
          dx = -dx; dy = -dy;
       }
       res += `l${Math.round(dx)},${Math.round(dy)}`;
-      if (x0 && (y0===undefined)) res+="z";
+      if (x0 && (y0 === undefined)) res += "z";
       return res;
    }
 
@@ -129,6 +127,6 @@ class TArrowPainter extends ObjectPainter {
       return ensureTCanvas(painter, false).then(() => painter.redraw());
    }
 
-}
+} // class TArrowPainter
 
 export { TArrowPainter };

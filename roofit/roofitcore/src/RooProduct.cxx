@@ -86,6 +86,9 @@ RooProduct::RooProduct(const char* name, const char* title, const RooArgList& pr
 }
 
 
+RooProduct::RooProduct(const char *name, const char *title, RooAbsReal& real1, RooAbsReal& real2) :
+  RooProduct{name, title, {real1, real2}} {}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
@@ -123,12 +126,11 @@ bool RooProduct::forceAnalyticalInt(const RooAbsArg& dep) const
   // Force internal handling of integration of given observable if any
   // of the product terms depend on it.
 
-  RooFIter compRIter = _compRSet.fwdIterator() ;
-  RooAbsReal* rcomp ;
   bool depends(false);
-  while((rcomp=(RooAbsReal*)compRIter.next())&&!depends) {
-        depends = rcomp->dependsOn(dep);
-  }
+  for (auto const* rcomp : static_range_cast<RooAbsReal*>(_compRSet)) {
+    if (depends) break;
+    depends = rcomp->dependsOn(dep);
+    }
   return depends ;
 }
 
@@ -144,10 +146,8 @@ RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) con
 
   // Do we have any terms which do not depend on the
   // on the variables we integrate over?
-  RooAbsReal* rcomp ;
-  RooFIter compRIter = _compRSet.fwdIterator() ;
   RooArgList *indep = new RooArgList();
-  while((rcomp=(RooAbsReal*) compRIter.next())) {
+  for (auto const* rcomp : static_range_cast<RooAbsReal*>(_compRSet)) {
     if( !rcomp->dependsOn(allVars) ) indep->add(*rcomp);
   }
   if (indep->getSize()!=0) {
@@ -157,15 +157,11 @@ RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) con
   }
 
   // Map observables -> functions ; start with individual observables
-  RooFIter allVarsIter = allVars.fwdIterator() ;
-  RooAbsReal* var ;
-  while((var=(RooAbsReal*)allVarsIter.next())) {
+  for (auto const* var : static_range_cast<RooAbsReal*>(allVars)) {
     RooArgSet *vars  = new RooArgSet(); vars->add(*var);
     RooArgList *comps = new RooArgList();
-    RooAbsReal* rcomp2 ;
 
-    compRIter = _compRSet.fwdIterator() ;
-    while((rcomp2=(RooAbsReal*) compRIter.next())) {
+    for (auto const* rcomp2 : static_range_cast<RooAbsReal*>(_compRSet)) {
       if( rcomp2->dependsOn(*var) ) comps->add(*rcomp2);
     }
     map->push_back( std::make_pair(vars,comps) );
@@ -180,12 +176,10 @@ RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) con
       i.first->first->add(*i.second->first);
 
       // In the merging step, make sure not to duplicate
-      RooFIter it = i.second->second->fwdIterator() ;
-      RooAbsArg* targ ;
-      while ((targ = it.next())) {
-   if (!i.first->second->find(*targ)) {
-     i.first->second->add(*targ) ;
-   }
+      for (auto const* targ : *(i.second->second)) {
+        if (!i.first->second->find(*targ)) {
+          i.first->second->add(*targ) ;
+        }
       }
       //i.first->second->add(*i.second->second);
 
@@ -257,8 +251,7 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
       cxcoutD(Integration) << "RooProduct::getPartIntList(" << GetName() << ") created subexpression " << term->GetName() << endl;
     } else {
       assert(i->second->getSize()==1);
-      RooFIter j = i->second->fwdIterator();
-      term = (RooAbsReal*)j.next();
+      term = static_cast<RooAbsReal*>(i->second->at(0));
     }
     assert(term!=0);
     if (i->first->empty()) { // check whether we need to integrate over this term or not...
@@ -348,10 +341,8 @@ const char* RooProduct::makeFPName(const char *pfx,const RooArgSet& terms) const
 {
   static TString pname;
   pname = pfx;
-  RooFIter i = terms.fwdIterator();
-  RooAbsArg *arg;
   bool first(true);
-  while((arg=(RooAbsArg*)i.next())) {
+  for (auto const* arg : terms) {
     if (first) { first=false;}
     else pname.Append("_X_");
     pname.Append(arg->GetName());
@@ -530,7 +521,34 @@ void RooProduct::printMetaArgs(ostream& os) const
 }
 
 
+void RooProduct::ioStreamerPass2() {
+  RooAbsReal::ioStreamerPass2(); // call the baseclass method
 
+  if(numProxies() < 2) {
+    throw std::runtime_error("RooProduct::ioStreamerPass2(): the number of proxies in the proxy list should be at leat 2!");
+  }
+
+  // If the proxy data members are evolved by schema evolution, the proxy list
+  // that references them will contain null pointers because the evolved
+  // members are only created after the proxy list. That's why we have to set
+  // them manually in that case. But to make sure we don't overwrite valid
+  // proxies, an exception will be thrown if the proxy list constains
+  // unexpected values.
+  RooAbsProxy * p0 = getProxy(0);
+  if(p0 != &_compRSet) {
+    if(p0) {
+      throw std::runtime_error("RooProduct::ioStreamerPass2(): the first proxy unexpectedly wasn't the compRSet!");
+    }
+    _proxyList.AddAt(&_compRSet, 0);
+  }
+  RooAbsProxy * p1 = getProxy(1);
+  if(p1 != &_compCSet) {
+    if(p1) {
+      throw std::runtime_error("RooProduct::ioStreamerPass2(): the second proxy unexpectedly wasn't the compCSet!");
+    }
+    _proxyList.AddAt(&_compCSet, 1);
+  }
+}
 
 
 namespace {
@@ -561,7 +579,3 @@ void dump_map(ostream& os, RPPMIter i, RPPMIter end)
 }
 
 }
-
-
-
-

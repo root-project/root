@@ -196,7 +196,7 @@ TClass::TDeclNameRegistry::TDeclNameRegistry(Int_t verbLevel): fVerbLevel(verbLe
 void TClass::TDeclNameRegistry::AddQualifiedName(const char *name)
 {
    // Sanity check
-   auto strLen = strlen(name);
+   auto strLen = name ? strlen(name) : 0;
    if (strLen == 0) return;
    // find <. If none, put end of string
    const char* endCharPtr = strchr(name, '<');
@@ -2297,9 +2297,8 @@ Bool_t TClass::CanSplitBaseAllow()
 
    // Look at inheritance tree
    while (lnk) {
-      TClass     *c;
       TBaseClass *base = (TBaseClass*) lnk->GetObject();
-      c = base->GetClassPointer();
+      TClass *c = base->GetClassPointer();
       if(!c) {
          // If there is a missing base class, we can't split the immediate
          // derived class.
@@ -2571,7 +2570,7 @@ char *TClass::EscapeChars(const char *text) const
    static const UInt_t maxsize = 255;
    static char name[maxsize+2]; //One extra if last char needs to be escaped
 
-   UInt_t nch = strlen(text);
+   UInt_t nch = text ? strlen(text) : 0;
    UInt_t icur = 0;
    for (UInt_t i = 0; i < nch && icur < maxsize; ++i, ++icur) {
       if (text[i] == '\"' || text[i] == '[' || text[i] == '~' ||
@@ -2607,7 +2606,8 @@ char *TClass::EscapeChars(const char *text) const
 
 TClass *TClass::GetActualClass(const void *object) const
 {
-   if (object==nullptr) return (TClass*)this;
+   if (!object)
+      return (TClass*)this;
    if (fIsA) {
       return (*fIsA)(object); // ROOT::IsA((ThisClass*)object);
    } else if (fGlobalIsA) {
@@ -6365,7 +6365,7 @@ TVirtualStreamerInfo *TClass::SetStreamerInfo(Int_t /*version*/, const char * /*
 
 /*
    TDataMember *dm;
-   Int_t nch = strlen(info);
+   Int_t nch = info ? strlen(info) : 0;
    Bool_t update = kTRUE;
    if (nch != 0) {
       //decode strings like "TObject;TAttLine;fA;fB;Int_t i,j,k;"

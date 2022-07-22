@@ -76,20 +76,6 @@ namespace RooStats{
       std::unique_ptr<RooProduct> CreateNormFactor(RooWorkspace* proto, std::string& channel,
             std::string& sigmaEpsilon, Sample& sample, bool doRatio);
 
-      void AddMultiVarGaussConstraint(RooWorkspace* proto, std::string prefix,
-                  int lowBin, int highBin,
-                  std::vector<std::string>& likelihoodTermNames);
-
-      void AddPoissonTerms(RooWorkspace* proto, std::string prefix, std::string obsPrefix,
-            std::string expPrefix, int lowBin, int highBin,
-            std::vector<std::string>& likelihoodTermNames);
-
-      static void EditSyst(RooWorkspace* proto, const char* pdfNameChar,
-            std::map<std::string,double> gammaSyst,
-            std::map<std::string,double> uniformSyst,
-            std::map<std::string,double> logNormSyst,
-            std::map<std::string,double> noSyst);
-
       RooWorkspace* MakeSingleChannelWorkspace(Measurement& measurement, Channel& channel);
 
       void MakeTotalExpected(RooWorkspace* proto, const std::string& totName,
@@ -100,7 +86,7 @@ namespace RooStats{
             std::vector<std::unique_ptr<RooWorkspace>>& wspace_vec,
             std::vector<std::string> const& channel_names,
             std::string const& dataSetName,
-            RooArgList obsList,
+            RooArgList const& obsList,
             RooCategory* channelCat);
 
       RooHistFunc* MakeExpectedHistFunc(const TH1* hist, RooWorkspace* proto, std::string prefix,

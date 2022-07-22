@@ -770,7 +770,9 @@ void TXMLFile::StoreStreamerElement(XMLNodePointer_t infonode, TStreamerElement 
 
    XMLNodePointer_t node = fXML->NewChild(infonode, nullptr, cl->GetName());
 
-   char sbuf[100], namebuf[100];
+   constexpr std::size_t bufferSize = 100;
+   char sbuf[bufferSize];
+   char namebuf[bufferSize];
 
    fXML->NewAttr(node, nullptr, "name", elem->GetName());
    if (strlen(elem->GetTitle()) > 0)
@@ -789,16 +791,16 @@ void TXMLFile::StoreStreamerElement(XMLNodePointer_t infonode, TStreamerElement 
       fXML->NewIntAttr(node, "numdim", elem->GetArrayDim());
 
       for (int ndim = 0; ndim < elem->GetArrayDim(); ndim++) {
-         sprintf(namebuf, "dim%d", ndim);
+         snprintf(namebuf, bufferSize, "dim%d", ndim);
          fXML->NewIntAttr(node, namebuf, elem->GetMaxIndex(ndim));
       }
    }
 
    if (cl == TStreamerBase::Class()) {
       TStreamerBase *base = (TStreamerBase *)elem;
-      sprintf(sbuf, "%d", base->GetBaseVersion());
+      snprintf(sbuf, bufferSize, "%d", base->GetBaseVersion());
       fXML->NewAttr(node, nullptr, "baseversion", sbuf);
-      sprintf(sbuf, "%d", base->GetBaseCheckSum());
+      snprintf(sbuf, bufferSize, "%d", base->GetBaseCheckSum());
       fXML->NewAttr(node, nullptr, "basechecksum", sbuf);
    } else if (cl == TStreamerBasicPointer::Class()) {
       TStreamerBasicPointer *bptr = (TStreamerBasicPointer *)elem;
@@ -869,7 +871,7 @@ void TXMLFile::ReadStreamerElement(XMLNodePointer_t node, TStreamerInfo *info)
       int numdim = fXML->GetIntAttr(node, "numdim");
       elem->SetArrayDim(numdim);
       for (int ndim = 0; ndim < numdim; ndim++) {
-         sprintf(namebuf, "dim%d", ndim);
+         snprintf(namebuf, 100, "dim%d", ndim);
          int maxi = fXML->GetIntAttr(node, namebuf);
          elem->SetMaxIndex(ndim, maxi);
       }

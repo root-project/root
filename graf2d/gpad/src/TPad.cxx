@@ -12,6 +12,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <iostream>
+#include <memory>
 
 #include "TROOT.h"
 #include "TBuffer.h"
@@ -182,7 +183,6 @@ TPad::TPad()
 
    fNumPaletteColor = 0;
    fNextPaletteColor = 0;
-   fCollideGrid = nullptr;
    fCGnx = 0;
    fCGny = 0;
 
@@ -315,7 +315,6 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
 
    fNumPaletteColor = 0;
    fNextPaletteColor = 0;
-   fCollideGrid = nullptr;
    fCGnx = 0;
    fCGny = 0;
 
@@ -394,7 +393,6 @@ TPad::~TPad()
    delete primitives;
    SafeDelete(fExecs);
    delete fViewer3D;
-   if (fCollideGrid) delete [] fCollideGrid;
 
    // Required since we overload TObject::Hash.
    ROOT::CallRecursiveRemoveIfNeeded(*this);
@@ -444,7 +442,7 @@ TPad::~TPad()
 /// to develop more powerful interactive applications exploiting the C++
 /// interpreter as a development engine.
 
-void TPad::AddExec(const char *name, const char*command)
+void TPad::AddExec(const char *name, const char *command)
 {
    if (!fExecs) fExecs = new TList;
    TExec *ex = new TExec(name,command);
@@ -460,10 +458,8 @@ void TPad::AutoExec()
 
    if (!fExecs) fExecs = new TList;
    TIter next(fExecs);
-   TExec *exec;
-   while ((exec = (TExec*)next())) {
+   while (auto exec = (TExec*)next())
       exec->Exec();
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -504,25 +500,24 @@ void TPad::Browse(TBrowser *b)
 TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
                            const char* title, Option_t *option)
 {
-   TList *lop=GetListOfPrimitives();
-   if (!lop) return 0;
-   TLegend *leg=0;
+   TList *lop = GetListOfPrimitives();
+   if (!lop) return nullptr;
+   TLegend *leg = nullptr;
    TIter next(lop);
    TString mes;
-   TObject *o=0;
-   TString opt("");
-   while( (o=next()) ) {
+   TString opt;
+   while(auto o = next()) {
       if ((o->InheritsFrom(TAttLine::Class()) || o->InheritsFrom(TAttMarker::Class()) ||
           o->InheritsFrom(TAttFill::Class())) &&
          ( !(o->InheritsFrom(TFrame::Class())) && !(o->InheritsFrom(TPave::Class())) )) {
             if (!leg) leg = new TLegend(x1, y1, x2, y2, title);
-            if (o->InheritsFrom(TNamed::Class()) && strlen(((TNamed *)o)->GetTitle()))
-               mes = ((TNamed *)o)->GetTitle();
+            if (o->InheritsFrom(TNamed::Class()) && strlen(o->GetTitle()))
+               mes = o->GetTitle();
             else if (strlen(o->GetName()))
                mes = o->GetName();
             else
                mes = o->ClassName();
-            if (strlen(option)) {
+            if (option && strlen(option)) {
                opt = option;
             } else {
                if (o->InheritsFrom(TAttLine::Class()))   opt += "l";
@@ -541,7 +536,7 @@ TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
             if      (strlen(gr->GetTitle())) mes = gr->GetTitle();
             else if (strlen(gr->GetName()))  mes = gr->GetName();
             else                             mes = gr->ClassName();
-            if (strlen(option))              opt = option;
+            if (option && strlen(option))    opt = option;
             else                             opt = "lpf";
             leg->AddEntry( obj, mes.Data(), opt );
          }
@@ -549,14 +544,12 @@ TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
          if (!leg) leg = new TLegend(x1, y1, x2, y2, title);
          TList * hlist = ((THStack *)o)->GetHists();
          TIter nexthist(hlist);
-         TH1 * hist;
-         TObject * obj;
-         while ((obj = nexthist())) {
-            hist = (TH1*) obj;
+         while (auto obj = nexthist()) {
+            TH1 *hist = (TH1*) obj;
             if      (strlen(hist->GetTitle())) mes = hist->GetTitle();
             else if (strlen(hist->GetName()))  mes = hist->GetName();
             else                               mes = hist->ClassName();
-            if (strlen(option))                opt = option;
+            if (option && strlen(option))      opt = option;
             else                               opt = "lpf";
             leg->AddEntry( obj, mes.Data(), opt );
          }
@@ -564,9 +557,8 @@ TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
       opt = "";
    }
    if (leg) {
-      TVirtualPad *gpadsave;
-      gpadsave = gPad;
-      this->cd();
+      TVirtualPad *gpadsave = gPad;
+      cd();
       leg->Draw();
       gpadsave->cd();
    } else {
@@ -611,10 +603,9 @@ TVirtualPad *TPad::cd(Int_t subpadnumber)
       return gPad;
    }
 
-   TObject *obj;
    if (!fPrimitives) fPrimitives = new TList;
    TIter    next(fPrimitives);
-   while ((obj = next())) {
+   while (auto obj = next()) {
       if (obj->InheritsFrom(TPad::Class())) {
          Int_t n = ((TPad*)obj)->GetNumber();
          if (n == subpadnumber) {
@@ -622,7 +613,7 @@ TVirtualPad *TPad::cd(Int_t subpadnumber)
          }
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -662,12 +653,9 @@ void TPad::Clear(Option_t *option)
    PaintBorder(GetFillColor(), kTRUE);
    fCrosshairPos = 0;
    fNumPaletteColor = 0;
-   if (fCollideGrid) {
-      delete [] fCollideGrid;
-      fCollideGrid = nullptr;
-      fCGnx = 0;
-      fCGny = 0;
-   }
+   fCollideGrid.clear();
+   fCGnx = 0;
+   fCGny = 0;
    ResetBit(TGraph::kClipFrame);
 }
 
@@ -745,7 +733,7 @@ Int_t TPad::Clip(Float_t *x, Float_t *y, Float_t xclipl, Float_t yclipb, Float_t
 
 Int_t TPad::Clip(Double_t *x, Double_t *y, Double_t xclipl, Double_t yclipb, Double_t xclipr, Double_t yclipt)
 {
-   const Double_t kP=10000;
+   const Double_t kP = 10000;
    Int_t clip = 0;
 
    for (Int_t i=0;i<2;i++) {
@@ -868,8 +856,7 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
    Int_t nc, nc2;
    Double_t x1, y1, x2, y2, slope; // Segment to be clipped
 
-   Double_t *xc2 = new Double_t[nn];
-   Double_t *yc2 = new Double_t[nn];
+   std::vector<Double_t> xc2(nn), yc2(nn);
 
    // Clip against the left boundary
    x1 = x[n-1]; y1 = y[n-1];
@@ -975,9 +962,6 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
       }
    }
 
-   delete [] xc2;
-   delete [] yc2;
-
    if (nc < 3) nc =0;
    return nc;
 }
@@ -1061,10 +1045,9 @@ void TPad::CopyPixmap()
 
 void TPad::CopyPixmaps()
 {
-   TObject *obj;
    if (!fPrimitives) fPrimitives = new TList;
    TIter    next(GetListOfPrimitives());
-   while ((obj = next())) {
+   while (auto obj = next()) {
       if (obj->InheritsFrom(TPad::Class())) {
          ((TPad*)obj)->CopyPixmap();
          ((TPad*)obj)->CopyPixmaps();
@@ -1170,7 +1153,6 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
 {
    if (!IsEditable()) return;
 
-
    if (gThreadXAR) {
       void *arr[7];
       arr[1] = this; arr[2] = (void*)&nx;arr[3] = (void*)& ny;
@@ -1182,14 +1164,10 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
    cd();
    if (nx <= 0) nx = 1;
    if (ny <= 0) ny = 1;
-   Int_t ix,iy;
-   Double_t x1,y1,x2,y2;
-   Double_t dx,dy;
+   Int_t ix, iy;
+   Double_t x1, y1, x2, y2, dx, dy;
    TPad *pad;
-   Int_t nchname  = strlen(GetName())+6;
-   Int_t nchtitle = strlen(GetTitle())+6;
-   char *name  = new char [nchname];
-   char *title = new char [nchtitle];
+   TString name, title;
    Int_t n = 0;
    if (color == 0) color = GetFillColor();
    if (xmargin > 0 && ymargin > 0) {
@@ -1206,8 +1184,8 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
             x2 = x1 +dx -2*xmargin;
             if (x1 > x2) continue;
             n++;
-            snprintf(name,nchname,"%s_%d",GetName(),n);
-            pad = new TPad(name,name,x1,y1,x2,y2,color);
+            name.Form("%s_%d", GetName(), n);
+            pad = new TPad(name.Data(), name.Data(), x1, y1, x2, y2, color);
             pad->SetNumber(n);
             pad->Draw();
          }
@@ -1240,9 +1218,9 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
             y1 = y2 - dy;
             if (j == 0)    y2 = 1-yt;
             if (j == ny-1) y1 = 0;
-            snprintf(name,nchname,"%s_%d",GetName(),number);
-            snprintf(title,nchtitle,"%s_%d",GetTitle(),number);
-            pad = new TPad(name,title,x1,y1,x2,y2);
+            name.Form("%s_%d", GetName(), number);
+            title.Form("%s_%d", GetTitle(), number);
+            pad = new TPad(name.Data(), title.Data(), x1, y1, x2, y2);
             pad->SetNumber(number);
             pad->SetBorderMode(0);
             if (i == 0)    pad->SetLeftMargin(xl*nx);
@@ -1255,8 +1233,6 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
          }
       }
    }
-   delete [] name;
-   delete [] title;
    Modified();
    if (padsav) padsav->cd();
 }
@@ -1599,7 +1575,7 @@ void TPad::DrawCrosshair()
 
 TH1F *TPad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, const char *title)
 {
-   if (!IsEditable()) return 0;
+   if (!IsEditable()) return nullptr;
    TPad *padsav = (TPad*)gPad;
    if (this !=  padsav) {
       Warning("DrawFrame","Must be called for the current pad only");
@@ -1617,13 +1593,12 @@ TH1F *TPad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax
       Double_t xminl = TMath::Log(xmin);
       Double_t xmaxl = TMath::Log(xmax);
       Double_t dx = (xmaxl-xminl)/nbins;
-      Double_t *xbins = new Double_t[nbins+1];
+      std::vector<Double_t> xbins(nbins+1);
       xbins[0] = xmin;
       for (Int_t i=1;i<=nbins;i++) {
          xbins[i] = TMath::Exp(xminl+i*dx);
       }
-      hframe = new TH1F("hframe",title,nbins,xbins);
-      delete [] xbins;
+      hframe = new TH1F("hframe",title,nbins,xbins.data());
    } else {
       hframe = new TH1F("hframe",title,nbins,xmin,xmax);
    }
@@ -1655,12 +1630,12 @@ void TPad::DrawColorTable()
    gPad->Clear();
    gPad->Range(x1,y1,x2,y2);
 
-   TText *text = new TText(0,0,"");
-   text->SetTextFont(61);
-   text->SetTextSize(0.07);
-   text->SetTextAlign(22);
+   TText text(0,0,"");
+   text.SetTextFont(61);
+   text.SetTextSize(0.07);
+   text.SetTextAlign(22);
 
-   TBox *box = new TBox();
+   TBox box;
 
    // Draw color table boxes.
    hs = (y2-y1)/Double_t(5);
@@ -1672,15 +1647,15 @@ void TPad::DrawColorTable()
          ylow = y1 + hs*(Double_t(j)+0.1);
          yup  = y1 + hs*(Double_t(j)+0.9);
          color = 10*j + i;
-         box->SetFillStyle(1001);
-         box->SetFillColor(color);
-         box->DrawBox(xlow, ylow, xup, yup);
-         box->SetFillStyle(0);
-         box->SetLineColor(1);
-         box->DrawBox(xlow, ylow, xup, yup);
-         if (color == 1) text->SetTextColor(0);
-         else            text->SetTextColor(1);
-         text->DrawText(0.5*(xlow+xup), 0.5*(ylow+yup), Form("%d",color));
+         box.SetFillStyle(1001);
+         box.SetFillColor(color);
+         box.DrawBox(xlow, ylow, xup, yup);
+         box.SetFillStyle(0);
+         box.SetLineColor(1);
+         box.DrawBox(xlow, ylow, xup, yup);
+         if (color == 1) text.SetTextColor(0);
+         else            text.SetTextColor(1);
+         text.DrawText(0.5*(xlow+xup), 0.5*(ylow+yup), Form("%d",color));
       }
    }
 }
@@ -2293,7 +2268,7 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
    Int_t bin1, bin2, first, last;
    Double_t temp, xmin,xmax;
    Bool_t opaque  = gPad->OpaqueMoving();
-   static TBox *zoombox;
+   static std::unique_ptr<TBox> zoombox;
    Double_t zbx1=0,zbx2=0,zby1=0,zby2=0;
 
    // The CONT4 option, used to paint TH2, is a special case; it uses a 3D
@@ -2365,7 +2340,7 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
                zby1 = TMath::Power(10,zby1);
                zby2 = TMath::Power(10,zby2);
             }
-            zoombox = new TBox(zbx1, zby1, zbx2, zby2);
+            zoombox = std::make_unique<TBox>(zbx1, zby1, zbx2, zby2);
             Int_t ci = TColor::GetColor("#7d7dff");
             TColor *zoomcolor = gROOT->GetColor(ci);
             if (!TCanvas::SupportAlpha() || !zoomcolor) zoombox->SetFillStyle(3002);
@@ -2452,10 +2427,8 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
    case kButton1Up:
       if (gROOT->IsEscaped()) {
          gROOT->SetEscape(kFALSE);
-         if (opaque && zoombox) {
-            zoombox->Delete();
-            zoombox = 0;
-         }
+         if (opaque && zoombox)
+            zoombox.reset();
          break;
       }
 
@@ -2603,8 +2576,7 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
          gVirtualX->SetLineColor(-1);
       } else {
          if (zoombox) {
-            zoombox->Delete();
-            zoombox = 0;
+            zoombox.reset();
             gPad->Modified();
             gPad->Update();
          }
@@ -2623,9 +2595,8 @@ TObject *TPad::FindObject(const char *name) const
    if (!fPrimitives) return nullptr;
    TObject *found = fPrimitives->FindObject(name);
    if (found) return found;
-   TObject *cur;
    TIter    next(GetListOfPrimitives());
-   while ((cur = next())) {
+   while (auto cur = next()) {
       if (cur->InheritsFrom(TPad::Class())) {
          found = ((TPad*)cur)->FindObject(name);
          if (found) return found;
@@ -2644,9 +2615,8 @@ TObject *TPad::FindObject(const TObject *obj) const
    if (!fPrimitives) return nullptr;
    TObject *found = fPrimitives->FindObject(obj);
    if (found) return found;
-   TObject *cur;
    TIter    next(GetListOfPrimitives());
-   while ((cur = next())) {
+   while (auto cur = next()) {
       if (cur->InheritsFrom(TPad::Class())) {
          found = ((TPad*)cur)->FindObject(obj);
          if (found) return found;
@@ -3033,7 +3003,7 @@ Int_t TPad::NextPaletteColor()
 
 void TPad::FillCollideGrid(TObject *oi)
 {
-   Int_t const cellSize = 10; // Sive of an individual grid cell in pixels.
+   Int_t const cellSize = 10; // Size of an individual grid cell in pixels.
 
    if (fCGnx == 0 && fCGny == 0) {
       fCGnx = (Int_t)(gPad->GetWw())/cellSize;
@@ -3044,29 +3014,22 @@ void TPad::FillCollideGrid(TObject *oi)
       if (fCGnx != CGnx || fCGny != CGny) {
          fCGnx = CGnx;
          fCGny = CGny;
-         delete [] fCollideGrid;
-         fCollideGrid = nullptr;
       }
    }
 
    // Initialise the collide grid
-   if (!fCollideGrid) {
-      fCollideGrid = new Bool_t [fCGnx*fCGny];
-      for (int i = 0; i<fCGnx; i++) {
-         for (int j = 0; j<fCGny; j++) {
-            fCollideGrid[i + j*fCGnx] = kTRUE;
-         }
-      }
-   }
+   fCollideGrid.resize(fCGnx*fCGny);
+   for (int i = 0; i < fCGnx; i++)
+      for (int j = 0; j < fCGny; j++)
+         fCollideGrid[i + j * fCGnx] = kTRUE;
 
    // Fill the collide grid
    TList *l = GetListOfPrimitives();
    if (!l) return;
    Int_t np = l->GetSize();
-   TObject *o;
 
    for (int i=0; i<np; i++) {
-      o = (TObject *) l->At(i);
+      TObject *o = (TObject *) l->At(i);
       if (o!=oi) {
          if (o->InheritsFrom(TFrame::Class())) { FillCollideGridTFrame(o); continue;}
          if (o->InheritsFrom(TBox::Class()))   { FillCollideGridTBox(o);   continue;}
@@ -3346,8 +3309,8 @@ void TPad::FillCollideGridTH1(TObject *o)
 void TPad::DrawCollideGrid()
 {
    if (fCGnx==0||fCGny==0) return;
-   auto box = new TBox();
-   box->SetFillColorAlpha(kRed,0.5);
+   TBox box;
+   box.SetFillColorAlpha(kRed,0.5);
 
    Double_t xs   = (fX2-fX1)/fCGnx;
    Double_t ys   = (fY2-fY1)/fCGny;
@@ -3377,11 +3340,11 @@ void TPad::DrawCollideGrid()
             Y2L = Y2;
          }
          if (!fCollideGrid[i + j*fCGnx]) {
-            box->SetFillColorAlpha(kBlack,t);
-            box->DrawBox(X1L, Y1L, X2L, Y2L);
+            box.SetFillColorAlpha(kBlack,t);
+            box.DrawBox(X1L, Y1L, X2L, Y2L);
          } else {
-            box->SetFillColorAlpha(kRed,t);
-            box->DrawBox(X1L, Y1L, X2L, Y2L);
+            box.SetFillColorAlpha(kRed,t);
+            box.DrawBox(X1L, Y1L, X2L, Y2L);
          }
          Y1 = Y2;
          Y2 = Y1+ys;
@@ -3465,11 +3428,10 @@ void TPad::Paint(Option_t * /*option*/)
    PaintDate();
 
    TObjOptLink *lnk = (TObjOptLink*)GetListOfPrimitives()->FirstLink();
-   TObject *obj;
 
    Bool_t began3DScene = kFALSE;
    while (lnk) {
-      obj = lnk->GetObject();
+      TObject *obj = lnk->GetObject();
 
       // Create a pad 3D viewer if none exists and we encounter a 3D shape
       if (!fViewer3D && obj->InheritsFrom(TAtt3D::Class())) {
@@ -3677,7 +3639,7 @@ void TPad::PaintModified()
          Modified(kFALSE);
       }
       TList *pList = GetListOfPrimitives();
-      TObjOptLink *lnk = 0;
+      TObjOptLink *lnk = nullptr;
       if (pList) lnk = (TObjOptLink*)pList->FirstLink();
       TObject *obj;
       while (lnk) {
@@ -3694,7 +3656,7 @@ void TPad::PaintModified()
    TPad *padsav = (TPad*)gPad;
    TVirtualPS *saveps = gVirtualPS;
    if (gVirtualPS) {
-      if (gVirtualPS->TestBit(kPrintingPS)) gVirtualPS = 0;
+      if (gVirtualPS->TestBit(kPrintingPS)) gVirtualPS = nullptr;
    }
    fPadPaint = 1;
    cd();
@@ -3708,14 +3670,13 @@ void TPad::PaintModified()
    PaintDate();
 
    TList *pList = GetListOfPrimitives();
-   TObjOptLink *lnk = 0;
+   TObjOptLink *lnk = nullptr;
    if (pList) lnk = (TObjOptLink*)pList->FirstLink();
-   TObject *obj;
 
    Bool_t began3DScene = kFALSE;
 
    while (lnk) {
-      obj = lnk->GetObject();
+      TObject *obj = lnk->GetObject();
       if (obj->InheritsFrom(TPad::Class())) {
          ((TPad*)obj)->PaintModified();
       } else if (IsModified() || IsTransparent()) {
@@ -3927,15 +3888,12 @@ void TPad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *)
 
 void TPad::PaintFillAreaNDC(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 {
-   auto xw = new Double_t[n];
-   auto yw = new Double_t[n];
+   std::vector<Double_t> xw(n), yw(n);
    for (int i=0; i<n; i++) {
       xw[i] = fX1 + x[i]*(fX2 - fX1);
       yw[i] = fY1 + y[i]*(fY2 - fY1);
    }
-   PaintFillArea(n, xw, yw, option);
-   delete [] xw;
-   delete [] yw;
+   PaintFillArea(n, xw.data(), yw.data(), option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4372,15 +4330,12 @@ void TPad::PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *)
       GetPainter()->DrawPolyLineNDC(n, x, y);
 
    if (gVirtualPS) {
-      Double_t *xw = new Double_t[n];
-      Double_t *yw = new Double_t[n];
+      std::vector<Double_t> xw(n), yw(n);
       for (Int_t i=0; i<n; i++) {
          xw[i] = fX1 + x[i]*(fX2 - fX1);
          yw[i] = fY1 + y[i]*(fY2 - fY1);
       }
-      gVirtualPS->DrawPS(n, xw, yw);
-      delete [] xw;
-      delete [] yw;
+      gVirtualPS->DrawPS(n, xw.data(), yw.data());
    }
    Modified();
 }
@@ -4539,24 +4494,24 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
    //the two following statements are necessary under NT (multithreaded)
    //when a TCanvas object is being created and a thread calling TPad::Pick
    //before the TPad constructor has completed in the other thread
-   if (gPad == 0) return 0; //Andy Haas
-   if (GetListOfPrimitives() == 0) return 0; //Andy Haas
+   if (!gPad) return nullptr; //Andy Haas
+   if (!GetListOfPrimitives()) return nullptr; //Andy Haas
 
    Int_t dist;
    // Search if point is in pad itself
    Double_t x = AbsPixeltoX(px);
    Double_t y = AbsPixeltoY(py);
    if (this != gPad->GetCanvas()) {
-      if (!((x >= fX1 && x <= fX2) && (y >= fY1 && y <= fY2))) return 0;
+      if (!((x >= fX1 && x <= fX2) && (y >= fY1 && y <= fY2))) return nullptr;
    }
 
    // search for a primitive in this pad or its sub-pads
-   static TObjOptLink dummyLink(0,"");  //place holder for when no link available
+   static TObjOptLink dummyLink(nullptr,"");  //place holder for when no link available
    TPad *padsav = (TPad*)gPad;
    gPad  = this;    // since no drawing will be done, don't use cd() for efficiency reasons
-   TPad *pick   = 0;
+   TPad *pick   = nullptr;
    TPad *picked = this;
-   pickobj      = 0;
+   pickobj      = nullptr;
    if (DistancetoPrimitive(px,py) < fgMaxPickDistance) {
       dummyLink.SetObject(this);
       pickobj = &dummyLink;
@@ -4634,14 +4589,14 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
 
    if (picked->InheritsFrom(TButton::Class())) {
       TButton *button = (TButton*)picked;
-      if (!button->IsEditable()) pickobj = 0;
+      if (!button->IsEditable()) pickobj = nullptr;
    }
 
    if (TestBit(kCannotPick)) {
 
       if (picked == this) {
          // cannot pick pad itself!
-         picked = 0;
+         picked = nullptr;
       }
 
    }
@@ -4661,13 +4616,11 @@ void TPad::Pop()
    if (this == fMother->GetListOfPrimitives()->Last()) return;
 
    TListIter next(fMother->GetListOfPrimitives());
-   TObject *obj;
-   while ((obj = next()))
+   while (auto obj = next())
       if (obj == this) {
-         char *opt = StrDup(next.GetOption());
+         TString opt = next.GetOption();
          fMother->GetListOfPrimitives()->Remove(this);
-         fMother->GetListOfPrimitives()->AddLast(this, opt);
-         delete [] opt;
+         fMother->GetListOfPrimitives()->AddLast(this, opt.Data());
          return;
       }
 }
@@ -4687,9 +4640,8 @@ void TPad::Print(const char *filename) const
 static Bool_t ContainsTImage(TList *li)
 {
    TIter next(li);
-   TObject *obj;
 
-   while ((obj = next())) {
+   while (auto obj = next()) {
       if (obj->InheritsFrom(TImage::Class())) {
          return kTRUE;
       } else if (obj->InheritsFrom(TPad::Class())) {
@@ -5073,7 +5025,7 @@ void TPad::Print(const char *filename, Option_t *option)
       }
 
       delete gVirtualPS;
-      gVirtualPS = 0;
+      gVirtualPS = nullptr;
       padsav->cd();
 
       return;
@@ -5186,10 +5138,10 @@ void TPad::Print(const char *filename, Option_t *option)
          else        Info("Print", "%s file %s has been closed", opt.Data(), psname.Data());
          gROOT->GetListOfSpecials()->Remove(gVirtualPS);
          delete gVirtualPS;
-         gVirtualPS = 0;
+         gVirtualPS = nullptr;
       } else {
          Info("Print", "Current canvas added to %s file %s", opt.Data(), psname.Data());
-         gVirtualPS = 0;
+         gVirtualPS = nullptr;
       }
    }
 
@@ -6193,7 +6145,7 @@ struct dField {
 
 
    dField()
-      : fa(0), fb(0), fdist(0), fdir(' ')
+      : fa(nullptr), fb(nullptr), fdist(0), fdir(' ')
    {}
 
    dField(TAttBBox2D *a, TAttBBox2D *b, Int_t dist, char direction)
@@ -6242,22 +6194,22 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
    if (mode != 'i') resize = true;
 
    TPad *is_pad = dynamic_cast<TPad *>( object );
-   TVirtualPad *padSave = 0;
+   TVirtualPad *padSave = nullptr;
    padSave = gPad;
    if (is_pad)
      if (is_pad->GetMother()) is_pad->GetMother()->cd();
 
-   static TPad * tmpGuideLinePad;
+   static TPad *tmpGuideLinePad = nullptr;
 
    //delete all existing Guidelines and create new invisible pad
    if (tmpGuideLinePad) {
       if (object == tmpGuideLinePad) { // in case of funny button click combination.
          tmpGuideLinePad->Delete();
-         tmpGuideLinePad = 0;
+         tmpGuideLinePad = nullptr;
          return;
       }
       tmpGuideLinePad->Delete();
-      tmpGuideLinePad = 0;
+      tmpGuideLinePad = nullptr;
    }
 
    // Get Primitives
@@ -6497,7 +6449,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
             // All the arrows and lines in that pad are also deleted because
             // they all have the bit kCanDelete on.
             tmpGuideLinePad->Delete();
-            tmpGuideLinePad = 0;
+            tmpGuideLinePad = nullptr;
          }
          break;
       }
@@ -6914,15 +6866,15 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
 {
    if (!gPad) return nullptr;
 
-   if (strlen(emode)) gROOT->SetEditorMode(emode);
-   if (gROOT->GetEditorMode() == 0 && strlen(pname) > 2) gROOT->SetEditorMode(&pname[1]);
+   if (emode && strlen(emode)) gROOT->SetEditorMode(emode);
+   if (gROOT->GetEditorMode() == 0 && pname && strlen(pname) > 2) gROOT->SetEditorMode(&pname[1]);
 
    if (!fPrimitives) fPrimitives = new TList;
    gSystem->ProcessEvents();
    TObject *oldlast = gPad->GetListOfPrimitives() ? gPad->GetListOfPrimitives()->Last() : nullptr;
    TObject *obj = nullptr;
    Bool_t testlast = kFALSE;
-   Bool_t hasname = strlen(pname) > 0;
+   Bool_t hasname = pname && (strlen(pname) > 0);
    if (!pname[0] && !emode[0]) testlast = kTRUE;
    if (testlast) gROOT->SetEditorMode();
    while (!gSystem->ProcessEvents() && gROOT->GetSelectedPad() && gPad) {
@@ -6940,7 +6892,7 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
                //the following statement is required against other loop executions
                //before returning
                fCanvas->HandleInput((EEventType)-1,0,0);
-               return 0;
+               return nullptr;
             }
          }
       }
@@ -6955,7 +6907,7 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
 
 TObject *TPad::CreateToolTip(const TBox *box, const char *text, Long_t delayms)
 {
-   if (gPad->IsBatch()) return 0;
+   if (gPad->IsBatch()) return nullptr;
    return (TObject*)gROOT->ProcessLineFast(Form("new TGToolTip((TBox*)0x%zx,\"%s\",%d)",
                                            (size_t)box,text,(Int_t)delayms));
 }
@@ -7040,7 +6992,7 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
    }
 
    // Ensure we can create the new viewer before removing any existing one
-   TVirtualViewer3D *newViewer = 0;
+   TVirtualViewer3D *newViewer = nullptr;
 
    Bool_t createdExternal = kFALSE;
 

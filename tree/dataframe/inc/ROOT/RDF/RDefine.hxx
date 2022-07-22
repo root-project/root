@@ -64,7 +64,7 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    ValuesPerSlot_t fLastResults;
 
    /// Column readers per slot and per input column
-   std::vector<std::array<std::unique_ptr<RColumnReaderBase>, ColumnTypes_t::list_size>> fValues;
+   std::vector<std::array<std::shared_ptr<RColumnReaderBase>, ColumnTypes_t::list_size>> fValues;
 
    /// Define objects corresponding to systematic variations other than nominal for this defined column.
    /// The map key is the full variation name, e.g. "pt:up".
@@ -75,9 +75,7 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    {
       fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()] =
          fExpression(fValues[slot][S]->template Get<ColTypes>(entry)...);
-      // silence "unused parameter" warnings in gcc
-      (void)slot;
-      (void)entry;
+      (void)entry; // avoid unused parameter warning (gcc 12.1)
    }
 
    template <typename... ColTypes, std::size_t... S>
@@ -85,9 +83,7 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    {
       fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()] =
          fExpression(slot, fValues[slot][S]->template Get<ColTypes>(entry)...);
-      // silence "unused parameter" warnings in gcc
-      (void)slot;
-      (void)entry;
+      (void)entry; // avoid unused parameter warning (gcc 12.1)
    }
 
    template <typename... ColTypes, std::size_t... S>
@@ -96,9 +92,6 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    {
       fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()] =
          fExpression(slot, entry, fValues[slot][S]->template Get<ColTypes>(entry)...);
-      // silence "unused parameter" warnings in gcc
-      (void)slot;
-      (void)entry;
    }
 
 public:
@@ -117,13 +110,9 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      RDFInternal::RColumnReadersInfo info{fColumnNames, fColRegister, fIsDefine.data(), fLoopManager->GetDSValuePtrs(),
-                                           fLoopManager->GetDataSource()};
+      RDFInternal::RColumnReadersInfo info{fColumnNames, fColRegister, fIsDefine.data(), *fLoopManager};
       fValues[slot] = RDFInternal::MakeColumnReaders(slot, r, ColumnTypes_t{}, info, fVariation);
       fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = -1;
-
-      for (auto &e : fVariedDefines)
-         e.second->InitSlot(r, slot);
    }
 
    /// Return the (type-erased) address of the Define'd value for the given processing slot.

@@ -24,11 +24,10 @@
 class RooExpensiveObjectCache : public TObject {
 public:
 
-  RooExpensiveObjectCache() ;
-  RooExpensiveObjectCache(const RooExpensiveObjectCache&) ;
+  RooExpensiveObjectCache() {}
+  RooExpensiveObjectCache(const RooExpensiveObjectCache& other) : TObject(other) {}
   ~RooExpensiveObjectCache() override ;
 
-  bool registerObject(const char* ownerName, const char* objectName, TObject& cacheObject, TIterator* paramIter) ;
   bool registerObject(const char* ownerName, const char* objectName, TObject& cacheObject, const RooArgSet& params) ;
   const TObject* retrieveObject(const char* name, TClass* tclass, const RooArgSet& params) ;
 
@@ -42,13 +41,14 @@ public:
   static RooExpensiveObjectCache& instance() ;
 
   Int_t size() const { return _map.size() ; }
+  bool empty() const { return _map.empty() ; }
 
   void print() const ;
 
   class ExpensiveObject {
   public:
     ExpensiveObject() { _uid = 0 ; _payload = 0 ; } ;
-    ExpensiveObject(Int_t uid, const char* ownerName, TObject& payload, TIterator* paramIter) ;
+    ExpensiveObject(Int_t uid, const char* ownerName, TObject& payload, RooArgSet const& params) ;
     ExpensiveObject(Int_t uid, const ExpensiveObject& other) ;
     virtual ~ExpensiveObject() ;
     bool matches(TClass* tc, const RooArgSet& params) ;
@@ -75,7 +75,7 @@ public:
 
 protected:
 
-  Int_t _nextUID ;
+  Int_t _nextUID = 0;
 
   std::map<TString,ExpensiveObject*> _map ;
 

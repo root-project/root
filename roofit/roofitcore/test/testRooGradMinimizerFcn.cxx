@@ -26,6 +26,21 @@
 
 #include <RooMsgService.h>
 #include <RooGlobalFunc.h> // RooFit::ERROR
+                           //
+class Environment : public testing::Environment {
+public:
+   void SetUp() override {
+      RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
+      ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
+   }
+};
+
+int main(int argc, char **argv)
+{
+   testing::InitGoogleTest(&argc, argv);
+   testing::AddGlobalTestEnvironment(new Environment);
+   return RUN_ALL_TESTS();
+}
 
 class GradMinimizerParSeed : public testing::TestWithParam<unsigned long> {};
 
@@ -55,7 +70,6 @@ TEST_P(GradMinimizerParSeed, Gaussian1D)
    // --------
 
    RooMinimizer m0(*nll);
-   m0.setMinimizerType("Minuit2");
 
    m0.setStrategy(0);
    m0.setPrintLevel(-1);
@@ -71,7 +85,6 @@ TEST_P(GradMinimizerParSeed, Gaussian1D)
    *values = *savedValues;
 
    RooMinimizer m1(*nll, RooMinimizer::FcnMode::gradient);
-   m1.setMinimizerType("Minuit2");
 
    m1.setStrategy(0);
    m1.setPrintLevel(-1);
@@ -110,7 +123,6 @@ TEST(GradMinimizerDebugging, DISABLED_Gaussian1DNominal)
    //  auto [nll, _] = generate_1D_gaussian_pdf_nll(w, 10000);
 
    RooMinimizer m0(*nll);
-   m0.setMinimizerType("Minuit2");
 
    m0.setStrategy(0);
    m0.setPrintLevel(100);
@@ -135,7 +147,6 @@ TEST(GradMinimizerDebugging, DISABLED_Gaussian1DGradMinimizer)
    // auto [nll, _] = generate_1D_gaussian_pdf_nll(w, 10000);
 
    RooMinimizer m1(*nll, RooMinimizer::FcnMode::gradient);
-   m1.setMinimizerType("Minuit2");
 
    m1.setStrategy(0);
    m1.setPrintLevel(100);
@@ -174,7 +185,6 @@ TEST(GradMinimizer, GaussianND)
    // --------
 
    RooMinimizer m0(*(nll.get()));
-   m0.setMinimizerType("Minuit2");
 
    m0.setStrategy(0);
    m0.setPrintLevel(-1);
@@ -206,7 +216,6 @@ TEST(GradMinimizer, GaussianND)
    // --------
 
    RooMinimizer m1(*(nll.get()), RooMinimizer::FcnMode::gradient);
-   m1.setMinimizerType("Minuit2");
 
    m1.setStrategy(0);
    m1.setPrintLevel(-1);
@@ -271,8 +280,6 @@ TEST(GradMinimizerReverse, GaussianND)
 
    RooMinimizer m0(*nll, RooMinimizer::FcnMode::gradient);
 
-   m0.setMinimizerType("Minuit2");
-
    m0.setStrategy(0);
    m0.setPrintLevel(-1);
 
@@ -303,7 +310,6 @@ TEST(GradMinimizerReverse, GaussianND)
    // --------
 
    RooMinimizer m1(*nll);
-   m1.setMinimizerType("Minuit2");
 
    m1.setStrategy(0);
    m1.setPrintLevel(-1);
@@ -403,8 +409,8 @@ TEST(GradMinimizer, BranchingPDF)
    RooArgSet all_values{most_values, *param_set, "all_values"};
 
    // set parameter values randomly so that they actually need to do some fitting
-   auto it = all_values.fwdIterator();
-   while (auto *val = dynamic_cast<RooRealVar *>(it.next())) {
+   for (auto *val : dynamic_range_cast<RooRealVar *>(all_values)) {
+      if(!val) break;
       val->setVal(RooRandom::randomGenerator()->Uniform(val->getMin(), val->getMax()));
    }
 
@@ -423,7 +429,6 @@ TEST(GradMinimizer, BranchingPDF)
    // --------
 
    RooMinimizer m0(*nll);
-   m0.setMinimizerType("Minuit2");
 
    m0.setStrategy(0);
    m0.setPrintLevel(-1);
@@ -450,7 +455,6 @@ TEST(GradMinimizer, BranchingPDF)
    // --------
 
    RooMinimizer m1(*nll, RooMinimizer::FcnMode::gradient);
-   m1.setMinimizerType("Minuit2");
 
    m1.setStrategy(0);
    m1.setPrintLevel(-1);
@@ -537,7 +541,6 @@ TEST(GradMinimizerDebugging, DISABLED_BranchingPDFLoadFromWorkspace)
 
    all_values.Print("v");
    RooMinimizer m0(*nll);
-   m0.setMinimizerType("Minuit2");
 
    m0.setStrategy(0);
    m0.setPrintLevel(-1);
@@ -568,7 +571,6 @@ TEST(GradMinimizerDebugging, DISABLED_BranchingPDFLoadFromWorkspace)
    all_values.Print("v");
 
    RooMinimizer m1(*nll, RooMinimizer::FcnMode::gradient);
-   m1.setMinimizerType("Minuit2");
 
    m1.setStrategy(0);
    m1.setPrintLevel(-1);
@@ -623,7 +625,6 @@ TEST(GradMinimizerDebugging, DISABLED_BranchingPDFLoadFromWorkspaceNominal)
    auto nll = sum.createNLL(*data);
 
    RooMinimizer m0(*nll);
-   m0.setMinimizerType("Minuit2");
    m0.setStrategy(0);
    m0.migrad();
 }
@@ -639,7 +640,6 @@ TEST(GradMinimizerDebugging, DISABLED_BranchingPDFLoadFromWorkspaceGradMinimizer
    auto nll = sum.createNLL(*data);
 
    RooMinimizer m0(*nll, RooMinimizer::FcnMode::gradient);
-   m0.setMinimizerType("Minuit2");
    m0.setStrategy(0);
    m0.migrad();
 }

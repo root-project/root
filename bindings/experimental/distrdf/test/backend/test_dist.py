@@ -60,6 +60,9 @@ class DistRDataFrameInvariants(unittest.TestCase):
         def make_dataframe(self, *args, **kwargs):
             """Dummy make_dataframe"""
             pass
+    
+        def optimize_npartitions(self):
+            pass
 
     def test_count_result_invariance(self):
         """

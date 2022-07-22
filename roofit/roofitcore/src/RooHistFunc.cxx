@@ -564,6 +564,8 @@ void RooHistFunc::Streamer(TBuffer &R__b)
 
 void RooHistFunc::ioStreamerPass2()
 {
+  RooAbsReal::ioStreamerPass2(); // call the baseclass method
+
   if (_histObsList.empty()) {
     _histObsList.addClone(_depList) ;
   }

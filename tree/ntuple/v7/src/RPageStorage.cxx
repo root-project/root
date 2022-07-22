@@ -337,6 +337,33 @@ void ROOT::Experimental::Detail::RPageSink::CommitSealedPage(
    fOpenPageRanges.at(columnId).fPageInfos.emplace_back(pageInfo);
 }
 
+std::vector<ROOT::Experimental::RNTupleLocator>
+ROOT::Experimental::Detail::RPageSink::CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges)
+{
+   std::vector<ROOT::Experimental::RNTupleLocator> locators;
+   for (auto &range : ranges) {
+      for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt)
+         locators.push_back(CommitSealedPageImpl(range.fColumnId, *sealedPageIt));
+   }
+   return locators;
+}
+
+void ROOT::Experimental::Detail::RPageSink::CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges)
+{
+   auto locators = CommitSealedPageVImpl(ranges);
+   unsigned i = 0;
+
+   for (auto &range : ranges) {
+      for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
+         fOpenColumnRanges.at(range.fColumnId).fNElements += sealedPageIt->fNElements;
+
+         RClusterDescriptor::RPageRange::RPageInfo pageInfo;
+         pageInfo.fNElements = sealedPageIt->fNElements;
+         pageInfo.fLocator = locators[i++];
+         fOpenPageRanges.at(range.fColumnId).fPageInfos.emplace_back(pageInfo);
+      }
+   }
+}
 
 std::uint64_t ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experimental::NTupleSize_t nEntries)
 {

@@ -82,8 +82,8 @@ void rf306_condpereventerrors()
    //
    // Instead of integrating out dterr, make a weighted average of curves
    // at values dterr_i as given in the external dataset.
-   // (The kTRUE argument bins the data before projection to speed up the process)
-   decay_gm.plotOn(frame2, ProjWData(*expDataDterr, kTRUE));
+   // (The true argument bins the data before projection to speed up the process)
+   decay_gm.plotOn(frame2, ProjWData(*expDataDterr, true));
 
    // Draw all frames on canvas
    TCanvas *c = new TCanvas("rf306_condpereventerrors", "rf306_condperventerrors", 1200, 400);

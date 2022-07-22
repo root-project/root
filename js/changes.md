@@ -1,9 +1,14 @@
 # JSROOT changelog
 
 ## Changes in dev
+1. Use TAxis attributes in lego plots - ticks/labels/title colors, sizes, offsets
+2. Correctly resize stats box when number of lines changes
+
+
+## Changes in 7.1.0
 1. Let change `settings` and `gStyle` parameters via "Settings" menu of the top hierarchy item
-2. Settings and gStyle can be stored as cookies, automatically read when loading webpage with jsroot
-3. `settings.OnlyLastCycle` defines if only last object version show in TFile (also as `&lastcycle` URL parameter)
+2. Settings and gStyle can be stored as cookies, automatically read when next time loading webpage
+3. `settings.OnlyLastCycle` defines if only last object version shown in TFile (also as `&lastcycle` URL parameter)
 4. `settings.DarkMode` configures dark mode for GUI and drawings (also as `&dark` URL parameter)
 5. Support new `TGraph2DAsymmErrors` class
 6. Support `gStyle.fOptDate` and `gStyle.fOptFile` (also as `&optdate` and `&optfile` URL parameter)
@@ -11,6 +16,7 @@
 8. Support `gStyle.fHistTopMargin` (also as `&histmargin=value` URL parameter)
 9. Let save frame, title and stats properties to `gStyle` via correspondent context menus
 10. Support majority of special symbols in TMathText
+11. Fix several issues with TPaveText
 
 
 ## Changes in 7.0.2

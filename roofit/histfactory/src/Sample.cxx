@@ -245,7 +245,6 @@ void RooStats::HistFactory::Sample::PrintXML( std::ofstream& xml ) const {
    << " Val=\""   << sys.GetVal()   << "\" "
    << " High=\""  << sys.GetHigh()  << "\" "
    << " Low=\""   << sys.GetLow()   << "\" "
-   << " Const=\"" << (sys.GetConst() ? std::string("True") : std::string("False")) << "\" "
    << "  /> " << std::endl;
     */
   }
@@ -350,7 +349,7 @@ void RooStats::HistFactory::Sample::AddOverallSys( const OverallSys& Sys ) {
   fOverallSysList.push_back(Sys);
 }
 
-void RooStats::HistFactory::Sample::AddNormFactor( std::string SysName, double SysVal, double SysLow, double SysHigh, bool SysConst ) {
+void RooStats::HistFactory::Sample::AddNormFactor( std::string const& SysName, double SysVal, double SysLow, double SysHigh ) {
 
   RooStats::HistFactory::NormFactor norm;
 
@@ -358,7 +357,6 @@ void RooStats::HistFactory::Sample::AddNormFactor( std::string SysName, double S
   norm.SetVal( SysVal );
   norm.SetLow( SysLow );
   norm.SetHigh( SysHigh );
-  norm.SetConst( SysConst );
 
   fNormFactorList.push_back( norm );
 

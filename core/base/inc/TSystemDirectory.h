@@ -32,15 +32,15 @@ class TList;
 class TSystemDirectory : public TSystemFile {
 
 protected:
-   TOrdCollection *fDirsInBrowser;
-   TOrdCollection *fFilesInBrowser;
+   TOrdCollection *fDirsInBrowser{nullptr};
+   TOrdCollection *fFilesInBrowser{nullptr};
 
    Bool_t             IsItDirectory(const char *name) const;
    TSystemDirectory  *FindDirObj(const char *name);
    TSystemFile       *FindFileObj(const char *name, const char *dir);
 
-   TSystemDirectory(const TSystemDirectory&);
-   TSystemDirectory& operator=(const TSystemDirectory&);
+   TSystemDirectory(const TSystemDirectory&) = delete;
+   TSystemDirectory& operator=(const TSystemDirectory&) = delete;
 
 public:
    TSystemDirectory();

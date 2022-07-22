@@ -342,86 +342,61 @@ Int_t REveBoxSet::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Crates 3D point array for rendering.
+/// Creates 3D point array for rendering.
 
 void REveBoxSet::BuildRenderData()
 {
-   fRenderData = std::make_unique<REveRenderData>("makeBoxSet", fPlex.Size()*24, 0, fPlex.Size());
+   fRenderData = std::make_unique<REveRenderData>("makeBoxSet", fPlex.Size() * 24, 0, fPlex.Size());
 
-   switch (fBoxType)
-   {
-      case REveBoxSet::kBT_FreeBox:
-      {
-         REveChunkManager::iterator bi(fPlex);
-         while (bi.next())
-         {
-            REveBoxSet::BFreeBox_t& b = * (REveBoxSet::BFreeBox_t*) bi();
-            // vertices
-            for (int c =0; c < 8; c++) {
-               for (int j =0; j < 3; j++)
-                  fRenderData->PushV(b.fVertices[c][j]);
+   REveChunkManager::iterator bi(fPlex);
+   while (bi.next()) {
+      REveDigitSet::DigitBase_t *b = (REveDigitSet::DigitBase_t *)bi();
+      if (IsDigitVisible(b)) {
+         WriteShapeData(*b);
+         if (fSingleColor == false) {
+
+            if (fValueIsColor) {
+               fRenderData->PushI(int(b->fValue));
+            } else if (fSingleColor == false) {
+               UChar_t c[4] = {0, 0, 0, 0};
+               fPalette->ColorFromValue(b->fValue, fDefaultValue, c);
+
+               int value = c[0] + c[1] * 256 + c[2] * 256 * 256;
+
+               // printf("box val [%d] values (%d, %d, %d) -> int <%d>\n", b.fValue, c[0], c[1], c[2],  value);
+               fRenderData->PushI(value);
             }
          }
-         break;
-      }
-      case REveBoxSet::kBT_AABox:
-      {
-         REveChunkManager::iterator bi(fPlex);
-         while (bi.next())
-         {
-            REveBoxSet::BAABox_t& b = * (REveBoxSet::BAABox_t*) bi();
-            // position
-            fRenderData->PushV(b.fA, b.fB, b.fC);
-            // dimensions
-            fRenderData->PushV(b.fW, b.fH, b.fD);
-         }
-         break;
-      }
-      default:
-         assert(false && "REveBoxSet::BuildRenderData only kBT_FreeBox type supported");
-   }
-
-   //
-   // setup colors
-   //
-   if (fSingleColor == false)
-   {
-      REveChunkManager::iterator bi(fPlex);
-      while (bi.next())
-      {
-         REveDigitSet::DigitBase_t& b = * (REveDigitSet::DigitBase_t*) bi();
-         if (fValueIsColor)
-         {
-            fRenderData->PushI(int(b.fValue));
-         }
-         else if (fSingleColor == false)
-         {
-            UChar_t c[4] = {0, 0, 0, 0};
-            Bool_t visible = fPalette->ColorFromValue(b.fValue, fDefaultValue, c);
-
-            int value =
-               c[0] +
-               c[1] * 256 +
-               c[2] * 256*256;
-
-            // printf("box val [%d] values (%d, %d, %d) -> int <%d>\n", b.fValue, c[0], c[1], c[2],  value);
-
-            // presume transparency 100% when non-visible
-            if (!visible)
-               value += 256*256*256*c[3];
-
-
-            fRenderData->PushI(value);
-         }
       }
    }
+}
 
-   if (!fDigitIds.empty())
-   {
-      for (int i = 0; i < fPlex.N(); ++i)
-      {
-         fRenderData->PushI(GetId(i));
+////////////////////////////////////////////////////////////////////////////////
+/// Write shape data for different cases
+///
+void REveBoxSet::WriteShapeData(REveDigitSet::DigitBase_t &digit)
+{
+   switch (fBoxType) {
+   case REveBoxSet::kBT_FreeBox: {
+      REveBoxSet::BFreeBox_t &b = (REveBoxSet::BFreeBox_t &)(digit);
+      // vertices
+      for (int c = 0; c < 8; c++) {
+         for (int j = 0; j < 3; j++)
+            fRenderData->PushV(b.fVertices[c][j]);
       }
+      break;
+   }
+
+   case REveBoxSet::kBT_AABox: {
+      REveBoxSet::BAABox_t &b = (REveBoxSet::BAABox_t &)(digit);
+      // position
+      fRenderData->PushV(b.fA, b.fB, b.fC);
+      // dimensions
+      fRenderData->PushV(b.fW, b.fH, b.fD);
+
+      break;
+   }
+   default: assert(false && "REveBoxSet::BuildRenderData only kBT_FreeBox type supported");
    }
 }
 

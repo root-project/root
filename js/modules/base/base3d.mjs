@@ -1,19 +1,15 @@
 import { select as d3_select } from '../d3.mjs';
-
 import { HelveticerRegularJson, Font, WebGLRenderer, WebGLRenderTarget,
          CanvasTexture, TextureLoader,
          BufferGeometry, BufferAttribute, Float32BufferAttribute,
          Vector2, Vector3, Color, Points, PointsMaterial,
          LineSegments, LineDashedMaterial, LineBasicMaterial,
          OrbitControls, Raycaster, SVGRenderer } from '../three.mjs';
-
 import { browser, settings, constants, internals, isBatchMode, isNodeJs, getDocument } from '../core.mjs';
-
 import { getElementRect, getAbsPosInCanvas } from './BasePainter.mjs';
-
 import { TAttMarkerHandler } from './TAttMarkerHandler.mjs';
-
 import { getSvgLineStyle } from './TAttLineHandler.mjs';
+
 
 const HelveticerRegularFont = new Font(HelveticerRegularJson);
 
@@ -388,7 +384,7 @@ function assign3DHandler(painter) {
 let node_canvas, node_gl;
 
 ///_begin_exclude_in_qt5web_
-if(isNodeJs()) { node_canvas = await import('canvas').then(h => h.default); node_gl = await import('gl').then(h => h.default); } /// cutNodeJs
+if(isNodeJs() && process.env?.APP_ENV !== 'browser') { node_canvas = await import('canvas').then(h => h.default); node_gl = await import('gl').then(h => h.default); } /// cutNodeJs
 ///_end_exclude_in_qt5web_
 
 

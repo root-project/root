@@ -210,9 +210,13 @@ RooAbsReal& ParamHistFunc::getParameter( Int_t index ) const {
     _numBinsPerDim = getNumBinsPerDim(_dataVars);
   }
 
-  int i = index / n.yz ;
-  int j = (index % n.y) / n.z;
-  int k = index % (n.yz);
+  // Unravel the index to 3D coordinates. We can't use the index directly,
+  // because in the parameter set the dimensions are ordered in reverse order
+  // compared to the RooDataHist (for historical reasons).
+  const int i = index / n.yz;
+  const int tmp = index % n.yz;
+  const int j = tmp / n.z;
+  const int k = tmp % n.z;
 
   return static_cast<RooAbsReal&>(_paramSet[i + j * n.x + k * n.xy]);
 }

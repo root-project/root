@@ -71,10 +71,7 @@ RooBinnedGenContext::RooBinnedGenContext(const RooAbsPdf &model, const RooArgSet
   _vars = _pdf->getObservables(vars) ;
 
   // If pdf has boundary definitions, follow those for the binning
-  RooFIter viter = _vars->fwdIterator() ;
-  RooAbsArg* var ;
-  while((var=viter.next())) {
-    RooRealVar* rvar = dynamic_cast<RooRealVar*>(var) ;
+  for (auto* rvar: dynamic_range_cast<RooRealVar*>(*_vars)) {
     if (rvar) {
       list<double>* binb = model.binBoundaries(*rvar,rvar->getMin(),rvar->getMax()) ;
       delete binb ;

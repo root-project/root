@@ -12,6 +12,7 @@
 #include "ROOT/REveDigitSet.hxx"
 #include "ROOT/REveManager.hxx"
 #include "ROOT/REveTrans.hxx"
+#include "ROOT/REveSelection.hxx"
 
 #include "TRefArray.h"
 
@@ -142,7 +143,15 @@ REveDigitSet::DigitBase_t* REveDigitSet::NewDigit()
 
 void REveDigitSet::ReleaseIds()
 {
-   fDigitIds.clear();
+   if (fDigitIds)
+   {
+      const Int_t N = fDigitIds->GetSize();
+
+      for (Int_t i = 0; i < N; ++i)
+         delete fDigitIds->At(i);
+
+      fDigitIds->Expand(0);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -191,34 +200,32 @@ void REveDigitSet::UnHighlighted()
    REveElement::UnHighlighted();
 }
 
+*/
 ////////////////////////////////////////////////////////////////////////////////
 /// Return tooltip for highlighted element if always-sec-select is set.
 /// Otherwise return the tooltip for this element.
 
-TString REveDigitSet::GetHighlightTooltip()
+std::string REveDigitSet::GetHighlightTooltip(const std::set<int>& secondary_idcs) const
 {
-   if (fHighlightedSet.empty()) return "";
-
    if (GetAlwaysSecSelect())
    {
       if (fTooltipCBFoo)
       {
-         return (fTooltipCBFoo)(this, *fHighlightedSet.begin());
+        return (fTooltipCBFoo)(this, *secondary_idcs.begin());
       }
       else if (fDigitIds)
       {
-         TObject *o = GetId(*fHighlightedSet.begin());
+         TObject *o = GetId(*secondary_idcs.begin());
          if (o)
-            return TString(o->GetName());
+            return o->GetName();
       }
-      return TString::Format("%s; idx=%d", GetElementName(), *fHighlightedSet.begin());
+      return TString::Format("%s; idx=%d", GetCName(), *secondary_idcs.begin()).Data();
    }
    else
    {
-      return REveElement::GetHighlightTooltip();
+      return REveElement::GetHighlightTooltip(secondary_idcs);
    }
 }
-*/
 ////////////////////////////////////////////////////////////////////////////////
 /// Instruct underlying memory allocator to regroup itself into a
 /// contiguous memory chunk.
@@ -311,21 +318,34 @@ void REveDigitSet::DigitColor(UChar_t* rgba)
    x[0] = rgba[0]; x[1] = rgba[1]; x[2] = rgba[2]; x[3] = rgba[3];
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set external object reference for the last digit added.
+
+void REveDigitSet::DigitId(TObject* id)
+{
+   DigitId(fLastIdx, id);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set external id for the last added digit.
 
-void REveDigitSet::DigitId(Int_t n)
+void REveDigitSet::DigitId(Int_t n, TObject* id)
 {
-   fDigitIds.push_back(n);
+   if (!fDigitIds)
+      fDigitIds = new TRefArray;
+
+   if (fOwnIds && n < fDigitIds->GetSize() && fDigitIds->At(n))
+      delete fDigitIds->At(n);
+
+   fDigitIds->AddAtAndExpand(id, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set external object reference for digit n.
 
-Int_t REveDigitSet::GetId(Int_t n) const
+TObject* REveDigitSet::GetId(Int_t n) const
 {
-   return fDigitIds[n];
+   return fDigitIds ? fDigitIds->At(n) : 0;
 }
 
 /*
@@ -419,6 +439,102 @@ REveRGBAPalette* REveDigitSet::AssertPalette()
       }
    }
    return fPalette;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Utility function for maping digit idx with visible shape idx
+bool REveDigitSet::IsDigitVisible(const DigitBase_t *d) const
+{
+   if (fSingleColor) {
+      return true;
+   } else if (fValueIsColor) {
+      return d->fValue ? true : false;
+   } else {
+      if (fPalette)
+         return d->fValue > fPalette->GetMinVal() && d->fValue < fPalette->GetMaxVal();
+      else {
+         printf("Error REveDigitSet::IsDigitVisible() unhadled case\n");
+         return true;
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Utility function for maping digit idx with visible shape idx
+int REveDigitSet::GetAtomIdxFromShapeIdx(int iShapeIdx) const
+{
+   int atomIdx = 0;
+   int shapeIdx = 0;
+   for (Int_t c = 0; c < fPlex.VecSize(); ++c) {
+      Char_t *a = fPlex.Chunk(c);
+      Int_t n = fPlex.NAtoms(c);
+      while (n--) {
+         if (IsDigitVisible((DigitBase_t *)a)) {
+            if (shapeIdx == iShapeIdx)
+               return atomIdx;
+            shapeIdx++;
+         }
+         atomIdx++;
+         a += fPlex.S();
+      }
+   }
+
+   printf("REveDigitSet::GetAtomIdxFromShapeIdx Error locating atom idx from shape idx %d\n", iShapeIdx);
+   return -1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Utility function for maping shape idx to digit idx
+int REveDigitSet::GetShapeIdxFromAtomIdx(int iAtomIdx) const
+{
+   int atomIdx = 0;
+   int shapeIdx = 0;
+   for (Int_t c = 0; c < fPlex.VecSize(); ++c) {
+      Char_t *a = fPlex.Chunk(c);
+      Int_t n = fPlex.NAtoms(c);
+      while (n--) {
+         if (IsDigitVisible((DigitBase_t *)a)) {
+            if (atomIdx == iAtomIdx) {
+               return shapeIdx;
+            }
+            shapeIdx++;
+         }
+         atomIdx++;
+         a += fPlex.S();
+      }
+   }
+
+   printf("REveDigitSet::GetShapeIdxFromAtomIdx:: Atom with idx %d dose not have a visible shape \n", iAtomIdx);
+   return -1;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Direct callback from EveElemenControl, function elementSelected/elementHighligted controll
+//
+void REveDigitSet::NewShapePicked(int shapeIdx, Int_t selectionId, bool multi)
+{
+   int digitId = GetAtomIdxFromShapeIdx(shapeIdx);
+   auto digit = GetDigit(digitId);
+   if (gDebug) printf("REveDigitSet::NewShapePicked elementId %d shape ID = %d, atom ID = %d, value = %d\n", GetElementId(), shapeIdx, digitId, digit->fValue);
+
+   REveSelection *selection = dynamic_cast<REveSelection *>(ROOT::Experimental::gEve->FindElementById(selectionId));
+   std::set<int> sset = {digitId};
+
+   RefSelectedSet() = sset;
+   selection->NewElementPicked(GetElementId(), multi, true, sset);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// called from REveSelection to stream specific selection data
+void REveDigitSet::FillExtraSelectionData(nlohmann::json &j, const std::set<int> &secondary_idcs) const
+{
+   j["shape_idcs"] = nlohmann::json::array();
+   for (auto &i : secondary_idcs) {
+      int shapeIdx =  GetShapeIdxFromAtomIdx(i);
+      if (shapeIdx >= 0)
+         j["shape_idcs"].push_back(GetShapeIdxFromAtomIdx(i));
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

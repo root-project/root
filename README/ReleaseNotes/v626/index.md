@@ -152,6 +152,7 @@ If you have been trying RNTuple for a while, these are the other important chang
 
 ### Notable changes in behavior
 
+- Using `Alias`, it is now possible to register homonymous aliases (alternative column names) in different branches of the computation graph, in line with the behavior of `Define` (until now, aliases were required to be unique in the whole computaton graph).
 - The `Histo*D` methods now support the combination of scalar values and vector-like weight values. For each entry, the histogram is filled once for each weight, always with the same scalar value.
 - The `Histo*D` methods do not work on columns of type `std::string` anymore. They used to fill the histogram with the integer value corresponding to each of the characters in the string. Please use `Fill` with a custom class to recover the old behavior if that was what was desired.
 
