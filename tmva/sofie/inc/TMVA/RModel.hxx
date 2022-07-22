@@ -1,6 +1,7 @@
 #ifndef TMVA_SOFIE_RMODEL
 #define TMVA_SOFIE_RMODEL
 
+#include <type_traits>
 #include <unordered_set>
 #include <vector>
 #include <unordered_map>
@@ -19,10 +20,18 @@ namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
 
+enum class Options {
+   kDefault = 0x0,
+   kNoSession = 0x1,
+   kNoWeightFile = 0x2,
+};
+
+std::underlying_type_t<Options> operator|(Options opA, Options opB);
+std::underlying_type_t<Options> operator|(std::underlying_type_t<Options> opA, Options opB);
+
 class RModel: public TObject{
 
 private:
-
    std::unordered_map<std::string, InputTensorInfo> fInputTensorInfos; //graph input only; not including operator input (intermediate tensors)
    std::unordered_map<std::string, TensorInfo> fReadyInputTensorInfos;
    std::unordered_map<std::string, InitializedTensor> fInitializedTensors;
@@ -42,10 +51,8 @@ private:
 
    const std::unordered_set<std::string> fAllowedStdLib = {"vector", "algorithm", "cmath"};
    std::unordered_set<std::string> fNeededStdLib = {"vector"};
-   bool fUseWeightFile = false;
-   bool fUseSession = false;
-
-
+   bool fUseWeightFile = true;
+   bool fUseSession = true;
 
 public:
 
@@ -87,7 +94,10 @@ public:
 
 
    void Initialize(int batchSize=1);
-   void Generate(bool useSession = true, bool useWeightFile = true, int batchSize = 1);
+   void Generate(std::underlying_type_t<Options> options, int batchSize = 1);
+   void Generate(Options options = Options::kDefault, int batchSize = 1) {
+      Generate(static_cast<std::underlying_type_t<Options>>(options), batchSize);
+   }
 
    void ReadInitializedTensorsFromFile();
    void WriteInitializedTensorsToFile(std::string filename = "");
