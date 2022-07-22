@@ -112,7 +112,7 @@ public:
    std::list<double> *plotSamplingHint(RooAbsRealLValue & /*obs*/, double /*xlo*/, double /*xhi*/) const override;
    bool isBinnedDistribution(const RooArgSet &obs) const override;
    double evaluate() const override;
-   TObject *clone(const char *newname) const override;
+   TObject *clone(const char *newname) const override { return new RooLagrangianMorphFunc(*this, newname); }
 
    bool checkObservables(const RooArgSet *nset) const override;
    bool forceAnalyticalInt(const RooAbsArg &arg) const override;
@@ -247,7 +247,6 @@ public:
    static std::unique_ptr<RooRatio> makeRatio(const char *name, const char *title, RooArgList &nr, RooArgList &dr);
 
 private:
-
    mutable RooObjCacheManager _cacheMgr; //! The cache manager
    double _scale = 1.0;
    std::map<std::string, int> _sampleMap;
