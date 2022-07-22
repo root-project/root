@@ -30,7 +30,7 @@ int main(int argc, char *argv[]){
    fileRead.GetObject("model",modelPtr);
    fileRead.Close();
    // in this case we don't write session class and weight file
-   modelPtr->Generate(false, false);
+   modelPtr->Generate(Options::kNoSession | Options::kNoWeightFile);
    modelPtr->OutputGenerated(outname+"_FromROOT.hxx");
    return 0;
 }
