@@ -293,17 +293,14 @@ std::unique_ptr<ROperator> MakeKerasConv(PyObject* fLayer){
          long outputHeight = std::ceil(float(inputHeight) / float(fAttrStrides[0]));
          long outputWidth  = std::ceil(float(inputWidth) / float(fAttrStrides[1]));
 
-         long x1 = (outputHeight - 1) * fAttrStrides[0] + fAttrKernelShape[0] - inputHeight;
-         long x2 = (outputWidth - 1) * fAttrStrides[1] + fAttrKernelShape[1] - inputWidth;
+         long padding_height = std::max(long((outputHeight - 1) * fAttrStrides[0] + fAttrKernelShape[0] - inputHeight),0L);
+         long padding_width = std::max(long((outputWidth - 1) * fAttrStrides[1] + fAttrKernelShape[1] - inputWidth),0L);
 
-         if(x1 < 0) x1 = 0;
-         if(x2 < 0) x2 = 0;
-
-         size_t x1_begin = std::floor(x1/2);
-         size_t x1_end   = x1 - x1_begin;
-         size_t x2_begin = std::floor(x2/2);
-         size_t x2_end   = x2 - x2_begin;
-         fAttrPads = {x1_begin,x2_begin,x1_end,x2_end};
+         size_t padding_top = std::floor(padding_height/2);
+         size_t padding_bottom   = padding_height - padding_top;
+         size_t padding_left = std::floor(padding_width/2);
+         size_t padding_right   = padding_width - padding_left;
+         fAttrPads = {padding_top,padding_bottom,padding_left,padding_right};
       }
       else{
          throw std::runtime_error("TMVA::SOFIE - RModel Keras Parser doesn't yet supports Convolution layer with padding " + fKerasPadding);
@@ -335,11 +332,7 @@ std::unique_ptr<ROperator> MakeKerasActivation(PyObject* fLayer){
       PyObject* fAttributes=PyDict_GetItemString(fLayer,"layerAttributes");
       PyObject* fPActivation = PyDict_GetItemString(fAttributes,"activation");
       std::string fLayerActivation = PyStringAsString(PyObject_GetAttrString(fPActivation,"__name__"));
-<<<<<<< HEAD
-      
-=======
 
->>>>>>> 4f8836d2f6 (feat: transpose op before and after conv for Keras NHWC)
       auto findLayer = mapKerasLayer.find(fLayerActivation);
       if(findLayer == mapKerasLayer.end()){
          throw std::runtime_error("TMVA::SOFIE - Parsing Keras Activation layer " + fLayerActivation + " is not yet supported");
