@@ -995,6 +995,7 @@ AddSizeBranches(const std::vector<std::string> &branches, TTree *tree, std::vect
    assert(colsWithoutAliases.size() == colsWithAliases.size());
 
    auto nCols = colsWithoutAliases.size();
+   // Use index-iteration as we modify the vector during the iteration. 
    for (std::size_t i = 0u; i < nCols; ++i) {
       const auto &colName = colsWithoutAliases[i];
       if (!IsStrInVec(colName, branches))
