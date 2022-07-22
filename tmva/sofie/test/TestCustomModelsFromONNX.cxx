@@ -27,6 +27,9 @@
 #include "Div_FromONNX.hxx"
 #include "input_models/references/Div.ref.hxx"
 
+#include "Neg_FromONNX.hxx"
+#include "input_models/references/Neg.ref.hxx"
+
 #include "LinearWithLeakyRelu_FromONNX.hxx"
 #include "input_models/references/LinearWithLeakyRelu.ref.hxx"
 
@@ -289,6 +292,30 @@ TEST(ONNX, Div)
       EXPECT_EQ(output.size(), sizeof(Div_ExpectedOutput::outputs) / sizeof(float));
 
       float *correct = Div_ExpectedOutput::outputs;
+
+      // Checking every output value, one by one
+      for (size_t i = 0; i < output.size(); ++i) {
+         EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+      }
+   }
+
+TEST(ONNX, Neg)
+   {
+      constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+      // Preparing the standard input
+      std::vector<float> input({
+        -1.9100,  1.8811, -1.7269, -0.1094, -0.0145,  0.2509,  0.5893, -2.2733,
+        -0.7077,  1.0645, -0.8607,  0.2085
+      });
+      
+      TMVA_SOFIE_Neg::Session s("Neg_FromONNX.dat");
+      std::vector<float> output = s.infer(input.data());
+
+      // Checking output size
+      EXPECT_EQ(output.size(), sizeof(Neg_ExpectedOutput::outputs) / sizeof(float));
+
+      float *correct = Neg_ExpectedOutput::outputs;
 
       // Checking every output value, one by one
       for (size_t i = 0; i < output.size(); ++i) {
