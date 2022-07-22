@@ -17,6 +17,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/RModel.hxx
    TMVA/ROperator.hxx
    TMVA/ROperator_BasicBinary.hxx
+   TMVA/ROperator_Neg.hxx
    TMVA/ROperator_BatchNormalization.hxx
    TMVA/ROperator_Conv.hxx
    TMVA/ROperator_Gemm.hxx
