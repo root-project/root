@@ -113,7 +113,6 @@ public:
    bool isBinnedDistribution(const RooArgSet &obs) const override;
    double evaluate() const override;
    TObject *clone(const char *newname) const override;
-   double getValV(const RooArgSet *set = 0) const override;
 
    bool checkObservables(const RooArgSet *nset) const override;
    bool forceAnalyticalInt(const RooAbsArg &arg) const override;
@@ -179,16 +178,13 @@ private:
    class CacheElem;
    void init();
    void setup(bool ownParams = true);
-   bool _ownParameters = false;
    void disableInterference(const std::vector<const char *> &nonInterfering);
    void disableInterferences(const std::vector<std::vector<const char *>> &nonInterfering);
-
-   mutable RooObjCacheManager _cacheMgr; //! The cache manager
 
    void addFolders(const RooArgList &folders);
 
    bool hasCache() const;
-   RooLagrangianMorphFunc::CacheElem *getCache(const RooArgSet *nset) const;
+   RooLagrangianMorphFunc::CacheElem *getCache() const;
    void updateSampleWeights();
 
    RooRealVar *setupObservable(const char *obsname, TClass *mode, TObject *inputExample);
@@ -251,7 +247,9 @@ public:
    static std::unique_ptr<RooRatio> makeRatio(const char *name, const char *title, RooArgList &nr, RooArgList &dr);
 
 private:
-   double _scale = 1;
+
+   mutable RooObjCacheManager _cacheMgr; //! The cache manager
+   double _scale = 1.0;
    std::map<std::string, int> _sampleMap;
    RooListProxy _physics;
    RooSetProxy _operators;
@@ -260,8 +258,6 @@ private:
    RooListProxy _flags;
    Config _config;
    std::vector<std::vector<RooListProxy *>> _diagrams;
-   mutable const RooArgSet *_curNormSet = nullptr; //!
-
    std::vector<RooListProxy *> _nonInterfering;
 
    ClassDefOverride(RooLagrangianMorphFunc, 1)
