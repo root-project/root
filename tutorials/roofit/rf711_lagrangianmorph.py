@@ -23,7 +23,7 @@ ROOT.gROOT.SetBatch(True)
 observablename = "pTV"
 
 # Setup observable that is to be morphed
-obsvar = ROOT.RooRealVar(observablename, "observable of pTV", 10, 600)
+obsvar = ROOT.RooRealVar(observablename, "p_{T}^{V}", 10, 600)
 
 # Setup two couplings that enters the morphing function
 # kSM -> SM coupling set to constant (1)
@@ -113,7 +113,6 @@ ROOT.gPad.SetLeftMargin(0.15)
 ROOT.gPad.SetRightMargin(0.05)
 
 frame0.Draw()
-frame0.GetXaxis().SetTitle("c_{Hq^{(3)}}")
 leg1 = ROOT.TLegend(0.55, 0.65, 0.94, 0.87)
 leg1.SetTextSize(0.04)
 leg1.SetFillColor(ROOT.kWhite)
@@ -130,7 +129,6 @@ ROOT.gPad.SetLeftMargin(0.15)
 ROOT.gPad.SetRightMargin(0.05)
 
 frame1.Draw()
-frame1.GetXaxis().SetTitle("p_{T}^{V}")
 
 leg2 = ROOT.TLegend(0.62, 0.65, 0.94, 0.87)
 leg2.SetTextSize(0.04)
@@ -155,7 +153,6 @@ ROOT.TColor.InvertPalette()
 ROOT.gPad.SetLogz()
 hh_data.GetYaxis().SetTitle("c_{Hq^{(3)}}")
 hh_data.GetYaxis().SetRangeUser(0, 0.5)
-hh_data.GetXaxis().SetTitle("p_{T}^{V}")
 hh_data.GetZaxis().SetTitleOffset(1.8)
 hh_data.Draw("COLZ")
 c1.SaveAs("rf711_lagrangianmorph.png")
