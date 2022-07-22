@@ -25,7 +25,7 @@ using namespace RooStats;
 void rs701_BayesianCalculator(bool useBkg = true, double confLevel = 0.90)
 {
 
-   RooWorkspace *w = new RooWorkspace("w", true);
+   RooWorkspace *w = new RooWorkspace("w");
    w->factory("SUM::pdf(s[0.001,15]*Uniform(x[0,1]),b[1,0,2]*Uniform(x))");
    w->factory("Gaussian::prior_b(b,1,1)");
    w->factory("PROD::model(pdf,prior_b)");
