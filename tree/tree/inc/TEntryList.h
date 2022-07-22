@@ -67,8 +67,8 @@ class TEntryList: public TNamed
    virtual Bool_t      Enter(Long64_t entry, TTree *tree = 0);
    virtual TEntryList *GetCurrentList() const { return fCurrent; };
    virtual TEntryList *GetEntryList(const char *treename, const char *filename, Option_t *opt="");
-   virtual Long64_t    GetEntry(Int_t index);
-   virtual Long64_t    GetEntryAndTree(Int_t index, Int_t &treenum);
+   virtual Long64_t    GetEntry(Long64_t index);
+   virtual Long64_t    GetEntryAndTree(Long64_t index, Int_t &treenum);
    virtual Long64_t    GetEntriesToProcess() const {return fEntriesToProcess;}
    virtual TList      *GetLists() const { return fLists; }
    virtual TDirectory *GetDirectory() const { return fDirectory; }
