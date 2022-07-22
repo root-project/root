@@ -109,4 +109,6 @@
 #pragma link C++ class ROOT::Math::GSLMultiRootFinder+;
 #pragma link C++ typedef ROOT::Math::MultiRootFinder;
 
+#pragma link C++ class ROOT::Math::VoigtRelativistic+;
+
 #endif //__CINT__
