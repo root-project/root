@@ -87,7 +87,7 @@ TEntryListFromFile::~TEntryListFromFile()
 /// Returns entry \#index
 /// See also Next() for a faster alternative
 
-Long64_t TEntryListFromFile::GetEntry(Int_t index)
+Long64_t TEntryListFromFile::GetEntry(Long64_t index)
 {
    if (index<0) return -1;
 
@@ -152,7 +152,7 @@ Long64_t TEntryListFromFile::GetEntry(Int_t index)
 /// Return the entry corresponding to the index parameter and the
 /// number of the tree, where this entry is
 
-Long64_t TEntryListFromFile::GetEntryAndTree(Int_t index, Int_t &treenum)
+Long64_t TEntryListFromFile::GetEntryAndTree(Long64_t index, Int_t &treenum)
 {
    Long64_t result = GetEntry(index);
    treenum = fTreeNumber;

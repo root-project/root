@@ -67,8 +67,8 @@ public:
    virtual TEntryList *GetCurrentList() const { return fCurrent; };
    virtual TEntryList *GetEntryList(const char * /*treename*/, const char * /*filename*/, Option_t * /*opt=""*/) {return 0;};
 
-   virtual Long64_t    GetEntry(Int_t index);
-   virtual Long64_t    GetEntryAndTree(Int_t index, Int_t &treenum);
+   virtual Long64_t    GetEntry(Long64_t index);
+   virtual Long64_t    GetEntryAndTree(Long64_t index, Int_t &treenum);
    virtual Long64_t    GetEntries();
    virtual Long64_t    GetEntriesFast() const { return fN; };
 
