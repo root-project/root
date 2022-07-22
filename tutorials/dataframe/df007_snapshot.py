@@ -3,7 +3,7 @@
 ## \notebook -draw
 ## Write ROOT data with RDataFrame.
 ##
-## This tutorial shows how to write out datasets in ROOT format using the RDataFrame
+## This tutorial shows how to write out datasets in ROOT format using RDataFrame.
 ##
 ## \macro_image
 ## \macro_code
@@ -26,14 +26,14 @@ outFileNameAllColumns = "df007_snapshot_output_allColumns_py.root"
 treeName = "myTree"
 fill_tree(treeName, fileName)
 
-# We read the tree from the file and create a RDataFrame.
+# We read the tree from the file and create a RDataFrame
 d = ROOT.RDataFrame(treeName, fileName)
 
 # ## Select entries
 # We now select some entries in the dataset
 d_cut = d.Filter("b1 % 2 == 0")
 # ## Enrich the dataset
-# Build some temporary columns: we'll write them out
+# Build some temporary columns: We'll write them out
 
 getVector_code ='''
 std::vector<float> getVector (float b2)
