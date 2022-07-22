@@ -247,7 +247,6 @@ public:
    static std::unique_ptr<RooRatio> makeRatio(const char *name, const char *title, RooArgList &nr, RooArgList &dr);
 
 private:
-
    mutable RooObjCacheManager _cacheMgr; //! The cache manager
    double _scale = 1.0;
    std::map<std::string, int> _sampleMap;
