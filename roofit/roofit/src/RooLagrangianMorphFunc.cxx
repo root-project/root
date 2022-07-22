@@ -495,8 +495,8 @@ std::unique_ptr<TFolder> readOwningFolderFromFile(TDirectory *inFile, const std:
 /// @param notFoundError If set, print a detailed error if we didn't find something
 /// @return Returns a pointer to a clone of the loaded object. Ownership assigned to the caller.
 template <class AObjType>
-AObjType *loadFromFileResidentFolder(TDirectory *inFile, const std::string &folderName, const std::string &objName,
-                                     bool notFoundError = true)
+std::unique_ptr<AObjType> loadFromFileResidentFolder(TDirectory *inFile, const std::string &folderName,
+                                                     const std::string &objName, bool notFoundError = true)
 {
    auto folder = readOwningFolderFromFile(inFile, folderName);
    if (!folder) {
@@ -518,8 +518,8 @@ AObjType *loadFromFileResidentFolder(TDirectory *inFile, const std::string &fold
       return nullptr;
    }
    // replace the loaded object by a clone, as the loaded folder will delete the original
-   return static_cast<AObjType *>(
-      loadedObject->Clone()); // can use a static_cast - confirmed validity by initial cast above.
+   // can use a static_cast - confirmed validity by initial cast above.
+   return std::unique_ptr<AObjType>{static_cast<AObjType *>(loadedObject->Clone())};
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -529,8 +529,8 @@ template <class T>
 void readValues(std::map<const std::string, T> &myMap, TDirectory *file, const std::string &name,
                 const std::string &key = "param_card", bool notFoundError = true)
 {
-   TH1F *h_pc = loadFromFileResidentFolder<TH1F>(file, name, key, notFoundError);
-   readValues(myMap, h_pc);
+   auto h_pc = loadFromFileResidentFolder<TH1F>(file, name, key, notFoundError);
+   readValues(myMap, h_pc.get());
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -767,7 +767,7 @@ void collectHistograms(const char *name, TDirectory *file, std::map<std::string,
    bool binningOK = false;
    for (auto sampleit : inputParameters) {
       const std::string sample(sampleit.first);
-      TH1 *hist = loadFromFileResidentFolder<TH1>(file, sample, varname, true);
+      auto hist = loadFromFileResidentFolder<TH1>(file, sample, varname, true);
       if (!hist)
          return;
 
@@ -798,13 +798,15 @@ void collectHistograms(const char *name, TDirectory *file, std::map<std::string,
          RooArgSet vars;
          vars.add(var);
 
-         RooDataHist *dh = new RooDataHist(histname, histname, vars, hist);
+         // TODO: to fix the memory leak of this RooDataHist here, the best
+         // solution will be to follow up with a way for having the RooHistFunc
+         // own the underlying RooDataHist.
+         RooDataHist *dh = new RooDataHist(histname, histname, vars, hist.get());
          // add it to the list
-         RooHistFunc *hf = new RooHistFunc(funcname, funcname, var, *dh);
+         auto hf = std::make_unique<RooHistFunc>(funcname, funcname, var, *dh);
          int idx = physics.getSize();
          list_hf[sample] = idx;
-         physics.add(*hf);
-         assert(hf = static_cast<RooHistFunc *>(physics.at(idx)));
+         physics.addOwned(std::move(hf));
       }
       // std::cout << "found histogram " << hist->GetName() << " with integral "
       // << hist->Integral() << std::endl;
@@ -820,15 +822,14 @@ void collectRooAbsReal(const char * /*name*/, TDirectory *file, std::map<std::st
 {
    for (auto sampleit : inputParameters) {
       const std::string sample(sampleit.first);
-      RooAbsReal *obj = loadFromFileResidentFolder<RooAbsReal>(file, sample, varname, true);
+      auto obj = loadFromFileResidentFolder<RooAbsReal>(file, sample, varname, true);
       if (!obj)
          return;
       auto it = list_hf.find(sample);
       if (it == list_hf.end()) {
          int idx = physics.getSize();
          list_hf[sample] = idx;
-         physics.add(*obj);
-         assert(obj == physics.at(idx));
+         physics.addOwned(std::move(obj));
       }
    }
 }
@@ -843,14 +844,14 @@ void collectCrosssections(const char *name, TDirectory *file, std::map<std::stri
 {
    for (auto sampleit : inputParameters) {
       const std::string sample(sampleit.first);
-      TObject *obj = loadFromFileResidentFolder<TObject>(file, sample, varname, false);
+      auto obj = loadFromFileResidentFolder<TObject>(file, sample, varname, false);
       TParameter<T> *xsection = nullptr;
       TParameter<T> *error = nullptr;
-      TParameter<T> *p = dynamic_cast<TParameter<T> *>(obj);
+      TParameter<T> *p = dynamic_cast<TParameter<T> *>(obj.get());
       if (p) {
          xsection = p;
       }
-      TPair *pair = dynamic_cast<TPair *>(obj);
+      TPair *pair = dynamic_cast<TPair *>(obj.get());
       if (pair) {
          xsection = dynamic_cast<TParameter<T> *>(pair->Key());
          error = dynamic_cast<TParameter<T> *>(pair->Value());
@@ -868,15 +869,17 @@ void collectCrosssections(const char *name, TDirectory *file, std::map<std::stri
          xs->setVal(xsection->GetVal());
       } else {
          std::string objname = Form("phys_%s_%s", name, sample.c_str());
-         xs = new RooRealVar(objname.c_str(), objname.c_str(), xsection->GetVal());
+         auto xsOwner = std::make_unique<RooRealVar>(objname.c_str(), objname.c_str(), xsection->GetVal());
+         xs = xsOwner.get();
          xs->setConstant(true);
          int idx = physics.getSize();
          list_xs[sample] = idx;
-         physics.add(*xs);
+         physics.addOwned(std::move(xsOwner));
          assert(physics.at(idx) == xs);
       }
-      if (error)
+      if (error) {
          xs->setError(error->GetVal());
+      }
    }
 }
 
@@ -888,21 +891,17 @@ void collectCrosssectionsTPair(const char *name, TDirectory *file, std::map<std:
                                RooArgList &physics, const std::string &varname, const std::string &basefolder,
                                const RooLagrangianMorphFunc::ParamMap &inputParameters)
 {
-   TPair *pair = loadFromFileResidentFolder<TPair>(file, basefolder, varname, false);
+   auto pair = loadFromFileResidentFolder<TPair>(file, basefolder, varname, false);
    if (!pair)
       return;
-   TParameter<double> *xsec_double = dynamic_cast<TParameter<double> *>(pair->Key());
-   if (xsec_double) {
+   if (dynamic_cast<TParameter<double> *>(pair->Key())) {
       collectCrosssections<double>(name, file, list_xs, physics, varname, inputParameters);
+   } else if (dynamic_cast<TParameter<float> *>(pair->Key())) {
+      collectCrosssections<float>(name, file, list_xs, physics, varname, inputParameters);
    } else {
-      TParameter<float> *xsec_float = dynamic_cast<TParameter<float> *>(pair->Key());
-      if (xsec_float) {
-         collectCrosssections<float>(name, file, list_xs, physics, varname, inputParameters);
-      } else {
-         std::cerr << "cannot morph objects of class 'TPair' if parameter is not "
-                      "double or float!"
-                   << std::endl;
-      }
+      std::cerr << "cannot morph objects of class 'TPair' if parameter is not "
+                   "double or float!"
+                << std::endl;
    }
 }
 
@@ -1270,13 +1269,13 @@ inline void buildSampleWeights(T1 &weights, const char *fname, const RooLagrangi
 
       int formulaidx = 0;
       // build the formula with the correct normalization
-      RooLinearCombination *sampleformula = new RooLinearCombination(name_full.Data());
+      auto sampleformula = std::make_unique<RooLinearCombination>(name_full.Data());
       for (auto const &formulait : formulas) {
          const RooFit::SuperFloat val(inverse(formulaidx, sampleidx));
          sampleformula->add(val, formulait.second.get());
          formulaidx++;
       }
-      weights.add(*sampleformula);
+      weights.addOwned(std::move(sampleformula));
       sampleidx++;
    }
 }
@@ -1506,7 +1505,6 @@ public:
       _sumFunc.get()->addServerList(operators);
       if (_weights.getSize() < 1)
          std::cerr << "unable to access weight objects" << std::endl;
-      _sumFunc.get()->addOwnedComponents(_weights);
       _sumFunc.get()->addOwnedComponents(std::move(sumElements));
       _sumFunc.get()->addServerList(sumElements);
       _sumFunc.get()->addServerList(scaleElements);
@@ -1640,10 +1638,15 @@ RooRealVar *RooLagrangianMorphFunc::setupObservable(const char *obsname, TClass 
    if (!obsExists) {
       if (mode && mode->InheritsFrom(TH1::Class())) {
          TH1 *hist = (TH1 *)(inputExample);
-         obs = new RooRealVar(obsname, obsname, hist->GetXaxis()->GetXmin(), hist->GetXaxis()->GetXmax());
+         auto obsOwner =
+            std::make_unique<RooRealVar>(obsname, obsname, hist->GetXaxis()->GetXmin(), hist->GetXaxis()->GetXmax());
+         obs = obsOwner.get();
+         addOwnedComponents(std::move(obsOwner));
          obs->setBins(hist->GetNbinsX());
       } else {
-         obs = new RooRealVar(obsname, obsname, 0, 1);
+         auto obsOwner = std::make_unique<RooRealVar>(obsname, obsname, 0, 1);
+         obs = obsOwner.get();
+         addOwnedComponents(std::move(obsOwner));
          obs->setBins(1);
       }
       _observables.add(*obs);
@@ -1655,11 +1658,11 @@ RooRealVar *RooLagrangianMorphFunc::setupObservable(const char *obsname, TClass 
    }
 
    TString sbw = Form("binWidth_%s", makeValidName(obs->GetName()).Data());
-   RooRealVar *binWidth = new RooRealVar(sbw.Data(), sbw.Data(), 1.);
+   auto binWidth = std::make_unique<RooRealVar>(sbw.Data(), sbw.Data(), 1.);
    double bw = obs->numBins() / (obs->getMax() - obs->getMin());
    binWidth->setVal(bw);
    binWidth->setConstant(true);
-   _binWidths.add(*binWidth);
+   _binWidths.addOwned(std::move(binWidth));
 
    return obs;
 }
@@ -1730,7 +1733,7 @@ void RooLagrangianMorphFunc::collectInputs(TDirectory *file)
    cxcoutP(InputArguments) << "initializing physics inputs from file " << file->GetName() << " with object name(s) '"
                            << obsName << "'" << std::endl;
    auto folderNames = _config.folderNames;
-   TObject *obj = loadFromFileResidentFolder<TObject>(file, folderNames.front(), obsName, true);
+   auto obj = loadFromFileResidentFolder<TObject>(file, folderNames.front(), obsName, true);
    if (!obj) {
       std::cerr << "unable to locate object '" << obsName << "' in folder '" << folderNames.front() << "'!"
                 << std::endl;
@@ -1739,7 +1742,7 @@ void RooLagrangianMorphFunc::collectInputs(TDirectory *file)
    std::string classname = obj->ClassName();
    TClass *mode = TClass::GetClass(obj->ClassName());
 
-   RooRealVar *observable = this->setupObservable(obsName.c_str(), mode, obj);
+   RooRealVar *observable = this->setupObservable(obsName.c_str(), mode, obj.get());
    if (classname.find("TH1") != std::string::npos) {
       collectHistograms(this->GetName(), file, _sampleMap, _physics, *observable, obsName, _config.paramCards);
    } else if (classname.find("RooHistFunc") != std::string::npos ||
@@ -1871,7 +1874,7 @@ void RooLagrangianMorphFunc::setup(bool own)
       extractOperators(_config.couplings, operators);
       vertices.push_back(new RooListProxy("!couplings", "set of couplings in the vertex", this, true, false));
       if (own) {
-         _operators.addOwned(operators);
+         _operators.addOwned(std::move(operators));
          vertices[0]->addOwned(_config.couplings);
       } else {
          _operators.add(operators);
@@ -1890,7 +1893,7 @@ void RooLagrangianMorphFunc::setup(bool own)
          new RooListProxy("!production", "set of couplings in the production vertex", this, true, false));
       vertices.push_back(new RooListProxy("!decay", "set of couplings in the decay vertex", this, true, false));
       if (own) {
-         _operators.addOwned(operators);
+         _operators.addOwned(std::move(operators));
          vertices[0]->addOwned(_config.prodCouplings);
          vertices[1]->addOwned(_config.decCouplings);
       } else {
@@ -1914,10 +1917,10 @@ void RooLagrangianMorphFunc::disableInterference(const std::vector<const char *>
    for (auto c : nonInterfering) {
       name << c;
    }
-   RooListProxy *p = new RooListProxy(name.str().c_str(), name.str().c_str(), this, kTRUE, kFALSE);
+   auto *p = new RooListProxy(name.str().c_str(), name.str().c_str(), this, true, false);
    this->_nonInterfering.push_back(p);
    for (auto c : nonInterfering) {
-      p->addOwned(*(new RooStringVar(c, c, c)));
+      p->addOwned(std::make_unique<RooStringVar>(c, c, c));
    }
 }
 
@@ -2033,15 +2036,10 @@ RooLagrangianMorphFunc::~RooLagrangianMorphFunc()
          delete vertex;
       }
    }
+   for (RooListProxy *l : _nonInterfering) {
+      delete l;
+   }
    TRACE_DESTROY
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// cloning method
-
-TObject *RooLagrangianMorphFunc::clone(const char *newname) const
-{
-   return new RooLagrangianMorphFunc(*this, newname);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2103,10 +2101,11 @@ RooLagrangianMorphFunc::createWeightStrings(const RooLagrangianMorphFunc::ParamM
       ownedVertices.emplace();
       auto &vertex = ownedVertices.top();
       for (const auto &c : vtx) {
-         RooRealVar *coupling = (RooRealVar *)(couplings.find(c.c_str()));
+         auto coupling = static_cast<RooRealVar *>(couplings.find(c.c_str()));
          if (!coupling) {
-            coupling = new RooRealVar(c.c_str(), c.c_str(), 1., 0., 10.);
-            couplings.add(*coupling);
+            auto couplingOwner = std::make_unique<RooRealVar>(c.c_str(), c.c_str(), 1., 0., 10.);
+            coupling = couplingOwner.get();
+            couplings.addOwned(std::move(couplingOwner));
          }
          vertex.add(*coupling);
       }
@@ -2382,7 +2381,7 @@ typename RooLagrangianMorphFunc::CacheElem *RooLagrangianMorphFunc::getCache() c
 
 bool RooLagrangianMorphFunc::hasCache() const
 {
-   return (bool)(_cacheMgr.getObj(nullptr, static_cast<RooArgSet*>(nullptr)));
+   return (bool)(_cacheMgr.getObj(nullptr, static_cast<RooArgSet *>(nullptr)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2520,8 +2519,8 @@ void RooLagrangianMorphFunc::setParameters(const char *foldername)
 {
    std::string filename = _config.fileName;
    TDirectory *file = openFile(filename.c_str());
-   TH1 *paramhist = loadFromFileResidentFolder<TH1>(file, foldername, "param_card");
-   setParams(paramhist, _operators, false);
+   auto paramhist = loadFromFileResidentFolder<TH1>(file, foldername, "param_card");
+   setParams(paramhist.get(), _operators, false);
    closeFile(file);
 }
 
