@@ -24,6 +24,7 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 
+
 namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
@@ -45,6 +46,8 @@ std::unique_ptr<ROperator> MakeKerasReLU(PyObject *fLayer);         // For insta
 std::unique_ptr<ROperator> MakeKerasSelu(PyObject *fLayer);         // For instantiating ROperator for Keras Selu layer
 std::unique_ptr<ROperator> MakeKerasSigmoid(PyObject *fLayer);      // For instantiating ROperator for Keras Sigmoid layer
 std::unique_ptr<ROperator> MakeKerasPermute(PyObject *fLayer);      // For instantiating ROperator for Keras Permute Layer
+std::unique_ptr<ROperator> MakeKerasBatchNorm(PyObject *fLayer);    // For instantiating ROperator for Keras Batch Normalization Layer
+
 
 // Declaring Internal function for Keras layers which have additional activation attribute
 std::unique_ptr<ROperator> MakeKerasDense(PyObject *fLayer);        // For instantiating ROperator for Keras Dense Layer
@@ -56,6 +59,7 @@ using KerasMethodMapWithActivation = std::unordered_map<std::string, std::unique
 const KerasMethodMap mapKerasLayer = {
    {"Activation", &MakeKerasActivation},
    {"Permute", &MakeKerasPermute},
+   {"BatchNormalization", &MakeKerasBatchNorm},
 
    // For activation layers
    {"ReLU", &MakeKerasReLU},
@@ -126,8 +130,10 @@ void AddKerasLayer(RModel& rmodel, PyObject* fLayer){
       findLayer = mapKerasLayerWithActivation.find(fLayerType);
       PyObject* fAttributes=PyDict_GetItemString(fLayer,"layerAttributes");
 
-      std::string fLayerName = PyStringAsString(PyDict_GetItemString(fAttributes,"name"));
-      std::string fLayerActivation = PyStringAsString(PyDict_GetItemString(fAttributes,"activation"));
+      std::string fLayerName = PyStringAsString(PyDict_GetItemString(fAttributes,"_name"));
+      
+      PyObject* fPActivation = PyDict_GetItemString(fAttributes,"activation");
+      std::string fLayerActivation = PyStringAsString(PyObject_GetAttrString(fPActivation,"__name__"));
 
       if(fLayerActivation == "selu" || fLayerActivation == "sigmoid")
          rmodel.AddNeededStdLib("cmath");
@@ -220,8 +226,9 @@ std::unique_ptr<ROperator> MakeKerasDense(PyObject* fLayer){
 /// extracted and appropriate function for adding the function is called.
 std::unique_ptr<ROperator> MakeKerasActivation(PyObject* fLayer){
       PyObject* fAttributes=PyDict_GetItemString(fLayer,"layerAttributes");
-      std::string fLayerActivation = PyStringAsString(PyDict_GetItemString(fAttributes,"activation"));
-
+      PyObject* fPActivation = PyDict_GetItemString(fAttributes,"activation");
+      std::string fLayerActivation = PyStringAsString(PyObject_GetAttrString(fPActivation,"__name__"));
+      
       auto findLayer = mapKerasLayer.find(fLayerActivation);
       if(findLayer == mapKerasLayer.end()){
          throw std::runtime_error("TMVA::SOFIE - Parsing Keras Activation layer " + fLayerActivation + " is not yet supported");
@@ -336,7 +343,7 @@ std::unique_ptr<ROperator> MakeKerasPermute(PyObject* fLayer)
       std::string fLayerOutputName     = PyStringAsString(PyList_GetItem(fOutputs,0));
 
       // Extracting the permute dimensions present in Attributes of the Keras layer
-      PyObject* fAttributePermute=PyDict_GetItemString(fAttributes,"dims");
+      PyObject* fAttributePermute = PyDict_GetItemString(fAttributes,"dims");
       std::vector<int_t>fPermuteDims;
 
       // Building vector of permute dimensions from the Tuple object.
@@ -361,7 +368,38 @@ std::unique_ptr<ROperator> MakeKerasPermute(PyObject* fLayer)
             throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Transpose does not yet support input type " + fLayerDType);
             }
    return op;
-   }
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+/// \brief Prepares a ROperator object for Keras BatchNorm layer
+///
+/// \param[in] fLayer Python Keras layer as a Dictionary object
+/// \return Unique pointer to ROperator object
+std::unique_ptr<ROperator> MakeKerasBatchNorm(PyObject* fLayer)
+{
+      // Extracting required layer information
+      PyObject* fAttributes = PyDict_GetItemString(fLayer,"layerAttributes");
+      PyObject* fInputs  = PyDict_GetItemString(fLayer,"layerInput");
+      PyObject* fOutputs = PyDict_GetItemString(fLayer,"layerOutput");
+      PyObject* fGamma =  PyDict_GetItemString(fAttributes,"gamma");
+      PyObject* fBeta =  PyDict_GetItemString(fAttributes,"beta");
+      PyObject* fMoving_Mean =  PyDict_GetItemString(fAttributes,"moving_mean");
+      PyObject* fMoving_Var =  PyDict_GetItemString(fAttributes,"moving_variance");
+
+      std::string fLayerDType = PyStringAsString(PyDict_GetItemString(fLayer,"layerDType"));
+      std::string fNX      = PyStringAsString(PyList_GetItem(fInputs,0));
+      std::string fNY     = PyStringAsString(PyList_GetItem(fOutputs,0));
+      std::string fNScale  = PyStringAsString(PyObject_GetAttrString(fGamma,"name"));
+      std::string fNB  = PyStringAsString(PyObject_GetAttrString(fBeta,"name"));
+      std::string fNMean  = PyStringAsString(PyObject_GetAttrString(fMoving_Mean,"name"));
+      std::string fNVar  = PyStringAsString(PyObject_GetAttrString(fMoving_Var,"name"));
+      float fEpsilon = (float)PyFloat_AsDouble(PyDict_GetItemString(fAttributes,"epsilon"));
+      float fMomentum = (float)PyFloat_AsDouble(PyDict_GetItemString(fAttributes,"momentum"));
+
+      std::unique_ptr<ROperator> op;
+      op.reset(new ROperator_BatchNormalization<float>(fEpsilon, fMomentum, /* training mode */ 0, fNX, fNScale, fNB, fNMean, fNVar, fNY));
+      return op;
+}
 
 }//INTERNAL
 
@@ -454,7 +492,7 @@ RModel Parse(std::string filename){
                "  globals().update(locals())\n"
                "  layerData={}\n"
                "  layerData['layerType']=layer.__class__.__name__\n"
-               "  layerData['layerAttributes']=layer.get_config()\n"
+               "  layerData['layerAttributes']=layer.__dict__\n"
                "  layerData['layerInput']=[x.name for x in layer.input] if isinstance(layer.input,list) else [layer.input.name]\n"
                "  layerData['layerOutput']=[x.name for x in layer.output] if isinstance(layer.output,list) else [layer.output.name]\n"
                "  layerData['layerDType']=layer.dtype\n"
@@ -481,6 +519,9 @@ RModel Parse(std::string filename){
       // inference code.
       else if(fLayerType == "Dense")
          rmodel.AddBlasRoutines({"Gemm", "Gemv"});
+      else if (fLayerType == "BatchNormalization") 
+         rmodel.AddBlasRoutines({"Copy", "Axpy"});
+         
       INTERNAL::AddKerasLayer(rmodel,fLayer);
 
    }
@@ -488,7 +529,6 @@ RModel Parse(std::string filename){
    //Extracting model's weights
    //For every initialized tensor, weightProp will have its name and dtype in string
    //and value in numpy array
-   PyRunString("globals().update(locals())",fGlobalNS,fLocalNS);
    PyRunString("weight=[]",fGlobalNS,fLocalNS);
    PyRunString("for idx in range(len(model.get_weights())):\n"
                "  weightProp={}\n"
