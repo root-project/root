@@ -2658,67 +2658,64 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 /// \f$ \mathrm{Cov}(mathbf{a},mathbf{a}') \f$ = the covariance matrix from the fit result.
 ///
 
-double RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet &nset_in) const
+double RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet &nset) const
 {
+  // Calling getParameters() might be costly, but necessary to get the right
+  // parameters in the RooAbsReal. The RooFitResult only stores snapshots.
+  RooArgSet allParamsInAbsReal;
+  getParameters(&nset, allParamsInAbsReal);
 
-   // Strip out parameters with zero error
-   RooArgList fpf_stripped;
-   RooFIter fi = fr.floatParsFinal().fwdIterator();
-   RooRealVar *frv;
-   while ((frv = (RooRealVar *)fi.next())) {
-      if (frv->getError() > 1e-20) {
-         fpf_stripped.add(*frv);
-      }
-   }
+  // Strip out parameters with zero error
+  RooArgList paramList;
+  for(auto * rrvInFitResult : static_range_cast<RooRealVar*>(fr.floatParsFinal())) {
+     if (rrvInFitResult->getError() > 1e-20) {
+        auto * rrvInAbsReal = static_cast<RooRealVar*>(allParamsInAbsReal.find(*rrvInFitResult));
 
-   // Clone self for internal use
-   std::unique_ptr<RooAbsReal> cloneFunc{static_cast<RooAbsReal*>(cloneTree())};
-   RooArgSet errorParams;
-   cloneFunc->getObservables(&fpf_stripped, errorParams);
+        if(rrvInAbsReal->getVal() != rrvInFitResult->getVal()) {
+           throw std::runtime_error(
+                   std::string("RooAbsReal::getPropagatedError(): the parameters of the RooAbsReal don't have") +
+                   "the same values as in the fit result! The logic of getPropagatedError is broken in this case.");
+        }
 
-   RooArgSet nset;
-   if (nset_in.empty()) {
-     cloneFunc->getParameters(&errorParams, nset);
-   } else {
-     cloneFunc->getObservables(&nset_in, nset);
-   }
-
-   // Make list of parameter instances of cloneFunc in order of error matrix
-   RooArgList paramList;
-   const RooArgList &fpf = fpf_stripped;
-   vector<int> fpf_idx;
-   for (Int_t i = 0; i < fpf.getSize(); i++) {
-      RooAbsArg *par = errorParams.find(fpf[i].GetName());
-      if (par) {
-         paramList.add(*par);
-         fpf_idx.push_back(i);
-      }
+        paramList.add(*rrvInAbsReal);
+     }
   }
 
-  vector<double> plusVar, minusVar ;
+  std::vector<double> plusVar, minusVar ;
+  plusVar.reserve(paramList.size());
+  minusVar.reserve(paramList.size());
 
   // Create vector of plus,minus variations for each parameter
-  TMatrixDSym V(paramList.getSize()==fr.floatParsFinal().getSize()?
-      fr.covarianceMatrix():
+  TMatrixDSym V(paramList.size() == fr.floatParsFinal().size() ?
+      fr.covarianceMatrix() :
       fr.reducedCovarianceMatrix(paramList)) ;
 
   for (Int_t ivar=0 ; ivar<paramList.getSize() ; ivar++) {
 
-    RooRealVar& rrv = (RooRealVar&)fpf[fpf_idx[ivar]] ;
+    auto& rrv = static_cast<RooRealVar&>(paramList[ivar]);
 
     double cenVal = rrv.getVal() ;
     double errVal = sqrt(V(ivar,ivar)) ;
 
     // Make Plus variation
-    ((RooRealVar*)paramList.at(ivar))->setVal(cenVal+errVal) ;
-    plusVar.push_back(cloneFunc->getVal(nset)) ;
+    rrv.setVal(cenVal+errVal) ;
+    plusVar.push_back(getVal(nset)) ;
 
     // Make Minus variation
-    ((RooRealVar*)paramList.at(ivar))->setVal(cenVal-errVal) ;
-    minusVar.push_back(cloneFunc->getVal(nset)) ;
+    rrv.setVal(cenVal-errVal) ;
+    minusVar.push_back(getVal(nset)) ;
 
-    ((RooRealVar*)paramList.at(ivar))->setVal(cenVal) ;
+    rrv.setVal(cenVal) ;
   }
+
+  // Re-evaluate this RooAbsReal with the central parameters just to be
+  // extra-safe that a call to `getPropagatedError()` doesn't change any state.
+  // It should not be necessarry because thanks to the dirty flag propagation
+  // the RooAbsReal is re-evaluated anyway the next time getVal() is called.
+  // Still there are imaginable corner cases where it would not be triggered,
+  // for example if the user changes the RooFit operation more after the error
+  // propagation.
+  getVal(nset);
 
   TMatrixDSym C(paramList.getSize()) ;
   vector<double> errVec(paramList.getSize()) ;
@@ -2878,9 +2875,7 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
 
     // Strip out parameters with zero error
     RooArgList fpf_stripped;
-    RooFIter fi = fr.floatParsFinal().fwdIterator();
-    RooRealVar *frv;
-    while ((frv = (RooRealVar *)fi.next())) {
+    for (auto const* frv : static_range_cast<RooRealVar*>(fr.floatParsFinal())) {
        if (frv->getError() > 1e-20) {
           fpf_stripped.add(*frv);
        }
@@ -4346,14 +4341,8 @@ RooFitResult* RooAbsReal::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdL
 ///
 /// \param arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8 ordered arguments
 ///
-/// The following named arguments are supported
-///
-///  | | Options to control construction of the \f$ \chi^2 \f$
-///  |-|-----------------------------------------
-///  | `DataError(RooAbsData::ErrorType)`  | Choose between Poisson errors and Sum-of-weights errors
-///  | `NumCPU(Int_t)`                     | Activate parallel processing feature on N processes
-///  | `Range()`                           | Calculate \f$ \chi^2 \f$ only in selected region
-///  | `IntegrateBins()` | Integrate PDF within each bin. This sets the desired precision.
+/// The list of supported command arguments is given in the documentation for
+///     RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataHist& hdata, const RooCmdArg&,const RooCmdArg&,const RooCmdArg&, const RooCmdArg&,const RooCmdArg&,const RooCmdArg&, const RooCmdArg&,const RooCmdArg&,const RooCmdArg&).
 ///
 /// \param data Histogram with data
 /// \return \f$ \chi^2 \f$ variable
@@ -4405,7 +4394,7 @@ RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooLinkedList& cmdLi
 /// be well defined.
 ///
 /// <table>
-/// <tr><th><th> Options to control construction of the \f$ \chi^2 \f$
+/// <tr><th><th> Options to control construction of the chi-square
 /// <tr><td> `YVar(RooRealVar& yvar)`          <td>  Designate given column in dataset as Y value
 /// <tr><td> `Integrate(bool flag)`          <td>  Integrate function over range specified by X errors
 ///                                    rather than take value at bin center.
@@ -4550,7 +4539,7 @@ RooFitResult* RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList)
   pc.defineInt("ext","Extended",0,2) ;
   pc.defineInt("numee","PrintEvalErrors",0,10) ;
   pc.defineInt("doWarn","Warnings",0,1) ;
-  pc.defineString("mintype","Minimizer",0,"Minuit") ;
+  pc.defineString("mintype","Minimizer",0,"") ;
   pc.defineString("minalg","Minimizer",1,"minuit") ;
   pc.defineObject("minosSet","Minos",0,0) ;
 
@@ -4561,7 +4550,7 @@ RooFitResult* RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList)
   }
 
   // Decode command line arguments
-  const char* minType = pc.getString("mintype","Minuit") ;
+  const char* minType = pc.getString("mintype","") ;
   const char* minAlg = pc.getString("minalg","minuit") ;
   Int_t optConst = pc.getInt("optConst") ;
   Int_t verbose  = pc.getInt("verbose") ;
@@ -4672,10 +4661,8 @@ void RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::ErrorLoggingMode m)
 
 void RooAbsReal::setParameterizeIntegral(const RooArgSet& paramVars)
 {
-  RooFIter iter = paramVars.fwdIterator() ;
-  RooAbsArg* arg ;
   string plist ;
-  while((arg=iter.next())) {
+  for (auto const* arg : paramVars) {
     if (!dependsOnValue(*arg)) {
       coutW(InputArguments) << "RooAbsReal::setParameterizeIntegral(" << GetName()
              << ") function does not depend on listed parameter " << arg->GetName() << ", ignoring" << endl ;

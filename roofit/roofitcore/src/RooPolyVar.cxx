@@ -67,9 +67,7 @@ RooPolyVar::RooPolyVar(const char* name, const char* title,
     _lowestOrder=0 ;
   }
 
-  RooFIter coefIter = coefList.fwdIterator() ;
-  RooAbsArg* coef ;
-  while((coef = (RooAbsArg*)coefIter.next())) {
+  for(RooAbsArg * coef : coefList) {
     if (!dynamic_cast<RooAbsReal*>(coef)) {
       coutE(InputArguments) << "RooPolyVar::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName()
              << " is not of type RooAbsReal" << endl ;
@@ -166,10 +164,8 @@ double RooPolyVar::analyticalIntegral(Int_t code, const char* rangeName) const
   _wksp.reserve(sz);
   {
     const RooArgSet* nset = _coefList.nset();
-    RooFIter it = _coefList.fwdIterator();
     unsigned i = 1 + lowestOrder;
-    RooAbsReal* c;
-    while ((c = (RooAbsReal*) it.next())) {
+    for(auto * c : static_range_cast<RooAbsReal*>(_coefList)) {
       _wksp.push_back(c->getVal(nset) / double(i));
       ++i;
     }

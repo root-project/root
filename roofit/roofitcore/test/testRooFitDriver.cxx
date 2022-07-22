@@ -62,7 +62,7 @@ TEST(testRooFitDriver, SimpleLikelihoodFit)
 
       RooMinimizer minimizer(absReal);
       minimizer.setPrintLevel(-1);
-      minimizer.minimize("Minuit", "minuit");
+      minimizer.minimize("", "minuit");
       std::unique_ptr<RooFitResult> result(minimizer.save());
 
       std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
@@ -84,7 +84,7 @@ TEST(testRooFitDriver, SimpleLikelihoodFit)
 
    // ...and now the new way with RooFitDriver
    using namespace ROOT::Experimental;
-   RooNLLVarNew nll("nll", "nll", model, *data->get(), false, "");
+   RooNLLVarNew nll("nll", "nll", model, *data->get(), false, "", false);
    auto driver = std::make_unique<RooFitDriver>(nll, x, RooFit::BatchModeOption::Cpu);
    driver->setData(*data);
    auto wrapper = RooFit::BatchModeHelpers::makeDriverAbsRealWrapper(std::move(driver), *data->get());

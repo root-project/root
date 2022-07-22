@@ -822,7 +822,7 @@ void TGraph::Draw(Option_t *option)
 
    // If no option is specified, it is defined as "alp" in case there
    // no current pad or if the current pad as no axis defined.
-   if (!strlen(option)) {
+   if (!option || !strlen(option)) {
       if (gPad) {
          if (!gPad->GetListOfPrimitives()->FindObject("TFrame")) opt = "alp";
       } else {
@@ -1227,8 +1227,7 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
 
 TFitResultPtr TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_t xmin, Axis_t xmax)
 {
-   char *linear;
-   linear = (char*) strstr(fname, "++");
+   const char *linear = fname ? strstr(fname, "++") : nullptr;
    if (linear) {
       TF1 f1(fname, fname, xmin, xmax);
       return Fit(&f1, option, "", xmin, xmax);
@@ -2175,18 +2174,18 @@ void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       }
    }
 
-   const char *l;
-   l = strstr(option, "multigraph");
+   const char *soption = option ? option : "";
+   const char *l = strstr(soption, "multigraph");
    if (l) {
       out << "   multigraph->Add(graph," << quote << l + 10 << quote << ");" << std::endl;
       return;
    }
-   l = strstr(option, "th2poly");
+   l = strstr(soption, "th2poly");
    if (l) {
       out << "   " << l + 7 << "->AddBin(graph);" << std::endl;
       return;
    }
-   out << "   graph->Draw(" << quote << option << quote << ");" << std::endl;
+   out << "   graph->Draw(" << quote << soption << quote << ");" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

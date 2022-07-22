@@ -477,7 +477,7 @@ public:
                                                      fLoopManager->GetBranchNames(), upcastNodeOnHeap);
 
       RDFInternal::RColumnRegister newCols(fColRegister);
-      newCols.AddColumn(jittedDefine);
+      newCols.AddDefine(std::move(jittedDefine));
 
       RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
 
@@ -567,7 +567,7 @@ public:
                                                      fLoopManager->GetBranchNames(), upcastNodeOnHeap);
 
       RDFInternal::RColumnRegister newCols(fColRegister);
-      newCols.AddColumn(jittedDefine);
+      newCols.AddDefine(std::move(jittedDefine));
 
       RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
 
@@ -628,7 +628,7 @@ public:
       fLoopManager->AddSampleCallback(std::move(updateDefinePerSample));
 
       RDFInternal::RColumnRegister newCols(fColRegister);
-      newCols.AddColumn(std::move(newColumn));
+      newCols.AddDefine(std::move(newColumn));
       RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
       return newInterface;
    }
@@ -647,8 +647,8 @@ public:
    ///
    /// ### Example usage:
    /// ~~~{.py}
-   /// df = ROOT.RDataFrame("mytree", ["sample1.root","sample2.root"])
-   /// df.DefinePerSample("weightbysample", "rdfsampleinfo_.Contains('sample1') ? 1.0f : 2.0f")
+   /// df = ROOT.RDataFrame('mytree', ['sample1.root','sample2.root'])
+   /// df.DefinePerSample('weightbysample', 'rdfsampleinfo_.Contains("sample1") ? 1.0f : 2.0f')
    /// ~~~
    ///
    /// \note
@@ -687,7 +687,7 @@ public:
       fLoopManager->AddSampleCallback(std::move(updateDefinePerSample));
 
       RDFInternal::RColumnRegister newCols(fColRegister);
-      newCols.AddColumn(jittedDefine);
+      newCols.AddDefine(std::move(jittedDefine));
 
       RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
 
@@ -798,7 +798,7 @@ public:
          validColumnNames);
 
       RDFInternal::RColumnRegister newCols(fColRegister);
-      newCols.AddVariation(variation);
+      newCols.AddVariation(std::move(variation));
 
       RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
 
@@ -2603,7 +2603,7 @@ public:
    {
       const auto col = fColRegister.ResolveAlias(std::string(column));
 
-      RDFDetail::RDefineBase *define = fColRegister.HasName(col) ? fColRegister.GetColumns().at(col).get() : nullptr;
+      RDFDetail::RDefineBase *define = fColRegister.GetDefine(col);
 
       const bool convertVector2RVec = true;
       return RDFInternal::ColumnName2ColumnTypeName(col, fLoopManager->GetTree(), fLoopManager->GetDataSource(), define,
@@ -2733,11 +2733,10 @@ public:
    {
       ColumnNames_t definedColumns;
 
-      auto columns = fColRegister.GetColumns();
-
+      const auto columns = fColRegister.BuildDefineNames();
       for (const auto &column : columns) {
-         if (!RDFInternal::IsInternalColumn(column.first))
-            definedColumns.emplace_back(column.first);
+         if (!RDFInternal::IsInternalColumn(column))
+            definedColumns.emplace_back(column);
       }
 
       return definedColumns;
@@ -2755,10 +2754,7 @@ public:
    /// variations.Print();
    /// ~~~
    ///
-   RVariationsDescription GetVariations()
-   {
-      return {fColRegister.GetVariations()};
-   }
+   RVariationsDescription GetVariations() const { return fColRegister.BuildVariationsDescription(); }
 
    /// \brief Checks if a column is present in the dataset.
    /// \return true if the column is available, false otherwise
@@ -2776,7 +2772,7 @@ public:
    /// ~~~
    bool HasColumn(std::string_view columnName)
    {
-      if (fColRegister.HasName(columnName))
+      if (fColRegister.IsDefineOrAlias(columnName))
          return true;
 
       if (auto tree = fLoopManager->GetTree()) {
@@ -3014,9 +3010,11 @@ public:
       CheckIMTDisabled("Display");
       auto newCols = columnList;
       newCols.insert(newCols.begin(), "rdfentry_"); // Artificially insert first column
-      auto displayer = std::make_shared<RDFInternal::RDisplay>(newCols, GetColumnTypeNamesList(newCols), nRows, nMaxCollectionElements);
+      auto displayer = std::make_shared<RDFInternal::RDisplay>(newCols, GetColumnTypeNamesList(newCols), nRows,
+                                                               nMaxCollectionElements);
       // Need to add ULong64_t type corresponding to the first column rdfentry_
-      return CreateAction<RDFInternal::ActionTags::Display, ULong64_t, ColumnTypes...>(newCols, displayer, displayer);
+      return CreateAction<RDFInternal::ActionTags::Display, ULong64_t, ColumnTypes...>(std::move(newCols), displayer,
+                                                                                       displayer);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -3036,9 +3034,10 @@ public:
       CheckIMTDisabled("Display");
       auto newCols = columnList;
       newCols.insert(newCols.begin(), "rdfentry_"); // Artificially insert first column
-      auto displayer = std::make_shared<RDFInternal::RDisplay>(newCols, GetColumnTypeNamesList(newCols), nRows, nMaxCollectionElements);
-      return CreateAction<RDFInternal::ActionTags::Display, RDFDetail::RInferredType>(newCols, displayer, displayer,
-                                                                                      newCols.size());
+      auto displayer = std::make_shared<RDFInternal::RDisplay>(newCols, GetColumnTypeNamesList(newCols), nRows,
+                                                               nMaxCollectionElements);
+      return CreateAction<RDFInternal::ActionTags::Display, RDFDetail::RInferredType>(std::move(newCols), displayer,
+                                                                                      displayer, columnList.size() + 1);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -3085,7 +3084,7 @@ private:
 
       auto entryColumn = std::make_shared<NewColEntry_t>(entryColName, entryColType, std::move(entryColGen),
                                                          ColumnNames_t{}, fColRegister, *fLoopManager);
-      fColRegister.AddColumn(entryColumn);
+      fColRegister.AddDefine(std::move(entryColumn));
 
       // Slot number column
       const std::string slotColName = "rdfslot_";
@@ -3095,7 +3094,7 @@ private:
 
       auto slotColumn = std::make_shared<NewColSlot_t>(slotColName, slotColType, std::move(slotColGen), ColumnNames_t{},
                                                        fColRegister, *fLoopManager);
-      fColRegister.AddColumn(slotColumn);
+      fColRegister.AddDefine(std::move(slotColumn));
 
       fColRegister.AddAlias("tdfentry_", entryColName);
       fColRegister.AddAlias("tdfslot_", slotColName);
@@ -3217,7 +3216,7 @@ private:
                                                   fColRegister, *fLoopManager);
 
       RDFInternal::RColumnRegister newCols(fColRegister);
-      newCols.AddColumn(newColumn);
+      newCols.AddDefine(std::move(newColumn));
 
       RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
 
@@ -3340,11 +3339,9 @@ private:
 
          const auto &innerTypeID = typeid(RDFInternal::InnerValueType_t<RetType>);
 
-         const auto &definesMap = fColRegister.GetColumns();
          for (auto i = 0u; i < colTypes.size(); ++i) {
-            const auto it = definesMap.find(colNames[i]);
-            const auto &expectedTypeID =
-               it == definesMap.end() ? RDFInternal::TypeName2TypeID(colTypes[i]) : it->second->GetTypeId();
+            const auto *define = fColRegister.GetDefine(colNames[i]);
+            const auto &expectedTypeID = define ? define->GetTypeId() : RDFInternal::TypeName2TypeID(colTypes[i]);
             if (innerTypeID != expectedTypeID)
                throw std::runtime_error("Varied values for column \"" + colNames[i] + "\" have a different type (" +
                                         RDFInternal::TypeID2TypeName(innerTypeID) + ") than the nominal value (" +
@@ -3353,10 +3350,9 @@ private:
       } else { // we are varying a single column, RetType is RVec<T>
          const auto &retTypeID = typeid(typename RetType::value_type);
          const auto &colName = colNames[0]; // we have only one element in there
-         const auto &definesMap = fColRegister.GetColumns();
-         const auto it = definesMap.find(colName);
+         const auto *define = fColRegister.GetDefine(colName);
          const auto &expectedTypeID =
-            it == definesMap.end() ? RDFInternal::TypeName2TypeID(GetColumnType(colName)) : it->second->GetTypeId();
+            define ? define->GetTypeId() : RDFInternal::TypeName2TypeID(GetColumnType(colName));
          if (retTypeID != expectedTypeID)
             throw std::runtime_error("Varied values for column \"" + colName + "\" have a different type (" +
                                      RDFInternal::TypeID2TypeName(retTypeID) + ") than the nominal value (" +

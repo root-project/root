@@ -106,6 +106,7 @@ Specific drawing options can be used to paint a TGraph2D:
 | "P0"     | Draw a circle at each vertex. Each circle background is white. |
 | "PCOL"   | Draw a marker at each vertex. The color of each marker is defined according to its Z position. |
 | "LINE"   | Draw a 3D polyline. |
+| "CONT5"  | Draw a contour plot using Delaunay triangles.|
 
 A TGraph2D can be also drawn with any options valid to draw a 2D histogram
 (like `COL`, `SURF`, `LEGO`, `CONT` etc..).

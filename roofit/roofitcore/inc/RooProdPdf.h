@@ -34,7 +34,6 @@ class RooProdPdf : public RooAbsPdf {
 public:
 
   RooProdPdf() ;
-  RooProdPdf(const char *name, const char *title, double cutOff=0);
   RooProdPdf(const char *name, const char *title,
        RooAbsPdf& pdf1, RooAbsPdf& pdf2, double cutOff=0) ;
   RooProdPdf(const char* name, const char* title, const RooArgList& pdfList, double cutOff=0) ;

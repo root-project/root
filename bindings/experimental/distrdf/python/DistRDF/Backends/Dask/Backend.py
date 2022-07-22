@@ -10,6 +10,8 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 import os
+from functools import singledispatch
+from typing import Any, Dict, Optional
 
 from DistRDF import DataFrame
 from DistRDF import HeadNode
@@ -18,16 +20,62 @@ from DistRDF.Backends import Utils
 
 try:
     import dask
-    from dask.distributed import Client, LocalCluster, progress, get_worker
+    from dask.distributed import Client, get_worker, LocalCluster, progress, SpecCluster
+    from dask_jobqueue import JobQueueCluster
 except ImportError:
     raise ImportError(("cannot import a Dask component. Refer to the Dask documentation "
                        "for installation instructions."))
 
 
+@singledispatch
+def get_total_cores(cluster: SpecCluster, client: Client) -> int:
+    """
+    Retrieve the total number of cores from a Dask cluster object.
+    """
+    # The Client.ncores() method returns the number of cores of each Dask
+    # worker that is known to the scheduler
+    return sum(client.ncores().values())
+
+
+@get_total_cores.register
+def _(cluster: JobQueueCluster, client: Client) -> int:
+    """
+    Retrieve the total number of cores from a Dask cluster object.
+    """
+    # Wrapping in a try-block in case any of the dictionaries do not have the
+    # needed keys
+    try:
+        # In some cases the Dask scheduler doesn't know about available workers
+        # at creation time. Most notably, when using batch systems like HTCondor
+        # through dask-jobqueue, creating the cluster object doesn't actually
+        # start the workers. The scheduler will know about available workers in
+        # the cluster only after cluster.scale has been called and the resource
+        # manager has granted the requested jobs. So at this point, we can only
+        # rely on the information that was passed by the user as a specification
+        # of the cluster object. This comes in the form:
+        # {'WORKER-NAME-1': {'cls': <class 'dask.WORKERCLASS'>,
+        #                    'options': {'CORES_OR_NTHREADS': N, ...}},
+        #  'WORKER-NAME-2': {'cls': <class 'dask.WORKERCLASS'>,
+        #                    'options': {'CORES_OR_NTHREADS': N, ...}}}
+        # This concept can vary between different types of clusters, but in the
+        # cluster types defined in dask-jobqueue the keys of the dictionary above
+        # refer to the name of a job submission, which can then involve multiple
+        # cores of a node.
+        workers_spec: Dict[str, Any] = cluster.worker_spec
+        # For each job, there is a sub-dictionary that contains the 'options'
+        # key, which value is another dictionary with all the information
+        # specified when creating the cluster object. This contains also the
+        # 'cores' key for any type of dask-jobqueue cluster.
+        return sum(spec["options"]["cores"] for spec in workers_spec.values())
+    except KeyError as e:
+        raise RuntimeError("Could not retrieve the provided worker specification from the Dask cluster object. "
+                           "Please report this as a bug.") from e
+
+
 class DaskBackend(Base.BaseBackend):
     """Dask backend for distributed RDataFrame."""
 
-    def __init__(self, daskclient=None):
+    def __init__(self, daskclient: Optional[Client] = None):
         super(DaskBackend, self).__init__()
         # If the user didn't explicitly pass a Client instance, the argument
         # `daskclient` will be `None`. In this case, we create a default Dask
@@ -36,19 +84,16 @@ class DaskBackend(Base.BaseBackend):
         self.client = (daskclient if daskclient is not None else
                        Client(LocalCluster(n_workers=os.cpu_count(), threads_per_worker=1, processes=True)))
 
-    def optimize_npartitions(self):
+    def optimize_npartitions(self) -> int:
         """
         Attempts to compute a clever number of partitions for the current
-        execution. Currently, we try to get the total number of worker logical
-        cores in the cluster.
+        execution. Currently it is the number of cores of the Dask cluster,
+        either retrieved if known or inferred from the user-provided cluster
+        specification.
         """
-        workers_dict = self.client.scheduler_info().get("workers")
-        if workers_dict:
-            # The 'workers' key exists in the dictionary and it is non-empty
-            return sum(worker['nthreads'] for worker in workers_dict.values())
-        else:
-            # The scheduler doesn't have information about the workers
-            return self.MIN_NPARTITIONS
+        # We dispatch on the type of the cluster, but the API to retrieve the
+        # number of available cores belongs to the client
+        return get_total_cores(self.client.cluster, self.client)
 
     def ProcessAndMerge(self, ranges, mapper, reducer):
         """
@@ -149,9 +194,6 @@ class DaskBackend(Base.BaseBackend):
         """
         # Set the number of partitions for this dataframe, one of the following:
         # 1. User-supplied `npartitions` optional argument
-        # 2. An educated guess according to the backend, using the backend's
-        #    `optimize_npartitions` function
-        # 3. Set `npartitions` to 2
-        npartitions = kwargs.pop("npartitions", self.optimize_npartitions())
+        npartitions = kwargs.pop("npartitions", None)
         headnode = HeadNode.get_headnode(self, npartitions, *args)
         return DataFrame.RDataFrame(headnode)

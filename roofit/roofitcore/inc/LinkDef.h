@@ -85,6 +85,12 @@
 #pragma link C++ class RooCmdConfig+ ;
 #pragma link C++ class RooConstVar+ ;
 #pragma read sourceClass="RooConstVar" targetClass="RooConstVar" version="[1]" source="double _value" target="" code="{ newObj->changeVal(onfile._value); }"
+#pragma read sourceClass="RooConstraintSum" targetClass="RooConstraintSum" version="[3]"   \
+             source="RooSetProxy _paramSet" target="_paramSet" code="{                     \
+                 for(RooAbsArg * arg : onfile._paramSet) {                                 \
+                    _paramSet.add(*arg);                                                   \
+                 }                                                                         \
+             }"
 #pragma link C++ class RooConvCoefVar+ ;
 #pragma link C++ class RooConvGenContext+ ;
 #pragma link C++ class RooConvIntegrandBinding+ ;
@@ -166,8 +172,12 @@
 #pragma link C++ class RooPrintable+ ;
 #pragma link C++ class RooProdGenContext+ ;
 #pragma link C++ class RooProduct+ ;
-#pragma read sourceClass="RooProduct" targetClass="RooProduct" version="[1]" source="RooSetProxy _compRSet" target="_compRSet" code="{ _compRSet.add(onfile._compRSet) ; }"
-#pragma read sourceClass="RooProduct" targetClass="RooProduct" version="[1]" source="RooSetProxy _compCSet" target="_compCSet" code="{ _compCSet.add(onfile._compCSet) ; }"
+#pragma read sourceClass="RooProduct" targetClass="RooProduct" version="[1]"                      \
+             source="RooSetProxy _compRSet; RooSetProxy _compCSet" target="_compRSet, _compCSet"  \
+             code="{                                                                              \
+                 _compRSet.initializeAfterIOConstructor(newObj, onfile._compRSet) ;               \
+                 _compCSet.initializeAfterIOConstructor(newObj, onfile._compCSet) ;               \
+             }"
 #pragma link C++ class RooPullVar+ ;
 #pragma link C++ class RooQuasiRandomGenerator+ ;
 #pragma link C++ class RooRatio+ ;

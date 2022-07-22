@@ -26,6 +26,7 @@ the object is valid, so that other instances can, at a later moment
 retrieve these precalculated objects.
 **/
 
+#include "RooExpensiveObjectCache.h"
 
 #include "TClass.h"
 #include "RooAbsReal.h"
@@ -33,31 +34,9 @@ retrieve these precalculated objects.
 #include "RooArgSet.h"
 #include "RooMsgService.h"
 #include <iostream>
-using namespace std ;
-
-#include "RooExpensiveObjectCache.h"
 
 ClassImp(RooExpensiveObjectCache);
 ClassImp(RooExpensiveObjectCache::ExpensiveObject);
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor
-
-RooExpensiveObjectCache::RooExpensiveObjectCache() : _nextUID(0)
-{
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor
-
-RooExpensiveObjectCache::RooExpensiveObjectCache(const RooExpensiveObjectCache& other) :
-  TObject(other), _nextUID(0)
-{
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -91,23 +70,6 @@ RooExpensiveObjectCache& RooExpensiveObjectCache::instance()
 
 bool RooExpensiveObjectCache::registerObject(const char* ownerName, const char* objectName, TObject& cacheObject, const RooArgSet& params)
 {
-  TIterator* parIter = params.createIterator() ;
-  bool ret = registerObject(ownerName,objectName,cacheObject,parIter) ;
-  delete parIter ;
-
-  return ret ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Register object associated with given name and given associated parameters with given values in cache.
-/// The cache will take _ownership_of_object_ and is indexed under the given name (which does not
-/// need to be the name of cacheObject and with given set of dependent parameters with validity for the
-/// current values of those parameters. It can be retrieved later by callin retrieveObject()
-
-bool RooExpensiveObjectCache::registerObject(const char* ownerName, const char* objectName, TObject& cacheObject, TIterator* parIter)
-{
   // Delete any previous object
   ExpensiveObject* eo = _map[objectName] ;
   Int_t olduid(-1) ;
@@ -116,7 +78,7 @@ bool RooExpensiveObjectCache::registerObject(const char* ownerName, const char* 
     delete eo ;
   }
   // Install new object
-  _map[objectName] = new ExpensiveObject(olduid!=-1?olduid:_nextUID++, ownerName,cacheObject,parIter) ;
+  _map[objectName] = new ExpensiveObject(olduid!=-1?olduid:_nextUID++, ownerName,cacheObject,params) ;
 
   return false ;
 }
@@ -213,16 +175,14 @@ void RooExpensiveObjectCache::clearAll()
 /// Construct ExpensiveObject oject for inPayLoad and store reference values
 /// for all RooAbsReal and RooAbsCategory parameters in params.
 
-RooExpensiveObjectCache::ExpensiveObject::ExpensiveObject(Int_t uidIn, const char* inOwnerName, TObject& inPayload, TIterator* parIter)
+RooExpensiveObjectCache::ExpensiveObject::ExpensiveObject(Int_t uidIn, const char* inOwnerName, TObject& inPayload, RooArgSet const& params)
 {
   _uid = uidIn ;
   _ownerName = inOwnerName;
 
   _payload = &inPayload ;
 
-  RooAbsArg* arg ;
-  parIter->Reset() ;
-  while((arg=(RooAbsArg*)parIter->Next() )) {
+  for(RooAbsArg * arg : params) {
     RooAbsReal* real = dynamic_cast<RooAbsReal*>(arg) ;
     if (real) {
       _realRefParams[real->GetName()] = real->getVal() ;
@@ -231,7 +191,7 @@ RooExpensiveObjectCache::ExpensiveObject::ExpensiveObject(Int_t uidIn, const cha
       if (cat) {
    _catRefParams[cat->GetName()] = cat->getCurrentIndex() ;
       } else {
-   oocoutW(&inPayload,Caching) << "RooExpensiveObject::registerObject() WARNING: ignoring non-RooAbsReal/non-RooAbsCategory reference parameter " << arg->GetName() << endl ;
+   oocoutW(&inPayload,Caching) << "RooExpensiveObject::registerObject() WARNING: ignoring non-RooAbsReal/non-RooAbsCategory reference parameter " << arg->GetName() << std::endl ;
       }
     }
   }
@@ -274,26 +234,21 @@ bool RooExpensiveObjectCache::ExpensiveObject::matches(TClass* tc, const RooArgS
   }
 
   // Check parameters
-  TIterator* iter = params.createIterator() ;
-  RooAbsArg* arg ;
-  while((arg=(RooAbsArg*)iter->Next() )) {
+  for(RooAbsArg * arg : params) {
     RooAbsReal* real = dynamic_cast<RooAbsReal*>(arg) ;
     if (real) {
       if (fabs(real->getVal()-_realRefParams[real->GetName()])>1e-12) {
-   delete iter ;
    return false ;
       }
     } else {
       RooAbsCategory* cat = dynamic_cast<RooAbsCategory*>(arg) ;
       if (cat) {
    if (cat->getCurrentIndex() != _catRefParams[cat->GetName()]) {
-     delete iter ;
      return false ;
    }
       }
     }
   }
-  delete iter ;
 
   return true ;
 
@@ -305,12 +260,9 @@ bool RooExpensiveObjectCache::ExpensiveObject::matches(TClass* tc, const RooArgS
 
 void RooExpensiveObjectCache::print() const
 {
-  map<TString,ExpensiveObject*>::const_iterator iter = _map.begin() ;
-
-  while(iter!=_map.end()) {
-    cout << "uid = " << iter->second->uid() << " key=" << iter->first << " value=" ;
-    iter->second->print() ;
-    ++iter ;
+  for(auto const& item : _map) {
+    std::cout << "uid = " << item.second->uid() << " key=" << item.first << " value=" ;
+    item.second->print() ;
   }
 }
 
@@ -320,22 +272,22 @@ void RooExpensiveObjectCache::print() const
 
 void RooExpensiveObjectCache::ExpensiveObject::print() const
 {
-  cout << _payload->ClassName() << "::" << _payload->GetName() ;
+  std::cout << _payload->ClassName() << "::" << _payload->GetName() ;
   if (_realRefParams.size()>0 || _catRefParams.size()>0) {
-    cout << " parameters=( " ;
+    std::cout << " parameters=( " ;
     auto iter = _realRefParams.begin() ;
     while(iter!=_realRefParams.end()) {
-      cout << iter->first << "=" << iter->second << " " ;
+      std::cout << iter->first << "=" << iter->second << " " ;
       ++iter ;
     }
     auto iter2 = _catRefParams.begin() ;
     while(iter2!=_catRefParams.end()) {
-      cout << iter2->first << "=" << iter2->second << " " ;
+      std::cout << iter2->first << "=" << iter2->second << " " ;
       ++iter2 ;
     }
-    cout << ")" ;
+    std::cout << ")" ;
   }
-  cout << endl ;
+  std::cout << std::endl ;
 }
 
 
@@ -345,16 +297,14 @@ void RooExpensiveObjectCache::ExpensiveObject::print() const
 
 void RooExpensiveObjectCache::importCacheObjects(RooExpensiveObjectCache& other, const char* ownerName, bool verbose)
 {
-  map<TString,ExpensiveObject*>::const_iterator iter = other._map.begin() ;
-  while(iter!=other._map.end()) {
-    if (string(ownerName)==iter->second->ownerName()) {
-      _map[iter->first.Data()] = new ExpensiveObject(_nextUID++, *iter->second) ;
+  for(auto const& item : other._map) {
+    if (std::string(ownerName)==item.second->ownerName()) {
+      _map[item.first.Data()] = new ExpensiveObject(_nextUID++, *item.second) ;
       if (verbose) {
-   oocoutI(iter->second->payload(),Caching) << "RooExpensiveObjectCache::importCache() importing cache object "
-                   << iter->first << " associated with object " << iter->second->ownerName() << endl ;
+   oocoutI(item.second->payload(),Caching) << "RooExpensiveObjectCache::importCache() importing cache object "
+                   << item.first << " associated with object " << item.second->ownerName() << std::endl ;
       }
     }
-    ++iter ;
   }
 
 }

@@ -90,16 +90,14 @@ std::enable_if_t<IsRVec<Value_t>::value, const std::type_info &> GetInnerValueTy
 
 // This overload is for the case of a single column and ret_type != RVec<RVec<...>>
 template <typename T>
-std::enable_if_t<!IsRVec<T>::value, void>
-ResizeResults(ROOT::RVec<T> &results, std::size_t /*nCols*/, std::size_t nVariations)
+void ResizeResults(ROOT::RVec<T> &results, std::size_t /*nCols*/, std::size_t nVariations)
 {
    results.resize(nVariations);
 }
 
 // This overload is for the case of ret_type == RVec<RVec<...>>
 template <typename T>
-std::enable_if_t<IsRVec<T>::value, void>
-ResizeResults(ROOT::RVec<T> &results, std::size_t nCols, std::size_t nVariations)
+void ResizeResults(ROOT::RVec<ROOT::RVec<T>> &results, std::size_t nCols, std::size_t nVariations)
 {
    if (nCols == 1) {
       results.resize(nVariations);
@@ -115,8 +113,7 @@ ResizeResults(ROOT::RVec<T> &results, std::size_t nCols, std::size_t nVariations
 // GetValuePtr)
 // This overload is for the case of a single column and ret_type != RVec<RVec<...>>
 template <typename T>
-std::enable_if_t<!IsRVec<T>::value, void>
-AssignResults(ROOT::RVec<T> &resStorage, ROOT::RVec<T> &&tmpResults, std::size_t /*nCols*/)
+void AssignResults(ROOT::RVec<T> &resStorage, ROOT::RVec<T> &&tmpResults, std::size_t /*nCols*/)
 {
    const auto nVariations = resStorage.size(); // we have already checked that tmpResults has the same size
 
@@ -126,8 +123,7 @@ AssignResults(ROOT::RVec<T> &resStorage, ROOT::RVec<T> &&tmpResults, std::size_t
 
 // This overload is for the case of ret_type == RVec<RVec<...>>
 template <typename T>
-std::enable_if_t<IsRVec<T>::value, void>
-AssignResults(ROOT::RVec<T> &resStorage, ROOT::RVec<T> &&tmpResults, std::size_t nCols)
+void AssignResults(ROOT::RVec<ROOT::RVec<T>> &resStorage, ROOT::RVec<ROOT::RVec<T>> &&tmpResults, std::size_t nCols)
 {
    // we have already checked that tmpResults has the same inner size
    const auto nVariations = nCols == 1 ? resStorage.size() : resStorage[0].size();
@@ -152,13 +148,14 @@ class R__CLING_PTRCHECK(off) RVariation final : public RVariationBase {
    std::vector<ret_type> fLastResults;
 
    /// Column readers per slot and per input column
-   std::vector<std::array<std::unique_ptr<RColumnReaderBase>, ColumnTypes_t::list_size>> fValues;
+   std::vector<std::array<std::shared_ptr<RColumnReaderBase>, ColumnTypes_t::list_size>> fValues;
 
    template <typename... ColTypes, std::size_t... S>
    void UpdateHelper(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>)
    {
       // fExpression must return an RVec<T>
       auto &&results = fExpression(fValues[slot][S]->template Get<ColTypes>(entry)...);
+      (void)entry; // avoid unused parameter warnings (gcc 12.1)
 
       if (!ResultsSizeEq(results, fVariationNames.size(), fColNames.size())) {
          std::string variationName = fVariationNames[0].substr(0, fVariationNames[0].find_first_of(':'));
@@ -168,10 +165,6 @@ class R__CLING_PTRCHECK(off) RVariation final : public RVariationBase {
       }
 
       AssignResults(fLastResults[slot * CacheLineStep<ret_type>()], std::move(results), fColNames.size());
-
-      // silence "unused parameter" warnings in gcc
-      (void)slot;
-      (void)entry;
    }
 
    // This overload is for the case of a single column and ret_type != RVec<RVec<...>> -- the colIdx is ignored.
@@ -216,10 +209,7 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      for (auto &define : fColumnRegister.GetColumns())
-         define.second->InitSlot(r, slot);
-      RColumnReadersInfo info{fInputColumns, fColumnRegister, fIsDefine.data(), fLoopManager->GetDSValuePtrs(),
-                              fLoopManager->GetDataSource()};
+      RColumnReadersInfo info{fInputColumns, fColumnRegister, fIsDefine.data(), *fLoopManager};
       fValues[slot] = MakeColumnReaders(slot, r, ColumnTypes_t{}, info);
       fLastCheckedEntry[slot * CacheLineStep<Long64_t>()] = -1;
    }

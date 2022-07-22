@@ -33,7 +33,7 @@ See TMarker for the list of possible marker types.
 TPolyMarker::TPolyMarker(): TObject()
 {
    fN = 0;
-   fX = fY = 0;
+   fX = fY = nullptr;
    fLastPoint = -1;
 }
 
@@ -49,7 +49,7 @@ TPolyMarker::TPolyMarker(Int_t n, Option_t *option)
    if (n <= 0) {
       fN = 0;
       fLastPoint = -1;
-      fX = fY = 0;
+      fX = fY = nullptr;
       return;
    }
    fN = n;
@@ -69,7 +69,7 @@ TPolyMarker::TPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *option)
    if (n <= 0) {
       fN = 0;
       fLastPoint = -1;
-      fX = fY = 0;
+      fX = fY = nullptr;
       return;
    }
    fN = n;
@@ -92,7 +92,7 @@ TPolyMarker::TPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option)
    if (n <= 0) {
       fN = 0;
       fLastPoint = -1;
-      fX = fY = 0;
+      fX = fY = nullptr;
       return;
    }
    fN = n;
@@ -108,18 +108,9 @@ TPolyMarker::TPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 
 TPolyMarker& TPolyMarker::operator=(const TPolyMarker& pm)
 {
-   if(this!=&pm) {
-      TObject::operator=(pm);
-      TAttMarker::operator=(pm);
-      fN=pm.fN;
-      fLastPoint=pm.fLastPoint;
-   // delete first previous existing fX and fY
-      if (fX) delete [] fX;
-      if (fY) delete [] fY;
-      fX=pm.fX;
-      fY=pm.fY;
-      fOption=pm.fOption;
-   }
+   if(this != &pm)
+      pm.Copy(*this);
+
    return *this;
 }
 
@@ -139,17 +130,16 @@ TPolyMarker::~TPolyMarker()
 TPolyMarker::TPolyMarker(const TPolyMarker &polymarker) : TObject(polymarker), TAttMarker(polymarker)
 {
    fN = 0;
-   fX = fY = 0;
+   fX = fY = nullptr;
    fLastPoint = -1;
-   ((TPolyMarker&)polymarker).Copy(*this);
+   polymarker.Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// Copy TPolyMarker into provided object
 
 void TPolyMarker::Copy(TObject &obj) const
 {
-   // Copy.
-
    TObject::Copy(obj);
    TAttMarker::Copy(((TPolyMarker&)obj));
    ((TPolyMarker&)obj).fN = fN;
@@ -159,10 +149,13 @@ void TPolyMarker::Copy(TObject &obj) const
    if (fN > 0) {
       ((TPolyMarker&)obj).fX = new Double_t [fN];
       ((TPolyMarker&)obj).fY = new Double_t [fN];
-      for (Int_t i=0; i<fN;i++) { ((TPolyMarker&)obj).fX[i] = fX[i], ((TPolyMarker&)obj).fY[i] = fY[i]; }
+      for (Int_t i=0; i<fN;i++) {
+         ((TPolyMarker&)obj).fX[i] = fX[i];
+         ((TPolyMarker&)obj).fY[i] = fY[i];
+      }
    } else {
-      ((TPolyMarker&)obj).fX = 0;
-      ((TPolyMarker&)obj).fY = 0;
+      ((TPolyMarker&)obj).fX = nullptr;
+      ((TPolyMarker&)obj).fY = nullptr;
    }
    ((TPolyMarker&)obj).fOption = fOption;
    ((TPolyMarker&)obj).fLastPoint = fLastPoint;

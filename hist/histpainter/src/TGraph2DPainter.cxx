@@ -24,6 +24,7 @@
 #include "TStyle.h"
 #include "Hoption.h"
 #include "TH1.h"
+#include <vector>
 
 R__EXTERN TH1  *gCurrentHist;
 R__EXTERN Hoption_t Hoption;
@@ -242,10 +243,10 @@ TList *TGraph2DPainter::GetContourList(Double_t contour)
    // Allocate space to store the segments. They cannot be more than the
    // number of triangles.
    Double_t xs0c, ys0c, xs1c, ys1c;
-   Double_t *xs0 = new Double_t[fNdt];
-   Double_t *ys0 = new Double_t[fNdt];
-   Double_t *xs1 = new Double_t[fNdt];
-   Double_t *ys1 = new Double_t[fNdt];
+   std::vector<Double_t> xs0(fNdt);
+   std::vector<Double_t> ys0(fNdt);
+   std::vector<Double_t> xs1(fNdt);
+   std::vector<Double_t> ys1(fNdt);
    for (i=0;i<fNdt;i++) {
       xs0[i] = 0.;
       ys0[i] = 0.;
@@ -279,10 +280,6 @@ TList *TGraph2DPainter::GetContourList(Double_t contour)
          if (fZ[p2]>z2)  {z2=fZ[p2]; x2=fX[p2]; y2=fY[p2]; i2=2;}
          if (i0==0 && i2==0) {
             Error("GetContourList", "wrong vertices ordering");
-            delete [] xs0;
-            delete [] ys0;
-            delete [] xs1;
-            delete [] ys1;
             return nullptr;
          } else {
             i1 = 3-i2-i0;
@@ -341,10 +338,6 @@ TList *TGraph2DPainter::GetContourList(Double_t contour)
          if (fZ[p[2]]>z2)  {z2=fZ[p[2]]; x2=fX[p[2]]; y2=fY[p[2]]; i2=2;}
          if (i0==0 && i2==0) {
             Error("GetContourList", "wrong vertices ordering");
-            delete [] xs0;
-            delete [] ys0;
-            delete [] xs1;
-            delete [] ys1;
             return nullptr;
          } else {
             i1 = 3-i2-i0;
@@ -386,8 +379,8 @@ TList *TGraph2DPainter::GetContourList(Double_t contour)
 
    TList *list   = new TList(); // list holding all the graphs
 
-   Int_t *segUsed = new Int_t[fNdt];
-   for(i=0; i<fNdt; i++) segUsed[i]=kFALSE;
+   std::vector<Bool_t> segUsed(fNdt);
+   for(i=0; i<fNdt; i++) segUsed[i] = kFALSE;
 
    // Find all the graphs making the contour. There is two kind of graphs,
    // either they are "opened" or they are "closed"
@@ -498,11 +491,6 @@ L02:
       list->Add(graph); npg = 0;
    }
 
-   delete [] xs0;
-   delete [] ys0;
-   delete [] xs1;
-   delete [] ys1;
-   delete [] segUsed;
    return list;
 }
 
@@ -579,24 +567,18 @@ void TGraph2DPainter::PaintContour(Option_t * /*option*/)
    Int_t ndivz  = TMath::Abs(ndiv);
    if (gCurrentHist->TestBit(TH1::kUserContour) == 0) gCurrentHist->SetContour(ndiv);
 
-   Int_t theColor;
-   TList *l;
-   TGraph *g;
-   TObject *obj;
-   Double_t c;
-
    if (!fNdt) FindTriangles();
 
    for (Int_t k=0; k<ndiv; k++) {
-      c = gCurrentHist->GetContourLevelPad(k);
-      l = GetContourList(c);
+      Double_t c = gCurrentHist->GetContourLevelPad(k);
+      TList *l = GetContourList(c);
       TIter next(l);
-      while ((obj = next())) {
+      while (auto obj = next()) {
          if(obj->InheritsFrom(TGraph::Class()) ) {
-            g=(TGraph*)obj;
+            TGraph *g = (TGraph*)obj;
             g->SetLineWidth(fGraph2D->GetLineWidth());
             g->SetLineStyle(fGraph2D->GetLineStyle());
-            theColor = Int_t((k+0.99)*Float_t(ncolors)/Float_t(ndivz));
+            Int_t theColor = Int_t((k+0.99)*Float_t(ncolors)/Float_t(ndivz));
             g->SetLineColor(gStyle->GetColorPalette(theColor));
             g->Paint("l");
          }
@@ -613,16 +595,16 @@ void TGraph2DPainter::PaintErrors(Option_t * /* option */)
 {
    Double_t temp1[3],temp2[3];
 
-   TView *view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("PaintErrors", "No TView in current pad");
       return;
    }
 
    Int_t  it;
-   Double_t *xm = new Double_t[2];
-   Double_t *ym = new Double_t[2];
-   Double_t err =0;
+   Double_t xm[2];
+   Double_t ym[2];
+   Double_t err = 0;
 
    fGraph2D->SetLineStyle(fGraph2D->GetLineStyle());
    fGraph2D->SetLineWidth(fGraph2D->GetLineWidth());
@@ -709,8 +691,6 @@ void TGraph2DPainter::PaintErrors(Option_t * /* option */)
       ym[1] = temp2[1];
       gPad->PaintPolyLine(2,xm,ym);
    }
-   delete [] xm;
-   delete [] ym;
 }
 
 
@@ -918,7 +898,7 @@ void TGraph2DPainter::PaintPolyMarker(Option_t *option)
 {
    Double_t temp1[3],temp2[3];
 
-   TView *view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("PaintPolyMarker", "No TView in current pad");
       return;
@@ -941,9 +921,9 @@ void TGraph2DPainter::PaintPolyMarker(Option_t *option)
       if (gCurrentHist->TestBit(TH1::kUserContour) == 0) gCurrentHist->SetContour(ndiv);
    }
 
-   Double_t *xm = new Double_t[fNpoints];
-   Double_t *ym = new Double_t[fNpoints];
-   Double_t *zm = new Double_t[fNpoints];
+   std::vector<Double_t> xm(fNpoints);
+   std::vector<Double_t> ym(fNpoints);
+   std::vector<Double_t> zm(fNpoints);
    Double_t hzmin = gCurrentHist->GetMinimum();
    Double_t hzmax = gCurrentHist->GetMaximum();
 
@@ -988,14 +968,14 @@ void TGraph2DPainter::PaintPolyMarker(Option_t *option)
       npd++;
    }
    if (markers0) {
-      PaintPolyMarker0(npd,xm,ym);
+      PaintPolyMarker0(npd,xm.data(),ym.data());
    } else if (colors) {
       Int_t cols = fGraph2D->GetMarkerColor();
       for (it=0; it<npd; it++) {
          theColor = (Int_t)( ((zm[it]-hzmincol)/(hzmaxcol-hzmincol))*(ncolors-1) );
          fGraph2D->SetMarkerColor(gStyle->GetColorPalette(theColor));
          fGraph2D->TAttMarker::Modify();
-         gPad->PaintPolyMarker(1,&xm[it],&ym[it]);
+         gPad->PaintPolyMarker(1,xm.data()+it,ym.data()+it);
       }
       fGraph2D->SetMarkerColor(cols);
    } else {
@@ -1003,11 +983,8 @@ void TGraph2DPainter::PaintPolyMarker(Option_t *option)
       fGraph2D->SetMarkerSize(fGraph2D->GetMarkerSize());
       fGraph2D->SetMarkerColor(fGraph2D->GetMarkerColor());
       fGraph2D->TAttMarker::Modify();
-      gPad->PaintPolyMarker(npd,xm,ym);
+      gPad->PaintPolyMarker(npd,xm.data(),ym.data());
    }
-   delete [] xm;
-   delete [] ym;
-   delete [] zm;
 }
 
 
@@ -1018,7 +995,7 @@ void TGraph2DPainter::PaintPolyLine(Option_t * /* option */)
 {
    Double_t temp1[3],temp2[3];
 
-   TView *view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("PaintPolyLine", "No TView in current pad");
       return;
@@ -1028,8 +1005,8 @@ void TGraph2DPainter::PaintPolyLine(Option_t * /* option */)
    Double_t Xeps = (fXmax - fXmin) * 0.0001;
    Double_t Yeps = (fYmax - fYmin) * 0.0001;
 
-   Double_t *xm = new Double_t[fNpoints];
-   Double_t *ym = new Double_t[fNpoints];
+   std::vector<Double_t> xm(fNpoints);
+   std::vector<Double_t> ym(fNpoints);
    Int_t    npd = 0;
 
    for (it=0; it<fNpoints; it++) {
@@ -1056,9 +1033,7 @@ void TGraph2DPainter::PaintPolyLine(Option_t * /* option */)
    fGraph2D->SetLineWidth(fGraph2D->GetLineWidth());
    fGraph2D->SetLineColor(fGraph2D->GetLineColor());
    fGraph2D->TAttLine::Modify();
-   gPad->PaintPolyLine(npd,xm,ym);
-   delete [] xm;
-   delete [] ym;
+   gPad->PaintPolyLine(npd,xm.data(),ym.data());
 }
 
 
@@ -1103,10 +1078,10 @@ void TGraph2DPainter::PaintTriangles_old(Option_t *option)
 {
    Double_t x[4], y[4], temp1[3],temp2[3];
    Int_t it,t[3];
-   Int_t *order = 0;
-   Double_t *dist = 0;
+   std::vector<Int_t> order;
+   std::vector<Double_t> dist;
 
-   TView *view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("PaintTriangles", "No TView in current pad");
       return;
@@ -1122,8 +1097,8 @@ void TGraph2DPainter::PaintTriangles_old(Option_t *option)
 
    // Define the grid levels drawn on the triangles.
    // The grid levels are aligned on the Z axis' main tick marks.
-   Int_t nblev=0;
-   Double_t *glev=0;
+   Int_t nblev = 0;
+   std::vector<Double_t> glev;
    if (!tri1 && !tri2 && !wire) {
       Int_t ndivz = gCurrentHist->GetZaxis()->GetNdivisions()%100;
       Int_t nbins;
@@ -1145,7 +1120,7 @@ void TGraph2DPainter::PaintTriangles_old(Option_t *option)
       }
       // Define the grid levels
       nblev = nbins+1;
-      glev = new Double_t[nblev];
+      glev.resize(nblev);
       for (Int_t i = 0; i < nblev; ++i) glev[i] = binLow+i*binWidth;
    }
 
@@ -1165,8 +1140,8 @@ void TGraph2DPainter::PaintTriangles_old(Option_t *option)
    if (!fNdt) FindTriangles();
    Double_t cp = TMath::Cos(view->GetLongitude()*TMath::Pi()/180.);
    Double_t sp = TMath::Sin(view->GetLongitude()*TMath::Pi()/180.);
-   order = new Int_t[fNdt];
-   dist  = new Double_t[fNdt];
+   order.resize(fNdt);
+   dist.resize(fNdt);
    Double_t xd,yd;
    Int_t p, n, m;
    Bool_t o = kFALSE;
@@ -1188,7 +1163,7 @@ void TGraph2DPainter::PaintTriangles_old(Option_t *option)
          o = kTRUE;
       }
    }
-   TMath::Sort(fNdt, dist, order, o);
+   TMath::Sort(fNdt, dist.data(), order.data(), o);
 
    // Draw the triangles and markers if requested
    fGraph2D->SetFillColor(fGraph2D->GetFillColor());
@@ -1224,7 +1199,7 @@ void TGraph2DPainter::PaintTriangles_old(Option_t *option)
       if (tri1 || tri2) PaintLevels(t,x,y);
       if (!tri1 && !tri2 && !wire) {
          gPad->PaintFillArea(3,x,y);
-         PaintLevels(t,x,y,nblev,glev);
+         PaintLevels(t,x,y,nblev,glev.data());
       }
       if (!tri2) gPad->PaintPolyLine(4,x,y);
       if (markers) {
@@ -1245,9 +1220,6 @@ endloop:
    fGraph2D->SetLineStyle(lst);
    fGraph2D->TAttLine::Modify();
    fGraph2D->TAttFill::Modify();
-   delete [] order;
-   delete [] dist;
-   if (glev) delete [] glev;
 }
 
 
@@ -1260,7 +1232,7 @@ void TGraph2DPainter::PaintTriangles_new(Option_t *option)
    Double_t x[4], y[4], temp1[3],temp2[3];
    Int_t p[3];
 
-   TView *view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view) {
       Error("PaintTriangles", "No TView in current pad");
       return;
@@ -1277,7 +1249,7 @@ void TGraph2DPainter::PaintTriangles_new(Option_t *option)
    // Define the grid levels drawn on the triangles.
    // The grid levels are aligned on the Z axis' main tick marks.
    Int_t nblev=0;
-   Double_t *glev=0;
+   std::vector<Double_t> glev;
    if (!tri1 && !tri2 && !wire) {
       Int_t ndivz = gCurrentHist->GetZaxis()->GetNdivisions()%100;
       Int_t nbins;
@@ -1299,7 +1271,7 @@ void TGraph2DPainter::PaintTriangles_new(Option_t *option)
       }
       // Define the grid levels
       nblev = nbins+1;
-      glev = new Double_t[nblev];
+      glev.resize(nblev);
       for (Int_t i = 0; i < nblev; ++i) glev[i] = binLow+i*binWidth;
    }
 
@@ -1382,7 +1354,7 @@ void TGraph2DPainter::PaintTriangles_new(Option_t *option)
       if (tri1 || tri2) PaintLevels(p,x,y);
       if (!tri1 && !tri2 && !wire) {
          gPad->PaintFillArea(3,x,y);
-         PaintLevels(p,x,y,nblev,glev);
+         PaintLevels(p,x,y,nblev,glev.data());
       }
       if (!tri2) gPad->PaintPolyLine(4,x,y);
       if (markers) {
@@ -1403,6 +1375,4 @@ endloop:
    fGraph2D->SetLineStyle(lst);
    fGraph2D->TAttLine::Modify();
    fGraph2D->TAttFill::Modify();
-
-   if (glev) delete [] glev;
 }

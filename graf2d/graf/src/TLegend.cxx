@@ -200,7 +200,7 @@ End_Macro
 TLegend::TLegend(): TPave(0.3,0.15,0.3,0.15,4,"brNDC"),
                     TAttText(12,0,1,gStyle->GetLegendFont(),0)
 {
-   fPrimitives = 0;
+   fPrimitives = nullptr;
    SetDefaults();
    SetBorderSize(gStyle->GetLegendBorderSize());
    SetFillColor(gStyle->GetLegendFillColor());
@@ -225,8 +225,8 @@ TLegend::TLegend( Double_t x1, Double_t y1,Double_t x2, Double_t y2,
         :TPave(x1,y1,x2,y2,4,option), TAttText(12,0,1,gStyle->GetLegendFont(),0)
 {
    fPrimitives = new TList;
-   if ( header && strlen(header) > 0) {
-      TLegendEntry *headerEntry = new TLegendEntry( 0, header, "h" );
+   if (header && strlen(header) > 0) {
+      TLegendEntry *headerEntry = new TLegendEntry( nullptr, header, "h" );
       headerEntry->SetTextAlign(0);
       headerEntry->SetTextAngle(0);
       headerEntry->SetTextColor(0);
@@ -258,8 +258,8 @@ TLegend::TLegend( Double_t w, Double_t h, const char *header, Option_t *option)
         :TPave(w,h,w,h,4,option), TAttText(12,0,1,gStyle->GetLegendFont(),0)
 {
    fPrimitives = new TList;
-   if ( header && strlen(header) > 0) {
-      TLegendEntry *headerEntry = new TLegendEntry( 0, header, "h" );
+   if (header && strlen(header) > 0) {
+      TLegendEntry *headerEntry = new TLegendEntry(nullptr, header, "h");
       headerEntry->SetTextAlign(0);
       headerEntry->SetTextAngle(0);
       headerEntry->SetTextColor(0);
@@ -275,18 +275,10 @@ TLegend::TLegend( Double_t w, Double_t h, const char *header, Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
-TLegend::TLegend( const TLegend &legend ) : TPave(legend), TAttText(legend),
-                                            fPrimitives(0)
+TLegend::TLegend(const TLegend &legend) : TPave(legend), TAttText(legend),
+                                           fPrimitives(nullptr)
 {
-  if (legend.fPrimitives) {
-      fPrimitives = new TList();
-      TListIter it(legend.fPrimitives);
-      while (TLegendEntry *e = (TLegendEntry *)it.Next()) {
-         TLegendEntry *newentry = new TLegendEntry(*e);
-         fPrimitives->Add(newentry);
-      }
-   }
-   ((TLegend&)legend).Copy(*this);
+   legend.TLegend::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -294,14 +286,8 @@ TLegend::TLegend( const TLegend &legend ) : TPave(legend), TAttText(legend),
 
 TLegend& TLegend::operator=(const TLegend &lg)
 {
-   if(this!=&lg) {
-      TPave::operator=(lg);
-      TAttText::operator=(lg);
-      fPrimitives=lg.fPrimitives;
-      fEntrySeparation=lg.fEntrySeparation;
-      fMargin=lg.fMargin;
-      fNColumns=lg.fNColumns;
-   }
+   if(this != &lg)
+      lg.TLegend::Copy(*this);
    return *this;
 }
 
@@ -310,9 +296,10 @@ TLegend& TLegend::operator=(const TLegend &lg)
 
 TLegend::~TLegend()
 {
-   if (fPrimitives) fPrimitives->Delete();
+   if (fPrimitives)
+      fPrimitives->Delete();
    delete fPrimitives;
-   fPrimitives = 0;
+   fPrimitives = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -364,9 +351,8 @@ TLegendEntry *TLegend::AddEntry(const char *name, const char *label, Option_t *o
    if (!obj) {
       TList *lop = gPad->GetListOfPrimitives();
       if (lop) {
-         TObject *o=0;
          TIter next(lop);
-         while( (o=next()) ) {
+         while(auto o = next()) {
             if ( o->InheritsFrom(TMultiGraph::Class() ) ) {
                TList * grlist = ((TMultiGraph *)o)->GetListOfGraphs();
                obj = grlist->FindObject(name);
@@ -396,13 +382,26 @@ void TLegend::Clear( Option_t *)
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy this legend into "obj".
 
-void TLegend::Copy( TObject &obj ) const
+void TLegend::Copy(TObject &obj) const
 {
-   TPave::Copy(obj);
-   TAttText::Copy((TLegend&)obj);
-   ((TLegend&)obj).fEntrySeparation = fEntrySeparation;
-   ((TLegend&)obj).fMargin = fMargin;
-   ((TLegend&)obj).fNColumns = fNColumns;
+   auto &tgt = static_cast<TLegend &> (obj);
+   TPave::Copy(tgt);
+   TAttText::Copy(tgt);
+   tgt.fEntrySeparation = fEntrySeparation;
+   tgt.fMargin = fMargin;
+   tgt.fNColumns = fNColumns;
+
+   if (tgt.fPrimitives) {
+      tgt.fPrimitives->Delete();
+      delete tgt.fPrimitives;
+      tgt.fPrimitives = nullptr;
+   }
+   if (fPrimitives) {
+      tgt.fPrimitives = new TList();
+      TIter next(fPrimitives);
+      while (auto entry = (TLegendEntry *) next())
+         tgt.fPrimitives->Add(new TLegendEntry(*entry));
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -516,15 +515,14 @@ TLegendEntry *TLegend::GetEntry() const
 
 const char *TLegend::GetHeader() const
 {
-   if ( !fPrimitives ) return 0;
+   if ( !fPrimitives ) return nullptr;
       TIter next(fPrimitives);
-   TLegendEntry *first;   // header is always the first entry
-   if ((  first = (TLegendEntry*)next()  )) {
+   if (auto first = (TLegendEntry*)next()) {
       TString opt = first->GetOption();
       opt.ToLower();
       if ( opt.Contains("h") ) return first->GetLabel();
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -637,8 +635,7 @@ void TLegend::PaintPrimitives()
       textsize = GetTextSize();
    }
    Bool_t autosize = kFALSE;
-   Double_t* columnWidths = new Double_t[fNColumns];
-   memset(columnWidths, 0, fNColumns*sizeof(Double_t));
+   std::vector<Double_t> columnWidths(fNColumns, 0.);
 
    if ( textsize == 0 ) {
       autosize = kTRUE;
@@ -691,10 +688,10 @@ void TLegend::PaintPrimitives()
    // don't want to ruin initialisation of these variables later on
    {
       TIter next(fPrimitives);
-      TLegendEntry *entry;
       Int_t iColumn = 0;
-      memset(columnWidths, 0, fNColumns*sizeof(Double_t));
-      while (( entry = (TLegendEntry *)next() )) {
+      for (Int_t k = 0; k < fNColumns; ++k)
+         columnWidths[k] = 0.;
+      while (auto entry = (TLegendEntry *)next()) {
          TLatex entrytex( 0, 0, entry->GetLabel() );
          entrytex.SetNDC();
          Style_t tfont = entry->GetTextFont();
@@ -1012,7 +1009,6 @@ void TLegend::PaintPrimitives()
       if ( opt.Contains("p"))  entrymarker.Paint();
    }
    SetTextSize(save_textsize);
-   delete [] columnWidths;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1030,9 +1026,9 @@ void TLegend::Print( Option_t* option ) const
 void TLegend::RecursiveRemove(TObject *obj)
 {
    TIter next(fPrimitives);
-   TLegendEntry *entry;
-   while (( entry = (TLegendEntry *)next() )) {
-      if (entry->GetObject() == obj) entry->SetObject((TObject*)0);
+   while (auto entry = (TLegendEntry *)next()) {
+      if (entry->GetObject() == obj)
+         entry->SetObject((TObject *)nullptr);
    }
 }
 

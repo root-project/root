@@ -30,7 +30,8 @@ class RooProduct : public RooAbsReal {
 public:
 
   RooProduct() ;
-  RooProduct(const char *name, const char *title, const RooArgList& _prodSet) ;
+  RooProduct(const char *name, const char *title, const RooArgList& prodSet) ;
+  RooProduct(const char *name, const char *title, RooAbsReal& real1, RooAbsReal& real2) ;
 
   RooProduct(const RooProduct& other, const char* name = 0);
 
@@ -60,6 +61,8 @@ public:
   void setCacheAndTrackHints(RooArgSet&) override ;
 
 protected:
+
+  void ioStreamerPass2() override ;
 
   RooListProxy _compRSet ;
   RooListProxy _compCSet ;

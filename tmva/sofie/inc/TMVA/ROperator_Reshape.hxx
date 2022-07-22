@@ -21,7 +21,7 @@ private:
 
    ReshapeOpMode fOpMode = Reshape;   // type of Reshape operator
 
-   int fAllowZero = 0; // (for Reshape) zero in tensor shape makes output shape equal to input tensor shape 
+   int fAllowZero = 0; // (for Reshape) zero in tensor shape makes output shape equal to input tensor shape
    int fAxis = 1;      // (for Flatten)
 
    std::string fNData;        // input data tensor name
@@ -41,9 +41,9 @@ public:
       if (opMode == Reshape) fAllowZero = attr_value;
       if (opMode == Flatten) fAxis = attr_value;
    }
-   
+
    // for squeeze/unsqueezed operators following old ONNX version (< 10)
-   // IN this cases axes are passed as attribute values
+   // In this cases axes are passed as attribute values
    ROperator_Reshape(ReshapeOpMode opMode, std::vector<int64_t> attrAxes, std::string nameData, std::string nameOutput)
       : fOpMode(opMode), fNData(UTILITY::Clean_name(nameData)), fNOutput(UTILITY::Clean_name(nameOutput)),
         fAttrAxes(attrAxes)
@@ -51,7 +51,7 @@ public:
       assert(fOpMode == Squeeze || fOpMode == Unsqueeze);
    }
 
-   // output type is same as input 
+   // output type is same as input
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
       auto ret = std::vector<ETensorType>(1, input[0]);
       return ret;
@@ -60,14 +60,14 @@ public:
    // output shape
    std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input){
       std::vector<std::vector<size_t>> ret;
-      auto & input_shape = input[0]; 
+      auto & input_shape = input[0];
 
       if (fOpMode == Reshape) {
          if (input.size() != 2) throw std::runtime_error("TMVA SOFIE Reshape Op needs 2 input tensors");
          auto output_shape = input[1]; // the provided shape
          size_t input_length = ConvertShapeToLength(input_shape);
          size_t output_length = ConvertShapeToLength(output_shape);
-         // input_length == output_length) is the easy case : (2,3,4) -> (2,12)
+         // (input_length == output_length) is the easy case : (2,3,4) -> (2,12)
          if (input_length != output_length) {
             if (output_shape.size() > 1 && ((output_length == 0 && fAllowZero == 0) || output_length > INT64_MAX)) {
                // in this case value 0 in shape are automatically corrected
@@ -96,7 +96,7 @@ public:
          ret.push_back(newShape);
 
       } else if (fOpMode == Squeeze) {
-         // squeeze 
+         // squeeze
          // assume no axis is provided - remove all axes with value equal to 1
          auto output_shape = input[0];
          if (input.size() == 1) {
@@ -105,7 +105,7 @@ public:
                   output_shape.erase(output_shape.begin() + i);
                }
             }
-         } else if (input.size() == 2) { 
+         } else if (input.size() == 2) {
             auto & axes = input[1];
             for (size_t i = 0; i < axes.size(); i++){
                if (output_shape[axes[i]] != 1)
@@ -125,7 +125,7 @@ public:
          if (axes[0] > 0) { // positive axis start from beginning
             for (auto & i : axes)
                output_shape.insert(output_shape.begin() + i, 1);
-         } else { 
+         } else {
             //negative axes
             for (auto &i : axes) {
                assert(i < 0);
@@ -140,9 +140,9 @@ public:
    void Initialize(RModel &model)
    {
 
-      if (model.CheckIfTensorAlreadyExist(fNData) == false) { 
+      if (model.CheckIfTensorAlreadyExist(fNData) == false) {
           // input must be a graph input, or already initialized intermediate tensor
-         throw std::runtime_error("TMVA Reshape Op Input Tensor is not found in model");
+         throw std::runtime_error("TMVA Reshape Op Input Tensor " + fNData + "  is not found in model");
       }
       fShapeInput = model.GetTensorShape(fNData);
 
@@ -159,7 +159,7 @@ public:
             std::copy(input_shape, input_shape + n, descShape.begin());
             fShapeOutput = ShapeInference({fShapeInput, descShape})[0];
          } else {
-            throw std::runtime_error("TMVA Reshape Op Input Tensor is not found in model");
+            throw std::runtime_error("TMVA Reshape Op Shape Tensor " + fNShape + " is not found in model");
          }
       } else if (!fAttrAxes.empty()) {
          // case fNShape is empty and axes are provided as attributes

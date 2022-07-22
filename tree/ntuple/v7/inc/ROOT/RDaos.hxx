@@ -18,22 +18,44 @@
 
 #include <ROOT/RStringView.hxx>
 #include <ROOT/TypeTraits.hxx>
+#include <ROOT/RSpan.hxx>
 
 #include <daos.h>
-// Avoid depending on `gurt/common.h` as the only required declaration is `d_rank_list_free()`.
-// Also, this header file is known to provide macros that conflict with std::min()/std::max().
-extern "C" void d_rank_list_free(d_rank_list_t *rank_list);
 
 #include <functional>
 #include <memory>
 #include <string>
 #include <type_traits>
 #include <vector>
+#include <optional>
+#include <unordered_map>
+
+#ifndef DAOS_UUID_STR_SIZE
+#define DAOS_UUID_STR_SIZE 37
+#endif
 
 namespace ROOT {
 
 namespace Experimental {
 namespace Detail {
+
+struct RDaosEventQueue {
+   daos_handle_t fQueue;
+   RDaosEventQueue();
+   ~RDaosEventQueue();
+
+   /// \brief Sets event barrier for a given parent event and waits for the completion of all children launched before
+   /// the barrier (must have at least one child).
+   /// \return 0 on success; a DAOS error code otherwise (< 0).
+   int WaitOnParentBarrier(daos_event_t *ev_ptr);
+   /// \brief Reserve event in queue, optionally tied to a parent event.
+   /// \return 0 on success; a DAOS error code otherwise (< 0).
+   int InitializeEvent(daos_event_t *ev_ptr, daos_event_t *parent_ptr = nullptr);
+   /// \brief Release event data from queue.
+   /// \return 0 on success; a DAOS error code otherwise (< 0).
+   int FinalizeEvent(daos_event_t *ev_ptr);
+};
+
 class RDaosContainer;
 
 /**
@@ -45,13 +67,16 @@ class RDaosPool {
 private:
    daos_handle_t fPoolHandle{};
    uuid_t fPoolUuid{};
+   std::string fPoolLabel{};
+   std::unique_ptr<RDaosEventQueue> fEventQueue;
 
 public:
    RDaosPool(const RDaosPool&) = delete;
-   RDaosPool(std::string_view poolUuid, std::string_view serviceReplicas);
+   RDaosPool(std::string_view poolId);
    ~RDaosPool();
 
    RDaosPool& operator=(const RDaosPool&) = delete;
+   std::string GetPoolUuid();
 };
 
 /**
@@ -64,7 +89,6 @@ private:
 public:
    using DistributionKey_t = std::uint64_t;
    using AttributeKey_t = std::uint64_t;
-
    /// \brief Wrap around a `daos_oclass_id_t`. An object class describes the schema of data distribution
    /// and protection.
    struct ObjClassId {
@@ -86,28 +110,30 @@ public:
    /// \brief Contains required information for a single fetch/update operation.
    struct FetchUpdateArgs {
       FetchUpdateArgs() = default;
-      FetchUpdateArgs(const FetchUpdateArgs&) = delete;
-      FetchUpdateArgs(FetchUpdateArgs&& fua);
-      FetchUpdateArgs(DistributionKey_t &d, AttributeKey_t &a, std::vector<d_iov_t> &v, daos_event_t *p = nullptr);
-      FetchUpdateArgs& operator=(const FetchUpdateArgs&) = delete;
+      FetchUpdateArgs(const FetchUpdateArgs &) = delete;
+      FetchUpdateArgs(FetchUpdateArgs &&fua);
+      FetchUpdateArgs(DistributionKey_t d, std::span<const AttributeKey_t> as, std::span<d_iov_t> vs,
+                      bool is_async = false);
+      FetchUpdateArgs &operator=(const FetchUpdateArgs &) = delete;
+      daos_event_t *GetEventPointer();
 
       /// \brief A `daos_key_t` is a type alias of `d_iov_t`. This type stores a pointer and a length.
-      /// In order for `fDistributionKey` and `fIods` to point to memory that we own, `fDkey` and
-      /// `fAkey` store a copy of the distribution and attribute key, respectively.
+      /// In order for `fDistributionKey` to point to memory that we own, `fDkey` holds the distribution key.
+      /// `fAkeys` and `fIovs` are sequential containers assumed to remain valid throughout the fetch/update operation.
       DistributionKey_t fDkey{};
-      AttributeKey_t fAkey{};
+      std::span<const AttributeKey_t> fAkeys{};
+      std::span<d_iov_t> fIovs{};
 
       /// \brief The distribution key, as used by the `daos_obj_{fetch,update}` functions.
       daos_key_t fDistributionKey{};
-      daos_iod_t fIods[1] = {};
-      d_sg_list_t fSgls[1] = {};
-      std::vector<d_iov_t> fIovs{};
-      daos_event_t *fEv = nullptr;
+      std::vector<daos_iod_t> fIods{};
+      std::vector<d_sg_list_t> fSgls{};
+      std::optional<daos_event_t> fEvent{};
    };
 
    RDaosObject() = delete;
    /// Provides low-level access to an object. If `cid` is OC_UNKNOWN, the user is responsible for
-   /// calling `daos_obj_generate_id()` to fill the reserved bits in `oid` before calling this constructor.
+   /// calling `daos_obj_generate_oid()` to fill the reserved bits in `oid` before calling this constructor.
    RDaosObject(RDaosContainer &container, daos_obj_id_t oid, ObjClassId cid = OC_UNKNOWN);
    ~RDaosObject();
 
@@ -125,65 +151,74 @@ public:
    using DistributionKey_t = RDaosObject::DistributionKey_t;
    using AttributeKey_t = RDaosObject::AttributeKey_t;
    using ObjClassId_t = RDaosObject::ObjClassId;
-  
+
+   /// \brief A pair of <object ID, distribution key> that can be used to issue a fetch/update request for multiple
+   /// attribute keys.
+   struct ROidDkeyPair {
+      daos_obj_id_t oid{};
+      DistributionKey_t dkey{};
+      ROidDkeyPair() = default;
+
+      inline bool operator==(const ROidDkeyPair &other) const
+      {
+         return this->oid.lo == other.oid.lo && this->oid.hi == other.oid.hi && this->dkey == other.dkey;
+      }
+
+      struct Hash {
+         auto operator()(const ROidDkeyPair &x) const
+         {
+            /// Implementation borrowed from `boost::hash_combine`. Comparable to initial seeding with `oid.hi` followed
+            /// by two subsequent hash calls for `oid.lo` and `dkey`.
+            auto seed = std::hash<uint64_t>{}(x.oid.hi);
+            seed ^= std::hash<uint64_t>{}(x.oid.lo) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+            seed ^= std::hash<DistributionKey_t>{}(x.dkey) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+            return seed;
+         }
+      };
+   };
+
    /// \brief Describes a read/write operation on multiple objects; see the `ReadV`/`WriteV` functions.
    struct RWOperation {
       RWOperation() = default;
-      RWOperation(daos_obj_id_t o, DistributionKey_t d, AttributeKey_t a, std::vector<d_iov_t> &v)
-         : fOid(o), fDistributionKey(d), fAttributeKey(a), fIovs(v) {};
+      RWOperation(daos_obj_id_t o, DistributionKey_t d, const std::vector<AttributeKey_t> &as,
+                  const std::vector<d_iov_t> &vs)
+         : fOid(o), fDistributionKey(d), fAttributeKeys(as), fIovs(vs){};
+      RWOperation(ROidDkeyPair &k) : fOid(k.oid), fDistributionKey(k.dkey){};
       daos_obj_id_t fOid{};
       DistributionKey_t fDistributionKey{};
-      AttributeKey_t fAttributeKey{};
+      std::vector<AttributeKey_t> fAttributeKeys{};
       std::vector<d_iov_t> fIovs{};
+
+      void insert(AttributeKey_t attr, const d_iov_t &vec)
+      {
+         fAttributeKeys.emplace_back(attr);
+         fIovs.emplace_back(vec);
+      }
    };
+
+   using MultiObjectRWOperation_t = std::unordered_map<ROidDkeyPair, RWOperation, ROidDkeyPair::Hash>;
+
+   std::string GetContainerUuid();
 
 private:
-   struct DaosEventQueue {
-      std::size_t fSize;
-      std::unique_ptr<daos_event_t[]> fEvs;
-      daos_handle_t fQueue;
-      DaosEventQueue(std::size_t size);
-      ~DaosEventQueue();
-      /**
-        \brief Wait for all events in this event queue to complete.
-        \return Number of events still in the queue. This should be 0 on success.
-       */
-      int Poll();
-   };
-
    daos_handle_t fContainerHandle{};
    uuid_t fContainerUuid{};
+   std::string fContainerLabel{};
    std::shared_ptr<RDaosPool> fPool;
    ObjClassId_t fDefaultObjectClass{OC_SX};
 
    /**
      \brief Perform a vector read/write operation on different objects.
-     \param vec A `std::vector<RWOperation>` that describes read/write operations to perform.
+     \param map A `MultiObjectRWOperation_t` that describes read/write operations to perform.
      \param cid The `daos_oclass_id_t` used to qualify OIDs.
-     \param fn Either `std::mem_fn<&RDaosObject::Fetch>` (read) or `std::mem_fn<&RDaosObject::Update>` (write).
-     \return Number of requests that did not complete; this should be 0 after a successful call.
+     \param fn Either `&RDaosObject::Fetch` (read) or `&RDaosObject::Update` (write).
+     \return 0 if the operation succeeded; a negative DAOS error number otherwise.
      */
-   template <typename Fn>
-   int VectorReadWrite(std::vector<RWOperation> &vec, ObjClassId_t cid, Fn fn) {
-      int ret;
-      DaosEventQueue eventQueue(vec.size());
-      {
-         std::vector<std::tuple<std::unique_ptr<RDaosObject>, RDaosObject::FetchUpdateArgs>> requests{};
-         requests.reserve(vec.size());
-         for (size_t i = 0; i < vec.size(); ++i) {
-           requests.push_back(std::make_tuple(std::unique_ptr<RDaosObject>(new RDaosObject(*this, vec[i].fOid, cid.fCid)),
-                                               RDaosObject::FetchUpdateArgs{
-                                                 vec[i].fDistributionKey, vec[i].fAttributeKey,
-                                                 vec[i].fIovs, &eventQueue.fEvs[i]}));
-            fn(std::get<0>(requests.back()).get(), std::get<1>(requests.back()));
-         }
-         ret = eventQueue.Poll();
-      }
-      return ret;
-   }
+   int VectorReadWrite(MultiObjectRWOperation_t &map, ObjClassId_t cid,
+                       int (RDaosObject::*fn)(RDaosObject::FetchUpdateArgs &));
 
 public:
-   RDaosContainer(std::shared_ptr<RDaosPool> pool, std::string_view containerUuid, bool create = false);
+   RDaosContainer(std::shared_ptr<RDaosPool> pool, std::string_view containerId, bool create = false);
    ~RDaosContainer();
 
    ObjClassId_t GetDefaultObjectClass() const { return fDefaultObjectClass; }
@@ -222,24 +257,25 @@ public:
    { return WriteSingleAkey(buffer, length, oid, dkey, akey, fDefaultObjectClass); }
 
    /**
-     \brief Perform a vector read operation on (possibly) multiple objects.
-     \param vec A `std::vector<RWOperation>` that describes read operations to perform.
+     \brief Perform a vector read operation on multiple objects.
+     \param map A `MultiObjectRWOperation_t` that describes read operations to perform.
      \param cid An object class ID.
      \return Number of operations that could not complete.
      */
-   int ReadV(std::vector<RWOperation> &vec, ObjClassId_t cid)
-   { return VectorReadWrite(vec, cid, std::mem_fn(&RDaosObject::Fetch)); }
-   int ReadV(std::vector<RWOperation> &vec) { return ReadV(vec, fDefaultObjectClass); }
+   int ReadV(MultiObjectRWOperation_t &map, ObjClassId_t cid) { return VectorReadWrite(map, cid, &RDaosObject::Fetch); }
+   int ReadV(MultiObjectRWOperation_t &map) { return ReadV(map, fDefaultObjectClass); }
 
    /**
-     \brief Perform a vector write operation on (possibly) multiple objects.
-     \param vec A `std::vector<RWOperation>` that describes write operations to perform.
+     \brief Perform a vector write operation on multiple objects.
+     \param map A `MultiObjectRWOperation_t` that describes write operations to perform.
      \param cid An object class ID.
      \return Number of operations that could not complete.
      */
-   int WriteV(std::vector<RWOperation> &vec, ObjClassId_t cid)
-   { return VectorReadWrite(vec, cid, std::mem_fn(&RDaosObject::Update)); }
-   int WriteV(std::vector<RWOperation> &vec) { return WriteV(vec, fDefaultObjectClass); }
+   int WriteV(MultiObjectRWOperation_t &map, ObjClassId_t cid)
+   {
+      return VectorReadWrite(map, cid, &RDaosObject::Update);
+   }
+   int WriteV(MultiObjectRWOperation_t &map) { return WriteV(map, fDefaultObjectClass); }
 };
 
 } // namespace Detail

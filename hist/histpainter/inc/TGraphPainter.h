@@ -22,6 +22,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TVirtualGraphPainter.h"
+#include <vector>
 
 class TGraph;
 class TF1;
@@ -62,6 +63,8 @@ public:
 protected:
 
    static Int_t   fgMaxPointsPerLine;  //Number of points per chunks' line when drawing a graph.
+
+   std::vector<Double_t> gxwork, gywork, gxworkl, gyworkl; // buffers for coordinates
 
    ClassDefOverride(TGraphPainter,0)  // TGraph painter
 };

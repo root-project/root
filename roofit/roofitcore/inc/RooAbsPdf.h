@@ -185,7 +185,7 @@ public:
       int doSumW2 = -1;
       int doAsymptotic = -1;
       const RooArgSet* minosSet = nullptr;
-      std::string minType = "Minuit";
+      std::string minType;
       std::string minAlg = "minuit";
   };
   std::unique_ptr<RooFitResult> minimizeNLL(RooAbsReal & nll, RooAbsData const& data, MinimizerConfig const& cfg);
@@ -353,7 +353,6 @@ protected:
   mutable double _rawValue ;
   mutable RooAbsReal* _norm = nullptr; //! Normalization integral (owned by _normMgr)
   mutable RooArgSet const* _normSet = nullptr; //! Normalization set with for above integral
-  inline const RooArgSet* getNormSet() { return _normSet; }
 
   class CacheElem : public RooAbsCacheElement {
   public:

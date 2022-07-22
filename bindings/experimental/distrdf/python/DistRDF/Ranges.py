@@ -163,26 +163,21 @@ class TaskTreeEntries:
 
 def get_clusters_and_entries(treename: str, filename: str) -> Tuple[List[int], int]:
     """
-    Retrieve cluster boundaries and number of entries of a TTree. If the tree
-    is empty, returns None, None.
+    Retrieve cluster boundaries and number of entries of a TTree.
     """
 
-    tfile = ROOT.TFile.Open(filename)
-    if not tfile or tfile.IsZombie():
-        raise RuntimeError(f"Error opening file '{filename}'.")
-    ttree = tfile.Get(treename)
+    with ROOT.TFile.Open(filename, "READ_WITHOUT_GLOBALREGISTRATION") as tfile:
+        ttree = tfile.Get(treename)
 
-    entries: int = ttree.GetEntriesFast()
+        entries: int = ttree.GetEntriesFast()
 
-    it = ttree.GetClusterIterator(0)
-    cluster_startentry: int = it()
-    clusters: List[int] = [cluster_startentry]
+        it = ttree.GetClusterIterator(0)
+        cluster_startentry: int = it()
+        clusters: List[int] = [cluster_startentry]
 
-    while cluster_startentry < entries:
-        cluster_startentry = it()
-        clusters.append(cluster_startentry)
-
-    tfile.Close()
+        while cluster_startentry < entries:
+            cluster_startentry = it()
+            clusters.append(cluster_startentry)
 
     return clusters, entries
 

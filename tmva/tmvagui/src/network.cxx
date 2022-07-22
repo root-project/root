@@ -26,7 +26,7 @@ static Int_t c_DarkBackground = TColor::GetColor( "#6e7a85" );
 
 Bool_t MovieMode = kFALSE;
 
-void TMVA::draw_network(TString dataset, TFile* f, TDirectory* d, const TString& hName, 
+void TMVA::draw_network(TString dataset, TFile* f, TDirectory* d, const TString& hName,
                         Bool_t movieMode , const TString& epoch  )
 {
    Bool_t __PRINT_LOGO__ = kTRUE;
@@ -47,14 +47,14 @@ void TMVA::draw_network(TString dataset, TFile* f, TDirectory* d, const TString&
    TMVAStyle->SetTitleFillColor( c_DarkBackground );
    TMVAStyle->SetTitleTextColor( TColor::GetColor( "#FFFFFF" ) );
    TMVAStyle->SetTitleBorderSize( 0 );
-   
+
    static Int_t icanvas = -1;
    Int_t ixc = 100 + (icanvas)*40;
-   Int_t iyc =   0 + (icanvas+1)*20;   
+   Int_t iyc =   0 + (icanvas+1)*20;
    if (MovieMode) ixc = iyc = 0;
    TString canvasnumber =  Form( "c%i", icanvas );
    TString canvastitle = Form("Neural Network Layout for: %s", d->GetName());
-   TCanvas* c = new TCanvas( canvasnumber, canvastitle, 
+   TCanvas* c = new TCanvas( canvasnumber, canvastitle,
                              ixc, 0 + (icanvas+1)*20, 1000, 650  );
    icanvas++;
    TIter next = d->GetListOfKeys();
@@ -68,15 +68,15 @@ void TMVA::draw_network(TString dataset, TFile* f, TDirectory* d, const TString&
    while ((key = (TKey*)next())) {
 
       TClass *cl = gROOT->GetClass(key->GetClassName());
-      if (!cl->InheritsFrom("TH2F")) 
+      if (!cl->InheritsFrom("TH2F"))
          {
-            continue;          
+            continue;
          }else
          {
-            std::cout<<key->GetClassName()<<"----"<<cl->InheritsFrom("TH2F")<<"----"<<hName<<std::endl;          
+            std::cout<<key->GetClassName()<<"----"<<cl->InheritsFrom("TH2F")<<"----"<<hName<<std::endl;
          }
-  
-      TH2F* h = (TH2F*)key->ReadObj();    
+
+      TH2F* h = (TH2F*)key->ReadObj();
       if (!h) {
          cout << "Big troubles in \"draw_network\" (1)" << endl;
          exit(1);
@@ -84,7 +84,7 @@ void TMVA::draw_network(TString dataset, TFile* f, TDirectory* d, const TString&
       std::cout<<h->GetName()<<"----"<<hName<<std::endl;
       if (TString(h->GetName()).Contains( hName )){
          numHists++;
- 
+
          Int_t n1 = h->GetNbinsX();
          Int_t n2 = h->GetNbinsY();
          for (Int_t i = 0; i < n1; i++) {
@@ -109,10 +109,10 @@ void TMVA::draw_network(TString dataset, TFile* f, TDirectory* d, const TString&
       //cout << "check4b" << endl;
 
       TClass *cl = gROOT->GetClass(key->GetClassName());
-      if (!cl->InheritsFrom("TH2F")) continue;    
+      if (!cl->InheritsFrom("TH2F")) continue;
       //cout << "check4c" << endl;
 
-      TH2F* h = (TH2F*)key->ReadObj();    
+      TH2F* h = (TH2F*)key->ReadObj();
       //cout << (h->GetName()) << endl;
       if (!h) {
          cout << "Big troubles in \"draw_network\" (2)" << endl;
@@ -130,17 +130,17 @@ void TMVA::draw_network(TString dataset, TFile* f, TDirectory* d, const TString&
 
    // add epoch
    if (MovieMode) {
-      TText* t = new TText();            
-      t->SetTextSize( 0.04 );
-      t->SetTextColor( 0 );
-      t->SetTextAlign( 31 );      
-      t->DrawTextNDC( 1 - c->GetRightMargin(), 1 - c->GetTopMargin() - 0.033, 
+      TText t;
+      t.SetTextSize( 0.04 );
+      t.SetTextColor( 0 );
+      t.SetTextAlign( 31 );
+      t.DrawTextNDC( 1 - c->GetRightMargin(), 1 - c->GetTopMargin() - 0.033,
                       Form( "Epoch: %s", epoch.Data() ) );
    }
 
    // ============================================================
    if (__PRINT_LOGO__) TMVAGlob::plot_logo();
-   // ============================================================  
+   // ============================================================
 
    c->Update();
    if (MovieMode) {
@@ -150,9 +150,9 @@ void TMVA::draw_network(TString dataset, TFile* f, TDirectory* d, const TString&
       foutname.Resize( foutname.Length()-5 );
       foutname.ReplaceAll("epochmonitoring___","");
       foutname += ".gif";
-      
+
       cout << "storing file: " << foutname << endl;
-      c->Print(foutname);     
+      c->Print(foutname);
       c->Clear();
       delete c;
    }
@@ -195,7 +195,7 @@ void TMVA::draw_layer_labels(Int_t nLayers)
    }
 }
 
-void TMVA::draw_input_labels(TString dataset,Int_t nInputs, Double_t* cy, 
+void TMVA::draw_input_labels(TString dataset,Int_t nInputs, Double_t* cy,
                              Double_t rad, Double_t layerWidth)
 {
    const Double_t LABEL_HEIGHT = 0.04;
@@ -215,12 +215,12 @@ void TMVA::draw_input_labels(TString dataset,Int_t nInputs, Double_t* cy,
       Double_t x = margX + width;
       Double_t y = cy[i] - effHeight;
 
-      TText* t = new TText();
-      t->SetTextColor(gStyle->GetTitleTextColor());
-      t->SetTextAlign(31);
-      t->SetTextSize(LABEL_HEIGHT);
-      if (i == nInputs-1) t->SetTextColor( TColor::GetColor( "#AFDCEC" ) );
-      t->DrawText( x, y+0.018, input + " :");
+      TText t;
+      t.SetTextColor(gStyle->GetTitleTextColor());
+      t.SetTextAlign(31);
+      t.SetTextSize(LABEL_HEIGHT);
+      if (i == nInputs-1) t.SetTextColor( TColor::GetColor( "#AFDCEC" ) );
+      t.DrawText( x, y+0.018, input + " :");
    }
 
    delete[] varNames;
@@ -234,7 +234,7 @@ TString* TMVA::get_var_names(TString dataset, Int_t nVars )
                                     "InputVariables_Id",
                                     "InputVariables_Norm",
                                     "InputVariables_Deco"};
-   
+
    TDirectory* dir = 0;
    for (Int_t i=0; i<6; i++) {
       dir = (TDirectory*)Network_GFile->GetDirectory(dataset.Data())->Get( directories[i] );
@@ -268,12 +268,12 @@ TString* TMVA::get_var_names(TString dataset, Int_t nVars )
       if (!cl->InheritsFrom("TH1")) continue;
       TH1 *sig = (TH1*)key->ReadObj();
       TString hname = sig->GetTitle();
-      
+
       vars[ivar] = hname; ivar++;
 
       if (ivar > nVars-1) break;
-   }      
-   
+   }
+
    if (ivar != nVars-1) { // bias layer and targets are also in nVars counts
       cout << "*** Troubles in \"network.cxx\": did not reproduce correct number of "
            << "input variables: " << ivar << " != " << nVars << endl;
@@ -282,7 +282,7 @@ TString* TMVA::get_var_names(TString dataset, Int_t nVars )
    return vars;
 }
 
-void TMVA::draw_activation(TCanvas* c, Double_t cx, Double_t cy, 
+void TMVA::draw_activation(TCanvas* c, Double_t cx, Double_t cy,
                            Double_t radx, Double_t rady, Int_t whichActivation)
 {
    TImage *activation = NULL;
@@ -304,7 +304,7 @@ void TMVA::draw_activation(TCanvas* c, Double_t cx, Double_t cy,
       cout << "Could not create an image... exit" << endl;
       return;
    }
-  
+
    activation->SetConstRatio(kFALSE);
 
    radx *= 0.7;
@@ -319,7 +319,7 @@ void TMVA::draw_activation(TCanvas* c, Double_t cx, Double_t cy,
    c->cd();
 }
 
-void TMVA::draw_layer(TString dataset,TCanvas* c, TH2F* h, Int_t iHist, 
+void TMVA::draw_layer(TString dataset,TCanvas* c, TH2F* h, Int_t iHist,
                       Int_t nLayers, Double_t maxWeight)
 {
    const Double_t MAX_NEURONS_NICE = 12;
@@ -348,7 +348,7 @@ void TMVA::draw_layer(TString dataset,TCanvas* c, TH2F* h, Int_t iHist,
 
       if (iHist == 0) {
 
-         TEllipse *ellipse = new TEllipse( cx1, cy1[nNeurons1-i-1], 
+         TEllipse *ellipse = new TEllipse( cx1, cy1[nNeurons1-i-1],
                                            effRad1*ratio, effRad1, 0, 360, 0 );
          ellipse->SetFillColor(TColor::GetColor( "#fffffd" ));
          ellipse->SetFillStyle(1001);
@@ -360,7 +360,7 @@ void TMVA::draw_layer(TString dataset,TCanvas* c, TH2F* h, Int_t iHist,
 
          Int_t whichActivation = 0;
          if (iHist==0 || iHist==nLayers-1 || i==0) whichActivation = 1;
-         draw_activation(c, cx1, cy1[nNeurons1-i-1], 
+         draw_activation(c, cx1, cy1[nNeurons1-i-1],
                          rad*ratio, rad, whichActivation);
       }
    }
@@ -374,7 +374,7 @@ void TMVA::draw_layer(TString dataset,TCanvas* c, TH2F* h, Int_t iHist,
    for (Int_t i = 0; i < nNeurons2; i++) {
       cy2[nNeurons2-i-1] = i*(1.0-LABEL_HEIGHT)/nNeurons2 + 1.0/(2.0*nNeurons2) + LABEL_HEIGHT;
 
-      TEllipse *ellipse = 
+      TEllipse *ellipse =
          new TEllipse(cx2, cy2[nNeurons2-i-1], effRad2*ratio, effRad2, 0, 360, 0);
       ellipse->SetFillColor(TColor::GetColor( "#fffffd" ));
       ellipse->SetFillStyle(1001);
@@ -428,10 +428,10 @@ void TMVA::network(TString dataset, TString fin , Bool_t useTMVAStyle )
    TMVAGlob::Initialize( useTMVAStyle );
 
    // checks if file with name "fin" is already open, and if not opens one
-   TFile* file = TMVAGlob::OpenFile( fin );  
+   TFile* file = TMVAGlob::OpenFile( fin );
    TIter next(file->GetDirectory(dataset.Data())->GetListOfKeys());
    TKey *key(0);
-   while( (key = (TKey*)next()) ) {      
+   while( (key = (TKey*)next()) ) {
       if (!TString(key->GetName()).BeginsWith("Method_MLP")) continue;
       if( ! gROOT->GetClass(key->GetClassName())->InheritsFrom("TDirectory") ) continue;
 
@@ -445,7 +445,7 @@ void TMVA::network(TString dataset, TString fin , Bool_t useTMVAStyle )
          if( ! gROOT->GetClass(titkey->GetClassName())->InheritsFrom("TDirectory") ) continue;
 
          TDirectory* dir = (TDirectory *)titkey->ReadObj();
-         dir->cd();  
+         dir->cd();
          TList titles;
          UInt_t ni = TMVAGlob::GetListOfTitles( dir, titles );
          if (ni==0) {

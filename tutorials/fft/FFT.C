@@ -191,7 +191,7 @@ void FFT()
    c1_5->cd();
    TH1 *hr = 0;
    hr = TH1::TransformHisto(fft_own, hr, "RE");
-   hr->SetTitle("Real part of the 3rd (array) tranfsorm");
+   hr->SetTitle("Real part of the 3rd (array) transform");
    hr->Draw();
    hr->SetStats(kFALSE);
    hr->GetXaxis()->SetLabelSize(0.05);

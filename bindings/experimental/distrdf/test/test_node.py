@@ -29,6 +29,8 @@ class TestBackend(Base.BaseBackend):
         """Dummy make_dataframe"""
         pass
 
+    def optimize_npartitions(self):
+        pass
 
 class OperationReadTest(unittest.TestCase):
     """

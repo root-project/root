@@ -1125,12 +1125,13 @@ TColor::~TColor()
 
 TColor::TColor(const TColor &color) : TNamed(color)
 {
-   ((TColor&)color).Copy(*this);
+   color.TColor::Copy(*this);
 }
 
 TColor &TColor::operator=(const TColor &color)
 {
-   ((TColor &)color).Copy(*this);
+   if (this != &color)
+      color.TColor::Copy(*this);
    return *this;
 }
 

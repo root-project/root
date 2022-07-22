@@ -9,6 +9,7 @@
 #include "ROOT/RDF/RColumnRegister.hxx"
 #include "ROOT/RDF/RDefineBase.hxx"
 #include "ROOT/RDF/RVariationBase.hxx"
+#include "ROOT/RDF/RVariationsDescription.hxx"
 #include "ROOT/RDF/Utils.hxx" // IsStrInVec
 
 #include <cassert>
@@ -30,22 +31,49 @@ RColumnRegister::~RColumnRegister()
    fColumnNames.reset();
 }
 
-bool RColumnRegister::HasName(std::string_view name) const
+////////////////////////////////////////////////////////////////////////////
+/// \brief Return the list of the names of defined columns (no aliases).
+ColumnNames_t RColumnRegister::BuildDefineNames() const
+{
+   ColumnNames_t names;
+   names.reserve(fDefines->size());
+   for (auto &kv : *fDefines) {
+      names.emplace_back(kv.first);
+   }
+   return names;
+}
+
+////////////////////////////////////////////////////////////////////////////
+/// \brief Return the RDefine for the requested column name, or nullptr.
+RDFDetail::RDefineBase *RColumnRegister::GetDefine(const std::string &colName) const
+{
+   auto it = fDefines->find(colName);
+   return it == fDefines->end() ? nullptr : (it->second).get();
+}
+
+////////////////////////////////////////////////////////////////////////////
+/// \brief Check if the provided name is tracked in the names list
+bool RColumnRegister::IsDefineOrAlias(std::string_view name) const
 {
    const auto ccolnamesEnd = fColumnNames->end();
    return ccolnamesEnd != std::find(fColumnNames->begin(), ccolnamesEnd, name);
 }
 
-void RColumnRegister::AddColumn(const std::shared_ptr<RDFDetail::RDefineBase> &column)
+////////////////////////////////////////////////////////////////////////////
+/// \brief Add a new defined column.
+/// Internally it recreates the map with the new column, and swaps it with the old one.
+void RColumnRegister::AddDefine(std::shared_ptr<RDFDetail::RDefineBase> column)
 {
    auto newDefines = std::make_shared<DefinesMap_t>(*fDefines);
    const std::string &colName = column->GetName();
-   (*newDefines)[colName] = column;
+   (*newDefines)[colName] = std::move(column);
    fDefines = std::move(newDefines);
    AddName(colName);
 }
 
-void RColumnRegister::AddVariation(const std::shared_ptr<RVariationBase> &variation)
+////////////////////////////////////////////////////////////////////////////
+/// \brief Register a new systematic variation.
+void RColumnRegister::AddVariation(std::shared_ptr<RVariationBase> variation)
 {
    auto newVariations = std::make_shared<VariationsMap_t>(*fVariations);
    const std::vector<std::string> &colNames = variation->GetColumnNames();
@@ -54,6 +82,8 @@ void RColumnRegister::AddVariation(const std::shared_ptr<RVariationBase> &variat
    fVariations = std::move(newVariations);
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// \brief Get the names of the variations that directly provide alternative values for this column.
 std::vector<std::string> RColumnRegister::GetVariationsFor(const std::string &column) const
 {
    std::vector<std::string> variations;
@@ -65,11 +95,21 @@ std::vector<std::string> RColumnRegister::GetVariationsFor(const std::string &co
    return variations;
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// \brief Get the names of all variations that directly or indirectly affect a given column.
+///
+/// This list includes variations applied to the column as well as variations applied to other
+/// columns on which the value of this column depends (typically via a Define expression).
 std::vector<std::string> RColumnRegister::GetVariationDeps(const std::string &column) const
 {
    return GetVariationDeps(std::vector<std::string>{column});
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// \brief Get the names of all variations that directly or indirectly affect the specified columns.
+///
+/// This list includes variations applied to the columns as well as variations applied to other
+/// columns on which the value of any of these columns depend (typically via Define expressions).
 std::vector<std::string> RColumnRegister::GetVariationDeps(const ColumnNames_t &columns) const
 {
    // here we assume that columns do not contain aliases, they must have already been resolved
@@ -91,18 +131,35 @@ std::vector<std::string> RColumnRegister::GetVariationDeps(const ColumnNames_t &
    return {variationNames.begin(), variationNames.end()};
 }
 
+////////////////////////////////////////////////////////////////////////////
 /// \brief Return the RVariation object that handles the specified variation of the specified column.
 RVariationBase &RColumnRegister::FindVariation(const std::string &colName, const std::string &variationName) const
 {
    auto range = fVariations->equal_range(colName);
    assert(range.first != fVariations->end() && "Could not find the variation you asked for. This should never happen.");
    auto it = range.first;
-   while (it != fVariations->end() && !IsStrInVec(variationName, it->second->GetVariationNames()))
+   while (it != range.second && !IsStrInVec(variationName, it->second->GetVariationNames()))
       ++it;
-   assert(it != fVariations->end() && "Could not find the variation you asked for. This should never happen.");
+   assert(it != range.second && "Could not find the variation you asked for. This should never happen.");
    return *it->second;
 }
 
+ROOT::RDF::RVariationsDescription RColumnRegister::BuildVariationsDescription() const
+{
+   std::set<const RVariationBase *> uniqueVariations;
+   for (auto &e : *fVariations)
+      uniqueVariations.insert(e.second.get());
+
+   const std::vector<const RVariationBase *> variations(uniqueVariations.begin(), uniqueVariations.end());
+   return ROOT::RDF::RVariationsDescription{variations};
+}
+
+////////////////////////////////////////////////////////////////////////////
+/// \brief Add a new name to the list returned by `GetNames` without booking a new column.
+///
+/// This is needed because we abuse fColumnNames to also keep track of the aliases defined
+/// in each branch of the computation graph.
+/// Internally it recreates the vector with the new name, and swaps it with the old one.
 void RColumnRegister::AddName(std::string_view name)
 {
    const auto &names = *fColumnNames;
@@ -114,6 +171,8 @@ void RColumnRegister::AddName(std::string_view name)
    fColumnNames = newColsNames;
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// \brief Add a new alias to the ledger.
 void RColumnRegister::AddAlias(std::string_view alias, std::string_view colName)
 {
    // at this point validation of alias and colName has already happened, we trust that
@@ -124,11 +183,18 @@ void RColumnRegister::AddAlias(std::string_view alias, std::string_view colName)
    AddName(alias);
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// \brief Return true if the given column name is an existing alias.
 bool RColumnRegister::IsAlias(const std::string &name) const
 {
    return fAliases->find(name) != fAliases->end();
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// \brief Return the actual column name that the alias resolves to.
+/// Drills through multiple levels of aliasing if needed.
+/// Returns the input in case it's not an alias.
+/// Expands `#%var` to `R_rdf_sizeof_var` (the #%var columns are implicitly-defined aliases).
 std::string RColumnRegister::ResolveAlias(std::string_view alias) const
 {
    std::string aliasStr{alias};

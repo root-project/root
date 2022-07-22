@@ -70,9 +70,9 @@ endif()
 if(NOT builtin_nlohmannjson)
   message(STATUS "Looking for nlohmann/json.hpp")
   if(fail-on-missing)
-    find_package(nlohmann_json REQUIRED)
+    find_package(nlohmann_json 3.9 REQUIRED)
   else()
-    find_package(nlohmann_json QUIET)
+    find_package(nlohmann_json 3.9 QUIET)
     if(nlohmann_json_FOUND)
       get_target_property(_nlohmann_json_incl nlohmann_json::nlohmann_json INTERFACE_INCLUDE_DIRECTORIES)
       message(STATUS "Found nlohmann/json.hpp in ${_nlohmann_json_incl} (found version ${nlohmann_json_VERSION})")
@@ -146,6 +146,9 @@ if(builtin_freetype)
     if(CMAKE_SYSTEM_NAME STREQUAL AIX)
       set(_freetype_zlib --without-zlib)
     endif()
+    if (APPLE)
+      set(_freetype_brotli "--with-brotli=no")
+    endif()
     if(CMAKE_OSX_SYSROOT)
       set(_freetype_cc "${_freetype_cc} -isysroot ${CMAKE_OSX_SYSROOT}")
     endif()
@@ -155,7 +158,7 @@ if(builtin_freetype)
       URL_HASH SHA256=efe71fd4b8246f1b0b1b9bfca13cfff1c9ad85930340c27df469733bbb620938
       CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR> --with-pic
                          --disable-shared --with-png=no --with-bzip2=no
-                         --with-harfbuzz=no ${_freetype_zlib}
+                         --with-harfbuzz=no ${_freetype_brotli} ${_freetype_zlib}
                           "CC=${_freetype_cc}" CFLAGS=${_freetype_cflags}
       INSTALL_COMMAND ""
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1

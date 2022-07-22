@@ -400,26 +400,18 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
 
     // process StoreError requests
     if (errorSet) {
-      RooArgSet* intErrorSet = (RooArgSet*) _vars.selectCommon(*errorSet) ;
+      std::unique_ptr<RooArgSet> intErrorSet{static_cast<RooArgSet*>(_vars.selectCommon(*errorSet))};
       intErrorSet->setAttribAll("StoreError") ;
-      TIterator* iter = intErrorSet->createIterator() ;
-      RooAbsArg* arg ;
-      while((arg=(RooAbsArg*)iter->Next())) {
+      for(RooAbsArg* arg : *intErrorSet) {
         arg->attachToStore(*_dstore) ;
       }
-      delete iter ;
-      delete intErrorSet ;
     }
     if (asymErrorSet) {
-      RooArgSet* intAsymErrorSet = (RooArgSet*) _vars.selectCommon(*asymErrorSet) ;
+      std::unique_ptr<RooArgSet> intAsymErrorSet{static_cast<RooArgSet*>(_vars.selectCommon(*asymErrorSet))};
       intAsymErrorSet->setAttribAll("StoreAsymError") ;
-      TIterator* iter = intAsymErrorSet->createIterator() ;
-      RooAbsArg* arg ;
-      while((arg=(RooAbsArg*)iter->Next())) {
+      for(RooAbsArg* arg : *intAsymErrorSet) {
         arg->attachToStore(*_dstore) ;
       }
-      delete iter ;
-      delete intAsymErrorSet ;
     }
 
     // Lookup name of weight variable if it was specified by object reference
@@ -1797,10 +1789,8 @@ void RooDataSet::printValue(ostream& os) const
 void RooDataSet::printArgs(ostream& os) const
 {
   os << "[" ;
-  TIterator* iter = _varsNoWgt.createIterator() ;
-  RooAbsArg* arg ;
   bool first(true) ;
-  while((arg=(RooAbsArg*)iter->Next())) {
+  for(RooAbsArg* arg : _varsNoWgt) {
     if (first) {
       first=false ;
     } else {
@@ -1812,7 +1802,6 @@ void RooDataSet::printArgs(ostream& os) const
     os << ",weight:" << _wgtVar->GetName() ;
   }
   os << "]" ;
-  delete iter ;
 }
 
 

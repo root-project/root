@@ -52,6 +52,7 @@ Please use their non-experimental counterparts `ROOT::TBufferMerger` and `ROOT::
   was removed. It was not implemented in RooDataSet, so it never worked as
   intended. Related to it was the `RooDataHist::cacheValidEntries()` function, which is removed as well.
   The preferred way to reduce RooFit datasets to subranges is [RooAbsData::reduce()](https://root.cern.ch/doc/v628/classRooAbsData.html#acfa7b31e5cd751eec1bc4e95d2796390).
+- The longtime-deprecated `RooStats::HistFactory::EstimateSummary` class is removed, including the functions that use it. The information that it was meant to store is managed by the `RooStats::HistFactory::Measurement` object since many years.
 
 
 ## Core Libraries
@@ -83,6 +84,11 @@ Please use their non-experimental counterparts `ROOT::TBufferMerger` and `ROOT::
 
 
 ## RooFit Libraries
+
+### Consistent definition of the default minimizer type for all of RooFit/RooStats
+
+In previous releases, the default minimizer type that RooFit used was hardcoded to be the original `Minuit`, while RooStats used the default minimizer specified by `ROOT::Math::MinimizerOptions::DefaultMinimizerType()`. Now it is possible to centrally define the global minimizer for all RooFit libraries via `ROOT::Math::MinimizerOptions::SetDefaultMinimizer()`, or alternatively in the `.rootrc` file by adding for example `Root.Fitter: Minuit2` to select Minuit2.
+
 
 ### Code modernization by using `std::string` in RooFit interfaces
 
@@ -117,7 +123,9 @@ hfCfg.binnedFitOptimization = false;
 RooStats::HistFactory::MakeModelAndMeasurementFast(measurement, hfCfg);
 ```
 
-### Removal of HistoToWorkspaceFactory (non-Fast)
+### Removal of deprecated HistFactory functionality
+
+#### Removal of HistoToWorkspaceFactory (non-Fast version)
 
 The original `HistoToWorkspaceFactory` produced models that consisted of a
 Poisson term for each bin.  In this "number counting form" the dataset has one
@@ -132,6 +140,19 @@ histogram.
 
 Therefore, the original `HistoToWorkspaceFactory` is now removed to avoid
 confusion and maintainance burden.
+
+#### Removing constant parameter flag from RooStats:HistFactory::NormFactor
+
+As printed out by the HistFactory in a warning message for a long time already,
+setting the `Const` attribute to the `<NormFactor>` tag is deprecated and it
+will be ignored. Instead, add `<ParamSetting Const="True"> myparam </ParamSetting>` to your top-level XML's `<Measurement>` entry.
+
+This deprecation implied that the constant parameter flag in the
+`RooStats:HistFactory::NormFactor` class had no effect as well. To avoid
+ambiguity in the future, the possibility to set and retrieve this flag with
+`NormFactor::SetConst()` and `NormFactor::GetConst()` was removed, as well as the
+`Sample::AddNormFactor(std::string Name, double Val, double Low, double High, bool Const)`
+overload. Also, the aforementioned deprecation warning is not printed anymore.
 
 ### Removal of `RooAbsMinimizerFcn` and `RooMinimizerFcn` from the public interface
 

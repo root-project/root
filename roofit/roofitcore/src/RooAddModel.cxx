@@ -110,10 +110,9 @@ RooAddModel::RooAddModel(const char *name, const char *title, const RooArgList& 
    }
 
    // Constructor with N PDFs and N or N-1 coefs
-   auto pdfIter = inPdfList.fwdIterator();
-
+   std::size_t i = 0;
    for (auto const &coef : inCoefList) {
-      auto pdf = pdfIter.next();
+      auto pdf = inPdfList.at(i);
       if (!pdf) {
          std::stringstream msgSs;
          msgSs << "RooAddModel::RooAddModel(" << ownName
@@ -140,9 +139,11 @@ RooAddModel::RooAddModel(const char *name, const char *title, const RooArgList& 
       }
       _pdfList.add(*pdf);
       _coefList.add(*coef);
+      i++;
    }
 
-   if (auto pdf = pdfIter.next()) {
+   if (i < inPdfList.size()) {
+      auto pdf = inPdfList.at(i);
       if (!dynamic_cast<RooAbsPdf *>(pdf)) {
          std::stringstream msgSs;
          msgSs << "RooAddModel::RooAddModel(" << ownName << ") last pdf " << (pdf->GetName() ? pdf->GetName() : "")
@@ -864,7 +865,7 @@ void RooAddModel::selectNormalizationRange(const char* rangeName, bool force)
 RooAbsGenContext* RooAddModel::genContext(const RooArgSet &vars, const RooDataSet *prototype,
                const RooArgSet* auxProto, bool verbose) const
 {
-  return new RooAddGenContext(*this,vars,prototype,auxProto,verbose) ;
+  return RooAddGenContext::create(*this,vars,prototype,auxProto,verbose).release();
 }
 
 

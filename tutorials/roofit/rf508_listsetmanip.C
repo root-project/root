@@ -75,7 +75,7 @@ void rf508_listsetmanip()
    RooArgSet *subset1 = (RooArgSet *)s.selectByName("a,b,c");
 
    // Construct asubset by attribute
-   RooArgSet *subset2 = (RooArgSet *)s.selectByAttrib("Constant", kTRUE);
+   RooArgSet *subset2 = (RooArgSet *)s.selectByAttrib("Constant", true);
 
    // Construct the subset of overlapping contents with another set
    RooArgSet s1(a, b, c);
@@ -117,7 +117,7 @@ void rf508_listsetmanip()
    // dependencies, that together form a self-consistent
    // set that is free of external dependencies
 
-   RooArgSet *sclone3 = (RooArgSet *)s3.snapshot(kTRUE);
+   RooArgSet *sclone3 = (RooArgSet *)s3.snapshot(true);
 
    // S e t   p r i n t i n g
    // ------------------------

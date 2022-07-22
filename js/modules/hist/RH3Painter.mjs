@@ -1,22 +1,13 @@
 import { gStyle, settings } from '../core.mjs';
-
 import { REVISION, Matrix4, Mesh, MeshBasicMaterial, MeshLambertMaterial, SphereGeometry,
          LineBasicMaterial, BufferAttribute, BufferGeometry } from '../three.mjs';
-
 import { floatToString, TRandom } from '../base/BasePainter.mjs';
-
 import { ensureRCanvas } from '../gpad/RCanvasPainter.mjs';
-
 import { RAxisPainter } from '../gpad/RAxisPainter.mjs';
-
 import { RHistPainter } from '../hist2d/RHistPainter.mjs';
-
 import { createLineSegments, PointsCreator, Box3D } from '../base/base3d.mjs';
-
 import { RH1Painter } from './RH1Painter.mjs';
-
 import { RH2Painter } from './RH2Painter.mjs';
-
 import { assignFrame3DMethods } from './hist3d.mjs';
 
 /**

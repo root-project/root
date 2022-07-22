@@ -1,11 +1,8 @@
-
-import { settings, isBatchMode, source_dir } from '../core.mjs';
-
+import { settings, gStyle, isBatchMode, source_dir } from '../core.mjs';
 import { select as d3_select, pointer as d3_pointer, drag as d3_drag } from '../d3.mjs';
-
 import { BasePainter } from '../base/BasePainter.mjs';
-
 import { resize } from '../base/ObjectPainter.mjs';
+
 
 /** @summary Display progress message in the left bottom corner.
   * @desc Previous message will be overwritten
@@ -366,5 +363,95 @@ function injectStyle(code, node, tag) {
    return true;
 }
 
+/** @summary Select predefined style
+  * @private */
+function selectgStyle(name) {
+   gStyle.fName = name;
+   switch (name) {
+      case "Modern": Object.assign(gStyle, {
+         fFrameBorderMode: 0, fFrameFillColor: 0, fCanvasBorderMode: 0,
+         fCanvasColor: 0, fPadBorderMode: 0, fPadColor: 0, fStatColor: 0,
+         fTitleAlign: 23, fTitleX: 0.5, fTitleBorderSize: 0, fTitleColor: 0, fTitleStyle: 0,
+         fOptStat: 1111, fStatY: 0.935,
+         fLegendBorderSize: 1, fLegendFont: 42, fLegendTextSize: 0, fLegendFillColor: 0 }); break;
+      case "Plain": Object.assign(gStyle, {
+         fFrameBorderMode: 0, fCanvasBorderMode: 0, fPadBorderMode: 0,
+         fPadColor: 0, fCanvasColor: 0,
+         fTitleColor: 0, fTitleBorderSize: 0, fStatColor: 0, fStatBorderSize: 1, fLegendBorderSize: 1 }); break;
+      case "Bold": Object.assign(gStyle, {
+         fCanvasColor: 10, fCanvasBorderMode: 0,
+         fFrameLineWidth: 3, fFrameFillColor: 10,
+         fPadColor: 10, fPadTickX: 1, fPadTickY: 1, fPadBottomMargin: 0.15, fPadLeftMargin: 0.15,
+         fTitleColor: 10, fTitleTextColor: 600, fStatColor: 10 }); break;
+   }
+}
+
+function saveCookie(obj, expires, name) {
+   let arg = (expires <= 0) ? "" : btoa(JSON.stringify(obj)),
+       d = new Date();
+   d.setTime((expires <= 0) ? 0 : d.getTime() + expires*24*60*60*1000);
+   document.cookie = `${name}=${arg}; expires=${d.toUTCString()}; SameSite=None; Secure; path=/;`;
+}
+
+function readCookie(name) {
+   if (typeof document == 'undefined') return null;
+   let decodedCookie = decodeURIComponent(document.cookie),
+       ca = decodedCookie.split(';');
+   name += "=";
+   for(let i = 0; i < ca.length; i++) {
+      let c = ca[i];
+      while (c.charAt(0) == ' ')
+        c = c.substring(1);
+      if (c.indexOf(name) == 0) {
+         let s = JSON.parse(atob(c.substring(name.length, c.length)));
+
+         return (s && typeof s == 'object') ? s : null;
+      }
+   }
+   return null;
+}
+
+/** @summary Save JSROOT settings as specified cookie parameter
+  * @param {Number} expires - days when cookie will be removed by browser, negative - delete immediately
+  * @param {String} name - cookie parameter name
+  * @private */
+function saveSettings(expires = 365, name = "jsroot_settings") {
+   saveCookie(settings, expires, name);
+}
+
+/** @summary Read JSROOT settings from specified cookie parameter
+  * @param {Boolean} only_check - when true just checks if settings were stored before with provided name
+  * @param {String} name - cookie parameter name
+  * @private */
+function readSettings(only_check = false, name = "jsroot_settings") {
+   let s = readCookie(name);
+   if (!s) return false;
+   if (!only_check)
+      Object.assign(settings, s);
+   return true;
+}
+
+/** @summary Save JSROOT gStyle object as specified cookie parameter
+  * @param {Number} expires - days when cookie will be removed by browser, negative - delete immediately
+  * @param {String} name - cookie parameter name
+  * @private */
+function saveStyle(expires = 365, name = "jsroot_style") {
+   saveCookie(gStyle, expires, name);
+}
+
+/** @summary Read JSROOT gStyle object specified cookie parameter
+  * @param {Boolean} only_check - when true just checks if settings were stored before with provided name
+  * @param {String} name - cookie parameter name
+  * @private */
+function readStyle(only_check = false, name = "jsroot_style") {
+   let s = readCookie(name);
+   if (!s) return false;
+   if (!only_check)
+      Object.assign(gStyle, s);
+   return true;
+}
+
+
 export { showProgress, closeCurrentWindow, loadOpenui5, ToolbarIcons, registerForResize,
-         detectRightButton, addMoveHandler, injectStyle };
+         detectRightButton, addMoveHandler, injectStyle,
+         selectgStyle, saveSettings, readSettings, saveStyle, readStyle };

@@ -4,7 +4,7 @@
 ///
 /// This tutorial demonstrates how TSQLServer can be used to create a
 /// connection with a SQlite3 database. It accesses the Sqlite data base.
-/// Download from https://root.cern/download/root_download_stats.sqlite
+/// Download from https://root.cern/files/root_download_stats.sqlite
 /// In order to demonstrate the dependency over ROOT version 6.14, this tutorial uses the TSQLResult
 /// function which allows to extract the minimum time stored in the SQlite3 database.
 /// The next step is to create a TH1F Histogram, which will be filled with the values stored in

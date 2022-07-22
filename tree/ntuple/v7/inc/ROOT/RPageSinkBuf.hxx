@@ -23,6 +23,7 @@
 #include <deque>
 #include <iterator>
 #include <memory>
+#include <tuple>
 
 namespace ROOT {
 namespace Experimental {
@@ -48,12 +49,10 @@ private:
          RPage fPage;
          // Compression scratch buffer for fSealedPage.
          std::unique_ptr<unsigned char[]> fBuf;
-         RPageStorage::RSealedPage fSealedPage;
+         RPageStorage::RSealedPage *fSealedPage = nullptr;
          explicit RPageZipItem(RPage page)
             : fPage(page), fBuf(nullptr) {}
-         bool IsSealed() const {
-            return fSealedPage.fBuffer != nullptr;
-         }
+         bool IsSealed() const { return fSealedPage != nullptr; }
          void AllocateSealedPageBuf() {
             fBuf = std::make_unique<unsigned char[]>(fPage.GetNBytes());
          }
@@ -81,18 +80,35 @@ private:
          return std::prev(fBufferedPages.end());
       }
       const RPageStorage::ColumnHandle_t &GetHandle() const { return fCol; }
+      bool HasSealedPagesOnly() const { return fBufferedPages.size() && fBufferedPages.size() == fSealedPages.size(); }
+      const RPageStorage::SealedPageSequence_t &GetSealedPages() const { return fSealedPages; }
+
+      using BufferedPages_t = std::tuple<std::deque<RPageZipItem>, RPageStorage::SealedPageSequence_t>;
       // When the return value of DrainBufferedPages() is destroyed, all iterators
       // returned by GetBuffer are invalidated.
-      std::deque<RPageZipItem> DrainBufferedPages() {
-         std::deque<RPageZipItem> drained;
-         std::swap(fBufferedPages, drained);
+      BufferedPages_t DrainBufferedPages()
+      {
+         BufferedPages_t drained;
+         std::swap(fBufferedPages, std::get<decltype(fBufferedPages)>(drained));
+         std::swap(fSealedPages, std::get<decltype(fSealedPages)>(drained));
          return drained;
       }
+
+      // The returned iterator points to a default-constructed RSealedPage. This iterator can be used
+      // to fill in data after sealing.
+      RPageStorage::SealedPageSequence_t::iterator RegisterSealedPage()
+      {
+         return fSealedPages.emplace(std::end(fSealedPages));
+      }
+
    private:
       RPageStorage::ColumnHandle_t fCol;
       // Using a deque guarantees that element iterators are never invalidated
       // by appends to the end of the iterator by BufferPage.
       std::deque<RPageZipItem> fBufferedPages;
+      // Pages that have been already sealed by a concurrent task. A vector commit can be issued if all
+      // buffered pages have been sealed.
+      RPageStorage::SealedPageSequence_t fSealedPages;
    };
 
 private:

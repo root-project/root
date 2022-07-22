@@ -69,7 +69,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
               bool verbose, const RooArgSet* forceDirect) :
   RooAbsGenContext(model,vars,prototype,auxProto,verbose),
   _pdfClone(0), _acceptRejectFunc(0), _generator(0),
-  _maxVar(0), _uniIter(0), _updateFMaxPerEvent(0)
+  _maxVar(0), _updateFMaxPerEvent(0)
 {
   cxcoutI(Generation) << "RooGenContext::ctor() setting up event generator context for p.d.f. " << model.GetName()
          << " for generation of observable(s) " << vars ;
@@ -100,11 +100,10 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 
   // Analyze the list of variables to generate...
   _isValid= true;
-  TIterator *iterator= vars.createIterator();
-  TIterator *servers= _pdfClone->serverIterator();
-  const RooAbsArg *tmp = 0;
   const RooAbsArg *arg = 0;
-  while((_isValid && (tmp= (const RooAbsArg*)iterator->Next()))) {
+  for(RooAbsArg * tmp : vars) {
+    if(!_isValid) break;
+
     // is this argument derived?
     if(!tmp->isFundamental()) {
       coutE(Generation) << "RooGenContext::ctor(): cannot generate values for derived \""  << tmp->GetName() << "\"" << endl;
@@ -139,8 +138,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
       }
     }
   }
-  delete servers;
-  delete iterator;
+
   if(!isValid()) {
     coutE(Generation) << "RooGenContext::ctor() constructor failed with errors" << endl;
     return;
@@ -316,7 +314,6 @@ RooGenContext::~RooGenContext()
   if (_generator) delete _generator;
   if (_acceptRejectFunc) delete _acceptRejectFunc;
   if (_maxVar) delete _maxVar ;
-  if (_uniIter) delete _uniIter ;
 }
 
 
@@ -345,9 +342,7 @@ void RooGenContext::attach(const RooArgSet& args)
 
 void RooGenContext::initGenerator(const RooArgSet &theEvent)
 {
-  RooFIter iter = theEvent.fwdIterator() ;
-  RooAbsArg* arg ;
-  while((arg=iter.next())) {
+  for (auto* arg : theEvent) {
     arg->setOperMode(RooAbsArg::ADirty) ;
   }
 
@@ -360,12 +355,6 @@ void RooGenContext::initGenerator(const RooArgSet &theEvent)
   if (_directVars.getSize()>0) {
     cxcoutD(Generation) << "RooGenContext::initGenerator() initializing internal generator of model with code " << _code << endl ;
     _pdfClone->initGenerator(_code) ;
-  }
-
-  // Create iterator for uniform vars (if any)
-  if (_uniformVars.getSize()>0) {
-    delete _uniIter;
-    _uniIter = _uniformVars.createIterator() ;
   }
 }
 
@@ -410,19 +399,15 @@ void RooGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
   }
 
   // Generate uniform variables (non-dependents)
-  if (_uniIter) {
-    _uniIter->Reset() ;
-    RooAbsArg* uniVar ;
-    while((uniVar=(RooAbsArg*)_uniIter->Next())) {
-      RooAbsLValue* arglv = dynamic_cast<RooAbsLValue*>(uniVar) ;
-      if (!arglv) {
-   coutE(Generation) << "RooGenContext::generateEvent(" << GetName() << ") ERROR: uniform variable " << uniVar->GetName() << " is not an lvalue" << endl ;
-   RooErrorHandler::softAbort() ;
-      }
-      arglv->randomize() ;
+  for(auto * uniVar : _uniformVars) {
+    auto * arglv = dynamic_cast<RooAbsLValue*>(uniVar);
+    if (!arglv) {
+      coutE(Generation) << "RooGenContext::generateEvent(" << GetName() << ") ERROR: uniform variable " << uniVar->GetName() << " is not an lvalue" << endl ;
+      RooErrorHandler::softAbort() ;
     }
-    theEvent.assign(_uniformVars) ;
+    arglv->randomize() ;
   }
+  theEvent.assign(_uniformVars) ;
 
 }
 

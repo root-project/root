@@ -82,12 +82,10 @@ RooArgSet getObservablesInPdf(RooAbsPdf const &pdf, RooArgSet const &observables
 \param rangeName the range name
 **/
 RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables,
-                           bool isExtended, std::string const &rangeName)
+                           bool isExtended, std::string const &rangeName, bool doOffset)
    : RooAbsReal(name, title), _pdf{"pdf", "pdf", this, pdf}, _observables{getObservablesInPdf(pdf, observables)},
-     _isExtended{isExtended}, _weightVar{"weightVar", "weightVar",
-                                         this,        *new RooRealVar(weightVarName, weightVarName, 1.0),
-                                         true,        false,
-                                         true},
+     _isExtended{isExtended}, _doOffset{doOffset},
+     _weightVar{"weightVar", "weightVar", this, *new RooRealVar(weightVarName, weightVarName, 1.0), true, false, true},
      _weightSquaredVar{weightVarNameSumW2,
                        weightVarNameSumW2,
                        this,
@@ -203,7 +201,21 @@ void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_
          }
       }
 
-      output[0] = result.Sum() + sumWeightKahanSum.Sum();
+      result += sumWeightKahanSum.Sum();
+
+      // Check if value offset flag is set.
+      if (_doOffset) {
+
+         // If no offset is stored enable this feature now
+         if (_offset == 0 && result != 0) {
+            _offset = result;
+         }
+
+         // Subtract offset
+         result -= _offset;
+      }
+
+      output[0] = result.Sum();
 
       return;
    }
@@ -273,6 +285,19 @@ void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_
    if (_fractionInRange) {
       kahanProb += sumCorrectionTerm;
    }
+
+   // Check if value offset flag is set.
+   if (_doOffset) {
+
+      // If no offset is stored enable this feature now
+      if (_offset == 0 && kahanProb != 0) {
+         _offset = kahanProb;
+      }
+
+      // Subtract offset
+      kahanProb -= _offset;
+   }
+
    output[0] = kahanProb.Sum();
 }
 
@@ -300,9 +325,10 @@ RooArgSet RooNLLVarNew::prefixObservableAndWeightNames(std::string const &prefix
    RooArgSet obsSet{_observables};
    RooArgSet obsClones;
    obsSet.snapshot(obsClones);
-   for (RooAbsArg *arg : obsClones) {
+   for (auto *arg : static_range_cast<RooRealVar *>(obsClones)) {
       arg->setAttribute((std::string("ORIGNAME:") + arg->GetName()).c_str());
       arg->SetName((prefix + arg->GetName()).c_str());
+      arg->setConstant();
    }
    recursiveRedirectServers(obsClones, false, true);
 

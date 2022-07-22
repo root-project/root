@@ -847,7 +847,8 @@ else()
         "${libdir}" "-lCore" "-lRint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "${ROOTBUILD}")
 endif()
 
-#---Get the value of CMAKE_CXX_FLAGS provided by the user in the command line
+#---Get the values of ROOT_ALL_OPTIONS and CMAKE_CXX_FLAGS provided by the user in the command line
+set(all_features ${ROOT_ALL_OPTIONS})
 set(usercflags ${CMAKE_CXX_FLAGS-CACHED})
 file(REMOVE ${CMAKE_BINARY_DIR}/installtree/root-config)
 configure_file(${CMAKE_SOURCE_DIR}/config/root-config.in ${CMAKE_BINARY_DIR}/installtree/root-config @ONLY NEWLINE_STYLE UNIX)
@@ -864,6 +865,7 @@ if(xproofd AND xrootd AND ssl AND XROOTD_NOMAIN)
 endif()
 if(WIN32)
   set(thisrootbat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.bat)
+  set(thisrootps1 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.ps1)
   configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.bat ${thisrootbat} @ONLY)
   configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.ps1 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.ps1 @ONLY)
   configure_file(${CMAKE_SOURCE_DIR}/config/root.rc.in ${CMAKE_BINARY_DIR}/etc/root.rc @ONLY)
@@ -872,7 +874,6 @@ if(WIN32)
 endif()
 
 #--Local root-configure
-set(all_features ${ROOT_ALL_OPTIONS})
 set(prefix $ROOTSYS)
 set(bindir $ROOTSYS/bin)
 set(libdir $ROOTSYS/lib)
@@ -883,6 +884,11 @@ set(mandir $ROOTSYS/man)
 configure_file(${CMAKE_SOURCE_DIR}/config/root-config.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-config @ONLY NEWLINE_STYLE UNIX)
 if(MSVC)
   configure_file(${CMAKE_SOURCE_DIR}/config/root-config.bat.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-config.bat @ONLY)
+  install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-config.bat
+  PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+              GROUP_EXECUTE GROUP_READ
+              WORLD_EXECUTE WORLD_READ
+  DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh
@@ -891,6 +897,7 @@ install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.csh
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.sh
               ${thisrootbat}
+              ${thisrootps1}
               PERMISSIONS OWNER_WRITE OWNER_READ
                           GROUP_READ
                           WORLD_READ

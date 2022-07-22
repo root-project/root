@@ -11,13 +11,12 @@
 
 #include "TRootSnifferStore.h"
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootSnifferStore                                                    //
-//                                                                      //
-// Used to store different results of objects scanning by TRootSniffer  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TRootSnifferStore
+\ingroup http
+
+Used to store different results of objects scanning by TRootSniffer
+*/
 
 ClassImp(TRootSnifferStore);
 
@@ -35,13 +34,11 @@ void TRootSnifferStore::SetResult(void *_res, TClass *_rescl, TDataMember *_resm
 
 // =================================================================================
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootSnifferStoreXml                                                 //
-//                                                                      //
-// Used to store scanned objects hierarchy in XML form                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TRootSnifferStoreXml
+\ingroup http
+
+Used to store scanned objects hierarchy in XML form
+*/
 
 ClassImp(TRootSnifferStoreXml);
 
@@ -88,7 +85,8 @@ void TRootSnifferStoreXml::BeforeNextChild(Int_t, Int_t nchld, Int_t)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// called when node should be closed
+/// Called when node should be closed
+///
 /// depending from number of childs different xml format is applied
 
 void TRootSnifferStoreXml::CloseNode(Int_t lvl, Int_t numchilds)
@@ -101,13 +99,11 @@ void TRootSnifferStoreXml::CloseNode(Int_t lvl, Int_t numchilds)
 
 // ============================================================================
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootSnifferStoreJson                                                //
-//                                                                      //
-// Used to store scanned objects hierarchy in JSON form                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TRootSnifferStoreJson
+\ingroup http
+
+Used to store scanned objects hierarchy in JSON form
+*/
 
 ClassImp(TRootSnifferStoreJson);
 

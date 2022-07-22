@@ -48,6 +48,7 @@ from urllib.request import urlopen
 #              Platform independent functions (formerly indep.py)             #
 ###############################################################################
 
+
 def _convert_subprocess_cmd(cmd):
     if OS == 'Windows':
         cmd = cmd.replace('\\','/')
@@ -83,13 +84,17 @@ def exec_subprocess_check_output(cmd, cwd):
     finally:
         return out
 
+
 def travis_fold_start(tag):
     if os.environ.get('TRAVIS_BUILD_DIR', None):
        print('travis_fold:start:cpt-%s:' % (tag))
 
+
 def travis_fold_end(tag):
    if os.environ.get('TRAVIS_BUILD_DIR', None):
+
       print('travis_fold:end:cpt-%s:' % (tag))
+
 
 def box_draw_header():
     msg = 'cling (' + platform.machine() + ')' + formatdate(time.time(), tzinfo())
@@ -227,11 +232,22 @@ def fetch_llvm(llvm_revision):
     else:
         get_fresh_llvm()
 
+
+def llvm_flag_setter(llvm_dir, llvm_config_path):
+    flags = "-DLLVM_BINARY_DIR={0} -DLLVM_CONFIG={1} -DLLVM_LIBRARY_DIR={2} -DLLVM_MAIN_INCLUDE_DIR={3} -DLLVM_TABLEGEN_EXE={4} \
+                  -DLLVM_TOOLS_BINARY_DIR={5} -DLLVM_TOOL_CLING_BUILD=ON".format(llvm_dir, llvm_config_path,
+                                                                                 os.path.join(llvm_dir, 'lib'), os.path.join(llvm_dir, 'include'), os.path.join(llvm_dir, 'bin', 'llvm-tblgen'),
+                                                                                 os.path.join(llvm_dir, 'bin'))
+    if args['verbose']:
+        flags += " -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON"
+    return flags
+
+
 def download_llvm_binary():
     global llvm_flags, tar_required
     box_draw("Fetching LLVM binary")
     print('Current working directory is: ' + workdir + '\n')
-    if DIST=="Ubuntu":
+    if DIST == "Ubuntu":
         subprocess.call(
             "sudo -H {0} -m pip install lit".format(sys.executable), shell=True
             )
@@ -240,10 +256,7 @@ def download_llvm_binary():
             llvm_dir = os.path.join("/usr", "lib", "llvm-"+llvm_vers)
             if llvm_config_path[-1:] == "\n":
                 llvm_config_path = llvm_config_path[:-1]
-            llvm_flags = "-DLLVM_BINARY_DIR={0} -DLLVM_CONFIG={1} -DLLVM_LIBRARY_DIR={2} -DLLVM_MAIN_INCLUDE_DIR={3} -DLLVM_TABLEGEN_EXE={4} \
-                          -DLLVM_TOOLS_BINARY_DIR={5} -DLLVM_TOOL_CLING_BUILD=ON".format(llvm_dir, llvm_config_path,
-                           os.path.join(llvm_dir, 'lib'), os.path.join(llvm_dir, 'include'), os.path.join(llvm_dir, 'bin', 'llvm-tblgen'),
-                           os.path.join(llvm_dir, 'bin'))
+            llvm_flags = llvm_flag_setter(llvm_dir, llvm_config_path)
         else:
             tar_required = True
     elif DIST == 'MacOSX':
@@ -255,37 +268,33 @@ def download_llvm_binary():
             llvm_config_path = os.path.join(llvm_dir, "bin", "llvm-config")
             if llvm_config_path[-1:] == "\n":
                 llvm_config_path = llvm_config_path[:-1]
-            llvm_flags = "-DLLVM_BINARY_DIR={0} -DLLVM_CONFIG={1} -DLLVM_LIBRARY_DIR={2} -DLLVM_MAIN_INCLUDE_DIR={3} -DLLVM_TABLEGEN_EXE={4} \
-                          -DLLVM_TOOLS_BINARY_DIR={5} -DLLVM_TOOL_CLING_BUILD=ON".format(llvm_dir, llvm_config_path,
-                          os.path.join(llvm_dir, 'lib'), os.path.join(llvm_dir, 'include'), os.path.join(llvm_dir, 'bin', 'llvm-tblgen'),
-                          os.path.join(llvm_dir, 'bin'))
+            llvm_flags = llvm_flag_setter(llvm_dir, llvm_config_path)
     else:
-        raise Exception("Building clang using LLVM binary not possible. Please invoke cpt without --with-binary-llvm and --with-llvm-tar flags")
+        raise Exception("Building clang using LLVM binary not possible. Please invoke cpt without --with-llvm-binary and --with-llvm-tar flags")
     if tar_required:
-        llvm_flags = "-DLLVM_BINARY_DIR={0} -DLLVM_CONFIG={1} -DLLVM_LIBRARY_DIR={2} -DLLVM_MAIN_INCLUDE_DIR={3} -DLLVM_TABLEGEN_EXE={4} \
-                      -DLLVM_TOOLS_BINARY_DIR={5} -DLLVM_TOOL_CLING_BUILD=ON".format(srcdir, os.path.join(srcdir, 'bin', 'llvm-config'),
-                       os.path.join(srcdir, 'lib'), os.path.join(srcdir, 'include'), os.path.join(srcdir, 'bin', 'llvm-tblgen'),
-                       os.path.join(srcdir, 'bin'))
-        if DIST=="Ubuntu" and REV=='16.04' and is_os_64bit():
+        llvm_flags = llvm_flag_setter(llvm_dir, llvm_config_path)
+        if DIST == "Ubuntu" and REV == '16.04' and is_os_64bit():
             download_link = 'http://releases.llvm.org/5.0.2/clang+llvm-5.0.2-x86_64-linux-gnu-ubuntu-16.04.tar.xz'
             exec_subprocess_call('wget %s' % download_link, workdir)
             exec_subprocess_call('tar xvf clang+llvm-5.0.2-x86_64-linux-gnu-ubuntu-16.04.tar.xz', workdir)
             exec_subprocess_call('mv clang+llvm-5.0.2-x86_64-linux-gnu-ubuntu-16.04 %s' % srcdir, workdir)
-        elif DIST=="Ubuntu" and REV=='14.04' and is_os_64bit():
+        elif DIST == "Ubuntu" and REV == '14.04' and is_os_64bit():
             download_link = 'http://releases.llvm.org/5.0.2/clang+llvm-5.0.2-x86_64-linux-gnu-ubuntu-14.04.tar.xz'
             exec_subprocess_call('wget %s' % download_link, workdir)
             exec_subprocess_call('tar xvf clang+llvm-5.0.2-x86_64-linux-gnu-ubuntu-14.04.tar.xz', workdir)
             exec_subprocess_call('mv clang+llvm-5.0.2-x86_64-linux-gnu-ubuntu-14.04 %s' % srcdir, workdir)
-        elif DIST=='MacOSX' and is_os_64bit():
+        elif DIST == 'MacOSX' and is_os_64bit():
             download_link = 'http://releases.llvm.org/5.0.2/clang+llvm-5.0.2-x86_64-apple-darwin.tar.xz'
             exec_subprocess_call('wget %s' % download_link, workdir)
             exec_subprocess_call('tar xvf clang+llvm-5.0.2-x86_64-apple-darwin.tar.xz', workdir)
             exec_subprocess_call('sudo mv clang+llvm-5.0.2-x86_64-apple-darwin %s' % srcdir, workdir)
         else:
-            raise Exception("Building clang using LLVM binary not possible. Please invoke cpt without --with-binary-llvm and --with-llvm-tar flags")
+            raise Exception("Building clang using LLVM binary not possible. Please invoke cpt without --with-llvm-binary and --with-llvm-tar flags")
     # FIXME: Add Fedora and SUSE support
 
 # TODO Refactor all fetch_ functions to use this class will remove a lot of dup
+
+
 class RepoCache(object):
     def __init__(self, url, rootDir, depth=10):
         self.__url = url
@@ -301,6 +310,7 @@ class RepoCache(object):
             exec_subprocess_call('git clone %s' % self.__url, self.__projDir)
 
         exec_subprocess_call('git checkout %s' % branch, self.__workDir)
+
 
 def fetch_clang(llvm_revision):
     if "github.com" in CLANG_GIT_URL and args['create_dev_env'] is None and args['use_wget']:
@@ -325,7 +335,7 @@ def fetch_clang(llvm_revision):
         print()
         return
 
-    if args["with_binary_llvm"]:
+    if args["with_llvm_binary"]:
         dir = workdir
     else:
         dir = os.path.join(srcdir, 'tools')
@@ -355,9 +365,10 @@ def fetch_clang(llvm_revision):
     else:
         get_fresh_clang()
 
+
 def fetch_cling(arg):
 
-    if args["with_binary_llvm"]:
+    if args["with_llvm_binary"]:
         global CLING_SRC_DIR
         CLING_SRC_DIR = os.path.join(clangdir, 'tools', 'cling')
         dir = clangdir
@@ -407,6 +418,7 @@ def fetch_cling(arg):
     else:
         get_fresh_cling()
 
+
 def set_version():
     global VERSION
     global REVISION
@@ -453,6 +465,7 @@ def set_vars():
     print('SHLIBEXT: ' + SHLIBEXT)
     print('CLANG_VERSION: ' + CLANG_VERSION)
 
+
 def set_vars_for_lit():
     global tar_required, srcdir
 
@@ -485,9 +498,11 @@ def set_vars_for_lit():
         with open(os.path.join(CLING_SRC_DIR, "test", "lit.site.cfg.in"), "w") as file:
             file.writelines(lines)
 
+
 def allow_clang_tool():
     with open(os.path.join(workdir, 'clang', 'tools', 'CMakeLists.txt'), 'a') as file:
         file.writelines('add_llvm_external_project(cling)')
+
 
 class Build(object):
     def __init__(self, target=None):
@@ -518,9 +533,9 @@ class Build(object):
                 exec_subprocess_call('%s --build . --target %s %s'
                                      % (CMAKE, target, flags), LLVM_OBJ_ROOT)
         else:
-            if args['verbose']: flags += ' VERBOSE=1'
-            exec_subprocess_call('make -j%d %s %s' % (self.cores, targets, flags),
+            exec_subprocess_call('make -j %d %s %s' % (self.cores, targets, flags),
                                  LLVM_OBJ_ROOT)
+
 
 def compile(arg):
     travis_fold_start("compile")
@@ -566,7 +581,9 @@ def compile(arg):
                                   + ' -v ".I"', shell=True)
         except Exception as e:
             print(e)
+
     travis_fold_end("compile")
+
 
 def compile_for_binary(arg):
     travis_fold_start("compile")
@@ -607,6 +624,7 @@ def compile_for_binary(arg):
             print(e)
     travis_fold_end("compile")
 
+
 def install_prefix():
     travis_fold_start("install")
     global prefix
@@ -626,7 +644,7 @@ def install_prefix():
             if OS == 'Windows':
                 f = f.replace('\\', '/')
             for regex in regex_array:
-                if args['verbose']: print ("Applying regex " + regex + " to file " + f)
+                if args['with_verbose_output']: print ("Applying regex " + regex + " to file " + f)
                 if re.search(regex, f):
                     print ("Adding to final binary " + f)
                     if not os.path.isdir(os.path.join(prefix, os.path.dirname(f))):
@@ -634,6 +652,7 @@ def install_prefix():
                     shutil.copy(os.path.join(TMP_PREFIX, f), os.path.join(prefix, f))
                     break
     travis_fold_end("install")
+
 
 def install_prefix_for_binary():
     travis_fold_start("install")
@@ -655,7 +674,7 @@ def install_prefix_for_binary():
             if OS == 'Windows':
                 f = f.replace('\\', '/')
             for regex in regex_array:
-                if args['verbose']: print ("Applying regex " + regex + " to file " + f)
+                if args['with_verbose_output']: print ("Applying regex " + regex + " to file " + f)
                 if re.search(regex, f):
                     print ("Adding to final binary " + f)
                     if not os.path.isdir(os.path.join(prefix, os.path.dirname(f))):
@@ -686,7 +705,9 @@ def runSingleTest(test, Idx = 2, Recurse = True):
 
     except Exception as err:
         print("Error running '%s': %s" % (test, err))
+
         pass
+
 
 def setup_tests():
     global tar_required
@@ -766,14 +787,19 @@ def test_cling():
     # runSingleTest('Prompt/ValuePrinter')
     build = Build('check-cling')
 
+
 def tarball():
     box_draw("Compress binaries into a bzip2 tarball")
     tar = tarfile.open(prefix + '.tar.bz2', 'w:bz2')
     print('Creating archive: ' + os.path.basename(prefix) + '.tar.bz2')
+
     tar.add(prefix, arcname=os.path.basename(prefix))
     tar.close()
 
+
 gInCleanup = False
+
+
 def cleanup():
     global gInCleanup
     if gInCleanup:
@@ -830,6 +856,7 @@ def cleanup():
             print('Remove directory: ' + os.path.join(workdir, 'Install'))
             shutil.rmtree(os.path.join(workdir, 'Install'))
     gInCleanup = False
+
 
 def check_version_string_ge(vstring, min_vstring):
     version_fields = [int(x) for x in vstring.split('.')]
@@ -1277,7 +1304,7 @@ rm -rf %{buildroot}
 def check_win(pkg):
     # Check for Microsoft Visual Studio 14.0
     if pkg == "msvc":
-        if exec_subprocess_check_output('REG QUERY HKEY_CLASSES_ROOT\VisualStudio.DTE.14.0', 'C:\\').find(
+        if exec_subprocess_check_output('REG QUERY HKEY_CLASSES_ROOT\\VisualStudio.DTE.14.0', 'C:\\').find(
                 'ERROR') == -1:
             print(pkg.ljust(20) + '[OK]'.ljust(30))
         else:
@@ -1291,8 +1318,10 @@ def check_win(pkg):
             print(pkg.ljust(20) + '[OK]'.ljust(30))
 
 
+
 def is_os_64bit():
     return platform.machine().endswith('64')
+
 
 def get_win_dep():
 
@@ -1315,7 +1344,7 @@ def get_win_dep():
         try:
             rslt = exec_subprocess_check_output(cmake + ' --version', TMP_PREFIX)
             vers = [int(v) for v in rslt.split()[2].split('.')]
-            if vers[0] >= 3 and (vers[1] > 6 or (vers[1]==6 and vers[2] >= 2)):
+            if vers[0] >= 3 and (vers[1] > 6 or (vers[1] == 6 and vers[2] >= 2)):
                 return cmake
         except:
             pass
@@ -1370,7 +1399,7 @@ def make_nsi():
 !define MAIN_APP_EXE "cling.exe"
 !define INSTALL_TYPE "SetShellVarContext current"
 !define PRODUCT_ROOT_KEY "HKLM"
-!define PRODUCT_KEY "Software\Cling"
+!define PRODUCT_KEY "Software\\Cling"
 
 ###############################################################################
 
@@ -1460,7 +1489,7 @@ SectionEnd
 Section make_uninstaller
  ; Write the uninstall keys for Windows
  SetOutPath "$INSTDIR"
- WriteRegStr HKLM "Software\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Cling" "DisplayName" "Cling"
+ WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Cling" "DisplayName" "Cling"
  WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Cling" "UninstallString" "$INSTDIR\\uninstall.exe"
  WriteRegDWORD HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Cling" "NoModify" 1
  WriteRegDWORD HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Cling" "NoRepair" 1
@@ -1473,7 +1502,7 @@ Section "Shortcuts"
 
  CreateDirectory "$SMPROGRAMS\\Cling"
  CreateShortCut "$SMPROGRAMS\\Cling\\Uninstall.lnk" "$INSTDIR\\uninstall.exe" "" "$INSTDIR\\uninstall.exe" 0
- CreateShortCut "$SMPROGRAMS\Cling\\Cling.lnk" "$INSTDIR\\bin\\cling.exe" "" "${MUI_ICON}" 0
+ CreateShortCut "$SMPROGRAMS\\Cling\\Cling.lnk" "$INSTDIR\\bin\\cling.exe" "" "${MUI_ICON}" 0
  CreateDirectory "$SMPROGRAMS\\Cling\\Documentation"
  CreateShortCut "$SMPROGRAMS\\Cling\\Documentation\\Cling (PS).lnk" "$INSTDIR\\docs\\llvm\\ps\\cling.ps" "" "" 0
  CreateShortCut "$SMPROGRAMS\\Cling\\Documentation\\Cling (HTML).lnk" "$INSTDIR\\docs\\llvm\\html\\cling\\cling.html" "" "" 0
@@ -1482,14 +1511,14 @@ SectionEnd
 
 Section "Uninstall"
 
- DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\\Uninstall\Cling"
- DeleteRegKey HKLM "Software\Cling"
+ DeleteRegKey HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Cling"
+ DeleteRegKey HKLM "Software\\Cling"
 
  ; Remove shortcuts
- Delete "$SMPROGRAMS\Cling\*.*"
- Delete "$SMPROGRAMS\Cling\Documentation\*.*"
- Delete "$SMPROGRAMS\Cling\Documentation"
- RMDir "$SMPROGRAMS\Cling"
+ Delete "$SMPROGRAMS\\Cling\\*.*"
+ Delete "$SMPROGRAMS\\Cling\\Documentation\\*.*"
+ Delete "$SMPROGRAMS\\Cling\\Documentation"
+ RMDir "$SMPROGRAMS\\Cling"
 
 '''
     f.write(template)
@@ -1522,7 +1551,7 @@ SectionEnd
 Function DetectWinVer
   Push $0
   Push $1
-  ReadRegStr $0 HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion" CurrentVersion
+  ReadRegStr $0 HKLM "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion" CurrentVersion
   IfErrors is_error is_winnt
 is_winnt:
   StrCpy $1 $0 1
@@ -1544,9 +1573,9 @@ is_winnt_8:
   Goto done
 is_error:
   StrCpy $1 $0
-  ReadRegStr $0 HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion" ProductName
+  ReadRegStr $0 HKLM "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion" ProductName
   IfErrors 0 +4
-  ReadRegStr $0 HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion" Version
+  ReadRegStr $0 HKLM "SOFTWARE\\Microsoft\\Windows\\CurrentVersion" Version
   IfErrors 0 +2
   StrCpy $0 "Unknown"
   MessageBox MB_ICONSTOP|MB_OK "This version of Cling cannot be installed on this system. Cling is supported only on Windows NT systems. Current system: $0 (version: $1)"
@@ -1561,7 +1590,7 @@ Function CheckPrevVersion
   Push $0
   Push $1
   Push $2
-  IfFileExists "$INSTDIR\\bin\cling.exe" 0 otherver
+  IfFileExists "$INSTDIR\\bin\\cling.exe" 0 otherver
   MessageBox MB_OK|MB_ICONSTOP "Another Cling installation (with the same version) has been detected. Please uninstall it first."
   Abort
 otherver:
@@ -1688,15 +1717,15 @@ def make_dmg():
         os.path.join(workdir, '%s.app'%(APP_NAME), 'Contents', 'MacOS')
     )
 
-    os.makedirs(os.path.join(workdir, '%s.app'% (APP_NAME), 'Contents', 'Resources'))
+    os.makedirs(os.path.join(workdir, '%s.app' % (APP_NAME), 'Contents', 'Resources'))
     shutil.copyfile(
         os.path.join(CPT_SRC_DIR, 'LLVM.icns'),
-        os.path.join(workdir, '%s.app'% (APP_NAME), 'Contents', 'Resources', 'LLVM.icns')
+        os.path.join(workdir, '%s.app' % (APP_NAME), 'Contents', 'Resources', 'LLVM.icns')
     )
 
 
     print('Configuring Info.plist file')
-    plist_path = os.path.join(workdir, '%s.app'% (APP_NAME), 'Contents', 'Info.plist')
+    plist_path = os.path.join(workdir, '%s.app' % (APP_NAME), 'Contents', 'Info.plist')
     f = open(plist_path, 'w')
     plist_xml = '''
 <?xml version="1.0" encoding="UTF-8"?>
@@ -1794,9 +1823,9 @@ parser.add_argument('--with-clang-url', action='store', help='Specify an alterna
                     default='http://root.cern.ch/git/clang.git')
 parser.add_argument('--with-cling-url', action='store', help='Specify an alternate URL of Cling repo',
                     default='https://github.com/root-project/cling.git')
-parser.add_argument('--cling-branch', help='Specify a particular Cling branch')
+parser.add_argument('--with-cling-branch', help='Specify a particular Cling branch')
 
-parser.add_argument('--with-binary-llvm', help='Download LLVM binary and use it to build Cling in dev mode', action='store_true')
+parser.add_argument('--with-llvm-binary', help='Download LLVM binary and use it to build Cling in dev mode', action='store_true')
 parser.add_argument('--with-llvm-tar', help='Download and use LLVM binary release tar to build Cling for debugging', action='store_true')
 parser.add_argument('--no-test', help='Do not run test suite of Cling', action='store_true')
 parser.add_argument('--skip-cleanup', help='Do not clean up after a build', action='store_true')
@@ -1811,11 +1840,11 @@ else:
                         default='C:\\ci\\build\\')
 
 parser.add_argument('--make-proper', help='Internal option to support calls from build system')
-parser.add_argument('--verbose', help='Tell CMake to build with verbosity', action='store_true')
+parser.add_argument('--with-verbose-output', help='Tell CMake to build with verbosity', action='store_true')
 parser.add_argument('--with-cmake-flags', help='Additional CMake configuration flags', default='')
-parser.add_argument('--stdlib', help=('C++ Library to use, stdlibc++ or libc++.'
-                                     '  To build a spcific llvm <tag> of libc++ with cling '
-                                     'specify libc++,<tag>'),
+parser.add_argument('--with-stdlib', help=('C++ Library to use, stdlibc++ or libc++.'
+                                           '  To build a spcific llvm <tag> of libc++ with cling '
+                                           'specify libc++,<tag>'),
                     default='')
 parser.add_argument('-y', help='Non-interactive mode (yes to all)', action='store_true')
 
@@ -1824,6 +1853,7 @@ args = vars(parser.parse_args())
 ###############################################################################
 #                           Customized input                                  #
 ###############################################################################
+
 
 def custom_input(prompt, always_yes=False):
     if always_yes:
@@ -1835,7 +1865,8 @@ def custom_input(prompt, always_yes=False):
 #                               Global variables                              #
 ###############################################################################
 
-workdir = os.path.abspath(os.path.expanduser(args['with_workdir']))
+if __name__ == "__main__":
+    workdir = os.path.abspath(os.path.expanduser(args['with_workdir']))
 srcdir = os.path.join(workdir, 'cling-src')
 CLING_SRC_DIR = os.path.join(srcdir, 'tools', 'cling')
 CPT_SRC_DIR = os.path.join(CLING_SRC_DIR, 'tools', 'packaging')
@@ -1863,7 +1894,7 @@ TRAVIS_BUILD_DIR = os.environ.get('TRAVIS_BUILD_DIR', None)
 APPVEYOR_BUILD_FOLDER = os.environ.get('APPVEYOR_BUILD_FOLDER', None)
 
 # Make sure git log is invoked without a pager.
-os.environ['GIT_PAGER']=''
+os.environ['GIT_PAGER'] = ''
 
 ###############################################################################
 #                           Platform initialization                           #
@@ -1934,14 +1965,14 @@ if not CMAKE:
         CMAKE = 'cmake'
 
 # logic is too confusing supporting both at the same time
-if args.get('stdlib') and EXTRA_CMAKE_FLAGS.find('-DLLVM_ENABLE_LIBCXX=') != -1:
-    print('use of --stdlib cannot be combined with -DLLVM_ENABLE_LIBCXX')
+if args.get('with_stdlib') and EXTRA_CMAKE_FLAGS.find('-DLLVM_ENABLE_LIBCXX=') != -1:
+    print('use of --with-stdlib cannot be combined with -DLLVM_ENABLE_LIBCXX')
     parser.print_help()
     raise SystemExit
 
 CLING_BRANCH = None
-if args['current_dev'] and args['cling_branch']:
-    CLING_BRANCH = args['cling_branch']
+if args['current_dev'] and args['with_cling_branch']:
+    CLING_BRANCH = args['with_cling_branch']
 
 print('Cling Packaging Tool (CPT)')
 print('Arguments vector: ' + str(sys.argv))
@@ -1965,12 +1996,18 @@ if not (TRAVIS_BUILD_DIR or APPVEYOR_BUILD_FOLDER) and os.path.isdir(TMP_PREFIX)
 if not os.path.isdir(TMP_PREFIX):
     os.makedirs(TMP_PREFIX)
 
-if args['with_binary_llvm'] and args['with_llvm_url']:
-    raise Exception("Cannot specify flags --with-binary-llvm and --with-llvm-url together")
-elif args['with_binary_llvm'] is False and args['with_llvm_url']:
+if args['with_llvm_binary'] and args['with_llvm_url']:
+    raise Exception("Cannot specify flags --with-llvm-binary and --with-llvm-url together")
+elif args['with_llvm_binary'] is False and args['with_llvm_url']:
     LLVM_GIT_URL = args['with_llvm_url']
 else:
     LLVM_GIT_URL = "http://root.cern.ch/git/llvm.git"
+    
+if args['with_binary_llvm'] and args['with_llvm_tar']:
+    raise Exception("Cannot specify flags --with-binary-llvm and --with-llvm-tar together")
+
+if args['with_llvm_tar'] and args['with_llvm_url']:
+    raise Exception("Cannot specify flags --with-llvm-tar and --with-llvm-url together")
 
 if args['with_llvm_tar']:
     tar_required = True
@@ -1981,9 +2018,9 @@ if args['check_requirements']:
     if DIST == 'Ubuntu':
         install_line = ""
         prerequisite = ['git', 'cmake', 'gcc', 'g++', 'debhelper', 'devscripts', 'gnupg', 'zlib1g-dev']
-        if args["with_binary_llvm"] or args["with_llvm_tar"]:
+        if args["with_llvm_binary"] or args["with_llvm_tar"]:
             prerequisite.extend(['subversion'])
-        if args["with_binary_llvm"] and not args["with_llvm_tar"]:
+        if args["with_llvm_binary"] and not args["with_llvm_tar"]:
             if check_ubuntu('llvm-'+llvm_vers+'-dev') is False:
                 llvm_binary_name = 'llvm-{0}-dev'.format(llvm_vers)
         for pkg in prerequisite:
@@ -2001,15 +2038,15 @@ if args['check_requirements']:
                 if choice in yes:
                     # Need to communicate values to the shell. Do not use exec_subprocess_call()
                     subprocess.Popen(['sudo apt-get update'],
-                                    shell=True,
-                                    stdin=subprocess.PIPE,
-                                    stdout=None,
-                                    stderr=subprocess.STDOUT).communicate('yes'.encode('utf-8'))
+                                     shell=True,
+                                     stdin=subprocess.PIPE,
+                                     stdout=None,
+                                     stderr=subprocess.STDOUT).communicate('yes'.encode('utf-8'))
                     subprocess.Popen(['sudo apt-get install ' + install_line],
-                                    shell=True,
-                                    stdin=subprocess.PIPE,
-                                    stdout=None,
-                                    stderr=subprocess.STDOUT).communicate('yes'.encode('utf-8'))
+                                     shell=True,
+                                     stdin=subprocess.PIPE,
+                                     stdout=None,
+                                     stderr=subprocess.STDOUT).communicate('yes'.encode('utf-8'))
                     break
                 elif choice in no:
                     print('''
@@ -2057,10 +2094,10 @@ Refer to the documentation of CPT for information on setting up your Windows env
                 if choice in yes:
                     # Need to communicate values to the shell. Do not use exec_subprocess_call()
                     subprocess.Popen(['sudo yum install ' + install_line],
-                                    shell=True,
-                                    stdin=subprocess.PIPE,
-                                    stdout=None,
-                                    stderr=subprocess.STDOUT).communicate('yes'.encode('utf-8'))
+                                     shell=True,
+                                     stdin=subprocess.PIPE,
+                                     stdout=None,
+                                     stderr=subprocess.STDOUT).communicate('yes'.encode('utf-8'))
                     break
                 elif choice in no:
                     print('''
@@ -2094,15 +2131,15 @@ Refer to the documentation of CPT for information on setting up your Windows env
                 if choice in yes:
                     # Need to communicate values to the shell. Do not use exec_subprocess_call()
                     subprocess.Popen(['sudo port -v selfupdate'],
-                                    shell=True,
-                                    stdin=subprocess.PIPE,
-                                    stdout=None,
-                                    stderr=subprocess.STDOUT).communicate('yes'.encode('utf-8'))
+                                     shell=True,
+                                     stdin=subprocess.PIPE,
+                                     stdout=None,
+                                     stderr=subprocess.STDOUT).communicate('yes'.encode('utf-8'))
                     subprocess.Popen(['sudo port install ' + install_line],
-                                    shell=True,
-                                    stdin=subprocess.PIPE,
-                                    stdout=None,
-                                    stderr=subprocess.STDOUT).communicate('yes'.encode('utf-8'))
+                                     shell=True,
+                                     stdin=subprocess.PIPE,
+                                     stdout=None,
+                                     stderr=subprocess.STDOUT).communicate('yes'.encode('utf-8'))
                     break
                 elif choice in no:
                     print('''
@@ -2122,7 +2159,7 @@ Refer to the documentation of CPT for information on setting up your Windows env
                              stdout=None,
                              stderr=subprocess.STDOUT).communicate('yes'.encode('utf-8'))
 
-if args["with_llvm_tar"] or args["with_binary_llvm"]:
+if args["with_llvm_tar"] or args["with_llvm_binary"]:
     download_llvm_binary()
 
 if args['current_dev']:
@@ -2131,7 +2168,7 @@ if args['current_dev']:
         "https://raw.githubusercontent.com/root-project/cling/master/LastKnownGoodLLVMSVNRevision.txt").readline().strip().decode(
         'utf-8')
 
-    if args['with_binary_llvm']:
+    if args['with_llvm_binary']:
         compile = compile_for_binary
         install_prefix = install_prefix_for_binary
         fetch_clang(llvm_revision)
@@ -2180,7 +2217,7 @@ if args['current_dev']:
                                      'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
         install_prefix()
         if not args['no_test']:
-            if args['with_binary_llvm']:
+            if args['with_llvm_binary']:
                 setup_tests()
             test_cling()
         tarball()
@@ -2190,7 +2227,7 @@ if args['current_dev']:
         compile(os.path.join(workdir, 'cling-' + VERSION))
         install_prefix()
         if not args['no_test']:
-            if args['with_binary_llvm']:
+            if args['with_llvm_binary']:
                 setup_tests()
             test_cling()
         tarball_deb()
@@ -2220,7 +2257,7 @@ if args['current_dev']:
         compile(os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
         install_prefix()
         if not args['no_test']:
-            if args['with_binary_llvm']:
+            if args['with_llvm_binary']:
                 setup_tests()
             test_cling()
         make_dmg()
@@ -2230,7 +2267,7 @@ if args['current_dev']:
         compile(os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
         install_prefix()
         if not args['no_test']:
-            if args['with_binary_llvm']:
+            if args['with_llvm_binary']:
                 setup_tests()
             test_cling()
         tarball()
@@ -2249,9 +2286,10 @@ if args['last_stable']:
         'https://raw.githubusercontent.com/root-project/cling/%s/LastKnownGoodLLVMSVNRevision.txt' % tag
     ).readline().strip().decode('utf-8')
 
-    args["with_binary_llvm"] = True
+    args["with_llvm_binary"] = True
 
     if args["with_binary_llvm"]:
+        download_llvm_binary()
         compile = compile_for_binary
         install_prefix = install_prefix_for_binary
         fetch_clang(llvm_revision)
@@ -2276,7 +2314,7 @@ if args['last_stable']:
                                      'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
         install_prefix()
         if not args['no_test']:
-            if args['with_binary_llvm']:
+            if args['with_llvm_binary']:
                 setup_tests()
             test_cling()
         tarball()
@@ -2287,7 +2325,7 @@ if args['last_stable']:
         compile(os.path.join(workdir, 'cling-' + VERSION))
         install_prefix()
         if not args['no_test']:
-            if args['with_binary_llvm']:
+            if args['with_llvm_binary']:
                 setup_tests()
             test_cling()
         tarball_deb()
@@ -2320,7 +2358,7 @@ if args['last_stable']:
         compile(os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
         install_prefix()
         if not args['no_test']:
-            if args['with_binary_llvm']:
+            if args['with_llvm_binary']:
                 setup_tests()
             test_cling()
         make_dmg()
@@ -2331,7 +2369,7 @@ if args['last_stable']:
         compile(os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
         install_prefix()
         if not args['no_test']:
-            if args['with_binary_llvm']:
+            if args['with_llvm_binary']:
                 setup_tests()
             test_cling()
         tarball()
@@ -2342,7 +2380,7 @@ if args['tarball_tag']:
         "https://raw.githubusercontent.com/root-project/cling/%s/LastKnownGoodLLVMSVNRevision.txt" % args[
             'tarball_tag']).readline().strip().decode(
         'utf-8')
-    if args["with_binary_llvm"]:
+    if args["with_llvm_binary"]:
         compile = compile_for_binary
         install_prefix = install_prefix_for_binary
         fetch_clang(llvm_revision)
@@ -2366,7 +2404,7 @@ if args['tarball_tag']:
 
     install_prefix()
     if not args['no_test']:
-        if args['with_binary_llvm']:
+        if args['with_llvm_binary']:
             setup_tests()
         test_cling()
     tarball()
@@ -2450,7 +2488,7 @@ if args['create_dev_env']:
     fetch_llvm(llvm_revision)
     fetch_clang(llvm_revision)
     fetch_cling('master')
-
+    args['skip_cleanup'] = True
     set_version()
     if OS == 'Windows':
         get_win_dep()

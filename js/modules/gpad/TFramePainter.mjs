@@ -1,22 +1,13 @@
-/// TCanvas painting
-
 import { gStyle, settings, isBatchMode, browser } from '../core.mjs';
-
 import { select as d3_select, pointer as d3_pointer, pointers as d3_pointers, drag as d3_drag } from '../d3.mjs';
-
 import { getActivePad, ObjectPainter } from '../base/ObjectPainter.mjs';
-
 import { getSvgLineStyle } from '../base/TAttLineHandler.mjs';
-
 import { EAxisBits, TAxisPainter } from './TAxisPainter.mjs';
-
 import { getElementRect, getAbsPosInCanvas } from '../base/BasePainter.mjs';
-
 import { FontHandler } from '../base/FontHandler.mjs';
-
 import { createMenu, closeMenu } from '../gui/menu.mjs';
-
 import { detectRightButton, injectStyle } from '../gui/utils.mjs';
+
 
 function setPainterTooltipEnabled(painter, on) {
    if (!painter) return;
@@ -93,7 +84,7 @@ function addDragHandler(_painter, arg) {
 
       if (change_size || change_pos) {
          if (change_size && ('resize' in arg)) arg.resize(newwidth, newheight);
-         if (change_pos && ('move' in arg)) arg.move(newx, newy, newx - oldxx, newy - oldy);
+         if (change_pos && ('move' in arg)) arg.move(newx, newy, newx - oldx, newy - oldy);
 
          if (change_size || change_pos) {
             if ('obj' in arg) {
@@ -112,8 +103,11 @@ function addDragHandler(_painter, arg) {
    };
 
    // add interactive styles when frame painter not there
-   if (_painter && !_painter.getFramePainter())
-      injectFrameStyle(_painter.draw_g);
+   if (_painter) {
+      let fp = _painter.getFramePainter();
+      if (!fp || fp.mode3d)
+         injectFrameStyle(_painter.draw_g);
+   }
 
    let drag_move = d3_drag().subject(Object);
 
@@ -2503,7 +2497,7 @@ class TFramePainter extends ObjectPainter {
          gStyle.fPadRightMargin = 1 - this.fX2NDC;
          if (this.fillatt) this.fillatt.saveToStyle("fFrameFillColor", "fFrameFillStyle");
          if (this.lineatt) this.lineatt.saveToStyle("fFrameLineColor", "fFrameLineWidth", "fFrameLineStyle");
-      });
+      }, "Store frame position and graphical attributes to gStyle");
 
       menu.add("separator");
       menu.add("Save as frame.png", () => pp.saveAs("png", 'frame', 'frame.png'));

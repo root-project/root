@@ -26,7 +26,7 @@ if(PY_TORCH_FOUND)
    configure_file(generatePyTorchModelClassification.py generatePyTorchModelClassification.py COPYONLY)
    configure_file(generatePyTorchModelMulticlass.py generatePyTorchModelMulticlass.py COPYONLY)
    configure_file(generatePyTorchModelRegression.py generatePyTorchModelRegression.py COPYONLY)
-   configure_file(generatePyTorchModel.py generatePyTorchModel.py COPYONLY)
+   configure_file(generatePyTorchModels.py generatePyTorchModels.py COPYONLY)
    # Test PyTorch: Binary classification${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIRS}
    ROOT_EXECUTABLE(testPyTorchClassification testPyTorchClassification.C
       LIBRARIES ${Libraries})
@@ -86,8 +86,7 @@ endif()
 endif(PY_TORCH_FOUND)
 
 if((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOUND))
-   configure_file(generateKerasModelFunctional.py generateKerasModelFunctional.py COPYONLY)
-   configure_file(generateKerasModelSequential.py generateKerasModelSequential.py COPYONLY)
+   configure_file(generateKerasModels.py generateKerasModels.py COPYONLY)
 
    # Test PyKeras: Binary classification
    ROOT_EXECUTABLE(testPyKerasClassification testPyKerasClassification.C

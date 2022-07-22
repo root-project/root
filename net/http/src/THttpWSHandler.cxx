@@ -18,50 +18,53 @@
 #include <thread>
 #include <chrono>
 
-/////////////////////////////////////////////////////////////////////////
-///
-/// THttpWSHandler
-///
-/// Class for user-side handling of websocket with THttpServer
-/// 1. Create derived from  THttpWSHandler class and implement
-///     ProcessWS() method, where all web sockets request handled.
-/// 2. Register instance of derived class to running THttpServer
-///
-///        TUserWSHandler *handler = new TUserWSHandler("name1","title");
-///        THttpServer *server = new THttpServer("http:8090");
-///        server->Register("/subfolder", handler)
-///
-/// 3. Now server can accept web socket connection from outside.
-///    For instance, from JavaScirpt one can connect to it with code:
-///
-///        var ws = new WebSocket("ws://hostname:8090/subfolder/name1/root.websocket")
-///
-/// 4. In the ProcessWS(THttpCallArg *arg) method following code should be implemented:
-///
-///     if (arg->IsMethod("WS_CONNECT")) {
-///         return true;  // to accept incoming request
-///      }
-///
-///      if (arg->IsMethod("WS_READY")) {
-///          fWSId = arg->GetWSId(); // fWSId should be member of the user class
-///          return true; // connection established
-///      }
-///
-///     if (arg->IsMethod("WS_CLOSE")) {
-///         fWSId = 0;
-///         return true; // confirm close of socket
-///     }
-///
-///     if (arg->IsMethod("WS_DATA")) {
-///         // received data stored as POST data
-///         std::string str((const char *)arg->GetPostData(), arg->GetPostDataLength());
-///         std::cout << "got string " << str << std::endl;
-///         // immediately send data back using websocket id
-///         SendCharStarWS(fWSId, "our reply");
-///         return true;
-///     }
-///
-///////////////////////////////////////////////////////////////////////////
+/** \class THttpWSHandler
+\ingroup http
+
+Class for user-side handling of websocket with THttpServer
+
+Approximate how-to:
+
+1. Create derived from  THttpWSHandler class and implement
+   ProcessWS() method, where all web sockets request handled.
+
+2. Register instance of derived class to running THttpServer
+
+       TUserWSHandler *handler = new TUserWSHandler("name1","title");
+       THttpServer *server = new THttpServer("http:8090");
+       server->Register("/subfolder", handler)
+
+3. Now server can accept web socket connection from outside.
+   For instance, from JavaScirpt one can connect to it with code:
+
+       let ws = new WebSocket("ws://hostname:8090/subfolder/name1/root.websocket");
+
+4. In the ProcessWS(THttpCallArg *arg) method following code should be implemented:
+
+       if (arg->IsMethod("WS_CONNECT")) {
+          return true;  // to accept incoming request
+       }
+
+       if (arg->IsMethod("WS_READY")) {
+           fWSId = arg->GetWSId(); // fWSId should be member of the user class
+           return true; // connection established
+       }
+
+       if (arg->IsMethod("WS_CLOSE")) {
+            fWSId = 0;
+            return true; // confirm close of socket
+        }
+
+       if (arg->IsMethod("WS_DATA")) {
+            std::string str((const char *)arg->GetPostData(), arg->GetPostDataLength());
+            std::cout << "got string " << str << std::endl;
+            SendCharStarWS(fWSId, "our reply");
+            return true;
+        }
+
+5. See in `$ROOTSYS/tutorials/http/ws.C` and `$ROOTSYS/tutorials/http/ws.htm` functional example
+*/
+
 
 ClassImp(THttpWSHandler);
 
@@ -181,10 +184,12 @@ void THttpWSHandler::RemoveEngine(std::shared_ptr<THttpWSEngine> &engine, Bool_t
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Process request to websocket
-/// Different kind of requests coded into THttpCallArg::Method
-///  "WS_CONNECT" - connection request
-///  "WS_READY" - connection ready
-///  "WS_CLOSE" - connection closed
+/// Different kind of requests coded into THttpCallArg::Method:
+///
+///     "WS_CONNECT" - connection request
+///     "WS_READY" - connection ready
+///     "WS_CLOSE" - connection closed
+///
 /// All other are normal data, which are delivered to users
 
 Bool_t THttpWSHandler::HandleWS(std::shared_ptr<THttpCallArg> &arg)
@@ -255,9 +260,10 @@ void THttpWSHandler::CloseWS(UInt_t wsid)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Send data stored in the buffer
-/// Returns 0 - when operation was executed immediately
-///         1 - when send operation will be performed in different thread
+/// Send data stored in the buffer. Returns:
+///
+/// * 0 - when operation was executed immediately
+/// * 1 - when send operation will be performed in different thread
 
 Int_t THttpWSHandler::RunSendingThrd(std::shared_ptr<THttpWSEngine> engine)
 {
@@ -371,10 +377,11 @@ Int_t THttpWSHandler::CompleteSend(std::shared_ptr<THttpWSEngine> &engine)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Send binary data via given websocket id
-/// Returns -1 - in case of error
-///          0 - when operation was executed immediately
-///          1 - when send operation will be performed in different thread
+/// Send binary data via given websocket id. Returns:
+///
+/// * -1 - in case of error
+/// *  0 - when operation was executed immediately
+/// *  1 - when send operation will be performed in different thread
 
 Int_t THttpWSHandler::SendWS(UInt_t wsid, const void *buf, int len)
 {
@@ -415,10 +422,11 @@ Int_t THttpWSHandler::SendWS(UInt_t wsid, const void *buf, int len)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Send binary data with text header via given websocket id
-/// Returns -1 - in case of error,
-///          0 - when operation was executed immediately,
-///          1 - when send operation will be performed in different thread,
+/// Send binary data with text header via given websocket id. Returns:
+///
+/// * -1 - in case of error,
+/// *  0 - when operation was executed immediately,
+/// *  1 - when send operation will be performed in different thread,
 
 Int_t THttpWSHandler::SendHeaderWS(UInt_t wsid, const char *hdr, const void *buf, int len)
 {
@@ -459,10 +467,11 @@ Int_t THttpWSHandler::SendHeaderWS(UInt_t wsid, const char *hdr, const void *buf
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Send string via given websocket id
-/// Returns -1 - in case of error,
-///          0 - when operation was executed immediately,
-///          1 - when send operation will be performed in different thread,
+/// Send string via given websocket id. Returns:
+///
+/// * -1 - in case of error,
+/// *  0 - when operation was executed immediately,
+/// *  1 - when send operation will be performed in different thread,
 
 Int_t THttpWSHandler::SendCharStarWS(UInt_t wsid, const char *str)
 {

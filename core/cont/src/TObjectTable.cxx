@@ -88,7 +88,7 @@ via the command gObjectTable->Print()
 #include "TError.h"
 
 
-TObjectTable *gObjectTable;
+TObjectTable *gObjectTable = nullptr;
 
 
 ClassImp(TObjectTable);

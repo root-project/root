@@ -36,22 +36,22 @@ TCanvas *timeonaxis3() {
 
    TCanvas* c = new TCanvas;
 
-   TLatex* tex1 = new TLatex;
-   tex1->SetNDC();
-   tex1->SetTextFont(102);
-   tex1->SetTextSize(0.055*f);
+   TLatex tex1;
+   tex1.SetNDC();
+   tex1.SetTextFont(102);
+   tex1.SetTextSize(0.055*f);
 
-   TLatex* tex3 = new TLatex;
-   tex3->SetNDC();
-   tex3->SetTextFont(102);
-   tex3->SetTextSize(0.07*f);
-   tex3->SetTextColor(kBlue+2);
+   TLatex tex3;
+   tex3.SetNDC();
+   tex3.SetTextFont(102);
+   tex3.SetTextSize(0.07*f);
+   tex3.SetTextColor(kBlue+2);
 
-   TLatex* tex2 = new TLatex;
-   tex2->SetNDC();
-   tex2->SetTextFont(102);
-   tex2->SetTextSize(0.07*f);
-   tex2->SetTextColor(kOrange+3);
+   TLatex tex2;
+   tex2.SetNDC();
+   tex2.SetTextFont(102);
+   tex2.SetTextSize(0.07*f);
+   tex2.SetTextColor(kOrange+3);
 
    time_t offset[] = {0,                   0, 1325376000, 1341100800};
    time_t t[]      = {1331150400, 1336417200,          0, 36000};
@@ -99,11 +99,11 @@ TCanvas *timeonaxis3() {
             sprintf(buf, "#splitline{%d h %d m %d s}{offset: %s, option %s}",
                     h, m, s, stime(offset + i, gmt).Data(), opt);
          }
-         tex1->DrawLatex(.01, .75, buf);
-         tex2->DrawLatex(.01, .50, offsettimeformat);
+         tex1.DrawLatex(.01, .75, buf);
+         tex2.DrawLatex(.01, .50, offsettimeformat);
          time_t t_ = t[i] + offset[i];
          sprintf(buf, "Expecting:    #color[2]{%s}", stime(&t_, gmt, false).Data());
-         tex3->DrawLatex(.01, .24, buf);
+         tex3.DrawLatex(.01, .24, buf);
          if(i > 0) l.DrawLine(0, 0.95, 1, 0.95);
       }
    }

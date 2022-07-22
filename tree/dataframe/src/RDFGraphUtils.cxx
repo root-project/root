@@ -72,10 +72,9 @@ GraphDrawing::AddDefinesToGraph(std::shared_ptr<GraphNode> node, const RColumnRe
 {
    auto upmostNode = node;
    const auto &defineNames = colRegister.GetNames();
-   const auto &defineMap = colRegister.GetColumns();
    for (auto i = int(defineNames.size()) - 1; i >= 0; --i) { // walk backwards through the names of defined columns
       const auto colName = defineNames[i];
-      const bool isAlias = defineMap.find(colName) == defineMap.end();
+      const bool isAlias = colRegister.IsDefineOrAlias(colName) && colRegister.GetDefine(colName) == nullptr;
       if (isAlias || IsInternalColumn(colName))
          continue; // aliases appear in the list of defineNames but we don't support them yet
       const bool isANewDefine =
@@ -84,7 +83,7 @@ GraphDrawing::AddDefinesToGraph(std::shared_ptr<GraphNode> node, const RColumnRe
          break; // we walked back through all new defines, the rest is stuff that was already in the graph
 
       // create a node for this new Define
-      auto defineNode = RDFGraphDrawing::CreateDefineNode(colName, defineMap.at(colName).get(), visitedMap);
+      auto defineNode = RDFGraphDrawing::CreateDefineNode(colName, colRegister.GetDefine(colName), visitedMap);
       upmostNode->SetPrevNode(defineNode);
       upmostNode = defineNode;
    }

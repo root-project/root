@@ -392,28 +392,28 @@ class R__CLING_PTRCHECK(off) FillHelper : public RActionImpl<FillHelper<HIST>> {
    // in c++17 or later
 
    // return unchanged value for scalar
-   template <typename T, typename std::enable_if<!IsDataContainer<T>::value, int>::type = 0>
+   template <typename T, std::enable_if_t<!IsDataContainer<T>::value, int> = 0>
    ScalarConstIterator<T> MakeBegin(const T &val)
    {
       return ScalarConstIterator<T>(&val);
    }
 
    // return iterator to beginning of container
-   template <typename T, typename std::enable_if<IsDataContainer<T>::value, int>::type = 0>
+   template <typename T, std::enable_if_t<IsDataContainer<T>::value, int> = 0>
    auto MakeBegin(const T &val)
    {
       return std::begin(val);
    }
 
    // return 1 for scalars
-   template <typename T, typename std::enable_if<!IsDataContainer<T>::value, int>::type = 0>
+   template <typename T, std::enable_if_t<!IsDataContainer<T>::value, int> = 0>
    std::size_t GetSize(const T &)
    {
       return 1;
    }
 
    // return container size
-   template <typename T, typename std::enable_if<IsDataContainer<T>::value, int>::type = 0>
+   template <typename T, std::enable_if_t<IsDataContainer<T>::value, int> = 0>
    std::size_t GetSize(const T &val)
    {
 #if __cplusplus >= 201703L
@@ -452,16 +452,15 @@ public:
    void InitTask(TTreeReader *, unsigned int) {}
 
    // no container arguments
-   template <typename... ValTypes,
-             typename std::enable_if<!Disjunction<IsDataContainer<ValTypes>...>::value, int>::type = 0>
-   void Exec(unsigned int slot, const ValTypes &...x)
+   template <typename... ValTypes, std::enable_if_t<!Disjunction<IsDataContainer<ValTypes>...>::value, int> = 0>
+   auto Exec(unsigned int slot, const ValTypes &...x) -> decltype(fObjects[slot]->Fill(x...), void())
    {
       fObjects[slot]->Fill(x...);
    }
 
    // at least one container argument
-   template <typename... Xs, typename std::enable_if<Disjunction<IsDataContainer<Xs>...>::value, int>::type = 0>
-   void Exec(unsigned int slot, const Xs &...xs)
+   template <typename... Xs, std::enable_if_t<Disjunction<IsDataContainer<Xs>...>::value, int> = 0>
+   auto Exec(unsigned int slot, const Xs &...xs) -> decltype(fObjects[slot]->Fill(*MakeBegin(xs)...), void())
    {
       // array of bools keeping track of which inputs are containers
       constexpr std::array<bool, sizeof...(Xs)> isContainer{IsDataContainer<Xs>::value...};
@@ -484,6 +483,14 @@ public:
       }
 
       ExecLoop<colidx>(slot, xrefend, MakeBegin(xs)...);
+   }
+
+   template <typename T = HIST>
+   void Exec(...)
+   {
+      static_assert(sizeof(T) < 0,
+                    "When filling an object with RDataFrame (e.g. via a Fill action) the number or types of the "
+                    "columns passed did not match the signature of the object's `Fill` method.");
    }
 
    void Initialize() { /* noop */}
@@ -509,14 +516,14 @@ public:
    }
 
    // if the fObjects vector type is derived from TObject, return the name of the object
-   template <typename T = HIST, typename std::enable_if<std::is_base_of<TObject, T>::value>::type * = nullptr>
+   template <typename T = HIST, std::enable_if_t<std::is_base_of<TObject, T>::value, int> = 0>
    std::string GetActionName()
    {
       return std::string(fObjects[0]->IsA()->GetName()) + "<BR/>" + std::string(fObjects[0]->GetName());
    }
 
    // if fObjects is not derived from TObject, indicate it is some other object
-   template <typename T = HIST, typename std::enable_if<!std::is_base_of<TObject, T>::value>::type * = nullptr>
+   template <typename T = HIST, std::enable_if_t<!std::is_base_of<TObject, T>::value, int> = 0>
    std::string GetActionName()
    {
       return "Fill custom object";
@@ -1663,25 +1670,23 @@ public:
       // With this code, we set the value of the pointer in the output branch anew when needed.
       // Nota bene: the extra ",0" after the invocation of SetAddress, is because that method returns void and
       // we need an int for the expander list.
-      (void)slot; // avoid bogus 'unused parameter' warning
       int expander[] = {(fBranches[slot][S] && fBranchAddresses[slot][S] != GetData(values)
                          ? fBranches[slot][S]->SetAddress(GetData(values)),
                          fBranchAddresses[slot][S] = GetData(values), 0 : 0, 0)...,
                         0};
-      (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
+      (void)expander; // avoid unused parameter warnings (gcc 12.1)
    }
 
    template <std::size_t... S>
    void SetBranches(unsigned int slot, ColTypes &... values, std::index_sequence<S...> /*dummy*/)
    {
-         // hack to call TTree::Branch on all variadic template arguments
-         int expander[] = {(SetBranchesHelper(fInputTrees[slot], *fOutputTrees[slot], fInputBranchNames[S],
-                                              fOutputBranchNames[S], fBranches[slot][S], fBranchAddresses[slot][S],
-                                              &values, fOutputBranches[slot], fIsDefine[S]),
-                            0)...,
-                           0};
-         (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
-         (void)slot;     // avoid unused variable warnings in gcc6.2
+      // hack to call TTree::Branch on all variadic template arguments
+      int expander[] = {(SetBranchesHelper(fInputTrees[slot], *fOutputTrees[slot], fInputBranchNames[S],
+                                           fOutputBranchNames[S], fBranches[slot][S], fBranchAddresses[slot][S],
+                                           &values, fOutputBranches[slot], fIsDefine[S]),
+                         0)...,
+                        0};
+      (void)expander; // avoid unused parameter warnings (gcc 12.1)
    }
 
    void Initialize()

@@ -403,12 +403,9 @@ TLatex::TLatex()
 {
    fFactorSize  = 1.5;
    fFactorPos   = 0.6;
-   fError       = 0;
+   fError       = nullptr;
    fShow        = kFALSE;
-   fPos         = 0;
-   fTabMax      = 0;
    fOriginSize  = 0.04;
-   fTabSize     = 0;
    fItalic      = kFALSE;
    fLimitFactorSize = 3;
    SetLineWidth(2);
@@ -422,12 +419,9 @@ TLatex::TLatex(Double_t x, Double_t y, const char *text)
 {
    fFactorSize  = 1.5;
    fFactorPos   = 0.6;
-   fError       = 0;
+   fError       = nullptr;
    fShow        = kFALSE;
-   fPos         = 0;
-   fTabMax      = 0;
    fOriginSize  = 0.04;
-   fTabSize     = 0;
    fItalic      = kFALSE;
    fLimitFactorSize = 3;
    SetLineWidth(2);
@@ -443,19 +437,16 @@ TLatex::~TLatex()
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
-TLatex::TLatex(const TLatex &text) : TText(text), TAttLine(text)
+TLatex::TLatex(const TLatex &latex) : TText(latex), TAttLine(latex)
 {
    fFactorSize  = 1.5;
    fFactorPos   = 0.6;
-   fError       = 0;
+   fError       = nullptr;
    fShow        = kFALSE;
-   fPos         = 0;
-   fTabMax      = 0;
    fOriginSize  = 0.04;
-   fTabSize     = 0;
    fItalic      = kFALSE;
    fLimitFactorSize = 3;
-   ((TLatex&)text).Copy(*this);
+   latex.TLatex::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -463,19 +454,17 @@ TLatex::TLatex(const TLatex &text) : TText(text), TAttLine(text)
 
 TLatex& TLatex::operator=(const TLatex& lt)
 {
-   if(this!=&lt) {
+   if (this != &lt) {
       TText::operator=(lt);
       TAttLine::operator=(lt);
-      fFactorSize=lt.fFactorSize;
-      fFactorPos=lt.fFactorPos;
-      fLimitFactorSize=lt.fLimitFactorSize;
-      fError=lt.fError;
-      fShow=lt.fShow;
-      fTabSize=lt.fTabSize;
-      fOriginSize=lt.fOriginSize;
-      fTabSize=lt.fTabSize;
-      fTabSize=lt.fTabSize;
-      fItalic=lt.fItalic;
+      fFactorSize = lt.fFactorSize;
+      fFactorPos = lt.fFactorPos;
+      fLimitFactorSize = lt.fLimitFactorSize;
+      fError = lt.fError;
+      fShow = lt.fShow;
+      fTabSize = lt.fTabSize;
+      fOriginSize = lt.fOriginSize;
+      fItalic = lt.fItalic;
    }
    return *this;
 }
@@ -485,18 +474,16 @@ TLatex& TLatex::operator=(const TLatex& lt)
 
 void TLatex::Copy(TObject &obj) const
 {
+   TText::Copy(obj);
+   TAttLine::Copy((TLatex &)obj);
    ((TLatex&)obj).fFactorSize  = fFactorSize;
    ((TLatex&)obj).fFactorPos   = fFactorPos;
    ((TLatex&)obj).fLimitFactorSize  = fLimitFactorSize;
    ((TLatex&)obj).fError       = fError;
    ((TLatex&)obj).fShow        = fShow;
-   ((TLatex&)obj).fTabSize     = 0;
+   ((TLatex&)obj).fTabSize     = fTabSize;
    ((TLatex&)obj).fOriginSize  = fOriginSize;
-   ((TLatex&)obj).fTabMax      = fTabMax;
-   ((TLatex&)obj).fPos         = fPos;
    ((TLatex&)obj).fItalic      = fItalic;
-   TText::Copy(obj);
-   TAttLine::Copy(((TAttLine&)obj));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -557,11 +544,11 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
 
    const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","tilde","slash"};
 
-   if (fError != 0) return TLatexFormSize(0,0,0);
+   if (fError) return TLatexFormSize(0,0,0);
 
-   Int_t nBlancDeb=0,nBlancFin=0,l_nBlancDeb=0,l_nBlancFin=0;
-   Int_t i,k;
-   Int_t min=0, max=0;
+   Int_t nBlancDeb = 0, nBlancFin = 0, l_nBlancDeb = 0, l_nBlancFin = 0;
+   Int_t i, k;
+   Int_t min = 0, max = 0;
    Bool_t cont = kTRUE;
    while(cont) {
       // count leading blanks
@@ -2164,13 +2151,13 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
    if( newText.Length() == 0) return 0;
    newText.ReplaceAll("#hbox","#mbox");
 
-   fError = 0 ;
+   fError = nullptr;
    if (CheckLatexSyntax(newText)) {
       std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
       std::cout<<"==> "<<text1<<std::endl;
       return 0;
    }
-   fError = 0 ;
+   fError = nullptr;
 
    // Do not use Latex if font is low precision.
    if (fTextFont%10 < 2) {
@@ -2232,7 +2219,7 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
    Short_t halign = fTextAlign/10;
    Short_t valign = fTextAlign - 10*halign;
    TextSpec_t newSpec = spec;
-   if (fError != 0) {
+   if (fError) {
       std::cout<<"*ERROR<TLatex>: "<<fError<<std::endl;
       std::cout<<"==> "<<text<<std::endl;
    } else {
@@ -2260,8 +2247,8 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
    SetTextAlign(valign+10*halign);
    SetLineWidth(lineW);
    SetLineColor(lineC);
-   delete[] fTabSize;
-   if (fError != 0) return 0;
+   fTabSize.clear();
+   if (fError) return 0;
    return 1;
 }
 
@@ -2474,12 +2461,7 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
 
 TLatex::TLatexFormSize TLatex::FirstParse(Double_t angle, Double_t size, const Char_t *text)
 {
-   fError   = 0;
-   fTabMax  = 100;
-   fTabSize = new FormSize_t[fTabMax];
-   // we assume less than 100 parts in one formula
-   // we will reallocate if necessary.
-   fPos        = 0;
+   fTabSize.reserve(100); // ensure 100 entries before memory reallocation required
    fShow       = kFALSE;
    fOriginSize = size;
 
@@ -2536,19 +2518,19 @@ Double_t TLatex::GetXsize()
       return tm.GetXsize();
    }
 
-   fError = 0 ;
+   fError = nullptr;
    if (CheckLatexSyntax(newText)) {
       std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
       std::cout<<"==> "<<GetTitle()<<std::endl;
       return 0;
    }
-   fError = 0 ;
+   fError = nullptr;
 
    const Char_t *text = newText.Data() ;
    Double_t angle_old = GetTextAngle();
    TLatexFormSize fs = FirstParse(0,GetTextSize(),text);
    SetTextAngle(angle_old);
-   delete[] fTabSize;
+   fTabSize.clear();
    return TMath::Abs(gPad->AbsPixeltoX(Int_t(fs.Width())) - gPad->AbsPixeltoX(0));
 }
 
@@ -2568,13 +2550,13 @@ void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
       return;
    }
 
-   fError = 0 ;
+   fError = nullptr;
    if (CheckLatexSyntax(newText)) {
       std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
       std::cout<<"==> "<<GetTitle()<<std::endl;
       return;
    }
-   fError = 0 ;
+   fError = nullptr;
 
    if (angle) {
       Int_t cBoxX[4], cBoxY[4];
@@ -2602,7 +2584,7 @@ void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
    } else {
       const Char_t *text = newText.Data() ;
       TLatexFormSize fs = FirstParse(GetTextAngle(),GetTextSize(),text);
-      delete[] fTabSize;
+      fTabSize.clear();
       w = (UInt_t)fs.Width();
       h = (UInt_t)fs.Height();
    }
@@ -2624,19 +2606,19 @@ Double_t TLatex::GetYsize()
       return tm.GetYsize();
    }
 
-   fError = 0 ;
+   fError = nullptr;
    if (CheckLatexSyntax(newText)) {
       std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
       std::cout<<"==> "<<GetTitle()<<std::endl;
       return 0;
    }
-   fError = 0 ;
+   fError = nullptr;
 
-   const Char_t *text = newText.Data() ;
+   const Char_t *text = newText.Data();
    Double_t angsav = fTextAngle;
    TLatexFormSize fs = FirstParse(0,GetTextSize(),text);
    fTextAngle = angsav;
-   delete[] fTabSize;
+   fTabSize.clear();
    return TMath::Abs(gPad->AbsPixeltoY(Int_t(fs.Height())) - gPad->AbsPixeltoY(0));
 }
 
@@ -2645,8 +2627,13 @@ Double_t TLatex::GetYsize()
 
 TLatex::TLatexFormSize TLatex::Readfs()
 {
-   fPos--;
-   TLatexFormSize result(fTabSize[fPos].fWidth,fTabSize[fPos].fOver,fTabSize[fPos].fUnder);
+   if (fTabSize.empty()) {
+      Error("Readfs", "No data in fTabSize stack");
+      return TLatexFormSize(0,0,0);
+   }
+
+   TLatexFormSize result = fTabSize.back();
+   fTabSize.pop_back();
    return result;
 }
 
@@ -2655,21 +2642,7 @@ TLatex::TLatexFormSize TLatex::Readfs()
 
 void TLatex::Savefs(TLatex::TLatexFormSize *fs)
 {
-   fTabSize[fPos].fWidth  = fs->Width();
-   fTabSize[fPos].fOver   = fs->Over();
-   fTabSize[fPos].fUnder  = fs->Under();
-   fPos++;
-   if (fPos>=fTabMax) {
-      // allocate more memory
-      FormSize_t *temp = new FormSize_t[fTabMax+100];
-      // copy array
-      memcpy(temp,fTabSize,fTabMax*sizeof(FormSize_t));
-      fTabMax += 100;
-      // free previous array
-      delete [] fTabSize;
-      // swap pointers
-      fTabSize = temp;
-   }
+   fTabSize.emplace_back(*fs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

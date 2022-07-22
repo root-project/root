@@ -487,12 +487,13 @@ TStyle::~TStyle()
 
 TStyle::TStyle(const TStyle &style) : TNamed(style), TAttLine(style), TAttFill(style), TAttMarker(style), TAttText(style)
 {
-   style.Copy(*this);
+   style.TStyle::Copy(*this);
 }
 
 TStyle& TStyle::operator=(const TStyle& style)
 {
-   style.Copy(*this);
+   if (this != &style)
+      style.TStyle::Copy(*this);
    return *this;
 }
 
@@ -637,10 +638,9 @@ void TStyle::Copy(TObject &obj) const
    ((TStyle&)obj).fLegendFont       = fLegendFont;
    ((TStyle&)obj).fLegendTextSize   = fLegendTextSize;
 
-   Int_t i;
-   for (i=0;i<30;i++) {
+   for (Int_t i=0;i<30;i++)
       ((TStyle&)obj).fLineStyle[i]     = fLineStyle[i];
-   }
+
    ((TStyle&)obj).fHeaderPS       = fHeaderPS;
    ((TStyle&)obj).fTitlePS        = fTitlePS;
    ((TStyle&)obj).fLineScalePS    = fLineScalePS;
@@ -1431,7 +1431,7 @@ void TStyle::SetLabelSize(Float_t size, Option_t *axis)
 
 void TStyle::SetLineStyleString(Int_t i, const char *text)
 {
-
+   if (!text) text = "";
    char *l;
    Int_t nch = strlen(text);
    char *st = new char[nch+10];
@@ -1543,9 +1543,8 @@ void TStyle::SetOptFit(Int_t mode)
 {
    fOptFit = mode;
    if (gPad) {
-      TObject *obj;
       TIter next(gPad->GetListOfPrimitives());
-      while ((obj = next())) {
+      while (auto obj = next()) {
          TObject *stats = obj->FindObject("stats");
          if (stats) stats->SetBit(kTakeStyle);
       }
@@ -1591,9 +1590,8 @@ void TStyle::SetOptStat(Int_t mode)
 {
    fOptStat = mode;
    if (gPad) {
-      TObject *obj;
       TIter next(gPad->GetListOfPrimitives());
-      while ((obj = next())) {
+      while (auto obj = next()) {
          TObject *stats = obj->FindObject("stats");
          if (stats) stats->SetBit(kTakeStyle);
       }
@@ -1829,7 +1827,7 @@ void TStyle::SetStripDecimals(Bool_t strip)
 void TStyle::SaveSource(const char *filename, Option_t *option)
 {
    // Opens a file named filename or "Rootstyl.C"
-   TString ff = strlen(filename) ? filename : "Rootstyl.C";
+   TString ff = filename && *filename ? filename : "Rootstyl.C";
 
    // Computes the main method name.
    const char *fname = gSystem->BaseName(ff);

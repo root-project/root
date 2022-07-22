@@ -66,12 +66,13 @@ void candleplotwhiskers() {
    mygaus_1_middle->Draw("same");
 
    //In principal one could calculate these values by h2->Integral() as well
-   auto t = new TText(); t->SetTextFont(42);
-   t->DrawText(0,mygaus_1_middle->Eval(0)/2,"50%");
-   t->DrawText(-1.5,mygaus_1_middle->Eval(-1.5)/2,"24.65%");
-   t->DrawText(+1,mygaus_1_middle->Eval(+1.5)/2,"24.65%");
-   t->DrawText(q[0]-1.5*iqr,1000,Form("%.3f",q[0]-1.5*iqr))->SetTextAngle(90);
-   t->DrawText(q[2]+1.5*iqr,1000,Form("%.3f",q[2]+1.5*iqr))->SetTextAngle(90);
-   t->DrawText(q[0],1000,Form("%.3f",q[0]))->SetTextAngle(90);
-   t->DrawText(q[2],1000,Form("%.3f",q[2]))->SetTextAngle(90);
+   TText t;
+   t.SetTextFont(42);
+   t.DrawText(0,mygaus_1_middle->Eval(0)/2,"50%");
+   t.DrawText(-1.5,mygaus_1_middle->Eval(-1.5)/2,"24.65%");
+   t.DrawText(+1,mygaus_1_middle->Eval(+1.5)/2,"24.65%");
+   t.DrawText(q[0]-1.5*iqr,1000,Form("%.3f",q[0]-1.5*iqr))->SetTextAngle(90);
+   t.DrawText(q[2]+1.5*iqr,1000,Form("%.3f",q[2]+1.5*iqr))->SetTextAngle(90);
+   t.DrawText(q[0],1000,Form("%.3f",q[0]))->SetTextAngle(90);
+   t.DrawText(q[2],1000,Form("%.3f",q[2]))->SetTextAngle(90);
 }

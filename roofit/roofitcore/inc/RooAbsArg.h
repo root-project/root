@@ -362,6 +362,7 @@ public:
   }
 
   void setStringAttribute(const Text_t* key, const Text_t* value) ;
+  void removeStringAttribute(const Text_t* key) ;
   const Text_t* getStringAttribute(const Text_t* key) const ;
   inline const std::map<std::string,std::string>& stringAttributes() const {
     // Returns std::map<string,string> with all string attributes defined
@@ -733,7 +734,6 @@ private:
 
   mutable bool _valueDirty ;  // Flag set if value needs recalculating because input values modified
   mutable bool _shapeDirty ;  // Flag set if value needs recalculating because input shapes modified
-  mutable bool _allBatchesDirty{true}; //! Mark batches as dirty (only meaningful for RooAbsReal).
 
   mutable OperMode _operMode ; // Dirty state propagation mode
   mutable bool _fast = false; // Allow fast access mode in getVal() and proxies
@@ -755,7 +755,7 @@ private:
 
   mutable RooWorkspace *_myws; //! In which workspace do I live, if any
   
-  std::size_t _dataToken; //! Set by the RooFitDriver for this arg to retrieve its result in the run context
+  std::size_t _dataToken = 0; //! Set by the RooFitDriver for this arg to retrieve its result in the run context
 
   /// \cond Internal
   // Legacy streamers need the following statics:

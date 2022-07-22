@@ -1,15 +1,9 @@
-/// more ROOT classes
-
 import { internals } from '../core.mjs';
-
 import { DrawOptions } from '../base/BasePainter.mjs';
-
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
-
-// use only 2d painter
 import { TH1Painter } from '../hist2d/TH1Painter.mjs';
-
 import { draw } from '../draw.mjs';
+
 
 /**
  * @summary Painter for TGraphTime object
@@ -155,6 +149,5 @@ class TGraphTimePainter extends ObjectPainter {
    }
 
 } // class TGraphTimePainter
-
 
 export { TGraphTimePainter };

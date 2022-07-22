@@ -40,7 +40,7 @@ void StatusPrint(Int_t id,const TString &title,Int_t status)
 {
   const Int_t kMAX = 65;
   Char_t number[4];
-  sprintf(number,"%2d",id);
+  snprintf(number, 4, "%2d", id);
   TString header = TString("Test ")+number+" : "+title;
   const Int_t nch = header.Length();
   for (Int_t i = nch; i < kMAX; i++) header += '.';

@@ -365,10 +365,7 @@ public:
    /// Construct a RRecordField based on a vector of child fields. The ownership of the child fields is transferred
    /// to the RRecordField instance.
    RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<Detail::RFieldBase>> &&itemFields);
-   RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<Detail::RFieldBase>> &itemFields)
-      : RRecordField(fieldName, std::move(itemFields))
-   {
-   }
+   RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<Detail::RFieldBase>> &itemFields);
    RRecordField(RRecordField&& other) = default;
    RRecordField& operator =(RRecordField&& other) = default;
    ~RRecordField() = default;
@@ -607,6 +604,29 @@ public:
    RPairField(RPairField &&other) = default;
    RPairField &operator=(RPairField &&other) = default;
    ~RPairField() = default;
+
+   using Detail::RFieldBase::GenerateValue;
+   Detail::RFieldValue GenerateValue(void *where) override;
+   void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) override;
+};
+
+/// The generic field for `std::tuple<Ts...>` types
+class RTupleField : public RRecordField {
+private:
+   TClass *fClass = nullptr;
+   static std::string GetTypeList(const std::vector<std::unique_ptr<Detail::RFieldBase>> &itemFields);
+
+protected:
+   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const override;
+
+   RTupleField(std::string_view fieldName, std::vector<std::unique_ptr<Detail::RFieldBase>> &&itemFields,
+               const std::vector<std::size_t> &offsets);
+
+public:
+   RTupleField(std::string_view fieldName, std::vector<std::unique_ptr<Detail::RFieldBase>> &itemFields);
+   RTupleField(RTupleField &&other) = default;
+   RTupleField &operator=(RTupleField &&other) = default;
+   ~RTupleField() = default;
 
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void *where) override;
@@ -1561,6 +1581,91 @@ public:
    void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final
    {
       reinterpret_cast<ContainerT *>(value.GetRawPtr())->~pair();
+      if (!dtorOnly)
+         free(reinterpret_cast<ContainerT *>(value.GetRawPtr()));
+   }
+};
+
+template <typename... ItemTs>
+class RField<std::tuple<ItemTs...>> : public RTupleField {
+   using ContainerT = typename std::tuple<ItemTs...>;
+private:
+   template <typename HeadT, typename... TailTs>
+   static std::string BuildItemTypes()
+   {
+      std::string result = RField<HeadT>::TypeName();
+      if constexpr (sizeof...(TailTs) > 0)
+         result += "," + BuildItemTypes<TailTs...>();
+      return result;
+   }
+
+   template <typename HeadT, typename... TailTs>
+   static void _BuildItemFields(std::vector<std::unique_ptr<Detail::RFieldBase>> &itemFields, unsigned int index = 0)
+   {
+      itemFields.emplace_back(new RField<HeadT>("_" + std::to_string(index)));
+      if constexpr (sizeof...(TailTs) > 0)
+         _BuildItemFields<TailTs...>(itemFields, index + 1);
+   }
+   template <typename... Ts>
+   static std::vector<std::unique_ptr<Detail::RFieldBase>> BuildItemFields()
+   {
+      std::vector<std::unique_ptr<Detail::RFieldBase>> result;
+      _BuildItemFields<Ts...>(result);
+      return result;
+   }
+
+   template <unsigned Index, typename HeadT, typename... TailTs>
+   static void _BuildItemOffsets(std::vector<std::size_t> &offsets, const ContainerT &tuple)
+   {
+      auto offset =
+         reinterpret_cast<std::uintptr_t>(&std::get<Index>(tuple)) - reinterpret_cast<std::uintptr_t>(&tuple);
+      offsets.emplace_back(offset);
+      if constexpr (sizeof...(TailTs) > 0)
+         _BuildItemOffsets<Index + 1, TailTs...>(offsets, tuple);
+   }
+   template <typename... Ts>
+   static std::vector<std::size_t> BuildItemOffsets()
+   {
+      std::vector<std::size_t> result;
+      _BuildItemOffsets<0, Ts...>(result, ContainerT());
+      return result;
+   }
+
+protected:
+   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final
+   {
+      std::vector<std::unique_ptr<Detail::RFieldBase>> items;
+      for (auto &item : fSubFields)
+         items.push_back(item->Clone(item->GetName()));
+      return std::make_unique<RField<std::tuple<ItemTs...>>>(newName, std::move(items));
+   }
+
+public:
+   static std::string TypeName() { return "std::tuple<" + BuildItemTypes<ItemTs...>() + ">"; }
+   explicit RField(std::string_view name, std::vector<std::unique_ptr<Detail::RFieldBase>> &&itemFields)
+      : RTupleField(name, std::move(itemFields), BuildItemOffsets<ItemTs...>())
+   {
+      fMaxAlignment = std::max({alignof(ItemTs)...});
+      fSize = sizeof(ContainerT);
+   }
+   explicit RField(std::string_view name) : RField(name, BuildItemFields<ItemTs...>()) {}
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() = default;
+
+   using Detail::RFieldBase::GenerateValue;
+   template <typename... ArgsT>
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where, ArgsT &&...args)
+   {
+      return Detail::RFieldValue(this, static_cast<ContainerT *>(where), std::forward<ArgsT>(args)...);
+   }
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final
+   {
+      return GenerateValue(where, ContainerT());
+   }
+   void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final
+   {
+      reinterpret_cast<ContainerT *>(value.GetRawPtr())->~tuple();
       if (!dtorOnly)
          free(reinterpret_cast<ContainerT *>(value.GetRawPtr()));
    }

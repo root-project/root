@@ -1,10 +1,7 @@
-/// latex parsing and rendering
-
 import { loadScript, settings, isNodeJs } from '../core.mjs';
-
 import { getElementRect, _loadJSDOM } from './BasePainter.mjs';
-
 import { FontHandler } from './FontHandler.mjs';
+
 
 const symbols_map = {
    // greek letters

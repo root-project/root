@@ -55,15 +55,13 @@ RooStats::HistFactory::Constraint::Type RooStats::HistFactory::Constraint::GetTy
 
 // Norm Factor
 RooStats::HistFactory::NormFactor::NormFactor() : fName(""), fVal(1.0),
-                    fLow(1.0), fHigh(1.0),
-                    fConst(true) {;}
+                    fLow(1.0), fHigh(1.0) {}
 
 void RooStats::HistFactory::NormFactor::Print( std::ostream& stream ) const {
   stream << "\t \t Name: " << fName
     << "\t Val: " << fVal
     << "\t Low: " << fLow
     << "\t High: " << fHigh
-    << "\t Const: " << fConst
     << std::endl;
 }
 
@@ -72,7 +70,6 @@ void RooStats::HistFactory::NormFactor::PrintXML( std::ostream& xml ) const {
       << " Val=\""   << GetVal()   << "\" "
       << " High=\""  << GetHigh()  << "\" "
       << " Low=\""   << GetLow()   << "\" "
-      << " Const=\"" << (GetConst() ? std::string("True") : std::string("False")) << "\" "
       << "  /> " << std::endl;
 }
 

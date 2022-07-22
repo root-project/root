@@ -30,7 +30,7 @@ private:
    std::vector<size_t> fEnd;           // End values of slices
    std::vector<size_t> fSteps;         // step values of slices
 
-   std::vector<std::vector<IType>> fAttributes; // attributes for theversion <=10 case
+   std::vector<std::vector<IType>> fAttributes; // attributes for the version <=10 case
 
 
 public:

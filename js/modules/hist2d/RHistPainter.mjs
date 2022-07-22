@@ -1,5 +1,4 @@
 import { gStyle, settings } from '../core.mjs';
-
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
 
 
