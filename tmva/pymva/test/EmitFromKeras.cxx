@@ -17,20 +17,24 @@ int main(){
    Py_Initialize();
 
    //Emitting header file for Keras Sequential API Model
-   FILE* fKerasSequential;
-   fKerasSequential = fopen("generateKerasModelSequential.py", "r");
-   PyRun_SimpleFile(fKerasSequential, "generateKerasModelSequential.py");
+   FILE* fKerasModels;
+   fKerasModels = fopen("generateKerasModels.py", "r");
+   PyRun_SimpleFile(fKerasModels, "generateKerasModels.py");
+
+   //Emitting header file for Keras Sequential Model
    RModel modelSequential = TMVA::Experimental::SOFIE::PyKeras::Parse("KerasModelSequential.h5");
    modelSequential.Generate();
    modelSequential.OutputGenerated("KerasSequentialModel.hxx");
 
    //Emitting header file for Keras Functional API Model
-   FILE* fKerasFunctional;
-   fKerasFunctional = fopen("generateKerasModelFunctional.py", "r");
-   PyRun_SimpleFile(fKerasFunctional, "generateKerasModelFunctional.py");
    RModel modelFunctional = TMVA::Experimental::SOFIE::PyKeras::Parse("KerasModelFunctional.h5");
    modelFunctional.Generate();
    modelFunctional.OutputGenerated("KerasFunctionalModel.hxx");
+
+   //Emitting header file for Keras BatchNorm Model
+   RModel modelBatchNorm = TMVA::Experimental::SOFIE::PyKeras::Parse("KerasModelBatchNorm.h5");
+   modelBatchNorm.Generate();
+   modelBatchNorm.OutputGenerated("KerasBatchNormModel.hxx");
 
    return 0;
 }
