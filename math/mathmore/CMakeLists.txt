@@ -42,6 +42,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathMore
     Math/VavilovAccuratePdf.h
     Math/VavilovAccurateQuantile.h
     Math/VavilovFast.h
+    Math/VoigtRelativistic.h
 SOURCES
     src/ChebyshevApprox.cxx
     src/Derivator.cxx
@@ -77,6 +78,7 @@ SOURCES
     src/VavilovAccurateQuantile.cxx
     src/VavilovFast.cxx
     src/cblas.cxx
+    src/VoigtRelativistic.cxx
   LINKDEF
     Math/LinkDef.h
   DEPENDENCIES
