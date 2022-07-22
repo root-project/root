@@ -3193,10 +3193,6 @@ int main(int argc, char **argv)
       TString sp = gSystem->GetFromPipe("uname -a");
       sp.Resize(60);
       printf("*  SYS: %s\n",sp.Data());
-      if (strstr(gSystem->GetBuildNode(),"Linux")) {
-         sp = gSystem->GetFromPipe("lsb_release -d -s");
-         printf("*  SYS: %s\n",sp.Data());
-      }
       if (strstr(gSystem->GetBuildNode(),"Darwin")) {
          sp  = gSystem->GetFromPipe("sw_vers -productVersion");
          sp += " Mac OS X ";

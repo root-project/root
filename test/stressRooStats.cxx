@@ -232,10 +232,6 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
    if (UNIX) {
       TString sp = gSystem->GetFromPipe("uname -a");
       cout << "* SYS: " << sp << endl;
-      if (strstr(gSystem->GetBuildNode(), "Linux")) {
-         sp = gSystem->GetFromPipe("lsb_release -d -s");
-         cout << "* SYS: " << sp << endl;
-      }
       if (strstr(gSystem->GetBuildNode(), "Darwin")) {
          sp  = gSystem->GetFromPipe("sw_vers -productVersion");
          sp += " Mac OS X ";

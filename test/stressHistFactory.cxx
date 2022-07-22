@@ -139,10 +139,6 @@ Int_t stressHistFactory(const char* refFile, Bool_t writeRef, Int_t verbose, Boo
    if (UNIX) {
       TString sp = gSystem->GetFromPipe("uname -a");
       cout << "* SYS: " << sp << endl;
-      if (strstr(gSystem->GetBuildNode(), "Linux")) {
-         sp = gSystem->GetFromPipe("lsb_release -d -s");
-         cout << "* SYS: " << sp << endl;
-      }
       if (strstr(gSystem->GetBuildNode(), "Darwin")) {
          sp  = gSystem->GetFromPipe("sw_vers -productVersion");
          sp += " Mac OS X ";
