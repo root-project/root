@@ -1025,6 +1025,7 @@ AddSizeBranches(const std::vector<std::string> &branches, TTree *tree, std::vect
       colsWithoutAliases.insert(colsWithoutAliases.begin() + i, countLeaf->GetName());
       colsWithAliases.insert(colsWithAliases.begin() + i, countLeaf->GetName());
       ++nCols;
+      ++i; // as we inserted an element in the vector we iterate over, we need to move the index forward one extra time
    }
 
    return {std::move(colsWithoutAliases), std::move(colsWithAliases)};
