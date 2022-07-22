@@ -3,7 +3,7 @@
 /// \notebook -nodraw
 /// Compare creation of a ROOT dataset with RDataFrame and TTree.
 ///
-/// This tutorial illustrates how simpler it can be to use a
+/// This tutorial illustrates how much simpler it can be to use a
 /// RDataFrame to create a dataset with respect to the usage
 /// of the TTree interfaces.
 ///
@@ -49,9 +49,9 @@ void classicWay()
 // - Create new columns expressing their content with lambdas, functors, functions or strings
 // - Invoke the Snapshot action
 //
-// Parallelism is not the only advantage. Starting from an existing dataset and
-// filter it, enrich it with new columns, leave aside some other columns and
-// write a new dataset becomes very easy to do.
+// Parallelism is not the only advantage. Starting from an existing dataset,
+// filtering it, enriching it with new columns, leaving aside some other columns, and
+// writing a new dataset become very easy to do.
 void RDFWay()
 {
    ROOT::RDataFrame df(10);
