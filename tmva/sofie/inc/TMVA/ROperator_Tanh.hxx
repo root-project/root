@@ -49,7 +49,7 @@ public:
    std::string Generate(std::string OpName){
       OpName = "op_" + OpName;
       if (fShape.empty()) {
-         throw std::runtime_error("TMVA SOFIE Transpose Tanh called to Generate without being initialized first");
+         throw std::runtime_error("TMVA SOFIE Tanh operator called to Generate without being initialized first");
       }
       std::stringstream out;
       size_t length = ConvertShapeToLength(fShape);
