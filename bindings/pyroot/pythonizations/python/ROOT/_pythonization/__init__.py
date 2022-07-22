@@ -345,7 +345,7 @@ def _register_pythonizations():
     Registers the ROOT pythonizations with cppyy for lazy injection.
     '''
 
-    exclude = [ '_rdf_utils' ]
+    exclude = [ '_rdf_utils', '_rdf_pyz', '_rdf_conversion_maps' ]
     for _, module_name, _ in  pkgutil.walk_packages(__path__):
         if module_name not in exclude:
             importlib.import_module(__name__ + '.' + module_name)
