@@ -14,6 +14,11 @@ if(dataframe)
         ROOT/_pythonization/_rdataframe.py
         ROOT/_pythonization/_rdfdescription.py
         ROOT/_pythonization/_rtensor.py)
+    if(PYTHON_VERSION_STRING_Development_Main VERSION_GREATER_EQUAL 3.7)
+      list(APPEND PYROOT_EXTRA_PYSOURCE
+          ROOT/_pythonization/_rdf_conversion_maps.py
+          ROOT/_pythonization/_rdf_pyz.py)
+    endif()
     list(APPEND PYROOT_EXTRA_SOURCE
         src/RDataFramePyz.cxx
         src/RTensorPyz.cxx)
