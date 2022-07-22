@@ -646,7 +646,7 @@ RModel Parse(std::string filename){
                "  weightProp={}\n"
                "  weightProp['name']=model.weights[idx].name\n"
                "  weightProp['dtype']=(model.get_weights())[idx].dtype.name\n"
-               "  weightProp['value']=(model.get_weights())[idx].transpose() if 'conv' in model.weights[idx].name else (model.get_weights())[idx]\n"
+               "  weightProp['value']=(model.get_weights())[idx].transpose((3,2,0,1)).copy() if ('conv' in model.weights[idx].name and model.weights[idx].shape.ndims == 4) else (model.get_weights())[idx]\n"
                "  weight.append(weightProp)",fGlobalNS,fLocalNS);
 
    PyObject *fWeightTensor, *fPWeight;
