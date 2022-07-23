@@ -651,9 +651,9 @@ public:
       (fFormula) ? fFormula->SetParameters(params) : fParams->SetParameters(params);
       Update();
    }
-   virtual void     SetParameters(Double_t p0, Double_t p1, Double_t p2 = 0, Double_t p3 = 0, Double_t p4 = 0,
-                                  Double_t p5 = 0, Double_t p6 = 0, Double_t p7 = 0, Double_t p8 = 0,
-                                  Double_t p9 = 0, Double_t p10 = 0)
+   virtual void     SetParameters(double p0, double p1 = 0.0, double p2 = 0.0, double p3 = 0.0, double p4 = 0.0,
+                                  double p5 = 0.0, double p6 = 0.0, double p7 = 0.0, double p8 = 0.0,
+                                  double p9 = 0.0, double p10 = 0.0)
    {
       if (fFormula) fFormula->SetParameters(p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
       else          fParams->SetParameters(p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
