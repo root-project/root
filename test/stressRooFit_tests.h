@@ -1,3 +1,88 @@
+#include <Roo1DTable.h>
+#include <RooAbsReal.h>
+#include <RooAddModel.h>
+#include <RooAddPdf.h>
+#include <RooAddition.h>
+#include <RooArgSet.h>
+#include <RooArgusBG.h>
+#include <RooBCPEffDecay.h>
+#include <RooBDecay.h>
+#include <RooBMixDecay.h>
+#include <RooBinning.h>
+#include <RooBinningCategory.h>
+#include <RooCFunction1Binding.h>
+#include <RooCFunction3Binding.h>
+#include <RooCategory.h>
+#include <RooChebychev.h>
+#include <RooChi2MCSModule.h>
+#include <RooConstVar.h>
+#include <RooDLLSignificanceMCSModule.h>
+#include <RooDataHist.h>
+#include <RooDataSet.h>
+#include <RooDecay.h>
+#include <RooEffProd.h>
+#include <RooEfficiency.h>
+#include <RooExponential.h>
+#include <RooExtendPdf.h>
+#include <RooFFTConvPdf.h>
+#include <RooFitResult.h>
+#include <RooFormulaVar.h>
+#include <RooGaussModel.h>
+#include <RooGaussian.h>
+#include <RooGenericPdf.h>
+#include <RooGlobalFunc.h>
+#include <RooHelpers.h>
+#include <RooHist.h>
+#include <RooHistPdf.h>
+#include <RooIntegralMorph.h>
+#include <RooKeysPdf.h>
+#include <RooLandau.h>
+#include <RooMCStudy.h>
+#include <RooMappedCategory.h>
+#include <RooMinimizer.h>
+#include <RooMultiCategory.h>
+#include <RooNDKeysPdf.h>
+#include <RooNumIntConfig.h>
+#include <RooPlot.h>
+#include <RooPolyVar.h>
+#include <RooPolynomial.h>
+#include <RooProdPdf.h>
+#include <RooProduct.h>
+#include <RooProfileLL.h>
+#include <RooRandomizeParamMCSModule.h>
+#include <RooRealConstant.h>
+#include <RooRealSumPdf.h>
+#include <RooRealVar.h>
+#include <RooSimultaneous.h>
+#include <RooSuperCategory.h>
+#include <RooTFnBinding.h>
+#include <RooThresholdCategory.h>
+#include <RooTruthModel.h>
+#include <RooUnitTest.h>
+#include <RooWorkspace.h>
+
+#include <Math/DistFunc.h>
+#include <TCanvas.h>
+#include <TDirectory.h>
+#include <TF1.h>
+#include <TFile.h>
+#include <TH1.h>
+#include <TH1D.h>
+#include <TH2.h>
+#include <TH2D.h>
+#include <TMath.h>
+#include <TPluginManager.h>
+#include <TROOT.h>
+#include <TRandom.h>
+#include <TStyle.h>
+#include <TTree.h>
+
+#include <iomanip>
+
+
+using namespace RooFit ;
+
+
 //////////////////////////////////////////////////////////////////////////
 //
 // 'BASIC FUNCTIONALITY' RooFit tutorial macro #101
@@ -10,20 +95,6 @@
 // 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
-
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooFormulaVar.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-#include "RooUnitTest.h"
-#include "RooHelpers.h"
-
-using namespace RooFit ;
 
 
 // Elementary operations on a gaussian PDF
@@ -103,21 +174,6 @@ public:
 // 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
-
-
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooDataHist.h"
-#include "RooGaussian.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-#include "TTree.h"
-#include "TH1D.h"
-#include "TRandom.h"
-using namespace RooFit ;
 
 
 class TestBasic102 : public RooUnitTest
@@ -274,20 +330,6 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "TCanvas.h"
-#include "RooConstVar.h"
-#include "RooPlot.h"
-#include "RooFitResult.h"
-#include "RooGenericPdf.h"
-
-using namespace RooFit ;
-
 
 class TestBasic103 : public RooUnitTest
 {
@@ -389,22 +431,6 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-#include "TMath.h"
-#include "TF1.h"
-#include "Math/DistFunc.h"
-#include "RooCFunction1Binding.h"
-#include "RooCFunction3Binding.h"
-#include "RooTFnBinding.h"
-
-using namespace RooFit ;
 
 class TestBasic105 : public RooUnitTest
 {
@@ -486,21 +512,6 @@ public:
 // 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
-
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussModel.h"
-#include "RooDecay.h"
-#include "RooBMixDecay.h"
-#include "RooCategory.h"
-#include "RooBinning.h"
-#include "RooPlot.h"
-#include "TCanvas.h"
-#include "TH1.h"
-using namespace RooFit ;
 
 
 class TestBasic108 : public RooUnitTest
@@ -620,16 +631,6 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-#include "RooHist.h"
-using namespace RooFit ;
 
 class TestBasic109 : public RooUnitTest
 {
@@ -716,15 +717,6 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooGaussian.h"
-#include "RooAbsReal.h"
-#include "RooPlot.h"
-#include "TCanvas.h"
-using namespace RooFit ;
 
 class TestBasic110 : public RooUnitTest
 {
@@ -807,19 +799,6 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-#include "RooNumIntConfig.h"
-#include "RooLandau.h"
-#include "RooArgSet.h"
-#include <iomanip>
-using namespace RooFit ;
 
 class TestBasic111 : public RooUnitTest
 {
@@ -909,18 +888,6 @@ public:
 // 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
-
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooChebychev.h"
-#include "RooAddPdf.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-using namespace RooFit ;
 
 
 class TestBasic201 : public RooUnitTest
@@ -1036,19 +1003,6 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooChebychev.h"
-#include "RooAddPdf.h"
-#include "RooExtendPdf.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-using namespace RooFit ;
-
 
 class TestBasic202 : public RooUnitTest
 {
@@ -1155,20 +1109,6 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooPolynomial.h"
-#include "RooAddPdf.h"
-#include "RooFitResult.h"
-#include "RooPlot.h"
-#include "TCanvas.h"
-#include "TH1.h"
-using namespace RooFit ;
-
 
 class TestBasic203 : public RooUnitTest
 {
@@ -1242,20 +1182,6 @@ public:
 // 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
-
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooChebychev.h"
-#include "RooAddPdf.h"
-#include "RooExtendPdf.h"
-#include "RooFitResult.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-using namespace RooFit ;
 
 
 class TestBasic204 : public RooUnitTest
@@ -1336,19 +1262,6 @@ public:
 // 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
-
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooAddPdf.h"
-#include "RooChebychev.h"
-#include "RooExponential.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-using namespace RooFit ;
 
 
 class TestBasic205 : public RooUnitTest
@@ -1463,23 +1376,6 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooLandau.h"
-#include "RooFFTConvPdf.h"
-#include "RooPlot.h"
-#include "TCanvas.h"
-#include "TH1.h"
-#include "TPluginManager.h"
-#include "TROOT.h"
-
-using namespace RooFit ;
-
-
 
 class TestBasic208 : public RooUnitTest
 {
@@ -1580,21 +1476,6 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussModel.h"
-#include "RooAddModel.h"
-#include "RooTruthModel.h"
-#include "RooDecay.h"
-#include "RooPlot.h"
-#include "TCanvas.h"
-#include "TH1.h"
-using namespace RooFit ;
-
-
 
 class TestBasic209 : public RooUnitTest
 {
@@ -1673,19 +1554,6 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooPolyVar.h"
-#include "RooPlot.h"
-#include "TCanvas.h"
-#include "TH1.h"
-using namespace RooFit ;
-
-
 
 class TestBasic301 : public RooUnitTest
 {
@@ -1752,23 +1620,6 @@ public:
 // 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
-
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-#include "RooFormulaVar.h"
-#include "RooAddition.h"
-#include "RooProduct.h"
-#include "RooPolyVar.h"
-#include "TCanvas.h"
-#include "TH1.h"
-
-using namespace RooFit ;
 
 
 class TestBasic302 : public RooUnitTest
@@ -1867,20 +1718,6 @@ public:
 // 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
-
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooPolyVar.h"
-#include "RooProdPdf.h"
-#include "RooPlot.h"
-#include "TRandom.h"
-#include "TCanvas.h"
-#include "TH1.h"
-using namespace RooFit ;
 
 
 class TestBasic303 : public RooUnitTest
@@ -2002,18 +1839,6 @@ RooDataSet* makeFakeDataXY()
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooProdPdf.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-using namespace RooFit ;
-
-
 
 class TestBasic304 : public RooUnitTest
 {
@@ -2085,20 +1910,6 @@ public:
 // 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
-
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooPolyVar.h"
-#include "RooProdPdf.h"
-#include "RooPlot.h"
-#include "TCanvas.h"
-#include "TH1.h"
-using namespace RooFit ;
-
 
 
 class TestBasic305 : public RooUnitTest
@@ -2185,21 +1996,6 @@ public:
 // 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
-
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooGaussModel.h"
-#include "RooDecay.h"
-#include "RooLandau.h"
-#include "RooPlot.h"
-#include "TCanvas.h"
-#include "TH2D.h"
-using namespace RooFit ;
-
 
 
 class TestBasic306 : public RooUnitTest
@@ -2303,22 +2099,6 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooGaussModel.h"
-#include "RooDecay.h"
-#include "RooLandau.h"
-#include "RooProdPdf.h"
-#include "RooHistPdf.h"
-#include "RooPlot.h"
-#include "TCanvas.h"
-#include "TH1.h"
-using namespace RooFit ;
-
 
 class TestBasic307 : public RooUnitTest
 {
@@ -2416,18 +2196,6 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooGaussian.h"
-#include "RooProdPdf.h"
-#include "RooAbsReal.h"
-#include "RooPlot.h"
-#include "TCanvas.h"
-#include "TH1.h"
-using namespace RooFit ;
-
 
 class TestBasic308 : public RooUnitTest
 {
@@ -2524,19 +2292,6 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussModel.h"
-#include "RooDecay.h"
-#include "RooBMixDecay.h"
-#include "RooCategory.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-using namespace RooFit ;
-
 
 class TestBasic310 : public RooUnitTest
 {
@@ -2628,19 +2383,6 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooProdPdf.h"
-#include "RooAddPdf.h"
-#include "RooPolynomial.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-using namespace RooFit ;
-
 
 class TestBasic311 : public RooUnitTest
 {
@@ -2724,20 +2466,6 @@ public:
 // 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
-
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooProdPdf.h"
-#include "RooAddPdf.h"
-#include "RooPolynomial.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-#include "RooFitResult.h"
-using namespace RooFit ;
 
 
 class TestBasic312 : public RooUnitTest
@@ -2850,18 +2578,6 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooPolynomial.h"
-#include "RooProdPdf.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-using namespace RooFit ;
-
 
 class TestBasic313 : public RooUnitTest
 {
@@ -2944,19 +2660,6 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooExponential.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-#include "RooFitResult.h"
-
-using namespace RooFit ;
-
 
 class TestBasic314 : public RooUnitTest
 {
@@ -3034,21 +2737,6 @@ public:
 // 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
-
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooProdPdf.h"
-#include "RooPolyVar.h"
-#include "TH1.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-#include "RooNumIntConfig.h"
-#include "RooConstVar.h"
-using namespace RooFit ;
 
 
 
@@ -3134,19 +2822,6 @@ public:
 // 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
-
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooPolynomial.h"
-#include "RooAddPdf.h"
-#include "RooProdPdf.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-using namespace RooFit ;
 
 
 class TestBasic316 : public RooUnitTest
@@ -3263,19 +2938,6 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooDataHist.h"
-#include "RooGaussian.h"
-#include "RooCategory.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-#include "TFile.h"
-using namespace RooFit ;
-
 
 class TestBasic402 : public RooUnitTest
 {
@@ -3388,22 +3050,6 @@ public:
 // 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
-
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooDataHist.h"
-#include "RooGaussian.h"
-#include "RooFormulaVar.h"
-#include "RooGenericPdf.h"
-#include "RooPolynomial.h"
-#include "RooMinimizer.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-#include "RooFitResult.h"
-using namespace RooFit ;
 
 
 class TestBasic403 : public RooUnitTest
@@ -3548,19 +3194,6 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooPolynomial.h"
-#include "RooCategory.h"
-#include "Roo1DTable.h"
-#include "RooGaussian.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-using namespace RooFit ;
-
 
 class TestBasic404 : public RooUnitTest
 {
@@ -3660,22 +3293,6 @@ public:
 // 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
-
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooCategory.h"
-#include "RooThresholdCategory.h"
-#include "RooBinningCategory.h"
-#include "Roo1DTable.h"
-#include "RooArgusBG.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-#include "RooRealConstant.h"
-using namespace RooFit ;
 
 
 class TestBasic405 : public RooUnitTest
@@ -3790,21 +3407,6 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooPolynomial.h"
-#include "RooCategory.h"
-#include "RooMappedCategory.h"
-#include "RooMultiCategory.h"
-#include "RooSuperCategory.h"
-#include "Roo1DTable.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-using namespace RooFit ;
-
 
 class TestBasic406 : public RooUnitTest
 {
@@ -3898,20 +3500,6 @@ public:
 // 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
-
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooChebychev.h"
-#include "RooAddPdf.h"
-#include "RooSimultaneous.h"
-#include "RooCategory.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-using namespace RooFit ;
 
 
 class TestBasic501 : public RooUnitTest
@@ -4049,25 +3637,6 @@ public:
 // 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
-
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooWorkspace.h"
-#include "RooProdPdf.h"
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooGaussModel.h"
-#include "RooAddModel.h"
-#include "RooDecay.h"
-#include "RooChebychev.h"
-#include "RooAddPdf.h"
-#include "RooSimultaneous.h"
-#include "RooCategory.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-using namespace RooFit ;
 
 
 class TestBasic599 : public RooUnitTest
@@ -4283,21 +3852,6 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooProdPdf.h"
-#include "RooAddPdf.h"
-#include "RooMinimizer.h"
-#include "RooFitResult.h"
-#include "RooPlot.h"
-#include "TCanvas.h"
-#include "TH1.h"
-using namespace RooFit ;
-
 
 class TestBasic601 : public RooUnitTest
 {
@@ -4396,19 +3950,6 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooChebychev.h"
-#include "RooAddPdf.h"
-#include "RooMinimizer.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-using namespace RooFit ;
-
 
 class TestBasic602 : public RooUnitTest
 {
@@ -4481,21 +4022,6 @@ public:
 // 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
-
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooPolynomial.h"
-#include "RooAddPdf.h"
-#include "RooProdPdf.h"
-#include "RooFitResult.h"
-#include "RooPlot.h"
-#include "TCanvas.h"
-#include "TH1.h"
-using namespace RooFit ;
 
 
 class TestBasic604 : public RooUnitTest
@@ -4581,19 +4107,6 @@ public:
 // 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
-
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooAddPdf.h"
-#include "RooProfileLL.h"
-#include "RooMinimizer.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-using namespace RooFit ;
 
 
 class TestBasic605 : public RooUnitTest
@@ -4696,16 +4209,6 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooArgusBG.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-using namespace RooFit ;
-
 
 class TestBasic606 : public RooUnitTest
 {
@@ -4784,23 +4287,6 @@ public:
 // 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
-
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooAddPdf.h"
-#include "RooChebychev.h"
-#include "RooFitResult.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-#include "TFile.h"
-#include "TStyle.h"
-#include "TH2.h"
-
-using namespace RooFit ;
 
 
 class TestBasic607 : public RooUnitTest
@@ -4893,19 +4379,6 @@ public:
 /////////////////////////////////////////////////////////////////////////
 
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooPolyVar.h"
-#include "RooMinimizer.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-#include "TRandom.h"
-
-using namespace RooFit ;
-
 class TestBasic609 : public RooUnitTest
 {
 public:
@@ -4987,23 +4460,7 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooFormulaVar.h"
-#include "RooProdPdf.h"
-#include "RooEfficiency.h"
-#include "RooPolynomial.h"
-#include "RooCategory.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-using namespace RooFit ;
 
-
-// Elementary operations on a gaussian PDF
 class TestBasic701 : public RooUnitTest
 {
 public:
@@ -5092,24 +4549,7 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooCategory.h"
-#include "RooEfficiency.h"
-#include "RooPolynomial.h"
-#include "RooProdPdf.h"
-#include "RooFormulaVar.h"
-#include "TCanvas.h"
-#include "TH1.h"
-#include "RooPlot.h"
-using namespace RooFit ;
 
-
-// Elementary operations on a gaussian PDF
 class TestBasic702 : public RooUnitTest
 {
 public:
@@ -5210,21 +4650,7 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooExponential.h"
-#include "RooEffProd.h"
-#include "RooFormulaVar.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-using namespace RooFit ;
 
-
-// Elementary operations on a gaussian PDF
 class TestBasic703 : public RooUnitTest
 {
 public:
@@ -5309,24 +4735,7 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooTruthModel.h"
-#include "RooFormulaVar.h"
-#include "RooRealSumPdf.h"
-#include "RooPolyVar.h"
-#include "RooProduct.h"
-#include "TH1.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-using namespace RooFit ;
 
-
-// Elementary operations on a gaussian PDF
 class TestBasic704 : public RooUnitTest
 {
 public:
@@ -5428,21 +4837,7 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooPolynomial.h"
-#include "RooIntegralMorph.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-#include "TH1.h"
-using namespace RooFit ;
 
-
-// Elementary operations on a gaussian PDF
 class TestBasic705 : public RooUnitTest
 {
 public:
@@ -5576,20 +4971,7 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooPolynomial.h"
-#include "RooHistPdf.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-using namespace RooFit ;
 
-
-// Elementary operations on a gaussian PDF
 class TestBasic706 : public RooUnitTest
 {
 public:
@@ -5665,23 +5047,7 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooPolynomial.h"
-#include "RooKeysPdf.h"
-#include "RooNDKeysPdf.h"
-#include "RooProdPdf.h"
-#include "TCanvas.h"
-#include "TH1.h"
-#include "RooPlot.h"
-using namespace RooFit ;
 
-
-// Elementary operations on a gaussian PDF
 class TestBasic707 : public RooUnitTest
 {
 public:
@@ -5785,23 +5151,7 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooCategory.h"
-#include "RooBMixDecay.h"
-#include "RooBCPEffDecay.h"
-#include "RooBDecay.h"
-#include "RooFormulaVar.h"
-#include "RooTruthModel.h"
-#include "TCanvas.h"
-#include "RooPlot.h"
-using namespace RooFit ;
 
-// Elementary operations on a gaussian PDF
 class TestBasic708 : public RooUnitTest
 {
 public:
@@ -6003,26 +5353,7 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooChebychev.h"
-#include "RooAddPdf.h"
-#include "RooMCStudy.h"
-#include "RooPlot.h"
-#include "TCanvas.h"
-#include "TH2.h"
-#include "RooFitResult.h"
-#include "TStyle.h"
-#include "TDirectory.h"
 
-using namespace RooFit ;
-
-
-// Elementary operations on a gaussian PDF
 class TestBasic801 : public RooUnitTest
 {
 public:
@@ -6122,25 +5453,7 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooChebychev.h"
-#include "RooAddPdf.h"
-#include "RooMCStudy.h"
-#include "RooChi2MCSModule.h"
-#include "RooPlot.h"
-#include "TCanvas.h"
-#include "TH1.h"
-#include "TDirectory.h"
 
-using namespace RooFit ;
-
-
-// Elementary operations on a gaussian PDF
 class TestBasic802 : public RooUnitTest
 {
 public:
@@ -6194,7 +5507,6 @@ public:
   // Create alternate pdf with shifted mean
   RooRealVar mean2("mean2","mean of gaussian 2",0.5) ;
   RooGaussian gauss2("gauss2","gaussian PDF2",x,mean2,sigma) ;
-
   // Create study manager with separate generation and fit model. This configuration
   // is set up to generate bad fits as the fit and generator model have different means
   // and the mean parameter is not floating in the fit
@@ -6240,24 +5552,6 @@ public:
 // 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
-
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooChebychev.h"
-#include "RooAddPdf.h"
-#include "RooMCStudy.h"
-#include "RooRandomizeParamMCSModule.h"
-#include "RooDLLSignificanceMCSModule.h"
-#include "RooPlot.h"
-#include "TCanvas.h"
-#include "TH1.h"
-#include "TDirectory.h"
-
-using namespace RooFit ;
 
 
 class TestBasic803 : public RooUnitTest
@@ -6376,22 +5670,6 @@ public:
 // 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
-
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooPolynomial.h"
-#include "RooAddPdf.h"
-#include "RooProdPdf.h"
-#include "RooMCStudy.h"
-#include "RooPlot.h"
-#include "TCanvas.h"
-#include "TH1.h"
-
-using namespace RooFit ;
 
 
 class TestBasic804 : public RooUnitTest
