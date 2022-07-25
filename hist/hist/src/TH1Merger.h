@@ -24,10 +24,11 @@ public:
       kNotCompatible = -1,   // histogram arenot compatible and cannot be merged
       kAllSameAxes = 0,      // histogram have all some axes
       kAllNoLimits = 1,      // all histogram don't have limits (the buffer is used)
-      kHasNewLimits = 2,     // all histogram don't have limits (the buffer is used)
-      kAllLabel = 3,         // histogram have labels all axis
-      kAutoP2HaveLimits = 4, // P2 (power-of-2) algorithm: all histogram have limits
-      kAutoP2NeedLimits = 5  // P2 algorithm: some histogram still need projections
+      kHasNewLimits = 2,     // some histogram have different limits but are compatibles
+      kAllLabel = 3,         // histogram have labels all axis and same limits
+      kLabelAndNewLimits = 4, // histogram have label but also some axes with different limits
+      kAutoP2HaveLimits = 5, // P2 (power-of-2) algorithm: all histogram have limits
+      kAutoP2NeedLimits = 6  // P2 algorithm: some histogram still need projections
    };
 
    static Bool_t AxesHaveLimits(const TH1 * h);
@@ -117,7 +118,7 @@ private:
 
    Bool_t DifferentAxesMerge();
 
-   Bool_t LabelMerge();
+   Bool_t LabelMerge(bool newLimits = false);
 
    template <class TProfileType>
    void MergeProfileBin(const TProfileType *p, Int_t ibin, Int_t outbin);
