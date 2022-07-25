@@ -359,6 +359,64 @@ RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t 
    fDataSource->SetNSlots(fNSlots);
 }
 
+RLoopManager::RLoopManager(ROOT::Internal::RDF::RDatasetSpec &&spec)
+   : fBeginEntry(spec.fEntryRange.fBegin), fEndEntry(spec.fEntryRange.fEnd), fNSlots(RDFInternal::GetNSlots()),
+     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
+     fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots)
+{
+   auto chain = std::make_shared<TChain>(spec.fTreeNames.size() == 1 ? spec.fTreeNames[0].c_str() : "");
+   if (spec.fTreeNames.size() == 1) {
+      // A TChain has a global name, that is the name of single tree
+      // The global name of the chain is also the name of each tree in the list
+      // of files that make the chain.
+      for (const auto &f : spec.fFileNameGlobs)
+         chain->Add(f.c_str());
+   } else {
+      // Some other times, each different file has its own tree name, we need to
+      // reconstruct the full path to the tree in each file and pass that to
+      for (auto i = 0u; i < spec.fFileNameGlobs.size(); i++) {
+         const auto fullpath = spec.fFileNameGlobs[i] + "?#" + spec.fTreeNames[i];
+         chain->Add(fullpath.c_str());
+      }
+   }
+   SetTree(std::move(chain));
+
+   // Create the friends from the list of friends
+   const auto &friendNames = spec.fFriendInfo.fFriendNames;
+   const auto &friendFileNames = spec.fFriendInfo.fFriendFileNames;
+   const auto &friendChainSubNames = spec.fFriendInfo.fFriendChainSubNames;
+   const auto nFriends = friendNames.size();
+
+   for (auto i = 0u; i < nFriends; ++i) {
+      const auto &thisFriendName = friendNames[i].first;
+      const auto &thisFriendAlias = friendNames[i].second;
+      const auto &thisFriendFiles = friendFileNames[i];
+      const auto &thisFriendChainSubNames = friendChainSubNames[i];
+
+      // Build a friend chain
+      auto frChain = std::make_unique<TChain>(thisFriendName.c_str());
+      const auto nFileNames = friendFileNames[i].size();
+      if (thisFriendChainSubNames.empty()) {
+         // If there are no chain subnames, the friend was a TTree. It's safe
+         // to add to the chain the filename directly.
+         for (auto j = 0u; j < nFileNames; ++j) {
+            frChain->Add(thisFriendFiles[j].c_str());
+         }
+      } else {
+         // Otherwise, the new friend chain needs to be built using the nomenclature
+         // "filename?#treename" as argument to `TChain::Add`
+         for (auto j = 0u; j < nFileNames; ++j) {
+            frChain->Add((thisFriendFiles[j] + "?#" + thisFriendChainSubNames[j]).c_str());
+         }
+      }
+
+      // Make it friends with the main chain
+      fTree->AddFriend(frChain.get(), thisFriendAlias.c_str());
+      // the friend trees must have same lifetime as fTree
+      fFriends.emplace_back(std::move(frChain));
+   }
+}
+
 struct RSlotRAII {
    RSlotStack &fSlotStack;
    unsigned int fSlot;
@@ -475,8 +533,14 @@ void RLoopManager::RunTreeProcessorMT()
 void RLoopManager::RunTreeReader()
 {
    TTreeReader r(fTree.get(), fTree->GetEntryList());
-   if (0 == fTree->GetEntriesFast())
+   if (0 == fTree->GetEntriesFast() || fBeginEntry == fEndEntry)
       return;
+   // Apply the range if there is any
+   // In case of a chain with a total of N entries, calling SetEntriesRange(N + 1, ...) does not error out
+   // This is a bug, reported here: https://github.com/root-project/root/issues/10774
+   if (fBeginEntry != 0 || fEndEntry != std::numeric_limits<Long64_t>::max())
+      if (r.SetEntriesRange(fBeginEntry, fEndEntry) != TTreeReader::kEntryValid)
+         throw std::logic_error("Something went wrong in initializing the TTreeReader.");
    RCallCleanUpTask cleanup(*this, 0u, &r);
    InitNodeSlots(&r, 0);
    R__LOG_INFO(RDFLogChannel()) << LogRangeProcessing(TreeDatasetLogInfo(r, 0u));
