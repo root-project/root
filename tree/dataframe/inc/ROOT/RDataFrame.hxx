@@ -17,6 +17,7 @@ ROOT's RDataFrame allows to analyse data stored in TTrees with a high level inte
 #define ROOT_RDATAFRAME
 
 #include "TROOT.h" // To allow ROOT::EnableImplicitMT without including ROOT.h
+#include "ROOT/RDF/RDatasetSpec.hxx"
 #include "ROOT/RDF/RInterface.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RStringView.hxx"
@@ -47,6 +48,10 @@ public:
    RDataFrame(TTree &tree, const ColumnNames_t &defaultBranches = {});
    RDataFrame(ULong64_t numEntries);
    RDataFrame(std::unique_ptr<ROOT::RDF::RDataSource>, const ColumnNames_t &defaultBranches = {});
+
+   /// \cond HIDDEN_SYMBOLS
+   RDataFrame(ROOT::Internal::RDF::RDatasetSpec spec);
+   /// \endcond
 };
 
 } // ns ROOT
