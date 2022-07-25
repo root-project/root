@@ -5616,6 +5616,89 @@ bool testMergeProf3DLabelAllDiff()
    return ret;
 }
 
+bool testMerge2DLabelDiffAxes()
+{
+
+   // Tests the merge method with differently labelled 2D Histograms in one axis
+   // and with new limits in the other axis (see issue 10928)
+
+
+   TH2D* h1 = new TH2D("merge2DLabelDiffAxes_h1", "h1-Title",
+                       numberOfBins, minRange, maxRange,
+                       numberOfBins, minRange, maxRange);
+   TH2D* h2 = new TH2D("merge2DLabelDiffAxes_h2", "h2-Title",
+                       numberOfBins, minRange, maxRange,
+                       numberOfBins, minRange, maxRange);
+   TH2D* h3 = new TH2D("merge2DLabelDiffAxes_h3", "h3-Title",
+                       numberOfBins, minRange, maxRange,
+                       numberOfBins, minRange, maxRange);
+   TH2D* h4 = new TH2D("merge2DLabelDiffAxes_h4", "h4-Title",
+                       2*numberOfBins, minRange, maxRange,
+                       2*numberOfBins, minRange, 2*maxRange -minRange);
+
+
+   // the y axis will have the last bin without a label since it contains numberOfBins+1
+   for ( Int_t i = 1; i <= numberOfBins; ++ i) {
+      char letter = (char) ((int) 'a' + i - 1);
+      ostringstream name1, name2;
+      name1 << letter << 1;
+      h1->GetXaxis()->SetBinLabel(i, name1.str().c_str());
+      name2 << letter << 2;
+      h2->GetXaxis()->SetBinLabel(i, name2.str().c_str());
+      // use for h3 same label as for h2 to test the merging
+      h3->GetXaxis()->SetBinLabel(i, name2.str().c_str());
+       // we set the bin labels also in h4
+      h4->GetXaxis()->SetBinLabel(i, name1.str().c_str());
+      h4->GetXaxis()->SetBinLabel(i+numberOfBins, name2.str().c_str());
+   }
+
+   // the x axis will be full labels while the y axis will be numeric
+   // avoid underflow-overflow in x
+   // Inflate Y axis to new limits for y axis of h2 but not h3
+   h2->LabelsInflate("Y");
+
+   for ( Int_t e = 0; e < nEvents; ++e ) {
+      //Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+      TString label = h1->GetXaxis()->GetLabels()->At(r.Integer(numberOfBins))->GetName();
+      // need to generate in the range otherwise an error in TH1::Merge is correctly produced
+      // since we cannot merge in that case
+      Double_t y = r.Uniform(minRange, maxRange);
+      h1->Fill(label, y, 1.0);
+      h4->Fill(label, y, 1.0);
+   }
+
+   for ( Int_t e = 0; e < nEvents; ++e ) {
+      TString label = h2->GetXaxis()->GetLabels()->At(r.Integer(numberOfBins))->GetName();
+      Double_t y = r.Uniform(minRange, 2*maxRange-minRange); // fill new axes
+      h2->Fill(label, y, 1.0);
+      h4->Fill(label, y, 1.0);
+   }
+
+   for ( Int_t e = 0; e < nEvents; ++e ) {
+      TString label = h2->GetXaxis()->GetLabels()->At(r.Integer(numberOfBins))->GetName();
+      // need to generate in the range otherwise an error in TH1::Merge is produced
+      Double_t y = r.Uniform(minRange, maxRange);
+      h3->Fill(label, y, 1.0);
+      h4->Fill(label, y, 1.0);
+   }
+
+   TList *list = new TList;
+   list->Add(h2);
+   list->Add(h3);
+
+   h1->Merge(list);
+
+   // make sure labels are ordered
+   h1->LabelsOption("a","x");
+   h4->LabelsOption("a","x");
+
+   bool ret = equals("Merge2DLabelDiffAxes", h1, h4, cmpOptStats, 1E-10);
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
+   return ret;
+}
+
 bool testMerge1D_Diff(bool testEmpty=false)
 {
    // Tests the merge method with different binned 1D Histograms
@@ -11099,7 +11182,7 @@ int stressHistogram(int testNumber = 0)
                                                         testMerge1DLabelAllDiff,     testMergeProf1DLabelAllDiff,
                                                         testMerge2DLabelAllDiff,     testMergeProf2DLabelAllDiff,
                                                         testMerge3DLabelAllDiff,     testMerge3DLabelAllDiffWeight,
-                                                        testMergeProf3DLabelAllDiff,
+                                                        testMergeProf3DLabelAllDiff, testMerge2DLabelDiffAxes,
                                                         testMerge1DLabelSameStatsBug
    };
    // Test 14
