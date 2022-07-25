@@ -100,18 +100,22 @@ def distrdf_mapper(
     """
     Maps the computation graph to the input logical range of entries.
     """
-    setup_mapper(initialization_fn)
+    # Wrap code that may be calling into C++ in a try-except block in order
+    # to better propagate exceptions.
+    try:
+        setup_mapper(initialization_fn)
 
-    # Build an RDataFrame instance for the current mapper task, based
-    # on the type of the head node.
-    rdf_plus = build_rdf_from_range(current_range)
-    if rdf_plus.rdf is not None:
-        mergeables = get_mergeable_values(rdf_plus.rdf, current_range.id, computation_graph_callable, optimized)
-    else:
-        mergeables = None
+        # Build an RDataFrame instance for the current mapper task, based
+        # on the type of the head node.
+        rdf_plus = build_rdf_from_range(current_range)
+        if rdf_plus.rdf is not None:
+            mergeables = get_mergeable_values(rdf_plus.rdf, current_range.id, computation_graph_callable, optimized)
+        else:
+            mergeables = None
+    except ROOT.std.exception as e:
+        raise RuntimeError(f"C++ exception thrown:\n\t{type(e).__name__}: {e.what()}")
 
     return TaskResult(mergeables, rdf_plus.entries_in_trees)
-
 
 def merge_values(mergeables_out: Iterable, mergeables_in: Iterable) -> Iterable:
     """
@@ -154,10 +158,14 @@ def distrdf_reducer(results_inout: TaskResult,
         # entries, so we sum them
         entries_in_trees_out.processed_entries += entries_in_trees_in.processed_entries
 
-    mergeables_updated = merge_values(mergeables_out, mergeables_in)
+    # Wrap code that may be calling into C++ in a try-except block in order
+    # to better propagate exceptions.
+    try:
+        mergeables_updated = merge_values(mergeables_out, mergeables_in)
+    except ROOT.std.exception as e:
+        raise RuntimeError(f"C++ exception thrown:\n\t{type(e).__name__}: {e.what()}")
 
     return TaskResult(mergeables_updated, entries_in_trees_out)
-
 
 class BaseBackend(ABC):
     """
