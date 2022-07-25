@@ -550,7 +550,7 @@ class Build(object):
 
 def compile(arg):
     travis_fold_start("compile")
-    global prefix, EXTRA_CMAKE_FLAGS
+    global prefix
     prefix = arg
 
     EXTRA_CMAKE_FLAGS = args.get('with_cmake_flags')
@@ -600,7 +600,7 @@ def compile(arg):
 
 def compile_for_binary(arg):
     travis_fold_start("compile")
-    global prefix, EXTRA_CMAKE_FLAGS
+    global prefix
     prefix = arg
 
     EXTRA_CMAKE_FLAGS = args.get('with_cmake_flags')
