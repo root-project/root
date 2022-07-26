@@ -162,7 +162,9 @@ public:
    RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
    RLoopManager(ULong64_t nEmptyEntries);
    RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t &defaultBranches);
+   /// \cond HIDDEN_SYMBOLS
    RLoopManager(ROOT::Internal::RDF::RDatasetSpec &&spec);
+   /// \endcond
    RLoopManager(const RLoopManager &) = delete;
    RLoopManager &operator=(const RLoopManager &) = delete;
 

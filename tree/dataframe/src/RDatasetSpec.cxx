@@ -1,3 +1,4 @@
+/// \cond HIDDEN_SYMBOLS
 // Author: Vincenzo Eduardo Padulano CERN/UPV, Ivan Kabadzhov CERN  06/2022
 
 /*************************************************************************
@@ -130,3 +131,4 @@ void RDatasetSpec::AddFriend(const std::vector<std::pair<std::string, std::strin
 } // namespace RDF
 } // namespace Internal
 } // namespace ROOT
+/// \endcond
