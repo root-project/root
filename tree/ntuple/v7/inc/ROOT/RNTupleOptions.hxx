@@ -67,7 +67,7 @@ public:
 
    int GetCompression() const { return fCompression; }
    void SetCompression(int val) { fCompression = val; }
-   void SetCompression(RCompressionSetting::EAlgorithm algorithm, int compressionLevel) {
+   void SetCompression(RCompressionSetting::EAlgorithm::EValues algorithm, int compressionLevel) {
       fCompression = CompressionSettings(algorithm, compressionLevel);
    }
 
