@@ -2873,6 +2873,7 @@ void TGaxis::SetTimeOffset(Double_t toffset, Option_t *option)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function to set X and Y offset of the axis 10^n notation.
+/// It applies on axis belonging to an histogram (TAxis). It has no effect on standalone TGaxis.
 /// It is in % of the pad size. It can be negative.
 /// axis specifies which axis ("x","y"), default = "x"
 /// if axis="xz" set the two axes
