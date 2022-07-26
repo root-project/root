@@ -34,6 +34,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Physics
   DEPENDENCIES
     Matrix
     MathCore
+    GenVector
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
 )
