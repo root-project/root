@@ -7,6 +7,8 @@
 /// same width and height. CanvasPartition does that properly. This
 /// example also ensure that the axis labels and titles have the same
 /// sizes and that the tick marks length is uniform.
+/// In addition, XtoPad and YtoPad allow to place graphics objects like
+/// text in the right place in each sub-pads.
 ///
 /// \macro_image
 /// \macro_code
@@ -16,13 +18,16 @@
 void CanvasPartition(TCanvas *C,const Int_t Nx = 2,const Int_t Ny = 2,
                      Float_t lMargin = 0.15, Float_t rMargin = 0.05,
                      Float_t bMargin = 0.15, Float_t tMargin = 0.05);
+double XtoPad(double x);
+double YtoPad(double x);
 
 void canvas2()
 {
 
    gStyle->SetOptStat(0);
+   auto text = new TText();
 
-   TCanvas *C = (TCanvas*) gROOT->FindObject("C");
+   auto C = (TCanvas*) gROOT->FindObject("C");
    if (C) delete C;
    C = new TCanvas("C","canvas",1024,640);
    C->SetFillStyle(4000);
@@ -41,7 +46,7 @@ void canvas2()
    CanvasPartition(C,Nx,Ny,lMargin,rMargin,bMargin,tMargin);
 
    // Dummy histogram.
-   TH1F *h = (TH1F*) gROOT->FindObject("histo");
+   auto h = (TH1F*) gROOT->FindObject("histo");
    if (h) delete h;
    h = new TH1F("histo","",100,-5.0,5.0);
    h->FillRandom("gaus",10000);
@@ -104,6 +109,11 @@ void canvas2()
          hFrame->GetXaxis()->SetTickLength(yFactor*0.06/xFactor);
 
          h->Draw("same");
+
+         text->SetTextAlign(31);
+         text->SetTextFont(43);
+         text->SetTextSize(10);
+         text->DrawTextNDC(XtoPad(0.9),YtoPad(0.8), gPad->GetName());
       }
    }
    C->cd();
@@ -175,7 +185,7 @@ void CanvasPartition(TCanvas *C,const Int_t Nx,const Int_t Ny,
 
          char name[16];
          sprintf(name,"pad_%i_%i",i,j);
-         TPad *pad = (TPad*) gROOT->FindObject(name);
+         auto pad = (TPad*) gROOT->FindObject(name);
          if (pad) delete pad;
          pad = new TPad(name,"",hposl,vposd,hposr,vposu);
          pad->SetLeftMargin(hmarl);
@@ -190,4 +200,26 @@ void CanvasPartition(TCanvas *C,const Int_t Nx,const Int_t Ny,
          pad->Draw();
       }
    }
+}
+
+double XtoPad(double x)
+{
+   double xl,yl,xu,yu;
+   gPad->GetPadPar(xl,yl,xu,yu);
+   double pw = xu-xl;
+   double lm = gPad->GetLeftMargin();
+   double rm = gPad->GetRightMargin();
+   double fw = pw-pw*lm-pw*rm;
+   return (x*fw+pw*lm)/pw;
+}
+
+double YtoPad(double y)
+{
+   double xl,yl,xu,yu;
+   gPad->GetPadPar(xl,yl,xu,yu);
+   double ph = yu-yl;
+   double tm = gPad->GetTopMargin();
+   double bm = gPad->GetBottomMargin();
+   double fh = ph-ph*bm-ph*tm;
+   return (y*fh+bm*ph)/ph;
 }
