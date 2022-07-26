@@ -24,10 +24,9 @@
 #include "TMath.h"
 #include "TVector3.h"
 #include "TRotation.h"
-
+#include "Math/Vector4D.h"
 
 class TLorentzRotation;
-
 
 class TLorentzVector : public TObject {
 
@@ -256,6 +255,10 @@ public:
    TLorentzVector & operator *= (const TLorentzRotation &);
    TLorentzVector & Transform(const TLorentzRotation &);
    // Transformation with HepLorenzRotation.
+
+   operator ROOT::Math::PxPyPzEVector() const {
+      return {Px(), Py(), Pz(), E()};
+   }
 
    void        Print(Option_t *option="") const override;
 
