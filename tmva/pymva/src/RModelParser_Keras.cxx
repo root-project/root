@@ -47,6 +47,7 @@ std::unique_ptr<ROperator> MakeKerasSelu(PyObject *fLayer);         // For insta
 std::unique_ptr<ROperator> MakeKerasSigmoid(PyObject *fLayer);      // For instantiating ROperator for Keras Sigmoid layer
 std::unique_ptr<ROperator> MakeKerasPermute(PyObject *fLayer);      // For instantiating ROperator for Keras Permute Layer
 std::unique_ptr<ROperator> MakeKerasBatchNorm(PyObject *fLayer);    // For instantiating ROperator for Keras Batch Normalization Layer
+std::unique_ptr<ROperator> MakeKerasReshape(PyObject *fLayer);      // For instantiating ROperator for Keras Reshape Layer
 
 
 // Declaring Internal function for Keras layers which have additional activation attribute
@@ -61,6 +62,7 @@ const KerasMethodMap mapKerasLayer = {
    {"Activation", &MakeKerasActivation},
    {"Permute", &MakeKerasPermute},
    {"BatchNormalization", &MakeKerasBatchNorm},
+   {"Reshape", &MakeKerasReshape},
 
    // For activation layers
    {"ReLU", &MakeKerasReLU},
@@ -121,6 +123,16 @@ const KerasMethodMapWithActivation mapKerasLayerWithActivation = {
 void AddKerasLayer(RModel& rmodel, PyObject* fLayer){
    std::string fLayerType = PyStringAsString(PyDict_GetItemString(fLayer,"layerType"));
 
+   if(fLayerType == "Reshape"){
+      PyObject* fAttributes=PyDict_GetItemString(fLayer,"layerAttributes");
+      std::string fLayerName = PyStringAsString(PyDict_GetItemString(fAttributes,"_name"));
+      PyObject* fPTargetShape = PyDict_GetItemString(fAttributes,"target_shape");
+      std::vector<size_t>fTargetShape = GetDataFromTuple(fPTargetShape);
+      std::shared_ptr<void> fData(malloc(fTargetShape.size() * sizeof(float)), free);
+      std::memcpy(fData.get(),(float*)fTargetShape.data(), fTargetShape.size() * sizeof(float));
+      rmodel.AddInitializedTensor(fLayerName+"ReshapeAxes",ETensorType::FLOAT,{fTargetShape.size()},fData);
+   }
+
    //For layers without additional activation attribute
    auto findLayer = mapKerasLayer.find(fLayerType);
    if(findLayer != mapKerasLayer.end()){
@@ -140,6 +152,7 @@ void AddKerasLayer(RModel& rmodel, PyObject* fLayer){
 
       if(fLayerActivation == "selu" || fLayerActivation == "sigmoid")
          rmodel.AddNeededStdLib("cmath");
+
 
       //Checking if additional attribute exixts
       if(fLayerActivation != "linear"){
@@ -502,6 +515,29 @@ std::unique_ptr<ROperator> MakeKerasBatchNorm(PyObject* fLayer)
 
       std::unique_ptr<ROperator> op;
       op.reset(new ROperator_BatchNormalization<float>(fEpsilon, fMomentum, /* training mode */ 0, fNX, fNScale, fNB, fNMean, fNVar, fNY));
+      return op;
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+/// \brief Prepares a ROperator object for Keras Reshape layer
+///
+/// \param[in] fLayer Python Keras layer as a Dictionary object
+/// \return Unique pointer to ROperator object
+std::unique_ptr<ROperator> MakeKerasReshape(PyObject* fLayer)
+{
+      // Extracting required layer information
+      PyObject* fAttributes = PyDict_GetItemString(fLayer,"layerAttributes");
+      PyObject* fInputs  = PyDict_GetItemString(fLayer,"layerInput");
+      PyObject* fOutputs = PyDict_GetItemString(fLayer,"layerOutput");
+      std::string fLayerName = PyStringAsString(PyDict_GetItemString(fAttributes,"_name"));
+
+      ReshapeOpMode fOpMode = Reshape;
+      std::string fLayerDType = PyStringAsString(PyDict_GetItemString(fLayer,"layerDType"));
+      std::string fNameData      = PyStringAsString(PyList_GetItem(fInputs,0));
+      std::string fNameOutput    = PyStringAsString(PyList_GetItem(fOutputs,0));
+      std::string fNameShape     = fLayerName + "ReshapeAxes";
+      std::unique_ptr<ROperator> op;
+      op.reset(new ROperator_Reshape<float>(fOpMode, /*allow zero*/0, fNameData, fNameShape, fNameOutput));
       return op;
 }
 
