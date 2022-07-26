@@ -93,7 +93,7 @@ of the canvas. It gives a short explanation about the canvas' menus.
 
 A canvas may be automatically divided into pads via `TPad::Divide`.
 
-At creation time, no matter if in interactive or batch mode, the canvas size
+At creation time, no matter if in interactive or batch mode, the constructor
 defines the size of the canvas window (including the size of the window
 manager's decoration). To define precisely the graphics area size of a canvas in
 the interactive mode, the following four lines of code should be used:
@@ -110,7 +110,7 @@ and in the batch mode simply do:
       c->SetCanvasSize(w,h);
 ~~~
 
-If the canvas size this exceed the window size, scroll bars will be added to the canvas
+If the canvas size exceeds the window size, scroll bars will be added to the canvas
 This allows to display very large canvases (even bigger than the screen size). The
 Following example shows how to proceed.
 ~~~ {.cpp}
@@ -353,9 +353,9 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
 ///
 /// \param[in] name    canvas name
 /// \param[in] title   canvas title
-/// \param[in] ww      is the canvas size in pixels along X
+/// \param[in] ww      is the window size in pixels along X
 ///                    (if ww < 0  the menubar is not shown)
-/// \param[in] wh      is the canvas size in pixels along Y
+/// \param[in] wh      is the window size in pixels along Y
 ///
 /// If "name" starts with "gl" the canvas is ready to receive GL output.
 
@@ -372,9 +372,9 @@ TCanvas::TCanvas(const char *name, const char *title, Int_t ww, Int_t wh) : TPad
 ///
 /// \param[in] name    canvas name
 /// \param[in] title   canvas title
-/// \param[in] ww      is the canvas size in pixels along X
+/// \param[in] ww      is the window size in pixels along X
 ///                    (if ww < 0  the menubar is not shown)
-/// \param[in] wh      is the canvas size in pixels along Y
+/// \param[in] wh      is the window size in pixels along Y
 
 void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t wh)
 {
@@ -439,9 +439,9 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
 /// \param[in] name         canvas name
 /// \param[in] title        canvas title
 /// \param[in] wtopx,wtopy  are the pixel coordinates of the top left corner of
-///                         the canvas  (if wtopx < 0) the menubar is not shown)
-/// \param[in] ww           is the canvas size in pixels along X
-/// \param[in] wh           is the canvas size in pixels along Y
+///                         the canvas (if wtopx < 0) the menubar is not shown)
+/// \param[in] ww           is the window size in pixels along X
+/// \param[in] wh           is the window size in pixels along Y
 ///
 /// If "name" starts with "gl" the canvas is ready to receive GL output.
 
@@ -461,8 +461,8 @@ TCanvas::TCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy, 
 /// \param[in] title        canvas title
 /// \param[in] wtopx,wtopy  are the pixel coordinates of the top left corner of
 ///                         the canvas  (if wtopx < 0) the menubar is not shown)
-/// \param[in] ww           is the canvas size in pixels along X
-/// \param[in] wh           is the canvas size in pixels along Y
+/// \param[in] ww           is the window size in pixels along X
+/// \param[in] wh           is the window size in pixels along Y
 
 void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
                           Int_t wtopy, Int_t ww, Int_t wh)
