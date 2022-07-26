@@ -97,7 +97,11 @@ ROOT provides specialisations and aliases to them of the ROOT::Math::LorentzVect
           Construct from a foreign 4D vector type, for example, HepLorentzVector
           Precondition: v must implement methods x(), y(), z(), and t()
        */
-       template<class ForeignLorentzVector>
+       template<class ForeignLorentzVector,
+                typename = decltype(std::declval<ForeignLorentzVector>().x()
+                                    + std::declval<ForeignLorentzVector>().y()
+                                    + std::declval<ForeignLorentzVector>().z()
+                                    + std::declval<ForeignLorentzVector>().t())>
        explicit LorentzVector( const ForeignLorentzVector & v) :
           fCoordinates(PxPyPzE4D<Scalar>( v.x(), v.y(), v.z(), v.t()  ) ) { }
 
@@ -132,7 +136,11 @@ ROOT provides specialisations and aliases to them of the ROOT::Math::LorentzVect
           assignment from any other Lorentz vector  implementing
           x(), y(), z() and t()
        */
-       template<class ForeignLorentzVector>
+       template<class ForeignLorentzVector,
+                typename = decltype(std::declval<ForeignLorentzVector>().x()
+                                    + std::declval<ForeignLorentzVector>().y()
+                                    + std::declval<ForeignLorentzVector>().z()
+                                    + std::declval<ForeignLorentzVector>().t())>
        LorentzVector & operator = ( const ForeignLorentzVector & v) {
           SetXYZT( v.x(), v.y(), v.z(), v.t() );
           return *this;
