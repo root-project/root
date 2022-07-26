@@ -1,4 +1,6 @@
+from itertools import zip_longest
 import logging
+from typing import Optional
 import warnings
 
 import ROOT
@@ -156,7 +158,7 @@ class TreeHeadNode(Node.Node):
         self.npartitions = npartitions
 
         self.defaultbranches = None
-        self.friendinfo = None
+        self.friendinfo: Optional[ROOT.Internal.TreeUtils.RFriendInfo] = None
 
         # Retrieve the TTree/TChain that will be processed
         if isinstance(args[0], ROOT.TTree):
@@ -164,7 +166,8 @@ class TreeHeadNode(Node.Node):
             self.tree = args[0]
             # Retrieve information about friend trees when user passes a TTree
             # or TChain object.
-            self.friendinfo = ROOT.Internal.TreeUtils.GetFriendInfo(args[0])
+            fi = ROOT.Internal.TreeUtils.GetFriendInfo(args[0])
+            self.friendinfo = fi if not fi.fFriendNames.empty() else None
             if len(args) == 2:
                 self.defaultbranches = args[1]
         else:
@@ -225,7 +228,8 @@ class TreeHeadNode(Node.Node):
 
         logger.debug("%s clusters will be split along %s partitions.",
                      numclusters, self.npartitions)
-        return Ranges.get_clustered_ranges(clustersinfiles, self.npartitions, self.friendinfo)
+
+        return Ranges.get_clustered_ranges(clustersinfiles, self.npartitions, self.friendinfo, self.subtreenames, self.inputfiles)
 
     def generate_rdf_creator(self):
         """
@@ -234,42 +238,11 @@ class TreeHeadNode(Node.Node):
         the TTree data source.
         """
 
-        maintreename = self.maintreename
-        defaultbranches = self.defaultbranches
-
-        def build_rdf_from_range(current_range):
+        def attach_friend_info_if_present(current_range, ds):
             """
-            Builds an RDataFrame instance for a distributed mapper.
+            Adds info about friend trees to dataset specification.
             """
-            # Build TEntryList for this range:
-            elists = ROOT.TEntryList()
-
-            # Build TChain of files for this range:
-            chain = ROOT.TChain(maintreename)
-            for start, end, filename, treenentries, subtreename in zip(
-                current_range.localstarts, current_range.localends, current_range.filelist,
-                current_range.treesnentries, current_range.treenames):
-                # Use default constructor of TEntryList rather than the
-                # constructor accepting treename and filename, otherwise
-                # the TEntryList would remove any url or protocol from the
-                # file name.
-                elist = ROOT.TEntryList()
-                elist.SetTreeName(subtreename)
-                elist.SetFileName(filename)
-                elist.EnterRange(start, end)
-                elists.AddSubList(elist)
-                chain.Add(filename + "?#" + subtreename, treenentries)
-
-            # We assume 'end' is exclusive
-            chain.SetCacheEntryRange(current_range.globalstart, current_range.globalend)
-
-            # Connect the entry list to the chain
-            chain.SetEntryList(elists, "sync")
-
-            # Gather information about friend trees. Check that we got an
-            # RFriendInfo struct and that it's not empty
-            if (current_range.friendinfo is not None and
-                not current_range.friendinfo.fFriendNames.empty()):
+            if (current_range.friendinfo is not None):
                 # Zip together the information about friend trees. Each
                 # element of the iterator represents a single friend tree.
                 # If the friend is a TChain, the zipped information looks like:
@@ -284,33 +257,21 @@ class TreeHeadNode(Node.Node):
                     current_range.friendinfo.fFriendChainSubNames
                 )
                 for (friend_name, friend_alias), friend_filenames, friend_chainsubnames in zipped_friendinfo:
-                    # Start a TChain with the current friend treename
-                    friend_chain = ROOT.TChain(str(friend_name))
-                    # Add each corresponding file to the TChain
-                    if friend_chainsubnames.empty():
-                        # This friend is a TTree, friend_filenames is a vector of size 1
-                        friend_chain.Add(str(friend_filenames[0]))
-                    else:
-                        # This friend is a TChain, add all files with their tree names
-                        for filename, chainsubname in zip(friend_filenames, friend_chainsubnames):
-                            fullpath = filename + "/" + chainsubname
-                            friend_chain.Add(str(fullpath))
+                    friends = list(zip_longest(friend_chainsubnames, friend_filenames, fillvalue=friend_name))
+                    ds.AddFriend(friends, friend_alias)
 
-                    # Set cache on the same range as the parent TChain
-                    friend_chain.SetCacheEntryRange(current_range.globalstart, current_range.globalend)
-                    # Finally add friend TChain to the parent (with alias)
-                    chain.AddFriend(friend_chain, friend_alias)
+        def build_rdf_from_range(current_range):
+            """
+            Builds an RDataFrame instance for a distributed mapper.
+            """
 
-            if defaultbranches is not None:
-                rdf = ROOT.RDataFrame(chain, defaultbranches)
-            else:
-                rdf = ROOT.RDataFrame(chain)
+            ds = ROOT.ROOT.Internal.RDF.RDatasetSpec(
+                zip(current_range.treenames, current_range.filenames),
+                (current_range.globalstart, current_range.globalend)
+            )
 
-            # Bind the TChain to the RDataFrame object before returning it. Not
-            # doing so would lead to the TChain being destroyed when leaving
-            # the scope of this function.
-            rdf._chain_lifeline = chain
+            attach_friend_info_if_present(current_range, ds)
 
-            return rdf
+            return ROOT.ROOT.Internal.RDF.MakeDataFrameFromSpec(ds)
 
         return build_rdf_from_range

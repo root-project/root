@@ -1,7 +1,9 @@
 import itertools
 import logging
 
+from dataclasses import dataclass
 from functools import total_ordering
+from typing import List, Optional
 
 import ROOT
 
@@ -31,54 +33,39 @@ class EmptySourceRange(object):
         self.start = start
         self.end = end
 
-class TreeRange(object):
+
+@dataclass
+class TreeRange:
     """
-    TTree range of entries. The entries are local with respect to the list of
-    files that are processed with this range. These files are a subset of the
-    global list of input files of the original dataset.
+    Range of entries in one of the trees of the dataset of a single distributed
+    task. If there are no friend trees, the entries are local with respect to
+    the list of files that are processed in this range. These files are a subset
+    of the global list of input files of the original dataset. If there are
+    friend trees, the entries are global with respect to the whole dataset.
 
     Attributes:
 
-    id (int): Sequential counter to identify this range. It is used to assign
-        a filename to a partial Snapshot in case it was requested. The id is
-        assigned in `get_clustered_ranges` to ensure that each distributed
-        RDataFrame run has a list of ranges with sequential ids starting from
-        zero.
+    id: Sequential counter to identify this range. It is used to assign a
+        filename to a partial Snapshot in case it was requested.
 
-    globalstart (int): Starting entry relative to the TChain made with the list
-        of files of this range.
+    treenames: List of tree names.
 
-    globalend (int): Ending entry relative to the TChain made with the list
-        of files of this range.
+    filenames: List of file names.
 
-    localstarts (list[int]): List of starting entries relative to each single
-        file in this range.
+    globalstart: Starting entry relative to the dataset considered in this range.
 
-    localends (list[int]): List of ending entries relative to each single
-        file in this range.
+    globalend: Ending entry relative to the dataset considered in this range.
 
-    filelist (list[str]): List of files to be processed with this range.
-
-    treesnentries (list[int]): List of total number of entries relative to each
-        single file in this range.
-
-    friendinfo (ROOT.Internal.TreeUtils.RFriendInfo, None): Information about
-        friend trees of the chain built for this range. Not None if the user
-        provided a TTree or TChain in the distributed RDataFrame constructor.
+    friendinfo: Information about friend trees of the chain built for this
+        range, if present.
     """
 
-    def __init__(self, rangeid, globalstart, globalend, localstarts, localends, filelist, treesnentries, treenames, friendinfo):
-        """set attributes"""
-        self.id = rangeid
-        self.globalstart = globalstart
-        self.globalend = globalend
-        self.localstarts = localstarts
-        self.localends = localends
-        self.filelist = filelist
-        self.treesnentries = treesnentries
-        self.treenames = treenames
-        self.friendinfo = friendinfo
-
+    id: int
+    treenames: List[str]
+    filenames: List[str]
+    globalstart: int
+    globalend: int
+    friendinfo: Optional[ROOT.Internal.TreeUtils.RFriendInfo]
 
 @total_ordering
 class FileAndIndex(object):
@@ -300,7 +287,7 @@ def get_balanced_ranges(nentries, npartitions):
     return ranges
 
 
-def get_clustered_ranges(clustersinfiles, npartitions, friendinfo):
+def get_clustered_ranges(clustersinfiles, npartitions, friendinfo, dataset_treenames, dataset_filenames):
     """
     Builds ``TreeRange`` objects taking into account the clusters of the
     dataset. Each range will represent the entries processed within a single
@@ -371,22 +358,17 @@ def get_clustered_ranges(clustersinfiles, npartitions, friendinfo):
         # Let's start with the start and end entries local to each file. We
         # group the current partition by the fileindex, so that we can process
         # all the clusters belonging to the same file together.
-        localstarts = []
-        localends = []
-        filelist = []
-        treesnentries = []
-        treenames = []
+
+        taskfilenames = []
+        tasktreenames = []
 
         for _, clustersinsamefileiter in itertools.groupby(partition, lambda cluster: cluster.filetuple.fileindex):
             # Grab a list of clusters belonging to the same file to give as
             # argument to min and max
             clustersinsamefilelist = list(clustersinsamefileiter)
 
-            localstarts.append(min(clustersinsamefilelist).start)
-            localends.append(max(clustersinsamefilelist).end)
-            filelist.append(clustersinsamefilelist[0].filetuple.filename)
-            treesnentries.append(clustersinsamefilelist[0].treenentries)
-            treenames.append(clustersinsamefilelist[0].treename)
+            taskfilenames.append(clustersinsamefilelist[0].filetuple.filename)
+            tasktreenames.append(clustersinsamefilelist[0].treename)
 
         # The global start and end entries are retrieved as follows:
         # - Take as start start the `start` attribute of the first
@@ -431,17 +413,24 @@ def get_clustered_ranges(clustersinfiles, npartitions, friendinfo):
         #   20000), then switch to the third file and read the whole 30000
         #   entries there.
         firstclusterinpartition = partition[0]
-        partitionoffset = firstclusterinpartition.offset
-
         lastclusterinpartition = partition[-1]
 
-        # Cluster offsets are relative to the offset of the first cluster in the
-        # partition. For the first cluster, this would mean adding and
-        # subtracting the same quantity, no need to do that.
-        globalstart = firstclusterinpartition.start
-        globalend = lastclusterinpartition.end + lastclusterinpartition.offset - partitionoffset
+        if friendinfo is None:
+            # Cluster offsets are relative to the offset of the first cluster in the
+            # partition. For the first cluster, this would mean adding and
+            # subtracting the same quantity, no need to do that.
+            globalstart = firstclusterinpartition.start
+            globalend = lastclusterinpartition.end + lastclusterinpartition.offset - firstclusterinpartition.offset
+        else:
+            # Cluster offsets should be taken with respect to the whole dataset
+            globalstart = firstclusterinpartition.offset + firstclusterinpartition.start
+            globalend = lastclusterinpartition.offset + lastclusterinpartition.end
 
-        clustered_ranges.append(TreeRange(rangeid, globalstart, globalend, localstarts, localends, filelist, treesnentries, treenames, friendinfo))
+            # Consider the whole dataset
+            tasktreenames = dataset_treenames
+            taskfilenames = dataset_filenames
+
+        clustered_ranges.append(TreeRange(rangeid, tasktreenames, taskfilenames, globalstart, globalend, friendinfo))
         rangeid += 1
 
     return clustered_ranges
