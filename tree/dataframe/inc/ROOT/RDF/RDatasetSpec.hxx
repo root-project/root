@@ -1,3 +1,4 @@
+/// \cond HIDDEN_SYMBOLS
 // Author: Vincenzo Eduardo Padulano CERN/UPV, Ivan Kabadzhov CERN  06/2022
 
 /*************************************************************************
@@ -83,3 +84,4 @@ public:
 } // namespace ROOT
 
 #endif // ROOT_RDF_RDATASETSPEC
+/// \endcond

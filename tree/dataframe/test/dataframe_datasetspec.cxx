@@ -54,30 +54,31 @@ TEST_P(RDatasetSpecTest, SimpleChainsCreation)
 {
    // first constructor: 1 tree, 1 file; both passed as string directly
    // advanced note: internally a TChain is created named the same as the tree provided
-   const auto dfRDSc1 = *(RDataFrame(RDatasetSpec("tree", "specTestFile0.root")).Take<ULong64_t>("z"));
+   const auto dfRDSc1 = *(MakeDataFrameFromSpec(RDatasetSpec("tree", "specTestFile0.root")).Take<ULong64_t>("z"));
    EXPECT_VEC_EQ(dfRDSc1, {100u, 101u, 102u, 103u, 104u});
 
    // second constructor: 1 tree, many files; files passed as a vector; testing with 1 specTestFile
    // advanced note: internally a TChain is created named the same as the tree provided
-   const auto dfRDSc21 = *(RDataFrame(RDatasetSpec("tree", {"specTestFile0.root"s})).Take<ULong64_t>("z"));
+   const auto dfRDSc21 = *(MakeDataFrameFromSpec(RDatasetSpec("tree", {"specTestFile0.root"s})).Take<ULong64_t>("z"));
    EXPECT_VEC_EQ(dfRDSc21, {100u, 101u, 102u, 103u, 104u});
 
    // second constructor: here with multiple files
-   auto dfRDSc2N =
-      *(RDataFrame(RDatasetSpec("subTree", {"specTestFile1.root"s, "specTestFile2.root"s, "specTestFile3.root"s}))
-           .Take<ULong64_t>("z"));
+   auto dfRDSc2N = *(MakeDataFrameFromSpec(
+                        RDatasetSpec("subTree", {"specTestFile1.root"s, "specTestFile2.root"s, "specTestFile3.root"s}))
+                        .Take<ULong64_t>("z"));
    std::sort(dfRDSc2N.begin(), dfRDSc2N.end()); // the order is not necessary preserved by Take in MT
    EXPECT_VEC_EQ(dfRDSc2N, {100u, 101u, 102u, 103u, 104u});
 
    // third constructor: many trees, many files; trees and files passed in a vector of pairs; here 1 specTestFile
    // advanced note: when using this constructor, the internal TChain will always have no name
-   const auto dfRDSc31 = *(RDataFrame(RDatasetSpec({{"tree"s, "specTestFile0.root"s}})).Take<ULong64_t>("z"));
+   const auto dfRDSc31 =
+      *(MakeDataFrameFromSpec(RDatasetSpec({{"tree"s, "specTestFile0.root"s}})).Take<ULong64_t>("z"));
    EXPECT_VEC_EQ(dfRDSc31, {100u, 101u, 102u, 103u, 104u});
 
    // third constructor: many trees and files
-   auto dfRDSc3N = *(RDataFrame(RDatasetSpec({{"subTreeA"s, "specTestFile4.root"s},
-                                              {"subTreeB"s, "specTestFile5.root"s},
-                                              {"subTree"s, "specTestFile3.root"s}}))
+   auto dfRDSc3N = *(MakeDataFrameFromSpec(RDatasetSpec({{"subTreeA"s, "specTestFile4.root"s},
+                                                         {"subTreeB"s, "specTestFile5.root"s},
+                                                         {"subTree"s, "specTestFile3.root"s}}))
                         .Take<ULong64_t>("z"));
    std::sort(dfRDSc3N.begin(), dfRDSc3N.end());
    EXPECT_VEC_EQ(dfRDSc3N, {100u, 101u, 102u, 103u, 104u});
@@ -120,7 +121,7 @@ TEST_P(RDatasetSpecTest, Friends)
    // ensure that the friends did not "corrupt" the main chain
    for (auto i = 0u; i < ranges.size(); ++i) {
       for (const auto &s : specs[i]) {
-         auto res = *(RDataFrame(s).Take<ULong64_t>("z"));
+         auto res = *(MakeDataFrameFromSpec(s).Take<ULong64_t>("z"));
          std::sort(res.begin(), res.end());
          EXPECT_VEC_EQ(res, expectedRess[i]);
       }
@@ -132,12 +133,9 @@ TEST_P(RDatasetSpecTest, Friends)
       for (const auto &s : specs[i]) {
          // nested structure so that the event loop is not called multiple times with different actions
          std::vector<ROOT::RDF::RResultPtr<std::vector<ULong64_t>>> friends;
-         friends.push_back(RDataFrame(s).Take<ULong64_t>("friendTree.z"));
-         // friends.push_back(RDataFrame(s).Take<ULong64_t>("friendShortTree.z"));
-         friends.push_back(RDataFrame(s).Take<ULong64_t>("friendChain1.z"));
-         // friends.push_back(RDataFrame(s).Take<ULong64_t>("friendShortChain1.z"));
-         friends.push_back(RDataFrame(s).Take<ULong64_t>("friendChainN.z"));
-         // friends.push_back(RDataFrame(s).Take<ULong64_t>("friendShortChainN.z"));
+         friends.push_back(MakeDataFrameFromSpec(s).Take<ULong64_t>("friendTree.z"));
+         friends.push_back(MakeDataFrameFromSpec(s).Take<ULong64_t>("friendChain1.z"));
+         friends.push_back(MakeDataFrameFromSpec(s).Take<ULong64_t>("friendChainN.z"));
 
          for (auto &fr : friends) {
             std::sort(fr->begin(), fr->end());
@@ -153,7 +151,7 @@ TEST_P(RDatasetSpecTest, Histo1D)
       {{"subTree0"s, "specTestFile6.root"s}, {"subTree1"s, "specTestFile7.root"s}}); // vertical concatenation
    spec.AddFriend(
       {{"subTree2"s, "specTestFile8.root"s}, {"subTree3"s, "specTestFile9.root"s}}); // horizontal concatenation
-   ROOT::RDataFrame d(spec);
+   auto d = MakeDataFrameFromSpec(spec);
 
    auto h1 = d.Histo1D(::TH1D("h1", "h1", 10, 0, 10), "x");
    auto h2 = d.Histo1D({"h2", "h2", 10, 0, 10}, "x");
@@ -198,7 +196,7 @@ TEST_P(RDatasetSpecTest, FilterDependingOnVariation)
       {{"subTree0"s, "specTestFile6.root"s}, {"subTree1"s, "specTestFile7.root"s}}); // vertical concatenation
    spec.AddFriend(
       {{"subTree2"s, "specTestFile8.root"s}, {"subTree3"s, "specTestFile9.root"s}}); // horizontal concatenation
-   auto df = ROOT::RDataFrame(spec);
+   auto df = MakeDataFrameFromSpec(spec);
 
    auto sum = df.Vary(
                    "x",
@@ -244,7 +242,7 @@ TEST(RDatasetSpecTest, Describe)
       {{"subTree0"s, "specTestFile12.root"s}, {"subTree1"s, "specTestFile13.root"s}}); // vertical concatenation
    spec.AddFriend(
       {{"subTree2"s, "specTestFile14.root"s}, {"subTree3"s, "specTestFile15.root"s}}); // horizontal concatenation
-   auto df = ROOT::RDataFrame(spec);
+   auto df = MakeDataFrameFromSpec(spec);
    auto res0 = df.Sum<double>("x");
    auto res1 = df.Sum<double>("w");
 

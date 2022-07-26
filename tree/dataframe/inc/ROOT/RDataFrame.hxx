@@ -32,6 +32,15 @@ class TDirectory;
 class TTree;
 
 namespace ROOT {
+
+class RDataFrame;
+
+namespace Internal {
+namespace RDF {
+ROOT::RDataFrame MakeDataFrameFromSpec(const RDatasetSpec &spec);
+} // namespace RDF
+} // namespace Internal
+
 namespace RDF {
 class RDataSource;
 }
@@ -49,9 +58,10 @@ public:
    RDataFrame(ULong64_t numEntries);
    RDataFrame(std::unique_ptr<ROOT::RDF::RDataSource>, const ColumnNames_t &defaultBranches = {});
 
-   /// \cond HIDDEN_SYMBOLS
+   friend RDataFrame ROOT::Internal::RDF::MakeDataFrameFromSpec(const ROOT::Internal::RDF::RDatasetSpec &spec);
+
+private:
    RDataFrame(ROOT::Internal::RDF::RDatasetSpec spec);
-   /// \endcond
 };
 
 } // ns ROOT
