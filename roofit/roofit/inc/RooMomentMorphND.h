@@ -126,9 +126,6 @@ protected:
 
    RooListProxy _parList;
    RooSetProxy _obsList;
-   // RooListProxy _pdfList ;
-   TIterator *_parItr; //! Do not persist
-   TIterator *_obsItr; //! Do not persist
    mutable Grid _referenceGrid;
    RooListProxy _pdfList;
 

@@ -64,7 +64,7 @@ RooMomentMorph::RooMomentMorph(const char *name, const char *title,
     }
     _varList.add(*var) ;
   }
-  
+
   // reference p.d.f.s
 
   for (auto const *pdf : pdfList) {
@@ -118,7 +118,7 @@ RooMomentMorph::RooMomentMorph(const char *name, const char *title,
 
   // reference points in m
   _mref      = new TVectorD(mrefList.getSize());
-  Int_t i = 0; 
+  Int_t i = 0;
   for (auto *mref : mrefList) {
     if (!dynamic_cast<RooAbsReal*>(mref)) {
       coutE(InputArguments) << "RooMomentMorph::ctor(" << GetName() << ") ERROR: mref " << mref->GetName() << " is not of type RooAbsReal" << endl ;
@@ -158,8 +158,6 @@ RooMomentMorph::RooMomentMorph(const RooMomentMorph& other, const char* name) :
 RooMomentMorph::~RooMomentMorph()
 {
   if (_mref)   delete _mref;
-  if (_varItr) delete _varItr;
-  if (_pdfItr) delete _pdfItr;
   if (_M)      delete _M;
 }
 
@@ -276,17 +274,13 @@ RooMomentMorph::CacheElem* RooMomentMorph::getCache(const RooArgSet* /*nset*/) c
     }
 
     // construction of unit pdfs
-    _pdfItr->Reset();
-    RooAbsPdf* pdf;
     RooArgList transPdfList;
 
     for (Int_t i=0; i<nPdf; ++i) {
-      _varItr->Reset() ;
-      RooRealVar* var ;
 
-      pdf = (RooAbsPdf*)_pdfItr->Next();
-      std::string pdfName = Form("pdf_%d",i);
-      RooCustomizer cust(*pdf,pdfName.c_str());
+      auto& pdf = static_cast<RooAbsPdf&>(_pdfList[i]);
+      std::string pdfName = "pdf_" + std::to_string(i);
+      RooCustomizer cust(pdf,pdfName.c_str());
 
       for (Int_t j=0; j<nVar; ++j) {
    // slope and offset formulas
@@ -296,7 +290,7 @@ RooMomentMorph::CacheElem* RooMomentMorph::getCache(const RooArgSet* /*nset*/) c
    offs[ij(i,j)] = new RooFormulaVar(offsetName.c_str(),"@0-(@1*@2)",RooArgList(*meanrv[ij(i,j)],*mypos[j],*slope[ij(i,j)]));
    ownedComps.add(RooArgSet(*slope[ij(i,j)],*offs[ij(i,j)])) ;
    // linear transformations, so pdf can be renormalized
-   var = (RooRealVar*)(_varItr->Next());
+   auto* var = static_cast<RooRealVar*>(_varList[j]);
    std::string transVarName = Form("%s_transVar_%d_%d",GetName(),i,j);
    //transVar[ij(i,j)] = new RooFormulaVar(transVarName.c_str(),transVarName.c_str(),"@0*@1+@2",RooArgList(*var,*slope[ij(i,j)],*offs[ij(i,j)]));
 

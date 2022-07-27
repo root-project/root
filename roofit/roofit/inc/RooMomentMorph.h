@@ -83,8 +83,6 @@ protected:
   RooListProxy _pdfList ;
   mutable TVectorD* _mref;
 
-  TIterator* _varItr ;   //! do not persist
-  TIterator* _pdfItr ;   //!
   mutable TMatrixD* _M; //
 
   Setting _setting;
