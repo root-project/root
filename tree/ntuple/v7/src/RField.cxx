@@ -249,7 +249,10 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    if (!result) {
       auto cl = TClass::GetClass(normalizedType.c_str());
       if (cl != nullptr) {
-         result = std::make_unique<RClassField>(fieldName, normalizedType);
+         if (cl->GetCollectionProxy())
+            result = std::make_unique<RCollectionClassField>(fieldName, normalizedType);
+         else
+            result = std::make_unique<RClassField>(fieldName, normalizedType);
       }
    }
 
@@ -912,6 +915,120 @@ size_t ROOT::Experimental::RClassField::GetValueSize() const
 void ROOT::Experimental::RClassField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitClassField(*this);
+}
+
+//------------------------------------------------------------------------------
+
+ROOT::Experimental::RCollectionClassField::RCollectionClassField(std::string_view fieldName, std::string_view className)
+   : RCollectionClassField(fieldName, className, TClass::GetClass(std::string(className).c_str()))
+{
+}
+
+ROOT::Experimental::RCollectionClassField::RCollectionClassField(std::string_view fieldName, std::string_view className,
+                                                                 TClass *classp)
+   : ROOT::Experimental::Detail::RFieldBase(fieldName, className, ENTupleStructure::kCollection, false /* isSimple */),
+     fNWritten(0)
+{
+   if (classp == nullptr)
+      throw RException(R__FAIL("RField: no I/O support for type " + std::string(className)));
+
+   fProxy = classp->GetCollectionProxy();
+   if (!fProxy)
+      throw RException(R__FAIL(std::string(className) + " has no associated collection proxy"));
+   if (fProxy->HasPointers())
+      throw RException(R__FAIL("collection proxies whose value type is a pointer are not supported"));
+   if (fProxy->GetProperties() & TVirtualCollectionProxy::kIsAssociative)
+      throw RException(R__FAIL("associative collections not supported"));
+
+   std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> itemField;
+   if (auto valueClass = fProxy->GetValueClass()) {
+      // Element type is a class
+      itemField = RFieldBase::Create("_0", valueClass->GetName()).Unwrap();
+   } else {
+      switch (fProxy->GetType()) {
+      case EDataType::kChar_t:   itemField = std::make_unique<RField<char>>("_0"); break;
+      case EDataType::kUChar_t:  itemField = std::make_unique<RField<std::uint8_t>>("_0"); break;
+      case EDataType::kShort_t:  itemField = std::make_unique<RField<std::int16_t>>("_0"); break;
+      case EDataType::kUShort_t: itemField = std::make_unique<RField<std::uint16_t>>("_0"); break;
+      case EDataType::kInt_t:    itemField = std::make_unique<RField<std::int32_t>>("_0"); break;
+      case EDataType::kUInt_t:   itemField = std::make_unique<RField<std::uint32_t>>("_0"); break;
+      case EDataType::kLong_t:
+      case EDataType::kLong64_t:
+         itemField = std::make_unique<RField<std::int64_t>>("_0");
+         break;
+      case EDataType::kULong_t:
+      case EDataType::kULong64_t:
+         itemField = std::make_unique<RField<std::uint64_t>>("_0");
+         break;
+      case EDataType::kFloat_t:  itemField = std::make_unique<RField<float>>("_0"); break;
+      case EDataType::kDouble_t: itemField = std::make_unique<RField<double>>("_0"); break;
+      case EDataType::kBool_t:   itemField = std::make_unique<RField<bool>>("_0"); break;
+      default:
+         throw RException(R__FAIL("unsupported value type"));
+      }
+   }
+   fItemSize = itemField->GetValueSize();
+   Attach(std::move(itemField));
+}
+
+std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
+ROOT::Experimental::RCollectionClassField::CloneImpl(std::string_view newName) const
+{
+   return std::unique_ptr<RCollectionClassField>(
+      new RCollectionClassField(newName, GetType(), fProxy->GetCollectionClass()));
+}
+
+std::size_t ROOT::Experimental::RCollectionClassField::AppendImpl(const Detail::RFieldValue& value) {
+}
+
+void ROOT::Experimental::RCollectionClassField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
+{
+}
+
+void ROOT::Experimental::RCollectionClassField::GenerateColumnsImpl()
+{
+   RColumnModel modelIndex(EColumnType::kIndex, true /* isSorted*/);
+   fColumns.emplace_back(
+      std::unique_ptr<Detail::RColumn>(Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(modelIndex, 0)));
+}
+
+void ROOT::Experimental::RCollectionClassField::GenerateColumnsImpl(const RNTupleDescriptor &desc)
+{
+   EnsureColumnType({EColumnType::kIndex}, 0, desc);
+   GenerateColumnsImpl();
+}
+
+ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RCollectionClassField::GenerateValue(void *where)
+{
+   return Detail::RFieldValue(true /* captureFlag */, this, fProxy->New(where));
+}
+
+void ROOT::Experimental::RCollectionClassField::DestroyValue(const Detail::RFieldValue &value, bool dtorOnly)
+{
+   fProxy->Destructor(value.GetRawPtr(), true /* dtorOnly */);
+   if (!dtorOnly)
+      free(value.GetRawPtr());
+}
+
+ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RCollectionClassField::CaptureValue(void *where)
+{
+   return Detail::RFieldValue(true /* captureFlag */, this, where);
+}
+
+std::vector<ROOT::Experimental::Detail::RFieldValue>
+ROOT::Experimental::RCollectionClassField::SplitValue(const Detail::RFieldValue &value) const
+{
+   return {};
+}
+
+void ROOT::Experimental::RCollectionClassField::CommitCluster()
+{
+   fNWritten = 0;
+}
+
+void ROOT::Experimental::RCollectionClassField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+{
+   visitor.VisitCollectionClassField(*this);
 }
 
 //------------------------------------------------------------------------------

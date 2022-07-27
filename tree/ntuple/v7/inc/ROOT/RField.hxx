@@ -27,6 +27,7 @@
 #include <ROOT/TypeTraits.hxx>
 
 #include <TGenericClassInfo.h>
+#include <TVirtualCollectionProxy.h>
 
 #include <algorithm>
 #include <array>
@@ -331,6 +332,53 @@ public:
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const override;
 };
 
+/// The field for a class representing a collection of elements via `TVirtualCollectionProxy`.
+/// Objects of such type behave as collections that can be accessed through the corresponding member functions in
+/// `TVirtualCollectionProxy`. At a bare minimum, the user is required to provide an implementation for the following
+/// functions in `TVirtualCollectionProxy`: `HasPointers()`, `GetProperties()`, `GetValueClass()`, `GetType()`,
+/// `Sizeof()`, `PushProxy()`, `PopProxy()`, `At()`, `Clear()`, and `Insert()`.
+///
+/// The collection proxy for a given class can be set via `TClass::CopyCollectionProxy()`.
+class RCollectionClassField : public Detail::RFieldBase {
+private:
+   TVirtualCollectionProxy *fProxy;
+   std::size_t fItemSize;
+   ClusterSize_t fNWritten;
+
+   RCollectionClassField(std::string_view fieldName, std::string_view className, TClass *classp);
+
+protected:
+   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
+   std::size_t AppendImpl(const Detail::RFieldValue &value) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
+
+public:
+   RCollectionClassField(std::string_view fieldName, std::string_view className);
+   RCollectionClassField(RCollectionClassField &&other) = default;
+   RCollectionClassField &operator=(RCollectionClassField &&other) = default;
+   ~RCollectionClassField() override = default;
+
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   using Detail::RFieldBase::GenerateValue;
+   Detail::RFieldValue GenerateValue(void *where) override;
+   void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final;
+   Detail::RFieldValue CaptureValue(void *where) override;
+   std::vector<Detail::RFieldValue> SplitValue(const Detail::RFieldValue &value) const final;
+   size_t GetValueSize() const override { return fProxy->Sizeof(); }
+   size_t GetAlignment() const final { return alignof(std::max_align_t); }
+   void CommitCluster() final;
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
+   {
+      fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
+   }
+   void GetCollectionInfo(const RClusterIndex &clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
+   {
+      fPrincipalColumn->GetCollectionInfo(clusterIndex, collectionStart, size);
+   }
+};
+
 /// The field for an untyped record. The subfields are stored consequitively in a memory block, i.e.
 /// the memory layout is identical to one that a C++ struct would have
 class RRecordField : public Detail::RFieldBase {
@@ -540,6 +588,29 @@ public:
    RField(std::string_view name) : RClassField(name, TypeName()) {
       static_assert(std::is_class<T>::value, "no I/O support for this basic C++ type");
    }
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() override = default;
+
+   using Detail::RFieldBase::GenerateValue;
+   template <typename... ArgsT>
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where, ArgsT &&...args)
+   {
+      return Detail::RFieldValue(this, static_cast<T *>(where), std::forward<ArgsT>(args)...);
+   }
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final { return GenerateValue(where, T()); }
+};
+
+struct TagUseCollectionProxy {};
+/// Classes behaving as a collection of elements that can be queried via the `TVirtualCollectionProxy` interface
+template <typename T>
+class RField<T, ROOT::Experimental::TagUseCollectionProxy> : public RCollectionClassField {
+public:
+   static std::string TypeName() { return ROOT::Internal::GetDemangledTypeName(typeid(T)); }
+   RField(std::string_view name) : RCollectionClassField(name, TypeName())
+   {
+      static_assert(std::is_class<T>::value, "no I/O support for this basic C++ type");
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
@@ -552,7 +623,6 @@ public:
    }
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where) final { return GenerateValue(where, T()); }
 };
-
 
 /// The collection field is only used for writing; when reading, untyped collections are projected to an std::vector
 class RCollectionField : public ROOT::Experimental::Detail::RFieldBase {
