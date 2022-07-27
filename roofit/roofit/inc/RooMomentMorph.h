@@ -53,11 +53,13 @@ protected:
 
   class CacheElem : public RooAbsCacheElement {
   public:
-    CacheElem(RooAbsPdf& sumPdf, RooChangeTracker& tracker, const RooArgList& flist) : _sumPdf(&sumPdf), _tracker(&tracker) { _frac.add(flist) ; } ;
+    CacheElem(std::unique_ptr<RooAbsPdf> && sumPdf,
+              std::unique_ptr<RooChangeTracker> && tracker,
+              const RooArgList& flist);
     ~CacheElem() override ;
     RooArgList containedArgs(Action) override ;
-    RooAbsPdf* _sumPdf ;
-    RooChangeTracker* _tracker ;
+    std::unique_ptr<RooAbsPdf> _sumPdf ;
+    std::unique_ptr<RooChangeTracker> _tracker ;
     RooArgList _frac ;
 
     RooRealVar* frac(Int_t i ) ;
