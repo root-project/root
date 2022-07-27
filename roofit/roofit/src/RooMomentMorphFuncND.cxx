@@ -172,10 +172,6 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const RooMomentMorphFuncND &other, co
 //_____________________________________________________________________________
 RooMomentMorphFuncND::~RooMomentMorphFuncND()
 {
-   if (_parItr)
-      delete _parItr;
-   if (_obsItr)
-      delete _obsItr;
    if (_M)
       delete _M;
    if (_MSqr)
@@ -710,9 +706,6 @@ void RooMomentMorphFuncND::CacheElem::calculateFractions(const RooMomentMorphFun
    }
 
    if (self._setting == Linear || self._setting == NonLinearLinFractions) {
-      // loop over parList
-      self._parItr->Reset();
-
       // zero all fractions
       // for (int i = 0; i < 3*nPdf; ++i) {
       for (int i = 0; i < nPdf; ++i) {
@@ -724,8 +717,8 @@ void RooMomentMorphFuncND::CacheElem::calculateFractions(const RooMomentMorphFun
 
       vector<double> mtmp;
 
-      for (int j = 0; j < nPar; j++) {
-         RooRealVar *m = (RooRealVar *)(self._parItr->Next());
+      // loop over parList
+      for(auto * m : static_range_cast<RooRealVar*>(self._parList)) {
          mtmp.push_back(m->getVal());
       }
 
