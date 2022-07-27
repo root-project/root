@@ -48,6 +48,7 @@ public:
    virtual void VisitArrayField(const RArrayField &field) { VisitField(field); }
    virtual void VisitBoolField(const RField<bool> &field) { VisitField(field); }
    virtual void VisitClassField(const RClassField &field) { VisitField(field); }
+   virtual void VisitCollectionClassField(const RCollectionClassField &field) { VisitField(field); }
    virtual void VisitRecordField(const RRecordField &field) { VisitField(field); }
    virtual void VisitClusterSizeField(const RField<ClusterSize_t> &field) { VisitField(field); }
    virtual void VisitDoubleField(const RField<double> &field) { VisitField(field); }
