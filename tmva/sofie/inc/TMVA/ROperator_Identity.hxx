@@ -51,10 +51,6 @@ public:
          throw std::runtime_error("TMVA SOFIE Transpose Identity called to Generate without being initialized first");
       }
       std::stringstream out;
-      int length = 1;
-      for(auto& i: fShape){
-         length *= i;
-      }
       out << "\n//------ IDENTITY\n";
       // just copy the tensor pointers
       out << SP << SP << "tensor_" << fNY << " = tensor_" << fNX << ";\n";
