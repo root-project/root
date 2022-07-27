@@ -33,7 +33,7 @@ d = ROOT.RDataFrame(treeName, fileName)
 # We now select some entries in the dataset
 d_cut = d.Filter("b1 % 2 == 0")
 # ## Enrich the dataset
-# Build some temporary columns: We'll write them out
+# Build some temporary columns: we'll write them out
 
 getVector_code ='''
 std::vector<float> getVector (float b2)
@@ -54,11 +54,8 @@ d2 = d_cut.Define("b1_square", "b1 * b1") \
 # The user can explicitly specify the types of the columns as template
 # arguments of the Snapshot method, otherwise they will be automatically
 # inferred.
-branchList = ROOT.vector('string')()
-for branchName in ["b1", "b1_square", "b2_vector"]:
-    branchList.push_back(branchName)
-d2.Snapshot(treeName, outFileName, branchList)
-
+d2.Snapshot(treeName, outFileName, \
+    ["b1", "b1_square", "b2_vector"])
 # Open the new file and list the columns of the tree
 f1 = ROOT.TFile(outFileName)
 t = f1.myTree
