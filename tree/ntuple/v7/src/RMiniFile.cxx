@@ -33,6 +33,14 @@
 #include <utility>
 #include <chrono>
 
+#ifdef MY_CODE
+   #include <sys/file.h>
+   #include <fcntl.h>
+   #include <sys/ioctl.h>
+   #include <sys/types.h>
+   #include <unistd.h>
+   #include <linux/fs.h>
+#endif
 namespace {
 
 // The following types are used to read and write the TFile binary format
@@ -1305,14 +1313,86 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteBlob(const v
    return offset;
 }
 
+#ifdef MY_CODE
+
+std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WritePadding()//const void *data, size_t nbytes)
+{
+    std::uint32_t currentFilePos=0;
+    if (fFileSimple) {
+        currentFilePos = ftell(this->fFileSimple.fFile);//offset + nbytes; // Last position written in the file
+    }else{//TO TEST
+        currentFilePos = this->fFileProper.fFile->GetEND();//offset + nbytes; // Last position written in the file
+    }
+    std::uint64_t offset = 0;//TODO:Remove
+    //std::uint32_t currentFilePos = ftell(this->fFileSimple.fFile);//offset + nbytes; // Last position written in the file
+    std::uint32_t aligned_size = ( (currentFilePos + 4096 - 1)/4096*4096 );
+    std::uint32_t padding_size = aligned_size - currentFilePos;
+    if(padding_size > 0) {
+        std::vector<char> aligned_buffer(padding_size, 0xAB);
+        // std::memcpy(aligned_buffer.data(), data, nbytes);
+        if (fFileSimple) {
+            fFileSimple.Write(aligned_buffer.data(), padding_size);
+        } else {
+            fFileProper.Write(aligned_buffer.data(), padding_size, -1); // WriteKey(data, nbytes, len);
+        }
+    }
+    return offset;
+}
+
+void ROOT::Experimental::Internal::RNTupleFileWriter::ShareContent(std::string_view source_filename, size_t source_length, size_t source_offset){
+   
+   int source_fd=open(source_filename.data(), O_RDONLY);
+   if(source_fd<0){
+      std::cout<<"Error"<<std::endl;
+   }
+   int destination_fd = fileno(this->fFileSimple.fFile);
+   if(destination_fd<0){
+      std::cout<<"Error"<<std::endl;
+   }
+   std::cout<<destination_fd<<std::endl;
+   auto mode = fcntl(destination_fd, F_GETFL);
+   
+   fflush(this->fFileSimple.fFile);
+
+   file_clone_range cloning_details;
+
+   cloning_details.src_fd=source_fd;
+   cloning_details.src_length=source_length;
+   cloning_details.src_offset=source_offset;
+   cloning_details.dest_offset=this->fFileSimple.fFilePos;
+
+   int err = ioctl(destination_fd, FICLONERANGE, &cloning_details);
+
+   if(err<0){
+      std::cout<<strerror(errno)<<std::endl;
+   }
+   this->fFileSimple.fFilePos+=source_length;
+   fseek(this->fFileSimple.fFile, this->fFileSimple.fFilePos, SEEK_SET);
+   fflush(this->fFileSimple.fFile);
+}
+
+#endif
+
+
+
 
 std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteNTupleHeader(
    const void *data, size_t nbytes, size_t lenHeader)
 {
+#ifdef MY_CODE
+
    auto offset = WriteBlob(data, nbytes, lenHeader);
    fNTupleAnchor.fLenHeader = lenHeader;
    fNTupleAnchor.fNBytesHeader = nbytes;
    fNTupleAnchor.fSeekHeader = offset;
+   WritePadding();
+
+#else
+   auto offset = WriteBlob(data, nbytes, lenHeader);
+   fNTupleAnchor.fLenHeader = lenHeader;
+   fNTupleAnchor.fNBytesHeader = nbytes;
+   fNTupleAnchor.fSeekHeader = offset;
+#endif
    return offset;
 }
 

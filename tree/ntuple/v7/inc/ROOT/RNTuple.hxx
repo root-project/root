@@ -35,6 +35,8 @@
 #include <sstream>
 #include <utility>
 
+#define MY_CODE_RNTUPLE_WRITER
+
 class TFile;
 
 namespace ROOT {
@@ -433,6 +435,11 @@ public:
    const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
 
    const RNTupleModel *GetModel() const { return fModel.get(); }
+
+#ifdef MY_CODE_RNTUPLE_WRITER
+   void FastDuplicate( std::string_view ntupleName, std::string_view location );
+   void FastMerge( std::string_view ntupleNameSrc1, std::string_view locationSrc1, std::string_view ntupleNameSrc2, std::string_view locationSrc2 );
+#endif
 };
 
 // clang-format off

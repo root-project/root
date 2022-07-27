@@ -43,6 +43,19 @@
 #include <thread>
 #include <queue>
 
+#ifdef MY_CODE_RPAGE_STORAGE_FILE
+
+#include <sys/file.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <linux/fs.h>
+#include <fstream>
+
+#endif
+
+
 ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntupleName,
    const RNTupleWriteOptions &options)
    : RPageSink(ntupleName, options)
@@ -145,6 +158,10 @@ ROOT::Experimental::Detail::RPageSinkFile::CommitSealedPageImpl(
 std::uint64_t
 ROOT::Experimental::Detail::RPageSinkFile::CommitClusterImpl(ROOT::Experimental::NTupleSize_t /* nEntries */)
 {
+   #ifdef MY_CODE
+   this->fWriter->WritePadding();
+   #endif
+
    auto result = fNBytesCurrentCluster;
    fNBytesCurrentCluster = 0;
    return result;
@@ -186,6 +203,95 @@ void ROOT::Experimental::Detail::RPageSinkFile::ReleasePage(RPage &page)
 {
    fPageAllocator->DeletePage(page);
 }
+
+
+#ifdef MY_CODE_RPAGE_STORAGE_FILE
+   void ROOT::Experimental::Detail::RPageSinkFile::ZeroCopy( std::string_view ntupleName, std::string_view location ){
+      auto source = RPageSourceFile(ntupleName, location, RNTupleReadOptions());
+      source.Attach();
+      auto anchor = source.GetAnchor();
+      size_t seek_data_position = anchor.fSeekHeader + anchor.fNBytesHeader;
+      size_t aligned_seek_data_position = (seek_data_position + 4096 - 1) / 4096 * 4096;
+
+      this->fWriter->ShareContent(location, 4096, 4096);
+   }
+
+   void ROOT::Experimental::Detail::RPageSinkFile::ZeroCopyMerge( std::string_view ntupleNameSrc1, std::string_view locationSrc1, std::string_view ntupleNameSrc2, std::string_view locationSrc2 ){
+      
+      auto source1 = RPageSourceFile(ntupleNameSrc1, locationSrc1, RNTupleReadOptions());
+      source1.Attach();
+      auto anchor1 = source1.GetAnchor();
+      size_t seek_data_position = anchor1.fSeekHeader + anchor1.fNBytesHeader;
+      size_t aligned_seek_data_position = (seek_data_position + 4096 - 1) / 4096 * 4096;
+
+      this->fWriter->ShareContent(locationSrc1, 4096, aligned_seek_data_position);
+
+      auto source2 = RPageSourceFile(ntupleNameSrc2, locationSrc2, RNTupleReadOptions());
+      source2.Attach();
+      auto anchor2 = source2.GetAnchor();
+      seek_data_position = anchor2.fSeekHeader + anchor2.fNBytesHeader;
+      aligned_seek_data_position = (seek_data_position + 4096 - 1) / 4096 * 4096;
+      this->fWriter->ShareContent(locationSrc2, 4096, aligned_seek_data_position);
+      //this->fDescriptorBuilder.GetDescriptor().GetClusterIterable().;
+      
+      //this->fDescriptorBuilder.AddClusterWithDetails(source1.GetSharedDescriptorGuard().GetRef().GetClusterDescriptor(0).Clone());
+      
+      auto nEntries = source1.GetSharedDescriptorGuard().GetRef().GetNEntries();
+      //auto firstEntryIndex = source2.GetSharedDescriptorGuard().GetRef().GetClusterDescriptor(0).GetFirstEntryIndex();
+      //auto nEntries = source2.GetSharedDescriptorGuard().GetRef().GetClusterDescriptor(0).GetNEntries();
+       
+      //source2.GetSharedDescriptorGuard().GetRef().GetClusterDescriptor(0).GetPageRange(1);
+
+      //auto cluster = RClusterDescriptorBuilder( 1, firstEntryIndex, nEntries).MoveDescriptor();
+      //source2.GetSharedDescriptorGuard().GetRef().Clone()
+      //clusterBuilder.CommitColumnRange(1, firstEntryIndex, -1, source2.GetSharedDescriptorGuard().GetRef().GetClusterDescriptor(0).GetPageRange(0) );
+      //clusterBuilder.CommitColumnRange(1, firstEntryIndex, -1, source2.GetSharedDescriptorGuard().GetRef().GetClusterDescriptor(0).GetPageRange(1) );
+      
+      {
+         auto nEntriesInCluster = ClusterSize_t(nEntries - fPrevClusterNEntries);
+         RClusterDescriptorBuilder clusterBuilder(fDescriptorBuilder.GetDescriptor().GetNClusters(), fPrevClusterNEntries,
+                                             nEntriesInCluster);
+         
+         for (unsigned int i = 0; i < fOpenColumnRanges.size(); ++i) {
+            RClusterDescriptor::RPageRange fullRange;
+            fullRange.fColumnId = i;
+            auto pageRange = source1.GetSharedDescriptorGuard().GetRef().GetClusterDescriptor(0).GetPageRange(i).Clone();
+            //std::swap(fullRange, fOpenPageRanges[i]);
+            std::swap(fullRange, pageRange);
+            clusterBuilder.CommitColumnRange(i, fOpenColumnRanges[i].fFirstElementIndex,
+                                             fOpenColumnRanges[i].fCompressionSettings, fullRange);
+            fOpenColumnRanges[i].fFirstElementIndex += fOpenColumnRanges[i].fNElements;
+            fOpenColumnRanges[i].fNElements = 0;
+         }
+         fDescriptorBuilder.AddClusterWithDetails(clusterBuilder.MoveDescriptor().Unwrap());
+      }
+      std::uint64_t offset = 4096;
+      {
+         auto nEntriesInCluster = ClusterSize_t(nEntries - fPrevClusterNEntries);
+         RClusterDescriptorBuilder clusterBuilder(fDescriptorBuilder.GetDescriptor().GetNClusters(), fPrevClusterNEntries,
+                                             nEntriesInCluster);
+         
+         for (unsigned int i = 0; i < fOpenColumnRanges.size(); ++i) {
+            RClusterDescriptor::RPageRange fullRange;
+            fullRange.fColumnId = i;
+            auto pageRange = source1.GetSharedDescriptorGuard().GetRef().GetClusterDescriptor(0).GetPageRange(i).Clone();
+            //std::swap(fullRange, fOpenPageRanges[i]);
+            
+            std::cout<<pageRange.fPageInfos[0].fLocator.fPosition<<std::endl; 
+            pageRange.fPageInfos.front().fLocator.fPosition+=offset;
+            std::cout<<pageRange.fPageInfos[0].fLocator.fPosition<<std::endl; 
+
+            std::swap(fullRange, pageRange);
+            clusterBuilder.CommitColumnRange(i, fOpenColumnRanges[i].fFirstElementIndex,
+                                             fOpenColumnRanges[i].fCompressionSettings, fullRange);
+            fOpenColumnRanges[i].fFirstElementIndex += fOpenColumnRanges[i].fNElements;
+            fOpenColumnRanges[i].fNElements = 0;
+         }
+         fDescriptorBuilder.AddClusterWithDetails(clusterBuilder.MoveDescriptor().Unwrap());
+      }
+      fDescriptorBuilder.GetDescriptor().PrintInfo(std::cout);
+   }
+#endif
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -260,6 +366,12 @@ ROOT::Experimental::Detail::RPageSourceFile::CreateFromAnchor(const Internal::RF
 
 ROOT::Experimental::Detail::RPageSourceFile::~RPageSourceFile() = default;
 
+
+#ifdef MY_CODE_RPAGE_STORAGE_FILE
+ROOT::Experimental::Internal::RFileNTupleAnchor ROOT::Experimental::Detail::RPageSourceFile::GetAnchor(){
+   return fReader.GetNTuple(fNTupleName).Unwrap();
+}
+#endif
 
 ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFile::AttachImpl()
 {

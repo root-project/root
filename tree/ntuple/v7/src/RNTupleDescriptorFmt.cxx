@@ -192,3 +192,23 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
       output << "............................................................" << std::endl;
    }
 }
+
+#ifdef MY_CODE_INFO
+
+   std::uint64_t ROOT::Experimental::RNTupleDescriptor::RTuplePageSizeInfo() const{
+
+      std::uint64_t bytesOnStorage = 0;
+      for (const auto &column : fColumnDescriptors) {
+         // We generate the default memory representation for the given column type in order
+         // to report the size _in memory_ of column elements
+   
+         for (const auto &cluster : fClusterDescriptors) {
+            const auto &pageRange = cluster.second.GetPageRange(column.first);
+            for (const auto &page : pageRange.fPageInfos) {
+               bytesOnStorage += page.fLocator.fBytesOnStorage;
+            }
+         }
+      }
+      return bytesOnStorage; 
+   }
+#endif
