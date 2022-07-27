@@ -136,10 +136,6 @@ RooMomentMorphFunc::~RooMomentMorphFunc()
 {
    if (_mref)
       delete _mref;
-   if (_varItr)
-      delete _varItr;
-   if (_pdfItr)
-      delete _pdfItr;
    if (_M)
       delete _M;
 }
@@ -258,17 +254,12 @@ RooMomentMorphFunc::CacheElem *RooMomentMorphFunc::getCache(const RooArgSet * /*
       }
 
       // construction of unit pdfs
-      _pdfItr->Reset();
-      RooAbsPdf *pdf;
       RooArgList transPdfList;
 
       for (Int_t i = 0; i < nPdf; ++i) {
-         _varItr->Reset();
-         RooRealVar *var;
-
-         pdf = (RooAbsPdf *)_pdfItr->Next();
+         auto& pdf = static_cast<RooAbsPdf&>(_pdfList[i]);
          std::string pdfName = Form("pdf_%d", i);
-         RooCustomizer cust(*pdf, pdfName.c_str());
+         RooCustomizer cust(pdf, pdfName.c_str());
 
          for (Int_t j = 0; j < nVar; ++j) {
             // slope and offset formulas
@@ -279,20 +270,20 @@ RooMomentMorphFunc::CacheElem *RooMomentMorphFunc::getCache(const RooArgSet * /*
                                                RooArgList(*meanrv[ij(i, j)], *mypos[j], *slope[ij(i, j)]));
             ownedComps.add(RooArgSet(*slope[ij(i, j)], *offs[ij(i, j)]));
             // linear transformations, so pdf can be renormalized
-            var = (RooRealVar *)(_varItr->Next());
+            auto& var = static_cast<RooRealVar&>(*_varList[j]);
             std::string transVarName = Form("%s_transVar_%d_%d", GetName(), i, j);
             // transVar[ij(i,j)] = new
             // RooFormulaVar(transVarName.c_str(),transVarName.c_str(),"@0*@1+@2",RooArgList(*var,*slope[ij(i,j)],*offs[ij(i,j)]));
 
             transVar[ij(i, j)] =
-               new RooLinearVar(transVarName.c_str(), transVarName.c_str(), *var, *slope[ij(i, j)], *offs[ij(i, j)]);
+               new RooLinearVar(transVarName.c_str(), transVarName.c_str(), var, *slope[ij(i, j)], *offs[ij(i, j)]);
 
             // *** WVE this is important *** this declares that frac effectively depends on the morphing parameters
             // This will prevent the likelihood optimizers from erroneously declaring terms constant
             transVar[ij(i, j)]->addServer((RooAbsArg &)m.arg());
 
             ownedComps.add(*transVar[ij(i, j)]);
-            cust.replaceArg(*var, *transVar[ij(i, j)]);
+            cust.replaceArg(var, *transVar[ij(i, j)]);
          }
          transPdf[i] = (RooAbsPdf *)cust.build();
          transPdfList.add(*transPdf[i]);
