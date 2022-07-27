@@ -181,5 +181,19 @@ class TestChangeAttribute:
         assert df._headnode.npartitions == 4
 
 
+class TestPropagateExceptions:
+    """Tests that the C++ exceptions are properly propagated."""
+
+    def test_runtime_error_is_propagated(self, connection):
+        """The test creates a TGraph with mixed scalar and vector columns."""
+        df = Dask.RDataFrame(100, daskclient=connection)
+        df = df.Define("x", "1").Define("y", "ROOT::RVecF{1., 2., 3.}")
+        g = df.Graph("x", "y")
+        cpp_error_what = ("runtime_error: Graph was applied to a mix of scalar "
+                          "values and collections. This is not supported.")
+        with pytest.raises(RuntimeError, match=cpp_error_what):
+            g.GetValue()
+
+
 if __name__ == "__main__":
     pytest.main(args=[__file__])
