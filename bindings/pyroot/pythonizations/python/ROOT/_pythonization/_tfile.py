@@ -84,6 +84,8 @@ def _TFileConstructor(self, *args):
     # Parameters:
     # self: instance of TFile class
     # *args: arguments passed to the constructor
+    if len(args) > 0 and "://" in args[0]:
+        raise ValueError("Cannot handle path to remote file '{}' in TFile constructor. Use TFile::Open instead.".format(args[0]))
     self._OriginalConstructor(*args)
     if len(args) >= 1:
         if self.IsZombie():
