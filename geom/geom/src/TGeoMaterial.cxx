@@ -488,7 +488,7 @@ void TGeoMaterial::SetRadLen(Double_t radlen, Double_t intlen)
    }
    TGeoManager::EDefaultUnits typ = TGeoManager::GetDefaultUnits();
    // compute radlen systematically with G3 formula for a valid material
-   if ( radlen>=0 ) {
+   if (radlen >= 0) {
       //taken grom Geant3 routine GSMATE
       constexpr Double_t alr2av = 1.39621E-03;
       constexpr Double_t al183  = 5.20948;
@@ -498,8 +498,8 @@ void TGeoMaterial::SetRadLen(Double_t radlen, Double_t intlen)
       fRadLen *= (typ == TGeoManager::kRootUnits) ? TGeoUnit::cm : TGeant4Unit::cm;
    }
    // Compute interaction length using the same formula as in GEANT4
-   if ( intlen>=0 ) {
-      constexpr Double_t lambda0 = 35.*TGeoUnit::g/TGeoUnit::cm2;  // [g/cm^2]
+   if (intlen >= 0) {
+      constexpr Double_t lambda0 = 35. * TGeoUnit::g / TGeoUnit::cm2; // [g/cm^2]
       Double_t nilinv = 0.0;
       TGeoElement *elem = GetElement();
       if (!elem) {
@@ -508,8 +508,8 @@ void TGeoMaterial::SetRadLen(Double_t radlen, Double_t intlen)
       }
       Double_t nbAtomsPerVolume = TGeoUnit::Avogadro*fDensity/elem->A();
       nilinv += nbAtomsPerVolume*TMath::Power(elem->Neff(), 0.6666667);
-      nilinv *= TGeoUnit::amu/lambda0;
-      fIntLen = (nilinv<=0) ? TGeoShape::Big() : (1.0/nilinv);
+      nilinv *= TGeoUnit::amu / lambda0;
+      fIntLen = (nilinv <= 0) ? TGeoShape::Big() : (1.0 / nilinv);
       // fIntLen is in TGeo units. Apply conversion factor in requested length-units
       fIntLen *= (typ == TGeoManager::kRootUnits) ? TGeoUnit::cm : TGeant4Unit::cm;
    }
@@ -782,10 +782,10 @@ TGeoMixture::~TGeoMixture()
 
 void TGeoMixture::AverageProperties()
 {
-   constexpr const Double_t na      = TGeoUnit::Avogadro;
-   constexpr const Double_t alr2av  = 1.39621E-03;
-   constexpr const Double_t al183   = 5.20948;
-   constexpr const Double_t lambda0 = 35.*TGeoUnit::g/TGeoUnit::cm2;  // [g/cm^2]
+   constexpr const Double_t na = TGeoUnit::Avogadro;
+   constexpr const Double_t alr2av = 1.39621E-03;
+   constexpr const Double_t al183 = 5.20948;
+   constexpr const Double_t lambda0 = 35. * TGeoUnit::g / TGeoUnit::cm2; // [g/cm^2]
    Double_t radinv = 0.0;
    Double_t nilinv = 0.0;
    Double_t nbAtomsPerVolume;
@@ -807,10 +807,10 @@ void TGeoMixture::AverageProperties()
    fRadLen = (radinv <= 0) ? TGeoShape::Big() : 1.0 / radinv;
    // fRadLen is in TGeo units. Apply conversion factor in requested length-units
    fRadLen *= (TGeoManager::GetDefaultUnits() == TGeoManager::kRootUnits) ? TGeoUnit::cm : TGeant4Unit::cm;
-   
+
    // Compute interaction length
-   nilinv *= TGeoUnit::amu/lambda0;
-   fIntLen = (nilinv<=0) ? TGeoShape::Big() : 1.0/nilinv;
+   nilinv *= TGeoUnit::amu / lambda0;
+   fIntLen = (nilinv <= 0) ? TGeoShape::Big() : 1.0 / nilinv;
    // fIntLen is in TGeo units. Apply conversion factor in requested length-units
    fIntLen *= (TGeoManager::GetDefaultUnits() == TGeoManager::kRootUnits) ? TGeoUnit::cm : TGeant4Unit::cm;
 }
@@ -1296,10 +1296,10 @@ void TGeoMixture::ComputeRadiationLength()
    // Formula taken from G4Material.cxx L556
    Double_t radinv = 0.0 ;
    for (Int_t i=0;i<fNelements;++i) {
-     //                                                                    GetfRadTsai is in units of cm2
-     radinv += fVecNbOfAtomsPerVolume[i]*((TGeoElement*)fElements->At(i))->GetfRadTsai() / TGeoUnit::cm2;
+      //                                                                      GetfRadTsai is in units of cm2
+      radinv += fVecNbOfAtomsPerVolume[i] * ((TGeoElement *)fElements->At(i))->GetfRadTsai() / TGeoUnit::cm2;
    }
-   fRadLen = (radinv <= 0.0 ? DBL_MAX : 1.0/radinv);
+   fRadLen = (radinv <= 0.0 ? DBL_MAX : 1.0 / radinv);
    // fRadLen is in TGeo units. Apply conversion factor in requested length-units
    fRadLen *= (TGeoManager::GetDefaultUnits() == TGeoManager::kRootUnits) ? TGeoUnit::cm : TGeant4Unit::cm;
 }
@@ -1309,20 +1309,20 @@ void TGeoMixture::ComputeRadiationLength()
 void TGeoMixture::ComputeNuclearInterLength()
 {
    // Formula taken from G4Material.cxx L567
-   constexpr Double_t lambda0 = 35.*TGeoUnit::g/TGeoUnit::cm2;  // [g/cm^2]
+   constexpr Double_t lambda0 = 35. * TGeoUnit::g / TGeoUnit::cm2; // [g/cm^2]
    const Double_t twothird = 2.0/3.0;
    Double_t NILinv = 0.0;
    for (Int_t i=0; i<fNelements; ++i) {
-      Int_t Z = static_cast<Int_t>(((TGeoElement*)fElements->At(i))->Z()+0.5);
+      Int_t Z = static_cast<Int_t>(((TGeoElement *)fElements->At(i))->Z() + 0.5);
       Double_t A = ((TGeoElement*)fElements->At(i))->Neff();
       if(1 == Z) {
-         NILinv += fVecNbOfAtomsPerVolume[i]*A;
+         NILinv += fVecNbOfAtomsPerVolume[i] * A;
       } else {
-         NILinv += fVecNbOfAtomsPerVolume[i]*TMath::Exp(twothird*TMath::Log(A));
+         NILinv += fVecNbOfAtomsPerVolume[i] * TMath::Exp(twothird * TMath::Log(A));
       }
    }
-   NILinv *= TGeoUnit::amu/lambda0;
-   fIntLen = (NILinv <= 0.0 ? DBL_MAX : 1.0/NILinv);
+   NILinv *= TGeoUnit::amu / lambda0;
+   fIntLen = (NILinv <= 0.0 ? DBL_MAX : 1.0 / NILinv);
    // fIntLen is in TGeo units. Apply conversion factor in requested length-units
    fIntLen *= (TGeoManager::GetDefaultUnits() == TGeoManager::kRootUnits) ? TGeoUnit::cm : TGeant4Unit::cm;
 }
