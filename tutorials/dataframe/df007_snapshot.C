@@ -11,7 +11,7 @@
 /// \date April 2017
 /// \author Danilo Piparo (CERN)
 
-// A simple helper function to fill a test tree: This makes the example
+// A simple helper function to fill a test tree: this makes the example
 // stand-alone.
 void fill_tree(const char *treeName, const char *fileName)
 {
@@ -43,7 +43,7 @@ int df007_snapshot()
    // We now select some entries in the dataset
    auto d_cut = d.Filter("b1 % 2 == 0");
    // ## Enrich the dataset
-   // Build some temporary columns: We'll write them out
+   // Build some temporary columns: we'll write them out
    auto d2 = d_cut.Define("b1_square", "b1 * b1")
                 .Define("b2_vector",
                         [](float b2) {
