@@ -207,6 +207,8 @@ TEST_F(SimBinnedConstrainedTest, SumSubsidiaryLikelihoodIntrospection)
 
 TEST_F(BinnedDatasetTest, EventSections)
 {
+   // Test whether the summed total of multiple sections gives the same result
+   // as an evaluation with a single section over the whole event range.
    pdf->setAttribute("BinnedLikelihood");
    data = pdf->generateBinned(*w.var("x"));
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
@@ -219,7 +221,8 @@ TEST_F(BinnedDatasetTest, EventSections)
 
 TEST_F(SimBinnedConstrainedTest, EventSections)
 {
-
+   // Test whether the summed total of multiple sections gives the same result
+   // as an evaluation with a single section over the whole event range.
    likelihood = RooFit::TestStatistics::buildLikelihood(
       pdf, data, RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")}));
 
@@ -233,4 +236,62 @@ TEST_F(SimBinnedConstrainedTest, EventSections)
    auto part3of4 = likelihood->evaluatePartition({0.5, 0.75}, 0, likelihood->getNComponents());
    auto part4of4 = likelihood->evaluatePartition({0.75, 1}, 0, likelihood->getNComponents());
    EXPECT_EQ(whole, part1of4 + part2of4 + part3of4 + part4of4);
+}
+
+TEST_F(RooAbsLTest, SubEventSections)
+{
+   // Here we test behavior when sections are smaller than a single event or
+   // generally speaking when they do not align perfectly with integer event
+   // boundaries. For instance, when we have 10 events, but 9 sections (one
+   // must contain two events, but which section?), or 11 (one must be empty,
+   // but which one?).
+   std::tie(nll, pdf, data, values) = generate_1D_gaussian_pdf_nll(w, 10);
+   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
+
+   auto whole = likelihood->evaluatePartition({0, 1}, 0, likelihood->getNComponents());
+   ROOT::Math::KahanSum<double> nine_parts, eleven_parts, twenty_parts;
+
+   for (std::size_t ix = 0; ix < 9; ++ix) {
+      nine_parts += likelihood->evaluatePartition({static_cast<double>(ix)/9, static_cast<double>(ix+1)/9}, 0, likelihood->getNComponents());
+   }
+   EXPECT_EQ(whole, nine_parts);
+
+   for (std::size_t ix = 0; ix < 11; ++ix) {
+      eleven_parts += likelihood->evaluatePartition({static_cast<double>(ix)/11, static_cast<double>(ix+1)/11}, 0, likelihood->getNComponents());
+   }
+   EXPECT_EQ(whole, eleven_parts);
+
+   for (std::size_t ix = 0; ix < 20; ++ix) {
+      twenty_parts += likelihood->evaluatePartition({static_cast<double>(ix)/20, static_cast<double>(ix+1)/20}, 0, likelihood->getNComponents());
+   }
+   EXPECT_EQ(whole, twenty_parts);
+}
+
+TEST_F(SimBinnedConstrainedTest, SubEventSections)
+{
+   // Like RooAbsLTest.SubEventSections, but here we can also check behavior
+   // for when component likelihoods of a top-level RooSumL have a different
+   // number (less) of events than the RooSumL itself. Moreover, this more
+   // complex likelihood has an extended term and a subsidiary component
+   // which also depend on section so will also be checked here.
+   likelihood = RooFit::TestStatistics::buildLikelihood(
+      pdf, data, RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")}));
+
+   auto whole = likelihood->evaluatePartition({0, 1}, 0, likelihood->getNComponents());
+
+   ROOT::Math::KahanSum<double> N_events_total_parts;
+   auto N_events_total = likelihood->getNEvents();
+
+   for (std::size_t ix = 0; ix < N_events_total; ++ix) {
+      N_events_total_parts += likelihood->evaluatePartition({static_cast<double>(ix)/N_events_total, static_cast<double>(ix+1)/N_events_total}, 0, likelihood->getNComponents());
+   }
+   EXPECT_EQ(whole, N_events_total_parts);
+
+   // now let's do it again over a number of sections 3 times the number of events
+   ROOT::Math::KahanSum<double> thrice_N_events_total_parts;
+
+   for (std::size_t ix = 0; ix < 3 * N_events_total; ++ix) {
+      thrice_N_events_total_parts += likelihood->evaluatePartition({static_cast<double>(ix)/(3 * N_events_total), static_cast<double>(ix+1)/(3 * N_events_total)}, 0, likelihood->getNComponents());
+   }
+   EXPECT_EQ(whole, thrice_N_events_total_parts);
 }
