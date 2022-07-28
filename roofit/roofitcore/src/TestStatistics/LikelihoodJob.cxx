@@ -17,6 +17,7 @@
 #include "RooFit/MultiProcess/Queue.h"
 #include "RooFit/MultiProcess/Job.h"
 #include "RooFit/MultiProcess/types.h"
+#include "RooFit/MultiProcess/Config.h"
 #include "RooFit/TestStatistics/RooAbsL.h"
 #include "RooFit/TestStatistics/RooUnbinnedL.h"
 #include "RooFit/TestStatistics/RooBinnedL.h"
@@ -29,8 +30,10 @@ namespace TestStatistics {
 
 LikelihoodJob::LikelihoodJob(
    std::shared_ptr<RooAbsL> likelihood,
-   std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean /*, RooMinimizer *minimizer*/)
-   : LikelihoodWrapper(std::move(likelihood), std::move(calculation_is_clean) /*, minimizer*/)
+   std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean)
+   : LikelihoodWrapper(std::move(likelihood), std::move(calculation_is_clean)),
+     n_event_tasks_(MultiProcess::Config::LikelihoodJob::defaultNEventTasks),
+     n_component_tasks_(MultiProcess::Config::LikelihoodJob::defaultNComponentTasks)
 {
    init_vars();
    // determine likelihood type
@@ -105,6 +108,32 @@ void LikelihoodJob::update_state()
    }
 }
 
+/// \warning In automatic mode, this function can start MultiProcess (forks, starts workers, etc)!
+std::size_t LikelihoodJob::getNEventTasks()
+{
+   std::size_t val = n_event_tasks_;
+   if (val == MultiProcess::Config::LikelihoodJob::automaticNEventTasks) {
+      val = get_manager()->process_manager().N_workers();
+   }
+   if (val > likelihood_->getNEvents()) {
+      val = likelihood_->getNEvents();
+   }
+   return val;
+}
+
+
+std::size_t LikelihoodJob::getNComponentTasks()
+{
+   std::size_t val = n_component_tasks_;
+   if (val == MultiProcess::Config::LikelihoodJob::automaticNComponentTasks) {
+      val = 1;
+   }
+   if (val > likelihood_->getNComponents()) {
+      val = likelihood_->getNComponents();
+   }
+   return val;
+}
+
 void LikelihoodJob::updateWorkersParameters()
 {
    if (get_manager()->process_manager().is_master()) {
@@ -155,10 +184,11 @@ void LikelihoodJob::evaluate()
       updateWorkersParameters();
 
       // master fills queue with tasks
-      for (std::size_t ix = 0; ix < get_manager()->process_manager().N_workers(); ++ix) {
+      auto N_tasks = getNEventTasks() * getNComponentTasks();
+      for (std::size_t ix = 0; ix < N_tasks; ++ix) {
          get_manager()->queue().add({id_, state_id_, ix});
       }
-      N_tasks_at_workers_ = get_manager()->process_manager().N_workers();
+      n_tasks_at_workers_ = N_tasks;
 
       // wait for task results back from workers to master
       gather_worker_results();
@@ -186,8 +216,8 @@ bool LikelihoodJob::receive_task_result_on_master(const zmq::message_t &message)
 {
    auto task_result = message.data<task_result_t>();
    results_.emplace_back(task_result->value, task_result->carry);
-   --N_tasks_at_workers_;
-   bool job_completed = (N_tasks_at_workers_ == 0);
+   --n_tasks_at_workers_;
+   bool job_completed = (n_tasks_at_workers_ == 0);
    return job_completed;
 }
 
@@ -197,22 +227,40 @@ void LikelihoodJob::evaluate_task(std::size_t task)
 {
    assert(get_manager()->process_manager().is_worker());
 
-   std::size_t N_events = likelihood_->numDataEntries();
-
-   // used to have multiple modes here, but only kept "bulk" mode; dropped interleaved, single_event and all_events from
-   // old MultiProcess::NLLVar
-   std::size_t first = N_events * task / get_manager()->process_manager().N_workers();
-   std::size_t last = N_events * (task + 1) / get_manager()->process_manager().N_workers();
+   double section_first = 0;
+   double section_last = 1;
+   if (getNEventTasks() > 1) {
+      std::size_t event_task = task % getNEventTasks();
+      std::size_t N_events = likelihood_->numDataEntries();
+      if (event_task > 0) {
+         std::size_t first = N_events * event_task / getNEventTasks();
+         section_first = static_cast<double>(first) / N_events;
+      }
+      if (event_task < getNEventTasks() - 1) {
+         std::size_t last = N_events * (event_task + 1) / getNEventTasks();
+         section_last = static_cast<double>(last) / N_events;
+      }
+   }
 
    switch (likelihood_type_) {
    case LikelihoodType::unbinned:
    case LikelihoodType::binned: {
-      result_ = likelihood_->evaluatePartition(
-         {static_cast<double>(first) / N_events, static_cast<double>(last) / N_events}, 0, 0);
+      result_ = likelihood_->evaluatePartition({section_first, section_last}, 0, 0);
       break;
    }
    case LikelihoodType::sum: {
-      result_ = likelihood_->evaluatePartition( {static_cast<double>(first) / N_events, static_cast<double>(last) / N_events}, 0, likelihood_->getNComponents());
+      std::size_t components_first = 0;
+      std::size_t components_last = likelihood_->getNComponents();
+      if (getNComponentTasks() > 1) {
+         std::size_t component_task = task / getNEventTasks();
+         components_first = likelihood_->getNComponents() * component_task / getNComponentTasks();
+         if (component_task == getNComponentTasks() - 1) {
+            components_last = likelihood_->getNComponents();
+         } else {
+            components_last = likelihood_->getNComponents() * (component_task + 1) / getNComponentTasks();
+         }
+      }
+      result_ = likelihood_->evaluatePartition({section_first, section_last}, components_first, components_last);
       break;
    }
 
