@@ -19,7 +19,6 @@ This file contains the code for cpu computations using the RooBatchCompute libra
 **/
 
 #include "RooBatchCompute.h"
-#include "RunContext.h"
 #include "RooVDTHeaders.h"
 #include "Batches.h"
 
@@ -27,6 +26,8 @@ This file contains the code for cpu computations using the RooBatchCompute libra
 #include "ROOT/TExecutor.hxx"
 
 #include <algorithm>
+#include <sstream>
+#include <stdexcept>
 
 #ifndef RF_ARCH
 #error "RF_ARCH should always be defined"
@@ -77,20 +78,51 @@ public:
    void compute(cudaStream_t *, Computer computer, RestrictArr output, size_t nEvents, const VarVector &vars,
                 const ArgVector &extraArgs) override
    {
-      std::vector<double> buffer(vars.size() * bufferSize);
-      ROOT::Internal::TExecutor ex;
-      unsigned int nThreads = ROOT::IsImplicitMTEnabled() ? ex.GetPoolSize() : 1u;
+      static std::vector<double> buffer;
+      buffer.resize(vars.size() * bufferSize);
 
-      auto task = [&](std::size_t idx) -> int {
+      if (ROOT::IsImplicitMTEnabled()) {
+         ROOT::Internal::TExecutor ex;
+         std::size_t nThreads = ex.GetPoolSize();
+
+         std::size_t nEventsPerThread = nEvents / nThreads + (nEvents % nThreads > 0);
+
+         // Reset the number of threads to the number we actually need given nEventsPerThread
+         nThreads = nEvents / nEventsPerThread + (nEvents % nEventsPerThread > 0);
+
+         auto task = [&](std::size_t idx) -> int {
+
+            // Fill a std::vector<Batches> with the same object and with ~nEvents/nThreads
+            // Then advance every object but the first to split the work between threads
+            Batches batches(output, nEventsPerThread, vars, extraArgs, buffer.data());
+            batches.advance(batches.getNEvents() * idx);
+
+            // Set the number of events of the last Batches object as the remaining events
+            if (idx == nThreads - 1) {
+               batches.setNEvents(nEvents - idx * batches.getNEvents());
+            }
+
+            int events = batches.getNEvents();
+            batches.setNEvents(bufferSize);
+            while (events > bufferSize) {
+               _computeFunctions[computer](batches);
+               batches.advance(bufferSize);
+               events -= bufferSize;
+            }
+            batches.setNEvents(events);
+            _computeFunctions[computer](batches);
+            return 0;
+         };
+
+         std::vector<std::size_t> indices(nThreads);
+         for (unsigned int i = 1; i < nThreads; i++) {
+            indices[i] = i;
+         }
+         ex.Map(task, indices);
+      } else {
          // Fill a std::vector<Batches> with the same object and with ~nEvents/nThreads
          // Then advance every object but the first to split the work between threads
-         Batches batches(output, nEvents / nThreads + (nEvents % nThreads > 0), vars, extraArgs, buffer.data());
-         batches.advance(batches.getNEvents() * idx);
-
-         // Set the number of events of the last Btches object as the remaining events
-         if (idx == nThreads - 1) {
-            batches.setNEvents(nEvents - idx * batches.getNEvents());
-         }
+         Batches batches(output, nEvents, vars, extraArgs, buffer.data());
 
          int events = batches.getNEvents();
          batches.setNEvents(bufferSize);
@@ -101,14 +133,7 @@ public:
          }
          batches.setNEvents(events);
          _computeFunctions[computer](batches);
-         return 0;
-      };
-
-      std::vector<std::size_t> indices(nThreads);
-      for (unsigned int i = 1; i < nThreads; i++) {
-         indices[i] = i;
       }
-      ex.Map(task, indices);
    }
    /// Return the sum of an input array
    double sumReduce(cudaStream_t *, InputArr input, size_t n) override
@@ -138,7 +163,11 @@ Batches::Batches(RestrictArr output, size_t nEvents, const VarVector &vars, cons
    _arrays.resize(vars.size());
    for (size_t i = 0; i < vars.size(); i++) {
       const RooSpan<const double> &span = vars[i];
-      if (span.size() > 1)
+      if (span.empty()) {
+         std::stringstream ss;
+         ss << "The span number " << i << " passed to Batches::Batches() is empty!";
+         throw std::runtime_error(ss.str());
+      } else if (span.size() > 1)
          _arrays[i].set(span.data()[0], span.data(), true);
       else {
          std::fill_n(&buffer[i * bufferSize], bufferSize, span.data()[0]);

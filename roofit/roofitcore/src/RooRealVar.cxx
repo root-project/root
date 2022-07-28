@@ -261,7 +261,7 @@ RooSpan<const double> RooRealVar::getValues(RooBatchCompute::RunContext& inputDa
 
   for (const auto& var_span : inputData.spans) {
     auto var = var_span.first;
-    if (var->namePtr() == namePtr()) {
+    if (var == RooFit::Detail::DataKey{this}) {
       // A variable with the same name exists in the input data. Use their values as ours.
       inputData.spans[this] = var_span.second;
       return var_span.second;
@@ -287,6 +287,7 @@ void RooRealVar::setVal(Double_t value)
   if (clipValue != _value) {
     setValueDirty() ;
     _value = clipValue;
+    ++_valueResetCounter;
   }
 }
 
@@ -303,6 +304,7 @@ void RooRealVar::setVal(Double_t value, const char* rangeName)
   if (clipValue != _value) {
     setValueDirty() ;
     _value = clipValue;
+    ++_valueResetCounter;
   }
 }
 
@@ -1218,7 +1220,11 @@ void RooRealVar::fillTreeBranch(TTree& t)
 void RooRealVar::copyCache(const RooAbsArg* source, Bool_t valueOnly, Bool_t setValDirty)
 {
   // Follow usual procedure for valueklog
+  double oldVal = _value;
   RooAbsReal::copyCache(source,valueOnly,setValDirty) ;
+  if(_value != oldVal) {
+    ++_valueResetCounter;
+  }
 
   if (valueOnly) return ;
 

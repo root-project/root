@@ -38,7 +38,7 @@ void rf711_lagrangianmorph()
    std::string observablename = "pTV";
 
    // Setup observable that is morphed
-   RooRealVar obsvar(observablename.c_str(), "observable of pTV", 10, 600);
+   RooRealVar obsvar(observablename.c_str(), "p_{T}^{V}", 10, 600);
 
    // Setup two couplings that enters the morphing function
    // kSM -> SM coupling set to constant (1)
@@ -134,7 +134,6 @@ void rf711_lagrangianmorph()
    gPad->SetRightMargin(0.05);
 
    frame0->Draw();
-   frame0->GetXaxis()->SetTitle("c_{Hq^{(3)}}");
    TLegend *leg1 = new TLegend(0.55, 0.65, 0.94, 0.87);
    leg1->SetTextSize(0.04);
    leg1->SetFillColor(kWhite);
@@ -151,7 +150,6 @@ void rf711_lagrangianmorph()
    gPad->SetRightMargin(0.05);
 
    frame1->Draw();
-   frame1->GetXaxis()->SetTitle("p_{T}^{V}");
 
    TLegend *leg2 = new TLegend(0.60, 0.65, 0.94, 0.87);
    leg2->SetTextSize(0.04);
@@ -175,7 +173,6 @@ void rf711_lagrangianmorph()
    gPad->SetLogz();
    hh_data->GetYaxis()->SetTitle("c_{Hq^{(3)}}");
    hh_data->GetYaxis()->SetRangeUser(0, 0.5);
-   hh_data->GetXaxis()->SetTitle("p_{T}^{V}");
    hh_data->GetZaxis()->SetTitleOffset(1.8);
    hh_data->Draw("COLZ");
    c1->SaveAs("rf711_lagrangianmorph.png");

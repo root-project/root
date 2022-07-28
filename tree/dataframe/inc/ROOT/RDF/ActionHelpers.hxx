@@ -161,6 +161,36 @@ public:
       fBranches.clear();
       fNames.clear();
    }
+
+   void AssertNoNullBranchAddresses()
+   {
+      std::vector<TBranch *> branchesWithNullAddress;
+      std::copy_if(fBranches.begin(), fBranches.end(), std::back_inserter(branchesWithNullAddress),
+                   [](TBranch *b) { return b->GetAddress() == nullptr; });
+
+      if (branchesWithNullAddress.empty())
+         return;
+
+      // otherwise build error message and throw
+      std::vector<std::string> missingBranchNames;
+      std::transform(branchesWithNullAddress.begin(), branchesWithNullAddress.end(),
+                     std::back_inserter(missingBranchNames), [](TBranch *b) { return b->GetName(); });
+      std::string msg = "RDataFrame::Snapshot:";
+      if (missingBranchNames.size() == 1) {
+         msg += " branch " + missingBranchNames[0] +
+                " is needed as it provides the size for one or more branches containing dynamically sized arrays, but "
+                "it is";
+      } else {
+         msg += " branches ";
+         for (const auto &bName : missingBranchNames)
+            msg += bName + ", ";
+         msg.resize(msg.size() - 2); // remove last ", "
+         msg +=
+            " are needed as they provide the size of other branches containing dynamically sized arrays, but they are";
+      }
+      msg += " not part of the set of branches that are being written out.";
+      throw std::runtime_error(msg);
+   }
 };
 
 /// The container type for each thread's partial result in an action helper
@@ -1316,14 +1346,6 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
    }
 
    // else this must be a C-array, aka case 1.
-   auto *const leaf = static_cast<TLeaf *>(inputBranch->GetListOfLeaves()->UncheckedAt(0));
-   const auto bname = leaf->GetName();
-   const auto counterStr =
-      leaf->GetLeafCount() ? std::string(leaf->GetLeafCount()->GetName()) : std::to_string(leaf->GetLenStatic());
-   const auto btype = leaf->GetTypeName();
-   const auto rootbtype = TypeName2ROOTTypeName(btype);
-   const auto leaflist = std::string(bname) + "[" + counterStr + "]/" + rootbtype;
-
    auto dataPtr = ab->data();
 
    if (outputBranch) {
@@ -1334,11 +1356,39 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
          outputBranch->SetAddress(dataPtr);
       }
    } else {
-      outputBranch = outputTree.Branch(outName.c_str(), dataPtr, leaflist.c_str());
-      outputBranch->SetTitle(inputBranch->GetTitle());
-      outputBranches.Insert(outName, outputBranch);
-      branch = outputBranch;
-      branchAddress = ab->data();
+      // must construct the leaflist for the output branch and create the branch in the output tree
+      auto *const leaf = static_cast<TLeaf *>(inputBranch->GetListOfLeaves()->UncheckedAt(0));
+      const auto bname = leaf->GetName();
+      auto *sizeLeaf = leaf->GetLeafCount();
+      const auto sizeLeafName = sizeLeaf ? std::string(sizeLeaf->GetName()) : std::to_string(leaf->GetLenStatic());
+
+      if (sizeLeaf && !outputBranches.Get(sizeLeafName)) {
+         // The output array branch `bname` has dynamic size stored in leaf `sizeLeafName`, but that leaf has not been
+         // added to the output tree yet. However, the size leaf has to be available for the creation of the array
+         // branch to be successful. So we create the size leaf here.
+         const auto sizeTypeStr = TypeName2ROOTTypeName(sizeLeaf->GetTypeName());
+         const auto sizeBufSize = sizeLeaf->GetBranch()->GetBasketSize();
+         // The null branch address is a placeholder. It will be set when SetBranchesHelper is called for `sizeLeafName`
+         auto *sizeBranch = outputTree.Branch(sizeLeafName.c_str(), (void *)nullptr,
+                                              (sizeLeafName + '/' + sizeTypeStr).c_str(), sizeBufSize);
+         outputBranches.Insert(sizeLeafName, sizeBranch);
+      }
+
+      const auto btype = leaf->GetTypeName();
+      const auto rootbtype = TypeName2ROOTTypeName(btype);
+      if (rootbtype == ' ') {
+         Warning("Snapshot",
+                 "RDataFrame::Snapshot: could not correctly construct a leaflist for C-style array in column %s. This "
+                 "column will not be written out.",
+                 bname);
+      } else {
+         const auto leaflist = std::string(bname) + "[" + sizeLeafName + "]/" + rootbtype;
+         outputBranch = outputTree.Branch(outName.c_str(), dataPtr, leaflist.c_str());
+         outputBranch->SetTitle(inputBranch->GetTitle());
+         outputBranches.Insert(outName, outputBranch);
+         branch = outputBranch;
+         branchAddress = ab->data();
+      }
    }
 }
 
@@ -1421,6 +1471,7 @@ public:
                                            fBranches[S], fBranchAddresses[S], &values, fOutputBranches, fIsDefine[S]),
                          0)...,
                         0};
+      fOutputBranches.AssertNoNullBranchAddresses();
       (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
    }
 
@@ -1581,14 +1632,15 @@ public:
    template <std::size_t... S>
    void SetBranches(unsigned int slot, ColTypes &... values, std::index_sequence<S...> /*dummy*/)
    {
-         // hack to call TTree::Branch on all variadic template arguments
-         int expander[] = {(SetBranchesHelper(fInputTrees[slot], *fOutputTrees[slot], fInputBranchNames[S],
-                                              fOutputBranchNames[S], fBranches[slot][S], fBranchAddresses[slot][S],
-                                              &values, fOutputBranches[slot], fIsDefine[S]),
-                            0)...,
-                           0};
-         (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
-         (void)slot;     // avoid unused variable warnings in gcc6.2
+      // hack to call TTree::Branch on all variadic template arguments
+      int expander[] = {(SetBranchesHelper(fInputTrees[slot], *fOutputTrees[slot], fInputBranchNames[S],
+                                           fOutputBranchNames[S], fBranches[slot][S], fBranchAddresses[slot][S],
+                                           &values, fOutputBranches[slot], fIsDefine[S]),
+                         0)...,
+                        0};
+      fOutputBranches[slot].AssertNoNullBranchAddresses();
+      (void)expander; // avoid unused parameter warnings (gcc 12.1)
+      (void)slot;     // avoid unused variable warnings in gcc6.2
    }
 
    void Initialize()

@@ -104,10 +104,6 @@ for single nodes.
 
 using namespace std;
 
-#if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
-char* operator+( streampos&, char* );
-#endif
-
 ClassImp(RooAbsArg);
 ;
 
@@ -930,8 +926,6 @@ Bool_t RooAbsArg::observableOverlaps(const RooArgSet* nset, const RooAbsArg& tes
 
 void RooAbsArg::setValueDirty(const RooAbsArg* source)
 {
-  _allBatchesDirty = true;
-
   if (_operMode!=Auto || _inhibitDirty) return ;
 
   // Handle no-propagation scenarios first
@@ -2188,84 +2182,6 @@ void RooAbsArg::graphVizAddConnections(set<pair<RooAbsArg*,RooAbsArg*> >& linkSe
 }
 
 
-
-// //_____________________________________________________________________________
-// TGraphStruct* RooAbsArg::graph(Bool_t useFactoryTag, Double_t textSize)
-// {
-//   // Return a TGraphStruct object filled with the tree structure of the pdf object
-
-//   TGraphStruct* theGraph = new TGraphStruct() ;
-
-//   // First list all the tree nodes
-//   RooArgSet nodeSet ;
-//   treeNodeServerList(&nodeSet) ;
-//   TIterator* iter = nodeSet.createIterator() ;
-//   RooAbsArg* node ;
-
-
-//   // iterate over nodes
-//   while((node=(RooAbsArg*)iter->Next())) {
-
-//     // Skip node that represent numeric constants
-//     if (node->IsA()->InheritsFrom(RooConstVar::Class())) continue ;
-
-//     string nodeName ;
-//     if (useFactoryTag && node->getStringAttribute("factory_tag")) {
-//       nodeName  = node->getStringAttribute("factory_tag") ;
-//     } else {
-//       if (node->isFundamental()) {
-// 	nodeName = node->GetName();
-//       } else {
-// 	ostringstream oss ;
-// 	node->printStream(oss,(node->defaultPrintContents(0)&(~kValue)),node->defaultPrintStyle(0)) ;
-// 	nodeName= oss.str() ;
-// // 	nodeName = Form("%s::%s",node->IsA()->GetName(),node->GetName());
-
-//       }
-//     }
-//     if (strncmp(nodeName.c_str(),"Roo",3)==0) {
-//       nodeName = string(nodeName.c_str()+3) ;
-//     }
-//     node->setStringAttribute("graph_name",nodeName.c_str()) ;
-
-//     TGraphNode* gnode = theGraph->AddNode(nodeName.c_str(),nodeName.c_str()) ;
-//     gnode->SetLineWidth(2) ;
-//     gnode->SetTextColor(node->isFundamental()?kBlue:kRed) ;
-//     gnode->SetTextSize(textSize) ;
-//   }
-//   delete iter ;
-
-//   // Get set of all server links
-//   set<pair<RooAbsArg*,RooAbsArg*> > links ;
-//   graphVizAddConnections(links) ;
-
-//   // And insert them into the graph
-//   set<pair<RooAbsArg*,RooAbsArg*> >::iterator liter = links.begin() ;
-//   for( ; liter != links.end() ; ++liter ) {
-
-//     TGraphNode* n1 = (TGraphNode*)theGraph->GetListOfNodes()->FindObject(liter->first->getStringAttribute("graph_name")) ;
-//     TGraphNode* n2 = (TGraphNode*)theGraph->GetListOfNodes()->FindObject(liter->second->getStringAttribute("graph_name")) ;
-//     if (n1 && n2) {
-//       TGraphEdge* edge = theGraph->AddEdge(n1,n2) ;
-//       edge->SetLineWidth(2) ;
-//     }
-//   }
-
-//   return theGraph ;
-// }
-
-
-
-// //_____________________________________________________________________________
-// Bool_t RooAbsArg::inhibitDirty()
-// {
-//   // Return current status of the inhibitDirty global flag. If true
-//   // no dirty state change tracking occurs and all caches are considered
-//   // to be always dirty.
-//   return _inhibitDirty ;
-// }
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Take ownership of the contents of 'comps'.
 
@@ -2555,13 +2471,14 @@ void RooAbsArg::applyWeightSquared(bool flag) {
 
 
 /// Fills a RooArgSet to be used as the normalization set for a server, given a
-/// normalization set for this RooAbsArg.
+/// normalization set for this RooAbsArg. If the output is a `nullptr`, it
+/// means that the normalization set doesn't change.
 ///
 /// \param[in] normSet The normalization set for this RooAbsArg.
 /// \param[in] server A server of this RooAbsArg that we determine the
 ///            normalization set for.
 /// \param[out] serverNormSet Output parameter. Normalization set for the
 ///             server.
-void RooAbsArg::fillNormSetForServer(RooArgSet const& normSet, RooAbsArg const& server, RooArgSet& serverNormSet) const {
-  for(auto * arg : normSet) if(server.dependsOn(*arg)) serverNormSet.add(*arg);
+std::unique_ptr<RooArgSet> RooAbsArg::fillNormSetForServer(RooArgSet const& /*normSet*/, RooAbsArg const& /*server*/) const {
+   return nullptr;
 }

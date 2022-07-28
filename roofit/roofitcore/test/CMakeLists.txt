@@ -8,6 +8,7 @@
 # @author Patrick Bos, NL eScience Center, 2018
 
 ROOT_ADD_GTEST(simple simple.cxx LIBRARIES RooFitCore)
+ROOT_ADD_GTEST(testRooAddPdf testRooAddPdf.cxx LIBRARIES RooFitCore RooStats)
 ROOT_ADD_GTEST(testRooCacheManager testRooCacheManager.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testWorkspace testWorkspace.cxx LIBRARIES RooFitCore RooStats)
 if(NOT MSVC OR win_broken_tests)

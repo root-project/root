@@ -25,7 +25,6 @@ Plain Gaussian p.d.f
 #include "RooHelpers.h"
 #include "RooMath.h"
 #include "RooRandom.h"
-#include "RunContext.h"
 
 #include <vector>
 

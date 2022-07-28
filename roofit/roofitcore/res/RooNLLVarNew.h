@@ -18,6 +18,8 @@
 #include "RooAbsReal.h"
 #include "RooTemplateProxy.h"
 
+#include <Math/Util.h>
+
 #include "RooBatchComputeTypes.h"
 
 namespace ROOT {
@@ -32,7 +34,7 @@ public:
 
    RooNLLVarNew(){};
    RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables, bool isExtended,
-                std::string const &rangeName);
+                std::string const &rangeName, bool doOffset);
    RooNLLVarNew(const RooNLLVarNew &other, const char *name = 0);
    TObject *clone(const char *newname) const override { return new RooNLLVarNew(*this, newname); }
 
@@ -42,30 +44,34 @@ public:
    double defaultErrorLevel() const override { return 0.5; }
 
    inline RooAbsPdf *getPdf() const { return &*_pdf; }
-   void computeBatch(cudaStream_t *, double *output, size_t nOut, RooFit::Detail::DataMap const&) const override;
+   void computeBatch(cudaStream_t *, double *output, size_t nOut, RooFit::Detail::DataMap const &) const override;
    inline bool isReducerNode() const override { return true; }
 
    RooArgSet prefixObservableAndWeightNames(std::string const &prefix);
 
    void applyWeightSquared(bool flag) override;
 
-protected:
-   void setObservables(RooArgSet const &observables)
-   {
-      _observables.clear();
-      _observables.add(observables);
-   }
+   std::unique_ptr<RooArgSet> fillNormSetForServer(RooArgSet const &normSet, RooAbsArg const &server) const override;
+
+private:
+   double evaluate() const override;
+   void resetWeightVarNames();
 
    RooTemplateProxy<RooAbsPdf> _pdf;
    RooArgSet _observables;
-   mutable double _sumWeight = 0.0;         //!
-   mutable double _sumWeight2 = 0.0;        //!
+   mutable double _sumWeight = 0.0;  //!
+   mutable double _sumWeight2 = 0.0; //!
    bool _isExtended;
    bool _weightSquared = false;
+   bool _binnedL = false;
+   bool _doOffset = false;
    std::string _prefix;
+   RooTemplateProxy<RooAbsReal> _weightVar;
+   RooTemplateProxy<RooAbsReal> _weightSquaredVar;
    std::unique_ptr<RooTemplateProxy<RooAbsReal>> _fractionInRange;
-
-   double evaluate() const override;
+   mutable std::vector<double> _binw;                  ///<!
+   mutable std::vector<double> _logProbasBuffer;       ///<!
+   mutable ROOT::Math::KahanSum<double> _offset = 0.0; ///<! Offset as KahanSum to avoid loss of precision
 
 }; // end class RooNLLVar
 

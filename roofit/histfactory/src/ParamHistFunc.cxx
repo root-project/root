@@ -210,9 +210,13 @@ RooAbsReal& ParamHistFunc::getParameter( Int_t index ) const {
     _numBinsPerDim = getNumBinsPerDim(_dataVars);
   }
 
-  int i = index / n.yz ;
-  int j = (index % n.y) / n.z;
-  int k = index % (n.yz);
+  // Unravel the index to 3D coordinates. We can't use the index directly,
+  // because in the parameter set the dimensions are ordered in reverse order
+  // compared to the RooDataHist (for historical reasons).
+  const int i = index / n.yz;
+  const int tmp = index % n.yz;
+  const int j = tmp / n.z;
+  const int k = tmp % n.z;
 
   return static_cast<RooAbsReal&>(_paramSet[i + j * n.x + k * n.xy]);
 }
@@ -601,6 +605,8 @@ Double_t ParamHistFunc::evaluate() const
 void ParamHistFunc::computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const& dataMap) const {
   std::vector<double> oldValues;
   std::vector<RooSpan<const double>> data;
+  oldValues.reserve(_dataVars.size());
+  data.reserve(_dataVars.size());
 
   // Retrieve data for all variables
   for (auto arg : _dataVars) {

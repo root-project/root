@@ -70,9 +70,9 @@ endif()
 if(NOT builtin_nlohmannjson)
   message(STATUS "Looking for nlohmann/json.hpp")
   if(fail-on-missing)
-    find_package(nlohmann_json REQUIRED)
+    find_package(nlohmann_json 3.9 REQUIRED)
   else()
-    find_package(nlohmann_json QUIET)
+    find_package(nlohmann_json 3.9 QUIET)
     if(nlohmann_json_FOUND)
       get_target_property(_nlohmann_json_incl nlohmann_json::nlohmann_json INTERFACE_INCLUDE_DIRECTORIES)
       message(STATUS "Found nlohmann/json.hpp in ${_nlohmann_json_incl} (found version ${nlohmann_json_VERSION})")
@@ -119,7 +119,7 @@ if(NOT builtin_freetype)
 endif()
 
 if(builtin_freetype)
-  set(freetype_version 2.6.1)
+  set(freetype_version 2.12.1)
   message(STATUS "Building freetype version ${freetype_version} included in ROOT itself")
   set(FREETYPE_LIBRARY ${CMAKE_BINARY_DIR}/FREETYPE-prefix/src/FREETYPE/objs/.libs/${CMAKE_STATIC_LIBRARY_PREFIX}freetype${CMAKE_STATIC_LIBRARY_SUFFIX})
   if(WIN32)
@@ -131,7 +131,7 @@ if(builtin_freetype)
     ExternalProject_Add(
       FREETYPE
       URL ${CMAKE_SOURCE_DIR}/graf2d/freetype/src/freetype-${freetype_version}.tar.gz
-      URL_HASH SHA256=0a3c7dfbda6da1e8fce29232e8e96d987ababbbf71ebc8c75659e4132c367014
+      URL_HASH SHA256=efe71fd4b8246f1b0b1b9bfca13cfff1c9ad85930340c27df469733bbb620938
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
       BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${freetypebuild}
@@ -146,16 +146,19 @@ if(builtin_freetype)
     if(CMAKE_SYSTEM_NAME STREQUAL AIX)
       set(_freetype_zlib --without-zlib)
     endif()
+    if (APPLE)
+      set(_freetype_brotli "--with-brotli=no")
+    endif()
     if(CMAKE_OSX_SYSROOT)
       set(_freetype_cc "${_freetype_cc} -isysroot ${CMAKE_OSX_SYSROOT}")
     endif()
     ExternalProject_Add(
       FREETYPE
       URL ${CMAKE_SOURCE_DIR}/graf2d/freetype/src/freetype-${freetype_version}.tar.gz
-      URL_HASH SHA256=0a3c7dfbda6da1e8fce29232e8e96d987ababbbf71ebc8c75659e4132c367014
+      URL_HASH SHA256=efe71fd4b8246f1b0b1b9bfca13cfff1c9ad85930340c27df469733bbb620938
       CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR> --with-pic
                          --disable-shared --with-png=no --with-bzip2=no
-                         --with-harfbuzz=no ${_freetype_zlib}
+                         --with-harfbuzz=no ${_freetype_brotli} ${_freetype_zlib}
                           "CC=${_freetype_cc}" CFLAGS=${_freetype_cflags}
       INSTALL_COMMAND ""
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1

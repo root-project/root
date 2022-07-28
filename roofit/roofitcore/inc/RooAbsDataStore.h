@@ -71,8 +71,8 @@ public:
   virtual Bool_t isWeighted() const = 0 ;
 
   /// Retrieve batches for all observables in this data store.
-  virtual RooBatchCompute::RunContext getBatches(std::size_t first, std::size_t len) const = 0;
-  virtual std::map<const std::string, RooSpan<const RooAbsCategory::value_type>> getCategoryBatches(std::size_t /*first*/, std::size_t /*len*/) const {
+  virtual RooAbsData::RealSpans getBatches(std::size_t first, std::size_t len) const = 0;
+  virtual RooAbsData::CategorySpans getCategoryBatches(std::size_t /*first*/, std::size_t /*len*/) const {
     std::cerr << "This functionality is not yet implemented for this data store." << std::endl;
     throw std::logic_error("getCategoryBatches() not implemented in RooAbsDataStore.");
     return {};

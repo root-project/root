@@ -496,7 +496,7 @@ void TLatex::Copy(TObject &obj) const
    ((TLatex&)obj).fPos         = fPos;
    ((TLatex&)obj).fItalic      = fItalic;
    TText::Copy(obj);
-   TAttLine::Copy(((TAttLine&)obj));
+   TAttLine::Copy((TLatex&)obj);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

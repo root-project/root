@@ -30,9 +30,8 @@ In extended mode, a
 #include "RooAbsPdf.h"
 #include "RooAbsDataStore.h"
 #include "RooNLLVar.h"  // RooNLLVar::ComputeScalar
-#include "RunContext.h" // complete type BatchCompute::RunContext
-
-#include "Math/Util.h" // KahanSum
+#include "RunContext.h"
+#include "RooChangeTracker.h"
 
 namespace RooFit {
 namespace TestStatistics {
@@ -42,13 +41,18 @@ RooUnbinnedL::RooUnbinnedL(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended e
    : RooAbsL(RooAbsL::ClonePdfData{pdf, data}, data->numEntries(), 1, extended),
      useBatchedEvaluations_(useBatchedEvaluations)
 {
+   std::unique_ptr<RooArgSet> params(pdf->getParameters(data));
+   paramTracker_ = std::make_unique<RooChangeTracker>("chtracker","change tracker",*params,true);
 }
 
 RooUnbinnedL::RooUnbinnedL(const RooUnbinnedL &other)
    : RooAbsL(other), apply_weight_squared(other.apply_weight_squared), _first(other._first),
      useBatchedEvaluations_(other.useBatchedEvaluations_)
 {
+   paramTracker_ = std::make_unique<RooChangeTracker>(*other.paramTracker_);
 }
+
+RooUnbinnedL::~RooUnbinnedL() = default;
 
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -83,10 +87,14 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
    ROOT::Math::KahanSum<double> result;
    double sumWeight;
 
-   data_->store()->recalculateCache(nullptr, events.begin(N_events_), events.end(N_events_), 1, kTRUE);
+   // Do not reevaluate likelihood if parameters have not changed
+   if (!paramTracker_->hasChanged(true) & (cachedResult_ != 0)) return cachedResult_;
+
+   data_->store()->recalculateCache(nullptr, events.begin(N_events_), events.end(N_events_), 1, true);
 
    if (useBatchedEvaluations_) {
-      std::tie(result, sumWeight) = RooNLLVar::computeBatchedFunc(pdf_.get(), data_.get(), evalData_, normSet_.get(), apply_weight_squared,
+      std::unique_ptr<RooBatchCompute::RunContext> evalData;
+      std::tie(result, sumWeight) = RooNLLVar::computeBatchedFunc(pdf_.get(), data_.get(), evalData, normSet_.get(), apply_weight_squared,
                                                                   1, events.begin(N_events_), events.end(N_events_));
    } else {
       std::tie(result, sumWeight) = RooNLLVar::computeScalarFunc(pdf_.get(), data_.get(), normSet_.get(), apply_weight_squared,
@@ -160,6 +168,7 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
       pdf_->wireAllCaches();
    }
 
+   cachedResult_ = result;
    return result;
 }
 

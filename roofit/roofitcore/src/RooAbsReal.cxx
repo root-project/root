@@ -317,9 +317,9 @@ RooSpan<const double> RooAbsReal::getValues(RooBatchCompute::RunContext& evalDat
 
   normSet = normSet ? normSet : _lastNSet;
 
-  std::map<const TNamed *, RooSpan<const double>> dataSpans;
+  std::map<RooFit::Detail::DataKey, RooSpan<const double>> dataSpans;
   for (auto const &evalDataItem : evalData.spans) {
-    dataSpans[evalDataItem.first->namePtr()] = evalDataItem.second;
+    dataSpans[evalDataItem.first] = evalDataItem.second;
   }
 
   ROOT::Experimental::RooFitDriver driver(*this, normSet ? *normSet : RooArgSet{});
@@ -4916,23 +4916,20 @@ void RooAbsReal::computeBatch(cudaStream_t*, double* output, size_t nEvents, Roo
     RooAbsArg::OperMode oldOperMode;
   };
   std::vector<ServerData> ourServers;
-  std::size_t dataSize = 1;
+  ourServers.reserve(servers().size());
 
   for (auto server : servers()) {
-    if (server->isValueServer(*this)) {
-      // maybe we are still missing inhibit dirty here
-      auto oldOperMode = server->operMode();
-      // See note at the bottom of this function to learn why we can only set
-      // the operation mode to "always clean" if there are no other value
-      // clients.
-      server->setOperMode(RooAbsArg::AClean);
-      ourServers.push_back({server,
-          dataMap.at(server),
-          dynamic_cast<RooAbsCategory const*>(server) ? static_cast<RooAbsCategory const*>(server)->getCurrentIndex() : static_cast<RooAbsReal const*>(server)->_value,
-          oldOperMode});
-      // Prevent the server from evaluating; just return cached result, which we will side load:
-      dataSize = std::max(dataSize, ourServers.back().batch.size());
-    }
+    // maybe we are still missing inhibit dirty here
+    auto oldOperMode = server->operMode();
+    // See note at the bottom of this function to learn why we can only set
+    // the operation mode to "always clean" if there are no other value
+    // clients.
+    server->setOperMode(RooAbsArg::AClean);
+    ourServers.push_back({server,
+        dataMap.at(server),
+        server->isCategory() ? static_cast<RooAbsCategory const*>(server)->getCurrentIndex() : static_cast<RooAbsReal const*>(server)->_value,
+        oldOperMode});
+    // Prevent the server from evaluating; just return cached result, which we will side load:
   }
 
 
@@ -4954,8 +4951,8 @@ void RooAbsReal::computeBatch(cudaStream_t*, double* output, size_t nEvents, Roo
 
   // Advising to implement the batch interface makes only sense if the batch was not a scalar.
   // Otherwise, there would be no speedup benefit.
-  if(dataSize > 1 && RooMsgService::instance().isActive(this, RooFit::FastEvaluations, RooFit::INFO)) {
-    coutI(FastEvaluations) << "The class " << IsA()->GetName() << " does not implement the faster batch evaluation interface."
+  if(nEvents > 1 && RooMsgService::instance().isActive(this, RooFit::FastEvaluations, RooFit::INFO)) {
+    coutI(FastEvaluations) << "The class " << ClassName() << " does not implement the faster batch evaluation interface."
         << " Consider requesting or implementing it to benefit from a speed up." << std::endl;
   }
 

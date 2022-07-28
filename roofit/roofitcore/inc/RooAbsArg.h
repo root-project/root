@@ -33,11 +33,6 @@
 #include <stack>
 #include <string>
 
-#ifndef R__LESS_INCLUDES
-#include "TClass.h"
-#include "THashList.h"
-#endif
-
 
 class TTree ;
 class RooArgSet ;
@@ -597,7 +592,9 @@ public:
 
   virtual void applyWeightSquared(bool flag);
 
-  virtual void fillNormSetForServer(RooArgSet const& normSet, RooAbsArg const& server, RooArgSet& serverNormSet) const;
+  virtual std::unique_ptr<RooArgSet> fillNormSetForServer(RooArgSet const& normSet, RooAbsArg const& server) const;
+
+  virtual bool isCategory() const { return false; }
 
 protected:
    void graphVizAddConnections(std::set<std::pair<RooAbsArg*,RooAbsArg*> >&) ;
@@ -722,15 +719,20 @@ private:
  public:
   void setLocalNoDirtyInhibit(Bool_t flag) const { _localNoInhibitDirty = flag ; }
   Bool_t localNoDirtyInhibit() const { return _localNoInhibitDirty ; }
+
+  /// Returns the token for retrieving results in the BatchMode. For internal use only.
+  std::size_t dataToken() const { return _dataToken; }
+
+  /// Sets the token for retrieving results in the BatchMode. For internal use only.
+  void setDataToken(std::size_t index) { _dataToken = index; }
  protected:
 
 
   mutable Bool_t _valueDirty ;  // Flag set if value needs recalculating because input values modified
   mutable Bool_t _shapeDirty ;  // Flag set if value needs recalculating because input shapes modified
-  mutable bool _allBatchesDirty{true}; //! Mark batches as dirty (only meaningful for RooAbsReal).
 
   mutable OperMode _operMode ; // Dirty state propagation mode
-  mutable Bool_t _fast ; // Allow fast access mode in getVal() and proxies
+  mutable Bool_t _fast = false; // Allow fast access mode in getVal() and proxies
 
   // Owned components
   RooArgSet* _ownedComponents ; //! Set of owned component
@@ -748,6 +750,8 @@ private:
 /*   RooArgSet _branchNodeCache //! Cached branch nodes     */
 
   mutable RooWorkspace *_myws; //! In which workspace do I live, if any
+  
+  std::size_t _dataToken = 0; //! Set by the RooFitDriver for this arg to retrieve its result in the run context
 
   /// \cond Internal
   // Legacy streamers need the following statics:

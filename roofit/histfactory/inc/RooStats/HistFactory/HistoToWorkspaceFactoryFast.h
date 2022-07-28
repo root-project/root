@@ -107,7 +107,7 @@ namespace RooStats{
              int lowBin, int highBin);
 
       std::unique_ptr<TH1> MakeScaledUncertaintyHist(const std::string& Name,
-                 std::vector< std::pair<const TH1*, const TH1*> > HistVec ) const;
+                 std::vector< std::pair<const TH1*, std::unique_ptr<TH1>> > const& HistVec ) const;
 
       TH1* MakeAbsolUncertaintyHist( const std::string& Name, const TH1* Hist );
 

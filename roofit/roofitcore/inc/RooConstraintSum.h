@@ -55,17 +55,17 @@ public:
 
   void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
 
-  void fillNormSetForServer(RooArgSet const& /*normSet*/, RooAbsArg const& server, RooArgSet& serverNormSet) const override;
+  std::unique_ptr<RooArgSet> fillNormSetForServer(RooArgSet const& normSet, RooAbsArg const& server) const override;
 
 protected:
 
-  RooListProxy _set1 ;    // Set of constraint terms
-  RooSetProxy _paramSet ; // Set of parameters to which constraints apply
-  const bool _takeGlobalObservablesFromData = false; // If the global observable values are taken from data
+  RooListProxy _set1 ;    ///< Set of constraint terms
+  RooArgSet _paramSet ; ///< Set of parameters to which constraints apply
+  const bool _takeGlobalObservablesFromData = false; ///< If the global observable values are taken from data
 
   Double_t evaluate() const override;
 
-  ClassDefOverride(RooConstraintSum,3) // sum of -log of set of RooAbsPdf representing parameter constraints
+  ClassDefOverride(RooConstraintSum,4) // sum of -log of set of RooAbsPdf representing parameter constraints
 };
 
 #endif

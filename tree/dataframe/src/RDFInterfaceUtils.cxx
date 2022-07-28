@@ -37,6 +37,7 @@
 #endif
 
 #include <algorithm>
+#include <cassert>
 #include <unordered_set>
 #include <stdexcept>
 #include <string>
@@ -141,7 +142,7 @@ static ParsedExpression ParseRDFExpression(std::string_view expr, const ColumnNa
       "(^|\\W)#(?!(ifdef|ifndef|if|else|elif|endif|pragma|define|undef|include|line))([a-zA-Z_][a-zA-Z0-9_]*)");
    colSizeReplacer.Substitute(preProcessedExpr, "$1R_rdf_sizeof_$3", "g");
 
-   const auto usedColsAndAliases =
+   auto usedColsAndAliases =
       FindUsedColumns(std::string(preProcessedExpr), treeBranchNames, customColumns, dataSourceColNames);
 
    auto escapeDots = [](const std::string &s) {
@@ -156,6 +157,14 @@ static ParsedExpression ParseRDFExpression(std::string_view expr, const ColumnNa
    // when we are done, exprWithVars willl be the same as preProcessedExpr but column names will be substituted with
    // the dummy variable names in varNames
    TString exprWithVars(preProcessedExpr);
+
+   // sort the vector usedColsAndAliases by decreasing length of its elements,
+   // so in case of friends we guarantee we never substitute a column name with another column containing it
+   // ex. without sorting when passing "x" and "fr.x", the replacer would output "var0" and "fr.var0",
+   // because it has already substituted "x", hence the "x" in "fr.x" would be recognized as "var0",
+   // whereas the desired behaviour is handling them as "var0" and "var1"
+   std::sort(usedColsAndAliases.begin(), usedColsAndAliases.end(),
+             [](const std::string &a, const std::string &b) { return a.size() > b.size(); });
    for (const auto &colOrAlias : usedColsAndAliases) {
       const auto col = customColumns.ResolveAlias(colOrAlias);
       unsigned int varIdx; // index of the variable in varName corresponding to col
@@ -958,6 +967,46 @@ void CheckForDuplicateSnapshotColumns(const ColumnNames_t &cols)
 /// member of the input argument. It is intended for internal use only.
 void TriggerRun(ROOT::RDF::RNode &node){
    node.fLoopManager->Run();
+}
+
+/// Return copies of colsWithoutAliases and colsWithAliases with size branches for variable-sized array branches added
+/// in the right positions (i.e. before the array branches that need them).
+std::pair<std::vector<std::string>, std::vector<std::string>>
+AddSizeBranches(const std::vector<std::string> &branches, TTree *tree, std::vector<std::string> &&colsWithoutAliases,
+                std::vector<std::string> &&colsWithAliases)
+{
+   if (!tree) // nothing to do
+      return {std::move(colsWithoutAliases), std::move(colsWithAliases)};
+
+   assert(colsWithoutAliases.size() == colsWithAliases.size());
+
+   auto nCols = colsWithoutAliases.size();
+   // Use index-iteration as we modify the vector during the iteration. 
+   for (std::size_t i = 0u; i < nCols; ++i) {
+      const auto &colName = colsWithoutAliases[i];
+      if (!IsStrInVec(colName, branches))
+         continue; // this column is not a TTree branch, nothing to do
+
+      auto *b = tree->GetBranch(colName.c_str());
+      if (!b) // try harder
+         b = tree->FindBranch(colName.c_str());
+      assert(b != nullptr);
+      auto *leaves = b->GetListOfLeaves();
+      if (b->IsA() != TBranch::Class() || leaves->GetEntries() != 1)
+         continue; // this branch is not a variable-sized array, nothing to do
+
+      TLeaf *countLeaf = static_cast<TLeaf *>(leaves->At(0))->GetLeafCount();
+      if (!countLeaf || IsStrInVec(countLeaf->GetName(), colsWithoutAliases))
+         continue; // not a variable-sized array or the size branch is already there, nothing to do
+
+      // otherwise we must insert the size in colsWithoutAliases _and_ colsWithAliases
+      colsWithoutAliases.insert(colsWithoutAliases.begin() + i, countLeaf->GetName());
+      colsWithAliases.insert(colsWithAliases.begin() + i, countLeaf->GetName());
+      ++nCols;
+      ++i; // as we inserted an element in the vector we iterate over, we need to move the index forward one extra time
+   }
+
+   return {std::move(colsWithoutAliases), std::move(colsWithAliases)};
 }
 
 } // namespace RDF

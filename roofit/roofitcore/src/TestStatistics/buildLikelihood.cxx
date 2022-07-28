@@ -15,7 +15,6 @@
 #include <RooSimultaneous.h>
 #include <RooFit/TestStatistics/RooBinnedL.h>
 #include <RooFit/TestStatistics/RooUnbinnedL.h>
-#include <RunContext.h> // necessary to complete RooUnbinnedL
 #include <RooFit/TestStatistics/RooSubsidiaryL.h>
 #include <RooFit/TestStatistics/RooSumL.h>
 #include <RooAbsPdf.h>
@@ -231,7 +230,7 @@ getSimultaneousComponents(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended ex
    TString simCatName(simCat.GetName());
    // Note: important not to use cloned dataset here (possible when this code is run in Roo[...]L ctor), use the
    // original one (which is data_ in Roo[...]L ctors, but data here)
-   std::unique_ptr<TList> dsetList{data->split(simCat, process_empty_data_sets)};
+   std::unique_ptr<TList> dsetList{data->split(*sim_pdf, process_empty_data_sets)};
    if (!dsetList) {
       throw std::logic_error(
          "getSimultaneousComponents ERROR, index category of simultaneous pdf is missing in dataset, aborting");

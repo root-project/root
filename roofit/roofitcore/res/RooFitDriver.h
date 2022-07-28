@@ -17,6 +17,7 @@
 #include <RooFit/Detail/DataMap.h>
 #include <RooGlobalFunc.h>
 #include <RooHelpers.h>
+#include <RooFit/Detail/Buffers.h>
 
 #include <chrono>
 #include <memory>
@@ -40,7 +41,7 @@ public:
    ////////////////////
    // Enums and aliases
 
-   using DataSpansMap = std::map<const TNamed *, RooSpan<const double>>;
+   using DataSpansMap = std::map<RooFit::Detail::DataKey, RooSpan<const double>>;
 
    //////////////////////////
    // Public member functions
@@ -55,7 +56,7 @@ public:
    ~RooFitDriver();
    std::vector<double> getValues();
    double getVal();
-   RooAbsReal const &topNode() const;
+   RooAbsReal &topNode() const;
 
 private:
    ///////////////////////////
@@ -65,14 +66,15 @@ private:
    std::chrono::microseconds simulateFit(std::chrono::microseconds h2dTime, std::chrono::microseconds d2hTime,
                                          std::chrono::microseconds diffThreshold);
    void markGPUNodes();
-   void assignToGPU(const RooAbsArg *node);
+   void assignToGPU(NodeInfo &info);
    void computeCPUNode(const RooAbsArg *node, NodeInfo &info);
    void setOperMode(RooAbsArg *arg, RooAbsArg::OperMode opMode);
    void determineOutputSizes();
-   bool isInComputationGraph(RooAbsArg const *arg) const;
 
    ///////////////////////////
    // Private member variables
+
+   Detail::BufferManager _bufferManager; // The object managing the different buffers for the intermediate results
 
    const RooFit::BatchModeOption _batchMode = RooFit::BatchModeOption::Off;
    int _getValInvocations = 0;
@@ -81,13 +83,11 @@ private:
    // used for preserving static info about the computation graph
    RooFit::Detail::DataMap _dataMapCPU;
    RooFit::Detail::DataMap _dataMapCUDA;
-   std::map<RooFit::Detail::DataKey, NodeInfo> _nodeInfos;
 
    // the ordered computation graph
-   RooArgList _orderedNodes;
+   std::vector<NodeInfo> _nodes;
 
    // used for preserving resources
-   std::vector<double> _nonDerivedValues;
    std::stack<std::vector<double>> _vectorBuffers;
    std::unique_ptr<RooFit::NormalizationIntegralUnfolder> _integralUnfolder;
 

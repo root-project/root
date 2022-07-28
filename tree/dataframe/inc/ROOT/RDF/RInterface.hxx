@@ -1119,23 +1119,33 @@ public:
                                                  const ColumnNames_t &columnList,
                                                  const RSnapshotOptions &options = RSnapshotOptions())
    {
-      const auto columnListWithoutSizeColumns = RDFInternal::FilterArraySizeColNames(columnList, "Snapshot");
-      const auto validCols = GetValidatedColumnNames(columnListWithoutSizeColumns.size(), columnListWithoutSizeColumns);
-      RDFInternal::CheckForDuplicateSnapshotColumns(validCols);
+      // like columnList but with `#var` columns removed
+      auto colListNoPoundSizes = RDFInternal::FilterArraySizeColNames(columnList, "Snapshot");
+      // like columnListWithoutSizeColumns but with aliases resolved
+      auto colListNoAliases = GetValidatedColumnNames(colListNoPoundSizes.size(), colListNoPoundSizes);
+      RDFInternal::CheckForDuplicateSnapshotColumns(colListNoAliases);
+      // like validCols but with missing size branches required by array branches added in the right positions
+      const auto pairOfColumnLists =
+         RDFInternal::AddSizeBranches(fLoopManager->GetBranchNames(), fLoopManager->GetTree(),
+                                      std::move(colListNoAliases), std::move(colListNoPoundSizes));
+      const auto &colListNoAliasesWithSizeBranches = pairOfColumnLists.first;
+      const auto &colListWithAliasesAndSizeBranches = pairOfColumnLists.second;
+
 
       const auto fullTreeName = treename;
       const auto parsedTreePath = RDFInternal::ParseTreePath(fullTreeName);
       treename = parsedTreePath.fTreeName;
       const auto &dirname = parsedTreePath.fDirName;
 
-      auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(RDFInternal::SnapshotHelperArgs{
-         std::string(filename), std::string(dirname), std::string(treename), columnListWithoutSizeColumns, options});
+      auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(
+         RDFInternal::SnapshotHelperArgs{std::string(filename), std::string(dirname), std::string(treename),
+                                         colListWithAliasesAndSizeBranches, options});
 
       ::TDirectory::TContext ctxt;
-      auto newRDF = std::make_shared<ROOT::RDataFrame>(fullTreeName, filename, validCols);
+      auto newRDF = std::make_shared<ROOT::RDataFrame>(fullTreeName, filename, colListNoAliasesWithSizeBranches);
 
       auto resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, RDFDetail::RInferredType>(
-         validCols, newRDF, snapHelperArgs, validCols.size());
+         colListNoAliasesWithSizeBranches, newRDF, snapHelperArgs, colListNoAliasesWithSizeBranches.size());
 
       if (!options.fLazy)
          *resPtr;

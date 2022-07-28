@@ -20,6 +20,8 @@
 #include <TObject.h>
 
 #include <map>
+#include <stdexcept>
+#include <sstream>
 
 template <class T>
 class RooTemplateProxy;
@@ -38,10 +40,12 @@ namespace Detail {
 
 class DataKey {
 public:
-   inline DataKey(RooAbsArg const* arg) : _ptr{arg->namePtr()} {}
-   inline DataKey(TNamed const* arg) : _ptr{arg} {}
+   inline DataKey(RooAbsArg const *arg) : _ptr{arg->namePtr()} {}
+   inline DataKey(TNamed const *arg) : _ptr{arg} {}
    template <class T>
-   inline DataKey(RooTemplateProxy<T> const& proxy) : DataKey{&*proxy} {}
+   inline DataKey(RooTemplateProxy<T> const &proxy) : DataKey{&*proxy}
+   {
+   }
 
    // Comparison operators that wrap the pointer comparisons.
    friend inline bool operator==(const DataKey &k1, const DataKey &k2) { return k1._ptr == k2._ptr; }
@@ -56,7 +60,57 @@ private:
    TObject const *_ptr;
 };
 
-using DataMap = std::map<DataKey, RooSpan<const double>>;
+} // namespace Detail
+} // namespace RooFit
+
+namespace std {
+
+template <>
+struct hash<RooFit::Detail::DataKey> {
+   std::size_t operator()(const RooFit::Detail::DataKey &k) const { return hash<TObject const *>{}(&*k); }
+};
+
+} // namespace std
+
+namespace RooFit {
+namespace Detail {
+
+class DataMap {
+public:
+   auto empty() const { return _dataMap.empty(); }
+   auto begin() { return _dataMap.begin(); }
+   auto end() { return _dataMap.end(); }
+   auto begin() const { return _dataMap.begin(); }
+   auto end() const { return _dataMap.end(); }
+   auto size() const { return _dataMap.size(); }
+   auto resize(std::size_t n) { return _dataMap.resize(n); }
+
+   inline auto &at(RooAbsArg const *arg, RooAbsArg const * /*caller*/ = nullptr)
+   {
+      std::size_t idx = arg->dataToken();
+      return _dataMap[idx];
+   }
+
+   inline auto &at(RooAbsArg const *arg, RooAbsArg const *caller = nullptr) const
+   {
+      return const_cast<DataMap *>(this)->at(arg, caller);
+   }
+
+   template <class T>
+   inline auto &at(RooTemplateProxy<T> const &proxy)
+   {
+      return at(&proxy.arg(), proxy.owner());
+   }
+
+   template <class T>
+   inline auto &at(RooTemplateProxy<T> const &proxy) const
+   {
+      return at(&proxy.arg(), proxy.owner());
+   }
+
+private:
+   std::vector<RooSpan<const double>> _dataMap;
+};
 
 } // namespace Detail
 } // namespace RooFit
