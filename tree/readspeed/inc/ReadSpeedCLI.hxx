@@ -4,6 +4,9 @@
 /* This header contains helper functions for the root-readspeed program
    for CLI related actions, such as argument parsing and output printing. */
 
+#ifndef ROOTREADSPEEDCLI
+#define ROOTREADSPEEDCLI
+
 #include "ReadSpeed.hxx"
 
 #include <vector>
@@ -23,3 +26,5 @@ Args ParseArgs(std::vector<std::string> args);
 Args ParseArgs(int argc, char **argv);
 
 } // namespace ReadSpeed
+
+#endif // ROOTREADSPEEDCLI
