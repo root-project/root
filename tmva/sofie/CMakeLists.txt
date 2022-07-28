@@ -34,10 +34,14 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/ROperator_Concat.hxx
    TMVA/ROperator_Identity.hxx
    TMVA/ROperator_Softmax.hxx
+<<<<<<< HEAD
    TMVA/ROperator_Reduce.hxx
    TMVA/ROperator_Max.hxx
    TMVA/ROperator_Shape.hxx
    TMVA/ROperator_Cast.hxx
+=======
+   TMVA/ROperator_Custom.hxx
+>>>>>>> b80f4db51a (feat: Initial implementation of Custom operator in TMVA SOFIE)
    TMVA/SOFIE_common.hxx
    TMVA/SOFIEHelpers.hxx
   SOURCES
