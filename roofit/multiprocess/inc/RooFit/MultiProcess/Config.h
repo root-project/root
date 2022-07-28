@@ -13,6 +13,8 @@
 #ifndef ROOT_ROOFIT_MultiProcess_Config
 #define ROOT_ROOFIT_MultiProcess_Config
 
+#include <cstddef>  // std::size_t
+
 namespace RooFit {
 namespace MultiProcess {
 
@@ -20,6 +22,15 @@ class Config {
 public:
    static void setDefaultNWorkers(unsigned int N_workers);
    static unsigned int getDefaultNWorkers();
+
+   struct LikelihoodJob {
+      // magic values to indicate that the number of tasks will be set automatically
+      constexpr static std::size_t automaticNEventTasks = 0;
+      constexpr static std::size_t automaticNComponentTasks = 0;
+
+      static std::size_t defaultNEventTasks;
+      static std::size_t defaultNComponentTasks;
+   };
 private:
    static unsigned int defaultNWorkers_;
 };

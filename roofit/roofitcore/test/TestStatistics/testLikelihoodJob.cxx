@@ -461,3 +461,55 @@ TEST_F(LikelihoodJobTest, BatchedUnbinnedGaussianND)
 
    EXPECT_NEAR(nll0, nll1, 1e-14 * nll0);
 }
+
+class LikelihoodJobSplitStrategies : public LikelihoodJobSimBinnedConstrainedTest, public testing::WithParamInterface<std::tuple<std::size_t, std::size_t>> {};
+
+TEST_P(LikelihoodJobSplitStrategies, SimBinnedConstrainedAndOffset)
+{
+   // based on ConstrainedAndOffset, this test tests different parallelization strategies
+   nll.reset(pdf->createNLL(*data, RooFit::Constrain(RooArgSet(*w.var("alpha_bkg_obs_A"))),
+                            RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_B"))), RooFit::Offset(true)));
+
+   // --------
+
+   auto nll0 = nll->getVal();
+
+   likelihood = RooFit::TestStatistics::buildLikelihood(
+      pdf, data, RooFit::TestStatistics::ConstrainedParameters(RooArgSet(*w.var("alpha_bkg_obs_A"))),
+      RooFit::TestStatistics::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_B"))));
+
+   RooFit::MultiProcess::Config::LikelihoodJob::defaultNEventTasks = std::get<0>(GetParam());
+   RooFit::MultiProcess::Config::LikelihoodJob::defaultNComponentTasks = std::get<1>(GetParam());
+
+   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
+   nll_ts->enableOffsetting(true);
+
+   nll_ts->evaluate();
+   // The RooFit::TestStatistics classes used for minimization (RooAbsL and Wrapper derivatives) will return offset
+   // values, whereas RooNLLVar::getVal will always return the non-offset value, since that is the "actual" likelihood
+   // value. RooRealL will also give the non-offset value, so that can be directly compared to the RooNLLVar::getVal
+   // result (the nll0 vs nll2 comparison below). To compare to the raw RooAbsL/Wrapper value nll1, however, we need to
+   // manually add the offset.
+   ROOT::Math::KahanSum<double> nll1 = nll_ts->getResult() + nll_ts->offset();
+
+   EXPECT_DOUBLE_EQ(nll0, nll1);
+   EXPECT_FALSE(nll_ts->offset() == 0);
+
+   // also check against RooRealL value
+   RooFit::TestStatistics::RooRealL nll_real("real_nll", "RooRealL version", likelihood);
+
+   auto nll2 = nll_real.getVal();
+
+   EXPECT_EQ(nll0, nll2);
+   EXPECT_DOUBLE_EQ(nll1, nll2);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    SplitStrategies, LikelihoodJobSplitStrategies,
+    testing::Combine(
+        // number of event tasks:
+        testing::Values(0, 1, 2, 50, 100, 101, 102, 100000),  // the last value is larger than number of events to test that
+        // number of component tasks:
+        testing::Values(0, 1, 2, 4)  // the last value is larger than number of components
+    )
+);
