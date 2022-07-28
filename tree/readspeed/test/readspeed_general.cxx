@@ -45,13 +45,15 @@ class Environment : public ::testing::Environment {
 public:
    ~Environment() override {}
 
-   void SetUp() override {
+   void SetUp() override
+   {
       RequireFile("test1.root");
       RequireFile("test2.root");
       RequireFile("test3.root", {"x", "x_branch", "y_brunch", "mismatched"});
    }
 
-   void TearDown() override {
+   void TearDown() override
+   {
       gSystem->Unlink("test1.root");
       gSystem->Unlink("test2.root");
       gSystem->Unlink("test3.root");
@@ -83,19 +85,21 @@ TEST(ReadSpeedIntegration, MultiThread)
 
 TEST(ReadSpeedIntegration, NonExistentFile)
 {
-   EXPECT_THROW(EvalThroughput({{"t"}, {"test_fake.root"}, {"x"}}, 0), std::runtime_error) << "Should throw for non-existent file";
+   EXPECT_THROW(EvalThroughput({{"t"}, {"test_fake.root"}, {"x"}}, 0), std::runtime_error)
+      << "Should throw for non-existent file";
 }
 
 TEST(ReadSpeedIntegration, NonExistentTree)
 {
-   EXPECT_THROW(EvalThroughput({{"t_fake"}, {"test1.root"}, {"x"}}, 0), std::runtime_error) << "Should throw for non-existent tree";
+   EXPECT_THROW(EvalThroughput({{"t_fake"}, {"test1.root"}, {"x"}}, 0), std::runtime_error)
+      << "Should throw for non-existent tree";
 }
 
 TEST(ReadSpeedIntegration, NonExistentBranch)
 {
-   EXPECT_THROW(EvalThroughput({{"t"}, {"test1.root"}, {"z"}}, 0), std::runtime_error) << "Should throw for non-existent branch";
+   EXPECT_THROW(EvalThroughput({{"t"}, {"test1.root"}, {"z"}}, 0), std::runtime_error)
+      << "Should throw for non-existent branch";
 }
-
 
 TEST(ReadSpeedBranches, SingleBranch)
 {
@@ -115,8 +119,10 @@ TEST(ReadSpeedBranches, PatternBranch)
 
 TEST(ReadSpeedBranches, NoMatches)
 {
-   EXPECT_THROW(EvalThroughput({{"t"}, {"test3.root"}, {"x_.*"}, false}, 0), std::runtime_error) << "Should throw for no matching branch";
-   EXPECT_THROW(EvalThroughput({{"t"}, {"test3.root"}, {"z_.*"}, true}, 0), std::runtime_error) << "Should throw for no matching branch";
+   EXPECT_THROW(EvalThroughput({{"t"}, {"test3.root"}, {"x_.*"}, false}, 0), std::runtime_error)
+      << "Should throw for no matching branch";
+   EXPECT_THROW(EvalThroughput({{"t"}, {"test3.root"}, {"z_.*"}, true}, 0), std::runtime_error)
+      << "Should throw for no matching branch";
 }
 
 TEST(ReadSpeedBranches, AllBranches)
@@ -126,7 +132,6 @@ TEST(ReadSpeedBranches, AllBranches)
    EXPECT_EQ(result.fUncompressedBytesRead, 160000000) << "Wrong number of uncompressed bytes read";
    EXPECT_EQ(result.fCompressedBytesRead, 1316837) << "Wrong number of compressed bytes read";
 }
-
 
 TEST(ReadSpeedCLI, CheckFilenames)
 {
@@ -144,8 +149,8 @@ TEST(ReadSpeedCLI, CheckFilenames)
 
 TEST(ReadSpeedCLI, CheckTrees)
 {
-   const std::vector<std::string> baseArgs{"root-readspeed", "--files", "file.root", "--branches", "x",
-   "--trees"}; const std::vector<std::string> inTrees{"t1", "t2", "tree3"};
+   const std::vector<std::string> baseArgs{"root-readspeed", "--files", "file.root", "--branches", "x", "--trees"};
+   const std::vector<std::string> inTrees{"t1", "t2", "tree3"};
 
    const auto allArgs = ConcatVectors(baseArgs, inTrees);
 
@@ -168,7 +173,8 @@ TEST(ReadSpeedCLI, CheckBranches)
    const auto parsedArgs = ParseArgs(allArgs);
    const auto outBranches = parsedArgs.fData.fBranchNames;
 
-   EXPECT_EQ(outBranches.size(), inBranches.size()) << "Number of parsed trees does not match number of provided trees.";
+   EXPECT_EQ(outBranches.size(), inBranches.size())
+      << "Number of parsed trees does not match number of provided trees.";
    EXPECT_EQ(outBranches, inBranches) << "List of parsed trees does not match list of provided trees.";
 }
 
