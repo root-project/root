@@ -6,12 +6,6 @@
 #include "TMVA/ROperator.hxx"
 #include "TMVA/RModel.hxx"
 
-#include <sstream>
-#include <algorithm>
-#include <iterator>
-#include <iomanip>
-#include <limits>
-
 namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
@@ -41,6 +35,9 @@ public:
             fOutputNames.emplace_back(UTILITY::Clean_name(it));
         }
     }
+
+    std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>>) {return {{}};};
+    std::vector<ETensorType> TypeInference(std::vector<ETensorType>){ return {};};
 
     void Initialize(RModel& model){
       model.AddNeededCustomHeader(fHeaderName);
