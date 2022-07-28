@@ -1,5 +1,5 @@
 % ROOT Version 6.26 Release Notes
-% 2022-06-07
+% 2022-07-28
 <a name="TopOfPage"></a>
 
 ## Introduction
@@ -987,6 +987,25 @@ Published on June 7, 2022
 * [[#10586](https://github.com/root-project/root/issues/10586)] - [TMVA][SOFIE]Generated headers are missing include guards
 * [[#10538](https://github.com/root-project/root/issues/10538)] - AdditionalData is not exported to XML
 * [[#10578](https://github.com/root-project/root/issues/10578)] - SHA-256 Hash Mismatch for xrootd
+
+
+## Release 6.26/06
+
+Published on July 28, 2022
+
+### Bugs and Issues fixed in this release
+
+* [[#10814](https://github.com/root-project/root/issues/10814)] - Error in `REveBox.cxx` while building root 6.26.04
+* [[#10403](https://github.com/root-project/root/issues/10403)] - Update civetweb to 1.16 once it's released
+* [[#10759](https://github.com/root-project/root/issues/10759)] - `root-config` fails if spaces are part of `ROOTSYS` path
+* [[#11002](https://github.com/root-project/root/issues/11002)] - [DF] Wrong regex substitution when generating code to jit
+* [[#10920](https://github.com/root-project/root/issues/10920)] - [DF] RDataFrame confused by array variables in 6.26/04
+* [[#6932](https://github.com/root-project/root/issues/6932)] - rdf.Snapshot columnList - automate size columns
+* [[#11026](https://github.com/root-project/root/issues/11026)] - Integer overflow in `TEntryList`
+* [[#10872](https://github.com/root-project/root/issues/10872)] - [DF] Wrong entries are loaded from friend trees with distributed RDF
+* [[#11017](https://github.com/root-project/root/issues/11017)] - [RF] `RooDataSetHelper` doesn't respect `RooRealVar` range
+* [[#10840](https://github.com/root-project/root/issues/10840)] - [RF] HistFactory `PreprocessFunction::PrintXML()` needs to escape special characters to produce valid XML
+* [[#10869](https://github.com/root-project/root/issues/10869)] - [RF] sPlot does not work with `RooAddPdf` in 6.26/04
 
 
 ## HEAD of the v6-26-00-patches branch
