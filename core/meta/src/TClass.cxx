@@ -2464,7 +2464,8 @@ TObject *TClass::Clone(const char *new_name) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy the argument.
+/// Replaces the collection proxy for this class. The provided object is cloned
+/// and the copy is then owned by `TClass`.
 
 void TClass::CopyCollectionProxy(const TVirtualCollectionProxy &orig)
 {
