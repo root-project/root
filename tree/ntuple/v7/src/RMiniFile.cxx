@@ -1349,7 +1349,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::ShareContent(std::string_v
    if(destination_fd<0){
       std::cout<<"Error"<<std::endl;
    }
-   std::cout<<destination_fd<<std::endl;
+
    auto mode = fcntl(destination_fd, F_GETFL);
    
    fflush(this->fFileSimple.fFile);
