@@ -34,6 +34,7 @@
 #include <TRealData.h>
 
 #include <algorithm>
+#include <alloca.h>
 #include <cctype> // for isspace
 #include <cstdint>
 #include <cstdlib> // for malloc, free
@@ -978,11 +979,43 @@ ROOT::Experimental::RCollectionClassField::CloneImpl(std::string_view newName) c
       new RCollectionClassField(newName, GetType(), fProxy->GetCollectionClass()));
 }
 
-std::size_t ROOT::Experimental::RCollectionClassField::AppendImpl(const Detail::RFieldValue& value) {
+std::size_t ROOT::Experimental::RCollectionClassField::AppendImpl(const Detail::RFieldValue &value)
+{
+   TVirtualCollectionProxy::TPushPop RAII(fProxy, value.GetRawPtr());
+   std::size_t nbytes = 0;
+   auto count = fProxy->Size();
+   for (unsigned i = 0; i < count; ++i) {
+      auto itemValue = fSubFields[0]->CaptureValue(fProxy->At(i));
+      nbytes += fSubFields[0]->Append(itemValue);
+   }
+   Detail::RColumnElement<ClusterSize_t> elemIndex(&fNWritten);
+   fNWritten += count;
+   fColumns[0]->Append(elemIndex);
+   return nbytes + sizeof(elemIndex);
 }
 
 void ROOT::Experimental::RCollectionClassField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
 {
+   TVirtualCollectionProxy::TPushPop RAII(fProxy, value->GetRawPtr());
+
+   ClusterSize_t nItems;
+   RClusterIndex collectionStart;
+   fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
+
+   auto oldNItems = fProxy->Size();
+   if (fProxy->GetProperties() & TVirtualCollectionProxy::kNeedDelete) {
+      for (std::size_t i = 0; i < oldNItems; ++i) {
+         auto itemValue = fSubFields[0]->CaptureValue(fProxy->At(i));
+         fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
+      }
+   }
+   fProxy->Clear();
+   auto buff = alloca(fItemSize);
+   for (std::size_t i = 0; i < nItems; ++i) {
+      auto itemValue = fSubFields[0]->GenerateValue(buff);
+      fSubFields[0]->Read(collectionStart + i, &itemValue);
+      fProxy->Insert(itemValue.GetRawPtr(), value->GetRawPtr(), 1);
+   }
 }
 
 void ROOT::Experimental::RCollectionClassField::GenerateColumnsImpl()
@@ -1005,6 +1038,14 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RCollectionClassFiel
 
 void ROOT::Experimental::RCollectionClassField::DestroyValue(const Detail::RFieldValue &value, bool dtorOnly)
 {
+   TVirtualCollectionProxy::TPushPop RAII(fProxy, value.GetRawPtr());
+   if (fProxy->GetProperties() & TVirtualCollectionProxy::kNeedDelete) {
+      auto nItems = fProxy->Size();
+      for (unsigned i = 0; i < nItems; ++i) {
+         auto itemValue = fSubFields[0]->CaptureValue(fProxy->At(i));
+         fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
+      }
+   }
    fProxy->Destructor(value.GetRawPtr(), true /* dtorOnly */);
    if (!dtorOnly)
       free(value.GetRawPtr());
@@ -1018,7 +1059,13 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RCollectionClassFiel
 std::vector<ROOT::Experimental::Detail::RFieldValue>
 ROOT::Experimental::RCollectionClassField::SplitValue(const Detail::RFieldValue &value) const
 {
-   return {};
+   TVirtualCollectionProxy::TPushPop RAII(fProxy, value.GetRawPtr());
+   auto nItems = fProxy->Size();
+   std::vector<Detail::RFieldValue> result;
+   for (unsigned i = 0; i < nItems; ++i) {
+      result.emplace_back(fSubFields[0]->CaptureValue(fProxy->At(i)));
+   }
+   return result;
 }
 
 void ROOT::Experimental::RCollectionClassField::CommitCluster()
