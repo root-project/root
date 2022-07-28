@@ -43,6 +43,7 @@ public:
     }
 
     void Initialize(RModel& model){
+      model.AddNeededCustomHeader(fHeaderName);
       for(auto& it:fInputNames){
         if (model.CheckIfTensorAlreadyExist(it) == false){  
          throw std::runtime_error("TMVA SOFIE Custom " + fOpName + " Op Input Tensor " + it + " is not found in model");
@@ -62,7 +63,7 @@ public:
       OpName = "op_" + OpName;
       std::stringstream out;
       out << "\n//------ "<<fOpName<<" \n";
-      out << SP << "std::vector<float>"<<fOPName<<"_result = "<<fOpName<<"::Compute();\n";
+      out << SP << "std::vector<float>"<<fOpName<<"_result = "<<fOpName<<"::Compute();\n";
       for(auto i = 0; i<fOutputNames.size(); ++i){
         out << SP << SP << "tensor_"<<fOutputNames[i]<<" = "<<fOpName<<"_result["<<i<<"];\n";
       }

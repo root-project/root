@@ -222,6 +222,9 @@ namespace SOFIE{
       fGC += "#define " + hgname + "\n\n";
       for (auto& i: fNeededStdLib) {
          fGC += "#include<" + i + ">\n";
+      }      
+      for (auto& i: fCustomOpHeaders) {
+         fGC += "#include \"" + i + "\"\n";
       }
       // for the session we need to include SOFIE_Common functions
       //needed for convolution operator (need to add a flag)

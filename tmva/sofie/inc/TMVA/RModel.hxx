@@ -51,6 +51,7 @@ private:
 
    const std::unordered_set<std::string> fAllowedStdLib = {"vector", "algorithm", "cmath"};
    std::unordered_set<std::string> fNeededStdLib = {"vector"};
+   std::unordered_set<std::string> fCustomOpHeaders;
    bool fUseWeightFile = true;
    bool fUseSession = true;
 
@@ -85,6 +86,11 @@ public:
    void AddNeededStdLib(std::string libname) {
       if (fAllowedStdLib.find(libname) != fAllowedStdLib.end()) {
          fNeededStdLib.insert(libname);
+      }
+   }
+   void AddNeededCustomHeader(std::string filename) {
+      if (fCustomOpHeaders.find(filename) != fCustomOpHeaders.end()) {
+         fCustomOpHeaders.insert(filename);
       }
    }
    void AddInputTensorName(std::string name);
