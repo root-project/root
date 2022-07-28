@@ -216,80 +216,120 @@ void ROOT::Experimental::Detail::RPageSinkFile::ReleasePage(RPage &page)
       this->fWriter->ShareContent(location, 4096, 4096);
    }
 
-   void ROOT::Experimental::Detail::RPageSinkFile::ZeroCopyMerge( std::string_view ntupleNameSrc1, std::string_view locationSrc1, std::string_view ntupleNameSrc2, std::string_view locationSrc2 ){
-      
-      auto source1 = RPageSourceFile(ntupleNameSrc1, locationSrc1, RNTupleReadOptions());
-      source1.Attach();
-      auto anchor1 = source1.GetAnchor();
-      size_t seek_data_position = anchor1.fSeekHeader + anchor1.fNBytesHeader;
-      size_t aligned_seek_data_position = (seek_data_position + 4096 - 1) / 4096 * 4096;
+   void ROOT::Experimental::Detail::RPageSinkFile::ZeroCopyMerge( std::string_view ntupleNameSrc1, std::string_view locationSrc1, std::string_view ntupleNameSrc2, std::string_view locationSrc2 ) {
 
-      this->fWriter->ShareContent(locationSrc1, 4096, aligned_seek_data_position);
+       auto source1 = RPageSourceFile(ntupleNameSrc1, locationSrc1, RNTupleReadOptions());
+       source1.Attach();
+       auto anchor1 = source1.GetAnchor();
+       size_t seek_data_position = anchor1.fSeekHeader + anchor1.fNBytesHeader;
+       size_t aligned_seek_data_position = (seek_data_position + 4096 - 1) / 4096 * 4096;
 
-      auto source2 = RPageSourceFile(ntupleNameSrc2, locationSrc2, RNTupleReadOptions());
-      source2.Attach();
-      auto anchor2 = source2.GetAnchor();
-      seek_data_position = anchor2.fSeekHeader + anchor2.fNBytesHeader;
-      aligned_seek_data_position = (seek_data_position + 4096 - 1) / 4096 * 4096;
-      this->fWriter->ShareContent(locationSrc2, 4096, aligned_seek_data_position);
-      //this->fDescriptorBuilder.GetDescriptor().GetClusterIterable().;
-      
-      //this->fDescriptorBuilder.AddClusterWithDetails(source1.GetSharedDescriptorGuard().GetRef().GetClusterDescriptor(0).Clone());
-      
-      auto nEntries = source1.GetSharedDescriptorGuard().GetRef().GetNEntries();
-      //auto firstEntryIndex = source2.GetSharedDescriptorGuard().GetRef().GetClusterDescriptor(0).GetFirstEntryIndex();
-      //auto nEntries = source2.GetSharedDescriptorGuard().GetRef().GetClusterDescriptor(0).GetNEntries();
-       
-      //source2.GetSharedDescriptorGuard().GetRef().GetClusterDescriptor(0).GetPageRange(1);
+       this->fWriter->ShareContent(locationSrc1, 4096, aligned_seek_data_position);
 
-      //auto cluster = RClusterDescriptorBuilder( 1, firstEntryIndex, nEntries).MoveDescriptor();
-      //source2.GetSharedDescriptorGuard().GetRef().Clone()
-      //clusterBuilder.CommitColumnRange(1, firstEntryIndex, -1, source2.GetSharedDescriptorGuard().GetRef().GetClusterDescriptor(0).GetPageRange(0) );
-      //clusterBuilder.CommitColumnRange(1, firstEntryIndex, -1, source2.GetSharedDescriptorGuard().GetRef().GetClusterDescriptor(0).GetPageRange(1) );
-      
-      {
-         auto nEntriesInCluster = ClusterSize_t(nEntries - fPrevClusterNEntries);
-         RClusterDescriptorBuilder clusterBuilder(fDescriptorBuilder.GetDescriptor().GetNClusters(), fPrevClusterNEntries,
-                                             nEntriesInCluster);
-         
-         for (unsigned int i = 0; i < fOpenColumnRanges.size(); ++i) {
-            RClusterDescriptor::RPageRange fullRange;
-            fullRange.fColumnId = i;
-            auto pageRange = source1.GetSharedDescriptorGuard().GetRef().GetClusterDescriptor(0).GetPageRange(i).Clone();
-            //std::swap(fullRange, fOpenPageRanges[i]);
-            std::swap(fullRange, pageRange);
-            clusterBuilder.CommitColumnRange(i, fOpenColumnRanges[i].fFirstElementIndex,
-                                             fOpenColumnRanges[i].fCompressionSettings, fullRange);
-            fOpenColumnRanges[i].fFirstElementIndex += fOpenColumnRanges[i].fNElements;
-            fOpenColumnRanges[i].fNElements = 0;
-         }
-         fDescriptorBuilder.AddClusterWithDetails(clusterBuilder.MoveDescriptor().Unwrap());
-      }
-      std::uint64_t offset = 4096;
-      {
-         auto nEntriesInCluster = ClusterSize_t(nEntries - fPrevClusterNEntries);
-         RClusterDescriptorBuilder clusterBuilder(fDescriptorBuilder.GetDescriptor().GetNClusters(), fPrevClusterNEntries,
-                                             nEntriesInCluster);
-         
-         for (unsigned int i = 0; i < fOpenColumnRanges.size(); ++i) {
-            RClusterDescriptor::RPageRange fullRange;
-            fullRange.fColumnId = i;
-            auto pageRange = source1.GetSharedDescriptorGuard().GetRef().GetClusterDescriptor(0).GetPageRange(i).Clone();
-            //std::swap(fullRange, fOpenPageRanges[i]);
-            
-            std::cout<<pageRange.fPageInfos[0].fLocator.fPosition<<std::endl; 
-            pageRange.fPageInfos.front().fLocator.fPosition+=offset;
-            std::cout<<pageRange.fPageInfos[0].fLocator.fPosition<<std::endl; 
+       auto source2 = RPageSourceFile(ntupleNameSrc2, locationSrc2, RNTupleReadOptions());
+       source2.Attach();
+       auto anchor2 = source2.GetAnchor();
+       seek_data_position = anchor2.fSeekHeader + anchor2.fNBytesHeader;
+       aligned_seek_data_position = (seek_data_position + 4096 - 1) / 4096 * 4096;
+       this->fWriter->ShareContent(locationSrc2, 4096, aligned_seek_data_position);
 
-            std::swap(fullRange, pageRange);
-            clusterBuilder.CommitColumnRange(i, fOpenColumnRanges[i].fFirstElementIndex,
-                                             fOpenColumnRanges[i].fCompressionSettings, fullRange);
-            fOpenColumnRanges[i].fFirstElementIndex += fOpenColumnRanges[i].fNElements;
-            fOpenColumnRanges[i].fNElements = 0;
-         }
-         fDescriptorBuilder.AddClusterWithDetails(clusterBuilder.MoveDescriptor().Unwrap());
-      }
-      fDescriptorBuilder.GetDescriptor().PrintInfo(std::cout);
+
+       std::vector<RClusterDescriptorBuilder> clusters;
+       clusters.emplace_back( RClusterDescriptorBuilder(0, 0, 10));// RClusterGroupDescriptorBuilder::GetClusterSummaries(, cgDesc.GetId());
+       clusters.emplace_back( RClusterDescriptorBuilder(1, 10, 10));
+
+       std::uint32_t nClusters = 2;
+       for (std::uint32_t i = 0; i < nClusters; ++i) {
+           std::uint32_t nColumns = 2;
+           for (std::uint32_t j = 0; j < nColumns; ++j) {
+               std::uint32_t nPages = 1;
+               RClusterDescriptor::RPageRange pageRange;
+               pageRange.fColumnId = j;
+               for (std::uint32_t k = 0; k < nPages; ++k) {
+                   std::uint32_t nElements = 10;
+                   RNTupleLocator locator = source1.GetSharedDescriptorGuard().GetRef().GetClusterDescriptor(0).GetPageRange(j).fPageInfos.front().fLocator;
+                   if(i==1){
+                       locator.fPosition+=4096;
+                   }
+                   pageRange.fPageInfos.push_back({ClusterSize_t(nElements), locator});
+               }
+               std::uint64_t columnOffset=0;
+               if(i==1){
+                   columnOffset=10;
+               }
+               clusters[i].CommitColumnRange(j, columnOffset, this->GetWriteOptions().GetCompression(), pageRange);
+           }
+           fDescriptorBuilder.AddClusterWithDetails(clusters[i].MoveDescriptor().Unwrap());
+       }
+
+       /*
+       auto nEntries = source1.GetSharedDescriptorGuard().GetRef().GetNEntries();
+       //auto firstEntryIndex = source2.GetSharedDescriptorGuard().GetRef().GetClusterDescriptor(0).GetFirstEntryIndex();
+       //auto nEntries = source2.GetSharedDescriptorGuard().GetRef().GetClusterDescriptor(0).GetNEntries();
+       for (unsigned int i = 0; i < fOpenColumnRanges.size(); ++i) {
+           auto pageRange = source1.GetSharedDescriptorGuard().GetRef().GetClusterDescriptor(0).GetPageRange(i).Clone();
+           std::swap(fOpenPageRanges[i], pageRange);
+       }
+       this->CommitCluster(10);
+       for (unsigned int i = 0; i < fOpenColumnRanges.size(); ++i) {
+           auto pageRange = source2.GetSharedDescriptorGuard().GetRef().GetClusterDescriptor(0).GetPageRange(i).Clone();
+           std::swap(fOpenPageRanges[i], pageRange);
+           for (size_t p = 0; p < fOpenPageRanges[i].fPageInfos.size(); p++) {
+               fOpenPageRanges[i].fPageInfos[p].fLocator.fPosition += 4096;
+           }
+       }
+       this->CommitCluster(20);*/
+       //source2.GetSharedDescriptorGuard().GetRef().GetClusterDescriptor(0).GetPageRange(1);
+
+       //auto cluster = RClusterDescriptorBuilder( 1, firstEntryIndex, nEntries).MoveDescriptor();
+       //source2.GetSharedDescriptorGuard().GetRef().Clone()
+       //clusterBuilder.CommitColumnRange(1, firstEntryIndex, -1, source2.GetSharedDescriptorGuard().GetRef().GetClusterDescriptor(0).GetPageRange(0) );
+       //clusterBuilder.CommitColumnRange(1, firstEntryIndex, -1, source2.GetSharedDescriptorGuard().GetRef().GetClusterDescriptor(0).GetPageRange(1) );
+
+       /*{
+          auto nEntriesInCluster = ClusterSize_t(nEntries - fPrevClusterNEntries);
+          RClusterDescriptorBuilder clusterBuilder(fDescriptorBuilder.GetDescriptor().GetNClusters(), fPrevClusterNEntries,
+                                              nEntriesInCluster);
+
+          for (unsigned int i = 0; i < fOpenColumnRanges.size(); ++i) {
+             RClusterDescriptor::RPageRange fullRange;
+             fullRange.fColumnId = i;
+             auto pageRange = source1.GetSharedDescriptorGuard().GetRef().GetClusterDescriptor(0).GetPageRange(i).Clone();
+             //std::swap(fullRange, fOpenPageRanges[i]);
+             std::swap(fullRange, pageRange);
+             clusterBuilder.CommitColumnRange(i, fOpenColumnRanges[i].fFirstElementIndex,
+                                              fOpenColumnRanges[i].fCompressionSettings, fullRange);
+             fOpenColumnRanges[i].fFirstElementIndex += fOpenColumnRanges[i].fNElements;
+             fOpenColumnRanges[i].fNElements = 0;
+          }
+          fDescriptorBuilder.AddClusterWithDetails(clusterBuilder.MoveDescriptor().Unwrap());
+       }
+       std::uint64_t offset = 4096;
+       {
+          auto nEntriesInCluster = ClusterSize_t(nEntries - fPrevClusterNEntries);
+          RClusterDescriptorBuilder clusterBuilder(fDescriptorBuilder.GetDescriptor().GetNClusters(), fPrevClusterNEntries,
+                                              nEntriesInCluster);
+
+          for (unsigned int i = 0; i < fOpenColumnRanges.size(); ++i) {
+             RClusterDescriptor::RPageRange fullRange;
+             fullRange.fColumnId = i;
+             auto pageRange = source1.GetSharedDescriptorGuard().GetRef().GetClusterDescriptor(0).GetPageRange(i).Clone();
+             //std::swap(fullRange, fOpenPageRanges[i]);
+
+             std::cout<<pageRange.fPageInfos[0].fLocator.fPosition<<std::endl;
+             pageRange.fPageInfos.front().fLocator.fPosition+=offset;
+             std::cout<<pageRange.fPageInfos[0].fLocator.fPosition<<std::endl;
+
+             std::swap(fullRange, pageRange);
+             clusterBuilder.CommitColumnRange(i, fOpenColumnRanges[i].fFirstElementIndex,
+                                              fOpenColumnRanges[i].fCompressionSettings, fullRange);
+             fOpenColumnRanges[i].fFirstElementIndex += fOpenColumnRanges[i].fNElements;
+             fOpenColumnRanges[i].fNElements = 0;
+          }
+          fDescriptorBuilder.AddClusterWithDetails(clusterBuilder.MoveDescriptor().Unwrap());
+       }
+       fDescriptorBuilder.GetDescriptor().PrintInfo(std::cout);
+    }*/
    }
 #endif
 

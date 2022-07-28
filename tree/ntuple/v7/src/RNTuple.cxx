@@ -399,9 +399,10 @@ void ROOT::Experimental::RNTupleWriter::CommitCluster(bool commitClusterGroup)
 
       auto ntuple2 = RNTupleReader::Open(ntupleNameSrc2, locationSrc2);
 
-      ntuple2->GetNEntries();
+      //ntuple2->GetNEntries();
       this->fNEntries+=ntuple1->GetNEntries();
       this->fNEntries+=ntuple2->GetNEntries();
+      this->fLastCommitted=this->fNEntries;
       //TODO: Update this value
       //this->fUnzippedClusterSize
    }
