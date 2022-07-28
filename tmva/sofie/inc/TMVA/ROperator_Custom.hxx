@@ -16,11 +16,6 @@ namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
 
-template<typename P>
-struct fAttribute{
-    std::string fAttributeName;
-    P fAttributeValue;
-};
 
 template<typename T>
 class ROperator_Custom final : public ROperator
@@ -30,13 +25,12 @@ private:
     std::string fOpName;
     std::vector<std::string> fInputNames;
     std::vector<std::string> fOutputNames;
-    std::vector<fAttribute> fAttributes;
     std::vector<std::vector<std::size_t>> fOutputShapes;
     std::string fHeaderName;
 
 public:
     ROperator_Custom(){}
-    ROperator_Custom(std::string OpName, std::vector<std::string>Inputs, std::vector<std::string>Outputs, std::vector<fAttribute> Attrs, std::vector<std::vector<std::size_t>> OutputShapes, std::string HeaderName){
+    ROperator_Custom(std::string OpName, std::vector<std::string>Inputs, std::vector<std::string>Outputs, std::vector<std::vector<std::size_t>> OutputShapes, std::string HeaderName){
         fOpName = OpName;
         fOutputShapes = OutputShapes;
         fHeaderName = HeaderName;
@@ -45,13 +39,6 @@ public:
         }
         for(auto& it:Outputs){
             fOutputNames.emplace_back(UTILITY::Clean_name(it));
-        }
-        for(auto& it:Attrs){
-            if (std::is_same<it.fAttributeValue, std::string>) {
-                fAttributes.emplace_back({UTILITY::Clean_name(it.fAttributeName),UTILITY::Clean_name(it.fAttributeValue)});
-            } else {
-                fAttributes.emplace_back({UTILITY::Clean_name(it.fAttributeName), it.fAttributeValue});
-            }
         }
     }
 
