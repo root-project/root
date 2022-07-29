@@ -49,6 +49,7 @@ std::unique_ptr<ROperator> MakeKerasPermute(PyObject *fLayer);      // For insta
 std::unique_ptr<ROperator> MakeKerasBatchNorm(PyObject *fLayer);    // For instantiating ROperator for Keras Batch Normalization Layer
 std::unique_ptr<ROperator> MakeKerasReshape(PyObject *fLayer);      // For instantiating ROperator for Keras Reshape Layer
 std::unique_ptr<ROperator> MakeKerasConcat(PyObject *fLayer);       // For instantiating ROperator for Keras Concat Layer
+std::unique_ptr<ROperator> MakeKerasBinary(PyObject *fLayer);       // For instantiating ROperator for Keras binary operations: Add, Subtract & Multiply.
 
 
 // Declaring Internal function for Keras layers which have additional activation attribute
@@ -65,6 +66,9 @@ const KerasMethodMap mapKerasLayer = {
    {"BatchNormalization", &MakeKerasBatchNorm},
    {"Reshape", &MakeKerasReshape},
    {"Concatenate", &MakeKerasConcat},
+   {"Add", &MakeKerasBinary},
+   {"Subtract", &MakeKerasBinary},
+   {"Multiply", &MakeKerasBinary},
 
    // For activation layers
    {"ReLU", &MakeKerasReLU},
@@ -566,6 +570,44 @@ std::unique_ptr<ROperator> MakeKerasConcat(PyObject* fLayer)
       op.reset(new ROperator_Concat<float>(inputs, axis, output));
       return op;
 }
+
+//////////////////////////////////////////////////////////////////////////////////
+/// \brief Prepares a ROperator object for Keras binary operations like Add, 
+///        subtract, and multiply.
+///
+/// \param[in] fLayer Python Keras layer as a Dictionary object
+/// \return Unique pointer to ROperator object
+///
+/// For instantiating a ROperator_BasicBinary object, the names of
+/// input & output tensors, the data-type of the layer and the operation type
+/// are extracted.
+std::unique_ptr<ROperator> MakeKerasBinary(PyObject* fLayer){
+      PyObject* fInputs  = PyDict_GetItemString(fLayer,"layerInput");
+      PyObject* fOutputs = PyDict_GetItemString(fLayer,"layerOutput");
+
+      std::string fLayerType = PyStringAsString(PyDict_GetItemString(fLayer,"layerType"));
+      std::string fLayerDType = PyStringAsString(PyDict_GetItemString(fLayer,"layerDType"));
+      std::string fX1  = PyStringAsString(PyList_GetItem(fInputs,0));
+      std::string fX2  = PyStringAsString(PyList_GetItem(fInputs,1));
+      std::string fY   = PyStringAsString(PyList_GetItem(fOutputs,0));
+
+      std::unique_ptr<ROperator> op;
+      switch(ConvertStringToType(fLayerDType)){
+         case ETensorType::FLOAT:{
+            if(fLayerType == "Add")
+               op.reset(new ROperator_BasicBinary<float, Add> (fX1, fX2, fY));
+            else if(fLayerType == "Subtract")
+               op.reset(new ROperator_BasicBinary<float, Sub> (fX1, fX2, fY));
+            else
+               op.reset(new ROperator_BasicBinary<float, Mul> (fX1, fX2, fY));
+         break;
+         }
+         default:
+         throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Sigmoid does not yet support input type " + fLayerDType);
+         }
+   return op;
+}
+
 }//INTERNAL
 
 
