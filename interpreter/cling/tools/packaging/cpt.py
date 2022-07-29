@@ -1879,7 +1879,6 @@ if __name__ == "__main__":
     workdir = os.path.abspath(os.path.expanduser(args['with_workdir']))
 srcdir = os.path.join(workdir, 'cling-src')
 CLING_SRC_DIR = os.path.join(srcdir, 'tools', 'cling')
-# CPT_SRC_DIR = os.path.join(CLING_SRC_DIR, 'tools', 'packaging')
 LLVM_OBJ_ROOT = os.path.join(workdir, 'builddir')
 
 prefix = ''
@@ -1894,11 +1893,7 @@ CLING_GIT_URL = args['with_cling_url']
 EXTRA_CMAKE_FLAGS = args.get('with_cmake_flags')
 CMAKE = os.environ.get('CMAKE', None)
 
-# llvm_revision = urlopen(
-#    "https://raw.githubusercontent.com/root-project/cling/master/LastKnownGoodLLVMSVNRevision.txt").readline().strip().decode(
-#   'utf-8')
 VERSION = ''
-# REVISION = ''
 # Travis needs some special behaviour
 TRAVIS_BUILD_DIR = os.environ.get('TRAVIS_BUILD_DIR', None)
 APPVEYOR_BUILD_FOLDER = os.environ.get('APPVEYOR_BUILD_FOLDER', None)
