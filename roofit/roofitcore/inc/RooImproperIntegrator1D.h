@@ -30,7 +30,6 @@ public:
   RooImproperIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config);
   RooImproperIntegrator1D(const RooAbsFunc& function, double xmin, double xmax, const RooNumIntConfig& config);
   RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
-  ~RooImproperIntegrator1D() override;
 
   bool checkLimits() const override;
   using RooAbsIntegrator::setLimits ;
@@ -57,10 +56,12 @@ protected:
   mutable double _xmin, _xmax; ///< Value of limits
   bool _useIntegrandLimits;    ///< Use limits in function binding?
 
-  RooAbsFunc*      _origFunc ;  ///< Original function binding
-  RooInvTransform *_function;   ///< Binding with inverse of function
+  RooAbsFunc*      _origFunc = nullptr;  ///< Original function binding
+  std::unique_ptr<RooInvTransform> _function;   ///< Binding with inverse of function
   RooNumIntConfig  _config ;    ///< Configuration object
-  mutable RooIntegrator1D *_integrator1,*_integrator2,*_integrator3; ///< Piece integrators
+  mutable std::unique_ptr<RooIntegrator1D> _integrator1; ///< Piece integrator 1
+  mutable std::unique_ptr<RooIntegrator1D> _integrator2; ///< Piece integrator 2
+  mutable std::unique_ptr<RooIntegrator1D> _integrator3; ///< Piece integrator 3
 
   ClassDefOverride(RooImproperIntegrator1D,0) // 1-dimensional improper integration engine
 };
