@@ -89,9 +89,7 @@ public:
       }
    }
    void AddNeededCustomHeader(std::string filename) {
-      if (fCustomOpHeaders.find(filename) != fCustomOpHeaders.end()) {
-         fCustomOpHeaders.insert(filename);
-      }
+      fCustomOpHeaders.insert(filename);
    }
    void AddInputTensorName(std::string name);
    void AddOutputTensorNameList(std::vector<std::string> outputtensornames);

@@ -161,11 +161,11 @@ namespace SOFIE{
       }
    }
 
-   void RModel::UpdateOutputTensorList(std::vector<std::string> curr_output_tensor, std::vector<std::string> modify_output_tensor){
-      for(auto& it:curr_output_tensor){
+   void RModel::UpdateOutputTensorList(std::vector<std::string> curr_output_tensors, std::vector<std::string> new_output_tensors){
+      for(auto& it:curr_output_tensors){
          fOutputTensorNames.erase(std::remove(fOutputTensorNames.begin(), fOutputTensorNames.end(), it), fOutputTensorNames.end());
       }
-      fOutputTensorNames.insert(fOutputTensorNames.end(), modify_output_tensor.begin(), modify_output_tensor.end());
+      fOutputTensorNames.insert(fOutputTensorNames.end(), new_output_tensors.begin(), new_output_tensors.end());
    }
 
    void RModel::UpdateInitializedTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape, std::shared_ptr<void> data){
@@ -379,9 +379,6 @@ namespace SOFIE{
 
       for (size_t id = 0; id < fOperators.size() ; id++){
          fGC+= (fOperators[id]->Generate(std::to_string(id)));
-      }
-      for(auto& it: fOutputTensorNames){
-         std::cout<<it<<std::endl;
       }
       if (outputSize == 1) {
          size_t outputLength = ConvertShapeToLength(GetTensorShape(fOutputTensorNames[0]));
