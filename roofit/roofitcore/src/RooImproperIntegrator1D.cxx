@@ -161,6 +161,14 @@ void RooImproperIntegrator1D::initialize(const RooAbsFunc* function)
     }
   }
 
+  // Helper function to create a new configuration that is just like the one
+  // associated to this integrator, but with a different summation rule.
+  auto makeNewConfig = [&](RooIntegrator1D::SummationRule rule) {
+      RooNumIntConfig newConfig{_config}; // copy default configuration
+      newConfig.getConfigSection("RooIntegrator1D").setCatIndex("sumRule", rule);
+      return newConfig;
+  };
+
   // partition the integration range into subranges that can each be
   // handled by RooIntegrator1D
   switch(_case= limitsCase()) {
@@ -171,28 +179,28 @@ void RooImproperIntegrator1D::initialize(const RooAbsFunc* function)
   case OpenBothEnds:
     // both limits are infinite: integrate over (-1,+1) using
     // the plain trapezoid integrator...
-    _integrator1= new RooIntegrator1D(*function,-1,+1,RooIntegrator1D::Trapezoid);
+    _integrator1= new RooIntegrator1D(*function,-1,+1,makeNewConfig(RooIntegrator1D::Trapezoid));
     // ...and integrate the infinite tails using the midpoint integrator
-    _integrator2= new RooIntegrator1D(*_function,-1,0,RooIntegrator1D::Midpoint);
-    _integrator3= new RooIntegrator1D(*_function,0,+1,RooIntegrator1D::Midpoint);
+    _integrator2= new RooIntegrator1D(*_function,-1,0,makeNewConfig(RooIntegrator1D::Midpoint));
+    _integrator3= new RooIntegrator1D(*_function,0,+1,makeNewConfig(RooIntegrator1D::Midpoint));
     break;
   case OpenBelowSpansZero:
     // xmax >= 0 so integrate from (-inf,-1) and (-1,xmax)
-    _integrator1= new RooIntegrator1D(*_function,-1,0,RooIntegrator1D::Midpoint);
-    _integrator2= new RooIntegrator1D(*function,-1,_xmax,RooIntegrator1D::Trapezoid);
+    _integrator1= new RooIntegrator1D(*_function,-1,0,makeNewConfig(RooIntegrator1D::Midpoint));
+    _integrator2= new RooIntegrator1D(*function,-1,_xmax,makeNewConfig(RooIntegrator1D::Trapezoid));
     break;
   case OpenBelow:
     // xmax < 0 so integrate from (-inf,xmax)
-    _integrator1= new RooIntegrator1D(*_function,1/_xmax,0,RooIntegrator1D::Midpoint);
+    _integrator1= new RooIntegrator1D(*_function,1/_xmax,0,makeNewConfig(RooIntegrator1D::Midpoint));
     break;
   case OpenAboveSpansZero:
     // xmin <= 0 so integrate from (xmin,+1) and (+1,+inf)
-    _integrator1= new RooIntegrator1D(*_function,0,+1,RooIntegrator1D::Midpoint);
-    _integrator2= new RooIntegrator1D(*function,_xmin,+1,RooIntegrator1D::Trapezoid);
+    _integrator1= new RooIntegrator1D(*_function,0,+1,makeNewConfig(RooIntegrator1D::Midpoint));
+    _integrator2= new RooIntegrator1D(*function,_xmin,+1,makeNewConfig(RooIntegrator1D::Trapezoid));
     break;
   case OpenAbove:
     // xmin > 0 so integrate from (xmin,+inf)
-    _integrator1= new RooIntegrator1D(*_function,0,1/_xmin,RooIntegrator1D::Midpoint);
+    _integrator1= new RooIntegrator1D(*_function,0,1/_xmin,makeNewConfig(RooIntegrator1D::Midpoint));
     break;
   case Invalid:
   default:
