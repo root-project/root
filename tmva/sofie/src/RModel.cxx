@@ -161,6 +161,13 @@ namespace SOFIE{
       }
    }
 
+   void RModel::UpdateOutputTensorList(std::vector<std::string> curr_output_tensor, std::vector<std::string> modify_output_tensor){
+      for(auto& it:curr_output_tensor){
+         fOutputTensorNames.erase(std::remove(fOutputTensorNames.begin(), fOutputTensorNames.end(), it), fOutputTensorNames.end());
+      }
+      fOutputTensorNames.insert(fOutputTensorNames.end(), modify_output_tensor.begin(), modify_output_tensor.end());
+   }
+
    void RModel::UpdateInitializedTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape, std::shared_ptr<void> data){
       tensor_name = UTILITY::Clean_name(tensor_name);
       if (!CheckIfTensorAlreadyExist(tensor_name)){
@@ -183,6 +190,7 @@ namespace SOFIE{
       // check if there are only parametrized input tensor and convert in
       // ready input tensor according to batch size
       // convert parametric shape to a dimensional shape
+      fIntermediateTensorInfos.clear();
       if (fReadyInputTensorInfos.size() != fInputTensorNames.size()) {
          if ( fReadyInputTensorInfos.size() + fInputTensorInfos.size() != fInputTensorNames.size())
             throw std::runtime_error("TMVA-SOFIE: RModel::Initializes: invalid inputs");
@@ -212,6 +220,7 @@ namespace SOFIE{
          fUseSession = false;
       if (static_cast<std::underlying_type_t<Options>>(Options::kNoWeightFile) & options)
          fUseWeightFile = false;
+      fGC.clear();
       Initialize(batchSize);
       fGC += ("//Code generated automatically by TMVA for Inference of Model file [" + fFileName + "] at [" + fParseTime.substr(0, fParseTime.length()-1) +"] \n");
       // add header guards
@@ -370,6 +379,9 @@ namespace SOFIE{
 
       for (size_t id = 0; id < fOperators.size() ; id++){
          fGC+= (fOperators[id]->Generate(std::to_string(id)));
+      }
+      for(auto& it: fOutputTensorNames){
+         std::cout<<it<<std::endl;
       }
       if (outputSize == 1) {
          size_t outputLength = ConvertShapeToLength(GetTensorShape(fOutputTensorNames[0]));

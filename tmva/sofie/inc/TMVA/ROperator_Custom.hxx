@@ -54,15 +54,20 @@ public:
       for(auto i=0; i<fOutputNames.size(); ++i){
         model.AddIntermediateTensor(fOutputNames[i], ETensorType::FLOAT, fOutputShapes[i]);
       }
+      model.UpdateOutputTensorList(fInputNames, fOutputNames);
    }
 
     std::string Generate(std::string OpName){
       OpName = "op_" + OpName;
       std::stringstream out;
       out << "\n//------ "<<fOpName<<" \n";
-      out << SP << "std::vector<float>"<<fOpName<<"_result = "<<fOpName<<"::Compute();\n";
+      out << SP << "std::vector<std::vector<float>> " << fOpName << "_input;\n";
+      for(auto i = 0; i<fInputNames.size(); ++i){
+        out << SP << fOpName << "_input.emplace_back(" << fInputNames[i] << ");\n"; 
+      }
+      out << SP << "std::vector<float>"<<fOpName<<"_result = "<<fOpName<<"::Compute("<<fOpName<<"_input"<<");\n";
       for(auto i = 0; i<fOutputNames.size(); ++i){
-        out << SP << SP << "tensor_"<<fOutputNames[i]<<" = "<<fOpName<<"_result["<<i<<"];\n";
+        out << SP << "tensor_"<<fOutputNames[i]<<" = "<<fOpName<<"_result["<<i<<"];\n";
       }
       return out.str();
    }
