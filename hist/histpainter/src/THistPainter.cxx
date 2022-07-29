@@ -8912,14 +8912,11 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
       unov[7] = h2->Integral(firstX, lastX,           0, firstY-1);
       unov[8] = h2->Integral(lastX+1, cellsX  ,       0, firstY-1);
 
-      tt.Form(" %7d|%7d|%7d\n", (Int_t)unov[0], (Int_t)unov[1], (Int_t)unov[2]);
+      tt.Form("%g|%g|%g\n", unov[0], unov[1], unov[2]);
       stats->AddText(tt.Data());
-      if (TMath::Abs(unov[4]) < 1.e7)
-         tt.Form(" %7d|%7d|%7d\n", (Int_t)unov[3], (Int_t)unov[4], (Int_t)unov[5]);
-      else
-         tt.Form(" %7d|%14.7g|%7d\n", (Int_t)unov[3], (Float_t)unov[4], (Int_t)unov[5]);
+      tt.Form("%g|%g|%g\n", unov[3], unov[4], unov[5]);
       stats->AddText(tt.Data());
-      tt.Form(" %7d|%7d|%7d\n", (Int_t)unov[6], (Int_t)unov[7], (Int_t)unov[8]);
+      tt.Form("%g|%g|%g\n", unov[6], unov[7], unov[8]);
       stats->AddText(tt.Data());
    }
 
