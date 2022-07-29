@@ -48,6 +48,7 @@ std::unique_ptr<ROperator> MakeKerasSigmoid(PyObject *fLayer);      // For insta
 std::unique_ptr<ROperator> MakeKerasPermute(PyObject *fLayer);      // For instantiating ROperator for Keras Permute Layer
 std::unique_ptr<ROperator> MakeKerasBatchNorm(PyObject *fLayer);    // For instantiating ROperator for Keras Batch Normalization Layer
 std::unique_ptr<ROperator> MakeKerasReshape(PyObject *fLayer);      // For instantiating ROperator for Keras Reshape Layer
+std::unique_ptr<ROperator> MakeKerasConcat(PyObject *fLayer);       // For instantiating ROperator for Keras Concat Layer
 
 
 // Declaring Internal function for Keras layers which have additional activation attribute
@@ -63,6 +64,7 @@ const KerasMethodMap mapKerasLayer = {
    {"Permute", &MakeKerasPermute},
    {"BatchNormalization", &MakeKerasBatchNorm},
    {"Reshape", &MakeKerasReshape},
+   {"Concat", &MakeKerasConcat},
 
    // For activation layers
    {"ReLU", &MakeKerasReLU},
@@ -524,11 +526,12 @@ std::unique_ptr<ROperator> MakeKerasBatchNorm(PyObject* fLayer)
 /// \param[in] fLayer Python Keras layer as a Dictionary object
 /// \return Unique pointer to ROperator object
 std::unique_ptr<ROperator> MakeKerasReshape(PyObject* fLayer)
-{
+{      
       // Extracting required layer information
       PyObject* fAttributes = PyDict_GetItemString(fLayer,"layerAttributes");
       PyObject* fInputs  = PyDict_GetItemString(fLayer,"layerInput");
       PyObject* fOutputs = PyDict_GetItemString(fLayer,"layerOutput");
+
       std::string fLayerName = PyStringAsString(PyDict_GetItemString(fAttributes,"_name"));
 
       ReshapeOpMode fOpMode = Reshape;
@@ -541,6 +544,28 @@ std::unique_ptr<ROperator> MakeKerasReshape(PyObject* fLayer)
       return op;
 }
 
+//////////////////////////////////////////////////////////////////////////////////
+/// \brief Prepares a ROperator object for Keras Concat layer
+///
+/// \param[in] fLayer Python Keras layer as a Dictionary object
+/// \return Unique pointer to ROperator object
+std::unique_ptr<ROperator> MakeKerasConcat(PyObject* fLayer)
+{
+      PyObject* fAttributes = PyDict_GetItemString(fLayer,"layerAttributes");
+      PyObject* fInputs  = PyDict_GetItemString(fLayer,"layerInput");
+      PyObject* fOutputs = PyDict_GetItemString(fLayer,"layerOutput");
+
+      std::vector<std::string> inputs;
+      for(Py_ssize_t i=0; i<PyList_Size(fInputs); ++i){
+         inputs.emplace_back(PyStringAsString(PyList_GetItem(fInputs,i)));      
+      }            
+      std::string output  = PyStringAsString(PyList_GetItem(fOutputs,0));
+
+      int axis = (int)PyLong_AsLong(PyDict_GetItemString(fAttributes,"axis"));
+      std::unique_ptr<ROperator> op;
+      op.reset(new ROperator_Concat<float>(inputs, axis, output));
+      return op;
+}
 }//INTERNAL
 
 
