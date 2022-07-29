@@ -56,5 +56,10 @@ int main(){
    modelConcatenate.Generate();
    modelConcatenate.OutputGenerated("KerasConcatenateModel.hxx");
 
+   // Emitting header file for Keras Binary Op Model
+   RModel modelBinaryOp = TMVA::Experimental::SOFIE::PyKeras::Parse("KerasModelBinaryOp.h5");
+   modelBinaryOp.Generate();
+   modelBinaryOp.OutputGenerated("KerasBinaryOpModel.hxx");
+
    return 0;
 }
