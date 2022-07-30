@@ -184,10 +184,10 @@ RooCategory* RooFactoryWSTool::createCategory(const char* name, const char* stat
   // Add listed state names
   if (stateNameList) {
      const size_t tmpSize = strlen(stateNameList)+1;
-    char *tmp = new char[tmpSize] ;
-    strlcpy(tmp,stateNameList,tmpSize) ;
+    std::vector<char> tmp(tmpSize);
+    strlcpy(tmp.data(),stateNameList,tmpSize) ;
     char* save ;
-    char* tok = R__STRTOK_R(tmp,",",&save) ;
+    char* tok = R__STRTOK_R(tmp.data(),",",&save) ;
     while(tok) {
       char* sep = strchr(tok,'=') ;
       if (sep) {
@@ -200,7 +200,6 @@ RooCategory* RooFactoryWSTool::createCategory(const char* name, const char* stat
       }
       tok = R__STRTOK_R(0,",",&save) ;
     }
-    delete[] tmp ;
   }
 
   cat.setStringAttribute("factory_tag",Form("%s[%s]",name,stateNameList)) ;
@@ -481,9 +480,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
   cxcoutD(ObjectHandling) << "RooFactoryWSTool::createArg() Construct expression is " << cintExpr << endl ;
 
   // Call CINT to perform constructor call. Catch any error thrown by argument conversion method
-  RooAbsArg* arg = (RooAbsArg*) gROOT->ProcessLineFast(cintExpr.c_str()) ;
-
-  if (arg) {
+  if (std::unique_ptr<RooAbsArg> arg{reinterpret_cast<RooAbsArg*>(gROOT->ProcessLineFast(cintExpr.c_str()))}) {
     if (string(className)=="RooGenericPdf") {
       arg->setStringAttribute("factory_tag",Form("EXPR::%s(%s)",objName,varList)) ;
     } else if (string(className)=="RooFormulaVar") {
@@ -493,7 +490,6 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
     }
     if (_ws->import(*arg,Silence())) logError() ;
     RooAbsArg* ret = _ws->arg(objName) ;
-    delete arg ;
     return ret ;
   } else {
     coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR in CINT constructor call to create object" << endl ;
@@ -860,10 +856,10 @@ RooAbsArg* RooFactoryWSTool::process(const char* expr)
   }
 
   // Allocate work buffer
-  char* buf = new char[strlen(expr)+1] ;
+  std::vector<char> buf(strlen(expr)+1);
 
   // Copy to buffer while absorbing white space and newlines
-  char* buftmp = buf ;
+  char* buftmp = buf.data();
   while(*expr) {
     if (!isspace(*expr)) {
       *buftmp = *expr ;
@@ -881,7 +877,7 @@ RooAbsArg* RooFactoryWSTool::process(const char* expr)
   // Process buffer
   string out ;
   try {
-    out = processExpression(buf) ;
+    out = processExpression(buf.data()) ;
   } catch (const string &error) {
     coutE(ObjectHandling) << "RooFactoryWSTool::processExpression() ERROR in parsing: " << error << endl ;
     logError() ;
@@ -894,10 +890,6 @@ RooAbsArg* RooFactoryWSTool::process(const char* expr)
   } else {
     ws().commitTransaction() ;
   }
-
-
-  // Delete buffer
-  delete[] buf ;
 
   return out.size() ? ws().arg(out.c_str()) : 0 ;
 }
@@ -945,8 +937,8 @@ std::string RooFactoryWSTool::processCompositeExpression(const char* token)
 {
   // Allocate and fill work buffer
    const size_t bufBaseSize = strlen(token)+1;
-  char* buf_base = new char[bufBaseSize] ;
-  char* buf = buf_base ;
+  std::vector<char> buf_base(bufBaseSize);
+  char* buf = buf_base.data();
   strlcpy(buf,token,bufBaseSize) ;
   char* p = buf ;
 
@@ -978,7 +970,6 @@ std::string RooFactoryWSTool::processCompositeExpression(const char* token)
   }
   if (singleExpr.size()==1) {
     string ret = processSingleExpression(token) ;
-    delete[] buf_base ;
     return ret ;
   }
 
@@ -992,7 +983,6 @@ std::string RooFactoryWSTool::processCompositeExpression(const char* token)
     }
   }
 
-  delete[] buf_base ;
   return ret ;
 }
 
@@ -1020,22 +1010,21 @@ std::string RooFactoryWSTool::processSingleExpression(const char* arg)
 
   // Allocate and fill work buffer
   const size_t bufSize = strlen(arg)+1;
-  char* buf = new char[bufSize] ;
-  strlcpy(buf,arg,bufSize) ;
-  char* bufptr = buf ;
+  std::vector<char> buf(bufSize);
+  strlcpy(buf.data(),arg,bufSize) ;
+  char* bufptr = buf.data();
 
   string func,prefix ;
   vector<string> args ;
 
   // Process token into arguments
   char* save ;
-  char* tmpx = R__STRTOK_R(buf,"([",&save) ;
+  char* tmpx = R__STRTOK_R(buf.data(),"([",&save) ;
   func = tmpx ? tmpx : "" ;
   char* p = R__STRTOK_R(0,"",&save) ;
 
   // Return here if token is fundamental
   if (!p) {
-    delete[] buf ;
     return arg ;
   }
 
@@ -1079,9 +1068,6 @@ std::string RooFactoryWSTool::processSingleExpression(const char* arg)
   p = R__STRTOK_R(0,"",&save) ;
   if (p) tmp += p ;
   args.push_back(tmp) ;
-
-  // Delete the work buffer
-  delete[] buf ;
 
   // If function contains :: then call createArg to process this arg, otherwise
   // call createVariable
@@ -1159,14 +1145,14 @@ string RooFactoryWSTool::processListExpression(const char* arg)
 {
   // Allocate and fill work buffer
   const size_t bufSize = strlen(arg)+1;
-  char* buf = new char[bufSize] ;
-  strlcpy(buf,arg,bufSize) ;
+  std::vector<char> buf(bufSize);
+  strlcpy(buf.data(),arg,bufSize) ;
 
-  vector<string> args ;
+  std::vector<string> args ;
 
   // Start running pointer at position 1 to skip opening bracket
-  char* tok = buf+1 ;
-  char* p = buf+1 ;
+  char* tok = buf.data()+1 ;
+  char* p = buf.data()+1 ;
 
   // Processing look
   Int_t level(0) ;
@@ -1190,13 +1176,10 @@ string RooFactoryWSTool::processListExpression(const char* arg)
   }
 
   // Finalize token as last argument
-  if (p>buf && *(p-1)=='}') {
+  if (p>buf.data() && *(p-1)=='}') {
     *(p-1)=0 ;
   }
   args.push_back(tok) ;
-
-  // Delete work buffer
-  delete[] buf ;
 
   // Process each argument in list and construct reduced
   // expression to be returned
@@ -1452,22 +1435,21 @@ std::string RooFactoryWSTool::processMetaArg(std::string& func, std::vector<std:
 vector<string> RooFactoryWSTool::splitFunctionArgs(const char* funcExpr)
 {
   const size_t bufSize = strlen(funcExpr)+1;
-  char* buf = new char[bufSize] ;
-  strlcpy(buf,funcExpr,bufSize) ;
-  char* bufptr = buf ;
+  std::vector<char> buf(bufSize);
+  strlcpy(buf.data(),funcExpr,bufSize) ;
+  char* bufptr = buf.data();
 
   string func ;
   vector<string> args ;
 
   // Process token into arguments
   char* save ;
-  char* tmpx = R__STRTOK_R(buf,"(",&save) ;
+  char* tmpx = R__STRTOK_R(buf.data(),"(",&save) ;
   func = tmpx ? tmpx : "" ;
   char* p = R__STRTOK_R(0,"",&save) ;
 
   // Return here if token is fundamental
   if (!p) {
-    delete[] buf ;
     return args ;
   }
 
@@ -1510,9 +1492,6 @@ vector<string> RooFactoryWSTool::splitFunctionArgs(const char* funcExpr)
   p = R__STRTOK_R(0,"",&save) ;
   if (p) tmp += p ;
   args.push_back(tmp) ;
-
-  // Delete the work buffer
-  delete[] buf ;
 
   return args ;
 }
@@ -2166,12 +2145,11 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
   } else if (cl=="dataobs") {
 
     // dataobs::name[dset,func]
-    RooAbsArg* funcClone = static_cast<RooAbsArg*>(ft.asARG(pargv[1].c_str()).clone(instName)) ;
+    std::unique_ptr<RooAbsArg> funcClone{static_cast<RooAbsArg*>(ft.asARG(pargv[1].c_str()).clone(instName))};
     RooAbsArg* arg = ft.asDSET(pargv[0].c_str()).addColumn(*funcClone) ;
     if (!ft.ws().fundArg(arg->GetName())) {
       if (ft.ws().import(*arg,Silence())) ft.logError() ;
     }
-    delete funcClone ;
 
   } else if (cl=="int") {
 

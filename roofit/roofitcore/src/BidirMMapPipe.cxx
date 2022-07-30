@@ -1852,7 +1852,7 @@ childcloses:
     {
         std::cout << std::endl << "[PARENT]: benchmark: round-trip times vs block size" << std::endl;
         for (unsigned i = 0; i <= 24; ++i) {
-            char *s = new char[1 + (1 << i)];
+            std::vector<char> s(1 + (1 << i));
             std::memset(s, 'A', 1 << i);
             s[1 << i] = 0;
             const unsigned n = 1 << 7;
@@ -1883,7 +1883,6 @@ childcloses:
             int retVal = pipe->close();
             if (retVal) {
                 std::cout << "[PARENT]: child exited with code " << retVal << std::endl;
-                delete[] s;
                 return retVal;
             }
             delete pipe;
@@ -1896,7 +1895,6 @@ childcloses:
                 "us speed " << std::setw(9) <<
                 2. * (double(1 << i) / double(1 << 20) / (1e-6 * avg)) <<
                 " MB/s" << std::endl;
-            delete[] s;
         }
         std::cout << "[PARENT]: all children had exit code 0" << std::endl;
     }
@@ -1904,7 +1902,7 @@ childcloses:
     {
         std::cout << std::endl << "[PARENT]: benchmark: raw transfer rate with child as sink" << std::endl;
         for (unsigned i = 0; i <= 24; ++i) {
-            char *s = new char[1 + (1 << i)];
+            std::vector<char> s(1 + (1 << i));
             std::memset(s, 'A', 1 << i);
             s[1 << i] = 0;
             const unsigned n = 1 << 7;
@@ -1943,7 +1941,6 @@ childcloses:
                 "us speed " << std::setw(9) <<
                 (double(1 << i) / double(1 << 20) / (1e-6 * avg)) <<
                 " MB/s" << std::endl;
-            delete[] s;
         }
         std::cout << "[PARENT]: all children had exit code 0" << std::endl;
     }

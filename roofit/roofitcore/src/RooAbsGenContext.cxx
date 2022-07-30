@@ -52,7 +52,6 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
   _prototype(prototype),
   _isValid(true),
   _verbose(verbose),
-  _protoOrder(0),
   _genData(0)
 {
   // Check PDF dependents
@@ -95,16 +94,6 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
   if (model.normRange()) {
     _normRange = model.normRange() ;
   }
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooAbsGenContext::~RooAbsGenContext()
-{
-  if (_protoOrder) delete[] _protoOrder ;
 }
 
 
@@ -218,7 +207,7 @@ RooDataSet *RooAbsGenContext::generate(double nEvents, bool skipInit, bool exten
     if(0 != _prototype) {
       if(_nextProtoIndex >= _prototype->numEntries()) _nextProtoIndex= 0;
 
-      Int_t actualProtoIdx = _protoOrder ? _protoOrder[_nextProtoIndex] : _nextProtoIndex ;
+      Int_t actualProtoIdx = !_protoOrder.empty() ? _protoOrder[_nextProtoIndex] : _nextProtoIndex ;
 
       const RooArgSet *subEvent= _prototype->get(actualProtoIdx);
       _nextProtoIndex++;
@@ -332,16 +321,10 @@ void RooAbsGenContext::printMultiline(ostream &/*os*/, Int_t /*contents*/, bool 
 
 void RooAbsGenContext::setProtoDataOrder(Int_t* lut)
 {
-  // Delete any previous lookup table
-  if (_protoOrder) {
-    delete[] _protoOrder ;
-    _protoOrder = 0 ;
-  }
-
   // Copy new lookup table if provided and needed
   if (lut && _prototype) {
     Int_t n = _prototype->numEntries() ;
-    _protoOrder = new Int_t[n] ;
+    _protoOrder.resize(n);
     Int_t i ;
     for (i=0 ; i<n ; i++) {
       _protoOrder[i] = lut[i] ;

@@ -426,27 +426,25 @@ bool RooClassFactory::makeClass(const char* baseName, const char* className, con
 
   if (realArgNames && *realArgNames) {
     const size_t bufSize = strlen(realArgNames)+1;
-    char* buf = new char[bufSize] ;
-    strlcpy(buf,realArgNames,bufSize) ;
-    char* token = strtok(buf,",") ;
+    std::vector<char> buf(bufSize);
+    strlcpy(buf.data(),realArgNames,bufSize) ;
+    char* token = strtok(buf.data(),",") ;
     while(token) {
       alist.push_back(token) ;
       isCat.push_back(false) ;
       token = strtok(0,",") ;
     }
-    delete[] buf ;
   }
   if (catArgNames && *catArgNames) {
     const size_t bufSize = strlen(catArgNames)+1;
-    char* buf = new char[bufSize] ;
-    strlcpy(buf,catArgNames,bufSize) ;
-    char* token = strtok(buf,",") ;
+    std::vector<char> buf(bufSize);
+    strlcpy(buf.data(),catArgNames,bufSize) ;
+    char* token = strtok(buf.data(),",") ;
     while(token) {
       alist.push_back(token) ;
       isCat.push_back(true) ;
       token = strtok(0,",") ;
     }
-    delete[] buf ;
   }
 
   TString impFileName(className), hdrFileName(className) ;
@@ -626,15 +624,14 @@ bool RooClassFactory::makeClass(const char* baseName, const char* className, con
     // Expected form is observable:expression,observable,observable:expression;[...]
     if (intExpression && *intExpression) {
       const size_t bufSize = strlen(intExpression)+1;
-      char* buf = new char[bufSize] ;
-      strlcpy(buf,intExpression,bufSize) ;
-      char* ptr = strtok(buf,":") ;
+      std::vector<char> buf(bufSize);
+      strlcpy(buf.data(),intExpression,bufSize) ;
+      char* ptr = strtok(buf.data(),":") ;
       while(ptr) {
    intObs.push_back(ptr) ;
    intExpr.push_back(strtok(0,";")) ;
    ptr = strtok(0,":") ;
       }
-      delete[] buf ;
     }
 
     cf << " Int_t " << className << "::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const  " << endl

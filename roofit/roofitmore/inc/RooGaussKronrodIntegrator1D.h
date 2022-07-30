@@ -25,11 +25,10 @@ class RooGaussKronrodIntegrator1D : public RooAbsIntegrator {
 public:
 
   // Constructors, assignment etc
-  RooGaussKronrodIntegrator1D() ;
+  RooGaussKronrodIntegrator1D() {}
   RooGaussKronrodIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) ;
   RooGaussKronrodIntegrator1D(const RooAbsFunc& function, double xmin, double xmax, const RooNumIntConfig& config) ;
   RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
-  ~RooGaussKronrodIntegrator1D() override;
 
   bool checkLimits() const override;
   double integral(const double *yvec=nullptr) override ;
@@ -54,8 +53,8 @@ protected:
 
   bool _useIntegrandLimits;  // Use limits in function binding?
 
-  double* xvec(double& xx) { _x[0] = xx ; return _x ; }
-  double *_x ; //! do not persist
+  double* xvec(double& xx) { _x[0] = xx ; return _x.data(); }
+  std::vector<double> _x ; //! do not persist
 
   double _epsAbs ;                   // Absolute precision
   double _epsRel ;                   // Relative precision
