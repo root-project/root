@@ -39,23 +39,13 @@ integration, following the VEGAS algorithm.
 using namespace std;
 
 ClassImp(RooGrid);
-;
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooGrid::RooGrid() :
-  _valid(false), _dim(0), _bins(0), _boxes(0), _vol(0), _xl(0),  _xu(0),  _delx(0),  _d(0),  _xi(0),  _xin(0),  _weight(0)
-{
-}
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with given function binding
 
 RooGrid::RooGrid(const RooAbsFunc &function)
-  : _valid(true), _xl(0),_xu(0),_delx(0),_xi(0)
+  : _valid(true)
 {
   // check that the input function is valid
   if(!(_valid= function.isValid())) {
@@ -65,36 +55,16 @@ RooGrid::RooGrid(const RooAbsFunc &function)
 
   // allocate workspace memory
   _dim= function.getDimension();
-  _xl= new double[_dim];
-  _xu= new double[_dim];
-  _delx= new double[_dim];
-  _d= new double[_dim*maxBins];
-  _xi= new double[_dim*(maxBins+1)];
-  _xin= new double[maxBins+1];
-  _weight= new double[maxBins];
-  if(!_xl || !_xu || !_delx || !_d || !_xi || !_xin || !_weight) {
-    oocoutE(nullptr,Integration) << ClassName() << ": memory allocation failed" << endl;
-    _valid= false;
-    return;
-  }
+  _xl.resize(_dim);
+  _xu.resize(_dim);
+  _delx.resize(_dim);
+  _d.resize(_dim*maxBins);
+  _xi.resize(_dim*(maxBins+1));
+  _xin.resize(maxBins+1);
+  _weight.resize(maxBins);
 
   // initialize the grid
   _valid= initialize(function);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooGrid::~RooGrid()
-{
-  if(_xl)     delete[] _xl;
-  if(_xu)     delete[] _xu;
-  if(_delx)   delete[] _delx;
-  if(_d)      delete[] _d;
-  if(_xi)     delete[] _xi;
-  if(_xin)    delete[] _xin;
-  if(_weight) delete[] _weight;
 }
 
 

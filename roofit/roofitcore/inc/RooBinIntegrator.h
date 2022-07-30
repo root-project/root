@@ -58,19 +58,19 @@ protected:
   // Numerical integrator workspace
   mutable std::vector<double> _xmin;      ///<! Lower integration bound
   mutable std::vector<double> _xmax;      ///<! Upper integration bound
-  std::vector<std::vector<double>> _binb;   ///<! list of bin boundaries
-  mutable Int_t _numBins;                   ///<! Size of integration range
+  std::vector<std::vector<double>> _binb; ///<! list of bin boundaries
+  mutable Int_t _numBins = 0;             ///<! Size of integration range
 
-  bool _useIntegrandLimits;  ///< If true limits of function binding are ued
+  bool _useIntegrandLimits = false;       ///< If true limits of function binding are ued
 
   std::unique_ptr<RooBatchCompute::RunContext> _evalData;     ///<! Run context for evaluating a function.
   std::unique_ptr<RooBatchCompute::RunContext> _evalDataOrig; ///<! Run context to save bin centres in between invocations.
 
-  double* xvec(double xx) { _x[0] = xx ; return _x ; }
-  double* xvec(double xx, double yy) { _x[0] = xx ; _x[1] = yy ; return _x ; }
-  double* xvec(double xx, double yy, double zz) { _x[0] = xx ; _x[1] = yy ; _x[2] = zz ; return _x ; }
+  double* xvec(double xx) { _x[0] = xx ; return _x.data(); }
+  double* xvec(double xx, double yy) { _x[0] = xx ; _x[1] = yy ; return _x.data(); }
+  double* xvec(double xx, double yy, double zz) { _x[0] = xx ; _x[1] = yy ; _x[2] = zz ; return _x.data(); }
 
-  double *_x ; ///<! do not persist
+  std::vector<double> _x ; ///<! do not persist
 
   ClassDefOverride(RooBinIntegrator,0) // 1-dimensional numerical integration engine
 };

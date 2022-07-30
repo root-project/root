@@ -169,16 +169,6 @@ void RooAdaptiveGaussKronrodIntegrator1D::registerIntegrator(RooNumIntFactory& f
      oocoutI(nullptr,Integration)  << "RooAdaptiveGaussKronrodIntegrator1D has been registered " << std::endl;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// coverity[UNINIT_CTOR]
-/// Default constructor
-
-RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D() : _x(0), _workspace(0)
-{
-}
-
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor taking a function binding and a configuration object
@@ -187,8 +177,7 @@ RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const R
                             const RooNumIntConfig& config) :
   RooAbsIntegrator(function),
   _epsAbs(config.epsRel()),
-  _epsRel(config.epsAbs()),
-  _workspace(0)
+  _epsRel(config.epsAbs())
 {
   // Use this form of the constructor to integrate over the function's default range.
   const RooArgSet& confSet = config.getConfigSection(ClassName()) ;
@@ -210,7 +199,6 @@ RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const R
   RooAbsIntegrator(function),
   _epsAbs(config.epsRel()),
   _epsRel(config.epsAbs()),
-  _workspace(0),
   _xmin(xmin),
   _xmax(xmax)
 {
@@ -241,7 +229,7 @@ RooAbsIntegrator* RooAdaptiveGaussKronrodIntegrator1D::clone(const RooAbsFunc& f
 bool RooAdaptiveGaussKronrodIntegrator1D::initialize()
 {
   // Allocate coordinate buffer size after number of function dimensions
-  _x = new double[_function->getDimension()] ;
+  _x.resize(_function->getDimension());
   _workspace = gsl_integration_workspace_alloc (_maxSeg)  ;
 
   return checkLimits();
@@ -256,9 +244,6 @@ RooAdaptiveGaussKronrodIntegrator1D::~RooAdaptiveGaussKronrodIntegrator1D()
 {
   if (_workspace) {
     gsl_integration_workspace_free ((gsl_integration_workspace*) _workspace) ;
-  }
-  if (_x) {
-    delete[] _x ;
   }
 }
 

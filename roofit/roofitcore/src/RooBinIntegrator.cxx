@@ -80,7 +80,7 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function) :
   assert(_function && _function->isValid());
 
   // Allocate coordinate buffer size after number of function dimensions
-  _x = new double[_function->getDimension()] ;
+  _x.resize(_function->getDimension());
   _numBins = 100 ;
 
   _xmin.resize(_function->getDimension()) ;
@@ -133,7 +133,7 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, const RooNumIntCo
   assert(_function && _function->isValid());
 
   // Allocate coordinate buffer size after number of function dimensions
-  _x = new double[_function->getDimension()] ;
+  _x.resize(_function->getDimension());
 
   auto realBinding = dynamic_cast<const RooRealBinding*>(_function);
   if (realBinding) {
@@ -187,7 +187,6 @@ RooAbsIntegrator* RooBinIntegrator::clone(const RooAbsFunc& function, const RooN
 
 RooBinIntegrator::~RooBinIntegrator()
 {
-  if(_x) delete[] _x;
 }
 
 

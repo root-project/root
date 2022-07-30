@@ -15,7 +15,9 @@
 #include "RooAbsCachedReal.h"
 #include "RooRealProxy.h"
 #include "RooAbsReal.h"
+
 #include <string>
+#include <vector>
 
 class RooNumRunningInt : public RooAbsCachedReal {
 public:
@@ -29,15 +31,14 @@ protected:
   class RICacheElem: public FuncCacheElem {
   public:
     RICacheElem(const RooNumRunningInt& ri, const RooArgSet* nset) ;
-    ~RICacheElem() override ;
     RooArgList containedArgs(Action) override ;
     void calculate(bool cdfmode) ;
     void addRange(Int_t ixlo, Int_t ixhi, Int_t nbins) ;
     void addPoint(Int_t ix) ;
 
     RooNumRunningInt* _self ;
-    double* _ax ;
-    double* _ay ;
+    std::vector<double> _ax ;
+    std::vector<double> _ay ;
     RooRealVar* _xx ;
 
   } ;
