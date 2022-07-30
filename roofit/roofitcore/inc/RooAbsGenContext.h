@@ -27,7 +27,6 @@ class RooAbsGenContext : public TNamed, public RooPrintable {
 public:
   RooAbsGenContext(const RooAbsPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0, const RooArgSet* auxProto=nullptr,
          bool _verbose= false) ;
-  ~RooAbsGenContext() override;
 
   virtual RooDataSet *generate(double nEvents= 0, bool skipInit=false, bool extendedMode=false);
 
@@ -82,7 +81,7 @@ protected:
   RooArgSet _protoVars;         ///< Prototype observables
   Int_t _nextProtoIndex;        ///< Next prototype event to load according to LUT
   RooAbsPdf::ExtendMode _extendMode ;  ///< Extended mode capabilities of p.d.f.
-  Int_t* _protoOrder ;          ///< LUT with traversal order of prototype data
+  std::vector<Int_t> _protoOrder ; ///< LUT with traversal order of prototype data
   TString _normRange ;          ///< Normalization range of pdf
 
   RooDataSet* _genData ;        ///<! Data being generated

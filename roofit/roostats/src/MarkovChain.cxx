@@ -243,17 +243,16 @@ THnSparse* MarkovChain::GetAsSparseHist(RooAbsCollection* whichVars) const
    // Fill histogram
    Int_t size = fChain->numEntries();
    const RooArgSet* entry;
-   double* x = new double[dim];
+   std::vector<double> x(dim);
    for ( i = 0; i < size; i++) {
       entry = fChain->get(i);
 
       for (Int_t ii = 0; ii < dim; ii++) {
          //LM:  doing this is probably quite slow
          x[ii] = entry->getRealValue( names[ii]);
-         sparseHist->Fill(x, fChain->weight());
+         sparseHist->Fill(x.data(), fChain->weight());
       }
    }
-   delete[] x;
 
    return sparseHist;
 }

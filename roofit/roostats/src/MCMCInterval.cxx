@@ -246,12 +246,11 @@ bool MCMCInterval::IsInInterval(const RooArgSet& point) const
                                     const_cast<RooArgSet*>(&fParameters));
             Long_t bin;
             // kbelasco: consider making x static
-            double* x = new double[fDimension];
+            std::vector<double> x(fDimension);
             for (Int_t i = 0; i < fDimension; i++)
                x[i] = fAxes[i]->getVal();
-            bin = fSparseHist->GetBin(x, false);
+            bin = fSparseHist->GetBin(x.data(), false);
             double weight = fSparseHist->GetBinContent((Long64_t)bin);
-            delete[] x;
             return (weight >= (double)fHistCutoff);
          } else {
             if (fDataHist == nullptr)
@@ -457,20 +456,16 @@ void MCMCInterval::CreateSparseHist()
    if (fSparseHist != nullptr)
       delete fSparseHist;
 
-   double* min = new double[fDimension];
-   double* max = new double[fDimension];
-   Int_t* bins = new Int_t[fDimension];
+   std::vector<double> min(fDimension);
+   std::vector<double> max(fDimension);
+   std::vector<Int_t> bins(fDimension);
    for (Int_t i = 0; i < fDimension; i++) {
       min[i] = fAxes[i]->getMin();
       max[i] = fAxes[i]->getMax();
       bins[i] = fAxes[i]->numBins();
    }
    fSparseHist = new THnSparseF("posterior", "MCMC Posterior Histogram",
-         fDimension, bins, min, max);
-
-   delete[] min;
-   delete[] max;
-   delete[] bins;
+         fDimension, bins.data(), min.data(), max.data());
 
    // kbelasco: it appears we need to call Sumw2() just to get the
    // histogram to keep a running total of the weight so that Getsumw doesn't
@@ -487,14 +482,13 @@ void MCMCInterval::CreateSparseHist()
    // Fill histogram
    Int_t size = fChain->Size();
    const RooArgSet* entry;
-   double* x = new double[fDimension];
+   std::vector<double> x(fDimension);
    for (Int_t i = fNumBurnInSteps; i < size; i++) {
       entry = fChain->Get(i);
       for (Int_t ii = 0; ii < fDimension; ii++)
          x[ii] = entry->getRealValue(fAxes[ii]->GetName());
-      fSparseHist->Fill(x, fChain->Weight());
+      fSparseHist->Fill(x.data(), fChain->Weight());
    }
-   delete[] x;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1484,7 +1478,7 @@ void MCMCInterval::CreateKeysDataHist()
       return;
 
    //RooAbsBinning** savedBinning = new RooAbsBinning*[fDimension];
-   Int_t* savedBins = new Int_t[fDimension];
+   std::vector<Int_t> savedBins(fDimension);
    Int_t i;
    double numBins;
    RooRealVar* var;
@@ -1537,9 +1531,6 @@ void MCMCInterval::CreateKeysDataHist()
          //fAxes[i]->setBins(savedBinning[i]->numBins(), nullptr);
          fAxes[i]->setBins(savedBins[i], nullptr);
    }
-
-   //delete[] savedBinning;
-   delete[] savedBins;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

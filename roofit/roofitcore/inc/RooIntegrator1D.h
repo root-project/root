@@ -24,7 +24,7 @@ public:
 
   // Constructors, assignment etc
   enum SummationRule { Trapezoid, Midpoint };
-  RooIntegrator1D() ;
+  RooIntegrator1D() {}
 
   RooIntegrator1D(const RooAbsFunc& function, SummationRule rule= Trapezoid,
         Int_t maxSteps= 0, double eps= 0) ;
@@ -36,7 +36,6 @@ public:
         const RooNumIntConfig& config) ;
 
   RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
-  ~RooIntegrator1D() override;
 
   bool checkLimits() const override;
   double integral(const double *yvec=nullptr) override ;
@@ -80,15 +79,15 @@ protected:
   double _range;             ///<! Size of integration range
   double _extrapValue;       ///<! Extrapolated value
   double _extrapError;       ///<! Error on extrapolated value
-  double *_h ;               ///<! Integrator workspace
-  double *_s ;               ///<! Integrator workspace
-  double *_c ;               ///<! Integrator workspace
-  double *_d ;               ///<! Integrator workspace
+  std::vector<double> _h ;   ///<! Integrator workspace
+  std::vector<double> _s ;   ///<! Integrator workspace
+  std::vector<double> _c ;   ///<! Integrator workspace
+  std::vector<double> _d ;   ///<! Integrator workspace
   double _savedResult;       ///<! Integrator workspace
 
-  double* xvec(double& xx) { _x[0] = xx ; return _x ; }
+  double* xvec(double& xx) { _x[0] = xx ; return _x.data(); }
 
-  double *_x ; //! do not persist
+  std::vector<double> _x ; //! do not persist
 
   ClassDefOverride(RooIntegrator1D,0) // 1-dimensional numerical integration engine
 };

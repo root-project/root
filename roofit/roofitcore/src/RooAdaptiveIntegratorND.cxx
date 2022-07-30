@@ -67,8 +67,6 @@ void RooAdaptiveIntegratorND::registerIntegrator(RooNumIntFactory& fact)
 
 RooAdaptiveIntegratorND::RooAdaptiveIntegratorND()
 {
-  _xmin = 0 ;
-  _xmax = 0 ;
   _epsRel = 1e-7 ;
   _epsAbs = 1e-7 ;
   _nmax = 10000 ;
@@ -106,8 +104,6 @@ RooAdaptiveIntegratorND::RooAdaptiveIntegratorND(const RooAbsFunc& function, con
   _integrator->SetFunction(*_func) ;
   _useIntegrandLimits=true ;
 
-  _xmin = 0 ;
-  _xmax = 0 ;
   _nError = 0 ;
   _nWarn = 0 ;
   checkLimits() ;
@@ -134,8 +130,6 @@ RooAbsIntegrator* RooAdaptiveIntegratorND::clone(const RooAbsFunc& function, con
 
 RooAdaptiveIntegratorND::~RooAdaptiveIntegratorND()
 {
-  delete[] _xmin ;
-  delete[] _xmax ;
   delete _integrator ;
   delete _func ;
   if (_nError>_nWarn) {
@@ -153,9 +147,9 @@ RooAdaptiveIntegratorND::~RooAdaptiveIntegratorND()
 
 bool RooAdaptiveIntegratorND::checkLimits() const
 {
-  if (!_xmin) {
-    _xmin = new double[_func->NDim()] ;
-    _xmax = new double[_func->NDim()] ;
+  if (_xmin.empty()) {
+    _xmin.resize(_func->NDim());
+    _xmax.resize(_func->NDim());
   }
 
   if (_useIntegrandLimits) {
@@ -196,7 +190,7 @@ bool RooAdaptiveIntegratorND::setLimits(double *xmin, double *xmax)
 
 double RooAdaptiveIntegratorND::integral(const double* /*yvec*/)
 {
-  double ret = _integrator->Integral(_xmin,_xmax) ;
+  double ret = _integrator->Integral(_xmin.data(),_xmax.data());
   if (_integrator->Status()==1) {
     _nError++ ;
     if (_nError<=_nWarn) {

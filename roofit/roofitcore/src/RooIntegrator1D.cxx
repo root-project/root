@@ -70,17 +70,6 @@ void RooIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// coverity[UNINIT_CTOR]
-/// Default constructor
-
-RooIntegrator1D::RooIntegrator1D() :
-  _h(0), _s(0), _c(0), _d(0), _x(0)
-{
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct integrator on given function binding, using specified summation
 /// rule, maximum number of steps and conversion tolerance. The integration
@@ -204,30 +193,16 @@ bool RooIntegrator1D::initialize()
   }
 
   // Allocate coordinate buffer size after number of function dimensions
-  _x = new double[_function->getDimension()] ;
+  _x.resize(_function->getDimension());
 
 
   // Allocate workspace for numerical integration engine
-  _h= new double[_maxSteps + 2];
-  _s= new double[_maxSteps + 2];
-  _c= new double[_nPoints + 1];
-  _d= new double[_nPoints + 1];
+  _h.resize(_maxSteps + 2);
+  _s.resize(_maxSteps + 2);
+  _c.resize(_nPoints + 1);
+  _d.resize(_nPoints + 1);
 
   return checkLimits();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooIntegrator1D::~RooIntegrator1D()
-{
-  // Release integrator workspace
-  if(_h) delete[] _h;
-  if(_s) delete[] _s;
-  if(_c) delete[] _c;
-  if(_d) delete[] _d;
-  if(_x) delete[] _x;
 }
 
 

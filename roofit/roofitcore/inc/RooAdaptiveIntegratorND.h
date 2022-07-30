@@ -52,8 +52,8 @@ protected:
 
   bool _useIntegrandLimits;  ///< If true limits of function binding are used
 
-  mutable double* _xmin ;    ///< Lower bound in each dimension
-  mutable double* _xmax ;    ///< Upper bound in each dimension
+  mutable std::vector<double> _xmin;    ///< Lower bound in each dimension
+  mutable std::vector<double> _xmax;    ///< Upper bound in each dimension
   double _epsRel ;           ///< Relative precision
   double _epsAbs ;           ///< Absolute precision
   Int_t    _nmax ;             ///< Max number of divisions

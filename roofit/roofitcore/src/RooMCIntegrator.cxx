@@ -259,9 +259,10 @@ double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, doub
   }
 
   // allocate memory for some book-keeping arrays
-  UInt_t *box= _grid.createIndexVector();
-  UInt_t *bin= _grid.createIndexVector();
-  double *x= _grid.createPoint();
+  std::vector<UInt_t> box(_grid.getDimension());
+  std::vector<UInt_t> bin(_grid.getDimension());
+  std::vector<double> x(_grid.getDimension());
+
 
   // loop over iterations for this step
   double cum_int(0),cum_sig(0);
@@ -276,29 +277,29 @@ double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, doub
     _grid.resetValues();
 
     // loop over grid boxes
-    _grid.firstBox(box);
+    _grid.firstBox(box.data());
     do {
       double m(0),q(0);
       // loop over integrand evaluations within this grid box
       for(UInt_t k = 0; k < _calls_per_box; k++) {
         // generate a random point in this box
         double bin_vol(0);
-        _grid.generatePoint(box, x, bin, bin_vol, _genType == QuasiRandom ? true : false);
+        _grid.generatePoint(box.data(), x.data(), bin.data(), bin_vol, _genType == QuasiRandom ? true : false);
         // evaluate the integrand at the generated point
-        double fval= jacbin*bin_vol*integrand(x);
+        double fval= jacbin*bin_vol*integrand(x.data());
         // update mean and variance calculations
         double d = fval - m;
         m+= d / (k + 1.0);
         q+= d * d * (k / (k + 1.0));
         // accumulate the results of this evaluation (importance sampling only)
-        if (_mode != Stratified) _grid.accumulate(bin, fval*fval);
+        if (_mode != Stratified) _grid.accumulate(bin.data(), fval*fval);
       }
       intgrl += m * _calls_per_box;
       double f_sq_sum = q * _calls_per_box ;
       sig += f_sq_sum ;
 
       // accumulate the results for this grid box (stratified sampling only)
-      if (_mode == Stratified) _grid.accumulate(bin, f_sq_sum);
+      if (_mode == Stratified) _grid.accumulate(bin.data(), f_sq_sum);
 
       // print occasional progress messages
       if(_timer.RealTime() > 30) {
@@ -317,7 +318,7 @@ double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, doub
         _timer.Start(false);
       }
 
-    } while(_grid.nextBox(box));
+    } while(_grid.nextBox(box.data()));
 
     // compute final results for this iteration
     double wgt;
@@ -361,11 +362,6 @@ double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, doub
     }
     _grid.refine(_alpha);
   }
-
-  // cleanup
-  delete[] bin;
-  delete[] box;
-  delete[] x;
 
   if(absError) *absError = cum_sig;
   return cum_int;

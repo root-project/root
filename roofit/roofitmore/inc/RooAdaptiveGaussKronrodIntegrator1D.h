@@ -25,7 +25,7 @@ class RooAdaptiveGaussKronrodIntegrator1D : public RooAbsIntegrator {
 public:
 
   // Constructors, assignment etc
-  RooAdaptiveGaussKronrodIntegrator1D() ;
+  RooAdaptiveGaussKronrodIntegrator1D() {}
   RooAdaptiveGaussKronrodIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) ;
   RooAdaptiveGaussKronrodIntegrator1D(const RooAbsFunc& function, double xmin, double xmax,
                                       const RooNumIntConfig& config) ;
@@ -75,15 +75,15 @@ protected:
 
   double* xvec(double& xx) {
     // Return contents of xx in internal array pointer
-    _x[0] = xx ; return _x ;
+    _x[0] = xx ; return _x.data();
   }
-  double *_x ;                        //! Current coordinate
+  std::vector<double> _x ;                        //! Current coordinate
 
   double _epsAbs ;                   // Absolute precision
   double _epsRel ;                   // Relative precision
   Int_t    _methodKey ;                // GSL method key
   Int_t    _maxSeg ;                   // Maximum number of segments
-  void*    _workspace ;                // GSL workspace
+  void*    _workspace = nullptr;       // GSL workspace
 
   mutable double _xmin;              //! Lower integration bound
   mutable double _xmax;              //! Upper integration bound

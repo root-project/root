@@ -103,8 +103,8 @@ RooNumRunningInt::RICacheElem::RICacheElem(const RooNumRunningInt& self, const R
   FuncCacheElem(self,nset), _self(&const_cast<RooNumRunningInt&>(self))
 {
   // Instantiate temp arrays
-  _ax = new double[hist()->numEntries()] ;
-  _ay = new double[hist()->numEntries()] ;
+  _ax.resize(hist()->numEntries());
+  _ay.resize(hist()->numEntries());
 
   // Copy X values from histo
   _xx = (RooRealVar*) hist()->get()->find(self.x.arg().GetName()) ;
@@ -114,17 +114,6 @@ RooNumRunningInt::RICacheElem::RICacheElem(const RooNumRunningInt& self, const R
     _ay[i] = -1 ;
   }
 
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooNumRunningInt::RICacheElem::~RICacheElem()
-{
-  // Delete temp arrays
-  delete[] _ax ;
-  delete[] _ay ;
 }
 
 

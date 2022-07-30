@@ -1074,15 +1074,14 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
 
   list<string> rangeComps ;
   {
-    char* buf = new char[strlen(_normRange.Data()) + 1] ;
-    strcpy(buf,_normRange.Data()) ;
+    std::vector<char> buf(strlen(_normRange.Data()) + 1);
+    strcpy(buf.data(),_normRange.Data()) ;
     char* save(0) ;
-    char* token = R__STRTOK_R(buf,",",&save) ;
+    char* token = R__STRTOK_R(buf.data(),",",&save) ;
     while(token) {
       rangeComps.push_back(token) ;
       token = R__STRTOK_R(0,",",&save) ;
     }
-    delete[] buf;
   }
 
 

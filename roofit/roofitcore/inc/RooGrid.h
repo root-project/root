@@ -19,13 +19,14 @@
 #include "TObject.h"
 #include "RooPrintable.h"
 
+#include <vector>
+
 class RooAbsFunc;
 
 class RooGrid : public TObject, public RooPrintable {
 public:
-  RooGrid() ;
+  RooGrid() {}
   RooGrid(const RooAbsFunc &function);
-  ~RooGrid() override;
 
   // Printing interface
   void printName(std::ostream& os) const override ;
@@ -43,9 +44,6 @@ public:
   inline UInt_t getNBins() const { return _bins; }
   inline UInt_t getNBoxes() const { return _boxes; }
   inline void setNBoxes(UInt_t boxes) { _boxes= boxes; }
-
-  inline double *createPoint() const { return _valid ? new double[_dim] : 0; }
-  inline UInt_t *createIndexVector() const { return _valid ? new UInt_t[_dim] : 0; }
 
   bool initialize(const RooAbsFunc &function);
   void resize(UInt_t bins);
@@ -71,17 +69,19 @@ protected:
 
 protected:
 
-  bool _valid;              ///< Is configuration valid
-  UInt_t _dim,_bins,_boxes;   ///< Number of dimensions, bins and boxes
-  double _vol;              ///< Volume
+  bool _valid = false;         ///< Is configuration valid
+  UInt_t _dim = 0;             ///< Number of dimensions, bins and boxes
+  UInt_t _bins = 0;            ///< Number of bins
+  UInt_t _boxes = 0;           ///<Numbser of boxes
+  double _vol = 0.0;           ///< Volume
 
-  double *_xl;     ///<! Internal workspace
-  double *_xu;     ///<! Internal workspace
-  double *_delx;   ///<! Internal workspace
-  double *_d;      ///<! Internal workspace
-  double *_xi;     ///<! Internal workspace
-  double *_xin;    ///<! Internal workspace
-  double *_weight; ///<! Internal workspace
+  std::vector<double> _xl;     ///<! Internal workspace
+  std::vector<double> _xu;     ///<! Internal workspace
+  std::vector<double> _delx;   ///<! Internal workspace
+  std::vector<double> _d;      ///<! Internal workspace
+  std::vector<double> _xi;     ///<! Internal workspace
+  std::vector<double> _xin;    ///<! Internal workspace
+  std::vector<double> _weight; ///<! Internal workspace
 
   ClassDefOverride(RooGrid,1) // Utility class for RooMCIntegrator holding a multi-dimensional grid
 };

@@ -108,16 +108,6 @@ void RooGaussKronrodIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// coverity[UNINIT_CTOR]
-/// Default constructor
-
-RooGaussKronrodIntegrator1D::RooGaussKronrodIntegrator1D() : _x(0)
-{
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Construct integral on 'function' using given configuration object. The integration
 /// range is taken from the definition in the function binding
 
@@ -165,21 +155,9 @@ RooAbsIntegrator* RooGaussKronrodIntegrator1D::clone(const RooAbsFunc& function,
 bool RooGaussKronrodIntegrator1D::initialize()
 {
   // Allocate coordinate buffer size after number of function dimensions
-  _x = new double[_function->getDimension()] ;
+  _x.resize(_function->getDimension());
 
   return checkLimits();
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooGaussKronrodIntegrator1D::~RooGaussKronrodIntegrator1D()
-{
-  if (_x) {
-    delete[] _x ;
-  }
 }
 
 
