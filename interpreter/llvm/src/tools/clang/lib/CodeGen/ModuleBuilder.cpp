@@ -195,8 +195,7 @@ namespace clang {
       out << " DeferredDeclsToEmit (std::vector<DeferredGlobal>)\n";
       for(auto I = Builder->DeferredDeclsToEmit.begin(),
             E = Builder->DeferredDeclsToEmit.end(); I != E; ++I) {
-        I->GD.getDecl()->print(out);
-        I->GV->print(out);
+        I->getDecl()->print(out);
         out << "\n";
       }
 
