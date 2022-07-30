@@ -1,4 +1,9 @@
 #include <gtest/gtest.h>
+
+#ifndef INSTANTIATE_TEST_SUITE_P
+#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
+#endif
+
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RVec.hxx>
 #include <ROOT/RDFHelpers.hxx>
@@ -37,6 +42,7 @@ protected:
 
    const unsigned int NSLOTS;
 
+public:
    static void SetUpTestCase()
    {
       auto dfWriter0 = RDataFrame(5).Define("z", [](ULong64_t e) { return e + 100; }, {"rdfentry_"});
