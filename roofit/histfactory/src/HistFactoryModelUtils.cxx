@@ -253,9 +253,7 @@ namespace HistFactory{
     // Find the "data" of the poisson term
     // This is the nominal value
     bool FoundNomMean=false;
-    TIter iter_pois = constraintTerm->serverIterator(); //constraint_args
-    RooAbsArg* term_pois ;
-    while((term_pois=(RooAbsArg*)iter_pois.Next())) {
+    for (RooAbsArg * term_pois : constraintTerm->servers()) {
       std::string serverName = term_pois->GetName();
       //std::cout << "Checking Server: " << serverName << std::endl;
       if( serverName.find("nom_")!=std::string::npos ) {
@@ -275,18 +273,14 @@ namespace HistFactory{
     // Taking the constraint term (a Poisson), find
     // the "mean" which is the product: gamma*tau
     // Then, from that mean, find tau
-    TIter iter_constr = constraintTerm->serverIterator(); //constraint_args
-    RooAbsArg* pois_mean_arg=nullptr;
-    bool FoundPoissonMean = false;
-    while(( pois_mean_arg = (RooAbsArg*) iter_constr.Next() )) {
-      std::string serverName = pois_mean_arg->GetName();
-      if( pois_mean_arg->dependsOn( *gamma_stat ) ) {
-   FoundPoissonMean=true;
-   // pois_mean = (RooAbsReal*) pois_mean_arg;
-   break;
+    RooAbsArg * pois_mean_arg = nullptr;
+    for (RooAbsArg * arg : constraintTerm->servers()) {
+      if( arg->dependsOn( *gamma_stat ) ) {
+        pois_mean_arg = arg;
+        break;
       }
     }
-    if( !FoundPoissonMean || !pois_mean_arg ) {
+    if( !pois_mean_arg ) {
       std::cout << "Error: Did not find PoissonMean parameter in gamma constraint term: "
       << constraintTerm->GetName() << std::endl;
       throw std::runtime_error("Failed to find PoissonMean");
@@ -296,10 +290,8 @@ namespace HistFactory{
       if(verbose) std::cout << "Found Poisson 'mean' term: " << pois_mean_arg->GetName() << std::endl;
     }
 
-    TIter iter_product = pois_mean_arg->serverIterator(); //constraint_args
-    RooAbsArg* term_in_product ;
     bool FoundTau=false;
-    while((term_in_product=(RooAbsArg*)iter_product.Next())) {
+    for(RooAbsArg* term_in_product : pois_mean_arg->servers()) {
       std::string serverName = term_in_product->GetName();
       //std::cout << "Checking Server: " << serverName << std::endl;
       if( serverName.find("_tau")!=std::string::npos ) {
