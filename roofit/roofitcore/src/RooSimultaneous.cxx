@@ -1010,16 +1010,13 @@ RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars, const RooDa
     // Determine if we none,any or all servers
     bool anyServer(false), allServers(true) ;
     if (prototype) {
-      TIterator* sIter = _indexCat.arg().serverIterator() ;
-      RooAbsArg* server ;
-      while((server=(RooAbsArg*)sIter->Next())) {
+      for(RooAbsArg * server : _indexCat.arg().servers()) {
    if (prototype->get()->find(server->GetName())) {
      anyServer=true ;
    } else {
      allServers=false ;
    }
       }
-      delete sIter ;
     } else {
       allServers=true ;
     }

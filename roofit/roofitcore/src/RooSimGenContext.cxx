@@ -80,10 +80,8 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
       return ;
     }
   } else {
-    TIterator* sIter = idxCat->serverIterator() ;
-    RooAbsArg* server ;
     bool anyServer(false), allServers(true) ;
-    while((server=(RooAbsArg*)sIter->Next())) {
+    for(RooAbsArg* server : idxCat->servers()) {
       if (vars.find(server->GetName())) {
    anyServer=true ;
    pdfVars.remove(*server,true,true) ;
@@ -91,7 +89,6 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
    allServers=false ;
       }
     }
-    delete sIter ;
 
     if (anyServer && !allServers) {
       oocoutE(_pdf,Generation) << "RooSimGenContext::ctor(" << GetName() << ") ERROR: This context must"

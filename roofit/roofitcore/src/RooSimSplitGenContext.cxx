@@ -71,10 +71,8 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
       return ;
     }
   } else {
-    TIterator* sIter = idxCat->serverIterator() ;
-    RooAbsArg* server ;
     bool anyServer(false), allServers(true) ;
-    while((server=(RooAbsArg*)sIter->Next())) {
+    for(RooAbsArg* server : idxCat->servers()) {
       if (vars.find(server->GetName())) {
    anyServer=true ;
    pdfVars.remove(*server,true,true) ;
@@ -82,7 +80,6 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
    allServers=false ;
       }
     }
-    delete sIter ;
 
     if (anyServer && !allServers) {
       oocoutE(_pdf,Generation) << "RooSimSplitGenContext::ctor(" << GetName() << ") ERROR: This context must"
