@@ -21,11 +21,7 @@
 
 
 class RooDataSet;
-class RooRealIntegral;
-class RooAcceptReject;
 class RooDataHist;
-class TRandom;
-class TIterator;
 
 class RooBinnedGenContext : public RooAbsGenContext {
 public:

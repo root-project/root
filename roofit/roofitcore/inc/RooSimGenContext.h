@@ -59,7 +59,6 @@ protected:
   RooDataSet* _protoData{nullptr};           ///<! Prototype dataset
 
   RooArgSet _allVarsPdf{};        ///< All pdf variables
-  TIterator* _proxyIter{nullptr}; ///< Iterator over pdf proxies
 
   ClassDefOverride(RooSimGenContext,0) // Context for efficiently generating a dataset from a RooSimultaneous PDF
 };

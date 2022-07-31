@@ -42,8 +42,6 @@ namespace HistFactory{
     std::vector<double> _low;
     std::vector<double> _high;
 
-    TIterator* _paramIter ;  ///<! do not persist
-
     double evaluate() const override;
 
     ClassDefOverride(RooStats::HistFactory::LinInterpVar,1) // Piecewise linear interpolation

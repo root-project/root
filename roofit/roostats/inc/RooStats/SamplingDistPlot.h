@@ -15,7 +15,6 @@
 #include "Compression.h"
 #include "RooPrintable.h"
 #include "TNamed.h"
-#include "TIterator.h"
 #include "TH1F.h"
 #include "TF1.h"
 #include "TLegend.h"

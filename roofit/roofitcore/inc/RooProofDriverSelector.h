@@ -12,7 +12,6 @@
 #include <TFile.h>
 #include <TSelector.h>
 class RooStudyPackage ;
-class TIterator ;
 
 class RooProofDriverSelector : public TSelector {
 public :

@@ -121,13 +121,10 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
   _fracThresh[0] = 0 ;
 
   // Generate index category and all registered PDFS
-  _proxyIter = model._pdfProxyList.MakeIterator() ;
   _allVarsPdf.add(allPdfVars) ;
-  RooRealProxy* proxy ;
-  RooAbsPdf* pdf ;
   Int_t i(1) ;
-  while((proxy=(RooRealProxy*)_proxyIter->Next())) {
-    pdf=(RooAbsPdf*)proxy->absArg() ;
+  for(auto * proxy : static_range_cast<RooRealProxy*>(model._pdfProxyList)) {
+    auto* pdf = static_cast<RooAbsPdf*>(proxy->absArg());
 
     // Create generator context for this PDF
     RooAbsGenContext* cx = pdf->genContext(pdfVars,prototype,auxProto,verbose) ;
@@ -171,7 +168,6 @@ RooSimGenContext::~RooSimGenContext()
   for (vector<RooAbsGenContext*>::iterator iter = _gcList.begin() ; iter!=_gcList.end() ; ++iter) {
     delete (*iter) ;
   }
-  delete _proxyIter ;
   if (_protoData) delete _protoData ;
 }
 
@@ -301,12 +297,9 @@ void RooSimGenContext::updateFractions()
   if (_haveIdxProto) return ;
 
   // Generate index category and all registered PDFS
-  RooRealProxy* proxy ;
-  RooAbsPdf* pdf ;
   Int_t i(1) ;
-  _proxyIter->Reset() ;
-  while((proxy=(RooRealProxy*)_proxyIter->Next())) {
-    pdf=(RooAbsPdf*)proxy->absArg() ;
+  for(auto * proxy : static_range_cast<RooRealProxy*>(_pdf->_pdfProxyList)) {
+    auto* pdf = static_cast<RooAbsPdf*>(proxy->absArg());
 
     // Fill fraction threshold array
     _fracThresh[i] = _fracThresh[i-1] + (_haveIdxProto?0:pdf->expectedEvents(&_allVarsPdf)) ;

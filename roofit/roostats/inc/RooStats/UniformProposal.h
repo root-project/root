@@ -19,7 +19,6 @@
 #include "RooArgSet.h"
 #include "RooMsgService.h"
 #include "RooRealVar.h"
-#include "TIterator.h"
 
 namespace RooStats {
 

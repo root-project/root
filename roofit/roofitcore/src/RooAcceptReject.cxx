@@ -37,7 +37,6 @@ do not define internal methods
 #include "RooErrorHandler.h"
 
 #include "TString.h"
-#include "TIterator.h"
 #include "RooMsgService.h"
 #include "TClass.h"
 #include "TFoam.h"
