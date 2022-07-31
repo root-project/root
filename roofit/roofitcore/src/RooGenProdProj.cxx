@@ -111,12 +111,9 @@ RooGenProdProj::RooGenProdProj(const RooGenProdProj& other, const char* name) :
   _intList("intList","List of integrals",this)
 {
   // Explicitly remove all server links at this point
-  TIterator* iter = serverIterator() ;
-  RooAbsArg* server ;
-  while((server=(RooAbsArg*)iter->Next())) {
+  for(RooAbsArg * server : servers()) {
     removeServer(*server,true) ;
   }
-  delete iter ;
 
   // Copy constructor
   _compSetOwnedN = (RooArgSet*) other._compSetN.snapshot() ;
