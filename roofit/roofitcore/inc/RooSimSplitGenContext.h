@@ -57,7 +57,6 @@ protected:
   double* _fracThresh ;                   ///< fraction thresholds
 
   RooArgSet _allVarsPdf ; ///< All pdf variables
-  TIterator* _proxyIter ; ///< Iterator over pdf proxies
 
   ClassDefOverride(RooSimSplitGenContext,0) // Context for efficiently generating a dataset from a RooSimultaneous PDF
 };

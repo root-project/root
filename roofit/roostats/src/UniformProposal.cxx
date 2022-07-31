@@ -28,7 +28,6 @@ converge as quickly as other proposal functions.
 #include "RooArgSet.h"
 #include "RooMsgService.h"
 #include "RooRealVar.h"
-#include "TIterator.h"
 
 using namespace std;
 

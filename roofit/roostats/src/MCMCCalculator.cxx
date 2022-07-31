@@ -43,7 +43,6 @@
 #include "RooStats/MetropolisHastings.h"
 #include "RooStats/MarkovChain.h"
 #include "RooStats/MCMCInterval.h"
-#include "TIterator.h"
 #include "RooStats/UniformProposal.h"
 #include "RooStats/PdfProposal.h"
 #include "RooProdPdf.h"

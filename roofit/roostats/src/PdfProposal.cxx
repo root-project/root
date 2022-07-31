@@ -58,7 +58,6 @@ for future versions.
 #include "RooAbsPdf.h"
 #include "RooMsgService.h"
 #include "RooRealVar.h"
-#include "TIterator.h"
 
 #include <map>
 

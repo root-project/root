@@ -48,8 +48,6 @@ class RooStepFunction : public RooAbsReal {
   RooListProxy _coefList ;
   RooListProxy _boundaryList ;
   bool       _interpolate ;
-  TIterator* _coefIter ;  //! do not persist
-  TIterator* _boundIter ;  //! do not persist
 
   ClassDefOverride(RooStepFunction,1) //  Step Function
 };
