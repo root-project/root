@@ -19,7 +19,6 @@
 
 #include "RooArgSet.h"
 #include "RooMsgService.h"
-#include "TIterator.h"
 #include "RooRealVar.h"
 
 

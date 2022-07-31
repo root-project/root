@@ -17,7 +17,6 @@
 #define ROO_ABS_ANA_CONV_PDF
 
 
-class TIterator  ;
 #include "RooAbsPdf.h"
 #include "RooRealProxy.h"
 #include "RooListProxy.h"
@@ -28,7 +27,6 @@ class TIterator  ;
 
 class RooResolutionModel ;
 class RooRealVar ;
-class RooAbsGenContext ;
 class RooConvGenContext ;
 
 class RooAbsAnaConvPdf : public RooAbsPdf {

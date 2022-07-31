@@ -19,7 +19,6 @@
 #include "Rtypes.h"
 #include "RooPrintable.h"
 #include "TNamed.h"
-class TIterator ;
 class RooAbsRealLValue ;
 class RooAbsReal ;
 

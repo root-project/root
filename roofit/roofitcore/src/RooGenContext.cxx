@@ -42,7 +42,6 @@ use a RooAcceptReject sampling technique.
 #include "RooNumGenFactory.h"
 
 #include "TString.h"
-#include "TIterator.h"
 #include "TClass.h"
 
 

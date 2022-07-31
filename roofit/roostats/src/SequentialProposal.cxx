@@ -19,7 +19,6 @@ by moving only in one coordinate (chosen randomly) at each step
 #include <RooArgSet.h>
 #include <iostream>
 #include <memory>
-#include <TIterator.h>
 #include <RooRandom.h>
 #include <RooStats/RooStatsUtils.h>
 

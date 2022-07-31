@@ -29,7 +29,6 @@
 #include "RooMinimizer.h"
 
 #include "Riostream.h"
-#include "TIterator.h"
 #include "TClass.h"
 #include "Fit/Fitter.h"
 #include "Math/Minimizer.h"

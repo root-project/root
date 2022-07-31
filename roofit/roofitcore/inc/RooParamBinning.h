@@ -20,7 +20,6 @@
 #include "RooAbsBinning.h"
 #include "RooRealVar.h"
 #include "RooListProxy.h"
-class TIterator ;
 
 class RooParamBinning : public RooAbsBinning {
 public:

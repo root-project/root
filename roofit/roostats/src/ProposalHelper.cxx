@@ -25,7 +25,6 @@
 #include "RooUniform.h"
 #include "RooMsgService.h"
 #include "RooRealVar.h"
-#include "TIterator.h"
 #include "RooMultiVarGaussian.h"
 #include "RooConstVar.h"
 #include "TString.h"

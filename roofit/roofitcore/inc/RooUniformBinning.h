@@ -18,7 +18,6 @@
 
 #include "Rtypes.h"
 #include "RooAbsBinning.h"
-class TIterator ;
 
 class RooUniformBinning : public RooAbsBinning {
 public:

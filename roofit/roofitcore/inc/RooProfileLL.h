@@ -54,9 +54,6 @@ protected:
   RooSetProxy _par ;     ///< Marginalised parameters of likelihood
   bool _startFromMin ; ///< Always start minimization for global minimum?
 
-  TIterator* _piter ; ///<! Iterator over profile likelihood parameters to be minimized
-  TIterator* _oiter ; ///<! Iterator of profile likelihood output parameter(s)
-
   mutable std::unique_ptr<RooMinimizer> _minimizer = nullptr ; ///<! Internal minimizer instance
 
   mutable bool _absMinValid ; ///< flag if absmin is up-to-date

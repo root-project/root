@@ -68,7 +68,6 @@
 #include "RooStats/RooStatsUtils.h"
 #include "RooRealVar.h"
 #include "RooArgList.h"
-#include "TIterator.h"
 #include "TH1.h"
 #include "TH1F.h"
 #include "TH2F.h"

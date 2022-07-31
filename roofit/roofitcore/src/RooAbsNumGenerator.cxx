@@ -34,7 +34,6 @@ implementations like RooAcceptReject and RooFoam
 #include "RooErrorHandler.h"
 
 #include "TString.h"
-#include "TIterator.h"
 #include "RooMsgService.h"
 #include "TClass.h"
 #include "RooRealBinding.h"

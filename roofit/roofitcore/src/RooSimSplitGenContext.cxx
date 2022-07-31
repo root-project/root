@@ -111,7 +111,6 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
   _fracThresh[0] = 0 ;
 
   // Generate index category and all registered PDFS
-  _proxyIter = model._pdfProxyList.MakeIterator() ;
   _allVarsPdf.add(allPdfVars) ;
   Int_t i(1) ;
   for(auto * proxy : static_range_cast<RooRealProxy*>(model._pdfProxyList)) {
@@ -159,7 +158,6 @@ RooSimSplitGenContext::~RooSimSplitGenContext()
   for (vector<RooAbsGenContext*>::iterator iter = _gcList.begin() ; iter!=_gcList.end() ; ++iter) {
     delete (*iter) ;
   }
-  delete _proxyIter ;
 }
 
 
@@ -230,10 +228,8 @@ RooDataSet* RooSimSplitGenContext::generate(double nEvents, bool skipInit, bool 
   // Generate lookup table from expected event counts
   vector<double> nGen(_numPdf) ;
   if (extendedMode ) {
-    _proxyIter->Reset() ;
-    RooRealProxy* proxy ;
     Int_t i(0) ;
-    while((proxy=(RooRealProxy*)_proxyIter->Next())) {
+    for(auto * proxy : static_range_cast<RooRealProxy*>(_pdf->_pdfProxyList)) {
       RooAbsPdf* pdf=(RooAbsPdf*)proxy->absArg() ;
       //nGen[i] = Int_t(pdf->expectedEvents(&_allVarsPdf)+0.5) ;
       nGen[i] = pdf->expectedEvents(&_allVarsPdf) ;
@@ -241,11 +237,9 @@ RooDataSet* RooSimSplitGenContext::generate(double nEvents, bool skipInit, bool 
     }
 
   } else {
-    _proxyIter->Reset() ;
-    RooRealProxy* proxy ;
     Int_t i(1) ;
     _fracThresh[0] = 0 ;
-    while((proxy=(RooRealProxy*)_proxyIter->Next())) {
+    for(auto * proxy : static_range_cast<RooRealProxy*>(_pdf->_pdfProxyList)) {
       RooAbsPdf* pdf=(RooAbsPdf*)proxy->absArg() ;
       _fracThresh[i] = _fracThresh[i-1] + pdf->expectedEvents(&_allVarsPdf) ;
       i++ ;
@@ -272,11 +266,9 @@ RooDataSet* RooSimSplitGenContext::generate(double nEvents, bool skipInit, bool 
 
 
   // Now loop over states
-  _proxyIter->Reset() ;
   map<string,RooAbsData*> dataMap ;
   Int_t icomp(0) ;
-  RooRealProxy* proxy ;
-  while((proxy=(RooRealProxy*)_proxyIter->Next())) {
+  for(auto * proxy : static_range_cast<RooRealProxy*>(_pdf->_pdfProxyList)) {
 
     // Calculate number of events to generate for this state
     if (_gcList[icomp]) {
@@ -298,8 +290,8 @@ RooDataSet* RooSimSplitGenContext::generate(double nEvents, bool skipInit, bool 
 
 void RooSimSplitGenContext::setExpectedData(bool flag)
 {
-  for (vector<RooAbsGenContext*>::iterator iter=_gcList.begin() ; iter!=_gcList.end() ; ++iter) {
-    (*iter)->setExpectedData(flag) ;
+  for(auto * elem : _gcList) {
+    elem->setExpectedData(flag) ;
   }
 }
 
@@ -310,7 +302,7 @@ void RooSimSplitGenContext::setExpectedData(bool flag)
 
 RooDataSet* RooSimSplitGenContext::createDataSet(const char* , const char* , const RooArgSet& )
 {
-  return 0 ;
+  return nullptr;
 }
 
 
