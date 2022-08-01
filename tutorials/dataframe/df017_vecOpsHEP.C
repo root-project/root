@@ -8,7 +8,7 @@
 /// In this case we have a dataset containing the kinematic properties of
 /// particles stored in individual arrays.
 /// We want to plot the transverse momentum of these particles if the energy is
-/// greater than 100.
+/// greater than 100 MeV.
 ///
 /// \macro_code
 /// \macro_image
@@ -77,7 +77,7 @@ void WithRDataFrameVecOpsJit()
 void df017_vecOpsHEP()
 {
    // We plot four times the same quantity, the key is to look into the implementation
-   // of the functions above
+   // of the functions above.
    auto c = new TCanvas();
    c->Divide(2,2);
    c->cd(1);
