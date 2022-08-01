@@ -29,19 +29,19 @@ int df016_vecOps()
       .Define("x", vGen, {"len"})
       .Define("y", vGen, {"len"});
 
-   // Now we have in hands d, a RDataFrame with two columns, x and y, which
-   // hold collections of coordinates. The size of these collections vary.
-   // Let's now define radii out of x and y. We'll do it treating the collections
-   // stored in the columns without looping on the individual elements.
+   // Now we have in our hands d, a RDataFrame with two columns, x and y, which
+   // hold collections of coordinates. The sizes of these collections vary.
+   // Let's now define radii from the x and y coordinates. We'll do it treating 
+   // the collections stored in the columns without looping on the individual elements.
    auto d1 = d0.Define("r", "sqrt(x*x + y*y)");
 
-   // Now we want to plot 2 quarters of a ring with radii .5 and 1
+   // Now we want to plot 2 quarters of a ring with radii .5 and 1.
    // Note how the cuts are performed on RVecs, comparing them with integers and
-   // among themselves
-   auto ring_h = d1.Define("rInFig", "r > .4 && r < .8 && x*y < 0")
+   // among themselves.
+   auto ring_h = d1.Define("rInFig", "r > .5 && r < 1 && x*y < 0")
                     .Define("yFig", "y[rInFig]")
                     .Define("xFig", "x[rInFig]")
-                    .Histo2D({"fig", "Two quarters of a ring", 64, -1, 1, 64, -1, 1}, "xFig", "yFig");
+                    .Histo2D({"fig", "Two quarters of a ring", 64, -1.1, 1.1, 64, -1.1, 1.1}, "xFig", "yFig");
 
    auto cring = new TCanvas();
    ring_h->DrawCopy("Colz");
