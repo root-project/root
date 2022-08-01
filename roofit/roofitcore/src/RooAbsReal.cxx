@@ -180,32 +180,6 @@ RooAbsReal::RooAbsReal(const RooAbsReal& other, const char* name) :
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Assign values, name and configs from another RooAbsReal.
-RooAbsReal& RooAbsReal::operator=(const RooAbsReal& other) {
-  RooAbsArg::operator=(other);
-
-  _plotMin = other._plotMin;
-  _plotMax = other._plotMax;
-  _plotBins = other._plotBins;
-  _value = other._value;
-  _unit = other._unit;
-  _label = other._label;
-  _forceNumInt = other._forceNumInt;
-  _selectComp = other._selectComp;
-  _lastNSet = other._lastNSet;
-
-  if (other._specIntegratorConfig) {
-    _specIntegratorConfig = new RooNumIntConfig(*other._specIntegratorConfig);
-  } else {
-    _specIntegratorConfig = nullptr;
-  }
-
-  return *this;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
 RooAbsReal::~RooAbsReal()

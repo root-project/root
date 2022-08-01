@@ -69,7 +69,6 @@ public:
   RooAbsReal(const char *name, const char *title, double minVal, double maxVal,
         const char *unit= "") ;
   RooAbsReal(const RooAbsReal& other, const char* name=nullptr);
-  RooAbsReal& operator=(const RooAbsReal& other);
   ~RooAbsReal() override;
 
 

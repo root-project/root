@@ -123,6 +123,20 @@ hfCfg.binnedFitOptimization = false;
 RooStats::HistFactory::MakeModelAndMeasurementFast(measurement, hfCfg);
 ```
 
+### Disable copy assignment for RooAbsArg and derived types
+
+Copy assignment for RooAbsArgs was implemented in an unexpected and
+inconsistent way. While one would expect that the copy assignment is copying
+the object, it said in the documentation of `RooAbsArg::operator=` that it will
+"assign all boolean and string properties of the original bject. Transient
+properties and client-server links are not assigned." This contradicted with
+the implementation, where the server links were actually copied too.
+Furthermore, in `RooAbsRealLValue`, the assigment operator was overloaded by a
+function that only assigns the value of another `RooAbsReal`.
+
+With all these inconsistencies, it was deemed safer to disable copy assignment
+of RooAbsArgs from now on.
+
 ### Removal of deprecated HistFactory functionality
 
 #### Removal of HistoToWorkspaceFactory (non-Fast version)

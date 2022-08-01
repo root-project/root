@@ -170,37 +170,6 @@ RooAbsArg::RooAbsArg(const RooAbsArg &other, const char *name)
 
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Assign all boolean and string properties of the original
-/// object. Transient properties and client-server links are not assigned.
-RooAbsArg& RooAbsArg::operator=(const RooAbsArg& other) {
-  TNamed::operator=(other);
-  RooPrintable::operator=(other);
-  _boolAttrib = other._boolAttrib;
-  _stringAttrib = other._stringAttrib;
-  _deleteWatch = other._deleteWatch;
-  _operMode = other._operMode;
-  _fast = other._fast;
-  _ownedComponents = nullptr;
-  _prohibitServerRedirect = other._prohibitServerRedirect;
-  _namePtr = other._namePtr;
-  _isConstant = other._isConstant;
-  _localNoInhibitDirty = other._localNoInhibitDirty;
-  _myws = nullptr;
-
-  bool valueProp, shapeProp;
-  for (const auto server : other._serverList) {
-    valueProp = server->_clientListValue.containsByNamePtr(&other);
-    shapeProp = server->_clientListShape.containsByNamePtr(&other);
-    addServer(*server,valueProp,shapeProp) ;
-  }
-
-  setValueDirty();
-  setShapeDirty();
-
-  return *this;
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
