@@ -1247,11 +1247,12 @@ endfunction()
 #                                 DICTIONARY_OPTIONS option    : options passed to rootcling
 #                                 INSTALL_OPTIONS option       : options passed to install headers
 #                                 NO_CXXMODULE                 : don't generate a C++ module for this package
+#                                 BACKWARDS_COMPAT oldlibname  : backwards compatibility name of the library to symlink to libname
 #                                )
 #---------------------------------------------------------------------------------------------------
 function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
   set(options NO_INSTALL_HEADERS STAGE1 NO_HEADERS NO_SOURCES OBJECT_LIBRARY NO_CXXMODULE)
-  set(oneValueArgs LINKDEF)
+  set(oneValueArgs LINKDEF BACKWARDS_COMPAT)
   set(multiValueArgs DEPENDENCIES HEADERS NODEPHEADERS SOURCES BUILTINS LIBRARIES DICTIONARY_OPTIONS INSTALL_OPTIONS)
   CMAKE_PARSE_ARGUMENTS(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -1349,6 +1350,19 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
   # disabled this.
   if (NOT ARG_NO_INSTALL_HEADERS OR ARG_NO_HEADERS)
     ROOT_INSTALL_HEADERS(${ARG_INSTALL_OPTIONS})
+  endif()
+
+  # Symlink legacy libname to current libname for backwards compatibility
+  if (ARG_BACKWARDS_COMPAT)
+    # add alias (for CMake backwards compatibility)
+    add_library(${ARG_BACKWARDS_COMPAT} ALIAS ${libname})
+    # TODO: add option to install symlinks and check if option enabled
+    INSTALL(CODE "execute_process( \
+      COMMAND ${CMAKE_COMMAND} -E create_symlink \
+      ${CMAKE_INSTALL_LIBDIR}/${libprefix}${libname}${libsuffix} \
+      ${CMAKE_INSTALL_LIBDIR}/${libprefix}${ARG_BACKWARDS_COMPAT}${libsuffix} \
+      )"
+    )
   endif()
 endfunction()
 
