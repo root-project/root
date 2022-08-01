@@ -21,11 +21,12 @@ private:
    std::string fNX;
    std::string fNY;
    std::vector<size_t> fShape;
+   std::string fattr_type;
 
 public:
    ROperator_Cast(){}
-   ROperator_Cast(std::string nameX, std::string nameY):
-      fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)){}
+   ROperator_Cast(std::string attr_type,std::string nameX, std::string nameY):
+   fattr_type(attr_type), fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)){}
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
       return input;
@@ -54,10 +55,11 @@ public:
       std::stringstream out;
       size_t length = ConvertShapeToLength(fShape);
 
+      // out << SP << ETensorType << " " << OpName << "_attr = "  << fattr << ";\n";
       out << "\n//------ CAST\n";
       out << SP << "for (int id = 0; id < " << length << " ; id++){\n";
 
-      out << SP << SP << "tensor_" << fNY << "[id] = (float)(tensor_" << fNX << "[id]);\n";
+      out << SP << SP << "tensor_" << fNY << "[id] = static_cast<"<< fattr_type << ">(tensor_" << fNX << "[id]);\n";
 
       out << SP << "}\n";
       return out.str();

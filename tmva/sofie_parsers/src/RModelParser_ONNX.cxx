@@ -1188,18 +1188,26 @@ std::unique_ptr<ROperator> make_ROperator_Concat(const onnx::NodeProto &nodeprot
 
    std::unique_ptr<ROperator> op;
 
+   std::string attr_type;
+
+   for (int_t i = 0; i < nodeproto.attribute_size(); i++) {
+         std::string attribute_name = nodeproto.attribute(i).name();
+         if (attribute_name == "attr_type")
+            attr_type = nodeproto.attribute(i).s();
+   }
 
    switch(input_type){
    case ETensorType::INT64:
    case ETensorType::DOUBLE:
    case ETensorType::FLOAT:
-      op.reset(new ROperator_Cast<float>(nodeproto.input(0), nodeproto.output(0)));
+   case ETensorType::INT32:
+      op.reset(new ROperator_Cast<float>(attr_type,nodeproto.input(0), nodeproto.output(0)));
       break;
    default:
       throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Cast does not yet support input type " + std::to_string(static_cast<int>(input_type)));
    }
 
-   ETensorType output_type = (op->TypeInference({input_type}))[0];
+   ETensorType output_type = ConvertStringToType(attr_type);
    auto it2 = tensor_type.find(nodeproto.output(0));
    if (it2 == tensor_type.end()){
       tensor_type[nodeproto.output(0)] = output_type;
