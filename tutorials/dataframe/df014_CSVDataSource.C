@@ -47,7 +47,7 @@ int df014_CSVDataSource()
    invMass->DrawClone();
 
    // We will now produce a plot also for the J/Psi particle. We will plot
-   // on the same canvas the full spectrum and the zoom in the J/psi particle.
+   // on the same canvas the full spectrum and the zoom in on the J/psi particle.
    // First we will create the full spectrum histogram from the invariant mass
    // column, using a different histogram model than before.
    auto fullSpectrum =
