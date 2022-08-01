@@ -28,6 +28,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(WebGui6
     src/TWebSnapshot.cxx
   DEPENDENCIES
     Core
-    Gui
+    ROOTGui
     ROOTWebDisplay
 )

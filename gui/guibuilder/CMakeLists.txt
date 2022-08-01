@@ -8,7 +8,8 @@
 # CMakeLists.txt file for building ROOT gui/guibuilder package
 ############################################################################
 
-ROOT_STANDARD_LIBRARY_PACKAGE(GuiBld
+ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGuiBld
+  BACKWARDS_COMPAT GuiBld
   HEADERS
     TGuiBldDragManager.h
     TGuiBldEditor.h
@@ -26,7 +27,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GuiBld
     src/TGuiBldNameFrame.cxx
     src/TRootGuiBuilder.cxx
   DEPENDENCIES
-    Gui
+    ROOTGui
     Graf
     MathCore
 )

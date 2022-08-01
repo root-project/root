@@ -95,7 +95,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVAGui
     Minuit
     XMLIO
     TMVA
-    Gui
+    ROOTGui
     HistPainter
     Core
 )

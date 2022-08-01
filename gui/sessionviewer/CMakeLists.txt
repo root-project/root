@@ -25,7 +25,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(SessionViewer
     src/TSessionViewer.cxx
   DEPENDENCIES
     Proof
-    Gui
+    ROOTGui
     Hist
     Gpad
     Graf

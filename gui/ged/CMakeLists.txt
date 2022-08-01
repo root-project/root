@@ -71,7 +71,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Ged
     Hist
     Gpad
     Graf
-    Gui
+    ROOTGui
     Tree
     TreePlayer
 )

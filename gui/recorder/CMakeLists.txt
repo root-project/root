@@ -16,6 +16,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Recorder
   DEPENDENCIES
     RIO
     Tree
-    Gui
+    ROOTGui
     Thread
 )

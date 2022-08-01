@@ -12,7 +12,8 @@ if(ssl)
   add_definitions(-DR__SSL)
 endif()
 
-ROOT_STANDARD_LIBRARY_PACKAGE(GuiHtml
+ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGuiHtml
+  BACKWARDS_COMPAT GuiHtml
   HEADERS
     TGHtml.h
     TGHtmlBrowser.h
@@ -33,7 +34,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GuiHtml
     src/TGHtmlTokenMap.cxx
     src/TGHtmlUri.cxx
   DEPENDENCIES
-    Gui
+    ROOTGui
     Graf
     Net
 )
