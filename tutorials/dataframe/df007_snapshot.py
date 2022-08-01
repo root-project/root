@@ -82,9 +82,7 @@ f2.Close()
 # We can also get a fresh RDataFrame out of the snapshot and restart the
 # analysis chain from it.
 
-branchList.clear()
-branchList.push_back("b1_square")
-snapshot_df = d2.Snapshot(treeName, outFileName, branchList);
+snapshot_df = d2.Snapshot(treeName, outFileName, ["b1_square"]);
 h = snapshot_df.Histo1D("b1_square")
 
 c = ROOT.TCanvas()
