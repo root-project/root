@@ -233,13 +233,28 @@ TEST(RModelParser_Keras, CONV_SAME)
       EXPECT_LE(std::abs(outputConv2D_Same[i] - pOutputConv2DSame[i]), TOLERANCE);
     }
 }
-    
+
 TEST(RModelParser_Keras, RESHAPE)
 {
     constexpr float TOLERANCE = DEFAULT_TOLERANCE;
     float inputReshape[]={1,1,1,1};
     TMVA_SOFIE_KerasModelReshape::Session s("KerasReshapeModel.dat");
     std::vector<float> outputReshape = s.infer(inputReshape);
+
+    Py_Initialize();
+    PyObject* main = PyImport_AddModule("__main__");
+    PyObject* fGlobalNS = PyModule_GetDict(main);
+    PyObject* fLocalNS = PyDict_New();
+    if (!fGlobalNS) {
+        throw std::runtime_error("Can't init global namespace for Python");
+        }
+    if (!fLocalNS) {
+        throw std::runtime_error("Can't init local namespace for Python");
+        }
+    PyRun_String("import os",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("from tensorflow.keras.models import load_model",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("import numpy",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("model=load_model('KerasModelReshape.h5')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input=numpy.ones((1,4))",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
