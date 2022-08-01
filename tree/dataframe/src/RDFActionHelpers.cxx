@@ -9,6 +9,7 @@
  *************************************************************************/
 
 #include "ROOT/RDF/ActionHelpers.hxx"
+#include "ROOT/RDF/Utils.hxx" // CacheLineStep
 
 namespace ROOT {
 namespace Internal {
@@ -39,15 +40,16 @@ ULong64_t &CountHelper::PartialUpdate(unsigned int slot)
 
 void BufferedFillHelper::UpdateMinMax(unsigned int slot, double v)
 {
-   auto &thisMin = fMin[slot];
-   auto &thisMax = fMax[slot];
+   auto &thisMin = fMin[slot * CacheLineStep<BufEl_t>()];
+   auto &thisMax = fMax[slot * CacheLineStep<BufEl_t>()];
    thisMin = std::min(thisMin, v);
    thisMax = std::max(thisMax, v);
 }
 
 BufferedFillHelper::BufferedFillHelper(const std::shared_ptr<Hist_t> &h, const unsigned int nSlots)
    : fResultHist(h), fNSlots(nSlots), fBufSize(fgTotalBufSize / nSlots), fPartialHists(fNSlots),
-     fMin(nSlots, std::numeric_limits<BufEl_t>::max()), fMax(nSlots, std::numeric_limits<BufEl_t>::lowest())
+     fMin(nSlots * CacheLineStep<BufEl_t>(), std::numeric_limits<BufEl_t>::max()),
+     fMax(nSlots * CacheLineStep<BufEl_t>(), std::numeric_limits<BufEl_t>::lowest())
 {
    fBuffers.reserve(fNSlots);
    fWBuffers.reserve(fNSlots);
