@@ -168,6 +168,18 @@ protected:
     Py_ssize_t fArraySize;
 };
 
+class FunctionPointerExecutor : public Executor {
+public:
+    FunctionPointerExecutor(const std::string& ret, const std::string& sig) :
+        fRetType(ret), fSignature(sig) {}
+    virtual PyObject* Execute(
+        Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*);
+
+protected:
+    std::string fRetType;
+    std::string fSignature;
+};
+
 } // unnamed namespace
 
 } // namespace CPyCppyy
