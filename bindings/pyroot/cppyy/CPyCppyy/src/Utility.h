@@ -42,6 +42,9 @@ void ConstructCallbackPreamble(const std::string& retType,
     const std::vector<std::string>& argtypes, std::ostringstream& code);
 void ConstructCallbackReturn(const std::string& retType, int nArgs, std::ostringstream& code);
 
+// helper for function pointer conversions
+PyObject* FuncPtr2StdFunction(const std::string& retType, const std::string& signature, void* address);
+
 // initialize proxy type objects
 bool InitProxy(PyObject* module, PyTypeObject* pytype, const char* name);
 
