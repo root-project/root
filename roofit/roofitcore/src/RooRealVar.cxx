@@ -194,33 +194,6 @@ RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :
 
 }
 
-/// Assign the values of another RooRealVar to this instance.
-RooRealVar& RooRealVar::operator=(const RooRealVar& other) {
-  RooAbsRealLValue::operator=(other);
-
-  _error = other._error;
-  _asymErrLo = other._asymErrLo;
-  _asymErrHi = other._asymErrHi;
-
-  _binning.reset();
-  if (other._binning) {
-    _binning.reset(other._binning->clone());
-    _binning->insertHook(*this) ;
-  }
-
-  _altNonSharedBinning.clear();
-  for (const auto& item : other._altNonSharedBinning) {
-    RooAbsBinning* abc = item.second->clone();
-    _altNonSharedBinning[item.first].reset(abc);
-    abc->insertHook(*this);
-  }
-
-  _sharedProp = other.sharedProp();
-
-  return *this;
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor

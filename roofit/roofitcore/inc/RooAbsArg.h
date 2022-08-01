@@ -78,7 +78,7 @@ public:
   ~RooAbsArg() override;
   RooAbsArg(const char *name, const char *title);
   RooAbsArg(const RooAbsArg& other, const char* name=nullptr) ;
-  RooAbsArg& operator=(const RooAbsArg& other);
+  RooAbsArg& operator=(const RooAbsArg& other) = delete;
   virtual TObject* clone(const char* newname=nullptr) const = 0 ;
   TObject* Clone(const char* newname = 0) const override {
     return clone(newname && newname[0] != '\0' ? newname : nullptr);

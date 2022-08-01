@@ -34,7 +34,6 @@ public:
   inline RooAbsRealLValue() { }
   RooAbsRealLValue(const char *name, const char *title, const char *unit= "") ;
   RooAbsRealLValue(const RooAbsRealLValue& other, const char* name=nullptr);
-  RooAbsRealLValue& operator=(const RooAbsRealLValue&) = default;
   ~RooAbsRealLValue() override;
 
   // Parameter value and error accessors
@@ -45,7 +44,6 @@ public:
   virtual void setVal(double value, const char* /*rangeName*/) {
     return setVal(value) ;
   }
-  virtual RooAbsArg& operator=(const RooAbsReal& other) ;
   virtual RooAbsArg& operator=(double newValue);
 
   // Implementation of RooAbsLValue

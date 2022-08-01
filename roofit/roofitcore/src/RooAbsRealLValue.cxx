@@ -185,16 +185,6 @@ RooAbsArg& RooAbsRealLValue::operator=(double newValue)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Assignment operator from other RooAbsReal
-
-RooAbsArg& RooAbsRealLValue::operator=(const RooAbsReal& arg)
-{
-  return operator=(arg.getVal()) ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Create a new RooPlot on the heap with a drawing frame initialized for this
 /// object, but no plot contents. Use x.frame() as the first argument to a
 /// y.plotOn(...) method, for example. The caller is responsible for deleting

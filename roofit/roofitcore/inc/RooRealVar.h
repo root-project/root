@@ -48,7 +48,6 @@ public:
   RooRealVar(const char *name, const char *title, double value,
       double minValue, double maxValue, const char *unit= "") ;
   RooRealVar(const RooRealVar& other, const char* name=nullptr);
-  RooRealVar& operator=(const RooRealVar& other);
   TObject* clone(const char* newname) const override { return new RooRealVar(*this,newname); }
   ~RooRealVar() override;
 
