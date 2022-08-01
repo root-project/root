@@ -1,7 +1,7 @@
 from cppyy import gbl as gbl_namespace
 
 
-def _NumbaDeclareDecorator(input_types, return_type, name=None):
+def _NumbaDeclareDecorator(input_types, return_type = None, name=None):
     '''
     Decorator for making Python callables accessible in C++ by just-in-time compilation
     with numba and cling
@@ -42,7 +42,7 @@ def _NumbaDeclareDecorator(input_types, return_type, name=None):
         return t.replace('ROOT::', '').replace('VecOps::', '')
 
     input_types = [normalize_typename(t) for t in input_types]
-    return_type = normalize_typename(return_type)
+    return_type = normalize_typename(return_type) if return_type is not None else None
 
     # Helper functions to determine types
     def get_inner_type(t):
@@ -128,11 +128,15 @@ def _NumbaDeclareDecorator(input_types, return_type, name=None):
                 nb_input_types.append(get_numba_type(get_inner_type(t))[:])
             else:
                 nb_input_types.append(get_numba_type(t))
-        if 'RVec' in return_type:
-            nb_return_type = get_numba_type(get_inner_type(return_type))[:]
+        if return_type is not None:
+            if 'RVec' in return_type:
+                nb_return_type = get_numba_type(get_inner_type(return_type))[:]
+            else:
+                nb_return_type = get_numba_type(return_type)
         else:
-            nb_return_type = get_numba_type(return_type)
+            nb_return_type = None
         return nb_return_type, nb_input_types
+
 
     def inner(func, input_types=input_types, return_type=return_type, name=name):
         '''
@@ -142,11 +146,35 @@ def _NumbaDeclareDecorator(input_types, return_type, name=None):
         # Jit the given Python callable with numba
         nb_return_type, nb_input_types = get_numba_signature(input_types, return_type)
         try:
-            nbjit = nb.jit(nb_return_type(*nb_input_types), nopython=True, inline='always')(func)
+            if nb_return_type is not None:
+                nbjit = nb.jit(nb_return_type(*nb_input_types), nopython=True, inline='always')(func)
+            else:
+                nbjit = nb.jit(tuple(nb_input_types), nopython=True, inline='always')(func)
+                nb_return_type = nbjit.nopython_signatures[-1].return_type
         except:
             raise Exception('Failed to jit Python callable {} with numba.jit'.format(func))
         func.numba_func = nbjit
+        # return_type = "int"
+        if return_type is None:
+            type_map = {
+                nb.types.boolean: 'bool',
+                nb.types.uint8: 'unsigned int',
+                nb.types.uint16: 'unsigned int',
+                nb.types.uint32: 'unsigned int',
+                nb.types.uint64: 'unsigned long',
+                nb.types.char: 'int',
+                nb.types.int8: 'int',
+                nb.types.int16: 'int',
+                nb.types.int32: 'int',
+                nb.types.int64: 'long',
+                nb.types.float32: 'float',
+                nb.types.float64: 'double',
+            }
 
+            if nb_return_type in type_map:
+                return_type = type_map[nb_return_type]
+            elif "array" in nb.typeof(nb_return_type).name:
+                return_type = "RVec<" + type_map[nb_return_type.dtype] + ">"
         # Create Python wrapper with C++ friendly signature
 
         # Define signature

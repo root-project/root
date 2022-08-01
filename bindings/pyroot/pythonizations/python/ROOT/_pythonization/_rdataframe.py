@@ -420,6 +420,8 @@ def pythonize_rdataframe(klass):
     
     # Pythonization for Filters only to be implemented in Python3
     if sys.version_info >= (3, 7):
-        klass._OriginalFilter =  klass.Filter
-        from ._rdf_pyz import _PyFilter
+        klass._OriginalFilter = klass.Filter
+        klass._OriginalDefine = klass.Define
+        from ._rdf_pyz import _PyFilter, _PyDefine
         klass.Filter = _PyFilter
+        klass.Define = _PyDefine

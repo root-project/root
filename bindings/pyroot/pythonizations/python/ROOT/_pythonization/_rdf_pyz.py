@@ -11,10 +11,6 @@ import re
 import typing
 from .._numbadeclare import _NumbaDeclareDecorator
 
-# This class is still to undergo some restructuring thus the docstring may not be complete.
-# The class will be fully realized after the Define has been Pythonized.
-
-
 class FunctionJitter:
     """
     This class allows to jit a python callable with Numba, being able to infer the signature of the function from the types of the RDF columns.
@@ -42,7 +38,6 @@ class FunctionJitter:
     fil1 = rdf.Filter( "Numba::" + func_call, "x is greater than 2")
 
     """
-
     # Variable to store previous functions so as to not rejit.
     function_cache = {}
     lambda_function_counter = 0  # Counter to name the lambda functions
@@ -124,10 +119,7 @@ class FunctionJitter:
         func_sign = inspect.signature(func)
         # Find the Return type
         if func_sign.return_annotation is inspect.Signature.empty:
-            raise ValueError(
-                "Return type of the function is not mentioned.\n Function cannot be jitted as signature cannot be determined.")
-            # This error will be changed. Right now (for Filters) this condition will never be met as the return_annotations are specifically set to bool explicitly before it is jitted.
-            # In later versions for Define in which we need to edit _NumbaDeclare the return type will not be taken and rather will be computed there by Numba and can be checked there.
+            self.return_type = None
         else:
             self.return_type = str(func_sign.return_annotation)
         self.func = func
@@ -227,11 +219,9 @@ class FunctionJitter:
             return self.func_call
 
         self.get_function_params_args_call(func, cols_list, extra_args)
-        FunctionJitter.function_cache[self.func.__name__] = (
-            self.func_call, self.func_sign)
         _NumbaDeclareDecorator(self.func_sign, self.return_type)(self.func)
+        FunctionJitter.function_cache[self.func.__name__] = (self.func_call, self.func_sign)
         return self.func_call
-
 
 def _PyFilter(rdf, callable_or_str, *args, extra_args={}):
     """
@@ -271,7 +261,6 @@ def _PyFilter(rdf, callable_or_str, *args, extra_args={}):
     """
     if isinstance(callable_or_str, str):  # If string argument is passed. Invoke the Original Filters.
         return rdf._OriginalFilter(callable_or_str, *args)
-
     # The 1st argument is either a string or a python callable.
     if not callable(callable_or_str):
         raise TypeError(
@@ -315,3 +304,58 @@ def _PyFilter(rdf, callable_or_str, *args, extra_args={}):
     
     func_call = jitter.jit_function(func, col_list, extra_args)
     return rdf._OriginalFilter("Numba::" + func_call, filter_name)
+
+def _PyDefine(rdf, col_name, callable_or_str, cols = [] , extra_args = {} ):
+    """
+    Defines a new column in the RDataFrame.
+    Arguments:
+    1. col_name: The name of the new column to be defined
+    2. callable_or_str: The definition of the contents of the new columns
+        It can be either a python callable or a c style string.
+    3. cols: list of columns that the callable will receive as argument.
+                If not provided then it tries maps the name of the parameter to a column name of the RDF.
+    4. extra_args: non-columnar arguments to be passed to the callable.
+    Returns:
+        RDataFrame: rdf with new column defined
+    
+    Examples:
+    1. rdf.Define("x", lambda: np.random.rand())
+        Define using a python lambda
+    2. rdf.Define("x2", lambda x: x*x, ["y"])
+        Maps the function argument to column y.
+    3. scale = 0.5
+        def x_scaled(x):
+            return x*scale
+       rdf.Define("X_scaled", x_scaled)
+       The scale is captured from scope and treated as a compile time constant during first jit.
+       Note: Any changes to scale will not be reflected in the jitted function as jitting is a one time operation.
+    4. def x_scaled(x, u):
+            return x*u
+       rdf.Define("x_scaled", x_scaled, extra_args = {"u":0.5})
+
+    """
+    if not isinstance(col_name, str):
+        raise TypeError(f"First argument of Define must be a valid string for the new column name. {type(col_name).__name__} is not a string.")
+
+    if isinstance(callable_or_str, str): # If string argument is passed. Invoke the Original Define.
+        return rdf._OriginalDefine(col_name, callable_or_str)
+
+    if not callable(callable_or_str): # The 2st argument is either a string or a python callable.
+        raise TypeError(f"The second argument of a Define operation should be a callable. {type(callable_or_str).__name__} object is not callable.")
+    
+    if not isinstance(cols, list):        
+        raise TypeError(f"Define takes a column list as third arguments but {type(cols).__name__} was given.")
+    
+    func = callable_or_str
+    # Check if it is a c++ callable.
+    import libcppyy
+     # Implies a cppyy proxy of a function was passed.
+    if type(callable_or_str) == libcppyy.CPPOverload:
+        return rdf._OriginalDefine(col_name, func, cols)
+     # Second condition is a Python proxy to an std::function
+    if (isinstance(getattr(callable_or_str, 'target_type', None), libcppyy.CPPOverload)):
+        return rdf._OriginalDefine(col_name, func, cols)
+
+    jitter = FunctionJitter(rdf)    
+    func_call = jitter.jit_function(func, cols, extra_args)
+    return rdf._OriginalDefine(col_name, "Numba::" + func_call)
