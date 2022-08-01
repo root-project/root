@@ -5,7 +5,11 @@
 ##
 ## This tutorial shows how VecOps can be used to slim down the programming
 ## model typically adopted in HEP for analysis.
-##
+## In this case we have a dataset containing the kinematic properties of
+## particles stored in individual arrays.
+## We want to plot the transverse momentum of these particles if the energy is
+## greater than 100 MeV.
+
 ## \macro_code
 ## \macro_image
 ##
@@ -34,7 +38,7 @@ def WithRDataFrameVecOpsJit(treename, filename):
     h.DrawCopy()
 
 ## We plot twice the same quantity, the key is to look into the implementation
-## of the functions above
+## of the functions above.
 c = ROOT.TCanvas()
 c.Divide(2,1)
 c.cd(1)
