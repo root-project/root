@@ -488,7 +488,7 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
       } else if (fname && strlen(fname)) {
 
         // Case 5a --- Import TTree from file with cutspec
-        TFile *f = TFile::Open(fname) ;
+        std::unique_ptr<TFile> f{TFile::Open(fname)};
         if (!f) {
           coutE(InputArguments) << "RooDataSet::ctor(" << GetName() << ") ERROR file '" << fname << "' cannot be opened or does not exist" << endl ;
           throw string(Form("RooDataSet::ctor(%s) ERROR file %s cannot be opened or does not exist",GetName(),fname)) ;
@@ -546,7 +546,7 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
         }
       } else if (fname && strlen(fname)) {
         // Case 5b --- Import TTree from file with cutvar
-        TFile *f = TFile::Open(fname) ;
+        std::unique_ptr<TFile> f{TFile::Open(fname)};
         if (!f) {
           coutE(InputArguments) << "RooDataSet::ctor(" << GetName() << ") ERROR file '" << fname << "' cannot be opened or does not exist" << endl ;
           throw string(Form("RooDataSet::ctor(%s) ERROR file %s cannot be opened or does not exist",GetName(),fname)) ;

@@ -198,11 +198,12 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
       meas_chan.GetChannels().clear();
       meas_chan.GetChannels().push_back( channel );
       cxcoutIHF << "Opening File to hold channel: " << ChannelFileName << std::endl;
-      TFile* chanFile = TFile::Open( ChannelFileName.c_str(), "UPDATE" );
-      cxcoutIHF << "About to write channel measurement to file" << std::endl;
-      meas_chan.writeToFile( chanFile );
-      cxcoutPHF << "Successfully wrote channel to file" << std::endl;
-      chanFile->Close();
+      {
+        std::unique_ptr<TFile> chanFile{TFile::Open( ChannelFileName.c_str(), "UPDATE" )};
+        cxcoutIHF << "About to write channel measurement to file" << std::endl;
+        meas_chan.writeToFile( chanFile.get() );
+        cxcoutPHF << "Successfully wrote channel to file" << std::endl;
+      }
 
       // Get the Paramater of Interest as a RooRealVar
       RooRealVar* poi = dynamic_cast<RooRealVar*>( ws_single->var(measurement.GetPOI()));
@@ -246,13 +247,14 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
     cxcoutPHF << "Writing combined workspace to file: " << CombinedFileName << std::endl;
     ws->writeToFile( CombinedFileName.c_str() );
     cxcoutPHF << "Writing combined measurement to file: " << CombinedFileName << std::endl;
-    TFile* combFile = TFile::Open( CombinedFileName.c_str(), "UPDATE" );
-    if( combFile == nullptr ) {
-      cxcoutEHF << "Error: Failed to open file " << CombinedFileName << std::endl;
-      throw hf_exc();
+    {
+      std::unique_ptr<TFile> combFile{TFile::Open( CombinedFileName.c_str(), "UPDATE" )};
+      if( combFile == nullptr ) {
+        cxcoutEHF << "Error: Failed to open file " << CombinedFileName << std::endl;
+        throw hf_exc();
+      }
+      measurement.writeToFile( combFile.get() );
     }
-    measurement.writeToFile( combFile );
-    combFile->Close();
 
     // Fit the combined model
     if(! measurement.GetExportOnly()){

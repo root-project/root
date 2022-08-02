@@ -69,7 +69,7 @@ RooStudyManager::RooStudyManager(RooWorkspace& w, RooAbsStudy& study)
 RooStudyManager::RooStudyManager(const char* studyPackFileName)
 {
   string pwd = gDirectory->GetName() ;
-  TFile *f = new TFile(studyPackFileName) ;
+  std::unique_ptr<TFile> f{TFile::Open(studyPackFileName, "READ")};
   _pkg = dynamic_cast<RooStudyPackage*>(f->Get("studypack")) ;
   gDirectory->cd(Form("%s:",pwd.c_str())) ;
 }

@@ -281,7 +281,7 @@ bool RooWorkspace::import(const char* fileSpec,
   const std::string& objname = tokens[2];
 
   // Check that file can be opened
-  TFile* f = TFile::Open(filename.c_str()) ;
+  std::unique_ptr<TFile> f{TFile::Open(filename.c_str())};
   if (f==0) {
     coutE(InputArguments) << "RooWorkspace(" << GetName() << ") ERROR opening file " << filename << endl ;
     return false;
@@ -299,13 +299,11 @@ bool RooWorkspace::import(const char* fileSpec,
   RooAbsArg* warg = w->arg(objname.c_str()) ;
   if (warg) {
     bool ret = import(*warg,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9) ;
-    delete f ;
     return ret ;
   }
   RooAbsData* wdata = w->data(objname.c_str()) ;
   if (wdata) {
     bool ret = import(*wdata,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9) ;
-    delete f ;
     return ret ;
   }
 

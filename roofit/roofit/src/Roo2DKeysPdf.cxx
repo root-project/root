@@ -522,10 +522,9 @@ void Roo2DKeysPdf::writeToFile(char * outputFile, const char * name) const
 
 void Roo2DKeysPdf::writeHistToFile(char * outputFile, const char * histName) const
 {
-  TFile * file = 0;
   cout << "Roo2DKeysPdf::writeHistToFile This member function is temporarily disabled" <<endl;
   //make sure that any existing file is not over written
-  file = new TFile(outputFile, "UPDATE");
+  std::unique_ptr<TFile> file{TFile::Open(outputFile, "UPDATE")};
   if (!file)
   {
     cout << "Roo2DKeysPdf::writeHistToFile unable to open file "<< outputFile <<endl;

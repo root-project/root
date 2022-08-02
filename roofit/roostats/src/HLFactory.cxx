@@ -600,7 +600,7 @@ int HLFactory::fParseLine(TString& line){
         TString ws_name("");
         TString rootfile_name (static_cast<TObjString*>(descr_array->At(0))->GetString());
 
-        TFile* ifile=TFile::Open(rootfile_name);
+        std::unique_ptr<TFile> ifile{TFile::Open(rootfile_name)};
         if (ifile==0)
             return 1;
 
@@ -615,7 +615,6 @@ int HLFactory::fParseLine(TString& line){
           TObject* the_obj=ifile->Get(obj_name);
           fWs->import(*the_obj,o_name);
           }
-        delete ifile;
         return 0;
         } // end of import block
 
