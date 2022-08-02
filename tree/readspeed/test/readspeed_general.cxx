@@ -184,7 +184,7 @@ TEST(ReadSpeedCLI, HelpArg)
 
    const auto parsedArgs = ParseArgs(allArgs);
 
-   EXPECT_TRUE(!parsedArgs.fShouldRun) << "Programme running when using help argument";
+   EXPECT_TRUE(!parsedArgs.fShouldRun) << "Program running when using help argument";
 }
 
 TEST(ReadSpeedCLI, NoArgs)
@@ -193,7 +193,7 @@ TEST(ReadSpeedCLI, NoArgs)
 
    const auto parsedArgs = ParseArgs(allArgs);
 
-   EXPECT_TRUE(!parsedArgs.fShouldRun) << "Programme running when not using any arguments";
+   EXPECT_TRUE(!parsedArgs.fShouldRun) << "Program running when not using any arguments";
 }
 
 TEST(ReadSpeedCLI, InvalidArgs)
@@ -215,9 +215,9 @@ TEST(ReadSpeedCLI, RegularArgs)
 
    const auto parsedArgs = ParseArgs(allArgs);
 
-   EXPECT_TRUE(parsedArgs.fShouldRun) << "Programme not running when given valid arguments";
-   EXPECT_TRUE(!parsedArgs.fData.fUseRegex) << "Programme using regex when it should not";
-   EXPECT_EQ(parsedArgs.fNThreads, 0) << "Programme not set to single thread mode";
+   EXPECT_TRUE(parsedArgs.fShouldRun) << "Program not running when given valid arguments";
+   EXPECT_TRUE(!parsedArgs.fData.fUseRegex) << "Program using regex when it should not";
+   EXPECT_EQ(parsedArgs.fNThreads, 0) << "Program not set to single thread mode";
 }
 
 TEST(ReadSpeedCLI, RegexArgs)
@@ -228,8 +228,8 @@ TEST(ReadSpeedCLI, RegexArgs)
 
    const auto parsedArgs = ParseArgs(allArgs);
 
-   EXPECT_TRUE(parsedArgs.fShouldRun) << "Programme not running when given valid arguments";
-   EXPECT_TRUE(parsedArgs.fData.fUseRegex) << "Programme not using regex when it should";
+   EXPECT_TRUE(parsedArgs.fShouldRun) << "Program not running when given valid arguments";
+   EXPECT_TRUE(parsedArgs.fData.fUseRegex) << "Program not using regex when it should";
 }
 
 TEST(ReadSpeedCLI, AllBranches)
@@ -241,9 +241,9 @@ TEST(ReadSpeedCLI, AllBranches)
 
    const auto parsedArgs = ParseArgs(allArgs);
 
-   EXPECT_TRUE(parsedArgs.fShouldRun) << "Programme not running when given valid arguments";
-   EXPECT_TRUE(parsedArgs.fData.fUseRegex) << "Programme not using regex when it should";
-   EXPECT_TRUE(parsedArgs.fAllBranches) << "Programme not checking for all branches when it should";
+   EXPECT_TRUE(parsedArgs.fShouldRun) << "Program not running when given valid arguments";
+   EXPECT_TRUE(parsedArgs.fData.fUseRegex) << "Program not using regex when it should";
+   EXPECT_TRUE(parsedArgs.fAllBranches) << "Program not checking for all branches when it should";
    EXPECT_EQ(parsedArgs.fData.fBranchNames, allBranches) << "All branch regex not correct";
 }
 
@@ -256,8 +256,8 @@ TEST(ReadSpeedCLI, MultipleThreads)
 
    const auto parsedArgs = ParseArgs(allArgs);
 
-   EXPECT_TRUE(parsedArgs.fShouldRun) << "Programme not running when given valid arguments";
-   EXPECT_EQ(parsedArgs.fNThreads, threads) << "Programme not using the correct amount of threads";
+   EXPECT_TRUE(parsedArgs.fShouldRun) << "Program not running when given valid arguments";
+   EXPECT_EQ(parsedArgs.fNThreads, threads) << "Program not using the correct amount of threads";
 }
 
 TEST(ReadSpeedCLI, WorkerThreadsHint)
@@ -278,6 +278,6 @@ TEST(ReadSpeedCLI, WorkerThreadsHint)
    const auto parsedArgs = ParseArgs(allArgs);
    const auto newTasksPerWorker = ROOT::TTreeProcessorMT::GetTasksPerWorkerHint();
 
-   EXPECT_TRUE(parsedArgs.fShouldRun) << "Programme not running when given valid arguments";
+   EXPECT_TRUE(parsedArgs.fShouldRun) << "Program not running when given valid arguments";
    EXPECT_EQ(newTasksPerWorker, oldTasksPerWorker + 10) << "Tasks per worker hint not updated correctly";
 }

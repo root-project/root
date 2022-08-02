@@ -12,8 +12,6 @@ using namespace ReadSpeed;
 
 void ReadSpeed::PrintThroughput(const Result &r)
 {
-   const uint effectiveThreads = std::max(r.fThreadPoolSize, 1u);
-
    std::cout << "Thread pool size:\t\t" << r.fThreadPoolSize << '\n';
 
    if (r.fMTSetupRealTime > 0.) {
@@ -27,6 +25,8 @@ void ReadSpeed::PrintThroughput(const Result &r)
    std::cout << "Uncompressed data read:\t\t" << r.fUncompressedBytesRead << " bytes\n";
    std::cout << "Compressed data read:\t\t" << r.fCompressedBytesRead << " bytes\n";
 
+   const uint effectiveThreads = std::max(r.fThreadPoolSize, 1u);
+
    std::cout << "Uncompressed throughput:\t" << r.fUncompressedBytesRead / r.fRealTime / 1024 / 1024 << " MB/s\n";
    std::cout << "\t\t\t\t" << r.fUncompressedBytesRead / r.fRealTime / 1024 / 1024 / effectiveThreads
              << " MB/s/thread for " << effectiveThreads << " threads\n";
@@ -35,10 +35,10 @@ void ReadSpeed::PrintThroughput(const Result &r)
              << " MB/s/thread for " << effectiveThreads << " threads\n";
 }
 
-Args ReadSpeed::ParseArgs(std::vector<std::string> args)
+Args ReadSpeed::ParseArgs(const std::vector<std::string> &args)
 {
    // Print help message and exit if "--help"
-   if (args.size() < 2 || (args.size() == 2 && (args[1].compare("--help") == 0 || args[1].compare("-h") == 0))) {
+   if (args.size() < 2 || (args.size() == 2 && (args[1] == "--help" || args[1] == "-h"))) {
       std::cout << "Usage:\n"
                 << "  root-readspeed --trees tname1 [tname2 ...]\n"
                 << "                 --files fname1 [fname2 ...]\n"
@@ -58,13 +58,13 @@ Args ReadSpeed::ParseArgs(std::vector<std::string> args)
       "Options --all-branches, --branches, and --branches-regex are mutually exclusive. You can use only one.\n";
 
    for (size_t i = 1; i < args.size(); ++i) {
-      auto arg = args[i];
+      const auto &arg = args[i];
 
-      if (arg.compare("--trees") == 0) {
+      if (arg == "--trees") {
          argState = EArgState::kTrees;
-      } else if (arg.compare("--files") == 0) {
+      } else if (arg == "--files") {
          argState = EArgState::kFiles;
-      } else if (arg.compare("--all-branches") == 0) {
+      } else if (arg == "--all-branches") {
          argState = EArgState::kNone;
          if (branchState != EBranchState::kNone && branchState != EBranchState::kAll) {
             std::cerr << branchOptionsErrMsg;
@@ -73,14 +73,14 @@ Args ReadSpeed::ParseArgs(std::vector<std::string> args)
          branchState = EBranchState::kAll;
          d.fUseRegex = true;
          d.fBranchNames = {".*"};
-      } else if (arg.compare("--branches") == 0) {
+      } else if (arg == "--branches") {
          argState = EArgState::kBranches;
          if (branchState != EBranchState::kNone && branchState != EBranchState::kRegular) {
             std::cerr << branchOptionsErrMsg;
             return {};
          }
          branchState = EBranchState::kRegular;
-      } else if (arg.compare("--branches-regex") == 0) {
+      } else if (arg == "--branches-regex") {
          argState = EArgState::kBranches;
          if (branchState != EBranchState::kNone && branchState != EBranchState::kRegex) {
             std::cerr << branchOptionsErrMsg;
@@ -88,11 +88,11 @@ Args ReadSpeed::ParseArgs(std::vector<std::string> args)
          }
          branchState = EBranchState::kRegex;
          d.fUseRegex = true;
-      } else if (arg.compare("--threads") == 0) {
+      } else if (arg == "--threads") {
          argState = EArgState::kThreads;
-      } else if (arg.compare("--tasks-per-worker") == 0) {
+      } else if (arg == "--tasks-per-worker") {
          argState = EArgState::kTasksPerWorkerHint;
-      } else if (arg.compare(0, 1, "-") == 0) {
+      } else if (arg[0] == '-') {
          std::cerr << "Unrecognized option '" << arg << "'\n";
          return {};
       } else {
@@ -122,7 +122,7 @@ Args ReadSpeed::ParseArgs(int argc, char **argv)
    args.reserve(argc);
 
    for (int i = 0; i < argc; ++i) {
-      args.push_back(std::string(argv[i]));
+      args.emplace_back(argv[i]);
    }
 
    return ParseArgs(args);
