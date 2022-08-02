@@ -1171,7 +1171,7 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
    RooArgSet saveParams;
    allParams->snapshot(saveParams);
 
-   TFile * fileOut = TFile::Open(outputfile,"RECREATE");
+   std::unique_ptr<TFile> fileOut{TFile::Open(outputfile,"RECREATE")};
    if (!fileOut) {
       oocoutE(nullptr,InputArguments) << "HypoTestInverter - RebuildDistributions - Error opening file " << outputfile
                                           << " - the resulting limits will not be stored" << std::endl;
@@ -1320,9 +1320,6 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
       }
    }
 
-   if (fileOut) {
-      fileOut->Close();
-   }
    else {
       // delete all the histograms
       delete hL;
