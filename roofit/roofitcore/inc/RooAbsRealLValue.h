@@ -67,8 +67,6 @@ public:
   virtual void randomize(const RooAbsBinning& binning) ;
 
 
-  virtual void setBinFast(Int_t ibin, const RooAbsBinning& binning) ;
-
   // Get fit range limits
 
   /// Retrive binning configuration with given name or default binning.
