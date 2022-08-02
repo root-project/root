@@ -16,7 +16,6 @@ Here we also implement the analytic integral.
 **/
 
 #include "RooChiSquarePdf.h"
-#include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooBatchCompute.h"
 

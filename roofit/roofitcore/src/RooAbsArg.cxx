@@ -82,7 +82,6 @@ for single nodes.
 #include "RooListProxy.h"
 #include "RooAbsData.h"
 #include "RooAbsCategoryLValue.h"
-#include "RooAbsRealLValue.h"
 #include "RooTrace.h"
 #include "RooRealIntegral.h"
 #include "RooConstVar.h"

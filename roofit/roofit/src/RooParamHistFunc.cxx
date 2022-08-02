@@ -21,7 +21,6 @@
 
 #include "Riostream.h"
 #include "RooParamHistFunc.h"
-#include "RooAbsReal.h"
 #include "RooAbsCategory.h"
 #include "RooRealVar.h"
 #include "RooHelpers.h"

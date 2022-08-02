@@ -26,7 +26,6 @@ the selectFastAlgorithm() method.
 **/
 
 #include "RooVoigtian.h"
-#include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooMath.h"
 #include "RooBatchCompute.h"

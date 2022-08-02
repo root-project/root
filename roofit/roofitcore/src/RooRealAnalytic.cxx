@@ -24,7 +24,6 @@ RooAbsReal object (specified by a code) to a set of dependent variables.
 **/
 
 #include "RooRealAnalytic.h"
-#include "RooAbsReal.h"
 #include "RooAbsRealLValue.h"
 
 #include <assert.h>

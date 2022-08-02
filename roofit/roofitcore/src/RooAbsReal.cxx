@@ -73,7 +73,6 @@
 #include "RooMinimizer.h"
 #include "RooChi2Var.h"
 #include "RooFitResult.h"
-#include "RooAbsMoment.h"
 #include "RooMoment.h"
 #include "RooFirstMoment.h"
 #include "RooSecondMoment.h"

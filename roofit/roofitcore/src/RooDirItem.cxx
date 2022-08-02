@@ -25,9 +25,7 @@ methods that can be used to safely attach and detach one self from a TDirectory
 **/
 
 #include <iostream>
-#include "TList.h"
 #include "TDirectoryFile.h"
-#include "TString.h"
 #include "RooDirItem.h"
 
 using namespace std;

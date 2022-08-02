@@ -25,8 +25,6 @@ index value which define the state
 
 #include "RooFitLegacy/RooCatTypeLegacy.h"
 
-#include "TClass.h"
-
 #include <iostream>
 
 

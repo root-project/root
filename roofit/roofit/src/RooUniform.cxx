@@ -20,7 +20,6 @@
 Flat p.d.f. in N dimensions
 **/
 
-#include "RooAbsReal.h"
 #include "RooArgSet.h"
 #include "RooRealVar.h"
 #include "RooUniform.h"

@@ -33,7 +33,6 @@ but a not-normalized function (RooAbsReal)
 #include <math.h>
 
 #include "RooStepFunction.h"
-#include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooArgList.h"
 #include "RooMsgService.h"

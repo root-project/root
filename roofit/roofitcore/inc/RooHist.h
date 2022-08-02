@@ -19,10 +19,12 @@
 #include "TGraphAsymmErrors.h"
 #include "RooPlotable.h"
 #include "RooAbsData.h"
-#include "RooAbsRealLValue.h"
+
+class RooAbsRealLValue;
+class RooCurve;
+class RooFitResult;
 
 class TH1;
-class RooCurve ;
 
 class RooHist : public TGraphAsymmErrors, public RooPlotable {
 public:

@@ -176,10 +176,8 @@ called for each data event.
 #include "RunContext.h"
 
 #include "ROOT/StringUtils.hxx"
-#include "TClass.h"
 #include "TMath.h"
 #include "TPaveText.h"
-#include "TList.h"
 #include "TMatrixD.h"
 #include "TMatrixDSym.h"
 #include "Math/CholeskyDecomp.h"

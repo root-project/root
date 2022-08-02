@@ -50,7 +50,6 @@
 #include "RooRandom.h"
 #include "RooMsgService.h"
 #include "TH2D.h"
-#include "TText.h"
 #include "TMatrixDSym.h"
 #include "RooMultiVarGaussian.h"
 

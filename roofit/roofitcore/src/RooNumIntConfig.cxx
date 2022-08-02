@@ -32,9 +32,6 @@ use this class in the (normalization) integral configuration interface
 #include "RooNumIntFactory.h"
 #include "RooMsgService.h"
 
-#include "TClass.h"
-
-
 
 using namespace std;
 

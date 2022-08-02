@@ -29,7 +29,6 @@ is store in the summary dataset.
 #include "RooAbsPdf.h"
 #include "RooDataSet.h"
 #include "RooRealVar.h"
-#include "TString.h"
 #include "RooFitResult.h"
 #include "RooChi2MCSModule.h"
 #include "RooMsgService.h"
