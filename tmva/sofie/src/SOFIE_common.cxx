@@ -25,6 +25,27 @@ std::string ConvertTypeToString(ETensorType type){
       case ETensorType::FLOAT : {
          return "float";
       }
+      case ETensorType::INT16 : {
+         return "int16_t";
+      }
+      case ETensorType::INT32 : {
+         return "int32_t";
+      }
+      case ETensorType::INT64 : {
+         return "int64_t";
+      }
+      case ETensorType::UINT16 : {
+         return "uint16_t";
+      }
+      case ETensorType::UINT32 : {
+         return "uint32_t";
+      }
+      case ETensorType::UINT64 : {
+         return "uint64_t";
+      }
+      case ETensorType::DOUBLE : {
+         return "double";
+      }
       default:{
          return "other";
       }
@@ -32,11 +53,11 @@ std::string ConvertTypeToString(ETensorType type){
 }
 
 ETensorType ConvertStringToType(std::string type){
-   if(type == "float32" || type == "Float"){
+   if(type == "float32" || type == "float" || type == "Float"){
      return ETensorType::FLOAT;
    }
    else if(type == "int64" || type == "int"){
-     return ETensorType::INT64;
+     return ETensorType::INT32;
    }
    else if(type == "double"){
       return ETensorType::DOUBLE;

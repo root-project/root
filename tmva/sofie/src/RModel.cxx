@@ -318,6 +318,12 @@ namespace SOFIE{
             if (f->second.type == ETensorType::FLOAT){
                fGC += "std::vector<float> ";
             }
+            else if(f->second.type == ETensorType::INT32){
+               fGC += "std::vector<int> ";
+            }
+            else if(f->second.type == ETensorType::DOUBLE){
+               fGC += "std::vector<double> ";
+            }
          }
       } else {
          std::vector<ETensorType> outputTensorsTypes(outputSize);
