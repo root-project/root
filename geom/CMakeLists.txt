@@ -21,3 +21,5 @@ endif()
 if(vecgeom)
   add_subdirectory(vecgeom)
 endif()
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)
