@@ -313,7 +313,6 @@ RooAbsPdf::RooAbsPdf(const char *name, const char *title) :
   RooAbsReal(name,title), _normMgr(this,10), _selectComp(true)
 {
   resetErrorCounters() ;
-  setTraceCounter(0) ;
 }
 
 
@@ -326,7 +325,6 @@ RooAbsPdf::RooAbsPdf(const char *name, const char *title,
   RooAbsReal(name,title,plotMin,plotMax), _normMgr(this,10), _selectComp(true)
 {
   resetErrorCounters() ;
-  setTraceCounter(0) ;
 }
 
 
@@ -339,7 +337,6 @@ RooAbsPdf::RooAbsPdf(const RooAbsPdf& other, const char* name) :
   _normMgr(other._normMgr,this), _selectComp(other._selectComp), _normRange(other._normRange)
 {
   resetErrorCounters() ;
-  setTraceCounter(other._traceCount) ;
 
   if (other._specGeneratorConfig) {
     _specGeneratorConfig = std::make_unique<RooNumGenConfig>(*other._specGeneratorConfig);
@@ -664,31 +661,7 @@ bool RooAbsPdf::syncNormalization(const RooArgSet* nset, bool adjustProxies) con
 void RooAbsPdf::resetErrorCounters(Int_t resetValue)
 {
   _errorCount = resetValue ;
-  _negCount   = resetValue ;
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Reset trace counter to given value, limiting the
-/// number of future trace messages for this pdf to 'value'
-
-void RooAbsPdf::setTraceCounter(Int_t value, bool allNodes)
-{
-  if (!allNodes) {
-    _traceCount = value ;
-    return ;
-  } else {
-    RooArgList branchList ;
-    branchNodeServerList(&branchList) ;
-    for(auto * pdf : dynamic_range_cast<RooAbsPdf*>(branchList)) {
-      if (pdf) pdf->setTraceCounter(value,false) ;
-    }
-  }
-
-}
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
