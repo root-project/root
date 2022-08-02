@@ -22,9 +22,9 @@ struct Args {
    bool fShouldRun = false;
 };
 
-Args ParseArgs(std::vector<std::string> args);
+Args ParseArgs(const std::vector<std::string> &args);
 Args ParseArgs(int argc, char **argv);
 
-} // namespace ReadSpeed
+} // namespace ReadSpeed   
 
 #endif // ROOTREADSPEEDCLI
