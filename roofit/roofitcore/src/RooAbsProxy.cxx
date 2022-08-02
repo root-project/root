@@ -17,7 +17,6 @@
 #include "Riostream.h"
 #include "RooAbsProxy.h"
 #include "RooArgSet.h"
-#include "RooAbsArg.h"
 
 /**
 \file RooAbsProxy.cxx

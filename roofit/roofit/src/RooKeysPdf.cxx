@@ -37,7 +37,6 @@ Cranmer KS, Kernel Estimation in High-Energy Physics.
 #include "TMath.h"
 #include "snprintf.h"
 #include "RooKeysPdf.h"
-#include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooRandom.h"
 #include "RooDataSet.h"

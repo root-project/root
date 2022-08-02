@@ -81,7 +81,6 @@ in calculation speed.
 #include "Riostream.h"
 
 #include "RooIntegralMorph.h"
-#include "RooAbsReal.h"
 #include "RooAbsCategory.h"
 #include "RooBrentRootFinder.h"
 #include "RooAbsFunc.h"

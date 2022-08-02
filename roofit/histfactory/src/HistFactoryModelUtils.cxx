@@ -7,7 +7,6 @@
 #include <typeinfo>
 
 #include "RooStats/HistFactory/ParamHistFunc.h"
-#include "RooAbsArg.h"
 #include "RooAbsPdf.h"
 #include "RooArgSet.h"
 #include "RooArgList.h"

@@ -34,6 +34,7 @@ class RooArgList ;
 class TTree ;
 class RooFormulaVar ;
 class RooArgSet ;
+class RooTreeDataStore ;
 
 #define VECTOR_BUFFER_SIZE 1024
 

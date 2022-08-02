@@ -23,7 +23,6 @@ side of maximum value
 
 #include "RooBifurGauss.h"
 
-#include "RooAbsReal.h"
 #include "RooMath.h"
 #include "RooBatchCompute.h"
 

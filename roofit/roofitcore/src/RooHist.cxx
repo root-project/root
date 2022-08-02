@@ -26,13 +26,14 @@ a RooPlot.
 **/
 
 #include "RooHist.h"
+
+#include "RooAbsRealLValue.h"
 #include "RooHistError.h"
 #include "RooCurve.h"
 #include "RooScaledFunc.h"
 #include "RooMsgService.h"
 
 #include "TH1.h"
-#include "TClass.h"
 #include "Riostream.h"
 #include <iomanip>
 

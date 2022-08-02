@@ -80,7 +80,6 @@ observable snapshots are stored in the dataset.
 #include "RooAbsData.h"
 
 #include "TBuffer.h"
-#include "TClass.h"
 #include "TMath.h"
 #include "TTree.h"
 

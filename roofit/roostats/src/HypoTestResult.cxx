@@ -62,6 +62,8 @@ be larger than one.
 
 #include "RooStats/RooStatsUtils.h"
 
+#include <TMath.h>
+
 #include <limits>
 #define NaN numeric_limits<float>::quiet_NaN()
 #define IsNaN(a) TMath::IsNaN(a)

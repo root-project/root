@@ -90,7 +90,6 @@ the new `RooAbsData::uniqueId()`.
 #include "RooCategory.h"
 #include "RooFormulaVar.h"
 #include "RooArgList.h"
-#include "RooAbsRealLValue.h"
 #include "RooRealVar.h"
 #include "RooDataHist.h"
 #include "RooMsgService.h"
@@ -106,7 +105,6 @@ the new `RooAbsData::uniqueId()`.
 
 #include "Math/Util.h"
 #include "TTree.h"
-#include "TH2.h"
 #include "TFile.h"
 #include "TBuffer.h"
 #include "strlcpy.h"

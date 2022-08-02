@@ -61,7 +61,6 @@ convolution precision.
 #include "RooNumConvolution.h"
 #include "RooArgList.h"
 #include "RooRealVar.h"
-#include "RooFormulaVar.h"
 #include "RooCustomizer.h"
 #include "RooConvIntegrandBinding.h"
 #include "RooNumIntFactory.h"

@@ -142,7 +142,6 @@ public:
   static bool _printScientific ;
   static Int_t  _printSigDigits ;
 
-  friend class RooAbsRealLValue ;
   void setValFast(double value) override { _value = value ; setValueDirty() ; }
 
 

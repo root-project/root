@@ -31,8 +31,6 @@ The parameterization here is physics driven and differs from the ROOT::Math::log
 #include "RooHelpers.h"
 #include "RooBatchCompute.h"
 
-#include "TClass.h"
-
 #include <Math/PdfFuncMathCore.h>
 
 ClassImp(RooLognormal);

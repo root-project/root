@@ -29,8 +29,6 @@
 
 #include "Math/Minimizer.h"
 
-#include <TFile.h>
-
 #include <stdexcept> // runtime_error
 
 #include "gtest/gtest.h"

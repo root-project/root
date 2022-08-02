@@ -34,7 +34,6 @@ plotted for the 1-D case.
 #include "RooStats/MarkovChain.h"
 
 #include "TLine.h"
-#include "TList.h"
 #include "TGraph.h"
 #include "RooRealVar.h"
 #include "RooPlot.h"

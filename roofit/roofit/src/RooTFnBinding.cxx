@@ -14,7 +14,6 @@
 #include "Riostream.h"
 
 #include "RooTFnBinding.h"
-#include "RooAbsReal.h"
 #include "RooAbsCategory.h"
 #include "TF3.h"
 

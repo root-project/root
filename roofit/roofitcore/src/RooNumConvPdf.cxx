@@ -59,7 +59,6 @@ convolution precision.
 **/
 
 #include "Riostream.h"
-#include "TH2F.h"
 #include "RooNumConvPdf.h"
 #include "RooArgList.h"
 #include "RooRealVar.h"

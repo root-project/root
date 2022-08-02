@@ -18,8 +18,8 @@
 
 #include "TNamed.h"
 #include "RooAbsProxy.h"
-#include "RooAbsArg.h"
 
+class RooAbsArg;
 
 class RooArgProxy : public TNamed, public RooAbsProxy  {
 public:

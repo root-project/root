@@ -327,29 +327,17 @@ protected:
 
   RooPlot *plotOn(RooPlot *frame, PlotOpt o) const override;
 
-  friend class RooEffGenContext ;
-  friend class RooAddGenContext ;
-  friend class RooProdGenContext ;
-  friend class RooSimGenContext ;
-  friend class RooSimSplitGenContext ;
-  friend class RooConvGenContext ;
-  friend class RooSimultaneous ;
-  friend class RooAddGenContextOrig ;
-  friend class RooProdPdf ;
   friend class RooMCStudy ;
 
   Int_t* randomizeProtoOrder(Int_t nProto,Int_t nGen,bool resample=false) const ;
 
-  friend class RooExtendPdf ;
   // This also forces the definition of a copy ctor in derived classes
   RooAbsPdf(const RooAbsPdf& other, const char* name = 0);
 
-  friend class RooRealIntegral ;
   static Int_t _verboseEval ;
 
   virtual bool syncNormalization(const RooArgSet* dset, bool adjustProxies=true) const ;
 
-  friend class RooAbsAnaConvPdf ;
   mutable double _rawValue ;
   mutable RooAbsReal* _norm = nullptr; //! Normalization integral (owned by _normMgr)
   mutable RooArgSet const* _normSet = nullptr; //! Normalization set with for above integral
@@ -362,8 +350,6 @@ protected:
     RooAbsReal* _norm ;
   } ;
   mutable RooObjCacheManager _normMgr ; //! The cache manager
-
-  friend class CacheElem ; // Cache needs to be able to clear _norm pointer
 
   bool redirectServersHook(const RooAbsCollection&, bool, bool, bool) override {
     // Hook function intercepting redirectServer calls. Discard current normalization

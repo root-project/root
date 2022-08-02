@@ -41,7 +41,6 @@
 #include "RooArgList.h"
 
 #include "RooStreamParser.h"
-#include "RooAbsRealLValue.h"
 #include "RooAbsCategoryLValue.h"
 #include "RooTrace.h"
 #include "RooMsgService.h"

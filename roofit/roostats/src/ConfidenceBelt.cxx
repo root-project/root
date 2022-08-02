@@ -36,6 +36,8 @@ store the interval.
 
 #include "RooStats/RooStatsUtils.h"
 
+#include <TMath.h>
+
 ClassImp(RooStats::ConfidenceBelt); ;
 
 using namespace RooStats;

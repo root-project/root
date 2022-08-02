@@ -30,7 +30,6 @@ in the two sets.
 #include "RooRealSumFunc.h"
 #include "RooRealSumPdf.h"
 #include "RooProduct.h"
-#include "RooAbsReal.h"
 #include "RooErrorHandler.h"
 #include "RooArgSet.h"
 #include "RooNameReg.h"

@@ -35,13 +35,18 @@ Object          | function
 **/
 
 #include "RooUnitTest.h"
-#include "TDirectory.h"
-#include "TClass.h"
+
+#include "RooCurve.h"
 #include "RooHist.h"
 #include "RooMsgService.h"
 #include "RooDouble.h"
 #include "RooTrace.h"
 #include "RooRandom.h"
+
+#include <TClass.h>
+#include <TDirectory.h>
+#include <TFile.h>
+
 #include <cmath>
 
 ClassImp(RooUnitTest);

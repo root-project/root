@@ -16,15 +16,13 @@
 #ifndef RooStats_HLFactory
 #define RooStats_HLFactory
 
-#include "TString.h"
 #include "RooAbsPdf.h"
 #include "RooCategory.h"
 #include "RooDataSet.h"
 #include "RooWorkspace.h"
 
 
-// class TString;
-// class RooDataSet;
+ class TString;
 
 namespace RooStats {
 

@@ -17,8 +17,6 @@
 #include "RooStats/HistFactory/Sample.h"
 #include "RooStats/HistFactory/HistFactoryException.h"
 
-//#include "TClass.h"
-
 RooStats::HistFactory::Sample::Sample() :
   fNormalizeByTheory(false), fStatErrorActivate(false), fhNominal(), fhCountingHist(0) { ; }
 

@@ -28,11 +28,9 @@ based on a C version from the 0.9 beta release of the GNU scientific library.
 #include "Riostream.h"
 
 #include "TMath.h"
-#include "TClass.h"
 #include "RooMCIntegrator.h"
 #include "RooArgSet.h"
 #include "RooNumber.h"
-#include "RooAbsArg.h"
 #include "RooNumIntFactory.h"
 #include "RooRealVar.h"
 #include "RooCategory.h"

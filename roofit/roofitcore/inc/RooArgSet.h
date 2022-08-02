@@ -17,10 +17,9 @@
 #define ROO_ARG_SET
 
 #include "RooAbsCollection.h"
-#include "RooAbsArg.h"
 #include "RooFit/UniqueId.h"
 
-
+class RooAbsArg ;
 class RooArgList ;
 
 // # Original comment on USEMEMPOOLFORARGSET:

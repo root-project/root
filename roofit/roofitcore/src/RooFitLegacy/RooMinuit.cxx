@@ -44,7 +44,6 @@ automatic PDF optimization.
 #include <iostream>
 #include <fstream>
 #include <iomanip>
-#include "TH2.h"
 #include "TMarker.h"
 #include "TGraph.h"
 #include "TStopwatch.h"

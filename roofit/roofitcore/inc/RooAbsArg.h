@@ -38,7 +38,6 @@
 class TTree ;
 class RooArgSet ;
 class RooAbsCollection ;
-class RooTreeDataStore ;
 class RooVectorDataStore ;
 class RooAbsData ;
 class RooAbsDataStore ;
@@ -293,9 +292,6 @@ public:
 
 
   // Parameter & observable interpretation of servers
-  friend class RooProdPdf ;
-  friend class RooAddPdf ;
-  friend class RooAddPdfOrig ;
   RooArgSet* getVariables(bool stripDisconnected=true) const ;
   RooArgSet* getParameters(const RooAbsData* data, bool stripDisconnected=true) const ;
   /// Return the parameters of this p.d.f when used in conjuction with dataset 'data'
@@ -643,14 +639,9 @@ private:
  protected:
 
   // Client-Server relation and Proxy management
-  friend class RooArgSet ;
   friend class RooAbsCollection ;
-  friend class RooCustomizer ;
   friend class RooWorkspace ;
-  friend class RooExtendPdf ;
   friend class RooRealIntegral ;
-  friend class RooAbsReal ;
-  friend class RooProjectedPdf ;
   RefCountList_t _serverList       ; // list of server objects
   RefCountList_t _clientList; // list of client objects
   RefCountList_t _clientListShape; // subset of clients that requested shape dirty flag propagation
@@ -662,11 +653,9 @@ private:
 
 
   // Proxy management
-  friend class RooAddModel ;
   friend class RooArgProxy ;
   template<class RooCollection_t>
   friend class RooCollectionProxy;
-  friend class RooObjectFactory ;
   friend class RooHistPdf ;
   friend class RooHistFunc ;
   void registerProxy(RooArgProxy& proxy) ;

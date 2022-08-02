@@ -26,7 +26,6 @@ that models a non-relativistic Breit-Wigner shape
 #include <math.h>
 
 #include "RooBreitWigner.h"
-#include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooBatchCompute.h"
 

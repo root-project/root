@@ -36,9 +36,7 @@ do not define internal methods
 #include "RooRandom.h"
 #include "RooErrorHandler.h"
 
-#include "TString.h"
 #include "RooMsgService.h"
-#include "TClass.h"
 #include "TFoam.h"
 #include "RooRealBinding.h"
 #include "RooNumGenFactory.h"

@@ -20,7 +20,6 @@
 // from root
 #include "TFile.h"
 #include "TH1F.h"
-#include "TString.h"
 #include "TCanvas.h"
 #include "TStyle.h"
 #include "TLine.h"

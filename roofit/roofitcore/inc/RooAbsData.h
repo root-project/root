@@ -343,10 +343,7 @@ protected:
 
 
   // Constant term optimizer interface
-  friend class RooAbsArg ;
-  friend class RooAbsReal ;
   friend class RooAbsOptTestStatistic ;
-  friend class RooAbsCachedPdf ;
   friend struct RooFit::TestStatistics::ConstantTermsOptimizer;
   // for access into copied dataset:
   friend class RooFit::TestStatistics::RooAbsL;

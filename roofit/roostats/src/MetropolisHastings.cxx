@@ -56,7 +56,6 @@ uniformly over their intervals before construction of the MarkovChain begins.
 #include "RooMsgService.h"
 #include "RooRandom.h"
 #include "TMath.h"
-#include "TFile.h"
 
 ClassImp(RooStats::MetropolisHastings);
 

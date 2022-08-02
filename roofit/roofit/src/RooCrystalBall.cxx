@@ -47,7 +47,6 @@ where
 **/
 
 #include "RooCrystalBall.h"
-#include "RooAbsReal.h"
 #include "RooHelpers.h"
 #include "TError.h"
 

@@ -26,19 +26,18 @@
 
 #include "RooStats/HistFactory/RooBarlowBeestonLL.h"
 #include "RooAbsReal.h"
-#include "RooAbsData.h"
 #include "RooMsgService.h"
 #include "RooRealVar.h"
 
 #include "RooStats/RooStatsUtils.h"
-#include "RooProdPdf.h"
 #include "RooCategory.h"
 #include "RooSimultaneous.h"
 #include "RooArgList.h"
-#include "RooAbsCategoryLValue.h"
 
 #include "RooStats/HistFactory/ParamHistFunc.h"
 #include "RooStats/HistFactory/HistFactoryModelUtils.h"
+
+#include <TMath.h>
 
 using namespace std ;
 

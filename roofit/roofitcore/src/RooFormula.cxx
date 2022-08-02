@@ -63,7 +63,6 @@ Check the tutorial rf506_msgservice.C for details.
 #include "RooBatchCompute.h"
 
 #include "TObjString.h"
-#include "TClass.h"
 
 #include <memory>
 #include <regex>

@@ -18,7 +18,6 @@
 
 #include "TObject.h"
 #include "TUUID.h"
-#include "TString.h"
 
 class RooSharedProperties : public TObject {
 public:

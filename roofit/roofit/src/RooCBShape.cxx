@@ -22,7 +22,6 @@ PDF implementing the Crystal Ball line shape.
 
 #include "RooCBShape.h"
 
-#include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooMath.h"
 #include "RooBatchCompute.h"

@@ -21,6 +21,8 @@
 #include <RooMinimizer.h>
 #include <RooUnitTest.h>
 
+#include <TFile.h>
+
 #include <gtest/gtest.h>
 
 #include <memory>

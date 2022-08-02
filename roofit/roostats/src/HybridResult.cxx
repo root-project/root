@@ -39,6 +39,7 @@ TConfidenceLevel class (http://root.cern.ch/root/html/TConfidenceLevel.html).
 #include "RooStats/HybridResult.h"
 #include "RooStats/HybridPlot.h"
 
+#include <TMath.h>
 
 /// ClassImp for building the THtml documentation of the class
 using namespace std;

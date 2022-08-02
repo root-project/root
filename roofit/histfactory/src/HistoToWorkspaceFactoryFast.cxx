@@ -58,7 +58,6 @@
 #include "HFMsgService.h"
 
 #include "TH1.h"
-#include "TTree.h"
 #include "TStopwatch.h"
 #include "TVectorD.h"
 #include "TMatrixDSym.h"

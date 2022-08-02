@@ -26,13 +26,11 @@
 #include "RooBatchComputeTypes.h"
 #include "RooFit/Detail/DataMap.h"
 
-class RooArgList ;
 class RooDataSet ;
 class RooPlot;
 class RooRealVar;
 class RooAbsFunc;
 class RooAbsCategoryLValue ;
-class RooCategory ;
 class RooLinkedList ;
 class RooNumIntConfig ;
 class RooDataHist ;
@@ -468,7 +466,6 @@ protected:
 
  protected:
   // Hooks for RooDataSet interface
-  friend class RooRealIntegral ;
   friend class RooVectorDataStore ;
   void syncCache(const RooArgSet* set=0) override { getVal(set) ; }
   void copyCache(const RooAbsArg* source, bool valueOnly=false, bool setValDirty=true) override ;
@@ -486,13 +483,7 @@ protected:
   TString  _label ;         ///< Plot label for objects value
   bool   _forceNumInt ;   ///< Force numerical integration if flag set
 
-  friend class RooAbsPdf ;
-  friend class RooAbsAnaConvPdf ;
-
   RooNumIntConfig* _specIntegratorConfig ; // Numeric integrator configuration specific for this object
-
-  friend class RooDataProjBinding ;
-  friend class RooAbsOptGoodnessOfFit ;
 
   struct PlotOpt {
    PlotOpt() : drawOptions("L"), scaleFactor(1.0), stype(Relative), projData(0), binProjData(false), projSet(0), precision(1e-3),

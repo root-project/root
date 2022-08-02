@@ -49,7 +49,6 @@
 
 #include "RooArgSet.h"
 
-#include "TClass.h"
 #include "RooStreamParser.h"
 #include "RooFormula.h"
 #include "RooAbsRealLValue.h"

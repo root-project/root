@@ -11,9 +11,8 @@
 
 #include "RooWorkspace.h"
 #include "RooPlot.h"
-#include "TFile.h"
 
-
+class TFile;
 
 namespace RooStats{
   namespace HistFactory{
