@@ -676,9 +676,10 @@ double HypoTestInverterResult::GetGraphX(const TGraph & graph, double y0, bool l
 
    TString fname = "graph_upper.root";
    if (lowSearch) fname = "graph_lower.root";
-   auto file = TFile::Open(fname,"RECREATE");
-   graph.Write("graph");
-   file->Close();
+   {
+      std::unique_ptr<TFile> file{TFile::Open(fname,"RECREATE")};
+      graph.Write("graph");
+   }
 #endif
 
    // look in case if a new intersection exists
