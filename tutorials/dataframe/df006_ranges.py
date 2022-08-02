@@ -33,7 +33,7 @@ d = ROOT.RDataFrame(treeName, fileName)
 c_all = d.Count()
 
 # This is how you can express a range of the first 30 entries
-d_0_30 = d.Range(0, 30)  # you can also get the first 30 entries with `d.Range(30)`
+d_0_30 = d.Range(30) 
 c_0_30 = d_0_30.Count()
 
 # This is how you pick all entries from 15 onwards
@@ -46,7 +46,7 @@ c_15_end_3 = d_15_end_3.Count()
 
 # The Range here acts first on the (whole) RDataFrame graph:
 # Not only actions (like Count) but also filters and new columns can be added to it.
-d_0_50 = d.Range(0, 50)
+d_0_50 = d.Range(50)
 c_0_50_odd_b1 = d_0_50.Filter("1 == b1 % 2").Count()
 
 # An important thing to notice is that the counts of a filter are relative to the
