@@ -44,7 +44,6 @@ automatic PDF optimization.
 #include "RooArgSet.h"
 #include "RooArgList.h"
 #include "RooAbsReal.h"
-#include "RooAbsRealLValue.h"
 #include "RooDataSet.h"
 #include "RooRealVar.h"
 #include "RooSentinel.h"
@@ -57,7 +56,6 @@ automatic PDF optimization.
 
 #include "TClass.h"
 #include "Math/Minimizer.h"
-#include "TH2.h"
 #include "TMarker.h"
 #include "TGraph.h"
 #include "Fit/FitConfig.h"

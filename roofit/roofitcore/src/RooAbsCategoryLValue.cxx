@@ -34,8 +34,6 @@ to other RooAbsArgs must be invertible.
 #include "RooRandom.h"
 #include "RooMsgService.h"
 
-#include "TString.h"
-
 using namespace std;
 
 ClassImp(RooAbsCategoryLValue);

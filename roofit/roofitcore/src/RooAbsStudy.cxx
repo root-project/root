@@ -29,7 +29,6 @@ RooAbsStudy is an abstract base class for RooStudyManager modules
 #include "RooMsgService.h"
 #include "RooDataSet.h"
 #include "TList.h"
-#include "TClass.h"
 
 using namespace std ;
 

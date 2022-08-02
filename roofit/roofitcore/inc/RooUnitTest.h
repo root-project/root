@@ -21,12 +21,13 @@
 #include "RooPlot.h"
 
 #include "TNamed.h"
-#include "TFile.h"
 #include "TH1.h"
 
 #include <list>
 #include <string>
 #include <utility>
+
+class TFile;
 
 /*
  * The tolerance for the curve test is put to 0.4 instead of 0.2 to take into

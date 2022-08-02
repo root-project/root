@@ -12,7 +12,6 @@
 
 #include "NormalizationHelpers.h"
 
-#include <TClass.h>
 #include <RooAbsCachedPdf.h>
 #include <RooAbsPdf.h>
 #include <RooAbsReal.h>
@@ -22,7 +21,7 @@
 
 #include "RooNormalizedPdf.h"
 
-#include <TClass.h>
+#include <unordered_set>
 
 namespace {
 

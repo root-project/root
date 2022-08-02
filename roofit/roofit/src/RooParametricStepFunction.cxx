@@ -83,7 +83,6 @@ xframe->Draw();
 #include <math.h>
 
 #include "RooParametricStepFunction.h"
-#include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooArgList.h"
 

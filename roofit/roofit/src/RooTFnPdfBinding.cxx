@@ -12,7 +12,6 @@
 #include "Riostream.h"
 
 #include "RooTFnPdfBinding.h"
-#include "RooAbsReal.h"
 #include "RooAbsCategory.h"
 #include "TF3.h"
 

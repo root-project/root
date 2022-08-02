@@ -44,7 +44,6 @@ which returns spans pointing directly to the data.
 
 #include "Math/Util.h"
 #include "ROOT/StringUtils.hxx"
-#include "TList.h"
 #include "TBuffer.h"
 
 #include <iomanip>

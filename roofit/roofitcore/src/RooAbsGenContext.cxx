@@ -27,8 +27,6 @@ storage of common components, such as the observables definition, the
 prototype data etc..
 **/
 
-#include "TClass.h"
-
 #include "RooAbsGenContext.h"
 #include "RooRandom.h"
 #include "RooAbsPdf.h"

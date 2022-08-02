@@ -34,7 +34,6 @@ in the input dataset.
 #include "TMath.h"
 #include "TMatrixDSymEigen.h"
 #include "RooNDKeysPdf.h"
-#include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooRandom.h"
 #include "RooHist.h"

@@ -25,7 +25,6 @@ A RooRatio represents the ratio of two given RooAbsReal objects.
 
 #include "RooRatio.h"
 #include "Riostream.h"
-#include "RooAbsArg.h"
 #include "RooMsgService.h"
 #include "RooRealVar.h"
 #include "RooTrace.h"

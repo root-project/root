@@ -12,10 +12,6 @@
 #ifndef ROOSTATS_RooStatsUtils
 #define ROOSTATS_RooStatsUtils
 
-#include "TMath.h"
-
-#include "TTree.h"
-
 #include "Math/DistFuncMathCore.h"
 
 #include "RooArgSet.h"
@@ -25,6 +21,8 @@
 #include "RooProdPdf.h"
 #include "RooDataSet.h"
 #include "RooAbsCategoryLValue.h"
+
+class TTree;
 
 
 /** \namespace RooStats

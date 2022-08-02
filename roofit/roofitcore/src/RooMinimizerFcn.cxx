@@ -24,12 +24,10 @@
 #include "RooAbsPdf.h"
 #include "RooArgSet.h"
 #include "RooRealVar.h"
-#include "RooAbsRealLValue.h"
 #include "RooMsgService.h"
 #include "RooMinimizer.h"
 #include "RooNaNPacker.h"
 
-#include "TClass.h"
 #include "TMatrixDSym.h"
 
 #include <fstream>

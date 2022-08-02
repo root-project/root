@@ -45,9 +45,7 @@ Access those using:
 #include "RooRandom.h"
 #include "RooErrorHandler.h"
 
-#include "TString.h"
 #include "RooMsgService.h"
-#include "TClass.h"
 #include "TFoam.h"
 #include "RooTFoamBinding.h"
 #include "RooNumGenFactory.h"

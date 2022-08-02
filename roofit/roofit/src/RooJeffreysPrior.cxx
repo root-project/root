@@ -12,7 +12,6 @@ Check the tutorial rs302_JeffreysPriorDemo.C for a demonstration with a simple P
 
 #include "RooJeffreysPrior.h"
 
-#include "RooAbsReal.h"
 #include "RooAbsPdf.h"
 #include "RooErrorHandler.h"
 #include "RooArgSet.h"

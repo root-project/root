@@ -19,7 +19,6 @@
 #include "Riostream.h"
 
 #include "RooHistConstraint.h"
-#include "RooAbsReal.h"
 #include "RooAbsCategory.h"
 #include "RooParamHistFunc.h"
 #include "RooRealVar.h"

@@ -36,7 +36,6 @@ arguments.
 #include "RooMsgService.h"
 #include "RooHelpers.h"
 #include "RooWorkspace.h"
-#include "RooAbsRealLValue.h"
 #include "RooAbsCategoryLValue.h"
 
 #include <memory>

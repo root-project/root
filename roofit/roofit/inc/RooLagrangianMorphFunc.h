@@ -53,7 +53,6 @@
 #define ROO_LAGRANGIAN_MORPH
 
 #include "RooFit/Floats.h"
-#include "RooAbsArg.h"
 #include "RooAbsReal.h"
 #include "RooArgList.h"
 #include "RooRatio.h"
