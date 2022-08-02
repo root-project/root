@@ -222,18 +222,22 @@ void ROOT::Experimental::Detail::RPageSinkFile::ReleasePage(RPage &page)
        source1.Attach();
        auto anchor1 = source1.GetAnchor();
        size_t seek_data_position = anchor1.fSeekHeader + source1.GetSharedDescriptorGuard()->GetOnDiskHeaderSize();
-       seek_data_position += source1.GetSharedDescriptorGuard().GetRef().RTuplePageSizeInfo();
        size_t aligned_seek_data_position = (seek_data_position + 4096 - 1) / 4096 * 4096;
-       this->fWriter->ShareContent(locationSrc1, 4096, aligned_seek_data_position);
+       size_t length = source1.GetSharedDescriptorGuard().GetRef().RTuplePageSizeInfo();
+       size_t aligned_length = (length + 4096 - 1) / 4096 * 4096;
+       //std::cout << "Sharing from offset "<<aligned_seek_data_position << " " << aligned_length << " bytes" << std::endl;
+       this->fWriter->ShareContent(locationSrc1, aligned_length, aligned_seek_data_position);
 
 
        auto source2 = RPageSourceFile(ntupleNameSrc2, locationSrc2, RNTupleReadOptions());
        source2.Attach();
        auto anchor2 = source2.GetAnchor();
        seek_data_position = anchor2.fSeekHeader + source2.GetSharedDescriptorGuard()->GetOnDiskHeaderSize();
-       seek_data_position += source1.GetSharedDescriptorGuard().GetRef().RTuplePageSizeInfo();;
        aligned_seek_data_position = (seek_data_position + 4096 - 1) / 4096 * 4096;
-       this->fWriter->ShareContent(locationSrc2, 4096, aligned_seek_data_position);
+       length = source2.GetSharedDescriptorGuard().GetRef().RTuplePageSizeInfo();
+       aligned_length = (length + 4096 - 1) / 4096 * 4096;
+       //std::cout << "Sharing from offset "<<aligned_seek_data_position << " " << aligned_length << " bytes" << std::endl;
+       this->fWriter->ShareContent(locationSrc2, aligned_length, aligned_seek_data_position);
 
        auto descSrc1 = source1.GetSharedDescriptorGuard().GetRef().Clone();
        auto descSrc2 = source2.GetSharedDescriptorGuard().GetRef().Clone();
