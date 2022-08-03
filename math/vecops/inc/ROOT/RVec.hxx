@@ -66,6 +66,22 @@ namespace VecOps {
 template<typename T>
 using RVec = ROOT::VecOps::RVec<T>;
 
+// clang-format off
+template <typename>
+struct IsRVec : std::false_type {};
+
+template <typename T>
+struct IsRVec<ROOT::VecOps::RVec<T>> : std::true_type {};
+// clang-format on
+
+constexpr bool All(const bool *vals, std::size_t size)
+{
+   for (auto i = 0u; i < size; ++i)
+      if (!vals[i])
+         return false;
+   return true;
+}
+
 template <typename... T>
 std::size_t GetVectorsSize(const std::string &id, const RVec<T> &... vs)
 {
@@ -2052,6 +2068,13 @@ auto Map(Args &&... args)
    1. Forward as tuple the pack to MapFromTuple
    2. Invoke the MapImpl helper which has the signature `template<...T, F> RVec MapImpl(F &&f, RVec<T>...)`
    */
+
+   // check the first N - 1 arguments are RVecs
+   constexpr auto nArgs = sizeof...(Args);
+   constexpr bool isRVec[]{ROOT::Internal::VecOps::IsRVec<std::remove_cv_t<std::remove_reference_t<Args>>>::value...};
+   static_assert(ROOT::Internal::VecOps::All(isRVec, nArgs - 1),
+                 "Map: the first N-1 arguments must be RVecs or references to RVecs");
+
    return ROOT::Internal::VecOps::MapFromTuple(std::forward_as_tuple(args...),
                                                std::make_index_sequence<sizeof...(args) - 1>());
 }
