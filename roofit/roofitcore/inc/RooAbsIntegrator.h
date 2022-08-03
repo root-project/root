@@ -48,8 +48,8 @@ public:
     return true;
   }
 
-  double calculate(const double *yvec=0) ;
-  virtual double integral(const double *yvec=0)=0 ;
+  double calculate(const double *yvec=nullptr) ;
+  virtual double integral(const double *yvec=nullptr)=0 ;
 
   virtual bool canIntegrate1D() const = 0 ;
   virtual bool canIntegrate2D() const = 0 ;

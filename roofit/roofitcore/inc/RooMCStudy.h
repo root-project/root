@@ -44,8 +44,8 @@ public:
 
 
   // Run methods
-  bool generateAndFit(Int_t nSamples, Int_t nEvtPerSample=0, bool keepGenData=false, const char* asciiFilePat=0) ;
-  bool generate(Int_t nSamples, Int_t nEvtPerSample=0, bool keepGenData=false, const char* asciiFilePat=0) ;
+  bool generateAndFit(Int_t nSamples, Int_t nEvtPerSample=0, bool keepGenData=false, const char* asciiFilePat=nullptr) ;
+  bool generate(Int_t nSamples, Int_t nEvtPerSample=0, bool keepGenData=false, const char* asciiFilePat=nullptr) ;
   bool fit(Int_t nSamples, const char* asciiFilePat) ;
   bool fit(Int_t nSamples, TList& dataSetList) ;
   bool addFitResult(const RooFitResult& fr) ;
@@ -141,7 +141,7 @@ protected:
   std::list<RooAbsMCStudyModule*> _modList ; ///< List of additional study modules ;
 
   // Utilities for modules ;
-  RooFitResult* refit(RooAbsData* genSample=0) ;
+  RooFitResult* refit(RooAbsData* genSample=nullptr) ;
   void resetFitParams() ;
   void RecursiveRemove(TObject *obj) override;
 

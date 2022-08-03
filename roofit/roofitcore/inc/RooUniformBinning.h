@@ -22,10 +22,10 @@
 class RooUniformBinning : public RooAbsBinning {
 public:
 
-  RooUniformBinning(const char* name=0) ;
-  RooUniformBinning(double xlo, double xhi, Int_t nBins, const char* name=0) ;
-  RooUniformBinning(const RooUniformBinning& other, const char* name=0) ;
-  RooAbsBinning* clone(const char* name=0) const override { return new RooUniformBinning(*this,name?name:GetName()) ; }
+  RooUniformBinning(const char* name=nullptr) ;
+  RooUniformBinning(double xlo, double xhi, Int_t nBins, const char* name=nullptr) ;
+  RooUniformBinning(const RooUniformBinning& other, const char* name=nullptr) ;
+  RooAbsBinning* clone(const char* name=nullptr) const override { return new RooUniformBinning(*this,name?name:GetName()) ; }
   ~RooUniformBinning() override ;
 
   void setRange(double xlo, double xhi) override ;

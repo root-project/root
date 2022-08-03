@@ -36,7 +36,7 @@ public:
     // Default constructor
   } ;
   RooFunctor1DBinding(const char *name, const char *title, const ROOT::Math::IBaseFunctionOneDim& ftor, RooAbsReal& var);
-  RooFunctor1DBinding(const RooFunctor1DBinding& other, const char* name=0) ;
+  RooFunctor1DBinding(const RooFunctor1DBinding& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooFunctor1DBinding(*this,newname); }
   inline ~RooFunctor1DBinding() override {}
   void printArgs(std::ostream& os) const override ;
@@ -62,7 +62,7 @@ public:
     // Default constructor
   } ;
   RooFunctor1DPdfBinding(const char *name, const char *title, const ROOT::Math::IBaseFunctionOneDim& ftor, RooAbsReal& vars);
-  RooFunctor1DPdfBinding(const RooFunctor1DPdfBinding& other, const char* name=0) ;
+  RooFunctor1DPdfBinding(const RooFunctor1DPdfBinding& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooFunctor1DPdfBinding(*this,newname); }
   inline ~RooFunctor1DPdfBinding() override {}
   void printArgs(std::ostream& os) const override ;

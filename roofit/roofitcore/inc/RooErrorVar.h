@@ -32,11 +32,11 @@ public:
   inline RooErrorVar() {
   }
   RooErrorVar(const char *name, const char *title, const RooRealVar& input) ;
-  RooErrorVar(const RooErrorVar& other, const char* name=0);
+  RooErrorVar(const RooErrorVar& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooErrorVar(*this,newname); }
   ~RooErrorVar() override ;
 
-  double getValV(const RooArgSet* set=0) const override ;
+  double getValV(const RooArgSet* set=nullptr) const override ;
 
   double evaluate() const override {
     // return error of input RooRealVar
@@ -75,16 +75,16 @@ public:
   void setRange(const char* name, double min, double max) ;
 
   void setBins(Int_t nBins);
-  void setBinning(const RooAbsBinning& binning, const char* name=0) ;
-  const RooAbsBinning& getBinning(const char* name=0, bool verbose=true, bool createOnTheFly=false) const override ;
-  RooAbsBinning& getBinning(const char* name=0, bool verbose=true, bool createOnTheFly=false) override ;
+  void setBinning(const RooAbsBinning& binning, const char* name=nullptr) ;
+  const RooAbsBinning& getBinning(const char* name=nullptr, bool verbose=true, bool createOnTheFly=false) const override ;
+  RooAbsBinning& getBinning(const char* name=nullptr, bool verbose=true, bool createOnTheFly=false) override ;
   bool hasBinning(const char* name) const override ;
   std::list<std::string> getBinningNames() const override ;
 
   // Set infinite fit range limits
-  void removeMin(const char* name=0);
-  void removeMax(const char* name=0);
-  void removeRange(const char* name=0);
+  void removeMin(const char* name=nullptr);
+  void removeMax(const char* name=nullptr);
+  void removeRange(const char* name=nullptr);
 
   using RooAbsRealLValue::operator= ;
   using RooAbsRealLValue::setVal ;
@@ -93,7 +93,7 @@ protected:
 
   RooLinkedList _altBinning ;  ///<! Optional alternative ranges and binnings
 
-  void syncCache(const RooArgSet* set=0) override ;
+  void syncCache(const RooArgSet* set=nullptr) override ;
 
   RooRealProxy _realVar ;   ///< RealVar with the original error
   RooAbsBinning* _binning ; ///<! Pointer to default binning definition

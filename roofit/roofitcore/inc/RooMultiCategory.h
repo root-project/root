@@ -30,7 +30,7 @@ public:
   // Constructors etc.
   inline RooMultiCategory() { setShapeDirty(); }
   RooMultiCategory(const char *name, const char *title, const RooArgSet& inputCatList);
-  RooMultiCategory(const RooMultiCategory& other, const char *name=0) ;
+  RooMultiCategory(const RooMultiCategory& other, const char *name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooMultiCategory(*this,newname); }
   ~RooMultiCategory() override;
 

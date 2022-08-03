@@ -64,19 +64,19 @@ public:
 
   // Constructors, factory methods etc.
   RooAbsData() ;
-  RooAbsData(RooStringView name, RooStringView title, const RooArgSet& vars, RooAbsDataStore* store=0) ;
+  RooAbsData(RooStringView name, RooStringView title, const RooArgSet& vars, RooAbsDataStore* store=nullptr) ;
   RooAbsData(const RooAbsData& other, const char* newname = 0) ;
 
   RooAbsData& operator=(const RooAbsData& other);
   ~RooAbsData() override ;
-  virtual RooAbsData* emptyClone(const char* newName=0, const char* newTitle=0, const RooArgSet* vars=0, const char* wgtVarName=0) const = 0 ;
+  virtual RooAbsData* emptyClone(const char* newName=nullptr, const char* newTitle=nullptr, const RooArgSet* vars=nullptr, const char* wgtVarName=nullptr) const = 0 ;
 
   // Reduction methods
   RooAbsData* reduce(const RooCmdArg& arg1,const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg(),const RooCmdArg& arg4=RooCmdArg(),
                      const RooCmdArg& arg5=RooCmdArg(),const RooCmdArg& arg6=RooCmdArg(),const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg()) ;
   RooAbsData* reduce(const char* cut) ;
   RooAbsData* reduce(const RooFormulaVar& cutVar) ;
-  RooAbsData* reduce(const RooArgSet& varSubset, const char* cut=0) ;
+  RooAbsData* reduce(const RooArgSet& varSubset, const char* cut=nullptr) ;
   RooAbsData* reduce(const RooArgSet& varSubset, const RooFormulaVar& cutVar) ;
 
   RooAbsDataStore* store() { return _dstore ; }
@@ -99,7 +99,7 @@ public:
   virtual bool changeObservableName(const char* from, const char* to) ;
 
   // Add one ore more rows of data
-  virtual void add(const RooArgSet& row, double weight=1, double weightError=0) = 0 ; // DERIVED
+  virtual void add(const RooArgSet& row, double weight=1, double weightError=0.0) = 0 ; // DERIVED
   virtual void fill() ;
 
   // Load a given row of data
@@ -152,7 +152,7 @@ public:
   /// Return effective number of entries in dataset inside range or after cuts, i.e., sum certain weights.
   /// \param[in] cutSpec Apply given cut when counting (e.g. `0 < x && x < 5`). Passing `"1"` selects all events.
   /// \param[in] cutRange If the observables have a range with this name, only count events inside this range.
-  virtual double sumEntries(const char* cutSpec, const char* cutRange=0) const = 0 ; // DERIVED
+  virtual double sumEntries(const char* cutSpec, const char* cutRange=nullptr) const = 0 ; // DERIVED
   double sumEntriesW2() const;
   virtual bool isWeighted() const {
     // Do events in dataset have weights?
@@ -165,7 +165,7 @@ public:
   virtual void reset() ;
 
 
-  bool getRange(const RooAbsRealLValue& var, double& lowest, double& highest, double marginFrac=0, bool symMode=false) const ;
+  bool getRange(const RooAbsRealLValue& var, double& lowest, double& highest, double marginFrac=0.0, bool symMode=false) const ;
 
   // Plot the distribution of a real valued arg
   virtual Roo1DTable* table(const RooArgSet& catSet, const char* cuts="", const char* opts="") const ;
@@ -233,7 +233,7 @@ public:
                         const char* cuts="", const char *name="hist") const;
 
   // Fill an existing histogram
-  virtual TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars, const char *cuts= "", const char* cutRange=0) const;
+  virtual TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars, const char *cuts= "", const char* cutRange=nullptr) const;
 
   // Printing interface (human readable)
   inline void Print(Option_t *options= 0) const override {
@@ -250,25 +250,25 @@ public:
 
   void setDirtyProp(bool flag) ;
 
-  double moment(const RooRealVar& var, double order, const char* cutSpec=0, const char* cutRange=0) const ;
-  double moment(const RooRealVar& var, double order, double offset, const char* cutSpec=0, const char* cutRange=0) const ;
-  double standMoment(const RooRealVar& var, double order, const char* cutSpec=0, const char* cutRange=0) const ;
+  double moment(const RooRealVar& var, double order, const char* cutSpec=nullptr, const char* cutRange=nullptr) const ;
+  double moment(const RooRealVar& var, double order, double offset, const char* cutSpec=nullptr, const char* cutRange=nullptr) const ;
+  double standMoment(const RooRealVar& var, double order, const char* cutSpec=nullptr, const char* cutRange=nullptr) const ;
 
-  double mean(const RooRealVar& var, const char* cutSpec=0, const char* cutRange=0) const { return moment(var,1,0,cutSpec,cutRange) ; }
-  double sigma(const RooRealVar& var, const char* cutSpec=0, const char* cutRange=0) const { return sqrt(moment(var,2,cutSpec,cutRange)) ; }
-  double skewness(const RooRealVar& var, const char* cutSpec=0, const char* cutRange=0) const { return standMoment(var,3,cutSpec,cutRange) ; }
-  double kurtosis(const RooRealVar& var, const char* cutSpec=0, const char* cutRange=0) const { return standMoment(var,4,cutSpec,cutRange) ; }
+  double mean(const RooRealVar& var, const char* cutSpec=nullptr, const char* cutRange=nullptr) const { return moment(var,1,0,cutSpec,cutRange) ; }
+  double sigma(const RooRealVar& var, const char* cutSpec=nullptr, const char* cutRange=nullptr) const { return sqrt(moment(var,2,cutSpec,cutRange)) ; }
+  double skewness(const RooRealVar& var, const char* cutSpec=nullptr, const char* cutRange=nullptr) const { return standMoment(var,3,cutSpec,cutRange) ; }
+  double kurtosis(const RooRealVar& var, const char* cutSpec=nullptr, const char* cutRange=nullptr) const { return standMoment(var,4,cutSpec,cutRange) ; }
 
-  double covariance(RooRealVar &x,RooRealVar &y, const char* cutSpec=0, const char* cutRange=0) const { return corrcov(x,y,cutSpec,cutRange,false) ; }
-  double correlation(RooRealVar &x,RooRealVar &y, const char* cutSpec=0, const char* cutRange=0) const { return corrcov(x,y,cutSpec,cutRange,true) ; }
+  double covariance(RooRealVar &x,RooRealVar &y, const char* cutSpec=nullptr, const char* cutRange=nullptr) const { return corrcov(x,y,cutSpec,cutRange,false) ; }
+  double correlation(RooRealVar &x,RooRealVar &y, const char* cutSpec=nullptr, const char* cutRange=nullptr) const { return corrcov(x,y,cutSpec,cutRange,true) ; }
 
-  TMatrixDSym* covarianceMatrix(const char* cutSpec=0, const char* cutRange=0) const { return covarianceMatrix(*get(),cutSpec,cutRange) ; }
-  TMatrixDSym* correlationMatrix(const char* cutSpec=0, const char* cutRange=0) const { return correlationMatrix(*get(),cutSpec,cutRange) ; }
-  TMatrixDSym* covarianceMatrix(const RooArgList& vars, const char* cutSpec=0, const char* cutRange=0) const { return corrcovMatrix(vars,cutSpec,cutRange,false) ; }
-  TMatrixDSym* correlationMatrix(const RooArgList& vars, const char* cutSpec=0, const char* cutRange=0) const { return corrcovMatrix(vars,cutSpec,cutRange,true) ; }
+  TMatrixDSym* covarianceMatrix(const char* cutSpec=nullptr, const char* cutRange=nullptr) const { return covarianceMatrix(*get(),cutSpec,cutRange) ; }
+  TMatrixDSym* correlationMatrix(const char* cutSpec=nullptr, const char* cutRange=nullptr) const { return correlationMatrix(*get(),cutSpec,cutRange) ; }
+  TMatrixDSym* covarianceMatrix(const RooArgList& vars, const char* cutSpec=nullptr, const char* cutRange=nullptr) const { return corrcovMatrix(vars,cutSpec,cutRange,false) ; }
+  TMatrixDSym* correlationMatrix(const RooArgList& vars, const char* cutSpec=nullptr, const char* cutRange=nullptr) const { return corrcovMatrix(vars,cutSpec,cutRange,true) ; }
 
-  RooRealVar* meanVar(const RooRealVar &var, const char* cutSpec=0, const char* cutRange=0) const ;
-  RooRealVar* rmsVar(const RooRealVar &var, const char* cutSpec=0, const char* cutRange=0) const ;
+  RooRealVar* meanVar(const RooRealVar &var, const char* cutSpec=nullptr, const char* cutRange=nullptr) const ;
+  RooRealVar* rmsVar(const RooRealVar &var, const char* cutSpec=nullptr, const char* cutRange=nullptr) const ;
 
   virtual RooPlot* statOn(RooPlot* frame,
                           const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),
@@ -280,8 +280,8 @@ public:
            const char *label= "", Int_t sigDigits= 2,
            Option_t *options= "NELU", double xmin=0.15,
            double xmax= 0.65,double ymax=0.85,
-                          const char* cutSpec=0, const char* cutRange=0,
-                          const RooCmdArg* formatCmd=0);
+                          const char* cutSpec=nullptr, const char* cutRange=nullptr,
+                          const RooCmdArg* formatCmd=nullptr);
 
   void RecursiveRemove(TObject *obj) override;
 
@@ -348,12 +348,12 @@ protected:
   // for access into copied dataset:
   friend class RooFit::TestStatistics::RooAbsL;
 
-  virtual void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0, bool skipZeroWeights=false) ;
+  virtual void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=nullptr, bool skipZeroWeights=false) ;
   virtual void resetCache() ;
   virtual void setArgStatus(const RooArgSet& set, bool active) ;
   virtual void attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVars) ;
 
-  virtual RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=0,
+  virtual RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=nullptr,
                            std::size_t nStart = 0, std::size_t = std::numeric_limits<std::size_t>::max()) = 0 ;
 
   RooRealVar* dataRealVar(const char* methodname, const RooRealVar& extVar) const ;

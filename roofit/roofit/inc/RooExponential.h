@@ -27,12 +27,12 @@ public:
   RooExponential() {} ;
   RooExponential(const char *name, const char *title,
        RooAbsReal& _x, RooAbsReal& _c);
-  RooExponential(const RooExponential& other, const char* name=0);
+  RooExponential(const RooExponential& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooExponential(*this,newname); }
   inline ~RooExponential() override { }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override;
-  double analyticalIntegral(Int_t code, const char* rangeName=0) const override;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override;
 
 protected:
   RooRealProxy x;

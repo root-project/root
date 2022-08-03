@@ -33,14 +33,14 @@ public:
           RooAbsReal& mistag, RooAbsReal& delMistag, const RooResolutionModel& model,
           DecayType type=DoubleSided) ;
 
-  RooBMixDecay(const RooBMixDecay& other, const char* name=0);
+  RooBMixDecay(const RooBMixDecay& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooBMixDecay(*this,newname) ; }
   ~RooBMixDecay() override;
 
   double coefficient(Int_t basisIndex) const override ;
 
-  Int_t getCoefAnalyticalIntegral(Int_t coef, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-  double coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName=0) const override ;
+  Int_t getCoefAnalyticalIntegral(Int_t coef, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
+  double coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName=nullptr) const override ;
 
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void initGenerator(Int_t code) override ;

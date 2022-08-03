@@ -33,7 +33,7 @@ public:
   RooAbsOptTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
                          const RooArgSet& projDeps,
                          RooAbsTestStatistic::Configuration const& cfg);
-  RooAbsOptTestStatistic(const RooAbsOptTestStatistic& other, const char* name=0);
+  RooAbsOptTestStatistic(const RooAbsOptTestStatistic& other, const char* name=nullptr);
   ~RooAbsOptTestStatistic() override;
 
   double combinedValue(RooAbsReal** gofArray, Int_t nVal) const override ;

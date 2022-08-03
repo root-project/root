@@ -33,10 +33,10 @@ public:
   TObject* clone(const char* newname) const override { return new RooChebychev(*this, newname); }
   inline ~RooChebychev() override { }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-  double analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
-  void selectNormalizationRange(const char* rangeName=0, bool force=false) override ;
+  void selectNormalizationRange(const char* rangeName=nullptr, bool force=false) override ;
 
 private:
 

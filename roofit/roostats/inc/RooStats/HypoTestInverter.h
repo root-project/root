@@ -44,7 +44,7 @@ public:
 
    /// constructor from generic hypotest calculator
    HypoTestInverter( HypoTestCalculatorGeneric & hc,
-                     RooRealVar* scannedVariable =0,
+                     RooRealVar* scannedVariable =nullptr,
                      double size = 0.05) ;
 
 
@@ -97,9 +97,9 @@ public:
 
    bool RunOnePoint( double thisX, bool adaptive = false, double clTarget = -1 ) const;
 
-   //bool RunAutoScan( double xMin, double xMax, double target, double epsilon=0.005, unsigned int numAlgorithm=0 );
+   //bool RunAutoScan( double xMin, double xMax, double target, double epsilon=nullptr.005, unsigned int numAlgorithm=nullptr );
 
-   bool RunLimit(double &limit, double &limitErr, double absTol = 0, double relTol = 0, const double *hint=0) const;
+   bool RunLimit(double &limit, double &limitErr, double absTol = 0, double relTol = 0, const double *hint=nullptr) const;
 
    void UseCLs( bool on = true) { fUseCLs = on; if (fResults) fResults->UseCLs(on);   }
 

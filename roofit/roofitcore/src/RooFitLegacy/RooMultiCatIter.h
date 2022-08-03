@@ -29,7 +29,7 @@ typedef RooAbsCategoryLValue* pRooCategory ;
 class RooMultiCatIter : public TIterator {
 public:
   // Constructors, assignment etc.
-  RooMultiCatIter(const RooArgSet& catList, const char* rangeName=0) ;
+  RooMultiCatIter(const RooArgSet& catList, const char* rangeName=nullptr) ;
   RooMultiCatIter(const RooMultiCatIter& other) ;
   ~RooMultiCatIter() override ;
 

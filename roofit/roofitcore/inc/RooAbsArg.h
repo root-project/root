@@ -77,13 +77,13 @@ public:
   RooAbsArg() ;
   ~RooAbsArg() override;
   RooAbsArg(const char *name, const char *title);
-  RooAbsArg(const RooAbsArg& other, const char* name=0) ;
+  RooAbsArg(const RooAbsArg& other, const char* name=nullptr) ;
   RooAbsArg& operator=(const RooAbsArg& other);
-  virtual TObject* clone(const char* newname=0) const = 0 ;
+  virtual TObject* clone(const char* newname=nullptr) const = 0 ;
   TObject* Clone(const char* newname = 0) const override {
     return clone(newname && newname[0] != '\0' ? newname : nullptr);
   }
-  virtual RooAbsArg* cloneTree(const char* newname=0) const ;
+  virtual RooAbsArg* cloneTree(const char* newname=nullptr) const ;
 
   // Accessors to client-server relation information
 
@@ -98,7 +98,7 @@ public:
   /// @param serverList Test if one of the elements in this list serves values to `this`.
   /// @param ignoreArg Ignore values served by this object.
   /// @return True if values are served.
-  bool dependsOnValue(const RooAbsCollection& serverList, const RooAbsArg* ignoreArg=0) const {
+  bool dependsOnValue(const RooAbsCollection& serverList, const RooAbsArg* ignoreArg=nullptr) const {
     return dependsOn(serverList,ignoreArg,true) ;
   }
   /// Check whether this object depends on values served from the object passed as `server`.
@@ -106,11 +106,11 @@ public:
   /// @param server Test if `server` serves values to `this`.
   /// @param ignoreArg Ignore values served by this object.
   /// @return True if values are served.
-  bool dependsOnValue(const RooAbsArg& server, const RooAbsArg* ignoreArg=0) const {
+  bool dependsOnValue(const RooAbsArg& server, const RooAbsArg* ignoreArg=nullptr) const {
     return dependsOn(server,ignoreArg,true) ;
   }
-  bool dependsOn(const RooAbsCollection& serverList, const RooAbsArg* ignoreArg=0, bool valueOnly=false) const ;
-  bool dependsOn(const RooAbsArg& server, const RooAbsArg* ignoreArg=0, bool valueOnly=false) const ;
+  bool dependsOn(const RooAbsCollection& serverList, const RooAbsArg* ignoreArg=nullptr, bool valueOnly=false) const ;
+  bool dependsOn(const RooAbsArg& server, const RooAbsArg* ignoreArg=nullptr, bool valueOnly=false) const ;
   bool overlaps(const RooAbsArg& testArg, bool valueOnly=false) const ;
   bool hasClients() const { return !_clientList.empty(); }
 
@@ -227,9 +227,9 @@ public:
   inline bool isShapeServer(const char* name) const {
     return _clientListShape.containsSameName(name);
   }
-  void leafNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0, bool recurseNonDerived=false) const ;
-  void branchNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0, bool recurseNonDerived=false) const ;
-  void treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0,
+  void leafNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=nullptr, bool recurseNonDerived=false) const ;
+  void branchNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=nullptr, bool recurseNonDerived=false) const ;
+  void treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=nullptr,
            bool doBranch=true, bool doLeaf=true,
            bool valueOnly=false, bool recurseNonDerived=false) const ;
 
@@ -245,7 +245,7 @@ public:
   /// Create a fundamental-type object that stores our type of value. The
   /// created object will have a valid value, but not necessarily the same
   /// as our value. The caller is responsible for deleting the returned object.
-  virtual RooAbsArg *createFundamental(const char* newname=0) const = 0;
+  virtual RooAbsArg *createFundamental(const char* newname=nullptr) const = 0;
 
   /// Is this argument an l-value, i.e., can it appear on the left-hand side
   /// of an assignment expression? LValues are also special since they can
@@ -534,9 +534,9 @@ public:
   void graphVizTree(const char* fileName, const char* delimiter="\n", bool useTitle=false, bool useLatex=false) ;
   void graphVizTree(std::ostream& os, const char* delimiter="\n", bool useTitle=false, bool useLatex=false) ;
 
-  void printComponentTree(const char* indent="",const char* namePat=0, Int_t nLevel=999) ;
-  void printCompactTree(const char* indent="",const char* fileName=0, const char* namePat=0, RooAbsArg* client=0) ;
-  void printCompactTree(std::ostream& os, const char* indent="", const char* namePat=0, RooAbsArg* client=0) ;
+  void printComponentTree(const char* indent="",const char* namePat=nullptr, Int_t nLevel=999) ;
+  void printCompactTree(const char* indent="",const char* fileName=nullptr, const char* namePat=nullptr, RooAbsArg* client=nullptr) ;
+  void printCompactTree(std::ostream& os, const char* indent="", const char* namePat=nullptr, RooAbsArg* client=nullptr) ;
   virtual void printCompactTreeHook(std::ostream& os, const char *ind="") ;
 
   // We want to support three cases here:
@@ -679,7 +679,7 @@ private:
   friend class RooVectorDataStore ;
   friend class RooDataSet ;
   friend class RooRealMPFE ;
-  virtual void syncCache(const RooArgSet* nset=0) = 0 ;
+  virtual void syncCache(const RooArgSet* nset=nullptr) = 0 ;
   virtual void copyCache(const RooAbsArg* source, bool valueOnly=false, bool setValDirty=true) = 0 ;
 
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) = 0 ;

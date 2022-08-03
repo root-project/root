@@ -44,23 +44,23 @@ public:
   RooVectorDataStore() ;
 
   // Empty ctor
-  RooVectorDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, const char* wgtVarName=0) ;
+  RooVectorDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, const char* wgtVarName=nullptr) ;
 
-  RooAbsDataStore* clone(const char* newname=0) const override { return new RooVectorDataStore(*this,newname) ; }
-  RooAbsDataStore* clone(const RooArgSet& vars, const char* newname=0) const override { return new RooVectorDataStore(*this,vars,newname) ; }
+  RooAbsDataStore* clone(const char* newname=nullptr) const override { return new RooVectorDataStore(*this,newname) ; }
+  RooAbsDataStore* clone(const RooArgSet& vars, const char* newname=nullptr) const override { return new RooVectorDataStore(*this,vars,newname) ; }
 
   RooAbsDataStore* reduce(RooStringView name, RooStringView title,
                           const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
                           std::size_t nStart, std::size_t nStop) override;
 
-  RooVectorDataStore(const RooVectorDataStore& other, const char* newname=0) ;
-  RooVectorDataStore(const RooTreeDataStore& other, const RooArgSet& vars, const char* newname=0) ;
-  RooVectorDataStore(const RooVectorDataStore& other, const RooArgSet& vars, const char* newname=0) ;
+  RooVectorDataStore(const RooVectorDataStore& other, const char* newname=nullptr) ;
+  RooVectorDataStore(const RooTreeDataStore& other, const RooArgSet& vars, const char* newname=nullptr) ;
+  RooVectorDataStore(const RooVectorDataStore& other, const RooArgSet& vars, const char* newname=nullptr) ;
 
 
   RooVectorDataStore(RooStringView name, RooStringView title, RooAbsDataStore& tds,
                      const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
-                     std::size_t nStart, std::size_t nStop, const char* wgtVarName=0) ;
+                     std::size_t nStart, std::size_t nStop, const char* wgtVarName=nullptr) ;
 
   ~RooVectorDataStore() override ;
 
@@ -163,7 +163,7 @@ public:
 
   // Constant term  optimizer interface
   const RooAbsArg* cacheOwner() override { return _cacheOwner ; }
-  void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0, bool skipZeroWeights=true) override;
+  void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=nullptr, bool skipZeroWeights=true) override;
   void attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVars) override;
   void resetCache() override;
   void recalculateCache(const RooArgSet* /*proj*/, Int_t firstEvent, Int_t lastEvent, Int_t stepSize, bool skipZeroWeights) override;
@@ -172,7 +172,7 @@ public:
 
   const RooVectorDataStore* cache() const { return _cache ; }
 
-  void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=0, const char* rangeName=0, std::size_t nStart=0, std::size_t nStop = std::numeric_limits<std::size_t>::max()) override;
+  void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=nullptr, const char* rangeName=nullptr, std::size_t nStart=0, std::size_t nStop = std::numeric_limits<std::size_t>::max()) override;
 
   void dump() override;
 
@@ -211,7 +211,7 @@ public:
       if (_nset) delete _nset ;
     }
 
-    RealVector(const RealVector& other, RooAbsReal* real=0) :
+    RealVector(const RealVector& other, RooAbsReal* real=nullptr) :
       _vec(other._vec), _nativeReal(real?real:other._nativeReal), _real(real?real:other._real), _buf(other._buf), _nativeBuf(other._nativeBuf), _nset(0) {
       if (other._tracker) {
         _tracker = new RooChangeTracker(Form("track_%s",_nativeReal->GetName()),"tracker",other._tracker->parameters()) ;
@@ -251,12 +251,12 @@ public:
     void setBuffer(RooAbsReal* real, double* newBuf) {
       _real = real ;
       _buf = newBuf ;
-      if (_nativeBuf==0) {
+      if (_nativeBuf==nullptr) {
         _nativeBuf=newBuf ;
       }
     }
 
-    void setNativeBuffer(double* newBuf=0) {
+    void setNativeBuffer(double* newBuf=nullptr) {
       _nativeBuf = newBuf ? newBuf : _buf ;
     }
 
@@ -364,7 +364,7 @@ public:
       if (_vecEH) delete _vecEH ;
     }
 
-    RealFullVector(const RealFullVector& other, RooAbsReal* real=0) : RealVector(other,real),
+    RealFullVector(const RealFullVector& other, RooAbsReal* real=nullptr) : RealVector(other,real),
       _bufE(other._bufE), _bufEL(other._bufEL), _bufEH(other._bufEH),
       _nativeBufE(other._nativeBufE), _nativeBufEL(other._nativeBufEL), _nativeBufEH(other._nativeBufEH) {
       _vecE = (other._vecE) ? new std::vector<double>(*other._vecE) : 0 ;
@@ -372,7 +372,7 @@ public:
       _vecEH = (other._vecEH) ? new std::vector<double>(*other._vecEH) : 0 ;
     }
 
-    RealFullVector(const RealVector& other, RooAbsReal* real=0) : RealVector(other,real),
+    RealFullVector(const RealVector& other, RooAbsReal* real=nullptr) : RealVector(other,real),
       _bufE(0), _bufEL(0), _bufEH(0),
       _nativeBufE(0), _nativeBufEL(0), _nativeBufEH(0) {
       _vecE = 0 ;

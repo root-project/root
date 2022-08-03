@@ -44,12 +44,12 @@ public:
   }
   /// Forwards to the PDF's implementation.
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet,
-      const char* rangeName=0) const override {
+      const char* rangeName=nullptr) const override {
     return _pdf->getAnalyticalIntegralWN(allVars, analVars, normSet, rangeName);
   }
   /// Forwards to the PDF's implementation.
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars,
-      const char* rangeName=0) const override {
+      const char* rangeName=nullptr) const override {
     return _pdf->getAnalyticalIntegral(allVars, numVars, rangeName);
   }
   /// Forwards to the PDF's implementation.
@@ -57,7 +57,7 @@ public:
     return _pdf->analyticalIntegralWN(code, normSet, rangeName);
   }
   /// Forwards to the PDF's implementation.
-  double analyticalIntegral(Int_t code, const char* rangeName=0) const override {
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override {
     return _pdf->analyticalIntegral(code, rangeName);
   }
 

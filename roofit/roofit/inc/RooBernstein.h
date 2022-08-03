@@ -35,9 +35,9 @@ public:
   TObject* clone(const char* newname) const override { return new RooBernstein(*this, newname); }
   inline ~RooBernstein() override { }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-  double analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
-  void selectNormalizationRange(const char* rangeName=0, bool force=false) override ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
+  void selectNormalizationRange(const char* rangeName=nullptr, bool force=false) override ;
 
 private:
 

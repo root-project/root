@@ -53,10 +53,10 @@ public:
   void defineMutex(const char*) {} // to end the recursion of defineMutex()
 
   bool defineInt(const char* name, const char* argName, Int_t intNum, Int_t defValue=0) ;
-  bool defineDouble(const char* name, const char* argName, Int_t doubleNum, double defValue=0.) ;
+  bool defineDouble(const char* name, const char* argName, Int_t doubleNum, double defValue=0.0) ;
   bool defineString(const char* name, const char* argName, Int_t stringNum, const char* defValue="",bool appendMode=false) ;
-  bool defineObject(const char* name, const char* argName, Int_t setNum, const TObject* obj=0, bool isArray=false) ;
-  bool defineSet(const char* name, const char* argName, Int_t setNum, const RooArgSet* set=0) ;
+  bool defineObject(const char* name, const char* argName, Int_t setNum, const TObject* obj=nullptr, bool isArray=false) ;
+  bool defineSet(const char* name, const char* argName, Int_t setNum, const RooArgSet* set=nullptr) ;
 
   bool process(const RooCmdArg& arg) ;
   template<class... Args_t>
@@ -66,10 +66,10 @@ public:
   bool process(It_t begin, It_t end);
 
   Int_t getInt(const char* name, Int_t defaultValue=0) ;
-  double getDouble(const char* name, double defaultValue=0) ;
+  double getDouble(const char* name, double defaultValue=0.0) ;
   const char* getString(const char* name, const char* defaultValue="",bool convEmptyToNull=false) ;
-  TObject* getObject(const char* name, TObject* obj=0) ;
-  RooArgSet* getSet(const char* name, RooArgSet* set=0) ;
+  TObject* getObject(const char* name, TObject* obj=nullptr) ;
+  RooArgSet* getSet(const char* name, RooArgSet* set=nullptr) ;
   const RooLinkedList& getObjectList(const char* name) ;
 
   bool ok(bool verbose) const ;

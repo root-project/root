@@ -28,7 +28,7 @@ public:
   inline RooDecay() { }
   RooDecay(const char *name, const char *title, RooRealVar& t,
       RooAbsReal& tau, const RooResolutionModel& model, DecayType type) ;
-  RooDecay(const RooDecay& other, const char* name=0);
+  RooDecay(const RooDecay& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooDecay(*this,newname) ; }
   ~RooDecay() override;
 

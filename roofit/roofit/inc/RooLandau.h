@@ -25,7 +25,7 @@ class RooLandau : public RooAbsPdf {
 public:
   RooLandau() {} ;
   RooLandau(const char *name, const char *title, RooAbsReal& _x, RooAbsReal& _mean, RooAbsReal& _sigma);
-  RooLandau(const RooLandau& other, const char* name=0);
+  RooLandau(const RooLandau& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooLandau(*this,newname); }
   inline ~RooLandau() override { }
 

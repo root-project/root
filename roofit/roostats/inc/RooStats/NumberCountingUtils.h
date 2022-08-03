@@ -71,7 +71,7 @@ namespace RooStats{
    namespace  NumberCountingUtils {
 
 
-  /// Expected P-value for s=0 in a ratio of Poisson means.
+  /// Expected P-value for s=nullptr in a ratio of Poisson means.
   /// Here the background and its uncertainty are provided directly and
   /// assumed to be from the double Poisson counting setup described in the
   /// BinomialWithTau functions.
@@ -92,14 +92,14 @@ namespace RooStats{
   /// See BinomialExpP
      double BinomialExpP(double sExp, double bExp, double fractionalBUncertainty);
 
-  /// Expected P-value for s=0 in a ratio of Poisson means.
+  /// Expected P-value for s=nullptr in a ratio of Poisson means.
   /// Based on two expectations, a main measurement that might have signal
   /// and an auxiliary measurement for the background that is signal free.
   /// The expected background in the auxiliary measurement is a factor
   /// tau larger than in the main measurement.
      double BinomialWithTauExpP(double sExp, double bExp, double tau);
 
-  /// P-value for s=0 in a ratio of Poisson means.
+  /// P-value for s=nullptr in a ratio of Poisson means.
   /// Here the background and its uncertainty are provided directly and
   /// assumed to be from the double Poisson counting setup.
   /// Normally one would know tau directly, but here it is determined from
@@ -107,7 +107,7 @@ namespace RooStats{
   /// approximation.
      double BinomialObsP(double nObs, double, double fractionalBUncertainty);
 
-  /// P-value for s=0 in a ratio of Poisson means.
+  /// P-value for s=nullptr in a ratio of Poisson means.
   /// Based on two observations, a main measurement that might have signal
   /// and an auxiliary measurement for the background that is signal free.
   /// The expected background in the auxiliary measurement is a factor

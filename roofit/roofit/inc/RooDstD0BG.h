@@ -30,13 +30,13 @@ public:
         RooAbsReal& _dm, RooAbsReal& _dm0, RooAbsReal& _c,
         RooAbsReal& _a, RooAbsReal& _b);
 
-  RooDstD0BG(const RooDstD0BG& other, const char *name=0) ;
+  RooDstD0BG(const RooDstD0BG& other, const char *name=nullptr) ;
   TObject *clone(const char *newname) const override {
     return new RooDstD0BG(*this,newname); }
   inline ~RooDstD0BG() override { };
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-  double analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
 protected:
 

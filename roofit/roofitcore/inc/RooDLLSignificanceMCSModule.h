@@ -23,8 +23,8 @@
 class RooDLLSignificanceMCSModule : public RooAbsMCStudyModule {
 public:
 
-  RooDLLSignificanceMCSModule(const RooRealVar& param, double nullHypoValue=0) ;
-  RooDLLSignificanceMCSModule(const char* parName, double nullHypoValue=0) ;
+  RooDLLSignificanceMCSModule(const RooRealVar& param, double nullHypoValue=0.0) ;
+  RooDLLSignificanceMCSModule(const char* parName, double nullHypoValue=0.0) ;
   RooDLLSignificanceMCSModule(const RooDLLSignificanceMCSModule& other) ;
   ~RooDLLSignificanceMCSModule() override ;
 

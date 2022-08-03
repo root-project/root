@@ -44,12 +44,12 @@ public:
       RooAbsReal& mean, RooAbsReal& sigma, RooAbsReal& msSF) ;
   RooGaussModel(const char *name, const char *title, RooAbsRealLValue& x,
       RooAbsReal& mean, RooAbsReal& sigma, RooAbsReal& meanSF, RooAbsReal& sigmaSF) ;
-  RooGaussModel(const RooGaussModel& other, const char* name=0);
+  RooGaussModel(const RooGaussModel& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooGaussModel(*this,newname) ; }
   ~RooGaussModel() override;
 
   Int_t basisCode(const char* name) const override ;
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
   double analyticalIntegral(Int_t code, const char* rangeName) const override ;
 
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;

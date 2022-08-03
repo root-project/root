@@ -47,7 +47,7 @@ public:
 
   // Constructors, factory methods etc.
   RooDataHist() ;
-  RooDataHist(RooStringView name, RooStringView title, const RooArgSet& vars, const char* binningName=0) ;
+  RooDataHist(RooStringView name, RooStringView title, const RooArgSet& vars, const char* binningName=nullptr) ;
   RooDataHist(RooStringView name, RooStringView title, const RooArgSet& vars, const RooAbsData& data, double initWgt=1.0) ;
   RooDataHist(RooStringView name, RooStringView title, const RooArgList& vars, const TH1* hist, double initWgt=1.0) ;
   RooDataHist(RooStringView name, RooStringView title, const RooArgList& vars, RooCategory& indexCat, std::map<std::string,TH1*> histMap, double initWgt=1.0) ;
@@ -64,7 +64,7 @@ public:
   ~RooDataHist() override ;
 
   /// Return empty clone of this RooDataHist.
-  RooAbsData* emptyClone(const char* newName=0, const char* newTitle=0, const RooArgSet*vars=0, const char* /*wgtVarName*/=0) const override {
+  RooAbsData* emptyClone(const char* newName=nullptr, const char* newTitle=nullptr, const RooArgSet*vars=nullptr, const char* /*wgtVarName*/=nullptr) const override {
     return new RooDataHist(newName?newName:GetName(),newTitle?newTitle:GetTitle(),vars?*vars:*get()) ;
   }
 
@@ -75,7 +75,7 @@ public:
   void set(const RooArgSet& row, double weight, double wgtErr=-1.) ;
   void set(const RooArgSet& row, double weight, double wgtErrLo, double wgtErrHi) ;
 
-  void add(const RooAbsData& dset, const RooFormulaVar* cutVar=0, double weight=1.0 ) ;
+  void add(const RooAbsData& dset, const RooFormulaVar* cutVar=nullptr, double weight=1.0 ) ;
   void add(const RooAbsData& dset, const char* cut, double weight=1.0 ) ;
 
   /// Get bin centre of current bin.
@@ -84,7 +84,7 @@ public:
   virtual const RooArgSet* get(const RooArgSet& coord) const;
   Int_t numEntries() const override;
   double sumEntries() const override;
-  double sumEntries(const char* cutSpec, const char* cutRange=0) const override;
+  double sumEntries(const char* cutSpec, const char* cutRange=nullptr) const override;
 
   /// Always returns true as all histograms use event weights.
   bool isWeighted() const override { return true; }
@@ -231,16 +231,16 @@ protected:
 
   void setAllWeights(double value) ;
 
-  void initialize(const char* binningName=0,bool fillTree=true) ;
+  void initialize(const char* binningName=nullptr,bool fillTree=true) ;
   RooDataHist(RooStringView name, RooStringView title, RooDataHist* h, const RooArgSet& varSubset,
         const RooFormulaVar* cutVar, const char* cutRange, Int_t nStart, Int_t nStop) ;
-  RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=0,
+  RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=nullptr,
                   std::size_t nStart=0, std::size_t nStop=std::numeric_limits<std::size_t>::max()) override;
   double interpolateDim(int iDim, double xval, size_t centralIdx, int intOrder, bool correctForBinSize, bool cdfBoundaries) ;
   const std::vector<double>& calculatePartialBinVolume(const RooArgSet& dimSet) const ;
   void checkBinBounds() const;
 
-  void adjustBinning(const RooArgList& vars, const TH1& href, Int_t* offset=0) ;
+  void adjustBinning(const RooArgList& vars, const TH1& href, Int_t* offset=nullptr) ;
   void importTH1(const RooArgList& vars, const TH1& histo, double initWgt, bool doDensityCorrection) ;
   void importTH1Set(const RooArgList& vars, RooCategory& indexCat, std::map<std::string,TH1*> hmap, double initWgt, bool doDensityCorrection) ;
   void importDHistSet(const RooArgList& vars, RooCategory& indexCat, std::map<std::string,RooDataHist*> dmap, double initWgt) ;

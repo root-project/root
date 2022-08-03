@@ -154,7 +154,7 @@ public:
    }
 
    /// receive message with ZMQ, general version
-   // FIXME: what to do with flags=0.... more is a pointer, that might prevent conversion
+   // FIXME: what to do with flags=nullptr.... more is a pointer, that might prevent conversion
    template <class T, typename std::enable_if<!(std::is_same<zmq::message_t, T>::value), T>::type * = nullptr>
    T receive(zmq::socket_t &socket, zmq::recv_flags flags = zmq::recv_flags::none, bool *more = nullptr) const
    {

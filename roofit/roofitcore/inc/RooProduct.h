@@ -41,8 +41,8 @@ public:
   bool forceAnalyticalInt(const RooAbsArg& dep) const override ;
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars,
                                                    const RooArgSet* normSet,
-                                                   const char* rangeName=0) const override ;
-  double analyticalIntegral(Int_t code, const char* rangeName=0) const override;
+                                                   const char* rangeName=nullptr) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override;
 
 
   RooArgList components() { RooArgList tmp(_compRSet) ; tmp.add(_compCSet) ; return tmp ; }
@@ -84,7 +84,7 @@ protected:
 
   const char* makeFPName(const char *pfx,const RooArgSet& terms) const ;
   ProdMap* groupProductTerms(const RooArgSet&) const;
-  Int_t getPartIntList(const RooArgSet* iset, const char *rangeName=0) const;
+  Int_t getPartIntList(const RooArgSet* iset, const char *rangeName=nullptr) const;
 
   ClassDefOverride(RooProduct,3) // Product of RooAbsReal and/or RooAbsCategory terms
 };

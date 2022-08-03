@@ -30,7 +30,7 @@ public:
   RooDataWeightedAverage(const char *name, const char *title, RooAbsReal& real, RooAbsData& data, const RooArgSet& projDeps,
                          RooAbsTestStatistic::Configuration const& cfg, bool showProgress=false) ;
 
-  RooDataWeightedAverage(const RooDataWeightedAverage& other, const char* name=0);
+  RooDataWeightedAverage(const RooDataWeightedAverage& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooDataWeightedAverage(*this,newname); }
 
   RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& real, RooAbsData& adata,

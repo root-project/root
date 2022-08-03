@@ -24,7 +24,7 @@ public:
                           RooAbsReal& _x,
                           RooAbsReal& _k,
                           RooAbsReal& _lambda);
-   RooNonCentralChiSquare(const RooNonCentralChiSquare& other, const char* name=0) ;
+   RooNonCentralChiSquare(const RooNonCentralChiSquare& other, const char* name=nullptr) ;
    TObject* clone(const char* newname) const override { return new RooNonCentralChiSquare(*this,newname); }
    inline ~RooNonCentralChiSquare() override { }
 
@@ -33,8 +33,8 @@ public:
    void SetForceSum(bool flag);
 
 
-   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-   double analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
+   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
+   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
 protected:
 

@@ -25,12 +25,12 @@ class RooAbsReal ;
 class RooAbsBinning : public TNamed, public RooPrintable {
 public:
 
-  RooAbsBinning(const char* name=0) ;
-  RooAbsBinning(const RooAbsBinning& other, const char* name=0) : TNamed(name,name), RooPrintable(other) {
+  RooAbsBinning(const char* name=nullptr) ;
+  RooAbsBinning(const RooAbsBinning& other, const char* name=nullptr) : TNamed(name,name), RooPrintable(other) {
     // Copy constructor
   }
-  TObject* Clone(const char* newname=0) const override { return clone(newname) ; }
-  virtual RooAbsBinning* clone(const char* name=0) const = 0 ;
+  TObject* Clone(const char* newname=nullptr) const override { return clone(newname) ; }
+  virtual RooAbsBinning* clone(const char* name=nullptr) const = 0 ;
   ~RooAbsBinning() override ;
 
   /// Return number of bins.

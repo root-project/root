@@ -35,7 +35,7 @@ class RooAbsGenContext ;
 class RooGenFitStudy : public RooAbsStudy {
 public:
 
-  RooGenFitStudy(const char* name=0, const char* title=0) ;
+  RooGenFitStudy(const char* name=nullptr, const char* title=nullptr) ;
   RooGenFitStudy(const RooGenFitStudy& other) ;
   ~RooGenFitStudy() override ;
   RooAbsStudy* clone(const char* newname="") const override { return new RooGenFitStudy(newname?newname:GetName(),GetTitle()) ; }

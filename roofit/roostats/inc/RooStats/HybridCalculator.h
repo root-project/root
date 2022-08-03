@@ -26,7 +26,7 @@ namespace RooStats {
                         const RooAbsData &data,
                         const ModelConfig &altModel,
                         const ModelConfig &nullModel,
-                        TestStatSampler* sampler=0
+                        TestStatSampler* sampler=nullptr
       ) :
          HypoTestCalculatorGeneric(data, altModel, nullModel, sampler),
          fPriorNuisanceNull(MakeNuisancePdf(nullModel, "PriorNuisanceNull")),

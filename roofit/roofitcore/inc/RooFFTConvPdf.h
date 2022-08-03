@@ -30,7 +30,7 @@ public:
   } ;
   RooFFTConvPdf(const char *name, const char *title, RooRealVar& convVar, RooAbsPdf& pdf1, RooAbsPdf& pdf2, Int_t ipOrder=2);
   RooFFTConvPdf(const char *name, const char *title, RooAbsReal& pdfConvVar, RooRealVar& convVar, RooAbsPdf& pdf1, RooAbsPdf& pdf2, Int_t ipOrder=2);
-  RooFFTConvPdf(const RooFFTConvPdf& other, const char* name=0) ;
+  RooFFTConvPdf(const RooFFTConvPdf& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooFFTConvPdf(*this,newname); }
   ~RooFFTConvPdf() override ;
 
@@ -112,8 +112,8 @@ protected:
   double  _shift1 ;
   double  _shift2 ;
 
-  RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0,
-                                       const RooArgSet* auxProto=0, bool verbose= false) const override ;
+  RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=nullptr,
+                                       const RooArgSet* auxProto=nullptr, bool verbose= false) const override ;
 
   friend class RooConvGenContext ;
   RooSetProxy  _cacheObs ; ///< Non-convolution observables that are also cached

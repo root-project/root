@@ -42,7 +42,7 @@ public:
   RooSimultaneous(const char *name, const char *title, RooAbsCategoryLValue& indexCat) ;
   RooSimultaneous(const char *name, const char *title, std::map<std::string,RooAbsPdf*> pdfMap, RooAbsCategoryLValue& inIndexCat) ;
   RooSimultaneous(const char *name, const char *title, const RooArgList& pdfList, RooAbsCategoryLValue& indexCat) ;
-  RooSimultaneous(const RooSimultaneous& other, const char* name=0);
+  RooSimultaneous(const RooSimultaneous& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooSimultaneous(*this,newname) ; }
   ~RooSimultaneous() override ;
 
@@ -55,8 +55,8 @@ public:
   double expectedEvents(const RooArgSet* nset) const override ;
 
   bool forceAnalyticalInt(const RooAbsArg&) const override { return true ; }
-  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const override ;
-  double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
+  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
+  double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
 
   using RooAbsPdf::plotOn ;
   RooPlot* plotOn(RooPlot* frame,
@@ -71,9 +71,9 @@ public:
 
   // Backward compatibility function
   virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions, double scaleFactor=1.0,
-           ScaleType stype=Relative, const RooAbsData* projData=0, const RooArgSet* projSet=0,
-           double precision=1e-3, bool shiftToZero=false, const RooArgSet* projDataSet=0,
-           double rangeLo=0, double rangeHi=0, RooCurve::WingMode wmode=RooCurve::Extended) const;
+           ScaleType stype=Relative, const RooAbsData* projData=nullptr, const RooArgSet* projSet=nullptr,
+           double precision=1e-3, bool shiftToZero=false, const RooArgSet* projDataSet=nullptr,
+           double rangeLo=0.0, double rangeHi=0.0, RooCurve::WingMode wmode=RooCurve::Extended) const;
 
   RooAbsPdf* getPdf(const char* catName) const ;
   const RooAbsCategoryLValue& indexCat() const { return (RooAbsCategoryLValue&) _indexCat.arg() ; }
@@ -93,8 +93,8 @@ protected:
 
   void initialize(RooAbsCategoryLValue& inIndexCat, std::map<std::string,RooAbsPdf*> pdfMap) ;
 
-  void selectNormalization(const RooArgSet* depSet=0, bool force=false) override ;
-  void selectNormalizationRange(const char* rangeName=0, bool force=false) override ;
+  void selectNormalization(const RooArgSet* depSet=nullptr, bool force=false) override ;
+  void selectNormalizationRange(const char* rangeName=nullptr, bool force=false) override ;
   mutable RooSetProxy _plotCoefNormSet ;
   const TNamed* _plotCoefNormRange ;
 
@@ -109,10 +109,10 @@ protected:
 
   friend class RooSimGenContext ;
   friend class RooSimSplitGenContext ;
-  RooAbsGenContext* autoGenContext(const RooArgSet &vars, const RooDataSet* prototype=0, const RooArgSet* auxProto=0,
+  RooAbsGenContext* autoGenContext(const RooArgSet &vars, const RooDataSet* prototype=nullptr, const RooArgSet* auxProto=nullptr,
                   bool verbose=false, bool autoBinned=true, const char* binnedTag="") const override ;
-  RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0,
-                                  const RooArgSet* auxProto=0, bool verbose= false) const override ;
+  RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=nullptr,
+                                  const RooArgSet* auxProto=nullptr, bool verbose= false) const override ;
 
   RooCategoryProxy _indexCat ; ///< Index category
   TList    _pdfProxyList ;     ///< List of PDF proxies (named after applicable category state)

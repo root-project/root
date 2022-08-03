@@ -43,7 +43,7 @@ public:
   // Copy constructor
   RooLinkedList(const RooLinkedList& other) ;
 
-  TObject* Clone(const char* =0) const override {
+  TObject* Clone(const char* =nullptr) const override {
     return new RooLinkedList(*this) ;
   }
 
@@ -76,8 +76,8 @@ public:
   RooLinkedListIterImpl rbegin() const;
   RooLinkedListIterImpl rend() const;
 
-  void Clear(Option_t *o=0) override ;
-  void Delete(Option_t *o=0) override ;
+  void Clear(Option_t *o=nullptr) override ;
+  void Delete(Option_t *o=nullptr) override ;
   TObject* find(const char* name) const ;
   RooAbsArg* findArg(const RooAbsArg*) const ;
   TObject* FindObject(const char* name) const override ;
@@ -105,7 +105,7 @@ public:
 
 protected:
 
-  RooLinkedListElem* createElement(TObject* obj, RooLinkedListElem* elem=0) ;
+  RooLinkedListElem* createElement(TObject* obj, RooLinkedListElem* elem=nullptr) ;
   void deleteElement(RooLinkedListElem*) ;
 
 
