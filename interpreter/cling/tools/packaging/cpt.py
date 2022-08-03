@@ -287,12 +287,10 @@ def download_llvm_binary():
         subprocess.call("sudo -H {0} -m pip install lit".format(
             sys.executable),
                         shell=True)
-        llvm_config_path = exec_subprocess_check_output(
-            "which llvm-config-{0}".format(llvm_vers), workdir)
+        llvm_config_path = exec_subprocess_check_output("find . -name llvm-config", workdir)
         if llvm_config_path != '' and tar_required is False:
-            llvm_dir = os.path.join("/usr", "lib", "llvm-" + llvm_vers)
-            if llvm_config_path[-1:] == "\n":
-                llvm_config_path = llvm_config_path[:-1]
+            llvm_dir = os.path.join(srcdir, "bin")
+            llvm_config_path = os.path.join(llvm_dir, "llvm-config")
             llvm_flags = llvm_flag_setter(llvm_dir, llvm_config_path)
         else:
             tar_required = True
