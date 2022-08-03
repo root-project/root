@@ -36,7 +36,7 @@ public:
   RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPdf, RooDataSet& data, bool integrate=false) ;
   RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPdf, RooDataSet& data, RooRealVar& yvar, bool integrate=false) ;
 
-  RooXYChi2Var(const RooXYChi2Var& other, const char* name=0);
+  RooXYChi2Var(const RooXYChi2Var& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooXYChi2Var(*this,newname); }
 
   RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& adata,

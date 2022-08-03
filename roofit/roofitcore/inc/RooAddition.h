@@ -45,8 +45,8 @@ public:
       // Force RooRealIntegral to offer all observables for internal integration
       return true ;
   }
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars, const char* rangeName=0) const override;
-  double analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars, const char* rangeName=nullptr) const override;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
   bool setData(RooAbsData& data, bool cloneData=true) override ;
 

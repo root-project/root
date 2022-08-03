@@ -30,7 +30,7 @@ public:
   }
   RooAbsHiddenReal(const char *name, const char *title, const char *unit= "") ;
   RooAbsHiddenReal(const char *name, const char *title, RooAbsCategory& blindState, const char *unit= "") ;
-  RooAbsHiddenReal(const RooAbsHiddenReal& other, const char* name=0) ;
+  RooAbsHiddenReal(const RooAbsHiddenReal& other, const char* name=nullptr) ;
   ~RooAbsHiddenReal() override;
 
   // I/O streaming interface (machine readable)
@@ -45,7 +45,7 @@ public:
     return _state.arg().getCurrentIndex()!=0 ;
   }
 
-  double getHiddenVal(const RooArgSet* nset=0) const {
+  double getHiddenVal(const RooArgSet* nset=nullptr) const {
     // Bypass accessor to function value that also works in hidden mode
     return RooAbsReal::getVal(nset) ;
   }
@@ -55,7 +55,7 @@ protected:
   // This is dubious from a C++ point of view, but it blocks the interactive user
   // from accidentally calling getVal() without explicit cast, which is the whole
   // point of this class
-  double getValV(const RooArgSet* nset=0) const override {
+  double getValV(const RooArgSet* nset=nullptr) const override {
     // Forward call to RooAbsReal
     return RooAbsReal::getValV(nset) ;
   }

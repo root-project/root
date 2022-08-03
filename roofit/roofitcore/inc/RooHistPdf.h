@@ -31,7 +31,7 @@ public:
   RooHistPdf() ;
   RooHistPdf(const char *name, const char *title, const RooArgSet& vars, const RooDataHist& dhist, Int_t intOrder=0);
   RooHistPdf(const char *name, const char *title, const RooArgList& pdfObs, const RooArgList& histObs, const RooDataHist& dhist, Int_t intOrder=0);
-  RooHistPdf(const RooHistPdf& other, const char* name=0);
+  RooHistPdf(const RooHistPdf& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooHistPdf(*this,newname); }
   ~RooHistPdf() override ;
 
@@ -67,8 +67,8 @@ public:
                                      RooDataHist& dataHist,
                                      bool histFuncMode) ;
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-  double analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
   void setCdfBoundaries(bool flag) {
     // Set use of special boundary conditions for c.d.f.s

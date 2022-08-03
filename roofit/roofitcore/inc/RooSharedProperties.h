@@ -35,7 +35,7 @@ public:
   RooSharedProperties(RooSharedProperties &&) = delete;
   RooSharedProperties& operator=(RooSharedProperties &&) = delete;
 
-  void Print(Option_t* opts=0) const override ;
+  void Print(Option_t* opts=nullptr) const override ;
 
   void increaseRefCount() { _refCount++ ; }
   void decreaseRefCount() { if (_refCount>0) _refCount-- ; }

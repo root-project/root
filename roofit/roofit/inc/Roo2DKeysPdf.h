@@ -27,7 +27,7 @@ class Roo2DKeysPdf : public RooAbsPdf
 public:
   Roo2DKeysPdf(const char *name, const char *title,
              RooAbsReal& xx, RooAbsReal &yy, RooDataSet& data, TString options = "a", double widthScaleFactor = 1.0);
-  Roo2DKeysPdf(const Roo2DKeysPdf& other, const char* name=0);
+  Roo2DKeysPdf(const Roo2DKeysPdf& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new Roo2DKeysPdf(*this,newname); }
 
   ~Roo2DKeysPdf() override;

@@ -27,12 +27,12 @@ public:
   RooBifurGauss(const char *name, const char *title, RooAbsReal& _x,
       RooAbsReal& _mean, RooAbsReal& _sigmaL, RooAbsReal& _sigmaR);
 
-  RooBifurGauss(const RooBifurGauss& other, const char* name=0) ;
+  RooBifurGauss(const RooBifurGauss& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooBifurGauss(*this,newname); }
   inline ~RooBifurGauss() override { }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-  double analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
 
 protected:

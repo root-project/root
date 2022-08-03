@@ -49,7 +49,7 @@ private:
   // -----------------------------------------------------------
   // Define a 1-dim RooAbsFunc of mu that evaluates the sum:
   //
-  //  Q(n|mu) = Sum_{k=0}^{n} P(k|mu)
+  //  Q(n|mu) = Sum_{k=nullptr}^{n} P(k|mu)
   //
   // where P(n|mu) = exp(-mu) mu**n / n! is the Poisson PDF.
   // -----------------------------------------------------------
@@ -73,7 +73,7 @@ private:
   // -----------------------------------------------------------
   // Define a 1-dim RooAbsFunc of a that evaluates the sum:
   //
-  //  Q(n|n+m,a) = Sum_{k=0}^{n} B(k|n+m,a)
+  //  Q(n|n+m,a) = Sum_{k=nullptr}^{n} B(k|n+m,a)
   //
   // where B(n|n+m,a) = (n+m)!/(n!m!) ((1+a)/2)**n ((1-a)/2)**m
   // is the Binomial PDF.
@@ -104,7 +104,7 @@ private:
   // -----------------------------------------------------------
   // Define a 1-dim RooAbsFunc of a that evaluates the sum:
   //
-  //  Q(n|n+m,a) = Sum_{k=0}^{n} B(k|n+m,a)
+  //  Q(n|n+m,a) = Sum_{k=nullptr}^{n} B(k|n+m,a)
   //
   // where B(n|n+m,a) = (n+m)!/(n!m!) ((1+a)/2)**n ((1-a)/2)**m
   // is the Binomial PDF.

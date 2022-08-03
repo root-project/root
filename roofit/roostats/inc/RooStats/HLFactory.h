@@ -32,7 +32,7 @@ namespace RooStats {
 
     /// Constructor
     HLFactory(const char *name,
-              const char *fileName=0,
+              const char *fileName=nullptr,
               bool isVerbose = false);
 
     /// Constructor with external RooWorkspace
@@ -49,8 +49,8 @@ namespace RooStats {
     /// Add channel for the combination
     int AddChannel(const char* label,
                    const char* SigBkgPdfName,
-                   const char* BkgPdfName=0,
-                   const char* datasetName=0);
+                   const char* BkgPdfName=nullptr,
+                   const char* datasetName=nullptr);
 
     /// Dump the Workspace content as configuration file
     /* It needs some workspace object list or something..*/

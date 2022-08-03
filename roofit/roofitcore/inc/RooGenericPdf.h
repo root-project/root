@@ -28,7 +28,7 @@ public:
   inline RooGenericPdf(){}
   RooGenericPdf(const char *name, const char *title, const char* formula, const RooArgList& dependents);
   RooGenericPdf(const char *name, const char *title, const RooArgList& dependents);
-  RooGenericPdf(const RooGenericPdf& other, const char* name=0);
+  RooGenericPdf(const RooGenericPdf& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooGenericPdf(*this,newname); }
 
   // I/O streaming interface (machine readable)

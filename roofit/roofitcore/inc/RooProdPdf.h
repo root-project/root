@@ -35,8 +35,8 @@ public:
 
   RooProdPdf() ;
   RooProdPdf(const char *name, const char *title,
-       RooAbsPdf& pdf1, RooAbsPdf& pdf2, double cutOff=0) ;
-  RooProdPdf(const char* name, const char* title, const RooArgList& pdfList, double cutOff=0) ;
+       RooAbsPdf& pdf1, RooAbsPdf& pdf2, double cutOff=0.0) ;
+  RooProdPdf(const char* name, const char* title, const RooArgList& pdfList, double cutOff=0.0) ;
   RooProdPdf(const char* name, const char* title, const RooArgSet& fullPdfSet, const RooLinkedList& cmdArgList) ;
 
   RooProdPdf(const char* name, const char* title, const RooArgSet& fullPdfSet,
@@ -51,15 +51,15 @@ public:
              const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
              const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) ;
 
-  RooProdPdf(const RooProdPdf& other, const char* name=0) ;
+  RooProdPdf(const RooProdPdf& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooProdPdf(*this,newname) ; }
   ~RooProdPdf() override ;
 
   bool checkObservables(const RooArgSet* nset) const override ;
 
   bool forceAnalyticalInt(const RooAbsArg& dep) const override ;
-  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const override ;
-  double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
+  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
+  double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
   bool selfNormalized() const override { return _selfNorm ; }
 
   ExtendMode extendMode() const override ;
@@ -81,7 +81,7 @@ public:
 
   void printMetaArgs(std::ostream& os) const override ;
 
-  void selectNormalizationRange(const char* rangeName=0, bool force=false) override ;
+  void selectNormalizationRange(const char* rangeName=nullptr, bool force=false) override ;
   void fixRefRange(const char* rangeName) ;
 
   void setSelfNormalized(bool flag) { _selfNorm = flag ; }
@@ -121,7 +121,7 @@ private:
 
 
 
-  Int_t getPartIntList(const RooArgSet* nset, const RooArgSet* iset, const char* isetRangeName=0) const ;
+  Int_t getPartIntList(const RooArgSet* nset, const RooArgSet* iset, const char* isetRangeName=nullptr) const ;
 
   std::vector<RooAbsReal*> processProductTerm(const RooArgSet* nset, const RooArgSet* iset, const char* isetRangeName,
                      const RooArgSet* term,const RooArgSet& termNSet, const RooArgSet& termISet,
@@ -160,8 +160,8 @@ private:
 
 
   friend class RooProdGenContext ;
-  RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0,
-                                  const RooArgSet *auxProto=0, bool verbose= false) const override ;
+  RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=nullptr,
+                                  const RooArgSet *auxProto=nullptr, bool verbose= false) const override ;
 
 
   mutable RooAICRegistry _genCode ; ///<! Registry of composite direct generator codes

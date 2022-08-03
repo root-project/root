@@ -31,7 +31,7 @@ public:
   RooNumConvPdf(const char *name, const char *title,
                 RooRealVar& convVar, RooAbsPdf& pdf, RooAbsPdf& resmodel) ;
 
-  RooNumConvPdf(const RooNumConvPdf& other, const char* name=0) ;
+  RooNumConvPdf(const RooNumConvPdf& other, const char* name=nullptr) ;
 
   TObject* clone(const char* newname) const override { return new RooNumConvPdf(*this,newname) ; }
   ~RooNumConvPdf() override ;
@@ -70,8 +70,8 @@ protected:
   RooRealProxy _origPdf ;         ///< Original input PDF
   RooRealProxy _origModel ;       ///< Original resolution model
 
-  RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0,
-                                       const RooArgSet* auxProto=0, bool verbose= false) const override ;
+  RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=nullptr,
+                                       const RooArgSet* auxProto=nullptr, bool verbose= false) const override ;
 
   friend class RooConvGenContext ;
 

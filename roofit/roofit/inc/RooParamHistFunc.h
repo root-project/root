@@ -23,7 +23,7 @@ public:
   RooParamHistFunc(const char *name, const char *title, RooDataHist& dh, bool paramRelative=true);
   RooParamHistFunc(const char *name, const char *title, const RooAbsArg& x, RooDataHist& dh, bool paramRelative=true);
   RooParamHistFunc(const char *name, const char *title, RooDataHist& dh, const RooParamHistFunc& paramSource, bool paramRelative=true) ;
-  RooParamHistFunc(const RooParamHistFunc& other, const char* name=0) ;
+  RooParamHistFunc(const RooParamHistFunc& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooParamHistFunc(*this,newname); }
   inline ~RooParamHistFunc() override { }
 
@@ -33,8 +33,8 @@ public:
 
 
   bool forceAnalyticalInt(const RooAbsArg&) const override { return true ; }
-  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet,const char* rangeName=0) const override ;
-  double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
+  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet,const char* rangeName=nullptr) const override ;
+  double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
 
   double getActual(Int_t ibin) ;
   void setActual(Int_t ibin, double newVal) ;

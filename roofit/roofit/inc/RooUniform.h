@@ -25,12 +25,12 @@ class RooUniform : public RooAbsPdf {
 public:
   RooUniform() {} ;
   RooUniform(const char *name, const char *title, const RooArgSet& _x);
-  RooUniform(const RooUniform& other, const char* name=0) ;
+  RooUniform(const RooUniform& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooUniform(*this,newname); }
   inline ~RooUniform() override { }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-  double analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void generateEvent(Int_t code) override;

@@ -43,7 +43,7 @@ public:
   // Constructors, assignment etc.
   RooAbsCategory();
   RooAbsCategory(const char *name, const char *title);
-  RooAbsCategory(const RooAbsCategory& other, const char* name=0) ;
+  RooAbsCategory(const RooAbsCategory& other, const char* name=nullptr) ;
   ~RooAbsCategory() override;
 
   // Value accessors
@@ -90,7 +90,7 @@ public:
     return true ;
   }
 
-  RooAbsArg *createFundamental(const char* newname=0) const override;
+  RooAbsArg *createFundamental(const char* newname=nullptr) const override;
 
   /// Iterator for category state names. Points to pairs of index and name.
   std::map<std::string, value_type>::const_iterator begin() const {
@@ -130,8 +130,8 @@ public:
   TIterator*
   R__SUGGEST_ALTERNATIVE("This interface is inefficient. Use begin(), end() or range-based for loops.")
   typeIterator() const;
-  /// Return number of types defined (in range named rangeName if rangeName!=0)
-  Int_t numTypes(const char* /*rangeName*/=0) const {
+  /// Return number of types defined (in range named rangeName if rangeName!=nullptr)
+  Int_t numTypes(const char* /*rangeName*/=nullptr) const {
     return stateNames().size();
   }
   /// Retrieve the current index. Use getCurrentIndex() for more clarity.
@@ -206,7 +206,7 @@ protected:
   virtual void recomputeShape() = 0;
 
   friend class RooVectorDataStore ;
-  void syncCache(const RooArgSet* set=0) override ;
+  void syncCache(const RooArgSet* set=nullptr) override ;
   void copyCache(const RooAbsArg* source, bool valueOnly=false, bool setValueDirty=true) override ;
   void setCachedValue(double value, bool notifyClients = true) final;
   void attachToTree(TTree& t, Int_t bufSize=32000) override ;

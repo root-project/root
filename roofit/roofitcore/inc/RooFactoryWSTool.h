@@ -56,7 +56,7 @@ public:
 
   // Create variables
   RooRealVar* createVariable(const char* name, double xmin, double xmax) ;
-  RooCategory* createCategory(const char* name, const char* stateNameList=0) ;
+  RooCategory* createCategory(const char* name, const char* stateNameList=nullptr) ;
 
   // Create functions and p.d.f.s (any RooAbsArg)
   RooAbsArg* createArg(const char* className, const char* objName, const char* varList) ;

@@ -25,7 +25,7 @@ public:
   // Constructors, assignment etc.
   RooStringVar() { }
   RooStringVar(const char *name, const char *title, const char* value, Int_t size=1024) ;
-  RooStringVar(const RooStringVar& other, const char* name=0);
+  RooStringVar(const RooStringVar& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooStringVar(*this,newname); }
   ~RooStringVar() override = default;
 
@@ -54,7 +54,7 @@ public:
   void printValue(std::ostream& os) const override { os << _string; }
 
 
-  RooAbsArg *createFundamental(const char* newname=0) const override {
+  RooAbsArg *createFundamental(const char* newname=nullptr) const override {
     return new RooStringVar(newname ? newname : GetName(), GetTitle(), "", 1);
   }
 

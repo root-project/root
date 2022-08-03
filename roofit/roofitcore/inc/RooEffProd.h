@@ -21,7 +21,7 @@ class RooEffProd: public RooAbsPdf {
 public:
   // Constructors, assignment etc
   RooEffProd(const char *name, const char *title, RooAbsPdf& pdf, RooAbsReal& efficiency);
-  RooEffProd(const RooEffProd& other, const char* name=0);
+  RooEffProd(const RooEffProd& other, const char* name=nullptr);
 
   TObject* clone(const char* newname) const override { return new RooEffProd(*this,newname); }
 

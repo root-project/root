@@ -37,21 +37,21 @@ public:
   // Constructors, assignment etc
   inline RooTruthModel() { }
   RooTruthModel(const char *name, const char *title, RooAbsRealLValue& x) ;
-  RooTruthModel(const RooTruthModel& other, const char* name=0);
+  RooTruthModel(const RooTruthModel& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooTruthModel(*this,newname) ; }
   ~RooTruthModel() override;
 
   Int_t basisCode(const char* name) const override ;
 
   RooAbsGenContext* modelGenContext(const RooAbsAnaConvPdf& convPdf, const RooArgSet &vars,
-                                            const RooDataSet *prototype=0, const RooArgSet* auxProto=0,
+                                            const RooDataSet *prototype=nullptr, const RooArgSet* auxProto=nullptr,
                                             bool verbose= false) const override;
 
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void generateEvent(Int_t code) override;
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-  double analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
 protected:
   double evaluate() const override ;

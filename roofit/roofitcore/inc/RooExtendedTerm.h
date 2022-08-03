@@ -24,7 +24,7 @@ public:
 
   RooExtendedTerm() ;
   RooExtendedTerm(const char *name, const char *title, const RooAbsReal& n) ;
-  RooExtendedTerm(const RooExtendedTerm& other, const char* name=0) ;
+  RooExtendedTerm(const RooExtendedTerm& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooExtendedTerm(*this,newname) ; }
   ~RooExtendedTerm() override ;
 

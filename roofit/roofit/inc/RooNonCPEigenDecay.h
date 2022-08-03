@@ -76,7 +76,7 @@ public:
             const RooResolutionModel& model,
             DecayType       type = DoubleSided );
 
-  RooNonCPEigenDecay(const RooNonCPEigenDecay& other, const char* name=0);
+  RooNonCPEigenDecay(const RooNonCPEigenDecay& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override {
     return new RooNonCPEigenDecay(*this,newname);
   }
@@ -85,8 +85,8 @@ public:
   double coefficient( Int_t basisIndex ) const override;
 
   Int_t getCoefAnalyticalIntegral( Int_t coef, RooArgSet& allVars,
-                    RooArgSet& analVars, const char* rangeName=0 ) const override;
-  double coefAnalyticalIntegral( Int_t coef, Int_t code, const char* rangeName=0 ) const override;
+                    RooArgSet& analVars, const char* rangeName=nullptr ) const override;
+  double coefAnalyticalIntegral( Int_t coef, Int_t code, const char* rangeName=nullptr ) const override;
 
   Int_t getGenerator( const RooArgSet& directVars,
             RooArgSet&       generateVars, bool staticInitOK=true ) const override;

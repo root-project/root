@@ -24,7 +24,7 @@ public:
   }
   RooCachedReal(const char *name, const char *title, RooAbsReal& _func, const RooArgSet& cacheObs);
   RooCachedReal(const char *name, const char *title, RooAbsReal& _func);
-  RooCachedReal(const RooCachedReal& other, const char* name=0) ;
+  RooCachedReal(const RooCachedReal& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooCachedReal(*this,newname); }
   ~RooCachedReal() override ;
 

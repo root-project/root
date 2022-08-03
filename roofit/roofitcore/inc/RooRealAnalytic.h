@@ -20,7 +20,7 @@
 
 class RooRealAnalytic : public RooRealBinding {
 public:
-  inline RooRealAnalytic(const RooAbsReal &func, const RooArgSet &vars, Int_t code, const RooArgSet* normSet=0, const TNamed* rangeName=0) :
+  inline RooRealAnalytic(const RooAbsReal &func, const RooArgSet &vars, Int_t code, const RooArgSet* normSet=nullptr, const TNamed* rangeName=nullptr) :
     RooRealBinding(func,vars,normSet,rangeName), _code(code) { }
   inline ~RooRealAnalytic() override { }
 

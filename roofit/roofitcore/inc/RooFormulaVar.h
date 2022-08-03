@@ -33,7 +33,7 @@ public:
   RooFormulaVar() { }
   RooFormulaVar(const char *name, const char *title, const char* formula, const RooArgList& dependents, bool checkVariables = true);
   RooFormulaVar(const char *name, const char *title, const RooArgList& dependents, bool checkVariables = true);
-  RooFormulaVar(const RooFormulaVar& other, const char* name=0);
+  RooFormulaVar(const RooFormulaVar& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooFormulaVar(*this,newname); }
 
   inline bool ok() const { return getFormula().ok() ; }

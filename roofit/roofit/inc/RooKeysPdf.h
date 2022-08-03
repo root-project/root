@@ -35,7 +35,7 @@ public:
   RooKeysPdf(const char *name, const char *title,
              RooAbsReal& x, RooRealVar& xdata, RooDataSet& data, Mirror mirror= NoMirror,
         double rho=1);
-  RooKeysPdf(const RooKeysPdf& other, const char* name=0);
+  RooKeysPdf(const RooKeysPdf& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override {return new RooKeysPdf(*this,newname); }
   ~RooKeysPdf() override;
 

@@ -51,8 +51,8 @@ public:
 
   bool forceAnalyticalInt(const RooAbsArg&) const override { return true ; }
 
-  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet,const char* rangeName=0) const override;
-  double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override;
+  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet,const char* rangeName=nullptr) const override;
+  double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=nullptr) const override;
 
   static RooArgList createParamSet(RooWorkspace& w, const std::string&, const RooArgList& Vars);
   static RooArgList createParamSet(RooWorkspace& w, const std::string&, const RooArgList& Vars, double, double);

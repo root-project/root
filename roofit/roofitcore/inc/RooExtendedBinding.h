@@ -17,7 +17,7 @@ class RooExtendedBinding : public RooAbsReal {
 public:
   RooExtendedBinding() {} ;
   RooExtendedBinding(const char *name, const char *title, RooAbsPdf& _pdf);
-  RooExtendedBinding(const RooExtendedBinding& other, const char* name=0) ;
+  RooExtendedBinding(const RooExtendedBinding& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooExtendedBinding(*this,newname); }
   inline ~RooExtendedBinding() override { }
 

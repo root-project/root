@@ -32,7 +32,7 @@ public:
          const char *blindString, RooAbsReal& cpasym);
   RooUnblindCPAsymVar(const char *name, const char *title,
             const char *blindString, RooAbsReal& cpasym, RooAbsCategory& blindState);
-  RooUnblindCPAsymVar(const RooUnblindCPAsymVar& other, const char* name=0);
+  RooUnblindCPAsymVar(const RooUnblindCPAsymVar& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooUnblindCPAsymVar(*this,newname); }
   ~RooUnblindCPAsymVar() override;
 

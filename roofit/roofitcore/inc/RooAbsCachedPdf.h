@@ -44,8 +44,8 @@ public:
     // Return RooDataHist with cached values
     return getCacheHist(&nset) ;
   }
-  RooAbsPdf* getCachePdf(const RooArgSet* nset=0) const ;
-  RooDataHist* getCacheHist(const RooArgSet* nset=0) const ;
+  RooAbsPdf* getCachePdf(const RooArgSet* nset=nullptr) const ;
+  RooDataHist* getCacheHist(const RooArgSet* nset=nullptr) const ;
 
   void setInterpolationOrder(int order) ;
   Int_t getInterpolationOrder() const {

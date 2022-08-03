@@ -26,10 +26,10 @@ class RooDataHist;
 class RooBinnedGenContext : public RooAbsGenContext {
 public:
   RooBinnedGenContext(const RooAbsPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
-                   const RooArgSet* auxProto=0, bool _verbose= false);
+                   const RooArgSet* auxProto=nullptr, bool _verbose= false);
   ~RooBinnedGenContext() override;
 
-  RooDataSet* generate(double nEvents=0, bool skipInit=false, bool extendedMode=false) override ;
+  RooDataSet* generate(double nEvents=0.0, bool skipInit=false, bool extendedMode=false) override ;
 
   void setProtoDataOrder(Int_t*) override  {}
 

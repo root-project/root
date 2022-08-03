@@ -31,18 +31,18 @@ public:
   /// Default constructor
   inline RooConvCoefVar() {
   }
-  RooConvCoefVar(const char *name, const char *title, const RooAbsAnaConvPdf& input, Int_t coefIdx, const RooArgSet* varList=0) ;
-  RooConvCoefVar(const RooConvCoefVar& other, const char* name=0);
+  RooConvCoefVar(const char *name, const char *title, const RooAbsAnaConvPdf& input, Int_t coefIdx, const RooArgSet* varList=nullptr) ;
+  RooConvCoefVar(const RooConvCoefVar& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooConvCoefVar(*this,newname); }
   /// Destructor
   ~RooConvCoefVar() override {
   } ;
 
-  double getValV(const RooArgSet* nset=0) const override ;
+  double getValV(const RooArgSet* nset=nullptr) const override ;
 
   double evaluate() const override ;
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-  double analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
 protected:
 

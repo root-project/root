@@ -32,7 +32,7 @@ public:
   RooHistFunc() ;
   RooHistFunc(const char *name, const char *title, const RooArgSet& vars, const RooDataHist& dhist, Int_t intOrder=0);
   RooHistFunc(const char *name, const char *title, const RooArgList& funcObs, const RooArgList& histObs, const RooDataHist& dhist, Int_t intOrder=0);
-  RooHistFunc(const RooHistFunc& other, const char* name=0);
+  RooHistFunc(const RooHistFunc& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooHistFunc(*this,newname); }
   ~RooHistFunc() override ;
 
@@ -62,8 +62,8 @@ public:
     return _intOrder ;
   }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-  double analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
   /// Set use of special boundary conditions for c.d.f.s
   void setCdfBoundaries(bool flag) {

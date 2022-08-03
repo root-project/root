@@ -35,7 +35,7 @@ public:
   // Constructors etc.
   RooFormula() ;
   RooFormula(const char* name, const char* formula, const RooArgList& varList, bool checkVariables = true);
-  RooFormula(const RooFormula& other, const char* name=0);
+  RooFormula(const RooFormula& other, const char* name=nullptr);
   TObject* Clone(const char* newName = nullptr) const override {return new RooFormula(*this, newName);}
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -57,7 +57,7 @@ public:
 
   bool ok() const { return _tFormula != nullptr; }
   /// Evalute all parameters/observables, and then evaluate formula.
-  double eval(const RooArgSet* nset=0) const;
+  double eval(const RooArgSet* nset=nullptr) const;
   RooSpan<double> evaluateSpan(const RooAbsReal* dataOwner, RooBatchCompute::RunContext& inputData, const RooArgSet* nset = nullptr) const;
   void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const;
 
