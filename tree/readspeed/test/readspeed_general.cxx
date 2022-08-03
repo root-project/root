@@ -1,6 +1,3 @@
-/* Copyright (C) 2020 Enrico Guiraud
-   See the LICENSE file in the top directory for more information. */
-
 #include "gtest/gtest.h"
 
 #include "ReadSpeed.hxx"
@@ -13,6 +10,7 @@
 
 using namespace ReadSpeed;
 
+// Helper function to generate a .root file with some dummy data in it.
 void RequireFile(const std::string &fname, const std::vector<std::string> &branchNames = {"x"})
 {
    if (gSystem->AccessPathName(fname.c_str()) == false) // then the file already exists: weird return value convention
@@ -31,6 +29,7 @@ void RequireFile(const std::string &fname, const std::vector<std::string> &branc
    t.Write();
 }
 
+// Helper function to concatenate two vectors of strings.
 std::vector<std::string> ConcatVectors(const std::vector<std::string> &first, const std::vector<std::string> &second)
 {
    std::vector<std::string> all;
@@ -41,6 +40,7 @@ std::vector<std::string> ConcatVectors(const std::vector<std::string> &first, co
    return all;
 }
 
+// Creates all of our needed .root files and deletes them once the testing is over.
 class Environment : public ::testing::Environment {
 public:
    ~Environment() override {}
