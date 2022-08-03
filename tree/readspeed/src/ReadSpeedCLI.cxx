@@ -18,15 +18,18 @@
 using namespace ReadSpeed;
 
 const auto usageText = "Usage:\n"
-   " rootreadspeed --files fname1 [fname2 ...]\n"
-   "               --trees tname1 [tname2 ...]\n"
-   "               (--all-branches | --branches bname1 [bname2 ...] | --branches-regex bregex1 "
-   "[bregex2 ...])\n"
-   "               [--threads nthreads]\n"
-   "               [--tasks-per-worker ntasks]\n"
-   " rootreadspeed (--help|-h)\n";
+                       " rootreadspeed --files fname1 [fname2 ...]\n"
+                       "               --trees tname1 [tname2 ...]\n"
+                       "               (--all-branches | --branches bname1 [bname2 ...] | --branches-regex bregex1 "
+                       "[bregex2 ...])\n"
+                       "               [--threads nthreads]\n"
+                       "               [--tasks-per-worker ntasks]\n"
+                       " rootreadspeed (--help|-h)\n"
+                       " \n"
+                       " Use -h for usage help, --help for detailed information.\n";
 
-const auto argUsageText = "Arguments:\n"
+const auto argUsageText =
+   "Arguments:\n"
    " Specifying files and trees:\n"
    "   --files fname1 [fname2...]\n"
    "    The list of root files to read from.\n"
@@ -59,7 +62,8 @@ const auto argUsageText = "Arguments:\n"
    "   --tasks-per-worker ntasks\n"
    "    The number of tasks to generate for each worker thread when using multithreading.\n";
 
-const auto fullUsageText = "Description:\n"
+const auto fullUsageText =
+   "Description:\n"
    " rootreadspeed is a tool used to help identify bottlenecks in root analysis programs\n"
    " by providing an idea of what throughput you can expect when reading ROOT files in\n"
    " certain configurations.\n"
@@ -146,7 +150,7 @@ Args ReadSpeed::ParseArgs(const std::vector<std::string> &args)
    // Print help message and exit if "--help"
    const auto argsProvided = args.size() >= 2;
    const auto helpUsed = argsProvided && (args[1] == "--help" || args[1] == "-h");
-   const auto longHelpUsed = argsProvided && args[1] == "--help" ;
+   const auto longHelpUsed = argsProvided && args[1] == "--help";
 
    if (!argsProvided || helpUsed) {
       std::cout << usageText;
@@ -155,7 +159,7 @@ Args ReadSpeed::ParseArgs(const std::vector<std::string> &args)
       if (longHelpUsed)
          std::cout << "\n\n" << fullUsageText;
       std::cout << std::endl;
-      
+
       return {};
    }
 
