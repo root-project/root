@@ -20,17 +20,22 @@
 #include "RooRealProxy.h"
 #include "RooSetProxy.h"
 #include "RooAICRegistry.h"
+#include "RooDataHist.h"
+
 #include <list>
 
 class RooRealVar;
 class RooAbsReal;
-class RooDataHist ;
 
 class RooHistPdf : public RooAbsPdf {
 public:
-  RooHistPdf() ;
+  RooHistPdf() {}
   RooHistPdf(const char *name, const char *title, const RooArgSet& vars, const RooDataHist& dhist, Int_t intOrder=0);
   RooHistPdf(const char *name, const char *title, const RooArgList& pdfObs, const RooArgList& histObs, const RooDataHist& dhist, Int_t intOrder=0);
+  RooHistPdf(const char *name, const char *title, const RooArgSet& vars,
+             std::unique_ptr<RooDataHist> dhist, int intOrder=0);
+  RooHistPdf(const char *name, const char *title, const RooArgList& pdfObs, const RooArgList& histObs,
+             std::unique_ptr<RooDataHist> dhist, int intOrder=0);
   RooHistPdf(const RooHistPdf& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooHistPdf(*this,newname); }
   ~RooHistPdf() override ;
@@ -109,14 +114,15 @@ protected:
   friend class RooAbsCachedPdf ;
   double totVolume() const ;
 
-  RooArgSet         _histObsList ;   ///< List of observables defining dimensions of histogram
-  RooSetProxy       _pdfObsList ;    ///< List of observables mapped onto histogram observables
-  RooDataHist*      _dataHist ;      ///< Unowned pointer to underlying histogram
-  mutable RooAICRegistry _codeReg ;  ///<! Auxiliary class keeping tracking of analytical integration code
-  Int_t             _intOrder ;      ///< Interpolation order
-  bool            _cdfBoundaries ; ///< Use boundary conditions for CDFs.
-  mutable double  _totVolume ;     ///<! Total volume of space (product of ranges of observables)
-  bool            _unitNorm  ;     ///< Assume contents is unit normalized (for use as pdf cache)
+  RooArgSet _histObsList;                      ///< List of observables defining dimensions of histogram
+  RooSetProxy _pdfObsList;                     ///< List of observables mapped onto histogram observables
+  RooDataHist* _dataHist = nullptr;            ///< Unowned pointer to underlying histogram
+  std::unique_ptr<RooDataHist> _ownedDataHist; ///<! Owned pointer to underlying histogram
+  mutable RooAICRegistry _codeReg ;            ///<! Auxiliary class keeping tracking of analytical integration code
+  Int_t _intOrder = 0;                         ///< Interpolation order
+  bool _cdfBoundaries = false;                 ///< Use boundary conditions for CDFs.
+  mutable double _totVolume = 0.0;             ///<! Total volume of space (product of ranges of observables)
+  bool _unitNorm  = false;                     ///< Assume contents is unit normalized (for use as pdf cache)
 
   ClassDefOverride(RooHistPdf,4) // Histogram based PDF
 };

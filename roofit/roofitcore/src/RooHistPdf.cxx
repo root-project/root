@@ -44,18 +44,6 @@ using namespace std;
 ClassImp(RooHistPdf);
 
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-/// coverity[UNINIT_CTOR]
-
-RooHistPdf::RooHistPdf() : _dataHist(0), _totVolume(0), _unitNorm(false)
-{
-
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor from a RooDataHist. RooDataHist dimensions
 /// can be either real or discrete. See RooDataHist::RooDataHist for details on the binning.
@@ -69,9 +57,7 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& var
   _dataHist((RooDataHist*)&dhist),
   _codeReg(10),
   _intOrder(intOrder),
-  _cdfBoundaries(false),
-  _totVolume(0),
-  _unitNorm(false)
+  _cdfBoundaries(false)
 {
   _histObsList.addClone(vars) ;
   _pdfObsList.add(vars) ;
@@ -121,9 +107,7 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList& pd
   _dataHist((RooDataHist*)&dhist),
   _codeReg(10),
   _intOrder(intOrder),
-  _cdfBoundaries(false),
-  _totVolume(0),
-  _unitNorm(false)
+  _cdfBoundaries(false)
 {
   _histObsList.addClone(histObs) ;
   _pdfObsList.add(pdfObs) ;
@@ -161,6 +145,19 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList& pd
   }
 }
 
+
+RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& vars,
+           std::unique_ptr<RooDataHist> dhist, int intOrder)
+  : RooHistPdf{name, title, vars, *dhist, intOrder}
+{
+  _ownedDataHist = std::move(dhist);
+}
+RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList& pdfObs, const RooArgList& histObs,
+           std::unique_ptr<RooDataHist> dhist, int intOrder)
+  : RooHistPdf{name, title, pdfObs, histObs, *dhist, intOrder}
+{
+  _ownedDataHist = std::move(dhist);
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////

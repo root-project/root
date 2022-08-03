@@ -798,12 +798,9 @@ void collectHistograms(const char *name, TDirectory *file, std::map<std::string,
          RooArgSet vars;
          vars.add(var);
 
-         // TODO: to fix the memory leak of this RooDataHist here, the best
-         // solution will be to follow up with a way for having the RooHistFunc
-         // own the underlying RooDataHist.
-         RooDataHist *dh = new RooDataHist(histname, histname, vars, hist.get());
+         auto dh = std::make_unique<RooDataHist>(histname, histname, vars, hist.get());
          // add it to the list
-         auto hf = std::make_unique<RooHistFunc>(funcname, funcname, var, *dh);
+         auto hf = std::make_unique<RooHistFunc>(funcname, funcname, var, std::move(dh));
          int idx = physics.getSize();
          list_hf[sample] = idx;
          physics.addOwned(std::move(hf));

@@ -41,22 +41,6 @@ discrete dimensions and may have negative values.
 using namespace std;
 
 ClassImp(RooHistFunc);
-;
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooHistFunc::RooHistFunc() :
-  _dataHist(0),
-  _intOrder(0),
-  _cdfBoundaries(false),
-  _totVolume(0),
-  _unitNorm(false)
-{
-  TRACE_CREATE
-}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -73,9 +57,7 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& v
   _dataHist((RooDataHist*)&dhist),
   _codeReg(10),
   _intOrder(intOrder),
-  _cdfBoundaries(false),
-  _totVolume(0),
-  _unitNorm(false)
+  _cdfBoundaries(false)
 {
   _histObsList.addClone(vars) ;
   _depList.add(vars) ;
@@ -115,9 +97,7 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList& 
   _dataHist((RooDataHist*)&dhist),
   _codeReg(10),
   _intOrder(intOrder),
-  _cdfBoundaries(false),
-  _totVolume(0),
-  _unitNorm(false)
+  _cdfBoundaries(false)
 {
   _histObsList.addClone(histObs) ;
   _depList.add(funcObs) ;
@@ -141,6 +121,21 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList& 
   TRACE_CREATE
 }
 
+
+RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& vars,
+           std::unique_ptr<RooDataHist> dhist, int intOrder)
+  : RooHistFunc{name, title, vars, *dhist, intOrder}
+{
+  _ownedDataHist = std::move(dhist);
+}
+
+
+RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList& pdfObs, const RooArgList& histObs,
+           std::unique_ptr<RooDataHist> dhist, int intOrder)
+  : RooHistFunc{name, title, pdfObs, histObs, *dhist, intOrder}
+{
+  _ownedDataHist = std::move(dhist);
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
