@@ -114,7 +114,7 @@ public:
       for (int k =0; k < dim; k++){
          // find value in fAtrrPerm corresponding to k
          int l = std::find(fAttrPerm.begin(), fAttrPerm.end(), k) - fAttrPerm.begin();
-         assert(l > 0 && l < dim);
+         assert(l >= 0 && l < dim);
          out << "( " << i_out[l] << " )";
          if (k < dim-1) {
             out << " * " << inStrides[k];

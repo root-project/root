@@ -78,12 +78,12 @@ def generateConv2DModel_SamePadding():
     
 def generateReshapeModel():
     model = Sequential()
-    model.add(Dense(3, input_shape=(4,)))
-    model.add(Reshape((3, 1)))
+    model.add(Conv2D(8, kernel_size=3, activation="relu", input_shape=(4,4,1), padding="same"))
+    model.add(Reshape((32,4)))
 
     randomGenerator=np.random.RandomState(0)
-    x_train=randomGenerator.rand(1,4)
-    y_train=randomGenerator.rand(1,3,1)
+    x_train=randomGenerator.rand(1,4,4,1)
+    y_train=randomGenerator.rand(1,32,4)
 
     model.compile(loss='mean_squared_error', optimizer=SGD(learning_rate=0.01))
     model.fit(x_train, y_train, epochs=10, batch_size=2)

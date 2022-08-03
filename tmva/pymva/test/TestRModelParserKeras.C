@@ -237,7 +237,10 @@ TEST(RModelParser_Keras, CONV_SAME)
 TEST(RModelParser_Keras, RESHAPE)
 {
     constexpr float TOLERANCE = DEFAULT_TOLERANCE;
-    float inputReshape[]={1,1,1,1};
+    float inputReshape[]={1,1,1,1,
+                          1,1,1,1,
+                          1,1,1,1,
+                          1,1,1,1};
     TMVA_SOFIE_KerasModelReshape::Session s("KerasReshapeModel.dat");
     std::vector<float> outputReshape = s.infer(inputReshape);
 
@@ -256,7 +259,7 @@ TEST(RModelParser_Keras, RESHAPE)
     PyRun_String("from tensorflow.keras.models import load_model",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("import numpy",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("model=load_model('KerasModelReshape.h5')",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("input=numpy.ones((1,4))",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("input=numpy.ones((1,4,4,1))",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
     std::size_t pOutputReshapeSize=(std::size_t)PyLong_AsLong(PyDict_GetItemString(fLocalNS,"outputSize"));
