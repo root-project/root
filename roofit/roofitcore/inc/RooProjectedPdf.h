@@ -23,13 +23,13 @@ public:
 
   RooProjectedPdf() ;
   RooProjectedPdf(const char *name, const char *title,  RooAbsReal& _intpdf, const RooArgSet& intObs);
-  RooProjectedPdf(const RooProjectedPdf& other, const char* name=0) ;
+  RooProjectedPdf(const RooProjectedPdf& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooProjectedPdf(*this,newname); }
   inline ~RooProjectedPdf() override { }
 
   // Analytical integration support
-  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=0) const override ;
-  double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
+  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
+  double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
   bool forceAnalyticalInt(const RooAbsArg& dep) const override ;
 
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;

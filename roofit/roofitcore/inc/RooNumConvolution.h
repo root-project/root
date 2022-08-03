@@ -32,9 +32,9 @@ public:
   RooNumConvolution() ;
 
   RooNumConvolution(const char *name, const char *title,
-            RooRealVar& convVar, RooAbsReal& pdf, RooAbsReal& resmodel, const RooNumConvolution* proto=0) ;
+            RooRealVar& convVar, RooAbsReal& pdf, RooAbsReal& resmodel, const RooNumConvolution* proto=nullptr) ;
 
-  RooNumConvolution(const RooNumConvolution& other, const char* name=0) ;
+  RooNumConvolution(const RooNumConvolution& other, const char* name=nullptr) ;
 
   TObject* clone(const char* newname) const override { return new RooNumConvolution(*this,newname) ; }
   ~RooNumConvolution() override ;

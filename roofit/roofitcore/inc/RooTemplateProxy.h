@@ -201,7 +201,7 @@ public:
     }
   }
 
-  TObject* Clone(const char* newName=0) const override { return new RooTemplateProxy<T>(newName,_owner,*this); }
+  TObject* Clone(const char* newName=nullptr) const override { return new RooTemplateProxy<T>(newName,_owner,*this); }
 
 
   /// Return reference to the proxied object.
@@ -303,13 +303,13 @@ public:
   }
 
   /// Query lower limit of range. This requires the payload to be RooAbsRealLValue or derived.
-  double min(const char* rname=0) const  { return lvptr(static_cast<const T*>(nullptr))->getMin(rname) ; }
+  double min(const char* rname=nullptr) const  { return lvptr(static_cast<const T*>(nullptr))->getMin(rname) ; }
   /// Query upper limit of range. This requires the payload to be RooAbsRealLValue or derived.
-  double max(const char* rname=0) const  { return lvptr(static_cast<const T*>(nullptr))->getMax(rname) ; }
+  double max(const char* rname=nullptr) const  { return lvptr(static_cast<const T*>(nullptr))->getMax(rname) ; }
   /// Check if the range has a lower bound. This requires the payload to be RooAbsRealLValue or derived.
-  bool hasMin(const char* rname=0) const { return lvptr(static_cast<const T*>(nullptr))->hasMin(rname) ; }
+  bool hasMin(const char* rname=nullptr) const { return lvptr(static_cast<const T*>(nullptr))->hasMin(rname) ; }
   /// Check if the range has a upper bound. This requires the payload to be RooAbsRealLValue or derived.
-  bool hasMax(const char* rname=0) const { return lvptr(static_cast<const T*>(nullptr))->hasMax(rname) ; }
+  bool hasMax(const char* rname=nullptr) const { return lvptr(static_cast<const T*>(nullptr))->hasMax(rname) ; }
 
   /// @}
 

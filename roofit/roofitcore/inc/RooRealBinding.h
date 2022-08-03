@@ -28,8 +28,8 @@ namespace RooBatchCompute{ struct RunContext; }
 
 class RooRealBinding : public RooAbsFunc {
 public:
-  RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, const RooArgSet* nset=0, bool clipInvalid=false, const TNamed* rangeName=0);
-  RooRealBinding(const RooRealBinding& other, const RooArgSet* nset=0) ;
+  RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, const RooArgSet* nset=nullptr, bool clipInvalid=false, const TNamed* rangeName=nullptr);
+  RooRealBinding(const RooRealBinding& other, const RooArgSet* nset=nullptr) ;
   ~RooRealBinding() override;
 
   double operator()(const double xvector[]) const override;

@@ -28,9 +28,9 @@ class RooAbsCache {
 
 public:
 
-  RooAbsCache(RooAbsArg* owner=0) ;
+  RooAbsCache(RooAbsArg* owner=nullptr) ;
 
-  RooAbsCache(const RooAbsCache&, RooAbsArg* owner=0 ) ;
+  RooAbsCache(const RooAbsCache&, RooAbsArg* owner=nullptr ) ;
 
   virtual ~RooAbsCache() ;
 

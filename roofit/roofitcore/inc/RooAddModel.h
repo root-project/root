@@ -28,7 +28,7 @@ public:
 
   RooAddModel() ;
   RooAddModel(const char *name, const char *title, const RooArgList& pdfList, const RooArgList& coefList, bool ownPdfList=false) ;
-  RooAddModel(const RooAddModel& other, const char* name=0) ;
+  RooAddModel(const RooAddModel& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooAddModel(*this,newname) ; }
   RooResolutionModel* convolution(RooFormulaVar* basis, RooAbsArg* owner) const override ;
   ~RooAddModel() override ;
@@ -42,8 +42,8 @@ public:
     // Force RooRealIntegral to offer all observables for internal integration
     return true ;
   }
-  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const override ;
-  double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
+  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
+  double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
 
   /// Model is self normalized when used as p.d.f
   bool selfNormalized() const override {
@@ -84,11 +84,11 @@ public:
 protected:
 
   friend class RooAddGenContext ;
-  RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0,
-                                       const RooArgSet* auxProto=0, bool verbose= false) const override ;
+  RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=nullptr,
+                                       const RooArgSet* auxProto=nullptr, bool verbose= false) const override ;
 
-  void selectNormalization(const RooArgSet* depSet=0, bool force=false) override ;
-  void selectNormalizationRange(const char* rangeName=0, bool force=false) override ;
+  void selectNormalization(const RooArgSet* depSet=nullptr, bool force=false) override ;
+  void selectNormalizationRange(const char* rangeName=nullptr, bool force=false) override ;
 
   mutable RooSetProxy _refCoefNorm ;   ///<! Reference observable set for coefficient interpretation
   mutable TNamed* _refCoefRangeName ;  ///<! Reference range name for coefficient interpretation
@@ -112,7 +112,7 @@ protected:
 
   } ;
   mutable RooObjCacheManager _projCacheMgr ;  ///<! Manager of cache with coefficient projections and transformations
-  CacheElem* getProjCache(const RooArgSet* nset, const RooArgSet* iset=0, const char* rangeName=0) const ;
+  CacheElem* getProjCache(const RooArgSet* nset, const RooArgSet* iset=nullptr, const char* rangeName=nullptr) const ;
   void updateCoefficients(CacheElem& cache, const RooArgSet* nset) const ;
 
   typedef RooArgList* pRooArgList ;

@@ -161,9 +161,9 @@ public:
     return readFromStream(is, compact, 0, 0, verbose) ;
   }
   bool readFromStream(std::istream& is, bool compact, const char* flagReadAtt, const char* section, bool verbose=false) ;
-  virtual void writeToStream(std::ostream& os, bool compact, const char* section=0) const;
+  virtual void writeToStream(std::ostream& os, bool compact, const char* section=nullptr) const;
   void writeToFile(const char* fileName) const ;
-  bool readFromFile(const char* fileName, const char* flagReadAtt=0, const char* section=0, bool verbose=false) ;
+  bool readFromFile(const char* fileName, const char* flagReadAtt=nullptr, const char* section=nullptr, bool verbose=false) ;
 
 
   /// Check if this exact instance is in this collection.

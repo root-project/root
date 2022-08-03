@@ -26,7 +26,7 @@ public:
   RooUnblindUniform() ;
   RooUnblindUniform(const char *name, const char *title,
             const char *blindString, double scale, RooAbsReal& blindValue);
-  RooUnblindUniform(const RooUnblindUniform& other, const char* name=0);
+  RooUnblindUniform(const RooUnblindUniform& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooUnblindUniform(*this,newname); }
   ~RooUnblindUniform() override;
 

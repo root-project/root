@@ -29,7 +29,7 @@ public:
     // Default constructor
   } ;
   RooAbsCategoryLValue(const char *name, const char *title);
-  RooAbsCategoryLValue(const RooAbsCategoryLValue& other, const char* name=0) ;
+  RooAbsCategoryLValue(const RooAbsCategoryLValue& other, const char* name=nullptr) ;
   ~RooAbsCategoryLValue() override;
 
   // Value modifiers
@@ -76,21 +76,21 @@ public:
   RooAbsArg& operator=(const RooAbsCategory& other) ;
 
   // Binned fit interface
-  void setBin(Int_t ibin, const char* rangeName=0) override ;
+  void setBin(Int_t ibin, const char* rangeName=nullptr) override ;
   /// Get the index of the plot bin for the current value of this category.
   Int_t getBin(const char* /*rangeName*/=nullptr) const override {
     return getCurrentOrdinalNumber();
   }
   Int_t numBins(const char* rangeName=nullptr) const override ;
-  double getBinWidth(Int_t /*i*/, const char* /*rangeName*/=0) const override {
-    // Return volume of i-th bin (according to binning named rangeName if rangeName!=0)
+  double getBinWidth(Int_t /*i*/, const char* /*rangeName*/=nullptr) const override {
+    // Return volume of i-th bin (according to binning named rangeName if rangeName!=nullptr)
     return 1.0 ;
   }
   double volume(const char* rangeName) const override {
     // Return span of range with given name (=number of states included in this range)
     return numTypes(rangeName) ;
   }
-  void randomize(const char* rangeName=0) override;
+  void randomize(const char* rangeName=nullptr) override;
 
   const RooAbsBinning* getBinningPtr(const char* /*rangeName*/) const override { return 0 ; }
   std::list<std::string> getBinningNames() const override { return std::list<std::string>(1, "") ; }

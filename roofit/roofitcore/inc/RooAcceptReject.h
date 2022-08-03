@@ -31,9 +31,9 @@ public:
   RooAcceptReject() {
     // coverity[UNINIT_CTOR]
   } ;
-  RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig& config, bool verbose=false, const RooAbsReal* maxFuncVal=0);
+  RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig& config, bool verbose=false, const RooAbsReal* maxFuncVal=nullptr);
   RooAbsNumGenerator* clone(const RooAbsReal& func, const RooArgSet& genVars, const RooArgSet& /*condVars*/,
-             const RooNumGenConfig& config, bool verbose=false, const RooAbsReal* maxFuncVal=0) const override {
+             const RooNumGenConfig& config, bool verbose=false, const RooAbsReal* maxFuncVal=nullptr) const override {
     return new RooAcceptReject(func,genVars,config,verbose,maxFuncVal) ;
   }
 

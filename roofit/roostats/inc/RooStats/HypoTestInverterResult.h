@@ -157,7 +157,7 @@ public:
    double GetExpectedUpperLimit(double nsig = 0, const char * opt = "") const ;
 
 
-   double FindInterpolatedLimit(double target, bool lowSearch = false, double xmin=1, double xmax=0);
+   double FindInterpolatedLimit(double target, bool lowSearch = false, double xmin=1, double xmax=0.0);
 
    enum InterpolOption_t { kLinear, kSpline };
 
@@ -169,7 +169,7 @@ public:
 private:
 
 
-   double CalculateEstimatedError(double target, bool lower = true, double xmin = 1, double xmax = 0);
+   double CalculateEstimatedError(double target, bool lower = true, double xmin = 1, double xmax = 0.0);
 
    int FindClosestPointIndex(double target, int mode = 0, double xtarget = 0);
 

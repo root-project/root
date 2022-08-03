@@ -271,7 +271,7 @@ public:
 protected:
 
    /// helper function to check that content of a given set is exclusively parameters
-   bool SetHasOnlyParameters(const RooArgSet& set, const char* errorMsgPrefix=0) ;
+   bool SetHasOnlyParameters(const RooArgSet& set, const char* errorMsgPrefix=nullptr) ;
 
    /// helper functions to define a set in the WS
    void DefineSetInWS(const char* name, const RooArgSet& set);

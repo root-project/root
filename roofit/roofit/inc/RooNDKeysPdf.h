@@ -82,13 +82,13 @@ public:
                TString options = "ma", double rho = 1.0, double nSigma = 3, bool rotate = true,
                bool sortInput = true);
 
-  RooNDKeysPdf(const RooNDKeysPdf& other, const char* name=0);
+  RooNDKeysPdf(const RooNDKeysPdf& other, const char* name=nullptr);
   ~RooNDKeysPdf() override;
 
   TObject* clone(const char* newname) const override { return new RooNDKeysPdf(*this,newname); }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-  double analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
   inline void fixShape(bool fix) {
     createPdf(false);

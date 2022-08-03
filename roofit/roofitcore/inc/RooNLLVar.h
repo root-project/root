@@ -45,7 +45,7 @@ public:
             const RooArgSet& projDeps, bool extended = false,
             RooAbsTestStatistic::Configuration const& cfg=RooAbsTestStatistic::Configuration{});
 
-  RooNLLVar(const RooNLLVar& other, const char* name=0);
+  RooNLLVar(const RooNLLVar& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooNLLVar(*this,newname); }
 
   RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& adata,

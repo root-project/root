@@ -129,7 +129,7 @@ RooCmdArg Cut(const char* cutSpec) ;
 RooCmdArg Cut(const RooFormulaVar& cutVar) ;
 RooCmdArg Binning(const RooAbsBinning& binning) ;
 RooCmdArg Binning(const char* binningName) ;
-RooCmdArg Binning(int nBins, double xlo=0., double xhi=0.) ;
+RooCmdArg Binning(int nBins, double xlo=0.0, double xhi=0.0) ;
 RooCmdArg MarkerStyle(Style_t style) ;
 RooCmdArg MarkerSize(Size_t size) ;
 RooCmdArg MarkerColor(Color_t color) ;
@@ -271,7 +271,7 @@ RooCmdArg SumW2Error(bool flag) ;
 RooCmdArg AsymptoticError(bool flag) ;
 RooCmdArg CloneData(bool flag) ;
 RooCmdArg Integrate(bool flag) ;
-RooCmdArg Minimizer(const char* type, const char* alg=0) ;
+RooCmdArg Minimizer(const char* type, const char* alg=nullptr) ;
 RooCmdArg Offset(bool flag=true) ;
 RooCmdArg RecoverFromUndefinedRegions(double strength);
 /** @} */

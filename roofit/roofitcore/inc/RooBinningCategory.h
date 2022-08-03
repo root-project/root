@@ -25,8 +25,8 @@ class RooBinningCategory : public RooAbsCategory {
 public:
   // Constructors etc.
   inline RooBinningCategory() { }
-  RooBinningCategory(const char *name, const char *title, RooAbsRealLValue& inputVar, const char* binningName=0, const char* catTypeName=0);
-  RooBinningCategory(const RooBinningCategory& other, const char *name=0) ;
+  RooBinningCategory(const char *name, const char *title, RooAbsRealLValue& inputVar, const char* binningName=nullptr, const char* catTypeName=nullptr);
+  RooBinningCategory(const RooBinningCategory& other, const char *name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooBinningCategory(*this, newname); }
   ~RooBinningCategory() override;
 
@@ -35,7 +35,7 @@ public:
 
 protected:
 
-  void initialize(const char* catTypeName=0) ;
+  void initialize(const char* catTypeName=nullptr) ;
 
   RooTemplateProxy<RooAbsRealLValue> _inputVar; ///< Input variable that is mapped
   TString _bname ;         ///< Name of the binning specification to be used to perform the mapping

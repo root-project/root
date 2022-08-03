@@ -24,7 +24,7 @@ public:
 
   RooProfileLL() ;
   RooProfileLL(const char *name, const char *title, RooAbsReal& nll, const RooArgSet& observables);
-  RooProfileLL(const RooProfileLL& other, const char* name=0) ;
+  RooProfileLL(const RooProfileLL& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooProfileLL(*this,newname); }
 
   void setAlwaysStartFromMin(bool flag) { _startFromMin = flag ; }

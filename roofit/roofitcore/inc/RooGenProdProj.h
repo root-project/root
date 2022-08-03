@@ -28,7 +28,7 @@ public:
 
   RooGenProdProj() ;
   RooGenProdProj(const char *name, const char *title, const RooArgSet& _prodSet, const RooArgSet& _intSet,
-       const RooArgSet& _normSet, const char* isetRangeName, const char* normRangeName=0, bool doFactorize=true) ;
+       const RooArgSet& _normSet, const char* isetRangeName, const char* normRangeName=nullptr, bool doFactorize=true) ;
 
   RooGenProdProj(const RooGenProdProj& other, const char* name = 0);
   TObject* clone(const char* newname) const override { return new RooGenProdProj(*this, newname); }

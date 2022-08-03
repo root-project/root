@@ -37,12 +37,12 @@ public:
   // Constructors, assignment etc
   RooRealIntegral() ;
   RooRealIntegral(const char *name, const char *title, const RooAbsReal& function, const RooArgSet& depList,
-        const RooArgSet* funcNormSet=0, const RooNumIntConfig* config=0, const char* rangeName=0) ;
-  RooRealIntegral(const RooRealIntegral& other, const char* name=0);
+        const RooArgSet* funcNormSet=nullptr, const RooNumIntConfig* config=nullptr, const char* rangeName=nullptr) ;
+  RooRealIntegral(const RooRealIntegral& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooRealIntegral(*this,newname); }
   ~RooRealIntegral() override;
 
-  double getValV(const RooArgSet* set=0) const override ;
+  double getValV(const RooArgSet* set=nullptr) const override ;
 
   bool isValid() const override { return _valid; }
 
@@ -76,7 +76,7 @@ public:
     return _function.arg().plotSamplingHint(obs,xlo,xhi) ;
   }
 
-  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=0, const RooNumIntConfig* cfg=0, const char* rangeName=0) const override ;
+  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=nullptr, const RooNumIntConfig* cfg=nullptr, const char* rangeName=nullptr) const override ;
 
   void setAllowComponentSelection(bool allow);
   bool getAllowComponentSelection() const;

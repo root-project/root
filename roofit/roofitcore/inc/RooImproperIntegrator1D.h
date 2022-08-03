@@ -35,7 +35,7 @@ public:
   using RooAbsIntegrator::setLimits ;
   bool setLimits(double* xmin, double* xmax) override;
   bool setUseIntegrandLimits(bool flag) override {_useIntegrandLimits = flag ; return true ; }
-  double integral(const double* yvec=0) override ;
+  double integral(const double* yvec=nullptr) override ;
 
   bool canIntegrate1D() const override { return true ; }
   bool canIntegrate2D() const override { return false ; }
@@ -47,7 +47,7 @@ protected:
   friend class RooNumIntFactory ;
   static void registerIntegrator(RooNumIntFactory& fact) ;
 
-  void initialize(const RooAbsFunc* function=0) ;
+  void initialize(const RooAbsFunc* function=nullptr) ;
 
   enum LimitsCase { Invalid, ClosedBothEnds, OpenBothEnds, OpenBelowSpansZero, OpenBelow,
           OpenAboveSpansZero, OpenAbove };

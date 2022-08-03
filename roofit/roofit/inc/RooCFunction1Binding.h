@@ -90,7 +90,7 @@ class RooCFunction1Map {
 template<class VO, class VI>
 class RooCFunction1Ref : public TObject {
  public:
-  RooCFunction1Ref(VO (*ptr)(VI)=0) : _ptr(ptr) {
+  RooCFunction1Ref(VO (*ptr)(VI)=nullptr) : _ptr(ptr) {
     // Constructor of persistable function reference
   } ;
   ~RooCFunction1Ref() override {} ;
@@ -178,7 +178,7 @@ void RooCFunction1Ref<VO,VI>::Streamer(TBuffer &R__b)
        // Lookup pointer to C function with given name
        _ptr = fmap().lookupPtr(tmpName.Data()) ;
 
-       if (_ptr==0) {
+       if (_ptr==nullptr) {
     coutW(ObjectHandling) << "ERROR: Objected embeds pointer to function named " << tmpName
                 << " but no such function is registered, object will not be functional" << std::endl ;
        }
@@ -223,7 +223,7 @@ public:
     // Default constructor
   } ;
   RooCFunction1Binding(const char *name, const char *title, VO (*_func)(VI), RooAbsReal& _x);
-  RooCFunction1Binding(const RooCFunction1Binding& other, const char* name=0) ;
+  RooCFunction1Binding(const RooCFunction1Binding& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooCFunction1Binding(*this,newname); }
   inline ~RooCFunction1Binding() override { }
 
@@ -287,7 +287,7 @@ public:
     // Default constructor
   } ;
   RooCFunction1PdfBinding(const char *name, const char *title, VO (*_func)(VI), RooAbsReal& _x);
-  RooCFunction1PdfBinding(const RooCFunction1PdfBinding& other, const char* name=0) ;
+  RooCFunction1PdfBinding(const RooCFunction1PdfBinding& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooCFunction1PdfBinding(*this,newname); }
   inline ~RooCFunction1PdfBinding() override { }
 

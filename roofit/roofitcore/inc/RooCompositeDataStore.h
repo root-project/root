@@ -39,15 +39,15 @@ public:
   RooCompositeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, RooCategory& indexCat, std::map<std::string,RooAbsDataStore*> const& inputData) ;
 
   // Empty ctor
-  RooAbsDataStore* clone(const char* newname=0) const override { return new RooCompositeDataStore(*this,newname) ; }
-  RooAbsDataStore* clone(const RooArgSet& vars, const char* newname=0) const override { return new RooCompositeDataStore(*this,vars,newname) ; }
+  RooAbsDataStore* clone(const char* newname=nullptr) const override { return new RooCompositeDataStore(*this,newname) ; }
+  RooAbsDataStore* clone(const RooArgSet& vars, const char* newname=nullptr) const override { return new RooCompositeDataStore(*this,vars,newname) ; }
 
   RooAbsDataStore* reduce(RooStringView name, RooStringView title,
                           const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
                           std::size_t nStart, std::size_t nStop) override;
 
-  RooCompositeDataStore(const RooCompositeDataStore& other, const char* newname=0) ;
-  RooCompositeDataStore(const RooCompositeDataStore& other, const RooArgSet& vars, const char* newname=0) ;
+  RooCompositeDataStore(const RooCompositeDataStore& other, const char* newname=nullptr) ;
+  RooCompositeDataStore(const RooCompositeDataStore& other, const RooArgSet& vars, const char* newname=nullptr) ;
 
   ~RooCompositeDataStore() override ;
 
@@ -90,7 +90,7 @@ public:
   void resetBuffers() override ;
 
   // Constant term  optimizer interface
-  void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0, bool skipZeroWeights=false) override ;
+  void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=nullptr, bool skipZeroWeights=false) override ;
   const RooAbsArg* cacheOwner() override { return 0 ; }
   void setArgStatus(const RooArgSet& set, bool active) override ;
   void resetCache() override ;
@@ -98,7 +98,7 @@ public:
   void recalculateCache(const RooArgSet* /*proj*/, Int_t /*firstEvent*/, Int_t /*lastEvent*/, Int_t /*stepSize*/, bool /*skipZeroWeights*/) override ;
   bool hasFilledCache() const override ;
 
-  void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=0, const char* rangeName=0,
+  void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=nullptr, const char* rangeName=nullptr,
       std::size_t nStart=0, std::size_t nStop = std::numeric_limits<std::size_t>::max()) override;
 
   void forceCacheUpdate() override ;

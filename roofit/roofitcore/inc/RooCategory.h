@@ -31,7 +31,7 @@ public:
   RooCategory() ;
   RooCategory(const char *name, const char *title);
   RooCategory(const char* name, const char* title, const std::map<std::string, int>& allowedStates);
-  RooCategory(const RooCategory& other, const char* name=0) ;
+  RooCategory(const RooCategory& other, const char* name=nullptr) ;
   RooCategory& operator=(const RooCategory&) = delete;
   ~RooCategory() override;
   TObject* clone(const char* newname) const override { return new RooCategory(*this,newname); }

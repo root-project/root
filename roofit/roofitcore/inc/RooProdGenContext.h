@@ -30,7 +30,7 @@ class RooSuperCategory ;
 class RooProdGenContext : public RooAbsGenContext {
 public:
   RooProdGenContext(const RooProdPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
-          const RooArgSet* auxProto=0, bool _verbose= false);
+          const RooArgSet* auxProto=nullptr, bool _verbose= false);
   ~RooProdGenContext() override;
 
   void setProtoDataOrder(Int_t* lut) override ;

@@ -68,7 +68,7 @@ public:
   RooAbsReal(const char *name, const char *title, const char *unit= "") ;
   RooAbsReal(const char *name, const char *title, double minVal, double maxVal,
         const char *unit= "") ;
-  RooAbsReal(const RooAbsReal& other, const char* name=0);
+  RooAbsReal(const RooAbsReal& other, const char* name=nullptr);
   RooAbsReal& operator=(const RooAbsReal& other);
   ~RooAbsReal() override;
 
@@ -156,16 +156,16 @@ public:
   TString getTitle(bool appendUnit= false) const;
 
   // Lightweight interface adaptors (caller takes ownership)
-  RooAbsFunc *bindVars(const RooArgSet &vars, const RooArgSet* nset=0, bool clipInvalid=false) const;
+  RooAbsFunc *bindVars(const RooArgSet &vars, const RooArgSet* nset=nullptr, bool clipInvalid=false) const;
 
   // Create a fundamental-type object that can hold our value.
-  RooAbsArg *createFundamental(const char* newname=0) const override;
+  RooAbsArg *createFundamental(const char* newname=nullptr) const override;
 
   // Analytical integration support
-  virtual Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=0) const ;
-  virtual double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
-  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  virtual double analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  virtual Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=nullptr) const ;
+  virtual double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=nullptr) const ;
+  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const ;
+  virtual double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const ;
   virtual bool forceAnalyticalInt(const RooAbsArg& /*dep*/) const {
     // Interface to force RooRealIntegral to offer given observable for internal integration
     // even if this is deemed unsafe. This default implementation returns always false
@@ -214,19 +214,19 @@ public:
     return createIntegral(iset,0,0,rangeName) ;
   }
   /// Create integral over observables in iset in range named rangeName with integrand normalized over observables in nset
-  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset, const char* rangeName=0) const {
+  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset, const char* rangeName=nullptr) const {
     return createIntegral(iset,&nset,0,rangeName) ;
   }
   /// Create integral over observables in iset in range named rangeName with integrand normalized over observables in nset while
   /// using specified configuration for any numeric integration.
-  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset, const RooNumIntConfig& cfg, const char* rangeName=0) const {
+  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset, const RooNumIntConfig& cfg, const char* rangeName=nullptr) const {
     return createIntegral(iset,&nset,&cfg,rangeName) ;
   }
   /// Create integral over observables in iset in range named rangeName using specified configuration for any numeric integration.
-  RooAbsReal* createIntegral(const RooArgSet& iset, const RooNumIntConfig& cfg, const char* rangeName=0) const {
+  RooAbsReal* createIntegral(const RooArgSet& iset, const RooNumIntConfig& cfg, const char* rangeName=nullptr) const {
     return createIntegral(iset,0,&cfg,rangeName) ;
   }
-  virtual RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=0, const RooNumIntConfig* cfg=0, const char* rangeName=0) const ;
+  virtual RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=nullptr, const RooNumIntConfig* cfg=nullptr, const char* rangeName=nullptr) const ;
 
 
   void setParameterizeIntegral(const RooArgSet& paramVars) ;
@@ -265,7 +265,7 @@ public:
   void setIntegratorConfig(const RooNumIntConfig& config) ;
 
   virtual void fixAddCoefNormalization(const RooArgSet& addNormSet=RooArgSet(),bool force=true) ;
-  virtual void fixAddCoefRange(const char* rangeName=0,bool force=true) ;
+  virtual void fixAddCoefRange(const char* rangeName=nullptr,bool force=true) ;
 
   virtual void preferredObservableScanOrder(const RooArgSet& obs, RooArgSet& orderedObs) const ;
 
@@ -283,12 +283,12 @@ public:
 
   // Forwarder function for backward compatibility
   virtual RooPlot *plotSliceOn(RooPlot *frame, const RooArgSet& sliceSet, Option_t* drawOptions="L",
-                double scaleFactor=1.0, ScaleType stype=Relative, const RooAbsData* projData=0) const;
+                double scaleFactor=1.0, ScaleType stype=Relative, const RooAbsData* projData=nullptr) const;
 
   // Fill an existing histogram
   TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars,
            double scaleFactor= 1, const RooArgSet *projectedVars= 0, bool scaling=true,
-           const RooArgSet* condObs=0, bool setError=true) const;
+           const RooArgSet* condObs=nullptr, bool setError=true) const;
 
   // Create 1,2, and 3D histograms from and fill it
   TH1 *createHistogram(const char* varNameList, Int_t xbins=0, Int_t ybins=0, Int_t zbins=0) const ;
@@ -327,8 +327,8 @@ public:
   enum ErrorLoggingMode { PrintErrors, CollectErrors, CountErrors, Ignore } ;
   static ErrorLoggingMode evalErrorLoggingMode() ;
   static void setEvalErrorLoggingMode(ErrorLoggingMode m) ;
-  void logEvalError(const char* message, const char* serverValueString=0) const ;
-  static void logEvalError(const RooAbsReal* originator, const char* origName, const char* message, const char* serverValueString=0) ;
+  void logEvalError(const char* message, const char* serverValueString=nullptr) const ;
+  static void logEvalError(const RooAbsReal* originator, const char* origName, const char* message, const char* serverValueString=nullptr) ;
   static void printEvalErrors(std::ostream&os=std::cout, Int_t maxPerNode=10000000) ;
   static Int_t numEvalErrors() ;
   static Int_t numEvalErrorItems() ;
@@ -375,15 +375,15 @@ public:
 
 protected:
   // Hook for objects with normalization-dependent parameters interpretation
-  virtual void selectNormalization(const RooArgSet* depSet=0, bool force=false) ;
-  virtual void selectNormalizationRange(const char* rangeName=0, bool force=false) ;
+  virtual void selectNormalization(const RooArgSet* depSet=nullptr, bool force=false) ;
+  virtual void selectNormalizationRange(const char* rangeName=nullptr, bool force=false) ;
 
   // Helper functions for plotting
   bool plotSanityChecks(RooPlot* frame) const ;
   void makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* allVars,
           RooArgSet& projectedVars, bool silent) const ;
 
-  TString integralNameSuffix(const RooArgSet& iset, const RooArgSet* nset=0, const char* rangeName=0, bool omitEmpty=false) const ;
+  TString integralNameSuffix(const RooArgSet& iset, const RooArgSet* nset=nullptr, const char* rangeName=nullptr, bool omitEmpty=false) const ;
 
 
   bool isSelectedComp() const ;
@@ -392,7 +392,7 @@ protected:
  public:
   const RooAbsReal* createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars, RooArgSet*& cloneSet) const ;
   const RooAbsReal *createPlotProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
-                     RooArgSet *&cloneSet, const char* rangeName=0, const RooArgSet* condObs=0) const;
+                     RooArgSet *&cloneSet, const char* rangeName=nullptr, const RooArgSet* condObs=nullptr) const;
   virtual void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const;
 
  protected:
@@ -467,7 +467,7 @@ protected:
  protected:
   // Hooks for RooDataSet interface
   friend class RooVectorDataStore ;
-  void syncCache(const RooArgSet* set=0) override { getVal(set) ; }
+  void syncCache(const RooArgSet* set=nullptr) override { getVal(set) ; }
   void copyCache(const RooAbsArg* source, bool valueOnly=false, bool setValDirty=true) override ;
   void attachToTree(TTree& t, Int_t bufSize=32000) override ;
   void attachToVStore(RooVectorDataStore& vstore) override ;

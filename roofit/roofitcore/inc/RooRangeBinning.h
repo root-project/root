@@ -21,10 +21,10 @@
 class RooRangeBinning : public RooAbsBinning {
 public:
 
-  RooRangeBinning(const char* name=0) ;
-  RooRangeBinning(double xmin, double xmax, const char* name=0) ;
-  RooRangeBinning(const RooRangeBinning&, const char* name=0) ;
-  RooAbsBinning* clone(const char* name=0) const override { return new RooRangeBinning(*this,name?name:GetName()) ; }
+  RooRangeBinning(const char* name=nullptr) ;
+  RooRangeBinning(double xmin, double xmax, const char* name=nullptr) ;
+  RooRangeBinning(const RooRangeBinning&, const char* name=nullptr) ;
+  RooAbsBinning* clone(const char* name=nullptr) const override { return new RooRangeBinning(*this,name?name:GetName()) ; }
   ~RooRangeBinning() override ;
 
   Int_t numBoundaries() const override { return 2 ; }

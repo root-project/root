@@ -58,7 +58,7 @@ public:
   RooAbsTestStatistic() {}
   RooAbsTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
                       const RooArgSet& projDeps, Configuration const& cfg);
-  RooAbsTestStatistic(const RooAbsTestStatistic& other, const char* name=0);
+  RooAbsTestStatistic(const RooAbsTestStatistic& other, const char* name=nullptr);
   ~RooAbsTestStatistic() override;
   virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
                                       const RooArgSet& projDeps, Configuration const& cfg) = 0;

@@ -32,7 +32,7 @@ public:
   // Constructors, assignment etc.
   RooLinearVar() {} ;
   RooLinearVar(const char *name, const char *title, RooAbsRealLValue& variable, const RooAbsReal& slope, const RooAbsReal& offset, const char *unit= "") ;
-  RooLinearVar(const RooLinearVar& other, const char* name=0);
+  RooLinearVar(const RooLinearVar& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooLinearVar(*this,newname); }
   ~RooLinearVar() override ;
 
@@ -41,8 +41,8 @@ public:
 
   // Jacobian and limits
   bool hasBinning(const char* name) const override ;
-  const RooAbsBinning& getBinning(const char* name=0, bool verbose=true, bool createOnTheFly=false) const override ;
-  RooAbsBinning& getBinning(const char* name=0, bool verbose=true, bool createOnTheFly=false) override  ;
+  const RooAbsBinning& getBinning(const char* name=nullptr, bool verbose=true, bool createOnTheFly=false) const override ;
+  RooAbsBinning& getBinning(const char* name=nullptr, bool verbose=true, bool createOnTheFly=false) override  ;
   std::list<std::string> getBinningNames() const override;
 
   double jacobian() const override ;

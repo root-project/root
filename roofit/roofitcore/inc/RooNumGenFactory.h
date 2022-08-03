@@ -37,7 +37,7 @@ public:
   const RooAbsNumGenerator* getProtoSampler(const char* name) ;
 
   RooAbsNumGenerator* createSampler(RooAbsReal& func, const RooArgSet& genVars, const RooArgSet& condVars,
-                const RooNumGenConfig& config, bool verbose=false, RooAbsReal* maxFuncVal=0) ;
+                const RooNumGenConfig& config, bool verbose=false, RooAbsReal* maxFuncVal=nullptr) ;
 
 
 protected:

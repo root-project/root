@@ -24,7 +24,7 @@ class Roo1DTable ;
 
 class RooDataProjBinding : public RooRealBinding {
 public:
-  RooDataProjBinding(const RooAbsReal &real, const RooAbsData& data, const RooArgSet &vars, const RooArgSet* normSet=0) ;
+  RooDataProjBinding(const RooAbsReal &real, const RooAbsData& data, const RooArgSet &vars, const RooArgSet* normSet=nullptr) ;
   ~RooDataProjBinding() override ;
 
   double operator()(const double xvector[]) const override;

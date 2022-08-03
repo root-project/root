@@ -72,7 +72,7 @@ public:
   RooAbsCollection(const char *name);
   virtual TObject* clone(const char* newname) const = 0 ;
   virtual TObject* create(const char* newname) const = 0 ;
-  TObject* Clone(const char* newname=0) const override {
+  TObject* Clone(const char* newname=nullptr) const override {
     return clone(newname?newname:GetName()) ;
   }
   ~RooAbsCollection() override;
@@ -151,11 +151,11 @@ public:
   }
 
    // Utilities functions when used as configuration object
-   double getRealValue(const char* name, double defVal=0, bool verbose=false) const ;
+   double getRealValue(const char* name, double defVal=0.0, bool verbose=false) const ;
    const char* getCatLabel(const char* name, const char* defVal="", bool verbose=false) const ;
    Int_t getCatIndex(const char* name, Int_t defVal=0, bool verbose=false) const ;
    const char* getStringValue(const char* name, const char* defVal="", bool verbose=false) const ;
-   bool setRealValue(const char* name, double newVal=0, bool verbose=false) ;
+   bool setRealValue(const char* name, double newVal=0.0, bool verbose=false) ;
    bool setCatLabel(const char* name, const char* newVal="", bool verbose=false) ;
    bool setCatIndex(const char* name, Int_t newVal=0, bool verbose=false) ;
    bool setStringValue(const char* name, const char* newVal="", bool verbose=false) ;
@@ -313,7 +313,7 @@ public:
         const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
         const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) const ;
   void printLatex(std::ostream& ofs, Int_t ncol, const char* option="NEYU", Int_t sigDigit=1,
-                  const RooLinkedList& siblingLists=RooLinkedList(), const RooCmdArg* formatCmd=0) const ;
+                  const RooLinkedList& siblingLists=RooLinkedList(), const RooCmdArg* formatCmd=nullptr) const ;
 
   void setName(const char *name) {
     // Set name of collection
@@ -366,13 +366,13 @@ protected:
   // Support for snapshot method
   bool addServerClonesToList(const RooAbsArg& var) ;
 
-  inline TNamed* structureTag() { if (_structureTag==0) makeStructureTag() ; return _structureTag ; }
-  inline TNamed* typedStructureTag() { if (_typedStructureTag==0) makeTypedStructureTag() ; return _typedStructureTag ; }
+  inline TNamed* structureTag() { if (_structureTag==nullptr) makeStructureTag() ; return _structureTag ; }
+  inline TNamed* typedStructureTag() { if (_typedStructureTag==nullptr) makeTypedStructureTag() ; return _typedStructureTag ; }
 
   mutable TNamed* _structureTag{nullptr};      ///<! Structure tag
   mutable TNamed* _typedStructureTag{nullptr}; ///<! Typed structure tag
 
-  inline void clearStructureTags() { _structureTag=0 ; _typedStructureTag = 0 ; }
+  inline void clearStructureTags() { _structureTag=nullptr ; _typedStructureTag = 0 ; }
 
   void makeStructureTag() {}
   void makeTypedStructureTag() {}

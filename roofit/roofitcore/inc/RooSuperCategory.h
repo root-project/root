@@ -29,7 +29,7 @@ public:
   // Constructors etc.
   RooSuperCategory();
   RooSuperCategory(const char *name, const char *title, const RooArgSet& inputCatList);
-  RooSuperCategory(const RooSuperCategory& other, const char *name=0) ;
+  RooSuperCategory(const RooSuperCategory& other, const char *name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooSuperCategory(*this,newname); }
   ~RooSuperCategory() override { };
 

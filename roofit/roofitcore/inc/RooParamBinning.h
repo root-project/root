@@ -24,10 +24,10 @@
 class RooParamBinning : public RooAbsBinning {
 public:
 
-  RooParamBinning(const char* name=0) ;
-  RooParamBinning(RooAbsReal& xlo, RooAbsReal& xhi, Int_t nBins, const char* name=0) ;
-  RooParamBinning(const RooParamBinning& other, const char* name=0) ;
-  RooAbsBinning* clone(const char* name=0) const override { return new RooParamBinning(*this,name?name:GetName()) ; }
+  RooParamBinning(const char* name=nullptr) ;
+  RooParamBinning(RooAbsReal& xlo, RooAbsReal& xhi, Int_t nBins, const char* name=nullptr) ;
+  RooParamBinning(const RooParamBinning& other, const char* name=nullptr) ;
+  RooAbsBinning* clone(const char* name=nullptr) const override { return new RooParamBinning(*this,name?name:GetName()) ; }
   ~RooParamBinning() override ;
 
   void setRange(double xlo, double xhi) override ;

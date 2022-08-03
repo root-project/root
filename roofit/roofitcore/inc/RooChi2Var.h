@@ -38,7 +38,7 @@ public:
 
   enum FuncMode { Function, Pdf, ExtendedPdf } ;
 
-  RooChi2Var(const RooChi2Var& other, const char* name=0);
+  RooChi2Var(const RooChi2Var& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooChi2Var(*this,newname); }
 
   RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& dhist,

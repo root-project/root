@@ -70,7 +70,7 @@ namespace RooStats {
     /// if option "TF1" is used the objects are drawn using a TF1 scanning the LL function in a
     /// grid of the set points (by default
     /// the TF1 can be costumized by setting maximum and the number of points to scan
-    void Draw(const Option_t *options=0) override;
+    void Draw(const Option_t *options=nullptr) override;
 
   private:
 

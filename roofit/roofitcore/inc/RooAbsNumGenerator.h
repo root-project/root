@@ -30,9 +30,9 @@ class RooNumGenConfig ;
 class RooAbsNumGenerator : public TNamed, public RooPrintable {
 public:
   RooAbsNumGenerator() : _cloneSet(0), _funcClone(0), _funcMaxVal(0), _verbose(false), _isValid(false), _funcValStore(0), _funcValPtr(0), _cache(0) {} ;
-  RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &genVars, bool verbose=false, const RooAbsReal* maxFuncVal=0);
+  RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &genVars, bool verbose=false, const RooAbsReal* maxFuncVal=nullptr);
   virtual RooAbsNumGenerator* clone(const RooAbsReal&, const RooArgSet& genVars, const RooArgSet& condVars,
-                const RooNumGenConfig& config, bool verbose=false, const RooAbsReal* maxFuncVal=0) const = 0 ;
+                const RooNumGenConfig& config, bool verbose=false, const RooAbsReal* maxFuncVal=nullptr) const = 0 ;
 
   bool isValid() const {
     // If true, generator is in a valid state

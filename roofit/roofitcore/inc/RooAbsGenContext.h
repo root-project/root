@@ -25,7 +25,7 @@ class RooDataSet;
 
 class RooAbsGenContext : public TNamed, public RooPrintable {
 public:
-  RooAbsGenContext(const RooAbsPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0, const RooArgSet* auxProto=0,
+  RooAbsGenContext(const RooAbsPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0, const RooArgSet* auxProto=nullptr,
          bool _verbose= false) ;
   ~RooAbsGenContext() override;
 

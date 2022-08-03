@@ -35,7 +35,7 @@ public:
   ~RooMCIntegrator() override;
 
   bool checkLimits() const override;
-  double integral(const double* yvec=0) override;
+  double integral(const double* yvec=nullptr) override;
 
   enum Stage { AllStages, ReuseGrid, RefineGrid };
   double vegas(Stage stage, UInt_t calls, UInt_t iterations, double *absError= 0);

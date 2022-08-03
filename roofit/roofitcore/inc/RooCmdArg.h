@@ -35,10 +35,10 @@ public:
   /// a name and no payload doesn't make sense anyway.
   RooCmdArg(const char* name,
             Int_t i1, Int_t i2=0,
-            double d1=0, double d2=0,
-            const char* s1=0, const char* s2=0,
-            const TObject* o1=0, const TObject* o2=0, const RooCmdArg* ca=0, const char* s3=0,
-            const RooArgSet* c1=0, const RooArgSet* c2=0) ;
+            double d1=0.0, double d2=0.0,
+            const char* s1=nullptr, const char* s2=nullptr,
+            const TObject* o1=nullptr, const TObject* o2=nullptr, const RooCmdArg* ca=nullptr, const char* s3=nullptr,
+            const RooArgSet* c1=nullptr, const RooArgSet* c2=nullptr) ;
   RooCmdArg(const RooCmdArg& other) ;
   RooCmdArg& operator=(const RooCmdArg& other) ;
   void addArg(const RooCmdArg& arg) ;
@@ -54,7 +54,7 @@ public:
   /// Return list of sub-arguments in this RooCmdArg
   RooLinkedList& subArgs() { return _argList ; }
 
-  TObject* Clone(const char* newName=0) const override {
+  TObject* Clone(const char* newName=nullptr) const override {
     RooCmdArg* newarg = new RooCmdArg(*this) ;
     if (newName) { newarg->SetName(newName) ; }
     return newarg ;

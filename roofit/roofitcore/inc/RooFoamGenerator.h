@@ -31,9 +31,9 @@ class RooNumGenFactory ;
 class RooFoamGenerator : public RooAbsNumGenerator {
 public:
   RooFoamGenerator() : _binding(0), _tfoam(0), _xmin(0), _range(0), _vec(0) {} ;
-  RooFoamGenerator(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig& config, bool verbose=false, const RooAbsReal* maxFuncVal=0);
+  RooFoamGenerator(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig& config, bool verbose=false, const RooAbsReal* maxFuncVal=nullptr);
   RooAbsNumGenerator* clone(const RooAbsReal& func, const RooArgSet& genVars, const RooArgSet& /*condVars*/,
-             const RooNumGenConfig& config, bool verbose=false, const RooAbsReal* maxFuncVal=0) const override {
+             const RooNumGenConfig& config, bool verbose=false, const RooAbsReal* maxFuncVal=nullptr) const override {
     return new RooFoamGenerator(func,genVars,config,verbose,maxFuncVal) ;
   }
   ~RooFoamGenerator() override;

@@ -35,7 +35,7 @@ public:
          RooAbsReal& _sigp, RooAbsReal& _xi,
               RooAbsReal& _rho1, RooAbsReal& _rho2);
 
-  RooBukinPdf(const RooBukinPdf& other,const char* name=0) ;
+  RooBukinPdf(const RooBukinPdf& other,const char* name=nullptr) ;
 
   TObject* clone(const char* newname) const override { return new RooBukinPdf(*this,newname);   }
   inline ~RooBukinPdf() override { }

@@ -40,16 +40,16 @@ public:
   RooAbsDataStore() {}
   RooAbsDataStore(RooStringView name, RooStringView title, const RooArgSet& vars)
     : TNamed(name,title), _vars{vars} {}
-  RooAbsDataStore(const RooAbsDataStore& other, const char* newname=0)
+  RooAbsDataStore(const RooAbsDataStore& other, const char* newname=nullptr)
     : RooAbsDataStore(other, other._vars, newname) {}
-  RooAbsDataStore(const RooAbsDataStore& other, const RooArgSet& vars, const char* newname=0)
+  RooAbsDataStore(const RooAbsDataStore& other, const RooArgSet& vars, const char* newname=nullptr)
     : TNamed(other), RooPrintable(other), _vars{vars}, _doDirtyProp{other._doDirtyProp}
   {
     if(newname) SetName(newname);
   }
 
-  virtual RooAbsDataStore* clone(const char* newname=0) const = 0 ;
-  virtual RooAbsDataStore* clone(const RooArgSet& vars, const char* newname=0) const = 0 ;
+  virtual RooAbsDataStore* clone(const char* newname=nullptr) const = 0 ;
+  virtual RooAbsDataStore* clone(const RooArgSet& vars, const char* newname=nullptr) const = 0 ;
 
   virtual RooAbsDataStore* reduce(RooStringView name, RooStringView title,
                                   const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
@@ -126,7 +126,7 @@ public:
 
 
   // Constant term  optimizer interface
-  virtual void cacheArgs(const RooAbsArg* cacheOwner, RooArgSet& varSet, const RooArgSet* nset=0, bool skipZeroWeights=false) = 0 ;
+  virtual void cacheArgs(const RooAbsArg* cacheOwner, RooArgSet& varSet, const RooArgSet* nset=nullptr, bool skipZeroWeights=false) = 0 ;
   virtual const RooAbsArg* cacheOwner() = 0 ;
   virtual void attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVars) = 0 ;
   virtual void setArgStatus(const RooArgSet& set, bool active) = 0 ;
@@ -144,7 +144,7 @@ public:
   virtual const TTree* tree() const { return 0 ; }
   virtual void dump() {}
 
-  virtual void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=0, const char* rangeName=0,
+  virtual void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=nullptr, const char* rangeName=nullptr,
       std::size_t nStart=0, std::size_t nStop = std::numeric_limits<std::size_t>::max()) = 0 ;
 
   virtual void forceCacheUpdate() {} ;

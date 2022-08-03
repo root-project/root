@@ -65,7 +65,7 @@ public:
   RooDataSet() ;
 
   // Empty constructor
-  RooDataSet(RooStringView name, RooStringView title, const RooArgSet& vars, const char* wgtVarName=0) ;
+  RooDataSet(RooStringView name, RooStringView title, const RooArgSet& vars, const char* wgtVarName=nullptr) ;
 
   // Universal constructor
   RooDataSet(RooStringView name, RooStringView title, const RooArgSet& vars, const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg(),
@@ -74,29 +74,29 @@ public:
 
     // Constructor for subset of existing dataset
   RooDataSet(RooStringView name, RooStringView title, RooDataSet *data, const RooArgSet& vars,
-             const char *cuts=0, const char* wgtVarName=0);
+             const char *cuts=nullptr, const char* wgtVarName=nullptr);
   RooDataSet(RooStringView name, RooStringView title, RooDataSet *data, const RooArgSet& vars,
-             const RooFormulaVar& cutVar, const char* wgtVarName=0) ;
+             const RooFormulaVar& cutVar, const char* wgtVarName=nullptr) ;
 
 
   // Constructor importing data from external ROOT Tree
   RooDataSet(RooStringView name, RooStringView title, TTree *tree, const RooArgSet& vars,
-             const char *cuts=0, const char* wgtVarName=0);
+             const char *cuts=nullptr, const char* wgtVarName=nullptr);
   RooDataSet(RooStringView name, RooStringView title, TTree *tree, const RooArgSet& vars,
-             const RooFormulaVar& cutVar, const char* wgtVarName=0) ;
+             const RooFormulaVar& cutVar, const char* wgtVarName=nullptr) ;
 
-  RooDataSet(RooDataSet const & other, const char* newname=0) ;
+  RooDataSet(RooDataSet const & other, const char* newname=nullptr) ;
   TObject* Clone(const char* newname = "") const override {
     return new RooDataSet(*this, newname && newname[0] != '\0' ? newname : GetName());
   }
   ~RooDataSet() override ;
 
-  RooAbsData* emptyClone(const char* newName=0, const char* newTitle=0, const RooArgSet* vars=0, const char* wgtVarName=0) const override;
+  RooAbsData* emptyClone(const char* newName=nullptr, const char* newTitle=nullptr, const RooArgSet* vars=nullptr, const char* wgtVarName=nullptr) const override;
 
-  RooDataHist* binnedClone(const char* newName=0, const char* newTitle=0) const ;
+  RooDataHist* binnedClone(const char* newName=nullptr, const char* newTitle=nullptr) const ;
 
   double sumEntries() const override;
-  double sumEntries(const char* cutSpec, const char* cutRange=0) const override;
+  double sumEntries(const char* cutSpec, const char* cutRange=nullptr) const override;
 
   virtual RooPlot* plotOnXY(RooPlot* frame,
              const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),
@@ -109,7 +109,7 @@ public:
   /// The possible options are: (D)ebug, (Q)uiet.
   static RooDataSet *read(const char *filename, const RooArgList &variables,
            const char *opts= "", const char* commonPath="",
-           const char *indexCatName=0) ;
+           const char *indexCatName=nullptr) ;
   bool write(const char* filename) const;
   bool write(std::ostream & ofs) const;
 
@@ -130,14 +130,14 @@ public:
   RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len, bool sumW2) const override;
 
   /// Add one ore more rows of data
-  void add(const RooArgSet& row, double weight=1.0, double weightError=0) override;
+  void add(const RooArgSet& row, double weight=1.0, double weightError=0.0) override;
   virtual void add(const RooArgSet& row, double weight, double weightErrorLo, double weightErrorHi);
 
-  virtual void addFast(const RooArgSet& row, double weight=1.0, double weightError=0);
+  virtual void addFast(const RooArgSet& row, double weight=1.0, double weightError=0.0);
 
   void append(RooDataSet& data) ;
-  bool merge(RooDataSet* data1, RooDataSet* data2=0, RooDataSet* data3=0,
-           RooDataSet* data4=0, RooDataSet* data5=0, RooDataSet* data6=0) ;
+  bool merge(RooDataSet* data1, RooDataSet* data2=nullptr, RooDataSet* data3=nullptr,
+           RooDataSet* data4=nullptr, RooDataSet* data5=nullptr, RooDataSet* data6=nullptr) ;
   bool merge(std::list<RooDataSet*> dsetList) ;
 
   virtual RooAbsArg* addColumn(RooAbsArg& var, bool adjustRange=true) ;
@@ -161,7 +161,7 @@ protected:
   void initialize(const char* wgtVarName) ;
 
   // Cache copy feature is not publicly accessible
-  RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=0,
+  RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=nullptr,
                         std::size_t nStart=0, std::size_t nStop = std::numeric_limits<std::size_t>::max()) override;
   RooDataSet(RooStringView name, RooStringView title, RooDataSet *ntuple,
              const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,

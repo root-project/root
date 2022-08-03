@@ -36,29 +36,29 @@ class RooTreeDataStore : public RooAbsDataStore {
 public:
 
   RooTreeDataStore() ;
-  RooTreeDataStore(TTree* t, const RooArgSet& vars, const char* wgtVarName=0) ;
+  RooTreeDataStore(TTree* t, const RooArgSet& vars, const char* wgtVarName=nullptr) ;
 
   // Empty ctor
-  RooTreeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, const char* wgtVarName=0) ;
-  RooAbsDataStore* clone(const char* newname=0) const override { return new RooTreeDataStore(*this,newname) ; }
-  RooAbsDataStore* clone(const RooArgSet& vars, const char* newname=0) const override { return new RooTreeDataStore(*this,vars,newname) ; }
+  RooTreeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, const char* wgtVarName=nullptr) ;
+  RooAbsDataStore* clone(const char* newname=nullptr) const override { return new RooTreeDataStore(*this,newname) ; }
+  RooAbsDataStore* clone(const RooArgSet& vars, const char* newname=nullptr) const override { return new RooTreeDataStore(*this,vars,newname) ; }
 
   RooAbsDataStore* reduce(RooStringView name, RooStringView title,
                           const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
                           std::size_t nStart, std::size_t nStop) override;
 
   // Constructor from TTree
-  RooTreeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, TTree& t, const char* selExpr=0, const char* wgtVarName=0) ;
+  RooTreeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, TTree& t, const char* selExpr=nullptr, const char* wgtVarName=nullptr) ;
 
   // Constructor from DataStore
-  RooTreeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, const RooAbsDataStore& tds, const char* selExpr=0, const char* wgtVarName=0) ;
+  RooTreeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, const RooAbsDataStore& tds, const char* selExpr=nullptr, const char* wgtVarName=nullptr) ;
 
   RooTreeDataStore(RooStringView name, RooStringView title, RooAbsDataStore& tds,
                    const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
-                   Int_t nStart, Int_t nStop, const char* wgtVarName=0) ;
+                   Int_t nStart, Int_t nStop, const char* wgtVarName=nullptr) ;
 
-  RooTreeDataStore(const RooTreeDataStore& other, const char* newname=0) ;
-  RooTreeDataStore(const RooTreeDataStore& other, const RooArgSet& vars, const char* newname=0) ;
+  RooTreeDataStore(const RooTreeDataStore& other, const char* newname=nullptr) ;
+  RooTreeDataStore(const RooTreeDataStore& other, const RooArgSet& vars, const char* newname=nullptr) ;
   ~RooTreeDataStore() override ;
 
 
@@ -72,7 +72,7 @@ public:
   double weight() const override ;
   double weightError(RooAbsData::ErrorType etype=RooAbsData::Poisson) const override ;
   void weightError(double& lo, double& hi, RooAbsData::ErrorType etype=RooAbsData::Poisson) const override ;
-  bool isWeighted() const override { return (_wgtVar!=0||_extWgtArray!=0) ; }
+  bool isWeighted() const override { return (_wgtVar!=nullptr||_extWgtArray!=nullptr) ; }
 
   RooAbsData::RealSpans getBatches(std::size_t first, std::size_t len) const override {
     //TODO
@@ -111,20 +111,20 @@ public:
 
   // Forwarded from TTree
   Stat_t GetEntries() const;
-  void Reset(Option_t* option=0);
+  void Reset(Option_t* option=nullptr);
   Int_t Fill();
   Int_t GetEntry(Int_t entry = 0, Int_t getall = 0);
 
   void   Draw(Option_t* option = "") override ;
 
   // Constant term  optimizer interface
-  void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0, bool skipZeroWeights=false) override ;
+  void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=nullptr, bool skipZeroWeights=false) override ;
   const RooAbsArg* cacheOwner() override { return _cacheOwner ; }
   void setArgStatus(const RooArgSet& set, bool active) override ;
   void resetCache() override ;
 
-  void loadValues(const TTree *t, const RooFormulaVar* select=0, const char* rangeName=0, Int_t nStart=0, Int_t nStop=2000000000)  ;
-  void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=0, const char* rangeName=0,
+  void loadValues(const TTree *t, const RooFormulaVar* select=nullptr, const char* rangeName=nullptr, Int_t nStart=0, Int_t nStop=2000000000)  ;
+  void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=nullptr, const char* rangeName=nullptr,
       std::size_t nStart=0, std::size_t nStop = std::numeric_limits<std::size_t>::max()) override;
 
   void checkInit() const override;
@@ -143,8 +143,8 @@ public:
 
   friend class RooVectorDataStore ;
 
-  RooArgSet varsNoWeight(const RooArgSet& allVars, const char* wgtName=0) ;
-  RooRealVar* weightVar(const RooArgSet& allVars, const char* wgtName=0) ;
+  RooArgSet varsNoWeight(const RooArgSet& allVars, const char* wgtName=nullptr) ;
+  RooRealVar* weightVar(const RooArgSet& allVars, const char* wgtName=nullptr) ;
 
   void initialize();
   void attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVars) override ;

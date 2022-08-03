@@ -111,7 +111,7 @@ public:
 
   // container management
   const char* nameOf(Int_t idx) const ;
-  TObject *findObject(const char *name, const TClass* clas=0) const;
+  TObject *findObject(const char *name, const TClass* clas=nullptr) const;
   TObject* getObject(Int_t idx) const ;
   Stat_t numItems() const {return _items.size();}
 
@@ -120,7 +120,7 @@ public:
   void addTH1(TH1 *hist, Option_t* drawOptions= "", bool invisible=false);
   std::unique_ptr<TLegend> BuildLegend() const;
 
-  void remove(const char* name=0, bool deleteToo=true) ;
+  void remove(const char* name=nullptr, bool deleteToo=true) ;
 
   // ascii printing
   void printName(std::ostream& os) const override ;
@@ -149,14 +149,14 @@ public:
   const RooArgSet *getNormVars() const { return _normVars; }
 
   // get attributes of contained objects
-  TAttLine *getAttLine(const char *name=0) const;
-  TAttFill *getAttFill(const char *name=0) const;
-  TAttMarker *getAttMarker(const char *name=0) const;
-  TAttText *getAttText(const char *name=0) const;
+  TAttLine *getAttLine(const char *name=nullptr) const;
+  TAttFill *getAttFill(const char *name=nullptr) const;
+  TAttMarker *getAttMarker(const char *name=nullptr) const;
+  TAttText *getAttText(const char *name=nullptr) const;
 
   // Convenient type-safe accessors
-  RooCurve* getCurve(const char* name=0) const ;
-  RooHist* getHist(const char* name=0) const ;
+  RooCurve* getCurve(const char* name=nullptr) const ;
+  RooHist* getHist(const char* name=nullptr) const ;
 
 
   // rearrange drawing order of contained objects
@@ -173,13 +173,13 @@ public:
   virtual void SetMaximum(double maximum = -1111) ;
   virtual void SetMinimum(double minimum = -1111) ;
 
-  ///Shortcut for RooPlot::chiSquare(const char* pdfname, const char* histname, int nFitParam=0)
+  ///Shortcut for RooPlot::chiSquare(const char* pdfname, const char* histname, int nFitParam=nullptr)
   double chiSquare(int nFitParam=0) const { return chiSquare(0,0,nFitParam) ; }
   double chiSquare(const char* pdfname, const char* histname, int nFitParam=0) const ;
 
-  RooHist* residHist(const char* histname=0, const char* pdfname=0,bool normalize=false, bool useAverage=true) const ;
+  RooHist* residHist(const char* histname=nullptr, const char* pdfname=nullptr,bool normalize=false, bool useAverage=true) const ;
   ///Uses residHist() and sets normalize=true
-  RooHist* pullHist(const char* histname=0, const char* pdfname=0, bool useAverage=true) const
+  RooHist* pullHist(const char* histname=nullptr, const char* pdfname=nullptr, bool useAverage=true) const
     { return residHist(histname,pdfname,true,useAverage); }
 
   void Browse(TBrowser *b) override ;
@@ -214,7 +214,7 @@ protected:
   class DrawOpt {
     public:
 
-    DrawOpt(const char* _rawOpt=0) : invisible(false) { drawOptions[0] = 0 ; initialize(_rawOpt) ; }
+    DrawOpt(const char* _rawOpt=nullptr) : invisible(false) { drawOptions[0] = 0 ; initialize(_rawOpt) ; }
     void initialize(const char* _rawOpt) ;
     const char* rawOpt() const ;
 

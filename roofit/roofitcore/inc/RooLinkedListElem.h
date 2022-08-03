@@ -34,7 +34,7 @@ public:
     _prev(0), _next(0), _arg(0), _refCount(0) {
   }
 
-  void init(TObject* arg, RooLinkedListElem* after=0) {
+  void init(TObject* arg, RooLinkedListElem* after=nullptr) {
    _arg = arg ;
    _refCount = 1 ;
 

@@ -24,8 +24,8 @@ public:
 
   RooExtendPdf() ;
   RooExtendPdf(const char *name, const char *title, RooAbsPdf& pdf,
-          RooAbsReal& norm, const char* rangeName=0) ;
-  RooExtendPdf(const RooExtendPdf& other, const char* name=0) ;
+          RooAbsReal& norm, const char* rangeName=nullptr) ;
+  RooExtendPdf(const RooExtendPdf& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooExtendPdf(*this,newname) ; }
   ~RooExtendPdf() override ;
 
@@ -33,11 +33,11 @@ public:
 
   bool forceAnalyticalInt(const RooAbsArg& /*dep*/) const override { return true ; }
   /// Forward determination of analytical integration capabilities to input p.d.f
-  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=0) const override {
+  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=nullptr) const override {
     return _pdf->getAnalyticalIntegralWN(allVars, analVars, normSet, rangeName) ;
   }
   /// Forward calculation of analytical integrals to input p.d.f
-  double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override {
+  double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=nullptr) const override {
     return _pdf->analyticalIntegralWN(code, normSet, rangeName) ;
   }
 

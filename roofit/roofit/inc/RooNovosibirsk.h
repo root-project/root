@@ -33,12 +33,12 @@ public:
        RooAbsReal& _x,     RooAbsReal& _peak,
        RooAbsReal& _width, RooAbsReal& _tail);
 
-  RooNovosibirsk(const RooNovosibirsk& other,const char* name=0) ;
+  RooNovosibirsk(const RooNovosibirsk& other,const char* name=nullptr) ;
 
   TObject* clone(const char* newname) const override { return new RooNovosibirsk(*this,newname);   }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-  double analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
   // An empty constructor is usually ok
   inline ~RooNovosibirsk() override { }

@@ -29,7 +29,7 @@ public:
   // Constructors, assignment etc
   inline RooResolutionModel() : _basis(0) { }
   RooResolutionModel(const char *name, const char *title, RooAbsRealLValue& x) ;
-  RooResolutionModel(const RooResolutionModel& other, const char* name=0);
+  RooResolutionModel(const RooResolutionModel& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override = 0 ;
   ~RooResolutionModel() override;
 
@@ -37,7 +37,7 @@ public:
                                             const RooDataSet*, const RooArgSet*,
                                             bool) const { return 0; }
 
-  double getValV(const RooArgSet* nset=0) const override ;
+  double getValV(const RooArgSet* nset=nullptr) const override ;
 
   // If used as regular PDF, it also has to be normalized. If this resolution
   // model is used in a convolution, return unnormalized value regardless of
@@ -53,7 +53,7 @@ public:
   virtual Int_t basisCode(const char* name) const = 0 ;
 
   virtual void normLeafServerList(RooArgSet& list) const ;
-  double getNorm(const RooArgSet* nset=0) const override ;
+  double getNorm(const RooArgSet* nset=nullptr) const override ;
 
   inline const RooFormulaVar& basis() const { return _basis?*_basis:*identity() ; }
   bool isConvolved() const { return _basis ? true : false ; }

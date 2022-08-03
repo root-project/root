@@ -38,12 +38,12 @@ public:
   RooMultiVarGaussian(const char *name, const char *title, const RooArgList& xvec,const TMatrixDSym& covMatrix) ;
   void setAnaIntZ(double z) { _z = z ; }
 
-  RooMultiVarGaussian(const RooMultiVarGaussian& other, const char* name=0) ;
+  RooMultiVarGaussian(const RooMultiVarGaussian& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooMultiVarGaussian(*this,newname); }
   inline ~RooMultiVarGaussian() override { }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-  double analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void initGenerator(Int_t code) override ;

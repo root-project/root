@@ -22,7 +22,7 @@ public:
   RooCachedPdf() {} ;
   RooCachedPdf(const char *name, const char *title, RooAbsPdf& _pdf, const RooArgSet& cacheObs);
   RooCachedPdf(const char *name, const char *title, RooAbsPdf& _pdf);
-  RooCachedPdf(const RooCachedPdf& other, const char* name=0) ;
+  RooCachedPdf(const RooCachedPdf& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooCachedPdf(*this,newname); }
   ~RooCachedPdf() override ;
 

@@ -63,10 +63,10 @@ public:
   Int_t simplex() ;
   Int_t improve() ;
 
-  RooFitResult* save(const char* name=0, const char* title=0) ;
+  RooFitResult* save(const char* name=nullptr, const char* title=nullptr) ;
   RooPlot* contour(RooRealVar& var1, RooRealVar& var2,
-         double n1=1, double n2=2, double n3=0,
-         double n4=0, double n5=0, double n6=0) ;
+         double n1=1, double n2=2, double n3=0.0,
+         double n4=0.0, double n5=0.0, double n6=0.0) ;
 
   Int_t setPrintLevel(Int_t newLevel) ;
   void setNoWarn() ;
@@ -75,7 +75,7 @@ public:
   void setVerbose(bool flag=true) { _verbose = flag ; }
   void setProfile(bool flag=true) { _profile = flag ; }
   void setMaxEvalMultiplier(Int_t n) { _maxEvalMult = n ; }
-  bool setLogFile(const char* logfile=0) ;
+  bool setLogFile(const char* logfile=nullptr) ;
 
   static void cleanup() ;
 

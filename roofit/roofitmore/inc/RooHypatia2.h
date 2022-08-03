@@ -28,14 +28,14 @@ public:
   RooHypatia2(const char *name, const char *title,
          RooAbsReal& x, RooAbsReal& lambda, RooAbsReal& zeta, RooAbsReal& beta,
          RooAbsReal& sigma, RooAbsReal& mu, RooAbsReal& a, RooAbsReal& n, RooAbsReal& a2, RooAbsReal& n2);
-  RooHypatia2(const RooHypatia2& other, const char* name=0);
+  RooHypatia2(const RooHypatia2& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooHypatia2(*this,newname); }
   inline ~RooHypatia2() override { }
 
   /* Analytical integrals need testing.
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override;
-  double analyticalIntegral(Int_t code, const char* rangeName=0) const override;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override;
 
   */
 

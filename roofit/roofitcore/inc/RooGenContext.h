@@ -30,7 +30,7 @@ class RooAbsNumGenerator ;
 class RooGenContext : public RooAbsGenContext {
 public:
   RooGenContext(const RooAbsPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
-      const RooArgSet* auxProto=0, bool verbose=false, const RooArgSet* forceDirect=0);
+      const RooArgSet* auxProto=nullptr, bool verbose=false, const RooArgSet* forceDirect=nullptr);
   ~RooGenContext() override;
 
   void printMultiline(std::ostream &os, Int_t content, bool verbose=false, TString indent="") const override ;

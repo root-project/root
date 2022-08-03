@@ -33,7 +33,7 @@ public:
          RooAbsReal& _pdf2,
            RooAbsReal& _x,
          RooAbsReal& _alpha, bool cacheAlpha=false);
-  RooIntegralMorph(const RooIntegralMorph& other, const char* name=0) ;
+  RooIntegralMorph(const RooIntegralMorph& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooIntegralMorph(*this,newname); }
   inline ~RooIntegralMorph() override { }
 

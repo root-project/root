@@ -45,7 +45,7 @@ public:
     * following Fourier series based approximation:
     *
     * @f[ w(z) \approx \frac{i}{2\sqrt{\pi}}\left(
-    * \sum^N_{n=0} a_n \tau_m\left(
+    * \sum^N_{n=nullptr} a_n \tau_m\left(
     * \frac{1-e^{i(n\pi+\tau_m z)}}{n\pi + \tau_m z} -
     * \frac{1-e^{i(-n\pi+\tau_m z)}}{n\pi - \tau_m z}
     * \right) - a_0 \frac{1-e^{i \tau_m z}}{z}

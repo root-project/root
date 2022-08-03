@@ -28,7 +28,7 @@ public:
          RooAbsReal& _x, RooAbsReal& _mean,
               RooAbsReal& _width, RooAbsReal& _sigma,
               bool doFast = false);
-  RooVoigtian(const RooVoigtian& other, const char* name=0) ;
+  RooVoigtian(const RooVoigtian& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooVoigtian(*this,newname); }
   inline ~RooVoigtian() override { }
 

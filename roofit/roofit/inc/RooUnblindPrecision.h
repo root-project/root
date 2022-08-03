@@ -32,7 +32,7 @@ public:
   RooUnblindPrecision(const char *name, const char *title,
             const char *blindString, double centralValue, double scale,
             RooAbsReal& blindValue, RooAbsCategory& blindState, bool sin2betaMode=false);
-  RooUnblindPrecision(const RooUnblindPrecision& other, const char* name=0);
+  RooUnblindPrecision(const RooUnblindPrecision& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooUnblindPrecision(*this,newname); }
   ~RooUnblindPrecision() override;
 

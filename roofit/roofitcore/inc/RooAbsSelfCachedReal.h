@@ -23,7 +23,7 @@ public:
 
   RooAbsSelfCachedReal() {} ;
   RooAbsSelfCachedReal(const char *name, const char *title, Int_t ipOrder=0);
-  RooAbsSelfCachedReal(const RooAbsSelfCachedReal& other, const char* name=0) ;
+  RooAbsSelfCachedReal(const RooAbsSelfCachedReal& other, const char* name=nullptr) ;
   ~RooAbsSelfCachedReal() override ;
 
 protected:

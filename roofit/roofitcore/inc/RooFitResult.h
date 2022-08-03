@@ -41,7 +41,7 @@ class RooFitResult : public TNamed, public RooPrintable, public RooDirItem {
 public:
 
   // Constructors, assignment etc.
-  RooFitResult(const char* name=0, const char* title=0) ;
+  RooFitResult(const char* name=nullptr, const char* title=nullptr) ;
   RooFitResult(const RooFitResult& other) ;
   TObject* Clone(const char* newname = 0) const override {
     RooFitResult* r =  new RooFitResult(*this) ;

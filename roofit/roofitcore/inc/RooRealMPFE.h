@@ -31,12 +31,12 @@ class RooRealMPFE : public RooAbsReal {
 public:
   // Constructors, assignment etc
   RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, bool calcInline=false) ;
-  RooRealMPFE(const RooRealMPFE& other, const char* name=0);
+  RooRealMPFE(const RooRealMPFE& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooRealMPFE(*this,newname); }
   ~RooRealMPFE() override;
 
   void calculate() const ;
-  double getValV(const RooArgSet* nset=0) const override ;
+  double getValV(const RooArgSet* nset=nullptr) const override ;
   void standby() ;
 
   void setVerbose(bool clientFlag=true, bool serverFlag=true) ;

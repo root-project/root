@@ -23,7 +23,7 @@ public:
 
   RooAbsSelfCachedPdf() {} ;
   RooAbsSelfCachedPdf(const char *name, const char *title, Int_t ipOrder=0);
-  RooAbsSelfCachedPdf(const RooAbsSelfCachedPdf& other, const char* name=0) ;
+  RooAbsSelfCachedPdf(const RooAbsSelfCachedPdf& other, const char* name=nullptr) ;
   ~RooAbsSelfCachedPdf() override ;
 
 protected:

@@ -37,7 +37,7 @@ class RooCustomizer : public TNamed, public RooPrintable {
 public:
 
   // Constructors, assignment etc
-  RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafListOwned, RooArgSet* splitLeafListAll=0) ;
+  RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafListOwned, RooArgSet* splitLeafListAll=nullptr) ;
   RooCustomizer(const RooAbsArg& pdf, const char* name) ;
   ~RooCustomizer() override ;
 

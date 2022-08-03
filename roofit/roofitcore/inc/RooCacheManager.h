@@ -37,16 +37,16 @@ public:
 
   RooCacheManager(Int_t maxSize=2) ;
   RooCacheManager(RooAbsArg* owner, Int_t maxSize=2) ;
-  RooCacheManager(const RooCacheManager& other, RooAbsArg* owner=0) ;
+  RooCacheManager(const RooCacheManager& other, RooAbsArg* owner=nullptr) ;
   ~RooCacheManager() override ;
 
   /// Getter function without integration set
-  T* getObj(const RooArgSet* nset, Int_t* sterileIndex=0, const TNamed* isetRangeName=0) {
+  T* getObj(const RooArgSet* nset, Int_t* sterileIndex=nullptr, const TNamed* isetRangeName=nullptr) {
     return getObj(nset,0,sterileIndex,isetRangeName) ;
   }
 
   /// Setter function without integration set
-  Int_t setObj(const RooArgSet* nset, T* obj, const TNamed* isetRangeName=0) {
+  Int_t setObj(const RooArgSet* nset, T* obj, const TNamed* isetRangeName=nullptr) {
     return setObj(nset,0,obj,isetRangeName) ;
   }
 
@@ -55,8 +55,8 @@ public:
     return getObj(nset,iset,sterileIdx,RooNameReg::ptr(isetRangeName)) ;
   }
 
-  T* getObj(const RooArgSet* nset, const RooArgSet* iset, Int_t* sterileIndex=0, const TNamed* isetRangeName=0) ;
-  Int_t setObj(const RooArgSet* nset, const RooArgSet* iset, T* obj, const TNamed* isetRangeName=0) ;
+  T* getObj(const RooArgSet* nset, const RooArgSet* iset, Int_t* sterileIndex=nullptr, const TNamed* isetRangeName=nullptr) ;
+  Int_t setObj(const RooArgSet* nset, const RooArgSet* iset, T* obj, const TNamed* isetRangeName=nullptr) ;
 
   void reset() ;
   virtual void sterilize() ;
@@ -146,7 +146,7 @@ RooCacheManager<T>::RooCacheManager(RooAbsArg* owner, Int_t maxSize) : RooAbsCac
 
   Int_t i ;
   for (i=0 ; i<_maxSize ; i++) {
-    _object[i]=0 ;
+    _object[i]=nullptr ;
   }
 
 }
@@ -192,7 +192,7 @@ void RooCacheManager<T>::reset()
 {
   for (int i=0 ; i<_maxSize ; i++) {
     delete _object[i] ;
-    _object[i]=0 ;
+    _object[i]=nullptr ;
     _nsetCache[i].clear() ;
   }
   _lastIndex = -1 ;
@@ -208,7 +208,7 @@ void RooCacheManager<T>::sterilize()
   Int_t i ;
   for (i=0 ; i<_maxSize ; i++) {
     delete _object[i] ;
-    _object[i]=0 ;
+    _object[i]=nullptr ;
   }
 }
 
@@ -278,7 +278,7 @@ T* RooCacheManager<T>::getObj(const RooArgSet* nset, const RooArgSet* iset, Int_
 {
   // Fast-track for wired mode
   if (_wired) {
-    if(_object[0]==0 && sterileIdx) *sterileIdx=0 ;
+    if(_object[0]==nullptr && sterileIdx) *sterileIdx=0 ;
     return _object[0] ;
   }
 
@@ -286,7 +286,7 @@ T* RooCacheManager<T>::getObj(const RooArgSet* nset, const RooArgSet* iset, Int_
   for (i=0 ; i<_size ; i++) {
     if (_nsetCache[i].contains(nset,iset,isetRangeName)==true) {
       _lastIndex = i ;
-      if(_object[i]==0 && sterileIdx) *sterileIdx=i ;
+      if(_object[i]==nullptr && sterileIdx) *sterileIdx=i ;
       return _object[i] ;
     }
   }
@@ -294,7 +294,7 @@ T* RooCacheManager<T>::getObj(const RooArgSet* nset, const RooArgSet* iset, Int_
   for (i=0 ; i<_size ; i++) {
     if (_nsetCache[i].autoCache(_owner,nset,iset,isetRangeName,false)==false) {
       _lastIndex = i ;
-      if(_object[i]==0 && sterileIdx) *sterileIdx=i ;
+      if(_object[i]==nullptr && sterileIdx) *sterileIdx=i ;
       return _object[i] ;
     }
   }

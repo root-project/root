@@ -48,17 +48,17 @@ public:
     return _func.arg().forceAnalyticalInt(dep);
   }
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet,
-      const char* rangeName=0) const override {
+      const char* rangeName=nullptr) const override {
     return _func.arg().getAnalyticalIntegralWN(allVars, analVars, normSet, rangeName);
   }
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars,
-      const char* rangeName=0) const override {
+      const char* rangeName=nullptr) const override {
     return _func.arg().getAnalyticalIntegral(allVars, numVars, rangeName);
   }
   double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const override {
     return _func.arg().analyticalIntegralWN(code, normSet, rangeName);
   }
-  double analyticalIntegral(Int_t code, const char* rangeName=0) const override {
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override {
     return _func.arg().analyticalIntegral(code, rangeName);
   }
 

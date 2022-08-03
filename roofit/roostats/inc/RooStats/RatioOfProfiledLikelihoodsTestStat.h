@@ -37,7 +37,7 @@ namespace RooStats {
       }
 
       RatioOfProfiledLikelihoodsTestStat(RooAbsPdf& nullPdf, RooAbsPdf& altPdf,
-                                         const RooArgSet* altPOI=0) :
+                                         const RooArgSet* altPOI=nullptr) :
          fNullProfile(nullPdf),
          fAltProfile(altPdf),
          fSubtractMLE(true),

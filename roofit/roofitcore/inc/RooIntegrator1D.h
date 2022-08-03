@@ -39,7 +39,7 @@ public:
   ~RooIntegrator1D() override;
 
   bool checkLimits() const override;
-  double integral(const double *yvec=0) override ;
+  double integral(const double *yvec=nullptr) override ;
 
   using RooAbsIntegrator::setLimits ;
   bool setLimits(double* xmin, double* xmax) override;

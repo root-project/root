@@ -35,11 +35,11 @@ public:
   enum WingMode { NoWings=0 ,Straight=1, Extended=2 } ;
   RooCurve(const RooAbsReal &func, RooAbsRealLValue &x, double xlo, double xhi, Int_t xbins,
       double scaleFactor= 1, const RooArgSet *normVars= 0, double prec= 1e-3, double resolution= 1e-3,
-      bool shiftToZero=false, WingMode wmode=Extended, Int_t nEvalError=-1, Int_t doEEVal=false, double eeVal=0,
+      bool shiftToZero=false, WingMode wmode=Extended, Int_t nEvalError=-1, Int_t doEEVal=false, double eeVal=0.0,
       bool showProgress=false);
   RooCurve(const char *name, const char *title, const RooAbsFunc &func, double xlo,
       double xhi, UInt_t minPoints, double prec= 1e-3, double resolution= 1e-3,
-      bool shiftToZero=false, WingMode wmode=Extended, Int_t nEvalError=-1, Int_t doEEVal=false, double eeVal=0);
+      bool shiftToZero=false, WingMode wmode=Extended, Int_t nEvalError=-1, Int_t doEEVal=false, double eeVal=0.0);
   ~RooCurve() override;
 
   RooCurve(const char* name, const char* title, const RooCurve& c1, const RooCurve& c2, double scale1=1., double scale2=1.) ;
@@ -80,10 +80,10 @@ protected:
   void initialize();
   void addPoints(const RooAbsFunc &func, double xlo, double xhi,
        Int_t minPoints, double prec, double resolution, WingMode wmode,
-       Int_t numee=0, bool doEEVal=false, double eeVal=0.,std::list<double>* samplingHint=0) ;
+       Int_t numee=0, bool doEEVal=false, double eeVal=0.0,std::list<double>* samplingHint=nullptr) ;
   void addRange(const RooAbsFunc& func, double x1, double x2, double y1,
       double y2, double minDy, double minDx,
-      Int_t numee=0, bool doEEVal=false, double eeVal=0.)  ;
+      Int_t numee=0, bool doEEVal=false, double eeVal=0.0);
 
 
   void shiftCurveToZero(double prevYMax) ;

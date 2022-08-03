@@ -37,7 +37,7 @@ public:
          RooAbsReal& f3, RooAbsReal& dm,
          const RooResolutionModel& model,
          DecayType type);
-  RooBDecay(const RooBDecay& other, const char* name=0);
+  RooBDecay(const RooBDecay& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override
   {
     return new RooBDecay(*this,newname);
@@ -47,8 +47,8 @@ public:
   double coefficient(Int_t basisIndex) const override;
   RooArgSet* coefVars(Int_t coefIdx) const override ;
 
-  Int_t getCoefAnalyticalIntegral(Int_t coef, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
-  double coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName=0) const override ;
+  Int_t getCoefAnalyticalIntegral(Int_t coef, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
+  double coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName=nullptr) const override ;
 
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void generateEvent(Int_t code) override;

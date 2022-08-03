@@ -22,10 +22,10 @@
 class RooLinTransBinning : public RooAbsBinning {
 public:
 
-  RooLinTransBinning(const char* name=0) : RooAbsBinning(name) { }
-  RooLinTransBinning(const RooAbsBinning& input, double slope=1.0, double offset=0.0, const char* name=0);
-  RooLinTransBinning(const RooLinTransBinning&, const char* name=0);
-  RooAbsBinning* clone(const char* name=0) const override { return new RooLinTransBinning(*this,name) ; }
+  RooLinTransBinning(const char* name=nullptr) : RooAbsBinning(name) { }
+  RooLinTransBinning(const RooAbsBinning& input, double slope=1.0, double offset=0.0, const char* name=nullptr);
+  RooLinTransBinning(const RooLinTransBinning&, const char* name=nullptr);
+  RooAbsBinning* clone(const char* name=nullptr) const override { return new RooLinTransBinning(*this,name) ; }
   ~RooLinTransBinning() override ;
 
   Int_t numBoundaries() const override { return _input->numBoundaries() ; }
@@ -51,7 +51,7 @@ protected:
 
   inline Int_t binTrans(Int_t bin) const { if (_slope>0) return bin ; else return numBins()-bin-1 ; }
   inline double trans(double x) const { return x*_slope + _offset ; }
-  inline double invTrans(double x) const { if (_slope==0.) return 0 ; return (x-_offset)/_slope ; }
+  inline double invTrans(double x) const { if (_slope==0.0) return 0.0 ; return (x-_offset)/_slope ; }
 
   double _slope{0.};   ///< Slope of transformation
   double _offset{0.};  ///< Offset of transformation
