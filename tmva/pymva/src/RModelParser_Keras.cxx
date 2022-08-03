@@ -128,9 +128,9 @@ void AddKerasLayer(RModel& rmodel, PyObject* fLayer){
       std::string fLayerName = PyStringAsString(PyDict_GetItemString(fAttributes,"_name"));
       PyObject* fPTargetShape = PyDict_GetItemString(fAttributes,"target_shape");
       std::vector<size_t>fTargetShape = GetDataFromTuple(fPTargetShape);
-      std::shared_ptr<void> fData(malloc(fTargetShape.size() * sizeof(float)), free);
-      std::memcpy(fData.get(),(float*)fTargetShape.data(), fTargetShape.size() * sizeof(float));
-      rmodel.AddInitializedTensor(fLayerName+"ReshapeAxes",ETensorType::FLOAT,{fTargetShape.size()},fData);
+      std::shared_ptr<void> fData(malloc(fTargetShape.size() * sizeof(int64_t)), free);
+      std::copy(fTargetShape.begin(),fTargetShape.end(),(int64_t*)fData.get());
+      rmodel.AddInitializedTensor(fLayerName+"ReshapeAxes",ETensorType::INT64,{fTargetShape.size()},fData);
    }
 
    //For layers without additional activation attribute
