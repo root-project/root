@@ -38,7 +38,6 @@ discrete dimensions and may have negative values.
 
 #include <stdexcept>
 
-using namespace std;
 
 ClassImp(RooHistFunc);
 
@@ -64,16 +63,16 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& v
 
   // Verify that vars and dhist.get() have identical contents
   const RooArgSet* dvars = dhist.get() ;
-  if (vars.getSize()!=dvars->getSize()) {
+  if (vars.size()!=dvars->size()) {
     coutE(InputArguments) << "RooHistFunc::ctor(" << GetName()
-           << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
+           << ") ERROR variable list and RooDataHist must contain the same variables." << std::endl ;
     throw std::invalid_argument("RooHistFunc: ERROR variable list and RooDataHist must contain the same variables.");
   }
 
   for (const auto arg : vars) {
     if (!dvars->find(arg->GetName())) {
       coutE(InputArguments) << "RooHistFunc::ctor(" << GetName()
-             << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
+             << ") ERROR variable list and RooDataHist must contain the same variables." << std::endl ;
       throw std::invalid_argument("RooHistFunc: ERROR variable list and RooDataHist must contain the same variables.");
     }
   }
@@ -104,16 +103,16 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList& 
 
   // Verify that vars and dhist.get() have identical contents
   const RooArgSet* dvars = dhist.get() ;
-  if (histObs.getSize()!=dvars->getSize()) {
+  if (histObs.size()!=dvars->size()) {
     coutE(InputArguments) << "RooHistFunc::ctor(" << GetName()
-           << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
+           << ") ERROR variable list and RooDataHist must contain the same variables." << std::endl ;
     throw std::invalid_argument("RooHistFunc: ERROR variable list and RooDataHist must contain the same variables.");
   }
 
   for (const auto arg : histObs) {
     if (!dvars->find(arg->GetName())) {
       coutE(InputArguments) << "RooHistFunc::ctor(" << GetName()
-             << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
+             << ") ERROR variable list and RooDataHist must contain the same variables." << std::endl ;
       throw std::invalid_argument("RooHistFunc: ERROR variable list and RooDataHist must contain the same variables.");
     }
   }
@@ -176,7 +175,7 @@ RooHistFunc::~RooHistFunc()
 double RooHistFunc::evaluate() const
 {
   // Transfer values from
-  if (_depList.getSize()>0) {
+  if (!_depList.empty()) {
     for (auto i = 0u; i < _histObsList.size(); ++i) {
       const auto harg = _histObsList[i];
       const auto parg = _depList[i];
@@ -234,7 +233,7 @@ void RooHistFunc::computeBatch(cudaStream_t*, double* output, size_t size, RooFi
 Int_t RooHistFunc::getMaxVal(const RooArgSet& vars) const
 {
   RooAbsCollection* common = _depList.selectCommon(vars) ;
-  if (common->getSize()==_depList.getSize()) {
+  if (common->size()==_depList.size()) {
     delete common ;
     return 1;
   }
@@ -313,7 +312,7 @@ double RooHistFunc::analyticalIntegral(Int_t code, const char* rangeName) const
 /// as the recursive division strategy of RooCurve cannot deal efficiently
 /// with the vertical lines that occur in a non-interpolated histogram
 
-list<double>* RooHistFunc::plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const
+std::list<double>* RooHistFunc::plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
   // No hints are required when interpolation is used
   if (_intOrder>1) {
@@ -322,11 +321,11 @@ list<double>* RooHistFunc::plotSamplingHint(RooAbsRealLValue& obs, double xlo, d
 
 
   // Find histogram observable corresponding to pdf observable
-  RooAbsArg* hobs(0) ;
+  RooAbsArg* hobs = nullptr;
   for (auto i = 0u; i < _histObsList.size(); ++i) {
     const auto harg = _histObsList[i];
     const auto parg = _depList[i];
-    if (string(parg->GetName())==obs.GetName()) {
+    if (std::string(parg->GetName())==obs.GetName()) {
       hobs=harg ;
     }
   }
@@ -344,7 +343,7 @@ list<double>* RooHistFunc::plotSamplingHint(RooAbsRealLValue& obs, double xlo, d
   const RooAbsBinning* binning = lvarg->getBinningPtr(0) ;
   double* boundaries = binning->array() ;
 
-  list<double>* hint = new list<double> ;
+  auto hint = new std::list<double> ;
 
   // Widen range slighty
   xlo = xlo - 0.01*(xhi-xlo) ;
@@ -382,23 +381,23 @@ std::list<double>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, double xlo,
   for (auto i = 0u; i < _histObsList.size(); ++i) {
     const auto harg = _histObsList[i];
     const auto parg = _depList[i];
-    if (string(parg->GetName())==obs.GetName()) {
+    if (std::string(parg->GetName())==obs.GetName()) {
       hobs=harg ;
     }
   }
 
-  // cout << "RooHistFunc::bb(" << GetName() << ") histObs = " << _histObsList << endl ;
-  // cout << "RooHistFunc::bb(" << GetName() << ") pdfObs = " << _depList << endl ;
+  // cout << "RooHistFunc::bb(" << GetName() << ") histObs = " << _histObsList << std::endl ;
+  // cout << "RooHistFunc::bb(" << GetName() << ") pdfObs = " << _depList << std::endl ;
 
-  RooAbsRealLValue* transform(0) ;
+  RooAbsRealLValue* transform = nullptr;
   if (!hobs) {
 
     // Considering alternate: input observable is histogram observable and pdf observable is transformation in terms of it
-    RooAbsArg* pobs(0) ;
+    RooAbsArg* pobs = nullptr;
     for (auto i = 0u; i < _histObsList.size(); ++i) {
       const auto harg = _histObsList[i];
       const auto parg = _depList[i];
-      if (string(harg->GetName())==obs.GetName()) {
+      if (std::string(harg->GetName())==obs.GetName()) {
         pobs=parg ;
         hobs=harg ;
       }
@@ -406,7 +405,7 @@ std::list<double>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, double xlo,
 
     // Not found, or check that matching pdf observable is an l-value dependent on histogram observable fails
     if (!hobs || !(pobs->dependsOn(obs) && dynamic_cast<RooAbsRealLValue*>(pobs))) {
-      cout << "RooHistFunc::binBoundaries(" << GetName() << ") obs = " << obs.GetName() << " hobs is not found, returning null" << endl ;
+      std::cout << "RooHistFunc::binBoundaries(" << GetName() << ") obs = " << obs.GetName() << " hobs is not found, returning null" << std::endl ;
       return 0 ;
     }
 
@@ -416,19 +415,19 @@ std::list<double>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, double xlo,
   }
 
 
-  // cout << "hobs = " << hobs->GetName() << endl ;
-  // cout << "transform = " << (transform?transform->GetName():"<none>") << endl ;
+  // cout << "hobs = " << hobs->GetName() << std::endl ;
+  // cout << "transform = " << (transform?transform->GetName():"<none>") << std::endl ;
 
   // Check that observable is in dataset, if not no hint is generated
   RooAbsArg* xtmp = _dataHist->get()->find(hobs->GetName()) ;
   if (!xtmp) {
-    cout << "RooHistFunc::binBoundaries(" << GetName() << ") hobs = " << hobs->GetName() << " is not found in dataset?" << endl ;
+    std::cout << "RooHistFunc::binBoundaries(" << GetName() << ") hobs = " << hobs->GetName() << " is not found in dataset?" << std::endl ;
     _dataHist->get()->Print("v") ;
     return 0 ;
   }
   RooAbsLValue* lvarg = dynamic_cast<RooAbsLValue*>(_dataHist->get()->find(hobs->GetName())) ;
   if (!lvarg) {
-    cout << "RooHistFunc::binBoundaries(" << GetName() << ") hobs = " << hobs->GetName() << " but is not an LV, returning null" << endl ;
+    std::cout << "RooHistFunc::binBoundaries(" << GetName() << ") hobs = " << hobs->GetName() << " but is not an LV, returning null" << std::endl ;
     return 0 ;
   }
 
@@ -436,7 +435,7 @@ std::list<double>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, double xlo,
   const RooAbsBinning* binning = lvarg->getBinningPtr(0) ;
   double* boundaries = binning->array() ;
 
-  list<double>* hint = new list<double> ;
+  auto hint = new std::list<double> ;
 
   double delta = (xhi-xlo)*1e-8 ;
 
@@ -448,7 +447,7 @@ std::list<double>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, double xlo,
       double boundary = boundaries[i] ;
       if (transform) {
    transform->setVal(boundary) ;
-   //cout << "transform bound " << boundary << " using " << transform->GetName() << " result " << obs.getVal() << endl ;
+   //cout << "transform bound " << boundary << " using " << transform->GetName() << " result " << obs.getVal() << std::endl ;
    hint->push_back(obs.getVal()) ;
       } else {
    hint->push_back(boundary) ;
@@ -485,25 +484,25 @@ bool RooHistFunc::importWorkspaceHook(RooWorkspace& ws)
       } else {
 
         // not identical, clone rename and import
-        TString uniqueName = Form("%s_%s",_dataHist->GetName(),GetName()) ;
-        bool flag = ws.import(*_dataHist,RooFit::Rename(uniqueName.Data()),RooFit::Embedded()) ;
+        auto uniqueName = std::string(_dataHist->GetName()) + "_" + GetName();
+        bool flag = ws.import(*_dataHist,RooFit::Rename(uniqueName.c_str()),RooFit::Embedded()) ;
         if (flag) {
-          coutE(ObjectHandling) << " RooHistPdf::importWorkspaceHook(" << GetName() << ") unable to import clone of underlying RooDataHist with unique name " << uniqueName << ", abort" << endl ;
+          coutE(ObjectHandling) << " RooHistPdf::importWorkspaceHook(" << GetName() << ") unable to import clone of underlying RooDataHist with unique name " << uniqueName << ", abort" << std::endl ;
           return true ;
         }
-        _dataHist = (RooDataHist*) ws.embeddedData(uniqueName.Data()) ;
+        _dataHist = (RooDataHist*) ws.embeddedData(uniqueName.c_str()) ;
       }
 
     } else {
 
       // Exists and is NOT of correct type: clone rename and import
-      TString uniqueName = Form("%s_%s",_dataHist->GetName(),GetName()) ;
-      bool flag = ws.import(*_dataHist,RooFit::Rename(uniqueName.Data()),RooFit::Embedded()) ;
+      auto uniqueName = std::string(_dataHist->GetName()) + "_" + GetName();
+      bool flag = ws.import(*_dataHist,RooFit::Rename(uniqueName.c_str()),RooFit::Embedded()) ;
       if (flag) {
-        coutE(ObjectHandling) << " RooHistPdf::importWorkspaceHook(" << GetName() << ") unable to import clone of underlying RooDataHist with unique name " << uniqueName << ", abort" << endl ;
+        coutE(ObjectHandling) << " RooHistPdf::importWorkspaceHook(" << GetName() << ") unable to import clone of underlying RooDataHist with unique name " << uniqueName << ", abort" << std::endl ;
         return true ;
       }
-      _dataHist = (RooDataHist*) ws.embeddedData(uniqueName.Data()) ;
+      _dataHist = static_cast<RooDataHist*>(ws.embeddedData(uniqueName.c_str()));
 
     }
     return false ;
