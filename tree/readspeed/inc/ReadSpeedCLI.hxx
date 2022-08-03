@@ -1,5 +1,12 @@
-/* Copyright (C) 2020 Enrico Guiraud
-   See the LICENSE file in the top directory for more information. */
+// Author: Enrico Guiraud, David Poulton 2022
+
+/*************************************************************************
+ * Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 /* This header contains helper functions for the root-readspeed program
    for CLI related actions, such as argument parsing and output printing. */

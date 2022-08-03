@@ -1,5 +1,12 @@
-/* Copyright (C) 2020 Enrico Guiraud
-   See the LICENSE file in the top directory for more information. */
+// Author: Enrico Guiraud, David Poulton 2022
+
+/*************************************************************************
+ * Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #ifndef ROOTREADSPEED
 #define ROOTREADSPEED
@@ -37,7 +44,6 @@ struct Result {
    ULong64_t fCompressedBytesRead;
    /// Size of ROOT's thread pool for the run (0 indicates a single-thread run with no thread pool present).
    unsigned int fThreadPoolSize;
-   // TODO returning zipped bytes read too might be interesting, e.g. to estimate network I/O speed
 };
 
 struct EntryRange {
