@@ -1204,6 +1204,28 @@ TEST(VecOps, Map)
    CheckEqual(res, ref);
 }
 
+TEST(VecOps, MapOnNestedVectors)
+{
+   RVec<RVecF> vecOfVecs = {{1.f, 2.f}, {3.f}, {}};
+   RVecI sizes = {2, 1, 0};
+
+   auto size_by_value = [](RVecF v) { return v.size(); };
+   auto result = Map(vecOfVecs, size_by_value);
+   CheckEqual(result, sizes);
+
+   auto size_by_cvalue = [](const RVecF v) { return v.size(); };
+   result = Map(vecOfVecs, size_by_cvalue);
+   CheckEqual(result, sizes);
+
+   auto size_by_ref = [](RVecF &v) { return v.size(); };
+   result = Map(vecOfVecs, size_by_ref);
+   CheckEqual(result, sizes);
+
+   auto size_by_cref = [](const RVecF &v) { return v.size(); };
+   result = Map(vecOfVecs, size_by_cref);
+   CheckEqual(result, sizes);
+}
+
 TEST(VecOps, Construct)
 {
    RVec<float> pts {15.5f, 34.32f, 12.95f};
