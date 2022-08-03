@@ -100,8 +100,8 @@ std::size_t GetVectorsSize(const std::string &id, const RVec<T> &... vs)
    return sizes[0];
 }
 
-template <typename F, typename... T>
-auto MapImpl(F &&f, const RVec<T> &... vs) -> RVec<decltype(f(vs[0]...))>
+template <typename F, typename... RVecs>
+auto MapImpl(F &&f, RVecs &&... vs) -> RVec<decltype(f(vs[0]...))>
 {
    const auto size = GetVectorsSize("Map", vs...);
    RVec<decltype(f(vs[0]...))> ret(size);
