@@ -252,7 +252,7 @@ TEST(ReadSpeedCLI, MultipleThreads)
    const std::vector<std::string> allArgs{
       "root-readspeed", "--files", "file.root", "--trees", "t", "--branches", "x", "--threads", "16",
    };
-   const uint threads = 16;
+   const unsigned int threads = 16;
 
    const auto parsedArgs = ParseArgs(allArgs);
 
@@ -262,7 +262,7 @@ TEST(ReadSpeedCLI, MultipleThreads)
 
 TEST(ReadSpeedCLI, WorkerThreadsHint)
 {
-   const uint oldTasksPerWorker = ROOT::TTreeProcessorMT::GetTasksPerWorkerHint();
+   const unsigned int oldTasksPerWorker = ROOT::TTreeProcessorMT::GetTasksPerWorkerHint();
    const std::vector<std::string> allArgs{
       "root-readspeed",
       "--files",
