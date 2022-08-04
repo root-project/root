@@ -135,7 +135,7 @@ void ReadSpeed::PrintThroughput(const Result &r)
    std::cout << "Uncompressed data read:\t\t" << r.fUncompressedBytesRead << " bytes\n";
    std::cout << "Compressed data read:\t\t" << r.fCompressedBytesRead << " bytes\n";
 
-   const uint effectiveThreads = std::max(r.fThreadPoolSize, 1u);
+   const unsigned int effectiveThreads = std::max(r.fThreadPoolSize, 1u);
 
    std::cout << "Uncompressed throughput:\t" << r.fUncompressedBytesRead / r.fRealTime / 1024 / 1024 << " MB/s\n";
    std::cout << "\t\t\t\t" << r.fUncompressedBytesRead / r.fRealTime / 1024 / 1024 / effectiveThreads
