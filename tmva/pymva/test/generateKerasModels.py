@@ -3,7 +3,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import numpy as np
 from tensorflow.keras.models import Model,Sequential
-from tensorflow.keras.layers import Input,Dense,Activation,ReLU,BatchNormalization
+from tensorflow.keras.layers import Input,Dense,Activation,ReLU,BatchNormalization,Conv2D,Reshape,Concatenate
 from tensorflow.keras.optimizers import SGD
 
 def generateFunctionalModel():
@@ -38,8 +38,11 @@ def generateSequentialModel():
     model.fit(x_train, y_train, epochs=10, batch_size=4)
     model.save('KerasModelSequential.h5')
 
-def generateConcatModel():
-    model=
+def generateBatchNormModel():
+    model=Sequential()
+    model.add(Dense(4,batch_size=2))
+    model.add(BatchNormalization())
+    model.add(Dense(2))
 
     randomGenerator=np.random.RandomState(0)
     x_train=randomGenerator.rand(4,4)
@@ -49,6 +52,64 @@ def generateConcatModel():
     model.fit(x_train, y_train, epochs=10, batch_size=2)
     model.save('KerasModelBatchNorm.h5')
 
+def generateConv2DModel_ValidPadding():
+    model=Sequential()
+    model.add(Conv2D(8, kernel_size=3, activation="relu", input_shape=(4,4,1), padding="valid"))
+
+    randomGenerator=np.random.RandomState(0)
+    x_train=randomGenerator.rand(1,4,4,1)
+    y_train=randomGenerator.rand(1,2,2,8)
+
+    model.compile(loss='mean_squared_error', optimizer=SGD(learning_rate=0.01))
+    model.fit(x_train, y_train, epochs=10, batch_size=2)
+    model.save('KerasModelConv2D_Valid.h5')
+
+def generateConv2DModel_SamePadding():
+    model=Sequential()
+    model.add(Conv2D(8, kernel_size=3, activation="relu", input_shape=(4,4,1), padding="same"))
+
+    randomGenerator=np.random.RandomState(0)
+    x_train=randomGenerator.rand(1,4,4,1)
+    y_train=randomGenerator.rand(1,4,4,8)
+
+    model.compile(loss='mean_squared_error', optimizer=SGD(learning_rate=0.01))
+    model.fit(x_train, y_train, epochs=10, batch_size=2)
+    model.save('KerasModelConv2D_Same.h5')
+    
+def generateReshapeModel():
+    model = Sequential()
+    model.add(Conv2D(8, kernel_size=3, activation="relu", input_shape=(4,4,1), padding="same"))
+    model.add(Reshape((32,4)))
+
+    randomGenerator=np.random.RandomState(0)
+    x_train=randomGenerator.rand(1,4,4,1)
+    y_train=randomGenerator.rand(1,32,4)
+
+    model.compile(loss='mean_squared_error', optimizer=SGD(learning_rate=0.01))
+    model.fit(x_train, y_train, epochs=10, batch_size=2)
+    model.save('KerasModelReshape.h5')
+
+def generateConcatModel():
+    input_1 = Input(shape=(2,))
+    dense_1 = Dense(3)(input_1)
+    input_2 = Input(shape=(2,))
+    dense_2 = Dense(3)(input_2)
+    concat = Concatenate(axis=1)([dense_1,dense_2])
+    model  = Model(inputs=[input_1,input_2], outputs=concat)
+    
+    randomGenerator=np.random.RandomState(0)
+    x1_train = randomGenerator.rand(1,2)
+    x2_train = randomGenerator.rand(1,2)
+    y_train  = randomGenerator.rand(1,6)
+
+    model.compile(loss='mean_squared_error', optimizer=SGD(learning_rate=0.01))
+    model.fit([x1_train,x2_train], y_train, epochs=10, batch_size=1)
+    model.save('KerasModelConcatenate.h5')
+
 generateFunctionalModel()
 generateSequentialModel()
 generateBatchNormModel()
+generateConv2DModel_ValidPadding()
+generateConv2DModel_SamePadding()
+generateReshapeModel()
+generateConcatModel()

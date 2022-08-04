@@ -64,7 +64,7 @@ const KerasMethodMap mapKerasLayer = {
    {"Permute", &MakeKerasPermute},
    {"BatchNormalization", &MakeKerasBatchNorm},
    {"Reshape", &MakeKerasReshape},
-   {"Concat", &MakeKerasConcat},
+   {"Concatenate", &MakeKerasConcat},
 
    // For activation layers
    {"ReLU", &MakeKerasReLU},
