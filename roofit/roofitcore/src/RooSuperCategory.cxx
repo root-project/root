@@ -34,7 +34,6 @@ supercategory will propagate to its input categories.
 #include "Riostream.h"
 #include "RooStreamParser.h"
 #include "RooArgSet.h"
-#include "RooFitLegacy/RooMultiCatIter.h"
 #include "RooAbsCategoryLValue.h"
 #include "RooMsgService.h"
 
@@ -82,16 +81,6 @@ RooSuperCategory::RooSuperCategory(const RooSuperCategory& other, const char *na
 {
   RooSuperCategory::setIndex(other.getCurrentIndex(), true);
   setShapeDirty();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Make an iterator over all state permutations of
-/// the input categories of this supercategory.
-/// The iterator just generates state names, it does not set them.
-TIterator* RooSuperCategory::MakeIterator() const
-{
-  return new RooMultiCatIter(_multiCat->inputCatList());
 }
 
 

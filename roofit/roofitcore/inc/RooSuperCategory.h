@@ -41,8 +41,6 @@ public:
   // Printing interface (human readable)
   void printMultiline(std::ostream& os, Int_t content, bool verbose=false, TString indent="") const override;
 
-  /// \deprecated Use begin(), end() or range-based for loops to iterate through state names.
-  TIterator* MakeIterator() const ;
   const RooArgSet& inputCatList() const { return _multiCat->inputCatList(); }
 
   bool inRange(const char* rangeName) const override;
