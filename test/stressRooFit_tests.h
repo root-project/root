@@ -4326,7 +4326,7 @@ public:
   RooDataSet* data = model.generate(x,1000) ;
 
   // Construct unbinned likelihood
-  std::unique_ptr<RooAbsReal> nll{model.createNLL(*data)};
+  std::unique_ptr<RooAbsReal> nll{model.createNLL(*data, BatchMode(_batchMode))};
 
 
   // I n t e r a c t i v e   m i n i m i z a t i o n ,   e r r o r   a n a l y s i s
@@ -4628,7 +4628,7 @@ public:
   // ---------------------------------------------------
 
   // Construct unbinned likelihood
-  std::unique_ptr<RooAbsReal> nll{model.createNLL(*data)};
+  std::unique_ptr<RooAbsReal> nll{model.createNLL(*data, BatchMode(_batchMode))};
   nll->SetName("nll");
 
   // Minimize likelihood w.r.t all parameters before making plots
@@ -4753,7 +4753,7 @@ public:
   // ------------------------------------------------------------------
 
   // Construct likelihood function of model and data
-  std::unique_ptr<RooAbsReal> nll{argus.createNLL(*data)};
+  std::unique_ptr<RooAbsReal> nll{argus.createNLL(*data, BatchMode(_batchMode))};
   nll->SetName("nll");
 
   // Plot likelihood in m0 in range that includes problematic values
@@ -5547,7 +5547,7 @@ public:
   RooPlot* frame3 = alpha.frame(Bins(100),Range(0.5,0.9)) ;
 
   // Make 2D pdf of histogram
-  std::unique_ptr<RooAbsReal> nll{lmorph.createNLL(*data)};
+  std::unique_ptr<RooAbsReal> nll{lmorph.createNLL(*data, BatchMode(_batchMode))};
   nll->SetName("nll");
   nll->plotOn(frame3,ShiftToZero()) ;
 
