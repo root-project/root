@@ -780,6 +780,8 @@ std::pair<std::vector<std::string>, std::vector<std::string>>
 AddSizeBranches(const std::vector<std::string> &branches, TTree *tree, std::vector<std::string> &&colsWithoutAliases,
                 std::vector<std::string> &&colsWithAliases);
 
+void RemoveDuplicates(ColumnNames_t &columnNames);
+
 } // namespace RDF
 } // namespace Internal
 
