@@ -2018,14 +2018,9 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     projectedVars.remove(projDataVars,true,true) ;
   }
 
-  // Clone the plot variable
-  RooAbsReal* realVar = (RooRealVar*) frame->getPlotVar() ;
-  RooArgSet* plotCloneSet = (RooArgSet*) RooArgSet(*realVar).snapshot(true) ;
-  if (!plotCloneSet) {
-    coutE(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") Couldn't deep-clone self, abort," << endl ;
-    return frame ;
-  }
-  RooRealVar* plotVar = (RooRealVar*) plotCloneSet->find(realVar->GetName());
+  // Get the plot variable and remember its original value
+  auto* plotVar = static_cast<RooRealVar*>(frame->getPlotVar());
+  double oldPlotVarVal = plotVar->getVal();
 
   // Inform user about projections
   if (projectedVars.getSize()) {
@@ -2055,15 +2050,11 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
   // WVE take out conditional observables
   if (checkObservables(&deps)) {
     coutE(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") error in checkObservables, abort" << endl ;
-    delete plotCloneSet ;
     if (projDataNeededVars) delete projDataNeededVars ;
     return frame ;
   }
 
-  RooArgSet normSet(deps) ;
-  //normSet.add(projDataVars) ;
-
-  RooAbsReal *projection = (RooAbsReal*) createPlotProjection(normSet, &projectedVars, projectionCompList, o.projectionRangeName) ;
+  RooAbsReal *projection = (RooAbsReal*) createPlotProjection(deps, &projectedVars, projectionCompList, o.projectionRangeName) ;
   cxcoutD(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") plot projection object is " << projection->GetName() << endl ;
   if (dologD(Plotting)) {
     projection->printStream(ccoutD(Plotting),0,kVerbose) ;
@@ -2296,7 +2287,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
 
   if (projDataNeededVars) delete projDataNeededVars ;
   delete projectionCompList ;
-  delete plotCloneSet ;
+  plotVar->setVal(oldPlotVarVal); // reset the plot variable value to not disturb the original state
   return frame;
 }
 
