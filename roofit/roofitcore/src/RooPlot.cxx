@@ -189,9 +189,8 @@ RooPlot::RooPlot(const char* name, const char* title, const RooAbsRealLValue &va
   _hist->GetSumw2()->Set(0) ;
   _hist->SetDirectory(nullptr);
 
-  // plotVar can be a composite in case of a RooDataSet::plot, need deepClone
-  _plotVarSet = (RooArgSet*) RooArgSet(var).snapshot() ;
-  _plotVarClone= (RooAbsRealLValue*)_plotVarSet->find(var.GetName()) ;
+  // In the past, the plot variable was cloned, but there was no apparent reason for doing so.
+  _plotVar = const_cast<RooAbsRealLValue*>(&var);
 
   TString xtitle= var.getTitle(true);
   SetXTitle(xtitle.Data());
@@ -213,9 +212,8 @@ RooPlot::RooPlot(const RooAbsRealLValue &var, double xmin, double xmax, Int_t nb
   _hist->GetSumw2()->Set(0) ;
   _hist->SetDirectory(nullptr);
 
-  // plotVar can be a composite in case of a RooDataSet::plot, need deepClone
-  _plotVarSet = (RooArgSet*) RooArgSet(var).snapshot() ;
-  _plotVarClone= (RooAbsRealLValue*)_plotVarSet->find(var.GetName()) ;
+  // In the past, the plot variable was cloned, but there was no apparent reason for doing so.
+  _plotVar = const_cast<RooAbsRealLValue*>(&var);
 
   TString xtitle= var.getTitle(true);
   SetXTitle(xtitle.Data());
@@ -265,9 +263,8 @@ RooPlot* RooPlot::frameWithLabels(const RooAbsRealLValue &var){
     pl->_hist->GetXaxis()->SetBinLabel(i+1,s);
   }
 
-  // plotVar can be a composite in case of a RooDataSet::plot, need deepClone
-  pl->_plotVarSet = (RooArgSet*) RooArgSet(var).snapshot() ;
-  pl->_plotVarClone= (RooAbsRealLValue*)pl->_plotVarSet->find(var.GetName()) ;
+  // In the past, the plot variable was cloned, but there was no apparent reason for doing so.
+  pl->_plotVar = const_cast<RooAbsRealLValue*>(&var);
 
   TString xtitle= var.getTitle(true);
   pl->SetXTitle(xtitle.Data());
@@ -287,7 +284,7 @@ RooPlot* RooPlot::frameWithLabels(const RooAbsRealLValue &var){
 
 RooPlot* RooPlot::emptyClone(const char* name)
 {
-  RooPlot* clone = new RooPlot(*_plotVarClone,_hist->GetXaxis()->GetXmin(),_hist->GetXaxis()->GetXmax(),_hist->GetNbinsX()) ;
+  RooPlot* clone = new RooPlot(*_plotVar,_hist->GetXaxis()->GetXmin(),_hist->GetXaxis()->GetXmax(),_hist->GetNbinsX()) ;
   clone->SetName(name) ;
   return clone ;
 }
@@ -320,8 +317,8 @@ void RooPlot::initialize()
 
 TString RooPlot::histName() const
 {
-  if (_plotVarClone) {
-    return TString(Form("frame_%s_%zx",_plotVarClone->GetName(),(size_t)this)) ;
+  if (_plotVar) {
+    return TString(Form("frame_%s_%zx",_plotVar->GetName(),(size_t)this)) ;
   } else {
     return TString(Form("frame_%zx",(size_t)this)) ;
   }
@@ -575,9 +572,9 @@ void RooPlot::addPlotable(RooPlotable *plotable, Option_t *drawOptions, bool inv
     // if the frame axis is alphanumeric, the coordinates of the graph need to be translated to this binning
     if(_hist->GetXaxis()->IsAlphanumeric()){
       if(obj->InheritsFrom(RooCurve::Class())){
-        ::translateGraph(_hist,_plotVarClone,static_cast<RooCurve*>(obj));
+        ::translateGraph(_hist,_plotVar,static_cast<RooCurve*>(obj));
       } else if(obj->InheritsFrom(RooHist::Class())){
-        ::translateGraph(_hist,_plotVarClone,static_cast<RooHist*>(obj));
+        ::translateGraph(_hist,_plotVar,static_cast<RooHist*>(obj));
       }
     }
 
@@ -740,9 +737,9 @@ void RooPlot::printClassName(ostream& os) const
 
 void RooPlot::printArgs(ostream& os) const
 {
-  if (_plotVarClone) {
+  if (_plotVar) {
     os << "[" ;
-    _plotVarClone->printStream(os,kName,kInline) ;
+    _plotVar->printStream(os,kName,kInline) ;
     os << "]" ;
   }
 }
@@ -784,9 +781,9 @@ void RooPlot::printMultiline(ostream& os, Int_t /*content*/, bool verbose, TStri
 {
   TString deeper(indent);
   deeper.Append("    ");
-  if(0 != _plotVarClone) {
+  if(0 != _plotVar) {
     os << indent << "RooPlot " << GetName() << " (" << GetTitle() << ") plots variable ";
-    _plotVarClone->printStream(os,kName|kTitle,kSingleLine,"");
+    _plotVar->printStream(os,kName|kTitle,kSingleLine,"");
   }
   else {
     os << indent << "RooPlot " << GetName() << " (" << GetTitle() << ") has no associated plot variable" << endl ;
@@ -1396,7 +1393,7 @@ void RooPlot::Streamer(TBuffer &R__b)
         RooPlot::fillItemsFromTList(_items, itemsList);
       }
       R__b >> _padFactor;
-      R__b >> _plotVarClone;
+      R__b >> _plotVar;
       R__b >> _plotVarSet;
       R__b >> _normVars;
       R__b >> _normNumEvts;
