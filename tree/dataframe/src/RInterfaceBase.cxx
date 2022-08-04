@@ -335,7 +335,7 @@ bool ROOT::RDF::RInterfaceBase::HasColumn(std::string_view columnName)
    if (fColRegister.IsDefineOrAlias(columnName))
       return true;
 
-   if (auto tree = fLoopManager->GetTree()) {
+   if (fLoopManager->GetTree()) {
       const auto &branchNames = fLoopManager->GetBranchNames();
       const auto branchNamesEnd = branchNames.end();
       if (branchNamesEnd != std::find(branchNames.begin(), branchNamesEnd, columnName))
