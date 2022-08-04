@@ -345,12 +345,30 @@ namespace SOFIE{
          if (outputType == ETensorType::FLOAT) {
             fGC += "std::vector<std::vector<float>> ";
          }
+         else if(outputType == ETensorType::INT32 ){
+            fGC += "std::vector<std::vector<int32_t>> ";
+         }
+         else if(outputType == ETensorType::INT64){
+            fGC += "std::vector<std::vector<int64_t>> "; 
+         }
+         else if(outputType == ETensorType::DOUBLE){
+              fGC += "std::vector<std::vector<double>> ";
+         }
       }
 
       fGC += "infer(";
       for (auto& i: fReadyInputTensorInfos){
          if (i.second.type == ETensorType::FLOAT){
-         fGC += "float* tensor_" + i.first + ",";
+            fGC += "float* tensor_" + i.first + ",";
+         }
+         else if (i.second.type == ETensorType::INT32 ){
+            fGC += "int32_t* tensor_" + i.first + ",";
+         }
+         else if (i.second.type == ETensorType::INT64){
+            fGC += "int64_t* tensor_" + i.first + ",";
+         }
+         else if(i.second.type == ETensorType::DOUBLE){
+            fGC += "double* tensor_" + i.first + ",";
          }
       }
       fGC.pop_back(); //remove last ","
@@ -361,7 +379,7 @@ namespace SOFIE{
       }
       if (outputSize == 1) {
          size_t outputLength = ConvertShapeToLength(GetTensorShape(fOutputTensorNames[0]));
-
+         
          fGC += "\tstd::vector<float> ret (tensor_" + fOutputTensorNames[0] + ", tensor_" + fOutputTensorNames[0] + " + " +
                std::to_string(outputLength) + ");\n";
       } else {

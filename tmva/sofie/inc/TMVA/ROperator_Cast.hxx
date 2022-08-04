@@ -21,7 +21,7 @@ private:
    std::string fNX;
    std::string fNY;
    std::vector<size_t> fShape;
-   std::string fattr_type;
+   std::string fattr_type = "float";
 
 public:
    ROperator_Cast(){}
