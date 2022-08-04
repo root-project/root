@@ -137,7 +137,7 @@ public:
   }
 
   // data member get/set methods
-  inline RooAbsRealLValue *getPlotVar() const { return _plotVarClone; }
+  inline RooAbsRealLValue *getPlotVar() const { return _plotVar; }
   ///Return the number of events in the fit range
   inline double getFitRangeNEvt() const { return _normNumEvts; }
   double getFitRangeNEvt(double xlo, double xhi) const ;
@@ -235,7 +235,7 @@ protected:
   TH1* _hist = nullptr;      ///< Histogram that we uses as basis for drawing the content
   Items _items;  ///< A list of the items we contain.
   double _padFactor;       ///< Scale our y-axis to _padFactor of our maximum contents.
-  RooAbsRealLValue *_plotVarClone = nullptr; ///< A clone of the variable we are plotting.
+  RooAbsRealLValue *_plotVar = nullptr; ///< The variable we are plotting.
   RooArgSet *_plotVarSet = nullptr; ///< A list owning the cloned tree nodes of the plotVarClone
   RooArgSet *_normVars = nullptr; ///< Variables that PDF plots should be normalized over
 
