@@ -603,10 +603,18 @@ std::string RArrowDS::GetLabel()
 /// \param[in] table an apache::arrow table to use as a source / to observe.
 /// \param[in] columnNames the name of the columns to use
 /// In case columnNames is empty, we use all the columns found in the table
-RDataFrame MakeArrowDataFrame(std::shared_ptr<arrow::Table> table, std::vector<std::string> const &columnNames)
+RDataFrame FromArrow(std::shared_ptr<arrow::Table> table, std::vector<std::string> const &columnNames)
 {
    ROOT::RDataFrame tdf(std::make_unique<RArrowDS>(table, columnNames));
    return tdf;
+}
+
+/// \brief Factory method to create a Apache Arrow RDataFrame.
+///
+/// Deprecated in favor of FromArrow().
+RDataFrame MakeArrowDataFrame(std::shared_ptr<arrow::Table> table, std::vector<std::string> const &columnNames)
+{
+   return FromArrow(table, columnNames);
 }
 
 } // namespace RDF
