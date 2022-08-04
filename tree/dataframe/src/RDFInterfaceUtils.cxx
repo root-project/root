@@ -1009,6 +1009,15 @@ AddSizeBranches(const std::vector<std::string> &branches, TTree *tree, std::vect
    return {std::move(colsWithoutAliases), std::move(colsWithAliases)};
 }
 
+void RemoveDuplicates(ColumnNames_t &columnNames)
+{
+   std::set<std::string> uniqueCols;
+   columnNames.erase(
+      std::remove_if(columnNames.begin(), columnNames.end(),
+                     [&uniqueCols](const std::string &colName) { return !uniqueCols.insert(colName).second; }),
+      columnNames.end());
+}
+
 } // namespace RDF
 } // namespace Internal
 } // namespace ROOT

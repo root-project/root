@@ -1183,10 +1183,9 @@ public:
       columnNames.insert(columnNames.end(), treeBranchNames.begin(), treeBranchNames.end());
       columnNames.insert(columnNames.end(), dsColumnsWithoutSizeColumns.begin(), dsColumnsWithoutSizeColumns.end());
 
-      // De-duplicate column names. Currently the only way this can happen is if a column coming from a tree or
-      // data-source is Redefine'd.
-      std::set<std::string> uniqueCols(columnNames.begin(), columnNames.end());
-      columnNames.assign(uniqueCols.begin(), uniqueCols.end());
+      // The only way we can get duplicate entries is if a column coming from a tree or data-source is Redefine'd.
+      // RemoveDuplicates should preserve ordering of the columns: it might be meaningful.
+      RDFInternal::RemoveDuplicates(columnNames);
 
       const auto selectedColumns = RDFInternal::ConvertRegexToColumns(columnNames, columnNameRegexp, "Snapshot");
       return Snapshot(treename, filename, selectedColumns, options);
