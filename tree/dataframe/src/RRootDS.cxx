@@ -168,11 +168,6 @@ std::string RRootDS::GetLabel()
    return "Root";
 }
 
-RDataFrame MakeRootDataFrame(std::string_view treeName, std::string_view fileNameGlob)
-{
-   return ROOT::RDataFrame(treeName, fileNameGlob);
-}
-
 } // ns RDF
 
 } // ns Internal

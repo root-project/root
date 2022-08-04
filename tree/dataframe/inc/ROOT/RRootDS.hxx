@@ -57,8 +57,6 @@ public:
    std::string GetLabel();
 };
 
-RDataFrame MakeRootDataFrame(std::string_view treeName, std::string_view fileNameGlob);
-
 } // ns RDF
 
 } // ns Internal
