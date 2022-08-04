@@ -350,6 +350,16 @@ void ClearMustCleanupBits(TObjArray &branches)
    }
 }
 
+/// \brief Create a TChain object with options that avoid common causes of thread contention.
+///
+/// In particular, set its kWithoutGlobalRegistration mode and reset its kMustCleanup bit.
+std::unique_ptr<TChain> MakeChainForMT(const std::string &name, const std::string &title)
+{
+   auto c = std::make_unique<TChain>(name.c_str(), title.c_str(), TChain::kWithoutGlobalRegistration);
+   c->ResetBit(TObject::kMustCleanup);
+   return c;
+}
+
 } // namespace TreeUtils
 } // namespace Internal
 } // namespace ROOT

@@ -22,9 +22,10 @@
 #include "TNotifyLink.h"
 #include "TObjArray.h"
 
+#include <memory>
+#include <string>
 #include <utility> // std::pair
 #include <vector>
-#include <string>
 
 class TTree;
 
@@ -105,6 +106,8 @@ public:
 
    ClassDef(RNoCleanupNotifier, 0);
 };
+
+std::unique_ptr<TChain> MakeChainForMT(const std::string &name = "", const std::string &title = "");
 
 } // namespace TreeUtils
 } // namespace Internal
