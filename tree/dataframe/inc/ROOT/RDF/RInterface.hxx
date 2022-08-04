@@ -160,8 +160,7 @@ public:
    /// Note that it is not a problem to pass RNode's by value.
    operator RNode() const
    {
-      return RNode(std::static_pointer_cast<::ROOT::Detail::RDF::RNodeBase>(fProxiedPtr), *fLoopManager, fColRegister,
-                   fDataSource);
+      return RNode(std::static_pointer_cast<::ROOT::Detail::RDF::RNodeBase>(fProxiedPtr), *fLoopManager, fColRegister);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -216,7 +215,7 @@ public:
       using F_t = RDFDetail::RFilter<F, Proxied>;
 
       auto filterPtr = std::make_shared<F_t>(std::move(f), validColumnNames, fProxiedPtr, fColRegister, name);
-      return RInterface<F_t, DS_t>(std::move(filterPtr), *fLoopManager, fColRegister, fDataSource);
+      return RInterface<F_t, DS_t>(std::move(filterPtr), *fLoopManager, fColRegister);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -279,13 +278,12 @@ public:
       // deleted by the jitted call to JitFilterHelper
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
       using BaseNodeType_t = typename std::remove_pointer_t<decltype(upcastNodeOnHeap)>::element_type;
-      RInterface<BaseNodeType_t> upcastInterface(*upcastNodeOnHeap, *fLoopManager, fColRegister, fDataSource);
+      RInterface<BaseNodeType_t> upcastInterface(*upcastNodeOnHeap, *fLoopManager, fColRegister);
       const auto jittedFilter =
          RDFInternal::BookFilterJit(upcastNodeOnHeap, name, expression, fLoopManager->GetBranchNames(), fColRegister,
                                     fLoopManager->GetTree(), fDataSource);
 
-      return RInterface<RDFDetail::RJittedFilter, DS_t>(std::move(jittedFilter), *fLoopManager, fColRegister,
-                                                        fDataSource);
+      return RInterface<RDFDetail::RJittedFilter, DS_t>(std::move(jittedFilter), *fLoopManager, fColRegister);
    }
 
    // clang-format off
@@ -430,7 +428,7 @@ public:
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddDefine(std::move(jittedDefine));
 
-      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
+      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols));
 
       return newInterface;
    }
@@ -520,7 +518,7 @@ public:
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddDefine(std::move(jittedDefine));
 
-      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
+      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols));
 
       return newInterface;
    }
@@ -575,7 +573,7 @@ public:
 
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddDefine(std::move(newColumn));
-      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
+      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols));
       return newInterface;
    }
 
@@ -631,7 +629,7 @@ public:
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddDefine(std::move(jittedDefine));
 
-      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
+      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols));
 
       return newInterface;
    }
@@ -870,7 +868,7 @@ public:
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddAlias(alias, validColumnName);
 
-      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
+      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols));
 
       return newInterface;
    }
@@ -1113,7 +1111,7 @@ public:
       std::stringstream cacheCall;
       auto upcastNode = RDFInternal::UpcastNode(fProxiedPtr);
       RInterface<TTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(fProxiedPtr, *fLoopManager,
-                                                                                      fColRegister, fDataSource);
+                                                                                      fColRegister);
       // build a string equivalent to
       // "(RInterface<nodetype*>*)(this)->Cache<Ts...>(*(ColumnNames_t*)(&columnList))"
       RInterface<RLoopManager> resRDF(std::make_shared<ROOT::Detail::RDF::RLoopManager>(0));
@@ -1208,8 +1206,8 @@ public:
 
       using Range_t = RDFDetail::RRange<Proxied>;
       auto rangePtr = std::make_shared<Range_t>(begin, end, stride, fProxiedPtr);
-      RInterface<RDFDetail::RRange<Proxied>, DS_t> tdf_r(std::move(rangePtr), *fLoopManager, fColRegister, fDataSource);
-      return tdf_r;
+      RInterface<RDFDetail::RRange<Proxied>, DS_t> newInterface(std::move(rangePtr), *fLoopManager, fColRegister);
+      return newInterface;
    }
 
    // clang-format off
@@ -2757,7 +2755,7 @@ private:
 
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
       using BaseNodeType_t = typename std::remove_pointer_t<decltype(upcastNodeOnHeap)>::element_type;
-      RInterface<BaseNodeType_t> upcastInterface(*upcastNodeOnHeap, *fLoopManager, fColRegister, fDataSource);
+      RInterface<BaseNodeType_t> upcastInterface(*upcastNodeOnHeap, *fLoopManager, fColRegister);
 
       const auto jittedAction = std::make_shared<RDFInternal::RJittedAction>(
          *fLoopManager, validColumnNames, fColRegister, fProxiedPtr->GetVariations());
@@ -2811,7 +2809,7 @@ private:
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddDefine(std::move(newColumn));
 
-      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
+      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols));
 
       return newInterface;
    }
@@ -2911,7 +2909,7 @@ private:
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddVariation(std::move(variation));
 
-      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
+      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols));
 
       return newInterface;
    }
@@ -2946,7 +2944,7 @@ private:
       RDFInternal::RColumnRegister newColRegister(fColRegister);
       newColRegister.AddVariation(std::move(jittedVariation));
 
-      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newColRegister), fDataSource);
+      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newColRegister));
 
       return newInterface;
    }
@@ -2974,7 +2972,7 @@ private:
 
 protected:
    RInterface(const std::shared_ptr<Proxied> &proxied, RLoopManager &lm,
-              const RDFInternal::RColumnRegister &colRegister, RDataSource *)
+              const RDFInternal::RColumnRegister &colRegister)
       : RInterfaceBase(lm, colRegister), fProxiedPtr(proxied)
    {
    }
