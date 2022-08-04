@@ -316,6 +316,29 @@ TEST(RDFVary, ResultMapIteration)
    EXPECT_EQ(values, expected_values);
 }
 
+TEST(RDFVary, VaryAnAlias)
+{
+   // it's forbidden to explicitly vary an alias
+   auto df = ROOT::RDataFrame(10).Define("x", [] { return 42; }).Alias("y", "x");
+
+   EXPECT_THROW(
+      try {
+         df.Vary(
+            {"x", "y"},
+            [] {
+               return ROOT::RVec<ROOT::RVecI>{{0}, {0}};
+            },
+            {}, 1, "xyvariation");
+      } catch (const std::runtime_error &err) {
+         const auto msg = "RDataFrame::Vary: cannot redefine or vary column \"y\". An alias with that name, pointing "
+                          "to column \"x\", already exists. Aliases cannot be Redefined or Varied.";
+         EXPECT_STREQ(err.what(), msg);
+         throw;
+      },
+
+      std::runtime_error);
+}
+
 TEST_P(RDFVary, VaryDefinePerSample)
 {
    auto df = ROOT::RDataFrame(10).DefinePerSample("x", [](unsigned int, const ROOT::RDF::RSampleInfo &) { return 1; });
