@@ -93,6 +93,13 @@ void MnHesse::operator()(const FCNBase &fcn, FunctionMinimum &min, unsigned int 
 MinimumState MnHesse::operator()(const MnFcn &mfcn, const MinimumState &st, const MnUserTransformation &trafo,
                                  unsigned int maxcalls) const
 {
+   return MnHesse::calculator(fStrategy, mfcn, st, trafo, maxcalls);
+}
+
+// static member function
+MinimumState MnHesse::default_calculator(const MnStrategy &strategy, const MnFcn &mfcn, const MinimumState &st,
+                                         const MnUserTransformation &trafo, unsigned int maxcalls)
+{
    // internal interface from MinimumState and MnUserTransformation
    // Function who does the real Hessian calculations
    MnPrint print("MnHesse");
@@ -118,7 +125,7 @@ MinimumState MnHesse::operator()(const MnFcn &mfcn, const MinimumState &st, cons
    // case gradient is not numeric (could be analytical or from FumiliGradientCalculator)
 
    if (st.Gradient().IsAnalytical()) {
-      Numerical2PGradientCalculator igc(mfcn, trafo, fStrategy);
+      Numerical2PGradientCalculator igc(mfcn, trafo, strategy);
       FunctionGradient tmp = igc(st.Parameters());
       gst = tmp.Gstep();
       dirin = tmp.Gstep();
@@ -140,7 +147,7 @@ MinimumState MnHesse::operator()(const MnFcn &mfcn, const MinimumState &st, cons
 
       print.Debug("Derivative parameter", i, "d =", d, "dmin =", dmin);
 
-      for (unsigned int icyc = 0; icyc < Ncycles(); icyc++) {
+      for (unsigned int icyc = 0; icyc < strategy.HessianNCycles(); icyc++) {
          double sag = 0.;
          double fs1 = 0.;
          double fs2 = 0.;
@@ -200,9 +207,9 @@ MinimumState MnHesse::operator()(const MnFcn &mfcn, const MinimumState &st, cons
                      "diffg2 =", std::fabs(g2(i) - g2bfor) / g2(i));
 
          // see if converged
-         if (std::fabs((d - dlast) / d) < Tolerstp())
+         if (std::fabs((d - dlast) / d) < strategy.HessianStepTolerance())
             break;
-         if (std::fabs((g2(i) - g2bfor) / g2(i)) < TolerG2())
+         if (std::fabs((g2(i) - g2bfor) / g2(i)) < strategy.HessianG2Tolerance())
             break;
          d = std::min(d, 10. * dlast);
          d = std::max(d, 0.1 * dlast);
@@ -225,9 +232,9 @@ MinimumState MnHesse::operator()(const MnFcn &mfcn, const MinimumState &st, cons
 
    print.Debug("Second derivatives", g2);
 
-   if (fStrategy.Strategy() > 0) {
+   if (strategy.Strategy() > 0) {
       // refine first derivative
-      HessianGradientCalculator hgc(mfcn, trafo, fStrategy);
+      HessianGradientCalculator hgc(mfcn, trafo, strategy);
       FunctionGradient gr = hgc(st.Parameters(), FunctionGradient(grd, g2, gst));
       // update gradient and step values
       grd = gr.Grad();
@@ -315,103 +322,8 @@ MinimumState MnHesse::operator()(const MnFcn &mfcn, const MinimumState &st, cons
    return MinimumState(st.Parameters(), err, gr, edm, mfcn.NumOfCalls());
 }
 
-/*
- MinimumError MnHesse::Hessian(const MnFcn& mfcn, const MinimumState& st, const MnUserTransformation& trafo) const {
-
-    const MnMachinePrecision& prec = trafo.Precision();
-    // make sure starting at the right place
-    double amin = mfcn(st.Vec());
-    //   if(std::fabs(amin - st.Fval()) > prec.Eps2()) std::cout<<"function Value differs from amin  by "<<amin -
- st.Fval()<<std::endl;
-
-    double aimsag = std::sqrt(prec.Eps2())*(std::fabs(amin)+mfcn.Up());
-
-    // diagonal Elements first
-
-    unsigned int n = st.Parameters().Vec().size();
-    MnAlgebraicSymMatrix vhmat(n);
-    MnAlgebraicVector g2 = st.Gradient().G2();
-    MnAlgebraicVector gst = st.Gradient().Gstep();
-    MnAlgebraicVector grd = st.Gradient().Grad();
-    MnAlgebraicVector dirin = st.Gradient().Gstep();
-    MnAlgebraicVector yy(n);
-    MnAlgebraicVector x = st.Parameters().Vec();
-
-    for(unsigned int i = 0; i < n; i++) {
-
-       double xtf = x(i);
-       double dmin = 8.*prec.Eps2()*std::fabs(xtf);
-       double d = std::fabs(gst(i));
-       if(d < dmin) d = dmin;
-       for(int icyc = 0; icyc < Ncycles(); icyc++) {
-          double sag = 0.;
-          double fs1 = 0.;
-          double fs2 = 0.;
-          for(int multpy = 0; multpy < 5; multpy++) {
-             x(i) = xtf + d;
-             fs1 = mfcn(x);
-             x(i) = xtf - d;
-             fs2 = mfcn(x);
-             x(i) = xtf;
-             sag = 0.5*(fs1+fs2-2.*amin);
-             if(sag > prec.Eps2()) break;
-             if(trafo.Parameter(i).HasLimits()) {
-                if(d > 0.5) {
-                   std::cout<<"second derivative zero for Parameter "<<i<<std::endl;
-                   std::cout<<"return diagonal matrix "<<std::endl;
-                   for(unsigned int j = 0; j < n; j++) {
-                      vhmat(j,j) = (g2(j) < prec.Eps2() ? 1. : 1./g2(j));
-                      return MinimumError(vhmat, 1., false);
-                   }
-                }
-                d *= 10.;
-                if(d > 0.5) d = 0.51;
-                continue;
-             }
-             d *= 10.;
-          }
-          if(sag < prec.Eps2()) {
-             std::cout<<"MnHesse: internal loop exhausted, return diagonal matrix."<<std::endl;
-             for(unsigned int i = 0; i < n; i++)
-                vhmat(i,i) = (g2(i) < prec.Eps2() ? 1. : 1./g2(i));
-             return MinimumError(vhmat, 1., false);
-          }
-          double g2bfor = g2(i);
-          g2(i) = 2.*sag/(d*d);
-          grd(i) = (fs1-fs2)/(2.*d);
-          gst(i) = d;
-          dirin(i) = d;
-          yy(i) = fs1;
-          double dlast = d;
-          d = std::sqrt(2.*aimsag/std::fabs(g2(i)));
-          if(trafo.Parameter(i).HasLimits()) d = std::min(0.5, d);
-          if(d < dmin) d = dmin;
-
-          // see if converged
-          if(std::fabs((d-dlast)/d) < Tolerstp()) break;
-          if(std::fabs((g2(i)-g2bfor)/g2(i)) < TolerG2()) break;
-          d = std::min(d, 10.*dlast);
-          d = std::max(d, 0.1*dlast);
-       }
-       vhmat(i,i) = g2(i);
-    }
-
-    //off-diagonal Elements
-    for(unsigned int i = 0; i < n; i++) {
-       x(i) += dirin(i);
-       for(unsigned int j = i+1; j < n; j++) {
-          x(j) += dirin(j);
-          double fs1 = mfcn(x);
-          double elem = (fs1 + amin - yy(i) - yy(j))/(dirin(i)*dirin(j));
-          vhmat(i,j) = elem;
-          x(j) -= dirin(j);
-       }
-       x(i) -= dirin(i);
-    }
-
-    return MinimumError(vhmat, 0.);
- }
- */
+// initialize static members
+std::function<MinimumState(const MnStrategy &, const MnFcn &, const MinimumState &, const MnUserTransformation &, unsigned int)> MnHesse::calculator = &MnHesse::default_calculator;
 
 } // namespace Minuit2
 

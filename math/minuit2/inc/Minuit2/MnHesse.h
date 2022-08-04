@@ -14,6 +14,7 @@
 #include "Minuit2/MnStrategy.h"
 
 #include <vector>
+#include <functional>
 
 namespace ROOT {
 
@@ -84,10 +85,12 @@ public:
    MinimumState
    operator()(const MnFcn &, const MinimumState &, const MnUserTransformation &, unsigned int maxcalls = 0) const;
 
-   /// forward interface of MnStrategy
-   unsigned int Ncycles() const { return fStrategy.HessianNCycles(); }
-   double Tolerstp() const { return fStrategy.HessianStepTolerance(); }
-   double TolerG2() const { return fStrategy.HessianG2Tolerance(); }
+   /// the internal interface function in turn calls this calculator, which can be set to something different by
+   /// users
+   static std::function<MinimumState(const MnStrategy &, const MnFcn &, const MinimumState &, const MnUserTransformation &, unsigned int)> calculator;
+   /// default calculator implementation
+   static MinimumState default_calculator(const MnStrategy &strategy, const MnFcn &mfcn, const MinimumState &st,
+                                          const MnUserTransformation &trafo, unsigned int maxcalls);
 
 private:
    MnStrategy fStrategy;
