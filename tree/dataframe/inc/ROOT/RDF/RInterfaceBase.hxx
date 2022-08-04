@@ -138,6 +138,62 @@ protected:
          RDFInternal::AddDSColumns(validCols, *fLoopManager, *fDataSource, typeList, fColRegister);
    }
 
+   /// Create RAction object, return RResultPtr for the action
+   /// Overload for the case in which all column types were specified (no jitting).
+   /// For most actions, `r` and `helperArg` will refer to the same object, because the only argument to forward to
+   /// the action helper is the result value itself. We need the distinction for actions such as Snapshot or Cache,
+   /// for which the constructor arguments of the action helper are different from the returned value.
+   template <typename ActionTag, typename... ColTypes, typename ActionResultType, typename RDFNode,
+             typename HelperArgType = ActionResultType,
+             std::enable_if_t<!RDFInternal::RNeedJitting<ColTypes...>::value, int> = 0>
+   RResultPtr<ActionResultType> CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r,
+                                             const std::shared_ptr<HelperArgType> &helperArg,
+                                             const std::shared_ptr<RDFNode> &proxiedPtr, const int /*nColumns*/ = -1)
+   {
+      constexpr auto nColumns = sizeof...(ColTypes);
+
+      const auto validColumnNames = GetValidatedColumnNames(nColumns, columns);
+      CheckAndFillDSColumns(validColumnNames, RDFInternal::TypeList<ColTypes...>());
+
+      const auto nSlots = fLoopManager->GetNSlots();
+
+      auto action = RDFInternal::BuildAction<ColTypes...>(validColumnNames, helperArg, nSlots, proxiedPtr, ActionTag{},
+                                                          fColRegister);
+      return MakeResultPtr(r, *fLoopManager, std::move(action));
+   }
+
+   /// Create RAction object, return RResultPtr for the action
+   /// Overload for the case in which one or more column types were not specified (RTTI + jitting).
+   /// This overload has a `nColumns` optional argument. If present, the number of required columns for
+   /// this action is taken equal to nColumns, otherwise it is assumed to be sizeof...(ColTypes).
+   template <typename ActionTag, typename... ColTypes, typename ActionResultType, typename RDFNode,
+             typename HelperArgType = ActionResultType,
+             std::enable_if_t<RDFInternal::RNeedJitting<ColTypes...>::value, int> = 0>
+   RResultPtr<ActionResultType> CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r,
+                                             const std::shared_ptr<HelperArgType> &helperArg,
+                                             const std::shared_ptr<RDFNode> &proxiedPtr, const int nColumns = -1)
+   {
+      auto realNColumns = (nColumns > -1 ? nColumns : sizeof...(ColTypes));
+
+      const auto validColumnNames = GetValidatedColumnNames(realNColumns, columns);
+      const unsigned int nSlots = fLoopManager->GetNSlots();
+
+      auto *tree = fLoopManager->GetTree();
+      auto *helperArgOnHeap = RDFInternal::MakeSharedOnHeap(helperArg);
+
+      auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(proxiedPtr));
+
+      const auto jittedAction = std::make_shared<RDFInternal::RJittedAction>(*fLoopManager, validColumnNames,
+                                                                             fColRegister, proxiedPtr->GetVariations());
+      auto jittedActionOnHeap = RDFInternal::MakeWeakOnHeap(jittedAction);
+
+      auto toJit =
+         RDFInternal::JitBuildAction(validColumnNames, upcastNodeOnHeap, typeid(HelperArgType), typeid(ActionTag),
+                                     helperArgOnHeap, tree, nSlots, fColRegister, fDataSource, jittedActionOnHeap);
+      fLoopManager->ToJitExec(toJit);
+      return MakeResultPtr(r, *fLoopManager, std::move(jittedAction));
+   }
+
 public:
    RInterfaceBase(std::shared_ptr<RDFDetail::RLoopManager> lm);
    RInterfaceBase(RDFDetail::RLoopManager &lm, const RDFInternal::RColumnRegister &colRegister);
