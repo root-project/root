@@ -219,10 +219,13 @@ public:
 
    double defaultErrorLevel() const override { return _driver->topNode().defaultErrorLevel(); }
 
-   bool getParameters(const RooArgSet * /*observables*/, RooArgSet &outputSet,
+   bool getParameters(const RooArgSet * observables, RooArgSet &outputSet,
                       bool /*stripDisconnected=true*/) const override
    {
       outputSet.add(_parameters);
+      if(observables) {
+         outputSet.remove(*observables);
+      }
       return false;
    }
 
@@ -240,7 +243,7 @@ private:
    RooFitDriver *_driver = nullptr;
    RooRealProxy _topNode;
    RooArgSet _parameters;
-   bool _ownsDriver;
+   bool _ownsDriver = false;
 };
 
 } // namespace
