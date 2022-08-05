@@ -276,7 +276,8 @@ def download_llvm_binary():
         raise Exception("Building clang using LLVM binary not possible. Please invoke cpt without --with-llvm-binary and --with-llvm-tar flags")
     if tar_required:
         if DIST == 'Ubuntu':
-            llvm_dir = os.path.join("/usr", "lib", "llvm-"+llvm_vers)
+            llvm_dir = os.path.join(srcdir, "bin")
+            llvm_config_path = os.path.join(llvm_dir, "llvm-config")
         elif DIST == 'MacOSX':
             llvm_dir = os.path.join("/opt", "local", "libexec", "llvm-"+llvm_vers)
         llvm_flags = llvm_flag_setter(llvm_dir, llvm_config_path)
