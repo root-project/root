@@ -112,6 +112,9 @@ protected:
    Record_t GetColumnReadersImpl(std::string_view name, const std::type_info &) final;
 };
 
+RDataFrame FromSqlite(std::string_view fileName, std::string_view query);
+
+R__DEPRECATED(6, 30, "Use FromSqlite instead.")
 RDataFrame MakeSqliteDataFrame(std::string_view fileName, std::string_view query);
 
 } // namespace RDF
