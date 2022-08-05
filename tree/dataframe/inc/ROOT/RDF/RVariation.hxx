@@ -138,7 +138,7 @@ void AssignResults(ROOT::RVec<ROOT::RVec<T>> &resStorage, ROOT::RVec<ROOT::RVec<
    }
 }
 
-template <typename F>
+template <typename F, typename IsSingleColumn /* std::true_type or std::false_type*/>
 class R__CLING_PTRCHECK(off) RVariation final : public RVariationBase {
    using ColumnTypes_t = typename CallableTraits<F>::arg_types;
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
