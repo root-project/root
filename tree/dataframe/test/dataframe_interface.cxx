@@ -745,7 +745,7 @@ TEST(RDataFrameInterface, DescribeShortFormat)
    EXPECT_EQ(df2e.Describe().AsString(/*shortFormat =*/true), ss3);
 
    // others with an actual fDataSource, like csv
-   auto df3 = ROOT::RDF::MakeCsvDataFrame("RCsvDS_test_headers.csv");
+   auto df3 = ROOT::RDF::FromCSV("RCsvDS_test_headers.csv");
    EXPECT_EQ(df3.Describe().AsString(/*shortFormat =*/true), "Dataframe from datasource RCsv");
 
    for (int i = 1; i <= 3; ++i)
