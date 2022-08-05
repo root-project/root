@@ -495,8 +495,16 @@ public:
       // array of bools keeping track of which inputs are containers
       constexpr std::array<bool, sizeof...(Xs)> isContainer{IsDataContainer<Xs>::value...};
 
+      auto findIdxTrue = [](const auto &arr) {
+         for (size_t i = 0; i < arr.size(); ++i) {
+            if (arr[i])
+               return i;
+         }
+         return arr.size();
+      };
+
       // index of the first container input
-      constexpr std::size_t colidx = FindIdxTrue(isContainer);
+      constexpr std::size_t colidx = findIdxTrue(isContainer);
       // if this happens, there is a bug in the implementation
       static_assert(colidx < sizeof...(Xs), "Error: index of collection-type argument not found.");
 

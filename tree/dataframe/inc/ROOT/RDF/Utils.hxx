@@ -224,17 +224,6 @@ constexpr std::size_t CacheLineStep() {
 void CheckReaderTypeMatches(const std::type_info &colType, const std::type_info &requestedType,
                             const std::string &colName, const std::string &where);
 
-// TODO in C++17 this could be a lambda within FillHelper::Exec
-template <typename T>
-constexpr std::size_t FindIdxTrue(const T &arr)
-{
-   for (size_t i = 0; i < arr.size(); ++i) {
-      if (arr[i])
-         return i;
-   }
-   return arr.size();
-}
-
 // return type has to be decltype(auto) to preserve perfect forwarding
 template <std::size_t N, typename... Ts>
 decltype(auto) GetNthElement(Ts &&...args)
