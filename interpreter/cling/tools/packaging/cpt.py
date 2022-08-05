@@ -311,7 +311,8 @@ def download_llvm_binary():
         )
     if tar_required:
         if DIST == 'Ubuntu':
-            llvm_dir = os.path.join("/usr", "lib", "llvm-" + llvm_vers)
+            llvm_dir = os.path.join(srcdir, "bin")
+            llvm_config_path = os.path.join(llvm_dir, "llvm-config")
         elif DIST == 'MacOSX':
             llvm_dir = os.path.join("/opt", "local", "libexec",
                                     "llvm-" + llvm_vers)
