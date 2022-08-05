@@ -540,10 +540,19 @@ std::string RSqliteDS::GetLabel()
 /// \brief Factory method to create a SQlite RDataFrame.
 /// \param[in] fileName Path of the sqlite file.
 /// \param[in] query SQL query that defines the data set.
-RDataFrame MakeSqliteDataFrame(std::string_view fileName, std::string_view query)
+RDataFrame FromSqlite(std::string_view fileName, std::string_view query)
 {
    ROOT::RDataFrame rdf(std::make_unique<RSqliteDS>(std::string(fileName), std::string(query)));
    return rdf;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+/// \brief Factory method to create a SQlite RDataFrame.
+///
+/// Deprecated in favor of FromSqlite().
+RDataFrame MakeSqliteDataFrame(std::string_view fileName, std::string_view query)
+{
+   return FromSqlite(fileName, query);
 }
 
 ////////////////////////////////////////////////////////////////////////////
