@@ -52,15 +52,15 @@ model.add(Dense(64, activation='tanh', input_dim=2))
 model.add(Dense(1, activation='linear'))
 
 # Set loss and optimizer
-model.compile(loss='mean_squared_error', optimizer=SGD(lr=0.01))
+model.compile(loss='mean_squared_error', optimizer=SGD(learning_rate=0.01))
 
 # Store model to file
-model.save('model.h5')
+model.save('modelRegression.h5')
 model.summary()
 
 # Book methods
 factory.BookMethod(dataloader, TMVA.Types.kPyKeras, 'PyKeras',
-        'H:!V:VarTransform=D,G:FilenameModel=model.h5:NumEpochs=20:BatchSize=32')
+        'H:!V:VarTransform=D,G:FilenameModel=modelRegression.h5:FilenameTrainedModel=trainedModelRegression.h5:NumEpochs=20:BatchSize=32')
 factory.BookMethod(dataloader, TMVA.Types.kBDT, 'BDTG',
         '!H:!V:VarTransform=D,G:NTrees=1000:BoostType=Grad:Shrinkage=0.1:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=20:MaxDepth=4')
 

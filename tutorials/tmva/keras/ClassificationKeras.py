@@ -52,17 +52,17 @@ model.add(Dense(2, activation='softmax'))
 
 # Set loss and optimizer
 model.compile(loss='categorical_crossentropy',
-              optimizer=SGD(lr=0.01), metrics=['accuracy', ])
+              optimizer=SGD(learning_rate=0.01), metrics=['accuracy', ])
 
 # Store model to file
-model.save('model.h5')
+model.save('modelClassification.h5')
 model.summary()
 
 # Book methods
 factory.BookMethod(dataloader, TMVA.Types.kFisher, 'Fisher',
                    '!H:!V:Fisher:VarTransform=D,G')
 factory.BookMethod(dataloader, TMVA.Types.kPyKeras, 'PyKeras',
-                   'H:!V:VarTransform=D,G:FilenameModel=model.h5:NumEpochs=20:BatchSize=32')
+                   'H:!V:VarTransform=D,G:FilenameModel=modelClassification.h5:FilenameTrainedModel=trainedModelClassification.h5:NumEpochs=20:BatchSize=32')
 
 # Run training, test and evaluation
 factory.TrainAllMethods()

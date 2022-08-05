@@ -117,7 +117,7 @@ def train(model, train_loader, val_loader, num_epochs, batch_size, optimizer, cr
 def predict(model, test_X, batch_size=32):
     # Set to eval mode
     model.eval()
-   
+
     test_dataset = torch.utils.data.TensorDataset(torch.Tensor(test_X))
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
@@ -128,7 +128,7 @@ def predict(model, test_X, batch_size=32):
             outputs = model(X)
             predictions.append(outputs)
         preds = torch.cat(predictions)
-   
+
     return preds.numpy()
 
 
@@ -138,7 +138,7 @@ load_model_custom_objects = {"optimizer": optimizer, "criterion": loss, "train_f
 # Store model to file
 # Convert the model to torchscript before saving
 m = torch.jit.script(model)
-torch.jit.save(m, "model.pt")
+torch.jit.save(m, "modelClassification.pt")
 print(m)
 
 
@@ -146,7 +146,7 @@ print(m)
 factory.BookMethod(dataloader, TMVA.Types.kFisher, 'Fisher',
                    '!H:!V:Fisher:VarTransform=D,G')
 factory.BookMethod(dataloader, TMVA.Types.kPyTorch, 'PyTorch',
-                   'H:!V:VarTransform=D,G:FilenameModel=model.pt:NumEpochs=20:BatchSize=32')
+                   'H:!V:VarTransform=D,G:FilenameModel=modelClassification.pt:FilenameTrainedModel=trainedModelClassification.pt:NumEpochs=20:BatchSize=32')
 
 
 # Run training, test and evaluation
