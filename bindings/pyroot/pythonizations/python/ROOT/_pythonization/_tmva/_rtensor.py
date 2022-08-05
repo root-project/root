@@ -8,8 +8,8 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from . import pythonization
-from ._rvec import _array_interface_dtype_map
+from .. import pythonization
+from .._rvec import _array_interface_dtype_map
 from libROOTPythonizations import GetEndianess, GetDataPointer, GetSizeOfType
 import cppyy
 
