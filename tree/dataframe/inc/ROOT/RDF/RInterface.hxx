@@ -764,7 +764,7 @@ public:
       std::vector<std::string> colNames{{std::string(colName)}};
       const std::string theVariationName{variationName.empty() ? colName : variationName};
 
-      return Vary(std::move(colNames), std::forward<F>(expression), inputColumns, variationTags, theVariationName);
+      return VaryImpl(std::move(colNames), std::forward<F>(expression), inputColumns, variationTags, theVariationName);
    }
 
    /// \brief Register systematic variations for an existing columns using auto-generated variation tags.
@@ -806,34 +806,7 @@ public:
    Vary(const std::vector<std::string> &colNames, F &&expression, const ColumnNames_t &inputColumns,
         const std::vector<std::string> &variationTags, std::string_view variationName)
    {
-      using F_t = std::decay_t<F>;
-      using ColTypes_t = typename TTraits::CallableTraits<F_t>::arg_types;
-      using RetType = typename TTraits::CallableTraits<F_t>::ret_type;
-      constexpr auto nColumns = ColTypes_t::list_size;
-
-      SanityChecksForVary<RetType>(colNames, variationTags, variationName);
-
-      const auto validColumnNames = GetValidatedColumnNames(nColumns, inputColumns);
-      CheckAndFillDSColumns(validColumnNames, ColTypes_t{});
-
-      auto retTypeName = RDFInternal::TypeID2TypeName(typeid(RetType));
-      if (retTypeName.empty()) {
-         // The type is not known to the interpreter, but we don't want to error out
-         // here, rather if/when this column is used in jitted code, so we inject a broken but telling type name.
-         const auto demangledType = RDFInternal::DemangleTypeIdName(typeid(RetType));
-         retTypeName = "CLING_UNKNOWN_TYPE_" + demangledType;
-      }
-
-      auto variation = std::make_shared<RDFInternal::RVariation<F_t>>(
-         colNames, variationName, std::forward<F>(expression), variationTags, retTypeName, fColRegister, *fLoopManager,
-         validColumnNames);
-
-      RDFInternal::RColumnRegister newCols(fColRegister);
-      newCols.AddVariation(std::move(variation));
-
-      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
-
-      return newInterface;
+      return VaryImpl(colNames, std::forward<F>(expression), inputColumns, variationTags, variationName);
    }
 
    /// \brief Register systematic variations for one or more existing columns using auto-generated tags.
@@ -880,7 +853,7 @@ public:
       std::vector<std::string> colNames{{std::string(colName)}};
       const std::string theVariationName{variationName.empty() ? colName : variationName};
 
-      return Vary(std::move(colNames), expression, variationTags, theVariationName);
+      return JittedVaryImpl(colNames, expression, variationTags, theVariationName, /*isSingleColumn=*/true);
    }
 
    /// \brief Register systematic variations for an existing column.
@@ -949,35 +922,7 @@ public:
    RInterface<Proxied, DS_t> Vary(const std::vector<std::string> &colNames, std::string_view expression,
                                   const std::vector<std::string> &variationTags, std::string_view variationName)
    {
-      R__ASSERT(variationTags.size() > 0 && "Must have at least one variation.");
-      R__ASSERT(colNames.size() > 0 && "Must have at least one varied column.");
-      R__ASSERT(!variationName.empty() && "Must provide a variation name.");
-
-      for (auto &colName : colNames) {
-         RDFInternal::CheckValidCppVarName(colName, "Vary");
-         RDFInternal::CheckForDefinition("Vary", colName, fColRegister, fLoopManager->GetBranchNames(),
-                                         fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
-      }
-      RDFInternal::CheckValidCppVarName(variationName, "Vary");
-
-      // when varying multiple columns, they must be different columns
-      if (colNames.size() > 1) {
-         std::set<std::string> uniqueCols(colNames.begin(), colNames.end());
-         if (uniqueCols.size() != colNames.size())
-            throw std::logic_error("A column name was passed to the same Vary invocation multiple times.");
-      }
-
-      auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
-      auto jittedVariation =
-         RDFInternal::BookVariationJit(colNames, variationName, variationTags, expression, *fLoopManager, fDataSource,
-                                       fColRegister, fLoopManager->GetBranchNames(), upcastNodeOnHeap);
-
-      RDFInternal::RColumnRegister newColRegister(fColRegister);
-      newColRegister.AddVariation(std::move(jittedVariation));
-
-      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newColRegister), fDataSource);
-
-      return newInterface;
+      return JittedVaryImpl(colNames, expression, variationTags, variationName);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -3326,6 +3271,76 @@ private:
       RInterface<RLoopManager> cachedRDF(std::make_shared<RLoopManager>(std::move(ds), columnListWithoutSizeColumns));
 
       return cachedRDF;
+   }
+
+   template <typename F>
+   RInterface<Proxied, DS_t>
+   VaryImpl(const std::vector<std::string> &colNames, F &&expression, const ColumnNames_t &inputColumns,
+            const std::vector<std::string> &variationTags, std::string_view variationName)
+   {
+      using F_t = std::decay_t<F>;
+      using ColTypes_t = typename TTraits::CallableTraits<F_t>::arg_types;
+      using RetType = typename TTraits::CallableTraits<F_t>::ret_type;
+      constexpr auto nColumns = ColTypes_t::list_size;
+
+      SanityChecksForVary<RetType>(colNames, variationTags, variationName);
+
+      const auto validColumnNames = GetValidatedColumnNames(nColumns, inputColumns);
+      CheckAndFillDSColumns(validColumnNames, ColTypes_t{});
+
+      auto retTypeName = RDFInternal::TypeID2TypeName(typeid(RetType));
+      if (retTypeName.empty()) {
+         // The type is not known to the interpreter, but we don't want to error out
+         // here, rather if/when this column is used in jitted code, so we inject a broken but telling type name.
+         const auto demangledType = RDFInternal::DemangleTypeIdName(typeid(RetType));
+         retTypeName = "CLING_UNKNOWN_TYPE_" + demangledType;
+      }
+
+      auto variation = std::make_shared<RDFInternal::RVariation<F_t>>(
+         colNames, variationName, std::forward<F>(expression), variationTags, retTypeName, fColRegister, *fLoopManager,
+         validColumnNames);
+
+      RDFInternal::RColumnRegister newCols(fColRegister);
+      newCols.AddVariation(std::move(variation));
+
+      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
+
+      return newInterface;
+   }
+
+   RInterface<Proxied, DS_t> JittedVaryImpl(const std::vector<std::string> &colNames, std::string_view expression,
+                                            const std::vector<std::string> &variationTags,
+                                            std::string_view variationName)
+   {
+      R__ASSERT(variationTags.size() > 0 && "Must have at least one variation.");
+      R__ASSERT(colNames.size() > 0 && "Must have at least one varied column.");
+      R__ASSERT(!variationName.empty() && "Must provide a variation name.");
+
+      for (auto &colName : colNames) {
+         RDFInternal::CheckValidCppVarName(colName, "Vary");
+         RDFInternal::CheckForDefinition("Vary", colName, fColRegister, fLoopManager->GetBranchNames(),
+                                         fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+      }
+      RDFInternal::CheckValidCppVarName(variationName, "Vary");
+
+      // when varying multiple columns, they must be different columns
+      if (colNames.size() > 1) {
+         std::set<std::string> uniqueCols(colNames.begin(), colNames.end());
+         if (uniqueCols.size() != colNames.size())
+            throw std::logic_error("A column name was passed to the same Vary invocation multiple times.");
+      }
+
+      auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
+      auto jittedVariation =
+         RDFInternal::BookVariationJit(colNames, variationName, variationTags, expression, *fLoopManager, fDataSource,
+                                       fColRegister, fLoopManager->GetBranchNames(), upcastNodeOnHeap);
+
+      RDFInternal::RColumnRegister newColRegister(fColRegister);
+      newColRegister.AddVariation(std::move(jittedVariation));
+
+      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newColRegister), fDataSource);
+
+      return newInterface;
    }
 
    template <typename Helper, typename ActionResultType>
