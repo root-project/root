@@ -443,7 +443,7 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RCsvDS::GetEntryRanges()
          msg += "There is no `nan` equivalent for type " + colT + ", hence ";
          msg += std::string(colT == "Long64_t" ? "`0`" : "`false`") + " is stored.\n";
       }
-      msg += "Please manually set the column type to `double` (with `D`) in `MakeCsvDataFrame` to read NaNs instead.\n";
+      msg += "Please manually set the column type to `double` (with `D`) in `FromCSV` to read NaNs instead.\n";
       Warning("RCsvDS", "%s", msg.c_str());
    }
 
