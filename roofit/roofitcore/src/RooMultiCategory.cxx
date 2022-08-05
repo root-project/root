@@ -108,26 +108,6 @@ std::string RooMultiCategory::createLabel() const
 }
 
 
-#ifndef NDEBUG
-
-#include "RooFitLegacy/RooMultiCatIter.h"
-namespace {
-/// Check that root-6.22 redesign of category interfaces yields same labels
-std::string computeLabelOldStyle(const RooArgSet& catSet, unsigned int index) {
-  RooMultiCatIter iter(catSet) ;
-  TObjString* obj ;
-  for (unsigned int i=0; (obj=(TObjString*)iter.Next()); ++i) {
-    if (i == index) {
-      return obj->String().Data();
-    }
-  }
-
-  return {};
-}
-}
-#endif
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate the current value.
 /// This enumerates the states of each serving category, and calculates a unique
@@ -147,12 +127,6 @@ RooAbsCategory::value_type RooMultiCategory::evaluate() const
     computedStateIndex += cat->getCurrentOrdinalNumber() * multiplier;
     multiplier *= cat->size();
   }
-
-#ifndef NDEBUG
-  assert(hasIndex(computedStateIndex));
-  _currentIndex = computedStateIndex;
-  assert(createLabel() == computeLabelOldStyle(_catSet, computedStateIndex));
-#endif
 
   return computedStateIndex;
 }
