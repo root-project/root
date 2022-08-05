@@ -53,4 +53,10 @@ class RooAbsRealLValue(object):
         """
         # Redefinition of `RooAbsRealLValue.frame` for keyword arguments.
         args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
-        return self._frame(*args, **kwargs)
+        frame = self._frame(*args, **kwargs)
+
+        # Add a Python reference to the plot variable to the RooPlot because
+        # the plot variable needs to survive at least as long as the plot.
+        frame._plotVar = self
+
+        return frame
