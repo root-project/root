@@ -119,7 +119,7 @@ TEST(RCsvDS, ColumnReadersWrongType)
 
 TEST(RCsvDS, Snapshot)
 {
-   auto tdf = ROOT::RDF::MakeCsvDataFrame(fileName0);
+   auto tdf = ROOT::RDF::FromCSV(fileName0);
    auto snap = tdf.Snapshot<Long64_t>("data","csv2root.root", {"Age"});
    auto ages = *snap->Take<Long64_t>("Age");
    std::vector<Long64_t> agesRef {60LL, 50LL, 40LL, 30LL, 1LL, -1LL};
@@ -186,13 +186,13 @@ TEST(RCsvDS, ProgressiveReadingRDF)
 {
    // Even chunks
    auto chunkSize = 2LL;
-   auto tdf = ROOT::RDF::MakeCsvDataFrame(fileName0, true, ',', chunkSize);
+   auto tdf = ROOT::RDF::FromCSV(fileName0, true, ',', chunkSize);
    auto c = tdf.Count();
    EXPECT_EQ(6U, *c);
 
    // Uneven chunks
    chunkSize = 4LL;
-   auto tdf2 = ROOT::RDF::MakeCsvDataFrame(fileName0, true, ',', chunkSize);
+   auto tdf2 = ROOT::RDF::FromCSV(fileName0, true, ',', chunkSize);
    auto c2 = tdf2.Count();
    EXPECT_EQ(6U, *c2);
 }
@@ -236,7 +236,7 @@ TEST(RCsvDS, FromARDFWithJitting)
 
 TEST(RCsvDS, MultipleEventLoops)
 {
-   auto tdf = ROOT::RDF::MakeCsvDataFrame(fileName0, true, ',', 2LL);
+   auto tdf = ROOT::RDF::FromCSV(fileName0, true, ',', 2LL);
    EXPECT_EQ(6U, *tdf.Count());
    EXPECT_EQ(6U, *tdf.Count());
    EXPECT_EQ(6U, *tdf.Count());
@@ -245,17 +245,17 @@ TEST(RCsvDS, MultipleEventLoops)
 
 TEST(RCsvDS, WindowsLinebreaks)
 {
-   auto tdf = ROOT::RDF::MakeCsvDataFrame(fileName3);
+   auto tdf = ROOT::RDF::FromCSV(fileName3);
    EXPECT_EQ(6U, *tdf.Count());
 }
 
 TEST(RCsvDS, Remote)
 {
 #ifdef R__HAS_DAVIX
-   auto tdf = ROOT::RDF::MakeCsvDataFrame(url0, false);
+   auto tdf = ROOT::RDF::FromCSV(url0, false);
    EXPECT_EQ(1U, *tdf.Count());
 #else
-   EXPECT_THROW(ROOT::RDF::MakeCsvDataFrame(url0, false), std::runtime_error);
+   EXPECT_THROW(ROOT::RDF::FromCSV(url0, false), std::runtime_error);
 #endif
 }
 
@@ -309,13 +309,13 @@ TEST(RCsvDS, ProgressiveReadingRDFMT)
 {
    // Even chunks
    auto chunkSize = 2LL;
-   auto tdf = ROOT::RDF::MakeCsvDataFrame(fileName0, true, ',', chunkSize);
+   auto tdf = ROOT::RDF::FromCSV(fileName0, true, ',', chunkSize);
    auto c = tdf.Count();
    EXPECT_EQ(6U, *c);
 
    // Uneven chunks
    chunkSize = 4LL;
-   auto tdf2 = ROOT::RDF::MakeCsvDataFrame(fileName0, true, ',', chunkSize);
+   auto tdf2 = ROOT::RDF::FromCSV(fileName0, true, ',', chunkSize);
    auto c2 = tdf2.Count();
    EXPECT_EQ(6U, *c2);
 }
@@ -331,7 +331,7 @@ TEST(RCsvDS, SpecifyColumnTypes)
 
    EXPECT_THROW(
       try {
-         ROOT::RDF::MakeCsvDataFrame(fileName1, false, ',', -1LL, {{"Col2", 'L'}, {"wrong", 'O'}});
+         ROOT::RDF::FromCSV(fileName1, false, ',', -1LL, {{"Col2", 'L'}, {"wrong", 'O'}});
       } catch (const std::runtime_error &err) {
          std::string msg = "There is no column with name \"wrong\".\n";
          msg += "Since the input csv file does not contain headers, valid column names are [\"Col0\", ..., \"Col3\"].";
@@ -342,7 +342,7 @@ TEST(RCsvDS, SpecifyColumnTypes)
 
    EXPECT_THROW(
       try {
-         ROOT::RDF::MakeCsvDataFrame(fileName1, false, ',', -1LL, {{"Col0", 'T'}, {"Col3", 'X'}});
+         ROOT::RDF::FromCSV(fileName1, false, ',', -1LL, {{"Col0", 'T'}, {"Col3", 'X'}});
       } catch (const std::runtime_error &err) {
          std::string msg = "Type alias 'X' is not supported.\n";
          msg += "Supported type aliases are 'O' for boolean, 'D' for double, 'L' for Long64_t, 'T' for std::string.";
@@ -370,7 +370,7 @@ TEST(RCsvDS, NanWarningChecks)
 {
    ROOT::DisableImplicitMT(); // to allow usage of display
 
-   auto rdf = ROOT::RDF::MakeCsvDataFrame(fileName4);
+   auto rdf = ROOT::RDF::FromCSV(fileName4);
    auto d = rdf.Display<double, bool, Long64_t, std::string>({"col1", "col3", "col6", "col8"}, 12);
 
    const std::string Warn =
@@ -380,7 +380,7 @@ TEST(RCsvDS, NanWarningChecks)
       "There is no `nan` equivalent for type Long64_t, hence `0` is stored.\n"
       "Column \"col6\" of type Long64_t contains empty cell(s) or NaN(s).\n"
       "There is no `nan` equivalent for type Long64_t, hence `0` is stored.\n"
-      "Please manually set the column type to `double` (with `D`) in `MakeCsvDataFrame` to read NaNs instead.\n";
+      "Please manually set the column type to `double` (with `D`) in `FromCSV` to read NaNs instead.\n";
 
    ROOT_EXPECT_WARNING(d->AsString(), "RCsvDS", Warn);
 
