@@ -767,7 +767,7 @@ std::shared_ptr<RJittedVariation>
 BookVariationJit(const std::vector<std::string> &colNames, std::string_view variationName,
                  const std::vector<std::string> &variationTags, std::string_view expression, RLoopManager &lm,
                  RDataSource *ds, const RColumnRegister &colRegister, const ColumnNames_t &branches,
-                 std::shared_ptr<RNodeBase> *upcastNodeOnHeap)
+                 std::shared_ptr<RNodeBase> *upcastNodeOnHeap, bool isSingleColumn)
 {
    auto *const tree = lm.GetTree();
    const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
@@ -795,7 +795,8 @@ BookVariationJit(const std::vector<std::string> &colNames, std::string_view vari
    // - jittedVariation: heap-allocated weak_ptr that will be deleted by JitDefineHelper after usage
    // - definesAddr: heap-allocated, will be deleted by JitDefineHelper after usage
    std::stringstream varyInvocation;
-   varyInvocation << "ROOT::Internal::RDF::JitVariationHelper(" << funcName << ", new const char*["
+   varyInvocation << "ROOT::Internal::RDF::JitVariationHelper<"
+                  << (isSingleColumn ? "std::true_type" : "std::false_type") << ">(" << funcName << ", new const char*["
                   << parsedExpr.fUsedCols.size() << "]{";
    for (const auto &col : parsedExpr.fUsedCols) {
       varyInvocation << "\"" << col << "\", ";

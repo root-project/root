@@ -341,7 +341,7 @@ std::shared_ptr<RJittedVariation>
 BookVariationJit(const std::vector<std::string> &colNames, std::string_view variationName,
                  const std::vector<std::string> &variationTags, std::string_view expression, RLoopManager &lm,
                  RDataSource *ds, const RColumnRegister &colRegister, const ColumnNames_t &branches,
-                 std::shared_ptr<RNodeBase> *upcastNodeOnHeap);
+                 std::shared_ptr<RNodeBase> *upcastNodeOnHeap, bool isSingleColumn);
 
 std::string JitBuildAction(const ColumnNames_t &bl, std::shared_ptr<RDFDetail::RNodeBase> *prevNode,
                            const std::type_info &art, const std::type_info &at, void *rOnHeap, TTree *tree,
@@ -527,7 +527,7 @@ void JitDefineHelper(F &&f, const char **colsPtr, std::size_t colsSize, std::str
    doDeletes();
 }
 
-template <typename F>
+template <typename IsSingleColumn /*std::true_type or std::false_type*/, typename F>
 void JitVariationHelper(F &&f, const char **colsPtr, std::size_t colsSize, const char **variedCols,
                         std::size_t variedColsSize, const char **variationTags, std::size_t variationTagsSize,
                         std::string_view variationName, RLoopManager *lm,
@@ -566,9 +566,9 @@ void JitVariationHelper(F &&f, const char **colsPtr, std::size_t colsSize, const
       AddDSColumns(inputColNames, *lm, *ds, ColTypes_t(), *colRegister);
 
    // use unique_ptr<RDefineBase> instead of make_unique<NewCol_t> to reduce jit/compile-times
-   std::unique_ptr<RVariationBase> newVariation{
-      new RVariation<std::decay_t<F>>(std::move(variedColNames), variationName, std::forward<F>(f), std::move(tags),
-                                      jittedVariation->GetTypeName(), *colRegister, *lm, std::move(inputColNames))};
+   std::unique_ptr<RVariationBase> newVariation{new RVariation<std::decay_t<F>, IsSingleColumn>(
+      std::move(variedColNames), variationName, std::forward<F>(f), std::move(tags), jittedVariation->GetTypeName(),
+      *colRegister, *lm, std::move(inputColNames))};
    jittedVariation->SetVariation(std::move(newVariation));
 
    doDeletes();

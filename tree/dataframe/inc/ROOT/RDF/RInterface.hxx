@@ -764,7 +764,8 @@ public:
       std::vector<std::string> colNames{{std::string(colName)}};
       const std::string theVariationName{variationName.empty() ? colName : variationName};
 
-      return VaryImpl(std::move(colNames), std::forward<F>(expression), inputColumns, variationTags, theVariationName);
+      return VaryImpl<std::true_type>(std::move(colNames), std::forward<F>(expression), inputColumns, variationTags,
+                                      theVariationName);
    }
 
    /// \brief Register systematic variations for an existing columns using auto-generated variation tags.
@@ -806,7 +807,8 @@ public:
    Vary(const std::vector<std::string> &colNames, F &&expression, const ColumnNames_t &inputColumns,
         const std::vector<std::string> &variationTags, std::string_view variationName)
    {
-      return VaryImpl(colNames, std::forward<F>(expression), inputColumns, variationTags, variationName);
+      return VaryImpl<std::false_type>(colNames, std::forward<F>(expression), inputColumns, variationTags,
+                                       variationName);
    }
 
    /// \brief Register systematic variations for one or more existing columns using auto-generated tags.
@@ -871,7 +873,7 @@ public:
       std::vector<std::string> colNames{{std::string(colName)}};
       const std::string theVariationName{variationName.empty() ? colName : variationName};
 
-      return Vary(std::move(colNames), expression, nVariations, theVariationName);
+      return JittedVaryImpl(std::move(colNames), expression, nVariations, theVariationName, /*isSingleColumn*/true);
    }
 
    /// \brief Register systematic variations for one or more existing columns.
@@ -922,7 +924,7 @@ public:
    RInterface<Proxied, DS_t> Vary(const std::vector<std::string> &colNames, std::string_view expression,
                                   const std::vector<std::string> &variationTags, std::string_view variationName)
    {
-      return JittedVaryImpl(colNames, expression, variationTags, variationName);
+      return JittedVaryImpl(colNames, expression, variationTags, variationName, /*isSingleColumn=*/false);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -3273,7 +3275,7 @@ private:
       return cachedRDF;
    }
 
-   template <typename F>
+   template <typename IsSingleColumn /*std::true_type or std::false_type*/, typename F>
    RInterface<Proxied, DS_t>
    VaryImpl(const std::vector<std::string> &colNames, F &&expression, const ColumnNames_t &inputColumns,
             const std::vector<std::string> &variationTags, std::string_view variationName)
@@ -3296,7 +3298,7 @@ private:
          retTypeName = "CLING_UNKNOWN_TYPE_" + demangledType;
       }
 
-      auto variation = std::make_shared<RDFInternal::RVariation<F_t>>(
+      auto variation = std::make_shared<RDFInternal::RVariation<F_t, IsSingleColumn>>(
          colNames, variationName, std::forward<F>(expression), variationTags, retTypeName, fColRegister, *fLoopManager,
          validColumnNames);
 
@@ -3310,7 +3312,7 @@ private:
 
    RInterface<Proxied, DS_t> JittedVaryImpl(const std::vector<std::string> &colNames, std::string_view expression,
                                             const std::vector<std::string> &variationTags,
-                                            std::string_view variationName)
+                                            std::string_view variationName, bool isSingleColumn)
    {
       R__ASSERT(variationTags.size() > 0 && "Must have at least one variation.");
       R__ASSERT(colNames.size() > 0 && "Must have at least one varied column.");
@@ -3333,7 +3335,7 @@ private:
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
       auto jittedVariation =
          RDFInternal::BookVariationJit(colNames, variationName, variationTags, expression, *fLoopManager, fDataSource,
-                                       fColRegister, fLoopManager->GetBranchNames(), upcastNodeOnHeap);
+                                       fColRegister, fLoopManager->GetBranchNames(), upcastNodeOnHeap, isSingleColumn);
 
       RDFInternal::RColumnRegister newColRegister(fColRegister);
       newColRegister.AddVariation(std::move(jittedVariation));
