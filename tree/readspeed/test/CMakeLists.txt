@@ -1,1 +1,1 @@
-ROOT_ADD_GTEST(readspeed_general readspeed_general.cxx LIBRARIES ReadSpeed RIO Tree TreePlayer ROOTDataFrame)
+ROOT_ADD_GTEST(readspeed_general readspeed_general.cxx LIBRARIES ReadSpeed RIO Tree TreePlayer)
