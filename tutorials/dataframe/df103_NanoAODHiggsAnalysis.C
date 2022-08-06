@@ -438,7 +438,7 @@ void df103_NanoAODHiggsAnalysis(const bool run_fast = true)
    const auto nevt_SMHiggsToZZTo4L = 299973.0; // H->4l: Number of simulated events
    const auto nbins = 36;                      // Number of bins for the invariant mass spectrum
    auto df_h_sig_4mu = df_sig_4mu_reco
-         .Define("weight", [&]() { return luminosity * xsec_SMHiggsToZZTo4L / nevt_SMHiggsToZZTo4L; }, {})
+         .Define("weight", [&] { return luminosity * xsec_SMHiggsToZZTo4L / nevt_SMHiggsToZZTo4L; })
          .Histo1D({"h_sig_4mu", "", nbins, 70, 180}, "H_mass", "weight");
 
    const auto scale_ZZTo4l = 1.386;     // ZZ->4mu: Scale factor for ZZ to four leptons
@@ -446,46 +446,46 @@ void df103_NanoAODHiggsAnalysis(const bool run_fast = true)
    const auto nevt_ZZTo4mu = 1499064.0; // ZZ->4mu: Number of simulated events
    auto df_bkg_4mu_reco = reco_higgs_to_4mu(df_bkg_4mu);
    auto df_h_bkg_4mu = df_bkg_4mu_reco
-         .Define("weight", [&]() { return luminosity * xsec_ZZTo4mu * scale_ZZTo4l / nevt_ZZTo4mu; }, {})
+         .Define("weight", [&] { return luminosity * xsec_ZZTo4mu * scale_ZZTo4l / nevt_ZZTo4mu; })
          .Histo1D({"h_bkg_4mu", "", nbins, 70, 180}, "H_mass", "weight");
 
    auto df_data_4mu_reco = reco_higgs_to_4mu(df_data_doublemu);
    auto df_h_data_4mu = df_data_4mu_reco
-         .Define("weight", []() { return 1.0; }, {})
+         .Define("weight", [] { return 1.0; })
          .Histo1D({"h_data_4mu", "", nbins, 70, 180}, "H_mass", "weight");
 
    // Reconstruct Higgs to 4 electrons
    auto df_sig_4el_reco = reco_higgs_to_4el(df_sig_4l);
    auto df_h_sig_4el = df_sig_4el_reco
-         .Define("weight", [&]() { return luminosity * xsec_SMHiggsToZZTo4L / nevt_SMHiggsToZZTo4L; }, {})
+         .Define("weight", [&] { return luminosity * xsec_SMHiggsToZZTo4L / nevt_SMHiggsToZZTo4L; })
          .Histo1D({"h_sig_4el", "", nbins, 70, 180}, "H_mass", "weight");
 
    const auto xsec_ZZTo4el = xsec_ZZTo4mu; // ZZ->4el: Standard Model cross-section
    const auto nevt_ZZTo4el = 1499093.0;    // ZZ->4el: Number of simulated events
    auto df_bkg_4el_reco = reco_higgs_to_4el(df_bkg_4el);
    auto df_h_bkg_4el = df_bkg_4el_reco
-         .Define("weight", [&]() { return luminosity * xsec_ZZTo4el * scale_ZZTo4l / nevt_ZZTo4el; }, {})
+         .Define("weight", [&] { return luminosity * xsec_ZZTo4el * scale_ZZTo4l / nevt_ZZTo4el; })
          .Histo1D({"h_bkg_4el", "", nbins, 70, 180}, "H_mass", "weight");
 
    auto df_data_4el_reco = reco_higgs_to_4el(df_data_doubleel);
-   auto df_h_data_4el = df_data_4el_reco.Define("weight", []() { return 1.0; }, {})
+   auto df_h_data_4el = df_data_4el_reco.Define("weight", [] { return 1.0; })
                            .Histo1D({"h_data_4el", "", nbins, 70, 180}, "H_mass", "weight");
 
    // Reconstruct Higgs to 2 electrons and 2 muons
    auto df_sig_2el2mu_reco = reco_higgs_to_2el2mu(df_sig_4l);
    auto df_h_sig_2el2mu = df_sig_2el2mu_reco
-         .Define("weight", [&]() { return luminosity * xsec_SMHiggsToZZTo4L / nevt_SMHiggsToZZTo4L; }, {})
+         .Define("weight", [&] { return luminosity * xsec_SMHiggsToZZTo4L / nevt_SMHiggsToZZTo4L; })
          .Histo1D({"h_sig_2el2mu", "", nbins, 70, 180}, "H_mass", "weight");
 
    const auto xsec_ZZTo2el2mu = 0.18;      // ZZ->2el2mu: Standard Model cross-section
    const auto nevt_ZZTo2el2mu = 1497445.0; // ZZ->2el2mu: Number of simulated events
    auto df_bkg_2el2mu_reco = reco_higgs_to_2el2mu(df_bkg_2el2mu);
    auto df_h_bkg_2el2mu = df_bkg_2el2mu_reco
-         .Define("weight", [&]() { return luminosity * xsec_ZZTo2el2mu * scale_ZZTo4l / nevt_ZZTo2el2mu; }, {})
+         .Define("weight", [&] { return luminosity * xsec_ZZTo2el2mu * scale_ZZTo4l / nevt_ZZTo2el2mu; })
          .Histo1D({"h_bkg_2el2mu", "", nbins, 70, 180}, "H_mass", "weight");
 
    auto df_data_2el2mu_reco = reco_higgs_to_2el2mu(df_data_doublemu);
-   auto df_h_data_2el2mu = df_data_2el2mu_reco.Define("weight", []() { return 1.0; }, {})
+   auto df_h_data_2el2mu = df_data_2el2mu_reco.Define("weight", [] { return 1.0; })
                               .Histo1D({"h_data_2el2mu_doublemu", "", nbins, 70, 180}, "H_mass", "weight");
 
    // RunGraphs allows to run the event loops of the separate RDataFrame graphs
