@@ -55,7 +55,7 @@ public:
 
   RooArgSet intVars() const { RooArgSet tmp(_sumList) ; tmp.add(_intList) ; tmp.add(_anaList) ; tmp.add(_facList) ; return tmp ; }
   const char* intRange() { return _rangeName ? _rangeName->GetName() : 0 ; }
-  const RooAbsReal& integrand() const { return _function.arg() ; }
+  const RooAbsReal& integrand() const { return *_function; }
 
   void setCacheNumeric(bool flag) {
     // If true, value of this integral is cached if it is (partially numeric)
@@ -73,7 +73,7 @@ public:
 
   std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override {
     // Forward plot sampling hint of integrand
-    return _function.arg().plotSamplingHint(obs,xlo,xhi) ;
+    return _function->plotSamplingHint(obs,xlo,xhi) ;
   }
 
   RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=nullptr, const RooNumIntConfig* cfg=nullptr, const char* rangeName=nullptr) const override ;
@@ -83,8 +83,8 @@ public:
 
 protected:
 
-  mutable bool _valid;
-  bool _respectCompSelect;
+  mutable bool _valid = false;
+  bool _respectCompSelect = true;
 
   const RooArgSet& parameters() const ;
 
@@ -116,27 +116,27 @@ protected:
 
   mutable RooArgSet   _facListOwned ;  ///< Owned components in _facList
   RooRealProxy       _function ;     ///<Function being integration
-  RooArgSet*      _funcNormSet ;     ///< Optional normalization set passed to function
+  RooArgSet*      _funcNormSet = nullptr;     ///< Optional normalization set passed to function
 
   mutable RooArgSet       _saveInt ; ///<! do not persist
   mutable RooArgSet       _saveSum ; ///<! do not persist
 
-  RooNumIntConfig* _iconfig ;
+  RooNumIntConfig* _iconfig = nullptr;
 
   mutable RooListProxy _sumCat ; ///<! do not persist
 
-  Int_t _mode ;
-  IntOperMode _intOperMode ;   ///< integration operation mode
+  Int_t _mode = 0;
+  IntOperMode _intOperMode = Hybrid;   ///< integration operation mode
 
-  mutable bool _restartNumIntEngine ; ///<! do not persist
-  mutable RooAbsIntegrator* _numIntEngine ;  ///<! do not persist
-  mutable RooAbsFunc *_numIntegrand;         ///<! do not persist
+  mutable bool _restartNumIntEngine = false; ///<! do not persist
+  mutable std::unique_ptr<RooAbsIntegrator> _numIntEngine;  ///<! do not persist
+  mutable std::unique_ptr<RooAbsFunc> _numIntegrand;        ///<! do not persist
 
-  TNamed* _rangeName ;
+  TNamed* _rangeName = nullptr;
 
-  mutable RooArgSet* _params ; ///<! cache for set of parameters
+  mutable std::unique_ptr<RooArgSet> _params; ///<! cache for set of parameters
 
-  bool _cacheNum ;           ///< Cache integral if numeric
+  bool _cacheNum = false;           ///< Cache integral if numeric
   static Int_t _cacheAllNDim ; ///<! Cache all integrals with given numeric dimension
 
   ClassDefOverride(RooRealIntegral,3) // Real-valued function representing an integral over a RooAbsReal object
