@@ -50,7 +50,7 @@ public:
                 RooFit::BatchModeOption batchMode = RooFit::BatchModeOption::Cpu);
 
    void setData(RooAbsData const &data, std::string_view rangeName = "",
-                RooAbsCategory const *indexCatForSplitting = nullptr);
+                RooAbsCategory const *indexCatForSplitting = nullptr, bool skipZeroWeights = false);
    void setData(DataSpansMap const &dataSpans);
 
    ~RooFitDriver();
