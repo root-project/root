@@ -106,7 +106,7 @@ public:
    RooLagrangianMorphFunc(const char *name, const char *title, const Config &config);
    RooLagrangianMorphFunc(const RooLagrangianMorphFunc &other, const char *newName);
 
-   virtual ~RooLagrangianMorphFunc();
+   ~RooLagrangianMorphFunc() override;
 
    std::list<double> *binBoundaries(RooAbsRealLValue & /*obs*/, double /*xlo*/, double /*xhi*/) const override;
    std::list<double> *plotSamplingHint(RooAbsRealLValue & /*obs*/, double /*xlo*/, double /*xhi*/) const override;
@@ -230,16 +230,16 @@ public:
    void setScale(double val);
    double getScale();
 
-   int nSamples() const { return this->_config.folderNames.size(); }
+   int nSamples() const { return _config.folderNames.size(); }
 
    RooRealSumFunc *getFunc() const;
    std::unique_ptr<RooWrapperPdf> createPdf() const;
 
    RooAbsPdf::ExtendMode extendMode() const;
-   Double_t expectedEvents(const RooArgSet *nset) const;
-   Double_t expectedEvents(const RooArgSet &nset) const;
-   Double_t expectedEvents() const;
-   Bool_t selfNormalized() const { return true; }
+   double expectedEvents(const RooArgSet *nset) const;
+   double expectedEvents(const RooArgSet &nset) const;
+   double expectedEvents() const;
+   bool selfNormalized() const { return true; }
 
    void readParameters(TDirectory *f);
    void collectInputs(TDirectory *f);
