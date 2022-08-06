@@ -22,8 +22,8 @@
 
 namespace {
 
-void splitByCategory(std::map<RooFit::Detail::DataKey, RooSpan<const double>> &dataSpans, RooAbsCategory const &category,
-                     std::stack<std::vector<double>> &buffers)
+void splitByCategory(std::map<RooFit::Detail::DataKey, RooSpan<const double>> &dataSpans,
+                     RooAbsCategory const &category, std::stack<std::vector<double>> &buffers)
 {
    std::stack<std::vector<double>> oldBuffers;
    std::swap(buffers, oldBuffers);
@@ -71,28 +71,33 @@ void splitByCategory(std::map<RooFit::Detail::DataKey, RooSpan<const double>> &d
 } // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
-// Extract all content from a RooFit datasets as a map of spans.
-// Spans with the weights and squared weights will be also stored in the map,
-// keyed with the names `_weight` and the `_weight_sumW2`. If the dataset is
-// unweighted, these weight spans will only contain the single value `1.0`.
-// Entries with zero weight will be skipped.
-//
-// \return A `std::map` with spans keyed to name pointers.
-// \param[in] data The input dataset.
-// \param[in] rangeName Select only entries from the data in a given range
-//            (empty string for no range).
-// \param[in] indexCat If not `nullptr`, each span is spit up by this category,
-//            with the new names prefixed by the category component name
-//            surrounded by underscores. For example, if you have a category
-//            with `signal` and `control` samples, the span for a variable `x`
-//            will be split in two spans `_signal_x` and `_control_x`.
-// \param[in] buffers Pass here an empty stack of `double` vectors, which will
-//            be used as memory for the data if the memory in the dataset
-//            object can't be used directly (e.g. because you used the range
-//            selection or the splitting by categories).
+/// Extract all content from a RooFit datasets as a map of spans.
+/// Spans with the weights and squared weights will be also stored in the map,
+/// keyed with the names `_weight` and the `_weight_sumW2`. If the dataset is
+/// unweighted, these weight spans will only contain the single value `1.0`.
+/// Entries with zero weight will be skipped.
+///
+/// \return A `std::map` with spans keyed to name pointers.
+/// \param[in] data The input dataset.
+/// \param[in] rangeName Select only entries from the data in a given range
+///            (empty string for no range).
+/// \param[in] indexCat If not `nullptr`, each span is spit up by this category,
+///            with the new names prefixed by the category component name
+///            surrounded by underscores. For example, if you have a category
+///            with `signal` and `control` samples, the span for a variable `x`
+///            will be split in two spans `_signal_x` and `_control_x`.
+/// \param[in] buffers Pass here an empty stack of `double` vectors, which will
+///            be used as memory for the data if the memory in the dataset
+///            object can't be used directly (e.g. because you used the range
+///            selection or the splitting by categories).
+/// \param[in] skipZeroWeights Skip entries with zero weight when filling the
+///            data spans. Be very careful with enabling it, because the user
+///            might not expect that the batch results are not aligned with the
+///            original dataset anymore!
 std::map<RooFit::Detail::DataKey, RooSpan<const double>>
 RooFit::BatchModeDataHelpers::getDataSpans(RooAbsData const &data, std::string_view rangeName,
-                                           RooAbsCategory const *indexCat, std::stack<std::vector<double>> &buffers)
+                                           RooAbsCategory const *indexCat, std::stack<std::vector<double>> &buffers,
+                                           bool skipZeroWeights)
 {
    std::map<RooFit::Detail::DataKey, RooSpan<const double>> dataSpans; // output variable
 
@@ -137,7 +142,7 @@ RooFit::BatchModeDataHelpers::getDataSpans(RooAbsData const &data, std::string_v
          buffer.reserve(nEvents);
          bufferSumW2.reserve(nEvents);
          for (std::size_t i = 0; i < nEvents; ++i) {
-            if (weight[i] != 0) {
+            if (!skipZeroWeights || weight[i] != 0) {
                buffer.push_back(weight[i]);
                bufferSumW2.push_back(weightSumW2[i]);
                ++nNonZeroWeight;
