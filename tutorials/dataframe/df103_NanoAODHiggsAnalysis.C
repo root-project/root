@@ -35,6 +35,7 @@
 /// \author Stefan Wunsch (KIT, CERN)
 
 #include "ROOT/RDataFrame.hxx"
+#include "ROOT/RDFHelpers.hxx"
 #include "ROOT/RVec.hxx"
 #include "ROOT/RDF/RInterface.hxx"
 #include "TCanvas.h"
