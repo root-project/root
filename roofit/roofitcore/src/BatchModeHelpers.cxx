@@ -116,16 +116,16 @@ RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data, std::uniqu
    nll->addOwnedComponents(std::move(binSamplingPdfs));
    nll->addOwnedComponents(std::move(nllTerms));
 
+   RooAbsCategory const *indexCatForSplitting = nullptr;
    if (auto simPdf = dynamic_cast<RooSimultaneous *>(&finalPdf)) {
       RooArgSet parameters;
       pdf.getParameters(data.get(), parameters);
       nll->recursiveRedirectServers(parameters);
-      driver = std::make_unique<RooFitDriver>(*nll, observables, batchMode);
-      driver->setData(data, rangeName, &simPdf->indexCat());
-   } else {
-      driver = std::make_unique<RooFitDriver>(*nll, observables, batchMode);
-      driver->setData(data, rangeName);
+      indexCatForSplitting = &simPdf->indexCat();
    }
+
+   driver = std::make_unique<RooFitDriver>(*nll, observables, batchMode);
+   driver->setData(data, rangeName, indexCatForSplitting, /*skipZeroWeights=*/true);
 
    // Set the fitrange attribute so that RooPlot can automatically plot the fitting range by default
    if (!rangeName.empty()) {
@@ -219,11 +219,11 @@ public:
 
    double defaultErrorLevel() const override { return _driver->topNode().defaultErrorLevel(); }
 
-   bool getParameters(const RooArgSet * observables, RooArgSet &outputSet,
-                      bool /*stripDisconnected=true*/) const override
+   bool
+   getParameters(const RooArgSet *observables, RooArgSet &outputSet, bool /*stripDisconnected=true*/) const override
    {
       outputSet.add(_parameters);
-      if(observables) {
+      if (observables) {
          outputSet.remove(*observables);
       }
       return false;
