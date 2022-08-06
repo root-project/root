@@ -170,8 +170,9 @@ void treeNodeServerListAndNormSets(const RooAbsArg &arg, RooAbsCollection &list,
          }
 
          auto differentSet = arg.fillNormSetForServer(normSet, *server);
-         if (differentSet)
+         if (differentSet) {
             differentSet->sort();
+         }
 
          auto &serverNormSet = differentSet ? *differentSet : normSet;
 
@@ -219,14 +220,17 @@ std::vector<std::unique_ptr<RooAbsArg>> unfoldIntegrals(RooAbsArg const &topNode
    treeNodeServerListAndNormSets(topNode, nodes, normSetSorted, normSets, checker);
 
    // Clean normsets of the variables that the arg does not depend on
-   // std::unordered_map<std::pair<RooAbsArg const*,RooAbsArg const*>,bool> dependsResults;
    for (auto &item : normSets) {
       if (!item.second || item.second->empty())
          continue;
       auto actualNormSet = new RooArgSet{};
       for (auto *narg : *item.second) {
          if (checker.dependsOn(item.first, narg))
-            actualNormSet->add(*narg);
+            // Add the arg from the actual node list in the computation graph.
+            // Like this, we don't accidentally add internal variable clones
+            // that the client args returned. Looking this up is fast because
+            // of the name pointer hash map optimization.
+            actualNormSet->add(*nodes.find(*narg));
       }
       delete item.second;
       item.second = actualNormSet;
