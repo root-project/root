@@ -30,10 +30,9 @@ class TNamed;
 namespace RooFit {
 namespace BatchModeDataHelpers {
 
-std::map<RooFit::Detail::DataKey, RooSpan<const double>> getDataSpans(RooAbsData const &data,
-                                                                      std::string_view rangeName,
-                                                                      RooAbsCategory const *indexCat,
-                                                                      std::stack<std::vector<double>> &buffers);
+std::map<RooFit::Detail::DataKey, RooSpan<const double>>
+getDataSpans(RooAbsData const &data, std::string_view rangeName, RooAbsCategory const *indexCat,
+             std::stack<std::vector<double>> &buffers, bool skipZeroWeights);
 
 } // namespace BatchModeDataHelpers
 } // namespace RooFit

@@ -186,9 +186,10 @@ RooFitDriver::RooFitDriver(const RooAbsReal &absReal, RooArgSet const &normSet, 
 }
 
 void RooFitDriver::setData(RooAbsData const &data, std::string_view rangeName,
-                           RooAbsCategory const *indexCatForSplitting)
+                           RooAbsCategory const *indexCatForSplitting, bool skipZeroWeights)
 {
-   setData(RooFit::BatchModeDataHelpers::getDataSpans(data, rangeName, indexCatForSplitting, _vectorBuffers));
+   setData(RooFit::BatchModeDataHelpers::getDataSpans(data, rangeName, indexCatForSplitting, _vectorBuffers,
+                                                      skipZeroWeights));
 }
 
 void RooFitDriver::setData(DataSpansMap const &dataSpans)
