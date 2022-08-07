@@ -876,13 +876,3 @@ void RooFFTConvPdf::calcParams()
   _params.add(params1) ;
   _params.add(params2,true) ;
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-///calcParams() ;
-
-bool RooFFTConvPdf::redirectServersHook(const RooAbsCollection& /*newServerList*/, bool /*mustReplaceAll*/, bool /*nameChange*/, bool /*isRecursive*/)
-{
-  return false ;
-}

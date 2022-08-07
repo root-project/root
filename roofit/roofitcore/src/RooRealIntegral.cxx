@@ -1010,8 +1010,8 @@ double RooRealIntegral::integrate() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Intercept server redirects and reconfigure internal object accordingly
 
-bool RooRealIntegral::redirectServersHook(const RooAbsCollection& /*newServerList*/,
-                   bool /*mustReplaceAll*/, bool /*nameChange*/, bool /*isRecursive*/)
+bool RooRealIntegral::redirectServersHook(const RooAbsCollection& newServerList,
+                   bool mustReplaceAll, bool nameChange, bool isRecursive)
 {
   _restartNumIntEngine = true ;
 
@@ -1026,7 +1026,7 @@ bool RooRealIntegral::redirectServersHook(const RooAbsCollection& /*newServerLis
   // Delete parameters cache if we have one
   _params.reset();
 
-  return false ;
+  return RooAbsReal::redirectServersHook(newServerList, mustReplaceAll, nameChange, isRecursive);
 }
 
 

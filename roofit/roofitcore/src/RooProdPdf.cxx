@@ -2202,7 +2202,7 @@ void RooProdPdf::printMetaArgs(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Implement support for node removal
 
-bool RooProdPdf::redirectServersHook(const RooAbsCollection& newServerList, bool /*mustReplaceAll*/, bool nameChange, bool /*isRecursive*/)
+bool RooProdPdf::redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive)
 {
   if (nameChange && _pdfList.find("REMOVAL_DUMMY")) {
 
@@ -2234,7 +2234,7 @@ bool RooProdPdf::redirectServersHook(const RooAbsCollection& newServerList, bool
     }
   }
 
-  return false ;
+  return RooAbsPdf::redirectServersHook(newServerList, mustReplaceAll, nameChange, isRecursive);
 }
 
 void RooProdPdf::CacheElem::writeToStream(std::ostream& os) const {

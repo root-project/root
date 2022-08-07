@@ -278,11 +278,11 @@ void RooProfileLL::validateAbsMin() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool RooProfileLL::redirectServersHook(const RooAbsCollection& /*newServerList*/, bool /*mustReplaceAll*/,
-                bool /*nameChange*/, bool /*isRecursive*/)
+bool RooProfileLL::redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll,
+                                       bool nameChange, bool isRecursive)
 {
   _minimizer.reset(nullptr);
-  return false ;
+  return RooAbsReal::redirectServersHook(newServerList, mustReplaceAll, nameChange, isRecursive);
 }
 
 

@@ -172,12 +172,12 @@ RooSpan<double> RooFormulaVar::evaluateSpan(RooBatchCompute::RunContext& inputDa
 ////////////////////////////////////////////////////////////////////////////////
 /// Propagate server change information to embedded RooFormula object
 
-bool RooFormulaVar::redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool /*isRecursive*/)
+bool RooFormulaVar::redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive)
 {
-  bool success = getFormula().changeDependents(newServerList,mustReplaceAll,nameChange);
+  bool error = getFormula().changeDependents(newServerList,mustReplaceAll,nameChange);
 
   _formExpr = getFormula().GetTitle();
-  return success;
+  return error || RooAbsReal::redirectServersHook(newServerList, mustReplaceAll, nameChange, isRecursive);
 }
 
 

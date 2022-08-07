@@ -262,11 +262,11 @@ double RooNumConvolution::evaluate() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Intercept server redirects. Throw away cache, as figuring out redirections on the cache is an unsolvable problem.
 
-bool RooNumConvolution::redirectServersHook(const RooAbsCollection& /*newServerList*/, bool /*mustReplaceAll*/,
-                     bool /*nameChange*/, bool /*isRecursive*/)
+bool RooNumConvolution::redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll,
+                     bool nameChange, bool isRecursive)
 {
   _init = false ;
-  return false ;
+  return RooAbsReal::redirectServersHook(newServerList, mustReplaceAll, nameChange, isRecursive);
 }
 
 
