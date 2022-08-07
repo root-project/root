@@ -16,6 +16,7 @@
 #ifndef ROO_ADD_MODEL
 #define ROO_ADD_MODEL
 
+#include "RooAddPdf.h"
 #include "RooResolutionModel.h"
 #include "RooListProxy.h"
 #include "RooSetProxy.h"
@@ -97,23 +98,9 @@ protected:
   mutable double* _coefCache ; ///<! Transiet cache with transformed values of coefficients
 
 
-  class CacheElem : public RooAbsCacheElement {
-  public:
-    ~CacheElem() override {} ;
-
-    RooArgList _suppNormList ;     ///< Supplemental normalization list
-
-    RooArgList _projList ;         ///< Projection integrals to be multiplied with coefficients
-    RooArgList _suppProjList ;     ///< Projection integrals to be multiplied with coefficients for supplemental normalization terms
-    RooArgList _refRangeProjList ; ///< Range integrals to be multiplied with coefficients (reference range)
-    RooArgList _rangeProjList ;    ///< Range integrals to be multiplied with coefficients (target range)
-
-    RooArgList containedArgs(Action) override ;
-
-  } ;
   mutable RooObjCacheManager _projCacheMgr ;  ///<! Manager of cache with coefficient projections and transformations
-  CacheElem* getProjCache(const RooArgSet* nset, const RooArgSet* iset=nullptr, const char* rangeName=nullptr) const ;
-  void updateCoefficients(CacheElem& cache, const RooArgSet* nset) const ;
+  RooAddPdf::CacheElem* getProjCache(const RooArgSet* nset, const RooArgSet* iset=nullptr, const char* rangeName=nullptr) const ;
+  void updateCoefficients(RooAddPdf::CacheElem& cache, const RooArgSet* nset) const ;
 
   typedef RooArgList* pRooArgList ;
   void getCompIntList(const RooArgSet* nset, const RooArgSet* iset, pRooArgList& compIntList, Int_t& code, const char* isetRangeName) const ;
