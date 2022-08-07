@@ -358,7 +358,6 @@ void RooAddPdf::fixCoefRange(const char* rangeName)
 
 RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooArgSet* iset, const char* rangeName) const
 {
-
   // Check if cache already exists
   CacheElem* cache = (CacheElem*) _projCacheMgr.getObj(nset,iset,0,rangeName) ;
   if (cache) {
@@ -366,23 +365,35 @@ RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooAr
   }
 
   //Create new cache
-  cache = new CacheElem ;
+  cache = new CacheElem{*this, _pdfList, _coefList, nset, iset, rangeName,
+                        _projectCoefs, _refCoefNorm, _refCoefRangeName};
 
+  _projCacheMgr.setObj(nset,iset,cache,RooNameReg::ptr(rangeName)) ;
+
+  return cache;
+}
+
+
+RooAddPdf::CacheElem::CacheElem(RooAbsPdf const& addPdf, RooArgList const& pdfList, RooArgList const& coefList,
+                                const RooArgSet* nset, const RooArgSet* iset, const char* rangeName, bool projectCoefs,
+                                RooArgSet const& refCoefNorm, TNamed const* refCoefRangeName)
+{
   // *** PART 1 : Create supplemental normalization list ***
 
   // Retrieve the combined set of dependents of this PDF ;
-  auto fullDepList = std::unique_ptr<RooArgSet>{getObservables(nset)} ;
+  RooArgSet fullDepList;
+  addPdf.getObservables(nset, fullDepList);
   if (iset) {
-    fullDepList->remove(*iset,true,true) ;
+    fullDepList.remove(*iset,true,true) ;
   }
 
   // Fill with dummy unit RRVs for now
-  for (std::size_t i = 0; i < _pdfList.size(); ++i) {
-    auto pdf  = static_cast<const RooAbsPdf *>(_pdfList.at(i));
-    auto coef = static_cast<const RooAbsReal*>(_coefList.at(i));
+  for (std::size_t i = 0; i < pdfList.size(); ++i) {
+    auto pdf  = static_cast<const RooAbsPdf *>(pdfList.at(i));
+    auto coef = static_cast<const RooAbsReal*>(coefList.at(i));
 
     // Start with full list of dependents
-    RooArgSet supNSet(*fullDepList) ;
+    RooArgSet supNSet(fullDepList) ;
 
     // Remove PDF dependents
     if (auto pdfDeps = std::unique_ptr<RooArgSet>{pdf->getObservables(nset)}) {
@@ -395,22 +406,22 @@ RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooAr
     }
 
     RooAbsReal* snorm ;
-    auto name = std::string(GetName()) + "_" + pdf->GetName() + "_SupNorm";
-    cache->_needSupNorm = false ;
+    auto name = std::string(addPdf.GetName()) + "_" + pdf->GetName() + "_SupNorm";
+    _needSupNorm = false ;
     if (!supNSet.empty()) {
       snorm = new RooRealIntegral(name.c_str(),"Supplemental normalization integral",RooRealConstant::value(1.0),supNSet) ;
-      cxcoutD(Caching) << "RooAddPdf " << GetName() << " making supplemental normalization set " << supNSet << " for pdf component " << pdf->GetName() << endl ;
-      cache->_needSupNorm = true ;
+      oocxcoutD(&addPdf, Caching) << addPdf.ClassName() << " " << addPdf.GetName() << " making supplemental normalization set " << supNSet << " for pdf component " << pdf->GetName() << endl ;
+      _needSupNorm = true ;
     } else {
       snorm = new RooRealVar(name.c_str(),"Unit Supplemental normalization integral",1.0) ;
     }
-    cache->_suppNormList.addOwned(*snorm) ;
+    _suppNormList.addOwned(*snorm) ;
   }
 
   if (_verboseEval>1) {
-    cxcoutD(Caching) << "RooAddPdf::syncSuppNormList(" << GetName() << ") synching supplemental normalization list for norm" << (nset?*nset:RooArgSet()) << endl ;
-    if dologD(Caching) {
-      cache->_suppNormList.Print("v") ;
+    oocxcoutD(&addPdf, Caching) << addPdf.ClassName() << "::syncSuppNormList(" << addPdf.GetName() << ") synching supplemental normalization list for norm" << (nset?*nset:RooArgSet()) << endl ;
+    if oodologD(&addPdf, Caching) {
+      _suppNormList.Print("v") ;
     }
   }
 
@@ -422,145 +433,142 @@ RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooAr
 //   cout << "_normRange.Length() = " << _normRange.Length() << endl ;
 
   // If no projections required stop here
-  if (!_projectCoefs && !rangeName) {
-    _projCacheMgr.setObj(nset,iset,cache,RooNameReg::ptr(rangeName)) ;
+  if (!projectCoefs && !rangeName) {
 //     cout << " no projection required" << endl ;
-    return cache ;
+    return;
   }
 
 
 //   cout << "calculating projection" << endl ;
 
   // Reduce iset/nset to actual dependents of this PDF
-  auto nset2 = std::unique_ptr<RooArgSet>{nset ? getObservables(nset) : new RooArgSet()} ;
-  cxcoutD(Caching) << "RooAddPdf(" << GetName() << ")::getPC nset = " << (nset?*nset:RooArgSet()) << " nset2 = " << *nset2 << endl ;
+  RooArgSet nset2;
+  if(nset) addPdf.getObservables(nset, nset2);
+  oocxcoutD(&addPdf, Caching) << addPdf.ClassName() << "(" << addPdf.GetName() << ")::getPC nset = " << (nset?*nset:RooArgSet()) << " nset2 = " << nset2 << endl ;
 
-  if (nset2->empty() && !_refCoefNorm.empty()) {
+  if (nset2.empty() && !refCoefNorm.empty()) {
     //cout << "WVE: evaluating RooAddPdf without normalization, but have reference normalization for coefficient definition" << endl ;
 
-    nset2->add(_refCoefNorm) ;
-    if (_refCoefRangeName) {
-      rangeName = RooNameReg::str(_refCoefRangeName) ;
+    nset2.add(refCoefNorm) ;
+    if (refCoefRangeName) {
+      rangeName = RooNameReg::str(refCoefRangeName) ;
     }
   }
 
 
   // Check if requested transformation is not identity
-  if (!nset2->equals(_refCoefNorm) || _refCoefRangeName !=0 || rangeName !=0 || _normRange.Length()>0) {
+  if (!nset2.equals(refCoefNorm) || refCoefRangeName !=0 || rangeName !=0 || addPdf.normRange()) {
 
-    cxcoutD(Caching) << "ALEX:     RooAddPdf::syncCoefProjList(" << GetName() << ") projecting coefficients from "
-         << *nset2 << (rangeName?":":"") << (rangeName?rangeName:"")
-         << " to "  << ((!_refCoefNorm.empty())?_refCoefNorm:*nset2) << (_refCoefRangeName?":":"") << (_refCoefRangeName?RooNameReg::str(_refCoefRangeName):"") << endl ;
+    oocxcoutD(&addPdf, Caching) << "ALEX:     " << addPdf.ClassName() << "::syncCoefProjList(" << addPdf.GetName() << ") projecting coefficients from "
+         << nset2 << (rangeName?":":"") << (rangeName?rangeName:"")
+         << " to "  << ((!refCoefNorm.empty())?refCoefNorm:nset2) << (refCoefRangeName?":":"") << (refCoefRangeName?RooNameReg::str(refCoefRangeName):"") << std::endl;
 
     // Recalculate projection integrals of PDFs
-    for (auto arg : _pdfList) {
-      auto thePdf = static_cast<const RooAbsPdf*>(arg);
+    for (auto * thePdf : static_range_cast<const RooAbsPdf*>(pdfList)) {
 
       // Calculate projection integral
       RooAbsReal* pdfProj ;
-      if (!nset2->equals(_refCoefNorm)) {
-   pdfProj = thePdf->createIntegral(*nset2,_refCoefNorm,_normRange.Length()>0?_normRange.Data():0) ;
-   pdfProj->setOperMode(operMode()) ;
-   cxcoutD(Caching) << "RooAddPdf(" << GetName() << ")::getPC nset2(" << *nset2 << ")!=_refCoefNorm(" << _refCoefNorm << ") --> pdfProj = " << pdfProj->GetName() << endl ;
+      if (!nset2.equals(refCoefNorm)) {
+   pdfProj = thePdf->createIntegral(nset2,refCoefNorm,addPdf.normRange()) ;
+   pdfProj->setOperMode(addPdf.operMode()) ;
+   oocxcoutD(&addPdf, Caching) << addPdf.ClassName() << "(" << addPdf.GetName() << ")::getPC nset2(" << nset2 << ")!=_refCoefNorm(" << refCoefNorm << ") --> pdfProj = " << pdfProj->GetName() << endl ;
       } else {
-        auto name = std::string(GetName()) + "_" + thePdf->GetName() + "_ProjectNorm";
+        auto name = std::string(addPdf.GetName()) + "_" + thePdf->GetName() + "_ProjectNorm";
         pdfProj = new RooRealVar(name.c_str(),"Unit Projection normalization integral",1.0) ;
-        cxcoutD(Caching) << "RooAddPdf(" << GetName() << ")::getPC nset2(" << *nset2 << ")==_refCoefNorm("
-                         << _refCoefNorm << ") --> pdfProj = " << pdfProj->GetName() << std::endl;
+        oocxcoutD(&addPdf, Caching) << addPdf.ClassName() << "(" << addPdf.GetName() << ")::getPC nset2(" << nset2 << ")==_refCoefNorm("
+                         << refCoefNorm << ") --> pdfProj = " << pdfProj->GetName() << std::endl;
       }
 
-      cache->_projList.addOwned(*pdfProj) ;
-      cxcoutD(Caching) << " RooAddPdf::syncCoefProjList(" << GetName() << ") PP = " << pdfProj->GetName() << endl ;
+      _projList.addOwned(*pdfProj) ;
+      oocxcoutD(&addPdf, Caching) << " " << addPdf.ClassName() << "::syncCoefProjList(" << addPdf.GetName() << ") PP = " << pdfProj->GetName() << endl ;
 
       // Calculation optional supplemental normalization term
-      RooArgSet supNormSet(_refCoefNorm) ;
+      RooArgSet supNormSet(refCoefNorm) ;
       auto deps = std::unique_ptr<RooArgSet>{thePdf->getParameters(RooArgSet())} ;
       supNormSet.remove(*deps,true,true) ;
 
       RooAbsReal* snorm ;
-      auto name = std::string(GetName()) + "_" + thePdf->GetName() + "_ProjSupNorm";
-      if (!supNormSet.empty() && !nset2->equals(_refCoefNorm) ) {
+      auto name = std::string(addPdf.GetName()) + "_" + thePdf->GetName() + "_ProjSupNorm";
+      if (!supNormSet.empty() && !nset2.equals(refCoefNorm) ) {
         snorm = new RooRealIntegral(name.c_str(),"Projection Supplemental normalization integral",
                                     RooRealConstant::value(1.0),supNormSet) ;
       } else {
         snorm = new RooRealVar(name.c_str(),"Unit Projection Supplemental normalization integral",1.0) ;
       }
-      cxcoutD(Caching) << " RooAddPdf::syncCoefProjList(" << GetName() << ") SN = " << snorm->GetName() << endl ;
-      cache->_suppProjList.addOwned(*snorm) ;
+      oocxcoutD(&addPdf, Caching) << " " << addPdf.ClassName() << "::syncCoefProjList(" << addPdf.GetName() << ") SN = " << snorm->GetName() << endl ;
+      _suppProjList.addOwned(*snorm) ;
 
       // Calculate reference range adjusted projection integral
       RooAbsReal* rangeProj1 ;
 
-   //    cout << "ALEX >>>> RooAddPdf(" << GetName() << ")::getPC _refCoefRangeName WVE = "
-//       <<(_refCoefRangeName?":":"") << (_refCoefRangeName?RooNameReg::str(_refCoefRangeName):"")
-//       <<" _refCoefRangeName AK = "  << (_refCoefRangeName?_refCoefRangeName->GetName():"")
+   //    cout << "ALEX >>>> RooAddPdf(" << GetName() << ")::getPC refCoefRangeName WVE = "
+//       <<(refCoefRangeName?":":"") << (refCoefRangeName?RooNameReg::str(refCoefRangeName):"")
+//       <<" refCoefRangeName AK = "  << (refCoefRangeName?refCoefRangeName->GetName():"")
 //       << " && _refCoefNorm" << _refCoefNorm << " with size = _refCoefNorm.size() " << _refCoefNorm.size() << endl ;
 
-      // Check if _refCoefRangeName is identical to default range for all observables,
+      // Check if refCoefRangeName is identical to default range for all observables,
       // If so, substitute by unit integral
 
       // ----------
-      auto tmpObs = std::unique_ptr<RooArgSet>{thePdf->getObservables(_refCoefNorm)} ;
+      RooArgSet tmpObs;
+      thePdf->getObservables(&refCoefNorm, tmpObs);
       bool allIdent = true ;
-      for (auto const& obsArg : *tmpObs) {
-   RooRealVar* rvarg = dynamic_cast<RooRealVar*>(obsArg) ;
+      for (auto * rvarg : dynamic_range_cast<RooRealVar*>(tmpObs)) {
    if (rvarg) {
-     if (rvarg->getMin(RooNameReg::str(_refCoefRangeName))!=rvarg->getMin() ||
-         rvarg->getMax(RooNameReg::str(_refCoefRangeName))!=rvarg->getMax()) {
+     if (rvarg->getMin(RooNameReg::str(refCoefRangeName))!=rvarg->getMin() ||
+         rvarg->getMax(RooNameReg::str(refCoefRangeName))!=rvarg->getMax()) {
        allIdent=false ;
      }
    }
       }
       // -------------
 
-      if (_refCoefRangeName && !_refCoefNorm.empty() && !allIdent) {
+      if (refCoefRangeName && !refCoefNorm.empty() && !allIdent) {
 
 
-   auto tmp = std::unique_ptr<RooArgSet>{thePdf->getObservables(_refCoefNorm)} ;
-   rangeProj1 = thePdf->createIntegral(*tmp,*tmp,RooNameReg::str(_refCoefRangeName)) ;
+   RooArgSet tmp;
+   thePdf->getObservables(&refCoefNorm, tmp);
+   rangeProj1 = thePdf->createIntegral(tmp,tmp,RooNameReg::str(refCoefRangeName)) ;
 
    //rangeProj1->setOperMode(operMode()) ;
 
       } else {
 
-   auto theName = std::string(GetName()) + "_" + thePdf->GetName() + "_RangeNorm1";
+   auto theName = std::string(addPdf.GetName()) + "_" + thePdf->GetName() + "_RangeNorm1";
    rangeProj1 = new RooRealVar(theName.c_str(),"Unit range normalization integral",1.0) ;
 
       }
-      cxcoutD(Caching) << " RooAddPdf::syncCoefProjList(" << GetName() << ") R1 = " << rangeProj1->GetName() << endl ;
-      cache->_refRangeProjList.addOwned(*rangeProj1) ;
+      oocxcoutD(&addPdf, Caching) << " " << addPdf.ClassName() << "::syncCoefProjList(" << addPdf.GetName() << ") R1 = " << rangeProj1->GetName() << endl ;
+      _refRangeProjList.addOwned(*rangeProj1) ;
 
 
       // Calculate range adjusted projection integral
       RooAbsReal* rangeProj2 ;
-      cxcoutD(Caching) << "RooAddPdf::syncCoefProjList(" << GetName() << ") rangename = " << (rangeName?rangeName:"<null>")
+      oocxcoutD(&addPdf, Caching) << addPdf.ClassName() << "::syncCoefProjList(" << addPdf.GetName() << ") rangename = " << (rangeName?rangeName:"<null>")
              << " nset = " << (nset?*nset:RooArgSet()) << endl ;
-      if (rangeName && !_refCoefNorm.empty()) {
+      if (rangeName && !refCoefNorm.empty()) {
 
-   rangeProj2 = thePdf->createIntegral(_refCoefNorm,_refCoefNorm,rangeName) ;
+   rangeProj2 = thePdf->createIntegral(refCoefNorm,refCoefNorm,rangeName) ;
    //rangeProj2->setOperMode(operMode()) ;
 
-      } else if (_normRange.Length()>0) {
+      } else if (addPdf.normRange()) {
 
-   auto tmp = std::unique_ptr<RooArgSet>{thePdf->getObservables(_refCoefNorm)} ;
-   rangeProj2 = thePdf->createIntegral(*tmp,*tmp,_normRange.Data()) ;
+   RooArgSet tmp;
+   thePdf->getObservables(&refCoefNorm, tmp);
+   rangeProj2 = thePdf->createIntegral(tmp,tmp,addPdf.normRange()) ;
 
       } else {
 
-   auto theName = std::string(GetName()) + "_" + thePdf->GetName() + "_RangeNorm2";
+   auto theName = std::string(addPdf.GetName()) + "_" + thePdf->GetName() + "_RangeNorm2";
    rangeProj2 = new RooRealVar(theName.c_str(),"Unit range normalization integral",1.0) ;
 
       }
-      cxcoutD(Caching) << " RooAddPdf::syncCoefProjList(" << GetName() << ") R2 = " << rangeProj2->GetName() << endl ;
-      cache->_rangeProjList.addOwned(*rangeProj2) ;
+      oocxcoutD(&addPdf, Caching) << " " << addPdf.ClassName() << "::syncCoefProjList(" << addPdf.GetName() << ") R2 = " << rangeProj2->GetName() << endl ;
+      _rangeProjList.addOwned(*rangeProj2) ;
 
     }
 
   }
-
-  _projCacheMgr.setObj(nset,iset,cache,RooNameReg::ptr(rangeName)) ;
-
-  return cache ;
 }
 
 

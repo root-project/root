@@ -104,7 +104,9 @@ protected:
 
   class CacheElem : public RooAbsCacheElement {
   public:
-    ~CacheElem() override {} ;
+    CacheElem(RooAbsPdf const& addPdf, RooArgList const& pdfList, RooArgList const& coefList,
+              const RooArgSet* nset, const RooArgSet* iset, const char* rangeName,
+              bool projectCoefs, RooArgSet const& refCoefNorm, TNamed const* refCoefRangeName);
 
     RooArgList _suppNormList ; ///< Supplemental normalization list
     bool    _needSupNorm ;     ///< Does the above list contain any non-unit entries?
@@ -123,6 +125,7 @@ protected:
 
 
   friend class RooAddGenContext ;
+  friend class RooAddModel ;
   RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=nullptr,
                                const RooArgSet* auxProto=nullptr, bool verbose= false) const override;
 
