@@ -332,169 +332,22 @@ Int_t RooAddModel::basisCode(const char* name) const
 /// integrals to calculated transformed fraction coefficients when a frozen reference frame is provided
 /// and projection integrals for similar transformations when a frozen reference range is provided.
 
-RooAddModel::CacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const RooArgSet* iset, const char* rangeName) const
+RooAddPdf::CacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const RooArgSet* iset, const char* rangeName) const
 {
   // Check if cache already exists
-  CacheElem* cache = (CacheElem*) _projCacheMgr.getObj(nset,iset,0,RooNameReg::ptr(rangeName)) ;
+  RooAddPdf::CacheElem* cache = (RooAddPdf::CacheElem*) _projCacheMgr.getObj(nset,iset,0,rangeName) ;
   if (cache) {
     return cache ;
   }
 
   //Create new cache
-  cache = new CacheElem ;
-
-  // *** PART 1 : Create supplemental normalization list ***
-
-  // Retrieve the combined set of dependents of this PDF ;
-  RooArgSet *fullDepList = getObservables(nset) ;
-  if (iset) {
-    fullDepList->remove(*iset,true,true) ;
-  }
-
-  // Fill with dummy unit RRVs for now
-  for (unsigned int i = 0; i < _pdfList.size(); ++i) {
-    auto pdf = static_cast<RooAbsPdf*>(&_pdfList[i]);
-    auto coef = i < _coefList.size() ? &_coefList[i] : nullptr;
-
-    // Start with full list of dependents
-    RooArgSet supNSet(*fullDepList) ;
-
-    // Remove PDF dependents
-    RooArgSet* pdfDeps = pdf->getObservables(nset) ;
-    if (pdfDeps) {
-      supNSet.remove(*pdfDeps,true,true) ;
-      delete pdfDeps ;
-    }
-
-    // Remove coef dependents
-    if (coef) {
-      RooArgSet* coefDeps = coef->getObservables(nset);
-      supNSet.remove(*coefDeps,true,true) ;
-      delete coefDeps ;
-    }
-
-    RooAbsReal* snorm ;
-    TString name(GetName()) ;
-    name.Append("_") ;
-    name.Append(pdf->GetName()) ;
-    name.Append("_SupNorm") ;
-    if (supNSet.getSize()>0) {
-      snorm = new RooRealIntegral(name,"Supplemental normalization integral",RooRealConstant::value(1.0),supNSet) ;
-    } else {
-      snorm = new RooRealVar(name,"Unit Supplemental normalization integral",1.0) ;
-    }
-    cache->_suppNormList.addOwned(*snorm) ;
-  }
-
-  delete fullDepList ;
-
-  if (_verboseEval>1) {
-    cxcoutD(Caching) << "RooAddModel::syncSuppNormList(" << GetName() << ") synching supplemental normalization list for norm" << (nset?*nset:RooArgSet()) << endl ;
-    if (dologD(Caching)) {
-      cache->_suppNormList.Print("v") ;
-    }
-  }
-
-
-  // *** PART 2 : Create projection coefficients ***
-
-  // If no projections required stop here
-  if (!_projectCoefs || _basis!=0 ) {
-    _projCacheMgr.setObj(nset,iset,cache,RooNameReg::ptr(rangeName)) ;
-    return cache ;
-  }
-
-
-  // Reduce iset/nset to actual dependents of this PDF
-  RooArgSet* nset2 = nset ? getObservables(nset) : new RooArgSet() ;
-
-  // Check if requested transformation is not identity
-  if (!nset2->equals(_refCoefNorm) || _refCoefRangeName !=0 || rangeName !=0 ) {
-
-    coutI(Caching)  << "RooAddModel::syncCoefProjList(" << GetName() << ") creating coefficient projection integrals" << endl ;
-    ccoutI(Caching) << "  from current normalization: "  ; nset2->Print("1") ;
-    ccoutI(Caching) << "          with current range: " << (rangeName?rangeName:"<none>") << endl ;
-    ccoutI(Caching) << "  to reference normalization: "  ; _refCoefNorm.Print("1") ;
-    ccoutI(Caching) << "        with reference range: " << (_refCoefRangeName?RooNameReg::str(_refCoefRangeName):"<none>") << endl ;
-
-    // Recalculate projection integrals of PDFs
-    for (const auto obj : _pdfList) {
-        const auto thePdf = static_cast<RooAbsPdf*>(obj);
-
-      // Calculate projection integral
-      RooAbsReal* pdfProj ;
-      if (!nset2->equals(_refCoefNorm)) {
-   pdfProj = thePdf->createIntegral(*nset2,_refCoefNorm) ;
-   pdfProj->setOperMode(operMode()) ;
-      } else {
-   TString name(GetName()) ;
-   name.Append("_") ;
-   name.Append(thePdf->GetName()) ;
-   name.Append("_ProjectNorm") ;
-   pdfProj = new RooRealVar(name,"Unit Projection normalization integral",1.0) ;
-      }
-
-      cache->_projList.addOwned(*pdfProj) ;
-
-      // Calculation optional supplemental normalization term
-      RooArgSet supNormSet(_refCoefNorm) ;
-      RooArgSet* deps = thePdf->getParameters(RooArgSet()) ;
-      supNormSet.remove(*deps,true,true) ;
-      delete deps ;
-
-      RooAbsReal* snorm ;
-      TString name(GetName()) ;
-      name.Append("_") ;
-      name.Append(thePdf->GetName()) ;
-      name.Append("_ProjSupNorm") ;
-      if (supNormSet.getSize()>0) {
-   snorm = new RooRealIntegral(name,"Projection Supplemental normalization integral",
-                RooRealConstant::value(1.0),supNormSet) ;
-      } else {
-   snorm = new RooRealVar(name,"Unit Projection Supplemental normalization integral",1.0) ;
-      }
-      cache->_suppProjList.addOwned(*snorm) ;
-
-      // Calculate reference range adjusted projection integral
-      RooAbsReal* rangeProj1 ;
-      if (_refCoefRangeName && _refCoefNorm.getSize()>0) {
-   rangeProj1 = thePdf->createIntegral(_refCoefNorm,_refCoefNorm,RooNameReg::str(_refCoefRangeName)) ;
-   rangeProj1->setOperMode(operMode()) ;
-      } else {
-   TString theName(GetName()) ;
-   theName.Append("_") ;
-   theName.Append(thePdf->GetName()) ;
-   theName.Append("_RangeNorm1") ;
-   rangeProj1 = new RooRealVar(theName,"Unit range normalization integral",1.0) ;
-      }
-      cache->_refRangeProjList.addOwned(*rangeProj1) ;
-
-
-      // Calculate range adjusted projection integral
-      RooAbsReal* rangeProj2 ;
-      if (rangeName && _refCoefNorm.getSize()>0) {
-   rangeProj2 = thePdf->createIntegral(_refCoefNorm,_refCoefNorm,rangeName) ;
-   rangeProj2->setOperMode(operMode()) ;
-      } else {
-   TString theName(GetName()) ;
-   theName.Append("_") ;
-   theName.Append(thePdf->GetName()) ;
-   theName.Append("_RangeNorm2") ;
-   rangeProj2 = new RooRealVar(theName,"Unit range normalization integral",1.0) ;
-      }
-      cache->_rangeProjList.addOwned(*rangeProj2) ;
-
-    }
-
-  }
-
-  delete nset2 ;
+  cache = new RooAddPdf::CacheElem{*this, _pdfList, _coefList, nset, iset, rangeName,
+                        _projectCoefs, _refCoefNorm, _refCoefRangeName};
 
   _projCacheMgr.setObj(nset,iset,cache,RooNameReg::ptr(rangeName)) ;
 
-  return cache ;
+  return cache;
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -503,7 +356,7 @@ RooAddModel::CacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const R
 /// multiply these the various range and dimensional corrections needed in the
 /// current use context
 
-void RooAddModel::updateCoefficients(CacheElem& cache, const RooArgSet* nset) const
+void RooAddModel::updateCoefficients(RooAddPdf::CacheElem& cache, const RooArgSet* nset) const
 {
   // cxcoutD(ChangeTracking) << "RooAddModel::updateCoefficients(" << GetName() << ") update coefficients" << endl ;
 
@@ -612,7 +465,7 @@ void RooAddModel::updateCoefficients(CacheElem& cache, const RooArgSet* nset) co
 double RooAddModel::evaluate() const
 {
   const RooArgSet* nset = _normSet ;
-  CacheElem* cache = getProjCache(nset) ;
+  RooAddPdf::CacheElem* cache = getProjCache(nset) ;
 
   updateCoefficients(*cache,nset) ;
 
@@ -766,7 +619,7 @@ double RooAddModel::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, c
 
   // Calculate the current value
   const RooArgSet* nset = _normSet ;
-  CacheElem* pcache = getProjCache(nset) ;
+  RooAddPdf::CacheElem* pcache = getProjCache(nset) ;
 
   updateCoefficients(*pcache,nset) ;
 
@@ -913,24 +766,6 @@ void RooAddModel::generateEvent(Int_t /*code*/)
 {
   assert(0) ;
 }
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// List all RooAbsArg derived contents in this cache element
-
-RooArgList RooAddModel::CacheElem::containedArgs(Action)
-{
-  RooArgList allNodes;
-  allNodes.add(_projList) ;
-  allNodes.add(_suppProjList) ;
-  allNodes.add(_refRangeProjList) ;
-  allNodes.add(_rangeProjList) ;
-
-  return allNodes ;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
