@@ -814,3 +814,13 @@ void RooAddPdf::printMetaArgs(std::ostream& os) const
 {
   RooRealSumPdf::printMetaArgs(_pdfList, _coefList, os);
 }
+
+
+bool RooAddPdf::redirectServersHook(const RooAbsCollection & newServerList, bool mustReplaceAll,
+                                    bool nameChange, bool isRecursiveStep)
+{
+  // If a server is redirected, the cached normalization set might not point
+  // to the right observables anymore. We need to reset it.
+  _copyOfLastNormSet.reset();
+  return RooAbsPdf::redirectServersHook(newServerList, mustReplaceAll, nameChange, isRecursiveStep);
+}

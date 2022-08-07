@@ -3519,3 +3519,22 @@ void RooAbsPdf::setNormRangeOverride(const char* rangeName)
     _norm = 0 ;
   }
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Hook function intercepting redirectServer calls. Discard current
+/// normalization object if any server is redirected
+
+bool RooAbsPdf::redirectServersHook(const RooAbsCollection & newServerList, bool mustReplaceAll,
+                                    bool nameChange, bool isRecursiveStep)
+{
+  // Object is own by _normCacheManager that will delete object as soon as cache
+  // is sterilized by server redirect
+  _norm = nullptr ;
+
+  // Similar to the situation with the normalization integral above: if a
+  // server is redirected, the cached normalization set might not point to
+  // the right observables anymore. We need to reset it.
+  _normSet = nullptr ;
+  return RooAbsReal::redirectServersHook(newServerList, mustReplaceAll, nameChange, isRecursiveStep);
+}

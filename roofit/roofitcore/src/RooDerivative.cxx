@@ -142,11 +142,11 @@ double RooDerivative::evaluate() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Zap functor and derivator ;
 
-bool RooDerivative::redirectServersHook(const RooAbsCollection& /*newServerList*/, bool /*mustReplaceAll*/, bool /*nameChange*/, bool /*isRecursive*/)
+bool RooDerivative::redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive)
 {
   delete _ftor ;
   delete _rd ;
   _ftor = 0 ;
   _rd = 0 ;
-  return false ;
+  return RooAbsReal::redirectServersHook(newServerList, mustReplaceAll, nameChange, isRecursive);
 }

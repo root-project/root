@@ -255,7 +255,7 @@ double RooResolutionModel::getValV(const RooArgSet* nset) const
 /// Forward redirectServers call to our basis function, which is not connected to either resolution
 /// model or the physics model.
 
-bool RooResolutionModel::redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool /*isRecursive*/)
+bool RooResolutionModel::redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive)
 {
   if (!_basis) {
     _norm = 0 ;
@@ -275,7 +275,7 @@ bool RooResolutionModel::redirectServersHook(const RooAbsCollection& newServerLi
 
   _basis->redirectServers(newServerList,mustReplaceAll,nameChange) ;
 
-  return (mustReplaceAll && !newBasis) ;
+  return (mustReplaceAll && !newBasis) || RooAbsPdf::redirectServersHook(newServerList, mustReplaceAll, nameChange, isRecursive);
 }
 
 

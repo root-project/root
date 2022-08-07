@@ -1200,6 +1200,27 @@ bool RooAbsArg::recursiveRedirectServers(const RooAbsCollection& newSet, bool mu
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Function that is called at the end of redirectServers(). Can be overloaded
+/// to inject some class-dependent behavior after server redirection, e.g.
+/// resetting of caches. The return value is meant to be an error flag, so in
+/// case something goes wrong the function should return `true`. If you
+/// overload this function, don't forget to also call the function of the
+/// base class.
+///
+/// \see redirectServers() For a detailed explanation of the function parameters.
+///
+// \param[in] newServerList One of the original parameters passed to redirectServers().
+// \param[in] mustReplaceAll One of the original parameters passed to redirectServers().
+// \param[in] nameChange  One of the original parameters passed to redirectServers().
+// \param[in] isRecursiveStep  One of the original parameters passed to redirectServers().
+bool RooAbsArg::redirectServersHook(const RooAbsCollection & /*newServerList*/, bool /*mustReplaceAll*/,
+                                    bool /*nameChange*/, bool /*isRecursiveStep*/)
+{
+  return false;
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Register an RooArgProxy in the proxy list. This function is called by owned

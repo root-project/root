@@ -71,7 +71,6 @@ protected:
   RooSetProxy _params ;  ///< Effective parameters of this p.d.f.
 
   void calcParams() ;
-  bool redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive) override ;
 
   std::vector<double>  scanPdf(RooRealVar& obs, RooAbsPdf& pdf, const RooDataHist& hist, const RooArgSet& slicePos, Int_t& N, Int_t& N2, Int_t& zeroBin, double shift) const ;
 

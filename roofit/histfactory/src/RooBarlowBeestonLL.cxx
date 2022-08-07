@@ -349,7 +349,7 @@ bool RooStats::HistFactory::RooBarlowBeestonLL::getParameters(const RooArgSet* d
 
   RooArgSet toRemove;
   toRemove.reserve( _statUncertParams.size());
-    
+
   for (auto const& arg : outputSet) {
 
     // If there is a gamma in the name,
@@ -359,9 +359,9 @@ bool RooStats::HistFactory::RooBarlowBeestonLL::getParameters(const RooArgSet* d
       toRemove.add( *arg );
     }
   }
-  
+
   for( auto& arg : toRemove) outputSet.remove( *arg, true );
-  
+
   return errorInBaseCall || false;
 
 }
@@ -704,20 +704,3 @@ void RooStats::HistFactory::RooBarlowBeestonLL::validateAbsMin() const
   }
 }
 */
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool RooStats::HistFactory::RooBarlowBeestonLL::redirectServersHook(const RooAbsCollection& /*newServerList*/, bool /*mustReplaceAll*/,
-                bool /*nameChange*/, bool /*isRecursive*/)
-{
-  /*
-  if (_minuit) {
-    delete _minuit ;
-    _minuit = 0 ;
-  }
-  */
-  return false ;
-}
-
-

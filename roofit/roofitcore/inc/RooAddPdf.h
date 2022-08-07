@@ -135,12 +135,7 @@ protected:
 
   mutable Int_t _coefErrCount ; ///<! Coefficient error counter
 
-  bool redirectServersHook(const RooAbsCollection&, bool, bool, bool) override {
-    // If a server is redirected, the cached normalization set might not point
-    // to the right observables anymore. We need to reset it.
-    _copyOfLastNormSet.reset();
-    return false;
-  }
+  bool redirectServersHook(const RooAbsCollection&, bool, bool, bool) override;
 
 private:
   std::pair<const RooArgSet*, AddCacheElem*> getNormAndCache(const RooArgSet* nset) const;
