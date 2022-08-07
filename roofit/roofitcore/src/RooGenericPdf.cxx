@@ -169,13 +169,10 @@ bool RooGenericPdf::isValidReal(double /*value*/, bool /*printError*/) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Propagate server changes to embedded formula object
 
-bool RooGenericPdf::redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool /*isRecursive*/)
+bool RooGenericPdf::redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive)
 {
-  if (_formula) {
-     return _formula->changeDependents(newServerList,mustReplaceAll,nameChange);
-  } else {
-    return true ;
-  }
+  bool error = _formula ? _formula->changeDependents(newServerList,mustReplaceAll,nameChange) : true;
+  return error || RooAbsPdf::redirectServersHook(newServerList, mustReplaceAll, nameChange, isRecursive);
 }
 
 

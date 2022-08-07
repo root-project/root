@@ -228,8 +228,8 @@ void RooProjectedPdf::generateEvent(Int_t /*code*/)
 /// Specifically update the set proxy 'deps' which introduces the dependency
 /// on server value dirty flags of ourselves
 
-bool RooProjectedPdf::redirectServersHook(const RooAbsCollection& newServerList, bool /*mustReplaceAll*/,
-                   bool /*nameChange*/, bool /*isRecursive*/)
+bool RooProjectedPdf::redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll,
+                                          bool nameChange, bool isRecursive)
 {
   // Redetermine explicit list of dependents if intPdf is being replaced
   RooAbsArg* newPdf = newServerList.find(intpdf.arg().GetName()) ;
@@ -237,24 +237,23 @@ bool RooProjectedPdf::redirectServersHook(const RooAbsCollection& newServerList,
 
     // Determine if set of dependens of new p.d.f is different from old p.d.f.
     RooArgSet olddeps(deps) ;
-    RooArgSet* newdeps = newPdf->getParameters(intobs) ;
-    RooArgSet* common = (RooArgSet*) newdeps->selectCommon(deps) ;
-    newdeps->remove(*common,true,true) ;
-    olddeps.remove(*common,true,true) ;
+    RooArgSet newdeps;
+    newPdf->getParameters(&intobs, newdeps);
+    RooArgSet common;
+    newdeps.selectCommon(deps, common);
+    newdeps.remove(common,true,true) ;
+    olddeps.remove(common,true,true) ;
 
     // If so, adjust composition of deps Listproxy
-    if (newdeps->getSize()>0) {
-      deps.add(*newdeps) ;
+    if (!newdeps.empty()) {
+      deps.add(newdeps) ;
     }
-    if (olddeps.getSize()>0) {
+    if (!olddeps.empty()) {
       deps.remove(olddeps,true,true) ;
     }
-
-    delete common ;
-    delete newdeps ;
   }
 
-  return false ;
+  return RooAbsPdf::redirectServersHook(newServerList, mustReplaceAll, nameChange, isRecursive);
 }
 
 

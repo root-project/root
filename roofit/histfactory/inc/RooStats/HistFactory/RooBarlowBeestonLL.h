@@ -51,10 +51,6 @@ public:
   void initializeBarlowCache();
   bool getParameters(const RooArgSet* depList, RooArgSet& outputSet, bool stripDisconnected=true) const override;
   RooAbsReal& nll() { return const_cast<RooAbsReal&>(_nll.arg()) ; }
-  bool redirectServersHook(const RooAbsCollection& /*newServerList*/,
-                                   bool /*mustReplaceAll*/,
-                                   bool /*nameChange*/,
-                                   bool /*isRecursive*/) override ;
   void setPdf(RooAbsPdf* pdf) { _pdf = pdf; }
   void setDataset(RooAbsData* data) { _data = data; }
 

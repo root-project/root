@@ -351,20 +351,8 @@ protected:
   } ;
   mutable RooObjCacheManager _normMgr ; //! The cache manager
 
-  bool redirectServersHook(const RooAbsCollection&, bool, bool, bool) override {
-    // Hook function intercepting redirectServer calls. Discard current normalization
-    // object if any server is redirected
-
-    // Object is own by _normCacheManager that will delete object as soon as cache
-    // is sterilized by server redirect
-    _norm = nullptr ;
-
-    // Similar to the situation with the normalization integral above: if a
-    // server is redirected, the cached normalization set might not point to
-    // the right observables anymore. We need to reset it.
-    _normSet = nullptr ;
-    return false ;
-  } ;
+  bool redirectServersHook(const RooAbsCollection & newServerList, bool mustReplaceAll,
+                                   bool nameChange, bool isRecursiveStep) override;
 
 
   mutable Int_t _errorCount ;        ///< Number of errors remaining to print

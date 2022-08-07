@@ -309,7 +309,7 @@ bool RooAbsTestStatistic::initialize()
 ////////////////////////////////////////////////////////////////////////////////
 /// Forward server redirect calls to component test statistics
 
-bool RooAbsTestStatistic::redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool)
+bool RooAbsTestStatistic::redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive)
 {
   if (SimMaster == _gofOpMode && _gofArray) {
     // Forward to slaves
@@ -327,7 +327,7 @@ bool RooAbsTestStatistic::redirectServersHook(const RooAbsCollection& newServerL
       }
     }
   }
-  return false;
+  return RooAbsReal::redirectServersHook(newServerList, mustReplaceAll, nameChange, isRecursive);
 }
 
 

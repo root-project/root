@@ -477,7 +477,7 @@ bool RooAbsOptTestStatistic::redirectServersHook(const RooAbsCollection& newServ
   RooAbsTestStatistic::redirectServersHook(newServerList,mustReplaceAll,nameChange,isRecursive) ;
   if (operMode()!=Slave) return false ;
   bool ret = _funcClone->recursiveRedirectServers(newServerList,false,nameChange) ;
-  return ret ;
+  return ret || RooAbsReal::redirectServersHook(newServerList, mustReplaceAll, nameChange, isRecursive);
 }
 
 
