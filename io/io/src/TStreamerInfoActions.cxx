@@ -4283,20 +4283,10 @@ void TStreamerInfoActions::TActionSequence::AddToSubSequence(TStreamerInfoAction
             }
          }
       } else {
-         int localIndex = 0;
          TStreamerInfoActions::ActionContainer_t::iterator end = fActions.end();
          for(TStreamerInfoActions::ActionContainer_t::iterator iter = fActions.begin();
              iter != end;
              ++iter) {
-            // fprintf(stderr, "With element_ids[%d] For %s comparing act[%d/%zu] %d to %d  for %p vs %p %s\n",
-            //         id,
-            //         iter->fConfiguration->fInfo->GetName(),
-            //         localIndex, fActions.size(),
-            //         iter->fConfiguration->fElemId,
-            //         (UInt_t)element_ids[id].fElemID, iter->fConfiguration->fInfo,
-            //         element_ids[id].fInfo,
-            //         element_ids[id].fInfo ? element_ids[id].fInfo->GetName() : "nullptr" );
-            ++localIndex;
             if ( iter->fConfiguration->fElemId == (UInt_t)element_ids[id].fElemID ) {
                TConfiguration *conf = iter->fConfiguration->Copy();
                if (!iter->fConfiguration->fInfo->GetElements()->At(iter->fConfiguration->fElemId)->TestBit(TStreamerElement::kCache))

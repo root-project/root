@@ -3036,7 +3036,6 @@ void TMVA::MethodBDT::MakeClassInstantiateNode( DecisionTreeNode *n, std::ostrea
 void TMVA::MethodBDT::DeterminePreselectionCuts(const std::vector<const TMVA::Event*>& eventSample)
 {
    Double_t nTotS = 0.0, nTotB = 0.0;
-   Int_t nTotS_unWeighted = 0, nTotB_unWeighted = 0;
 
    std::vector<TMVA::BDTEventWrapper> bdtEventSample;
 
@@ -3056,11 +3055,9 @@ void TMVA::MethodBDT::DeterminePreselectionCuts(const std::vector<const TMVA::Ev
    for( std::vector<const TMVA::Event*>::const_iterator it = eventSample.begin(); it != eventSample.end(); ++it ) {
       if (DataInfo().IsSignal(*it)){
          nTotS += (*it)->GetWeight();
-         ++nTotS_unWeighted;
       }
       else {
          nTotB += (*it)->GetWeight();
-         ++nTotB_unWeighted;
       }
       bdtEventSample.push_back(TMVA::BDTEventWrapper(*it));
    }

@@ -571,9 +571,7 @@ bool LinkdefReader::ProcessOperators(std::string &pattern)
    int pos = -1;
    int pos1 = -1, pos2 = -1;
    int open_br = 0, close_br = 0;
-   int i = 0;
    while (true) {
-      i++;
       pos = pattern.find(" ", pos + 1);
       pos1 = pattern.find("<", pos1 + 1);
       pos2 = pattern.find(">", pos2 + 1);

@@ -1643,7 +1643,6 @@ Double_t TMVA::Tools::Mean ( Iterator first,  Iterator last,  WeightIterator w)
 {
    Double_t sum = 0;
    Double_t sumw = 0;
-   int i = 0;
    if (w==NULL)
       {
          while ( first != last )
@@ -1655,7 +1654,6 @@ Double_t TMVA::Tools::Mean ( Iterator first,  Iterator last,  WeightIterator w)
                sum  += (*first);
                sumw += 1.0 ;
                ++first;
-               ++i;
             }
          if (sumw <= 0) {
             ::Error("TMVA::Tools::Mean","sum of weights <= 0 ?! that's a bit too much of negative event weights :) ");
@@ -1674,7 +1672,6 @@ Double_t TMVA::Tools::Mean ( Iterator first,  Iterator last,  WeightIterator w)
                sumw += (*w) ;
                ++w;
                ++first;
-               ++i;
             }
          if (sumw <= 0) {
             ::Error("TMVA::Tools::Mean","sum of weights <= 0 ?! that's a bit too much of negative event weights :) ");

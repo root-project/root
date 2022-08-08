@@ -99,8 +99,7 @@ void *mhs1(void *)
    // Fill histograms randomly
    gRandom->SetSeed();
    Float_t xs1, xs2;
-   //for ( Int_t i=0; i<=100000; i++) {
-   for ( Int_t i=0; ; i++) {
+   while (true) {
       xs1   = gRandom->Gaus(-0.5,0.5);
       xs2   = gRandom->Gaus(1,0.3);
       // locking avoids data loss
@@ -186,7 +185,7 @@ void *top(void *)
 {
    TThread::Printf("Start of top");
 
-   for (Int_t i = 0; ;i++) {
+   while (true) {
       TThread::Ps();
       TThread::Sleep(5);
    }

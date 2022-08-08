@@ -307,9 +307,7 @@ Bool_t TMVA::SVWorkingSet::TakeStep(TMVA::SVEvent* ievt,TMVA::SVEvent* jevt )
    Float_t dL_I = type_I * ( newAlpha_I - alpha_I );
    Float_t dL_J = type_J * ( newAlpha_J - alpha_J );
 
-   Int_t k = 0;
    for(idIter = fInputData->begin(); idIter != fInputData->end(); ++idIter){
-      k++;
       if((*idIter)->GetIdx()==0){
          Float_t ii = fKMatrix->GetElement(ievt->GetNs(), (*idIter)->GetNs());
          Float_t jj = fKMatrix->GetElement(jevt->GetNs(), (*idIter)->GetNs());
@@ -623,9 +621,7 @@ Bool_t TMVA::SVWorkingSet::TakeStepReg(TMVA::SVEvent* ievt,TMVA::SVEvent* jevt )
       const Float_t diff_alpha_j = jevt->GetDeltaAlpha()+b_alpha_j_p - jevt->GetAlpha();
 
       //update error cache
-      Int_t k = 0;
       for(idIter = fInputData->begin(); idIter != fInputData->end(); ++idIter){
-         k++;
          //there will be some changes in Idx notation
          if((*idIter)->GetIdx()==0){
             Float_t k_ii = fKMatrix->GetElement(ievt->GetNs(), (*idIter)->GetNs());

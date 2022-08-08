@@ -277,7 +277,6 @@ void TMVA::RuleEnsemble::RemoveSimilarRules()
    TMVA::Rule *first, *second;
    std::vector< Char_t > removeMe( nrulesIn,false );  // <--- stores boolean
 
-   Int_t nrem = 0;
    Int_t remind=-1;
    Double_t r;
 
@@ -299,7 +298,6 @@ void TMVA::RuleEnsemble::RemoveSimilarRules()
                if (remind>-1) {
                   if (!removeMe[remind]) {
                      removeMe[remind] = true;
-                     nrem++;
                   }
                }
             }
@@ -371,7 +369,6 @@ void TMVA::RuleEnsemble::CalcRuleSupport()
    Log() << kVERBOSE << "Evaluating Rule support" << Endl;
    Double_t s,t,stot,ssb;
    Double_t ssig, sbkg, ssum;
-   Int_t indrule=0;
    stot = 0;
    // reset to default values
    SetAverageRuleSigma(0.4);
@@ -403,7 +400,6 @@ void TMVA::RuleEnsemble::CalcRuleSupport()
          (*itrRule)->SetNorm(t);
          (*itrRule)->SetSSB( ssb );
          (*itrRule)->SetSSBNeve(Double_t(ssig+sbkg));
-         indrule++;
       }
       fAverageSupport   = stot/nrules;
       fAverageRuleSigma = TMath::Sqrt(fAverageSupport*(1.0-fAverageSupport));

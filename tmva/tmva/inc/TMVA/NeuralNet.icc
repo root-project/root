@@ -1333,12 +1333,9 @@ template <typename LAYERDATA>
         double sumWeights (0.0);
         double sumError (0.0);
 
-        size_t idxPattern = 0;
 // FIXME: check that iteration doesn't go beyond itLayerDataEnd!
         for ( ; itPattern != itPatternEnd; ++itPattern, ++itLayerData)
         {
-            ++idxPattern;
-
             // compute E and the deltas of the computed output and the true output
             LayerData& layerData = (*itLayerData);
             const Pattern& _pattern = (*itPattern);
@@ -1375,11 +1372,10 @@ template <typename LAYERDATA>
                 std::vector<LayerData>& currLayerDataColl = *(itLayerPatternData);
                 std::vector<LayerData>& prevLayerDataColl = *(itLayerPatternData+1);
 
-                size_t idxPattern = 0;
 // FIXME: check that itPrevLayerData doesn't go beyond itPrevLayerDataEnd!
                 for (typename std::vector<LayerData>::iterator itCurrLayerData = begin (currLayerDataColl), itCurrLayerDataEnd = end (currLayerDataColl),
                      itPrevLayerData = begin (prevLayerDataColl) /*, itPrevLayerDataEnd = end (prevLayerDataColl)*/;
-                     itCurrLayerData != itCurrLayerDataEnd; ++itCurrLayerData, ++itPrevLayerData, ++idxPattern)
+                     itCurrLayerData != itCurrLayerDataEnd; ++itCurrLayerData, ++itPrevLayerData)
                 {
                     LayerData& currLayerData = (*itCurrLayerData);
                     LayerData& prevLayerData = *(itPrevLayerData);
