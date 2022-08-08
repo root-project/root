@@ -1273,9 +1273,10 @@ void TGeoMixture::ComputeRadiationLength()
 {
    // Formula taken from G4Material.cxx L556
    Double_t radinv = 0.0 ;
+   // GetfRadTsai is in units of cm2 due to <unit>::alpha_rcl2. Correction must be applied to end up in TGeo cm.
+   Double_t denom = (TGeoManager::GetDefaultUnits() == TGeoManager::kRootUnits) ? TGeoUnit::cm2 : TGeant4Unit::cm2;
    for (Int_t i=0;i<fNelements;++i) {
-      //                                                                      GetfRadTsai is in units of cm2
-      radinv += fVecNbOfAtomsPerVolume[i] * ((TGeoElement *)fElements->At(i))->GetfRadTsai() / TGeoUnit::cm2;
+      radinv += fVecNbOfAtomsPerVolume[i] * ((TGeoElement *)fElements->At(i))->GetfRadTsai() / denom;
    }
    fRadLen = (radinv <= 0.0 ? DBL_MAX : 1.0 / radinv);
    // fRadLen is in TGeo units. Apply conversion factor in requested length-units
