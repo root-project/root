@@ -8,7 +8,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from root.bindings.pyroot.pythonizations.python.ROOT._pythonization import pythonization
+from .. import pythonization
 import cppyy
 
 

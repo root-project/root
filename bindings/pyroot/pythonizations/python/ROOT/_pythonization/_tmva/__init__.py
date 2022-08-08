@@ -18,6 +18,9 @@ from .. import pythonization
 from ._factory import Factory
 from ._dataloader import DataLoader
 from ._crossvalidation import CrossValidation
+from ._rbdt import *
+from ._rtensor import *
+from ._tree_inference import *
 
 
 # list of python classes that are used to pythonize TMVA classes

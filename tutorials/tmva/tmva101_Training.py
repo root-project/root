@@ -47,7 +47,8 @@ if __name__ == "__main__":
     # Fit xgboost model
     from xgboost import XGBClassifier
     bdt = XGBClassifier(max_depth=3, n_estimators=500)
-    bdt.fit(x, y, w)
+    bdt.fit(x, y, sample_weight=w)
 
     # Save model in TMVA format
-    ROOT.TMVA.Experimental.SaveXGBoost(bdt, "myBDT", "tmva101.root")
+    print("Training done on ",x.shape[0],"events. Saving model in tmva101.root")
+    ROOT.TMVA.Experimental.SaveXGBoost(bdt, "myBDT", "tmva101.root", num_inputs=x.shape[1])
