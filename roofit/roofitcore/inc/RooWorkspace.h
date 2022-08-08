@@ -44,12 +44,12 @@ class RooWorkspace : public TNamed {
 public:
 
   RooWorkspace() ;
-  RooWorkspace(const char* name, bool doCINTExport) ;
+  RooWorkspace(const char* name, bool doCINTExport)
+  R__SUGGEST_ALTERNATIVE("The \"doCINTExprot\" argument has no effect anymore since ROOT 6."
+          "Consider using RooWorkspace(const char* name, const char* title=nullptr).");
   RooWorkspace(const char* name, const char* title=nullptr) ;
   RooWorkspace(const RooWorkspace& other) ;
   ~RooWorkspace() override ;
-
-  void exportToCint(const char* namespaceName=nullptr) ;
 
   bool importClassCode(const char* pat="*", bool doReplace=false) ;
   bool importClassCode(TClass* theClass, bool doReplace=false) ;
@@ -249,10 +249,6 @@ public:
     friend class RooConstraintSum;
     bool defineSetInternal(const char *name, const RooArgSet &aset);
 
-    bool isValidCPPID(const char *name);
-    void exportObj(TObject *obj);
-    void unExport();
-
     friend class CodeRepo;
     static std::list<std::string> _classDeclDirList;
     static std::list<std::string> _classImplDirList;
@@ -273,7 +269,7 @@ public:
     RooLinkedList _studyMods;                    ///< List if StudyManager modules
     std::map<std::string, RooArgSet> _namedSets; ///< Map of named RooArgSets
 
-    WSDir *_dir; ///<! Transient ROOT directory representation of workspace
+    WSDir *_dir = nullptr; ///<! Transient ROOT directory representation of workspace
 
     RooExpensiveObjectCache _eocache; ///< Cache for expensive objects
 
@@ -282,7 +278,7 @@ public:
     bool _doExport;          ///<! Export contents of workspace to CINT?
     std::string _exportNSName; ///<! Name of CINT namespace to which contents are exported
 
-    bool _openTrans;       ///<! Is there a transaction open?
+    bool _openTrans = false; ///<! Is there a transaction open?
     RooArgSet _sandboxNodes; ///<! Sandbox for incoming objects in a transaction
 
     ClassDefOverride(RooWorkspace, 8) // Persistable project container for (composite) pdfs, functions, variables and datasets

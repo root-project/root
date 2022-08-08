@@ -159,7 +159,7 @@ void RooWorkspace::autoImportClassCode(bool flag)
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooWorkspace::RooWorkspace() : _classes(this), _dir(nullptr), _factory(nullptr), _doExport(false), _openTrans(false)
+RooWorkspace::RooWorkspace() : _classes(this)
 {
 }
 
@@ -169,18 +169,17 @@ RooWorkspace::RooWorkspace() : _classes(this), _dir(nullptr), _factory(nullptr),
 /// Construct empty workspace with given name and title
 
 RooWorkspace::RooWorkspace(const char* name, const char* title) :
-  TNamed(name,title?title:name), _classes(this), _dir(nullptr), _factory(nullptr), _doExport(false), _openTrans(false)
+  TNamed(name,title?title:name), _classes(this)
 {
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Construct empty workspace with given name and option to export reference to
+/// all workspace contents to a CINT namespace with the same name.
 
-RooWorkspace::RooWorkspace(const char* name, bool doCINTExport)  :
-  TNamed(name,name), _classes(this), _dir(nullptr), _factory(nullptr), _doExport(false), _openTrans(false)
+RooWorkspace::RooWorkspace(const char* name, bool /*doCINTExport*/)  :
+  TNamed(name,name), _classes(this)
 {
-  // Construct empty workspace with given name and option to export reference to all workspace contents to a CINT namespace with the same name
-  if (doCINTExport) {
-    exportToCint(name) ;
-  }
 }
 
 
@@ -188,7 +187,7 @@ RooWorkspace::RooWorkspace(const char* name, bool doCINTExport)  :
 /// Workspace copy constructor
 
 RooWorkspace::RooWorkspace(const RooWorkspace& other) :
-  TNamed(other), _uuid(other._uuid), _classes(other._classes,this), _dir(nullptr), _factory(nullptr), _doExport(false), _openTrans(false)
+  TNamed(other), _uuid(other._uuid), _classes(other._classes,this)
 {
   // Copy owned nodes
   other._allOwnedNodes.snapshot(_allOwnedNodes,true) ;
@@ -230,11 +229,6 @@ RooWorkspace::RooWorkspace(const RooWorkspace& other) :
 
 RooWorkspace::~RooWorkspace()
 {
-  // Delete references to variables that were declared in CINT
-  if (_doExport) {
-    unExport() ;
-  }
-
   // Delete contents
   _dataList.Delete() ;
   if (_dir) {
@@ -687,9 +681,6 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
         if (_dir && node->IsA() != RooConstVar::Class()) {
           _dir->InternalAppend(node) ;
         }
-        if (_doExport && node->IsA() != RooConstVar::Class()) {
-          exportObj(node) ;
-        }
       }
     }
   }
@@ -817,9 +808,6 @@ bool RooWorkspace::import(RooAbsData& inData,
   dataList.Add(clone) ;
   if (_dir) {
     _dir->InternalAppend(clone) ;
-  }
-  if (_doExport) {
-    exportObj(clone) ;
   }
 
   // Set expensive object cache of dataset internal buffers to that of workspace
@@ -1077,9 +1065,6 @@ bool RooWorkspace::commitTransaction()
   for(RooAbsArg* sarg : _sandboxNodes) {
     if (_dir && sarg->IsA() != RooConstVar::Class()) {
       _dir->InternalAppend(sarg) ;
-    }
-    if (_doExport && sarg->IsA() != RooConstVar::Class()) {
-      exportObj(sarg) ;
     }
   }
 
@@ -2913,101 +2898,6 @@ void RooWorkspace::WSDir::Append(TObject* obj,bool)
   }
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Activate export of workspace symbols to CINT in a namespace with given name. If no name
-/// is given the namespace will have the same name as the workspace
-
-void RooWorkspace::exportToCint(const char* nsname)
-{
-  // If export is already active, do nothing
-  if (_doExport) {
-    coutE(ObjectHandling) << "RooWorkspace::exportToCint(" << GetName() << ") WARNING: repeated calls to exportToCint() have no effect" << endl ;
-    return ;
-  }
-
-  // Set flag so that future import to workspace are automatically exported to CINT
-  _doExport = true ;
-
-  // If no name is provided choose name of workspace
-  if (!nsname) nsname = GetName() ;
-  _exportNSName = nsname ;
-
-  coutI(ObjectHandling) << "RooWorkspace::exportToCint(" << GetName()
-         << ") INFO: references to all objects in this workspace will be created in CINT in 'namespace " << _exportNSName << "'" << endl ;
-
-  // Export present contents of workspace to CINT
-  for(TObject * wobj : _allOwnedNodes) {
-    exportObj(wobj) ;
-  }
-  for(TObject * wobj : _dataList) {
-    exportObj(wobj) ;
-  }
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Export reference to given workspace object to CINT
-
-void RooWorkspace::exportObj(TObject* wobj)
-{
-  // Do nothing if export flag is not set
-  if (!_doExport) return ;
-
-  // Do not export RooConstVars
-  if (wobj->IsA() == RooConstVar::Class()) {
-    return ;
-  }
-
-
-  // Determine if object name is a valid C++ identifier name
-
-  // Do not export objects that have names that are not valid C++ identifiers
-  if (!isValidCPPID(wobj->GetName())) {
-    cxcoutD(ObjectHandling) << "RooWorkspace::exportObj(" << GetName() << ") INFO: Workspace object name " << wobj->GetName() << " is not a valid C++ identifier and is not exported to CINT" << endl ;
-    return ;
-  }
-
-  // Declare correctly typed reference to object in CINT in the namespace associated with this workspace
-  string cintExpr = Form("namespace %s { %s& %s = *(%s *)0x%zx ; }",_exportNSName.c_str(),wobj->ClassName(),wobj->GetName(),wobj->ClassName(),(size_t)wobj) ;
-  gROOT->ProcessLine(cintExpr.c_str()) ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return true if given name is a valid C++ identifier name
-
-bool RooWorkspace::isValidCPPID(const char* name)
-{
-  string oname(name) ;
-  if (isdigit(oname[0])) {
-    return false ;
-  } else {
-    for (UInt_t i=0 ; i<oname.size() ; i++) {
-      char c = oname[i] ;
-      if (!isalnum(c) && (c!='_')) {
-   return false ;
-      }
-    }
-  }
-  return true ;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delete exported reference in CINT namespace
-
-void RooWorkspace::unExport()
-{
-   char buf[64000];
-   for(TObject* wobj : _allOwnedNodes) {
-      if (isValidCPPID(wobj->GetName())) {
-         strlcpy(buf, Form("%s::%s", _exportNSName.c_str(), wobj->GetName()), 64000);
-         gInterpreter->DeleteVariable(buf);
-      }
-  }
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// If one of the TObject we have a referenced to is deleted, remove the
