@@ -12,8 +12,8 @@
 
 #include <ROOT/TSeq.hxx>
 #include <ROOT/TThreadExecutor.hxx>
-#include <ROOT/TTreeProcessorMT.hxx>   // for TTreeProcessorMT::GetTasksPerWorkerHint
-#include <ROOT/RDF/InterfaceUtils.hxx> // for ROOT::Internal::RDF::GetTopLevelBranchNames
+#include <ROOT/TTreeProcessorMT.hxx>  // for TTreeProcessorMT::GetTasksPerWorkerHint
+#include <ROOT/InternalTreeUtils.hxx> // for ROOT::Internal::TreeUtils::GetTopLevelBranchNames
 #include <TBranch.h>
 #include <TStopwatch.h>
 #include <TTree.h>
@@ -38,7 +38,7 @@ std::vector<std::string> ReadSpeed::GetMatchingBranchNames(const std::string &fi
    if (t == nullptr)
       throw std::runtime_error("Could not retrieve tree '" + treeName + "' from file '" + fileName + '\'');
 
-   const auto unfilteredBranchNames = ROOT::Internal::RDF::GetTopLevelBranchNames(*t);
+   const auto unfilteredBranchNames = ROOT::Internal::TreeUtils::GetTopLevelBranchNames(*t);
    std::set<std::string> usedRegexes;
    std::vector<std::string> branchNames;
 
