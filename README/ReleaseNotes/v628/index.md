@@ -175,6 +175,11 @@ The `RooAbsMinimizerFcn` class and its implementation `RooMinimizerFcn` were rem
 These classes are implementation details of the RooMinimizer and should not be used in your code.
 In the unlikely case that this causes any problem for you, please open a GitHub issue requesting to extend the RooMinimizer by the needed functionality.
 
+### Vectorize `RooAbsBinning` interface for bin index lookups
+
+The `RooAbsBinning` interface for bin index lookups was changed to enable vectorized implementations.
+Instead of having the override `RooAbsBinning::binNumber()`, the binning implementations now have to override the `RooAbsBinning::binNumbers()` function to evaluate the bin indices of multiple values in one function call.
+
 ## 2D Graphics Libraries
 
 - Implement the option "File": The current file name is painted on the bottom right of each plot

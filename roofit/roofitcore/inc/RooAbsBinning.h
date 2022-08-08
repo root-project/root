@@ -25,20 +25,44 @@ class RooAbsReal ;
 class RooAbsBinning : public TNamed, public RooPrintable {
 public:
 
-  RooAbsBinning(const char* name=nullptr) ;
+  RooAbsBinning(const char* name=nullptr) : TNamed{name, name} {}
   RooAbsBinning(const RooAbsBinning& other, const char* name=nullptr) : TNamed(name,name), RooPrintable(other) {
     // Copy constructor
   }
   TObject* Clone(const char* newname=nullptr) const override { return clone(newname) ; }
   virtual RooAbsBinning* clone(const char* name=nullptr) const = 0 ;
-  ~RooAbsBinning() override ;
 
   /// Return number of bins.
   Int_t numBins() const {
     return numBoundaries()-1 ;
   }
   virtual Int_t numBoundaries() const = 0 ;
-  virtual Int_t binNumber(double x) const = 0 ;
+
+  /// Compute the bin indices for multiple values of `x`.
+  ///
+  /// For each element in the input, the corresponding output element will be
+  /// increased by `coef * binIdx`. This is useful for aggregating
+  /// multi-dimensional bin indices inplace.
+  ///
+  /// param[in] x The read-only input array of values of `x`.
+  /// param[out] bins The output array. Note that the initial values don't get
+  ///                 replaced! The result is added to the array elements.
+  /// param[in] n The size of the input and output arrays.
+  /// param[in] coef The multiplication factor that is applied to all calculated bin indices.
+  virtual void binNumbers(double const * x, int * bins, std::size_t n, int coef=1) const = 0 ;
+
+  /// Returns the bin number corresponding to the value `x`.
+  ///
+  /// \note This `inline` function is implemented by calling the vectorized
+  ///       function `RooAbsBinning::binNumbers()`. If you want to calculate
+  ///       the bin indices for multiple values, use that one for better
+  ///       performance.
+  inline int binNumber(double x) const {
+    int out = 0.0;
+    binNumbers(&x, &out, 1);
+    return out;
+  }
+
   virtual double binCenter(Int_t bin) const = 0 ;
   virtual double binWidth(Int_t bin) const = 0 ;
   virtual double binLow(Int_t bin) const = 0 ;

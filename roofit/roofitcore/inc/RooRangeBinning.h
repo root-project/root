@@ -28,7 +28,7 @@ public:
   ~RooRangeBinning() override ;
 
   Int_t numBoundaries() const override { return 2 ; }
-  Int_t binNumber(double) const override { return 0 ; }
+  void binNumbers(double const * /*x*/, int * /*bins*/, std::size_t /*n*/, int /*coef*/) const override {}
   double binCenter(Int_t) const override { return (_range[0] + _range[1]) / 2 ; }
   double binWidth(Int_t) const override { return (_range[1] - _range[0]) ; }
   double binLow(Int_t) const override { return _range[0] ; }

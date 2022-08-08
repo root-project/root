@@ -29,7 +29,7 @@ public:
   ~RooLinTransBinning() override ;
 
   Int_t numBoundaries() const override { return _input->numBoundaries() ; }
-  Int_t binNumber(double x) const override { return _input->binNumber(invTrans(x)) ; }
+  void binNumbers(double const * x, int * bins, std::size_t n, int coef) const override;
   double binCenter(Int_t bin) const override { return trans(_input->binCenter(binTrans(bin))) ; }
   double binWidth(Int_t bin) const override { return _slope*_input->binWidth(binTrans(bin)) ; }
   double binLow(Int_t bin) const override { if (_slope>0) return trans(_input->binLow(binTrans(bin))) ; else return trans(_input->binHigh(binTrans(bin))) ; }
