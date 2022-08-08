@@ -46,19 +46,19 @@ int check_mat(const PDG_material &pdg, const PDG_material &mat, bool have_tolera
    int num_err = 0;
 
    double diff_dens = fabs(dens / pdg.density - 1.0);
-   if (diff_dens > (have_tolerance ? tolerance_density : 1e-15)) {
+   if (diff_dens > (have_tolerance ? tolerance_density / 100e0 : 1e-15)) {
       log << "TEST FAILED " << std::setw(16) << std::left << mat.name << " Units: " << units
           << " Density out of tolerance " << diff_dens << " PDG: " << pdg.density << " TGeo:" << dens << std::endl;
       ++num_err;
    }
    double diff_radlen = fabs(radlen / pdg.radlen - 1.0);
-   if (diff_radlen > (have_tolerance ? tolerance_radlen : 1e-15)) {
+   if (diff_radlen > (have_tolerance ? tolerance_radlen / 100e0 : 1e-15)) {
       log << "TEST FAILED " << std::setw(16) << std::left << mat.name << " Units: " << units
           << " RadLen out of tolerance " << diff_radlen << " PDG: " << pdg.radlen << " TGeo:" << radlen << std::endl;
       ++num_err;
    }
    double diff_intlen = fabs(intlen / pdg.intlen - 1.0);
-   if (diff_intlen > (have_tolerance ? tolerance_intlen : 1e-15)) {
+   if (diff_intlen > (have_tolerance ? tolerance_intlen / 100e0 : 1e-15)) {
       log << "TEST FAILED " << std::setw(16) << std::left << mat.name << " Units: " << units
           << " Intlen out of tolerance " << diff_intlen << " PDG: " << pdg.intlen << " TGeo:" << intlen << std::endl;
       ++num_err;
@@ -128,41 +128,43 @@ TEST(Geometry, MaterialUnits)
    PDG_material tgeo_mat[num_mat][4];
    PDG_material g4_mat[num_mat][4];
 
-   if (gGeoManager)
-      delete gGeoManager;
-   gGeoManager = new TGeoManager();
    TGeoManager::LockDefaultUnits(kFALSE);
    TGeoManager::SetDefaultUnits(TGeoManager::kRootUnits);
    TGeoManager::LockDefaultUnits(kTRUE);
-   std::cout << " Using ROOT system of units. " << std::endl;
-
-   for (size_t i = 0; i < num_mat; ++i)
-      build_material(pdg[i], tgeo_mat[i], verbose);
-
+   // Delete the current TGeoManager (if any) and create the new one only after units were changed
    if (gGeoManager)
       delete gGeoManager;
    gGeoManager = new TGeoManager();
+   std::cout << " Using ROOT system of units. " << std::endl;
+
+   for (size_t i = 0; i < num_mat; ++i)
+      build_material(pdg[i], tgeo_mat[i], verbose | debug);
+
    TGeoManager::LockDefaultUnits(kFALSE);
    TGeoManager::SetDefaultUnits(TGeoManager::kG4Units);
    TGeoManager::LockDefaultUnits(kTRUE);
+   // Delete the current TGeoManager (if any) and create the new one only after units were changed
+   if (gGeoManager)
+      delete gGeoManager;
+   gGeoManager = new TGeoManager();
    std::cout << " Using Geant4 system of units. " << std::endl;
 
    for (size_t i = 0; i < num_mat; ++i)
-      build_material(pdg[i], g4_mat[i], verbose);
+      build_material(pdg[i], g4_mat[i], verbose | debug);
 
    int nerrs = 0;
    for (size_t i = 0; i < num_mat; ++i) {
       // Test pdg against materials in TGeo units
       for (size_t j = 0; j < 4; ++j)
-         nerrs += check_mat(pdg[i], tgeo_mat[i][j], true, verbose);
+         nerrs += check_mat(pdg[i], tgeo_mat[i][j], true, verbose | debug);
       // Test pdg against materials in G4 units
       for (size_t j = 0; j < 4; ++j)
-         nerrs += check_mat(pdg[i], g4_mat[i][j], true, verbose);
+         nerrs += check_mat(pdg[i], g4_mat[i][j], true, verbose | debug);
       // Test materials in G4 units against materials in TGeo units
       for (size_t j = 0; j < 4; ++j)
-         nerrs += check_mat(tgeo_mat[i][j], g4_mat[i][j], false, verbose);
+         nerrs += check_mat(tgeo_mat[i][j], g4_mat[i][j], true, verbose | debug);
    }
-   if (verbose)
+   if (verbose | debug)
       std::cout << std::endl
                 << ((0 == nerrs) ? "TEST PASSED " : "TEST FAILED ") << nerrs << " failures detected." << std::endl;
    EXPECT_EQ(nerrs, 0);
