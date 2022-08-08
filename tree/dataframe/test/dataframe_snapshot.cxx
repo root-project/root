@@ -897,7 +897,7 @@ TEST(RDFSnapshotMore, MissingSizeBranch)
    ROOT::RDataFrame df("t", inFile);
 
    // fully typed Snapshot call throws
-   EXPECT_THROW(df.Snapshot<ROOT::RVecF>("t", "NeverWrittenOut.root", {"vec"}), std::runtime_error);
+   EXPECT_THROW(df.Snapshot<ROOT::RVecF>("t", outFile, {"vec"}), std::runtime_error);
 
    // jitted Snapshot works anyway
    auto out = df.Snapshot("t", outFile, {"vec"});
@@ -913,6 +913,7 @@ TEST(RDFSnapshotMore, MissingSizeBranch)
    EXPECT_TRUE(All(vecs->at(2) == ROOT::RVecF{1, 2, 3}));
 
    gSystem->Unlink(inFile);
+   gSystem->Unlink(outFile);
 }
 
 TEST(RDFSnapshotMore, OutOfOrderSizeBranch)
