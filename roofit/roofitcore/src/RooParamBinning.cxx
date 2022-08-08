@@ -192,12 +192,15 @@ void RooParamBinning::setRange(double newxlo, double newxhi)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the fit bin index for the current value
 
-Int_t RooParamBinning::binNumber(double x) const
+void RooParamBinning::binNumbers(double const * x, int * bins, std::size_t n, int coef) const
 {
-  if (x >= xhi()->getVal()) return _nbins-1 ;
-  if (x < xlo()->getVal()) return 0 ;
+  const double xloVal = xlo()->getVal();
+  const double xhiVal = xhi()->getVal();
+  const double oneOverW = 1./averageBinWidth();
 
-  return Int_t((x - xlo()->getVal())/averageBinWidth()) ;
+  for(std::size_t i = 0; i < n; ++i) {
+    bins[i] += coef * (x[i] >= xhiVal ? _nbins - 1 : std::max(0, int((x[i] - xloVal)*oneOverW)));
+  }
 }
 
 

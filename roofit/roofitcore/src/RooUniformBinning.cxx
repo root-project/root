@@ -114,12 +114,13 @@ void RooUniformBinning::setRange(double xlo, double xhi)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the index of the bin that encloses 'x'
 
-Int_t RooUniformBinning::binNumber(double x) const
+void RooUniformBinning::binNumbers(double const * x, int * bins, std::size_t n, int coef) const
 {
-  Int_t bin = Int_t((x - _xlo)/_binw) ;
-  if (bin<0) return 0 ;
-  if (bin>_nbins-1) return _nbins-1 ;
-  return bin ;
+  const double oneOverW = 1./_binw;
+
+  for(std::size_t i = 0; i < n; ++i) {
+    bins[i] += coef * (x[i] >= _xhi ? _nbins - 1 : std::max(0, int((x[i] - _xlo)*oneOverW)));
+  }
 }
 
 

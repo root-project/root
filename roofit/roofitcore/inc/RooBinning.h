@@ -38,7 +38,7 @@ public:
   Int_t numBoundaries() const override {
     return _nbins+1;
   }
-  Int_t binNumber(double x) const override;
+  void binNumbers(double const * x, int * bins, std::size_t n, int coef) const override;
   Int_t rawBinNumber(double x) const;
   virtual double nearestBoundary(double x) const;
 

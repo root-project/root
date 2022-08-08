@@ -185,9 +185,11 @@ inline int rawBinNumberImpl(double x, std::vector<double> const& boundaries) {
 /// zero is the first bin with an upper boundary above the lower bound
 /// of the range
 
-Int_t RooBinning::binNumber(double x) const
+void RooBinning::binNumbers(double const * x, int * bins, std::size_t n, int coef) const
 {
-  return std::max(0, std::min(_nbins, rawBinNumberImpl(x, _boundaries) - _blo));
+  for(std::size_t i = 0; i < n; ++i) {
+    bins[i] += coef * (std::max(0, std::min(_nbins, rawBinNumberImpl(x[i], _boundaries) - _blo)));
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
