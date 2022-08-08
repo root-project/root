@@ -1,4 +1,3 @@
-
 // #ifndef TMVA_SOFIE_ROPERATOR_Reduce
 // #define TMVA_SOFIE_ROPERATOR_Reduce
 
@@ -299,3 +298,4 @@ public:
 
 
 #endif //TMVA_SOFIE_ROPERATOR_Reduce
+

@@ -131,7 +131,7 @@ auto input_name =  nodeproto.input(0);
 
    std::unique_ptr<ROperator> op;
    int attr_keepdims = 1;
-    int attr_axis = 1;
+   int attr_axis = 1;
    for (int_t i = 0; i < nodeproto.attribute_size(); i++) {
          std::string attribute_name = nodeproto.attribute(i).name();
          if (attribute_name == "keepdims")
