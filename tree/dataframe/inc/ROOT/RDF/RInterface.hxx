@@ -870,10 +870,12 @@ public:
    RInterface<Proxied, DS_t> Vary(std::string_view colName, std::string_view expression, std::size_t nVariations,
                                   std::string_view variationName = "")
    {
-      std::vector<std::string> colNames{{std::string(colName)}};
-      const std::string theVariationName{variationName.empty() ? colName : variationName};
+      std::vector<std::string> variationTags;
+      variationTags.reserve(nVariations);
+      for (std::size_t i = 0u; i < nVariations; ++i)
+         variationTags.emplace_back(std::to_string(i));
 
-      return JittedVaryImpl(std::move(colNames), expression, nVariations, theVariationName, /*isSingleColumn*/true);
+      return Vary(colName, expression, std::move(variationTags), variationName);
    }
 
    /// \brief Register systematic variations for one or more existing columns.
