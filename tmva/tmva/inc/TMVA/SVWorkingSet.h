@@ -51,7 +51,6 @@ namespace TMVA {
       Bool_t  TakeStep      ( SVEvent*, SVEvent*);
       Bool_t  Terminated();
       void    Train(UInt_t nIter=1000);
-      void    PrintStat();
       std::vector<TMVA::SVEvent*>* GetSupportVectors();
       Float_t GetBpar() {return 0.5*(fB_low + fB_up);}
 

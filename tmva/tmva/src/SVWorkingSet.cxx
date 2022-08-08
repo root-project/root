@@ -456,16 +456,6 @@ void TMVA::SVWorkingSet::SetIndex( TMVA::SVEvent* event )
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TMVA::SVWorkingSet::PrintStat()
-{
-   std::vector<TMVA::SVEvent*>::iterator idIter;
-   UInt_t counter = 0;
-   for( idIter = fInputData->begin(); idIter != fInputData->end(); ++idIter)
-      if((*idIter)->GetAlpha() !=0) counter++;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 std::vector<TMVA::SVEvent*>* TMVA::SVWorkingSet::GetSupportVectors()
 {
    std::vector<TMVA::SVEvent*>::iterator idIter;
