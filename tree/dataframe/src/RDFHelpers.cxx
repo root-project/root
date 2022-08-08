@@ -12,6 +12,8 @@
 #include "TROOT.h"      // IsImplicitMTEnabled
 #include "TError.h"     // Warning
 #include "RConfigure.h" // R__USE_IMT
+#include "ROOT/RDF/RLoopManager.hxx" // for RLoopManager
+#include "ROOT/RResultHandle.hxx"    // for RResultHandle, RunGraphs
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
 #endif // R__USE_IMT

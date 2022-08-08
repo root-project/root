@@ -24,7 +24,6 @@ ROOT's RDataFrame allows to analyse data stored in TTrees with a high level inte
 #include "RtypesCore.h"
 
 #include <memory>
-#include <ostream>
 #include <string>
 #include <vector>
 

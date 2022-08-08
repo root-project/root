@@ -9,7 +9,6 @@
  *************************************************************************/
 
 #include <ROOT/RDF/RJittedDefine.hxx>
-#include <ROOT/RDF/RLoopManager.hxx>
 
 #include <cassert>
 

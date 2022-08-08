@@ -8,21 +8,30 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <ROOT/RDataSource.hxx>
 #include <ROOT/RDF/InterfaceUtils.hxx>
-#include <ROOT/RDataFrame.hxx>
+#include <ROOT/RDF/RColumnRegister.hxx>
+#include <ROOT/RDF/RDisplay.hxx>
+#include <ROOT/RDF/RInterface.hxx>
+#include <ROOT/RDF/RJittedDefine.hxx>
+#include <ROOT/RDF/RJittedFilter.hxx>
+#include <ROOT/RDF/RJittedVariation.hxx>
+#include <ROOT/RDF/RLoopManager.hxx>
+#include <ROOT/RDF/RNodeBase.hxx>
+#include <ROOT/RDF/Utils.hxx>
 #include <ROOT/RStringView.hxx>
-#include <ROOT/TSeq.hxx>
-#include <RtypesCore.h>
-#include <TDirectory.h>
-#include <TChain.h>
+#include <TBranch.h>
 #include <TClass.h>
 #include <TClassEdit.h>
-#include <TFriendElement.h>
-#include <TInterpreter.h>
-#include <TObject.h>
+#include <TDataType.h>
+#include <TError.h>
+#include <TLeaf.h>
+#include <TObjArray.h>
 #include <TPRegexp.h>
+#include <TROOT.h>
 #include <TString.h>
 #include <TTree.h>
+#include <TVirtualMutex.h>
 
 // pragma to disable warnings on Rcpp which have
 // so many noise compiling
@@ -38,25 +47,32 @@
 
 #include <algorithm>
 #include <cassert>
-#include <unordered_set>
+#include <cstdlib>  // for size_t
+#include <iterator> // for back_insert_iterator
+#include <map>
+#include <memory>
+#include <set>
+#include <sstream>
 #include <stdexcept>
 #include <string>
-#include <sstream>
+#include <type_traits> // for remove_reference<>::type
 #include <typeinfo>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility> // for pair
+#include <vector>
 
 namespace ROOT {
 namespace Detail {
 namespace RDF {
 class RDefineBase;
-class RFilterBase;
-class RLoopManager;
-class RRangeBase;
 } // namespace RDF
-} // namespace Detail
-
+namespace Internal {
 namespace RDF {
-class RDataSource;
-} // namespace RDF
+class RJittedAction;
+}
+} // namespace Internal
+} // namespace Detail
 
 } // namespace ROOT
 
