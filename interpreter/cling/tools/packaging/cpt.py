@@ -19,7 +19,6 @@
 #
 ###############################################################################
 
-
 import sys
 
 if sys.version_info < (3, 0):
@@ -57,8 +56,9 @@ def _convert_subprocess_cmd(cmd):
 
 
 def _perror(e):
-    print("subprocess.CalledProcessError: Command '%s' returned non-zero exit status %s" % (
-        ' '.join(e.cmd), str(e.returncode)))
+    print(
+        "subprocess.CalledProcessError: Command '%s' returned non-zero exit status %s"
+        % (' '.join(e.cmd), str(e.returncode)))
     cleanup()
     # Communicate return code to the calling program if any
     sys.exit(e.returncode)
@@ -69,8 +69,12 @@ def exec_subprocess_call(cmd, cwd, showCMD=False):
         print(cmd)
     cmd = _convert_subprocess_cmd(cmd)
     try:
-        subprocess.check_call(cmd, cwd=cwd, shell=False,
-                              stdin=subprocess.PIPE, stdout=None, stderr=subprocess.STDOUT)
+        subprocess.check_call(cmd,
+                              cwd=cwd,
+                              shell=False,
+                              stdin=subprocess.PIPE,
+                              stdout=None,
+                              stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
         _perror(e)
 
@@ -79,8 +83,11 @@ def exec_subprocess_check_output(cmd, cwd):
     cmd = _convert_subprocess_cmd(cmd)
     out = ''
     try:
-        out = subprocess.check_output(cmd, cwd=cwd, shell=False,
-                                      stdin=subprocess.PIPE, stderr=subprocess.STDOUT).decode('utf-8')
+        out = subprocess.check_output(cmd,
+                                      cwd=cwd,
+                                      shell=False,
+                                      stdin=subprocess.PIPE,
+                                      stderr=subprocess.STDOUT).decode('utf-8')
     except subprocess.CalledProcessError as e:
         _perror(e)
     finally:
@@ -99,21 +106,25 @@ def travis_fold_end(tag):
 
 
 def box_draw_header():
-    msg = 'cling (' + platform.machine() + ')' + formatdate(time.time(), tzinfo())
+    msg = 'cling (' + platform.machine() + ')' + formatdate(
+        time.time(), tzinfo())
     spaces_no = 80 - len(msg) - 4
     spacer = ' ' * spaces_no
-    msg = 'cling (' + platform.machine() + ')' + spacer + formatdate(time.time(), tzinfo())
+    msg = 'cling (' + platform.machine() + ')' + spacer + formatdate(
+        time.time(), tzinfo())
 
     if OS != 'Windows':
         print('''
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║ %s ║
-╚══════════════════════════════════════════════════════════════════════════════╝''' % (msg))
+╚══════════════════════════════════════════════════════════════════════════════╝'''
+              % (msg))
     else:
         print('''
 +=============================================================================+
 | %s|
-+=============================================================================+''' % (msg))
++=============================================================================+'''
+              % (msg))
 
 
 def box_draw(msg):
@@ -124,19 +135,24 @@ def box_draw(msg):
         print('''
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │ %s%s │
-└──────────────────────────────────────────────────────────────────────────────┘''' % (msg, spacer))
+└──────────────────────────────────────────────────────────────────────────────┘'''
+              % (msg, spacer))
     else:
         print('''
 +-----------------------------------------------------------------------------+
 | %s%s|
-+-----------------------------------------------------------------------------+''' % (msg, spacer))
++-----------------------------------------------------------------------------+'''
+              % (msg, spacer))
 
 
 def pip_install(package):
     # Needs brew install python. We should only install if we need the
     # functionality
     import pip
-    pip.main(['install', '--ignore-installed', '--prefix', os.path.join(workdir, 'pip'), '--upgrade', package])
+    pip.main([
+        'install', '--ignore-installed', '--prefix',
+        os.path.join(workdir, 'pip'), '--upgrade', package
+    ])
 
 
 def wget(url, out_dir, rename_file=None, retries=3):
@@ -157,7 +173,7 @@ def wget(url, out_dir, rename_file=None, retries=3):
     except Exception:
         print('  Error due to broken pipe')
         print('  Retrying ...')
-        wget(url, out_dir, retries-1)
+        wget(url, out_dir, retries - 1)
 
     else:
         print("  Downloading: %s Bytes: %s" % (file_name, file_size))
@@ -174,7 +190,8 @@ def wget(url, out_dir, rename_file=None, retries=3):
 
             file_size_dl += len(buffer)
             f.write(buffer)
-            status = r"%10d  [%3.2f%%]" % (file_size_dl, file_size_dl * 100. / file_size)
+            status = r"%10d  [%3.2f%%]" % (file_size_dl,
+                                           file_size_dl * 100. / file_size)
             status += chr(8) * (len(status) + 1)
             print(status, end=' ')
         f.close()
@@ -191,30 +208,44 @@ def fetch_llvm(llvm_revision):
     print('Last known good LLVM revision is: ' + llvm_revision)
     print('Current working directory is: ' + workdir + '\n')
 
-    if "github.com" in LLVM_GIT_URL and args['create_dev_env'] is None and args['use_wget']:
+    if "github.com" in LLVM_GIT_URL and args[
+            'create_dev_env'] is None and args['use_wget']:
         _, _, _, user, repo = LLVM_GIT_URL.split('/')
         print('Fetching LLVM ...')
-        wget(url='https://github.com/%s/%s' % (user, repo.replace('.git', '')) +
-                 '/archive/cling-patches-r%s.tar.gz' % llvm_revision,
+        wget(url='https://github.com/%s/%s' %
+             (user, repo.replace('.git', '')) +
+             '/archive/cling-patches-r%s.tar.gz' % llvm_revision,
              out_dir=workdir)
 
-        print('Extracting: ' + os.path.join(workdir, 'cling-patches-r%s.tar.gz' % llvm_revision))
+        print('Extracting: ' +
+              os.path.join(workdir, 'cling-patches-r%s.tar.gz' %
+                           llvm_revision))
         extract_tar(workdir, 'cling-patches-r%s.tar.gz' % llvm_revision)
 
-        os.rename(os.path.join(workdir, 'llvm-cling-patches-r%s' % llvm_revision), srcdir)
+        os.rename(
+            os.path.join(workdir, 'llvm-cling-patches-r%s' % llvm_revision),
+            srcdir)
 
-        if os.path.isfile(os.path.join(workdir, 'cling-patches-r%s.tar.gz' % llvm_revision)):
-            print("Remove file: " + os.path.join(workdir, 'cling-patches-r%s.tar.gz' % llvm_revision))
-            os.remove(os.path.join(workdir, 'cling-patches-r%s.tar.gz' % llvm_revision))
+        if os.path.isfile(
+                os.path.join(workdir,
+                             'cling-patches-r%s.tar.gz' % llvm_revision)):
+            print("Remove file: " +
+                  os.path.join(workdir, 'cling-patches-r%s.tar.gz' %
+                               llvm_revision))
+            os.remove(
+                os.path.join(workdir,
+                             'cling-patches-r%s.tar.gz' % llvm_revision))
 
         print()
         return
 
     def checkout():
-        exec_subprocess_call('git checkout cling-patches-r%s' % llvm_revision, srcdir)
+        exec_subprocess_call('git checkout cling-patches-r%s' % llvm_revision,
+                             srcdir)
 
     def get_fresh_llvm():
-        exec_subprocess_call('git clone %s %s' % (LLVM_GIT_URL, srcdir), workdir)
+        exec_subprocess_call('git clone %s %s' % (LLVM_GIT_URL, srcdir),
+                             workdir)
         checkout()
 
     def update_old_llvm():
@@ -224,8 +255,9 @@ def fetch_llvm(llvm_revision):
 
         checkout()
         exec_subprocess_call('git fetch --tags', srcdir)
-        exec_subprocess_call('git pull origin refs/tags/cling-patches-r%s'
-                             % llvm_revision, srcdir)
+        exec_subprocess_call(
+            'git pull origin refs/tags/cling-patches-r%s' % llvm_revision,
+            srcdir)
 
     if os.path.isdir(srcdir):
         update_old_llvm()
@@ -235,67 +267,83 @@ def fetch_llvm(llvm_revision):
 
 def llvm_flag_setter(llvm_dir, llvm_config_path):
     flags = "-DLLVM_BINARY_DIR={0} -DLLVM_CONFIG={1} -DLLVM_LIBRARY_DIR={2} -DLLVM_MAIN_INCLUDE_DIR={3} -DLLVM_TABLEGEN_EXE={4} \
-                  -DLLVM_TOOLS_BINARY_DIR={5} -DLLVM_TOOL_CLING_BUILD=ON".format(llvm_dir, llvm_config_path,
-                                                                                 os.path.join(llvm_dir, 'lib'), os.path.join(llvm_dir, 'include'), os.path.join(llvm_dir, 'bin', 'llvm-tblgen'),
-                                                                                 os.path.join(llvm_dir, 'bin'))
+                  -DLLVM_TOOLS_BINARY_DIR={5} -DLLVM_TOOL_CLING_BUILD=ON".format(
+        llvm_dir, llvm_config_path, os.path.join(llvm_dir, 'lib'),
+        os.path.join(llvm_dir, 'include'),
+        os.path.join(llvm_dir, 'bin', 'llvm-tblgen'),
+        os.path.join(llvm_dir, 'bin'))
     if args['with_verbose_output']:
         flags += " -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON"
     return flags
+
 
 def extract_tar(extractpath, tarfilename):
     tar = tarfile.open(os.path.join(workdir, tarfilename))
     tar.extractall(path=extractpath)
     tar.close()
 
+
 def download_llvm_binary():
     global llvm_flags, tar_required
     box_draw("Fetching LLVM binary")
     print('Current working directory is: ' + workdir + '\n')
     if DIST == "Ubuntu":
-        subprocess.call(
-            "sudo -H {0} -m pip install lit".format(sys.executable), shell=True
-            )
-        llvm_config_path = exec_subprocess_check_output("which llvm-config-{0}".format(llvm_vers), workdir)
+        subprocess.call("sudo -H {0} -m pip install lit".format(
+            sys.executable),
+                        shell=True)
+        llvm_config_path = exec_subprocess_check_output(
+            "which llvm-config-{0}".format(llvm_vers), workdir)
         if llvm_config_path != '' and tar_required is False:
-            llvm_dir = os.path.join("/usr", "lib", "llvm-"+llvm_vers)
+            llvm_dir = os.path.join("/usr", "lib", "llvm-" + llvm_vers)
             if llvm_config_path[-1:] == "\n":
                 llvm_config_path = llvm_config_path[:-1]
             llvm_flags = llvm_flag_setter(llvm_dir, llvm_config_path)
         else:
             tar_required = True
     elif DIST == 'MacOSX':
-        subprocess.call(
-            "sudo -H {0} -m pip install lit".format(sys.executable), shell=True
-            )
+        subprocess.call("sudo -H {0} -m pip install lit".format(
+            sys.executable),
+                        shell=True)
         if tar_required is False:
-            llvm_dir = os.path.join("/opt", "local", "libexec", "llvm-"+llvm_vers)
+            llvm_dir = os.path.join("/opt", "local", "libexec",
+                                    "llvm-" + llvm_vers)
             llvm_config_path = os.path.join(llvm_dir, "bin", "llvm-config")
             if llvm_config_path[-1:] == "\n":
                 llvm_config_path = llvm_config_path[:-1]
             llvm_flags = llvm_flag_setter(llvm_dir, llvm_config_path)
     else:
-        raise Exception("Building clang using LLVM binary not possible. Please invoke cpt without --with-llvm-binary and --with-llvm-tar flags")
+        raise Exception(
+            "Building clang using LLVM binary not possible. Please invoke cpt without --with-llvm-binary and --with-llvm-tar flags"
+        )
     if tar_required:
         if DIST == 'Ubuntu':
-            llvm_dir = os.path.join("/usr", "lib", "llvm-"+llvm_vers)
+            llvm_dir = os.path.join("/usr", "lib", "llvm-" + llvm_vers)
         elif DIST == 'MacOSX':
-            llvm_dir = os.path.join("/opt", "local", "libexec", "llvm-"+llvm_vers)
+            llvm_dir = os.path.join("/opt", "local", "libexec",
+                                    "llvm-" + llvm_vers)
         llvm_flags = llvm_flag_setter(llvm_dir, llvm_config_path)
         if DIST == "Ubuntu" and REV == '16.04' and is_os_64bit():
             download_link = 'http://releases.llvm.org/5.0.2/clang+llvm-5.0.2-x86_64-linux-gnu-ubuntu-16.04.tar.xz'
             wget(url=download_link, out_dir=workdir)
-            extract_tar(srcdir, 'clang+llvm-5.0.2-x86_64-linux-gnu-ubuntu-16.04.tar.xz')
+            extract_tar(
+                srcdir,
+                'clang+llvm-5.0.2-x86_64-linux-gnu-ubuntu-16.04.tar.xz')
         elif DIST == "Ubuntu" and REV == '14.04' and is_os_64bit():
             download_link = 'http://releases.llvm.org/5.0.2/clang+llvm-5.0.2-x86_64-linux-gnu-ubuntu-14.04.tar.xz'
             wget(url=download_link, out_dir=workdir)
-            extract_tar(srcdir, 'clang+llvm-5.0.2-x86_64-linux-gnu-ubuntu-14.04.tar.xz')
+            extract_tar(
+                srcdir,
+                'clang+llvm-5.0.2-x86_64-linux-gnu-ubuntu-14.04.tar.xz')
         elif DIST == 'MacOSX' and is_os_64bit():
             download_link = 'http://releases.llvm.org/5.0.2/clang+llvm-5.0.2-x86_64-apple-darwin.tar.xz'
             wget(url=download_link, out_dir=workdir)
             extract_tar(srcdir, 'clang+llvm-5.0.2-x86_64-apple-darwin.tar.xz')
         else:
-            raise Exception("Building clang using LLVM binary not possible. Please invoke cpt without --with-llvm-binary and --with-llvm-tar flags")
+            raise Exception(
+                "Building clang using LLVM binary not possible. Please invoke cpt without --with-llvm-binary and --with-llvm-tar flags"
+            )
     # FIXME: Add Fedora and SUSE support
+
 
 # TODO Refactor all fetch_ functions to use this class will remove a lot of dup
 
