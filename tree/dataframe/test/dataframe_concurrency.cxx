@@ -2,9 +2,7 @@
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDF/RInterface.hxx>
 #include <ROOT/TThreadExecutor.hxx>
-#include <ROOT/RDFHelpers.hxx>
 #include <atomic>
-#include <chrono>
 #include <thread>
 #include <vector>
 #include <string>

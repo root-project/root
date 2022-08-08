@@ -26,7 +26,6 @@
 #include "TEntryList.h"
 #include "TFile.h"
 #include "TFriendElement.h"
-#include "TInterpreter.h"
 #include "TROOT.h" // IsImplicitMTEnabled
 #include "TTreeReader.h"
 #include "TTree.h" // For MaxTreeSizeRAII. Revert when #6640 will be solved.
@@ -39,7 +38,6 @@
 #include <algorithm>
 #include <atomic>
 #include <cassert>
-#include <exception>
 #include <functional>
 #include <iostream>
 #include <memory>

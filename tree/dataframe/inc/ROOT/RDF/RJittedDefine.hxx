@@ -18,7 +18,10 @@
 #include "RtypesCore.h"
 
 #include <memory>
-#include <type_traits>
+#include <stdexcept>
+#include <string>
+#include <typeinfo>
+#include <vector>
 
 class TTreeReader;
 

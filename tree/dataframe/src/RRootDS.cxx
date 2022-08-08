@@ -10,9 +10,6 @@
 #include <ROOT/RRootDS.hxx>
 #include <ROOT/TSeq.hxx>
 #include <TClass.h>
-#include <TError.h>
-#include <TROOT.h>         // For the gROOTMutex
-#include <TVirtualMutex.h> // For the R__LOCKGUARD
 
 #include <algorithm>
 #include <vector>

@@ -78,14 +78,12 @@ Empty cells and explicit `nan`-s inside columns of type Long64_t/bool are stored
 */
 // clang-format on
 
-#include <ROOT/RDF/Utils.hxx>
 #include <ROOT/TSeq.hxx>
 #include <ROOT/RCsvDS.hxx>
 #include <ROOT/RRawFile.hxx>
 #include <TError.h>
 
 #include <algorithm>
-#include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>

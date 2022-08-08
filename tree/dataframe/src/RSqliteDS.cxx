@@ -8,10 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-
 #include <ROOT/RSqliteDS.hxx>
-#include <ROOT/RConfig.hxx>
-#include <ROOT/RDF/Utils.hxx>
 #include <ROOT/RRawFile.hxx>
 
 #include "TError.h"
