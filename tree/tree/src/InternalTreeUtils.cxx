@@ -18,6 +18,45 @@
 #include <vector>
 #include <stdexcept> // std::runtime_error
 #include <string>
+#include <set>
+
+// Recursively get the top level branches from the specified tree and all of its attached friends.
+static void GetTopLevelBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, std::vector<std::string> &bNames,
+                                       std::set<TTree *> &analysedTrees, const std::string friendName = "")
+{
+   if (!analysedTrees.insert(&t).second) {
+      return;
+   }
+
+   auto branches = t.GetListOfBranches();
+   if (branches) {
+      for (auto branchObj : *branches) {
+         const auto name = branchObj->GetName();
+         if (bNamesReg.insert(name).second) {
+            bNames.emplace_back(name);
+         } else if (!friendName.empty()) {
+            // If this is a friend and the branch name has already been inserted, it might be because the friend
+            // has a branch with the same name as a branch in the main tree. Let's add it as <friendname>.<branchname>.
+            // If used for a Snapshot, this name will become <friendname>_<branchname> (with an underscore).
+            const auto longName = friendName + "." + name;
+            if (bNamesReg.insert(longName).second)
+               bNames.emplace_back(longName);
+         }
+      }
+   }
+
+   auto friendTrees = t.GetListOfFriends();
+
+   if (!friendTrees)
+      return;
+
+   for (auto friendTreeObj : *friendTrees) {
+      auto friendElement = static_cast<TFriendElement *>(friendTreeObj);
+      auto friendTree = friendElement->GetTree();
+      const std::string frName(friendElement->GetName()); // this gets us the TTree name or the friend alias if any
+      GetTopLevelBranchNamesImpl(*friendTree, bNamesReg, bNames, analysedTrees, frName);
+   }
+}
 
 namespace ROOT {
 namespace Internal {
@@ -76,6 +115,17 @@ void RFriendInfo::AddFriend(const std::vector<std::pair<std::string, std::string
       *fSubNamesIt = names.first;
       *fNamesIt = names.second;
    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// Get all the top-level branches names, including the ones of the friend trees
+std::vector<std::string> GetTopLevelBranchNames(TTree &t)
+{
+   std::set<std::string> bNamesSet;
+   std::vector<std::string> bNames;
+   std::set<TTree *> analysedTrees;
+   GetTopLevelBranchNamesImpl(t, bNamesSet, bNames, analysedTrees);
+   return bNames;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1120,7 +1120,7 @@ public:
    {
       const auto definedColumns = fColRegister.GetNames();
       auto *tree = fLoopManager->GetTree();
-      const auto treeBranchNames = tree != nullptr ? RDFInternal::GetTopLevelBranchNames(*tree) : ColumnNames_t{};
+      const auto treeBranchNames = tree != nullptr ? Internal::TreeUtils::GetTopLevelBranchNames(*tree) : ColumnNames_t{};
       const auto dsColumns = fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{};
       // Ignore R_rdf_sizeof_* columns coming from datasources: we don't want to Snapshot those
       ColumnNames_t dsColumnsWithoutSizeColumns;
@@ -1263,7 +1263,8 @@ public:
    {
       const auto definedColumns = fColRegister.GetNames();
       auto *tree = fLoopManager->GetTree();
-      const auto treeBranchNames = tree != nullptr ? RDFInternal::GetTopLevelBranchNames(*tree) : ColumnNames_t{};
+      const auto treeBranchNames =
+         tree != nullptr ? Internal::TreeUtils::GetTopLevelBranchNames(*tree) : ColumnNames_t{};
       const auto dsColumns = fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{};
       // Ignore R_rdf_sizeof_* columns coming from datasources: we don't want to Snapshot those
       ColumnNames_t dsColumnsWithoutSizeColumns;
