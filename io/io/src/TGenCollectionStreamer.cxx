@@ -389,13 +389,13 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b, const TClass
          switch (fVal->fCase) {
             case kIsClass:
                DOLOOP(b.StreamObject(i, fVal->fType, onFileValClass ));
-            case EProperty(kBIT_ISSTRING):
+            case kBIT_ISSTRING:
                DOLOOP(i->read_std_string(b));
-            case EProperty(kIsPointer | kIsClass):
+            case kIsPointer | kIsClass:
                DOLOOP(i->set(b.ReadObjectAny(fVal->fType)));
-            case EProperty(kIsPointer | kBIT_ISSTRING):
+            case kIsPointer | kBIT_ISSTRING:
                DOLOOP(i->read_std_string_pointer(b));
-            case EProperty(kIsPointer | kBIT_ISTSTRING | kIsClass):
+            case kIsPointer | kBIT_ISTSTRING | kIsClass:
                DOLOOP(i->read_tstring_pointer(vsn3, b));
          }
 #undef DOLOOP
@@ -442,20 +442,20 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b, const TClass
                fFeed(fEnv->fStart,fEnv->fObject,fEnv->fSize);
                fDestruct(fEnv->fStart,fEnv->fSize);
                break;
-            case EProperty(kBIT_ISSTRING):
+            case kBIT_ISSTRING:
                DOLOOP(i->read_std_string(b))
                fFeed(fEnv->fStart,fEnv->fObject,fEnv->fSize);
                fDestruct(fEnv->fStart,fEnv->fSize);
                break;
-            case EProperty(kIsPointer | kIsClass):
+            case kIsPointer | kIsClass:
                DOLOOP(i->set(b.ReadObjectAny(fVal->fType)));
                fFeed(fEnv->fStart,fEnv->fObject,fEnv->fSize);
                break;
-            case EProperty(kIsPointer | kBIT_ISSTRING):
+            case kIsPointer | kBIT_ISSTRING:
                DOLOOP(i->read_std_string_pointer(b))
                fFeed(fEnv->fStart,fEnv->fObject,fEnv->fSize);
                break;
-            case EProperty(kIsPointer | kBIT_ISTSTRING | kIsClass):
+            case kIsPointer | kBIT_ISTSTRING | kIsClass:
                DOLOOP(i->read_tstring_pointer(vsn3, b));
                fFeed(fEnv->fStart,fEnv->fObject,fEnv->fSize);
                break;
@@ -864,16 +864,16 @@ void TGenCollectionStreamer::ReadMap(int nElements, TBuffer &b, const TClass *on
             case kIsClass:
                b.StreamObject(i, v->fType);
                break;
-            case EProperty(kBIT_ISSTRING):
+            case kBIT_ISSTRING:
                i->read_std_string(b);
                break;
-            case EProperty(kIsPointer | kIsClass):
+            case kIsPointer | kIsClass:
                i->set(b.ReadObjectAny(v->fType));
                break;
-            case EProperty(kIsPointer | kBIT_ISSTRING):
+            case kIsPointer | kBIT_ISSTRING:
                i->read_std_string_pointer(b);
                break;
-            case EProperty(kIsPointer | kBIT_ISTSTRING | kIsClass):
+            case kIsPointer | kBIT_ISTSTRING | kIsClass:
                i->read_tstring_pointer(vsn3, b);
                break;
          }
