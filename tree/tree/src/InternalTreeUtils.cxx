@@ -18,11 +18,10 @@
 #include <vector>
 #include <stdexcept> // std::runtime_error
 #include <string>
-#include <set>
 
 // Recursively get the top level branches from the specified tree and all of its attached friends.
-static void GetTopLevelBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, std::vector<std::string> &bNames,
-                                       std::set<TTree *> &analysedTrees, const std::string friendName = "")
+static void GetTopLevelBranchNamesImpl(TTree &t, std::unordered_set<std::string> &bNamesReg, std::vector<std::string> &bNames,
+                                       std::unordered_set<TTree *> &analysedTrees, const std::string friendName = "")
 {
    if (!analysedTrees.insert(&t).second) {
       return;
@@ -37,7 +36,6 @@ static void GetTopLevelBranchNamesImpl(TTree &t, std::set<std::string> &bNamesRe
          } else if (!friendName.empty()) {
             // If this is a friend and the branch name has already been inserted, it might be because the friend
             // has a branch with the same name as a branch in the main tree. Let's add it as <friendname>.<branchname>.
-            // If used for a Snapshot, this name will become <friendname>_<branchname> (with an underscore).
             const auto longName = friendName + "." + name;
             if (bNamesReg.insert(longName).second)
                bNames.emplace_back(longName);
@@ -121,9 +119,9 @@ void RFriendInfo::AddFriend(const std::vector<std::pair<std::string, std::string
 /// Get all the top-level branches names, including the ones of the friend trees
 std::vector<std::string> GetTopLevelBranchNames(TTree &t)
 {
-   std::set<std::string> bNamesSet;
+   std::unordered_set<std::string> bNamesSet;
    std::vector<std::string> bNames;
-   std::set<TTree *> analysedTrees;
+   std::unordered_set<TTree *> analysedTrees;
    GetTopLevelBranchNamesImpl(t, bNamesSet, bNames, analysedTrees);
    return bNames;
 }
