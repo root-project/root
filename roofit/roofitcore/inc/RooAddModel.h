@@ -16,13 +16,14 @@
 #ifndef ROO_ADD_MODEL
 #define ROO_ADD_MODEL
 
-#include "RooAddPdf.h"
 #include "RooResolutionModel.h"
 #include "RooListProxy.h"
 #include "RooSetProxy.h"
 #include "RooAICRegistry.h"
 #include "RooNormSetCache.h"
 #include "RooObjCacheManager.h"
+
+class AddCacheElem;
 
 class RooAddModel : public RooResolutionModel {
 public:
@@ -99,8 +100,8 @@ protected:
 
 
   mutable RooObjCacheManager _projCacheMgr ;  ///<! Manager of cache with coefficient projections and transformations
-  RooAddPdf::CacheElem* getProjCache(const RooArgSet* nset, const RooArgSet* iset=nullptr, const char* rangeName=nullptr) const ;
-  void updateCoefficients(RooAddPdf::CacheElem& cache, const RooArgSet* nset) const ;
+  AddCacheElem* getProjCache(const RooArgSet* nset, const RooArgSet* iset=nullptr, const char* rangeName=nullptr) const ;
+  void updateCoefficients(AddCacheElem& cache, const RooArgSet* nset) const ;
 
   typedef RooArgList* pRooArgList ;
   void getCompIntList(const RooArgSet* nset, const RooArgSet* iset, pRooArgList& compIntList, Int_t& code, const char* isetRangeName) const ;
