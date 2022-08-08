@@ -292,7 +292,6 @@ endif ()
 
 # The package needs to be compiler without RTTI information
 if(MSVC)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -GR-")
   if(NOT DEFINED ROOT_BINARY_DIR)
     # Add the /std:c++XX flag for Visual Studio if not building as part of ROOT
     if(MSVC_VERSION GREATER_EQUAL 1920)
@@ -303,8 +302,6 @@ if(MSVC)
       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std:c++14")
     endif()
   endif()
-else()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
 endif()
 
 if(MSVC)

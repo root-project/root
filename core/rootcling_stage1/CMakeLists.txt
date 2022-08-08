@@ -11,9 +11,6 @@
 if(WIN32)
   set_source_files_properties(src/rootcling_stage1.cxx PROPERTIES COMPILE_FLAGS "-D_WIN32 -DNOMINMAX")
 else()
-  if(CXX_HAS_fno_rtti)
-    set_source_files_properties(src/rootcling_stage1.cxx PROPERTIES COMPILE_FLAGS "-fno-rtti")
-  endif()
 endif()
 
 if(NOT builtin_clang)

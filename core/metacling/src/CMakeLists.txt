@@ -7,17 +7,6 @@
 # TInterpreter implementation for cling. Only in libCling; needs to resolve
 # symbols from libCore.
 
-
-if(MSVC)
-  set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingCallbacks.cxx COMPILE_FLAGS -GR-)
-  set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingDiagnostics.cxx COMPILE_FLAGS -GR-)
-  set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingRdictModuleFileExtension.cxx COMPILE_FLAGS -GR-)
-else()
-  set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingCallbacks.cxx COMPILE_FLAGS -fno-rtti)
-  set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingDiagnostics.cxx COMPILE_FLAGS -fno-rtti)
-  set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingRdictModuleFileExtension.cxx COMPILE_FLAGS -fno-rtti)
-endif()
-
 ROOT_OBJECT_LIBRARY(MetaCling
   rootclingTCling.cxx
   TCling.cxx
