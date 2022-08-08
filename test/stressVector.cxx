@@ -271,7 +271,6 @@ double testDeltaR( const std::vector<V *> & dataV, TStopwatch & tim, double& t, 
 
 template <class V>
 int testAnalysis( const std::vector<V *> & dataV, TStopwatch & tim, double& t,  std::string s) {
-  int nsel = 0;
   int nsel2 = 0;
   double deltaMax = 1.;
   double ptMin = 1.;
@@ -288,7 +287,6 @@ int testAnalysis( const std::vector<V *> & dataV, TStopwatch & tim, double& t,  
          delta = VectorUtil::DeltaR(v1,v2);
          if (delta < deltaMax) {
             V v3 = v1 + v2;
-            nsel++;
             if ( cutPtEtaAndMass(v3))
             nsel2++;
          }
@@ -297,7 +295,6 @@ int testAnalysis( const std::vector<V *> & dataV, TStopwatch & tim, double& t,  
   }
   tim.Stop();
   print(tim,s);
-  //std::cout << nsel << "\n";
   t += tim.RealTime();
   return nsel2;
 }

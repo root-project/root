@@ -1225,7 +1225,6 @@ Bool_t TGTextEntry::HandleKey(Event_t* event)
 
    gVirtualX->LookupString(event, tmp, sizeof(tmp), keysym);
    n = strlen(tmp);
-   Int_t unknown = 0;
 
    if ((EKeySym)keysym  == kKey_Enter || (EKeySym)keysym  == kKey_Return) {
 
@@ -1288,8 +1287,6 @@ Bool_t TGTextEntry::HandleKey(Event_t* event)
       case kKey_Left:
          CursorWordBackward(event->fState & kKeyShiftMask);
          break;
-      default:
-         unknown++;
       }
    } else if (n && keysym <127 && keysym >=32  &&     // printable keys
                (EKeySym)keysym  != kKey_Delete &&
@@ -1328,7 +1325,8 @@ Bool_t TGTextEntry::HandleKey(Event_t* event)
          SetInsertMode(GetInsertMode() == kInsert ? kReplace : kInsert);
          break;
       default:
-         unknown++;
+         // empty case to avoid compiler warning about unhandled enum values
+         break;
       }
    }
 

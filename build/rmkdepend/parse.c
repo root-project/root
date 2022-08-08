@@ -248,7 +248,6 @@ struct symtab **fdefined(register char *symbol, struct inclist *file, struct inc
    register struct inclist **ip;
    register struct symtab **val;
    register int i;
-   static int recurse_lvl = 0;
 
    if (file->i_flags & DEFCHECKED)
       return(NULL);
@@ -268,7 +267,6 @@ struct symtab **fdefined(register char *symbol, struct inclist *file, struct inc
             if (val != NULL) break;
          }
    } else if (val != NULL && srcfile != NULL) *srcfile = file;
-   recurse_lvl--;
    file->i_flags &= ~DEFCHECKED;
 
    return(val);

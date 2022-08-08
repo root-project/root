@@ -621,7 +621,6 @@ void RooFitResult::fillLegacyCorrMatrix() const
   // Build holding arrays for correlation coefficients
   _globalCorr = new RooArgList("globalCorrelations") ;
 
-  Int_t idx(0) ;
   for(RooAbsArg* arg : *_initPars) {
     // Create global correlation value holder
     TString gcName("GC[") ;
@@ -650,7 +649,6 @@ void RooFitResult::fillLegacyCorrMatrix() const
       cTitle.Append(arg2->GetName()) ;
       corrMatrixRow->addOwned(*(new RooRealVar(cName.Data(),cTitle.Data(),0.))) ;
     }
-    idx++ ;
   }
 
   for (unsigned int i = 0; i < (unsigned int)_CM->GetNcols() ; ++i) {

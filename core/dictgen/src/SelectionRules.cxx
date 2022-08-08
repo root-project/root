@@ -580,7 +580,6 @@ const ClassSelectionRule *SelectionRules::IsNamespaceSelected(const clang::Decl*
    int fImplNo = 0;
    const ClassSelectionRule *explicit_selector = nullptr;
    const ClassSelectionRule *specific_pattern_selector = nullptr;
-   int fFileNo = 0;
 
    // NOTE: should we separate namespaces from classes in the rules?
    std::list<ClassSelectionRule>::const_iterator it = fClassSelectionRules.begin();
@@ -609,8 +608,8 @@ const ClassSelectionRule *SelectionRules::IsNamespaceSelected(const clang::Decl*
          } else if (it->GetSelected() == BaseSelectionRule::kNo) {
             if (!IsLinkdefFile()) {
                // in genreflex - we could explicitly select classes from other source files
-               if (match == BaseSelectionRule::kFile) ++fFileNo; // if we have veto because of class defined in other source file -> implicit No
-               else {
+               // if we have veto because of class defined in other source file -> implicit No
+               if (match != BaseSelectionRule::kFile) {
 
 #ifdef SELECTION_DEBUG
                   std::cout<<"\tNo returned"<<std::endl;
@@ -697,7 +696,6 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(const clang::Decl* D, 
    int fImplNo = 0;
    const ClassSelectionRule *explicit_selector = nullptr;
    const ClassSelectionRule *specific_pattern_selector = nullptr;
-   int fFileNo = 0;
 
    // iterate through all class selection rles
    bool earlyReturn=false;
@@ -741,8 +739,8 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(const clang::Decl* D, 
 
             if (!isLinkDefFile) {
                // in genreflex - we could explicitly select classes from other source files
-               if (match == BaseSelectionRule::kFile) ++fFileNo; // if we have veto because of class defined in other source file -> implicit No
-               else {
+               // if we have veto because of class defined in other source file -> implicit No
+               if (match != BaseSelectionRule::kFile) {
                   retval = selector;
                   earlyReturn=true; // explicit No returned
                }
@@ -1059,7 +1057,6 @@ const BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(const clang::De
    std::cout<<"\tFunction prototype = "<<prototype<<std::endl;
 #endif
 
-   int expl_Yes = 0, impl_r_Yes = 0, impl_rr_Yes = 0;
    int impl_r_No = 0, impl_rr_No = 0;
    const BaseSelectionRule *explicit_r = nullptr;
    const BaseSelectionRule *implicit_r = nullptr;
@@ -1076,8 +1073,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(const clang::De
             // here I should implement my implicit/explicit thing
             // I have included two levels of implicitness - "A::Get_*" is stronger than "*"
             explicit_r = &(*it);
-            if (it->GetSelected() == BaseSelectionRule::kYes) ++expl_Yes;
-            else {
+            if (it->GetSelected() != BaseSelectionRule::kYes) {
 
 #ifdef SELECTION_DEBUG
                   std::cout<<"\tExplicit rule BaseSelectionRule::kNo found"<<std::endl;
@@ -1103,7 +1099,6 @@ const BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(const clang::De
                      std::cout<<"Implicit_rr rule ("<<pat_value<<"), selected = "<<selected<<std::endl;
 #endif
 
-                     ++impl_rr_Yes;
                   }
                   else {
 
@@ -1122,7 +1117,6 @@ const BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(const clang::De
                      std::cout<<"Implicit_r rule ("<<pat_value<<"), selected = "<<selected<<std::endl;
 #endif
 
-                     ++impl_r_Yes;
                   }
                   else {
 
@@ -1137,7 +1131,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(const clang::De
          }
       }
    }
-   if (explicit_r /*&& expl_Yes > 0*/){
+   if (explicit_r){
 
 #ifdef SELECTION_DEBUG
       std::cout<<"\tExplicit rule BaseSelectionRule::BaseSelectionRule::kYes found"<<std::endl;
@@ -1277,7 +1271,6 @@ const BaseSelectionRule *SelectionRules::IsMemberSelected(const clang::Decl* D, 
       const BaseSelectionRule *selector = nullptr;
       Int_t fImplNo = 0;
       const BaseSelectionRule *explicit_selector = nullptr;
-      int fFileNo = 0;
 
       //DEBUG std::cout<<"\n\tParent is class";
       std::list<ClassSelectionRule>::const_iterator it = fClassSelectionRules.begin();
@@ -1302,8 +1295,7 @@ const BaseSelectionRule *SelectionRules::IsMemberSelected(const clang::Decl* D, 
                }
             } else if (it->GetSelected() == BaseSelectionRule::kNo) {
                if (!IsLinkdefFile()) {
-                  if (match == BaseSelectionRule::kFile) ++fFileNo;
-                  else {
+                  if (match != BaseSelectionRule::kFile) {
 
 #ifdef SELECTION_DEBUG
                      std::cout<<"\tNo returned"<<std::endl;
