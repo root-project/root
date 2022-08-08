@@ -39,7 +39,6 @@ public:
   }
   virtual Int_t numBoundaries() const = 0 ;
   virtual Int_t binNumber(double x) const = 0 ;
-  virtual Int_t rawBinNumber(double x) const { return binNumber(x) ; }
   virtual double binCenter(Int_t bin) const = 0 ;
   virtual double binWidth(Int_t bin) const = 0 ;
   virtual double binLow(Int_t bin) const = 0 ;

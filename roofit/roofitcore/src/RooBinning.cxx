@@ -158,14 +158,6 @@ bool RooBinning::removeBoundary(double boundary)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check if boundary exists at given value
-
-bool RooBinning::hasBoundary(double boundary)
-{
-  return std::binary_search(_boundaries.begin(), _boundaries.end(), boundary);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Add array of nbins uniformly sized bins in range [xlo,xhi]
 
 void RooBinning::addUniform(Int_t nbins, double xlo, double xhi)
@@ -176,6 +168,18 @@ void RooBinning::addUniform(Int_t nbins, double xlo, double xhi)
    (double(i) / double(nbins)) * xhi);
 }
 
+namespace {
+
+inline int rawBinNumberImpl(double x, std::vector<double> const& boundaries) {
+  auto it = std::lower_bound(boundaries.begin(), boundaries.end(), x);
+  // always return valid bin number
+  while (boundaries.begin() != it &&
+     (boundaries.end() == it || boundaries.end() == it + 1 || x < *it)) --it;
+  return it - boundaries.begin();
+}
+
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Return sequential bin number that contains value x where bin
 /// zero is the first bin with an upper boundary above the lower bound
@@ -183,7 +187,7 @@ void RooBinning::addUniform(Int_t nbins, double xlo, double xhi)
 
 Int_t RooBinning::binNumber(double x) const
 {
-  return std::max(0, std::min(_nbins, rawBinNumber(x) - _blo));
+  return std::max(0, std::min(_nbins, rawBinNumberImpl(x, _boundaries) - _blo));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -193,13 +197,9 @@ Int_t RooBinning::binNumber(double x) const
 
 Int_t RooBinning::rawBinNumber(double x) const
 {
-  std::vector<double>::const_iterator it = std::lower_bound(
-      _boundaries.begin(), _boundaries.end(), x);
-  // always return valid bin number
-  while (_boundaries.begin() != it &&
-     (_boundaries.end() == it || _boundaries.end() == it + 1 || x < *it)) --it;
-  return it - _boundaries.begin();
+  return rawBinNumberImpl(x, _boundaries);
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the value of the nearest boundary to x
@@ -254,7 +254,7 @@ void RooBinning::updateBinCount()
       _nbins = -1;
       return;
   }
-  _blo = rawBinNumber(_xlo);
+  _blo = rawBinNumberImpl(_xlo, _boundaries);
   std::vector<double>::const_iterator it = std::lower_bound(
       _boundaries.begin(), _boundaries.end(), _xhi);
   if (_boundaries.begin() != it && (_boundaries.end() == it || _xhi < *it)) --it;
