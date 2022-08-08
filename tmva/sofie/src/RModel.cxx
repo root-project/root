@@ -318,11 +318,17 @@ namespace SOFIE{
             if (f->second.type == ETensorType::FLOAT){
                fGC += "std::vector<float> ";
             }
-            else if(f->second.type == ETensorType::INT32 || f->second.type == ETensorType::INT64 || f->second.type == ETensorType::UINT32 || f->second.type == ETensorType::UINT64 ){
-               fGC += "std::vector<int> ";
+            else if(f->second.type == ETensorType::INT32) {
+               fGC += "std::vector<int32_t> ";
             }
-            else if(f->second.type == ETensorType::DOUBLE){
-               fGC += "std::vector<double> ";
+            else if(f->second.type == ETensorType::INT64) {
+               fGC += "std::vector<int64_t> ";
+            }
+            else if(f->second.type == ETensorType::UINT32) {
+               fGC += "std::vector<uint32_t> ";
+            }
+            else if(f->second.type == ETensorType::UINT64) {
+               fGC += "std::vector<uint64_t> ";
             }
          }
       } else {
@@ -351,8 +357,14 @@ namespace SOFIE{
          else if(outputType == ETensorType::INT64){
             fGC += "std::vector<std::vector<int64_t>> "; 
          }
+         else if(outputType == ETensorType::UINT32 ){
+            fGC += "std::vector<std::vector<uint32_t>> ";
+         }
+         else if(outputType == ETensorType::UINT64){
+            fGC += "std::vector<std::vector<uint64_t>> "; 
+         }
          else if(outputType == ETensorType::DOUBLE){
-              fGC += "std::vector<std::vector<double>> ";
+            fGC += "std::vector<std::vector<double>> ";
          }
       }
 
