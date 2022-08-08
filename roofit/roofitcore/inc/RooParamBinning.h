@@ -33,7 +33,7 @@ public:
   void setRange(double xlo, double xhi) override ;
 
   Int_t numBoundaries() const override { return _nbins + 1 ; }
-  Int_t binNumber(double x) const override  ;
+  void binNumbers(double const * x, int * bins, std::size_t n, int coef) const override;
 
   double lowBound() const override { return xlo()->getVal() ; }
   double highBound() const override { return xhi()->getVal() ; }

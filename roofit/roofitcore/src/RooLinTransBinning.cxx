@@ -26,6 +26,8 @@ way that RooLinearVar does
 
 #include "RooLinTransBinning.h"
 
+#include <stdexcept>
+
 using namespace std;
 
 ClassImp(RooLinTransBinning);
@@ -113,3 +115,15 @@ void RooLinTransBinning::updateInput(const RooAbsBinning& input, double slope, d
   _offset = offset ;
 }
 
+
+void RooLinTransBinning::binNumbers(double const * x, int * bins, std::size_t n, int coef) const
+{
+  // We are not allowed to modify the input array, so we can't apply the
+  // transformation in-place and then call _input->binNumbers() without
+  // allocating additional memory. That's why we fall back to binNumber() for
+  // now. The RooLinTransBinning is only ever used in the RooLinearVar, so if
+  // this ever becomes a bottleneck this could be optimized.
+  for(std::size_t i = 0; i < n; ++i) {
+    bins[i] += coef * _input->binNumber(invTrans(x[i]));
+  }
+}

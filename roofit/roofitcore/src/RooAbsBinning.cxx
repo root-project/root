@@ -34,24 +34,6 @@ This class defines the interface to retrieve bin boundaries, ranges etc.
 using namespace std;
 
 ClassImp(RooAbsBinning);
-;
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor
-
-RooAbsBinning::RooAbsBinning(const char* name) : TNamed(name,name)
-{
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooAbsBinning::~RooAbsBinning()
-{
-}
 
 
 
