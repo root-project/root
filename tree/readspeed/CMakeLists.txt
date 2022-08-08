@@ -14,7 +14,7 @@ ROOT_OBJECT_LIBRARY(ReadSpeed
   src/ReadSpeedCLI.cxx
 )
 
-add_dependencies(ReadSpeed RIO Tree TreePlayer ROOTDataFrame)
+add_dependencies(ReadSpeed RIO Tree TreePlayer)
 
 target_include_directories(ReadSpeed PRIVATE
   ${CMAKE_SOURCE_DIR}/io/io/inc

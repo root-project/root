@@ -34,7 +34,7 @@ endif()
 ROOT_EXECUTABLE(rootnb.exe nbmain.cxx LIBRARIES Core)
 
 #---ReadSpeed-------------------------------------------------------------------------------------
-ROOT_EXECUTABLE(rootreadspeed src/readspeed.cxx $<TARGET_OBJECTS:ReadSpeed> LIBRARIES RIO Tree TreePlayer ROOTDataFrame)
+ROOT_EXECUTABLE(rootreadspeed src/readspeed.cxx $<TARGET_OBJECTS:ReadSpeed> LIBRARIES RIO Tree TreePlayer)
 target_include_directories(rootreadspeed PRIVATE ${CMAKE_SOURCE_DIR}/tree/readspeed/inc)
 
 #---CreateHaddCommandLineOptions------------------------------------------------------------------
