@@ -39,7 +39,7 @@ public:
     return _nbins+1;
   }
   Int_t binNumber(double x) const override;
-  Int_t rawBinNumber(double x) const override;
+  Int_t rawBinNumber(double x) const;
   virtual double nearestBoundary(double x) const;
 
   void setRange(double xlo, double xhi) override;
@@ -69,8 +69,6 @@ public:
   void addBoundaryPair(double boundary, double mirrorPoint = 0);
   void addUniform(Int_t nBins, double xlo, double xhi);
   bool removeBoundary(double boundary);
-
-  bool hasBoundary(double boundary);
 
 protected:
 
