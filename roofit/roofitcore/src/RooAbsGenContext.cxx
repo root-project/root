@@ -200,7 +200,6 @@ RooDataSet *RooAbsGenContext::generate(double nEvents, bool skipInit, bool exten
   }
 
   // Loop over the events to generate
-  Int_t evt(0) ;
   while(_genData->numEntries()<nEvents) {
 
     // first, load values from the prototype dataset, if one was provided
@@ -231,7 +230,6 @@ RooDataSet *RooAbsGenContext::generate(double nEvents, bool skipInit, bool exten
     }
 
     _genData->addFast(_theEvent);
-    evt++ ;
   }
 
   RooDataSet* output = _genData ;

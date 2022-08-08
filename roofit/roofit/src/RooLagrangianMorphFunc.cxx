@@ -2018,8 +2018,6 @@ RooLagrangianMorphFunc::RooLagrangianMorphFunc()
      _observables("observable", "morphing observable", this, true, false),
      _binWidths("binWidths", "set of bin width objects", this, true, false)
 {
-   static int counter(0);
-   counter++;
    TRACE_CREATE
 }
 

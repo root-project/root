@@ -67,11 +67,10 @@ void CreateVariableTransforms(const TString& trafoDefinitionIn,
    // workaround for transformations to complicated to be handled by makeclass
    // count number of transformations with incomplete set of variables
    TString trafoDefinitionCheck(trafoDefinitionIn);
-   int npartial = 0, ntrafo = 0;
+   int npartial = 0;
    for (Int_t pos = 0, siz = trafoDefinition.Sizeof(); pos < siz; ++pos) {
       TString ch = trafoDefinition(pos,1);
       if ( ch == "(" ) npartial++;
-      if ( ch == "+" || ch == ",") ntrafo++;
    }
    if (npartial>1) {
       log << kWARNING

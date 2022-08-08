@@ -1259,7 +1259,6 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
       if( splitMode == "ALTERNATE" ){
          Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName())<< "split 'ALTERNATE'" << Endl;
          Int_t nTraining = availableTraining;
-         Int_t nTesting  = availableTesting;
          for( EventVector::iterator it = eventVectorUndefined.begin(), itEnd = eventVectorUndefined.end(); it != itEnd; ){
             ++nTraining;
             if( nTraining <= requestedTraining ){
@@ -1267,7 +1266,6 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
                ++it;
             }
             if( it != itEnd ){
-               ++nTesting;
                eventVectorTesting.insert( eventVectorTesting.end(), (*it) );
                ++it;
             }

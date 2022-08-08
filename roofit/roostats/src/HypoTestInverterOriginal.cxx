@@ -170,7 +170,6 @@ bool HypoTestInverterOriginal::RunAutoScan( double xMin, double xMax, double tar
     return false;
   }
 
-  unsigned int nIteration = 2;  // number of iteration performed by the algorithm
   bool quitThisLoop = false;  // flag to interrupt the search and quit cleanly
 
   double centerCL = 0;
@@ -233,7 +232,6 @@ bool HypoTestInverterOriginal::RunAutoScan( double xMin, double xMax, double tar
 
     if (success) {
 
-      nIteration++;  // succeeded, increase the iteration counter
       centerCL = fResults->GetYValue(fResults->ArraySize()-1);
       centerCLError = fResults->GetYError(fResults->ArraySize()-1);
 
@@ -278,7 +276,6 @@ bool HypoTestInverterOriginal::RunAutoScan( double xMin, double xMax, double tar
      ((HybridCalculatorOriginal*)fCalculator0)->SetNumberOfToys(nToysTarget-nToys);
 
      if (!RunOnePoint(x)) quitThisLoop=true;
-     nIteration++;  // succeeded, increase the iteration counter
      centerCL = fResults->GetYValue(fResults->ArraySize()-1);
      centerCLError = fResults->GetYError(fResults->ArraySize()-1);
 

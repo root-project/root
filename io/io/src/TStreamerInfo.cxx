@@ -3034,14 +3034,12 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
 
    TMemberInfo local(GetClass());
    TMemberInfo other(cl ? cl : info->GetClass());
-   UInt_t idx = 0;
    while(!done) {
       local.Clear();
       other.Clear();
       el = (TStreamerElement*)next();
       while (el && (el->IsBase() || el->IsA() == TStreamerArtificial::Class())) {
          el = (TStreamerElement*)next();
-         ++idx;
       }
       if (el) {
          local.SetName( el->GetName() );
@@ -3119,7 +3117,6 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
          result = result && kFALSE;
          if (!complete) return result;
       }
-      ++idx;
    }
    return result;
 }

@@ -1064,7 +1064,6 @@ void TMVA::MethodBase::TestRegression( Double_t& bias, Double_t& biasT,
    Double_t devMax = bias + 2*rms;
    Double_t devMin = bias - 2*rms;
    sumw = 0;
-   int ic=0;
    for (Long64_t ievt=0; ievt<nevt; ievt++) {
       Float_t d = (rV[ievt] - tV[ievt]);
       hist->Fill( rV[ievt], tV[ievt], wV[ievt] );
@@ -1074,7 +1073,6 @@ void TMVA::MethodBase::TestRegression( Double_t& bias, Double_t& biasT,
          devT  += wV[ievt] * TMath::Abs(d);
          rmsT  += wV[ievt] * d * d;
          histT->Fill( rV[ievt], tV[ievt], wV[ievt] );
-         ic++;
       }
    }
    biasT /= sumw;
@@ -2962,8 +2960,6 @@ void TMVA::MethodBase::Statistics( Types::ETreeType treeType, const TString& the
    // first fill signal and background in arrays before analysis
    xmin               = +DBL_MAX;
    xmax               = -DBL_MAX;
-   Long64_t nEventsS  = -1;
-   Long64_t nEventsB  = -1;
 
    // take into account event weights
    meanS = 0;
@@ -2993,8 +2989,6 @@ void TMVA::MethodBase::Statistics( Types::ETreeType treeType, const TString& the
       xmin = TMath::Min( xmin, theVar );
       xmax = TMath::Max( xmax, theVar );
    }
-   ++nEventsS;
-   ++nEventsB;
 
    meanS = meanS/sumwS;
    meanB = meanB/sumwB;

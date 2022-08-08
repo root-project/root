@@ -87,12 +87,10 @@ void TF1NormSum::InitializeDataMembers(const std::vector<TF1 *> &functions, cons
       if (fCstIndexes[n]!= -1)                                        //if there exists a constant parameter
       {
          fFunctions[n] -> FixParameter(fCstIndexes[n], 1.); // fixes the parameters called "Constant" to 1
-         int k = 0;                                         // index for the temp array, k wil go form 0 until fNofNonCstParameter
          for (int i=0; i<npar; i++)                         // go through all the parameter to
          {
             if (i==fCstIndexes[n])   continue;              // go to next step if this is the constant parameter
             fParNames.push_back(  fFunctions[n] -> GetParName(i) );
-            k++;
          }
       }
       else {

@@ -195,11 +195,6 @@ std::vector<Int_t>* TMVA::MethodANNBase::ParseLayoutString(TString layerSpec)
    else
       layout->push_back(1);  // one output node (for signal/background classification)
 
-   int n = 0;
-   for( std::vector<Int_t>::iterator it = layout->begin(); it != layout->end(); ++it ){
-      n++;
-   }
-
    return layout;
 }
 

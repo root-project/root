@@ -2284,7 +2284,6 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
    Int_t length = text.Length() ;
 
    Int_t nOfCurlyBracket, nOfKW1, nOfKW2, nOfKW3, nOfSquareCurly, nOfCurlyCurly ;
-   Int_t nOfExtraCurly = 0 , nOfExtraSquare = 0;
    Int_t nOfSquareBracket = 0 ;
    Int_t error = 0  ;
    Bool_t quote1 = kFALSE , quote2 = kFALSE;
@@ -2397,19 +2396,16 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
                text.Insert(i,"@") ;
                length++ ;
                i+=2 ;
-               nOfExtraSquare-- ;
          }
          else if (text[i] == '[' ) {  // not belonging to a key word, add @ in front
                text.Insert(i,"@") ;
                length++ ;
                i+=2 ;
-               nOfExtraSquare++ ;
          }
          else if (text[i] == '{' ) {  // not belonging to a key word, add @ in front
                text.Insert(i,"@") ;
                length++ ;
                i+=2 ;
-               nOfExtraCurly++ ;
          }
          else if (text[i] == '}' ) {
             if ( nOfCurlyBracket) {
@@ -2419,7 +2415,6 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
                text.Insert(i,"@") ;
                length++ ;
                i+=2 ;
-               nOfExtraCurly-- ;
             }
          } else {
             i++ ;

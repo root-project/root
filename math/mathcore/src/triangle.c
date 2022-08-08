@@ -14513,7 +14513,9 @@ char **argv;
   struct otri triangleloop;
   vertex p1, p2, p3;
   vertex mid1, mid2, mid3;
+#ifndef TRILIBRARY
   long elementnumber;
+#endif
   int i;
 
 #ifdef TRILIBRARY
@@ -14553,7 +14555,9 @@ char **argv;
   traversalinit(&m->triangles);
   triangleloop.tri = triangletraverse(m);
   triangleloop.orient = 0;
+#ifndef TRILIBRARY
   elementnumber = b->firstnumber;
+#endif
   while (triangleloop.tri != (triangle *) NULL) {
     org(triangleloop, p1);
     dest(triangleloop, p2);
@@ -14599,7 +14603,9 @@ char **argv;
 #endif /* not TRILIBRARY */
 
     triangleloop.tri = triangletraverse(m);
+#ifndef TRILIBRARY
     elementnumber++;
+#endif
   }
 
 #ifndef TRILIBRARY
@@ -14964,7 +14970,10 @@ char **argv;
   vertex torg, tdest, tapex;
   REAL circumcenter[2];
   REAL xi, eta;
-  long vnodenumber, vedgenumber;
+  long vnodenumber;
+#ifndef TRILIBRARY
+  long vedgenumber;
+#endif
   int p1, p2;
   int i;
   triangle ptr;                         /* Temporary variable used by sym(). */
@@ -15072,7 +15081,9 @@ char **argv;
 
   traversalinit(&m->triangles);
   triangleloop.tri = triangletraverse(m);
+#ifndef TRILIBRARY
   vedgenumber = b->firstnumber;
+#endif
   /* To loop over the set of edges, loop over all triangles, and look at   */
   /*   the three edges of each triangle.  If there isn't another triangle  */
   /*   adjacent to the edge, operate on the edge.  If there is another     */
@@ -15115,7 +15126,9 @@ char **argv;
           fprintf(outfile, "%4ld   %d  %d\n", vedgenumber, p1, p2);
 #endif /* not TRILIBRARY */
         }
+#ifndef TRILIBRARY
         vedgenumber++;
+#endif
       }
     }
     triangleloop.tri = triangletraverse(m);

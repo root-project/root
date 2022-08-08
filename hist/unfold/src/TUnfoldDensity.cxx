@@ -470,10 +470,14 @@ void TUnfoldDensity::RegularizeOneDistribution
    Int_t startBin=binning->GetStartBin();
    Int_t endBin=startBin+ binning->GetDistributionNumberOfBins();
    std::vector<Double_t> factor(endBin-startBin);
+#ifdef DEBUG
    Int_t nbin=0;
+#endif
    for(Int_t bin=startBin;bin<endBin;bin++) {
       factor[bin-startBin]=GetDensityFactor(densityMode,bin);
+#ifdef DEBUG
       if(factor[bin-startBin] !=0.0) nbin++;
+#endif
    }
 #ifdef DEBUG
    cout<<"initial number of bins "<<nbin<<"\n";
@@ -481,13 +485,17 @@ void TUnfoldDensity::RegularizeOneDistribution
    Int_t dimension=binning->GetDistributionDimension();
 
    // decide whether to skip underflow/overflow bins
+#ifdef DEBUG
    nbin=0;
+#endif
    for(Int_t bin=startBin;bin<endBin;bin++) {
       Int_t uStatus,oStatus;
       binning->GetBinUnderflowOverflowStatus(bin,&uStatus,&oStatus);
       if(uStatus & isOptionGiven[1]) factor[bin-startBin]=0.;
       if(oStatus & isOptionGiven[3]) factor[bin-startBin]=0.;
+#ifdef DEBUG
       if(factor[bin-startBin] !=0.0) nbin++;
+#endif
    }
 #ifdef DEBUG
    cout<<"after underflow/overflow bin removal "<<nbin<<"\n";

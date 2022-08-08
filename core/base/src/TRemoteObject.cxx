@@ -139,7 +139,6 @@ TList *TRemoteObject::Browse()
    // allocations of new objects with the same names during browsing.
    TList *objects  = new TList;
 
-   static Int_t level = 0;
    const char *name = GetTitle();
    TRemoteObject *sdir;
 
@@ -157,7 +156,6 @@ TList *TRemoteObject::Browse()
       while ((file=(TSystemFile*)next())) {
          fname = file->GetName();
          if (file->IsDirectory()) {
-            level++;
             TString sdirpath;
             if (!strcmp(fname.Data(), "."))
                sdirpath = name;
@@ -171,7 +169,6 @@ TList *TRemoteObject::Browse()
             }
             sdir = new TRemoteObject(fname.Data(), sdirpath.Data(), "TSystemDirectory");
             objects->Add(sdir);
-            level--;
          }
       }
       // then files...

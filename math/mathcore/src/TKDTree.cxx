@@ -455,21 +455,16 @@ void TKDTree<Index, Value>::Build()
    Int_t npointStack[128];
    Int_t posStack[128];
    Int_t currentIndex = 0;
-   Int_t iter =0;
    rowStack[0]    = 0;
    nodeStack[0]   = 0;
    npointStack[0] = fNPoints;
    posStack[0]   = 0;
    //
-   Int_t nbucketsall =0;
    while (currentIndex>=0){
-      iter++;
       //
       Int_t npoints  = npointStack[currentIndex];
       if (npoints<=fBucketSize) {
-         //printf("terminal node : index %d iter %d\n", currentIndex, iter);
          currentIndex--;
-         nbucketsall++;
          continue; // terminal node
       }
       Int_t crow     = rowStack[currentIndex];

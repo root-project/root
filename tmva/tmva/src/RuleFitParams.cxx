@@ -1070,7 +1070,6 @@ Double_t TMVA::RuleFitParams::ErrorRateRocRaw( std::vector<Double_t> & sFsig,
    // Double_t drejb;
    Double_t deffs;
    Double_t area=0;
-   Int_t    npok=0;
    //
    // loop over range of F [minf,maxf]
    //
@@ -1080,7 +1079,6 @@ Double_t TMVA::RuleFitParams::ErrorRateRocRaw( std::vector<Double_t> & sFsig,
                            std::bind(std::greater_equal<Double_t>(), std::placeholders::_1, fcut));
       nesig = sFsig.end()-indit; // number of sig accepted with F>cut
       if (TMath::Abs(pnesig-nesig)>0) {
-         npok++;
          indit = std::find_if(sFbkg.begin(), sFbkg.end(),
                               std::bind(std::greater_equal<Double_t>(), std::placeholders::_1, fcut));
          nrbkg = indit-sFbkg.begin(); // number of bkg rejected with F>cut
@@ -1291,7 +1289,6 @@ void TMVA::RuleFitParams::MakeTstGradientVector()
    //
    // Loop over all events
    //
-   UInt_t nsfok=0;
    for (UInt_t i=fPathIdx1; i<fPathIdx2+1; i++) {
       const Event *e = (*events)[i];
       UInt_t nrules=0;
@@ -1305,7 +1302,6 @@ void TMVA::RuleFitParams::MakeTstGradientVector()
          if (fGDErrTstOK[itau]) {
             sF = fRuleEnsemble->EvalEvent( i, fGDOfsTst[itau], fGDCoefTst[itau], fGDCoefLinTst[itau] );
             if (TMath::Abs(sF)<1.0) {
-               nsfok++;
                r = 0;
                y = (fRuleFit->GetMethodRuleFit()->DataInfo().IsSignal(e)?1.0:-1.0);
                r = norm*(y - sF) * fRuleFit->GetTrainingEventWeight(i);
