@@ -258,6 +258,10 @@ linuxs390xgcc)
    auxldflags="-m64"
    auxlibs="-lm -ldl -rdynamic"
    ;;
+linuxriscv64)
+   # RISC-V Linux
+   auxlibs="-lm -ldl -rdynamic"
+   ;;
 freebsd)
    # FreeBSD with libc5
    auxcflags="${cxxversionflag}"
