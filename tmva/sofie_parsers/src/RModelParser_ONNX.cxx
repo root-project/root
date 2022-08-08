@@ -1187,13 +1187,12 @@ std::unique_ptr<ROperator> make_ROperator_Concat(const onnx::NodeProto &nodeprot
    }
 
    std::unique_ptr<ROperator> op;
-
    std::string attr_type;
 
    for (int_t i = 0; i < nodeproto.attribute_size(); i++) {
          std::string attribute_name = nodeproto.attribute(i).name();
-         if (attribute_name == "attr_type")
-            attr_type = nodeproto.attribute(i).s();
+         if (attribute_name == "to")
+            attr_type = ConvertTypeToString(static_cast<ETensorType>(nodeproto.attribute(i).i()));
    }
 
    switch(input_type){
@@ -1209,6 +1208,7 @@ std::unique_ptr<ROperator> make_ROperator_Concat(const onnx::NodeProto &nodeprot
 
    ETensorType output_type = ConvertStringToType(attr_type);
    auto it2 = tensor_type.find(nodeproto.output(0));
+   std::cout << nodeproto.output(0) << std::endl;
    if (it2 == tensor_type.end()){
       tensor_type[nodeproto.output(0)] = output_type;
    }

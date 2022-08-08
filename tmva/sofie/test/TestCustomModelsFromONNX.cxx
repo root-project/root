@@ -311,7 +311,7 @@ TEST(ONNX, Neg)
         -1.9100,  1.8811, -1.7269, -0.1094, -0.0145,  0.2509,  0.5893, -2.2733,
         -0.7077,  1.0645, -0.8607,  0.2085
       });
-      
+
       TMVA_SOFIE_Neg::Session s("Neg_FromONNX.dat");
       std::vector<float> output = s.infer(input.data());
 
@@ -331,13 +331,13 @@ TEST(ONNX, Cast)
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // Preparing the standard  input
-   std::vector<int> input({
+   std::vector<int64_t> input({
       1,2,3,4,5,6
    });
 
    TMVA_SOFIE_Cast::Session s("Cast_FromONNX.dat");
 
-   std::vector<float> output = s.infer(input.data());
+   auto output = s.infer(input.data());
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Cast_ExpectedOutput::outputs) / sizeof(float));
@@ -616,12 +616,12 @@ TEST(ONNX, MaxPool1d){
            0.2283,  0.8947,  1.7627,
          -0.1657,  0.0649, -1.6066,  0.4162, -1.1525, -0.8184,  1.1324,
           -1.1086,  0.1061,  1.0071});
-   
+
    TMVA_SOFIE_MaxPool1d::Session s("MaxPool1d_FromONNX.dat");
    std::vector<float> output = s.infer(input.data());
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(MaxPool1d_ExpectedOutput::output) / sizeof(float));
-   
+
    float *correct = MaxPool1d_ExpectedOutput::output;
 
    // Checking every output value, one by one
@@ -647,12 +647,12 @@ TEST(ONNX, MaxPool2d){
           -0.9398, -0.2065, -0.9499, -0.9739, -0.1288, -0.1375, -1.2612,
             0.8810,  0.8506,  0.4455
    });
-   
+
    TMVA_SOFIE_MaxPool2d::Session s("MaxPool2d_FromONNX.dat");
    std::vector<float> output = s.infer(input.data());
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(MaxPool2d_ExpectedOutput::output) / sizeof(float));
-   
+
    float *correct = MaxPool2d_ExpectedOutput::output;
 
    // Checking every output value, one by one
@@ -679,12 +679,12 @@ TEST(ONNX, MaxPool3d){
            -0.5477,  0.2341,  0.9181,
             0.3842,  0.2428,  1.7924
    });
-   
+
    TMVA_SOFIE_MaxPool3d::Session s("MaxPool3d_FromONNX.dat");
    std::vector<float> output = s.infer(input.data());
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(MaxPool3d_ExpectedOutput::output) / sizeof(float));
-   
+
    float *correct = MaxPool3d_ExpectedOutput::output;
 
    // Checking every output value, one by one
@@ -710,12 +710,12 @@ TEST(ONNX, AvgPool){
           -1.4971,  0.5386, -0.2922,  0.4860, -0.3973, -0.4624,  0.4514,
             0.2385,  0.3783, -1.0500
    });
-   
+
    TMVA_SOFIE_AvgPool::Session s("AvgPool_FromONNX.dat");
    std::vector<float> output = s.infer(input.data());
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(AvgPool_ExpectedOutput::output) / sizeof(float));
-   
+
    float *correct = AvgPool_ExpectedOutput::output;
 
    // Checking every output value, one by one

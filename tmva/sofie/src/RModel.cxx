@@ -277,14 +277,18 @@ namespace SOFIE{
          }
       }
       for (auto&i: fIntermediateTensorInfos){
+         size_t length = ConvertShapeToLength(i.second.shape);
          if (i.second.type == ETensorType::FLOAT){
-            size_t length = 1;
-            for (auto & dim: i.second.shape){
-               length *= dim;
-            }
-            //fGC += "float tensor_" + i.first + "[" + std::to_string(length) + "];\n";
             fGC += "std::vector<float> fTensor_" + i.first  + " = std::vector<float>(" + std::to_string(length) + ");\n";
             fGC += "float * tensor_" + i.first + " = fTensor_" + i.first  + ".data();\n";
+         }
+         if (i.second.type == ETensorType::DOUBLE){
+            fGC += "std::vector<double> fTensor_" + i.first  + " = std::vector<double>(" + std::to_string(length) + ");\n";
+            fGC += "double * tensor_" + i.first + " = fTensor_" + i.first  + ".data();\n";
+         }
+         if (i.second.type == ETensorType::INT64){
+            fGC += "std::vector<int64_t> fTensor_" + i.first  + " = std::vector<int64_t>(" + std::to_string(length) + ");\n";
+            fGC += "int64_t * tensor_" + i.first + " = fTensor_" + i.first  + ".data();\n";
          }
       }
       if (fUseSession) {
@@ -310,26 +314,15 @@ namespace SOFIE{
       }
 
       size_t outputSize = fOutputTensorNames.size();
+      // assume output types are all the same
+      std::string outputType;
       if (outputSize == 1) {
          auto f = fIntermediateTensorInfos.find(fOutputTensorNames[0]);
          if (f == fIntermediateTensorInfos.end()){
             throw std::runtime_error("TMVA-SOFIE: output tensor " + fOutputTensorNames[0] + " not found when trying to get its info");
          }else{
-            if (f->second.type == ETensorType::FLOAT){
-               fGC += "std::vector<float> ";
-            }
-            else if(f->second.type == ETensorType::INT32) {
-               fGC += "std::vector<int32_t> ";
-            }
-            else if(f->second.type == ETensorType::INT64) {
-               fGC += "std::vector<int64_t> ";
-            }
-            else if(f->second.type == ETensorType::UINT32) {
-               fGC += "std::vector<uint32_t> ";
-            }
-            else if(f->second.type == ETensorType::UINT64) {
-               fGC += "std::vector<uint64_t> ";
-            }
+            outputType = ConvertTypeToString(f->second.type);
+            fGC += "std::vector<" + outputType + "> ";
          }
       } else {
          std::vector<ETensorType> outputTensorsTypes(outputSize);
@@ -342,30 +335,14 @@ namespace SOFIE{
                outputTensorsTypes[i] = f->second.type;
             }
          }
-         ETensorType outputType = outputTensorsTypes[0];
+         // assume all output types are the same
+         outputType = ConvertTypeToString(outputTensorsTypes[0]);
          for (size_t i = 0; i < outputSize; i++) {
-            if (outputTensorsTypes[i] != outputType) {
+            if (outputTensorsTypes[i] != outputTensorsTypes[0]) {
                throw std::runtime_error("TMVA-SOFIE: output tensor " + fOutputTensorNames[i] + " is of different type.");
             }
          }
-         if (outputType == ETensorType::FLOAT) {
-            fGC += "std::vector<std::vector<float>> ";
-         }
-         else if(outputType == ETensorType::INT32 ){
-            fGC += "std::vector<std::vector<int32_t>> ";
-         }
-         else if(outputType == ETensorType::INT64){
-            fGC += "std::vector<std::vector<int64_t>> "; 
-         }
-         else if(outputType == ETensorType::UINT32 ){
-            fGC += "std::vector<std::vector<uint32_t>> ";
-         }
-         else if(outputType == ETensorType::UINT64){
-            fGC += "std::vector<std::vector<uint64_t>> "; 
-         }
-         else if(outputType == ETensorType::DOUBLE){
-            fGC += "std::vector<std::vector<double>> ";
-         }
+         fGC += "std::vector<std::vector<" + outputType + ">> ";
       }
 
       fGC += "infer(";
@@ -386,25 +363,27 @@ namespace SOFIE{
       fGC.pop_back(); //remove last ","
       fGC += "){\n";
 
+      const std::string SP = "   ";
+
       for (size_t id = 0; id < fOperators.size() ; id++){
          fGC+= (fOperators[id]->Generate(std::to_string(id)));
       }
       if (outputSize == 1) {
          size_t outputLength = ConvertShapeToLength(GetTensorShape(fOutputTensorNames[0]));
-         
-         fGC += "\tstd::vector<float> ret (tensor_" + fOutputTensorNames[0] + ", tensor_" + fOutputTensorNames[0] + " + " +
+
+         fGC += SP + "std::vector<" + outputType + "> ret (tensor_" + fOutputTensorNames[0] + ", tensor_" + fOutputTensorNames[0] + " + " +
                std::to_string(outputLength) + ");\n";
       } else {
          for (size_t i = 0; i < outputSize; i++) {
             if (!fOutputTensorNames[i].empty()) {
                size_t outputLength = ConvertShapeToLength(GetTensorShape(fOutputTensorNames[i]));
-               fGC += "\tstd::vector<float> ret_";
+               fGC += SP + "std::vector<" + outputType + "> ret_";
                fGC += std::to_string(i);
                fGC += " (tensor_" + fOutputTensorNames[i] + ", tensor_" + fOutputTensorNames[i] + " + " +
                std::to_string(outputLength) + ");\n";
             }
          }
-         fGC += "\tstd::vector<std::vector<float>> ret({";
+         fGC += SP + "std::vector<std::vector<" + outputType + ">> ret({";
          for (size_t i = 0; i < outputSize; i++) {
             if (fOutputTensorNames[i].empty()) {
                fGC += "{}";
@@ -418,7 +397,7 @@ namespace SOFIE{
          }
          fGC += "});\n";
       }
-      fGC += "\treturn ret;\n";
+      fGC += SP + "return ret;\n";
       fGC += "}\n";
       if (fUseSession) {
          fGC += "};\n";
@@ -430,7 +409,7 @@ namespace SOFIE{
    void RModel::ReadInitializedTensorsFromFile() {
       // generate the code to read initialized tensors from a text data file
       if (fInitializedTensors.empty()) return;
-      
+
       fGC += "   std::ifstream f;\n";
       fGC += "   f.open(filename);\n";
       fGC += "   if (!f.is_open()){\n";
