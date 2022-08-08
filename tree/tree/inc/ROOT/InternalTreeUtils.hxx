@@ -69,6 +69,7 @@ struct RFriendInfo {
                   const std::string &alias = "");
 };
 
+std::vector<std::string> GetTopLevelBranchNames(TTree &t);
 std::vector<std::string> GetFileNamesFromTree(const TTree &tree);
 RFriendInfo GetFriendInfo(const TTree &tree);
 std::vector<std::string> GetTreeFullPaths(const TTree &tree);

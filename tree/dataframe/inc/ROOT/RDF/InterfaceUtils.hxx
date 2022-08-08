@@ -69,8 +69,6 @@ using namespace ROOT::Detail::RDF;
 using namespace ROOT::RDF;
 namespace TTraits = ROOT::TypeTraits;
 
-ColumnNames_t GetTopLevelBranchNames(TTree &t);
-
 std::string DemangleTypeIdName(const std::type_info &typeInfo);
 
 ColumnNames_t
