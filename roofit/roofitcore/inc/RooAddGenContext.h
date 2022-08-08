@@ -26,6 +26,7 @@
 #include <memory>
 #include <vector>
 
+class AddCacheElem;
 class RooDataSet;
 
 class RooAddGenContext : public RooAbsGenContext {
@@ -61,7 +62,7 @@ protected:
   Int_t  _nComp ;                   ///<  Number of PDF components
   std::vector<double> _coefThresh ;           ///<[_nComp] Array of coefficient thresholds
   bool _isModel ;                 ///< Are we generating from a RooAddPdf or a RooAddModel
-  RooAddPdf::CacheElem* _pcache = nullptr;   ///<! RooAddPdf cache element
+  AddCacheElem* _pcache = nullptr;   ///<! RooAddPdf cache element
 
   ClassDefOverride(RooAddGenContext,0) // Specialized context for generating a dataset from a RooAddPdf
 };

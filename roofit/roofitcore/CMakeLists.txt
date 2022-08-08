@@ -288,6 +288,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooAcceptReject.cxx
     src/RooAdaptiveIntegratorND.cxx
     src/RooAddGenContext.cxx
+    src/RooAddHelpers.cxx
     src/RooAddition.cxx
     src/RooAddModel.cxx
     src/RooAddPdf.cxx

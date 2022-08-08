@@ -29,6 +29,8 @@
 #include <list>
 #include <utility>
 
+class AddCacheElem;
+
 class RooAddPdf : public RooAbsPdf {
 public:
 
@@ -102,26 +104,9 @@ protected:
   std::vector<double> _coefCache; ///<! Transient cache with transformed values of coefficients
 
 
-  class CacheElem : public RooAbsCacheElement {
-  public:
-    CacheElem(RooAbsPdf const& addPdf, RooArgList const& pdfList, RooArgList const& coefList,
-              const RooArgSet* nset, const RooArgSet* iset, const char* rangeName,
-              bool projectCoefs, RooArgSet const& refCoefNorm, TNamed const* refCoefRangeName);
-
-    RooArgList _suppNormList ; ///< Supplemental normalization list
-    bool    _needSupNorm ;     ///< Does the above list contain any non-unit entries?
-
-    RooArgList _projList ;     ///< Projection integrals to be multiplied with coefficients
-    RooArgList _suppProjList ; ///< Projection integrals to be multiplied with coefficients for supplemental normalization terms
-    RooArgList _refRangeProjList ; ///< Range integrals to be multiplied with coefficients (reference range)
-    RooArgList _rangeProjList ;    ///< Range integrals to be multiplied with coefficients (target range)
-
-    RooArgList containedArgs(Action) override ;
-
-  } ;
   mutable RooObjCacheManager _projCacheMgr ;  //! Manager of cache with coefficient projections and transformations
-  CacheElem* getProjCache(const RooArgSet* nset, const RooArgSet* iset=nullptr, const char* rangeName=nullptr) const ;
-  void updateCoefficients(CacheElem& cache, const RooArgSet* nset) const ;
+  AddCacheElem* getProjCache(const RooArgSet* nset, const RooArgSet* iset=nullptr, const char* rangeName=nullptr) const ;
+  void updateCoefficients(AddCacheElem& cache, const RooArgSet* nset) const ;
 
 
   friend class RooAddGenContext ;
@@ -158,7 +143,7 @@ protected:
   }
 
 private:
-  std::pair<const RooArgSet*, CacheElem*> getNormAndCache(const RooArgSet* nset) const;
+  std::pair<const RooArgSet*, AddCacheElem*> getNormAndCache(const RooArgSet* nset) const;
   mutable RooFit::UniqueId<RooArgSet>::Value_t _idOfLastUsedNormSet = RooFit::UniqueId<RooArgSet>::nullval; ///<!
   mutable std::unique_ptr<const RooArgSet> _copyOfLastNormSet = nullptr; ///<!
 

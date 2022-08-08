@@ -43,6 +43,7 @@
 
 #include "RooAddModel.h"
 
+#include "RooAddHelpers.h"
 #include "RooMsgService.h"
 #include "RooDataSet.h"
 #include "RooRealProxy.h"
@@ -332,17 +333,17 @@ Int_t RooAddModel::basisCode(const char* name) const
 /// integrals to calculated transformed fraction coefficients when a frozen reference frame is provided
 /// and projection integrals for similar transformations when a frozen reference range is provided.
 
-RooAddPdf::CacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const RooArgSet* iset, const char* rangeName) const
+AddCacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const RooArgSet* iset, const char* rangeName) const
 {
   // Check if cache already exists
-  RooAddPdf::CacheElem* cache = (RooAddPdf::CacheElem*) _projCacheMgr.getObj(nset,iset,0,rangeName) ;
+  auto cache = static_cast<AddCacheElem*>(_projCacheMgr.getObj(nset,iset,0,rangeName));
   if (cache) {
     return cache ;
   }
 
   //Create new cache
-  cache = new RooAddPdf::CacheElem{*this, _pdfList, _coefList, nset, iset, rangeName,
-                        _projectCoefs, _refCoefNorm, _refCoefRangeName};
+  cache = new AddCacheElem{*this, _pdfList, _coefList, nset, iset, rangeName,
+                        _projectCoefs, _refCoefNorm, _refCoefRangeName, _verboseEval};
 
   _projCacheMgr.setObj(nset,iset,cache,RooNameReg::ptr(rangeName)) ;
 
@@ -356,7 +357,7 @@ RooAddPdf::CacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const Roo
 /// multiply these the various range and dimensional corrections needed in the
 /// current use context
 
-void RooAddModel::updateCoefficients(RooAddPdf::CacheElem& cache, const RooArgSet* nset) const
+void RooAddModel::updateCoefficients(AddCacheElem& cache, const RooArgSet* nset) const
 {
   // cxcoutD(ChangeTracking) << "RooAddModel::updateCoefficients(" << GetName() << ") update coefficients" << endl ;
 
@@ -465,7 +466,7 @@ void RooAddModel::updateCoefficients(RooAddPdf::CacheElem& cache, const RooArgSe
 double RooAddModel::evaluate() const
 {
   const RooArgSet* nset = _normSet ;
-  RooAddPdf::CacheElem* cache = getProjCache(nset) ;
+  AddCacheElem* cache = getProjCache(nset) ;
 
   updateCoefficients(*cache,nset) ;
 
@@ -619,7 +620,7 @@ double RooAddModel::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, c
 
   // Calculate the current value
   const RooArgSet* nset = _normSet ;
-  RooAddPdf::CacheElem* pcache = getProjCache(nset) ;
+  AddCacheElem* pcache = getProjCache(nset) ;
 
   updateCoefficients(*pcache,nset) ;
 
