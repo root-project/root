@@ -544,7 +544,7 @@ public:
 
 protected:
    // Default ctor - Initialize to empty.
-   explicit RVecImpl(unsigned N) : Internal::VecOps::SmallVectorTemplateBase<T>(N) {}
+   explicit RVecImpl(unsigned N) : ROOT::Internal::VecOps::SmallVectorTemplateBase<T>(N) {}
 
 public:
    RVecImpl(const RVecImpl &) = delete;

@@ -5,7 +5,6 @@
 #include <TStatistic.h> // To check reading of columns with types which are mothers of the column type
 #include <TSystem.h>
 
-#include <mutex>
 #include <thread>
 #include <stdexcept> // std::runtime_error
 

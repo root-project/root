@@ -9,6 +9,7 @@
  *************************************************************************/
 
 #include "ROOT/RDF/RVariationsDescription.hxx"
+#include "ROOT/RDF/RVariationBase.hxx"
 
 #include <iostream>
 

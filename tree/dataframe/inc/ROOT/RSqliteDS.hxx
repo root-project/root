@@ -16,7 +16,6 @@
 #include "ROOT/RStringView.hxx"
 
 #include <memory>
-#include <mutex>
 #include <string>
 #include <vector>
 

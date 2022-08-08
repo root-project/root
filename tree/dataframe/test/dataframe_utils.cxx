@@ -5,7 +5,6 @@
 #include "gtest/gtest.h"
 
 #include <stdexcept>
-#include <typeinfo>
 #include <vector>
 
 namespace RDFInt = ROOT::Internal::RDF;

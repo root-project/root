@@ -17,13 +17,13 @@
 #include <unordered_map>
 
 namespace ROOT {
-
-// fwd decl
 namespace Internal {
 namespace RDF {
+namespace GraphDrawing {
 class GraphNode;
-} // ns RDF
-} // ns Internal
+}
+} // namespace RDF
+} // namespace Internal
 
 namespace Detail {
 namespace RDF {
@@ -59,6 +59,6 @@ public:
 
 } // ns RDF
 } // ns Detail
-} // ns ROOT
+} // namespace ROOT
 
 #endif // ROOT_RRANGEBASE

@@ -11,11 +11,15 @@
 #ifndef ROOT_RDF_RVARIATIONSDESCRIPTION
 #define ROOT_RDF_RVARIATIONSDESCRIPTION
 
-#include <ROOT/RDF/RVariationBase.hxx>
-
-#include <memory>
 #include <string>
 #include <vector>
+namespace ROOT {
+namespace Internal {
+namespace RDF {
+class RVariationBase;
+}
+} // namespace Internal
+} // namespace ROOT
 
 namespace ROOT {
 namespace RDF {

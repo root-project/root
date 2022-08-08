@@ -6,8 +6,6 @@
 
 #include <gtest/gtest.h>
 
-#include <iostream>
-
 using namespace ROOT::RDF;
 
 auto fileName0 = "RCsvDS_test_headers.csv";
