@@ -196,6 +196,12 @@ double RooHistFunc::evaluate() const
 
 
 void RooHistFunc::computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const& dataMap) const {
+  if (_depList.size() == 1 && _intOrder == 0) {
+    auto xVals = dataMap.at(_depList[0]);
+    _dataHist->weights(output, xVals, false);
+    return;
+  }
+  
   std::vector<RooSpan<const double>> inputValues;
   for (const auto& obs : _depList) {
     auto realObs = dynamic_cast<const RooAbsReal*>(obs);
