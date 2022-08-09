@@ -12,6 +12,7 @@
 
 #include <RooAbsPdf.h>
 #include <RooArgSet.h>
+#include <RooNaNPacker.h>
 #include <RooRealConstant.h>
 #include <RooRealIntegral.h>
 #include <RooRealVar.h>
@@ -238,4 +239,128 @@ RooArgList AddCacheElem::containedArgs(Action)
    allNodes.add(_rangeProjList);
 
    return allNodes;
+}
+
+void RooAddHelpers::updateCoefficients(RooAbsPdf const &addPdf, RooArgList const &pdfList, RooArgList const &coefList,
+                                       AddCacheElem &cache, const RooArgSet *nset, bool projectCoefs,
+                                       RooArgSet const &refCoefNorm, bool allExtendable, std::vector<double> &coefCache,
+                                       int &coefErrCount)
+{
+   bool haveLastCoef = pdfList.size() == coefList.size();
+
+   coefCache.resize(haveLastCoef ? coefList.size() : pdfList.size(), 0.);
+
+   // Straight coefficients
+   if (allExtendable) {
+
+      // coef[i] = expectedEvents[i] / SUM(expectedEvents)
+      double coefSum(0);
+      std::size_t i = 0;
+      for (auto arg : pdfList) {
+         auto pdf = static_cast<RooAbsPdf *>(arg);
+         coefCache[i] = pdf->expectedEvents(!refCoefNorm.empty() ? &refCoefNorm : nset);
+         coefSum += coefCache[i];
+         i++;
+      }
+
+      if (coefSum == 0.) {
+         oocoutW(&addPdf, Eval) << addPdf.ClassName() << "::updateCoefCache(" << addPdf.GetName()
+                                << ") WARNING: total number of expected events is 0" << std::endl;
+      } else {
+         for (std::size_t j = 0; j < pdfList.size(); j++) {
+            coefCache[j] /= coefSum;
+         }
+      }
+
+   } else {
+      if (haveLastCoef) {
+
+         // coef[i] = coef[i] / SUM(coef)
+         double coefSum(0);
+         std::size_t i = 0;
+         for (auto coefArg : coefList) {
+            auto coef = static_cast<RooAbsReal *>(coefArg);
+            coefCache[i] = coef->getVal(nset);
+            coefSum += coefCache[i++];
+         }
+         if (coefSum == 0.) {
+            oocoutW(&addPdf, Eval) << addPdf.ClassName() << "::updateCoefCache(" << addPdf.GetName()
+                                   << ") WARNING: sum of coefficients is zero 0" << std::endl;
+         } else {
+            const double invCoefSum = 1. / coefSum;
+            for (std::size_t j = 0; j < coefList.size(); j++) {
+               coefCache[j] *= invCoefSum;
+            }
+         }
+      } else {
+
+         // coef[i] = coef[i] ; coef[n] = 1-SUM(coef[0...n-1])
+         double lastCoef(1);
+         std::size_t i = 0;
+         for (auto coefArg : coefList) {
+            auto coef = static_cast<RooAbsReal *>(coefArg);
+            coefCache[i] = coef->getVal(nset);
+            lastCoef -= coefCache[i++];
+         }
+         coefCache[coefList.size()] = lastCoef;
+
+         // Treat coefficient degeneration
+         const float coefDegen = lastCoef < 0. ? -lastCoef : (lastCoef > 1. ? lastCoef - 1. : 0.);
+         if (coefDegen > 1.E-5) {
+            coefCache[coefList.size()] = RooNaNPacker::packFloatIntoNaN(100.f * coefDegen);
+
+            std::stringstream msg;
+            if (coefErrCount-- > 0) {
+               msg << "RooAddPdf::updateCoefCache(" << addPdf.GetName()
+                   << " WARNING: sum of PDF coefficients not in range [0-1], value=" << 1 - lastCoef;
+               if (coefErrCount == 0) {
+                  msg << " (no more will be printed)";
+               }
+               oocoutW(&addPdf, Eval) << msg.str() << std::endl;
+            }
+         }
+      }
+   }
+
+   // Stop here if not projection is required or needed
+   if ((!projectCoefs && !addPdf.normRange()) || cache._projList.empty()) {
+      return;
+   }
+
+   // Adjust coefficients for given projection
+   double coefSum(0);
+   {
+      RooAbsReal::GlobalSelectComponentRAII compRAII(true);
+
+      for (std::size_t i = 0; i < pdfList.size(); i++) {
+
+         RooAbsReal *pp = ((RooAbsReal *)cache._projList.at(i));
+         RooAbsReal *sn = ((RooAbsReal *)cache._suppProjList.at(i));
+         RooAbsReal *r1 = ((RooAbsReal *)cache._refRangeProjList.at(i));
+         RooAbsReal *r2 = ((RooAbsReal *)cache._rangeProjList.at(i));
+
+         double proj = pp->getVal() / sn->getVal() * (r2->getVal() / r1->getVal());
+
+         coefCache[i] *= proj;
+         coefSum += coefCache[i];
+      }
+   }
+
+   if ((RooMsgService::_debugCount > 0) &&
+       RooMsgService::instance().isActive(&addPdf, RooFit::Caching, RooFit::DEBUG)) {
+      for (std::size_t i = 0; i < pdfList.size(); ++i) {
+         ooccoutD(&addPdf, Caching) << " ALEX:   POST-SYNC coef[" << i << "] = " << coefCache[i]
+                                    << " ( _coefCache[i]/coefSum = " << coefCache[i] * coefSum << "/" << coefSum
+                                    << " ) " << std::endl;
+      }
+   }
+
+   if (coefSum == 0.) {
+      oocoutE(&addPdf, Eval) << addPdf.ClassName() << "::updateCoefCache(" << addPdf.GetName()
+                             << ") sum of coefficients is zero." << std::endl;
+   }
+
+   for (std::size_t i = 0; i < pdfList.size(); i++) {
+      coefCache[i] /= coefSum;
+   }
 }

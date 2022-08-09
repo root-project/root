@@ -50,30 +50,21 @@
 #include "RooPlot.h"
 #include "RooRealVar.h"
 #include "RooAddGenContext.h"
-#include "RooRealConstant.h"
 #include "RooNameReg.h"
-#include "RooRealIntegral.h"
 
 using namespace std;
 
 ClassImp(RooAddModel);
-;
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
 RooAddModel::RooAddModel() :
   _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,false,false),
-  _refCoefRangeName(0),
-  _projectCoefs(false),
   _projCacheMgr(this,10),
-  _intCacheMgr(this,10),
-  _codeReg(10),
-  _snormList(0),
-  _haveLastCoef(false),
-  _allExtendable(false)
+  _intCacheMgr(this,10)
 {
-  _coefCache = new double[10] ;
+  _coefCache.resize(10);
   _coefErrCount = _errorCount ;
 }
 
@@ -158,7 +149,7 @@ RooAddModel::RooAddModel(const char *name, const char *title, const RooArgList& 
       _haveLastCoef = true;
    }
 
-   _coefCache = new double[_pdfList.getSize()];
+   _coefCache.resize(_pdfList.getSize());
    _coefErrCount = _errorCount;
 
    if (ownPdfList) {
@@ -182,18 +173,8 @@ RooAddModel::RooAddModel(const RooAddModel& other, const char* name) :
   _haveLastCoef(other._haveLastCoef),
   _allExtendable(other._allExtendable)
 {
-  _coefCache = new double[_pdfList.getSize()] ;
+  _coefCache.resize(_pdfList.getSize());
   _coefErrCount = _errorCount ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooAddModel::~RooAddModel()
-{
-  if (_coefCache) delete[] _coefCache ;
 }
 
 
@@ -353,111 +334,15 @@ AddCacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const RooArgSet* 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Update the coefficient values in the given cache element: calculate new remainder
-/// fraction, normalize fractions obtained from extended ML terms to unity and
-/// multiply these the various range and dimensional corrections needed in the
-/// current use context
+/// fraction, normalize fractions obtained from extended ML terms to unity, and
+/// multiply the various range and dimensional corrections needed in the
+/// current use context.
 
 void RooAddModel::updateCoefficients(AddCacheElem& cache, const RooArgSet* nset) const
 {
-  // cxcoutD(ChangeTracking) << "RooAddModel::updateCoefficients(" << GetName() << ") update coefficients" << endl ;
-
-  Int_t i ;
-
-  // Straight coefficients
-  if (_allExtendable) {
-
-    // coef[i] = expectedEvents[i] / SUM(expectedEvents)
-    double coefSum(0) ;
-    for (i=0 ; i<_pdfList.getSize() ; i++) {
-      _coefCache[i] = ((RooAbsPdf*)_pdfList.at(i))->expectedEvents(_refCoefNorm.getSize()>0?&_refCoefNorm:nset) ;
-      coefSum += _coefCache[i] ;
-    }
-    if (coefSum==0.) {
-      coutW(Eval) << "RooAddModel::updateCoefCache(" << GetName() << ") WARNING: total number of expected events is 0" << endl ;
-    } else {
-      for (i=0 ; i<_pdfList.getSize() ; i++) {
-   _coefCache[i] /= coefSum ;
-      }
-    }
-
-  } else {
-    if (_haveLastCoef) {
-
-      // coef[i] = coef[i] / SUM(coef)
-      double coefSum(0) ;
-      for (i=0 ; i<_coefList.getSize() ; i++) {
-   _coefCache[i] = ((RooAbsPdf*)_coefList.at(i))->getVal(nset) ;
-   coefSum += _coefCache[i] ;
-      }
-      for (i=0 ; i<_coefList.getSize() ; i++) {
-   _coefCache[i] /= coefSum ;
-      }
-    } else {
-
-      // coef[i] = coef[i] ; coef[n] = 1-SUM(coef[0...n-1])
-      double lastCoef(1) ;
-      for (i=0 ; i<_coefList.getSize() ; i++) {
-   _coefCache[i] = ((RooAbsPdf*)_coefList.at(i))->getVal(nset) ;
-   cxcoutD(Caching) << "SYNC: orig coef[" << i << "] = " << _coefCache[i] << endl ;
-   lastCoef -= _coefCache[i] ;
-      }
-      _coefCache[_coefList.getSize()] = lastCoef ;
-      cxcoutD(Caching) << "SYNC: orig coef[" << _coefList.getSize() << "] = " << _coefCache[_coefList.getSize()] << endl ;
-
-
-      // Warn about coefficient degeneration
-      if ((lastCoef<-1e-05 || (lastCoef-1)>1e-5) && _coefErrCount-->0) {
-   coutW(Eval) << "RooAddModel::updateCoefCache(" << GetName()
-          << " WARNING: sum of PDF coefficients not in range [0-1], value="
-          << 1-lastCoef << endl ;
-   if (_coefErrCount==0) {
-     coutW(Eval) << " (no more will be printed)" << endl  ;
-   }
-      }
-    }
-  }
-
-
-
-  // Stop here if not projection is required or needed
-  if ((!_projectCoefs) || cache._projList.empty()) {
-    //     cout << "SYNC no projection required rangeName = " << (rangeName?rangeName:"<none>") << endl ;
-    return ;
-  }
-
-  // Adjust coefficients for given projection
-  double coefSum(0) ;
-  for (i=0 ; i<_pdfList.getSize() ; i++) {
-    GlobalSelectComponentRAII compRAII(true);
-
-    RooAbsReal* pp = ((RooAbsReal*)cache._projList.at(i)) ;
-    RooAbsReal* sn = ((RooAbsReal*)cache._suppProjList.at(i)) ;
-    RooAbsReal* r1 = ((RooAbsReal*)cache._refRangeProjList.at(i)) ;
-    RooAbsReal* r2 = ((RooAbsReal*)cache._rangeProjList.at(i)) ;
-
-    if (dologD(Eval)) {
-      cxcoutD(Eval) << "pp = " << pp->GetName() << endl
-          << "sn = " << sn->GetName() << endl
-          << "r1 = " << r1->GetName() << endl
-          << "r2 = " << r2->GetName() << endl ;
-      r1->printStream(ccoutD(Eval),kName|kArgs|kValue,kSingleLine) ;
-      r1->printCompactTree(ccoutD(Eval)) ;
-    }
-
-    double proj = pp->getVal()/sn->getVal()*(r2->getVal()/r1->getVal()) ;
-
-    _coefCache[i] *= proj ;
-    coefSum += _coefCache[i] ;
-  }
-  for (i=0 ; i<_pdfList.getSize() ; i++) {
-    _coefCache[i] /= coefSum ;
-//     cout << "POST-SYNC coef[" << i << "] = " << _coefCache[i] << endl ;
-  }
-
-
-
+  RooAddHelpers::updateCoefficients(*this, _pdfList, _coefList, cache, nset, _projectCoefs,
+                                    _refCoefNorm, _allExtendable, _coefCache, _coefErrCount);
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -691,9 +576,9 @@ void RooAddModel::selectNormalization(const RooArgSet* depSet, bool force)
     return ;
   }
 
-  RooArgSet* myDepSet = getObservables(depSet) ;
-  fixCoefNormalization(*myDepSet) ;
-  delete myDepSet ;
+  RooArgSet myDepSet;
+  getObservables(depSet, myDepSet);
+  fixCoefNormalization(myDepSet);
 }
 
 

@@ -545,6 +545,7 @@ protected:
 
   friend class RooRealSumPdf ;
   friend class RooRealSumFunc;
+  friend class RooAddHelpers ;
   friend class RooAddPdf ;
   friend class RooAddModel ;
   void selectComp(bool flag) {
