@@ -76,13 +76,15 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public ROOT::Det
          return &fRVec; // we already pointed our fRVec to the right address
 
       auto &readerArray = *fTreeArray;
-      // We only use TTreeReaderArrays to read columns that users flagged as type `RVec`, so we need to check
-      // that the branch stores the array as contiguous memory that we can actually wrap in an `RVec`.
-      // Currently we need the first entry to have been loaded to perform the check
-      // TODO Move check to constructor once ROOT-10823 is fixed and TTreeReaderArray itself exposes this information
       const auto readerArraySize = readerArray.GetSize();
-      if (EStorageType::kUnknown == fStorageType && readerArraySize > 1) {
-         // We can decide since the array is long enough
+      if (R__likely(fStorageType == EStorageType::kContiguous)) {
+         // trigger loading of the contents of the TTreeReaderArray
+         // the address of the first element in the reader array is not necessarily equal to
+         // the address returned by the GetAddress method
+         auto *readerArrayAddr = &readerArray.At(0);
+         ROOT::Internal::VecOps::ResetAddress(fRVec, readerArrayAddr, readerArraySize);
+      } else if (fStorageType == EStorageType::kUnknown && readerArraySize > 1) {
+         // TODO Move this check to constructor once ROOT-10823 is fixed and TTreeReaderArray itself exposes this info
          fStorageType = EStorageType::kContiguous;
          for (auto i = 0u; i < readerArraySize - 1; ++i) {
             if ((char *)&readerArray[i + 1] - (char *)&readerArray[i] != sizeof(T)) {
@@ -90,41 +92,29 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public ROOT::Det
                break;
             }
          }
-      }
-
-      if (EStorageType::kContiguous == fStorageType ||
-          (EStorageType::kUnknown == fStorageType && readerArray.GetSize() < 2)) {
-         if (readerArraySize > 0) {
-            // trigger loading of the contents of the TTreeReaderArray
-            // the address of the first element in the reader array is not necessarily equal to
-            // the address returned by the GetAddress method
+         if (fStorageType == EStorageType::kContiguous) {
+            // must put the RVec in memory adoption mode
             auto readerArrayAddr = &readerArray.At(0);
             RVec<T> rvec(readerArrayAddr, readerArraySize);
             swap(fRVec, rvec);
-         } else {
-            RVec<T> emptyVec{};
-            swap(fRVec, emptyVec);
          }
       } else {
          // The storage is not contiguous or we don't know yet: we cannot but copy into the rvec
 #ifndef NDEBUG
-         if (!fCopyWarningPrinted) {
-            Warning("RTreeColumnReader::Get",
-                    "Branch %s hangs from a non-split branch. A copy is being performed in order "
-                    "to properly read the content.",
-                    readerArray.GetBranchName());
-            fCopyWarningPrinted = true;
+         if (fStorageType == EStorageType::kSparse) {
+            if (!fCopyWarningPrinted) {
+               Warning("RTreeColumnReader::Get",
+                       "Branch %s hangs from a non-split branch. A copy is being performed in order "
+                       "to properly read the content.",
+                       readerArray.GetBranchName());
+               fCopyWarningPrinted = true;
+            }
          }
 #else
          (void)fCopyWarningPrinted;
 #endif
-         if (readerArraySize > 0) {
-            RVec<T> rvec(readerArray.begin(), readerArray.end());
-            swap(fRVec, rvec);
-         } else {
-            RVec<T> emptyVec{};
-            swap(fRVec, emptyVec);
-         }
+         RVec<T> rvec(readerArray.begin(), readerArray.end());
+         swap(fRVec, rvec);
       }
       fLastEntry = entry;
       return &fRVec;

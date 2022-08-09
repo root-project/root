@@ -524,6 +524,15 @@ public:
       elementsPerCacheLine >= 8 ? elementsPerCacheLine : (sizeof(T) * 8 > maxInlineByteSize ? 0 : 8);
 };
 
+/// An unsafe function to reset the buffer for which this RVec is acting as a view.
+///
+/// This method _must_ be called on RVecs that are not owning.
+template <typename T>
+void ResetAddress(RVec<T> &v, T* addr, std::size_t sz)
+{
+   v.fBeginX = addr;
+   v.fSize = sz;
+}
 } // namespace VecOps
 } // namespace Internal
 
@@ -1455,6 +1464,9 @@ hpt->Draw();
 template <typename T>
 class R__CLING_PTRCHECK(off) RVec : public RVecN<T, Internal::VecOps::RVecInlineStorageSize<T>::value> {
    using SuperClass = RVecN<T, Internal::VecOps::RVecInlineStorageSize<T>::value>;
+
+   friend void Internal::VecOps::ResetAddress<>(RVec<T> &v, T *addr, std::size_t sz);
+
 public:
    using reference = typename SuperClass::reference;
    using const_reference = typename SuperClass::const_reference;
