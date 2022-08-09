@@ -153,6 +153,8 @@ public:
   static TH1* createHistogram(const char *name, RooArgList &vars, const char *tAxisLabel, double* xlo, double* xhi, Int_t* nBins) ;
   static TH1* createHistogram(const char *name, RooArgList &vars, const char *tAxisLabel, const RooAbsBinning** bins) ;
 
+  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=nullptr, const RooNumIntConfig* cfg=nullptr, const char* rangeName=nullptr) const override;
+
 protected:
 
   virtual void setValFast(double value) { setVal(value) ; }

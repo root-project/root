@@ -22,9 +22,10 @@ TEST(RooWrapperPdf, Basics)
   RooRealVar a0("a0", "a0", 0.1, 0.1, 10.);
   RooRealVar a1("a1", "a1", -0.01, -2.1, 0.);
   RooRealVar a2("a2", "a2", 0.01, 0.01, 5.);
+  RooProduct xId("xId", "x", RooArgList(x));
   RooProduct xSq("xSq", "x^2", RooArgList(x, x));
   RooConstVar one("one", "one", 1.);
-  RooRealSumFunc pol("pol", "pol", RooArgList(one, x, xSq), RooArgList(a0, a1, a2));
+  RooRealSumFunc pol("pol", "pol", RooArgList(one, xId, xSq), RooArgList(a0, a1, a2));
 
   RooWrapperPdf polPdf("polPdf", "polynomial PDF", pol);
 
@@ -52,15 +53,16 @@ TEST(RooWrapperPdf, GenerateAndFit) {
   RooRealVar a0("a0", "a0", 0.1);
   RooRealVar a1("a1", "a1", -0.01);
   RooRealVar a2("a2", "a2", 0.01, 0.001, 5.);
+  RooProduct xId("xId", "x", RooArgList(x));
   RooProduct xSq("xSq", "x^2", RooArgList(x, x));
   RooConstVar one("one", "one", 1.);
-  RooRealSumFunc pol("pol", "pol", RooArgList(one, x, xSq), RooArgList(a0, a1, a2));
+  RooRealSumFunc pol("pol", "pol", RooArgList(one, xId, xSq), RooArgList(a0, a1, a2));
 
   RooWrapperPdf polPdf("polPdf", "polynomial PDF", pol);
 
   auto data = polPdf.generate(x, 50000);
   a2.setVal(0.02);
-  auto result = polPdf.fitTo(*data, RooFit::Save());
+  auto result = polPdf.fitTo(*data, RooFit::Save(), RooFit::PrintLevel(-1));
 
   EXPECT_EQ(result->status(), 0) << "Fit converged.";
   EXPECT_LT(fabs(a2.getVal()-0.01), a2.getError());
