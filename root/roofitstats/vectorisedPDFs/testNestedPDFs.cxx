@@ -40,9 +40,10 @@ class TestNestedPDFs : public PDFTest
       auto a2 = new RooRealVar("a2", "a2", 1., 1., 5.);
       a0->setConstant(true);
       a1->setConstant(true);
+      auto xId = new RooProduct("xId", "x", RooArgList(*x));
       auto xSq = new RooProduct("xSq", "x^2", RooArgList(*x, *x));
       auto one = new RooConstVar("one", "one", 1.);
-      auto pol = new RooRealSumPdf("pol", "pol", RooArgList(*one, *x, *xSq), RooArgList(*a0, *a1, *a2));
+      auto pol = new RooRealSumPdf("pol", "pol", RooArgList(*one, *xId, *xSq), RooArgList(*a0, *a1, *a2));
 
       auto mean = new RooRealVar("mean", "mean of gaussian", 2., 0., 20.);
       auto sigma = new RooRealVar("sigma", "width of gaussian", 0.337, 0.1, 10);
