@@ -64,7 +64,6 @@ RooAddModel::RooAddModel() :
   _projCacheMgr(this,10),
   _intCacheMgr(this,10)
 {
-  _coefCache.resize(10);
   _coefErrCount = _errorCount ;
 }
 
@@ -149,7 +148,6 @@ RooAddModel::RooAddModel(const char *name, const char *title, const RooArgList& 
       _haveLastCoef = true;
    }
 
-   _coefCache.resize(_pdfList.getSize());
    _coefErrCount = _errorCount;
 
    if (ownPdfList) {
@@ -173,7 +171,6 @@ RooAddModel::RooAddModel(const RooAddModel& other, const char* name) :
   _haveLastCoef(other._haveLastCoef),
   _allExtendable(other._allExtendable)
 {
-  _coefCache.resize(_pdfList.getSize());
   _coefErrCount = _errorCount ;
 }
 
@@ -340,8 +337,12 @@ AddCacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const RooArgSet* 
 
 void RooAddModel::updateCoefficients(AddCacheElem& cache, const RooArgSet* nset) const
 {
-  RooAddHelpers::updateCoefficients(*this, _pdfList, _coefList, cache, nset, _projectCoefs,
-                                    _refCoefNorm, _allExtendable, _coefCache, _coefErrCount);
+  _coefCache.resize(_pdfList.getSize());
+  for(std::size_t i = 0; i < _coefList.size(); ++i) {
+    _coefCache[i] = static_cast<RooAbsReal const&>(_coefList[i]).getVal(nset);
+  }
+  RooAddHelpers::updateCoefficients(*this, _coefCache, _pdfList, _haveLastCoef, cache, nset, _projectCoefs,
+                                    _refCoefNorm, _allExtendable, _coefErrCount);
 }
 
 
