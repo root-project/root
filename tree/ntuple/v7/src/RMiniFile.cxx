@@ -1341,7 +1341,7 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WritePadding()//c
 
 void ROOT::Experimental::Internal::RNTupleFileWriter::ShareContent(std::string_view source_filename, size_t source_length, size_t source_offset){
 
-    this->WritePadding();
+    //this->WritePadding();
    int source_fd=open(source_filename.data(), O_RDONLY);
    if(source_fd<0){
       std::cout<<"Error"<<std::endl;
