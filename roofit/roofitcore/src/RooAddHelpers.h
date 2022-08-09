@@ -13,6 +13,7 @@
 
 #include <RooAbsCacheElement.h>
 #include <RooArgList.h>
+#include <RooAbsReal.h>
 
 class RooAbsPdf;
 class RooArgSet;
@@ -25,13 +26,37 @@ public:
 
    RooArgList containedArgs(Action) override;
 
-   RooArgList _suppNormList; ///< Supplemental normalization list
-   bool _needSupNorm;        ///< Does the above list contain any non-unit entries?
+   inline double suppNormVal(std::size_t idx) const { return _suppNormList[idx] ? _suppNormList[idx]->getVal() : 1.0; }
 
-   RooArgList _projList;         ///< Projection integrals to be multiplied with coefficients
-   RooArgList _suppProjList;     ///< Projection integrals to multiply with coefficients for supplemental normalization
-   RooArgList _refRangeProjList; ///< Range integrals to be multiplied with coefficients (reference range)
-   RooArgList _rangeProjList;    ///< Range integrals to be multiplied with coefficients (target range)
+   inline bool doProjection() const { return !_projList.empty(); }
+
+   inline double projVal(std::size_t idx) const { return _projList[idx] ? _projList[idx]->getVal() : 1.0; }
+
+   inline double projSuppNormVal(std::size_t idx) const
+   {
+      return _suppProjList[idx] ? _suppProjList[idx]->getVal() : 1.0;
+   }
+
+   inline double rangeProjScaleFactor(std::size_t idx) const { return rangeProjVal(idx) / refRangeProjVal(idx); }
+
+private:
+   inline double refRangeProjVal(std::size_t idx) const
+   {
+      return _refRangeProjList[idx] ? _refRangeProjList[idx]->getVal() : 1.0;
+   }
+
+   inline double rangeProjVal(std::size_t idx) const
+   {
+      return _rangeProjList[idx] ? _rangeProjList[idx]->getVal() : 1.0;
+   }
+
+   using OwningArgVector = std::vector<std::unique_ptr<RooAbsReal>>;
+
+   OwningArgVector _suppNormList; ///< Supplemental normalization list
+   OwningArgVector _projList;     ///< Projection integrals to be multiplied with coefficients
+   OwningArgVector _suppProjList; ///< Projection integrals to multiply with coefficients for supplemental normalization
+   OwningArgVector _refRangeProjList; ///< Range integrals to be multiplied with coefficients (reference range)
+   OwningArgVector _rangeProjList;    ///< Range integrals to be multiplied with coefficients (target range)
 };
 
 class RooAddHelpers {

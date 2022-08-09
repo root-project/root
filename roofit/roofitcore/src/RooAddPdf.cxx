@@ -463,9 +463,7 @@ double RooAddPdf::getValV(const RooArgSet* normSet) const
     for (unsigned int i=0; i < _pdfList.size(); ++i) {
       const auto& pdf = static_cast<RooAbsPdf&>(_pdfList[i]);
       double snormVal = 1.;
-      if (cache->_needSupNorm) {
-        snormVal = ((RooAbsReal*)cache->_suppNormList.at(i))->getVal();
-      }
+      snormVal = cache->suppNormVal(i);
 
       double pdfVal = pdf.getVal(nset);
       if (pdf.isSelectedComp()) {
@@ -492,8 +490,7 @@ void RooAddPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvent
     if (pdf->isSelectedComp())
     {
       pdfs.push_back(dataMap.at(pdf));
-      coefs.push_back(_coefCache[pdfNo] / (cache->_needSupNorm ?
-        static_cast<RooAbsReal*>(cache->_suppNormList.at(pdfNo))->getVal() : 1) );
+      coefs.push_back(_coefCache[pdfNo] / cache->suppNormVal(pdfNo) );
     }
   }
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
@@ -631,12 +628,11 @@ double RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, con
   double snormVal ;
 
   //cout << "ROP::aIWN updateCoefCache with rangeName = " << (rangeName?rangeName:"<null>") << endl ;
-  RooArgList* snormSet = (!cache->_suppNormList.empty()) ? &cache->_suppNormList : nullptr ;
   for (std::size_t i = 0; i < _pdfList.size(); ++i ) {
     auto pdf = static_cast<const RooAbsPdf*>(_pdfList.at(i));
 
     if (_coefCache[i]) {
-      snormVal = snormSet ? ((RooAbsReal*) cache->_suppNormList.at(i))->getVal() : 1.0 ;
+      snormVal = cache->suppNormVal(i);
 
       // WVE swap this?
       double val = pdf->analyticalIntegralWN(subCode[i],normSet,rangeName) ;
@@ -664,14 +660,12 @@ double RooAddPdf::expectedEvents(const RooArgSet* nset) const
   AddCacheElem& cache = *getProjCache(nset) ;
   updateCoefficients(cache, nset);
 
-  if (!cache._rangeProjList.empty()) {
+  if (cache.doProjection()) {
 
     for (std::size_t i = 0; i < _pdfList.size(); ++i) {
-      auto const& r1 = static_cast<RooAbsReal&>(cache._refRangeProjList[i]);
-      auto const& r2 = static_cast<RooAbsReal&>(cache._rangeProjList[i]);
       double ncomp = _allExtendable ? static_cast<RooAbsPdf&>(_pdfList[i]).expectedEvents(nset)
                                     : static_cast<RooAbsReal&>(_coefList[i]).getVal(nset);
-      expectedTotal += (r2.getVal()/r1.getVal()) * ncomp ;
+      expectedTotal += cache.rangeProjScaleFactor(i) * ncomp ;
 
     }
 

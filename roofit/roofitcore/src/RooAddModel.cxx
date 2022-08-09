@@ -364,7 +364,7 @@ double RooAddModel::evaluate() const
     auto pdf = static_cast<RooAbsPdf*>(obj);
 
     if (_coefCache[i]!=0.) {
-      snormVal = nset ? ((RooAbsReal*)cache->_suppNormList.at(i))->getVal() : 1.0 ;
+      snormVal = nset ? cache->suppNormVal(i) : 1.0 ;
       double pdfVal = pdf->getVal(nset) ;
       // double pdfNorm = pdf->getNorm(nset) ;
       if (pdf->isSelectedComp()) {
@@ -516,7 +516,7 @@ double RooAddModel::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, c
   for (const auto obj : *compIntList) {
     auto pdfInt = static_cast<const RooAbsReal*>(obj);
     if (_coefCache[i]!=0.) {
-      snormVal = nset ? ((RooAbsReal*)pcache->_suppNormList.at(i))->getVal() : 1.0 ;
+      snormVal = nset ? pcache->suppNormVal(i) : 1.0 ;
       double intVal = pdfInt->getVal(nset) ;
       value += intVal*_coefCache[i]/snormVal ;
       cxcoutD(Eval) << "RooAddModel::evaluate(" << GetName() << ")  value += ["
