@@ -210,23 +210,29 @@ void ROOT::Experimental::Detail::RPageSinkFile::ReleasePage(RPage &page)
         auto source = RPageSourceFile(ntupleName, location, RNTupleReadOptions());
         source.Attach();
         auto anchor = source.GetAnchor();
-        /**
-         * Compute the data part starting point
-         * */
-        size_t seek_data_position = anchor.fSeekHeader + source.GetSharedDescriptorGuard()->GetOnDiskHeaderSize();
-        size_t aligned_seek_data_position = (seek_data_position + 4096 - 1) / 4096 * 4096;
-        size_t length = source.GetSharedDescriptorGuard().GetRef().RTuplePageSizeInfo();
-        size_t aligned_length = (length + 4096 - 1) / 4096 * 4096;
+       /**
+        * Compute the data part starting point
+        * */
+        auto descSrc = source.GetSharedDescriptorGuard().GetRef().Clone();
+
+        size_t seekDataPosition = anchor.fSeekHeader + source.GetSharedDescriptorGuard()->GetOnDiskHeaderSize();
+        size_t alignedSeekDataPosition = (seekDataPosition + 4096 - 1) / 4096 * 4096;
+
+        //TODO: Change this clustergroup 0
+        size_t endDataClusterGroup = descSrc->GetClusterGroupDescriptor(0).GetPageListLocator().fPosition;
+        size_t length = endDataClusterGroup - alignedSeekDataPosition;//source.GetSharedDescriptorGuard().GetRef().RTuplePageSizeInfo();
+        size_t alignedLength = length;//(length + 4096 - 1) / 4096 * 4096;
 
        /**
         * Share the data part (zero-copy)
         * */
-        this->fWriter->ShareContent(location, aligned_length, aligned_seek_data_position);
+
+       this->fWriter->ShareContent(location, alignedLength, alignedSeekDataPosition);
 
        /**
         * Update metadata
         * */
-        auto descSrc = source.GetSharedDescriptorGuard().GetRef().Clone();
+
 
         std::vector<RClusterDescriptorBuilder> clusters;
 
@@ -236,7 +242,7 @@ void ROOT::Experimental::Detail::RPageSinkFile::ReleasePage(RPage &page)
         std::uint32_t nClusters = fDescriptorBuilder.GetDescriptor().GetNClusters();
         auto descDst = fDescriptorBuilder.GetDescriptor().Clone();
 
-        //for (const auto &CG : descDst->GetClusterGroupIterable()) {
+        for (const auto &CG : descDst->GetClusterGroupIterable()) {
            for (const auto &C: descDst->GetClusterIterable()) {
 
                auto clusterDesc = C.Clone();
@@ -249,22 +255,41 @@ void ROOT::Experimental::Detail::RPageSinkFile::ReleasePage(RPage &page)
                    for (std::uint32_t k = 0; k < nPages; ++k) {
                        std::uint32_t nElements = clusterDesc.GetNEntries();
                        RNTupleLocator locator = clusterDesc.GetPageRange(j).fPageInfos[k].fLocator;
-                       lastPageOffset = locator.fPosition + locator.fBytesOnStorage;
+                       //lastPageOffset = locator.fPosition + locator.fBytesOnStorage;
                    }
                    std::uint64_t columnOffset = clusterDesc.GetColumnRange(j).fFirstElementIndex;
                }
                lastColumnOffset = clusterDesc.GetFirstEntryIndex() + clusterDesc.GetNEntries();
            }
-        //}
+            lastPageOffset = CG.GetPageListLocator().fPosition + CG.GetPageListLocator().fBytesOnStorage;
+        }
+        std::cout << lastColumnOffset <<std::endl;
+        std::cout << lastPageOffset <<std::endl;
         // Round up to the block size
-        lastPageOffset = lastPageOffset == 0 ? aligned_seek_data_position : (lastPageOffset + 4096 - 1) / 4096 * 4096;
+        lastPageOffset = lastPageOffset == 0 ? alignedSeekDataPosition : (lastPageOffset + 4096 - 1) / 4096 * 4096;
         // Being the second cluster, the page locator will have as position the header size (assumed rounded up to the
         // nearest block size). Thus, subtract the header size from this offset in order to adjust the page position with
         // respect to the new cluster (in the merged tuple) and to the position in the old cluster
-        lastPageOffset -= aligned_seek_data_position;
+        lastPageOffset -= alignedSeekDataPosition;
         std::uint32_t i = 0;
+
+        std::uint32_t groupId = fDescriptorBuilder.GetDescriptor().GetNClusterGroups();
+
         for (const auto &CG : descSrc->GetClusterGroupIterable()) {
-           for (const auto &C: CG.GetClusterIds()) {
+
+            /* std::uint64_t clusterId = fDescriptorBuilder.GetDescriptor().GetNClusters();
+            Internal::RNTupleSerializer::RClusterGroup clusterGroup;
+            // TODO: fDescriptorBuilder.AddToOnDiskFooterSize(CG.fPageListEnvelopeLink.fLocator.fBytesOnStorage);
+            RClusterGroupDescriptorBuilder clusterGroupBuilder;
+            clusterGroupBuilder.ClusterGroupId(groupId)
+                    .PageListLocator({0}) // CG.GetPageListLocator()) // rGroup.fPageListEnvelopeLink.fLocator)
+                    .PageListLength(0); // CG.GetPageListLength());//clusterGroup.fPageListEnvelopeLink.fUnzippedSize);
+            for (std::uint32_t n = 0; n < CG.GetNClusters(); ++n) {
+                clusterGroupBuilder.AddCluster( clusterId + n );
+            }
+            fDescriptorBuilder.AddClusterGroup(std::move(clusterGroupBuilder));
+            */
+            for (const auto &C: CG.GetClusterIds()) {
                auto clusterDesc = descSrc->GetClusterDescriptor(C).Clone();
                clusters.emplace_back(RClusterDescriptorBuilder(nClusters + i, clusterDesc.GetFirstEntryIndex() + lastColumnOffset,
                                                                clusterDesc.GetNEntries()));
@@ -286,7 +311,9 @@ void ROOT::Experimental::Detail::RPageSinkFile::ReleasePage(RPage &page)
                }
                fDescriptorBuilder.AddClusterWithDetails(clusters[i].MoveDescriptor().Unwrap());
                i++;
-           }
+            }
+            // CommitClusterGroup();
+            groupId++;
         }
    }
 
