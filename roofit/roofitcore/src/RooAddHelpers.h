@@ -34,4 +34,12 @@ public:
    RooArgList _rangeProjList;    ///< Range integrals to be multiplied with coefficients (target range)
 };
 
+class RooAddHelpers {
+public:
+   static void updateCoefficients(RooAbsPdf const &addPdf, RooArgList const &pdfList, RooArgList const &coefList,
+                                  AddCacheElem &cache, const RooArgSet *nset, bool projectCoefs,
+                                  RooArgSet const &refCoefNorm, bool allExtendable, std::vector<double> &coefCache,
+                                  int &coefErrCount);
+};
+
 #endif

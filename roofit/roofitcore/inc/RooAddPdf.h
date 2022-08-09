@@ -101,7 +101,7 @@ protected:
   mutable TNamed* _refCoefRangeName = nullptr ;  ///< Reference range name for coefficient interpreation
 
   bool _projectCoefs = false;     ///< If true coefficients need to be projected for use in evaluate()
-  std::vector<double> _coefCache; ///<! Transient cache with transformed values of coefficients
+  mutable std::vector<double> _coefCache; ///<! Transient cache with transformed values of coefficients
 
 
   mutable RooObjCacheManager _projCacheMgr ;  //! Manager of cache with coefficient projections and transformations

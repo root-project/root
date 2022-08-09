@@ -70,11 +70,9 @@ An (enforced) condition for this assumption is that each \f$ \mathrm{PDF}_i \f$ 
 #include "RooBatchCompute.h"
 #include "RooDataSet.h"
 #include "RooGlobalFunc.h"
-#include "RooNaNPacker.h"
 #include "RooRealProxy.h"
 #include "RooRealVar.h"
 #include "RooRealConstant.h"
-#include "RooRealIntegral.h"
 #include "RooRealSumPdf.h"
 #include "RooRecursiveFraction.h"
 
@@ -383,122 +381,8 @@ AddCacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooArgSet* is
 
 void RooAddPdf::updateCoefficients(AddCacheElem& cache, const RooArgSet* nset) const
 {
-  // Since this function updates the cache, it obviously needs write access:
-  auto& myCoefCache = const_cast<std::vector<double>&>(_coefCache);
-  myCoefCache.resize(_haveLastCoef ? _coefList.size() : _pdfList.size(), 0.);
-
-  // Straight coefficients
-  if (_allExtendable) {
-
-    // coef[i] = expectedEvents[i] / SUM(expectedEvents)
-    double coefSum(0) ;
-    std::size_t i = 0;
-    for (auto arg : _pdfList) {
-      auto pdf = static_cast<RooAbsPdf*>(arg);
-      myCoefCache[i] = pdf->expectedEvents(!_refCoefNorm.empty()?&_refCoefNorm:nset) ;
-      coefSum += myCoefCache[i] ;
-      i++ ;
-    }
-
-    if (coefSum==0.) {
-      coutW(Eval) << "RooAddPdf::updateCoefCache(" << GetName() << ") WARNING: total number of expected events is 0" << endl ;
-    } else {
-      for (std::size_t j=0; j < _pdfList.size(); j++) {
-        myCoefCache[j] /= coefSum ;
-      }
-    }
-
-  } else {
-    if (_haveLastCoef) {
-
-      // coef[i] = coef[i] / SUM(coef)
-      double coefSum(0) ;
-      std::size_t i=0;
-      for (auto coefArg : _coefList) {
-        auto coef = static_cast<RooAbsReal*>(coefArg);
-        myCoefCache[i] = coef->getVal(nset) ;
-        coefSum += myCoefCache[i++];
-      }
-      if (coefSum==0.) {
-        coutW(Eval) << "RooAddPdf::updateCoefCache(" << GetName() << ") WARNING: sum of coefficients is zero 0" << endl ;
-      } else {
-        const double invCoefSum = 1./coefSum;
-        for (std::size_t j=0; j < _coefList.size(); j++) {
-          myCoefCache[j] *= invCoefSum;
-        }
-      }
-    } else {
-
-      // coef[i] = coef[i] ; coef[n] = 1-SUM(coef[0...n-1])
-      double lastCoef(1) ;
-      std::size_t i=0;
-      for (auto coefArg : _coefList) {
-        auto coef = static_cast<RooAbsReal*>(coefArg);
-        myCoefCache[i] = coef->getVal(nset) ;
-        lastCoef -= myCoefCache[i++];
-      }
-      myCoefCache[_coefList.size()] = lastCoef ;
-
-      // Treat coefficient degeneration
-      const float coefDegen = lastCoef < 0. ? -lastCoef : (lastCoef > 1. ? lastCoef - 1. : 0.);
-      if (coefDegen > 1.E-5) {
-        myCoefCache[_coefList.size()] = RooNaNPacker::packFloatIntoNaN(100.f*coefDegen);
-
-        std::stringstream msg;
-        if (_coefErrCount-->0) {
-          msg << "RooAddPdf::updateCoefCache(" << GetName()
-              << " WARNING: sum of PDF coefficients not in range [0-1], value="
-            << 1-lastCoef ;
-          if (_coefErrCount==0) {
-            msg << " (no more will be printed)"  ;
-          }
-          coutW(Eval) << msg.str() << std::endl;
-        }
-      }
-    }
-  }
-
-
-  // Stop here if not projection is required or needed
-  if ((!_projectCoefs && _normRange.Length()==0) || cache._projList.empty()) {
-    return ;
-  }
-
-  // Adjust coefficients for given projection
-  double coefSum(0) ;
-  {
-    RooAbsReal::GlobalSelectComponentRAII compRAII(true);
-
-    for (std::size_t i = 0; i < _pdfList.size(); i++) {
-
-      RooAbsReal* pp = ((RooAbsReal*)cache._projList.at(i)) ;
-      RooAbsReal* sn = ((RooAbsReal*)cache._suppProjList.at(i)) ;
-      RooAbsReal* r1 = ((RooAbsReal*)cache._refRangeProjList.at(i)) ;
-      RooAbsReal* r2 = ((RooAbsReal*)cache._rangeProjList.at(i)) ;
-
-      double proj = pp->getVal()/sn->getVal()*(r2->getVal()/r1->getVal()) ;
-
-      myCoefCache[i] *= proj ;
-      coefSum += myCoefCache[i] ;
-    }
-  }
-
-
-  if ((RooMsgService::_debugCount>0) && RooMsgService::instance().isActive(this,RooFit::Caching,RooFit::DEBUG)) {
-    for (std::size_t i=0; i < _pdfList.size(); ++i) {
-      ccoutD(Caching) << " ALEX:   POST-SYNC coef[" << i << "] = " << myCoefCache[i]
-                      << " ( _coefCache[i]/coefSum = " << myCoefCache[i]*coefSum << "/" << coefSum << " ) "<< endl ;
-    }
-  }
-
-  if (coefSum==0.) {
-    coutE(Eval) << "RooAddPdf::updateCoefCache(" << GetName() << ") sum of coefficients is zero." << endl ;
-  }
-
-  for (std::size_t i=0; i < _pdfList.size(); i++) {
-    myCoefCache[i] /= coefSum ;
-  }
-
+  RooAddHelpers::updateCoefficients(*this, _pdfList, _coefList, cache, nset, _projectCoefs,
+                                    _refCoefNorm, _allExtendable, _coefCache, _coefErrCount);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -551,7 +435,7 @@ std::pair<const RooArgSet*, AddCacheElem*> RooAddPdf::getNormAndCache(const RooA
 
 
   AddCacheElem* cache = getProjCache(nset) ;
-  updateCoefficients(*cache,nset) ;
+  updateCoefficients(*cache, nset);
 
   return {nset, cache};
 }
@@ -738,7 +622,7 @@ double RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, con
   }
 
   AddCacheElem* cache = getProjCache(normSet,intSet,0) ; // WVE rangename here?
-  updateCoefficients(*cache,normSet) ;
+  updateCoefficients(*cache,normSet);
 
   // Calculate the current value of this object
   double value(0) ;
@@ -778,7 +662,7 @@ double RooAddPdf::expectedEvents(const RooArgSet* nset) const
 
   cxcoutD(Caching) << "RooAddPdf::expectedEvents(" << GetName() << ") calling getProjCache with nset = " << (nset?*nset:RooArgSet()) << endl ;
   AddCacheElem& cache = *getProjCache(nset) ;
-  updateCoefficients(cache,nset) ;
+  updateCoefficients(cache, nset);
 
   if (!cache._rangeProjList.empty()) {
 
