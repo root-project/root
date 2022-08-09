@@ -33,7 +33,6 @@ public:
   RooAddModel(const RooAddModel& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooAddModel(*this,newname) ; }
   RooResolutionModel* convolution(RooFormulaVar* basis, RooAbsArg* owner) const override ;
-  ~RooAddModel() override ;
 
   double evaluate() const override ;
   bool checkObservables(const RooArgSet* nset) const override ;
@@ -93,10 +92,10 @@ protected:
   void selectNormalizationRange(const char* rangeName=nullptr, bool force=false) override ;
 
   mutable RooSetProxy _refCoefNorm ;   ///<! Reference observable set for coefficient interpretation
-  mutable TNamed* _refCoefRangeName ;  ///<! Reference range name for coefficient interpretation
+  mutable TNamed* _refCoefRangeName = nullptr;  ///<! Reference range name for coefficient interpretation
 
-  bool _projectCoefs ;         ///< If true coefficients need to be projected for use in evaluate()
-  mutable double* _coefCache ; ///<! Transiet cache with transformed values of coefficients
+  bool _projectCoefs = false;  ///< If true coefficients need to be projected for use in evaluate()
+  mutable std::vector<double> _coefCache; ///<! Transiet cache with transformed values of coefficients
 
 
   mutable RooObjCacheManager _projCacheMgr ;  ///<! Manager of cache with coefficient projections and transformations
@@ -114,14 +113,14 @@ protected:
 
   mutable RooObjCacheManager _intCacheMgr ; ///<! Manager of cache with integrals
 
-  mutable RooAICRegistry _codeReg ;  ///<! Registry of component analytical integration codes
+  mutable RooAICRegistry _codeReg = 10; ///<! Registry of component analytical integration codes
 
   RooListProxy _pdfList ;   ///<  List of component PDFs
   RooListProxy _coefList ;  ///<  List of coefficients
   mutable RooArgList* _snormList{nullptr};  ///<!  List of supplemental normalization factors
 
-  bool _haveLastCoef ;    ///<  Flag indicating if last PDFs coefficient was supplied in the ctor
-  bool _allExtendable ;   ///<  Flag indicating if all PDF components are extendable
+  bool _haveLastCoef = false;    ///<  Flag indicating if last PDFs coefficient was supplied in the ctor
+  bool _allExtendable = false;   ///<  Flag indicating if all PDF components are extendable
 
   mutable Int_t _coefErrCount ; ///<! Coefficient error counter
 
