@@ -61,10 +61,9 @@ private:
 
 class RooAddHelpers {
 public:
-   static void updateCoefficients(RooAbsPdf const &addPdf, RooArgList const &pdfList, RooArgList const &coefList,
-                                  AddCacheElem &cache, const RooArgSet *nset, bool projectCoefs,
-                                  RooArgSet const &refCoefNorm, bool allExtendable, std::vector<double> &coefCache,
-                                  int &coefErrCount);
+   static void updateCoefficients(RooAbsPdf const &addPdf, std::vector<double> &coefCache, RooArgList const &pdfList,
+                                  bool haveLastCoef, AddCacheElem &cache, const RooArgSet *nset, bool projectCoefs,
+                                  RooArgSet const &refCoefNorm, bool allExtendable, int &coefErrCount);
 };
 
 #endif
