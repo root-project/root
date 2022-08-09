@@ -1059,3 +1059,14 @@ Bool_t RooAbsRealLValue::isJacobianOK(const RooArgSet&) const
   // always returns true (i.e. jacobian is constant)
   return kTRUE ; 
 }
+
+
+RooAbsReal* RooAbsRealLValue::createIntegral(const RooArgSet&, const RooArgSet*, const RooNumIntConfig*, const char*) const
+{
+  std::stringstream errStream;
+  errStream << "Attempting to integrate the " << ClassName() << " \"" << GetName()
+            << "\", but integrating a RooAbsRealLValue is not allowed!";
+  const std::string errString = errStream.str();
+  coutE(InputArguments) << errString << std::endl;
+  throw std::runtime_error(errString);
+}
