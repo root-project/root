@@ -121,8 +121,6 @@ void RooAddPdf::finalizeConstruction() {
     }
     seen.insert(elem);
   }
-
-  _coefCache.resize(_pdfList.size());
 }
 
 
@@ -378,11 +376,25 @@ AddCacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooArgSet* is
 /// fraction, normalize fractions obtained from extended ML terms to unity, and
 /// multiply the various range and dimensional corrections needed in the
 /// current use context.
+///
+/// param[in] cache The cache element for the given normalization set that
+///                 stores the supplementary normalization values and
+///                 projection-related objects.
+/// param[in] nset The set of variables to normalize over.
+/// param[in] syncCoefValues If the initial values of the coefficients still
+///                          need to be copied from the `_coefList` elements to
+///                          the `_coefCache`. True by default.
 
-void RooAddPdf::updateCoefficients(AddCacheElem& cache, const RooArgSet* nset) const
+void RooAddPdf::updateCoefficients(AddCacheElem& cache, const RooArgSet* nset, bool syncCoefValues) const
 {
-  RooAddHelpers::updateCoefficients(*this, _pdfList, _coefList, cache, nset, _projectCoefs,
-                                    _refCoefNorm, _allExtendable, _coefCache, _coefErrCount);
+  _coefCache.resize(_pdfList.size());
+  if(syncCoefValues) {
+    for(std::size_t i = 0; i < _coefList.size(); ++i) {
+      _coefCache[i] = static_cast<RooAbsReal const&>(_coefList[i]).getVal(nset);
+    }
+  }
+  RooAddHelpers::updateCoefficients(*this, _coefCache, _pdfList, _haveLastCoef, cache, nset, _projectCoefs,
+                                    _refCoefNorm, _allExtendable, _coefErrCount);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -435,7 +447,6 @@ std::pair<const RooArgSet*, AddCacheElem*> RooAddPdf::getNormAndCache(const RooA
 
 
   AddCacheElem* cache = getProjCache(nset) ;
-  updateCoefficients(*cache, nset);
 
   return {nset, cache};
 }
@@ -449,6 +460,7 @@ double RooAddPdf::getValV(const RooArgSet* normSet) const
   auto normAndCache = getNormAndCache(normSet);
   const RooArgSet* nset = normAndCache.first;
   AddCacheElem* cache = normAndCache.second;
+  updateCoefficients(*cache, nset);
 
   // Process change in last data set used
   bool nsetChanged(false) ;
@@ -481,9 +493,32 @@ double RooAddPdf::getValV(const RooArgSet* normSet) const
 /// Compute addition of PDFs in batches.
 void RooAddPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
+  _coefCache.resize(_pdfList.size());
+  for(std::size_t i = 0; i < _coefList.size(); ++i) {
+    auto coefVals = dataMap.at(&_coefList[i]);
+    // We don't support per-event coefficients in this function. If the CPU
+    // mode is used, we can just fall back to the RooAbsReal implementation.
+    // With CUDA, we can't do that because the inputs might be on the device.
+    // That's why we throw an exception then.
+    if(coefVals.size() > 1) {
+      if(stream) {
+        throw std::runtime_error("The RooAddPdf doesn't support per-event coefficients in CUDA mode yet!");
+      }
+      RooAbsReal::computeBatch(stream, output, nEvents, dataMap);
+      return;
+    }
+    _coefCache[i] = coefVals[0];
+  }
+
   RooBatchCompute::VarVector pdfs;
   RooBatchCompute::ArgVector coefs;
-  AddCacheElem* cache = getNormAndCache(nullptr).second;
+  auto normAndCache = getNormAndCache(nullptr);
+  const RooArgSet* nset = normAndCache.first;
+  AddCacheElem* cache = normAndCache.second;
+  // We don't sync the coefficient values from the _coefList to the _coefCache
+  // because we have already done it using the dataMap.
+  updateCoefficients(*cache, nset, /*syncCoefValues=*/false);
+
   for (unsigned int pdfNo = 0; pdfNo < _pdfList.size(); ++pdfNo)
   {
     auto pdf = static_cast<RooAbsPdf*>(&_pdfList[pdfNo]);
