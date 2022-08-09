@@ -1142,6 +1142,33 @@ RooPlot *RooDataHist::plotOn(RooPlot *frame, PlotOpt o) const
   return RooAbsData::plotOn(frame,o) ;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// A vectorized version of RooDataHist::weight for one dimensional histograms 
+/// with no interpolation. 
+/// \param[out] output An array of weights corresponding the values in xVals.
+/// \param[in] xVals An array of coordinates for which the weights should be
+///                  calculated.
+/// \param[in] correctForBinSize Enable the inverse bin volume correction factor.
+
+void RooDataHist::weights(double* output, RooSpan<double const> xVals, bool correctForBinSize) 
+{
+  auto const nEvents = xVals.size();
+  RooAbsBinning const& binning = *_lvbins[0];
+
+  // Reuse the output buffer for bin indices and zero-initialize it
+  auto binIndices = reinterpret_cast<int*>(output + nEvents) - nEvents; 
+  std::fill(binIndices, binIndices + nEvents, 0);
+
+  binning.binNumbers(xVals.data(), binIndices, nEvents);
+
+  for (std::size_t i=0; i < nEvents; ++i) {
+    auto binIdx = binIndices[i];
+    output[i] = correctForBinSize ? _wgt[binIdx] / _binv[binIdx] : _wgt[binIdx];
+  }
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// A faster version of RooDataHist::weight that assumes the passed arguments
 /// are aligned with the histogram variables.
@@ -1243,7 +1270,6 @@ double RooDataHist::weightInterpolated(const RooArgSet& bin, int intOrder, bool 
 
   double wInt{0} ;
   if (varInfo.nRealVars == 1) {
-
     // buffer needs to be 2 x (interpolation order + 1), with the factor 2 for x and y.
     _interpolationBuffer.resize(2 * intOrder + 2);
 
