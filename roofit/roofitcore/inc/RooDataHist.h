@@ -106,6 +106,7 @@ public:
                const std::map<const RooAbsArg*, std::pair<double, double> >& ranges,
                std::function<double(int)> getBinScale = [](int){ return 1.0; } );
 
+  void weights(double* output, RooSpan<double const> xVals, bool correctForBinSize);
   /// Return weight of i-th bin. \see getIndex()
   double weight(std::size_t i) const { return _wgt[i]; }
   double weightFast(const RooArgSet& bin, int intOrder, bool correctForBinSize, bool cdfBoundaries);
