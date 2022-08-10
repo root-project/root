@@ -41,10 +41,7 @@ Boston, MA 02111-1307, USA.  */
 
 static size_t pagesize;
 
-PTR
-mvalloc (md, size)
-  PTR md;
-  size_t size;
+PTR mvalloc(PTR md, size_t size)
 {
   if (pagesize == 0)
     {

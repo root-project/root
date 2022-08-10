@@ -60,10 +60,7 @@ static size_t pagesize;
     amount to either add to or subtract from the existing region.  Works
     like sbrk(), but using mmap(). */
 
-PTR
-__mmalloc_mmap_morecore (mdp, size)
-  struct mdesc *mdp;
-  int size;
+PTR __mmalloc_mmap_morecore(struct mdesc *mdp, int size)
 {
   PTR result = NULL;
   off_t foffset;        /* File offset at which new mapping will start */
@@ -200,9 +197,7 @@ __mmalloc_mmap_morecore (mdp, size)
   return (result);
 }
 
-PTR
-__mmalloc_remap_core (mdp)
-  struct mdesc *mdp;
+PTR __mmalloc_remap_core(struct mdesc *mdp)
 {
   caddr_t base;
   int rdonly = 0;
@@ -283,9 +278,7 @@ __mmalloc_remap_core (mdp)
   return ((PTR) base);
 }
 
-int
-mmalloc_update_mapping(md)
-  PTR md;
+int mmalloc_update_mapping(PTR md)
 {
   /*
    * In case of a read-only mapping, we need to call this routine to
