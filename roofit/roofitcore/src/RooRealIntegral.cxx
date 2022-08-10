@@ -59,9 +59,17 @@ ClassImp(RooRealIntegral);
 
 namespace {
 
-void addValueAndShapeServers(RooAbsArg &integral, RooAbsReal const &function, RooArgSet const &depList,
-                             RooArgSet const &intDepList, const char *rangeName, RooArgSet &anIntOKDepList)
+struct ServerToAdd {
+   ServerToAdd(RooAbsArg * theArg, bool isShape) : arg{theArg}, isShapeServer{isShape} {}
+   RooAbsArg * arg = nullptr;
+   bool isShapeServer = false;
+};
+
+std::vector<ServerToAdd> getValueAndShapeServers(RooAbsReal const &function, RooArgSet const &depList,
+                                                 RooArgSet const &intDepList, const char *rangeName,
+                                                 RooArgSet &anIntOKDepList)
 {
+   std::vector<ServerToAdd> serversToAdd;
 
    for (const auto arg : function.servers()) {
 
@@ -69,7 +77,7 @@ void addValueAndShapeServers(RooAbsArg &integral, RooAbsReal const &function, Ro
       if (!arg->dependsOnValue(intDepList)) {
 
          if (function.dependsOnValue(*arg)) {
-            integral.addServer(*arg, true, false);
+            serversToAdd.emplace_back(arg, false);
          }
 
          continue;
@@ -107,26 +115,26 @@ void addValueAndShapeServers(RooAbsArg &integral, RooAbsReal const &function, Ro
                      << " has parameterized binning, add value dependence of boundary objects rather than shape of leaf"
                      << endl;
                   if (leaflv->getBinning(rangeName).lowBoundFunc()) {
-                     integral.addServer(*leaflv->getBinning(rangeName).lowBoundFunc(), true, false);
+                     serversToAdd.emplace_back(leaflv->getBinning(rangeName).lowBoundFunc(), false);
                   }
                   if (leaflv->getBinning(rangeName).highBoundFunc()) {
-                     integral.addServer(*leaflv->getBinning(rangeName).highBoundFunc(), true, false);
+                     serversToAdd.emplace_back(leaflv->getBinning(rangeName).highBoundFunc(), false);
                   }
                } else {
                   oocxcoutD(&function, Integration) << function.GetName() << ": Adding observable " << leaf->GetName()
                                                     << " of server " << arg->GetName() << " as shape dependent" << endl;
-                  integral.addServer(*leaf, false, true);
+                  serversToAdd.emplace_back(leaf, true);
                }
             } else if (!depList.find(leaf->GetName())) {
 
                if (argLeafValueServers.contains(*leaf)) {
                   oocxcoutD(&function, Integration) << function.GetName() << ": Adding parameter " << leaf->GetName()
                                                     << " of server " << arg->GetName() << " as value dependent" << endl;
-                  integral.addServer(*leaf, true, false);
+                  serversToAdd.emplace_back(leaf, false);
                } else {
                   oocxcoutD(&function, Integration) << function.GetName() << ": Adding parameter " << leaf->GetName()
                                                     << " of server " << arg->GetName() << " as shape dependent" << endl;
-                  integral.addServer(*leaf, false, true);
+                  serversToAdd.emplace_back(leaf, true);
                }
             }
          }
@@ -174,6 +182,8 @@ void addValueAndShapeServers(RooAbsArg &integral, RooAbsReal const &function, Ro
                                            << " is suitable for analytical integration (if supported by p.d.f)" << endl;
       }
    }
+
+   return serversToAdd;
 }
 
 } // namespace
@@ -418,7 +428,10 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   //      Add all parameters/dependents as value/shape servers     *
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-  addValueAndShapeServers(*this, function, depList, intDepList, rangeName, anIntOKDepList);
+  auto serversToAdd = getValueAndShapeServers(function, depList, intDepList, rangeName, anIntOKDepList);
+  // We will not add the servers just now, because it makes only sense to add
+  // them once we have made sure that this integral is not operating in
+  // pass-through mode. It will be done at the end of this constructor.
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
   // * E) interact with function to make list of objects actually integrated analytically  *
@@ -579,6 +592,14 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   if (_sumList.getSize()>0) {
     RooSuperCategory *sumCat = new RooSuperCategory(Form("%s_sumCat",GetName()),"sumCat",_sumList) ;
     _sumCat.addOwned(*sumCat) ;
+  }
+
+  // Only if we are not in pass-through mode we need to add the shape and value
+  // servers separately.
+  if(_intOperMode != PassThrough) {
+    for(auto const& toAdd : serversToAdd) {
+      addServer(*toAdd.arg, !toAdd.isShapeServer, toAdd.isShapeServer);
+    }
   }
 
   TRACE_CREATE
@@ -912,6 +933,10 @@ double RooRealIntegral::evaluate() const
       // In pass through mode, the RooRealIntegral should have registered the
       // function as a value server, because we directly depend on its value.
       assert(_function.isValueServer());
+      // There should be no other servers besides the actual function and the
+      // factorized observables that the function doesn't depend on but are
+      // integrated over later.
+      assert(servers().size() == _facList.size() + 1);
 
       //setDirtyInhibit(true) ;
       retVal= _function.arg().getVal(_funcNormSet) ;
