@@ -1341,7 +1341,6 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WritePadding()//c
 
 void ROOT::Experimental::Internal::RNTupleFileWriter::ShareContent(std::string_view source_filename, size_t source_length, size_t source_offset){
 
-    //this->WritePadding();
    int source_fd=open(source_filename.data(), O_RDONLY);
    if(source_fd<0){
       std::cout<<"Error"<<std::endl;
@@ -1350,12 +1349,10 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::ShareContent(std::string_v
    if(destination_fd<0){
       std::cout<<"Error"<<std::endl;
    }
-
-   auto mode = fcntl(destination_fd, F_GETFL);
    
    fflush(this->fFileSimple.fFile);
 
-   file_clone_range cloning_details;
+   file_clone_range cloning_details{};
 
    cloning_details.src_fd=source_fd;
    cloning_details.src_length=source_length;

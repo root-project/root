@@ -236,13 +236,12 @@ void ROOT::Experimental::Detail::RPageSinkFile::ReleasePage(RPage &page)
 
            // TODO Check this is true
            size_t startDataPosition = descSource->GetClusterDescriptor(CG.GetClusterIds().front()).GetPageRange(
-                   0).fPageInfos.front().fLocator.fPosition; // anchor.fSeekHeader + source.GetSharedDescriptorGuard()->GetOnDiskHeaderSize();
+                   0).fPageInfos.front().fLocator.fPosition;
            size_t alignedStartDataPosition = (startDataPosition + 4096 - 1) / 4096 * 4096;
 
            std::cout << "Start cluster group" << std::endl;
            std::cout << "Start data position: " << startDataPosition << " " << alignedStartDataPosition << std::endl;
 
-           // TODO: Change this clustergroup 0
            size_t endDataClusterGroup = descSource->GetClusterGroupDescriptor(CGIdx).GetPageListLocator().fPosition;
            std::cout << "End data position: " << endDataClusterGroup << std::endl;
 
