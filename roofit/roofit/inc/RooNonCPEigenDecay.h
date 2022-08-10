@@ -108,7 +108,7 @@ protected:
   RooCategoryProxy _tag;
   RooCategoryProxy _rhoQ;
   RooRealProxy     _correctQ;
-  RooRealProxy     _wQ;
+  RooRealProxy     _wQ; ///< dummy mischarge (must be set to zero!)
   double         _genB0Frac;
   double         _genRhoPlusFrac;
 
