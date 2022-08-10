@@ -57,6 +57,128 @@ using namespace std;
 ClassImp(RooRealIntegral);
 
 
+namespace {
+
+void addValueAndShapeServers(RooAbsArg &integral, RooAbsReal const &function, RooArgSet const &depList,
+                             RooArgSet const &intDepList, const char *rangeName, RooArgSet &anIntOKDepList)
+{
+
+   for (const auto arg : function.servers()) {
+
+      // Dependent or parameter?
+      if (!arg->dependsOnValue(intDepList)) {
+
+         if (function.dependsOnValue(*arg)) {
+            integral.addServer(*arg, true, false);
+         }
+
+         continue;
+
+      } else {
+
+         // Add final dependents of arg as shape servers
+
+         // Skip arg if it is neither value or shape server
+         if (!arg->isValueServer(function) && !arg->isShapeServer(function)) {
+            continue;
+         }
+
+         // We keep track separately of all leaves and the leaves that are only
+         // value servers to `arg`, which in this code branch is always a value
+         // server of the original function. With the additional value-only server
+         // list, we can quicky check if a given leaf is also a value server to
+         // the top-level `function`, because if and only if `leaf` is a value
+         // server of `arg` is it also a value server of `function`. The expensive
+         // calls to `function.dependsOnValue(*leaf)` that were used before are
+         // avoided like this.
+         RooArgSet argLeafServers;
+         RooArgSet argLeafValueServers;
+         arg->treeNodeServerList(&argLeafServers, nullptr, false, true, /*valueOnly=*/false, false);
+         arg->treeNodeServerList(&argLeafValueServers, nullptr, false, true, /*valueOnly=*/true, false);
+
+         for (const auto leaf : argLeafServers) {
+
+            if (depList.find(leaf->GetName()) && argLeafValueServers.contains(*leaf)) {
+
+               auto *leaflv = dynamic_cast<RooAbsRealLValue *>(leaf);
+               if (leaflv && leaflv->getBinning(rangeName).isParameterized()) {
+                  oocxcoutD(&function, Integration)
+                     << function.GetName() << " : Observable " << leaf->GetName()
+                     << " has parameterized binning, add value dependence of boundary objects rather than shape of leaf"
+                     << endl;
+                  if (leaflv->getBinning(rangeName).lowBoundFunc()) {
+                     integral.addServer(*leaflv->getBinning(rangeName).lowBoundFunc(), true, false);
+                  }
+                  if (leaflv->getBinning(rangeName).highBoundFunc()) {
+                     integral.addServer(*leaflv->getBinning(rangeName).highBoundFunc(), true, false);
+                  }
+               } else {
+                  oocxcoutD(&function, Integration) << function.GetName() << ": Adding observable " << leaf->GetName()
+                                                    << " of server " << arg->GetName() << " as shape dependent" << endl;
+                  integral.addServer(*leaf, false, true);
+               }
+            } else if (!depList.find(leaf->GetName())) {
+
+               if (argLeafValueServers.contains(*leaf)) {
+                  oocxcoutD(&function, Integration) << function.GetName() << ": Adding parameter " << leaf->GetName()
+                                                    << " of server " << arg->GetName() << " as value dependent" << endl;
+                  integral.addServer(*leaf, true, false);
+               } else {
+                  oocxcoutD(&function, Integration) << function.GetName() << ": Adding parameter " << leaf->GetName()
+                                                    << " of server " << arg->GetName() << " as shape dependent" << endl;
+                  integral.addServer(*leaf, false, true);
+               }
+            }
+         }
+      }
+
+      // If this dependent arg is self-normalized, stop here
+      // if (function.selfNormalized()) continue ;
+
+      bool depOK(false);
+      // Check for integratable AbsRealLValue
+
+      if (arg->isDerived()) {
+         RooAbsRealLValue *realArgLV = dynamic_cast<RooAbsRealLValue *>(arg);
+         RooAbsCategoryLValue *catArgLV = dynamic_cast<RooAbsCategoryLValue *>(arg);
+         if ((realArgLV && intDepList.find(realArgLV->GetName()) && (realArgLV->isJacobianOK(intDepList) != 0)) ||
+             catArgLV) {
+
+            // Derived LValue with valid jacobian
+            depOK = true;
+
+            // Now, check for overlaps
+            bool overlapOK = true;
+            for (const auto otherArg : function.servers()) {
+               // skip comparison with self
+               if (arg == otherArg)
+                  continue;
+               if (otherArg->IsA() == RooConstVar::Class())
+                  continue;
+               if (arg->overlaps(*otherArg, true)) {
+               }
+            }
+            // coverity[DEADCODE]
+            if (!overlapOK)
+               depOK = false;
+         }
+      } else {
+         // Fundamental types are always OK
+         depOK = true;
+      }
+
+      // Add server to list of dependents that are OK for analytical integration
+      if (depOK) {
+         anIntOKDepList.add(*arg, true);
+         oocxcoutI(&function, Integration) << function.GetName() << ": Observable " << arg->GetName()
+                                           << " is suitable for analytical integration (if supported by p.d.f)" << endl;
+      }
+   }
+}
+
+} // namespace
+
+
 Int_t RooRealIntegral::_cacheAllNDim(2) ;
 
 
@@ -296,108 +418,8 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   //      Add all parameters/dependents as value/shape servers     *
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-  for (const auto arg : function.servers()) {
+  addValueAndShapeServers(*this, function, depList, intDepList, rangeName, anIntOKDepList);
 
-    // Dependent or parameter?
-    if (!arg->dependsOnValue(intDepList)) {
-
-      if (function.dependsOnValue(*arg)) {
-        addServer(*arg,true,false) ;
-      }
-
-      continue ;
-
-    } else {
-
-      // Add final dependents of arg as shape servers
-
-      // We keep track separately of all leaves and the leaves that are only
-      // value servers to `arg`, which in this code branch is always a value
-      // server of the original function. With the additional value-only server
-      // list, we can quicky check if a given leaf is also a value server to
-      // the top-level `function`, because if and only if `leaf` is a value
-      // server of `arg` is it also a value server of `function`. The expensive
-      // calls to `function.dependsOnValue(*leaf)` that were used before are
-      // avoided like this.
-      RooArgSet argLeafServers ;
-      RooArgSet argLeafValueServers ;
-      arg->treeNodeServerList(&argLeafServers,nullptr,false,true,/*valueOnly=*/false,false) ;
-      arg->treeNodeServerList(&argLeafValueServers,nullptr,false,true,/*valueOnly=*/true,false) ;
-
-      // Skip arg if it is neither value or shape server
-      if (!arg->isValueServer(function) && !arg->isShapeServer(function)) {
-        continue ;
-      }
-
-      for (const auto leaf : argLeafServers) {
-
-        if (depList.find(leaf->GetName()) && argLeafValueServers.contains(*leaf)) {
-
-          RooAbsRealLValue* leaflv = dynamic_cast<RooAbsRealLValue*>(leaf) ;
-          if (leaflv && leaflv->getBinning(rangeName).isParameterized()) {
-            oocxcoutD(&function,Integration) << function.GetName() << " : Observable " << leaf->GetName() << " has parameterized binning, add value dependence of boundary objects rather than shape of leaf" << endl ;
-            if (leaflv->getBinning(rangeName).lowBoundFunc()) {
-              addServer(*leaflv->getBinning(rangeName).lowBoundFunc(),true,false) ;
-            }
-            if(leaflv->getBinning(rangeName).highBoundFunc()) {
-              addServer(*leaflv->getBinning(rangeName).highBoundFunc(),true,false) ;
-            }
-          } else {
-            oocxcoutD(&function,Integration) << function.GetName() << ": Adding observable " << leaf->GetName() << " of server "
-                << arg->GetName() << " as shape dependent" << endl ;
-            addServer(*leaf,false,true) ;
-          }
-        } else if (!depList.find(leaf->GetName())) {
-
-          if (argLeafValueServers.contains(*leaf)) {
-            oocxcoutD(&function,Integration) << function.GetName() << ": Adding parameter " << leaf->GetName() << " of server " << arg->GetName() << " as value dependent" << endl ;
-            addServer(*leaf,true,false) ;
-          } else {
-            oocxcoutD(&function,Integration) << function.GetName() << ": Adding parameter " << leaf->GetName() << " of server " << arg->GetName() << " as shape dependent" << endl ;
-            addServer(*leaf,false,true) ;
-          }
-        }
-      }
-    }
-
-    // If this dependent arg is self-normalized, stop here
-    //if (function.selfNormalized()) continue ;
-
-    bool depOK(false) ;
-    // Check for integratable AbsRealLValue
-
-    if (arg->isDerived()) {
-      RooAbsRealLValue    *realArgLV = dynamic_cast<RooAbsRealLValue*>(arg) ;
-      RooAbsCategoryLValue *catArgLV = dynamic_cast<RooAbsCategoryLValue*>(arg) ;
-      if ((realArgLV && intDepList.find(realArgLV->GetName()) && (realArgLV->isJacobianOK(intDepList)!=0)) || catArgLV) {
-
-   // Derived LValue with valid jacobian
-   depOK = true ;
-
-   // Now, check for overlaps
-   bool overlapOK = true ;
-   for (const auto otherArg : function.servers()) {
-     // skip comparison with self
-     if (arg==otherArg) continue ;
-     if (otherArg->IsA()==RooConstVar::Class()) continue ;
-     if (arg->overlaps(*otherArg,true)) {
-     }
-   }
-   // coverity[DEADCODE]
-   if (!overlapOK) depOK=false ;
-
-      }
-    } else {
-      // Fundamental types are always OK
-      depOK = true ;
-    }
-
-    // Add server to list of dependents that are OK for analytical integration
-    if (depOK) {
-      anIntOKDepList.add(*arg,true) ;
-      oocxcoutI(&function,Integration) << function.GetName() << ": Observable " << arg->GetName() << " is suitable for analytical integration (if supported by p.d.f)" << endl ;
-    }
-  }
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
   // * E) interact with function to make list of objects actually integrated analytically  *
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
