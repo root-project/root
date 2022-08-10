@@ -49,6 +49,8 @@ ROOT_ADD_GTEST(ntuple_show ntuple_show.cxx LIBRARIES ROOTDataFrame ROOTNTuple Ma
 ROOT_ADD_GTEST(ntuple_storage ntuple_storage.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
 ROOT_ADD_GTEST(ntuple_extended ntuple_extended.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
 
+ROOT_ADD_GTEST(ntuple_zero_copy_merge ntuple_zero_copy_merge.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
+
 if(daos OR daos_mock)
   # UUID of the DAOS pool used for testing, if not provided (may be any for libdaos_mock).
   if(NOT daos_test_pool)

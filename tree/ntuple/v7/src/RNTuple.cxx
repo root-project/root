@@ -393,7 +393,7 @@ void ROOT::Experimental::RNTupleWriter::CommitCluster(bool commitClusterGroup)
        auto ntupleSrc = RNTupleReader::Open(ntupleName, location);
        this->fNEntries += ntupleSrc->GetNEntries();
        this->fLastCommitted = this->fNEntries;
-      // this->fLastCommittedClusterGroup = 0;//this->fNEntries;
+       this->fLastCommittedClusterGroup = this->fNEntries;
    }
 #endif
 //------------------------------------------------------------------------------
