@@ -232,7 +232,7 @@ public:
 
 #ifdef MY_CODE
    std::uint64_t WritePadding();
-   void ShareContent(std::string_view source_filename, size_t source_length, size_t source_offset);
+   void ShareContent(std::string_view sourceFilename, size_t sourceLength, size_t sourceOffset);
 #endif
 
 };

@@ -1339,9 +1339,9 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WritePadding()//c
     return offset;
 }
 
-void ROOT::Experimental::Internal::RNTupleFileWriter::ShareContent(std::string_view source_filename, size_t source_length, size_t source_offset){
+void ROOT::Experimental::Internal::RNTupleFileWriter::ShareContent(std::string_view sourceFilename, size_t sourceLength, size_t sourceOffset){
 
-   int source_fd=open(source_filename.data(), O_RDONLY);
+   int source_fd=open(sourceFilename.data(), O_RDONLY);
    if(source_fd<0){
       std::cout<<"Error"<<std::endl;
    }
@@ -1355,8 +1355,8 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::ShareContent(std::string_v
    file_clone_range cloning_details{};
 
    cloning_details.src_fd=source_fd;
-   cloning_details.src_length=source_length;
-   cloning_details.src_offset=source_offset;
+   cloning_details.src_length= sourceLength;
+   cloning_details.src_offset= sourceOffset;
    cloning_details.dest_offset=this->fFileSimple.fFilePos;
 
    int err = ioctl(destination_fd, FICLONERANGE, &cloning_details);
@@ -1364,7 +1364,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::ShareContent(std::string_v
    if(err<0){
       std::cout<<strerror(errno)<<std::endl;
    }
-   this->fFileSimple.fFilePos+=source_length;
+   this->fFileSimple.fFilePos+= sourceLength;
 
    fseek(this->fFileSimple.fFile, this->fFileSimple.fFilePos, SEEK_SET);
    fflush(this->fFileSimple.fFile);
