@@ -31,6 +31,8 @@ part of the RooFit computation graph.
 #include "RooMsgService.h"
 #include "RooRealVar.h"
 
+#include <utility>
+
 using namespace std;
 using namespace RooFit;
 
@@ -56,7 +58,7 @@ void RooPolyFunc::addTerm(double coefficient)
 
    termList->addOwned(*exponents);
    termList->addOwned(*coeff);
-   _terms.push_back(move(termList));
+   _terms.push_back(std::move(termList));
 }
 
 void RooPolyFunc::addTerm(double coefficient, const RooAbsReal &var1, int exp1)
@@ -80,7 +82,7 @@ void RooPolyFunc::addTerm(double coefficient, const RooAbsReal &var1, int exp1)
 
    termList->addOwned(*exponents);
    termList->addOwned(*coeff);
-   _terms.push_back(move(termList));
+   _terms.push_back(std::move(termList));
 }
 
 void RooPolyFunc::addTerm(double coefficient, const RooAbsReal &var1, int exp1, const RooAbsReal &var2, int exp2)
@@ -105,7 +107,7 @@ void RooPolyFunc::addTerm(double coefficient, const RooAbsReal &var1, int exp1, 
    }
    termList->addOwned(*exponents);
    termList->addOwned(*coeff);
-   _terms.push_back(move(termList));
+   _terms.push_back(std::move(termList));
 }
 
 void RooPolyFunc::addTerm(double coefficient, const RooAbsCollection &exponents)
@@ -122,7 +124,7 @@ void RooPolyFunc::addTerm(double coefficient, const RooAbsCollection &exponents)
    auto coeff = new RooRealVar(coeff_name.c_str(), coeff_name.c_str(), coefficient);
    termList->addOwned(exponents);
    termList->addOwned(*coeff);
-   _terms.push_back(move(termList));
+   _terms.push_back(std::move(termList));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
