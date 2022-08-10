@@ -41,9 +41,7 @@ Boston, MA 02111-1307, USA.  */
    region we are about to unmap, so we first make a local copy of it on the
    stack and use the copy. */
 
-PTR
-mmalloc_detach (md)
-     PTR md;
+PTR mmalloc_detach(PTR md)
 {
    struct mdesc mtemp;
 

@@ -34,11 +34,7 @@ Boston, MA 02111-1307, USA.
    new region.  This module has incestuous knowledge of the
    internals of both mfree and mmalloc. */
 
-PTR
-mrealloc (md, ptr, size)
-  PTR md;
-  PTR ptr;
-  size_t size;
+PTR mrealloc(PTR md, PTR ptr, size_t size)
 {
    struct mdesc *mdp;
    PTR result;

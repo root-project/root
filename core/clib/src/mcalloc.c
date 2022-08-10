@@ -26,11 +26,7 @@ Boston, MA 02111-1307, USA.  */
 /* Allocate an array of NMEMB elements each SIZE bytes long.
    The entire array is initialized to zeros.  */
 
-PTR
-mcalloc (md, nmemb, size)
-  PTR md;
-  register size_t nmemb;
-  register size_t size;
+PTR mcalloc(PTR md, register size_t nmemb, register size_t size)
 {
    register PTR result;
 
