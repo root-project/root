@@ -36,6 +36,13 @@ public:
   RooArgProxy(const char* name, RooAbsArg* owner, const RooArgProxy& other) ;
   ~RooArgProxy() override ;
 
+  // Delete copy/move construction and assignment, because it will always
+  // result in invalid proxies.
+  RooArgProxy(RooArgProxy const& other) = delete;
+  RooArgProxy(RooArgProxy && other) = delete;
+  RooArgProxy& operator=(RooArgProxy const& other) = delete;
+  RooArgProxy& operator=(RooArgProxy && other) = delete;
+
   /// Return pointer to contained argument
   inline RooAbsArg* absArg() const {
     return _arg ;
