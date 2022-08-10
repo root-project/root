@@ -60,10 +60,8 @@ static void     put_short ARGS((int));
  * Return: size of GIF                                                 *
  *                                                                     *
  ***********************************************************************/
-long GIFencode(Width, Height, Ncol, R, G, B, ScLine, get_scline, pb)
-          int  Width, Height, Ncol;
-          byte R[], G[], B[], ScLine[];
-          void (*get_scline) ARGS((int, int, byte *)), (*pb) ARGS((byte));
+long GIFencode(int Width, int Height, int Ncol, byte R[], byte G[], byte B[], byte ScLine[],
+               void(*get_scline) ARGS((int, int, byte *)), void(*pb) ARGS((byte)))
 {
   long          CodeK;
   int           ncol, i, x, y, disp, Code, K;
@@ -223,8 +221,7 @@ static unsigned long masks[] = { 0x0000,
  * Input: code - GIF code                                      *
  *                                                             *
  ***************************************************************/
-static void output(code)
-               int code;
+static void output(int code)
 {
   /*   O U T P U T   C O D E   */
 
@@ -278,8 +275,7 @@ static void char_init()
    cur_bits  = 0;
 }
 
-static void char_out(c)
-                 int c;
+static void char_out(int c)
 {
    accum[a_count++] = c;
    if (a_count >= 254)
@@ -298,8 +294,7 @@ static void char_flush()
   a_count = 0;
 }
 
-static void put_short(word)
-                  int word;
+static void put_short(int word)
 {
   put_byte(word & 0xFF);
   put_byte((word>>8) & 0xFF);
