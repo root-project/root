@@ -60,7 +60,7 @@ ClassImp(ParamHistFunc);
 ////////////////////////////////////////////////////////////////////////////////
 
 ParamHistFunc::ParamHistFunc()
-  : _normIntMgr(this), _numBins(0)
+  : _normIntMgr(this)
 {
   _dataSet.removeSelfFromDir(); // files must not delete _dataSet.
 }
@@ -84,7 +84,6 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
   _normIntMgr(this),
   _dataVars("!dataVars","data Vars",       this),
   _paramSet("!paramSet","bin parameters",  this),
-  _numBins(0),
   _dataSet( (std::string(name)+"_dataSet").c_str(), "", vars)
 {
 
@@ -130,7 +129,6 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
   //  _dataVar("!dataVar","data Var", this, (RooRealVar&) var),
   _dataVars("!dataVars","data Vars",       this),
   _paramSet("!paramSet","bin parameters",  this),
-  _numBins(0),
   _dataSet( (std::string(name)+"_dataSet").c_str(), "", vars, Hist)
 {
 
@@ -184,14 +182,6 @@ ParamHistFunc::ParamHistFunc(const ParamHistFunc& other, const char* name) :
 
   // Copy constructor
   // Member _ownedList is intentionally not copy-constructed -- ownership is not transferred
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-ParamHistFunc::~ParamHistFunc()
-{
-  ;
 }
 
 
@@ -603,35 +593,34 @@ double ParamHistFunc::evaluate() const
 /// \param[in,out] evalData Input/output data for evaluating the ParamHistFunc.
 /// \param[in] normSet Normalisation set passed on to objects that are serving values to us.
 void ParamHistFunc::computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const& dataMap) const {
-  std::vector<double> oldValues;
-  std::vector<RooSpan<const double>> data;
-  oldValues.reserve(_dataVars.size());
-  data.reserve(_dataVars.size());
 
-  // Retrieve data for all variables
-  for (auto arg : _dataVars) {
-    const auto* var = static_cast<RooRealVar*>(arg);
-    oldValues.push_back(var->getVal());
-    data.push_back(dataMap.at(var));
+  auto const& n = _numBinsPerDim;
+  // check if _numBins needs to be filled
+  if(n.x == 0) {
+    _numBinsPerDim = getNumBinsPerDim(_dataVars);
   }
 
-  // Run computation for each entry in the dataset
+  // Different from the evaluate() funnction that first retrieves the indices
+  // corresponding to the RooDataHist and then transforms them, we can use the
+  // right bin multiplicators to begin with.
+  std::array<int, 3> idxMult{{1, n.x, n.xy}};
+
+  // As a working buffer for the bin indices, we use the tail of the output
+  // buffer. We can't use the same starting pointer, otherwise we would
+  // overwrite the later bin indices as we fill the output.
+  auto indexBuffer = reinterpret_cast<int*>(output + size) - size;
+  std::fill(indexBuffer, indexBuffer + size, 0); // output buffer for bin indices needs to be zero-initialized
+
+  // Use the vectorized RooAbsBinning::binNumbers() to update the total bin
+  // index for each dimension, using the `coef` parameter to multiply with the
+  // right index multiplication factor for each dimension.
+  for (std::size_t iVar = 0; iVar < _dataVars.size(); ++iVar) {
+    _dataSet.getBinnings()[iVar]->binNumbers(dataMap.at(&_dataVars[iVar]).data(), indexBuffer, size, idxMult[iVar]);
+  }
+
+  // Finally, look up the parameters and get their values to fill the output buffer
   for (std::size_t i = 0; i < size; ++i) {
-    for (unsigned int j = 0; j < _dataVars.size(); ++j) {
-      assert(i < data[j].size());
-      auto& var = static_cast<RooRealVar&>(_dataVars[j]);
-      var.setCachedValue(data[j][i], /*notifyClients=*/false);
-    }
-
-    const auto index = _dataSet.getIndex(_dataVars, /*fast=*/true);
-    const RooAbsReal& param = getParameter(index);
-    output[i] = param.getVal();
-  }
-
-  // Restore old values
-  for (unsigned int j = 0; j < _dataVars.size(); ++j) {
-    auto& var = static_cast<RooRealVar&>(_dataVars[j]);
-    var.setCachedValue(oldValues[j], /*notifyClients=*/false);
+    output[i] = static_cast<RooAbsReal const&>(_paramSet[indexBuffer[i]]).getVal();
   }
 }
 
