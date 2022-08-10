@@ -142,7 +142,20 @@ void ReadSpeed::PrintThroughput(const Result &r)
              << " MB/s/thread for " << effectiveThreads << " threads\n";
    std::cout << "Compressed throughput:\t\t" << r.fCompressedBytesRead / r.fRealTime / 1024 / 1024 << " MB/s\n";
    std::cout << "\t\t\t\t" << r.fCompressedBytesRead / r.fRealTime / 1024 / 1024 / effectiveThreads
-             << " MB/s/thread for " << effectiveThreads << " threads\n";
+             << " MB/s/thread for " << effectiveThreads << " threads\n\n";
+
+   const float cpuEfficiency = (r.fCpuTime / effectiveThreads) / r.fRealTime;
+
+   std::cout << "CPU Efficiency: \t\t" << cpuEfficiency << "%\n";
+   std::cout << "Reading data is ";
+   if (cpuEfficiency > 0.80f) {
+      std::cout << "likely CPU bound (decompression).\n";
+   } else if (cpuEfficiency < 0.50f) {
+      std::cout << "likely I/O bound.\n";
+   } else {
+      std::cout << "likely balanced (more threads may help though).\n";
+   }
+   std::cout << "For details run with the --help command.\n";
 }
 
 Args ReadSpeed::ParseArgs(const std::vector<std::string> &args)
