@@ -40,28 +40,21 @@ extern char *notdotdot[ ];
 extern boolean show_where_not;
 extern boolean warn_multiple;
 
-
-boolean
-isdot(p)
-register char *p;
+boolean isdot(register char *p)
 {
    if (p && *p++ == '.' && *p++ == '\0')
       return(TRUE);
    return(FALSE);
 }
 
-boolean
-isdotdot(p)
-register char *p;
+boolean isdotdot(register char *p)
 {
    if (p && *p++ == '.' && *p++ == '.' && *p++ == '\0')
       return(TRUE);
    return(FALSE);
 }
 
-boolean
-issymbolic(dir, component)
-register char *dir, *component;
+boolean issymbolic(register char *dir, register char *component)
 {
 #ifdef S_IFLNK
    struct stat st;
@@ -89,9 +82,7 @@ register char *dir, *component;
  * Any of the 'x/..' sequences within the name can be eliminated.
  * (but only if 'x' is not a symbolic link!!)
  */
-void
-remove_dotdot(path)
-char *path;
+void remove_dotdot(char *path)
 {
    register char *end, *from, *to, **cp;
    char  *components[ MAXFILES ],
@@ -161,8 +152,7 @@ char *path;
 /*
  * Add an include file to the list of those included by 'file'.
  */
-struct inclist *newinclude(newfile, incstring)
-         register char *newfile, *incstring;
+struct inclist *newinclude(register char *newfile, register char *incstring)
 {
    register struct inclist *ip;
 
@@ -182,9 +172,7 @@ struct inclist *newinclude(newfile, incstring)
    return(ip);
 }
 
-void
-included_by(ip, newfile)
-register struct inclist *ip, *newfile;
+void included_by(register struct inclist *ip, register struct inclist *newfile)
 {
    register int i;
 

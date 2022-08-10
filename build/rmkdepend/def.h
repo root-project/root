@@ -137,7 +137,7 @@ char   *base_name(char*);
 char   *rgetline(struct filepointer*);
 struct symtab  **slookup(char*, struct inclist*);
 struct symtab  **isdefined(char*,struct inclist*, struct inclist**);
-struct symtab  **fdefined();
+struct symtab **fdefined(char *, struct inclist *, struct inclist **);
 struct filepointer *getfile(char*);
 struct inclist  *newinclude(char*,char*);
 struct inclist  *inc_path(char*, char*, boolean);
