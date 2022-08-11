@@ -444,7 +444,7 @@ public:
    /// df.DefineSlot("x", function, {"column1", "column2"})
    /// ~~~
    ///
-   /// See Define for more information.
+   /// See Define() for more information.
    template <typename F>
    RInterface<Proxied, DS_t> DefineSlot(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
@@ -474,7 +474,7 @@ public:
    /// DefineSlotEntry("x", function, {"column1", "column2"})
    /// ~~~
    ///
-   /// See Define for more information.
+   /// See Define() for more information.
    template <typename F>
    RInterface<Proxied, DS_t> DefineSlotEntry(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
