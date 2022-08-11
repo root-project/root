@@ -107,6 +107,63 @@
 #include <sstream>
 #include <sys/types.h>
 
+namespace {
+
+// Internal helper RooAbsFunc that evalutes the scaled data-weighted average of
+// given RooAbsReal as a function of a single variable using the RooFitDriver.
+class ScaledDataWeightedAverage : public RooAbsFunc {
+public:
+   ScaledDataWeightedAverage(RooAbsReal const &arg, RooAbsData const &data, double scaleFactor, RooAbsRealLValue &var)
+      : RooAbsFunc{1}, _var{var},
+        _dataWeights{data.getWeightBatch(0, data.numEntries())}, _scaleFactor{scaleFactor}
+   {
+      _arg = RooFit::Detail::compileForNormSet(arg, *data.get());
+      _arg->recursiveRedirectServers(RooArgList{var});
+      _driver = std::make_unique<ROOT::Experimental::RooFitDriver>(*_arg, RooFit::BatchModeOption::Cpu);
+      _driver->setData(data, "");
+   }
+
+   ~ScaledDataWeightedAverage() {
+      _driver.reset();
+   }
+
+   double operator()(const double xvector[]) const override
+   {
+      double oldVal = _var.getVal();
+      _var.setVal(xvector[0]);
+
+      double out = 0.0;
+      auto pdfValues = _driver->getValues();
+      if (_dataWeights.empty()) {
+         out = std::accumulate(pdfValues.begin(), pdfValues.end(), 0.0) / pdfValues.size();
+      } else {
+         double weightsSum = 0.0;
+         for (std::size_t i = 0; i < pdfValues.size(); ++i) {
+            out += pdfValues[i] * _dataWeights[i];
+            weightsSum += _dataWeights[i];
+         }
+         out /= weightsSum;
+      }
+      out *= _scaleFactor;
+
+      _var.setVal(oldVal);
+      return out;
+   }
+   double getMinLimit(UInt_t /*dimension*/) const override { return std::numeric_limits<std::size_t>::min(); }
+   double getMaxLimit(UInt_t /*dimension*/) const override { return std::numeric_limits<std::size_t>::max(); }
+
+private:
+   std::unique_ptr<ROOT::Experimental::RooFitDriver> _driver;
+   RooAbsRealLValue &_var;
+   std::unique_ptr<RooAbsReal> _arg;
+   RooSpan<const double> _dataWeights;
+   double _scaleFactor;
+};
+
+} // namespace
+
+using namespace std ;
+
 ClassImp(RooAbsReal)
 
 bool RooAbsReal::_globalSelectComp = false;
@@ -280,8 +337,8 @@ RooSpan<const double> RooAbsReal::getValues(RooBatchCompute::RunContext& evalDat
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::vector<double> RooAbsReal::getValues(RooAbsData const& data) const {
-  std::unique_ptr<RooAbsReal> clone = RooFit::Detail::compileForNormSet<RooAbsReal>(*this, *data.get());
+std::vector<double> RooAbsReal::getValues(RooAbsData const& data, RooArgSet const* normSet) const {
+  std::unique_ptr<RooAbsReal> clone = RooFit::Detail::compileForNormSet<RooAbsReal>(*this, normSet ? *normSet : *data.get());
   ROOT::Experimental::RooFitDriver driver(*clone, RooFit::BatchModeOption::Cpu);
   driver.setData(data, "");
   return driver.getValues();
@@ -948,7 +1005,6 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
   // directly (it is contained in the cloneSet instead).
   return projectedPtr;
 }
-
 
 
 
@@ -2103,25 +2159,38 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
       projDataSel = tmp ;
     }
 
+    // Construct scaled data weighted average
+    ScaledDataWeightedAverage scaleBind{*projection, *projDataSel, o.scaleFactor, *plotVar};
 
+    // Validate the scaled data weighted average
+    {
+      // Construct optimized data weighted average using the old
+      // RooDataWeightedAverage. It is much slower than the new implementation,
+      // but it will only be evaluated once to valideate the new implementation.
+      RooAbsTestStatistic::Configuration cfg;
+      cfg.nCPU = o.numCPU;
+      cfg.interleave = o.interleave;
+      RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*projection,*projDataSel,RooArgSet()/**projDataSel->get()*/,
+              std::move(cfg), true) ;
+      //RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*projection,*projDataSel,*projDataSel->get(),o.numCPU,o.interleave,true) ;
 
-    // Attach dataset
-    projection->getVal(projDataSel->get()) ;
-    projection->attachDataSet(*projDataSel) ;
+      // Do _not_ activate cache-and-track as necessary information to define normalization observables are not present in the underlying dataset
+      dwa.constOptimizeTestStatistic(Activate,false) ;
 
-    // Construct optimized data weighted average
-    RooAbsTestStatistic::Configuration cfg;
-    cfg.nCPU = o.numCPU;
-    cfg.interleave = o.interleave;
-    RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*projection,*projDataSel,RooArgSet()/**projDataSel->get()*/,
-            std::move(cfg), true) ;
-    //RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*projection,*projDataSel,*projDataSel->get(),o.numCPU,o.interleave,true) ;
+      RooProduct scaledDwa{"scaled_dwa", "Data Weighted average", dwa, {RooFit::RooConst(o.scaleFactor)}};
+      RooRealBinding scaleBindRef(scaledDwa,*plotVar) ;
 
-    // Do _not_ activate cache-and-track as necessary information to define normalization observables are not present in the underlying dataset
-    dwa.constOptimizeTestStatistic(Activate,false) ;
-
-    RooProduct scaledDwa{"scaled_dwa", "Data Weighted average", dwa, {RooFit::RooConst(o.scaleFactor)}};
-    RooRealBinding scaleBind(scaledDwa,*plotVar) ;
+      const double testVal = plotVar->getVal();
+      const double refVal = scaleBindRef(&testVal);
+      const double newVal = scaleBind(&testVal);
+      if(std::abs(newVal - refVal) / refVal > 1e-6) {
+        std::stringstream ss;
+        ss << "Error in RooAbsReal::plotOn(): The data-weighted average gave a wrong result! "
+           << newVal << " vs. " << refVal << ". Please open an issue to report this implementation error.";
+        const std::string errMsg = ss.str();
+        coutE(Plotting) << errMsg << std::endl;
+      }
+    }
 
     // Set default range, if not specified
     if (o.rangeLo==0 && o.rangeHi==0) {
@@ -2474,19 +2543,33 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
     }
 
 
-    RooAbsTestStatistic::Configuration cfg;
-    cfg.nCPU = o.numCPU;
-    cfg.interleave = o.interleave;
-    RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",funcAsym,*projDataSel,RooArgSet()/**projDataSel->get()*/,
-            std::move(cfg),true) ;
-    //RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*funcAsym,*projDataSel,*projDataSel->get(),o.numCPU,o.interleave,true) ;
-    dwa.constOptimizeTestStatistic(Activate) ;
+    // Construct scaled data weighted average
+    ScaledDataWeightedAverage scaleBind{funcAsym, *projDataSel, o.scaleFactor, *plotVar};
 
-    ((RooAbsReal*)posProj)->attachDataSet(*projDataSel) ;
-    ((RooAbsReal*)negProj)->attachDataSet(*projDataSel) ;
+    // Validate the scaled data weighted average
+    {
+      RooAbsTestStatistic::Configuration cfg;
+      cfg.nCPU = o.numCPU;
+      cfg.interleave = o.interleave;
+      RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",funcAsym,*projDataSel,RooArgSet()/**projDataSel->get()*/,
+              std::move(cfg),true) ;
+      //RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*funcAsym,*projDataSel,*projDataSel->get(),o.numCPU,o.interleave,true) ;
+      dwa.constOptimizeTestStatistic(Activate) ;
 
-    RooProduct scaledDwa{"scaled_dwa", "Data Weighted average", {dwa, RooFit::RooConst(o.scaleFactor)}};
-    RooRealBinding scaleBind(scaledDwa,*plotVar) ;
+      RooProduct scaledDwa{"scaled_dwa", "Data Weighted average", {dwa, RooFit::RooConst(o.scaleFactor)}};
+      RooRealBinding scaleBindRef(scaledDwa,*plotVar) ;
+
+      const double testVal = plotVar->getVal();
+      const double refVal = scaleBindRef(&testVal);
+      const double newVal = scaleBind(&testVal);
+      if(std::abs(newVal - refVal) / refVal > 1e-6) {
+        std::stringstream ss;
+        ss << "Error in RooAbsReal::plotOn(): The data-weighted average gave a wrong result! "
+           << newVal << " vs. " << refVal << ". Please open an issue to report this implementation error.";
+        const std::string errMsg = ss.str();
+        coutE(Plotting) << errMsg << std::endl;
+      }
+    }
 
     // Set default range, if not specified
     if (o.rangeLo==0 && o.rangeHi==0) {
