@@ -100,9 +100,10 @@ TEST(RooNaNPacker, FitSimpleLinear) {
   std::unique_ptr<RooDataSet> data(pdf.generate(x, 1000));
   std::unique_ptr<RooAbsReal> nll(pdf.createNLL(*data));
 
-  ASSERT_FALSE(std::isnan(pdf.getVal(RooArgSet(x))));
+  RooArgSet normSet{x};
+  ASSERT_FALSE(std::isnan(pdf.getVal(normSet)));
   a1.setVal(-9.);
-  ASSERT_TRUE(std::isnan(pdf.getVal(RooArgSet(x))));
+  ASSERT_TRUE(std::isnan(pdf.getVal(normSet)));
 
   RooMinimizer minim(*nll);
   minim.setPrintLevel(-1);
@@ -189,7 +190,7 @@ TEST(RooNaNPacker, FitAddPdf_DegenerateCoeff) {
   RooGenericPdf pdf3("gen3", "x*x*x+1", RooArgSet(x));
   RooAddPdf pdf("sum", "a1*gen1 + a2*gen2 + (1-a1-a2)*gen3", RooArgList(pdf1, pdf2, pdf3), RooArgList(a1, a2));
   std::unique_ptr<RooDataSet> data(pdf.generate(x, 2000));
-  auto nll = pdf.createNLL(*data);
+  std::unique_ptr<RooAbsReal> nll{pdf.createNLL(*data)};
 
   RooArgSet params(a1, a2);
   RooArgSet paramsInit;
