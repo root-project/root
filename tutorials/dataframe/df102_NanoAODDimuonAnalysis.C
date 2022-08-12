@@ -48,7 +48,7 @@ void df102_NanoAODDimuonAnalysis()
    //ROOT::EnableImplicitMT();
 
    // Create dataframe from NanoAOD files
-   ROOT::RDataFrame df("Events", "root://eospublic.cern.ch//eos/opendata/cms/derived-data/AOD2NanoAODOutreachTool/Run2012BC_DoubleMuParked_Muons.root");
+   ROOT::RDF::RNode df("Events", "root://eospublic.cern.ch//eos/opendata/cms/derived-data/AOD2NanoAODOutreachTool/Run2012BC_DoubleMuParked_Muons.root");
    //progressBar(df);
    ROOT::RDF::Experimental::AddProgressbar(df);
    
