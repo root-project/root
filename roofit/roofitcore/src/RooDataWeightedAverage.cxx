@@ -30,15 +30,15 @@ plot option.
 
 **/
 
-#include "Riostream.h"
+#include "RooFitLegacy/RooDataWeightedAverage.h"
 
-#include "RooDataWeightedAverage.h"
 #include "RooAbsData.h"
 #include "RooAbsPdf.h"
 #include "RooCmdConfig.h"
 #include "RooMsgService.h"
 #include "RooAbsDataStore.h"
 
+#include "Riostream.h"
 
 
 using namespace std;

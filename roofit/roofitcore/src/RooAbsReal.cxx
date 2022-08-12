@@ -56,7 +56,7 @@
 #include "RooAddition.h"
 #include "RooDataSet.h"
 #include "RooDataHist.h"
-#include "RooDataWeightedAverage.h"
+#include "RooFitLegacy/RooDataWeightedAverage.h"
 #include "RooNumRunningInt.h"
 #include "RooGlobalFunc.h"
 #include "RooParamBinning.h"
@@ -337,8 +337,8 @@ RooSpan<const double> RooAbsReal::getValues(RooBatchCompute::RunContext& evalDat
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::vector<double> RooAbsReal::getValues(RooAbsData const& data, RooArgSet const* normSet) const {
-  std::unique_ptr<RooAbsReal> clone = RooFit::Detail::compileForNormSet<RooAbsReal>(*this, normSet ? *normSet : *data.get());
+std::vector<double> RooAbsReal::getValues(RooAbsData const& data) const {
+  std::unique_ptr<RooAbsReal> clone = RooFit::Detail::compileForNormSet<RooAbsReal>(*this, *data.get());
   ROOT::Experimental::RooFitDriver driver(*clone, RooFit::BatchModeOption::Cpu);
   driver.setData(data, "");
   return driver.getValues();
