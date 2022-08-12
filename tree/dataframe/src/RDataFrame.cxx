@@ -66,7 +66,7 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern.c
    - [User-defined custom actions](\ref generic-actions)
    - [Friend trees](\ref friends)
    - [Reading data formats other than ROOT trees](\ref other-file-formats)
-   - [Computation graphs (storing and reusing sets of transformations](\ref callgraphs)
+   - [Computation graphs (storing and reusing sets of transformations)](\ref callgraphs)
    - [Visualizing the computation graph](\ref representgraph)
    - [Activating RDataFrame execution logs](\ref rdf-logging)
 - [Efficient analysis in Python](\ref python)
