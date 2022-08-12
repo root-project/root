@@ -61,10 +61,7 @@ struct ReadSpeedRegex {
    std::string text;
    std::regex regex;
 
-   bool operator<(const ReadSpeedRegex &other) const
-   {
-      return text < other.text;
-   }
+   bool operator<(const ReadSpeedRegex &other) const { return text < other.text; }
 };
 
 std::vector<std::string> GetMatchingBranchNames(const std::string &fileName, const std::string &treeName,
