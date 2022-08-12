@@ -1421,6 +1421,9 @@ Float_t TGLUtil::fgScreenScalingFactor     = 1.0f;
 Float_t TGLUtil::fgPointLineScalingFactor  = 1.0f;
 Int_t   TGLUtil::fgPickingRadius           = 1;
 
+Float_t TGLUtil::fgSimpleAxisWidthScale = 1.0f;
+Float_t TGLUtil::fgSimpleAxisBBoxScale  = 1.0f;
+
 const UChar_t TGLUtil::fgRed[4]    = { 230,   0,   0, 255 };
 const UChar_t TGLUtil::fgGreen[4]  = {   0, 230,   0, 255 };
 const UChar_t TGLUtil::fgBlue[4]   = {   0,   0, 230, 255 };
@@ -2513,8 +2516,10 @@ void TGLUtil::DrawSimpleAxes(const TGLCamera      & camera,
    Double_t   pixelSize   = pixelVector.Mag();
 
    // Find x/y/z min/max values
-   Double_t min[3] = { bbox.XMin(), bbox.YMin(), bbox.ZMin() };
-   Double_t max[3] = { bbox.XMax(), bbox.YMax(), bbox.ZMax() };
+   TGLBoundingBox bb(bbox);
+   bb.Scale(fgSimpleAxisBBoxScale);
+   Double_t min[3] = { bb.XMin(), bb.YMin(), bb.ZMin() };
+   Double_t max[3] = { bb.XMax(), bb.YMax(), bb.ZMax() };
 
    for (UInt_t i = 0; i < 3; i++) {
       TGLVertex3 start;
@@ -2542,7 +2547,7 @@ void TGLUtil::DrawSimpleAxes(const TGLCamera      & camera,
             start[i] = max[i];
             vector[i] = min[i] - max[i];
          }
-         DrawLine(start, vector, kLineHeadNone, pixelSize*2.5, axesColors[i*2]);
+         DrawLine(start, vector, kLineHeadNone, pixelSize*fgSimpleAxisWidthScale*2.5, axesColors[i*2]);
       }
       // +ive axis?
       if (max[i] > 0.0) {
@@ -2554,7 +2559,7 @@ void TGLUtil::DrawSimpleAxes(const TGLCamera      & camera,
             start[i] = min[i];
             vector[i] = max[i] - min[i];
          }
-         DrawLine(start, vector, kLineHeadNone, pixelSize*2.5, axesColors[i*2 + 1]);
+         DrawLine(start, vector, kLineHeadNone, pixelSize*fgSimpleAxisWidthScale*2.5, axesColors[i*2 + 1]);
       }
    }
 
