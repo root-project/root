@@ -239,11 +239,11 @@ void ROOT::Experimental::Detail::RPageSinkFile::ReleasePage(RPage &page)
                    0).fPageInfos.front().fLocator.fPosition;
            size_t alignedStartDataPosition = (startDataPosition + 4096 - 1) / 4096 * 4096;
 
-           std::cout << "Start cluster group" << std::endl;
-           std::cout << "Start data position: " << startDataPosition << " " << alignedStartDataPosition << std::endl;
+           //std::cout << "Start cluster group" << std::endl;
+           //std::cout << "Start data position: " << startDataPosition << " " << alignedStartDataPosition << std::endl;
 
            size_t endDataClusterGroup = descSource->GetClusterGroupDescriptor(CGIdx).GetPageListLocator().fPosition;
-           std::cout << "End data position: " << endDataClusterGroup << std::endl;
+           //std::cout << "End data position: " << endDataClusterGroup << std::endl;
 
            size_t length = endDataClusterGroup -
                            alignedStartDataPosition;
@@ -257,8 +257,8 @@ void ROOT::Experimental::Detail::RPageSinkFile::ReleasePage(RPage &page)
             /**
             * Update metadata
             **/
-           std::cout << lastColumnOffset << std::endl;
-           std::cout << lastPageOffset << std::endl;
+           //std::cout << lastColumnOffset << std::endl;
+           //std::cout << lastPageOffset << std::endl;
            // Round up to the block size
            lastPageOffset = lastPageOffset == 0 ? alignedStartDataPosition : (lastPageOffset + 4096 - 1) / 4096 * 4096;
            // Being the second cluster, the page locator will have as position the header size (assumed rounded up to the
@@ -280,7 +280,7 @@ void ROOT::Experimental::Detail::RPageSinkFile::ReleasePage(RPage &page)
                    RClusterDescriptor::RPageRange pageRange;
                    pageRange.fColumnId = j;
                    for (std::uint32_t k = 0; k < nPages; ++k) {
-                       std::uint32_t nElements = clusterDesc.GetNEntries();
+                       std::uint32_t nElements = clusterDesc.GetPageRange(j).fPageInfos[k].fNElements;// clusterDesc.GetNEntries();
                        RNTupleLocator locator = clusterDesc.GetPageRange(j).fPageInfos[k].fLocator;
                        locator.fPosition += lastPageOffset;
                        pageRange.fPageInfos.push_back({ClusterSize_t(nElements), locator});
