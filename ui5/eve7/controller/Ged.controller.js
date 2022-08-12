@@ -235,7 +235,7 @@ sap.ui.define([
       closeGedEditor: function() {
          if (this.ged_visible) {
             let prnt = this.getView().getParent();
-            if (prnt) prnt.removeContentArea(this.getView());
+            if (prnt) prnt.removeItem(this.getView());
             this.ged_visible = false;
          }
 
@@ -253,7 +253,7 @@ sap.ui.define([
             return this.closeGedEditor();
 
          if (!this.ged_visible)
-            sumSplitter.addContentArea(this.getView());
+            sumSplitter.addItem(this.getView());
 
          this.ged_id = elementId;
          this.ged_visible = true;
