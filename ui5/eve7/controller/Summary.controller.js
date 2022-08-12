@@ -236,7 +236,6 @@ sap.ui.define([
 
             XMLView.create({
                viewName: "rootui5.eve7.view.Ged",
-               layoutData: new SplitterLayoutData("sld", {size: "30%"}),
                height: "100%"
             }).then(function(oView) {
                pthis.ged = oView;
@@ -363,8 +362,8 @@ sap.ui.define([
 
             oTree.expandToLevel(this.expandLevel);
 
-            if (this.ged)
-               this.ged.getController().closeGedEditor();
+            if (this.ged_visible)
+               this.ged.getController().buildEditor();
 
             this.rebuild = false;
          } else if (this.any_changed) {
