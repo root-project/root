@@ -24,12 +24,11 @@
 #include <memory>
 #include <stdexcept>
 #include <set>
-#include <regex>
 
 using namespace ReadSpeed;
 
 std::vector<std::string> ReadSpeed::GetMatchingBranchNames(const std::string &fileName, const std::string &treeName,
-                                                           const std::vector<std::string> &regexes)
+                                                           const std::vector<ReadSpeedRegex> &regexes)
 {
    TFile *f = TFile::Open(fileName.c_str(), "READ_WITHOUT_GLOBALREGISTRATION");
    if (f == nullptr || f->IsZombie())
@@ -39,13 +38,12 @@ std::vector<std::string> ReadSpeed::GetMatchingBranchNames(const std::string &fi
       throw std::runtime_error("Could not retrieve tree '" + treeName + "' from file '" + fileName + '\'');
 
    const auto unfilteredBranchNames = ROOT::Internal::TreeUtils::GetTopLevelBranchNames(*t);
-   std::set<std::string> usedRegexes;
+   std::set<ReadSpeedRegex> usedRegexes;
    std::vector<std::string> branchNames;
 
-   auto filterBranchName = [regexes, &usedRegexes](std::string bName) {
-      const auto matchBranch = [&usedRegexes, bName](std::string regex) {
-         std::regex branchRegex(regex);
-         bool match = std::regex_match(bName, branchRegex);
+   auto filterBranchName = [regexes, &usedRegexes](const std::string &bName) {
+      const auto matchBranch = [&usedRegexes, bName](const ReadSpeedRegex &regex) {
+         bool match = std::regex_match(bName, regex.regex);
 
          if (match)
             usedRegexes.insert(regex);
@@ -66,7 +64,7 @@ std::vector<std::string> ReadSpeed::GetMatchingBranchNames(const std::string &fi
          "The following regexes didn't match any branches in the tree, this is probably unintended:\n";
       for (const auto &regex : regexes) {
          if (usedRegexes.find(regex) == usedRegexes.end())
-            errString += '\t' + regex + '\n';
+            errString += '\t' + regex.text + '\n';
       }
       throw std::runtime_error(errString);
    }
@@ -132,10 +130,14 @@ Result ReadSpeed::EvalThroughputST(const Data &d)
 
    TStopwatch sw;
 
+   std::vector<ReadSpeedRegex> regexes;
+   if (d.fUseRegex)
+      std::transform(d.fBranchNames.begin(), d.fBranchNames.end(), std::back_inserter(regexes), [](std::string text) { return ReadSpeedRegex{text, std::regex(text)}; });
+
    for (const auto &fName : d.fFileNames) {
       std::vector<std::string> branchNames;
       if (d.fUseRegex)
-         branchNames = GetMatchingBranchNames(fName, d.fTreeNames[treeIdx], d.fBranchNames);
+         branchNames = GetMatchingBranchNames(fName, d.fTreeNames[treeIdx], regexes);
       else
          branchNames = d.fBranchNames;
 
@@ -248,10 +250,15 @@ Result ReadSpeed::EvalThroughputMT(const Data &d, unsigned nThreads)
 
    auto treeIdx = 0;
    std::vector<std::vector<std::string>> fileBranchNames;
+
+   std::vector<ReadSpeedRegex> regexes;
+   if (d.fUseRegex)
+      std::transform(d.fBranchNames.begin(), d.fBranchNames.end(), std::back_inserter(regexes), [](std::string text) { return ReadSpeedRegex{text, std::regex(text)}; });
+
    for (const auto &fName : d.fFileNames) {
       std::vector<std::string> branchNames;
       if (d.fUseRegex)
-         branchNames = GetMatchingBranchNames(fName, d.fTreeNames[treeIdx], d.fBranchNames);
+         branchNames = GetMatchingBranchNames(fName, d.fTreeNames[treeIdx], regexes);
       else
          branchNames = d.fBranchNames;
 
