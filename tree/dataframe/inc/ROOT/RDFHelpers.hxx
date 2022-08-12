@@ -253,6 +253,8 @@ RResultMap<T> VariationsFor(RResultPtr<T> resPtr)
                                         *resPtr.fLoopManager, std::move(nominalAction), std::move(variedAction));
 }
 
+void AddProgressbar(RNode &df);
+
 } // namespace Experimental
 
 // clang-format off

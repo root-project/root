@@ -34,7 +34,6 @@ using namespace ROOT::VecOps;
 
 void progressBar(ROOT::RDataFrame &dataframe)
 {
-   //std::shared_ptr<ROOT::RDF::ProgressHelper> progress = std::make_shared<ROOT::RDF::ProgressHelper>(1000);
    auto progress = std::make_shared<ROOT::RDF::ProgressHelper>(1000);
    dataframe.DefinePerSample("_progressbar",
            [progress](unsigned int slot, const ROOT::RDF::RSampleInfo & id) -> std::size_t {
@@ -46,20 +45,13 @@ void progressBar(ROOT::RDataFrame &dataframe)
 void df102_NanoAODDimuonAnalysis()
 {
    // Enable multi-threading
-   ROOT::EnableImplicitMT();
+   //ROOT::EnableImplicitMT();
 
    // Create dataframe from NanoAOD files
    ROOT::RDataFrame df("Events", "root://eospublic.cern.ch//eos/opendata/cms/derived-data/AOD2NanoAODOutreachTool/Run2012BC_DoubleMuParked_Muons.root");
-<<<<<<< HEAD
-   ROOT::RDF::ProgressHelper progress{1000};
-   df.DefinePerSample("_progressbar",
-           [&progress](unsigned int slot, const ROOT::RDF::RSampleInfo & id) -> std::size_t { progress.registerNewSample(slot, id); return progress.ComputeMaxEvents(); });
-   df.Count().OnPartialResultSlot(1000, [&](unsigned int slot, auto && arg){ progress(slot, arg); });
-
-=======
-   progressBar(df);
+   //progressBar(df);
+   ROOT::RDF::Experimental::AddProgressbar(df);
    
->>>>>>> 4521201d4d ([DF] Introduce a single callable function for the progress bar)
    // For simplicity, select only events with exactly two muons and require opposite charge
    auto df_2mu = df.Filter("nMuon == 2", "Events with exactly two muons");
    auto df_os = df_2mu.Filter("Muon_charge[0] != Muon_charge[1]", "Muons with opposite charge");

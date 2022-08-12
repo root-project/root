@@ -219,7 +219,7 @@ void ProgressHelper::PrintProgressbar(std::ostream& stream, std::size_t currentE
   if (fUseShellColours) stream << "\e[0m";
 }
 
-std::size_t ROOT::RDF::RetrieveNEvents(const char* treename, const char* fileUrl) {
+std::size_t RetrieveNEvents(const char* treename, const char* fileUrl) {
   std::unique_ptr<TFile> file( TFile::Open(fileUrl, "READ") );
   if (!file)
     return 0u;
@@ -230,4 +230,14 @@ std::size_t ROOT::RDF::RetrieveNEvents(const char* treename, const char* fileUrl
   return 0u;
 }
 
+namespace Experimental {
+  void AddProgressbar(RNode &dataframe){
+    auto progress = std::make_shared<ROOT::RDF::ProgressHelper>(1000);
+    dataframe.DefinePerSample("_progressbar",
+            [progress](unsigned int slot, const ROOT::RDF::RSampleInfo & id) -> std::size_t {
+              progress->registerNewSample(slot, id); return progress->ComputeMaxEvents(); });
+    dataframe.Count().OnPartialResultSlot(1000, [progress](unsigned int slot, auto && arg){
+    (*progress)(slot, arg); });
+}
+}
 } } // namespace ROOT::RDF
