@@ -64,6 +64,7 @@ int main(int argc, char **argv)
 {
    testing::InitGoogleTest(&argc, argv);
    testing::AddGlobalTestEnvironment(new Environment);
+   (void)(::testing::GTEST_FLAG(death_test_style) = "threadsafe");
    return RUN_ALL_TESTS();
 }
 
@@ -121,8 +122,10 @@ TEST(ReadSpeedBranches, NoMatches)
 {
    EXPECT_THROW(EvalThroughput({{"t"}, {"test3.root"}, {"x_.*"}, false}, 0), std::runtime_error)
       << "Should throw for no matching branch";
-   EXPECT_THROW(EvalThroughput({{"t"}, {"test3.root"}, {"z_.*"}, true}, 0), std::runtime_error)
-      << "Should throw for no matching branch";
+   EXPECT_DEATH(EvalThroughput({{"t"}, {"test3.root"}, {"z_.*"}, true}, 0), "branch regexes didn't match any branches")
+      << "Should terminate for no matching branch";
+   EXPECT_DEATH(EvalThroughput({{"t"}, {"test3.root"}, {".*", "z_.*"}, true}, 0), "following regexes didn't match any branches")
+      << "Should terminate for no matching branch";
 }
 
 TEST(ReadSpeedBranches, AllBranches)

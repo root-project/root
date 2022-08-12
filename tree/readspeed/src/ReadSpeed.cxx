@@ -24,6 +24,7 @@
 #include <memory>
 #include <stdexcept>
 #include <set>
+#include <iostream>
 
 using namespace ReadSpeed;
 
@@ -57,16 +58,19 @@ std::vector<std::string> ReadSpeed::GetMatchingBranchNames(const std::string &fi
    std::copy_if(unfilteredBranchNames.begin(), unfilteredBranchNames.end(), std::back_inserter(branchNames),
                 filterBranchName);
 
-   if (branchNames.empty())
-      throw std::runtime_error("Provided branch regexes didn't match any branches in the tree.");
+   if (branchNames.empty()) {
+      std::cerr << "Provided branch regexes didn't match any branches in tree '" + treeName + "' from file '" + fileName + ".\n";
+      std::terminate();
+   }
    if (usedRegexes.size() != regexes.size()) {
       std::string errString =
-         "The following regexes didn't match any branches in the tree, this is probably unintended:\n";
+         "The following regexes didn't match any branches in tree '" + treeName + "' from file '" + fileName + "', this is probably unintended:\n";
       for (const auto &regex : regexes) {
          if (usedRegexes.find(regex) == usedRegexes.end())
             errString += '\t' + regex.text + '\n';
       }
-      throw std::runtime_error(errString);
+      std::cerr << errString;
+      std::terminate();
    }
 
    return branchNames;
@@ -308,14 +312,22 @@ Result ReadSpeed::EvalThroughputMT(const Data &d, unsigned nThreads)
 
 Result ReadSpeed::EvalThroughput(const Data &d, unsigned nThreads)
 {
-   if (d.fTreeNames.empty())
-      throw std::runtime_error("Please provide at least one tree name");
-   if (d.fFileNames.empty())
-      throw std::runtime_error("Please provide at least one file name");
-   if (d.fBranchNames.empty())
-      throw std::runtime_error("Please provide at least one branch name");
-   if (d.fTreeNames.size() != 1 && d.fTreeNames.size() != d.fFileNames.size())
-      throw std::runtime_error("Please provide either one tree name or as many as the file names");
+   if (d.fTreeNames.empty()) {
+      std::cerr << "Please provide at least one tree name\n";
+      std::terminate();
+   }
+   if (d.fFileNames.empty()) {
+      std::cerr << "Please provide at least one file name\n";
+      std::terminate();
+   }
+   if (d.fBranchNames.empty()) {
+      std::cerr << "Please provide at least one branch name\n";
+      std::terminate();
+   }
+   if (d.fTreeNames.size() != 1 && d.fTreeNames.size() != d.fFileNames.size()) {
+      std::cerr << "Please provide either one tree name or as many as the file names\n";
+      std::terminate();
+   }
 
    return nThreads > 0 ? EvalThroughputMT(d, nThreads) : EvalThroughputST(d);
 }
