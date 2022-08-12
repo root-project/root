@@ -15,6 +15,7 @@
 
 #include <string>
 #include <vector>
+#include <regex>
 
 namespace ReadSpeed {
 
@@ -56,8 +57,18 @@ struct ByteData {
    ULong64_t fCompressedBytesRead;
 };
 
+struct ReadSpeedRegex {
+   std::string text;
+   std::regex regex;
+
+   bool operator<(const ReadSpeedRegex &other) const
+   {
+      return text < other.text;
+   }
+};
+
 std::vector<std::string> GetMatchingBranchNames(const std::string &fileName, const std::string &treeName,
-                                                const std::vector<std::string> &regexes);
+                                                const std::vector<ReadSpeedRegex> &regexes);
 
 // Read branches listed in branchNames in tree treeName in file fileName, return number of uncompressed bytes read.
 ByteData ReadTree(const std::string &treeName, const std::string &fileName, const std::vector<std::string> &branchNames,
