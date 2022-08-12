@@ -30,7 +30,7 @@ using namespace ReadSpeed;
 std::vector<std::string> ReadSpeed::GetMatchingBranchNames(const std::string &fileName, const std::string &treeName,
                                                            const std::vector<ReadSpeedRegex> &regexes)
 {
-   TFile *f = TFile::Open(fileName.c_str(), "READ_WITHOUT_GLOBALREGISTRATION");
+   const auto f = std::unique_ptr<TFile>(TFile::Open(fileName.c_str(), "READ_WITHOUT_GLOBALREGISTRATION"));
    if (f == nullptr || f->IsZombie())
       throw std::runtime_error("Could not open file '" + fileName + '\'');
    std::unique_ptr<TTree> t(f->Get<TTree>(treeName.c_str()));
