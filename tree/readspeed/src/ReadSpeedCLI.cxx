@@ -146,7 +146,7 @@ void ReadSpeed::PrintThroughput(const Result &r)
 
    const float cpuEfficiency = (r.fCpuTime / effectiveThreads) / r.fRealTime;
 
-   std::cout << "CPU Efficiency: \t\t" << cpuEfficiency << "%\n";
+   std::cout << "CPU Efficiency: \t\t" << (cpuEfficiency * 100) << "%\n";
    std::cout << "Reading data is ";
    if (cpuEfficiency > 0.80f) {
       std::cout << "likely CPU bound (decompression).\n";
