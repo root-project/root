@@ -43,6 +43,11 @@ std::vector<std::string> ReadSpeed::GetMatchingBranchNames(const std::string &fi
    std::vector<std::string> branchNames;
 
    auto filterBranchName = [regexes, &usedRegexes](const std::string &bName) {
+      if (regexes.size() == 1 && regexes[0].text == ".*") {
+         usedRegexes.insert(regexes[0]);
+         return true;
+      }
+
       const auto matchBranch = [&usedRegexes, bName](const ReadSpeedRegex &regex) {
          bool match = std::regex_match(bName, regex.regex);
 
@@ -59,12 +64,13 @@ std::vector<std::string> ReadSpeed::GetMatchingBranchNames(const std::string &fi
                 filterBranchName);
 
    if (branchNames.empty()) {
-      std::cerr << "Provided branch regexes didn't match any branches in tree '" + treeName + "' from file '" + fileName + ".\n";
+      std::cerr << "Provided branch regexes didn't match any branches in tree '" + treeName + "' from file '" +
+                      fileName + ".\n";
       std::terminate();
    }
    if (usedRegexes.size() != regexes.size()) {
-      std::string errString =
-         "The following regexes didn't match any branches in tree '" + treeName + "' from file '" + fileName + "', this is probably unintended:\n";
+      std::string errString = "The following regexes didn't match any branches in tree '" + treeName + "' from file '" +
+                              fileName + "', this is probably unintended:\n";
       for (const auto &regex : regexes) {
          if (usedRegexes.find(regex) == usedRegexes.end())
             errString += '\t' + regex.text + '\n';
@@ -112,7 +118,7 @@ ByteData ReadSpeed::ReadTree(const std::string &treeName, const std::string &fil
    if (range.fStart == -1ll)
       range = EntryRange{0ll, nEntries};
    else if (range.fEnd > nEntries)
-      throw std::runtime_error("Range end (" + std::to_string(range.fEnd) + ") is beyod the end of tree '" +
+      throw std::runtime_error("Range end (" + std::to_string(range.fEnd) + ") is beyond the end of tree '" +
                                t->GetName() + "' in file '" + t->GetCurrentFile()->GetName() + "' with " +
                                std::to_string(nEntries) + " entries.");
 
@@ -136,7 +142,9 @@ Result ReadSpeed::EvalThroughputST(const Data &d)
 
    std::vector<ReadSpeedRegex> regexes;
    if (d.fUseRegex)
-      std::transform(d.fBranchNames.begin(), d.fBranchNames.end(), std::back_inserter(regexes), [](std::string text) { return ReadSpeedRegex{text, std::regex(text)}; });
+      std::transform(d.fBranchNames.begin(), d.fBranchNames.end(), std::back_inserter(regexes), [](std::string text) {
+         return ReadSpeedRegex{text, std::regex(text)};
+      });
 
    for (const auto &fName : d.fFileNames) {
       std::vector<std::string> branchNames;
@@ -248,7 +256,7 @@ Result ReadSpeed::EvalThroughputMT(const Data &d, unsigned nThreads)
    const auto rangesPerFile = MergeClusters(GetClusters(d), maxTasksPerFile);
    clsw.Stop();
 
-   size_t nranges =
+   const size_t nranges =
       std::accumulate(rangesPerFile.begin(), rangesPerFile.end(), 0u, [](size_t s, auto &r) { return s + r.size(); });
    std::cout << "Total number of tasks: " << nranges << '\n';
 
@@ -257,7 +265,9 @@ Result ReadSpeed::EvalThroughputMT(const Data &d, unsigned nThreads)
 
    std::vector<ReadSpeedRegex> regexes;
    if (d.fUseRegex)
-      std::transform(d.fBranchNames.begin(), d.fBranchNames.end(), std::back_inserter(regexes), [](std::string text) { return ReadSpeedRegex{text, std::regex(text)}; });
+      std::transform(d.fBranchNames.begin(), d.fBranchNames.end(), std::back_inserter(regexes), [](std::string text) {
+         return ReadSpeedRegex{text, std::regex(text)};
+      });
 
    for (const auto &fName : d.fFileNames) {
       std::vector<std::string> branchNames;

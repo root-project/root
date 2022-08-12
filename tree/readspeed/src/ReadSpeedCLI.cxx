@@ -69,7 +69,7 @@ const auto fullUsageText =
    " certain configurations.\n"
    " \n"
    " It does this by providing information about the number of bytes read from your files,\n"
-   " how long this takes, and the differnet throughputs in MB/s, both in total and per thread.\n"
+   " how long this takes, and the different throughputs in MB/s, both in total and per thread.\n"
    "\n"
    "\n"
    "Interpreting results:\n"

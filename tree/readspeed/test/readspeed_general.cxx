@@ -124,7 +124,8 @@ TEST(ReadSpeedBranches, NoMatches)
       << "Should throw for no matching branch";
    EXPECT_DEATH(EvalThroughput({{"t"}, {"test3.root"}, {"z_.*"}, true}, 0), "branch regexes didn't match any branches")
       << "Should terminate for no matching branch";
-   EXPECT_DEATH(EvalThroughput({{"t"}, {"test3.root"}, {".*", "z_.*"}, true}, 0), "following regexes didn't match any branches")
+   EXPECT_DEATH(EvalThroughput({{"t"}, {"test3.root"}, {".*", "z_.*"}, true}, 0),
+                "following regexes didn't match any branches")
       << "Should terminate for no matching branch";
 }
 
