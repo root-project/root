@@ -928,6 +928,9 @@ private:
    static Float_t fgPointLineScalingFactor;
    static Int_t   fgPickingRadius;
 
+   static Float_t fgSimpleAxisWidthScale;
+   static Float_t fgSimpleAxisBBoxScale;
+
    TGLUtil(const TGLUtil&);            // Not implemented.
    TGLUtil& operator=(const TGLUtil&); // Not implemented.
 
@@ -1045,6 +1048,9 @@ public:
    static void DrawNumber(const TString    & num,
                           const TGLVertex3 & pos,
                                 Bool_t       center = kFALSE);
+
+   static void SetSimpleAxisWidthScale(Float_t s) { fgSimpleAxisWidthScale = s; }
+   static void SetSimpleAxisBBoxScale(Float_t s) { fgSimpleAxisBBoxScale = s; }
 
    // Frequently used colors.
    static const UChar_t fgRed[4];
