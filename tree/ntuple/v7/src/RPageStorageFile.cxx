@@ -44,7 +44,6 @@
 #include <queue>
 
 #ifdef MY_CODE_RPAGE_STORAGE_FILE
-
 #include <sys/file.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -52,7 +51,6 @@
 #include <unistd.h>
 #include <linux/fs.h>
 #include <fstream>
-
 #endif
 
 

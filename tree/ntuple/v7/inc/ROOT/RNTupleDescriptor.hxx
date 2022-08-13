@@ -35,7 +35,6 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#define MY_CODE_INFO
 
 
 namespace ROOT {
@@ -724,9 +723,6 @@ public:
    /// Re-create the C++ model from the stored meta-data
    std::unique_ptr<RNTupleModel> GenerateModel() const;
    void PrintInfo(std::ostream &output) const;
-#ifdef MY_CODE_INFO
-   std::uint64_t RTuplePageSizeInfo() const;
-#endif
 };
 
 

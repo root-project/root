@@ -94,7 +94,6 @@ public:
 
 #ifdef MY_CODE_RPAGE_STORAGE_FILE
    void ZeroCopy( std::string_view ntupleName, std::string_view location );
-   //void ZeroCopyMerge( std::string_view ntupleNameSrc1, std::string_view locationSrc1, std::string_view ntupleNameSrc2, std::string_view locationSrc2 );
 #endif
 };
 
