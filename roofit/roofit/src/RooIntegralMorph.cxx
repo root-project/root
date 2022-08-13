@@ -333,7 +333,6 @@ void RooIntegralMorph::MorphCacheElem::calculate(TIterator* dIter)
  _yatX.resize(_x->numBins("cache")+1);
  _calcX.resize(_x->numBins("cache")+1);
 
-  RooArgSet nsetTmp(*_x) ;
   _ccounter = 0 ;
 
   // Get number of bins from PdfCacheElem histogram
@@ -422,8 +421,8 @@ void RooIntegralMorph::MorphCacheElem::calculate(TIterator* dIter)
     _rf1->findRoot(x1,x1,xMax,y) ;
     _rf2->findRoot(x2,x2,xMax,y) ;
 
-    _x->setVal(x1) ; double f1x1 = _pdf1->getVal(&nsetTmp) ;
-    _x->setVal(x2) ; double f2x2 = _pdf2->getVal(&nsetTmp) ;
+    _x->setVal(x1) ; double f1x1 = _pdf1->getVal(_nset) ;
+    _x->setVal(x2) ; double f2x2 = _pdf2->getVal(_nset) ;
     double fbarX = f1x1*f2x2 / ( _alpha->getVal()*f2x2 + (1-_alpha->getVal())*f1x1 ) ;
 
     dIter->Next() ;
