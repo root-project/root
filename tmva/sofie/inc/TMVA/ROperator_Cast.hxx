@@ -21,13 +21,13 @@ private:
    std::string fNX;
    std::string fNY;
    std::vector<size_t> fShape;
-   std::string fattr_type = "float";
+   std::string fAttrType = "float";
 
 public:
    ROperator_Cast(){}
    ROperator_Cast(std::string attr_type,std::string nameX, std::string nameY):
    fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)),
-   fattr_type(attr_type) {}
+   fAttrType(attr_type) {}
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
       return input;
@@ -44,7 +44,7 @@ public:
         throw std::runtime_error("TMVA SOFIE Cast Op Input Tensor is not found in model");
       }
       fShape = model.GetTensorShape(fNX);
-      model.AddIntermediateTensor(fNY, ConvertStringToType(fattr_type), fShape);
+      model.AddIntermediateTensor(fNY, ConvertStringToType(fAttrType), fShape);
    }
 
 
@@ -60,7 +60,7 @@ public:
       out << "\n//------ CAST\n";
       out << SP << "for (int id = 0; id < " << length << " ; id++){\n";
 
-      out << SP << SP << "tensor_" << fNY << "[id] = static_cast<"<< fattr_type << ">(tensor_" << fNX << "[id]);\n";
+      out << SP << SP << "tensor_" << fNY << "[id] = static_cast<"<< fAttrType << ">(tensor_" << fNX << "[id]);\n";
 
       out << SP << "}\n";
       return out.str();
