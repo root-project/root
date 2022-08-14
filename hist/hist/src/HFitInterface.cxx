@@ -17,10 +17,10 @@
 #include "Fit/FitResult.h"
 #include "Math/IParamFunction.h"
 
-#include <vector>
-
 #include <cassert>
 #include <cmath>
+#include <utility>
+#include <vector>
 
 #include "TH1.h"
 #include "THnBase.h"
@@ -28,9 +28,6 @@
 #include "TGraph2D.h"
 #include "TGraph.h"
 #include "TGraphErrors.h"
-// #include "TGraphErrors.h"
-// #include "TGraphBentErrors.h"
-// #include "TGraphAsymmErrors.h"
 #include "TMultiGraph.h"
 #include "TList.h"
 #include "TError.h"
@@ -599,9 +596,20 @@ void DoFillData ( BinData  & dv,  const TGraph * gr,  BinData::ErrorType type, T
    }
 #endif
 
-   double x[1];
-   for ( int i = 0; i < nPoints; ++i) {
+   // Unlike histograms, graphs may have array of points created in
+   // non-ascending order along the X axis. This breaks fitting algorithm. We
+   // create a "remap" for the TGraph point indexes that provides ascending
+   // order of X values for the BinData
+   std::vector<std::pair<double, int>> indexRemap;
+   for (int i = 0; i < nPoints; ++i) {
+      indexRemap.emplace_back(gx[i], i);
+   }
+   std::sort(indexRemap.begin(), indexRemap.end());
 
+   double x[1];
+   for (int j = 0; j < nPoints; ++j) {
+
+      int i = indexRemap[j].second;
       x[0] = gx[i];
 
 
@@ -981,7 +989,6 @@ bool GetConfidenceIntervals(const TH1 * h1, const ROOT::Fit::FitResult  & result
    }
    return true;
 }
-
 
 } // end namespace Fit
 
