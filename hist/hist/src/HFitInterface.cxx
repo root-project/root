@@ -601,12 +601,12 @@ void DoFillData ( BinData  & dv,  const TGraph * gr,  BinData::ErrorType type, T
    // We create a "remap" for the TGraph point indexes that provides ascending order of X values for the BinData
    std::vector<std::pair<double, int>> indexRemap;
    for ( int i = 0; i < nPoints; ++i) {
-       indexRemap.push_back(std::pair<double, int>(gx[i], i));
+      indexRemap.push_back(std::pair<double, int>(gx[i], i));
    }
    std::sort(indexRemap.begin(), indexRemap.end());
 
    double x[1];
-   for ( int j = 0; j < nPoints; ++j) {
+   for (int j = 0; j < nPoints; ++j) {
 
       int i = indexRemap[j].second;
       x[0] = gx[i];
@@ -993,4 +993,3 @@ bool GetConfidenceIntervals(const TH1 * h1, const ROOT::Fit::FitResult  & result
 } // end namespace Fit
 
 } // end namespace ROOT
-
