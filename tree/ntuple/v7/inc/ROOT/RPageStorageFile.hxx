@@ -172,11 +172,6 @@ protected:
    void UnzipClusterImpl(RCluster *cluster) final;
 
 public:
-
-#ifdef MY_CODE_RPAGE_STORAGE_FILE
-   ROOT::Experimental::Internal::RFileNTupleAnchor GetAnchor();
-#endif
-
    RPageSourceFile(std::string_view ntupleName, std::string_view path, const RNTupleReadOptions &options);
    /// The cloned page source creates a new raw file and reader and opens its own file descriptor to the data.
    /// The meta-data (header and footer) is reread and parsed by the clone.
