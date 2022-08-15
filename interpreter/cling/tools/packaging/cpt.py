@@ -2590,7 +2590,8 @@ if args['make_proper']:
     with open(os.path.join(LLVM_OBJ_ROOT, 'config.log'), 'r') as log:
         for line in log:
             if re.match('^LLVM_PREFIX=', line):
-                prefix = re.sub('^LLVM_PREFIX=', '', line).replace("'", '').strip()
+                prefix = re.sub('^LLVM_PREFIX=', '',
+                                line).replace("'", '').strip()
 
     set_version()
     install_prefix()
