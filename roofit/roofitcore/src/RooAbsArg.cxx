@@ -1217,6 +1217,7 @@ bool RooAbsArg::recursiveRedirectServers(const RooAbsCollection& newSet, bool mu
 bool RooAbsArg::redirectServersHook(const RooAbsCollection & /*newServerList*/, bool /*mustReplaceAll*/,
                                     bool /*nameChange*/, bool /*isRecursiveStep*/)
 {
+  setProxyNormSet(nullptr);
   return false;
 }
 
