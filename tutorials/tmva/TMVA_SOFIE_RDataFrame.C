@@ -25,6 +25,7 @@ using namespace TMVA::Experimental;
 // need to add the current directory (from where we are running this macro)
 // to the include path for Cling
 R__ADD_INCLUDE_PATH($PWD)
+R__ADD_INCLUDE_PATH($ROOTSYS/runtutorials)
 #include "Higgs_trained_model.hxx"
 #include "TMVA/SOFIEHelpers.hxx"
 
