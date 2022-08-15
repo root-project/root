@@ -4904,3 +4904,11 @@ void RooAbsReal::checkBatchComputation(const RooBatchCompute::RunContext& evalDa
     throw CachingError(formatter);
   }
 }
+
+
+bool RooAbsReal::redirectServersHook(const RooAbsCollection & newServerList, bool mustReplaceAll,
+                                    bool nameChange, bool isRecursiveStep)
+{
+  _lastNSet = nullptr ;
+  return RooAbsArg::redirectServersHook(newServerList, mustReplaceAll, nameChange, isRecursiveStep);
+}
