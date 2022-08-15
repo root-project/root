@@ -1424,6 +1424,9 @@ Int_t   TGLUtil::fgPickingRadius           = 1;
 Float_t TGLUtil::fgSimpleAxisWidthScale = 1.0f;
 Float_t TGLUtil::fgSimpleAxisBBoxScale  = 1.0f;
 
+void TGLUtil::SetSimpleAxisWidthScale(Float_t s) { fgSimpleAxisWidthScale = s; }
+void TGLUtil::SetSimpleAxisBBoxScale(Float_t s) { fgSimpleAxisBBoxScale = s; }
+
 const UChar_t TGLUtil::fgRed[4]    = { 230,   0,   0, 255 };
 const UChar_t TGLUtil::fgGreen[4]  = {   0, 230,   0, 255 };
 const UChar_t TGLUtil::fgBlue[4]   = {   0,   0, 230, 255 };
