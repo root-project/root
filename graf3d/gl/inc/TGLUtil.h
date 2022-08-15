@@ -1049,8 +1049,8 @@ public:
                           const TGLVertex3 & pos,
                                 Bool_t       center = kFALSE);
 
-   static void SetSimpleAxisWidthScale(Float_t s) { fgSimpleAxisWidthScale = s; }
-   static void SetSimpleAxisBBoxScale(Float_t s) { fgSimpleAxisBBoxScale = s; }
+   static void SetSimpleAxisWidthScale(Float_t s);
+   static void SetSimpleAxisBBoxScale(Float_t s);
 
    // Frequently used colors.
    static const UChar_t fgRed[4];
