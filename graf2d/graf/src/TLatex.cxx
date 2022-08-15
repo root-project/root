@@ -390,8 +390,8 @@ End_Macro
 ## Interface to TMathText
 
 The class `TMathText` is a TeX math formulae interpreter. It uses plain
-TeX syntax and uses "\" as control instead of "#". If a piece of text containing
-"\" is given to `TLatex` then `TMathText` is automatically invoked.
+TeX syntax and uses "\\" as control instead of "#". If a piece of text containing
+"\\" is given to `TLatex` then `TMathText` is automatically invoked.
 Therefore, as histograms' titles, axis titles, labels etc ... are drawn using
 `TLatex`, the `TMathText` syntax can be used for them also.
 */
