@@ -19,6 +19,7 @@
 #include "RooAbsReal.h"
 #include "RooObjCacheManager.h"
 #include "RooCmdArg.h"
+#include "RooFit/UniqueId.h"
 
 class RooDataSet;
 class RooDataHist ;
@@ -321,8 +322,23 @@ private:
   void logBatchComputationErrors(RooSpan<const double>& outputs, std::size_t begin) const;
   bool traceEvalPdf(double value) const;
 
+  /// Setter for the _normSet member, which should never be set directly.
+  inline void setActiveNormSet(RooArgSet const* normSet) const {
+    _normSet = normSet;
+    // Also store the unique ID of the _normSet. This makes it possible to
+    // detect if the pointer was invalidated.
+    _normSetId = RooFit::getUniqueId(normSet);
+  }
 
 protected:
+
+  /// Checks if `normSet` is the currently active normalization set of this
+  /// PDF, meaning is exactly the same object as the one the `_normSet` member
+  /// points to (or both are `nullptr`).
+  inline bool isActiveNormSet(RooArgSet const* normSet) const {
+    return RooFit::getUniqueId(normSet).value() == _normSetId;
+  }
+
   double normalizeWithNaNPacking(double rawVal, double normVal) const;
 
   RooPlot *plotOn(RooPlot *frame, PlotOpt o) const override;
@@ -367,6 +383,8 @@ protected:
   static TString _normRangeOverride ;
 
 private:
+  mutable RooFit::UniqueId<RooArgSet>::Value_t _normSetId = RooFit::UniqueId<RooArgSet>::nullval; ///<! Unique ID of the currently-active normalization set
+
   int calcAsymptoticCorrectedCovariance(RooMinimizer& minimizer, RooAbsData const& data);
   int calcSumW2CorrectedCovariance(RooMinimizer& minimizer, RooAbsReal & nll) const;
 

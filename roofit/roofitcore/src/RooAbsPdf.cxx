@@ -366,7 +366,7 @@ double RooAbsPdf::getValV(const RooArgSet* nset) const
 
   // Process change in last data set used
   bool nsetChanged(false) ;
-  if (RooFit::getUniqueId(nset) != RooFit::getUniqueId(_normSet) || _norm==0) {
+  if (!isActiveNormSet(nset) || _norm==0) {
     nsetChanged = syncNormalization(nset) ;
   }
 
@@ -537,7 +537,7 @@ const RooAbsReal* RooAbsPdf::getNormObj(const RooArgSet* nset, const RooArgSet* 
 
 bool RooAbsPdf::syncNormalization(const RooArgSet* nset, bool adjustProxies) const
 {
-  _normSet = nset;
+  setActiveNormSet(nset);
 
   // Check if data sets are identical
   CacheElem* cache = (CacheElem*) _normMgr.getObj(nset) ;
@@ -3535,6 +3535,6 @@ bool RooAbsPdf::redirectServersHook(const RooAbsCollection & newServerList, bool
   // Similar to the situation with the normalization integral above: if a
   // server is redirected, the cached normalization set might not point to
   // the right observables anymore. We need to reset it.
-  _normSet = nullptr ;
+  setActiveNormSet(nullptr);
   return RooAbsReal::redirectServersHook(newServerList, mustReplaceAll, nameChange, isRecursiveStep);
 }
