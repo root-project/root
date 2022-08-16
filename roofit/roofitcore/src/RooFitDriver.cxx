@@ -96,8 +96,6 @@ struct NodeInfo {
          RooBatchCompute::dispatchCUDA->deleteCudaEvent(eventStart);
       if (stream)
          RooBatchCompute::dispatchCUDA->deleteCudaStream(stream);
-
-      absArg->setDataToken(originalDataToken);
    }
 };
 
@@ -246,6 +244,10 @@ void RooFitDriver::setData(DataSpansMap const &dataSpans)
 
 RooFitDriver::~RooFitDriver()
 {
+   for (auto &info : _nodes) {
+      info.absArg->setDataToken(info.originalDataToken);
+   }
+
    if (_batchMode == RooFit::BatchModeOption::Cuda) {
       RooBatchCompute::dispatchCUDA->cudaFree(_cudaMemDataset);
    }
