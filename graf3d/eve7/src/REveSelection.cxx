@@ -21,6 +21,7 @@
 #include <iostream>
 #include <regex>
 
+#include "REveJsonWrapper.hxx"
 #include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
@@ -693,7 +694,7 @@ int REveSelection::RemoveImpliedSelectedReferencesTo(REveElement *el)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write core json. If rnr_offset negative, render data will not be written
 
-Int_t REveSelection::WriteCoreJson(nlohmann::json &j, Int_t /* rnr_offset */)
+Int_t REveSelection::WriteCoreJson(Internal::REveJsonWrapper &j, Int_t /* rnr_offset */)
 {
    REveElement::WriteCoreJson(j, -1);
 
@@ -707,6 +708,7 @@ Int_t REveSelection::WriteCoreJson(nlohmann::json &j, Int_t /* rnr_offset */)
       nlohmann::json rec = {}, imp = nlohmann::json::array(), sec = nlohmann::json::array();
 
       rec["primary"] = i.first->GetElementId();
+      Internal::REveJsonWrapper extra(rec["extra"]);
 
       // XXX if not empty / f_is_sec is false ???
       for (auto &sec_id : i.second.f_sec_idcs)
@@ -715,14 +717,14 @@ Int_t REveSelection::WriteCoreJson(nlohmann::json &j, Int_t /* rnr_offset */)
       // XXX if not empty ???
       for (auto &imp_el : i.second.f_implied) {
          imp.push_back(imp_el->GetElementId());
-         imp_el->FillExtraSelectionData(rec["extra"], sec);
+         imp_el->FillExtraSelectionData(extra, sec);
 
       }
       rec["implied"]  = imp;
 
 
       if (i.first->RequiresExtraSelectionData()) {
-         i.first->FillExtraSelectionData(rec["extra"], sec);
+         i.first->FillExtraSelectionData(extra, sec);
       }
 
       rec["sec_idcs"] = sec;

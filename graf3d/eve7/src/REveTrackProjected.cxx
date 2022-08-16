@@ -15,6 +15,7 @@
 #include <ROOT/REveTrans.hxx>
 #include <ROOT/REveRenderData.hxx>
 
+#include "REveJsonWrapper.hxx"
 #include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
@@ -313,7 +314,7 @@ void REveTrackListProjected::SetDepth(Float_t d, REveElement *el)
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates client representation.
 
-Int_t REveTrackProjected::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+Int_t REveTrackProjected::WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset)
 {
    Int_t ret = REveTrack::WriteCoreJson(j, rnr_offset);
 

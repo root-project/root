@@ -53,7 +53,7 @@ public:
    REveGeoShape(const std::string &name = "REveGeoShape", const std::string &title = "");
    virtual ~REveGeoShape();
 
-   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
+   Int_t WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset) override;
    void BuildRenderData() override;
 
    Int_t GetNSegments() const { return fNSegments; }

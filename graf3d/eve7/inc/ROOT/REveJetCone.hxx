@@ -49,7 +49,7 @@ public:
    REveJetCone(const Text_t *n = "REveJetCone", const Text_t *t = "");
    virtual ~REveJetCone() {}
 
-   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
+   Int_t WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset) override;
    void BuildRenderData() override;
 
    void ComputeBBox() override;

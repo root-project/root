@@ -53,7 +53,7 @@ public:
 
    void SecSelected(REveTrack *) override; // marked as signal in REveTrack
 
-   Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset) override;
+   Int_t WriteCoreJson(Internal::REveJsonWrapper &cj, Int_t rnr_offset) override;
    void BuildRenderData() override;
 };
 

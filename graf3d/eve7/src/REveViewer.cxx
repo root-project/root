@@ -17,6 +17,7 @@
 #include <ROOT/REveManager.hxx>
 #include <ROOT/REveSelection.hxx>
 
+#include "REveJsonWrapper.hxx"
 #include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
@@ -104,7 +105,7 @@ List of Viewers providing common operations on REveViewer collections.
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream Camera Info.
 /// Virtual from REveElement.
-int REveViewer::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+int REveViewer::WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset)
 {
    std::string ct;
    switch (fCameraType)

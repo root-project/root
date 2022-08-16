@@ -30,6 +30,7 @@
 #include <cassert>
 #include <algorithm>
 
+#include "REveJsonWrapper.hxx"
 #include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
@@ -1459,7 +1460,7 @@ const std::string& REveElement::ToString(Bool_t b)
 /// written.
 /// Returns number of bytes written into binary render data.
 
-Int_t REveElement::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+Int_t REveElement::WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset)
 {
    j["_typename"]  = IsA()->GetName();
    j["fName"]      = fName;

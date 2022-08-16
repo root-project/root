@@ -19,6 +19,7 @@
 #include "TArrayI.h"
 #include "TClass.h"
 
+#include "REveJsonWrapper.hxx"
 #include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
@@ -206,7 +207,7 @@ TClass* REvePointSet::ProjectedClass(const REveProjection*) const
 }
 
 
-Int_t REvePointSet::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset)
+Int_t REvePointSet::WriteCoreJson(Internal::REveJsonWrapper& j, Int_t rnr_offset)
 {
    Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
 

@@ -11,6 +11,7 @@
 
 #include <ROOT/REveShape.hxx>
 
+#include "REveJsonWrapper.hxx"
 #include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
@@ -54,7 +55,7 @@ REveShape::~REveShape()
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation.
 
-Int_t REveShape::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+Int_t REveShape::WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset)
 {
    Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
 

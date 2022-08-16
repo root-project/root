@@ -98,7 +98,7 @@ public:
 
    void AddDelegate(Delegate_t d) { fDelegates.push_back(d); }
 
-   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
+   Int_t WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset) override;
 
    // read
    REveTableHandle::Entries_t &RefTableEntries(std::string cname);

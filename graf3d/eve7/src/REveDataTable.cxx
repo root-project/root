@@ -18,6 +18,7 @@
 
 #include <sstream>
 
+#include "REveJsonWrapper.hxx"
 #include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
@@ -53,7 +54,7 @@ void REveDataTable::PrintTable()
    }
 }
 
-Int_t REveDataTable::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+Int_t REveDataTable::WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset)
 {
    int ret = REveElement::WriteCoreJson(j, rnr_offset);
    Int_t Nit = fCollection->GetNItems();

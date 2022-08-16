@@ -523,7 +523,7 @@ void REveTrack::PrintPathMarks()
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation.
 
-Int_t REveTrack::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+Int_t REveTrack::WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset)
 {
    // TODO: missing streaming of fitting points
    return REveLine::WriteCoreJson(j, rnr_offset);

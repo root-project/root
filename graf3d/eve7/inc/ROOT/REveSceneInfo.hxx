@@ -39,7 +39,7 @@ public:
    REveSceneInfo(REveViewer *viewer, REveScene *scene);
    virtual ~REveSceneInfo() {}
 
-   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
+   Int_t WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset) override;
 
    REveViewer *GetViewer() const { return fViewer; }
    REveScene *GetScene() const { return fScene; }

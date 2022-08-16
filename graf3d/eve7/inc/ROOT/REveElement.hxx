@@ -21,21 +21,6 @@
 
 class TGeoMatrix;
 
-namespace nlohmann {
-template<typename T, typename SFINAE>
-struct adl_serializer;
-
-template <template <typename U, typename V, typename... Args> class ObjectType,
-          template <typename U, typename... Args> class ArrayType, class StringType, class BooleanType,
-          class NumberIntegerType, class NumberUnsignedType, class NumberFloatType,
-          template <typename U> class AllocatorType, template <typename T, typename SFINAE = void> class JSONSerializer,
-          class BinaryType>
-class basic_json;
-
-using json = basic_json<std::map, std::vector, std::string, bool, std::int64_t, std::uint64_t, double, std::allocator,
-                        adl_serializer, std::vector<std::uint8_t>>;
-} // namespace nlohmann
-
 namespace ROOT {
 namespace Experimental {
 
@@ -44,6 +29,10 @@ class REveScene;
 class REveCompound;
 class REveTrans;
 class REveRenderData;
+
+namespace Internal {
+struct REveJsonWrapper;
+}
 
 //==============================================================================
 // REveElement
@@ -264,7 +253,7 @@ public:
    virtual void SetTransMatrix(Double_t *carr);
    virtual void SetTransMatrix(const TGeoMatrix &mat);
 
-   virtual Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset);
+   virtual Int_t WriteCoreJson(Internal::REveJsonWrapper &cj, Int_t rnr_offset);
    virtual void  BuildRenderData();
 
    void* GetUserData() const   { return fUserData; }
@@ -328,7 +317,7 @@ public:
    void   CSCApplyMainTransparencyToMatchingChildren() { fCSCBits |= kCSCBApplyMainTransparencyToMatchingChildren; }
 
    virtual bool RequiresExtraSelectionData() const { return false; }
-   virtual void FillExtraSelectionData(nlohmann::json&, const std::set<int>&) const {}
+   virtual void FillExtraSelectionData(Internal::REveJsonWrapper&, const std::set<int>&) const {}
 
    // Change-stamping and change bits
    //---------------------------------

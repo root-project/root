@@ -21,6 +21,7 @@
 
 #include <sstream>
 
+#include "REveJsonWrapper.hxx"
 #include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
@@ -167,7 +168,7 @@ REveTableHandle::Entries_t &REveTableViewInfo::RefTableEntries(std::string cname
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation.
 
-Int_t REveTableViewInfo::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+Int_t REveTableViewInfo::WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset)
 {
    auto ret = REveElement::WriteCoreJson(j, rnr_offset);
    j["fDisplayedCollection"] = fDisplayedCollection;

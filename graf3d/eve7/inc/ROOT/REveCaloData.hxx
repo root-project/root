@@ -223,12 +223,12 @@ public:
    void     SetSelector(REveCaloDataSelector* iSelector) { fSelector.reset(iSelector); }
    REveCaloDataSelector* GetSelector() { return fSelector.get(); }
 
-   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
+   Int_t WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset) override;
 
    static  Float_t EtaToTheta(Float_t eta);
 
    bool RequiresExtraSelectionData() const override { return true; };
-   void FillExtraSelectionData(nlohmann::json&, const std::set<int>&) const override;
+   void FillExtraSelectionData(Internal::REveJsonWrapper&, const std::set<int>&) const override;
 
    using REveElement::GetHighlightTooltip;
    std::string GetHighlightTooltip(const std::set<int>& secondary_idcs) const override;

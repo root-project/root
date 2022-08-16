@@ -12,6 +12,7 @@
 #include <ROOT/REveSceneInfo.hxx>
 #include <ROOT/REveScene.hxx>
 
+#include "REveJsonWrapper.hxx"
 #include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
@@ -37,7 +38,7 @@ REveSceneInfo::REveSceneInfo(REveViewer* viewer, REveScene* scene) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation.
 
-Int_t REveSceneInfo::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+Int_t REveSceneInfo::WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset)
 {
    Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
 

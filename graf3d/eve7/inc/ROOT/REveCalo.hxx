@@ -145,8 +145,8 @@ public:
 
    Bool_t  CellInEtaPhiRng (REveCaloData::CellData_t&) const;
 
-   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
-   virtual void WriteCoreJsonSelection(nlohmann::json &j,  REveCaloData::vCellId_t) = 0;
+   Int_t WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset) override;
+   virtual void WriteCoreJsonSelection(Internal::REveJsonWrapper &j,  REveCaloData::vCellId_t) = 0;
 };
 
 /**************************************************************************/
@@ -177,8 +177,8 @@ public:
    virtual ~REveCalo3D() {}
    void ComputeBBox() override;
 
-   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
-   void WriteCoreJsonSelection(nlohmann::json &j,  REveCaloData::vCellId_t) override;
+   Int_t WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset) override;
+   void WriteCoreJsonSelection(Internal::REveJsonWrapper &j,  REveCaloData::vCellId_t) override;
    void BuildRenderData() override;
 
    void    SetFrameWidth(Float_t w) { fFrameWidth = w; }
@@ -249,8 +249,8 @@ public:
 
    Float_t GetValToHeight() const override;
 
-   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
-   void WriteCoreJsonSelection(nlohmann::json &j,  REveCaloData::vCellId_t) override;
+   Int_t WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset) override;
+   void WriteCoreJsonSelection(Internal::REveJsonWrapper &j,  REveCaloData::vCellId_t) override;
    void BuildRenderData() override;
 
    void NewBinPicked(Int_t bin, Int_t slice, Int_t selectionId, Bool_t multi);

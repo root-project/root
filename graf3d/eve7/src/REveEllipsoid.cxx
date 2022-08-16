@@ -19,6 +19,7 @@
 
 #include <cassert>
 
+#include "REveJsonWrapper.hxx"
 #include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
@@ -92,7 +93,7 @@ TClass* REveEllipsoid::ProjectedClass(const REveProjection*) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation.
 
-Int_t REveEllipsoid::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+Int_t REveEllipsoid::WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset)
 {
    Int_t ret = REveStraightLineSet::WriteCoreJson(j, rnr_offset);
 
@@ -293,7 +294,7 @@ void REveEllipsoidProjected::UpdateProjection()
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation.
 
-Int_t REveEllipsoidProjected::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+Int_t REveEllipsoidProjected::WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset)
 {
    Int_t ret = REveStraightLineSet::WriteCoreJson(j, rnr_offset);
 

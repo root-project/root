@@ -44,7 +44,7 @@ public:
    // For TAttBBox:
    virtual void ComputeBBox() override;
 
-   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
+   Int_t WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset) override;
    void BuildRenderData() override;
    // Projectable:
    virtual TClass* ProjectedClass(const REveProjection* p) const override;
@@ -76,7 +76,7 @@ public:
    virtual ~REveBoxProjected();
 
    void BuildRenderData() override;
-   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
+   Int_t WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset) override;
 
    // For TAttBBox:
    void ComputeBBox() override;

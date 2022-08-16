@@ -16,6 +16,7 @@
 
 #include "TRefArray.h"
 
+#include "REveJsonWrapper.hxx"
 #include <nlohmann/json.hpp>
 
 using namespace::ROOT::Experimental;
@@ -527,7 +528,7 @@ void REveDigitSet::NewShapePicked(int shapeIdx, Int_t selectionId, bool multi)
 
 ////////////////////////////////////////////////////////////////////////////////
 // called from REveSelection to stream specific selection data
-void REveDigitSet::FillExtraSelectionData(nlohmann::json &j, const std::set<int> &secondary_idcs) const
+void REveDigitSet::FillExtraSelectionData(Internal::REveJsonWrapper &j, const std::set<int> &secondary_idcs) const
 {
    j["shape_idcs"] = nlohmann::json::array();
    for (auto &i : secondary_idcs) {
@@ -540,7 +541,7 @@ void REveDigitSet::FillExtraSelectionData(nlohmann::json &j, const std::set<int>
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation.
 
-Int_t REveDigitSet::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+Int_t REveDigitSet::WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset)
 {
    Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
 

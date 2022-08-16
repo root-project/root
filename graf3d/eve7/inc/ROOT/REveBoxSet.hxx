@@ -100,7 +100,7 @@ public:
    void  SetBoxSkip(Int_t bs) { fBoxSkip = bs; }
 
 
-   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
+   Int_t WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset) override;
    void  BuildRenderData() override;
 };
 

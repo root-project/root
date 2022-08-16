@@ -17,6 +17,7 @@
 #include "TRandom.h"
 #include <cassert>
 
+#include "REveJsonWrapper.hxx"
 #include <nlohmann/json.hpp>
 
 using namespace::ROOT::Experimental;
@@ -333,7 +334,7 @@ void REveBoxSet::ComputeBBox()
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation.
 
-Int_t REveBoxSet::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+Int_t REveBoxSet::WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset)
 {
    Int_t ret = REveDigitSet::WriteCoreJson(j, rnr_offset);
    j["boxType"] = int(fBoxType);

@@ -15,6 +15,7 @@
 
 #include "TClass.h"
 
+#include "REveJsonWrapper.hxx"
 #include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
@@ -99,7 +100,7 @@ void REveBox::ComputeBBox()
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation.
 
-Int_t REveBox::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+Int_t REveBox::WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset)
 {
    Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
 
@@ -276,7 +277,7 @@ void REveBoxProjected::BuildRenderData()
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation.
 
-Int_t REveBoxProjected::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+Int_t REveBoxProjected::WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset)
 {
    Int_t ret = REveShape::WriteCoreJson(j, rnr_offset);
 

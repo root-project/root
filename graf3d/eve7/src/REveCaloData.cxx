@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <set>
 
+#include "REveJsonWrapper.hxx"
 #include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
@@ -256,7 +257,7 @@ void REveCaloData::DataChanged()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t REveCaloData::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+Int_t REveCaloData::WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset)
 {
    Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
 
@@ -274,7 +275,7 @@ Int_t REveCaloData::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 }
 ////////////////////////////////////////////////////////////////////////////////
 
-void  REveCaloData::FillExtraSelectionData(nlohmann::json& j, const std::set<int>& secondary_idcs) const
+void  REveCaloData::FillExtraSelectionData(Internal::REveJsonWrapper& j, const std::set<int>& secondary_idcs) const
 {
    vCellId_t cells;
 

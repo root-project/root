@@ -19,6 +19,7 @@
 
 #include <cassert>
 
+#include "REveJsonWrapper.hxx"
 #include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
@@ -162,7 +163,8 @@ void REveScene::StreamElements()
 
    jarr.push_back(jhdr);
 
-   StreamJsonRecurse(this, jarr);
+   Internal::REveJsonWrapper wrappedArr(jarr);
+   StreamJsonRecurse(this, wrappedArr);
    // for (auto &c : fChildren)
    // {
    //    StreamJsonRecurse(c, jarr);
@@ -183,11 +185,12 @@ void REveScene::StreamElements()
    fOutputJson = jarr.dump();
 }
 
-void REveScene::StreamJsonRecurse(REveElement *el, nlohmann::json &jarr)
+void REveScene::StreamJsonRecurse(REveElement *el, Internal::REveJsonWrapper &jarr)
 {
    nlohmann::json jobj = {};
-   Int_t rd_size = el->WriteCoreJson(jobj, fTotalBinarySize);
-   jarr.push_back(jobj);
+   Internal::REveJsonWrapper wrappedObj(jobj);
+   Int_t rd_size = el->WriteCoreJson(wrappedObj, fTotalBinarySize);
+   jarr.json.push_back(jobj);
 
    // If this is another scene, do not stream additional details.
    // It should be requested / subscribed to independently.
@@ -262,6 +265,7 @@ void REveScene::StreamRepresentationChanges()
       nlohmann::json jobj = {};
       jobj["fElementId"] = el->GetElementId();
       jobj["changeBit"]  = bits;
+      Internal::REveJsonWrapper wobj(jobj);
 
       if (bits & kCBElementAdded || bits & kCBObjProps)
       {
@@ -271,7 +275,7 @@ void REveScene::StreamRepresentationChanges()
                  el->GetCName(), bits);
          }
 
-         Int_t rd_size = el->WriteCoreJson(jobj, fTotalBinarySize);
+         Int_t rd_size = el->WriteCoreJson(wobj, fTotalBinarySize);
          if (rd_size) {
             assert (rd_size % 4 == 0);
             fTotalBinarySize += rd_size;
@@ -288,7 +292,7 @@ void REveScene::StreamRepresentationChanges()
 
         if (bits & kCBColorSelection)
         {
-          el->WriteCoreJson(jobj, -1);
+          el->WriteCoreJson(wobj, -1);
         }
 
         if (bits & kCBTransBBox)

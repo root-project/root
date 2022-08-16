@@ -33,7 +33,7 @@ public:
    const REveDataCollection *GetCollection() const { return fCollection; }
 
    void PrintTable();
-   virtual Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset);
+   virtual Int_t WriteCoreJson(Internal::REveJsonWrapper &cj, Int_t rnr_offset);
 
    void AddNewColumn(const std::string& expr, const std::string& title, int prec = 2);
 };

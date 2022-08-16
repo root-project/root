@@ -15,6 +15,7 @@
 
 #include "TClass.h"
 
+#include "REveJsonWrapper.hxx"
 #include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
@@ -280,7 +281,7 @@ TClass* REveLine::ProjectedClass(const REveProjection*) const
 
 //------------------------------------------------------------------------------
 
-Int_t REveLine::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+Int_t REveLine::WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset)
 {
    Int_t ret = REvePointSet::WriteCoreJson(j, rnr_offset);
 

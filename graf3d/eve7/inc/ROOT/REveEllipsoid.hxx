@@ -48,7 +48,7 @@ public:
    void SetBaseVectors(REveVector& v0, REveVector& v1, REveVector& v3);
    void SetPhiStep(float ps);
 
-   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
+   Int_t WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset) override;
 
    TClass *ProjectedClass(const REveProjection *p) const override;
 };
@@ -78,7 +78,7 @@ public:
 
    void BuildRenderData() override;
 
-   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
+   Int_t WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset) override;
 
    virtual void OutlineProjected();
    virtual void SetProjection(REveProjectionManager *mng, REveProjectable *model) override;

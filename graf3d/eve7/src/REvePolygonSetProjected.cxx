@@ -20,6 +20,7 @@
 
 #include <cassert>
 
+#include "REveJsonWrapper.hxx"
 #include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
@@ -68,7 +69,7 @@ REvePolygonSetProjected::~REvePolygonSetProjected()
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation.
 
-Int_t REvePolygonSetProjected::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset)
+Int_t REvePolygonSetProjected::WriteCoreJson(Internal::REveJsonWrapper& j, Int_t rnr_offset)
 {
    Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
 

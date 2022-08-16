@@ -45,6 +45,7 @@
 #include <iostream>
 #include <regex>
 
+#include "REveJsonWrapper.hxx"
 #include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;

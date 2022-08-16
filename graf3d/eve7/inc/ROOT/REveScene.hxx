@@ -102,7 +102,7 @@ public:
    void ProcessChanges();
 
    void StreamElements();
-   void StreamJsonRecurse(REveElement *el, nlohmann::json &jobj);
+   void StreamJsonRecurse(REveElement *el, Internal::REveJsonWrapper &jobj);
 
    // void   Repaint(Bool_t dropLogicals=kFALSE);
    // void   RetransHierarchically();

@@ -115,7 +115,7 @@ public:
 
    TClass* ProjectedClass(const REveProjection* p) const override;
 
-   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
+   Int_t WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset) override;
    void  BuildRenderData() override;
 
    void ComputeBBox() override;

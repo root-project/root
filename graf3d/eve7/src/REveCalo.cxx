@@ -25,6 +25,7 @@
 #include <cassert>
 #include <iostream>
 
+#include "REveJsonWrapper.hxx"
 #include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
@@ -424,7 +425,7 @@ void REveCaloViz::SetupHeight(Float_t value, Int_t /*slice*/, Float_t& outH) con
 ///////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation.
 
-Int_t REveCaloViz::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+Int_t REveCaloViz::WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset)
 {
    // The slice colors need to be streamed becuse at EveElement contruction time, streamed caloData
    // is not available. Maybe this is not necessary if EveElements have EveManager globaly available
@@ -656,7 +657,7 @@ void REveCalo3D::BuildRenderData()
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation.
 
-Int_t REveCalo3D::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+Int_t REveCalo3D::WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset)
 {
    return REveCaloViz::WriteCoreJson(j, rnr_offset);
 }
@@ -664,7 +665,7 @@ Int_t REveCalo3D::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation for selection.
 
-void REveCalo3D::WriteCoreJsonSelection(nlohmann::json &j, REveCaloData::vCellId_t cells)
+void REveCalo3D::WriteCoreJsonSelection(Internal::REveJsonWrapper &j, REveCaloData::vCellId_t cells)
 {
    // selection
    auto sarr = nlohmann::json::array();
@@ -686,7 +687,7 @@ void REveCalo3D::WriteCoreJsonSelection(nlohmann::json &j, REveCaloData::vCellId
    rec["caloVizId"] = GetElementId();
    rec["cells"] = sarr;
 
-   j.push_back(rec);
+   j.json.push_back(rec);
 }
 
 
@@ -1017,7 +1018,7 @@ void REveCalo2D::ComputeBBox()
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation.
 
-Int_t REveCalo2D::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+Int_t REveCalo2D::WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset)
 {
    Int_t ret = REveCaloViz::WriteCoreJson(j, rnr_offset);
    j["isRPhi"] = IsRPhi();
@@ -1027,7 +1028,7 @@ Int_t REveCalo2D::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation for selection.
 
-void REveCalo2D::WriteCoreJsonSelection(nlohmann::json &j, REveCaloData::vCellId_t cells)
+void REveCalo2D::WriteCoreJsonSelection(Internal::REveJsonWrapper &j, REveCaloData::vCellId_t cells)
 {
    static const REveException eh("REveCalo2D::WriteCoreJsonSelection ");
    auto sarr = nlohmann::json::array();
@@ -1161,7 +1162,7 @@ void REveCalo2D::WriteCoreJsonSelection(nlohmann::json &j, REveCaloData::vCellId
    nlohmann::json rec = {};
    rec["caloVizId"] = GetElementId();
    rec["cells"] = sarr;
-   j.push_back(rec);
+   j.json.push_back(rec);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

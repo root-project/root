@@ -25,6 +25,7 @@
 #include <sstream>
 #include <regex>
 
+#include "REveJsonWrapper.hxx"
 #include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
@@ -106,7 +107,7 @@ void REveDataItemList::FillImpliedSelectedSet(Set_t &impSelSet, const std::set<i
 //______________________________________________________________________________
 
 
-Int_t REveDataItemList::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+Int_t REveDataItemList::WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset)
 {
    Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
    j["items"] =  nlohmann::json::array();
@@ -353,7 +354,7 @@ void REveDataCollection::ApplyFilter()
 
 //______________________________________________________________________________
 
-void  REveDataCollection::StreamPublicMethods(nlohmann::json &j) const
+void  REveDataCollection::StreamPublicMethods(Internal::REveJsonWrapper &j) const
 {
    struct PubMethods
    {
@@ -462,7 +463,7 @@ Bool_t REveDataCollection::SetRnrState(Bool_t iRnrSelf)
 
 //______________________________________________________________________________
 
-Int_t REveDataCollection::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+Int_t REveDataCollection::WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset)
 {
    Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
    j["fFilterExpr"] = fFilterExpr.Data();

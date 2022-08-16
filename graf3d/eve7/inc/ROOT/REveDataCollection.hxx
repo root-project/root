@@ -81,7 +81,7 @@ private:
 public:
    REveDataItemList(const std::string& n = "Items", const std::string& t = "");
    virtual ~REveDataItemList() {}
-   Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset) override;
+   Int_t WriteCoreJson(Internal::REveJsonWrapper &cj, Int_t rnr_offset) override;
 
    virtual void ItemChanged(REveDataItem *item);
    virtual void ItemChanged(Int_t idx);
@@ -151,8 +151,8 @@ public:
    void *GetDataPtr(Int_t i) const { return  fItemList->fItems[i]->GetDataPtr(); }
    const REveDataItem* GetDataItem(Int_t i) const { return  fItemList->fItems[i]; }
 
-   void  StreamPublicMethods(nlohmann::json &cj) const;
-   Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset) override;
+   void  StreamPublicMethods(Internal::REveJsonWrapper &cj) const;
+   Int_t WriteCoreJson(Internal::REveJsonWrapper &cj, Int_t rnr_offset) override;
 
    void SetMainColor(Color_t) override;
 

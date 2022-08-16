@@ -49,7 +49,7 @@ public:
    REveShape(const std::string &n = "REveShape", const std::string &t = "");
    virtual ~REveShape();
 
-   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
+   Int_t WriteCoreJson(Internal::REveJsonWrapper &j, Int_t rnr_offset) override;
 
    // Rendering parameters.
    void SetMainColor(Color_t color) override;
