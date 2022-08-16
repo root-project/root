@@ -1902,7 +1902,7 @@ T TClingCallFunc::ExecT(void *address)
       return 0;
    }
 
-   if (fReturnIsRecordType)
+   if (ret.needsManagedAllocation())
       ((TCling *)gCling)->RegisterTemporary(ret);
    return sv_to<T>(ret);
 }
@@ -2081,8 +2081,6 @@ TInterpreter::CallFuncIFacePtr_t TClingCallFunc::IFacePtr()
       } else {
          fWrapper = make_wrapper();
       }
-
-      fReturnIsRecordType = GetDecl()->getReturnType().getCanonicalType()->isRecordType();
    }
    return TInterpreter::CallFuncIFacePtr_t(fWrapper);
 }
