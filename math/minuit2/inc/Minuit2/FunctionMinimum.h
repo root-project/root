@@ -17,6 +17,7 @@
 
 #include <vector>
 #include <memory>
+#include <cmath>
 
 #ifdef G__DICTIONARY
 typedef ROOT::Minuit2::MinimumState MinimumState;
@@ -100,7 +101,7 @@ public:
    bool HasMadePosDefCovar() const { return State().Error().IsMadePosDef(); }
    bool HesseFailed() const { return State().Error().HesseFailed(); }
    bool HasCovariance() const { return State().Error().IsAvailable(); }
-   bool IsAboveMaxEdm() const { return fPtr->fAboveMaxEdm; }
+   bool IsAboveMaxEdm() const { return fPtr->fAboveMaxEdm || std::isnan(Edm()); }
    bool HasReachedCallLimit() const { return fPtr->fReachedCallLimit; }
 
    void SetErrorDef(double up)
