@@ -45,6 +45,7 @@ std::unique_ptr<ROperator> make_ROperator_BasicBinary(const onnx::NodeProto &nod
 std::unique_ptr<ROperator> make_ROperator_Neg(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
 std::unique_ptr<ROperator> make_ROperator_Identity(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
 std::unique_ptr<ROperator> make_ROperator_Softmax(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
+std::unique_ptr<ROperator> make_ROperator_Max(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
 std::unique_ptr<ROperator> make_ROperator_Concat(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
 std::unique_ptr<ROperator> make_ROperator_Cast(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
 template <EReduceOpMode Op1>
@@ -84,6 +85,7 @@ const factoryMethodMap mapOptypeOperator = {
    {"Flatten", &make_ROperator_Reshape},
    {"Identity", &make_ROperator_Identity},
    {"Softmax", &make_ROperator_Softmax},
+   {"Max", &make_ROperator_Max},
    {"Concat", &make_ROperator_Concat},
    {"Cast", &make_ROperator_Cast}
 };
