@@ -74,7 +74,6 @@ private:
    mutable llvm::SmallVector<cling::Value, 8> fArgVals;
    /// If true, do not limit number of function arguments to declared number.
    bool fIgnoreExtraArgs : 1;
-   bool fReturnIsRecordType : 1;
 
 private:
    enum EReferenceType {
@@ -153,14 +152,13 @@ public:
    ~TClingCallFunc() = default;
 
    explicit TClingCallFunc(cling::Interpreter *interp)
-      : fInterp(interp), fWrapper(0), fIgnoreExtraArgs(false), fReturnIsRecordType(false)
+      : fInterp(interp), fWrapper(0), fIgnoreExtraArgs(false)
    {
       fMethod = std::unique_ptr<TClingMethodInfo>(new TClingMethodInfo(interp));
    }
 
    explicit TClingCallFunc(const TClingMethodInfo &minfo)
-   : fInterp(minfo.GetInterpreter()), fWrapper(0), fIgnoreExtraArgs(false),
-     fReturnIsRecordType(false)
+   : fInterp(minfo.GetInterpreter()), fWrapper(0), fIgnoreExtraArgs(false)
 
    {
       fMethod = std::unique_ptr<TClingMethodInfo>(new TClingMethodInfo(minfo));
@@ -168,7 +166,7 @@ public:
 
    TClingCallFunc(const TClingCallFunc &rhs)
       : fInterp(rhs.fInterp), fWrapper(rhs.fWrapper), fArgVals(rhs.fArgVals),
-        fIgnoreExtraArgs(rhs.fIgnoreExtraArgs), fReturnIsRecordType(rhs.fReturnIsRecordType)
+        fIgnoreExtraArgs(rhs.fIgnoreExtraArgs)
    {
       fMethod = std::unique_ptr<TClingMethodInfo>(new TClingMethodInfo(*rhs.fMethod));
    }
