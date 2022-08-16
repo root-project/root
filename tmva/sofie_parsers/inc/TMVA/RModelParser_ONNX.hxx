@@ -85,9 +85,10 @@ const factoryMethodMap mapOptypeOperator = {
    {"Flatten", &make_ROperator_Reshape},
    {"Identity", &make_ROperator_Identity},
    {"Softmax", &make_ROperator_Softmax},
-   {"Max", &make_ROperator_Max},
    {"Concat", &make_ROperator_Concat},
    {"Cast", &make_ROperator_Cast}
+   {"Max", &make_ROperator_Max},
+   {"Concat", &make_ROperator_Concat}
 };
 
 using factoryMethodMap1 = std::unordered_map<std::string, std::unique_ptr<ROperator> (*)(const onnx::NodeProto&,const onnx::NodeProto&, const onnx::GraphProto&, std::unordered_map<std::string, ETensorType>&)>;
