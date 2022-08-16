@@ -34,22 +34,21 @@ using ROOT::Experimental::RooNLLVarNew;
 
 namespace {
 
-std::unique_ptr<RooAbsArg> prepareSimultaneousModelForBatchMode(RooSimultaneous &simPdf, RooArgSet &observables,
-                                                                bool isExtended, std::string const &rangeName,
-                                                                bool doOffset)
+std::unique_ptr<RooAbsArg> createSimultaneousNLL(std::unique_ptr<RooSimultaneous> &&simPdf, RooArgSet &observables,
+                                                 bool isExtended, std::string const &rangeName, bool doOffset)
 {
    // Prepare the NLLTerms for each component
    RooArgList nllTerms;
    RooArgSet newObservables;
-   for (auto const &catItem : simPdf.indexCat()) {
+   for (auto const &catItem : simPdf->indexCat()) {
       auto const &catName = catItem.first;
-      if (RooAbsPdf *pdf = simPdf.getPdf(catName.c_str())) {
-         auto nllName = std::string("nll_") + pdf->GetName();
-         auto *nll =
-            new RooNLLVarNew(nllName.c_str(), nllName.c_str(), *pdf, observables, isExtended, rangeName, doOffset);
+      if (RooAbsPdf *pdf = simPdf->getPdf(catName.c_str())) {
+         auto name = std::string("nll_") + pdf->GetName();
+         auto nll = std::make_unique<RooNLLVarNew>(name.c_str(), name.c_str(), *pdf, observables, isExtended, rangeName,
+                                                   doOffset);
          // Rename the observables and weights
          newObservables.add(nll->prefixObservableAndWeightNames(std::string("_") + catName + "_"));
-         nllTerms.add(*nll);
+         nllTerms.addOwned(std::move(nll));
       }
    }
 
@@ -57,7 +56,10 @@ std::unique_ptr<RooAbsArg> prepareSimultaneousModelForBatchMode(RooSimultaneous 
    observables.add(newObservables);
 
    // Time to sum the NLLs
-   return std::make_unique<RooAddition>("mynll", "mynll", nllTerms, true);
+   auto nll = std::make_unique<RooAddition>("mynll", "mynll", nllTerms);
+   nll->addOwnedComponents(std::move(simPdf));
+   nll->addOwnedComponents(std::move(nllTerms));
+   return nll;
 }
 
 } // namespace
@@ -97,12 +99,16 @@ RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data, std::uniqu
 
    RooArgList nllTerms;
 
+   RooAbsCategory const *indexCatForSplitting = nullptr;
    if (auto simPdf = dynamic_cast<RooSimultaneous *>(&finalPdf)) {
-      auto *simPdfClone = static_cast<RooSimultaneous *>(simPdf->cloneTree());
+      RooArgSet parameters;
+      finalPdf.getParameters(data.get(), parameters);
+      std::unique_ptr<RooSimultaneous> simPdfClone{static_cast<RooSimultaneous *>(simPdf->cloneTree())};
+      indexCatForSplitting = &simPdfClone->indexCat();
+      simPdfClone->recursiveRedirectServers(parameters);
       simPdfClone->wrapPdfsInBinSamplingPdfs(data, integrateOverBinsPrecision);
       // Warning! This mutates "observables"
-      nllTerms.addOwned(
-         prepareSimultaneousModelForBatchMode(*simPdfClone, observables, isExtended, rangeName, doOffset));
+      nllTerms.addOwned(createSimultaneousNLL(std::move(simPdfClone), observables, isExtended, rangeName, doOffset));
    } else {
       nllTerms.addOwned(std::make_unique<RooNLLVarNew>("RooNLLVarNew", "RooNLLVarNew", finalPdf, observables,
                                                        isExtended, rangeName, doOffset));
@@ -115,14 +121,6 @@ RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data, std::uniqu
    auto nll = std::make_unique<RooAddition>(nllName.c_str(), nllName.c_str(), nllTerms);
    nll->addOwnedComponents(std::move(binSamplingPdfs));
    nll->addOwnedComponents(std::move(nllTerms));
-
-   RooAbsCategory const *indexCatForSplitting = nullptr;
-   if (auto simPdf = dynamic_cast<RooSimultaneous *>(&finalPdf)) {
-      RooArgSet parameters;
-      pdf.getParameters(data.get(), parameters);
-      nll->recursiveRedirectServers(parameters);
-      indexCatForSplitting = &simPdf->indexCat();
-   }
 
    driver = std::make_unique<RooFitDriver>(*nll, observables, batchMode);
    driver->setData(data, rangeName, indexCatForSplitting, /*skipZeroWeights=*/true);
@@ -254,5 +252,5 @@ std::unique_ptr<RooAbsReal>
 RooFit::BatchModeHelpers::makeDriverAbsRealWrapper(std::unique_ptr<ROOT::Experimental::RooFitDriver> driver,
                                                    RooArgSet const &observables)
 {
-   return std::unique_ptr<RooAbsReal>{new RooAbsRealWrapper{*driver.release(), observables, true}};
+   return std::make_unique<RooAbsRealWrapper>(*driver.release(), observables, true);
 }
