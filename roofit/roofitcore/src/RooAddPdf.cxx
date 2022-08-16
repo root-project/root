@@ -464,7 +464,7 @@ double RooAddPdf::getValV(const RooArgSet* normSet) const
 
   // Process change in last data set used
   bool nsetChanged(false) ;
-  if (RooFit::getUniqueId(nset) != RooFit::getUniqueId(_normSet) || _norm==0) {
+  if (!isActiveNormSet(nset) || _norm==0) {
     nsetChanged = syncNormalization(nset) ;
   }
 
