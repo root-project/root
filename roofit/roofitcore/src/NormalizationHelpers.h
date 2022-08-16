@@ -36,6 +36,7 @@ private:
    RooAbsArg *_arg = nullptr;
    std::unordered_map<RooFit::Detail::DataKey, RooArgSet *> _normSets;
    RooArgSet _replacedArgs;
+   RooArgSet _newArgs;
    bool _normSetWasEmpty;
 };
 

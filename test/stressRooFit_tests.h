@@ -1439,7 +1439,7 @@ public:
     // Fit gxlx to data
     {
       // Get rid of the caching info prints
-    RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::Caching, true};
+      RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::Caching, true};
       lxg.fitTo(*data,BatchMode(_batchMode)) ;
     }
 
@@ -4942,9 +4942,13 @@ public:
   RooPlot* frame3 = alpha.frame(Bins(100),Range(0.5,0.9)) ;
 
   // Make 2D pdf of histogram
-  std::unique_ptr<RooAbsReal> nll{lmorph.createNLL(*data, BatchMode(_batchMode))};
-  nll->SetName("nll");
-  nll->plotOn(frame3,ShiftToZero()) ;
+  {
+    // Get rid of the caching info prints
+    RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::Caching, true};
+    std::unique_ptr<RooAbsReal> nll{lmorph.createNLL(*data, BatchMode(_batchMode))};
+    nll->SetName("nll");
+    nll->plotOn(frame3,ShiftToZero()) ;
+  }
 
   lmorph.setCacheAlpha(kFALSE) ;
 
