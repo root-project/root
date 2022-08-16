@@ -193,10 +193,9 @@ namespace {
 
 class RooAbsRealWrapper final : public RooAbsReal {
 public:
-   RooAbsRealWrapper() {}
-   RooAbsRealWrapper(RooFitDriver &driver, RooArgSet const &observables, bool ownsDriver)
-      : RooAbsReal{"RooFitDriverWrapper", "RooFitDriverWrapper"}, _driver{&driver},
-        _topNode("topNode", "top node", this, _driver->topNode()), _ownsDriver{ownsDriver}
+   RooAbsRealWrapper(std::unique_ptr<RooFitDriver> driver, RooArgSet const &observables)
+      : RooAbsReal{"RooFitDriverWrapper", "RooFitDriverWrapper"}, _driver{std::move(driver)},
+        _topNode("topNode", "top node", this, _driver->topNode())
    {
       _driver->topNode().getParameters(&observables, _parameters, true);
    }
@@ -207,18 +206,11 @@ public:
    {
    }
 
-   ~RooAbsRealWrapper() override
-   {
-      if (_ownsDriver)
-         delete _driver;
-   }
-
    TObject *clone(const char *newname) const override { return new RooAbsRealWrapper(*this, newname); }
 
    double defaultErrorLevel() const override { return _driver->topNode().defaultErrorLevel(); }
 
-   bool
-   getParameters(const RooArgSet *observables, RooArgSet &outputSet, bool /*stripDisconnected=true*/) const override
+   bool getParameters(const RooArgSet *observables, RooArgSet &outputSet, bool /*stripDisconnected*/) const override
    {
       outputSet.add(_parameters);
       if (observables) {
@@ -238,10 +230,9 @@ protected:
    double evaluate() const override { return _driver ? _driver->getVal() : 0.0; }
 
 private:
-   RooFitDriver *_driver = nullptr;
+   std::shared_ptr<RooFitDriver> _driver;
    RooRealProxy _topNode;
    RooArgSet _parameters;
-   bool _ownsDriver = false;
 };
 
 } // namespace
@@ -252,5 +243,5 @@ std::unique_ptr<RooAbsReal>
 RooFit::BatchModeHelpers::makeDriverAbsRealWrapper(std::unique_ptr<ROOT::Experimental::RooFitDriver> driver,
                                                    RooArgSet const &observables)
 {
-   return std::make_unique<RooAbsRealWrapper>(*driver.release(), observables, true);
+   return std::make_unique<RooAbsRealWrapper>(std::move(driver), observables);
 }
