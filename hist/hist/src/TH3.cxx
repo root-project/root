@@ -4428,7 +4428,8 @@ TH3D::TH3D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 TH3D::TH3D(const TH3D &h3d) : TH3(), TArrayD()
 {
-   h3d.TH3D::Copy(*this);
+   // intentially call virtual Copy method to warn if TProfile3D is copied
+   h3d.Copy(*this);
 }
 
 
@@ -4502,8 +4503,9 @@ void TH3D::Streamer(TBuffer &R__b)
 
 TH3D& TH3D::operator=(const TH3D &h3d)
 {
+   // intentially call virtual Copy method to warn if TProfile3D is copied
    if (this != &h3d)
-      h3d.TH3D::Copy(*this);
+      h3d.Copy(*this);
    return *this;
 }
 

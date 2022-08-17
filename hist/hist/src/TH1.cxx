@@ -10145,7 +10145,8 @@ TH1D::~TH1D()
 
 TH1D::TH1D(const TH1D &h1d) : TH1(), TArrayD()
 {
-   h1d.TH1D::Copy(*this);
+   // intentially call virtual method to warn if TProfile is copying
+   h1d.Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -10181,8 +10182,9 @@ void TH1D::SetBinsLength(Int_t n)
 
 TH1D& TH1D::operator=(const TH1D &h1d)
 {
+   // intentially call virtual method to warn if TProfile is copying
    if (this != &h1d)
-      h1d.TH1D::Copy(*this);
+      h1d.Copy(*this);
    return *this;
 }
 
