@@ -3914,7 +3914,8 @@ TH2D::TH2D(const TMatrixDBase &m)
 
 TH2D::TH2D(const TH2D &h2d) : TH2(), TArrayD()
 {
-   h2d.TH2D::Copy(*this);
+   // intentially call virtual Copy method to warn if TProfile2D is copied
+   h2d.Copy(*this);
 }
 
 
@@ -3989,8 +3990,9 @@ void TH2D::Streamer(TBuffer &R__b)
 
 TH2D& TH2D::operator=(const TH2D &h2d)
 {
+   // intentially call virtual Copy method to warn if TProfile2D is copied
    if (this != &h2d)
-      h2d.TH2D::Copy(*this);
+      h2d.Copy(*this);
    return *this;
 }
 
