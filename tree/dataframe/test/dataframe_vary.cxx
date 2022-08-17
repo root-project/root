@@ -367,9 +367,9 @@ TEST(RDFVary, SaveGraph)
    // (at the moment, `Vary` calls are not displayed)
    EXPECT_EQ(
       s,
-      "digraph {\n\t1 [label=<Count>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n\t2 "
-      "[label=<Define<BR/>x>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n\t0 [label=<Empty "
-      "source<BR/>Entries: 1>, style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n\t2 -> 1;\n\t0 -> 2;\n}");
+      "digraph {\n\t1 [label=\"Count\", style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n\t2 "
+      "[label=\"Define\\nx\", style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n\t0 [label=\"Empty "
+      "source\\nEntries: 1\", style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n\t2 -> 1;\n\t0 -> 2;\n}");
 }
 
 TEST_P(RDFVary, SimpleSum)
