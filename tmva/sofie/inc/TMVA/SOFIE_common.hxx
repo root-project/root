@@ -422,6 +422,20 @@ extern "C" void sgemm_(const char * transa, const char * transb, const int * m, 
                        const float * alpha, const float * A, const int * lda, const float * B, const int * ldb,
                        const float * beta, float * C, const int * ldc);
 }//BLAS
+
+namespace GNN{
+   struct GNN_Data {
+      std::unordered_map<std::string,std::vector<float>> nodes;
+      std::unordered_map<std::pair<int,int>,std::vector<float>> edges;
+      std::unordered_map<std::string, std::vector<float>> globals; 
+   };
+
+   struct GNN_Agg {
+      std::pair<int,int> edge;
+      std::string receiver;
+      std::string sender;
+   };
+}
 }//SOFIE
 }//Experimental
 }//TMVA
