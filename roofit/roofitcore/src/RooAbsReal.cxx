@@ -2763,9 +2763,17 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
     }
   }
 
+  // Function to plot a single curve, creating a copy of the plotArgList to
+  // pass as plot command arguments. The "FillColor" command is removed because
+  // it has no effect on plotting single curves and would cause a warning.
+  auto plotFunc = [&](RooAbsReal const& absReal) {
+    RooLinkedList tmp(plotArgList) ;
+    RooCmdConfig::stripCmdList(tmp, "FillColor");
+    absReal.plotOn(frame, tmp);
+  };
+
   // Generate central value curve
-  RooLinkedList tmp(plotArgList) ;
-  plotOn(frame,tmp) ;
+  plotFunc(*this);
   RooCurve* cenCurve = frame->getCurve() ;
   if(!cenCurve){
     coutE(Plotting) << ClassName() << "::" << GetName() << ":plotOnWithErrorBand: no curve for central value available" << endl;
@@ -2805,8 +2813,7 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
     vector<RooCurve*> cvec ;
     for (int i=0 ; i<d->numEntries() ; i++) {
       cloneParams.assign(*d->get(i)) ;
-      RooLinkedList tmp2(plotArgList) ;
-      cloneFunc->plotOn(frame,tmp2) ;
+      plotFunc(*cloneFunc);
       cvec.push_back(frame->getCurve()) ;
       frame->remove(0,false) ;
     }
@@ -2887,16 +2894,14 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
       ((RooRealVar*)paramList.at(ivar))->setVal(cenVal+Z*errVal) ;
 
 
-      RooLinkedList tmp2(plotArgList) ;
-      cloneFunc->plotOn(frame,tmp2) ;
+      plotFunc(*cloneFunc);
       plusVar.push_back(frame->getCurve()) ;
       frame->remove(0,false) ;
 
 
       // Make Minus variation
       ((RooRealVar*)paramList.at(ivar))->setVal(cenVal-Z*errVal) ;
-      RooLinkedList tmp3(plotArgList) ;
-      cloneFunc->plotOn(frame,tmp3) ;
+      plotFunc(*cloneFunc);
       minusVar.push_back(frame->getCurve()) ;
       frame->remove(0,false) ;
 
