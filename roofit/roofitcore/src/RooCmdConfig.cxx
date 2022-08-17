@@ -569,7 +569,7 @@ bool RooCmdConfig::ok(bool verbose) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Utility function that strips command names listed (comma separated) in cmdsToPurge from cmdList
 
-void RooCmdConfig::stripCmdList(RooLinkedList& cmdList, const char* cmdsToPurge) const
+void RooCmdConfig::stripCmdList(RooLinkedList& cmdList, const char* cmdsToPurge)
 {
   // Sanity check
   if (!cmdsToPurge) return ;
