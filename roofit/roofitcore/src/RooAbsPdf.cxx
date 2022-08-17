@@ -365,13 +365,13 @@ double RooAbsPdf::getValV(const RooArgSet* nset) const
 
 
   // Process change in last data set used
-  bool nsetChanged(false) ;
+  bool nintChanged(false) ;
   if (!isActiveNormSet(nset) || _norm==0) {
-    nsetChanged = syncNormalization(nset) ;
+    nintChanged = syncNormalization(nset) ;
   }
 
   // Return value of object. Calculated if dirty, otherwise cached value is returned.
-  if (isValueDirty() || nsetChanged || _norm->isValueDirty()) {
+  if (isValueDirty() || nintChanged || _norm->isValueDirty()) {
 
     // Evaluate numerator
     const double rawVal = evaluate();
@@ -543,18 +543,22 @@ bool RooAbsPdf::syncNormalization(const RooArgSet* nset, bool adjustProxies) con
   CacheElem* cache = (CacheElem*) _normMgr.getObj(nset) ;
   if (cache) {
 
-    bool nsetChanged = (_norm!=cache->_norm) ;
+    bool nintChanged = (_norm!=cache->_norm) ;
     _norm = cache->_norm ;
 
-
-//      cout << "returning existing object " << _norm->GetName() << endl ;
-
-    if (nsetChanged && adjustProxies) {
+    // In the past, this condition read `if (nintChanged && adjustProxies)`.
+    // However, the cache checks if the nset was already cached **by content**,
+    // and not by RooArgSet instance! So it can happen that the normalization
+    // set object is different, but the integral object is the same, in which
+    // case it would be wrong to not adjust the proxies. They always have to be
+    // adjusted when the nset changed, which is always the case when
+    // `syncNormalization()` is called.
+    if (adjustProxies) {
       // Update dataset pointers of proxies
       ((RooAbsPdf*) this)->setProxyNormSet(nset) ;
     }
 
-    return nsetChanged ;
+    return nintChanged ;
   }
 
   // Update dataset pointers of proxies
