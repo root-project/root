@@ -2759,7 +2759,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
   }
 
   // Remove PDF-only commands from command list
-  pc.stripCmdList(cmdList,"SelectCompSet,SelectCompSpec") ;
+  RooCmdConfig::stripCmdList(cmdList,"SelectCompSet,SelectCompSpec") ;
 
   // Adjust normalization, if so requested
   if (asymCat) {

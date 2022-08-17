@@ -1151,7 +1151,7 @@ RooPlot* RooMCStudy::plotPull(const RooRealVar& param, const RooCmdArg& arg1, co
     bool fitGauss=pc.getInt("fitGauss") ;
 
     // Pass stripped command list to plotOn()
-    pc.stripCmdList(cmdList,"FitGauss") ;
+    RooCmdConfig::stripCmdList(cmdList,"FitGauss") ;
     const bool success = _fitParData->plotOn(frame,cmdList) ;
 
     if (!success) {
@@ -1219,7 +1219,7 @@ RooPlot* RooMCStudy::makeFrameAndPlotCmd(const RooRealVar& param, RooLinkedList&
   }
 
   // Filter frame command from list and pass on to plotOn()
-  pc.stripCmdList(cmdList,"FrameArgs,Bins,Range") ;
+  RooCmdConfig::stripCmdList(cmdList,"FrameArgs,Bins,Range") ;
 
   return frame ;
 }

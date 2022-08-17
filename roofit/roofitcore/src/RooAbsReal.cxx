@@ -1411,7 +1411,7 @@ TH1* RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
   }
 
   RooLinkedList argListCreate(argList) ;
-  pc.stripCmdList(argListCreate,"Scaling,ProjectedObservables,IntrinsicBinning,SelectCompSet,SelectCompSpec,Extended") ;
+  RooCmdConfig::stripCmdList(argListCreate,"Scaling,ProjectedObservables,IntrinsicBinning,SelectCompSet,SelectCompSpec,Extended") ;
 
   TH1* histo(0) ;
   if (intBinning) {
@@ -2748,8 +2748,7 @@ double RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet &n
 RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, double Z,const RooArgSet* params, const RooLinkedList& argList, bool linMethod) const
 {
   RooLinkedList plotArgListTmp(argList) ;
-  RooCmdConfig pc(Form("RooAbsPdf::plotOn(%s)",GetName())) ;
-  pc.stripCmdList(plotArgListTmp,"VisualizeError,MoveToBack") ;
+  RooCmdConfig::stripCmdList(plotArgListTmp,"VisualizeError,MoveToBack") ;
 
   // Strip any 'internal normalization' arguments from list
   RooLinkedList plotArgList ;
@@ -2932,6 +2931,7 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
   if (!band) return frame ;
 
   // Define configuration for this method
+  RooCmdConfig pc(Form("RooAbsPdf::plotOn(%s)",GetName())) ;
   pc.defineString("drawOption","DrawOption",0,"F") ;
   pc.defineString("curveNameSuffix","CurveNameSuffix",0,"") ;
   pc.defineInt("lineColor","LineColor",0,-999) ;

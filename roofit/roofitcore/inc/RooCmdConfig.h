@@ -77,7 +77,7 @@ public:
   std::string missingArgs() const ;
 
   RooLinkedList filterCmdList(RooLinkedList& cmdInList, const char* cmdNameList, bool removeFromInList=true) const;
-  void stripCmdList(RooLinkedList& cmdList, const char* cmdsToPurge) const;
+  static void stripCmdList(RooLinkedList& cmdList, const char* cmdsToPurge);
   bool hasProcessed(const char* cmdName) const ;
 
   void print() const;

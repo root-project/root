@@ -833,7 +833,7 @@ TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
     vars.add(*zvar) ;
   }
 
-  pc.stripCmdList(argList,"CutRange,CutSpec") ;
+  RooCmdConfig::stripCmdList(argList,"CutRange,CutSpec") ;
 
   // Swap Auto(Sym)RangeData with a Binning command
   RooLinkedList ownedCmds ;
