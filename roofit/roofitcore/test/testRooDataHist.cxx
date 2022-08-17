@@ -9,6 +9,9 @@
 #include "RooCategory.h"
 #include "RooHistFunc.h"
 #include "RooHistPdf.h"
+#include "RooAbsArg.h"
+#include "RooDataSet.h"
+#include "RooRandom.h"
 
 #include "TH1D.h"
 #include "TH2D.h"
@@ -666,4 +669,91 @@ TEST(RooDataHist, CombinedRooDataHistBinning)
    // In both cases the number of bins should be 40 + 40 = 80
    EXPECT_EQ(dhComb1.numEntries(), 80);
    EXPECT_EQ(dhComb2.numEntries(), 80);
+}
+
+
+
+TEST(RooDataHist, VectorizedWeightsZeroInterpolation)
+{
+  const double xMin = -1;
+  const double xMax = 1;
+  const std::size_t nBins = 100;
+  std::vector<double> boundaries(nBins + 1);
+  for(std::size_t i = 0; i < boundaries.size(); ++i) {
+      boundaries[i] = ((xMax - xMin) / nBins) * i + xMin;
+  }
+  TH1D h1{"h1", "h1", nBins, boundaries.data()};
+  
+  h1.FillRandom("gaus");
+
+  RooRealVar x("x", "x", 0, xMin, xMax);
+  RooDataHist dh{"dh", "dh", x, &h1};
+  RooHistPdf histPdf{"histPdf", "histPdf", x, dh};
+
+  // Fill 10 000 random x values
+  std::size_t nVals = 10000;
+  std::vector<double> xVals(nVals);
+  RooDataSet data{"data", "data", x};
+
+  for(std::size_t i = 0; i < nVals; ++i) {
+      xVals[i] = xMin + RooRandom::uniform() * (xMax - xMin);
+      x.setVal(xVals[i]);
+      data.add(x);
+  }
+
+  std::vector<double> weightsGetVal(nVals);
+  for(std::size_t i = 0; i < nVals; ++i) {
+    x.setVal(xVals[i]);
+    weightsGetVal[i] = histPdf.getVal(x);
+  }
+  x.setVal(0.0);
+
+  auto weightsGetValues = histPdf.getValues(data);
+
+  for(std::size_t i = 0; i < nVals; ++i) {
+    EXPECT_NEAR(weightsGetVal[i], weightsGetValues[i], 1e-6);
+  }
+}
+
+
+TEST(RooDataHist, VectorizedFirstOrderInterpolation)
+{
+  const double xMin = -1;
+  const double xMax = 1;
+  const std::size_t nBins = 100;
+  std::vector<double> boundaries(nBins + 1);
+  for(std::size_t i = 0; i < boundaries.size(); ++i) {
+      boundaries[i] = ((xMax - xMin) / nBins) * i + xMin;
+  }
+  TH1D h1{"h1", "h1", nBins, boundaries.data()};
+  
+  h1.FillRandom("gaus");
+
+  RooRealVar x("x", "x", 0, xMin, xMax);
+  RooDataHist dh{"dh", "dh", x, &h1};
+  RooHistPdf histPdf{"histPdf", "histPdf", x, dh, 1};
+
+  // Fill 10 000 random x values
+  std::size_t nVals = 10000;
+  std::vector<double> xVals(nVals);
+  RooDataSet data{"data", "data", x};
+
+  for(std::size_t i = 0; i < nVals; ++i) {
+      xVals[i] = xMin + RooRandom::uniform() * (xMax - xMin);
+      x.setVal(xVals[i]);
+      data.add(x);
+  }
+
+  std::vector<double> weightsGetVal(nVals);
+  for(std::size_t i = 0; i < nVals; ++i) {
+    x.setVal(xVals[i]);
+    weightsGetVal[i] = histPdf.getVal(x);
+  }
+  x.setVal(0.0);
+
+  auto weightsGetValues = histPdf.getValues(data);
+
+  for(std::size_t i = 0; i < nVals; ++i) {
+    EXPECT_NEAR(weightsGetVal[i], weightsGetValues[i], 1e-6);
+  }
 }
