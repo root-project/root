@@ -33,7 +33,8 @@ The following people have contributed to this new version:
  Matevz Tadel, UCSD/CMS,\
  Vassil Vassilev, Princeton/CMS,\
  Wouter Verkerke, NIKHEF/Atlas,\
- Ivan Kabadzhov, CERN/SFT
+ Ivan Kabadzhov, CERN/SFT,\
+ David Poulton, Wits/SFT
 
 ## Deprecation and Removal
 
@@ -55,6 +56,18 @@ Please use their non-experimental counterparts `ROOT::TBufferMerger` and `ROOT::
 - The longtime-deprecated `RooStats::HistFactory::EstimateSummary` class is removed, including the functions that use it. The information that it was meant to store is managed by the `RooStats::HistFactory::Measurement` object since many years.
 - The `RooSuperCategory::MakeIterator()` function that was deprecated since 6.22 is now removed. Please use range-based loops to iterate over the category states.
 
+
+## rootreadspeed
+
+This version adds the new `rootreadspeed` CLI tool. This tool can be used to help identify bottlenecks in analysis runtimes, by providing time and throughput measurements when reading ROOT files via file systems or XRootD. More detailed information can be found in the tool's help information.
+
+To see help information, install and source a recent enough version of ROOT, and run the command `rootreadspeed --help` in your terminal.
+
+### Example usage of the tool:
+
+```console
+$ rootreadspeed --files <local-folder>/File1.root xrootd://<url-folder>/File2.root --trees Events --all-branches --threads 8
+```
 
 ## Core Libraries
 
