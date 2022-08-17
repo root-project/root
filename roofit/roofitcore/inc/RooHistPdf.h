@@ -104,7 +104,6 @@ public:
 
   void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
 
-
 protected:
 
   bool areIdentical(const RooDataHist& dh1, const RooDataHist& dh2) ;
