@@ -19,6 +19,9 @@
 #include <nlohmann/json.hpp>
 
 #include <memory>
+#include <list>
+#include <set>
+#include <string>
 
 class TGeoMatrix;
 
