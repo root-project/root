@@ -5,6 +5,7 @@
 #include "TMVA/ROperator.hxx"
 #include "TMVA/RModel.hxx"
 
+#include <cassert>
 #include <sstream>
 
 namespace TMVA{
