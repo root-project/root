@@ -3528,6 +3528,10 @@ void RooAbsPdf::setNormRangeOverride(const char* rangeName)
 bool RooAbsPdf::redirectServersHook(const RooAbsCollection & newServerList, bool mustReplaceAll,
                                     bool nameChange, bool isRecursiveStep)
 {
+  // If servers are redirected, the cached normalization integrals and
+  // normalization sets are most likely invalid.
+  _normMgr.sterilize();
+
   // Object is own by _normCacheManager that will delete object as soon as cache
   // is sterilized by server redirect
   _norm = nullptr ;
