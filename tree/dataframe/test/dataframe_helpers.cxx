@@ -117,37 +117,36 @@ public:
 
    std::string GetRealRepresentationFromRoot()
    {
-      return std::string("digraph {\n\t7 [label=<Count") +
-             (hasLoopRun ? "<BR/><FONT POINT-SIZE=\"10.0\">Already Run</FONT>" : "") +
-             ">, style=\"filled\", fillcolor=\"" + (hasLoopRun ? "#e6e5e6" : "#e47c7e") +
+      return std::string("digraph {\n\t7 [label=\"Count") + (hasLoopRun ? "\\n(already run)" : "") +
+             "\", style=\"filled\", fillcolor=\"" + (hasLoopRun ? "#e6e5e6" : "#e47c7e") +
              "\", shape=\"box\"];\n"
-             "\t3 [label=<Filter>, style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
-             "\t4 [label=<Define<BR/>Branch_1_2_def>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-             "\t5 [label=<Define<BR/>Branch_1_def>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-             "\t6 [label=<Define<BR/>Root_def2>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-             "\t1 [label=<Filter>, style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
-             "\t2 [label=<Define<BR/>Root_def1>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-             "\t0 [label=<Empty source<BR/>Entries: 8>, style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n"
-             "\t8 [label=<Count" +
-             (hasLoopRun ? "<BR/><FONT POINT-SIZE=\"10.0\">Already Run</FONT>" : "") +
-             ">, style=\"filled\", fillcolor=\"" + (hasLoopRun ? "#e6e5e6" : "#e47c7e") +
+             "\t3 [label=\"Filter\", style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
+             "\t4 [label=\"Define\\nBranch_1_2_def\", style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+             "\t5 [label=\"Define\\nBranch_1_def\", style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+             "\t6 [label=\"Define\\nRoot_def2\", style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+             "\t1 [label=\"Filter\", style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
+             "\t2 [label=\"Define\\nRoot_def1\", style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+             "\t0 [label=\"Empty source\\nEntries: 8\", style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n"
+             "\t8 [label=\"Count" +
+             (hasLoopRun ? "\\n(already run)" : "") + "\", style=\"filled\", fillcolor=\"" +
+             (hasLoopRun ? "#e6e5e6" : "#e47c7e") +
              "\", shape=\"box\"];\n"
-             "\t9 [label=<Define<BR/>Branch_2_def>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-             "\t13 [label=<Mean" +
-             (hasLoopRun ? "<BR/><FONT POINT-SIZE=\"10.0\">Already Run</FONT>" : "") +
-             ">, style=\"filled\", fillcolor=\"" + (hasLoopRun ? "#e6e5e6" : "#e47c7e") +
+             "\t9 [label=\"Define\\nBranch_2_def\", style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+             "\t13 [label=\"Mean" +
+             (hasLoopRun ? "\\n(already run)" : "") + "\", style=\"filled\", fillcolor=\"" +
+             (hasLoopRun ? "#e6e5e6" : "#e47c7e") +
              "\", shape=\"box\"];\n"
-             "\t11 [label=<Filter>, style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
-             "\t12 [label=<Define<BR/>Branch_1_1_def>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-             "\t10 [label=<Filter>, style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
-             "\t18 [label=<Max" +
-             (hasLoopRun ? "<BR/><FONT POINT-SIZE=\"10.0\">Already Run</FONT>" : "") +
-             ">, style=\"filled\", fillcolor=\"" + (hasLoopRun ? "#e6e5e6" : "#e47c7e") +
+             "\t11 [label=\"Filter\", style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
+             "\t12 [label=\"Define\\nBranch_1_1_def\", style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+             "\t10 [label=\"Filter\", style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
+             "\t18 [label=\"Max" +
+             (hasLoopRun ? "\\n(already run)" : "") + "\", style=\"filled\", fillcolor=\"" +
+             (hasLoopRun ? "#e6e5e6" : "#e47c7e") +
              "\", shape=\"box\"];\n"
-             "\t15 [label=<Filter>, style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
-             "\t16 [label=<Define<BR/>Branch_2_2_def>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-             "\t17 [label=<Define<BR/>Branch_2_1_def>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-             "\t14 [label=<Filter>, style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
+             "\t15 [label=\"Filter\", style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
+             "\t16 [label=\"Define\\nBranch_2_2_def\", style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+             "\t17 [label=\"Define\\nBranch_2_1_def\", style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+             "\t14 [label=\"Filter\", style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
              "\t3 -> 7;\n"
              "\t4 -> 3;\n"
              "\t5 -> 4;\n"
@@ -172,19 +171,18 @@ public:
 
    std::string GetRealRepresentationFromAction()
    {
-      return std::string("digraph {\n\t8 [label=<Mean") +
-             (hasLoopRun ? "<BR/><FONT POINT-SIZE=\"10.0\">Already Run</FONT>" : "") +
-             ">, style=\"filled\", fillcolor=\"" + (hasLoopRun ? "#e6e5e6" : "#e47c7e") +
+      return std::string("digraph {\n\t8 [label=\"Mean") + (hasLoopRun ? "\\n(already run)" : "") +
+             "\", style=\"filled\", fillcolor=\"" + (hasLoopRun ? "#e6e5e6" : "#e47c7e") +
              "\", shape=\"box\"];\n"
-             "\t6 [label=<Filter>, style=\"filled\", fillcolor=\"#0f9d58\", "
+             "\t6 [label=\"Filter\", style=\"filled\", fillcolor=\"#0f9d58\", "
              "shape=\"hexagon\"];\n"
-             "\t7 [label=<Define<BR/>Branch_1_1_def>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-             "\t3 [label=<Filter>, style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
-             "\t4 [label=<Define<BR/>Branch_1_def>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-             "\t5 [label=<Define<BR/>Root_def2>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-             "\t1 [label=<Filter>, style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
-             "\t2 [label=<Define<BR/>Root_def1>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-             "\t0 [label=<Empty source<BR/>Entries: 8>, style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n"
+             "\t7 [label=\"Define\\nBranch_1_1_def\", style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+             "\t3 [label=\"Filter\", style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
+             "\t4 [label=\"Define\\nBranch_1_def\", style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+             "\t5 [label=\"Define\\nRoot_def2\", style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+             "\t1 [label=\"Filter\", style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
+             "\t2 [label=\"Define\\nRoot_def1\", style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+             "\t0 [label=\"Empty source\\nEntries: 8\", style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n"
              "\t6 -> 8;\n"
              "\t7 -> 6;\n"
              "\t3 -> 7;\n"
@@ -259,19 +257,19 @@ TEST(RDFHelpers, SaveGraphHistograms)
 
    static const std::string expectedGraph(
       "digraph {\n"
-      "\t5 [label=<TH1D<BR/>h1>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
-      "\t4 [label=<Filter>, style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
-      "\t3 [label=<Range>, style=\"filled\", fillcolor=\"#9574b4\", shape=\"diamond\"];\n"
-      "\t1 [label=<MyFilt>, style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
-      "\t2 [label=<Define<BR/>x>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-      "\t0 [label=<Empty source<BR/>Entries: 10>, style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n"
-      "\t6 [label=<TH1D<BR/>v0_weighted_w>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
-      "\t7 [label=<Define<BR/>w>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-      "\t8 [label=<Define<BR/>v2>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-      "\t9 [label=<Define<BR/>v1>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-      "\t10 [label=<Define<BR/>v0>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-      "\t11 [label=<TH2D<BR/>A>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
-      "\t12 [label=<TH3D<BR/>C>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
+      "\t5 [label=\"TH1D\\nh1\", style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
+      "\t4 [label=\"Filter\", style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
+      "\t3 [label=\"Range\", style=\"filled\", fillcolor=\"#9574b4\", shape=\"diamond\"];\n"
+      "\t1 [label=\"MyFilt\", style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
+      "\t2 [label=\"Define\\nx\", style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+      "\t0 [label=\"Empty source\\nEntries: 10\", style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n"
+      "\t6 [label=\"TH1D\\nv0_weighted_w\", style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
+      "\t7 [label=\"Define\\nw\", style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+      "\t8 [label=\"Define\\nv2\", style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+      "\t9 [label=\"Define\\nv1\", style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+      "\t10 [label=\"Define\\nv0\", style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+      "\t11 [label=\"TH2D\\nA\", style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
+      "\t12 [label=\"TH3D\\nC\", style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
       "\t4 -> 5;\n"
       "\t3 -> 4;\n"
       "\t1 -> 3;\n"
@@ -323,17 +321,17 @@ TEST(RDFHelpers, CustomObjects)
 
    static const std::string expectedGraph(
       "digraph {\n"
-      "\t1 [label=<Fill custom object>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
-      "\t2 [label=<Define<BR/>Jet>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-      "\t0 [label=<Empty source<BR/>Entries: 10>, style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n"
-      "\t7 [label=<TH1D<BR/>h1>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
-      "\t6 [label=<Filter>, style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
-      "\t5 [label=<Range>, style=\"filled\", fillcolor=\"#9574b4\", shape=\"diamond\"];\n"
-      "\t3 [label=<MyFilt>, style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
-      "\t4 [label=<Define<BR/>x>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-      "\t8 [label=<TH1D<BR/>v0_weighted_w>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
-      "\t9 [label=<Define<BR/>w>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-      "\t10 [label=<Define<BR/>v0>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+      "\t1 [label=\"Fill custom object\", style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
+      "\t2 [label=\"Define\\nJet\", style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+      "\t0 [label=\"Empty source\\nEntries: 10\", style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n"
+      "\t7 [label=\"TH1D\\nh1\", style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
+      "\t6 [label=\"Filter\", style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
+      "\t5 [label=\"Range\", style=\"filled\", fillcolor=\"#9574b4\", shape=\"diamond\"];\n"
+      "\t3 [label=\"MyFilt\", style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
+      "\t4 [label=\"Define\\nx\", style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+      "\t8 [label=\"TH1D\\nv0_weighted_w\", style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
+      "\t9 [label=\"Define\\nw\", style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+      "\t10 [label=\"Define\\nv0\", style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
       "\t2 -> 1;\n"
       "\t0 -> 2;\n"
       "\t6 -> 7;\n"
@@ -361,7 +359,7 @@ TEST(RDFHelpers, SaveGraphRootFromTree)
    f.Close();
 
    static const std::string expectedGraph(
-      "digraph {\n\t1 [label=<Count>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n\t0 [label=<t>, "
+      "digraph {\n\t1 [label=\"Count\", style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n\t0 [label=\"t\", "
       "style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n\t0 -> 1;\n}");
 
    ROOT::RDataFrame df("t", "savegraphrootfromtree.root");
@@ -384,7 +382,7 @@ TEST(RDFHelpers, SaveGraphToFile)
    f.Close();
 
    static const std::string expectedGraph(
-      "digraph {\n\t1 [label=<Count>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n\t0 [label=<t>, "
+      "digraph {\n\t1 [label=\"Count\", style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n\t0 [label=\"t\", "
       "style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n\t0 -> 1;\n}");
 
    ROOT::RDataFrame df("t", "savegraphtofile.root");
@@ -408,8 +406,9 @@ TEST(RDFHelpers, SaveGraphNoActions)
    auto df2 = df.Filter([] { return true; });
    const auto res = ROOT::RDF::SaveGraph(df);
    const std::string expected =
-      "digraph {\n\t1 [label=<Filter>, style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n\t0 [label=<Empty "
-      "source<BR/>Entries: 1>, style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n\t0 -> 1;\n}";
+      "digraph {\n\t1 [label=\"Filter\", style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n\t0 "
+      "[label=\"Empty source\\nEntries: 1\", style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n"
+      "\t0 -> 1;\n}";
    EXPECT_EQ(res, expected);
 }
 
@@ -422,11 +421,11 @@ TEST(RDFHelpers, SaveGraphSharedDefines)
    auto c2 = df2.Define("two", One).Count();
    std::string graph = ROOT::RDF::SaveGraph(df);
    const std::string expected =
-      "digraph {\n\t1 [label=<Count>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n\t2 "
-      "[label=<Define<BR/>one>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n\t3 "
-      "[label=<Define<BR/>shared>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n\t0 [label=<Empty "
-      "source<BR/>Entries: 1>, style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n\t4 [label=<Count>, "
-      "style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n\t5 [label=<Define<BR/>two>, style=\"filled\", "
+      "digraph {\n\t1 [label=\"Count\", style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n\t2 "
+      "[label=\"Define\\none\", style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n\t3 "
+      "[label=\"Define\\nshared\", style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n\t0 [label=\"Empty "
+      "source\\nEntries: 1\", style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n\t4 [label=\"Count\", "
+      "style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n\t5 [label=\"Define\\ntwo\", style=\"filled\", "
       "fillcolor=\"#4285f4\", shape=\"ellipse\"];\n\t2 -> 1;\n\t3 -> 2;\n\t0 -> 3;\n\t5 -> 4;\n\t3 -> 5;\n}";
    EXPECT_EQ(graph, expected);
 }

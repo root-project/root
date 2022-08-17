@@ -999,7 +999,7 @@ std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RLoopManager::GetG
    } else if (fTree) {
       name = fTree->GetName();
    } else {
-      name = "Empty source<BR/>Entries: " + std::to_string(fNEmptyEntries);
+      name = "Empty source\\nEntries: " + std::to_string(fNEmptyEntries);
    }
    auto thisNode = std::make_shared<ROOT::Internal::RDF::GraphDrawing::GraphNode>(
       name, visitedMap.size(), ROOT::Internal::RDF::GraphDrawing::ENodeType::kRoot);

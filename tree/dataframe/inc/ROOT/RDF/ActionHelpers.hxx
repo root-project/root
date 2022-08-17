@@ -327,7 +327,7 @@ public:
 
    std::string GetActionName()
    {
-      return std::string(fResultHist->IsA()->GetName()) + "<BR/>" + std::string(fResultHist->GetName());
+      return std::string(fResultHist->IsA()->GetName()) + "\\n" + std::string(fResultHist->GetName());
    }
 
    BufferedFillHelper MakeNew(void *newResult)
@@ -549,7 +549,7 @@ public:
    template <typename T = HIST, std::enable_if_t<std::is_base_of<TObject, T>::value, int> = 0>
    std::string GetActionName()
    {
-      return std::string(fObjects[0]->IsA()->GetName()) + "<BR/>" + std::string(fObjects[0]->GetName());
+      return std::string(fObjects[0]->IsA()->GetName()) + "\\n" + std::string(fObjects[0]->GetName());
    }
 
    // if fObjects is not derived from TObject, indicate it is some other object

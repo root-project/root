@@ -102,7 +102,7 @@ class GraphNode {
    void SetAction(bool hasRun)
    {
       if (hasRun) {
-         fName += "<BR/><FONT POINT-SIZE=\"10.0\">Already Run</FONT>";
+         fName += "\\n(already run)";
          fColor = "#e6e5e6";
       } else {
          fColor = "#e47c7e";

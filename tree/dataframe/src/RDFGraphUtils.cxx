@@ -27,7 +27,7 @@ GraphDrawing::CreateDefineNode(const std::string &columnName, const ROOT::Detail
    if (duplicateDefineIt != visitedMap.end())
       return duplicateDefineIt->second;
 
-   auto node = std::make_shared<GraphNode>("Define<BR/>" + columnName, visitedMap.size(), ENodeType::kDefine);
+   auto node = std::make_shared<GraphNode>("Define\\n" + columnName, visitedMap.size(), ENodeType::kDefine);
    visitedMap[(void *)columnPtr] = node;
    return node;
 }
@@ -103,8 +103,9 @@ std::string GraphCreatorHelper::FromGraphLeafToDot(const GraphNode &start) const
    // Explore the graph bottom-up and store its dot representation.
    const GraphNode *leaf = &start;
    while (leaf) {
-      dotStringLabels << "\t" << leaf->GetID() << " [label=<" << leaf->GetName() << ">, style=\"filled\", fillcolor=\""
-                      << leaf->GetColor() << "\", shape=\"" << leaf->GetShape() << "\"];\n";
+      dotStringLabels << "\t" << leaf->GetID() << " [label=\"" << leaf->GetName()
+                      << "\", style=\"filled\", fillcolor=\"" << leaf->GetColor() << "\", shape=\"" << leaf->GetShape()
+                      << "\"];\n";
       if (leaf->GetPrevNode()) {
          dotStringGraph << "\t" << leaf->GetPrevNode()->GetID() << " -> " << leaf->GetID() << ";\n";
       }
@@ -124,8 +125,8 @@ std::string GraphCreatorHelper::FromGraphActionsToDot(std::vector<std::shared_pt
    for (auto leafShPtr : leaves) {
       GraphNode *leaf = leafShPtr.get();
       while (leaf && !leaf->IsExplored()) {
-         dotStringLabels << "\t" << leaf->GetID() << " [label=<" << leaf->GetName()
-                         << ">, style=\"filled\", fillcolor=\"" << leaf->GetColor() << "\", shape=\""
+         dotStringLabels << "\t" << leaf->GetID() << " [label=\"" << leaf->GetName()
+                         << "\", style=\"filled\", fillcolor=\"" << leaf->GetColor() << "\", shape=\""
                          << leaf->GetShape() << "\"];\n";
          if (leaf->GetPrevNode()) {
             dotStringGraph << "\t" << leaf->GetPrevNode()->GetID() << " -> " << leaf->GetID() << ";\n";
