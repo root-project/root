@@ -72,8 +72,6 @@ private:
    tcling_callfunc_Wrapper_t fWrapper;
    /// Stored function arguments, we own.
    mutable llvm::SmallVector<cling::Value, 8> fArgVals;
-   /// If true, do not limit number of function arguments to declared number.
-   bool fIgnoreExtraArgs : 1;
 
 private:
    enum EReferenceType {
@@ -152,21 +150,20 @@ public:
    ~TClingCallFunc() = default;
 
    explicit TClingCallFunc(cling::Interpreter *interp)
-      : fInterp(interp), fWrapper(0), fIgnoreExtraArgs(false)
+      : fInterp(interp), fWrapper(0)
    {
       fMethod = std::unique_ptr<TClingMethodInfo>(new TClingMethodInfo(interp));
    }
 
    explicit TClingCallFunc(const TClingMethodInfo &minfo)
-   : fInterp(minfo.GetInterpreter()), fWrapper(0), fIgnoreExtraArgs(false)
+   : fInterp(minfo.GetInterpreter()), fWrapper(0)
 
    {
       fMethod = std::unique_ptr<TClingMethodInfo>(new TClingMethodInfo(minfo));
    }
 
    TClingCallFunc(const TClingCallFunc &rhs)
-      : fInterp(rhs.fInterp), fWrapper(rhs.fWrapper), fArgVals(rhs.fArgVals),
-        fIgnoreExtraArgs(rhs.fIgnoreExtraArgs)
+      : fInterp(rhs.fInterp), fWrapper(rhs.fWrapper), fArgVals(rhs.fArgVals)
    {
       fMethod = std::unique_ptr<TClingMethodInfo>(new TClingMethodInfo(*rhs.fMethod));
    }
@@ -189,7 +186,7 @@ public:
    long long ExecInt64(void* address);
    double ExecDouble(void* address);
    TClingMethodInfo* FactoryMethod() const;
-   void IgnoreExtraArgs(bool ignore) { fIgnoreExtraArgs = ignore; }
+   void IgnoreExtraArgs(bool ignore) { /*FIXME Remove that interface */ }
    void Init();
    void Init(const TClingMethodInfo&);
    void Init(std::unique_ptr<TClingMethodInfo>);
