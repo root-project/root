@@ -16,15 +16,22 @@
 #include <ROOT/REveVector.hxx>
 #include <ROOT/REveProjectionBases.hxx>
 
-#include <map>
 #include <memory>
 #include <list>
 #include <ostream>
 #include <set>
 #include <string>
-#include <vector>
 
-class TGeoMatrix;
+#if __has_include(<nlohmann/json_fwd.hpp>)
+#include <nlohmann/json_fwd.hpp>
+#else
+// This forward declaration works for versions before 3.11.0, which introduced
+// a "versioned, ABI-tagged inline namespace". The json_fwd.hpp header is
+// present in multi-header installations (the default as of version 3.11.0), and
+// single-header installations of version 3.11.2+.
+
+#include <map>
+#include <vector>
 
 namespace nlohmann {
 template<typename T, typename SFINAE>
@@ -40,6 +47,10 @@ class basic_json;
 using json = basic_json<std::map, std::vector, std::string, bool, std::int64_t, std::uint64_t, double, std::allocator,
                         adl_serializer, std::vector<std::uint8_t>>;
 } // namespace nlohmann
+
+#endif
+
+class TGeoMatrix;
 
 namespace ROOT {
 namespace Experimental {
