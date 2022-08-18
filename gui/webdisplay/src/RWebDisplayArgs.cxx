@@ -135,17 +135,19 @@ bool RWebDisplayArgs::SetPosAsStr(const std::string &str)
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// Set browser kind as string argument
+///
 /// Recognized values:
-///   chrome - use Google Chrome web browser, supports headless mode from v60, default
-///  firefox - use Mozilla Firefox browser, supports headless mode from v57
-///   native - (or empty string) either chrome or firefox, only these browsers support batch (headless) mode
-///  browser - default system web-browser, no batch mode
-///   safari - Safari browser on Mac
-///      cef - Chromium Embeded Framework, local display, local communication
-///      qt5 - Qt5 QWebEngine, local display, local communication
-///      qt6 - Qt6 QWebEngineCore, local display, local communication
-///    local - either cef or qt5 or qt6
-/// `<prog>` - any program name which will be started instead of default browser, like /usr/bin/opera
+///
+///      chrome - use Google Chrome web browser, supports headless mode from v60, default
+///     firefox - use Mozilla Firefox browser, supports headless mode from v57
+///      native - (or empty string) either chrome or firefox, only these browsers support batch (headless) mode
+///     browser - default system web-browser, no batch mode
+///      safari - Safari browser on Mac
+///         cef - Chromium Embeded Framework, local display, local communication
+///         qt5 - Qt5 QWebEngine, local display, local communication
+///         qt6 - Qt6 QWebEngineCore, local display, local communication
+///       local - either cef or qt5 or qt6
+///    `<prog>` - any program name which will be started instead of default browser, like /usr/bin/opera
 
 RWebDisplayArgs &RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
 {
@@ -215,6 +217,8 @@ RWebDisplayArgs &RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
       SetBrowserKind(kQt6);
    else if ((kind == "embed") || (kind == "embedded"))
       SetBrowserKind(kEmbedded);
+   else if ((kind == "std") || (kind == "standard") || (kind == "browser"))
+      SetBrowserKind(kStandard);
    else if (kind == "off")
       SetBrowserKind(kOff);
    else if (!SetSizeAsStr(kind))
