@@ -655,8 +655,9 @@ Int_t TDavixFileInternal::DavixStat(const char *url, struct stat *st)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TDavixFile::TDavixFile(const char *url, Option_t *opt, const char *ftitle, Int_t compress) : TFile(url, "WEB"),
-   d_ptr(new TDavixFileInternal(fUrl, opt))
+TDavixFile::TDavixFile(const char *url, Option_t *opt, const char *ftitle, Int_t compress)
+   : TFile(url, strstr(opt, "_WITHOUT_GLOBALREGISTRATION") != nullptr ? "WEB_WITHOUT_GLOBALREGISTRATION" : "WEB"),
+     d_ptr(new TDavixFileInternal(fUrl, opt))
 {
    (void) ftitle;
    (void) compress;
