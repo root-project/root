@@ -494,6 +494,7 @@ std::string RWebWindowsManager::GetUrl(const RWebWindow &win, bool remote)
 ///
 /// Following parameters can be configured in rootrc file:
 ///
+///      WebGui.Display: kind of display like chrome or firefox or browser, can be overwritten by --web=value command line argument
 ///      WebGui.Chrome: full path to Google Chrome executable
 ///      WebGui.ChromeBatch: command to start chrome in batch, used for image production, like "$prog --headless --disable-gpu $geometry $url"
 ///      WebGui.ChromeHeadless: command to start chrome in headless mode, like "fork: --headless --disable-gpu $geometry $url"
