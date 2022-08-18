@@ -235,7 +235,7 @@ namespace ROOT {
 
       if ( fpTmpBinEdgeVector )
       {
-        assert( Opt().fIntegral );
+        assert(HasBinEdges());
 
         delete[] fpTmpBinEdgeVector;
         fpTmpBinEdgeVector= nullptr;
@@ -304,7 +304,7 @@ namespace ROOT {
 
       fpTmpCoordErrorVector= new double[ fDim ];
 
-      if ( Opt().fIntegral )
+      if ( HasBinEdges() )
         fpTmpBinEdgeVector = new double[ fDim ];
 
       return *this;
@@ -608,7 +608,7 @@ namespace ROOT {
 
     /**
        add the bin width data, a pointer to an array with the bin upper edge information.
-       This is needed when fitting with integral options
+       This is needed when fitting with integral or Bin volume normalization options
        The information is added for the previously inserted point.
        BinData::Add  must be called before
     */

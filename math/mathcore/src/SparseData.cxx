@@ -220,7 +220,7 @@ namespace ROOT {
       SparseData & SparseData::operator=(const SparseData & rhs)
       {
          FitData::operator=( rhs );
-         fList.reset(new ProxyListBox(*rhs.fList));
+         fList = std::make_unique<ProxyListBox>(*rhs.fList);
          return *this;
       }
 
