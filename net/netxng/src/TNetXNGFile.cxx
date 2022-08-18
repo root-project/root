@@ -131,14 +131,11 @@ TNetXNGFile::TNetXNGFile(const char *url,
                          Bool_t      parallelopen) :
 	TNetXNGFile(url,0,mode,title,compress,netopt,parallelopen){}
 
-TNetXNGFile::TNetXNGFile(const char *url,
-		         const char *lurl,
-                         Option_t   *mode,
-                         const char *title,
-                         Int_t       compress,
-                         Int_t       /*netopt*/,
-                         Bool_t      parallelopen) :
-   TFile((lurl ? lurl : url), "NET", title, compress)
+TNetXNGFile::TNetXNGFile(const char *url, const char *lurl, Option_t *mode, const char *title, Int_t compress,
+                         Int_t /*netopt*/, Bool_t parallelopen)
+   : TFile((lurl ? lurl : url),
+           strstr(mode, "_WITHOUT_GLOBALREGISTRATION") != nullptr ? "NET_WITHOUT_GLOBALREGISTRATION" : "NET", title,
+           compress)
 {
    using namespace XrdCl;
 
