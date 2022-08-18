@@ -133,21 +133,33 @@ BufferedFillHelper::Exec(unsigned int, const std::vector<unsigned int> &, const 
 // template void MaxHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
 MeanHelper::MeanHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots)
-   : fResultMean(meanVPtr), fCounts(nSlots, 0), fSums(nSlots, 0), fPartialMeans(nSlots)
+   : fResultMean(meanVPtr), fCounts(nSlots, 0), fSums(nSlots, 0), fPartialMeans(nSlots), fCompensations(nSlots)
 {
 }
 
 void MeanHelper::Exec(unsigned int slot, double v)
 {
-   fSums[slot] += v;
    fCounts[slot]++;
+   // Kahan Sum:
+   double y = v - fCompensations[slot];
+   double t = fSums[slot] + y;
+   fCompensations[slot] = (t - fSums[slot]) - y;
+   fSums[slot] = t;
 }
 
 void MeanHelper::Finalize()
 {
    double sumOfSums = 0;
-   for (auto &s : fSums)
-      sumOfSums += s;
+   //Kahan Sum:
+   double compensation(0);
+   double y(0);
+   double t(0);
+   for (auto &m : fSums) {
+         y = m - compensation;
+         t = sumOfSums + y;
+         compensation = (t - sumOfSums) - y;
+         sumOfSums = t;
+      }
    ULong64_t sumOfCounts = 0;
    for (auto &c : fCounts)
       sumOfCounts += c;

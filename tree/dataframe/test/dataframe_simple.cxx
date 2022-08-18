@@ -735,18 +735,40 @@ TEST(RDFSimpleTests, SumOfStrings)
 }
 */
 
-TEST(RDFSimpleTests, KahanSum)
+TEST_P(RDFSimpleTests, KahanSum_Double)
 {
-   ROOT::RDataFrame d(20);
-   auto dd = d.Define("x", "(rdfentry_ %2 == 0) ? 0.00000001 : 100000000.");
-   EXPECT_EQ(*dd.Sum<double>({"x"}), 1000000000.00000011920929);
+   constexpr std::uint64_t N = 10e7;
+   ROOT::RDataFrame d(N);
+   auto df = d.Define("x", "double(rdfentry_ +1)");
+   double true_sum = (N + 1.0)/2.0;
+   EXPECT_DOUBLE_EQ(*df.Sum<double>({"x"})/N, true_sum);
 }
 
-TEST(RDFSimpleTests, KahanMean)
+TEST_P(RDFSimpleTests, KahanSum_Float)
 {
-   ROOT::RDataFrame d(20);
-   auto dd = d.Define("x", "(rdfentry_ %2 == 0) ? 0.00000001 : 100000000.");
-   EXPECT_EQ(*dd.Mean<double>({"x"}), 50000000.0000000074505806);
+   constexpr std::uint64_t N = 10e7;
+   ROOT::RDataFrame d(N);
+   auto df = d.Define("x", "float(rdfentry_ +1)");
+   float true_sum = (N + 1.0)/2.0;
+   EXPECT_FLOAT_EQ(*df.Sum<float>({"x"})/N, true_sum);
+}
+
+TEST_P(RDFSimpleTests, KahanMean_Double)
+{
+   constexpr std::uint64_t N = 10e7;
+   ROOT::RDataFrame d(N);
+   auto df = d.Define("x", "double(rdfentry_ +1)");
+   double true_sum = (N + 1.0) / 2.0;
+   EXPECT_DOUBLE_EQ(*df.Mean<double>({"x"}), true_sum);
+}
+
+TEST_P(RDFSimpleTests, KahanMean_Float)
+{
+   constexpr std::uint64_t N = 10e7;
+   ROOT::RDataFrame d(N);
+   auto df = d.Define("x", "float(rdfentry_ +1)");
+   float true_sum = (N + 1.0) / 2.0;
+   EXPECT_FLOAT_EQ(*df.Mean<float>({"x"}), true_sum);
 }
 
 TEST(RDFSimpleTests, GenVector)
