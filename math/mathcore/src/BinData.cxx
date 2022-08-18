@@ -340,12 +340,6 @@ namespace ROOT {
       InitializeErrors( );
     }
 
-    void BinData::Initialize( unsigned int newPoints, unsigned int dim, ErrorType err )
-    {
-      Append( newPoints, dim, err );
-    }
-
-
 
     /**
       apply a Log transformation of the data values
