@@ -91,13 +91,12 @@ struct ParsedExpression {
    ColumnNames_t fVarNames;
 };
 
-// look at expression `expr` and return a list of column names used, including aliases
-static ColumnNames_t FindUsedColumns(const std::string &expr, const ColumnNames_t &treeBranchNames,
-                                     const ROOT::Internal::RDF::RColumnRegister &customColumns,
-                                     const ColumnNames_t &dataSourceColNames)
+/// Look at expression `expr` and return a pair of (column names used, aliases used)
+static std::pair<ColumnNames_t, ColumnNames_t>
+FindUsedColsAndAliases(const std::string &expr, const ColumnNames_t &treeBranchNames,
+                       const ROOT::Internal::RDF::RColumnRegister &customColumns,
+                       const ColumnNames_t &dataSourceColNames)
 {
-   ColumnNames_t usedCols;
-
    lexertk::generator tokens;
    const auto tokensOk = tokens.process(expr);
    if (!tokensOk) {
@@ -105,7 +104,10 @@ static ColumnNames_t FindUsedColumns(const std::string &expr, const ColumnNames_
       throw std::runtime_error(msg);
    }
 
-   // iterate over tokens in expression and fill usedCols, varNames and exprWithVars
+   std::unordered_set<std::string> usedCols;
+   std::unordered_set<std::string> usedAliases;
+
+   // iterate over tokens in expression and fill usedCols and usedAliases
    const auto nTokens = tokens.size();
    const auto kSymbol = lexertk::token::e_symbol;
    for (auto i = 0u; i < nTokens; ++i) {
@@ -127,29 +129,57 @@ static ColumnNames_t FindUsedColumns(const std::string &expr, const ColumnNames_
          i += 2; // consume the tokens we looked at
       }
 
+      // in an expression such as `a.b`, if `a` is a column alias add it to `usedAliases` and
+      // replace the alias with the real column name in `potentialColNames`.
+      const auto maybeAnAlias = potentialColNames[0]; // intentionally a copy as we'll modify potentialColNames later
+      const auto &resolvedAlias = customColumns.ResolveAlias(maybeAnAlias);
+      if (resolvedAlias != maybeAnAlias) { // this is an alias
+         usedAliases.insert(maybeAnAlias);
+         for (auto &s : potentialColNames)
+            s.replace(0, maybeAnAlias.size(), resolvedAlias);
+      }
+
       // find the longest potential column name that is an actual column name
-      // if it's a new match, also add it to usedCols and update varNames
-      // potential columns are sorted by length, so we search from the end
-      auto isRDFColumn = [&](const std::string &columnOrAlias) {
-         const auto &col = customColumns.ResolveAlias(columnOrAlias);
+      // (potential columns are sorted by length, so we search from the end to find the longest)
+      auto isRDFColumn = [&](const std::string &col) {
          if (customColumns.IsDefineOrAlias(col) || IsStrInVec(col, treeBranchNames) ||
              IsStrInVec(col, dataSourceColNames))
             return true;
          return false;
       };
       const auto longestRDFColMatch = std::find_if(potentialColNames.crbegin(), potentialColNames.crend(), isRDFColumn);
-
-      if (longestRDFColMatch != potentialColNames.crend() && !IsStrInVec(*longestRDFColMatch, usedCols)) {
-         // found a new RDF column in the expression (potentially an alias)
-         usedCols.emplace_back(*longestRDFColMatch);
-      }
+      if (longestRDFColMatch != potentialColNames.crend())
+         usedCols.insert(*longestRDFColMatch);
    }
 
-   return usedCols;
+   return {{usedCols.begin(), usedCols.end()}, {usedAliases.begin(), usedAliases.end()}};
+}
+
+/// Substitute each '.' in a string with '\.'
+static std::string EscapeDots(const std::string &s)
+{
+   TString out(s);
+   TPRegexp dot("\\.");
+   dot.Substitute(out, "\\.", "g");
+   return std::string(std::move(out));
+}
+
+static TString ResolveAliases(const TString &expr, const ColumnNames_t &usedAliases,
+                              const ROOT::Internal::RDF::RColumnRegister &colRegister)
+{
+   TString out(expr);
+
+   for (const auto &alias : usedAliases) {
+      const auto &col = colRegister.ResolveAlias(alias);
+      TPRegexp replacer("\\b" + EscapeDots(alias) + "\\b");
+      replacer.Substitute(out, col, "g");
+   }
+
+   return out;
 }
 
 static ParsedExpression ParseRDFExpression(std::string_view expr, const ColumnNames_t &treeBranchNames,
-                                           const ROOT::Internal::RDF::RColumnRegister &customColumns,
+                                           const ROOT::Internal::RDF::RColumnRegister &colRegister,
                                            const ColumnNames_t &dataSourceColNames)
 {
    // transform `#var` into `R_rdf_sizeof_var`
@@ -159,42 +189,31 @@ static ParsedExpression ParseRDFExpression(std::string_view expr, const ColumnNa
       "(^|\\W)#(?!(ifdef|ifndef|if|else|elif|endif|pragma|define|undef|include|line))([a-zA-Z_][a-zA-Z0-9_]*)");
    colSizeReplacer.Substitute(preProcessedExpr, "$1R_rdf_sizeof_$3", "g");
 
-   auto usedColsAndAliases =
-      FindUsedColumns(std::string(preProcessedExpr), treeBranchNames, customColumns, dataSourceColNames);
-
-   auto escapeDots = [](const std::string &s) {
-      TString ss(s);
-      TPRegexp dot("\\.");
-      dot.Substitute(ss, "\\.", "g");
-      return std::string(std::move(ss));
-   };
-
-   ColumnNames_t varNames;
    ColumnNames_t usedCols;
+   ColumnNames_t usedAliases;
+   std::tie(usedCols, usedAliases) =
+      FindUsedColsAndAliases(std::string(preProcessedExpr), treeBranchNames, colRegister, dataSourceColNames);
+
+   const auto exprNoAliases = ResolveAliases(preProcessedExpr, usedAliases, colRegister);
+
    // when we are done, exprWithVars willl be the same as preProcessedExpr but column names will be substituted with
    // the dummy variable names in varNames
-   TString exprWithVars(preProcessedExpr);
+   TString exprWithVars(exprNoAliases);
+
+   ColumnNames_t varNames(usedCols.size());
+   for (auto i = 0u; i < varNames.size(); ++i)
+      varNames[i] = "var" + std::to_string(i);
 
    // sort the vector usedColsAndAliases by decreasing length of its elements,
    // so in case of friends we guarantee we never substitute a column name with another column containing it
    // ex. without sorting when passing "x" and "fr.x", the replacer would output "var0" and "fr.var0",
    // because it has already substituted "x", hence the "x" in "fr.x" would be recognized as "var0",
    // whereas the desired behaviour is handling them as "var0" and "var1"
-   std::sort(usedColsAndAliases.begin(), usedColsAndAliases.end(),
+   std::sort(usedCols.begin(), usedCols.end(),
              [](const std::string &a, const std::string &b) { return a.size() > b.size(); });
-   for (const auto &colOrAlias : usedColsAndAliases) {
-      const auto col = customColumns.ResolveAlias(colOrAlias);
-      unsigned int varIdx; // index of the variable in varName corresponding to col
-      if (!IsStrInVec(col, usedCols)) {
-         usedCols.emplace_back(col);
-         varIdx = varNames.size();
-         varNames.emplace_back("var" + std::to_string(varIdx));
-      } else {
-         // colOrAlias must be an alias that resolves to a column we have already seen.
-         // Find back the corresponding varName
-         varIdx = std::distance(usedCols.begin(), std::find(usedCols.begin(), usedCols.end(), col));
-      }
-      TPRegexp replacer("\\b" + escapeDots(colOrAlias) + "\\b"); // watch out: need to replace colOrAlias, not col
+   for (const auto &col : usedCols) {
+      const auto varIdx = std::distance(usedCols.begin(), std::find(usedCols.begin(), usedCols.end(), col));
+      TPRegexp replacer("\\b" + EscapeDots(col) + "\\b");
       replacer.Substitute(exprWithVars, varNames[varIdx], "g");
    }
 
