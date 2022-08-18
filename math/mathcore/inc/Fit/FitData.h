@@ -35,7 +35,8 @@ namespace ROOT {
 
    namespace Fit {
 
-      //class used for making shared_ptr of data classes managed by the user (i.e. when we don;t want to delete the contained object)
+      //class used for making shared_ptr of data classes managed by the user
+      // (i.e. when we don't want to delete the contained object)
       template <class T>
       struct DummyDeleter {
          // a deleter not deleting the contained object

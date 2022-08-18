@@ -821,7 +821,6 @@ bool Fitter::DoMinimization(const ROOT::Math::IMultiGenFunction * chi2func) {
    fResult->fObjFunc = fObjFunction;
    fResult->fFitData = fData;
 
-
 #ifdef DEBUG
       std::cout << "ROOT::Fit::Fitter::DoMinimization : ncalls = " << fResult->fNCalls << " type of objfunc " << fFitFitResType << "  typeid: " << typeid(*fObjFunction).name() << " use gradient " << fUseGradient << std::endl;
 #endif
