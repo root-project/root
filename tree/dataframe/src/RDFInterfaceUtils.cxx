@@ -94,8 +94,7 @@ struct ParsedExpression {
 /// Look at expression `expr` and return a pair of (column names used, aliases used)
 static std::pair<ColumnNames_t, ColumnNames_t>
 FindUsedColsAndAliases(const std::string &expr, const ColumnNames_t &treeBranchNames,
-                       const ROOT::Internal::RDF::RColumnRegister &customColumns,
-                       const ColumnNames_t &dataSourceColNames)
+                       const ROOT::Internal::RDF::RColumnRegister &colRegister, const ColumnNames_t &dataSourceColNames)
 {
    lexertk::generator tokens;
    const auto tokensOk = tokens.process(expr);
@@ -132,7 +131,7 @@ FindUsedColsAndAliases(const std::string &expr, const ColumnNames_t &treeBranchN
       // in an expression such as `a.b`, if `a` is a column alias add it to `usedAliases` and
       // replace the alias with the real column name in `potentialColNames`.
       const auto maybeAnAlias = potentialColNames[0]; // intentionally a copy as we'll modify potentialColNames later
-      const auto &resolvedAlias = customColumns.ResolveAlias(maybeAnAlias);
+      const auto &resolvedAlias = colRegister.ResolveAlias(maybeAnAlias);
       if (resolvedAlias != maybeAnAlias) { // this is an alias
          usedAliases.insert(maybeAnAlias);
          for (auto &s : potentialColNames)
@@ -142,7 +141,7 @@ FindUsedColsAndAliases(const std::string &expr, const ColumnNames_t &treeBranchN
       // find the longest potential column name that is an actual column name
       // (potential columns are sorted by length, so we search from the end to find the longest)
       auto isRDFColumn = [&](const std::string &col) {
-         if (customColumns.IsDefineOrAlias(col) || IsStrInVec(col, treeBranchNames) ||
+         if (colRegister.IsDefineOrAlias(col) || IsStrInVec(col, treeBranchNames) ||
              IsStrInVec(col, dataSourceColNames))
             return true;
          return false;
@@ -484,16 +483,16 @@ ConvertRegexToColumns(const ColumnNames_t &colNames, std::string_view columnName
 }
 
 /// Throw if column `definedColView` is already there.
-void CheckForRedefinition(const std::string &where, std::string_view definedColView, const RColumnRegister &customCols,
+void CheckForRedefinition(const std::string &where, std::string_view definedColView, const RColumnRegister &colRegister,
                           const ColumnNames_t &treeColumns, const ColumnNames_t &dataSourceColumns)
 {
    const std::string definedCol(definedColView); // convert to std::string
 
    std::string error;
-   if (customCols.IsAlias(definedCol))
-      error = "An alias with that name, pointing to column \"" + customCols.ResolveAlias(definedCol) +
+   if (colRegister.IsAlias(definedCol))
+      error = "An alias with that name, pointing to column \"" + colRegister.ResolveAlias(definedCol) +
               "\", already exists in this branch of the computation graph.";
-   else if (customCols.IsDefineOrAlias(definedCol))
+   else if (colRegister.IsDefineOrAlias(definedCol))
       error = "A column with that name has already been Define'd. Use Redefine to force redefinition.";
    // else, check if definedCol is in the list of tree branches. This is a bit better than interrogating the TTree
    // directly because correct usage of GetBranch, FindBranch, GetLeaf and FindLeaf can be tricky; so let's assume we
@@ -512,19 +511,19 @@ void CheckForRedefinition(const std::string &where, std::string_view definedColV
 }
 
 /// Throw if column `definedColView` is _not_ already there.
-void CheckForDefinition(const std::string &where, std::string_view definedColView, const RColumnRegister &customCols,
+void CheckForDefinition(const std::string &where, std::string_view definedColView, const RColumnRegister &colRegister,
                         const ColumnNames_t &treeColumns, const ColumnNames_t &dataSourceColumns)
 {
    const std::string definedCol(definedColView); // convert to std::string
    std::string error;
 
-   if (customCols.IsAlias(definedCol)) {
-      error = "An alias with that name, pointing to column \"" + customCols.ResolveAlias(definedCol) +
+   if (colRegister.IsAlias(definedCol)) {
+      error = "An alias with that name, pointing to column \"" + colRegister.ResolveAlias(definedCol) +
               "\", already exists. Aliases cannot be Redefined or Varied.";
    }
 
    if (error.empty()) {
-      const bool isAlreadyDefined = customCols.IsDefineOrAlias(definedCol);
+      const bool isAlreadyDefined = colRegister.IsDefineOrAlias(definedCol);
       // check if definedCol is in the list of tree branches. This is a bit better than interrogating the TTree
       // directly because correct usage of GetBranch, FindBranch, GetLeaf and FindLeaf can be tricky; so let's assume we
       // got it right when we collected the list of available branches.
@@ -543,10 +542,10 @@ void CheckForDefinition(const std::string &where, std::string_view definedColVie
 }
 
 /// Throw if the column has systematic variations attached.
-void CheckForNoVariations(const std::string &where, std::string_view definedColView, const RColumnRegister &customCols)
+void CheckForNoVariations(const std::string &where, std::string_view definedColView, const RColumnRegister &colRegister)
 {
    const std::string definedCol(definedColView);
-   const auto &variationDeps = customCols.GetVariationDeps(definedCol);
+   const auto &variationDeps = colRegister.GetVariationDeps(definedCol);
    if (!variationDeps.empty()) {
       const std::string error =
          "RDataFrame::" + where + ": cannot redefine column \"" + definedCol +
@@ -642,26 +641,26 @@ std::string PrettyPrintAddr(const void *const addr)
 /// Book the jitting of a Filter call
 std::shared_ptr<RDFDetail::RJittedFilter>
 BookFilterJit(std::shared_ptr<RDFDetail::RNodeBase> *prevNodeOnHeap, std::string_view name, std::string_view expression,
-              const ColumnNames_t &branches, const RColumnRegister &customCols, TTree *tree, RDataSource *ds)
+              const ColumnNames_t &branches, const RColumnRegister &colRegister, TTree *tree, RDataSource *ds)
 {
    const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
 
-   const auto parsedExpr = ParseRDFExpression(expression, branches, customCols, dsColumns);
+   const auto parsedExpr = ParseRDFExpression(expression, branches, colRegister, dsColumns);
    const auto exprVarTypes =
-      GetValidatedArgTypes(parsedExpr.fUsedCols, customCols, tree, ds, "Filter", /*vector2rvec=*/true);
+      GetValidatedArgTypes(parsedExpr.fUsedCols, colRegister, tree, ds, "Filter", /*vector2rvec=*/true);
    const auto funcName = DeclareFunction(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes);
    const auto type = RetTypeOfFunc(funcName);
    if (type != "bool")
       std::runtime_error("Filter: the following expression does not evaluate to bool:\n" + std::string(expression));
 
    // definesOnHeap is deleted by the jitted call to JitFilterHelper
-   ROOT::Internal::RDF::RColumnRegister *definesOnHeap = new ROOT::Internal::RDF::RColumnRegister(customCols);
+   ROOT::Internal::RDF::RColumnRegister *definesOnHeap = new ROOT::Internal::RDF::RColumnRegister(colRegister);
    const auto definesOnHeapAddr = PrettyPrintAddr(definesOnHeap);
    const auto prevNodeAddr = PrettyPrintAddr(prevNodeOnHeap);
 
    const auto jittedFilter = std::make_shared<RDFDetail::RJittedFilter>(
       (*prevNodeOnHeap)->GetLoopManagerUnchecked(), name,
-      Union(customCols.GetVariationDeps(parsedExpr.fUsedCols), (*prevNodeOnHeap)->GetVariations()));
+      Union(colRegister.GetVariationDeps(parsedExpr.fUsedCols), (*prevNodeOnHeap)->GetVariations()));
 
    // Produce code snippet that creates the filter and registers it with the corresponding RJittedFilter
    // Windows requires std::hex << std::showbase << (size_t)pointer to produce notation "0x1234"
@@ -691,22 +690,22 @@ BookFilterJit(std::shared_ptr<RDFDetail::RNodeBase> *prevNodeOnHeap, std::string
 
 /// Book the jitting of a Define call
 std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm,
-                                             RDataSource *ds, const RColumnRegister &customCols,
+                                             RDataSource *ds, const RColumnRegister &colRegister,
                                              const ColumnNames_t &branches,
                                              std::shared_ptr<RNodeBase> *upcastNodeOnHeap)
 {
    auto *const tree = lm.GetTree();
    const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
 
-   const auto parsedExpr = ParseRDFExpression(expression, branches, customCols, dsColumns);
+   const auto parsedExpr = ParseRDFExpression(expression, branches, colRegister, dsColumns);
    const auto exprVarTypes =
-      GetValidatedArgTypes(parsedExpr.fUsedCols, customCols, tree, ds, "Define", /*vector2rvec=*/true);
+      GetValidatedArgTypes(parsedExpr.fUsedCols, colRegister, tree, ds, "Define", /*vector2rvec=*/true);
    const auto funcName = DeclareFunction(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes);
    const auto type = RetTypeOfFunc(funcName);
 
-   auto definesCopy = new RColumnRegister(customCols);
+   auto definesCopy = new RColumnRegister(colRegister);
    auto definesAddr = PrettyPrintAddr(definesCopy);
-   auto jittedDefine = std::make_shared<RDFDetail::RJittedDefine>(name, type, lm, customCols, parsedExpr.fUsedCols);
+   auto jittedDefine = std::make_shared<RDFDetail::RJittedDefine>(name, type, lm, colRegister, parsedExpr.fUsedCols);
 
    std::stringstream defineInvocation;
    defineInvocation << "ROOT::Internal::RDF::JitDefineHelper<ROOT::Internal::RDF::DefineTypes::RDefineTag>(" << funcName
@@ -734,16 +733,16 @@ std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_
 
 /// Book the jitting of a DefinePerSample call
 std::shared_ptr<RJittedDefine> BookDefinePerSampleJit(std::string_view name, std::string_view expression,
-                                                      RLoopManager &lm, const RColumnRegister &customCols,
+                                                      RLoopManager &lm, const RColumnRegister &colRegister,
                                                       std::shared_ptr<RNodeBase> *upcastNodeOnHeap)
 {
    const auto funcName = DeclareFunction(std::string(expression), {"rdfslot_", "rdfsampleinfo_"},
                                          {"unsigned int", "const ROOT::RDF::RSampleInfo"});
    const auto retType = RetTypeOfFunc(funcName);
 
-   auto definesCopy = new RColumnRegister(customCols);
+   auto definesCopy = new RColumnRegister(colRegister);
    auto definesAddr = PrettyPrintAddr(definesCopy);
-   auto jittedDefine = std::make_shared<RDFDetail::RJittedDefine>(name, retType, lm, customCols, ColumnNames_t{});
+   auto jittedDefine = std::make_shared<RDFDetail::RJittedDefine>(name, retType, lm, colRegister, ColumnNames_t{});
 
    std::stringstream defineInvocation;
    defineInvocation << "ROOT::Internal::RDF::JitDefineHelper<ROOT::Internal::RDF::DefineTypes::RDefinePerSampleTag>("
@@ -830,7 +829,7 @@ BookVariationJit(const std::vector<std::string> &colNames, std::string_view vari
 // (see comments in the body for actual jitted code)
 std::string JitBuildAction(const ColumnNames_t &cols, std::shared_ptr<RDFDetail::RNodeBase> *prevNode,
                            const std::type_info &helperArgType, const std::type_info &at, void *helperArgOnHeap,
-                           TTree *tree, const unsigned int nSlots, const RColumnRegister &customCols, RDataSource *ds,
+                           TTree *tree, const unsigned int nSlots, const RColumnRegister &colRegister, RDataSource *ds,
                            std::weak_ptr<RJittedAction> *jittedActionOnHeap)
 {
    // retrieve type of action as a string
@@ -848,7 +847,7 @@ std::string JitBuildAction(const ColumnNames_t &cols, std::shared_ptr<RDFDetail:
       ThrowJitBuildActionHelperTypeError(actionTypeNameBase, helperArgType);
    }
 
-   auto definesCopy = new RColumnRegister(customCols); // deleted in jitted CallBuildAction
+   auto definesCopy = new RColumnRegister(colRegister); // deleted in jitted CallBuildAction
    auto definesAddr = PrettyPrintAddr(definesCopy);
 
    // Build a call to CallBuildAction with the appropriate argument. When run through the interpreter, this code will
@@ -856,7 +855,7 @@ std::string JitBuildAction(const ColumnNames_t &cols, std::shared_ptr<RDFDetail:
    std::stringstream createAction_str;
    createAction_str << "ROOT::Internal::RDF::CallBuildAction<" << actionTypeName;
    const auto columnTypeNames =
-      GetValidatedArgTypes(cols, customCols, tree, ds, actionTypeNameBase, /*vector2rvec=*/true);
+      GetValidatedArgTypes(cols, colRegister, tree, ds, actionTypeNameBase, /*vector2rvec=*/true);
    for (auto &colType : columnTypeNames)
       createAction_str << ", " << colType;
    // on Windows, to prefix the hexadecimal value of a pointer with '0x',
@@ -896,16 +895,16 @@ std::shared_ptr<RNodeBase> UpcastNode(std::shared_ptr<RNodeBase> ptr)
 /// * replace column names from aliases by the actual column name
 /// Return the list of selected column names.
 ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColumns, const ColumnNames_t &columns,
-                                      const RColumnRegister &customColumns, RDataSource *ds)
+                                      const RColumnRegister &colRegister, RDataSource *ds)
 {
    auto selectedColumns = SelectColumns(nColumns, columns, lm.GetDefaultColumnNames());
 
    for (auto &col : selectedColumns) {
-      col = customColumns.ResolveAlias(col);
+      col = colRegister.ResolveAlias(col);
    }
 
    // Complain if there are still unknown columns at this point
-   const auto unknownColumns = FindUnknownColumns(selectedColumns, lm.GetBranchNames(), customColumns,
+   const auto unknownColumns = FindUnknownColumns(selectedColumns, lm.GetBranchNames(), colRegister,
                                                   ds ? ds->GetColumnNames() : ColumnNames_t{});
 
    if (!unknownColumns.empty()) {

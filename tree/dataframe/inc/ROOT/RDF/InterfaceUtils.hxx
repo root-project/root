@@ -314,26 +314,27 @@ ColumnNames_t FilterArraySizeColNames(const ColumnNames_t &columnNames, const st
 
 void CheckValidCppVarName(std::string_view var, const std::string &where);
 
-void CheckForRedefinition(const std::string &where, std::string_view definedCol, const RColumnRegister &customCols,
+void CheckForRedefinition(const std::string &where, std::string_view definedCol, const RColumnRegister &colRegister,
                           const ColumnNames_t &treeColumns, const ColumnNames_t &dataSourceColumns);
 
-void CheckForDefinition(const std::string &where, std::string_view definedColView, const RColumnRegister &customCols,
+void CheckForDefinition(const std::string &where, std::string_view definedColView, const RColumnRegister &colRegister,
                         const ColumnNames_t &treeColumns, const ColumnNames_t &dataSourceColumns);
 
-void CheckForNoVariations(const std::string &where, std::string_view definedColView, const RColumnRegister &customCols);
+void CheckForNoVariations(const std::string &where, std::string_view definedColView,
+                          const RColumnRegister &colRegister);
 
 std::string PrettyPrintAddr(const void *const addr);
 
 std::shared_ptr<RJittedFilter> BookFilterJit(std::shared_ptr<RNodeBase> *prevNodeOnHeap, std::string_view name,
                                              std::string_view expression, const ColumnNames_t &branches,
-                                             const RColumnRegister &customCols, TTree *tree, RDataSource *ds);
+                                             const RColumnRegister &colRegister, TTree *tree, RDataSource *ds);
 
 std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm,
-                                             RDataSource *ds, const RColumnRegister &customCols,
+                                             RDataSource *ds, const RColumnRegister &colRegister,
                                              const ColumnNames_t &branches, std::shared_ptr<RNodeBase> *prevNodeOnHeap);
 
 std::shared_ptr<RJittedDefine> BookDefinePerSampleJit(std::string_view name, std::string_view expression,
-                                                      RLoopManager &lm, const RColumnRegister &customCols,
+                                                      RLoopManager &lm, const RColumnRegister &colRegister,
                                                       std::shared_ptr<RNodeBase> *upcastNodeOnHeap);
 
 std::shared_ptr<RJittedVariation>
@@ -469,7 +470,7 @@ template <typename F>
 auto MakeDefineNode(DefineTypes::RDefineTag, std::string_view name, std::string_view dummyType, F &&f,
                     const ColumnNames_t &cols, RColumnRegister &colRegister, RLoopManager &lm)
 {
-   return std::unique_ptr<RDefineBase>(new RDefine<std::decay_t<F>, CustomColExtraArgs::None>(
+   return std::unique_ptr<RDefineBase>(new RDefine<std::decay_t<F>, ExtraArgsForDefine::None>(
       name, dummyType, std::forward<F>(f), cols, colRegister, lm));
 }
 
