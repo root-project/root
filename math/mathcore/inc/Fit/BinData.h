@@ -114,16 +114,16 @@ public :
 
 
    /**
-      Preallocate a data set with given size ,  dimension and error type.
-      If the data set already exists newPoints are appended to the existing dataset.
-      (i.e if the data exists Initialize is equivalent to a resize( NPoints() + maxpoints).
-      Initialize and Append are equivalent.
+      Preallocate a data set with given size, dimension and error type.
+      If the data set already exists, `newPoints` are appended to the existing data set.
+      (i.e., if the data exists Initialize() is equivalent to a `resize( NPoints() + maxpoints)`).
+      Initialize() and Append() are equivalent.
    */
    void Initialize( unsigned int newPoints, unsigned int dim = 1, ErrorType err = kValueError ){
       Append(newPoints,dim,err);
    }
 
-   /// Equivalent to Initialize
+   /// Equivalent to Initialize()
    void Append( unsigned int newPoints, unsigned int dim = 1, ErrorType err = kValueError );
 
 
@@ -241,7 +241,7 @@ public :
         the inverse of the errors.
       - If the data contains errors in coordinates and value (e.g from TGraphErrors) returns a
         pointer to the corresponding value error (NOT the inverse).
-      - If the data contains asymmetric errors return a ponter to the average error (NOT the inverse):
+      - If the data contains asymmetric errors return a pointer to the average error (NOT the inverse):
         0.5(eu + el).
       - If the data does not contain errors return a nullptr.
    */
@@ -257,7 +257,7 @@ public :
    }
 
    /// Return the error on the given point.
-   /// Safer method returing in any case the error and not the inverse as in the
+   /// Safer method returning in any case the error and not the inverse as in the
    /// function above.
    double Error( unsigned int ipoint ) const
    {
