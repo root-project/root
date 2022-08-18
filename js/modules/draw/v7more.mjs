@@ -29,12 +29,12 @@ function drawText() {
   * @private */
 function drawLine() {
 
-    let line         = this.getObject(),
-        pp           = this.getPadPainter(),
-        onframe      = this.v7EvalAttr("onFrame", false) ? pp.getFramePainter() : null,
-        clipping     = onframe ? this.v7EvalAttr("clipping", false) : false,
-        p1           = pp.getCoordinate(line.fP1, onframe),
-        p2           = pp.getCoordinate(line.fP2, onframe);
+    let line     = this.getObject(),
+        pp       = this.getPadPainter(),
+        onframe  = this.v7EvalAttr("onFrame", false) ? pp.getFramePainter() : null,
+        clipping = onframe ? this.v7EvalAttr("clipping", false) : false,
+        p1       = pp.getCoordinate(line.fP1, onframe),
+        p2       = pp.getCoordinate(line.fP2, onframe);
 
     this.createG(clipping ? "main_layer" : (onframe ? "upper_layer" : false));
 
@@ -50,12 +50,12 @@ function drawLine() {
   * @private */
 function drawBox() {
 
-   let box          = this.getObject(),
-       pp           = this.getPadPainter(),
-       onframe      = this.v7EvalAttr("onFrame", false) ? pp.getFramePainter() : null,
-       clipping     = onframe ? this.v7EvalAttr("clipping", false) : false,
-       p1           = pp.getCoordinate(box.fP1, onframe),
-       p2           = pp.getCoordinate(box.fP2, onframe);
+   let box      = this.getObject(),
+       pp       = this.getPadPainter(),
+       onframe  = this.v7EvalAttr("onFrame", false) ? pp.getFramePainter() : null,
+       clipping = onframe ? this.v7EvalAttr("clipping", false) : false,
+       p1       = pp.getCoordinate(box.fP1, onframe),
+       p2       = pp.getCoordinate(box.fP2, onframe);
 
    this.createG(clipping ? "main_layer" : (onframe ? "upper_layer" : false));
 
@@ -73,11 +73,11 @@ function drawBox() {
 /** @summary draw RMarker object
   * @private */
 function drawMarker() {
-    let marker       = this.getObject(),
-        pp           = this.getPadPainter(),
-        onframe      = this.v7EvalAttr("onFrame", false) ? pp.getFramePainter() : null,
-        clipping     = onframe ? this.v7EvalAttr("clipping", false) : false,
-        p            = pp.getCoordinate(marker.fP, onframe);
+    let marker   = this.getObject(),
+        pp       = this.getPadPainter(),
+        onframe  = this.v7EvalAttr("onFrame", false) ? pp.getFramePainter() : null,
+        clipping = onframe ? this.v7EvalAttr("clipping", false) : false,
+        p        = pp.getCoordinate(marker.fP, onframe);
 
     this.createG(clipping ? "main_layer" : (onframe ? "upper_layer" : false));
 

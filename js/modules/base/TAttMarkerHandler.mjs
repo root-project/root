@@ -130,8 +130,8 @@ class TAttMarkerHandler {
 
       this.optimized = false;
 
-      let marker_kind = root_markers[this.style] ?? 104;
-      let shape = marker_kind % 100;
+      let marker_kind = root_markers[this.style] ?? 104,
+          shape = marker_kind % 100;
 
       this.fill = (marker_kind >= 100);
 

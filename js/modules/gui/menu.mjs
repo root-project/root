@@ -114,7 +114,8 @@ class JSRootMenu {
       }
 
       if (opts.length === 1) {
-         if (opts[0]==='inspect') top_name = top_name.replace("Draw", "Inspect");
+         if (opts[0] === 'inspect')
+            top_name = top_name.replace("Draw", "Inspect");
          this.add(top_name, opts[0], call_back);
          return;
       }
@@ -122,13 +123,12 @@ class JSRootMenu {
       if (!without_sub) this.add("sub:" + top_name, opts[0], call_back);
 
       for (let i = 0; i < opts.length; ++i) {
-         let name = opts[i];
-         if (name=="") name = this._use_plain_text ? '<dflt>' : '&lt;dflt&gt;';
+         let name = opts[i] || (this._use_plain_text ? '<dflt>' : '&lt;dflt&gt;');
 
          let group = i+1;
          if ((opts.length > 5) && (name.length > 0)) {
             // check if there are similar options, which can be grouped once again
-            while ((group<opts.length) && (opts[group].indexOf(name)==0)) group++;
+            while ((group < opts.length) && (opts[group].indexOf(name) == 0)) group++;
          }
 
          if (without_sub) name = top_name + " " + name;
@@ -191,21 +191,31 @@ class JSRootMenu {
    /** @summary Add size selection menu entries
      * @protected */
    addSizeMenu(name, min, max, step, size_value, set_func, title) {
+
       if (size_value === undefined) return;
 
-      this.add("sub:" + name, () => {
-         let entry = size_value.toFixed(4);
-         if (step >= 0.1) entry = size_value.toFixed(2);
-         if (step >= 1) entry = size_value.toFixed(0);
-         this.input("Enter value of " + name, entry, (step >= 1) ? "int" : "float").then(set_func);
-      }, title);
-      for (let sz = min; sz <= max; sz += step) {
-         let entry = sz.toFixed(2);
-         if (step >= 0.1) entry = sz.toFixed(1);
-         if (step >= 1) entry = sz.toFixed(0);
-         this.addchk((Math.abs(size_value - sz) < step / 2), entry,
-                     sz, res => set_func((step >= 1) ? parseInt(res) : parseFloat(res)));
+      let values = [], miss_current = false;
+      if (typeof step == 'object') {
+         values = step; step = 1;
+      } else for (let sz = min; sz <= max; sz += step)
+         values.push(sz);
+
+      const match = v => Math.abs(v-size_value) < (max - min)*1e-5,
+            conv = (v, more) => {
+               if ((v === size_value) && miss_current) more = true;
+               if (step >= 1) return v.toFixed(0);
+               if (step >= 0.1) return v.toFixed(more ? 2 : 1);
+               return v.toFixed(more ? 4 : 2);
+           };
+
+      if (values.findIndex(match) < 0) {
+         miss_current = true;
+         values.push(size_value);
+         values = values.sort((a,b) => a > b);
       }
+
+      this.add("sub:" + name, () => this.input("Enter value of " + name, conv(size_value, true), (step >= 1) ? "int" : "float").then(set_func), title);
+      values.forEach(v => this.addchk(match(v), conv(v), v, res => set_func((step >= 1) ? parseInt(res) : parseFloat(res))));
       this.add("endsub:");
    }
 
@@ -319,12 +329,9 @@ class JSRootMenu {
    /** @summary Add rebin menu entries
      * @protected */
    addRebinMenu(rebin_func) {
-     this.add("sub:Rebin", () => {
-         this.input("Enter rebin value", 2, "int", 2).then(rebin_func);
-      });
-      for (let sz = 2; sz <= 7; sz++) {
+      this.add("sub:Rebin", () => this.input("Enter rebin value", 2, "int", 2).then(rebin_func));
+      for (let sz = 2; sz <= 7; sz++)
          this.add(sz.toString(), sz, res => rebin_func(parseInt(res)));
-      }
       this.add("endsub:");
    }
 
@@ -397,7 +404,7 @@ class JSRootMenu {
       // for the moment, text attributes accessed directly from objects
 
       let obj = painter.getObject();
-      if (!obj || !('fTextColor' in obj)) return;
+      if ((obj?.fTextColor === undefined) || (obj?.fTextAlign == undefined)) return;
 
       this.add("sub:" + (prefix ? prefix : "Text"));
       this.addColorMenu("color", obj.fTextColor,
@@ -502,7 +509,7 @@ class JSRootMenu {
 
       if (!preffix) preffix = "";
 
-      if (painter.lineatt && painter.lineatt.used) {
+      if (painter.lineatt?.used) {
          this.add("sub:" + preffix + "Line att");
          this.addSizeMenu("width", 1, 10, 1, painter.lineatt.width,
             arg => { painter.lineatt.change(undefined, arg); painter.interactiveRedraw(true, `exec:SetLineWidth(${arg})`); });
@@ -514,7 +521,7 @@ class JSRootMenu {
          });
          this.add("endsub:");
 
-         if (('excl_side' in painter.lineatt) && (painter.lineatt.excl_side !== 0)) {
+         if (painter.lineatt?.excl_side) {
             this.add("sub:Exclusion");
             this.add("sub:side");
             for (let side = -1; side <= 1; ++side)
@@ -531,7 +538,7 @@ class JSRootMenu {
          }
       }
 
-      if (painter.fillatt && painter.fillatt.used) {
+      if (painter.fillatt?.used) {
          this.add("sub:" + preffix + "Fill att");
          this.addColorMenu("color", painter.fillatt.colorindx, arg => {
             painter.fillatt.change(arg, undefined, painter.getCanvSvg());
@@ -544,7 +551,7 @@ class JSRootMenu {
          this.add("endsub:");
       }
 
-      if (painter.markeratt && painter.markeratt.used) {
+      if (painter.markeratt?.used) {
          this.add("sub:" + preffix + "Marker att");
          this.addColorMenu("color", painter.markeratt.color,
             arg => { painter.markeratt.change(arg); painter.interactiveRedraw(true, getColorExec(arg, "SetMarkerColor"));});
@@ -645,6 +652,7 @@ class JSRootMenu {
       }
 
       this.addchk(settings.UseStamp, "Use stamp arg", flag => { settings.UseStamp = flag; });
+      this.addSizeMenu("Max ranges", 1, 1000, [1, 10, 20, 50, 200, 1000], settings.MaxRanges, value => { settings.MaxRanges = value; }, "Maximal number of ranges in single http request");
 
       this.addchk(settings.HandleWrongHttpResponse, "Handle wrong http response", flag => { settings.HandleWrongHttpResponse = flag; });
 
@@ -910,11 +918,11 @@ class JSRootMenu {
                let arg = method.fArgs[k];
                let value = element.querySelector(`#${dlg_id}_inp${k}`).value;
                if (value === "") value = arg.fDefault;
-               if ((arg.fTitle=="Option_t*") || (arg.fTitle=="const char*")) {
+               if ((arg.fTitle == "Option_t*") || (arg.fTitle == "const char*")) {
                   // check quotes,
                   // TODO: need to make more precise checking of escape characters
                   if (!value) value = '""';
-                  if (value[0]!='"') value = '"' + value;
+                  if (value[0] != '"') value = '"' + value;
                   if (value[value.length-1] != '"') value += '"';
                }
 
@@ -924,7 +932,6 @@ class JSRootMenu {
             resolveFunc(args);
          });
       });
-
    }
 
    /** @summary Let input arguments from the Command
@@ -1041,55 +1048,19 @@ class StandaloneMenu extends JSRootMenu {
          outer.style.left = left + 'px';
          outer.style.top = top + 'px';
 
-         injectStyle(`
-.jsroot_ctxt_container {
-   position: absolute;
-   top: 0;
-   user-select: none;
-   z-index: 100000;
-   background-color: rgb(250, 250, 250);
-   margin: 0;
-   padding: 0px;
-   width: auto;
-   min-width: 100px;
-   box-shadow: 0px 0px 10px rgb(0, 0, 0, 0.2);
-   border: 3px solid rgb(215, 215, 215);
-   font-family: Arial, helvetica, sans-serif, serif;
-   font-size: 13px;
-   color: rgb(0, 0, 0, 0.8);
-}
-.jsroot_ctxt_column {
-   float: left;
-}
-.jsroot_ctxt_divider {
-   width: 85%;
-   margin: 3px auto;
-   border: 1px solid rgb(0, 0, 0, 0.15);
-}
-.jsroot_ctxt_header {
-   background-color: lightblue;
-   padding: 3px 7px;
-   font-weight: bold;
-   border-bottom: 1px;
-}
-.jsroot_ctxt_text {
-   margin: 0;
-   padding: 3px 7px;
-   pointer-events: none;
-   white-space: nowrap;
-}
-.jsroot_ctxt_extraText {
-   margin: 0;
-   padding: 3px 7px;
-   color: rgb(0, 0, 0, 0.6);
-}
-.jsroot_ctxt_focus {
-   background-color: rgb(220, 220, 220);
-}
-.jsroot_ctxt_item:hover {
-   background-color: rgb(235, 235, 235);
-}`, this.element);
-
+         injectStyle(
+            `.jsroot_ctxt_container {
+                position: absolute; top: 0; user-select: none; z-index: 100000; background-color: rgb(250, 250, 250); margin: 0; padding: 0px; width: auto;
+                min-width: 100px; box-shadow: 0px 0px 10px rgb(0, 0, 0, 0.2); border: 3px solid rgb(215, 215, 215); font-family: Arial, helvetica, sans-serif, serif;
+                font-size: 13px; color: rgb(0, 0, 0, 0.8);
+             }
+             .jsroot_ctxt_column { float: left; }
+             .jsroot_ctxt_divider { width: 85%; margin: 3px auto; border: 1px solid rgb(0, 0, 0, 0.15); }
+             .jsroot_ctxt_header { background-color: lightblue; padding: 3px 7px; font-weight: bold; border-bottom: 1px; }
+             .jsroot_ctxt_text { margin: 0; padding: 3px 7px; pointer-events: none; white-space: nowrap; }
+             .jsroot_ctxt_extraText { margin: 0; padding: 3px 7px; color: rgb(0, 0, 0, 0.6); }
+             .jsroot_ctxt_focus { background-color: rgb(220, 220, 220); }
+             .jsroot_ctxt_item:hover { background-color: rgb(235, 235, 235); }`, this.element);
       } else if ((left < 0) && (top == left)) {
          // column
          outer.className = "jsroot_ctxt_column";
@@ -1223,7 +1194,6 @@ class StandaloneMenu extends JSRootMenu {
             //Does sub-contextmenu overflow window width?
             outer.style.left = (docWidth - outer.offsetWidth) + 'px';
          }
-
          if (outer.offsetHeight > docHeight) {
             //is the contextmenu height larger than the window height?
             outer.style.top = 0;
@@ -1238,38 +1208,30 @@ class StandaloneMenu extends JSRootMenu {
       } else if (outer.className != "jsroot_ctxt_column") {
 
          //if its sub-contextmenu
-
          let dimensionsLoc = loc.getBoundingClientRect(), dimensionsOuter = outer.getBoundingClientRect();
 
          //Does sub-contextmenu overflow window width?
          if (dimensionsOuter.left + dimensionsOuter.width > docWidth) {
-            outer.style.left = (-loc.offsetLeft - dimensionsOuter.width) + 'px'
+            outer.style.left = (-loc.offsetLeft - dimensionsOuter.width) + 'px';
          }
 
          if (dimensionsOuter.height > docHeight) {
             //is the sub-contextmenu height larger than the window height?
-
-            outer.style.top = -dimensionsOuter.top + 'px'
-            outer.style.overflowY = 'scroll'
-            outer.style.overflowX = 'hidden'
-            outer.style.height = docHeight + 'px'
-         }
-         else if (dimensionsOuter.height < docHeight && dimensionsOuter.height > docHeight / 2) {
+            outer.style.top = -dimensionsOuter.top + 'px';
+            outer.style.overflowY = 'scroll';
+            outer.style.overflowX = 'hidden';
+            outer.style.height = docHeight + 'px';
+         } else if (dimensionsOuter.height < docHeight && dimensionsOuter.height > docHeight / 2) {
             //is the sub-contextmenu height smaller than the window height AND larger than half of window height?
-
             if (dimensionsOuter.top - docHeight / 2 >= 0) { //If sub-contextmenu is closer to bottom of the screen
-               outer.style.top = (-dimensionsOuter.top - dimensionsOuter.height + docHeight) + 'px'
+               outer.style.top = (-dimensionsOuter.top - dimensionsOuter.height + docHeight) + 'px';
+            } else { //If sub-contextmenu is closer to top of the screen
+               outer.style.top = (-dimensionsOuter.top) + 'px';
             }
-            else { //If sub-contextmenu is closer to top of the screen
-               outer.style.top = (-dimensionsOuter.top) + 'px'
-            }
-
-         }
-         else if (dimensionsOuter.top + dimensionsOuter.height > docHeight) {
+         } else if (dimensionsOuter.top + dimensionsOuter.height > docHeight) {
             //Does sub-contextmenu overflow window height?
-            outer.style.top = (-dimensionsOuter.height + dimensionsLoc.height) + 'px'
+            outer.style.top = (-dimensionsOuter.height + dimensionsLoc.height) + 'px';
          }
-
       }
       return outer;
    }
@@ -1316,62 +1278,27 @@ class StandaloneMenu extends JSRootMenu {
            </div>
           </div>`);
 
-      injectStyle(`
-.jsroot_dialog_block {
-   z-index: 100000;
-   position: absolute;
-   top: 0;
-   left: 0;
-   right: 0;
-   bottom: 0;
-   opacity: 0.2;
-   background-color: white;
-}
-.jsroot_dialog {
-   z-index: 100001;
-   position: absolute;
-   left: 50%;
-   top: 50%;
-}
-.jsroot_dialog_body {
-   position: relative;
-   left: -50%;
-   top: -50%;
-   border: solid green 3px;
-   padding: 5px;
-   display: flex;
-   flex-flow: column;
-   background-color: white;
-}
-.jsroot_dialog_header {
-   flex: 0 1 auto;
-   padding: 5px;
-}
-.jsroot_dialog_content {
-   flex: 1 1 auto;
-   padding: 5px;
-}
-.jsroot_dialog_footer {
-   flex: 0 1 auto;
-   padding: 5px;
-}
-.jsroot_dialog_button {
-   float: right;
-   margin-right: 1em;
-}`, element.node());
+      injectStyle(
+         `.jsroot_dialog_block { z-index: 100000; position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.2; background-color: white; }
+          .jsroot_dialog { z-index: 100001; position: absolute; left: 50%; top: 50%; }
+          .jsroot_dialog_body { position: relative; left: -50%; top: -50%; border: solid green 3px; padding: 5px; display: flex; flex-flow: column; background-color: white; }
+          .jsroot_dialog_header { flex: 0 1 auto; padding: 5px; }
+          .jsroot_dialog_content { flex: 1 1 auto; padding: 5px; }
+          .jsroot_dialog_footer { flex: 0 1 auto; padding: 5px; }
+          .jsroot_dialog_button { float: right; margin-right: 1em; }`, element.node());
 
       return new Promise(resolveFunc => {
          element.on("keyup", evnt => {
-            if ((evnt.keyCode == 13) || (evnt.keyCode == 27)) {
+            if ((evnt.code == 'Enter') || (evnt.code == 'Escape')) {
                evnt.preventDefault();
                evnt.stopPropagation();
-               resolveFunc(evnt.keyCode == 13 ? element.node() : null);
+               resolveFunc(evnt.code == 'Enter' ? element.node() : null);
                element.remove();
                block.remove();
             }
          });
          element.on("keydown", evnt => {
-            if ((evnt.keyCode == 13) || (evnt.keyCode == 27)) {
+            if ((evnt.code == 'Enter') || (evnt.code == 'Escape')) {
                evnt.preventDefault();
                evnt.stopPropagation();
             }

@@ -109,7 +109,7 @@ class RH1Painter extends RHistPainter {
           stat_sumw = 0, stat_sumwx = 0, stat_sumwx2 = 0, stat_sumwy = 0, stat_sumwy2 = 0,
           i, xx = 0, w = 0, xmax = null, wmax = null,
           fp = this.getFramePainter(),
-          res = { name: "histo", meanx: 0, meany: 0, rmsx: 0, rmsy: 0, integral: 0, entries: this.stat_entries, xmax:0, wmax:0 };
+          res = { name: "histo", meanx: 0, meany: 0, rmsx: 0, rmsy: 0, integral: 0, entries: this.stat_entries, xmax: 0, wmax: 0 };
 
       for (i = left; i < right; ++i) {
          xx = xaxis.GetBinCoord(i+0.5);
@@ -122,7 +122,7 @@ class RH1Painter extends RHistPainter {
 
          stat_sumw += w;
          stat_sumwx += w * xx;
-         stat_sumwx2 += w * xx * xx;
+         stat_sumwx2 += w * xx**2;
       }
 
       // when no range selection done, use original statistic from histogram
@@ -137,8 +137,8 @@ class RH1Painter extends RHistPainter {
       if (stat_sumw > 0) {
          res.meanx = stat_sumwx / stat_sumw;
          res.meany = stat_sumwy / stat_sumw;
-         res.rmsx = Math.sqrt(Math.abs(stat_sumwx2 / stat_sumw - res.meanx * res.meanx));
-         res.rmsy = Math.sqrt(Math.abs(stat_sumwy2 / stat_sumw - res.meany * res.meany));
+         res.rmsx = Math.sqrt(Math.abs(stat_sumwx2 / stat_sumw - res.meanx**2));
+         res.rmsy = Math.sqrt(Math.abs(stat_sumwy2 / stat_sumw - res.meany**2));
       }
 
       if (xmax !== null) {
@@ -832,7 +832,7 @@ class RH1Painter extends RHistPainter {
 
          res.menu = res.exact; // one could show context menu
          // distance to middle point, use to decide which menu to activate
-         res.menu_dist = Math.sqrt((midx-pnt_x)*(midx-pnt_x) + (midy-pnt_y)*(midy-pnt_y));
+         res.menu_dist = Math.sqrt((midx-pnt_x)**2 + (midy-pnt_y)**2);
 
       } else {
          let radius = this.lineatt.width + 3;
@@ -848,7 +848,7 @@ class RH1Painter extends RHistPainter {
          res.exact = (Math.abs(midx - pnt.x) <= radius) && (Math.abs(midy - pnt.y) <= radius);
 
          res.menu = res.exact; // show menu only when mouse pointer exactly over the histogram
-         res.menu_dist = Math.sqrt((midx-pnt.x)*(midx-pnt.x) + (midy-pnt.y)*(midy-pnt.y));
+         res.menu_dist = Math.sqrt((midx-pnt.x)**2 + (midy-pnt.y)**2);
 
          res.changed = ttrect.property("current_bin") !== findbin;
 

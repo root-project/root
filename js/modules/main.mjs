@@ -15,14 +15,16 @@ export * from './hist/TH2Painter.mjs';
 
 export * from './hist/TH3Painter.mjs';
 
-export { loadOpenui5, registerForResize } from './gui/utils.mjs';
+export { loadOpenui5, registerForResize, setSaveFile } from './gui/utils.mjs';
 
 export { draw, redraw, makeSVG, addDrawFunc, setDefaultDrawOpt } from './draw.mjs';
 
-export { openFile } from './io.mjs';
+export { openFile, FileProxy } from './io.mjs';
 
 export * from './gui/display.mjs';
 
 export { HierarchyPainter, getHPainter } from './gui/HierarchyPainter.mjs';
 
 export { readStyleFromURL, buildGUI } from './gui.mjs';
+
+export { TSelector, treeDraw } from './tree.mjs';

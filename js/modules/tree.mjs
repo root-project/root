@@ -383,7 +383,7 @@ function findBranch(tree, name) {
   * @private */
 function getNumBranches(tree) {
    function count(obj) {
-      if (!obj || !obj.fBranches) return 0;
+      if (!obj?.fBranches) return 0;
       let nchld = 0;
       obj.fBranches.arr.forEach(sub => nchld += count(sub));
       return obj.fBranches.arr.length + nchld;
@@ -810,7 +810,7 @@ class TDrawSelector extends TSelector {
       let expr = this.parseParameters(tree, args, args.expr), cut = "";
 
       // parse option for histogram creation
-      this.hist_title = "drawing '" + expr + "' from " + tree.fName;
+      this.hist_title = `drawing '${expr}' from ${tree.fName}`;
 
       let pos = 0;
       if (args.cut) {
@@ -1237,8 +1237,10 @@ class TDrawSelector extends TSelector {
    ProcessArraysFunc(/*entry*/) {
 
       if (this.arr_limit || this.graph) {
-         let var0 = this.vars[0], len = this.tgtarr.br0.length,
-            var1 = this.vars[1], var2 = this.vars[2];
+         let var0 = this.vars[0],
+             var1 = this.vars[1],
+             var2 = this.vars[2],
+             len = this.tgtarr.br0.length;
          if ((var0.buf.length === 0) && (len >= this.arr_limit) && !this.graph) {
             // special use case - first array large enough to create histogram directly base on it
             var0.buf = this.tgtarr.br0;
@@ -1459,7 +1461,7 @@ function makeMethodsList(typename) {
    let res = {
       names: [],
       values: [],
-      Create: function() {
+      Create() {
          let obj = {};
          for (let n = 0; n < this.names.length; ++n)
             obj[this.names[n]] = this.values[n];
@@ -1467,7 +1469,8 @@ function makeMethodsList(typename) {
       }
    }
 
-   res.names.push("_typename"); res.values.push(typename);
+   res.names.push("_typename");
+   res.values.push(typename);
    for (let key in methods) {
       res.names.push(key);
       res.values.push(methods[key]);
@@ -1588,14 +1591,14 @@ function treeProcess(tree, selector, args) {
          staged_prev: 0, // entry limit of previous I/O request
          staged_now: 0, // entry limit of current I/O request
          progress_showtm: 0, // last time when progress was showed
-         GetBasketEntry: function(k) {
+         GetBasketEntry(k) {
             if (!this.branch || (k > this.branch.fMaxBaskets)) return 0;
             let res = (k < this.branch.fMaxBaskets) ? this.branch.fBasketEntry[k] : 0;
             if (res) return res;
             let bskt = (k > 0) ? this.branch.fBaskets.arr[k - 1] : null;
             return bskt ? (this.branch.fBasketEntry[k - 1] + bskt.fNevBuf) : 0;
          },
-         GetTarget: function(tgtobj) {
+         GetTarget(tgtobj) {
             // returns target object which should be used for the branch reading
             if (!this.tgt) return tgtobj;
             for (let k = 0; k < this.tgt.length; ++k) {
@@ -1605,7 +1608,7 @@ function treeProcess(tree, selector, args) {
             }
             return tgtobj;
          },
-         GetEntry: function(entry) {
+         GetEntry(entry) {
             // This should be equivalent to TBranch::GetEntry() method
             let shift = entry - this.first_entry, off;
             if (!this.branch.TestBit(kDoNotUseBufferMap))
@@ -1669,18 +1672,17 @@ function treeProcess(tree, selector, args) {
 
             if (!item_cnt2) { console.error('Cannot add counter branch2', BranchCount2.fName); return null; }
          }
-      } else
-         if (nb_leaves === 1 && leaf && leaf.fLeafCount) {
-            let br_cnt = findBranch(handle.tree, leaf.fLeafCount.fName);
+      } else if (nb_leaves === 1 && leaf && leaf.fLeafCount) {
+         let br_cnt = findBranch(handle.tree, leaf.fLeafCount.fName);
 
-            if (br_cnt) {
-               item_cnt = findInHandle(br_cnt);
+         if (br_cnt) {
+            item_cnt = findInHandle(br_cnt);
 
-               if (!item_cnt) item_cnt = AddBranchForReading(br_cnt, target_object, "$counter" + namecnt++, true);
+            if (!item_cnt) item_cnt = AddBranchForReading(br_cnt, target_object, "$counter" + namecnt++, true);
 
-               if (!item_cnt) { console.error('Cannot add counter branch', br_cnt.fName); return null; }
-            }
+            if (!item_cnt) { console.error('Cannot add counter branch', br_cnt.fName); return null; }
          }
+      }
 
       function ScanBranches(lst, master_target, chld_kind) {
          if (!lst || !lst.arr.length) return true;
@@ -1737,129 +1739,128 @@ function treeProcess(tree, selector, args) {
             name: target_name,
             typename: branch.fClassName,
             virtual: leaf.fVirtual,
-            func: function(buf, obj) {
+            func(buf, obj) {
                let clname = this.typename;
                if (this.virtual) clname = buf.readFastString(buf.ntou1() + 1);
                obj[this.name] = buf.classStreamer({}, clname);
             }
          };
-      } else
 
-         if ((branch.fType === kClonesNode) || (branch.fType === kSTLNode)) {
+      } else if ((branch.fType === kClonesNode) || (branch.fType === kSTLNode)) {
 
-            elem = createStreamerElement(target_name, kInt);
+         elem = createStreamerElement(target_name, kInt);
 
-            if (!read_mode || ((typeof read_mode === "string") && (read_mode[0] === ".")) || (read_mode === 1)) {
-               handle.process_arrays = false;
+         if (!read_mode || ((typeof read_mode === "string") && (read_mode[0] === ".")) || (read_mode === 1)) {
+            handle.process_arrays = false;
 
-               member = {
-                  name: target_name,
-                  conttype: branch.fClonesName || "TObject",
-                  reallocate: args.reallocate_objects,
-                  func: function(buf, obj) {
-                     let size = buf.ntoi4(), n = 0, arr = obj[this.name];
-                     if (!arr || this.reallocate) {
-                        arr = obj[this.name] = new Array(size);
-                     } else {
-                        n = arr.length;
-                        arr.length = size; // reallocate array
-                     }
-
-                     while (n < size) arr[n++] = this.methods.Create(); // create new objects
+            member = {
+               name: target_name,
+               conttype: branch.fClonesName || "TObject",
+               reallocate: args.reallocate_objects,
+               func(buf, obj) {
+                  let size = buf.ntoi4(), n = 0, arr = obj[this.name];
+                  if (!arr || this.reallocate) {
+                     arr = obj[this.name] = new Array(size);
+                  } else {
+                     n = arr.length;
+                     arr.length = size; // reallocate array
                   }
-               };
 
-               if ((typeof read_mode === "string") && (read_mode[0] === ".")) {
-                  member.conttype = detectBranchMemberClass(branch.fBranches, branch.fName + read_mode);
-                  if (!member.conttype) {
-                     console.error(`Cannot select object ${read_mode} in the branch ${branch.fName}`);
-                     return null;
-                  }
+                  while (n < size) arr[n++] = this.methods.Create(); // create new objects
                }
+            };
 
-               member.methods = makeMethodsList(member.conttype);
-
-               child_scan = (branch.fType === kClonesNode) ? kClonesMemberNode : kSTLMemberNode;
-            }
-         } else
-
-            if ((object_class = getBranchObjectClass(branch, handle.tree))) {
-
-               if (read_mode === true) {
-                  console.warn(`Object branch ${object_class} can not have data to be read directly`);
+            if ((typeof read_mode === "string") && (read_mode[0] === ".")) {
+               member.conttype = detectBranchMemberClass(branch.fBranches, branch.fName + read_mode);
+               if (!member.conttype) {
+                  console.error(`Cannot select object ${read_mode} in the branch ${branch.fName}`);
                   return null;
                }
-
-               handle.process_arrays = false;
-
-               let newtgt = new Array(target_object ? (target_object.length + 1) : 1);
-               for (let l = 0; l < newtgt.length - 1; ++l)
-                  newtgt[l] = target_object[l];
-               newtgt[newtgt.length - 1] = { name: target_name, lst: makeMethodsList(object_class) };
-
-               if (!ScanBranches(branch.fBranches, newtgt, 0)) return null;
-
-               return item; // this kind of branch does not have baskets and not need to be read
-
-            } else if (is_brelem && (nb_leaves === 1) && (leaf.fName === branch.fName) && (branch.fID == -1)) {
-
-               elem = createStreamerElement(target_name, branch.fClassName);
-
-               if (elem.fType === kAny) {
-
-                  let streamer = handle.file.getStreamer(branch.fClassName, { val: branch.fClassVersion, checksum: branch.fCheckSum });
-                  if (!streamer) { elem = null; console.warn('not found streamer!'); } else
-                     member = {
-                        name: target_name,
-                        typename: branch.fClassName,
-                        streamer: streamer,
-                        func: function(buf, obj) {
-                           let res = { _typename: this.typename };
-                           for (let n = 0; n < this.streamer.length; ++n)
-                              this.streamer[n].func(buf, res);
-                           obj[this.name] = res;
-                        }
-                     };
-               }
-
-               // elem.fType = kAnyP;
-
-               // only STL containers here
-               // if (!elem.fSTLtype) elem = null;
-            } else if (is_brelem && (nb_leaves <= 1)) {
-
-               elem = findBrachStreamerElement(branch, handle.file);
-
-               // this is basic type - can try to solve problem differently
-               if (!elem && branch.fStreamerType && (branch.fStreamerType < 20))
-                  elem = createStreamerElement(target_name, branch.fStreamerType);
-
-            } else if (nb_leaves === 1) {
-               // no special constrains for the leaf names
-
-               elem = createLeafElem(leaf, target_name);
-
-            } else if ((branch._typename === "TBranch") && (nb_leaves > 1)) {
-               // branch with many elementary leaves
-
-               let arr = new Array(nb_leaves), isok = true;
-               for (let l = 0; l < nb_leaves; ++l) {
-                  arr[l] = createMemberStreamer(createLeafElem(branch.fLeaves.arr[l]), handle.file);
-                  if (!arr[l]) isok = false;
-               }
-
-               if (isok)
-                  member = {
-                     name: target_name,
-                     leaves: arr,
-                     func: function(buf, obj) {
-                        let tgt = obj[this.name], l = 0;
-                        if (!tgt) obj[this.name] = tgt = {};
-                        while (l < this.leaves.length)
-                           this.leaves[l++].func(buf, tgt);
-                     }
-                  };
             }
+
+            member.methods = makeMethodsList(member.conttype);
+
+            child_scan = (branch.fType === kClonesNode) ? kClonesMemberNode : kSTLMemberNode;
+         }
+
+      } else if ((object_class = getBranchObjectClass(branch, handle.tree))) {
+
+         if (read_mode === true) {
+            console.warn(`Object branch ${object_class} can not have data to be read directly`);
+            return null;
+         }
+
+         handle.process_arrays = false;
+
+         let newtgt = new Array(target_object ? (target_object.length + 1) : 1);
+         for (let l = 0; l < newtgt.length - 1; ++l)
+            newtgt[l] = target_object[l];
+         newtgt[newtgt.length - 1] = { name: target_name, lst: makeMethodsList(object_class) };
+
+         if (!ScanBranches(branch.fBranches, newtgt, 0)) return null;
+
+         return item; // this kind of branch does not have baskets and not need to be read
+
+      } else if (is_brelem && (nb_leaves === 1) && (leaf.fName === branch.fName) && (branch.fID == -1)) {
+
+         elem = createStreamerElement(target_name, branch.fClassName);
+
+         if (elem.fType === kAny) {
+
+            let streamer = handle.file.getStreamer(branch.fClassName, { val: branch.fClassVersion, checksum: branch.fCheckSum });
+            if (!streamer) { elem = null; console.warn('not found streamer!'); } else
+               member = {
+                  name: target_name,
+                  typename: branch.fClassName,
+                  streamer: streamer,
+                  func(buf, obj) {
+                     let res = { _typename: this.typename };
+                     for (let n = 0; n < this.streamer.length; ++n)
+                        this.streamer[n].func(buf, res);
+                     obj[this.name] = res;
+                  }
+               };
+         }
+
+         // elem.fType = kAnyP;
+
+         // only STL containers here
+         // if (!elem.fSTLtype) elem = null;
+
+      } else if (is_brelem && (nb_leaves <= 1)) {
+
+         elem = findBrachStreamerElement(branch, handle.file);
+
+         // this is basic type - can try to solve problem differently
+         if (!elem && branch.fStreamerType && (branch.fStreamerType < 20))
+            elem = createStreamerElement(target_name, branch.fStreamerType);
+
+      } else if (nb_leaves === 1) {
+         // no special constrains for the leaf names
+
+         elem = createLeafElem(leaf, target_name);
+
+      } else if ((branch._typename === "TBranch") && (nb_leaves > 1)) {
+         // branch with many elementary leaves
+
+         let leaves = new Array(nb_leaves), isok = true;
+         for (let l = 0; l < nb_leaves; ++l) {
+            leaves[l] = createMemberStreamer(createLeafElem(branch.fLeaves.arr[l]), handle.file);
+            if (!leaves[l]) isok = false;
+         }
+
+         if (isok)
+            member = {
+               name: target_name,
+               leaves,
+               func(buf, obj) {
+                  let tgt = obj[this.name], l = 0;
+                  if (!tgt) obj[this.name] = tgt = {};
+                  while (l < this.leaves.length)
+                     this.leaves[l++].func(buf, tgt);
+               }
+            };
+      }
 
       if (!elem && !member) {
          console.warn('Not supported branch kind', branch.fName, branch._typename);
@@ -1935,7 +1936,6 @@ function treeProcess(tree, selector, args) {
 
          // case when target is sub-object and need to be created before
 
-
          if (member.objs_branch_func) {
             // STL branch provides special function for the reading
             member.func = member.objs_branch_func;
@@ -1961,104 +1961,100 @@ function treeProcess(tree, selector, args) {
                obj[this.name] = this.readarr(buf, obj[this.stl_size]);
             };
 
-         } else
-            if (((elem.fType === kOffsetP + kDouble32) || (elem.fType === kOffsetP + kFloat16)) && branch.fBranchCount2) {
-               // special handling for variable arrays of compressed floats in branch - not tested
+         } else if (((elem.fType === kOffsetP + kDouble32) || (elem.fType === kOffsetP + kFloat16)) && branch.fBranchCount2) {
+            // special handling for variable arrays of compressed floats in branch - not tested
 
-               member.stl_size = item_cnt.name;
+            member.stl_size = item_cnt.name;
+            member.arr_size = item_cnt2.name;
+            member.func = function(buf, obj) {
+               let sz0 = obj[this.stl_size], sz1 = obj[this.arr_size], arr = new Array(sz0);
+               for (let n = 0; n < sz0; ++n)
+                  arr[n] = (buf.ntou1() === 1) ? this.readarr(buf, sz1[n]) : [];
+               obj[this.name] = arr;
+            };
+
+         } else if (((elem.fType > 0) && (elem.fType < kOffsetL)) || (elem.fType === kTString) ||
+                    (((elem.fType > kOffsetP) && (elem.fType < kOffsetP + kOffsetL)) && branch.fBranchCount2)) {
+            // special handling of simple arrays
+            member = {
+               name: target_name,
+               stl_size: item_cnt.name,
+               type: elem.fType,
+               func(buf, obj) {
+                  obj[this.name] = buf.readFastArray(obj[this.stl_size], this.type);
+               }
+            };
+
+            if (branch.fBranchCount2) {
+               member.type -= kOffsetP;
                member.arr_size = item_cnt2.name;
                member.func = function(buf, obj) {
                   let sz0 = obj[this.stl_size], sz1 = obj[this.arr_size], arr = new Array(sz0);
                   for (let n = 0; n < sz0; ++n)
-                     arr[n] = (buf.ntou1() === 1) ? this.readarr(buf, sz1[n]) : [];
+                     arr[n] = (buf.ntou1() === 1) ? buf.readFastArray(sz1[n], this.type) : [];
                   obj[this.name] = arr;
                };
+            }
 
-            } else
-               // special handling of simple arrays
-               if (((elem.fType > 0) && (elem.fType < kOffsetL)) || (elem.fType === kTString) ||
-                  (((elem.fType > kOffsetP) && (elem.fType < kOffsetP + kOffsetL)) && branch.fBranchCount2)) {
+         } else if ((elem.fType > kOffsetP) && (elem.fType < kOffsetP + kOffsetL) && member.cntname) {
 
-                  member = {
-                     name: target_name,
-                     stl_size: item_cnt.name,
-                     type: elem.fType,
-                     func: function(buf, obj) {
-                        obj[this.name] = buf.readFastArray(obj[this.stl_size], this.type);
-                     }
-                  };
+            member.cntname = item_cnt.name;
 
-                  if (branch.fBranchCount2) {
-                     member.type -= kOffsetP;
-                     member.arr_size = item_cnt2.name;
-                     member.func = function(buf, obj) {
-                        let sz0 = obj[this.stl_size], sz1 = obj[this.arr_size], arr = new Array(sz0);
-                        for (let n = 0; n < sz0; ++n)
-                           arr[n] = (buf.ntou1() === 1) ? buf.readFastArray(sz1[n], this.type) : [];
-                        obj[this.name] = arr;
-                     };
+         } else if (elem.fType == kStreamer) {
+            // with streamers one need to extend existing array
+
+            if (item_cnt2)
+               throw new Error('Second branch counter not supported yet with kStreamer');
+
+            // function provided by normal I/O
+            member.func = member.branch_func;
+            member.stl_size = item_cnt.name;
+
+         } else if ((elem.fType === kStreamLoop) || (elem.fType === kOffsetL + kStreamLoop)) {
+            if (item_cnt2) {
+               // special solution for kStreamLoop
+               member.stl_size = item_cnt.name;
+               member.cntname = item_cnt2.name;
+               member.func = member.branch_func; // this is special function, provided by base I/O
+            } else {
+               member.cntname = item_cnt.name;
+            }
+         } else {
+
+            member.name = "$stl_member";
+
+            let loop_size_name;
+
+            if (item_cnt2) {
+               if (member.cntname) {
+                  loop_size_name = item_cnt2.name;
+                  member.cntname = "$loop_size";
+               } else {
+                  throw new Error('Second branch counter not used - very BAD');
+               }
+            }
+
+            let stlmember = {
+               name: target_name,
+               stl_size: item_cnt.name,
+               loop_size: loop_size_name,
+               member0: member,
+               func(buf, obj) {
+                  let cnt = obj[this.stl_size], arr = new Array(cnt);
+                  for (let n = 0; n < cnt; ++n) {
+                     if (this.loop_size) obj.$loop_size = obj[this.loop_size][n];
+                     this.member0.func(buf, obj);
+                     arr[n] = obj.$stl_member;
                   }
+                  delete obj.$stl_member;
+                  delete obj.$loop_size;
+                  obj[this.name] = arr;
+               }
+            };
 
-               } else
-                  if ((elem.fType > kOffsetP) && (elem.fType < kOffsetP + kOffsetL) && member.cntname) {
-
-                     member.cntname = item_cnt.name;
-                  } else
-                     if (elem.fType == kStreamer) {
-                        // with streamers one need to extend existing array
-
-                        if (item_cnt2)
-                           throw new Error('Second branch counter not supported yet with kStreamer');
-
-                        // function provided by normal I/O
-                        member.func = member.branch_func;
-                        member.stl_size = item_cnt.name;
-                     } else
-                        if ((elem.fType === kStreamLoop) || (elem.fType === kOffsetL + kStreamLoop)) {
-                           if (item_cnt2) {
-                              // special solution for kStreamLoop
-                              member.stl_size = item_cnt.name;
-                              member.cntname = item_cnt2.name;
-                              member.func = member.branch_func; // this is special function, provided by base I/O
-                           } else {
-                              member.cntname = item_cnt.name;
-                           }
-                        } else {
-
-                           member.name = "$stl_member";
-
-                           let loop_size_name;
-
-                           if (item_cnt2) {
-                              if (member.cntname) {
-                                 loop_size_name = item_cnt2.name;
-                                 member.cntname = "$loop_size";
-                              } else {
-                                 throw new Error('Second branch counter not used - very BAD');
-                              }
-                           }
-
-                           let stlmember = {
-                              name: target_name,
-                              stl_size: item_cnt.name,
-                              loop_size: loop_size_name,
-                              member0: member,
-                              func: function(buf, obj) {
-                                 let cnt = obj[this.stl_size], arr = new Array(cnt);
-                                 for (let n = 0; n < cnt; ++n) {
-                                    if (this.loop_size) obj.$loop_size = obj[this.loop_size][n];
-                                    this.member0.func(buf, obj);
-                                    arr[n] = obj.$stl_member;
-                                 }
-                                 delete obj.$stl_member;
-                                 delete obj.$loop_size;
-                                 obj[this.name] = arr;
-                              }
-                           };
-
-                           member = stlmember;
-                        }
-      }
+            member = stlmember;
+         }
+      } // if (item_cnt)
 
       // set name used to store result
       member.name = target_name;
@@ -2191,7 +2187,7 @@ function treeProcess(tree, selector, args) {
             places.push(branch.fBasketSeek[bitems[n].basket], branch.fBasketBytes[bitems[n].basket]);
          }
 
-         return places.length > 0 ? { places: places, filename: filename } : null;
+         return places.length > 0 ? { places, filename } : null;
       }
 
       function ReadProgress(value) {
@@ -2378,7 +2374,8 @@ function treeProcess(tree, selector, args) {
 
       handle.progress_showtm = new Date().getTime();
 
-      if (totalsz > 0) return ReadBaskets(bitems).then(ProcessBaskets);
+      if (totalsz > 0)
+         return ReadBaskets(bitems).then(ProcessBaskets);
 
       if (is_direct) return ProcessBaskets([]); // directly process baskets
 
@@ -2559,13 +2556,13 @@ function treeIOTest(tree, args) {
    let branches = [], names = [], nchilds = [];
 
    function collectBranches(obj, prntname = "") {
-      if (!obj || !obj.fBranches) return 0;
+      if (!obj?.fBranches) return 0;
 
       let cnt = 0;
 
       for (let n = 0; n < obj.fBranches.arr.length; ++n) {
          let br = obj.fBranches.arr[n],
-            name = (prntname ? prntname + "/" : "") + br.fName;
+             name = (prntname ? prntname + "/" : "") + br.fName;
          branches.push(br);
          names.push(name);
          nchilds.push(0);
@@ -2666,17 +2663,17 @@ function treeHierarchy(node, obj) {
       branch.$tree = tree; // keep tree pointer, later do it more smart
 
       let subitem = {
-            _name : ClearName(branch.fName),
-            _kind : "ROOT." + branch._typename,
-            _title : branch.fTitle,
-            _obj : branch
+            _name: ClearName(branch.fName),
+            _kind: "ROOT." + branch._typename,
+            _title: branch.fTitle,
+            _obj: branch
       };
 
       if (!node._childs) node._childs = [];
 
       node._childs.push(subitem);
 
-      if (branch._typename==='TBranchElement')
+      if (branch._typename === 'TBranchElement')
          subitem._title += " from " + branch.fClassName + ";" + branch.fClassVersion;
 
       if (nb_branches > 0) {
@@ -2696,7 +2693,7 @@ function treeHierarchy(node, obj) {
                     _kind: "ROOT.TLeafElement",
                     _icon: "img_leaf",
                     _obj: bobj.fLeaves.arr[0],
-                    _more : false
+                    _more: false
                  });
               }
 
@@ -2716,7 +2713,7 @@ function treeHierarchy(node, obj) {
                         _title: "function " + key + " of class " + object_class,
                         _kind: "ROOT.TBranchFunc", // fictional class, only for drawing
                         _obj: { _typename: "TBranchFunc", branch: bobj, func: key },
-                        _more : false
+                        _more: false
                      });
 
                }

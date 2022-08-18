@@ -42,7 +42,7 @@ class TGraphTimePainter extends ObjectPainter {
          this._doing_primitives = true;
       }
 
-      let lst = this.getObject().fSteps.arr[this.step];
+      let lst = this.getObject()?.fSteps.arr[this.step];
 
       if (!lst || (indx >= lst.arr.length)) {
          delete this._doing_primitives;

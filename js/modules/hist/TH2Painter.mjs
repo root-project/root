@@ -232,35 +232,37 @@ class TH2Painter extends TH2Painter2D {
 
          if (is_main) {
             assignFrame3DMethods(main);
-            main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale);
-            main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, this.zmin, this.zmax);
-            main.set3DOptions(this.options);
-            main.drawXYZ(main.toplevel, TAxisPainter, { zmult, zoom: settings.Zooming, ndim: 2, draw: this.options.Axis !== -1 });
+            pr = main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale).then(() => {
+               main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, this.zmin, this.zmax);
+               main.set3DOptions(this.options);
+               main.drawXYZ(main.toplevel, TAxisPainter, { zmult, zoom: settings.Zooming, ndim: 2, draw: this.options.Axis !== -1 });
+            });
          }
 
-         if (main.mode3d) {
-            if (this.draw_content) {
-               if (this.isTH2Poly())
-                  drawTH2PolyLego(this);
-               else if (this.options.Contour)
-                  drawBinsContour3D(this, true);
-               else if (this.options.Surf)
-                  drawBinsSurf3D(this);
-               else if (this.options.Error)
-                  drawBinsError3D(this);
-               else
-                  drawBinsLego(this);
-            }
-            main.render3D();
-            this.updateStatWebCanvas();
-            main.addKeysHandler();
-         }
+         if (main.mode3d)
+            pr = pr.then(() => {
+               if (this.draw_content) {
+                  if (this.isTH2Poly())
+                     drawTH2PolyLego(this);
+                  else if (this.options.Contour)
+                     drawBinsContour3D(this, true);
+                  else if (this.options.Surf)
+                     drawBinsSurf3D(this);
+                  else if (this.options.Error)
+                     drawBinsError3D(this);
+                  else
+                     drawBinsLego(this);
+               }
+               main.render3D();
+               this.updateStatWebCanvas();
+               main.addKeysHandler();
+            });
       }
 
       //  (re)draw palette by resize while canvas may change dimension
       if (is_main)
-         pr = this.drawColorPalette(this.options.Zscale && ((this.options.Lego == 12) || (this.options.Lego == 14) ||
-                                     (this.options.Surf == 11) || (this.options.Surf == 12))).then(() => this.drawHistTitle());
+         pr = pr.then(() => this.drawColorPalette(this.options.Zscale && ((this.options.Lego == 12) || (this.options.Lego == 14) ||
+                                     (this.options.Surf == 11) || (this.options.Surf == 12)))).then(() => this.drawHistTitle());
 
       return pr.then(() => this);
    }

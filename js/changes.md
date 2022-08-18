@@ -1,8 +1,27 @@
 # JSROOT changelog
 
 ## Changes in dev
+1. Force MathJax rendering when `\` symbol is found (#243)
+2. Fix - use alfa channel for TColor when intended
+
+
+## Changes in 7.2.0
 1. Use TAxis attributes in lego plots - ticks/labels/title colors, sizes, offsets
 2. Correctly resize stats box when number of lines changes
+3. Support JSROOT usage with yarn and webpack
+4. Provide `FileProxy` class to let read ROOT files from arbitrary place
+5. Let 'hook' save file functionality to use alternative method to store image files
+6. Implement 'tabs' layout for objects display (#238)
+7. Upgrade d3.js to version 7.6.1
+8. Fix - adjust pad margins when moving palette and frame
+
+
+## Changes in 7.1.1
+1. Fix - let modify node visibility bits via context menu
+2. Fix - menu position adjusting
+3. Fix - tree_draw.js example, export treeDraw function from main.mjs
+4. Fix - TH3 scatter plot with large number of bins converted to box2
+5. Fix - create geo css entries also when expand object in hierarchy (#240)
 
 
 ## Changes in 7.1.0

@@ -76,7 +76,7 @@ class TSplinePainter extends ObjectPainter {
       let xmin = 0, xmax = 1, ymin = 0, ymax = 1,
           spline = this.getObject();
 
-      if (spline && spline.fPoly) {
+      if (spline?.fPoly) {
 
          xmin = xmax = spline.fPoly[0].fX;
          ymin = ymax = spline.fPoly[0].fY;
@@ -112,7 +112,7 @@ class TSplinePainter extends ObjectPainter {
       let cleanup = false,
           spline = this.getObject(),
           main = this.getFramePainter(),
-          funcs = main ? main.getGrFuncs(this.options.second_x, this.options.second_y) : null,
+          funcs = main?.getGrFuncs(this.options.second_x, this.options.second_y),
           xx, yy, knot = null, indx = 0;
 
       if ((pnt === null) || !spline || !funcs) {
@@ -160,7 +160,7 @@ class TSplinePainter extends ObjectPainter {
 
       res.changed = gbin.property("current_xx") !== xx;
       res.menu = res.exact;
-      res.menu_dist = Math.sqrt((res.x-pnt.x)*(res.x-pnt.x) + (res.y-pnt.y)*(res.y-pnt.y));
+      res.menu_dist = Math.sqrt((res.x-pnt.x)**2 + (res.y-pnt.y)**2);
 
       if (res.changed)
          gbin.attr("cx", Math.round(res.x))
@@ -176,7 +176,7 @@ class TSplinePainter extends ObjectPainter {
          res.lines.push("B = " + floatToString(knot.fB, gStyle.fStatFormat));
          res.lines.push("C = " + floatToString(knot.fC, gStyle.fStatFormat));
          res.lines.push("D = " + floatToString(knot.fD, gStyle.fStatFormat));
-         if ((knot.fE!==undefined) && (knot.fF!==undefined)) {
+         if ((knot.fE !== undefined) && (knot.fF !== undefined)) {
             res.lines.push("E = " + floatToString(knot.fE, gStyle.fStatFormat));
             res.lines.push("F = " + floatToString(knot.fF, gStyle.fStatFormat));
          }
@@ -191,7 +191,7 @@ class TSplinePainter extends ObjectPainter {
 
       let spline = this.getObject(),
           pmain = this.getFramePainter(),
-          funcs = pmain ? pmain.getGrFuncs(this.options.second_x, this.options.second_y) : null,
+          funcs = pmain?.getGrFuncs(this.options.second_x, this.options.second_y),
           w = pmain.getFrameWidth(),
           h = pmain.getFrameHeight();
 
@@ -226,7 +226,7 @@ class TSplinePainter extends ObjectPainter {
          }
 
          let h0 = h;  // use maximal frame height for filling
-         if ((pmain.hmin!==undefined) && (pmain.hmin >= 0)) {
+         if ((pmain.hmin !== undefined) && (pmain.hmin >= 0)) {
             h0 = Math.round(funcs.gry(0));
             if ((h0 > h) || (h0 < 0)) h0 = h;
          }

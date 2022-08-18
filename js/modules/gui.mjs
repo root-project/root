@@ -36,6 +36,12 @@ function readStyleFromURL(url) {
    get_bool("usestamp", "UseStamp");
    get_bool("dark", "DarkMode");
 
+   let mr = d.get("maxranges");
+   if (mr) {
+      mr = parseInt(mr);
+      if (Number.isInteger(mr)) settings.MaxRanges = mr;
+   }
+
    if (d.has('wrong_http_response'))
       settings.HandleWrongHttpResponse = true;
 

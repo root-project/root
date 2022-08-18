@@ -133,9 +133,10 @@ class RObjectPainter extends ObjectPainter {
 
       if (val == "auto") {
          let pp = this.getPadPainter();
-         if (pp && (pp._auto_color_cnt !== undefined)) {
-            let pal = pp.getHistPalette();
-            let cnt = pp._auto_color_cnt++, num = pp._num_primitives - 1;
+         if (pp?._auto_color_cnt !== undefined) {
+            let pal = pp.getHistPalette(),
+                cnt = pp._auto_color_cnt++,
+                num = pp._num_primitives - 1;
             if (num < 2) num = 2;
             val = pal ? pal.getColorOrdinal((cnt % num) / num) : "blue";
             if (!this._auto_colors) this._auto_colors = {};
@@ -151,7 +152,7 @@ class RObjectPainter extends ObjectPainter {
          val = "black";
          if (Number.isFinite(ordinal)) {
              let pp = this.getPadPainter(),
-                 pal = pp ? pp.getHistPalette() : null;
+                 pal = pp?.getHistPalette();
              if (pal) val = pal.getColorOrdinal(ordinal);
          }
       }
@@ -192,22 +193,22 @@ class RObjectPainter extends ObjectPainter {
    createv7AttFill(prefix) {
       if (!prefix || (typeof prefix != "string")) prefix = "fill_";
 
-      let fill_color = this.v7EvalColor(prefix + "color", ""),
-          fill_style = this.v7EvalAttr(prefix + "style", 0);
+      let color = this.v7EvalColor(prefix + "color", ""),
+          pattern = this.v7EvalAttr(prefix + "style", 0);
 
-      this.createAttFill({ pattern: fill_style, color: fill_color,  color_as_svg: true });
+      this.createAttFill({ pattern, color,  color_as_svg: true });
    }
 
    /** @summary Create this.lineatt object based on v7 line attributes */
    createv7AttLine(prefix) {
       if (!prefix || (typeof prefix != "string")) prefix = "line_";
 
-      let line_color = this.v7EvalColor(prefix + "color", "black"),
-          line_width = this.v7EvalAttr(prefix + "width", 1),
-          line_style = this.v7EvalAttr(prefix + "style", 1),
-          line_pattern = this.v7EvalAttr(prefix + "pattern");
+      let color = this.v7EvalColor(prefix + "color", "black"),
+          width = this.v7EvalAttr(prefix + "width", 1),
+          style = this.v7EvalAttr(prefix + "style", 1),
+          pattern = this.v7EvalAttr(prefix + "pattern");
 
-      this.createAttLine({ color: line_color, width: line_width, style: line_style, pattern: line_pattern });
+      this.createAttLine({ color, width, style, pattern });
 
       if (prefix == "border_")
          this.lineatt.setBorder(this.v7EvalAttr(prefix + "rx", 0), this.v7EvalAttr(prefix + "ry", 0));
@@ -217,16 +218,16 @@ class RObjectPainter extends ObjectPainter {
    createv7AttMarker(prefix) {
       if (!prefix || (typeof prefix != "string")) prefix = "marker_";
 
-      let marker_color = this.v7EvalColor(prefix + "color", "black"),
-          marker_size = this.v7EvalAttr(prefix + "size", 0.01),
-          marker_style = this.v7EvalAttr(prefix + "style", 1),
-          marker_refsize = 1;
-      if (marker_size < 1) {
+      let color = this.v7EvalColor(prefix + "color", "black"),
+          size = this.v7EvalAttr(prefix + "size", 0.01),
+          style = this.v7EvalAttr(prefix + "style", 1),
+          refsize = 1;
+      if (size < 1) {
          let pp = this.getPadPainter();
-         marker_refsize = pp ? pp.getPadHeight() : 100;
+         refsize = pp?.getPadHeight() || 100;
       }
 
-      this.createAttMarker({ color: marker_color, size: marker_size, style: marker_style, refsize: marker_refsize });
+      this.createAttMarker({ color, size, style, refsize });
    }
 
    /** @summary Create RChangeAttr, which can be applied on the server side
@@ -275,8 +276,9 @@ class RObjectPainter extends ObjectPainter {
    /** @summary Sends accumulated attribute changes to server */
    v7SendAttrChanges(req, do_update) {
       let canp = this.getCanvPainter();
-      if (canp && req && req._typename) {
-         if (do_update !== undefined) req.update = do_update ? true : false;
+      if (canp && req?._typename) {
+         if (do_update !== undefined)
+            req.update = do_update ? true : false;
          canp.v7SubmitRequest("", req);
       }
    }
@@ -287,12 +289,12 @@ class RObjectPainter extends ObjectPainter {
     * @param method is method of painter object which will be called when getting reply */
    v7SubmitRequest(kind, req, method) {
       let canp = this.getCanvPainter();
-      if (!canp || !canp.submitDrawableRequest) return null;
+      if (typeof canp?.submitDrawableRequest != 'function') return null;
 
       // special situation when snapid not yet assigned - just keep ref until snapid is there
       // maybe keep full list - for now not clear if really needed
       if (!this.snapid) {
-         this._pending_request = { _kind: kind, _req: req, _method: method };
+         this._pending_request = { kind, req, method };
          return req;
       }
 
@@ -304,17 +306,17 @@ class RObjectPainter extends ObjectPainter {
    assignSnapId(id) {
       this.snapid = id;
       if (this.snapid && this._pending_request) {
-         let req = this._pending_request;
-         this.v7SubmitRequest(req._kind, req._req, req._method);
+         let p = this._pending_request;
+         this.v7SubmitRequest(p.kind, p.req, p.method);
          delete this._pending_request;
       }
    }
 
    /** @summary Return communication mode with the server
-    * @desc
-    * kOffline means no server there,
-    * kLessTraffic advise not to send commands if offline functionality available
-    * kNormal is standard functionality with RCanvas on server side */
+     * @desc
+     * kOffline means no server there,
+     * kLessTraffic advise not to send commands if offline functionality available
+     * kNormal is standard functionality with RCanvas on server side */
    v7CommMode() {
       let canp = this.getCanvPainter();
       if (!canp || !canp.submitDrawableRequest || !canp._websocket)

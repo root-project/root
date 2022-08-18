@@ -27,8 +27,7 @@ class THStackPainter extends ObjectPainter {
 
    /** @summary Cleanup THStack painter */
    cleanup() {
-      let pp = this.getPadPainter();
-      if (pp) pp.cleanPrimitives(objp => { return (objp === this.firstpainter) || (this.painters.indexOf(objp) >= 0); });
+      this.getPadPainter()?.cleanPrimitives(objp => { return (objp === this.firstpainter) || (this.painters.indexOf(objp) >= 0); });
       delete this.firstpainter;
       delete this.painters;
       super.cleanup();
@@ -165,7 +164,7 @@ class THStackPainter extends ObjectPainter {
 
       if (this.options._pfc || this.options._plc || this.options._pmc) {
          let mp = this.getMainPainter();
-         if (mp && mp.createAutoColor) {
+         if (typeof mp?.createAutoColor == 'function') {
             let icolor = mp.createAutoColor(nhists);
             if (this.options._pfc) hist.fFillColor = icolor;
             if (this.options._plc) hist.fLineColor = icolor;
@@ -325,8 +324,7 @@ class THStackPainter extends ObjectPainter {
           nhists = (hlst && hlst.arr) ? hlst.arr.length : 0;
 
       if (nhists !== this.painters.length) {
-         let pp = this.getPadPainter();
-         if (pp) pp.cleanPrimitives(objp => { return this.painters.indexOf(objp) >= 0; });
+         this.getPadPainter()?.cleanPrimitives(objp => { return this.painters.indexOf(objp) >= 0; });
          this.painters = [];
          this.did_update = true;
       } else {
@@ -366,8 +364,8 @@ class THStackPainter extends ObjectPainter {
 
          if (painter.options.pads) {
             pad_painter = painter.getPadPainter();
-            if (pad_painter.doingDraw() && pad_painter.pad && pad_painter.pad.fPrimitives &&
-                pad_painter.pad.fPrimitives.arr.length > 1 && (pad_painter.pad.fPrimitives.arr.indexOf(stack)==0)) {
+            if (pad_painter.doingDraw() && pad_painter.pad?.fPrimitives &&
+                pad_painter.pad.fPrimitives.arr.length > 1 && (pad_painter.pad.fPrimitives.arr.indexOf(stack) == 0)) {
                skip_drawing = true;
                console.log('special case with THStack with is already rendered - do nothing');
                return;

@@ -5,7 +5,7 @@ let version_id = "dev";
 
 /** @summary version date
   * @desc Release date in format day/month/year like "19/11/2021" */
-let version_date = "20/06/2022";
+let version_date = "17/08/2022";
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -49,19 +49,18 @@ function setBatchMode(on) { batch_mode = !!on; }
 /** @summary Indicates if running inside Node.js */
 function isNodeJs() { return nodejs; }
 
-let node_atob, node_xhr2;
+/** @summary atob function in all environments */
+const atob_func = isNodeJs() ? str => Buffer.from(str, 'base64').toString('latin1') : globalThis?.atob;
 
-///_begin_exclude_in_qt5web_
-if(isNodeJs() && process.env?.APP_ENV !== 'browser') { node_atob = await import('atob').then(h => h.default); node_xhr2 = await import('xhr2').then(h => h.default); } /// cutNodeJs
-///_end_exclude_in_qt5web_
+/** @summary btoa function in all environments */
+const btoa_func = isNodeJs() ? str => Buffer.from(str,'latin1').toString('base64') : globalThis?.btoa;
 
-let browser = { isOpera: false, isFirefox: true, isSafari: false, isChrome: false, isWin: false, touches: false  };
+let browser = { isFirefox: true, isSafari: false, isChrome: false, isWin: false, touches: false  };
 
 if ((typeof document !== "undefined") && (typeof window !== "undefined")) {
-   browser.isOpera = !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
-   browser.isFirefox = typeof InstallTrigger !== 'undefined';
+   browser.isFirefox = (navigator.userAgent.indexOf("Firefox") >= 0) || (typeof InstallTrigger !== 'undefined');
    browser.isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0;
-   browser.isChrome = !!window.chrome && !browser.isOpera;
+   browser.isChrome = !!window.chrome;
    browser.isChromeHeadless = navigator.userAgent.indexOf('HeadlessChrome') >= 0;
    browser.chromeVersion = (browser.isChrome || browser.isChromeHeadless) ? parseInt(navigator.userAgent.match(/Chrom(?:e|ium)\/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)/)[1]) : 0;
    browser.isWin = navigator.platform.indexOf('Win') >= 0;
@@ -93,7 +92,7 @@ let constants = {
       WebGLImage: 2,
       /** @summary Use SVG rendering, slow, inprecise and not interactive, nor recommendet */
       SVG: 3,
-      fromString: function(s) {
+      fromString(s) {
          if ((s === "webgl") || (s == "gl")) return this.WebGL;
          if (s === "img") return this.WebGLImage;
          if (s === "svg") return this.SVG;
@@ -114,7 +113,7 @@ let constants = {
       /** @summary Embeding, but when SVG rendering or SVG image converion is used */
       EmbedSVG: 3,
       /** @summary Convert string values into number  */
-      fromString: function(s) {
+      fromString(s) {
          if (s === "embed") return this.Embed;
          if (s === "overlay") return this.Overlay;
          return this.Default;
@@ -134,7 +133,7 @@ let constants = {
       /** @summary always use MathJax for text rendering */
       AlwaysMathJax: 4,
       /** @summary Convert string values into number */
-      fromString: function(s) {
+      fromString(s) {
          if (!s || (typeof s !== 'string'))
             return this.Normal;
          switch(s){
@@ -235,11 +234,15 @@ let settings = {
      * Can be enabled by adding "wrong_http_response" parameter to URL when using JSROOT UI
      * @default false */
    HandleWrongHttpResponse: false,
-   /** @summary Let tweak browser caching
+   /** @summary Tweak browser caching with stamp URL parameter
      * @desc When specified, extra URL parameter like ```?stamp=unique_value``` append to each files loaded
      * In such case browser will be forced to load file content disregards of server cache settings
      * @default true */
    UseStamp: true,
+   /** @summary Maximal number of bytes ranges in http "Range" header
+     * @desc Some http server has limitations for number of bytes rannges therefore let change maximal number via setting
+     * @default 200 */
+   MaxRanges: 200,
    /** @summary Skip streamer infos from the GUI */
    SkipStreamerInfos: false,
    /** @summary Show only last cycle for objects in TFile */
@@ -377,22 +380,18 @@ function getDocument() {
   * @private */
 function injectCode(code) {
    if (nodejs) {
-      if (process.env?.APP_ENV !== 'browser') {
-         let name, fs;
-         return import('tmp').then(tmp => {
-            name = tmp.tmpNameSync() + ".js";
-            return import('fs');
-         }).then(_fs => {
-            fs = _fs;
-            fs.writeFileSync(name, code);
-            return import("file://" + name);
-         }).finally(() => fs.unlinkSync(name));
-      } else {
-         return Promise.resolve(true); // dummy for webpack
-      }
+      let name, fs;
+      return import('tmp').then(tmp => {
+         name = tmp.tmpNameSync() + ".js";
+         return import('fs');
+      }).then(_fs => {
+         fs = _fs;
+         fs.writeFileSync(name, code);
+         return import(/* webpackIgnore: true */ "file://" + name);
+      }).finally(() => fs.unlinkSync(name));
    }
-   if (typeof document !== 'undefined') {
 
+   if (typeof document !== 'undefined') {
       // check if code already loaded - to avoid duplication
       let scripts = document.getElementsByTagName('script');
       for (let n = 0; n < scripts.length; ++n)
@@ -443,16 +442,12 @@ function loadScript(url) {
    let element, isstyle = url.indexOf(".css") > 0;
 
    if (nodejs) {
-      if (process.env.APP_ENV !== 'browser') {
-         if (isstyle)
-            return Promise.resolve(null);
-         if ((url.indexOf("http:") == 0) || (url.indexOf("https:") == 0))
-            return httpRequest(url, "text").then(code => injectCode(code));
-
-         return import(url);
-      } else {
+      if (isstyle)
          return Promise.resolve(null);
-      }
+      if ((url.indexOf("http:") == 0) || (url.indexOf("https:") == 0))
+         return httpRequest(url, "text").then(code => injectCode(code));
+
+      return import(/* webpackIgnore: true */ url);
    }
 
    const match_url = src => {
@@ -631,8 +626,6 @@ function parse(json) {
 
          if (value.b !== undefined) {
             // base64 coding
-
-            let atob_func = nodejs ? node_atob : window.atob;
 
             let buf = atob_func(value.b);
 
@@ -834,11 +827,10 @@ function findFunction(name) {
    return (typeof elem == 'function') ? elem : null;
 }
 
-/** @summary Method to create http request
-  * @private */
-function createHttpRequest(url, kind, user_accept_callback, user_reject_callback) {
-   let xhr = nodejs ? new node_xhr2() : new XMLHttpRequest();
 
+/** @summary Assign methods to request
+  * @private */
+function setRequestMethods(xhr, url, kind, user_accept_callback, user_reject_callback) {
    xhr.http_callback = (typeof user_accept_callback == 'function') ? user_accept_callback.bind(xhr) : function() {};
    xhr.error_callback = (typeof user_reject_callback == 'function') ? user_reject_callback.bind(xhr) : function(err) { console.warn(err.message); this.http_callback(null); }.bind(xhr);
 
@@ -861,7 +853,7 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
          if (oEvent.lengthComputable && this.expected_size && (oEvent.loaded > this.expected_size)) {
             this.did_abort = true;
             this.abort();
-            this.error_callback(Error('Server sends more bytes ' + oEvent.loaded + ' than expected ' + this.expected_size + '. Abort I/O operation'), 598);
+            this.error_callback(Error(`Server sends more bytes ${oEvent.loaded} than expected ${this.expected_size}. Abort I/O operation`), 598);
          }
       }.bind(xhr));
 
@@ -874,7 +866,7 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
          if (Number.isInteger(len) && (len > this.expected_size) && !settings.HandleWrongHttpResponse) {
             this.did_abort = true;
             this.abort();
-            return this.error_callback(Error('Server response size ' + len + ' larger than expected ' + this.expected_size + '. Abort I/O operation'), 599);
+            return this.error_callback(Error(`Server response size ${len} larger than expected ${this.expected_size}. Abort I/O operation`), 599);
          }
       }
 
@@ -883,7 +875,7 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
       if ((this.status != 200) && (this.status != 206) && !browser.qt5 &&
           // in these special cases browsers not always set status
           !((this.status == 0) && ((url.indexOf("file://")==0) || (url.indexOf("blob:")==0)))) {
-            return this.error_callback(Error('Fail to load url ' + url), this.status);
+            return this.error_callback(Error(`Fail to load url ${url}`), this.status);
       }
 
       if (this.nodejs_checkzip && (this.getResponseHeader("content-encoding") == "gzip"))
@@ -932,6 +924,24 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
    return xhr;
 }
 
+/** @summary Method to create http request, without promise can be used only in browser environment
+  * @private */
+function createHttpRequest(url, kind, user_accept_callback, user_reject_callback, use_promise) {
+   if (isNodeJs()) {
+      if (!use_promise)
+         throw Error("Not allowed to create http requests in node without promise");
+      return import('xhr2').then(h => {
+         let xhr = new h.default();
+         setRequestMethods(xhr, url, kind, user_accept_callback, user_reject_callback);
+         return xhr;
+      });
+   }
+
+   let xhr = new XMLHttpRequest();
+   setRequestMethods(xhr, url, kind, user_accept_callback, user_reject_callback);
+   return use_promise ? Promise.resolve(xhr) : xhr;
+}
+
 /** @summary Submit asynchronoues http request
   * @desc Following requests kind can be specified:
   *    - "bin" - abstract binary data, result as string
@@ -953,8 +963,7 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
   *       .catch(err => console.error(err.message)); */
 function httpRequest(url, kind, post_data) {
    return new Promise((accept, reject) => {
-      let xhr = createHttpRequest(url, kind, accept, reject);
-      xhr.send(post_data || null);
+      createHttpRequest(url, kind, accept, reject, true).then(xhr => xhr.send(post_data || null));
    });
 }
 
@@ -1562,7 +1571,7 @@ function getMethods(typename, obj) {
          if (this.fErrorMode === EErrorType.kERRORSPREADG)
             return 1.0/Math.sqrt(sum);
          // compute variance in y (eprim2) and standard deviation in y (eprim)
-         let contsum = cont/sum, eprim = Math.sqrt(Math.abs(err2/sum - contsum*contsum));
+         let contsum = cont/sum, eprim = Math.sqrt(Math.abs(err2/sum - contsum**2));
          if (this.fErrorMode === EErrorType.kERRORSPREADI) {
             if (eprim != 0) return eprim/Math.sqrt(neff);
             // in case content y is an integer (so each my has an error +/- 1/sqrt(12)
@@ -1611,15 +1620,11 @@ function getMethods(typename, obj) {
       m.Py = m.Y = function() { return this.fY; }
       m.Pz = m.Z = function() { return this.fZ; }
       m.E = m.T = function() { return this.fT; }
-      m.P2 = function() { return this.fX*this.fX + this.fY*this.fY + this.fZ*this.fZ; }
+      m.P2 = function() { return this.fX**2 + this.fY**2 + this.fZ**2; }
       m.R = m.P = function() { return Math.sqrt(this.P2()); }
-      m.Mag2 = m.M2 = function() { return this.fT*this.fT - this.fX*this.fX - this.fY*this.fY - this.fZ*this.fZ; }
-      m.Mag = m.M = function() {
-         let mm = this.M2();
-         if (mm >= 0) return Math.sqrt(mm);
-         return -Math.sqrt(-mm);
-      }
-      m.Perp2 = m.Pt2 = function() { return this.fX*this.fX + this.fY*this.fY;}
+      m.Mag2 = m.M2 = function() { return this.fT**2 - this.fX**2 - this.fY**2 - this.fZ**2; }
+      m.Mag = m.M = function() { return (this.M2() >= 0) ? Math.sqrt(this.M2()) : -Math.sqrt(-this.M2()); }
+      m.Perp2 = m.Pt2 = function() { return this.fX**2 + this.fY**2; }
       m.Pt = m.pt = function() { return Math.sqrt(this.P2()); }
       m.Phi = m.phi = function() { return Math.atan2(this.fY, this.fX); }
       m.Eta = m.eta = function() { return Math.atanh(this.Pz/this.P()); }
@@ -1669,7 +1674,7 @@ function _ensureJSROOT() {
 }
 
 export { version_id, version_date, version, source_dir, isNodeJs, isBatchMode, setBatchMode,
-         browser, internals, constants, settings, gStyle,
+         browser, internals, constants, settings, gStyle, atob_func, btoa_func,
          isArrayProto, getDocument, BIT, clone, addMethods, parse, parseMulti, toJSON,
          decodeUrl, findFunction, createHttpRequest, httpRequest, loadScript, injectCode,
          create, createHistogram, createTPolyLine, createTGraph, createTHStack, createTMultiGraph,

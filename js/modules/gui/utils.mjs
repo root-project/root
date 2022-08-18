@@ -1,4 +1,4 @@
-import { settings, gStyle, isBatchMode, source_dir } from '../core.mjs';
+import { settings, gStyle, isBatchMode, isNodeJs, source_dir, atob_func, btoa_func } from '../core.mjs';
 import { select as d3_select, pointer as d3_pointer, drag as d3_drag } from '../d3.mjs';
 import { BasePainter } from '../base/BasePainter.mjs';
 import { resize } from '../base/ObjectPainter.mjs';
@@ -328,8 +328,7 @@ function addMoveHandler(painter, enabled) {
          evnt.sourceEvent.stopPropagation();
          if (this.moveEnd)
             this.moveEnd(not_changed);
-         let pp = this.getPadPainter();
-         if (pp) pp.selectObjectPainter(this);
+         this.getPadPainter()?.selectObjectPainter(this);
       }.bind(painter));
 
    painter.draw_g
@@ -387,7 +386,7 @@ function selectgStyle(name) {
 }
 
 function saveCookie(obj, expires, name) {
-   let arg = (expires <= 0) ? "" : btoa(JSON.stringify(obj)),
+   let arg = (expires <= 0) ? "" : btoa_func(JSON.stringify(obj)),
        d = new Date();
    d.setTime((expires <= 0) ? 0 : d.getTime() + expires*24*60*60*1000);
    document.cookie = `${name}=${arg}; expires=${d.toUTCString()}; SameSite=None; Secure; path=/;`;
@@ -403,7 +402,7 @@ function readCookie(name) {
       while (c.charAt(0) == ' ')
         c = c.substring(1);
       if (c.indexOf(name) == 0) {
-         let s = JSON.parse(atob(c.substring(name.length, c.length)));
+         let s = JSON.parse(atob_func(c.substring(name.length, c.length)));
 
          return (s && typeof s == 'object') ? s : null;
       }
@@ -451,7 +450,62 @@ function readStyle(only_check = false, name = "jsroot_style") {
    return true;
 }
 
+let _saveFileFunc = null;
+
+
+/** @summary Returns image file content as it should be stored on the disc
+  * @desc Replaces all kind of base64 coding
+  * @private */
+
+function getBinFileContent(content) {
+   const svg_prefix = "data:image/svg+xml;charset=utf-8,";
+
+   if (content.indexOf(svg_prefix) == 0)
+      return decodeURIComponent(content.slice(svg_prefix.length));
+
+   if (content.indexOf('data:image/') == 0) {
+      let p = content.indexOf('base64,');
+      if (p > 0) {
+         let base64 = content.slice(p + 7);
+         return atob_func(base64);
+      }
+   }
+
+   return content;
+}
+
+/** @summary Function store content as file with filename
+  * @private */
+function saveFile(filename, content) {
+
+   if (typeof _saveFileFunc == 'function') {
+      return _saveFileFunc(filename, getBinFileContent(content));
+   } else if (isNodeJs()) {
+      return import('fs').then(fs => {
+         fs.writeFileSync(filename, getBinFileContent(content));
+         return true;
+      });
+   } else if (typeof document == 'object') {
+      let a = document.createElement('a');
+      a.download = filename;
+      a.href = content;
+      document.body.appendChild(a);
+
+      return new Promise(resolve => {
+         a.addEventListener("click", () => { a.parentNode.removeChild(a); resolve(true); });
+         a.click();
+      });
+   }
+   return Promise.resolve(false);
+}
+
+/** @summary Function store content as file with filename
+  * @private */
+function setSaveFile(func) {
+   _saveFileFunc = func;
+}
 
 export { showProgress, closeCurrentWindow, loadOpenui5, ToolbarIcons, registerForResize,
          detectRightButton, addMoveHandler, injectStyle,
-         selectgStyle, saveSettings, readSettings, saveStyle, readStyle };
+         selectgStyle, saveSettings, readSettings, saveStyle, readStyle,
+         saveFile, setSaveFile, getBinFileContent };

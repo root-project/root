@@ -12,11 +12,12 @@ class RH1Painter extends RH1Painter2D {
 
       let main = this.getFramePainter(), // who makes axis drawing
           is_main = this.isMainPainter(), // is main histogram
-          zmult = 1 + 2*gStyle.fHistTopMargin;
+          zmult = 1 + 2*gStyle.fHistTopMargin,
+          pr = Promise.resolve(this);
 
       if (reason == "resize")  {
          if (is_main && main.resize3D()) main.render3D();
-         return Promise.resolve(this);
+         return pr;
       }
 
       this.deleteAttr();
@@ -25,16 +26,17 @@ class RH1Painter extends RH1Painter2D {
 
       if (is_main) {
          assignFrame3DMethods(main);
-         main.create3DScene(this.options.Render3D);
-         main.setAxesRanges(this.getAxis("x"), this.xmin, this.xmax, null, this.ymin, this.ymax, null, 0, 0);
-         main.set3DOptions(this.options);
-         main.drawXYZ(main.toplevel, RAxisPainter, { use_y_for_z: true, zmult, zoom: settings.Zooming, ndim: 1, draw: true, v7: true });
+         pr = main.create3DScene(this.options.Render3D).then(() => {
+            main.setAxesRanges(this.getAxis("x"), this.xmin, this.xmax, null, this.ymin, this.ymax, null, 0, 0);
+            main.set3DOptions(this.options);
+            main.drawXYZ(main.toplevel, RAxisPainter, { use_y_for_z: true, zmult, zoom: settings.Zooming, ndim: 1, draw: true, v7: true });
+         });
       }
 
       if (!main.mode3d)
-         return Promise.resolve(this);
+         return pr;
 
-      return this.drawingBins(reason).then(() => {
+      return pr.then(() => this.drawingBins(reason)).then(() => {
 
          // called when bins received from server, must be reentrant
          let main = this.getFramePainter();

@@ -313,8 +313,8 @@ class RFramePainter extends RObjectPainter {
       }
 
       let xaxis = this.xaxis, yaxis = this.yaxis;
-      if (!xaxis || xaxis._typename != "TAxis") xaxis = create("TAxis");
-      if (!yaxis || yaxis._typename != "TAxis") yaxis = create("TAxis");
+      if (xaxis?._typename != "TAxis") xaxis = create("TAxis");
+      if (yaxis?._typename != "TAxis") yaxis = create("TAxis");
 
       this.x_handle = new TAxisPainter(this.getDom(), xaxis, true);
       this.x_handle.setPadName(this.getPadName());
@@ -425,7 +425,7 @@ class RFramePainter extends RObjectPainter {
           draw_vertical = this.swap_xy ? this.x_handle : this.y_handle,
           pp = this.getPadPainter(), pr;
 
-      if (pp && pp._fast_drawing) {
+      if (pp?._fast_drawing) {
          pr = Promise.resolve(true); // do nothing
       } else if (this.v6axes) {
 
@@ -545,12 +545,12 @@ class RFramePainter extends RObjectPainter {
          scale_ymax: use_y2 ? this.scale_y2max : this.scale_ymax,
          swap_xy: this.swap_xy,
          fp: this,
-         revertAxis: function(name, v) {
+         revertAxis(name, v) {
             if ((name == "x") && this.use_x2) name = "x2";
             if ((name == "y") && this.use_y2) name = "y2";
             return this.fp.revertAxis(name, v);
          },
-         axisAsText: function(name, v) {
+         axisAsText(name, v) {
             if ((name == "x") && this.use_x2) name = "x2";
             if ((name == "y") && this.use_y2) name = "y2";
             return this.fp.axisAsText(name, v);
@@ -667,7 +667,7 @@ class RFramePainter extends RObjectPainter {
       delete this._dblclick_handler;
 
       let pp = this.getPadPainter();
-      if (pp && (pp.frame_painter_ref === this))
+      if (pp?.frame_painter_ref === this)
          delete pp.frame_painter_ref;
 
       super.cleanup();
@@ -965,7 +965,7 @@ class RFramePainter extends RObjectPainter {
           };
 
       let checkZooming = (painter, force) => {
-         if (!force && (typeof painter.canZoomInside != 'function')) return;
+         if (!force && (typeof painter?.canZoomInside != 'function')) return;
 
          is_any_check = true;
 
@@ -988,8 +988,8 @@ class RFramePainter extends RObjectPainter {
          checkZooming(null, true);
 
       if (unzoom_v) {
-         if (this["zoom_" + name + "min"] !== this["zoom_" + name + "max"]) changed = true;
-         this["zoom_" + name + "min"] = this["zoom_" + name + "max"] = 0;
+         if (this[`zoom_${name}min`] !== this[`zoom_${name}max`]) changed = true;
+         this[`zoom_${name}min`] = this[`zoom_${name}max`] = 0;
          req.values[indx*2] = req.values[indx*2+1] = -1;
       }
 

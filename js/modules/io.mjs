@@ -58,22 +58,22 @@ const CustomStreamers = {
    },
 
    TNamed: [ {
-      basename: clTObject, base: 1, func: (buf, obj) => {
+      basename: clTObject, base: 1, func(buf, obj) {
          if (!obj._typename) obj._typename = clTNamed;
          buf.classStreamer(obj, clTObject);
       }
      },
-     { name: 'fName', func: (buf, obj) => { obj.fName = buf.readTString(); } },
-     { name: 'fTitle', func: (buf, obj) => { obj.fTitle = buf.readTString(); } }
+     { name: 'fName', func(buf, obj) { obj.fName = buf.readTString(); } },
+     { name: 'fTitle', func(buf, obj) { obj.fTitle = buf.readTString(); } }
    ],
 
    TObjString: [ {
-      basename: clTObject, base: 1, func: (buf, obj) => {
+      basename: clTObject, base: 1, func(buf, obj) {
          if (!obj._typename) obj._typename = clTObjString;
          buf.classStreamer(obj, clTObject);
       }
      },
-     { name: 'fString', func: (buf, obj) => { obj.fString = buf.readTString(); } }
+     { name: 'fString', func(buf, obj) { obj.fString = buf.readTString(); } }
    ],
 
    TClonesArray(buf, list) {
@@ -312,7 +312,7 @@ const CustomStreamers = {
          buf.classStreamer(elem, "TStreamerSTL");
    },
 
-   TList: function(buf, obj) {
+   TList(buf, obj) {
       // stream all objects in the list from the I/O buffer
       if (!obj._typename) obj._typename = this.typename;
       obj.$kind = clTList; // all derived classes will be marked as well
@@ -363,7 +363,7 @@ const CustomStreamers = {
 
    TTree: {
       name: '$file',
-      func: (buf, obj) => { obj.$kind = "TTree"; obj.$file = buf.fFile; }
+      func(buf, obj) { obj.$kind = "TTree"; obj.$file = buf.fFile; }
    },
 
    RooRealVar(buf, obj) {
@@ -409,24 +409,24 @@ const CustomStreamers = {
 
    TImagePalette: [
       {
-         basename: clTObject, base: 1, func: (buf, obj) => {
+         basename: clTObject, base: 1, func(buf, obj) {
             if (!obj._typename) obj._typename = 'TImagePalette';
             buf.classStreamer(obj, clTObject);
          }
       },
-      { name: 'fNumPoints', func: (buf, obj) => { obj.fNumPoints = buf.ntou4(); } },
-      { name: 'fPoints', func: (buf, obj) => { obj.fPoints = buf.readFastArray(obj.fNumPoints, kDouble); } },
-      { name: 'fColorRed', func: (buf, obj) => { obj.fColorRed = buf.readFastArray(obj.fNumPoints, kUShort); } },
-      { name: 'fColorGreen', func: (buf, obj) => { obj.fColorGreen = buf.readFastArray(obj.fNumPoints, kUShort); } },
-      { name: 'fColorBlue', func: (buf, obj) => { obj.fColorBlue = buf.readFastArray(obj.fNumPoints, kUShort); } },
-      { name: 'fColorAlpha', func: (buf, obj) => { obj.fColorAlpha = buf.readFastArray(obj.fNumPoints, kUShort); } }
+      { name: 'fNumPoints', func(buf, obj) { obj.fNumPoints = buf.ntou4(); } },
+      { name: 'fPoints', func(buf, obj) { obj.fPoints = buf.readFastArray(obj.fNumPoints, kDouble); } },
+      { name: 'fColorRed', func(buf, obj) { obj.fColorRed = buf.readFastArray(obj.fNumPoints, kUShort); } },
+      { name: 'fColorGreen', func(buf, obj) { obj.fColorGreen = buf.readFastArray(obj.fNumPoints, kUShort); } },
+      { name: 'fColorBlue', func(buf, obj) { obj.fColorBlue = buf.readFastArray(obj.fNumPoints, kUShort); } },
+      { name: 'fColorAlpha', func(buf, obj) { obj.fColorAlpha = buf.readFastArray(obj.fNumPoints, kUShort); } }
    ],
 
    TAttImage: [
-      { name: 'fImageQuality', func: (buf, obj) => { obj.fImageQuality = buf.ntoi4(); } },
-      { name: 'fImageCompression', func: (buf, obj) => { obj.fImageCompression = buf.ntou4(); } },
-      { name: 'fConstRatio', func: (buf, obj) => { obj.fConstRatio = (buf.ntou1() != 0); } },
-      { name: 'fPalette', func: (buf, obj) => { obj.fPalette = buf.classStreamer({}, "TImagePalette"); } }
+      { name: 'fImageQuality', func(buf, obj) { obj.fImageQuality = buf.ntoi4(); } },
+      { name: 'fImageCompression', func(buf, obj) { obj.fImageCompression = buf.ntou4(); } },
+      { name: 'fConstRatio', func(buf, obj) { obj.fConstRatio = (buf.ntou1() != 0); } },
+      { name: 'fPalette', func(buf, obj) { obj.fPalette = buf.classStreamer({}, "TImagePalette"); } }
    ],
 
    TASImage(buf, obj) {
@@ -1301,7 +1301,7 @@ function addClassMethods(clname, streamer) {
             streamer.push({
                name: key,
                method: methods[key],
-               func: function(buf, obj) { obj[this.name] = this.method; }
+               func(buf, obj) { obj[this.name] = this.method; }
             });
 
    return streamer;
@@ -2571,9 +2571,8 @@ class TBuffer {
          return obj;
       }
 
-      const ver = this.readVersion();
-
-      const streamer = this.fFile.getStreamer(classname, ver);
+      const ver = this.readVersion(),
+            streamer = this.fFile.getStreamer(classname, ver);
 
       if (streamer !== null) {
 
@@ -2661,12 +2660,10 @@ class TDirectory {
       if ((this.fSeekKeys <= 0) || (this.fNbytesKeys <= 0))
          return Promise.resolve(this);
 
-      let file = this.fFile;
-
-      return file.readBuffer([this.fSeekKeys, this.fNbytesKeys]).then(blob => {
+      return this.fFile.readBuffer([this.fSeekKeys, this.fNbytesKeys]).then(blob => {
          // Read keys of the top directory
 
-         const buf = new TBuffer(blob, 0, file);
+         const buf = new TBuffer(blob, 0, this.fFile);
 
          buf.readTKey();
          const nkeys = buf.ntoi4();
@@ -2674,7 +2671,7 @@ class TDirectory {
          for (let i = 0; i < nkeys; ++i)
             this.fKeys.push(buf.readTKey());
 
-         file.fDirectories.push(this);
+         this.fFile.fDirectories.push(this);
 
          return this;
       });
@@ -2701,7 +2698,7 @@ class TFile {
       this.fUseStampPar = settings.UseStamp ? "stamp=" + (new Date).getTime() : false;
       this.fFileContent = null; // this can be full or partial content of the file (if ranges are not supported or if 1K header read from file)
       // stored as TBuffer instance
-      this.fMaxRanges = 200; // maximal number of file ranges requested at once
+      this.fMaxRanges = settings.MaxRanges || 200; // maximal number of file ranges requested at once
       this.fDirectories = [];
       this.fKeys = [];
       this.fSeekInfo = 0;
@@ -2798,32 +2795,34 @@ class TFile {
             ranges += (n > first ? "," : "=") + (place[n] + "-" + (place[n] + place[n + 1] - 1));
             totalsz += place[n + 1]; // accumulated total size
          }
-         if (last - first > 2) totalsz += (last - first) * 60; // for multi-range ~100 bytes/per request
+         if (last - first > 2)
+            totalsz += (last - first) * 60; // for multi-range ~100 bytes/per request
 
-         let xhr = createHttpRequest(fullurl, "buf", read_callback);
+         return createHttpRequest(fullurl, "buf", read_callback, undefined, true).then(xhr => {
 
-         if (file.fAcceptRanges) {
-            xhr.setRequestHeader("Range", ranges);
-            xhr.expected_size = Math.max(Math.round(1.1 * totalsz), totalsz + 200); // 200 if offset for the potential gzip
-         }
-
-         if (progress_callback && (typeof xhr.addEventListener === 'function')) {
-            let sum1 = 0, sum2 = 0, sum_total = 0;
-            for (let n = 1; n < place.length; n += 2) {
-               sum_total += place[n];
-               if (n < first) sum1 += place[n];
-               if (n < last) sum2 += place[n];
+            if (file.fAcceptRanges) {
+               xhr.setRequestHeader("Range", ranges);
+               xhr.expected_size = Math.max(Math.round(1.1 * totalsz), totalsz + 200); // 200 if offset for the potential gzip
             }
-            if (!sum_total) sum_total = 1;
 
-            let progress_offest = sum1 / sum_total, progress_this = (sum2 - sum1) / sum_total;
-            xhr.addEventListener("progress", function(oEvent) {
-               if (oEvent.lengthComputable)
-                  progress_callback(progress_offest + progress_this * oEvent.loaded / oEvent.total);
-            });
-         }
+            if (progress_callback && (typeof xhr.addEventListener === 'function')) {
+               let sum1 = 0, sum2 = 0, sum_total = 0;
+               for (let n = 1; n < place.length; n += 2) {
+                  sum_total += place[n];
+                  if (n < first) sum1 += place[n];
+                  if (n < last) sum2 += place[n];
+               }
+               if (!sum_total) sum_total = 1;
 
-         xhr.send(null);
+               let progress_offest = sum1 / sum_total, progress_this = (sum2 - sum1) / sum_total;
+               xhr.addEventListener("progress", function(oEvent) {
+                  if (oEvent.lengthComputable)
+                     progress_callback(progress_offest + progress_this * oEvent.loaded / oEvent.total);
+               });
+            }
+
+            xhr.send(null);
+         });
       }
 
       read_callback = function(res) {
@@ -2985,9 +2984,7 @@ class TFile {
          send_new_request(true);
       }
 
-      send_new_request(true);
-
-      return promise;
+      return send_new_request(true).then(() => promise);
    }
 
    /** @summary Returns file name */
@@ -3415,7 +3412,7 @@ class TFile {
 
          if (elem.basename == clTObject) {
             tgt.push({
-               func: function(buf, obj) {
+               func(buf, obj) {
                   buf.ntoi2(); // read version, why it here??
                   obj.fUniqueID = buf.ntou4();
                   obj.fBits = buf.ntou4();
@@ -3727,12 +3724,89 @@ class TNodejsFile extends TFile {
 
 } // class TNodejsFile
 
+/**
+  * @summary Proxy to read file contenxt
+  *
+  * @desc Should implement followinf methods
+  *        openFile() - return Promise with true when file can be open normally
+  *        getFileName() - returns string with file name
+  *        getFileSize() - returns size of file
+  *        readBuffer(pos, len) - return promise with DataView for requested position and length
+  * @private
+  */
+
+class FileProxy {
+
+   openFile() { return Promise.resolve(false); }
+
+   getFileName() { return ""; }
+
+   getFileSize() { return 0; }
+
+   readBuffer(/*pos, sz*/) { return Promise.resolve(null); }
+
+} // class FileProxy
+
+/**
+  * @summary File to use file context via FileProxy
+  *
+  * @hideconstructor
+  * @desc Use {@link openFile} to create instance of the class, providing FileProxy as argument
+  * @private
+  */
+
+class TProxyFile extends TFile {
+
+   constructor(proxy) {
+      super(null);
+      this.fUseStampPar = false;
+      this.proxy = proxy;
+   }
+
+   /** @summary Open file
+     * @returns {Promise} after file keys are read */
+   _open() {
+      return this.proxy.openFile().then(res => {
+         if (!res) return false;
+         this.fEND = this.proxy.getFileSize();
+         this.fFullURL = this.fURL = this.fFileName = this.proxy.getFileName();
+         if (typeof this.fFileName == 'string') {
+            let p = this.fFileName.lastIndexOf("/");
+            if ((p > 0) && (p < this.fFileName.length - 4))
+               this.fFileName = this.fFileName.slice(p+1);
+         }
+         return this.readKeys();
+      });
+   }
+
+   /** @summary Read buffer from FileProxy
+     * @returns {Promise} with requested blocks */
+   readBuffer(place, filename /*, progress_callback */) {
+      if (filename)
+         return Promise.reject(Error(`Cannot access other file ${filename}`));
+
+      if (!this.proxy)
+         return Promise.reject(Error(`File is not opened ${this.fFileName}`));
+
+      if (place.length == 2)
+         return this.proxy.readBuffer(place[0], place[1]);
+
+      let arr = [];
+      for (let k = 0; k < place.length; k+=2)
+         arr.push(this.proxy.readBuffer(place[k], place[k+1]));
+      return Promise.all(arr);
+   }
+
+} // class TProxyFile
+
+
 /** @summary Open ROOT file for reading
   * @desc Generic method to open ROOT file for reading
   * Following kind of arguments can be provided:
   *  - string with file URL (see example). In node.js environment local file like "file://hsimple.root" can be specified
   *  - [File]{@link https://developer.mozilla.org/en-US/docs/Web/API/File} instance which let read local files from browser
   *  - [ArrayBuffer]{@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer} instance with complete file content
+  *  - [FileProxy]{@link FileProxy} let access arbitrary files via tiny proxy API
   * @param {string|object} arg - argument for file open like url, see details
   * @returns {object} - Promise with {@link TFile} instance when file is opened
   * @example
@@ -3750,6 +3824,9 @@ function openFile(arg) {
       else if (arg.indexOf("http") !== 0)
          file = new TNodejsFile(arg);
    }
+
+   if (!file && (typeof arg === 'object') && (arg instanceof FileProxy))
+      file = new TProxyFile(arg);
 
    if (!file && (typeof arg === 'object') && (arg instanceof ArrayBuffer)) {
       file = new TFile("localfile.root");
@@ -3777,6 +3854,6 @@ export {
    kBase, kOffsetL, kOffsetP, kObject, kAny, kObjectp, kObjectP, kTString,
    kAnyP, kStreamer, kStreamLoop, kSTLp, kSTL,
    R__unzip, addUserStreamer, createStreamerElement, createMemberStreamer,
-   openFile, reconstructObject,
+   openFile, reconstructObject, FileProxy,
    TBuffer /*, TDirectory, TFile, TLocalFile, TNodejsFile */
 };

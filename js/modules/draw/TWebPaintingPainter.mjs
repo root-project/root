@@ -17,7 +17,7 @@ class TWebPaintingPainter extends ObjectPainter {
 
       const obj = this.getObject(), func = this.getAxisToSvgFunc();
 
-      if (!obj || !obj.fOper || !func) return;
+      if (!obj?.fOper || !func) return;
 
       let indx = 0, attr = {}, lastpath = null, lastkind = "none", d = "",
           oper, npoints, n, arr = obj.fOper.split(";");
