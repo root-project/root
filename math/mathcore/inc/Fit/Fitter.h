@@ -520,20 +520,16 @@ protected:
    // get function calls from the FCN
    int GetNCallsFromFCN();
 
-   /// Set data for the fit using a shared ptr
+   /// Set the input data for the fit using a shared ptr (No Copying)
    template <class Data>
    void SetData(const std::shared_ptr<Data> & data) {
       fData = std::static_pointer_cast<Data>(data);
    }
 
-   /// Set the input binned data for the fit copying them
-   void SetData(const BinData & data) {
-      auto dataClone = std::make_shared<BinData>(data);
-      SetData(dataClone);
-   }
-   /// Set the input un-binned data for the fit copying them
-   void SetData(const UnBinData & data) {
-      auto dataClone = std::make_shared<UnBinData>(data);
+   /// Set the input data for the fit (Copying the given data object)
+   template <class Data>
+   void SetData(const Data & data) {
+      auto dataClone = std::make_shared<Data>(data);
       SetData(dataClone);
    }
 

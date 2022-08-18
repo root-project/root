@@ -67,7 +67,7 @@ namespace ROOT {
 
          /// Transforms the data into a ROOT::Fit::BinData structure
          void GetBinData(BinData&) const;
-         /// Same as before, but returning a BInData with integral format (containing bin edges)
+         /// Same as before, but returning a BinData with integral format (containing bin edges)
          void GetBinDataIntegral(BinData&) const;
          /// Same as before, but including zero content bins
          void GetBinDataNoZeros(BinData&) const;
