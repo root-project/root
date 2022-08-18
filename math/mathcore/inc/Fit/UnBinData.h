@@ -41,7 +41,7 @@ namespace ROOT {
   the data are inserted one by one using the Add method.
   It is mandatory to set the size before using the Add method.
 
-  @ingroup  FitData
+  @ingroup FitData
 */
 class UnBinData : public FitData {
 
