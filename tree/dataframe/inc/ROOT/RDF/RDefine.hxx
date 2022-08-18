@@ -35,19 +35,19 @@ namespace RDF {
 using namespace ROOT::TypeTraits;
 
 // clang-format off
-namespace CustomColExtraArgs {
+namespace ExtraArgsForDefine {
 struct None{};
 struct Slot{};
 struct SlotAndEntry{};
 }
 // clang-format on
 
-template <typename F, typename ExtraArgsTag = CustomColExtraArgs::None>
+template <typename F, typename ExtraArgsTag = ExtraArgsForDefine::None>
 class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    // shortcuts
-   using NoneTag = CustomColExtraArgs::None;
-   using SlotTag = CustomColExtraArgs::Slot;
-   using SlotAndEntryTag = CustomColExtraArgs::SlotAndEntry;
+   using NoneTag = ExtraArgsForDefine::None;
+   using SlotTag = ExtraArgsForDefine::Slot;
+   using SlotAndEntryTag = ExtraArgsForDefine::SlotAndEntry;
    // other types
    using FunParamTypes_t = typename CallableTraits<F>::arg_types;
    using ColumnTypesTmp_t =

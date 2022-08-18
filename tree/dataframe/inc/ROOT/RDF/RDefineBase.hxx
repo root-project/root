@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_RCUSTOMCOLUMNBASE
-#define ROOT_RCUSTOMCOLUMNBASE
+#ifndef ROOT_RDEFINEBASE
+#define ROOT_RDEFINEBASE
 
 #include "ROOT/RDF/GraphNode.hxx"
 #include "ROOT/RDF/RColumnRegister.hxx"
@@ -82,4 +82,4 @@ public:
 } // ns Detail
 } // ns ROOT
 
-#endif // ROOT_RCUSTOMCOLUMNBASE
+#endif // ROOT_RDEFINEBASE

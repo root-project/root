@@ -419,7 +419,7 @@ public:
    template <typename F, typename std::enable_if_t<!std::is_convertible<F, std::string>::value, int> = 0>
    RInterface<Proxied, DS_t> Define(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
-      return DefineImpl<F, RDFDetail::CustomColExtraArgs::None>(name, std::move(expression), columns, "Define");
+      return DefineImpl<F, RDFDetail::ExtraArgsForDefine::None>(name, std::move(expression), columns, "Define");
    }
    // clang-format on
 
@@ -448,7 +448,7 @@ public:
    template <typename F>
    RInterface<Proxied, DS_t> DefineSlot(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
-      return DefineImpl<F, RDFDetail::CustomColExtraArgs::Slot>(name, std::move(expression), columns, "DefineSlot");
+      return DefineImpl<F, RDFDetail::ExtraArgsForDefine::Slot>(name, std::move(expression), columns, "DefineSlot");
    }
    // clang-format on
 
@@ -478,7 +478,7 @@ public:
    template <typename F>
    RInterface<Proxied, DS_t> DefineSlotEntry(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
-      return DefineImpl<F, RDFDetail::CustomColExtraArgs::SlotAndEntry>(name, std::move(expression), columns,
+      return DefineImpl<F, RDFDetail::ExtraArgsForDefine::SlotAndEntry>(name, std::move(expression), columns,
                                                                         "DefineSlotEntry");
    }
    // clang-format on
@@ -538,7 +538,7 @@ public:
    template <typename F, std::enable_if_t<!std::is_convertible<F, std::string>::value, int> = 0>
    RInterface<Proxied, DS_t> Redefine(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
-      return DefineImpl<F, RDFDetail::CustomColExtraArgs::None>(name, std::move(expression), columns, "Redefine");
+      return DefineImpl<F, RDFDetail::ExtraArgsForDefine::None>(name, std::move(expression), columns, "Redefine");
    }
 
    // clang-format off
@@ -557,7 +557,7 @@ public:
    template <typename F>
    RInterface<Proxied, DS_t> RedefineSlot(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
-      return DefineImpl<F, RDFDetail::CustomColExtraArgs::Slot>(name, std::move(expression), columns, "RedefineSlot");
+      return DefineImpl<F, RDFDetail::ExtraArgsForDefine::Slot>(name, std::move(expression), columns, "RedefineSlot");
    }
 
    // clang-format off
@@ -576,7 +576,7 @@ public:
    template <typename F>
    RInterface<Proxied, DS_t> RedefineSlotEntry(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
-      return DefineImpl<F, RDFDetail::CustomColExtraArgs::SlotAndEntry>(name, std::move(expression), columns,
+      return DefineImpl<F, RDFDetail::ExtraArgsForDefine::SlotAndEntry>(name, std::move(expression), columns,
                                                                         "RedefineSlotEntry");
    }
 
@@ -3121,7 +3121,7 @@ private:
       const std::string entryColName = "rdfentry_";
       const std::string entryColType = "ULong64_t";
       auto entryColGen = [](unsigned int, ULong64_t entry) { return entry; };
-      using NewColEntry_t = RDFDetail::RDefine<decltype(entryColGen), RDFDetail::CustomColExtraArgs::SlotAndEntry>;
+      using NewColEntry_t = RDFDetail::RDefine<decltype(entryColGen), RDFDetail::ExtraArgsForDefine::SlotAndEntry>;
 
       auto entryColumn = std::make_shared<NewColEntry_t>(entryColName, entryColType, std::move(entryColGen),
                                                          ColumnNames_t{}, fColRegister, *fLoopManager);
@@ -3131,7 +3131,7 @@ private:
       const std::string slotColName = "rdfslot_";
       const std::string slotColType = "unsigned int";
       auto slotColGen = [](unsigned int slot) { return slot; };
-      using NewColSlot_t = RDFDetail::RDefine<decltype(slotColGen), RDFDetail::CustomColExtraArgs::Slot>;
+      using NewColSlot_t = RDFDetail::RDefine<decltype(slotColGen), RDFDetail::ExtraArgsForDefine::Slot>;
 
       auto slotColumn = std::make_shared<NewColSlot_t>(slotColName, slotColType, std::move(slotColGen), ColumnNames_t{},
                                                        fColRegister, *fLoopManager);
@@ -3233,9 +3233,9 @@ private:
 
       using ArgTypes_t = typename TTraits::CallableTraits<F>::arg_types;
       using ColTypesTmp_t = typename RDFInternal::RemoveFirstParameterIf<
-         std::is_same<DefineType, RDFDetail::CustomColExtraArgs::Slot>::value, ArgTypes_t>::type;
+         std::is_same<DefineType, RDFDetail::ExtraArgsForDefine::Slot>::value, ArgTypes_t>::type;
       using ColTypes_t = typename RDFInternal::RemoveFirstTwoParametersIf<
-         std::is_same<DefineType, RDFDetail::CustomColExtraArgs::SlotAndEntry>::value, ColTypesTmp_t>::type;
+         std::is_same<DefineType, RDFDetail::ExtraArgsForDefine::SlotAndEntry>::value, ColTypesTmp_t>::type;
 
       constexpr auto nColumns = ColTypes_t::list_size;
 
