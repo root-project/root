@@ -726,11 +726,20 @@ TEST_P(RDFSimpleTests, StandardDeviationEmpty)
    auto stdDev = rd1.Define("b1", []() { return 0; }).StdDev("b1");
    EXPECT_DOUBLE_EQ(*stdDev, 0);
 }
-
+/*
 TEST(RDFSimpleTests, SumOfStrings)
 {
    auto df = RDataFrame(2).Define("str", []() -> std::string { return "bla"; });
    EXPECT_EQ(*df.Sum<std::string>("str"), "blabla");
+}
+*/
+
+
+TEST(RDFSimpleTests, KahanSum)
+{
+   ROOT::RDataFrame d(20);
+   auto dd = d.Define("x", "(rdfentry_ %2 == 0) ? 0.00000001 : 100000000.");
+   EXPECT_EQ(*dd.Sum<double>({"x"}), 1000000000.00000011920929);
 }
 
 
