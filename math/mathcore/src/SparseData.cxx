@@ -22,7 +22,6 @@
 #include <cmath>
 #include <limits>
 
-// #include "TMath.h"
 #include "Fit/BinData.h"
 #include "Fit/SparseData.h"
 
@@ -56,7 +55,7 @@ namespace ROOT {
          const vector<double>& GetMax() const { return fMax; }
          // Get the value of the Box
          double GetVal() const { return fVal; }
-         // Get the rror of the Box
+         // Get the error of the Box
          double GetError() const { return fError; }
 
          // Add an amount to the content of the Box
@@ -193,28 +192,39 @@ namespace ROOT {
 
       SparseData::SparseData(vector<double>& min, vector<double>& max)
       {
-         // Creates a SparseData convering the range defined by min
+         // Creates a SparseData covering the range defined by min
          // and max. For this it will create an empty Box for that
          // range.
          Box originalBox(min, max);
-         fList = new ProxyListBox();
+         fList = std::make_unique<ProxyListBox>();
          fList->PushBack(originalBox);
       }
 
       SparseData::SparseData(const unsigned int dim, double min[], double max[])
       {
-         // Creates a SparseData convering the range defined by min
+         // Creates a SparseData covering the range defined by min
          // and max. For this it will create an empty Box for that
          // range.
          vector<double> minv(min,min+dim);
          vector<double> maxv(max,max+dim);
          Box originalBox(minv, maxv);
-         fList = new ProxyListBox();
+         fList = std::make_unique<ProxyListBox>();
          fList->PushBack(originalBox);
       }
 
-      SparseData::~SparseData()
-      { delete fList; }
+      SparseData::SparseData(const SparseData & rhs) :
+         FitData(rhs)
+      {
+         fList = std::make_unique<ProxyListBox>(*rhs.fList);
+      }
+      SparseData & SparseData::operator=(const SparseData & rhs)
+      {
+         FitData::operator=( rhs );
+         fList.reset(new ProxyListBox(*rhs.fList));
+         return *this;
+      }
+
+      SparseData::~SparseData() {}
 
       unsigned int SparseData::NPoints() const
       {
