@@ -4,6 +4,7 @@
 #include "TROOT.h"
 #include "TVector3.h"
 #include "TSystem.h"
+#include "Math/Vector4D.h"
 
 #include <algorithm>
 
@@ -38,6 +39,30 @@ void FillTree(const char *filename, const char *treeName, int nevents = 0)
    }
    t.Write();
    f.Close();
+}
+
+// https://github.com/root-project/root/issues/11207
+TEST(RDFRegressionTests, AliasAndSubBranches)
+{
+   TTree t("t", "t");
+   // In order to reproduce the problem at #11207, we need to create a TTree with branch
+   // "topbranch.something" where `something` must _not_ be a data member of the type
+   // of "topbranch" (otherwise things "happen" to work due to the order in which we do substitutions in RDF, see
+   // below).
+   std::vector<ROOT::Math::XYZTVector> objs{{}, {}};
+
+   t.Branch("topbranch", &objs);
+   t.Fill();
+   t.Fill();
+   t.Fill();
+
+   auto df = ROOT::RDataFrame(t).Alias("alias", "topbranch");
+   // Here, before the fix for #11207 we transformed `"alias.fCoordinates.fX.size() == 2"` into
+   // `[](std::vector<XYZTVector> &var0) { return var0.fCoordinates.fX.size() == 2; }`, which is not valid C++
+   // (std::vector does not have a fCoordinates data member). Now the string expression is correctly expanded to
+   // `[](RVec<typeof(XYZTVector{}.fCoordinates.fX)> &var0) { return var0.size() == 2; }`
+   auto entryCount = df.Filter("alias.fCoordinates.fX.size() == 2").Count();
+   EXPECT_EQ(*entryCount, 3);
 }
 
 TEST_P(RDFRegressionTests, MultipleTriggerRun)
