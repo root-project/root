@@ -489,7 +489,7 @@ class BasePainter {
       this.divid = null;
       delete this._selected_main;
 
-      if (this._hpainter && typeof this._hpainter.removePainter === 'function')
+      if (typeof this._hpainter?.removePainter === 'function')
          this._hpainter.removePainter(this);
 
       delete this._hitemname;

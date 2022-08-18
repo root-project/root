@@ -348,7 +348,7 @@ class TGraphPolarPainter extends ObjectPainter {
       let graph = this.getObject(),
           main = this.getMainPainter();
 
-      if (!graph || !main || !main.$polargram) return;
+      if (!graph || !main?.$polargram) return;
 
       if (this.options.mark) this.createAttMarker({ attr: graph });
       if (this.options.err || this.options.line || this.options.curve) this.createAttLine({ attr: graph });
@@ -448,7 +448,7 @@ class TGraphPolarPainter extends ObjectPainter {
 
       for (let n = 0; n < graph.fNpoints; ++n) {
          let pos = main.translate(graph.fX[n], graph.fY[n]),
-             dist2 = (pos.x-pnt.x)*(pos.x-pnt.x) + (pos.y-pnt.y)*(pos.y-pnt.y);
+             dist2 = (pos.x-pnt.x)**2 + (pos.y-pnt.y)**2;
          if (dist2 < best_dist2) { best_dist2 = dist2; bestindx = n; bestpos = pos; }
       }
 

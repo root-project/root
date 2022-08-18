@@ -1,16 +1,8 @@
-import { create, isNodeJs } from '../core.mjs';
+import { create, isNodeJs, btoa_func } from '../core.mjs';
 import { toHex } from '../base/colors.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TPavePainter } from '../hist/TPavePainter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
-
-
-let node_canvas, btoa_func = globalThis?.btoa;
-
-///_begin_exclude_in_qt5web_
-if(isNodeJs() && process?.env?.APP_ENV !== 'browser') { node_canvas = await import('canvas').then(h => h.default); btoa_func = await import("btoa").then(h => h.default); } /// cutNodeJs
-///_end_exclude_in_qt5web_
-
 
 /**
  * @summary Painter for TASImage object.
@@ -31,7 +23,7 @@ class TASImagePainter extends ObjectPainter {
    createRGBA(nlevels) {
       let obj = this.getObject();
 
-      if (!obj || !obj.fPalette) return null;
+      if (!obj?.fPalette) return null;
 
       let rgba = new Array((nlevels+1) * 4), indx = 1, pal = obj.fPalette; // precaclucated colors
 
@@ -51,10 +43,101 @@ class TASImagePainter extends ObjectPainter {
       return rgba;
    }
 
+   /** @summary Create url using image buffer
+     * @private */
+   makeUrlFromImageBuf(obj, fp) {
+
+      let nlevels = 1000;
+      this.rgba = this.createRGBA(nlevels); // precaclucated colors
+
+      let min = obj.fImgBuf[0], max = obj.fImgBuf[0];
+      for (let k = 1; k < obj.fImgBuf.length; ++k) {
+         let v = obj.fImgBuf[k];
+         min = Math.min(v, min);
+         max = Math.max(v, max);
+      }
+
+      // does not work properly in Node.js, causes "Maximum call stack size exceeded" error
+      // min = Math.min.apply(null, obj.fImgBuf),
+      // max = Math.max.apply(null, obj.fImgBuf);
+
+      // create countor like in hist painter to allow palette drawing
+      this.fContour = {
+         arr: new Array(200),
+         rgba: this.rgba,
+         getLevels() { return this.arr; },
+         getPaletteColor(pal, zval) {
+            if (!this.arr || !this.rgba) return "white";
+            let indx = Math.round((zval - this.arr[0]) / (this.arr[this.arr.length-1] - this.arr[0]) * (this.rgba.length-4)/4) * 4;
+            return "#" + toHex(this.rgba[indx],1) + toHex(this.rgba[indx+1],1) + toHex(this.rgba[indx+2],1) + toHex(this.rgba[indx+3],1);
+         }
+      };
+      for (let k = 0; k < 200; k++)
+         this.fContour.arr[k] = min + (max-min)/(200-1)*k;
+
+      if (min >= max) max = min + 1;
+
+      let xmin = 0, xmax = obj.fWidth, ymin = 0, ymax = obj.fHeight; // dimension in pixels
+
+      if (fp && (fp.zoom_xmin != fp.zoom_xmax)) {
+         xmin = Math.round(fp.zoom_xmin * obj.fWidth);
+         xmax = Math.round(fp.zoom_xmax * obj.fWidth);
+      }
+
+      if (fp && (fp.zoom_ymin != fp.zoom_ymax)) {
+         ymin = Math.round(fp.zoom_ymin * obj.fHeight);
+         ymax = Math.round(fp.zoom_ymax * obj.fHeight);
+      }
+
+      let pr = isNodeJs() ?
+                 import('canvas').then(h => h.default.createCanvas(xmax - xmin, ymax - ymin)) :
+                 new Promise(resolveFunc => {
+                    let c = document.createElement('canvas');
+                    c.width = xmax - xmin;
+                    c.height = ymax - ymin;
+                    resolveFunc(c);
+                 });
+
+      return pr.then(canvas => {
+
+         let context = canvas.getContext('2d'),
+             imageData = context.getImageData(0, 0, canvas.width, canvas.height),
+             arr = imageData.data;
+
+         for(let i = ymin; i < ymax; ++i) {
+            let dst = (ymax - i - 1) * (xmax - xmin) * 4,
+                row = i * obj.fWidth;
+            for(let j = xmin; j < xmax; ++j) {
+               let iii = Math.round((obj.fImgBuf[row + j] - min) / (max - min) * nlevels) * 4;
+               // copy rgba value for specified point
+               arr[dst++] = this.rgba[iii++];
+               arr[dst++] = this.rgba[iii++];
+               arr[dst++] = this.rgba[iii++];
+               arr[dst++] = this.rgba[iii++];
+            }
+         }
+
+         context.putImageData(imageData, 0, 0);
+
+         return { url: canvas.toDataURL(), constRatio: obj.fConstRatio, is_buf: true };
+      });
+   }
+
+   makeUrlFromPngBuf(obj) {
+      let buf = obj.fPngBuf, pngbuf = "";
+
+      if (typeof buf == "string")
+         pngbuf = buf;
+      else
+         for (let k = 0; k < buf.length; ++k)
+            pngbuf += String.fromCharCode(buf[k] < 0 ? 256 + buf[k] : buf[k]);
+
+      return Promise.resolve({ url: "data:image/png;base64," + btoa_func(pngbuf), constRatio: true });
+   }
+
    /** @summary Draw image */
    drawImage() {
       let obj = this.getObject(),
-          is_buf = false,
           fp = this.getFramePainter(),
           rect = fp ? fp.getFrameRect() : this.getPadPainter().getPadRect();
 
@@ -91,129 +174,45 @@ class TASImagePainter extends ObjectPainter {
 
          } else if ((obj._blob.length == 3) && obj._blob[0]) {
             obj.fPngBuf = obj._blob[2];
-            if (!obj.fPngBuf || (obj.fPngBuf.length != obj._blob[1])) {
-               console.error('TASImage with png buffer _blob error', obj._blob[1], '!=', (obj.fPngBuf ? obj.fPngBuf.length : -1));
+            if (obj.fPngBuf?.length != obj._blob[1]) {
+               console.error(`TASImage with png buffer _blob error ${obj._blob[1]} != ${obj.fPngBuf?.length}`);
                delete obj.fPngBuf;
             }
          } else {
-            console.error('TASImage _blob len', obj._blob.length, 'not recognized');
+            console.error(`TASImage _blob len ${obj._blob.length} not recognized`);
          }
 
          delete obj._blob;
       }
 
-      let url, constRatio = true;
+      let promise;
 
       if (obj.fImgBuf && obj.fPalette) {
-
-         is_buf = true;
-
-         let nlevels = 1000;
-         this.rgba = this.createRGBA(nlevels); // precaclucated colors
-
-         let min = obj.fImgBuf[0], max = obj.fImgBuf[0];
-         for (let k = 1; k < obj.fImgBuf.length; ++k) {
-            let v = obj.fImgBuf[k];
-            min = Math.min(v, min);
-            max = Math.max(v, max);
-         }
-
-         // does not work properly in Node.js, causes "Maximum call stack size exceeded" error
-         // min = Math.min.apply(null, obj.fImgBuf),
-         // max = Math.max.apply(null, obj.fImgBuf);
-
-         // create countor like in hist painter to allow palette drawing
-         this.fContour = {
-            arr: new Array(200),
-            rgba: this.rgba,
-            getLevels: function() { return this.arr; },
-            getPaletteColor: function(pal, zval) {
-               if (!this.arr || !this.rgba) return "white";
-               let indx = Math.round((zval - this.arr[0]) / (this.arr[this.arr.length-1] - this.arr[0]) * (this.rgba.length-4)/4) * 4;
-               return "#" + toHex(this.rgba[indx],1) + toHex(this.rgba[indx+1],1) + toHex(this.rgba[indx+2],1) + toHex(this.rgba[indx+3],1);
-            }
-         };
-         for (let k = 0; k < 200; k++)
-            this.fContour.arr[k] = min + (max-min)/(200-1)*k;
-
-         if (min >= max) max = min + 1;
-
-         let xmin = 0, xmax = obj.fWidth, ymin = 0, ymax = obj.fHeight; // dimension in pixels
-
-         if (fp && (fp.zoom_xmin != fp.zoom_xmax)) {
-            xmin = Math.round(fp.zoom_xmin * obj.fWidth);
-            xmax = Math.round(fp.zoom_xmax * obj.fWidth);
-         }
-
-         if (fp && (fp.zoom_ymin != fp.zoom_ymax)) {
-            ymin = Math.round(fp.zoom_ymin * obj.fHeight);
-            ymax = Math.round(fp.zoom_ymax * obj.fHeight);
-         }
-
-         let canvas;
-
-         if (isNodeJs()) {
-            canvas = node_canvas.createCanvas(xmax - xmin, ymax - ymin);
-         } else {
-            canvas = document.createElement('canvas');
-            canvas.width = xmax - xmin;
-            canvas.height = ymax - ymin;
-         }
-
-         if (!canvas)
-            return null;
-
-         let context = canvas.getContext('2d'),
-             imageData = context.getImageData(0, 0, canvas.width, canvas.height),
-             arr = imageData.data;
-
-         for(let i = ymin; i < ymax; ++i) {
-            let dst = (ymax - i - 1) * (xmax - xmin) * 4,
-                row = i * obj.fWidth;
-            for(let j = xmin; j < xmax; ++j) {
-               let iii = Math.round((obj.fImgBuf[row + j] - min) / (max - min) * nlevels) * 4;
-               // copy rgba value for specified point
-               arr[dst++] = this.rgba[iii++];
-               arr[dst++] = this.rgba[iii++];
-               arr[dst++] = this.rgba[iii++];
-               arr[dst++] = this.rgba[iii++];
-            }
-         }
-
-         context.putImageData(imageData, 0, 0);
-
-         url = canvas.toDataURL(); // create data url to insert into image
-
-         constRatio = obj.fConstRatio;
-
+         promise = this.makeUrlFromImageBuf(obj, fp);
       } else if (obj.fPngBuf) {
-         let pngbuf = "";
-
-         if (typeof obj.fPngBuf == "string") {
-            pngbuf = obj.fPngBuf;
-         } else {
-            for (let k = 0; k < obj.fPngBuf.length; ++k)
-               pngbuf += String.fromCharCode(obj.fPngBuf[k] < 0 ? 256 + obj.fPngBuf[k] : obj.fPngBuf[k]);
-         }
-
-         url = "data:image/png;base64," + btoa_func(pngbuf);
+         promise = this.makeUrlFromPngBuf(obj);
+      } else {
+         promise = Promise.resolve({});
       }
 
-      if (url)
-         this.createG(fp ? true : false)
-             .append("image")
-             .attr("href", url)
-             .attr("width", rect.width)
-             .attr("height", rect.height)
-             .attr("preserveAspectRatio", constRatio ? null : "none");
+      return promise.then(res => {
 
-      if (!url || !this.isMainPainter() || !is_buf || !fp)
-         return this;
+         if (res.url)
+            this.createG(fp ? true : false)
+                .append("image")
+                .attr("href", res.url)
+                .attr("width", rect.width)
+                .attr("height", rect.height)
+                .attr("preserveAspectRatio", res.constRatio ? null : "none");
 
-      return this.drawColorPalette(this.options.Zscale, true).then(() => {
-         fp.setAxesRanges(create("TAxis"), 0, 1, create("TAxis"), 0, 1, null, 0, 0);
-         fp.createXY({ ndim: 2, check_pad_range: false });
-         return fp.addInteractivity();
+         if (!res.url || !this.isMainPainter() || !res.is_buf || !fp)
+            return this;
+
+         return this.drawColorPalette(this.options.Zscale, true).then(() => {
+            fp.setAxesRanges(create("TAxis"), 0, 1, create("TAxis"), 0, 1, null, 0, 0);
+            fp.createXY({ ndim: 2, check_pad_range: false });
+            return fp.addInteractivity();
+         })
       });
    }
 
@@ -221,7 +220,7 @@ class TASImagePainter extends ObjectPainter {
    canZoomInside(axis,min,max) {
       let obj = this.getObject();
 
-      if (!obj || !obj.fImgBuf)
+      if (!obj?.fImgBuf)
          return false;
 
       if ((axis == "x") && ((max - min) * obj.fWidth > 3)) return true;
@@ -331,7 +330,7 @@ class TASImagePainter extends ObjectPainter {
    /** @summary Fill pad toolbar for TASImage */
    fillToolbar() {
       let pp = this.getPadPainter(), obj = this.getObject();
-      if (pp && obj && obj.fPalette) {
+      if (pp && obj?.fPalette) {
          pp.addPadButton("th2colorz", "Toggle color palette", "ToggleColorZ");
          pp.showPadButtons();
       }

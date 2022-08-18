@@ -187,8 +187,7 @@ class TCanvasPainter extends TPadPainter {
 
          promise.then(painter => { this.proj_painter = painter; });
       } else {
-         let hp = this.proj_painter.getMainPainter();
-         if (hp) hp.updateObject(hist, hopt);
+         this.proj_painter.getMainPainter()?.updateObject(hist, hopt);
          this.proj_painter.redrawPad();
       }
    }
@@ -370,29 +369,24 @@ class TCanvasPainter extends TPadPainter {
          return false;
       if (this.brlayout)
          return this.brlayout.hasStatus();
-      let hp = getHPainter();
-      if (hp)
-         return hp.hasStatusLine();
-      return false;
+      return getHPainter()?.hasStatusLine() ?? false;
    }
 
    /** @summary Show/toggle event status bar
      * @private */
    activateStatusBar(state) {
       if (this.testUI5()) return;
-      if (this.brlayout) {
+      if (this.brlayout)
          this.brlayout.createStatusLine(23, state);
-      } else {
-         let hp = getHPainter();
-         if (hp) hp.createStatusLine(23, state);
-      }
+      else
+         getHPainter()?.createStatusLine(23, state);
       this.processChanges("sbits", this);
    }
 
    /** @summary Returns true if GED is present on the canvas */
    hasGed() {
       if (this.testUI5()) return false;
-      return this.brlayout ? this.brlayout.hasContent() : false;
+      return this.brlayout?.hasContent() ?? false;
    }
 
    /** @summary Function used to de-activate GED
@@ -407,8 +401,7 @@ class TCanvasPainter extends TPadPainter {
          this.ged_view.destroy();
          delete this.ged_view;
       }
-      if (this.brlayout)
-         this.brlayout.deleteContent();
+      this.brlayout?.deleteContent();
 
       this.processChanges("sbits", this);
    }
@@ -421,12 +414,10 @@ class TCanvasPainter extends TPadPainter {
          return Promise.resolve(false);
 
       if (this.brlayout.hasContent()) {
-         if ((mode === "toggle") || (mode === false)) {
+         if ((mode === "toggle") || (mode === false))
             this.removeGed();
-         } else {
-            let pp = objpainter ? objpainter.getPadPainter() : null;
-            if (pp) pp.selectObjectPainter(objpainter);
-         }
+         else
+            objpainter?.getPadPainter()?.selectObjectPainter(objpainter);
 
          return Promise.resolve(true);
       }
@@ -473,8 +464,7 @@ class TCanvasPainter extends TPadPainter {
                   // TODO: should be moved into Ged controller - it must be able to detect canvas painter itself
                   this.registerForPadEvents(oGed.getController().padEventsReceiver.bind(oGed.getController()));
 
-                  let pp = objpainter ? objpainter.getPadPainter() : null;
-                  if (pp) pp.selectObjectPainter(objpainter);
+                  objpainter?.getPadPainter()?.selectObjectPainter(objpainter);
 
                   this.processChanges("sbits", this);
 
@@ -575,7 +565,7 @@ class TCanvasPainter extends TPadPainter {
             }
             break;
          default:
-            if ((kind.slice(0,5) == "exec:") && painter && painter.snapid) {
+            if ((kind.slice(0,5) == "exec:") && painter?.snapid) {
                console.log('Call exec', painter.snapid);
 
                msg = "PRIMIT6:" + toJSON({
@@ -610,7 +600,7 @@ class TCanvasPainter extends TPadPainter {
          this.forEachPainterInPad(pp => pp.drawActiveBorder(null, pp === pad_painter), "pads");
       }
 
-      if (obj_painter && (obj_painter.snapid!==undefined) && arg) {
+      if ((obj_painter?.snapid !== undefined) && arg) {
          ischanged = true;
          arg.objid = obj_painter.snapid.toString();
       }

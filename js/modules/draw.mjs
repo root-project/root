@@ -106,8 +106,8 @@ const drawFuncs = { lst: [
    { name: "TNtuple", sameas: "TTree" },
    { name: "TNtupleD", sameas: "TTree" },
    { name: "TBranchFunc", icon: "img_leaf_method", draw: () => import('./draw/TTree.mjs').then(h => h.drawTree), opt: ";dump", noinspect: true },
-   { name: /^TBranch/, icon: "img_branch", draw: () => import('./draw/TTree.mjs').then(h => h.drawTree), dflt: "expand", opt: ";dump", ctrl: "dump", shift: "inspect", ignore_online: true },
-   { name: /^TLeaf/, icon: "img_leaf", noexpand: true, draw: () => import('./draw/TTree.mjs').then(h => h.drawTree), opt: ";dump", ctrl: "dump", ignore_online: true },
+   { name: /^TBranch/, icon: "img_branch", draw: () => import('./draw/TTree.mjs').then(h => h.drawTree), dflt: "expand", opt: ";dump", ctrl: "dump", shift: "inspect", ignore_online: true, always_draw: true },
+   { name: /^TLeaf/, icon: "img_leaf", noexpand: true, draw: () => import('./draw/TTree.mjs').then(h => h.drawTree), opt: ";dump", ctrl: "dump", ignore_online: true, always_draw: true },
    { name: "TList", icon: "img_list", draw: () => import('./gui/HierarchyPainter.mjs').then(h => h.drawList), get_expand: () => import('./gui/HierarchyPainter.mjs').then(h => h.listHierarchy), dflt: "expand" },
    { name: "THashList", sameas: "TList" },
    { name: "TObjArray", sameas: "TList" },
@@ -294,6 +294,7 @@ function setDefaultDrawOpt(classname, opt) {
   * let obj = await file.readObject("hpxpy;1");
   * await draw("drawing", obj, "colz;logx;gridx;gridy"); */
 function draw(dom, obj, opt) {
+
    if (!obj || (typeof obj !== 'object'))
       return Promise.reject(Error('not an object in draw call'));
 
@@ -325,7 +326,7 @@ function draw(dom, obj, opt) {
 
          let main_painter = getElementMainPainter(dom);
 
-         if (main_painter && (typeof main_painter.performDrop === 'function'))
+         if (typeof main_painter?.performDrop === 'function')
             return main_painter.performDrop(obj, "", null, opt);
       }
 

@@ -31,23 +31,25 @@ class TH1Painter extends TH1Painter2D {
 
          if (is_main) {
             assignFrame3DMethods(main);
-            main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale);
-            main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, 0, 0);
-            main.set3DOptions(this.options);
-            main.drawXYZ(main.toplevel, TAxisPainter, { use_y_for_z: true, zmult, zoom: settings.Zooming, ndim: 1, draw: this.options.Axis !== -1 });
+            pr = main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale).then(() => {
+               main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, 0, 0);
+               main.set3DOptions(this.options);
+               main.drawXYZ(main.toplevel, TAxisPainter, { use_y_for_z: true, zmult, zoom: settings.Zooming, ndim: 1, draw: this.options.Axis !== -1 });
+            });
          }
 
-         if (main.mode3d) {
-            drawBinsLego(this);
-            main.render3D();
-            this.updateStatWebCanvas();
-            main.addKeysHandler();
-         }
+         if (main.mode3d)
+            pr = pr.then(() => {
+               drawBinsLego(this);
+               main.render3D();
+               this.updateStatWebCanvas();
+               main.addKeysHandler();
+            });
       }
 
       if (is_main)
-         pr = this.drawColorPalette(this.options.Zscale && ((this.options.Lego===12) || (this.options.Lego===14)))
-                  .then(() => this.drawHistTitle());
+         pr = pr.then(() => this.drawColorPalette(this.options.Zscale && ((this.options.Lego===12) || (this.options.Lego===14))))
+                .then(() => this.drawHistTitle());
 
       return pr.then(() => this);
    }

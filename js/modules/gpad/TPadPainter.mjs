@@ -1,4 +1,4 @@
-import { gStyle, settings, constants, internals,
+import { gStyle, settings, constants, internals, btoa_func,
          create, toJSON, isBatchMode, loadScript, injectCode, isPromise } from '../core.mjs';
 import { color as d3_color, pointer as d3_pointer, select as d3_select } from '../d3.mjs';
 import { ColorPalette, adoptRootColors, extendRootColors, getRGBfromTColor } from '../base/colors.mjs';
@@ -6,7 +6,7 @@ import { getElementRect, getAbsPosInCanvas, DrawOptions, compressSVG } from '../
 import { ObjectPainter, selectActivePad, getActivePad  } from '../base/ObjectPainter.mjs';
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
 import { createMenu, closeMenu } from '../gui/menu.mjs';
-import { ToolbarIcons, registerForResize } from '../gui/utils.mjs';
+import { ToolbarIcons, registerForResize, saveFile } from '../gui/utils.mjs';
 import { BrowserLayout } from '../gui/display.mjs';
 
 
@@ -109,9 +109,9 @@ let PadButtonsHandler = {
              .on("mouseleave", () => toggleButtonsVisibility(this, 'disable'));
 
          for (let k = 0; k < this._buttons.length; ++k) {
-            let item = this._buttons[k];
+            let item = this._buttons[k],
+                 btn = item.btn;
 
-            let btn = item.btn;
             if (typeof btn == 'string') btn = ToolbarIcons[btn];
             if (!btn) btn = ToolbarIcons.circle;
 
@@ -173,7 +173,7 @@ class TPadPainter extends ObjectPainter {
       this.pad = pad;
       this.iscan = iscan; // indicate if working with canvas
       this.this_pad_name = "";
-      if (!this.iscan && (pad !== null) && ('fName' in pad)) {
+      if (!this.iscan && pad?.fName) {
          this.this_pad_name = pad.fName.replace(" ", "_"); // avoid empty symbol in pad name
          let regexp = new RegExp("^[A-Za-z][A-Za-z0-9_]*$");
          if (!regexp.test(this.this_pad_name)) this.this_pad_name = 'jsroot_pad_' + internals.id_counter++;
@@ -309,11 +309,7 @@ class TPadPainter extends ObjectPainter {
   /** @summary returns custom palette associated with pad or top canvas
     * @private */
    getCustomPalette() {
-      if (this.custom_palette)
-         return this.custom_palette;
-
-      let cp = this.getCanvPainter();
-      return cp?.custom_palette;
+      return this.custom_palette || this.getCanvPainter()?.custom_palette;
    }
 
    /** @summary Returns number of painters
@@ -1063,8 +1059,7 @@ class TPadPainter extends ObjectPainter {
          evnt.stopPropagation(); // disable main context menu
          evnt.preventDefault();  // disable browser context menu
 
-         let fp = this.getFramePainter();
-         if (fp) fp.setLastEventPos();
+         this.getFramePainter()?.setLastEventPos();
       }
 
       createMenu(evnt, this).then(menu => {
@@ -1104,10 +1099,8 @@ class TPadPainter extends ObjectPainter {
          return redrawNext(0);
       }).then(() => {
          this.confirmDraw();
-         if (getActivePad() === this) {
-            let canp = this.getCanvPainter();
-            if (canp) canp.producePadEvent("padredraw", this);
-         }
+         if (getActivePad() === this)
+            this.getCanvPainter()?.producePadEvent("padredraw", this);
          return true;
       });
    }
@@ -1315,7 +1308,7 @@ class TPadPainter extends ObjectPainter {
                ListOfColors[parseInt(name.slice(0,p))] = d3_color("rgb(" + name.slice(p+1) + ")").formatHex();
             } else {
                p = name.indexOf("=");
-               ListOfColors[parseInt(name.slice(0,p))] = d3_color("rgba(" + name.slice(p+1) + ")").formatHex();
+               ListOfColors[parseInt(name.slice(0,p))] = d3_color("rgba(" + name.slice(p+1) + ")").formatHex8();
             }
          }
 
@@ -1550,10 +1543,8 @@ class TPadPainter extends ObjectPainter {
          return Promise.all(promises);
       }).then(() => {
          this.selectCurrentPad(prev_name);
-         if (getActivePad() === this) {
-            let canp = this.getCanvPainter();
-            if (canp) canp.producePadEvent("padredraw", this);
-         }
+         if (getActivePad() === this)
+            this.getCanvPainter()?.producePadEvent("padredraw", this);
          return this;
       });
    }
@@ -1565,7 +1556,7 @@ class TPadPainter extends ObjectPainter {
    createImage(format) {
       // use https://github.com/MrRio/jsPDF in the future here
       if (format == "pdf")
-         return Promise.resolve(btoa("dummy PDF file"));
+         return Promise.resolve(btoa_func("dummy PDF file"));
 
       if ((format == "png") || (format == "jpeg") || (format == "svg"))
          return this.produceImage(true, format).then(res => {
@@ -1629,7 +1620,7 @@ class TPadPainter extends ObjectPainter {
       let main = this.getFramePainter(),
           p = this.svg_this_pad();
 
-      r.ranges = main && main.ranges_set ? true : false; // indicate that ranges are assigned
+      r.ranges = main?.ranges_set ? true : false; // indicate that ranges are assigned
 
       r.ux1 = r.px1 = r.ranges ? main.scale_xmin : 0; // need to initialize for JSON reader
       r.uy1 = r.py1 = r.ranges ? main.scale_ymin : 0;
@@ -1708,7 +1699,7 @@ class TPadPainter extends ObjectPainter {
           }
        }
 
-       if (!selp || (typeof selp.fillContextMenu !== 'function')) return;
+       if (typeof selp?.fillContextMenu !== 'function') return;
 
        createMenu(evnt, selp).then(menu => {
           if (selp.fillContextMenu(menu, selkind))
@@ -1721,16 +1712,12 @@ class TPadPainter extends ObjectPainter {
    saveAs(kind, full_canvas, filename) {
       if (!filename)
          filename = (this.this_pad_name || (this.iscan ? "canvas" : "pad")) + "." + kind;
+
       this.produceImage(full_canvas, kind).then(imgdata => {
          if (!imgdata)
             return console.error(`Fail to produce image ${filename}`);
 
-         let a = document.createElement('a');
-         a.download = filename;
-         a.href = (kind != "svg") ? imgdata : "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(imgdata);
-         document.body.appendChild(a);
-         a.addEventListener("click", () => a.parentNode.removeChild(a));
-         a.click();
+         saveFile(filename, (kind != "svg") ? imgdata : "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(imgdata));
       });
    }
 
@@ -1769,7 +1756,7 @@ class TPadPainter extends ObjectPainter {
          }
 
          let main = pp.getFramePainter();
-         if (!main || (typeof main.render3D !== 'function') || (typeof main.access3dKind !== 'function')) return;
+         if ((typeof main?.render3D !== 'function') || (typeof main?.access3dKind !== 'function')) return;
 
          let can3d = main.access3dKind();
 
@@ -1875,7 +1862,7 @@ class TPadPainter extends ObjectPainter {
             resolveFunc(null);
          }
 
-         image.src = 'data:image/svg+xml;base64,' + window.btoa(reEncode(doctype + svg));
+         image.src = 'data:image/svg+xml;base64,' + btoa_func(reEncode(doctype + svg));
       });
    }
 
@@ -1955,21 +1942,21 @@ class TPadPainter extends ObjectPainter {
 
    /** @summary Add button to the pad
      * @private */
-   addPadButton(_btn, _tooltip, _funcname, _keyname) {
+   addPadButton(btn, tooltip, funcname, keyname) {
       if (!settings.ToolBar || isBatchMode() || this.batch_mode) return;
 
       if (!this._buttons) this._buttons = [];
       // check if there are duplications
 
-      for (let k=0;k<this._buttons.length;++k)
-         if (this._buttons[k].funcname == _funcname) return;
+      for (let k = 0; k < this._buttons.length; ++k)
+         if (this._buttons[k].funcname == funcname) return;
 
-      this._buttons.push({ btn: _btn, tooltip: _tooltip, funcname: _funcname, keyname: _keyname });
+      this._buttons.push({ btn, tooltip, funcname, keyname });
 
       let iscan = this.iscan || !this.has_canvas;
-      if (!iscan && (_funcname.indexOf("Pad")!=0) && (_funcname !== "enlargePad")) {
+      if (!iscan && (funcname.indexOf("Pad")!=0) && (funcname !== "enlargePad")) {
          let cp = this.getCanvPainter();
-         if (cp && (cp!==this)) cp.addPadButton(_btn, _tooltip, _funcname);
+         if (cp && (cp !== this)) cp.addPadButton(btn, tooltip, funcname);
       }
    }
 

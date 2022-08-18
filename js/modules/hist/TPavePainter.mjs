@@ -95,7 +95,7 @@ class TPavePainter extends ObjectPainter {
       }
 
       // fill stats before drawing to have coordinates early
-      if (this.isStats() && !(pp && pp._fast_drawing)) {
+      if (this.isStats() && !this.NoFillStats && !(pp && pp._fast_drawing)) {
 
          let main = pt.$main_painter || this.getMainPainter();
 
@@ -311,7 +311,7 @@ class TPavePainter extends ObjectPainter {
                   align: (n == 0) ? "start" : "end", x: margin_x, y,
                   width: width-2*margin_x, height: stepy, text: parts[n], color,
                   _expected_width: width-2*margin_x, _args: args,
-                  post_process: function(painter) {
+                  post_process(painter) {
                     if (this._args[0].ready && this._args[1].ready)
                        painter.scaleTextDrawing(1.05*(this._args[0].result_width+this._args[1].result_width)/this._expected_width, painter.draw_g);
                   }
@@ -365,7 +365,7 @@ class TPavePainter extends ObjectPainter {
 
       if (!text_g) text_g = this.draw_g;
 
-      let fast = (nlines == 1) && pp && pp._fast_drawing, num_default = 0;
+      let fast = (nlines == 1) && pp?._fast_drawing, num_default = 0;
 
       for(let nline = 0; nline < nlines; ++nline) {
          let entry = arr[nline], texty = nline*stepy;
@@ -561,9 +561,9 @@ class TPavePainter extends ObjectPainter {
 
          // Draw fill pattern (in a box)
          if (draw_fill) {
-            let lineatt, fillatt = (painter && painter.fillatt) ? painter.fillatt : this.createAttFill(o_fill);
+            let lineatt, fillatt = painter?.fillatt || this.createAttFill(o_fill);
             if ((lopt.indexOf('l') < 0 && lopt.indexOf('e') < 0) && (lopt.indexOf('p') < 0)) {
-               lineatt = (painter && painter.lineatt) ? painter.lineatt : new TAttLineHandler(o_line);
+               lineatt = painter?.lineatt || new TAttLineHandler(o_line);
                if (lineatt.empty()) lineatt = null;
             }
 
@@ -581,7 +581,7 @@ class TPavePainter extends ObjectPainter {
 
          // Draw line and error (when specified)
          if (draw_line || draw_error) {
-            let lineatt = (painter && painter.lineatt) ? painter.lineatt : new TAttLineHandler(o_line);
+            let lineatt = painter?.lineatt || new TAttLineHandler(o_line);
             if (!lineatt.empty()) {
                isany = true;
                this.draw_g.append("svg:path")
@@ -596,7 +596,7 @@ class TPavePainter extends ObjectPainter {
 
          // Draw Polymarker
          if (draw_marker) {
-            let marker = (painter && painter.markeratt) ? painter.markeratt : new TAttMarkerHandler(o_marker);
+            let marker = painter?.markeratt || new TAttMarkerHandler(o_marker);
             if (!marker.empty()) {
                isany = true;
                this.draw_g
@@ -607,7 +607,7 @@ class TPavePainter extends ObjectPainter {
          }
 
          // special case - nothing draw, try to show rect with line attributes
-         if (!isany && painter && painter.lineatt && !painter.lineatt.empty())
+         if (!isany && painter?.lineatt && !painter.lineatt.empty())
             this.draw_g.append("svg:path")
                        .attr("d", `M${x0 + padding_x},${Math.round(pos_y+step_y*0.1)}v${Math.round(step_y*0.8)}h${tpos_x-2*padding_x-x0}v${-Math.round(step_y*0.8)}z`)
                        .style("fill", "none")
@@ -635,9 +635,10 @@ class TPavePainter extends ObjectPainter {
           can_move = (typeof arg == "string") && (arg.indexOf('can_move') >= 0),
           postpone_draw = (typeof arg == "string") && (arg.indexOf('postpone') >= 0),
           cjust = (typeof arg == "string") && (arg.indexOf('cjust') >= 0),
-          width = this.getPadPainter().getPadWidth(),
-          height = this.getPadPainter().getPadHeight(),
-          pad = this.getPadPainter().getRootPad(true),
+          pp = this.getPadPainter(),
+          width = pp.getPadWidth(),
+          height = pp.getPadHeight(),
+          pad = pp.getRootPad(true),
           main = palette.$main_painter || this.getMainPainter(),
           framep = this.getFramePainter(),
           zmin = 0, zmax = 100, gzmin, gzmax,
@@ -972,7 +973,7 @@ class TPavePainter extends ObjectPainter {
    paveContextMenu(evnt) {
       if (this.z_handle) {
          let fp = this.getFramePainter();
-         if (fp && fp.showContextMenu)
+         if (typeof fp?.showContextMenu == 'function')
              fp.showContextMenu("z", evnt);
          return;
       }
@@ -1176,6 +1177,8 @@ class TPavePainter extends ObjectPainter {
             painter.UseContextMenu = true;
          }
 
+         painter.NoFillStats = (opt == "nofillstats");
+
          switch (pave._typename) {
             case "TPaveLabel":
                painter.paveDrawFunc = painter.drawPaveLabel;
@@ -1211,7 +1214,7 @@ class TPavePainter extends ObjectPainter {
 function produceLegend(dom, opt) {
    let main_painter = getElementMainPainter(dom),
        pp = main_painter ? main_painter.getPadPainter() : null,
-       pad = pp ? pp.getRootPad(true) : null;
+       pad = pp?.getRootPad(true);
    if (!pad) return Promise.resolve(null);
 
    let leg = create("TLegend");

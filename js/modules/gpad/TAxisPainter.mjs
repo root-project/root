@@ -213,10 +213,10 @@ const AxisPainterMethods = {
          for (let k = 1; k < arr.length; ++k) {
             let diff = (arr[k] - arr[k-1]);
             sum1 += diff;
-            sum2 += diff*diff;
+            sum2 += diff**2;
          }
          let mean = sum1/(arr.length-1),
-             dev = sum2/(arr.length-1) - mean*mean;
+             dev = sum2/(arr.length-1) - mean**2;
 
          if (dev <= 0) return true;
          if (Math.abs(mean) < 1e-100) return false;
@@ -466,7 +466,7 @@ class TAxisPainter extends ObjectPainter {
       else
          this.gr = this.func;
 
-      let is_gaxis = (axis && axis._typename === 'TGaxis');
+      let is_gaxis = (axis?._typename === 'TGaxis');
 
       delete this.format;// remove formatting func
 

@@ -94,7 +94,7 @@ class MDIDisplay extends BasePainter {
    }
 
    /** @summary Activate frame */
-   activateFrame(frame) { this.active_frame_title = d3_select(frame).attr('frame_title'); }
+   activateFrame(frame) { this.active_frame_title = frame ? d3_select(frame).attr('frame_title') : ""; }
 
    /** @summary Return active frame */
    getActiveFrame() { return this.findFrame(this.active_frame_title); }
@@ -288,30 +288,10 @@ class GridDisplay extends MDIDisplay {
       if (sizes && (sizes.length!==num)) sizes = undefined;
 
       if (!this.simple_layout) {
-         injectStyle(`
-.jsroot_vline:after {
-    content:"";
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 50%;
-    border-left: 1px dotted #ff0000;
-}
-.jsroot_hline:after {
-    content:"";
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 50%;
-    border-top: 1px dotted #ff0000;
-}
-.jsroot_separator {
-   pointer-events: all;
-   border: 0;
-   margin: 0;
-   padding: 0;
-}
-`, dom.node());
+         injectStyle(
+            `.jsroot_vline:after { content:""; position: absolute; top: 0; bottom: 0; left: 50%; border-left: 1px dotted #ff0000; }
+             .jsroot_hline:after { content:""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px dotted #ff0000; }
+             .jsroot_separator { pointer-events: all; border: 0; margin: 0; padding: 0; }`, dom.node(), 'grid_style');
          this.createGroup(this, dom, num, arr, sizes);
       }
    }
@@ -533,7 +513,171 @@ class GridDisplay extends MDIDisplay {
 
 } // class GridDisplay
 
+
+
 // ================================================
+
+/**
+ * @summary Tabs-based display
+ *
+ * @private
+ */
+
+class TabsDisplay extends MDIDisplay {
+
+   constructor(frameid) {
+      super(frameid);
+      this.cnt = 0; // use to count newly created frames
+      this.selectDom().style('overflow', 'hidden');
+   }
+
+   /** @summary Cleanup all drawings */
+   cleanup() {
+      this.selectDom().style('overflow', null);
+      this.cnt = 0;
+      super.cleanup();
+   }
+
+   /** @summary call function for each frame */
+   forEachFrame(userfunc,  only_visible) {
+      if (typeof userfunc != 'function') return;
+
+      if (only_visible) {
+         let active = this.getActiveFrame();
+         if (active) userfunc(active);
+         return;
+      }
+
+      let main = this.selectDom().select('.jsroot_tabs_main');
+
+      main.selectAll(".jsroot_tabs_draw").each(function() {
+         userfunc(this);
+      });
+   }
+
+   /** @summary modify tab state by id */
+   modifyTabsFrame(frame_id, action) {
+      let top = this.selectDom().select(".jsroot_tabs"),
+          labels = top.select(".jsroot_tabs_labels"),
+          main = top.select(".jsroot_tabs_main");
+
+      labels.selectAll(".jsroot_tabs_label").each(function() {
+         let id = d3_select(this).property('frame_id'),
+             is_same = (id == frame_id);
+         if (action == "activate")
+            d3_select(this).style("background", is_same ? (settings.DarkMode ? "black" : "white") : null);
+         else if ((action == "close") && is_same)
+            this.parentNode.remove();
+      });
+
+      let selected_frame, other_frame;
+
+      main.selectAll(".jsroot_tabs_draw").each(function() {
+         if (d3_select(this).property('frame_id') === frame_id)
+            selected_frame = this;
+         else
+            other_frame = this;
+      });
+
+      if (!selected_frame) return;
+
+      if (action == "activate") {
+         selected_frame.parentNode.appendChild(selected_frame);
+         // super.activateFrame(selected_frame);
+      } else if (action == "close") {
+         let was_active = (selected_frame === this.getActiveFrame());
+         cleanup(selected_frame);
+         selected_frame.remove();
+
+         if (was_active)
+            this.activateFrame(other_frame);
+      }
+   }
+
+   /** @summary actiavte frame */
+   activateFrame(frame) {
+      if (frame)
+         this.modifyTabsFrame(d3_select(frame).property('frame_id'), "activate");
+      super.activateFrame(frame);
+   }
+
+   /** @summary create new frame */
+   createFrame(title) {
+
+      this.beforeCreateFrame(title);
+
+      let dom = this.selectDom(),
+          top = dom.select(".jsroot_tabs"), labels, main;
+
+      if (top.empty()) {
+         top = dom.append("div").classed("jsroot_tabs", true);
+         labels = top.append("div").classed("jsroot_tabs_labels", true);
+         main = top.append("div").classed("jsroot_tabs_main", true);
+      } else {
+         labels = top.select(".jsroot_tabs_labels");
+         main = top.select(".jsroot_tabs_main");
+      }
+
+      let bkgr_color = settings.DarkMode ? 'black' : 'white',
+          lbl_color = settings.DarkMode ? '#111': '#eee',
+          lbl_border = settings.DarkMode ? '#333' : "#ccc",
+          text_color = settings.DarkMode ? '#ddd' : "inherit";
+
+      injectStyle(
+         `.jsroot_tabs { display: flex; flex-direction: column; position: absolute; overflow: hidden; inset: 0px 0px 0px 0px; }
+          .jsroot_tabs_labels { white-space: nowrap; position: relative; overflow-x: auto; }
+          .jsroot_tabs_labels .jsroot_tabs_label {
+             color: ${text_color}; background: ${lbl_color}; border: 1px solid ${lbl_border}; display: inline-block; font-size: 1rem; left: 1px;
+             margin-left: 3px; padding: 0px 5px 1px 5px; position: relative; vertical-align: bottom;
+          }
+          .jsroot_tabs_main { margin: 0; flex: 1 1 0%; position: relative; }
+          .jsroot_tabs_main .jsroot_tabs_draw { overflow: hidden; background: ${bkgr_color}; position: absolute; top: 0px; bottom: 0px; left: 0px; right: 0px; }`,
+          dom.node(), 'tabs_style');
+
+      let frame_id = this.cnt++, mdi = this, lbl = title;
+
+      if (!lbl || typeof lbl != 'string') lbl = `frame_${frame_id}`;
+
+      if (lbl.length > 15) {
+         let p = lbl.lastIndexOf("/");
+         if (p == lbl.length-1) p = lbl.lastIndexOf("/", p-1);
+         if ((p > 0) && (lbl.length - p < 20) && (lbl.length - p > 1))
+            lbl = lbl.slice(p+1);
+         else
+            lbl = "..." + lbl.slice(lbl.length-17);
+      }
+
+      labels.append('span')
+         .attr('tabindex', 0)
+         .append("label")
+         .attr('class', "jsroot_tabs_label")
+         .style("background", "white")
+         .property('frame_id', frame_id)
+         .text(lbl)
+         .attr("title", title)
+         .on("click", function(evnt) {
+            evnt.preventDefault(); // prevent handling in close button
+            mdi.modifyTabsFrame(d3_select(this).property('frame_id'), "activate");
+         }).append("button")
+         .attr("title", "close")
+         .attr("style", 'margin-left: .5em; padding: 0; font-size: 0.5em; width: 1.8em; height: 1.8em; vertical-align: center;')
+         .html('&#x2715;')
+         .on("click", function() {
+            mdi.modifyTabsFrame(d3_select(this.parentNode).property('frame_id'), "close");
+         });
+
+      let draw_frame = main.append('div')
+                           .attr('frame_title', title)
+                           .attr('class', 'jsroot_tabs_draw')
+                           .property('frame_id', frame_id);
+
+      this.modifyTabsFrame(frame_id, "activate");
+
+      return this.afterCreateFrame(draw_frame.node());
+   }
+
+} // class TabsDisplay
+
 
 /**
  * @summary Generic flexible MDI display
@@ -734,60 +878,15 @@ class FlexibleDisplay extends MDIDisplay {
           dom = this.selectDom(),
           top = dom.select(".jsroot_flex_top");
 
-      if (this.cnt == 0) injectStyle(`
-.jsroot_flex_top {
-   overflow: auto;
-   position: relative;
-   height: 100%;
-   width: 100%;
-}
-
-.jsroot_flex_btn {
-   float: right;
-   padding: 0;
-   width: 1.4em;
-   text-align: center;
-   font-size: 10px;
-   margin-top: 2px;
-   margin-right: 4px;
-}
-
-.jsroot_flex_header {
-   height: 23px;
-   overflow: hidden;
-   background-color: lightblue;
-}
-
-.jsroot_flex_header p {
-   margin: 1px;
-   float: left;
-   font-size: 14px;
-   padding-left: 5px;
-}
-
-.jsroot_flex_draw {
-   overflow: hidden;
-   width: 100%;
-   height: calc(100% - 24px);
-}
-
-.jsroot_flex_frame {
-   border: 1px solid black;
-   box-shadow: 1px 1px 2px 2px #aaa;
-   background: white;
-}
-
-.jsroot_flex_resize {
-   position: absolute;
-   right: 2px;
-   bottom: 2px;
-   overflow: hidden;
-   cursor: nwse-resize;
-}
-
-.jsroot_flex_resizable_helper {
-   border: 2px dotted #00F;
-}`, dom.node());
+      injectStyle(
+         `.jsroot_flex_top { overflow: auto; position: relative; height: 100%; width: 100%; }
+          .jsroot_flex_btn { float: right; padding: 0; width: 1.4em; text-align: center; font-size: 10px; margin-top: 2px; margin-right: 4px; }
+          .jsroot_flex_header { height: 23px; overflow: hidden; background-color: lightblue; }
+          .jsroot_flex_header p { margin: 1px; float: left; font-size: 14px; padding-left: 5px; }
+          .jsroot_flex_draw { overflow: hidden; width: 100%; height: calc(100% - 24px); }
+          .jsroot_flex_frame { border: 1px solid black; box-shadow: 1px 1px 2px 2px #aaa; background: white; }
+          .jsroot_flex_resize { position: absolute; right: 2px; bottom: 2px; overflow: hidden; cursor: nwse-resize; }
+          .jsroot_flex_resizable_helper { border: 2px dotted #00F; }`, dom.node(), 'flex_style');
 
       if (top.empty())
          top = dom.append("div").classed("jsroot_flex_top", true);
@@ -795,7 +894,6 @@ class FlexibleDisplay extends MDIDisplay {
       let w = top.node().clientWidth,
           h = top.node().clientHeight,
           main = top.append('div');
-
 
       main.html(`<div class="jsroot_flex_header"><p>${title}</p></div>
                  <div id="${this.frameid}_cont${this.cnt}" class="jsroot_flex_draw"></div>
@@ -1097,9 +1195,9 @@ class BrowserLayout {
 
    /** @summary Check resize action */
    checkResize() {
-      if (this.hpainter && (typeof this.hpainter.checkResize == 'function'))
+      if (typeof this.hpainter?.checkResize == 'function')
          this.hpainter.checkResize();
-      else if (this.objpainter && (typeof this.objpainter.checkResize == 'function')) {
+      else if (typeof this.objpainter?.checkResize == 'function') {
          this.objpainter.checkResize(true);
       }
    }
@@ -1111,98 +1209,24 @@ class BrowserLayout {
           text_color = settings.DarkMode ? '#ddd' : "inherit",
           input_style = settings.DarkMode ? `background-color: #222; color: ${text_color}` : "";
 
-      injectStyle(`
-.jsroot_browser {
-   pointer-events: none;
-   position: absolute;
-   left: 0;
-   top: 0;
-   bottom: 0;
-   right:0;
-   margin: 0;
-   border: 0;
-   overflow: hidden;
-}
-.jsroot_draw_area {
-   background-color: ${bkgr_color};
-   overflow: hidden;
-   margin: 0;
-   border: 0;
-}
-.jsroot_browser_area {
-   color: ${text_color};
-   background-color: ${bkgr_color};
-   font-size: 12px;
-   font-family: Verdana;
-   pointer-events: all;
-   box-sizing: initial;
-}
-.jsroot_browser_area input { ${input_style} }
-.jsroot_browser_area select { ${input_style} }
-.jsroot_browser_title {
-   font-family: Verdana;
-   font-size: 20px;
-   color: ${title_color};
-}
-.jsroot_browser_btns {
-   pointer-events: all;
-   opacity: 0;
-   display:flex;
-   flex-direction: column;
-}
-.jsroot_browser_btns:hover {
-   opacity: 0.3;
-}
-.jsroot_browser_area p {
-   margin-top: 5px;
-   margin-bottom: 5px;
-   white-space: nowrap;
-}
-.jsroot_browser_hierarchy {
-   flex: 1;
-   margin-top: 2px;
-}
-.jsroot_status_area {
-   background-color: ${bkgr_color};
-   overflow: hidden;
-   font-size: 12px;
-   font-family: Verdana;
-   pointer-events: all;
-}
-.jsroot_float_browser {
-   border: solid 3px white;
-}
-.jsroot_browser_resize {
-   position: absolute;
-   right: 3px;
-   bottom: 3px;
-   margin-bottom: 0px;
-   margin-right: 0px;
-   opacity: 0.5;
-   cursor: se-resize;
-}
-.jsroot_separator {
-   pointer-events: all;
-   border: 0;
-   margin: 0;
-   padding: 0;
-}
-.jsroot_h_separator {
-   cursor: ns-resize;
-   background-color: azure;
-}
-.jsroot_v_separator {
-   cursor: ew-resize;
-   background-color: azure;
-}
-.jsroot_status_label {
-   margin: 3px;
-   margin-left: 5px;
-   font-size: 14px;
-   vertical-align: middle;
-   white-space: nowrap;
-}
-`, this.main().node(), "browser_layout_style");
+      injectStyle(
+         `.jsroot_browser { pointer-events: none; position: absolute; left: 0; top: 0; bottom: 0; right:0; margin: 0; border: 0; overflow: hidden; }
+          .jsroot_draw_area { background-color: ${bkgr_color}; overflow: hidden; margin: 0; border: 0; }
+          .jsroot_browser_area { color: ${text_color}; background-color: ${bkgr_color}; font-size: 12px; font-family: Verdana; pointer-events: all; box-sizing: initial; }
+          .jsroot_browser_area input { ${input_style} }
+          .jsroot_browser_area select { ${input_style} }
+          .jsroot_browser_title { font-family: Verdana; font-size: 20px; color: ${title_color}; }
+          .jsroot_browser_btns { pointer-events: all; opacity: 0; display:flex; flex-direction: column; }
+          .jsroot_browser_btns:hover { opacity: 0.3; }
+          .jsroot_browser_area p { margin-top: 5px; margin-bottom: 5px; white-space: nowrap; }
+          .jsroot_browser_hierarchy { flex: 1; margin-top: 2px; }
+          .jsroot_status_area { background-color: ${bkgr_color}; overflow: hidden; font-size: 12px; font-family: Verdana; pointer-events: all; }
+          .jsroot_float_browser { border: solid 3px white; }
+          .jsroot_browser_resize { position: absolute; right: 3px; bottom: 3px; margin-bottom: 0px; margin-right: 0px; opacity: 0.5; cursor: se-resize; }
+          .jsroot_status_label { margin: 3px; margin-left: 5px; font-size: 14px; vertical-align: middle; white-space: nowrap; }
+          .jsroot_separator { pointer-events: all; border: 0; margin: 0; padding: 0; }
+          .jsroot_h_separator { cursor: ns-resize; background-color: azure; }
+          .jsroot_v_separator { cursor: ew-resize; background-color: azure; }`, this.main().node(), "browser_layout_style");
    }
 
    /** @summary method used to create basic elements
@@ -1683,5 +1707,5 @@ class BrowserLayout {
 
 } // class BrowserLayout
 
-export { MDIDisplay, CustomDisplay, BatchDisplay, GridDisplay, FlexibleDisplay, BrowserLayout,
+export { MDIDisplay, CustomDisplay, BatchDisplay, GridDisplay, TabsDisplay, FlexibleDisplay, BrowserLayout,
          getHPainter, setHPainter };

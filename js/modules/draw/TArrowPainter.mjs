@@ -8,6 +8,7 @@ import { addMoveHandler } from '../gui/utils.mjs';
   * @private */
 class TArrowPainter extends ObjectPainter {
 
+   /** @summary Create line segment with rotation */
    rotate(angle, x0, y0) {
       let dx = this.wsize * Math.cos(angle), dy = this.wsize * Math.sin(angle), res = "";
       if ((x0 !== undefined) && (y0 !== undefined)) {
@@ -20,6 +21,7 @@ class TArrowPainter extends ObjectPainter {
       return res;
    }
 
+   /** @summary Create SVG path for the arrow */
    createPath() {
       let angle = Math.atan2(this.y2 - this.y1, this.x2 - this.x1),
           dlen = this.wsize * Math.cos(this.angle2),
@@ -47,19 +49,27 @@ class TArrowPainter extends ObjectPainter {
               path;
    }
 
+   /** @summary Start interactive moving */
    moveStart(x,y) {
-      let fullsize = Math.sqrt(Math.pow(this.x1-this.x2,2) + Math.pow(this.y1-this.y2,2)),
-          sz1 = Math.sqrt(Math.pow(x-this.x1,2) + Math.pow(y-this.y1,2))/fullsize,
-          sz2 = Math.sqrt(Math.pow(x-this.x2,2) + Math.pow(y-this.y2,2))/fullsize;
-      if (sz1>0.9) this.side = 1; else if (sz2>0.9) this.side = -1; else this.side = 0;
+      let fullsize = Math.sqrt((this.x1-this.x2)**2 + (this.y1-this.y2)**2),
+          sz1 = Math.sqrt((x-this.x1)**2 + (y-this.y1)**2)/fullsize,
+          sz2 = Math.sqrt((x-this.x2)**2 + (y-this.y2)**2)/fullsize;
+      if (sz1 > 0.9)
+         this.side = 1;
+      else if (sz2 > 0.9)
+         this.side = -1;
+      else
+         this.side = 0;
    }
 
+   /** @summary Continue interactive moving */
    moveDrag(dx,dy) {
       if (this.side != 1) { this.x1 += dx; this.y1 += dy; }
       if (this.side != -1) { this.x2 += dx; this.y2 += dy; }
       this.draw_g.select('path').attr("d", this.createPath());
    }
 
+   /** @summary Finish interactive moving */
    moveEnd(not_changed) {
       if (not_changed) return;
       let arrow = this.getObject(), exec = "";
@@ -72,6 +82,7 @@ class TArrowPainter extends ObjectPainter {
       this.submitCanvExec(exec + "Notify();;");
    }
 
+   /** @summary Redraw arrow */
    redraw() {
       let arrow = this.getObject(), kLineNDC = BIT(14),
           oo = arrow.fOption, rect = this.getPadPainter().getPadRect();
@@ -122,6 +133,7 @@ class TArrowPainter extends ObjectPainter {
       return this;
    }
 
+   /** @summary Draw TArrow object */
    static draw(dom, obj, opt) {
       let painter = new TArrowPainter(dom, obj,opt);
       return ensureTCanvas(painter, false).then(() => painter.redraw());

@@ -30,11 +30,11 @@ function createSVGRenderer(as_is, precision, doc) {
      svg_style: {},
      path_attr: {},
      accPath: "",
-     createElementNS: function(ns,kind) {
+     createElementNS(ns,kind) {
         if (kind == 'path')
            return {
               _wrapper: this,
-              setAttribute: function(name, value) {
+              setAttribute(name, value) {
                  // cut useless fill-opacity:1 at the end of many SVG attributes
                  if ((name=="style") && value) {
                     let pos1 = value.indexOf(excl_style1);
@@ -57,14 +57,14 @@ function createSVGRenderer(as_is, precision, doc) {
            _wrapper: this,
            childNodes: [], // may be accessed - make dummy
            style: this.svg_style, // for background color
-           setAttribute: function(name, value) {
+           setAttribute(name, value) {
               this._wrapper.svg_attr[name] = value;
            },
-           appendChild: function(node) {
+           appendChild(node) {
               this._wrapper.accPath += '<path style="' + this._wrapper.path_attr['style'] + '" d="' + this._wrapper.path_attr['d'] + '"/>';
               this._wrapper.path_attr = {};
            },
-           removeChild: function(node) {
+           removeChild(node) {
               this.childNodes = [];
            }
         };
@@ -184,7 +184,7 @@ let Handling3DDrawings = {
 
       let fp = this.getFramePainter(), pp = this.getPadPainter(), size;
 
-      if (fp && fp.mode3d && (can3d > 0)) {
+      if (fp?.mode3d && (can3d > 0)) {
          size = fp.getFrameRect();
       } else {
          let elem = (can3d > 0) ? pad : this.getCanvSvg();
@@ -202,7 +202,7 @@ let Handling3DDrawings = {
       size.clname = clname;
       size.can3d = can3d;
 
-      let rect = pp ?  pp.getPadRect() : null;
+      let rect = pp?.getPadRect();
       if (rect) {
          // while 3D canvas uses area also for the axis labels, extend area relative to normal frame
          let dx = Math.round(size.width*0.07), dy = Math.round(size.height*0.05);
@@ -381,96 +381,93 @@ function assign3DHandler(painter) {
    Object.assign(painter, Handling3DDrawings);
 }
 
-let node_canvas, node_gl;
-
-///_begin_exclude_in_qt5web_
-if(isNodeJs() && process.env?.APP_ENV !== 'browser') { node_canvas = await import('canvas').then(h => h.default); node_gl = await import('gl').then(h => h.default); } /// cutNodeJs
-///_end_exclude_in_qt5web_
-
 
 /** @summary Creates renderer for the 3D drawings
   * @param {value} width - rendering width
   * @param {value} height - rendering height
   * @param {value} render3d - render type, see {@link constants.Render3D}
   * @param {object} args - different arguments for creating 3D renderer
+  * @returns {Promise} with renderer object
   * @private */
 
 function createRender3D(width, height, render3d, args) {
 
-   let rc = constants.Render3D;
+   let rc = constants.Render3D, promise, need_workaround = false, doc = getDocument();
 
    render3d = getRender3DKind(render3d);
 
    if (!args) args = { antialias: true, alpha: true };
 
-   let need_workaround = false, renderer,
-       doc = getDocument();
-
    if (render3d == rc.WebGL) {
       // interactive WebGL Rendering
-      renderer = new WebGLRenderer(args);
+      promise = Promise.resolve(new WebGLRenderer(args));
 
    } else if (render3d == rc.SVG) {
       // SVG rendering
-      renderer = createSVGRenderer(false, 0, doc);
+      let r = createSVGRenderer(false, 0, doc);
 
       if (isBatchMode()) {
          need_workaround = true;
       } else {
-         renderer.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
-         // d3_select(renderer.jsroot_dom).attr("width", width).attr("height", height);
+         r.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
+         // d3_select(r.jsroot_dom).attr("width", width).attr("height", height);
       }
+      promise = Promise.resolve(r);
    } else if (isNodeJs()) {
       // try to use WebGL inside node.js - need to create headless context
-      args.canvas = node_canvas.createCanvas(width, height);
-      args.canvas.addEventListener = function() { }; // dummy
-      args.canvas.removeEventListener = function() { }; // dummy
-      args.canvas.style = {};
-
-      let gl = node_gl(width, height, { preserveDrawingBuffer: true });
-      if (!gl) throw(Error("Fail to create headless-gl"));
-      args.context = gl;
-      gl.canvas = args.canvas;
-
-      renderer = new WebGLRenderer(args);
-
-      renderer.jsroot_output = new WebGLRenderTarget(width, height);
-
-      renderer.setRenderTarget(renderer.jsroot_output);
-
-      need_workaround = true;
+      promise = import('canvas').then(node_canvas => {
+         args.canvas = node_canvas.default.createCanvas(width, height);
+         args.canvas.addEventListener = function() { }; // dummy
+         args.canvas.removeEventListener = function() { }; // dummy
+         args.canvas.style = {};
+         return import('gl');
+      }).then(node_gl => {
+         let gl = node_gl.default(width, height, { preserveDrawingBuffer: true });
+         if (!gl) throw(Error("Fail to create headless-gl"));
+         args.context = gl;
+         gl.canvas = args.canvas;
+         let r = new WebGLRenderer(args);
+         r.jsroot_output = new WebGLRenderTarget(width, height);
+         r.setRenderTarget(r.jsroot_output);
+         need_workaround = true;
+         return r;
+      });
 
    } else {
       // rendering with WebGL directly into svg image
-      renderer = new WebGLRenderer(args);
-      renderer.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'image');
-      d3_select(renderer.jsroot_dom).attr("width", width).attr("height", height);
+      let r = new WebGLRenderer(args);
+      r.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'image');
+      d3_select(r.jsroot_dom).attr("width", width).attr("height", height);
+      promise = Promise.resolve(r);
    }
 
-   if (need_workaround) {
-      if (!internals.svg_3ds) internals.svg_3ds = [];
-      renderer.workaround_id = internals.svg_3ds.length;
-      internals.svg_3ds[renderer.workaround_id] = "<svg></svg>"; // dummy, provided in afterRender3D
+   return promise.then(renderer => {
 
-      // replace DOM element in renderer
-      renderer.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'path');
-      renderer.jsroot_dom.setAttribute('jsroot_svg_workaround', renderer.workaround_id);
-   } else if (!renderer.jsroot_dom) {
-      renderer.jsroot_dom = renderer.domElement;
-   }
+      if (need_workaround) {
+          if (!internals.svg_3ds) internals.svg_3ds = [];
+         renderer.workaround_id = internals.svg_3ds.length;
+         internals.svg_3ds[renderer.workaround_id] = "<svg></svg>"; // dummy, provided in afterRender3D
 
-   // res.renderer.setClearColor("#000000", 1);
-   // res.renderer.setClearColor(0x0, 0);
-   renderer.setSize(width, height);
-   renderer.jsroot_render3d = render3d;
+         // replace DOM element in renderer
+         renderer.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'path');
+         renderer.jsroot_dom.setAttribute('jsroot_svg_workaround', renderer.workaround_id);
+      } else if (!renderer.jsroot_dom) {
+         renderer.jsroot_dom = renderer.domElement;
+      }
 
-   // apply size to dom element
-   renderer.setJSROOTSize = function(width, height) {
-      if ((this.jsroot_render3d === constants.Render3D.WebGLImage) && !isBatchMode() && !isNodeJs())
-         return d3_select(this.jsroot_dom).attr("width", width).attr("height", height);
-   };
+      // res.renderer.setClearColor("#000000", 1);
+      // res.renderer.setClearColor(0x0, 0);
+      renderer.setSize(width, height);
+      renderer.jsroot_render3d = render3d;
 
-   return renderer;
+      // apply size to dom element
+      renderer.setJSROOTSize = function(width, height) {
+         if ((this.jsroot_render3d === constants.Render3D.WebGLImage) && !isBatchMode() && !isNodeJs())
+            return d3_select(this.jsroot_dom).attr("width", width).attr("height", height);
+      };
+
+      return renderer;
+   });
 }
 
 
@@ -480,8 +477,8 @@ function cleanupRender3D(renderer) {
    if (!renderer) return;
 
    if (isNodeJs()) {
-      let ctxt = (typeof renderer.getContext == 'function') ? renderer.getContext() : null;
-      let ext = ctxt ? ctxt.getExtension('STACKGL_destroy_context') : null;
+      let ctxt = (typeof renderer.getContext == 'function') ? renderer.getContext() : null,
+          ext = ctxt?.getExtension('STACKGL_destroy_context');
       if (ext) ext.destroy();
    } else {
       // suppress warnings in Chrome about lost webgl context, not required in firefox
@@ -759,9 +756,8 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
 
       if (control.enable_select && control.mouse_select_pnt) {
 
-         let pnt = control.getMousePos(evnt, {});
-
-         let same_pnt = (pnt.x == control.mouse_select_pnt.x) && (pnt.y == control.mouse_select_pnt.y);
+         let pnt = control.getMousePos(evnt, {}),
+             same_pnt = (pnt.x == control.mouse_select_pnt.x) && (pnt.y == control.mouse_select_pnt.y);
          delete control.mouse_select_pnt;
 
          if (same_pnt) {
@@ -795,7 +791,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       evnt.stopPropagation();
       evnt.stopImmediatePropagation();
 
-      if (control.painter && (typeof control.painter.analyzeMouseWheelEvent == 'function')) {
+      if (typeof control.painter?.analyzeMouseWheelEvent == 'function') {
          let kind = intersect.object.zoom,
              position = intersect.point[kind],
              item = { name: kind, ignore: false };
@@ -908,11 +904,8 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       // domElement gives correct coordinate with canvas render, but isn't always right for webgl renderer
       if (!this.renderer) return [];
 
-      let sz = (this.renderer instanceof WebGLRenderer) ?
-                  this.renderer.getSize(new Vector2()) :
-                  this.renderer.domElement;
-
-      let pnt = { x: mouse.x / sz.width * 2 - 1, y: -mouse.y / sz.height * 2 + 1 };
+      let sz = (this.renderer instanceof WebGLRenderer) ? this.renderer.getSize(new Vector2()) : this.renderer.domElement,
+          pnt = { x: mouse.x / sz.width * 2 - 1, y: -mouse.y / sz.height * 2 + 1 };
 
       this.camera.updateMatrix();
       this.camera.updateMatrixWorld();
@@ -965,7 +958,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
 
       // then check if double-click handler assigned
       let fp = this.painter ? this.painter.getFramePainter() : null;
-      if (fp && typeof fp._dblclick_handler == 'function') {
+      if (typeof fp?._dblclick_handler == 'function') {
          let info = this.getInfoAtMousePosition(this.getMousePos(evnt, {}));
          if (info) {
             fp._dblclick_handler(info);
@@ -1045,13 +1038,8 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       if (this.mouse_zoom_mesh) {
          // when working with zoom mesh, need special handling
 
-         let zoom2 = this.detectZoomMesh(evnt), pnt2 = null;
-
-         if (zoom2 && (zoom2.object === this.mouse_zoom_mesh.object)) {
-            pnt2 = zoom2.point;
-         } else {
-            pnt2 = this.mouse_zoom_mesh.object.globalIntersect(this.raycaster);
-         }
+         let zoom2 = this.detectZoomMesh(evnt),
+             pnt2 = (zoom2?.object === this.mouse_zoom_mesh.object) ? zoom2.point : this.mouse_zoom_mesh.object.globalIntersect(this.raycaster);
 
          if (pnt2) this.mouse_zoom_mesh.point2 = pnt2;
 
@@ -1091,7 +1079,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
 
       if (tip) {
          let name = "", title = "", coord = "", info = "";
-         if (mouse) coord = mouse.x.toFixed(0)+ "," + mouse.y.toFixed(0);
+         if (mouse) coord = mouse.x.toFixed(0) + "," + mouse.y.toFixed(0);
          if (typeof tip == "string") {
             info = tip;
          } else {
@@ -1103,7 +1091,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       }
 
       this.cursor_changed = false;
-      if (tip && this.painter && this.painter.isTooltipAllowed()) {
+      if (tip && this.painter?.isTooltipAllowed()) {
          this.tooltip.checkParent(this.painter.selectDom().node());
 
          this.tooltip.show(tip, mouse);
@@ -1111,7 +1099,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       } else {
          this.tooltip.hide();
          if (intersects)
-            for (let n=0;n<intersects.length;++n)
+            for (let n = 0; n < intersects.length; ++n)
                if (intersects[n].object.zoom) this.cursor_changed = true;
       }
 
@@ -1149,7 +1137,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
 
       if (kind == 1) {
          let fp = this.painter ? this.painter.getFramePainter() : null;
-         if (fp && (typeof fp._click_handler == 'function')) {
+         if (typeof fp?._click_handler == 'function') {
             let info = this.getInfoAtMousePosition(mouse_pos);
             if (info) {
                fp._click_handler(info);
@@ -1174,10 +1162,10 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
          delete this.single_click_tm;
       }
 
-      let kind = 0, fp = this.painter ? this.painter.getFramePainter() : null;
-      if (fp && typeof fp._click_handler == 'function')
+      let kind = 0, fp = this.painter?.getFramePainter();
+      if (typeof fp?._click_handler == 'function')
          kind = 1; // user click handler
-      else if (this.processSingleClick && this.painter && this.painter.options && this.painter.options.mouse_click)
+      else if (this.processSingleClick && this.painter?.options?.mouse_click)
          kind = 2;  // eve7 click handler
 
       // if normal event, set longer timeout waiting if double click not detected
@@ -1263,12 +1251,12 @@ function createLineSegments(arr, material, index = undefined, only_geometry = fa
 
       if (index) {
          distances = new Float32Array(index.length);
-         for (let n=0; n<index.length; n+=2) {
+         for (let n = 0; n < index.length; n += 2) {
             let i1 = index[n], i2 = index[n+1];
             v1.set(arr[i1],arr[i1+1],arr[i1+2]);
             v2.set(arr[i2],arr[i2+1],arr[i2+2]);
             distances[n] = d;
-            d += v2.distanceTo( v1 );
+            d += v2.distanceTo(v1);
             distances[n+1] = d;
          }
       } else {
@@ -1277,11 +1265,11 @@ function createLineSegments(arr, material, index = undefined, only_geometry = fa
             v1.set(arr[n],arr[n+1],arr[n+2]);
             v2.set(arr[n+3],arr[n+4],arr[n+5]);
             distances[n/3] = d;
-            d += v2.distanceTo( v1 );
+            d += v2.distanceTo(v1);
             distances[n/3+1] = d;
          }
       }
-      geom.setAttribute( 'lineDistance', new BufferAttribute(distances, 1) );
+      geom.setAttribute('lineDistance', new BufferAttribute(distances, 1));
    }
 
    return only_geometry ? geom : new LineSegments(geom, material);
@@ -1396,7 +1384,7 @@ class PointsControl extends InteractiveControl {
       if (!m.js_special) {
          let geom = new BufferGeometry();
          geom.setAttribute( 'position', m.geometry.getAttribute("position"));
-         let material = new PointsMaterial({ size: m.material.size*2, color: color });
+         let material = new PointsMaterial({ size: m.material.size*2, color });
          material.sizeAttenuation = m.material.sizeAttenuation;
 
          m.js_special = new Points(geom, material);
@@ -1487,14 +1475,12 @@ class PointsCreator {
           promise;
 
       if (isNodeJs()) {
-         promise = import('canvas').then(handle => {
-            return handle.default.loadImage(dataUrl).then(img => {
-               const canvas = handle.default.createCanvas(64, 64);
-               const ctx = canvas.getContext('2d');
+         promise = import('canvas').then(handle => handle.default.loadImage(dataUrl).then(img => {
+               const canvas = handle.default.createCanvas(64, 64),
+                     ctx = canvas.getContext('2d');
                ctx.drawImage(img, 0, 0, 64, 64);
                return new CanvasTexture(canvas);
-            });
-         });
+            }));
       } else if (this.noPromise) {
          // only for v6 support
          return makePoints(new TextureLoader().load(dataUrl));

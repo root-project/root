@@ -1,6 +1,6 @@
 /// Connections handling to RWebWindow
 
-import { httpRequest, createHttpRequest, loadScript, decodeUrl, browser, setBatchMode, isBatchMode } from './core.mjs';
+import { httpRequest, createHttpRequest, loadScript, decodeUrl, browser, setBatchMode, isBatchMode, btoa_func } from './core.mjs';
 
 import { closeCurrentWindow, showProgress, loadOpenui5 } from './gui/utils.mjs';
 
@@ -46,7 +46,7 @@ class LongPollSocket {
       if (data) {
          if (this.raw) {
             // special workaround to avoid POST request, use base64 coding
-            url += "&post=" + btoa(data);
+            url += "&post=" + btoa_func(data);
          } else {
             // send data with post request - most efficient way
             reqmode = "postbuf";
@@ -54,7 +54,7 @@ class LongPollSocket {
          }
       }
 
-      let req = createHttpRequest(url, reqmode, function(res) {
+      createHttpRequest(url, reqmode, function(res) {
          // this set to the request itself, res is response
 
          if (this.handle.req === this)
@@ -78,7 +78,8 @@ class LongPollSocket {
             while (i < 4) str += String.fromCharCode(u8Arr[i++]);
             if (str != "txt:") {
                str = "";
-               while ((i < offset) && (String.fromCharCode(u8Arr[i]) != ':')) str += String.fromCharCode(u8Arr[i++]);
+               while ((i < offset) && (String.fromCharCode(u8Arr[i]) != ':'))
+                  str += String.fromCharCode(u8Arr[i++]);
                ++i;
                offset = i + parseInt(str.trim());
             }
@@ -115,12 +116,12 @@ class LongPollSocket {
       }, function(/*err,status*/) {
          // console.log(`Get request error ${err} status ${status}`);
          this.handle.processRequest(null, "error");
+      }, true).then(req => {
+         req.handle = this;
+         if (!this.req)
+            this.req = req; // any request can be used for response, do not submit dummy until req is there
+         req.send(post);
       });
-
-      req.handle = this;
-      if (!this.req) this.req = req; // any request can be used for response, do not submit dummy until req is there
-      // if (kind === "dummy") this.req = req; // remember last dummy request, wait for reply
-      req.send(post);
    }
 
    /** @summary Process request */

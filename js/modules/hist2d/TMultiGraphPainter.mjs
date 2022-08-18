@@ -47,18 +47,14 @@ class TMultiGraphPainter extends ObjectPainter {
          if (this.firstpainter.updateObject(histo)) isany = true;
       }
 
-      for (let i = 0; i < graphs.arr.length; ++i) {
-         if (i<this.painters.length)
-            if (this.painters[i].updateObject(graphs.arr[i])) isany = true;
-      }
+      for (let i = 0; i < graphs.arr.length; ++i)
+         if ((i < this.painters.length) && this.painters[i].updateObject(graphs.arr[i]))
+            isany = true;
 
-      if (obj.fFunctions)
-         for (let i = 0; i < obj.fFunctions.arr.length; ++i) {
-            let func = obj.fFunctions.arr[i];
-            if (!func || !func._typename || !func.fName) continue;
-            let funcpainter = pp ? pp.findPainterFor(null, func.fName, func._typename) : null;
-            if (funcpainter) funcpainter.updateObject(func);
-         }
+      obj.fFunctions?.arr?.forEach(func => {
+         if (func?._typename && func?.fName)
+            pp?.findPainterFor(null, func.fName, func._typename)?.updateObject(func);
+      });
 
       return isany;
    }
@@ -237,7 +233,7 @@ class TMultiGraphPainter extends ObjectPainter {
       // if there is auto colors assignment, try to provide it
       if (this._pfc || this._plc || this._pmc) {
          let mp = this.getMainPainter();
-         if (mp && mp.createAutoColor) {
+         if (typeof mp?.createAutoColor == 'function') {
             let icolor = mp.createAutoColor(graphs.arr.length);
             if (this._pfc) graphs.arr[indx].fFillColor = icolor;
             if (this._plc) graphs.arr[indx].fLineColor = icolor;
@@ -271,7 +267,7 @@ class TMultiGraphPainter extends ObjectPainter {
       if (d.check("A") || !painter.getMainPainter()) {
           let mgraph = painter.getObject(),
               pp = painter.getPadPainter(),
-              histo = painter.scanGraphsRange(mgraph.fGraphs, mgraph.fHistogram, pp ? pp.getRootPad(true) : null);
+              histo = painter.scanGraphsRange(mgraph.fGraphs, mgraph.fHistogram, pp?.getRootPad(true));
 
          promise = painter.drawAxisHist(histo, hopt).then(fp => {
             painter.firstpainter = fp;

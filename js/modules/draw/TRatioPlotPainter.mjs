@@ -14,14 +14,12 @@ class TRatioPlotPainter extends ObjectPainter {
 
    /** @summary Set grids range */
    setGridsRange(xmin, xmax) {
-      let ratio = this.getObject(),
-          pp = this.getPadPainter();
+      let ratio = this.getObject();
       if (xmin === xmax) {
-         let low_p = pp.findPainterFor(ratio.fLowerPad, "lower_pad", "TPad"),
-             low_fp = low_p ? low_p.getFramePainter() : null;
-         if (!low_fp || !low_fp.x_handle) return;
-         xmin = low_fp.x_handle.full_min;
-         xmax = low_fp.x_handle.full_max;
+         let x_handle = this.getPadPainter()?.findPainterFor(ratio.fLowerPad, "lower_pad", "TPad")?.getFramePainter()?.x_handle;
+         if (!x_handle) return;
+         xmin = x_handle.full_min;
+         xmax = x_handle.full_max;
       }
 
       ratio.fGridlines.forEach(line => {
@@ -39,11 +37,11 @@ class TRatioPlotPainter extends ObjectPainter {
       if (top_p) top_p.disablePadDrawing();
 
       let up_p = pp.findPainterFor(ratio.fUpperPad, "upper_pad", "TPad"),
-          up_main = up_p ? up_p.getMainPainter() : null,
-          up_fp = up_p ? up_p.getFramePainter() : null,
+          up_main = up_p?.getMainPainter(),
+          up_fp = up_p?.getFramePainter(),
           low_p = pp.findPainterFor(ratio.fLowerPad, "lower_pad", "TPad"),
-          low_main = low_p ? low_p.getMainPainter() : null,
-          low_fp = low_p ? low_p.getFramePainter() : null,
+          low_main = low_p?.getMainPainter(),
+          low_fp = low_p?.getFramePainter(),
           lbl_size = 20, promise_up = Promise.resolve(true);
 
       if (up_p && up_main && up_fp && low_fp && !up_p._ratio_configured) {
@@ -99,7 +97,7 @@ class TRatioPlotPainter extends ObjectPainter {
          low_p.getRootPad().fTicky = 1;
 
          low_p.forEachPainterInPad(objp => {
-            if (typeof objp.testEditable == 'function')
+            if (typeof objp?.testEditable == 'function')
                objp.testEditable(false);
          });
 
