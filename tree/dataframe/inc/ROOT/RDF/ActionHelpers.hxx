@@ -1120,14 +1120,9 @@ public:
 
 template <typename ResultType>
 class R__CLING_PTRCHECK(off) SumHelper : public RActionImpl<SumHelper<ResultType>> {
-
-public:
-      using Result_t = ResultType;
-private:
-   std::shared_ptr<ResultType> fResultSum; 
-   Results<ResultType> fSums;  
-   Results<ResultType> fCompensations; 
-   int fNSlots;
+   const std::shared_ptr<ResultType> fResultSum;
+   Results<ResultType> fSums;
+   Results<ResultType> fCompensations;
 
    /// Evaluate neutral element for this type and the sum operation.
    /// This is assumed to be any_value - any_value if operator- is defined
@@ -1156,7 +1151,7 @@ public:
 
    void Exec(unsigned int slot, ResultType x)
    {
-      // Kahan Sum
+      // Kahan Sum:
       ResultType y = x - fCompensations[slot];
       ResultType t = fSums[slot] + y;
       fCompensations[slot] = (t - fSums[slot]) - y;
@@ -1175,18 +1170,18 @@ public:
 
    void Finalize()
    {
-   ResultType sum(0) ;
-   ResultType compensation(0);
-   ResultType y(0);
-   ResultType t(0);
-   for (auto &m : fSums) {
-         // Kahan Sum:
-         y = m - compensation;
-         t = sum + y;
-         compensation = (t - sum) - y;
-         sum = t;
-      }
-   *fResultSum = sum;
+      ResultType sum(NeutralElement(ResultType{}, -1)) ;
+      ResultType compensation(NeutralElement(ResultType{}, -1));
+      ResultType y(NeutralElement(ResultType{}, -1));
+      ResultType t(NeutralElement(ResultType{}, -1));
+      for (auto &m : fSums) {
+            // Kahan Sum:
+            y = m - compensation;
+            t = sum + y;
+            compensation = (t - sum) - y;
+            sum = t;
+         }
+      *fResultSum += sum;
    }
 
    // Helper functions for RMergeableValue
@@ -1212,6 +1207,7 @@ class R__CLING_PTRCHECK(off) MeanHelper : public RActionImpl<MeanHelper> {
    std::vector<ULong64_t> fCounts;
    std::vector<double> fSums;
    std::vector<double> fPartialMeans;
+   std::vector<double> fCompensations;
 
 public:
    MeanHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots);
@@ -1224,8 +1220,13 @@ public:
    void Exec(unsigned int slot, const T &vs)
    {
       for (auto &&v : vs) {
-         fSums[slot] += v;
+
          fCounts[slot]++;
+         // Kahan Sum:
+         double y = v - fCompensations[slot];
+         double t = fSums[slot] + y;
+         fCompensations[slot] = (t - fSums[slot]) - y;
+         fSums[slot] = t;
       }
    }
 
