@@ -18,6 +18,11 @@
 
 #include <map>
 #include <memory>
+#include <list>
+#include <ostream>
+#include <set>
+#include <string>
+#include <vector>
 
 class TGeoMatrix;
 
