@@ -6,6 +6,7 @@
 
 #---Check for installed packages depending on the build options/components enabled --
 include(CheckCXXSourceCompiles)
+include(CheckIncludeFileCXX)
 include(ExternalProject)
 include(FindPackageHandleStandardArgs)
 
@@ -79,6 +80,29 @@ if(NOT builtin_nlohmannjson)
     else()
       message(STATUS "nlohmann/json.hpp not found. Switching on builtin_nlohmannjson option")
       set(builtin_nlohmannjson ON CACHE BOOL "Enabled because nlohmann/json.hpp not found" FORCE)
+    endif()
+
+    # If we found an external nlohmann_json with a version greater than 3.11,
+    # check that it has the json_fwd.hpp header.
+    if(nlohmann_json_FOUND AND nlohmann_json_VERSION VERSION_GREATER_EQUAL 3.11)
+      set(_old_CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES})
+      set(_old_CMAKE_REQUIRED_QUIET ${CMAKE_REQUIRED_QUIET})
+
+      set(CMAKE_REQUIRED_LIBRARIES nlohmann_json::nlohmann_json)
+      set(CMAKE_REQUIRED_QUIET TRUE)
+      check_include_file_cxx("nlohmann/json_fwd.hpp" _nlohmann_json_fwd_hpp)
+      if(NOT _nlohmann_json_fwd_hpp)
+        set(_msg "Could not find nlohmann/json_fwd.hpp, which is required for versions greater than 3.11.")
+        if(nlohmann_json_VERSION VERSION_LESS 3.11.2)
+          set(_msg "${_msg} Please upgrade to at least version 3.11.2.")
+        else()
+          set(_msg "${_msg} It is installed by default, so your installation is incomplete!")
+        endif()
+        message(FATAL_ERROR "${_msg}")
+      endif()
+
+      set(CMAKE_REQUIRED_LIBRARIES ${_old_CMAKE_REQUIRED_LIBRARIES})
+      set(CMAKE_REQUIRED_QUIET ${_old_CMAKE_REQUIRED_QUIET})
     endif()
   endif()
 endif()
