@@ -433,21 +433,39 @@ unsigned RWebWindow::AddDisplayHandle(bool headless_mode, const std::string &key
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+/// Find connection with specified key.
+/// Must be used under connection mutex lock
+
+std::shared_ptr<RWebWindow::WebConn> RWebWindow::_FindConnWithKey(const std::string &key) const
+{
+   if (key.empty())
+      return nullptr;
+
+   for (auto &entry : fPendingConn) {
+      if (entry->fKey == key)
+         return entry;
+   }
+
+   for (auto &conn : fConn) {
+      if (conn->fKey == key)
+         return conn;
+   }
+
+   return nullptr;
+}
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
 /// Returns true if provided key value already exists (in processes map or in existing connections)
 
 bool RWebWindow::HasKey(const std::string &key) const
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
-   for (auto &entry : fPendingConn) {
-      if (entry->fKey == key)
-         return true;
-   }
+   auto conn = _FindConnWithKey(key);
 
-   for (auto &conn : fConn) {
-      if (conn->fKey == key)
-         return true;
-   }
+   return conn ? true : false;
 
    return false;
 }
@@ -586,11 +604,17 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
 
    if (arg.IsMethod("WS_CONNECT")) {
 
+      TUrl url;
+      url.SetOptions(arg.GetQuery());
+      bool check_key = RWebWindowWSHandler::GetBoolEnv("WebGui.OnetimeKey") == 1;
+
       std::lock_guard<std::mutex> grd(fConnMutex);
 
+      // refuse connection when number of connections exceed limit
+      if (fConnLimit && (fConn.size() >= fConnLimit))
+         return false;
+
       if (!fConnToken.empty()) {
-         TUrl url;
-         url.SetOptions(arg.GetQuery());
          // refuse connection which does not provide proper token
          if (!url.HasOption("token") || (fConnToken != url.GetValueFromOptions("token"))) {
             R__LOG_DEBUG(0, WebGUILog()) << "Refuse connection without proper token";
@@ -598,9 +622,28 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
          }
       }
 
-      // refuse connection when number of connections exceed limit
-      if (fConnLimit && (fConn.size() >= fConnLimit))
-         return false;
+      if (check_key) {
+         if(!url.HasOption("key")) {
+            R__LOG_DEBUG(0, WebGUILog()) << "key parameter not provided in url";
+            return false;
+         }
+
+         auto key = url.GetValueFromOptions("key");
+
+         auto conn = _FindConnWithKey(key);
+         if (!conn) {
+            R__LOG_ERROR(WebGUILog()) << "connection with key " << key << " not found ";
+            return false;
+         }
+
+         if (conn->fKeyUsed) {
+            R__LOG_ERROR(WebGUILog()) << "key " << key << " was used for establishing connection, call ShowWindow again";
+            return false;
+         }
+
+         conn->fKeyUsed = true;
+      }
+
 
       return true;
    }

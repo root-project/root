@@ -25,6 +25,7 @@
 #include "TBase64.h"
 
 #include <fstream>
+#include <iostream>
 #include <memory>
 #include <regex>
 
@@ -212,6 +213,11 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
    std::string url = args.GetFullUrl();
    if (url.empty())
       return nullptr;
+
+   if(args.GetBrowserKind() == RWebDisplayArgs::kServer) {
+      std::cout << "New web window: " << url << std::endl;
+      return std::make_unique<RWebBrowserHandle>(url, "", "");
+   }
 
    std::string exec;
    if (args.IsBatchMode())

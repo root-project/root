@@ -41,6 +41,7 @@ public:
       kQt6,      ///< Qt6 QWebEngine libraries - Chromium code packed in qt6
       kLocal,    ///< either CEF or Qt5 - both runs on local display without real http server
       kStandard, ///< default system web browser, can not be used in batch mode
+      kServer,   ///< indicates that ROOT runs as server and just printouts window URL, browser should be started by the user
       kEmbedded, ///< window will be embedded into other, no extra browser need to be started
       kOff,      ///< disable web display, do not start any browser
       kCustom    ///< custom web browser, execution string should be provided

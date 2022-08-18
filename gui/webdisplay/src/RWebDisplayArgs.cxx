@@ -131,7 +131,7 @@ bool RWebDisplayArgs::SetPosAsStr(const std::string &str)
       return false;
    }
 
-   if ((x<0) || (y<0))
+   if ((x < 0) || (y < 0))
       return false;
 
    SetPos(x, y);
@@ -224,6 +224,8 @@ RWebDisplayArgs &RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
       SetBrowserKind(kEmbedded);
    else if ((kind == "dflt") || (kind == "default") || (kind == "browser"))
       SetBrowserKind(kStandard);
+   else if (kind == "server")
+      SetBrowserKind(kServer);
    else if (kind == "off")
       SetBrowserKind(kOff);
    else if (!SetSizeAsStr(kind))
@@ -246,6 +248,7 @@ std::string RWebDisplayArgs::GetBrowserName() const
       case kQt6: return "qt6";
       case kLocal: return "local";
       case kStandard: return "default";
+      case kServer: return "server";
       case kEmbedded: return "embed";
       case kOff: return "off";
       case kCustom:
