@@ -80,9 +80,9 @@ class TH3Painter extends THistPainter {
                   stat_sumx1 += xx * cont;
                   stat_sumy1 += yy * cont;
                   stat_sumz1 += zz * cont;
-                  stat_sumx2 += xx * xx * cont;
-                  stat_sumy2 += yy * yy * cont;
-                  stat_sumz2 += zz * zz * cont;
+                  stat_sumx2 += xx**2 * cont;
+                  stat_sumy2 += yy**2 * cont;
+                  stat_sumz2 += zz**2 * cont;
                }
             }
          }
@@ -193,7 +193,7 @@ class TH3Painter extends THistPainter {
           k2 = this.getSelectIndex("z", "right", 0),
           i, j, k, bin_content;
 
-      if ((i2<=i1) || (j2<=j1) || (k2<=k1))
+      if ((i2 <= i1) || (j2 <= j1) || (k2 <= k1))
          return Promise.resolve(true);
 
       // scale down factor if too large values
@@ -254,7 +254,7 @@ class TH3Painter extends THistPainter {
             }
 
             let indx = Math.floor(intersect.index / this.nvertex);
-            if ((indx<0) || (indx >= this.bins.length)) return null;
+            if ((indx < 0) || (indx >= this.bins.length)) return null;
 
             let p = this.painter, histo = p.getHisto(),
                 main = p.getFramePainter(),
@@ -282,8 +282,13 @@ class TH3Painter extends THistPainter {
       if (!this.draw_content)
          return Promise.resolve(false);
 
-      if (!this.options.Box && !this.options.GLBox && !this.options.GLColor && !this.options.Lego)
-          return this.draw3DScatter();
+      let box_option = this.options.Box ? this.options.BoxStyle : 0;
+
+      if (!box_option && !this.options.GLBox && !this.options.GLColor && !this.options.Lego) {
+         let promise = this.draw3DScatter();
+         if (promise !== false) return promise;
+         box_option = 12; // fall back to box2 draw option
+      }
 
       let histo = this.getHisto(),
           fillcolor = this.getColor(histo.fFillColor),
@@ -291,10 +296,11 @@ class TH3Painter extends THistPainter {
           buffer_size = 0, use_lambert = false,
           use_helper = false, use_colors = false, use_opacity = 1, use_scale = true,
           single_bin_verts, single_bin_norms,
-          box_option = this.options.Box ? this.options.BoxStyle : 0,
+
           tipscale = 0.5;
 
-      if (!box_option && this.options.Lego) box_option = (this.options.Lego===1) ? 10 : this.options.Lego;
+      if (!box_option && this.options.Lego)
+         box_option = (this.options.Lego===1) ? 10 : this.options.Lego;
 
       if ((this.options.GLBox === 11) || (this.options.GLBox === 12)) {
 
@@ -334,7 +340,7 @@ class TH3Painter extends THistPainter {
          single_bin_verts = new Float32Array(buffer_size);
          single_bin_norms = new Float32Array(buffer_size);
 
-         for (let k=0,nn=-3;k<indicies.length;++k) {
+         for (let k = 0, nn = -3; k < indicies.length; ++k) {
             let vert = vertices[indicies[k]];
             single_bin_verts[k*3]   = vert.x-0.5;
             single_bin_verts[k*3+1] = vert.y-0.5;
@@ -592,11 +598,12 @@ class TH3Painter extends THistPainter {
 
       } else {
          assignFrame3DMethods(main);
-         main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale);
-         main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, this.zmin, this.zmax);
-         main.set3DOptions(this.options);
-         main.drawXYZ(main.toplevel, TAxisPainter, { zoom: settings.Zooming, ndim: 3, draw: this.options.Axis !== -1 });
-         pr = this.draw3DBins().then(() => {
+         pr = main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale).then(() => {
+            main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, this.zmin, this.zmax);
+            main.set3DOptions(this.options);
+            main.drawXYZ(main.toplevel, TAxisPainter, { zoom: settings.Zooming, ndim: 3, draw: this.options.Axis !== -1 });
+            return this.draw3DBins();
+         }).then(() => {
             main.render3D();
             this.updateStatWebCanvas();
             main.addKeysHandler();

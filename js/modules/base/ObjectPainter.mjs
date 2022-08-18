@@ -68,7 +68,8 @@ class ObjectPainter extends BasePainter {
 
       if (this.isMainPainter()) {
          let pp = this.getPadPainter();
-         if (!pp || pp.normal_canvas === false) keep_origin = false;
+         if (!pp || (pp.normal_canvas === false))
+            keep_origin = false;
       }
 
       // cleanup all existing references
@@ -119,7 +120,7 @@ class ObjectPainter extends BasePainter {
       if (!can.empty()) can.select("title").text(name);
                    else this.selectDom().attr("title", name);
       let cp = this.getCanvPainter();
-      if (cp && (cp === this) || (this.isMainPainter() && (cp === this.getPadPainter())))
+      if (cp && ((cp === this) || (this.isMainPainter() && (cp === this.getPadPainter()))))
          cp.drawItemNameOnCanvas(name);
    }
 
@@ -141,7 +142,7 @@ class ObjectPainter extends BasePainter {
 
       if (typeof this.options.asString == "function") {
          let changed = false, pp = this.getPadPainter();
-         if (!this.options_store || (pp && pp._interactively_changed)) {
+         if (!this.options_store || pp?._interactively_changed) {
             changed  = true;
          } else {
             for (let k in this.options)
@@ -149,7 +150,7 @@ class ObjectPainter extends BasePainter {
                   changed = true;
          }
          if (changed)
-            return this.options.asString(this.isMainPainter(), pp ? pp.getRootPad() : null);
+            return this.options.asString(this.isMainPainter(), pp?.getRootPad());
       }
 
       return this.options.original || ""; // nothing better, return original draw option
@@ -161,7 +162,7 @@ class ObjectPainter extends BasePainter {
       let pp = this.getPadPainter(),
           obj = this.getObject();
 
-      if (!pp || !obj || !obj._typename || !pp.getObjectDrawSettings)
+      if (!obj?._typename || !pp?.getObjectDrawSettings)
          return [];
 
       let sett = pp.getObjectDrawSettings('ROOT.' + obj._typename, 'nosame');
@@ -215,14 +216,10 @@ class ObjectPainter extends BasePainter {
      * @returns {string} with SVG color name or rgb()
      * @protected */
    getColor(indx) {
-      let jsarr = this.root_colors;
+      if (!this.root_colors)
+         this.root_colors = this.getCanvPainter()?.root_colors || getRootColors();
 
-      if (!jsarr) {
-         let pp = this.getCanvPainter();
-         jsarr = this.root_colors = (pp && pp.root_colors) ? pp.root_colors : getRootColors();
-      }
-
-      return jsarr[indx];
+      return this.root_colors[indx];
    }
 
    /** @summary Add color to list of colors
@@ -230,15 +227,12 @@ class ObjectPainter extends BasePainter {
      * @returns {number} new color index
      * @protected */
    addColor(color) {
-      let jsarr = this.root_colors;
-      if (!jsarr) {
-         let pp = this.getCanvPainter();
-         jsarr = this.root_colors = (pp && pp.root_colors) ? pp.root_colors : getRootColors();
-      }
-      let indx = jsarr.indexOf(color);
+      if (!this.root_colors)
+         this.root_colors = this.getCanvPainter()?.root_colors || getRootColors();
+      let indx = this.root_colors.indexOf(color);
       if (indx >= 0) return indx;
-      jsarr.push(color);
-      return jsarr.length - 1;
+      this.root_colors.push(color);
+      return this.root_colors.length - 1;
    }
 
    /** @summary returns tooltip allowed flag
@@ -416,10 +410,10 @@ class ObjectPainter extends BasePainter {
      * @param {boolean} [noround] - if set, return coordinates will not be rounded
      * @protected */
    getAxisToSvgFunc(isndc, nornd) {
-      let func = { isndc: isndc, nornd: nornd },
+      let func = { isndc, nornd },
           use_frame = this.draw_g && this.draw_g.property('in_frame');
       if (use_frame) func.main = this.getFramePainter();
-      if (func.main && func.main.grx && func.main.gry) {
+      if (func.main?.grx && func.main?.gry) {
          if (nornd) {
             func.x = function(x) { return this.main.grx(x); }
             func.y = function(y) { return this.main.gry(y); }
@@ -429,8 +423,8 @@ class ObjectPainter extends BasePainter {
          }
       } else if (!use_frame) {
          let pp = this.getPadPainter();
-         if (!isndc && pp) func.pad = pp.getRootPad(true); // need for NDC conversion
-         func.padw = pp ? pp.getPadWidth() : 10;
+         if (!isndc) func.pad = pp?.getRootPad(true); // need for NDC conversion
+         func.padw = pp?.getPadWidth() ?? 10;
          func.x = function(value) {
             if (this.pad) {
                if (this.pad.fLogx)
@@ -440,7 +434,7 @@ class ObjectPainter extends BasePainter {
             value *= this.padw;
             return this.nornd ? value : Math.round(value);
          }
-         func.padh = pp ? pp.getPadHeight() : 10;
+         func.padh = pp?.getPadHeight() ?? 10;
          func.y = function(value) {
             if (this.pad) {
                if (this.pad.fLogy)
@@ -484,11 +478,11 @@ class ObjectPainter extends BasePainter {
 
       if (use_frame) {
          let main = this.getFramePainter();
-         return main ? main.revertAxis(axis, coord) : 0;
+         return main?.revertAxis(axis, coord) ?? 0;
       }
 
       let pp = this.getPadPainter(),
-          value = (axis == "y") ? (1 - coord / pp.getPadHeight()) : coord / pp.getPadWidth(),
+          value = !pp ? 0 : ((axis == "y") ? (1 - coord / pp.getPadHeight()) : coord / pp.getPadWidth()),
           pad = (ndc || !pp) ? null : pp.getRootPad(true);
 
       if (pad) {
@@ -522,8 +516,7 @@ class ObjectPainter extends BasePainter {
      * @desc Pad has direct reference on frame if any
      * @protected */
    getFramePainter() {
-      let pp = this.getPadPainter();
-      return pp ? pp.getFramePainter() : null;
+      return this.getPadPainter()?.getFramePainter();
    }
 
    /** @summary Returns painter for main object on the pad.
@@ -535,12 +528,10 @@ class ObjectPainter extends BasePainter {
       let res = this._main_painter;
       if (!res) {
          let pp = this.getPadPainter();
-         if (!pp)
-            res = this.getTopPainter();
-         else
-            res = pp.getMainPainter();
+         res = pp ? pp.getMainPainter() : this.getTopPainter();
          if (!res) res = null;
-         if (!not_store) this._main_painter = res;
+         if (!not_store)
+            this._main_painter = res;
       }
       return res;
    }
@@ -717,11 +708,11 @@ class ObjectPainter extends BasePainter {
          // inform GED that something changes
          let canp = this.getCanvPainter();
 
-         if (canp && (typeof canp.producePadEvent == 'function'))
+         if (typeof canp?.producePadEvent == 'function')
             canp.producePadEvent("redraw", this.getPadPainter(), this, null, subelem);
 
          // inform server that drawopt changes
-         if (canp && (typeof canp.processChanges == 'function'))
+         if (typeof canp?.processChanges == 'function')
             canp.processChanges(info, this, subelem);
 
          return this;
@@ -758,7 +749,7 @@ class ObjectPainter extends BasePainter {
       if (!exec || (typeof exec != 'string')) return;
 
       let canp = this.getCanvPainter();
-      if (canp && (typeof canp.submitExec == "function"))
+      if (typeof canp?.submitExec == "function")
          canp.submitExec(this, exec, snapid);
    }
 
@@ -850,7 +841,7 @@ class ObjectPainter extends BasePainter {
             .property('text_factor', 0.)
             .property('max_text_width', 0) // keep maximal text width, use it later
             .property('max_font_size', max_font_size)
-            .property("_fast_drawing", pp ? pp._fast_drawing : false);
+            .property("_fast_drawing", pp?._fast_drawing || false);
 
       if (draw_g.property("_fast_drawing"))
          draw_g.property("_font_too_small", (max_font_size && (max_font_size < 5)) || (font.size < 4));
@@ -1154,7 +1145,8 @@ class ObjectPainter extends BasePainter {
 
       if (arg.latex === 1)
          use_mathjax = (settings.Latex == constants.Latex.AlwaysMathJax) ||
-                       ((settings.Latex == constants.Latex.MathJax) && arg.text.match(/[#{\\]/g));
+                       ((settings.Latex == constants.Latex.MathJax) && arg.text.match(/[#{\\]/g)) ||
+                       arg.text.match(/[\\]/g);
 
       if (!use_mathjax || arg.nomathjax) {
 
@@ -1257,12 +1249,12 @@ class ObjectPainter extends BasePainter {
 
          // this is special entry, produced by TWebMenuItem, which recognizes editor entries itself
          if (item.fExec == "Show:Editor") {
-            if (cp && (typeof cp.activateGed == 'function'))
+            if (typeof cp?.activateGed == 'function')
                cp.activateGed(execp);
             return;
          }
 
-         if (cp && (typeof cp.executeObjectMethod == 'function'))
+         if (typeof cp?.executeObjectMethod == 'function')
             if (cp.executeObjectMethod(execp, item, execp.args_menu_id)) return;
 
          if (execp.executeMenuCommand(item)) return;
@@ -1379,7 +1371,7 @@ class ObjectPainter extends BasePainter {
       * @param {function} handler - function called when mouse click is done */
    configureUserClickHandler(handler) {
       let fp = this.getFramePainter();
-      if (fp && typeof fp.configureUserClickHandler == "function")
+      if (typeof fp?.configureUserClickHandler == "function")
          fp.configureUserClickHandler(handler);
    }
 
@@ -1390,7 +1382,7 @@ class ObjectPainter extends BasePainter {
      * @param {function} handler - function called when mouse double click is done */
    configureUserDblclickHandler(handler) {
       let fp = this.getFramePainter();
-      if (fp && typeof fp.configureUserDblclickHandler == "function")
+      if (typeof fp?.configureUserDblclickHandler == "function")
          fp.configureUserDblclickHandler(handler);
    }
 
@@ -1445,17 +1437,17 @@ class ObjectPainter extends BasePainter {
      * @private */
    drawInSpecialArea(obj, opt) {
       let canp = this.getCanvPainter();
-      if (!this._special_draw_area || !canp || typeof canp.drawProjection !== "function")
-         return Promise.resolve(false);
+      if (this._special_draw_area && (typeof canp?.drawProjection == "function"))
+            return canp.drawProjection(this._special_draw_area, obj, opt);
 
-      return canp.drawProjection(this._special_draw_area, obj, opt);
+      return Promise.resolve(false);
    }
 
    /** @summary Get tooltip for painter and specified event position
      * @param {Object} evnt - object wiith clientX and clientY positions
      * @private */
    getToolTip(evnt) {
-      if (!evnt || (evnt.clientX === undefined) || (evnt.clientY === undefined)) return null;
+      if ((evnt?.clientX === undefined) || (evnt?.clientY === undefined)) return null;
 
       let frame = this.getFrameSvg();
       if (frame.empty()) return null;
@@ -1472,7 +1464,7 @@ class ObjectPainter extends BasePainter {
 
       let res = (typeof this.processTooltipEvent == 'function') ? this.processTooltipEvent(pnt) : null;
 
-      return res && res.user_info ? res.user_info : res;
+      return res?.user_info || res;
    }
 
 } // class ObjectPainter

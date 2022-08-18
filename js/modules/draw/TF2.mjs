@@ -5,6 +5,8 @@ import { getElementMainPainter } from '../base/ObjectPainter.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 
 
+/** @summary Create histogram for TF2 drawing
+  * @private */
 function createTF2Histogram(func, hist = undefined) {
    let nsave = func.fSave.length, use_middle = true;
    if ((nsave > 6) && (nsave !== (func.fSave[nsave-2]+1)*(func.fSave[nsave-1]+1) + 6)) nsave = 0;

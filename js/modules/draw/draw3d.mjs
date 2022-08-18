@@ -4,10 +4,12 @@ import { createLineSegments, PointsCreator, create3DLineMaterial } from '../base
 import { drawDummy3DGeom } from '../geom/TGeoPainter.mjs';
 
 
+/** @summary Prepare frame painter for 3D drawing
+  * @private */
 function before3DDraw(painter, obj) {
    let fp = painter.getFramePainter();
 
-   if (!fp || !fp.mode3d || !obj)
+   if (!fp?.mode3d || !obj)
       return null;
 
    if (fp.toplevel)
@@ -16,7 +18,7 @@ function before3DDraw(painter, obj) {
    let geop = painter.getMainPainter();
    if(!geop)
       return drawDummy3DGeom(painter);
-   else if (typeof geop.drawExtras == 'function')
+   if (typeof geop.drawExtras == 'function')
       return geop.drawExtras(obj);
 
    return null;
@@ -33,12 +35,12 @@ function drawPolyMarker3D() {
    if (!fp || (typeof fp !== 'object') || !fp.grx || !fp.gry || !fp.grz)
       return fp;
 
-   let step = 1, sizelimit = 50000, numselect = 0;
+   let step = 1, sizelimit = 50000, numselect = 0, fP = poly.fP;
 
-   for (let i = 0; i < poly.fP.length; i += 3) {
-      if ((poly.fP[i] < fp.scale_xmin) || (poly.fP[i] > fp.scale_xmax) ||
-          (poly.fP[i+1] < fp.scale_ymin) || (poly.fP[i+1] > fp.scale_ymax) ||
-          (poly.fP[i+2] < fp.scale_zmin) || (poly.fP[i+2] > fp.scale_zmax)) continue;
+   for (let i = 0; i < fP.length; i += 3) {
+      if ((fP[i] < fp.scale_xmin) || (fP[i] > fp.scale_xmax) ||
+          (fP[i+1] < fp.scale_ymin) || (fP[i+1] > fp.scale_ymax) ||
+          (fP[i+2] < fp.scale_zmin) || (fP[i+2] > fp.scale_zmax)) continue;
       ++numselect;
    }
 
@@ -52,11 +54,11 @@ function drawPolyMarker3D() {
        index = new Int32Array(size),
        select = 0, icnt = 0;
 
-   for (let i = 0; i < poly.fP.length; i += 3) {
+   for (let i = 0; i < fP.length; i += 3) {
 
-      if ((poly.fP[i] < fp.scale_xmin) || (poly.fP[i] > fp.scale_xmax) ||
-          (poly.fP[i+1] < fp.scale_ymin) || (poly.fP[i+1] > fp.scale_ymax) ||
-          (poly.fP[i+2] < fp.scale_zmin) || (poly.fP[i+2] > fp.scale_zmax)) continue;
+      if ((fP[i] < fp.scale_xmin) || (fP[i] > fp.scale_xmax) ||
+          (fP[i+1] < fp.scale_ymin) || (fP[i+1] > fp.scale_ymax) ||
+          (fP[i+2] < fp.scale_zmin) || (fP[i+2] > fp.scale_zmax)) continue;
 
       if (step > 1) {
          select = (select+1) % step;
@@ -65,7 +67,7 @@ function drawPolyMarker3D() {
 
       index[icnt++] = i;
 
-      pnts.addPoint(fp.grx(poly.fP[i]), fp.gry(poly.fP[i+1]), fp.grz(poly.fP[i+2]));
+      pnts.addPoint(fp.grx(fP[i]), fp.gry(fP[i+1]), fp.grz(fP[i+2]));
    }
 
    return pnts.createPoints({ color: this.getColor(poly.fMarkerColor), style: poly.fMarkerStyle }).then(mesh => {

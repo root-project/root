@@ -141,6 +141,7 @@ class TAttLineHandler {
          .call(this.func);
    }
 
+   /** @summary Save attributes values to gStyle */
    saveToStyle(name_color, name_width, name_style) {
       if (name_color) {
          let indx = (this.color_index !== undefined) ? this.color_index : findColor(this.color);
@@ -148,9 +149,9 @@ class TAttLineHandler {
             gStyle[name_color] = indx;
       }
       if (name_width)
-        gStyle[name_width] = this.width;
+         gStyle[name_width] = this.width;
       if (name_style)
-        gStyle[name_style] = this.style;
+         gStyle[name_style] = this.style;
    }
 
 } // class TAttLineHandler

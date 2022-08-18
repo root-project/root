@@ -1,10 +1,10 @@
-import { gStyle, settings, constants, internals, addMethods, isPromise, isBatchMode } from '../core.mjs';
+import { gStyle, settings, constants, internals, addMethods, isPromise, isBatchMode, btoa_func } from '../core.mjs';
 import { pointer as d3_pointer } from '../d3.mjs';
 import { ColorPalette, addColor, getRootColors } from '../base/colors.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
 import { getElementRect, getAbsPosInCanvas, DrawOptions, compressSVG } from '../base/BasePainter.mjs';
 import { selectActivePad, getActivePad } from '../base/ObjectPainter.mjs';
-import { registerForResize } from '../gui/utils.mjs';
+import { registerForResize, saveFile } from '../gui/utils.mjs';
 import { BrowserLayout } from '../gui/display.mjs';
 import { createMenu, closeMenu } from '../gui/menu.mjs';
 import { PadButtonsHandler } from './TPadPainter.mjs';
@@ -677,8 +677,7 @@ class RPadPainter extends RObjectPainter {
          evnt.stopPropagation(); // disable main context menu
          evnt.preventDefault();  // disable browser context menu
 
-         let fp = this.getFramePainter();
-         if (fp) fp.setLastEventPos();
+         this.getFramePainter()?.setLastEventPos();
       }
 
       createMenu(evnt, this).then(menu => {
@@ -718,10 +717,8 @@ class RPadPainter extends RObjectPainter {
          }
          return redrawNext(0);
       }).then(() => {
-         if (getActivePad() === this) {
-            let canp = this.getCanvPainter();
-            if (canp) canp.producePadEvent("padredraw", this);
-         }
+         if (getActivePad() === this)
+            this.getCanvPainter()?.producePadEvent("padredraw", this);
          this.confirmDraw();
          return true;
       });
@@ -1112,7 +1109,7 @@ class RPadPainter extends RObjectPainter {
       if (!isanyfound) {
          let fp = this.getFramePainter();
          // cannot preserve ROOT6 frame - it must be recreated
-         if (fp && fp.is_root6()) fp = null;
+         if (fp?.is_root6()) fp = null;
          for (let k = 0; k < this.painters.length; ++k)
              if (fp !== this.painters[k])
                this.painters[k].cleanup();
@@ -1132,10 +1129,8 @@ class RPadPainter extends RObjectPainter {
       return this.drawNextSnap(snap.fPrimitives).then(() => {
          this.selectCurrentPad(prev_name);
 
-         if (getActivePad() === this) {
-            let canp = this.getCanvPainter();
-            if (canp) canp.producePadEvent("padredraw", this);
-         }
+         if (getActivePad() === this)
+            this.getCanvPainter()?.producePadEvent("padredraw", this);
          return this;
       });
    }
@@ -1147,7 +1142,7 @@ class RPadPainter extends RObjectPainter {
    createImage(format) {
       // use https://github.com/MrRio/jsPDF in the future here
       if (format == "pdf")
-         return Promise.resolve(btoa("dummy PDF file"));
+         return Promise.resolve(btoa_func("dummy PDF file"));
 
       if ((format == "png") || (format == "jpeg") || (format == "svg"))
          return this.produceImage(true, format).then(res => {
@@ -1187,7 +1182,7 @@ class RPadPainter extends RObjectPainter {
           }
        }
 
-       if (!selp || (typeof selp.fillContextMenu !== 'function')) return;
+       if (typeof selp?.fillContextMenu !== 'function') return;
 
        createMenu(evnt, selp).then(menu => {
           if (selp.fillContextMenu(menu, selkind))
@@ -1200,18 +1195,12 @@ class RPadPainter extends RObjectPainter {
    saveAs(kind, full_canvas, filename) {
       if (!filename)
          filename = (this.this_pad_name || (this.iscan ? "canvas" : "pad")) + "." + kind;
-      console.log('saveAs', kind, full_canvas, filename);
 
       this.produceImage(full_canvas, kind).then(imgdata => {
          if (!imgdata)
             return console.error(`Fail to produce image ${filename}`);
 
-         let a = document.createElement('a');
-         a.download = filename;
-         a.href = (kind != "svg") ? imgdata : "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(imgdata);
-         document.body.appendChild(a);
-         a.addEventListener("click", () => a.parentNode.removeChild(a));
-         a.click();
+         saveFile(filename, (kind != "svg") ? imgdata : "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(imgdata));
       });
    }
 
@@ -1348,7 +1337,7 @@ class RPadPainter extends RObjectPainter {
             resolveFunc(null);
          }
 
-         image.src = 'data:image/svg+xml;base64,' + window.btoa(reEncode(doctype + svg));
+         image.src = 'data:image/svg+xml;base64,' + btoa_func(reEncode(doctype + svg));
       });
    }
 
@@ -1384,7 +1373,7 @@ class RPadPainter extends RObjectPainter {
             if (this.getFramePainter())
                menu.add("Frame", "frame", this.itemContextMenu);
 
-            let main = this.getMainPainter(); // here pad painter method
+            let main = this.getMainPainter(); // here hist painter methods
 
             if (main) {
                menu.add("X axis", "xaxis", this.itemContextMenu);
@@ -1393,17 +1382,16 @@ class RPadPainter extends RObjectPainter {
                   menu.add("Z axis", "zaxis", this.itemContextMenu);
             }
 
-            if (this.painters && (this.painters.length>0)) {
+            if (this.painters?.length) {
                menu.add("separator");
                let shown = [];
-               for (let n=0;n<this.painters.length;++n) {
-                  let pp = this.painters[n];
-                  let obj = pp ? pp.getObject() : null;
-                  if (!obj || (shown.indexOf(obj)>=0)) continue;
+               for (let n = 0; n < this.painters.length; ++n) {
+                  let obj = this.painters[n]?.getObject();
+                  if (!obj || (shown.indexOf(obj) >= 0)) continue;
 
-                  let name = ('_typename' in obj) ? (obj._typename + "::") : "";
-                  if ('fName' in obj) name += obj.fName;
-                  if (name.length==0) name = "item" + n;
+                  let name = obj._typename ? obj._typename + "::" : "";
+                  if (obj.fName) name += obj.fName;
+                  if (!name) name = "item" + n;
                   menu.add(name, n, this.itemContextMenu);
                }
             }
@@ -1431,21 +1419,21 @@ class RPadPainter extends RObjectPainter {
 
    /** @summary Add button to the pad
      * @private */
-   addPadButton(_btn, _tooltip, _funcname, _keyname) {
+   addPadButton(btn, tooltip, funcname, keyname) {
       if (!settings.ToolBar || isBatchMode() || this.batch_mode) return;
 
       if (!this._buttons) this._buttons = [];
       // check if there are duplications
 
-      for (let k=0;k<this._buttons.length;++k)
-         if (this._buttons[k].funcname == _funcname) return;
+      for (let k = 0; k < this._buttons.length; ++k)
+         if (this._buttons[k].funcname == funcname) return;
 
-      this._buttons.push({ btn: _btn, tooltip: _tooltip, funcname: _funcname, keyname: _keyname });
+      this._buttons.push({ btn, tooltip, funcname, keyname });
 
       let iscan = this.iscan || !this.has_canvas;
-      if (!iscan && (_funcname.indexOf("Pad")!=0) && (_funcname !== "enlargePad")) {
+      if (!iscan && (funcname.indexOf("Pad") != 0) && (funcname !== "enlargePad")) {
          let cp = this.getCanvPainter();
-         if (cp && (cp!==this)) cp.addPadButton(_btn, _tooltip, _funcname);
+         if (cp && (cp !== this)) cp.addPadButton(btn, tooltip, funcname);
       }
    }
 

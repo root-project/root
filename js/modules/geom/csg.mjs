@@ -63,7 +63,7 @@ class Vertex {
    }
 
    normalize() {
-      let length = Math.sqrt( this.x * this.x + this.y * this.y + this.z * this.z );
+      let length = Math.sqrt( this.x**2 + this.y**2 + this.z**2 );
 
       this.x /= length;
       this.y /= length;
@@ -80,9 +80,9 @@ class Vertex {
       let dx = (this.x - vertex.x),
           dy = (this.y - vertex.y),
           dz = (this.z - vertex.z),
-          len2 = this.x*this.x + this.y*this.y + this.z*this.z;
+          len2 = this.x**2 + this.y**2 + this.z**2;
 
-      return (dx*dx + dy*dy + dz*dz) / (len2>0 ? len2 : 1e-10);
+      return (dx**2 + dy**2 + dz**2) / (len2>0 ? len2 : 1e-10);
    }
 
 /*
@@ -108,9 +108,9 @@ class Vertex {
 */
 
    interpolate( a, t ) {
-      let t1 = 1-t;
+      let t1 = 1 - t;
       return new Vertex(this.x*t1 + a.x*t, this.y*t1 + a.y*t, this.z*t1 + a.z*t,
-                                 this.nx*t1 + a.nx*t, this.ny*t1 + a.ny*t, this.nz*t1 + a.nz*t);
+                        this.nx*t1 + a.nx*t, this.ny*t1 + a.ny*t, this.nz*t1 + a.nz*t);
    }
 
    applyMatrix4(m) {
@@ -502,7 +502,7 @@ class Geometry {
          for (let i=0;i<polygons.length;++i) {
             let polygon = polygons[i];
             if (transfer_matrix) {
-               for (let n=0;n<polygon.vertices.length;++n)
+               for (let n = 0; n < polygon.vertices.length; ++n)
                   polygon.vertices[n].applyMatrix4(transfer_matrix);
             }
 
@@ -577,7 +577,7 @@ class Geometry {
 
    union( other_tree ) {
       let a = this.tree.clone(),
-         b = other_tree.tree.clone();
+          b = other_tree.tree.clone();
 
       a.clipTo( b );
       b.clipTo( a );
@@ -592,7 +592,7 @@ class Geometry {
 
    intersect( other_tree ) {
       let a = this.tree.clone(),
-         b = other_tree.tree.clone();
+          b = other_tree.tree.clone();
 
       a.invert();
       b.clipTo( a );
@@ -623,7 +623,7 @@ class Geometry {
          arr[p.id].push(p);
       }
 
-      for(n=0; n<arr.length; ++n) {
+      for(n = 0; n < arr.length; ++n) {
          parts = arr[n];
          if (parts===undefined) continue;
 
@@ -636,7 +636,7 @@ class Geometry {
 
             for (i1 = 0; i1<len-1; ++i1) {
                p1 = parts[i1];
-               if (!p1 || !p1.parent) continue;
+               if (!p1?.parent) continue;
                for (i2 = i1+1; i2 < len; ++i2) {
                   p2 = parts[i2];
                   if (p2 && (p1.parent === p2.parent) && (p1.nsign === p2.nsign)) {
@@ -658,7 +658,7 @@ class Geometry {
       if (nreduce>0) {
          polygons.splice(0, polygons.length);
 
-         for(n=0;n<arr.length;++n) {
+         for(n = 0; n < arr.length; ++n) {
             parts = arr[n];
             if (parts !== undefined)
                for (i1=0,len=parts.length; i1<len;++i1)

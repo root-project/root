@@ -126,7 +126,8 @@ class TAttFillHandler {
          return true;
       }
 
-      if (this.pattern == 1000) this.pattern = 1001;
+      if (this.pattern == 1000)
+         this.pattern = 1001;
 
       if (this.pattern < 1001) {
          this.pattern_url = 'none';
@@ -159,13 +160,13 @@ class TAttFillHandler {
 
       if (!svg || svg.empty() || (this.pattern < 3000) || (this.color == "none")) return false;
 
-      let id = "pat_" + this.pattern + "_" + indx,
+      let id = `pat_${this.pattern}_${indx}`,
          defs = svg.select('.canvas_defs');
 
       if (defs.empty())
          defs = svg.insert("svg:defs", ":first-child").attr("class", "canvas_defs");
 
-      this.pattern_url = "url(#" + id + ")";
+      this.pattern_url = `url(#${id})`;
       this.antialias = false;
 
       if (!defs.select("." + id).empty())
@@ -320,9 +321,9 @@ class TAttFillHandler {
 
       const sample = new TAttFillHandler({ svg, pattern: this.pattern, color: this.color, color_as_svg: true });
 
-     svg.append("path")
-        .attr("d", `M0,0h${width}v${height}h${-width}z`)
-        .call(sample.func);
+      svg.append("path")
+         .attr("d", `M0,0h${width}v${height}h${-width}z`)
+         .call(sample.func);
    }
 
    /** @summary Save fill attributes to style
@@ -335,8 +336,6 @@ class TAttFillHandler {
       if (name_pattern)
          gStyle[name_pattern] = this.pattern;
    }
-
-
 
 } // class TAttFillHandler
 
