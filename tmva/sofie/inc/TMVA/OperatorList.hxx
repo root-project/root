@@ -19,4 +19,3 @@
 #include "TMVA/ROperator_Softmax.hxx"
 #include "TMVA/ROperator_Concat.hxx"
 #include "TMVA/ROperator_Cast.hxx"
-#include "TMVA/ROperator_Pow.hxx"

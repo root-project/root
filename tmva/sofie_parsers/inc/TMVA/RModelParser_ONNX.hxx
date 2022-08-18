@@ -47,7 +47,6 @@ std::unique_ptr<ROperator> make_ROperator_Identity(const onnx::NodeProto &nodepr
 std::unique_ptr<ROperator> make_ROperator_Softmax(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
 std::unique_ptr<ROperator> make_ROperator_Concat(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
 std::unique_ptr<ROperator> make_ROperator_Cast(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
-std::unique_ptr<ROperator> make_ROperator_Pow(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
 
 using factoryMethodMap = std::unordered_map<std::string, std::unique_ptr<ROperator> (*)(const onnx::NodeProto&, const onnx::GraphProto&, std::unordered_map<std::string, ETensorType>&)>;
 const factoryMethodMap mapOptypeOperator = {
@@ -81,8 +80,7 @@ const factoryMethodMap mapOptypeOperator = {
    {"Identity", &make_ROperator_Identity},
    {"Softmax", &make_ROperator_Softmax},
    {"Concat", &make_ROperator_Concat},
-   {"Cast", &make_ROperator_Cast},
-   {"Pow", &make_ROperator_Pow}
+   {"Cast", &make_ROperator_Cast}
 };
 
 using factoryMethodMap1 = std::unordered_map<std::string, std::unique_ptr<ROperator> (*)(const onnx::NodeProto&,const onnx::NodeProto&, const onnx::GraphProto&, std::unordered_map<std::string, ETensorType>&)>;

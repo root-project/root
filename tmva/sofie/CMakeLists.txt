@@ -33,7 +33,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/ROperator_Concat.hxx
    TMVA/ROperator_Identity.hxx
    TMVA/ROperator_Softmax.hxx
-   TMVA/ROperator_Pow.hxx
    TMVA/ROperator_Cast.hxx
    TMVA/SOFIE_common.hxx
    TMVA/SOFIEHelpers.hxx
