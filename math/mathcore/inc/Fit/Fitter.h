@@ -130,7 +130,8 @@ public:
        If data set is binned a least square fit is performed
        If data set is unbinned a maximum likelihood fit (not extended) is done
        Pre-requisite on the function:
-       it must implement the 1D or multidimensional parametric function interface
+       it must implement the 1D or multidimensional parametric function interface.
+       Note that both the input data and the function object are copied by the Fitter.
    */
    template <class Data, class Function,
              class cond = typename std::enable_if<!(std::is_same<Function, ROOT::EExecutionPolicy>::value ||
@@ -144,62 +145,91 @@ public:
    }
 
    /**
-       Fit a binned data set using a least square fit (default method)
+      Fit a binned data set using a least square fit.
+      Note that the provided input data are copied in the Fitter class.
+      Use the next function (passing a `shared_ptr` to the BinData class if you want to avoid
+      copying.
    */
    bool Fit(const BinData & data, const ROOT::EExecutionPolicy &executionPolicy = ROOT::EExecutionPolicy::kSequential) {
-      SetData(data);
-      return DoLeastSquareFit(executionPolicy);
-   }
-   bool Fit(const std::shared_ptr<BinData> & data, const ROOT::EExecutionPolicy &executionPolicy = ROOT::EExecutionPolicy::kSequential) {
-      SetData(data);
-      return DoLeastSquareFit(executionPolicy);
+      return LeastSquareFit(data, executionPolicy);
    }
 
    /**
-       Fit a binned data set using a least square fit
+      Fit a binned data set using a least square fit.
+      Pass the input data using a `shared_ptr` for NOT copying the input data.
    */
-   bool LeastSquareFit(const BinData & data) {
-      return Fit(data);
+   bool Fit(const std::shared_ptr<BinData> & data, const ROOT::EExecutionPolicy &executionPolicy = ROOT::EExecutionPolicy::kSequential) {
+      return LeastSquareFit(data, executionPolicy);
    }
 
    /**
-       fit an unbinned data set using loglikelihood method
+       Fit a binned data set using a least square fit copying the input data.
+   */
+   bool LeastSquareFit(const BinData & data, const ROOT::EExecutionPolicy &executionPolicy = ROOT::EExecutionPolicy::kSequential) {
+      SetData(data);
+      return DoLeastSquareFit(executionPolicy);
+   }
+   /**
+       Fit a binned data set using a least square fit NOT copying the input data.
+   */
+   bool LeastSquareFit(const std::shared_ptr<BinData> & data, const ROOT::EExecutionPolicy &executionPolicy = ROOT::EExecutionPolicy::kSequential) {
+      SetData(data);
+      return DoLeastSquareFit(executionPolicy);
+   }
+
+   /**
+       Fit an un-binned data set using the negative log-likelihood method.
+       This function copies the input data.
    */
    bool Fit(const UnBinData & data, bool extended = false, const ROOT::EExecutionPolicy &executionPolicy = ROOT::EExecutionPolicy::kSequential) {
-      SetData(data);
-      return DoUnbinnedLikelihoodFit(extended, executionPolicy);
+      return LikelihoodFit(data, extended, executionPolicy);
+   }
+   /**
+       Fit an un-binned data set using the negative log-likelihood method.
+       This function uses a `shared_ptr` to avoid copying the input data.
+   */
+   bool Fit(const std::shared_ptr<UnBinData> & data, bool extended = false, const ROOT::EExecutionPolicy &executionPolicy = ROOT::EExecutionPolicy::kSequential) {
+      return LikelihoodFit(data, extended, executionPolicy);
    }
 
    /**
-      Binned Likelihood fit. Default is extended
+      Binned Likelihood fit copying the input data.
+      Default is extended.
     */
    bool LikelihoodFit(const BinData &data, bool extended = true,
                       const ROOT::EExecutionPolicy &executionPolicy = ROOT::EExecutionPolicy::kSequential) {
       SetData(data);
       return DoBinnedLikelihoodFit(extended, executionPolicy);
    }
-
+   /**
+      Binned Likelihood fit using a `shared_ptr` for NOT copying the input data.
+      Default is extended.
+    */
    bool LikelihoodFit(const std::shared_ptr<BinData> &data, bool extended = true,
                       const ROOT::EExecutionPolicy &executionPolicy = ROOT::EExecutionPolicy::kSequential) {
       SetData(data);
       return DoBinnedLikelihoodFit(extended, executionPolicy);
    }
    /**
-      Unbinned Likelihood fit. Default is not extended
+      Un-binned Likelihood fit copying the input data
+      Default is NOT extended
     */
    bool LikelihoodFit(const UnBinData & data, bool extended = false, const ROOT::EExecutionPolicy &executionPolicy = ROOT::EExecutionPolicy::kSequential) {
       SetData(data);
       return DoUnbinnedLikelihoodFit(extended, executionPolicy);
    }
+   /**
+      Un-binned Likelihood fit using a `shared_ptr` for NOT copying the input data.
+      Default is NOT extended
+    */
    bool LikelihoodFit(const std::shared_ptr<UnBinData> & data, bool extended = false, const ROOT::EExecutionPolicy &executionPolicy = ROOT::EExecutionPolicy::kSequential) {
       SetData(data);
       return DoUnbinnedLikelihoodFit(extended, executionPolicy);
    }
 
-
    /**
-       fit a data set using any  generic model  function
-       Pre-requisite on the function:
+      Likelihood fit given a data set (Binned or Un-binned) using any  generic model  function.
+      This interface copies the input data and the model function object
    */
    template < class Data , class Function>
    bool LikelihoodFit( const Data & data, const Function & func, bool extended) {
@@ -208,17 +238,19 @@ public:
    }
 
    /**
-      do a linear fit on a set of bin-data
+      Do a linear fit copying the input data
     */
    bool LinearFit(const BinData & data) {
       SetData(data);
       return DoLinearFit();
    }
+   /**
+      Do a linear fit using a `shared_ptr` for NOT copying the input data
+    */
    bool LinearFit(const std::shared_ptr<BinData> & data) {
       SetData(data);
       return DoLinearFit();
    }
-
 
    /**
       Fit using the a generic FCN function as a C++ callable object implementing
@@ -488,21 +520,21 @@ protected:
    // get function calls from the FCN
    int GetNCallsFromFCN();
 
-   //set data for the fit
-   void SetData(const FitData & data) {
-      fData = std::shared_ptr<FitData>(const_cast<FitData*>(&data),DummyDeleter<FitData>());
-   }
-   // set data and function without cloning them
-   template <class T>
-   void SetFunctionAndData(const IModelFunctionTempl<T> & func, const FitData & data) {
-      SetData(data);
-      fFunc = std::shared_ptr<IModelFunctionTempl<T>>(const_cast<IModelFunctionTempl<T>*>(&func),DummyDeleter<IModelFunctionTempl<T>>());
-   }
-
-   //set data for the fit using a shared ptr
+   /// Set data for the fit using a shared ptr
    template <class Data>
    void SetData(const std::shared_ptr<Data> & data) {
       fData = std::static_pointer_cast<Data>(data);
+   }
+
+   /// Set the input binned data for the fit copying them
+   void SetData(const BinData & data) {
+      auto dataClone = std::make_shared<BinData>(data);
+      SetData(dataClone);
+   }
+   /// Set the input un-binned data for the fit copying them
+   void SetData(const UnBinData & data) {
+      auto dataClone = std::make_shared<UnBinData>(data);
+      SetData(dataClone);
    }
 
    /// look at the user provided FCN and get data and model function is

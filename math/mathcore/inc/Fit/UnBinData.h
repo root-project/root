@@ -25,19 +25,23 @@ namespace ROOT {
 
 //___________________________________________________________________________________
 /**
-   Class describing the unbinned data sets (just x coordinates values) of any dimensions
+   Class describing the un-binned data sets (just x coordinates values) of any dimensions
 
-              There is the option to construct UnBindata copying the data in (using the DataVector class)
-              or using pointer to external data (DataWrapper) class.
-              In general is found to be more efficient to copy the data.
-              In case of really large data sets for limiting memory consumption then the other option can be used
-              Specialized constructor exists for using external data up to 3 dimensions.
+  There is the option to construct UnBindata copying the data inside
+  (in the base FitData class) or using a pointer to external data, depending on which
+  constructor of the UnBinData class is used.
+  It is recommended to copy the input data inside, since this will be more efficient and
+  less error prone, since the input provided data will have to be kept alive for all the time the
+  Fit classes will be used.
+  In case of really large data sets for limiting memory consumption then the other option can be used
+  with special care.
+  Specialized constructor exists for using external data up to 3 dimensions.
 
-              When the data are copying in the number of points can be set later (or re-set) using Initialize and
-              the data are inserted one by one using the Add method.
-              It is mandatory to set the size before using the Add method.
+  When the data are copying in the number of points can be set later (or re-set) using Initialize and
+  the data are inserted one by one using the Add method.
+  It is mandatory to set the size before using the Add method.
 
-             @ingroup  FitData
+  @ingroup  FitData
 */
 class UnBinData : public FitData {
 
@@ -173,11 +177,10 @@ public :
   {
   }
 
-private:
-  /// copy constructor (private)
-  UnBinData(const UnBinData &) : FitData() { assert(false); }
-  /// assignment operator  (private)
-  UnBinData & operator= (const UnBinData &) { assert(false); return *this; }
+  /// copy constructor
+  UnBinData(const UnBinData &);
+  /// assignment operator
+  UnBinData & operator= (const UnBinData &);
 
 public:
   /**
@@ -185,14 +188,6 @@ public:
   */
   ~UnBinData() override {
   }
-
-  /**
-    preallocate a data set given size and dimension of the coordinates
-    if a vector already exists with correct dimension (point size) extend the existing one
-    to a total size of maxpoints (equivalent to a Resize)
-  */
-  //void Initialize(unsigned int maxpoints, unsigned int dim = 1, bool isWeighted = false);
-
 
   /**
     add one dim coordinate data (unweighted)

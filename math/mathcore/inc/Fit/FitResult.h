@@ -61,21 +61,12 @@ public:
    */
    FitResult (const FitConfig & fconfig);
 
-
-   /**
-      Copy constructor.
-   */
-   FitResult(const FitResult & rhs);
-
-   /**
-      Assignment operator
-   */
-   FitResult & operator = (const FitResult & rhs);
+   // default copy constructor and assignment can be used
 
    /**
       Destructor
    */
-   virtual ~FitResult ();
+   virtual ~FitResult () {}
 
 
 public:
