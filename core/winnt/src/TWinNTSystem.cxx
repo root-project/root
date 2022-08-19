@@ -32,6 +32,7 @@
 #include "TException.h"
 #include "TEnv.h"
 #include "TApplication.h"
+#include "TBrowser.h"
 #include "TWin32SplashThread.h"
 #include "Win32Constants.h"
 #include "TInterpreter.h"
@@ -3874,11 +3875,10 @@ void TWinNTSystem::Exit(int code, Bool_t mode)
             TBrowser *b;
             TIter next(gROOT->GetListOfBrowsers());
             while ((b = (TBrowser*) next()))
-               gROOT->ProcessLine(TString::Format("\
-                  if (((TBrowser*)0x%zx)->GetBrowserImp() &&\
-                      ((TBrowser*)0x%zx)->GetBrowserImp()->GetMainFrame()) \
-                     ((TBrowser*)0x%zx)->GetBrowserImp()->GetMainFrame()->CloseWindow();\
-                  else delete (TBrowser*)0x%zx", (size_t)b, (size_t)b, (size_t)b, (size_t)b));
+               if (b->GetBrowserImp() && b->GetBrowserImp()->GetMainFrame())
+                  gROOT->ProcessLine(TString::Format("\
+                     (((TBrowser*)0x%zx)->GetBrowserImp()->GetMainFrame()->CloseWindow();",
+                     (intptr_t)b));
          }
       }
    }
