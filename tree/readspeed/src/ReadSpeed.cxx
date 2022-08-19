@@ -83,23 +83,12 @@ std::vector<std::string> ReadSpeed::GetMatchingBranchNames(const std::string &fi
 }
 
 // Read branches listed in branchNames in tree treeName in file fileName, return number of uncompressed bytes read.
-ByteData ReadSpeed::ReadTree(const std::string &treeName, const std::string &fileName,
-                             const std::vector<std::string> &branchNames, EntryRange range)
+ByteData ReadSpeed::ReadTree(TFile *f, const std::string &treeName, const std::vector<std::string> &branchNames,
+                             EntryRange range)
 {
-   // This logic avoids re-opening the same file many times if not needed
-   // Given the static lifetime of `f`, we cannot use a `unique_ptr<TFile>` lest we have issues at teardown
-   // (e.g. because this file outlives ROOT global lists). Instead we rely on ROOT's memory management.
-   thread_local TFile *f;
-   if (f == nullptr || f->GetName() != fileName) {
-      delete f;
-      f = TFile::Open(fileName.c_str(), "READ_WITHOUT_GLOBALREGISTRATION"); // TFile::Open uses plug-ins if needed
-   }
-
-   if (f == nullptr || f->IsZombie())
-      throw std::runtime_error("Could not open file '" + fileName + '\'');
    std::unique_ptr<TTree> t(f->Get<TTree>(treeName.c_str()));
    if (t == nullptr)
-      throw std::runtime_error("Could not retrieve tree '" + treeName + "' from file '" + fileName + '\'');
+      throw std::runtime_error("Could not retrieve tree '" + treeName + "' from file '" + f->GetName() + '\'');
 
    t->SetBranchStatus("*", 0);
 
@@ -146,21 +135,35 @@ Result ReadSpeed::EvalThroughputST(const Data &d)
          return ReadSpeedRegex{text, std::regex(text)};
       });
 
-   for (const auto &fName : d.fFileNames) {
+   for (const auto &fileName : d.fFileNames) {
       std::vector<std::string> branchNames;
       if (d.fUseRegex)
-         branchNames = GetMatchingBranchNames(fName, d.fTreeNames[treeIdx], regexes);
+         branchNames = GetMatchingBranchNames(fileName, d.fTreeNames[treeIdx], regexes);
       else
          branchNames = d.fBranchNames;
 
+      TFile *f = TFile::Open(fileName.c_str(), "READ_WITHOUT_GLOBALREGISTRATION");
+      if (f == nullptr || f->IsZombie())
+         throw std::runtime_error("Could not open file '" + fileName + '\'');
+
       sw.Start(kFALSE);
 
-      const auto byteData = ReadTree(d.fTreeNames[treeIdx], fName, branchNames);
-      uncompressedBytesRead += byteData.fUncompressedBytesRead;
-      compressedBytesRead += byteData.fCompressedBytesRead;
+      try {
+         const auto byteData = ReadTree(f, d.fTreeNames[treeIdx], branchNames);
+         uncompressedBytesRead += byteData.fUncompressedBytesRead;
+         compressedBytesRead += byteData.fCompressedBytesRead;
+      } catch (const std::runtime_error &err) {
+         if (f != nullptr && !f->IsZombie())
+            f->Close();
+         delete f;
+         throw;
+      }
 
       if (d.fTreeNames.size() > 1)
          ++treeIdx;
+
+      f->Close();
+      delete f;
 
       sw.Stop();
    }
@@ -294,22 +297,74 @@ Result ReadSpeed::EvalThroughputMT(const Data &d, unsigned nThreads)
       return {uncompressedBytes, compressedBytes};
    };
 
+   typedef std::map<int, TFile *> FileMap;
+   typedef std::map<std::thread::id, FileMap *> ThreadFileMap;
+   ThreadFileMap threadFileMap;
+
    auto processFile = [&](int fileIdx) {
       const auto &fileName = d.fFileNames[fileIdx];
       const auto &treeName = d.fTreeNames.size() > 1 ? d.fTreeNames[fileIdx] : d.fTreeNames[0];
       const auto &branchNames = fileBranchNames[fileIdx];
 
       auto readRange = [&](const EntryRange &range) -> ByteData {
-         return ReadTree(treeName, fileName, branchNames, range);
+         std::thread::id threadId = std::this_thread::get_id();
+         ThreadFileMap::iterator tMapIt = threadFileMap.find(threadId);
+         FileMap *fileMap;
+
+         if (tMapIt == threadFileMap.end()) {
+            fileMap = new FileMap();
+            threadFileMap.insert(std::make_pair(threadId, fileMap));
+         } else {
+            fileMap = tMapIt->second;
+         }
+
+         FileMap::iterator fMapIt = fileMap->find(fileIdx);
+         TFile *f;
+
+         if (fMapIt == fileMap->end()) {
+            f = TFile::Open(fileName.c_str(), "READ_WITHOUT_GLOBALREGISTRATION");
+            fileMap->insert(std::make_pair(fileIdx, f));
+         } else {
+            f = fMapIt->second;
+         }
+
+         if (f == nullptr || f->IsZombie())
+            throw std::runtime_error("Could not open file '" + fileName + '\'');
+
+         try {
+            return ReadTree(f, treeName, branchNames, range);
+         } catch (const std::runtime_error &err) {
+            if (f != nullptr && !f->IsZombie())
+               f->Close();
+            delete f;
+            throw;
+         }
+
+         f->Close();
+         delete f;
       };
 
-      return pool.MapReduce(readRange, rangesPerFile[fileIdx], sumBytes);
+      const auto byteData = pool.MapReduce(readRange, rangesPerFile[fileIdx], sumBytes);
+
+      return byteData;
    };
 
    TStopwatch sw;
    sw.Start();
    const auto totalByteData = pool.MapReduce(processFile, ROOT::TSeqUL{d.fFileNames.size()}, sumBytes);
    sw.Stop();
+
+   for (const auto &fileMapPair : threadFileMap) {
+      const auto *fileMap = fileMapPair.second;
+
+      for (const auto &filePair : *fileMap) {
+         auto *file = filePair.second;
+
+         if (file != nullptr && !file->IsZombie())
+            file->Close();
+         delete file;
+      }
+   }
 
    return {sw.RealTime(),
            sw.CpuTime(),
