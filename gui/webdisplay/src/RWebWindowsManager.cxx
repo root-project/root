@@ -590,10 +590,28 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
    if (!token.empty())
       args.AppendUrlOpt(std::string("token=") + token);
 
-   if (!args.IsHeadless() && (gROOT->GetWebDisplay() == "server") && (RWebWindowWSHandler::GetBoolEnv("WebGui.OnetimeKey") != 1)) {
+   if (!args.IsHeadless() && (args.GetBrowserKind() == RWebDisplayArgs::kServer) && (RWebWindowWSHandler::GetBoolEnv("WebGui.OnetimeKey") != 1)) {
       std::cout << "New web window: " << args.GetUrl() << std::endl;
       return 0;
    }
+
+#if not(defined(R__MACOSX)) and not(defined(R__WIN32))
+   if (args.IsInteractiveBrowser()) {
+      const char *varname = "WebGui.CheckRemoteDisplay";
+      if (RWebWindowWSHandler::GetBoolEnv(varname, 1) == 1) {
+         const char *displ = gSystem->Getenv("DISPLAY");
+         if (displ && *displ && (*displ != ':')) {
+            gEnv->SetValue(varname, "no");
+            std::cout << "\n"
+               "ROOT web-based widget started in the session where DISPLAY set to " << displ << "\n" <<
+               "Means web browser will be displayed on remote X11 server which is usually very inefficient\n"
+               "One can start ROOT session in server mode like \"root -b --web=server:8877\" and forward http port to display node\n"
+               "Find more info on https://root.cern/for_developers/root7/#rbrowser\n"
+               "This message can be disabled by setting \"" << varname << ": no\" in .rootrc file\n";
+         }
+      }
+   }
+#endif
 
    if (!normal_http)
       args.SetHttpServer(GetServer());

@@ -94,6 +94,12 @@ public:
 
    void SetMasterWindow(std::shared_ptr<RWebWindow> master, int channel = -1);
 
+   /// returns true if interactive browser window supposed to be started
+   bool IsInteractiveBrowser() const
+   {
+      return !IsHeadless() && ((GetBrowserKind() == kNative) || (GetBrowserKind() == kChrome) || (GetBrowserKind() == kFirefox) || (GetBrowserKind() == kStandard) || (GetBrowserKind() == kCustom));
+   }
+
    /// returns true if local display like CEF or Qt5 QWebEngine should be used
    bool IsLocalDisplay() const
    {
