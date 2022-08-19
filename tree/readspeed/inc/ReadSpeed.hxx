@@ -68,7 +68,7 @@ std::vector<std::string> GetMatchingBranchNames(const std::string &fileName, con
                                                 const std::vector<ReadSpeedRegex> &regexes);
 
 // Read branches listed in branchNames in tree treeName in file fileName, return number of uncompressed bytes read.
-ByteData ReadTree(const std::string &treeName, const std::string &fileName, const std::vector<std::string> &branchNames,
+ByteData ReadTree(TFile *file, const std::string &treeName, const std::vector<std::string> &branchNames,
                   EntryRange range = {-1, -1});
 
 Result EvalThroughputST(const Data &d);
