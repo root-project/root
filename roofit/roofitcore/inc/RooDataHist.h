@@ -280,6 +280,8 @@ protected:
   mutable double _cache_sum{0.};          ///<! Cache for sum of entries ;
 
 private:
+
+  void interpolateQuadratic(double* output, RooSpan<const double> xVals, bool correctForBinSize, bool cdfBoundaries);
   void interpolateLinear(double* output, RooSpan<const double> xVals, bool correctForBinSize, bool cdfBoundaries);
   double weightInterpolated(const RooArgSet& bin, int intOrder, bool correctForBinSize, bool cdfBoundaries);
 
