@@ -15,6 +15,7 @@ from DistRDF.Backends.Base import BaseBackend, distrdf_mapper, distrdf_reducer, 
 from DistRDF.Node import Node
 from DistRDF.Operation import Action, InstantAction, Operation
 from DistRDF.Backends import Utils
+from DistRDF.Profiling import profilable_mapper
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +90,10 @@ class HeadNode(Node, ABC):
         # If so, this attribute will not be updated when triggering.
         self._npartitions = npartitions
         self._user_specified_npartitions = True if npartitions is not None else False
+
+        # Profiling is controlled by these internal attributes
+        self._activate_profiling = False
+        self._visualization = None
 
     @property
     def npartitions(self) -> Optional[int]:
@@ -186,12 +191,17 @@ class HeadNode(Node, ABC):
         else:
             computation_graph_callable = partial(
                 ComputationGraphGenerator.trigger_computation_graph, self._generate_graph_dict())
+        
+        if self._activate_profiling:
+            mapper = self._visualization.Decorator(profilable_mapper)
+        else:
+            mapper = distrdf_mapper
 
-        mapper = partial(distrdf_mapper,
-                         build_rdf_from_range=self._generate_rdf_creator(),
-                         computation_graph_callable=computation_graph_callable,
-                         initialization_fn=self.backend.initialization,
-                         optimized=optimized)
+        mapper = partial(mapper,
+                build_rdf_from_range=self._generate_rdf_creator(),
+                computation_graph_callable=computation_graph_callable,
+                initialization_fn=self.backend.initialization,
+                optimized=optimized)
 
         # Execute graph distributedly and return the aggregated results from all
         # tasks
@@ -516,5 +526,8 @@ class TreeHeadNode(HeadNode):
         if entries_in_trees.processed_entries != total_dataset_entries:
             raise RuntimeError(f"The dataset has {total_dataset_entries} entries, "
                                f"but {entries_in_trees.processed_entries} were processed.")
+
+        if self._activate_profiling:
+            self._visualization.Client_task(values.prof_data)
 
         return values.mergeables

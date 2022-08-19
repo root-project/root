@@ -9,6 +9,7 @@
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
+from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -24,21 +25,23 @@ from DistRDF.Backends import Utils
 if TYPE_CHECKING:
     from DistRDF.HeadNode import TaskObjects
     from DistRDF.Ranges import DataRange
+    from DistRDF.Profiling.Base import ProfilingData
 
 
 def setup_mapper(initialization_fn: Callable) -> None:
     """
     Perform initial setup steps common to every mapper function.
     """
-    # Disable graphics functionality in ROOT. It is not needed inside a
-    # distributed task
-    ROOT.gROOT.SetBatch(True)
     # Enable thread safety for the whole mapper function. We need to do
     # this since two tasks could be invoking the C++ interpreter
     # simultaneously, given that this function will release the GIL
     # before calling into C++ to run the event loop. Dask multi-threaded
     # or even multi-process workers could trigger such a scenario.
     ROOT.EnableThreadSafety()
+    # Disable graphics functionality in ROOT. It is not needed inside a
+    # distributed task
+    ROOT.gROOT.SetBatch(True)
+
 
     # Run initialization method to prepare the worker runtime
     # environment
@@ -88,6 +91,7 @@ class TaskResult:
     """
     mergeables: Optional[List]
     entries_in_trees: Optional[Ranges.TaskTreeEntries]
+    prof_data: Optional[ProfilingData] = None
 
 
 def distrdf_mapper(
@@ -100,6 +104,7 @@ def distrdf_mapper(
     """
     Maps the computation graph to the input logical range of entries.
     """
+
     setup_mapper(initialization_fn)
 
     # Build an RDataFrame instance for the current mapper task, based
@@ -134,6 +139,16 @@ def merge_values(mergeables_out: Iterable, mergeables_in: Iterable) -> Iterable:
     # 4. Both arguments are None: return first, it's None anyway.
     return mergeables_out
 
+def merge_prof_data(data_out:ProfilingData, data_in:ProfilingData) -> ProfilingData:
+    
+    if data_out is not None and data_in is not None:
+        Utils.merge_values(data_out, data_in)
+
+    elif data_out is None and data_in is not None:
+        data_out = data_in
+
+    return data_out
+
 
 def distrdf_reducer(results_inout: TaskResult,
                     results_in: TaskResult) -> TaskResult:
@@ -145,6 +160,9 @@ def distrdf_reducer(results_inout: TaskResult,
     mergeables_out, entries_in_trees_out = results_inout.mergeables, results_inout.entries_in_trees
     mergeables_in, entries_in_trees_in = results_in.mergeables, results_in.entries_in_trees
 
+    prof_data_out = results_inout.prof_data
+    prof_data_in = results_in.prof_data
+
     if entries_in_trees_out is not None and entries_in_trees_in is not None:
         # Merge dictionaries of trees and their entries. Different tasks
         # might have to access the same tree, so we must not count its
@@ -155,8 +173,9 @@ def distrdf_reducer(results_inout: TaskResult,
         entries_in_trees_out.processed_entries += entries_in_trees_in.processed_entries
 
     mergeables_updated = merge_values(mergeables_out, mergeables_in)
+    prof_data_updated = merge_prof_data(prof_data_out, prof_data_in)
 
-    return TaskResult(mergeables_updated, entries_in_trees_out)
+    return TaskResult(mergeables_updated, entries_in_trees_out, prof_data_updated)
 
 
 class BaseBackend(ABC):
