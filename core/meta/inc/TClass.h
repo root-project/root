@@ -33,6 +33,7 @@ class TObjArray;
 // #include <set>
 #endif
 
+#include <cstddef>
 #include <map>
 #include <string>
 #include <unordered_set>
@@ -631,8 +632,8 @@ struct TClassGetClassHelper {
 template <typename F, typename S>
 struct TClassGetClassHelper<std::pair<F, S> > {
    static TClass *GetClass(Bool_t load, Bool_t silent) {
-      std::pair<F, S> *p = nullptr;
-      size_t hint_offset = ((char*)&(p->second)) - (char*)p;
+      using pair_t = std::pair<F,S>;
+      size_t hint_offset = offsetof(pair_t, second);
       return TClass::GetClass(typeid(std::pair<F, S>), load, silent, hint_offset, sizeof(std::pair<F,S>));
    }
 };
