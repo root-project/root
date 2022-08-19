@@ -116,12 +116,23 @@ std::unique_ptr<ROperator> make_ROperator_Neg(const onnx::NodeProto& nodeproto, 
    return op;
 }
 
-template<ReduceOpMode Op1>
+template<EReduceOpMode Op1>
 std::unique_ptr<ROperator> make_ROperator_Reduce(const onnx::NodeProto& nodeproto, const onnx::GraphProto& /*graphproto*/, std::unordered_map<std::string, ETensorType>& tensor_type){
 
    ETensorType input_type;
 
-auto input_name =  nodeproto.input(0);
+   EReduceOpMode op_mode = InvalidReduceOp;
+
+   if (nodeproto.op_type() == "ReduceMean")
+      op_mode = ReduceMean;
+   else if (nodeproto.op_type() == "ReduceSumsquare")
+      op_mode = ReduceSumsquare;
+   else if (nodeproto.op_type() == "ReduceProd")
+      op_mode = ReduceProd;
+
+   assert(op_mode != InvalidReduceOp);
+
+   auto input_name =  nodeproto.input(0);
    auto it = tensor_type.find(input_name);
    if (it != tensor_type.end()){
       input_type = it->second;
