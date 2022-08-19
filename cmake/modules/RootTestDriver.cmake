@@ -118,6 +118,11 @@ endif()
 
 if(CMD)
   #---Execute the actual test ------------------------------------------------------------------------
+  if(CMD_ENV)
+    # Only support exactly one variable
+    set(_cmd ${CMAKE_COMMAND} -E env ${CMD_ENV} ${_cmd})
+  endif()
+
   if(IN)
     set(_input INPUT_FILE ${IN})
   endif()

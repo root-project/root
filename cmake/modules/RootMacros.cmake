@@ -1610,7 +1610,7 @@ function(ROOT_ADD_TEST test)
              _command MATCHES roottest/root/rint/driveTabCom.py))
        OR (_command MATCHES roottest/python/cmdLineUtils AND
            NOT _command MATCHES MakeNameCyclesRootmvInput))
-      list(APPEND ARG_ENVIRONMENT ${ld_preload}=${ASAN_EXTRA_LD_PRELOAD})
+      set(_command ${_command} -DCMD_ENV=${ld_preload}=${ASAN_EXTRA_LD_PRELOAD})
     endif()
   endif()
 
