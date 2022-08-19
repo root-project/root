@@ -191,7 +191,7 @@ RooHistPdf::~RooHistPdf()
 void RooHistPdf::computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const {
 
   // For interpolation and histograms of higher dimension, use base function
-  if(_pdfObsList.size() > 1 || _intOrder > 1) {
+  if(_pdfObsList.size() > 1) {
       RooAbsReal::computeBatch(nullptr, output, nEvents, dataMap);
       return;
   }

@@ -673,87 +673,117 @@ TEST(RooDataHist, CombinedRooDataHistBinning)
 
 
 
-TEST(RooDataHist, VectorizedWeightsZeroInterpolation)
+class WeightsTest : public testing::TestWithParam<std::tuple<int, bool, bool, bool>> {
+   void SetUp() override
+   {
+      _interpolationOrder = std::get<0>(GetParam());
+      _correctForBinSize = std::get<1>(GetParam());
+      _cdfBoundaries = std::get<2>(GetParam());
+      _isUniform = std::get<3>(GetParam());
+   }
+
+   void TearDown() override {}
+
+protected:
+   int _interpolationOrder = 0;
+   bool _correctForBinSize = false;
+   bool _cdfBoundaries = false;
+   bool _isUniform = false;
+};
+
+TEST_P(WeightsTest, VectorizedWeights)
 {
+  // Change local message level to suppress unnecessary info
+  RooHelpers::LocalChangeMsgLevel chmsglvl1{RooFit::WARNING, 0u, RooFit::DataHandling, true};
+  RooHelpers::LocalChangeMsgLevel chmsglvl2{RooFit::WARNING, 0u, RooFit::Fitting, true};
+
   const double xMin = -1;
   const double xMax = 1;
   const std::size_t nBins = 100;
-  std::vector<double> boundaries(nBins + 1);
-  for(std::size_t i = 0; i < boundaries.size(); ++i) {
-      boundaries[i] = ((xMax - xMin) / nBins) * i + xMin;
+
+  TH1D h1;
+  if (_isUniform) {
+    h1 = TH1D("h1", "h1", nBins, xMin, xMax);
   }
-  TH1D h1{"h1", "h1", nBins, boundaries.data()};
-  
+  else {
+    std::vector<double> boundaries(nBins + 1);
+    for(std::size_t i = 0; i < boundaries.size(); ++i) {
+      boundaries[i] = ((xMax - xMin) / nBins) * i + xMin;
+    }
+    h1 = TH1D("h1", "h1", nBins, boundaries.data());
+  }
+
   h1.FillRandom("gaus");
 
   RooRealVar x("x", "x", 0, xMin, xMax);
   RooDataHist dh{"dh", "dh", x, &h1};
-  RooHistPdf histPdf{"histPdf", "histPdf", x, dh};
+
+  std::unique_ptr<RooAbsReal> absReal;
+  if (_correctForBinSize) {
+    auto histPdf = std::make_unique<RooHistPdf>("histPdf", "histPdf", x, dh, _interpolationOrder);
+    histPdf->setCdfBoundaries(_cdfBoundaries);
+    absReal = std::move(histPdf);
+  } else {
+    auto histFunc = std::make_unique<RooHistFunc>("histPdf", "histPdf", x, dh, _interpolationOrder);
+    histFunc->setCdfBoundaries(_cdfBoundaries);
+    absReal = std::move(histFunc);
+  }
 
   // Fill 10 000 random x values
   std::size_t nVals = 10000;
   std::vector<double> xVals(nVals);
   RooDataSet data{"data", "data", x};
 
-  for(std::size_t i = 0; i < nVals; ++i) {
-      xVals[i] = xMin + RooRandom::uniform() * (xMax - xMin);
-      x.setVal(xVals[i]);
-      data.add(x);
+  for (std::size_t i = 0; i < nVals; ++i) {
+    xVals[i] = xMin + RooRandom::uniform() * (xMax - xMin);
+    x.setVal(xVals[i]);
+    data.add(x);
   }
 
   std::vector<double> weightsGetVal(nVals);
-  for(std::size_t i = 0; i < nVals; ++i) {
+  for (std::size_t i = 0; i < nVals; ++i) {
     x.setVal(xVals[i]);
-    weightsGetVal[i] = histPdf.getVal(x);
+    weightsGetVal[i] = absReal->getVal(x);
   }
   x.setVal(0.0);
 
-  auto weightsGetValues = histPdf.getValues(data);
+  auto weightsGetValues = absReal->getValues(data);
 
-  for(std::size_t i = 0; i < nVals; ++i) {
+  for (std::size_t i = 0; i < nVals; ++i) {
     EXPECT_NEAR(weightsGetVal[i], weightsGetValues[i], 1e-6);
   }
 }
 
-
-TEST(RooDataHist, VectorizedFirstOrderInterpolation)
-{
-  const double xMin = -1;
-  const double xMax = 1;
-  const std::size_t nBins = 100;
-  std::vector<double> boundaries(nBins + 1);
-  for(std::size_t i = 0; i < boundaries.size(); ++i) {
-      boundaries[i] = ((xMax - xMin) / nBins) * i + xMin;
-  }
-  TH1D h1{"h1", "h1", nBins, boundaries.data()};
-  
-  h1.FillRandom("gaus");
-
-  RooRealVar x("x", "x", 0, xMin, xMax);
-  RooDataHist dh{"dh", "dh", x, &h1};
-  RooHistPdf histPdf{"histPdf", "histPdf", x, dh, 1};
-
-  // Fill 10 000 random x values
-  std::size_t nVals = 10000;
-  std::vector<double> xVals(nVals);
-  RooDataSet data{"data", "data", x};
-
-  for(std::size_t i = 0; i < nVals; ++i) {
-      xVals[i] = xMin + RooRandom::uniform() * (xMax - xMin);
-      x.setVal(xVals[i]);
-      data.add(x);
-  }
-
-  std::vector<double> weightsGetVal(nVals);
-  for(std::size_t i = 0; i < nVals; ++i) {
-    x.setVal(xVals[i]);
-    weightsGetVal[i] = histPdf.getVal(x);
-  }
-  x.setVal(0.0);
-
-  auto weightsGetValues = histPdf.getValues(data);
-
-  for(std::size_t i = 0; i < nVals; ++i) {
-    EXPECT_NEAR(weightsGetVal[i], weightsGetValues[i], 1e-6);
-  }
-}
+INSTANTIATE_TEST_SUITE_P(RooDataHist, WeightsTest,
+                         testing::Values(WeightsTest::ParamType{0, false, false, false},
+                                         WeightsTest::ParamType{1, false, false, false},
+                                         WeightsTest::ParamType{2, false, false, false},
+                                         WeightsTest::ParamType{0, false, true, false},
+                                         WeightsTest::ParamType{1, false, true, false},
+                                         WeightsTest::ParamType{2, false, true, false},
+                                         WeightsTest::ParamType{0, true, false, false},
+                                         WeightsTest::ParamType{1, true, false, false},
+                                         WeightsTest::ParamType{2, true, false, false},
+                                         WeightsTest::ParamType{0, true, true, false},
+                                         WeightsTest::ParamType{1, true, true, false},
+                                         WeightsTest::ParamType{2, true, true, false},
+                                         WeightsTest::ParamType{0, false, false, true},
+                                         WeightsTest::ParamType{1, false, false, true},
+                                         WeightsTest::ParamType{2, false, false, true},
+                                         WeightsTest::ParamType{0, false, true, true},
+                                         WeightsTest::ParamType{1, false, true, true},
+                                         WeightsTest::ParamType{2, false, true, true},
+                                         WeightsTest::ParamType{0, true, false, true},
+                                         WeightsTest::ParamType{1, true, false, true},
+                                         WeightsTest::ParamType{2, true, false, true},
+                                         WeightsTest::ParamType{0, true, true, true},
+                                         WeightsTest::ParamType{1, true, true, true},
+                                         WeightsTest::ParamType{2, true, true, true}),
+                         [](testing::TestParamInfo<WeightsTest::ParamType> const &paramInfo) {
+                            std::stringstream ss;
+                            ss << (std::get<1>(paramInfo.param) ? "RooHistFunc" : "RooHistPdf");
+                            ss << "IntOrder" << std::get<0>(paramInfo.param);
+                            ss << (std::get<2>(paramInfo.param) ? "CDF" : "");
+                            ss << (std::get<3>(paramInfo.param) ? "UniformBins" : "");
+                            return ss.str();
+                         });

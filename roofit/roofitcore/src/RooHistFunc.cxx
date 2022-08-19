@@ -196,7 +196,7 @@ double RooHistFunc::evaluate() const
 
 
 void RooHistFunc::computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const& dataMap) const {
-  if (_depList.size() == 1 && _intOrder < 2) {
+  if (_depList.size() == 1) {
     auto xVals = dataMap.at(_depList[0]);
     _dataHist->weights(output, xVals, _intOrder, false, _cdfBoundaries);
     return;
