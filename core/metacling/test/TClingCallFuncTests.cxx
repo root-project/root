@@ -259,3 +259,29 @@ TEST(TClingCallFunc, FunctionWrapperSharedPtr)
    std::string wrapper = CfRAII.GetWrapper();
    ASSERT_TRUE(gInterpreter->Declare(wrapper.c_str()));
 }
+
+#include "TClass.h"
+#include "TMethod.h"
+
+TEST(TClingCallFunc, ROOT_6523) {
+  std::string theString("blaaah");
+  std::string searchFor("aaa");
+  TClass* stringClass = TClass::GetClass("std::string");
+  assert(stringClass != nullptr);
+  stringClass->GetListOfMethods();
+  TCollection const* overloads = stringClass->GetListOfMethodOverloads("find");
+  assert(overloads != nullptr);
+  size_t value;
+  void const* args[1];
+  args[0] = &searchFor;
+  for (auto fn : *overloads) {
+    TMethod* method = (TMethod *)(fn);
+    std::string signature(method->GetSignature());
+    if (signature.find("basic_string") == std::string::npos)
+      continue;
+    method->Dump();
+    gInterpreter->ExecuteWithArgsAndReturn(method, &theString, args, 1, &value);
+    ASSERT_EQ(value, 2);
+    break;
+  }
+}
