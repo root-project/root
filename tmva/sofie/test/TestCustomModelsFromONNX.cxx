@@ -878,7 +878,7 @@ TEST(ONNX, Shape){
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Shape_ExpectedOutput::outputs) / sizeof(float));
    
-   float *correct = Shape_ExpectedOutput::outputs;
+   int *correct = Shape_ExpectedOutput::outputs;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {

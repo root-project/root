@@ -24,9 +24,8 @@ private:
    /* Attributes*/
    std::string fNX;
    std::string fNY;
-   std::string result;
    std::vector<size_t> fShape;
-   std::vector<size_t> output_shape;
+   std::vector<size_t> fOutput_shape;
    std::string fType;
 
 public:
@@ -50,9 +49,9 @@ public:
          throw std::runtime_error("TMVA SOFIE Shape Op Input Tensor is not found in model");
       }
       fShape = model.GetTensorShape(fNX);
-      result = ConvertShapeToString(fShape);
-      output_shape = model.GetTensorShape(result);
-      model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), output_shape);
+      size_t length = ConvertShapeToLength(fShape);
+      fOutput_shape = {length};
+      model.AddIntermediateTensor(fNY, ETensorType::INT64, fOutput_shape);
    }
 
    std::string Generate(std::string OpName){
@@ -62,10 +61,10 @@ public:
       }
       std::stringstream out;
       
-      result = ConvertShapeToString(fShape);
       // std::stringstream result;
       // std::copy(fShape.begin(), fShape.end(), std::ostream_iterator<int>(result, ""));
-      size_t length = ConvertShapeToLength(output_shape);
+      size_t length = ConvertShapeToLength(fOutput_shape);
+      std::string result = ConvertShapeToString(fShape);
       out << "\n//------ Shape\n";
       out << SP << "for (int id = 0; id < " << length << " ; id++){\n";
       out << SP << SP << "tensor_" << fNY << "[id] = " << result << "[id] ;\n";
