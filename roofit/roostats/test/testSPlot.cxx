@@ -13,7 +13,7 @@
 TEST(SPlot, UseWithRooLinearVar) {
   RooRealVar x("x", "observable", 0, 0, 20);
   RooRealVar m("m", "mean", 5., -10, 10);
-  RooRealVar s("s", "sigma", 2., 0, 10);
+  RooRealVar s("s", "sigma", 2., 0.1, 10);
   RooGaussian gaus("gaus", "gaus", x, m, s);
 
   RooRealVar a("a", "exp", -0.2, -10., 0.);
@@ -26,7 +26,7 @@ TEST(SPlot, UseWithRooLinearVar) {
   RooLinearVar c2("c2", "c2", r2, common, RooFit::RooConst(0.));
   RooAddPdf sum("sum", "sum", RooArgSet(gaus, ex), RooArgSet(c1, c2));
 
-  auto data = sum.generate(x, 1000);
+  std::unique_ptr<RooDataSet> data{sum.generate(x, 1000)};
 
   RooStats::SPlot splot("splot", "splot", *data, &sum, RooArgSet(c1, c2));
   EXPECT_EQ(splot.GetNumSWeightVars(), 2);
