@@ -1422,6 +1422,7 @@ void TClingCallFunc::exec(void *address, void *ret)
    SmallVector<ValHolder, 8> vh_ary;
    SmallVector<void *, 8> vp_ary;
 
+   const FunctionDecl *FD = GetDecl();
    const unsigned num_args = fArgVals.size();
    const unsigned num_params = FD->getNumParams();
 
@@ -1443,8 +1444,6 @@ void TClingCallFunc::exec(void *address, void *ret)
 
    {
       R__LOCKGUARD_CLING(gInterpreterMutex);
-
-      const FunctionDecl *FD = GetDecl();
 
       //
       //  Convert the arguments from cling::Value to their
@@ -1543,17 +1542,17 @@ void TClingCallFunc::exec(void *address, void *ret)
 
 TClingCallFunc::ExecWithRetFunc_t
 TClingCallFunc::InitRetAndExecNoCtor(clang::QualType QT, cling::Value &ret) {
+   ret = cling::Value(QT, *fInterp);
+   if (QT->isVoidType())
+     return [this](void* address, cling::Value& ret) { exec(address, 0); };
+
+   if (QT->isUnsignedIntegerOrEnumerationType())
+     return [this](void* address, cling::Value& ret) { exec(address, &ret.getULL()); };
+
+   if (QT->isSignedIntegerOrEnumerationType())
+     return [this](void* address, cling::Value& ret) { exec(address, &ret.getLL()); };
+
    if (auto BT = dyn_cast<const BuiltinType>(QT.getTypePtr())) {
-      ret = cling::Value(QT, *fInterp);
-      if (BT->isVoidType())
-         return [this](void* address, cling::Value& ret) { exec(address, 0); };
-
-      if (BT->isUnsignedIntegerOrEnumerationType())
-         return [this](void* address, cling::Value& ret) { exec(address, &ret.getULL()); };
-
-      if (BT->isSignedIntegerOrEnumerationType())
-         return [this](void* address, cling::Value& ret) { exec(address, &ret.getLL()); };
-
       switch (BT->getKind()) {
       case BuiltinType::Float:
          return [this](void* address, cling::Value& ret) { exec(address, &ret.getFloat()); };
@@ -1566,8 +1565,12 @@ TClingCallFunc::InitRetAndExecNoCtor(clang::QualType QT, cling::Value &ret) {
       }
    }
 
-   if (QT->isReferenceType() || QT->isMemberPointerType() || QT->isRecordType()) {
-      ret = cling::Value(QT, *fInterp);
+   if (QT->isRecordType() || QT->isMemberDataPointerType())
+      return [this](void* address, cling::Value& ret) { exec(address, ret.getPtr()); };
+
+   if (QT->isReferenceType() || QT->isMemberPointerType()) {
+      //ret = cling::Value::Create<void>(QT.getAsOpaquePtr(), *fInterp);
+      //ret = cling::Value(QT, *fInterp);
       return [this](void* address, cling::Value& ret) { exec(address, &ret.getPtr()); };
    }
 
@@ -1679,6 +1682,7 @@ T TClingCallFunc::ExecT(void *address)
 
    if (ret.needsManagedAllocation())
       ((TCling *)gCling)->RegisterTemporary(ret);
+
    return ret.simplisticCastAs<T>();
 }
 
