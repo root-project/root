@@ -1324,6 +1324,7 @@ std::unique_ptr<ROperator> make_ROperator_Shape(const onnx::NodeProto& nodeproto
    switch(input_type){
    case ETensorType::FLOAT:
    case ETensorType::INT64:
+   case ETensorType::DOUBLE:
       op.reset(new ROperator_Shape<float>(nodeproto.input(0), nodeproto.output(0)));
       break;
    default:
