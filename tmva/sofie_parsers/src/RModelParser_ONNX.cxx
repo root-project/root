@@ -214,25 +214,27 @@ std::unique_ptr<ROperator> make_ROperator_Transpose(const onnx::NodeProto& nodep
 std::unique_ptr<ROperator> make_ROperator_Max(const onnx::NodeProto& nodeproto, const onnx::GraphProto& /*graphproto */, std::unordered_map<std::string, ETensorType>& tensor_type){
 
    ETensorType input_type = ETensorType::UNDEFINED;
-
-   for (int i = 0; i < 2; ++i) {
+   std::vector<std::string> fInputNames;
+   for (int i = 0; i < nodeproto.input_size(); ++i) {
       auto input_name = nodeproto.input(i);
       auto it = tensor_type.find(input_name);
-      if (it != tensor_type.end()){
-         // according to ONNX both inputs have same time
-         if (i == 0) input_type = it->second;
+      if (it != tensor_type.end()) {
+         if (i == 0)
+            input_type = it->second;
          else
             assert(it->second == input_type);
       } else {
-         throw std::runtime_error("TMVA::SOFIE ONNX Parser Max op has input tensor" + input_name + " but its type is not yet registered");
+         throw std::runtime_error("TMVA::SOFIE ONNX Parser Max op has input tensor" + input_name +
+                                  " but its type is not yet registered");
       }
+      fInputNames.push_back(input_name);
    }
 
    std::unique_ptr<ROperator> op;
 
    switch(input_type){
    case ETensorType::FLOAT:
-      op.reset(new ROperator_Max<float>(nodeproto.input(0), nodeproto.input(1), nodeproto.output(0)));
+      op.reset(new ROperator_Max<float>(fInputNames, nodeproto.output(0)));
       break;
    default:
       throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Max does not yet support input type " + std::to_string(static_cast<int>(input_type)));
@@ -1574,7 +1576,7 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose){
          rmodel.AddBlasRoutines({"Gemm", "Axpy"});
       } else if (op_type == "RNN") {
          rmodel.AddBlasRoutines({"Gemm", "Axpy"});
-      } else if (op_type == "Selu" || op_type == "Sigmoid" || op_type == "Pow" || op_type == "Tanh") {
+      } else if (op_type == "Selu" || op_type == "Sigmoid" || op_type == "Pow" || op_type == "Tanh" || op_type == "Max") {
          rmodel.AddNeededStdLib("cmath");
       } else if (op_type == "LSTM") {
          rmodel.AddBlasRoutines({"Gemm", "Axpy"});

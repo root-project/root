@@ -6,6 +6,7 @@
 #include "TMVA/RModel.hxx"
 
 #include <sstream>
+#include <algorithm>
 
 namespace TMVA{
 namespace Experimental{
@@ -17,15 +18,19 @@ class ROperator_Max final : public ROperator
 
 private:
 
-   std::string fNX1;
-   std::string fNX2;
+   std::vector<std::string> fInputNames;
    std::string fNY;
+   std::vector<std::vector<size_t> > fShapeInputs;
    std::vector<size_t> fShape;
 
 public:
    ROperator_Max(){}
-   ROperator_Max(std::string nameX1, std::string nameX2, std::string nameY):
-      fNX1(UTILITY::Clean_name(nameX1)), fNX2(UTILITY::Clean_name(nameX2)), fNY(UTILITY::Clean_name(nameY)){}
+   ROperator_Max( const std::vector<std::string> & inputNames, std::string nameY):
+   fNY(UTILITY::Clean_name(nameY)){
+      fInputNames.reserve(inputNames.size());
+      for (auto & name : inputNames)
+         fInputNames.push_back(UTILITY::Clean_name(name));
+   }
 
    // type of output given input 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
@@ -40,22 +45,22 @@ public:
 
    void Initialize(RModel& model){
       // input must be a graph input, or already initialized intermediate tensor
-      if (model.CheckIfTensorAlreadyExist(fNX1) == false){
-         throw std::runtime_error(std::string("TMVA SOFIE Max Op Input Tensor ") + fNX1 + "is not found in model");
+
+      for (auto &it : fInputNames) {
+         if (model.CheckIfTensorAlreadyExist(it) == false) {
+            throw std::runtime_error("TMVA SOFIE Concat Op Input Tensor " + it + " is not found in model");
+         }
+         fShapeInputs.push_back(model.GetTensorShape(it));
       }
-      if (model.CheckIfTensorAlreadyExist(fNX2) == false) {
-         throw std::runtime_error(std::string("TMVA SOFIE Max Op Input Tensor ") + fNX2 + "is not found in model");
-      }
-      auto shapeX1 = model.GetTensorShape(fNX1);
-      auto shapeX2 = model.GetTensorShape(fNX2);
-      // assume same shape X1 and X2 
-      if (shapeX1 != shapeX2) {
-         std::string msg = "TMVA SOFIE Max Op: Support only inputs with same shape, shape 1 is " +
-                           ConvertShapeToString(shapeX1) + "shape 2 is " + ConvertShapeToString(shapeX2);
+      for(size_t i=0; i < fShapeInputs.size()-1; i++){
+         if(fShapeInputs[i] != fShapeInputs[i+1]){
+            std::string msg = "TMVA SOFIE Max Op: Support only inputs with same shape";
          throw std::runtime_error(msg);
+         } ;
       }
-      fShape = shapeX1;
-      model.AddIntermediateTensor(fNY, model.GetTensorType(fNX1), fShape);
+      fShape = fShapeInputs[0];
+      model.AddIntermediateTensor(fNY, model.GetTensorType(fInputNames[0]), fShape);
+      model.AddNeededStdLib("cmath");
    }
 
 
@@ -65,14 +70,15 @@ public:
          throw std::runtime_error("TMVA SOFIE Max called to Generate without being initialized first");
       }
       std::stringstream out;
-      // int length = 1;
-      // for(auto& i: fShape){
-      //    length *= i;
-      // }
       size_t length = ConvertShapeToLength(fShape);
       out << "\n//------ Max\n";
       out << SP << "for (size_t id = 0; id < " << length << " ; id++){\n";
-      out << SP << SP << "tensor_" << fNY << "[id] = (tensor_" << fNX1 << "[id] > tensor_" << fNX2 << "[id]) ? (tensor_" << fNX1 << "[id]) : (tensor_" << fNX2 << "[id]);\n";
+      out << SP << SP <<"tensor_" << fNY << "[id] = std::max({";
+      size_t j = 0;
+      for ( j = 0; j < fInputNames.size()-1; j++){
+         out << "tensor_" << fInputNames[j] << "[id],";
+      }
+      out << "tensor_" << fInputNames[j] << "[id]});\n";
       out << SP << "}\n";
       return out.str();
    }
