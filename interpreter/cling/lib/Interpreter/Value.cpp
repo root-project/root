@@ -258,6 +258,64 @@ namespace cling {
                                                     GetNumberOfElements());
   }
 
+  long double Value::CastInternal() const {
+    assert(sizeof(long double) == sizeof(Value::Storage));
+
+    clang::QualType QT = getType();
+
+    if (const auto *ET = llvm::dyn_cast<clang::EnumType>(QT.getTypePtr()))
+      QT = ET->getDecl()->getIntegerType();
+
+    QT = QT.getCanonicalType();
+
+    assert(QT->isBuiltinType());
+
+    const auto* BT = llvm::cast<const clang::BuiltinType>(QT.getTypePtr());
+    switch (BT->getKind()) {
+    case clang::BuiltinType::Char_S:
+      return static_cast<signed char>(getLL());
+    case clang::BuiltinType::SChar:
+      return static_cast<signed char>(getLL());
+    case clang::BuiltinType::Short:
+      return static_cast<short>(getLL());
+    case clang::BuiltinType::Int:
+      return static_cast<int>(getLL());
+    case clang::BuiltinType::Long:
+      return static_cast<long>(getLL());
+    case clang::BuiltinType::LongLong:
+      return static_cast<long long>(getLL());
+
+    case clang::BuiltinType::Bool:
+      return static_cast<bool>(getULL());
+    case clang::BuiltinType::Char_U:
+      return static_cast<unsigned char>(getULL());
+    case clang::BuiltinType::UChar:
+      return static_cast<unsigned char>(getULL());
+    case clang::BuiltinType::UShort:
+      return static_cast<unsigned short>(getULL());
+    case clang::BuiltinType::UInt:
+      return static_cast<unsigned int>(getULL());
+    case clang::BuiltinType::ULong:
+      return static_cast<unsigned long>(getULL());
+    case clang::BuiltinType::ULongLong:
+      return static_cast<unsigned long long>(getULL());
+
+    case clang::BuiltinType::Float:
+      return static_cast<float>(getFloat());
+    case clang::BuiltinType::Double:
+      return static_cast<double>(getDouble());
+    case clang::BuiltinType::LongDouble:
+      return static_cast<long double>(getLongDouble());
+
+    default:
+      assert(0 && "Unsupported builtin type " && QT->getTypeClassName());
+      break;
+    }
+
+    // unreachable
+    return ~0U;
+  }
+
   void Value::AssertOnUnsupportedTypeCast() const {
     assert("unsupported type in Value, cannot cast simplistically!" && 0);
   }

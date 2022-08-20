@@ -122,6 +122,9 @@ namespace cling {
 
     size_t GetNumberOfElements() const;
 
+    // Returns the longest type from Storage.
+    long double CastInternal() const;
+
     // Allow simplisticCastAs to be partially specialized.
     template<typename T>
     struct CastFwd {
@@ -129,21 +132,18 @@ namespace cling {
         EStorageType storageType = V.getStorageType();
         switch (storageType) {
         case kSignedIntegerOrEnumerationType:
-          return (T) V.getAs<long long>();
         case kUnsignedIntegerOrEnumerationType:
-          return (T) V.getAs<unsigned long long>();
         case kDoubleType:
-          return (T) V.getAs<double>();
         case kFloatType:
-          return (T) V.getAs<float>();
         case kLongDoubleType:
-          return (T) V.getAs<long double>();
+          return (T) V.CastInternal();
         case kPointerType:
         case kManagedAllocation:
           return (T) (uintptr_t) V.getAs<void*>();
         case kUnsupportedType:
-          V.AssertOnUnsupportedTypeCast();
+          break; // assert
         }
+        V.AssertOnUnsupportedTypeCast();
         return T();
       }
     };
@@ -152,8 +152,7 @@ namespace cling {
     struct CastFwd<T*> {
       static T* cast(const Value& V) {
         EStorageType storageType = V.getStorageType();
-        if (storageType == kPointerType
-            || storageType == kManagedAllocation)
+        if (storageType == kPointerType  || storageType == kManagedAllocation)
           return (T*) (uintptr_t) V.getAs<void*>();
         V.AssertOnUnsupportedTypeCast();
         return 0;
