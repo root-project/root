@@ -48,9 +48,6 @@
 #include "RooMsgService.h"
 
 
-
-using namespace std;
-
 ClassImp(RooLinearVar);
 
 
@@ -67,11 +64,14 @@ RooLinearVar::RooLinearVar(const char *name, const char *title, RooAbsRealLValue
 {
   // Slope and offset may not depend on variable
   if (slope.dependsOnValue(variable) || offs.dependsOnValue(variable)) {
-    coutE(InputArguments) << "RooLinearVar::RooLinearVar(" << GetName()
-           << "): ERROR, slope(" << slope.GetName() << ") and offset("
-           << offs.GetName() << ") may not depend on variable("
-           << variable.GetName() << ")" << endl ;
-    assert(0) ;
+    std::stringstream ss;
+    ss << "RooLinearVar::RooLinearVar(" << GetName()
+       << "): ERROR, slope(" << slope.GetName() << ") and offset("
+       << offs.GetName() << ") may not depend on variable("
+       << variable.GetName() << ")";
+    const std::string errMsg = ss.str();
+    coutE(InputArguments) << errMsg << std::endl;
+    throw std::invalid_argument(errMsg);
   }
 
   // Initial plot range and number of bins from dependent variable
@@ -127,12 +127,12 @@ void RooLinearVar::setVal(double value)
 
   // Prevent DIV0 problems
   if (_slope == 0.) {
-    coutE(Eval) << "RooLinearVar::setVal(" << GetName() << "): ERROR: slope is zero, cannot invert relation" << endl ;
+    coutE(Eval) << "RooLinearVar::setVal(" << GetName() << "): ERROR: slope is zero, cannot invert relation" << std::endl ;
     return ;
   }
 
   // Invert formula 'value = offset + slope*var'
-  ((RooRealVar&)_var.arg()).setVal((value - _offset) / _slope) ;
+  _var->setVal((value - _offset) / _slope) ;
 
 }
 
@@ -144,14 +144,14 @@ void RooLinearVar::setVal(double value)
 
 bool RooLinearVar::isJacobianOK(const RooArgSet& depList) const
 {
-  if (!((RooAbsRealLValue&)_var.arg()).isJacobianOK(depList)) {
+  if (!_var->isJacobianOK(depList)) {
     return false ;
   }
 
   // Check if jacobian has no real-valued dependents
   for(RooAbsArg* arg : depList) {
     if (arg->IsA()->InheritsFrom(RooAbsReal::Class())) {
-      if (_slope.arg().dependsOnValue(*arg)) {
+      if (_slope->dependsOnValue(*arg)) {
 //    cout << "RooLinearVar::isJacobianOK(" << GetName() << ") return false because slope depends on value of " << arg->GetName() << endl ;
    return false ;
       }
@@ -168,7 +168,7 @@ bool RooLinearVar::isJacobianOK(const RooArgSet& depList) const
 
 double RooLinearVar::jacobian() const
 {
-  return _slope*((RooAbsRealLValue&)_var.arg()).jacobian() ;
+  return _slope*_var->jacobian() ;
 }
 
 
@@ -176,7 +176,7 @@ double RooLinearVar::jacobian() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Read object contents from stream
 
-bool RooLinearVar::readFromStream(istream& /*is*/, bool /*compact*/, bool /*verbose*/)
+bool RooLinearVar::readFromStream(std::istream& /*is*/, bool /*compact*/, bool /*verbose*/)
 {
   return true ;
 }
@@ -186,12 +186,12 @@ bool RooLinearVar::readFromStream(istream& /*is*/, bool /*compact*/, bool /*verb
 ////////////////////////////////////////////////////////////////////////////////
 /// Write object contents to stream
 
-void RooLinearVar::writeToStream(ostream& os, bool compact) const
+void RooLinearVar::writeToStream(std::ostream& os, bool compact) const
 {
   if (compact) {
     os << getVal() ;
   } else {
-    os << _slope.arg().GetName() << " * " << _var.arg().GetName() << " + " << _offset.arg().GetName() ;
+    os << _slope->GetName() << " * " << _var->GetName() << " + " << _offset->GetName() ;
   }
 }
 
@@ -207,25 +207,25 @@ void RooLinearVar::writeToStream(ostream& os, bool compact) const
 {
   // Normalization binning
   if (name==0) {
-    _binning.updateInput(((RooAbsRealLValue&)_var.arg()).getBinning(),_slope,_offset) ;
+    _binning.updateInput(_var->getBinning(),_slope,_offset) ;
     return _binning ;
   }
 
   // Alternative named range binnings, look for existing translator binning first
-  RooLinTransBinning* altBinning = (RooLinTransBinning*) _altBinning.FindObject(name) ;
+  auto* altBinning = static_cast<RooLinTransBinning*>(_altBinning.FindObject(name));
   if (altBinning) {
-    altBinning->updateInput(((RooAbsRealLValue&)_var.arg()).getBinning(name,verbose),_slope,_offset) ;
+    altBinning->updateInput(_var->getBinning(name,verbose),_slope,_offset) ;
     return *altBinning ;
   }
 
   // If binning is not found return default binning, if creation is not requested
-  if (!_var.arg().hasRange(name) && !createOnTheFly) {
+  if (!_var->hasRange(name) && !createOnTheFly) {
     return _binning ;
   }
 
   // Create translator binning on the fly
-  RooAbsBinning& sourceBinning = ((RooAbsRealLValue&)_var.arg()).getBinning(name,verbose) ;
-  RooLinTransBinning* transBinning = new RooLinTransBinning(sourceBinning,_slope,_offset) ;
+  RooAbsBinning& sourceBinning = _var->getBinning(name,verbose) ;
+  auto* transBinning = new RooLinTransBinning(sourceBinning,_slope,_offset) ;
   _altBinning.Add(transBinning) ;
 
   return *transBinning ;
@@ -249,8 +249,7 @@ std::list<std::string> RooLinearVar::getBinningNames() const
   std::list<std::string> binningNames(1, "");
 
   for (TObject const* binning : _altBinning) {
-    const char* name = binning->GetName();
-    binningNames.push_back(name);
+    binningNames.push_back(binning->GetName());
   }
 
   return binningNames;
@@ -263,5 +262,5 @@ std::list<std::string> RooLinearVar::getBinningNames() const
 
 bool RooLinearVar::hasBinning(const char* name) const
 {
-  return ((RooAbsRealLValue&)_var.arg()).hasBinning(name) ;
+  return _var->hasBinning(name) ;
 }
