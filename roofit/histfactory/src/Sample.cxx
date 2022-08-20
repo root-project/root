@@ -18,7 +18,7 @@
 #include "RooStats/HistFactory/HistFactoryException.h"
 
 RooStats::HistFactory::Sample::Sample() :
-  fNormalizeByTheory(false), fStatErrorActivate(false), fhNominal(), fhCountingHist(0) { ; }
+  fNormalizeByTheory(false), fStatErrorActivate(false), fhNominal() {}
 
 // copy constructor (important for python)
 RooStats::HistFactory::Sample::Sample(const Sample& other) :
@@ -36,13 +36,12 @@ RooStats::HistFactory::Sample::Sample(const Sample& other) :
   fStatError(other.fStatError),
   fNormalizeByTheory(other.fNormalizeByTheory),
   fStatErrorActivate(other.fStatErrorActivate),
-  fhNominal(other.fhNominal),
-  fhCountingHist(0)
+  fhNominal(other.fhNominal)
   {
     if( other.fhCountingHist ) {
       SetValue( other.fhCountingHist->GetBinContent(1) );
     }else{
-      fhCountingHist = nullptr;
+      fhCountingHist.reset();
     }
   }
 
@@ -64,13 +63,12 @@ RooStats::HistFactory::Sample& RooStats::HistFactory::Sample::operator=(const Sa
   fStatErrorActivate = other.fStatErrorActivate;
   fhNominal = other.fhNominal;
 
-  if (fhCountingHist)
-    delete fhCountingHist;
+  fhCountingHist.reset();
 
   if( other.fhCountingHist ) {
     SetValue( other.fhCountingHist->GetBinContent(1) );
   } else {
-    fhCountingHist = nullptr;
+    fhCountingHist.reset();
   }
 
   return *this;
@@ -80,19 +78,12 @@ RooStats::HistFactory::Sample& RooStats::HistFactory::Sample::operator=(const Sa
 RooStats::HistFactory::Sample::Sample(std::string SampName, std::string SampHistoName, std::string SampInputFile, std::string SampHistoPath) :
   fName( SampName ),   fInputFile( SampInputFile),
   fHistoName( SampHistoName ), fHistoPath( SampHistoPath ),
-  fNormalizeByTheory(true), fStatErrorActivate(false), fhNominal(),
-  fhCountingHist(0) { ; }
+  fNormalizeByTheory(true), fStatErrorActivate(false), fhNominal() {}
 
 RooStats::HistFactory::Sample::Sample(std::string SampName) :
   fName( SampName ),   fInputFile( "" ),
   fHistoName( "" ), fHistoPath( "" ),
-  fNormalizeByTheory(true), fStatErrorActivate(false),fhNominal(),
-  fhCountingHist(0) { ; }
-
-RooStats::HistFactory::Sample::~Sample() {
-  if(fhCountingHist)
-    delete fhCountingHist;
-}
+  fNormalizeByTheory(true), fStatErrorActivate(false),fhNominal() {}
 
 const TH1* RooStats::HistFactory::Sample::GetHisto() const {
   TH1* histo = (TH1*) fhNominal.GetObject();
@@ -145,15 +136,14 @@ void RooStats::HistFactory::Sample::SetValue( double val ) {
   std::string SampleHistName = fName + "_hist";
 
   // Histogram has 1-bin (hard-coded)
-  if(fhCountingHist)
-    delete fhCountingHist;
+  fhCountingHist.reset();
 
-  fhCountingHist = new TH1F( SampleHistName.c_str(), SampleHistName.c_str(), 1, 0, 1 );
+  fhCountingHist = std::make_unique<TH1F>( SampleHistName.c_str(), SampleHistName.c_str(), 1, 0, 1 );
   fhCountingHist->SetBinContent( 1, val );
 
   // Set the histogram of the internally held data
   // node of this channel to this newly created histogram
-  SetHisto( fhCountingHist );
+  SetHisto( fhCountingHist.get() );
 
 }
 

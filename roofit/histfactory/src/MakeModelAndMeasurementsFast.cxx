@@ -97,7 +97,7 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
 {
   // This will be returned
   RooWorkspace* ws = nullptr;
-  TFile* outFile = nullptr;
+  std::unique_ptr<TFile> outFile;
   FILE*  tableFile=nullptr;
 
   auto& msgSvc = RooMsgService::instance();
@@ -150,7 +150,7 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
     // This holds the TGraphs that are created during the fit
     std::string outputFileName = measurement.GetOutputFilePrefix() + "_" + measurement.GetName() + ".root";
     cxcoutIHF << "Creating the output file: " << outputFileName << std::endl;
-    outFile = new TFile(outputFileName.c_str(), "recreate");
+    outFile = std::make_unique<TFile>(outputFileName.c_str(), "recreate");
 
     // Create the table file
     // This holds the table of fitted values and errors
@@ -215,10 +215,10 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
    } else {
      if(ws_single->data("obsData")) {
        FitModelAndPlot(measurement.GetName(), measurement.GetOutputFilePrefix(), ws_single,
-             ch_name, "obsData",    outFile, tableFile);
+             ch_name, "obsData",    outFile.get(), tableFile);
      } else {
        FitModelAndPlot(measurement.GetName(), measurement.GetOutputFilePrefix(), ws_single,
-             ch_name, "asimovData", outFile, tableFile);
+             ch_name, "asimovData", outFile.get(), tableFile);
      }
    }
       }
@@ -264,26 +264,22 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
       else {
    if(ws->data("obsData")){
      FitModelAndPlot(measurement.GetName(), measurement.GetOutputFilePrefix(), ws,"combined",
-           "obsData",    outFile, tableFile);
+           "obsData",    outFile.get(), tableFile);
    }
    else {
      FitModelAndPlot(measurement.GetName(), measurement.GetOutputFilePrefix(), ws,"combined",
-           "asimovData", outFile, tableFile);
+           "asimovData", outFile.get(), tableFile);
    }
       }
     }
 
     fprintf(tableFile, " \\\\ \n");
 
-    outFile->Close();
-    delete outFile;
-
     fclose( tableFile );
 
   }
   catch(...) {
     if( tableFile ) fclose(tableFile);
-    if(outFile) outFile->Close();
     throw;
   }
 
@@ -393,23 +389,20 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
     throw hf_exc();
   }
 
-  RooPlot* frame = poi->frame();
-  if( frame == nullptr ) {
-    cxcoutEHF << "Error: Failed to create RooPlot frame for: " << poi->GetName() << std::endl;
-    throw hf_exc();
-  }
+  std::unique_ptr<RooPlot> frame{poi->frame()};
 
   // Draw the likelihood curve
-  FormatFrameForLikelihood(frame);
-  TCanvas* ProfileLikelihoodCanvas = new TCanvas( channel.c_str(), "",800,600);
-  nll->plotOn(frame, ShiftToZero(), LineColor(kRed), LineStyle(kDashed));
-  profile->plotOn(frame);
-  frame->SetMinimum(0);
-  frame->SetMaximum(2.);
-  frame->Draw();
-  std::string ProfilePlotName = FileNamePrefix+"_"+channel+"_"+MeasurementName+"_profileLR.eps";
-  ProfileLikelihoodCanvas->SaveAs( ProfilePlotName.c_str() );
-  delete ProfileLikelihoodCanvas;
+  FormatFrameForLikelihood(frame.get());
+  {
+    TCanvas profileLikelihoodCanvas{channel.c_str(), "",800,600};
+    nll->plotOn(frame.get(), ShiftToZero(), LineColor(kRed), LineStyle(kDashed));
+    profile->plotOn(frame.get());
+    frame->SetMinimum(0);
+    frame->SetMaximum(2.);
+    frame->Draw();
+    std::string profilePlotName = FileNamePrefix+"_"+channel+"_"+MeasurementName+"_profileLR.eps";
+    profileLikelihoodCanvas.SaveAs( profilePlotName.c_str() );
+  }
 
   // Now, we save our results to the 'output' file
   // (I'm not sure if users actually look into this file,
@@ -435,8 +428,8 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
   Int_t curve_N=curve->GetN();
   double* curve_x=curve->GetX();
 
-  double * x_arr = new double[curve_N];
-  double * y_arr_nll = new double[curve_N];
+  std::vector<double> x_arr(curve_N);
+  std::vector<double> y_arr_nll(curve_N);
 
   for(int i=0; i<curve_N; i++){
     double f=curve_x[i];
@@ -445,14 +438,9 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
     y_arr_nll[i]=nll->getVal();
   }
 
-  delete frame;
-
-  TGraph* g = new TGraph(curve_N, x_arr, y_arr_nll);
-  g->SetName( (FileNamePrefix +"_nll").c_str() );
-  g->Write();
-  delete g;
-  delete [] x_arr;
-  delete [] y_arr_nll;
+  TGraph g{curve_N, x_arr.data(), y_arr_nll.data()};
+  g.SetName( (FileNamePrefix +"_nll").c_str() );
+  g.Write();
 
   // Finally, restore the initial values
   combined->loadSnapshot("InitialValues");

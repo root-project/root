@@ -82,12 +82,11 @@ namespace HistFactory{
          }
       } else if (id == typeid(RooSimultaneous)) {    //|| id == typeid(RooSimultaneousOpt)) {
          RooSimultaneous *sim  = dynamic_cast<RooSimultaneous *>(&pdf);
-         RooAbsCategoryLValue *cat = (RooAbsCategoryLValue *) sim->indexCat().Clone();
+         std::unique_ptr<RooAbsCategoryLValue> cat{static_cast<RooAbsCategoryLValue *>(sim->indexCat().Clone())};
          for (int ic = 0, nc = cat->numBins((const char *)0); ic < nc; ++ic) {
             cat->setBin(ic);
             FactorizeHistFactoryPdf(observables, *sim->getPdf(cat->getCurrentLabel()), obsTerms, constraints);
          }
-         delete cat;
       } else if (pdf.dependsOn(observables)) {
          if (!obsTerms.contains(pdf)) obsTerms.add(pdf);
       } else {
@@ -152,7 +151,7 @@ namespace HistFactory{
     }
 
     // split dataset
-    TList* dataByCategory = data->split(*cat);
+    std::unique_ptr<TList> dataByCategory{data->split(*cat)};
     if(verbose) dataByCategory->Print();
     // note :
     // RooAbsData* dataForChan = (RooAbsData*) dataByCategory->FindObject("");
@@ -202,7 +201,6 @@ namespace HistFactory{
     } // End Loop Over Categories
 
     dataByCategory->Delete();
-    delete dataByCategory;
   }
 
 

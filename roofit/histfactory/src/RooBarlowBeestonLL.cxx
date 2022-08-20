@@ -106,23 +106,6 @@ RooStats::HistFactory::RooBarlowBeestonLL::RooBarlowBeestonLL(const RooBarlowBee
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooStats::HistFactory::RooBarlowBeestonLL::~RooBarlowBeestonLL()
-{
-  // Delete instance of minuit if it was ever instantiated
-  // if (_minuit) {
-  //   delete _minuit ;
-  // }
-
-
-  //delete _piter ;
-  //delete _oiter ;
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 void RooStats::HistFactory::RooBarlowBeestonLL::BarlowCache::SetBinCenter() const {

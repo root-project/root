@@ -81,7 +81,7 @@ namespace RooStats {
       _label_print_width(20), _bin_print_width(12) {
 
       // Open the File
-      TFile* file = new TFile(FileName.c_str());
+      auto file = std::make_unique<TFile>(FileName.c_str());
       if( !file ) {
    std::cout << "Error: Failed to open file: " << FileName << std::endl;
    throw hf_exc();
@@ -242,13 +242,12 @@ namespace RooStats {
 
    std::string sample_name = itr->first;
    std::string tmp_name = sample_name + channel + "_pretty_tmp";
-   TH1* sample_hist = GetSampleHist(channel, sample_name, tmp_name);
+   std::unique_ptr<TH1> sample_hist{GetSampleHist(channel, sample_name, tmp_name)};
    num_bins = sample_hist->GetNbinsX()*sample_hist->GetNbinsY()*sample_hist->GetNbinsZ();
    std::cout << std::setw(_label_print_width) << sample_name;
 
    // Print the content of the histogram
-   PrintMultiDimHist(sample_hist, _bin_print_width);
-   delete sample_hist;
+   PrintMultiDimHist(sample_hist.get(), _bin_print_width);
 
       }
 
@@ -264,12 +263,11 @@ namespace RooStats {
       std::cout << line_break << std::endl;
 
       std::string tmp_name = channel + "_pretty_tmp";
-      TH1* channel_hist = GetChannelHist(channel, tmp_name);
+      std::unique_ptr<TH1> channel_hist{GetChannelHist(channel, tmp_name)};
       std::cout << std::setw(_label_print_width) << "TOTAL:";
 
       // Print the Histogram
-      PrintMultiDimHist(channel_hist, _bin_print_width);
-      delete channel_hist;
+      PrintMultiDimHist(channel_hist.get(), _bin_print_width);
 
       return;
 
@@ -328,12 +326,11 @@ namespace RooStats {
    // If we pass a channel string, we only print that one channel
    if( channel_to_print != "" && channel_name != channel_to_print) continue;
 
-   TH1* data_hist = GetDataHist(data, channel_name, channel_name+"_tmp");
+   std::unique_ptr<TH1> data_hist{GetDataHist(data, channel_name, channel_name+"_tmp")};
    std::cout << std::setw(_label_print_width) << channel_name + " (data)";
 
    // Print the Histogram
-   PrintMultiDimHist(data_hist, _bin_print_width);
-   delete data_hist;
+   PrintMultiDimHist(data_hist.get(), _bin_print_width);
       }
     }
 
@@ -455,10 +452,8 @@ namespace RooStats {
       // (Could be optimized, it uses an intermediate histogram for now...)
 
       // Get the histogram, fetch the bin content, and return
-      TH1* channel_hist_tmp = GetChannelHist(channel, (channel+"_tmp").c_str());
-      double val = channel_hist_tmp->GetBinContent(bin);
-      delete channel_hist_tmp;
-      return val;
+      std::unique_ptr<TH1> channel_hist_tmp{GetChannelHist(channel, (channel+"_tmp").c_str())};
+      return channel_hist_tmp->GetBinContent(bin);
     }
 
 
@@ -469,10 +464,8 @@ namespace RooStats {
       //  Could be optimized, it uses an intermediate histogram for now...)
 
       // Get the histogram, fetch the bin content, and return
-      TH1* sample_hist_tmp = GetSampleHist(channel, sample,  (channel+"_tmp").c_str());
-      double val = sample_hist_tmp->GetBinContent(bin);
-      delete sample_hist_tmp;
-      return val;
+      std::unique_ptr<TH1> sample_hist_tmp{GetSampleHist(channel, sample,  (channel+"_tmp").c_str())};
+      return sample_hist_tmp->GetBinContent(bin);
     }
 
 
@@ -564,10 +557,9 @@ namespace RooStats {
    std::string sample_name = itr->first;
    std::string tmp_hist_name = sample_name + "_hist_tmp";
    RooAbsReal* sample_function = itr->second;
-   TH1* sample_hist = MakeHistFromRooFunction(sample_function, observable_list,
-                     tmp_hist_name);
+   std::unique_ptr<TH1> sample_hist{MakeHistFromRooFunction(sample_function, observable_list,
+                     tmp_hist_name)};
    total_hist = (TH1*) sample_hist->Clone("TotalHist");
-   delete sample_hist;
    break;
       }
       if (!total_hist)
@@ -582,10 +574,9 @@ namespace RooStats {
    std::string sample_name = itr->first;
    std::string tmp_hist_name = sample_name + "_hist_tmp";
    RooAbsReal* sample_function = itr->second;
-   TH1* sample_hist = MakeHistFromRooFunction(sample_function, observable_list,
-                     tmp_hist_name);
-   total_hist->Add(sample_hist);
-   delete sample_hist;
+   std::unique_ptr<TH1> sample_hist{MakeHistFromRooFunction(sample_function, observable_list,
+                     tmp_hist_name)};
+   total_hist->Add(sample_hist.get());
       }
 
       if(hist_name=="") total_hist->SetName(hist_name.c_str());
@@ -640,7 +631,7 @@ namespace RooStats {
       // MAKE IT WORK FOR MULTI-DIMENSIONAL
       //
 
-      TList *dataset_list = nullptr;
+      std::unique_ptr<TList> dataset_list;
 
       // If the dataset covers multiple categories,
       // Split the dataset based on the categories
@@ -650,7 +641,7 @@ namespace RooStats {
    RooSimultaneous* simPdf = (RooSimultaneous*) fModel;
    RooCategory* channelCat = (RooCategory*) (&simPdf->indexCat());
 
-   dataset_list = data->split(*channelCat);
+   dataset_list.reset(data->split(*channelCat));
 
    data = dynamic_cast<RooDataSet*>( dataset_list->FindObject(channel.c_str()) );
 
@@ -665,9 +656,7 @@ namespace RooStats {
       if (!data) {
    std::cout << "Error: To Create Histogram from RooDataSet" << std::endl;
    if (dataset_list) {
-      dataset_list->Delete();
-      delete dataset_list;
-      dataset_list = nullptr;
+      dataset_list.reset();
    }
         throw hf_exc();
       } else if( dim==1 ) {
@@ -694,16 +683,14 @@ namespace RooStats {
    vars.Print("V");
    if (dataset_list) {
       dataset_list->Delete();
-      delete dataset_list;
-      dataset_list = nullptr;
+      dataset_list.reset();
    }
    throw hf_exc();
       }
 
    if (dataset_list) {
       dataset_list->Delete();
-      delete dataset_list;
-      dataset_list = nullptr;
+      dataset_list.reset();
    }
 
       return hist;
@@ -842,7 +829,7 @@ namespace RooStats {
 
   // Loop over the sample nodes in this
   // channel's RooRealSumPdf
-  for (auto *func : static_range_cast<RooAbsReal *>(sumPdf->funcList())) {          
+  for (auto *func : static_range_cast<RooAbsReal *>(sumPdf->funcList())) {
     // Do a bit of work to get the name of each sample
     std::string SampleName = func->GetName();
     if( SampleName.find("L_x_") != std::string::npos ) {
@@ -887,15 +874,14 @@ namespace RooStats {
       // If that failed,
       // Check if it's a Parameter
       // (ie a RooRealVar)
-      RooArgSet* args = new RooArgSet();
-      for (auto *param : *parent->getParameters(args)) {
+      RooArgSet args;
+      for (auto *param : *parent->getParameters(&args)) {
         std::string ParamName = param->GetName();
         if( ParamName == name ) {
             term = param;
             break;
         }
       }
-      delete args;
 
       /* Not sure if we want to be silent
     But since we're returning a pointer which can be nullptr,
@@ -1063,7 +1049,7 @@ namespace RooStats {
 
       // Make the total histogram for this sample
       std::string total_Name = sampleNode->GetName();
-      TH1* total_hist= MakeHistFromRooFunction( sampleNode, observable_list, total_Name + "_tmp");
+      std::unique_ptr<TH1> total_hist{MakeHistFromRooFunction( sampleNode, observable_list, total_Name + "_tmp")};
       unsigned int num_bins = total_hist->GetNbinsX()*total_hist->GetNbinsY()*total_hist->GetNbinsZ();
 
       RooArgSet components;
@@ -1080,7 +1066,7 @@ namespace RooStats {
       }
 
       /////// NODE SIZE
-      { 
+      {
         for (auto *component : static_range_cast<RooAbsReal*>(components)) {
           std::string NodeName = component->GetName();
           label_print_width = TMath::Max(label_print_width, static_cast<int>(NodeName.size())+2);
@@ -1101,7 +1087,7 @@ namespace RooStats {
       }
       std::cout << std::endl;
 
- 
+
       for (auto *component : static_range_cast<RooAbsReal*>(components)) {
         std::string NodeName = component->GetName();
         // Make a histogram for this node
@@ -1109,21 +1095,20 @@ namespace RooStats {
         // annoying messages from being printed
         RooFit::MsgLevel levelBefore = RooMsgService::instance().globalKillBelow();
         RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
-        TH1* hist=nullptr;
+        std::unique_ptr<TH1> hist;
         try {
-          hist = MakeHistFromRooFunction( component, observable_list, NodeName+"_tmp");
+          hist.reset(MakeHistFromRooFunction( component, observable_list, NodeName+"_tmp"));
         } catch(...) {
         RooMsgService::instance().setGlobalKillBelow(levelBefore);
         throw;
         }
         RooMsgService::instance().setGlobalKillBelow(levelBefore);
-      
+
         // Print the hist
         std::cout << std::setw(label_print_width) << NodeName;
 
         // Print the Histogram
-        PrintMultiDimHist(hist, bin_print_width);
-        delete hist;
+        PrintMultiDimHist(hist.get(), bin_print_width);
       }
       /////
       std::string line_break;
@@ -1137,12 +1122,7 @@ namespace RooStats {
       std::cout << line_break << std::endl;
 
       std::cout << std::setw(label_print_width) << "TOTAL:";
-      PrintMultiDimHist(total_hist, bin_print_width);
-
-      delete total_hist;
-
-      return;
-
+      PrintMultiDimHist(total_hist.get(), bin_print_width);
     }
 
 
