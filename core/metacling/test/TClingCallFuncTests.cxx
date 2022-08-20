@@ -20,9 +20,11 @@ class CallFuncRAII {
   ClassInfo_t *fScope = nullptr;
   CallFunc_t *fmc = nullptr;
 public:
-  CallFuncRAII(const char *scopeName) {
+  CallFuncRAII(const char *scopeName, const char* method, const char* proto) {
     fScope = gInterpreter->ClassInfo_Factory(scopeName);
     fmc = gInterpreter->CallFunc_Factory();
+    Longptr_t offset = 0;
+    gInterpreter->CallFunc_SetFuncProto(fmc, fScope, method, proto, &offset);
   }
   ~CallFuncRAII() {
    // Cleanup
@@ -30,13 +32,27 @@ public:
     gInterpreter->ClassInfo_Delete(fScope);
   }
 
-  std::string SetProtoAndGetWrapper(const char* method, const char* proto) {
-    Longptr_t offset = 0;
-    gInterpreter->CallFunc_SetFuncProto(fmc, fScope, method, proto, &offset);
+  std::string GetWrapper() {
     return gInterpreter->CallFunc_GetWrapperCode(fmc);
   }
 
+  CallFunc_t * GetCF() const { return fmc; }
+
 };
+
+TEST(TClingCallFunc, Conversions)
+{
+   gInterpreter->Declare(R"cpp(
+                           bool CheckFunc() { return false; }
+                           )cpp");
+
+   CallFuncRAII CfRAII("", "CheckFunc", "");
+   // Here the bool return result is represented as a unsigned int, however,
+   // long has a different representation and if we do not cast it propertly
+   // the bits are `1` instead `0`.
+   long result = gInterpreter->CallFunc_ExecInt(CfRAII.GetCF(), /*address*/0);
+   ASSERT_TRUE(result == 0);
+}
 
 TEST(TClingCallFunc, FunctionWrapper)
 {
@@ -44,8 +60,8 @@ TEST(TClingCallFunc, FunctionWrapper)
                            bool FunctionWrapperFunc(int b, float f) { return false; }
                            )cpp");
 
-   CallFuncRAII CfRAII("");
-   std::string wrapper = CfRAII.SetProtoAndGetWrapper("FunctionWrapperFunc", "int, float");
+   CallFuncRAII CfRAII("", "FunctionWrapperFunc", "int, float");
+   std::string wrapper = CfRAII.GetWrapper();
 
    ASSERT_TRUE(gInterpreter->Declare(wrapper.c_str()));
    // Test that we cast this function to the right function type.
@@ -58,8 +74,8 @@ TEST(TClingCallFunc, FunctionWrapperPointer)
                            int *FunctionWrapperFuncPtr(int b, float f) { return nullptr; }
                            )cpp");
 
-   CallFuncRAII CfRAII("");
-   std::string wrapper = CfRAII.SetProtoAndGetWrapper("FunctionWrapperFuncPtr", "int, float");
+   CallFuncRAII CfRAII("", "FunctionWrapperFuncPtr", "int, float");
+   std::string wrapper = CfRAII.GetWrapper();
 
    ASSERT_TRUE(gInterpreter->Declare(wrapper.c_str()));
    // Test that we cast this function to the right function type.
@@ -76,8 +92,8 @@ TEST(TClingCallFunc, FunctionWrapperReference)
                            )cpp");
 
 
-   CallFuncRAII CfRAII("");
-   std::string wrapper = CfRAII.SetProtoAndGetWrapper("FunctionWrapperFuncRef", "int*, float");
+   CallFuncRAII CfRAII("", "FunctionWrapperFuncRef", "int*, float");
+   std::string wrapper = CfRAII.GetWrapper();
 
    ASSERT_TRUE(gInterpreter->Declare(wrapper.c_str()));
    // Test that we cast this function to the right function type.
@@ -93,8 +109,8 @@ TEST(TClingCallFunc, FunctionWrapperVoid)
                            void FunctionWrapperFuncVoid(int j) {}
                            )cpp");
 
-   CallFuncRAII CfRAII("");
-   std::string wrapper = CfRAII.SetProtoAndGetWrapper("FunctionWrapperFuncVoid", "int");
+   CallFuncRAII CfRAII("", "FunctionWrapperFuncVoid", "int");
+   std::string wrapper = CfRAII.GetWrapper();
 
    ASSERT_TRUE(gInterpreter->Declare(wrapper.c_str()));
 }
@@ -105,8 +121,8 @@ TEST(TClingCallFunc, FunctionWrapperRValueRefArg)
                            void FunctionWrapperFuncRValueRefArg(int&& j) {}
                            )cpp");
 
-   CallFuncRAII CfRAII("");
-   std::string wrapper = CfRAII.SetProtoAndGetWrapper("FunctionWrapperFuncRValueRefArg", "int&&");
+   CallFuncRAII CfRAII("", "FunctionWrapperFuncRValueRefArg", "int&&");
+   std::string wrapper = CfRAII.GetWrapper();
 
    ASSERT_TRUE(gInterpreter->Declare(wrapper.c_str()));
 }
@@ -117,8 +133,8 @@ TEST(TClingCallFunc, FunctionWrapperVariadic)
                            void FunctionWrapperFuncVariadic(int j, ...) {}
                            )cpp");
 
-   CallFuncRAII CfRAII("");
-   std::string wrapper = CfRAII.SetProtoAndGetWrapper("FunctionWrapperFuncVariadic", "int");
+   CallFuncRAII CfRAII("", "FunctionWrapperFuncVariadic", "int");
+   std::string wrapper = CfRAII.GetWrapper();
 
    ASSERT_TRUE(gInterpreter->Declare(wrapper.c_str()));
    // Make sure we didn't forget the ... in the variadic function signature.
@@ -131,8 +147,8 @@ TEST(TClingCallFunc, FunctionWrapperDefaultArg)
                            int FunctionWrapperFuncDefaultArg(int j = 0) { return j; }
                            )cpp");
 
-   CallFuncRAII CfRAII("");
-   std::string wrapper = CfRAII.SetProtoAndGetWrapper("FunctionWrapperFuncDefaultArg", "");
+   CallFuncRAII CfRAII("", "FunctionWrapperFuncDefaultArg", "");
+   std::string wrapper = CfRAII.GetWrapper();
 
    ASSERT_TRUE(gInterpreter->Declare(wrapper.c_str()));
 
@@ -150,8 +166,8 @@ TEST(TClingCallFunc, TemplateFunctionWrapper)
                            template<typename T> bool TemplateFunctionWrapperFunc(T b) {return false;}
                            )cpp");
 
-   CallFuncRAII CfRAII("");
-   std::string wrapper = CfRAII.SetProtoAndGetWrapper("TemplateFunctionWrapperFunc", "int");
+   CallFuncRAII CfRAII("", "TemplateFunctionWrapperFunc", "int");
+   std::string wrapper = CfRAII.GetWrapper();
 
    ASSERT_TRUE(gInterpreter->Declare(wrapper.c_str()));
    // Test that we cast this template function to the right function type.
@@ -164,8 +180,8 @@ TEST(TClingCallFunc, FunctionWrapperIncompleteReturnType)
                            class FunctionWrapperFwd;
                            FunctionWrapperFwd* FunctionWrapperIncompleteType() { return nullptr;}
                            )cpp");
-   CallFuncRAII CfRAII("");
-   std::string wrapper = CfRAII.SetProtoAndGetWrapper("FunctionWrapperIncompleteType", "");
+   CallFuncRAII CfRAII("", "FunctionWrapperIncompleteType", "");
+   std::string wrapper = CfRAII.GetWrapper();
 
    ASSERT_TRUE(gInterpreter->Declare(wrapper.c_str()));
 }
@@ -178,8 +194,8 @@ TEST(TClingCallFunc, MemberMethodWrapper)
                            };
                            )cpp");
 
-   CallFuncRAII CfRAII("TClingCallFunc_TestClass1");
-   std::string wrapper = CfRAII.SetProtoAndGetWrapper("foo", "int");
+   CallFuncRAII CfRAII("TClingCallFunc_TestClass1", "foo", "int");
+   std::string wrapper = CfRAII.GetWrapper();
 
    // We just test that the wrapper compiles. This is a regression test to make sure
    // we never try to cast a member function as we do above.
@@ -216,8 +232,8 @@ TEST(TClingCallFunc, FunctionWrapperNodiscard)
                            };
                            )cpp");
 
-   CallFuncRAII CfRAII("TClingCallFunc_Nodiscard1");
-   std::string wrapper = CfRAII.SetProtoAndGetWrapper("foo", "int");
+   CallFuncRAII CfRAII("TClingCallFunc_Nodiscard1", "foo", "int");
+   std::string wrapper = CfRAII.GetWrapper();
 
    {
       using ::testing::Not;
@@ -239,7 +255,7 @@ TEST(TClingCallFunc, FunctionWrapperSharedPtr)
                           }
                           )cpp");
 
-   CallFuncRAII CfRAII("");
-   std::string wrapper = CfRAII.SetProtoAndGetWrapper("add_sp", "std::shared_ptr<std::vector<E>>");
+  CallFuncRAII CfRAII("", "add_sp", "std::shared_ptr<std::vector<E>>");
+   std::string wrapper = CfRAII.GetWrapper();
    ASSERT_TRUE(gInterpreter->Declare(wrapper.c_str()));
 }
