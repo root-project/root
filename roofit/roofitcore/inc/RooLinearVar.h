@@ -62,12 +62,12 @@ protected:
   double evaluate() const override ;
 
   mutable RooLinTransBinning _binning ;
-  RooLinkedList _altBinning ; ///<!
-  RooRealProxy _var ;         ///< Input observable
-  RooRealProxy _slope ;       ///< Slope of transformation
-  RooRealProxy _offset ;      ///< Offset of transformation
+  RooLinkedList _altBinning ;              ///<!
+  RooTemplateProxy<RooAbsRealLValue> _var; ///< Input observable
+  RooRealProxy _slope ;                    ///< Slope of transformation
+  RooRealProxy _offset ;                   ///< Offset of transformation
 
-  ClassDefOverride(RooLinearVar,1) // Lvalue linear transformation function
+  ClassDefOverride(RooLinearVar,2) // Lvalue linear transformation function
 };
 
 #endif
