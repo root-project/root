@@ -36,6 +36,9 @@
 #include "ReduceMean_FromONNX.hxx"
 #include "input_models/references/ReduceMean.ref.hxx"
 
+#include "ReduceProd_FromONNX.hxx"
+#include "input_models/references/ReduceProd.ref.hxx"
+
 #include "LinearWithLeakyRelu_FromONNX.hxx"
 #include "input_models/references/LinearWithLeakyRelu.ref.hxx"
 
@@ -807,6 +810,28 @@ TEST(ONNX, Pow_broadcast){
 
 }
 
+   TEST(ONNX, ReduceProd){
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard  input
+   std::vector<float> input({
+      5, 2, 3,
+      5, 5, 4
+   });
+   
+   TMVA_SOFIE_ReduceProd::Session s("ReduceProd_FromONNX.dat");
+   std::vector<float> output = s.infer(input.data());
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(ReduceProd_ExpectedOutput::output) / sizeof(float));
+   
+   float *correct = ReduceProd_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+
+}
 
 TEST(ONNX, RNNBatchwise)
 {

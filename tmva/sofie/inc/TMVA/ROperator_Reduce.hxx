@@ -110,8 +110,6 @@ public:
       else 
          out << " };\n";
       }
-      // no compute indices as function of strides
-      // as in the example I have sent you
       
       for (size_t k = 0; k < dim; k++) {
          size_t j;
@@ -125,7 +123,7 @@ public:
       // out << SP << "assert(idx[" << fAttrAxes << "] == 0);\n";  // we can avoid computing this for the reduction axis which by definition is always zero
 
       out << SP << "float sum = 0;\n";
-      out << SP << SP << " for (size_t k = 0; k < " << fShapeX[fAttrAxes] <<"; k++) { \n";
+      out << SP << " for (size_t k = 0; k < " << fShapeX[fAttrAxes] <<"; k++) { \n";
       out << SP << SP << "  idx_" << fAttrAxes << " = k;\n";
        // compute input index j 
       out << SP << "std::vector<size_t> inputStrides = {" ;
@@ -137,13 +135,13 @@ public:
          out << " };\n";
       }
       out << SP << SP << "size_t l = 0;\n";
-      for (size_t m = 0; m < dim; m++) {
-         size_t n;
-         for(n = 0; n < m; n++ )
+      
+         size_t n ;
+         for(n = 0; n < dim-1; n++ )
          out << SP << "l += idx_" << n << " * inputStrides[" << n << "];\n";
 
-         out << SP << "l +=  idx_" << m << ";\n";
-      }
+         out << SP << "l +=  idx_" << n << ";\n";
+      
       if(fReduceOpMode == ReduceMean){
          out << SP << SP << "sum += tensor_" << fNX << "[l];\n";
          out << SP << SP << "};\n"; 

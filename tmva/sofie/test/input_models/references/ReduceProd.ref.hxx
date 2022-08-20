@@ -1,5 +1,5 @@
 namespace Reduce_mean_ExpectedOutput{
 	float output[] = {
-        5.0, 3.5, 3.5
+        25.0, 10.0, 12.0
 	};
 } // namespace Reduce_mean_ExpectedOutput
