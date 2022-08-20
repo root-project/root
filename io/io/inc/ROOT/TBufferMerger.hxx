@@ -106,7 +106,7 @@ public:
       fMerger.SetNotrees(notrees);
    }
 
-   /** Returns whether the the file has been marked as not containing any TTree objects
+   /** Returns whether the file has been marked as not containing any TTree objects
     * and thus that steps that are specific to TTree can be skipped */
    Bool_t GetNotrees() const
    {

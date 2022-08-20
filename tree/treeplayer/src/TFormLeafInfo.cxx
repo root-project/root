@@ -30,7 +30,7 @@ The following method are available from the TFormLeafInfo interface:
 
  -  AddOffset(Int_t offset, TStreamerElement* element)
  -  GetCounterValue(TLeaf* leaf) : return the size of the array pointed to.
- -  GetObjectAddress(TLeafElement* leaf) : Returns the the location of the object pointed to.
+ -  GetObjectAddress(TLeafElement* leaf) : Returns the location of the object pointed to.
  -  GetMultiplicity() : Returns info on the variability of the number of elements
  -  GetNdata(TLeaf* leaf) : Returns the number of elements
  -  GetNdata() : Used by GetNdata(TLeaf* leaf)
@@ -178,7 +178,7 @@ TClass* TFormLeafInfo::GetClass() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns the the location of the object pointed to.
+/// Returns the location of the object pointed to.
 /// Modify instance if the object is part of an array.
 
 char* TFormLeafInfo::GetObjectAddress(TLeafElement* leaf, Int_t& instance)
@@ -1166,7 +1166,7 @@ TFormLeafInfoClones &TFormLeafInfoClones::operator=(const TFormLeafInfoClones &o
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the current size of the the TClonesArray
+/// Return the current size of the TClonesArray
 
 Int_t TFormLeafInfoClones::GetCounterValue(TLeaf* leaf)
 {
@@ -1180,7 +1180,7 @@ Int_t TFormLeafInfoClones::GetCounterValue(TLeaf* leaf)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the current size of the the TClonesArray
+/// Return the current size of the TClonesArray
 
 Int_t TFormLeafInfoClones::ReadCounterValue(char* where)
 {
@@ -1364,7 +1364,7 @@ TFormLeafInfoCollectionObject &TFormLeafInfoCollectionObject::operator=(const TF
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the current size of the the TClonesArray
+/// Return the current size of the TClonesArray
 
 Int_t TFormLeafInfoCollectionObject::GetCounterValue(TLeaf* /* leaf */)
 {
@@ -1607,7 +1607,7 @@ Bool_t TFormLeafInfoCollection::HasCounter() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the current size of the the TClonesArray
+/// Return the current size of the TClonesArray
 
 Int_t TFormLeafInfoCollection::GetCounterValue(TLeaf* leaf)
 {
@@ -1635,7 +1635,7 @@ Int_t TFormLeafInfoCollection::ReadCounterValue(char* where)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the current size of the the TClonesArray
+/// Return the current size of the TClonesArray
 
 Int_t TFormLeafInfoCollection::GetCounterValue(TLeaf* leaf, Int_t instance)
 {

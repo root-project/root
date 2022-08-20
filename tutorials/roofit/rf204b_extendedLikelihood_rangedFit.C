@@ -102,7 +102,7 @@ void rf204b_extendedLikelihood_rangedFit()
 
 
  // It can be instructive to fit the above model to either the LEFT or RIGHT range. `N` should approximately converge to the expected number
- // of events in the full range. One may try to leave out `"FULL"` in the constructor, o the the interpretation of `N` changes.
+ // of events in the full range. One may try to leave out `"FULL"` in the constructor, or the interpretation of `N` changes.
  extmodel.fitTo(*data, Range("LEFT"), PrintLevel(-1));
  N.Print();
 

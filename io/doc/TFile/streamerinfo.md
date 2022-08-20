@@ -50,7 +50,7 @@ of class TStreamerInfo.
                       | In the StreamerInfo record, the objects in the list are
                       |   TStreamerInfo objects.  There will be one TStreamerInfo
                       |   object for every class used in data records other than
-                      |   core records and the the StreamerInfo record itself.
+                      |   core records and the StreamerInfo record itself.
 -------
 </pre></div>
 

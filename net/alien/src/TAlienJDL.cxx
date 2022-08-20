@@ -369,7 +369,7 @@ void TAlienJDL::AddToMerge(const char *filenameToMerge, const char *jdlToSubmit,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Adds a package name the the package section.
+/// Adds a package name the package section.
 
 void TAlienJDL::AddToMerge(const char *merge, const char *description)
 {

@@ -45,7 +45,7 @@ particle at say 8 fixed planes, the trajectory is described by an
 \f]
 in 8-dimensional pattern space.
 
-One proceeds by generating a a representative tracks sample and
+One proceeds by generating a representative tracks sample and
 building up the covariance matrix \f$\mathsf{C}\f$. Its eigenvectors and
 eigenvalues are computed by standard methods, and thus a new basis is
 obtained for the original 8-dimensional space the expansion of the

@@ -43,7 +43,7 @@ public:
 
    // static methods for setting and retrieving the default options
 
-   /// Set the the default Minimizer type and corresponding algorithms.
+   /// Set the default Minimizer type and corresponding algorithms.
    /// Here is the list of the available minimizers and their corresponding algorithms.
    /// For some minimizers (e.g. Fumili) there are no specific algorithms available, then there is no need to specify it.
    ///

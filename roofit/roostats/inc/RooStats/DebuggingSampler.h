@@ -75,7 +75,7 @@ namespace RooStats {
       void Initialize(RooAbsArg& /* testStatistic */, RooArgSet& /* paramsOfInterest */, RooArgSet& /* nuisanceParameters */ ) override {
       }
 
-      /// Set the Pdf, add to the the workspace if not already there
+      /// Set the Pdf, add to the workspace if not already there
       void SetPdf(RooAbsPdf&) override {}
 
       /// specify the parameters of interest in the interval

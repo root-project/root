@@ -198,7 +198,7 @@ std::vector<std::string> GetFileNamesFromTree(const TTree &tree)
 /// - A pair with the name and alias of the chain (if present, both might be
 ///   empty strings).
 /// - A vector with all the paths to the files contained in the chain.
-/// - A vector with all the the names of the trees making up the chain,
+/// - A vector with all the names of the trees making up the chain,
 ///   associated with the file names of the previous vector.
 RFriendInfo GetFriendInfo(const TTree &tree)
 {

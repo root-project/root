@@ -35,7 +35,7 @@ namespace Math {
 //__________________________________________________________________________________________
    /**
       Rotation class representing a 3D rotation about the X axis by the angle of rotation.
-      For efficiency reason, in addition to the the angle, the sine and cosine of the angle are held
+      For efficiency reason, in addition to the angle, the sine and cosine of the angle are held
 
       @ingroup GenVector
 

@@ -111,7 +111,7 @@ fold_id_vec_t getCurrentFoldExternal(id_vec_t ids, UInt_t numFolds, UInt_t iFold
       std::cout << std::endl;
    }
 
-   // Combine folds into a a training and test set
+   // Combine folds into a training and test set
    fold_id_vec_t combined_vec;
    for (size_t i = 0; i < 2; ++i) {
       combined_vec.push_back(std::shared_ptr<id_vec_t>(new id_vec_t()));

@@ -2012,7 +2012,7 @@ The height of the mesh is proportional to the cell content.
 | "SURF2"  | Draw a surface plot using colors to show the cell contents.|
 | "SURF3"  | Same as `SURF` with an additional filled contour plot on top.|
 | "SURF4"  | Draw a surface using the Gouraud shading technique.|
-| "SURF5"  | Used with one of the options CYL, PSR and CYL this option allows to draw a a filled contour plot.|
+| "SURF5"  | Used with one of the options CYL, PSR and CYL this option allows to draw a filled contour plot.|
 | "SURF6"  | This option should not be used directly. It is used internally when the CONT is used with option the option SAME on a 3D plot.|
 | "SURF7"  | Same as `SURF2` with an additional line contour plot on top.|
 
@@ -2723,7 +2723,7 @@ is a collection of `TH1` (or derived) objects. For painting only the
 By default, histograms are shown stacked:
 
 1. The first histogram is paint.
-2. The the sum of the first and second, etc...
+2. The sum of the first and second, etc...
 
 If the option `NOSTACK` is specified, the histograms are all paint in
 the same pad as if the option `SAME` had been specified. This allows to
