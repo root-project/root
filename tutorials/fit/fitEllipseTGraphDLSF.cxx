@@ -41,7 +41,7 @@
 //   F(x, y) = 0
 //   B^2 - 4 * A * C < 0
 //
-// input parameter is a a pointer to a "TGraph" with at least 6 points
+// input parameter is a pointer to a "TGraph" with at least 6 points
 //
 // returns a "TVectorD" ("empty" in case any problems encountered):
 // ellipse[0] = "X0"

@@ -91,7 +91,7 @@ RooDataWeightedAverage::~RooDataWeightedAverage()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return global normalization term by which raw (combined) test statistic should
 /// be defined to obtain final test statistic. For a data weighted avarage this
-/// the the sum of all weights
+/// the sum of all weights
 
 double RooDataWeightedAverage::globalNormalization() const
 {

@@ -56,7 +56,7 @@ used for coverage studies, the Neyman Construction, etc.
       /// Common Initialization
       virtual void Initialize(RooAbsArg& testStatistic, RooArgSet& paramsOfInterest, RooArgSet& nuisanceParameters) = 0;
 
-      /// Set the Pdf, add to the the workspace if not already there
+      /// Set the Pdf, add to the workspace if not already there
       virtual void SetPdf(RooAbsPdf&) = 0;
 
       /// How to randomize the prior. Set to nullptr to deactivate randomization.

@@ -34,7 +34,7 @@ the ROOT generator, *gRandom*.
 <a href="https://arxiv.org/abs/1705.03123">paper </a>. It generates random numbers with 52 bit precision (double
 precision) and it has an higher luxury level than the original Ranlux generator (`p = 2048` instead of `p=794`).
 - ::TRandomMixMax: Generator based on the family of the MIXMAX matrix generators (see the
-<a href="https://mixmax.hepforge.org">MIXMAX HEPFORGE Web page</a> and the the documentation of the class
+<a href="https://mixmax.hepforge.org">MIXMAX HEPFORGE Web page</a> and the documentation of the class
 ROOT::Math::MixMaxEngine for more information), that are base on the Asanov dynamical C systems. This generator has a
 state of N=240 64 bit integers, proof random properties, it provides 61 random bits and it has a very large period
 (\f$10^{4839}\f$). Furthermore, it provides the capability to be seeded with the guarantee that, for each given

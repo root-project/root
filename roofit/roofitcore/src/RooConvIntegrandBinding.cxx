@@ -19,7 +19,7 @@
 \class RooConvIntegrandBinding
 \ingroup Roofitcore
 
-Implementation of RooAbsFunc that represent the the integrand
+Implementation of RooAbsFunc that represent the integrand
 of a generic (numeric) convolution A (x) B so that it can be
 passed to a numeric integrator. This is a utility class for
 RooNumConvPdf

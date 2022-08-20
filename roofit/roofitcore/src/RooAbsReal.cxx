@@ -918,7 +918,7 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
   }
   RooAbsReal *theClone= (RooAbsReal*)cloneSet->find(GetName());
 
-  // The remaining entries in our list of leaf nodes are the the external
+  // The remaining entries in our list of leaf nodes are the external
   // dependents (x) and parameters (p) of the projection. Patch them back
   // into the theClone. This orphans the nodes they replace, but the orphans
   // are still in the cloneList and so will be cleaned up eventually.

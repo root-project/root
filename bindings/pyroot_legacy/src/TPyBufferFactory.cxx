@@ -64,7 +64,7 @@ namespace {
 // implement get, str, and length functions
    Py_ssize_t buffer_length( PyObject* self )
    {
-   // Retrieve the (type-strided) size of the the buffer; may be a guess.
+   // Retrieve the (type-strided) size of the buffer; may be a guess.
 #if PY_VERSION_HEX < 0x03000000
       Py_ssize_t nlen = ((PyBufferTop_t*)self)->fSize;
       Py_ssize_t item = ((PyBufferTop_t*)self)->fItemSize;

@@ -2588,7 +2588,7 @@ char *TClass::EscapeChars(const char *text) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return a pointer the the real class of the object.
+/// Return a pointer to the real class of the object.
 /// This is equivalent to object->IsA() when the class has a ClassDef.
 /// It is REQUIRED that object is coming from a proper pointer to the
 /// class represented by 'this'.

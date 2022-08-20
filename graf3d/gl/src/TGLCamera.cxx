@@ -158,7 +158,7 @@ void TGLCamera::UpdateCache() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the the current camera frustum. If asBox == kFALSE return
+/// Return the current camera frustum. If asBox == kFALSE return
 /// a true frustum (truncated square based pyramid). If asBox == kTRUE
 /// return a true box, using the far clipping plane intersection projected
 /// back to the near plane.

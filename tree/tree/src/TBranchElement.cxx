@@ -4335,7 +4335,7 @@ void TBranchElement::ReadLeavesCollection(TBuffer& b)
          break;
    }
    //------------------------------------------------------------------------
-   // We have split this stuff, so we need to create the the pointers
+   // We have split this stuff, so we need to create the pointers
    /////////////////////////////////////////////////////////////////////////////
 
    if( proxy->HasPointers() && fSplitLevel > TTree::kSplitCollectionOfPointers )

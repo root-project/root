@@ -4170,7 +4170,7 @@ void TGraphPainter::PaintGraphSimple(TGraph *theGraph, Option_t *option)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint a polyline with hatches on one side showing an exclusion zone. x and y
-/// are the the vectors holding the polyline and n the number of points in the
+/// are the vectors holding the polyline and n the number of points in the
 /// polyline and `w` the width of the hatches. `w` can be negative.
 /// This method is not meant to be used directly. It is called automatically
 /// according to the line style convention.

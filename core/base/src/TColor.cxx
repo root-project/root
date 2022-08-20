@@ -1979,7 +1979,7 @@ Int_t TColor::GetColorBright(Int_t n)
    if (n < ncolors) color = (TColor*)colors->At(n);
    if (!color) return -1;
 
-   //Get the rgb of the the new bright color corresponding to color n
+   //Get the rgb of the new bright color corresponding to color n
    Float_t r,g,b;
    HLStoRGB(color->GetHue(), 1.2f*color->GetLight(), color->GetSaturation(), r, g, b);
 
@@ -2011,7 +2011,7 @@ Int_t TColor::GetColorDark(Int_t n)
    if (n < ncolors) color = (TColor*)colors->At(n);
    if (!color) return -1;
 
-   //Get the rgb of the the new dark color corresponding to color n
+   //Get the rgb of the new dark color corresponding to color n
    Float_t r,g,b;
    HLStoRGB(color->GetHue(), 0.7f*color->GetLight(), color->GetSaturation(), r, g, b);
 

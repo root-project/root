@@ -150,7 +150,7 @@ int TMVACrossValidation(bool useRandomSplitting = false)
 
    // The CV mechanism of TMVA splits up the training set into several folds.
    // The test set is currently left unused. The `nTest_ClassName=1` assigns
-   // one event to the the test set for each class and puts the rest in the
+   // one event to the test set for each class and puts the rest in the
    // training set. A value of 0 is a special value and would split the
    // datasets 50 / 50.
    dataloader->PrepareTrainingAndTestTree("", "",

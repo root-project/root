@@ -633,7 +633,7 @@ double RooCurve::average(double xFirst, double xLast) const
     const_cast<RooCurve&>(*this).GetPoint(ifirst,xFirstPt,yFirstPt) ;
   }
 
-  // If last point closest to yLast is at yLast or beyond yLast the the previous point
+  // If last point closest to yLast is at yLast or beyond yLast the previous point
   // as the last midway point
   if ((xLastPt-xLast)>tolerance) {
     ilast-- ;
