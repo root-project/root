@@ -130,7 +130,7 @@ static char* cdata_str = XML_CDATA_STR;
  * Also, variables of the form $image.width and $image.height are
  * supported.  $image.width is the width of the image with refid "image",
  * and $image.height is the height of the same image.  The special
- * $xroot.width and $xroot.height values are defined by the the X root
+ * $xroot.width and $xroot.height values are defined by the X root
  * window, if there is one.  This allows images to be scaled to the
  * desktop size: <scale width="$xroot.width" height="$xroot.height">.
  *

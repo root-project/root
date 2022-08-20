@@ -67,7 +67,7 @@ problem in a common way for several concrete calculators.
       /// Get the Confidence level for the test
       virtual double ConfidenceLevel()  const = 0;
 
-      /// Set the DataSet ( add to the the workspace if not already there ?)
+      /// Set the DataSet ( add to the workspace if not already there ?)
       virtual void SetData(RooAbsData&) = 0;
 
       /// Set the Model

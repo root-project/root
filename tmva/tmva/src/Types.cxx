@@ -65,7 +65,7 @@ TMVA::Types::~Types()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// the the single instance of "Types" if existing already, or create it  (Singleton)
+/// The single instance of "Types" if existing already, or create it  (Singleton)
 
 TMVA::Types& TMVA::Types::Instance()
 {

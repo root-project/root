@@ -193,7 +193,7 @@
 ;;      created.  The point is left in the current window. 
 ;;
 ;;    root-send-buffer-to-root
-;;      Sends the the current buffer to an interactive ROOT session.  
+;;      Sends the current buffer to an interactive ROOT session.  
 ;;      If no session exists, then one will be created.  The point is
 ;;      left in the current window.  If the buffer has an associated
 ;;      file, and it has been modified since the last save, then the
@@ -1272,7 +1272,7 @@ that will be inserted into the session on startup."
 
 ;;____________________________________________________________________
 (defun root-send-buffer-to-root () 
-  "Sends the the current buffer to an interactive ROOT session.  
+  "Sends the current buffer to an interactive ROOT session.  
 
 If no session exists, then one will be created.  The point is
 left in the current window.  If the buffer has an associated

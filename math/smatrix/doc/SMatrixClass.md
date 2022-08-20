@@ -131,7 +131,7 @@ x = m.apply(7);                        // returns again the (row=2,col=1) elemen
 
 There are methods to place and/or retrieve ROOT::Math::SVector objects as rows or columns
 in (from) a matrix. In addition one can put (get) a sub-matrix as another
-ROOT::Math::SMatrix object in a matrix. If the size of the the sub-vector or sub-matrix are
+ROOT::Math::SMatrix object in a matrix. If the size of the sub-vector or sub-matrix are
 larger than the matrix size a static assert ( a compilation error) is produced. The non-const
 
 ~~~ {.cpp}

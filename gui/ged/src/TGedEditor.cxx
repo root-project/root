@@ -38,7 +38,7 @@ different class is selected, a new object editor is loaded in the
 editor frame. The old one is cached in memory for potential reuse.
 
 Any created canvas will be shown with the editor if you have a
-.rootrc file in your working directory containing the the line:
+.rootrc file in your working directory containing the line:
 Canvas.ShowEditor:      true
 
 An created object can be set as selected in a macro by:

@@ -67,7 +67,7 @@ void fitLinear()
    gre4->SetMarkerColor(kRed);
    gre4->SetLineColor(kRed);
    //If you don't want to define the function, you can just pass the string
-   //with the the formula:
+   //with the formula:
    gre4->Fit("1 ++ exp(-x)");
    //Access the fit results:
    TF1 *f4 = gre4->GetFunction("1 ++ exp(-x)");

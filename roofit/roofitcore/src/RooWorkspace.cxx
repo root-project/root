@@ -145,7 +145,7 @@ void RooWorkspace::setClassFileExportDir(const char* dir)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// If flag is true, source code of classes not the the ROOT distribution
+/// If flag is true, source code of classes not the ROOT distribution
 /// is automatically imported if on object of such a class is imported
 /// in the workspace
 

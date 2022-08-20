@@ -109,7 +109,7 @@ in a common way for several concrete calculators.
       /// Get the Confidence level for the test
       double ConfidenceLevel()  const override {return 1.-fSize;}
 
-      /// Set the DataSet, add to the the workspace if not already there
+      /// Set the DataSet, add to the workspace if not already there
       void SetData(RooAbsData & data) override {
          fData = &data;
       }

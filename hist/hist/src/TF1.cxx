@@ -2700,7 +2700,7 @@ Double_t TF1::IntegralOneDim(Double_t a, Double_t b,  Double_t epsrel, Double_t 
 /// When the poassed pointer to the covariance matrix is null, a covariance matrix from the last fit is retrieved
 /// from a global fitter instance when it exists. Note that the global fitter instance
 /// esists only when ROOT is not running with multi-threading enabled (ROOT::IsImplicitMTEnabled() == True).
-/// When the ovariance matrix from the last fit cannot be retrieved, an error message is printed and a a zero value is
+/// When the ovariance matrix from the last fit cannot be retrieved, an error message is printed and a zero value is
 /// returned.
 ///
 ///
@@ -2750,7 +2750,7 @@ Double_t TF1::IntegralError(Double_t a, Double_t b, const Double_t *params, cons
 /// When the poassed pointer to the covariance matrix is null, a covariance matrix from the last fit is retrieved
 /// from a global fitter instance when it exists. Note that the global fitter instance
 /// esists only when ROOT is not running with multi-threading enabled (ROOT::IsImplicitMTEnabled() == True).
-/// When the ovariance matrix from the last fit cannot be retrieved, an error message is printed and a a zero value is
+/// When the ovariance matrix from the last fit cannot be retrieved, an error message is printed and a zero value is
 /// returned.
 ///
 ///

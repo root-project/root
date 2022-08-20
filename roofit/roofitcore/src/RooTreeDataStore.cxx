@@ -618,7 +618,7 @@ double RooTreeDataStore::weightError(RooAbsData::ErrorType etype) const
 
    } else if (_wgtVar) {
 
-    // We have a a weight variable, use that info
+    // We have a weight variable, use that info
     if (_wgtVar->hasAsymError()) {
       return ( _wgtVar->getAsymErrorHi() - _wgtVar->getAsymErrorLo() ) / 2 ;
     } else {
@@ -680,7 +680,7 @@ void RooTreeDataStore::weightError(double& lo, double& hi, RooAbsData::ErrorType
 
   } else if (_wgtVar) {
 
-    // We have a a weight variable, use that info
+    // We have a weight variable, use that info
     if (_wgtVar->hasAsymError()) {
       hi = _wgtVar->getAsymErrorHi() ;
       lo = _wgtVar->getAsymErrorLo() ;

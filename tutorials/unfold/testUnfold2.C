@@ -285,7 +285,7 @@ int testUnfold2()
   // extract unfolding results into histograms
 
   // set up a bin map, excluding underflow and overflow bins
-  // the binMap relates the the output of the unfolding to the final
+  // the binMap relates the output of the unfolding to the final
   // histogram bins
   Int_t *binMap=new Int_t[nGen+2];
   for(Int_t i=1;i<=nGen;i++) binMap[i]=i;

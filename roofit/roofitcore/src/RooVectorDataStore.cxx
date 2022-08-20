@@ -437,7 +437,7 @@ double RooVectorDataStore::weightError(RooAbsData::ErrorType etype) const
 
    } else if (_wgtVar) {
 
-    // We have a a weight variable, use that info
+    // We have a weight variable, use that info
     if (_wgtVar->hasAsymError()) {
       return ( _wgtVar->getAsymErrorHi() - _wgtVar->getAsymErrorLo() ) / 2 ;
     } else if (_wgtVar->hasError(false)) {
@@ -503,7 +503,7 @@ void RooVectorDataStore::weightError(double& lo, double& hi, RooAbsData::ErrorTy
 
   } else if (_wgtVar) {
 
-    // We have a a weight variable, use that info
+    // We have a weight variable, use that info
     if (_wgtVar->hasAsymError()) {
       hi = _wgtVar->getAsymErrorHi() ;
       lo = _wgtVar->getAsymErrorLo() ;

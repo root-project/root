@@ -7604,7 +7604,7 @@ void TProof::ClearData(UInt_t what, const char *dsname)
                }
             }
          }
-         // Clean up the the received map
+         // Clean up the received map
          if (fcmap) fcmap->SetOwner(kTRUE);
          SafeDelete(fcmap);
       }

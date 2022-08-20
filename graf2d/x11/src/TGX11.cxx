@@ -1108,7 +1108,7 @@ Int_t TGX11::OpenDisplay(void *disp)
    GetColor(0).fDefined = kTRUE; // default background
    GetColor(0).fPixel = fWhitePixel;
 
-   // Inquire the the XServer Vendor
+   // Inquire the XServer Vendor
    char vendor[132];
    strlcpy(vendor, XServerVendor((Display*)fDisplay),132);
 

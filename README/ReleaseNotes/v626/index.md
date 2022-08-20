@@ -672,7 +672,7 @@ canvas->Print(".tex", "Standalone");
 
 - Add missing documentation to TH1 functions.
 
-- Restructure the the math reference guide.
+- Restructure the math reference guide.
 
 - Make the web gui documentation visible in the reference guide
 

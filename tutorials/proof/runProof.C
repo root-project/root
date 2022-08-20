@@ -1112,7 +1112,7 @@ void runProof(const char *what = "simple",
       nevt = (nevt < 0) ? 1000000 : nevt;
       Printf("\nrunProof: running \"dataset\" with nevt= %lld\n", nevt);
 
-      // Ask for registration of the dataset (the default is the the TFileCollection is return
+      // Ask for registration of the dataset (the default is the TFileCollection is return
       // without registration; the name of the TFileCollection is the name of the dataset
       proof->SetParameter("SimpleNtuple.root","testNtuple");
 

@@ -80,7 +80,7 @@ The following method are available from the TFormLeafInfo interface:
 
  -  AddOffset(Int_t offset, TStreamerElement* element)
  -  GetCounterValue(TLeaf* leaf) : return the size of the array pointed to.
- -  GetObjectAddress(TLeafElement* leaf) : Returns the the location of the object pointed to.
+ -  GetObjectAddress(TLeafElement* leaf) : Returns the location of the object pointed to.
  -  GetMultiplicity() : Returns info on the variability of the number of elements
  -  GetNdata(TLeaf* leaf) : Returns the number of elements
  -  GetNdata() : Used by GetNdata(TLeaf* leaf)

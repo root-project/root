@@ -129,7 +129,7 @@ TMVA::DataSet* TMVA::DataSetFactory::CreateDataSet( TMVA::DataSetInfo& dsi,
    if (ds->GetNEvents() > 1 && fComputeCorrelations ) {
       CalcMinMax(ds,dsi);
 
-      // from the the final dataset build the correlation matrix
+      // from the final dataset build the correlation matrix
       for (UInt_t cl = 0; cl< dsi.GetNClasses(); cl++) {
          const TString className = dsi.GetClassInfo(cl)->GetName();
          dsi.SetCorrelationMatrix( className, CalcCorrelationMatrix( ds, cl ) );

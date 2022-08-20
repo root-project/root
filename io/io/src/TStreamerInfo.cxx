@@ -1343,7 +1343,7 @@ namespace {
       Int_t oldv = oldClass->GetStreamerInfo()->GetClassVersion();
 
       if (newClass->GetStreamerInfos() && oldv < newClass->GetStreamerInfos()->GetSize() && newClass->GetStreamerInfos()->At(oldv) && strcmp(newClass->GetStreamerInfos()->At(oldv)->GetName(), oldClass->GetName()) != 0) {
-         // The new class has already a TStreamerInfo for the the same version as
+         // The new class has already a TStreamerInfo for the same version as
          // the old class and this was not the result of an import.  So we do not
          // have a match
          return kFALSE;

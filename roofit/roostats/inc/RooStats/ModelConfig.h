@@ -71,19 +71,19 @@ public:
      SetWS(*ws);
    }
 
-   /// Set the proto DataSet, add to the the workspace if not already there
+   /// Set the proto DataSet, add to the workspace if not already there
    virtual void SetProtoData(RooAbsData & data) {
       ImportDataInWS(data);
       SetProtoData( data.GetName() );
    }
 
-   /// Set the Pdf, add to the the workspace if not already there
+   /// Set the Pdf, add to the workspace if not already there
    virtual void SetPdf(const RooAbsPdf& pdf) {
       ImportPdfInWS(pdf);
       SetPdf( pdf.GetName() );
    }
 
-   /// Set the Prior Pdf, add to the the workspace if not already there
+   /// Set the Prior Pdf, add to the workspace if not already there
    virtual void SetPriorPdf(const RooAbsPdf& pdf) {
       ImportPdfInWS(pdf);
       SetPriorPdf( pdf.GetName() );

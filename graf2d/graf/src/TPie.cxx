@@ -786,7 +786,7 @@ TLegend* TPie::MakeLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2, co
 ///  - "R"   Print the labels along the central "R"adius of slices.
 ///  - "T"   Print the label in a direction "T"angent to circle that describes
 ///          the TPie.
-///  - "SC"  Paint the the labels with the "S"ame "C"olor as the slices.
+///  - "SC"  Paint the labels with the "S"ame "C"olor as the slices.
 ///  - "3D"  Draw the pie-chart with a pseudo 3D effect.
 ///  - "NOL" No OutLine: Don't draw the slices' outlines, any property over the
 ///          slices' line is ignored.

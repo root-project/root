@@ -1267,7 +1267,7 @@ bool CheckReshuffling(TTree &mainTree, TTree &friendTree)
 /// see other AddFriend functions
 ///
 /// A TFriendElement TF describes a TTree object TF in a file.
-/// When a TFriendElement TF is added to the the list of friends of an
+/// When a TFriendElement TF is added to the list of friends of an
 /// existing TTree T, any variable from TF can be referenced in a query
 /// to T.
 ///

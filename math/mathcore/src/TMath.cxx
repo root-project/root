@@ -890,7 +890,7 @@ Double_t TMath::KolmogorovTest(Int_t na, const Double_t *a, Int_t nb, const Doub
 /// Translated and adapted by Miha D. Puc
 ///
 /// To calculate the Faddeeva function with relative error less than 10^(-r).
-/// r can be set by the the user subject to the constraints 2 <= r <= 5.
+/// r can be set by the user subject to the constraints 2 <= r <= 5.
 ///
 ///  - [1] J. Humlicek, JQSRT, 21, 437 (1982).
 ///  - [2] [R.J. Wells "Rapid Approximation to the Voigt/Faddeeva Function and its Derivatives" JQSRT 62 (1999), pp 29-48.](http://www-atm.physics.ox.ac.uk/user/wells/voigt.html)

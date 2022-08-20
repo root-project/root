@@ -56,7 +56,7 @@
   and a list which parameters of the pdf are yields. The SPlot will calculate SWeights, and
   include these as columns in the RooDataSet. The dataset will have two additional columns
   for every yield with name "`<varname>`":
-  - `L_<varname>` is the the likelihood for each event, *i.e.*, the pdf evaluated for the given value of the variable "varname".
+  - `L_<varname>` is the likelihood for each event, *i.e.*, the pdf evaluated for the given value of the variable "varname".
   - `<varname>_sw` is the value of the sWeight for the variable "varname" for each event.
 
   In SPlot::SPlot(), one can choose whether columns should be added to an existing dataset or whether a copy of the dataset
@@ -394,7 +394,7 @@ Int_t SPlot::GetNumSWeightVars() const
 /// Method which adds the sWeights to the dataset.
 ///
 /// The SPlot will contain two new variables for each yield parameter:
-/// - `L_<varname>` is the the likelihood for each event, i.e., the pdf evaluated for the a given value of the variable "varname".
+/// - `L_<varname>` is the likelihood for each event, i.e., the pdf evaluated for the a given value of the variable "varname".
 /// - `<varname>_sw` is the value of the sWeight for the variable "varname" for each event.
 ///
 /// Find Parameters in the PDF to be considered fixed when calculating the SWeights

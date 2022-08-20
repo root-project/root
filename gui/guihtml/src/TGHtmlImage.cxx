@@ -362,7 +362,7 @@ const char *TGHtml::GetPctWidth(TGHtmlElement *p, char *opt, char *ret)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This routine searchs for an image beneath the coordinates x,y
-/// and returns the token number of the the image, or -1 if no
+/// and returns the token number of the image, or -1 if no
 /// image found.
 
 int TGHtml::GetImageAt(int x, int y)

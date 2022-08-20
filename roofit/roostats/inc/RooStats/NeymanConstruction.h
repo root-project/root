@@ -77,7 +77,7 @@ namespace RooStats {
       /// Set the DataSet
       void SetData(RooAbsData& data) override { fData = data; }
 
-      /// Set the Pdf, add to the the workspace if not already there
+      /// Set the Pdf, add to the workspace if not already there
       virtual void SetPdf(RooAbsPdf& /*pdf*/) {
         std::cout << "DEPRECATED, use ModelConfig"<<std::endl;
       }

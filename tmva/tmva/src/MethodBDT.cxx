@@ -270,7 +270,7 @@ TMVA::MethodBDT::MethodBDT( DataSetInfo& theData,
    fRegressionLossFunctionBDTG = nullptr;
    // constructor for calculating BDT-MVA using previously generated decision trees
    // the result of the previous training (the decision trees) are read in via the
-   // weight file. Make sure the the variables correspond to the ones used in
+   // weight file. Make sure the variables correspond to the ones used in
    // creating the "weight"-file
 }
 
@@ -1712,7 +1712,7 @@ Double_t TMVA::MethodBDT::TestTreeQuality( DecisionTree *dt )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Apply the boosting algorithm (the algorithm is selecte via the the "option" given
+/// Apply the boosting algorithm (the algorithm is selecte via the "option" given
 /// in the constructor. The return value is the boosting weight.
 
 Double_t TMVA::MethodBDT::Boost( std::vector<const TMVA::Event*>& eventSample, DecisionTree *dt, UInt_t cls )

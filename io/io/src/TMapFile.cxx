@@ -506,7 +506,7 @@ zombie:
 ////////////////////////////////////////////////////////////////////////////////
 /// Private copy ctor.
 ///
-/// Used by the the ctor to create a new version
+/// Used by the ctor to create a new version
 /// of TMapFile in the memory mapped heap. It's main purpose is to
 /// correctly create the string data members.
 

@@ -2274,7 +2274,7 @@ g_main_context_pending (GMainContext *context)
  * for a source to become ready, then dispatching the highest priority
  * events sources that are ready. Note that even when @may_block is %TRUE,
  * it is still possible for g_main_context_iteration() to return
- * %FALSE, since the the wait may be interrupted for other
+ * %FALSE, since the wait may be interrupted for other
  * reasons than an event source becoming ready.
  * 
  * Return value: %TRUE if events were dispatched.

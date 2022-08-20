@@ -48,7 +48,7 @@ namespace CNN {
     a CNN. It inherits all of the properties of the convolutional layer
     TConvLayer, but it overrides the propagation methods. In a sense, max pooling
     can be seen as non-linear convolution: a filter slides over the input and produces
-    one element as a function of the the elements within the receptive field.
+    one element as a function of the elements within the receptive field.
     In addition to that, it contains a matrix of winning units.
 
     The height and width of the weights and biases is set to 0, since this

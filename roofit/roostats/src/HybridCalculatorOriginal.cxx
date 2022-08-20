@@ -455,7 +455,7 @@ void HybridCalculatorOriginal::RunToys(std::vector<double>& bVals, std::vector<d
          }
       }
 
-      // test first the S+B hypothesis and the the B-only hypothesis
+      // test first the S+B hypothesis and the B-only hypothesis
       for (int hypoTested=0; hypoTested<=1; hypoTested++) {
    RooAbsData* dataToTest = sbData;
    bool dataIsEmpty = sbIsEmpty;
