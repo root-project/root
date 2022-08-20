@@ -36,7 +36,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/ROperator_Reduce.hxx
    TMVA/ROperator_Max.hxx
    TMVA/ROperator_Cast.hxx
-   TMVA/ROperator_Max.hxx
    TMVA/SOFIE_common.hxx
    TMVA/SOFIEHelpers.hxx
   SOURCES
