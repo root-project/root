@@ -35,7 +35,6 @@ public:
   Sample& operator=(const Sample& other);
   /// constructor from name, file and path. Name of the histogram should not include the path
   Sample(std::string Name, std::string HistoName, std::string InputFile, std::string HistoPath="");
-  ~Sample();
 
   void Print(std::ostream& = std::cout) const;
   void PrintXML( std::ofstream& xml ) const;
@@ -161,7 +160,7 @@ protected:
 
   /// The Nominal Shape
   HistRef fhNominal;
-  TH1* fhCountingHist;
+  std::unique_ptr<TH1> fhCountingHist;
 
 };
 
