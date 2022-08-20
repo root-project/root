@@ -1,5 +1,5 @@
 namespace Max_ExpectedOutput {
-float output[] = {
+float outputs[] = {
     3.0, 2.0, 4.0
 };
 } // namespace Max_ExpectedOutput
