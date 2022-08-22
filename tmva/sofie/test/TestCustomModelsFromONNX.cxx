@@ -874,7 +874,7 @@ TEST(ONNX, Shape){
    });
    
    TMVA_SOFIE_Shape::Session s("Shape_FromONNX.dat");
-   std::vector<int> output = s.infer(input.data());
+   auto output = s.infer(input.data());
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Shape_ExpectedOutput::outputs) / sizeof(float));
    

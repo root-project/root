@@ -66,9 +66,9 @@ public:
       size_t length = ConvertShapeToLength(fOutput_shape);
       std::string result = ConvertShapeToString(fShape);
       out << "\n//------ Shape\n";
-      out << SP << "for (int id = 0; id < " << length << " ; id++){\n";
-      out << SP << SP << "tensor_" << fNY << "[id] = " << result << "[id] ;\n";
-      out << SP << "}\n";
+      for (size_t id = 0; id <length; id++) { 
+      out << SP << "tensor_" << fNY << "["<< id << "] = " << fShape[id] << ";\n";
+      }
       return out.str();
    }
    
