@@ -10,7 +10,7 @@
 /// The two tags where used the THtml version to generate images from ROOT code.
 /// The generated picture is inlined exactly at the place where the macro is
 /// defined. The Macro can be defined in two way:
-///  - by direct in-lining of the the C++ code
+///  - by direct in-lining of the C++ code
 ///  - by a reference to a C++ file
 /// The tag `Begin_Macro` can have the parameter `(source)`. The directive becomes:
 /// `Begin_Macro(source)`. This parameter allows to show the macro's code in addition.
