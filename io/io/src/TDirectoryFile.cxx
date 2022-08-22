@@ -1597,7 +1597,7 @@ Int_t TDirectoryFile::SaveObjectAs(const TObject *obj, const char *filename, Opt
       nbytes = TBufferJSON::ExportToFile(fname, obj, option);
    } else {
       TContext ctxt; // The TFile::Open will change the current directory.
-      auto *local = TFile::Open(fname.Data(), opt.Contains("a") ? "update" : "recreate");
+      TFile *local = TFile::Open(fname.Data(), opt.Contains("a") ? "update" : "recreate");
       if (!local) return 0;
       nbytes = obj->Write();
       delete local;

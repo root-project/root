@@ -28,6 +28,7 @@
 #include "TDirectoryFile.h"
 #include "TUrl.h"
 #include "ROOT/RConcurrentHashColl.hxx"
+#include "ROOT/ROwningPtr.hxx"
 
 // Not a part of TFile interface; provide a forward declaration instead of #include.
 // #ifndef R__LESS_INCLUDES
@@ -296,9 +297,9 @@ public:
                       *AsyncOpen(const char *name, Option_t *option = "",
                                  const char *ftitle = "", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault,
                                  Int_t netopt = 0);
-   static TFile       *Open(const char *name, Option_t *option = "",
-                            const char *ftitle = "", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault,
-                            Int_t netopt = 0);
+   static ROOT::ROwningPtr<TFile *> Open(const char *name, Option_t *option = "", const char *ftitle = "",
+                                         Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault,
+                                         Int_t netopt = 0);
    static TFile       *Open(TFileOpenHandle *handle);
 
    static EFileType    GetType(const char *name, Option_t *option = "", TString *prefix = nullptr);

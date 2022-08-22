@@ -16,6 +16,7 @@ set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
   ThreadLocalStorage.h
   ROOT/RLogger.hxx
   ROOT/RNotFn.hxx
+  ROOT/ROwningPtr.hxx  
   ROOT/RRangeCast.hxx
   ROOT/RSpan.hxx
   ROOT/RStringView.hxx
