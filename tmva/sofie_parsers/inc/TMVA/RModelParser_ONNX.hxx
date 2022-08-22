@@ -69,6 +69,7 @@ const factoryMethodMap mapOptypeOperator = {
    {"Sub", &make_ROperator_BasicBinary<Sub>},
    {"Mul", &make_ROperator_BasicBinary<Mul>},
    {"Div", &make_ROperator_BasicBinary<Div>},
+   {"Pow", &make_ROperator_BasicBinary<Pow>},
    {"Neg", &make_ROperator_Neg},
    {"Reshape", &make_ROperator_Reshape},
    {"Flatten", &make_ROperator_Reshape},

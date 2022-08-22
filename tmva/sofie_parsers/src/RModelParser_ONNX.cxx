@@ -1486,7 +1486,7 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose){
          rmodel.AddBlasRoutines({"Gemm", "Axpy"});
       } else if (op_type == "RNN") {
          rmodel.AddBlasRoutines({"Gemm", "Axpy"});
-      } else if (op_type == "Selu" || op_type == "Sigmoid" || op_type == "Tanh") {
+      } else if (op_type == "Selu" || op_type == "Sigmoid" || op_type == "Pow" || op_type == "Tanh") {
          rmodel.AddNeededStdLib("cmath");
       } else if (op_type == "LSTM") {
          rmodel.AddBlasRoutines({"Gemm", "Axpy"});
