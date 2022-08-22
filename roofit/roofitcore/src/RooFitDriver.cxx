@@ -48,6 +48,12 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 
 #define COUT_DEBUG ooccoutD(nullptr, FastEvaluations)
 
+namespace {
+
+enum HeterogeneosIterations { CPUOnly = 2, GPUOnly = 1, Both = 3 };
+
+}
+
 namespace ROOT {
 namespace Experimental {
 
@@ -298,7 +304,7 @@ void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
       double *buffer = info.buffer->cpuWritePtr();
       _dataMapCPU.at(node) = RooSpan<const double>(buffer, nOut);
       // compute node and measure the time the first time
-      if (_getValInvocations == 1) {
+      if (_getValInvocations == CPUOnly) {
          using namespace std::chrono;
          auto start = steady_clock::now();
          nodeAbsReal->computeBatch(nullptr, buffer, nOut, _dataMapCPU);
@@ -359,11 +365,14 @@ double RooFitDriver::getValHeterogeneous()
    for (auto &info : _nodes) {
       info.remClients = info.clientInfos.size();
       info.remServers = info.serverInfos.size();
+      if (info.buffer)
+         delete info.buffer;
+      info.buffer = nullptr;
    }
 
    // In a cuda fit, use first 3 fits to determine the execution times
    // and the hardware that computes each part of the graph
-   if (_getValInvocations > 1 && _getValInvocations <= 3) {
+   if (_getValInvocations <= Both) {
       // leave everything to be computed (and timed) in CPU in the 1st
       // invocation, and after the 3rd the GPU nodes are already marked.
       markGPUNodes();
@@ -381,7 +390,7 @@ double RooFitDriver::getValHeterogeneous()
       // find finished GPU nodes
       for (auto &info : _nodes) {
          if (info.remServers == -1 && !RooBatchCompute::dispatchCUDA->streamIsActive(info.stream)) {
-            if (_getValInvocations == 2) {
+            if (_getValInvocations == GPUOnly) {
                float ms = RooBatchCompute::dispatchCUDA->cudaEventElapsedTime(info.eventStart, info.event);
                info.cudaTime += std::chrono::microseconds{int(1000.0 * ms)};
             }
@@ -458,14 +467,15 @@ void RooFitDriver::assignToGPU(NodeInfo &info)
    double *buffer = info.buffer->gpuWritePtr();
    _dataMapCUDA.at(node) = RooSpan<const double>(buffer, nOut);
    // measure launching overhead (add computation time later)
-   if (_getValInvocations == 2) {
+   if (_getValInvocations == GPUOnly) {
       using namespace std::chrono;
       RooBatchCompute::dispatchCUDA->cudaEventRecord(info.eventStart, info.stream);
       auto start = steady_clock::now();
       node->computeBatch(info.stream, buffer, nOut, _dataMapCUDA);
       info.cudaTime = duration_cast<microseconds>(steady_clock::now() - start);
-   } else
+   } else {
       node->computeBatch(info.stream, buffer, nOut, _dataMapCUDA);
+   }
    RooBatchCompute::dispatchCUDA->cudaEventRecord(info.event, info.stream);
    if (info.copyAfterEvaluation) {
       _dataMapCPU.at(node) = RooSpan<const double>(info.buffer->cpuReadPtr(), nOut);
@@ -659,46 +669,37 @@ namespace Experimental {
 /// the best configuration. In the end, mark the nodes and handle the details accordingly.
 void RooFitDriver::markGPUNodes()
 {
-   if (_getValInvocations == 2) {
-      // compute (and time) as much as possible in GPU
+   if (_getValInvocations == CPUOnly) {
       for (auto &info : _nodes) {
-         info.computeInGPU = !info.isScalar && info.absArg->canComputeBatchWithCuda();
+         info.copyAfterEvaluation = false;
+         info.computeInGPU = false;
       }
-   } else {
+   } else if (_getValInvocations == Both) {
       auto computeInGPU = selectNodesForGPU(_nodes);
       for (std::size_t iNode = 0; iNode < _nodes.size(); ++iNode) {
-         // If the compute mode is changed, the current buffer might not be appropriate anymore
-         if (_nodes[iNode].computeInGPU != computeInGPU[iNode]) {
-            delete _nodes[iNode].buffer;
-            _nodes[iNode].buffer = nullptr;
-         }
+         _nodes[iNode].copyAfterEvaluation = false;
          _nodes[iNode].computeInGPU = computeInGPU[iNode];
       }
 
       // deletion of the timing events (to be replaced later by non-timing events)
       for (auto &info : _nodes) {
-         // If the copy mode is changed, the current buffer might not be appropriate anymore
-         if (info.copyAfterEvaluation) {
-            delete info.buffer;
-            info.buffer = nullptr;
-         }
-         info.copyAfterEvaluation = false;
          RooBatchCompute::dispatchCUDA->deleteCudaEvent(info.event);
          RooBatchCompute::dispatchCUDA->deleteCudaEvent(info.eventStart);
          info.event = info.eventStart = nullptr;
       }
-   } // else (_getValInvocations > 2)
+   } else {
+      // compute (and time) as much as possible in GPU
+      for (auto &info : _nodes) {
+         info.copyAfterEvaluation = false;
+         info.computeInGPU = !info.isScalar && info.absArg->canComputeBatchWithCuda();
+      }
+   }
 
    for (auto &info : _nodes) {
       // scalar nodes don't need copying
       if (!info.isScalar) {
          for (auto *clientInfo : info.clientInfos) {
             if (info.computeInGPU != clientInfo->computeInGPU) {
-               // If the copy mode is changed, the current buffer might not be appropriate anymore
-               if (!info.copyAfterEvaluation) {
-                  delete info.buffer;
-                  info.buffer = nullptr;
-               }
                info.copyAfterEvaluation = true;
                break;
             }
@@ -707,7 +708,7 @@ void RooFitDriver::markGPUNodes()
    }
 
    // restore a cudaEventDisableTiming event when necessary
-   if (_getValInvocations == 3) {
+   if (_getValInvocations == Both) {
       for (auto &info : _nodes) {
          if (info.computeInGPU || info.copyAfterEvaluation)
             info.event = RooBatchCompute::dispatchCUDA->newCudaEvent(false);
