@@ -13,7 +13,7 @@ class ProfilingData(ABC):
         """
         raise NotImplementedError
 
-class Visualization():
+class Visualization:
     """
     Base class that represents visualizations for profiling data
     """
