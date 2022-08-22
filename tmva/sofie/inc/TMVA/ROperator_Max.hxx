@@ -73,12 +73,20 @@ public:
       size_t length = ConvertShapeToLength(fShape);
       out << "\n//------ Max\n";
       out << SP << "for (size_t id = 0; id < " << length << " ; id++){\n";
-      out << SP << SP <<"tensor_" << fNY << "[id] = std::max({";
-      size_t j = 0;
-      for ( j = 0; j < fInputNames.size()-1; j++){
-         out << "tensor_" << fInputNames[j] << "[id],";
+      if(fInputNames.size() == 1){
+         out << SP << SP <<"tensor_" << fNY << "[id] = tensor_" << fInputNames[0] << "[id];\n";
       }
-      out << "tensor_" << fInputNames[j] << "[id]});\n";
+      else if(fInputNames.size() == 2){
+         out << SP << SP <<"tensor_" << fNY << "[id] = std::max({tensor_" << fInputNames[0] << "[id],tensor_" << fInputNames[1] << "[id]});\n";
+      }
+      else{
+         out << SP << SP <<"tensor_" << fNY << "[id] = std::max({";
+         size_t j = 0;
+         for ( j = 0; j < fInputNames.size()-1; j++){
+            out << "tensor_" << fInputNames[j] << "[id],";
+         }
+         out << "tensor_" << fInputNames[j] << "[id]});\n";
+      }
       out << SP << "}\n";
       return out.str();
    }
