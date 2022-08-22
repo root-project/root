@@ -1404,11 +1404,12 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::ShareContent(std::string_v
 
       size_t totalRD = 0;
 
-
       do {
          n = read(source_fd, data.data(), SZ_BUFFER);
+         totalRD+=n;
          size_t offset = 0;
-         while ((n = write(destination_fd, data.data() + offset, SZ_BUFFER - offset)) > 0) {
+         size_t toWrite = std::min(SZ_BUFFER, n);
+         while ((n = write(destination_fd, data.data() + offset, toWrite-offset)) > 0) {
             offset += n;
          }
       }
