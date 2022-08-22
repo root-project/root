@@ -11,7 +11,7 @@ namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
 
-enum EBasicBinaryOperator { Add, Sub, Mul, Div };
+enum EBasicBinaryOperator { Add, Sub, Mul, Div, Pow };
 
 template <typename T, EBasicBinaryOperator Op1>
 struct BinaryOperatorTrait {
@@ -21,25 +21,31 @@ struct BinaryOperatorTrait {
 template <typename T>
 struct BinaryOperatorTrait<T, Add> {
    static const char *Name() { return "Add"; }
-   static const char *Op() { return "+"; }
+   static std::string Op(const std::string & t1, const std::string t2) { return t1 + " + " + t2; }
 };
 
 template <typename T>
 struct BinaryOperatorTrait<T, Sub> {
    static const char *Name() { return "Sub"; }
-   static const char *Op() { return "-"; }
+   static std::string Op(const std::string & t1, const std::string t2) { return t1 + " - " + t2; }
 };
 
 template <typename T>
 struct BinaryOperatorTrait<T, Mul> {
    static const char *Name() { return "Mul"; }
-   static const char *Op() { return "*"; }
+   static std::string Op(const std::string & t1, const std::string t2) { return t1 + " * " + t2; }
 };
 
 template <typename T>
 struct BinaryOperatorTrait<T, Div> {
    static const char *Name() { return "Div"; }
-   static const char *Op() { return "/"; }
+   static std::string Op(const std::string & t1, const std::string t2) { return t1 + " / " + t2; }
+};
+
+template <typename T>
+struct BinaryOperatorTrait<T, Pow> {
+   static const char *Name() { return "Pow"; }
+   static std::string Op(const std::string & t1, const std::string t2) { return "std::pow(" + t1 + "," + t2 + ")"; }
 };
 
 template<typename T, EBasicBinaryOperator Op>
@@ -108,8 +114,8 @@ public:
       size_t length = ConvertShapeToLength(fShape);
       out << "\n//------ " + std::string(BinaryOperatorTrait<T,Op>::Name())+"\n";
       out << SP << "for (size_t id = 0; id < " << length << " ; id++){\n";
-      out << SP << SP << "tensor_" << fNY << "[id] = tensor_" << fNX1 << "[id]" +
-      std::string(BinaryOperatorTrait<T,Op>::Op()) +  "tensor_" << fNX2 << "[id];\n";
+      out << SP << SP << "tensor_" << fNY << "[id] = " +
+      std::string(BinaryOperatorTrait<T,Op>::Op( "tensor_" + fNX1 + "[id]" , "tensor_" + fNX2 + "[id]")) +  " ;\n";
       out << SP << "}\n";
       return out.str();
    }

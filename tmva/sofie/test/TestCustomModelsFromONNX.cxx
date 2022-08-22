@@ -72,6 +72,12 @@
 #include "AvgPool_FromONNX.hxx"
 #include "input_models/references/AvgPool.ref.hxx"
 
+#include "Pow_FromONNX.hxx"
+#include "input_models/references/Pow.ref.hxx"
+
+#include "Pow_broadcast_FromONNX.hxx"
+#include "input_models/references/Pow_broadcast.ref.hxx"
+
 #include "RNNBatchwise_FromONNX.hxx"
 #include "input_models/references/RNNBatchwise.ref.hxx"
 
@@ -717,6 +723,56 @@ TEST(ONNX, AvgPool){
    EXPECT_EQ(output.size(), sizeof(AvgPool_ExpectedOutput::output) / sizeof(float));
 
    float *correct = AvgPool_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+
+}
+
+TEST(ONNX, Pow){
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard  input
+   std::vector<float> input1({
+      1, 2, 3
+   });
+   std::vector<float> input2({
+      4, 5, 6
+   });
+   
+   TMVA_SOFIE_Pow::Session s("Pow_FromONNX.dat");
+   std::vector<float> output = s.infer(input2.data(),input1.data());
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(Pow_ExpectedOutput::outputs) / sizeof(float));
+   
+   float *correct = Pow_ExpectedOutput::outputs;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+
+}
+
+TEST(ONNX, Pow_broadcast){
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard  input
+   std::vector<float> input1({
+      1, 2, 3, 3, 4, 5
+   });
+   std::vector<float> input2({
+      2, 3, 4, 2, 3, 4
+   });
+   
+   TMVA_SOFIE_Pow_broadcast::Session s("Pow_broadcast_FromONNX.dat");
+   std::vector<float> output = s.infer(input2.data(),input1.data());
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(Pow_broadcast_ExpectedOutput::outputs) / sizeof(float));
+   
+   float *correct = Pow_broadcast_ExpectedOutput::outputs;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
