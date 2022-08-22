@@ -206,7 +206,7 @@ void ROOT::Experimental::Detail::RPageSinkFile::ReleasePage(RPage &page)
 
 
 #ifdef MY_CODE_RPAGE_STORAGE_FILE
-   void ROOT::Experimental::Detail::RPageSinkFile::ZeroCopy( std::string_view ntupleName, std::string_view location ) {
+   void ROOT::Experimental::Detail::RPageSinkFile::ZeroCopy( std::string_view ntupleName, std::string_view location, std::uint8_t type ) {
        auto source = RPageSourceFile(ntupleName, location, RNTupleReadOptions());
        source.Attach();
        /**
@@ -250,7 +250,7 @@ void ROOT::Experimental::Detail::RPageSinkFile::ReleasePage(RPage &page)
            /**
             * Share the data part (zero-copy)
             * */
-           this->fWriter->ShareContent(location, alignedLength, alignedStartDataPosition);
+           this->fWriter->ShareContent(location, alignedLength, alignedStartDataPosition, type);
 
             /**
             * Update metadata

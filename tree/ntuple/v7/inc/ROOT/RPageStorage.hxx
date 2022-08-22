@@ -290,7 +290,7 @@ public:
    virtual RNTupleMetrics &GetMetrics() override { return fMetrics; };
 
 #ifdef MY_CODE_RPAGE_SINK
-   virtual void ZeroCopy( std::string_view ntupleName, std::string_view location ) {};
+   virtual void ZeroCopy( std::string_view ntupleName, std::string_view location, std::uint8_t type ) {};
 #endif
 };
 

@@ -1339,7 +1339,7 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WritePadding()//c
     return offset;
 }
 
-void ROOT::Experimental::Internal::RNTupleFileWriter::ShareContent(std::string_view sourceFilename, size_t sourceLength, size_t sourceOffset){
+void ROOT::Experimental::Internal::RNTupleFileWriter::ShareContent(std::string_view sourceFilename, size_t sourceLength, size_t sourceOffset, std::uint8_t type){
 
    int source_fd=open(sourceFilename.data(), O_RDONLY);
    if(source_fd<0){
@@ -1352,22 +1352,73 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::ShareContent(std::string_v
    
    fflush(this->fFileSimple.fFile);
 
-   file_clone_range cloning_details{};
+   if (type==0) {
+      std::cerr << "Zero-Copy Merge active" << std::endl;
 
-   cloning_details.src_fd=source_fd;
-   cloning_details.src_length= sourceLength;
-   cloning_details.src_offset= sourceOffset;
-   cloning_details.dest_offset=this->fFileSimple.fFilePos;
+      file_clone_range cloning_details{};
 
-   int err = ioctl(destination_fd, FICLONERANGE, &cloning_details);
+      cloning_details.src_fd = source_fd;
+      cloning_details.src_length = sourceLength;
+      cloning_details.src_offset = sourceOffset;
+      cloning_details.dest_offset = this->fFileSimple.fFilePos;
 
-   if(err<0){
-      std::cout<<strerror(errno)<<std::endl;
+      int err = ioctl(destination_fd, FICLONERANGE, &cloning_details);
+
+      if (err < 0) {
+         std::cout << strerror(errno) << std::endl;
+      }
+      this->fFileSimple.fFilePos += sourceLength;
+
+      fseek(this->fFileSimple.fFile, this->fFileSimple.fFilePos, SEEK_SET);
+      fflush(this->fFileSimple.fFile);
    }
-   this->fFileSimple.fFilePos+= sourceLength;
+   else if (type==1) {
+      std::cerr << "One-Copy Merge active" << std::endl;
+      lseek(source_fd, sourceOffset, SEEK_SET);
 
-   fseek(this->fFileSimple.fFile, this->fFileSimple.fFilePos, SEEK_SET);
-   fflush(this->fFileSimple.fFile);
+      ssize_t err = 0;
+      size_t toCopy = sourceLength;
+      size_t copied = 0;
+      while (copied < sourceLength) {
+         err = copy_file_range(source_fd, NULL, destination_fd, NULL, toCopy, 0);
+         if (err < 0) {
+            std::cout << strerror(errno) << std::endl;
+            break;
+         }
+         copied += err;
+         toCopy = toCopy - err;
+         //std::cout << "Copied " << copied << " (+ " << err << ") bytes out of " << sourceLength << std::endl;
+      }
+      this->fFileSimple.fFilePos += sourceLength;
+      fflush(this->fFileSimple.fFile);
+   } else {
+
+      std::cerr << "Fast Merge active" << std::endl;
+
+      lseek(source_fd, sourceOffset, SEEK_SET);
+
+      size_t n = 0;
+
+      size_t SZ_BUFFER = 32*(1<<20);
+      std::vector<char> data(SZ_BUFFER);
+
+      size_t totalRD = 0;
+
+
+      do {
+         n = read(source_fd, data.data(), SZ_BUFFER);
+         size_t offset = 0;
+         while ((n = write(destination_fd, data.data() + offset, SZ_BUFFER - offset)) > 0) {
+            offset += n;
+         }
+      }
+      while (totalRD != sourceLength);
+
+
+      this->fFileSimple.fFilePos += sourceLength;
+      fseek(this->fFileSimple.fFile, this->fFileSimple.fFilePos, SEEK_SET);
+      fflush(this->fFileSimple.fFile);
+   }
 }
 
 #endif

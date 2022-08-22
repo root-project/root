@@ -10,7 +10,7 @@ constexpr char const* kNTupleFileName1 = "ntpl001_staff.root";
 constexpr char const* kNTupleFileName2 = "ntpl001_staff_new.root";
 constexpr char const* kNTupleFileNameMerged = "ntpl001_staff_merged.root";
 
-TEST(RNTuple, ReconstructModel)
+TEST(RNTuple, ZeroCopyMerge)
 {
    int val = 0;
    size_t SZ_TUPLE1 = 3500;
@@ -73,28 +73,6 @@ TEST(RNTuple, ReconstructModel)
       }
    }
 
-   /*{
-      auto ntuple = RNTupleReader::Open("Staff", kNTupleFileName1);
-      ntuple->PrintInfo();
-      auto desc = ntuple->GetDescriptor();
-      std::cout << desc->GetNClusters();
-      auto viewPt = ntuple->GetView<int>("Age");
-
-      for (auto j : ntuple->GetEntryRange()) {
-         // std::cout << viewPt(i) << std::endl;
-      }
-   }
-
-   {
-      auto ntuple = RNTupleReader::Open("Staff_New", kNTupleFileName2);
-      ntuple->PrintInfo();
-      auto viewPt = ntuple->GetView<int>("Grade");
-
-      for (auto j : ntuple->GetEntryRange()) {
-         // std::cout << viewPt(i) << std::endl;
-      }
-   }*/
-
    auto options = ROOT::Experimental::RNTupleWriteOptions();
 
    options.SetContainerFormat(ENTupleContainerFormat::kBare);
@@ -108,9 +86,9 @@ TEST(RNTuple, ReconstructModel)
                                std::make_unique<RPageSinkFile>("Staff_Merged", kNTupleFileNameMerged, options));
 
       ntuple_dst.FastDuplicate(
-         "Staff", kNTupleFileName1);
+         "Staff", kNTupleFileName1, 0);
       ntuple_dst.FastDuplicate(
-         "Staff_New", kNTupleFileName2);
+         "Staff_New", kNTupleFileName2, 0);
    };
 
    {

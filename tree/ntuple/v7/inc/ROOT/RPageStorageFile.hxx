@@ -93,7 +93,7 @@ public:
    void ReleasePage(RPage &page) final;
 
 #ifdef MY_CODE_RPAGE_STORAGE_FILE
-   void ZeroCopy( std::string_view ntupleName, std::string_view location );
+   void ZeroCopy( std::string_view ntupleName, std::string_view location, std::uint8_t type );
 #endif
 };
 

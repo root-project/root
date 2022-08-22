@@ -437,8 +437,7 @@ public:
    const RNTupleModel *GetModel() const { return fModel.get(); }
 
 #ifdef MY_CODE_RNTUPLE_WRITER
-   void FastDuplicate( std::string_view ntupleName, std::string_view location );
-   void FastMerge( std::string_view ntupleNameSrc1, std::string_view locationSrc1, std::string_view ntupleNameSrc2, std::string_view locationSrc2 );
+   void FastDuplicate( std::string_view ntupleName, std::string_view location, std::uint8_t type );
 #endif
 };
 
