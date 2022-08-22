@@ -652,7 +652,7 @@ end:
 void TASImage::WriteImage(const char *file, EImageFileTypes type)
 {
    if (!IsValid()) {
-      Error("WriteImage", "no image loaded");
+      Error("WriteImage", "no image in memory. Draw something first");
       return;
    }
 
