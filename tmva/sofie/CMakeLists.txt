@@ -20,6 +20,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/ROperator_Neg.hxx
    TMVA/ROperator_BatchNormalization.hxx
    TMVA/ROperator_Conv.hxx
+   TMVA/ROperator_ConvTranspose.hxx
    TMVA/ROperator_Gemm.hxx
    TMVA/ROperator_Relu.hxx
    TMVA/ROperator_Tanh.hxx

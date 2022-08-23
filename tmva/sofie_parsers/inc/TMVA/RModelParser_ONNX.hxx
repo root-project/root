@@ -51,6 +51,7 @@ std::unique_ptr<ROperator> make_ROperator_Cast(const onnx::NodeProto &nodeproto,
 template <EReduceOpMode Op1>
 std::unique_ptr<ROperator> make_ROperator_Reduce(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
 std::unique_ptr<ROperator> make_ROperator_Shape(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
+std::unique_ptr<ROperator> make_ROperator_ConvTranspose(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
 
 using factoryMethodMap = std::unordered_map<std::string, std::unique_ptr<ROperator> (*)(const onnx::NodeProto&, const onnx::GraphProto&, std::unordered_map<std::string, ETensorType>&)>;
 const factoryMethodMap mapOptypeOperator = {
@@ -89,7 +90,8 @@ const factoryMethodMap mapOptypeOperator = {
    {"Concat", &make_ROperator_Concat},
    {"Cast", &make_ROperator_Cast},
    {"Max", &make_ROperator_Max},
-   {"Shape", &make_ROperator_Shape}
+   {"Shape", &make_ROperator_Shape},
+   {"ConvTranspose", &make_ROperator_ConvTranspose}
 };
 
 using factoryMethodMap1 = std::unordered_map<std::string, std::unique_ptr<ROperator> (*)(const onnx::NodeProto&,const onnx::NodeProto&, const onnx::GraphProto&, std::unordered_map<std::string, ETensorType>&)>;
