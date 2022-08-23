@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 import logging
 import warnings
@@ -6,15 +8,18 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from functools import partial, singledispatch
 from itertools import zip_longest
-from typing import Callable, Deque, Dict, Iterable, List, Optional, Union
+from typing import Callable, Deque, Dict, Iterable, List, Optional, TYPE_CHECKING, Union
 
 import ROOT
 
 from DistRDF import ComputationGraphGenerator, Ranges
-from DistRDF.Backends.Base import BaseBackend, distrdf_mapper, distrdf_reducer, TaskResult
+from DistRDF.Backends.Base import distrdf_mapper, distrdf_reducer
 from DistRDF.Node import Node
 from DistRDF.Operation import Action, InstantAction, Operation
 from DistRDF.Backends import Utils
+
+if TYPE_CHECKING:
+    from DistRDF.Backends.Base import BaseBackend, TaskResult
 
 logger = logging.getLogger(__name__)
 
@@ -147,7 +152,7 @@ class HeadNode(Node, ABC):
         pass
 
     @abstractmethod
-    def _handle_returned_values(self, values: "TaskResult") -> Iterable:
+    def _handle_returned_values(self, values: TaskResult) -> Iterable:
         pass
 
     def execute_graph(self) -> None:
@@ -303,7 +308,7 @@ class EmptySourceHeadNode(HeadNode):
 
         return build_rdf_from_range
 
-    def _handle_returned_values(self, values: "TaskResult") -> Iterable:
+    def _handle_returned_values(self, values: TaskResult) -> Iterable:
         """
         Handle values returned after distributed execution. No extra checks are
         needed in the empty source case.
@@ -483,7 +488,7 @@ class TreeHeadNode(HeadNode):
 
         return build_rdf_from_range
 
-    def _handle_returned_values(self, values: "TaskResult") -> Iterable:
+    def _handle_returned_values(self, values: TaskResult) -> Iterable:
         """
         Handle values returned after distributed execution. When the data source
         is a TTree, check that exactly the input files and all the entries in

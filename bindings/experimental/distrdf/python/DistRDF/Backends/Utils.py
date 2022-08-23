@@ -9,11 +9,13 @@
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
+from __future__ import annotations
 
 import logging
 import os
 
 from functools import singledispatch
+from typing import Iterable, Set, Tuple
 
 import ROOT
 from ROOT._pythonization._rdataframe import AsNumpyResult
@@ -23,7 +25,7 @@ from DistRDF.PythonMergeables import SnapshotResult
 logger = logging.getLogger(__name__)
 
 
-def extend_include_path(include_path):
+def extend_include_path(include_path: str) -> None:
     """
     Extends the list of paths in which ROOT looks for headers and
     libraries. Every header directory is added to the internal include
@@ -43,7 +45,7 @@ def extend_include_path(include_path):
     logger.debug("ROOT include paths:\n{}".format(root_includepath))
 
 
-def declare_headers(headers_to_include):
+def declare_headers(headers_to_include: Iterable[str]) -> None:
     """
     Declares all required headers using the ROOT's C++ Interpreter.
 
@@ -65,7 +67,7 @@ def declare_headers(headers_to_include):
             raise e(msg)
 
 
-def declare_shared_libraries(libraries_to_include):
+def declare_shared_libraries(libraries_to_include: Iterable[str]) -> None:
     """
     Declares all required shared libraries using the ROOT's C++
     Interpreter.
@@ -86,7 +88,7 @@ def declare_shared_libraries(libraries_to_include):
             raise Exception("ROOT couldn't load the shared library!")
 
 
-def get_paths_set_from_string(path_string):
+def get_paths_set_from_string(path_string: str) -> Set[str]:
     """
     Retrieves paths to files (directory or single file) from a string.
 
@@ -120,7 +122,7 @@ def get_paths_set_from_string(path_string):
         return {path_string}
 
 
-def check_pcm_in_library_path(shared_library_path):
+def check_pcm_in_library_path(shared_library_path: str) -> Tuple[Set[str], Set[str]]:
     """
     Retrieves paths to shared libraries and pcm file(s) in a directory.
 

@@ -9,6 +9,7 @@
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
+from __future__ import annotations
 
 import logging
 import sys
@@ -16,8 +17,12 @@ import types
 
 import concurrent.futures
 
+from typing import TYPE_CHECKING
+
 from DistRDF.Backends import build_backends_submodules
-from DistRDF.Proxy import ActionProxy, VariationsProxy
+
+if TYPE_CHECKING:
+    from DistRDF.Proxy import ActionProxy, VariationsProxy
 
 logger = logging.getLogger(__name__)
 

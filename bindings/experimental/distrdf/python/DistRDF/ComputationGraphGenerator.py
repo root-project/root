@@ -9,6 +9,8 @@
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
+from __future__ import annotations
+
 import logging
 
 from copy import deepcopy
@@ -148,7 +150,7 @@ def _(op: VariationsFor, parent_rdf_node: Any, range_id: int) -> Tuple[Any, Oper
     return ROOT.RDF.Experimental.VariationsFor(parent_rdf_node), op
 
 
-def generate_computation_graph(graph: Dict[int, "Node"], starting_node: ROOT.RDF.RNode, range_id: int) -> List:
+def generate_computation_graph(graph: Dict[int, Node], starting_node: ROOT.RDF.RNode, range_id: int) -> List:
     """
     Generates the RDataFrame computation graph from the nodes stored in the
     input graph.
@@ -188,7 +190,7 @@ def generate_computation_graph(graph: Dict[int, "Node"], starting_node: ROOT.RDF
     return promises
 
 
-def trigger_computation_graph(graph: Dict[int, "Node"], starting_node: ROOT.RDF.RNode, range_id: int) -> List:
+def trigger_computation_graph(graph: Dict[int, Node], starting_node: ROOT.RDF.RNode, range_id: int) -> List:
     """
     Trigger the computation graph.
 
@@ -226,7 +228,7 @@ def trigger_computation_graph(graph: Dict[int, "Node"], starting_node: ROOT.RDF.
     return actions
 
 
-def run_with_cppworkflow(graph: Dict[int, "Node"], starting_node: ROOT.RDF.RNode, range_id: int) -> Tuple[List, List[str]]:
+def run_with_cppworkflow(graph: Dict[int, Node], starting_node: ROOT.RDF.RNode, range_id: int) -> Tuple[List, List[str]]:
     """
     The callable that traverses the DistRDF graph nodes, generates the
     code to create the same graph in C++, compiles it and runs it.
