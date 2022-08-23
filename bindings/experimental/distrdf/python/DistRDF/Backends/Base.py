@@ -9,6 +9,7 @@
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
+from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -93,7 +94,7 @@ class TaskResult:
 def distrdf_mapper(
         current_range: Union[Ranges.EmptySourceRange, Ranges.TreeRangePerc],
         build_rdf_from_range:  Callable[[Union[Ranges.EmptySourceRange, Ranges.TreeRangePerc]],
-                                        "TaskObjects"],
+                                        TaskObjects],
         computation_graph_callable: Callable[[ROOT.RDF.RNode, int], List],
         initialization_fn: Callable,
         optimized: bool) -> TaskResult:
@@ -199,7 +200,7 @@ class BaseBackend(ABC):
         fun(*args, **kwargs)
 
     @abstractmethod
-    def ProcessAndMerge(self, ranges: List["DataRange"],
+    def ProcessAndMerge(self, ranges: List[DataRange],
                         mapper: Callable[..., TaskResult],
                         reducer: Callable[[TaskResult, TaskResult], TaskResult]) -> TaskResult:
         """

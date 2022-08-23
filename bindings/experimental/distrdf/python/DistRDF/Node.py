@@ -64,7 +64,7 @@ class Node(object):
             on a worker.
     """
 
-    def __init__(self, get_head: Callable[[], "HeadNode"], node_id: int = 0,
+    def __init__(self, get_head: Callable[[], HeadNode], node_id: int = 0,
                  operation: "Operation" = None, parent: Node = None):
         self.get_head = get_head
         self.node_id = node_id

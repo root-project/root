@@ -1,5 +1,11 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import ROOT
+
+if TYPE_CHECKING:
+    from DistRDF.Backends.Base import BaseBackend
 
 
 class SnapshotResult(object):
@@ -8,11 +14,11 @@ class SnapshotResult(object):
     merge it with other objects of this type.
     """
 
-    def __init__(self, treename, filenames):
+    def __init__(self, treename: str, filenames: list[str]) -> None:
         self.treename = treename
         self.filenames = filenames
 
-    def Merge(self, other):
+    def Merge(self, other: SnapshotResult) -> None:
         """
         When calling Snapshot on a distributed worker, a list with the path to
         the snapshotted file on the worker is stored. This function extends the
@@ -21,7 +27,7 @@ class SnapshotResult(object):
         """
         self.filenames.extend(other.filenames)
 
-    def GetValue(self, backend):
+    def GetValue(self, backend: BaseBackend):
         """
         With local RDataFrame, Snapshot returns another RDataFrame object that
         can be used to continue the application. The equivalent in the
