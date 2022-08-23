@@ -297,9 +297,9 @@ public:
                       *AsyncOpen(const char *name, Option_t *option = "",
                                  const char *ftitle = "", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault,
                                  Int_t netopt = 0);
-   static ROOT::ROwningPtr<TFile *> Open(const char *name, Option_t *option = "", const char *ftitle = "",
-                                         Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault,
-                                         Int_t netopt = 0);
+   static ROOT::ROwningPtr<TFile> Open(const char *name, Option_t *option = "", const char *ftitle = "",
+                                       Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault,
+                                       Int_t netopt = 0);
    static TFile       *Open(TFileOpenHandle *handle);
 
    static EFileType    GetType(const char *name, Option_t *option = "", TString *prefix = nullptr);

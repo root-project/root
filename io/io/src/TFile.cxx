@@ -4068,7 +4068,7 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
 /// In RECREATE mode, a nullptr is returned if the file can not be created.
 /// In UPDATE mode, a nullptr is returned if the file cannot be created or opened.
 
-ROOT::ROwningPtr<TFile *>
+ROOT::ROwningPtr<TFile>
 TFile::Open(const char *url, Option_t *options, const char *ftitle, Int_t compress, Int_t netopt)
 {
    TPluginHandler *h;

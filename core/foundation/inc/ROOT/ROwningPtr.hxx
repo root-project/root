@@ -20,14 +20,14 @@
 #include <memory>
 namespace ROOT {
 
-template <typename T, typename = std::enable_if_t<std::is_pointer<T>::value>>
+template <typename T>
 class ROwningPtr {
 public:
-   using pointer = T;
+   using pointer = T *;
    using element_type = typename std::remove_pointer<pointer>::type;
    using reference = typename std::add_lvalue_reference<element_type>::type;
 
-   ROwningPtr(T ptr) : _ptr{ptr} {}
+   ROwningPtr(T *ptr) : _ptr{ptr} {}
 
    operator pointer() { return _ptr; }
    operator std::unique_ptr<element_type>() { return std::unique_ptr<element_type>{_ptr}; }
@@ -36,7 +36,7 @@ public:
    pointer operator->() const { return _ptr; }
 
 private:
-   T _ptr;
+   T *_ptr;
 };
 
 } // namespace ROOT
