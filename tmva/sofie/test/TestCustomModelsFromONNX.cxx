@@ -153,6 +153,21 @@
 #include "Softmax4d_FromONNX.hxx"
 #include "input_models/references/Softmax4d.ref.hxx"
 
+#include "ConvTranspose1d_FromONNX.hxx"
+#include "input_models/references/ConvTranspose1d.ref.hxx"
+
+#include "ConvTranspose2d_FromONNX.hxx"
+#include "input_models/references/ConvTranspose2d.ref.hxx"
+
+#include "ConvTranspose3d_FromONNX.hxx"
+#include "input_models/references/ConvTranspose3d.ref.hxx"
+
+#include "ConvTransposeBias2d_FromONNX.hxx"
+#include "input_models/references/ConvTransposeBias2d.ref.hxx"
+
+#include "ConvTransposeBias2dBatched_FromONNX.hxx"
+#include "input_models/references/ConvTransposeBias2dBatched.ref.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -1551,3 +1566,109 @@ TEST(ONNX, Softmax4d)
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 }
+
+TEST(ONNX, ConvTranspose1d)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input(3);
+   std::iota(input.begin(), input.end(), 0.0f);
+   TMVA_SOFIE_ConvTranspose1d::Session s("ConvTranspose1d_FromONNX.dat");
+   auto output = s.infer(input.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(ConvTranspose1d_ExpectedOutput::output) / sizeof(float));
+
+   float *correct = ConvTranspose1d_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, ConvTranspose2d)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input(9);
+   std::iota(input.begin(), input.end(), 0.0f);
+   TMVA_SOFIE_ConvTranspose2d::Session s("ConvTranspose2d_FromONNX.dat");
+   std::vector<float> output(s.infer(input.data()));
+
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(ConvTranspose2d_ExpectedOutput::output) / sizeof(float));
+
+   float *correct = ConvTranspose2d_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, ConvTranspose3d)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input(8);
+   std::iota(input.begin(), input.end(), 0.0f);
+   TMVA_SOFIE_ConvTranspose3d::Session s("ConvTranspose3d_FromONNX.dat");
+   std::vector<float> output(s.infer(input.data()));
+
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(ConvTranspose3d_ExpectedOutput::output) / sizeof(float));
+
+   float *correct = ConvTranspose3d_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, ConvTransposeBias2d)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input(9);
+   std::iota(input.begin(), input.end(), 0.0f);
+   TMVA_SOFIE_ConvTransposeBias2d::Session s("ConvTransposeBias2d_FromONNX.dat");
+   std::vector<float> output(s.infer(input.data()));
+
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(ConvTransposeBias2d_ExpectedOutput::output) / sizeof(float));
+
+   float *correct = ConvTransposeBias2d_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, ConvTransposeBias2dBatched)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input(18);
+   std::iota(input.begin(), input.end(), 0.0f);
+   TMVA_SOFIE_ConvTransposeBias2dBatched::Session s("ConvTransposeBias2dBatched_FromONNX.dat");
+   std::vector<float> output(s.infer(input.data()));
+
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(ConvTransposeBias2dBatched_ExpectedOutput::output) / sizeof(float));
+
+   float *correct = ConvTransposeBias2dBatched_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
