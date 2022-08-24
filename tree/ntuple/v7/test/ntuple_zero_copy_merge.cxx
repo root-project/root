@@ -12,6 +12,7 @@ constexpr char const* kNTupleFileNameMerged = "ntpl001_staff_merged.root";
 
 TEST(RNTuple, ZeroCopyMerge)
 {
+   int type=1; // Select the kernel-copy merge, which acts as zero-copy merge on XFS filesystem
    int val = 0;
    size_t SZ_TUPLE1 = 3500;
    size_t SZ_TUPLE2 = 3500;
@@ -86,9 +87,9 @@ TEST(RNTuple, ZeroCopyMerge)
                                std::make_unique<RPageSinkFile>("Staff_Merged", kNTupleFileNameMerged, options));
 
       ntuple_dst.FastDuplicate(
-         "Staff", kNTupleFileName1, 0);
+         "Staff", kNTupleFileName1, type);
       ntuple_dst.FastDuplicate(
-         "Staff_New", kNTupleFileName2, 0);
+         "Staff_New", kNTupleFileName2, type);
    };
 
    {

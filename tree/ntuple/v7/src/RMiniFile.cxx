@@ -1315,21 +1315,20 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteBlob(const v
 
 #ifdef MY_CODE
 
-std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WritePadding()//const void *data, size_t nbytes)
+std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WritePadding()
 {
     std::uint32_t currentFilePos=0;
     if (fFileSimple) {
-        currentFilePos = ftell(this->fFileSimple.fFile);//offset + nbytes; // Last position written in the file
+        currentFilePos = ftell(this->fFileSimple.fFile); // Last position written in the file
     }else{//TO TEST
-        currentFilePos = this->fFileProper.fFile->GetEND();//offset + nbytes; // Last position written in the file
+        currentFilePos = this->fFileProper.fFile->GetEND();
     }
-    std::uint64_t offset = 0;//TODO:Remove
-    //std::uint32_t currentFilePos = ftell(this->fFileSimple.fFile);//offset + nbytes; // Last position written in the file
+    std::uint64_t offset = 0;
+
     std::uint32_t aligned_size = ( (currentFilePos + 4096 - 1)/4096*4096 );
     std::uint32_t padding_size = aligned_size - currentFilePos;
     if(padding_size > 0) {
         std::vector<char> aligned_buffer(padding_size, 0xAB);
-        // std::memcpy(aligned_buffer.data(), data, nbytes);
         if (fFileSimple) {
             fFileSimple.Write(aligned_buffer.data(), padding_size);
         } else {
@@ -1353,6 +1352,11 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::ShareContent(std::string_v
    fflush(this->fFileSimple.fFile);
 
    if (type==0) {
+      /**
+       * This function implements a zero-copy merge only.
+       * This means it simply fails if the filesystem does not support filesystem blocks sharing or if addresses are not
+       * aligned to the filesystem block size.
+       * */
       std::cerr << "Zero-Copy Merge active" << std::endl;
 
       file_clone_range cloning_details{};
@@ -1373,7 +1377,13 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::ShareContent(std::string_v
       fflush(this->fFileSimple.fFile);
    }
    else if (type==1) {
-      std::cerr << "One-Copy Merge active" << std::endl;
+      /**
+       * Kernel Copy merge behaves differently according to the filesystem.
+       * If it run on filesystems such as XFS (which support filessystem block sharing), then it acts as zero-copy merge.
+       * If it runs on filesystems not supporting this features (ext3, ext4, etc), it performs a copy of data at kernel
+       * level, without passing through the userspace.
+       * */
+      std::cerr << "Kernel-Copy Merge active" << std::endl;
       lseek(source_fd, sourceOffset, SEEK_SET);
 
       ssize_t err = 0;
@@ -1392,28 +1402,30 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::ShareContent(std::string_v
       this->fFileSimple.fFilePos += sourceLength;
       fflush(this->fFileSimple.fFile);
    } else {
-
+      /**
+       * Simply read data from the source file and write them in the new file.
+       * */
       std::cerr << "Fast Merge active" << std::endl;
 
       lseek(source_fd, sourceOffset, SEEK_SET);
 
-      size_t n = 0;
 
       size_t SZ_BUFFER = 32*(1<<20);
       std::vector<char> data(SZ_BUFFER);
 
       size_t totalRD = 0;
+      size_t nBytes = 0;
 
       do {
-         n = read(source_fd, data.data(), SZ_BUFFER);
-         totalRD+=n;
+         nBytes = read(source_fd, data.data(), SZ_BUFFER);
+         totalRD += nBytes;
          size_t offset = 0;
-         size_t toWrite = std::min(SZ_BUFFER, n);
-         while ((n = write(destination_fd, data.data() + offset, toWrite-offset)) > 0) {
-            offset += n;
+         size_t toWrite = nBytes;
+         while ((nBytes = write(destination_fd, data.data() + offset, toWrite-offset)) > 0) {
+            offset += nBytes;
          }
       }
-      while (totalRD != sourceLength);
+      while (totalRD < sourceLength);
 
 
       this->fFileSimple.fFilePos += sourceLength;
