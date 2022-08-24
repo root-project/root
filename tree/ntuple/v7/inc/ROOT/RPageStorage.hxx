@@ -35,6 +35,8 @@
 #include <unordered_set>
 #include <vector>
 
+#define MY_CODE_RPAGE_SINK
+
 namespace ROOT {
 namespace Experimental {
 
@@ -286,6 +288,10 @@ public:
 
    /// Returns the default metrics object.  Subclasses might alternatively provide their own metrics object by overriding this.
    virtual RNTupleMetrics &GetMetrics() override { return fMetrics; };
+
+#ifdef MY_CODE_RPAGE_SINK
+   virtual void ZeroCopy( std::string_view ntupleName, std::string_view location, std::uint8_t type ) {};
+#endif
 };
 
 // clang-format off

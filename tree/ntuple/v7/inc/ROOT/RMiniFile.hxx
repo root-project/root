@@ -25,6 +25,8 @@
 #include <memory>
 #include <string>
 
+#define MY_CODE
+
 class TCollection;
 class TFile;
 class TFileMergeInfo;
@@ -227,6 +229,12 @@ public:
    std::uint64_t WriteBlob(const void *data, size_t nbytes, size_t len);
    /// Writes the RNTuple key to the file so that the header and footer keys can be found
    void Commit();
+
+#ifdef MY_CODE
+   std::uint64_t WritePadding();
+   void ShareContent(std::string_view sourceFilename, size_t sourceLength, size_t sourceOffset, std::uint8_t type);
+#endif
+
 };
 
 } // namespace Internal

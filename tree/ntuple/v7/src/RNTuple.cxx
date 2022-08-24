@@ -387,6 +387,16 @@ void ROOT::Experimental::RNTupleWriter::CommitCluster(bool commitClusterGroup)
 }
 
 
+#ifdef MY_CODE_RNTUPLE_WRITER
+   void ROOT::Experimental::RNTupleWriter::FastDuplicate( std::string_view ntupleName, std::string_view location, std::uint8_t type ){
+       this->fSink->ZeroCopy( ntupleName, location, type );
+     //  this->fSink->CommitClusterGroup();
+       auto ntupleSrc = RNTupleReader::Open(ntupleName, location);
+       this->fNEntries += ntupleSrc->GetNEntries();
+       this->fLastCommitted = this->fNEntries;
+       this->fLastCommittedClusterGroup = this->fNEntries;
+   }
+#endif
 //------------------------------------------------------------------------------
 
 

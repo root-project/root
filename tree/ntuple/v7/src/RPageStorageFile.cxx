@@ -43,6 +43,17 @@
 #include <thread>
 #include <queue>
 
+#ifdef MY_CODE_RPAGE_STORAGE_FILE
+#include <sys/file.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <linux/fs.h>
+#include <fstream>
+#endif
+
+
 ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntupleName,
    const RNTupleWriteOptions &options)
    : RPageSink(ntupleName, options)
@@ -158,9 +169,15 @@ ROOT::Experimental::Detail::RPageSinkFile::CommitClusterGroupImpl(unsigned char 
    auto szPageListZip = fCompressor->Zip(serializedPageList, length, GetWriteOptions().GetCompression(),
                                          RNTupleCompressor::MakeMemCopyWriter(bufPageListZip.get()));
 
+#ifdef MY_CODE
+    this->fWriter->WritePadding();
+#endif
    RNTupleLocator result;
    result.fBytesOnStorage = szPageListZip;
    result.fPosition = fWriter->WriteBlob(bufPageListZip.get(), szPageListZip, length);
+#ifdef MY_CODE
+    this->fWriter->WritePadding();
+#endif
    return result;
 }
 
@@ -186,6 +203,99 @@ void ROOT::Experimental::Detail::RPageSinkFile::ReleasePage(RPage &page)
 {
    fPageAllocator->DeletePage(page);
 }
+
+
+#ifdef MY_CODE_RPAGE_STORAGE_FILE
+   void ROOT::Experimental::Detail::RPageSinkFile::ZeroCopy( std::string_view ntupleName, std::string_view location, std::uint8_t type ) {
+       auto source = RPageSourceFile(ntupleName, location, RNTupleReadOptions());
+       source.Attach();
+       /**
+        * Compute the data part starting point
+        * */
+       auto descSource = source.GetSharedDescriptorGuard().GetRef().Clone();
+
+       /**
+       * Update offsets
+       * */
+       NTupleSize_t lastColumnOffset = lastColumnOffset = fDescriptorBuilder.GetDescriptor().GetNEntries();
+       NTupleSize_t lastPageOffset = 0;
+
+       size_t nClusterGroup = fDescriptorBuilder.GetDescriptor().GetNClusterGroups();
+       lastPageOffset = (nClusterGroup == 0 ? 0 :
+                         fDescriptorBuilder.GetDescriptor().GetClusterGroupDescriptor(nClusterGroup-1).GetPageListLocator().fPosition + fDescriptorBuilder.GetDescriptor().GetClusterGroupDescriptor(nClusterGroup-1).GetPageListLocator().fBytesOnStorage);
+
+       std::uint32_t nClusters = fDescriptorBuilder.GetDescriptor().GetNClusters();
+       auto descDst = fDescriptorBuilder.GetDescriptor().Clone();
+       size_t CGIdx = 0;
+       std::uint32_t i = 0;
+       std::vector<RClusterDescriptorBuilder> clusters;
+       for (const auto &CG: descSource->GetClusterGroupIterable()) {
+
+
+           // TODO Check this is true
+           size_t startDataPosition = descSource->GetClusterDescriptor(CG.GetClusterIds().front()).GetPageRange(
+                   0).fPageInfos.front().fLocator.fPosition;
+           size_t alignedStartDataPosition = (startDataPosition + 4096 - 1) / 4096 * 4096;
+
+           //std::cout << "Start cluster group" << std::endl;
+           //std::cout << "Start data position: " << startDataPosition << " " << alignedStartDataPosition << std::endl;
+
+           size_t endDataClusterGroup = descSource->GetClusterGroupDescriptor(CGIdx).GetPageListLocator().fPosition;
+           //std::cout << "End data position: " << endDataClusterGroup << std::endl;
+
+           size_t length = endDataClusterGroup -
+                           alignedStartDataPosition;
+           size_t alignedLength = length;
+
+           /**
+            * Share the data part (zero-copy)
+            * */
+           this->fWriter->ShareContent(location, alignedLength, alignedStartDataPosition, type);
+
+            /**
+            * Update metadata
+            **/
+           //std::cout << lastColumnOffset << std::endl;
+           //std::cout << lastPageOffset << std::endl;
+           // Round up to the block size
+           lastPageOffset = lastPageOffset == 0 ? alignedStartDataPosition : (lastPageOffset + 4096 - 1) / 4096 * 4096;
+           // Being the second cluster, the page locator will have as position the header size (assumed rounded up to the
+           // nearest block size). Thus, subtract the header size from this offset in order to adjust the page position with
+           // respect to the new cluster (in the merged tuple) and to the position in the old cluster
+           lastPageOffset -= alignedStartDataPosition;
+
+
+           std::uint32_t groupId = fDescriptorBuilder.GetDescriptor().GetNClusterGroups();
+
+            for (const auto &C: CG.GetClusterIds()) {
+               auto clusterDesc = descSource->GetClusterDescriptor(C).Clone();
+               clusters.emplace_back(RClusterDescriptorBuilder(nClusters + i, clusterDesc.GetFirstEntryIndex() + lastColumnOffset,
+                                                               clusterDesc.GetNEntries()));
+               std::uint32_t nColumns = fDescriptorBuilder.GetDescriptor().GetNColumns();
+
+               for (std::uint32_t j = 0; j < nColumns; ++j) {
+                   auto nPages = clusterDesc.GetPageRange(j).fPageInfos.size();
+                   RClusterDescriptor::RPageRange pageRange;
+                   pageRange.fColumnId = j;
+                   for (std::uint32_t k = 0; k < nPages; ++k) {
+                       std::uint32_t nElements = clusterDesc.GetPageRange(j).fPageInfos[k].fNElements;// clusterDesc.GetNEntries();
+                       RNTupleLocator locator = clusterDesc.GetPageRange(j).fPageInfos[k].fLocator;
+                       locator.fPosition += lastPageOffset;
+                       pageRange.fPageInfos.push_back({ClusterSize_t(nElements), locator});
+                   }
+                   std::uint64_t columnOffset = clusterDesc.GetColumnRange(j).fFirstElementIndex;
+                   columnOffset += lastColumnOffset;
+                   clusters[i].CommitColumnRange(j, columnOffset, this->GetWriteOptions().GetCompression(), pageRange);
+               }
+               fDescriptorBuilder.AddClusterWithDetails(clusters[i].MoveDescriptor().Unwrap());
+               i++;
+            }
+            CommitClusterGroup();
+            groupId++;
+            CGIdx++;
+        }
+   }
+#endif
 
 
 ////////////////////////////////////////////////////////////////////////////////

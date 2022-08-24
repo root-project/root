@@ -29,6 +29,8 @@
 #include <string>
 #include <utility>
 
+#define MY_CODE_RPAGE_STORAGE_FILE
+
 class TFile;
 
 namespace ROOT {
@@ -89,6 +91,10 @@ public:
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
    void ReleasePage(RPage &page) final;
+
+#ifdef MY_CODE_RPAGE_STORAGE_FILE
+   void ZeroCopy( std::string_view ntupleName, std::string_view location, std::uint8_t type );
+#endif
 };
 
 
@@ -159,6 +165,7 @@ private:
    std::unique_ptr<RCluster> PrepareSingleCluster(
       const RCluster::RKey &clusterKey,
       std::vector<ROOT::Internal::RRawFile::RIOVec> &readRequests);
+
 
 protected:
    RNTupleDescriptor AttachImpl() final;
