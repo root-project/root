@@ -82,6 +82,44 @@ std::vector<std::string> ReadSpeed::GetMatchingBranchNames(const std::string &fi
    return branchNames;
 }
 
+std::vector<std::vector<std::string>> GetPerFileBranchNames(const Data &d)
+{
+   auto treeIdx = 0;
+   std::vector<std::vector<std::string>> fileBranchNames;
+
+   std::vector<ReadSpeedRegex> regexes;
+   if (d.fUseRegex)
+      std::transform(d.fBranchNames.begin(), d.fBranchNames.end(), std::back_inserter(regexes), [](std::string text) {
+         return ReadSpeedRegex{text, std::regex(text)};
+      });
+
+   for (const auto &fName : d.fFileNames) {
+      std::vector<std::string> branchNames;
+      if (d.fUseRegex)
+         branchNames = GetMatchingBranchNames(fName, d.fTreeNames[treeIdx], regexes);
+      else
+         branchNames = d.fBranchNames;
+
+      fileBranchNames.push_back(branchNames);
+
+      if (d.fTreeNames.size() > 1)
+         ++treeIdx;
+   }
+   
+   return fileBranchNames;
+}
+
+ByteData SumBytes(const std::vector<ByteData> &bytesData) {
+   const auto uncompressedBytes =
+      std::accumulate(bytesData.begin(), bytesData.end(), 0ull,
+                        [](ULong64_t sum, const ByteData &o) { return sum + o.fUncompressedBytesRead; });
+   const auto compressedBytes =
+      std::accumulate(bytesData.begin(), bytesData.end(), 0ull,
+                        [](ULong64_t sum, const ByteData &o) { return sum + o.fCompressedBytesRead; });
+
+   return {uncompressedBytes, compressedBytes};
+};
+
 // Read branches listed in branchNames in tree treeName in file fileName, return number of uncompressed bytes read.
 ByteData ReadSpeed::ReadTree(TFile *f, const std::string &treeName, const std::vector<std::string> &branchNames,
                              EntryRange range)
@@ -114,7 +152,7 @@ ByteData ReadSpeed::ReadTree(TFile *f, const std::string &treeName, const std::v
    ULong64_t bytesRead = 0;
    const ULong64_t fileStartBytes = f->GetBytesRead();
    for (auto e = range.fStart; e < range.fEnd; ++e)
-      for (const auto &b : branches)
+      for (auto *b : branches)
          bytesRead += b->GetEntry(e);
 
    const ULong64_t fileBytesRead = f->GetBytesRead() - fileStartBytes;
@@ -124,46 +162,27 @@ ByteData ReadSpeed::ReadTree(TFile *f, const std::string &treeName, const std::v
 Result ReadSpeed::EvalThroughputST(const Data &d)
 {
    auto treeIdx = 0;
+   auto fileIdx = 0;
    ULong64_t uncompressedBytesRead = 0;
    ULong64_t compressedBytesRead = 0;
 
    TStopwatch sw;
-
-   std::vector<ReadSpeedRegex> regexes;
-   if (d.fUseRegex)
-      std::transform(d.fBranchNames.begin(), d.fBranchNames.end(), std::back_inserter(regexes), [](std::string text) {
-         return ReadSpeedRegex{text, std::regex(text)};
-      });
+   const auto fileBranchNames = GetPerFileBranchNames(d);
 
    for (const auto &fileName : d.fFileNames) {
-      std::vector<std::string> branchNames;
-      if (d.fUseRegex)
-         branchNames = GetMatchingBranchNames(fileName, d.fTreeNames[treeIdx], regexes);
-      else
-         branchNames = d.fBranchNames;
-
-      TFile *f = TFile::Open(fileName.c_str(), "READ_WITHOUT_GLOBALREGISTRATION");
+      auto f = std::unique_ptr<TFile>(TFile::Open(fileName.c_str(), "READ_WITHOUT_GLOBALREGISTRATION"));
       if (f == nullptr || f->IsZombie())
          throw std::runtime_error("Could not open file '" + fileName + '\'');
 
       sw.Start(kFALSE);
 
-      try {
-         const auto byteData = ReadTree(f, d.fTreeNames[treeIdx], branchNames);
-         uncompressedBytesRead += byteData.fUncompressedBytesRead;
-         compressedBytesRead += byteData.fCompressedBytesRead;
-      } catch (const std::runtime_error &err) {
-         if (f != nullptr && !f->IsZombie())
-            f->Close();
-         delete f;
-         throw;
-      }
+      const auto byteData = ReadTree(f.get(), d.fTreeNames[treeIdx], fileBranchNames[fileIdx]);
+      uncompressedBytesRead += byteData.fUncompressedBytesRead;
+      compressedBytesRead += byteData.fCompressedBytesRead;
 
       if (d.fTreeNames.size() > 1)
          ++treeIdx;
-
-      f->Close();
-      delete f;
+      ++fileIdx;
 
       sw.Stop();
    }
@@ -263,42 +282,10 @@ Result ReadSpeed::EvalThroughputMT(const Data &d, unsigned nThreads)
       std::accumulate(rangesPerFile.begin(), rangesPerFile.end(), 0u, [](size_t s, auto &r) { return s + r.size(); });
    std::cout << "Total number of tasks: " << nranges << '\n';
 
-   auto treeIdx = 0;
-   std::vector<std::vector<std::string>> fileBranchNames;
+   const auto fileBranchNames = GetPerFileBranchNames(d);
 
-   std::vector<ReadSpeedRegex> regexes;
-   if (d.fUseRegex)
-      std::transform(d.fBranchNames.begin(), d.fBranchNames.end(), std::back_inserter(regexes), [](std::string text) {
-         return ReadSpeedRegex{text, std::regex(text)};
-      });
-
-   for (const auto &fName : d.fFileNames) {
-      std::vector<std::string> branchNames;
-      if (d.fUseRegex)
-         branchNames = GetMatchingBranchNames(fName, d.fTreeNames[treeIdx], regexes);
-      else
-         branchNames = d.fBranchNames;
-
-      fileBranchNames.push_back(branchNames);
-
-      if (d.fTreeNames.size() > 1)
-         ++treeIdx;
-   }
-
-   // for each file, for each range, spawn a reading task
-   auto sumBytes = [](const std::vector<ByteData> &bytesData) -> ByteData {
-      const auto uncompressedBytes =
-         std::accumulate(bytesData.begin(), bytesData.end(), 0ull,
-                         [](ULong64_t sum, const ByteData &o) { return sum + o.fUncompressedBytesRead; });
-      const auto compressedBytes =
-         std::accumulate(bytesData.begin(), bytesData.end(), 0ull,
-                         [](ULong64_t sum, const ByteData &o) { return sum + o.fCompressedBytesRead; });
-
-      return {uncompressedBytes, compressedBytes};
-   };
-
-   typedef std::map<int, TFile *> FileMap;
-   typedef std::map<std::thread::id, FileMap *> ThreadFileMap;
+   using FileMap = std::map<int, std::unique_ptr<TFile>>;
+   using ThreadFileMap = std::map<std::thread::id, FileMap *>;
    ThreadFileMap threadFileMap;
 
    auto processFile = [&](int fileIdx) {
@@ -323,48 +310,26 @@ Result ReadSpeed::EvalThroughputMT(const Data &d, unsigned nThreads)
 
          if (fMapIt == fileMap->end()) {
             f = TFile::Open(fileName.c_str(), "READ_WITHOUT_GLOBALREGISTRATION");
-            fileMap->insert(std::make_pair(fileIdx, f));
+            fileMap->insert(std::make_pair(fileIdx, std::unique_ptr<TFile>(f)));
          } else {
-            f = fMapIt->second;
+            f = fMapIt->second.get();
          }
 
          if (f == nullptr || f->IsZombie())
             throw std::runtime_error("Could not open file '" + fileName + '\'');
 
-         try {
-            return ReadTree(f, treeName, branchNames, range);
-         } catch (const std::runtime_error &err) {
-            if (f != nullptr && !f->IsZombie())
-               f->Close();
-            delete f;
-            throw;
-         }
-
-         f->Close();
-         delete f;
+         return ReadTree(f, treeName, branchNames, range);
       };
 
-      const auto byteData = pool.MapReduce(readRange, rangesPerFile[fileIdx], sumBytes);
+      const auto byteData = pool.MapReduce(readRange, rangesPerFile[fileIdx], SumBytes);
 
       return byteData;
    };
 
    TStopwatch sw;
    sw.Start();
-   const auto totalByteData = pool.MapReduce(processFile, ROOT::TSeqUL{d.fFileNames.size()}, sumBytes);
+   const auto totalByteData = pool.MapReduce(processFile, ROOT::TSeqUL{d.fFileNames.size()}, SumBytes);
    sw.Stop();
-
-   for (const auto &fileMapPair : threadFileMap) {
-      const auto *fileMap = fileMapPair.second;
-
-      for (const auto &filePair : *fileMap) {
-         auto *file = filePair.second;
-
-         if (file != nullptr && !file->IsZombie())
-            file->Close();
-         delete file;
-      }
-   }
 
    return {sw.RealTime(),
            sw.CpuTime(),
