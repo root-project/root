@@ -16,6 +16,7 @@
 #include <ROOT/RDF/GraphUtils.hxx>
 #include <ROOT/RDF/RActionBase.hxx>
 #include <ROOT/RDF/RResultMap.hxx>
+#include <ROOT/RResultHandle.hxx> // users of RunGraphs might rely on this transitive include
 #include <ROOT/TypeTraits.hxx>
 
 #include <fstream>
@@ -64,7 +65,6 @@ auto PassAsVec(F &&f) -> PassAsVecHelper<std::make_index_sequence<N>, T, F>
 } // namespace Internal
 
 namespace RDF {
-class RResultHandle;
 namespace RDFInternal = ROOT::Internal::RDF;
 
 // clag-format off
