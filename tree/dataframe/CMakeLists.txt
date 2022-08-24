@@ -77,7 +77,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/RRangeBase.hxx
     ROOT/RDF/RRange.hxx
     ROOT/RDF/RResultMap.hxx
-    ROOT/RDF/RSlotStack.hxx
     ROOT/RDF/RTreeColumnReader.hxx
     ROOT/RDF/RVariation.hxx
     ROOT/RDF/RVariationBase.hxx
@@ -113,7 +112,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RVariationBase.cxx
     src/RVariationsDescription.cxx
     src/RRootDS.cxx
-    src/RSlotStack.cxx
     src/RTrivialDS.cxx
     src/RDFDescription.cxx
   DICTIONARY_OPTIONS
