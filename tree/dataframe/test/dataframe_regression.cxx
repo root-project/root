@@ -218,6 +218,37 @@ TEST_P(RDFRegressionTests, PolymorphicTBranchObject)
    gSystem->Unlink(filename.c_str());
 }
 
+// #11222
+TEST_P(RDFRegressionTests, UseAfterDeleteOfSampleCallbacks)
+{
+   struct MyHelper : ROOT::Detail::RDF::RActionImpl<MyHelper> {
+      using Result_t = int;
+      std::shared_ptr<int> fResult;
+      bool fThisWasDeleted = false;
+
+      MyHelper() : fResult(std::make_shared<int>()) {}
+      ~MyHelper() { fThisWasDeleted = true; }
+      void Initialize() {}
+      void InitTask(TTreeReader *, unsigned int) {}
+      void Exec(unsigned int) {}
+      void Finalize() {}
+      std::shared_ptr<Result_t> GetResultPtr() const { return fResult; }
+      std::string GetActionName() const { return "MyHelper"; }
+      ROOT::RDF::SampleCallback_t GetSampleCallback()
+      {
+         // in a well-behaved program, this won't ever even be called as the RResultPtr returned
+         // by the Book call below goes immediately out of scope, removing the action from the computation graph
+         return [this](unsigned int, const ROOT::RDF::RSampleInfo &) { EXPECT_FALSE(fThisWasDeleted); };
+      }
+   };
+
+   ROOT::RDataFrame df(10);
+   // Book custom action and immediately deregister it (because the RResultPtr goes out of scope)
+   df.Book<>(MyHelper{}, {});
+   // trigger an event loop that will invoke registered sample callbacks (in a well-behaved program, none should run)
+   df.Count().GetValue();
+}
+
 // run single-thread tests
 INSTANTIATE_TEST_SUITE_P(Seq, RDFRegressionTests, ::testing::Values(false));
 
