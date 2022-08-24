@@ -662,11 +662,6 @@ public:
       auto newColumn =
          std::make_shared<RDFDetail::RDefinePerSample<F>>(name, retTypeName, std::move(expression), *fLoopManager);
 
-      auto updateDefinePerSample = [newColumn](unsigned int slot, const ROOT::RDF::RSampleInfo &id) {
-         newColumn->Update(slot, id);
-      };
-      fLoopManager->AddSampleCallback(std::move(updateDefinePerSample));
-
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddDefine(std::move(newColumn));
       RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
@@ -721,10 +716,6 @@ public:
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
       auto jittedDefine =
          RDFInternal::BookDefinePerSampleJit(name, expression, *fLoopManager, fColRegister, upcastNodeOnHeap);
-      auto updateDefinePerSample = [jittedDefine](unsigned int slot, const ROOT::RDF::RSampleInfo &id) {
-         jittedDefine->Update(slot, id);
-      };
-      fLoopManager->AddSampleCallback(std::move(updateDefinePerSample));
 
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddDefine(std::move(jittedDefine));
@@ -3190,7 +3181,6 @@ private:
 
       auto action = RDFInternal::BuildAction<ColTypes...>(validColumnNames, helperArg, nSlots, fProxiedPtr, ActionTag{},
                                                           fColRegister);
-      fLoopManager->AddSampleCallback(action->GetSampleCallback());
       return MakeResultPtr(r, *fLoopManager, std::move(action));
    }
 
