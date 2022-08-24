@@ -21,6 +21,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 // forward declarations
@@ -129,8 +130,9 @@ class RLoopManager : public RNodeBase {
    std::vector<RDFInternal::RCallback> fCallbacks;         ///< Registered callbacks
    /// Registered callbacks to invoke just once before running the loop
    std::vector<RDFInternal::ROneTimeCallback> fCallbacksOnce;
-   /// Registered callbacks to call at the beginning of each "data block"
-   std::vector<ROOT::RDF::SampleCallback_t> fSampleCallbacks;
+   /// Registered callbacks to call at the beginning of each "data block".
+   /// The key is the pointer of the corresponding node in the computation graph (a RDefinePerSample or a RAction).
+   std::unordered_map<void *, ROOT::RDF::SampleCallback_t> fSampleCallbacks;
    RDFInternal::RNewSampleNotifier fNewSampleNotifier;
    std::vector<ROOT::RDF::RSampleInfo> fSampleInfos;
    unsigned int fNRuns{0}; ///< Number of event loops run
@@ -218,7 +220,7 @@ public:
 
    const ColumnNames_t &GetBranchNames();
 
-   void AddSampleCallback(ROOT::RDF::SampleCallback_t &&callback);
+   void AddSampleCallback(void *nodePtr, ROOT::RDF::SampleCallback_t &&callback);
 };
 
 } // ns RDF

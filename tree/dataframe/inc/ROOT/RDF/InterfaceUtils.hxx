@@ -598,7 +598,6 @@ void CallBuildAction(std::shared_ptr<PrevNodeType> *prevNodeOnHeap, const char *
 
    auto actionPtr = BuildAction<ColTypes...>(cols, std::move(*helperArgOnHeap), nSlots, std::move(prevNodePtr),
                                              ActionTag{}, *colRegister);
-   loopManager.AddSampleCallback(actionPtr->GetSampleCallback());
    jittedActionOnHeap->SetAction(std::move(actionPtr));
 
    doDeletes();
