@@ -42,10 +42,15 @@ public:
       : RDefineBase(name, type, RDFInternal::RColumnRegister{nullptr}, lm, /*columnNames*/ {}),
         fExpression(std::move(expression)), fLastResults(lm.GetNSlots() * RDFInternal::CacheLineStep<RetType_t>())
    {
+      fLoopManager->Register(this);
+      auto callUpdate = [this](unsigned int slot, const ROOT::RDF::RSampleInfo &id) { this->Update(slot, id); };
+      fLoopManager->AddSampleCallback(this, std::move(callUpdate));
    }
 
    RDefinePerSample(const RDefinePerSample &) = delete;
    RDefinePerSample &operator=(const RDefinePerSample &) = delete;
+
+   ~RDefinePerSample() { fLoopManager->Deregister(this); }
 
    /// Return the (type-erased) address of the Define'd value for the given processing slot.
    void *GetValuePtr(unsigned int slot) final
