@@ -17,7 +17,6 @@
 
 namespace ROOT {
 namespace Internal {
-namespace RDF {
 
 /// This is an helper class to allow to pick a slot resorting to a map
 /// indexed by thread ids.
@@ -35,7 +34,7 @@ public:
    void ReturnSlot(unsigned int slotNumber);
    unsigned int GetSlot();
 };
-} // namespace RDF
+
 } // namespace Internal
 } // namespace ROOT
 

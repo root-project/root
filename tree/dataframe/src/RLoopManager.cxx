@@ -15,9 +15,9 @@
 #include "ROOT/RDF/RFilterBase.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/RRangeBase.hxx"
-#include "ROOT/RDF/RSlotStack.hxx"
 #include "ROOT/RDF/RVariationBase.hxx"
 #include "ROOT/RLogger.hxx"
+#include "ROOT/RSlotStack.hxx"
 #include "RtypesCore.h" // Long64_t
 #include "TStopwatch.h"
 #include "TBranchElement.h"
@@ -424,9 +424,9 @@ RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
 }
 
 struct RSlotRAII {
-   RSlotStack &fSlotStack;
+   ROOT::Internal::RSlotStack &fSlotStack;
    unsigned int fSlot;
-   RSlotRAII(RSlotStack &slotStack) : fSlotStack(slotStack), fSlot(slotStack.GetSlot()) {}
+   RSlotRAII(ROOT::Internal::RSlotStack &slotStack) : fSlotStack(slotStack), fSlot(slotStack.GetSlot()) {}
    ~RSlotRAII() { fSlotStack.ReturnSlot(fSlot); }
 };
 
@@ -434,7 +434,7 @@ struct RSlotRAII {
 void RLoopManager::RunEmptySourceMT()
 {
 #ifdef R__USE_IMT
-   RSlotStack slotStack(fNSlots);
+   ROOT::Internal::RSlotStack slotStack(fNSlots);
    // Working with an empty tree.
    // Evenly partition the entries according to fNSlots. Produce around 2 tasks per slot.
    const auto nEntriesPerSlot = fNEmptyEntries / (fNSlots * 2);
@@ -499,7 +499,7 @@ void RLoopManager::RunTreeProcessorMT()
 #ifdef R__USE_IMT
    if (fEndEntry == fBeginEntry) // empty range => no work needed
       return;
-   RSlotStack slotStack(fNSlots);
+   ROOT::Internal::RSlotStack slotStack(fNSlots);
    const auto &entryList = fTree->GetEntryList() ? *fTree->GetEntryList() : TEntryList();
    auto tp = (fBeginEntry != 0 || fEndEntry != std::numeric_limits<Long64_t>::max())
                 ? std::make_unique<ROOT::TTreeProcessorMT>(*fTree, fNSlots, std::make_pair(fBeginEntry, fEndEntry))
@@ -612,7 +612,7 @@ void RLoopManager::RunDataSourceMT()
 {
 #ifdef R__USE_IMT
    assert(fDataSource != nullptr);
-   RSlotStack slotStack(fNSlots);
+   ROOT::Internal::RSlotStack slotStack(fNSlots);
    ROOT::TThreadExecutor pool;
 
    // Each task works on a subrange of entries

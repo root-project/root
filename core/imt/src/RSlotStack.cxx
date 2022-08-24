@@ -9,18 +9,18 @@
  *************************************************************************/
 
 #include <ROOT/TSeq.hxx>
-#include <ROOT/RDF/RSlotStack.hxx>
+#include <ROOT/RSlotStack.hxx>
 
 #include <cassert>
 #include <mutex> // std::lock_guard
 
-ROOT::Internal::RDF::RSlotStack::RSlotStack(unsigned int size) : fSize(size)
+ROOT::Internal::RSlotStack::RSlotStack(unsigned int size) : fSize(size)
 {
    for (auto i : ROOT::TSeqU(size))
       fStack.push(i);
 }
 
-void ROOT::Internal::RDF::RSlotStack::ReturnSlot(unsigned int slot)
+void ROOT::Internal::RSlotStack::ReturnSlot(unsigned int slot)
 {
    std::lock_guard<ROOT::TSpinMutex> guard(fMutex);
    assert(fStack.size() < fSize && "Trying to put back a slot to a full stack!");
@@ -28,7 +28,7 @@ void ROOT::Internal::RDF::RSlotStack::ReturnSlot(unsigned int slot)
    fStack.push(slot);
 }
 
-unsigned int ROOT::Internal::RDF::RSlotStack::GetSlot()
+unsigned int ROOT::Internal::RSlotStack::GetSlot()
 {
    std::lock_guard<ROOT::TSpinMutex> guard(fMutex);
    assert(!fStack.empty() && "Trying to pop a slot from an empty stack!");
