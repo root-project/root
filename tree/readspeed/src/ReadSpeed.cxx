@@ -14,6 +14,7 @@
 #include <ROOT/TThreadExecutor.hxx>
 #include <ROOT/TTreeProcessorMT.hxx>  // for TTreeProcessorMT::GetTasksPerWorkerHint
 #include <ROOT/InternalTreeUtils.hxx> // for ROOT::Internal::TreeUtils::GetTopLevelBranchNames
+#include <ROOT/RSlotStack.hxx>
 #include <TBranch.h>
 #include <TStopwatch.h>
 #include <TTree.h>
@@ -284,9 +285,13 @@ Result ReadSpeed::EvalThroughputMT(const Data &d, unsigned nThreads)
 
    const auto fileBranchNames = GetPerFileBranchNames(d);
 
-   using FileMap = std::map<int, std::unique_ptr<TFile>>;
-   using ThreadFileMap = std::map<std::thread::id, FileMap *>;
-   ThreadFileMap threadFileMap;
+   ROOT::Internal::RSlotStack slotStack(actualThreads);
+   std::vector<int> lastFileIdxs;
+   std::vector<std::unique_ptr<TFile>> lastTFiles;
+   for (unsigned int i = 0; i < actualThreads; ++i) {
+      lastFileIdxs.push_back(-1);
+      lastTFiles.push_back(std::make_unique<TFile>());
+   }
 
    auto processFile = [&](int fileIdx) {
       const auto &fileName = d.fFileNames[fileIdx];
@@ -294,31 +299,23 @@ Result ReadSpeed::EvalThroughputMT(const Data &d, unsigned nThreads)
       const auto &branchNames = fileBranchNames[fileIdx];
 
       auto readRange = [&](const EntryRange &range) -> ByteData {
-         std::thread::id threadId = std::this_thread::get_id();
-         ThreadFileMap::iterator tMapIt = threadFileMap.find(threadId);
-         FileMap *fileMap;
+         auto slotIndex = slotStack.GetSlot();
+         auto &file = lastTFiles[slotIndex];
+         auto &lastIndex = lastFileIdxs[slotIndex];
 
-         if (tMapIt == threadFileMap.end()) {
-            fileMap = new FileMap();
-            threadFileMap.insert(std::make_pair(threadId, fileMap));
-         } else {
-            fileMap = tMapIt->second;
+         if (lastIndex != fileIdx) {
+            file.reset(TFile::Open(fileName.c_str(), "READ_WITHOUT_GLOBALREGISTRATION"));
+            lastIndex = fileIdx;
          }
 
-         FileMap::iterator fMapIt = fileMap->find(fileIdx);
-         TFile *f;
-
-         if (fMapIt == fileMap->end()) {
-            f = TFile::Open(fileName.c_str(), "READ_WITHOUT_GLOBALREGISTRATION");
-            fileMap->insert(std::make_pair(fileIdx, std::unique_ptr<TFile>(f)));
-         } else {
-            f = fMapIt->second.get();
-         }
-
-         if (f == nullptr || f->IsZombie())
+         if (file == nullptr || file->IsZombie())
             throw std::runtime_error("Could not open file '" + fileName + '\'');
 
-         return ReadTree(f, treeName, branchNames, range);
+         auto result = ReadTree(file.get(), treeName, branchNames, range);
+
+         slotStack.ReturnSlot(slotIndex);
+
+         return result;
       };
 
       const auto byteData = pool.MapReduce(readRange, rangesPerFile[fileIdx], SumBytes);
