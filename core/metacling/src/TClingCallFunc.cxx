@@ -1450,12 +1450,8 @@ void TClingCallFunc::exec(void *address, void *ret)
    (*fWrapper)(address, (int)num_args, (void **)vp_ary.data(), ret);
 }
 
-void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret)
+void TClingCallFunc::exec_with_valref_return(void *address, cling::Value &ret)
 {
-   if (!ret) {
-      exec(address, 0);
-      return;
-   }
    const FunctionDecl *FD = GetDecl();
 
    if (llvm::isa<CXXConstructorDecl>(FD)) {
@@ -1463,15 +1459,15 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret)
      const TypeDecl *TD = dyn_cast<TypeDecl>(GetDeclContext());
      QualType ClassTy(TD->getTypeForDecl(), 0);
      QualType QT = Context.getLValueReferenceType(ClassTy);
-     *ret = cling::Value(QT, *fInterp);
+     ret = cling::Value(QT, *fInterp);
    } else {
      QualType QT = FD->getReturnType().getCanonicalType();
-     *ret = cling::Value(QT, *fInterp);
+     ret = cling::Value(QT, *fInterp);
 
      if (QT->isRecordType() || QT->isMemberDataPointerType())
-       return exec(address, ret->getPtr());
+       return exec(address, ret.getPtr());
    }
-   exec(address, &ret->getPtr());
+   exec(address, &ret.getPtr());
 }
 
 void TClingCallFunc::EvaluateArgList(const string &ArgList)
@@ -1506,12 +1502,12 @@ void TClingCallFunc::Exec(void *address, TInterpreterValue *interpVal/*=0*/)
             "Called with no wrapper, not implemented!");
       return;
    }
-   if (!interpVal) {
+   if (!interpVal || !interpVal->GetValAddr()) {
       exec(address, 0);
       return;
    }
    cling::Value *val = reinterpret_cast<cling::Value *>(interpVal->GetValAddr());
-   exec_with_valref_return(address, val);
+   exec_with_valref_return(address, *val);
 }
 
 template <typename T>
@@ -1524,7 +1520,7 @@ T TClingCallFunc::ExecT(void *address)
       return 0;
    }
    cling::Value ret;
-   exec_with_valref_return(address, &ret);
+   exec_with_valref_return(address, ret);
    if (!ret.isValid()) {
       // Sometimes we are called on a function returning void!
       return 0;
