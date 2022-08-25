@@ -1,3 +1,5 @@
+from __future__ import annotations 
+
 from abc import ABC, abstractmethod
 from typing import Callable
 
@@ -18,10 +20,16 @@ class Visualization:
     Base class that represents visualizations for profiling data
     """
 
-    @property
-    def Decorator(self) -> Callable:
-        return lambda func: func
+    @abstractmethod
+    def decorate(self, mapper:Callable) -> Callable:
+        """
+        Decorate mapper function to include collection and post-processing of profiling data
+        """
+        raise NotImplementedError
 
-    @property
-    def Client_task(self) -> Callable:
-        return lambda task_result: None
+    @abstractmethod
+    def produce_visualization(self, data:ProfilingData) -> Callable:
+        """
+        Using post-processed data from the distributed workers, produce the visualization on the client side 
+        """
+        raise NotImplementedError

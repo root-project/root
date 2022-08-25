@@ -15,6 +15,14 @@
 # It is crucial that this instruction is executed before importing ROOT in the distributed workers.
 from __future__ import annotations
 
+# TODO: Each time the module DistRDF is imported, the CLING_PROFILE=1 variable is set
+# modyfing the environment in both the client and the workers.
+# This affects only the workers when the profling option is enabled, since in all other
+# cases Cling is already initialized. However the environment is modified every time, and
+# this can potentially give rise to unexpected side effects.
+# The issue can be solved by adding the option to programmatically enable/disable 
+# Cling's profiling feature after its initialization, moving this step inside the 
+# data collection context manager for all Visualizations
 from os import environ
 environ["CLING_PROFILE"]="1"
 

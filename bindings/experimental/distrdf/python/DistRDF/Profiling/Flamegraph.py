@@ -1,3 +1,5 @@
+from __future__ import annotations 
+
 from functools import partial
 import os
 from typing import Callable, Optional
@@ -5,10 +7,10 @@ from typing import Callable, Optional
 from subprocess import run
 
 from DistRDF.Profiling.ErrorHandling import check_and_raise_errors
-from DistRDF.Profiling.Perf import collect_perf_data
+from DistRDF.Profiling.Perf import CollectPerfData
 from DistRDF.Profiling.Base import ProfilingData, Visualization
 
-def Decorator(func:Callable, data_dir:str, perf_options:Optional[dict]):
+def collect_data_for_flamegraph(func:Callable, data_dir:str, perf_options:Optional[dict]):
     """
     Decorator for the distributed mapper function.
     It includes collection of profiling data and postprocessing to build flamegraphs
@@ -17,7 +19,7 @@ def Decorator(func:Callable, data_dir:str, perf_options:Optional[dict]):
     def inner(*args, **kwargs):
 
         # Start collecting data
-        with collect_perf_data(data_dir, perf_options):
+        with CollectPerfData(data_dir, perf_options):
             result = func(*args, **kwargs)
 
         # Postprocessing
@@ -59,7 +61,7 @@ def fold_perf_data(data_dir:str)->"FlameGraphData":
 def restore_jit_annotation(callstack:str) -> str:
     return callstack.replace("[j]","_[j]")
 
-def make_flamegraph(prof_data:FlameGraphData, filename) -> None:
+def produce_flamegraph(prof_data:FlameGraphData, filename) -> None:
     """
     Produce a flamegraph given some folded flamegraph data
     """
@@ -85,13 +87,11 @@ class FlameGraph(Visualization):
         filename:str = "flamegraph.svg"
     ) -> None:
 
-        self._dc = partial(Decorator, data_dir = data_dir, perf_options = perf_options)
-        self._ct = partial(make_flamegraph, filename = filename)
+        self._decorator = partial(collect_data_for_flamegraph, data_dir = data_dir, perf_options = perf_options)
+        self._produce_flamegraph = partial(produce_flamegraph, filename = filename)
 
-    @property
-    def Decorator(self):
-        return self._dc
+    def decorate(self, mapper:Callable):
+        return self._decorator(mapper)
     
-    @property
-    def Client_task(self):
-        return self._ct
+    def produce_visualization(self, data:FlameGraphData):
+        return self._produce_flamegraph(data)

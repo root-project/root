@@ -193,7 +193,9 @@ class HeadNode(Node, ABC):
                 ComputationGraphGenerator.trigger_computation_graph, self._generate_graph_dict())
         
         if self._activate_profiling:
-            mapper = self._visualization.Decorator(profilable_mapper)
+
+            mapper = self._visualization.decorate(profilable_mapper)
+
         else:
             mapper = distrdf_mapper
 
@@ -528,6 +530,6 @@ class TreeHeadNode(HeadNode):
                                f"but {entries_in_trees.processed_entries} were processed.")
 
         if self._activate_profiling:
-            self._visualization.Client_task(values.prof_data)
+            self._visualization.produce_visualization(values.prof_data)
 
         return values.mergeables

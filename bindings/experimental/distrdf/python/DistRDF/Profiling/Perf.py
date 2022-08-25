@@ -1,3 +1,5 @@
+from __future__ import annotations 
+
 from typing import Optional
 import os
 
@@ -18,7 +20,7 @@ def remove_logs(stderr:str)->str:
     msg = "perf record:"
     return "\n".join([line for line in err_lines if not msg in line])
 
-class collect_perf_data:
+class CollectPerfData:
     """
     Context manager to collect profiling data in the mapper.
     Data is saved in proc-pid.perf.data
