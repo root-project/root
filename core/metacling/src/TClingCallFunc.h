@@ -114,8 +114,6 @@ private:
    tcling_callfunc_dtor_Wrapper_t
    make_dtor_wrapper(const TClingClassInfo* info);
 
-   ExecWithRetFunc_t InitRetAndExec(const clang::FunctionDecl *FD, cling::Value &ret);
-
    void exec(void* address, void* ret);
 
    void exec_with_valref_return(void* address,
