@@ -1450,47 +1450,28 @@ void TClingCallFunc::exec(void *address, void *ret)
    (*fWrapper)(address, (int)num_args, (void **)vp_ary.data(), ret);
 }
 
-// FIXME: Inlining InitRetAndExec into exec_with_valref_return causes crashes
-// in roottest/root/treeformula/retobj/runretobjTest.C
-TClingCallFunc::ExecWithRetFunc_t
-TClingCallFunc::InitRetAndExec(const clang::FunctionDecl *FD, cling::Value &ret) {
-   if (llvm::isa<CXXConstructorDecl>(FD)) {
-      ASTContext &Context = FD->getASTContext();
-      const TypeDecl *TD = dyn_cast<TypeDecl>(GetDeclContext());
-      QualType ClassTy(TD->getTypeForDecl(), 0);
-      QualType QT = Context.getLValueReferenceType(ClassTy);
-      ret = cling::Value(QT, *fInterp);
-      // Store the new()'ed address in getPtr()
-      return [this](void* address, cling::Value& ret) { exec(address, &ret.getPtr()); };
-   } else {
-      QualType QT = FD->getReturnType().getCanonicalType();
-      ret = cling::Value(QT, *fInterp);
-
-      if (QT->isRecordType() || QT->isMemberDataPointerType())
-        return [this](void* address, cling::Value& ret) { exec(address, ret.getPtr()); };
-
-      return [this](void* address, cling::Value& ret) { exec(address, &ret.getPtr()); };
-
-   }
-}
-
 void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret)
 {
    if (!ret) {
       exec(address, 0);
       return;
    }
-   std::function<void(void*, cling::Value&)> execFunc;
+   const FunctionDecl *FD = GetDecl();
 
-   /* Release lock during user function execution*/
-   {
-      R__LOCKGUARD_CLING(gInterpreterMutex);
-      execFunc = InitRetAndExec(GetDecl(), *ret);
+   if (llvm::isa<CXXConstructorDecl>(FD)) {
+     ASTContext &Context = FD->getASTContext();
+     const TypeDecl *TD = dyn_cast<TypeDecl>(GetDeclContext());
+     QualType ClassTy(TD->getTypeForDecl(), 0);
+     QualType QT = Context.getLValueReferenceType(ClassTy);
+     *ret = cling::Value(QT, *fInterp);
+   } else {
+     QualType QT = FD->getReturnType().getCanonicalType();
+     *ret = cling::Value(QT, *fInterp);
+
+     if (QT->isRecordType() || QT->isMemberDataPointerType())
+       return exec(address, ret->getPtr());
    }
-
-   if (execFunc)
-      execFunc(address, *ret);
-   return;
+   exec(address, &ret->getPtr());
 }
 
 void TClingCallFunc::EvaluateArgList(const string &ArgList)
