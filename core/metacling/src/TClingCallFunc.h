@@ -117,7 +117,7 @@ private:
    void exec(void* address, void* ret);
 
    void exec_with_valref_return(void* address,
-                                cling::Value* ret);
+                                cling::Value& ret);
    void EvaluateArgList(const std::string& ArgList);
 
    size_t CalculateMinRequiredArguments();
