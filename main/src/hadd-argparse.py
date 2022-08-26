@@ -1,5 +1,4 @@
 import argparse
-import sys
 
 def get_argparse():
 	DESCRIPTION = """This program will add histograms from a list of root files and write them to a target root file.\n
