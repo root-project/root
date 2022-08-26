@@ -17,7 +17,6 @@
 #include "ROOT/RDF/RRangeBase.hxx"
 #include "ROOT/RDF/RVariationBase.hxx"
 #include "ROOT/RLogger.hxx"
-#include "ROOT/RSlotStack.hxx"
 #include "RtypesCore.h" // Long64_t
 #include "TStopwatch.h"
 #include "TBranchElement.h"
@@ -33,6 +32,7 @@
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
 #include "ROOT/TTreeProcessorMT.hxx"
+#include "ROOT/RSlotStack.hxx"
 #endif
 
 #include <algorithm>
@@ -423,12 +423,14 @@ RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
    }
 }
 
+#ifdef R__USE_IMT
 struct RSlotRAII {
    ROOT::Internal::RSlotStack &fSlotStack;
    unsigned int fSlot;
    RSlotRAII(ROOT::Internal::RSlotStack &slotStack) : fSlotStack(slotStack), fSlot(slotStack.GetSlot()) {}
    ~RSlotRAII() { fSlotStack.ReturnSlot(fSlot); }
 };
+#endif
 
 /// Run event loop with no source files, in parallel.
 void RLoopManager::RunEmptySourceMT()
