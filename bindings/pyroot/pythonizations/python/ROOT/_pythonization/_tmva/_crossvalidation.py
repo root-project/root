@@ -39,4 +39,4 @@ class CrossValidation(object):
         # The keywords must correspond to the CmdArg of the constructor function.
 
         args, kwargs = _kwargs_to_tmva_cmdargs(*args, **kwargs)
-        return self._init(*args, **kwargs)
+        self._init(*args, **kwargs)

@@ -18,9 +18,9 @@ from .. import pythonization
 from ._factory import Factory
 from ._dataloader import DataLoader
 from ._crossvalidation import CrossValidation
-from ._rbdt import *
-from ._rtensor import *
-from ._tree_inference import *
+from ._rbdt import Compute, pythonize_rbdt
+from ._rtensor import get_array_interface, add_array_interface_property, RTensorGetitem, pythonize_rtensor
+from ._tree_inference import SaveXGBoost, pythonize_tree_inference
 
 
 # list of python classes that are used to pythonize TMVA classes
@@ -115,7 +115,7 @@ def make_func_name_orig(func_name):
     return "_" + func_name
 
 
-@pythonization(class_name=["Factory","DataLoader","CrossValidation"], ns="TMVA")
+@pythonization(class_name=["Factory", "DataLoader", "CrossValidation"], ns="TMVA")
 def pythonize_tmva(klass, name):
     # Parameters:
     # klass: class to pythonize
@@ -123,10 +123,10 @@ def pythonize_tmva(klass, name):
 
     # need to strip the TMVA namespace
     ns_prefix = "TMVA::"
-    name = name[len(ns_prefix):len(name)]
+    name = name[len(ns_prefix) : len(name)]
 
     if not name in python_classes_dict:
-        print("Error - class ",name,"is not in the pythonization list")
+        print("Error - class ", name, "is not in the pythonization list")
         return
 
     python_klass = python_classes_dict[name]

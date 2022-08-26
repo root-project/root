@@ -10,8 +10,6 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-import cppyy
-
 
 def _kwargs_to_tmva_cmdargs(*args, **kwargs):
     """Helper function to check kwargs with keys that correspond to a function that creates TmvaCmdArg."""
@@ -33,10 +31,10 @@ def _kwargs_to_tmva_cmdargs(*args, **kwargs):
     if kwargs:
         cmdOpt = ""
         first = True
-        for  k, v in kwargs.items() :
-            if (not first) :
+        for k, v in kwargs.items():
+            if not first:
                 cmdOpt += ":"
-            cmdOpt += getter(k,v)
+            cmdOpt += getter(k, v)
             first = False
 
         args = args + (cmdOpt,)

@@ -21,8 +21,9 @@
 
 
 import ROOT
-from ROOT import TMVA
 
+TMVA = ROOT.TMVA
+TFile = ROOT.TFile
 
 import os
 
@@ -55,7 +56,7 @@ def MakeTimeData(n, ntime, ndim):
 
     sgn = ROOT.TTree("sgn", "sgn")
     bkg = ROOT.TTree("bkg", "bkg")
-    f = ROOT.TFile(fname, "RECREATE")
+    f = TFile(fname, "RECREATE")
 
     x1 = []
     x2 = []
@@ -199,7 +200,7 @@ if fileDoesNotExist:
     MakeTimeData(nTotEvts, ntime, ninput)
 
 
-inputFile = ROOT.TFile.Open(inputFileName)
+inputFile = TFile.Open(inputFileName)
 if inputFile is None:
     raise ROOT.Error("Error opening input file %s - exit", inputFileName.Data())
 
@@ -212,7 +213,7 @@ outputFile = None
 
 
 if writeOutputFile:
-    outputFile = ROOT.TFile.Open(outfileName, "RECREATE")
+    outputFile = TFile.Open(outfileName, "RECREATE")
 
 
 ## Declare Factory

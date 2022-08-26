@@ -24,7 +24,9 @@
 
 
 import ROOT
-from ROOT import TMVA, TFile
+
+TMVA = ROOT.TMVA
+TFile = ROOT.TFile
 
 
 import os
@@ -106,13 +108,11 @@ def MakeImagesTree(n, nh, nw):
 
 
 opt = [1, 1, 1, 1, 1]
-useTMVACNN = opt[0] if len(opt) > 0 else False
+useTMVACNN = opt[0] if len(opt) > 0 or ROOT.gSystem.GetFromPipe("root-config --has-tmva-gpu") == "yes" else False
 useKerasCNN = opt[1] if len(opt) > 1 else False
 useTMVADNN = opt[2] if len(opt) > 2 else False
 useTMVABDT = opt[3] if len(opt) > 3 else False
 usePyTorchCNN = opt[4] if len(opt) > 4 else False
-
-useTMVACNN = opt[0] if ROOT.gSystem.GetFromPipe("root-config --has-tmva-gpu") == "yes" else False
 
 
 if not useTMVACNN:
@@ -129,7 +129,7 @@ num_threads = 0  # use default threads
 # do enable MT running
 if num_threads >= 0:
     ROOT.EnableImplicitMT(num_threads)
-    if num_threads > 0:
+    if not num_threads:
         ROOT.gSystem.Setenv("OMP_NUM_THREADS", ROOT.TString.Format("%d", num_threads))
 else:
     ROOT.gSystem.Setenv("OMP_NUM_THREADS", "1")
@@ -205,10 +205,9 @@ inputFileName = "images_data_16x16.root"
 if ROOT.gSystem.AccessPathName(inputFileName):
     MakeImagesTree(5000, 16, 16)
 
-try:
-    inputFile = ROOT.TFile.Open(inputFileName)
-except:
-    Warning("TMVA_CNN_Classification", "Error opening input file %s - exit", inputFileName.Data())
+inputFile = TFile.Open(inputFileName)
+if inputFile is None:
+    ROOT.Warning("TMVA_CNN_Classification", "Error opening input file %s - exit", inputFileName.Data())
 
 
 # inputFileName = "tmva_class_example.root"

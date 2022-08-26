@@ -30,7 +30,9 @@
 ## - The third argument is a string option defining some general configuration for the TMVA session. For example all TMVA output can be suppressed by removing the "!" (not) in front of the "Silent" argument in the option string
 
 import ROOT
-from ROOT import TMVA, TFile
+
+TMVA = ROOT.TMVA
+TFile = ROOT.TFile
 
 
 TMVA.Tools.Instance()
