@@ -1959,11 +1959,19 @@ TString TBranch::GetFullName() const
    if (!mother || mother==this) {
       return fName;
    }
-   TString motherName(mother->GetName());
-   if (motherName.Length() && (motherName[motherName.Length()-1] == '.')) {
+
+   const auto motherName = mother->GetName();
+   const auto len = strlen(motherName);
+   if (len > 0 && (motherName[len-1] == '.')) {
       return fName;
    }
-   return motherName + "." + fName;
+
+   // Reserve the final size to avoid allocations
+   TString result{static_cast<Ssiz_t>(len + 1 + fName.Length())};
+   result  = motherName;
+   result += ".";
+   result += fName;
+   return result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
