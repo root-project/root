@@ -95,23 +95,7 @@ public:
       out << "\n//----  operator " << Name() << "  " << OpName << "\n";
       out << SP << "for (size_t i = 0; i < " << outputLength << "; i++) {\n";
 
-      // write here according to size of shape
-      // in generation code can be done automatically
-      // i0 =  i / s0 ; i1 = (i % s0) / s1 ; i2 = ( (i % s0) % s1 ) / s2 and so on
-      // and we have for the inverse
-      // i = i0 * s0 + i1 * s1 + i2 * s2 + i3 * s3 ....
-
-      // don't need to divide by last stride s[n-1] since it is 1 by definition
-
       size_t dim = fShapeX.size();   // this is the input dimension (e.g. 2, 3 or 4 or more)
-      // out << SP << "std::vector<size_t> outputStrides = {" ;
-      // for (size_t k = 0; k < dim; k++) {
-      // out << outputStrides[k] ;
-      // if (k < dim-1)
-      //    out << "  ,";
-      // else
-      //    out << " };\n";
-      // }
 
       // here we find output indices
       out << SP << SP << "size_t idx_0 = i / " << outputStrides[0] << ";\n" ;
@@ -125,18 +109,6 @@ public:
            out << SP << SP << "size_t idx_" << k << " = itmp;\n";
       }
 
-
-      // for (size_t k = 0; k < dim; k++) {
-      //    size_t j;
-      //    out << SP << "size_t idx_" << k <<" = i;\n";
-      //    for(j = 0; j < k; j++ )
-      //    out << SP << "idx_" << k << " = idx_" << k <<" % outputStrides[" << j << "];\n" ;
-
-      //    out << SP << "idx_" << k << " = idx_" << k << "/ outputStrides[" << j << "];\n";
-      // }
-
-      // out << SP << "assert(idx[" << fAttrAxes << "] == 0);\n";  // we can avoid computing this for the reduction axis which by definition is always zero
-
       // compute reduction
 
       out << SP << SP << "float sum = 0;\n";
@@ -144,30 +116,13 @@ public:
       out << SP << SP << SP << "idx_" << fAttrAxes << " = k;\n";
        // compute input index j
       out << SP << SP << SP << "size_t l = ";
-      for(int n = dim-1; n >= 0; n-- ) {
+      for(size_t n = dim-1; n >= 0; n-- ) {
          if (n == dim-1)
             out << "idx_" << n;
          else
             out << " + " << "idx_" << n << " * " << inputStrides[n];
       }
       out << ";\n";
-
-
-      // out << SP << "std::vector<size_t> inputStrides = {" ;
-      // for (size_t k = 0; k < dim; k++) {
-      // out << inputStrides[k] ;
-      // if (k < dim-1)
-      //    out << "  ,";
-      // else
-      //    out << " };\n";
-      // }
-      // out << SP << SP << "size_t l = 0;\n";
-
-      //    size_t n ;
-      //    for(n = 0; n < dim-1; n++ )
-      //    out << SP << "l += idx_" << n << " * inputStrides[" << n << "];\n";
-
-      //    out << SP << "l +=  idx_" << n << ";\n";
 
       if(fReduceOpMode == ReduceMean){
          out << SP << SP << SP << "sum += tensor_" << fNX << "[l];\n";
