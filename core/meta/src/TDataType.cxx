@@ -273,7 +273,11 @@ const char *TDataType::AsString(void *buf) const
       line = *(char*)buf;
    } else if (!strcmp("float", name))
       line.Form( "%g", *(float *)buf);
+   else if (!strcmp("Float16_t", name))
+      line.Form( "%g", *(float *)buf);
    else if (!strcmp("double", name))
+      line.Form( "%g", *(double *)buf);
+   else if (!strcmp("Double32_t", name))
       line.Form( "%g", *(double *)buf);
    else if (!strcmp("char*", name))
       line.Form( "%s", *(char**)buf);
@@ -352,9 +356,11 @@ void TDataType::SetType(const char *name)
    }
 
    if (!strcmp("Float16_t", fName.Data())) {
+      fSize = sizeof(Float16_t);
       fType = kFloat16_t;
    }
    if (!strcmp("Double32_t", fName.Data())) {
+      fSize = sizeof(Double32_t);
       fType = kDouble32_t;
    }
    if (!strcmp("char*",fName.Data())) {
@@ -424,6 +430,8 @@ void TDataType::AddBuiltins(TCollection* types)
       fgBuiltins[kULong64_t] = new TDataType("unsigned long long");
       fgBuiltins[kFloat_t] = new TDataType("float");
       fgBuiltins[kDouble_t] = new TDataType("double");
+      fgBuiltins[kFloat16_t] = new TDataType("Float16_t");
+      fgBuiltins[kDouble32_t] = new TDataType("Double32_t");
       fgBuiltins[kVoid_t] = new TDataType("void");
       fgBuiltins[kBool_t] = new TDataType("bool");
       fgBuiltins[kCharStar] = new TDataType("char*");
