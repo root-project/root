@@ -467,7 +467,7 @@ RSA.KeyType:  1
 #TFile.AsyncReading:     no
 
 # Control the usage of asynchronous prefetching capabilities irrespective
-# of the TFile implementation. By default it is disabled.
+# of the TFile implementation. By default it is enabled.
 #TFile.AsyncPrefetching:   no
 
 # Enable cross-protocol redirects
