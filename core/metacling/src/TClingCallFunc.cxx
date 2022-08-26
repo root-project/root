@@ -1537,7 +1537,7 @@ void TClingCallFunc::exec(void *address, void *ret)
             vp_ary.push_back(&vh_ary.back());
          } else {
             ::Error("TClingCallFunc::exec(void*)",
-                    "Invalid type '%s'", BT->getTypeClassName());
+                    "Invalid type '%s'", QT->getTypeClassName());
             QT->dump();
             return;
          }
