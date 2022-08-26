@@ -48,17 +48,30 @@ public:
 
       for (auto &it : fInputNames) {
          if (model.CheckIfTensorAlreadyExist(it) == false) {
-            throw std::runtime_error("TMVA SOFIE Concat Op Input Tensor " + it + " is not found in model");
+            throw std::runtime_error("TMVA SOFIE Max Op Input Tensor " + it + " is not found in model");
          }
          fShapeInputs.push_back(model.GetTensorShape(it));
       }
       for(size_t i=0; i < fShapeInputs.size()-1; i++){
-         if(fShapeInputs[i] != fShapeInputs[i+1]){
-            std::string msg = "TMVA SOFIE Max Op: Support only inputs with same shape";
-         throw std::runtime_error(msg);
-         } ;
+         // input must be a graph input, or already initialized intermediate tensor
+         auto shapeX1 = fShapeInputs[i];
+         auto shapeX2 = fShapeInputs[i+1];
+         // If the shape of 2 tensors are not same we perform multi-directional Broadcasting.
+         // We only support tensors with same length and the resultant output length should also be same.
+         if (shapeX1 != shapeX2) {
+            fShape = UTILITY::Multidirectional_broadcast(shapeX1,shapeX2);
+            size_t length1 = ConvertShapeToLength(shapeX1);
+            size_t length2 = ConvertShapeToLength(shapeX2);
+            size_t output_length = ConvertShapeToLength(fShape);
+            if(length1 != length2 || length1 != output_length){
+               throw std::runtime_error(std::string("TMVA SOFIE Max Op does not support input tensors with different lengths. The output tensor should also have the same length as the input tensors."));
+            }
+         }
+         // If both the tensors have same shape then assign the same shape to resultant output.
+         else if(shapeX1 == shapeX2){
+            fShape = shapeX1;
+         }
       }
-      fShape = fShapeInputs[0];
       model.AddIntermediateTensor(fNY, model.GetTensorType(fInputNames[0]), fShape);
       model.AddNeededStdLib("cmath");
    }
