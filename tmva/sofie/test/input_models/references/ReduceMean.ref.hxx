@@ -1,4 +1,4 @@
-namespace Reduce_mean_ExpectedOutput{
+namespace ReduceMean_ExpectedOutput{
 	float output[] = {
         5.0, 3.5, 3.5
 	};

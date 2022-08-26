@@ -30,7 +30,7 @@ private:
     std::string fNY;
     std::vector<size_t> fShapeX;
     std::vector<size_t> fShapeY;
-   
+
 
 public:
 
@@ -41,9 +41,11 @@ public:
       return "Invalid";
    }
 
-   ROperator_Reduce(){}   
+   ROperator_Reduce(){}
    ROperator_Reduce(int keepdims,int attrAxes,std::string nameX, std::string nameY):
-   fkeepdims(keepdims), fAttrAxes(attrAxes), fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)) {}
+   fkeepdims(keepdims), fAttrAxes(attrAxes), fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)) {
+      fReduceOpMode = Op;
+   }
 
    // type of output given input
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
@@ -80,7 +82,7 @@ public:
 
       auto inputStrides = TMVA::Experimental::SOFIE::UTILITY::ComputeStrideFromShape(fShapeX);
       auto outputStrides = TMVA::Experimental::SOFIE::UTILITY::ComputeStrideFromShape(fShapeY);
-      
+
       // write here according to size of shape
       // in generation code can be done automatically
       // i0 =  i / s0 ; i1 = (i % s0) / s1 ; i2 = ( (i % s0) % s1 ) / s2 and so on
@@ -88,11 +90,11 @@ public:
       // i = i0 * s0 + i1 * s1 + i2 * s2 + i3 * s3 ....
 
       // don't need to divide by last stride s[n-1] since it is 1 by definition
-      
+
       std::stringstream out;
       out << "\n//----  operator " << Name() << "  " << OpName << "\n";
       out << SP << "for (size_t i = 0; i < " << outputLength << "; i++) {\n";
-      
+
       // write here according to size of shape
       // in generation code can be done automatically
       // i0 =  i / s0 ; i1 = (i % s0) / s1 ; i2 = ( (i % s0) % s1 ) / s2 and so on
@@ -102,61 +104,88 @@ public:
       // don't need to divide by last stride s[n-1] since it is 1 by definition
 
       size_t dim = fShapeX.size();   // this is the input dimension (e.g. 2, 3 or 4 or more)
-      out << SP << "std::vector<size_t> outputStrides = {" ;
-      for (size_t k = 0; k < dim; k++) {
-      out << outputStrides[k] ; 
-      if (k < dim-1) 
-         out << "  ,";
-      else 
-         out << " };\n";
-      }
-      
-      for (size_t k = 0; k < dim; k++) {
-         size_t j;
-         out << SP << "size_t idx_" << k <<" = i;\n";
-         for(j = 0; j < k; j++ )
-         out << SP << "idx_" << k << " = idx_" << k <<" % outputStrides[" << j << "];\n" ;
+      // out << SP << "std::vector<size_t> outputStrides = {" ;
+      // for (size_t k = 0; k < dim; k++) {
+      // out << outputStrides[k] ;
+      // if (k < dim-1)
+      //    out << "  ,";
+      // else
+      //    out << " };\n";
+      // }
 
-         out << SP << "idx_" << k << " = idx_" << k << "/ outputStrides[" << j << "];\n";
+      // here we find output indices
+      out << SP << SP << "size_t idx_0 = i / " << outputStrides[0] << ";\n" ;
+      out << SP << SP << "size_t itmp = i;\n";
+      for (size_t k = 1; k < dim; k++) {
+         out << SP << SP << "itmp = itmp % " << outputStrides[k-1] << ";\n" ;
+         if (k < dim-1)
+            out << SP << SP << "size_t idx_" << k << " = itmp / " << outputStrides[k] << ";\n" ;
+         else
+           // to avoid division by 1 which is outputStrides[dim-1]
+           out << SP << SP << "size_t idx_" << k << " = itmp;\n";
       }
+
+
+      // for (size_t k = 0; k < dim; k++) {
+      //    size_t j;
+      //    out << SP << "size_t idx_" << k <<" = i;\n";
+      //    for(j = 0; j < k; j++ )
+      //    out << SP << "idx_" << k << " = idx_" << k <<" % outputStrides[" << j << "];\n" ;
+
+      //    out << SP << "idx_" << k << " = idx_" << k << "/ outputStrides[" << j << "];\n";
+      // }
 
       // out << SP << "assert(idx[" << fAttrAxes << "] == 0);\n";  // we can avoid computing this for the reduction axis which by definition is always zero
 
-      out << SP << "float sum = 0;\n";
-      out << SP << " for (size_t k = 0; k < " << fShapeX[fAttrAxes] <<"; k++) { \n";
-      out << SP << SP << "  idx_" << fAttrAxes << " = k;\n";
-       // compute input index j 
-      out << SP << "std::vector<size_t> inputStrides = {" ;
-      for (size_t k = 0; k < dim; k++) {
-      out << inputStrides[k] ; 
-      if (k < dim-1) 
-         out << "  ,";
-      else 
-         out << " };\n";
-      }
-      out << SP << SP << "size_t l = 0;\n";
-      
-         size_t n ;
-         for(n = 0; n < dim-1; n++ )
-         out << SP << "l += idx_" << n << " * inputStrides[" << n << "];\n";
+      // compute reduction
 
-         out << SP << "l +=  idx_" << n << ";\n";
-      
+      out << SP << SP << "float sum = 0;\n";
+      out << SP << SP << "for (size_t k = 0; k < " << fShapeX[fAttrAxes] <<"; k++) { \n";
+      out << SP << SP << SP << "idx_" << fAttrAxes << " = k;\n";
+       // compute input index j
+      out << SP << SP << SP << "size_t l = ";
+      for(int n = dim-1; n >= 0; n-- ) {
+         if (n == dim-1)
+            out << "idx_" << n;
+         else
+            out << " + " << "idx_" << n << " * " << inputStrides[n];
+      }
+      out << ";\n";
+
+
+      // out << SP << "std::vector<size_t> inputStrides = {" ;
+      // for (size_t k = 0; k < dim; k++) {
+      // out << inputStrides[k] ;
+      // if (k < dim-1)
+      //    out << "  ,";
+      // else
+      //    out << " };\n";
+      // }
+      // out << SP << SP << "size_t l = 0;\n";
+
+      //    size_t n ;
+      //    for(n = 0; n < dim-1; n++ )
+      //    out << SP << "l += idx_" << n << " * inputStrides[" << n << "];\n";
+
+      //    out << SP << "l +=  idx_" << n << ";\n";
+
       if(fReduceOpMode == ReduceMean){
-         out << SP << SP << "sum += tensor_" << fNX << "[l];\n";
-         out << SP << SP << "};\n"; 
+         out << SP << SP << SP << "sum += tensor_" << fNX << "[l];\n";
+         out << SP << SP << "}\n";
+         out << SP << SP << "float reduceResult = sum/static_cast<float>(" << fShapeX[fAttrAxes] << ");\n";
       }
       else if(fReduceOpMode == ReduceSumsquare){
-         out << SP << SP << "sum += tensor_" << fNX << "[l] * tensor_" << fNX << "[l];\n";
-         out << SP << SP << "};\n"; 
+         out << SP << SP << SP << "sum += tensor_" << fNX << "[l] * tensor_" << fNX << "[l];\n";
+         out << SP << SP << "}\n";
+         out << SP << SP << "float reduceResult = sum;\n";
       }
       else if(fReduceOpMode == ReduceProd){
-         out << SP << SP << "sum *= tensor_" << fNX << "[l];\n";
-         out << SP << SP << "};\n"; 
+         out << SP << SP << SP << "sum *= tensor_" << fNX << "[l];\n";
+         out << SP << SP << "}\n";
+         out << SP << SP << "float reduceResult = sum;\n";
       }
-      out << SP << SP << "float average = sum/(float)" << fShapeX[fAttrAxes] << ";\n";
-      out << SP << SP << "tensor_" << fNY << "[i] = average;\n";
-      out << SP << "};\n";   
+
+      out << SP << SP << "tensor_" << fNY << "[i] = reduceResult;\n";
       out << SP << "}\n";
       return out.str();
    }
