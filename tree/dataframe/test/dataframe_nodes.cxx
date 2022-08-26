@@ -1,7 +1,6 @@
 #include "ROOT/TestSupport.hxx"
 
 #include <ROOT/RDataFrame.hxx>
-#include <ROOT/RSlotStack.hxx>
 #include <TStatistic.h> // To check reading of columns with types which are mothers of the column type
 #include <TSystem.h>
 
@@ -10,7 +9,8 @@
 
 #include "gtest/gtest.h"
 
-#ifndef NDEBUG
+#if defined(R__USE_IMT) && !defined(NDEBUG)
+#include <ROOT/RSlotStack.hxx>
 
 TEST(RDataFrameNodes, RSlotStackGetOneTooMuch)
 {
