@@ -809,6 +809,12 @@ const char* ROOT::Internal::TTreeReaderArrayBase::GetBranchContentDataType(TBran
          if (ExpectedTypeRet == 0) {
             dict = clData;
             if (!dict) {
+               if (dtData == kFloat16_t) {
+                  dtData = kFloat_t;
+               }
+               if (dtData == kDouble32_t) {
+                  dtData = kDouble_t;
+               }
                dict = TDataType::GetDataType(dtData);
             }
             if (!dict) {
