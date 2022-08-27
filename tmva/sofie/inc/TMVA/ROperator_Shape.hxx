@@ -22,16 +22,17 @@ class ROperator_Shape final : public ROperator
 private:
 
    /* Attributes*/
+   size_t fStart = 0;
+   size_t fEnd;
    std::string fNX;
    std::string fNY;
    std::vector<size_t> fShape;
    std::vector<size_t> fOutput_shape;
-   std::string fType;
 
 public:
    ROperator_Shape(){}
-   ROperator_Shape(std::string nameX, std::string nameY):
-   fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)){}
+   ROperator_Shape(int start, int end, std::string nameX, std::string nameY):
+   fStart(start) ,fEnd(end), fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)){}
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
       return input;
@@ -50,7 +51,12 @@ public:
       }
       fShape = model.GetTensorShape(fNX);
       size_t length = ConvertShapeToLength(fShape);
-      fOutput_shape = {length};
+      // if(fStart > 0 && fEnd > 0) fOutput_shape = {length};
+      if(!fEnd) fEnd = int(length);
+      if(fStart < 0) fStart += length;
+      if(fEnd < 0) fEnd += length;
+      fOutput_shape = {fEnd - fStart};
+
       model.AddIntermediateTensor(fNY, ETensorType::INT64, fOutput_shape);
    }
 
@@ -60,18 +66,14 @@ public:
          throw std::runtime_error("TMVA SOFIE Shape op called to Generate without being initialized first");
       }
       std::stringstream out;
-      
-      // std::stringstream result;
-      // std::copy(fShape.begin(), fShape.end(), std::ostream_iterator<int>(result, ""));
-      size_t length = ConvertShapeToLength(fOutput_shape);
-      std::string result = ConvertShapeToString(fShape);
+
       out << "\n//------ Shape\n";
-      for (size_t id = 0; id <length; id++) { 
+      for (size_t id = fStart; id < fEnd; id++) { 
       out << SP << "tensor_" << fNY << "["<< id << "] = " << fShape[id] << ";\n";
       }
       return out.str();
    }
-   
+
 };
 
 }//SOFIE

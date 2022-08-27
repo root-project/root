@@ -1320,12 +1320,21 @@ std::unique_ptr<ROperator> make_ROperator_Shape(const onnx::NodeProto& nodeproto
 
    std::unique_ptr<ROperator> op;
 
+   int attr_start = 0;
+   int attr_end;
 
+   for (int_t i = 0; i < nodeproto.attribute_size(); i++) {
+         std::string attribute_name = nodeproto.attribute(i).name();
+         if (attribute_name == "start")
+            attr_start = nodeproto.attribute(i).i();
+         if (attribute_name == "end")
+            attr_end = nodeproto.attribute(i).i();
+   }
    switch(input_type){
    case ETensorType::FLOAT:
    case ETensorType::INT64:
    case ETensorType::DOUBLE:
-      op.reset(new ROperator_Shape<float>(nodeproto.input(0), nodeproto.output(0)));
+      op.reset(new ROperator_Shape<float>(attr_start, attr_end, nodeproto.input(0), nodeproto.output(0)));
       break;
    default:
       throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Shape does not yet support input type " + std::to_string(static_cast<int>(input_type)));
