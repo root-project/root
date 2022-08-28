@@ -195,7 +195,10 @@ namespace Internal {
 
    void TGenericClassInfo::Init(Int_t pragmabits)
    {
-      // Initilization routine.
+      // Initialization routine.
+
+      // Writing to TClassTable requires that we hold this lock.
+      R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
       //TVirtualStreamerInfo::Class_Version MUST be the same as TStreamerInfo::Class_Version
       if (fVersion==-2) fVersion = TVirtualStreamerInfo::Class_Version();
