@@ -1253,7 +1253,7 @@ int RooAbsPdf::calcAsymptoticCorrectedCovariance(RooMinimizer &minimizer, RooAbs
       double prob = getVal(&obs);
       for (int k = 0; k < floated.getSize(); k++) {
          for (int l = 0; l < floated.getSize(); l++) {
-            num(k, l) += data.weight() * data.weight() * diffs[k] * diffs[l] / (prob * prob);
+            num(k, l) += data.weightSquared() * diffs[k] * diffs[l] / (prob * prob);
          }
       }
    }
