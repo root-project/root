@@ -1720,48 +1720,6 @@ void TClingCallFunc::ResetArg()
    fArgVals.clear();
 }
 
-void TClingCallFunc::SetArg(unsigned long param)
-{
-   const ASTContext &C = fInterp->getCI()->getASTContext();
-   fArgVals.push_back(cling::Value(C.UnsignedLongTy, *fInterp));
-   fArgVals.back().setULongLong(param);
-}
-
-void TClingCallFunc::SetArg(long param)
-{
-   const ASTContext &C = fInterp->getCI()->getASTContext();
-   fArgVals.push_back(cling::Value(C.LongTy, *fInterp));
-   fArgVals.back().setLong(param);
-}
-
-void TClingCallFunc::SetArg(float param)
-{
-   const ASTContext &C = fInterp->getCI()->getASTContext();
-   fArgVals.push_back(cling::Value(C.FloatTy, *fInterp));
-   fArgVals.back().setFloat(param);
-}
-
-void TClingCallFunc::SetArg(double param)
-{
-   const ASTContext &C = fInterp->getCI()->getASTContext();
-   fArgVals.push_back(cling::Value(C.DoubleTy, *fInterp));
-   fArgVals.back().setDouble(param);
-}
-
-void TClingCallFunc::SetArg(long long param)
-{
-   const ASTContext &C = fInterp->getCI()->getASTContext();
-   fArgVals.push_back(cling::Value(C.LongLongTy, *fInterp));
-   fArgVals.back().setLongLong(param);
-}
-
-void TClingCallFunc::SetArg(unsigned long long param)
-{
-   const ASTContext &C = fInterp->getCI()->getASTContext();
-   fArgVals.push_back(cling::Value(C.UnsignedLongLongTy, *fInterp));
-   fArgVals.back().setULongLong(param);
-}
-
 void TClingCallFunc::SetArgArray(Longptr_t *paramArr, int nparam)
 {
    ResetArg();
