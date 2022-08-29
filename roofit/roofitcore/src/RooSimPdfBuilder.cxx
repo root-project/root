@@ -416,6 +416,7 @@
 
 #include <cstring>
 #include "strtok.h"
+#include "strlcpy.h"
 
 #ifndef _WIN32
 #include <strings.h>
@@ -428,6 +429,7 @@
 #include "RooFormulaVar.h"
 #include "RooAbsCategory.h"
 #include "RooCategory.h"
+#include "RooCatType.h"
 #include "RooStringVar.h"
 #include "RooMappedCategory.h"
 #include "RooRealIntegral.h"
