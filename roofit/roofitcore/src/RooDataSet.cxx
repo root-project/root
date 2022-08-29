@@ -350,7 +350,7 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
     }
 
     // Create composite datastore
-    _dstore = new RooCompositeDataStore(name,title,_vars,*icat,storeMap) ;
+    _dstore = std::make_unique<RooCompositeDataStore>(name,title,_vars,*icat,storeMap) ;
 
   } else {
 
@@ -366,12 +366,10 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
     }
 
     // Create empty datastore
-    RooTreeDataStore* tstore(0) ;
-    RooVectorDataStore* vstore(0) ;
-
+    RooTreeDataStore* tstore = nullptr;
     if (defaultStorageType==Tree) {
-      tstore = new RooTreeDataStore(name,title,_vars,wgtVarName) ;
-      _dstore = tstore ;
+      _dstore = std::make_unique<RooTreeDataStore>(name,title,_vars,wgtVarName) ;
+      tstore = static_cast<RooTreeDataStore*>(_dstore.get());
     } else if (defaultStorageType==Vector) {
       if (wgtVarName && newWeight) {
         RooAbsArg* wgttmp = _vars.find(wgtVarName) ;
@@ -379,10 +377,7 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
           wgttmp->setAttribute("NewWeight") ;
         }
       }
-      vstore = new RooVectorDataStore(name,title,_vars,wgtVarName) ;
-      _dstore = vstore ;
-    } else {
-      _dstore = 0 ;
+      _dstore = std::make_unique<RooVectorDataStore>(name,title,_vars,wgtVarName) ;
     }
 
 
@@ -631,8 +626,8 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
   RooAbsData(name,title,vars)
 {
 //   cout << "RooDataSet::ctor(" << this << ") storageType = " << ((defaultStorageType==Tree)?"Tree":"Vector") << endl ;
-  _dstore = (defaultStorageType==Tree) ? ((RooAbsDataStore*) new RooTreeDataStore(name,title,_vars,wgtVarName)) :
-                                         ((RooAbsDataStore*) new RooVectorDataStore(name,title,_vars,wgtVarName)) ;
+  _dstore = defaultStorageType==Tree ? static_cast<std::unique_ptr<RooAbsDataStore>>(std::make_unique<RooTreeDataStore>(name,title,_vars,wgtVarName)) :
+                                       static_cast<std::unique_ptr<RooAbsDataStore>>(std::make_unique<RooVectorDataStore>(name,title,_vars,wgtVarName)) ;
 
   appendToDir(this,true) ;
   initialize(wgtVarName) ;
@@ -662,14 +657,14 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, RooDataSet *dset
 {
   // Initialize datastore
   if(defaultStorageType == Tree) {
-    _dstore = new RooTreeDataStore(name,title,_vars,*dset->_dstore,cuts,wgtVarName);
+    _dstore = std::make_unique<RooTreeDataStore>(name,title,_vars,*dset->_dstore,cuts,wgtVarName);
   } else {
     std::unique_ptr<RooFormulaVar> cutVar;
     if (cuts && strlen(cuts) != 0) {
       // Create a RooFormulaVar cut from given cut expression
       cutVar = std::make_unique<RooFormulaVar>(cuts, cuts, _vars, /*checkVariables=*/false);
     }
-    _dstore = new RooVectorDataStore(name,title,
+    _dstore = std::make_unique<RooVectorDataStore>(name,title,
             /*tds=*/*dset->_dstore,
             /*vars=*/_vars,
             /*cutVar=*/cutVar.get(),
@@ -764,18 +759,14 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, TTree* theTree,
   RooAbsData(name,title,vars)
 {
   // Create tree version of datastore
-  RooTreeDataStore* tstore = new RooTreeDataStore(name,title,_vars,*theTree,cuts,wgtVarName);
+  auto tstore = std::make_unique<RooTreeDataStore>(name,title,_vars,*theTree,cuts,wgtVarName);
 
   // Convert to vector datastore if needed
   if (defaultStorageType==Tree) {
-    _dstore = tstore ;
+    _dstore = std::move(tstore);
   } else if (defaultStorageType==Vector) {
-    RooVectorDataStore* vstore = new RooVectorDataStore(name,title,_vars,wgtVarName) ;
-    _dstore = vstore ;
-    _dstore->append(*tstore) ;
-    delete tstore ;
-  } else {
-    _dstore = 0 ;
+    _dstore = std::make_unique<RooVectorDataStore>(name,title,_vars,wgtVarName);
+    static_cast<RooVectorDataStore&>(*_dstore).append(*tstore) ;
   }
 
   appendToDir(this,true) ;
@@ -805,7 +796,7 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, RooDataSet *dset
              std::size_t nStart, std::size_t nStop) :
   RooAbsData(name,title,vars)
 {
-  _dstore = dset->_dstore->reduce(name, title, _vars, cutVar, cutRange, nStart, nStop).release();
+  _dstore = dset->_dstore->reduce(name, title, _vars, cutVar, cutRange, nStart, nStop);
 
    _cachedVars.add(_dstore->cachedVars());
 
@@ -1304,8 +1295,7 @@ bool RooDataSet::merge(list<RooDataSet*>dsetList)
   mergedStore->SetTitle(_dstore->GetTitle()) ;
 
   // Replace current data store with merged store
-  delete _dstore ;
-  _dstore = mergedStore ;
+  _dstore.reset(mergedStore);
 
   initialize(_wgtVar?_wgtVar->GetName():0) ;
   return false ;
@@ -1876,7 +1866,7 @@ void RooDataSet::Streamer(TBuffer &R__b)
        // --- End of RooTreeData-v1 streamer
 
        // Construct RooTreeDataStore from X_tree and complete initialization of new-style RooAbsData
-       _dstore = new RooTreeDataStore(X_tree,_vars) ;
+       _dstore = std::make_unique<RooTreeDataStore>(X_tree,_vars) ;
        _dstore->SetName(GetName()) ;
        _dstore->SetTitle(GetTitle()) ;
        _dstore->checkInit() ;
@@ -1902,9 +1892,7 @@ void RooDataSet::Streamer(TBuffer &R__b)
 void RooDataSet::convertToTreeStore()
 {
    if (storageType != RooAbsData::Tree) {
-      RooTreeDataStore *newStore = new RooTreeDataStore(GetName(), GetTitle(), _vars, *_dstore, nullptr, _wgtVar ? _wgtVar->GetName() : nullptr);
-      delete _dstore;
-      _dstore = newStore;
+      _dstore = std::make_unique<RooTreeDataStore>(GetName(), GetTitle(), _vars, *_dstore, nullptr, _wgtVar ? _wgtVar->GetName() : nullptr);
       storageType = RooAbsData::Tree;
    }
 }
