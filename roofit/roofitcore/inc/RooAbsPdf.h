@@ -377,7 +377,7 @@ protected:
 
   bool _selectComp ;               ///< Component selection flag for RooAbsPdf::plotCompOn
 
-  RooNumGenConfig* _specGeneratorConfig ; ///<! MC generator configuration specific for this object
+  std::unique_ptr<RooNumGenConfig> _specGeneratorConfig ; ///<! MC generator configuration specific for this object
 
   TString _normRange ; ///< Normalization range
   static TString _normRangeOverride ;
