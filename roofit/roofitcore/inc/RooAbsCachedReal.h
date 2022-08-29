@@ -85,7 +85,6 @@ protected:
   } ;
 
   FuncCacheElem* getCache(const RooArgSet* nset) const ;
-  void clearCacheObject(FuncCacheElem& cache) const ;
 
   virtual const char* payloadUniqueSuffix() const { return nullptr ; }
 

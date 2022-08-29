@@ -104,17 +104,6 @@ double RooAbsCachedReal::getValV(const RooArgSet* nset) const
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Mark all bins as unitialized (value -1)
-
-void RooAbsCachedReal::clearCacheObject(FuncCacheElem& cache) const
-{
-  cache.hist()->setAllWeights(-1) ;
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Interface function to create an internal cache object that represent
 /// each cached function configuration. This interface allows to create and

@@ -104,16 +104,6 @@ RooDataHist* RooAbsCachedPdf::getCacheHist(const RooArgSet* nset) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Mark all bins of given cache as unitialized (value -1)
-
-void RooAbsCachedPdf::clearCacheObject(PdfCacheElem& cache) const
-{
-  cache.hist()->setAllWeights(-1) ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Retrieve cache object associated with given choice of observables. If cache object
 /// does not exist, create and fill and register it on the fly. If recalculate=false
 /// recalculation of cache contents of existing caches that are marked dirty due to
