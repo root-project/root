@@ -249,7 +249,7 @@ TString RooAbsPdf::_normRangeOverride;
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooAbsPdf::RooAbsPdf() :_normMgr(this,10), _specGeneratorConfig(0)
+RooAbsPdf::RooAbsPdf() :_normMgr(this,10)
 {
   _errorCount = 0 ;
   _negCount = 0 ;
@@ -264,7 +264,7 @@ RooAbsPdf::RooAbsPdf() :_normMgr(this,10), _specGeneratorConfig(0)
 /// Constructor with name and title only
 
 RooAbsPdf::RooAbsPdf(const char *name, const char *title) :
-  RooAbsReal(name,title), _normMgr(this,10), _selectComp(true), _specGeneratorConfig(0)
+  RooAbsReal(name,title), _normMgr(this,10), _selectComp(true)
 {
   resetErrorCounters() ;
   setTraceCounter(0) ;
@@ -277,7 +277,7 @@ RooAbsPdf::RooAbsPdf(const char *name, const char *title) :
 
 RooAbsPdf::RooAbsPdf(const char *name, const char *title,
            double plotMin, double plotMax) :
-  RooAbsReal(name,title,plotMin,plotMax), _normMgr(this,10), _selectComp(true), _specGeneratorConfig(0)
+  RooAbsReal(name,title,plotMin,plotMax), _normMgr(this,10), _selectComp(true)
 {
   resetErrorCounters() ;
   setTraceCounter(0) ;
@@ -296,9 +296,7 @@ RooAbsPdf::RooAbsPdf(const RooAbsPdf& other, const char* name) :
   setTraceCounter(other._traceCount) ;
 
   if (other._specGeneratorConfig) {
-    _specGeneratorConfig = new RooNumGenConfig(*other._specGeneratorConfig) ;
-  } else {
-    _specGeneratorConfig = 0 ;
+    _specGeneratorConfig = std::make_unique<RooNumGenConfig>(*other._specGeneratorConfig);
   }
 }
 
@@ -309,7 +307,6 @@ RooAbsPdf::RooAbsPdf(const RooAbsPdf& other, const char* name) :
 
 RooAbsPdf::~RooAbsPdf()
 {
-  if (_specGeneratorConfig) delete _specGeneratorConfig ;
 }
 
 
@@ -1698,12 +1695,8 @@ RooFitResult* RooAbsPdf::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdLi
   RooLinkedList fitCmdList(cmdList) ;
   RooLinkedList chi2CmdList = pc.filterCmdList(fitCmdList,"Range,RangeWithName,NumCPU,Optimize,ProjectedObservables,AddCoefRange,SplitRange,DataError,Extended,IntegrateBins") ;
 
-  RooAbsReal* chi2 = createChi2(data,chi2CmdList) ;
-  RooFitResult* ret = chi2FitDriver(*chi2,fitCmdList) ;
-
-  // Cleanup
-  delete chi2 ;
-  return ret ;
+  std::unique_ptr<RooAbsReal> chi2{createChi2(data,chi2CmdList)};
+  return chi2FitDriver(*chi2,fitCmdList) ;
 }
 
 
@@ -2133,7 +2126,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, double nEvents, bool 
   }
 
   // Request for binned generation
-  RooAbsGenContext *context = autoGenContext(whatVars,0,0,verbose,autoBinned,binnedTag) ;
+  std::unique_ptr<RooAbsGenContext> context{autoGenContext(whatVars,0,0,verbose,autoBinned,binnedTag)};
   if (expectedData) {
     context->setExpectedData(true) ;
   }
@@ -2145,7 +2138,6 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, double nEvents, bool 
   else {
     coutE(Generation)  << "RooAbsPdf::generate(" << GetName() << ") cannot create a valid context" << endl;
   }
-  if(0 != context) delete context;
   return generated;
 }
 
@@ -2214,14 +2206,13 @@ RooDataSet *RooAbsPdf::generate(RooAbsGenContext& context, const RooArgSet &what
 RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, const RooDataSet& prototype,
             Int_t nEvents, bool verbose, bool randProtoOrder, bool resampleProto) const
 {
-  RooAbsGenContext *context= genContext(whatVars,&prototype,0,verbose);
+  std::unique_ptr<RooAbsGenContext> context{genContext(whatVars,&prototype,0,verbose)};
   if (context) {
     RooDataSet* data =  generate(*context,whatVars,&prototype,nEvents,verbose,randProtoOrder,resampleProto) ;
-    delete context ;
     return data ;
   } else {
     coutE(Generation) << "RooAbsPdf::generate(" << GetName() << ") ERROR creating generator context" << endl ;
-    return 0 ;
+    return nullptr;
   }
 }
 
@@ -2436,7 +2427,7 @@ RooDataHist *RooAbsPdf::generateBinned(const RooArgSet &whatVars, double nEvents
     if (!canBeExtended()) {
       coutE(InputArguments) << "RooAbsPdf::generateBinned(" << GetName() << ") ERROR: No event count provided and p.d.f does not provide expected number of events" << endl ;
       delete hist ;
-      return 0 ;
+      return nullptr;
     } else {
 
       // Don't round in expectedData or extended mode
@@ -2689,17 +2680,17 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
 
   // Pre-processing if p.d.f. contains a fit range and there is no command specifying one,
   // add a fit range as default range
-  RooCmdArg* plotRange(0) ;
-  RooCmdArg* normRange2(0);
+  std::unique_ptr<RooCmdArg> plotRange;
+  std::unique_ptr<RooCmdArg> normRange2;
   if (getStringAttribute("fitrange") && !cmdList.FindObject("Range") &&
       !cmdList.FindObject("RangeWithName")) {
-    plotRange = (RooCmdArg*) RooFit::Range(getStringAttribute("fitrange")).Clone() ;
-    cmdList.Add(plotRange) ;
+    plotRange.reset(static_cast<RooCmdArg*>(RooFit::Range(getStringAttribute("fitrange")).Clone()));
+    cmdList.Add(plotRange.get());
   }
 
   if (getStringAttribute("fitrange") && !cmdList.FindObject("NormRange")) {
-    normRange2 = (RooCmdArg*) RooFit::NormRange(getStringAttribute("fitrange")).Clone() ;
-    cmdList.Add(normRange2) ;
+    normRange2.reset(static_cast<RooCmdArg*>(RooFit::NormRange(getStringAttribute("fitrange")).Clone()));
+    cmdList.Add(normRange2.get());
   }
 
   if (plotRange || normRange2) {
@@ -2877,8 +2868,8 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
           if (rangeArg)
             rangeArg->setString(0, rangesNoOverlap.c_str());
           else {
-            plotRange = new RooCmdArg(RooFit::Range(rangesNoOverlap.c_str()));
-            cmdList.Add(plotRange);
+            plotRange = std::make_unique<RooCmdArg>(RooFit::Range(rangesNoOverlap.c_str()));
+            cmdList.Add(plotRange.get());
           }
         }
 
@@ -2922,17 +2913,17 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
     }
 
     // Obtain direct selection
-    RooArgSet* dirSelNodes ;
+    std::unique_ptr<RooArgSet> dirSelNodes;
     if (compSet) {
-      dirSelNodes = (RooArgSet*) branchNodeSet.selectCommon(*compSet) ;
+      dirSelNodes.reset(static_cast<RooArgSet*>(branchNodeSet.selectCommon(*compSet)));
     } else {
-      dirSelNodes = (RooArgSet*) branchNodeSet.selectByName(compSpec) ;
+      dirSelNodes.reset(static_cast<RooArgSet*>(branchNodeSet.selectByName(compSpec)));
     }
     if (dirSelNodes->getSize()>0) {
       coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") directly selected PDF components: " << *dirSelNodes << endl ;
 
       // Do indirect selection and activate both
-      plotOnCompSelect(dirSelNodes) ;
+      plotOnCompSelect(dirSelNodes.get());
     } else {
       if (compSet) {
    coutE(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") ERROR: component selection set " << *compSet << " does not match any components of p.d.f." << endl ;
@@ -2941,8 +2932,6 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
       }
       return 0 ;
     }
-
-    delete dirSelNodes ;
   }
 
 
@@ -2953,13 +2942,6 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
 
   // Restore selection status ;
   if (haveCompSel) plotOnCompSelect(0) ;
-
-  if (plotRange) {
-    delete plotRange ;
-  }
-  if (normRange2) {
-    delete normRange2 ;
-  }
 
   return ret ;
 }
@@ -3171,9 +3153,8 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooArgSet& params, bool showCo
     auto var = static_cast<const RooRealVar*>(param);
     if(var->isConstant() && !showConstants) continue;
 
-    TString *formatted= options ? var->format(sigDigits, options) : var->format(*formatCmd) ;
+    std::unique_ptr<TString> formatted{options ? var->format(sigDigits, options) : var->format(*formatCmd)};
     box->AddText(formatted->Data());
-    delete formatted;
   }
 
   // add the optional label if specified
@@ -3409,7 +3390,7 @@ RooNumGenConfig* RooAbsPdf::defaultGeneratorConfig()
 
 RooNumGenConfig* RooAbsPdf::specialGeneratorConfig() const
 {
-  return _specGeneratorConfig ;
+  return _specGeneratorConfig.get();
 }
 
 
@@ -3423,9 +3404,9 @@ RooNumGenConfig* RooAbsPdf::specialGeneratorConfig() const
 RooNumGenConfig* RooAbsPdf::specialGeneratorConfig(bool createOnTheFly)
 {
   if (!_specGeneratorConfig && createOnTheFly) {
-    _specGeneratorConfig = new RooNumGenConfig(*defaultGeneratorConfig()) ;
+    _specGeneratorConfig = std::make_unique<RooNumGenConfig>(*defaultGeneratorConfig()) ;
   }
-  return _specGeneratorConfig ;
+  return _specGeneratorConfig.get();
 }
 
 
@@ -3450,10 +3431,7 @@ const RooNumGenConfig* RooAbsPdf::getGeneratorConfig() const
 
 void RooAbsPdf::setGeneratorConfig(const RooNumGenConfig& config)
 {
-  if (_specGeneratorConfig) {
-    delete _specGeneratorConfig ;
-  }
-  _specGeneratorConfig = new RooNumGenConfig(config) ;
+  _specGeneratorConfig = std::make_unique<RooNumGenConfig>(config);
 }
 
 
@@ -3464,10 +3442,7 @@ void RooAbsPdf::setGeneratorConfig(const RooNumGenConfig& config)
 
 void RooAbsPdf::setGeneratorConfig()
 {
-  if (_specGeneratorConfig) {
-    delete _specGeneratorConfig ;
-  }
-  _specGeneratorConfig = 0 ;
+  _specGeneratorConfig.reset();
 }
 
 
