@@ -9,6 +9,7 @@
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
+from __future__ import annotations
 
 import logging
 import os
@@ -19,9 +20,9 @@ import ROOT
 from ROOT._pythonization._rdataframe import AsNumpyResult
 
 from DistRDF.PythonMergeables import SnapshotResult
+from DistRDF.Profiling.Base import ProfilingData
 
 logger = logging.getLogger(__name__)
-
 
 def extend_include_path(include_path):
     """
@@ -198,6 +199,7 @@ def merge_values(mergeable_out, mergeable_in):
 
 @merge_values.register(AsNumpyResult)
 @merge_values.register(SnapshotResult)
+@merge_values.register(ProfilingData)
 def _(mergeable_out, mergeable_in):
     """
     Mergeables coming from `Snapshot` or `AsNumpy` operations have their own
