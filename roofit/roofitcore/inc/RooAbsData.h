@@ -79,8 +79,8 @@ public:
   RooAbsData* reduce(const RooArgSet& varSubset, const char* cut=nullptr) ;
   RooAbsData* reduce(const RooArgSet& varSubset, const RooFormulaVar& cutVar) ;
 
-  RooAbsDataStore* store() { return _dstore ; }
-  const RooAbsDataStore* store() const { return _dstore ; }
+  RooAbsDataStore* store() { return _dstore.get(); }
+  const RooAbsDataStore* store() const { return _dstore.get(); }
   const TTree* tree() const ;
   TTree *GetClonedTree() const;
 
@@ -362,7 +362,7 @@ protected:
   RooArgSet _vars;         ///< Dimensions of this data set
   RooArgSet _cachedVars ;  ///<! External variables cached with this data set
 
-  RooAbsDataStore* _dstore = nullptr; ///< Data storage implementation
+  std::unique_ptr<RooAbsDataStore> _dstore; ///< Data storage implementation
 
   std::map<std::string,RooAbsData*> _ownedComponents ; ///< Owned external components
 
@@ -375,7 +375,7 @@ private:
 
   const RooFit::UniqueId<RooAbsData> _uniqueId; ///<!
 
-   ClassDefOverride(RooAbsData, 6) // Abstract data collection
+   ClassDefOverride(RooAbsData, 7) // Abstract data collection
 };
 
 #endif

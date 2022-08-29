@@ -289,6 +289,8 @@ private:
   void registerWeightArraysToDataStore() const;
   VarInfo const& getVarInfo();
 
+  static std::unique_ptr<RooAbsDataStore> makeDefaultDataStore(const char* name, const char* title, RooArgSet const& vars);
+
   VarInfo _varInfo; ///<!
   std::vector<double> _interpolationBuffer; ///<! Buffer to contain values used for weight interpolation
 

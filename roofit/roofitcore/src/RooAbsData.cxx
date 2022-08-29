@@ -250,13 +250,13 @@ RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
     }
 
     RooCategory* idx = (RooCategory*) _vars.find(*((RooCompositeDataStore*)other.store())->index()) ;
-    _dstore = new RooCompositeDataStore(newname?newname:other.GetName(),other.GetTitle(),_vars,*idx,smap) ;
+    _dstore = std::make_unique<RooCompositeDataStore>(newname?newname:other.GetName(),other.GetTitle(),_vars,*idx,smap) ;
     storageType = RooAbsData::Composite;
 
   } else {
 
     // Convert to vector store if default is vector
-    _dstore = other._dstore->clone(_vars,newname?newname:other.GetName()) ;
+    _dstore.reset(other._dstore->clone(_vars,newname?newname:other.GetName()));
     storageType = other.storageType;
   }
 
@@ -292,13 +292,13 @@ RooAbsData& RooAbsData::operator=(const RooAbsData& other) {
     }
 
     RooCategory* idx = (RooCategory*) _vars.find(*((RooCompositeDataStore*)other.store())->index()) ;
-    _dstore = new RooCompositeDataStore(GetName(), GetTitle(), _vars, *idx, smap);
+    _dstore = std::make_unique<RooCompositeDataStore>(GetName(), GetTitle(), _vars, *idx, smap);
     storageType = RooAbsData::Composite;
 
   } else {
 
     // Convert to vector store if default is vector
-    _dstore = other._dstore->clone(_vars);
+    _dstore.reset(other._dstore->clone(_vars));
     storageType = other.storageType;
   }
 
@@ -330,9 +330,6 @@ RooAbsData::~RooAbsData()
     _vars.releaseOwnership() ;
   }
 
-  // delete owned contents.
-  delete _dstore ;
-
   // Delete owned dataset components
   for(map<std::string,RooAbsData*>::iterator iter = _ownedComponents.begin() ; iter!= _ownedComponents.end() ; ++iter) {
     delete iter->second ;
@@ -346,9 +343,8 @@ RooAbsData::~RooAbsData()
 
 void RooAbsData::convertToVectorStore()
 {
-   if (auto treeStore = dynamic_cast<RooTreeDataStore*>(_dstore)) {
-      _dstore = new RooVectorDataStore(*treeStore, _vars, GetName());
-      delete treeStore;
+   if (auto treeStore = dynamic_cast<RooTreeDataStore*>(_dstore.get())) {
+      _dstore = std::make_unique<RooVectorDataStore>(*treeStore, _vars, GetName());
       storageType = RooAbsData::Vector;
    }
 }
@@ -2582,9 +2578,7 @@ TTree *RooAbsData::GetClonedTree() const
 void RooAbsData::convertToTreeStore()
 {
    if (storageType != RooAbsData::Tree) {
-      auto *newStore = new RooTreeDataStore(GetName(), GetTitle(), _vars, *_dstore);
-      delete _dstore;
-      _dstore = newStore;
+      _dstore = std::make_unique<RooTreeDataStore>(GetName(), GetTitle(), _vars, *_dstore);
       storageType = RooAbsData::Tree;
    }
 }
