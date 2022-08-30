@@ -1,17 +1,7 @@
 #ifndef TMVA_SOFIE_RMODEL
 #define TMVA_SOFIE_RMODEL
 
-#include <type_traits>
-#include <unordered_set>
-#include <vector>
-#include <unordered_map>
-#include <iostream>
-#include <memory>
-#include <ctime>
-#include <set>
-#include <iomanip>
-#include <fstream>
-#include <sstream>
+#include "TMVA/RModel_Base.hxx"
 #include "TMVA/SOFIE_common.hxx"
 #include "TMVA/ROperator.hxx"
 #include "TBuffer.h"
@@ -20,13 +10,14 @@ namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
 
+<<<<<<< HEAD
 enum class Options {
    kDefault = 0x0,
    kNoSession = 0x1,
    kNoWeightFile = 0x2,
    kRootBinaryWeightFile = 0x4
-   kGNN = 0x3,
-   kGNNComponent = 0x4,
+   kGNN = 0x8,
+   kGNNComponent = 0x16,
 };
 
 std::underlying_type_t<Options> operator|(Options opA, Options opB);
@@ -35,6 +26,9 @@ std::underlying_type_t<Options> operator|(std::underlying_type_t<Options> opA, O
 enum class WeightFileType {None, RootBinary, Text};
 
 class RModel: public TObject{
+=======
+class RModel: public RModel_Base{
+>>>>>>> 3b618fbcad (feat: modify RModel architecture)
 
 private:
    WeightFileType fWeightFile = WeightFileType::Text;
@@ -48,22 +42,26 @@ private:
 
    std::vector<std::unique_ptr<ROperator>> fOperators;
 
-   std::string fName="UnnamedModel";
+<<<<<<< HEAD
    std::string fFileName; //file name of original model file for identification
    std::string fParseTime; //UTC date and time string at parsing
 
-
-   std::string fGC; //generated code
    std::unordered_set<std::string> fNeededBlasRoutines;
 
    const std::unordered_set<std::string> fAllowedStdLib = {"vector", "algorithm", "cmath"};
    std::unordered_set<std::string> fNeededStdLib = {"vector"};
    std::unordered_set<std::string> fCustomOpHeaders;
+
+protected:
+   std::string fName="UnnamedModel";
+   std::string fGC; //generated code
    bool fUseWeightFile = true;
    bool fUseSession = true;
    bool fIsGNN = false;
    bool fIsGNNComponent = false;
 
+=======
+>>>>>>> d8ae68bedf (feat: modify RModel architecture)
 public:
 
    //explicit move ctor/assn
@@ -76,7 +74,10 @@ public:
    RModel& operator=(const RModel& other) = delete;
 
    RModel(){}
-   RModel(std::string name, std::string parsedtime);
+   RModel(std::string name, std::string parsedtime): RModel_Base(name, parsedtime){}
+   
+   // For GNN Functions usage
+   RModel(std::string function_name):RModel_Base(function_name){}
 
    const std::vector<size_t>& GetTensorShape(std::string name);
    const ETensorType& GetTensorType(std::string name);
@@ -89,19 +90,11 @@ public:
    // Check if a tensor is initialized
    bool IsInitializedTensor(const std::string& name) const;
    void AddIntermediateTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape);
-   void AddBlasRoutines(std::vector<std::string> routines) {
-      for (auto &routine : routines) {
-         fNeededBlasRoutines.insert(routine);
-      }
-   }
-   void AddNeededStdLib(std::string libname) {
-      if (fAllowedStdLib.find(libname) != fAllowedStdLib.end()) {
-         fNeededStdLib.insert(libname);
-      }
-   }
+   
    void AddNeededCustomHeader(std::string filename) {
       fCustomOpHeaders.insert(filename);
    }
+   
    void AddInputTensorName(std::string name);
    void AddOutputTensorNameList(std::vector<std::string> outputtensornames);
    void UpdateOutputTensorList(std::vector<std::string> curr_output_tensor, std::vector<std::string> modify_output_tensor);
@@ -110,24 +103,34 @@ public:
 
 
    void Initialize(int batchSize=1);
-   void GenerateHeaderInfo();
+   void GenerateInitializedTensorInfo();
    void GenerateIntermediateTensorInfo();
    void GenerateOutput();
-   void Generate(std::underlying_type_t<Options> options, int batchSize = 1);
-   void Generate(Options options = Options::kDefault, int batchSize = 1) {
-      Generate(static_cast<std::underlying_type_t<Options>>(options), batchSize);
+   void Generate(std::underlying_type_t<Options> options, int batchSize = 1, long pos = 0);
+   void Generate(Options options = Options::kDefault, int batchSitmva/sofie/inc/TMVA/RModel.hxx
+ze = 1, int pos = 0) {
+      Generate(static_cast<std::underlying_type_t<Options>>(options), batchSize, pos);
    }
 
-   void ReadInitializedTensorsFromFile();
-   void WriteInitializedTensorsToFile(std::string filename = "");
+   void ReadInitializedTensorsFromFile(long);
+   long WriteInitializedTensorsToFile(std::string filename = "");
 
+<<<<<<< HEAD
    void PrintGenerated() {
       std::cout << fGC;
    }
+
+   std::string ReturnGenerated(){
+      return fGC;
+   }
+=======
+>>>>>>> 3b618fbcad (feat: modify RModel architecture)
    void PrintIntermediateTensors();
    void OutputGenerated(std::string filename = "", bool append = false);
    std::vector<std::string> GetOutputTensorNames(){
       return fOutputTensorNames;
+   void SetFilename(std::string filename){
+      fName = filename;
    }
 
 /*

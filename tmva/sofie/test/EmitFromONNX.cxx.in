@@ -7,6 +7,7 @@
 
 #include <iostream>
 
+#include "TMVA/RModel_Base.hxx"
 #include "TMVA/RModel.hxx"
 #include "TMVA/RModelParser_ONNX.hxx"
 
