@@ -169,9 +169,9 @@ private:
 public:
    TObjOptLink(TObject *obj, Option_t *opt) : TObjLink(obj), fOption(opt) { }
    ~TObjOptLink() { }
-   Option_t        *GetAddOption() const { return fOption.Data(); }
-   Option_t        *GetOption() const { return fOption.Data(); }
-   void             SetOption(Option_t *option) { fOption = option; }
+   Option_t        *GetAddOption() const override { return fOption.Data(); }
+   Option_t        *GetOption() const override { return fOption.Data(); }
+   void             SetOption(Option_t *option) override { fOption = option; }
 };
 
 
