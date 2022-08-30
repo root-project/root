@@ -2,8 +2,10 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import numpy as np
+import tensorflow as tf
 from tensorflow.keras.models import Model,Sequential
-from tensorflow.keras.layers import Input,Dense,Activation,ReLU,BatchNormalization,Conv2D,Reshape,Concatenate,Add,Subtract,Multiply
+from tensorflow.keras.layers import Input,Dense,Activation,ReLU,LeakyReLU,BatchNormalization,Conv2D,Reshape,Concatenate,Add,Subtract,Multiply
+from tensorflow.keras.activations import tanh
 from tensorflow.keras.optimizers import SGD
 
 def generateFunctionalModel():
@@ -123,6 +125,22 @@ def generateBinaryOpModel():
     model.fit([x1_train,x2_train], y_train, epochs=10, batch_size=2)
     model.save('KerasModelBinaryOp.h5')
 
+def generateActivationModel():
+    input=Input(shape=(8,),batch_size=2)
+    x=Dense(16, activation=tf.nn.tanh)(input)
+    x=Dense(32)(x)
+    x=LeakyReLU()(x)
+    output=Dense(4, activation='softmax')(x)
+    model=Model(inputs=input,outputs=output)
+
+    randomGenerator=np.random.RandomState(0)
+    x_train=randomGenerator.rand(2,8)
+    y_train=randomGenerator.rand(2,4)
+
+    model.compile(loss='mean_squared_error', optimizer=SGD(learning_rate=0.01))
+    model.fit(x_train, y_train, epochs=10, batch_size=2)
+    model.save('KerasModelActivations.h5')
+
 generateFunctionalModel()
 generateSequentialModel()
 generateBatchNormModel()
@@ -131,3 +149,4 @@ generateConv2DModel_SamePadding()
 generateReshapeModel()
 generateConcatModel()
 generateBinaryOpModel()
+generateActivationModel()

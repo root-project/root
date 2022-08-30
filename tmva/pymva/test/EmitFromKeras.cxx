@@ -61,5 +61,10 @@ int main(){
    modelBinaryOp.Generate();
    modelBinaryOp.OutputGenerated("KerasBinaryOpModel.hxx");
 
+   //Emitting header file for Keras activation functions model
+   RModel modelActivations = TMVA::Experimental::SOFIE::PyKeras::Parse("KerasModelActivations.h5");
+   modelActivations.Generate();
+   modelActivations.OutputGenerated("KerasActivationsModel.hxx");
+
    return 0;
 }

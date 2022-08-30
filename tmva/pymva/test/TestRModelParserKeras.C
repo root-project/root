@@ -6,6 +6,7 @@
 #include "KerasReshapeModel.hxx"
 #include "KerasConcatenateModel.hxx"
 #include "KerasBinaryOpModel.hxx"
+#include "KerasActivationsModel.hxx"
 
 #include <Python.h>
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
@@ -359,5 +360,45 @@ TEST(RModelParser_Keras, BINARY_OP)
     //Testing the actual and expected output tensor values
     for (size_t i = 0; i < outputBinaryOp.size(); ++i) {
       EXPECT_LE(std::abs(outputBinaryOp[i] - pOutputBinaryOp[i]), TOLERANCE);
+    }
+}
+
+TEST(RModelParser_Keras, ACTIVATIONS)
+{
+    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+    float inputActivations[]={1,1,1,1,1,1,1,1,
+                             1,1,1,1,1,1,1,1};
+    TMVA_SOFIE_KerasModelActivations::Session s("KerasActivationsModel.dat");
+    std::vector<float> outputActivations = s.infer(inputActivations);
+
+    Py_Initialize();
+    PyObject* main = PyImport_AddModule("__main__");
+    PyObject* fGlobalNS = PyModule_GetDict(main);
+    PyObject* fLocalNS = PyDict_New();
+    if (!fGlobalNS) {
+        throw std::runtime_error("Can't init global namespace for Python");
+        }
+    if (!fLocalNS) {
+        throw std::runtime_error("Can't init local namespace for Python");
+        }
+    PyRun_String("import os",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("from tensorflow.keras.models import load_model",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("import numpy",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("model=load_model('KerasModelActivations.h5')",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("input=numpy.ones((2,8))",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
+    std::size_t pOutputActivationsSize=(std::size_t)PyLong_AsLong(PyDict_GetItemString(fLocalNS,"outputSize"));
+
+    //Testing the actual and expected output tensor sizes
+    EXPECT_EQ(outputActivations.size(), pOutputActivationsSize);
+
+    PyArrayObject* pActivationsValues=(PyArrayObject*)PyDict_GetItemString(fLocalNS,"output");
+    float* pOutputActivations=(float*)PyArray_DATA(pActivationsValues);
+
+    //Testing the actual and expected output tensor values
+    for (size_t i = 0; i < outputActivations.size(); ++i) {
+      EXPECT_LE(std::abs(outputActivations[i] - pOutputActivations[i]), TOLERANCE);
     }
 }
