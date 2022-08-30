@@ -53,7 +53,7 @@ class RLazyDS final : public ROOT::RDF::RDataSource {
    std::vector<std::pair<ULong64_t, ULong64_t>> fEntryRanges{};
    unsigned int fNSlots{0};
 
-   Record_t GetColumnReadersImpl(std::string_view colName, const std::type_info &id)
+   Record_t GetColumnReadersImpl(std::string_view colName, const std::type_info &id) final
    {
       auto colNameStr = std::string(colName);
       // This could be optimised and done statically
@@ -114,7 +114,7 @@ class RLazyDS final : public ROOT::RDF::RDataSource {
    }
 
 protected:
-   std::string AsString() { return "lazy data source"; };
+   std::string AsString() final { return "lazy data source"; };
 
 public:
    RLazyDS(std::pair<std::string, RResultPtr<std::vector<ColumnTypes>>>... colsNameVals)
@@ -134,34 +134,34 @@ public:
       }
    }
 
-   const std::vector<std::string> &GetColumnNames() const { return fColNames; }
+   const std::vector<std::string> &GetColumnNames() const final { return fColNames; }
 
-   std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges()
+   std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges() final
    {
       auto entryRanges(std::move(fEntryRanges)); // empty fEntryRanges
       return entryRanges;
    }
 
-   std::string GetTypeName(std::string_view colName) const
+   std::string GetTypeName(std::string_view colName) const final
    {
       const auto key = std::string(colName);
       return fColTypesMap.at(key);
    }
 
-   bool HasColumn(std::string_view colName) const
+   bool HasColumn(std::string_view colName) const final
    {
       const auto key = std::string(colName);
       const auto endIt = fColTypesMap.end();
       return endIt != fColTypesMap.find(key);
    }
 
-   bool SetEntry(unsigned int slot, ULong64_t entry)
+   bool SetEntry(unsigned int slot, ULong64_t entry) final
    {
       SetEntryHelper(slot, entry, std::index_sequence_for<ColumnTypes...>());
       return true;
    }
 
-   void SetNSlots(unsigned int nSlots)
+   void SetNSlots(unsigned int nSlots) final
    {
       fNSlots = nSlots;
       const auto nCols = fColNames.size();
@@ -179,7 +179,7 @@ public:
          delete ptrHolder;
    }
 
-   void Initialize()
+   void Initialize() final
    {
       ColLenghtChecker(std::index_sequence_for<ColumnTypes...>());
       const auto nEntries = GetEntriesNumber();
@@ -200,7 +200,7 @@ public:
       }
    }
 
-   std::string GetLabel() { return "LazyDS"; }
+   std::string GetLabel() final { return "LazyDS"; }
 };
 
 } // ns RDF

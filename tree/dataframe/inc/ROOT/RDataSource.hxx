@@ -62,7 +62,7 @@ class TTypedPointerHolder final : public TPointerHolder {
 public:
    TTypedPointerHolder(T *ptr) : TPointerHolder((void *)ptr) {}
 
-   virtual TPointerHolder *GetDeepCopy()
+   TPointerHolder *GetDeepCopy() final
    {
       const auto typedPtr = static_cast<T *>(fPointer);
       return new TTypedPointerHolder(new T(*typedPtr));

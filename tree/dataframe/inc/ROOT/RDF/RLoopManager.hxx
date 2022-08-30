@@ -211,7 +211,7 @@ public:
    RColumnReaderBase *GetDatasetColumnReader(unsigned int slot, const std::string &col, const std::type_info &ti) const;
 
    /// End of recursive chain of calls, does nothing
-   void AddFilterName(std::vector<std::string> &) {}
+   void AddFilterName(std::vector<std::string> &) final {}
    /// For each booked filter, returns either the name or "Unnamed Filter"
    std::vector<std::string> GetFiltersNames();
 
@@ -223,7 +223,7 @@ public:
    std::vector<RDFInternal::RActionBase *> GetAllActions() const;
 
    std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>
-   GetGraph(std::unordered_map<void *, std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>> &visitedMap);
+   GetGraph(std::unordered_map<void *, std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>> &visitedMap) final;
 
    const ColumnNames_t &GetBranchNames();
 

@@ -128,7 +128,7 @@ public:
       : fField(std::move(f)), fValue(fField->GenerateValue()), fLastEntry(-1)
    {
    }
-   virtual ~RNTupleColumnReader() { fField->DestroyValue(fValue); }
+   ~RNTupleColumnReader() { fField->DestroyValue(fValue); }
 
    /// Column readers are created as prototype and then cloned for every slot
    std::unique_ptr<RNTupleColumnReader> Clone()
