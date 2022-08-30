@@ -1,6 +1,9 @@
 #ifndef TMVA_SOFIE_RMODEL_GNN
 #define TMVA_SOFIE_RMODEL_GNN
 
+#include <ctime>
+
+#include "TMVA/RModel_Base.hxx"
 #include "TMVA/RModel.hxx"
 #include "TMVA/RFunction.hxx"
 
@@ -8,41 +11,54 @@ namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
 
+class RFunction_Update;
+class RFunction_Aggregate;
+
 struct GNN_Init {
     // updation blocks
-    RFunction edges_updation_block;
-    RFunction nodes_updation_block;
-    RFunction globals_updation_block;
+    std::shared_ptr<RFunction_Update> edges_update_block;
+    std::shared_ptr<RFunction_Update> nodes_update_block;
+    std::shared_ptr<RFunction_Update> globals_update_block;
     
     // aggregation blocks
-    RFunction edge_node_agg_block;
-    RFunction edge_global_agg_block;
-    RFunction node_global_agg_block;
+    std::shared_ptr<RFunction_Aggregate> edge_node_agg_block;
+    std::shared_ptr<RFunction_Aggregate> edge_global_agg_block;
+    std::shared_ptr<RFunction_Aggregate> node_global_agg_block;
    
-    std::vector<std::string> nodes;
+    int num_nodes;
     std::vector<std::pair<int,int>> edges;
-    std::vector<std::string> globals;
+   
+    int num_node_features;
+    int num_edge_features;
+    int num_global_features;
+
+    std::string filename;
 };
 
-class RModel_GNN: public RModel{
+class RModel_GNN: public RModel_Base{
 
 private:
     
     // updation function for edges, nodes & global attributes
-    std::unique_ptr<RFunction> edges_updation_block;
-    std::unique_ptr<RFunction> nodes_updation_block;
-    std::unique_ptr<RFunction> globals_updation_block;
+    std::unique_ptr<RFunction_Update> edges_update_block;
+    std::unique_ptr<RFunction_Update> nodes_update_block;
+    std::unique_ptr<RFunction_Update> globals_update_block;
 
     // aggregation function for edges, nodes & global attributes
-    std::unique_ptr<RFunction> edge_node_agg_block;
-    std::unique_ptr<RFunction> edge_global_agg_block;
-    std::unique_ptr<RFunction> node_global_agg_block;
+    std::unique_ptr<RFunction_Aggregate> edge_node_agg_block;
+    std::unique_ptr<RFunction_Aggregate> edge_global_agg_block;
+    std::unique_ptr<RFunction_Aggregate> node_global_agg_block;
 
-    std::vector<std::pair<int,int>> edges; // contains node indices
-    std::vector<std::string> nodes;
-    std::vector<std::string> globals;
+    int num_nodes;
+    int num_edges;
     std::vector<int> senders;              // contains node indices
     std::vector<int> receivers;            // contains node indices
+
+    int num_node_features;
+    int num_edge_features;
+    int num_global_features;
+
+    std::string fFilename;
 
 public:
 
@@ -59,13 +75,13 @@ public:
    RModel_GNN(){}
    RModel_GNN(std::string name, std::string parsedtime);
 
-   void AddFunction(std::unique_ptr<RFunction> func);
+//    void AddFunction(std::unique_ptr<RFunction> func);
    
    void InitializeGNN(int batch_size=1);
    void GenerateGNN(int batchSize = 1);
-   
-   ~RModel_GNN(){}}
-   ClassDef(RModel_GNN,1);
+
+   ~RModel_GNN(){}
+//    ClassDef(RModel_GNN,1);
 };
 
 }//SOFIE
