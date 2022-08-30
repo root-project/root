@@ -98,7 +98,7 @@ class RNTupleWriteOptionsDaos : public RNTupleWriteOptions {
   std::string fObjectClass{"SX"};
 
 public:
-   virtual ~RNTupleWriteOptionsDaos() = default;
+   ~RNTupleWriteOptionsDaos() override = default;
    std::unique_ptr<RNTupleWriteOptions> Clone() const override
    { return std::make_unique<RNTupleWriteOptionsDaos>(*this); }
 

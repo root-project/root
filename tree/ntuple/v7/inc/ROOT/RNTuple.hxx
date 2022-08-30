@@ -78,7 +78,7 @@ private:
    std::unique_ptr<TTaskGroup> fTaskGroup;
 public:
    RNTupleImtTaskScheduler();
-   virtual ~RNTupleImtTaskScheduler() = default;
+   ~RNTupleImtTaskScheduler() override = default;
    void Reset() final;
    void AddTask(const std::function<void(void)> &taskFunc) final;
    void Wait() final;

@@ -140,7 +140,7 @@ public:
    RPageSinkBuf& operator=(const RPageSinkBuf&) = delete;
    RPageSinkBuf(RPageSinkBuf&&) = default;
    RPageSinkBuf& operator=(RPageSinkBuf&&) = default;
-   virtual ~RPageSinkBuf() = default;
+   ~RPageSinkBuf() override = default;
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
    void ReleasePage(RPage &page) final;

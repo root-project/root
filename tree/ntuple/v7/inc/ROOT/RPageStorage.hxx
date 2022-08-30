@@ -249,7 +249,7 @@ public:
    RPageSink& operator=(const RPageSink&) = delete;
    RPageSink(RPageSink&&) = default;
    RPageSink& operator=(RPageSink&&) = default;
-   virtual ~RPageSink();
+   ~RPageSink() override;
 
    /// Guess the concrete derived page source from the file name (location)
    static std::unique_ptr<RPageSink> Create(std::string_view ntupleName, std::string_view location,
@@ -285,7 +285,7 @@ public:
    virtual RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) = 0;
 
    /// Returns the default metrics object.  Subclasses might alternatively provide their own metrics object by overriding this.
-   virtual RNTupleMetrics &GetMetrics() override { return fMetrics; };
+   RNTupleMetrics &GetMetrics() override { return fMetrics; };
 };
 
 // clang-format off
@@ -408,7 +408,7 @@ public:
    RPageSource& operator=(const RPageSource&) = delete;
    RPageSource(RPageSource &&) = delete;
    RPageSource &operator=(RPageSource &&) = delete;
-   virtual ~RPageSource();
+   ~RPageSource() override;
    /// Guess the concrete derived page source from the file name (location)
    static std::unique_ptr<RPageSource> Create(std::string_view ntupleName, std::string_view location,
                                               const RNTupleReadOptions &options = RNTupleReadOptions());
@@ -468,7 +468,7 @@ public:
    void UnzipCluster(RCluster *cluster);
 
    /// Returns the default metrics object.  Subclasses might alternatively override the method and provide their own metrics object.
-   virtual RNTupleMetrics &GetMetrics() override { return fMetrics; };
+   RNTupleMetrics &GetMetrics() override { return fMetrics; };
 };
 
 } // namespace Detail
