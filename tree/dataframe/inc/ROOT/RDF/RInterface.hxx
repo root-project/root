@@ -70,6 +70,8 @@ class RDataFrame;
 namespace Internal {
 namespace RDF {
 class GraphCreatorHelper;
+struct RTreeInfo;
+std::unique_ptr<RTreeInfo> MakeTreeInfo(const ROOT::RDF::RNode &node);
 }
 } // namespace Internal
 } // namespace ROOT
@@ -113,6 +115,7 @@ class RInterface {
    friend class RInterface;
 
    friend void RDFInternal::TriggerRun(RNode &node);
+   friend std::unique_ptr<RDFInternal::RTreeInfo> RDFInternal::MakeTreeInfo(const RNode &rdf);
 
    std::shared_ptr<Proxied> fProxiedPtr; ///< Smart pointer to the graph node encapsulated by this RInterface.
    ///< The RLoopManager at the root of this computation graph. Never null.
