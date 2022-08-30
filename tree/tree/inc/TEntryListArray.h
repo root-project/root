@@ -55,7 +55,7 @@ public:
    TEntryListArray(const TEntryList& elist); // to convert TEL to TELA
    ~TEntryListArray() override;
 
-   void        Add(const TEntryList *elist) override;
+   void                Add(const TEntryList *elist) override;
    virtual Int_t       Contains(Long64_t entry, TTree *tree, Long64_t subentry);
    Int_t       Contains(Long64_t entry, TTree *tree = nullptr) override {
       return TEntryList::Contains(entry, tree);
@@ -65,7 +65,7 @@ public:
    Bool_t      Enter(Long64_t entry, TTree *tree = nullptr) override {
       return Enter(entry, tree, -1);
    };
-   Bool_t      Enter(Long64_t entry, const char *treename, const char *filename) override
+   Bool_t              Enter(Long64_t entry, const char *treename, const char *filename) override
    {
       return Enter(entry, treename, filename, -1);
    };
@@ -87,6 +87,6 @@ public:
       return fSubLists;
    };
 
-   ClassDef(TEntryListArray, 1);  //A list of entries and subentries in a TTree
+   ClassDefOverride(TEntryListArray, 1);  //A list of entries and subentries in a TTree
 };
 #endif

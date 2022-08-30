@@ -70,7 +70,7 @@ public:
    void        RecursiveRemove(TObject *obj) override;
 
 
-   ClassDef(TFriendElement,2)  //A friend element of another TTree
+   ClassDefOverride(TFriendElement,2)  //A friend element of another TTree
 };
 
 #endif

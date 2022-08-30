@@ -69,9 +69,9 @@ public:
    Int_t GetCounterValue(TLeaf* leaf) override;
 
    /// Access value of referenced object (macro from TFormLeafInfo.g)
-   DECLARE_GETVAL;
+   DECLARE_GETVAL( , override);
    /// Read value of referenced object
-   DECLARE_READVAL;
+   DECLARE_READVAL( , override);
    /// TFormLeafInfo overload: Update (and propagate) cached information
    Bool_t   Update() override;
 };

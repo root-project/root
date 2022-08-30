@@ -74,7 +74,7 @@ public:
    friend TEventList operator-(const TEventList &list1, const TEventList &list2);
    friend TEventList operator*(const TEventList &list1, const TEventList &list2);
 
-   ClassDef(TEventList,4);  //A list of selected entries in a TTree.
+   ClassDefOverride(TEventList,4);  //A list of selected entries in a TTree.
 };
 
 #endif

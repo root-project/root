@@ -62,7 +62,7 @@ public:
    void SetLineColor(Color_t col) override;
    void SetLineWidth(Width_t wid) override;
 
-   ClassDef(TParallelCoordRange,1); // A TParallelCoordRange is a range used for parallel coordinates plots.
+   ClassDefOverride(TParallelCoordRange,1); // A TParallelCoordRange is a range used for parallel coordinates plots.
 };
 
 
@@ -86,7 +86,7 @@ public:
    void        SetShowRanges(Bool_t s);
    void        SetTitle(const char* title) {fTitle = title;}
 
-   ClassDef(TParallelCoordSelect,1); // A TParallelCoordSelect is a specialised TList to hold TParallelCoordRanges used by TParallelCoord.
+   ClassDefOverride(TParallelCoordSelect,1); // A TParallelCoordSelect is a specialised TList to hold TParallelCoordRanges used by TParallelCoord.
 };
 
 #endif

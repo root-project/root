@@ -49,7 +49,7 @@ public:
    void         Scan();                          // *MENU*
    void         SetExpression(const char *name="", const char *alias="-empty-", Bool_t cut=kFALSE); // *MENU*
 
-   ClassDef(TGItemContext, 0)  // Context menu for TTVLVEntry
+   ClassDefOverride(TGItemContext, 0)  // Context menu for TTVLVEntry
 };
 
 
@@ -93,7 +93,7 @@ public:
    void            SetSmallPic(const TGPicture *spic);
    void            Empty();
 
-   ClassDef(TTVLVEntry,0)  // Item that goes into the tree list view widget
+   ClassDefOverride(TTVLVEntry,0)  // Item that goes into the tree list view widget
 };
 
 
@@ -139,7 +139,7 @@ public:
    Bool_t HandleButton(Event_t *event) override;
    Bool_t HandleMotion(Event_t *event) override;
 
-   ClassDef(TTVLVContainer,0)  // A dragging-capable LVContainer
+   ClassDefOverride(TTVLVContainer,0)  // A dragging-capable LVContainer
 };
 
 
@@ -189,7 +189,7 @@ public:
 
    static TGSelectBox *GetInstance();
 
-   ClassDef(TGSelectBox,0)  // TreeView dialog widget
+   ClassDefOverride(TGSelectBox,0)  // TreeView dialog widget
 };
 
 #endif

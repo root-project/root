@@ -251,7 +251,7 @@ public:
    void          UpdateCombo();
    void          UpdateRecord(const char *name="new name");      // *MENU*
 
-   ClassDef(TTreeViewer,0)  // A GUI oriented tree viewer
+   ClassDefOverride(TTreeViewer,0)  // A GUI oriented tree viewer
 };
 
 #endif

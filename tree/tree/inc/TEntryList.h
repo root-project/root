@@ -96,7 +96,7 @@ class TEntryList: public TNamed
    virtual void        Reset();
    virtual Int_t       ScanPaths(TList *roots, Bool_t notify = kTRUE);
 
-   void        Print(const Option_t* option = "") const override;
+   void                Print(const Option_t* option = "") const override;
    virtual void        SetDirectory(TDirectory *dir);
    virtual void        SetEntriesToProcess(Long64_t nen) { fEntriesToProcess = nen; }
    virtual void        SetShift(Bool_t shift) { fShift = shift; };
@@ -122,6 +122,6 @@ class TEntryList: public TNamed
 #pragma GCC diagnostic pop
 #endif
 
-   ClassDef(TEntryList, 2);  //A list of entries in a TTree
+   ClassDefOverride(TEntryList, 2);  //A list of entries in a TTree
 };
 #endif
