@@ -111,7 +111,11 @@ public:
 
       // compute reduction
 
-      out << SP << SP << "float sum = 0;\n";
+      if(fReduceOpMode == ReduceProd)
+         out << SP << SP << "float sum = 1;\n";
+      else 
+         out << SP << SP << "float sum = 0;\n";
+      
       out << SP << SP << "for (size_t k = 0; k < " << fShapeX[fAttrAxes] <<"; k++) { \n";
       out << SP << SP << SP << "idx_" << fAttrAxes << " = k;\n";
        // compute input index j
