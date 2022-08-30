@@ -116,8 +116,8 @@ public:
       out << SP << SP << SP << "idx_" << fAttrAxes << " = k;\n";
        // compute input index j
       out << SP << SP << SP << "size_t l = ";
-      for(size_t n = dim-1; n >= 0; n-- ) {
-         if (n == dim-1)
+      for(int n = dim-1; n >=0; n--) {
+         if (n == int(dim-1))
             out << "idx_" << n;
          else
             out << " + " << "idx_" << n << " * " << inputStrides[n];
