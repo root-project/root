@@ -61,7 +61,7 @@ or an instance. For instance to draw an extra scale on a plot.
 - [Blank axis](\ref GA03)
 - [Tick marks' orientation](\ref GA04)
 - [Tick marks' size](\ref GA05)
-- [Labels' positionning](\ref GA06)
+- [Labels' positioning](\ref GA06)
 - [Labels' orientation](\ref GA07)
 - [Labels' position on tick marks](\ref GA08)
 - [Labels' format](\ref GA09)
@@ -258,7 +258,7 @@ A good way to remove tick marks on an axis is to set the tick length to 0:
 `h->GetXaxis()->SetTickLength(0.);`
 
 \anchor GA06
-## Labels' positionning
+## Labels' positioning
 
 Labels are normally drawn on side opposite to tick marks. However the option
 `"="` allows to draw them on the same side. The distance between the labels and
