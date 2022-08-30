@@ -21,7 +21,7 @@ struct DefinePerSample : ::testing::TestWithParam<bool> {
          ROOT::EnableImplicitMT();
    }
 
-   ~DefinePerSample()
+   ~DefinePerSample() override
    {
       if (GetParam())
          ROOT::DisableImplicitMT();

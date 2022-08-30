@@ -66,7 +66,7 @@ private:
    void FillHeaders(const std::string &);
    void FillRecord(const std::string &, Record_t &);
    void GenerateHeaders(size_t);
-   std::vector<void *> GetColumnReadersImpl(std::string_view, const std::type_info &);
+   std::vector<void *> GetColumnReadersImpl(std::string_view, const std::type_info &) final;
    void ValidateColTypes(std::vector<std::string> &) const;
    void InferColTypes(std::vector<std::string> &);
    void InferType(const std::string &, unsigned int);
@@ -76,7 +76,7 @@ private:
    void FreeRecords();
 
 protected:
-   std::string AsString();
+   std::string AsString() final;
 
 public:
    RCsvDS(std::string_view fileName, bool readHeaders = true, char delimiter = ',', Long64_t linesChunkSize = -1LL,
