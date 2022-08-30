@@ -109,9 +109,9 @@ public:
    }
 
    /// This function must be defined by all nodes, but only the filters will add their name
-   void AddFilterName(std::vector<std::string> &filters) { fPrevNode.AddFilterName(filters); }
+   void AddFilterName(std::vector<std::string> &filters) final { fPrevNode.AddFilterName(filters); }
    std::shared_ptr<RDFGraphDrawing::GraphNode>
-   GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap)
+   GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap) final
    {
       // TODO: Ranges node have no information about custom columns, hence it is not possible now
       // if defines have been used before.

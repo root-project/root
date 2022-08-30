@@ -27,7 +27,7 @@ struct RDFSampleCallback : ::testing::TestWithParam<bool> {
          ROOT::EnableImplicitMT();
    }
 
-   ~RDFSampleCallback()
+   ~RDFSampleCallback() override
    {
       if (GetParam())
          ROOT::DisableImplicitMT();

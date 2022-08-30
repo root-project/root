@@ -46,7 +46,7 @@ public:
    // - Thread #2) a task starts and overwrites thread-local TTreeReaderValues
    // - Thread #1) first task deletes TTreeReader
    // See https://github.com/root-project/root/commit/26e8ace6e47de6794ac9ec770c3bbff9b7f2e945
-   ~RTreeColumnReader() { fTreeValue.reset(); }
+   ~RTreeColumnReader() override { fTreeValue.reset(); }
 };
 
 /// RTreeColumnReader specialization for TTree values read via TTreeReaderArrays.
@@ -137,7 +137,7 @@ public:
    }
 
    /// See the other class template specializations for an explanation.
-   ~RTreeColumnReader() { fTreeArray.reset(); }
+   ~RTreeColumnReader() override { fTreeArray.reset(); }
 };
 
 /// RTreeColumnReader specialization for arrays of boolean values read via TTreeReaderArrays.
@@ -178,7 +178,7 @@ public:
    }
 
    /// See the other class template specializations for an explanation.
-   ~RTreeColumnReader() { fTreeArray.reset(); }
+   ~RTreeColumnReader() override { fTreeArray.reset(); }
 };
 
 } // namespace RDF

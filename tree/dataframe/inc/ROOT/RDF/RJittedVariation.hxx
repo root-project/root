@@ -36,7 +36,7 @@ public:
       : RVariationBase(colNames, variationName, variationTags, type, colRegister, lm, inputColNames)
    {
    }
-   ~RJittedVariation();
+   ~RJittedVariation() override;
 
    void SetVariation(std::unique_ptr<RVariationBase> c) { fConcreteVariation = std::move(c); }
 

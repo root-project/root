@@ -227,7 +227,7 @@ public:
       }
    }
 
-   const std::type_info &GetTypeId() const { return typeid(VariedCol_t); }
+   const std::type_info &GetTypeId() const final { return typeid(VariedCol_t); }
 
    /// Clean-up operations to be performed at the end of a task.
    void FinalizeSlot(unsigned int slot) final { fValues[slot].fill(nullptr); }

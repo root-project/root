@@ -18,7 +18,7 @@ protected:
       if (GetParam())
          ROOT::EnableImplicitMT(NSLOTS);
    }
-   ~RDFRegressionTests()
+   ~RDFRegressionTests() override
    {
       if (GetParam())
          ROOT::DisableImplicitMT();
@@ -252,14 +252,14 @@ TEST_P(RDFRegressionTests, UseAfterDeleteOfSampleCallbacks)
       bool fThisWasDeleted = false;
 
       MyHelper() : fResult(std::make_shared<int>()) {}
-      ~MyHelper() { fThisWasDeleted = true; }
+      ~MyHelper() override { fThisWasDeleted = true; }
       void Initialize() {}
       void InitTask(TTreeReader *, unsigned int) {}
       void Exec(unsigned int) {}
       void Finalize() {}
       std::shared_ptr<Result_t> GetResultPtr() const { return fResult; }
       std::string GetActionName() const { return "MyHelper"; }
-      ROOT::RDF::SampleCallback_t GetSampleCallback()
+      ROOT::RDF::SampleCallback_t GetSampleCallback() final
       {
          // in a well-behaved program, this won't ever even be called as the RResultPtr returned
          // by the Book call below goes immediately out of scope, removing the action from the computation graph

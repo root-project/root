@@ -153,7 +153,7 @@ public:
       fPrevNode.IncrChildrenCount();
    }
 
-   void AddFilterName(std::vector<std::string> &filters)
+   void AddFilterName(std::vector<std::string> &filters) final
    {
       fPrevNode.AddFilterName(filters);
       auto name = (HasName() ? fName : "Unnamed Filter");
@@ -164,7 +164,7 @@ public:
    void FinalizeSlot(unsigned int slot) final { fValues[slot].fill(nullptr); }
 
    std::shared_ptr<RDFGraphDrawing::GraphNode>
-   GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap)
+   GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap) final
    {
       // Recursively call for the previous node.
       auto prevNode = fPrevNode.GetGraph(visitedMap);

@@ -59,7 +59,7 @@ public:
    void AddFilterName(std::vector<std::string> &filters) final;
    void FinalizeSlot(unsigned int slot) final;
    std::shared_ptr<RDFGraphDrawing::GraphNode>
-   GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap);
+   GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap) final;
    std::shared_ptr<RNodeBase> GetVariedFilter(const std::string &variationName) final;
 };
 

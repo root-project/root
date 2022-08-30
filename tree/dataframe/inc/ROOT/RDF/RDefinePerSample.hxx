@@ -69,7 +69,7 @@ public:
       fLastResults[slot * RDFInternal::CacheLineStep<RetType_t>()] = fExpression(slot, id);
    }
 
-   const std::type_info &GetTypeId() const { return typeid(RetType_t); }
+   const std::type_info &GetTypeId() const final { return typeid(RetType_t); }
 
    void InitSlot(TTreeReader *, unsigned int) final {}
 
