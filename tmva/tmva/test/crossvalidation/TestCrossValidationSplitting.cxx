@@ -313,6 +313,45 @@ TEST(CrossValidationSplitting, TrainingSetSplitOnSpectator)
    testFold(d, ids, split, 1);
 }
 
+TEST(CrossValidationSplitting, TrainingSetSplitOnSpectator2)
+{
+   TMVA::Tools::Instance();
+
+   const UInt_t NUM_FOLDS = 2;
+   const UInt_t nPointsSig = 11;
+   const UInt_t nPointsBkg = 10;
+
+   // Create DataSet
+   TMVA::MsgLogger::InhibitOutput();
+   data_t data_class0 = TMVA::createData(nPointsSig, 0);
+   data_t data_class1 = TMVA::createData(nPointsBkg, 100);
+
+   id_vec_t ids;
+   ids.insert(ids.end(), std::get<0>(data_class0).begin(), std::get<0>(data_class0).end());
+   ids.insert(ids.end(), std::get<0>(data_class1).begin(), std::get<0>(data_class1).end());
+
+   TMVA::DataLoader *d = new TMVA::DataLoader("dataset");
+
+   d->AddSignalTree(std::get<1>(data_class0));
+   d->AddBackgroundTree(std::get<1>(data_class1));
+
+   d->AddVariable("x", 'D');
+   d->AddSpectator("id", "id", "");
+   d->PrepareTrainingAndTestTree(
+      "", Form("SplitMode=Block:nTrain_Signal=%i:nTrain_Background=%i:!V", nPointsSig, nPointsBkg));
+
+   d->GetDataSetInfo().GetDataSet(); // Force creation of dataset.
+   TMVA::MsgLogger::EnableOutput();
+
+   // test split expression without passing the number of folds
+   TMVA::CvSplitKFolds split{NUM_FOLDS, "int([id])%2", kFALSE, 0};
+   d->MakeKFoldDataSet(split);
+
+   // Actual test
+   testFold(d, ids, split, 0);
+   testFold(d, ids, split, 1);
+}
+
 TEST(CrossValidationSplitting, TrainingSetSplitRandomStratified)
 {
    TMVA::Tools::Instance();

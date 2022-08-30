@@ -137,7 +137,7 @@ void TMVA::CvSplit::RecombineKFoldDataSet(DataSetInfo &dsi, Types::ETreeType tt)
 ///
 
 TMVA::CvSplitKFoldsExpr::CvSplitKFoldsExpr(DataSetInfo &dsi, TString expr)
-   : fDsi(dsi), fIdxFormulaParNumFolds(std::numeric_limits<UInt_t>::max()), fSplitFormula("", expr),
+   : fDsi(dsi), fIdxFormulaParNumFolds(std::numeric_limits<Int_t>::max()), fSplitFormula("", expr),
      fParValues(fSplitFormula.GetNpar())
 {
    if (!fSplitFormula.IsValid()) {
