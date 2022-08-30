@@ -2736,7 +2736,7 @@ void TGaxis::ResetLabelAttributes(TLatex* t)
 /// `fgMaxDigits` must be greater than 0.
 /// Warning: this static function changes the max number of digits in all axes.
 /// If you only want to change the digits of the current TGaxis instance, use
-/// axis->SetNdivisions(N*1000000 + (A1->GetNdiv()%1000000))
+/// axis->SetNdivisions(N*1000000 + (axis->GetNdiv()%1000000))
 /// instead of axis->SetMaxDigits(N).
 
 void TGaxis::SetMaxDigits(Int_t maxd)
