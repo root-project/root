@@ -70,7 +70,7 @@ public:
    void           UpdateFormulaLeaves(const TTree *parent) override;
    void           SetTree(TTree *T) override;
 
-   ClassDef(TTreeIndex,2);  //A Tree Index with majorname and minorname.
+   ClassDefOverride(TTreeIndex,2);  //A Tree Index with majorname and minorname.
 };
 
 #endif

@@ -28,7 +28,7 @@ public:
                const char *option = nullptr, UInt_t nrows = 50, UInt_t ncolumns = 10);
    ~TGTreeTable() override;
 
-   ClassDef(TGTreeTable, 0) // A TGTable that owns it's TTreeTableIngeface.
+   ClassDefOverride(TGTreeTable, 0) // A TGTable that owns it's TTreeTableIngeface.
 };
 
 #endif

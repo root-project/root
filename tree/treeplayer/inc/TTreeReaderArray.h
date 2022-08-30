@@ -50,7 +50,7 @@ Base class of TTreeReaderArray.
       std::unique_ptr<TVirtualCollectionReader> fImpl; // Common interface to collections
 
       // FIXME: re-introduce once we have ClassDefInline!
-      //ClassDef(TTreeReaderArrayBase, 0);//Accessor to member of an object stored in a collection
+      //ClassDefOverride(TTreeReaderArrayBase, 0);//Accessor to member of an object stored in a collection
    };
 
 } // namespace Internal

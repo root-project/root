@@ -57,7 +57,7 @@ public :
    void     SlaveTerminate() override;
    void     Terminate() override;
 
-   ClassDef(TSelectorEntries,1); //A specialized TSelector for TTree::GetEntries(selection)
+   ClassDefOverride(TSelectorEntries,1); //A specialized TSelector for TTree::GetEntries(selection)
 };
 
 #endif

@@ -61,7 +61,7 @@ public:
    TEntryListFromFile(const char *filename, const char *listname, Int_t nfiles);
    ~TEntryListFromFile() override;
    void        Add(const TEntryList * /* elist */) override {};
-   Int_t       Contains(Long64_t /* entry */, TTree * /* tree = 0 */) override  { return 0; };
+   Int_t       Contains(Long64_t /* entry */, TTree * /* tree = 0 */) override { return 0; };
    Bool_t      Enter(Long64_t /* entry */, TTree * /* tree = 0 */) override { return kFALSE; };
    Bool_t      Enter(Long64_t /* entry */, const char * /* treename */, const char * /* filename */) override { return kFALSE; };
    TEntryList *GetCurrentList() const override { return fCurrent; };
@@ -94,6 +94,6 @@ public:
    virtual void        SetNFiles(Int_t nfiles) { fNFiles = nfiles; }
    void        Subtract(const TEntryList * /*elist*/) override {}
 
-   ClassDef(TEntryListFromFile, 1); //Manager for entry lists from different files
+   ClassDefOverride(TEntryListFromFile, 1); //Manager for entry lists from different files
 };
 #endif

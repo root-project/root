@@ -119,7 +119,7 @@ public:
    virtual void            DoWeightCut();
    void            SetModel(TObject* obj) override;
 
-   ClassDef(TParallelCoordEditor,0)    // GUI for editing the parallel coordinates plot attributes.
+   ClassDefOverride(TParallelCoordEditor,0)    // GUI for editing the parallel coordinates plot attributes.
 };
 
 

@@ -59,7 +59,7 @@ public:
    virtual void  InspectObject(); // *MENU*
    void  Paint(Option_t *option) override;
 
-   ClassDef(TFileDrawMap,1);  //Draw a 2-d map of the objects in a file
+   ClassDefOverride(TFileDrawMap,1);  //Draw a 2-d map of the objects in a file
 };
 
 #endif

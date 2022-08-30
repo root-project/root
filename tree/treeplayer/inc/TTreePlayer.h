@@ -127,7 +127,7 @@ public:
                                  ,Long64_t nentries, Long64_t firstentry) override;
    void      UpdateFormulaLeaves() override;
 
-   ClassDef(TTreePlayer,3);  //Manager class to play with TTrees
+   ClassDefOverride(TTreePlayer,3);  //Manager class to play with TTrees
 };
 
 #endif

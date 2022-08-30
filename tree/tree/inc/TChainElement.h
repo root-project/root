@@ -79,7 +79,7 @@ public:
    virtual void        SetPacketSize(Int_t size = 100);
    virtual void        SetStatus(Int_t status) {fStatus = status;}
 
-   ClassDef(TChainElement,2);  //A chain element
+   ClassDefOverride(TChainElement,2);  //A chain element
 };
 
 #endif

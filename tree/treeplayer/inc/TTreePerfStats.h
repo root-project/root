@@ -154,7 +154,7 @@ public:
 
    BasketList_t     GetDuplicateBasketCache() const;
 
-   ClassDef(TTreePerfStats, 8) // TTree I/O performance measurement
+   ClassDefOverride(TTreePerfStats, 8) // TTree I/O performance measurement
 };
 
 #endif

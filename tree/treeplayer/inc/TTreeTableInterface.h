@@ -66,7 +66,7 @@ public:
    virtual void SetSelection(const char *selection);
    virtual void SetEntryList(TEntryList *entrylist = nullptr);
 
-   ClassDef(TTreeTableInterface, 0) // Interface to data in a TTree
+   ClassDefOverride(TTreeTableInterface, 0) // Interface to data in a TTree
 };
 
 #endif

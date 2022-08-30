@@ -91,7 +91,7 @@ public:
    virtual void         DoAvFillColor(Pixel_t);
    virtual void         DoAvFillPattern(Style_t);
 
-   ClassDef(TSpiderEditor,0) // GUI for editing the spider plot attributes.
+   ClassDefOverride(TSpiderEditor,0) // GUI for editing the spider plot attributes.
 };
 
 #endif

@@ -54,7 +54,7 @@ public:
 
    void Update(Int_t offset, Int_t skipped) override;
 
-   ClassDef(TBasketSQL,1)  //the TBranch buffers
+   ClassDefOverride(TBasketSQL,1)  //the TBranch buffers
 
 };
 
