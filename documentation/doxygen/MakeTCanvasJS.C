@@ -1,6 +1,10 @@
 /// Generates the root file output of the macro MacroName
+#include "TSystem.h"
+#include "TROOT.h"
+#include "TBufferJSON.h"
+#include "TCanvas.h"
 
-void MakeTCanvasJS(const char *MacroName, const char *IN, const char *OutDir, bool cp, bool py)
+void MakeTCanvasJS(const char *MacroName, const char *IN, const char *OutDir, /*const char *AuxDir,*/ bool cp, bool py)
 {
 
    // Execute the macro as a C++ one or a Python one.

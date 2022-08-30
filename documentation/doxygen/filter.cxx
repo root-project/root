@@ -84,12 +84,12 @@
 using namespace std;
 
 // Auxiliary functions
-void   FilterClass();
-void   FilterTutorial();
+void   FilterClass(const int);
+void   FilterTutorial(const int);
 void   GetClassName();
-int    NumberOfImages();
-string ImagesList(string&);
-void   ExecuteMacro();
+int    NumberOfImages(const int);
+string ImagesList(string&, const int);
+void   ExecuteMacro(const int);
 void   ExecuteCommand(string);
 void   ReplaceAll(string&, const string&, const string&);
 string StringFormat(const string fmt_str, ...);
@@ -125,6 +125,8 @@ int    gMacroID;       // Macro identifier in class documentation.
 
 int main(int argc, char *argv[])
 {
+   if(argc<2) return argc;
+   const int suffix = getpid();
    // Initialisation
    gFileName      = argv[1];
    gHeader        = false;
@@ -134,7 +136,7 @@ int main(int argc, char *argv[])
    gInMacro       = 0;
    gImageID       = 0;
    gMacroID       = 0;
-   gOutputName    = "stdout.dat";
+   gOutputName    = StringFormat("%s/stdout%d.dat",CMAKE_BUILD_DIRECTORY,suffix).c_str();
    gImageType     = "png";
    gImageWidth    = "";
    if (EndsWith(gFileName,".cxx")) gSource = true;
@@ -147,29 +149,30 @@ int main(int argc, char *argv[])
    gCwd     = gFileName.substr(0,last);
 
    // Retrieve the output directory
-   gOutDir = getenv("DOXYGEN_OUTPUT_DIRECTORY");
+   gOutDir = DOXYGEN_OUTPUT_DIRECTORY;
    ReplaceAll(gOutDir,"\"","");
 
    // Retrieve the source directory
-   gSourceDir = getenv("DOXYGEN_SOURCE_DIRECTORY");
+   gSourceDir = DOXYGEN_SOURCE_DIRECTORY;
    ReplaceAll(gSourceDir,"\"","");
 
    // Retrieve the python executable
-   gPythonExec = getenv("PYTHON_EXECUTABLE");
+   gPythonExec = PYTHON_EXECUTABLE;
    ReplaceAll(gPythonExec,"\"","");
 
    // Open the input file name.
    f = fopen(gFileName.c_str(),"r");
    if (!f) return 1;
 
-   if (gFileName.find("tutorials") != string::npos) FilterTutorial();
-   else                                             FilterClass();
+   if (gFileName.find("tutorials") != string::npos) FilterTutorial(suffix);
+   else                                             FilterClass(suffix);
+   remove(gOutputName.c_str());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Filter ROOT class for Doxygen.
 
-void FilterClass()
+void FilterClass(const int suffix)
 {
    // File for inline macros.
    FILE *m = 0;
@@ -197,19 +200,19 @@ void FilterClass()
             if (m) {
                fclose(m);
                m = 0;
-               ExecuteCommand(
-                  StringFormat("root -l -b -q \"makeimage.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",true,false)\"",
-                               StringFormat("%s_%3.3d.C", gClassName.c_str(), gMacroID).c_str(),
-                               StringFormat("%s_%3.3d.%s", gClassName.c_str(), gImageID, gImageType.c_str()).c_str(),
-                               gOutDir.c_str()));
-               ExecuteCommand(StringFormat("rm %s_%3.3d.C", gClassName.c_str(), gMacroID));
+               ExecuteCommand(StringFormat(ROOT_COMMAND " -l -b -q \"makeimage.C+O(\\\"" CMAKE_BUILD_DIRECTORY "/%s\\\",\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",true,false,\\\"%d\\\")\""
+                                              , StringFormat("%s_%3.3d.C", gClassName.c_str(), gMacroID).c_str()
+                                              , StringFormat("%s_%3.3d.%s", gClassName.c_str(), gImageID, gImageType.c_str()).c_str()
+                                              , gOutDir.c_str(), CMAKE_BUILD_DIRECTORY, suffix));
+               ExecuteCommand(StringFormat("rm " CMAKE_BUILD_DIRECTORY "/%s_%3.3d.C", gClassName.c_str(), gMacroID));
+               remove(StringFormat("%s/NumberOfImages%d.dat",CMAKE_BUILD_DIRECTORY,suffix).c_str());//or call ImagesList instead
             }
             int ImageSize = 300;
-            FILE *f = fopen("ImagesSizes.dat", "r");
-            if (!f) return;
+            FILE *f = fopen(StringFormat("%s/ImagesSizes%d.dat",CMAKE_BUILD_DIRECTORY,suffix).c_str(), "r");
+            if(!f) return;
             fscanf(f, "%d", &ImageSize);
             fclose(f);
-            remove("ImagesSizes.dat");
+            remove(StringFormat("%s/ImagesSizes%d.dat",CMAKE_BUILD_DIRECTORY,suffix).c_str());
             ReplaceAll(gImageWidth,"IMAGESIZE",StringFormat("%d",ImageSize));
             ReplaceAll(gLineString,"End_Macro", StringFormat("\\image html pict1_%s_%3.3d.%s %s", gClassName.c_str(), gImageID, gImageType.c_str(), gImageWidth.c_str()));
          }
@@ -217,12 +220,14 @@ void FilterClass()
          if (gInMacro) {
             if (spos) gLineString = gLineString.substr(spos);
             if (gInMacro == 1) {
-               if (EndsWith(gLineString,".C\n") || (gLineString.find(".C(") != string::npos)) {
-                  ExecuteMacro();
+               if (EndsWith(gLineString,".C\n") || (gLineString.find(".C(") != string::npos) || (gLineString.find(".C+(") != string::npos)) {
+                  ExecuteMacro(suffix);
                   gInMacro++;
+                  remove(StringFormat("%s/NumberOfImages%d.dat",CMAKE_BUILD_DIRECTORY,suffix).c_str());//or call ImagesList instead
                } else {
                   gMacroID++;
-                  m = fopen(StringFormat("%s_%3.3d.C", gClassName.c_str(), gMacroID).c_str(), "w");
+                  //~ cerr << "Writing " << StringFormat(CMAKE_BUILD_DIRECTORY "/%s_%3.3d.C", gClassName.c_str(), gMacroID).c_str() << endl;
+                  m = fopen(StringFormat(CMAKE_BUILD_DIRECTORY "/%s_%3.3d.C", gClassName.c_str(), gMacroID).c_str(), "w");
                   if (m) fprintf(m,"%s",gLineString.c_str());
                   if (BeginsWith(gLineString,"{")) {
                      if (gImageSource) {
@@ -260,6 +265,7 @@ void FilterClass()
             } else {
                gImageType = "png";
             }
+            //~ cerr << "Running " << gFileName << " " << endl;
             gImageWidth = "";
             int wpos1 = gLineString.find("\"width=");
             if (wpos1 != string::npos) {
@@ -299,13 +305,13 @@ void FilterClass()
 ////////////////////////////////////////////////////////////////////////////////
 /// Filter ROOT tutorials for Doxygen.
 
-void FilterTutorial()
+void FilterTutorial(const int suffix)
 {
    // Use these to write out work that should be run in parallel after doxygen is done:
    // This executes python <work>
-   std::ofstream worklist_py("tutorialWorklist_py", ios_base::app);
+   std::ofstream worklist_py(CMAKE_BUILD_DIRECTORY "/tutorialWorklist_py", ios_base::app);
    // This executes root <work>
-   std::ofstream worklist_root("tutorialWorklist_root", ios_base::app);
+   std::ofstream worklist_root(CMAKE_BUILD_DIRECTORY "/tutorialWorklist_root", ios_base::app);
 
    // File for inline macros.
    FILE *m = 0;
@@ -323,7 +329,12 @@ void FilterTutorial()
    }
    gMacroName  = gFileName.substr(i1,i2-i1+1);
    gImageName  = StringFormat("%s.%s", gMacroName.c_str(), gImageType.c_str()); // Image name
-   gOutputName = StringFormat("%s.out", gMacroName.c_str()); // output name
+   gOutputName = StringFormat(CMAKE_BUILD_DIRECTORY "/%s.out", gMacroName.c_str()); // output name
+
+   // Copy to auxiliary folder
+   //~ cerr << gFileName << " " << gMacroName << endl;
+   ExecuteCommand(StringFormat("cp %s " CMAKE_BUILD_DIRECTORY "/%s", gFileName.c_str(), gMacroName.c_str()));
+   gFileName = StringFormat(CMAKE_BUILD_DIRECTORY "/%s", gMacroName.c_str());
 
    // Parse the source and generate the image if needed
    while (fgets(gLine,255,f)) {
@@ -349,9 +360,9 @@ void FilterTutorial()
             if (gPython) {
                ExecuteCommand(StringFormat("%s %s", gPythonExec.c_str(), gFileName.c_str()));
             } else {
-               ExecuteCommand(StringFormat("root -l -b -q %s", gFileName.c_str()));
+               ExecuteCommand(StringFormat(ROOT_COMMAND " -l -b -q %s", gFileName.c_str()));
             }
-            ExecuteCommand(StringFormat("mv %s %s/html", image_name.c_str(), gOutDir.c_str()));
+            ExecuteCommand(StringFormat("mv %s %s/images/", image_name.c_str(), gOutDir.c_str()));
             ReplaceAll(gLineString, "macro_image (", "image html ");
             ReplaceAll(gLineString, ")", "");
          } else if (tcanvas_js) {
@@ -359,42 +370,38 @@ void FilterTutorial()
             IN = gImageName;
             int i = IN.find(".");
             IN.erase(i,IN.length());
-            ExecuteCommand(StringFormat("root -l -b -q \"MakeTCanvasJS.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,%d)\"",
-                                         gFileName.c_str(), IN.c_str(), gOutDir.c_str(), gPython));
+            ExecuteCommand(StringFormat(ROOT_COMMAND " -l -b -q \"MakeTCanvasJS.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,%d)\"",
+                                         gFileName.c_str(), IN.c_str(), gOutDir.c_str(), gPython));//, CMAKE_BUILD_DIRECTORY));
             ReplaceAll(gLineString, "macro_image", StringFormat("htmlinclude %s.html",IN.c_str()));
          } else if (rcanvas_js) {
             string IN;
             IN = gImageName;
             int i = IN.find(".");
             IN.erase(i,IN.length());
-            ExecuteCommand(StringFormat(
-               "root -l -b -q --web=batch \"MakeRCanvasJS.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,%d)\"",
-               gFileName.c_str(), IN.c_str(), gOutDir.c_str(), gPython));
+            ExecuteCommand(StringFormat(ROOT_COMMAND " -l -b -q --web=batch \"MakeRCanvasJS.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,%d)\"",
+                                          gFileName.c_str(), IN.c_str(), gOutDir.c_str(), gPython));//, CMAKE_BUILD_DIRECTORY));
             ReplaceAll(gLineString, "macro_image", StringFormat("htmlinclude %s.html",IN.c_str()));
          } else {
             if (gPython) {
                if (nobatch) {
-                  ExecuteCommand(StringFormat("%s makeimage.py %s %s %s 0 1 0",
+                  ExecuteCommand(StringFormat("%s makeimage.py %s %s %s %s 0 1 0 '%d'",
                                              gPythonExec.c_str(),
-                                             gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+                                             gFileName.c_str(), gImageName.c_str(), gOutDir.c_str(), CMAKE_BUILD_DIRECTORY, suffix));
                } else {
-                  ExecuteCommand(StringFormat("%s makeimage.py %s %s %s 0 1 1",
+                  ExecuteCommand(StringFormat("%s makeimage.py %s %s %s %s 0 1 1 '%d'",
                                              gPythonExec.c_str(),
-                                             gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+                                             gFileName.c_str(), gImageName.c_str(), gOutDir.c_str(), CMAKE_BUILD_DIRECTORY, suffix));
                }
             } else {
                if (nobatch) {
-                  ExecuteCommand(
-                     StringFormat("root -l -q \"makeimage.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
-                                  gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+                  ExecuteCommand(StringFormat(ROOT_COMMAND " -l -q \"makeimage.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false,\\\"%d\\\")\"",
+                                               gFileName.c_str(), gImageName.c_str(), gOutDir.c_str(), CMAKE_BUILD_DIRECTORY, suffix));
                } else {
-                  ExecuteCommand(
-                     StringFormat("root -l -b -q \"makeimage.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
-                                  gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+                  ExecuteCommand(StringFormat(ROOT_COMMAND " -l -b -q \"makeimage.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false,\\\"%d\\\")\"",
+                                               gFileName.c_str(), gImageName.c_str(), gOutDir.c_str(), CMAKE_BUILD_DIRECTORY, suffix));
                }
             }
-            ReplaceAll(gLineString, "\\macro_image", ImagesList(gImageName));
-            remove(gOutputName.c_str());
+            ReplaceAll(gLineString, "\\macro_image", ImagesList(gImageName, suffix));//ImagesList calls NumberOfImages, which removes NumberOfImages%d.dat
          }
       }
 
@@ -408,8 +415,7 @@ void FilterTutorial()
       // notebook found
       if (gLineString.find("\\notebook") != string::npos) {
          // Notebooks are generated in dedicated step:
-         worklist_py << "converttonotebook.py " << gFileName << " " << gOutDir << "/notebooks/" << std::endl;
-
+         worklist_py << "converttonotebook.py " << gFileName << " " << gOutDir << "/notebooks/" << " " << CMAKE_BUILD_DIRECTORY << std::endl;
          if (gPython){
              gLineString = "## ";
          }
@@ -422,7 +428,7 @@ void FilterTutorial()
       // \macro_output found
       if (gLineString.find("\\macro_output") != string::npos) {
          remove(gOutputName.c_str());
-         if (!gPython) ExecuteCommand(StringFormat("root -l -b -q %s", gFileName.c_str()).c_str());
+         if (!gPython) ExecuteCommand(StringFormat(ROOT_COMMAND " -l -b -q %s", gFileName.c_str()).c_str());
          else          ExecuteCommand(StringFormat("%s %s", gPythonExec.c_str(), gFileName.c_str()).c_str());
          ExecuteCommand(StringFormat("sed -i '/Processing/d' %s", gOutputName.c_str()).c_str());
          rename(gOutputName.c_str(), StringFormat("%s/macros/%s",gOutDir.c_str(), gOutputName.c_str()).c_str());
@@ -482,10 +488,11 @@ void GetClassName()
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute the macro in gLineString and produce the corresponding picture.
 
-void ExecuteMacro()
+void ExecuteMacro(const int suffix)
 {
    // Name of the next Image to be generated
    gImageName = StringFormat("%s_%3.3d.%s", gClassName.c_str(), gImageID, gImageType.c_str());
+   //~ cerr << "Execute " << gClassName << " " << gImageID << " " << gLineString << endl;
 
    // Retrieve the macro to be executed.
    if (gLineString.find("../../..") != string::npos) {
@@ -496,11 +503,13 @@ void ExecuteMacro()
    int i1     = gLineString.rfind('/')+1;
    int i2     = gLineString.rfind('C');
    gMacroName = gLineString.substr(i1,i2-i1+1);
+   //~ cerr << "The macro is " << gMacroName << endl;
 
    // Build the ROOT command to be executed.
-   gLineString.insert(0, StringFormat("root -l -b -q \"makeimage.C+O(\\\""));
+   gLineString.insert(0, StringFormat(ROOT_COMMAND " -l -b -q \"makeimage.C+O(\\\""));
    size_t l = gLineString.length();
-   gLineString.replace(l-1,1,StringFormat("\\\",\\\"%s\\\",\\\"%s\\\",true,false)\"", gImageName.c_str(), gOutDir.c_str()));
+   gLineString.replace(l-1,1,StringFormat("\\\",\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",true,false,\\\"%d\\\")\"", gImageName.c_str(), gOutDir.c_str(), CMAKE_BUILD_DIRECTORY, suffix));
+   //~ cerr << "The line is " << gLineString << endl;
 
    // Execute the macro
    ExecuteCommand(gLineString);
@@ -525,14 +534,14 @@ void ExecuteCommand(string command)
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the number of images in NumberOfImages.dat after makeimage.C is executed.
 
-int NumberOfImages()
+int NumberOfImages(const int suffix)
 {
    int ImageNum;
-   FILE *f = fopen("NumberOfImages.dat", "r");
+   FILE *f = fopen(StringFormat("%s/NumberOfImages%d.dat",CMAKE_BUILD_DIRECTORY,suffix).c_str(), "r");
    if (!f) return 0;
    fscanf(f, "%d", &ImageNum);
    fclose(f);
-   remove("NumberOfImages.dat");
+   remove(StringFormat("%s/NumberOfImages%d.dat",CMAKE_BUILD_DIRECTORY,suffix).c_str());
    return ImageNum;
 }
 
@@ -540,7 +549,8 @@ int NumberOfImages()
 /// Replace all instances of a string with another string.
 
 void ReplaceAll(string& str, const string& from, const string& to) {
-   if (from.empty()) return;
+   if (from.empty() || str.empty()) return;
+   if (str.find(from) == std::string::npos) return;
    string wsRet;
    wsRet.reserve(str.length());
    size_t start_pos = 0, pos;
@@ -577,9 +587,9 @@ string StringFormat(const string fmt_str, ...) {
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the image list after a tutorial macro execution.
 
-string ImagesList(string& name) {
+string ImagesList(string& name, const int suffix) {
 
-   int N = NumberOfImages();
+   int N = NumberOfImages(suffix);
 
    // evaluate the size of the output string
    char evalstring[300];
@@ -592,8 +602,8 @@ string ImagesList(string& name) {
    int len = 0;
 
    int ImageSize = 300;
-   FILE *f = fopen("ImagesSizes.dat", "r");
-   if (!f) return "";
+   FILE *f = fopen(StringFormat("%s/ImagesSizes%d.dat",CMAKE_BUILD_DIRECTORY,suffix).c_str(), "r");
+   if(!f) return "";
 
    for (int i = 1; i <= N; i++){
       fscanf(f, "%d", &ImageSize);
@@ -607,7 +617,7 @@ string ImagesList(string& name) {
    }
 
    fclose(f);
-   remove("ImagesSizes.dat");
+   remove(StringFormat("%s/ImagesSizes%d.dat",CMAKE_BUILD_DIRECTORY,suffix).c_str());
 
    return (string)val;
 }

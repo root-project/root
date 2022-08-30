@@ -187,6 +187,13 @@ def print_pyroot_blocks_for_cpp_docs():
 
 
 if __name__ == "__main__":
+    try:
+        from ROOT._pythonization import _roofit
+    except ModuleNotFoundError as err:
+        import sys
+        print('ROOT PYTHONPATH not set, or roofit not installed', file=sys.stderr)
+        print(err, file=sys.stderr)
+        sys.exit()
 
     print("/**")
     print_roofit_pythonization_page()

@@ -1,11 +1,18 @@
 /// Generates the json file output of the macro MacroName
 
+#include "TSystem.h"
+#include "TROOT.h"
+#include "TBufferJSON.h"
+#include <fstream>
+#if __has_include("ROOT/RCanvas.hxx")
 #include "ROOT/RCanvas.hxx"
+#endif
 
-void MakeRCanvasJS(const char *MacroName, const char *IN, const char *OutDir, bool cp, bool py)
+void MakeRCanvasJS(const char *MacroName, const char *IN, const char *OutDir, /*const char *AuxDir,*/ bool cp, bool py)
 {
+#if __has_include("ROOT/RCanvas.hxx")
    using namespace ROOT::Experimental;
-
+#endif
    // Execute the macro as a C++ one or a Python one.
    if (!py) gROOT->ProcessLine(Form(".x %s",MacroName));
    else     gROOT->ProcessLine(Form("TPython::ExecScript(\"%s\");",MacroName));
@@ -18,15 +25,16 @@ void MakeRCanvasJS(const char *MacroName, const char *IN, const char *OutDir, bo
       if (i>0) MN.Remove(i, l);
       gSystem->Exec(TString::Format("cp %s %s/macros", MN.Data(), OutDir));
    }
-
+   TString json_file = TString::Format("%s/html/%s.json",OutDir,IN);
+#if __has_include("ROOT/RCanvas.hxx")
    // Retrieve the RCanvas produced by the macro execution and produce the json file.
    auto canv = RCanvas::GetCanvases()[0];
-   TString json_file = TString::Format("%s/html/%s.json",OutDir,IN);
    canv->SaveAs(json_file.Data());
+#endif
 
    std::string json_str;
    {
-       std::ifstream fjson(json_file.Data());
+      std::ifstream fjson(json_file.Data());
       json_str = std::string((std::istreambuf_iterator<char>(fjson)), std::istreambuf_iterator<char>());
    }
    gSystem->Unlink(json_file.Data());
