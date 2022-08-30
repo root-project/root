@@ -177,6 +177,11 @@ Where:
 - chopt : Drawing options (see below).
 - gridlength: grid length on main tick marks.
 
+It should be noted that `func` is not defined in the user's coordinate space,
+but in the new TGaxis space. If `x` is the original axis, `w` the new axis,
+and `w = f(x)` (for example, `f` is a calibration function converting ADC
+channels `x` to energy `w`), then `func` must be supplied as `f^{-1}(w)`.
+
 Examples:
 
 Begin_Macro(source)
