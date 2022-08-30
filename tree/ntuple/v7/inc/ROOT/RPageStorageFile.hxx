@@ -85,7 +85,7 @@ public:
    RPageSinkFile& operator=(const RPageSinkFile&) = delete;
    RPageSinkFile(RPageSinkFile&&) = default;
    RPageSinkFile& operator=(RPageSinkFile&&) = default;
-   virtual ~RPageSinkFile();
+   ~RPageSinkFile() override;
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
    void ReleasePage(RPage &page) final;
@@ -174,7 +174,7 @@ public:
    RPageSourceFile& operator=(const RPageSourceFile&) = delete;
    RPageSourceFile(RPageSourceFile &&) = delete;
    RPageSourceFile &operator=(RPageSourceFile &&) = delete;
-   virtual ~RPageSourceFile();
+   ~RPageSourceFile() override;
 
    RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
    RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) final;

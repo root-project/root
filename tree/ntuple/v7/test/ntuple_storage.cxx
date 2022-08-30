@@ -24,7 +24,7 @@ protected:
       fCounters.fNCommitSealedPage++;
       return {};
    }
-   std::vector<RNTupleLocator> CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges)
+   std::vector<RNTupleLocator> CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges) override
    {
       fCounters.fNCommitSealedPageV++;
       auto nLocators =
