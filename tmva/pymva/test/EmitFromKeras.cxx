@@ -4,7 +4,7 @@
 //           The program is run when the target 'TestRModelParserKeras' is built.
 //           The program generates the required .hxx file after parsing a Keras .keras file into a RModel object.
 
-
+#include "TMVA/RModel_Base.hxx"
 #include "TMVA/RModel.hxx"
 #include "TMVA/RModelParser_Keras.h"
 

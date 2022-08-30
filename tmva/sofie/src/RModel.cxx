@@ -51,10 +51,6 @@ namespace SOFIE{
       return *this;
    }
 
-   RModel::RModel(std::string name, std::string parsedtime): fFileName (name), fParseTime(parsedtime) {
-      fName = fFileName.substr(0, fFileName.rfind("."));
-   }
-
    const std::vector<size_t>& RModel::GetTensorShape(std::string name){
       auto f = fReadyInputTensorInfos.find(name);
       if (f != fReadyInputTensorInfos.end()){
@@ -236,94 +232,8 @@ namespace SOFIE{
       }
    }
    
-   void RModel::GenerateHeaderInfo(std::string& hgname){
-      fGC += ("//Code generated automatically by TMVA for Inference of Model file [" + fFileName + "] at [" + fParseTime.substr(0, fParseTime.length()-1) +"] \n");
-      // add header guards
-      std::string hgname = fName;
-      std::transform(hgname.begin(), hgname.end(), hgname.begin(), [](unsigned char c){ return std::toupper(c);} );
-      hgname = "TMVA_SOFIE_" + hgname;
-      fGC += "\n#ifndef " + hgname + "\n";
-      fGC += "#define " + hgname + "\n\n";
-      for (auto& i: fNeededStdLib) {
-         fGC += "#include<" + i + ">\n";
-      }
-      // for the session we need to include SOFIE_Common functions
-      //needed for convolution operator (need to add a flag)
-      fGC += "#include \"TMVA/SOFIE_common.hxx\"\n";
-      if (fUseWeightFile)
-         fGC += "#include <fstream>\n";
 
-   void RModel::Generate(std::underlying_type_t<Options> options, int batchSize) {
-      // session flag is used in operator initialize
-      if (static_cast<std::underlying_type_t<Options>>(Options::kNoSession) & options) {
-         fUseSession = false;
-         fWeightFile = WeightFileType::None;
-      }
-      if (static_cast<std::underlying_type_t<Options>>(Options::kNoWeightFile) & options) {
-         fUseWeightFile = false;
-         fWeightFile = WeightFileType::None;
-      }
-      if (static_cast<std::underlying_type_t<Options>>(Options::kRootBinaryWeightFile) & options) {
-         fUseWeightFile = true;
-         fWeightFile = WeightFileType::RootBinary;
-      }
-      if (fUseWeightFile && !fUseSession) {
-         throw
-            std::runtime_error("TMVA-SOFIE: RModel::Generate: cannot use a separate weight file without generating a Session class");
-      }
-      if (static_cast<std::underlying_type_t<Options>>(Options::kGNN) & options){
-         fIsGNN = true;
-      }
-
-      Initialize(batchSize);
-      if (!fIsGNN){   
-         fGC += ("//Code generated automatically by TMVA for Inference of Model file [" + fFileName + "] at [" + fParseTime.substr(0, fParseTime.length()-1) +"] \n");
-         // add header guards
-         std::string hgname = fName;
-         std::transform(hgname.begin(), hgname.end(), hgname.begin(), [](unsigned char c){ return std::toupper(c);} );
-         hgname = "ROOT_TMVA_SOFIE_" + hgname;
-         fGC += "\n#ifndef " + hgname + "\n";
-         fGC += "#define " + hgname + "\n\n";
-         for (auto& i: fNeededStdLib) {
-            fGC += "#include<" + i + ">\n";
-         }
-         for (auto& i: fCustomOpHeaders) {
-            fGC += "#include \"" + i + "\"\n";
-         }
-         // for the session we need to include SOFIE_Common functions
-         //needed for convolution operator (need to add a flag)
-         fGC += "#include \"TMVA/SOFIE_common.hxx\"\n";
-         if (fUseWeightFile)
-            fGC += "#include <fstream>\n";
-         
-         // Include TFile when saving the weights in a binary ROOT file
-         if (fWeightFile == WeightFileType::RootBinary)
-         fGC += "#include \"TFile.h\"\n";
-
-         fGC += "\nnamespace TMVA_SOFIE_" + fName + "{\n";
-         if (!fNeededBlasRoutines.empty()) {
-            fGC += ("namespace BLAS{\n");
-            for (auto &routine : fNeededBlasRoutines) {
-               if (routine == "Gemm") {
-                  fGC += ("\textern \"C\" void sgemm_(const char * transa, const char * transb, const int * m, const int * n, const int * k,\n"
-                        "\t                       const float * alpha, const float * A, const int * lda, const float * B, const int * ldb,\n"
-                        "\t                       const float * beta, float * C, const int * ldc);\n");
-               } else if (routine == "Gemv") {
-                  fGC += ("\textern \"C\" void sgemv_(const char * trans, const int * m, const int * n, const float * alpha, const float * A,\n"
-                        "\t                       const int * lda, const float * X, const int * incx, const float * beta, const float * Y, const int * incy);\n");
-               } else if (routine == "Axpy") {
-                  fGC += ("\textern \"C\" void saxpy_(const int * n, const float * alpha, const float * x,\n"
-                        "\t                         const int * incx, float * y, const int * incy);\n");
-               } else if (routine == "Copy") {
-                  fGC += ("\textern \"C\" void scopy_(const int *n, const float* x, const int *incx, float* y, const int* incy);\n");
-               }
-            }
-         }
-         fGC += ("}//BLAS\n");
-      }
-      if (fUseSession) {
-         fGC += "struct Session {\n";
-      }
+   void RModel::GenerateInitializedTensorInfo(){
       for (auto& i: fInitializedTensors){
          if (i.second.fType == ETensorType::FLOAT){
             size_t length = 1;
@@ -432,6 +342,7 @@ namespace SOFIE{
       }
 
       fGC += "infer(";
+      
       for(size_t i = 0; i<fInputTensorNames.size(); ++i){
          switch((fReadyInputTensorInfos[fInputTensorNames[i]]).type){
             case  ETensorType::FLOAT :{
@@ -452,9 +363,10 @@ namespace SOFIE{
             }
             default: {
                throw std::runtime_error("TMVA-SOFIE: input tensor " + fInputTensorNames[i] + " is of a data type which is not yet supported.");
-            }
+            }        
          }
       }
+      
       fGC.pop_back(); //remove last ","
       fGC += "){\n";
 
@@ -463,6 +375,7 @@ namespace SOFIE{
       for (size_t id = 0; id < fOperators.size() ; id++){
          fGC+= (fOperators[id]->Generate(std::to_string(id)));
       }
+      
       if (outputSize == 1) {
          size_t outputLength = ConvertShapeToLength(GetTensorShape(fOutputTensorNames[0]));
 
@@ -496,7 +409,7 @@ namespace SOFIE{
       fGC += "}\n";
    }
 
-   void RModel::Generate(std::underlying_type_t<Options> options, int batchSize){
+   void RModel::Generate(std::underlying_type_t<Options> options, int batchSize, long pos){
       // session flag is used in operator initialize
       if (static_cast<std::underlying_type_t<Options>>(Options::kNoSession) & options)
          fUseSession = false;
@@ -509,16 +422,43 @@ namespace SOFIE{
 
       Initialize(batchSize);
       std::string hgname;
-      if(!fIsGNNComponent)
+      if(!fIsGNNComponent){
          GenerateHeaderInfo(hgname);
+         if (fUseSession) {
+            fGC += "struct Session {\n";
+         }
+      }
 
-      if(!fIsGNN)
-         GenerateIntermediateTensorInfo();
+      GenerateInitializedTensorInfo();
+      GenerateIntermediateTensorInfo();
 
-      if(!fIsGNN)
-         GenerateOutput();
+      if (fUseSession) {
+         // add here specific operator code that needs to define session data members
+         fGC += "\n";
+         for (size_t id = 0; id < fOperators.size(); id++) {
+            std::string opName = std::to_string(id);
+            fGC += fOperators[id]->GenerateSessionMembersCode(opName);
+         }
+         fGC += "\n";
+         fGC += "Session(std::string filename =\"\") {\n";
+         // here add initialization and reading of weight tensors
+         if (fUseWeightFile) {
+            fGC += "   if (filename.empty()) filename = \"" + fName + ".dat\";\n";
+            ReadInitializedTensorsFromFile(pos);
+            //fUseWeightFile = fUseWeightFile;
+         }
+         
+         // add here initialization code
+         for (size_t id = 0; id < fOperators.size() ; id++){
+            fGC += fOperators[id]->GenerateInitCode();
+         }
+         
+         fGC += "}\n\n";
+      }
 
-      if(!fIsGNN && !fIsGNNComponent){
+      GenerateOutput();
+
+      if(!fIsGNNComponent){
       if (fUseSession) {
          fGC += "};\n";
       }
@@ -527,18 +467,22 @@ namespace SOFIE{
       }
    }
 
-   void RModel::ReadInitializedTensorsFromFile() {
+   void RModel::ReadInitializedTensorsFromFile(long pos) {
       // generate the code to read initialized tensors from a text data file
       if (fWeightFile == WeightFileType::Text) {
          if (fInitializedTensors.empty()) return;
 
-         fGC += "   std::ifstream f;\n";
-         fGC += "   f.open(filename);\n";
-         fGC += "   if (!f.is_open()) {\n";
-         fGC += "      throw std::runtime_error(\"tmva-sofie failed to open file for input weights\");\n";
-         fGC += "   }\n";
-         fGC += "   std::string tensor_name;\n";
-         fGC += "   size_t length;\n";
+      fGC += "   std::ifstream f;\n";
+      fGC += "   f.open(filename);\n";
+      fGC += "   if (!f.is_open()){\n";
+      fGC += "      throw std::runtime_error(\"tmva-sofie failed to open file for input weights\");\n";
+      fGC += "   }\n";
+      if(fIsGNNComponent){
+      fGC += "   f.seekg(" + std::to_string(pos) + ");\n";
+      }
+
+      fGC += "   std::string tensor_name;\n";
+      fGC += "   int length;\n";
 
          // loop on tensors and parse the file
          for (auto& i: fInitializedTensors) {
@@ -565,13 +509,11 @@ namespace SOFIE{
       fGC += "   f.close();\n";
    }
 
-   // generate the code to read initialized tensors from a ROOT data file
-   if(fWeightFile == WeightFileType::RootBinary) {
-      fGC += "   {\n";
-      fGC += "   std::unique_ptr<TFile> rootFile(TFile::Open(filename.c_str(), \"READ\"));\n";
-      fGC += "   if (!rootFile->IsOpen()) {\n";
-      fGC += "      throw std::runtime_error(\"tmva-sofie failed to open ROOT file for input weights\");\n";
-      fGC += "   }\n";
+   long RModel::WriteInitializedTensorsToFile(std::string filename) {
+      // write the initialized tens ors in a text file
+      if (filename == ""){
+         filename = fName + ".data";
+      }
 
       std::string dirName = fName + "_weights";
       fGC += "   if (!rootFile->GetKey(\"" + dirName + "\")) {\n";
@@ -657,9 +599,15 @@ void RModel::WriteInitializedTensorsToFile(std::string filename) {
    // Write the initialized tensors to a text file
    if (fWeightFile == WeightFileType::Text) {
       std::ofstream f;
-      f.open(filename);
-      if (!f.is_open())
+      if(fIsGNNComponent){
+         // appening all GNN components into the same file
+         f.open(filename, std::ios::app);
+      } else{
+         f.open(filename);
+      }
+      if (!f.is_open()){
          throw std::runtime_error("tmva-sofie failed to open file for tensor weight data");
+      }
       for (auto& i: fInitializedTensors){
          if (i.second.fType == ETensorType::FLOAT){
             size_t length = 1;
@@ -676,7 +624,9 @@ void RModel::WriteInitializedTensorsToFile(std::string filename) {
             f << "\n";
          }
       }
+      long curr_pos = f.tellp();
       f.close();
+      return curr_pos;
    }
 }
 
@@ -778,6 +728,7 @@ void RModel::WriteInitializedTensorsToFile(std::string filename) {
 
    }
 
+<<<<<<< HEAD
    void RModel::OutputGenerated(std::string filename, bool append) {
       // the model can be appended only if a file name is provided
       if (filename.empty()) {
@@ -801,17 +752,21 @@ void RModel::WriteInitializedTensorsToFile(std::string filename) {
       f << fGC;
       f.close();
 
-      // write weights in a text or root binary file
-      if (fUseWeightFile) {
+      // write weights in a text file
+      size_t pos = filename.find(".hxx");
+      filename.replace(pos,4,".dat");
+      if (fUseWeightFile) 
+         pos = WriteInitializedTensorsToFile(filename);
+=======
+   void RModel::OutputGenerated(std::string filename){
+         RModel_Base::OutputGenerated(filename);
+         
+         // write weights in a text file
          size_t pos = filename.find(".hxx");
-         if (fWeightFile == WeightFileType::Text)
-            filename.replace(pos, 4, ".dat");
-         if (fWeightFile == WeightFileType::RootBinary)  {
-            filename = filename.erase(pos, 4);
-            filename += ".root";
-         }
-         WriteInitializedTensorsToFile(filename);
-      }
+         filename.replace(pos,4,".dat");
+         if (fUseWeightFile) 
+            pos = WriteInitializedTensorsToFile(filename);
+>>>>>>> 3e5d14a78a (feat: modify RModel architecture)
    }
 
    void RModel::Streamer(TBuffer &R__b){

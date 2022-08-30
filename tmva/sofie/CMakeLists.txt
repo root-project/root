@@ -14,6 +14,7 @@
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
   HEADERS
    TMVA/OperatorList.hxx
+   TMVA/RModel_Base.hxx
    TMVA/RModel.hxx
    TMVA/ROperator.hxx
    TMVA/ROperator_BasicUnary.hxx
@@ -37,6 +38,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/ROperator_Softmax.hxx
    TMVA/ROperator_Reduce.hxx
    TMVA/ROperator_Shape.hxx
+   TMVA/ROperator_Max.hxx
+   TMVA/ROperator_Shape.hxx
    TMVA/ROperator_Cast.hxx
    TMVA/ROperator_Custom.hxx
    TMVA/ROperator_LayerNormalization.hxx
@@ -44,8 +47,17 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/ROperator_Erf.hxx
    TMVA/SOFIE_common.hxx
    TMVA/SOFIEHelpers.hxx
+
+   TMVA/FunctionList.hxx
+   TMVA/RModel_GNN.hxx
+   TMVA/RFunction.hxx
+   TMVA/RFunction_MLP.hxx
+   TMVA/RFunction_Sum.hxx
+   TMVA/RFunction_Mean.hxx
   SOURCES
+    src/RModel_Base.cxx
     src/RModel.cxx
+    src/RModel_GNN.cxx
     src/SOFIE_common.cxx
   DEPENDENCIES
     TMVA
