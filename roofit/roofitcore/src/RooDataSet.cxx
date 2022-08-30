@@ -934,11 +934,17 @@ double RooDataSet::weight() const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return squared event weight of current event
+/// Return squared event weight of the current event. If this RooDataSet has no
+/// weight errors set, this will be the same as `weight() * weight()`, like
+/// expected for an unbinned dataset. When weight errors are set, it is assumed
+/// that the RooDataSet represents a weighted binned dataset and
+/// weightSquared() is the corresponding sum of weight squares for the bin.
 
 double RooDataSet::weightSquared() const
 {
-  return store()->weight()*store()->weight() ;
+  const double w = store()->weight();
+  const double e = weightError();
+  return e > 0.0 ? e * e : w * w;
 }
 
 
@@ -966,9 +972,8 @@ RooSpan<const double> RooDataSet::getWeightBatch(std::size_t first, std::size_t 
     _sumW2Buffer->reserve(nEntries);
 
     for (std::size_t i = 0; i < nEntries; ++i) {
-      // Unlike in the RooDataHist case, the sum of weights squared for each
-      // entry is simply the square of the weight.
-      _sumW2Buffer->push_back(allWeights[i] * allWeights[i]);
+      get(i);
+      _sumW2Buffer->push_back(weightSquared());
     }
   }
 
