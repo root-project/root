@@ -123,7 +123,7 @@ protected:
 
 public:
    RPageSinkDaos(std::string_view ntupleName, std::string_view uri, const RNTupleWriteOptions &options);
-   virtual ~RPageSinkDaos();
+   ~RPageSinkDaos() override;
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
    void ReleasePage(RPage &page) final;
@@ -189,7 +189,7 @@ public:
    /// The cloned page source creates a new connection to the pool/container.
    /// The meta-data (header and footer) is reread and parsed by the clone.
    std::unique_ptr<RPageSource> Clone() const final;
-   virtual ~RPageSourceDaos();
+   ~RPageSourceDaos() override;
 
    RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
    RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) final;
