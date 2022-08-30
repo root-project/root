@@ -133,7 +133,7 @@ Base class of TTreeReaderValue.
       Read_t fProxyReadFunc = &TTreeReaderValueBase::ProxyReadDefaultImpl;      ///<! Pointer to the Read implementation to use.
 
       // FIXME: re-introduce once we have ClassDefInline!
-      //ClassDef(TTreeReaderValueBase, 0);//Base class for accessors to data via TTreeReader
+      //ClassDefOverride(TTreeReaderValueBase, 0);//Base class for accessors to data via TTreeReader
 
       friend class ::TTreeReader;
    };

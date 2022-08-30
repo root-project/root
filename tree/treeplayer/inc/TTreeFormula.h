@@ -210,7 +210,7 @@ public:
    virtual TTree*      GetTree() const {return fTree;}
    virtual void        UpdateFormulaLeaves();
 
-   ClassDef(TTreeFormula, 10);  //The Tree formula
+   ClassDefOverride(TTreeFormula, 10);  //The Tree formula
 };
 
 #endif

@@ -170,7 +170,7 @@ public:
    void      SetWeight(Double_t w=1, Option_t *option="") override;
    virtual void      UseCache(Int_t maxCacheSize = 10, Int_t pageSize = 0);
 
-   ClassDef(TChain,5)  //A chain of TTrees
+   ClassDefOverride(TChain,5)  //A chain of TTrees
 };
 
 #endif // ROOT_TChain

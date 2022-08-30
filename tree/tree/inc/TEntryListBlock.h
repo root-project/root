@@ -77,7 +77,7 @@ class TEntryListBlock:public TObject
    void Print(const Option_t *option = "") const override;
    void    PrintWithShift(Int_t shift) const;
 
-   ClassDef(TEntryListBlock, 1) //Used internally in TEntryList to store the entry numbers
+   ClassDefOverride(TEntryListBlock, 1) //Used internally in TEntryList to store the entry numbers
 
 };
 

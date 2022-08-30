@@ -103,7 +103,7 @@ public:
    void           SetOriginal(TObject *o) { fOriginal = o; }
    static Int_t   GetMaxDimension();
 
-   ClassDef(TTreeDrawArgsParser,0); // Helper class to parse the argument to TTree::Draw
+   ClassDefOverride(TTreeDrawArgsParser,0); // Helper class to parse the argument to TTree::Draw
 };
 
 #endif

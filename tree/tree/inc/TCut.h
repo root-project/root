@@ -76,7 +76,7 @@ public:
    // Type conversion
    operator const char*() const { return GetTitle(); }
 
-   ClassDef(TCut,1)  //A specialized string object used for TTree selections
+   ClassDefOverride(TCut,1)  //A specialized string object used for TTree selections
 };
 
 // Declarations.

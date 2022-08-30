@@ -133,7 +133,7 @@ public:
    void           SetWeightCut(Int_t w=0) {fWeightCut = w;} // *MENU*
    void           UnzoomAll(); // *MENU*
 
-   ClassDef(TParallelCoord,1); // To display parallel coordinates plots.
+   ClassDefOverride(TParallelCoord,1); // To display parallel coordinates plots.
 };
 
 #endif

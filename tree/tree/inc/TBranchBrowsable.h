@@ -143,7 +143,7 @@ protected:
          const TVirtualBranchBrowsable *parent = nullptr);
 
 private:
-   ClassDef(TNonSplitBrowsable, 0); // Helper object to browse unsplit objects
+   ClassDefOverride(TNonSplitBrowsable, 0); // Helper object to browse unsplit objects
 };
 
 
@@ -188,7 +188,7 @@ protected:
    TCollectionMethodBrowsable(const TBranch* branch, TMethod* m,
       const TVirtualBranchBrowsable* parent = nullptr);
 
-   ClassDef(TCollectionMethodBrowsable,0); // Helper object to browse a collection's methods
+   ClassDefOverride(TCollectionMethodBrowsable,0); // Helper object to browse a collection's methods
 };
 
 #endif // defined ROOT_TBranchBrowsable

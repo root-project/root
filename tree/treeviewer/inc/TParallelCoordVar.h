@@ -114,7 +114,7 @@ public:
    void           SetY(Double_t y, Bool_t gl);    // Set a new y position in case of a horizontal display.
    void           Unzoom() {SetCurrentLimits(fMinInit,fMaxInit);} // *MENU* Reset fMin and fMax to their original value.
 
-   ClassDef(TParallelCoordVar,1); // A Variable of a parallel coordinates plot.
+   ClassDefOverride(TParallelCoordVar,1); // A Variable of a parallel coordinates plot.
 };
 
 #endif

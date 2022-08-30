@@ -128,7 +128,7 @@ public:
    void           SetShowRange(Bool_t showrange) {fShowRange = showrange;}
    void           SuperposeTo(TSpider* sp) {sp->AddSuperposed(this);}
 
-   ClassDef(TSpider,0)  //Helper class to draw spider
+   ClassDefOverride(TSpider,0)  //Helper class to draw spider
 };
 
 #endif

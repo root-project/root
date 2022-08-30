@@ -78,7 +78,7 @@ namespace Internal {
 
       void OutputDecl(FILE *hf, int offset, UInt_t /* maxVarname */);
 
-      ClassDef(TBranchProxyClassDescriptor,0); // Class to cache the information we gathered about the branch and its content
+      ClassDefOverride(TBranchProxyClassDescriptor,0); // Class to cache the information we gathered about the branch and its content
    };
 
 } // namespace Internal

@@ -63,7 +63,7 @@ public:
 
 private:
 
-   ClassDef(TBranchClones,2);  //Branch in case of an array of clone objects
+   ClassDefOverride(TBranchClones,2);  //Branch in case of an array of clone objects
 };
 
 #endif

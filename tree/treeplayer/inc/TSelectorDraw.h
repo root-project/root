@@ -118,7 +118,7 @@ public:
    virtual void      TakeEstimate();
    void      Terminate() override;
 
-   ClassDef(TSelectorDraw,1);  //A specialized TSelector for TTree::Draw
+   ClassDefOverride(TSelectorDraw,1);  //A specialized TSelector for TTree::Draw
 };
 
 #endif

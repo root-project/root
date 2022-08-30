@@ -153,7 +153,7 @@ public:
    virtual void    Update(Int_t newlast, Int_t skipped);
    virtual Int_t   WriteBuffer();
 
-   ClassDef(TBasket, 3); // the TBranch buffers
+   ClassDefOverride(TBasket, 3); // the TBranch buffers
 };
 
 #endif

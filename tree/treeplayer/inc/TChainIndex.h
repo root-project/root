@@ -83,14 +83,14 @@ public:
    Long64_t       GetEntryNumberFriend(const TTree *parent) override;
    Long64_t       GetEntryNumberWithIndex(Long64_t major, Long64_t minor) const override;
    Long64_t       GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor) const override;
-   const char            *GetMajorName()    const override {return fMajorName.Data();}
-   const char            *GetMinorName()    const override {return fMinorName.Data();}
+   const char    *GetMajorName()    const override {return fMajorName.Data();}
+   const char    *GetMinorName()    const override {return fMinorName.Data();}
    Long64_t       GetN()            const override {return fEntries.size();}
    Bool_t         IsValidFor(const TTree *parent) override;
    void           UpdateFormulaLeaves(const TTree *parent) override;
    void           SetTree(TTree *T) override;
 
-   ClassDef(TChainIndex,1)  //A Tree Index with majorname and minorname.
+   ClassDefOverride(TChainIndex,1)  //A Tree Index with majorname and minorname.
 };
 
 #endif

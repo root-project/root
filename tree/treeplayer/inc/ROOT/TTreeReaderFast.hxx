@@ -171,7 +171,7 @@ private:
 
    friend class ROOT::Experimental::Internal::TTreeReaderValueFastBase;
 
-   ClassDef(TTreeReaderFast, 0); // A simple interface to read trees via bulk I/O
+   ClassDefOverride(TTreeReaderFast, 0); // A simple interface to read trees via bulk I/O
 };
 
 }  // Experimental

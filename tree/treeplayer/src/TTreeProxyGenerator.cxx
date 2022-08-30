@@ -1854,17 +1854,17 @@ namespace Internal {
       fprintf(hf,    "\n      { }\n");
 
       // Other functions.
-      fprintf(hf,"   ~%s();\n",classname.Data());
-      fprintf(hf,"   Int_t   Version() const {return 1;}\n");
-      fprintf(hf,"   void    Begin(::TTree *tree);\n");
-      fprintf(hf,"   void    SlaveBegin(::TTree *tree);\n");
-      fprintf(hf,"   void    Init(::TTree *tree);\n");
-      fprintf(hf,"   Bool_t  Notify();\n");
-      fprintf(hf,"   Bool_t  Process(Long64_t entry);\n");
-      fprintf(hf,"   void    SlaveTerminate();\n");
-      fprintf(hf,"   void    Terminate();\n");
+      fprintf(hf,"   ~%s() override;\n",classname.Data());
+      fprintf(hf,"   Int_t   Version() const override {return 1;}\n");
+      fprintf(hf,"   void    Begin(::TTree *tree) override;\n");
+      fprintf(hf,"   void    SlaveBegin(::TTree *tree) override;\n");
+      fprintf(hf,"   void    Init(::TTree *tree) override;\n");
+      fprintf(hf,"   Bool_t  Notify() override;\n");
+      fprintf(hf,"   Bool_t  Process(Long64_t entry) override;\n");
+      fprintf(hf,"   void    SlaveTerminate() override;\n");
+      fprintf(hf,"   void    Terminate() override;\n");
       fprintf(hf,"\n");
-      fprintf(hf,"   ClassDef(%s,0);\n",classname.Data());
+      fprintf(hf,"   ClassDefOverride(%s,0);\n",classname.Data());
       fprintf(hf,"\n\n");
 
       fprintf(hf,"//inject the user's code\n");

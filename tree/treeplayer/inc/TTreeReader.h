@@ -310,7 +310,7 @@ private:
    friend class ROOT::Internal::TTreeReaderValueBase;
    friend class ROOT::Internal::TTreeReaderArrayBase;
 
-   ClassDef(TTreeReader, 0); // A simple interface to read trees
+   ClassDefOverride(TTreeReader, 0); // A simple interface to read trees
 };
 
 #endif // defined TTreeReader

@@ -70,7 +70,7 @@ public:
    virtual Bool_t     Sync();
    virtual void       UpdateFormulaLeaves();
 
-   ClassDef(TTreeFormulaManager,0) // A class coordinating several TTreeFormula objects.
+   ClassDefOverride(TTreeFormulaManager,0) // A class coordinating several TTreeFormula objects.
 };
 
 
