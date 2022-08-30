@@ -398,7 +398,7 @@ For example, to accept 6 digits number like 900000 on an axis call
 Warning: even when called on a particular TGaxis* instance, this static function
 changes globally the number of digits for all axes (X, Y, ...) in the canvas.
 If you want to change the maximum number of digits N only of the current TGaxis*,
-and not all the others, use axis->SetNdivisions(N*1000000 + (A1->GetNdiv()%1000000))
+and not all the others, use axis->SetNdivisions(N*1000000 + (axis->GetNdiv()%1000000))
 instead of axis->SetMaxDigits(N).
 
 \anchor GA13
