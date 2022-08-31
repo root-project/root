@@ -366,8 +366,7 @@ TEST(RModelParser_Keras, BINARY_OP)
 TEST(RModelParser_Keras, ACTIVATIONS)
 {
     constexpr float TOLERANCE = DEFAULT_TOLERANCE;
-    float inputActivations[]={1,1,1,1,1,1,1,1,
-                             1,1,1,1,1,1,1,1};
+    float inputActivations[]={1,1,1,1,1,1,1,1};
     TMVA_SOFIE_KerasModelActivations::Session s("KerasActivationsModel.dat");
     std::vector<float> outputActivations = s.infer(inputActivations);
 
@@ -386,7 +385,7 @@ TEST(RModelParser_Keras, ACTIVATIONS)
     PyRun_String("from tensorflow.keras.models import load_model",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("import numpy",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("model=load_model('KerasModelActivations.h5')",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("input=numpy.ones((2,8))",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("input=numpy.ones((1,8))",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
     std::size_t pOutputActivationsSize=(std::size_t)PyLong_AsLong(PyDict_GetItemString(fLocalNS,"outputSize"));
