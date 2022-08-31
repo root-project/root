@@ -883,11 +883,22 @@ void TGeoMixture::AddElement(TGeoElement *elem, Double_t weight)
    // If previous elements were defined by A/Z, add corresponding TGeoElements
    for (Int_t i=0; i<fNelements; i++) {
       elemold = (TGeoElement*)fElements->At(i);
-      if (!elemold) fElements->AddAt(elemold = table->GetElement((Int_t)fZmixture[i]), i);
-      if (elemold == elem) exist = kTRUE;
+      if (!elemold)  {
+         // Add element with corresponding Z in the list
+         fElements->AddAt(elemold = table->GetElement((Int_t)fZmixture[i]), i);
+         elemold->SetDefined();
+      }
+      if (elemold == elem) {
+         fWeights[i] += weight;
+         exist = kTRUE;
+      }
    }
-   if (!exist) fElements->AddAtAndExpand(elem, fNelements);
-   AddElement(elem->A(), elem->Z(), weight);
+   if (!exist)   {
+      fElements->AddAtAndExpand(elem, fNelements);
+      AddElement(elem->A(), elem->Z(), weight);
+   } else {
+      AverageProperties();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1039,6 +1050,11 @@ void TGeoMixture::Print(const Option_t * /*option*/) const
    printf("Mixture %s %s   Aeff=%g Zeff=%g rho=%g radlen=%g intlen=%g index=%i\n", GetName(), GetTitle(),
           fA,fZ,fDensity, fRadLen, fIntLen, fIndex);
    for (Int_t i=0; i<fNelements; i++) {
+      if (fElements && fElements->At(i)) {
+         printf("   Element #%i : %s  Z=%6.2f A=%6.2f w=%6.3f\n", i, GetElement(i)->GetName(), fZmixture[i],
+                fAmixture[i], fWeights[i]);
+         continue;
+      }
       if (fNatoms) printf("   Element #%i : %s  Z=%6.2f A=%6.2f w=%6.3f natoms=%d\n", i, GetElement(i)->GetName(),fZmixture[i],
              fAmixture[i], fWeights[i], fNatoms[i]);
       else printf("   Element #%i : %s  Z=%6.2f A=%6.2f w=%6.3f\n", i, GetElement(i)->GetName(),fZmixture[i],
@@ -1195,9 +1211,13 @@ void TGeoMixture::ComputeDerivedQuantities()
    fVecNbOfAtomsPerVolume = new Double_t[fNelements];
 
    // Formula taken from G4Material.cxx L312
+   double sumweights = 0;
    for (Int_t i=0; i<fNelements; ++i) {
+      sumweights += fWeights[i];
       fVecNbOfAtomsPerVolume[i] = Na*fDensity*fWeights[i]/((TGeoElement*)fElements->At(i))->A();
    }
+   if (TMath::Abs(sumweights - 1) > 0.001)
+      Warning("ComputeDerivedQuantities", "Mixture %s: sum of weights is: %g", GetName(), sumweights);
    ComputeRadiationLength();
    ComputeNuclearInterLength();
 }
