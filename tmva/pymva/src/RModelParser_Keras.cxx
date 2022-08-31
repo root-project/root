@@ -496,7 +496,6 @@ std::unique_ptr<ROperator> MakeKerasLeakyRelu(PyObject* fLayer){
       std::string fLayerInputName  = PyStringAsString(PyList_GetItem(fInputs,0));
       std::string fLayerOutputName = PyStringAsString(PyList_GetItem(fOutputs,0));
       float fAlpha = (float)PyFloat_AsDouble(PyDict_GetItemString(fAttributes,"alpha"));
-
       std::unique_ptr<ROperator> op;
       switch(ConvertStringToType(fLayerDType)){
          case ETensorType::FLOAT:
