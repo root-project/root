@@ -5,7 +5,6 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import Model,Sequential
 from tensorflow.keras.layers import Input,Dense,Activation,ReLU,LeakyReLU,BatchNormalization,Conv2D,Reshape,Concatenate,Add,Subtract,Multiply
-from tensorflow.keras.activations import tanh
 from tensorflow.keras.optimizers import SGD
 
 def generateFunctionalModel():
@@ -126,19 +125,19 @@ def generateBinaryOpModel():
     model.save('KerasModelBinaryOp.h5')
 
 def generateActivationModel():
-    input=Input(shape=(8,),batch_size=2)
-    x=Dense(16, activation=tf.nn.tanh)(input)
+    input=Input(shape=(8,))
+    x=Dense(16, activation='tanh')(input)
     x=Dense(32)(x)
     x=LeakyReLU()(x)
     output=Dense(4, activation='softmax')(x)
     model=Model(inputs=input,outputs=output)
 
     randomGenerator=np.random.RandomState(0)
-    x_train=randomGenerator.rand(2,8)
-    y_train=randomGenerator.rand(2,4)
+    x_train=randomGenerator.rand(1,8)
+    y_train=randomGenerator.rand(1,4)
 
     model.compile(loss='mean_squared_error', optimizer=SGD(learning_rate=0.01))
-    model.fit(x_train, y_train, epochs=10, batch_size=2)
+    model.fit(x_train, y_train, epochs=10, batch_size=1)
     model.save('KerasModelActivations.h5')
 
 generateFunctionalModel()
