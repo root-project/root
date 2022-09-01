@@ -243,6 +243,10 @@ if(ROOT_CLASSIC_BUILD)
   set(classic_veto multicore/mp104_*.C multicore/mp105_*.C)
 endif()
 
+if(NOT gdml)
+  set(gdml_veto geom/gdml/testoptical.C)
+endif()
+
 #---These ones requires a display to run-----------------------------
 set(gui_veto fit/fitpanel_playback.C
              cocoa/*.C
@@ -367,6 +371,7 @@ set(extra_veto
 set(all_veto hsimple.C
              geom/geometry.C
              ${extra_veto}
+             ${gdml_veto}
              ${gui_veto}
              ${minuit2_veto}
              ${roofit_veto}
