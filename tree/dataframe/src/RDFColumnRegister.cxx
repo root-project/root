@@ -143,7 +143,7 @@ std::vector<std::string> RColumnRegister::GetVariationsFor(const std::string &co
    std::vector<std::string> variations;
    auto range = fVariations->equal_range(column);
    for (auto it = range.first; it != range.second; ++it)
-      for (const auto &variationName : it->second->GetVariation()->GetVariationNames())
+      for (const auto &variationName : it->second->GetVariation().GetVariationNames())
          variations.emplace_back(variationName);
 
    return variations;
@@ -195,7 +195,7 @@ RColumnRegister::FindVariationAndReaders(const std::string &colName, const std::
    if (range.first == fVariations->end())
       return nullptr;
    for (auto it = range.first; it != range.second; ++it) {
-      if (IsStrInVec(variationName, it->second->GetVariation()->GetVariationNames()))
+      if (IsStrInVec(variationName, it->second->GetVariation().GetVariationNames()))
          return it->second.get();
    }
 
@@ -206,7 +206,7 @@ ROOT::RDF::RVariationsDescription RColumnRegister::BuildVariationsDescription() 
 {
    std::set<const RVariationBase *> uniqueVariations;
    for (auto &e : *fVariations)
-      uniqueVariations.insert(e.second->GetVariation());
+      uniqueVariations.insert(&e.second->GetVariation());
 
    const std::vector<const RVariationBase *> variations(uniqueVariations.begin(), uniqueVariations.end());
    return ROOT::RDF::RVariationsDescription{variations};
