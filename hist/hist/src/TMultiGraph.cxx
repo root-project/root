@@ -1314,6 +1314,7 @@ void TMultiGraph::Paint(Option_t *choptin)
       TString chopth = "0";
       if ((char*)strstr(chopt.Data(),"X+")) chopth.Append("X+");
       if ((char*)strstr(chopt.Data(),"Y+")) chopth.Append("Y+");
+      if ((char*)strstr(chopt.Data(),"I"))  chopth.Append("A");
       fHistogram->Paint(chopth.Data());
    }
 
