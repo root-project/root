@@ -10,14 +10,36 @@
  *************************************************************************/
 
 /** \class TGeoMaterial
-\ingroup Geometry_classes
+\ingroup Materials_classes
 
 Base class describing materials.
 
-\image html geom_material.jpg
+## Important note about units
+Since **v6-17-02** the geometry package adopted a system of units, upon the request to support
+an in-memory material representation consistent with the one in Geant4. The adoption was done
+gradually and starting with **v6-19-02** (back-ported to **v6-18-02**) the package supports changing
+the default units to either ROOT (CGS) or Geant4 ones. In the same version the Geant4 units were
+set to be the default ones, changing the previous behavior and making material properties such
+as radiation and interaction lengths having in memory values an order of magnitude lower. This behavior
+affected versions up to **v6-25-01**, after which the default units were restored to be the ROOT ones.
+
+For users needing to restore the CGS behavior for material properties, the following sequence needs
+to be called before creating the TGeoManager instance:
+ * From **v6-18-02** to **v6-22-06**:
+```
+    TGeoUnit::setUnitType(TGeoUnit::kTGeoUnits);
+```
+
+ * From **v6-22-08** to **v6-25-01**:
+```
+    TGeoManager::LockDefaultUnits(false);
+    TGeoManager::SetDefaultUnits(kRootUnits);
+    TGeoManager::LockDefaultUnits(true);
+```
 */
 
 #include <iostream>
+#include <limits>
 #include "TMath.h"
 #include "TObjArray.h"
 #include "TGeoElement.h"
@@ -33,7 +55,7 @@ Base class describing materials.
 ClassImp(TGeoMaterial);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
+/// Default constructor.
 
 TGeoMaterial::TGeoMaterial()
              :TNamed(), TAttFill(),
@@ -61,7 +83,9 @@ TGeoMaterial::TGeoMaterial()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// constructor
+/// Constructor.
+///
+/// \param name   material name.
 
 TGeoMaterial::TGeoMaterial(const char *name)
              :TNamed(name, ""), TAttFill(),
@@ -95,7 +119,14 @@ TGeoMaterial::TGeoMaterial(const char *name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// constructor
+/// Constructor.
+///
+/// \param name   material name.
+/// \param a      atomic mass.
+/// \param z      atomic number.
+/// \param rho    material density in g/cm3.
+/// \param radlen
+/// \param intlen
 
 TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z,
                 Double_t rho, Double_t radlen, Double_t intlen)
@@ -137,6 +168,15 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with state, temperature and pressure.
+///
+/// \param name   material name.
+/// \param a      atomic mass.
+/// \param z      atomic number.
+/// \param rho    material density in g/cm3.
+/// \param state
+/// \param temperature
+/// \param pressure
+
 
 TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z, Double_t rho,
                 EGeoMaterialState state, Double_t temperature, Double_t pressure)
@@ -171,7 +211,11 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z, Double_t rh
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// constructor
+/// Constructor.
+///
+/// \param name   material name.
+/// \param elem
+/// \param rho    material density in g/cm3.
 
 TGeoMaterial::TGeoMaterial(const char *name, TGeoElement *elem, Double_t rho)
              :TNamed(name, ""), TAttFill(),
@@ -543,7 +587,7 @@ Int_t TGeoMaterial::GetDefaultColor() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get a pointer to the element this material is made of.
-/// This second call is to avaoid warnings to not call a virtual
+/// This second call is to avoid warnings to not call a virtual
 /// method from the constructor
 
 TGeoElement *TGeoMaterial::GetElement() const
@@ -636,7 +680,7 @@ TGeoMaterial *TGeoMaterial::DecayMaterial(Double_t time, Double_t precision)
 ////////////////////////////////////////////////////////////////////////////////
 /// Fills a user array with all the elements deriving from the possible
 /// decay of the top element composing the mixture. Each element contained
-/// by <population> may be a radionuclide having a Bateman solution attached.
+/// by `<population>` may be a radionuclide having a Bateman solution attached.
 /// The precision represent the minimum cumulative branching ratio for
 /// which decay products are still taken into account.
 /// To visualize the time evolution of each decay product one can use:
@@ -681,7 +725,7 @@ void TGeoMaterial::FillMaterialEvolution(TObjArray *population, Double_t precisi
 }
 
 /** \class TGeoMixture
-\ingroup Geometry_classes
+\ingroup Materials_classes
 
 Mixtures of elements.
 
@@ -778,11 +822,20 @@ void TGeoMixture::AverageProperties()
 void TGeoMixture::AddElement(Double_t a, Double_t z, Double_t weight)
 {
    TGeoElementTable *table = gGeoManager->GetElementTable();
-   if (z<1 || z>table->GetNelements()-1)
+
+   // Check preconditions
+   if (weight < 0e0)    {
+      Fatal("AddElement", "Cannot add element with negative weight %g to mixture %s", weight, GetName());
+   }
+   else if ( weight < std::numeric_limits<Double_t>::epsilon() )   {
+      return;
+   }
+   else if (z<1 || z>table->GetNelements()-1)   {
       Fatal("AddElement", "Cannot add element having Z=%d to mixture %s", (Int_t)z, GetName());
+   }
    Int_t i;
    for (i=0; i<fNelements; i++) {
-      if (TMath::Abs(z-fZmixture[i])<1.e-6  && TMath::Abs(a-fAmixture[i])<1.e-6) {
+      if (!fElements && TMath::Abs(z-fZmixture[i])<1.e-6  && TMath::Abs(a-fAmixture[i])<1.e-6) {
          fWeights[i] += weight;
          AverageProperties();
          return;
@@ -831,6 +884,18 @@ void TGeoMixture::AddElement(TGeoMaterial *mat, Double_t weight)
 {
    TGeoElement *elnew, *elem;
    Double_t a,z;
+
+   // Check preconditions
+   if (!mat)   {
+      Fatal("AddElement", "Cannot add INVALID material to mixture %s", GetName());
+   }
+   else if (weight < 0e0)   {
+      Fatal("AddElement", "Cannot add material %s with negative weight %g to mixture %s",
+            mat->GetName(), weight, GetName());
+   }
+   else if ( weight < std::numeric_limits<Double_t>::epsilon() )   {
+      return;
+   }
    if (!mat->IsMixture()) {
       elem = mat->GetBaseElement();
       if (elem) {
@@ -855,7 +920,7 @@ void TGeoMixture::AddElement(TGeoMaterial *mat, Double_t weight)
       if (!elnew) continue;
       // check if we have the element already defined in the parent mixture
       for (j=0; j<fNelements; j++) {
-         if (fWeights[j]<=0) continue;
+         if ( fWeights[j] < 0e0 ) continue;
          elem = GetElement(j);
          if (elem == elnew) {
             // element found, compute new weight
@@ -880,6 +945,18 @@ void TGeoMixture::AddElement(TGeoElement *elem, Double_t weight)
    TGeoElementTable *table = gGeoManager->GetElementTable();
    if (!fElements) fElements = new TObjArray(128);
    Bool_t exist = kFALSE;
+
+   // Check preconditions
+   if (!elem)   {
+      Fatal("AddElement", "Cannot add INVALID element to mixture %s", GetName());
+   }
+   else if (weight < 0e0)   {
+      Fatal("AddElement", "Cannot add element %s with negative weight %g to mixture %s",
+            elem->GetName(), weight, GetName());
+   }
+   else if ( weight < std::numeric_limits<Double_t>::epsilon() )   {
+      return;
+   }
    // If previous elements were defined by A/Z, add corresponding TGeoElements
    for (Int_t i=0; i<fNelements; i++) {
       elemold = (TGeoElement*)fElements->At(i);
@@ -1140,7 +1217,7 @@ TGeoMaterial *TGeoMixture::DecayMaterial(Double_t time, Double_t precision)
 ////////////////////////////////////////////////////////////////////////////////
 /// Fills a user array with all the elements deriving from the possible
 /// decay of the top elements composing the mixture. Each element contained
-/// by <population> may be a radionuclide having a Bateman solution attached.
+/// by `<population>` may be a radionuclide having a Bateman solution attached.
 /// The precision represent the minimum cumulative branching ratio for
 /// which decay products are still taken into account.
 /// To visualize the time evolution of each decay product one can use:
