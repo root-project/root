@@ -795,9 +795,8 @@ BookVariationJit(const std::vector<std::string> &colNames, std::string_view vari
    // - jittedVariation: heap-allocated weak_ptr that will be deleted by JitDefineHelper after usage
    // - definesAddr: heap-allocated, will be deleted by JitDefineHelper after usage
    std::stringstream varyInvocation;
-   varyInvocation << "ROOT::Internal::RDF::JitVariationHelper<"
-                  << (isSingleColumn ? "std::true_type" : "std::false_type") << ">(" << funcName << ", new const char*["
-                  << parsedExpr.fUsedCols.size() << "]{";
+   varyInvocation << "ROOT::Internal::RDF::JitVariationHelper<" << (isSingleColumn ? "true" : "false") << ">("
+                  << funcName << ", new const char*[" << parsedExpr.fUsedCols.size() << "]{";
    for (const auto &col : parsedExpr.fUsedCols) {
       varyInvocation << "\"" << col << "\", ";
    }

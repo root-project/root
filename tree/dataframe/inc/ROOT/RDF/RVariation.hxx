@@ -126,33 +126,32 @@ void *GetValuePtrHelper(std::vector<ROOT::RVec<T>> &v, std::size_t colIdx, std::
 
 /******* End of helper functions *******/
 
-template <typename VaryExpressionRet_t, typename IsSingleColumn>
+template <typename VaryExpressionRet_t, bool IsSingleColumn>
 struct ColumnType {
 };
 
 template <typename T>
-struct ColumnType<ROOT::RVec<T>, std::true_type> {
+struct ColumnType<ROOT::RVec<T>, true> {
    using type = T;
 };
 
 template <typename T>
-struct ColumnType<ROOT::RVec<ROOT::RVec<T>>, std::false_type> {
+struct ColumnType<ROOT::RVec<ROOT::RVec<T>>, false> {
    using type = T;
 };
 
 /// When varying a single column, Ret_t is RVec<T> and ColumnType_t is T.
 /// When varying multiple columns, Ret_t is RVec<RVec<T>> and ColumnType_t is T.
-template <typename IsSingleColumn, typename Ret_t>
+template <bool IsSingleColumn, typename Ret_t>
 using ColumnType_t = typename ColumnType<Ret_t, IsSingleColumn>::type;
 
-template <typename F, typename IsSingleColumn /* std::true_type or std::false_type*/>
+template <typename F, bool IsSingleColumn>
 class R__CLING_PTRCHECK(off) RVariation final : public RVariationBase {
    using ColumnTypes_t = typename CallableTraits<F>::arg_types;
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
    using Ret_t = typename CallableTraits<F>::ret_type;
    using VariedCol_t = ColumnType_t<IsSingleColumn, Ret_t>;
-   using Result_t =
-      std::conditional_t<IsSingleColumn::value, ROOT::RVec<VariedCol_t>, std::vector<ROOT::RVec<VariedCol_t>>>;
+   using Result_t = std::conditional_t<IsSingleColumn, ROOT::RVec<VariedCol_t>, std::vector<ROOT::RVec<VariedCol_t>>>;
 
    F fExpression;
    /// Per-slot storage for varied column values (for one or multiple columns depending on IsSingleColumn).
@@ -168,7 +167,8 @@ class R__CLING_PTRCHECK(off) RVariation final : public RVariationBase {
       auto &&results = fExpression(fValues[slot][S]->template Get<ColTypes>(entry)...);
       (void)entry; // avoid unused parameter warnings (gcc 12.1)
 
-      if (!ResultsSizeEq(results, fVariationNames.size(), fColNames.size(), IsSingleColumn{})) {
+      if (!ResultsSizeEq(results, fVariationNames.size(), fColNames.size(),
+                         std::integral_constant<bool, IsSingleColumn>{})) {
          std::string variationName = fVariationNames[0].substr(0, fVariationNames[0].find_first_of(':'));
          throw std::runtime_error("The evaluation of the expression for variation \"" + variationName +
                                   "\" resulted in " + std::to_string(GetNVariations(results)) + " values, but " +
