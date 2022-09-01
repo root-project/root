@@ -22,8 +22,8 @@ class ROperator_Shape final : public ROperator
 private:
 
    /* Attributes*/
-   size_t fStart = 0;
-   size_t fEnd;
+   int fStart = 0;
+   int fEnd = -1;
    std::string fNX;
    std::string fNY;
    std::vector<size_t> fShape;
@@ -40,7 +40,7 @@ public:
 
    std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input){
       std::vector<std::vector<size_t>>  ret;
-      ret[0].push_back(input.size()); 
+      ret[0].push_back(input.size());
       ret[0].push_back(input[0].size());
       return ret;
    }
@@ -51,12 +51,9 @@ public:
       }
       fShape = model.GetTensorShape(fNX);
       size_t length = ConvertShapeToLength(fShape);
-      // if(fStart > 0 && fEnd > 0) fOutput_shape = {length};
-      if(!fEnd) fEnd = int(length);
-      if(fStart < 0) fStart += length;
-      if(fEnd < 0) fEnd += length;
-      fOutput_shape = {fEnd - fStart};
-
+      if (fStart < 0) fStart += length;
+      if (fEnd < 0) fEnd += length;
+      fOutput_shape = { size_t(fEnd - fStart) };
       model.AddIntermediateTensor(fNY, ETensorType::INT64, fOutput_shape);
    }
 
@@ -68,8 +65,9 @@ public:
       std::stringstream out;
 
       out << "\n//------ Shape\n";
-      for (size_t id = fStart; id < fEnd; id++) { 
-      out << SP << "tensor_" << fNY << "["<< id << "] = " << fShape[id] << ";\n";
+      size_t length = ConvertShapeToLength(fOutput_shape);
+      for (size_t id = 0; id < length; id++) {
+         out << SP << "tensor_" << fNY << "["<< id << "] = " << fOutput_shape[id] << ";\n";
       }
       return out.str();
    }
