@@ -99,7 +99,7 @@ ColumnNames_t RColumnRegister::BuildDefineNames() const
 RDFDetail::RDefineBase *RColumnRegister::GetDefine(const std::string &colName) const
 {
    auto it = fDefines->find(colName);
-   return it == fDefines->end() ? nullptr : it->second->GetDefine();
+   return it == fDefines->end() ? nullptr : &it->second->GetDefine();
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -177,7 +177,7 @@ std::vector<std::string> RColumnRegister::GetVariationDeps(const ColumnNames_t &
       // For Define'd columns, add the systematic variations they depend on to the set
       auto defineIt = fDefines->find(col);
       if (defineIt != fDefines->end()) {
-         for (const auto &v : defineIt->second->GetDefine()->GetVariations())
+         for (const auto &v : defineIt->second->GetDefine().GetVariations())
             variationNames.insert(v);
       }
    }
