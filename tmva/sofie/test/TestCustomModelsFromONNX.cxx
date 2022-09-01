@@ -75,6 +75,9 @@
 #include "MaxPool3d_FromONNX.hxx"
 #include "input_models/references/MaxPool3d.ref.hxx"
 
+#include "Max_FromONNX.hxx"
+#include "input_models/references/Max.ref.hxx"
+
 #include "AvgPool_FromONNX.hxx"
 #include "input_models/references/AvgPool.ref.hxx"
 
@@ -832,6 +835,32 @@ TEST(ONNX, Pow_broadcast){
    }
 
 }
+
+TEST(ONNX, Max)
+   {
+      constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+      // Preparing the standard input
+      std::vector<float> input1({
+         1.0,  2.0, -1.0
+      });
+      std::vector<float> input2({
+         3.0, 0.0, 4.0
+      });
+      TMVA_SOFIE_Max::Session s("Max_FromONNX.dat");
+
+      std::vector<float> output = s.infer(input1.data(),input2.data());
+
+      // Checking output size
+      EXPECT_EQ(output.size(), sizeof(Max_ExpectedOutput::outputs) / sizeof(float));
+
+      float *correct = Max_ExpectedOutput::outputs;
+
+      // Checking every output value, one by one
+      for (size_t i = 0; i < output.size(); ++i) {
+         EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+      }
+   }
 
 TEST(ONNX, RNNBatchwise)
 {
