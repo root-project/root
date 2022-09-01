@@ -41,7 +41,7 @@ class RVariationBase;
 class RVariationReader;
 
 /// A helper type that keeps track of RDefine objects and their corresponding RDefineReaders.
-class RDefineAndReaders {
+class RDefinesWithReaders {
    using RDefineBase = RDFDetail::RDefineBase;
 
    std::shared_ptr<RDefineBase> fDefine;
@@ -49,19 +49,19 @@ class RDefineAndReaders {
    std::vector<std::unordered_map<std::string, std::shared_ptr<RDefineReader>>> fReadersPerVariation;
 
 public:
-   RDefineAndReaders(std::shared_ptr<RDefineBase> define, unsigned int nSlots);
+   RDefinesWithReaders(std::shared_ptr<RDefineBase> define, unsigned int nSlots);
    RDefineBase *GetDefine() const { return fDefine.get(); }
    std::shared_ptr<RDefineReader>
    GetReader(unsigned int slot, const std::string &variationName, const std::type_info &);
 };
 
-class RVariationAndReaders {
+class RVariationsWithReaders {
    std::shared_ptr<RVariationBase> fVariation;
    // Column readers for this RVariation for a given variation (map key) and a given slot (vector element).
    std::vector<std::unordered_map<std::string, std::shared_ptr<RVariationReader>>> fReadersPerVariation;
 
 public:
-   RVariationAndReaders(std::shared_ptr<RVariationBase> variation, unsigned int nSlots);
+   RVariationsWithReaders(std::shared_ptr<RVariationBase> variation, unsigned int nSlots);
    RVariationBase *GetVariation() const { return fVariation.get(); }
    std::shared_ptr<RVariationReader> GetReader(unsigned int slot, const std::string &colName,
                                                const std::string &variationName, const std::type_info &tid);
@@ -86,9 +86,9 @@ public:
  */
 class RColumnRegister {
    using ColumnNames_t = std::vector<std::string>;
-   using DefinesMap_t = std::unordered_map<std::string, std::shared_ptr<RDefineAndReaders>>;
+   using DefinesMap_t = std::unordered_map<std::string, std::shared_ptr<RDefinesWithReaders>>;
    /// See fVariations for more information on this type.
-   using VariationsMap_t = std::unordered_multimap<std::string, std::shared_ptr<RVariationAndReaders>>;
+   using VariationsMap_t = std::unordered_multimap<std::string, std::shared_ptr<RVariationsWithReaders>>;
 
    std::shared_ptr<RDFDetail::RLoopManager> fLoopManager;
 
@@ -106,7 +106,7 @@ class RColumnRegister {
 
    void AddName(std::string_view name);
 
-   RVariationAndReaders *FindVariationAndReaders(const std::string &colName, const std::string &variationName);
+   RVariationsWithReaders *FindVariationAndReaders(const std::string &colName, const std::string &variationName);
 
 public:
    RColumnRegister(const RColumnRegister &) = default;
