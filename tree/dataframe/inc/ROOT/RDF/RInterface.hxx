@@ -764,8 +764,8 @@ public:
       std::vector<std::string> colNames{{std::string(colName)}};
       const std::string theVariationName{variationName.empty() ? colName : variationName};
 
-      return VaryImpl<std::true_type>(std::move(colNames), std::forward<F>(expression), inputColumns, variationTags,
-                                      theVariationName);
+      return VaryImpl<true>(std::move(colNames), std::forward<F>(expression), inputColumns, variationTags,
+                            theVariationName);
    }
 
    /// \brief Register systematic variations for an existing columns using auto-generated variation tags.
@@ -807,8 +807,7 @@ public:
    Vary(const std::vector<std::string> &colNames, F &&expression, const ColumnNames_t &inputColumns,
         const std::vector<std::string> &variationTags, std::string_view variationName)
    {
-      return VaryImpl<std::false_type>(colNames, std::forward<F>(expression), inputColumns, variationTags,
-                                       variationName);
+      return VaryImpl<false>(colNames, std::forward<F>(expression), inputColumns, variationTags, variationName);
    }
 
    /// \brief Register systematic variations for one or more existing columns using auto-generated tags.
@@ -3277,7 +3276,7 @@ private:
       return cachedRDF;
    }
 
-   template <typename IsSingleColumn /*std::true_type or std::false_type*/, typename F>
+   template <bool IsSingleColumn, typename F>
    RInterface<Proxied, DS_t>
    VaryImpl(const std::vector<std::string> &colNames, F &&expression, const ColumnNames_t &inputColumns,
             const std::vector<std::string> &variationTags, std::string_view variationName)

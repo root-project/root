@@ -527,7 +527,7 @@ void JitDefineHelper(F &&f, const char **colsPtr, std::size_t colsSize, std::str
    doDeletes();
 }
 
-template <typename IsSingleColumn /*std::true_type or std::false_type*/, typename F>
+template <bool IsSingleColumn, typename F>
 void JitVariationHelper(F &&f, const char **colsPtr, std::size_t colsSize, const char **variedCols,
                         std::size_t variedColsSize, const char **variationTags, std::size_t variationTagsSize,
                         std::string_view variationName, RLoopManager *lm,
