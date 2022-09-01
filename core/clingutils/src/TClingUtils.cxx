@@ -4741,8 +4741,12 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
             // so we probably don't really know how to spell it ... we would need to recreate it
             // (See AddDefaultParameters).
             return input;
-         } else {
+         } else if (TST->getArg(index).getKind() == clang::TemplateArgument::Type) {
             return TST->getArg(index).getAsType();
+         } else {
+            // The argument is (likely) a value or expression and there is nothing for us
+            // to change
+            return input;
          }
       }
    }
