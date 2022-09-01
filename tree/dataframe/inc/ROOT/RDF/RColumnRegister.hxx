@@ -44,13 +44,13 @@ class RVariationReader;
 class RDefinesWithReaders {
    using RDefineBase = RDFDetail::RDefineBase;
 
-   std::shared_ptr<RDefineBase> fDefine;
+   std::shared_ptr<RDefineBase> fDefine; // cannot be null
    // Column readers per variation (in the map) per slot (in the vector).
    std::vector<std::unordered_map<std::string, std::shared_ptr<RDefineReader>>> fReadersPerVariation;
 
 public:
    RDefinesWithReaders(std::shared_ptr<RDefineBase> define, unsigned int nSlots);
-   RDefineBase *GetDefine() const { return fDefine.get(); }
+   RDefineBase &GetDefine() const { return *fDefine; }
    std::shared_ptr<RDefineReader>
    GetReader(unsigned int slot, const std::string &variationName, const std::type_info &);
 };
