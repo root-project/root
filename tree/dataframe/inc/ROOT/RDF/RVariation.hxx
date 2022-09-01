@@ -67,6 +67,7 @@ void ResizeResults(ROOT::RVec<T> &results, std::size_t /*nCols*/, std::size_t nV
 
 // Assign into fLastResults[slot] without changing the addresses of its elements (we gave those addresses away in
 // GetValuePtr)
+// The callee is responsible of making sure that `resStorage` has the correct size.
 template <typename T>
 void AssignResults(ROOT::RVec<T> &resStorage, ROOT::RVec<T> &&tmpResults)
 {
@@ -106,6 +107,7 @@ void ResizeResults(std::vector<ROOT::RVec<T>> &results, std::size_t nCols, std::
       rvecOverVariations.resize(nVariations);
 }
 
+// The callee is responsible of making sure that `resStorage` has the correct outer and inner sizes.
 template <typename T>
 void AssignResults(std::vector<ROOT::RVec<T>> &resStorage, ROOT::RVec<ROOT::RVec<T>> &&tmpResults)
 {
