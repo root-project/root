@@ -118,7 +118,7 @@ void RColumnRegister::AddDefine(std::shared_ptr<RDFDetail::RDefineBase> define)
    auto newDefines = std::make_shared<DefinesMap_t>(*fDefines);
    const std::string &colName = define->GetName();
 
-   // this will assign over a pre-exising element in case this AddDefine is due to a Redefine
+   // this will assign over a pre-existing element in case this AddDefine is due to a Redefine
    (*newDefines)[colName] = std::make_shared<RDefineAndReaders>(define, fLoopManager->GetNSlots());
 
    fDefines = std::move(newDefines);
