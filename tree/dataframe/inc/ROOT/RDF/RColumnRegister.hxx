@@ -40,8 +40,19 @@ class RVariationBase;
 /**
  * \class ROOT::Internal::RDF::RColumnRegister
  * \ingroup dataframe
- * \brief A binder for user-defined columns and aliases.
+ * \brief A binder for user-defined columns, variations and aliases.
+ *
  * The storage is copy-on-write and shared between all instances of the class that have the same values.
+ *
+ * Several components of an RDF computation graph make use of a column register. It keeps track of which columns have
+ * been defined, varied or aliased at each point of the computation graph.
+ * In many cases, the contents of the different column register instances are the same or only differ by a single
+ * extra defined/varied/aliased column. For this reason, in order to avoid unnecessary data duplication, fDefines,
+ * fAliases, fVariations and fColumnNames are all shared_ptr<const T> that (whenever possible) are shared across
+ * RColumnRegister instances that are part of the same computation graph. If a new column, alias or variation is added
+ * between one node and the next, then the new node contains a new instance of a RColumnRegister that shares all data
+ * members with the previous instance except for the one data member that needed updating, which is replaced with a new
+ * updated instance.
  */
 class RColumnRegister {
    using ColumnNames_t = std::vector<std::string>;
