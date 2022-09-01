@@ -22,14 +22,14 @@ namespace ROOT {
 namespace Internal {
 namespace RDF {
 
-RDefineAndReaders::RDefineAndReaders(std::shared_ptr<RDefineBase> define, unsigned int nSlots)
+RDefinesWithReaders::RDefinesWithReaders(std::shared_ptr<RDefineBase> define, unsigned int nSlots)
    : fDefine(std::move(define)), fReadersPerVariation(nSlots)
 {
    assert(fDefine != nullptr);
 }
 
 std::shared_ptr<RDFInternal::RDefineReader>
-RDefineAndReaders::GetReader(unsigned int slot, const std::string &variationName, const std::type_info &tid)
+RDefinesWithReaders::GetReader(unsigned int slot, const std::string &variationName, const std::type_info &tid)
 {
    auto &defineReaders = fReadersPerVariation[slot];
 
@@ -45,7 +45,7 @@ RDefineAndReaders::GetReader(unsigned int slot, const std::string &variationName
    return insertion.first->second;
 }
 
-RVariationAndReaders::RVariationAndReaders(std::shared_ptr<RVariationBase> variation, unsigned int nSlots)
+RVariationsWithReaders::RVariationsWithReaders(std::shared_ptr<RVariationBase> variation, unsigned int nSlots)
    : fVariation(std::move(variation)), fReadersPerVariation(nSlots)
 {
    assert(fVariation != nullptr);
@@ -53,9 +53,9 @@ RVariationAndReaders::RVariationAndReaders(std::shared_ptr<RVariationBase> varia
 
 ////////////////////////////////////////////////////////////////////////////
 /// Return a column reader for the given slot, column and variation, or a nullptr if not available.
-std::shared_ptr<RVariationReader> RVariationAndReaders::GetReader(unsigned int slot, const std::string &colName,
-                                                                  const std::string &variationName,
-                                                                  const std::type_info &tid)
+std::shared_ptr<RVariationReader> RVariationsWithReaders::GetReader(unsigned int slot, const std::string &colName,
+                                                                    const std::string &variationName,
+                                                                    const std::type_info &tid)
 {
    assert(IsStrInVec(variationName, fVariation->GetVariationNames())); // otherwise we should not be here
 
@@ -119,7 +119,7 @@ void RColumnRegister::AddDefine(std::shared_ptr<RDFDetail::RDefineBase> define)
    const std::string &colName = define->GetName();
 
    // this will assign over a pre-existing element in case this AddDefine is due to a Redefine
-   (*newDefines)[colName] = std::make_shared<RDefineAndReaders>(define, fLoopManager->GetNSlots());
+   (*newDefines)[colName] = std::make_shared<RDefinesWithReaders>(define, fLoopManager->GetNSlots());
 
    fDefines = std::move(newDefines);
    AddName(colName);
@@ -132,7 +132,7 @@ void RColumnRegister::AddVariation(std::shared_ptr<RVariationBase> variation)
    auto newVariations = std::make_shared<VariationsMap_t>(*fVariations);
    const std::vector<std::string> &colNames = variation->GetColumnNames();
    for (auto &colName : colNames)
-      newVariations->insert({colName, std::make_shared<RVariationAndReaders>(variation, fLoopManager->GetNSlots())});
+      newVariations->insert({colName, std::make_shared<RVariationsWithReaders>(variation, fLoopManager->GetNSlots())});
    fVariations = std::move(newVariations);
 }
 
@@ -186,8 +186,9 @@ std::vector<std::string> RColumnRegister::GetVariationDeps(const ColumnNames_t &
 }
 
 ////////////////////////////////////////////////////////////////////////////
-/// \brief Return the RVariationAndReaders object that handles the specified variation of the specified column, or null.
-RVariationAndReaders *
+/// \brief Return the RVariationsWithReaders object that handles the specified variation of the specified column, or
+/// null.
+RVariationsWithReaders *
 RColumnRegister::FindVariationAndReaders(const std::string &colName, const std::string &variationName)
 {
    auto range = fVariations->equal_range(colName);
