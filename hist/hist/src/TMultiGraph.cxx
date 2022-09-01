@@ -1311,7 +1311,10 @@ void TMultiGraph::Paint(Option_t *choptin)
          if (timedisplay) {fHistogram->GetXaxis()->SetTimeDisplay(timedisplay);}
          if (!timeformat.empty()) fHistogram->GetXaxis()->SetTimeFormat(timeformat.c_str());
       }
-      fHistogram->Paint("0");
+      TString chopth = "0";
+      if ((char*)strstr(chopt.Data(),"X+")) chopth.Append("X+");
+      if ((char*)strstr(chopt.Data(),"Y+")) chopth.Append("Y+");
+      fHistogram->Paint(chopth.Data());
    }
 
    TGraph *gfit = nullptr;
