@@ -126,18 +126,22 @@ void *GetValuePtrHelper(std::vector<ROOT::RVec<T>> &v, std::size_t colIdx, std::
 
 /******* End of helper functions *******/
 
-template <typename Ret_t, typename IsSingleColumn = std::true_type>
+template <typename VaryExpressionRet_t, typename IsSingleColumn>
 struct ColumnType {
-   using type = typename Ret_t::value_type;
 };
 
-template <typename Ret_t>
-struct ColumnType<Ret_t, std::false_type> {
-   using type = typename Ret_t::value_type::value_type;
+template <typename T>
+struct ColumnType<ROOT::RVec<T>, std::true_type> {
+   using type = T;
 };
 
-/// ColumnType_t is Ret_t::value_type if IsSingleColumn is std::true_type, otherwise it is
-/// Ret_t::value_type::value_type.
+template <typename T>
+struct ColumnType<ROOT::RVec<ROOT::RVec<T>>, std::false_type> {
+   using type = T;
+};
+
+/// When varying a single column, Ret_t is RVec<T> and ColumnType_t is T.
+/// When varying multiple columns, Ret_t is RVec<RVec<T>> and ColumnType_t is T.
 template <typename IsSingleColumn, typename Ret_t>
 using ColumnType_t = typename ColumnType<Ret_t, IsSingleColumn>::type;
 
