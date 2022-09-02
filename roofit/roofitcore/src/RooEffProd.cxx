@@ -24,8 +24,6 @@
 #include "RooFit.h"
 #include "RooEffProd.h"
 #include "RooEffGenContext.h"
-#include "RooNameReg.h"
-#include "RooRealVar.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
