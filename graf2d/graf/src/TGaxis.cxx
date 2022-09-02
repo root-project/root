@@ -208,6 +208,8 @@ Begin_Macro(source)
 }
 End_Macro
 
+Note that this functionality has some limitations and does not follow all the TGaxis setting.
+In particular he number of divisions or the maximum number digits do not apply.
 
 \anchor GA02
 ## Logarithmic axis
