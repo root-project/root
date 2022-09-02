@@ -67,7 +67,7 @@ public:
       out << "\n//------ Shape\n";
       size_t length = ConvertShapeToLength(fOutput_shape);
       for (size_t id = 0; id < length; id++) {
-         out << SP << "tensor_" << fNY << "["<< id << "] = " << fOutput_shape[id] << ";\n";
+         out << SP << "tensor_" << fNY << "["<< id << "] = " << fShape[fStart+id] << ";\n";
       }
       return out.str();
    }
