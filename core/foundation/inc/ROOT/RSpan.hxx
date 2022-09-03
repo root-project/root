@@ -16,7 +16,7 @@
 
 #include "RConfigure.h"
 
-#ifdef R__HAS_STD_SPAN
+#if defined(R__HAS_STD_SPAN) || __cplusplus >= 202002L
 
 #include <span>
 
