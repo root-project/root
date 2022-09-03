@@ -423,8 +423,23 @@ static PyObject* addressof(PyObject* /* dummy */, PyObject* args, PyObject* kwds
     } else if (PyTuple_CheckExact(args) && PyTuple_GET_SIZE(args) == 1) {
         PyErr_Clear();
         PyObject* arg0 = PyTuple_GET_ITEM(args, 0);
+
+    // nullptr special case
         if (arg0 == gNullPtrObject || (PyInt_Check(arg0) && PyInt_AsLong(arg0) == 0))
             return PyLong_FromLong(0);
+
+    // overload if unambiguous
+        if (CPPOverload_CheckExact(arg0)) {
+            const auto& methods = ((CPPOverload*)arg0)->fMethodInfo->fMethods;
+            if (methods.size() != 1) {
+                PyErr_SetString(PyExc_TypeError, "overload is not unambiguous");
+                return nullptr;
+            }
+
+            Cppyy::TCppFuncAddr_t addr = methods[0]->GetFunctionAddress();
+            return PyLong_FromLongLong((intptr_t)addr);
+        }
+
         Utility::GetBuffer(arg0, '*', 1, addr, false);
         if (addr) return PyLong_FromLongLong((intptr_t)addr);
     }
