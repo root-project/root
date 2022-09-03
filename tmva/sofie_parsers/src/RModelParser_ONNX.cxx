@@ -1308,16 +1308,6 @@ std::unique_ptr<ROperator> make_ROperator_Concat(const onnx::NodeProto &nodeprot
 
 std::unique_ptr<ROperator> make_ROperator_Shape(const onnx::NodeProto& nodeproto, const onnx::GraphProto& /*graphproto */, std::unordered_map<std::string, ETensorType>& tensor_type){
 
-   ETensorType input_type;
-
-   auto input_name =  nodeproto.input(0);
-   auto it = tensor_type.find(input_name);
-   if (it != tensor_type.end()){
-      input_type = it->second;
-   }else{
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser Shape op has input tensor" + input_name + " but its type is not yet registered");
-   }
-
    std::unique_ptr<ROperator> op;
 
    int attr_start = 0;
@@ -1330,18 +1320,9 @@ std::unique_ptr<ROperator> make_ROperator_Shape(const onnx::NodeProto& nodeproto
          if (attribute_name == "end")
             attr_end = nodeproto.attribute(i).i();
    }
-   switch(input_type){
-   case ETensorType::FLOAT:
-      op.reset(new ROperator_Shape<float>(attr_start, attr_end, nodeproto.input(0), nodeproto.output(0)));
-      break;
-   case ETensorType::INT64:
-   case ETensorType::DOUBLE:
-      op.reset(new ROperator_Shape<float>(attr_start, attr_end, nodeproto.input(0), nodeproto.output(0)));
-      break;
-   default:
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Shape does not yet support input type " + std::to_string(static_cast<int>(input_type)));
-   }
 
+   op.reset(new ROperator_Shape(attr_start, attr_end, nodeproto.input(0), nodeproto.output(0)));
+   
    ETensorType output_type = ETensorType::INT64;
    auto it2 = tensor_type.find(nodeproto.output(0));
    if (it2 == tensor_type.end()){
