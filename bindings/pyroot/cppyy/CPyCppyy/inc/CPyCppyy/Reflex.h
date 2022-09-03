@@ -10,6 +10,9 @@ namespace Cppyy {
 namespace Reflex {
 
 typedef int RequestId_t;
+
+const RequestId_t IS_NAMESPACE    = 1;
+
 const RequestId_t OFFSET          = 2;
 const RequestId_t RETURN_TYPE     = 3;
 const RequestId_t TYPE            = 4;
