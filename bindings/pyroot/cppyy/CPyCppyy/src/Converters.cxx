@@ -1808,7 +1808,13 @@ bool CPyCppyy::InstancePtrConverter::SetArg(
         return false;
     }
 
-    if (pyobj->ObjectIsA() && Cppyy::IsSubtype(pyobj->ObjectIsA(), fClass)) {
+    // smart pointers should only extract the pointer if this is NOT an implicit
+    // conversion to another smart pointer
+    if (pyobj->IsSmart() && IsConstructor(ctxt->fFlags) && Cppyy::IsSmartPtr(ctxt->fCurScope))
+        return false;
+
+    Cppyy::TCppType_t oisa = pyobj->ObjectIsA();
+    if (oisa && (oisa == fClass || Cppyy::IsSubtype(oisa, fClass))) {
     // depending on memory policy, some objects need releasing when passed into functions
         if (!KeepControl() && !UseStrictOwnership(ctxt))
             pyobj->CppOwns();
