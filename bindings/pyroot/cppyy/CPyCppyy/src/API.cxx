@@ -131,6 +131,12 @@ PyObject* CPyCppyy::Instance_FromVoidPtr(
     return pyobject;
 }
 
+namespace CPyCppyy {
+// version with C type arguments only for use with Numba
+PyObject* Instance_FromVoidPtr(void* addr, const char* classname, int python_owns) {
+    return Instance_FromVoidPtr(addr, std::string(classname), (bool)python_owns);
+}
+} // namespace CPyCppyy
 
 //-----------------------------------------------------------------------------
 bool CPyCppyy::Scope_Check(PyObject* pyobject)
