@@ -513,6 +513,10 @@ PyObject* CPyCppyy::CPPMethod::GetArgDefault(int iarg)
     return nullptr;
 }
 
+bool CPyCppyy::CPPMethod::IsConst() {
+    return Cppyy::IsConstMethod(GetMethod());
+}
+
 //----------------------------------------------------------------------------
 PyObject* CPyCppyy::CPPMethod::GetScopeProxy()
 {

@@ -31,6 +31,8 @@ public:
     virtual int       GetMaxArgs();
     virtual PyObject* GetCoVarNames();
     virtual PyObject* GetArgDefault(int iarg);
+    virtual bool      IsConst();
+
     virtual PyObject* GetScopeProxy();
     virtual Cppyy::TCppFuncAddr_t GetFunctionAddress();
 
