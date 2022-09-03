@@ -723,6 +723,36 @@ static PyGetSetDef tpp_getset[] = {
 };
 
 
+//= CPyCppyy method proxy access to internals ================================
+static PyObject* tpp_overload(TemplateProxy* pytmpl, PyObject* args)
+{
+// Select and call a specific C++ overload, based on its signature.
+    const char* sigarg = nullptr;
+    int want_const = -1;
+    if (!PyArg_ParseTuple(args, const_cast<char*>("s|i:__overload__"), &sigarg, &want_const))
+        return nullptr;
+    want_const = PyTuple_GET_SIZE(args) == 1 ? -1 : want_const;
+
+// check existing overloads in order
+    PyObject* ol = pytmpl->fTI->fNonTemplated->FindOverload(sigarg, want_const);
+    if (ol) return ol;
+    PyErr_Clear();
+    ol = pytmpl->fTI->fTemplated->FindOverload(sigarg, want_const);
+    if (ol) return ol;
+    PyErr_Clear();
+    ol = pytmpl->fTI->fLowPriority->FindOverload(sigarg, want_const);
+    if (ol) return ol;
+
+// TODO: else attempt instantiation
+    return ol;
+}
+
+static PyMethodDef tpp_methods[] = {
+    {(char*)"__overload__", (PyCFunction)tpp_overload, METH_VARARGS,
+      (char*)"select overload for dispatch" },
+    {(char*)nullptr, nullptr, 0, nullptr }
+};
+
 //= CPyCppyy template proxy type =============================================
 PyTypeObject TemplateProxy_Type = {
    PyVarObject_HEAD_INIT(&PyType_Type, 0)
@@ -752,7 +782,7 @@ PyTypeObject TemplateProxy_Type = {
    offsetof(TemplateProxy, fWeakrefList),        // tp_weaklistoffset
    0,                         // tp_iter
    0,                         // tp_iternext
-   0,                         // tp_methods
+   tpp_methods,               // tp_methods
    0,                         // tp_members
    tpp_getset,                // tp_getset
    0,                         // tp_base

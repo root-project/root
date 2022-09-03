@@ -62,6 +62,9 @@ public:
     const std::string& GetName() const { return fMethodInfo->fName; }
     bool HasMethods() const { return !fMethodInfo->fMethods.empty(); }
 
+// find a method based on the provided signature
+    PyObject* FindOverload(const std::string& signature, int want_const = -1);
+
 public:                 // public, as the python C-API works with C structs
     PyObject_HEAD
     CPPInstance*   fSelf;         // must be first (same layout as TemplateProxy)
