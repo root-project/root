@@ -123,7 +123,7 @@ TEST(RooAddPdf, Issue10988)
    w1.factory("x[3., 0., 10.]");
    w1.var("x")->setRange("range_int", 0., 4.);
    w1.factory("AddPdf::sum(Gaussian(x, mean1[1.], sigma1[2., 0.1, 10.]),"
-                          "Gaussian(x, mean2[5.], sigma2[10., 0.1, 10.]), coef[0.3])");
+              "Gaussian(x, mean2[5.], sigma2[10., 0.1, 10.]), coef[0.3])");
    RooWorkspace w2(w1);
 
    auto &pdf1 = *static_cast<RooAddPdf *>(w1.pdf("sum"));
@@ -150,4 +150,32 @@ TEST(RooAddPdf, Issue10988)
    // range was fixed to a different one.
    EXPECT_NE(val0, val1);
    EXPECT_EQ(val1, val2);
+}
+
+/// Check that the treatment of recursive coefficients works correctly.
+TEST(RooAddPdf, RecursiveCoefficients)
+{
+   using namespace RooFit;
+
+   RooRealVar x{"x", "x", 0, 0, 20};
+
+   RooGaussian g1{"g1", "g1", x, RooConst(3.0), RooConst(1.0)};
+   RooGaussian g2{"g2", "g2", x, RooConst(9.0), RooConst(1.0)};
+   RooGaussian g3{"g3", "g3", x, RooConst(15.0), RooConst(1.0)};
+
+   // A regular RooAddPdf
+   RooAddPdf model1{"model1", "model1", {g1, g2, g3}, {RooConst(1. / 3), RooConst(1. / 3)}};
+
+   // A RooAddPdf with recursive coefficients that should be mathematically equivalent
+   RooAddPdf model2{"model2", "model2", {g1, g2, g3}, {RooConst(1. / 3), RooConst(0.5)}, true};
+
+   std::unique_ptr<RooPlot> plot{x.frame()};
+
+   model1.plotOn(plot.get(), LineColor(kBlue), Name("model1"));
+   model2.plotOn(plot.get(), LineColor(kRed), LineStyle(kDashed), Name("model2"));
+
+   auto curve1 = plot->getCurve("model1");
+   auto curve2 = plot->getCurve("model2");
+
+   EXPECT_TRUE(curve2->isIdentical(*curve1));
 }
