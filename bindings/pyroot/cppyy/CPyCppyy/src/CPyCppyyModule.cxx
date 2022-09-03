@@ -440,6 +440,13 @@ static PyObject* addressof(PyObject* /* dummy */, PyObject* args, PyObject* kwds
             return PyLong_FromLongLong((intptr_t)addr);
         }
 
+    // C functions (incl. ourselves)
+        if (PyCFunction_Check(arg0)) {
+            void* caddr = (void*)PyCFunction_GetFunction(arg0);
+            return PyLong_FromLongLong((intptr_t)caddr);
+        }
+
+    // final attempt: any type of buffer
         Utility::GetBuffer(arg0, '*', 1, addr, false);
         if (addr) return PyLong_FromLongLong((intptr_t)addr);
     }

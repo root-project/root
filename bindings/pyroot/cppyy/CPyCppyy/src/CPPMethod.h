@@ -25,6 +25,8 @@ public:
 public:
     virtual PyObject* GetSignature(bool show_formalargs = true);
     virtual PyObject* GetPrototype(bool show_formalargs = true);
+    virtual PyObject* Reflex(Cppyy::Reflex::RequestId_t request,
+                             Cppyy::Reflex::FormatId_t = Cppyy::Reflex::OPTIMAL);
     virtual int       GetPriority();
     virtual bool IsGreedy();
 
