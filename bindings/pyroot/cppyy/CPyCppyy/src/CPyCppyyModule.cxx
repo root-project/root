@@ -16,6 +16,14 @@
 #include "TupleOfInstances.h"
 #include "Utility.h"
 
+#define CPYCPPYY_INTERNAL 1
+namespace CPyCppyy {
+void* Instance_AsVoidPtr(PyObject* pyobject);
+PyObject* Instance_FromVoidPtr(
+    void* addr, const std::string& classname, bool python_owns = false);
+} // namespace CPyCppyy
+#undef CPYCPPYY_INTERNAL
+
 // Standard
 #include <algorithm>
 #include <map>
@@ -375,35 +383,45 @@ static void* GetCPPInstanceAddress(const char* fname, PyObject* args, PyObject* 
 // Helper to get the address (address-of-address) of various object proxy types.
     CPPInstance* pyobj = 0; PyObject* pyname = 0; int byref = 0;
     if (PyArg_ParseTupleAndKeywords(args, kwds, const_cast<char*>("O|O!b"), GCIA_kwlist,
-            &pyobj, &CPyCppyy_PyText_Type, &pyname, &byref) && CPPInstance_Check(pyobj)) {
+            &pyobj, &CPyCppyy_PyText_Type, &pyname, &byref)) {
 
-        if (pyname != 0) {
-        // locate property proxy for offset info
-            CPPDataMember* pyprop = nullptr;
+        if (CPPInstance_Check(pyobj)) {
+            if (pyname != 0) {
+            // locate property proxy for offset info
+                CPPDataMember* pyprop = nullptr;
 
-            PyObject* pyclass = (PyObject*)Py_TYPE((PyObject*)pyobj);
-            PyObject* dict = PyObject_GetAttr(pyclass, PyStrings::gDict);
-            pyprop = (CPPDataMember*)PyObject_GetItem(dict, pyname);
-            Py_DECREF(dict);
+                PyObject* pyclass = (PyObject*)Py_TYPE((PyObject*)pyobj);
+                PyObject* dict = PyObject_GetAttr(pyclass, PyStrings::gDict);
+                pyprop = (CPPDataMember*)PyObject_GetItem(dict, pyname);
+                Py_DECREF(dict);
 
-            if (CPPDataMember_Check(pyprop)) {
-            // this is an address of a value (i.e. &myobj->prop)
-                void* addr = (void*)pyprop->GetAddress(pyobj);
-                Py_DECREF(pyprop);
-                return addr;
+                if (CPPDataMember_Check(pyprop)) {
+                // this is an address of a value (i.e. &myobj->prop)
+                    void* addr = (void*)pyprop->GetAddress(pyobj);
+                    Py_DECREF(pyprop);
+                    return addr;
+                }
+
+                Py_XDECREF(pyprop);
+
+                PyErr_Format(PyExc_TypeError,
+                    "%s is not a valid data member", CPyCppyy_PyText_AsString(pyname));
+                return nullptr;
             }
 
-            Py_XDECREF(pyprop);
+            // this is an address of an address (i.e. &myobj, with myobj of type MyObj*)
+            // note that the return result may be null
+            if (!byref) return ((CPPInstance*)pyobj)->GetObject();
+            return &((CPPInstance*)pyobj)->GetObjectRaw();
 
-            PyErr_Format(PyExc_TypeError,
-                "%s is not a valid data member", CPyCppyy_PyText_AsString(pyname));
-            return nullptr;
+        } else if (CPyCppyy_PyText_Check(pyobj)) {
+        // special cases for acces to the CPyCppyy API
+            std::string req = CPyCppyy_PyText_AsString((PyObject*)pyobj);
+            if (req == "Instance_AsVoidPtr")
+                return (void*)&Instance_AsVoidPtr;
+            else if (req == "Instance_FromVoidPtr")
+                return (void*)&Instance_FromVoidPtr;
         }
-
-    // this is an address of an address (i.e. &myobj, with myobj of type MyObj*)
-    // note that the return result may be null
-        if (!byref) return ((CPPInstance*)pyobj)->GetObject();
-        return &((CPPInstance*)pyobj)->GetObjectRaw();
     }
 
     if (!PyErr_Occurred())
