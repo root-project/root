@@ -214,7 +214,7 @@ def typeof_scope(val, c):
     try:
         cnt = scope_numbatypes[val]
     except KeyError:
-        if 'namespace' in repr(val):
+        if val.__cpp_reflex__(cpp_refl.IS_NAMESPACE):
             cnt = nb_types.Module(val)
             scope_numbatypes[val] = cnt
             return cnt
