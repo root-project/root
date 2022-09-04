@@ -25,10 +25,13 @@ def _init_extension():
 
 
 ir_voidptr  = irType.pointer(irType.int(8))  # by convention
-ir_charptr  = ir_voidptr
+ir_byteptr  = ir_voidptr
 ir_intptr_t = irType.int(cppyy.sizeof('void*')*8)
 
-cppyy_addressof_ptr = None
+# special case access to unboxing/boxing APIs
+cppyy_as_voidptr   = cppyy.addressof('Instance_AsVoidPtr')
+cppyy_from_voidptr = cppyy.addressof('Instance_FromVoidPtr')
+
 
 _cpp2numba = {
     'void'                   : nb_types.void,
@@ -68,6 +71,7 @@ def numba2cpp(val):
 # TODO: looks like Numba treats unsigned types as signed when lowering,
 # which seems to work as they're just reinterpret_casts
 _cpp2ir = {
+    'char*'                  : ir_byteptr,
     'int8_t'                 : irType.int(8),
     'uint8_t'                : irType.int(8),
     'short'                  : irType.int(nb_types.short.bitwidth),
@@ -281,26 +285,41 @@ def typeof_scope(val, c):
       # Python proxy unwrapping for arguments into the Numba trace
         @nb_ext.unbox(ImplClassType)
         def unbox_instance(typ, obj, c):
-            global cppyy_addressof_ptr
-            if cppyy_addressof_ptr is None:
-                # TODO: loading the CPyCppyy API just for Instance_AsVoidPtr is a bit overkill
-                cppyy.include("CPyCppyy/API.h")
-                cppyy_addressof_ptr = cppyy.addressof(cppyy.gbl.CPyCppyy.Instance_AsVoidPtr)
+            global cppyy_as_voidptr
             ptrty = irType.pointer(irType.function(ir_voidptr, [ir_voidptr]))
-            ptrval = c.context.add_dynamic_addr(c.builder, cppyy_addressof_ptr, info='Instance_AsVoidPtr')
+            ptrval = c.context.add_dynamic_addr(c.builder, cppyy_as_voidptr, info='Instance_AsVoidPtr')
             fp = c.builder.bitcast(ptrval, ptrty)
 
             pobj = c.context.call_function_pointer(c.builder, fp, [obj])
 
             # TODO: the use of create_struct_proxy is (too) slow and probably unnecessary
             d = nb_cgu.create_struct_proxy(typ)(c.context, c.builder)
-            basep = c.builder.bitcast(pobj, ir_charptr)
+            basep = c.builder.bitcast(pobj, ir_byteptr)
             for f, o in offsets:
                 pfc = c.builder.gep(basep, [ir.Constant(ir_intptr_t, o)])
                 pf = c.builder.bitcast(pfc, irType.pointer(ir_ftypes[f]))
                 setattr(d, f, c.builder.load(pf))
 
             return nb_ext.NativeValue(d._getvalue(), is_error=None, cleanup=None)
+
+      # C++ object to Python proxy wrapping for returns from Numba trace
+        @nb_ext.box(ImplClassType)
+        def box_instance(typ, val, c):
+            assert not "requires object model and passing of intact object, not memberwise copy"
+            global cppyy_from_voidptr
+
+            ir_pyobj = c.context.get_argument_type(nb_types.pyobject)
+            ir_int   = cpp2ir('int')
+
+            ptrty = irType.pointer(irType.function(ir_pyobj, [ir_voidptr, cpp2ir('char*'), ir_int]))
+            ptrval = c.context.add_dynamic_addr(c.builder, cppyy_from_voidptr, info='Instance_FromVoidPtr')
+            fp = c.builder.bitcast(ptrval, ptrty)
+
+            module = c.builder.basic_block.function.module
+            clname = c.context.insert_const_string(module, typ._scope.__cpp_name__)
+
+            NULL = c.context.get_constant_null(nb_types.voidptr)     # TODO: get the real thing
+            return c.context.call_function_pointer(c.builder, fp, [NULL, clname, ir_int(0)])
 
     return cnt
 
