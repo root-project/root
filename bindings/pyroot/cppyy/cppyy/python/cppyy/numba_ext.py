@@ -11,6 +11,7 @@ import numba.core.cgutils as nb_cgu
 import numba.core.datamodel.models as nb_models
 import numba.core.imputils as nb_iutils
 import numba.core.registry as nb_reg
+import numba.core.typing.templates as nb_tmpl
 import numba.core.types as nb_types
 import numba.core.typing as nb_typing
 
@@ -25,6 +26,7 @@ cppyy_addressof_ptr = None
 
 _numba2cpp = {
     nb_types.void            : 'void',
+    nb_types.voidptr         : 'void*',
     nb_types.long_           : 'long',
     nb_types.int64           : 'int64_t',
     nb_types.float64         : 'double',
@@ -37,6 +39,7 @@ def numba2cpp(val):
 
 _cpp2numba = {
     'void'                   : nb_types.void,
+    'void*'                  : nb_types.voidptr,
     'long'                   : nb_types.long_,
     'int64_t'                : nb_types.int64,
     'double'                 : nb_types.float64,
@@ -62,11 +65,12 @@ class CppFunctionNumbaType(nb_types.Callable):
     targetdescr = nb_reg.cpu_target
     requires_gil = False
 
-    def __init__(self, func):
+    def __init__(self, func, is_method=False):
         super(CppFunctionNumbaType, self).__init__('CppFunction(%s)' % str(func))
 
         self.sig = None
         self._func = func
+        self._is_method = is_method
 
         self._signatures = list()
         self._impl_keys = dict()
@@ -80,7 +84,10 @@ class CppFunctionNumbaType(nb_types.Callable):
         except KeyError:
             pass
 
-        ol = CppFunctionNumbaType(self._func.__overload__(*(numba2cpp(x) for x in args)))
+        ol = CppFunctionNumbaType(self._func.__overload__(*(numba2cpp(x) for x in args)), self._is_method)
+
+        if self._is_method:
+            args = (nb_types.voidptr, *args)
 
         ol.sig = nb_typing.Signature(
             return_type=cpp2numba(ol._func.__cpp_reflex__(cpp_refl.RETURN_TYPE)),
@@ -96,6 +103,9 @@ class CppFunctionNumbaType(nb_types.Callable):
             ptrval = context.add_dynamic_addr(
                 builder, ty.get_pointer(pyval), info=str(pyval))
             fptr = builder.bitcast(ptrval, ptrty)
+            if hasattr(context, 'cppyy_currentcall_this'):
+                args = [context.cppyy_currentcall_this]+args
+                del context.cppyy_currentcall_this
             return context.call_function_pointer(builder, fptr, args)
 
         return ol.sig
@@ -108,7 +118,7 @@ class CppFunctionNumbaType(nb_types.Callable):
 
     def get_pointer(self, func):
         if func is None: func = self._func
-        ol = func.__overload__(*(numba2cpp(x) for x in self.sig.args))
+        ol = func.__overload__(*(numba2cpp(x) for x in self.sig.args[int(self._is_method):]))
         address = cppyy.addressof(ol)
         if not address:
             raise RuntimeError("unresolved address for %s" % str(ol))
@@ -140,7 +150,7 @@ class CppFunctionModel(nb_models.PrimitiveModel):
 @nb_iutils.lower_constant(CppFunctionNumbaType)
 def constant_function_pointer(context, builder, ty, pyval):
     # TODO: needs to exist for the proper flow, but why? The lowering of the
-    # actual overloads is handled dynamically.
+    # actual overload is handled dynamically.
     return
 
 
@@ -165,6 +175,26 @@ class CppClassNumbaType(CppFunctionNumbaType):
     def key(self):
         return self._scope
 
+@nb_tmpl.infer_getattr
+class CppClassAttribute(nb_tmpl.AttributeTemplate):
+     key = CppClassNumbaType
+
+     def generic_resolve(self, typ, attr):
+         try:
+             f = getattr(typ._scope, attr)
+             if type(f) == cpp_types.Function:
+                 return CppFunctionNumbaType(f, is_method=True)
+         except AttributeError:
+             pass
+
+@nb_iutils.lower_getattr_generic(CppClassNumbaType)
+def cppclass_getattr_impl(context, builder, typ, val, attr):
+    # TODO: the following relies on the fact that numba will first lower the
+    # field access, then immediately lower the call; and that the `val` loads
+    # the struct representing the C++ object. Neither need be stable.
+    context.cppyy_currentcall_this = builder.bitcast(val.operands[0], ir_voidptr)
+    return context.cppyy_currentcall_this
+
 
 class_numbatypes = dict()
 
@@ -184,6 +214,7 @@ def typeof_scope(val, c):
         cnt = ImplClassType(val)
         class_numbatypes[val] = cnt
 
+      # declare data members to Numba
         fields = list()
         for key, value in val.__dict__.items():
             if type(value) == cpp_types.DataMember:
