@@ -890,6 +890,28 @@ Cppyy::TCppFuncAddr_t Cppyy::GetFunctionAddress(TCppMethod_t method, bool check_
 {
     if (check_enabled && !gEnableFastPath) return (TCppFuncAddr_t)nullptr;
     TFunction* f = m2f(method);
+    TCppFuncAddr_t pf = gInterpreter->FindSym(f->GetMangledName());
+    if (pf) return pf;
+
+    int ierr = 0;
+    const char* fn = TClassEdit::DemangleName(f->GetMangledName(), ierr);
+    if (ierr || !fn)
+        return pf;
+
+    // TODO: the following attempts are all brittle and leak transactions, but
+    // each properly exposes the symbol so subsequent lookups will succeed
+    if (strstr(f->GetName(), "<")) {
+    // force explicit instantiation and try again
+        std::ostringstream sig;
+        sig << "template " << fn << ";";
+        gInterpreter->ProcessLine(sig.str().c_str());
+    } else {
+        std::string sfn = std::string("&")+fn;
+        std::string::size_type pos = sfn.find('(');
+        if (pos != std::string::npos) sfn = sfn.substr(0, pos);
+        gInterpreter->Calc(sfn.c_str());
+    }
+
     return (TCppFuncAddr_t)gInterpreter->FindSym(f->GetMangledName());
 }
 
