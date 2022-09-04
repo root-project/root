@@ -30,29 +30,23 @@ ir_intptr_t = irType.int(cppyy.sizeof('void*')*8)
 
 cppyy_addressof_ptr = None
 
-_numba2cpp = {
-    nb_types.void            : 'void',
-    nb_types.voidptr         : 'void*',
-    nb_types.int_            : 'int',
-    nb_types.int32           : 'int32_t',
-    nb_types.int64           : 'int64_t',
-    nb_types.long_           : 'long',
-    nb_types.float32         : 'float',
-    nb_types.float64         : 'double',
-}
-
-def numba2cpp(val):
-    if hasattr(val, 'literal_type'):
-        val = val.literal_type
-    return _numba2cpp[val]
-
 _cpp2numba = {
     'void'                   : nb_types.void,
     'void*'                  : nb_types.voidptr,
+    'int8_t'                 : nb_types.int8,
+    'uint8_t'                : nb_types.uint8,
+    'short'                  : nb_types.short,
+    'unsigned short'         : nb_types.ushort,
     'int'                    : nb_types.intc,
+    'unsigned int'           : nb_types.uintc,
     'int32_t'                : nb_types.int32,
+    'uint32_t'               : nb_types.uint32,
     'int64_t'                : nb_types.int64,
+    'uint64_t'               : nb_types.uint64,
     'long'                   : nb_types.long_,
+    'unsigned long'          : nb_types.ulong,
+    'long long'              : nb_types.longlong,
+    'unsigned long long'     : nb_types.ulonglong,
     'float'                  : nb_types.float32,
     'double'                 : nb_types.float64,
 }
@@ -62,10 +56,32 @@ def cpp2numba(val):
         return numba.typeof(val)
     return _cpp2numba[val]
 
+_numba2cpp = dict()
+for key, value in _cpp2numba.items():
+    _numba2cpp[value] = key
+
+def numba2cpp(val):
+    if hasattr(val, 'literal_type'):
+        val = val.literal_type
+    return _numba2cpp[val]
+
+# TODO: looks like Numba treats unsigned types as signed when lowering,
+# which seems to work as they're just reinterpret_casts
 _cpp2ir = {
+    'int8_t'                 : irType.int(8),
+    'uint8_t'                : irType.int(8),
+    'short'                  : irType.int(nb_types.short.bitwidth),
+    'unsigned short'         : irType.int(nb_types.ushort.bitwidth),
     'int'                    : irType.int(nb_types.intc.bitwidth),
+    'unsigned int'           : irType.int(nb_types.uintc.bitwidth),
     'int32_t'                : irType.int(32),
+    'uint32_t'               : irType.int(32),
     'int64_t'                : irType.int(64),
+    'uint64_t'               : irType.int(64),
+    'long'                   : irType.int(nb_types.long_.bitwidth),
+    'unsigned long'          : irType.int(nb_types.ulong.bitwidth),
+    'long long'              : irType.int(nb_types.longlong.bitwidth),
+    'unsigned long long'     : irType.int(nb_types.ulonglong.bitwidth),
     'float'                  : irType.float(),
     'double'                 : irType.double(),
 }
