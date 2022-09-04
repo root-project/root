@@ -2605,23 +2605,36 @@ double RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet &n
   RooArgSet allParamsInAbsReal;
   getParameters(&nset, allParamsInAbsReal);
 
-  // Strip out parameters with zero error
   RooArgList paramList;
-  for(auto * rrvInFitResult : static_range_cast<RooRealVar*>(fr.floatParsFinal())) {
-     if (rrvInFitResult->getError() > 1e-20) {
-        auto * rrvInAbsReal = static_cast<RooRealVar*>(allParamsInAbsReal.find(*rrvInFitResult));
+  for(auto * rrvFitRes : static_range_cast<RooRealVar*>(fr.floatParsFinal())) {
 
-        if(rrvInAbsReal->getVal() != rrvInFitResult->getVal()) {
-           throw std::runtime_error(
-                   std::string("RooAbsReal::getPropagatedError(): the parameters of the RooAbsReal don't have") +
-                   "the same values as in the fit result! The logic of getPropagatedError is broken in this case.");
-        }
+     auto rrvInAbsReal = static_cast<RooRealVar const*>(allParamsInAbsReal.find(*rrvFitRes));
 
-        paramList.add(*rrvInAbsReal);
+     // If this RooAbsReal is a RooRealVar in the fit result, we don't need to
+     // propagate anything and can just return the error in the fit result
+     if(rrvFitRes->namePtr() == namePtr()) return rrvFitRes->getError();
+
+     // Strip out parameters with zero error
+     if (rrvFitRes->getError() <= 1e-20) continue;
+
+     // Ignore parameters in the fit result that this RooAbsReal doesn't depend on
+     if(!rrvInAbsReal) continue;
+
+     // Checking for float equality is a bad. We check if the values are
+     // negligibly far away from each other, relative to the uncertainty.
+     if(std::abs(rrvInAbsReal->getVal() - rrvFitRes->getVal()) > 0.01 * rrvFitRes->getError()) {
+        std::stringstream errMsg;
+        errMsg << "RooAbsReal::getPropagatedError(): the parameters of the RooAbsReal don't have"
+               << " the same values as in the fit result! The logic of getPropagatedError is broken in this case.";
+
+        throw std::runtime_error(errMsg.str());
      }
+
+     paramList.add(*rrvInAbsReal);
   }
 
-  std::vector<double> plusVar, minusVar ;
+  std::vector<double> plusVar;
+  std::vector<double> minusVar;
   plusVar.reserve(paramList.size());
   minusVar.reserve(paramList.size());
 
@@ -2660,9 +2673,9 @@ double RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet &n
   TMatrixDSym C(paramList.getSize()) ;
   vector<double> errVec(paramList.getSize()) ;
   for (int i=0 ; i<paramList.getSize() ; i++) {
-    errVec[i] = sqrt(V(i,i)) ;
+    errVec[i] = std::sqrt(V(i,i)) ;
     for (int j=i ; j<paramList.getSize() ; j++) {
-      C(i,j) = V(i,j)/sqrt(V(i,i)*V(j,j)) ;
+      C(i,j) = V(i,j) / std::sqrt(V(i,i)*V(j,j));
       C(j,i) = C(i,j) ;
     }
   }
@@ -2678,13 +2691,6 @@ double RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet &n
 
   return sqrt(sum) ;
 }
-
-
-
-
-
-
-
 
 
 
