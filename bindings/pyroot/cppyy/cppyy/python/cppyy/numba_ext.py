@@ -33,9 +33,10 @@ cppyy_addressof_ptr = None
 _numba2cpp = {
     nb_types.void            : 'void',
     nb_types.voidptr         : 'void*',
-    nb_types.long_           : 'long',
+    nb_types.int_            : 'int',
     nb_types.int32           : 'int32_t',
     nb_types.int64           : 'int64_t',
+    nb_types.long_           : 'long',
     nb_types.float32         : 'float',
     nb_types.float64         : 'double',
 }
@@ -48,9 +49,10 @@ def numba2cpp(val):
 _cpp2numba = {
     'void'                   : nb_types.void,
     'void*'                  : nb_types.voidptr,
-    'long'                   : nb_types.long_,
+    'int'                    : nb_types.intc,
     'int32_t'                : nb_types.int32,
     'int64_t'                : nb_types.int64,
+    'long'                   : nb_types.long_,
     'float'                  : nb_types.float32,
     'double'                 : nb_types.float64,
 }
@@ -61,7 +63,11 @@ def cpp2numba(val):
     return _cpp2numba[val]
 
 _cpp2ir = {
+    'int'                    : irType.int(nb_types.intc.bitwidth),
+    'int32_t'                : irType.int(32),
     'int64_t'                : irType.int(64),
+    'float'                  : irType.float(),
+    'double'                 : irType.double(),
 }
 
 def cpp2ir(val):
