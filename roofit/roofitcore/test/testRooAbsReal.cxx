@@ -1,50 +1,95 @@
 // Tests for RooAbsReal
-// Author: Stephan Hageboeck, CERN 05/2020
+// Authors: Stephan Hageboeck, CERN 05/2020
+//          Jonas Rembser, CERN 09/2022
 
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooHelpers.h"
-#include "RooGlobalFunc.h"
+#include <RooAbsPdf.h>
+#include <RooDataSet.h>
+#include <RooFitResult.h>
+#include <RooGlobalFunc.h>
+#include <RooHelpers.h>
+#include <RooRealVar.h>
+#include <RooWorkspace.h>
 
-#include "TTree.h"
-#include "TFile.h"
-#include "gtest/gtest.h"
+#include <TFile.h>
+#include <TTree.h>
+
+#include <gtest/gtest.h>
 
 #include <memory>
 
 // ROOT-6882: Cannot read from ULong64_t branches.
 TEST(RooAbsReal, ReadFromTree)
 {
-  RooRealVar x("ULong64Branch", "xx", 0, 0, 10);
-  RooRealVar y("FloatBranch", "yy", 2, 0, 10);
-  RooRealVar z("IntBranch", "zz", 2, 0, 10);
-  RooRealVar a("DoubleBranch", "aa", 2, 0, 10);
+   RooRealVar x("ULong64Branch", "xx", 0, 0, 10);
+   RooRealVar y("FloatBranch", "yy", 2, 0, 10);
+   RooRealVar z("IntBranch", "zz", 2, 0, 10);
+   RooRealVar a("DoubleBranch", "aa", 2, 0, 10);
 
-  TFile theFile("testRooAbsReal_1.root", "READ");
-  ASSERT_TRUE(theFile.IsOpen());
+   TFile theFile("testRooAbsReal_1.root", "READ");
+   ASSERT_TRUE(theFile.IsOpen());
 
-  TTree* tree = nullptr;
-  theFile.GetObject("tree", tree);
-  ASSERT_NE(tree, nullptr);
+   TTree *tree = nullptr;
+   theFile.GetObject("tree", tree);
+   ASSERT_NE(tree, nullptr);
 
-  tree->AddFriend("tree2", "testRooAbsReal_2.root");
+   tree->AddFriend("tree2", "testRooAbsReal_2.root");
 
+   RooHelpers::HijackMessageStream hijack(RooFit::INFO, RooFit::DataHandling);
 
-  RooHelpers::HijackMessageStream hijack(RooFit::INFO, RooFit::DataHandling);
+   RooDataSet data("data", "data", {x, y, z, a}, RooFit::Import(*tree));
+   ASSERT_EQ(data.numEntries(), 4);
 
-  RooDataSet data("data", "data", RooArgSet(x,y,z,a), RooFit::Import(*tree));
-  ASSERT_EQ(data.numEntries(), 4);
+   EXPECT_DOUBLE_EQ(data.moment(x, 1), (1. + 3. + 3. + 7.) / 4.) << "ULong64Branch should contain {1, 3, 3, 7}";
+   EXPECT_FLOAT_EQ(data.moment(y, 1), (1.f + 0.3f + 0.03f + 0.007f) / 4.f)
+      << "FloatBranch should contain {1., 0.3, 0.03, 0.007}";
+   EXPECT_DOUBLE_EQ(data.moment(z, 1), (1. + 3. + 3. + 7.) / 4.) << "IntBranch should contain {1, 3, 3, 7}";
+   EXPECT_DOUBLE_EQ(data.moment(a, 1), (1. + 0.3 + 0.03 + 0.007) / 4.) << "DoubleBranch should contain {1, 3, 3, 7}";
 
-  EXPECT_DOUBLE_EQ(data.moment(x, 1), (1.+3.+3.+7.)/4.)       << "ULong64Branch should contain {1, 3, 3, 7}";
-  EXPECT_FLOAT_EQ (data.moment(y, 1), (1.f+0.3f+0.03f+0.007f)/4.f) << "FloatBranch should contain {1., 0.3, 0.03, 0.007}";
-  EXPECT_DOUBLE_EQ(data.moment(z, 1), (1.+3.+3.+7.)/4.)       << "IntBranch should contain {1, 3, 3, 7}";
-  EXPECT_DOUBLE_EQ(data.moment(a, 1), (1.+0.3+0.03+0.007)/4.) << "DoubleBranch should contain {1, 3, 3, 7}";
-
-  const std::string& msgs = hijack.str();
-  const char* targetMsg = " will be converted to double precision";
-  EXPECT_NE(msgs.find(std::string(x.GetName()) + targetMsg), std::string::npos) << "Expect to see INFO messages for conversion of integer branch to double.";
-  EXPECT_NE(msgs.find(std::string(y.GetName()) + targetMsg), std::string::npos) << "Expect to see INFO messages for conversion of float branch to double.";
-  EXPECT_NE(msgs.find(std::string(z.GetName()) + targetMsg), std::string::npos) << "Expect to see INFO messages for conversion of integer branch to double.";
-  EXPECT_EQ(msgs.find(std::string(a.GetName()) + targetMsg), std::string::npos) << "Expect not to see INFO messages for conversion of double branch to double.";
+   const std::string &msgs = hijack.str();
+   const char *targetMsg = " will be converted to double precision";
+   EXPECT_NE(msgs.find(std::string(x.GetName()) + targetMsg), std::string::npos)
+      << "Expect to see INFO messages for conversion of integer branch to double.";
+   EXPECT_NE(msgs.find(std::string(y.GetName()) + targetMsg), std::string::npos)
+      << "Expect to see INFO messages for conversion of float branch to double.";
+   EXPECT_NE(msgs.find(std::string(z.GetName()) + targetMsg), std::string::npos)
+      << "Expect to see INFO messages for conversion of integer branch to double.";
+   EXPECT_EQ(msgs.find(std::string(a.GetName()) + targetMsg), std::string::npos)
+      << "Expect not to see INFO messages for conversion of double branch to double.";
 }
 
+/// Check that RooAbsReal::getPropagatedError() works as expected in some
+/// corner cases.
+TEST(RooAbsReal, ErrorPropagation)
+{
+   using namespace RooFit;
+
+   RooWorkspace ws;
+
+   ws.factory("Gaussian::gauss1(x[5, 0, 10], mu[5, 0, 10], sigma1[2, 0.1, 10.])");
+   ws.factory("Gaussian::gauss2(x[5, 0, 10], mu[5, 0, 10], sigma2[2, 0.1, 10.])");
+
+   RooRealVar &x = *ws.var("x");
+   RooRealVar &mu = *ws.var("mu");
+   RooAbsPdf &gauss1 = *ws.pdf("gauss1");
+   RooAbsPdf &gauss2 = *ws.pdf("gauss2");
+
+   std::unique_ptr<RooDataSet> data{gauss1.generate(x, 1000)};
+
+   std::unique_ptr<RooFitResult> res1{gauss1.fitTo(*data, Save(), PrintLevel(-1))};
+
+   RooArgSet normSet{x};
+
+   x.setError(1.0);
+   EXPECT_FLOAT_EQ(x.getPropagatedError(*res1, normSet), 0.0)
+      << "Propagating the uncertainties to an unrelated variable should give no uncertainty, even if that variable has "
+         "an intrinsic error";
+
+   EXPECT_FLOAT_EQ(mu.getPropagatedError(*res1, normSet), mu.getError())
+      << "Propagating the uncertainties to an parameter in the fit result should result in that parameters uncertainty";
+
+   const double err1 = gauss1.getPropagatedError(*res1, normSet);
+   const double err2 = gauss2.getPropagatedError(*res1, normSet);
+   EXPECT_LE(err2, err1)
+      << "When propagating uncertainties to another PDF that is identical to the fit model except for one parameter, "
+         "the uncertainty is expected to be smaller because that parameters uncertainty is not considered";
+}
