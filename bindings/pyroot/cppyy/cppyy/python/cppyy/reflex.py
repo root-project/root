@@ -16,6 +16,8 @@ except ImportError:
 
     cppyy.include("CPyCppyy/Reflex.h")
 
+    IS_NAMESPACE   = cppyy.gbl.Cppyy.Reflex.IS_NAMESPACE
+
     OFFSET         = cppyy.gbl.Cppyy.Reflex.OFFSET
     RETURN_TYPE    = cppyy.gbl.Cppyy.Reflex.RETURN_TYPE
     TYPE           = cppyy.gbl.Cppyy.Reflex.TYPE
