@@ -19,6 +19,11 @@ from llvmlite import ir
 from llvmlite.llvmpy.core import Type as irType
 
 
+# setuptools entry point for Numba
+def _init_extension():
+    pass
+
+
 ir_voidptr = irType.pointer(irType.int(8))  # by convention
 
 cppyy_addressof_ptr = None
@@ -28,7 +33,9 @@ _numba2cpp = {
     nb_types.void            : 'void',
     nb_types.voidptr         : 'void*',
     nb_types.long_           : 'long',
+    nb_types.int32           : 'int32_t',
     nb_types.int64           : 'int64_t',
+    nb_types.float32         : 'float',
     nb_types.float64         : 'double',
 }
 
@@ -41,7 +48,9 @@ _cpp2numba = {
     'void'                   : nb_types.void,
     'void*'                  : nb_types.voidptr,
     'long'                   : nb_types.long_,
+    'int32_t'                : nb_types.int32,
     'int64_t'                : nb_types.int64,
+    'float'                  : nb_types.float32,
     'double'                 : nb_types.float64,
 }
 
@@ -196,23 +205,25 @@ def cppclass_getattr_impl(context, builder, typ, val, attr):
     return context.cppyy_currentcall_this
 
 
-class_numbatypes = dict()
+scope_numbatypes = dict()
 
 @nb_ext.typeof_impl.register(cpp_types.Scope)
 def typeof_scope(val, c):
-    if 'namespace' in repr(val):
-        return nb_types.Module(val)
-
-    global class_numbatypes
+    global scope_numbatypes
 
     try:
-        cnt = class_numbatypes[val]
+        cnt = scope_numbatypes[val]
     except KeyError:
+        if 'namespace' in repr(val):
+            cnt = nb_types.Module(val)
+            scope_numbatypes[val] = cnt
+            return cnt
+
         class ImplClassType(CppClassNumbaType):
             pass
 
         cnt = ImplClassType(val)
-        class_numbatypes[val] = cnt
+        scope_numbatypes[val] = cnt
 
       # declare data members to Numba
         fields = list()
@@ -249,14 +260,14 @@ def typeof_scope(val, c):
         def unbox_instance(typ, obj, c):
             global cppyy_addressof_ptr
             if cppyy_addressof_ptr is None:
-                # TODO: loading this for retrieving addresses of objects only; is a bit overkill
+                # TODO: loading the CPyCppyy API just for Instance_AsVoidPtr is a bit overkill
                 cppyy.include("CPyCppyy/API.h")
-                fp1 = cppyy.addressof(cppyy.gbl.CPyCppyy.Instance_AsVoidPtr)
-                ptrty = irType.pointer(irType.function(ir_voidptr, [ir_voidptr]))
-                ptrval = c.context.add_dynamic_addr(c.builder, fp1, info='Instance_AsVoidPtr')
-                cppyy_addressof_ptr = c.builder.bitcast(ptrval, ptrty)
+                cppyy_addressof_ptr = cppyy.addressof(cppyy.gbl.CPyCppyy.Instance_AsVoidPtr)
+            ptrty = irType.pointer(irType.function(ir_voidptr, [ir_voidptr]))
+            ptrval = c.context.add_dynamic_addr(c.builder, cppyy_addressof_ptr, info='Instance_AsVoidPtr')
+            fp = c.builder.bitcast(ptrval, ptrty)
 
-            pobj = c.context.call_function_pointer(c.builder, cppyy_addressof_ptr, [obj])
+            pobj = c.context.call_function_pointer(c.builder, fp, [obj])
 
             # TODO: the use of create_struct_proxy is (too) slow and probably unnecessary:w
             d = nb_cgu.create_struct_proxy(typ)(c.context, c.builder)
@@ -276,5 +287,11 @@ def typeof_scope(val, c):
 #
 @nb_ext.typeof_impl.register(cpp_types.Instance)
 def typeof_instance(val, c):
-    return typeof_scope(type(val), c)
+    global scope_numbatypes
 
+    try:
+        return scope_numbatypes[type(val)]
+    except KeyError:
+        pass
+
+    return typeof_scope(type(val), c)
