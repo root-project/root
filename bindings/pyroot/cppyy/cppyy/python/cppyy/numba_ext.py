@@ -24,10 +24,11 @@ def _init_extension():
     pass
 
 
-ir_voidptr = irType.pointer(irType.int(8))  # by convention
+ir_voidptr  = irType.pointer(irType.int(8))  # by convention
+ir_charptr  = ir_voidptr
+ir_intptr_t = irType.int(cppyy.sizeof('void*')*8)
 
 cppyy_addressof_ptr = None
-
 
 _numba2cpp = {
     nb_types.void            : 'void',
@@ -269,15 +270,15 @@ def typeof_scope(val, c):
 
             pobj = c.context.call_function_pointer(c.builder, fp, [obj])
 
-            # TODO: the use of create_struct_proxy is (too) slow and probably unnecessary:w
+            # TODO: the use of create_struct_proxy is (too) slow and probably unnecessary
             d = nb_cgu.create_struct_proxy(typ)(c.context, c.builder)
+            basep = c.builder.bitcast(pobj, ir_charptr)
             for f, o in offsets:
-                pf = c.builder.bitcast(pobj, irType.pointer(ir_ftypes[f]))
+                pfc = c.builder.gep(basep, [ir.Constant(ir_intptr_t, o)])
+                pf = c.builder.bitcast(pfc, irType.pointer(ir_ftypes[f]))
                 setattr(d, f, c.builder.load(pf))
 
-            # TODO: after typing, cppyy_addressof_ptr can not fail, so error checking is
-            # only done b/c of create_struct_proxy(typ), which should go
-            return nb_ext.NativeValue(d._getvalue(), is_error=c.pyapi.c_api_error())
+            return nb_ext.NativeValue(d._getvalue(), is_error=None, cleanup=None)
 
     return cnt
 
