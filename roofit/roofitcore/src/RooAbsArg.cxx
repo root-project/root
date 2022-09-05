@@ -1546,7 +1546,7 @@ void RooAbsArg::printMultiline(ostream& os, Int_t /*contents*/, Bool_t /*verbose
       os << endl ;
       TString moreIndent(indent) ;
       moreIndent.Append("    ") ;
-      static_cast<RooAbsCollection*>(proxy)->printStream(os,kName,kStandard,moreIndent.Data()) ;
+      dynamic_cast<RooAbsCollection*>(proxy)->printStream(os,kName,kStandard,moreIndent.Data()) ;
     }
   }
 }
