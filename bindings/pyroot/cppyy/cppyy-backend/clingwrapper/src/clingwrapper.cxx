@@ -33,6 +33,7 @@
 // Standard
 #include <assert.h>
 #include <algorithm>     // for std::count, std::remove
+#include <climits>
 #include <stdexcept>
 #include <map>
 #include <new>
@@ -1588,6 +1589,36 @@ std::string Cppyy::GetMethodArgType(TCppMethod_t method, TCppIndex_t iarg)
         return arg->GetTypeNormalizedName();
     }
     return "<unknown>";
+}
+
+Cppyy::TCppIndex_t Cppyy::CompareMethodArgType(TCppMethod_t method, TCppIndex_t iarg, const std::string &req_type)
+{
+    if (method) {
+        TFunction* f = m2f(method);
+        TMethodArg* arg = (TMethodArg *)f->GetListOfMethodArgs()->At((int)iarg);
+        void *argqtp = gInterpreter->TypeInfo_QualTypePtr(arg->GetTypeInfo());
+
+        TypeInfo_t *reqti = gInterpreter->TypeInfo_Factory(req_type.c_str());
+        void *reqqtp = gInterpreter->TypeInfo_QualTypePtr(reqti);
+
+        // This scoring is not based on any particular rules
+        if (gInterpreter->IsSameType(argqtp, reqqtp))
+            return 0; // Best match
+        else if ((gInterpreter->IsSignedIntegerType(argqtp) && gInterpreter->IsSignedIntegerType(reqqtp)) || 
+                 (gInterpreter->IsUnsignedIntegerType(argqtp) && gInterpreter->IsUnsignedIntegerType(reqqtp)) ||
+                 (gInterpreter->IsFloatingType(argqtp) && gInterpreter->IsFloatingType(reqqtp)))
+            return 1;
+        else if ((gInterpreter->IsSignedIntegerType(argqtp) && gInterpreter->IsUnsignedIntegerType(reqqtp)) ||
+                 (gInterpreter->IsFloatingType(argqtp) && gInterpreter->IsUnsignedIntegerType(reqqtp)))
+            return 2;
+        else if ((gInterpreter->IsIntegerType(argqtp) && gInterpreter->IsIntegerType(reqqtp)))
+            return 3;
+        else if ((gInterpreter->IsVoidPointerType(argqtp) && gInterpreter->IsPointerType(reqqtp)))
+            return 4;
+        else 
+            return 10; // Penalize heavily for no possible match
+    }
+    return INT_MAX; // Method is not valid
 }
 
 std::string Cppyy::GetMethodArgDefault(TCppMethod_t method, TCppIndex_t iarg)
