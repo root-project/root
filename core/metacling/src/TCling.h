@@ -533,6 +533,7 @@ public: // Public Interface
    const char* MethodArgInfo_Name(MethodArgInfo_t* marginfo) const final;
    const char* MethodArgInfo_TypeName(MethodArgInfo_t* marginfo) const final;
    std::string MethodArgInfo_TypeNormalizedName(MethodArgInfo_t *marginfo) const final;
+   TypeInfo_t* MethodArgInfo_TypeInfo(MethodArgInfo_t *marginfo) const;
 
    // TypeInfo interface
    void   TypeInfo_Delete(TypeInfo_t* tinfo) const final;
@@ -546,6 +547,7 @@ public: // Public Interface
    int    TypeInfo_RefType(TypeInfo_t* /* tinfo */) const final;
    int    TypeInfo_Size(TypeInfo_t* tinfo) const final;
    const char* TypeInfo_TrueName(TypeInfo_t* tinfo) const final;
+   void*  TypeInfo_QualTypePtr(TypeInfo_t* tinfo) const;
 
    // TypedefInfo interface
    DeclId_t GetDeclId(TypedefInfo_t *info) const final;
