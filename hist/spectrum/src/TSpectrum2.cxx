@@ -6,7 +6,7 @@
     \brief Advanced 2-dimensional spectra processing
     \author Miroslav Morhac
 
-    \legacy{TSpectrum2}
+    \unmaintained{TSpectrum2}
 
  This class contains advanced spectra processing functions.
 

@@ -6,7 +6,7 @@
     \brief Advanced 2-dimensional orthogonal transform functions
     \author Miroslav Morhac
 
- \legacy{TSpectrum2Transform}
+ \unmaintained{TSpectrum2Transform}
 
  Class to carry out transforms of 2D spectra, its filtering and
  enhancement. It allows to calculate classic Fourier, Cosine, Sin,

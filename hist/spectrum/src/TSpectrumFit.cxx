@@ -6,7 +6,7 @@
     \brief Advanced 1-dimensional spectra fitting functions
     \author Miroslav Morhac
 
- \legacy{TSpectrumFit}
+ \unmaintained{TSpectrumFit}
 
  Class for fitting 1D spectra using AWMI (algorithm without matrix
  inversion) and conjugate gradient algorithms for symmetrical

@@ -6,7 +6,7 @@
     \brief Advanced 2-dimensional spectra fitting functions
     \author Miroslav Morhac
 
- \legacy{TSpectrum2Fit}
+ \unmaintained{TSpectrum2Fit}
 
 Class for fitting 2D spectra using AWMI (algorithm without matrix
 inversion) and conjugate gradient algorithms for symmetrical

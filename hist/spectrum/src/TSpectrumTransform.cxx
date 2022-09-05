@@ -6,7 +6,7 @@
     \brief Advanced 1-dimensional orthogonal transform functions
     \author Miroslav Morhac
 
- \legacy{TSpectrumTransform}
+ \unmaintained{TSpectrumTransform}
 
 
  Class to carry out transforms of 1D spectra, its filtering and
