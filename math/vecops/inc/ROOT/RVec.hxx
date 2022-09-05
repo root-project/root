@@ -48,6 +48,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <iostream>
 
 #ifdef R__HAS_VDT
 #include <vdt/vdtMath.h>
@@ -2263,6 +2264,24 @@ RVec<T> Take(const RVec<T> &v, const RVec<typename RVec<T>::size_type> &i)
       r[k] = v[i[k]];
    return r;
 }
+
+/// Take version that defaults to (user-specified) output value if some index is out of range
+template <typename T>
+RVec<T> Take(const RVec<T> &v, const RVec<typename RVec<T>::size_type> &i, const T default_val)
+{
+   using size_type = typename RVec<T>::size_type;
+   const size_type isize = i.size();
+   RVec<T> r(isize);
+   for (size_type k = 0; k < isize; k++)
+      if (k < v.size()){
+         r[k] = v[i[k]];
+      }
+      else {
+         r[k] = default_val;
+      }
+   return r;
+}
+
 
 /// Return first or last `n` elements of an RVec
 ///
