@@ -124,7 +124,7 @@ class CppFunctionNumbaType(nb_types.Callable):
         except KeyError:
             pass
 
-        ol = CppFunctionNumbaType(self._func.__overload__(*(numba2cpp(x) for x in args)), self._is_method)
+        ol = CppFunctionNumbaType(self._func.__overload__(tuple(numba2cpp(x) for x in args)), self._is_method)
 
         if self._is_method:
             args = (nb_types.voidptr, *args)
@@ -158,7 +158,7 @@ class CppFunctionNumbaType(nb_types.Callable):
 
     def get_pointer(self, func):
         if func is None: func = self._func
-        ol = func.__overload__(*(numba2cpp(x) for x in self.sig.args[int(self._is_method):]))
+        ol = func.__overload__(tuple(numba2cpp(x) for x in self.sig.args[int(self._is_method):]))
         address = cppyy.addressof(ol)
         if not address:
             raise RuntimeError("unresolved address for %s" % str(ol))
