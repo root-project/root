@@ -9488,6 +9488,14 @@ bool TCling::IsVoidPointerType(const void * QualTypePtr) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool TCling::FunctionDeclId_IsMethod(DeclId_t fdeclid) const
+{
+   clang::FunctionDecl *FD = (clang::FunctionDecl *) fdeclid;
+   return llvm::isa_and_nonnull<clang::CXXMethodDecl>(FD);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void TCling::SnapshotMutexState(ROOT::TVirtualRWMutex* mtx)
 {
    if (!fInitialMutex) {
