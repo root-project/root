@@ -42,8 +42,8 @@ namespace RDF {
 
 using namespace ROOT::TypeTraits;
 
-/******* Beginning of helper functions ********/
-/******* Overloads for the case of a single column being varied ********/
+/// @name Helper functions for the case of a single column being varied.
+///@{
 template <typename T>
 bool ResultsSizeEq(const T &results, std::size_t expected, std::size_t nColumns, std::true_type /*isSingleColumn*/)
 {
@@ -65,9 +65,9 @@ void ResizeResults(ROOT::RVec<T> &results, std::size_t /*nCols*/, std::size_t nV
    results.resize(nVariations);
 }
 
-// Assign into fLastResults[slot] without changing the addresses of its elements (we gave those addresses away in
-// GetValuePtr)
-// The callee is responsible of making sure that `resStorage` has the correct size.
+/// Assign into fLastResults[slot] without changing the addresses of its elements (we gave those addresses away in
+/// GetValuePtr)
+/// The callee is responsible of making sure that `resStorage` has the correct size.
 template <typename T>
 void AssignResults(ROOT::RVec<T> &resStorage, ROOT::RVec<T> &&tmpResults)
 {
@@ -82,9 +82,10 @@ void *GetValuePtrHelper(ROOT::RVec<T> &v, std::size_t /*colIdx*/, std::size_t va
 {
    return static_cast<void *>(&v[varIdx]);
 }
+///@}
 
-/****** Overloads for the case of multiple columns varied simultaneously *******/
-
+/// @name Helper functions for the case of multiple columns being varied simultaneously.
+///@{
 template <typename T>
 bool ResultsSizeEq(const T &results, std::size_t expected, std::size_t /*nColumns*/, std::false_type /*isSingleColumn*/)
 {
@@ -123,8 +124,7 @@ void *GetValuePtrHelper(std::vector<ROOT::RVec<T>> &v, std::size_t colIdx, std::
 {
    return static_cast<void *>(&v[colIdx][varIdx]);
 }
-
-/******* End of helper functions *******/
+///@}
 
 template <typename VaryExpressionRet_t, bool IsSingleColumn>
 struct ColumnType {
