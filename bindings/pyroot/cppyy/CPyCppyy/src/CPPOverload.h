@@ -64,6 +64,7 @@ public:
 
 // find a method based on the provided signature
     PyObject* FindOverload(const std::string& signature, int want_const = -1);
+    PyObject* FindOverload(PyObject *args_tuple, int want_const = -1);
 
 public:                 // public, as the python C-API works with C structs
     PyObject_HEAD
