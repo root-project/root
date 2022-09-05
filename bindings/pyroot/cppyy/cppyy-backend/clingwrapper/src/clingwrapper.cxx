@@ -338,6 +338,16 @@ TFunction* m2f(Cppyy::TCppMethod_t method) {
 }
 
 static inline
+CallWrapper::DeclId_t m2d(Cppyy::TCppMethod_t method) {
+    CallWrapper* wrap = ((CallWrapper*)method);
+    if (!wrap->fTF || wrap->fTF->GetDeclId() != wrap->fDecl) {
+        MethodInfo_t* mi = gInterpreter->MethodInfo_Factory(wrap->fDecl);
+        wrap->fTF = new TFunction(mi);
+    }
+    return wrap->fDecl;
+}
+
+static inline
 char* cppstring_to_cstring(const std::string& cppstr)
 {
     char* cstr = (char*)malloc(cppstr.size()+1);
@@ -907,10 +917,25 @@ Cppyy::TCppFuncAddr_t Cppyy::GetFunctionAddress(TCppMethod_t method, bool check_
         sig << "template " << fn << ";";
         gInterpreter->ProcessLine(sig.str().c_str());
     } else {
-        std::string sfn = std::string("&")+fn;
-        std::string::size_type pos = sfn.find('(');
-        if (pos != std::string::npos) sfn = sfn.substr(0, pos);
-        gInterpreter->Calc(sfn.c_str());
+        std::string sfn(fn);
+        std::string addrstr;
+        addrstr.reserve(128);
+        addrstr.push_back('(');
+        addrstr.append(Cppyy::GetMethodResultType(method));
+        addrstr.append(" (");
+
+        if (gInterpreter->FunctionDeclId_IsMethod(m2d(method))) {
+            std::string::size_type colon = sfn.rfind("::");
+            if (colon != std::string::npos) addrstr.append(sfn.substr(0, colon+2));
+        }
+
+        addrstr.append("*)");
+        addrstr.append(Cppyy::GetMethodSignature(method, false));
+        addrstr.append(") &");
+
+        addrstr.append(sfn.substr(0, sfn.find('(')));
+
+        gInterpreter->Calc(addrstr.c_str());
     }
 
     return (TCppFuncAddr_t)gInterpreter->FindSym(f->GetMangledName());
