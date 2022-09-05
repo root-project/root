@@ -1221,7 +1221,7 @@ std::unique_ptr<ROperator> make_ROperator_BatchNormalization(const onnx::NodePro
    return op;
 }
 
-std::unique_ptr<ROperator> make_ROperator_Concat(const onnx::NodeProto &nodeproto,
+std::unique_ptr<ROperator> make_ROperator_ConcatFromSequence(const onnx::NodeProto &nodeproto,
                                                  const onnx::GraphProto & /*graphproto */,
                                                  std::unordered_map<std::string, ETensorType> &tensor_type)
 {
@@ -1237,7 +1237,7 @@ std::unique_ptr<ROperator> make_ROperator_Concat(const onnx::NodeProto &nodeprot
          else
             assert(it->second == input_type);
       } else {
-         throw std::runtime_error("TMVA::SOFIE ONNX Parser Concat op has input tensor" + input_name +
+         throw std::runtime_error("TMVA::SOFIE ONNX Parser ConcatFromSequence op has input tensor" + input_name +
                                   " but its type is not yet registered");
          // std::cout << "TMVA::SOFIE ONNX Parser " << nodeproto.op_type() <<
          // " op has input tensor" + input_name + "  but its type is not yet registered - use default float " << std::endl;
@@ -1258,9 +1258,9 @@ std::unique_ptr<ROperator> make_ROperator_Concat(const onnx::NodeProto &nodeprot
          attr_new_axis = nodeproto.attribute(i).i();
    }
    switch (input_type) {
-   case ETensorType::FLOAT: op.reset(new ROperator_Concat<float>(fInputs, attr_axis, attr_new_axis, nodeproto.output(0))); break;
+   case ETensorType::FLOAT: op.reset(new ROperator_ConcatFromSequence<float>(fInputs, attr_axis, attr_new_axis, nodeproto.output(0))); break;
    default:
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Concat does not yet support input type " +
+      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator ConcatFromSequence does not yet support input type " +
                                std::to_string(static_cast<int>(input_type)));
    }
 
