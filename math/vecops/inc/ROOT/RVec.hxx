@@ -1874,10 +1874,17 @@ auto Dot(const RVec<T> &v0, const RVec<V> &v1) -> decltype(v0[0] * v1[0])
 /// v_sum_lv
 /// // (ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> > &) (30.8489,2.46534,2.58947,361.084)
 /// ~~~
-template <typename T, typename R = T>
-R Sum(const RVec<T> &v, const R zero = R(0))
+template <typename T>
+T Sum(const RVec<T> &v, const T zero = T(0))
 {
    return std::accumulate(v.begin(), v.end(), zero);
+}
+
+/// Product method analogous to Sum:
+template <typename T>
+T Product(const RVec<T> &v, const T zero = T(0))
+{
+   return std::accumulate(v.begin(), v.end(), zero, std::multiplies<T>());
 }
 
 /// Get the mean of the elements of an RVec
