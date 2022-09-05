@@ -262,7 +262,7 @@ TAB_SIZE               = 3
 # @} or use a double escape (\\{ and \\})
 
 ALIASES                = "legacy{1}=\htmlonly<div class=\"legacybox\"><h2>Legacy Code</h2> \1 is a legacy interface: it is not recommended to use it in new code. There will be no bug fixes nor new developments.</div>\endhtmlonly"
-ALIASES               += "unmaintained{1}=\htmlonly<div class=\"legacybox\"><h2>Unmainted Code</h2> \1 is a legacy interface: you can use it, as there is no one-to-one replacement interface planned/known. There will be no bug fixes nor new developments.</div>\endhtmlonly"
+ALIASES               += "unmaintained{1}=\htmlonly<div class=\"legacybox\"><h2>Unmaintained Code</h2> \1 is a legacy interface: you can use it, as there is no one-to-one replacement interface planned/known. There will be no bug fixes nor new developments.</div>\endhtmlonly"
 
 # Set the OPTIMIZE_OUTPUT_FOR_C tag to YES if your project consists of C sources
 # only. Doxygen will then generate output that is more tailored for C. For
