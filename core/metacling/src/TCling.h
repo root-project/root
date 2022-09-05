@@ -564,6 +564,16 @@ public: // Public Interface
    const char* TypedefInfo_Name(TypedefInfo_t* tinfo) const final;
    const char* TypedefInfo_Title(TypedefInfo_t* tinfo) const final;
 
+   // QualType Opaque Ptr interface
+   bool IsSameType(const void * QualTypePtr1, const void * QualTypePtr2) const;
+   bool IsIntegerType(const void * QualTypePtr) const;
+   bool IsSignedIntegerType(const void * QualTypePtr) const;
+   bool IsUnsignedIntegerType(const void * QualTypePtr) const;
+   bool IsFloatingType(const void * QualTypePtr) const;
+   bool IsPointerType(const void * QualTypePtr) const;
+   bool IsVoidPointerType(const void * QualTypePtr) const;
+
+
    std::set<TClass*>& GetModTClasses() { return fModTClasses; }
 
    void HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*>& modifiedClasses);
