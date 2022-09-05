@@ -358,7 +358,7 @@ const RooArgSet* RooVectorDataStore::get(Int_t index) const
   }
 
   for (const auto fullRealP : _realfStoreList) {
-    fullRealP->get(index);
+    fullRealP->load(index);
   }
 
   for (const auto catP : _catStoreList) {
@@ -377,43 +377,6 @@ const RooArgSet* RooVectorDataStore::get(Int_t index) const
 
   if (_cache) {
     _cache->get(index) ;
-  }
-
-  return &_vars;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Load the n-th data point (n='index') into the variables of this dataset,
-/// and return a pointer to the RooArgSet that holds them.
-const RooArgSet* RooVectorDataStore::getNative(Int_t index) const
-{
-  if (index < 0 || static_cast<std::size_t>(index) >= size()) return 0;
-
-  for (const auto realV : _realStoreList) {
-    realV->loadToNative(index) ;
-  }
-
-  for (const auto fullRealP : _realfStoreList) {
-    fullRealP->loadToNative(index);
-  }
-
-  for (const auto catP : _catStoreList) {
-    catP->loadToNative(index);
-  }
-
-  if (_doDirtyProp) {
-    // Raise all dirty flags
-    for (auto var : _vars) {
-      var->setValueDirty() ; // This triggers recalculation of all clients
-    }
-  }
-
-  // Update current weight cache
-  _currentWeightIndex = index;
-
-  if (_cache) {
-    _cache->getNative(index) ;
   }
 
   return &_vars;
@@ -687,7 +650,7 @@ RooAbsArg* RooVectorDataStore::addColumn(RooAbsArg& newVar, bool /*adjustRange*/
   }
 
   for (std::size_t i=0; i < numEvt; i++) {
-    getNative(i) ;
+    get(i) ;
 
     newVarClone->syncCache(&_vars) ;
     valHolder->copyCache(newVarClone) ;
@@ -902,7 +865,7 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
   const std::size_t numEvt = size();
   newCache->reserve(numEvt);
   for (std::size_t i=0; i < numEvt; i++) {
-    getNative(i) ;
+    get(i) ;
     if (weight()!=0 || !skipZeroWeights) {
       for (unsigned int j = 0; j < cloneSet.size(); ++j) {
         auto& cloneArg = cloneSet[j];
