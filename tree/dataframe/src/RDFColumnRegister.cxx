@@ -41,7 +41,7 @@ RDefinesWithReaders::GetReader(unsigned int slot, const std::string &variationNa
    if (variationName != "nominal")
       define = &define->GetVariedDefine(variationName);
 
-   auto insertion = defineReaders.insert({variationName, std::make_shared<RDefineReader>(slot, *define)});
+   const auto insertion = defineReaders.insert({variationName, std::make_shared<RDefineReader>(slot, *define)});
    return insertion.first->second;
 }
 
@@ -64,7 +64,7 @@ RVariationsWithReaders::GetReader(unsigned int slot, const std::string &colName,
    if (it != varReaders.end())
       return it->second;
 
-   auto insertion =
+   const auto insertion =
       varReaders.insert({variationName, std::make_shared<RVariationReader>(slot, colName, variationName, *fVariation)});
    return insertion.first->second;
 }
