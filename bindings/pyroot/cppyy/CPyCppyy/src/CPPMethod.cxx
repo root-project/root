@@ -553,6 +553,39 @@ Cppyy::TCppFuncAddr_t CPyCppyy::CPPMethod::GetFunctionAddress()
     return Cppyy::GetFunctionAddress(fMethod, false /* don't check fast path envar */);
 }
 
+//----------------------------------------------------------------------------
+int CPyCppyy::CPPMethod::GetArgMatchScore(PyObject* args_tuple)
+{
+    Py_ssize_t n = PyTuple_Size(args_tuple);
+
+    int req_args = Cppyy::GetMethodReqArgs(fMethod);
+    
+    // Not enough arguments supplied: no match
+    if (req_args > n)
+        return INT_MAX;
+    
+    size_t score = 0;
+    for (int i = 0; i < n; i++) {
+        PyObject *pItem = PyTuple_GetItem(args_tuple, i);
+        if(!CPyCppyy_PyText_Check(pItem)) {
+            PyErr_SetString(PyExc_TypeError, "argument types should be in string format");
+            return INT_MAX;
+        }
+        std::string req_type(CPyCppyy_PyText_AsString(pItem));
+
+        size_t arg_score = Cppyy::CompareMethodArgType(fMethod, i, req_type);
+
+        // Method is not compatible if even one argument does not match
+        if (arg_score >= 10) {
+            score = INT_MAX;
+            break;
+        }
+
+        score += arg_score;
+    }
+
+    return score;
+}
 
 //----------------------------------------------------------------------------
 bool CPyCppyy::CPPMethod::Initialize(CallContext* ctxt)
