@@ -135,7 +135,7 @@ TEST(RDFVary, RequireVariationsHaveConsistentTypeJitted)
       // before starting the event loop, we jit and notice the mismatch in types
       EXPECT_THROW(
          try { ss["nominal"]; } catch (const std::runtime_error &err) {
-            const auto msg = "RVariationReader: type mismatch: column \"x\" is being used as float but the "
+            const auto msg = "RDataFrame: type mismatch: column \"x\" is being used as float but the "
                              "Define or Vary node advertises it as double";
             EXPECT_STREQ(err.what(), msg);
             throw;
@@ -152,7 +152,7 @@ TEST(RDFVary, RequireVariationsHaveConsistentTypeJitted)
       // before starting the event loop, we jit and notice the mismatch in types
       EXPECT_THROW(
          try { ss2["nominal"]; } catch (const std::runtime_error &err) {
-            const auto msg = "RVariationReader: type mismatch: column \"y\" is being used as int but the Define "
+            const auto msg = "RDataFrame: type mismatch: column \"y\" is being used as int but the Define "
                              "or Vary node advertises it as double";
             EXPECT_STREQ(err.what(), msg);
             throw;
@@ -185,7 +185,7 @@ TEST(RDFVary, RequireVariationsHaveConsistentTypeJitted)
       auto ss = ROOT::RDF::Experimental::VariationsFor(s);
       EXPECT_THROW(
          try { ss["broken:0"]; } catch (const std::runtime_error &err) {
-            const auto expected = "RVariationReader: type mismatch: column \"z\" is being used as int but the Define "
+            const auto expected = "RDataFrame: type mismatch: column \"z\" is being used as int but the Define "
                                   "or Vary node advertises it as float";
             EXPECT_STREQ(err.what(), expected);
             throw;
