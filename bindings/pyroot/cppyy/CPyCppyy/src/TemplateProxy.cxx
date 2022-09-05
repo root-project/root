@@ -751,26 +751,62 @@ static PyObject* tpp_overload(TemplateProxy* pytmpl, PyObject* args)
 {
 // Select and call a specific C++ overload, based on its signature.
     const char* sigarg = nullptr;
+    PyObject* sigarg_tuple = nullptr;
     int want_const = -1;
-    if (!PyArg_ParseTuple(args, const_cast<char*>("s|i:__overload__"), &sigarg, &want_const))
-        return nullptr;
-    want_const = PyTuple_GET_SIZE(args) == 1 ? -1 : want_const;
 
-// check existing overloads in order
-    PyObject* ol = pytmpl->fTI->fNonTemplated->FindOverload(sigarg, want_const);
-    if (ol) return ol;
-    PyErr_Clear();
-    ol = pytmpl->fTI->fTemplated->FindOverload(sigarg, want_const);
-    if (ol) return ol;
-    PyErr_Clear();
-    ol = pytmpl->fTI->fLowPriority->FindOverload(sigarg, want_const);
-    if (ol) return ol;
+    std::string proto;
+
+    if (PyArg_ParseTuple(args, const_cast<char*>("s|i:__overload__"), &sigarg, &want_const)) {
+        want_const = PyTuple_GET_SIZE(args) == 1 ? -1 : want_const;
+
+    // check existing overloads in order
+        PyObject* ol = pytmpl->fTI->fNonTemplated->FindOverload(sigarg, want_const);
+        if (ol) return ol;
+        PyErr_Clear();
+        ol = pytmpl->fTI->fTemplated->FindOverload(sigarg, want_const);
+        if (ol) return ol;
+        PyErr_Clear();
+        ol = pytmpl->fTI->fLowPriority->FindOverload(sigarg, want_const);
+        if (ol) return ol;
+
+        proto = Utility::ConstructTemplateArgs(nullptr, args);
+    } else if (PyArg_ParseTuple(args, const_cast<char*>("O|i:__overload__"), &sigarg_tuple, &want_const)) {
+        PyErr_Clear();
+        want_const = PyTuple_GET_SIZE(args) == 1 ? -1 : want_const;
+
+    // check existing overloads in order
+        PyObject* ol = pytmpl->fTI->fNonTemplated->FindOverload(sigarg_tuple, want_const);
+        if (ol) return ol;
+        PyErr_Clear();
+        ol = pytmpl->fTI->fTemplated->FindOverload(sigarg_tuple, want_const);
+        if (ol) return ol;
+        PyErr_Clear();
+        ol = pytmpl->fTI->fLowPriority->FindOverload(sigarg_tuple, want_const);
+        if (ol) return ol;
+
+        proto.reserve(128);
+        proto.push_back('<');
+        Py_ssize_t n = PyTuple_Size(sigarg_tuple);
+        for (int i = 0; i < n; i++) {
+            PyObject *pItem = PyTuple_GetItem(sigarg_tuple, i);
+            if(!CPyCppyy_PyText_Check(pItem)) {
+                PyErr_Format(PyExc_LookupError, "argument types should be in string format");
+                return (PyObject*) nullptr;
+            }
+            proto.append(CPyCppyy_PyText_AsString(pItem));
+            if (i < n - 1)
+                proto.push_back(',');
+        }
+        proto.push_back('>');
+    } else {
+        PyErr_Format(PyExc_TypeError, "Unexpected arguments to __overload__");
+        return nullptr;
+    }
 
 // else attempt instantiation
     PyObject* pytype = 0, *pyvalue = 0, *pytrace = 0;
     PyErr_Fetch(&pytype, &pyvalue, &pytrace);
 
-    std::string proto = Utility::ConstructTemplateArgs(nullptr, args);
     Cppyy::TCppScope_t scope = ((CPPClass*)pytmpl->fTI->fPyClass)->fCppType;
     Cppyy::TCppMethod_t cppmeth = Cppyy::GetMethodTemplate(
         scope, CPyCppyy_PyText_AsString(pytmpl->fTI->fCppName),
@@ -796,8 +832,7 @@ static PyObject* tpp_overload(TemplateProxy* pytmpl, PyObject* args)
     } else
         meth = new CPPMethod(scope, cppmeth);
 
-    return (PyObject*)CPPOverload_New(
-        CPyCppyy_PyText_AsString(pytmpl->fTI->fCppName) + proto, meth);
+    return (PyObject*)CPPOverload_New(CPyCppyy_PyText_AsString(pytmpl->fTI->fCppName) + proto, meth);
 }
 
 static PyMethodDef tpp_methods[] = {
