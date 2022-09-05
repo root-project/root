@@ -521,6 +521,7 @@ public:
    virtual const char *MethodArgInfo_Name(MethodArgInfo_t * /* marginfo */) const {return nullptr;}
    virtual const char *MethodArgInfo_TypeName(MethodArgInfo_t * /* marginfo */) const {return nullptr;}
    virtual std::string MethodArgInfo_TypeNormalizedName(MethodArgInfo_t * /* marginfo */) const = 0;
+   virtual TypeInfo_t *MethodArgInfo_TypeInfo(MethodArgInfo_t * /* marginfo */) const {return 0;}
 
 
    // TypeInfo interface
@@ -535,6 +536,7 @@ public:
    virtual int    TypeInfo_RefType(TypeInfo_t * /* tinfo */) const {return 0;}
    virtual int    TypeInfo_Size(TypeInfo_t * /* tinfo */) const {return 0;}
    virtual const char *TypeInfo_TrueName(TypeInfo_t * /* tinfo */) const {return nullptr;}
+   virtual void  *TypeInfo_QualTypePtr(TypeInfo_t * /* tinfo */) const {return 0;}
 
 
    // TypedefInfo interface

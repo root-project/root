@@ -263,3 +263,12 @@ std::string TClingTypeInfo::NormalizedName(const ROOT::TMetaUtils::TNormalizedCt
    return buf;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return the QualType as a void pointer
+
+void *TClingTypeInfo::QualTypePtr() const
+{
+   return fQualType.getAsOpaquePtr();
+}
+
+

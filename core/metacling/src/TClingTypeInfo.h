@@ -59,6 +59,8 @@ public:
    cling::Interpreter  *GetInterpreter() const { return fInterp; }
 
    clang::QualType      GetQualType() const { return fQualType; }
+   
+   void                *QualTypePtr() const;
 
    void                 Init(const char *name); // Set type by name.
    void                 Init(clang::QualType ty) { fQualType = ty; }

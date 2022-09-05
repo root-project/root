@@ -54,6 +54,7 @@ public:
    const char    *GetFullTypeName() const;
    std::string    GetTypeNormalizedName() const;
    Long_t         Property() const override;
+   TypeInfo_t    *GetTypeInfo() const;
 
    TDataMember   *GetDataMember() const;
    TList         *GetOptions() const;
