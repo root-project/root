@@ -553,6 +553,15 @@ public:
    virtual const char *TypedefInfo_Name(TypedefInfo_t * /* tinfo */) const {return nullptr;}
    virtual const char *TypedefInfo_Title(TypedefInfo_t * /* tinfo */) const {return nullptr;}
 
+   // QualType Opaque Ptr interface
+   virtual Bool_t IsSameType(const void * /* QualTypePtr1 */, const void * /* QualTypePtr2 */) const {return 0;}
+   virtual Bool_t IsIntegerType(const void * /* QualTypePtr */) const {return 0;}
+   virtual Bool_t IsSignedIntegerType(const void * /* QualTypePtr */) const {return 0;}
+   virtual Bool_t IsUnsignedIntegerType(const void * /* QualTypePtr */) const {return 0;}
+   virtual Bool_t IsFloatingType(const void * /* QualTypePtr */) const {return 0;}
+   virtual Bool_t IsPointerType(const void * /* QualTypePtr */) const {return 0;}
+   virtual Bool_t IsVoidPointerType(const void * /* QualTypePtr */) const {return 0;}
+
    static TInterpreter *Instance();
 
    ClassDefOverride(TInterpreter,0)  //ABC defining interface to generic interpreter
