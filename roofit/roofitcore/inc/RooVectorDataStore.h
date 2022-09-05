@@ -106,8 +106,6 @@ public:
   using RooAbsDataStore::get;
   const RooArgSet* get(Int_t index) const override;
 
-  virtual const RooArgSet* getNative(Int_t index) const;
-
   using RooAbsDataStore::weight ;
   /// Return the weight of the last-retrieved data point.
   double weight() const override
@@ -288,6 +286,7 @@ public:
     inline void load(std::size_t idx) const {
       assert(idx < _vec.size());
       *_buf = *(_vec.begin() + idx) ;
+      *_nativeBuf = *_buf ;
     }
 
     RooSpan<const double> getRange(std::size_t first, std::size_t last) const {
@@ -295,10 +294,6 @@ public:
       auto end = std::min(_vec.cbegin() + last,  _vec.cend());
 
       return RooSpan<const double>(beg, end);
-    }
-
-    inline void loadToNative(std::size_t idx) const {
-      *_nativeBuf = *(_vec.begin() + idx) ;
     }
 
     std::size_t size() const { return _vec.size() ; }
@@ -435,17 +430,6 @@ public:
       }
     }
 
-    inline void loadToNative(Int_t idx) const {
-      RealVector::loadToNative(idx) ;
-      if (_vecE) {
-        *_nativeBufE = (*_vecE)[idx] ;
-      }
-      if (_vecEL) {
-        *_nativeBufEL = (*_vecEL)[idx] ;
-        *_nativeBufEH = (*_vecEH)[idx] ;
-      }
-    }
-
     void fill() {
       RealVector::fill() ;
       if (_vecE) _vecE->push_back(*_bufE) ;
@@ -476,11 +460,20 @@ public:
       }
     }
 
-    inline void get(Int_t idx) const {
+    inline void load(Int_t idx) const {
       RealVector::load(idx) ;
-      if (_vecE) *_bufE = (*_vecE)[idx];
-      if (_vecEL) *_bufEL = (*_vecEL)[idx] ;
-      if (_vecEH) *_bufEH = (*_vecEH)[idx] ;
+      if (_vecE) {
+        *_bufE = (*_vecE)[idx];
+        *_nativeBufE = (*_vecE)[idx] ;
+      }
+      if (_vecEL) {
+        *_bufEL = (*_vecEL)[idx] ;
+        *_nativeBufEL = (*_vecEL)[idx] ;
+      }
+      if (_vecEH) {
+        *_bufEH = (*_vecEH)[idx] ;
+        *_nativeBufEH = (*_vecEH)[idx] ;
+      }
     }
 
     void resize(Int_t siz) {
@@ -595,6 +588,7 @@ public:
 
     inline void load(std::size_t idx) const {
       *_buf = _vec[idx];
+      *_nativeBuf = *_buf;
     }
 
     RooSpan<const RooAbsCategory::value_type> getRange(std::size_t first, std::size_t last) const {
@@ -604,10 +598,6 @@ public:
       return RooSpan<const RooAbsCategory::value_type>(beg, end);
     }
 
-
-    inline void loadToNative(std::size_t idx) const {
-      *_nativeBuf = _vec[idx];
-    }
 
     std::size_t size() const { return _vec.size() ; }
 
