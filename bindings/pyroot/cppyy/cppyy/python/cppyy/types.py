@@ -17,7 +17,7 @@ except ImportError:
         'DataMember',
         'Instance',
         'Function',
-        'Method'
+        'Method',
         'Scope',
         'InstanceArray',
         'Template'
