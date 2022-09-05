@@ -51,10 +51,12 @@ _cpp2numba = {
     'uint64_t'               : nb_types.uint64,
     'long'                   : nb_types.long_,
     'unsigned long'          : nb_types.ulong,
-    'long long'              : nb_types.longlong,
+    'Long64_t'               : nb_types.longlong,   # Note: placed above long long as the last value is used in numba2cpp
+    'long long'              : nb_types.longlong,   # this value will be used in numba2cpp
     'unsigned long long'     : nb_types.ulonglong,
     'float'                  : nb_types.float32,
-    'double'                 : nb_types.float64,
+    'long double'            : nb_types.float64,    # Note: see Long64_t
+    'double'                 : nb_types.float64,    # this value will be used in numba2cpp
 }
 
 def cpp2numba(val):
