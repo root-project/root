@@ -725,9 +725,30 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
       }
 
       if (opt.Contains("I"))  fitOption.Integral= 1;   // integral of function in the bin (no sense for graph)
+      if (opt.Contains("W")) fitOption.W1     = 1; // all non-empty bins or points have weight =1 (for chi2 fit)
       if (opt.Contains("WW")) fitOption.W1      = 2; //all bins have weight=1, even empty bins
-   }
+      if (opt.Contains("L")) fitOption.Like    = 1;
+      if (opt.Contains("X")) fitOption.Chi2    = 1;
+      if (opt.Contains("P")) fitOption.PChi2    = 1;
 
+      // specific likelihood fit options
+      if (fitOption.Like == 1) {
+          //if (opt.Contains("LL")) fitOption.Like    = 2;
+         if (opt.Contains("W")){ fitOption.Like    = 2;  fitOption.W1=0;}//  (weighted likelihood)
+         if (opt.Contains("MULTI")) {
+            if (fitOption.Like == 2) fitOption.Like = 6; // weighted multinomial
+            else fitOption.Like    = 4; // multinomial likelihood fit instead of Poisson
+            opt.ReplaceAll("MULTI","");
+         }
+         // give precedence for likelihood options
+         if (fitOption.Chi2 == 1 || fitOption.PChi2 == 1)
+            Warning("Fit","Cannot use P or X option in combination of L. Ignore the chi2 option and perform a likelihood fit");
+      }
+      if (fitOption.PChi2 && fitOption.W1) {
+         Warning("FitOptionsMake", "Ignore option W or WW when used together with option P (Pearson chi2)");
+         fitOption.W1 = 0; // with Pearson chi2 W option is ignored
+      }
+   }
    // specific Graph options (need to be parsed before)
    else if (type == kGraph) {
       opt.ReplaceAll("ROB", "H");
@@ -750,40 +771,13 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
 
       if (opt.Contains("H")) { fitOption.Robust  = 1;   fitOption.hRobust = h; }
       if (opt.Contains("T")) fitOption.NoErrX   = 1;  // no error in X
-
+      if (opt.Contains("W")) fitOption.W1     = 1; // ignorer all point errors when fitting
    }
 
    if (opt.Contains("U")) fitOption.User    = 1;
    if (opt.Contains("Q")) fitOption.Quiet   = 1;
    if (opt.Contains("V")) {fitOption.Verbose = 1; fitOption.Quiet   = 0;}
-   if (opt.Contains("L")) fitOption.Like    = 1;
-   if (opt.Contains("X")) fitOption.Chi2    = 1;
-   if (opt.Contains("P")) fitOption.PChi2    = 1;
 
-
-   // likelihood fit options
-   if (fitOption.Like == 1) {
-      //if (opt.Contains("LL")) fitOption.Like    = 2;
-      if (opt.Contains("W")){ fitOption.Like    = 2;  fitOption.W1=0;}//  (weighted likelihood)
-      if (opt.Contains("MULTI")) {
-         if (fitOption.Like == 2) fitOption.Like = 6; // weighted multinomial
-         else fitOption.Like    = 4; // multinomial likelihood fit instead of Poisson
-         opt.ReplaceAll("MULTI","");
-      }
-      // in case of histogram give precedence for likelihood options
-      if (type == kHistogram) {
-         if (fitOption.Chi2 == 1 || fitOption.PChi2 == 1)
-            Warning("Fit","Cannot use P or X option in combination of L. Ignore the chi2 option and perform a likelihood fit");
-      }
-
-   } else {
-      if (opt.Contains("W")) fitOption.W1     = 1; // all non-empty bins have weight =1 (for chi2 fit)
-   }
-
-   if (fitOption.PChi2 && fitOption.W1) {
-      Warning("FitOptionsMake", "Ignore option W or WW when used together with option P (Pearson chi2)");
-      fitOption.W1 = 0; // with Pearson chi2 W option is ignored
-   }
 
    if (opt.Contains("E")) fitOption.Errors  = 1;
    if (opt.Contains("R")) fitOption.Range   = 1;
