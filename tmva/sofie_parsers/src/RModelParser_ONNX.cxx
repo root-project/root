@@ -1308,6 +1308,13 @@ std::unique_ptr<ROperator> make_ROperator_Concat(const onnx::NodeProto &nodeprot
 
 std::unique_ptr<ROperator> make_ROperator_Shape(const onnx::NodeProto& nodeproto, const onnx::GraphProto& /*graphproto */, std::unordered_map<std::string, ETensorType>& tensor_type){
 
+   auto input_name =  nodeproto.input(0);
+   auto it = tensor_type.find(input_name);
+
+   if (it == tensor_type.end()){ 
+      throw std::runtime_error("TMVA::SOFIE ONNX Parser Shape op has input tensor" + input_name + " but its type is not yet registered"); 
+   }
+
    std::unique_ptr<ROperator> op;
 
    int attr_start = 0;
