@@ -40,6 +40,8 @@ public:
 
     virtual PyCallable* Clone() { return new CPPMethod(*this); }
 
+    virtual int       GetArgMatchScore(PyObject* args_tuple);
+
 public:
     virtual PyObject* Call(
         CPPInstance*& self, PyObject* args, PyObject* kwds, CallContext* ctxt = nullptr);

@@ -1,6 +1,8 @@
 #ifndef CPYCPPYY_PYCALLABLE_H
 #define CPYCPPYY_PYCALLABLE_H
 
+#include <climits>
+
 // Bindings
 #include "CPyCppyy/Reflex.h"
 #include "CallContext.h"
@@ -36,6 +38,8 @@ public:
     virtual Cppyy::TCppFuncAddr_t GetFunctionAddress() = 0;
 
     virtual PyCallable* Clone() = 0;
+
+    virtual int GetArgMatchScore(PyObject* /* args_tuple */) { return INT_MAX; }
 
 public:
     virtual PyObject* Call(
