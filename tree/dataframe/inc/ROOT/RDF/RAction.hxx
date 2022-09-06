@@ -100,17 +100,19 @@ public:
    }
 
    template <typename... ColTypes, std::size_t... S>
-   void CallExec(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>)
+   void CallExec(unsigned int slot, std::size_t idx, TypeList<ColTypes...>, std::index_sequence<S...>)
    {
-      fHelper.Exec(slot, fValues[slot][S]->template Get<ColTypes>(entry)...);
-      (void)entry; // avoid unused parameter warning (gcc 12.1)
+      fHelper.Exec(slot, fValues[slot][S]->template Get<ColTypes>(idx)...);
+      (void)idx; // avoid unused parameter warning (gcc 12.1)
    }
 
    void Run(unsigned int slot, Long64_t entry) final
    {
-      // check if entry passes all filters
-      if (fPrevNode.CheckFilters(slot, entry))
-         CallExec(slot, entry, ColumnTypes_t{}, TypeInd_t{});
+      const auto mask = fPrevNode.CheckFilters(slot, entry);
+      std::for_each(fValues[slot].begin(), fValues[slot].end(), [entry, mask](auto *v) { v->Load(entry, mask); });
+
+      if (mask)
+         CallExec(slot, /*idx=*/0u, ColumnTypes_t{}, TypeInd_t{});
    }
 
    void TriggerChildrenCount() final { fPrevNode.IncrChildrenCount(); }

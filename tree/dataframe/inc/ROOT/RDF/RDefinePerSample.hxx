@@ -58,7 +58,7 @@ public:
       return static_cast<void *>(&fLastResults[slot * RDFInternal::CacheLineStep<RetType_t>()]);
    }
 
-   void Update(unsigned int, Long64_t) final
+   void Update(unsigned int, Long64_t, bool) final
    {
       // no-op
    }

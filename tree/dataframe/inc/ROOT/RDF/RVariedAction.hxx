@@ -114,17 +114,21 @@ public:
 
    template <typename... ColTypes, std::size_t... S>
    void
-   CallExec(unsigned int slot, unsigned int varIdx, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>)
+   CallExec(unsigned int slot, unsigned int varIdx, std::size_t idx, TypeList<ColTypes...>, std::index_sequence<S...>)
    {
-      fHelpers[varIdx].Exec(slot, fInputValues[slot][varIdx][S]->template Get<ColTypes>(entry)...);
-      (void)entry;
+      fHelpers[varIdx].Exec(slot, fInputValues[slot][varIdx][S]->template Get<ColTypes>(idx)...);
+      (void)idx;
    }
 
    void Run(unsigned int slot, Long64_t entry) final
    {
       for (auto varIdx = 0u; varIdx < GetVariations().size(); ++varIdx) {
-         if (fPrevNodes[varIdx]->CheckFilters(slot, entry))
-            CallExec(slot, varIdx, entry, ColumnTypes_t{}, TypeInd_t{});
+         const auto mask = fPrevNodes[varIdx]->CheckFilters(slot, entry);
+         std::for_each(fInputValues[slot][varIdx].begin(), fInputValues[slot][varIdx].end(),
+                       [entry, mask](auto *v) { v->Load(entry, mask); });
+
+         if (mask)
+            CallExec(slot, varIdx, /*idx=*/0u, ColumnTypes_t{}, TypeInd_t{});
       }
    }
 

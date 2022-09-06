@@ -148,13 +148,14 @@ public:
          f.ConnectPageSource(source);
    }
 
-   void *GetImpl(Long64_t entry) final
+   void *GetImpl(std::size_t /*idx*/) final { return fValue.GetRawPtr(); }
+
+   void LoadImpl(Long64_t entry, bool mask) final
    {
-      if (entry != fLastEntry) {
+      if (entry != fLastEntry && mask) {
          fField->Read(entry, &fValue);
          fLastEntry = entry;
       }
-      return fValue.GetRawPtr();
    }
 };
 

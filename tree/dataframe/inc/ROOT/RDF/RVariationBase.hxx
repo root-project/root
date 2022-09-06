@@ -68,7 +68,7 @@ public:
    const std::vector<std::string> &GetVariationNames() const;
    std::string GetTypeName() const;
    /// Update the value at the address returned by GetValuePtr with the content corresponding to the given entry
-   virtual void Update(unsigned int slot, Long64_t entry) = 0;
+   virtual void Update(unsigned int slot, Long64_t entry, bool mask) = 0;
    /// Clean-up operations to be performed at the end of a task.
    virtual void FinalizeSlot(unsigned int slot) = 0;
 };

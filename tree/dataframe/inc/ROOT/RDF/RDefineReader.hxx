@@ -35,11 +35,9 @@ class R__CLING_PTRCHECK(off) RDefineReader final : public ROOT::Detail::RDF::RCo
    /// The slot this value belongs to.
    unsigned int fSlot = std::numeric_limits<unsigned int>::max();
 
-   void *GetImpl(Long64_t entry) final
-   {
-      fDefine.Update(fSlot, entry);
-      return fValuePtr;
-   }
+   void *GetImpl(std::size_t /*idx*/) final { return fValuePtr; }
+
+   void LoadImpl(Long64_t entry, bool mask) final { fDefine.Update(fSlot, entry, mask); }
 
 public:
    RDefineReader(unsigned int slot, RDFDetail::RDefineBase &define)

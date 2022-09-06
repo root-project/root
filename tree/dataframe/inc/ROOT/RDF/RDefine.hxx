@@ -71,27 +71,30 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    std::unordered_map<std::string, std::unique_ptr<RDefineBase>> fVariedDefines;
 
    template <typename... ColTypes, std::size_t... S>
-   void UpdateHelper(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>, NoneTag)
+   void UpdateHelper(unsigned int slot, std::size_t idx, Long64_t /*entry*/, TypeList<ColTypes...>,
+                     std::index_sequence<S...>, NoneTag)
    {
       fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()] =
-         fExpression(fValues[slot][S]->template Get<ColTypes>(entry)...);
-      (void)entry; // avoid unused parameter warning (gcc 12.1)
+         fExpression(fValues[slot][S]->template Get<ColTypes>(idx)...);
+      (void)idx; // avoid unused parameter warning (gcc 12.1)
    }
 
    template <typename... ColTypes, std::size_t... S>
-   void UpdateHelper(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>, SlotTag)
+   void UpdateHelper(unsigned int slot, std::size_t idx, Long64_t /*entry*/, TypeList<ColTypes...>,
+                     std::index_sequence<S...>, SlotTag)
    {
       fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()] =
-         fExpression(slot, fValues[slot][S]->template Get<ColTypes>(entry)...);
-      (void)entry; // avoid unused parameter warning (gcc 12.1)
+         fExpression(slot, fValues[slot][S]->template Get<ColTypes>(idx)...);
+      (void)idx; // avoid unused parameter warning (gcc 12.1)
    }
 
    template <typename... ColTypes, std::size_t... S>
-   void
-   UpdateHelper(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>, SlotAndEntryTag)
+   void UpdateHelper(unsigned int slot, std::size_t idx, Long64_t batchFirstEntry, TypeList<ColTypes...>,
+                     std::index_sequence<S...>, SlotAndEntryTag)
    {
       fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()] =
-         fExpression(slot, entry, fValues[slot][S]->template Get<ColTypes>(entry)...);
+         fExpression(slot, batchFirstEntry + idx, fValues[slot][S]->template Get<ColTypes>(idx)...);
+      (void)idx; // avoid unused parameter warning (gcc 12.1)
    }
 
 public:
@@ -122,12 +125,15 @@ public:
    }
 
    /// Update the value at the address returned by GetValuePtr with the content corresponding to the given entry
-   void Update(unsigned int slot, Long64_t entry) final
+   void Update(unsigned int slot, Long64_t entry, bool mask) final
    {
       if (entry != fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()]) {
          // evaluate this define expression, cache the result
-         UpdateHelper(slot, entry, ColumnTypes_t{}, TypeInd_t{}, ExtraArgsTag{});
-         fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = entry;
+         std::for_each(fValues[slot].begin(), fValues[slot].end(), [entry, mask](auto *v) { v->Load(entry, mask); });
+         if (mask) {
+            UpdateHelper(slot, /*idx=*/0u, entry, ColumnTypes_t{}, TypeInd_t{}, ExtraArgsTag{});
+            fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = entry;
+         }
       }
    }
 

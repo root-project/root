@@ -29,8 +29,19 @@ namespace RDF {
 template <typename T>
 class R__CLING_PTRCHECK(off) RTreeColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
    std::unique_ptr<TTreeReaderValue<T>> fTreeValue;
+   T *fValuePtr = nullptr;
+   Long64_t fLastEntry = -1ll;
 
-   void *GetImpl(Long64_t) final { return fTreeValue->Get(); }
+   void LoadImpl(Long64_t entry, bool mask) final
+   {
+      if (entry != fLastEntry && mask) {
+         fValuePtr = fTreeValue->Get();
+         fLastEntry = entry;
+      }
+   }
+
+   void *GetImpl(std::size_t) final { return fValuePtr; }
+
 public:
    /// Construct the RTreeColumnReader. Actual initialization is performed lazily by the Init method.
    RTreeColumnReader(TTreeReader &r, const std::string &colName)
@@ -70,10 +81,10 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public ROOT::Det
    /// Whether we already printed a warning about performing a copy of the TTreeReaderArray contents
    bool fCopyWarningPrinted = false;
 
-   void *GetImpl(Long64_t entry) final
+   void LoadImpl(Long64_t entry, bool mask) final
    {
-      if (entry == fLastEntry)
-         return &fRVec; // we already pointed our fRVec to the right address
+      if (entry == fLastEntry || !mask)
+         return; // nothing to do
 
       auto &readerArray = *fTreeArray;
       // We only use TTreeReaderArrays to read columns that users flagged as type `RVec`, so we need to check
@@ -127,6 +138,10 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public ROOT::Det
          }
       }
       fLastEntry = entry;
+   }
+
+   void *GetImpl(std::size_t) final
+   {
       return &fRVec;
    }
 
@@ -156,7 +171,7 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<bool>> final : public ROOT::
    // slab of bool values.
    // Note that this also penalizes the case in which the column type is actually bool[], but the possible performance
    // gains in this edge case is probably not worth the extra complication required to differentiate the two cases.
-   void *GetImpl(Long64_t) final
+   void *GetImpl(std::size_t) final
    {
       auto &readerArray = *fTreeArray;
       const auto readerArraySize = readerArray.GetSize();

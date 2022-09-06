@@ -91,29 +91,33 @@ public:
 
    bool CheckFilters(unsigned int slot, Long64_t entry) final
    {
-      if (entry != fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()]) {
-         if (!fPrevNode.CheckFilters(slot, entry)) {
-            // a filter upstream returned false, cache the result
-            fLastResult[slot * RDFInternal::CacheLineStep<int>()] = false;
-         } else {
-            // evaluate this filter, cache the result
-            auto passed = CheckFilterHelper(slot, entry, ColumnTypes_t{}, TypeInd_t{});
-            passed ? ++fAccepted[slot * RDFInternal::CacheLineStep<ULong64_t>()]
-                   : ++fRejected[slot * RDFInternal::CacheLineStep<ULong64_t>()];
-            fLastResult[slot * RDFInternal::CacheLineStep<int>()] = passed;
-         }
-         fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = entry;
+      auto &newMask = fLastResult[slot * RDFInternal::CacheLineStep<int>()];
+      auto &lastEntry = fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()];
+
+      if (entry != lastEntry) {
+         newMask = fPrevNode.CheckFilters(slot, entry);
+
+         // evaluate this filter, cache the result
+         std::for_each(fValues[slot].begin(), fValues[slot].end(),
+                       [entry, newMask](auto *v) { v->Load(entry, newMask); });
+         CheckFilterHelper(slot, /*idx=*/0u, newMask, ColumnTypes_t{}, TypeInd_t{});
+
+         lastEntry = entry;
       }
-      return fLastResult[slot * RDFInternal::CacheLineStep<int>()];
+
+      return newMask;
    }
 
    template <typename... ColTypes, std::size_t... S>
-   bool CheckFilterHelper(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>)
+   void CheckFilterHelper(unsigned int slot, std::size_t idx, int &entryMask, TypeList<ColTypes...>,
+                          std::index_sequence<S...>)
    {
-      return fFilter(fValues[slot][S]->template Get<ColTypes>(entry)...);
-      // avoid unused parameter warnings (gcc 12.1)
-      (void)slot;
-      (void)entry;
+      if (entryMask) {
+         entryMask = fFilter(fValues[slot][S]->template Get<ColTypes>(idx)...);
+         entryMask ? ++fAccepted[slot * RDFInternal::CacheLineStep<ULong64_t>()]
+                   : ++fRejected[slot * RDFInternal::CacheLineStep<ULong64_t>()];
+      }
+      (void)idx; // avoid unused parameter warning (gcc 12.1)
    }
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
