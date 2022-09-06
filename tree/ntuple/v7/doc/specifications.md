@@ -167,7 +167,7 @@ A reader must support at least this version in order to extract meaningful data 
 If the envelope version is larger than the minimum version, there might be additional data in the envelope
 that older readers can safely ignore.
 
-_CRC32_: Checksum of the envelope and the payload
+_CRC32_: Checksum of the envelope and the payload bytes together (CRC32 has the property that `crc32("123456") == crc32("456", crc32("123")`)
 
 Note that the size of envelopes is given by the RNTuple anchor (header, footer)
 or by a locator that references the envelope.
