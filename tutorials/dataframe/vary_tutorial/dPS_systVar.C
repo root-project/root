@@ -36,35 +36,11 @@ using namespace ROOT::RDF::Experimental;
 
 // At the beginning of the code, we define functions to get the variations of the lepton scale factors.
 // The variations of these scale factors depend on the kinematics of the leptons involved, and are thus
-// different, depending on the lepton's transverse momentum (p_{T}) and pseudorapidity (#eta).
+// different, depending on the lepton's transverse momentum (p_{T}) and pseudorapidity (eta).
 // In particular, we are interested in the systematic uncertainty. 
 // It is define as the quadratic sum of the systematic and statistical uncertainties of the lepton Scale factors.
-// Since the positive and the negative variations may be different, we define two respective functions.
-Float_t getVarUp(const Float_t LepEta, const Float_t LepPhi)
-{
-    // We get the systematic and statistical uncertainties on the scale factors.
-    static TFile f("Reco_HighPt_Z.root");
-    static TH2F *h1 = (TH2F*)f.Get("SF_SYS_1UP_2018");
-    static TH2F *h2 = (TH2F*)f.Get("SF_STAT_1UP_2018");
-
-    // The Phi and Eta values can be extracted from the 2D histogram.
-    float_t v1  = h1->GetBinContent(h1->GetXaxis()->FindBin(LepPhi),h1->GetYaxis()->FindBin(LepEta));
-    float_t v2  = h2->GetBinContent(h2->GetXaxis()->FindBin(LepPhi),h2->GetYaxis()->FindBin(LepEta));
-    float_t v = TMath::Sqrt(v1*v1 + v2*v2);
-    return v;
-}
-
-
-Float_t getVarDown(const Float_t LepEta, const Float_t LepPhi)
-{
-    static TFile f("Reco_HighPt_Z.root");
-    static TH2F *h3 = (TH2F*)f.Get("SF_SYS_1DN_2018");
-    static TH2F *h4 = (TH2F*)f.Get("SF_STAT_1DN_2018");
-    float_t v3  = h3->GetBinContent(h3->GetXaxis()->FindBin(LepPhi),h3->GetYaxis()->FindBin(LepEta));
-    float_t v4  = h4->GetBinContent(h4->GetXaxis()->FindBin(LepPhi),h4->GetYaxis()->FindBin(LepEta));
-    float_t v = TMath::Sqrt(v3*v3 + v4*v4);
-    return v;
-}
+// The uncertainties for electrons were taken from the analysis in https://doi.org/10.48550/arXiv.1908.00005. 
+// For muons, the uncertainties are negligible (cv. https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/PAPERS/MUON-2018-03/).
 
 // We select only events with "good" leptons that meet specific preselection criteria that can 
 // be found at (http://opendata.atlas.cern/release/2020/documentation/datasets/objects.html).
@@ -94,7 +70,7 @@ float ComputeInvariantMass(cRVecF pt, cRVecF eta, cRVecF phi, cRVecF e)
 void dPS_systVar(){
 
     //Enable Multithreading
-    ROOT::EnableImplicitMT();    
+    //ROOT::EnableImplicitMT();    
 
     //Load the input data from real data and MC simulations.
     /*
@@ -186,22 +162,29 @@ void dPS_systVar(){
     // In addition, we must define the "weight" column to be varied for the MC datasets.
     auto df_with_weight = df_4l_mc.Define("weight", ("scaleFactor_ELE * scaleFactor_MUON * scaleFactor_LepTRIGGER * scaleFactor_PILEUP * mcWeight * scale * xsecs / sumws * " + std::to_string(lumi)));
     
+    // Before we vary our data, we need to obtain the uncertainties in the lepton scale factors.
+    // For this purpose, we read them as datapoints from publicly available plots and interpolate linearly using an Interpolator.
+    const std::vector<double> & x = {5.50 * 10e2, 5.52 * 10e2, 12.54 * 10e2, 17.43 * 10e2, 22.40 * 10e2, 27.48 * 10e2, 30 * 10e2, 10000 * 10e2};
+    const std::vector<double> & y = {0.06628, 0.06395, 0.06396, 0.03372, 0.02441, 0.01403, 0, 0};
+    unsigned int N = x.size();
+    ROOT::Math::Interpolator inter(N, ROOT::Math::Interpolation::kLINEAR);
+    inter.SetData(x, y);
+        
     // Now we are ready to perform systematic variations on the MC datasets using the Vary method. 
     // The input consists of the column to be varied, here the muon scale factor, a lamdbda function 
     // to compute the variations to be performed, here a scaling by the scale factor variations, 
     // and the new output columns that contain the varied values of the given column. 
-    auto df_with_variations_mc = df_with_weight.Vary("weight", [](const double &x, RVec<float_t> &eta, RVec<float_t> &phi){
-                                                const long unsigned int N = eta.size();
-                                                float_t u = 0; float_t d = 0;
-                                                for (std::size_t i = 0; i < N; ++i) {
-                                                u += getVarUp(eta[i], phi[i]);
-                                                d += getVarDown(eta[i], phi[i]);
+    auto df_with_variations_mc = df_with_weight.Vary("weight", [&inter](const double &x, RVec<float_t> &pt, RVec<unsigned int> &type){
+                                                const long unsigned int N = pt.size();
+                                                float_t v = 0;
+                                                    for (std::size_t i = 0; i < N; ++i) {
+                                                if (type[i] == 11){
+                                                    v += inter.Eval((double)pt[i]);
+                                                }
                                                 };
-                                                float_t up = 1 + u;
-                                                float_t down = 1 - d;
-                                                return RVec<double>({up * x, down * x});
-                                            }, {"weight", "goodlep_eta", "goodlep_phi"}, {"up", "down"});
-    
+                                                return RVec<double>({(1 + v) * x, (1 - v) * x});
+                                            }, {"weight", "goodlep_pt", "lep_type"}, {"up", "down"});
+
     // Since we want to see how the histogram of the invariant mass changes, we must compute that next.
     auto df_mass_var_mc = df_with_variations_mc.Define("m4l", ComputeInvariantMass, {"goodlep_pt", "goodlep_eta", "goodlep_phi", "goodlep_E"})
                                                .Histo1D<float>(ROOT::RDF::TH1DModel("Invariant Mass", "m4l", 24, 80, 170), "m4l", "weight");
@@ -265,7 +248,7 @@ void dPS_systVar(){
     header.SetTextSize(0.04);
     header.DrawLatexNDC(0.21, 0.75, "#sqrt{s} = 13 TeV, 10 fb^{-1}");
 
-    // It can be seen that the systematic varations are very small and decrease at higher energies.
+    // It can be seen that the lepton scale factor uncertainties show signficiant effects at lower masses and decrease with higher energies.
     c_mc->SaveAs("SF_varied_4L_Decay.png");
 }
 
