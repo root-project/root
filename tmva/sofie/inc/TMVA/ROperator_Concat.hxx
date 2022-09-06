@@ -96,55 +96,48 @@
             }
             std::stringstream out;
             out<<"\n//--------- Concat\n";
-            // special case for 0 axis that memory is contiguous
-            if(fnewAxis == 0){
-               if (fAxis == 0) {
-                  for(auto &it : fInputs){
-                     out<<SP<<"tensor_" << fOutput<<".insert("<<"tensor_" << fOutput<<".end(),tensor_" << it<<".begin(),tensor_"<<it<<".end());\n";
-                  }
-               }
-               else {
-
-                  std::vector<size_t> outStride = UTILITY::ComputeStrideFromShape(fOutputShape);
-                  std::vector<std::vector<size_t>> inStrides(fInputs.size());
-                  int idx = 0;
-                  for ( auto &s : inStrides) {
-                     s = UTILITY::ComputeStrideFromShape(fInputShapes[idx]);
-                     idx++;
-                  }
-                  for (int i = 0; i < fAxis; ++i) {
-                     // loop on dimensions
-                     out << SP << "for (size_t i" << i << " = 0; i" << i << " < " << fOutputShape[i] << "; ++i" << i <<") {\n";
-                  }
-
-                  out << SP << SP << SP << "int idxOut =";
-                  for (int k = 0; k < fAxis; k++)
-                     out << " + " << outStride[k] << "*i" << k;
-                  out << ";\n";
-
-                  for (size_t j = 0; j < fInputs.size(); j++) {
-                     if (j>0)
-                     out << SP << SP << SP << "idxOut += " << fInputShapes[j-1][fAxis] << ";\n";
-                     out << SP << SP << SP << "int idxIn" << j <<" =";
-                     for (int k = 0; k < fAxis; k++)
-                        out << " + " << inStrides[j][k] << "*i" << k;
-                     out << ";\n";
-                     out << SP << SP << SP << "for (size_t iC = 0; iC < " << fInputShapes[j][fAxis] << "; ++iC) {\n";
-                     out << SP << SP << SP << SP << "tensor_" << fOutput << "[idxOut+iC] = tensor_" << fInputs[j] << "[idxIn" << j << "+iC];\n";
-                     out << SP << SP << SP << "}\n";
-                  // concatenate the axis values
-                  }
-                  for (int i = 0; i < fAxis; ++i) {
-                     out << SP << "}\n";
-                  }
-               }
-            }
-            else if(fnewAxis == 1){
+            // special case for 0 axis that memory is contigous
+            if (fAxis == 0) {
                for(auto &it : fInputs){
-                  out<<SP<<"tensor_" << fOutput<<".append(tensor_"<<it<<");\n";
-                  out<<SP<<"tensor_" << fOutput<<".append(,);\n";
+                  out<<SP<<"tensor_" << fOutput<<".insert("<<"tensor_" << fOutput<<".end(),tensor_" << it<<".begin(),tensor_"<<it<<".end());\n";
                }
             }
+            else {
+
+               std::vector<size_t> outStride = UTILITY::ComputeStrideFromShape(fOutputShape);
+               std::vector<std::vector<size_t>> inStrides(fInputs.size());
+               int idx = 0;
+               for ( auto &s : inStrides) {
+                  s = UTILITY::ComputeStrideFromShape(fInputShapes[idx]);
+                  idx++;
+               }
+               for (int i = 0; i < fAxis; ++i) {
+                  // loop on dimensions
+                  out << SP << "for (size_t i" << i << " = 0; i" << i << " < " << fOutputShape[i] << "; ++i" << i <<") {\n";
+               }
+
+               out << SP << SP << SP << "int idxOut =";
+               for (int k = 0; k < fAxis; k++)
+                  out << " + " << outStride[k] << "*i" << k;
+               out << ";\n";
+
+               for (size_t j = 0; j < fInputs.size(); j++) {
+                  if (j>0)
+                  out << SP << SP << SP << "idxOut += " << fInputShapes[j-1][fAxis] << ";\n";
+                  out << SP << SP << SP << "int idxIn" << j <<" =";
+                  for (int k = 0; k < fAxis; k++)
+                     out << " + " << inStrides[j][k] << "*i" << k;
+                  out << ";\n";
+                  out << SP << SP << SP << "for (size_t iC = 0; iC < " << fInputShapes[j][fAxis] << "; ++iC) {\n";
+                  out << SP << SP << SP << SP << "tensor_" << fOutput << "[idxOut+iC] = tensor_" << fInputs[j] << "[idxIn" << j << "+iC];\n";
+                  out << SP << SP << SP << "}\n";
+               // concatenate the axis values
+               }
+                for (int i = 0; i < fAxis; ++i) {
+                    out << SP << "}\n";
+                }
+            }
+            
             return out.str();
          }
      };
