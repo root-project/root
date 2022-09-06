@@ -62,8 +62,6 @@ class RVariationsWithReaders {
 public:
    RVariationsWithReaders(std::shared_ptr<RVariationBase> variation, unsigned int nSlots);
    RVariationBase &GetVariation() const { return *fVariation; }
-   std::shared_ptr<RVariationReader> GetReader(unsigned int slot, const std::string &colName,
-                                               const std::string &variationName, const std::type_info &tid);
    std::shared_ptr<RVariationReader>
    GetReader(unsigned int slot, const std::string &colName, const std::string &variationName);
 };
