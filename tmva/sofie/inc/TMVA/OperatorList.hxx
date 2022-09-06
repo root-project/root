@@ -18,6 +18,6 @@
 #include "TMVA/ROperator_Identity.hxx"
 #include "TMVA/ROperator_Softmax.hxx"
 #include "TMVA/ROperator_Max.hxx"
-#include "TMVA/ROperator_ConcatFromSequence.hxx"
+#include "TMVA/ROperator_Concat.hxx"
 #include "TMVA/ROperator_Reduce.hxx"
 #include "TMVA/ROperator_Cast.hxx"
