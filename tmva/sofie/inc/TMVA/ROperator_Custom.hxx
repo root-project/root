@@ -63,7 +63,7 @@ public:
       out << "\n//------ "<<fOpName<<" \n";
       out << SP << "std::vector<std::vector<float>> " << fOpName << "_input;\n";
       for(auto i = 0; i<fInputNames.size(); ++i){
-        out << SP << fOpName << "_input.emplace_back(" << fInputNames[i] << ");\n"; 
+        out << SP << fOpName << "_input.emplace_back(fTensor_" << fInputNames[i] << ");\n"; 
       }
       out << SP << "std::vector<float>"<<fOpName<<"_result = "<<fOpName<<"::Compute("<<fOpName<<"_input"<<");\n";
       for(auto i = 0; i<fOutputNames.size(); ++i){
