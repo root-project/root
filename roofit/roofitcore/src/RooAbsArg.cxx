@@ -1541,12 +1541,12 @@ void RooAbsArg::printMultiline(ostream& os, Int_t /*contents*/, Bool_t /*verbose
       } else {
 	os << " (empty)" << endl ; ;
       }
-    } else {
+    } else if(dynamic_cast<RooAbsCollection*>(proxy)) {
       os << indent << "    " << proxy->name() << " -> " ;
       os << endl ;
       TString moreIndent(indent) ;
       moreIndent.Append("    ") ;
-      ((RooSetProxy*)proxy)->printStream(os,kName,kStandard,moreIndent.Data()) ;
+      dynamic_cast<RooAbsCollection*>(proxy)->printStream(os,kName,kStandard,moreIndent.Data()) ;
     }
   }
 }
