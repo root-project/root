@@ -8,7 +8,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from . import pythonization
+from .. import pythonization
 from cppyy import gbl as gbl_namespace
 
 

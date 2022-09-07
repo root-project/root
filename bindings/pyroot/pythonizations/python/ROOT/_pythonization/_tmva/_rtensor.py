@@ -8,8 +8,8 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from . import pythonization
-from ._rvec import _array_interface_dtype_map
+from .. import pythonization
+from .._rvec import _array_interface_dtype_map
 from libROOTPythonizations import GetEndianess, GetDataPointer, GetSizeOfType
 import cppyy
 
@@ -26,7 +26,7 @@ def get_array_interface(self):
     cppname = type(self).__cpp_name__
     idx1 = cppname.find("RTensor<")
     idx2 = cppname.find(",", idx1)
-    dtype = cppname[idx1 + 8:idx2]
+    dtype = cppname[idx1 + 8 : idx2]
     dtype_numpy = _array_interface_dtype_map[dtype]
     dtype_size = GetSizeOfType(dtype)
     endianess = GetEndianess()
@@ -42,7 +42,7 @@ def get_array_interface(self):
         "strides": tuple(s * dtype_size for s in strides),
         "typestr": "{}{}{}".format(endianess, dtype_numpy, dtype_size),
         "version": 3,
-        "data": (pointer, False)
+        "data": (pointer, False),
     }
 
 
@@ -55,9 +55,7 @@ def add_array_interface_property(klass, name):
         klass: class to be pythonized
         name: string containing the name of the class
     """
-    if True in [
-            name.find("RTensor<{},".format(dtype)) != -1 for dtype in _array_interface_dtype_map
-    ]:
+    if True in [name.find("RTensor<{},".format(dtype)) != -1 for dtype in _array_interface_dtype_map]:
         klass.__array_interface__ = property(get_array_interface)
 
 
