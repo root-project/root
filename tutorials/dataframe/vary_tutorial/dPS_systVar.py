@@ -3,7 +3,7 @@
 ## \notebook -draw
 ## Perform systematic variations on event data and compare them in a histogram.
 ##
-## This tutorial shows how to perform systematic variations on the muon efficiency scale factors,
+## This tutorial shows how to perform systematic variations on the lepton scale factors,
 ## and see how these would affect events resulting in a four-lepton decay, in particular including
 ## those contributions that result from a Higgs decay.
 ## Lepton scale factors are applied to leptons in MC simulations to correct for the differences in the
@@ -20,10 +20,9 @@
 ## \author Julia Mathe (CERN)
 
 import ROOT
-import numpy as np
 
 # Enable Multithreading
-# ROOT.EnableImplicitMT();    
+ROOT.EnableImplicitMT();    
 
 # Load the input data from real data and MC simulations.
 # df_data = ROOT::RDataFrame("mini;", ["https://atlas-opendata.web.cern.ch/atlas-opendata/samples/2020/4lep/Data/data_A.4lep.root",
@@ -42,8 +41,6 @@ df_data = ROOT.RDataFrame("mini;", ["data_A.4lep.root",
                                     "data_B.4lep.root",
                                     "data_C.4lep.root",
                                     "data_D.4lep.root"])
-
-
 
 # Use DefinePerSample to encode information for each MC dataset
 df_mc = ROOT.RDataFrame("mini;", ["mc_345060.ggH125_ZZ4lep.4lep.root", 
@@ -69,7 +66,6 @@ float xsecs(unsigned int slot, const ROOT::RDF::RSampleInfo &id){
                 else {return  1950.6321f;}
 }
 """)
-
 df_mc_xsecs = df_mc.DefinePerSample("xsecs", "xsecs(rdfslot_, rdfsampleinfo_)")
 
 ROOT.gInterpreter.Declare(
@@ -82,10 +78,9 @@ float sumws(unsigned int slot, const ROOT::RDF::RSampleInfo &id){
                 else {return 147334691090.0f;}
 }
 """)
-
 df_mc_sumws = df_mc_xsecs.DefinePerSample("sumws", "sumws(rdfslot_, rdfsampleinfo_)")
 
-# We must further apply a MC correction for the ZZ decay due to missing gg->ZZ process
+# We must further apply a MC correction for the ZZ decay due to missing gg->ZZ processes.
 ROOT.gInterpreter.Declare(
 """
 float scale(unsigned int slot, const ROOT::RDF::RSampleInfo &id){
@@ -156,29 +151,13 @@ df_with_weight = df_4l_mc.Define("weight", "scaleFactor_ELE * scaleFactor_MUON *
 # The uncertainties for electrons were taken from the analysis in https://doi.org/10.48550/arXiv.1908.00005. 
 # For muons, the uncertainties are negligible (cv. https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/PAPERS/MUON-2018-03/).
 
-# Before we vary our data, we need to obtain the uncertainties in the lepton scale factors.
-# For this purpose, we read them as datapoints from publicly available plots and interpolate linearly using an Interpolator.
-
-#ROOT.gInterpreter.Declare("""
-#const std::vector<double> & x = {5.50 * 10e2, 5.52 * 10e2, 12.54 * 10e2, 17.43 * 10e2, 22.40 * 10e2, 27.48 * 10e2, 30 * 10e2, 10000 * 10e2};
-#const std::vector<double> & y = {0.06628, 0.06395, 0.06396, 0.03372, 0.02441, 0.01403, 0, 0};
-#unsigned int N = x.size();
-#ROOT::Math::Interpolator inter(N, ROOT::Math::Interpolation::kLINEAR);
-#inter.SetData(x, y);
-#""")
-    
+# The uncertainties of the lepton scale factors can be read from datapoints of publicly available plots and interpolate linearly using the ROOT::Math::Interpolator.
 # Now we are ready to perform systematic variations on the MC datasets using the Vary method. 
-# The input consists of the column to be varied, here the muon scale factor, a lamdbda function 
-# to compute the variations to be performed, here a scaling by the scale factor variations, 
+# The input consists of the column to be varied, a function to compute the variations to be performed, here expressed through a C++ VaryHelper,
 # and the new output columns that contain the varied values of the given column. 
-
-#x = [5.50 * 10e2, 5.52 * 10e2, 12.54 * 10e2, 17.43 * 10e2, 22.40 * 10e2, 27.48 * 10e2, 30 * 10e2, 10000 * 10e2]
-#y = [0.06628, 0.06395, 0.06396, 0.03372, 0.02441, 0.01403, 0, 0]
-#inter = ROOT.Math.Interpolator(x, y)
-#print(inter.Eval(6000))
-
+# The VaryHelper is necessary to perform the linear interpolation of the datapoints, so that the uncertainties can be expressed as functions of the lepton type and momenta.
+# The average of the electron uncertainties is used for correction. 
 ROOT.gInterpreter.Declare("""
-
 #include <Math/Interpolator.h>
 using namespace ROOT::VecOps;
 using namespace ROOT::Math;
@@ -202,7 +181,6 @@ VaryHelper myHelper;
 """)
 df_with_variations_mc = df_with_weight.Vary("weight", "myHelper(weight, goodlep_pt, goodlep_type)", ["up", "down"])
 
-
 ROOT.gInterpreter.Declare("""
 float ComputeInvariantMass(cRVecF pt, cRVecF eta, cRVecF phi, cRVecF e)
 {
@@ -214,12 +192,13 @@ float ComputeInvariantMass(cRVecF pt, cRVecF eta, cRVecF phi, cRVecF e)
 }
 """)
 
-# Since we want to see how the histogram of the invariant mass changes, we must compute that next.
+# Since we want to see how the histogram of the invariant mass changes, we compute it.
 df_mass_var_mc = df_with_variations_mc.Define("m4l", "ComputeInvariantMass(goodlep_pt, goodlep_eta, goodlep_phi, goodlep_E)")\
                                       .Histo1D(ROOT.RDF.TH1DModel("Invariant Mass", "m4l", 24, 80, 170), "m4l", "weight")
 
+
 # Now, we are ready to plot the variations for this histogram using the VariationsFor method.
-c_mc = ROOT.TCanvas("c_mc", " ", 600, 600) # Create a new canvas to plot the variations.
+c_mc = ROOT.TCanvas("c_mc", " ", 600, 600)
 histos_mc = ROOT.RDF.Experimental.VariationsFor(df_mass_var_mc)
 (histos_mc)["weight:up"].SetLabelSize(0.04)
 (histos_mc)["weight:up"].SetTitleSize(0.04)
@@ -241,7 +220,7 @@ histos_mc = ROOT.RDF.Experimental.VariationsFor(df_mass_var_mc)
 for k in histos_mc.GetKeys():
     print(k)
 
-# To compare the variations against the real data, we also need to plot that.
+# To compare the variations against the real data, we need to plot that too.
 df_h_mass_data = df_4l_data.Define("m4l", "ComputeInvariantMass(goodlep_pt, goodlep_eta, goodlep_phi, goodlep_E)")\
                            .Histo1D(ROOT.RDF.TH1DModel("Invariant Mass", "m4l", 24, 80, 170), "m4l")
 h_mass_data = df_h_mass_data.GetPtr()
@@ -276,5 +255,6 @@ data_label.SetTextFont(42)
 header.SetTextSize(0.04)
 header.DrawLatexNDC(0.21, 0.75, "#sqrt{s} = 13 TeV, 10 fb^{-1}")
 
-# It can be seen that the lepton scale factor uncertainties show signficiant effects at lower masses and decrease with higher energies.
+# Save the plot.
 c_mc.SaveAs("SF_varied_4L_Decay.png")
+# Note that the lepton scale factor uncertainties show signficiant effects at lower masses and decrease with higher energies.
