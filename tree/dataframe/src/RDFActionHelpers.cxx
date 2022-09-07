@@ -150,16 +150,16 @@ void MeanHelper::Exec(unsigned int slot, double v)
 void MeanHelper::Finalize()
 {
    double sumOfSums = 0;
-   //Kahan Sum:
+   // Kahan Sum:
    double compensation(0);
    double y(0);
    double t(0);
    for (auto &m : fSums) {
-         y = m - compensation;
-         t = sumOfSums + y;
-         compensation = (t - sumOfSums) - y;
-         sumOfSums = t;
-      }
+      y = m - compensation;
+      t = sumOfSums + y;
+      compensation = (t - sumOfSums) - y;
+      sumOfSums = t;
+   }
    ULong64_t sumOfCounts = 0;
    for (auto &c : fCounts)
       sumOfCounts += c;
