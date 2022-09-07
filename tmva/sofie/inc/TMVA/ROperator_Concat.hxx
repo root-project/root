@@ -51,7 +51,8 @@
                throw std::runtime_error("TMVA SOFIE Concat Op - invalid axis value ");
 
             int concat_dim=0;
-            for(size_t i = 0; i < inputs.size(); i++) {
+            if(fnewAxis == 0){
+               for(size_t i = 0; i < inputs.size(); i++) {
                   if (i > 0 && inputs[i].size() != inputs[i-1].size() )
                   throw std::runtime_error("TMVA SOFIE Concat Op - input tensors have different shapes " +
                      ConvertShapeToString(inputs[i]) + " and " + ConvertShapeToString(inputs[i-1]));
@@ -64,16 +65,31 @@
                         ConvertShapeToString(inputs[i]) + " and " + ConvertShapeToString(inputs[i-1]));
                   }
                }
-            if(fnewAxis == 0){
+
                // output shape
                ret[0] = inputs[0];
                ret[0][fAxis] = concat_dim;
             }
-
+            std::vector<int> stack;
             if(fnewAxis == 1){
-               ret[0].insert(ret[0].begin() + fAxis, inputs.size());
-               ret[0][fAxis] = concat_dim;
+               for(size_t i = 0; i < inputs.size(); i++) {
+                  if (i > 0 && inputs[i].size() != inputs[i-1].size() )
+                  throw std::runtime_error("TMVA SOFIE Concat Op - input tensors have different shapes " +
+                     ConvertShapeToString(inputs[i]) + " and " + ConvertShapeToString(inputs[i-1]));
+                  for (size_t iaxis = 0; iaxis < inputs[i].size(); iaxis++) {
+                     if ((int) iaxis == fAxis)
+                        stack.push_back(inputs[i][iaxis]);
+                     else
+                     if (i> 0 && inputs[i][iaxis] != inputs[i-1][iaxis])
+                        throw std::runtime_error("TMVA SOFIE Concat Op - input tensors have wrong shapes " +
+                        ConvertShapeToString(inputs[i]) + " and " + ConvertShapeToString(inputs[i-1]));
+                  }
+                  
+               }
+               for(auto it:stack)
+               ret[0].push_back(it);
             }
+
             return ret;
          }
 
@@ -137,7 +153,7 @@
                     out << SP << "}\n";
                 }
             }
-            
+
             return out.str();
          }
      };
