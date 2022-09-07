@@ -39,6 +39,9 @@
 #include "ReduceProd_FromONNX.hxx"
 #include "input_models/references/ReduceProd.ref.hxx"
 
+#include "Shape_FromONNX.hxx"
+#include "input_models/references/Shape.ref.hxx"
+
 #include "LinearWithLeakyRelu_FromONNX.hxx"
 #include "input_models/references/LinearWithLeakyRelu.ref.hxx"
 
@@ -861,6 +864,28 @@ TEST(ONNX, Max)
          EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
       }
    }
+
+TEST(ONNX, Shape){
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard  input
+   std::vector<float> input({
+      1, 2
+   });
+   
+   TMVA_SOFIE_Shape::Session s("Shape_FromONNX.dat");
+   auto output = s.infer(input.data());
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(Shape_ExpectedOutput::outputs) / sizeof(float));
+   
+   int *correct = Shape_ExpectedOutput::outputs;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+
+}
 
 TEST(ONNX, RNNBatchwise)
 {

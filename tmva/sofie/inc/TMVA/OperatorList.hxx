@@ -21,3 +21,4 @@
 #include "TMVA/ROperator_Concat.hxx"
 #include "TMVA/ROperator_Reduce.hxx"
 #include "TMVA/ROperator_Cast.hxx"
+#include "TMVA/ROperator_Shape.hxx"
