@@ -1248,9 +1248,17 @@ std::unique_ptr<ROperator> make_ROperator_Concat(const onnx::NodeProto &nodeprot
 
    std::unique_ptr<ROperator> op;
 
-   int axis = nodeproto.attribute(0).i();
+   int attr_axis = 0;
+   int attr_new_axis = 0;
+   for (int_t i = 0; i < nodeproto.attribute_size(); i++) {
+      std::string attribute_name = nodeproto.attribute(i).name();
+      if (attribute_name == "axis")
+         attr_axis = nodeproto.attribute(i).i();
+      else if(attribute_name == "new_axis")
+         attr_new_axis = nodeproto.attribute(i).i();
+   }
    switch (input_type) {
-   case ETensorType::FLOAT: op.reset(new ROperator_Concat<float>(fInputs, axis, nodeproto.output(0))); break;
+   case ETensorType::FLOAT: op.reset(new ROperator_Concat<float>(fInputs, attr_axis, attr_new_axis, nodeproto.output(0))); break;
    default:
       throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Concat does not yet support input type " +
                                std::to_string(static_cast<int>(input_type)));
