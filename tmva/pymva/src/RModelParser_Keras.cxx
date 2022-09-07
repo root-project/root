@@ -567,7 +567,7 @@ std::unique_ptr<ROperator> MakeKerasConcat(PyObject* fLayer)
 
       int axis = (int)PyLong_AsLong(PyDict_GetItemString(fAttributes,"axis"));
       std::unique_ptr<ROperator> op;
-      op.reset(new ROperator_Concat<float>(inputs, axis, output));
+      op.reset(new ROperator_Concat<float>(inputs, axis, 0,  output));
       return op;
 }
 
