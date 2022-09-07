@@ -1143,9 +1143,9 @@ public:
    SumHelper(SumHelper &&) = default;
    SumHelper(const SumHelper &) = delete;
    SumHelper(const std::shared_ptr<ResultType> &sumVPtr, const unsigned int nSlots)
-      : fResultSum(sumVPtr) , fSums(nSlots, NeutralElement(*sumVPtr, -1)), fCompensations(nSlots, NeutralElement(*sumVPtr, -1))
+      : fResultSum(sumVPtr), fSums(nSlots, NeutralElement(*sumVPtr, -1)),
+        fCompensations(nSlots, NeutralElement(*sumVPtr, -1))
    {
-
    }
    void InitTask(TTreeReader *, unsigned int) {}
 
@@ -1164,23 +1164,23 @@ public:
       for (auto &&v : vs) {
          Exec(slot, v);
       }
-   }  
+   }
 
    void Initialize() { /* noop */}
 
    void Finalize()
    {
-      ResultType sum(NeutralElement(ResultType{}, -1)) ;
+      ResultType sum(NeutralElement(ResultType{}, -1));
       ResultType compensation(NeutralElement(ResultType{}, -1));
       ResultType y(NeutralElement(ResultType{}, -1));
       ResultType t(NeutralElement(ResultType{}, -1));
       for (auto &m : fSums) {
-            // Kahan Sum:
-            y = m - compensation;
-            t = sum + y;
-            compensation = (t - sum) - y;
-            sum = t;
-         }
+         // Kahan Sum:
+         y = m - compensation;
+         t = sum + y;
+         compensation = (t - sum) - y;
+         sum = t;
+      }
       *fResultSum += sum;
    }
 

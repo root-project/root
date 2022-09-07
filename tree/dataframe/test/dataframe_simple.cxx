@@ -740,8 +740,8 @@ TEST_P(RDFSimpleTests, KahanSum_Double)
    constexpr std::uint64_t N = 10e7;
    ROOT::RDataFrame d(N);
    auto df = d.Define("x", "double(rdfentry_ +1)");
-   double true_sum = (N + 1.0)/2.0;
-   EXPECT_DOUBLE_EQ(*df.Sum<double>({"x"})/N, true_sum);
+   double true_sum = (N + 1.0) / 2.0;
+   EXPECT_DOUBLE_EQ(*df.Sum<double>({"x"}) / N, true_sum);
 }
 
 TEST_P(RDFSimpleTests, KahanSum_Float)
@@ -749,8 +749,8 @@ TEST_P(RDFSimpleTests, KahanSum_Float)
    constexpr std::uint64_t N = 10e7;
    ROOT::RDataFrame d(N);
    auto df = d.Define("x", "float(rdfentry_ +1)");
-   float true_sum = (N + 1.0)/2.0;
-   EXPECT_FLOAT_EQ(*df.Sum<float>({"x"})/N, true_sum);
+   float true_sum = (N + 1.0) / 2.0;
+   EXPECT_FLOAT_EQ(*df.Sum<float>({"x"}) / N, true_sum);
 }
 
 TEST_P(RDFSimpleTests, KahanMean_Double)
