@@ -351,6 +351,8 @@ class ROOTFacade(types.ModuleType):
     # Overload TMVA namespace
     @property
     def TMVA(self):
+        #this line is needed to import the pythonizations in _tmva directory
+        from ._pythonization import _tmva
         ns = self._fallback_getattr('TMVA')
         try:
             from libROOTPythonizations import AsRTensor

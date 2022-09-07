@@ -34,7 +34,7 @@ y_pred = bdt.Compute(x)
 # Compute ROC using sklearn
 from sklearn.metrics import roc_curve, auc
 fpr, tpr, _ = roc_curve(y_true, y_pred, sample_weight=w)
-score = auc(fpr, tpr, reorder=True)
+score = auc(fpr, tpr)
 
 # Plot ROC
 c = ROOT.TCanvas("roc", "", 600, 600)
