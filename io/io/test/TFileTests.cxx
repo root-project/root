@@ -1,3 +1,4 @@
+#include <memory>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -5,6 +6,8 @@
 #include "TFile.h"
 #include "TKey.h"
 #include "TNamed.h"
+#include "TPluginManager.h"
+#include "TROOT.h" // gROOT
 #include "TSystem.h"
 
 TEST(TFile, WriteObjectTObject)
@@ -84,4 +87,51 @@ TEST(TFile, ReadFromSameFile)
    auto o2 = f2.Get(objpath);
 
    EXPECT_TRUE(o1 != o2) << "Same objects read from two different files have the same pointer!";
+}
+
+TEST(TFile, ReadWithoutGlobalRegistrationLocal)
+{
+   const auto localFile = "TFileTestReadWithoutGlobalRegistrationLocal.root";
+
+   // create local input file
+   {
+      std::unique_ptr<TFile> input{TFile::Open(localFile, "RECREATE")};
+      ASSERT_TRUE(input != nullptr);
+      ASSERT_FALSE(input->IsZombie());
+   }
+
+   // test that with READ_WITHOUT_GLOBALREGISTRATION the file does not end up in the global list of files
+   std::unique_ptr<TFile> f{TFile::Open(localFile, "READ_WITHOUT_GLOBALREGISTRATION")};
+   EXPECT_TRUE(f != nullptr);
+   EXPECT_FALSE(f->IsZombie());
+   EXPECT_TRUE(gROOT->GetListOfFiles()->FindObject(localFile) == nullptr);
+
+   gSystem->Unlink(localFile);
+}
+
+void TestReadWithoutGlobalRegistrationIfPossible(const char *fname)
+{
+   TPluginHandler *h;
+   if ((h = gROOT->GetPluginManager()->FindHandler("TFile", fname))) {
+      if (h->LoadPlugin() == -1)
+         return;
+   }
+
+   // test that with READ_WITHOUT_GLOBALREGISTRATION the file does not end up in the global list of files
+   std::unique_ptr<TFile> f{TFile::Open(fname, "READ_WITHOUT_GLOBALREGISTRATION")};
+   EXPECT_TRUE(f != nullptr);
+   EXPECT_FALSE(f->IsZombie());
+   EXPECT_TRUE(gROOT->GetListOfFiles()->FindObject(fname) == nullptr);
+}
+
+// https://github.com/root-project/root/issues/10742
+TEST(TFile, ReadWithoutGlobalRegistrationWeb)
+{
+   const auto webFile = "https://root.cern/files/h1/dstarmb.root";
+   TestReadWithoutGlobalRegistrationIfPossible(webFile);
+}
+TEST(TFile, ReadWithoutGlobalRegistrationNet)
+{
+   const auto netFile = "root://eospublic.cern.ch//eos/root-eos/h1/dstarmb.root";
+   TestReadWithoutGlobalRegistrationIfPossible(netFile);
 }
