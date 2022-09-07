@@ -14,7 +14,7 @@
     \brief Advanced Spectra Processing
     \author Miroslav Morhac
 
- \legacy{TSpectrum}
+ \legacy{TSpectrum, For modeling a spectrum fitting  and estimating the background one can use RooFit while for deconvolution and unfolding one can use TUnfold.}
 
  This class contains advanced spectra processing functions for:
 
