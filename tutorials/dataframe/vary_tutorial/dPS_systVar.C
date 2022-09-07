@@ -153,6 +153,7 @@ void dPS_systVar(){
                                .Define("goodlep_sumtypes", "Sum(lep_type[good_lep])")
                                .Filter("goodlep_sumtypes == 44 || goodlep_sumtypes == 52 || goodlep_sumtypes == 48")
                                .Filter("GoodElectronsAndMuons(lep_type[good_lep], lep_pt[good_lep], lep_eta[good_lep], lep_phi[good_lep], lep_E[good_lep], lep_trackd0pvunbiased[good_lep], lep_tracksigd0pvunbiased[good_lep], lep_z0[good_lep])")
+                               .Define("goodlep_type", "lep_type[good_lep]")
                                .Define("goodlep_pt", "lep_pt[good_lep]")
                                .Define("goodlep_eta", "lep_eta[good_lep]")
                                .Define("goodlep_phi", "lep_phi[good_lep]")
@@ -161,7 +162,8 @@ void dPS_systVar(){
 
     // In addition, we must define the "weight" column to be varied for the MC datasets.
     auto df_with_weight = df_4l_mc.Define("weight", ("scaleFactor_ELE * scaleFactor_MUON * scaleFactor_LepTRIGGER * scaleFactor_PILEUP * mcWeight * scale * xsecs / sumws * " + std::to_string(lumi)));
-    
+    //df_with_weight.Display({"weight", "scaleFactor_ELE", "lep_type"}, 10)->Print();
+
     // Before we vary our data, we need to obtain the uncertainties in the lepton scale factors.
     // For this purpose, we read them as datapoints from publicly available plots and interpolate linearly using an Interpolator.
     const std::vector<double> & x = {5.50 * 10e2, 5.52 * 10e2, 12.54 * 10e2, 17.43 * 10e2, 22.40 * 10e2, 27.48 * 10e2, 30 * 10e2, 10000 * 10e2};
@@ -174,16 +176,10 @@ void dPS_systVar(){
     // The input consists of the column to be varied, here the muon scale factor, a lamdbda function 
     // to compute the variations to be performed, here a scaling by the scale factor variations, 
     // and the new output columns that contain the varied values of the given column. 
-    auto df_with_variations_mc = df_with_weight.Vary("weight", [&inter](const double &x, RVec<float_t> &pt, RVec<unsigned int> &type){
-                                                const long unsigned int N = pt.size();
-                                                float_t v = 0;
-                                                    for (std::size_t i = 0; i < N; ++i) {
-                                                if (type[i] == 11){
-                                                    v += inter.Eval((double)pt[i]);
-                                                }
-                                                };
-                                                return RVec<double>({(1 + v) * x, (1 - v) * x});
-                                            }, {"weight", "goodlep_pt", "lep_type"}, {"up", "down"});
+    auto df_with_variations_mc = df_with_weight.Vary("weight", [&inter](const double &x, RVec<float_t> &pt, RVec<unsigned int> &type){                                                   
+                                                const auto v = Mean(Map(pt[type == 11], [& inter](auto p) {return inter.Eval(p); }));                                                                                              
+                                                return RVec<double>{(1 + v) * x, (1 - v) * x};
+                                            }, {"weight", "goodlep_pt", "goodlep_type"}, {"up", "down"});
 
     // Since we want to see how the histogram of the invariant mass changes, we must compute that next.
     auto df_mass_var_mc = df_with_variations_mc.Define("m4l", ComputeInvariantMass, {"goodlep_pt", "goodlep_eta", "goodlep_phi", "goodlep_E"})
@@ -195,7 +191,7 @@ void dPS_systVar(){
     (histos_mc)["weight:up"].SetLabelSize(0.04);
     (histos_mc)["weight:up"].SetTitleSize(0.04);
     (histos_mc)["weight:up"].SetMaximum(26);
-    (histos_mc)["weight:up"].SetTitle("Systematic variations of the muon scale factor");
+    (histos_mc)["weight:up"].SetTitle("");
     (histos_mc)["weight:up"].GetXaxis()->SetTitle("m_{4l}^{H#rightarrow ZZ} [GeV]");
     (histos_mc)["weight:up"].GetYaxis()->SetTitle("Events");
     (histos_mc)["weight:up"].SetStats(0);

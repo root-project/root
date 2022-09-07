@@ -20,9 +20,10 @@
 ## \author Julia Mathe (CERN)
 
 import ROOT
+import numpy as np
 
 # Enable Multithreading
-ROOT.EnableImplicitMT();    
+# ROOT.EnableImplicitMT();    
 
 # Load the input data from real data and MC simulations.
 # df_data = ROOT::RDataFrame("mini;", ["https://atlas-opendata.web.cern.ch/atlas-opendata/samples/2020/4lep/Data/data_A.4lep.root",
@@ -137,6 +138,7 @@ df_4l_mc = df_mc_scale.Filter("trigE || trigM")\
                       .Define("goodlep_sumtypes", "Sum(lep_type[good_lep])")\
                       .Filter("goodlep_sumtypes == 44 || goodlep_sumtypes == 52 || goodlep_sumtypes == 48")\
                       .Filter("GoodElectronsAndMuons(lep_type[good_lep], lep_pt[good_lep], lep_eta[good_lep], lep_phi[good_lep], lep_E[good_lep], lep_trackd0pvunbiased[good_lep], lep_tracksigd0pvunbiased[good_lep], lep_z0[good_lep])")\
+                      .Define("goodlep_type", "lep_type[good_lep]")\
                       .Define("goodlep_pt", "lep_pt[good_lep]")\
                       .Define("goodlep_eta", "lep_eta[good_lep]")\
                       .Define("goodlep_phi", "lep_phi[good_lep]")\
@@ -144,67 +146,62 @@ df_4l_mc = df_mc_scale.Filter("trigE || trigM")\
                       .Filter("goodlep_pt[0] > 25000 && goodlep_pt[1] > 15000 && goodlep_pt[2] > 10000");\
 
 # In addition, we must define the "weight" column to be varied for the MC datasets.
-df_with_weight = df_4l_mc.Define("weight", "scaleFactor_ELE * scaleFactor_MUON * scaleFactor_LepTRIGGER * scaleFactor_PILEUP * mcWeight * xsecs / sumws * {}".format(lumi))
+df_with_weight = df_4l_mc.Define("weight", "scaleFactor_ELE * scaleFactor_MUON * scaleFactor_LepTRIGGER * scaleFactor_PILEUP * scale * mcWeight * xsecs / sumws * {}".format(lumi))
 
 # Before using the Vary method, we must define functions to get the variations of the lepton scale factors.
 # The variations of these scale factors depend on the kinematics of the leptons involved, and are thus
 # different, depending on the lepton's transverse momentum (p_{T}) and pseudorapidity (#eta).
 # In particular, we are interested in the systematic uncertainty. 
 # It is define as the quadratic sum of the systematic and statistical uncertainties of the lepton Scale factors.
-# Since the positive and the negative variations may be different, we define two respective functions.
-ROOT.gInterpreter.Declare("""
-Float_t getVarUp(const Float_t LepEta, const Float_t LepPhi)
-{
-    // We get the systematic and statistical uncertainties on the scale factors.
-    static TFile f("Reco_HighPt_Z.root");
-    static TH2F *h1 = (TH2F*)f.Get("SF_SYS_1UP_2018");
-    static TH2F *h2 = (TH2F*)f.Get("SF_STAT_1UP_2018");
+# The uncertainties for electrons were taken from the analysis in https://doi.org/10.48550/arXiv.1908.00005. 
+# For muons, the uncertainties are negligible (cv. https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/PAPERS/MUON-2018-03/).
 
-    // The Phi and Eta values can be extracted from the 2D histogram.
-    float_t v1  = h1->GetBinContent(h1->GetXaxis()->FindBin(LepPhi),h1->GetYaxis()->FindBin(LepEta));
-    float_t v2  = h2->GetBinContent(h2->GetXaxis()->FindBin(LepPhi),h2->GetYaxis()->FindBin(LepEta));
-    float_t v = TMath::Sqrt(v1*v1 + v2*v2);
-    return v;
-}
-""")
+# Before we vary our data, we need to obtain the uncertainties in the lepton scale factors.
+# For this purpose, we read them as datapoints from publicly available plots and interpolate linearly using an Interpolator.
 
-ROOT.gInterpreter.Declare("""
-Float_t getVarDown(const Float_t LepEta, const Float_t LepPhi)
-{
-
-    static TFile f("Reco_HighPt_Z.root");
-    static TH2F *h3 = (TH2F*)f.Get("SF_SYS_1DN_2018");
-    static TH2F *h4 = (TH2F*)f.Get("SF_STAT_1DN_2018");
-    float_t v3  = h3->GetBinContent(h3->GetXaxis()->FindBin(LepPhi),h3->GetYaxis()->FindBin(LepEta));
-    float_t v4  = h4->GetBinContent(h4->GetXaxis()->FindBin(LepPhi),h4->GetYaxis()->FindBin(LepEta));
-    float_t v = TMath::Sqrt(v3*v3 + v4*v4);
-    return v;
-}
-""")
-
-# Now we are ready to perform systematic variations on the MC datasets using the Vary method.
-# For this, we need to define a function that implements our variations.
+#ROOT.gInterpreter.Declare("""
+#const std::vector<double> & x = {5.50 * 10e2, 5.52 * 10e2, 12.54 * 10e2, 17.43 * 10e2, 22.40 * 10e2, 27.48 * 10e2, 30 * 10e2, 10000 * 10e2};
+#const std::vector<double> & y = {0.06628, 0.06395, 0.06396, 0.03372, 0.02441, 0.01403, 0, 0};
+#unsigned int N = x.size();
+#ROOT::Math::Interpolator inter(N, ROOT::Math::Interpolation::kLINEAR);
+#inter.SetData(x, y);
+#""")
+    
+# Now we are ready to perform systematic variations on the MC datasets using the Vary method. 
 # The input consists of the column to be varied, here the muon scale factor, a lamdbda function 
 # to compute the variations to be performed, here a scaling by the scale factor variations, 
 # and the new output columns that contain the varied values of the given column. 
-ROOT.gInterpreter.Declare("""
-using namespace ROOT::VecOps;
-RVec<double> var(const double &x, RVec<float_t> &eta, RVec<float_t> &phi)
-{
-    const long unsigned int N = eta.size();
-    float_t u = 0; float_t d = 0;
-    for (std::size_t i = 0; i < N; ++i) {
-    u += getVarUp(eta[i], phi[i]);
-    d += getVarDown(eta[i], phi[i]);
-    };
-    float_t up = 1 + u;
-    float_t down = 1 - d;
-    return RVec<double>({up * x, down * x});
-    return RVec<double>({up * x, down * x});
-}
-""")
 
-df_with_variations_mc = df_with_weight.Vary("weight", "var(weight, goodlep_eta, goodlep_phi)", {"up", "down"})
+#x = [5.50 * 10e2, 5.52 * 10e2, 12.54 * 10e2, 17.43 * 10e2, 22.40 * 10e2, 27.48 * 10e2, 30 * 10e2, 10000 * 10e2]
+#y = [0.06628, 0.06395, 0.06396, 0.03372, 0.02441, 0.01403, 0, 0]
+#inter = ROOT.Math.Interpolator(x, y)
+#print(inter.Eval(6000))
+
+ROOT.gInterpreter.Declare("""
+
+#include <Math/Interpolator.h>
+using namespace ROOT::VecOps;
+using namespace ROOT::Math;
+
+class VaryHelper 
+{
+    std::vector<double> x = {5.50 * 10e2, 5.52 * 10e2, 12.54 * 10e2, 17.43 * 10e2, 22.40 * 10e2, 27.48 * 10e2, 30 * 10e2, 10000 * 10e2};
+    std::vector<double> y = {0.06628, 0.06395, 0.06396, 0.03372, 0.02441, 0.01403, 0, 0};
+    Interpolator inter;
+public:
+    VaryHelper() : inter(x, y, Interpolation::kLINEAR) {}
+
+    RVec<double> operator()(const double &w, RVec<float> &pt, RVec<unsigned int> &type)
+    {
+        const auto v = Mean(Map(pt[type == 11], [this](auto p) {return this->inter.Eval(p); }));                                                                                              
+        return RVec<double>{(1 + v) * w, (1 - v) * w};
+    }
+};
+
+VaryHelper myHelper;
+""")
+df_with_variations_mc = df_with_weight.Vary("weight", "myHelper(weight, goodlep_pt, goodlep_type)", ["up", "down"])
+
 
 ROOT.gInterpreter.Declare("""
 float ComputeInvariantMass(cRVecF pt, cRVecF eta, cRVecF phi, cRVecF e)
@@ -227,7 +224,7 @@ histos_mc = ROOT.RDF.Experimental.VariationsFor(df_mass_var_mc)
 (histos_mc)["weight:up"].SetLabelSize(0.04)
 (histos_mc)["weight:up"].SetTitleSize(0.04)
 (histos_mc)["weight:up"].SetMaximum(26)
-(histos_mc)["weight:up"].SetTitle("Systematic variations of the muon scale factor")
+(histos_mc)["weight:up"].SetTitle("")
 (histos_mc)["weight:up"].GetXaxis().SetTitle("m_{4l}^{H#rightarrow ZZ} [GeV]")
 (histos_mc)["weight:up"].GetYaxis().SetTitle("Events")
 (histos_mc)["weight:up"].SetStats(0)
@@ -279,5 +276,5 @@ data_label.SetTextFont(42)
 header.SetTextSize(0.04)
 header.DrawLatexNDC(0.21, 0.75, "#sqrt{s} = 13 TeV, 10 fb^{-1}")
 
-# It can be seen that the systematic varations are very small and decrease at higher energies.
+# It can be seen that the lepton scale factor uncertainties show signficiant effects at lower masses and decrease with higher energies.
 c_mc.SaveAs("SF_varied_4L_Decay.png")
