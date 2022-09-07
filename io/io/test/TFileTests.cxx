@@ -127,7 +127,7 @@ void TestReadWithoutGlobalRegistrationIfPossible(const char *fname)
 // https://github.com/root-project/root/issues/10742
 TEST(TFile, ReadWithoutGlobalRegistrationWeb)
 {
-   const auto webFile = "https://root.cern/files/h1/dstarmb.root";
+   const auto webFile = "http://root.cern/files/h1/dstarmb.root";
    TestReadWithoutGlobalRegistrationIfPossible(webFile);
 }
 TEST(TFile, ReadWithoutGlobalRegistrationNet)
