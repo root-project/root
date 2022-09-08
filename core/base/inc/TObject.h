@@ -33,6 +33,10 @@ class TObjArray;
 class TMethod;
 class TTimer;
 
+namespace ROOT {
+namespace Internal {
+   bool DeleteChangesMemoryImpl();
+}}
 
 class TObject {
 
@@ -163,6 +167,16 @@ public:
    virtual Int_t       Write(const char *name = nullptr, Int_t option = 0, Int_t bufsize = 0);
    virtual Int_t       Write(const char *name = nullptr, Int_t option = 0, Int_t bufsize = 0) const;
 
+   /// IsDestructed
+   ///
+   /// \note This function must be non-virtual as it can be used on destructed (but
+   /// not yet modified) memory.  This is used for example in TClonesArray to record
+   /// the element that have been destructed but not deleted and thus are ready for
+   /// re-use (by operator new with placement).
+   ///
+   /// \return true if this object's destructor has been run.
+   Bool_t IsDestructed() const { return !TestBit(kNotDeleted); }
+
    //----- operators
    void    *operator new(size_t sz) { return TStorage::ObjectAlloc(sz); }
    void    *operator new[](size_t sz) { return TStorage::ObjectAllocArray(sz); }
@@ -226,6 +240,7 @@ public:
    static void      SetObjectStat(Bool_t stat);
 
    friend class TClonesArray; // needs to reset kNotDeleted in fBits
+   friend bool ROOT::Internal::DeleteChangesMemoryImpl();
 
    ClassDef(TObject,1)  //Basic ROOT object
 };
@@ -364,5 +379,32 @@ enum EObjBits {
 namespace cling {
    std::string printValue(TObject *val);
 }
+
+namespace ROOT {
+
+namespace Internal {
+   bool DeleteChangesMemory();
+} // Internal
+
+namespace Detail {
+
+
+/// @brief Check if the TObject's memory has been deleted.
+/// @warning This should be only used for error mitigation as the answer is only
+///    sometimes correct.  It actually just checks whether the object has been
+///    deleted, so this will falsely return true for an object that has
+///    been destructed but its memory has not been deleted.  This will return an
+///    undefined value if the memory is re-used between the deletion and the check.
+///    i.e.  This is useful to prevent a segmentation fault in case where the problem
+///    can be detected when the deletion and the usage are 'close-by'
+/// @warning In enviroment where delete taints (changes) the memory, this function
+///    always returns false as the marker left by ~TObject will be overwritten.
+/// @param obj The memory to check
+/// @return true if the object has been destructed and it can be inferred that it has been deleted
+R__ALWAYS_INLINE bool HasBeenDeleted(const TObject *obj) {
+   return !ROOT::Internal::DeleteChangesMemory() && obj->IsDestructed();
+}
+
+}} // ROOT::Details
 
 #endif

@@ -896,7 +896,7 @@ Int_t TApplicationServer::SendCanvases()
       while (lnk) {
          TObject *sc = lnk->GetObject();
          lnk = lnk->Next();
-         if ((sc->TestBit(kNotDeleted)) && sc == o)
+         if ((!ROOT::Detail::HasBeenDeleted(sc)) && sc == o)
             sentalready = kTRUE;
       }
       if (!sentalready) {

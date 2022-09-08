@@ -963,7 +963,7 @@ Int_t TGMdiMainFrame::Close(TGMdiFrame *mdiframe)
    TGMdiDecorFrame *frame = GetDecorFrame(mdiframe);
    Restore(mdiframe);
    mdiframe->Emit("CloseWindow()");
-   if (frame && mdiframe->TestBit(kNotDeleted) && !mdiframe->TestBit(TGMdiFrame::kDontCallClose))
+   if (frame && !ROOT::Detail::HasBeenDeleted(mdiframe) && !mdiframe->TestBit(TGMdiFrame::kDontCallClose))
       return frame->CloseWindow();
    return kTRUE;
 }

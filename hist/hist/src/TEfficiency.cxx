@@ -1033,7 +1033,7 @@ TEfficiency::~TEfficiency()
       TObject* obj = 0;
       while ((obj  = fFunctions->First())) {
          while(fFunctions->Remove(obj)) { }
-         if (!obj->TestBit(kNotDeleted)) {
+         if (ROOT::Detail::HasBeenDeleted(obj)) {
             break;
          }
          delete obj;

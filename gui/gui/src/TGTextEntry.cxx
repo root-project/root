@@ -1229,7 +1229,7 @@ Bool_t TGTextEntry::HandleKey(Event_t* event)
    if ((EKeySym)keysym  == kKey_Enter || (EKeySym)keysym  == kKey_Return) {
 
       ReturnPressed();                                      // emit signal
-      if (!TestBit(kNotDeleted)) return kTRUE;
+      if (ROOT::Detail::HasBeenDeleted(this)) return kTRUE;
       fSelectionOn = kFALSE;
 
    } else if (event->fState & kKeyShiftMask && (EKeySym)keysym  == kKey_Backtab) {

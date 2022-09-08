@@ -111,26 +111,31 @@ TRatioPlot::~TRatioPlot()
 
    gROOT->GetListOfCleanups()->Remove(this);
 
-   if (fRatioGraph && fRatioGraph->TestBit(kNotDeleted)) delete fRatioGraph;
-   if (fConfidenceInterval1 && fConfidenceInterval1->TestBit(kNotDeleted)) delete fConfidenceInterval1;
-   if (fConfidenceInterval2 && fConfidenceInterval2->TestBit(kNotDeleted)) delete fConfidenceInterval2;
+   auto safeDelete = [](TObject *obj) {
+      if (obj && !ROOT::Detail::HasBeenDeleted(obj))
+         delete obj;
+   };
+
+   safeDelete(fRatioGraph);
+   safeDelete(fConfidenceInterval1);
+   safeDelete(fConfidenceInterval2);
 
    for (unsigned int i=0;i<fGridlines.size();++i) {
       delete (fGridlines[i]);
    }
 
-   if (fSharedXAxis && fSharedXAxis->TestBit(kNotDeleted)) delete fSharedXAxis;
-   if (fUpperGXaxis && fUpperGXaxis->TestBit(kNotDeleted)) delete fUpperGXaxis;
-   if (fLowerGXaxis && fLowerGXaxis->TestBit(kNotDeleted)) delete fLowerGXaxis;
-   if (fUpperGYaxis && fUpperGYaxis->TestBit(kNotDeleted)) delete fUpperGYaxis;
-   if (fLowerGYaxis && fLowerGYaxis->TestBit(kNotDeleted)) delete fLowerGYaxis;
-   if (fUpperGXaxisMirror && fUpperGXaxisMirror->TestBit(kNotDeleted)) delete fUpperGXaxisMirror;
-   if (fLowerGXaxisMirror && fLowerGXaxisMirror->TestBit(kNotDeleted)) delete fLowerGXaxisMirror;
-   if (fUpperGYaxisMirror && fUpperGYaxisMirror->TestBit(kNotDeleted)) delete fUpperGYaxisMirror;
-   if (fLowerGYaxisMirror && fLowerGYaxisMirror->TestBit(kNotDeleted)) delete fLowerGYaxisMirror;
+   safeDelete(fSharedXAxis);
+   safeDelete(fUpperGXaxis);
+   safeDelete(fLowerGXaxis);
+   safeDelete(fUpperGYaxis);
+   safeDelete(fLowerGYaxis);
+   safeDelete(fUpperGXaxisMirror);
+   safeDelete(fLowerGXaxisMirror);
+   safeDelete(fUpperGYaxisMirror);
+   safeDelete(fLowerGYaxisMirror);
 
-   if (fUpYaxis && fUpYaxis->TestBit(kNotDeleted)) delete fUpYaxis;
-   if (fLowYaxis && fLowYaxis->TestBit(kNotDeleted)) delete fLowYaxis;
+   safeDelete(fUpYaxis);
+   safeDelete(fLowYaxis);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

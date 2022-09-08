@@ -379,7 +379,7 @@ zombie:
 
 TPad::~TPad()
 {
-   if (!TestBit(kNotDeleted)) return;
+   if (ROOT::Detail::HasBeenDeleted(this)) return;
    Close();
    CloseToolTip(fTip);
    DeleteToolTip(fTip);
@@ -633,7 +633,7 @@ void TPad::Clear(Option_t *option)
       SafeDelete(fView);
       if (fPrimitives) fPrimitives->Clear(option);
       if (fFrame) {
-         if (fFrame->TestBit(kNotDeleted)) delete fFrame;
+         if (! ROOT::Detail::HasBeenDeleted(fFrame)) delete fFrame;
          fFrame = nullptr;
       }
    }
@@ -973,18 +973,18 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
 
 void TPad::Close(Option_t *)
 {
-   if (!TestBit(kNotDeleted)) return;
+   if (ROOT::Detail::HasBeenDeleted(this)) return;
    if (!fMother) return;
-   if (!fMother->TestBit(kNotDeleted)) return;
+   if (ROOT::Detail::HasBeenDeleted(fMother)) return;
 
    if (fPrimitives)
       fPrimitives->Clear();
    if (fView) {
-      if (fView->TestBit(kNotDeleted)) delete fView;
+      if (!ROOT::Detail::HasBeenDeleted(fView)) delete fView;
       fView = nullptr;
    }
    if (fFrame) {
-      if (fFrame->TestBit(kNotDeleted)) delete fFrame;
+      if (!ROOT::Detail::HasBeenDeleted(fFrame)) delete fFrame;
       fFrame = nullptr;
    }
 
@@ -1274,7 +1274,7 @@ void TPad::Draw(Option_t *option)
    // pad cannot be in itself and it can only be in one other pad at a time
    if (!fPrimitives) fPrimitives = new TList;
    if (gPad != this) {
-      if (fMother && fMother->TestBit(kNotDeleted))
+      if (fMother && !ROOT::Detail::HasBeenDeleted(fMother))
             if (fMother->GetListOfPrimitives()) fMother->GetListOfPrimitives()->Remove(this);
       TPad *oldMother = fMother;
       fCanvas = gPad->GetCanvas();
@@ -4611,7 +4611,7 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
 void TPad::Pop()
 {
    if (!fMother) return;
-   if (!fMother->TestBit(kNotDeleted)) return;
+   if (ROOT::Detail::HasBeenDeleted(fMother)) return;
    if (!fPrimitives) fPrimitives = new TList;
    if (this == fMother->GetListOfPrimitives()->Last()) return;
 

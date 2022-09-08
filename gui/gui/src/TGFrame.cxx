@@ -1731,7 +1731,7 @@ Bool_t TGMainFrame::HandleClientMessage(Event_t *event)
    if ((event->fFormat == 32) && ((Atom_t)event->fUser[0] == gWM_DELETE_WINDOW) &&
        (event->fHandle != gROOT_MESSAGE)) {
       Emit("CloseWindow()");
-      if (TestBit(kNotDeleted) && !TestBit(kDontCallClose))
+      if (!ROOT::Detail::HasBeenDeleted(this) && !TestBit(kDontCallClose))
          CloseWindow();
    }
    return kTRUE;
