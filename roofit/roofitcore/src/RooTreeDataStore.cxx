@@ -426,8 +426,15 @@ void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, c
         numInvalid++ ;
         allOK=false ;
         if (numInvalid < 5) {
-          coutI(DataHandling) << "RooTreeDataStore::loadValues(" << GetName() << ") Skipping event #" << i << " because " << destArg->GetName()
-              << " cannot accommodate the value " << static_cast<RooAbsReal*>(sourceArg)->getVal() << std::endl;
+          auto& log = coutI(DataHandling);
+          log << "RooTreeDataStore::loadValues(" << GetName() << ") Skipping event #" << i << " because " << destArg->GetName()
+              << " cannot accommodate the value ";
+          if(sourceArg->isCategory()) {
+            log << static_cast<RooAbsCategory*>(sourceArg)->getCurrentIndex();
+          } else {
+            log << static_cast<RooAbsReal*>(sourceArg)->getVal();
+          }
+          log << std::endl;
         } else if (numInvalid == 5) {
           coutI(DataHandling) << "RooTreeDataStore::loadValues(" << GetName() << ") Skipping ..." << std::endl;
         }
