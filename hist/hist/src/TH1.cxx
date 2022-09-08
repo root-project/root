@@ -629,7 +629,7 @@ TH1::TH1(): TNamed(), TAttLine(), TAttFill(), TAttMarker()
 
 TH1::~TH1()
 {
-   if (!TestBit(kNotDeleted)) {
+   if (ROOT::Detail::HasBeenDeleted(this)) {
       return;
    }
    delete[] fIntegral;
@@ -650,7 +650,7 @@ TH1::~TH1()
       //and may have been already deleted.
       while ((obj  = fFunctions->First())) {
          while(fFunctions->Remove(obj)) { }
-         if (!obj->TestBit(kNotDeleted)) {
+         if (ROOT::Detail::HasBeenDeleted(obj)) {
             break;
          }
          delete obj;

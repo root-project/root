@@ -290,7 +290,7 @@ CallFunc_t *TQSlot::StartExecuting() {
 
 void TQSlot::EndExecuting() {
    fExecuting--;
-   if (!TestBit(kNotDeleted) && !fExecuting)
+   if (ROOT::Detail::HasBeenDeleted(this) && !fExecuting)
       gCling->CallFunc_Delete(fFunc);
 }
 
@@ -350,7 +350,7 @@ inline void TQSlot::ExecuteMethod(void *object, Longptr_t *paramArr, Int_t npara
    fExecuting++;
    gCling->CallFunc_Exec(fFunc, address);
    fExecuting--;
-   if (!TestBit(kNotDeleted) && !fExecuting)
+   if (ROOT::Detail::HasBeenDeleted(this) && !fExecuting)
       gCling->CallFunc_Delete(fFunc);
 }
 

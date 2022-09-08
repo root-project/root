@@ -687,7 +687,7 @@ void TCanvas::Destructor()
       if ((*gThreadXAR)("CDEL", 2, arr, 0)) return;
    }
 
-   if (!TestBit(kNotDeleted)) return;
+   if (ROOT::Detail::HasBeenDeleted(this)) return;
 
    SafeDelete(fContextMenu);
    if (!gPad) return;

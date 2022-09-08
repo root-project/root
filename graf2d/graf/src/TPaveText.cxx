@@ -115,7 +115,7 @@ TPaveText::TPaveText(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Option_
 
 TPaveText::~TPaveText()
 {
-   if (!TestBit(kNotDeleted)) return;
+   if (ROOT::Detail::HasBeenDeleted(this)) return;
    if (fLines) fLines->Delete();
    delete fLines;
    fLines = 0;
