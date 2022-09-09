@@ -18,6 +18,7 @@
 #include "ROOT/TThreadExecutor.hxx"
 #endif // R__USE_IMT
 
+#include <algorithm>
 #include <set>
 
 using ROOT::RDF::RResultHandle;
@@ -30,16 +31,13 @@ void ROOT::RDF::RunGraphs(std::vector<RResultHandle> handles)
    }
 
    // Check that there are results which have not yet been run
-   unsigned int nNotRun = 0;
-   for (const auto &h : handles) {
-      if (!h.IsReady())
-         nNotRun++;
-   }
-   if (nNotRun < handles.size()) {
+   const unsigned int nToRun =
+      std::count_if(handles.begin(), handles.end(), [](const auto &h) { return !h.IsReady(); });
+   if (nToRun < handles.size()) {
       Warning("RunGraphs", "Got %lu handles from which %lu link to results which are already ready.", handles.size(),
-              handles.size() - nNotRun);
+              handles.size() - nToRun);
    }
-   if (nNotRun == 0)
+   if (nToRun == 0u)
       return;
 
    // Find the unique event loops
@@ -55,6 +53,5 @@ void ROOT::RDF::RunGraphs(std::vector<RResultHandle> handles)
       return;
    }
 #endif // R__USE_IMT
-   for (auto &h : uniqueLoops)
-      run(h);
+   std::for_each(uniqueLoops.begin(), uniqueLoops.end(), run);
 }
