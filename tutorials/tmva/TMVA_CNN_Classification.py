@@ -167,7 +167,7 @@ if writeOutputFile:
 # The factory is the major TMVA object you have to interact with. Here is the list of parameters you need to pass
 
 # - The first argument is the base of the name of all the output
-# weightfiles in the directory weight/ that will be created with the
+#   weight files in the directory weight/ that will be created with the
 #    method parameters
 
 # - The second argument is the output file for the training results
@@ -213,7 +213,7 @@ loader = TMVA.DataLoader("dataset")
 imgSize = 16 * 16
 inputFileName = "images_data_16x16.root"
 
-# if file does not exists create it
+# if the input file does not exist create it
 if ROOT.gSystem.AccessPathName(inputFileName):
     MakeImagesTree(5000, 16, 16)
 
@@ -322,7 +322,7 @@ if useTMVADNN:
 
 # Training strategies
 # one can catenate several training strings with different parameters (e.g. learning rates or regularizations
-# parameters) The training string must be concatenates with the `|` delimiter
+# parameters) The training string must be concatenated with the `|` delimiter
 trainingString1 = ROOT.TString(
     "LearningRate=1e-3,Momentum=0.9,Repetitions=1,"
     "ConvergenceSteps=5,BatchSize=100,TestRepetitions=1,"
