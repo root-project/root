@@ -573,14 +573,12 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
     };
 
     // Reduce pdfNSet to actual dependents
-    if (0 == strcmp("nset", pdfNSetOrig.GetName())) {
-      getObservablesOfCurrentPdf(pdfNSet, pdfNSetOrig);
-    } else if (0 == strcmp("cset", pdfNSetOrig.GetName())) {
+    if (0 == strcmp("cset", pdfNSetOrig.GetName())) {
       getObservablesOfCurrentPdf(pdfNSet, normSet);
       removeCommon(pdfNSet, pdfNSetOrig.get());
       pdfCSet = pdfNSetOrig.get();
     } else {
-      // Legacy mode. Interpret at NSet for backward compatibility
+      // Interpret at NSet
       getObservablesOfCurrentPdf(pdfNSet, pdfNSetOrig);
     }
 
@@ -2275,7 +2273,18 @@ std::unique_ptr<RooArgSet> RooProdPdf::fillNormSetForServer(RooArgSet const& nor
   if(normSet.empty()) return nullptr;
   auto * pdfNset = findPdfNSet(static_cast<RooAbsPdf const&>(server));
   if (pdfNset && !pdfNset->empty()) {
-    return std::make_unique<RooArgSet>(*pdfNset);
+    if (0 == strcmp("cset", pdfNset->GetName())) {
+      // If the name of the normalization set is "cset", it doesn't contain the
+      // normalization set but the conditional observables that should *not* be
+      // normalized over.
+      auto out = std::make_unique<RooArgSet>(normSet);
+      RooArgSet common;
+      out->selectCommon(*pdfNset, common);
+      out->remove(common);
+      return out;
+    } else {
+      return std::make_unique<RooArgSet>(*pdfNset);
+    }
   } else {
     return nullptr;
   }
