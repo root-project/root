@@ -823,7 +823,8 @@ void RLoopManager::EvalChildrenCounts()
 
 /// Start the event loop with a different mechanism depending on IMT/no IMT, data source/no data source.
 /// Also perform a few setup and clean-up operations (jit actions if necessary, clear booked actions after the loop...).
-void RLoopManager::Run()
+/// The jitting phase is skipped if the `jit` parameter is `false` (unsafe, use with care).
+void RLoopManager::Run(bool jit)
 {
    // Change value of TTree::GetMaxTreeSize only for this scope. Revert when #6640 will be solved.
    MaxTreeSizeRAII ctxtmts;
@@ -832,7 +833,8 @@ void RLoopManager::Run()
 
    ThrowIfNSlotsChanged(GetNSlots());
 
-   Jit();
+   if (jit)
+      Jit();
 
    InitNodes();
 
