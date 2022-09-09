@@ -48,7 +48,6 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include <iostream>
 
 #ifdef R__HAS_VDT
 #include <vdt/vdtMath.h>
@@ -1882,10 +1881,11 @@ T Sum(const RVec<T> &v, const T zero = T(0))
 }
 
 /// Product method analogous to Sum:
+/// Multiply the elements of a vector
 template <typename T>
-T Product(const RVec<T> &v, const T zero = T(0))
+T Product(const RVec<T> &v, const T init = T(1)) // initialize with identity
 {
-   return std::accumulate(v.begin(), v.end(), zero, std::multiplies<T>());
+   return std::accumulate(v.begin(), v.end(), init, std::multiplies<T>());
 }
 
 /// Get the mean of the elements of an RVec
@@ -2254,6 +2254,7 @@ RVec<typename RVec<T>::size_type> StableArgsort(const RVec<T> &v, Compare &&c)
 /// vTaken
 /// // (ROOT::VecOps::RVec<double>) { 2.0000000, 1.0000000 }
 /// ~~~
+
 template <typename T>
 RVec<T> Take(const RVec<T> &v, const RVec<typename RVec<T>::size_type> &i)
 {
@@ -2273,12 +2274,14 @@ RVec<T> Take(const RVec<T> &v, const RVec<typename RVec<T>::size_type> &i, const
    const size_type isize = i.size();
    RVec<T> r(isize);
    for (size_type k = 0; k < isize; k++)
+   {
       if (k < v.size()){
          r[k] = v[i[k]];
       }
       else {
          r[k] = default_val;
       }
+   }
    return r;
 }
 
@@ -3003,9 +3006,16 @@ RVec<T> Construct(const RVec<Args_t> &... args)
    return ret;
 }
 
-//Enumerate
+/// Enumerate method:
+/// For any Rvec v produce another RVec with entries starting from 0, and incrementing by 1 until a N = v.size() is reached.
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVecF v = {1., 2., 3.};
+/// cout << Enumerate(v1) << "\n";
+/// // { 0, 1, 2 }
 template <typename T>
-RVec<T> Enumerate(const RVec<T> &v)
+RVec<typename RVec<T>::size_type> Enumerate(const RVec<T> &v)
 {
    const auto size = v.size();
    RVec<T> ret;
@@ -3016,19 +3026,22 @@ RVec<T> Enumerate(const RVec<T> &v)
    return ret;
 }
 
-// Range
-//Enumerate
-template <typename T>
-RVec<T> Range(const T &length)
+/// Range method: 
+/// Produce RVec with entries starting from 0, and incrementing by 1 until a user-specified N is reached.
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// cout << Range(3) << "\n";
+/// // { 0, 1, 2 }
+inline RVec<std::size_t> Range(std::size_t length)
 {
-   RVec<T> ret;
+   RVec<std::size_t> ret;
    ret.reserve(length);
    for (auto i = 0UL; i < length; ++i) {
       ret.emplace_back(i);
    }
    return ret;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print a RVec at the prompt:
