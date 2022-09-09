@@ -1,17 +1,65 @@
 // Tests for the RooProdPdf
-// Author: Jonas Rembser, CERN, June 2021
+// Authors: Stephan Hageboeck, CERN  02/2019
+//          Jonas Rembser, CERN, June 2021
 
-#include "RooArgList.h"
-#include "RooArgSet.h"
-#include "RooGenericPdf.h"
-#include "RooProdPdf.h"
-#include "RooRealVar.h"
+#include <RooArgList.h>
+#include <RooArgSet.h>
+#include <RooGenericPdf.h>
+#include <RooProdPdf.h>
+#include <RooRealVar.h>
+#include <RooDataSet.h>
+#include <RooGaussModel.h>
+#include <RooDecay.h>
+#include <RooFitResult.h>
+#include <RooConstVar.h>
+#include <RooGamma.h>
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include <memory>
 #include <sstream>
 #include <string>
+
+class TestProdPdf : public ::testing::Test {
+protected:
+   TestProdPdf() : Test()
+   {
+      datap.reset(prod.generate(RooArgSet(x), 1000));
+      a.setConstant(true);
+   }
+
+   constexpr static double bTruth = -0.5;
+
+   RooRealVar x{"x", "x", 2., 0., 5.};
+   RooRealVar a{"a", "a", -0.2, -5., 0.};
+   RooRealVar b{"b", "b", bTruth, -5., 0.};
+
+   RooGenericPdf c1{"c1", "exp(x[0]*x[1])", RooArgSet(x, a)};
+   RooGenericPdf c2{"c2", "exp(x[0]*x[1])", RooArgSet(x, b)};
+   RooProdPdf prod{"mypdf", "mypdf", RooArgList(c1, c2)};
+   std::unique_ptr<RooDataSet> datap{nullptr};
+};
+
+TEST_F(TestProdPdf, CachingOpt2)
+{
+   prod.fitTo(*datap, RooFit::Optimize(2), RooFit::PrintLevel(-1));
+   EXPECT_LT(fabs(b.getVal() - bTruth), b.getError() * 1.1)
+      << "b=" << b.getVal() << " +- " << b.getError() << " doesn't match truth value with O2.";
+}
+
+TEST_F(TestProdPdf, CachingOpt1)
+{
+   prod.fitTo(*datap, RooFit::Optimize(1), RooFit::PrintLevel(-1));
+   EXPECT_LT(fabs(b.getVal() - bTruth), b.getError() * 1.1)
+      << "b=" << b.getVal() << " +- " << b.getError() << " doesn't match truth value with O1.";
+}
+
+TEST_F(TestProdPdf, CachingOpt0)
+{
+   prod.fitTo(*datap, RooFit::Optimize(0), RooFit::PrintLevel(-1));
+   EXPECT_LT(fabs(b.getVal() - bTruth), b.getError() * 1.1)
+      << "b=" << b.getVal() << " +- " << b.getError() << " doesn't match truth value with O0.";
+}
 
 std::vector<std::vector<RooAbsArg *>> allPossibleSubset(RooAbsCollection const &arr)
 {
@@ -83,4 +131,46 @@ TEST(RooProdPdf, TestGetPartIntList)
    // This value must be updated if the convention for integral names in
    // RooProdPdf changes.
    EXPECT_EQ(hashRooProduct(prod), 2448666198);
+}
+
+TEST(RooProdPdf, TestDepsAreCond)
+{
+   using namespace RooFit;
+
+   RooRealVar x("x", "", 0, 1);
+   RooRealVar xErr("xErr", "", 0.0001, 0.1);
+
+   RooGaussModel gm("gm", "", x, RooConst(0), xErr);
+
+   RooRealVar tau("tau", "", 0.4, 0, 1);
+   RooDecay decayPdf("decayPdf", "", x, tau, gm, RooDecay::SingleSided);
+
+   RooGamma errPdf("errPdf", "", xErr, RooConst(4), RooConst(0.005), RooConst(0));
+
+   // What we want: decayPdf(x|xErr)*errPdf(xErr):
+   RooProdPdf pdf1("pdf1", "", RooArgSet(errPdf), Conditional(decayPdf, x, false));
+
+   // Should be the same as pdf1:
+   RooProdPdf pdf2("pdf2", "", RooArgSet(errPdf), Conditional(decayPdf, xErr, true));
+
+   std::unique_ptr<RooDataSet> data{pdf1.generate(RooArgSet(x, xErr), NumEvents(10000))};
+
+   auto resetParameters = [&]() {
+      tau.setVal(0.4);
+      tau.setError(0.0);
+   };
+
+   using ResultPtr = std::unique_ptr<RooFitResult>;
+
+   ResultPtr result1{pdf1.fitTo(*data, Save(), BatchMode("off"), PrintLevel(-1))};
+   resetParameters();
+   ResultPtr result2{pdf1.fitTo(*data, Save(), BatchMode("cpu"), PrintLevel(-1))};
+   resetParameters();
+   ResultPtr result3{pdf2.fitTo(*data, Save(), BatchMode("off"), PrintLevel(-1))};
+   resetParameters();
+   ResultPtr result4{pdf2.fitTo(*data, Save(), BatchMode("cpu"), PrintLevel(-1))};
+
+   EXPECT_TRUE(result2->isIdentical(*result1)) << "batchmode fit is inconsistent!";
+   EXPECT_TRUE(result3->isIdentical(*result1)) << "alternative model fit is inconsistent!";
+   EXPECT_TRUE(result4->isIdentical(*result1)) << "alternative model batchmode fit is inconsistent!";
 }
