@@ -80,12 +80,7 @@ ClassImp(RooProdPdf);
 /// Default constructor
 
 RooProdPdf::RooProdPdf() :
-  _cacheMgr(this,10),
-  _cutOff(0),
-  _extendedIndex(-1),
-  _useDefaultGen(false),
-  _refRangeName(0),
-  _selfNorm(true)
+  _cacheMgr(this,10)
 {
   // Default constructor
   TRACE_CREATE
@@ -114,13 +109,8 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
              RooAbsPdf& pdf1, RooAbsPdf& pdf2, double cutOff) :
   RooAbsPdf(name,title),
   _cacheMgr(this,10),
-  _genCode(10),
   _cutOff(cutOff),
-  _pdfList("!pdfs","List of PDFs",this),
-  _extendedIndex(-1),
-  _useDefaultGen(false),
-  _refRangeName(0),
-  _selfNorm(true)
+  _pdfList("!pdfs","List of PDFs",this)
 {
   _pdfList.add(pdf1) ;
   _pdfNSetList.emplace_back(std::make_unique<RooArgSet>("nset")) ;
@@ -167,13 +157,8 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
 RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& inPdfList, double cutOff) :
   RooAbsPdf(name,title),
   _cacheMgr(this,10),
-  _genCode(10),
   _cutOff(cutOff),
-  _pdfList("!pdfs","List of PDFs",this),
-  _extendedIndex(-1),
-  _useDefaultGen(false),
-  _refRangeName(0),
-  _selfNorm(true)
+  _pdfList("!pdfs","List of PDFs",this)
 {
   Int_t numExtended(0) ;
   for(RooAbsArg * arg : inPdfList) {
@@ -246,13 +231,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgSet& ful
              const RooCmdArg& arg7, const RooCmdArg& arg8) :
   RooAbsPdf(name,title),
   _cacheMgr(this,10),
-  _genCode(10),
-  _cutOff(0),
-  _pdfList("!pdfs","List of PDFs",this),
-  _extendedIndex(-1),
-  _useDefaultGen(false),
-  _refRangeName(0),
-  _selfNorm(true)
+  _pdfList("!pdfs","List of PDFs",this)
 {
   RooLinkedList l ;
   l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;
@@ -276,13 +255,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title,
              const RooCmdArg& arg7, const RooCmdArg& arg8) :
   RooAbsPdf(name,title),
   _cacheMgr(this,10),
-  _genCode(10),
-  _cutOff(0),
-  _pdfList("!pdfList","List of PDFs",this),
-  _extendedIndex(-1),
-  _useDefaultGen(false),
-  _refRangeName(0),
-  _selfNorm(true)
+  _pdfList("!pdfList","List of PDFs",this)
 {
   RooLinkedList l ;
   l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;
@@ -302,13 +275,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title,
 RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgSet& fullPdfSet, const RooLinkedList& cmdArgList) :
   RooAbsPdf(name,title),
   _cacheMgr(this,10),
-  _genCode(10),
-  _cutOff(0),
-  _pdfList("!pdfs","List of PDFs",this),
-  _extendedIndex(-1),
-  _useDefaultGen(false),
-  _refRangeName(0),
-  _selfNorm(true)
+  _pdfList("!pdfs","List of PDFs",this)
 {
   initializeFromCmdArgList(fullPdfSet, cmdArgList) ;
   TRACE_CREATE
