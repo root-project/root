@@ -3,6 +3,8 @@ from torch import nn
 
 # Define model
 
+print("running Torch code defining the model....")
+
 # Custom Reshape Layer
 class Reshape(torch.nn.Module):
     def forward(self, x):
@@ -116,3 +118,4 @@ load_model_custom_objects = {"optimizer": optimizer, "criterion": criterion, "tr
 # Store model to file
 m = torch.jit.script(net)
 torch.jit.save(m,"PyTorchModelCNN.pt")
+print("The PyTorch CNN model is created and saved as PyTorchModelCNN.pt") 

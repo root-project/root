@@ -112,6 +112,10 @@ useTMVADNN = opt[2] if len(opt) > 2 else False
 useTMVABDT = opt[3] if len(opt) > 3 else False
 usePyTorchCNN = opt[4] if len(opt) > 4 else False
 
+if ROOT.gSystem.GetFromPipe("root-config --has-tmva-pymva") != "yes":
+    useKerasCNN = False
+    usePyTorchCNN = False
+
 tf_spec = importlib.util.find_spec("tensorflow")
 if tf_spec is None:
     useKerasCNN = False
@@ -127,6 +131,10 @@ if not useTMVACNN:
         "TMVA_CNN_Classificaton",
         "TMVA is not build with GPU or CPU multi-thread support. Cannot use TMVA Deep Learning for CNN",
     )
+
+#there is an issue using TF and PyTorch - so use only one of the two
+if (usePyTorchCNN):
+   useKerasCNN = False
 
 writeOutputFile = True
 
@@ -144,10 +152,6 @@ else:
 
 print("Running with nthreads  = ", ROOT.GetThreadPoolSize())
 
-
-if ROOT.gSystem.GetFromPipe("root-config --has-tmva-pymva") == "yes":
-    useKerasCNN = True
-    usePyTorchCNN = True
 
 
 outputFile = None
@@ -419,6 +423,36 @@ if useTMVACNN:
 ### Book Convolutional Neural Network in Keras using a generated model
 
 
+if usePyTorchCNN:
+    ROOT.Info("TMVA_CNN_Classification", "Using Convolutional PyTorch Model")
+    pyTorchFileName = str(ROOT.gROOT.GetTutorialDir())
+    pyTorchFileName += "/tmva/PyTorch_Generate_CNN_Model.py"
+    # check that pytorch can be imported and file defining the model exists
+    torch_spec = importlib.util.find_spec("torch")
+    if torch_spec is not None and os.path.exists(pyTorchFileName):
+        #cmd = str(ROOT.TMVA.Python_Executable()) + "  " + pyTorchFileName
+        #os.system(cmd)
+        #import PyTorch_Generate_CNN_Model
+        ROOT.Info("TMVA_CNN_Classification", "Booking PyTorch CNN model")
+        factory.BookMethod(
+            loader,
+            TMVA.Types.kPyTorch,
+            "PyTorch",
+            H=True,
+            V=False,
+            VarTransform=None,
+            FilenameModel="PyTorchModelCNN.pt",
+            FilenameTrainedModel="PyTorchTrainedModelCNN.pt",
+            NumEpochs=max_epochs,
+            BatchSize=100,
+            UserCode=str(pyTorchFileName)
+        )
+    else:
+        ROOT.Warning(
+            "TMVA_CNN_Classification",
+            "PyTorch is not installed or model building file is not existing - skip using PyTorch",
+        )
+
 if useKerasCNN:
     ROOT.Info("TMVA_CNN_Classification", "Building convolutional keras model")
     # create python script which can be executed
@@ -465,33 +499,6 @@ if useKerasCNN:
             GpuOptions="allow_growth=True",
         )  # needed for RTX NVidia card and to avoid TF allocates all GPU memory
 
-
-if usePyTorchCNN:
-    ROOT.Info("TMVA_CNN_Classification", "Using Convolutional PyTorch Model")
-    pyTorchFileName = str(ROOT.gROOT.GetTutorialDir())
-    pyTorchFileName += "/tmva/PyTorch_Generate_CNN_Model.py"
-    # check that pytorch can be imported and file defining the model exists
-    torch_spec = importlib.util.find_spec("torch")
-    if torch_spec is not None and os.path.exists(pyTorchFileName) :
-        ROOT.Info("TMVA_CNN_Classification", "Booking PyTorch CNN model")
-        factory.BookMethod(
-            loader,
-            TMVA.Types.kPyTorch,
-            "PyTorch",
-            H=True,
-            V=False,
-            VarTransform=None,
-            FilenameModel="PyTorchModelCNN.pt",
-            FilenameTrainedModel="PyTorchTrainedModelCNN.pt",
-            NumEpochs=max_epochs,
-            BatchSize=100,
-            UserCode=pyTorchFileName,
-        )
-    else:
-        ROOT.Warning(
-            "TMVA_CNN_Classification",
-            "PyTorch is not installed or model building file is not existing - skip using PyTorch",
-        )
 
 
 ## Train Methods
