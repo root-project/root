@@ -45,8 +45,14 @@ void ROOT::RDF::RunGraphs(std::vector<RResultHandle> handles)
    std::set<RResultHandle, decltype(sameGraph)> s(handles.begin(), handles.end(), sameGraph);
    std::vector<RResultHandle> uniqueLoops(s.begin(), s.end());
 
+   // Trigger jitting. One call is enough to jit the code required by all computation graphs.
+   uniqueLoops[0].fLoopManager->Jit();
+
    // Trigger the unique event loops
-   auto run = [](RResultHandle &h) { if (h.fLoopManager) h.fLoopManager->Run(); };
+   auto run = [](RResultHandle &h) {
+      if (h.fLoopManager)
+         h.fLoopManager->Run(/*jit=*/false);
+   };
 #ifdef R__USE_IMT
    if (ROOT::IsImplicitMTEnabled()) {
       ROOT::TThreadExecutor{}.Foreach(run, uniqueLoops);

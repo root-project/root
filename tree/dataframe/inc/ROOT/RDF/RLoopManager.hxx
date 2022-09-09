@@ -176,7 +176,7 @@ public:
    void JitDeclarations();
    void Jit();
    RLoopManager *GetLoopManagerUnchecked() final { return this; }
-   void Run();
+   void Run(bool jit = true);
    const ColumnNames_t &GetDefaultColumnNames() const;
    TTree *GetTree() const;
    ::TDirectory *GetDirectory() const;
