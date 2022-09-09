@@ -3003,6 +3003,19 @@ RVec<T> Construct(const RVec<Args_t> &... args)
    return ret;
 }
 
+//Enumerate
+template <typename T>
+RVec<T> Enumerate(const RVec<T> &v)
+{
+   const auto size = v.size();
+   RVec<T> ret;
+   ret.reserve(size);
+   for (auto i = 0UL; i < size; ++i) {
+      ret.emplace_back(i);
+   }
+   return ret;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Print a RVec at the prompt:
 template <class T>
