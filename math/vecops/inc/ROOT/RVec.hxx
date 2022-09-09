@@ -3016,6 +3016,20 @@ RVec<T> Enumerate(const RVec<T> &v)
    return ret;
 }
 
+// Range
+//Enumerate
+template <typename T>
+RVec<T> Range(const T &length)
+{
+   RVec<T> ret;
+   ret.reserve(length);
+   for (auto i = 0UL; i < length; ++i) {
+      ret.emplace_back(i);
+   }
+   return ret;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Print a RVec at the prompt:
 template <class T>
