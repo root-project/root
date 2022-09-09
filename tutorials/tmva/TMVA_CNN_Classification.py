@@ -30,9 +30,7 @@ TFile = ROOT.TFile
 
 
 import os
-
-os.environ["KERAS_BACKEND"] = "tensorflow"
-
+import importlib
 
 TMVA.Tools.Instance()
 TMVA.PyMethodBase.PyInitialize()
@@ -114,6 +112,19 @@ useTMVADNN = opt[2] if len(opt) > 2 else False
 useTMVABDT = opt[3] if len(opt) > 3 else False
 usePyTorchCNN = opt[4] if len(opt) > 4 else False
 
+if ROOT.gSystem.GetFromPipe("root-config --has-tmva-pymva") != "yes":
+    useKerasCNN = False
+    usePyTorchCNN = False
+
+tf_spec = importlib.util.find_spec("tensorflow")
+if tf_spec is None:
+    useKerasCNN = False
+    ROOT.Warning("TMVA_CNN_Classificaton","Skip using Keras since tensorflow is not installed")
+
+torch_spec = importlib.util.find_spec("torch")
+if torch_spec is None:
+    usePyTorchCNN = False
+    ROOT.Warning("TMVA_CNN_Classificaton","Skip using PyTorch since torch is not installed")
 
 if not useTMVACNN:
     ROOT.Warning(
@@ -121,25 +132,26 @@ if not useTMVACNN:
         "TMVA is not build with GPU or CPU multi-thread support. Cannot use TMVA Deep Learning for CNN",
     )
 
+#there is an issue using TF and PyTorch - so use only one of the two
+if (usePyTorchCNN):
+   useKerasCNN = False
+
 writeOutputFile = True
 
 num_threads = 0  # use default threads
+max_epochs = 10  # maximum number of epochs used for training
 
 
 # do enable MT running
 if num_threads >= 0:
     ROOT.EnableImplicitMT(num_threads)
-    if not num_threads:
-        ROOT.gSystem.Setenv("OMP_NUM_THREADS", ROOT.TString.Format("%d", num_threads))
+    if (num_threads > 0) :
+        ROOT.gSystem.Setenv("OMP_NUM_THREADS", str(num_threads))
 else:
     ROOT.gSystem.Setenv("OMP_NUM_THREADS", "1")
 
 print("Running with nthreads  = ", ROOT.GetThreadPoolSize())
 
-
-if ROOT.gSystem.GetFromPipe("root-config --has-tmva-pymva") == "yes":
-    useKerasCNN = True
-    usePyTorchCNN = True
 
 
 outputFile = None
@@ -155,7 +167,7 @@ if writeOutputFile:
 # The factory is the major TMVA object you have to interact with. Here is the list of parameters you need to pass
 
 # - The first argument is the base of the name of all the output
-# weightfiles in the directory weight/ that will be created with the
+#   weight files in the directory weight/ that will be created with the
 #    method parameters
 
 # - The second argument is the output file for the training results
@@ -201,7 +213,7 @@ loader = TMVA.DataLoader("dataset")
 imgSize = 16 * 16
 inputFileName = "images_data_16x16.root"
 
-# if file does not exists create it
+# if the input file does not exist create it
 if ROOT.gSystem.AccessPathName(inputFileName):
     MakeImagesTree(5000, 16, 16)
 
@@ -310,13 +322,14 @@ if useTMVADNN:
 
 # Training strategies
 # one can catenate several training strings with different parameters (e.g. learning rates or regularizations
-# parameters) The training string must be concatenates with the `|` delimiter
+# parameters) The training string must be concatenated with the `|` delimiter
 trainingString1 = ROOT.TString(
     "LearningRate=1e-3,Momentum=0.9,Repetitions=1,"
     "ConvergenceSteps=5,BatchSize=100,TestRepetitions=1,"
-    "MaxEpochs=20,WeightDecay=1e-4,Regularization=None,"
+    "WeightDecay=1e-4,Regularization=None,"
     "Optimizer=ADAM,DropConfig=0.0+0.0+0.0+0."
-)  # + "|" + trainingString2 + ....
+)  # + "|" + trainingString2 + ...
+trainingString1 += ",MaxEpochs=" + str(max_epochs)
 
 # Build now the full DNN Option string
 dnnMethodName = "TMVA_DNN_CPU"
@@ -376,9 +389,10 @@ if useTMVACNN:
     trainingString1 = ROOT.TString(
         "LearningRate=1e-3,Momentum=0.9,Repetitions=1,"
         "ConvergenceSteps=5,BatchSize=100,TestRepetitions=1,"
-        "MaxEpochs=20,WeightDecay=1e-4,Regularization=None,"
+        "WeightDecay=1e-4,Regularization=None,"
         "Optimizer=ADAM,DropConfig=0.0+0.0+0.0+0.0"
     )
+    trainingString1 += ",MaxEpochs=" + str(max_epochs)
 
     ## New DL (CNN)
     cnnMethodName = "TMVA_CNN_CPU"
@@ -389,9 +403,6 @@ if useTMVACNN:
         cnnMethodName = "TMVA_CNN_GPU"
     elif ROOT.gSystem.GetFromPipe("root-config --has-tmva-cpu") == "yes":
         cnnOptions = "CPU"
-
-    cnnOptions += ROOT.cnnOptions
-    cnnMethodName = ROOT.cnnMethodName
 
     factory.BookMethod(
         loader,
@@ -411,6 +422,36 @@ if useTMVACNN:
 
 ### Book Convolutional Neural Network in Keras using a generated model
 
+
+if usePyTorchCNN:
+    ROOT.Info("TMVA_CNN_Classification", "Using Convolutional PyTorch Model")
+    pyTorchFileName = str(ROOT.gROOT.GetTutorialDir())
+    pyTorchFileName += "/tmva/PyTorch_Generate_CNN_Model.py"
+    # check that pytorch can be imported and file defining the model exists
+    torch_spec = importlib.util.find_spec("torch")
+    if torch_spec is not None and os.path.exists(pyTorchFileName):
+        #cmd = str(ROOT.TMVA.Python_Executable()) + "  " + pyTorchFileName
+        #os.system(cmd)
+        #import PyTorch_Generate_CNN_Model
+        ROOT.Info("TMVA_CNN_Classification", "Booking PyTorch CNN model")
+        factory.BookMethod(
+            loader,
+            TMVA.Types.kPyTorch,
+            "PyTorch",
+            H=True,
+            V=False,
+            VarTransform=None,
+            FilenameModel="PyTorchModelCNN.pt",
+            FilenameTrainedModel="PyTorchTrainedModelCNN.pt",
+            NumEpochs=max_epochs,
+            BatchSize=100,
+            UserCode=str(pyTorchFileName)
+        )
+    else:
+        ROOT.Warning(
+            "TMVA_CNN_Classification",
+            "PyTorch is not installed or model building file is not existing - skip using PyTorch",
+        )
 
 if useKerasCNN:
     ROOT.Info("TMVA_CNN_Classification", "Building convolutional keras model")
@@ -435,15 +476,15 @@ if useKerasCNN:
     model.add(Dense(64, activation="tanh"))
     # model.add(Dropout(0.2))
     model.add(Dense(2, activation="sigmoid"))
-    model.compile(loss="binary_crossentropy", optimizer=Adam(lr=0.001), metrics=["accuracy"])
+    model.compile(loss="binary_crossentropy", optimizer=Adam(learning_rate=0.001), metrics=["accuracy"])
     model.save("model_cnn.h5")
     model.summary()
 
-    if ROOT.gSystem.AccessPathName("model_cnn.h5"):
+    if not os.path.exists("model_cnn.h5"):
         raise FileNotFoundError("Error creating Keras model file - skip using Keras")
     else:
         # book PyKeras method only if Keras model could be created
-        ROOT.Info("TMVA_CNN_Classification", "Building convolutional keras model")
+        ROOT.Info("TMVA_CNN_Classification", "Booking convolutional keras model")
         factory.BookMethod(
             loader,
             TMVA.Types.kPyKeras,
@@ -453,39 +494,11 @@ if useKerasCNN:
             VarTransform=None,
             FilenameModel="model_cnn.h5",
             FilenameTrainedModel="trained_model_cnn.h5",
-            NumEpochs=20,
+            NumEpochs=max_epochs,
             BatchSize=100,
             GpuOptions="allow_growth=True",
         )  # needed for RTX NVidia card and to avoid TF allocates all GPU memory
 
-
-if usePyTorchCNN:
-    ROOT.Info("TMVA_CNN_Classification", "Using Convolutional PyTorch Model")
-    pyTorchFileName = ROOT.gROOT.GetTutorialDir() + "/tmva/PyTorch_Generate_CNN_Model.py"
-    # check that pytorch can be imported and file defining the model and used later when booking the method is existing
-    if ROOT.gSystem.Exec(str(TMVA.Python_Executable()) + "-c 'import torch'") or ROOT.gSystem.AccessPathName(
-        pyTorchFileName
-    ):
-        ROOT.Warning(
-            "TMVA_CNN_Classification",
-            "PyTorch is not installed or model building file is not existing - skip using PyTorch",
-        )
-
-    else:
-        ROOT.Info("TMVA_CNN_Classification", "Booking PyTorch CNN model")
-        factory.BookMethod(
-            loader,
-            TMVA.Types.kPyTorch,
-            "PyTorch",
-            H=True,
-            V=False,
-            VarTransform=None,
-            FilenameModel="PyTorchModelCNN.pt",
-            FilenameTrainedModel="PyTorchTrainedModelCNN.pt",
-            NumEpochs=20,
-            BatchSize=100,
-            UserCode=pyTorchFileName,
-        )
 
 
 ## Train Methods

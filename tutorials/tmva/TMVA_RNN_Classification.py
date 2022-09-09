@@ -26,8 +26,7 @@ TMVA = ROOT.TMVA
 TFile = ROOT.TFile
 
 import os
-
-os.environ["KERAS_BACKEND"] = "tensorflow"
+import importlib
 
 
 TMVA.Tools.Instance()
@@ -140,7 +139,7 @@ use_type = 1
 ninput = 30
 ntime = 10
 batchSize = 100
-maxepochs = 20
+maxepochs = 10
 
 nTotEvts = 10000  # total events to be generated for signal or background
 
@@ -149,6 +148,12 @@ useKeras = True
 useTMVA_RNN = True
 useTMVA_DNN = True
 useTMVA_BDT = False
+
+tf_spec = importlib.util.find_spec("tensorflow")
+if tf_spec is None:
+    useKerasCNN = False
+    ROOT.Warning("TMVA_RNN_Classificaton","Skip using Keras since tensorflow is not installed")
+
 
 rnn_types = ["RNN", "LSTM", "GRU"]
 use_rnn_type = [1, 1, 1]
@@ -184,7 +189,7 @@ num_threads = 0  # use by default all threads
 if num_threads >= 0:
     ROOT.EnableImplicitMT(num_threads)
     if num_threads > 0:
-        ROOT.gSystem.Setenv("OMP_NUM_THREADS", ROOT.TString.Format("%d", num_threads))
+        ROOT.gSystem.Setenv("OMP_NUM_THREADS", str(num_threads))
 else:
     ROOT.gSystem.Setenv("OMP_NUM_THREADS", "1")
 
@@ -383,12 +388,12 @@ if useKeras:
             print("Building recurrent keras model using a", rnn_types[i], "layer")
             # create python script which can be executed
             # create 2 conv2d layer + maxpool + dense
-            from keras.models import Sequential
-            from keras.optimizers import Adam
+            from tensorflow.keras.models import Sequential
+            from tensorflow.keras.optimizers import Adam
 
             # from keras.initializers import TruncatedNormal
             # from keras import initializations
-            from keras.layers import Input, Dense, Dropout, Flatten, SimpleRNN, GRU, LSTM, Reshape, BatchNormalization
+            from tensorflow.keras.layers import Input, Dense, Dropout, Flatten, SimpleRNN, GRU, LSTM, Reshape, BatchNormalization
 
             model = Sequential()
             model.add(Reshape((10, 30), input_shape=(10 * 30,)))
@@ -399,17 +404,18 @@ if useKeras:
                 model.add(GRU(units=10, return_sequences=True))
             else:
                 model.add(SimpleRNN(units=10, return_sequences=True))
-                # m.AddLine("model.add(BatchNormalization())");
-                model.add(Flatten())  # needed if returning the full time output sequence
-                model.add(Dense(64, activation="tanh"))
-                model.add(Dense(2, activation="sigmoid"))
-                model.compile(loss="binary_crossentropy", optimizer=Adam(lr=0.001), metrics=["accuracy"])
-                model.save(modelName)
-                model.summary()
+            # m.AddLine("model.add(BatchNormalization())");
+            model.add(Flatten())  # needed if returning the full time output sequence
+            model.add(Dense(64, activation="tanh"))
+            model.add(Dense(2, activation="sigmoid"))
+            model.compile(loss="binary_crossentropy", optimizer=Adam(learning_rate=0.001), metrics=["accuracy"])
+            model.save(modelName)
+            model.summary()
+            print("saved recurrent model", modelName)
 
-            if ROOT.gSystem.AccessPathName(modelName):
+            if not os.path.exists(modelName):
                 useKeras = False
-                raise FileNotFoundError("Error creating Keras recurrent model file - Skip using Keras")
+                print("Error creating Keras recurrent model file - Skip using Keras")
             else:
                 # book PyKeras method only if Keras model could be created
                 print("Booking Keras  model ", rnn_types[i])
