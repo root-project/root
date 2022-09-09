@@ -1306,6 +1306,9 @@ import ROOT
 
 verbosity = ROOT.Experimental.RLogScopedVerbosity(ROOT.Detail.RDF.RDFLogChannel(), ROOT.Experimental.ELogLevel.kInfo)
 ~~~
+
+More information (e.g. start and end of each multi-thread task) is printed using `ELogLevel.kDebug` and even more
+(e.g. a full dump of the generated code that RDataFrame just-in-time-compiles) using `ELogLevel.kDebug+10`.
 */
 // clang-format on
 
