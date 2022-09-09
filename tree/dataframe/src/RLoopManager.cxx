@@ -803,7 +803,8 @@ void RLoopManager::Jit()
    RDFInternal::InterpreterCalc(code, "RLoopManager::Run");
    s.Stop();
    R__LOG_INFO(RDFLogChannel()) << "Just-in-time compilation phase completed"
-                                << (s.RealTime() > 1e-3 ? " in " + std::to_string(s.RealTime()) + " seconds." : ".");
+                                << (s.RealTime() > 1e-3 ? " in " + std::to_string(s.RealTime()) + " seconds."
+                                                        : " in less than 1ms.");
 }
 
 /// Trigger counting of number of children nodes for each node of the functional graph.
