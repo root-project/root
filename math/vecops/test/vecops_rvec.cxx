@@ -616,6 +616,9 @@ TEST(VecOps, SimpleStatOps)
 
    RVec<double> v1 {42.};
    ASSERT_DOUBLE_EQ(Sum(v1), 42.);
+   ASSERT_DOUBLE_EQ(Sum(v1, 1.5), 43.5);
+   ASSERT_DOUBLE_EQ(Product(v1), 42.);
+   ASSERT_DOUBLE_EQ(Product(v1, 1.5), 63.);
    ASSERT_DOUBLE_EQ(Mean(v1), 42.);
    ASSERT_DOUBLE_EQ(Max(v1), 42.);
    ASSERT_DOUBLE_EQ(Min(v1), 42.);
@@ -626,6 +629,7 @@ TEST(VecOps, SimpleStatOps)
 
    RVec<double> v2 {1., 2., 3.};
    ASSERT_DOUBLE_EQ(Sum(v2), 6.);
+   ASSERT_DOUBLE_EQ(Product(v2), 6.);
    ASSERT_DOUBLE_EQ(Mean(v2), 2.);
    ASSERT_DOUBLE_EQ(Max(v2), 3.);
    ASSERT_DOUBLE_EQ(Min(v2), 1.);
@@ -636,6 +640,7 @@ TEST(VecOps, SimpleStatOps)
 
    RVec<double> v3 {10., 20., 32.};
    ASSERT_DOUBLE_EQ(Sum(v3), 62.);
+   ASSERT_DOUBLE_EQ(Product(v3), 6400.);
    ASSERT_DOUBLE_EQ(Mean(v3), 20.666666666666668);
    ASSERT_DOUBLE_EQ(Max(v3), 32.);
    ASSERT_DOUBLE_EQ(Min(v3), 10.);
@@ -646,6 +651,7 @@ TEST(VecOps, SimpleStatOps)
 
    RVec<int> v4 {2, 3, 1};
    ASSERT_DOUBLE_EQ(Sum(v4), 6.);
+   ASSERT_DOUBLE_EQ(Product(v4), 6.);
    ASSERT_DOUBLE_EQ(Mean(v4), 2.);
    ASSERT_DOUBLE_EQ(Max(v4), 3);
    ASSERT_DOUBLE_EQ(Min(v4), 1);
@@ -656,6 +662,7 @@ TEST(VecOps, SimpleStatOps)
 
    RVec<int> v5 {2, 3, 1, 4};
    ASSERT_DOUBLE_EQ(Sum(v5), 10);
+   ASSERT_DOUBLE_EQ(Product(v5), 24.);
    ASSERT_DOUBLE_EQ(Mean(v5), 2.5);
    ASSERT_DOUBLE_EQ(Max(v5), 4);
    ASSERT_DOUBLE_EQ(Min(v5), 1);
@@ -782,6 +789,29 @@ TEST(VecOps, TakeLast)
    auto v2 = Take(v0, 0);
    RVec<int> none{};
    CheckEqual(v2, none);
+}
+
+TEST(VecOps, TakeWithDefault)
+{
+   RVec<int> v0{1, 2, 3};
+
+   auto v1 = Take(v0, {0, 1, 2, 3}, -999);
+   RVec<int> ref{1, 2, 3, -999};
+   CheckEqual(v1, ref);
+}
+
+TEST(VecOps, Enumerate)
+{
+   RVec<int> v0{1, 2, 3};
+   RVec<int> ref{0, 1, 2};
+   CheckEqual(Enumerate(v0), ref);
+}
+
+TEST(VecOps, Range)
+{
+   std::size_t l = 3;
+   RVec<int> ref{0, 1, 2};
+   CheckEqual(Range(l), ref);
 }
 
 TEST(VecOps, Drop)
