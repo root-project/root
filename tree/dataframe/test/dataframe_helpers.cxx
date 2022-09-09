@@ -662,7 +662,7 @@ TEST(RunGraphs, EmptyListOfHandles)
    ROOT::EnableImplicitMT();
 #endif // R__USE_IMT
 
-   ROOT_EXPECT_WARNING(ROOT::RDF::RunGraphs({}), "RunGraphs", "Got an empty list of handles");
+   ROOT_EXPECT_WARNING(ROOT::RDF::RunGraphs({}), "RunGraphs", "Got an empty list of handles, now quitting.");
 }
 
 TEST(RunGraphs, AlreadyRun)
