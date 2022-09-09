@@ -459,7 +459,7 @@ void RLoopManager::RunEmptySourceMT()
       auto slot = slotRAII.fSlot;
       RCallCleanUpTask cleanup(*this, slot);
       InitNodeSlots(nullptr, slot);
-      R__LOG_INFO(RDFLogChannel()) << LogRangeProcessing({"an empty source", range.first, range.second, slot});
+      R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing({"an empty source", range.first, range.second, slot});
       try {
          UpdateSampleInfo(slot, range);
          for (auto currEntry = range.first; currEntry < range.second; ++currEntry) {
@@ -482,7 +482,7 @@ void RLoopManager::RunEmptySourceMT()
 void RLoopManager::RunEmptySource()
 {
    InitNodeSlots(nullptr, 0);
-   R__LOG_INFO(RDFLogChannel()) << LogRangeProcessing({"an empty source", 0, fNEmptyEntries, 0u});
+   R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing({"an empty source", 0, fNEmptyEntries, 0u});
    RCallCleanUpTask cleanup(*this);
    try {
       UpdateSampleInfo(/*slot*/0, {0, fNEmptyEntries});
@@ -514,7 +514,7 @@ void RLoopManager::RunTreeProcessorMT()
       auto slot = slotRAII.fSlot;
       RCallCleanUpTask cleanup(*this, slot, &r);
       InitNodeSlots(&r, slot);
-      R__LOG_INFO(RDFLogChannel()) << LogRangeProcessing(TreeDatasetLogInfo(r, slot));
+      R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing(TreeDatasetLogInfo(r, slot));
       const auto entryRange = r.GetEntriesRange(); // we trust TTreeProcessorMT to call SetEntriesRange
       const auto nEntries = entryRange.second - entryRange.first;
       auto count = entryCount.fetch_add(nEntries);
@@ -556,7 +556,7 @@ void RLoopManager::RunTreeReader()
 
    RCallCleanUpTask cleanup(*this, 0u, &r);
    InitNodeSlots(&r, 0);
-   R__LOG_INFO(RDFLogChannel()) << LogRangeProcessing(TreeDatasetLogInfo(r, 0u));
+   R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing(TreeDatasetLogInfo(r, 0u));
 
    // recursive call to check filters and conditionally execute actions
    // in the non-MT case processing can be stopped early by ranges, hence the check on fNStopsReceived
@@ -592,7 +592,7 @@ void RLoopManager::RunDataSource()
          for (const auto &range : ranges) {
             const auto start = range.first;
             const auto end = range.second;
-            R__LOG_INFO(RDFLogChannel()) << LogRangeProcessing({fDataSource->GetLabel(), start, end, 0u});
+            R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing({fDataSource->GetLabel(), start, end, 0u});
             for (auto entry = start; entry < end && fNStopsReceived < fNChildren; ++entry) {
                if (fDataSource->SetEntry(0u, entry)) {
                   RunAndCheckFilters(0u, entry);
@@ -626,7 +626,7 @@ void RLoopManager::RunDataSourceMT()
       fDataSource->InitSlot(slot, range.first);
       const auto start = range.first;
       const auto end = range.second;
-      R__LOG_INFO(RDFLogChannel()) << LogRangeProcessing({fDataSource->GetLabel(), start, end, slot});
+      R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing({fDataSource->GetLabel(), start, end, slot});
       try {
          for (auto entry = start; entry < end; ++entry) {
             if (fDataSource->SetEntry(slot, entry)) {
