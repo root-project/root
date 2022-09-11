@@ -104,7 +104,7 @@ private:
   void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
-  RooAbsReal* makeCondPdfRatioCorr(RooAbsReal& term, const RooArgSet& termNset, const RooArgSet& termImpSet, const char* normRange, const char* refRange) const ;
+  std::unique_ptr<RooAbsReal> makeCondPdfRatioCorr(RooAbsReal& term, const RooArgSet& termNset, const RooArgSet& termImpSet, const char* normRange, const char* refRange) const ;
 
   void getParametersHook(const RooArgSet* /*nset*/, RooArgSet* /*list*/, bool stripDisconnected) const override ;
 
