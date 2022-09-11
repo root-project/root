@@ -65,9 +65,9 @@ public:
       for(auto i = 0; i<fInputNames.size(); ++i){
         out << SP << fOpName << "_input.emplace_back(fTensor_" << fInputNames[i] << ");\n"; 
       }
-      out << SP << "std::vector<float>"<<fOpName<<"_result = "<<fOpName<<"::Compute("<<fOpName<<"_input"<<");\n";
+      out << SP << "std::vector<std::vector<float>>"<<fOpName<<"_result = "<<fOpName<<"::Compute("<<fOpName<<"_input"<<");\n";
       for(auto i = 0; i<fOutputNames.size(); ++i){
-        out << SP << "tensor_"<<fOutputNames[i]<<" = "<<fOpName<<"_result["<<i<<"];\n";
+        out << SP << "tensor_"<<fOutputNames[i]<<" = "<<fOpName<<"_result["<<i<<"].data();\n";
       }
       return out.str();
    }

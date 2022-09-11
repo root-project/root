@@ -140,6 +140,18 @@ def generateActivationModel():
     model.fit(x_train, y_train, epochs=10, batch_size=1)
     model.save('KerasModelActivations.h5')
 
+def generateCustomModel():
+    model = Sequential()
+    model.add(Dense(4, activation='relu'))
+
+    randomGenerator=np.random.RandomState(0)
+    x_train=randomGenerator.rand(1,8)
+    y_train=randomGenerator.rand(1,4)
+
+    model.compile(loss='mean_squared_error', optimizer=SGD(learning_rate=0.01))
+    model.fit(x_train, y_train, epochs=5, batch_size=1)
+    model.save('KerasModelForCustomOp.h5')
+
 generateFunctionalModel()
 generateSequentialModel()
 generateBatchNormModel()
@@ -149,3 +161,4 @@ generateReshapeModel()
 generateConcatModel()
 generateBinaryOpModel()
 generateActivationModel()
+generateCustomModel()
