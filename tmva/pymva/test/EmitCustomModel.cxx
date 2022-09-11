@@ -8,20 +8,46 @@
 //           file. It also creates another Keras .h5 file with the library 
 //           definition of the custom operator included to test the equality.
 
+#include "Python.h"
+
 #include "TMVA/RModel.hxx"
 #include "TMVA/ROperator.hxx"
 #include "TMVA/RModelParser_Keras.h"
 
 using namespace TMVA::Experimental::SOFIE;
 
+const char* pythonSrc = "\
+import os\n\
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'\n\
+\n\
+import numpy as np\n\
+from tensorflow.keras.models import Sequential\n\
+from tensorflow.keras.layers import Dense\n\
+from tensorflow.keras.optimizers import SGD\n\
+\n\
+model = Sequential()\n\
+model.add(Dense(4, activation='relu'))\n\
+\n\
+randomGenerator=np.random.RandomState(0)\n\
+x_train=randomGenerator.rand(1,8)\n\
+y_train=randomGenerator.rand(1,4)\n\
+\n\
+model.compile(loss='mean_squared_error', optimizer=SGD(learning_rate=0.01))\n\
+model.fit(x_train, y_train, epochs=10, batch_size=1)\n\
+model.save('KerasModelForCustomOp.h5')\n";
+
 int main(){
-    
+   Py_Initialize();
+
+   //Emitting header file for Keras Model
+   PyRun_SimpleString(pythonSrc);
+
     //Parsing the saved Keras .h5 file into RModel object
     RModel model = PyKeras::Parse("KerasModelForCustomOp.h5");
     model.Generate();
 
     std::unique_ptr<ROperator> op;
-    op.reset(new ROperator_Custom<float>(/*OpName*/ "Double", /*input tensor names*/{"dense9Relu0"}, 
+    op.reset(new ROperator_Custom<float>(/*OpName*/ "Double", /*input tensor names*/model.GetOutputTensorNames(), 
                                         /*output tensor names*/{"output"}, /*output shapes*/{{1,4}},
                                         /*header file name with the compute function*/ "double_op.hxx"));
 

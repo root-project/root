@@ -112,7 +112,9 @@ public:
    }
    void PrintIntermediateTensors();
    void OutputGenerated(std::string filename = "");
-
+   std::vector<std::string> GetOutputTensorNames(){
+      return fOutputTensorNames;
+   }
 
 /*
    template <typename T>
