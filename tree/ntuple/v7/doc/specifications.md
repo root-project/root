@@ -490,8 +490,6 @@ In order to save space, the page descriptions (inner items) are _not_ in a recor
 If at a later point more information per page is needed,
 the page list envelope can be extended by addtional list and record frames.
 
-**Note**: this list of list of list is a contiguous chunk in the footer.
-
 ### User Meta-data Envelope
 
 User-defined meta-data can be attached to an ntuple.
