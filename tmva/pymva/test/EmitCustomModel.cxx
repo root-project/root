@@ -47,9 +47,9 @@ int main(){
     model.Generate();
 
     std::unique_ptr<ROperator> op;
-    op.reset(new ROperator_Custom<float>(/*OpName*/ "Double", /*input tensor names*/model.GetOutputTensorNames(), 
+    op.reset(new ROperator_Custom<float>(/*OpName*/ "Scale_by_2", /*input tensor names*/model.GetOutputTensorNames(), 
                                         /*output tensor names*/{"output"}, /*output shapes*/{{1,4}},
-                                        /*header file name with the compute function*/ "double_op.hxx"));
+                                        /*header file name with the compute function*/ "scale_by_2_op.hxx"));
 
     // adding the custom op in the model
     model.AddOperator(std::move(op));

@@ -87,7 +87,7 @@ endif(PY_TORCH_FOUND)
 
 if((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOUND))
    configure_file(generateKerasModels.py generateKerasModels.py COPYONLY)
-   configure_file(double_op.hxx double_op.hxx COPYONLY)
+   configure_file(scale_by_2_op.hxx scale_by_2_op.hxx COPYONLY)
 
    # Test PyKeras: Binary classification
    ROOT_EXECUTABLE(testPyKerasClassification testPyKerasClassification.C
