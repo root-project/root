@@ -151,7 +151,7 @@ useTMVA_BDT = False
 
 tf_spec = importlib.util.find_spec("tensorflow")
 if tf_spec is None:
-    useKerasCNN = False
+    useKeras = False
     ROOT.Warning("TMVA_RNN_Classificaton","Skip using Keras since tensorflow is not installed")
 
 
