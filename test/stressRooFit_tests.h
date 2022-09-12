@@ -136,7 +136,7 @@ public:
     // -----------------------------
 
     // Generate a dataset of 1000 events in x from gauss
-    RooDataSet* data = gauss.generate(x,10000) ;
+    std::unique_ptr<RooDataSet> data{gauss.generate(x,10000)};
 
     // Make a second plot frame in x and draw both the
     // data and the p.d.f in the frame
@@ -155,8 +155,6 @@ public:
     // --- Post processing for stressRooFit ---
     regPlot(xframe ,"rf101_plot1") ;
     regPlot(xframe2,"rf101_plot2") ;
-
-    delete data ;
 
     return kTRUE ;
   }
@@ -181,11 +179,11 @@ class TestBasic102 : public RooUnitTest
 public:
   TestBasic102(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Data import methods",refFile,writeRef,verbose,batchMode) {} ;
 
-  TH1* makeTH1()
+  std::unique_ptr<TH1> makeTH1()
   {
     // Create ROOT TH1 filled with a Gaussian distribution
 
-    TH1D* hh = new TH1D("hh","hh",25,-10,10) ;
+    auto hh = std::make_unique<TH1D>("hh","hh",25,-10,10);
     for (int i=0 ; i<100 ; i++) {
       hh->Fill(gRandom->Gaus(0,3)) ;
     }
@@ -193,11 +191,11 @@ public:
   }
 
 
-  TTree* makeTTree()
+  std::unique_ptr<TTree> makeTTree()
   {
     // Create ROOT TTree filled with a Gaussian distribution in x and a uniform distribution in y
 
-    TTree* tree = new TTree("tree","tree") ;
+    auto tree = std::make_unique<TTree>("tree","tree");
     Double_t* px = new Double_t ;
     Double_t* py = new Double_t ;
     tree->Branch("x",px,"x/D") ;
@@ -224,7 +222,7 @@ public:
     // ---------------------------------------------------------
 
     // Create a ROOT TH1 histogram
-    TH1* hh = makeTH1() ;
+    std::unique_ptr<TH1> hh{makeTH1()};
 
     // Declare observable x
     RooRealVar x("x","x",-10,10) ;
@@ -273,7 +271,7 @@ public:
     // I m p o r t   T T r e e   i n t o   a   R o o D a t a S e t
     // -----------------------------------------------------------
 
-    TTree* tree = makeTTree() ;
+    std::unique_ptr<TTree> tree{makeTTree()};
 
     // Define 2nd observable y
     RooRealVar y("y","y",-10,10) ;
@@ -304,9 +302,6 @@ public:
     regPlot(frame2,"rf102_plot2") ;
     regPlot(frame3,"rf102_plot3") ;
     regPlot(frame4,"rf102_plot4") ;
-
-    delete hh ;
-    delete tree ;
 
     return kTRUE ;
   }
@@ -358,7 +353,7 @@ public:
     // ---------------------------------------------------------------
 
     // Generate a toy dataset from the interpreted p.d.f
-    RooDataSet* data = genpdf.generate(x,10000) ;
+    std::unique_ptr<RooDataSet> data{genpdf.generate(x,10000)};
 
     // Fit the interpreted p.d.f to the generated data
     genpdf.fitTo(*data,BatchMode(_batchMode)) ;
@@ -396,7 +391,7 @@ public:
 
     // Construct a separate gaussian g1(x,10,3) to generate a toy Gaussian dataset with mean 10 and width 3
     RooGaussian g1("g1","g1",x,RooConst(10),RooConst(3)) ;
-    RooDataSet* data2 = g1.generate(x,1000) ;
+    std::unique_ptr<RooDataSet> data2{g1.generate(x,1000)};
 
 
     // F i t   a n d   p l o t   t a i l o r e d   s t a n d a r d   p d f
@@ -413,9 +408,6 @@ public:
     regPlot(xframe,"rf103_plot1") ;
     regPlot(xframe2,"rf103_plot2") ;
     regResult(r,"rf103_fit1") ;
-
-    delete data ;
-    delete data2 ;
 
     return kTRUE ;
   }
@@ -443,7 +435,7 @@ public:
 
     // Bind one-dimensional TMath::Erf function as RooAbsReal function
     RooRealVar x("x","x",-3,3) ;
-    RooAbsReal* erf = bindFunction("erf",TMath::Erf,x) ;
+    std::unique_ptr<RooAbsReal> erf{bindFunction("erf",TMath::Erf,x)};
 
     // Plot erf on frame
     RooPlot* frame1 = x.frame(Title("TMath::Erf bound as RooFit function")) ;
@@ -459,10 +451,10 @@ public:
     RooRealVar x2("x2","x2",0.001,0.999) ;
     RooRealVar a("a","a",5,0,10) ;
     RooRealVar b("b","b",2,0,10) ;
-    RooAbsPdf* beta = bindPdf("beta",ROOT::Math::beta_pdf,x2,a,b) ;
+    std::unique_ptr<RooAbsPdf> beta{bindPdf("beta",ROOT::Math::beta_pdf,x2,a,b)};
 
     // Generate some events and fit
-    RooDataSet* data = beta->generate(x2,10000) ;
+    std::unique_ptr<RooDataSet> data{beta->generate(x2,10000)};
     beta->fitTo(*data,BatchMode(_batchMode)) ;
 
     // Plot data and pdf on frame
@@ -476,13 +468,13 @@ public:
     // ---------------------------------------------------------------
 
     // Create a ROOT TF1 function
-    TF1 *fa1 = new TF1("fa1","sin(x)/x",0,10);
+    auto fa1 = std::make_unique<TF1>("fa1","sin(x)/x",0,10);
 
     // Create an observable
     RooRealVar x3("x3","x3",0.01,20) ;
 
     // Create binding of TF1 object to above observable
-    RooAbsReal* rfa1 = bindFunction(fa1,x3) ;
+    std::unique_ptr<RooAbsReal> rfa1{bindFunction(fa1.get(),x3)};
 
     // Make plot frame in observable, plot TF1 binding function
     RooPlot* frame3 = x3.frame(Title("TF1 bound as RooFit function")) ;
@@ -492,12 +484,6 @@ public:
     regPlot(frame1,"rf105_plot1") ;
     regPlot(frame2,"rf105_plot2") ;
     regPlot(frame3,"rf105_plot3") ;
-
-    delete erf ;
-    delete beta ;
-    delete fa1 ;
-    delete rfa1 ;
-    delete data ;
 
     return kTRUE ;
   }
@@ -551,7 +537,7 @@ public:
     // --------------------------------------------
 
     // Sample 2000 events in (dt,mixState,tagFlav) from bmix
-    RooDataSet *data = bmix.generate(RooArgSet(dt,mixState,tagFlav),2000) ;
+    std::unique_ptr<RooDataSet> data{bmix.generate(RooArgSet(dt,mixState,tagFlav),2000)};
 
 
 
@@ -613,8 +599,6 @@ public:
     regPlot(dtframe,"rf108_plot1") ;
     regPlot(aframe,"rf108_plot2") ;
 
-    delete data ;
-
     return kTRUE ;
   }
 } ;
@@ -650,7 +634,7 @@ public:
     RooGaussian gauss("gauss","gauss",x,RooConst(0),sigma) ;
 
     // Generate a sample of 1000 events with sigma=3
-    RooDataSet* data = gauss.generate(x,10000) ;
+    std::unique_ptr<RooDataSet> data{gauss.generate(x,10000)};
 
     // Change sigma to 3.15
     sigma=3.15 ;
@@ -697,7 +681,6 @@ public:
     regPlot(frame2,"rf109_plot2") ;
     regPlot(frame3,"rf109_plot3") ;
 
-    delete data ;
     //delete hresid ;
     //delete hpull ;
 
@@ -747,7 +730,7 @@ public:
 
     // Create object representing integral over gx
     // which is used to calculate  gx_Norm[x] == gx / gx_Int[x]
-    RooAbsReal* igx = gx.createIntegral(x) ;
+    std::unique_ptr<RooAbsReal> igx{gx.createIntegral(x)};
     regValue(igx->getVal(),"rf110_gx_Int[x]") ;
 
 
@@ -760,7 +743,7 @@ public:
     // Create an integral of gx_Norm[x] over x in range "signal"
     // This is the fraction of of p.d.f. gx_Norm[x] which is in the
     // range named "signal"
-    RooAbsReal* igx_sig = gx.createIntegral(x,NormSet(x),Range("signal")) ;
+    std::unique_ptr<RooAbsReal> igx_sig{gx.createIntegral(x,NormSet(x),Range("signal"))};
     regValue(igx_sig->getVal(),"rf110_gx_Int[x|signal]_Norm[x]") ;
 
 
@@ -770,7 +753,7 @@ public:
 
     // Create the cumulative distribution function of gx
     // i.e. calculate Int[-10,x] gx(x') dx'
-    RooAbsReal* gx_cdf = gx.createCdf(x) ;
+    std::unique_ptr<RooAbsReal> gx_cdf{gx.createCdf(x)};
 
     // Plot cdf of gx versus x
     RooPlot* frame = x.frame(Title("c.d.f of Gaussian p.d.f")) ;
@@ -778,10 +761,6 @@ public:
 
 
     regPlot(frame,"rf110_plot1") ;
-
-    delete igx ;
-    delete igx_sig ;
-    delete gx_cdf ;
 
     return kTRUE ;
   }
@@ -833,7 +812,7 @@ public:
 
 
     // Calculate integral over landau with default choice of numeric integrator
-    RooAbsReal* intLandau = landau.createIntegral(x) ;
+    std::unique_ptr<RooAbsReal> intLandau{landau.createIntegral(x)};
     Double_t val = intLandau->getVal() ;
     regValue(val,"rf111_val1") ;
 
@@ -850,7 +829,7 @@ public:
 #endif
 
     // Calculate integral over landau with custom integral specification
-    RooAbsReal* intLandau2 = landau.createIntegral(x,NumIntConfig(customConfig)) ;
+    std::unique_ptr<RooAbsReal> intLandau2{landau.createIntegral(x,NumIntConfig(customConfig))};
     Double_t val2 = intLandau2->getVal() ;
     regValue(val2,"rf111_val2") ;
 
@@ -864,14 +843,10 @@ public:
 
 
     // Calculate integral over landau custom numeric integrator specified as object default
-    RooAbsReal* intLandau3 = landau.createIntegral(x) ;
+    std::unique_ptr<RooAbsReal> intLandau3{landau.createIntegral(x)};
     Double_t val3 = intLandau3->getVal() ;
     regValue(val3,"rf111_val3") ;
 
-
-    delete intLandau ;
-    delete intLandau2 ;
-    delete intLandau3 ;
 
     return kTRUE ;
   }
@@ -941,7 +916,7 @@ public:
     // ---------------------------------------------------
 
     // Generate a data sample of 1000 events in x from model
-    RooDataSet *data = model.generate(x,1000) ;
+    std::unique_ptr<RooDataSet> data{model.generate(x,1000)};
 
     // Fit model to data
     model.fitTo(*data,BatchMode(_batchMode)) ;
@@ -984,7 +959,6 @@ public:
 
     regPlot(xframe,"rf201_plot1") ;
 
-    delete data ;
     return kTRUE ;
 
   }
@@ -1053,7 +1027,7 @@ public:
 
     // Generate a data sample of expected number events in x from model
     // = model.expectedEvents() = nsig+nbkg
-    RooDataSet *data = model.generate(x) ;
+    std::unique_ptr<RooDataSet> data{model.generate(x)};
 
     // Fit model to data, extended ML term automatically included
     model.fitTo(*data,BatchMode(_batchMode)) ;
@@ -1092,7 +1066,6 @@ public:
 
     regPlot(xframe,"rf202_plot1") ;
 
-    delete data ;
     return kTRUE ;
 
   }
@@ -1134,7 +1107,7 @@ public:
     RooAddPdf model("model","model",RooArgList(gx,px),f) ;
 
     // Generated 10000 events in (x,y) from p.d.f. model
-    RooDataSet* modelData = model.generate(x,10000) ;
+    std::unique_ptr<RooDataSet> modelData{model.generate(x,10000)};
 
     // F i t   f u l l   r a n g e
     // ---------------------------
@@ -1166,7 +1139,6 @@ public:
     regResult(r_full,"rf203_r_full") ;
     regResult(r_sig,"rf203_r_sig") ;
 
-    delete modelData ;
     return kTRUE;
   }
 } ;
@@ -1238,7 +1210,7 @@ public:
     // -------------------------------------------
 
     // Generate 1000 events from model so that nsig,nbkg come out to numbers <<500 in fit
-    RooDataSet *data = model.generate(x,1000) ;
+    std::unique_ptr<RooDataSet> data{model.generate(x,1000)};
 
 
     // Perform unbinned extended ML fit to data
@@ -1247,7 +1219,6 @@ public:
 
     regResult(r,"rf204_result") ;
 
-    delete data ;
     return kTRUE ;
   }
 } ;
@@ -1310,7 +1281,7 @@ public:
     // ------------------------------------------------------------------------------
 
     // Generate a data sample of 1000 events in x from model
-    RooDataSet *data = model.generate(x,1000) ;
+    std::unique_ptr<RooDataSet> data{model.generate(x,1000)};
 
     // Plot data and complete PDF overlaid
     RooPlot* xframe  = x.frame(Title("Component plotting of pdf=(sig1+sig2)+(bkg1+bkg2)")) ;
@@ -1356,7 +1327,6 @@ public:
     regPlot(xframe,"rf205_plot1") ;
     regPlot(xframe2,"rf205_plot2") ;
 
-    delete data ;
     return kTRUE ;
 
   }
@@ -1434,7 +1404,7 @@ public:
     // ----------------------------------------------------------------------
 
     // Sample 1000 events in x from gxlx
-    RooDataSet* data = lxg.generate(t,10000) ;
+    std::unique_ptr<RooDataSet> data{lxg.generate(t,10000)};
 
     // Fit gxlx to data
     {
@@ -1451,7 +1421,6 @@ public:
 
     regPlot(frame,"rf208_plot1") ;
 
-    delete data ;
     return kTRUE ;
 
   }
@@ -1582,7 +1551,7 @@ public:
   // ---------------------------------------------------------------------------------
 
   // Generate 10000 events in x and y from model
-  RooDataSet *data = model.generate(RooArgSet(x,y),10000) ;
+  std::unique_ptr<RooDataSet> data{model.generate(RooArgSet(x,y),10000)};
 
   // Plot x distribution of data and projection of model on x = Int(dy) model(x,y)
   RooPlot* xframe = x.frame() ;
@@ -1603,7 +1572,6 @@ public:
   regPlot(yframe,"rf302_plot2") ;
   regTH(hh_model,"rf302_model2d") ;
 
-  delete data ;
   return kTRUE ;
   }
 } ;
@@ -1769,7 +1737,7 @@ RooDataSet* makeFakeDataXY()
 
 
   // Obtain fake external experimental dataset with values for x and y
-  RooDataSet* expDataXY = makeFakeDataXY() ;
+  std::unique_ptr<RooDataSet> expDataXY{makeFakeDataXY()};
 
 
 
@@ -1777,10 +1745,10 @@ RooDataSet* makeFakeDataXY()
   // ---------------------------------------------------------------------------------------------
 
   // Make subset of experimental data with only y values
-  RooDataSet* expDataY= (RooDataSet*) expDataXY->reduce(y) ;
+  std::unique_ptr<RooDataSet> expDataY{static_cast<RooDataSet*>(expDataXY->reduce(y))};
 
   // Generate 10000 events in x obtained from _conditional_ model(x|y) with y values taken from experimental data
-  RooDataSet *data = model.generate(x,ProtoData(*expDataY)) ;
+  std::unique_ptr<RooDataSet> data{model.generate(x,ProtoData(*expDataY))};
 
 
 
@@ -1801,23 +1769,17 @@ RooDataSet* makeFakeDataXY()
 
 
   // Speed up (and approximate) projection by using binned clone of data for projection
-  RooAbsData* binnedDataY = expDataY->binnedClone() ;
+  std::unique_ptr<RooAbsData> binnedDataY{expDataY->binnedClone()};
   model.plotOn(xframe,ProjWData(*binnedDataY),LineColor(kCyan),LineStyle(kDotted),Name("Alt1")) ;
 
 
   // Show effect of projection with too coarse binning
   ((RooRealVar*)expDataY->get()->find("y"))->setBins(5) ;
-  RooAbsData* binnedDataY2 = expDataY->binnedClone() ;
+  std::unique_ptr<RooAbsData> binnedDataY2{expDataY->binnedClone()};
   model.plotOn(xframe,ProjWData(*binnedDataY2),LineColor(kRed),Name("Alt2")) ;
 
 
   regPlot(xframe,"rf303_plot1") ;
-
-  delete binnedDataY ;
-  delete binnedDataY2 ;
-  delete expDataXY ;
-  delete expDataY ;
-  delete data ;
 
   return kTRUE ;
   }
@@ -1875,7 +1837,7 @@ public:
   // ---------------------------------------------------------------------------
 
   // Generate 10000 events in x and y from gaussxy
-  RooDataSet *data = gaussxy.generate(RooArgSet(x,y),10000) ;
+  std::unique_ptr<RooDataSet> data{gaussxy.generate(RooArgSet(x,y),10000)};
 
   // Plot x distribution of data and projection of gaussxy on x = Int(dy) gaussxy(x,y)
   RooPlot* xframe = x.frame(Title("X projection of gauss(x)*gauss(y)")) ;
@@ -1889,8 +1851,6 @@ public:
 
   regPlot(xframe,"rf304_plot1") ;
   regPlot(yframe,"rf304_plot2") ;
-
-  delete data ;
 
   return kTRUE ;
   }
@@ -1956,7 +1916,7 @@ public:
   // ---------------------------------------------------------------
 
   // Generate 1000 events in x and y from model
-  RooDataSet *data = model.generate(RooArgSet(x,y),10000) ;
+  std::unique_ptr<RooDataSet> data{model.generate(RooArgSet(x,y),10000)};
 
   // Plot x distribution of data and projection of model on x = Int(dy) model(x,y)
   RooPlot* xframe = x.frame() ;
@@ -1975,8 +1935,6 @@ public:
   regTH(hh_model,"rf305_model2d") ;
   regPlot(xframe,"rf305_plot1") ;
   regPlot(yframe,"rf305_plot2") ;
-
-  delete data ;
 
   return kTRUE ;
 
@@ -2027,7 +1985,7 @@ public:
 
   // Use landau p.d.f to get somewhat realistic distribution with long tail
   RooLandau pdfDtErr("pdfDtErr","pdfDtErr",dterr,RooConst(1),RooConst(0.25)) ;
-  RooDataSet* expDataDterr = pdfDtErr.generate(dterr,10000) ;
+  std::unique_ptr<RooDataSet> expDataDterr{pdfDtErr.generate(dterr,10000)};
 
 
 
@@ -2035,7 +1993,7 @@ public:
   // ---------------------------------------------------------------------------------------------
 
   // Specify external dataset with dterr values to use decay_dm as conditional p.d.f.
-  RooDataSet* data = decay_gm.generate(dt,ProtoData(*expDataDterr)) ;
+  std::unique_ptr<RooDataSet> data{decay_gm.generate(dt,ProtoData(*expDataDterr))};
 
 
 
@@ -2079,9 +2037,6 @@ public:
   regTH(hh_decay,"rf306_model2d") ;
   regPlot(frame,"rf306_plot1") ;
   regPlot(frame2,"rf306_plot2") ;
-
-  delete expDataDterr ;
-  delete data ;
 
   return kTRUE ;
   }
@@ -2129,10 +2084,10 @@ public:
 
   // Use landau p.d.f to get empirical distribution with long tail
   RooLandau pdfDtErr("pdfDtErr","pdfDtErr",dterr,RooConst(1),RooConst(0.25)) ;
-  RooDataSet* expDataDterr = pdfDtErr.generate(dterr,10000) ;
+  std::unique_ptr<RooDataSet> expDataDterr{pdfDtErr.generate(dterr,10000)};
 
   // Construct a histogram pdf to describe the shape of the dtErr distribution
-  RooDataHist* expHistDterr = expDataDterr->binnedClone() ;
+  std::unique_ptr<RooDataHist> expHistDterr{expDataDterr->binnedClone()};
   RooHistPdf pdfErr("pdfErr","pdfErr",dterr,*expHistDterr) ;
 
 
@@ -2151,7 +2106,7 @@ public:
   // ------------------------------------------------------------------
 
   // Specify external dataset with dterr values to use model_dm as conditional p.d.f.
-  RooDataSet* data = model.generate(RooArgSet(dt,dterr),10000) ;
+  std::unique_ptr<RooDataSet> data{model.generate(RooArgSet(dt,dterr),10000)};
 
 
 
@@ -2174,10 +2129,6 @@ public:
 
 
   regPlot(frame,"rf307_plot1") ;
-
-  delete expDataDterr ;
-  delete expHistDterr ;
-  delete data ;
 
   return kTRUE ;
 
@@ -2231,7 +2182,7 @@ public:
 
   // Create object representing integral over gx
   // which is used to calculate  gx_Norm[x,y] == gx / gx_Int[x,y]
-  RooAbsReal* igxy = gxy.createIntegral(RooArgSet(x,y)) ;
+  std::unique_ptr<RooAbsReal> igxy{gxy.createIntegral(RooArgSet(x,y))};
   regValue(igxy->getVal(),"rf308_gx_Int[x,y]") ;
 
   // NB: it is also possible to do the following
@@ -2256,7 +2207,7 @@ public:
   // Create an integral of gxy_Norm[x,y] over x and y in range "signal"
   // This is the fraction of of p.d.f. gxy_Norm[x,y] which is in the
   // range named "signal"
-  RooAbsReal* igxy_sig = gxy.createIntegral(RooArgSet(x,y),NormSet(RooArgSet(x,y)),Range("signal")) ;
+  std::unique_ptr<RooAbsReal> igxy_sig{gxy.createIntegral(RooArgSet(x,y),NormSet(RooArgSet(x,y)),Range("signal"))};
   regValue(igxy_sig->getVal(),"rf308_gx_Int[x,y|signal]_Norm[x,y]") ;
 
 
@@ -2266,16 +2217,12 @@ public:
 
   // Create the cumulative distribution function of gx
   // i.e. calculate Int[-10,x] gx(x') dx'
-  RooAbsReal* gxy_cdf = gxy.createCdf(RooArgSet(x,y)) ;
+  std::unique_ptr<RooAbsReal> gxy_cdf{gxy.createCdf(RooArgSet(x,y))};
 
   // Plot cdf of gx versus x
   TH1* hh_cdf = gxy_cdf->createHistogram("hh_cdf",x,Binning(40),YVar(y,Binning(40))) ;
 
   regTH(hh_cdf,"rf308_cdf") ;
-
-  delete igxy_sig ;
-  delete igxy ;
-  delete gxy_cdf ;
 
   return kTRUE ;
   }
@@ -2330,7 +2277,7 @@ public:
   RooBMixDecay bmix_gm1("bmix","decay",dt,mixState,tagFlav,tau,dm,w,dw,gm1,RooBMixDecay::DoubleSided) ;
 
   // Generate BMixing data with above set of event errors
-  RooDataSet *data = bmix_gm1.generate(RooArgSet(dt,tagFlav,mixState),20000) ;
+  std::unique_ptr<RooDataSet> data{bmix_gm1.generate(RooArgSet(dt,tagFlav,mixState),20000)};
 
 
 
@@ -2365,8 +2312,6 @@ public:
   regPlot(frame,"rf310_plot1") ;
   regPlot(frame2,"rf310_plot2") ;
   regPlot(frame3,"rf310_plot3") ;
-
-  delete data ;
 
   return kTRUE ;
   }
@@ -2414,7 +2359,7 @@ public:
   RooRealVar fsig("fsig","signal fraction",0.1,0.,1.) ;
   RooAddPdf model("model","model",RooArgList(sig,bkg),fsig) ;
 
-  RooDataSet* data = model.generate(RooArgSet(x,y,z),20000) ;
+  std::unique_ptr<RooDataSet> data{model.generate(RooArgSet(x,y,z),20000)};
 
 
 
@@ -2449,8 +2394,6 @@ public:
 
   regPlot(frame,"rf311_plot1") ;
   regPlot(frame2,"rf312_plot2") ;
-
-  delete data ;
 
   return kTRUE ;
   }
@@ -2500,7 +2443,7 @@ public:
   RooAddPdf model("model","model",RooArgList(sig,bkg),f) ;
 
   // Sample 10000 events in (x,y) from the model
-  RooDataSet* modelData = model.generate(RooArgSet(x,y),10000) ;
+  std::unique_ptr<RooDataSet> modelData{model.generate(RooArgSet(x,y),10000)};
 
 
 
@@ -2558,8 +2501,6 @@ public:
   regResult(r_sb1,"rf312_fit_sb1") ;
   regResult(r_sb2,"rf312_fit_sb2") ;
   regResult(r_sb12,"rf312_fit_sb12") ;
-
-  delete modelData ;
 
   return kTRUE ;
 
@@ -2630,7 +2571,7 @@ public:
     RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::INFO, 0u, RooFit::NumIntegration, false};
 
     // Create integral over normalized pdf model over x,y,z in "R" region
-    RooAbsReal* intPdf = pxyz.createIntegral(RooArgSet(x,y,z),RooArgSet(x,y,z),"R") ;
+    std::unique_ptr<RooAbsReal> intPdf{pxyz.createIntegral(RooArgSet(x,y,z),RooArgSet(x,y,z),"R")};
 
     // Plot value of integral as function of pdf parameter z0
     RooPlot* frame = z0.frame(Title("Integral of pxyz over x,y,z in region R")) ;
@@ -2638,8 +2579,6 @@ public:
 
 
     regPlot(frame,"rf313_plot1") ;
-
-    delete intPdf ;
   }
 
   return kTRUE;
@@ -2687,13 +2626,13 @@ public:
   // ------------------------------------
 
   // Generate complete dataset without acceptance cuts (for reference)
-  RooDataSet* dall = model.generate(t,10000) ;
+  std::unique_ptr<RooDataSet> dall{model.generate(t,10000)};
 
   // Generate a (fake) prototype dataset for acceptance limit values
-  RooDataSet* tmp = RooGaussian("gmin","gmin",tmin,RooConst(0),RooConst(0.5)).generate(tmin,5000) ;
+  std::unique_ptr<RooDataSet> tmp{RooGaussian("gmin","gmin",tmin,RooConst(0),RooConst(0.5)).generate(tmin,5000)};
 
   // Generate dataset with t values that observe (t>tmin)
-  RooDataSet* dacc = model.generate(t,ProtoData(*tmp)) ;
+  std::unique_ptr<RooDataSet> dacc{model.generate(t,ProtoData(*tmp))};
 
 
 
@@ -2716,10 +2655,6 @@ public:
   // Print fit results to demonstrate absence of bias
   regResult(r,"rf314_fit") ;
   regPlot(frame,"rf314_plot1") ;
-
-  delete tmp ;
-  delete dacc ;
-  delete dall ;
 
   return kTRUE;
   }
@@ -2779,7 +2714,7 @@ public:
     // ----------------------------------------------------
 
     // modelx(x) = Int model(x,y) dy
-    RooAbsPdf* modelx = model.createProjection(y) ;
+    std::unique_ptr<RooAbsPdf> modelx{model.createProjection(y)};
 
 
 
@@ -2787,7 +2722,7 @@ public:
     // ------------------------------------------------------------------------------------------
 
     // Sample 1000 events from modelx
-    RooAbsData* data = modelx->generateBinned(x,1000) ;
+    std::unique_ptr<RooAbsData> data{modelx->generateBinned(x,1000)};
 
     // Fit modelx to toy data
     modelx->fitTo(*data,BatchMode(_batchMode)) ;
@@ -2798,9 +2733,6 @@ public:
     modelx->plotOn(frame) ;
 
     regPlot(frame,"rf315_frame") ;
-
-    delete data ;
-    delete modelx ;
 
     return kTRUE ;
   }
@@ -2854,7 +2786,7 @@ public:
   RooRealVar fsig("fsig","signal fraction",0.1,0.,1.) ;
   RooAddPdf model("model","model",RooArgList(sig,bkg),fsig) ;
 
-  RooDataSet* data = model.generate(RooArgSet(x,y,z),20000) ;
+  std::unique_ptr<RooDataSet> data{model.generate(RooArgSet(x,y,z),20000)};
 
 
 
@@ -2873,8 +2805,8 @@ public:
 
   // Calculate projection of signal and total likelihood on (y,z) observables
   // i.e. integrate signal and composite model over x
-  RooAbsPdf* sigyz = sig.createProjection(x) ;
-  RooAbsPdf* totyz = model.createProjection(x) ;
+  std::unique_ptr<RooAbsPdf> sigyz{sig.createProjection(x)};
+  std::unique_ptr<RooAbsPdf> totyz{model.createProjection(x)};
 
   // Construct the log of the signal / signal+background probability
   RooFormulaVar llratio_func("llratio","log10(@0)-log10(@1)",RooArgList(*sigyz,*totyz)) ;
@@ -2888,7 +2820,7 @@ public:
   data->addColumn(llratio_func) ;
 
   // Extract the subset of data with large signal likelihood
-  RooDataSet* dataSel = (RooDataSet*) data->reduce(Cut("llratio>0.7")) ;
+  std::unique_ptr<RooDataSet> dataSel{static_cast<RooDataSet*>(data->reduce(Cut("llratio>0.7")))};
 
   // Make plot frame
   RooPlot* frame2 = x.frame(Title("Same projection on X with LLratio(y,z)>0.7"),Bins(40)) ;
@@ -2902,11 +2834,11 @@ public:
   // ---------------------------------------------------------------------------------------------
 
   // Generate large number of events for MC integration of pdf projection
-  RooDataSet* mcprojData = model.generate(RooArgSet(x,y,z),10000) ;
+  std::unique_ptr<RooDataSet> mcprojData{model.generate(RooArgSet(x,y,z),10000)};
 
   // Calculate LL ratio for each generated event and select MC events with llratio)0.7
   mcprojData->addColumn(llratio_func) ;
-  RooDataSet* mcprojDataSel = (RooDataSet*) mcprojData->reduce(Cut("llratio>0.7")) ;
+  std::unique_ptr<RooDataSet> mcprojDataSel{static_cast<RooDataSet*>(mcprojData->reduce(Cut("llratio>0.7")))};
 
   // Project model on x, integrating projected observables (y,z) with Monte Carlo technique
   // on set of events with the same llratio cut as was applied to data
@@ -2915,13 +2847,6 @@ public:
 
   regPlot(frame,"rf316_plot1") ;
   regPlot(frame2,"rf316_plot2") ;
-
-  delete data ;
-  delete dataSel ;
-  delete mcprojData ;
-  delete mcprojDataSel ;
-  delete sigyz ;
-  delete totyz ;
 
   return kTRUE ;
   }
@@ -2985,16 +2910,16 @@ public:
   // -------------------------------------------------------------
 
   // The reduce() function returns a new dataset which is a subset of the original
-  RooDataSet* d1 = (RooDataSet*) d.reduce(RooArgSet(x,c)) ;
-  RooDataSet* d2 = (RooDataSet*) d.reduce(RooArgSet(y)) ;
-  RooDataSet* d3 = (RooDataSet*) d.reduce("y>5.17") ;
-  RooDataSet* d4 = (RooDataSet*) d.reduce(RooArgSet(x,c),"y>5.17") ;
+  std::unique_ptr<RooDataSet> d1{static_cast<RooDataSet*>(d.reduce(RooArgSet(x,c)))};
+  std::unique_ptr<RooDataSet> d2{static_cast<RooDataSet*>(d.reduce(RooArgSet(y)))};
+  std::unique_ptr<RooDataSet> d3{static_cast<RooDataSet*>(d.reduce("y>5.17"))};
+  std::unique_ptr<RooDataSet> d4{static_cast<RooDataSet*>(d.reduce(RooArgSet(x,c),"y>5.17"))};
 
   regValue(d3->numEntries(),"rf403_nd3") ;
   regValue(d4->numEntries(),"rf403_nd4") ;
 
   // The merge() function adds two data set column-wise
-  d1->merge(d2) ;
+  d1->merge(d2.get()) ;
 
   // The append() function addes two datasets row-wise
   d1->append(*d3) ;
@@ -3024,18 +2949,13 @@ public:
   //
   // All reduce() methods are interfaced in RooAbsData. All reduction techniques
   // demonstrated on unbinned datasets can be applied to binned datasets as well.
-  RooDataHist* dh2 = (RooDataHist*) dh.reduce(y,"x>0") ;
+  std::unique_ptr<RooDataHist> dh2{static_cast<RooDataHist*>(dh.reduce(y,"x>0"))};
 
   // Add dh2 to yframe and redraw
   dh2->plotOn(yframe,LineColor(kRed),MarkerColor(kRed),Name("dh2")) ;
 
   regPlot(yframe,"rf402_plot1") ;
 
-  delete d1 ;
-  delete d2 ;
-  delete d3 ;
-  delete d4 ;
-  delete dh2 ;
   return kTRUE ;
   }
 } ;
@@ -3069,7 +2989,7 @@ public:
   RooPolynomial p0("px","px",x) ;
 
   // Sample 1000 events from pdf
-  RooDataSet* data = p0.generate(x,1000) ;
+  std::unique_ptr<RooDataSet> data{p0.generate(x,1000)};
 
 
 
@@ -3083,7 +3003,7 @@ public:
   RooRealVar* w = (RooRealVar*) data->addColumn(wFunc) ;
 
   // Instruct dataset d in interpret w as event weight rather than as observable
-  RooDataSet dataw(data->GetName(),data->GetTitle(),data,*data->get(),nullptr,w->GetName()) ;
+  RooDataSet dataw(data->GetName(),data->GetTitle(),data.get(),*data->get(),nullptr,w->GetName()) ;
   dataw.convertToVectorStore();
   //data->setWeightVar(*w) ;
 
@@ -3129,10 +3049,10 @@ public:
   RooGenericPdf genPdf("genPdf","x*x+10",x) ;
 
   // Sample a dataset with the same number of events as data
-  RooDataSet* data2 = genPdf.generate(x,1000) ;
+  std::unique_ptr<RooDataSet> data2{genPdf.generate(x,1000)};
 
   // Sample a dataset with the same number of weights as data
-  RooDataSet* data3 = genPdf.generate(x,43000) ;
+  std::unique_ptr<RooDataSet> data3{genPdf.generate(x,43000)};
 
   // Fit the 2nd order polynomial to both unweighted datasets and save the results for comparison
   RooFitResult* r_ml_unw10 = p2.fitTo(*data2,Save(),BatchMode(_batchMode)) ;
@@ -3143,7 +3063,7 @@ public:
   // ------------------------------------------------------------------------------------
 
   // Construct binned clone of unbinned weighted dataset
-  RooDataHist* binnedData = dataw.binnedClone() ;
+  std::unique_ptr<RooDataHist> binnedData{dataw.binnedClone()};
 
   // Perform chi2 fit to binned weighted dataset using sum-of-weights errors
   //
@@ -3173,11 +3093,6 @@ public:
   regResult(r_ml_wgt  ,"rf403_ml_wgt") ;
   regResult(r_chi2_wgt ,"rf403_ml_chi2") ;
   regPlot(frame,"rf403_plot1") ;
-
-  delete binnedData ;
-  delete data ;
-  delete data2 ;
-  delete data3 ;
 
   return kTRUE ;
   }
@@ -3228,7 +3143,7 @@ public:
 
   // Generate a dummy dataset
   RooRealVar x("x","x",0,10) ;
-  RooDataSet *data = RooPolynomial("p","p",x).generate(RooArgSet(x,b0flav,tagCat),10000) ;
+  std::unique_ptr<RooDataSet> data{RooPolynomial("p","p",x).generate(RooArgSet(x,b0flav,tagCat),10000)};
 
 
 
@@ -3265,7 +3180,7 @@ public:
   tagCat.addToRange("soso","NetTagger-2") ;
 
   // Use category range in dataset reduction specification
-  RooDataSet* goodData = (RooDataSet*) data->reduce(CutRange("good")) ;
+  std::unique_ptr<RooDataSet> goodData{static_cast<RooDataSet*>(data->reduce(CutRange("good")))};
   Roo1DTable* gtable = goodData->table(tagCat) ;
 
 
@@ -3275,8 +3190,6 @@ public:
   regTable(gtable,"rf404_gtable") ;
 
 
-  delete goodData ;
-  delete data ;
   return kTRUE ;
 
   }
@@ -3311,7 +3224,7 @@ public:
   RooArgusBG a("a","argus(x)",x,RooRealConstant::value(10),RooRealConstant::value(-1)) ;
 
   // Generate a dummy dataset
-  RooDataSet *data = a.generate(x,10000) ;
+  std::unique_ptr<RooDataSet> data{a.generate(x,10000)};
 
 
 
@@ -3380,15 +3293,12 @@ public:
   xb->setRange("alt","x_coarse_bin1,x_coarse_bin3,x_coarse_bin5,x_coarse_bin7,x_coarse_bin9") ;
 
   // Construct subset of data matching range "alt" but only for the first 5000 events and plot it on the fram
-  RooDataSet* dataSel = (RooDataSet*) data->reduce(CutRange("alt"),EventRange(0,5000)) ;
+  std::unique_ptr<RooDataSet> dataSel{static_cast<RooDataSet*>(data->reduce(CutRange("alt"),EventRange(0,5000)))};
 //   dataSel->plotOn(xframe,MarkerColor(kGreen),LineColor(kGreen),Name("data_sel")) ;
 
 
   regTable(xbtable,"rf405_xbtable") ;
   regPlot(xframe,"rf405_plot1") ;
-
-  delete data ;
-  delete dataSel ;
 
   return kTRUE ;
 
@@ -3432,7 +3342,7 @@ public:
   // Construct a dummy dataset with random values of tagCat and b0flav
   RooRealVar x("x","x",0,10) ;
   RooPolynomial p("p","p",x) ;
-  RooDataSet* data = p.generate(RooArgSet(x,b0flav,tagCat),10000) ;
+  std::unique_ptr<RooDataSet> data{p.generate(RooArgSet(x,b0flav,tagCat),10000)};
 
 
 
@@ -3481,8 +3391,6 @@ public:
   regTable(mtable,"rf406_mtable") ;
   regTable(stable,"rf406_stable") ;
   regTable(xtable,"rf406_xtable") ;
-
-  delete data ;
 
   return kTRUE ;
   }
@@ -3553,8 +3461,8 @@ public:
   // ---------------------------------------------------------------
 
   // Generate 1000 events in x and y from model
-  RooDataSet *data = model.generate(RooArgSet(x),100) ;
-  RooDataSet *data_ctl = model_ctl.generate(RooArgSet(x),2000) ;
+  std::unique_ptr<RooDataSet> data{model.generate(RooArgSet(x),100)};
+  std::unique_ptr<RooDataSet> data_ctl{model_ctl.generate(RooArgSet(x),2000)};
 
 
 
@@ -3567,7 +3475,7 @@ public:
   sample.defineType("control") ;
 
   // Construct combined dataset in (x,sample)
-  RooDataSet combData("combData","combined data",x,Index(sample),Import({{"physics",data}, {"control",data_ctl}})) ;
+  RooDataSet combData("combData","combined data",x,Index(sample),Import({{"physics",data.get()}, {"control",data_ctl.get()}})) ;
 
 
 
@@ -3616,9 +3524,6 @@ public:
 
   regPlot(frame1,"rf501_plot1") ;
   regPlot(frame2,"rf501_plot2") ;
-
-  delete data ;
-  delete data_ctl ;
 
   return kTRUE ;
 
@@ -3877,7 +3782,7 @@ public:
   RooAddPdf model("model","model",RooArgList(g1,g2),frac) ;
 
   // Generate 1000 events
-  RooDataSet* data = model.generate(x,1000) ;
+  std::unique_ptr<RooDataSet> data{model.generate(x,1000)};
 
   // Construct unbinned likelihood
   std::unique_ptr<RooAbsReal> nll{model.createNLL(*data, BatchMode(_batchMode))};
@@ -3933,8 +3838,6 @@ public:
   regResult(r,"rf601_r") ;
   regResult(r2,"rf601_r2") ;
 
-  delete data ;
-
   return kTRUE ;
   }
 } ;
@@ -3988,8 +3891,8 @@ public:
   // C r e a t e   b i n n e d   d a t a s e t
   // -----------------------------------------
 
-  RooDataSet* d = model.generate(x,10000) ;
-  RooDataHist* dh = d->binnedClone() ;
+  std::unique_ptr<RooDataSet> d{model.generate(x,10000)};
+  std::unique_ptr<RooDataHist> dh{d->binnedClone()};
 
 
   // Construct a chi^2 of the data and the model,
@@ -4005,9 +3908,6 @@ public:
   RooFitResult* r = m.save() ;
 
   regResult(r,"rf602_r") ;
-
-  delete d ;
-  delete dh ;
 
   return kTRUE ;
   }
@@ -4048,7 +3948,7 @@ public:
   RooAddPdf model("model","model",RooArgSet(gauss,poly),f) ;
 
   // Generate small dataset for use in fitting below
-  RooDataSet* d = model.generate(x,50) ;
+  std::unique_ptr<RooDataSet> d{model.generate(x,50)};
 
 
 
@@ -4091,8 +3991,6 @@ public:
   regResult(r2,"rf604_r2") ;
   regResult(r3,"rf604_r3") ;
 
-  delete d ;
-
   return kTRUE ;
   }
 } ;
@@ -4133,7 +4031,7 @@ public:
   RooAddPdf model("model","model",RooArgList(g1,g2),frac) ;
 
   // Generate 1000 events
-  RooDataSet* data = model.generate(x,1000) ;
+  std::unique_ptr<RooDataSet> data{model.generate(x,1000)};
 
 
 
@@ -4191,8 +4089,6 @@ public:
   regPlot(frame1,"rf605_plot1") ;
   regPlot(frame2,"rf605_plot2") ;
 
-  delete data ;
-
   return kTRUE ;
   }
 } ;
@@ -4230,7 +4126,7 @@ public:
   RooArgusBG argus("argus","argus",m,m0,k) ;
 
   // Sample 1000 events in m from argus
-  RooDataSet* data = argus.generate(m,1000) ;
+  std::unique_ptr<RooDataSet> data{argus.generate(m,1000)};
 
 
 
@@ -4271,7 +4167,6 @@ public:
   regPlot(frame1,"rf606_plot1") ;
   regPlot(frame2,"rf606_plot3") ; // 3 is the reference of the plot
 
-  delete data ;
   return kTRUE ;
 
   }
@@ -4323,7 +4218,7 @@ public:
   RooAddPdf  model("model","g1+g2+a",RooArgList(bkg,sig),bkgfrac) ;
 
   // Generate 1000 events
-  RooDataSet* data = model.generate(x,1000) ;
+  std::unique_ptr<RooDataSet> data{model.generate(x,1000)};
 
 
 
@@ -4331,7 +4226,7 @@ public:
   // -------------------------------------------------------------
 
   // Perform fit and save result
-  RooFitResult* r = model.fitTo(*data,Save(),BatchMode(_batchMode)) ;
+  std::unique_ptr<RooFitResult> r{model.fitTo(*data,Save(),BatchMode(_batchMode))};
 
 
   // V i s u a l i z e   c o r r e l a t i o n   m a t r i x
@@ -4355,9 +4250,6 @@ public:
 
   regTH(hcorr,"rf607_hcorr") ;
   regTH(hhrand,"rf607_hhand") ;
-
-  delete data ;
-  delete r ;
 
   return kTRUE ;
 
@@ -4503,7 +4395,7 @@ public:
   RooProdPdf model("model","model",shapePdf,Conditional(effPdf,cut)) ;
 
   // Generate some toy data from model
-  RooDataSet* data = model.generate(RooArgSet(x,cut),10000) ;
+  std::unique_ptr<RooDataSet> data{model.generate(RooArgSet(x,cut),10000)};
 
 
 
@@ -4532,8 +4424,6 @@ public:
   regPlot(frame1,"rf701_plot1") ;
   regPlot(frame2,"rf701_plot2") ;
 
-
-  delete data ;
 
   return kTRUE ;
   }
@@ -4602,7 +4492,7 @@ public:
   RooProdPdf model("model","model",shapePdf,Conditional(effPdf,cut)) ;
 
   // Generate some toy data from model
-  RooDataSet* data = model.generate(RooArgSet(x,y,cut),10000) ;
+  std::unique_ptr<RooDataSet> data{model.generate(RooArgSet(x,y,cut),10000)};
 
 
 
@@ -4631,8 +4521,6 @@ public:
   regTH(hh_data_all,"rf702_hh_data_all") ;
   regTH(hh_data_sel,"rf702_hh_data_sel") ;
   regTH(hh_eff,"rf702_hh_eff") ;
-
-  delete data ;
 
   return kTRUE;
 
@@ -4703,7 +4591,7 @@ public:
 
   // Generate events. If the input pdf has an internal generator, the internal generator
   // is used and an accept/reject sampling on the efficiency is applied.
-  RooDataSet* data = modelEff.generate(t,10000) ;
+  std::unique_ptr<RooDataSet> data{modelEff.generate(t,10000)};
 
   // Fit pdf. The normalization integral is calculated numerically.
   modelEff.fitTo(*data,BatchMode(_batchMode)) ;
@@ -4719,7 +4607,6 @@ public:
   regPlot(frame3,"rf703_plot3") ;
 
 
-  delete data ;
   return kTRUE ;
   }
 } ;
@@ -4755,8 +4642,8 @@ public:
   RooTruthModel tm("tm","tm",t) ;
   RooFormulaVar coshGBasis("coshGBasis","exp(-@0/ @1)*cosh(@0*@2/2)",RooArgList(t,tau,deltaGamma));
   RooFormulaVar sinhGBasis("sinhGBasis","exp(-@0/ @1)*sinh(@0*@2/2)",RooArgList(t,tau,deltaGamma));
-  RooAbsReal* coshGConv = tm.convolution(&coshGBasis,&t);
-  RooAbsReal* sinhGConv = tm.convolution(&sinhGBasis,&t);
+  std::unique_ptr<RooAbsReal> coshGConv{tm.convolution(&coshGBasis,&t)};
+  std::unique_ptr<RooAbsReal> sinhGConv{tm.convolution(&sinhGBasis,&t)};
 
   // Construct polynomial amplitudes in cos(a)
   RooPolyVar poly1("poly1","poly1",cosa,RooArgList(RooConst(0.5),RooConst(0.2),RooConst(0.2)),0);
@@ -4779,7 +4666,7 @@ public:
   RooRealSumPdf pdf("pdf","pdf",RooArgList(ampl1,ampl2),RooArgList(f1,f2)) ;
 
   // Generate some toy data from pdf
-  RooDataSet* data = pdf.generate(RooArgSet(t,cosa),10000);
+  std::unique_ptr<RooDataSet> data{pdf.generate(RooArgSet(t,cosa),10000)};
 
   // Fit pdf to toy data with only amplitude strength floating
   pdf.fitTo(*data,BatchMode(_batchMode)) ;
@@ -4817,10 +4704,6 @@ public:
   regPlot(frame2,"rf704_plot2") ;
   regTH(hh_cos,"rf704_hh_cos") ;
   regTH(hh_sin,"rf704_hh_sin") ;
-
-  delete data ;
-  delete coshGConv ;
-  delete sinhGConv ;
 
   return kTRUE ;
   }
@@ -4919,7 +4802,7 @@ public:
 
   // Generate a toy dataset at alpha = 0.8
   alpha=0.8 ;
-  RooDataSet* data = lmorph.generate(x,1000) ;
+  std::unique_ptr<RooDataSet> data{lmorph.generate(x,1000)};
 
   // Fit pdf to toy data
   lmorph.setCacheAlpha(kTRUE) ;
@@ -4958,8 +4841,6 @@ public:
   regPlot(frame3,"rf705_plot3") ;
   regTH(hh,"rf705_hh") ;
 
-  delete data ;
-
   return kTRUE;
   }
 } ;
@@ -4995,10 +4876,10 @@ public:
 
   // Sample 500 events from p
   x.setBins(20) ;
-  RooDataSet* data1 = p.generate(x,500) ;
+  std::unique_ptr<RooDataSet> data1{p.generate(x,500)};
 
   // Create a binned dataset with 20 bins and 500 events
-  RooDataHist* hist1 = data1->binnedClone() ;
+  std::unique_ptr<RooDataHist> hist1{data1->binnedClone()};
 
   // Represent data in dh as pdf in x
   RooHistPdf histpdf1("histpdf1","histpdf1",x,*hist1,0) ;
@@ -5014,10 +4895,10 @@ public:
 
   // Sample 100000 events from p
   x.setBins(10) ;
-  RooDataSet* data2 = p.generate(x,100000) ;
+  std::unique_ptr<RooDataSet> data2{p.generate(x,100000)};
 
   // Create a binned dataset with 10 bins and 100K events
-  RooDataHist* hist2 = data2->binnedClone() ;
+  std::unique_ptr<RooDataHist> hist2{data2->binnedClone()};
 
   // Represent data in dh as pdf in x, apply 2nd order interpolation
   RooHistPdf histpdf2("histpdf2","histpdf2",x,*hist2,2) ;
@@ -5030,11 +4911,6 @@ public:
 
   regPlot(frame1,"rf607_plot1") ;
   regPlot(frame2,"rf607_plot2") ;
-
-  delete data1 ;
-  delete hist1 ;
-  delete data2 ;
-  delete hist2 ;
 
   return kTRUE ;
   }
@@ -5066,7 +4942,7 @@ public:
   RooPolynomial p("p","p",x,RooArgList(RooConst(0.01),RooConst(-0.01),RooConst(0.0004))) ;
 
   // Sample 500 events from p
-  RooDataSet* data1 = p.generate(x,200) ;
+  std::unique_ptr<RooDataSet> data1{p.generate(x,200)};
 
 
 
@@ -5109,7 +4985,7 @@ public:
   RooRealVar y("y","y",0,20) ;
   RooPolynomial py("py","py",y,RooArgList(RooConst(0.01),RooConst(0.01),RooConst(-0.0004))) ;
   RooProdPdf pxy("pxy","pxy",RooArgSet(p,py)) ;
-  RooDataSet* data2 = pxy.generate(RooArgSet(x,y),1000) ;
+  std::unique_ptr<RooDataSet> data2{pxy.generate(RooArgSet(x,y),1000)};
 
 
 
@@ -5136,9 +5012,6 @@ public:
   regTH(hh_data,"rf707_hhdata") ;
   regTH(hh_pdf,"rf707_hhpdf") ;
   regTH(hh_pdf2,"rf707_hhpdf2") ;
-
-  delete data1 ;
-  delete data2 ;
 
   return kTRUE ;
   }
@@ -5199,7 +5072,7 @@ public:
   // ---------------------------------------------------
 
   // Generate some data
-  RooDataSet* data = bmix.generate(RooArgSet(dt,mixState,tagFlav),10000) ;
+  std::unique_ptr<RooDataSet> data{bmix.generate(RooArgSet(dt,mixState,tagFlav),10000)};
 
   // Plot B0 and B0bar tagged data separately
   // For all plots below B0 and B0 tagged data will look somewhat differently
@@ -5258,7 +5131,7 @@ public:
   // ---------------------------------------------------------------------------
 
   // Generate some data
-  RooDataSet* data2 = bcp.generate(RooArgSet(dt,tagFlav),10000) ;
+  std::unique_ptr<RooDataSet> data2{bcp.generate(RooArgSet(dt,tagFlav),10000)};
 
   // Plot B0 and B0bar tagged data separately
   RooPlot* frame4 = dt.frame(Title("B decay distribution with CPV(|l|=1,Im(l)=0.7) (B0/B0bar)")) ;
@@ -5277,7 +5150,7 @@ public:
   absLambda=0.7 ;
 
   // Generate some data
-  RooDataSet* data3 = bcp.generate(RooArgSet(dt,tagFlav),10000) ;
+  std::unique_ptr<RooDataSet> data3{bcp.generate(RooArgSet(dt,tagFlav),10000)};
 
   // Plot B0 and B0bar tagged data separately (sin2b = 0.7 plus direct CPV |l|=0.5)
   RooPlot* frame5 = dt.frame(Title("B decay distribution with CPV(|l|=0.7,Im(l)=0.7) (B0/B0bar)")) ;
@@ -5320,7 +5193,7 @@ public:
   // -------------------------------------------------------------------------------------
 
   // Generate some data
-  RooDataSet* data4 = bcpg.generate(RooArgSet(dt,tagFlav),10000) ;
+  std::unique_ptr<RooDataSet> data4{bcpg.generate(RooArgSet(dt,tagFlav),10000)};
 
   // Plot B0 and B0bar tagged data separately
   RooPlot* frame6 = dt.frame(Title("B decay distribution with CPV(Im(l)=0.7,Re(l)=0.7,|l|=1,dG/G=0.5) (B0/B0bar)")) ;
@@ -5338,11 +5211,6 @@ public:
   regPlot(frame4,"rf708_plot4") ;
   regPlot(frame5,"rf708_plot5") ;
   regPlot(frame6,"rf708_plot6") ;
-
-  delete data ;
-  delete data2 ;
-  delete data3 ;
-  delete data4 ;
 
   return kTRUE ;
   }
@@ -5413,15 +5281,15 @@ public:
   // A Binned() option is added in this example to bin the data between generation and fitting
   // to speed up the study at the expemse of some precision
 
-  RooMCStudy* mcstudy = new RooMCStudy(model,x,Binned(kTRUE),Silence(),Extended(),
-                                       FitOptions(Save(kTRUE),PrintEvalErrors(0),BatchMode(_batchMode))) ;
+  RooMCStudy mcstudy{model,x,Binned(kTRUE),Silence(),Extended(),
+                                       FitOptions(Save(kTRUE),PrintEvalErrors(0),BatchMode(_batchMode))};
 
 
   // G e n e r a t e   a n d   f i t   e v e n t s
   // ---------------------------------------------
 
   // Generate and fit 100 samples of Poisson(nExpected) events
-  mcstudy->generateAndFit(100) ;
+  mcstudy.generateAndFit(100) ;
 
 
 
@@ -5429,19 +5297,17 @@ public:
   // ------------------------------------------------
 
   // Make plots of the distributions of mean, the error on mean and the pull of mean
-  RooPlot* frame1 = mcstudy->plotParam(mean,Bins(40)) ;
-  RooPlot* frame2 = mcstudy->plotError(mean,Bins(40)) ;
-  RooPlot* frame3 = mcstudy->plotPull(mean,Bins(40),FitGauss(kTRUE)) ;
+  RooPlot* frame1 = mcstudy.plotParam(mean,Bins(40)) ;
+  RooPlot* frame2 = mcstudy.plotError(mean,Bins(40)) ;
+  RooPlot* frame3 = mcstudy.plotPull(mean,Bins(40),FitGauss(kTRUE)) ;
 
   // Plot distribution of minimized likelihood
-  RooPlot* frame4 = mcstudy->plotNLL(Bins(40)) ;
+  RooPlot* frame4 = mcstudy.plotNLL(Bins(40)) ;
 
   regPlot(frame1,"rf801_plot1") ;
   regPlot(frame2,"rf801_plot2") ;
   regPlot(frame3,"rf801_plot3") ;
   regPlot(frame4,"rf801_plot4") ;
-
-  delete mcstudy ;
 
   return kTRUE ;
   }
@@ -5482,26 +5348,26 @@ public:
   // ----------------------------------------------------------------------------
 
   // Create study manager for binned likelihood fits of a Gaussian pdf in 10 bins
-  RooMCStudy* mcs = new RooMCStudy(gauss,x,Silence(),Binned(),FitOptions(BatchMode(_batchMode))) ;
+  RooMCStudy mcs{gauss,x,Silence(),Binned(),FitOptions(BatchMode(_batchMode))};
 
   // Add chi^2 calculator module to mcs
   RooChi2MCSModule chi2mod ;
-  mcs->addModule(chi2mod) ;
+  mcs.addModule(chi2mod) ;
 
   // Generate 200 samples of 1000 events
-  mcs->generateAndFit(200,1000) ;
+  mcs.generateAndFit(200,1000) ;
 
   // Fill histograms with distributions chi2 and prob(chi2,ndf) that
   // are calculated by RooChiMCSModule
 
-  RooRealVar* chi2 = (RooRealVar*) mcs->fitParDataSet().get()->find("chi2") ;
-  RooRealVar* prob = (RooRealVar*) mcs->fitParDataSet().get()->find("prob") ;
+  RooRealVar* chi2 = (RooRealVar*) mcs.fitParDataSet().get()->find("chi2") ;
+  RooRealVar* prob = (RooRealVar*) mcs.fitParDataSet().get()->find("prob") ;
 
   TH1* h_chi2  = new TH1F("h_chi2","",40,0,20) ;
   TH1* h_prob  = new TH1F("h_prob","",40,0,1) ;
 
-  mcs->fitParDataSet().fillHistogram(h_chi2,*chi2) ;
-  mcs->fitParDataSet().fillHistogram(h_prob,*prob) ;
+  mcs.fitParDataSet().fillHistogram(h_chi2,*chi2) ;
+  mcs.fitParDataSet().fillHistogram(h_prob,*prob) ;
 
 
 
@@ -5514,14 +5380,14 @@ public:
   // Create study manager with separate generation and fit model. This configuration
   // is set up to generate bad fits as the fit and generator model have different means
   // and the mean parameter is not floating in the fit
-  RooMCStudy* mcs2 = new RooMCStudy(gauss2,x,FitModel(gauss),Silence(),Binned(),FitOptions(BatchMode(_batchMode))) ;
+  RooMCStudy mcs2{gauss2,x,FitModel(gauss),Silence(),Binned(),FitOptions(BatchMode(_batchMode))};
 
   // Add chi^2 calculator module to mcs
   RooChi2MCSModule chi2mod2 ;
-  mcs2->addModule(chi2mod2) ;
+  mcs2.addModule(chi2mod2) ;
 
   // Generate 200 samples of 1000 events
-  mcs2->generateAndFit(200,1000) ;
+  mcs2.generateAndFit(200,1000) ;
 
   // Fill histograms with distributions chi2 and prob(chi2,ndf) that
   // are calculated by RooChiMCSModule
@@ -5529,8 +5395,8 @@ public:
   TH1* h2_chi2  = new TH1F("h2_chi2","",40,0,20) ;
   TH1* h2_prob  = new TH1F("h2_prob","",40,0,1) ;
 
-  mcs2->fitParDataSet().fillHistogram(h2_chi2,*chi2) ;
-  mcs2->fitParDataSet().fillHistogram(h2_prob,*prob) ;
+  mcs2.fitParDataSet().fillHistogram(h2_chi2,*chi2) ;
+  mcs2.fitParDataSet().fillHistogram(h2_prob,*prob) ;
 
   h_chi2->SetLineColor(kRed) ;
   h_prob->SetLineColor(kRed) ;
@@ -5539,9 +5405,6 @@ public:
   regTH(h2_chi2,"rf802_hist2_chi2") ;
   regTH(h_prob,"rf802_hist_prob") ;
   regTH(h2_prob,"rf802_hist2_prob") ;
-
-  delete mcs ;
-  delete mcs2 ;
 
   return kTRUE ;
   }
@@ -5596,7 +5459,7 @@ public:
 
   // Configure manager to perform binned extended likelihood fits (Binned(),Extended()) on data generated
   // with a Poisson fluctuation on Nobs (Extended())
-  RooMCStudy* mcs = new RooMCStudy(model,mjjj,Binned(),Silence(),Extended(kTRUE),
+  auto mcs = std::make_unique<RooMCStudy>(model,mjjj,Binned(),Silence(),Extended(kTRUE),
                                    FitOptions(Extended(kTRUE),PrintEvalErrors(-1),BatchMode(_batchMode))) ;
 
 
@@ -5653,8 +5516,6 @@ public:
   regTH(z_vs_ngen,"rf803_z_vs_ngen") ;
   regTH(errnsig_vs_ngen,"rf803_errnsig_vs_ngen") ;
   regTH(errnsig_vs_nsig,"rf803_errnsig_vs_nsig") ;
-
-  delete mcs ;
 
   return kTRUE ;
 
