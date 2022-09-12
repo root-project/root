@@ -470,10 +470,11 @@ without inspecting the meta-data of all the previous clusters.
 
 The hierarchical structure of the frames in the page list envelope is as follows:
 
-    - Top-most cluster list frame
+    # this is `List frame of cluster group record frames` mentioned above
+    - Top-most cluster list frame (contains one item for each cluster)
     |
-    |---- Cluster 1 column list frame (outer list frame)
-    |     |---- Column 1 page list frame (inner list frame)
+    |---- Cluster 1 column list frame (outer list frame, contains one item for each column)
+    |     |---- Column 1 page list frame (inner list frame, contains one item for each page)
     |     |     |---- Page 1 description (inner item)
     |     |     |---- Page 2 description (inner item)
     |     |     | ...
@@ -488,6 +489,8 @@ The hierarchical structure of the frames in the page list envelope is as follows
 In order to save space, the page descriptions (inner items) are _not_ in a record frame.
 If at a later point more information per page is needed,
 the page list envelope can be extended by addtional list and record frames.
+
+**Note**: this list of list of list is a contiguous chunk in the footer.
 
 ### User Meta-data Envelope
 
