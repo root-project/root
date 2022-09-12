@@ -471,10 +471,10 @@ without inspecting the meta-data of all the previous clusters.
 The hierarchical structure of the frames in the page list envelope is as follows:
 
     # this is `List frame of cluster group record frames` mentioned above
-    - Top-most cluster list frame (contains one item for each cluster)
+    - Top-most cluster list frame (one item for each cluster in this RNTuple)
     |
-    |---- Cluster 1 column list frame (outer list frame, contains one item for each column)
-    |     |---- Column 1 page list frame (inner list frame, contains one item for each page)
+    |---- Cluster 1 column list frame (outer list frame, one item for each column in this RNTuple)
+    |     |---- Column 1 page list frame (inner list frame, one item for each page in this column)
     |     |     |---- Page 1 description (inner item)
     |     |     |---- Page 2 description (inner item)
     |     |     | ...
