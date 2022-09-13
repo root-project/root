@@ -44,8 +44,8 @@ namespace Detail {
       TSchemaRuleSet();
       virtual ~TSchemaRuleSet();
 
-      Bool_t              AddRule( TSchemaRule* rule, EConsistencyCheck checkConsistency = kCheckAll, TString *errmsg = 0 );
-      Bool_t              AddRules( TSchemaRuleSet* rules, EConsistencyCheck checkConsistency = kCheckAll, TString *errmsg = 0);
+      Bool_t              AddRule(TSchemaRule *rule, EConsistencyCheck checkConsistency = kCheckAll, TString *errmsg = nullptr);
+      Bool_t              AddRules(TSchemaRuleSet *rules, EConsistencyCheck checkConsistency = kCheckAll, TString *errmsg = nullptr);
       Bool_t              HasRuleWithSourceClass( const TString &source) const;
       const TMatches FindRules( const TString &source ) const;
       const TMatches FindRules( const TString &source, Int_t version ) const;
