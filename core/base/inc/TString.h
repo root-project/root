@@ -671,10 +671,10 @@ inline TString &TString::Prepend(const TString &s, Ssiz_t n)
 { return Replace(0, 0, s.Data(), TMath::Min(n, s.Length())); }
 
 inline TString &TString::Remove(Ssiz_t pos)
-{ return Replace(pos, TMath::Max(0, Length()-pos), 0, 0); }
+{ return Replace(pos, TMath::Max(0, Length()-pos), nullptr, 0); }
 
 inline TString &TString::Remove(Ssiz_t pos, Ssiz_t n)
-{ return Replace(pos, n, 0, 0); }
+{ return Replace(pos, n, nullptr, 0); }
 
 inline TString &TString::Chop()
 { return Remove(TMath::Max(0, Length()-1)); }

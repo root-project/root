@@ -60,7 +60,7 @@ public:
       kSortWithIndex  = BIT(17)     // Use index when sorting (in Compare)
    };
 
-   TFileInfo(const char *url = 0, Long64_t size = -1, const char *uuid = nullptr,
+   TFileInfo(const char *url = nullptr, Long64_t size = -1, const char *uuid = nullptr,
              const char *md5 = nullptr, TObject *meta = nullptr);
    TFileInfo(const TFileInfo &);
 
@@ -81,7 +81,7 @@ public:
    TUUID          *GetUUID() const         { return fUUID; }
    TMD5           *GetMD5() const          { return fMD5; }
    TList          *GetMetaDataList() const { return fMetaDataList; }
-   TFileInfoMeta  *GetMetaData(const char *meta = 0) const;
+   TFileInfoMeta  *GetMetaData(const char *meta = nullptr) const;
 
    void            SetSize(Long64_t size)  { fSize = size; }
    void            SetUUID(const char *uuid);

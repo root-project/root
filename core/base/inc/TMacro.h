@@ -47,14 +47,14 @@ public:
    virtual TMD5        *Checksum();
    virtual TObjString  *GetLineWith(const char *text) const;
    virtual Bool_t       Load() const; //*MENU*
-   virtual Longptr_t    Exec(const char *params = 0, Int_t* error = 0); //*MENU*
+   virtual Longptr_t    Exec(const char *params = nullptr, Int_t *error = nullptr); //*MENU*
    TList               *GetListOfLines() const {return fLines;}
    void                 Paint(Option_t *option="") override;
    void                 Print(Option_t *option="") const override;  //*MENU*
    virtual Int_t        ReadFile(const char *filename);
    virtual void         SaveSource(const char *filename);  //*MENU*
    void                 SavePrimitive(std::ostream &out, Option_t *option = "") override;
-   virtual void         SetParams(const char *params=0); //*MENU*
+   virtual void         SetParams(const char *params = nullptr); //*MENU*
 
    ClassDefOverride(TMacro,1)  // Class supporting a collection of lines with C++ code.
 };
