@@ -155,7 +155,7 @@ namespace TClassEdit {
 
    void        Init(TClassEdit::TInterpreterLookupHelper *helper);
 
-   std::string CleanType (const char *typeDesc,int mode = 0,const char **tail=0);
+   std::string CleanType (const char *typeDesc,int mode = 0,const char **tail = nullptr);
    inline bool IsArtificial(std::string_view name) { return name.find('@') != name.npos; }
    inline bool IsArtificial(ROOT::Internal::TStringView name) {return IsArtificial(std::string_view(name)); }
    bool        IsDefAlloc(const char *alloc, const char *classname);
@@ -234,7 +234,7 @@ namespace TClassEdit {
       demangledName.erase(0, 7);
    strcpy(demangled_name, demangledName.c_str());
 #else
-   char *demangled_name = abi::__cxa_demangle(mangled_name, 0, 0, &errorCode);
+   char *demangled_name = abi::__cxa_demangle(mangled_name, nullptr, nullptr, &errorCode);
    if (!demangled_name || errorCode) {
       free(demangled_name);
       return nullptr;
