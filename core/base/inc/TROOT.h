@@ -186,7 +186,7 @@ public:
 
    typedef std::vector<std::pair<std::string, int> > FwdDeclArgsToKeepCollection_t;
 
-                     TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc = 0);
+                     TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc = nullptr);
    virtual           ~TROOT();
    void              AddClass(TClass *cl);
    void              AddClassGenerator(TClassGenerator *gen);
@@ -264,8 +264,8 @@ public:
    TObject          *GetFunction(const char *name) const;
    TGlobal          *GetGlobal(const char *name, Bool_t load = kFALSE) const;
    TGlobal          *GetGlobal(const TObject *obj, Bool_t load = kFALSE) const;
-   TFunction        *GetGlobalFunction(const char *name, const char *params = 0, Bool_t load = kFALSE);
-   TFunction        *GetGlobalFunctionWithPrototype(const char *name, const char *proto = 0, Bool_t load = kFALSE);
+   TFunction        *GetGlobalFunction(const char *name, const char *params = nullptr, Bool_t load = kFALSE);
+   TFunction        *GetGlobalFunctionWithPrototype(const char *name, const char *proto = nullptr, Bool_t load = kFALSE);
    TObject          *GetGeometry(const char *name) const;
    const TObject    *GetSelectedPrimitive() const { return fPrimitive; }
    TVirtualPad      *GetSelectedPad() const { return fSelectPad; }
@@ -274,7 +274,7 @@ public:
    TFolder          *GetRootFolder() const { return fRootFolder; }
    TProcessUUID     *GetUUIDs() const { return fUUIDs; }
    const TString    &GetWebDisplay() const { return fWebDisplay; }
-   void              Idle(UInt_t idleTimeInSec, const char *command = 0);
+   void              Idle(UInt_t idleTimeInSec, const char *command = nullptr);
    Int_t             IgnoreInclude(const char *fname, const char *expandedfname);
    Bool_t            IsBatch() const { return fBatch; }
    Bool_t            IsExecutingMacro() const { return fExecutingMacro; }
@@ -289,14 +289,14 @@ public:
    void              ls(Option_t *option = "") const override;
    Int_t             LoadClass(const char *classname, const char *libname, Bool_t check = kFALSE);
    TClass           *LoadClass(const char *name, Bool_t silent = kFALSE) const;
-   Int_t             LoadMacro(const char *filename, Int_t *error = 0, Bool_t check = kFALSE);
-   Longptr_t         Macro(const char *filename, Int_t *error = 0, Bool_t padUpdate = kTRUE);
+   Int_t             LoadMacro(const char *filename, Int_t *error = nullptr, Bool_t check = kFALSE);
+   Longptr_t         Macro(const char *filename, Int_t *error = nullptr, Bool_t padUpdate = kTRUE);
    TCanvas          *MakeDefCanvas() const;
    void              Message(Int_t id, const TObject *obj);
    Bool_t            MustClean() const { return fMustClean; }
-   Longptr_t         ProcessLine(const char *line, Int_t *error = 0);
-   Longptr_t         ProcessLineSync(const char *line, Int_t *error = 0);
-   Longptr_t         ProcessLineFast(const char *line, Int_t *error = 0);
+   Longptr_t         ProcessLine(const char *line, Int_t *error = nullptr);
+   Longptr_t         ProcessLineSync(const char *line, Int_t *error = nullptr);
+   Longptr_t         ProcessLineFast(const char *line, Int_t *error = nullptr);
    Bool_t            ReadingObject() const;
    void              RecursiveRemove(TObject *obj) override;
    void              RefreshBrowsers();

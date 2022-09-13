@@ -2039,7 +2039,7 @@ Int_t TColor::GetColorTransparent(Int_t n, Float_t a)
    if (color) {
       TObjArray *colors = (TObjArray *)gROOT->GetListOfColors();
       Int_t ncolors = colors->GetSize();
-      TColor *col = 0;
+      TColor *col = nullptr;
       for (Int_t i = 0; i < ncolors; i++) {
          col = (TColor *)colors->At(i);
          if (col) {

@@ -219,11 +219,11 @@ class ClassDefGenerateInitInstanceLocalInjector:
       static void DeleteArray(void *p) { delete[] ((T*)p); }
       static void Destruct(void *p) { ((T*)p)->~T();  }
       static ::ROOT::TGenericClassInfo *GenerateInitInstanceLocal() {
-         static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy<T>(0);
+         static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy<T>(nullptr);
          static ::ROOT::TGenericClassInfo
             R__instance(T::Class_Name(), T::Class_Version(),
                         T::DeclFileName(), T::DeclFileLine(),
-                        typeid(T), ::ROOT::Internal::DefineBehavior((T*)0, (T*)0),
+                        typeid(T), ::ROOT::Internal::DefineBehavior((T*)nullptr, (T*)nullptr),
                         &T::Dictionary, isa_proxy, 0, sizeof(T) );
          SetInstance(R__instance, &New, &NewArray, &Delete, &DeleteArray, &Destruct);
          return &R__instance;
@@ -314,7 +314,7 @@ public:                                                                         
 #define _ClassDefInline_(name, id, virtual_keyword, overrd)                                                     \
    _ClassDefBase_(name, id, virtual_keyword, overrd) public :                                                   \
    /** \cond HIDDEN_SYMBOLS \deprecated */ static int ImplFileLine() { return -1; } /** \endcond */             \
-   /** \cond HIDDEN_SYMBOLS \deprecated */ static const char *ImplFileName() { return 0; } /** \endcond */      \
+   /** \cond HIDDEN_SYMBOLS \deprecated */ static const char *ImplFileName() { return nullptr; } /** \endcond */\
    /** \return Name of this class */ static const char *Class_Name()                                            \
    {                                                                                                            \
       return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Name();                         \

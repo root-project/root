@@ -450,7 +450,7 @@ public:
    virtual const char     *UnixPathName(const char *unixpathname);
    virtual const char     *FindFile(const char *search, TString& file, EAccessMode mode = kFileExists);
    virtual char           *Which(const char *search, const char *file, EAccessMode mode = kFileExists);
-   virtual TList          *GetVolumes(Option_t *) const { return 0; }
+   virtual TList          *GetVolumes(Option_t *) const { return nullptr; }
 
    //---- Users & Groups
    virtual Int_t           GetUid(const char *user = nullptr);

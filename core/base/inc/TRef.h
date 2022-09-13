@@ -39,7 +39,7 @@ protected:
 
 public:
 
-   TRef(): fPID(0) { }
+   TRef(): fPID(nullptr) {}
    TRef(TObject *obj);
    TRef(const TRef &ref);
    void  operator=(TObject *obj);

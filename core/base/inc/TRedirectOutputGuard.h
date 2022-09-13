@@ -38,7 +38,7 @@ class TRedirectOutputGuard {
  public:
    TRedirectOutputGuard(const char *fout, const char *mode = "a")
                                    { gSystem->RedirectOutput(fout, mode); }
-   virtual ~TRedirectOutputGuard() { gSystem->RedirectOutput(0); }
+   virtual ~TRedirectOutputGuard() { gSystem->RedirectOutput(nullptr); }
 
    ClassDef(TRedirectOutputGuard,0)  // Exception safe output redirection
 };

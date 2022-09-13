@@ -70,7 +70,7 @@ public:
    THashList      *GetList() { return fList; }
    void            SetList(THashList* list) { fList = list; }
 
-   TObjString     *ExportInfo(const char *name = 0, Int_t popt = 0);
+   TObjString     *ExportInfo(const char *name = nullptr, Int_t popt = 0);
 
    Long64_t        Merge(TCollection* list);
    Int_t           RemoveDuplicates();
@@ -103,7 +103,7 @@ public:
    TFileCollection *GetStagedSubset();
 
    TFileCollection *GetFilesOnServer(const char *server);
-   TMap            *GetFilesPerServer(const char *exclude = 0, Bool_t curronly =  kFALSE);
+   TMap            *GetFilesPerServer(const char *exclude = nullptr, Bool_t curronly =  kFALSE);
 
    ClassDefOverride(TFileCollection, 3)  // Collection of TFileInfo objects
 };
