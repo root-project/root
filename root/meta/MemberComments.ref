@@ -170,9 +170,9 @@ OBJ: TList	TList	Doubly linked list : 0
  OBJ: TMethod	Error	 : 0
       void TObject::Error(const char* method, const char* msgfmt,...) const
  OBJ: TMethod	Execute	 : 0
-      void TObject::Execute(const char* method, const char* params, Int_t* error = 0)
+      void TObject::Execute(const char* method, const char* params, Int_t* error = nullptr)
  OBJ: TMethod	Execute	 : 0
-      void TObject::Execute(TMethod* method, TObjArray* params, Int_t* error = 0)
+      void TObject::Execute(TMethod* method, TObjArray* params, Int_t* error = nullptr)
  OBJ: TMethod	ExecuteEvent	 : 0
       void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
  OBJ: TMethod	ExecuteEvent	 : 0
@@ -520,9 +520,9 @@ OBJ: TList	TList	Doubly linked list : 0
  OBJ: TMethod	Warning	 : 0
       void TObject::Warning(const char* method, const char* msgfmt,...) const
  OBJ: TMethod	Write	 : 0
-      Int_t TObject::Write(const char* name = 0, Int_t option = 0, Int_t bufsize = 0)
+      Int_t TObject::Write(const char* name = nullptr, Int_t option = 0, Int_t bufsize = 0)
  OBJ: TMethod	Write	 : 0
-      Int_t TObject::Write(const char* name = 0, Int_t option = 0, Int_t bufsize = 0) const
+      Int_t TObject::Write(const char* name = nullptr, Int_t option = 0, Int_t bufsize = 0) const
  OBJ: TMethod	ls	 : 0
       void TLine::ls(Option_t* option = "") const
  OBJ: TMethod	ls	 : 0
