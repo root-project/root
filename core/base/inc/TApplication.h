@@ -83,7 +83,7 @@ protected:
 
    TApplication();
 
-   virtual Longptr_t  ProcessRemote(const char *line, Int_t *error = 0);
+   virtual Longptr_t  ProcessRemote(const char *line, Int_t *error = nullptr);
    virtual void       Help(const char *line);
    virtual void       LoadGraphicsLibs();
    virtual void       MakeBatch();

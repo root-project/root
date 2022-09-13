@@ -9,6 +9,8 @@
 ################################################################################
 
 import cppyy
+from . import pythonization
+
 
 def set_size(self, buf):
     # Parameters:
@@ -18,6 +20,7 @@ def set_size(self, buf):
     # - buffer whose size has been set
     buf.reshape((self.GetN(),))
     return buf
+
 
 # Create a composite pythonizor.
 #
@@ -34,9 +37,29 @@ def set_size(self, buf):
 # The pythonization consists in setting the size of the array that the getter
 # method returns, so that it is known in Python and the array is fully usable
 # (its length can be obtained, it is iterable).
-comp = cppyy.py.compose_method('^TGraph(2D)?$|^TGraph.*Errors$', # class to match
-                               'GetE?[XYZ]$',                    # method to match
-                               set_size)                         # post-process function
+comp = cppyy.py.compose_method(
+    "^TGraph(2D)?$|^TGraph.*Errors$", "GetE?[XYZ]$", set_size  # class to match  # method to match
+)  # post-process function
 
 # Add the composite to the list of pythonizors
 cppyy.py.add_pythonization(comp)
+
+
+def _init(self, *args):
+    import numpy as np
+
+    if isinstance(args[0], (np.ndarray, np.generic)) and args == 2:
+        self.__class__.__init__(args[0].size, *args)
+
+
+python_funcs = []
+
+
+@pythonization("TGraph")
+def pythonize_tgraph(klass):
+    # Parameters:
+    # klass: class to be pythonized
+    # Support hist *= scalar
+    klass.__init__ = _init
+    for func in python_funcs:
+        setattr(klass, func.__name__, func)

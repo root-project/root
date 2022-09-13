@@ -11,7 +11,6 @@
 #ifndef ROOT_RDF_TINTERFACE
 #define ROOT_RDF_TINTERFACE
 
-#include "ROOT/InternalTreeUtils.hxx" // for GetFileNamesFromTree and GetFriendInfo
 #include "ROOT/RDataSource.hxx"
 #include "ROOT/RDF/ActionHelpers.hxx"
 #include "ROOT/RDF/HistoModels.hxx"
@@ -20,6 +19,7 @@
 #include "ROOT/RDF/RDefine.hxx"
 #include "ROOT/RDF/RDefinePerSample.hxx"
 #include "ROOT/RDF/RFilter.hxx"
+#include "ROOT/RDF/RInterfaceBase.hxx"
 #include "ROOT/RDF/RVariation.hxx"
 #include "ROOT/RDF/RLazyDSImpl.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
@@ -32,8 +32,7 @@
 #include "ROOT/RStringView.hxx"
 #include "ROOT/RVec.hxx"
 #include "ROOT/TypeTraits.hxx"
-#include "RtypesCore.h"               // for ULong64_t
-#include "TChain.h" // for checking fLoopManger->GetTree() return type
+#include "RtypesCore.h" // for ULong64_t
 #include "TDirectory.h"
 #include "TH1.h" // For Histo actions
 #include "TH2.h" // For Histo actions
@@ -101,7 +100,7 @@ using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, void>;
  */
 // clang-format on
 template <typename Proxied, typename DataSource = void>
-class RInterface {
+class RInterface : public RInterfaceBase {
    using DS_t = DataSource;
    using RFilterBase = RDFDetail::RFilterBase;
    using RRangeBase = RDFDetail::RRangeBase;
@@ -115,92 +114,6 @@ class RInterface {
    friend void RDFInternal::TriggerRun(RNode &node);
 
    std::shared_ptr<Proxied> fProxiedPtr; ///< Smart pointer to the graph node encapsulated by this RInterface.
-   ///< The RLoopManager at the root of this computation graph. Never null.
-   RLoopManager *fLoopManager;
-   /// Non-owning pointer to a data-source object. Null if no data-source. RLoopManager has ownership of the object.
-   RDataSource *fDataSource = nullptr;
-
-   /// Contains the columns defined up to this node.
-   RDFInternal::RColumnRegister fColRegister;
-
-   std::string DescribeDataset() const
-   {
-      // TTree/TChain as input
-      const auto tree = fLoopManager->GetTree();
-      if (tree) {
-         const auto treeName = tree->GetName();
-         const auto isTChain = dynamic_cast<TChain *>(tree) ? true : false;
-         const auto treeType = isTChain ? "TChain" : "TTree";
-         const auto isInMemory = !isTChain && !tree->GetCurrentFile() ? true : false;
-         const auto friendInfo = ROOT::Internal::TreeUtils::GetFriendInfo(*tree);
-         const auto hasFriends = friendInfo.fFriendNames.empty() ? false : true;
-         std::stringstream ss;
-         ss << "Dataframe from " << treeType << " " << treeName;
-         if (isInMemory) {
-            ss << " (in-memory)";
-         } else {
-            const auto files = ROOT::Internal::TreeUtils::GetFileNamesFromTree(*tree);
-            const auto numFiles = files.size();
-            if (numFiles == 1) {
-               ss << " in file " << files[0];
-            } else {
-               ss << " in files\n";
-               for (auto i = 0u; i < numFiles; i++) {
-                  ss << "  " << files[i];
-                  if (i < numFiles - 1)
-                     ss << '\n';
-               }
-            }
-         }
-         if (hasFriends) {
-            const auto numFriends = friendInfo.fFriendNames.size();
-            if (numFriends == 1) {
-               ss << "\nwith friend\n";
-            } else {
-               ss << "\nwith friends\n";
-            }
-            for (auto i = 0u; i < numFriends; i++) {
-               const auto nameAlias = friendInfo.fFriendNames[i];
-               const auto files = friendInfo.fFriendFileNames[i];
-               const auto numFiles = files.size();
-               const auto subnames = friendInfo.fFriendChainSubNames[i];
-               ss << "  " << nameAlias.first;
-               if (nameAlias.first != nameAlias.second)
-                  ss << " (" << nameAlias.second << ")";
-               // case: TTree as friend
-               if (numFiles == 1) {
-                  ss << " " << files[0];
-               }
-               // case: TChain as friend
-               else {
-                  ss << '\n';
-                  for (auto j = 0u; j < numFiles; j++) {
-                     ss << "    " << subnames[j] << " " << files[j];
-                     if (j < numFiles - 1)
-                        ss << '\n';
-                  }
-               }
-               if (i < numFriends - 1)
-                  ss << '\n';
-            }
-         }
-         return ss.str();
-      }
-      // Datasource as input
-      else if (fDataSource) {
-         const auto datasourceLabel = fDataSource->GetLabel();
-         return "Dataframe from datasource " + datasourceLabel;
-      }
-      // Trivial/empty datasource
-      else {
-         const auto n = fLoopManager->GetNEmptyEntries();
-         if (n == 1) {
-            return "Empty dataframe filling 1 row";
-         } else {
-            return "Empty dataframe filling " + std::to_string(n) + " rows";
-         }
-      }
-   }
 
 public:
    ////////////////////////////////////////////////////////////////////////////
@@ -223,10 +136,8 @@ public:
    /// \brief Build a RInterface from a RLoopManager.
    /// This constructor is only available for RInterface<RLoopManager>.
    template <typename T = Proxied, typename = std::enable_if_t<std::is_same<T, RLoopManager>::value, int>>
-   RInterface(const std::shared_ptr<RLoopManager> &proxied)
-      : fProxiedPtr(proxied), fLoopManager(proxied.get()), fDataSource(proxied->GetDataSource()), fColRegister(proxied)
+   RInterface(const std::shared_ptr<RLoopManager> &proxied) : RInterfaceBase(proxied), fProxiedPtr(proxied)
    {
-      AddDefaultColumns();
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -249,8 +160,7 @@ public:
    /// Note that it is not a problem to pass RNode's by value.
    operator RNode() const
    {
-      return RNode(std::static_pointer_cast<::ROOT::Detail::RDF::RNodeBase>(fProxiedPtr), *fLoopManager, fColRegister,
-                   fDataSource);
+      return RNode(std::static_pointer_cast<::ROOT::Detail::RDF::RNodeBase>(fProxiedPtr), *fLoopManager, fColRegister);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -305,7 +215,7 @@ public:
       using F_t = RDFDetail::RFilter<F, Proxied>;
 
       auto filterPtr = std::make_shared<F_t>(std::move(f), validColumnNames, fProxiedPtr, fColRegister, name);
-      return RInterface<F_t, DS_t>(std::move(filterPtr), *fLoopManager, fColRegister, fDataSource);
+      return RInterface<F_t, DS_t>(std::move(filterPtr), *fLoopManager, fColRegister);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -368,13 +278,12 @@ public:
       // deleted by the jitted call to JitFilterHelper
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
       using BaseNodeType_t = typename std::remove_pointer_t<decltype(upcastNodeOnHeap)>::element_type;
-      RInterface<BaseNodeType_t> upcastInterface(*upcastNodeOnHeap, *fLoopManager, fColRegister, fDataSource);
+      RInterface<BaseNodeType_t> upcastInterface(*upcastNodeOnHeap, *fLoopManager, fColRegister);
       const auto jittedFilter =
          RDFInternal::BookFilterJit(upcastNodeOnHeap, name, expression, fLoopManager->GetBranchNames(), fColRegister,
                                     fLoopManager->GetTree(), fDataSource);
 
-      return RInterface<RDFDetail::RJittedFilter, DS_t>(std::move(jittedFilter), *fLoopManager, fColRegister,
-                                                        fDataSource);
+      return RInterface<RDFDetail::RJittedFilter, DS_t>(std::move(jittedFilter), *fLoopManager, fColRegister);
    }
 
    // clang-format off
@@ -519,7 +428,7 @@ public:
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddDefine(std::move(jittedDefine));
 
-      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
+      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols));
 
       return newInterface;
    }
@@ -609,7 +518,7 @@ public:
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddDefine(std::move(jittedDefine));
 
-      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
+      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols));
 
       return newInterface;
    }
@@ -664,7 +573,7 @@ public:
 
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddDefine(std::move(newColumn));
-      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
+      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols));
       return newInterface;
    }
 
@@ -720,7 +629,7 @@ public:
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddDefine(std::move(jittedDefine));
 
-      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
+      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols));
 
       return newInterface;
    }
@@ -959,7 +868,7 @@ public:
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddAlias(alias, validColumnName);
 
-      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
+      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols));
 
       return newInterface;
    }
@@ -1073,7 +982,8 @@ public:
       auto newRDF = std::make_shared<ROOT::RDataFrame>(fullTreeName, filename, colListNoAliasesWithSizeBranches);
 
       auto resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, RDFDetail::RInferredType>(
-         colListNoAliasesWithSizeBranches, newRDF, snapHelperArgs, colListNoAliasesWithSizeBranches.size());
+         colListNoAliasesWithSizeBranches, newRDF, snapHelperArgs, fProxiedPtr,
+         colListNoAliasesWithSizeBranches.size());
 
       if (!options.fLazy)
          *resPtr;
@@ -1202,7 +1112,7 @@ public:
       std::stringstream cacheCall;
       auto upcastNode = RDFInternal::UpcastNode(fProxiedPtr);
       RInterface<TTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(fProxiedPtr, *fLoopManager,
-                                                                                      fColRegister, fDataSource);
+                                                                                      fColRegister);
       // build a string equivalent to
       // "(RInterface<nodetype*>*)(this)->Cache<Ts...>(*(ColumnNames_t*)(&columnList))"
       RInterface<RLoopManager> resRDF(std::make_shared<ROOT::Detail::RDF::RLoopManager>(0));
@@ -1297,8 +1207,8 @@ public:
 
       using Range_t = RDFDetail::RRange<Proxied>;
       auto rangePtr = std::make_shared<Range_t>(begin, end, stride, fProxiedPtr);
-      RInterface<RDFDetail::RRange<Proxied>, DS_t> tdf_r(std::move(rangePtr), *fLoopManager, fColRegister, fDataSource);
-      return tdf_r;
+      RInterface<RDFDetail::RRange<Proxied>, DS_t> newInterface(std::move(rangePtr), *fLoopManager, fColRegister);
+      return newInterface;
    }
 
    // clang-format off
@@ -1537,7 +1447,7 @@ public:
 
       if (h->GetXaxis()->GetXmax() == h->GetXaxis()->GetXmin())
          RDFInternal::HistoUtils<::TH1D>::SetCanExtendAllAxes(*h);
-      return CreateAction<RDFInternal::ActionTags::Histo1D, V>(validatedColumns, h, h);
+      return CreateAction<RDFInternal::ActionTags::Histo1D, V>(validatedColumns, h, h, fProxiedPtr);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1595,7 +1505,7 @@ public:
          ROOT::Internal::RDF::RIgnoreErrorLevelRAII iel(kError);
          h = model.GetHistogram();
       }
-      return CreateAction<RDFInternal::ActionTags::Histo1D, V, W>(userColumns, h, h);
+      return CreateAction<RDFInternal::ActionTags::Histo1D, V, W>(userColumns, h, h, fProxiedPtr);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1686,7 +1596,7 @@ public:
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
-      return CreateAction<RDFInternal::ActionTags::Histo2D, V1, V2>(userColumns, h, h);
+      return CreateAction<RDFInternal::ActionTags::Histo2D, V1, V2>(userColumns, h, h, fProxiedPtr);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1729,7 +1639,7 @@ public:
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
-      return CreateAction<RDFInternal::ActionTags::Histo2D, V1, V2, W>(userColumns, h, h);
+      return CreateAction<RDFInternal::ActionTags::Histo2D, V1, V2, W>(userColumns, h, h, fProxiedPtr);
    }
 
    template <typename V1, typename V2, typename W>
@@ -1782,7 +1692,7 @@ public:
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
-      return CreateAction<RDFInternal::ActionTags::Histo3D, V1, V2, V3>(userColumns, h, h);
+      return CreateAction<RDFInternal::ActionTags::Histo3D, V1, V2, V3>(userColumns, h, h, fProxiedPtr);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1831,7 +1741,7 @@ public:
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
-      return CreateAction<RDFInternal::ActionTags::Histo3D, V1, V2, V3, W>(userColumns, h, h);
+      return CreateAction<RDFInternal::ActionTags::Histo3D, V1, V2, V3, W>(userColumns, h, h, fProxiedPtr);
    }
 
    template <typename V1, typename V2, typename V3, typename W>
@@ -1876,7 +1786,8 @@ public:
             throw std::runtime_error("Wrong number of columns for the specified number of histogram axes.");
          }
       }
-      return CreateAction<RDFInternal::ActionTags::HistoND, FirstColumn, OtherColumns...>(columnList, h, h);
+      return CreateAction<RDFInternal::ActionTags::HistoND, FirstColumn, OtherColumns...>(columnList, h, h,
+                                                                                          fProxiedPtr);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1909,7 +1820,7 @@ public:
             throw std::runtime_error("Wrong number of columns for the specified number of histogram axes.");
          }
       }
-      return CreateAction<RDFInternal::ActionTags::HistoND, RDFDetail::RInferredType>(columnList, h, h,
+      return CreateAction<RDFInternal::ActionTags::HistoND, RDFDetail::RInferredType>(columnList, h, h, fProxiedPtr,
                                                                                       columnList.size());
    }
 
@@ -1959,7 +1870,7 @@ public:
       graph->GetXaxis()->SetTitle(validatedColumns[0].c_str());
       graph->GetYaxis()->SetTitle(validatedColumns[1].c_str());
 
-      return CreateAction<RDFInternal::ActionTags::Graph, X, Y>(validatedColumns, graph, graph);
+      return CreateAction<RDFInternal::ActionTags::Graph, X, Y>(validatedColumns, graph, graph, fProxiedPtr);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -2014,7 +1925,7 @@ public:
       graph->GetYaxis()->SetTitle(validatedColumns[1].c_str());
 
       return CreateAction<RDFInternal::ActionTags::GraphAsymmErrors, X, Y, EXL, EXH, EYL, EYH>(validatedColumns, graph,
-                                                                                               graph);
+                                                                                               graph, fProxiedPtr);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -2057,7 +1968,7 @@ public:
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
-      return CreateAction<RDFInternal::ActionTags::Profile1D, V1, V2>(userColumns, h, h);
+      return CreateAction<RDFInternal::ActionTags::Profile1D, V1, V2>(userColumns, h, h, fProxiedPtr);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -2102,7 +2013,7 @@ public:
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
-      return CreateAction<RDFInternal::ActionTags::Profile1D, V1, V2, W>(userColumns, h, h);
+      return CreateAction<RDFInternal::ActionTags::Profile1D, V1, V2, W>(userColumns, h, h, fProxiedPtr);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -2159,7 +2070,7 @@ public:
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
-      return CreateAction<RDFInternal::ActionTags::Profile2D, V1, V2, V3>(userColumns, h, h);
+      return CreateAction<RDFInternal::ActionTags::Profile2D, V1, V2, V3>(userColumns, h, h, fProxiedPtr);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -2207,7 +2118,7 @@ public:
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
-      return CreateAction<RDFInternal::ActionTags::Profile2D, V1, V2, V3, W>(userColumns, h, h);
+      return CreateAction<RDFInternal::ActionTags::Profile2D, V1, V2, V3, W>(userColumns, h, h, fProxiedPtr);
    }
 
    /// \brief Fill and return a two-dimensional profile (*lazy action*).
@@ -2259,7 +2170,7 @@ public:
       if (!RDFInternal::HistoUtils<T>::HasAxisLimits(*h)) {
          throw std::runtime_error("The absence of axes limits is not supported yet.");
       }
-      return CreateAction<RDFInternal::ActionTags::Fill, FirstColumn, OtherColumns...>(columnList, h, h,
+      return CreateAction<RDFInternal::ActionTags::Fill, FirstColumn, OtherColumns...>(columnList, h, h, fProxiedPtr,
                                                                                        columnList.size());
    }
 
@@ -2362,7 +2273,7 @@ public:
       const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
       using RetType_t = RDFDetail::MinReturnType_t<T>;
       auto minV = std::make_shared<RetType_t>(std::numeric_limits<RetType_t>::max());
-      return CreateAction<RDFInternal::ActionTags::Min, T>(userColumns, minV, minV);
+      return CreateAction<RDFInternal::ActionTags::Min, T>(userColumns, minV, minV, fProxiedPtr);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -2392,7 +2303,7 @@ public:
       const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
       using RetType_t = RDFDetail::MaxReturnType_t<T>;
       auto maxV = std::make_shared<RetType_t>(std::numeric_limits<RetType_t>::lowest());
-      return CreateAction<RDFInternal::ActionTags::Max, T>(userColumns, maxV, maxV);
+      return CreateAction<RDFInternal::ActionTags::Max, T>(userColumns, maxV, maxV, fProxiedPtr);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -2420,7 +2331,7 @@ public:
    {
       const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
       auto meanV = std::make_shared<double>(0);
-      return CreateAction<RDFInternal::ActionTags::Mean, T>(userColumns, meanV, meanV);
+      return CreateAction<RDFInternal::ActionTags::Mean, T>(userColumns, meanV, meanV, fProxiedPtr);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -2448,7 +2359,7 @@ public:
    {
       const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
       auto stdDeviationV = std::make_shared<double>(0);
-      return CreateAction<RDFInternal::ActionTags::StdDev, T>(userColumns, stdDeviationV, stdDeviationV);
+      return CreateAction<RDFInternal::ActionTags::StdDev, T>(userColumns, stdDeviationV, stdDeviationV, fProxiedPtr);
    }
 
    // clang-format off
@@ -2481,7 +2392,7 @@ public:
    {
       const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
       auto sumV = std::make_shared<RDFDetail::SumReturnType_t<T>>(initValue);
-      return CreateAction<RDFInternal::ActionTags::Sum, T>(userColumns, sumV, sumV);
+      return CreateAction<RDFInternal::ActionTags::Sum, T>(userColumns, sumV, sumV, fProxiedPtr);
    }
    // clang-format on
 
@@ -2530,163 +2441,6 @@ public:
       return MakeResultPtr(rep, *fLoopManager, std::move(action));
    }
 
-   /////////////////////////////////////////////////////////////////////////////
-   /// \brief Returns the names of the available columns.
-   /// \return the container of column names.
-   ///
-   /// This is not an action nor a transformation, just a query to the RDataFrame object.
-   ///
-   /// ### Example usage:
-   /// ~~~{.cpp}
-   /// auto colNames = d.GetColumnNames();
-   /// // Print columns' names
-   /// for (auto &&colName : colNames) std::cout << colName << std::endl;
-   /// ~~~
-   ///
-   ColumnNames_t GetColumnNames()
-   {
-      // there could be duplicates between Redefined columns and columns in the data source
-      std::unordered_set<std::string> allColumns;
-
-      auto addIfNotInternal = [&allColumns](std::string_view colName) {
-         if (!RDFInternal::IsInternalColumn(colName))
-            allColumns.emplace(colName);
-      };
-
-      auto definedColumns = fColRegister.GetNames();
-
-      std::for_each(definedColumns.begin(), definedColumns.end(), addIfNotInternal);
-
-      auto tree = fLoopManager->GetTree();
-      if (tree) {
-         for (const auto &bName : RDFInternal::GetBranchNames(*tree, /*allowDuplicates=*/false))
-            allColumns.emplace(bName);
-      }
-
-      if (fDataSource) {
-         for (const auto &s : fDataSource->GetColumnNames()) {
-            if (s.rfind("R_rdf_sizeof", 0) != 0)
-               allColumns.emplace(s);
-         }
-      }
-
-      ColumnNames_t ret(allColumns.begin(), allColumns.end());
-      std::sort(ret.begin(), ret.end());
-      return ret;
-   }
-
-   /////////////////////////////////////////////////////////////////////////////
-   /// \brief Return the type of a given column as a string.
-   /// \return the type of the required column.
-   ///
-   /// This is not an action nor a transformation, just a query to the RDataFrame object.
-   ///
-   /// ### Example usage:
-   /// ~~~{.cpp}
-   /// auto colType = d.GetColumnType("columnName");
-   /// // Print column type
-   /// std::cout << "Column " << colType << " has type " << colType << std::endl;
-   /// ~~~
-   ///
-   std::string GetColumnType(std::string_view column)
-   {
-      const auto col = fColRegister.ResolveAlias(std::string(column));
-
-      RDFDetail::RDefineBase *define = fColRegister.GetDefine(col);
-
-      const bool convertVector2RVec = true;
-      return RDFInternal::ColumnName2ColumnTypeName(col, fLoopManager->GetTree(), fLoopManager->GetDataSource(), define,
-                                                    convertVector2RVec);
-   }
-
-   /////////////////////////////////////////////////////////////////////////////
-   /// \brief Return information about the dataframe.
-   /// \return information about the dataframe as RDFDescription object
-   ///
-   /// This convenience function describes the dataframe and combines the following information:
-   /// - Number of event loops run, see GetNRuns()
-   /// - Number of total and defined columns, see GetColumnNames() and GetDefinedColumnNames()
-   /// - Column names, see GetColumnNames()
-   /// - Column types, see GetColumnType()
-   /// - Number of processing slots, see GetNSlots()
-   ///
-   /// This is not an action nor a transformation, just a query to the RDataFrame object.
-   /// The result is dependent on the node from which this method is called, e.g. the list of
-   /// defined columns returned by GetDefinedColumnNames().
-   ///
-   /// Please note that this is a convenience feature and the layout of the output can be subject
-   /// to change and should be parsed via RDFDescription methods.
-   ///
-   /// ### Example usage:
-   /// ~~~{.cpp}
-   /// RDataFrame df(10);
-   /// auto df2 = df.Define("x", "1.f").Define("s", "\"myStr\"");
-   /// // Describe the dataframe
-   /// df2.Describe().Print()
-   /// df2.Describe().Print(/*shortFormat=*/true)
-   /// std::cout << df2.Describe().AsString() << std::endl;
-   /// std::cout << df2.Describe().AsString(/*shortFormat=*/true) << std::endl;
-   /// ~~~
-   ///
-   RDFDescription Describe()
-   {
-      // Build set of defined column names to find later in all column names
-      // the defined columns more efficiently
-      const auto columnNames = GetColumnNames();
-      std::set<std::string> definedColumnNamesSet;
-      for (const auto &name : GetDefinedColumnNames())
-         definedColumnNamesSet.insert(name);
-
-      // Get information for the metadata table
-      const std::vector<std::string> metadataProperties = {"Columns in total", "Columns from defines",
-                                                           "Event loops run", "Processing slots"};
-      const std::vector<std::string> metadataValues = {std::to_string(columnNames.size()),
-                                                       std::to_string(definedColumnNamesSet.size()),
-                                                       std::to_string(GetNRuns()), std::to_string(GetNSlots())};
-
-      // Set header for metadata table
-      const auto columnWidthProperties = RDFInternal::GetColumnWidth(metadataProperties);
-      // The column width of the values is required to make right-bound numbers and is equal
-      // to the maximum of the string "Value" and all values to be put in this column.
-      const auto columnWidthValues =
-         std::max(std::max_element(metadataValues.begin(), metadataValues.end())->size(), static_cast<std::size_t>(5u));
-      std::stringstream ss;
-      ss << std::left << std::setw(columnWidthProperties) << "Property" << std::setw(columnWidthValues) << "Value\n"
-         << std::setw(columnWidthProperties) << "--------" << std::setw(columnWidthValues) << "-----\n";
-
-      // Build metadata table
-      // All numbers should be bound to the right and strings bound to the left.
-      for (auto i = 0u; i < metadataProperties.size(); i++) {
-         ss << std::left << std::setw(columnWidthProperties) << metadataProperties[i] << std::right
-            << std::setw(columnWidthValues) << metadataValues[i] << '\n';
-      }
-      ss << '\n'; // put space between this and the next table
-
-      // Set header for columns table
-      const auto columnWidthNames = RDFInternal::GetColumnWidth(columnNames);
-      const auto columnTypes = GetColumnTypeNamesList(columnNames);
-      const auto columnWidthTypes = RDFInternal::GetColumnWidth(columnTypes);
-      ss << std::left << std::setw(columnWidthNames) << "Column" << std::setw(columnWidthTypes) << "Type"
-         << "Origin\n"
-         << std::setw(columnWidthNames) << "------" << std::setw(columnWidthTypes) << "----"
-         << "------\n";
-
-      // Build columns table
-      const auto nCols = columnNames.size();
-      for (auto i = 0u; i < nCols; i++) {
-         auto origin = "Dataset";
-         if (definedColumnNamesSet.find(columnNames[i]) != definedColumnNamesSet.end())
-            origin = "Define";
-         ss << std::left << std::setw(columnWidthNames) << columnNames[i] << std::setw(columnWidthTypes)
-            << columnTypes[i] << origin;
-         if (i < nCols - 1)
-            ss << '\n';
-      }
-      // Use the string returned from DescribeDataset() as the 'brief' description
-      // Use the converted to string stringstream ss as the 'full' description
-      return RDFDescription(DescribeDataset(), ss.str());
-   }
-
    /// \brief Returns the names of the filters created.
    /// \return the container of filters names.
    ///
@@ -2702,110 +2456,6 @@ public:
    /// ~~~
    ///
    std::vector<std::string> GetFilterNames() { return RDFInternal::GetFilterNames(fProxiedPtr); }
-
-   /// \brief Returns the names of the defined columns.
-   /// \return the container of the defined column names.
-   ///
-   /// This is not an action nor a transformation, just a simple utility to
-   /// get the columns names that have been defined up to the node.
-   /// If no column has been defined, e.g. on a root node, it returns an
-   /// empty collection.
-   ///
-   /// ### Example usage:
-   /// ~~~{.cpp}
-   /// auto defColNames = d.GetDefinedColumnNames();
-   /// // Print defined columns' names
-   /// for (auto &&defColName : defColNames) std::cout << defColName << std::endl;
-   /// ~~~
-   ///
-   ColumnNames_t GetDefinedColumnNames()
-   {
-      ColumnNames_t definedColumns;
-
-      const auto columns = fColRegister.BuildDefineNames();
-      for (const auto &column : columns) {
-         if (!RDFInternal::IsInternalColumn(column))
-            definedColumns.emplace_back(column);
-      }
-
-      return definedColumns;
-   }
-
-   /// \brief Return a descriptor for the systematic variations registered in this branch of the computation graph.
-   ///
-   /// This is not an action nor a transformation, just a simple utility to
-   /// inspect the systematic variations that have been registered with Vary() up to this node.
-   /// When called on the root node, it returns an empty descriptor.
-   ///
-   /// ### Example usage:
-   /// ~~~{.cpp}
-   /// auto variations = d.GetVariations();
-   /// variations.Print();
-   /// ~~~
-   ///
-   RVariationsDescription GetVariations() const { return fColRegister.BuildVariationsDescription(); }
-
-   /// \brief Checks if a column is present in the dataset.
-   /// \return true if the column is available, false otherwise
-   ///
-   /// This method checks if a column is part of the input ROOT dataset, has
-   /// been defined or can be provided by the data source.
-   ///
-   /// Example usage:
-   /// ~~~{.cpp}
-   /// ROOT::RDataFrame base(1);
-   /// auto rdf = base.Define("definedColumn", [](){return 0;});
-   /// rdf.HasColumn("definedColumn"); // true: we defined it
-   /// rdf.HasColumn("rdfentry_"); // true: it's always there
-   /// rdf.HasColumn("foo"); // false: it is not there
-   /// ~~~
-   bool HasColumn(std::string_view columnName)
-   {
-      if (fColRegister.IsDefineOrAlias(columnName))
-         return true;
-
-      if (auto tree = fLoopManager->GetTree()) {
-         const auto &branchNames = fLoopManager->GetBranchNames();
-         const auto branchNamesEnd = branchNames.end();
-         if (branchNamesEnd != std::find(branchNames.begin(), branchNamesEnd, columnName))
-            return true;
-      }
-
-      if (fDataSource && fDataSource->HasColumn(columnName))
-         return true;
-
-      return false;
-   }
-
-   /// \brief Gets the number of data processing slots.
-   /// \return The number of data processing slots used by this RDataFrame instance
-   ///
-   /// This method returns the number of data processing slots used by this RDataFrame
-   /// instance. This number is influenced by the global switch ROOT::EnableImplicitMT().
-   ///
-   /// Example usage:
-   /// ~~~{.cpp}
-   /// ROOT::EnableImplicitMT(6)
-   /// ROOT::RDataFrame df(1);
-   /// std::cout << df.GetNSlots() << std::endl; // prints "6"
-   /// ~~~
-   unsigned int GetNSlots() const { return fLoopManager->GetNSlots(); }
-
-   /// \brief Gets the number of event loops run.
-   /// \return The number of event loops run by this RDataFrame instance
-   ///
-   /// This method returns the number of events loops run so far by this RDataFrame instance.
-   ///
-   /// Example usage:
-   /// ~~~{.cpp}
-   /// ROOT::RDataFrame df(1);
-   /// std::cout << df.GetNRuns() << std::endl; // prints "0"
-   /// df.Sum("rdfentry_").GetValue(); // trigger the event loop
-   /// std::cout << df.GetNRuns() << std::endl; // prints "1"
-   /// df.Sum("rdfentry_").GetValue(); // trigger another event loop
-   /// std::cout << df.GetNRuns() << std::endl; // prints "2"
-   /// ~~~
-   unsigned int GetNRuns() const { return fLoopManager->GetNRuns(); }
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
@@ -2963,7 +2613,7 @@ public:
          return CallCreateActionWithoutColsIfPossible<HelperT>(resPtr, hPtr, TTraits::TypeList<FirstColumn>{});
       } else {
          return CreateAction<RDFInternal::ActionTags::Book, FirstColumn, OtherColumns...>(columns, resPtr, hPtr,
-                                                                                          columns.size());
+                                                                                          fProxiedPtr, columns.size());
       }
    }
 
@@ -3003,7 +2653,7 @@ public:
                                                                nMaxCollectionElements);
       // Need to add ULong64_t type corresponding to the first column rdfentry_
       return CreateAction<RDFInternal::ActionTags::Display, ULong64_t, ColumnTypes...>(std::move(newCols), displayer,
-                                                                                       displayer);
+                                                                                       displayer, fProxiedPtr);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -3025,8 +2675,8 @@ public:
       newCols.insert(newCols.begin(), "rdfentry_"); // Artificially insert first column
       auto displayer = std::make_shared<RDFInternal::RDisplay>(newCols, GetColumnTypeNamesList(newCols), nRows,
                                                                nMaxCollectionElements);
-      return CreateAction<RDFInternal::ActionTags::Display, RDFDetail::RInferredType>(std::move(newCols), displayer,
-                                                                                      displayer, columnList.size() + 1);
+      return CreateAction<RDFInternal::ActionTags::Display, RDFDetail::RInferredType>(
+         std::move(newCols), displayer, displayer, fProxiedPtr, columnList.size() + 1);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -3063,108 +2713,6 @@ public:
    }
 
 private:
-   void AddDefaultColumns()
-   {
-      // Entry number column
-      const std::string entryColName = "rdfentry_";
-      const std::string entryColType = "ULong64_t";
-      auto entryColGen = [](unsigned int, ULong64_t entry) { return entry; };
-      using NewColEntry_t = RDFDetail::RDefine<decltype(entryColGen), RDFDetail::ExtraArgsForDefine::SlotAndEntry>;
-
-      auto entryColumn = std::make_shared<NewColEntry_t>(entryColName, entryColType, std::move(entryColGen),
-                                                         ColumnNames_t{}, fColRegister, *fLoopManager);
-      fColRegister.AddDefine(std::move(entryColumn));
-
-      // Slot number column
-      const std::string slotColName = "rdfslot_";
-      const std::string slotColType = "unsigned int";
-      auto slotColGen = [](unsigned int slot) { return slot; };
-      using NewColSlot_t = RDFDetail::RDefine<decltype(slotColGen), RDFDetail::ExtraArgsForDefine::Slot>;
-
-      auto slotColumn = std::make_shared<NewColSlot_t>(slotColName, slotColType, std::move(slotColGen), ColumnNames_t{},
-                                                       fColRegister, *fLoopManager);
-      fColRegister.AddDefine(std::move(slotColumn));
-
-      fColRegister.AddAlias("tdfentry_", entryColName);
-      fColRegister.AddAlias("tdfslot_", slotColName);
-   }
-
-   std::vector<std::string> GetColumnTypeNamesList(const ColumnNames_t &columnList)
-   {
-      std::vector<std::string> types;
-
-      for (auto column : columnList) {
-         types.push_back(GetColumnType(column));
-      }
-      return types;
-   }
-
-   void CheckIMTDisabled(std::string_view callerName)
-   {
-      if (ROOT::IsImplicitMTEnabled()) {
-         std::string error(callerName);
-         error += " was called with ImplicitMT enabled, but multi-thread is not supported.";
-         throw std::runtime_error(error);
-      }
-   }
-
-   /// Create RAction object, return RResultPtr for the action
-   /// Overload for the case in which all column types were specified (no jitting).
-   /// For most actions, `r` and `helperArg` will refer to the same object, because the only argument to forward to
-   /// the action helper is the result value itself. We need the distinction for actions such as Snapshot or Cache,
-   /// for which the constructor arguments of the action helper are different from the returned value.
-   template <typename ActionTag, typename... ColTypes, typename ActionResultType,
-             typename HelperArgType = ActionResultType,
-             std::enable_if_t<!RDFInternal::RNeedJitting<ColTypes...>::value, int> = 0>
-   RResultPtr<ActionResultType>
-   CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r,
-                const std::shared_ptr<HelperArgType> &helperArg, const int /*nColumns*/ = -1)
-   {
-      constexpr auto nColumns = sizeof...(ColTypes);
-
-      const auto validColumnNames = GetValidatedColumnNames(nColumns, columns);
-      CheckAndFillDSColumns(validColumnNames, RDFInternal::TypeList<ColTypes...>());
-
-      const auto nSlots = fLoopManager->GetNSlots();
-
-      auto action = RDFInternal::BuildAction<ColTypes...>(validColumnNames, helperArg, nSlots, fProxiedPtr, ActionTag{},
-                                                          fColRegister);
-      return MakeResultPtr(r, *fLoopManager, std::move(action));
-   }
-
-   /// Create RAction object, return RResultPtr for the action
-   /// Overload for the case in which one or more column types were not specified (RTTI + jitting).
-   /// This overload has a `nColumns` optional argument. If present, the number of required columns for
-   /// this action is taken equal to nColumns, otherwise it is assumed to be sizeof...(ColTypes).
-   template <typename ActionTag, typename... ColTypes, typename ActionResultType,
-             typename HelperArgType = ActionResultType,
-             std::enable_if_t<RDFInternal::RNeedJitting<ColTypes...>::value, int> = 0>
-   RResultPtr<ActionResultType> CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r,
-                                             const std::shared_ptr<HelperArgType> &helperArg, const int nColumns = -1)
-   {
-      auto realNColumns = (nColumns > -1 ? nColumns : sizeof...(ColTypes));
-
-      const auto validColumnNames = GetValidatedColumnNames(realNColumns, columns);
-      const unsigned int nSlots = fLoopManager->GetNSlots();
-
-      auto *tree = fLoopManager->GetTree();
-      auto *helperArgOnHeap = RDFInternal::MakeSharedOnHeap(helperArg);
-
-      auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
-      using BaseNodeType_t = typename std::remove_pointer_t<decltype(upcastNodeOnHeap)>::element_type;
-      RInterface<BaseNodeType_t> upcastInterface(*upcastNodeOnHeap, *fLoopManager, fColRegister, fDataSource);
-
-      const auto jittedAction = std::make_shared<RDFInternal::RJittedAction>(
-         *fLoopManager, validColumnNames, fColRegister, fProxiedPtr->GetVariations());
-      auto jittedActionOnHeap = RDFInternal::MakeWeakOnHeap(jittedAction);
-
-      auto toJit =
-         RDFInternal::JitBuildAction(validColumnNames, upcastNodeOnHeap, typeid(HelperArgType), typeid(ActionTag),
-                                     helperArgOnHeap, tree, nSlots, fColRegister, fDataSource, jittedActionOnHeap);
-      fLoopManager->ToJitExec(toJit);
-      return MakeResultPtr(r, *fLoopManager, std::move(jittedAction));
-   }
-
    template <typename F, typename DefineType, typename RetType = typename TTraits::CallableTraits<F>::ret_type>
    std::enable_if_t<std::is_default_constructible<RetType>::value, RInterface<Proxied, DS_t>>
    DefineImpl(std::string_view name, F &&expression, const ColumnNames_t &columns, const std::string &where)
@@ -3206,7 +2754,7 @@ private:
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddDefine(std::move(newColumn));
 
-      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
+      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols));
 
       return newInterface;
    }
@@ -3246,7 +2794,8 @@ private:
       ::TDirectory::TContext ctxt;
       auto newRDF = std::make_shared<ROOT::RDataFrame>(fullTreeName, filename, validCols);
 
-      auto resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, ColumnTypes...>(validCols, newRDF, snapHelperArgs);
+      auto resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, ColumnTypes...>(validCols, newRDF, snapHelperArgs,
+                                                                                    fProxiedPtr);
 
       if (!options.fLazy)
          *resPtr;
@@ -3306,7 +2855,7 @@ private:
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddVariation(std::move(variation));
 
-      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
+      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols));
 
       return newInterface;
    }
@@ -3341,7 +2890,7 @@ private:
       RDFInternal::RColumnRegister newColRegister(fColRegister);
       newColRegister.AddVariation(std::move(jittedVariation));
 
-      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newColRegister), fDataSource);
+      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newColRegister));
 
       return newInterface;
    }
@@ -3352,7 +2901,7 @@ private:
                                               TTraits::TypeList<RDFDetail::RInferredType>)
       -> decltype(hPtr->Exec(0u), RResultPtr<ActionResultType>{})
    {
-      return CreateAction<RDFInternal::ActionTags::Book>(/*columns=*/{}, resPtr, hPtr, 0u);
+      return CreateAction<RDFInternal::ActionTags::Book>(/*columns=*/{}, resPtr, hPtr, fProxiedPtr, 0u);
    }
 
    template <typename Helper, typename ActionResultType, typename... Others>
@@ -3367,86 +2916,14 @@ private:
       return {};
    }
 
-   template <typename RetType>
-   void SanityChecksForVary(const std::vector<std::string> &colNames, const std::vector<std::string> &variationTags,
-                            std::string_view variationName)
-   {
-      R__ASSERT(variationTags.size() > 0 && "Must have at least one variation.");
-      R__ASSERT(colNames.size() > 0 && "Must have at least one varied column.");
-      R__ASSERT(!variationName.empty() && "Must provide a variation name.");
-
-      for (auto &colName : colNames) {
-         RDFInternal::CheckForDefinition("Vary", colName, fColRegister, fLoopManager->GetBranchNames(),
-                                         fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
-      }
-      RDFInternal::CheckValidCppVarName(variationName, "Vary");
-
-      static_assert(RDFInternal::IsRVec<RetType>::value, "Vary expressions must return an RVec.");
-
-      if (colNames.size() > 1) { // we are varying multiple columns simultaneously, RetType is RVec<RVec<T>>
-         constexpr bool hasInnerRVec = RDFInternal::IsRVec<typename RetType::value_type>::value;
-         if (!hasInnerRVec)
-            throw std::runtime_error("This Vary call is varying multiple columns simultaneously but the expression "
-                                     "does not return an RVec of RVecs.");
-
-         auto colTypes = GetColumnTypeNamesList(colNames);
-         auto allColTypesEqual =
-            std::all_of(colTypes.begin() + 1, colTypes.end(), [&](const std::string &t) { return t == colTypes[0]; });
-         if (!allColTypesEqual)
-            throw std::runtime_error("Cannot simultaneously vary multiple columns of different types.");
-
-         const auto &innerTypeID = typeid(RDFInternal::InnerValueType_t<RetType>);
-
-         for (auto i = 0u; i < colTypes.size(); ++i) {
-            const auto *define = fColRegister.GetDefine(colNames[i]);
-            const auto &expectedTypeID = define ? define->GetTypeId() : RDFInternal::TypeName2TypeID(colTypes[i]);
-            if (innerTypeID != expectedTypeID)
-               throw std::runtime_error("Varied values for column \"" + colNames[i] + "\" have a different type (" +
-                                        RDFInternal::TypeID2TypeName(innerTypeID) + ") than the nominal value (" +
-                                        colTypes[i] + ").");
-         }
-      } else { // we are varying a single column, RetType is RVec<T>
-         const auto &retTypeID = typeid(typename RetType::value_type);
-         const auto &colName = colNames[0]; // we have only one element in there
-         const auto *define = fColRegister.GetDefine(colName);
-         const auto &expectedTypeID =
-            define ? define->GetTypeId() : RDFInternal::TypeName2TypeID(GetColumnType(colName));
-         if (retTypeID != expectedTypeID)
-            throw std::runtime_error("Varied values for column \"" + colName + "\" have a different type (" +
-                                     RDFInternal::TypeID2TypeName(retTypeID) + ") than the nominal value (" +
-                                     GetColumnType(colName) + ").");
-      }
-
-      // when varying multiple columns, they must be different columns
-      if (colNames.size() > 1) {
-         std::set<std::string> uniqueCols(colNames.begin(), colNames.end());
-         if (uniqueCols.size() != colNames.size())
-            throw std::logic_error("A column name was passed to the same Vary invocation multiple times.");
-      }
-   }
-
 protected:
-   RInterface(const std::shared_ptr<Proxied> &proxied, RLoopManager &lm, const RDFInternal::RColumnRegister &columns,
-              RDataSource *ds)
-      : fProxiedPtr(proxied), fLoopManager(&lm), fDataSource(ds), fColRegister(columns)
+   RInterface(const std::shared_ptr<Proxied> &proxied, RLoopManager &lm,
+              const RDFInternal::RColumnRegister &colRegister)
+      : RInterfaceBase(lm, colRegister), fProxiedPtr(proxied)
    {
    }
-
-   RLoopManager *GetLoopManager() const { return fLoopManager; }
 
    const std::shared_ptr<Proxied> &GetProxiedPtr() const { return fProxiedPtr; }
-
-   ColumnNames_t GetValidatedColumnNames(const unsigned int nColumns, const ColumnNames_t &columns)
-   {
-      return RDFInternal::GetValidatedColumnNames(*fLoopManager, nColumns, columns, fColRegister, fDataSource);
-   }
-
-   template <typename... ColumnTypes>
-   void CheckAndFillDSColumns(ColumnNames_t validCols, TTraits::TypeList<ColumnTypes...> typeList)
-   {
-      if (fDataSource != nullptr)
-         RDFInternal::AddDSColumns(validCols, *fLoopManager, *fDataSource, typeList, fColRegister);
-   }
 };
 
 } // namespace RDF

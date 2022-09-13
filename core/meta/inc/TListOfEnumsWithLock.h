@@ -37,7 +37,7 @@ private:
 
 public:
 
-   TListOfEnumsWithLock(TClass *cl = 0);
+   TListOfEnumsWithLock(TClass *cl = nullptr);
    ~TListOfEnumsWithLock() override;
 
    TEnum *GetObject(const char*) const override;

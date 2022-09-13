@@ -88,7 +88,7 @@ namespace {
 
          static const char* colornames[] = {
             "black", "red", "green", "yellow",
-            "blue", "magenta", "cyan", "white", 0
+            "blue", "magenta", "cyan", "white", nullptr
          };
          static const unsigned char colorrgb[][3] = {
             {0,0,0}, {255,48,48}, {48,255,48}, {255,255,48},

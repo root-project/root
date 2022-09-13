@@ -70,7 +70,7 @@ public:
 class TLockGuard {
 
 private:
-   TVirtualMutex *fMutex;
+   TVirtualMutex *fMutex{nullptr};
 
    TLockGuard(const TLockGuard&) = delete;
    TLockGuard& operator=(const TLockGuard&) = delete;
@@ -81,7 +81,7 @@ public:
    Int_t UnLock() {
       if (!fMutex) return 0;
       auto tmp = fMutex;
-      fMutex = 0;
+      fMutex = nullptr;
       return tmp->UnLock();
    }
    ~TLockGuard() { if (fMutex) fMutex->UnLock(); }

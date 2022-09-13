@@ -184,7 +184,7 @@ public:
    virtual void     RangeAxisChanged() { Emit("RangeAxisChanged()"); } // *SIGNAL*
            void     RecursiveRemove(TObject *obj) override = 0;
    virtual void     RedrawAxis(Option_t *option="") = 0;
-   virtual void     ResetView3D(TObject *view=0) = 0;
+   virtual void     ResetView3D(TObject *view = nullptr) = 0;
    virtual void     ResizePad(Option_t *option="") = 0;
            void     SaveAs(const char *filename="",Option_t *option="") const override = 0;
    virtual void     SetBatch(Bool_t batch=kTRUE) = 0;
@@ -222,7 +222,7 @@ public:
    virtual void     SetPhi(Double_t phi=30) = 0;
    virtual void     SetToolTipText(const char *text, Long_t delayms = 1000) = 0;
    virtual void     SetVertical(Bool_t vert=kTRUE) = 0;
-   virtual void     SetView(TView *view=0) = 0;
+   virtual void     SetView(TView *view = nullptr) = 0;
    virtual void     SetViewer3D(TVirtualViewer3D * /*viewer3d*/) {}
    virtual void     ShowGuidelines(TObject *object, const Int_t event, const char mode = 'i', const bool cling = true) = 0;
    virtual TObject *WaitPrimitive(const char *pname="", const char *emode="") = 0;

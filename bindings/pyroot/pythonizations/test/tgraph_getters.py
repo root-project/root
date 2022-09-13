@@ -11,13 +11,22 @@ class TGraphGetters(unittest.TestCase):
     getters, which sets the size of the returned buffers.
     """
 
+    def test_numpy_graph(self):
+        import numpy as np
+
+        x = np.array([1, 2, 3, 4, 5])
+        y = np.array([3, 4, 6, 7, 8])
+        g1 = ROOT.TGraph(x, y)
+        g2 = ROOT.TGraph(5, x, y)
+        self.assertEqual(g1, g2)
+
     # Tests
     def test_graph(self):
         N = 5
         xval, yval = 1, 2
 
-        ax = array.array('d', map(lambda x: x*xval, range(N)))
-        ay = array.array('d', map(lambda x: x*yval, range(N)))
+        ax = array.array("d", map(lambda x: x * xval, range(N)))
+        ay = array.array("d", map(lambda x: x * yval, range(N)))
 
         g = ROOT.TGraph(N, ax, ay)
 
@@ -38,12 +47,12 @@ class TGraphGetters(unittest.TestCase):
         xval, yval, zval = 1, 2, 3
         xerrval, yerrval, zerrval = 0.1, 0.2, 0.3
 
-        ax = array.array('d', map(lambda x: x*xval, range(N)))
-        ay = array.array('d', map(lambda x: x*yval, range(N)))
-        az = array.array('d', map(lambda x: x*zval, range(N)))
-        aex = array.array('d', map(lambda x: x*xerrval, range(N)))
-        aey = array.array('d', map(lambda x: x*yerrval, range(N)))
-        aez = array.array('d', map(lambda x: x*zerrval, range(N)))
+        ax = array.array("d", map(lambda x: x * xval, range(N)))
+        ay = array.array("d", map(lambda x: x * yval, range(N)))
+        az = array.array("d", map(lambda x: x * zval, range(N)))
+        aex = array.array("d", map(lambda x: x * xerrval, range(N)))
+        aey = array.array("d", map(lambda x: x * yerrval, range(N)))
+        aez = array.array("d", map(lambda x: x * zerrval, range(N)))
 
         g = ROOT.TGraph2DErrors(N, ax, ay, az, aex, aey, aez)
 
@@ -72,5 +81,5 @@ class TGraphGetters(unittest.TestCase):
         self.assertEqual(list(ez), list(aez))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

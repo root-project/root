@@ -25,7 +25,7 @@ using ROOT::RDF::RResultHandle;
 void ROOT::RDF::RunGraphs(std::vector<RResultHandle> handles)
 {
    if (handles.empty()) {
-      Warning("RunGraphs", "Got an empty list of handles");
+      Warning("RunGraphs", "Got an empty list of handles, now quitting.");
       return;
    }
 
@@ -38,7 +38,6 @@ void ROOT::RDF::RunGraphs(std::vector<RResultHandle> handles)
    if (nNotRun < handles.size()) {
       Warning("RunGraphs", "Got %lu handles from which %lu link to results which are already ready.", handles.size(),
               handles.size() - nNotRun);
-      return;
    }
    if (nNotRun == 0)
       return;

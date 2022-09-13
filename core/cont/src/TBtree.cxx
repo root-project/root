@@ -205,13 +205,13 @@ void TBtree::Add(TObject *obj)
       return;
    }
    if (!fRoot) {
-      fRoot = new TBtLeafNode(0, obj, this);
-      R__CHECK(fRoot != 0);
+      fRoot = new TBtLeafNode(nullptr, obj, this);
+      R__CHECK(fRoot != nullptr);
       IncrNofKeys();
    } else {
       TBtNode *loc;
       Int_t idx;
-      if (fRoot->Found(obj, &loc, &idx) != 0) {
+      if (fRoot->Found(obj, &loc, &idx)) {
          // loc and idx are set to either where the object
          // was found, or where it should go in the Btree.
          // Nothing is here now, but later we might give the user
@@ -228,7 +228,7 @@ void TBtree::Add(TObject *obj)
 TObject *TBtree::After(const TObject *) const
 {
    MayNotUse("After");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -237,7 +237,7 @@ TObject *TBtree::After(const TObject *) const
 TObject *TBtree::Before(const TObject *) const
 {
    MayNotUse("Before");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -284,10 +284,10 @@ TObject *TBtree::FindObject(const TObject *obj) const
 {
    if (!obj->IsSortable()) {
       Error("FindObject", "object must be sortable");
-      return 0;
+      return nullptr;
    }
    if (!fRoot)
-      return 0;
+      return nullptr;
    else {
       TBtNode *loc;
       Int_t idx;
@@ -306,14 +306,14 @@ Int_t TBtree::IdxAdd(const TObject &obj)
       return -1;
    }
    if (!fRoot) {
-      fRoot = new TBtLeafNode(0, &obj, this);
-      R__ASSERT(fRoot != 0);
+      fRoot = new TBtLeafNode(nullptr, &obj, this);
+      R__ASSERT(fRoot != nullptr);
       IncrNofKeys();
       r = 0;
    } else {
       TBtNode *loc;
       int idx;
-      if (fRoot->Found(&obj, &loc, &idx) != 0) {
+      if (fRoot->Found(&obj, &loc, &idx)) {
          // loc and idx are set to either where the object
          // was found, or where it should go in the Btree.
          // Nothing is here now, but later we might give the user
@@ -324,7 +324,7 @@ Int_t TBtree::IdxAdd(const TObject &obj)
          R__CHECK(loc->fIsLeaf);
       }
       if (loc->fIsLeaf) {
-         if (loc->fParent == 0)
+         if (!loc->fParent)
             r = idx;
          else
             r = idx + loc->fParent->FindRankUp(loc);
@@ -347,7 +347,7 @@ void TBtree::Init(Int_t order)
       Warning("Init", "order must be at least 3");
       order = 3;
    }
-   fRoot   = 0;
+   fRoot   = nullptr;
    fOrder  = order;
    fOrder2 = 2 * (fOrder+1);
    fLeafMaxIndex  = fOrder2 - 1;     // fItem[0..fOrder2-1]
@@ -409,16 +409,16 @@ TObject *TBtree::Remove(TObject *obj)
 {
    if (!obj->IsSortable()) {
       Error("Remove", "object must be sortable");
-      return 0;
+      return nullptr;
    }
    if (!fRoot)
-      return 0;
+      return nullptr;
 
    TBtNode *loc;
    Int_t idx;
    TObject *ob = fRoot->Found(obj, &loc, &idx);
    if (!ob)
-      return 0;
+      return nullptr;
    loc->Remove(idx);
    return ob;
 }
@@ -430,8 +430,8 @@ TObject *TBtree::Remove(TObject *obj)
 void TBtree::RootIsFull()
 {
    TBtNode *oldroot = fRoot;
-   fRoot = new TBtInnerNode(0, this, oldroot);
-   R__ASSERT(fRoot != 0);
+   fRoot = new TBtInnerNode(nullptr, this, oldroot);
+   R__ASSERT(fRoot != nullptr);
    oldroot->Split();
 }
 
@@ -444,12 +444,12 @@ void TBtree::RootIsEmpty()
       TBtLeafNode *lroot = (TBtLeafNode*)fRoot;
       R__CHECK(lroot->Psize() == 0);
       delete lroot;
-      fRoot = 0;
+      fRoot = nullptr;
    } else {
       TBtInnerNode *iroot = (TBtInnerNode*)fRoot;
       R__CHECK(iroot->Psize() == 0);
       fRoot = iroot->GetTree(0);
-      fRoot->fParent = 0;
+      fRoot->fParent = nullptr;
       delete iroot;
    }
 }
@@ -496,8 +496,8 @@ Item stored in inner nodes of a TBtree.
 TBtItem::TBtItem()
 {
    fNofKeysInTree = 0;
-   fTree = 0;
-   fKey  = 0;
+   fTree = nullptr;
+   fKey  = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -543,8 +543,8 @@ TBtNode::TBtNode(Int_t isleaf, TBtInnerNode *p, TBtree *t)
    fLast   = -1;
    fIsLeaf = isleaf;
    fParent = p;
-   if (p == 0) {
-      R__CHECK(t != 0);
+   if (!p) {
+      R__CHECK(t != nullptr);
       fTree = t;
    } else
 #ifdef cxxbug
@@ -646,7 +646,7 @@ TObject *TBtreeIter::Next()
       if (fCursor >= 0)
          return (*fTree)[fCursor--];
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -689,7 +689,7 @@ TBtInnerNode::TBtInnerNode(TBtInnerNode *p, TBtree *t) : TBtNode(0,p,t)
 {
    const Int_t index = MaxIndex() + 1;
    fItem = new TBtItem[ index ];
-   if (fItem == 0)
+   if (!fItem)
       ::Fatal("TBtInnerNode::TBtInnerNode", "no more memory");
 }
 
@@ -701,9 +701,9 @@ TBtInnerNode::TBtInnerNode(TBtInnerNode *parent, TBtree *tree, TBtNode *oldroot)
                 : TBtNode(0, parent, tree)
 {
    fItem = new TBtItem[MaxIndex()+1];
-   if (fItem == 0)
+   if (!fItem)
       ::Fatal("TBtInnerNode::TBtInnerNode", "no more memory");
-   Append(0, oldroot);
+   Append(nullptr, oldroot);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -851,7 +851,7 @@ void TBtInnerNode::DecrNofKeys(TBtNode *that)
 {
    Int_t i = IndexOf(that);
    fItem[i].fNofKeysInTree--;
-   if (fParent != 0)
+   if (fParent)
       fParent->DecrNofKeys(this);
    else
       fTree->DecrNofKeys();
@@ -893,7 +893,7 @@ Int_t TBtInnerNode::FindRankUp(const TBtNode *that) const
    Int_t sum = 0;
    for (Int_t i = 0; i < l; i++)
       sum += GetNofKeys(i);
-   return sum + l + (fParent == 0 ? 0 : fParent->FindRankUp(this));
+   return sum + l + (!fParent ? 0 : fParent->FindRankUp(this));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -933,7 +933,7 @@ void TBtInnerNode::IncrNofKeys(TBtNode *that)
 {
    Int_t i = IndexOf(that);
    fItem[i].fNofKeysInTree++;
-   if (fParent != 0)
+   if (fParent)
       fParent->IncrNofKeys(this);
    else
       fTree->IncrNofKeys();
@@ -957,7 +957,7 @@ Int_t TBtInnerNode::IndexOf(const TBtNode *that) const
 
 void TBtInnerNode::InformParent()
 {
-   if (fParent == 0) {
+   if (!fParent) {
       // then this is the root of the tree and needs to be split
       // inform the btree.
       R__ASSERT(fTree->fRoot == this);
@@ -978,14 +978,14 @@ void TBtInnerNode::IsFull(TBtNode *that)
 {
    if (that->fIsLeaf) {
       TBtLeafNode *leaf = (TBtLeafNode *)that;
-      TBtLeafNode *left = 0;
-      TBtLeafNode *right= 0;
+      TBtLeafNode *left = nullptr;
+      TBtLeafNode *right= nullptr;
       // split LEAF only if both sibling nodes are full.
       Int_t leafidx = IndexOf(leaf);
       Int_t hasRightSib = (leafidx < fLast) &&
-                           ((right = (TBtLeafNode*)GetTree(leafidx+1)) != 0);
+                           ((right = (TBtLeafNode*)GetTree(leafidx+1)) != nullptr);
       Int_t hasLeftSib  = (leafidx > 0) &&
-                           ((left = (TBtLeafNode*)GetTree(leafidx-1)) != 0);
+                           ((left = (TBtLeafNode*)GetTree(leafidx-1)) != nullptr);
       Int_t rightSibFull = (hasRightSib && right->IsAlmostFull());
       Int_t leftSibFull  = (hasLeftSib  && left->IsAlmostFull());
       if (rightSibFull) {
@@ -1016,12 +1016,12 @@ void TBtInnerNode::IsFull(TBtNode *that)
       TBtInnerNode *inner = (TBtInnerNode *)that;
       // split INNER only if both sibling nodes are full
       Int_t inneridx = IndexOf(inner);
-      TBtInnerNode *left = 0;
-      TBtInnerNode *right= 0;
+      TBtInnerNode *left = nullptr;
+      TBtInnerNode *right = nullptr;
       Int_t hasRightSib = (inneridx < fLast) &&
-                           ((right = (TBtInnerNode*)GetTree(inneridx+1)) != 0);
+                           ((right = (TBtInnerNode*)GetTree(inneridx+1)) != nullptr);
       Int_t hasLeftSib  = (inneridx > 0) &&
-                           ((left=(TBtInnerNode*)GetTree(inneridx-1)) != 0);
+                           ((left=(TBtInnerNode*)GetTree(inneridx-1)) != nullptr);
       Int_t rightSibFull = (hasRightSib && right->IsAlmostFull());
       Int_t leftSibFull  = (hasLeftSib  && left->IsAlmostFull());
       if (rightSibFull) {
@@ -1057,14 +1057,14 @@ void TBtInnerNode::IsLow(TBtNode *that)
 {
    if (that->fIsLeaf) {
       TBtLeafNode *leaf = (TBtLeafNode *)that;
-      TBtLeafNode *left = 0;
-      TBtLeafNode *right= 0;
+      TBtLeafNode *left = nullptr;
+      TBtLeafNode *right = nullptr;
       // split LEAF only if both sibling nodes are full.
       Int_t leafidx = IndexOf(leaf);
       Int_t hasRightSib = (leafidx < fLast) &&
-                           ((right = (TBtLeafNode*)GetTree(leafidx+1)) != 0);
+                           ((right = (TBtLeafNode*)GetTree(leafidx+1)) != nullptr);
       Int_t hasLeftSib  = (leafidx > 0) &&
-                           ((left = (TBtLeafNode*)GetTree(leafidx-1)) != 0);
+                           ((left = (TBtLeafNode*)GetTree(leafidx-1)) != nullptr);
       if (hasRightSib && (leaf->Psize() + right->Vsize()) >= leaf->MaxPsize()) {
          // then cannot merge,
          // and balancing this and rightsib will leave them both
@@ -1085,12 +1085,12 @@ void TBtInnerNode::IsLow(TBtNode *that)
       TBtInnerNode *inner = (TBtInnerNode *)that;
 
       Int_t inneridx = IndexOf(inner);
-      TBtInnerNode *left = 0;
-      TBtInnerNode *right= 0;
+      TBtInnerNode *left = nullptr;
+      TBtInnerNode *right = nullptr;
       Int_t hasRightSib = (inneridx < fLast) &&
-                           ((right = (TBtInnerNode*)GetTree(inneridx+1)) != 0);
+                           ((right = (TBtInnerNode*)GetTree(inneridx+1)) != nullptr);
       Int_t hasLeftSib  = (inneridx > 0) &&
-                           ((left = (TBtInnerNode*)GetTree(inneridx-1)) != 0);
+                           ((left = (TBtInnerNode*)GetTree(inneridx-1)) != nullptr);
       if (hasRightSib && (inner->Psize() + right->Vsize()) >= inner->MaxPsize()) {
          // cannot merge
          inner->BalanceWith(right, inneridx+1);
@@ -1153,14 +1153,14 @@ TObject *TBtInnerNode::operator[](Int_t idx) const
       if (idx == r) {
          if (j == fLast) {
             ::Error("TBtInnerNode::operator[]", "should not happen, 0 returned");
-            return 0;
+            return nullptr;
          } else
             return GetKey(j+1);
       }
       idx -= r+1; // +1 because of the key in the node
    }
    ::Error("TBtInnerNode::operator[]", "should not happen, 0 returned");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1248,7 +1248,7 @@ void TBtInnerNode::RemoveItem(Int_t index)
       fItem[to] = fItem[to+1];
    fLast--;
    if (IsLow()) {
-      if (fParent == 0) {
+      if (!fParent) {
          // then this is the root; when only one child, make the child the root
          if (Psize() == 0)
             fTree->RootIsEmpty();
@@ -1277,7 +1277,7 @@ void TBtInnerNode::ShiftLeft(Int_t cnt)
 void TBtInnerNode::Split()
 {
    TBtInnerNode *newnode = new TBtInnerNode(fParent);
-   R__CHECK(newnode != 0);
+   R__CHECK(newnode != nullptr);
    fParent->Append(GetKey(fLast), newnode);
    newnode->AppendFrom(this, fLast, fLast);
    fLast--;
@@ -1331,7 +1331,7 @@ void TBtInnerNode::SplitWith(TBtInnerNode *rightsib, Int_t keyidx)
    R__CHECK(noFromThis >= 0);
    R__CHECK(noFromSib >= 1);
    TBtInnerNode *newNode = new TBtInnerNode(fParent);
-   R__CHECK(newNode != 0);
+   R__CHECK(newNode != nullptr);
    if (noFromThis > 0) {
       newNode->Append(GetItem(fLast));
       fParent->AddElt(keyidx, GetKey(fLast--), newNode);
@@ -1365,8 +1365,8 @@ TBtLeafNode::TBtLeafNode(TBtInnerNode *p, const TObject *obj, TBtree *t): TBtNod
    fItem = new TObject *[MaxIndex()+1];
    memset(fItem, 0, (MaxIndex()+1)*sizeof(TObject*));
 
-   R__ASSERT(fItem != 0);
-   if (obj != 0)
+   R__ASSERT(fItem != nullptr);
+   if (obj)
       fItem[++fLast] = (TObject*)obj;   // cast const away
 }
 
@@ -1393,14 +1393,14 @@ void TBtLeafNode::Add(const TObject *obj, Int_t index)
    fLast++;
 
    // check for overflow
-   if (fParent == 0)
+   if (!fParent)
       fTree->IncrNofKeys();
    else
       fParent->IncrNofKeys(this);
 
    if (IsFull()) {
       // it's full; tell parent node
-      if (fParent == 0) {
+      if (!fParent) {
          // this occurs when this leaf is the only node in the
          // btree, and this->fTree->fRoot == this
          R__CHECK(fTree->fRoot == this);
@@ -1519,12 +1519,12 @@ TObject *TBtLeafNode::Found(const TObject *what, TBtNode **which, Int_t *where)
       if (fItem[i]->Compare(what) > 0) {
          *which = this;
          *where = i;
-         return 0;
+         return nullptr;
       }
    }
    *which = this;
    *where = fLast+1;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1659,12 +1659,12 @@ void TBtLeafNode::Remove(Int_t index)
    for (Int_t to = index; to < fLast; to++)
       fItem[to] = fItem[to+1];
    fLast--;
-   if (fParent == 0)
+   if (!fParent)
       fTree->DecrNofKeys();
    else
       fParent->DecrNofKeys(this);
    if (IsLow()) {
-      if (fParent == 0) {
+      if (!fParent) {
          // then this is the root; when no keys left, inform the tree
          if (Psize() == 0)
             fTree->RootIsEmpty();
@@ -1693,7 +1693,7 @@ void TBtLeafNode::ShiftLeft(Int_t cnt)
 void TBtLeafNode::Split()
 {
    TBtLeafNode *newnode = new TBtLeafNode(fParent);
-   R__ASSERT(newnode != 0);
+   R__ASSERT(newnode != nullptr);
    fParent->Append(fItem[fLast--], newnode);
    fParent->SetNofKeys(0, fParent->GetTree(0)->NofKeys());
    fParent->SetNofKeys(1, fParent->GetTree(1)->NofKeys());
@@ -1716,7 +1716,7 @@ void TBtLeafNode::SplitWith(TBtLeafNode *rightsib, Int_t keyidx)
    R__CHECK(noFromThis >= 0);
    R__CHECK(noFromSib >= 1);
    TBtLeafNode *newNode  = new TBtLeafNode(fParent);
-   R__ASSERT(newNode != 0);
+   R__ASSERT(newNode != nullptr);
    fParent->AddElt(keyidx, fItem[fLast--], newNode);
    fParent->SetNofKeys(keyidx, 0);
    fParent->DecNofKeys(keyidx-1);
