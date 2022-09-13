@@ -348,7 +348,7 @@ TObject *TList::After(const TObject *obj) const
    if (t && t->Next())
       return t->Next()->GetObject();
    else
-      return 0;
+      return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -361,7 +361,7 @@ TObject *TList::At(Int_t idx) const
 
    TObjLink *lnk = LinkAt(idx);
    if (lnk) return lnk->GetObject();
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -388,7 +388,7 @@ TObject *TList::Before(const TObject *obj) const
    if (t && t->Prev())
       return t->Prev()->GetObject();
    else
-      return 0;
+      return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -548,9 +548,9 @@ void TList::Delete(Option_t *option)
    // not, they are supposed to be deleted, so we can as well unregister
    // them from their directory, even if they are stack-based:
    TIter iRemDir(&removeDirectory);
-   TObject* dirRem = 0;
+   TObject* dirRem = nullptr;
    while ((dirRem = iRemDir())) {
-      (*dirRem->IsA()->GetDirectoryAutoAdd())(dirRem, 0);
+      (*dirRem->IsA()->GetDirectoryAutoAdd())(dirRem, nullptr);
    }
    Changed();
 }
@@ -634,7 +634,7 @@ TObjLink *TList::FindLink(const TObject *obj, Int_t &idx) const
 
    R__COLLECTION_READ_LOCKGUARD(ROOT::gCoreMutex);
 
-   if (!fFirst) return 0;
+   if (!fFirst) return nullptr;
 
    TObject *object;
    TObjLink *lnk = fFirst.get();
@@ -650,7 +650,7 @@ TObjLink *TList::FindLink(const TObject *obj, Int_t &idx) const
       lnk = lnk->Next();
       idx++;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -662,7 +662,7 @@ TObject *TList::First() const
    R__COLLECTION_READ_GUARD();
 
    if (fFirst) return fFirst->GetObject();
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -684,7 +684,7 @@ TObject **TList::GetObjectRef(const TObject *obj) const
       if (ob->IsEqual(obj)) return lnk->GetObjectRef();
       lnk = lnk->Next();
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -696,7 +696,7 @@ TObject *TList::Last() const
    R__COLLECTION_READ_GUARD();
 
    if (fLast) return fLast->GetObject();
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -823,12 +823,12 @@ TObject *TList::Remove(TObject *obj)
 {
    R__COLLECTION_WRITE_GUARD();
 
-   if (!obj) return 0;
+   if (!obj) return nullptr;
 
    Int_t    idx;
    TObjLink *lnk = FindLink(obj, idx);
 
-   if (!lnk) return 0;
+   if (!lnk) return nullptr;
 
    // return object found, which may be (pointer wise) different than the
    // input object (depending on what IsEqual() is doing)
@@ -871,7 +871,7 @@ TObject *TList::Remove(TObjLink *lnk)
 {
    R__COLLECTION_WRITE_GUARD();
 
-   if (!lnk) return 0;
+   if (!lnk) return nullptr;
 
    R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
@@ -1052,7 +1052,7 @@ ClassImp(TListIter);
 /// is kIterForward. To go backward use kIterBackward.
 
 TListIter::TListIter(const TList *l, Bool_t dir)
-        : fList(l), fCurCursor(0), fCursor(0), fDirection(dir), fStarted(kFALSE)
+        : fList(l), fCurCursor(nullptr), fCursor(nullptr), fDirection(dir), fStarted(kFALSE)
 {
    R__COLLECTION_ITER_GUARD(fList);
 }
@@ -1110,7 +1110,7 @@ TListIter &TListIter::operator=(const TListIter &rhs)
 
 TObject *TListIter::Next()
 {
-   if (!fList) return 0;
+   if (!fList) return nullptr;
 
    R__COLLECTION_ITER_GUARD(fList);
 
@@ -1133,7 +1133,7 @@ TObject *TListIter::Next()
    }
 
    if (fCurCursor) return fCurCursor->GetObject();
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -79,7 +79,7 @@ public:
    Int_t              GetSize(Int_t pid) const {return fAllocSize[GetInternalIdxForPID(pid)];}
    Int_t              GetN(Int_t pid) const {return fN[GetInternalIdxForPID(pid)];}
    TObject           *GetOwner() const {return fOwner;}
-   TObject           *GetParent(Int_t uid, TProcessID* context = 0) const;
+   TObject           *GetParent(Int_t uid, TProcessID *context = nullptr) const;
    TObjArray         *GetParents() const {return fParents;}
    UInt_t             GetUID() const {return fUID;}
    TProcessID        *GetUIDContext() const {return fUIDContext;}
@@ -88,7 +88,7 @@ public:
    virtual void       Reset(Option_t * /* option */ ="");
    virtual Int_t      SetParent(const TObject* parent, Int_t branchID);
    static  void       SetRefTable(TRefTable *table);
-   virtual void       SetUID(UInt_t uid, TProcessID* context = 0) {fUID=uid; fUIDContext = context;}
+   virtual void       SetUID(UInt_t uid, TProcessID *context = nullptr) { fUID = uid; fUIDContext = context; }
 
    ClassDefOverride(TRefTable,3)  //Table of referenced objects during an I/O operation
 };

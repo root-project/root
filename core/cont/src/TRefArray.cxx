@@ -197,7 +197,7 @@ TRefArray& TRefArray::operator=(const TRefArray &a)
 TRefArray::~TRefArray()
 {
    if (fUIDs) delete [] fUIDs;
-   fPID  = 0;
+   fPID  = nullptr;
    fUIDs = nullptr;
    fSize = 0;
 }
@@ -400,10 +400,10 @@ Int_t  TRefArray::AddAtFree(TObject *obj)
 
 TObject *TRefArray::After(const TObject *obj) const
 {
-   if (!obj || !fPID) return 0;
+   if (!obj || !fPID) return nullptr;
 
    Int_t idx = IndexOf(obj) - fLowerBound;
-   if (idx == -1 || idx == fSize-1) return 0;
+   if (idx == -1 || idx == fSize-1) return nullptr;
 
    return fPID->GetObjectWithID(fUIDs[idx+1]);
 }
@@ -413,10 +413,10 @@ TObject *TRefArray::After(const TObject *obj) const
 
 TObject *TRefArray::Before(const TObject *obj) const
 {
-   if (!obj || !fPID) return 0;
+   if (!obj || !fPID) return nullptr;
 
    Int_t idx = IndexOf(obj) - fLowerBound;
-   if (idx == -1 || idx == 0) return 0;
+   if (idx == -1 || idx == 0) return nullptr;
 
    return fPID->GetObjectWithID(fUIDs[idx-1]);
 }
@@ -507,7 +507,7 @@ TObject *TRefArray::GetFromTable(Int_t idx) const
       table->Notify();
       return fPID->GetObjectWithID(fUIDs[idx]);
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -577,7 +577,7 @@ TObject *TRefArray::First() const
 TObject *TRefArray::Last() const
 {
    if (fLast == -1)
-      return 0;
+      return nullptr;
    else
       return fPID->GetObjectWithID(fUIDs[GetAbsLast()]);
 }
@@ -635,7 +635,7 @@ TObject **TRefArray::GetObjectRef(const TObject *) const
 {
    //Int_t index = IndexOf(obj);
    //return &fCont[index];
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -724,13 +724,13 @@ Bool_t TRefArray::OutOfBoundsError(const char *where, Int_t i) const
 
 TObject *TRefArray::RemoveAt(Int_t idx)
 {
-   if (!BoundsOk("RemoveAt", idx)) return 0;
+   if (!BoundsOk("RemoveAt", idx)) return nullptr;
 
    int i = idx-fLowerBound;
 
-   TObject *obj = 0;
+   TObject *obj = nullptr;
    if (fUIDs[i]) {
-      if (!TProcessID::IsValid(fPID)) return 0;
+      if (!TProcessID::IsValid(fPID)) return nullptr;
       obj = fPID->GetObjectWithID(fUIDs[i]);
       fUIDs[i] = 0;
       // recalculate array size
@@ -749,11 +749,11 @@ TObject *TRefArray::RemoveAt(Int_t idx)
 
 TObject *TRefArray::Remove(TObject *obj)
 {
-   if (!obj) return 0;
+   if (!obj) return nullptr;
 
    Int_t idx = IndexOf(obj) - fLowerBound;
 
-   if (idx == -1) return 0;
+   if (idx == -1) return nullptr;
 
    TObject *ob = fPID->GetObjectWithID(fUIDs[idx]);
    fUIDs[idx] = 0;
@@ -903,7 +903,7 @@ TRefArrayIter &TRefArrayIter::operator=(const TRefArrayIter &rhs)
 TObject *TRefArrayIter::Next()
 {
    if (fDirection == kIterForward) {
-      for ( ; fCursor < fArray->Capacity() && fArray->At(fCursor+fArray->LowerBound()) == 0;
+      for ( ; fCursor < fArray->Capacity() && !fArray->At(fCursor+fArray->LowerBound());
               fCursor++) { }
 
       fCurCursor = fCursor;
@@ -912,7 +912,7 @@ TObject *TRefArrayIter::Next()
          return fArray->At(fCurCursor+fArray->LowerBound());
       }
    } else {
-      for ( ; fCursor >= 0 && fArray->At(fCursor) == 0;
+      for ( ; fCursor >= 0 && !fArray->At(fCursor);
               fCursor--) { }
 
       fCurCursor = fCursor;
@@ -921,7 +921,7 @@ TObject *TRefArrayIter::Next()
          return fArray->At(fCurCursor+fArray->LowerBound());
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
