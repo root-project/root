@@ -65,7 +65,7 @@ protected:
    TEnum  *Get(DeclId_t id, const char *name);
 
 public:
-   TListOfEnums(TClass *cl = 0);
+   TListOfEnums(TClass *cl = nullptr);
    ~TListOfEnums() override;
 
    TEnum     *Find(DeclId_t id) const;
