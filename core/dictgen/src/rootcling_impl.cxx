@@ -4398,7 +4398,7 @@ int RootClingMain(int argc,
       const clang::LangOptions& LangOpts
          = interp.getCI()->getASTContext().getLangOpts();
 #define LANGOPT(Name, Bits, Default, Description) \
-      ROOT::TMetaUtils::Info(0, "%s = %d // %s\n", #Name, (int)LangOpts.Name, Description);
+      ROOT::TMetaUtils::Info(nullptr, "%s = %d // %s\n", #Name, (int)LangOpts.Name, Description);
 #define ENUM_LANGOPT(Name, Type, Bits, Default, Description)
 #include "clang/Basic/LangOptions.def"
       ROOT::TMetaUtils::Info(nullptr, "==== END interpreter configuration ====\n\n");

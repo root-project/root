@@ -103,7 +103,7 @@ private:
                 const std::string& identifier,
                 bool linkOn,
                 bool requestOnlyTClass,
-                Options *option = 0);
+                Options *option = nullptr);
 
    bool ProcessFunctionPrototype(std::string &proto, bool &name); // transforms the function prototypes to a more unified form
    bool ProcessOperators(std::string &pattern); // transforms the operators statement to the suitable function pattern
