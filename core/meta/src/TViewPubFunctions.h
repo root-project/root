@@ -101,7 +101,7 @@ protected:
    Bool_t       fStarted;      //iteration started
    Bool_t       fDirection;    //iteration direction
 
-   TViewPubFunctionsIter() : fView(0), fClassIter((TCollection *)0), fFuncIter((TCollection *)0), fStarted(kFALSE), fDirection(kIterForward) { }
+   TViewPubFunctionsIter() : fView(nullptr), fClassIter((TCollection *)nullptr), fFuncIter((TCollection *)nullptr), fStarted(kFALSE), fDirection(kIterForward) {}
 
 public:
    using iterator_category = std::bidirectional_iterator_tag;

@@ -86,7 +86,7 @@ private:
    TProtoClass(const TProtoClass &) = delete;
    TProtoClass &operator=(const TProtoClass &) = delete;
 
-   const char * GetClassName(Int_t index) const { return (index >= 0) ? fDepClasses[index].Data() : 0; }
+   const char * GetClassName(Int_t index) const { return (index >= 0) ? fDepClasses[index].Data() : nullptr; }
 
    // compute index of data member in the list
    static Int_t DataMemberIndex(TClass * cl, const char * name);
