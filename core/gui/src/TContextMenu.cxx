@@ -59,13 +59,13 @@ ClassImp(TContextMenu);
 TContextMenu::TContextMenu(const char *name, const char *title)
              : TNamed(name, title)
 {
-   fSelectedObject   = 0;
-   fCalledObject     = 0;
-   fSelectedMethod   = 0;
-   fBrowser          = 0;
-   fSelectedPad      = 0;
-   fSelectedCanvas   = 0;
-   fSelectedMenuItem = 0;
+   fSelectedObject   = nullptr;
+   fCalledObject     = nullptr;
+   fSelectedMethod   = nullptr;
+   fBrowser          = nullptr;
+   fSelectedPad      = nullptr;
+   fSelectedCanvas   = nullptr;
+   fSelectedMenuItem = nullptr;
 
    fContextMenuImp = gGuiFactory->CreateContextMenuImp(this, name, title);
 }
@@ -77,11 +77,11 @@ TContextMenu::~TContextMenu()
 {
    delete fContextMenuImp;
 
-   fSelectedMethod   = 0;
-   fCalledObject     = 0;
-   fSelectedObject   = 0;
-   fSelectedMenuItem = 0;
-   fContextMenuImp   = 0;
+   fSelectedMethod   = nullptr;
+   fCalledObject     = nullptr;
+   fSelectedObject   = nullptr;
+   fSelectedMenuItem = nullptr;
+   fContextMenuImp   = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -94,7 +94,7 @@ void TContextMenu::Action(TObject *object, TMethod *method)
 {
    if (method) {
       SetMethod( method );
-      SetSelectedMenuItem(0);
+      SetSelectedMenuItem(nullptr);
       SetCalledObject(object);
 
       if (method->GetListOfMethodArgs()->First())
@@ -116,7 +116,7 @@ void TContextMenu::Action(TObject *object, TMethod *method)
 void TContextMenu::Action(TClassMenuItem *menuitem)
 {
    TObject* object;
-   TMethod* method = 0;
+   TMethod* method = nullptr;
 
    SetSelectedMenuItem( menuitem );
 
@@ -128,7 +128,7 @@ void TContextMenu::Action(TClassMenuItem *menuitem)
       // If object deleted, remove from popup and return
       if (!(object->TestBit(kNotDeleted))) {
          menuitem->SetType(TClassMenuItem::kPopupSeparator);
-         menuitem->SetCall(0,"");
+         menuitem->SetCall(nullptr, "");
          return;
       }
 
@@ -183,10 +183,10 @@ void TContextMenu::Action(TClassMenuItem *menuitem)
                                  //menuitem->GetArgs());
       if (function) {
          SetMethod(function);
-         SetCalledObject(0);
+         SetCalledObject(nullptr);
          if ( (function->GetNargs() && menuitem->GetSelfObjectPos() < 0) ||
                function->GetNargs() > 1) {
-            fContextMenuImp->Dialog(0,function);
+            fContextMenuImp->Dialog(nullptr, function);
          } else {
             char* cmd;
             if (menuitem->GetSelfObjectPos() < 0) {
@@ -410,7 +410,7 @@ void TContextMenu::Execute(TObject *object, TFunction *method, TObjArray *params
 
 void TContextMenu::Popup(Int_t x, Int_t y, TObject *obj, TVirtualPad *c, TVirtualPad *p)
 {
-   SetBrowser(0);
+   SetBrowser(nullptr);
    SetObject(obj);
    SetCanvas(c);
    SetPad(p);
@@ -425,8 +425,8 @@ void TContextMenu::Popup(Int_t x, Int_t y, TObject *obj, TBrowser *b)
 {
    SetBrowser(b);
    SetObject(obj);
-   SetCanvas(0);
-   SetPad(0);
+   SetCanvas(nullptr);
+   SetPad(nullptr);
 
    DisplayPopUp(x,y);
 }
