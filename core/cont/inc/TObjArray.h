@@ -122,7 +122,7 @@ private:
    Int_t             fCursor;    //next position in array
    Bool_t            fDirection; //iteration direction
 
-   TObjArrayIter() : fArray(0), fCurCursor(0), fCursor(0), fDirection(kIterForward) { }
+   TObjArrayIter() : fArray(nullptr), fCurCursor(0), fCursor(0), fDirection(kIterForward) { }
 
 public:
    using iterator_category = std::bidirectional_iterator_tag; // TODO: ideally it should be a randomaccess_iterator_tag
@@ -167,7 +167,7 @@ inline TObject *TObjArray::At(Int_t i) const
    int j = i-fLowerBound;
    if (j >= 0 && j < fSize) return fCont[j];
    BoundsOk("At", i);
-   return 0;
+   return nullptr;
 }
 
 #endif

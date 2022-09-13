@@ -68,7 +68,7 @@ TObjArray::TObjArray(Int_t s, Int_t lowerBound)
       s = TCollection::kInitCapacity;
    } else if (s == 0)
       s = TCollection::kInitCapacity;
-   fCont = 0;
+   fCont = nullptr;
    Init(s, lowerBound);
 }
 
@@ -77,7 +77,7 @@ TObjArray::TObjArray(Int_t s, Int_t lowerBound)
 
 TObjArray::TObjArray(const TObjArray &a) : TSeqCollection()
 {
-   fCont = 0;
+   fCont = nullptr;
    Init(a.fSize, a.fLowerBound);
 
    for (Int_t i = 0; i < fSize; i++)
@@ -97,7 +97,7 @@ TObjArray::~TObjArray()
       Delete();
 
    TStorage::Dealloc(fCont);
-   fCont = 0;
+   fCont = nullptr;
    fSize = 0;
 }
 
@@ -153,7 +153,7 @@ TObject *TObjArray::operator[](Int_t i) const
    int j = i-fLowerBound;
    if (j >= 0 && j < fSize) return fCont[j];
    BoundsOk("operator[] const", i);
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -289,12 +289,12 @@ Int_t  TObjArray::AddAtFree(TObject *obj)
 
 TObject *TObjArray::After(const TObject *obj) const
 {
-   if (!obj) return 0;
+   if (!obj) return nullptr;
 
    R__COLLECTION_READ_LOCKGUARD(ROOT::gCoreMutex);
 
    Int_t idx = IndexOf(obj) - fLowerBound;
-   if (idx == -1 || idx == fSize-1) return 0;
+   if (idx == -1 || idx == fSize-1) return nullptr;
 
    return fCont[idx+1];
 }
@@ -304,12 +304,12 @@ TObject *TObjArray::After(const TObject *obj) const
 
 TObject *TObjArray::Before(const TObject *obj) const
 {
-   if (!obj) return 0;
+   if (!obj) return nullptr;
 
    R__COLLECTION_READ_LOCKGUARD(ROOT::gCoreMutex);
 
    Int_t idx = IndexOf(obj) - fLowerBound;
-   if (idx == -1 || idx == 0) return 0;
+   if (idx == -1 || idx == 0) return nullptr;
 
    return fCont[idx-1];
 }
@@ -347,7 +347,7 @@ void TObjArray::Compress()
    fLast = j - 1;
 
    for ( ; j < fSize; j++)
-      fCont[j] = 0;
+      fCont[j] = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -374,7 +374,7 @@ void TObjArray::Delete(Option_t * /* opt */)
    for (Int_t i = 0; i < fSize; i++) {
       if (fCont[i] && fCont[i]->IsOnHeap()) {
          TCollection::GarbageCollect(fCont[i]);
-         fCont[i] = 0;
+         fCont[i] = nullptr;
       }
    }
 
@@ -419,9 +419,9 @@ TObject *TObjArray::FindObject(const char *name) const
    Int_t nobjects = GetAbsLast()+1;
    for (Int_t i = 0; i < nobjects; ++i) {
       TObject *obj = fCont[i];
-      if (obj && 0==strcmp(name, obj->GetName())) return obj;
+      if (obj && 0 == strcmp(name, obj->GetName())) return obj;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -440,7 +440,7 @@ TObject *TObjArray::FindObject(const TObject *iobj) const
       TObject *obj = fCont[i];
       if (obj && obj->IsEqual(iobj)) return obj;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -508,7 +508,7 @@ TObject *TObjArray::Last() const
    R__COLLECTION_READ_LOCKGUARD(ROOT::gCoreMutex);
 
    if (fLast == -1)
-      return 0;
+      return nullptr;
    else
       return fCont[GetAbsLast()];
 }
@@ -630,7 +630,7 @@ void TObjArray::Init(Int_t s, Int_t lowerBound)
 
    if (fCont && fSize != s) {
       TStorage::Dealloc(fCont);
-      fCont = 0;
+      fCont = nullptr;
    }
 
    fSize = s;
@@ -676,12 +676,12 @@ void TObjArray::RecursiveRemove(TObject *obj)
 
    for (int i = 0; i < fSize; i++) {
       if (fCont[i] && fCont[i]->TestBit(kNotDeleted) && fCont[i]->IsEqual(obj)) {
-         fCont[i] = 0;
+         fCont[i] = nullptr;
          // recalculate array size
          if (i == fLast)
             do {
                fLast--;
-            } while (fLast >= 0 && fCont[fLast] == 0);
+            } while (fLast >= 0 && !fCont[fLast]);
          Changed();
       } else if (fCont[i] && fCont[i]->TestBit(kNotDeleted))
          fCont[i]->RecursiveRemove(obj);
@@ -693,21 +693,21 @@ void TObjArray::RecursiveRemove(TObject *obj)
 
 TObject *TObjArray::RemoveAt(Int_t idx)
 {
-   if (!BoundsOk("RemoveAt", idx)) return 0;
+   if (!BoundsOk("RemoveAt", idx)) return nullptr;
 
    R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
    int i = idx-fLowerBound;
 
-   TObject *obj = 0;
+   TObject *obj = nullptr;
    if (fCont[i]) {
       obj = fCont[i];
-      fCont[i] = 0;
+      fCont[i] = nullptr;
       // recalculate array size
       if (i == fLast)
          do {
             fLast--;
-         } while (fLast >= 0 && fCont[fLast] == 0);
+         } while (fLast >= 0 && !fCont[fLast]);
       Changed();
    }
    return obj;
@@ -718,21 +718,21 @@ TObject *TObjArray::RemoveAt(Int_t idx)
 
 TObject *TObjArray::Remove(TObject *obj)
 {
-   if (!obj) return 0;
+   if (!obj) return nullptr;
 
    R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
    Int_t idx = IndexOf(obj) - fLowerBound;
 
-   if (idx == -1) return 0;
+   if (idx == -1) return nullptr;
 
    TObject *ob = fCont[idx];
-   fCont[idx] = 0;
+   fCont[idx] = nullptr;
    // recalculate array size
    if (idx == fLast)
       do {
          fLast--;
-      } while (fLast >= 0 && fCont[fLast] == 0);
+      } while (fLast >= 0 && !fCont[fLast]);
    Changed();
    return ob;
 }
@@ -753,7 +753,7 @@ void TObjArray::RemoveRange(Int_t idx1, Int_t idx2)
    Bool_t change = kFALSE;
    for (TObject **obj = fCont+idx1; obj <= fCont+idx2; obj++) {
       if (*obj) {
-         *obj = 0;
+         *obj = nullptr;
          change = kTRUE;
       }
    }
@@ -761,7 +761,7 @@ void TObjArray::RemoveRange(Int_t idx1, Int_t idx2)
    // recalculate array size
    if (change) Changed();
    if (idx1 < fLast || fLast > idx2) return;
-   do { fLast--; } while (fLast >= 0 && fCont[fLast] == 0);
+   do { fLast--; } while (fLast >= 0 && !fCont[fLast]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -931,7 +931,7 @@ TObjArrayIter &TObjArrayIter::operator=(const TObjArrayIter &rhs)
 TObject *TObjArrayIter::Next()
 {
    if (fDirection == kIterForward) {
-      for ( ; fCursor < fArray->Capacity() && fArray->fCont[fCursor] == 0;
+      for ( ; fCursor < fArray->Capacity() && !fArray->fCont[fCursor];
               fCursor++) { }
 
       fCurCursor = fCursor;
@@ -939,7 +939,7 @@ TObject *TObjArrayIter::Next()
          return fArray->fCont[fCursor++];
       }
    } else {
-      for ( ; fCursor >= 0 && fArray->fCont[fCursor] == 0;
+      for ( ; fCursor >= 0 && !fArray->fCont[fCursor];
               fCursor--) { }
 
       fCurCursor = fCursor;
@@ -947,7 +947,7 @@ TObject *TObjArrayIter::Next()
          return fArray->fCont[fCursor--];
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -76,7 +76,7 @@ inline Bool_t TObjectTable::HighWaterMark()
    { return (Bool_t) (fTally >= ((3*fSize)/4)); }
 
 inline Bool_t TObjectTable::PtrIsValid(TObject *op)
-   { return fTable[FindElement(op)] != 0; }
+   { return fTable[FindElement(op)] != nullptr; }
 
 
 R__EXTERN TObjectTable *gObjectTable;

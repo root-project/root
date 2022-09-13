@@ -60,7 +60,7 @@ namespace ROOT {
    class TClassRec {
    public:
       TClassRec(TClassRec *next) :
-        fName(0), fId(0), fDict(0), fInfo(0), fProto(0), fNext(next)
+        fName(nullptr), fId(0), fDict(nullptr), fInfo(nullptr), fProto(nullptr), fNext(next)
       {}
 
       ~TClassRec() {
@@ -120,9 +120,8 @@ namespace ROOT {
       }
 
       mapped_type Find(const key_type &key) const {
-
          IdMap_t::const_iterator iter = fMap.find(key);
-         mapped_type cl = 0;
+         mapped_type cl = nullptr;
          if (iter != fMap.end()) cl = iter->second;
          return cl;
       }
@@ -428,8 +427,8 @@ void TClassTable::Add(TProtoClass *proto)
    r->fName = StrDup(cname);
    r->fId   = 0;
    r->fBits = 0;
-   r->fDict = 0;
-   r->fInfo = 0;
+   r->fDict = nullptr;
+   r->fInfo = nullptr;
    r->fProto= proto;
 
    fgSorted = kFALSE;

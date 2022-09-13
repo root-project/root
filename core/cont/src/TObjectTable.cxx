@@ -109,7 +109,7 @@ TObjectTable::TObjectTable(Int_t tableSize)
 
 TObjectTable::~TObjectTable()
 {
-   delete [] fTable; fTable = 0;
+   delete [] fTable; fTable = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -154,7 +154,7 @@ void TObjectTable::Add(TObject *op)
       return;
 
    Int_t slot = FindElement(op);
-   if (fTable[slot] == 0) {
+   if (!fTable[slot]) {
       fTable[slot] = op;
       fTally++;
       if (HighWaterMark())
@@ -197,7 +197,7 @@ void TObjectTable::Delete(Option_t *)
    for (int i = 0; i < fSize; i++) {
       if (fTable[i]) {
          delete fTable[i];
-         fTable[i] = 0;
+         fTable[i] = nullptr;
       }
    }
    fTally = 0;
@@ -208,7 +208,7 @@ void TObjectTable::Delete(Option_t *)
 
 void TObjectTable::Remove(TObject *op)
 {
-   if (op == 0) {
+   if (!op) {
       Error("Remove", "remove 0 from TObjectTable");
       return;
    }
@@ -217,7 +217,7 @@ void TObjectTable::Remove(TObject *op)
       return;
 
    Int_t i = FindElement(op);
-   if (fTable[i] == 0) {
+   if (!fTable[i]) {
       Warning("Remove", "0x%zx not found at %d", (size_t)op, i);
       for (int j = 0; j < fSize; j++) {
          if (fTable[j] == op) {
@@ -228,7 +228,7 @@ void TObjectTable::Remove(TObject *op)
    }
 
    if (fTable[i]) {
-      fTable[i] = 0;
+      fTable[i] = nullptr;
       FixCollisions(i);
       fTally--;
    }
@@ -242,18 +242,18 @@ void TObjectTable::Remove(TObject *op)
 
 void TObjectTable::RemoveQuietly(TObject *op)
 {
-   if (op == 0) return;
+   if (!op) return;
 
    if (!fTable)
       return;
 
    Int_t i = FindElement(op);
-   if (fTable[i] == 0)
+   if (!fTable[i])
       for (int j = 0; j < fSize; j++)
          if (fTable[j] == op)
             i = j;
 
-   fTable[i] = 0;
+   fTable[i] = nullptr;
    FixCollisions(i);
    fTally--;
 }
@@ -264,7 +264,8 @@ void TObjectTable::RemoveQuietly(TObject *op)
 void TObjectTable::Terminate()
 {
    InstanceStatistics();
-   delete [] fTable; fTable = 0;
+   delete [] fTable;
+   fTable = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -283,7 +284,7 @@ Int_t TObjectTable::FindElement(TObject *op)
    //slot = Int_t(((ULong_t) op >> 2) % fSize);
    slot = Int_t(TString::Hash(&op, sizeof(TObject*)) % fSize);
    for (n = 0; n < fSize; n++) {
-      if ((slotOp = fTable[slot]) == 0)
+      if ((slotOp = fTable[slot]) == nullptr)
          break;
       if (op == slotOp)
          break;
@@ -305,12 +306,12 @@ void TObjectTable::FixCollisions(Int_t index)
       if (oldIndex >= fSize)
          oldIndex = 0;
       nextObject = fTable[oldIndex];
-      if (nextObject == 0)
+      if (!nextObject)
          break;
       nextIndex = FindElement(nextObject);
       if (nextIndex != oldIndex) {
          fTable[nextIndex] = nextObject;
-         fTable[oldIndex] = 0;
+         fTable[oldIndex] = nullptr;
       }
    }
 }
