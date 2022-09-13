@@ -104,13 +104,20 @@ def MakeImagesTree(n, nh, nw):
     bkg.Print()
     f.Close()
 
+hasGPU = ROOT.gSystem.GetFromPipe("root-config --has-tmva-gpu") == "yes"
+hasCPU = ROOT.gSystem.GetFromPipe("root-config --has-tmva-gpu") == "yes"
 
 opt = [1, 1, 1, 1, 1]
-useTMVACNN = opt[0] if len(opt) > 0 or ROOT.gSystem.GetFromPipe("root-config --has-tmva-gpu") == "yes" else False
+useTMVACNN = opt[0] if len(opt) > 0  else False
 useKerasCNN = opt[1] if len(opt) > 1 else False
 useTMVADNN = opt[2] if len(opt) > 2 else False
 useTMVABDT = opt[3] if len(opt) > 3 else False
 usePyTorchCNN = opt[4] if len(opt) > 4 else False
+
+if (not hasCPU and not hasGPU) :
+    ROOT.Warning("TMVA_CNN_Classificaton","ROOT is not supporting tmva-cpu and tmva-gpu skip using TMVA-DNN and TMVA-CNN")
+    useTMVACNN = False
+    useTMVADNN = False
 
 if ROOT.gSystem.GetFromPipe("root-config --has-tmva-pymva") != "yes":
     useKerasCNN = False
@@ -320,41 +327,39 @@ if useTMVADNN:
         "DENSE|100|RELU,BNORM,DENSE|100|RELU,BNORM,DENSE|100|RELU,BNORM,DENSE|100|RELU,DENSE|1|LINEAR"
     )
 
-# Training strategies
-# one can catenate several training strings with different parameters (e.g. learning rates or regularizations
-# parameters) The training string must be concatenated with the `|` delimiter
-trainingString1 = ROOT.TString(
-    "LearningRate=1e-3,Momentum=0.9,Repetitions=1,"
-    "ConvergenceSteps=5,BatchSize=100,TestRepetitions=1,"
-    "WeightDecay=1e-4,Regularization=None,"
-    "Optimizer=ADAM,DropConfig=0.0+0.0+0.0+0."
-)  # + "|" + trainingString2 + ...
-trainingString1 += ",MaxEpochs=" + str(max_epochs)
+    # Training strategies
+    # one can catenate several training strings with different parameters (e.g. learning rates or regularizations
+    # parameters) The training string must be concatenated with the `|` delimiter
+    trainingString1 = ROOT.TString(
+        "LearningRate=1e-3,Momentum=0.9,Repetitions=1,"
+        "ConvergenceSteps=5,BatchSize=100,TestRepetitions=1,"
+        "WeightDecay=1e-4,Regularization=None,"
+        "Optimizer=ADAM,DropConfig=0.0+0.0+0.0+0."
+    )  # + "|" + trainingString2 + ...
+    trainingString1 += ",MaxEpochs=" + str(max_epochs)
 
-# Build now the full DNN Option string
-dnnMethodName = "TMVA_DNN_CPU"
+    # Build now the full DNN Option string
+    dnnMethodName = "TMVA_DNN_CPU"
 
-# use GPU if available
-if ROOT.gSystem.GetFromPipe("root-config --has-tmva-gpu") == "yes":
-    dnnOptions = "GPU"
-    dnnMethodName = "TMVA_DNN_GPU"
-elif ROOT.gSystem.GetFromPipe("root-config --has-tmva-cpu") == "yes":
+    # use GPU if available
     dnnOptions = "CPU"
+    if hasGPU :
+        dnnOptions = "GPU"
+        dnnMethodName = "TMVA_DNN_GPU"
 
-
-factory.BookMethod(
-    loader,
-    TMVA.Types.kDL,
-    dnnMethodName,
-    H=False,
-    V=True,
-    ErrorStrategy="CROSSENTROPY",
-    VarTransform=None,
-    WeightInitialization="XAVIER",
-    Layout=layoutString,
-    TrainingStrategy=trainingString1,
-    Architecture=dnnOptions,
-)
+    factory.BookMethod(
+        loader,
+        TMVA.Types.kDL,
+        dnnMethodName,
+        H=False,
+        V=True,
+        ErrorStrategy="CROSSENTROPY",
+        VarTransform=None,
+        WeightInitialization="XAVIER",
+        Layout=layoutString,
+        TrainingStrategy=trainingString1,
+        Architecture=dnnOptions
+    )
 
 
 ### Book Convolutional Neural Network in TMVA
@@ -396,13 +401,11 @@ if useTMVACNN:
 
     ## New DL (CNN)
     cnnMethodName = "TMVA_CNN_CPU"
-    cnnOptions = None
+    cnnOptions = "CPU"
     # use GPU if available
-    if ROOT.gSystem.GetFromPipe("root-config --has-tmva-gpu") == "yes":
+    if hasGPU:
         cnnOptions = "GPU"
         cnnMethodName = "TMVA_CNN_GPU"
-    elif ROOT.gSystem.GetFromPipe("root-config --has-tmva-cpu") == "yes":
-        cnnOptions = "CPU"
 
     factory.BookMethod(
         loader,
