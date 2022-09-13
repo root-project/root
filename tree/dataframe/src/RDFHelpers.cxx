@@ -25,6 +25,35 @@
 #endif
 #include <stdio.h>
 
+#include <unistd.h>
+#include <iostream>
+
+#if defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#define VC_EXTRALEAN
+#include <Windows.h>
+#elif defined(__linux__)
+#include <sys/ioctl.h>
+#endif // Windows/Linux
+
+// Get terminal size for progress bar
+int get_tty_size() {
+#if defined(_WIN32)
+    int width = 0;
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+    width = (int)(csbi.srWindow.Right-csbi.srWindow.Left+1);
+    return width;
+#elif defined(__linux__)
+    int width = 0;
+    struct winsize w;
+    ioctl(fileno(stdout), TIOCGWINSZ, &w);
+    width = (int)(w.ws_col);
+    return width;
+#endif // Windows/Linux
+}
+
+
 using ROOT::RDF::RResultHandle;
 
 namespace ROOT {
@@ -75,7 +104,7 @@ ProgressHelper::ProgressHelper(std::size_t increment,
     bool useShellColors) :
 fPrintInterval(printInterval),
 fIncrement{increment},
-fBarWidth{progressBarWidth},
+fBarWidth{progressBarWidth = int(get_tty_size()/4)},
 #ifdef _WIN32
 fIsTTY{_isatty(_fileno(stdout)) == 1},
 fUseShellColours{false && useShellColors}
@@ -165,7 +194,70 @@ namespace {
     std::ostream::char_type fFillChar;
   };
 }
+/*
+void ProgressHelper::PrintOut(std::ostream& stream, std::size_t currentEventCount, std::chrono::seconds elapsedSeconds) const {
+  
+  // Print bar
+  const auto maxEvents = ComputeMaxEvents();
+  if (maxEvents == 0)
+    return;
+  RestoreStreamState restore(stream);
 
+  // Make one big string to stream
+  std::string printout;
+
+  const double completion = double(currentEventCount) / maxEvents;
+  const unsigned int nBar = std::min(completion, 1.) * fBarWidth;
+
+  std::string bars(std::max(nBar, 1u), '=');
+  bars.back() = (nBar == fBarWidth) ? '=' : '>';
+    
+  //stream << "\r";
+  printout += "\r";
+  //if (fUseShellColours) stream << "\e[33m";
+  //stream << '|' << std::setfill(' ') << std::setw(fBarWidth) << std::left << bars << "|   ";
+  printout = printout + '|' + bars + "|   ";
+  //if (fUseShellColours) stream << "\e[0m";  
+
+  // Print statistics
+  const auto evtpersec = EvtPerSec();
+  //RestoreStreamState restore(stream);
+
+  //stream << "[" << std::to_string(elapsedSeconds.count()) << "  ";
+  //printout = printout + "[" + std::format("{}", elapsedSeconds) + "  ";
+  // Event counts:
+  //if (fUseShellColours) stream << "\e[32m";
+
+  //stream << PacksOfThree(currentEventCount);
+  //printout = printout + to_string(PacksOfThree(currentEventCount));
+  //if (maxEvents != 0) {
+    // stream << "/" << PacksOfThree(maxEvents);
+    //printout = printout +  "/" + to_string(PacksOfThree(maxEvents));
+  //}
+  //stream << " evt  ";
+  printout += " evt  ";
+
+  //if (fUseShellColours) stream << "\e[0m";
+
+  // events/s
+  //stream << std::scientific << std::setprecision(2) << evtpersec << " evt/s";
+  //printout = printout + evtpersec + " evt/s";
+
+  // Time statistics:
+  if (maxEvents != 0) {
+    //if (fUseShellColours) stream << "\e[35m";
+    const std::chrono::seconds remainingSeconds( static_cast<long long>((ComputeMaxEvents() - currentEventCount) / evtpersec) );
+    //stream << " " << remainingSeconds << " remaining";
+    //printout = printout + " " + to_string(remainingSeconds) + " remaining";
+    //if (fUseShellColours) stream << "\e[0m";
+  }
+
+  //stream << "]   " ;
+  printout += "]   " ;
+  stream << printout;
+} 
+*/
+///*
 /// Print event and time statistics.
 void ProgressHelper::PrintStats(std::ostream& stream, std::size_t currentEventCount, std::chrono::seconds elapsedSeconds) const {
   const auto evtpersec = EvtPerSec();
@@ -217,7 +309,8 @@ void ProgressHelper::PrintProgressbar(std::ostream& stream, std::size_t currentE
   if (fUseShellColours) stream << "\e[33m";
   stream << '|' << std::setfill(' ') << std::setw(fBarWidth) << std::left << bars << "|   ";
   if (fUseShellColours) stream << "\e[0m";
-}
+} 
+//*/
 
 std::size_t RetrieveNEvents(const char* treename, const char* fileUrl) {
   std::unique_ptr<TFile> file( TFile::Open(fileUrl, "READ") );
