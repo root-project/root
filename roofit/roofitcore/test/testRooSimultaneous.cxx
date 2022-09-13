@@ -19,7 +19,7 @@
 /// GitHub issue #8307.
 /// A likelihood with a model wrapped in a RooSimultaneous in one category
 /// should give the same results as the likelihood with the model directly.
-TEST(RooSimultaneous, ImportFromTreeWithCut)
+TEST(RooSimultaneous, SingleChannelCrossCheck)
 {
    using namespace RooFit;
 
@@ -49,8 +49,14 @@ TEST(RooSimultaneous, ImportFromTreeWithCut)
 
    std::unique_ptr<RooAbsReal> nllDirect{modelConstrained.createNLL(combData, Constrain(constraints))};
    std::unique_ptr<RooAbsReal> nllSimWrapped{modelSim.createNLL(combData, Constrain(constraints))};
+   std::unique_ptr<RooAbsReal> nllDirectBatch{
+      modelConstrained.createNLL(combData, Constrain(constraints), BatchMode("cpu"))};
+   std::unique_ptr<RooAbsReal> nllSimWrappedBatch{
+      modelSim.createNLL(combData, Constrain(constraints), BatchMode("cpu"))};
 
-   EXPECT_FLOAT_EQ(nllDirect->getVal(), nllSimWrapped->getVal());
+   EXPECT_FLOAT_EQ(nllDirect->getVal(), nllSimWrapped->getVal()) << "Inconsistency in old RooFit";
+   EXPECT_FLOAT_EQ(nllDirect->getVal(), nllDirectBatch->getVal()) << "Old RooFit and BatchMode don't agree";
+   EXPECT_FLOAT_EQ(nllDirectBatch->getVal(), nllSimWrappedBatch->getVal()) << "Inconsistency in BatchMode";
 }
 
 /// Forum issue

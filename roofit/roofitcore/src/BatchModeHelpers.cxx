@@ -34,15 +34,15 @@ using ROOT::Experimental::RooNLLVarNew;
 
 namespace {
 
-std::unique_ptr<RooAbsArg> createSimultaneousNLL(std::unique_ptr<RooSimultaneous> &&simPdf, RooArgSet &observables,
-                                                 bool isExtended, std::string const &rangeName, bool doOffset)
+std::unique_ptr<RooAbsArg> createSimultaneousNLL(RooSimultaneous const &simPdf, RooArgSet &observables, bool isExtended,
+                                                 std::string const &rangeName, bool doOffset)
 {
    // Prepare the NLLTerms for each component
    RooArgList nllTerms;
    RooArgSet newObservables;
-   for (auto const &catItem : simPdf->indexCat()) {
+   for (auto const &catItem : simPdf.indexCat()) {
       auto const &catName = catItem.first;
-      if (RooAbsPdf *pdf = simPdf->getPdf(catName.c_str())) {
+      if (RooAbsPdf *pdf = simPdf.getPdf(catName.c_str())) {
          auto name = std::string("nll_") + pdf->GetName();
          auto nll = std::make_unique<RooNLLVarNew>(name.c_str(), name.c_str(), *pdf, observables, isExtended, rangeName,
                                                    doOffset);
@@ -57,7 +57,6 @@ std::unique_ptr<RooAbsArg> createSimultaneousNLL(std::unique_ptr<RooSimultaneous
 
    // Time to sum the NLLs
    auto nll = std::make_unique<RooAddition>("mynll", "mynll", nllTerms);
-   nll->addOwnedComponents(std::move(simPdf));
    nll->addOwnedComponents(std::move(nllTerms));
    return nll;
 }
@@ -70,28 +69,38 @@ RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data, std::uniqu
                                     RooArgSet const &projDeps, bool isExtended, double integrateOverBinsPrecision,
                                     RooFit::BatchModeOption batchMode, bool doOffset)
 {
-   std::unique_ptr<RooFitDriver> driver;
+   // Clone PDF and reattach to original parameters
+   std::unique_ptr<RooAbsPdf> pdfClone{static_cast<RooAbsPdf *>(pdf.cloneTree())};
+   {
+      RooArgSet origParams;
+      pdf.getParameters(data.get(), origParams);
+      pdfClone->recursiveRedirectServers(origParams);
+   }
 
    RooArgSet observables;
+   RooArgSet obsClones;
+   pdfClone->getObservables(data.get(), obsClones);
    pdf.getObservables(data.get(), observables);
    observables.remove(projDeps, true, true);
+   obsClones.remove(projDeps, true, true);
 
    oocxcoutI(&pdf, Fitting) << "RooAbsPdf::fitTo(" << pdf.GetName()
                             << ") fixing normalization set for coefficient determination to observables in data"
                             << "\n";
+   pdfClone->fixAddCoefNormalization(obsClones, false);
    pdf.fixAddCoefNormalization(observables, false);
    if (!addCoefRangeName.empty()) {
       oocxcoutI(&pdf, Fitting) << "RooAbsPdf::fitTo(" << pdf.GetName()
                                << ") fixing interpretation of coefficients of any component to range "
                                << addCoefRangeName << "\n";
+      pdfClone->fixAddCoefRange(addCoefRangeName.c_str(), false);
       pdf.fixAddCoefRange(addCoefRangeName.c_str(), false);
    }
 
    // Deal with the IntegrateBins argument
    RooArgList binSamplingPdfs;
-   std::unique_ptr<RooAbsPdf> wrappedPdf;
-   wrappedPdf = RooBinSamplingPdf::create(pdf, data, integrateOverBinsPrecision);
-   RooAbsPdf &finalPdf = wrappedPdf ? *wrappedPdf : pdf;
+   std::unique_ptr<RooAbsPdf> wrappedPdf = RooBinSamplingPdf::create(*pdfClone, data, integrateOverBinsPrecision);
+   RooAbsPdf &finalPdf = wrappedPdf ? *wrappedPdf : *pdfClone;
    if (wrappedPdf) {
       binSamplingPdfs.addOwned(std::move(wrappedPdf));
    }
@@ -101,28 +110,24 @@ RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data, std::uniqu
 
    RooAbsCategory const *indexCatForSplitting = nullptr;
    if (auto simPdf = dynamic_cast<RooSimultaneous *>(&finalPdf)) {
-      RooArgSet parameters;
-      finalPdf.getParameters(data.get(), parameters);
-      std::unique_ptr<RooSimultaneous> simPdfClone{static_cast<RooSimultaneous *>(simPdf->cloneTree())};
-      indexCatForSplitting = &simPdfClone->indexCat();
-      simPdfClone->recursiveRedirectServers(parameters);
-      simPdfClone->wrapPdfsInBinSamplingPdfs(data, integrateOverBinsPrecision);
-      // Warning! This mutates "observables"
-      nllTerms.addOwned(createSimultaneousNLL(std::move(simPdfClone), observables, isExtended, rangeName, doOffset));
+      indexCatForSplitting = &simPdf->indexCat();
+      simPdf->wrapPdfsInBinSamplingPdfs(data, integrateOverBinsPrecision);
+      // Warning! This mutates "obsClones"
+      nllTerms.addOwned(createSimultaneousNLL(*simPdf, obsClones, isExtended, rangeName, doOffset));
    } else {
-      nllTerms.addOwned(std::make_unique<RooNLLVarNew>("RooNLLVarNew", "RooNLLVarNew", finalPdf, observables,
+      nllTerms.addOwned(std::make_unique<RooNLLVarNew>("RooNLLVarNew", "RooNLLVarNew", finalPdf, obsClones,
                                                        isExtended, rangeName, doOffset));
    }
    if (constraints) {
       nllTerms.addOwned(std::move(constraints));
    }
 
-   std::string nllName = std::string("nll_") + pdf.GetName() + "_" + data.GetName();
+   std::string nllName = std::string("nll_") + pdfClone->GetName() + "_" + data.GetName();
    auto nll = std::make_unique<RooAddition>(nllName.c_str(), nllName.c_str(), nllTerms);
    nll->addOwnedComponents(std::move(binSamplingPdfs));
    nll->addOwnedComponents(std::move(nllTerms));
 
-   driver = std::make_unique<RooFitDriver>(*nll, observables, batchMode);
+   auto driver = std::make_unique<RooFitDriver>(*nll, obsClones, batchMode);
    driver->setData(data, rangeName, indexCatForSplitting, /*skipZeroWeights=*/true);
 
    // Set the fitrange attribute so that RooPlot can automatically plot the fitting range by default
@@ -138,17 +143,17 @@ RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data, std::uniqu
             fitrangeValueSubrange += "_" + subrange;
          }
          fitrangeValue += fitrangeValueSubrange + ",";
-         for (auto *observable : static_range_cast<RooRealVar *>(observables)) {
+         for (auto *observable : static_range_cast<RooRealVar *>(obsClones)) {
             observable->setRange(fitrangeValueSubrange.c_str(), observable->getMin(subrange.c_str()),
                                  observable->getMax(subrange.c_str()));
          }
       }
-      fitrangeValue = fitrangeValue.substr(0, fitrangeValue.size() - 1);
-      pdf.setStringAttribute("fitrange", fitrangeValue.c_str());
+      pdf.setStringAttribute("fitrange", fitrangeValue.substr(0, fitrangeValue.size() - 1).c_str());
    }
 
    auto driverWrapper = makeDriverAbsRealWrapper(std::move(driver), *data.get());
    driverWrapper->addOwnedComponents(std::move(nll));
+   driverWrapper->addOwnedComponents(std::move(pdfClone));
 
    return driverWrapper;
 }
@@ -158,8 +163,9 @@ void RooFit::BatchModeHelpers::logArchitectureInfo(RooFit::BatchModeOption batch
    // We have to exit early if the message stream is not active. Otherwise it's
    // possible that this funciton skips logging because it thinks it has
    // already logged, but actually it didn't.
-   if (!RooMsgService::instance().isActive(static_cast<RooAbsArg *>(nullptr), RooFit::Fitting, RooFit::INFO))
+   if (!RooMsgService::instance().isActive(static_cast<RooAbsArg *>(nullptr), RooFit::Fitting, RooFit::INFO)) {
       return;
+   }
 
    // Don't repeat logging architecture info if the batchMode option didn't change
    {
@@ -245,3 +251,4 @@ RooFit::BatchModeHelpers::makeDriverAbsRealWrapper(std::unique_ptr<ROOT::Experim
 {
    return std::make_unique<RooAbsRealWrapper>(std::move(driver), observables);
 }
+
