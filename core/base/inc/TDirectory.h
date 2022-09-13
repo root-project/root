@@ -208,7 +208,7 @@ public:
    virtual void       *GetObjectChecked(const char *namecycle, const TClass* cl);
    virtual void       *GetObjectUnchecked(const char *namecycle);
    virtual Int_t       GetBufferSize() const {return 0;}
-   virtual TFile      *GetFile() const { return 0; }
+   virtual TFile      *GetFile() const { return nullptr; }
    virtual TKey       *GetKey(const char * /*name */, Short_t /* cycle */=9999) const {return nullptr;}
    virtual TList      *GetList() const { return fList; }
    virtual TList      *GetListOfKeys() const { return nullptr; }

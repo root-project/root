@@ -47,7 +47,7 @@ protected:
 public:
    TVirtualMonitoringWriter() : TNamed(), fValue(0), fTmpOpenPhases(nullptr) { }
    TVirtualMonitoringWriter(const char *name, Double_t value)
-     : TNamed(name, ""), fValue(value), fTmpOpenPhases(0) { }
+     : TNamed(name, ""), fValue(value), fTmpOpenPhases(nullptr) { }
 
    virtual ~TVirtualMonitoringWriter();
 
@@ -62,7 +62,7 @@ public:
    virtual Bool_t SendParameters(TList * /*valuelist*/, const char * /*identifier*/ = nullptr)
       { MayNotUse("SendParameters"); return kFALSE; }
    virtual Bool_t SendInfoTime() { MayNotUse("SendInfoTime"); return kFALSE; }
-   virtual Bool_t SendInfoUser(const char * /*user*/ = 0) { MayNotUse("SendInfoUser"); return kFALSE; }
+   virtual Bool_t SendInfoUser(const char * /*user*/ = nullptr) { MayNotUse("SendInfoUser"); return kFALSE; }
    virtual Bool_t SendInfoDescription(const char * /*jobtag*/) { MayNotUse("SendInfoDescription"); return kFALSE; }
    virtual Bool_t SendInfoStatus(const char * /*status*/) { MayNotUse("SendInfoStatus"); return kFALSE; }
 
@@ -106,7 +106,7 @@ public:
                               Long_t /*min*/, Long_t /*max*/, Long_t /*lifetime*/)
       { MayNotUse("ProxyValues"); }
 
-   virtual TMap *GetMap() { MayNotUse("GetMap"); return 0; }
+   virtual TMap *GetMap() { MayNotUse("GetMap"); return nullptr; }
    virtual void DeleteMap(TMap * /*map*/) { MayNotUse("DeleteMap"); }
 
    ClassDefOverride(TVirtualMonitoringReader, 1) // ABC for Reading Monitoring Information

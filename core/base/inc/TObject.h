@@ -123,8 +123,8 @@ public:
    virtual void        DrawClass() const; // *MENU*
    virtual TObject    *DrawClone(Option_t *option="") const; // *MENU*
    virtual void        Dump() const; // *MENU*
-   virtual void        Execute(const char *method,  const char *params, Int_t *error=0);
-   virtual void        Execute(TMethod *method, TObjArray *params, Int_t *error=0);
+   virtual void        Execute(const char *method,  const char *params, Int_t *error = nullptr);
+   virtual void        Execute(TMethod *method, TObjArray *params, Int_t *error = nullptr);
    virtual void        ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual TObject    *FindObject(const char *name) const;
    virtual TObject    *FindObject(const TObject *obj) const;
@@ -160,8 +160,8 @@ public:
    virtual void        SetDrawOption(Option_t *option="");  // *MENU*
    virtual void        SetUniqueID(UInt_t uid);
    virtual void        UseCurrentStyle();
-   virtual Int_t       Write(const char *name=0, Int_t option=0, Int_t bufsize=0);
-   virtual Int_t       Write(const char *name=0, Int_t option=0, Int_t bufsize=0) const;
+   virtual Int_t       Write(const char *name = nullptr, Int_t option = 0, Int_t bufsize = 0);
+   virtual Int_t       Write(const char *name = nullptr, Int_t option = 0, Int_t bufsize = 0) const;
 
    //----- operators
    void    *operator new(size_t sz) { return TStorage::ObjectAlloc(sz); }

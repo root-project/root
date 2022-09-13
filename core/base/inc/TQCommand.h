@@ -50,9 +50,9 @@ private:
    TQCommand &operator=(const TQCommand &); // Not yet implemented.
 
 public:
-   TQCommand(const char *cl = 0, void *object = 0,
-             const char *redo = 0, const char *undo = 0);
-   TQCommand(TObject *obj, const char *redo = 0, const char *undo = 0);
+   TQCommand(const char *cl = nullptr, void *object = nullptr,
+             const char *redo = nullptr, const char *undo = nullptr);
+   TQCommand(TObject *obj, const char *redo = nullptr, const char *undo = nullptr);
    TQCommand(const TQCommand &com);
    virtual ~TQCommand();
 
@@ -88,7 +88,7 @@ public:
    virtual void   SetTitle(const char *title);
    void           ls(Option_t *option="") const override;
    void           Add(TObject *obj, Option_t *opt) override;
-   void           Add(TObject *obj) override { Add(obj, 0); }
+   void           Add(TObject *obj) override { Add(obj, nullptr); }
    void           Delete(Option_t *option="") override;
    const char    *GetName() const override;
    const char    *GetTitle() const override;
