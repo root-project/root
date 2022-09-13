@@ -121,7 +121,7 @@ private:
    Int_t             fCursor;     //next position in array
    Bool_t            fDirection;  //iteration direction
 
-   TRefArrayIter() : fArray(0), fCurCursor(0), fCursor(0), fDirection(kIterForward) { }
+   TRefArrayIter() : fArray(nullptr), fCurCursor(0), fCursor(0), fDirection(kIterForward) {}
 
 public:
    using iterator_category = std::bidirectional_iterator_tag; // TODO: ideally it should be a randomaccess_iterator_tag
@@ -165,14 +165,14 @@ inline TObject *TRefArray::operator[](Int_t at) const
 {
    int j = at-fLowerBound;
    if (j >= 0 && j < fSize) {
-      if (!fPID) return 0;
-      if (!TProcessID::IsValid(fPID)) return 0;
+      if (!fPID) return nullptr;
+      if (!TProcessID::IsValid(fPID)) return nullptr;
       TObject *obj = fPID->GetObjectWithID(fUIDs[j]);
-      if (obj==0) obj = GetFromTable(j);
+      if (!obj) obj = GetFromTable(j);
       return obj;
    }
    BoundsOk("At", at);
-   return 0;
+   return nullptr;
 }
 
 inline TObject *TRefArray::At(Int_t at) const
@@ -180,14 +180,14 @@ inline TObject *TRefArray::At(Int_t at) const
    // Return the object at position i. Returns 0 if i is out of bounds.
    int j = at-fLowerBound;
    if (j >= 0 && j < fSize) {
-      if (!fPID) return 0;
-      if (!TProcessID::IsValid(fPID)) return 0;
+      if (!fPID) return nullptr;
+      if (!TProcessID::IsValid(fPID)) return nullptr;
       TObject *obj = fPID->GetObjectWithID(fUIDs[j]);
-      if (obj==0) obj = GetFromTable(j);
+      if (!obj) obj = GetFromTable(j);
       return obj;
    }
    BoundsOk("At", at);
-   return 0;
+   return nullptr;
 }
 
 #endif
