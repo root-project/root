@@ -55,9 +55,9 @@ public:
       kNoHidden     = BIT(9)   // don't show '.' files and directories
    };
 
-   TBrowser(const char *name="Browser", const char *title="ROOT Object Browser", TBrowserImp *extimp=0, Option_t *opt="");
-   TBrowser(const char *name, const char *title, UInt_t width, UInt_t height, TBrowserImp *extimp=0, Option_t *opt="");
-   TBrowser(const char *name, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height, TBrowserImp *extimp=0, Option_t *opt="");
+   TBrowser(const char *name="Browser", const char *title = "ROOT Object Browser", TBrowserImp *extimp = nullptr, Option_t *opt = "");
+   TBrowser(const char *name, const char *title, UInt_t width, UInt_t height, TBrowserImp *extimp = nullptr, Option_t *opt = "");
+   TBrowser(const char *name, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height, TBrowserImp *extimp = nullptr, Option_t *opt = "");
 
    TBrowser(const char *name, TObject *obj, const char *title="ROOT Object Browser", Option_t *opt="");
    TBrowser(const char *name, TObject *obj, const char *title, UInt_t width, UInt_t height, Option_t *opt="");
