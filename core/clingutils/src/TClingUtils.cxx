@@ -867,9 +867,8 @@ int ROOT::TMetaUtils::ElementStreamer(std::ostream& finalString,
    if (tiName == "string*") kase |= kBIT_ISSTRING;
 
 
-   if (tcl == nullptr) {
+   if (!tcl)
       tcl = " internal error in rootcling ";
-   }
    //    if (strcmp(objType,"string")==0) RStl::Instance().GenerateTClassFor( "string", interp, normCtxt  );
 
    if (rwmode == 0) {  //Read mode
@@ -1570,8 +1569,8 @@ bool ROOT::TMetaUtils::hasOpaqueTypedef(clang::QualType instanceType, const ROOT
    if (clxx && clxx->getTemplateSpecializationKind() != clang::TSK_Undeclared) {
       // do the template thing.
       const clang::TemplateSpecializationType* TST
-      = llvm::dyn_cast<const clang::TemplateSpecializationType>(instanceType.getTypePtr());
-      if (TST==nullptr) {
+         = llvm::dyn_cast<const clang::TemplateSpecializationType>(instanceType.getTypePtr());
+      if (!TST) {
    //         std::string type_name;
    //         type_name =  GetQualifiedName( instanceType, *clxx );
    //         fprintf(stderr,"ERROR: Could not findS TST for %s\n",type_name.c_str());
@@ -1962,7 +1961,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
               (stl != ROOT::kSTLbitset && stl !=-ROOT::kSTLbitset) ){     // is no bitset
       int idx = classname.find("<");
       int stlType = (idx!=(int)std::string::npos) ? TClassEdit::STLKind(classname.substr(0,idx)) : 0;
-      const char* methodTCP=nullptr;
+      const char* methodTCP = nullptr;
       switch(stlType)  {
          case ROOT::kSTLvector:
          case ROOT::kSTLlist:
@@ -2112,18 +2111,18 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
             // Check the name of the decl
             clang::NamedDecl* namedInternalDecl = clang::dyn_cast<clang::NamedDecl> (*internalDeclIt);
             if (!namedInternalDecl) {
-               TMetaUtils::Error(nullptr,"Cannot convert field declaration to clang::NamedDecl");
+               TMetaUtils::Error(nullptr, "Cannot convert field declaration to clang::NamedDecl");
                continue;
-            };
+            }
             const std::string memberName(namedInternalDecl->getName());
-            const std::string cppMemberName="theMember_"+memberName;
+            const std::string cppMemberName = "theMember_"+memberName;
 
             // Prepare a string to get the data member, it can be used later.
             const std::string dataMemberCreation= "      TDataMember* "+cppMemberName+" = theClass->GetDataMember(\""+memberName+"\");\n";
 
             // Let's now attack regular properties
 
-            if (0!=ROOT::TMetaUtils::extractPropertyNameValFromString(attribute_s, attrName, attrValue)){
+            if (0 != ROOT::TMetaUtils::extractPropertyNameValFromString(attribute_s, attrName, attrValue)) {
                continue;
             }
 
@@ -2185,7 +2184,7 @@ bool ROOT::TMetaUtils::GetNameWithinNamespace(std::string &fullname,
       const clang::NamedDecl *namedCtxt = llvm::dyn_cast<clang::NamedDecl>(ctxt);
       if (namedCtxt && namedCtxt!=cl) {
          const clang::NamespaceDecl *nsdecl = llvm::dyn_cast<clang::NamespaceDecl>(namedCtxt);
-         if (nsdecl != nullptr && !nsdecl->isAnonymousNamespace()) {
+         if (nsdecl && !nsdecl->isAnonymousNamespace()) {
             ROOT::TMetaUtils::GetQualifiedName(nsname,*nsdecl);
             clsname.erase (0, nsname.size() + 2);
             return true;
@@ -2302,10 +2301,10 @@ bool ROOT::TMetaUtils::HasCustomOperatorNewPlacement(const char *which, const cl
       ctxtnewPlacement = operatornewPlacement->getParent();
    }
 
-   if (ctxtnewPlacement == nullptr) {
+   if (!ctxtnewPlacement) {
       return false;
    }
-   if (ctxtnew == nullptr) {
+   if (!ctxtnew) {
       // Only a new with placement, no hiding
       return true;
    }
@@ -2316,17 +2315,17 @@ bool ROOT::TMetaUtils::HasCustomOperatorNewPlacement(const char *which, const cl
    }
    const clang::CXXRecordDecl* clnew = llvm::dyn_cast<clang::CXXRecordDecl>(ctxtnew);
    const clang::CXXRecordDecl* clnewPlacement = llvm::dyn_cast<clang::CXXRecordDecl>(ctxtnewPlacement);
-   if (clnew == nullptr && clnewPlacement == nullptr) {
+   if (!clnew && !clnewPlacement) {
       // They are both in different namespaces, I am not sure of the rules.
       // we probably ought to find which one is closest ... for now bail
       // (because rootcling was also bailing on that).
       return true;
    }
-   if (clnew != nullptr && clnewPlacement == nullptr) {
+   if (clnew && !clnewPlacement) {
       // operator new is class method hiding the outer scope operator new with placement.
       return false;
    }
-   if (clnew == nullptr && clnewPlacement != nullptr) {
+   if (!clnew && clnewPlacement) {
       // operator new is a not class method and can not hide new with placement which is a method
       return true;
    }
@@ -2479,7 +2478,7 @@ void ROOT::TMetaUtils::WritePointersSTL(const AnnotatedRecordDecl &cl,
 
 
    const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl());
-   if (clxx == nullptr) return;
+   if (!clxx) return;
 
    // We also need to look at the base classes.
    for(clang::CXXRecordDecl::base_class_const_iterator iter = clxx->bases_begin(), end = clxx->bases_end();
@@ -2903,7 +2902,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
 
    // Treat the Scope.
    bool prefix_changed = false;
-   clang::NestedNameSpecifier* prefix = nullptr;
+   clang::NestedNameSpecifier *prefix = nullptr;
    clang::Qualifiers prefix_qualifiers = instanceType.getLocalQualifiers();
    const clang::ElaboratedType* etype
       = llvm::dyn_cast<clang::ElaboratedType>(instanceType.getTypePtr());
@@ -3119,14 +3118,14 @@ llvm::StringRef ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const cling::I
       if (!isspace(indexvar[i])) {
          working += indexvar[i];
       }
-   };
+   }
 
    // Now we go through all indentifiers
    const char *tokenlist = "*+-";
    char *current = const_cast<char*>(working.c_str());
    current = strtok(current,tokenlist); // this method does not need to be reentrant
 
-   while (current!=nullptr) {
+   while (current) {
       // Check the token
       if (isdigit(current[0])) {
          for(i=0;i<strlen(current);i++) {
@@ -3222,7 +3221,7 @@ llvm::StringRef ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const cling::I
          } // end of if is a data member of the class
       } // end of if isdigit
 
-      current = strtok(nullptr,tokenlist);
+      current = strtok(nullptr, tokenlist);
    } // end of while loop on tokens
 
    return indexvar;
@@ -4551,7 +4550,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
       // We have to also handle the prefix.
 
       clang::Qualifiers scope_qualifiers = input.getLocalQualifiers();
-      assert(instance->getAsCXXRecordDecl()!=nullptr && "ReSubstTemplateArg only makes sense with a type representing a class.");
+      assert(instance->getAsCXXRecordDecl() != nullptr && "ReSubstTemplateArg only makes sense with a type representing a class.");
 
       clang::NestedNameSpecifier *scope = ReSubstTemplateArgNNS(Ctxt,etype->getQualifier(),instance);
       clang::QualType subTy = ReSubstTemplateArg(clang::QualType(etype->getNamedType().getTypePtr(),0),instance);
