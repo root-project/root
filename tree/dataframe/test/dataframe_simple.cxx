@@ -728,6 +728,8 @@ TEST_P(RDFSimpleTests, StandardDeviationEmpty)
 }
 
 /*
+/// This test was deactivated because it is not possible to Sum Strings using a Kahan Sum.
+/// The reason is that there is no minus operator for that case. 
 TEST(RDFSimpleTests, SumOfStrings)
 {
    auto df = RDataFrame(2).Define("str", []() -> std::string { return "bla"; });
