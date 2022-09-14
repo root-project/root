@@ -35,10 +35,10 @@ public:
 
    TRootSecContext(const char *url, Int_t meth, Int_t offset,
                const char *id, const char *token,
-               TDatime expdate = kROOTTZERO, void *ctx = 0, Int_t key = 1);
+               TDatime expdate = kROOTTZERO, void *ctx = nullptr, Int_t key = 1);
    TRootSecContext(const char *user, const char *host, Int_t meth, Int_t offset,
                const char *id, const char *token,
-               TDatime expdate = kROOTTZERO, void *ctx = 0, Int_t key = 1);
+               TDatime expdate = kROOTTZERO, void *ctx = nullptr, Int_t key = 1);
    virtual    ~TRootSecContext();
 
    const char *AsString(TString &out) override;

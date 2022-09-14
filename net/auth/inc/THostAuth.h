@@ -47,14 +47,14 @@ private:
    TList       *fSecContexts;  // List of TSecContexts related to this THostAuth
 
    void         Create(const char *host, const char *user, Int_t nmeth = 0,
-                       Int_t *authmeth = 0, char **details = 0);
+                       Int_t *authmeth = nullptr, char **details = nullptr);
 public:
 
    THostAuth();
    THostAuth(const char *host, const char *user,
-             Int_t nmeth = 0, Int_t *authmeth = 0, char **details = 0);
+             Int_t nmeth = 0, Int_t *authmeth = nullptr, char **details = nullptr);
    THostAuth(const char *host, Int_t server, const char *user,
-             Int_t nmeth = 0, Int_t *authmeth = 0, char **details = 0);
+             Int_t nmeth = 0, Int_t *authmeth = nullptr, char **details = nullptr);
    THostAuth(const char *host, const char *user, Int_t authmeth,
              const char *details);
    THostAuth(const char *host, Int_t server, const char *user, Int_t authmeth,
@@ -68,13 +68,13 @@ public:
 
    Int_t    NumMethods() const { return fNumMethods; }
    Int_t    GetMethod(Int_t idx) const { return fMethods[idx]; }
-   Bool_t   HasMethod(Int_t level, Int_t *pos = 0);
-   void     AddMethod(Int_t level, const char *details = 0);
+   Bool_t   HasMethod(Int_t level, Int_t *pos = nullptr);
+   void     AddMethod(Int_t level, const char *details = nullptr);
    void     RemoveMethod(Int_t level);
    void     ReOrder(Int_t nmet, Int_t *fmet);
    void     Update(THostAuth *ha);
    void     SetFirst(Int_t level);
-   void     AddFirst(Int_t level, const char *details = 0);
+   void     AddFirst(Int_t level, const char *details = nullptr);
    void     SetLast(Int_t level);
    void     CountFailure(Int_t level);
    void     CountSuccess(Int_t level);
@@ -106,7 +106,7 @@ public:
    TRootSecContext *CreateSecContext(const char *user, const char *host, Int_t meth,
                                      Int_t offset, const char *details,
                                      const char *token, TDatime expdate = kROOTTZERO,
-                                     void *ctx = 0, Int_t key = -1);
+                                     void *ctx = nullptr, Int_t key = -1);
 
    ClassDefOverride(THostAuth,1)  // Class providing host specific authentication information
 };

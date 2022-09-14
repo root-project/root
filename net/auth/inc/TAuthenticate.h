@@ -152,7 +152,7 @@ public:
    static Bool_t      CheckProofAuth(Int_t cSec, TString &det);
 
    static Int_t       DecodeRSAPublic(const char *rsapubexport, R__rsa_NUMBER &n,
-                                      R__rsa_NUMBER &d, char **rsassl = 0);
+                                      R__rsa_NUMBER &d, char **rsassl = nullptr);
 
    static TList      *GetAuthInfo();
    static const char *GetAuthMethod(Int_t idx);
@@ -167,7 +167,7 @@ public:
    static const char *GetGlobalUser();
    static GlobusAuth_t GetGlobusAuthHook();
    static THostAuth  *GetHostAuth(const char *host, const char *user="",
-                                  Option_t *opt = "R", Int_t *Exact = 0);
+                                  Option_t *opt = "R", Int_t *Exact = nullptr);
    static const char *GetKrb5Principal();
    static Bool_t      GetPromptUser();
    static TList      *GetProofAuthInfo();
