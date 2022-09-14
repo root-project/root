@@ -78,7 +78,7 @@ void TSQLiteStatement::Close(Option_t *)
 #define CheckStmt(method, res)                          \
    {                                                    \
       ClearError();                                     \
-      if (fStmt==0) {                                   \
+      if (!fStmt) {                                     \
          SetError(-1,"Statement handle is 0",method);   \
          return res;                                    \
       }                                                 \
@@ -212,9 +212,8 @@ Int_t TSQLiteStatement::GetNumFields()
 
 const char* TSQLiteStatement::GetFieldName(Int_t nfield)
 {
-   if (!IsResultSetMode() || (nfield < 0) || (nfield >= sqlite3_column_count(fStmt->fRes))) {
-      return 0;
-   }
+   if (!IsResultSetMode() || (nfield < 0) || (nfield >= sqlite3_column_count(fStmt->fRes)))
+      return nullptr;
 
    return sqlite3_column_name(fStmt->fRes, nfield);
 }
