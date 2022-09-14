@@ -46,7 +46,7 @@ public:
    virtual Int_t  DistancetoPrimitive(Int_t px, Int_t py);
    virtual void   ExecuteEvent(Int_t event, Int_t px, Int_t py);
    void           SetGVNode(GVizAgnode_t *gvn) {fGVNode = gvn;}
-   virtual void   SetTextAngle(Float_t) {;}
+   virtual void   SetTextAngle(Float_t) {}
    GVizAgnode_t  *GetGVNode() {return fGVNode;}
    void           Layout();
    virtual void   Paint(Option_t *option="");
