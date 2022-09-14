@@ -100,7 +100,7 @@ public:
    virtual void RemoveEntry(Int_t id = -1);                        //*MENU*
    void         RemoveAll() override;                              //*MENU*
    void         Layout() override;
-   virtual Bool_t IsTextInputEnabled() const { return (fTextEntry != 0); }
+   virtual Bool_t IsTextInputEnabled() const { return fTextEntry != nullptr; }
    virtual void EnableTextInput(Bool_t on);    //*TOGGLE* *GETTER=IsTextInputEnabled
    virtual void RemoveEntries(Int_t from_ID, Int_t to_ID)
                         { fListBox->RemoveEntries(from_ID, to_ID); }

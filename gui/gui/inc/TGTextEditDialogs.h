@@ -58,7 +58,7 @@ protected:
 
 public:
    TGSearchDialog(const TGWindow *p = nullptr, const TGWindow *main = nullptr, UInt_t w = 1, UInt_t h = 1,
-                  TGSearchType *sstruct = 0, Int_t *ret_code = 0,
+                  TGSearchType *sstruct = nullptr, Int_t *ret_code = nullptr,
                   UInt_t options = kVerticalFrame);
    virtual ~TGSearchDialog();
 

@@ -68,7 +68,7 @@ struct FontAttributes_t {
    Int_t fOverstrike;   // Non-zero for overstrike font.
 
    FontAttributes_t():  // default constructor
-      fFamily    (0),
+      fFamily    (nullptr),
       fPointsize (0),
       fWeight    (kFontWeightNormal),
       fSlant     (kFontSlantRoman),

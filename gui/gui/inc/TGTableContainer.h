@@ -41,7 +41,7 @@ protected:
    TGTable *fTable;  ///< Table that this frame belongs to
 
 public:
-   TGTableHeaderFrame(const TGWindow *p, TGTable *table = 0, UInt_t w = 1,
+   TGTableHeaderFrame(const TGWindow *p, TGTable *table = nullptr, UInt_t w = 1,
                       UInt_t h = 1, EHeaderType type = kColumnHeader,
                       UInt_t option = 0);
    ~TGTableHeaderFrame() {}
