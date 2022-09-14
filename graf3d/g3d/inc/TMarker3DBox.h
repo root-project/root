@@ -74,7 +74,7 @@ public:
    virtual void    SetDirection(Float_t theta, Float_t phi);
    virtual void    SetPosition(Float_t x, Float_t y, Float_t z);
    virtual void    SetSize(Float_t dx, Float_t dy, Float_t dz);
-   virtual void    SetRefObject(TObject *obj=0) {fRefObject = obj;}
+   virtual void    SetRefObject(TObject *obj = nullptr) {fRefObject = obj;}
 
    ClassDef(TMarker3DBox,2)  //A special 3-D marker designed for event display
 };
