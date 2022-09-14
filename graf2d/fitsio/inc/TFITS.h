@@ -115,7 +115,7 @@ public:
 
    //Image readers
    TH1               *ReadAsHistogram();
-   TImage            *ReadAsImage(Int_t layer = 0, TImagePalette *pal = 0);
+   TImage            *ReadAsImage(Int_t layer = 0, TImagePalette *pal = nullptr);
    TMatrixD          *ReadAsMatrix(Int_t layer = 0, Option_t *opt="");
    TVectorD          *GetArrayRow(UInt_t row);
    TVectorD          *GetArrayColumn(UInt_t col);
