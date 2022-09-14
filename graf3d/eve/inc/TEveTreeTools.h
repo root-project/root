@@ -81,12 +81,12 @@ protected:
    TList                   fInputList;
 
 public:
-   TEvePointSelector(TTree* t=0, TEvePointSelectorConsumer* c=0,
+   TEvePointSelector(TTree* t=nullptr, TEvePointSelectorConsumer* c=nullptr,
                      const char* vexp="", const char* sel="");
    virtual ~TEvePointSelector() {}
 
-   virtual Long64_t Select(const char* selection=0);
-   virtual Long64_t Select(TTree* t, const char* selection=0);
+   virtual Long64_t Select(const char* selection=nullptr);
+   virtual Long64_t Select(TTree* t, const char* selection=nullptr);
    virtual void  TakeAction();
 
 

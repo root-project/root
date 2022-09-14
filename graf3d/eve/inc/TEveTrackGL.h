@@ -34,7 +34,7 @@ public:
    TEveTrackGL();
    virtual ~TEveTrackGL() {}
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
+   virtual Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr);
    virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
 
    virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }

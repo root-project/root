@@ -36,7 +36,7 @@ protected:
 public:
    TEveCaloLego*  fLego;
 
-   TEveLegoEventHandler(TGWindow *w, TObject *obj, TEveCaloLego* lego = 0);
+   TEveLegoEventHandler(TGWindow *w, TObject *obj, TEveCaloLego* lego = nullptr);
    virtual ~TEveLegoEventHandler() {}
 
    virtual Bool_t HandleKey(Event_t *event);
@@ -47,7 +47,7 @@ public:
    TEveCaloLego* GetLego() { return fLego; }
    void          SetLego( TEveCaloLego* x) { fLego = x; }
 
-   ClassDef(TEveLegoEventHandler, 0); // A GL event handler class. Swiches perspective or orthographic camera.
+   ClassDef(TEveLegoEventHandler, 0); // A GL event handler class. Switches perspective or orthographic camera.
 };
 
 #endif
