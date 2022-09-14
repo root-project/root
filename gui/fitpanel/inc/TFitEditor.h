@@ -175,9 +175,9 @@ public:
    TFitEditor(TVirtualPad* pad, TObject *obj);
    virtual ~TFitEditor();
 
-   TList*  GetListOfFittingFunctions(TObject* obj = 0);
+   TList*  GetListOfFittingFunctions(TObject *obj = nullptr);
 
-   static  TFitEditor *GetInstance(TVirtualPad* pad = 0, TObject *obj = 0);
+   static  TFitEditor *GetInstance(TVirtualPad* pad = nullptr, TObject *obj = nullptr);
    virtual Option_t  *GetDrawOption() const;
    virtual void       Hide();
    virtual void       Show(TVirtualPad* pad, TObject *obj);
