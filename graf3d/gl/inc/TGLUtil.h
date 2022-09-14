@@ -623,7 +623,7 @@ public:
    TGLMatrix & operator*=(const TGLMatrix & rhs) { MultRight(rhs); return *this; }
 
    // Manipulators
-   void Set(const TGLVertex3 & origin, const TGLVector3 & zAxis, const TGLVector3 & xAxis = 0);
+   void Set(const TGLVertex3 & origin, const TGLVector3 & zAxis, const TGLVector3 & xAxis = nullptr);
    void Set(const Double_t vals[16]);
    void SetIdentity();
 
@@ -1040,7 +1040,7 @@ public:
    static void DrawReferenceMarker(const TGLCamera  & camera,
                                    const TGLVertex3 & pos,
                                          Float_t      radius = 3,
-                                   const UChar_t    * rgba   = 0);
+                                   const UChar_t    * rgba   = nullptr);
    static void DrawSimpleAxes(const TGLCamera      & camera,
                               const TGLBoundingBox & bbox,
                                     Int_t            axesType,

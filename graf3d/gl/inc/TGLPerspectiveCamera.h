@@ -46,7 +46,7 @@ public:
    virtual Bool_t Zoom (Int_t delta, Bool_t mod1, Bool_t mod2);
    using   TGLCamera::Truck;
    virtual Bool_t Truck(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2);
-   virtual void   Apply(const TGLBoundingBox & box, const TGLRect * pickRect = 0) const;
+   virtual void   Apply(const TGLBoundingBox & box, const TGLRect * pickRect = nullptr) const;
 
    // External scripting control
    virtual void Configure(Double_t fov, Double_t dolly, Double_t center[3],
