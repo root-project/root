@@ -89,7 +89,7 @@ private:
    void           UpdateLabels( TStructNode* node );
 
 public:
-   TStructViewerGUI(TStructViewer* parent, TStructNode* nodePtr, TList* colors, const TGWindow *p = NULL,
+   TStructViewerGUI(TStructViewer* parent, TStructNode* nodePtr, TList* colors, const TGWindow *p = nullptr,
       UInt_t w = 800, UInt_t h = 600);
    ~TStructViewerGUI();
 
