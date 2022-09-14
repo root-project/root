@@ -40,9 +40,9 @@ public:
    Int_t  Locate(const char *path, TString &endpath) override;
    Int_t  LocateCollection(TFileCollection *fc, Bool_t addDummyUrl = kFALSE) override;
    Bool_t Matches(const char *s) override;
-   Bool_t Stage(const char *path, Option_t *opt = 0) override;
-   Bool_t Stage(TCollection *pathlist, Option_t *opt = 0) override;
-   Bool_t IsValid() const override { return (fSystem ? kTRUE : kFALSE); }
+   Bool_t Stage(const char *path, Option_t *opt = nullptr) override;
+   Bool_t Stage(TCollection *pathlist, Option_t *opt = nullptr) override;
+   Bool_t IsValid() const override { return fSystem ? kTRUE : kFALSE; }
 
 private:
    UChar_t ParseStagePriority(Option_t *opt);
