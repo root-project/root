@@ -127,7 +127,7 @@ protected:
    void           InitAtoms();
    Window_t       GetRootProxy();
    Window_t       FindWindow(Window_t root, Int_t x, Int_t y, Int_t maxd);
-   Bool_t         IsDNDAware(Window_t win, Atom_t *typelist = 0);
+   Bool_t         IsDNDAware(Window_t win, Atom_t *typelist = nullptr);
    Bool_t         IsTopLevel(Window_t win);
 
    void           SendDNDEnter(Window_t target);
