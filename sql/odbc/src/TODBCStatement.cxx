@@ -46,8 +46,8 @@ TODBCStatement::TODBCStatement(SQLHSTMT stmt, Int_t rowarrsize, Bool_t errout) :
    fHstmt = stmt;
    fBufferPreferredSize = rowarrsize;
 
-   fBuffer = 0;
-   fStatusBuffer = 0;
+   fBuffer = nullptr;
+   fStatusBuffer = nullptr;
    fNumBuffers = 0;
    fBufferLength = 0;
    fBufferCounter = 0;
@@ -75,7 +75,7 @@ TODBCStatement::TODBCStatement(SQLHSTMT stmt, Int_t rowarrsize, Bool_t errout) :
 
       SQLUINTEGER getsize = 0;
 
-      retcode = SQLGetStmtAttr(fHstmt, SQL_ATTR_PARAMSET_SIZE, &getsize, 0, 0);
+      retcode = SQLGetStmtAttr(fHstmt, SQL_ATTR_PARAMSET_SIZE, &getsize, 0, nullptr);
       ExtractErrors(retcode,"Constructor");
 
       Int_t bufferlen = fBufferPreferredSize;
@@ -117,7 +117,7 @@ void TODBCStatement::Close(Option_t *)
 
    SQLFreeHandle(SQL_HANDLE_STMT, fHstmt);
 
-   fHstmt = 0;
+   fHstmt = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -248,7 +248,7 @@ const char* TODBCStatement::GetFieldName(Int_t nfield)
 {
    ClearError();
 
-   if (!IsResultSet() || (nfield<0) || (nfield>=fNumBuffers)) return 0;
+   if (!IsResultSet() || (nfield<0) || (nfield>=fNumBuffers)) return nullptr;
 
    return fBuffer[nfield].fBnamebuffer;
 }
@@ -278,7 +278,7 @@ Bool_t TODBCStatement::NextResultRow()
       // calculate it from current row number
       if (!IsError() && (retcode!=SQL_NO_DATA) && (fNumRowsFetched==0)) {
          SQLULEN rownumber = 0;
-         SQLRETURN retcode2 = SQLGetStmtAttr(fHstmt, SQL_ATTR_ROW_NUMBER, &rownumber, 0, 0);
+         SQLRETURN retcode2 = SQLGetStmtAttr(fHstmt, SQL_ATTR_ROW_NUMBER, &rownumber, 0, nullptr);
          ExtractErrors(retcode2, "NextResultRow");
 
          if (!IsError()) {
@@ -331,9 +331,9 @@ Bool_t TODBCStatement::NextIteration()
 {
    ClearError();
 
-   if (!IsParSettMode() || (fBuffer==0) || (fBufferLength<=0)) return kFALSE;
+   if (!IsParSettMode() || !fBuffer || (fBufferLength <= 0)) return kFALSE;
 
-   if (fBufferCounter>=fBufferLength-1) {
+   if (fBufferCounter >= fBufferLength-1) {
       SQLRETURN retcode = SQLExecute(fHstmt);
       if (ExtractErrors(retcode,"NextIteration")) return kFALSE;
       fBufferCounter = 0;
@@ -372,9 +372,9 @@ void TODBCStatement::SetNumBuffers(Int_t isize, Int_t ilen)
       fBuffer[n].fBsqlctype = 0;
       fBuffer[n].fBbuffer = nullptr;
       fBuffer[n].fBelementsize = 0;
-      fBuffer[n].fBlenarray = 0;
-      fBuffer[n].fBstrbuffer = 0;
-      fBuffer[n].fBnamebuffer = 0;
+      fBuffer[n].fBlenarray = nullptr;
+      fBuffer[n].fBstrbuffer = nullptr;
+      fBuffer[n].fBnamebuffer = nullptr;
    }
 
    fStatusBuffer = new SQLUSMALLINT[fBufferLength];
@@ -385,7 +385,7 @@ void TODBCStatement::SetNumBuffers(Int_t isize, Int_t ilen)
 
 void TODBCStatement::FreeBuffers()
 {
-   if (fBuffer==0) return;
+   if (!fBuffer) return;
    for (Int_t n=0;n<fNumBuffers;n++) {
       if (fBuffer[n].fBbuffer)
         free(fBuffer[n].fBbuffer);
@@ -564,20 +564,20 @@ void* TODBCStatement::GetParAddr(Int_t npar, Int_t roottype, Int_t length)
 {
    ClearError();
 
-   if ((fBuffer==0) || (npar<0) || (npar>=fNumBuffers) || (fBufferCounter<0)) {
+   if (!fBuffer || (npar < 0) || (npar >= fNumBuffers) || (fBufferCounter < 0)) {
       SetError(-1, "Invalid parameter number","GetParAddr");
-      return 0;
+      return nullptr;
    }
 
-   if (fBuffer[npar].fBbuffer==0) {
-      if (IsParSettMode() && (roottype!=0) && (fBufferCounter==0))
-         if (!BindParam(npar, roottype, length)) return 0;
+   if (!fBuffer[npar].fBbuffer) {
+      if (IsParSettMode() && (roottype != 0) && (fBufferCounter == 0))
+         if (!BindParam(npar, roottype, length)) return nullptr;
 
-      if (fBuffer[npar].fBbuffer==0) return 0;
+      if (!fBuffer[npar].fBbuffer) return nullptr;
    }
 
    if (roottype!=0)
-      if (fBuffer[npar].fBroottype!=roottype) return 0;
+      if (fBuffer[npar].fBroottype!=roottype) return nullptr;
 
    return (char*)fBuffer[npar].fBbuffer + fBufferCounter*fBuffer[npar].fBelementsize;
 }
@@ -588,7 +588,7 @@ void* TODBCStatement::GetParAddr(Int_t npar, Int_t roottype, Int_t length)
 long double TODBCStatement::ConvertToNumeric(Int_t npar)
 {
    void* addr = GetParAddr(npar);
-   if (addr==0) return 0;
+   if (!addr) return 0;
 
    switch (fBuffer[npar].fBsqlctype) {
       case SQL_C_ULONG:    return *((SQLUINTEGER*) addr); break;
@@ -630,8 +630,8 @@ long double TODBCStatement::ConvertToNumeric(Int_t npar)
 const char* TODBCStatement::ConvertToString(Int_t npar)
 {
    void* addr = GetParAddr(npar);
-   if (addr==0) return 0;
-   if (fBuffer[npar].fBstrbuffer==0)
+   if (!addr) return nullptr;
+   if (!fBuffer[npar].fBstrbuffer)
       fBuffer[npar].fBstrbuffer = new char[100];
 
    char* buf = fBuffer[npar].fBstrbuffer;
@@ -671,7 +671,7 @@ const char* TODBCStatement::ConvertToString(Int_t npar)
                   tm->hour, tm->minute, tm->second);
          break;
       }
-      default: return 0;
+      default: return nullptr;
    }
 
    return buf;
@@ -683,7 +683,7 @@ const char* TODBCStatement::ConvertToString(Int_t npar)
 Bool_t TODBCStatement::IsNull(Int_t npar)
 {
    void* addr = GetParAddr(npar);
-   if (addr==0) return kTRUE;
+   if (!addr) return kTRUE;
 
    return fBuffer[npar].fBlenarray[fBufferCounter] == SQL_NULL_DATA;
 }
@@ -694,7 +694,7 @@ Bool_t TODBCStatement::IsNull(Int_t npar)
 Int_t TODBCStatement::GetInt(Int_t npar)
 {
    void* addr = GetParAddr(npar);
-   if (addr==0) return 0;
+   if (!addr) return 0;
 
    if (fBuffer[npar].fBsqlctype==SQL_C_SLONG)
       return (Int_t) *((SQLINTEGER*) addr);
@@ -708,7 +708,7 @@ Int_t TODBCStatement::GetInt(Int_t npar)
 UInt_t TODBCStatement::GetUInt(Int_t npar)
 {
    void* addr = GetParAddr(npar);
-   if (addr==0) return 0;
+   if (!addr) return 0;
 
    if (fBuffer[npar].fBsqlctype==SQL_C_ULONG)
       return (UInt_t) *((SQLUINTEGER*) addr);
@@ -722,7 +722,7 @@ UInt_t TODBCStatement::GetUInt(Int_t npar)
 Long_t TODBCStatement::GetLong(Int_t npar)
 {
    void* addr = GetParAddr(npar);
-   if (addr==0) return 0;
+   if (!addr) return 0;
 
    if (fBuffer[npar].fBsqlctype==SQL_C_SLONG)
      return (Long_t) *((SQLINTEGER*) addr);
@@ -736,7 +736,7 @@ Long_t TODBCStatement::GetLong(Int_t npar)
 Long64_t TODBCStatement::GetLong64(Int_t npar)
 {
    void* addr = GetParAddr(npar);
-   if (addr==0) return 0;
+   if (!addr) return 0;
 
    if (fBuffer[npar].fBsqlctype==SQL_C_SBIGINT)
      return *((Long64_t*) addr);
@@ -750,7 +750,7 @@ Long64_t TODBCStatement::GetLong64(Int_t npar)
 ULong64_t TODBCStatement::GetULong64(Int_t npar)
 {
    void* addr = GetParAddr(npar);
-   if (addr==0) return 0;
+   if (!addr) return 0;
 
    if (fBuffer[npar].fBsqlctype==SQL_C_UBIGINT)
      return *((ULong64_t*) addr);
@@ -764,7 +764,7 @@ ULong64_t TODBCStatement::GetULong64(Int_t npar)
 Double_t TODBCStatement::GetDouble(Int_t npar)
 {
    void* addr = GetParAddr(npar);
-   if (addr==0) return 0;
+   if (!addr) return 0;
 
    if (fBuffer[npar].fBsqlctype==SQL_C_DOUBLE)
      return *((SQLDOUBLE*) addr);
@@ -778,14 +778,14 @@ Double_t TODBCStatement::GetDouble(Int_t npar)
 const char* TODBCStatement::GetString(Int_t npar)
 {
    void* addr = GetParAddr(npar);
-   if (addr==0) return 0;
+   if (!addr) return nullptr;
 
    if (fBuffer[npar].fBsqlctype==SQL_C_CHAR) {
       // first check if string is null
 
       int len = fBuffer[npar].fBlenarray[fBufferCounter];
 
-      if ((len == SQL_NULL_DATA) || (len==0)) return 0;
+      if ((len == SQL_NULL_DATA) || (len==0)) return nullptr;
 
       char* res = (char*) addr;
       if (len < fBuffer[npar].fBelementsize) {
@@ -795,10 +795,10 @@ const char* TODBCStatement::GetString(Int_t npar)
 
       if (len > fBuffer[npar].fBelementsize) {
          SetError(-1, Form("Problems with string size %d", len), "GetString");
-         return 0;
+         return nullptr;
       }
 
-      if (fBuffer[npar].fBstrbuffer==0)
+      if (!fBuffer[npar].fBstrbuffer)
          fBuffer[npar].fBstrbuffer = new char[len+1];
 
       strlcpy(fBuffer[npar].fBstrbuffer, res, len+1);
@@ -816,11 +816,11 @@ const char* TODBCStatement::GetString(Int_t npar)
 
 Bool_t TODBCStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
 {
-   mem = 0;
+   mem = nullptr;
    size = 0;
 
    void* addr = GetParAddr(npar);
-   if (addr==0) return kFALSE;
+   if (!addr) return kFALSE;
 
    if ((fBuffer[npar].fBsqlctype==SQL_C_BINARY) ||
        (fBuffer[npar].fBsqlctype==SQL_C_CHAR)) {
@@ -832,7 +832,7 @@ Bool_t TODBCStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
 
       size = len;
 
-      if (fBuffer[npar].fBstrbuffer==0)
+      if (!fBuffer[npar].fBstrbuffer)
          fBuffer[npar].fBstrbuffer = new char[size];
 
       memcpy(fBuffer[npar].fBstrbuffer, addr, size);
@@ -852,7 +852,7 @@ Bool_t TODBCStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
 Bool_t TODBCStatement::GetDate(Int_t npar, Int_t& year, Int_t& month, Int_t& day)
 {
    void* addr = GetParAddr(npar);
-   if (addr==0) return kFALSE;
+   if (!addr) return kFALSE;
 
    if (fBuffer[npar].fBsqlctype!=SQL_C_TYPE_DATE) return kFALSE;
 
@@ -870,7 +870,7 @@ Bool_t TODBCStatement::GetDate(Int_t npar, Int_t& year, Int_t& month, Int_t& day
 Bool_t TODBCStatement::GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec)
 {
    void* addr = GetParAddr(npar);
-   if (addr==0) return kFALSE;
+   if (!addr) return kFALSE;
 
    if (fBuffer[npar].fBsqlctype!=SQL_C_TYPE_TIME) return kFALSE;
 
@@ -888,7 +888,7 @@ Bool_t TODBCStatement::GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec)
 Bool_t TODBCStatement::GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec)
 {
    void* addr = GetParAddr(npar);
-   if (addr==0) return kFALSE;
+   if (!addr) return kFALSE;
 
    if (fBuffer[npar].fBsqlctype!=SQL_C_TYPE_TIMESTAMP) return kFALSE;
 
@@ -909,7 +909,7 @@ Bool_t TODBCStatement::GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t& d
 Bool_t TODBCStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec, Int_t& frac)
 {
    void* addr = GetParAddr(npar);
-   if (addr==0) return kFALSE;
+   if (!addr) return kFALSE;
 
    if (fBuffer[npar].fBsqlctype!=SQL_C_TYPE_TIMESTAMP) return kFALSE;
 
@@ -938,10 +938,10 @@ Bool_t TODBCStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_t
 Bool_t TODBCStatement::SetNull(Int_t npar)
 {
    void* addr = GetParAddr(npar, kInt_t);
-   if (addr!=0)
+   if (addr)
       *((SQLINTEGER*) addr) = 0;
 
-   if ((npar>=0) && (npar<fNumBuffers))
+   if ((npar >= 0) && (npar < fNumBuffers))
       fBuffer[npar].fBlenarray[fBufferCounter] = SQL_NULL_DATA;
 
    return kTRUE;
@@ -953,7 +953,7 @@ Bool_t TODBCStatement::SetNull(Int_t npar)
 Bool_t TODBCStatement::SetInt(Int_t npar, Int_t value)
 {
    void* addr = GetParAddr(npar, kInt_t);
-   if (addr==0) return kFALSE;
+   if (!addr) return kFALSE;
 
    *((SQLINTEGER*) addr) = value;
 
@@ -968,7 +968,7 @@ Bool_t TODBCStatement::SetInt(Int_t npar, Int_t value)
 Bool_t TODBCStatement::SetUInt(Int_t npar, UInt_t value)
 {
    void* addr = GetParAddr(npar, kUInt_t);
-   if (addr==0) return kFALSE;
+   if (!addr) return kFALSE;
 
    *((SQLUINTEGER*) addr) = value;
 
@@ -983,7 +983,7 @@ Bool_t TODBCStatement::SetUInt(Int_t npar, UInt_t value)
 Bool_t TODBCStatement::SetLong(Int_t npar, Long_t value)
 {
    void* addr = GetParAddr(npar, kLong_t);
-   if (addr==0) return kFALSE;
+   if (!addr) return kFALSE;
 
    *((SQLINTEGER*) addr) = value;
 
@@ -998,7 +998,7 @@ Bool_t TODBCStatement::SetLong(Int_t npar, Long_t value)
 Bool_t TODBCStatement::SetLong64(Int_t npar, Long64_t value)
 {
    void* addr = GetParAddr(npar, kLong64_t);
-   if (addr==0) return kFALSE;
+   if (!addr) return kFALSE;
 
    *((Long64_t*) addr) = value;
 
@@ -1013,7 +1013,7 @@ Bool_t TODBCStatement::SetLong64(Int_t npar, Long64_t value)
 Bool_t TODBCStatement::SetULong64(Int_t npar, ULong64_t value)
 {
    void* addr = GetParAddr(npar, kULong64_t);
-   if (addr==0) return kFALSE;
+   if (!addr) return kFALSE;
 
    *((ULong64_t*) addr) = value;
 
@@ -1028,7 +1028,7 @@ Bool_t TODBCStatement::SetULong64(Int_t npar, ULong64_t value)
 Bool_t TODBCStatement::SetDouble(Int_t npar, Double_t value)
 {
    void* addr = GetParAddr(npar, kDouble_t);
-   if (addr==0) return kFALSE;
+   if (!addr) return kFALSE;
 
    *((SQLDOUBLE*) addr) = value;
 
@@ -1043,8 +1043,7 @@ Bool_t TODBCStatement::SetDouble(Int_t npar, Double_t value)
 Bool_t TODBCStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
 {
    void* addr = GetParAddr(npar, kCharStar, maxsize);
-
-   if (addr==0) return kFALSE;
+   if (!addr) return kFALSE;
 
    if (value) {
       int len = strlen(value);
@@ -1075,7 +1074,7 @@ Bool_t TODBCStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
 Bool_t TODBCStatement::SetBinary(Int_t npar, void* mem, Long_t size, Long_t maxsize)
 {
    void* addr = GetParAddr(npar, kSqlBinary, maxsize);
-   if (addr==0) return kFALSE;
+   if (!addr) return kFALSE;
 
    if (size>fBuffer[npar].fBelementsize)
       size = fBuffer[npar].fBelementsize;
@@ -1092,7 +1091,7 @@ Bool_t TODBCStatement::SetBinary(Int_t npar, void* mem, Long_t size, Long_t maxs
 Bool_t TODBCStatement::SetDate(Int_t npar, Int_t year, Int_t month, Int_t day)
 {
    void* addr = GetParAddr(npar, kSqlDate);
-   if (addr==0) return kFALSE;
+   if (!addr) return kFALSE;
 
    DATE_STRUCT* dt = (DATE_STRUCT*) addr;
    dt->year = year;
@@ -1110,7 +1109,7 @@ Bool_t TODBCStatement::SetDate(Int_t npar, Int_t year, Int_t month, Int_t day)
 Bool_t TODBCStatement::SetTime(Int_t npar, Int_t hour, Int_t min, Int_t sec)
 {
    void* addr = GetParAddr(npar, kSqlTime);
-   if (addr==0) return kFALSE;
+   if (!addr) return kFALSE;
 
    TIME_STRUCT* tm = (TIME_STRUCT*) addr;
    tm->hour = hour;
@@ -1128,7 +1127,7 @@ Bool_t TODBCStatement::SetTime(Int_t npar, Int_t hour, Int_t min, Int_t sec)
 Bool_t TODBCStatement::SetDatime(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec)
 {
    void* addr = GetParAddr(npar, kSqlTimestamp);
-   if (addr==0) return kFALSE;
+   if (!addr) return kFALSE;
 
    TIMESTAMP_STRUCT* tm = (TIMESTAMP_STRUCT*) addr;
    tm->year = year;
@@ -1150,7 +1149,7 @@ Bool_t TODBCStatement::SetDatime(Int_t npar, Int_t year, Int_t month, Int_t day,
 Bool_t TODBCStatement::SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec, Int_t frac)
 {
    void* addr = GetParAddr(npar, kSqlTimestamp);
-   if (addr==0) return kFALSE;
+   if (!addr) return kFALSE;
 
    TIMESTAMP_STRUCT* tm = (TIMESTAMP_STRUCT*) addr;
    tm->year = year;

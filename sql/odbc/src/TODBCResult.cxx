@@ -45,7 +45,7 @@ TODBCResult::~TODBCResult()
 void TODBCResult::Close(Option_t *)
 {
    SQLFreeHandle(SQL_HANDLE_STMT, fHstmt);
-   fHstmt = 0;
+   fHstmt = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -66,7 +66,7 @@ const char *TODBCResult::GetFieldName(Int_t field)
                      &nameLength, &dataType,
                      &columnSize, &decimalDigits, &nullable);
 
-   if (retcode != SQL_SUCCESS && retcode != SQL_SUCCESS_WITH_INFO) return 0;
+   if (retcode != SQL_SUCCESS && retcode != SQL_SUCCESS_WITH_INFO) return nullptr;
 
    fNameBuffer = (const char*) columnName;
 
@@ -79,12 +79,12 @@ const char *TODBCResult::GetFieldName(Int_t field)
 
 TSQLRow *TODBCResult::Next()
 {
-   if (fHstmt==0) return 0;
+   if (!fHstmt) return nullptr;
 
    SQLRETURN retcode = SQLFetch(fHstmt);
 
    if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO)
        return new TODBCRow(fHstmt, fFieldCount);
 
-   return 0;
+   return nullptr;
 }
