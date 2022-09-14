@@ -58,7 +58,7 @@ public:
    TSQLClassInfo *GetInfo() const { return fInfo; }
 
    Bool_t LocateColumn(const char *colname, Bool_t isblob = kFALSE);
-   Bool_t IsBlobData() const { return fCurrentBlob || (fUnpack != 0); }
+   Bool_t IsBlobData() const { return fCurrentBlob || (fUnpack != nullptr); }
    void ShiftToNextValue();
 
    void AddUnpack(const char *tname, const char *value);
