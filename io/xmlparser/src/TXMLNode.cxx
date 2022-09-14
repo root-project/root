@@ -33,8 +33,8 @@ ClassImp(TXMLNode);
 /// TXMLNode constructor.
 
 TXMLNode::TXMLNode(_xmlNode *node, TXMLNode *parent, TXMLNode *previous) :
-   fXMLNode(node), fParent(parent), fChildren(0), fNextNode(0),
-   fPreviousNode(previous), fAttrList(0)
+   fXMLNode(node), fParent(parent), fChildren(nullptr), fNextNode(nullptr),
+   fPreviousNode(previous), fAttrList(nullptr)
 {
 }
 
@@ -80,7 +80,7 @@ TXMLNode *TXMLNode::GetChildren()
       fChildren = new TXMLNode(fXMLNode->children, this);
       return fChildren;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -98,7 +98,7 @@ const char *TXMLNode::GetContent() const
 {
    if (fXMLNode->content)
       return (const char *) fXMLNode->content;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -111,7 +111,7 @@ TList *TXMLNode::GetAttributes()
       return fAttrList;
 
    if (!HasAttributes())
-      return 0;
+      return nullptr;
 
    fAttrList = new TList();
    xmlAttr *attr_node = fXMLNode->properties;
@@ -136,7 +136,7 @@ TXMLNode *TXMLNode::GetNextNode()
       fNextNode = new TXMLNode(fXMLNode->next, fParent, this);
       return fNextNode;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -157,7 +157,7 @@ const char *TXMLNode::GetText() const
       if (fXMLNode->children->type == XML_TEXT_NODE)
          return (const char *) fXMLNode->children->content;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -208,7 +208,7 @@ const char *TXMLNode::GetNamespaceHref() const
    if (fXMLNode->ns) {
       return (const char *) fXMLNode->ns->href;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -219,5 +219,5 @@ const char *TXMLNode::GetNamespacePrefix() const
    if (fXMLNode->ns) {
       return (const char *) fXMLNode->ns->prefix;
    }
-   return 0;
+   return nullptr;
 }
