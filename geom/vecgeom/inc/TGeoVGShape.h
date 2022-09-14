@@ -53,9 +53,9 @@ public:
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py)
                             { return fShape->DistancetoPrimitive(px, py); }
    virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1,
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
+                                   Double_t step=TGeoShape::Big(), Double_t *safe=nullptr) const;
    virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1,
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
+                                   Double_t step=TGeoShape::Big(), Double_t *safe=nullptr) const;
    virtual TGeoVolume   *Divide(TGeoVolume *, const char *, Int_t, Int_t, Double_t, Double_t)
                             { return nullptr; }
    virtual void          Draw(Option_t *option="") { fShape->Draw(option); } // *MENU*
