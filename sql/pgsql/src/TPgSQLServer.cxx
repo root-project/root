@@ -68,9 +68,9 @@ TPgSQLServer::TPgSQLServer(const char *db, const char *uid, const char *pw)
    if (url.GetPort()) {
       TString port;
       port += url.GetPort();
-      fPgSQL = PQsetdbLogin(url.GetHost(), port, 0, 0, dbase, uid, pw);
+      fPgSQL = PQsetdbLogin(url.GetHost(), port.Data(), nullptr, nullptr, dbase, uid, pw);
    } else {
-      fPgSQL = PQsetdbLogin(url.GetHost(), 0, 0, 0, dbase, uid, pw);
+      fPgSQL = PQsetdbLogin(url.GetHost(), nullptr, nullptr, nullptr, dbase, uid, pw);
    }
 
    if (PQstatus(fPgSQL) != CONNECTION_BAD) {
@@ -127,17 +127,16 @@ TSQLResult *TPgSQLServer::Query(const char *sql)
 {
    if (!IsConnected()) {
       Error("Query", "not connected");
-      return 0;
+      return nullptr;
    }
 
    PGresult *res = PQexec(fPgSQL, sql);
-   //cout << " Query called " << sql << ":" << PQntuples(res) << endl;
 
    if ((PQresultStatus(res) != PGRES_COMMAND_OK) &&
        (PQresultStatus(res) != PGRES_TUPLES_OK)) {
       Error("Query", "%s",PQresultErrorMessage(res));
       PQclear(res);
-      return 0;
+      return nullptr;
    }
 
    return new TPgSQLResult(res);
@@ -168,7 +167,7 @@ Int_t TPgSQLServer::SelectDataBase(const char *dbname)
 
       Close();
       fPgSQL = PQsetdbLogin(fHost.Data(), port.Data(),
-                            opts.Data(), 0, dbname,
+                            opts.Data(), nullptr, dbname,
                             usr.Data(), pwd.Data());
 
       if (PQstatus(fPgSQL) == CONNECTION_OK) {
@@ -192,14 +191,14 @@ TSQLResult *TPgSQLServer::GetDataBases(const char *wild)
 {
    if (!IsConnected()) {
       Error("GetDataBases", "not connected");
-      return 0;
+      return nullptr;
    }
 
    TString sql = "SELECT pg_database.datname FROM pg_database";
-   if (wild)
-      sql += Form(" WHERE pg_database.datname LIKE '%s'", wild);
+   if (wild && *wild)
+      sql += TString::Format(" WHERE pg_database.datname LIKE '%s'", wild);
 
-   return Query(sql);
+   return Query(sql.Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -212,19 +211,19 @@ TSQLResult *TPgSQLServer::GetTables(const char *dbname, const char *wild)
 {
    if (!IsConnected()) {
       Error("GetTables", "not connected");
-      return 0;
+      return nullptr;
    }
 
    if (SelectDataBase(dbname) != 0) {
       Error("GetTables", "no such database %s", dbname);
-      return 0;
+      return nullptr;
    }
 
    TString sql = "SELECT relname FROM pg_class where relkind='r'";
-   if (wild)
-      sql += Form(" AND relname LIKE '%s'", wild);
+   if (wild && *wild)
+      sql += TString::Format(" AND relname LIKE '%s'", wild);
 
-   return Query(sql);
+   return Query(sql.Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -238,28 +237,28 @@ TSQLResult *TPgSQLServer::GetColumns(const char *dbname, const char *table,
 {
    if (!IsConnected()) {
       Error("GetColumns", "not connected");
-      return 0;
+      return nullptr;
    }
 
    if (SelectDataBase(dbname) != 0) {
       Error("GetColumns", "no such database %s", dbname);
-      return 0;
+      return nullptr;
    }
 
-   char *sql;
-   if (wild)
-      sql = Form("select a.attname,t.typname,a.attnotnull \
-                  from pg_attribute a, pg_class c, pg_type t \
-                  where c.oid=a.attrelid and c.relname='%s' and \
-                  a.atttypid=t.oid and a.attnum>0 \
-                  and a.attname like '%s' order by a.attnum ", table,wild);
+   TString sql;
+   if (wild && *wild)
+      sql.Form("select a.attname,t.typname,a.attnotnull \
+                from pg_attribute a, pg_class c, pg_type t \
+                where c.oid=a.attrelid and c.relname='%s' and \
+                a.atttypid=t.oid and a.attnum>0 \
+                and a.attname like '%s' order by a.attnum ", table, wild);
    else
-      sql = Form("select a.attname,t.typname,a.attnotnull \
-                  from pg_attribute a, pg_class c, pg_type t \
-                  where c.oid=a.attrelid and c.relname='%s' and \
-                  a.atttypid=t.oid and a.attnum>0 order by a.attnum",table);
+      sql.Form("select a.attname,t.typname,a.attnotnull \
+                from pg_attribute a, pg_class c, pg_type t \
+                where c.oid=a.attrelid and c.relname='%s' and \
+                a.atttypid=t.oid and a.attnum>0 order by a.attnum", table);
 
-   return Query(sql);
+   return Query(sql.Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -271,9 +270,9 @@ Int_t TPgSQLServer::CreateDataBase(const char *dbname)
       Error("CreateDataBase", "not connected");
       return -1;
    }
-   char *sql;
-   sql = Form("CREATE DATABASE %s", dbname);
-   PGresult *res = PQexec(fPgSQL, sql);
+   TString sql;
+   sql.Form("CREATE DATABASE %s", dbname);
+   PGresult *res = PQexec(fPgSQL, sql.Data());
    PQclear(res);
    return 0;
 }
@@ -288,9 +287,9 @@ Int_t TPgSQLServer::DropDataBase(const char *dbname)
       Error("DropDataBase", "not connected");
       return -1;
    }
-   char *sql;
-   sql = Form("DROP DATABASE %s", dbname);
-   PGresult *res = PQexec(fPgSQL, sql);
+   TString sql;
+   sql.Form("DROP DATABASE %s", dbname);
+   PGresult *res = PQexec(fPgSQL, sql.Data());
    PQclear(res);
    return 0;
 }
@@ -332,7 +331,7 @@ const char *TPgSQLServer::ServerInfo()
 {
    if (!IsConnected()) {
       Error("ServerInfo", "not connected");
-      return 0;
+      return nullptr;
    }
 
    return fSrvInfo.Data();
@@ -364,13 +363,13 @@ TSQLStatement* TPgSQLServer::Statement(const char *, Int_t)
 #ifdef PG_VERSION_NUM
    if (!sql || !*sql) {
       SetError(-1, "no query string specified","Statement");
-      return 0;
+      return nullptr;
    }
 
    PgSQL_Stmt_t *stmt = new PgSQL_Stmt_t;
    if (!stmt){
       SetError(-1, "cannot allocate PgSQL_Stmt_t", "Statement");
-      return 0;
+      return nullptr;
    }
    stmt->fConn = fPgSQL;
    stmt->fRes  = PQprepare(fPgSQL, "preparedstmt", sql, 0, (const Oid*)0);
@@ -381,14 +380,14 @@ TSQLStatement* TPgSQLServer::Statement(const char *, Int_t)
       return new TPgSQLStatement(stmt, fErrorOut);
    } else {
       SetError(stat, PQresultErrorMessage(stmt->fRes), "Statement");
-      stmt->fConn = 0;
+      stmt->fConn = nullptr;
       delete stmt;
-      return 0;
+      return nullptr;
    }
 #else
    Error("Statement", "not implemented for pgsql < 8.2");
 #endif
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -398,19 +397,21 @@ TSQLTableInfo *TPgSQLServer::GetTableInfo(const char* tablename)
 {
    if (!IsConnected()) {
       Error("GetColumns", "not connected");
-      return NULL;
+      return nullptr;
    }
 
    // Check table name
-   if ((tablename==0) || (*tablename==0)) return 0;
-      // Query first row ( works same way as MySQL)
-      PGresult *res = PQexec(fPgSQL, TString::Format("SELECT * FROM %s LIMIT 1;", tablename));
+   if (!tablename || (*tablename==0))
+      return nullptr;
+
+   // Query first row ( works same way as MySQL)
+   PGresult *res = PQexec(fPgSQL, TString::Format("SELECT * FROM %s LIMIT 1;", tablename));
 
    if ((PQresultStatus(res) != PGRES_COMMAND_OK) &&
        (PQresultStatus(res) != PGRES_TUPLES_OK)) {
       Error("Query", "%s",PQresultErrorMessage(res));
       PQclear(res);
-      return 0;
+      return nullptr;
    }
 
    if (fOidTypNameMap.empty()) {
@@ -423,7 +424,7 @@ TSQLTableInfo *TPgSQLServer::GetTableInfo(const char* tablename)
          Error("Query", "%s", PQresultErrorMessage(res_type));
          PQclear(res);
          PQclear(res_type);
-         return 0;
+         return nullptr;
       }
 
       Int_t nOids = PQntuples(res_type);
@@ -439,7 +440,7 @@ TSQLTableInfo *TPgSQLServer::GetTableInfo(const char* tablename)
       PQclear(res_type);
    }
 
-   TList * lst = NULL;
+   TList * lst = nullptr;
 
    Int_t nfields  = PQnfields(res);
 
@@ -545,9 +546,8 @@ TSQLTableInfo *TPgSQLServer::GetTableInfo(const char* tablename)
          data_size=-1;
       }
 
-      if (!lst) {
+      if (!lst)
          lst = new TList;
-      }
 
       lst->Add(new TSQLColumnInfo(column_name,
                                   type_name,

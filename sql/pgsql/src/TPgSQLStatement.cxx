@@ -1,4 +1,4 @@
-   // @(#)root/pgsql:$Id$
+// @(#)root/pgsql:$Id$
 // Author: Dennis Box (dbox@fnal.gov)  3/12/2007
 
 /*************************************************************************
@@ -251,7 +251,7 @@ Int_t TPgSQLStatement::GetNumFields()
 
 const char* TPgSQLStatement::GetFieldName(Int_t nfield)
 {
-   if (!IsResultSetMode() || (nfield<0) || (nfield>=fNumBuffers)) return 0;
+   if (!IsResultSetMode() || (nfield < 0) || (nfield >= fNumBuffers)) return nullptr;
 
    return fFieldName[nfield];
 }
@@ -280,7 +280,7 @@ Bool_t TPgSQLStatement::NextIteration()
 {
    ClearError();
 
-   if (!IsSetParsMode() || (fBind==0)) {
+   if (!IsSetParsMode() || !fBind) {
       SetError(-1,"Cannot call for that statement","NextIteration");
       return kFALSE;
    }
