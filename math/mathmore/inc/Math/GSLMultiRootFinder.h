@@ -44,8 +44,8 @@ namespace Math {
 
    class GSLMultiRootBaseSolver;
 
-   /** @defgroup MultiRoot  Multidimensional ROOT finding 
-       Classes for finding the roots of a multi-dimensional system. 
+   /** @defgroup MultiRoot  Multidimensional ROOT finding
+       Classes for finding the roots of a multi-dimensional system.
        @ingroup NumAlgo
    */
 
@@ -133,7 +133,7 @@ namespace Math {
       after having remived the GSL prefix (gsl_multiroot_fsolver).
       Default algorithm  is "hybrids" (without derivative).
     */
-    GSLMultiRootFinder(const char * name = 0);
+    GSLMultiRootFinder(const char * name = nullptr);
 
     /// destructor
     virtual ~GSLMultiRootFinder();

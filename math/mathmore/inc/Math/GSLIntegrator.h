@@ -172,7 +172,7 @@ namespace Math {
       /**
          Set function from a GSL pointer function type
        */
-      void SetFunction( GSLFuncPointer f, void * p = 0);
+      void SetFunction( GSLFuncPointer f, void * p = nullptr);
 
       // methods using IGenFunction
 
