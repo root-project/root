@@ -201,7 +201,7 @@ public:
    Double_t       Eval(Double_t x, Double_t y) const;
    Double_t       Eval(Double_t x, Double_t y , Double_t z) const;
    Double_t       Eval(Double_t x, Double_t y , Double_t z , Double_t t ) const;
-   Double_t       EvalPar(const Double_t *x, const Double_t *params=0) const;
+   Double_t       EvalPar(const Double_t *x, const Double_t *params = nullptr) const;
 
    /// Generate gradient computation routine with respect to the parameters.
    /// \returns true if a gradient was generated and GradientPar can be called.
@@ -247,7 +247,7 @@ public:
       return  EvalParVec(x, params);
    }
 #ifdef R__HAS_VECCORE
-   ROOT::Double_v EvalParVec(const ROOT::Double_v *x, const Double_t *params = 0) const;
+   ROOT::Double_v EvalParVec(const ROOT::Double_v *x, const Double_t *params = nullptr) const;
 #endif
    TString        GetExpFormula(Option_t *option="") const;
    TString        GetGradientFormula() const;

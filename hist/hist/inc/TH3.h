@@ -90,8 +90,8 @@ public:
 
            void     FillRandom(const char *fname, Int_t ntimes=5000, TRandom *rng = nullptr) override;
            void     FillRandom(TH1 *h, Int_t ntimes=5000, TRandom *rng = nullptr) override;
-   virtual void     FitSlicesZ(TF1 *f1=0,Int_t binminx=1, Int_t binmaxx=0,Int_t binminy=1, Int_t binmaxy=0,
-                                        Int_t cut=0 ,Option_t *option="QNR"); // *MENU*
+   virtual void     FitSlicesZ(TF1 *f1 = nullptr, Int_t binminx = 1, Int_t binmaxx = 0, Int_t binminy = 1, Int_t binmaxy = 0,
+                               Int_t cut = 0, Option_t *option = "QNR"); // *MENU*
            Int_t    GetBin(Int_t binx, Int_t biny, Int_t binz) const override;
    using TH1::GetBinContent;
            Double_t GetBinContent(Int_t binx, Int_t biny, Int_t binz) const override { return TH1::GetBinContent( GetBin(binx, biny, binz) ); }
