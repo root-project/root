@@ -120,7 +120,7 @@ protected:
    const Element               *fPtr;     //  pointer to the a[row,0]
 
 public:
-   TMatrixTRow_const() { fMatrix = 0; fRowInd = 0; fInc = 0; fPtr = 0; }
+   TMatrixTRow_const() { fMatrix = nullptr; fRowInd = 0; fInc = 0; fPtr = nullptr; }
    TMatrixTRow_const(const TMatrixT   <Element> &matrix,Int_t row);
    TMatrixTRow_const(const TMatrixTSym<Element> &matrix,Int_t row);
   TMatrixTRow_const(const TMatrixTRow_const<Element>& trc):
@@ -220,7 +220,7 @@ protected:
    const Element               *fPtr;     //  pointer to the a[0,col] column
 
 public:
-   TMatrixTColumn_const() { fMatrix = 0; fColInd = 0; fInc = 0; fPtr = 0; }
+   TMatrixTColumn_const() { fMatrix = nullptr; fColInd = 0; fInc = 0; fPtr = nullptr; }
    TMatrixTColumn_const(const TMatrixT   <Element> &matrix,Int_t col);
    TMatrixTColumn_const(const TMatrixTSym<Element> &matrix,Int_t col);
    TMatrixTColumn_const(const TMatrixTColumn_const<Element>& trc):
@@ -322,7 +322,7 @@ protected:
    const Element               *fPtr;     //  pointer to the a[0,0]
 
 public:
-   TMatrixTDiag_const() { fMatrix = 0; fInc = 0; fNdiag = 0; fPtr = 0; }
+   TMatrixTDiag_const() { fMatrix = nullptr; fInc = 0; fNdiag = 0; fPtr = nullptr; }
    TMatrixTDiag_const(const TMatrixT   <Element> &matrix);
    TMatrixTDiag_const(const TMatrixTSym<Element> &matrix);
    TMatrixTDiag_const(const TMatrixTDiag_const<Element>& trc):
@@ -411,7 +411,7 @@ protected:
    const Element               *fPtr;     //  pointer to the a[0,0]
 
 public:
-   TMatrixTFlat_const() { fMatrix = 0; fNelems = 0; fPtr = 0; }
+   TMatrixTFlat_const() { fMatrix = nullptr; fNelems = 0; fPtr = nullptr; }
    TMatrixTFlat_const(const TMatrixT   <Element> &matrix);
    TMatrixTFlat_const(const TMatrixTSym<Element> &matrix);
    TMatrixTFlat_const(const TMatrixTFlat_const<Element>& trc):
@@ -499,7 +499,7 @@ protected:
          Int_t                  fNcolsSub;  //
 
 public:
-   TMatrixTSub_const() { fRowOff = fColOff = fNrowsSub = fNcolsSub = 0; fMatrix = 0; }
+   TMatrixTSub_const() { fRowOff = fColOff = fNrowsSub = fNcolsSub = 0; fMatrix = nullptr; }
    TMatrixTSub_const(const TMatrixT   <Element> &matrix,Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
    TMatrixTSub_const(const TMatrixTSym<Element> &matrix,Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
    virtual ~TMatrixTSub_const() { }
@@ -592,7 +592,7 @@ protected:
    const Element               *fDataPtr; // data pointer
 
 public:
-   TMatrixTSparseRow_const() { fMatrix = 0; fRowInd = 0; fNindex = 0; fColPtr = 0; fDataPtr = 0; }
+   TMatrixTSparseRow_const() { fMatrix = nullptr; fRowInd = 0; fNindex = 0; fColPtr = nullptr; fDataPtr = nullptr; }
    TMatrixTSparseRow_const(const TMatrixTSparse<Element> &matrix,Int_t row);
    TMatrixTSparseRow_const(const TMatrixTSparseRow_const<Element>& trc):
      fMatrix(trc.fMatrix), fRowInd(trc.fRowInd), fNindex(trc.fNindex), fColPtr(trc.fColPtr), fDataPtr(trc.fDataPtr) { }
@@ -656,7 +656,7 @@ protected:
    const Element               *fDataPtr; //  data pointer
 
 public:
-   TMatrixTSparseDiag_const() { fMatrix = 0; fNdiag = 0; fDataPtr = 0; }
+   TMatrixTSparseDiag_const() { fMatrix = nullptr; fNdiag = 0; fDataPtr = nullptr; }
    TMatrixTSparseDiag_const(const TMatrixTSparse<Element> &matrix);
    TMatrixTSparseDiag_const(const TMatrixTSparseDiag_const<Element>& trc):
      fMatrix(trc.fMatrix), fNdiag(trc.fNdiag), fDataPtr(trc.fDataPtr) { }
