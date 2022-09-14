@@ -139,7 +139,7 @@ protected:
    Int_t       FindLeafForExpression(const char* expression, TLeaf *&leaf, TString &leftover, Bool_t &final, UInt_t &paran_level, TObjArray &castqueue, std::vector<std::string>& aliasUsed, Bool_t &useLeafCollectionObject, const char *fullExpression);
    TLeaf*      GetLeafWithDatamember(const char* topchoice, const char* nextchice, Long64_t readentry) const;
    Int_t       ParseWithLeaf(TLeaf *leaf, const char *expression, Bool_t final, UInt_t paran_level, TObjArray &castqueue, Bool_t useLeafCollectionObject, const char *fullExpression);
-   Int_t       RegisterDimensions(Int_t code, Int_t size, TFormLeafInfoMultiVarDim * multidim = 0);
+   Int_t       RegisterDimensions(Int_t code, Int_t size, TFormLeafInfoMultiVarDim *multidim = nullptr);
    Int_t       RegisterDimensions(Int_t code, TBranchElement *branch);
    Int_t       RegisterDimensions(Int_t code, TFormLeafInfo *info, TFormLeafInfo *maininfo, Bool_t useCollectionObject);
    Int_t       RegisterDimensions(Int_t code, TLeaf *leaf);
@@ -177,10 +177,10 @@ public:
    virtual Int_t       DefinedVariable(TString &variable, Int_t &action);
    virtual TClass*     EvalClass() const;
 
-   template<typename T> T EvalInstance(Int_t i=0, const char *stringStack[]=0);
-   virtual Double_t       EvalInstance(Int_t i=0, const char *stringStack[]=0) {return EvalInstance<Double_t>(i, stringStack); }
-   virtual Long64_t       EvalInstance64(Int_t i=0, const char *stringStack[]=0) {return EvalInstance<Long64_t>(i, stringStack); }
-   virtual LongDouble_t   EvalInstanceLD(Int_t i=0, const char *stringStack[]=0) {return EvalInstance<LongDouble_t>(i, stringStack); }
+   template<typename T> T EvalInstance(Int_t i=0, const char *stringStack[] = nullptr);
+   virtual Double_t       EvalInstance(Int_t i=0, const char *stringStack[] = nullptr) {return EvalInstance<Double_t>(i, stringStack); }
+   virtual Long64_t       EvalInstance64(Int_t i=0, const char *stringStack[] = nullptr) {return EvalInstance<Long64_t>(i, stringStack); }
+   virtual LongDouble_t   EvalInstanceLD(Int_t i=0, const char *stringStack[] = nullptr) {return EvalInstance<LongDouble_t>(i, stringStack); }
 
    virtual const char *EvalStringInstance(Int_t i=0);
    virtual void*       EvalObject(Int_t i=0);
@@ -203,7 +203,7 @@ public:
    virtual Bool_t      Notify() { UpdateFormulaLeaves(); return kTRUE; }
    virtual char       *PrintValue(Int_t mode=0) const;
    virtual char       *PrintValue(Int_t mode, Int_t instance, const char *decform = "9.9") const;
-   virtual void        SetAxis(TAxis *axis=0);
+   virtual void        SetAxis(TAxis *axis = nullptr);
            void        SetQuickLoad(Bool_t quick) { fQuickLoad = quick; }
    virtual void        SetTree(TTree *tree) {fTree = tree;}
    virtual void        ResetLoading();

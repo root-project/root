@@ -45,7 +45,7 @@ public:
    public:
       TChainIndexEntry() : fMinIndexValue(0), fMinIndexValMinor(0),
                            fMaxIndexValue(0), fMaxIndexValMinor(0),
-                           fTreeIndex(0) {}
+                           fTreeIndex(nullptr) {}
 
       typedef std::pair<Long64_t, Long64_t>      IndexValPair_t;
 

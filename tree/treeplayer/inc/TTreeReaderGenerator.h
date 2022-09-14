@@ -63,7 +63,7 @@ namespace Internal {
 
       TBranchDescriptor(const char *type, TVirtualStreamerInfo *info,
                         const char *branchname, const char *subBranchPrefix, ELocation isclones,
-                        const TString &containerName, TBranchDescriptor *parent = 0) :
+                        const TString &containerName, TBranchDescriptor *parent = nullptr) :
          TNamed(type,type),
          fIsClones(isclones),
          fContainerName(containerName),
@@ -92,7 +92,7 @@ namespace Internal {
       std::vector<TString>  fIncludeStruct;     ///< Branches whom should be included
 
       void   AddReader(TTreeReaderDescriptor::ReaderType type, TString dataType, TString name,
-                       TString branchName, TBranchDescriptor *parent = 0, Bool_t isLeaf = kTRUE);
+                       TString branchName, TBranchDescriptor *parent = nullptr, Bool_t isLeaf = kTRUE);
       UInt_t AnalyzeBranches(TBranchDescriptor *desc, TBranchElement *branch, TVirtualStreamerInfo *info);
       UInt_t AnalyzeBranches(TBranchDescriptor *desc, TIter &branches, TVirtualStreamerInfo *info);
       UInt_t AnalyzeOldBranch(TBranch *branch);
