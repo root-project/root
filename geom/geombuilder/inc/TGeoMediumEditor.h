@@ -56,7 +56,7 @@ protected:
    virtual void   ConnectSignals2Slots();   // Connect the signals to the slots
 
 public:
-   TGeoMediumEditor(const TGWindow *p = 0,
+   TGeoMediumEditor(const TGWindow *p = nullptr,
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
