@@ -414,8 +414,8 @@ public:
    virtual TBranch        *BranchOld(const char* name, const char* classname, void* addobj, Int_t bufsize = 32000, Int_t splitlevel = 1);
    virtual TBranch        *BranchRef();
            void            Browse(TBrowser*) override;
-   virtual Int_t           BuildIndex(const char* majorname, const char* minorname = "0");
-   TStreamerInfo          *BuildStreamerInfo(TClass* cl, void* pointer = 0, Bool_t canOptimize = kTRUE);
+   virtual Int_t           BuildIndex(const char *majorname, const char *minorname = "0");
+   TStreamerInfo          *BuildStreamerInfo(TClass* cl, void *pointer = nullptr, Bool_t canOptimize = kTRUE);
    virtual TFile          *ChangeFile(TFile* file);
    virtual TTree          *CloneTree(Long64_t nentries = -1, Option_t* option = "");
    virtual void            CopyAddresses(TTree*,Bool_t undo = kFALSE);
@@ -545,10 +545,10 @@ public:
    virtual Int_t           LoadBaskets(Long64_t maxmemory = 2000000000);
    virtual Long64_t        LoadTree(Long64_t entry);
    virtual Long64_t        LoadTreeFriend(Long64_t entry, TTree* T);
-   virtual Int_t           MakeClass(const char* classname = 0, Option_t* option = "");
-   virtual Int_t           MakeCode(const char* filename = 0);
-   virtual Int_t           MakeProxy(const char* classname, const char* macrofilename = 0, const char* cutfilename = 0, const char* option = 0, Int_t maxUnrolling = 3);
-   virtual Int_t           MakeSelector(const char* selector = 0, Option_t* option = "");
+   virtual Int_t           MakeClass(const char *classname = nullptr, Option_t* option = "");
+   virtual Int_t           MakeCode(const char *filename = nullptr);
+   virtual Int_t           MakeProxy(const char* classname, const char* macrofilename = nullptr, const char* cutfilename = nullptr, const char* option = nullptr, Int_t maxUnrolling = 3);
+   virtual Int_t           MakeSelector(const char *selector = nullptr, Option_t *option = "");
    Bool_t                  MemoryFull(Int_t nbytes);
    virtual Long64_t        Merge(TCollection* list, Option_t* option = "");
    virtual Long64_t        Merge(TCollection* list, TFileMergeInfo *info);
@@ -578,26 +578,26 @@ public:
    virtual void            SetAutoSave(Long64_t autos = -300000000);
    virtual void            SetAutoFlush(Long64_t autof = -30000000);
    virtual void            SetBasketSize(const char* bname, Int_t buffsize = 16000);
-   virtual Int_t           SetBranchAddress(const char *bname,void *add, TBranch **ptr = 0);
+   virtual Int_t           SetBranchAddress(const char *bname,void *add, TBranch **ptr = nullptr);
    virtual Int_t           SetBranchAddress(const char *bname,void *add, TClass *realClass, EDataType datatype, Bool_t isptr);
    virtual Int_t           SetBranchAddress(const char *bname,void *add, TBranch **ptr, TClass *realClass, EDataType datatype, Bool_t isptr);
-   template <class T> Int_t SetBranchAddress(const char *bname, T **add, TBranch **ptr = 0) {
+   template <class T> Int_t SetBranchAddress(const char *bname, T **add, TBranch **ptr = nullptr) {
       TClass *cl = TClass::GetClass<T>();
       EDataType type = kOther_t;
-      if (cl==0) type = TDataType::GetType(typeid(T));
+      if (!cl) type = TDataType::GetType(typeid(T));
       return SetBranchAddress(bname,add,ptr,cl,type,true);
    }
 #ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
    // This can only be used when the template overload resolution can distinguish between
    // T* and T**
-   template <class T> Int_t SetBranchAddress(const char *bname, T *add, TBranch **ptr = 0) {
+   template <class T> Int_t SetBranchAddress(const char *bname, T *add, TBranch **ptr = nullptr) {
       TClass *cl = TClass::GetClass<T>();
       EDataType type = kOther_t;
-      if (cl==0) type = TDataType::GetType(typeid(T));
+      if (!cl) type = TDataType::GetType(typeid(T));
       return SetBranchAddress(bname,add,ptr,cl,type,false);
    }
 #endif
-   virtual void            SetBranchStatus(const char* bname, Bool_t status = 1, UInt_t* found = 0);
+   virtual void            SetBranchStatus(const char* bname, Bool_t status = 1, UInt_t* found = nullptr);
    static  void            SetBranchStyle(Int_t style = 1);  //style=0 for old branch, =1 for new branch style
    virtual Int_t           SetCacheSize(Long64_t cachesize = -1);
    virtual Int_t           SetCacheEntryRange(Long64_t first, Long64_t last);
