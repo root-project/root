@@ -164,11 +164,11 @@ const char *TOracleResult::GetFieldName(Int_t field)
 
 TSQLRow *TOracleResult::Next()
 {
-   if (!fResult || (fResultType!=1)) return 0;
+   if (!fResult || (fResultType!=1)) return nullptr;
 
-   if (fPool!=0) {
+   if (fPool) {
       TSQLRow* row = (TSQLRow*) fPool->First();
-      if (row!=0) fPool->Remove(row);
+      if (row) fPool->Remove(row);
       return row;
    }
 
@@ -178,7 +178,7 @@ TSQLRow *TOracleResult::Next()
          fRowCount++;
          return new TOracleRow(fResult, fFieldInfo);
       } else
-         return 0;
+         return nullptr;
    } catch (oracle::occi::SQLException &oraex) {
       Error("Next", "%s", (oraex.getMessage()).c_str());
       MakeZombie();
