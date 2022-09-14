@@ -27,25 +27,25 @@ public:
    static TConfidenceLevel *ComputeLimit(TLimitDataSource * data,
                                          Int_t nmc =50000,
                                          bool stat = false,
-                                         TRandom * generator = 0);
+                                         TRandom * generator = nullptr);
    static TConfidenceLevel *ComputeLimit(Double_t s, Double_t b, Int_t d,
                                          Int_t nmc =50000,
                                          bool stat = false,
-                                         TRandom * generator = 0);
+                                         TRandom * generator = nullptr);
    static TConfidenceLevel *ComputeLimit(Double_t s, Double_t b, Int_t d,
                                          TVectorD* se, TVectorD* be, TObjArray*,
                                          Int_t nmc =50000,
                                          bool stat = false,
-                                         TRandom * generator = 0);
+                                         TRandom * generator = nullptr);
    static TConfidenceLevel *ComputeLimit(TH1* s, TH1* b, TH1* d,
                                          Int_t nmc =50000,
                                          bool stat = false,
-                                         TRandom * generator = 0);
+                                         TRandom * generator = nullptr);
    static TConfidenceLevel *ComputeLimit(TH1* s, TH1* b, TH1* d,
                                          TVectorD* se, TVectorD* be, TObjArray*,
                                          Int_t nmc =50000,
                                          bool stat = false,
-                                         TRandom * generator = 0);
+                                         TRandom * generator = nullptr);
  private:
    static TArrayD *fgTable;              ///< A log table... just to speed up calculation
    static TOrdCollection *fgSystNames;   ///< Collection of systematics names

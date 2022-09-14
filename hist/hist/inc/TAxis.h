@@ -97,7 +97,7 @@ public:
    void       Copy(TObject &axis) const override;
    void       Delete(Option_t * /*option*/ ="") override { }
    Int_t      DistancetoPrimitive(Int_t px, Int_t py) override;
-   TObject   *DrawClone(Option_t * /*option*/ ="") const override {return 0;}
+   TObject   *DrawClone(Option_t * /*option*/ ="") const override {return nullptr;}
    void       ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    virtual Int_t      FindBin(Double_t x);
    virtual Int_t      FindBin(Double_t x) const { return FindFixBin(x); }

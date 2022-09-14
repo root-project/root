@@ -145,7 +145,7 @@ namespace ROOT {
             // use EvalPar since it is much more efficient than Eval
             fX[0] = x;
             //const double * p = (fParams.size() > 0) ? &fParams.front() : 0;
-            return fFunc->EvalPar(fX, 0);
+            return fFunc->EvalPar(fX, nullptr);
          }
 
          /// return the function derivatives w.r.t. x

@@ -139,7 +139,7 @@ namespace ROOT {
 
          /// method to set a new function pointer and copy it inside.
          /// By calling this method the class manages now the passed TF1 pointer
-         void SetAndCopyFunction(const TF1 *f = 0);
+         void SetAndCopyFunction(const TF1 *f = nullptr);
 
       private:
          /// evaluate function passing coordinates x and vector of parameters
@@ -162,7 +162,8 @@ namespace ROOT {
             // no need to call InitArg for interpreted functions (done in ctor)
 
             //const double * p = (fParams.size() > 0) ? &fParams.front() : 0;
-            return fFunc->EvalPar(x, 0);
+
+            return fFunc->EvalPar(x, nullptr);
          }
 
          /// evaluate the partial derivative with respect to the parameter
@@ -203,7 +204,7 @@ namespace ROOT {
          DoParameterDerivative(const WrappedMultiTF1Templ<double> *wrappedFunc, const double *x, unsigned int ipar)
          {
             const TFormula *df = dynamic_cast<const TFormula *>(wrappedFunc->GetFunction()->GetLinearPart(ipar));
-            assert(df != 0);
+            assert(df != nullptr);
             return (const_cast<TFormula *>(df))->EvalPar(x); // derivatives should not depend on parameters since
             // function  is linear
          }
@@ -231,7 +232,7 @@ namespace ROOT {
             int ip = 0;
             fLinear = true;
             while (fLinear && ip < fFunc->GetNpar())  {
-               fLinear &= (fFunc->GetLinearPart(ip) != 0) ;
+               fLinear &= (fFunc->GetLinearPart(ip) != nullptr);
                ip++;
             }
          }

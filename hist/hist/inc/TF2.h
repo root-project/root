@@ -89,11 +89,11 @@ public:
    Int_t    DistancetoPrimitive(Int_t px, Int_t py) override;
    void     Draw(Option_t *option="") override;
    TF1     *DrawCopy(Option_t *option="") const override;
-   TObject *DrawDerivative(Option_t * ="al") override {return 0;}
-   TObject *DrawIntegral(Option_t * ="al") override   {return 0;}
+   TObject *DrawDerivative(Option_t * ="al") override {return nullptr;}
+   TObject *DrawIntegral(Option_t * ="al") override   {return nullptr;}
    //virtual void     DrawF2(const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Option_t *option="");
    void     ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
-   virtual Int_t    GetContour(Double_t *levels=0);
+   virtual Int_t    GetContour(Double_t *levels=nullptr);
    virtual Double_t GetContourLevel(Int_t level) const;
           Int_t     GetNpy() const {return fNpy;}
    char    *GetObjectInfo(Int_t px, Int_t py) const override;
@@ -120,7 +120,7 @@ public:
    void     Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax) override;
    void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void     SetNpy(Int_t npy=100); // *MENU*
-   virtual void     SetContour(Int_t nlevels=20, const Double_t *levels=0);
+   virtual void     SetContour(Int_t nlevels=20, const Double_t *levels=nullptr);
    virtual void     SetContourLevel(Int_t level, Double_t value);
    void     SetRange(Double_t xmin, Double_t xmax) override;
    void     SetRange(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax) override; // *MENU*
