@@ -65,7 +65,7 @@
 //  matrices with large dimensions.                                     //
 //                                                                      //
 //  Thus the algorithm should not used for large dimensions of x and y  //
-//    dim(x) should not exceed O(100)                                   //    
+//    dim(x) should not exceed O(100)                                   //
 //    dim(y) should not exceed O(500)                                   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
@@ -276,30 +276,30 @@ public:
    TUnfold(void);
    ~TUnfold(void) override;
    // define input distribution
-   virtual Int_t SetInput(const TH1 *hist_y, Double_t scaleBias=0.0,Double_t oneOverZeroError=0.0,const TH2 *hist_vyy=0,const TH2 *hist_vyy_inv=0);
-   // Unfold with given choice of tau and input 
+   virtual Int_t SetInput(const TH1 *hist_y, Double_t scaleBias=0.0,Double_t oneOverZeroError=0.0,const TH2 *hist_vyy=nullptr,const TH2 *hist_vyy_inv=nullptr);
+   // Unfold with given choice of tau and input
    virtual Double_t DoUnfold(Double_t tau);
    Double_t DoUnfold(Double_t tau,const TH1 *hist_y, Double_t scaleBias=0.0);
    // scan the L curve using successive calls to DoUnfold(Double_t) at various tau
    virtual Int_t ScanLcurve(Int_t nPoint,Double_t tauMin,
                             Double_t tauMax,TGraph **lCurve,
-			    TSpline **logTauX=0,TSpline **logTauY=0,
-                            TSpline **logTauCurvature=0);
+			                   TSpline **logTauX=nullptr,TSpline **logTauY=nullptr,
+                            TSpline **logTauCurvature=nullptr);
 
    // access unfolding results
    Double_t GetTau(void) const;
-   void GetOutput(TH1 *output,const Int_t *binMap=0) const;
-   void GetEmatrix(TH2 *ematrix,const Int_t *binMap=0) const;
-   void GetRhoIJ(TH2 *rhoij,const Int_t *binMap=0) const;
-   Double_t GetRhoI(TH1 *rhoi,const Int_t *binMap=0,TH2 *invEmat=0) const;
-   void GetFoldedOutput(TH1 *folded,const Int_t *binMap=0) const;
+   void GetOutput(TH1 *output,const Int_t *binMap=nullptr) const;
+   void GetEmatrix(TH2 *ematrix,const Int_t *binMap=nullptr) const;
+   void GetRhoIJ(TH2 *rhoij,const Int_t *binMap=nullptr) const;
+   Double_t GetRhoI(TH1 *rhoi,const Int_t *binMap=nullptr,TH2 *invEmat=nullptr) const;
+   void GetFoldedOutput(TH1 *folded,const Int_t *binMap=nullptr) const;
 
    // access input parameters
    void GetProbabilityMatrix(TH2 *A,EHistMap histmap) const;
-   void GetNormalisationVector(TH1 *s,const Int_t *binMap=0) const; // get the vector of normalisation factors, equivalent to the initial bias vector
-   void GetInput(TH1 *inputData,const Int_t *binMap=0) const; // get input data
+   void GetNormalisationVector(TH1 *s,const Int_t *binMap=nullptr) const; // get the vector of normalisation factors, equivalent to the initial bias vector
+   void GetInput(TH1 *inputData,const Int_t *binMap=nullptr) const; // get input data
    void GetInputInverseEmatrix(TH2 *ematrix);   // get input data inverse of error matrix
-   void GetBias(TH1 *bias,const Int_t *binMap=0) const; // get bias (includind biasScale)
+   void GetBias(TH1 *bias,const Int_t *binMap=nullptr) const; // get bias (includind biasScale)
    Int_t GetNr(void) const; // number of regularisation conditions
    void GetL(TH2 *l) const; // get matrix of regularisation conditions
    void GetLsquared(TH2 *lsquared) const;
@@ -333,7 +333,7 @@ public:
    Int_t RegularizeBins2D(int start_bin, int step1, int nbin1, int step2, int nbin2, ERegMode regmode);  // regularize a 2-dimensional grid
    /// get numerical accuracy for Eigenvalue analysis when inverting
    /// matrices with rank problems
-   inline Double_t GetEpsMatrix(void) const { return  fEpsMatrix; } 
+   inline Double_t GetEpsMatrix(void) const { return  fEpsMatrix; }
    /// set numerical accuracy for Eigenvalue analysis when inverting
    /// matrices with rank problems
    void SetEpsMatrix(Double_t eps); // set accuracy for eigenvalue analysis
