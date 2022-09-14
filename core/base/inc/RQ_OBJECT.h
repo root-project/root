@@ -70,9 +70,9 @@ public:\
 TList *GetListOfSignals() const {return fQObject.GetListOfSignals();}\
 Bool_t Connect(const char *sig,const char *cl,void *rcvr,const char *slt)\
 {fQObject.SetSender(this);fQObject.SetSenderClassName(sender_class);return fQObject.Connect(sig,cl,rcvr,slt);}\
-Bool_t Disconnect(const char *sig=0,void *rcvr=0,const char *slt=0){return fQObject.Disconnect(sig,rcvr,slt);}\
-void HighPriority(const char *signal_name,const char *slot_name=0){fQObject.HighPriority(signal_name,slot_name);}\
-void LowPriority(const char *signal_name,const char *slot_name=0){fQObject.LowPriority(signal_name,slot_name);}\
+Bool_t Disconnect(const char *sig=nullptr,void *rcvr=nullptr,const char *slt=nullptr){return fQObject.Disconnect(sig,rcvr,slt);}\
+void HighPriority(const char *signal_name,const char *slot_name=nullptr){fQObject.HighPriority(signal_name,slot_name);}\
+void LowPriority(const char *signal_name,const char *slot_name=nullptr){fQObject.LowPriority(signal_name,slot_name);}\
 template <typename... T> void EmitVA(const char *signal_name, Int_t nargs, const T&... params) \
 { fQObject.EmitVA(signal_name,nargs,params...); } \
 void Emit(const char *signal){EmitVA(signal, /*nargs*/0);} \

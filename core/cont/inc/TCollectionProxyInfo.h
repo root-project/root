@@ -113,7 +113,7 @@ namespace Detail {
                ++(*iter);
                return result;
             }
-            return 0;
+            return nullptr;
          }
          static void destruct1(void *iter_ptr) {
             iterator *start = (iterator *)(iter_ptr);
@@ -197,7 +197,7 @@ namespace Detail {
                ++(*iter);
                return result;
             }
-            return 0;
+            return nullptr;
          }
          static void destruct1(void *begin_ptr) {
             iterator *start = (iterator *)(begin_ptr);
@@ -417,13 +417,13 @@ namespace Detail {
       }
       static void* feed(void *from, void *to, size_t size)  {
          PCont_t  c = PCont_t(to);
-         if (size==0) return 0;
+         if (size==0) return nullptr;
          PValue_t m = &(PValue_t(from)[size-1]); // Take the last item
          // Iterate backwards not to revert ordering
          for (size_t i=0; i<size; ++i, --m){
             c->push_front(*m);
          }
-         return 0;
+         return nullptr;
       }
       static int value_offset()  {
          return 0;
@@ -452,7 +452,7 @@ namespace Detail {
          PValue_t m = PValue_t(from);
          for (size_t i=0; i<size; ++i, ++m)
             c->insert(*m);
-         return 0;
+         return nullptr;
       }
       static void resize(void* /* obj */, size_t )  {
          ;
@@ -484,7 +484,7 @@ namespace Detail {
          PValue_t m = PValue_t(from);
          for (size_t i=0; i<size; ++i, ++m)
             c->insert(*m);
-         return 0;
+         return nullptr;
       }
       static void resize(void* /* obj */, size_t )  {
          ;
@@ -647,7 +647,7 @@ namespace Detail {
       }
       static void* clear(void* env)  {
          object(env)->clear();
-         return 0;
+         return nullptr;
       }
       static void* first(void* env)  {
          PEnv_t  e = PEnv_t(env);
@@ -658,25 +658,25 @@ namespace Detail {
 #endif
          e->fIterator = c->begin();
          e->fSize  = c->size();
-         return 0;
+         return nullptr;
       }
       static void* next(void* env)  {
          PEnv_t  e = PEnv_t(env);
          PCont_t c = PCont_t(e->fObject);
          for (; e->fIdx > 0 && e->iter() != c->end(); ++(e->iter()), --e->fIdx){ }
          // TODO: Need to find something for going backwards....
-         return 0;
+         return nullptr;
       }
       static void* construct(void*,size_t)  {
          // Nothing to construct.
-         return 0;
+         return nullptr;
       }
       static void* collect(void *coll, void *array)  {
          PCont_t  c = PCont_t(coll);
          PValue_t m = PValue_t(array); // 'start' is a buffer outside the container.
          for (Iter_t i=c->begin(); i != c->end(); ++i, ++m )
             ::new(m) Value_t(*i);
-         return 0;
+         return nullptr;
       }
       static void destruct(void*,size_t)  {
          // Nothing to destruct.
@@ -735,7 +735,7 @@ namespace Detail {
          PValue_t m = PValue_t(from);
          for (size_t i=0; i<size; ++i, ++m)
             c->push_back(*m);
-         return 0;
+         return nullptr;
       }
       static int value_offset()  {
          return 0;
@@ -774,7 +774,7 @@ namespace Detail {
       }
       static void* clear(void* env)  {
          object(env)->reset();
-         return 0;
+         return nullptr;
       }
       static void* first(void* env)  {
          PEnv_t  e = PEnv_t(env);
@@ -793,14 +793,14 @@ namespace Detail {
       }
       static void* construct(void*,size_t)  {
          // Nothing to construct.
-         return 0;
+         return nullptr;
       }
       static void* collect(void *coll, void *array)  {
          PCont_t  c = PCont_t(coll);
          PValue_t m = PValue_t(array); // 'start' is a buffer outside the container.
          for (size_t i=0; i != c->size(); ++i, ++m )
             *m = c->test(i);
-         return 0;
+         return nullptr;
       }
       static void destruct(void*,size_t)  {
          // Nothing to destruct.
@@ -872,7 +872,7 @@ namespace Detail {
          PValue_t m = PValue_t(from);
          for (size_t i=0; i<size; ++i, ++m)
             c->set(i,*m);
-         return 0;
+         return nullptr;
       }
       static int value_offset()  {
          return 0;
