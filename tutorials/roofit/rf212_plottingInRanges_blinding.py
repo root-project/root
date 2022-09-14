@@ -42,7 +42,7 @@ expo.fitTo(blindedData, Range="left,right")
 # automatically taken as the NormRange() for plotting. We want to avoid this,
 # because the point of this tutorial is to show what can go wrong when the
 # NormRange() is not specified.
-expo.removeStringAttribute("fitrange");
+expo.removeStringAttribute("fitrange")
 
 
 # Here we will plot the results
