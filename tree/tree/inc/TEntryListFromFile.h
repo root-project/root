@@ -61,8 +61,8 @@ public:
    TEntryListFromFile(const char *filename, const char *listname, Int_t nfiles);
    virtual ~TEntryListFromFile();
    virtual void        Add(const TEntryList * /*elist*/){}
-   virtual Int_t       Contains(Long64_t /*entry*/, TTree * /*tree = 0*/)  {return 0;}
-   virtual Bool_t      Enter(Long64_t /*entry*/, TTree * /*tree = 0*/){return kFALSE;}
+   virtual Int_t       Contains(Long64_t /*entry*/, TTree * /*tree = nullptr */)  {return 0;}
+   virtual Bool_t      Enter(Long64_t /*entry*/, TTree * /*tree = nullptr */){return kFALSE;}
    virtual Bool_t      Enter(Long64_t /*entry*/, const char */*treename*/, const char */*filename*/) { return kFALSE; }
    virtual TEntryList *GetCurrentList() const { return fCurrent; }
    virtual TEntryList *GetEntryList(const char * /*treename*/, const char * /*filename*/, Option_t * /*opt=""*/) {return nullptr;}
@@ -83,7 +83,7 @@ public:
 
    virtual Long64_t    Next();
    virtual void        OptimizeStorage() {};
-   virtual Bool_t      Remove(Long64_t /*entry*/, TTree * /*tree = 0*/){ return 0; }
+   virtual Bool_t      Remove(Long64_t /*entry*/, TTree * /*tree = nullptr */){ return kFALSE; }
 
    virtual void        Print(const Option_t* option = "") const;
 
