@@ -140,7 +140,7 @@ public:
    static  Int_t      ProjectSinusoidal2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab);
    static  Int_t      ProjectParabolic2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab);
    virtual void       RecalculateRange();
-   void       RecursiveRemove(TObject *) override {;}
+   void       RecursiveRemove(TObject *) override {}
    void       SetHighlight() override;
    void       SetHistogram(TH1 *h) override;
    void       SetStack(TList *stack) override {fStack = stack;}
