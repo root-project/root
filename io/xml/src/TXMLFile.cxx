@@ -126,7 +126,7 @@ TXMLFile::TXMLFile(const char *filename, Option_t *option, const char *title, In
    gDirectory = nullptr;
    SetName(filename);
    SetTitle(title);
-   TDirectoryFile::Build(this, 0);
+   TDirectoryFile::Build(this, nullptr);
 
    fD = -1;
    fFile = this;
@@ -140,7 +140,7 @@ TXMLFile::TXMLFile(const char *filename, Option_t *option, const char *title, In
    fSum2Buffer = 0;
    fBytesRead = 0;
    fBytesWrite = 0;
-   fClassIndex = 0;
+   fClassIndex = nullptr;
    fSeekInfo = 0;
    fNbytesInfo = 0;
    fProcessIDs = nullptr;
