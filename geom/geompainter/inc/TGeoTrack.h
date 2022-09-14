@@ -46,10 +46,10 @@ protected:
 
 public:
    TGeoTrack();
-   TGeoTrack(Int_t id, Int_t pdgcode, TVirtualGeoTrack *parent=0, TObject *particle=0);
+   TGeoTrack(Int_t id, Int_t pdgcode, TVirtualGeoTrack *parent=nullptr, TObject *particle=nullptr);
    virtual ~TGeoTrack();
 
-   virtual TVirtualGeoTrack *AddDaughter(Int_t id, Int_t pdgcode, TObject *particle=0);
+   virtual TVirtualGeoTrack *AddDaughter(Int_t id, Int_t pdgcode, TObject *particle=nullptr);
    virtual Int_t       AddDaughter(TVirtualGeoTrack *other);
    virtual void        AddPoint(Double_t x, Double_t y, Double_t z, Double_t t);
    virtual void        AnimateTrack(Double_t tmin=0, Double_t tmax=5E-8, Double_t nframes=200, Option_t *option="/*"); // *MENU*
