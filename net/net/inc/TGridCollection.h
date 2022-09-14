@@ -39,15 +39,15 @@ public:
    virtual void         Reset()
       { MayNotUse("Reset"); }
    virtual TMap        *Next()
-      { MayNotUse("Next"); return 0;}
+      { MayNotUse("Next"); return nullptr;}
    virtual Bool_t       Remove(TMap *)
       { MayNotUse("Remove"); return 0;}
    virtual const char  *GetTURL(const char * /*name*/ = "")
-      { MayNotUse("GetTURL"); return 0;}
+      { MayNotUse("GetTURL"); return nullptr;}
    virtual const char  *GetSURL(const char * /*name*/ = "")
-      { MayNotUse("GetSURL"); return 0;}
+      { MayNotUse("GetSURL"); return nullptr;}
    virtual const char  *GetLFN(const char * /*name*/ = "")
-      { MayNotUse("GetLFN"); return 0;}
+      { MayNotUse("GetLFN"); return nullptr;}
    virtual Long64_t    GetSize(const char * /*name*/ = "")
       { MayNotUse("GetSize"); return -1;}
    virtual Bool_t      IsOnline(const char * /*name*/ = "")
@@ -70,17 +70,17 @@ public:
                                  const char * /*name*/ = "ROOT xml", const char * /*comment*/ = "Exported XML")
       { MayNotUse("ExportXML"); return kFALSE;}
    virtual const char* GetExportUrl()
-      { MayNotUse("GetExportUrl"); return 0;}
-   virtual Bool_t      SetExportUrl(const char * /*exporturl*/ = 0)
+      { MayNotUse("GetExportUrl"); return nullptr;}
+   virtual Bool_t      SetExportUrl(const char * /*exporturl*/ = nullptr)
       { MayNotUse("SetExportUrl"); return kFALSE;}
    virtual void         Print(Option_t * = "") const override
       { MayNotUse("Print"); }
    virtual TFile       *OpenFile(const char *)
-      { MayNotUse("OpenFile"); return 0;}
+      { MayNotUse("OpenFile"); return nullptr;}
    virtual TList       *GetFileGroupList() const
-      { MayNotUse("GetFileGroupList"); return 0;}
+      { MayNotUse("GetFileGroupList"); return nullptr;}
    virtual TEntryList  *GetEntryList(const char *)
-      { MayNotUse("GetEntryList"); return 0;}
+      { MayNotUse("GetEntryList"); return nullptr;}
    virtual UInt_t       GetNofGroups() const
       { MayNotUse("GetNofGroups"); return 0;}
    virtual UInt_t       GetNofGroupfiles() const
@@ -96,21 +96,21 @@ public:
    virtual Bool_t       CheckIfOnline(Bool_t /*bulk*/ = kFALSE)
       { MayNotUse("CheckIfOnline"); return kFALSE;}
    virtual TDSet       *GetDataset(const char *, const char * , const char *)
-      { MayNotUse("GetDataset"); return 0;}
+      { MayNotUse("GetDataset"); return nullptr;}
    virtual TGridResult *GetGridResult(const char * /*filename*/ = "", Bool_t /*onlyonline*/ = kTRUE , Bool_t /*publicaccess*/ = kFALSE )
-      { MayNotUse("GetGridResult"); return 0;}
+      { MayNotUse("GetGridResult"); return nullptr;}
    virtual Bool_t       LookupSUrls(Bool_t /*verbose*/ = kTRUE)
       { MayNotUse("LookupSUrls"); return kFALSE;}
    virtual TList       *GetTagFilterList() const
-      { MayNotUse("GetTagFilterList"); return 0;}
+      { MayNotUse("GetTagFilterList"); return nullptr;}
    virtual void         SetTagFilterList(TList *)
       { MayNotUse("SetTagFilterList");}
    virtual const char* GetCollectionName() const
-      { MayNotUse("GetCollectionName"); return 0;}
+      { MayNotUse("GetCollectionName"); return nullptr;}
    virtual const char* GetInfoComment() const
-      { MayNotUse("GetInfoComment"); return 0;}
+      { MayNotUse("GetInfoComment"); return nullptr;}
    virtual TFileCollection* GetFileCollection(const char* /*name*/ = "", const char* /*title*/ = "") const
-      { MayNotUse("GetFileCollection"); return 0;}
+      { MayNotUse("GetFileCollection"); return nullptr;}
 
    ClassDefOverride(TGridCollection,1)  // ABC managing collection of files on the Grid
 };

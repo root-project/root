@@ -70,7 +70,7 @@ protected:
    TUDPSocket() : fAddress(), fBytesRecv(0), fBytesSent(0), fCompress(0),
                   fLocalAddress(), fRemoteProtocol(), fSecContext(nullptr), fService(),
                   fServType(kSOCKD), fSocket(-1), fUrl(),
-                  fBitsInfo(), fUUIDs(nullptr), fLastUsageMtx(0), fLastUsage() { }
+                  fBitsInfo(), fUUIDs(nullptr), fLastUsageMtx(nullptr), fLastUsage() { }
 
    void         SetDescriptor(Int_t desc) { fSocket = desc; }
    void         SendStreamerInfos(const TMessage &mess);
