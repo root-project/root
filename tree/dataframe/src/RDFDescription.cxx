@@ -17,6 +17,9 @@ namespace RDF {
 RDFDescription::RDFDescription(const std::string &briefDescription, const std::string &fullDescription)
    : fBriefDescription(briefDescription), fFullDescription(fullDescription){};
 
+RDFDescription::RDFDescription(const std::string &briefDescription, const std::string &fullDescription, int filecount)
+   : fBriefDescription(briefDescription), fFullDescription(fullDescription), ffilecount(filecount){};
+
 std::string RDFDescription::AsString(bool shortFormat /*= false*/) const
 {
    if (shortFormat)

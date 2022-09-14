@@ -123,6 +123,40 @@ class RInterface {
    /// Contains the columns defined up to this node.
    RDFInternal::RColumnRegister fColRegister;
 
+// 
+   int GetFileNumber()
+   {
+      // TTree/TChain as input
+      const auto tree = fLoopManager->GetTree();
+      int numFiles = 0;
+      if (tree) {
+         const auto treeName = tree->GetName();
+         const auto isTChain = dynamic_cast<TChain *>(tree) ? true : false;
+         const auto treeType = isTChain ? "TChain" : "TTree";
+         const auto isInMemory = !isTChain && !tree->GetCurrentFile() ? true : false;
+         const auto friendInfo = ROOT::Internal::TreeUtils::GetFriendInfo(*tree);
+         const auto hasFriends = friendInfo.fFriendNames.empty() ? false : true;
+         std::stringstream ss;
+         ss << "Dataframe from " << treeType << " " << treeName;
+         if (isInMemory) {
+            ss << " (in-memory)";
+         } else {
+            const auto files = ROOT::Internal::TreeUtils::GetFileNamesFromTree(*tree);
+            numFiles = files.size();
+         }
+         if (hasFriends) {
+            const auto numFriends = friendInfo.fFriendNames.size();
+            for (auto i = 0u; i < numFriends; i++) {
+               const auto files = friendInfo.fFriendFileNames[i];
+               numFiles = files.size();
+            }
+         }
+      }
+      return numFiles;
+   }
+
+//
+
    std::string DescribeDataset() const
    {
       // TTree/TChain as input

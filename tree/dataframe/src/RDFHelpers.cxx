@@ -194,70 +194,7 @@ namespace {
     std::ostream::char_type fFillChar;
   };
 }
-/*
-void ProgressHelper::PrintOut(std::ostream& stream, std::size_t currentEventCount, std::chrono::seconds elapsedSeconds) const {
-  
-  // Print bar
-  const auto maxEvents = ComputeMaxEvents();
-  if (maxEvents == 0)
-    return;
-  RestoreStreamState restore(stream);
 
-  // Make one big string to stream
-  std::string printout;
-
-  const double completion = double(currentEventCount) / maxEvents;
-  const unsigned int nBar = std::min(completion, 1.) * fBarWidth;
-
-  std::string bars(std::max(nBar, 1u), '=');
-  bars.back() = (nBar == fBarWidth) ? '=' : '>';
-    
-  //stream << "\r";
-  printout += "\r";
-  //if (fUseShellColours) stream << "\e[33m";
-  //stream << '|' << std::setfill(' ') << std::setw(fBarWidth) << std::left << bars << "|   ";
-  printout = printout + '|' + bars + "|   ";
-  //if (fUseShellColours) stream << "\e[0m";  
-
-  // Print statistics
-  const auto evtpersec = EvtPerSec();
-  //RestoreStreamState restore(stream);
-
-  //stream << "[" << std::to_string(elapsedSeconds.count()) << "  ";
-  //printout = printout + "[" + std::format("{}", elapsedSeconds) + "  ";
-  // Event counts:
-  //if (fUseShellColours) stream << "\e[32m";
-
-  //stream << PacksOfThree(currentEventCount);
-  //printout = printout + to_string(PacksOfThree(currentEventCount));
-  //if (maxEvents != 0) {
-    // stream << "/" << PacksOfThree(maxEvents);
-    //printout = printout +  "/" + to_string(PacksOfThree(maxEvents));
-  //}
-  //stream << " evt  ";
-  printout += " evt  ";
-
-  //if (fUseShellColours) stream << "\e[0m";
-
-  // events/s
-  //stream << std::scientific << std::setprecision(2) << evtpersec << " evt/s";
-  //printout = printout + evtpersec + " evt/s";
-
-  // Time statistics:
-  if (maxEvents != 0) {
-    //if (fUseShellColours) stream << "\e[35m";
-    const std::chrono::seconds remainingSeconds( static_cast<long long>((ComputeMaxEvents() - currentEventCount) / evtpersec) );
-    //stream << " " << remainingSeconds << " remaining";
-    //printout = printout + " " + to_string(remainingSeconds) + " remaining";
-    //if (fUseShellColours) stream << "\e[0m";
-  }
-
-  //stream << "]   " ;
-  printout += "]   " ;
-  stream << printout;
-} 
-*/
-///*
 /// Print event and time statistics.
 void ProgressHelper::PrintStats(std::ostream& stream, std::size_t currentEventCount, std::chrono::seconds elapsedSeconds) const {
   const auto evtpersec = EvtPerSec();
@@ -324,13 +261,58 @@ std::size_t RetrieveNEvents(const char* treename, const char* fileUrl) {
 }
 
 namespace Experimental {
-  void AddProgressbar(RNode &dataframe){
-    auto progress = std::make_shared<ROOT::RDF::ProgressHelper>(1000);
+
+class ProgressBarAction final : public ROOT::Detail::RDF::RActionImpl<ProgressBarAction>  {
+public:
+   using Result_t = int;
+
+private:
+   std::shared_ptr<ProgressHelper> fHelper;
+   std::shared_ptr<int> fDummyResult = std::make_shared<int>();
+
+public:
+   ProgressBarAction(std::shared_ptr<ProgressHelper> r) : fHelper(std::move(r))
+   {
+   }
+
+   std::shared_ptr<Result_t> GetResultPtr() const { return fDummyResult; }
+
+   void Initialize() {}
+   void InitTask(TTreeReader *, unsigned int) {}
+
+   void Exec(unsigned int)
+   {
+   }
+
+   void Finalize()
+   {
+     std::cout << '\n';
+   }
+
+   std::string GetActionName() { return "ProgressBar"; }
+
+   ROOT::RDF::SampleCallback_t GetSampleCallback() {
+    return [this](unsigned int slot, const ROOT::RDF::RSampleInfo & id) {
+              this->fHelper->registerNewSample(slot, id);
+              return this->fHelper->ComputeMaxEvents();
+      };
+    }
+};
+
+void AddProgressbar(RNode &dataframe){
+    auto progress = std::make_shared<ProgressHelper>(1000);
+/*    
     dataframe.DefinePerSample("_progressbar",
             [progress](unsigned int slot, const ROOT::RDF::RSampleInfo & id) -> std::size_t {
               progress->registerNewSample(slot, id); return progress->ComputeMaxEvents(); });
-    dataframe.Count().OnPartialResultSlot(1000, [progress](unsigned int slot, auto && arg){
+    dataframe.Count().OnPartialResultSlot(1000, [progress](unsignes int slot, auto && arg){
     (*progress)(slot, arg); });
+*/
+    ProgressBarAction c(progress);
+    auto r = dataframe.Book<>(c);
+    r.OnPartialResultSlot(1000, [progress](unsigned int slot, auto && arg){
+      (*progress)(slot, arg);
+    });
 }
 }
 } } // namespace ROOT::RDF

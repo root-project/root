@@ -682,3 +682,16 @@ TEST(RunGraphs, AlreadyRun)
    ROOT_EXPECT_WARNING(ROOT::RDF::RunGraphs({r1, r2, r3, r4}), "RunGraphs",
                        "Got 4 handles from which 2 link to results which are already ready.");
 }
+/*
+/// Progressbar tests
+TEST(RDFHelpers, ProgressHelper_Single_thread_single_tree)
+{
+   auto d_write = ROOT::RDataFrame(10000000).Define("x", "42").Snapshot("tree", "f.root");
+   ROOT::RDF::RNode d = ROOT::RDataFrame("tree", "f.root");
+   ROOT::RDF::Experimental::AddProgressbar(d);
+   
+
+   // just output 
+   EXPECT_EQ(expect, d.Count().GetValue());
+}
+*/
