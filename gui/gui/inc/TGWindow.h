@@ -32,15 +32,22 @@ protected:
    UInt_t            fEditDisabled;   ///< flags used for "guibuilding"
 
    TGWindow(Window_t id) :
-      fParent(0), fNeedRedraw(kFALSE), fName(), fEditDisabled(0) { fClient = 0; fId = id; }
+      fParent(nullptr), fNeedRedraw(kFALSE), fName(), fEditDisabled(0) { fClient = nullptr; fId = id; }
    TGWindow(const TGWindow& tgw) :
       TGObject(tgw), fParent(tgw.fParent), fNeedRedraw(tgw.fNeedRedraw),
-      fName(tgw.fName), fEditDisabled(tgw.fEditDisabled) { }
+      fName(tgw.fName), fEditDisabled(tgw.fEditDisabled) {}
 
    TGWindow& operator=(const TGWindow& tgw)
-      { if (this!=&tgw) { TGObject::operator=(tgw); fParent=tgw.fParent;
-      fNeedRedraw=tgw.fNeedRedraw; fName=tgw.fName;
-      fEditDisabled=tgw.fEditDisabled; } return *this; }
+   {
+      if (this != &tgw) {
+         TGObject::operator=(tgw);
+         fParent = tgw.fParent;
+         fNeedRedraw = tgw.fNeedRedraw;
+         fName = tgw.fName;
+         fEditDisabled = tgw.fEditDisabled;
+      }
+      return *this;
+   }
 
    virtual void DoRedraw() { }
 

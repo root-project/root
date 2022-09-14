@@ -313,12 +313,12 @@ public:
    virtual ~TGMenuBar();
 
    virtual void AddPopup(TGHotString *s, TGPopupMenu *menu, TGLayoutHints *l,
-                         TGPopupMenu *before = 0);
+                         TGPopupMenu *before = nullptr);
    virtual void AddPopup(const char *s, TGPopupMenu *menu, TGLayoutHints *l,
-                         TGPopupMenu *before = 0);
+                         TGPopupMenu *before = nullptr);
    virtual TGPopupMenu *AddPopup(const TString &s, Int_t padleft = 4, Int_t padright = 0,
                                  Int_t padtop = 0, Int_t padbottom = 0);
-   virtual void AddTitle(TGMenuTitle *title, TGLayoutHints *l, TGPopupMenu *before = 0);
+   virtual void AddTitle(TGMenuTitle *title, TGLayoutHints *l, TGPopupMenu *before = nullptr);
 
    virtual TGPopupMenu *GetPopup(const char *s);
    virtual TGPopupMenu *RemovePopup(const char *s);

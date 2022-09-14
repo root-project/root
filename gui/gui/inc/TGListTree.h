@@ -390,8 +390,8 @@ public:
    TGListTreeItem *FindItemByObj(TGListTreeItem *item, void *ptr);
 
    void  AddItem(const char *string) { AddItem(fSelected, string); } //*MENU*
-   void  AddRoot(const char *string) { AddItem(0, string); } //*MENU*
-   Int_t DeleteSelected() { return (fSelected ? DeleteItem(fSelected) : 0); } //*MENU*
+   void  AddRoot(const char *string) { AddItem(nullptr, string); } //*MENU*
+   Int_t DeleteSelected() { return fSelected ? DeleteItem(fSelected) : 0; } //*MENU*
    void  RenameSelected(const char *string) { if (fSelected) RenameItem(fSelected, string); } //*MENU*
 
    virtual void MouseOver(TGListTreeItem *entry);  //*SIGNAL*

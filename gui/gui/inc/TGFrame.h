@@ -272,7 +272,7 @@ public:
    Bool_t              IsDNDSource() const { return fDNDState & kIsDNDSource; }
    Bool_t              IsDNDTarget() const { return fDNDState & kIsDNDTarget; }
 
-   virtual TDNDData   *GetDNDData(Atom_t /*dataType*/) { return 0; }
+   virtual TDNDData   *GetDNDData(Atom_t /*dataType*/) { return nullptr; }
    virtual Bool_t      HandleDNDDrop(TDNDData * /*DNDData*/) { return kFALSE; }
    virtual Atom_t      HandleDNDPosition(Int_t /*x*/, Int_t /*y*/, Atom_t /*action*/,
                                          Int_t /*xroot*/, Int_t /*yroot*/) { return kNone; }
@@ -340,7 +340,7 @@ public:
 
    virtual TGFrameElement* FindFrameElement(TGFrame *f) const;
 
-   virtual void   AddFrame(TGFrame *f, TGLayoutHints *l = 0);
+   virtual void   AddFrame(TGFrame *f, TGLayoutHints *l = nullptr);
    virtual void   RemoveAll();
    virtual void   RemoveFrame(TGFrame *f);
    virtual void   ShowFrame(TGFrame *f);
@@ -373,7 +373,7 @@ public:
 
 class TGVerticalFrame : public TGCompositeFrame {
 public:
-   TGVerticalFrame(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
+   TGVerticalFrame(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground()) :
       TGCompositeFrame(p, w, h, options | kVerticalFrame, back) { SetWindowName(); }
@@ -384,7 +384,7 @@ public:
 
 class TGHorizontalFrame : public TGCompositeFrame {
 public:
-   TGHorizontalFrame(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
+   TGHorizontalFrame(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
                      UInt_t options = kChildFrame,
                      Pixel_t back = GetDefaultFrameBackground()) :
       TGCompositeFrame(p, w, h, options | kHorizontalFrame, back) { SetWindowName(); }
