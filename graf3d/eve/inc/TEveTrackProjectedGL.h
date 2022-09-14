@@ -32,7 +32,7 @@ public:
    TEveTrackProjectedGL();
    virtual ~TEveTrackProjectedGL() {}
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
+   virtual Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr);
    virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
 
    ClassDef(TEveTrackProjectedGL, 0); // GL-renderer for TEveTrackProjected class.

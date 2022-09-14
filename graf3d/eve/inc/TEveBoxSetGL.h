@@ -41,7 +41,7 @@ public:
    virtual void   DLCacheDrop();
    virtual void   DLCachePurge();
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
+   virtual Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr);
    virtual void   DirectDraw(TGLRnrCtx& rnrCtx) const;
 
    virtual void Render(TGLRnrCtx& rnrCtx);

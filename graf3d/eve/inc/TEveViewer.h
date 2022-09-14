@@ -51,8 +51,8 @@ public:
    TGLViewer* GetGLViewer() const { return fGLViewer; }
    void SetGLViewer(TGLViewer* viewer, TGFrame* frame);
 
-   TGLSAViewer*       SpawnGLViewer(TGedEditor* ged=0, Bool_t stereo=kFALSE, Bool_t quad_buf=kTRUE);
-   TGLEmbeddedViewer* SpawnGLEmbeddedViewer(TGedEditor* ged=0, Int_t border=0);
+   TGLSAViewer*       SpawnGLViewer(TGedEditor* ged=nullptr, Bool_t stereo=kFALSE, Bool_t quad_buf=kTRUE);
+   TGLEmbeddedViewer* SpawnGLEmbeddedViewer(TGedEditor* ged=nullptr, Int_t border=0);
 
    void Redraw(Bool_t resetCameras=kFALSE);
    void SwitchStereo();

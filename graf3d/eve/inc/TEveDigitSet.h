@@ -51,7 +51,7 @@ public:
       Int_t  fValue;    // signal value of a digit (can be direct RGBA color)
       void  *fUserData; // user-data for given digit
 
-      DigitBase_t(Int_t v=0) : fValue(v), fUserData(0) {}
+      DigitBase_t(Int_t v=0) : fValue(v), fUserData(nullptr) {}
    };
 
 protected:

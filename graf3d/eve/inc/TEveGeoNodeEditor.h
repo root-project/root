@@ -37,7 +37,7 @@ protected:
    TGCheckButton*  fVizVolumeDaughters;
 
 public:
-   TEveGeoNodeEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
+   TEveGeoNodeEditor(const TGWindow *p = nullptr, Int_t width=170, Int_t height=30,
                      UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
    virtual ~TEveGeoNodeEditor() {}
 
@@ -66,7 +66,7 @@ protected:
    TEveGValuator*  fMaxVisNodes;
 
 public:
-   TEveGeoTopNodeEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
+   TEveGeoTopNodeEditor(const TGWindow *p = nullptr, Int_t width=170, Int_t height=30,
                         UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
    virtual ~TEveGeoTopNodeEditor() {}
 
