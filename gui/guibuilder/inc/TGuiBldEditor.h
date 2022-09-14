@@ -51,7 +51,7 @@ private:
    TGNumberEntry        *fYpos;           // Y position
 
 public:
-   TGuiBldEditor(const TGWindow *p = 0);
+   TGuiBldEditor(const TGWindow *p = nullptr);
    virtual ~TGuiBldEditor();
 
    Int_t    GetXPos() const { return fXpos->GetIntNumber(); }
@@ -71,7 +71,7 @@ public:
 
    void     RemoveFrame(TGFrame *);
    void     TabSelected(Int_t id);
-   void     UpdateSelected(TGFrame* = 0); //*SIGNAL*
+   void     UpdateSelected(TGFrame* = nullptr); //*SIGNAL*
    void     ChangeSelected(TGFrame*);     //*SIGNAL*
    void     SwitchLayout();
 
