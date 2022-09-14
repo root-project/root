@@ -48,8 +48,8 @@ protected:
 public:
    TPie();
    TPie(const char *,const char *, Int_t);
-   TPie(const char *,const char *, Int_t, Double_t *,Int_t *cols=0, const char *lbls[]=0);
-   TPie(const char *,const char *, Int_t, Float_t *,Int_t *cols=0, const char *lbls[]=0);
+   TPie(const char *,const char *, Int_t, Double_t *, Int_t *cols = nullptr, const char *lbls[] = nullptr);
+   TPie(const char *,const char *, Int_t, Float_t *, Int_t *cols = nullptr, const char *lbls[] = nullptr);
    TPie(const TH1 *h);
    TPie(const TPie&);
    ~TPie();

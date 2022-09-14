@@ -37,7 +37,7 @@ public:
    TCurlyLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
               Double_t wl = .02,
               Double_t amp = .01);
-   virtual ~TCurlyLine(){;}
+   virtual ~TCurlyLine(){}
    virtual void Build();
    Int_t        DistancetoPrimitive(Int_t px, Int_t py) override;
    void         ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
