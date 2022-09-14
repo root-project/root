@@ -34,7 +34,7 @@ protected :
 
 public:
    // constructors
-   TGeoParallelWorld() : TNamed(),fGeoManager(0),fPaths(0),fUseOverlaps(kFALSE),fIsClosed(kFALSE),fVolume(0),fLastState(0),fPhysical(0) {}
+   TGeoParallelWorld() : TNamed(),fGeoManager(nullptr),fPaths(nullptr),fUseOverlaps(kFALSE),fIsClosed(kFALSE),fVolume(nullptr),fLastState(nullptr),fPhysical(nullptr) {}
    TGeoParallelWorld(const char *name, TGeoManager *mgr);
 
    // destructor

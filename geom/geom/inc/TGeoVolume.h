@@ -88,7 +88,7 @@ public:
    };
    // constructors
    TGeoVolume();
-   TGeoVolume(const char *name, const TGeoShape *shape, const TGeoMedium *med=0);
+   TGeoVolume(const char *name, const TGeoShape *shape, const TGeoMedium *med=nullptr);
 
    // destructor
    virtual ~TGeoVolume();
@@ -97,7 +97,7 @@ public:
    void            Browse(TBrowser *b);
    Double_t        Capacity() const;
    void            CheckShapes();
-   void            ClearNodes() {fNodes = 0;}
+   void            ClearNodes() {fNodes = nullptr;}
    void            ClearShape();
    void            CleanAll();
    virtual TGeoVolume *CloneVolume() const;
@@ -114,9 +114,9 @@ public:
    Bool_t          IsRunTime() const {return fShape->IsRunTimeShape();}
    virtual Bool_t  IsVolumeMulti() const {return kFALSE;}
    virtual TGeoNode *
-   AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat = 0, Option_t *option = ""); // most general case
+   AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat = nullptr, Option_t *option = ""); // most general case
    void            AddNodeOffset(TGeoVolume *vol, Int_t copy_no, Double_t offset=0, Option_t *option="");
-   virtual void    AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat=0, Option_t *option="");
+   virtual void    AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat=nullptr, Option_t *option="");
 
    virtual TGeoVolume *Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step, Int_t numed=0, Option_t *option="");
    virtual Int_t   DistancetoPrimitive(Int_t px, Int_t py);
@@ -185,10 +185,10 @@ public:
    Bool_t          GetOptimalVoxels() const;
    Option_t       *GetOption() const { return fOption.Data(); }
    char           *GetPointerName() const;
-   Char_t          GetTransparency() const {return (fMedium==0)?0:(fMedium->GetMaterial()->GetTransparency());}
+   Char_t          GetTransparency() const { return !fMedium ? 0 : fMedium->GetMaterial()->GetTransparency(); }
    TGeoShape      *GetShape() const                  {return fShape;}
    void            GrabFocus(); // *MENU*
-   void            Gsord(Int_t /*iaxis*/)                {;}
+   void            Gsord(Int_t /*iaxis*/)                {}
    Bool_t          IsStyleDefault() const;
    void            InspectMaterial() const; // *MENU*
    void            InspectShape() const {fShape->InspectShape();} // *MENU*
@@ -197,11 +197,11 @@ public:
    TGeoVolume     *MakeReflectedVolume(const char *newname="") const;
    Bool_t          OptimizeVoxels(); // *MENU*
    void            RandomPoints(Int_t npoints=1000000, Option_t *option=""); // *MENU*
-   void            RandomRays(Int_t nrays=10000, Double_t startx=0, Double_t starty=0, Double_t startz=0, const char *target_vol=0, Bool_t check_norm=kFALSE); // *MENU*
+   void            RandomRays(Int_t nrays=10000, Double_t startx=0, Double_t starty=0, Double_t startz=0, const char *target_vol=nullptr, Bool_t check_norm=kFALSE); // *MENU*
    void            Raytrace(Bool_t flag=kTRUE); // *TOGGLE* *GETTER=IsRaytracing
    void            RegisterYourself(Option_t *option="");
    void            RemoveNode(TGeoNode *node);
-   TGeoNode       *ReplaceNode(TGeoNode *nodeorig, TGeoShape *newshape=0, TGeoMatrix *newpos=0, TGeoMedium *newmed=0);
+   TGeoNode       *ReplaceNode(TGeoNode *nodeorig, TGeoShape *newshape=nullptr, TGeoMatrix *newpos=nullptr, TGeoMedium *newmed=nullptr);
    void            SaveAs(const char *filename,Option_t *option="") const; // *MENU*
    virtual void    SavePrimitive(std::ostream &out, Option_t *option = "");
    void            SelectVolume(Bool_t clear = kFALSE);
@@ -268,7 +268,7 @@ private:
 
 public:
    TGeoVolumeMulti();
-   TGeoVolumeMulti(const char* name, TGeoMedium *med=0);
+   TGeoVolumeMulti(const char* name, TGeoMedium *med=nullptr);
    virtual ~TGeoVolumeMulti();
 
    void            AddVolume(TGeoVolume *vol);
@@ -331,12 +331,12 @@ public:
    TGeoVolumeAssembly(const char *name);
    virtual ~TGeoVolumeAssembly();
 
-   virtual TGeoNode *AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat = 0, Option_t *option = "");
+   virtual TGeoNode *AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat = nullptr, Option_t *option = "");
    virtual void    AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option);
    virtual TGeoVolume *CloneVolume() const;
    virtual TGeoVolume *Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step, Int_t numed=0, Option_t *option="");
    TGeoVolume     *Divide(TGeoVolume *cell, TGeoPatternFinder *pattern, Option_t *option="spacedout");
-   virtual void    DrawOnly(Option_t *) {;}
+   virtual void    DrawOnly(Option_t *) {}
    virtual Int_t   GetCurrentNodeIndex() const;
    virtual Int_t   GetNextNodeIndex() const;
    virtual Bool_t  IsAssembly() const {return kTRUE;}

@@ -39,7 +39,7 @@ protected:
 public:
    // constructors
    TGeoMedium();
-   TGeoMedium(const char *name, Int_t numed, const TGeoMaterial *mat, Double_t *params=0);
+   TGeoMedium(const char *name, Int_t numed, const TGeoMaterial *mat, Double_t *params=nullptr);
    TGeoMedium(const char *name, Int_t numed, Int_t imat, Int_t isvol, Int_t ifield,
               Double_t fieldm, Double_t tmaxfd, Double_t stemax, Double_t deemax, Double_t epsil, Double_t stmin);
    virtual ~TGeoMedium();

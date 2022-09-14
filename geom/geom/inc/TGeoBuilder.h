@@ -48,7 +48,7 @@ public :
    void                   RegisterMatrix(TGeoMatrix *matrix);
 
    TGeoVolume            *MakeArb8(const char *name, TGeoMedium *medium,
-                                     Double_t dz, Double_t *vertices=0);
+                                     Double_t dz, Double_t *vertices=nullptr);
    TGeoVolume            *MakeBox(const char *name, TGeoMedium *medium,
                                      Double_t dx, Double_t dy, Double_t dz);
    TGeoVolume            *MakeCone(const char *name, TGeoMedium *medium,

@@ -48,7 +48,7 @@ public:
    TGeoCacheState(Int_t capacity);
    virtual ~TGeoCacheState();
 
-   void                 SetState(Int_t level, Int_t startlevel, Int_t nmany, Bool_t ovlp, Double_t *point=0);
+   void                 SetState(Int_t level, Int_t startlevel, Int_t nmany, Bool_t ovlp, Double_t *point=nullptr);
    Bool_t               GetState(Int_t &level, Int_t &nmany, Double_t *point) const;
 
    ClassDef(TGeoCacheState, 0)       // class storing the cache state
@@ -102,8 +102,8 @@ public:
    void                *GetMatrices() const {return fMatrixBranch;}
    TGeoHMatrix         *GetCurrentMatrix() const {return fMatrix;}
    Int_t                GetCurrentNodeId() const;
-   TGeoNode            *GetMother(Int_t up=1) const {return ((fLevel-up)>=0)?fNodeBranch[fLevel-up]:0;}
-   TGeoHMatrix         *GetMotherMatrix(Int_t up=1) const {return ((fLevel-up)>=0)?fMatrixBranch[fLevel-up]:0;}
+   TGeoNode            *GetMother(Int_t up=1) const {return ((fLevel-up)>=0)?fNodeBranch[fLevel-up]:nullptr;}
+   TGeoHMatrix         *GetMotherMatrix(Int_t up=1) const {return ((fLevel-up)>=0)?fMatrixBranch[fLevel-up]:nullptr;}
    TGeoNode            *GetNode() const        {return fNode;}
    TGeoNode            *GetTopNode() const     {return fTop;}
    TGeoStateInfo       *GetInfo();
@@ -122,12 +122,12 @@ public:
    void                 MasterToLocalVect(const Double_t *master, Double_t *local) const;
    void                 LocalToMasterBomb(const Double_t *local, Double_t *master) const;
    void                 MasterToLocalBomb(const Double_t *master, Double_t *local) const;
-   Int_t                PushState(Bool_t ovlp, Int_t ntmany=0, Int_t startlevel=0, Double_t *point=0);
-   Bool_t               PopState(Int_t &nmany, Double_t *point=0);
-   Bool_t               PopState(Int_t &nmany, Int_t level, Double_t *point=0);
+   Int_t                PushState(Bool_t ovlp, Int_t ntmany=0, Int_t startlevel=0, Double_t *point=nullptr);
+   Bool_t               PopState(Int_t &nmany, Double_t *point=nullptr);
+   Bool_t               PopState(Int_t &nmany, Int_t level, Double_t *point=nullptr);
    void                 PopDummy(Int_t ipop=9999) {fStackLevel=(ipop>fStackLevel)?(fStackLevel-1):(ipop-1);}
    void                 Refresh() {fNode=fNodeBranch[fLevel]; fMatrix=fMatrixBranch[fLevel];}
-   Bool_t               RestoreState(Int_t &nmany, TGeoCacheState *state, Double_t *point=0);
+   Bool_t               RestoreState(Int_t &nmany, TGeoCacheState *state, Double_t *point=nullptr);
 
    ClassDef(TGeoNodeCache, 0)        // cache of reusable physical nodes
 };

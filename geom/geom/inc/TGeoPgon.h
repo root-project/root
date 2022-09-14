@@ -70,10 +70,10 @@ public:
    virtual Bool_t        Contains(const Double_t *point) const;
    virtual void          Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const;
    virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1,
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
+                                   Double_t step=TGeoShape::Big(), Double_t *safe=nullptr) const;
    virtual void          DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
    virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1,
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
+                                   Double_t step=TGeoShape::Big(), Double_t *safe=nullptr) const;
    virtual void          DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv,
@@ -81,7 +81,7 @@ public:
    virtual void          GetBoundingCylinder(Double_t *param) const;
    virtual const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
    virtual Int_t         GetByteCount() const {return 64+12*fNz;}
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const {return 0;}
+   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const {return nullptr;}
    virtual void          GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const;
    Int_t                 GetNedges() const   {return fNedges;}
    virtual Int_t         GetNmeshVertices() const;
