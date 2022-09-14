@@ -93,7 +93,7 @@ private:
    TGButton *FindActionButton(const char *name, const char *section);
 
 public:
-   TRootGuiBuilder(const TGWindow *p = 0);
+   TRootGuiBuilder(const TGWindow *p = nullptr);
    virtual ~TRootGuiBuilder();
 
    virtual void      AddAction(TGuiBldAction *act, const char *sect);
@@ -107,15 +107,15 @@ public:
    virtual void      Update();
    virtual Bool_t    IsSelectMode() const;
    virtual Bool_t    IsGrabButtonDown() const;
-   virtual Bool_t    OpenProject(Event_t *event = 0);
-   virtual Bool_t    SaveProject(Event_t *event = 0);
+   virtual Bool_t    OpenProject(Event_t *event = nullptr);
+   virtual Bool_t    SaveProject(Event_t *event = nullptr);
    virtual Bool_t    NewProject(TString type = "");
    virtual Bool_t    HandleKey(Event_t *event);
    virtual void      HandleMenu(Int_t id);
    virtual void      CloseWindow();
    virtual void      MaybeCloseWindow();
    virtual void      HandleWindowClosed(Int_t id);
-   virtual void      UpdateStatusBar(const char *text = 0);
+   virtual void      UpdateStatusBar(const char *text = nullptr);
    virtual void      EraseStatusBar();
    virtual void      SwitchToolbarButton();
 
