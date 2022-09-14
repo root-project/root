@@ -49,7 +49,7 @@ public:
    //   enum {default_size = 1048576};
    enum { default_size = 524288 };
 
-   StackAllocator() : fStack(0)
+   StackAllocator() : fStack(nullptr)
    {
 #ifdef _MN_NO_THREAD_SAVE_
       // std::cout<<"StackAllocator Allocate "<<default_size<<std::endl;

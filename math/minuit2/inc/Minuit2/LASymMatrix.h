@@ -45,7 +45,7 @@ int Invert(LASymMatrix &);
 class LASymMatrix {
 
 private:
-   LASymMatrix() : fSize(0), fNRow(0), fData(0) {}
+   LASymMatrix() : fSize(0), fNRow(0), fData(nullptr) {}
 
 public:
    typedef sym Type;
@@ -111,7 +111,7 @@ public:
 
    template <class A, class T>
    LASymMatrix(const ABObj<sym, ABSum<ABObj<sym, LASymMatrix, T>, ABObj<sym, A, T>>, T> &sum)
-      : fSize(0), fNRow(0), fData(0)
+      : fSize(0), fNRow(0), fData(nullptr)
    {
       //     std::cout<<"template<class A, class T> LASymMatrix(const ABObj<sym, ABSum<ABObj<sym, LASymMatrix, T>,
       //     ABObj<sym, A, T> >,T>& sum)"<<std::endl;
@@ -126,7 +126,7 @@ public:
    }
 
    template <class A, class T>
-   LASymMatrix(const ABObj<sym, ABObj<sym, A, T>, T> &something) : fSize(0), fNRow(0), fData(0)
+   LASymMatrix(const ABObj<sym, ABObj<sym, A, T>, T> &something) : fSize(0), fNRow(0), fData(nullptr)
    {
       //     std::cout<<"template<class A, class T> LASymMatrix(const ABObj<sym, ABObj<sym, A, T>, T>&
       //     something)"<<std::endl;
@@ -168,7 +168,7 @@ public:
    template <class A, class T>
    LASymMatrix(
       const ABObj<sym, ABSum<ABObj<sym, VectorOuterProduct<ABObj<vec, LAVector, T>, T>, T>, ABObj<sym, A, T>>, T> &sum)
-      : fSize(0), fNRow(0), fData(0)
+      : fSize(0), fNRow(0), fData(nullptr)
    {
       //     std::cout<<"template<class A, class T> LASymMatrix(const ABObj<sym, ABSum<ABObj<sym,
       //     VectorOuterProduct<ABObj<vec, LAVector, T>, T>, T> ABObj<sym, A, T> >,T>& sum)"<<std::endl;
@@ -285,7 +285,7 @@ public:
    LASymMatrix &operator=(const ABObj<sym, LASymMatrix, T> &v)
    {
       // std::cout<<"template<class T> LASymMatrix& operator=(ABObj<sym, LASymMatrix, T>& v)"<<std::endl;
-      if (fSize == 0 && fData == 0) {
+      if (fSize == 0 && !fData) {
          fSize = v.Obj().size();
          fNRow = v.Obj().Nrow();
          fData = (double *)StackAllocatorHolder::Get().Allocate(sizeof(double) * fSize);

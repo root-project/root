@@ -32,12 +32,10 @@ int Mndspmv(const char *, unsigned int, double, const double *, const double *, 
 class LAVector {
 
 private:
-   LAVector() : fSize(0), fData(0) {}
+   LAVector() : fSize(0), fData(nullptr) {}
 
 public:
    typedef vec Type;
-
-   //   LAVector() : fSize(0), fData(0) {}
 
    LAVector(unsigned int n) : fSize(n), fData((double *)StackAllocatorHolder::Get().Allocate(sizeof(double) * n))
    {
@@ -95,7 +93,7 @@ public:
    }
 
    template <class A, class T>
-   LAVector(const ABObj<vec, ABSum<ABObj<vec, LAVector, T>, ABObj<vec, A, T>>, T> &sum) : fSize(0), fData(0)
+   LAVector(const ABObj<vec, ABSum<ABObj<vec, LAVector, T>, ABObj<vec, A, T>>, T> &sum) : fSize(0), fData(nullptr)
    {
       //     std::cout<<"template<class A, class T> LAVector(const ABObj<ABSum<ABObj<LAVector, T>, ABObj<A, T> >,T>&
       //     sum)"<<std::endl;
@@ -235,7 +233,7 @@ public:
    LAVector &operator=(const ABObj<vec, LAVector, T> &v)
    {
       //     std::cout<<"template<class T> LAVector& operator=(ABObj<LAVector, T>& v)"<<std::endl;
-      if (fSize == 0 && fData == 0) {
+      if (fSize == 0 && !fData) {
          fSize = v.Obj().size();
          fData = (double *)StackAllocatorHolder::Get().Allocate(sizeof(double) * fSize);
       } else {
@@ -251,7 +249,7 @@ public:
    {
       //     std::cout<<"template<class A, class T> LAVector& operator=(const ABObj<ABObj<A, T>, T>&
       //     something)"<<std::endl;
-      if (fSize == 0 && fData == 0) {
+      if (fSize == 0 && !fData) {
          (*this) = something.Obj();
       } else {
          LAVector tmp(something.Obj());
@@ -265,7 +263,7 @@ public:
    template <class A, class B, class T>
    LAVector &operator=(const ABObj<vec, ABSum<ABObj<vec, A, T>, ABObj<vec, B, T>>, T> &sum)
    {
-      if (fSize == 0 && fData == 0) {
+      if (fSize == 0 && !fData) {
          (*this) = sum.Obj().A();
          (*this) += sum.Obj().B();
       } else {
@@ -281,7 +279,7 @@ public:
    template <class A, class T>
    LAVector &operator=(const ABObj<vec, ABSum<ABObj<vec, LAVector, T>, ABObj<vec, A, T>>, T> &sum)
    {
-      if (fSize == 0 && fData == 0) {
+      if (fSize == 0 && !fData) {
          (*this) = sum.Obj().B();
          (*this) += sum.Obj().A();
       } else {
@@ -298,7 +296,7 @@ public:
    template <class T>
    LAVector &operator=(const ABObj<vec, ABProd<ABObj<sym, LASymMatrix, T>, ABObj<vec, LAVector, T>>, T> &prod)
    {
-      if (fSize == 0 && fData == 0) {
+      if (fSize == 0 && !fData) {
          fSize = prod.Obj().B().Obj().size();
          fData = (double *)StackAllocatorHolder::Get().Allocate(sizeof(double) * fSize);
          Mndspmv("U", fSize, double(prod.f() * prod.Obj().A().f() * prod.Obj().B().f()), prod.Obj().A().Obj().Data(),
@@ -320,7 +318,7 @@ public:
              ABSum<ABObj<vec, ABProd<ABObj<sym, LASymMatrix, T>, ABObj<vec, LAVector, T>>, T>, ABObj<vec, LAVector, T>>,
              T> &prod)
    {
-      if (fSize == 0 && fData == 0) {
+      if (fSize == 0 && !fData) {
          (*this) = prod.Obj().B();
          (*this) += prod.Obj().A();
       } else {
