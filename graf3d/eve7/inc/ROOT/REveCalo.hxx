@@ -68,7 +68,7 @@ protected:
    virtual void BuildCellIdCache() = 0;
 
 public:
-   REveCaloViz(REveCaloData* data=0, const char* n="REveCaloViz", const char* t="");
+   REveCaloViz(REveCaloData* data=nullptr, const char* n="REveCaloViz", const char* t="");
 
    virtual ~REveCaloViz();
 
@@ -173,7 +173,7 @@ protected:
    void BuildCellIdCache() override;
 
 public:
-   REveCalo3D(REveCaloData* d=0, const char* n="REveCalo3D", const char* t="");
+   REveCalo3D(REveCaloData* d=nullptr, const char* n="REveCalo3D", const char* t="");
    virtual ~REveCalo3D() {}
    void ComputeBBox() override;
 
@@ -302,7 +302,7 @@ protected:
    void BuildCellIdCache() override;
 
 public:
-   REveCaloLego(REveCaloData* data=0, const char* n="REveCaloLego", const char* t="");
+   REveCaloLego(REveCaloData* data=nullptr, const char* n="REveCaloLego", const char* t="");
    virtual ~REveCaloLego(){}
 
    void ComputeBBox() override;
