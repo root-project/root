@@ -66,7 +66,7 @@ public:
     */
    explicit
    IntegratorMultiDim(IntegrationMultiDim::Type type = IntegrationMultiDim::kDEFAULT, double absTol = -1, double relTol = -1, unsigned int ncall = 0) :
-      fIntegrator(0)
+      fIntegrator(nullptr)
    {
        fIntegrator = CreateIntegrator(type, absTol, relTol, ncall);
    }
@@ -81,7 +81,7 @@ public:
     */
    explicit
    IntegratorMultiDim(const IMultiGenFunction &f, IntegrationMultiDim::Type type = IntegrationMultiDim::kDEFAULT, double absTol = -1, double relTol = -1, unsigned int ncall = 0) :
-      fIntegrator(0)
+      fIntegrator(nullptr)
    {
       fIntegrator = CreateIntegrator(type, absTol, relTol, ncall);
       SetFunction(f);
@@ -114,7 +114,7 @@ public:
    // disable copy constructor and assignment operator
 
 private:
-   IntegratorMultiDim(const IntegratorMultiDim &) : fIntegrator(0), fFunc(nullptr) {}
+   IntegratorMultiDim(const IntegratorMultiDim &) : fIntegrator(nullptr), fFunc(nullptr) {}
    IntegratorMultiDim & operator=(const IntegratorMultiDim &) { return *this; }
 
 public:
@@ -124,7 +124,7 @@ public:
       evaluate the integral with the previously given function between xmin[] and xmax[]
    */
    double Integral(const double* xmin, const double * xmax) {
-      return fIntegrator == 0 ? 0 : fIntegrator->Integral(xmin,xmax);
+      return !fIntegrator ? 0 : fIntegrator->Integral(xmin,xmax);
    }
 
    /// evaluate the integral passing a new function
@@ -157,13 +157,13 @@ public:
    }
 
    /// return result of last integration
-   double Result() const { return fIntegrator == 0 ? 0 : fIntegrator->Result(); }
+   double Result() const { return !fIntegrator ? 0 : fIntegrator->Result(); }
 
    /// return integration error
-   double Error() const { return fIntegrator == 0 ? 0 : fIntegrator->Error(); }
+   double Error() const { return !fIntegrator ? 0 : fIntegrator->Error(); }
 
    ///  return the Error Status of the last Integral calculation
-   int Status() const { return fIntegrator == 0 ? -1 : fIntegrator->Status(); }
+   int Status() const { return !fIntegrator ? -1 : fIntegrator->Status(); }
 
    // return number of function evaluations in calculating the integral
    //unsigned int NEval() const { return fNEval; }
@@ -178,13 +178,13 @@ public:
    void SetOptions(const ROOT::Math::IntegratorMultiDimOptions & opt) { if (fIntegrator) fIntegrator->SetOptions(opt); }
 
    /// retrieve the options
-   ROOT::Math::IntegratorMultiDimOptions Options() const { return (fIntegrator) ? fIntegrator->Options() : IntegratorMultiDimOptions(); }
+   ROOT::Math::IntegratorMultiDimOptions Options() const { return fIntegrator ? fIntegrator->Options() : IntegratorMultiDimOptions(); }
 
    /// return a pointer to integrator object
    VirtualIntegratorMultiDim * GetIntegrator() { return fIntegrator; }
 
    /// return name of integrator
-   std::string Name() const { return (fIntegrator) ? Options().Integrator() : std::string(""); }
+   std::string Name() const { return fIntegrator ? Options().Integrator() : std::string(""); }
 
    /// static function to get the enumeration from a string
    static IntegrationMultiDim::Type GetType(const char * name);

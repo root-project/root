@@ -72,7 +72,7 @@ namespace Math {
    public:
 
       /// class constructor
-      RandomFunctionsImpl() : fBaseEngine(0) {}
+      RandomFunctionsImpl() : fBaseEngine(nullptr) {}
 
       void SetEngine(void *r) {
          fBaseEngine = static_cast<TRandomEngine*>(r);

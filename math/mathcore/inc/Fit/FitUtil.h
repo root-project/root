@@ -130,7 +130,7 @@ namespace FitUtil {
   public:
      IntegralEvaluator(const ParamFunc &func, const double *p, bool useIntegral = true,
                        ROOT::Math::IntegrationOneDim::Type igType = ROOT::Math::IntegrationOneDim::kDEFAULT)
-        : fDim(0), fParams(0), fFunc(0), fIg1Dim(0), fIgNDim(0), fFunc1Dim(0), fFuncNDim(0)
+        : fDim(0), fParams(nullptr), fFunc(nullptr), fIg1Dim(nullptr), fIgNDim(nullptr), fFunc1Dim(nullptr), fFuncNDim(nullptr)
      {
         if (useIntegral) {
            SetFunction(func, p, igType);
@@ -147,7 +147,7 @@ namespace FitUtil {
         // copy the function object to be able to modify the parameters
         // fFunc = dynamic_cast<ROOT::Math::IParamMultiFunction *>( func.Clone() );
         fFunc = &func;
-        assert(fFunc != 0);
+        assert(fFunc != nullptr);
         // set parameters in function
         // fFunc->SetParameters(p);
         if (fDim == 1) {
@@ -335,7 +335,7 @@ namespace FitUtil {
       is used
   */
   double EvaluateChi2Residual(const IModelFunction &func, const BinData &data, const double *p, unsigned int ipoint,
-                              double *g = 0, bool hasGrad = false);
+                              double *g = nullptr, bool hasGrad = false);
 
   /**
       evaluate the pdf contribution to the LogL given a model function and the BinPoint data.
@@ -344,7 +344,7 @@ namespace FitUtil {
       is used
   */
   double
-  EvaluatePdf(const IModelFunction &func, const UnBinData &data, const double *p, unsigned int ipoint, double *g = 0, bool hasGrad = false);
+  EvaluatePdf(const IModelFunction &func, const UnBinData &data, const double *p, unsigned int ipoint, double *g = nullptr, bool hasGrad = false);
 
 #ifdef R__HAS_VECCORE
    template <class NotCompileIfScalarBackend = std::enable_if<!(std::is_same<double, ROOT::Double_v>::value)>>
@@ -365,7 +365,7 @@ namespace FitUtil {
        If the function provides parameter derivatives they are used otherwise a simple derivative calculation
        is used
    */
-   double EvaluatePoissonBinPdf(const IModelFunction & func, const BinData & data, const double * x, unsigned int ipoint, double * g = 0, bool hasGrad = false);
+   double EvaluatePoissonBinPdf(const IModelFunction & func, const BinData & data, const double * x, unsigned int ipoint, double * g = nullptr, bool hasGrad = false);
 
    unsigned setAutomaticChunking(unsigned nEvents);
 
@@ -1429,7 +1429,7 @@ namespace FitUtil {
       {
          FitUtil::EvaluateChi2Gradient(func, data, p, g, nPoints, executionPolicy, nChunks);
       }
-      static double EvalChi2Residual(const IModelFunctionTempl<double> &func, const BinData & data, const double * p, unsigned int i, double *g = 0, bool hasGrad=false)
+      static double EvalChi2Residual(const IModelFunctionTempl<double> &func, const BinData & data, const double * p, unsigned int i, double *g = nullptr, bool hasGrad=false)
       {
          return FitUtil::EvaluateChi2Residual(func, data, p, i, g, hasGrad);
       }

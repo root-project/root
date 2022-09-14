@@ -282,20 +282,20 @@ public:
       Note that passing a params != 0 will set the parameter settings to the new value AND also the
       step sizes to some pre-defined value (stepsize = 0.3 * abs(parameter_value) )
     */
-   bool FitFCN(const ROOT::Math::IMultiGenFunction &fcn, const double *params = 0, unsigned int dataSize = 0, bool chi2fit = false);
+   bool FitFCN(const ROOT::Math::IMultiGenFunction &fcn, const double *params = nullptr, unsigned int dataSize = 0, bool chi2fit = false);
 
    /**
        Fit using a FitMethodFunction interface. Same as method above, but now extra information
        can be taken from the function class
    */
-   bool FitFCN(const ROOT::Math::FitMethodFunction & fcn, const double * params = 0);
+   bool FitFCN(const ROOT::Math::FitMethodFunction & fcn, const double *params = nullptr);
 
    /**
       Set the FCN function represented by a multi-dimensional function interface
       (ROOT::Math::IMultiGenFunction) and optionally the initial parameters
       See also note above for the initial parameters for FitFCN
     */
-   bool SetFCN(const ROOT::Math::IMultiGenFunction &fcn, const double *params = 0, unsigned int dataSize = 0, bool chi2fit = false);
+   bool SetFCN(const ROOT::Math::IMultiGenFunction &fcn, const double *params = nullptr, unsigned int dataSize = 0, bool chi2fit = false);
 
    /**
       Set the FCN function represented by a multi-dimensional function interface
@@ -304,14 +304,14 @@ public:
       With this interface we pass in addition a ModelFunction that will be attached to the FitResult and
       used to compute confidence interval of the fit
    */
-   bool SetFCN(const ROOT::Math::IMultiGenFunction &fcn, const IModelFunction & func, const double *params = 0,
+   bool SetFCN(const ROOT::Math::IMultiGenFunction &fcn, const IModelFunction & func, const double *params = nullptr,
                unsigned int dataSize = 0, bool chi2fit = false);
 
    /**
        Set the objective function (FCN)  using a FitMethodFunction interface.
        Same as method above, but now extra information can be taken from the function class
    */
-   bool SetFCN(const ROOT::Math::FitMethodFunction & fcn, const double * params = 0);
+   bool SetFCN(const ROOT::Math::FitMethodFunction & fcn, const double *params = nullptr);
 
    /**
       Fit using the given FCN function representing a multi-dimensional gradient function
@@ -319,20 +319,20 @@ public:
       gradient information provided by the function.
       For the options same consideration as in the previous method
     */
-   bool FitFCN(const ROOT::Math::IMultiGradFunction &fcn, const double *params = 0, unsigned int dataSize = 0, bool chi2fit = false);
+   bool FitFCN(const ROOT::Math::IMultiGradFunction &fcn, const double *params = nullptr, unsigned int dataSize = 0, bool chi2fit = false);
 
    /**
        Fit using a FitMethodGradFunction interface. Same as method above, but now extra information
        can be taken from the function class
    */
-   bool FitFCN(const ROOT::Math::FitMethodGradFunction & fcn, const double * params = 0);
+   bool FitFCN(const ROOT::Math::FitMethodGradFunction & fcn, const double *params = nullptr);
 
    /**
       Set the FCN function represented by a multi-dimensional gradient function interface
       (ROOT::Math::IMultiGradFunction) and optionally the initial parameters
       See also note above for the initial parameters for FitFCN
     */
-   bool SetFCN(const ROOT::Math::IMultiGradFunction &fcn, const double *params = 0, unsigned int dataSize = 0, bool chi2fit = false);
+   bool SetFCN(const ROOT::Math::IMultiGradFunction &fcn, const double *params = nullptr, unsigned int dataSize = 0, bool chi2fit = false);
 
    /**
       Set the FCN function represented by a multi-dimensional gradient function interface
@@ -341,14 +341,14 @@ public:
       With this interface we pass in addition a ModelFunction that will be attached to the FitResult and
       used to compute confidence interval of the fit
    */
-   bool SetFCN(const ROOT::Math::IMultiGradFunction &fcn, const IModelFunction &func, const double *params = 0,
+   bool SetFCN(const ROOT::Math::IMultiGradFunction &fcn, const IModelFunction &func, const double *params = nullptr,
                unsigned int dataSize = 0, bool chi2fit = false);
 
    /**
        Set the objective function (FCN)  using a FitMethodGradFunction interface.
        Same as method above, but now extra information can be taken from the function class
    */
-   bool SetFCN(const ROOT::Math::FitMethodGradFunction & fcn, const double * params = 0);
+   bool SetFCN(const ROOT::Math::FitMethodGradFunction & fcn, const double *params = nullptr);
 
 
    /**
@@ -357,14 +357,14 @@ public:
       For the options same consideration as in the previous method
     */
    typedef  void (* MinuitFCN_t )(int &npar, double *gin, double &f, double *u, int flag);
-   bool FitFCN( MinuitFCN_t fcn, int npar = 0, const double * params = 0, unsigned int dataSize = 0, bool chi2fit = false);
+   bool FitFCN( MinuitFCN_t fcn, int npar = 0, const double *params = nullptr, unsigned int dataSize = 0, bool chi2fit = false);
 
    /**
       set objective function using user provided FCN with Minuit-like interface
       If npar = 0 it is assumed that the parameters are specified in the parameter settings created before
       For the options same consideration as in the previous method
     */
-   bool SetFCN( MinuitFCN_t fcn, int npar = 0, const double * params = 0, unsigned int dataSize = 0, bool chi2fit = false);
+   bool SetFCN( MinuitFCN_t fcn, int npar = 0, const double *params = nullptr, unsigned int dataSize = 0, bool chi2fit = false);
 
    /**
       Perform a fit with the previously set FCN function. Require SetFCN before

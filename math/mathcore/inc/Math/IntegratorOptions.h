@@ -117,7 +117,7 @@ public:
 
    /// constructor using the default options
    /// can pass a pointer to extra options (N.B. pointer will be managed by the class)
-   IntegratorOneDimOptions(IOptions * extraOpts = 0);
+   IntegratorOneDimOptions(IOptions * extraOpts = nullptr);
 
    ~IntegratorOneDimOptions() override {}
 
@@ -176,7 +176,7 @@ public:
    static ROOT::Math::IOptions * FindDefault(const char * name);
 
    /// print only the specified default options
-   static void PrintDefault(const char * name = 0, std::ostream & os = std::cout);
+   static void PrintDefault(const char * name = nullptr, std::ostream & os = std::cout);
 
 
 private:
@@ -198,7 +198,7 @@ public:
 
    /// constructor using the default options
    /// can pass a pointer to extra options (N.B. pointer will be managed by the class)
-   IntegratorMultiDimOptions(IOptions * extraOpts = 0);
+   IntegratorMultiDimOptions(IOptions * extraOpts = nullptr);
 
    ~IntegratorMultiDimOptions() override {}
 
@@ -255,7 +255,7 @@ public:
    static ROOT::Math::IOptions * FindDefault(const char * name);
 
    /// print only the specified default options
-   static void PrintDefault(const char * name = 0, std::ostream & os = std::cout);
+   static void PrintDefault(const char *name = nullptr, std::ostream & os = std::cout);
 
 
 private:

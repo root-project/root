@@ -28,7 +28,7 @@ namespace Math
 //______________________________________________________________________________
 template<typename _val_type>
 TDataPointN<_val_type>::TDataPointN():
-   m_vCoordinates(0),
+   m_vCoordinates(nullptr),
    m_fWeight(1)
 {
    m_vCoordinates = new _val_type[kDimension];

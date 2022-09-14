@@ -143,7 +143,7 @@ private:
       typename M::const_iterator pos;
       pos = opts.find(name);
       if (pos == opts.end()) {
-         return 0;
+         return nullptr;
       }
       return  &((*pos).second);
    }
