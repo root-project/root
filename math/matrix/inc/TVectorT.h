@@ -27,15 +27,15 @@
 template<class Element> class TVectorT : public TObject {
 
 protected:
-   Int_t    fNrows{0};                // number of rows
-   Int_t    fRowLwb{0};               // lower bound of the row index
-   Element *fElements{nullptr};             //[fNrows] elements themselves
+   Int_t    fNrows{0};             // number of rows
+   Int_t    fRowLwb{0};            // lower bound of the row index
+   Element *fElements{nullptr};    //[fNrows] elements themselves
 
-   enum {kSizeMax = 5};             // size data container on stack, see New_m(),Delete_m()
-   enum {kWorkMax = 100};           // size of work array's in several routines
+   enum {kSizeMax = 5};            // size data container on stack, see New_m(),Delete_m()
+   enum {kWorkMax = 100};          // size of work array's in several routines
 
    Element  fDataStack[kSizeMax];  //! data container
-   Bool_t   fIsOwner{kTRUE};              //!default kTRUE, when Use array kFALSE
+   Bool_t   fIsOwner{kTRUE};       //!default kTRUE, when Use array kFALSE
 
    Element* New_m   (Int_t size);
    void     Delete_m(Int_t size,Element*&);
@@ -50,7 +50,7 @@ protected:
 
 public:
 
-   TVectorT() : fNrows(0), fRowLwb(0), fElements(0), fDataStack (), fIsOwner(kTRUE) { }
+   TVectorT() : fNrows(0), fRowLwb(0), fElements(nullptr), fDataStack (), fIsOwner(kTRUE) { }
    explicit TVectorT(Int_t n);
    TVectorT(Int_t lwb,Int_t upb);
    TVectorT(Int_t n,const Element *elements);
@@ -171,11 +171,16 @@ public:
 
    void Add(const TVectorT<Element> &v);
    void Add(const TVectorT<Element> &v1, const TVectorT<Element> &v2);
-   void Clear(Option_t * /*option*/ ="") override { if (fIsOwner) Delete_m(fNrows,fElements);
-                                           else fElements = 0;
-                                           fNrows = 0; }
-   void Draw (Option_t *option="") override; // *MENU*
-   void Print(Option_t *option="") const override;  // *MENU*
+   void Clear(Option_t * /*option*/ = "") override
+   {
+      if (fIsOwner)
+         Delete_m(fNrows, fElements);
+      else
+         fElements = nullptr;
+      fNrows = 0;
+   }
+   void Draw(Option_t *option = "") override;       // *MENU*
+   void Print(Option_t *option = "") const override;  // *MENU*
 
    ClassDefOverride(TVectorT,4)  // Template of Vector class
 };

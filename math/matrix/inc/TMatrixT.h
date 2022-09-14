@@ -58,7 +58,7 @@ public:
    enum EMatrixCreatorsOp1 { kZero,kUnit,kTransposed,kInverted,kAtA };
    enum EMatrixCreatorsOp2 { kMult,kTransposeMult,kInvMult,kMultTranspose,kPlus,kMinus };
 
-   TMatrixT(): fDataStack(), fElements(0) { }
+   TMatrixT(): fDataStack(), fElements(nullptr) { }
    TMatrixT(Int_t nrows,Int_t ncols);
    TMatrixT(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
    TMatrixT(Int_t nrows,Int_t ncols,const Element *data,Option_t *option="");
@@ -66,7 +66,7 @@ public:
    TMatrixT(const TMatrixT      <Element> &another);
    TMatrixT(const TMatrixTSym   <Element> &another);
    TMatrixT(const TMatrixTSparse<Element> &another);
-   template <class Element2> TMatrixT(const TMatrixT<Element2> &another): fElements(0)
+   template <class Element2> TMatrixT(const TMatrixT<Element2> &another): fElements(nullptr)
    {
       R__ASSERT(another.IsValid());
       Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());
@@ -109,17 +109,22 @@ public:
 
    const Element *GetMatrixArray  () const override;
          Element *GetMatrixArray  () override;
-   const Int_t   *GetRowIndexArray() const override { return 0; }
-         Int_t   *GetRowIndexArray() override       { return 0; }
-   const Int_t   *GetColIndexArray() const override { return 0; }
-         Int_t   *GetColIndexArray() override       { return 0; }
+   const Int_t   *GetRowIndexArray() const override { return nullptr; }
+         Int_t   *GetRowIndexArray() override       { return nullptr; }
+   const Int_t   *GetColIndexArray() const override { return nullptr; }
+         Int_t   *GetColIndexArray() override       { return nullptr; }
 
          TMatrixTBase<Element> &SetRowIndexArray(Int_t * /*data*/) override { MayNotUse("SetRowIndexArray(Int_t *)"); return *this; }
          TMatrixTBase<Element> &SetColIndexArray(Int_t * /*data*/) override { MayNotUse("SetColIndexArray(Int_t *)"); return *this; }
 
-   void Clear(Option_t * /*option*/ ="") override { if (this->fIsOwner) Delete_m(this->fNelems,fElements);
-                                                   else fElements = 0;
-                                                   this->fNelems = 0; }
+   void Clear(Option_t * /*option*/ ="") override
+   {
+      if (this->fIsOwner)
+         Delete_m(this->fNelems, fElements);
+      else
+         fElements = nullptr;
+      this->fNelems = 0;
+   }
 
            TMatrixT    <Element> &Use     (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Element *data);
    const   TMatrixT    <Element> &Use     (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,const Element *data) const
@@ -144,8 +149,8 @@ public:
    Double_t Determinant  () const override;
    void     Determinant  (Double_t &d1,Double_t &d2) const override;
 
-           TMatrixT<Element> &Invert      (Double_t *det=0);
-           TMatrixT<Element> &InvertFast  (Double_t *det=0);
+           TMatrixT<Element> &Invert      (Double_t *det = nullptr);
+           TMatrixT<Element> &InvertFast  (Double_t *det = nullptr);
            TMatrixT<Element> &Transpose   (const TMatrixT<Element> &source);
    inline  TMatrixT<Element> &T           () { return this->Transpose(*this); }
            TMatrixT<Element> &Rank1Update (const TVectorT<Element> &v,Element alpha=1.0);
