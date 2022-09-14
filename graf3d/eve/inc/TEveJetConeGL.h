@@ -42,7 +42,7 @@ public:
    TEveJetConeGL();
    virtual ~TEveJetConeGL() {}
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
+   virtual Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr);
    virtual void   SetBBox();
 
    virtual void   DLCacheClear();
@@ -75,7 +75,7 @@ public:
    TEveJetConeProjectedGL();
    virtual ~TEveJetConeProjectedGL() {}
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
+   virtual Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr);
    virtual void   SetBBox();
 
    virtual void   Draw(TGLRnrCtx& rnrCtx) const;

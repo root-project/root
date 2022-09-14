@@ -45,7 +45,7 @@ public:
       TGListTree*     fTree;
       TGListTreeItem* fItem;
 
-      TEveListTreeInfo() : fTree(0), fItem(0) {}
+      TEveListTreeInfo() : fTree(nullptr), fItem(nullptr) {}
       TEveListTreeInfo(TGListTree* lt, TGListTreeItem* lti) : fTree(lt), fItem(lti) {}
       TEveListTreeInfo(const TEveListTreeInfo& l) : fTree(l.fTree), fItem(l.fItem) {}
       virtual ~TEveListTreeInfo() {}
@@ -138,7 +138,7 @@ public:
    Bool_t         ApplyVizTag(const TString& tag, const TString& fallback_tag="");
 
    virtual void PropagateVizParamsToProjecteds();
-   virtual void PropagateVizParamsToElements(TEveElement* el=0);
+   virtual void PropagateVizParamsToElements(TEveElement* el=nullptr);
    virtual void CopyVizParams(const TEveElement* el);
    virtual void CopyVizParamsFromDB();
    void         SaveVizParams (std::ostream& out, const TString& tag, const TString& var);
@@ -171,10 +171,10 @@ public:
    Bool_t  HasChildren()   const { return  fNumChildren != 0; }
 
    Bool_t       HasChild(TEveElement* el);
-   TEveElement* FindChild(const TString& name, const TClass* cls=0);
-   TEveElement* FindChild(TPRegexp& regexp, const TClass* cls=0);
-   Int_t        FindChildren(List_t& matches, const TString&  name, const TClass* cls=0);
-   Int_t        FindChildren(List_t& matches, TPRegexp& regexp, const TClass* cls=0);
+   TEveElement* FindChild(const TString& name, const TClass* cls=nullptr);
+   TEveElement* FindChild(TPRegexp& regexp, const TClass* cls=nullptr);
+   Int_t        FindChildren(List_t& matches, const TString&  name, const TClass* cls=nullptr);
+   Int_t        FindChildren(List_t& matches, TPRegexp& regexp, const TClass* cls=nullptr);
    TEveElement* FirstChild() const;
    TEveElement* LastChild () const;
 
@@ -268,7 +268,7 @@ public:
    Color_t* GetMainColorPtr()        const   { return fMainColorPtr; }
    void     SetMainColorPtr(Color_t* color)  { fMainColorPtr = color; }
 
-   virtual Bool_t  HasMainColor() const { return fMainColorPtr != 0; }
+   virtual Bool_t  HasMainColor() const { return fMainColorPtr != nullptr; }
    virtual Color_t GetMainColor() const { return fMainColorPtr ? *fMainColorPtr : 0; }
    virtual void    SetMainColor(Color_t color);
    void            SetMainColorPixel(Pixel_t pixel);
@@ -284,7 +284,7 @@ public:
    virtual void    PropagateMainTransparencyToProjecteds(Char_t t, Char_t old_t);
 
    virtual Bool_t     CanEditMainTrans() const { return fCanEditMainTrans; }
-   virtual Bool_t     HasMainTrans()     const { return fMainTrans != 0;   }
+   virtual Bool_t     HasMainTrans()     const { return fMainTrans != nullptr;   }
    virtual TEveTrans* PtrMainTrans(Bool_t create=kTRUE);
    virtual TEveTrans& RefMainTrans();
    virtual void       InitMainTrans(Bool_t can_edit=kTRUE);

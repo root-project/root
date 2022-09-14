@@ -34,12 +34,12 @@ protected:
    static TGeoManager *fgGeoMangeur;
 
    static TEveGeoShape* SubImportShapeExtract(TEveGeoShapeExtract* gse, TEveElement* parent);
-   TEveGeoShapeExtract* DumpShapeTree(TEveGeoShape* geon, TEveGeoShapeExtract* parent=0);
+   TEveGeoShapeExtract* DumpShapeTree(TEveGeoShape* geon, TEveGeoShapeExtract* parent=nullptr);
 
    TGeoShape* MakePolyShape();
 
 public:
-   TEveGeoShape(const char* name="TEveGeoShape", const char* title=0);
+   TEveGeoShape(const char* name="TEveGeoShape", const char* title=nullptr);
    virtual ~TEveGeoShape();
 
    virtual TObject* GetObject(const TEveException&) const
@@ -57,7 +57,7 @@ public:
    void SaveExtract(const char* file, const char* name);
    void WriteExtract(const char* name);
 
-   static TEveGeoShape* ImportShapeExtract(TEveGeoShapeExtract* gse, TEveElement* parent=0);
+   static TEveGeoShape* ImportShapeExtract(TEveGeoShapeExtract* gse, TEveElement* parent=nullptr);
 
    // GeoProjectable
    virtual TBuffer3D*   MakeBuffer3D();

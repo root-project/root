@@ -132,7 +132,7 @@ private:
    TEvePadHolder& operator=(const TEvePadHolder&); // Not implemented
 
 public:
-   TEvePadHolder(Bool_t modify_update_p, TVirtualPad* new_pad=0, Int_t subpad=0);
+   TEvePadHolder(Bool_t modify_update_p, TVirtualPad* new_pad=nullptr, Int_t subpad=0);
    virtual ~TEvePadHolder();
 
    ClassDef(TEvePadHolder, 0); // Exception-safe wrapper for temporary setting of gPad variable.
@@ -148,7 +148,7 @@ private:
    TEveGeoManagerHolder& operator=(const TEveGeoManagerHolder&); // Not implemented
 
 public:
-   TEveGeoManagerHolder(TGeoManager* new_gmgr=0, Int_t n_seg=0);
+   TEveGeoManagerHolder(TGeoManager* new_gmgr=nullptr, Int_t n_seg=0);
    virtual ~TEveGeoManagerHolder();
 
    ClassDef(TEveGeoManagerHolder, 0); // Exception-safe wrapper for temporary setting of gGeoManager variable.

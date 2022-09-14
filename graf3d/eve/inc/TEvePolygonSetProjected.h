@@ -34,8 +34,8 @@ protected:
       Int_t     fNPnts;  // number of points
       Int_t*    fPnts;   // point indices
 
-      Polygon_t() : fNPnts(0), fPnts(0) {}
-      virtual ~Polygon_t() { delete [] fPnts; fNPnts=0; fPnts=0; }
+      Polygon_t() : fNPnts(0), fPnts(nullptr) {}
+      virtual ~Polygon_t() { delete [] fPnts; fNPnts = 0; fPnts = nullptr; }
 
       Polygon_t& operator=(const Polygon_t& x)
       { fNPnts = x.fNPnts; fPnts = x.fPnts; return *this; }

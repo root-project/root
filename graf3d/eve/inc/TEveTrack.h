@@ -65,10 +65,10 @@ protected:
 
 public:
    TEveTrack();
-   TEveTrack(TParticle* t, Int_t label, TEveTrackPropagator* prop=0);
-   TEveTrack(TEveMCTrack*  t, TEveTrackPropagator* prop=0);
-   TEveTrack(TEveRecTrack* t, TEveTrackPropagator* prop=0);
-   TEveTrack(TEveRecTrackD* t, TEveTrackPropagator* prop=0);
+   TEveTrack(TParticle* t, Int_t label, TEveTrackPropagator* prop=nullptr);
+   TEveTrack(TEveMCTrack*  t, TEveTrackPropagator* prop=nullptr);
+   TEveTrack(TEveRecTrack* t, TEveTrackPropagator* prop=nullptr);
+   TEveTrack(TEveRecTrackD* t, TEveTrackPropagator* prop=nullptr);
    TEveTrack(const TEveTrack& t);
    virtual ~TEveTrack();
 
@@ -164,8 +164,8 @@ protected:
    void     SanitizeMinMaxCuts();
 
 public:
-   TEveTrackList(TEveTrackPropagator* prop=0);
-   TEveTrackList(const char* name, TEveTrackPropagator* prop=0);
+   TEveTrackList(TEveTrackPropagator* prop=nullptr);
+   TEveTrackList(const char* name, TEveTrackPropagator* prop=nullptr);
    virtual ~TEveTrackList();
 
    void  MakeTracks(Bool_t recurse=kTRUE);

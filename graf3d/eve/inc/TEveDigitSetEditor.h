@@ -44,7 +44,7 @@ protected:
    TGVerticalFrame      *fInfoFrame;       // Frame displaying basic digit statistics.
 
 public:
-   TEveDigitSetEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
+   TEveDigitSetEditor(const TGWindow *p = nullptr, Int_t width=170, Int_t height=30,
                       UInt_t options = kChildFrame, Pixel_t back=GetDefaultFrameBackground());
    virtual ~TEveDigitSetEditor() {}
 

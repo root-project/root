@@ -102,7 +102,7 @@ protected:
    static TString    fgEditorClass;
 
 public:
-   TEveGListTreeEditorFrame(const TGWindow* p=0, Int_t width=250, Int_t height=700);
+   TEveGListTreeEditorFrame(const TGWindow *p = nullptr, Int_t width=250, Int_t height=700);
    virtual ~TEveGListTreeEditorFrame();
 
    void ConnectSignals();

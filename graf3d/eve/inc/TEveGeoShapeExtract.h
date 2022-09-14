@@ -34,7 +34,7 @@ protected:
    TList*      fElements;    // Children elements.
 
 public:
-   TEveGeoShapeExtract(const char* n="TEveGeoShapeExtract", const char* t=0);
+   TEveGeoShapeExtract(const char* n="TEveGeoShapeExtract", const char* t=nullptr);
    ~TEveGeoShapeExtract();
 
    Bool_t HasElements();

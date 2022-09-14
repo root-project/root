@@ -36,7 +36,7 @@ protected:
    TGCheckButton    *fHighlightFrame;  // Checkbox for frame rendering.
 
 public:
-   TEveShapeEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
+   TEveShapeEditor(const TGWindow *p = nullptr, Int_t width=170, Int_t height=30,
          UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
    virtual ~TEveShapeEditor() {}
 
