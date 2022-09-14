@@ -83,7 +83,7 @@ public:
    /**
       Constructor with a generator instance and given level of log output
    */
-   TUnuran (TRandom * r = 0, unsigned int log = 0);
+   TUnuran (TRandom * r = nullptr, unsigned int log = 0);
 
 
    /**

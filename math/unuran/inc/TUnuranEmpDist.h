@@ -55,7 +55,7 @@ public:
       Constructor from a TH1 objects.
       If the histogram has a buffer by default the unbinned data are used
    */
-   TUnuranEmpDist (const TH1 * h1 = 0, bool useBuffer = true );
+   TUnuranEmpDist (const TH1 * h1 = nullptr, bool useBuffer = true );
 
    /**
       Constructor from a set of data using an iterator to specify begin/end of the data
