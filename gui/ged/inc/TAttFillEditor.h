@@ -32,7 +32,7 @@ protected:
    virtual void ConnectSignals2Slots();
 
 public:
-   TAttFillEditor(const TGWindow *p = 0,
+   TAttFillEditor(const TGWindow *p = nullptr,
                   Int_t width = 140, Int_t height = 30,
                   UInt_t options = kChildFrame,
                   Pixel_t back = GetDefaultFrameBackground());

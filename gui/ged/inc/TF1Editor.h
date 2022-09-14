@@ -41,7 +41,7 @@ protected:
    virtual void ConnectSignals2Slots();   //connect signals to slots
 
 public:
-   TF1Editor(const TGWindow *p = 0,  Int_t width = 140, Int_t height = 30,
+   TF1Editor(const TGWindow *p = nullptr,  Int_t width = 140, Int_t height = 30,
              UInt_t options = kChildFrame, Pixel_t back = GetDefaultFrameBackground());
    virtual ~TF1Editor();
 

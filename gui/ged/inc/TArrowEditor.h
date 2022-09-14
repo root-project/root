@@ -34,7 +34,7 @@ protected:
    Int_t          GetShapeEntry(Option_t *opt);
 
 public:
-   TArrowEditor(const TGWindow *p = 0,
+   TArrowEditor(const TGWindow *p = nullptr,
                 Int_t width = 140, Int_t height = 30,
                 UInt_t options = kChildFrame,
                 Pixel_t back = GetDefaultFrameBackground());
