@@ -121,7 +121,7 @@ private:
 
 
 public:
-   TH1Editor(const TGWindow *p = 0,
+   TH1Editor(const TGWindow *p = nullptr,
                Int_t width = 140, Int_t height = 30,
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());
