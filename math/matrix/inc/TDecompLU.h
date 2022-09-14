@@ -44,7 +44,7 @@ public :
    TDecompLU(Int_t row_lwb,Int_t row_upb);
    TDecompLU(const TMatrixD &m,Double_t tol = 0.0,Int_t implicit = 1);
    TDecompLU(const TDecompLU &another);
-   ~TDecompLU() override {if (fIndex) delete [] fIndex; fIndex = 0; }
+   ~TDecompLU() override {if (fIndex) delete [] fIndex; fIndex = nullptr; }
 
            const TMatrixD  GetMatrix ();
          Int_t     GetNrows  () const override { return fLU.GetNrows(); }
@@ -63,7 +63,7 @@ public :
    Bool_t   TransSolve (      TMatrixDColumn &b) override;
    void     Det        (Double_t &d1,Double_t &d2) override;
 
-   static  Bool_t   InvertLU  (TMatrixD &a,Double_t tol,Double_t *det=0);
+   static  Bool_t   InvertLU  (TMatrixD &a,Double_t tol,Double_t *det = nullptr);
    Bool_t           Invert    (TMatrixD &inv);
    TMatrixD         Invert    (Bool_t &status);
    TMatrixD         Invert    () { Bool_t status; return Invert(status); }

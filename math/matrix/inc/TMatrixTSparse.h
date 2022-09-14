@@ -70,7 +70,7 @@ public:
    enum EMatrixCreatorsOp1 { kZero,kUnit,kTransposed,kAtA };
    enum EMatrixCreatorsOp2 { kMult,kMultTranspose,kPlus,kMinus };
 
-   TMatrixTSparse() { fElements = 0; fRowIndex = 0; fColIndex = 0; }
+   TMatrixTSparse() { fElements = nullptr; fRowIndex = nullptr; fColIndex = nullptr; }
    TMatrixTSparse(Int_t nrows,Int_t ncols);
    TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
    TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros,
@@ -115,9 +115,9 @@ public:
                                                                                                 m.GetColUpb(),m.GetNoElements()); }
 
    void Clear(Option_t * /*option*/ ="") override { if (this->fIsOwner) {
-                                                      if (fElements) { delete [] fElements; fElements = 0; }
-                                                      if (fRowIndex) { delete [] fRowIndex; fRowIndex = 0; }
-                                                      if (fColIndex) { delete [] fColIndex; fColIndex = 0; }
+                                                      if (fElements) { delete [] fElements; fElements = nullptr; }
+                                                      if (fRowIndex) { delete [] fRowIndex; fRowIndex = nullptr; }
+                                                      if (fColIndex) { delete [] fColIndex; fColIndex = nullptr; }
                                                    }
                                                    this->fNelems    = 0;
                                                    this->fNrowIndex = 0;
