@@ -81,7 +81,7 @@ public:
    virtual void       DrawPolygon(const TGeoPolygon *poly) = 0;
    virtual void       DrawVolume(TGeoVolume *vol, Option_t *option="") = 0;
    virtual void       EditGeometry(Option_t *option="") = 0;
-   virtual void       EstimateCameraMove(Double_t /*tmin*/, Double_t /*tmax*/, Double_t *, Double_t * ) {;}
+   virtual void       EstimateCameraMove(Double_t /*tmin*/, Double_t /*tmax*/, Double_t *, Double_t * ) {}
    virtual void       ExecuteShapeEvent(TGeoShape *shape, Int_t event, Int_t px, Int_t py) = 0;
    virtual void       ExecuteManagerEvent(TGeoManager *geom, Int_t event, Int_t px, Int_t py) = 0;
    virtual void       ExecuteVolumeEvent(TGeoVolume *volume, Int_t event, Int_t px, Int_t py) = 0;
@@ -92,7 +92,7 @@ public:
    virtual const char *GetDrawPath() const = 0;
    virtual TGeoVolume *GetDrawnVolume() const = 0;
    virtual TGeoVolume *GetTopVolume() const = 0;
-   virtual void       GetViewAngles(Double_t &/*longitude*/, Double_t &/*latitude*/, Double_t &/*psi*/) {;}
+   virtual void       GetViewAngles(Double_t &/*longitude*/, Double_t &/*latitude*/, Double_t &/*psi*/) {}
    virtual Int_t      GetVisLevel() const = 0;
    virtual Int_t      GetVisOption() const = 0;
    virtual const char*GetVolumeInfo(const TGeoVolume *volume, Int_t px, Int_t py) const = 0;

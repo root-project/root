@@ -74,7 +74,7 @@ protected :
 // methods
    virtual void          FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t localFrame) const;
    Int_t                 GetBasicColor() const;
-   void                  SetOnBoundary(Bool_t /*flag=kTRUE*/) {;}
+   void                  SetOnBoundary(Bool_t /*flag=kTRUE*/) {}
    void                  TransformPoints(Double_t *points, UInt_t NbPoints) const;
 
 public:
@@ -102,10 +102,10 @@ public:
    virtual Bool_t        CouldBeCrossed(const Double_t *point, const Double_t *dir) const = 0;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py) = 0;
    virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1,
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const = 0;
+                                   Double_t step=TGeoShape::Big(), Double_t *safe=nullptr) const = 0;
    virtual void          DistFromInside_v(const Double_t *, const Double_t *, Double_t *, Int_t, Double_t *) const {}
    virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1,
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const = 0;
+                                   Double_t step=TGeoShape::Big(), Double_t *safe=nullptr) const = 0;
    virtual void          DistFromOutside_v(const Double_t *, const Double_t *, Double_t *, Int_t, Double_t *) const {}
    static Double_t       DistToPhiMin(const Double_t *point, const Double_t *dir, Double_t s1, Double_t c1, Double_t s2, Double_t c2,
                                       Double_t sm, Double_t cm, Bool_t in=kTRUE);
@@ -122,7 +122,7 @@ public:
    virtual Int_t         GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const = 0;
    Int_t                 GetId() const  {return fShapeId;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const  = 0;
-   virtual void          GetMeshNumbers(Int_t &/*nvert*/, Int_t &/*nsegs*/, Int_t &/*npols*/) const {;}
+   virtual void          GetMeshNumbers(Int_t &/*nvert*/, Int_t &/*nsegs*/, Int_t &/*npols*/) const {}
    virtual const char   *GetName() const;
    virtual Int_t         GetNmeshVertices() const {return 0;}
    const char           *GetPointerName() const;
@@ -140,7 +140,7 @@ public:
    Bool_t                IsValid() const {return !TestShapeBit(kGeoInvalidShape);}
    virtual Bool_t        IsValidBox() const                      = 0;
    virtual void          InspectShape() const                    = 0;
-   virtual TBuffer3D    *MakeBuffer3D() const {return 0;}
+   virtual TBuffer3D    *MakeBuffer3D() const {return nullptr;}
    static void           NormalPhi(const Double_t *point, const Double_t *dir, Double_t *norm, Double_t c1, Double_t s1, Double_t c2, Double_t s2);
    virtual void          Paint(Option_t *option="");
    virtual Double_t      Safety(const Double_t *point, Bool_t in=kTRUE) const = 0;

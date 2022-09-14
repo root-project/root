@@ -264,11 +264,11 @@ public :
    void                 SetScale(Double_t sx, Double_t sy, Double_t sz);
    void                 SetScale(const TGeoMatrix &other);
    virtual void         LocalToMaster(const Double_t *local, Double_t *master) const;
-   Double_t             LocalToMaster(Double_t dist, const Double_t *dir=0) const;
+   Double_t             LocalToMaster(Double_t dist, const Double_t *dir=nullptr) const;
    virtual void         LocalToMasterVect(const Double_t *local, Double_t *master) const {TGeoScale::LocalToMaster(local, master);}
    virtual TGeoMatrix  *MakeClone() const;
    virtual void         MasterToLocal(const Double_t *master, Double_t *local) const;
-   Double_t             MasterToLocal(Double_t dist, const Double_t *dir=0) const;
+   Double_t             MasterToLocal(Double_t dist, const Double_t *dir=nullptr) const;
    virtual void         MasterToLocalVect(const Double_t *master, Double_t *local) const {TGeoScale::MasterToLocal(master, local);}
    virtual void         ReflectX(Bool_t, Bool_t) {fScale[0]=-fScale[0]; SetBit(kGeoReflection, !IsReflection());}
    virtual void         ReflectY(Bool_t, Bool_t) {fScale[1]=-fScale[1]; SetBit(kGeoReflection, !IsReflection());}
@@ -364,7 +364,7 @@ public :
    TGeoHMatrix          Inverse() const;
    void                 SetScale(Double_t sx, Double_t sy, Double_t sz);
    void                 SetScale(Double_t *scale) {memcpy(&fScale[0], scale, 3*sizeof(Double_t));}
-   virtual TGeoMatrix  *MakeClone() const {return NULL;}
+   virtual TGeoMatrix  *MakeClone() const {return nullptr;}
    Bool_t               Normalize();
 
    virtual const Double_t    *GetScale()     const {return &fScale[0];}
@@ -393,7 +393,7 @@ public :
    virtual void         LocalToMaster(const Double_t *local, Double_t *master) const {memcpy(master, local, 3*sizeof(Double_t));}
    virtual void         LocalToMasterVect(const Double_t *local, Double_t *master) const {memcpy(master, local, 3*sizeof(Double_t));}
    virtual void         LocalToMasterBomb(const Double_t *local, Double_t *master) const {TGeoIdentity::LocalToMaster(local, master);}
-   virtual TGeoMatrix  *MakeClone() const {return NULL;}
+   virtual TGeoMatrix  *MakeClone() const {return nullptr;}
    virtual void         MasterToLocal(const Double_t *master, Double_t *local) const {memcpy(local, master, 3*sizeof(Double_t));}
    virtual void         MasterToLocalVect(const Double_t *master, Double_t *local) const {memcpy(local, master, 3*sizeof(Double_t));}
    virtual void         MasterToLocalBomb(const Double_t *master, Double_t *local) const {TGeoIdentity::MasterToLocal(master, local);}
@@ -401,7 +401,7 @@ public :
    virtual const Double_t    *GetTranslation() const {return &kNullVector[0];}
    virtual const Double_t    *GetRotationMatrix() const {return &kIdentityMatrix[0];}
    virtual const Double_t    *GetScale()       const {return &kUnitScale[0];}
-   virtual void         SavePrimitive(std::ostream &, Option_t * = "") {;}
+   virtual void         SavePrimitive(std::ostream &, Option_t * = "") {}
 
    ClassDef(TGeoIdentity, 1)                 // identity transformation class
 };
