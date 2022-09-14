@@ -23,8 +23,8 @@ public:
 
    Bool_t            MakeCurrent();
    void              SwapBuffers();
-   const TGLFormat  *GetPixelFormat()const{return 0;}
-   const TGLContext *GetContext()const{return 0;}
+   const TGLFormat  *GetPixelFormat()const{return nullptr;}
+   const TGLContext *GetContext()const{return nullptr;}
 
    void SetGLDevice(Int_t glDevice)
    {

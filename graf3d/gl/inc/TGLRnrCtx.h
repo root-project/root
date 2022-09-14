@@ -199,7 +199,7 @@ public:
    void     SetSceneClip(TGLClip *p)   { fSceneClip = p;     }
    TGLClip* Clip()               const { return  fClip;      }
    void     SetClip(TGLClip *p)        { fClip = p;          }
-   Bool_t   HasClip()            const { return  fClip != 0; }
+   Bool_t   HasClip()            const { return  fClip != nullptr; }
 
    Short_t DrawPass()    const         { return fDrawPass;  }
    void    SetDrawPass(Short_t dpass)  { fDrawPass = dpass; }
