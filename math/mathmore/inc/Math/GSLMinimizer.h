@@ -138,9 +138,7 @@ public:
    bool ProvidesError() const override { return false; }
 
    /// return errors at the minimum
-   const double * Errors() const override {
-      return 0;
-   }
+   const double * Errors() const override { return nullptr; }
 
    /** return covariance matrices elements
        if the variable is fixed the matrix is zero

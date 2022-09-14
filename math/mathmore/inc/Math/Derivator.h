@@ -82,7 +82,7 @@ public:
        @param p :  pointer to the object carrying the function state
                     (for example the function object itself)
     */
-   explicit Derivator(const GSLFuncPointer &f, void * p = 0);
+   explicit Derivator(const GSLFuncPointer &f, void * p = nullptr);
 
    /// destructor
    virtual ~Derivator();
@@ -123,7 +123,7 @@ public:
        @param p :  pointer to the object carrying the function state
                     (for example the function object itself)
    */
-   void SetFunction( const GSLFuncPointer &f, void * p = 0);
+   void SetFunction( const GSLFuncPointer &f, void * p = nullptr);
 
 
 
