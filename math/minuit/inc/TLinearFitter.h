@@ -194,7 +194,7 @@ private:
    TBits        fFitsample;      //indices of points, used in the robust fit
 
    Bool_t       *fFixedParams;   //[fNfixed] array of fixed/released params
-   
+
 
    void  AddToDesign(Double_t *x, Double_t y, Double_t e);
    void  ComputeTValues();
@@ -222,7 +222,7 @@ public:
    virtual void       Add(TLinearFitter *tlf);
    virtual void       AddPoint(Double_t *x, Double_t y, Double_t e=1);
    virtual void       AddTempMatrices();
-   virtual void       AssignData(Int_t npoints, Int_t xncols, Double_t *x, Double_t *y, Double_t *e=0);
+   virtual void       AssignData(Int_t npoints, Int_t xncols, Double_t *x, Double_t *y, Double_t *e=nullptr);
 
    void       Clear(Option_t *option="") override;
    virtual void       ClearPoints();
@@ -271,7 +271,7 @@ public:
 
    Int_t     GetStats(Double_t& /*amin*/, Double_t& /*edm*/, Double_t& /*errdef*/, Int_t& /*nvpar*/, Int_t& /*nparx*/) const override {return 0;}
    Double_t  GetSumLog(Int_t /*i*/) override {return 0;}
-   void      SetFitMethod(const char * /*name*/) override {;}
+   void      SetFitMethod(const char * /*name*/) override {}
    Int_t     SetParameter(Int_t /*ipar*/,const char * /*parname*/,Double_t /*value*/,Double_t /*verr*/,Double_t /*vlow*/, Double_t /*vhigh*/) override {return 0;}
 
    ClassDefOverride(TLinearFitter, 2) //fit a set of data points with a linear combination of functions

@@ -31,13 +31,13 @@ class TMultiLayerPerceptron : public TObject {
                           kRibierePolak, kFletcherReeves, kBFGS };
    enum EDataSet { kTraining, kTest };
    TMultiLayerPerceptron();
-   TMultiLayerPerceptron(const char* layout, TTree* data = 0,
+   TMultiLayerPerceptron(const char* layout, TTree* data = nullptr,
                          const char* training = "Entry$%2==0",
                          const char* test = "",
                          TNeuron::ENeuronType type = TNeuron::kSigmoid,
                          const char* extF = "", const char* extD  = "");
    TMultiLayerPerceptron(const char* layout,
-                         const char* weight, TTree* data = 0,
+                         const char* weight, TTree* data = nullptr,
                          const char* training = "Entry$%2==0",
                          const char* test = "",
                          TNeuron::ENeuronType type = TNeuron::kSigmoid,

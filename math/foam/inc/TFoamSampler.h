@@ -102,7 +102,7 @@ public:
       divided by the bin width)
       By default do not do random sample, just return the function values
     */
-   bool SampleBin(double prob, double & value, double *error = 0) override;
+   bool SampleBin(double prob, double & value, double *error = nullptr) override;
 
 
 
