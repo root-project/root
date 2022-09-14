@@ -66,7 +66,7 @@ public:
    TGeometry(const char *name, const char *title);
    virtual           ~TGeometry();
    virtual void      Browse(TBrowser *b);
-   virtual void      cd(const char *path=0);
+   virtual void      cd(const char *path=nullptr);
    virtual void      Draw(Option_t *option="");
    virtual TObject  *FindObject(const char *name) const;
    virtual TObject  *FindObject(const TObject *obj) const;
@@ -102,13 +102,13 @@ public:
    virtual void      SetBomb(Float_t bomb=1.4) {fBomb = bomb;}
    virtual void      SetCurrentNode(TNode *node) {fCurrentNode = node;}
    virtual void      SetGeomLevel(Int_t level=0){fGeomLevel=level;}
-   virtual void      SetMatrix(TRotMatrix *matrix=0){fMatrix = matrix;}
+   virtual void      SetMatrix(TRotMatrix *matrix=nullptr){fMatrix = matrix;}
    virtual void      SetPosition(TRotMatrix *matrix, Double_t x=0,Double_t y=0,Double_t z=0);
    virtual void      SetPosition(TRotMatrix *matrix, Float_t x,Float_t y,Float_t z);
    virtual void      SetPosition(Double_t x,Double_t y,Double_t z);
    virtual void      SetPosition(Float_t x,Float_t y,Float_t z);
    virtual void      UpdateMatrix(TNode *node);
-   virtual void      UpdateTempMatrix(Double_t x=0, Double_t y=0, Double_t z=0, TRotMatrix *matrix=0);
+   virtual void      UpdateTempMatrix(Double_t x=0, Double_t y=0, Double_t z=0, TRotMatrix *matrix=nullptr);
    virtual void      UpdateTempMatrix(Double_t x, Double_t y, Double_t z, Double_t *matrix,Bool_t isReflection=kFALSE);
 
    static TObjArray *Get(const char *name);

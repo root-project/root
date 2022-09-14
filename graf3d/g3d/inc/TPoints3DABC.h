@@ -25,8 +25,8 @@
 class TPoints3DABC : public TObject {
 
 public:
-   TPoints3DABC(){;}
-   virtual ~TPoints3DABC(){;}
+   TPoints3DABC(){}
+   virtual ~TPoints3DABC(){}
 
    static  Int_t     DistancetoLine(Int_t px, Int_t py, Float_t x1, Float_t y1, Float_t x2, Float_t y2, Int_t lineWidth = 1 );
 
@@ -51,7 +51,7 @@ public:
    virtual Int_t     SetNextPoint(Float_t x, Float_t y, Float_t z);
    virtual void      SetOption(Option_t *option="")=0;
    virtual Int_t     SetPoint(Int_t point, Float_t x, Float_t y, Float_t z)=0;
-   virtual Int_t     SetPoints(Int_t n, Float_t *p=0, Option_t *option="") =0;
+   virtual Int_t     SetPoints(Int_t n, Float_t *p=nullptr, Option_t *option="") =0;
    virtual Int_t     Size() const              =0;
 
    ClassDef(TPoints3DABC,0)  //A 3-D Points
