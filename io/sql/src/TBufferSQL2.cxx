@@ -56,7 +56,7 @@ ClassImp(TBufferSQL2);
 /// Default constructor, should not be used
 
 TBufferSQL2::TBufferSQL2()
-   : TBufferText(), fSQL(nullptr), fIOVersion(1), fStructure(nullptr), fStk(0), fReadBuffer(), fErrorFlag(0),
+   : TBufferText(), fSQL(nullptr), fIOVersion(1), fStructure(nullptr), fStk(nullptr), fReadBuffer(), fErrorFlag(0),
      fCompressLevel(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal), fReadVersionBuffer(-1), fObjIdCounter(1), fIgnoreVerification(kFALSE),
      fCurrentData(nullptr), fObjectsInfos(nullptr), fFirstObjId(0), fLastObjId(0), fPoolsMap(nullptr)
 {
@@ -68,7 +68,7 @@ TBufferSQL2::TBufferSQL2()
 /// Mode should be either TBuffer::kRead or TBuffer::kWrite.
 
 TBufferSQL2::TBufferSQL2(TBuffer::EMode mode, TSQLFile *file)
-   : TBufferText(mode, file), fSQL(nullptr), fIOVersion(1), fStructure(nullptr), fStk(0), fReadBuffer(), fErrorFlag(0),
+   : TBufferText(mode, file), fSQL(nullptr), fIOVersion(1), fStructure(nullptr), fStk(nullptr), fReadBuffer(), fErrorFlag(0),
      fCompressLevel(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal), fReadVersionBuffer(-1), fObjIdCounter(1), fIgnoreVerification(kFALSE),
      fCurrentData(nullptr), fObjectsInfos(nullptr), fFirstObjId(0), fLastObjId(0), fPoolsMap(nullptr)
 {
@@ -136,7 +136,7 @@ void *TBufferSQL2::SqlReadAny(Long64_t keyid, Long64_t objid, TClass **cl, void 
    if (!fSQL)
       return nullptr;
 
-   fCurrentData = 0;
+   fCurrentData = nullptr;
    fErrorFlag = 0;
 
    fReadVersionBuffer = -1;
@@ -327,7 +327,7 @@ void *TBufferSQL2::SqlReadObject(void *obj, TClass **cl, TMemberStreamer *stream
    Bool_t findptr = kFALSE;
 
    const char *refid = fCurrentData->GetValue();
-   if ((refid == 0) || (strlen(refid) == 0)) {
+   if (!refid || (strlen(refid) == 0)) {
       Error("SqlReadObject", "Invalid object reference value");
       fErrorFlag = 1;
       return obj;
@@ -850,7 +850,7 @@ UInt_t TBufferSQL2::WriteVersion(const TClass *cl, Bool_t /* useBcnt */)
 
 void *TBufferSQL2::ReadObjectAny(const TClass *)
 {
-   return SqlReadObject(0);
+   return SqlReadObject(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -885,7 +885,7 @@ R__ALWAYS_INLINE void TBufferSQL2::SqlReadArrayContent(T *arr, Int_t arrsize, Bo
    if (fCurrentData->IsBlobData()) {
       while (indx < arrsize) {
          const char *name = fCurrentData->GetBlobPrefixName();
-         if (strstr(name, sqlio::IndexSepar) == 0) {
+         if (!strstr(name, sqlio::IndexSepar)) {
             sscanf(name, "[%d", &first);
             last = first;
          } else {
@@ -1733,7 +1733,7 @@ void TBufferSQL2::StreamObject(void *obj, const TClass *cl, const TClass *onFile
    if (gDebug > 1)
       Info("StreamObject", "class  %s", (cl ? cl->GetName() : "none"));
    if (IsReading())
-      SqlReadObject(obj, 0, nullptr, 0, onFileClass);
+      SqlReadObject(obj, nullptr, nullptr, 0, onFileClass);
    else
       SqlWriteObject(obj, cl, kTRUE);
 }
@@ -1752,7 +1752,7 @@ void TBufferSQL2::StreamObjectExtra(void *obj, TMemberStreamer *streamer, const 
    //   (*streamer)(*this, obj, n);
 
    if (IsReading())
-      SqlReadObject(obj, 0, streamer, n, onFileClass);
+      SqlReadObject(obj, nullptr, streamer, n, onFileClass);
    else
       SqlWriteObject(obj, cl, kTRUE, streamer, n);
 }
@@ -2434,18 +2434,18 @@ void TBufferSQL2::SqlReadBasic(ULong64_t &value)
 const char *TBufferSQL2::SqlReadValue(const char *tname)
 {
    if (fErrorFlag > 0)
-      return 0;
+      return nullptr;
 
    if (!fCurrentData) {
       Error("SqlReadValue", "No object data to read from");
       fErrorFlag = 1;
-      return 0;
+      return nullptr;
    }
 
    if (!fIgnoreVerification)
       if (!fCurrentData->VerifyDataType(tname)) {
          fErrorFlag = 1;
-         return 0;
+         return nullptr;
       }
 
    fReadBuffer = fCurrentData->GetValue();
