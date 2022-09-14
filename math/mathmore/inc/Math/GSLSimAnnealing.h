@@ -68,18 +68,18 @@ protected:
       derived classes might need to re-define completely the class
     */
    GSLSimAnFunc() :
-      fFunc(0)
+      fFunc(nullptr)
    {}
 
 public:
 
 
-   /// virtual distructor (no operations)
+   /// virtual destructor (no operations)
    virtual ~GSLSimAnFunc() { } //
 
 
    /**
-      fast copy method called by GSL simuated annealing internally
+      fast copy method called by GSL simulated annealing internally
       copy only the things which have been changed
       must be re-implemented by derived classes if needed
    */
