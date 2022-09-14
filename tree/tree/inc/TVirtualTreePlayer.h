@@ -78,8 +78,8 @@ public:
    virtual Int_t          MakeClass(const char *classname, const char *option) = 0;
    virtual Int_t          MakeCode(const char *filename) = 0;
    virtual Int_t          MakeProxy(const char *classname,
-                                    const char *macrofilename = 0, const char *cutfilename = 0,
-                                    const char *option = 0, Int_t maxUnrolling = 3) = 0;
+                                    const char *macrofilename = nullptr, const char *cutfilename = nullptr,
+                                    const char *option = nullptr, Int_t maxUnrolling = 3) = 0;
    virtual Int_t          MakeReader(const char *classname, Option_t *option) = 0;
    virtual TPrincipal    *Principal(const char *varexp="", const char *selection="", Option_t *option="np"
                                     ,Long64_t nentries=kMaxEntries, Long64_t firstentry=0) = 0;
