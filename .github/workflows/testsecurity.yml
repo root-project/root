@@ -1,0 +1,47 @@
+
+name: 'Self-hosted runner security test'
+
+on: 
+  workflow_dispatch:
+
+jobs:
+  no-container:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - name: Print debug info
+        run:  'printf "%s@%s\\n" $(whoami) $(hostname); pwd; ls -la; ls -la /'
+        if:   always()
+
+      - name: Attempt illegal write operation
+        run:  'if touch /a; then false; fi'
+        if:   always()
+
+      - name: Attempt illegal read operation
+        run:  'if cd /root; then false; fi'
+        if:   always()
+
+  in-container:
+    needs: no-container
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ["","","","","","","","","","","","","","","","","","","",""]
+
+    runs-on: [self-hosted, linux, x64]
+
+    container:
+      image: ubuntu
+      options: '-v /:/mnt/test --security-opt label=disable'
+
+    steps:
+      - name: Print debug info
+        run:  'printf "%s@%s\\n" $(whoami) $(hostname); pwd; ls -Zla; ls -Zla /'
+        if:   always()
+
+      - name: Attempt illegal write operation
+        run:  'if touch /mnt/test/a > /dev/null; then false; fi'
+        if:   always()
+
+      - name: Attempt illegal read operation
+        run:  'if cd /mnt/test/root > /dev/null; then false; fi'
+        if:   always()

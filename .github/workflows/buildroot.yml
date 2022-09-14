@@ -1,0 +1,119 @@
+
+name: 'Root Rebase and Build'
+
+on:
+  schedule:
+    - cron: '0 1 * * *'
+
+  # PR
+  pull_request_target:
+    branches:
+      - '**'
+    paths-ignore:
+      - 'doc/**'
+      - 'documentation/**'
+
+  # Allows nightly builds to trigger one run for each branch easily
+  workflow_call:
+    inputs:
+      head_ref:
+        type: string
+        required: true
+        default: master
+      base_ref:
+        type: string
+        required: true
+        default: master
+      incremental:
+        type: boolean
+        required: true
+        default: true
+  
+  # Enables manual start of workflow
+  workflow_dispatch:
+    inputs:
+      head_ref:
+        description: rebase from ...
+        type: string
+        required: true
+        default: master
+      base_ref:
+        description: ... to ... (can have same value)
+        type: string
+        required: true
+        default: master
+      incremental:
+        description: 'Do incremental build'
+        type: boolean
+        required: true
+        default: true
+
+env:
+  OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
+  OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
+  OS_AUTH_TYPE: 'v3applicationcredential'
+  OS_AUTH_URL: 'https://keystone.cern.ch/v3'
+  OS_IDENTITY_API_VERSION: 3
+  OS_INTERFACE: 'public'
+  OS_REGION_NAME: 'cern'
+  PYTHONUNBUFFERED: true
+
+jobs:
+  build-linux:
+    strategy:
+      matrix:
+        image: ["fedora32", "fedora34", "centos8", "ubuntu18", "ubuntu20", "ubuntu22"]
+        config: ["Release"]
+        #, "Debug", "RelWithDebInfo"]
+      fail-fast: false
+
+    runs-on: [self-hosted, linux, x64]
+
+    container:
+      image: ghcr.io/olemorud/${{ matrix.image }}:buildready
+      options: '--security-opt label=disable'
+      env: # S3 storage
+        OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
+        OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
+        OS_AUTH_TYPE: 'v3applicationcredential'
+        OS_AUTH_URL: 'https://keystone.cern.ch/v3'
+        OS_IDENTITY_API_VERSION: 3
+        OS_INTERFACE: 'public'
+        OS_REGION_NAME: 'cern'
+        PYTHONUNBUFFERED: true
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJSON(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
+      - name: Print debug info
+        run:  'printf "%s@%s %s\\n" "$(whoami)" "$(hostname)";
+               ls -la
+              '
+
+      - name: Install root PR
+        if:   github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
+        run: ".github/workflows/rootci-installers/build_root.py
+                    --buildtype      ${{ matrix.config }}
+                    --platform       ${{ matrix.image }}
+                    --incremental    true
+                    --base_ref       ${{ github.base_ref }}
+                    --head_ref       refs/pull/${{ github.event.pull_request.number }}/head
+                    --repository     ${{ github.server_url }}/${{ github.repository }}
+              "
+
+      - name: Install root workflow dispatch/call
+        if:   github.event_name == 'workflow_dispatch'
+        run: ".github/workflows/rootci-installers/build_root.py
+                    --buildtype      ${{ matrix.config }}
+                    --platform       ${{ matrix.image }}
+                    --incremental    ${{ inputs.incremental }}
+                    --base_ref       ${{ inputs.base_ref }}
+                    --head_ref       ${{ inputs.head_ref }}
+                    --repository     ${{ github.server_url }}/${{ github.repository }}
+              "
