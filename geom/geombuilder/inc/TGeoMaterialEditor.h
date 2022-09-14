@@ -55,7 +55,7 @@ protected:
    virtual void ConnectSignals2Slots();      // Connect the signals to the slots
 
 public:
-   TGeoMaterialEditor(const TGWindow *p = 0,
+   TGeoMaterialEditor(const TGWindow *p = nullptr,
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
@@ -100,7 +100,7 @@ protected:
    virtual void ConnectSignals2Slots();     // Connect the signals to the slots
 
 public:
-   TGeoMixtureEditor(const TGWindow *p = 0,
+   TGeoMixtureEditor(const TGWindow *p = nullptr,
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
