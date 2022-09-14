@@ -1,0 +1,75 @@
+
+name: 'Build ROOT multi-platform'
+
+on:
+  # Enables manual start of workflow
+  workflow_dispatch:
+    inputs:
+      incremental:
+        description: 'Do incremental build'
+        required: false
+        default: 'true'
+      force_generation:
+        description: 'Incremental build: Make sure generation step is always run'
+        required: false
+        default: 'false'
+
+  # Uses workflow from base of pull request which may help prevent execution of unsafe code
+  # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request_target
+ 
+  # This workflow has repository read/write access. Read about security considerations
+  # https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
+  pull_request_target:
+    branches:
+      - '**'
+    paths-ignore:
+      - 'doc/**'
+      - 'documentation/**'
+
+  # Nightly build
+  schedule:
+    - cron: '0 1 * * *'
+
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        image: ["fedora32", "fedora34", "centos8", "ubuntu18", "ubuntu20", "ubuntu22"]
+        config: ["Release", "Debug", "RelWithDebInfo"]
+      fail-fast: false
+
+    runs-on: [self-hosted, linux, x64]
+
+    container:
+      image: ghcr.io/olemorud/${{ matrix.image }}:buildready
+      options: '--security-opt label=disable'
+      env: # S3 storage
+        OS_APPLICATION_CREDENTIAL_ID: 'fdbb885970e547a49e3dfc339ce1efa7'
+        OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
+        OS_AUTH_TYPE: 'v3applicationcredential'
+        OS_AUTH_URL: 'https://keystone.cern.ch/v3'
+        OS_IDENTITY_API_VERSION: 3
+        OS_INTERFACE: 'public'
+        OS_REGION_NAME: 'cern'
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Print debug info
+        run:  'printf "%s@%s %s\\n" "$(whoami)" "$(hostname)" "$(pwd)";
+               printf "%s\\n%s\\n####\\n/\\n%s" $(pwd) $(ls -Zla .) $(ls -Zla /)
+               echo ${{ github.event }}
+               echo ${{ github.event_name }}
+               echo ${{ github.head_ref }}
+               echo ${{ github.base_ref }}
+              '
+
+      - name: Nightly build
+        if:   github.event.schedule == '0 1 * * *'
+        run: ".github/workflows/rootci-installers/build_root.py --buildtype ${{ matrix.config }} --platform ${{ matrix.platform }} --branch master --incremental false"
+
+      - name: Install root
+        run: ".github/workflows/rootci-installers/build_root.py --buildtype ${{ matrix.config }} --platform ${{ matrix.platform }} --branch master --incremental ${{ inputs.incremental }} --alwaysgenerate ${{ inputs.force_generation }}"
+
