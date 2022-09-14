@@ -20,7 +20,7 @@ class FTGL_EXPORT FTVector
         FTVector()
         {
             Capacity = Size = 0;
-            Items = 0;
+            Items = nullptr;
         }
 
 
@@ -93,11 +93,11 @@ class FTGL_EXPORT FTVector
 
         void clear()
         {
-            if( Capacity)
+            if(Capacity)
             {
                 delete [] Items;
                 Capacity = Size = 0;
-                Items = 0;
+                Items = nullptr;
             }
         }
 

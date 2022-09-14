@@ -20,9 +20,9 @@ class FTGL_EXPORT FTList
          */
         FTList()
         :   listSize(0),
-            tail(0)
+            tail(nullptr)
         {
-            tail = NULL;
+            tail = nullptr;
             head = new Node;
         }
 
@@ -55,7 +55,7 @@ class FTGL_EXPORT FTList
         {
             Node* node = new Node( item);
 
-            if( head->next == NULL)
+            if( head->next == nullptr)
             {
                 head->next = node;
             }
@@ -88,11 +88,11 @@ class FTGL_EXPORT FTList
         struct Node
         {
             Node()
-            : next(NULL)
+            : next(nullptr)
             {}
 
             Node( const value_type& item)
-            : next(NULL)
+            : next(nullptr)
             {
                 payload = item;
             }
