@@ -46,12 +46,12 @@ public:
       Constructor a wrapped function from a pointer to a callable object, the function dimension and number of parameters
       which are set to zero by default
    */
-   WrappedParamFunction (FuncPtr  func, unsigned int dim = 1, unsigned int npar = 0, double * par = 0) :
+   WrappedParamFunction (FuncPtr  func, unsigned int dim = 1, unsigned int npar = 0, double * par = nullptr) :
       fFunc(func),
       fDim(dim),
       fParams(std::vector<double>(npar) )
    {
-      if (par != 0) std::copy(par,par+npar,fParams.begin() );
+      if (par) std::copy(par, par+npar, fParams.begin());
    }
 
 //    /**

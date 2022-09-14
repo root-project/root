@@ -72,7 +72,7 @@ namespace ROOT {
             BaseFunc(),
             IParamMultiFunction(),
             fOwn(rhs.fOwn),
-            fFunc(0)
+            fFunc(nullptr)
          {
             if (fOwn)
                fFunc = dynamic_cast<IParamFunction *>((rhs.fFunc)->Clone());
@@ -83,7 +83,7 @@ namespace ROOT {
          */
          ~MultiDimParamFunctionAdapter() override
          {
-            if (fOwn && fFunc != 0) delete fFunc;
+            if (fOwn && fFunc) delete fFunc;
          }
 
 
@@ -214,7 +214,7 @@ namespace ROOT {
          */
          ~MultiDimParamGradFunctionAdapter() override
          {
-            if (fOwn && fFunc != 0) delete fFunc;
+            if (fOwn && fFunc) delete fFunc;
          }
 
 

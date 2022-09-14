@@ -121,7 +121,7 @@ public:
     */
     explicit
     IntegratorOneDim(IntegrationOneDim::Type type = IntegrationOneDim::kDEFAULT, double absTol = -1, double relTol = -1, unsigned int size = 0, unsigned int rule = 0) :
-       fIntegrator(0), fFunc(0)
+       fIntegrator(nullptr), fFunc(nullptr)
    {
       fIntegrator = CreateIntegrator(type, absTol, relTol, size, rule);
    }
@@ -140,7 +140,7 @@ public:
     */
    explicit
    IntegratorOneDim(const IGenFunction &f, IntegrationOneDim::Type type = IntegrationOneDim::kDEFAULT, double absTol = -1, double relTol = -1, unsigned int size = 0, int rule = 0) :
-      fIntegrator(0), fFunc(0)
+      fIntegrator(nullptr), fFunc(nullptr)
    {
       fIntegrator = CreateIntegrator(type, absTol, relTol, size, rule);
       SetFunction(f,true);
@@ -163,7 +163,7 @@ public:
    template<class Function>
    explicit
    IntegratorOneDim(Function & f, IntegrationOneDim::Type type = IntegrationOneDim::kDEFAULT, double absTol = -1, double relTol = -1, unsigned int size = 0, int rule = 0) :
-      fIntegrator(0), fFunc(0)
+      fIntegrator(nullptr), fFunc(nullptr)
    {
       fIntegrator = CreateIntegrator(type, absTol, relTol, size, rule);
       SetFunction(f);
@@ -178,7 +178,7 @@ public:
    // disable copy constructor and assignment operator
 
 private:
-   IntegratorOneDim(const IntegratorOneDim &) : fIntegrator(0), fFunc(0) {}
+   IntegratorOneDim(const IntegratorOneDim &) : fIntegrator(nullptr), fFunc(nullptr) {}
    IntegratorOneDim & operator=(const IntegratorOneDim &) { return *this; }
 
 public:
@@ -353,7 +353,7 @@ public:
    */
 
    double Integral(double a, double b) {
-      return fIntegrator == 0 ? 0 : fIntegrator->Integral(a,b);
+      return !fIntegrator ? 0 : fIntegrator->Integral(a,b);
    }
 
 
@@ -362,7 +362,7 @@ public:
    */
 
    double Integral( ) {
-      return fIntegrator == 0 ? 0 : fIntegrator->Integral();
+      return !fIntegrator ? 0 : fIntegrator->Integral();
    }
 
    /**
@@ -370,7 +370,7 @@ public:
       @param a lower value of the integration interval
    */
    double IntegralUp(double a ) {
-      return fIntegrator == 0 ? 0 : fIntegrator->IntegralUp(a);
+      return !fIntegrator ? 0 : fIntegrator->IntegralUp(a);
    }
 
    /**
@@ -378,7 +378,7 @@ public:
       @param b upper value of the integration interval
    */
    double IntegralLow( double b ) {
-      return fIntegrator == 0 ? 0 : fIntegrator->IntegralLow(b);
+      return !fIntegrator ? 0 : fIntegrator->IntegralLow(b);
    }
    /**
        define operator() for IntegralLow
@@ -394,7 +394,7 @@ public:
 
    */
    double Integral( const std::vector<double> & pts) {
-      return fIntegrator == 0 ? 0 : fIntegrator->Integral(pts);
+      return !fIntegrator ? 0 : fIntegrator->Integral(pts);
    }
 
    /**
@@ -402,29 +402,29 @@ public:
 
    */
    double IntegralCauchy(double a, double b, double c) {
-      return fIntegrator == 0 ? 0 : fIntegrator->IntegralCauchy(a,b,c);
+      return !fIntegrator ? 0 : fIntegrator->IntegralCauchy(a,b,c);
    }
 
    /**
       return  the Result of the last Integral calculation
    */
-   double Result() const { return fIntegrator == 0 ? 0 : fIntegrator->Result(); }
+   double Result() const { return !fIntegrator ? 0 : fIntegrator->Result(); }
 
    /**
       return the estimate of the absolute Error of the last Integral calculation
    */
-   double Error() const { return fIntegrator == 0 ? 0 : fIntegrator->Error(); }
+   double Error() const { return !fIntegrator ? 0 : fIntegrator->Error(); }
 
    /**
       return the Error Status of the last Integral calculation
    */
-   int Status() const { return fIntegrator == 0 ? -1 : fIntegrator->Status(); }
+   int Status() const { return !fIntegrator ? -1 : fIntegrator->Status(); }
 
    /**
       return number of function evaluations in calculating the integral
       (if integrator do not implement this function returns -1)
    */
-   int NEval() const { return fIntegrator == 0 ? -1 : fIntegrator->NEval(); }
+   int NEval() const { return !fIntegrator ? -1 : fIntegrator->NEval(); }
 
 
    // setter for control Parameters  (getters are not needed so far )

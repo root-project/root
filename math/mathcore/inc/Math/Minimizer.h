@@ -251,7 +251,7 @@ public:
    virtual double Edm() const { return -1; }
 
    /// return pointer to gradient values at the minimum
-   virtual const double *  MinGradient() const { return NULL; }
+   virtual const double *  MinGradient() const { return nullptr; }
 
    /// number of function calls to reach the minimum
    virtual unsigned int NCalls() const { return 0; }
@@ -272,7 +272,7 @@ public:
    virtual bool ProvidesError() const { return false; }
 
    /// return errors at the minimum
-   virtual const double * Errors() const { return NULL; }
+   virtual const double * Errors() const { return nullptr; }
 
    /** return covariance matrices element for variables ivar,jvar
        if the variable is fixed the return value is zero

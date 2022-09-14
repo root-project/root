@@ -454,7 +454,7 @@ struct Limits {
 
    //Sample quantiles
    void      Quantiles(Int_t n, Int_t nprob, Double_t *x, Double_t *quantiles, Double_t *prob,
-                       Bool_t isSorted=kTRUE, Int_t *index = 0, Int_t type=7);
+                       Bool_t isSorted=kTRUE, Int_t *index = nullptr, Int_t type=7);
 
    // IsInside
    template <typename T> Bool_t IsInside(T xp, T yp, Int_t np, T *x, T *y);

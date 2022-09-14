@@ -69,7 +69,7 @@ public:
 
    /// clone:  not supported (since unique_ptr used in the fVariables)
    IMultiGenFunction * Clone() const override {
-      return 0;
+      return nullptr;
    }
 
 
