@@ -43,7 +43,7 @@ public:
    CreateIterators_t    fCreateIterators;
    DeleteTwoIterators_t fDeleteTwoIterators;
 
-   TVirtualCollectionIterators(TVirtualCollectionProxy *proxy, Bool_t read_from_file = kTRUE) : fBegin( &(fBeginBuffer[0]) ), fEnd(&(fEndBuffer[0])), fCreateIterators(0), fDeleteTwoIterators(0)
+   TVirtualCollectionIterators(TVirtualCollectionProxy *proxy, Bool_t read_from_file = kTRUE) : fBegin( &(fBeginBuffer[0]) ), fEnd(&(fEndBuffer[0])), fCreateIterators(nullptr), fDeleteTwoIterators(nullptr)
    {
       // Constructor given a collection proxy.
 
@@ -216,8 +216,8 @@ private:
    private:
       TInternalIterator &operator=(const TInternalIterator&); // intentionally not implemented
    public:
-      TInternalIterator() : fCopy(0),fDelete(0),fNext(0),fIter(nullptr) {}
-      TInternalIterator(const TInternalIterator &source) : fCopy(source.fCopy),fDelete(source.fDelete),fNext(source.fNext),fIter(nullptr) {}
+      TInternalIterator() : fCopy(nullptr), fDelete(nullptr), fNext(nullptr), fIter(nullptr) {}
+      TInternalIterator(const TInternalIterator &source) : fCopy(source.fCopy), fDelete(source.fDelete), fNext(source.fNext), fIter(nullptr) {}
 
       Copy_t    fCopy;
       Delete_t  fDelete;
@@ -237,7 +237,7 @@ public:
    void *fBegin; // Pointer to the starting iterator (collection->begin())
    void *fEnd;   // Pointer to the ending iterator (collection->end())
 
-   TVirtualCollectionPtrIterators(TVirtualCollectionProxy *proxy) : fCreateIterators(0), fDeleteTwoIterators(0), fAllocated(kFALSE),
+   TVirtualCollectionPtrIterators(TVirtualCollectionProxy *proxy) : fCreateIterators(nullptr), fDeleteTwoIterators(nullptr), fAllocated(kFALSE),
                                                                     fBegin( &(fRawBeginBuffer[0]) ),
                                                                     fEnd( &(fRawEndBuffer[0]) )
    {
@@ -305,7 +305,7 @@ public:
 
       void *newiter = internal_source->fCopy(dest,internal_source->fIter);
       if (newiter == dest) {
-         internal_dest->fDelete = 0;
+         internal_dest->fDelete = nullptr;
       }
       internal_dest->fIter = newiter;
       return internal_dest;
@@ -329,17 +329,17 @@ public:
    void *fBegin; // Pointer to the starting iterator (collection->begin())
    void *fEnd;   // Pointer to the ending iterator (collection->end())
 
-   TVirtualVectorIterators(TVirtualCollectionProxy * /* proxy */) : fBegin(0), fEnd(0)
+   TVirtualVectorIterators(TVirtualCollectionProxy * /* proxy */) : fBegin(nullptr), fEnd(nullptr)
    {
       // fCreateIterators = proxy->GetFunctionCreateIterators();
    }
 
-   TVirtualVectorIterators(CreateIterators_t /* creator */) : fBegin(0), fEnd(0)
+   TVirtualVectorIterators(CreateIterators_t /* creator */) : fBegin(nullptr), fEnd(nullptr)
    {
       // fCreateIterators = creator;
    }
 
-   TVirtualVectorIterators() : fBegin(0), fEnd(0)
+   TVirtualVectorIterators() : fBegin(nullptr), fEnd(nullptr)
    {
       // Default constructor.
    }
@@ -352,8 +352,8 @@ public:
       // the content!
       std::vector<char> *vec = (std::vector<char>*)collection;
       if (vec->empty()) {
-         fBegin = 0;
-         fEnd = 0;
+         fBegin = nullptr;
+         fEnd = nullptr;
          return;
       }
       fBegin= &(*vec->begin());

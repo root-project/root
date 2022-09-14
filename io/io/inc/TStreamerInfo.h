@@ -54,9 +54,9 @@ class TStreamerInfo : public TVirtualStreamerInfo {
       TClass           *fNewClass; ///< Not Owned
       TString           fClassName;
       TMemberStreamer  *fStreamer; ///< Not Owned
-      TCompInfo() : fType(-1), fNewType(0), fOffset(0), fLength(0), fElem(0), fMethod(0),
-                    fClass(0), fNewClass(0), fClassName(), fStreamer(0) {};
-      ~TCompInfo() {};
+      TCompInfo() : fType(-1), fNewType(0), fOffset(0), fLength(0), fElem(nullptr), fMethod(0),
+                    fClass(nullptr), fNewClass(nullptr), fClassName(), fStreamer(nullptr) {}
+      ~TCompInfo() {}
       void Update(const TClass *oldcl, TClass *newcl);
    };
    friend class TStreamerInfoActions::TActionSequence;
