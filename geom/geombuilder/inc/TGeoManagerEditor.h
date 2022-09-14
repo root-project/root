@@ -108,12 +108,12 @@ protected:
    void           ShowSelectMatrix(Bool_t show=kTRUE);
 
 public:
-   TGeoManagerEditor(const TGWindow *p = 0,
+   TGeoManagerEditor(const TGWindow *p = nullptr,
                     Int_t width = 140, Int_t height = 30,
                     UInt_t options = kChildFrame,
                     Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGeoManagerEditor();
-   static void    LoadLib() {;}
+   static void    LoadLib() {}
    virtual void   SetModel(TObject *obj);
 
    virtual void   SelectedSlot(TVirtualPad* pad, TObject* obj, Int_t event);

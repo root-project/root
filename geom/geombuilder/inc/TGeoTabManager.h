@@ -130,7 +130,7 @@ protected:
 
 public:
    TGeoVolumeDialog(TGFrame *caller, const TGWindow *main, UInt_t w = 1, UInt_t h = 1);
-   virtual ~TGeoVolumeDialog() {;}
+   virtual ~TGeoVolumeDialog() {}
 
    // Slots
    virtual void        DoClose();
@@ -155,7 +155,7 @@ protected:
 
 public:
    TGeoShapeDialog(TGFrame *caller, const TGWindow *main, UInt_t w = 1, UInt_t h = 1);
-   virtual ~TGeoShapeDialog() {;}
+   virtual ~TGeoShapeDialog() {}
 
    // Slots
    virtual void        DoClose();
@@ -180,7 +180,7 @@ protected:
 
 public:
    TGeoMediumDialog(TGFrame *caller, const TGWindow *main, UInt_t w = 1, UInt_t h = 1);
-   virtual ~TGeoMediumDialog() {;}
+   virtual ~TGeoMediumDialog() {}
 
    // Slots
    virtual void        DoClose();
@@ -205,7 +205,7 @@ protected:
 
 public:
    TGeoMaterialDialog(TGFrame *caller, const TGWindow *main, UInt_t w = 1, UInt_t h = 1);
-   virtual ~TGeoMaterialDialog() {;}
+   virtual ~TGeoMaterialDialog() {}
 
    // Slots
    virtual void        DoClose();
@@ -230,7 +230,7 @@ protected:
 
 public:
    TGeoMatrixDialog(TGFrame *caller, const TGWindow *main, UInt_t w = 1, UInt_t h = 1);
-   virtual ~TGeoMatrixDialog() {;}
+   virtual ~TGeoMatrixDialog() {}
 
    // Slots
    virtual void        DoClose();
