@@ -82,11 +82,11 @@ namespace TStreamerInfoActions {
    private:
       // assignment operator must be the default because the 'copy' constructor is actually a move constructor and must be used.
    public:
-      TConfiguredAction() : fAction(0), fConfiguration(nullptr) {}
+      TConfiguredAction() : fAction(nullptr), fConfiguration(nullptr) {}
       TConfiguredAction(const TConfiguredAction &rval) : TObject(rval), fAction(rval.fAction), fConfiguration(rval.fConfiguration)
       {
          // WARNING: Technically this is a move constructor ...
-         const_cast<TConfiguredAction&>(rval).fConfiguration = 0;
+         const_cast<TConfiguredAction&>(rval).fConfiguration = nullptr;
       }
       TConfiguredAction &operator=(const TConfiguredAction &rval)
       {
@@ -180,7 +180,7 @@ namespace TStreamerInfoActions {
       using SequenceGetter_t = SequencePtr(*)(TStreamerInfo *info, TVirtualCollectionProxy *collectionProxy, TClass *originalClass);
 
       TActionSequence(TVirtualStreamerInfo *info, UInt_t maxdata, Bool_t isForVecPtr = kFALSE)
-         : fStreamerInfo(info), fLoopConfig(0)
+         : fStreamerInfo(info), fLoopConfig(nullptr)
       {
          if (isForVecPtr)
             SetBit((UInt_t)EStatusBits::kVectorPtrLooper);

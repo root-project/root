@@ -194,7 +194,7 @@ public:
    public:
       typedef void* (*Call_t)(void*);
       Call_t call;
-      Method() : call(0)                       {      }
+      Method() : call(nullptr)                 {      }
       Method(Call_t c) : call(c)               {      }
       Method(const Method& m) : call(m.call)   {      }
       Method &operator=(const Method& m) { call = m.call; return *this; }
@@ -214,8 +214,8 @@ public:
    public:
       typedef void* (*Call_t)();
       Call_t call;
-      Method0() : call(0)                       {      }
-      Method0(Call_t c) : call(c)               {      }
+      Method0() : call(nullptr)                  {      }
+      Method0(Call_t c) : call(c)                {      }
       Method0(const Method0& m) : call(m.call)   {      }
       Method0 &operator=(const Method0& m) { call = m.call; return *this; }
       void* invoke() const { return (*call)(); }
@@ -242,7 +242,7 @@ public:
       TStaging &operator=(const TStaging&); ///< Not implemented.
 
    public:
-      TStaging(size_t size, size_t size_of) : fTarget(0), fContent(0), fReserved(0), fSize(size), fSizeOf(size_of)
+      TStaging(size_t size, size_t size_of) : fTarget(nullptr), fContent(nullptr), fReserved(0), fSize(size), fSizeOf(size_of)
       {
          // Usual constructor.  Reserves the required number of elements.
          fReserved = fSize;
