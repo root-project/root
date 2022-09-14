@@ -40,7 +40,7 @@ public:
       kXMLCommentNode = 8
    };
 
-   TXMLNode(_xmlNode *node, TXMLNode* parent=0, TXMLNode* previous=0);
+   TXMLNode(_xmlNode *node, TXMLNode *parent = nullptr, TXMLNode *previous = nullptr);
 
    virtual ~TXMLNode();
 
