@@ -48,7 +48,7 @@ class TEntryList: public TNamed
    TDirectory      *fDirectory;         ///<! Pointer to directory holding this tree
    Bool_t           fReapply;           ///<  If true, TTree::Draw will 'reapply' the original cut
 
-   void             GetFileName(const char *filename, TString &fn, Bool_t * = 0);
+   void             GetFileName(const char *filename, TString &fn, Bool_t * = nullptr);
 
  public:
    enum {kBlockSize = 64000}; //number of entries in each block (not the physical size).
@@ -63,9 +63,9 @@ class TEntryList: public TNamed
 
    virtual void        Add(const TEntryList *elist);
    void                AddSubList(TEntryList *elist);
-   virtual Int_t       Contains(Long64_t entry, TTree *tree = 0);
+   virtual Int_t       Contains(Long64_t entry, TTree *tree = nullptr);
    virtual void        DirectoryAutoAdd(TDirectory *);
-   virtual Bool_t      Enter(Long64_t entry, TTree *tree = 0);
+   virtual Bool_t      Enter(Long64_t entry, TTree *tree = nullptr);
    virtual Bool_t      Enter(Long64_t localentry, const char *treename, const char *filename);
    void                EnterRange(Long64_t start, Long64_t end, TTree *tree = nullptr, UInt_t step = 1U);
    virtual TEntryList *GetCurrentList() const { return fCurrent; };
@@ -91,8 +91,8 @@ class TEntryList: public TNamed
 
    virtual Long64_t    Next();
    virtual void        OptimizeStorage();
-   virtual Int_t       RelocatePaths(const char *newloc, const char *oldloc = 0);
-   virtual Bool_t      Remove(Long64_t entry, TTree *tree = 0);
+   virtual Int_t       RelocatePaths(const char *newloc, const char *oldloc = nullptr);
+   virtual Bool_t      Remove(Long64_t entry, TTree *tree = nullptr);
    virtual void        Reset();
    virtual Int_t       ScanPaths(TList *roots, Bool_t notify = kTRUE);
 
@@ -109,7 +109,7 @@ class TEntryList: public TNamed
    virtual void        Subtract(const TEntryList *elist);
 
    static  Int_t       Relocate(const char *fn,
-                                const char *newroot, const char *oldroot = 0, const char *enlnm = 0);
+                                const char *newroot, const char *oldroot = nullptr, const char *enlnm = nullptr);
    static  Int_t       Scan(const char *fn, TList *roots);
 
 // Preventing warnings with -Weffc++ in GCC since the overloading of the || operator was a design choice.
