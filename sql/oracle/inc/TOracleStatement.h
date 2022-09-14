@@ -44,12 +44,12 @@ protected:
    TBufferRec            *fBuffer{nullptr};                  // buffer of values and field names
    Int_t                  fBufferSize{0};                    // size of fBuffer
    Int_t                  fNumIterations{0};                 // size of internal statement buffer
-   Int_t                  fIterCounter{0};                   //counts nextiteration calls and process iterations, if required
+   Int_t                  fIterCounter{0};                   // counts nextiteration calls and process iterations, if required
    Int_t                  fWorkingMode{0};                   // 1 - settingpars, 2 - getting results
    TString                fTimeFmt;                          // format for date to string conversion, default "MM/DD/YYYY, HH24:MI:SS"
 
-   Bool_t      IsParSettMode() const { return fWorkingMode==1; }
-   Bool_t      IsResultSet() const { return (fWorkingMode==2) && (fResult!=0); }
+   Bool_t      IsParSettMode() const { return fWorkingMode == 1; }
+   Bool_t      IsResultSet() const { return (fWorkingMode == 2) && (fResult != nullptr); }
 
    void        SetBufferSize(Int_t size);
    void        CloseBuffer();

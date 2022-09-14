@@ -1,7 +1,6 @@
 // @(#)root/oracle:$Id$
 // Author: Sergey Linev   6/02/2006
 
-
 /*************************************************************************
  * Copyright (C) 1995-2006, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -115,7 +114,7 @@ void TOracleStatement::Close(Option_t *)
          SetError(-1,"There is no result set for statement", method); \
          return defres;                                 \
       }                                                 \
-      if ((npar<0) || (npar>=fBufferSize)) {                                     \
+      if ((npar < 0) || (npar >= fBufferSize)) {        \
          TString errmsg("Invalid parameter number ");   \
          errmsg+= npar;                                 \
          SetError(-1,errmsg.Data(),method);             \
@@ -658,7 +657,7 @@ Int_t TOracleStatement::GetNumFields()
 
 const char* TOracleStatement::GetFieldName(Int_t npar)
 {
-   CheckGetField("GetFieldName", 0);
+   CheckGetField("GetFieldName", nullptr);
 
    if (!IsResultSet() || (npar<0) || (npar>=fBufferSize)) return nullptr;
 
@@ -842,13 +841,13 @@ Double_t TOracleStatement::GetDouble(Int_t npar)
 
 const char* TOracleStatement::GetString(Int_t npar)
 {
-   CheckGetField("GetString", 0);
+   CheckGetField("GetString", nullptr);
 
    if (fBuffer[npar].membuf)
       return (const char *) fBuffer[npar].membuf;
 
    try {
-      if (fResult->isNull(npar+1)) return 0;
+      if (fResult->isNull(npar+1)) return nullptr;
 
       int datatype = (*fFieldInfo)[npar].getInt(oracle::occi::MetaData::ATTR_DATA_TYPE);
 
@@ -902,7 +901,7 @@ const char* TOracleStatement::GetString(Int_t npar)
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetString");
    }
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -913,7 +912,7 @@ const char* TOracleStatement::GetString(Int_t npar)
 
 Bool_t TOracleStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
 {
-   mem = 0;
+   mem = nullptr;
    size = 0;
 
    CheckGetField("GetBinary", kFALSE);

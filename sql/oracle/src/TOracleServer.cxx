@@ -171,7 +171,7 @@ void TOracleServer::Close(Option_t *)
 
 TSQLStatement *TOracleServer::Statement(const char *sql, Int_t niter)
 {
-   CheckConnect("Statement",0);
+   CheckConnect("Statement", nullptr);
 
    if (!sql || !*sql) {
       SetError(-1, "no query string specified","Statement");
@@ -196,7 +196,7 @@ TSQLStatement *TOracleServer::Statement(const char *sql, Int_t niter)
 
 TSQLResult *TOracleServer::Query(const char *sql)
 {
-   CheckConnect("Query",0);
+   CheckConnect("Query", nullptr);
 
    if (!sql || !*sql) {
       SetError(-1, "no query string specified","Query");
@@ -269,7 +269,7 @@ TSQLResult *TOracleServer::GetTables(const char *dbname, const char * /*wild*/)
    // "dbname": if specified, return table list of this schema, or return all tables
    // "wild" is not used in this implementation
 
-   CheckConnect("GetTables",0);
+   CheckConnect("GetTables", nullptr);
 
    TString sqlstr("SELECT object_name,owner FROM ALL_OBJECTS WHERE object_type='TABLE'");
    if (dbname && dbname[0])
@@ -282,11 +282,11 @@ TSQLResult *TOracleServer::GetTables(const char *dbname, const char * /*wild*/)
 
 TList* TOracleServer::GetTablesList(const char* wild)
 {
-   CheckConnect("GetTablesList",0);
+   CheckConnect("GetTablesList", nullptr);
 
    TString cmd("SELECT table_name FROM user_tables");
-   if ((wild!=0) && (*wild!=0))
-      cmd+=Form(" WHERE table_name LIKE '%s'", wild);
+   if (wild && *wild)
+      cmd += TString::Format(" WHERE table_name LIKE '%s'", wild);
 
    TSQLStatement* stmt = Statement(cmd);
    if (!stmt) return nullptr;
@@ -317,7 +317,7 @@ TList* TOracleServer::GetTablesList(const char* wild)
 
 TSQLTableInfo *TOracleServer::GetTableInfo(const char* tablename)
 {
-   CheckConnect("GetTableInfo",0);
+   CheckConnect("GetTableInfo", nullptr);
 
    if (!tablename || (*tablename==0)) return nullptr;
 
@@ -407,7 +407,7 @@ TSQLTableInfo *TOracleServer::GetTableInfo(const char* tablename)
       }
 
       Bool_t IsNullable = kFALSE;
-      if (nstr!=0)
+      if (nstr)
          IsNullable = (*nstr=='Y') || (*nstr=='y');
 
       TSQLColumnInfo* info =
@@ -438,7 +438,7 @@ TSQLTableInfo *TOracleServer::GetTableInfo(const char* tablename)
 TSQLResult *TOracleServer::GetColumns(const char * /*dbname*/, const char *tablename,
                                       const char * wild)
 {
-   CheckConnect("GetColumns",0);
+   CheckConnect("GetColumns", nullptr);
 
 //  make no sense, while method is not implemented
 //   if (SelectDataBase(dbname) != 0) {
@@ -449,7 +449,7 @@ TSQLResult *TOracleServer::GetColumns(const char * /*dbname*/, const char *table
    TString sql;
    TString table(tablename);
    table.ToUpper();
-   if (wild && wild[0])
+   if (wild && *wild)
       sql.Form("select COLUMN_NAME, concat(concat(concat(data_type,'('),data_length),')') \"Type\" FROM user_tab_columns WHERE table_name like '%s' ORDER BY COLUMN_ID", wild);
    else
       sql.Form("select COLUMN_NAME, concat(concat(concat(data_type,'('),data_length),')') \"Type\" FROM user_tab_columns WHERE table_name = '%s' ORDER BY COLUMN_ID", table.Data());
@@ -477,7 +477,7 @@ Int_t TOracleServer::SelectDataBase(const char * /*dbname*/)
 
 TSQLResult *TOracleServer::GetDataBases(const char * /*wild*/)
 {
-   CheckConnect("GetDataBases",0);
+   CheckConnect("GetDataBases", nullptr);
 
    return nullptr;
 }
@@ -534,11 +534,11 @@ Int_t TOracleServer::Shutdown()
 
 const char *TOracleServer::ServerInfo()
 {
-   CheckConnect("ServerInfo", 0);
+   CheckConnect("ServerInfo", nullptr);
 
    fInfo = "Oracle";
    TSQLStatement* stmt = Statement("select * from v$version");
-   if (stmt!=0) {
+   if (stmt) {
        stmt->EnableErrorOutput(kFALSE);
        if (stmt->Process()) {
           fInfo = "";
