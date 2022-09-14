@@ -465,7 +465,7 @@ public:
    void DoEditionUpdatePreview();            // SLOT
    void DoChangeTab(Int_t i);                // SLOT
    void DoChangeAxisTab(Int_t i);            // SLOT
-   void BuildList(TStyle *style = 0);
+   void BuildList(TStyle *style = nullptr);
    void DoSelectNoCanvas();                  // SLOT
    void DoSelectCanvas(TVirtualPad *pad,
          TObject *obj, Int_t mouseButton);   // SLOT
