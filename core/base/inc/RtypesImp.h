@@ -77,7 +77,7 @@ class TFunc2void {
    funcptr_and_voidptr _tmp;
 public:
    template <typename T>
-   TFunc2void( T vfp ) : _tmp(0) {
+   TFunc2void( T vfp ) : _tmp(nullptr) {
       _tmp._write = ( funcptr_t )vfp;
    }
 
