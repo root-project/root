@@ -108,7 +108,7 @@ public:
    const double *  X() const override { return &fParams.front(); }
 
    /// return pointer to gradient values at the minimum
-   const double *  MinGradient() const override { return 0; } // not available
+   const double *  MinGradient() const override { return nullptr; } // not available
 
    /// number of function calls to reach the minimum
    unsigned int NCalls() const override { return 0; }

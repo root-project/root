@@ -51,7 +51,7 @@ public:
    Double_t   GetPointReal(const Int_t* /*ipoint*/, Bool_t /*fromInput=kFALSE*/) const override{return 0;}
    void       GetPointComplex(Int_t ipoint, Double_t &re, Double_t &im, Bool_t fromInput=kFALSE) const override;
    void       GetPointComplex(const Int_t *ipoint, Double_t &re, Double_t &im, Bool_t fromInput=kFALSE) const override;
-   Double_t*  GetPointsReal(Bool_t /*fromInput=kFALSE*/) const override {return 0;};
+   Double_t*  GetPointsReal(Bool_t /*fromInput=kFALSE*/) const override {return nullptr;};
    void       GetPointsComplex(Double_t *re, Double_t *im, Bool_t fromInput = kFALSE) const override ;
    void       GetPointsComplex(Double_t *data, Bool_t fromInput = kFALSE) const override ;
 

@@ -32,7 +32,7 @@ private:
    //    const TRotation & fRR;
    int fII;
 };
-   // Helper class for implemention of C-style subscripting r[i][j]
+   // Helper class for implementation of C-style subscripting r[i][j]
 
    TRotation();
    // Default constructor. Gives a unit matrix.
@@ -41,7 +41,7 @@ private:
    TRotation(const TQuaternion &);
    // Copy constructor.
 
-   ~TRotation() override {;};
+   ~TRotation() override {}
 
    inline Double_t XX() const;
    inline Double_t XY() const;
