@@ -158,7 +158,7 @@ private :
    Bool_t                InsertPNEId(Int_t uid, Int_t ientry);
    void                  SetLoopVolumes(Bool_t flag=kTRUE) {fLoopVolumes=flag;}
    void                  UpdateElements();
-   void                  Voxelize(Option_t *option = 0);
+   void                  Voxelize(Option_t *option = nullptr);
 
 public:
    // constructors
@@ -172,7 +172,7 @@ public:
    Int_t                  AddRegion(TGeoRegion *region);
    Int_t                  AddTransformation(const TGeoMatrix *matrix);
    Int_t                  AddShape(const TGeoShape *shape);
-   Int_t                  AddTrack(Int_t id, Int_t pdgcode, TObject *particle=0);
+   Int_t                  AddTrack(Int_t id, Int_t pdgcode, TObject *particle=nullptr);
    Int_t                  AddTrack(TVirtualGeoTrack *track);
    Int_t                  AddVolume(TGeoVolume *volume);
    TGeoNavigator         *AddNavigator();
@@ -224,10 +224,10 @@ public:
    Bool_t                 IsInPhiRange() const;
    Bool_t                 IsDrawingExtra() const {return fDrawExtra;}
    Bool_t                 IsNodeSelectable() const {return fIsNodeSelectable;}
-   Bool_t                 IsVisLeaves() const {return (fVisOption==1)?kTRUE:kFALSE;}
+   Bool_t                 IsVisLeaves() const {return fVisOption==1;}
    void                   ModifiedPad() const;
    void                   OptimizeVoxels(const char *filename="tgeovox.C"); // *MENU*
-   void                   SetClipping(Bool_t flag=kTRUE) {SetClippingShape(((flag)?fClippingShape:0));} // *MENU*
+   void                   SetClipping(Bool_t flag=kTRUE) {SetClippingShape(flag?fClippingShape:nullptr);} // *MENU*
    void                   SetClippingShape(TGeoShape *clip);
    void                   SetExplodedView(Int_t iopt=0); // *MENU*
    void                   SetPhiRange(Double_t phimin=0., Double_t phimax=360.);
@@ -264,7 +264,7 @@ public:
    void                   DrawPath(const char *path, Option_t *option="");
    void                   PrintOverlaps() const; // *MENU*
    void                   RandomPoints(const TGeoVolume *vol, Int_t npoints=10000, Option_t *option="");
-   void                   RandomRays(Int_t nrays=1000, Double_t startx=0, Double_t starty=0, Double_t startz=0, const char *target_vol=0, Bool_t check_norm=kFALSE);
+   void                   RandomRays(Int_t nrays=1000, Double_t startx=0, Double_t starty=0, Double_t startz=0, const char *target_vol=nullptr, Bool_t check_norm=kFALSE);
    TGeoNode              *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil=1E-5,
                                        const char *g3path="");
    void                   SetNmeshPoints(Int_t npoints=1000);
@@ -304,7 +304,7 @@ public:
    void                   CloseGeometry(Option_t *option="d");
    Bool_t                 IsClosed() const {return fClosed;}
    TGeoVolume            *MakeArb8(const char *name, TGeoMedium *medium,
-                                     Double_t dz, Double_t *vertices=0);
+                                     Double_t dz, Double_t *vertices=nullptr);
    TGeoVolume            *MakeBox(const char *name, TGeoMedium *medium,
                                      Double_t dx, Double_t dy, Double_t dz);
    TGeoVolume            *MakeCone(const char *name, TGeoMedium *medium,
@@ -364,7 +364,7 @@ public:
    Int_t                  GetNAlignable(Bool_t with_uid=kFALSE) const;
    TGeoPhysicalNode      *MakeAlignablePN(const char *name);
    TGeoPhysicalNode      *MakeAlignablePN(TGeoPNEntry *entry);
-   TGeoPhysicalNode      *MakePhysicalNode(const char *path=0);
+   TGeoPhysicalNode      *MakePhysicalNode(const char *path=nullptr);
    void                   ClearPhysicalNodes(Bool_t mustdelete=kFALSE);
    void                   RefreshPhysicalNodes(Bool_t lock=kTRUE);
    TVirtualGeoTrack      *MakeTrack(Int_t id, Int_t pdgcode, TObject *particle);
@@ -385,7 +385,7 @@ public:
    TGeoNode              *InitTrack(Double_t x, Double_t y, Double_t z, Double_t nx, Double_t ny, Double_t nz);
    void                   ResetState();
    Double_t               Safety(Bool_t inside=kFALSE);
-   TGeoNode              *SearchNode(Bool_t downwards=kFALSE, const TGeoNode *skipnode=0);
+   TGeoNode              *SearchNode(Bool_t downwards=kFALSE, const TGeoNode *skipnode=nullptr);
    TGeoNode              *Step(Bool_t is_geom=kTRUE, Bool_t cross=kTRUE);
    void                   DisableInactiveVolumes() {fActivity=kTRUE;}
    void                   EnableInactiveVolumes()  {fActivity=kFALSE;}
@@ -393,9 +393,9 @@ public:
    void                   SetCurrentTrack(TVirtualGeoTrack *track) {fCurrentTrack=track;}
    Int_t                  GetNtracks() const {return fNtracks;}
    TVirtualGeoTrack      *GetCurrentTrack() {return fCurrentTrack;}
-   TVirtualGeoTrack      *GetLastTrack() {return (TVirtualGeoTrack*)((fNtracks>0)?fTracks->At(fNtracks-1):NULL);}
+   TVirtualGeoTrack      *GetLastTrack() {return (TVirtualGeoTrack*)((fNtracks>0)?fTracks->At(fNtracks-1):nullptr);}
    const Double_t        *GetLastPoint() const {return GetCurrentNavigator()->GetLastPoint();}
-   TVirtualGeoTrack      *GetTrack(Int_t index)         {return (index<fNtracks)?(TVirtualGeoTrack*)fTracks->At(index):0;}
+   TVirtualGeoTrack      *GetTrack(Int_t index)         {return (index<fNtracks)?(TVirtualGeoTrack*)fTracks->At(index):nullptr;}
    Int_t                  GetTrackIndex(Int_t id) const;
    TVirtualGeoTrack      *GetTrackOfId(Int_t id) const;
    TVirtualGeoTrack      *FindTrackWithId(Int_t id) const;
@@ -443,14 +443,14 @@ public:
 
 
    //--- utilities
-   Int_t                  CountNodes(const TGeoVolume *vol=0, Int_t nlevels=10000, Int_t option=0);
+   Int_t                  CountNodes(const TGeoVolume *vol=nullptr, Int_t nlevels=10000, Int_t option=0);
    void                   CountLevels();
    virtual void           ExecuteEvent(Int_t event, Int_t px, Int_t py);
    static Int_t           Parse(const char* expr, TString &expr1, TString &expr2, TString &expr3);
    Int_t                  ReplaceVolume(TGeoVolume *vorig, TGeoVolume *vnew);
    Int_t                  TransformVolumeToAssembly(const char *vname);
    UChar_t               *GetBits() {return fBits;}
-   virtual Int_t          GetByteCount(Option_t *option=0);
+   virtual Int_t          GetByteCount(Option_t *option=nullptr);
    void                   SetAllIndex();
    static Int_t           GetMaxDaughters();
    static Int_t           GetMaxLevels();

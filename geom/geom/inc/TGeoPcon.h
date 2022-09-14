@@ -58,10 +58,10 @@ public:
    virtual void          Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const;
    virtual void          DefineSection(Int_t snum, Double_t z, Double_t rmin, Double_t rmax);
    virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1,
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
+                                   Double_t step=TGeoShape::Big(), Double_t *safe=nullptr) const;
    virtual void          DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
    virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1,
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
+                                   Double_t step=TGeoShape::Big(), Double_t *safe=nullptr) const;
    virtual void          DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
    Double_t              DistToSegZ(const Double_t *point, const Double_t *dir, Int_t &iz) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
@@ -82,7 +82,7 @@ public:
    Double_t              GetRmax(Int_t ipl) const;
    Double_t             *GetZ() const    {return fZ;}
    Double_t              GetZ(Int_t ipl) const;
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const {return 0;}
+   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const {return nullptr;}
    virtual Int_t         GetNmeshVertices() const;
    virtual Bool_t        GetPointsOnSegments(Int_t /*npoints*/, Double_t * /*array*/) const {return kFALSE;}
    virtual void          GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const;

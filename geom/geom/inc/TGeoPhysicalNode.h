@@ -62,7 +62,7 @@ public:
    // destructor
    virtual ~TGeoPhysicalNode();
 
-   Bool_t            Align(TGeoMatrix *newmat=0, TGeoShape *newshape=0, Bool_t check=kFALSE, Double_t ovlp=0.001);
+   Bool_t            Align(TGeoMatrix *newmat=nullptr, TGeoShape *newshape=nullptr, Bool_t check=kFALSE, Double_t ovlp=0.001);
    void              cd() const;
    void              Draw(Option_t *option="");
    Int_t             GetLevel() const {return fLevel;}
@@ -112,7 +112,7 @@ private:
 
 protected:
    TGeoPNEntry(const TGeoPNEntry& pne)
-     : TNamed(pne), fNode(pne.fNode), fMatrix(NULL), fGlobalOrig(NULL) { }
+     : TNamed(pne), fNode(pne.fNode), fMatrix(nullptr), fGlobalOrig(nullptr) { }
    TGeoPNEntry& operator=(const TGeoPNEntry& pne)
      {if(this!=&pne) {TNamed::operator=(pne); fNode=pne.fNode; fMatrix=pne.fMatrix;}
      return *this;}
@@ -124,7 +124,7 @@ public:
 
    inline const char   *GetPath() const {return GetTitle();}
    const TGeoHMatrix   *GetMatrix() const {return fMatrix;}
-   TGeoHMatrix      *GetMatrixOrig() const {if (fNode) return fNode->GetOriginalMatrix(); else return NULL;};
+   TGeoHMatrix      *GetMatrixOrig() const {if (fNode) return fNode->GetOriginalMatrix(); else return nullptr;};
    TGeoHMatrix      *GetGlobalOrig() const {return fGlobalOrig;}
    TGeoPhysicalNode *GetPhysicalNode() const {return fNode;}
    void              SetMatrix(const TGeoHMatrix *matrix);

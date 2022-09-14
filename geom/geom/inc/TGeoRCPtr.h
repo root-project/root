@@ -66,29 +66,29 @@ class TGeoRCPtr
 {
 public:
    //Construct using a C pointer, e.g. TGeoRCPtr<T> x = new T();
-   TGeoRCPtr(T* ptr = 0)
+   TGeoRCPtr(T* ptr = nullptr)
        : fPtr(ptr)
    {
-      if(ptr != 0) ptr->Grab();
+      if(ptr) ptr->Grab();
    }
 
    //Copy constructor
    TGeoRCPtr(const TGeoRCPtr &ptr)
        : fPtr(ptr.fPtr)
    {
-      if(fPtr != 0) fPtr->Grab();
+      if(fPtr) fPtr->Grab();
    }
 
    ~TGeoRCPtr()
    {
-      if(fPtr != 0) fPtr->Release();
+      if(fPtr) fPtr->Release();
    }
 
    //Assign a pointer, e.g. x = new T();
    TGeoRCPtr &operator=(T* ptr)
    {
-      if(ptr != 0) ptr->Grab();
-      if(fPtr != 0) fPtr->Release();
+      if(ptr) ptr->Grab();
+      if(fPtr) fPtr->Release();
       fPtr = ptr;
       return (*this);
    }
@@ -110,7 +110,7 @@ public:
    T* operator->() const {return fPtr;}   //x->member
    T &operator*() const {return *fPtr;}   //*x, (*x).member
    operator T*() const {return fPtr;}      //T* y = x;
-   operator bool() const {return fPtr != 0;}   //if(x) {/*x is not NULL*/}
+   operator bool() const {return fPtr != nullptr;}   //if(x) {/*x is not NULL*/}
    bool operator==(const TGeoRCPtr &ptr) {return fPtr == ptr.fPtr;}
    bool operator==(const T *ptr) {return fPtr == ptr;}
 
