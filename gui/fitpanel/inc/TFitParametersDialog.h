@@ -82,7 +82,7 @@ protected:
    void  DisconnectSlots();
 public:
    TFitParametersDialog(const TGWindow *p, const TGWindow *main, TF1 *func,
-                        TVirtualPad *pad, Int_t *ret_code = 0);
+                        TVirtualPad *pad, Int_t *ret_code = nullptr);
    virtual ~TFitParametersDialog();
 
    virtual void  CloseWindow();
