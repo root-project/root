@@ -168,7 +168,7 @@ void DetachRes(T res)
 {
    if (res) {
       TIter nxo(res);
-      TObject *obj = 0;
+      TObject *obj = nullptr;
       while ((obj = nxo())) {
          DetachRes(obj);
       }
