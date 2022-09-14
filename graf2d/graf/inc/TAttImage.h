@@ -100,7 +100,7 @@ public:
                      { fImageQuality = lquality;} // *SUBMENU*
    virtual void     SetPalette(const TImagePalette *palette);
    virtual void     StartPaletteEditor(); // *MENU*
-   virtual void     EditorClosed() { fPaletteEditor = 0; }
+   virtual void     EditorClosed() { fPaletteEditor = nullptr; }
    Bool_t           IsPaletteEnabled() const { return fPaletteEnabled; }
 
    ClassDef(TAttImage,1)  //Image attributes
