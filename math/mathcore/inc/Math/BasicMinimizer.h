@@ -166,7 +166,7 @@ protected:
 
    bool CheckObjFunction() const;
 
-   MinimTransformFunction * CreateTransformation(std::vector<double> & startValues, const ROOT::Math::IMultiGradFunction * func = 0);
+   MinimTransformFunction * CreateTransformation(std::vector<double> & startValues, const ROOT::Math::IMultiGradFunction * func = nullptr);
 
    void SetFinalValues(const double * x, const MinimTransformFunction * func = nullptr);
 

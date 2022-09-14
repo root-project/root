@@ -49,7 +49,7 @@ private:
       double fval = 0;
       int dim = fDim;
       // call with flag 4
-      fFCN(dim, 0, fval, const_cast<double *>(x), 4);
+      fFCN(dim, nullptr, fval, const_cast<double *>(x), 4);
       return fval;
    }
 
@@ -57,7 +57,6 @@ private:
 
    unsigned int fDim;
    void (*fFCN)(int&, double*, double&, double*, int);
-
 
 };
 

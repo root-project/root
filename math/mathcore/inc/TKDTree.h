@@ -58,7 +58,7 @@ public:
    Value   KOrdStat(Index ntotal, Value *a, Index k, Index *index) const;
 
 
-   void    MakeBoundaries(Value *range = 0x0);
+   void    MakeBoundaries(Value *range = nullptr);
    void    MakeBoundariesExact();
    void    SetData(Index npoints, Index ndim, UInt_t bsize, Value **data);
    Int_t   SetData(Index idim, Value *data);

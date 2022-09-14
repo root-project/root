@@ -59,7 +59,7 @@ class DistSampler {
 public:
 
    /// default constructor
-   DistSampler() : fOwnFunc(false), fRange(0), fFunc(0) {}
+   DistSampler() : fOwnFunc(false), fRange(nullptr), fFunc(nullptr) {}
 
 
    /// virtual destructor
@@ -129,7 +129,7 @@ public:
       To be implemented by the derived classes who needs it
       Returns zero by default
     */
-   virtual TRandom * GetRandom() { return 0; }
+   virtual TRandom * GetRandom() { return nullptr; }
 
    /// Set the range in a given dimension.
    void SetRange(double xmin, double xmax, int icoord = 0);
@@ -209,7 +209,7 @@ public:
       By default do not do random sample, just return the function values
       Typically Poisson statistics will be used
     */
-   virtual bool SampleBin(double prob, double & value, double * error = 0) {
+   virtual bool SampleBin(double prob, double & value, double * error = nullptr) {
       value = prob;
       if (error) *error = 0;
       return true;
@@ -220,7 +220,7 @@ public:
       will be equal to the total number of events to be generated
       For sampling the bins independently, SampleBin should be used
     */
-   virtual bool SampleBins(unsigned int n, const double * prob, double * values, double * errors  = 0)  {
+   virtual bool SampleBins(unsigned int n, const double * prob, double * values, double * errors  = nullptr)  {
       std::copy(prob,prob+n, values); // default impl returns prob values (Asimov data)
       if (errors) std::fill(errors,errors+n,0);
       return true;

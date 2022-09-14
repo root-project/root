@@ -282,7 +282,7 @@ public:
    /**
       Default constructor
    */
-   ParamFunctorTempl ()  : fImpl(0) {}
+   ParamFunctorTempl ()  : fImpl(nullptr) {}
 
 
    /**
@@ -329,11 +329,11 @@ public:
       Copy constructor
    */
    ParamFunctorTempl(const ParamFunctorTempl & rhs) :
-      fImpl(0)
+      fImpl(nullptr)
    {
 //       if (rhs.fImpl.get() != 0)
 //          fImpl = std::unique_ptr<Impl>( (rhs.fImpl)->Clone() );
-      if (rhs.fImpl != 0)  fImpl = rhs.fImpl->Clone();
+      if (rhs.fImpl)  fImpl = rhs.fImpl->Clone();
    }
 
    /**
@@ -348,8 +348,8 @@ public:
 
       if(this != &rhs) {
          if (fImpl) delete fImpl;
-         fImpl = 0;
-         if (rhs.fImpl != 0)
+         fImpl = nullptr;
+         if (rhs.fImpl)
             fImpl = rhs.fImpl->Clone();
       }
       return *this;
@@ -367,7 +367,7 @@ public:
    }
 
 
-   bool Empty() const { return fImpl == 0; }
+   bool Empty() const { return !fImpl; }
 
 
    void SetFunction(Impl * f) {

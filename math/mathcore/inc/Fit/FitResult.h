@@ -76,7 +76,7 @@ public:
       Run also Minos if requested from the configuration
     */
    void FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, const FitConfig & fconfig,  const std::shared_ptr<IModelFunction> & f,
-              bool isValid, unsigned int sizeOfData = 0, bool binFit = true, const ROOT::Math::IMultiGenFunction * chi2func = 0, unsigned int ncalls = 0);
+              bool isValid, unsigned int sizeOfData = 0, bool binFit = true, const ROOT::Math::IMultiGenFunction *chi2func = nullptr, unsigned int ncalls = 0);
 
 
    /**
@@ -159,7 +159,7 @@ public:
    /// parameter errors (return st::vector)
    const std::vector<double> & Errors() const { return fErrors; }
    /// parameter errors (return const pointer)
-   const double * GetErrors() const { return (fErrors.empty()) ? 0 : &fErrors.front(); }
+   const double * GetErrors() const { return fErrors.empty() ? nullptr : &fErrors.front(); }
 
    /// parameter values (return std::vector)
    const std::vector<double> & Parameters() const { return fParams; }

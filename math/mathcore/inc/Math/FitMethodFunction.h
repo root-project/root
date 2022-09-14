@@ -66,7 +66,7 @@ public:
       likelihood functions.
       Estimating eventually also the gradient of the data element if the passed pointer  is not null
     */
-   virtual double DataElement(const double *x, unsigned int i, double *g = 0) const = 0;
+   virtual double DataElement(const double *x, unsigned int i, double *g = nullptr) const = 0;
 
 
    /**
