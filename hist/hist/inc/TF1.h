@@ -423,10 +423,10 @@ public:
    static  Bool_t   DefaultAddToGlobalList(Bool_t on = kTRUE);
    void     Browse(TBrowser *b) override;
    void     Copy(TObject &f1) const override;
-   TObject*         Clone(const char* newname=0) const override;
-   virtual Double_t Derivative(Double_t x, Double_t *params = 0, Double_t epsilon = 0.001) const;
-   virtual Double_t Derivative2(Double_t x, Double_t *params = 0, Double_t epsilon = 0.001) const;
-   virtual Double_t Derivative3(Double_t x, Double_t *params = 0, Double_t epsilon = 0.001) const;
+   TObject         *Clone(const char *newname = nullptr) const override;
+   virtual Double_t Derivative(Double_t x, Double_t *params = nullptr, Double_t epsilon = 0.001) const;
+   virtual Double_t Derivative2(Double_t x, Double_t *params = nullptr, Double_t epsilon = 0.001) const;
+   virtual Double_t Derivative3(Double_t x, Double_t *params = nullptr, Double_t epsilon = 0.001) const;
    static  Double_t DerivativeError();
    Int_t    DistancetoPrimitive(Int_t px, Int_t py) override;
    void     Draw(Option_t *option = "") override;
@@ -436,8 +436,8 @@ public:
    virtual void     DrawF1(Double_t xmin, Double_t xmax, Option_t *option = "");
    virtual Double_t Eval(Double_t x, Double_t y = 0, Double_t z = 0, Double_t t = 0) const;
    //template <class T> T Eval(T x, T y = 0, T z = 0, T t = 0) const;
-   virtual Double_t EvalPar(const Double_t *x, const Double_t *params = 0);
-   template <class T> T EvalPar(const T *x, const Double_t *params = 0);
+   virtual Double_t EvalPar(const Double_t *x, const Double_t *params = nullptr);
+   template <class T> T EvalPar(const T *x, const Double_t *params = nullptr);
    virtual Double_t operator()(Double_t x, Double_t y = 0, Double_t z = 0, Double_t t = 0) const;
    template <class T> T operator()(const T *x, const Double_t *params = nullptr);
    void     ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
@@ -585,10 +585,10 @@ public:
    static  void     InitStandardFunctions();
    virtual Double_t Integral(Double_t a, Double_t b, Double_t epsrel = 1.e-12);
    virtual Double_t IntegralOneDim(Double_t a, Double_t b, Double_t epsrel, Double_t epsabs, Double_t &err);
-   virtual Double_t IntegralError(Double_t a, Double_t b, const Double_t *params = 0, const Double_t *covmat = 0, Double_t epsilon = 1.E-2);
-   virtual Double_t IntegralError(Int_t n, const Double_t *a, const Double_t *b, const Double_t *params = 0, const Double_t *covmat = 0, Double_t epsilon = 1.E-2);
-   // virtual Double_t IntegralFast(const TGraph *g, Double_t a, Double_t b, Double_t *params=0);
-   virtual Double_t IntegralFast(Int_t num, Double_t *x, Double_t *w, Double_t a, Double_t b, Double_t *params = 0, Double_t epsilon = 1e-12);
+   virtual Double_t IntegralError(Double_t a, Double_t b, const Double_t *params = nullptr, const Double_t *covmat = nullptr, Double_t epsilon = 1.E-2);
+   virtual Double_t IntegralError(Int_t n, const Double_t *a, const Double_t *b, const Double_t *params = nullptr, const Double_t *covmat = nullptr, Double_t epsilon = 1.E-2);
+   // virtual Double_t IntegralFast(const TGraph *g, Double_t a, Double_t b, Double_t *params = nullptr);
+   virtual Double_t IntegralFast(Int_t num, Double_t *x, Double_t *w, Double_t a, Double_t b, Double_t *params = nullptr, Double_t epsilon = 1e-12);
    virtual Double_t IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Int_t maxpts, Double_t epsrel, Double_t epsabs , Double_t &relerr, Int_t &nfnevl, Int_t &ifail);
    virtual Double_t IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Int_t /*minpts*/, Int_t maxpts, Double_t epsrel, Double_t &relerr, Int_t &nfnevl, Int_t &ifail)
    {
@@ -618,7 +618,7 @@ public:
    {
       fChisquare = chi2;
    }
-   virtual void     SetFitResult(const ROOT::Fit::FitResult &result, const Int_t *indpar = 0);
+   virtual void     SetFitResult(const ROOT::Fit::FitResult &result, const Int_t *indpar = nullptr);
    template <class PtrObj, typename MemFn>
    void SetFunction(PtrObj &p, MemFn memFn);
    template <typename Func>
@@ -667,7 +667,7 @@ public:
    virtual void     SetParError(Int_t ipar, Double_t error);
    virtual void     SetParErrors(const Double_t *errors);
    virtual void     SetParLimits(Int_t ipar, Double_t parmin, Double_t parmax);
-   virtual void     SetParent(TObject *p = 0)
+   virtual void     SetParent(TObject *p = nullptr)
    {
       fParent = p;
    }
@@ -692,13 +692,13 @@ public:
    static  void     SetCurrent(TF1 *f1);
 
    //Moments
-   virtual Double_t Moment(Double_t n, Double_t a, Double_t b, const Double_t *params = 0, Double_t epsilon = 0.000001);
-   virtual Double_t CentralMoment(Double_t n, Double_t a, Double_t b, const Double_t *params = 0, Double_t epsilon = 0.000001);
-   virtual Double_t Mean(Double_t a, Double_t b, const Double_t *params = 0, Double_t epsilon = 0.000001)
+   virtual Double_t Moment(Double_t n, Double_t a, Double_t b, const Double_t *params = nullptr, Double_t epsilon = 0.000001);
+   virtual Double_t CentralMoment(Double_t n, Double_t a, Double_t b, const Double_t *params = nullptr, Double_t epsilon = 0.000001);
+   virtual Double_t Mean(Double_t a, Double_t b, const Double_t *params = nullptr, Double_t epsilon = 0.000001)
    {
       return Moment(1, a, b, params, epsilon);
    }
-   virtual Double_t Variance(Double_t a, Double_t b, const Double_t *params = 0, Double_t epsilon = 0.000001)
+   virtual Double_t Variance(Double_t a, Double_t b, const Double_t *params = nullptr, Double_t epsilon = 0.000001)
    {
       return CentralMoment(2, a, b, params, epsilon);
    }

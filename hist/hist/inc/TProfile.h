@@ -62,7 +62,7 @@ private:
    Int_t Fill(Double_t) override { MayNotUse("Fill(Double_t)"); return -1;}
    void FillN(Int_t, const Double_t *, const Double_t *, Int_t) override { MayNotUse("FillN(Int_t, Double_t*, Double_t*, Int_t)"); }
    Double_t *GetB()  {return &fBinEntries.fArray[0];}
-   Double_t *GetB2() {return (fBinSumw2.fN ? &fBinSumw2.fArray[0] : 0 ); }
+   Double_t *GetB2() {return fBinSumw2.fN ? &fBinSumw2.fArray[0] : nullptr; }
    Double_t *GetW()  {return &fArray[0];}
    Double_t *GetW2() {return &fSumw2.fArray[0];}
    void SetBins(Int_t, Double_t, Double_t, Int_t, Double_t, Double_t) override
@@ -123,7 +123,7 @@ public:
    Bool_t   Multiply(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option="") override; // *MENU*
            TH1D    *ProjectionX(const char *name="_px", Option_t *option="e") const;
    void     PutStats(Double_t *stats) override;
-           TH1     *Rebin(Int_t ngroup=2, const char*newname="", const Double_t *xbins=0) override;
+           TH1     *Rebin(Int_t ngroup = 2, const char *newname = "", const Double_t *xbins = nullptr) override;
    void     Reset(Option_t *option="") override;
    void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
    void     Scale(Double_t c1=1, Option_t *option="") override;

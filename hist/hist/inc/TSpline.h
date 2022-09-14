@@ -45,13 +45,13 @@ protected:
 
 public:
    TSpline() : fDelta(-1), fXmin(0), fXmax(0),
-      fNp(0), fKstep(kFALSE), fHistogram(0), fGraph(0), fNpx(100) {}
+      fNp(0), fKstep(kFALSE), fHistogram(nullptr), fGraph(nullptr), fNpx(100) {}
    TSpline(const char *title, Double_t delta, Double_t xmin,
       Double_t xmax, Int_t np, Bool_t step) :
       TNamed("Spline",title), TAttFill(0,1),
       fDelta(delta), fXmin(xmin),
       fXmax(xmax), fNp(np), fKstep(step),
-      fHistogram(0), fGraph(0), fNpx(100) {}
+      fHistogram(nullptr), fGraph(nullptr), fNpx(100) {}
    ~TSpline() override;
 
    virtual void     GetKnot(Int_t i, Double_t &x, Double_t &y) const =0;
@@ -66,7 +66,7 @@ public:
    virtual Double_t GetXmax()  const {return fXmax;}
    void     Paint(Option_t *option="") override;
    virtual Double_t Eval(Double_t x) const=0;
-   void     SaveAs(const char * /*filename*/,Option_t * /*option*/) const override {;}
+   void     SaveAs(const char * /*filename*/,Option_t * /*option*/) const override {}
    void             SetNpx(Int_t n) {fNpx=n;}
 
    ClassDefOverride(TSpline,2) // Spline base class
@@ -210,26 +210,26 @@ protected:
    void   SetCond(const char *opt);
 
 public:
-   TSpline3() : TSpline() , fPoly(0), fValBeg(0), fValEnd(0),
+   TSpline3() : TSpline() , fPoly(nullptr), fValBeg(0), fValEnd(0),
       fBegCond(-1), fEndCond(-1) {}
    TSpline3(const char *title,
-            Double_t x[], Double_t y[], Int_t n, const char *opt=0,
+            Double_t x[], Double_t y[], Int_t n, const char *opt=nullptr,
             Double_t valbeg=0, Double_t valend=0);
    TSpline3(const char *title,
             Double_t xmin, Double_t xmax,
-            Double_t y[], Int_t n, const char *opt=0,
+            Double_t y[], Int_t n, const char *opt=nullptr,
             Double_t valbeg=0, Double_t valend=0);
    TSpline3(const char *title,
-            Double_t x[], const TF1 *func, Int_t n, const char *opt=0,
+            Double_t x[], const TF1 *func, Int_t n, const char *opt=nullptr,
             Double_t valbeg=0, Double_t valend=0);
    TSpline3(const char *title,
             Double_t xmin, Double_t xmax,
-            const TF1 *func, Int_t n, const char *opt=0,
+            const TF1 *func, Int_t n, const char *opt=nullptr,
             Double_t valbeg=0, Double_t valend=0);
    TSpline3(const char *title,
-            const TGraph *g, const char *opt=0,
+            const TGraph *g, const char *opt=nullptr,
             Double_t valbeg=0, Double_t valend=0);
-   TSpline3(const TH1 *h, const char *opt=0,
+   TSpline3(const TH1 *h, const char *opt=nullptr,
             Double_t valbeg=0, Double_t valend=0);
    TSpline3(const TSpline3&);
    TSpline3& operator=(const TSpline3&);
@@ -266,31 +266,31 @@ protected:
                       const char *cb1, const char *ce1, const char *cb2,
                       const char *ce2);
 public:
-   TSpline5() : TSpline() , fPoly(0) {}
+   TSpline5() : TSpline() , fPoly(nullptr) {}
    TSpline5(const char *title,
             Double_t x[], Double_t y[], Int_t n,
-            const char *opt=0, Double_t b1=0, Double_t e1=0,
+            const char *opt=nullptr, Double_t b1=0, Double_t e1=0,
             Double_t b2=0, Double_t e2=0);
    TSpline5(const char *title,
             Double_t xmin, Double_t xmax,
             Double_t y[], Int_t n,
-            const char *opt=0, Double_t b1=0, Double_t e1=0,
+            const char *opt=nullptr, Double_t b1=0, Double_t e1=0,
             Double_t b2=0, Double_t e2=0);
    TSpline5(const char *title,
             Double_t x[], const TF1 *func, Int_t n,
-            const char *opt=0, Double_t b1=0, Double_t e1=0,
+            const char *opt=nullptr, Double_t b1=0, Double_t e1=0,
             Double_t b2=0, Double_t e2=0);
    TSpline5(const char *title,
             Double_t xmin, Double_t xmax,
             const TF1 *func, Int_t n,
-            const char *opt=0, Double_t b1=0, Double_t e1=0,
+            const char *opt=nullptr, Double_t b1=0, Double_t e1=0,
             Double_t b2=0, Double_t e2=0);
    TSpline5(const char *title,
             const TGraph *g,
-            const char *opt=0, Double_t b1=0, Double_t e1=0,
+            const char *opt=nullptr, Double_t b1=0, Double_t e1=0,
             Double_t b2=0, Double_t e2=0);
    TSpline5(const TH1 *h,
-            const char *opt=0, Double_t b1=0, Double_t e1=0,
+            const char *opt=nullptr, Double_t b1=0, Double_t e1=0,
             Double_t b2=0, Double_t e2=0);
    TSpline5(const TSpline5&);
    TSpline5& operator=(const TSpline5&);

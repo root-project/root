@@ -85,8 +85,8 @@ public:
    void     Copy(TObject &f3) const override;
    Int_t    DistancetoPrimitive(Int_t px, Int_t py) override;
    void     Draw(Option_t *option="") override;
-   TObject *DrawDerivative(Option_t * ="al") override {return 0;}
-   TObject *DrawIntegral(Option_t * ="al") override   {return 0;}
+   TObject *DrawDerivative(Option_t * ="al") override {return nullptr;}
+   TObject *DrawIntegral(Option_t * ="al") override   {return nullptr;}
    void     ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    virtual Double_t GetMinimumXYZ(Double_t &x, Double_t &y, Double_t &z);
    virtual Double_t GetMaximumXYZ(Double_t &x, Double_t &y, Double_t &z);

@@ -32,7 +32,7 @@ class TFitResult;
 class TFitResultPtr {
 public:
 
-   TFitResultPtr(int status = -1): fStatus(status), fPointer(0) {};
+   TFitResultPtr(int status = -1): fStatus(status), fPointer(nullptr) {}
 
    TFitResultPtr(const std::shared_ptr<TFitResult> & p);
 

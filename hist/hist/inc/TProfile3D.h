@@ -71,7 +71,7 @@ protected:
 
 private:
    Double_t *GetB()  {return &fBinEntries.fArray[0];}
-   Double_t *GetB2() {return (fBinSumw2.fN ? &fBinSumw2.fArray[0] : 0 ); }
+   Double_t *GetB2() {return fBinSumw2.fN ? &fBinSumw2.fArray[0] : nullptr;}
    Double_t *GetW()  {return &fArray[0];}
    Double_t *GetW2() {return &fSumw2.fArray[0];}
    void  SetBins(Int_t, Double_t, Double_t) override

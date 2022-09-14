@@ -130,7 +130,7 @@ protected:
    TAxis* GetAxis(Int_t dim) const { return (TAxis*)fAxes[dim]; }
 
    TFitResultPtr Fit(TF1 *f1 ,Option_t *option = "", Option_t *goption = "");
-   TList* GetListOfFunctions() { return 0; }
+   TList* GetListOfFunctions() { return nullptr; }
 
    virtual ROOT::Internal::THnBaseBinIter* CreateIter(Bool_t respectAxisRange) const = 0;
 
@@ -193,7 +193,7 @@ protected:
    void SetTitle(const char *title) override;
 
    Double_t GetBinContent(const Int_t *idx) const { return GetBinContent(GetBin(idx)); } // intentionally non-virtual
-   virtual Double_t GetBinContent(Long64_t bin, Int_t* idx = 0) const = 0;
+   virtual Double_t GetBinContent(Long64_t bin, Int_t* idx = nullptr) const = 0;
    virtual Double_t GetBinError2(Long64_t linidx) const = 0;
    virtual Long64_t GetBin(const Int_t* idx) const = 0;
    virtual Long64_t GetBin(const Double_t* x) const = 0;
@@ -275,7 +275,7 @@ protected:
    void GetRandom(Double_t *rand, Bool_t subBinRandom = kTRUE);
 
    void Print(Option_t* option = "") const override;
-   void PrintEntries(Long64_t from = 0, Long64_t howmany = -1, Option_t* options = 0) const;
+   void PrintEntries(Long64_t from = 0, Long64_t howmany = -1, Option_t* options = nullptr) const;
    void PrintBin(Int_t* coord, Option_t* options) const {
       PrintBin(-1, coord, options);
    }
@@ -318,7 +318,7 @@ namespace Internal {
       Bool_t RespectsAxisRange() const { return fRespectAxisRange; }
 
       virtual Int_t GetCoord(Int_t dim) const = 0;
-      virtual Long64_t Next(Int_t* coord = 0) = 0;
+      virtual Long64_t Next(Int_t* coord = nullptr) = 0;
 
    protected:
       Bool_t fRespectAxisRange;
@@ -337,7 +337,7 @@ public:
    /// If provided, set coord to that bin's coordinates (bin indexes).
    /// I.e. coord must point to Int_t[hist->GetNdimensions()]
    /// Returns -1 when all bins have been visited.
-   Long64_t Next(Int_t* coord = 0) {
+   Long64_t Next(Int_t* coord = nullptr) {
       return fIter->Next(coord);
    }
 

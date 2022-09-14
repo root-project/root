@@ -121,7 +121,7 @@ class THnSparse: public THnBase {
 
       return THnBase::GetBinContent(idx);
    }
-   Double_t GetBinContent(Long64_t bin, Int_t* idx = 0) const override;
+   Double_t GetBinContent(Long64_t bin, Int_t* idx = nullptr) const override;
    Double_t GetBinError2(Long64_t linidx) const override;
 
    Double_t GetSparseFractionBins() const;

@@ -53,11 +53,11 @@ public :
 //      TGraphSmooth(const TGraphSmooth &smoothReg);   //??
    ~TGraphSmooth() override;
 
-   TGraph         *Approx(TGraph *grin, Option_t *option="linear", Int_t nout=50, Double_t *xout=0,
+   TGraph         *Approx(TGraph *grin, Option_t *option="linear", Int_t nout=50, Double_t *xout=nullptr,
                           Double_t yleft=0, Double_t yright=0, Int_t rule=0, Double_t f=0, Option_t *ties="mean");
-   TGraph         *SmoothKern(TGraph *grin, Option_t *option="normal", Double_t bandwidth=0.5, Int_t nout=100, Double_t *xout=0);
+   TGraph         *SmoothKern(TGraph *grin, Option_t *option="normal", Double_t bandwidth=0.5, Int_t nout=100, Double_t *xout=nullptr);
    TGraph         *SmoothLowess(TGraph *grin, Option_t *option="",Double_t span=0.67, Int_t iter = 3, Double_t delta = 0);
-   TGraph         *SmoothSuper(TGraph *grin, Option_t *option="", Double_t bass = 0, Double_t span=0, Bool_t isPeriodic = kFALSE, Double_t *w=0);
+   TGraph         *SmoothSuper(TGraph *grin, Option_t *option="", Double_t bass = 0, Double_t span=0, Bool_t isPeriodic = kFALSE, Double_t *w=nullptr);
 
    void            Approxin(TGraph *grin, Int_t iKind, Double_t &Ylow, Double_t &Yhigh, Int_t rule, Int_t iTies);
    void            Smoothin(TGraph *grin);

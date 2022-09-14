@@ -121,27 +121,27 @@ public:
    Double_t             *GetX() const {return fX;}
    Double_t             *GetY() const {return fY;}
    Double_t             *GetZ() const {return fZ;}
-   virtual Double_t     *GetEX() const {return 0;}
-   virtual Double_t     *GetEY() const {return 0;}
-   virtual Double_t     *GetEZ() const {return 0;}
-   virtual Double_t     *GetEXlow() const {return 0;}
-   virtual Double_t     *GetEXhigh() const {return 0;}
-   virtual Double_t     *GetEYlow() const {return 0;}
-   virtual Double_t     *GetEYhigh() const {return 0;}
-   virtual Double_t     *GetEZlow() const {return 0;}
-   virtual Double_t     *GetEZhigh() const {return 0;}
+   virtual Double_t     *GetEX() const {return nullptr;}
+   virtual Double_t     *GetEY() const {return nullptr;}
+   virtual Double_t     *GetEZ() const {return nullptr;}
+   virtual Double_t     *GetEXlow() const {return nullptr;}
+   virtual Double_t     *GetEXhigh() const {return nullptr;}
+   virtual Double_t     *GetEYlow() const {return nullptr;}
+   virtual Double_t     *GetEYhigh() const {return nullptr;}
+   virtual Double_t     *GetEZlow() const {return nullptr;}
+   virtual Double_t     *GetEZhigh() const {return nullptr;}
    Double_t              GetXmax() const;
    Double_t              GetXmin() const;
    Double_t              GetYmax() const;
    Double_t              GetYmin() const;
    Double_t              GetZmax() const;
    Double_t              GetZmin() const;
-   virtual Double_t      GetXmaxE() const {return GetXmax();};
-   virtual Double_t      GetXminE() const {return GetXmin();};
-   virtual Double_t      GetYmaxE() const {return GetYmax();};
-   virtual Double_t      GetYminE() const {return GetYmin();};
-   virtual Double_t      GetZmaxE() const {return GetZmax();};
-   virtual Double_t      GetZminE() const {return GetZmin();};
+   virtual Double_t      GetXmaxE() const {return GetXmax();}
+   virtual Double_t      GetXminE() const {return GetXmin();}
+   virtual Double_t      GetYmaxE() const {return GetYmax();}
+   virtual Double_t      GetYminE() const {return GetYmin();}
+   virtual Double_t      GetZmaxE() const {return GetZmax();}
+   virtual Double_t      GetZminE() const {return GetZmin();}
    virtual Int_t         GetPoint(Int_t i, Double_t &x, Double_t &y, Double_t &z) const;
    Double_t              Interpolate(Double_t x, Double_t y);
    void                  Paint(Option_t *option="") override;

@@ -166,8 +166,8 @@ public:
       static Bool_t CheckWeights(const TH1& pass,const TH1& total);
       static Double_t Combine(Double_t& up,Double_t& low,Int_t n,const Int_t* pass,const Int_t* total,
                               Double_t alpha,Double_t beta,Double_t level=0.683,
-                              const Double_t* w=0,Option_t* opt="");
-      static TGraphAsymmErrors* Combine(TCollection* pList,Option_t* opt="",Int_t n=0,const Double_t* w=0);
+                              const Double_t* w=nullptr,Option_t* opt="");
+      static TGraphAsymmErrors* Combine(TCollection* pList,Option_t* opt="",Int_t n=0,const Double_t* w=nullptr);
 
       //calculating boundaries of confidence intervals
       static Double_t AgrestiCoull(Double_t total,Double_t passed,Double_t level,Bool_t bUpper);

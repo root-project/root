@@ -35,8 +35,8 @@ class THnSparseArrayChunk: public TObject {
 
  public:
    THnSparseArrayChunk():
-      fCoordinateAllocationSize(-1), fSingleCoordinateSize(0), fCoordinatesSize(0), fCoordinates(0),
-      fContent(0), fSumw2(0) {}
+      fCoordinateAllocationSize(-1), fSingleCoordinateSize(0), fCoordinatesSize(0), fCoordinates(nullptr),
+      fContent(nullptr), fSumw2(nullptr) {}
 
    THnSparseArrayChunk(Int_t coordsize, bool errors, TArray* cont);
    ~THnSparseArrayChunk() override;
@@ -52,7 +52,7 @@ class THnSparseArrayChunk: public TObject {
    void AddBinContent(Int_t idx, Double_t v = 1.) {
       fContent->SetAt(v + fContent->GetAt(idx), idx);
       if (fSumw2)
-         fSumw2->SetAt(v * v+ fSumw2->GetAt(idx), idx);
+         fSumw2->SetAt(v * v + fSumw2->GetAt(idx), idx);
    }
    void Sumw2();
    Int_t GetEntries() const { return fCoordinatesSize / fSingleCoordinateSize; }
