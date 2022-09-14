@@ -68,8 +68,8 @@ public:
    template<class Iterator>
    TUnuranDiscrDist (Iterator * begin, Iterator * end) :
       fPVec(begin,end),
-      fPmf(0),
-      fCdf(0),
+      fPmf(nullptr),
+      fCdf(nullptr),
       fXmin(1),
       fXmax(-1),
       fMode(0),
@@ -171,7 +171,7 @@ public:
    /**
       flag to control if distribution provides also a Cdf
     */
-   bool HasCdf() const { return fCdf != 0; }
+   bool HasCdf() const { return fCdf != nullptr; }
 
 
    /**

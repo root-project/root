@@ -59,7 +59,7 @@ public:
       set them in order to speed up the algorithm. For example in case of the Cdf, if the user has not set it, a numerical
       integration algorithm is used to estimate the Cdf from the Pdf.
    */
-   explicit TUnuranContDist (TF1 * pdf = 0, TF1 * deriv = 0, bool isLogPdf = false );
+   explicit TUnuranContDist (TF1 * pdf = nullptr, TF1 * deriv = nullptr, bool isLogPdf = false );
    /**
       Constructor as above but with the possibility to pass also the Cdf.
        In case an algorithm requiring only the Cdf (no Pdf), one can use this constructor passing nullptr for Pdf and derivative of
@@ -69,7 +69,7 @@ public:
    /**
       Constructor as before but from a generic function object interface for one-dim functions
    */
-   explicit TUnuranContDist (const ROOT::Math::IGenFunction & pdf, const ROOT::Math::IGenFunction * dpdf = 0, bool isLogPdf = false, bool copyFunc = false);
+   explicit TUnuranContDist (const ROOT::Math::IGenFunction & pdf, const ROOT::Math::IGenFunction * dpdf = nullptr, bool isLogPdf = false, bool copyFunc = false);
    /**
       Constructor as before from pointers to generic function object interface for one-dim functions
       which can be use for all algorithms including those requiring only the Cdf
@@ -145,7 +145,7 @@ public:
    /**
       check if a cdf function is provided for the distribution
     */
-   bool HasCdf() const { return fCdf != 0; }
+   bool HasCdf() const { return fCdf != nullptr; }
 
    /**
       check if distribution has a pre-computed mode
