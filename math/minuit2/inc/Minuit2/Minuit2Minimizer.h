@@ -156,7 +156,7 @@ public:
    const double *X() const override { return &fValues.front(); }
 
    /// return pointer to gradient values at the minimum
-   const double *MinGradient() const override { return 0; } // not available in Minuit2
+   const double *MinGradient() const override { return nullptr; } // not available in Minuit2
 
    /// number of function calls to reach the minimum
    unsigned int NCalls() const override { return fState.NFcn(); }
