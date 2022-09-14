@@ -130,7 +130,7 @@ public:
    void SetStreamerElement(const TStreamerElement *elem, Int_t number);
    void SetCustomClass(const TClass *cl, Version_t version);
    void SetCustomElement(TStreamerElement *elem);
-   void SetValue(const char *value, const char *tname = 0);
+   void SetValue(const char *value, const char *tname = nullptr);
    void SetArrayIndex(Int_t indx, Int_t cnt = 1);
    void SetArray(Int_t sz = -1);
    void ChangeValueOnly(const char *value);
@@ -150,7 +150,7 @@ public:
 
    void Add(TSQLStructure *child);
    void AddVersion(const TClass *cl, Int_t version = -100);
-   void AddValue(const char *value, const char *tname = 0);
+   void AddValue(const char *value, const char *tname = nullptr);
    void ChildArrayIndex(Int_t index, Int_t cnt = 1);
 
    // this is part specially for reading of sql tables
