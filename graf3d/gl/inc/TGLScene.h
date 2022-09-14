@@ -58,7 +58,7 @@ public:
       Short_t    fPixelLOD;  // Size in LOD units.
       Short_t    fFinalLOD;  // Corrected with SceneLOD and quantized.
 
-      DrawElement_t(const TGLPhysicalShape* pshp=0) :
+      DrawElement_t(const TGLPhysicalShape* pshp=nullptr) :
          fPhysical(pshp), fPixelSize(0), fPixelLOD(0), fFinalLOD(0) {}
    };
 
@@ -95,7 +95,7 @@ public:
       DrawElementPtrVec_t fSelOpaqueElements;
       DrawElementPtrVec_t fSelTranspElements;
 
-      TSceneInfo(TGLViewerBase* view=0, TGLScene* scene=0);
+      TSceneInfo(TGLViewerBase* view=nullptr, TGLScene* scene=nullptr);
       virtual ~TSceneInfo();
 
       void ClearAfterRebuild();
@@ -179,7 +179,7 @@ public:
    virtual void RenderElements (TGLRnrCtx&           rnrCtx,
                                 DrawElementPtrVec_t& elVec,
                                 Bool_t               check_timeout,
-                                const TGLPlaneSet_t* clipPlanes = 0);
+                                const TGLPlaneSet_t* clipPlanes = nullptr);
 
    // Selection
    virtual Bool_t ResolveSelectRecord(TGLSelectRecord& rec, Int_t curIdx);

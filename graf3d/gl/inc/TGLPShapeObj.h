@@ -23,7 +23,7 @@ public:
    TGLPhysicalShape *fPShape;
    TGLViewer        *fViewer;
 
-   TGLPShapeObj() : TObject(), fPShape(0), fViewer(0) {}
+   TGLPShapeObj() : TObject(), fPShape(nullptr), fViewer(nullptr) {}
    TGLPShapeObj(TGLPhysicalShape* sh, TGLViewer* v) :
       TObject(), fPShape(sh), fViewer(v) {}
    virtual ~TGLPShapeObj() {}

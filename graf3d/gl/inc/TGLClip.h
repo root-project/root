@@ -166,7 +166,7 @@ public:
 
    virtual void Render(TGLRnrCtx& rnrCtx);
 
-   Bool_t    IsClipping()     const { return fCurrentClip != 0; }
+   Bool_t    IsClipping()     const { return fCurrentClip != nullptr; }
    TGLClip*  GetCurrentClip() const { return fCurrentClip; }
    void      FillPlaneSet(TGLPlaneSet_t& set) const;
 

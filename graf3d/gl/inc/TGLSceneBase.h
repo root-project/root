@@ -102,7 +102,7 @@ public:
    virtual void PostRender(TGLRnrCtx& rnrCtx);
    virtual void PostDraw  (TGLRnrCtx& rnrCtx);
 
-   virtual TGLLogicalShape* FindLogical(TObject*) const { return 0; }
+   virtual TGLLogicalShape* FindLogical(TObject*) const { return nullptr; }
 
    // Selection interface
    virtual Bool_t ResolveSelectRecord(TGLSelectRecord& rec, Int_t curIdx);

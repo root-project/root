@@ -90,7 +90,7 @@ public:
    virtual void CalculateShapeLOD(TGLRnrCtx & rnrCtx, Float_t& pixSize, Short_t& shapeLOD) const;
    virtual void QuantizeShapeLOD (Short_t shapeLOD, Short_t combiLOD, Short_t& quantLOD) const;
 
-   void SetupGLColors(TGLRnrCtx & rnrCtx, const Float_t* color=0) const;
+   void SetupGLColors(TGLRnrCtx & rnrCtx, const Float_t* color = nullptr) const;
    virtual void Draw(TGLRnrCtx & rnrCtx) const;
 
    const TGLLogicalShape  * GetLogical()      const { return fLogicalShape; }

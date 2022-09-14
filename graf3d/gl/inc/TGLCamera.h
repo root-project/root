@@ -141,7 +141,7 @@ public:
    virtual Bool_t RotateArcBall(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2);
    virtual Bool_t RotateArcBallRad(Double_t hRotate, Double_t vRotate);
 
-   virtual void   Apply(const TGLBoundingBox & sceneBox, const TGLRect * pickRect = 0) const = 0;
+   virtual void   Apply(const TGLBoundingBox & sceneBox, const TGLRect * pickRect = nullptr) const = 0;
 
    Bool_t     AdjustAndClampVal(Double_t & val, Double_t min, Double_t max,
                                 Int_t screenShift, Int_t screenShiftRange,
@@ -184,13 +184,13 @@ public:
    Rgl::EOverlap FrustumOverlap (const TGLBoundingBox & box) const; // box/frustum overlap test
    Rgl::EOverlap ViewportOverlap(const TGLBoundingBox & box) const; // box/viewport overlap test
    TGLRect    ViewportRect   (const TGLBoundingBox & box, TGLBoundingBox::EFace face) const;
-   TGLRect    ViewportRect   (const TGLBoundingBox & box, const TGLBoundingBox::EFace * face = 0) const;
-   TGLVertex3 WorldToViewport(const TGLVertex3 & worldVertex, TGLMatrix* modviewMat=0) const;
+   TGLRect    ViewportRect   (const TGLBoundingBox & box, const TGLBoundingBox::EFace * face = nullptr) const;
+   TGLVertex3 WorldToViewport(const TGLVertex3 & worldVertex, TGLMatrix* modviewMat = nullptr) const;
    TGLVector3 WorldDeltaToViewport(const TGLVertex3 & worldRef, const TGLVector3 & worldDelta) const;
-   TGLVertex3 ViewportToWorld(const TGLVertex3 & viewportVertex, TGLMatrix* modviewMat=0) const;
+   TGLVertex3 ViewportToWorld(const TGLVertex3 & viewportVertex, TGLMatrix* modviewMat = nullptr) const;
    TGLLine3   ViewportToWorld(Double_t viewportX, Double_t viewportY) const;
    TGLLine3   ViewportToWorld(const TPoint & viewport) const;
-   TGLVector3 ViewportDeltaToWorld(const TGLVertex3 & worldRef, Double_t viewportXDelta, Double_t viewportYDelta, TGLMatrix* modviewMat=0) const;
+   TGLVector3 ViewportDeltaToWorld(const TGLVertex3 & worldRef, Double_t viewportXDelta, Double_t viewportYDelta, TGLMatrix* modviewMat = nullptr) const;
    std::pair<Bool_t, TGLVertex3> ViewportPlaneIntersection(Double_t viewportX, Double_t viewportY, const TGLPlane & worldPlane) const;
    std::pair<Bool_t, TGLVertex3> ViewportPlaneIntersection(const TPoint & viewport, const TGLPlane & worldPlane) const;
 

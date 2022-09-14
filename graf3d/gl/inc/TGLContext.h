@@ -45,7 +45,7 @@ private:
    static Bool_t fgGlewInitDone;
 
 public:
-   TGLContext(TGLWidget *glWidget, Bool_t shareDefault=kTRUE, const TGLContext *shareList=0);
+   TGLContext(TGLWidget *glWidget, Bool_t shareDefault=kTRUE, const TGLContext *shareList=nullptr);
    //   TGLContext(TGLPBuffer *glPbuf, const TGLContext *shareList = 0);
 
    TGLContextIdentity *GetIdentity()const;
