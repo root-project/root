@@ -57,7 +57,7 @@ public:
    virtual ~TParallelCoordVar();
 
    void           AddRange(TParallelCoordRange* range);
-   void           AddRange() {AddRange(NULL);} // *MENU*
+   void           AddRange() {AddRange(nullptr);} // *MENU*
    void           DeleteVariable(); // *MENU*
    virtual Int_t  DistancetoPrimitive(Int_t px, Int_t py);
    virtual void   Draw(Option_t *option="");
