@@ -98,7 +98,7 @@ namespace TMVA {
       // create ranking
       virtual const Ranking *CreateRanking() = 0;
 
-      virtual Double_t GetMvaValue(Double_t *errLower = 0, Double_t *errUpper = 0) = 0;
+      virtual Double_t GetMvaValue(Double_t *errLower = nullptr, Double_t *errUpper = nullptr) = 0;
 
       Bool_t HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets) = 0;
    protected:
