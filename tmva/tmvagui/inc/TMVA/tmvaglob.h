@@ -33,14 +33,14 @@ namespace TMVA{
    namespace TMVAGlob {
       // --------- S t y l e ---------------------------
       // -----------------------------------------------
-      
+
       enum TypeOfPlot { kId = 0,
                         kNorm,
                         kDecorrelated,
                         kPCA,
                         kGaussDecorr,
                         kNumOfMethods };
-      
+
       inline Int_t getCanvas         () {return  TColor::GetColor( "#f0f0f0" );}
       inline Int_t getFrameFill      () {return  TColor::GetColor( "#fffffd" );}
       inline Int_t getTitleBox       () {return  TColor::GetColor( "#5D6B7D" );}
@@ -51,11 +51,11 @@ namespace TMVA{
       inline Int_t getBackgroundLine () {return  TColor::GetColor( "#ff0000" );}
       inline Int_t getBackgroundFill () {return  TColor::GetColor( "#ff0000" );}
       inline Int_t getNovelBlue      () {return  TColor::GetColor( "#2244a5" );}
-      
-      
+
+
       // set the style
-      void SetSignalAndBackgroundStyle( TH1* sig, TH1* bkg, TH1* all = 0 ); 
-      void SetMultiClassStyle( TObjArray* hists ); 
+      void SetSignalAndBackgroundStyle( TH1* sig, TH1* bkg, TH1* all = nullptr );
+      void SetMultiClassStyle( TObjArray* hists );
       // set frame styles
       void SetFrameStyle( TH1* frame, Float_t scale = 1.0 );
       void SetTMVAStyle();
@@ -68,30 +68,30 @@ namespace TMVA{
       void imgconv( TCanvas* c, const TString & fname );
       TImage * findImage(const char * imageName) ;
       void plot_logo( Float_t v_scale = 1.0, Float_t skew = 1.0 );
-      void NormalizeHist( TH1* h ); 
-      void NormalizeHists( TH1* sig, TH1* bkg = 0 ); 
-      void GetMethodName( TString & name, TKey * mkey ); 
+      void NormalizeHist( TH1* h );
+      void NormalizeHists( TH1* sig, TH1* bkg = nullptr );
+      void GetMethodName( TString & name, TKey * mkey );
       void GetMethodTitle( TString & name, TKey * ikey ) ;
-      void GetMethodName( TString & name, TDirectory * mdir ); 
+      void GetMethodName( TString & name, TDirectory * mdir );
       void GetMethodTitle( TString & name, TDirectory * idir ) ;
-      TKey *NextKey( TIter & keyIter, TString className); 
-      UInt_t GetListOfKeys( TList& keys, TString inherits, TDirectory *dir=0 );
+      TKey *NextKey( TIter & keyIter, TString className);
+      UInt_t GetListOfKeys( TList& keys, TString inherits, TDirectory *dir=nullptr );
       Int_t GetNumberOfTargets( TDirectory *dir );
       Int_t GetNumberOfInputVariables( TDirectory *dir );
       std::vector<TString> GetInputVariableNames(TDirectory *dir );
       Int_t GetNumberOfInputVariablesMultiClass( TDirectory *dir );
       std::vector<TString> GetClassNames(TDirectory *dir );
-      TKey* FindMethod( TString name, TDirectory *dir=0 );
-      Bool_t ExistMethodName( TString name, TDirectory *dir=0 );
-      UInt_t GetListOfMethods( TList & methods, TDirectory *dir=0 );
+      TKey* FindMethod( TString name, TDirectory *dir=nullptr );
+      Bool_t ExistMethodName( TString name, TDirectory *dir=nullptr );
+      UInt_t GetListOfMethods( TList & methods, TDirectory *dir=nullptr );
       UInt_t GetListOfJobs( TFile* file, TList& jobdirs);
       UInt_t GetListOfTitles( TDirectory *rfdir, TList & titles );
-      UInt_t GetListOfTitles( TString & methodName, TList & titles, TDirectory *dir=0 );
-      TDirectory *GetInputVariablesDir( TMVAGlob::TypeOfPlot type, TDirectory *dir=0 );
-      TDirectory *GetCorrelationPlotsDir( TMVAGlob::TypeOfPlot type, TDirectory *dir=0 );
-      
+      UInt_t GetListOfTitles( TString & methodName, TList & titles, TDirectory *dir=nullptr );
+      TDirectory *GetInputVariablesDir( TMVAGlob::TypeOfPlot type, TDirectory *dir=nullptr );
+      TDirectory *GetCorrelationPlotsDir( TMVAGlob::TypeOfPlot type, TDirectory *dir=nullptr );
+
    }
-   
+
 #endif
 }
 #endif

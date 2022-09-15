@@ -7,7 +7,7 @@
 #include "TKey.h"
 namespace TMVA{
 
-   void plot_training_history(TString dataset, TFile* file, TDirectory* BinDir=0);
+   void plot_training_history(TString dataset, TFile* file, TDirectory* BinDir=nullptr);
    void training_history(TString dataset, TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE );
 }
 #endif
