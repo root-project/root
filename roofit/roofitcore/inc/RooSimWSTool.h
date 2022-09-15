@@ -161,8 +161,8 @@ protected:
 class RooSimWSTool::ObjBuildConfig
 {
  public:
-  ObjBuildConfig() : _masterCat(0) {} ;
-  virtual ~ObjBuildConfig() {} ;
+  ObjBuildConfig() : _masterCat(nullptr) {}
+  virtual ~ObjBuildConfig() {}
   void print() ;
 
  protected:

@@ -44,7 +44,7 @@ public:
 
   const Text_t* GetName() const override {
     // Return state name
-    return _label[0] ? _label : 0 ;
+    return _label[0] ? _label : nullptr ;
   }
   void SetName(const Text_t* name) ;
 
@@ -91,7 +91,7 @@ public:
   void printClassName(std::ostream& os) const override ;
   void printValue(std::ostream& os) const override ;
 
-  inline void Print(Option_t *options= 0) const override {
+  inline void Print(Option_t *options= nullptr) const override {
     // Printing interface
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }

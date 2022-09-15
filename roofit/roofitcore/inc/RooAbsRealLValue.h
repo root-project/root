@@ -86,7 +86,7 @@ public:
   /// Get low and high bound of the variable.
   /// \param name Optional range name. If not given, the default range will be used.
   /// \return A pair with [lowerBound, upperBound]
-  std::pair<double, double> getRange(const char* name = 0) const {
+  std::pair<double, double> getRange(const char* name = nullptr) const {
     const auto& binning = getBinning(name);
     return {binning.lowBound(), binning.highBound()};
   }

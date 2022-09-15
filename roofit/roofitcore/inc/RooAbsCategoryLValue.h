@@ -27,7 +27,7 @@ public:
   // Constructor, assignment etc.
   RooAbsCategoryLValue() {
     // Default constructor
-  } ;
+  }
   RooAbsCategoryLValue(const char *name, const char *title);
   RooAbsCategoryLValue(const RooAbsCategoryLValue& other, const char* name=nullptr) ;
   ~RooAbsCategoryLValue() override;
@@ -92,7 +92,7 @@ public:
   }
   void randomize(const char* rangeName=nullptr) override;
 
-  const RooAbsBinning* getBinningPtr(const char* /*rangeName*/) const override { return 0 ; }
+  const RooAbsBinning* getBinningPtr(const char* /*rangeName*/) const override { return nullptr ; }
   std::list<std::string> getBinningNames() const override { return std::list<std::string>(1, "") ; }
   Int_t getBin(const RooAbsBinning* /*ptr*/) const override { return getBin((const char*)0) ; }
 

@@ -29,7 +29,7 @@ public:
 
   RooAbsMoment() ;
   RooAbsMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x, Int_t order=1, bool takeRoot=false) ;
-  RooAbsMoment(const RooAbsMoment& other, const char* name = 0);
+  RooAbsMoment(const RooAbsMoment& other, const char* name = nullptr);
   ~RooAbsMoment() override ;
 
   Int_t order() const { return _order ; }

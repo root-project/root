@@ -60,15 +60,15 @@ public:
   // Set/get finite fit range limits
   /// Set lower bound of default range to value
   inline void setMin(double value) {
-    setMin(0,value) ;
+    setMin(nullptr,value) ;
   }
   /// Set upper bound of default range to value
   inline void setMax(double value) {
-    setMax(0,value) ;
+    setMax(nullptr,value) ;
   }
   /// Set default ranges to [min,max]
   inline void setRange(double min, double max) {
-    setRange(0,min,max) ;
+    setRange(nullptr,min,max) ;
   }
   void setMin(const char* name, double value) ;
   void setMax(const char* name, double value) ;

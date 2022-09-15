@@ -30,7 +30,7 @@ public:
   RooConstraintSum() {}
   RooConstraintSum(const char *name, const char *title, const RooArgSet& constraintSet, const RooArgSet& paramSet, bool takeGlobalObservablesFromData=false) ;
 
-  RooConstraintSum(const RooConstraintSum& other, const char* name = 0);
+  RooConstraintSum(const RooConstraintSum& other, const char* name = nullptr);
   TObject* clone(const char* newname) const override { return new RooConstraintSum(*this, newname); }
 
   const RooArgList& list() { return _set1 ; }

@@ -41,7 +41,7 @@ public:
   RooRatio(const char *name, const char *title,
            const RooArgList &num, const RooArgList &denom);
 
-  RooRatio(const RooRatio &other, const char *name = 0);
+  RooRatio(const RooRatio &other, const char *name = nullptr);
   TObject *clone(const char *newname) const override {
     return new RooRatio(*this, newname);
   }

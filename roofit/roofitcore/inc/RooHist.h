@@ -36,7 +36,7 @@ public:
      double xErrorFrac=1.0, bool efficiency=false, double scaleFactor=1.0);
   RooHist(const RooHist& hist1, const RooHist& hist2, double wgt1=1.0, double wgt2=1.0,
      RooAbsData::ErrorType etype=RooAbsData::Poisson, double xErrorFrac=1.0) ;
-  RooHist(const RooAbsReal &f, RooAbsRealLValue &x, double xErrorFrac=1.0, double scaleFactor=1.0, const RooArgSet *normVars = 0, const RooFitResult* fr = 0);
+  RooHist(const RooAbsReal &f, RooAbsRealLValue &x, double xErrorFrac=1.0, double scaleFactor=1.0, const RooArgSet *normVars = nullptr, const RooFitResult* fr = nullptr);
 
   // add a datapoint for a bin with n entries, using a Poisson error
   void addBin(Axis_t binCenter, double n, double binWidth= 0, double xErrorFrac=1.0, double scaleFactor=1.0);
@@ -61,7 +61,7 @@ public:
   void printClassName(std::ostream& os) const override ;
   void printMultiline(std::ostream& os, Int_t content, bool verbose=false, TString indent= "") const override;
 
-  inline void Print(Option_t *options= 0) const override {
+  inline void Print(Option_t *options= nullptr) const override {
     // Printing interface
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }

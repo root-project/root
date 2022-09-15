@@ -45,7 +45,7 @@ public:
   virtual void printMultiline(std::ostream& os, Int_t contents, bool verbose=false, TString indent="") const ;
   virtual void printTree(std::ostream& os, TString indent="") const ;
 
-  static std::ostream& defaultPrintStream(std::ostream *os= 0);
+  static std::ostream& defaultPrintStream(std::ostream *os= nullptr);
   virtual Int_t defaultPrintContents(Option_t* opt) const ;
   virtual StyleOption defaultPrintStyle(Option_t* opt) const ;
 

@@ -76,7 +76,7 @@ public:
   class GenSpec {
   public:
     virtual ~GenSpec() ;
-    GenSpec() { _genContext = 0 ; _protoData = 0 ; _init = false ; _extended=false, _nGen=0 ; _randProto = false ; _resampleProto=false ; }
+    GenSpec() { _genContext = nullptr ; _protoData = nullptr ; _init = false ; _extended=false, _nGen=0 ; _randProto = false ; _resampleProto=false ; }
   private:
     GenSpec(RooAbsGenContext* context, const RooArgSet& whatVars, RooDataSet* protoData, Int_t nGen, bool extended,
        bool randProto, bool resampleProto, TString dsetName, bool init=false) ;
@@ -211,7 +211,7 @@ public:
   // Constraint management
   virtual RooArgSet* getConstraints(const RooArgSet& /*observables*/, RooArgSet& /*constrainedParams*/, bool /*stripDisconnected*/) const {
     // Interface to retrieve constraint terms on this pdf. Default implementation returns null
-    return 0 ;
+    return nullptr ;
   }
   virtual RooArgSet* getAllConstraints(const RooArgSet& observables, RooArgSet& constrainedParams, bool stripDisconnected=true) const ;
 
@@ -292,11 +292,11 @@ public:
 
   void setNormRange(const char* rangeName) ;
   const char* normRange() const {
-    return _normRange.Length()>0 ? _normRange.Data() : 0 ;
+    return _normRange.Length()>0 ? _normRange.Data() : nullptr ;
   }
   void setNormRangeOverride(const char* rangeName) ;
 
-  const RooAbsReal* getNormIntegral(const RooArgSet& nset) const { return getNormObj(0,&nset,0) ; }
+  const RooAbsReal* getNormIntegral(const RooArgSet& nset) const { return getNormObj(nullptr,&nset,nullptr) ; }
 
   virtual const RooAbsReal* getNormObj(const RooArgSet* set, const RooArgSet* iset, const TNamed* rangeName=nullptr) const ;
 
@@ -348,7 +348,7 @@ protected:
   Int_t* randomizeProtoOrder(Int_t nProto,Int_t nGen,bool resample=false) const ;
 
   // This also forces the definition of a copy ctor in derived classes
-  RooAbsPdf(const RooAbsPdf& other, const char* name = 0);
+  RooAbsPdf(const RooAbsPdf& other, const char* name = nullptr);
 
   static Int_t _verboseEval ;
 

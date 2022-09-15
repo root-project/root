@@ -106,7 +106,7 @@ public:
   virtual void setExternalWeightArray(const double* /*arrayWgt*/, const double* /*arrayWgtErrLo*/, const double* /*arrayWgtErrHi*/, const double* /*arraySumW2*/) {} ;
 
   // Printing interface (human readable)
-  inline void Print(Option_t *options= 0) const override {
+  inline void Print(Option_t *options= nullptr) const override {
     // Print contents on stdout
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
@@ -141,7 +141,7 @@ public:
 
   virtual bool hasFilledCache() const { return false ; }
 
-  virtual const TTree* tree() const { return 0 ; }
+  virtual const TTree* tree() const { return nullptr ; }
   virtual void dump() {}
 
   virtual void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=nullptr, const char* rangeName=nullptr,

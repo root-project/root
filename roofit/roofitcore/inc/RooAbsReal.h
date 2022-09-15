@@ -210,11 +210,11 @@ public:
 
   /// Create integral over observables in iset in range named rangeName.
   RooAbsReal* createIntegral(const RooArgSet& iset, const char* rangeName) const {
-    return createIntegral(iset,0,0,rangeName) ;
+    return createIntegral(iset,nullptr,nullptr,rangeName) ;
   }
   /// Create integral over observables in iset in range named rangeName with integrand normalized over observables in nset
   RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset, const char* rangeName=nullptr) const {
-    return createIntegral(iset,&nset,0,rangeName) ;
+    return createIntegral(iset,&nset,nullptr,rangeName) ;
   }
   /// Create integral over observables in iset in range named rangeName with integrand normalized over observables in nset while
   /// using specified configuration for any numeric integration.
@@ -223,7 +223,7 @@ public:
   }
   /// Create integral over observables in iset in range named rangeName using specified configuration for any numeric integration.
   RooAbsReal* createIntegral(const RooArgSet& iset, const RooNumIntConfig& cfg, const char* rangeName=nullptr) const {
-    return createIntegral(iset,0,&cfg,rangeName) ;
+    return createIntegral(iset,nullptr,&cfg,rangeName) ;
   }
   virtual RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=nullptr, const RooNumIntConfig* cfg=nullptr, const char* rangeName=nullptr) const ;
 
@@ -286,7 +286,7 @@ public:
 
   // Fill an existing histogram
   TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars,
-           double scaleFactor= 1, const RooArgSet *projectedVars= 0, bool scaling=true,
+           double scaleFactor= 1, const RooArgSet *projectedVars= nullptr, bool scaling=true,
            const RooArgSet* condObs=nullptr, bool setError=true) const;
 
   // Create 1,2, and 3D histograms from and fill it
@@ -485,10 +485,10 @@ protected:
   RooNumIntConfig* _specIntegratorConfig ; // Numeric integrator configuration specific for this object
 
   struct PlotOpt {
-   PlotOpt() : drawOptions("L"), scaleFactor(1.0), stype(Relative), projData(0), binProjData(false), projSet(0), precision(1e-3),
-               shiftToZero(false),projDataSet(0),normRangeName(0),rangeLo(0),rangeHi(0),postRangeFracScale(false),wmode(RooCurve::Extended),
-               projectionRangeName(0),curveInvisible(false), curveName(0),addToCurveName(0),addToWgtSelf(1.),addToWgtOther(1.),
-               numCPU(1),interleave(RooFit::Interleave),curveNameSuffix(""), numee(10), eeval(0), doeeval(false), progress(false), errorFR(0) {} ;
+   PlotOpt() : drawOptions("L"), scaleFactor(1.0), stype(Relative), projData(nullptr), binProjData(false), projSet(nullptr), precision(1e-3),
+               shiftToZero(false),projDataSet(nullptr),normRangeName(nullptr),rangeLo(0),rangeHi(0),postRangeFracScale(false),wmode(RooCurve::Extended),
+               projectionRangeName(nullptr),curveInvisible(false), curveName(nullptr),addToCurveName(nullptr),addToWgtSelf(1.),addToWgtOther(1.),
+               numCPU(1),interleave(RooFit::Interleave),curveNameSuffix(""), numee(10), eeval(0), doeeval(false), progress(false), errorFR(nullptr) {}
    Option_t* drawOptions ;
    double scaleFactor ;
    ScaleType stype ;

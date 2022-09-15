@@ -48,7 +48,7 @@ public:
   bool execute() override ;
   bool finalize() override ;
 
-  void Print(Option_t *options= 0) const override;
+  void Print(Option_t *options= nullptr) const override;
 
  protected:
 

@@ -80,7 +80,7 @@ public:
   RooAbsArg(const RooAbsArg& other, const char* name=nullptr) ;
   RooAbsArg& operator=(const RooAbsArg& other) = delete;
   virtual TObject* clone(const char* newname=nullptr) const = 0 ;
-  TObject* Clone(const char* newname = 0) const override {
+  TObject* Clone(const char* newname = nullptr) const override {
     return clone(newname && newname[0] != '\0' ? newname : nullptr);
   }
   virtual RooAbsArg* cloneTree(const char* newname=nullptr) const ;
@@ -318,7 +318,7 @@ public:
 
   /// Print the object to the defaultPrintStream().
   /// \param[in] options **V** print verbose. **T** print a tree structure with all children.
-  void Print(Option_t *options= 0) const override {
+  void Print(Option_t *options= nullptr) const override {
     // Printing interface (human readable)
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
@@ -495,7 +495,7 @@ public:
   void setShapeDirty() { setShapeDirty(nullptr); }
 
   const char* aggregateCacheUniqueSuffix() const ;
-  virtual const char* cacheUniqueSuffix() const { return 0 ; }
+  virtual const char* cacheUniqueSuffix() const { return nullptr ; }
 
   void wireAllCaches() ;
 

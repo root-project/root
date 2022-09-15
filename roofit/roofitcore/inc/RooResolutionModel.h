@@ -27,15 +27,15 @@ class RooResolutionModel : public RooAbsPdf {
 public:
 
   // Constructors, assignment etc
-  inline RooResolutionModel() : _basis(0) { }
+  inline RooResolutionModel() : _basis(nullptr) { }
   RooResolutionModel(const char *name, const char *title, RooAbsRealLValue& x) ;
   RooResolutionModel(const RooResolutionModel& other, const char* name=nullptr);
-  TObject* clone(const char* newname) const override = 0 ;
+  TObject* clone(const char* newname) const override = 0;
   ~RooResolutionModel() override;
 
   virtual RooAbsGenContext* modelGenContext(const RooAbsAnaConvPdf&, const RooArgSet&,
                                             const RooDataSet*, const RooArgSet*,
-                                            bool) const { return 0; }
+                                            bool) const { return nullptr; }
 
   double getValV(const RooArgSet* nset=nullptr) const override ;
 

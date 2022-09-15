@@ -33,7 +33,7 @@ public:
   RooProduct(const char *name, const char *title, const RooArgList& prodSet) ;
   RooProduct(const char *name, const char *title, RooAbsReal& real1, RooAbsReal& real2) ;
 
-  RooProduct(const RooProduct& other, const char* name = 0);
+  RooProduct(const RooProduct& other, const char *name = nullptr);
 
   void addTerm(RooAbsArg* term);
 

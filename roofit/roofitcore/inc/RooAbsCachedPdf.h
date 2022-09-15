@@ -88,7 +88,7 @@ public:
   PdfCacheElem* getCache(const RooArgSet* nset, bool recalculate=true) const ;
   void clearCacheObject(PdfCacheElem& cache) const ;
 
-  virtual const char* payloadUniqueSuffix() const { return 0 ; }
+  virtual const char* payloadUniqueSuffix() const { return nullptr ; }
 
   friend class PdfCacheElem ;
   virtual const char* binningName() const {

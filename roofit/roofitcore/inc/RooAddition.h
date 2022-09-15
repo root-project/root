@@ -31,7 +31,7 @@ public:
   RooAddition(const char *name, const char *title, const RooArgList& sumSet, bool takeOwnerShip=false) ;
   RooAddition(const char *name, const char *title, const RooArgList& sumSet1, const RooArgList& sumSet2, bool takeOwnerShip=false) ;
 
-  RooAddition(const RooAddition& other, const char* name = 0);
+  RooAddition(const RooAddition& other, const char* name = nullptr);
   TObject* clone(const char* newname) const override { return new RooAddition(*this, newname); }
 
   double defaultErrorLevel() const override ;

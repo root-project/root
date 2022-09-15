@@ -204,7 +204,7 @@ std::string RooCmdConfig::decodeStringOnTheFly(
   pc.allowUndefined() ;
   pc.defineString("theString",cmdArgName,strIdx,defVal) ;
   pc.process(std::forward<Args_t>(args)...);
-  const char* ret =  pc.getString("theString",0,true) ;
+  const char* ret =  pc.getString("theString",nullptr,true) ;
 
   return ret ? ret : "";
 }

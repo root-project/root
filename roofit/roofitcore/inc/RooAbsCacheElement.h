@@ -26,7 +26,7 @@ class RooArgList ;
 class RooAbsCacheElement {
 
 public:
-  RooAbsCacheElement() : _owner(0) {
+  RooAbsCacheElement() : _owner(nullptr) {
     // Default constructor
   } ;
   virtual bool redirectServersHook(const RooAbsCollection& /*newServerList*/, bool /*mustReplaceAll*/,
