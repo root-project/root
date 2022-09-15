@@ -223,6 +223,33 @@ class FunctionJitter:
         FunctionJitter.function_cache[self.func.__name__] = (self.func_call, self.func_sign)
         return self.func_call
 
+def _convert_to_vector(args):
+    """
+    Converts a Python list of strings into an std::vector before passing such
+    argument to a Filter operation.
+    The purpose of this function is to workaround issue #10092 until there is
+    a proper fix in cppyy.
+    Arguments:
+        args: arguments passed to Filter, possibly including the list of column
+    names
+    Returns:
+        Tuple with arguments, possibly replacing a list of column names by a
+    vector
+    """
+
+    import ROOT
+
+    if not args or not isinstance(args[0], list):
+        return args
+
+    try:
+        v = ROOT.std.vector['std::string'](args[0])
+    except TypeError:
+        raise TypeError(
+            f"The list of columns of a Filter operation can only contain strings. Please check: {args[0]}")
+
+    return v, *args[1:]
+
 def _handle_cpp_callables(func, original_rdf_method, args):
     """
     Checks whether the callable `func` is a cppyy proxy of one of these:
@@ -250,7 +277,6 @@ def _handle_cpp_callables(func, original_rdf_method, args):
 
     if is_cpp_function() or is_cpp_functor() or is_std_function():
         return original_rdf_method(func, *args)
-
 
 def _PyFilter(rdf, callable_or_str, *args, extra_args={}):
     """
@@ -300,7 +326,7 @@ def _PyFilter(rdf, callable_or_str, *args, extra_args={}):
             f"Filter takes at most 3 positional arguments but {len(args) + 1} were given")
 
     func = callable_or_str
-    rdf_node = _handle_cpp_callables(func, rdf._OriginalFilter, args)
+    rdf_node = _handle_cpp_callables(func, rdf._OriginalFilter, func, _convert_to_vector(args))
     if rdf_node is not None:
         return rdf_node
 
@@ -320,7 +346,7 @@ def _PyFilter(rdf, callable_or_str, *args, extra_args={}):
     
     elif len(args) == 2:
         if isinstance(args[0], list) and isinstance(args[1], str):
-            col_list = args[0] 
+            col_list = args[0]
             filter_name = args[1]
         else:
             raise ValueError(f"Arguments should be ('list', 'str',) not ({type(args[0]).__name__,type(args[1]).__name__}.")
