@@ -27,11 +27,11 @@ class RooRealVar;
 class RooBinning : public RooAbsBinning {
 public:
 
-  RooBinning(double xlo = -RooNumber::infinity(), double xhi = RooNumber::infinity(), const char* name = 0);
-  RooBinning(Int_t nBins, double xlo, double xhi, const char* name = 0);
-  RooBinning(Int_t nBins, const double* boundaries, const char* name = 0);
-  RooBinning(const RooBinning& other, const char* name = 0);
-  RooAbsBinning* clone(const char* name = 0) const override { return new RooBinning(*this,name?name:GetName()); }
+  RooBinning(double xlo = -RooNumber::infinity(), double xhi = RooNumber::infinity(), const char* name = nullptr);
+  RooBinning(Int_t nBins, double xlo, double xhi, const char* name = nullptr);
+  RooBinning(Int_t nBins, const double* boundaries, const char* name = nullptr);
+  RooBinning(const RooBinning& other, const char* name = nullptr);
+  RooAbsBinning* clone(const char* name = nullptr) const override { return new RooBinning(*this,name?name:GetName()); }
   ~RooBinning() override;
 
   /// Return the number boundaries

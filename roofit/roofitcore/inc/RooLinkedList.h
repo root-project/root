@@ -85,7 +85,7 @@ public:
   Int_t IndexOf(const char* name) const ;
   Int_t IndexOf(const TObject* arg) const ;
   TObject* First() const {
-    return _first?_first->_arg:0 ;
+    return _first ? _first->_arg : nullptr ;
   }
 
   void RecursiveRemove(TObject *obj) override;
@@ -132,7 +132,7 @@ protected:
 private:
   template <bool ascending>
   static RooLinkedListElem* mergesort_impl(RooLinkedListElem* l1,
-     const unsigned sz, RooLinkedListElem** tail = 0);
+     const unsigned sz, RooLinkedListElem** tail = nullptr);
   /// memory pool for quick allocation of RooLinkedListElems
   typedef RooLinkedListImplDetails::Pool Pool;
   /// shared memory pool for allocation of RooLinkedListElems

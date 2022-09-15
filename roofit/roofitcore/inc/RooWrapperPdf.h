@@ -35,7 +35,7 @@ public:
     _func("inputFunction", "Function to be converted into a PDF", this, inputFunction) { }
   ~RooWrapperPdf() override {};
 
-  RooWrapperPdf(const RooWrapperPdf& other, const char* name = 0) :
+  RooWrapperPdf(const RooWrapperPdf& other, const char *name = nullptr) :
     RooAbsPdf(other, name),
     _func("inputFunction", this, other._func) { }
 

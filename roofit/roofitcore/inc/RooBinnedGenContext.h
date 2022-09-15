@@ -25,7 +25,7 @@ class RooDataHist;
 
 class RooBinnedGenContext : public RooAbsGenContext {
 public:
-  RooBinnedGenContext(const RooAbsPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
+  RooBinnedGenContext(const RooAbsPdf &model, const RooArgSet &vars, const RooDataSet *prototype= nullptr,
                    const RooArgSet* auxProto=nullptr, bool _verbose= false);
   ~RooBinnedGenContext() override;
 

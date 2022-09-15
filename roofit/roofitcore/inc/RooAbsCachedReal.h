@@ -87,7 +87,7 @@ protected:
   FuncCacheElem* getCache(const RooArgSet* nset) const ;
   void clearCacheObject(FuncCacheElem& cache) const ;
 
-  virtual const char* payloadUniqueSuffix() const { return 0 ; }
+  virtual const char* payloadUniqueSuffix() const { return nullptr ; }
 
   friend class FuncCacheElem ;
   virtual const char* binningName() const {

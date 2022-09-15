@@ -197,12 +197,12 @@ public:
   public:
 
     RealVector(UInt_t initialCapacity=(VECTOR_BUFFER_SIZE / sizeof(double))) :
-      _nativeReal(0), _real(0), _buf(0), _nativeBuf(0), _tracker(0), _nset(0) {
+      _nativeReal(nullptr), _real(nullptr), _buf(nullptr), _nativeBuf(nullptr), _tracker(nullptr), _nset(nullptr) {
       _vec.reserve(initialCapacity);
     }
 
     RealVector(RooAbsReal* arg, UInt_t initialCapacity=(VECTOR_BUFFER_SIZE / sizeof(double))) :
-      _nativeReal(arg), _real(0), _buf(0), _nativeBuf(0), _tracker(0), _nset(0) {
+      _nativeReal(arg), _real(nullptr), _buf(nullptr), _nativeBuf(nullptr), _tracker(nullptr), _nset(nullptr) {
       _vec.reserve(initialCapacity);
     }
 
@@ -212,11 +212,11 @@ public:
     }
 
     RealVector(const RealVector& other, RooAbsReal* real=nullptr) :
-      _vec(other._vec), _nativeReal(real?real:other._nativeReal), _real(real?real:other._real), _buf(other._buf), _nativeBuf(other._nativeBuf), _nset(0) {
+      _vec(other._vec), _nativeReal(real?real:other._nativeReal), _real(real?real:other._real), _buf(other._buf), _nativeBuf(other._nativeBuf), _nset(nullptr) {
       if (other._tracker) {
         _tracker = new RooChangeTracker(Form("track_%s",_nativeReal->GetName()),"tracker",other._tracker->parameters()) ;
       } else {
-        _tracker = 0 ;
+        _tracker = nullptr ;
       }
       if (other._nset) {
         _nset = new RooArgSet(*other._nset) ;
@@ -241,7 +241,7 @@ public:
       return *this;
     }
 
-    void setNset(RooArgSet* newNset) { _nset = newNset ? new RooArgSet(*newNset) : 0 ; }
+    void setNset(RooArgSet* newNset) { _nset = newNset ? new RooArgSet(*newNset) : nullptr ; }
 
     RooArgSet* nset() const { return _nset ; }
 
@@ -346,16 +346,16 @@ public:
   class RealFullVector : public RealVector {
   public:
     RealFullVector(UInt_t initialCapacity=(VECTOR_BUFFER_SIZE / sizeof(double))) : RealVector(initialCapacity),
-      _bufE(0), _bufEL(0), _bufEH(0),
-      _nativeBufE(0), _nativeBufEL(0), _nativeBufEH(0),
-      _vecE(0), _vecEL(0), _vecEH(0) {
+      _bufE(nullptr), _bufEL(nullptr), _bufEH(nullptr),
+      _nativeBufE(nullptr), _nativeBufEL(nullptr), _nativeBufEH(nullptr),
+      _vecE(nullptr), _vecEL(nullptr), _vecEH(nullptr) {
     }
 
     RealFullVector(RooAbsReal* arg, UInt_t initialCapacity=(VECTOR_BUFFER_SIZE / sizeof(double))) :
       RealVector(arg,initialCapacity),
-      _bufE(0), _bufEL(0), _bufEH(0),
-      _nativeBufE(0), _nativeBufEL(0), _nativeBufEH(0),
-      _vecE(0), _vecEL(0), _vecEH(0) {
+      _bufE(nullptr), _bufEL(nullptr), _bufEH(nullptr),
+      _nativeBufE(nullptr), _nativeBufEL(nullptr), _nativeBufEH(nullptr),
+      _vecE(nullptr), _vecEL(nullptr), _vecEH(nullptr) {
     }
 
     ~RealFullVector() override {
@@ -367,17 +367,17 @@ public:
     RealFullVector(const RealFullVector& other, RooAbsReal* real=nullptr) : RealVector(other,real),
       _bufE(other._bufE), _bufEL(other._bufEL), _bufEH(other._bufEH),
       _nativeBufE(other._nativeBufE), _nativeBufEL(other._nativeBufEL), _nativeBufEH(other._nativeBufEH) {
-      _vecE = (other._vecE) ? new std::vector<double>(*other._vecE) : 0 ;
-      _vecEL = (other._vecEL) ? new std::vector<double>(*other._vecEL) : 0 ;
-      _vecEH = (other._vecEH) ? new std::vector<double>(*other._vecEH) : 0 ;
+      _vecE = (other._vecE) ? new std::vector<double>(*other._vecE) : nullptr ;
+      _vecEL = (other._vecEL) ? new std::vector<double>(*other._vecEL) : nullptr ;
+      _vecEH = (other._vecEH) ? new std::vector<double>(*other._vecEH) : nullptr ;
     }
 
     RealFullVector(const RealVector& other, RooAbsReal* real=nullptr) : RealVector(other,real),
-      _bufE(0), _bufEL(0), _bufEH(0),
-      _nativeBufE(0), _nativeBufEL(0), _nativeBufEH(0) {
-      _vecE = 0 ;
-      _vecEL = 0 ;
-      _vecEH = 0 ;
+      _bufE(nullptr), _bufEL(nullptr), _bufEH(nullptr),
+      _nativeBufE(nullptr), _nativeBufEL(nullptr), _nativeBufEH(nullptr) {
+      _vecE = nullptr ;
+      _vecEL = nullptr ;
+      _vecEH = nullptr ;
     }
 
     RealFullVector& operator=(const RealFullVector& other) {
@@ -408,7 +408,7 @@ public:
           }
         } else {
           delete dst[i];
-          dst[i] = 0;
+          dst[i] = nullptr;
         }
       }
       return *this;

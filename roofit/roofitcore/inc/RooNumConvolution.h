@@ -49,7 +49,7 @@ public:
 
   void setCallWarning(Int_t threshold=2000) ;
   void setCallProfiling(bool flag, Int_t nbinX = 40, Int_t nbinCall = 40, Int_t nCallHigh=1000) ;
-  const TH2* profileData() const { return _doProf ? _callHist : 0 ; }
+  const TH2* profileData() const { return _doProf ? _callHist : nullptr ; }
 
   // Access components
   RooRealVar&  var() const { return (RooRealVar&) _origVar.arg() ; }

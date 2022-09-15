@@ -35,7 +35,7 @@ public:
    RooNLLVarNew(){};
    RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables, bool isExtended,
                 std::string const &rangeName, bool doOffset);
-   RooNLLVarNew(const RooNLLVarNew &other, const char *name = 0);
+   RooNLLVarNew(const RooNLLVarNew &other, const char *name = nullptr);
    TObject *clone(const char *newname) const override { return new RooNLLVarNew(*this, newname); }
 
    void getParametersHook(const RooArgSet *nset, RooArgSet *list, bool stripDisconnected) const override;

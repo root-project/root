@@ -29,7 +29,7 @@ class RooNumGenConfig ;
 
 class RooAbsNumGenerator : public TNamed, public RooPrintable {
 public:
-  RooAbsNumGenerator() : _cloneSet(0), _funcClone(0), _funcMaxVal(0), _verbose(false), _isValid(false), _funcValStore(0), _funcValPtr(0), _cache(0) {} ;
+  RooAbsNumGenerator() : _cloneSet(nullptr), _funcClone(nullptr), _funcMaxVal(nullptr), _verbose(false), _isValid(false), _funcValStore(nullptr), _funcValPtr(nullptr), _cache(nullptr) {}
   RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &genVars, bool verbose=false, const RooAbsReal* maxFuncVal=nullptr);
   virtual RooAbsNumGenerator* clone(const RooAbsReal&, const RooArgSet& genVars, const RooArgSet& condVars,
                 const RooNumGenConfig& config, bool verbose=false, const RooAbsReal* maxFuncVal=nullptr) const = 0 ;
@@ -52,7 +52,7 @@ public:
   virtual const RooArgSet *generateEvent(UInt_t remaining, double& resampleRatio) = 0;
   virtual double getFuncMax() { return 0 ; }
 
-   inline void Print(Option_t *options= 0) const override {
+   inline void Print(Option_t *options= nullptr) const override {
      // ascii printing interface
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }

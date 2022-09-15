@@ -66,7 +66,7 @@ public:
 
   const char* opcode() const {
     // Return operator code
-    return strlen(GetName()) ? GetName() : 0 ;
+    return strlen(GetName()) ? GetName() : nullptr ;
   }
 
   void setInt(Int_t idx,Int_t value) {
@@ -93,7 +93,7 @@ public:
   }
   /// Return string stored in slot idx
   const char* getString(Int_t idx) const {
-      return (_s[idx].size()>0) ? _s[idx].c_str() : 0 ;
+      return (_s[idx].size()>0) ? _s[idx].c_str() : nullptr ;
   }
   /// Return TObject stored in slot idx
   const TObject* getObject(Int_t idx) const {

@@ -91,7 +91,7 @@ public:
 
   // Constant term  optimizer interface
   void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=nullptr, bool skipZeroWeights=false) override ;
-  const RooAbsArg* cacheOwner() override { return 0 ; }
+  const RooAbsArg* cacheOwner() override { return nullptr ; }
   void setArgStatus(const RooArgSet& set, bool active) override ;
   void resetCache() override ;
 

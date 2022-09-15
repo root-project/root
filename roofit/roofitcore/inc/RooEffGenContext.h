@@ -24,7 +24,7 @@ class RooEffGenContext : public RooAbsGenContext {
 public:
   RooEffGenContext(const RooAbsPdf &model,
                    const RooAbsPdf &pdf,const RooAbsReal& eff,
-                   const RooArgSet &vars, const RooDataSet *prototype= 0,
+                   const RooArgSet &vars, const RooDataSet *prototype= nullptr,
                    const RooArgSet* auxProto=nullptr, bool verbose=false, const RooArgSet* forceDirect=nullptr);
   ~RooEffGenContext() override;
 
