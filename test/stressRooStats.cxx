@@ -67,7 +67,7 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
       RooAbsData::setDefaultStorageType(RooAbsData::Tree) ;
    }
 
-   TFile* fref = 0 ;
+   TFile* fref = nullptr ;
    if (!dryRun) {
       if (TString(refFile).Contains("http:")) {
          if (writeRef) {
@@ -266,7 +266,7 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
    }
 
    delete gBenchmark ;
-   gBenchmark = 0 ;
+   gBenchmark = nullptr ;
 
    // Some of the object are multiple times in the list, let's make sure they
    // are not deleted twice.
