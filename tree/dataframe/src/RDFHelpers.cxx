@@ -52,6 +52,7 @@ void ROOT::RDF::RunGraphs(std::vector<RResultHandle> handles)
    TStopwatch sw;
    sw.Start();
    {
+      // silence logs from RLoopManager::Jit: RunGraphs does its own logging
       auto silenceRDFLogs = ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(),
                                                                     ROOT::Experimental::ELogLevel::kError);
       uniqueLoops[0].fLoopManager->Jit();
