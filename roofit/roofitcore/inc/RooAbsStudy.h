@@ -33,7 +33,7 @@ class RooStudyPackage ;
 class RooAbsStudy : public TNamed {
 public:
 
-  RooAbsStudy() :  _storeDetails(false), _summaryData(0), _detailData(0), _ownDetailData(true) {} ;
+  RooAbsStudy() :  _storeDetails(false), _summaryData(nullptr), _detailData(nullptr), _ownDetailData(true) {} ;
   RooAbsStudy(const char* name, const char* title) ;
   RooAbsStudy(const RooAbsStudy& other) ;
   virtual RooAbsStudy* clone(const char* newname="") const = 0 ;
@@ -43,7 +43,7 @@ public:
   virtual bool attach(RooWorkspace& /*w*/) { return false ; } ;
   virtual bool initialize() { return false ; } ;
   virtual bool execute() { return false ; } ;
-  virtual bool finalize() { return 0 ; } ;
+  virtual bool finalize() { return false ; } ;
   void storeDetailedOutput(bool flag) { _storeDetails = flag ; }
 
   RooDataSet* summaryData() { return _summaryData ; }

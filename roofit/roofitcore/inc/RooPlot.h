@@ -63,7 +63,7 @@ public:
   virtual Stat_t GetBinContent(Int_t) const;
   virtual Stat_t GetBinContent(Int_t, Int_t) const;
   virtual Stat_t GetBinContent(Int_t, Int_t, Int_t) const;
-  void Draw(Option_t *options= 0) override;
+  void Draw(Option_t *options= nullptr) override;
 
   // forwarding of relevant TH1 interface
   TAxis* GetXaxis() const ;
@@ -77,7 +77,7 @@ public:
   void SetAxisRange(double xmin, double xmax, Option_t* axis = "X") ;
   void SetBarOffset(Float_t offset = 0.25) ;
   void SetBarWidth(Float_t width = 0.5) ;
-  void SetContour(Int_t nlevels, const double* levels = 0) ;
+  void SetContour(Int_t nlevels, const double* levels = nullptr) ;
   void SetContourLevel(Int_t level, double value) ;
   void SetDrawOption(Option_t* option = "") override ;
   void SetFillAttributes() ;
@@ -132,7 +132,7 @@ public:
 
   Int_t defaultPrintContents(Option_t* opt) const override ;
 
-  inline void Print(Option_t *options= 0) const override {
+  inline void Print(Option_t *options= nullptr) const override {
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
@@ -174,7 +174,7 @@ public:
   virtual void SetMinimum(double minimum = -1111) ;
 
   ///Shortcut for RooPlot::chiSquare(const char* pdfname, const char* histname, int nFitParam=nullptr)
-  double chiSquare(int nFitParam=0) const { return chiSquare(0,0,nFitParam) ; }
+  double chiSquare(int nFitParam=0) const { return chiSquare(nullptr,nullptr,nFitParam) ; }
   double chiSquare(const char* pdfname, const char* histname, int nFitParam=0) const ;
 
   RooHist* residHist(const char* histname=nullptr, const char* pdfname=nullptr,bool normalize=false, bool useAverage=true) const ;

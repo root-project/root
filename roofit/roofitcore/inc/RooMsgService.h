@@ -164,7 +164,7 @@ public:
   void setGlobalKillBelow(RooFit::MsgLevel level) { _globMinLevel = level ; }
   RooFit::MsgLevel globalKillBelow() const { return _globMinLevel ; }
 
-  void Print(Option_t *options= 0) const override ;
+  void Print(Option_t *options= nullptr) const override ;
   void showPid(bool flag) { _showPid = flag ; }
 
   // Back end -- Send message or check if particular logging configuration is active

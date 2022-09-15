@@ -230,7 +230,7 @@ RooCmdArg Optimize(Int_t flag=2) ;
 //                          observables or a single RooArgSet containing them.
 template<class... Args_t>
 RooCmdArg ConditionalObservables(Args_t &&... argsOrArgSet) {
-  return RooCmdArg("ProjectedObservables",0,0,0,0,0,0,
+  return RooCmdArg("ProjectedObservables",0,0,0,0,nullptr,nullptr,
           &RooCmdArg::take(RooArgSet{std::forward<Args_t>(argsOrArgSet)...}));
 }
 
@@ -258,7 +258,7 @@ RooCmdArg Constrain(RooArgSet && params) ;
 
 template<class... Args_t>
 RooCmdArg GlobalObservables(Args_t &&... argsOrArgSet) {
-  return RooCmdArg("GlobalObservables",0,0,0,0,0,0,0,0,0,0,
+  return RooCmdArg("GlobalObservables",0,0,0,0,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,
           &RooCmdArg::take(RooArgSet{std::forward<Args_t>(argsOrArgSet)...}));
 }
 RooCmdArg GlobalObservablesSource(const char* sourceName);
@@ -321,8 +321,8 @@ RooCmdArg IntrinsicBinning(bool flag=true) ;
 // RooAbsReal::createIntegral arguments
 template<class... Args_t>
 RooCmdArg NormSet(Args_t &&... argsOrArgSet) {
-  return RooCmdArg("NormSet",0,0,0,0,0,0,
-          &RooCmdArg::take(RooArgSet{std::forward<Args_t>(argsOrArgSet)...}), 0);
+  return RooCmdArg("NormSet",0,0,0,0,nullptr,nullptr,
+          &RooCmdArg::take(RooArgSet{std::forward<Args_t>(argsOrArgSet)...}), nullptr);
 }
 RooCmdArg NumIntConfig(const RooNumIntConfig& cfg) ;
 

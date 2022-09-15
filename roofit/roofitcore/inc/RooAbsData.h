@@ -65,7 +65,7 @@ public:
   // Constructors, factory methods etc.
   RooAbsData() ;
   RooAbsData(RooStringView name, RooStringView title, const RooArgSet& vars, RooAbsDataStore* store=nullptr) ;
-  RooAbsData(const RooAbsData& other, const char* newname = 0) ;
+  RooAbsData(const RooAbsData& other, const char* newname = nullptr) ;
 
   RooAbsData& operator=(const RooAbsData& other);
   ~RooAbsData() override ;
@@ -181,8 +181,8 @@ public:
 
   // WVE --- This needs to be public to avoid CINT problems
   struct PlotOpt {
-   PlotOpt() : cuts(""), drawOptions("P"), bins(0), etype(RooAbsData::Poisson), cutRange(0), histName(0), histInvisible(false),
-              addToHistName(0),addToWgtSelf(1.),addToWgtOther(1.),xErrorSize(1),refreshFrameNorm(false),correctForBinWidth(true),
+   PlotOpt() : cuts(""), drawOptions("P"), bins(nullptr), etype(RooAbsData::Poisson), cutRange(nullptr), histName(nullptr), histInvisible(false),
+              addToHistName(nullptr),addToWgtSelf(1.),addToWgtOther(1.),xErrorSize(1),refreshFrameNorm(false),correctForBinWidth(true),
               scaleFactor(1.) {} ;
    const char* cuts ;
    Option_t* drawOptions ;
@@ -236,7 +236,7 @@ public:
   virtual TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars, const char *cuts= "", const char* cutRange=nullptr) const;
 
   // Printing interface (human readable)
-  inline void Print(Option_t *options= 0) const override {
+  inline void Print(Option_t *options= nullptr) const override {
     // Print contents on stdout
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }

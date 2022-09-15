@@ -57,7 +57,7 @@ public:
         const RooCmdArg& arg4=RooCmdArg(),const RooCmdArg& arg5=RooCmdArg(),const RooCmdArg& arg6=RooCmdArg(),const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg()) ;
   RooDataHist& operator=(const RooDataHist&) = delete;
 
-  RooDataHist(const RooDataHist& other, const char* newname = 0) ;
+  RooDataHist(const RooDataHist& other, const char* newname = nullptr) ;
   TObject* Clone(const char* newname="") const override {
     return new RooDataHist(*this, newname && newname[0] != '\0' ? newname : GetName());
   }

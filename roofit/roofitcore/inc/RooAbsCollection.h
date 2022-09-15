@@ -292,7 +292,7 @@ public:
 
   Int_t index(const char* name) const;
 
-  inline void Print(Option_t *options= 0) const override {
+  inline void Print(Option_t *options= nullptr) const override {
     // Printing interface (human readable)
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
@@ -372,7 +372,7 @@ protected:
   mutable TNamed* _structureTag{nullptr};      ///<! Structure tag
   mutable TNamed* _typedStructureTag{nullptr}; ///<! Typed structure tag
 
-  inline void clearStructureTags() { _structureTag=nullptr ; _typedStructureTag = 0 ; }
+  inline void clearStructureTags() { _structureTag = nullptr ; _typedStructureTag = nullptr ; }
 
   void makeStructureTag() {}
   void makeTypedStructureTag() {}

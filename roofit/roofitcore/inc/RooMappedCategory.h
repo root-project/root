@@ -29,7 +29,7 @@ public:
   static constexpr value_type NoCatIdx = std::numeric_limits<value_type>::min();
   // Constructors etc.
 
-  inline RooMappedCategory() : _defCat(0), _mapcache(0) { }
+  inline RooMappedCategory() : _defCat(0), _mapcache(nullptr) { }
   RooMappedCategory(const char *name, const char *title, RooAbsCategory& inputCat, const char* defCatName="NotMapped", Int_t defCatIdx=NoCatIdx);
   RooMappedCategory(const RooMappedCategory& other, const char *name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooMappedCategory(*this,newname); }

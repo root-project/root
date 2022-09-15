@@ -34,7 +34,7 @@ public:
   RooCurve();
   enum WingMode { NoWings=0 ,Straight=1, Extended=2 } ;
   RooCurve(const RooAbsReal &func, RooAbsRealLValue &x, double xlo, double xhi, Int_t xbins,
-      double scaleFactor= 1, const RooArgSet *normVars= 0, double prec= 1e-3, double resolution= 1e-3,
+      double scaleFactor= 1, const RooArgSet *normVars= nullptr, double prec= 1e-3, double resolution= 1e-3,
       bool shiftToZero=false, WingMode wmode=Extended, Int_t nEvalError=-1, Int_t doEEVal=false, double eeVal=0.0,
       bool showProgress=false);
   RooCurve(const char *name, const char *title, const RooAbsFunc &func, double xlo,
@@ -56,7 +56,7 @@ public:
   void printClassName(std::ostream& os) const override ;
   void printMultiline(std::ostream& os, Int_t contents, bool verbose=false, TString indent="") const override;
 
-  inline void Print(Option_t *options= 0) const override {
+  inline void Print(Option_t *options= nullptr) const override {
     // Printing interface
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }

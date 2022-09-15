@@ -42,12 +42,12 @@ public:
 
   /// Getter function without integration set
   T* getObj(const RooArgSet* nset, Int_t* sterileIndex=nullptr, const TNamed* isetRangeName=nullptr) {
-    return getObj(nset,0,sterileIndex,isetRangeName) ;
+    return getObj(nset,nullptr,sterileIndex,isetRangeName) ;
   }
 
   /// Setter function without integration set
   Int_t setObj(const RooArgSet* nset, T* obj, const TNamed* isetRangeName=nullptr) {
-    return setObj(nset,0,obj,isetRangeName) ;
+    return setObj(nset,nullptr,obj,isetRangeName) ;
   }
 
   inline T* getObj(const RooArgSet* nset, const RooArgSet* iset, Int_t* sterileIdx, const char* isetRangeName)  {
@@ -120,11 +120,11 @@ protected:
 /// and will not receive information on server redirects and
 /// cache operation mode changes.
 template<class T>
-RooCacheManager<T>::RooCacheManager(Int_t maxSize) : RooAbsCache(0)
+RooCacheManager<T>::RooCacheManager(Int_t maxSize) : RooAbsCache(nullptr)
 {
   _maxSize = maxSize ;
   _nsetCache.resize(_maxSize) ; // = new RooNormSetCache[maxSize] ;
-  _object.resize(_maxSize,0) ; // = new T*[maxSize] ;
+  _object.resize(_maxSize,nullptr) ; // = new T*[maxSize] ;
   _wired = false ;
 }
 
@@ -140,7 +140,7 @@ RooCacheManager<T>::RooCacheManager(RooAbsArg* owner, Int_t maxSize) : RooAbsCac
   _size = 0 ;
 
   _nsetCache.resize(_maxSize) ; // = new RooNormSetCache[maxSize] ;
-  _object.resize(_maxSize,0) ; // = new T*[maxSize] ;
+  _object.resize(_maxSize,nullptr) ; // = new T*[maxSize] ;
   _wired = false ;
   _lastIndex = -1 ;
 
@@ -159,7 +159,7 @@ RooCacheManager<T>::RooCacheManager(const RooCacheManager& other, RooAbsArg* own
   _size = other._size ;
 
   _nsetCache.resize(_maxSize) ; // = new RooNormSetCache[_maxSize] ;
-  _object.resize(_maxSize,0) ; // = new T*[_maxSize] ;
+  _object.resize(_maxSize,nullptr) ; // = new T*[_maxSize] ;
   _wired = false ;
   _lastIndex = -1 ;
 
@@ -168,11 +168,11 @@ RooCacheManager<T>::RooCacheManager(const RooCacheManager& other, RooAbsArg* own
   Int_t i ;
   for (i=0 ; i<other._size ; i++) {
     _nsetCache[i].initialize(other._nsetCache[i]) ;
-    _object[i] = 0 ;
+    _object[i] = nullptr ;
   }
 
   for (i=other._size ; i<_maxSize ; i++) {
-    _object[i] = 0 ;
+    _object[i] = nullptr ;
   }
 }
 
@@ -231,7 +231,7 @@ Int_t RooCacheManager<T>::setObj(const RooArgSet* nset, const RooArgSet* iset, T
     if (sterileIdx>=_maxSize) {
       //cout << "RooCacheManager<T>::setObj()/SI increasing object cache size from " << _maxSize << " to " << sterileIdx+4 << endl ;
       _maxSize = sterileIdx+4;
-      _object.resize(_maxSize,0) ;
+      _object.resize(_maxSize,nullptr) ;
       _nsetCache.resize(_maxSize) ;
     }
 
@@ -247,7 +247,7 @@ Int_t RooCacheManager<T>::setObj(const RooArgSet* nset, const RooArgSet* iset, T
   if (_size>=_maxSize-1) {
     //cout << "RooCacheManager<T>::setObj() increasing object cache size from " << _maxSize << " to " << _maxSize*2 << endl ;
     _maxSize *=2 ;
-    _object.resize(_maxSize,0) ;
+    _object.resize(_maxSize,nullptr) ;
     _nsetCache.resize(_maxSize) ;
   }
 
@@ -299,7 +299,7 @@ T* RooCacheManager<T>::getObj(const RooArgSet* nset, const RooArgSet* iset, Int_
     }
   }
 
-  return 0 ;
+  return nullptr ;
 }
 
 
@@ -310,7 +310,7 @@ T* RooCacheManager<T>::getObjByIndex(Int_t index) const
   if (index<0||index>=_size) {
     oocoutE(_owner,ObjectHandling) << "RooCacheManager::getNormListByIndex: ERROR index ("
                << index << ") out of range [0," << _size-1 << "]" << std::endl ;
-    return 0 ;
+    return nullptr ;
   }
   return _object[index] ;
 }

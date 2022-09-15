@@ -264,7 +264,7 @@ public:
 
   const TCollection *GetCollection() const override {
     // Dummy
-    return 0 ;
+    return nullptr ;
   }
 
   TObject *Next() override {

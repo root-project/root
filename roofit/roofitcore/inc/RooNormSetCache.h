@@ -44,10 +44,10 @@ private:
 public:
   RooNormSetCache(std::size_t max = 32) : _max(max) {}
 
-  void add(const RooArgSet* set1, const RooArgSet* set2 = 0);
+  void add(const RooArgSet* set1, const RooArgSet* set2 = nullptr);
 
-  inline int index(const RooArgSet* set1, const RooArgSet* set2 = 0,
-      const TNamed* set2RangeName = 0)
+  inline int index(const RooArgSet* set1, const RooArgSet* set2 = nullptr,
+      const TNamed* set2RangeName = nullptr)
   {
     // Match range name first
     if (set2RangeName != _set2RangeName) return -1;
@@ -59,8 +59,8 @@ public:
     return -1;
   }
 
-  inline bool contains(const RooArgSet* set1, const RooArgSet* set2 = 0,
-      const TNamed* set2RangeName = 0)
+  inline bool contains(const RooArgSet* set1, const RooArgSet* set2 = nullptr,
+      const TNamed* set2RangeName = nullptr)
   { return (index(set1,set2,set2RangeName) >= 0); }
 
   inline bool containsSet1(const RooArgSet* set1)
@@ -76,7 +76,7 @@ public:
   const std::string& nameSet2() const { return _name2; }
 
   bool autoCache(const RooAbsArg* self, const RooArgSet* set1,
-      const RooArgSet* set2 = 0, const TNamed* set2RangeName = 0,
+      const RooArgSet* set2 = nullptr, const TNamed* set2RangeName = nullptr,
       bool autoRefill = true);
 
   void clear();

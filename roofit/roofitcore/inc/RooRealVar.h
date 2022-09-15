@@ -78,12 +78,12 @@ public:
   void setMax(const char* name, double value) ;
   void setRange(const char* name, double min, double max) ;
   void setRange(const char* name, RooAbsReal& min, RooAbsReal& max) ;
-  inline void setMin(double value) { setMin(0,value) ; }
-  inline void setMax(double value) { setMax(0,value) ; }
+  inline void setMin(double value) { setMin(nullptr,value) ; }
+  inline void setMax(double value) { setMax(nullptr,value) ; }
   /// Set the limits of the default range.
-  inline void setRange(double min, double max) { setRange(0,min,max) ; }
+  inline void setRange(double min, double max) { setRange(nullptr,min,max) ; }
   /// Set parameterised limits of the default range. See setRange(const char*, RooAbsReal&, RooAbsReal&).
-  inline void setRange(RooAbsReal& min, RooAbsReal& max) { setRange(0,min,max) ; }
+  inline void setRange(RooAbsReal& min, RooAbsReal& max) { setRange(nullptr,min,max) ; }
 
   void setBins(Int_t nBins, const char* name=nullptr);
   void setBinning(const RooAbsBinning& binning, const char* name=nullptr) ;

@@ -23,7 +23,7 @@ public :
    // List of branches
    TBranch        *b_i;   ///<!
 
-   RooProofDriverSelector(TTree * /*tree*/ =nullptr) { b_i = 0 ; _pkg = 0 ; fChain = 0 ; }
+   RooProofDriverSelector(TTree * /*tree*/ =nullptr) { b_i = nullptr ; _pkg = nullptr ; fChain = nullptr ; }
    ~RooProofDriverSelector() override { }
    Int_t   Version() const override { return 2; }
    void    SlaveBegin(TTree *tree) override;

@@ -31,7 +31,7 @@ class RooLinkedListElem {
 public:
   // Initial element ctor
   RooLinkedListElem() :
-    _prev(0), _next(0), _arg(0), _refCount(0) {
+    _prev(nullptr), _next(nullptr), _arg(nullptr), _refCount(0) {
   }
 
   void init(TObject* arg, RooLinkedListElem* after=nullptr) {
@@ -51,13 +51,13 @@ public:
  void release() {
    if (_prev) _prev->_next = _next ;
    if (_next) _next->_prev = _prev ;
-   _prev = 0 ;
-   _next = 0 ;
+   _prev = nullptr ;
+   _next = nullptr ;
  }
 
   RooLinkedListElem(TObject* arg) :
     // Constructor with payload
-    _prev(0), _next(0), _arg(arg), _refCount(1) {
+    _prev(nullptr), _next(nullptr), _arg(arg), _refCount(1) {
   }
 
   RooLinkedListElem(TObject* arg, RooLinkedListElem* after) :

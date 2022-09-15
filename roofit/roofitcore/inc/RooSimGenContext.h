@@ -26,7 +26,7 @@ class RooAbsCategoryLValue ;
 
 class RooSimGenContext : public RooAbsGenContext {
 public:
-  RooSimGenContext(const RooSimultaneous &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
+  RooSimGenContext(const RooSimultaneous &model, const RooArgSet &vars, const RooDataSet *prototype= nullptr,
                    const RooArgSet* auxProto=nullptr, bool _verbose= false);
   ~RooSimGenContext() override;
   void setProtoDataOrder(Int_t* lut) override ;

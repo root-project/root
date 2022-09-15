@@ -25,7 +25,7 @@ class RooDataSet;
 
 class RooAbsGenContext : public TNamed, public RooPrintable {
 public:
-  RooAbsGenContext(const RooAbsPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0, const RooArgSet* auxProto=nullptr,
+  RooAbsGenContext(const RooAbsPdf &model, const RooArgSet &vars, const RooDataSet *prototype= nullptr, const RooArgSet* auxProto=nullptr,
          bool _verbose= false) ;
 
   virtual RooDataSet *generate(double nEvents= 0, bool skipInit=false, bool extendedMode=false);
@@ -46,7 +46,7 @@ public:
 
   virtual void setProtoDataOrder(Int_t* lut) ;
 
-   inline void Print(Option_t *options= 0) const override {
+   inline void Print(Option_t *options= nullptr) const override {
      // Print context information on stdout
      printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }

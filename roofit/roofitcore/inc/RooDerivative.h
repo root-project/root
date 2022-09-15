@@ -35,7 +35,7 @@ public:
   RooDerivative(const char *name, const char *title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, Int_t order=1, double eps=0.001) ;
   ~RooDerivative() override ;
 
-  RooDerivative(const RooDerivative& other, const char* name = 0);
+  RooDerivative(const RooDerivative& other, const char* name = nullptr);
   TObject* clone(const char* newname) const override { return new RooDerivative(*this, newname); }
 
   Int_t order() const { return _order ; }

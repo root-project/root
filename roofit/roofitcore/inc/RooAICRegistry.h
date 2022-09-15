@@ -30,8 +30,8 @@ public:
   RooAICRegistry(const RooAICRegistry& other) ;
   virtual ~RooAICRegistry() ;
 
-  Int_t store(const std::vector<Int_t>& codeList, RooArgSet* set1 = 0, RooArgSet* set2 = 0,
-              RooArgSet* set3 = 0, RooArgSet* set4 = 0);
+  Int_t store(const std::vector<Int_t>& codeList, RooArgSet* set1 = nullptr, RooArgSet* set2 = nullptr,
+              RooArgSet* set3 = nullptr, RooArgSet* set4 = nullptr) ;
   const std::vector<Int_t>& retrieve(Int_t masterCode) const ;
   const std::vector<Int_t>&  retrieve(Int_t masterCode, pRooArgSet& set1) const ;
   const std::vector<Int_t>&  retrieve(Int_t masterCode, pRooArgSet& set1, pRooArgSet& set2) const ;

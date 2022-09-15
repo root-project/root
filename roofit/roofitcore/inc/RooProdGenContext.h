@@ -29,7 +29,7 @@ class RooSuperCategory ;
 
 class RooProdGenContext : public RooAbsGenContext {
 public:
-  RooProdGenContext(const RooProdPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
+  RooProdGenContext(const RooProdPdf &model, const RooArgSet &vars, const RooDataSet *prototype= nullptr,
           const RooArgSet* auxProto=nullptr, bool _verbose= false);
   ~RooProdGenContext() override;
 

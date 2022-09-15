@@ -128,7 +128,7 @@ public:
   std::list<TObject*> allGenericObjects() const ;
 
   bool makeDir() ;
-  bool cd(const char* path = 0) ;
+  bool cd(const char* path = nullptr) ;
 
   bool writeToFile(const char* fileName, bool recreate=true) ;
 
@@ -223,12 +223,12 @@ public:
   class WSDir : public TDirectoryFile {
   public:
     WSDir(const char* name, const char* title, RooWorkspace* wspace) :
-      TDirectoryFile(name,title,"RooWorkspace::WSDir",0),
+      TDirectoryFile(name,title,"RooWorkspace::WSDir",nullptr),
       _wspace(wspace)
       {
       }
 
-    ~WSDir() override { Clear("nodelete") ; } ;
+    ~WSDir() override { Clear("nodelete") ; }
 
 
     void Add(TObject*,bool) override ;
