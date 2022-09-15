@@ -125,7 +125,7 @@ protected:
   void loadWeightSet();
   void calculateShell(BoxInfo *bi) const;
   void calculatePreNorm(BoxInfo *bi) const;
-  void sortDataIndices(BoxInfo *bi = 0);
+  void sortDataIndices(BoxInfo *bi = nullptr);
   void calculateBandWidth();
   double gauss(std::vector<double> &x, std::vector<std::vector<double>> &weights) const;
   void loopRange(std::vector<double> &x, std::vector<Int_t> &indices) const;

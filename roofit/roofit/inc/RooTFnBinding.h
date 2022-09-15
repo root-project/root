@@ -15,7 +15,7 @@ class TF3 ;
 
 class RooTFnBinding : public RooAbsReal {
 public:
-   RooTFnBinding() : _func(0) {} ;
+  RooTFnBinding() : _func(nullptr) {}
   RooTFnBinding(const char *name, const char *title, TF1* func, const RooArgList& list);
   RooTFnBinding(const char *name, const char *title, TF1* func, const RooArgList& list, const RooArgList& plist);
   RooTFnBinding(const RooTFnBinding& other, const char* name=nullptr) ;

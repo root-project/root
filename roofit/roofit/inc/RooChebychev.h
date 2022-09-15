@@ -29,7 +29,7 @@ public:
   RooChebychev(const char *name, const char *title,
                RooAbsReal& _x, const RooArgList& _coefList) ;
 
-  RooChebychev(const RooChebychev& other, const char* name = 0);
+  RooChebychev(const RooChebychev& other, const char *name = nullptr);
   TObject* clone(const char* newname) const override { return new RooChebychev(*this, newname); }
   inline ~RooChebychev() override { }
 

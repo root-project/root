@@ -26,7 +26,7 @@ public:
   RooChiSquarePdf(const char *name, const char *title,
                RooAbsReal& x,  RooAbsReal& ndof) ;
 
-  RooChiSquarePdf(const RooChiSquarePdf& other, const char* name = 0);
+  RooChiSquarePdf(const RooChiSquarePdf& other, const char *name = nullptr);
   TObject* clone(const char* newname) const override { return new RooChiSquarePdf(*this, newname); }
   inline ~RooChiSquarePdf() override { }
 

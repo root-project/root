@@ -96,7 +96,7 @@ public:
                         const RooArgList &pdfList, const RooArgList &mrefList, Setting setting);
    RooMomentMorphFuncND(const char *name, const char *title, const RooArgList &parList, const RooArgList &obsList,
                         const Grid2 &referenceGrid, const Setting &setting);
-   RooMomentMorphFuncND(const RooMomentMorphFuncND &other, const char *name = 0);
+   RooMomentMorphFuncND(const RooMomentMorphFuncND &other, const char *name = nullptr);
    RooMomentMorphFuncND(const char *name, const char *title, RooAbsReal &_m, const RooArgList &varList,
                         const RooArgList &pdfList, const TVectorD &mrefpoints, Setting setting);
    ~RooMomentMorphFuncND() override;
@@ -108,7 +108,7 @@ public:
    void useHorizontalMorphing(bool val) { _useHorizMorph = val; }
 
    double evaluate() const override;
-   virtual double getVal(const RooArgSet *set = 0) const;
+   virtual double getVal(const RooArgSet *set = nullptr) const;
 
 protected:
    void initialize();

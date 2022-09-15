@@ -40,8 +40,8 @@ public:
   ~RooKeysPdf() override;
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
-     const char* rangeName = 0) const override;
-  double analyticalIntegral(Int_t code, const char* rangeName = 0) const override;
+     const char* rangeName = nullptr) const override;
+  double analyticalIntegral(Int_t code, const char* rangeName = nullptr) const override;
   Int_t getMaxVal(const RooArgSet& vars) const override;
   double maxVal(Int_t code) const override;
 
