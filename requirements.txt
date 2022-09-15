@@ -16,4 +16,3 @@ metakernel>=0.20.0
 pyspark>=2.4 # Spark backend
 dask>=2022.02.0 # Dask backend
 distributed>=2022.02.0 # Dask backend
-dask-jobqueue>=0.7.3 # Dask backend
