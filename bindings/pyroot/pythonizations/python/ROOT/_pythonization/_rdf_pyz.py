@@ -223,6 +223,35 @@ class FunctionJitter:
         FunctionJitter.function_cache[self.func.__name__] = (self.func_call, self.func_sign)
         return self.func_call
 
+def _handle_cpp_callables(func, original_rdf_method, args):
+    """
+    Checks whether the callable `func` is a cppyy proxy of one of these:
+    1. C++ function
+    2. C++ functor
+    3. std::function
+
+    The cases above are supported by cppyy, so we can just invoke the original
+    cppyy method (Filter or Define) with the callable as argument.
+
+    Arguments:
+        func: callable to be checked
+        original_rdf_method: cppyy proxy for Filter or Define
+        args: arguments passed by the user to Filter or Define
+    Returns:
+        RDataFrame: RDataFrame node if `func` can be classified in one of the
+    three cases above, None otherwise
+    """
+
+    import libcppyy
+
+    is_cpp_function = lambda : type(func) == libcppyy.CPPOverload
+    is_cpp_functor  = lambda : type(getattr(func, '__call__', None)) == libcppyy.CPPOverload
+    is_std_function = lambda : isinstance(getattr(func, 'target_type', None), libcppyy.CPPOverload)
+
+    if is_cpp_function() or is_cpp_functor() or is_std_function():
+        return original_rdf_method(func, *args)
+
+
 def _PyFilter(rdf, callable_or_str, *args, extra_args={}):
     """
     Filters the entries of RDF according to a given condition.
@@ -271,15 +300,10 @@ def _PyFilter(rdf, callable_or_str, *args, extra_args={}):
             f"Filter takes at most 3 positional arguments but {len(args) + 1} were given")
 
     func = callable_or_str
-    # Check if it is a c++ callable.
-    import libcppyy
-     # Implies a cppyy proxy of a function was passed.
-    if type(callable_or_str) == libcppyy.CPPOverload:
-        return rdf._OriginalFilter(callable_or_str, *args)
-     # Second condition is a Python proxy to an std::function
-    if (isinstance(getattr(callable_or_str, 'target_type', None), libcppyy.CPPOverload)):
-        return rdf._OriginalFilter(callable_or_str, *args)
-    
+    rdf_node = _handle_cpp_callables(func, rdf._OriginalFilter, args)
+    if rdf_node is not None:
+        return rdf_node
+
     jitter = FunctionJitter(rdf)
     func.__annotations__['return'] = 'bool' # return type for Filters is bool # Note: You can keep double and Filter still works.
 
@@ -347,14 +371,9 @@ def _PyDefine(rdf, col_name, callable_or_str, cols = [] , extra_args = {} ):
         raise TypeError(f"Define takes a column list as third arguments but {type(cols).__name__} was given.")
     
     func = callable_or_str
-    # Check if it is a c++ callable.
-    import libcppyy
-     # Implies a cppyy proxy of a function was passed.
-    if type(callable_or_str) == libcppyy.CPPOverload:
-        return rdf._OriginalDefine(col_name, func, cols)
-     # Second condition is a Python proxy to an std::function
-    if (isinstance(getattr(callable_or_str, 'target_type', None), libcppyy.CPPOverload)):
-        return rdf._OriginalDefine(col_name, func, cols)
+    rdf_node = _handle_cpp_callables(func, rdf._OriginalDefine, [cols])
+    if rdf_node is not None:
+        return rdf_node
 
     jitter = FunctionJitter(rdf)    
     func_call = jitter.jit_function(func, cols, extra_args)
