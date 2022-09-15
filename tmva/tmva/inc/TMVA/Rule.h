@@ -146,7 +146,7 @@ namespace TMVA {
       Double_t            GetImportanceRef() const { return fImportanceRef; }
 
       // print the rule using flogger
-      void PrintLogger( const char *title=0 ) const;
+      void PrintLogger( const char *title=nullptr ) const;
 
       // print just the raw info, used for weight file generation
       void  PrintRaw   ( std::ostream& os  ) const; // obsolete

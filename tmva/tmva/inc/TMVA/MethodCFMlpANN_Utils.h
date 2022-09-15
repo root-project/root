@@ -130,8 +130,8 @@ namespace TMVA {
       // dynamic data table
       class VARn2 {
       public:
-      VARn2() : fNevt(0), fNvar(0) {
-            fxx = 0;
+         VARn2() : fNevt(0), fNvar(0) {
+            fxx = nullptr;
          }
          ~VARn2() {
             Delete();
@@ -143,7 +143,7 @@ namespace TMVA {
          }
          Double_t operator=( Double_t val ) { return val; }
          Double_t &operator()( Int_t ievt, Int_t ivar ) const {
-            if (0 != fxx && ievt < fNevt && ivar < fNvar) return fxx[ievt][ivar];
+            if (fxx && ievt < fNevt && ivar < fNvar) return fxx[ievt][ivar];
             else {
                printf( "*** ERROR in varn3_(): fxx is zero pointer ==> abort ***\n") ;
                std::exit(1);
@@ -151,9 +151,9 @@ namespace TMVA {
             }
          }
          void Delete( void ) {
-            if (0 != fxx) for (Int_t i=0; i<fNevt; i++) if (0 != fxx[i]) delete [] fxx[i];
+            if (fxx) for (Int_t i=0; i<fNevt; i++) if (fxx[i]) delete [] fxx[i];
             delete[] fxx;
-            fxx=0;
+            fxx=nullptr;
          }
 
          Double_t** fxx;

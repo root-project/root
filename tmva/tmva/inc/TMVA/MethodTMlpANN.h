@@ -78,12 +78,12 @@ namespace TMVA {
       // - here it is just a dummy, as it is done in the overwritten
       // - PrepareEvaluationtree... ugly but necessary due to the structure
       //   of TMultiLayerPercepton in ROOT grr... :-(
-      Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 );
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
 
       void SetHiddenLayer(TString hiddenlayer = "" ) { fHiddenLayer=hiddenlayer; }
 
       // ranking of input variables
-      const Ranking* CreateRanking() { return 0; }
+      const Ranking* CreateRanking() { return nullptr; }
 
       // make ROOT-independent C++ class
       void MakeClass( const TString& classFileName = TString("") ) const;

@@ -79,20 +79,20 @@ namespace TMVA {
       // ---
       VariableInfo&     AddVariable( const TString& expression, const TString& title = "", const TString& unit = "",
                                      Double_t min = 0, Double_t max = 0, char varType='F',
-                                     Bool_t normalized = kTRUE, void* external = 0 );
+                                     Bool_t normalized = kTRUE, void* external = nullptr );
       VariableInfo&     AddVariable( const VariableInfo& varInfo );
 
       // NEW: add an array of variables (e.g. for image data)
       void AddVariablesArray(const TString &expression, Int_t size, const TString &title = "", const TString &unit = "",
                              Double_t min = 0, Double_t max = 0, char type = 'F', Bool_t normalized = kTRUE,
-                             void *external = 0 );
+                             void *external = nullptr );
 
       VariableInfo&     AddTarget  ( const TString& expression, const TString& title, const TString& unit,
-                                     Double_t min, Double_t max, Bool_t normalized = kTRUE, void* external = 0 );
+                                     Double_t min, Double_t max, Bool_t normalized = kTRUE, void* external = nullptr );
       VariableInfo&     AddTarget  ( const VariableInfo& varInfo );
 
       VariableInfo&     AddSpectator ( const TString& expression, const TString& title, const TString& unit,
-                                       Double_t min, Double_t max, char type = 'F', Bool_t normalized = kTRUE, void* external = 0 );
+                                       Double_t min, Double_t max, char type = 'F', Bool_t normalized = kTRUE, void* external = nullptr );
       VariableInfo&     AddSpectator ( const VariableInfo& varInfo );
 
       ClassInfo*        AddClass   ( const TString& className );

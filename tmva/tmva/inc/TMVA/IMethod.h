@@ -65,7 +65,7 @@ namespace TMVA {
       virtual const char *GetName() const = 0;
 
       // calculate the MVA value - some methods may return a per-event error estimate (unless: *err = -1)
-      virtual Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 ) = 0;
+      virtual Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr ) = 0;
 
       // training method
       virtual void Train( void ) = 0;

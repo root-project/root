@@ -75,7 +75,7 @@ namespace TMVA {
       explicit PDF( const TString& name, const TH1* theHist,
                     KDEKernel::EKernelType ktype, KDEKernel::EKernelIter kiter, KDEKernel::EKernelBorder
                     kborder, Float_t FineFactor, Bool_t norm=kTRUE );
-      explicit PDF( const TString& name, const TString& options, const TString& suffix = "", PDF* defaultPDF = 0, Bool_t norm=kTRUE);
+      explicit PDF( const TString& name, const TString& options, const TString& suffix = "", PDF* defaultPDF = nullptr, Bool_t norm=kTRUE);
       virtual ~PDF();
 
       //creates the pdf after the definitions have been stored in
@@ -105,7 +105,7 @@ namespace TMVA {
       Double_t GetXmax  () const { return fHist->GetXaxis()->GetXmax();   }
 
       // perform series of validation tests
-      void     ValidatePDF( TH1* original = 0 ) const;
+      void     ValidatePDF( TH1* original = nullptr ) const;
 
       //gives the number of needed bins in the source histogram
       Int_t    GetHistNBins ( Int_t evtNum = 0 );

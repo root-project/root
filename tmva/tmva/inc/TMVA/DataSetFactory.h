@@ -145,7 +145,7 @@ namespace TMVA {
             nWeEvBeforeCut(0),
             nWeEvAfterCut(0),
             nNegWeights(0),
-            varAvLength(0)
+            varAvLength(nullptr)
                {}
          ~EventStats() { delete[] varAvLength; }
          Float_t cutScaling() const { return Float_t(nEvAfterCut)/nEvBeforeCut; }
@@ -201,7 +201,7 @@ namespace TMVA {
 
       // resets branch addresses to current event
       void   ResetBranchAndEventAddresses( TTree* );
-      void   ResetCurrentTree() { fCurrentTree = 0; }
+      void   ResetCurrentTree() { fCurrentTree = nullptr; }
       void   ChangeToNewTree( TreeInfo&, const DataSetInfo & );
       Bool_t CheckTTreeFormula( TTreeFormula* ttf, const TString& expression, Bool_t& hasDollar );
 

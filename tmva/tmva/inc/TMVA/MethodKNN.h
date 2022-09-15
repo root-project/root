@@ -68,7 +68,7 @@ namespace TMVA
 
       void Train( void );
 
-      Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 );
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
       const std::vector<Float_t>& GetRegressionValues();
 
       using MethodBase::ReadWeightsFromStream;

@@ -63,7 +63,7 @@ namespace TMVA {
        virtual ~Results();
 
       // setters
-      void                Store( TObject* obj, const char* alias=0 );
+      void                Store( TObject* obj, const char* alias=nullptr );
       void                SetTreeType( Types::ETreeType type ) { fTreeType = type; }
 
       // getters

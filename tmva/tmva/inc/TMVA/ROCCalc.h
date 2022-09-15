@@ -36,7 +36,7 @@ namespace TMVA {
       TH1* GetSignificance( Int_t nStot, Int_t nBtot);
       TH1* GetPurity(Int_t nStot, Int_t nBtot);
 
-      void ApplySignalAndBackgroundStyle( TH1* sig, TH1* bkg, TH1* any = 0 );
+      void ApplySignalAndBackgroundStyle( TH1* sig, TH1* bkg, TH1* any = nullptr );
 
       TH1* GetMvaSpdf(){return fmvaSpdf;}
       TH1* GetMvaBpdf(){return fmvaBpdf;}

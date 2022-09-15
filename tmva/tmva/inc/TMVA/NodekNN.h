@@ -224,8 +224,8 @@ namespace TMVA
 template<class T>
 TMVA::kNN::Node<T>::Node(const Node<T> *parent, const T &event, const Int_t mod)
 :fNodeP(parent),
-   fNodeL(0),
-   fNodeR(0),
+   fNodeL(nullptr),
+   fNodeR(nullptr),
    fEvent(event),
    fVarDis(event.GetVar(mod)),
    fVarMin(fVarDis),
@@ -257,7 +257,7 @@ const TMVA::kNN::Node<T>* TMVA::kNN::Node<T>::Add(const T &event, const UInt_t d
    fVarMin = std::min(fVarMin, value);
    fVarMax = std::max(fVarMax, value);
 
-   Node<T> *node = 0;
+   Node<T> *node = nullptr;
    if (value < fVarDis) {
       if (fNodeL)
          {

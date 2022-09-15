@@ -49,8 +49,8 @@ namespace TMVA {
    public:
 
       // constructors
-      Volume( std::vector<Float_t>* l, std::vector<Float_t>* u = 0);
-      Volume( std::vector<Double_t>* l = 0, std::vector<Double_t>* u = 0);
+      Volume( std::vector<Float_t>* l, std::vector<Float_t>* u = nullptr);
+      Volume( std::vector<Double_t>* l = nullptr, std::vector<Double_t>* u = nullptr);
       Volume( Volume& );
       Volume( Float_t* l , Float_t* u , Int_t nvar );
       Volume( Double_t* l , Double_t* u , Int_t nvar );

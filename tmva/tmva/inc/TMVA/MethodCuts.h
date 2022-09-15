@@ -88,7 +88,7 @@ namespace TMVA {
       void ReadWeightsFromXML   ( void* wghtnode );
 
       // calculate the MVA value (for CUTs this is just a dummy)
-      Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 );
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
 
       // write method specific histos to target file
       void WriteMonitoringHistosToFile( void ) const;
@@ -98,7 +98,7 @@ namespace TMVA {
 
       // also overwrite --> not computed for cuts
       Double_t GetSeparation  ( TH1*, TH1* ) const { return -1; }
-      Double_t GetSeparation  ( PDF* = 0, PDF* = 0 ) const { return -1; }
+      Double_t GetSeparation  ( PDF* = nullptr, PDF* = nullptr ) const { return -1; }
       Double_t GetSignificance( void )       const { return -1; }
       Double_t GetmuTransform ( TTree *)           { return -1; }
       Double_t GetEfficiency  ( const TString&, Types::ETreeType, Double_t& );
@@ -121,7 +121,7 @@ namespace TMVA {
       Double_t GetCuts  ( Double_t effS, Double_t* cutMin, Double_t* cutMax ) const;
 
       // ranking of input variables (not available for cuts)
-      const Ranking* CreateRanking() { return 0; }
+      const Ranking* CreateRanking() { return nullptr; }
 
       void DeclareOptions();
       void ProcessOptions();

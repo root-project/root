@@ -92,7 +92,7 @@ namespace TMVA {
       enum EBPTrainingMode { kSequential=0, kBatch };
 
       bool     HasInverseHessian() { return fCalculateErrors; }
-      Double_t GetMvaValue( Double_t* err=0, Double_t* errUpper=0 );
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
 
    protected:
 
@@ -124,7 +124,7 @@ namespace TMVA {
       Bool_t   GetHessian( TMatrixD &Hessian, TMatrixD &Gamma, TMatrixD &Delta );
       void     SetDir( TMatrixD &Hessian, TMatrixD &Dir );
       Double_t DerivDir( TMatrixD &Dir );
-      Bool_t   LineSearch( TMatrixD &Dir, std::vector<Double_t> &Buffer, Double_t* dError=0 ); ///< zjh
+      Bool_t   LineSearch( TMatrixD &Dir, std::vector<Double_t> &Buffer, Double_t* dError=nullptr ); ///< zjh
       void     ComputeDEDw();
       void     SimulateEvent( const Event* ev );
       void     SetDirWeights( std::vector<Double_t> &Origin, TMatrixD &Dir, Double_t alpha );

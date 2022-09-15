@@ -41,7 +41,7 @@ inline XMLConfig ParseXMLConfig(const std::string &filename)
    // Parse XML file and find root node
    TXMLEngine xml;
    auto xmldoc = xml.ParseFile(filename.c_str());
-   if (xmldoc == 0) {
+   if (!xmldoc) {
       std::stringstream ss;
       ss << "Failed to open TMVA XML file "
          << filename << ".";

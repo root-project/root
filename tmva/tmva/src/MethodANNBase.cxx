@@ -699,16 +699,16 @@ const std::vector<Float_t> &TMVA::MethodANNBase::GetMulticlassValues()
 void TMVA::MethodANNBase::AddWeightsXMLTo( void* parent ) const
 {
    Int_t numLayers = fNetwork->GetEntriesFast();
-   void* wght = gTools().xmlengine().NewChild(parent, 0, "Weights");
-   void* xmlLayout = gTools().xmlengine().NewChild(wght, 0, "Layout");
-   gTools().xmlengine().NewAttr(xmlLayout, 0, "NLayers", gTools().StringFromInt(fNetwork->GetEntriesFast()) );
+   void* wght = gTools().xmlengine().NewChild(parent, nullptr, "Weights");
+   void* xmlLayout = gTools().xmlengine().NewChild(wght, nullptr, "Layout");
+   gTools().xmlengine().NewAttr(xmlLayout, nullptr, "NLayers", gTools().StringFromInt(fNetwork->GetEntriesFast()) );
    TString weights = "";
    for (Int_t i = 0; i < numLayers; i++) {
       TObjArray* layer = (TObjArray*)fNetwork->At(i);
       Int_t numNeurons = layer->GetEntriesFast();
-      void* layerxml = gTools().xmlengine().NewChild(xmlLayout, 0, "Layer");
-      gTools().xmlengine().NewAttr(layerxml, 0, "Index",    gTools().StringFromInt(i) );
-      gTools().xmlengine().NewAttr(layerxml, 0, "NNeurons", gTools().StringFromInt(numNeurons) );
+      void* layerxml = gTools().xmlengine().NewChild(xmlLayout, nullptr, "Layer");
+      gTools().xmlengine().NewAttr(layerxml, nullptr, "Index",    gTools().StringFromInt(i) );
+      gTools().xmlengine().NewAttr(layerxml, nullptr, "NNeurons", gTools().StringFromInt(numNeurons) );
       for (Int_t j = 0; j < numNeurons; j++) {
          TNeuron* neuron = (TNeuron*)layer->At(j);
          Int_t numSynapses = neuron->NumPostLinks();
@@ -727,15 +727,15 @@ void TMVA::MethodANNBase::AddWeightsXMLTo( void* parent ) const
 
    // if inverse hessian exists, write inverse hessian to weight file
    if( fInvHessian.GetNcols()>0 ){
-      void* xmlInvHessian = gTools().xmlengine().NewChild(wght, 0, "InverseHessian");
+      void* xmlInvHessian = gTools().xmlengine().NewChild(wght, nullptr, "InverseHessian");
 
       // get the matrix dimensions
       Int_t nElements = fInvHessian.GetNoElements();
       Int_t nRows     = fInvHessian.GetNrows();
       Int_t nCols     = fInvHessian.GetNcols();
-      gTools().xmlengine().NewAttr(xmlInvHessian, 0, "NElements", gTools().StringFromInt(nElements) );
-      gTools().xmlengine().NewAttr(xmlInvHessian, 0, "NRows", gTools().StringFromInt(nRows) );
-      gTools().xmlengine().NewAttr(xmlInvHessian, 0, "NCols", gTools().StringFromInt(nCols) );
+      gTools().xmlengine().NewAttr(xmlInvHessian, nullptr, "NElements", gTools().StringFromInt(nElements) );
+      gTools().xmlengine().NewAttr(xmlInvHessian, nullptr, "NRows", gTools().StringFromInt(nRows) );
+      gTools().xmlengine().NewAttr(xmlInvHessian, nullptr, "NCols", gTools().StringFromInt(nCols) );
 
       // read in the matrix elements
       Double_t* elements = new Double_t[nElements+10];
@@ -744,8 +744,8 @@ void TMVA::MethodANNBase::AddWeightsXMLTo( void* parent ) const
       // store the matrix elements row-wise
       Int_t index = 0;
       for( Int_t row = 0; row < nRows; ++row ){
-         void* xmlRow = gTools().xmlengine().NewChild(xmlInvHessian, 0, "Row");
-         gTools().xmlengine().NewAttr(xmlRow, 0, "Index", gTools().StringFromInt(row) );
+         void* xmlRow = gTools().xmlengine().NewChild(xmlInvHessian, nullptr, "Row");
+         gTools().xmlengine().NewAttr(xmlRow, nullptr, "Index", gTools().StringFromInt(row) );
 
          // create the rows
          std::stringstream s("");

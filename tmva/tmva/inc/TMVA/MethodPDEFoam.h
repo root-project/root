@@ -108,7 +108,7 @@ namespace TMVA {
       PDEFoam* ReadClonedFoamFromFile(TFile*, const TString&);
 
       // calculate the MVA value
-      Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 );
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
 
       // calculate multiclass MVA values
       const std::vector<Float_t>& GetMulticlassValues();
