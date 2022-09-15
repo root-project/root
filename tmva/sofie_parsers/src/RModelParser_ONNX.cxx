@@ -474,8 +474,12 @@ std::unique_ptr<ROperator> make_ROperator_Softmax(const onnx::NodeProto &nodepro
 
    std::unique_ptr<ROperator> op;
 
+   int64_t attr_axis = -1;
+   if (nodeproto.attribute_size() == 1 && nodeproto.attribute(0).name() == "axis")
+      attr_axis = nodeproto.attribute(0).i();
+
    switch (input_type) {
-   case ETensorType::FLOAT: op.reset(new ROperator_Softmax<float>(nodeproto.input(0), nodeproto.output(0))); break;
+   case ETensorType::FLOAT: op.reset(new ROperator_Softmax<float>(attr_axis, nodeproto.input(0), nodeproto.output(0))); break;
    default:
       throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Softmax does not yet support input type " +
                                std::to_string(static_cast<int>(input_type)));
