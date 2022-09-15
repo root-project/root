@@ -34,7 +34,7 @@ public:
   PiecewiseInterpolation(const char *name, const char *title, const RooAbsReal& nominal, const RooArgList& lowSet, const RooArgList& highSet, const RooArgList& paramSet, bool takeOwnerShip=false) ;
   ~PiecewiseInterpolation() override ;
 
-  PiecewiseInterpolation(const PiecewiseInterpolation& other, const char* name = 0);
+  PiecewiseInterpolation(const PiecewiseInterpolation& other, const char *name = nullptr);
   TObject* clone(const char* newname) const override { return new PiecewiseInterpolation(*this, newname); }
 
   /// Return pointer to the nominal hist function.
