@@ -606,8 +606,8 @@ extern "C" const Decl* TCling__GetObjectDecl(TObject *obj) {
 extern "C" R__DLLEXPORT TInterpreter *CreateInterpreter(void* interpLibHandle,
                                                         const char* argv[])
 {
-   auto tcling = new TCling("C++", "cling C++ Interpreter", argv);
-   cling::DynamicLibraryManager::ExposeHiddenSharedLibrarySymbols(interpLibHandle);
+   auto tcling = new TCling("C++", "cling C++ Interpreter", argv, interpLibHandle);
+
    return tcling;
 }
 
@@ -1369,7 +1369,7 @@ static void RegisterPreIncludedHeaders(cling::Interpreter &clingInterp)
 /// \param argv - array of arguments passed to the cling::Interpreter constructor
 ///               e.g. `-DFOO=bar`. The last element of the array must be `nullptr`.
 
-TCling::TCling(const char *name, const char *title, const char* const argv[])
+TCling::TCling(const char *name, const char *title, const char* const argv[], void *interpLibHandle)
 : TInterpreter(name, title), fGlobalsListSerial(-1), fMapfile(nullptr),
   fRootmapFiles(nullptr), fLockProcessLine(true), fNormalizedCtxt(0),
   fPrevLoadedDynLibInfo(0), fClingCallbacks(0), fAutoLoadCallBack(0),
@@ -1572,7 +1572,8 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
 
    fInterpreter = std::make_unique<cling::Interpreter>(interpArgs.size(),
                                                        &(interpArgs[0]),
-                                                       llvmResourceDir, extensions);
+                                                       llvmResourceDir, extensions,
+                                                       interpLibHandle);
 
    // Don't check whether modules' files exist.
    fInterpreter->getCI()->getPreprocessorOpts().DisablePCHOrModuleValidation =
