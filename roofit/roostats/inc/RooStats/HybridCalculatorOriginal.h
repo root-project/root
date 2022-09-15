@@ -43,16 +43,16 @@ namespace RooStats {
       HybridCalculatorOriginal(RooAbsPdf& sb_model,
                        RooAbsPdf& b_model,
                        RooArgList& observables,
-                       const RooArgSet* nuisance_parameters = 0,
-                       RooAbsPdf* prior_pdf = 0,
+                       const RooArgSet* nuisance_parameters = nullptr,
+                       RooAbsPdf* prior_pdf = nullptr,
                        bool GenerateBinned = false, int testStatistics = 1, int ntoys = 1000 );
 
       /// Constructor for HybridCalculator using  a data set and pdf instances
       HybridCalculatorOriginal(RooAbsData& data,
                        RooAbsPdf& sb_model,
                        RooAbsPdf& b_model,
-                       const RooArgSet* nuisance_parameters = 0,
-                       RooAbsPdf* prior_pdf = 0,
+                       const RooArgSet* nuisance_parameters = nullptr,
+                       RooAbsPdf* prior_pdf = nullptr,
                        bool GenerateBinned = false, int testStatistics = 1, int ntoys = 1000 );
 
 

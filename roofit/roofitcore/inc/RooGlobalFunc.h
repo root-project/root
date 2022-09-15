@@ -119,8 +119,8 @@ RooCmdArg ShowProgress() ;
 RooCmdArg Normalization(double scaleFactor, Int_t scaleType) ;
 template<class... Args_t>
 RooCmdArg Components(Args_t &&... argsOrArgSet) {
-  return RooCmdArg("SelectCompSet",0,0,0,0,0,0,
-          &RooCmdArg::take(RooArgSet{std::forward<Args_t>(argsOrArgSet)...}), 0);
+  return RooCmdArg("SelectCompSet",0,0,0,0,nullptr,nullptr,
+          &RooCmdArg::take(RooArgSet{std::forward<Args_t>(argsOrArgSet)...}), nullptr);
 }
 RooCmdArg Components(const char* compSpec) ;
 
