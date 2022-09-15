@@ -28,7 +28,7 @@ public:
         RooAbsReal& _m0, RooAbsReal& _sigma,
         RooAbsReal& _alpha, RooAbsReal& _n);
 
-  RooCBShape(const RooCBShape& other, const char* name = 0);
+  RooCBShape(const RooCBShape& other, const char *name = nullptr);
   TObject* clone(const char* newname) const override { return new RooCBShape(*this,newname); }
 
   inline ~RooCBShape() override { }

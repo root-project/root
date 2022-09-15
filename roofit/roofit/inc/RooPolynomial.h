@@ -33,7 +33,7 @@ public:
   RooPolynomial(const char *name, const char *title,
       RooAbsReal& _x, const RooArgList& _coefList, Int_t lowestOrder=1) ;
 
-  RooPolynomial(const RooPolynomial& other, const char* name = 0);
+  RooPolynomial(const RooPolynomial& other, const char *name = nullptr);
   TObject* clone(const char* newname) const override { return new RooPolynomial(*this, newname); }
   ~RooPolynomial() override ;
 

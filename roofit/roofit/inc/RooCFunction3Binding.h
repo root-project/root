@@ -160,7 +160,7 @@ class RooCFunction3Ref : public TObject {
 
 // Define static member
 template<class VO, class VI1, class VI2, class VI3>
-RooCFunction3Map<VO,VI1,VI2,VI3>* RooCFunction3Ref<VO,VI1,VI2,VI3>::_fmap = 0;
+RooCFunction3Map<VO,VI1,VI2,VI3>* RooCFunction3Ref<VO,VI1,VI2,VI3>::_fmap = nullptr;
 
 
 
