@@ -49,7 +49,7 @@ namespace TMVA {
    public:
 
       VariableInfo( const TString& expression, const TString& title, const TString& unit,
-                    Int_t varCounter, char varType = 'F', void* external = 0,
+                    Int_t varCounter, char varType = 'F', void* external = nullptr,
                     Double_t min = 0, Double_t max = 0, Bool_t normalized=kTRUE );
       VariableInfo();
       VariableInfo( const VariableInfo& other );

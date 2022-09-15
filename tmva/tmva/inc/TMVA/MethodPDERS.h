@@ -88,7 +88,7 @@ namespace TMVA {
       void ReadWeightsFromXML( void* wghtnode );
 
       // calculate the MVA value
-      Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 );
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
 
       // calculate the MVA value
       const std::vector<Float_t>& GetRegressionValues();
@@ -127,7 +127,7 @@ namespace TMVA {
       Double_t LanczosFilter( Int_t level, Double_t x );
 
       // ranking of input variables
-      const Ranking* CreateRanking() { return 0; }
+      const Ranking* CreateRanking() { return nullptr; }
 
    private:
 

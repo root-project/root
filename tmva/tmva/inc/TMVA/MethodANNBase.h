@@ -116,7 +116,7 @@ namespace TMVA {
       virtual void ReadWeightsFromStream( std::istream& istr );
 
       // calculate the MVA value
-      virtual Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 );
+      virtual Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
 
       virtual const std::vector<Float_t> &GetRegressionValues();
 
@@ -176,7 +176,7 @@ namespace TMVA {
       TH1F* fEstimatorHistTest;  // monitors convergence of independent test sample
 
       // monitoring histograms (not available for regression)
-      void CreateWeightMonitoringHists( const TString& bulkname, std::vector<TH1*>* hv = 0 ) const;
+      void CreateWeightMonitoringHists( const TString& bulkname, std::vector<TH1*>* hv = nullptr ) const;
       std::vector<TH1*> fEpochMonHistS; // epoch monitoring histograms for signal
       std::vector<TH1*> fEpochMonHistB; // epoch monitoring histograms for background
       std::vector<TH1*> fEpochMonHistW; // epoch monitoring histograms for weights

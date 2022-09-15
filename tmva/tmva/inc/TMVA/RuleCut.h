@@ -41,7 +41,7 @@ namespace TMVA {
       RuleCut( const std::vector< const TMVA::Node * > & nodes );
 
       // copy constructor
-   RuleCut( const RuleCut & other ) : fLogger(0) { Copy( other ); }
+      RuleCut( const RuleCut & other ) : fLogger(nullptr) { Copy( other ); }
 
       // empty constructor
       RuleCut();

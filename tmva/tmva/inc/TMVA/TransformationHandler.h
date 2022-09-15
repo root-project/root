@@ -88,7 +88,7 @@ namespace TMVA {
       Double_t     GetMax   ( Int_t ivar, Int_t cls = -1 ) const;
 
       void         WriteToStream ( std::ostream& o ) const;
-      void         AddXMLTo      ( void* parent=0 ) const;
+      void         AddXMLTo      ( void* parent=nullptr ) const;
       void         ReadFromStream( std::istream& istr );
       void         ReadFromXML   ( void* trfsnode );
 
@@ -110,7 +110,7 @@ namespace TMVA {
       TDirectory*    GetRootDir() const { return fRootBaseDir; }
       void           SetRootDir( TDirectory *d ) { fRootBaseDir = d; }
 
-      void           PlotVariables( const std::vector<Event*>& events, TDirectory* theDirectory = 0 );
+      void           PlotVariables( const std::vector<Event*>& events, TDirectory* theDirectory = nullptr );
 
    private:
 

@@ -282,13 +282,13 @@ auto TMaxPoolLayer<Architecture_t>::Print() const -> void
 template <typename Architecture_t>
 void TMaxPoolLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
 {
-   auto layerxml = gTools().xmlengine().NewChild(parent, 0, "MaxPoolLayer");
+   auto layerxml = gTools().xmlengine().NewChild(parent, nullptr, "MaxPoolLayer");
 
    // write  maxpool layer info
-   gTools().xmlengine().NewAttr(layerxml, 0, "FilterHeight", gTools().StringFromInt(this->GetFilterHeight()));
-   gTools().xmlengine().NewAttr(layerxml, 0, "FilterWidth", gTools().StringFromInt(this->GetFilterWidth()));
-   gTools().xmlengine().NewAttr(layerxml, 0, "StrideRows", gTools().StringFromInt(this->GetStrideRows()));
-   gTools().xmlengine().NewAttr(layerxml, 0, "StrideCols", gTools().StringFromInt(this->GetStrideCols()));
+   gTools().xmlengine().NewAttr(layerxml, nullptr, "FilterHeight", gTools().StringFromInt(this->GetFilterHeight()));
+   gTools().xmlengine().NewAttr(layerxml, nullptr, "FilterWidth", gTools().StringFromInt(this->GetFilterWidth()));
+   gTools().xmlengine().NewAttr(layerxml, nullptr, "StrideRows", gTools().StringFromInt(this->GetStrideRows()));
+   gTools().xmlengine().NewAttr(layerxml, nullptr, "StrideCols", gTools().StringFromInt(this->GetStrideCols()));
 
 }
 
