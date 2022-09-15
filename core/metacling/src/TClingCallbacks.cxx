@@ -183,12 +183,16 @@ public:
 
          assert(!llvm::StringRef(libName).startswith("libNew") && "We must not resolve symbols from libNew!");
 
-         if (libName.empty()) {
-            missing.insert(name);
-            continue;
-         }
+         // libCling symbols are intentionally hidden from the process, and libCling must not be
+         // dlopened. Instead, symbols must be resolved by specifically querying the dynlib handle of
+         // libCling, which by definition is loaded - else we could not call this code. The handle
+         // is made available as argument to `CreateInterpreter`.
+         assert(libName.find("/libCling.") == std::string::npos && "Must not autoload libCling!");
 
-         found[libName].push_back(name);
+         if (libName.empty())
+            missing.insert(name);
+         else
+            found[libName].push_back(name);
       }
 
       for (auto &&KV : found) {
