@@ -23,7 +23,7 @@ public:
   RooSpHarmonic(const char *name, const char *title, RooAbsReal& ctheta, RooAbsReal& phi, int l, int m);
   RooSpHarmonic(const char *name, const char *title, RooAbsReal& ctheta, RooAbsReal& phi, int l1, int m1, int l2, int m2);
 
-  RooSpHarmonic(const RooSpHarmonic& other, const char* name = 0);
+  RooSpHarmonic(const RooSpHarmonic& other, const char *name = nullptr);
   TObject* clone(const char* newname) const override { return new RooSpHarmonic(*this, newname); }
   inline ~RooSpHarmonic() override { }
 
