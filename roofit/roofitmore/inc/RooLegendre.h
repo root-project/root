@@ -26,7 +26,7 @@ public:
   // product of two associated Legendre polynomials, P_l1^m1(ctheta) * P_l2^m2(ctheta)
   RooLegendre(const char *name, const char *title, RooAbsReal& ctheta, int l1, int m1, int l2, int m2);
 
-  RooLegendre(const RooLegendre& other, const char* name = 0);
+  RooLegendre(const RooLegendre& other, const char *name = nullptr);
   TObject* clone(const char* newname) const override { return new RooLegendre(*this, newname); }
   inline ~RooLegendre() override { }
 
