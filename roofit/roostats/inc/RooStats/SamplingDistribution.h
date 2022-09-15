@@ -30,14 +30,14 @@ namespace RooStats {
    public:
 
     /// Constructor for SamplingDistribution
-    SamplingDistribution(const char *name,const char *title, std::vector<double>& samplingDist, const char * varName = 0);
+    SamplingDistribution(const char *name,const char *title, std::vector<double>& samplingDist, const char * varName = nullptr);
     SamplingDistribution(const char *name,const char *title,
-          std::vector<double>& samplingDist, std::vector<double>& sampleWeights, const char * varName = 0);
+          std::vector<double>& samplingDist, std::vector<double>& sampleWeights, const char * varName = nullptr);
 
 
-    SamplingDistribution(const char *name,const char *title, const char * varName = 0);
+    SamplingDistribution(const char *name,const char *title, const char * varName = nullptr);
 
-    SamplingDistribution(const char *name,const char *title, RooDataSet& dataSet, const char * columnName = 0, const char * varName = 0);
+    SamplingDistribution(const char *name,const char *title, RooDataSet& dataSet, const char * columnName = nullptr, const char * varName = nullptr);
 
     /// Default constructor for SamplingDistribution
     SamplingDistribution();

@@ -36,7 +36,7 @@ namespace RooStats {
    public:
 
       /// default constructor
-      explicit MCMCInterval(const char* name = 0);
+      explicit MCMCInterval(const char *name = nullptr);
 
       /// constructor from parameter of interest and Markov chain object
       MCMCInterval(const char* name, const RooArgSet& parameters,

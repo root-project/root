@@ -22,7 +22,7 @@ namespace RooStats {
 class HypoTestPlot: public SamplingDistPlot {
    public:
       /// Constructor
-   HypoTestPlot() : SamplingDistPlot() , fHypoTestResult(0) {}   // needed for IO
+      HypoTestPlot() : SamplingDistPlot() , fHypoTestResult(nullptr) {}   // needed for IO
       HypoTestPlot(HypoTestResult& result, Int_t bins=100, Option_t* opt = "NORMALIZE HIST");
       HypoTestPlot(HypoTestResult& result, Int_t bins, double min, double max, Option_t* opt = "NORMALIZE HIST");
       ~HypoTestPlot(void) override {}

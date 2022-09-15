@@ -31,19 +31,19 @@ class ModelConfig final : public TNamed, public RooWorkspaceHandle {
 
 public:
 
-   ModelConfig(RooWorkspace * ws = 0) :
+   ModelConfig(RooWorkspace * ws = nullptr) :
       TNamed()
    {
       if(ws) SetWS(*ws);
    }
 
-   ModelConfig(const char* name, RooWorkspace *ws = 0) :
+   ModelConfig(const char* name, RooWorkspace *ws = nullptr) :
       TNamed(name, name)
    {
       if(ws) SetWS(*ws);
    }
 
-   ModelConfig(const char* name, const char* title, RooWorkspace *ws = 0) :
+   ModelConfig(const char* name, const char* title, RooWorkspace *ws = nullptr) :
       TNamed(name, title)
    {
       if(ws) SetWS(*ws);
@@ -54,9 +54,9 @@ public:
    ModelConfig * Clone(const char * name = "") const override {
       ModelConfig * mc =  new ModelConfig(*this);
       if(strcmp(name,"")==0)
-   mc->SetName(this->GetName());
+         mc->SetName(this->GetName());
       else
-   mc->SetName(name);
+         mc->SetName(name);
       return mc;
    }
 
@@ -228,31 +228,31 @@ public:
 
 
    /// get model PDF (return nullptr if pdf has not been specified or does not exist)
-   RooAbsPdf * GetPdf() const { return (GetWS()) ? GetWS()->pdf(fPdfName.c_str()) : 0;   }
+   RooAbsPdf * GetPdf() const { return (GetWS()) ? GetWS()->pdf(fPdfName.c_str()) : nullptr;   }
 
    /// get RooArgSet containing the parameter of interest (return nullptr if not existing)
-   const RooArgSet * GetParametersOfInterest() const { return (GetWS()) ? GetWS()->set(fPOIName.c_str()) : 0; }
+   const RooArgSet * GetParametersOfInterest() const { return (GetWS()) ? GetWS()->set(fPOIName.c_str()) : nullptr; }
 
    /// get RooArgSet containing the nuisance parameters (return nullptr if not existing)
-   const RooArgSet * GetNuisanceParameters() const { return (GetWS()) ? GetWS()->set(fNuisParamsName.c_str()) : 0; }
+   const RooArgSet * GetNuisanceParameters() const { return (GetWS()) ? GetWS()->set(fNuisParamsName.c_str()) : nullptr; }
 
    /// get RooArgSet containing the constraint parameters (return nullptr if not existing)
-   const RooArgSet * GetConstraintParameters() const { return (GetWS()) ? GetWS()->set(fConstrParamsName.c_str()) : 0; }
+   const RooArgSet * GetConstraintParameters() const { return (GetWS()) ? GetWS()->set(fConstrParamsName.c_str()) : nullptr; }
 
    /// get parameters prior pdf  (return nullptr if not existing)
-   RooAbsPdf * GetPriorPdf() const { return (GetWS()) ? GetWS()->pdf(fPriorPdfName.c_str()) : 0; }
+   RooAbsPdf * GetPriorPdf() const { return (GetWS()) ? GetWS()->pdf(fPriorPdfName.c_str()) : nullptr; }
 
    /// get RooArgSet for observables  (return nullptr if not existing)
-   const RooArgSet * GetObservables() const { return (GetWS()) ? GetWS()->set(fObservablesName.c_str()) : 0; }
+   const RooArgSet * GetObservables() const { return (GetWS()) ? GetWS()->set(fObservablesName.c_str()) : nullptr; }
 
    /// get RooArgSet for conditional observables  (return nullptr if not existing)
-   const RooArgSet * GetConditionalObservables() const { return (GetWS()) ? GetWS()->set(fConditionalObsName.c_str()) : 0; }
+   const RooArgSet * GetConditionalObservables() const { return (GetWS()) ? GetWS()->set(fConditionalObsName.c_str()) : nullptr; }
 
    /// get RooArgSet for global observables  (return nullptr if not existing)
-   const RooArgSet * GetGlobalObservables() const { return (GetWS()) ? GetWS()->set(fGlobalObsName.c_str()) : 0; }
+   const RooArgSet * GetGlobalObservables() const { return (GetWS()) ? GetWS()->set(fGlobalObsName.c_str()) : nullptr; }
 
    /// get Proto data set (return nullptr if not existing)
-   RooAbsData * GetProtoData()  const {  return (GetWS()) ? GetWS()->data(fProtoDataName.c_str()) : 0; }
+   RooAbsData * GetProtoData()  const {  return (GetWS()) ? GetWS()->data(fProtoDataName.c_str()) : nullptr; }
 
    /// get RooArgSet for parameters for a particular hypothesis  (return nullptr if not existing)
    const RooArgSet * GetSnapshot() const;

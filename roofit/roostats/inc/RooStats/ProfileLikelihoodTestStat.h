@@ -34,29 +34,29 @@ namespace RooStats {
    public:
      ProfileLikelihoodTestStat() {
         // Proof constructor. Do not use.
-        fPdf = 0;
-        fNll = 0;
-        fCachedBestFitParams = 0;
-        fLastData = 0;
-   fLimitType = twoSided;
-   fSigned = false;
+        fPdf = nullptr;
+        fNll = nullptr;
+        fCachedBestFitParams = nullptr;
+        fLastData = nullptr;
+        fLimitType = twoSided;
+        fSigned = false;
         fDetailedOutputWithErrorsAndPulls = false;
         fDetailedOutputEnabled = false;
         fDetailedOutput = nullptr;
-   fLOffset = RooStats::IsNLLOffset() ;
+        fLOffset = RooStats::IsNLLOffset() ;
 
         fVarName = "Profile Likelihood Ratio";
         fReuseNll = false;
-   fStrategy=::ROOT::Math::MinimizerOptions::DefaultStrategy();
+        fStrategy=::ROOT::Math::MinimizerOptions::DefaultStrategy();
         fTolerance=TMath::Max(1.,::ROOT::Math::MinimizerOptions::DefaultTolerance());
-   fPrintLevel=::ROOT::Math::MinimizerOptions::DefaultPrintLevel();
-
+        fPrintLevel=::ROOT::Math::MinimizerOptions::DefaultPrintLevel();
      }
+
      ProfileLikelihoodTestStat(RooAbsPdf& pdf) {
        fPdf = &pdf;
-       fNll = 0;
-       fCachedBestFitParams = 0;
-       fLastData = 0;
+       fNll = nullptr;
+       fCachedBestFitParams = nullptr;
+       fLastData = nullptr;
        fLimitType = twoSided;
        fSigned = false;
        fDetailedOutputWithErrorsAndPulls = false;

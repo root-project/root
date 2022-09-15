@@ -24,7 +24,7 @@ namespace RooStats {
    public:
 
       /// default constructor
-      explicit HypoTestResult(const char* name = 0);
+      explicit HypoTestResult(const char *name = nullptr);
 
       /// copy constructor
       HypoTestResult(const HypoTestResult& other);
