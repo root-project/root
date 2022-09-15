@@ -65,12 +65,12 @@ in a common way for several concrete calculators.
 
       CombinedCalculator() :
          fSize(0.),
-         fPdf(0),
-         fData(0)
+         fPdf(nullptr),
+         fData(nullptr)
       {}
 
       CombinedCalculator(RooAbsData& data, RooAbsPdf& pdf, const RooArgSet& paramsOfInterest,
-                         double size = 0.05, const RooArgSet* nullParams = 0, const RooArgSet* altParams = 0, const RooArgSet* nuisParams = 0) :
+                         double size = 0.05, const RooArgSet* nullParams = nullptr, const RooArgSet* altParams = nullptr, const RooArgSet* nuisParams = nullptr) :
 
          fPdf(&pdf),
          fData(&data),
@@ -85,7 +85,7 @@ in a common way for several concrete calculators.
       /// constructor from data and model configuration
       CombinedCalculator(RooAbsData& data, const ModelConfig& model,
                          double size = 0.05) :
-         fPdf(0),
+         fPdf(nullptr),
          fData(&data)
       {
          SetModel(model);

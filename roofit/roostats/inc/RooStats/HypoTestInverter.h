@@ -50,7 +50,7 @@ public:
 
    /// constructor from hybrid calculator
    HypoTestInverter( HybridCalculator & hc,
-                     RooRealVar* scannedVariable = 0,
+                     RooRealVar* scannedVariable = nullptr,
                      double size = 0.05) ;
 
    /// constructor from frequentist calculator
@@ -66,7 +66,7 @@ public:
    /// constructor from two ModelConfigs (first sb (the null model) then b (the alt model)
    /// creating a calculator inside
    HypoTestInverter( RooAbsData& data, ModelConfig &sb, ModelConfig &b,
-           RooRealVar * scannedVariable = 0,  ECalculatorType type = kFrequentist,
+           RooRealVar * scannedVariable = nullptr,  ECalculatorType type = kFrequentist,
            double size = 0.05) ;
 
 
@@ -129,7 +129,7 @@ public:
 
    /// function to rebuild the distributions
    SamplingDistribution * RebuildDistributions(bool isUpper=true, int nToys = 100,
-                                               TList * clsDist = 0, TList *clsbDist= 0, TList * clbDist = 0, const char *  outputfile = "HypoTestInverterRebuiltDist.root");
+                                               TList *clsDist = nullptr, TList *clsbDist = nullptr, TList *clbDist = nullptr, const char *outputfile = "HypoTestInverterRebuiltDist.root");
 
    /// get the test statistic
    TestStatistic * GetTestStatistic() const;

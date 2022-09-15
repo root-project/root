@@ -59,15 +59,15 @@ namespace RooStats {
     /// Applies a predefined style if fApplyStyle is true (default).
     void ApplyDefaultStyle(void);
 
-    void SetLineColor(Color_t color, const SamplingDistribution *samplDist = 0);
-    void SetLineWidth(Width_t lwidth, const SamplingDistribution *samplDist = 0);
-    void SetLineStyle(Style_t style, const SamplingDistribution *samplDist = 0);
+    void SetLineColor(Color_t color, const SamplingDistribution *samplDist = nullptr);
+    void SetLineWidth(Width_t lwidth, const SamplingDistribution *samplDist = nullptr);
+    void SetLineStyle(Style_t style, const SamplingDistribution *samplDist = nullptr);
 
-    void SetMarkerColor(Color_t color, const SamplingDistribution *samplDist = 0);
-    void SetMarkerStyle(Style_t style, const SamplingDistribution *samplDist = 0);
-    void SetMarkerSize(Size_t size, const SamplingDistribution *samplDist = 0);
+    void SetMarkerColor(Color_t color, const SamplingDistribution *samplDist = nullptr);
+    void SetMarkerStyle(Style_t style, const SamplingDistribution *samplDist = nullptr);
+    void SetMarkerSize(Size_t size, const SamplingDistribution *samplDist = nullptr);
 
-    void RebinDistribution(Int_t rebinFactor, const SamplingDistribution *samplDist = 0);
+    void RebinDistribution(Int_t rebinFactor, const SamplingDistribution *samplDist = nullptr);
 
     void SetAxisTitle(char *varName) { fVarName = TString(varName); }
 

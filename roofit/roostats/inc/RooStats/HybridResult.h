@@ -29,7 +29,7 @@ namespace RooStats {
    public:
 
       /// Default constructor
-      explicit HybridResult(const char *name = 0);
+      explicit HybridResult(const char *name = nullptr);
 
       /// Constructor for HybridResult
       HybridResult(const char *name,

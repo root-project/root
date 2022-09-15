@@ -36,11 +36,11 @@ namespace RooStats {
    public:
 
       /// default constructor
-      explicit LikelihoodInterval(const char* name = 0);
+      explicit LikelihoodInterval(const char *name = nullptr);
 
       //// construct the interval from a Profile Likelihood object, parameter of interest and optionally a snapshot of
       //// POI with their best fit values
-      LikelihoodInterval(const char* name, RooAbsReal*, const RooArgSet*,  RooArgSet * = 0);
+      LikelihoodInterval(const char* name, RooAbsReal*, const RooArgSet*,  RooArgSet * = nullptr);
 
       /// destructor
       ~LikelihoodInterval() override;

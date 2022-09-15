@@ -33,7 +33,7 @@ namespace RooStats {
       /// defining the null parameters and their value. There is no need to pass the alternate parameters. These
       /// will be obtained by the value maximizing the likelihood function
       ProfileLikelihoodCalculator(RooAbsData& data, RooAbsPdf& pdf, const RooArgSet& paramsOfInterest,
-                                  double size = 0.05, const RooArgSet* nullParams = 0 );
+                                  double size = 0.05, const RooArgSet* nullParams = nullptr );
 
 
       /// Constructor from data and a model configuration

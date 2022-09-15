@@ -44,7 +44,7 @@ namespace RooStats {
       HypoTestResult *GetHypoTest() const override;
 
       /// Make Asimov data.
-      static RooAbsData * MakeAsimovData( RooAbsData & data, const ModelConfig & model,  const RooArgSet & poiValues, RooArgSet & globObs, const RooArgSet * genPoiValues = 0);
+      static RooAbsData * MakeAsimovData( RooAbsData & data, const ModelConfig & model,  const RooArgSet & poiValues, RooArgSet & globObs, const RooArgSet * genPoiValues = nullptr);
 
 
       /// Make a nominal Asimov data set from a model.
@@ -107,16 +107,16 @@ namespace RooStats {
 
 
       static RooAbsData * GenerateAsimovDataSinglePdf(const RooAbsPdf & pdf, const RooArgSet & obs,  const RooRealVar & weightVar,
-                                                      RooCategory * channelCat = 0);
+                                                      RooCategory * channelCat = nullptr);
 
       static RooAbsData * GenerateCountingAsimovData(RooAbsPdf & pdf, const RooArgSet & obs,  const RooRealVar & weightVar,
-                                                      RooCategory * channelCat = 0);
+                                                      RooCategory * channelCat = nullptr);
 
 
       static void FillBins(const RooAbsPdf & pdf, const RooArgList &obs, RooAbsData & data, int &index,  double
                            &binVolume, int &ibin);
 
-      static double EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data, const RooArgSet * condObs, const RooArgSet * globObs, const RooArgSet *poiSet = 0 );
+      static double EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data, const RooArgSet * condObs, const RooArgSet * globObs, const RooArgSet *poiSet = nullptr );
 
       static bool SetObsToExpected(RooAbsPdf &pdf, const RooArgSet &obs);
       static bool SetObsToExpected(RooProdPdf &prod, const RooArgSet &obs);
