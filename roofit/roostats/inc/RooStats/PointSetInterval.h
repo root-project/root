@@ -23,7 +23,7 @@ namespace RooStats {
   public:
 
      /// default constructors
-    explicit PointSetInterval(const char* name = 0);
+    explicit PointSetInterval(const char *name = nullptr);
 
     /// constructor from name and data set specifying the interval points
     PointSetInterval(const char* name, RooAbsData&);

@@ -21,7 +21,7 @@ namespace RooStats {
 
   public:
     /// default constructor
-    explicit SimpleInterval(const char* name = 0);
+    explicit SimpleInterval(const char *name = nullptr);
 
     /// default constructor
     SimpleInterval(const SimpleInterval& other, const char* name);

@@ -37,7 +37,7 @@ namespace RooStats {
 
 
       /// Dummy Constructor with only name
-      explicit HybridCalculatorOriginal(const char *name = 0);
+      explicit HybridCalculatorOriginal(const char *name = nullptr);
 
       /// Constructor for HybridCalculator from pdf instances but without a data-set
       HybridCalculatorOriginal(RooAbsPdf& sb_model,
