@@ -12,8 +12,7 @@
 from __future__ import annotations
 
 import os
-from functools import singledispatch
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, TYPE_CHECKING
 
 from DistRDF import DataFrame
 from DistRDF import HeadNode
@@ -22,27 +21,27 @@ from DistRDF.Backends import Utils
 
 try:
     import dask
-    from dask.distributed import Client, get_worker, LocalCluster, progress, SpecCluster
-    from dask_jobqueue import JobQueueCluster
+    from dask.distributed import Client, get_worker, LocalCluster, progress
 except ImportError:
     raise ImportError(("cannot import a Dask component. Refer to the Dask documentation "
                        "for installation instructions."))
 
+if TYPE_CHECKING:
+    from dask_jobqueue import JobQueueCluster
 
-@singledispatch
-def get_total_cores(cluster: SpecCluster, client: Client) -> int:
+
+def get_total_cores_generic(client: Client) -> int:
     """
-    Retrieve the total number of cores from a Dask cluster object.
+    Retrieve the total number of cores known to the Dask scheduler through the
+    client connection.
     """
-    # The Client.ncores() method returns the number of cores of each Dask
-    # worker that is known to the scheduler
     return sum(client.ncores().values())
 
 
-@get_total_cores.register
-def _(cluster: JobQueueCluster, client: Client) -> int:
+def get_total_cores_jobqueuecluster(cluster: JobQueueCluster) -> int:
     """
-    Retrieve the total number of cores from a Dask cluster object.
+    Retrieve the total number of cores from a Dask cluster connected to some
+    kind of batch system (HTCondor, Slurm...).
     """
     # Wrapping in a try-block in case any of the dictionaries do not have the
     # needed keys
@@ -74,6 +73,23 @@ def _(cluster: JobQueueCluster, client: Client) -> int:
                            "Please report this as a bug.") from e
 
 
+def get_total_cores(client: Client) -> int:
+    """
+    Retrieve the total number of cores of the Dask cluster.
+    """
+    try:
+        # It may happen that the user is connected to a batch system. We try
+        # to import the 'dask_jobqueue' module lazily to avoid a dependency.
+        from dask_jobqueue import JobQueueCluster
+        if isinstance(client.cluster, JobQueueCluster):
+            return get_total_cores_jobqueuecluster(client.cluster)
+    except ModuleNotFoundError:
+        # We are not using 'dask_jobqueue', fall through to generic case
+        pass
+
+    return get_total_cores_generic(client)
+
+
 class DaskBackend(Base.BaseBackend):
     """Dask backend for distributed RDataFrame."""
 
@@ -93,9 +109,7 @@ class DaskBackend(Base.BaseBackend):
         either retrieved if known or inferred from the user-provided cluster
         specification.
         """
-        # We dispatch on the type of the cluster, but the API to retrieve the
-        # number of available cores belongs to the client
-        return get_total_cores(self.client.cluster, self.client)
+        return get_total_cores(self.client)
 
     def ProcessAndMerge(self, ranges, mapper, reducer):
         """
