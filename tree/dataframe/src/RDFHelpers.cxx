@@ -290,6 +290,8 @@ public:
    }
 
    std::string GetActionName() { return "ProgressBar"; }
+   // dummy implementation of PartialUpdate
+   int &PartialUpdate(unsigned int) { return *fDummyResult; }
 
    ROOT::RDF::SampleCallback_t GetSampleCallback() {
     return [this](unsigned int slot, const ROOT::RDF::RSampleInfo & id) {
