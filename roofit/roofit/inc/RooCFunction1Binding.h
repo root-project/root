@@ -142,7 +142,7 @@ class RooCFunction1Ref : public TObject {
 
 // Define static member
 template<class VO, class VI>
-RooCFunction1Map<VO,VI>* RooCFunction1Ref<VO,VI>::_fmap = 0;
+RooCFunction1Map<VO,VI>* RooCFunction1Ref<VO,VI>::_fmap = nullptr;
 
 template<class VO, class VI>
 void RooCFunction1Ref<VO,VI>::Streamer(TBuffer &R__b)

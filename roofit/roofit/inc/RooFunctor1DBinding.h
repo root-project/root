@@ -32,7 +32,7 @@ RooAbsPdf*  bindPdf(const char* name, const ROOT::Math::IBaseFunctionOneDim& fto
 
 class RooFunctor1DBinding : public RooAbsReal {
 public:
-  RooFunctor1DBinding() : func(0) {
+  RooFunctor1DBinding() : func(nullptr) {
     // Default constructor
   } ;
   RooFunctor1DBinding(const char *name, const char *title, const ROOT::Math::IBaseFunctionOneDim& ftor, RooAbsReal& var);
@@ -58,7 +58,7 @@ private:
 
 class RooFunctor1DPdfBinding : public RooAbsPdf {
 public:
-  RooFunctor1DPdfBinding() : func(0) {
+  RooFunctor1DPdfBinding() : func(nullptr) {
     // Default constructor
   } ;
   RooFunctor1DPdfBinding(const char *name, const char *title, const ROOT::Math::IBaseFunctionOneDim& ftor, RooAbsReal& vars);

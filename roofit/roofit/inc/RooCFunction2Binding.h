@@ -157,7 +157,7 @@ class RooCFunction2Ref : public TObject {
 
 // Define static member
 template<class VO, class VI1, class VI2>
-RooCFunction2Map<VO,VI1,VI2>* RooCFunction2Ref<VO,VI1,VI2>::_fmap = 0;
+RooCFunction2Map<VO,VI1,VI2>* RooCFunction2Ref<VO,VI1,VI2>::_fmap = nullptr;
 
 
 template<class VO, class VI1, class VI2>
