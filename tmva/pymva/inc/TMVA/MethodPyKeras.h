@@ -60,7 +60,7 @@ namespace TMVA {
       // Get class probabilities of given event
       std::vector<Float_t>& GetMulticlassValues();
 
-      const Ranking *CreateRanking() { return 0; }
+      const Ranking *CreateRanking() { return nullptr; }
       virtual void TestClassification();
       virtual void AddWeightsXMLTo(void*) const{}
       virtual void ReadWeightsFromXML(void*){}
