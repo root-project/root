@@ -181,7 +181,8 @@ public:
          std::string libName = DLM.searchLibrariesForSymbol((*name).str(),
                                                             /*searchSystem=*/true);
 
-         assert(!llvm::StringRef(libName).startswith("libNew") && "We must not resolve symbols from libNew!");
+         // libNew overrides memory management functions; must never autoload that.
+         assert(libName.find("/libNew.") == std::string::npos && "We must not autoload libNew!");
 
          // libCling symbols are intentionally hidden from the process, and libCling must not be
          // dlopened. Instead, symbols must be resolved by specifically querying the dynlib handle of
