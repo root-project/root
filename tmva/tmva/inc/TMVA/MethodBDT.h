@@ -106,14 +106,14 @@ namespace TMVA {
       void WriteMonitoringHistosToFile( void ) const;
 
       // calculate the MVA value
-      Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0);
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr);
 
       // get the actual forest size (might be less than fNTrees, the requested one, if boosting is stopped early
       UInt_t   GetNTrees() const {return fForest.size();}
    private:
 
       Double_t GetMvaValue( Double_t* err, Double_t* errUpper, UInt_t useNTrees );
-      Double_t PrivateGetMvaValue( const TMVA::Event *ev, Double_t* err=0, Double_t* errUpper=0, UInt_t useNTrees=0 );
+      Double_t PrivateGetMvaValue( const TMVA::Event *ev, Double_t* err=nullptr, Double_t* errUpper=nullptr, UInt_t useNTrees=0 );
       void     BoostMonitor(Int_t iTree);
 
    public:

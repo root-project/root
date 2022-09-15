@@ -593,14 +593,14 @@ auto inline TBasicRNNLayer<Architecture_t>::CellBackward(Matrix_t & state_gradie
 template <typename Architecture_t>
 void TBasicRNNLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
 {
-   auto layerxml = gTools().xmlengine().NewChild(parent, 0, "RNNLayer");
+   auto layerxml = gTools().xmlengine().NewChild(parent, nullptr, "RNNLayer");
 
    // write All other info like stateSize, inputSize, timeSteps,rememberState
-   gTools().xmlengine().NewAttr(layerxml, 0, "StateSize", gTools().StringFromInt(this->GetStateSize()));
-   gTools().xmlengine().NewAttr(layerxml, 0, "InputSize", gTools().StringFromInt(this->GetInputSize()));
-   gTools().xmlengine().NewAttr(layerxml, 0, "TimeSteps", gTools().StringFromInt(this->GetTimeSteps()));
-   gTools().xmlengine().NewAttr(layerxml, 0, "RememberState", gTools().StringFromInt(this->DoesRememberState()));
-   gTools().xmlengine().NewAttr(layerxml, 0, "ReturnSequence", gTools().StringFromInt(this->DoesReturnSequence()));
+   gTools().xmlengine().NewAttr(layerxml, nullptr, "StateSize", gTools().StringFromInt(this->GetStateSize()));
+   gTools().xmlengine().NewAttr(layerxml, nullptr, "InputSize", gTools().StringFromInt(this->GetInputSize()));
+   gTools().xmlengine().NewAttr(layerxml, nullptr, "TimeSteps", gTools().StringFromInt(this->GetTimeSteps()));
+   gTools().xmlengine().NewAttr(layerxml, nullptr, "RememberState", gTools().StringFromInt(this->DoesRememberState()));
+   gTools().xmlengine().NewAttr(layerxml, nullptr, "ReturnSequence", gTools().StringFromInt(this->DoesReturnSequence()));
 
    // write weights and bias matrices
    this->WriteMatrixToXML(layerxml, "InputWeights", this -> GetWeightsAt(0));

@@ -77,10 +77,10 @@ namespace TMVA {
       void ReadWeightsFromStream( std::istream& istr );
       void ReadWeightsFromXML( void* wghtnode );
       // calculate the MVA value
-      Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 );
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
 
       // ranking of input variables
-      const Ranking* CreateRanking() { return 0; }
+      const Ranking* CreateRanking() { return nullptr; }
 
    protected:
 

@@ -57,7 +57,7 @@ namespace TMVA {
 
    public:
 
-      KDEKernel( EKernelIter kiter = kNonadaptiveKDE, const TH1* hist = 0, Float_t lower_edge=0., Float_t upper_edge=1., EKernelBorder kborder = kNoTreatment, Float_t FineFactor = 1.);
+      KDEKernel( EKernelIter kiter = kNonadaptiveKDE, const TH1* hist = nullptr, Float_t lower_edge=0., Float_t upper_edge=1., EKernelBorder kborder = kNoTreatment, Float_t FineFactor = 1.);
 
       virtual ~KDEKernel( void );
 

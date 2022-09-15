@@ -100,7 +100,7 @@ namespace TMVA {
       UInt_t  GetPeriode( void ) const { return fPeriod; }
 
       // counts events (weights) within a given volume
-      Double_t SearchVolume( Volume*, std::vector<const TMVA::BinarySearchTreeNode*>* events = 0 );
+      Double_t SearchVolume( Volume*, std::vector<const TMVA::BinarySearchTreeNode*>* events = nullptr );
 
       // Create the search tree from the event collection
       // using ONLY the variables specified in "theVars"
@@ -112,8 +112,8 @@ namespace TMVA {
 
       void NormalizeTree ();
 
-      void CalcStatistics( TMVA::Node* n = 0 );
-      void Clear         ( TMVA::Node* n = 0 );
+      void CalcStatistics( TMVA::Node* n = nullptr );
+      void Clear         ( TMVA::Node* n = nullptr );
 
       /// access to mean for signal and background for each variable
       Float_t Mean(Types::ESBType sb, UInt_t var ) { return fMeans[sb==Types::kSignal?0:1][var]; }
@@ -127,7 +127,7 @@ namespace TMVA {
       /// access to Maximum for signal and background for each variable
       Float_t Max(Types::ESBType sb, UInt_t var ) { return fMax[sb==Types::kSignal?0:1][var]; }
 
-      Int_t SearchVolumeWithMaxLimit( TMVA::Volume*, std::vector<const TMVA::BinarySearchTreeNode*>* events = 0, Int_t = -1);
+      Int_t SearchVolumeWithMaxLimit( TMVA::Volume*, std::vector<const TMVA::BinarySearchTreeNode*>* events = nullptr, Int_t = -1);
 
       /// access to RMS for each variable
       Float_t RMS(UInt_t var ) { return fRMS[0][var]; } // attention! class 0 is taken as signal!

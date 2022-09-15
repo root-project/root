@@ -103,7 +103,7 @@ namespace TMVA {
                               TString /*methodTitle*/,
                               TString /*methodOption*/,
                               TMVA::Types::EMVA /*theComposite*/,
-                              TString /*compositeOption = ""*/ ) { return 0; }
+                              TString /*compositeOption = ""*/ ) { return nullptr; }
 
       // optimize all booked methods (well, if desired by the method)
       std::map<TString,Double_t> OptimizeAllMethods                 (TString fomType="ROCIntegral", TString fitType="FitGA");

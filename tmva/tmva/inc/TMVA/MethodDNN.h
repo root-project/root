@@ -157,7 +157,7 @@ public:
    void TrainGpu();
    void TrainCpu();
 
-   virtual Double_t GetMvaValue( Double_t* err=0, Double_t* errUpper=0 );
+   virtual Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
    virtual const std::vector<Float_t>& GetRegressionValues();
    virtual const std::vector<Float_t>& GetMulticlassValues();
 
@@ -190,10 +190,10 @@ inline void MethodDNN::WriteMatrixXML(void *parent,
       }
    }
    std::string s = matrixStringStream.str();
-   void* matxml = gTools().xmlengine().NewChild(parent, 0, name);
-   gTools().xmlengine().NewAttr(matxml, 0, "rows",
+   void* matxml = gTools().xmlengine().NewChild(parent, nullptr, name);
+   gTools().xmlengine().NewAttr(matxml, nullptr, "rows",
                                 gTools().StringFromInt((int)X.GetNrows()));
-   gTools().xmlengine().NewAttr(matxml, 0, "cols",
+   gTools().xmlengine().NewAttr(matxml, nullptr, "cols",
                                 gTools().StringFromInt((int)X.GetNcols()));
    gTools().xmlengine().AddRawLine (matxml, s.c_str());
 }

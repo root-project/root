@@ -1374,22 +1374,22 @@ const std::vector<Float_t> & TMVA::MethodDNN::GetMulticlassValues()
 
 void TMVA::MethodDNN::AddWeightsXMLTo( void* parent ) const
 {
-   void* nn = gTools().xmlengine().NewChild(parent, 0, "Weights");
+   void* nn = gTools().xmlengine().NewChild(parent, nullptr, "Weights");
    Int_t inputWidth = fNet.GetInputWidth();
    Int_t depth      = fNet.GetDepth();
    char  lossFunction = static_cast<char>(fNet.GetLossFunction());
-   gTools().xmlengine().NewAttr(nn, 0, "InputWidth",
+   gTools().xmlengine().NewAttr(nn, nullptr, "InputWidth",
                                 gTools().StringFromInt(inputWidth));
-   gTools().xmlengine().NewAttr(nn, 0, "Depth", gTools().StringFromInt(depth));
-   gTools().xmlengine().NewAttr(nn, 0, "LossFunction", TString(lossFunction));
-   gTools().xmlengine().NewAttr(nn, 0, "OutputFunction",
+   gTools().xmlengine().NewAttr(nn, nullptr, "Depth", gTools().StringFromInt(depth));
+   gTools().xmlengine().NewAttr(nn, nullptr, "LossFunction", TString(lossFunction));
+   gTools().xmlengine().NewAttr(nn, nullptr, "OutputFunction",
                                 TString(static_cast<char>(fOutputFunction)));
 
    for (Int_t i = 0; i < depth; i++) {
       const auto& layer = fNet.GetLayer(i);
-      auto layerxml = gTools().xmlengine().NewChild(nn, 0, "Layer");
+      auto layerxml = gTools().xmlengine().NewChild(nn, nullptr, "Layer");
       int activationFunction = static_cast<int>(layer.GetActivationFunction());
-      gTools().xmlengine().NewAttr(layerxml, 0, "ActivationFunction",
+      gTools().xmlengine().NewAttr(layerxml, nullptr, "ActivationFunction",
                                    TString::Itoa(activationFunction, 10));
       WriteMatrixXML(layerxml, "Weights", layer.GetWeights());
       WriteMatrixXML(layerxml, "Biases",  layer.GetBiases());

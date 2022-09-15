@@ -169,7 +169,7 @@ void TMVA::Configurable::AddPreDefVal(const T& val)
 {
    // add predefined option value to the last declared option
    Option<T>* oc = dynamic_cast<Option<T>*>(fLastDeclaredOption);
-   if(oc!=0) oc->AddPreDefVal(val);
+   if(oc) oc->AddPreDefVal(val);
 }
 
 //______________________________________________________________________
@@ -182,7 +182,7 @@ void TMVA::Configurable::AddPreDefVal(const TString &optname, const T& val)
    while (OptionBase * op = (OptionBase *) optIt()) {
       if (optname == TString(op->TheName())){
          Option<T>* oc = dynamic_cast<Option<T>*>(op);
-         if(oc!=0){
+         if(oc){
             oc->AddPreDefVal(val);
             return;
          }

@@ -250,12 +250,12 @@ void TDenseLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
 {
   // write layer width activation function + weight and bias matrices
 
-   auto layerxml = gTools().xmlengine().NewChild(parent, 0, "DenseLayer");
+   auto layerxml = gTools().xmlengine().NewChild(parent, nullptr, "DenseLayer");
 
-   gTools().xmlengine().NewAttr(layerxml, 0, "Width", gTools().StringFromInt(this->GetWidth()));
+   gTools().xmlengine().NewAttr(layerxml, nullptr, "Width", gTools().StringFromInt(this->GetWidth()));
 
    int activationFunction = static_cast<int>(this -> GetActivationFunction());
-   gTools().xmlengine().NewAttr(layerxml, 0, "ActivationFunction",
+   gTools().xmlengine().NewAttr(layerxml, nullptr, "ActivationFunction",
                                 TString::Itoa(activationFunction, 10));
    // write weights and bias matrix
    this->WriteMatrixToXML(layerxml, "Weights", this -> GetWeightsAt(0));

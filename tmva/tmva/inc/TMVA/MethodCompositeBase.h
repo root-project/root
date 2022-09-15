@@ -68,7 +68,7 @@ namespace TMVA {
       void ReadWeightsFromXML( void* wghtnode );
 
       // calculate the MVA value combining all classifiers according to their fMethodWeight
-      Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 );
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
 
       using MethodBase::GetMvaValue;
 
@@ -99,7 +99,7 @@ namespace TMVA {
 
       IMethod* GetLastMethod() { return fMethods.back(); }
 
-      IMethod* GetPreviousMethod() { return (fCurrentMethodIdx>0)?fMethods[fCurrentMethodIdx-1]:0; }
+      IMethod* GetPreviousMethod() { return (fCurrentMethodIdx>0)?fMethods[fCurrentMethodIdx-1]:nullptr; }
 
       MethodBase* GetCurrentMethod(){ return fCurrentMethod;}
       MethodBase* GetCurrentMethod(UInt_t idx){return dynamic_cast<MethodBase*>(fMethods.at(idx)); }

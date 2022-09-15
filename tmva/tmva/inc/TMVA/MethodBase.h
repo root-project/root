@@ -195,10 +195,10 @@ namespace TMVA {
       // classifier response:
       // some methods may return a per-event error estimate
       // error calculation is skipped if err==0
-      virtual Double_t GetMvaValue( Double_t* errLower = 0, Double_t* errUpper = 0) = 0;
+      virtual Double_t GetMvaValue( Double_t* errLower = nullptr, Double_t* errUpper = nullptr) = 0;
 
       // signal/background classification response
-      Double_t GetMvaValue( const TMVA::Event* const ev, Double_t* err = 0, Double_t* errUpper = 0 );
+      Double_t GetMvaValue( const TMVA::Event* const ev, Double_t* err = nullptr, Double_t* errUpper = nullptr );
 
    protected:
       // helper function to set errors to -1
@@ -214,7 +214,7 @@ namespace TMVA {
       const std::vector<Float_t>& GetRegressionValues(const TMVA::Event* const ev){
          fTmpEvent = ev;
          const std::vector<Float_t>* ptr = &GetRegressionValues();
-         fTmpEvent = 0;
+         fTmpEvent = nullptr;
          return (*ptr);
       }
 
@@ -317,11 +317,11 @@ namespace TMVA {
       virtual TMatrixD GetMulticlassConfusionMatrix(Double_t effB, Types::ETreeType type);
       virtual Double_t GetSignificance() const;
       virtual Double_t GetROCIntegral(TH1D *histS, TH1D *histB) const;
-      virtual Double_t GetROCIntegral(PDF *pdfS=0, PDF *pdfB=0) const;
+      virtual Double_t GetROCIntegral(PDF *pdfS=nullptr, PDF *pdfB=nullptr) const;
       virtual Double_t GetMaximumSignificance( Double_t SignalEvents, Double_t BackgroundEvents,
                                                Double_t& optimal_significance_value  ) const;
       virtual Double_t GetSeparation( TH1*, TH1* ) const;
-      virtual Double_t GetSeparation( PDF* pdfS = 0, PDF* pdfB = 0 ) const;
+      virtual Double_t GetSeparation( PDF* pdfS = nullptr, PDF* pdfB = nullptr ) const;
 
       virtual void GetRegressionDeviation(UInt_t tgtNum, Types::ETreeType type, Double_t& stddev,Double_t& stddev90Percent ) const;
       // ---------- public accessors -----------------------------------------------
@@ -758,25 +758,25 @@ inline const TMVA::Event* TMVA::MethodBase::GetEvent() const
 
 inline const TMVA::Event* TMVA::MethodBase::GetEvent( Long64_t ievt ) const
 {
-   assert(fTmpEvent==0);
+   assert(fTmpEvent==nullptr);
    return GetTransformationHandler().Transform(Data()->GetEvent(ievt));
 }
 
 inline const TMVA::Event* TMVA::MethodBase::GetEvent( Long64_t ievt, Types::ETreeType type ) const
 {
-   assert(fTmpEvent==0);
+   assert(fTmpEvent==nullptr);
    return GetTransformationHandler().Transform(Data()->GetEvent(ievt, type));
 }
 
 inline const TMVA::Event* TMVA::MethodBase::GetTrainingEvent( Long64_t ievt ) const
 {
-   assert(fTmpEvent==0);
+   assert(fTmpEvent==nullptr);
    return GetEvent(ievt, Types::kTraining);
 }
 
 inline const TMVA::Event* TMVA::MethodBase::GetTestingEvent( Long64_t ievt ) const
 {
-   assert(fTmpEvent==0);
+   assert(fTmpEvent==nullptr);
    return GetEvent(ievt, Types::kTesting);
 }
 

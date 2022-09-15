@@ -1114,8 +1114,8 @@ void TMVA::Tools::ReadAttr( void* node, const char* attrname, TString& value )
 
 void TMVA::Tools::AddAttr( void* node, const char* attrname, const char* value )
 {
-   if( node == 0 ) return;
-   gTools().xmlengine().NewAttr(node, 0, attrname, value );
+   if( !node ) return;
+   gTools().xmlengine().NewAttr(node, nullptr, attrname, value );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
