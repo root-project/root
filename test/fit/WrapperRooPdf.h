@@ -24,20 +24,20 @@ public:
       fNorm(norm),
       fPdf(pdf),
       fX(0),
-      fParams(0)
+      fParams(nullptr)
    {
-      assert(fPdf != 0);
+      assert(fPdf != nullptr);
 
       RooArgSet *vars = fPdf->getVariables();
       RooAbsArg * arg = vars->find(xvar.c_str());  // code should abort if not found
       if (!arg) std::cout <<"Error - observable " << xvar << "is not in the list of pdf variables" << std::endl;
-      assert(arg != 0);
+      assert(arg != nullptr);
       RooArgSet obsList(*arg);
       //arg.setDirtyInhibit(true); // do have faster setter of values
       fX = fPdf->getObservables(obsList);
       fParams = fPdf->getParameters(obsList);
-      assert(fX!=0);
-      assert(fParams!=0);
+      assert(fX != nullptr);
+      assert(fParams != nullptr);
       delete vars;
 #ifdef DEBUG
       fX->Print("v");
@@ -54,15 +54,15 @@ public:
    WrapperRooPdf(RooAbsPdf * pdf, const RooArgSet & obsList, bool norm = true ) :
       fNorm(norm),
       fPdf(pdf),
-      fX(0),
-      fParams(0)
+      fX(nullptr),
+      fParams(nullptr)
    {
-      assert(fPdf != 0);
+      assert(fPdf != nullptr);
 
       fX = fPdf->getObservables(obsList);
       fParams = fPdf->getParameters(obsList);
-      assert(fX!=0);
-      assert(fParams!=0);
+      assert(fX != nullptr);
+      assert(fParams != nullptr);
 #ifdef DEBUG
       fX->Print("v");
       fParams->Print("v");
@@ -113,7 +113,7 @@ public:
 
       RooRealVar* var = nullptr;
       while( ( var = dynamic_cast<RooRealVar*>(itr.Next() ) ) ) {
-         assert(var != 0);
+         assert(var != nullptr);
          *vpitr++ = var->getVal();
       }
       return &fParamValues.front();
@@ -125,7 +125,7 @@ public:
       RooRealVar* var = nullptr;
       unsigned int index = 0;
       while( ( var = dynamic_cast<RooRealVar*>(itr.Next() ) ) ) {
-         assert(var != 0);
+         assert(var != nullptr);
          if (index == i) return std::string(var->GetName() );
          index++;
       }
@@ -169,9 +169,9 @@ private:
 
       // iterate on observables
       TIter itr = fX->createIterator() ;
-      RooRealVar* var = 0;
+      RooRealVar* var = nullptr;
       while( ( var = dynamic_cast<RooRealVar*>(itr.Next() ) ) ) {
-         assert(var != 0);
+         assert(var != nullptr);
 #ifndef _WIN32
          var->setDirtyInhibit(true);
 #endif
@@ -193,7 +193,7 @@ private:
       TIter itr = fParams->createIterator() ;
       RooRealVar* var = nullptr;
       while( ( var = dynamic_cast<RooRealVar*>(itr.Next() ) ) ) {
-         assert(var != 0);
+         assert(var != nullptr);
          var->setVal(*p++);
       }
       // debug
