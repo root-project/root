@@ -220,7 +220,7 @@ public:
 
    static std::string genPrefix(const RooFit::Experimental::JSONNode &p, bool trailing_underscore);
    static void exportHistogram(const TH1 &h, RooFit::Experimental::JSONNode &n,
-                               const std::vector<std::string> &obsnames, const TH1 *errH = 0,
+                               const std::vector<std::string> &obsnames, const TH1 *errH = nullptr,
                                bool writeObservables = true, bool writeErrors = true);
    void exportData(RooAbsData *data, RooFit::Experimental::JSONNode &n);
    static void
