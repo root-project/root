@@ -1533,7 +1533,7 @@ T TClingCallFunc::ExecT(void *address)
    if (ret.needsManagedAllocation())
       ((TCling *)gCling)->RegisterTemporary(ret);
 
-   return ret.simplisticCastAs<T>();
+   return ret.castAs<T>();
 }
 
 Longptr_t TClingCallFunc::ExecInt(void *address)

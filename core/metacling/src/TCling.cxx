@@ -2634,7 +2634,7 @@ Longptr_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
        && result.isValid()
        && !result.isVoid())
    {
-      return result.simplisticCastAs<Longptr_t>();
+      return result.castAs<Longptr_t>();
    }
    return 0;
 }
@@ -3610,7 +3610,7 @@ Longptr_t TCling::Calc(const char* line, EErrorCode* error)
       gROOT->SetLineHasBeenProcessed();
    }
 #endif // R__WIN32
-   return valRef.simplisticCastAs<Longptr_t>();
+   return valRef.castAs<Longptr_t>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
