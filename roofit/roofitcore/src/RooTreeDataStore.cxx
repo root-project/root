@@ -177,7 +177,7 @@ RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, RooA
 }
 
 
-RooAbsDataStore* RooTreeDataStore::reduce(RooStringView name, RooStringView title,
+std::unique_ptr<RooAbsDataStore> RooTreeDataStore::reduce(RooStringView name, RooStringView title,
                         const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
                         std::size_t nStart, std::size_t nStop) {
   RooArgSet tmp(vars) ;
@@ -185,7 +185,7 @@ RooAbsDataStore* RooTreeDataStore::reduce(RooStringView name, RooStringView titl
     tmp.add(*_wgtVar) ;
   }
   const char* wgtVarName = _wgtVar ? _wgtVar->GetName() : nullptr;
-  return new RooTreeDataStore(name, title, *this, tmp, cutVar, cutRange, nStart, nStop, wgtVarName);
+  return std::make_unique<RooTreeDataStore>(name, title, *this, tmp, cutVar, cutRange, nStart, nStop, wgtVarName);
 }
 
 
