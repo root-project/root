@@ -101,12 +101,14 @@ again:
 void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, const char *msg)
 {
    if (gErrorIgnoreLevel == kUnset) {
+      // This can also print error messages, so we need to do it outside the lock
+      auto cstrlevel = gEnv->GetValue("Root.ErrorIgnoreLevel", "Print");
+
       std::lock_guard<std::mutex> guard(*GetErrorMutex());
 
       gErrorIgnoreLevel = 0;
       if (gEnv) {
          std::string slevel;
-         auto cstrlevel = gEnv->GetValue("Root.ErrorIgnoreLevel", "Print");
          while (cstrlevel && *cstrlevel) {
             slevel.push_back(tolower(*cstrlevel));
             cstrlevel++;
