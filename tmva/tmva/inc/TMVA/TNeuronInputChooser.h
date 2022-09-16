@@ -86,9 +86,9 @@ namespace TMVA {
          case kSum:    return new TNeuronInputSum();
          case kSqSum:  return new TNeuronInputSqSum();
          case kAbsSum: return new TNeuronInputAbs();
-         default: return NULL;
+         default: return nullptr;
          }
-         return NULL;
+         return nullptr;
       }
 
       TNeuronInput* CreateNeuronInput(const TString type) const
@@ -96,7 +96,7 @@ namespace TMVA {
          if      (type == fSUM)    return CreateNeuronInput(kSum);
          else if (type == fSQSUM)  return CreateNeuronInput(kSqSum);
          else if (type == fABSSUM) return CreateNeuronInput(kAbsSum);
-         else                      return NULL;
+         else                      return nullptr;
       }
 
       std::vector<TString>* GetAllNeuronInputNames() const

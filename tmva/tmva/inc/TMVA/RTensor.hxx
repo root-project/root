@@ -187,7 +187,7 @@ public:
    /// \param[in] shape Shape vector
    /// \param[in] layout Memory layout
    RTensor(Value_t *data, Shape_t shape, MemoryLayout layout = MemoryLayout::RowMajor)
-      : fShape(shape), fLayout(layout), fData(data), fContainer(NULL)
+      : fShape(shape), fLayout(layout), fData(data), fContainer(nullptr)
    {
       fSize = Internal::GetSizeFromShape(shape);
       fStrides = Internal::ComputeStridesFromShape(shape, layout);
@@ -199,7 +199,7 @@ public:
    /// \param[in] strides Strides vector
    /// \param[in] layout Memory layout
    RTensor(Value_t *data, Shape_t shape, Shape_t strides, MemoryLayout layout = MemoryLayout::RowMajor)
-      : fShape(shape), fStrides(strides), fLayout(layout), fData(data), fContainer(NULL)
+      : fShape(shape), fStrides(strides), fLayout(layout), fData(data), fContainer(nullptr)
    {
       fSize = Internal::GetSizeFromShape(shape);
    }
@@ -246,7 +246,7 @@ public:
    std::shared_ptr<Container_t> GetContainer() { return fContainer; }
    const std::shared_ptr<Container_t> GetContainer() const { return fContainer; }
    MemoryLayout GetMemoryLayout() const { return fLayout; }
-   bool IsView() const { return fContainer == NULL; }
+   bool IsView() const { return fContainer == nullptr; }
    bool IsOwner() const { return !IsView(); }
 
    // Copy
