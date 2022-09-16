@@ -102,7 +102,7 @@ public:
          bool notBatch = axis != 0;
          bool notChannel = axis != 1;
          bool notDepth = (size == 5 && axis != 2);
-         bool notHeigt = (size == 5 && axis != 3) || (size == 4 && axis != 2);
+         bool notHeight = (size == 5 && axis != 3) || (size == 4 && axis != 2);
          bool notWidth = (size == 5 && axis != 4) || (size == 4 && axis != 3) || (size == 3 && axis != 2);
 
          if (notBatch) {
@@ -114,7 +114,7 @@ public:
          if (notDepth) {
             out << SP << SP << "for (size_t d = 0; d < " << depth << " ; d++){\n";
          }
-         if (notHeigt) {
+         if (notHeight) {
             out << SP << SP << "for (size_t h = 0; h < " << height << " ; h++){\n";
          }
          if (notWidth) {
@@ -131,7 +131,7 @@ public:
          if (notDepth) {
             out << "+ d * " << dStride;
          }
-         if (notHeigt) {
+         if (notHeight) {
             out << "+ h * " << hStride;
          }
          if (notWidth) {
@@ -150,7 +150,7 @@ public:
          if (notWidth) {
             out << SP << SP << "}\n"; // end w
          }
-         if (notHeigt) {
+         if (notHeight) {
             out << SP << SP << "}\n"; // end h
          }
          if (notDepth) {
