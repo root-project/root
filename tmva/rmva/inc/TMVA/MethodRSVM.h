@@ -53,7 +53,7 @@ namespace TMVA {
       // create ranking
       const Ranking *CreateRanking()
       {
-         return NULL;  // = 0;
+         return nullptr;  // = 0;
       }
 
 
