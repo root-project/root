@@ -794,7 +794,7 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, RooDataSet *dset
              std::size_t nStart, std::size_t nStop) :
   RooAbsData(name,title,vars)
 {
-  _dstore = dset->_dstore->reduce(name, title, _vars, cutVar, cutRange, nStart, nStop);
+  _dstore = dset->_dstore->reduce(name, title, _vars, cutVar, cutRange, nStart, nStop).release();
 
    _cachedVars.add(_dstore->cachedVars());
 

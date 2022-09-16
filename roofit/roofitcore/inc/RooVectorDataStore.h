@@ -49,7 +49,7 @@ public:
   RooAbsDataStore* clone(const char* newname=nullptr) const override { return new RooVectorDataStore(*this,newname) ; }
   RooAbsDataStore* clone(const RooArgSet& vars, const char* newname=nullptr) const override { return new RooVectorDataStore(*this,vars,newname) ; }
 
-  RooAbsDataStore* reduce(RooStringView name, RooStringView title,
+  std::unique_ptr<RooAbsDataStore> reduce(RooStringView name, RooStringView title,
                           const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
                           std::size_t nStart, std::size_t nStop) override;
 
