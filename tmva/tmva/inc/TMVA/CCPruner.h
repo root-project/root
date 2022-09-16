@@ -65,11 +65,11 @@ namespace TMVA {
 
       CCPruner( DecisionTree* t_max,
                 const EventList* validationSample,
-                SeparationBase* qualityIndex = NULL );
+                SeparationBase* qualityIndex = nullptr );
 
       CCPruner( DecisionTree* t_max,
                 const DataSet* validationSample,
-                SeparationBase* qualityIndex = NULL );
+                SeparationBase* qualityIndex = nullptr );
 
       ~CCPruner( );
 

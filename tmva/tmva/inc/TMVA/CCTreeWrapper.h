@@ -50,7 +50,7 @@ namespace TMVA {
 
       public:
 
-         CCTreeNode( DecisionTreeNode* n = NULL );
+         CCTreeNode( DecisionTreeNode* n = nullptr );
          virtual ~CCTreeNode( );
 
          virtual Node* CreateNode() const { return new CCTreeNode(); }
@@ -109,12 +109,12 @@ namespace TMVA {
 
 
          // test event if it descends the tree at this node to the right
-         inline virtual Bool_t GoesRight( const Event& e ) const { return (GetDTNode() != NULL ?
-                                                                           GetDTNode()->GoesRight(e) : false); }
+         inline virtual Bool_t GoesRight( const Event& e ) const { return GetDTNode() ?
+                                                                           GetDTNode()->GoesRight(e) : false; }
 
          // test event if it descends the tree at this node to the left
-         inline virtual Bool_t GoesLeft ( const Event& e ) const { return (GetDTNode() != NULL ?
-                                                                           GetDTNode()->GoesLeft(e) : false); }
+         inline virtual Bool_t GoesLeft ( const Event& e ) const { return GetDTNode() ?
+                                                                           GetDTNode()->GoesLeft(e) : false; }
          // initialize a node from a data record
          virtual void ReadAttributes(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE);
          virtual void ReadContent(std::stringstream& s);
