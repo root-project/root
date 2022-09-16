@@ -57,7 +57,7 @@ namespace TMVA {
       virtual ~ExpectedErrorPruneTool( );
 
       // returns the PruningInfo object for a given tree and test sample
-      virtual PruningInfo* CalculatePruningInfo( DecisionTree* dt, const IPruneTool::EventSample* testEvents = NULL,
+      virtual PruningInfo* CalculatePruningInfo( DecisionTree* dt, const IPruneTool::EventSample* testEvents = nullptr,
                                                  Bool_t isAutomatic = kFALSE );
 
    public:
@@ -82,7 +82,7 @@ namespace TMVA {
       DecisionTreeNode* l = (DecisionTreeNode*)node->GetLeft();
       DecisionTreeNode* r = (DecisionTreeNode*)node->GetRight();
       Int_t counter = icount + 1; // count this node
-      if(!(node->IsTerminal()) && l != NULL && r != NULL) {
+      if(!node->IsTerminal() && l && r) {
          counter = CountNodes(l,counter);
          counter = CountNodes(r,counter);
       }

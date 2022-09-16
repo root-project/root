@@ -61,11 +61,11 @@ namespace TMVA {
 
    class CostComplexityPruneTool : public IPruneTool {
    public:
-      CostComplexityPruneTool( SeparationBase* qualityIndex = NULL );
+      CostComplexityPruneTool( SeparationBase* qualityIndex = nullptr );
       virtual ~CostComplexityPruneTool( );
 
       // calculate the prune sequence for a given tree
-      virtual PruningInfo* CalculatePruningInfo( DecisionTree* dt, const IPruneTool::EventSample* testEvents = NULL, Bool_t isAutomatic = kFALSE );
+      virtual PruningInfo* CalculatePruningInfo( DecisionTree* dt, const IPruneTool::EventSample* testEvents = nullptr, Bool_t isAutomatic = kFALSE );
 
    private:
       SeparationBase* fQualityIndexTool;             ///<! the quality index used to calculate R(t), R(T) = sum[t in ~T]{ R(t) }

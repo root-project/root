@@ -45,7 +45,7 @@
 #define TMVA_DNN_PrintTCpuMatrix(mat, text)                                                                \
    {                                                                                                       \
       auto _dpointer = mat.GetRawDataPointer();                                                            \
-      if (_dpointer == NULL) {                                                                             \
+      if (!_dpointer) {                                                                                    \
          std::cout << #mat << " is null pointer" << std::endl;                                             \
          exit(1);                                                                                          \
       }                                                                                                    \

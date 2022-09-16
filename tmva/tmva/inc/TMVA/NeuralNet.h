@@ -911,7 +911,7 @@ namespace TMVA
             , m_sumOfBkgWeights (0)
             , m_scaleToNumEvents (_scaleToNumEvents)
             , m_cutValue (10.0)
-            , m_pResultPatternContainer (NULL)
+            , m_pResultPatternContainer(nullptr)
             , m_fileNameResult ()
             , m_fileNameNetConfig ()
             {

@@ -88,12 +88,12 @@ namespace TMVA {
       // count the number of Nodes in the Tree by looping through the tree and updates
       // the stored number. (e.g. useful when pruning, as the number count is updated when
       // building the tree.
-      UInt_t CountNodes( Node* n = NULL );
+      UInt_t CountNodes( Node* n = nullptr );
 
       UInt_t GetTotalTreeDepth() const { return fDepth; }
 
       void SetTotalTreeDepth( Int_t depth ) { fDepth = depth; }
-      void SetTotalTreeDepth( Node* n = NULL );
+      void SetTotalTreeDepth( Node* n = nullptr );
 
       Node* GetLeftDaughter ( Node* n);
       Node* GetRightDaughter( Node* n);

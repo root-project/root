@@ -113,8 +113,8 @@ namespace TMVA {
       void      SetOutputNeuron()               { NullifyLinks(fLinksOut);                }
       void      SetBiasNeuron()                 { NullifyLinks(fLinksIn);                 }
       void      SetDEDw( Double_t DEDw )        { fDEDw = DEDw;                           }
-      Bool_t    IsInputNeuron() const           { return fLinksIn == NULL;                }
-      Bool_t    IsOutputNeuron() const          { return fLinksOut == NULL;               }
+      Bool_t    IsInputNeuron() const           { return fLinksIn == nullptr;             }
+      Bool_t    IsOutputNeuron() const          { return fLinksOut == nullptr;            }
       void      PrintPreLinks() const           { PrintLinks(fLinksIn); return;           }
       void      PrintPostLinks() const          { PrintLinks(fLinksOut); return;          }
 

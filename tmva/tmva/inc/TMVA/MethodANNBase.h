@@ -143,7 +143,7 @@ namespace TMVA {
       virtual void MakeClassSpecific( std::ostream&, const TString& ) const;
 
       std::vector<Int_t>* ParseLayoutString( TString layerSpec );
-      virtual void        BuildNetwork( std::vector<Int_t>* layout, std::vector<Double_t>* weights=NULL,
+      virtual void        BuildNetwork( std::vector<Int_t>* layout, std::vector<Double_t>* weights = nullptr,
                                         Bool_t fromFile = kFALSE );
       void     ForceNetworkInputs( const Event* ev, Int_t ignoreIndex = -1 );
       Double_t GetNetworkOutput() { return GetOutputNeuron()->GetActivationValue(); }

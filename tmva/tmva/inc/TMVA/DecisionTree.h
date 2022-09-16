@@ -78,7 +78,7 @@ namespace TMVA {
 
       // the constructor needed for constructing the decision tree via training with events
       DecisionTree( SeparationBase *sepType, Float_t minSize,
-                    Int_t nCuts, DataSetInfo* = NULL,
+                    Int_t nCuts, DataSetInfo* = nullptr,
                     UInt_t cls =0,
                     Bool_t randomisedTree=kFALSE, Int_t useNvars=0, Bool_t usePoissonNvars=kFALSE,
                     UInt_t nMaxDepth=9999999,
@@ -100,9 +100,9 @@ namespace TMVA {
       // building of a tree by recursively splitting the nodes
 
       //      UInt_t BuildTree( const EventList & eventSample,
-      //                        DecisionTreeNode *node = NULL);
+      //                        DecisionTreeNode *node = nullptr);
       UInt_t BuildTree( const EventConstList & eventSample,
-                        DecisionTreeNode *node = NULL);
+                        DecisionTreeNode *node = nullptr);
       // determine the way how a node is split (which variable, which cut value)
 
       Double_t TrainNode( const EventConstList & eventSample,  DecisionTreeNode *node ) { return TrainNodeFast( eventSample, node ); }
@@ -140,7 +140,7 @@ namespace TMVA {
       void SetPruneMethod( EPruneMethod m = kCostComplexityPruning ) { fPruneMethod = m; }
 
       // recursive pruning of the tree, validation sample required for automatic pruning
-      Double_t PruneTree( const EventConstList* validationSample = NULL );
+      Double_t PruneTree( const EventConstList* validationSample = nullptr );
 
       // manage the pruning strength parameter (iff < 0 -> automate the pruning process)
       void SetPruneStrength( Double_t p ) { fPruneStrength = p; }
@@ -150,7 +150,7 @@ namespace TMVA {
       void ApplyValidationSample( const EventConstList* validationSample ) const;
 
       // return the misclassification rate of a pruned tree
-      Double_t TestPrunedTreeQuality( const DecisionTreeNode* dt = NULL, Int_t mode=0 ) const;
+      Double_t TestPrunedTreeQuality( const DecisionTreeNode* dt = nullptr, Int_t mode = 0 ) const;
 
       // pass a single validation event through a pruned decision tree
       void CheckEventWithPrunedTree( const TMVA::Event* ) const;
@@ -161,15 +161,15 @@ namespace TMVA {
       void SetNodePurityLimit( Double_t p ) { fNodePurityLimit = p; }
       Double_t GetNodePurityLimit( ) const { return fNodePurityLimit; }
 
-      void DescendTree( Node *n = NULL );
-      void SetParentTreeInNodes( Node *n = NULL );
+      void DescendTree( Node *n = nullptr );
+      void SetParentTreeInNodes( Node *n = nullptr );
 
       // retrieve node from the tree. Its position (up to a maximal tree depth of 64)
       // is coded as a sequence of left-right moves starting from the root, coded as
       // 0-1 bit patterns stored in the "long-integer" together with the depth
       Node* GetNode( ULong_t sequence, UInt_t depth );
 
-      UInt_t CleanTree(DecisionTreeNode *node=NULL);
+      UInt_t CleanTree(DecisionTreeNode *node = nullptr);
 
       void PruneNode(TMVA::DecisionTreeNode *node);
 
@@ -180,7 +180,7 @@ namespace TMVA {
       Int_t GetNNodesBeforePruning(){return (fNNodesBeforePruning)?fNNodesBeforePruning:fNNodesBeforePruning=GetNNodes();}
 
 
-      UInt_t CountLeafNodes(TMVA::Node *n = NULL);
+      UInt_t CountLeafNodes(TMVA::Node *n = nullptr);
 
       void  SetTreeID(Int_t treeID){fTreeID = treeID;};
       Int_t GetTreeID(){return fTreeID;};

@@ -79,7 +79,7 @@ Any tool which implements the interface should provide two modes for tree prunin
    public:
 
       // returns the PruningInfo object for a given tree and test sample
-      virtual PruningInfo* CalculatePruningInfo( DecisionTree* dt, const EventSample* testEvents = NULL,
+      virtual PruningInfo* CalculatePruningInfo( DecisionTree* dt, const EventSample* testEvents = nullptr,
                                                  Bool_t isAutomatic = kFALSE ) = 0;
 
    public:
