@@ -652,19 +652,32 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
 /// intermediate formula objects, use the equivalent constructor
 /// accepting RooFormulaVar reference as cut specification.
 ///
-/// This constructor will internally store the data in a TTree.
-///
 /// For most uses the RooAbsData::reduce() wrapper function, which
 /// uses this constructor, is the most convenient way to create a
 /// subset of an existing data
-///
 
 RooDataSet::RooDataSet(RooStringView name, RooStringView title, RooDataSet *dset,
              const RooArgSet& vars, const char *cuts, const char* wgtVarName) :
   RooAbsData(name,title,vars)
 {
   // Initialize datastore
-  _dstore = new RooTreeDataStore(name,title,_vars,*dset->_dstore,cuts,wgtVarName) ;
+  if(defaultStorageType == Tree) {
+    _dstore = new RooTreeDataStore(name,title,_vars,*dset->_dstore,cuts,wgtVarName);
+  } else {
+    std::unique_ptr<RooFormulaVar> cutVar;
+    if (cuts && strlen(cuts) != 0) {
+      // Create a RooFormulaVar cut from given cut expression
+      cutVar = std::make_unique<RooFormulaVar>(cuts, cuts, _vars, /*checkVariables=*/false);
+    }
+    _dstore = new RooVectorDataStore(name,title,
+            /*tds=*/*dset->_dstore,
+            /*vars=*/_vars,
+            /*cutVar=*/cutVar.get(),
+            /*cutRange=*/nullptr,
+            /*nStart=*/0,
+            /*nStop=*/dset->numEntries(),
+            /*wgtVarName=*/wgtVarName);
+  }
 
   appendToDir(this,true) ;
 
@@ -694,8 +707,6 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, RooDataSet *dset
 /// equivalent constructor with a string based cut expression is
 /// recommended.
 ///
-/// This constructor will internally store the data in a TTree.
-///
 /// For most uses the RooAbsData::reduce() wrapper function, which
 /// uses this constructor, is the most convenient way to create a
 /// subset of an existing data
@@ -707,7 +718,7 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, RooDataSet *dset
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor of a data set from (part of) an ROOT TTRee. The dimensions
+/// Constructor of a data set from (part of) an ROOT TTree. The dimensions
 /// of the data set are defined by the 'vars' RooArgSet. For each dimension
 /// specified, the TTree must have a branch with the same name. For category
 /// branches, this branch should contain the numeric index value. Real dimensions
