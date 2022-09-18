@@ -1396,7 +1396,7 @@ void TClingCallFunc::exec(void *address, void *ret)
    const FunctionDecl *FD = GetDecl();
    const unsigned num_args = fArgVals.size();
 
-   // FIXME: Consider the implicit this
+   // FIXME: Consider the implicit this which is sometimes not passed.
    if (num_args < GetMinRequiredArguments()) {
       ::Error("TClingCallFunc::exec",
               "Not enough arguments provided for %s (%d instead of the minimum %d)",
@@ -1410,14 +1410,13 @@ void TClingCallFunc::exec(void *address, void *ret)
               num_args, (int)GetMinRequiredArguments());
       return;
    }
-   if (address == nullptr && dyn_cast<CXXMethodDecl>(FD)
-       && !(dyn_cast<CXXMethodDecl>(FD))->isStatic()
-       && !dyn_cast<CXXConstructorDecl>(FD)) {
-      ::Error("TClingCallFunc::exec",
-              "The method %s is called without an object.",
-              fMethod->Name());
-      return;
-   }
+   if (auto CXXMD = dyn_cast<CXXMethodDecl>(FD))
+     if (!address && CXXMD && !CXXMD->isStatic() && !isa<CXXConstructorDecl>(FD)) {
+       ::Error("TClingCallFunc::exec",
+               "The method %s is called without an object.",
+               fMethod->Name());
+       return;
+     }
 
    SmallVector<void *, 8> vp_ary;
    {
