@@ -9,6 +9,6 @@ if (ROOT_test_distrdf_dask_FOUND)
     ROOTTEST_ADD_TEST(test_all
                       MACRO test_all.py
                       TIMEOUT 420
-                      PROPERTIES PROCESSORS 2)
+                      PROPERTIES PROCESSORS 4)
 
 endif()
