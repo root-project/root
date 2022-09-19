@@ -25,6 +25,6 @@ if (ROOT_test_distrdf_pyspark_FOUND AND ROOT_test_distrdf_dask_FOUND)
     ROOTTEST_ADD_TEST(test_all
                       MACRO test_all.py
                       ENVIRONMENT ${PYSPARK_ENV_VARS}
-                      PROPERTIES PROCESSORS 4)
+                      PROPERTIES PROCESSORS 6)
 
 endif()
