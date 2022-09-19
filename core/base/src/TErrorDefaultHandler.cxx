@@ -106,8 +106,8 @@ void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, c
 
       std::lock_guard<std::mutex> guard(*GetErrorMutex());
 
-      gErrorIgnoreLevel = 0;
       if (gEnv) {
+         gErrorIgnoreLevel = 0;
          std::string slevel;
          while (cstrlevel && *cstrlevel) {
             slevel.push_back(tolower(*cstrlevel));
