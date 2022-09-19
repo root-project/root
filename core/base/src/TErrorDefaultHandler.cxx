@@ -102,7 +102,7 @@ void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, c
 {
    if (gErrorIgnoreLevel == kUnset) {
       // This can also print error messages, so we need to do it outside the lock
-      auto cstrlevel = gEnv->GetValue("Root.ErrorIgnoreLevel", "Print");
+      auto cstrlevel = gEnv ? gEnv->GetValue("Root.ErrorIgnoreLevel", "Print") : 0;
 
       std::lock_guard<std::mutex> guard(*GetErrorMutex());
 
