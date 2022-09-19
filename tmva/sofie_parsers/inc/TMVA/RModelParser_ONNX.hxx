@@ -11,6 +11,7 @@
 #include <fstream>
 #include <memory>
 #include <ctime>
+#include <unordered_map>
 
 //forward declaration
 namespace onnx{
@@ -42,6 +43,8 @@ std::unique_ptr<ROperator> make_ROperator_FuseConvAdd(const onnx::NodeProto& con
 std::unique_ptr<ROperator> make_ROperator_Reshape(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
 std::unique_ptr<ROperator> make_ROperator_Slice(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
 std::unique_ptr<ROperator> make_ROperator_GRU(const onnx::NodeProto& nodeproto, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type);
+template<EBasicUnaryOperator Op>
+std::unique_ptr<ROperator> make_ROperator_BasicUnary(const onnx::NodeProto& nodeproto, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type);
 template <EBasicBinaryOperator Op1>
 std::unique_ptr<ROperator> make_ROperator_BasicBinary(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
 std::unique_ptr<ROperator> make_ROperator_Neg(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
@@ -72,6 +75,8 @@ const factoryMethodMap mapOptypeOperator = {
    {"AveragePool", &make_ROperator_Pool},
    {"GlobalAveragePool", &make_ROperator_Pool},
    {"MaxPool", &make_ROperator_Pool},
+   {"Sqrt", &make_ROperator_BasicUnary<EBasicUnaryOperator::kSqrt>},
+   {"Reciprocal", &make_ROperator_BasicUnary<EBasicUnaryOperator::kReciprocal>},
    {"Add", &make_ROperator_BasicBinary<Add>},
    {"Sub", &make_ROperator_BasicBinary<Sub>},
    {"Mul", &make_ROperator_BasicBinary<Mul>},

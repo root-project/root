@@ -168,6 +168,12 @@
 #include "ConvTransposeBias2dBatched_FromONNX.hxx"
 #include "input_models/references/ConvTransposeBias2dBatched.ref.hxx"
 
+#include "Sqrt_FromONNX.hxx"
+#include "input_models/references/Sqrt.ref.hxx"
+
+#include "Reciprocal_FromONNX.hxx"
+#include "input_models/references/Reciprocal.ref.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -1668,6 +1674,40 @@ TEST(ONNX, ConvTransposeBias2dBatched)
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, Sqrt)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   std::vector<float> input({0.8344, 0.4716, 0.6226, 0.8448, 0.2483, 0.9467});
+   TMVA_SOFIE_Sqrt::Session s("Sqrt_FromONNX.data");
+   std::vector<float> output = s.infer(input.data());
+
+   EXPECT_EQ(output.size(), sizeof(Sqrt_ExpectedOutput::output) / sizeof(float));
+
+   float* correct = Sqrt_ExpectedOutput::output;
+
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, Reciprocal)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   std::vector<float> input({1.2691, -1.2160,  0.6393, -0.4438,  0.8065,  0.2011});
+   TMVA_SOFIE_Reciprocal::Session s("Reciprocal_FromONNX.data");
+   std::vector<float> output = s.infer(input.data());
+
+   EXPECT_EQ(output.size(), sizeof(Reciprocal_ExpectedOutput::output) / sizeof(float));
+
+   float* correct = Reciprocal_ExpectedOutput::output;
+
+   for (size_t i = 0; i < output.size(); i++) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 }
