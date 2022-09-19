@@ -129,7 +129,32 @@ std::unique_ptr<ROperator> make_ROperator_FuseConvTransposeAdd(const onnx::NodeP
    if (it2 == tensor_type.end()) {
       tensor_type[addnode.output(0)] = output_type;
    }
+   return op;
+}
 
+template<EBasicUnaryOperator Op>
+std::unique_ptr<ROperator> make_ROperator_BasicUnary(const onnx::NodeProto& nodeproto, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type) {
+   std::unique_ptr<ROperator> op;
+
+   ETensorType input_type = ETensorType::UNDEFINED;
+   auto it = tensor_type.find(nodeproto.input(0));
+   if (it != tensor_type.end()) {
+      input_type = it->second;
+   }
+   switch(input_type) {
+      case ETensorType::FLOAT:
+         op.reset(new ROperator_BasicUnary<float, Op>(nodeproto.input(0), nodeproto.output(0)));
+         break;
+      default:
+         throw
+            std::runtime_error("TMVA::SOFIE - Unsupported - Unary Operator does not support imput type " + std::to_string(static_cast<int>(input_type)));
+   }
+
+   ETensorType output_type = (op->TypeInference({input_type}))[0];
+   auto it2 = tensor_type.find(nodeproto.output(0));
+   if (it2 == tensor_type.end()) {
+      tensor_type[nodeproto.output(0)] = output_type;
+   }
    return op;
 }
 
@@ -1787,7 +1812,7 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose){
          rmodel.AddBlasRoutines({"Gemm", "Axpy"});
       } else if (op_type == "RNN") {
          rmodel.AddBlasRoutines({"Gemm", "Axpy"});
-      } else if (op_type == "Selu" || op_type == "Sigmoid" || op_type == "Pow" || op_type == "Tanh" || op_type == "Max") {
+      } else if (op_type == "Selu" || op_type == "Sigmoid" || op_type == "Pow" || op_type == "Tanh" || op_type == "Max" || op_type == "Sqrt") {
          rmodel.AddNeededStdLib("cmath");
       } else if (op_type == "LSTM") {
          rmodel.AddBlasRoutines({"Gemm", "Axpy"});
