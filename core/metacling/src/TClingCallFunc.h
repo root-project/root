@@ -187,6 +187,7 @@ public:
    int get_wrapper_code(std::string &wrapper_name, std::string &wrapper);
 
    const clang::FunctionDecl *GetDecl() {
+      R__LOCKGUARD_CLING(gInterpreterMutex);
       if (!fDecl)
          fDecl = fMethod->GetTargetFunctionDecl();
       return fDecl;

@@ -46,8 +46,7 @@ TEST(TClingCallFunc, Void)
                            void ExecVoid() { }
                            )cpp");
 
-   CallFuncRAII CfRAII("");
-   CfRAII.SetProtoAndGetWrapper("ExecVoid", "");
+   CallFuncRAII CfRAII("", "ExecVoid", "");
 
    // Should not crash
    long result = gInterpreter->CallFunc_ExecInt(CfRAII.GetCF(), /*address*/0);
