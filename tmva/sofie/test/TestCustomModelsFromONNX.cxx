@@ -141,6 +141,18 @@
 #include "GRUSeqLength_FromONNX.hxx"
 #include "input_models/references/GRUSeqLength.ref.hxx"
 
+#include "Softmax1d_FromONNX.hxx"
+#include "input_models/references/Softmax1d.ref.hxx"
+
+#include "Softmax2d_FromONNX.hxx"
+#include "input_models/references/Softmax2d.ref.hxx"
+
+#include "Softmax3d_FromONNX.hxx"
+#include "input_models/references/Softmax3d.ref.hxx"
+
+#include "Softmax4d_FromONNX.hxx"
+#include "input_models/references/Softmax4d.ref.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -1456,5 +1468,86 @@ TEST(ONNX, GRUSeqLength)
    // Checking every output value, one by one
    for (size_t i = 0; i < output_yh.size(); ++i) {
       EXPECT_LE(std::abs(output_yh[i] - correct_yh[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, Softmax1d)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   std::vector<float> input({-1., 0., 1.});
+   TMVA_SOFIE_Softmax1d::Session s("Softmax1d_FromONNX.dat");
+   std::vector<float> output(s.infer(input.data()));
+
+   EXPECT_EQ(output.size(), sizeof(Softmax1d_ExpectedOutput::output) / sizeof(float));
+
+   float *correct = Softmax1d_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, Softmax2d)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   std::vector<float> input({-1., 0., 1.});
+   TMVA_SOFIE_Softmax2d::Session s("Softmax2d_FromONNX.dat");
+   std::vector<float> output(s.infer(input.data()));
+
+   EXPECT_EQ(output.size(), sizeof(Softmax2d_ExpectedOutput::output) / sizeof(float));
+
+   float *correct = Softmax2d_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, Softmax3d)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   std::vector<float> input({
+        -0.8939, -0.3674,  0.1763,  1.5804, -0.4687,  1.2253, -1.3488, -0.1000,
+        -0.1262,  0.4962,  1.0870,  0.6905, -0.3451, -1.6981, -0.4688,  0.4468,
+        -0.5479,  0.0650,  1.0446, -1.6249, -0.7190, -1.7520,  3.7753, -1.4939});
+   TMVA_SOFIE_Softmax3d::Session s("Softmax3d_FromONNX.dat");
+   std::vector<float> output(s.infer(input.data()));
+
+   EXPECT_EQ(output.size(), sizeof(Softmax3d_ExpectedOutput::output) / sizeof(float));
+
+   float *correct = Softmax3d_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, Softmax4d)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   std::vector<float> input({
+        -0.5869, -1.4272, -0.1546,  0.0096,  0.1706,  0.0388, -0.3484, -0.7829,
+         1.1138, -0.5644, -0.6264, -1.1890,  1.6741, -0.7130,  0.9592,  1.7477,
+        -0.4775,  1.3407, -0.3882, -0.4560,  1.0385, -0.1669,  0.5540, -1.0790,
+        -0.6153, -0.6274, -1.2304, -0.6757,  1.0178, -0.2379, -0.7912, -0.0165,
+        -0.5423,  0.1459,  1.3585, -0.5005, -0.2187, -1.8181, -0.6642,  0.0287,
+        -1.9103,  0.7984, -0.7860,  1.5134,  1.3873, -0.6462, -0.6354, -0.1335});
+   TMVA_SOFIE_Softmax4d::Session s("Softmax4d_FromONNX.dat");
+   std::vector<float> output(s.infer(input.data()));
+
+   EXPECT_EQ(output.size(), sizeof(Softmax4d_ExpectedOutput::output) / sizeof(float));
+
+   float *correct = Softmax4d_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 }
