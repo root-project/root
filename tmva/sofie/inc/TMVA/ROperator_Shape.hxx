@@ -52,7 +52,7 @@ public:
       size_t length = ConvertShapeToLength(fShape);
       if (fStart < 0) fStart += length;
       if (fEnd < 0) fEnd += length;
-      fOutput_shape = { size_t(fEnd - fStart) };
+      fOutput_shape = { size_t(fEnd - fStart) + 1};
       model.AddIntermediateTensor(fNY, ETensorType::INT64, fOutput_shape);
    }
 
