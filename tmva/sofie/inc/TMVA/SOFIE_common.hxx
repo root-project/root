@@ -11,6 +11,7 @@
 #include <vector>
 #include <memory>
 #include <regex>
+#include <sstream>
 
 namespace TMVA{
 namespace Experimental{
@@ -111,7 +112,6 @@ std::string Clean_name(std::string input_tensor_name);
 template<typename T>
 T* BroadcastConvBias(const T* data, const size_t channel, const std::vector<size_t>& targetShape) {
    size_t size = targetShape.size();
-   size_t index = 1;
    if (targetShape[1] != channel) {
       std::stringstream ss;
       ss << "TMVA::SOFIE - Error broadcasting Conv Bias of shape {";
