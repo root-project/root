@@ -86,6 +86,41 @@ class PyFilter(unittest.TestCase):
             return x > y
         fil1 = rdf.Filter(x_greater_than_y, "x is greater than 2")
         self.assertTrue(np.array_equal(fil1.AsNumpy()["x"], np.array([3, 4])))
+
+    def test_cpp_functor(self):
+        """
+        Test that a C++ functor can be passed as a callable argument of a
+        Filter operation.
+        """
+
+        ROOT.gInterpreter.Declare("""
+        struct MyFunctor
+        {
+            bool operator()(ULong64_t l) { return l == 0; };
+        };
+        """)
+        f = ROOT.MyFunctor()
+
+        rdf = ROOT.RDataFrame(5)
+        c = rdf.Filter(f, ["rdfentry_"]).Count().GetValue()
+
+        self.assertEqual(c, 1)
+
+    def test_std_function(self):
+        """
+        Test that an std::function can be passed as a callable argument of a
+        Filter operation.
+        """
+
+        ROOT.gInterpreter.Declare("""
+        std::function<bool(ULong64_t)> myfun = [](ULong64_t l) { return l == 0; };
+        """)
+
+        rdf = ROOT.RDataFrame(5)
+        c = rdf.Filter(ROOT.myfun, ["rdfentry_"]).Count().GetValue()
+
+        self.assertEqual(c, 1)
+
     
 if __name__ == '__main__':
     unittest.main()
