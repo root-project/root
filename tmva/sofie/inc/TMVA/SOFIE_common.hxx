@@ -108,6 +108,46 @@ T* Unidirectional_broadcast(const T* original_data, const std::vector<size_t> or
 std::vector<size_t> Multidirectional_broadcast(std::vector<size_t> input1_shape, std::vector<size_t> input2_shape);
 std::string Clean_name(std::string input_tensor_name);
 
+template<typename T>
+T* BroadcastConvBias(const T* data, const size_t channel, const std::vector<size_t>& targetShape) {
+   size_t size = targetShape.size();
+   size_t index = 1;
+   if (targetShape[1] != channel) {
+      std::stringstream ss;
+      ss << "TMVA::SOFIE - Error broadcasting Conv Bias of shape {";
+      ss << std::to_string(channel);
+      ss << "} to ";
+      ss << ConvertShapeToString(targetShape);
+      throw
+         std::runtime_error(ss.str());
+   }
+
+   size_t targetLength = ConvertShapeToLength(targetShape);
+   T* newData = new T[targetLength];
+
+   if (targetLength == channel) {
+      std::copy(data, data + channel, newData);
+      return newData;
+   }
+
+   // OutDepth * outHeight * outWidth
+   size_t cStride = 1;
+   for (size_t i = 2; i < size; i++)
+      cStride *= targetShape[i];
+   for (size_t i = 0; i < channel; i++) {
+      for (size_t j = 0; j < cStride; j++) {
+         newData[i * cStride + j] = data[i];
+      }
+   }
+   // broadcast newData[0...channel * cStride) to newData[0...batch * channel * cStride)
+   size_t batch = targetShape[0];
+   size_t bStride = channel * cStride;
+   for (size_t i = 1; i < batch; i++) {
+      std::copy(newData, newData + bStride, newData + i * bStride);
+   }
+   return newData;
+}
+
 /// compute stride of a tensor given its shape (assume layout is row-major)
 std::vector<size_t> ComputeStrideFromShape(const std::vector<size_t> & shape);
 
