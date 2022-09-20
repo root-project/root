@@ -470,7 +470,7 @@ std::unique_ptr<ROperator> MakeKerasSoftmax(PyObject* fLayer){
       std::unique_ptr<ROperator> op;
       switch(ConvertStringToType(fLayerDType)){
          case ETensorType::FLOAT:
-         op.reset(new ROperator_Softmax<float>(fLayerInputName, fLayerOutputName));
+         op.reset(new ROperator_Softmax<float>(/*default axis is -1*/-1,fLayerInputName, fLayerOutputName));
          break;
          default:
          throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Sigmoid does not yet support input type " + fLayerDType);
