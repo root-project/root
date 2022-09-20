@@ -66,7 +66,7 @@
 using namespace ROOT::Math;
 
 
-
+bool gTestResultSuccess = true;
 
 class VectorTest {
 
@@ -107,6 +107,7 @@ public:
     std::cout.precision(16);
     std::cout << s1 << "\t" << s2 <<"\t" << s3 << "\n";
     std::cout << "Test " << name << " failed !!\n\n";
+    gTestResultSuccess = false;
     return -1;
   }
 
@@ -650,5 +651,9 @@ int main(int argc,const char *argv[]) {
 
   //tr.dump();
 
+  if (!gTestResultSuccess)
+    return 1;
+
+  return 0;
 }
 
