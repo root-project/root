@@ -11,6 +11,8 @@ import re
 import typing
 from .._numbadeclare import _NumbaDeclareDecorator
 
+import libcppyy
+
 class FunctionJitter:
     """
     This class allows to jit a python callable with Numba, being able to infer the signature of the function from the types of the RDF columns.
@@ -250,15 +252,19 @@ def _convert_to_vector(args):
 
     return v, *args[1:]
 
-def _handle_cpp_callables(func, original_rdf_method, args):
+def _handle_cpp_callables(func, original_template, *args):
     """
     Checks whether the callable `func` is a cppyy proxy of one of these:
-    1. C++ function
-    2. C++ functor
-    3. std::function
+    1. C++ functor
+    2. std::function
 
     The cases above are supported by cppyy, so we can just invoke the original
-    cppyy method (Filter or Define) with the callable as argument.
+    cppyy TemplateProxy (Filter or Define) with the callable as argument.
+
+    Prior to the invocation of the original cppyy TemplateProxy, though, we
+    need to explicitly instantiate the template using the type of the `func`
+    callable. Implicit instantiation won't work since the original
+    implementation of Filter and Define is replaced by a pythonization.
 
     Arguments:
         func: callable to be checked
@@ -269,14 +275,11 @@ def _handle_cpp_callables(func, original_rdf_method, args):
     three cases above, None otherwise
     """
 
-    import libcppyy
-
-    is_cpp_function = lambda : type(func) == libcppyy.CPPOverload
-    is_cpp_functor  = lambda : type(getattr(func, '__call__', None)) == libcppyy.CPPOverload
+    is_cpp_functor  = lambda : isinstance(getattr(func, '__call__', None), libcppyy.CPPOverload)
     is_std_function = lambda : isinstance(getattr(func, 'target_type', None), libcppyy.CPPOverload)
 
-    if is_cpp_function() or is_cpp_functor() or is_std_function():
-        return original_rdf_method(func, *args)
+    if is_cpp_functor() or is_std_function():
+        return original_template[type(func)](*args)
 
 def _PyFilter(rdf, callable_or_str, *args, extra_args={}):
     """
@@ -326,7 +329,7 @@ def _PyFilter(rdf, callable_or_str, *args, extra_args={}):
             f"Filter takes at most 3 positional arguments but {len(args) + 1} were given")
 
     func = callable_or_str
-    rdf_node = _handle_cpp_callables(func, rdf._OriginalFilter, func, _convert_to_vector(args))
+    rdf_node = _handle_cpp_callables(func, rdf._OriginalFilter, func, *_convert_to_vector(args))
     if rdf_node is not None:
         return rdf_node
 
@@ -397,7 +400,7 @@ def _PyDefine(rdf, col_name, callable_or_str, cols = [] , extra_args = {} ):
         raise TypeError(f"Define takes a column list as third arguments but {type(cols).__name__} was given.")
     
     func = callable_or_str
-    rdf_node = _handle_cpp_callables(func, rdf._OriginalDefine, [cols])
+    rdf_node = _handle_cpp_callables(func, rdf._OriginalDefine, col_name, func, cols)
     if rdf_node is not None:
         return rdf_node
 
