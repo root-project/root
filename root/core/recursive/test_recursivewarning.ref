@@ -1,2 +1,2 @@
 Warning in <TInterpreter::ReadRootmapFile>: class  MyFakeClass found in anotherfakelib.so is already in fakelib.so 
-Info in <RecursiveMessage>: We are at the start of main, gROOT is not yet initialized
+Info in <RecursiveMessage>: We are before the start of main, gROOT is not yet initialized
