@@ -637,6 +637,19 @@ int main(int argc,const char *argv[]) {
       a.check("BoostX2",s1,s2,s3,10);
 
 
+      // test TLorentzVector => ROOT::Math::PxPyPzEVector conversion.
+      TLorentzVector lv(0.1, 0.2, 0.3, 0.4);
+      ROOT::Math::PxPyPzEVector xyze(lv);
+      auto checkConversion = [](double l, double g, const char* what) {
+        if (l != g) {
+          std::cerr << "ERROR: PxPyPzEVector::" << what << "()\n";
+          gTestResultSuccess = false;
+        }
+      };
+      checkConversion(lv.X(), xyze.X(), "X");
+      checkConversion(lv.Y(), xyze.Y(), "Y");
+      checkConversion(lv.Z(), xyze.Z(), "Z");
+      checkConversion(lv.E(), xyze.E(), "E");
 
       // clean all at the end
       a.clear(v1);
