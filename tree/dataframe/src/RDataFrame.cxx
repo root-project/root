@@ -584,6 +584,31 @@ Actions can be **instant** or **lazy**. Instant actions are executed as soon as 
 executed whenever the object they return is accessed for the first time. As a rule of thumb, actions with a return value
 are lazy, the others are instant.
 
+### Return type of a lazy action
+
+When a lazy action is called, it returns a \link ROOT::RDF::RResultPtr ROOT::RDF::RResultPtr<T>\endlink, where T is the
+type of the result of the action. The final result will be stored in the `RResultPtr` and can be retrieved by
+dereferencing it or via its `GetValue` method.
+
+### Actions that return collections
+
+If the type of the return value of an action is a collection, e.g. `std::vector<int>`, you can iterate its elements
+directly through the wrapping `RResultPtr`:
+
+~~~{.cpp}
+ROOT::RDataFrame df{5};
+auto df1 = df.Define("x", []{ return 42; });
+for (const auto &el: df1.Take<int>("x")){
+   std::cout << "Element: " << el << "\n";
+}
+~~~
+
+~~~{.py}
+df = ROOT.RDataFrame(5).Define("x", "42")
+for el in df.Take[int]("x"):
+    print(f"Element: {el}")
+~~~
+
 \anchor distrdf
 ## Distributed execution
 
@@ -1006,9 +1031,6 @@ auto maybeRangedDF = MaybeAddRange(df, true);
 
 The conversion to ROOT::RDF::RNode is cheap, but it will introduce an extra virtual call during the RDataFrame event
 loop (in most cases, the resulting performance impact should be negligible). Python users can perform the conversion with the helper function `ROOT.RDF.AsRNode`.
-
-As a final note, remember that RDataFrame actions do not return another dataframe, but a \link ROOT::RDF::RResultPtr ROOT::RDF::RResultPtr<T>\endlink, where T is the
-type of the result of the action.
 
 \anchor RDFCollections
 ### Storing RDataFrame objects in collections
