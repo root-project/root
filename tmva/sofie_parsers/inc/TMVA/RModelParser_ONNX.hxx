@@ -37,6 +37,8 @@ std::unique_ptr<ROperator> make_ROperator_LSTM(const onnx::NodeProto& nodeproto,
 std::unique_ptr<ROperator> make_ROperator_BatchNormalization(const onnx::NodeProto& nodeproto, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type);
 std::unique_ptr<ROperator> make_ROperator_Pool(const onnx::NodeProto& nodeproto, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type);
 std::unique_ptr<ROperator> make_ROperator_GemmFromMatMulandAdd(const onnx::NodeProto& nodeproto1,const onnx::NodeProto& nodeproto2, const onnx::GraphProto& graphproto , std::unordered_map<std::string, ETensorType>& tensor_type);
+std::unique_ptr<ROperator> make_ROperator_FuseConvTransposeAdd(const onnx::NodeProto& convnode, const onnx::NodeProto& addnode, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type);
+std::unique_ptr<ROperator> make_ROperator_FuseConvAdd(const onnx::NodeProto& convnode, const onnx::NodeProto& addnode, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type);
 std::unique_ptr<ROperator> make_ROperator_Reshape(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
 std::unique_ptr<ROperator> make_ROperator_Slice(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
 std::unique_ptr<ROperator> make_ROperator_GRU(const onnx::NodeProto& nodeproto, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type);
@@ -96,7 +98,9 @@ const factoryMethodMap mapOptypeOperator = {
 
 using factoryMethodMap1 = std::unordered_map<std::string, std::unique_ptr<ROperator> (*)(const onnx::NodeProto&,const onnx::NodeProto&, const onnx::GraphProto&, std::unordered_map<std::string, ETensorType>&)>;
 const factoryMethodMap1 mapOptypeOperator1 = {
-    {"MatMul", &make_ROperator_GemmFromMatMulandAdd}
+    {"MatMul", &make_ROperator_GemmFromMatMulandAdd},
+    {"Conv", &make_ROperator_FuseConvAdd},
+    {"ConvTranspose", &make_ROperator_FuseConvTransposeAdd}
 };
 std::unique_ptr<ROperator> make_ROperator(size_t idx, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type);
 }//INTERNAL
