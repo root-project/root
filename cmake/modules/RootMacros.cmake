@@ -179,7 +179,10 @@ function(REFLEX_GENERATE_DICTIONARY dictionary)
 
   IF(TARGET ${dictionary})
     LIST(APPEND include_dirs $<TARGET_PROPERTY:${dictionary},INCLUDE_DIRECTORIES>)
-    LIST(APPEND definitions $<TARGET_PROPERTY:${dictionary},COMPILE_DEFINITIONS>)
+    # The COMPILE_DEFINITIONS list might contain empty elements. These are
+    # removed with the FILTER generator expression, excluding elements that
+    # match the ^$ regexp (only matches empty strings).
+    LIST(APPEND definitions "$<FILTER:$<TARGET_PROPERTY:${ARG_MODULE},COMPILE_DEFINITIONS>,EXCLUDE,^$>")
   ENDIF()
 
   add_custom_command(
