@@ -80,8 +80,8 @@ public:
          size_t cStride = depth * dStride;
          size_t bStride = channel * cStride;
 
-         size_t N; // Size of the axis
-         size_t iStride;
+         size_t N = 0; // Size of the axis
+         size_t iStride = 0;
          if (axis == 0) {
             N = batch;
             iStride = bStride;
@@ -94,9 +94,14 @@ public:
          } else if (size > 3 && axis == size - 2) {
             N = height;
             iStride = hStride;
-         } else if (size > 4 && axis == size - 3) {
+         } else if (size == 5 && axis == size - 3) {
             N = depth;
             iStride = dStride;
+         } else {
+            throw
+               std::runtime_error("TMVA::SOFIE - Softmax operator along the axis "
+                  + std::to_string(fAttrAxis) + " with " + std::to_string(size)
+                  + "d input tensor not supported.");
          }
 
          bool notBatch = axis != 0;
