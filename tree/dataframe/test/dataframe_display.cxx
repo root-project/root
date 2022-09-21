@@ -635,3 +635,54 @@ TEST(RDFDisplayTests, PrintWideTables3)
    "+-----+--------------------------------------------------------------------------------------------------------+-----+\n");
 }
 
+TEST(RDFDisplayTests, DisplayZeroEntries)
+{
+   ROOT::RDataFrame d{1};
+   auto dd = d.Define("b1", [] { return 42; }).Display<int>({"b1"}, 0);
+
+   // Testing the std output printing
+   std::cout << std::flush;
+   // Redirect cout.
+   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
+   std::ostringstream strCout;
+   std::cout.rdbuf(strCout.rdbuf());
+   dd->Print();
+   // Restore old cout.
+   std::cout.rdbuf(oldCoutStreamBuf);
+
+   EXPECT_EQ(strCout.str(), "+-----+----+\n"
+                            "| Row | b1 | \n"
+                            "+-----+----+\n");
+}
+
+TEST(RDFDisplayTests, DisplayLimitWithOtherOps)
+{
+   ROOT::RDataFrame d{10};
+   auto d1 = d.Define("b1", [] { return 42; }).Define("b2", [] { return 11; });
+   auto dd = d1.Display<int>({"b1"}, 3);
+   auto s1 = d1.Sum<int>("b1");
+   auto c1 = d1.Filter([](ULong64_t entry) { return entry < 5; }, {"rdfentry_"}).Count();
+
+   // Testing the std output printing
+   std::cout << std::flush;
+   // Redirect cout.
+   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
+   std::ostringstream strCout;
+   std::cout.rdbuf(strCout.rdbuf());
+   dd->Print();
+   // Restore old cout.
+   std::cout.rdbuf(oldCoutStreamBuf);
+
+   EXPECT_EQ(s1.GetValue(), 420);
+   EXPECT_EQ(c1.GetValue(), 5);
+
+   EXPECT_EQ(strCout.str(), "+-----+----+\n"
+                            "| Row | b1 | \n"
+                            "+-----+----+\n"
+                            "| 0   | 42 | \n"
+                            "+-----+----+\n"
+                            "| 1   | 42 | \n"
+                            "+-----+----+\n"
+                            "| 2   | 42 | \n"
+                            "+-----+----+\n");
+}

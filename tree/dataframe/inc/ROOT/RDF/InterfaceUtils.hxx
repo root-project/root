@@ -230,15 +230,19 @@ BuildAction(const ColumnNames_t &bl, const std::shared_ptr<double> &stdDeviation
    return std::make_unique<Action_t>(Helper_t(stdDeviationV, nSlots), bl, prevNode, colRegister);
 }
 
+using displayHelperArgs_t = std::pair<int, std::shared_ptr<ROOT::RDF::RDisplay>>;
+
 // Display action
 template <typename... ColTypes, typename PrevNodeType>
-std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<RDisplay> &d,
-                                         const unsigned int, std::shared_ptr<PrevNodeType> prevNode,
-                                         ActionTags::Display, const RDFInternal::RColumnRegister &colRegister)
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &bl, const std::shared_ptr<displayHelperArgs_t> &helperArgs, const unsigned int,
+            std::shared_ptr<PrevNodeType> prevNode, ActionTags::Display,
+            const RDFInternal::RColumnRegister &colRegister)
 {
    using Helper_t = DisplayHelper<PrevNodeType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
-   return std::make_unique<Action_t>(Helper_t(d, prevNode), bl, prevNode, colRegister);
+   return std::make_unique<Action_t>(Helper_t(helperArgs->first, helperArgs->second, prevNode), bl, prevNode,
+                                     colRegister);
 }
 
 struct SnapshotHelperArgs {

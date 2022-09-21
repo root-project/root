@@ -175,9 +175,9 @@ void RDisplay::MovePosition()
    }
 }
 
-RDisplay::RDisplay(const VecStr_t &columnNames, const VecStr_t &types, int entries, size_t nMaxCollectionElements)
+RDisplay::RDisplay(const VecStr_t &columnNames, const VecStr_t &types, size_t nMaxCollectionElements)
    : fTypes(types), fWidths(columnNames.size(), 0), fRepresentations(columnNames.size()),
-     fCollectionsRepresentations(columnNames.size()), fNColumns(columnNames.size()), fEntries(entries),
+     fCollectionsRepresentations(columnNames.size()), fNColumns(columnNames.size()),
      fNMaxCollectionElements(nMaxCollectionElements)
 {
    // Add the first row with the names of the columns
