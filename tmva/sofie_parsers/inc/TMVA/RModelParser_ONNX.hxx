@@ -47,7 +47,6 @@ template<EBasicUnaryOperator Op>
 std::unique_ptr<ROperator> make_ROperator_BasicUnary(const onnx::NodeProto& nodeproto, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type);
 template <EBasicBinaryOperator Op1>
 std::unique_ptr<ROperator> make_ROperator_BasicBinary(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
-std::unique_ptr<ROperator> make_ROperator_Neg(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
 std::unique_ptr<ROperator> make_ROperator_Identity(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
 std::unique_ptr<ROperator> make_ROperator_Softmax(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
 std::unique_ptr<ROperator> make_ROperator_Max(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
@@ -77,12 +76,12 @@ const factoryMethodMap mapOptypeOperator = {
    {"MaxPool", &make_ROperator_Pool},
    {"Sqrt", &make_ROperator_BasicUnary<EBasicUnaryOperator::kSqrt>},
    {"Reciprocal", &make_ROperator_BasicUnary<EBasicUnaryOperator::kReciprocal>},
+   {"Neg", &make_ROperator_BasicUnary<EBasicUnaryOperator::kNeg>},
    {"Add", &make_ROperator_BasicBinary<Add>},
    {"Sub", &make_ROperator_BasicBinary<Sub>},
    {"Mul", &make_ROperator_BasicBinary<Mul>},
    {"Div", &make_ROperator_BasicBinary<Div>},
    {"Pow", &make_ROperator_BasicBinary<Pow>},
-   {"Neg", &make_ROperator_Neg},
    {"ReduceMean", &make_ROperator_Reduce<ReduceMean>},
    {"ReduceSumsquare", &make_ROperator_Reduce<ReduceSumsquare>},
    {"ReduceProd", &make_ROperator_Reduce<ReduceProd>},
