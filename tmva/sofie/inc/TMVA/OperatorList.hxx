@@ -12,7 +12,6 @@
 #include "TMVA/ROperator_Pool.hxx"
 #include "TMVA/ROperator_BasicUnary.hxx"
 #include "TMVA/ROperator_BasicBinary.hxx"
-#include "TMVA/ROperator_Neg.hxx"
 #include "TMVA/ROperator_Reshape.hxx"
 #include "TMVA/ROperator_Slice.hxx"
 #include "TMVA/ROperator_GRU.hxx"
