@@ -132,7 +132,10 @@ private:
 
 std::pair<double, double> getRangeOrBinningInterval(RooAbsArg const* arg, const char* rangeName);
 
-bool checkIfRangesOverlap(RooAbsPdf const& pdf, RooAbsData const& data, std::vector<std::string> const& rangeNames);
+bool checkIfRangesOverlap(RooAbsPdf const& pdf,
+                          RooAbsData const& data,
+                          std::vector<std::string> const& rangeNames,
+                          bool splitRange);
 
 std::string getColonSeparatedNameString(RooArgSet const& argSet);
 RooArgSet selectFromArgSet(RooArgSet const&, std::string const& names);

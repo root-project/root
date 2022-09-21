@@ -1146,7 +1146,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     // Composite case: multiple ranges
     RooArgList nllList ;
     auto tokens = ROOT::Split(rangeName, ",");
-    if (RooHelpers::checkIfRangesOverlap(*this, data, tokens)) {
+    if (RooHelpers::checkIfRangesOverlap(*this, data, tokens, cfg.splitCutRange)) {
       throw std::runtime_error(
               std::string("Error in RooAbsPdf::createNLL! The ranges ") + rangeName + " are overlapping!");
     }
