@@ -780,6 +780,16 @@ void THnBase::AddInternal(const THnBase* h, Double_t c, Bool_t rebinned)
    delete [] coord;
    delete [] x;
 
+   // add also the statistics
+   fTsumw += c * h->fTsumw;
+   if (haveErrors) {
+      fTsumw2 += c * c * h->fTsumw2;
+      for (Int_t d = 0; d < fNdimensions; ++d) {
+         fTsumwx[d] += c * h->fTsumwx[d];
+         fTsumwx2[d] += c * h->fTsumwx2[d];
+      }
+   }
+
    Double_t nEntries = GetEntries() + c * h->GetEntries();
    SetEntries(nEntries);
 }
