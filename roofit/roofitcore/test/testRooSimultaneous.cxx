@@ -87,7 +87,7 @@ TEST(RooSimultaneous, MultiRangeNLL)
    datasetMap["cat2"] = pdfCat2.generate(RooArgSet(x), 11000);
    RooDataSet combData("combData", "", RooArgSet(x), Index(indexCat), Import(datasetMap));
 
-   std::unique_ptr<RooAbsReal> nll{simPdf.createNLL(combData, Range("range1,range2"), SplitRange())};
+   std::unique_ptr<RooAbsReal> nll{simPdf.createNLL(combData, Range("range1,range2"))};
 }
 
 /// GitHub issue #10473.
