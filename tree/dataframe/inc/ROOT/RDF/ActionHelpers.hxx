@@ -1199,10 +1199,11 @@ private:
    using Display_t = ROOT::RDF::RDisplay;
    const std::shared_ptr<Display_t> fDisplayerHelper;
    const std::shared_ptr<PrevNodeType> fPrevNode;
+   int fEntriesToProcess;
 
 public:
-   DisplayHelper(const std::shared_ptr<Display_t> &d, const std::shared_ptr<PrevNodeType> &prevNode)
-      : fDisplayerHelper(d), fPrevNode(prevNode)
+   DisplayHelper(int nRows, const std::shared_ptr<Display_t> &d, const std::shared_ptr<PrevNodeType> &prevNode)
+      : fDisplayerHelper(d), fPrevNode(prevNode), fEntriesToProcess(nRows)
    {
    }
    DisplayHelper(DisplayHelper &&) = default;
@@ -1212,8 +1213,17 @@ public:
    template <typename... Columns>
    void Exec(unsigned int, Columns &... columns)
    {
+      if (fEntriesToProcess == 0)
+         return;
+
       fDisplayerHelper->AddRow(columns...);
-      if (!fDisplayerHelper->HasNext()) {
+      --fEntriesToProcess;
+
+      if (fEntriesToProcess == 0) {
+         // No more entries to process. Send a one-time signal that this node
+         // of the graph is done. It is important that the 'StopProcessing'
+         // method is only called once from this helper, otherwise it would seem
+         // like more than one operation has completed its work.
          fPrevNode->StopProcessing();
       }
    }
