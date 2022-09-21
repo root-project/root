@@ -9,7 +9,7 @@ namespace TMVA {
 namespace Experimental {
 namespace SOFIE {
 
-enum class EBasicUnaryOperator { kReciprocal, kSqrt };
+enum class EBasicUnaryOperator { kReciprocal, kSqrt , kNeg};
 
 template <typename T, EBasicUnaryOperator Op>
 struct UnaryOpTraits {
@@ -27,6 +27,12 @@ struct UnaryOpTraits<T, EBasicUnaryOperator::kSqrt> {
    static std::string Op(const std::string &X) { return "std::sqrt(" + X + ")"; }
 };
 
+template <typename T>
+struct UnaryOpTraits<T, EBasicUnaryOperator::kNeg> {
+   static std::string Name() { return "Neg"; }
+   static std::string Op(const std::string &X) { return "-" + X; }
+};
+
 template <typename T, EBasicUnaryOperator Op>
 class ROperator_BasicUnary final : public ROperator {
 private:
@@ -41,8 +47,7 @@ public:
 
    ROperator_BasicUnary(std::string nameX, std::string nameY)
       : fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY))
-   {
-   }
+   {}
 
    std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override { return input; }
 

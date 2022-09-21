@@ -27,9 +27,6 @@
 #include "Div_FromONNX.hxx"
 #include "input_models/references/Div.ref.hxx"
 
-#include "Neg_FromONNX.hxx"
-#include "input_models/references/Neg.ref.hxx"
-
 #include "Cast_FromONNX.hxx"
 #include "input_models/references/Cast.ref.hxx"
 
@@ -173,6 +170,9 @@
 
 #include "Reciprocal_FromONNX.hxx"
 #include "input_models/references/Reciprocal.ref.hxx"
+
+#include "Neg_FromONNX.hxx"
+#include "input_models/references/Neg.ref.hxx"
 
 #include "gtest/gtest.h"
 
