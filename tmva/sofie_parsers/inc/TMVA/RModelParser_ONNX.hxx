@@ -77,6 +77,7 @@ const factoryMethodMap mapOptypeOperator = {
    {"Sqrt", &make_ROperator_BasicUnary<EBasicUnaryOperator::kSqrt>},
    {"Reciprocal", &make_ROperator_BasicUnary<EBasicUnaryOperator::kReciprocal>},
    {"Neg", &make_ROperator_BasicUnary<EBasicUnaryOperator::kNeg>},
+   {"Exp", &make_ROperator_BasicUnary<EBasicUnaryOperator::kExp>},
    {"Add", &make_ROperator_BasicBinary<Add>},
    {"Sub", &make_ROperator_BasicBinary<Sub>},
    {"Mul", &make_ROperator_BasicBinary<Mul>},

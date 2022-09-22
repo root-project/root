@@ -1780,7 +1780,8 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose){
          rmodel.AddBlasRoutines({"Gemm", "Axpy"});
       } else if (op_type == "RNN") {
          rmodel.AddBlasRoutines({"Gemm", "Axpy"});
-      } else if (op_type == "Selu" || op_type == "Sigmoid" || op_type == "Pow" || op_type == "Tanh" || op_type == "Max" || op_type == "Sqrt") {
+      } else if (op_type == "Selu" || op_type == "Sigmoid" || op_type == "Pow" || op_type == "Tanh"
+                  || op_type == "Max" || op_type == "Sqrt" || op_type == "Exp") {
          rmodel.AddNeededStdLib("cmath");
       } else if (op_type == "LSTM") {
          rmodel.AddBlasRoutines({"Gemm", "Axpy"});
