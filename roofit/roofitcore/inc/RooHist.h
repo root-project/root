@@ -84,6 +84,11 @@ protected:
   void initialize();
   Int_t roundBin(Double_t y);
 
+  friend class RooPlot;
+
+  void fillResidHist(RooHist & residHist, const RooCurve& curve,bool normalize=false, bool useAverage=false) const;
+  std::unique_ptr<RooHist> createEmptyResidHist(const RooCurve& curve, bool normalize=false) const;
+
 private:
   Double_t _nominalBinWidth ; // Average bin width
   Double_t _nSigma ;          // Number of 'sigmas' error bars represent
