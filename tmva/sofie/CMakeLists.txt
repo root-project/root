@@ -50,6 +50,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
 
    TMVA/FunctionList.hxx
    TMVA/RModel_GNN.hxx
+   TMVA/RModel_GraphIndependent.hxx
    TMVA/RFunction.hxx
    TMVA/RFunction_MLP.hxx
    TMVA/RFunction_Sum.hxx
@@ -58,6 +59,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
     src/RModel_Base.cxx
     src/RModel.cxx
     src/RModel_GNN.cxx
+    src/RModel_GraphIndependent.cxx
     src/SOFIE_common.cxx
   DEPENDENCIES
     TMVA
