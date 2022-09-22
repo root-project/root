@@ -61,13 +61,81 @@ std::unique_ptr<RooAbsArg> createSimultaneousNLL(RooSimultaneous const &simPdf, 
    return nll;
 }
 
+class RooAbsRealWrapper final : public RooAbsReal {
+public:
+   RooAbsRealWrapper(std::unique_ptr<RooFitDriver> driver, std::string const &rangeName,
+                     RooAbsCategory const *indexCatForSplitting, bool takeGlobalObservablesFromData)
+      : RooAbsReal{"RooFitDriverWrapper", "RooFitDriverWrapper"}, _driver{std::move(driver)},
+        _topNode("topNode", "top node", this, _driver->topNode()), _rangeName{rangeName},
+        _indexCatForSplitting{indexCatForSplitting}, _takeGlobalObservablesFromData{takeGlobalObservablesFromData}
+   {
+   }
+
+   RooAbsRealWrapper(const RooAbsRealWrapper &other, const char *name = nullptr)
+      : RooAbsReal{other, name}, _driver{other._driver},
+        _topNode("topNode", this, other._topNode), _data{other._data}, _parameters{other._parameters},
+        _rangeName{other._rangeName}, _indexCatForSplitting{other._indexCatForSplitting},
+        _takeGlobalObservablesFromData{other._takeGlobalObservablesFromData}
+   {
+   }
+
+   TObject *clone(const char *newname) const override { return new RooAbsRealWrapper(*this, newname); }
+
+   double defaultErrorLevel() const override { return _driver->topNode().defaultErrorLevel(); }
+
+   bool getParameters(const RooArgSet *observables, RooArgSet &outputSet, bool /*stripDisconnected*/) const override
+   {
+      outputSet.add(_parameters);
+      if (observables) {
+         outputSet.remove(*observables);
+      }
+      // If we take the global observables as data, we have to return these as
+      // parameters instead of the parameters in the model. Otherwise, the
+      // constant parameters in the fit result that are global observables will
+      // not have the right values.
+      if (_takeGlobalObservablesFromData && _data->getGlobalObservables()) {
+         outputSet.replace(*_data->getGlobalObservables());
+      }
+      return false;
+   }
+
+   bool setData(RooAbsData &data, bool /*cloneData*/) override
+   {
+      _data = &data;
+      _driver->topNode().getParameters(_data->get(), _parameters, true);
+      _driver->setData(*_data, _rangeName, _indexCatForSplitting, /*skipZeroWeights=*/true,
+                       _takeGlobalObservablesFromData);
+      return true;
+   }
+
+   double getValV(const RooArgSet *) const override { return evaluate(); }
+
+   void applyWeightSquared(bool flag) override
+   {
+      const_cast<RooAbsReal &>(_driver->topNode()).applyWeightSquared(flag);
+   }
+
+protected:
+   double evaluate() const override { return _driver ? _driver->getVal() : 0.0; }
+
+private:
+   std::shared_ptr<RooFitDriver> _driver;
+   RooRealProxy _topNode;
+   RooAbsData *_data = nullptr;
+   RooArgSet _parameters;
+   std::string _rangeName;
+   RooAbsCategory const *_indexCatForSplitting = nullptr;
+   const bool _takeGlobalObservablesFromData;
+};
+
 } // namespace
 
 std::unique_ptr<RooAbsReal>
 RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data, std::unique_ptr<RooAbsReal> &&constraints,
                                     std::string const &rangeName, std::string const &addCoefRangeName,
                                     RooArgSet const &projDeps, bool isExtended, double integrateOverBinsPrecision,
-                                    RooFit::BatchModeOption batchMode, bool doOffset)
+                                    RooFit::BatchModeOption batchMode, bool doOffset,
+                                    bool takeGlobalObservablesFromData)
 {
    // Clone PDF and reattach to original parameters
    std::unique_ptr<RooAbsPdf> pdfClone{static_cast<RooAbsPdf *>(pdf.cloneTree())};
@@ -115,8 +183,8 @@ RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data, std::uniqu
       // Warning! This mutates "obsClones"
       nllTerms.addOwned(createSimultaneousNLL(*simPdf, obsClones, isExtended, rangeName, doOffset));
    } else {
-      nllTerms.addOwned(std::make_unique<RooNLLVarNew>("RooNLLVarNew", "RooNLLVarNew", finalPdf, obsClones,
-                                                       isExtended, rangeName, doOffset));
+      nllTerms.addOwned(std::make_unique<RooNLLVarNew>("RooNLLVarNew", "RooNLLVarNew", finalPdf, obsClones, isExtended,
+                                                       rangeName, doOffset));
    }
    if (constraints) {
       nllTerms.addOwned(std::move(constraints));
@@ -128,7 +196,6 @@ RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data, std::uniqu
    nll->addOwnedComponents(std::move(nllTerms));
 
    auto driver = std::make_unique<RooFitDriver>(*nll, obsClones, batchMode);
-   driver->setData(data, rangeName, indexCatForSplitting, /*skipZeroWeights=*/true);
 
    // Set the fitrange attribute so that RooPlot can automatically plot the fitting range by default
    if (!rangeName.empty()) {
@@ -151,7 +218,9 @@ RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data, std::uniqu
       pdf.setStringAttribute("fitrange", fitrangeValue.substr(0, fitrangeValue.size() - 1).c_str());
    }
 
-   auto driverWrapper = makeDriverAbsRealWrapper(std::move(driver), *data.get());
+   auto driverWrapper = std::make_unique<RooAbsRealWrapper>(std::move(driver), rangeName, indexCatForSplitting,
+                                                            takeGlobalObservablesFromData);
+   driverWrapper->setData(data, false);
    driverWrapper->addOwnedComponents(std::move(nll));
    driverWrapper->addOwnedComponents(std::move(pdfClone));
 
@@ -194,61 +263,3 @@ void RooFit::BatchModeHelpers::logArchitectureInfo(RooFit::BatchModeOption batch
       log("using CUDA computation library");
    }
 }
-
-namespace {
-
-class RooAbsRealWrapper final : public RooAbsReal {
-public:
-   RooAbsRealWrapper(std::unique_ptr<RooFitDriver> driver, RooArgSet const &observables)
-      : RooAbsReal{"RooFitDriverWrapper", "RooFitDriverWrapper"}, _driver{std::move(driver)},
-        _topNode("topNode", "top node", this, _driver->topNode())
-   {
-      _driver->topNode().getParameters(&observables, _parameters, true);
-   }
-
-   RooAbsRealWrapper(const RooAbsRealWrapper &other, const char *name = 0)
-      : RooAbsReal{other, name}, _driver{other._driver},
-        _topNode("topNode", this, other._topNode), _parameters{other._parameters}
-   {
-   }
-
-   TObject *clone(const char *newname) const override { return new RooAbsRealWrapper(*this, newname); }
-
-   double defaultErrorLevel() const override { return _driver->topNode().defaultErrorLevel(); }
-
-   bool getParameters(const RooArgSet *observables, RooArgSet &outputSet, bool /*stripDisconnected*/) const override
-   {
-      outputSet.add(_parameters);
-      if (observables) {
-         outputSet.remove(*observables);
-      }
-      return false;
-   }
-
-   double getValV(const RooArgSet *) const override { return evaluate(); }
-
-   void applyWeightSquared(bool flag) override
-   {
-      const_cast<RooAbsReal &>(_driver->topNode()).applyWeightSquared(flag);
-   }
-
-protected:
-   double evaluate() const override { return _driver ? _driver->getVal() : 0.0; }
-
-private:
-   std::shared_ptr<RooFitDriver> _driver;
-   RooRealProxy _topNode;
-   RooArgSet _parameters;
-};
-
-} // namespace
-
-/// Static method to create a RooAbsRealWrapper that owns a given RooFitDriver
-/// passed by smart pointer.
-std::unique_ptr<RooAbsReal>
-RooFit::BatchModeHelpers::makeDriverAbsRealWrapper(std::unique_ptr<ROOT::Experimental::RooFitDriver> driver,
-                                                   RooArgSet const &observables)
-{
-   return std::make_unique<RooAbsRealWrapper>(std::move(driver), observables);
-}
-

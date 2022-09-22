@@ -171,7 +171,7 @@ TEST_F(TestGlobalObservables, NoConstraints)
    }
 }
 
-TEST_F(TestGlobalObservables, InternalConstrains)
+TEST_F(TestGlobalObservables, InternalConstraints)
 {
    using namespace RooFit;
 
@@ -384,7 +384,7 @@ TEST_F(TestGlobalObservables, GlobalObservablesSourceFromModel)
    auto res2 = doFit(modelc(), dataWithMeanSigmaGlobs());
    EXPECT_TRUE(res1->isIdentical(*res2));
 
-   auto res3 = doFit(modelc(), dataWithMeanSigmaGlobs(), GlobalObservablesSource("model"));
+   auto res3 = doFit(modelc(), dataWithMeanSigmaGlobs(), GlobalObservablesSource("model"), GlobalObservables(gm, gs));
 
    // If the global observable values are indeed taken from the model and not
    // from data, the comparison will fail now because we have changed the
