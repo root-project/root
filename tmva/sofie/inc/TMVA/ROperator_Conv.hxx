@@ -237,14 +237,10 @@ public:
                                            ConvertShapeToString(fShapeB));
             if (fType != "float")
                throw std::runtime_error("TMVA SOFIE Conv op: Broadcasting for non-float type tensors is not supported");
-            
             // here is the actual broadcasting
             if (!fUseSession) {
-
-               fShapeB.resize(fShapeY.size(), 1.);
-
                std::shared_ptr<void> new_data_ptr(
-                  UTILITY::Unidirectional_broadcast<float>(static_cast<float *>(original_data.get()), fShapeB, fShapeY),
+                  UTILITY::BroadcastConvBias<float>(static_cast<float *>(original_data.get()), fShapeB[0], fShapeY),
                   std::default_delete<float[]>());
                model.UpdateInitializedTensor(fNB, model.GetTensorType(fNB), fShapeY, new_data_ptr);
                fShapeB = model.GetTensorShape(fNB);
@@ -258,41 +254,24 @@ public:
             }
          }
       }
-      }
+   }
 
    std::string GenerateInitCode() {
-
-      size_t oDepth = (fDim > 2) ? fShapeY[2] : 1; // output depth
-      size_t oHeight = (fDim > 1) ? fShapeY[fDim] : 1;  // output height
-      size_t oWidth = fShapeY[fDim+1]; // output width
-
       std::stringstream out;
-      // generate initialization code for broadcasting of bias tensor  
+      // Generate initialization code for broadcasting of bias tensor
       if (fShapeB.size() != fShapeY.size() && !fNB2.empty() ) {
-         // include a separate scope to avoid defining unique operator temp variables 
-         out << "   {\n"; 
-         out << "      std::vector<size_t> oldShape = " << ConvertShapeToString(fShapeB) << ";\n";
-         out << "      std::vector<size_t> newShape = { " << fShapeY[1] << ", ";
-         if (fDim > 2) out << oDepth << ", ";
-         if (fDim > 1) out << oHeight << ", ";
-         out << oWidth << "};\n";
-         out << "      oldShape.resize(newShape.size(), 1.);\n";
-         std::string original_bias_tensor = "tensor_" + fNB;
-         std::string new_bias_tensor = "tensor_" + fNB2;
-         out << "      float * newData_ptr = TMVA::Experimental::SOFIE::UTILITY::Unidirectional_broadcast<float>("
-             << original_bias_tensor << ", oldShape, newShape);\n";
-         // extend the new broadcasted bias tensor for the batch dimension
-         int length =  fShapeY[1]*oDepth*oHeight*oWidth; // output N X C X H X W
-         out << "      for (int i = 0; i < " << fShapeY[0] << " ; i++)\n";
-         out << "         std::copy(newData_ptr, newData_ptr + " << length << ", "
-             <<  new_bias_tensor << " + i * " << length << ");\n";
-         out << "      delete [] newData_ptr;\n";
-         out << "   }\n";
+         // include a separate scope to avoid defining unique operator temp variables
+         out << SP << "{\n";
+         out << SP << SP << "float * data = TMVA::Experimental::SOFIE::UTILITY::BroadcastConvBias<float>(tensor_"
+             << fNB << ", " << fShapeB[0] << ", " << ConvertShapeToString(fShapeY) << ");\n";
+         out << SP << SP << "std::copy(data, data + " << ConvertShapeToLength(fShapeY) << ", tensor_" << fNB2 << ");\n";
+         out << SP << SP << "delete[] data;\n";
+         out << SP << "}\n";
       }
       return out.str();
    }
-   
-   // generate code for Session data members (e.g. internal vectors)
+
+   // Generate code for Session data members (e.g. internal vectors)
    virtual std::string GenerateSessionMembersCode(std::string opName) {
 
       size_t outputChannelSize = fShapeY[2];  // size/channel = D * H * W

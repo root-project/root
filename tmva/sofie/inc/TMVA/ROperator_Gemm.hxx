@@ -138,10 +138,9 @@ namespace SOFIE{
                if (!model.UseSession()) {
                   auto original_data = model.GetInitializedTensorData(fNC);
                   if (fType == "float") {
-
-                     std::shared_ptr<void> new_data_ptr(UTILITY::Unidirectional_broadcast<float>(
-                                                           static_cast<float *>(original_data.get()), fShapeC, fShapeY),
-                                                        std::default_delete<float[]>());
+                     std::shared_ptr<void> new_data_ptr(UTILITY::BidirectionalBroadcast<float>(
+                        static_cast<float *>(original_data.get()), {1, fShapeC[0]}, fShapeY),
+                        std::default_delete<float[]>());
 
                      model.UpdateInitializedTensor(fNC, model.GetTensorType(fNC), fShapeY, new_data_ptr);
                      fShapeC = fShapeY;
@@ -169,17 +168,13 @@ namespace SOFIE{
          // generate initialization code for broadcasting of bias tensor
          if (fShapeC.size() != fShapeY.size() && fNC != fNC2) {
             // include a separate scope to avoid defining unique operator temp variables
-            out << "   {\n";
-            out << "      std::vector<size_t> oldShape = " << ConvertShapeToString(fShapeC) << ";\n";
-            out << "      std::vector<size_t> newShape = " << ConvertShapeToString(fShapeY) << ";\n";
-            std::string original_bias_tensor = "tensor_" + fNC;
-            std::string new_bias_tensor = "tensor_" + fNC2;
-            out << "      float * newData_ptr = TMVA::Experimental::SOFIE::UTILITY::Unidirectional_broadcast<float>("
-                << original_bias_tensor << ", oldShape, newShape);\n";
-            int length = TMVA::Experimental::SOFIE::ConvertShapeToLength(fShapeY); // output size
-            out << "      std::copy(newData_ptr, newData_ptr + " << length << ", " << new_bias_tensor << ");\n";
-            out << "      delete [] newData_ptr;\n";
-            out << "   }\n";
+            out << SP << "{\n";
+            out << "      float * data = TMVA::Experimental::SOFIE::UTILITY::BidirectionalBroadcast<float>(tensor_"
+               << fNC << ", {1, " << fShapeC[0] << "}, " << ConvertShapeToString(fShapeY) << ");\n";
+            size_t length = TMVA::Experimental::SOFIE::ConvertShapeToLength(fShapeY); // output size
+            out << SP << SP << "std::copy(data, data + " << length << ", tensor_" << fNC2 << ");\n";
+            out << SP << SP << "delete [] data;\n";
+            out << SP << "}\n";
          }
          return out.str();
       }

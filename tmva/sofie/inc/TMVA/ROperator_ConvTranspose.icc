@@ -151,35 +151,16 @@ void ROperator_ConvTranspose<T>::Initialize(RModel &model)
 template <typename T>
 std::string ROperator_ConvTranspose<T>::GenerateInitCode()
 {
-
-   size_t oDepth = (fDim > 2) ? fShapeY[2] : 1;     // output depth
-   size_t oHeight = (fDim > 1) ? fShapeY[fDim] : 1; // ouput height
-   size_t oWidth = fShapeY[fDim + 1];               // output width
-
    std::stringstream out;
    // generate initialization code for broadcasting of bias tensor
    if (fShapeB.size() != fShapeY.size() && !fNBroadcastedB.empty()) {
-      //  include a separate scope to avoid defining unique operator temp variables
-      out << "   {\n";
-      out << "      std::vector<size_t> oldShape = " << ConvertShapeToString(fShapeB) << ";\n";
-      out << "      std::vector<size_t> newShape = { " << fShapeY[1] << ", ";
-      if (fDim > 2)
-         out << oDepth << ", ";
-      if (fDim > 1)
-         out << oHeight << ", ";
-      out << oWidth << "};\n";
-      out << "      oldShape.resize(newShape.size(), 1.);\n";
-      std::string original_bias_tensor = "tensor_" + fNB;
-      std::string new_bias_tensor = "tensor_" + fNBroadcastedB;
-      out << "      float * newData_ptr = TMVA::Experimental::SOFIE::UTILITY::Unidirectional_broadcast<float>("
-          << original_bias_tensor << ", oldShape, newShape);\n";
-      // extend the new broadcasted bias tensor for the batch dimension
-      int length = fShapeY[1] * oDepth * oHeight * oWidth; // output nc*h*w
-      out << "      for (int i = 0; i < " << fShapeY[0] << " ; i++)\n";
-      out << "         std::copy(newData_ptr, newData_ptr + " << length << ", " << new_bias_tensor << " + i * "
-          << length << ");\n";
-      out << "      delete [] newData_ptr;\n";
-      out << "   }\n";
+         // include a separate scope to avoid defining unique operator temp variables
+         out << SP << "{\n";
+         out << SP << SP << "float * data = TMVA::Experimental::SOFIE::UTILITY::BroadcastConvBias<float>(tensor_"
+             << fNB << ", " << fShapeB[0] << ", " << ConvertShapeToString(fShapeY) << ");\n";
+         out << SP << SP << "std::copy(data, data + " << ConvertShapeToLength(fShapeY) << ", tensor_" << fNBroadcastedB << ");\n";
+         out << SP << SP << "delete[] data;\n";
+         out << SP << "}\n";
    }
    return out.str();
 }
