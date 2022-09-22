@@ -345,4 +345,18 @@
 
 #pragma read sourceClass="TF1" targetClass="TF1" version="[10]" source="TF1AbsComposition* fComposition_ptr" target="fComposition" code="{ fComposition.reset(onfile.fComposition_ptr); onfile.fComposition_ptr = nullptr; }"
 
+#pragma read sourceClass="TNDArrayT<Float_t>" targetClass="TNDArrayT<Float_t>" source="Int_t fNumData; Float_t *fData;" target="fData" versions="1" code="{ fData.clear(); if(onfile.fData) for(int i = 0; i < onfile.fNumData; ++i) fData.push_back(onfile.fData[i]); }"
+#pragma read sourceClass="TNDArrayT<Double_t>" targetClass="TNDArrayT<Double_t>" source="Int_t fNumData; Double_t *fData;" target="fData" versions="1" code="{ fData.clear(); if(onfile.fData) for(int i = 0; i < onfile.fNumData; ++i) fData.push_back(onfile.fData[i]); }"
+#pragma read sourceClass="TNDArrayT<Long64_t>" targetClass="TNDArrayT<Long64_t>" source="Int_t fNumData; Long64_t *fData;" target="fData" versions="1" code="{ fData.clear(); if(onfile.fData) for(int i = 0; i < onfile.fNumData; ++i) fData.push_back(onfile.fData[i]); }"
+#pragma read sourceClass="TNDArrayT<Long_t>" targetClass="TNDArrayT<Long_t>" source="Int_t fNumData; Long_t *fData;" target="fData" versions="1" code="{ fData.clear(); if(onfile.fData) for(int i = 0; i < onfile.fNumData; ++i) fData.push_back(onfile.fData[i]); }"
+#pragma read sourceClass="TNDArrayT<Int_t>" targetClass="TNDArrayT<Int_t>" source="Int_t fNumData; Int_t *fData;" target="fData" versions="1" code="{ fData.clear(); if(onfile.fData) for(int i = 0; i < onfile.fNumData; ++i) fData.push_back(onfile.fData[i]); }"
+#pragma read sourceClass="TNDArrayT<Short_t>" targetClass="TNDArrayT<Short_t>" source="Int_t fNumData; Short_t *fData;" target="fData" versions="1" code="{ fData.clear(); if(onfile.fData) for(int i = 0; i < onfile.fNumData; ++i) fData.push_back(onfile.fData[i]); }"
+#pragma read sourceClass="TNDArrayT<Char_t>" targetClass="TNDArrayT<Char_t>" source="Int_t fNumData; Char_t *fData;" target="fData" versions="1" code="{ fData.clear(); if(onfile.fData) for(int i = 0; i < onfile.fNumData; ++i) fData.push_back(onfile.fData[i]); }"
+#pragma read sourceClass="TNDArrayT<ULong64_t>" targetClass="TNDArrayT<ULong64_t>" source="Int_t fNumData; ULong64_t *fData;" target="fData" versions="1" code="{ fData.clear(); if(onfile.fData) for(int i = 0; i < onfile.fNumData; ++i) fData.push_back(onfile.fData[i]); }"
+#pragma read sourceClass="TNDArrayT<ULong_t>" targetClass="TNDArrayT<ULong_t>" source="Int_t fNumData; ULong_t *fData;" target="fData" versions="1" code="{ fData.clear(); if(onfile.fData) for(int i = 0; i < onfile.fNumData; ++i) fData.push_back(onfile.fData[i]); }"
+#pragma read sourceClass="TNDArrayT<UInt_t>" targetClass="TNDArrayT<UInt_t>" source="Int_t fNumData; UInt_t *fData;" target="fData" versions="1" code="{ fData.clear(); if(onfile.fData) for(int i = 0; i < onfile.fNumData; ++i) fData.push_back(onfile.fData[i]); }"
+#pragma read sourceClass="TNDArrayT<UShort_t>" targetClass="TNDArrayT<UShort_t>" source="Int_t fNumData; UShort_t *fData;" target="fData" versions="1" code="{ fData.clear(); if(onfile.fData) for(int i = 0; i < onfile.fNumData; ++i) fData.push_back(onfile.fData[i]); }"
+
+#pragma read sourceClass="TNDArray" targetClass="TNDArray" source="Int_t fNdimPlusOne; Long64_t *fSizes;" target="fSizes" versions="1" code="{ fSizes.clear(); if(onfile.fSizes) for(int i = 0; i < onfile.fNdimPlusOne; ++i) fSizes.push_back(onfile.fSizes[i]); }"
+
 #endif
