@@ -44,7 +44,6 @@ public:
         RooArgSet const* globalObservables,
         const char* globalObservablesTag,
         bool takeGlobalObservablesFromData,
-        bool cloneConstraints,
         RooWorkspace * workspace);
 
   bool setData(RooAbsData const& data, bool cloneData=true);
