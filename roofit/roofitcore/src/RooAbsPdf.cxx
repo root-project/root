@@ -1104,7 +1104,6 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
           pc.getSet("glObs"), // GlobalObservables RooCmdArg
           pc.getString("globstag",0,true), // GlobalObservablesTag RooCmdArg
           takeGlobalObservablesFromData, // From GlobalObservablesSource RooCmdArg
-          batchMode == RooFit::BatchModeOption::Off, // clone constraints?
           _myws // passing workspace to cache the set of constraints
   );
 
@@ -1119,7 +1118,8 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
                                                ext,
                                                pc.getDouble("IntegrateBins"),
                                                batchMode,
-                                               doOffset).release();
+                                               doOffset,
+                                               takeGlobalObservablesFromData).release();
   }
 
   // Construct NLL
