@@ -1146,7 +1146,7 @@ RooPlot *RooDataHist::plotOn(RooPlot *frame, PlotOpt o) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// A vectorized version of interpolateDim for boundary safe quadratic
-/// interpolation of one dimensional histograms. 
+/// interpolation of one dimensional histograms.
 ///
 /// \param[out] output An array of interpolated weights corresponding to the
 ///                    values in xVals.
@@ -1193,7 +1193,7 @@ void RooDataHist::interpolateQuadratic(double* output, RooSpan<const double> xVa
   for (std::size_t binIdx = 0; binIdx < nBins; ++binIdx) {
     weightsExt[binIdx+2] = correctForBinSize ? _wgt[binIdx] / _binv[binIdx] : _wgt[binIdx];
   }
-  
+
   if (cdfBoundaries) {
     coordsExt[0] = - 1e-10 + binning.lowBound();
     weightsExt[0] = 0.;
@@ -1211,7 +1211,7 @@ void RooDataHist::interpolateQuadratic(double* output, RooSpan<const double> xVa
 
     coordsExt[1] = binCoords[0] - _binv[0];
     weightsExt[1] = weightsExt[2];
-    
+
     coordsExt[nBins+2] = binCoords[nBins-1] + _binv[nBins-1];
     weightsExt[nBins+2] = weightsExt[nBins+1];
   }
@@ -1252,10 +1252,10 @@ void RooDataHist::interpolateQuadratic(double* output, RooSpan<const double> xVa
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// A vectorized version of interpolateDim for boundary safe linear 
-/// interpolation of one dimensional histograms. 
+/// A vectorized version of interpolateDim for boundary safe linear
+/// interpolation of one dimensional histograms.
 ///
-/// \param[out] output An array of interpolated weights corresponding to the 
+/// \param[out] output An array of interpolated weights corresponding to the
 ///                    values in xVals.
 /// \param[in] xVals An array of event coordinates for which the weights should be
 ///                  calculated.
@@ -1342,7 +1342,7 @@ void RooDataHist::interpolateLinear(double* output, RooSpan<const double> xVals,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// A vectorized version of RooDataHist::weight() for one dimensional histograms
-/// with up to one dimensional interpolation. 
+/// with up to one dimensional interpolation.
 /// \param[out] output An array of weights corresponding the values in xVals.
 /// \param[in] xVals An array of coordinates for which the weights should be
 ///                  calculated.
@@ -2273,7 +2273,8 @@ TIterator* RooDataHist::sliceIterator(RooAbsArg& sliceArg, const RooArgSet& othe
 void RooDataHist::SetName(const char *name)
 {
   if (_dir) _dir->GetList()->Remove(this);
-  TNamed::SetName(name) ;
+  // We need to use the function from RooAbsData, because it already overrides TNamed::SetName
+  RooAbsData::SetName(name);
   if (_dir) _dir->GetList()->Add(this);
 }
 
@@ -2283,9 +2284,8 @@ void RooDataHist::SetName(const char *name)
 
 void RooDataHist::SetNameTitle(const char *name, const char* title)
 {
-  if (_dir) _dir->GetList()->Remove(this);
-  TNamed::SetNameTitle(name,title) ;
-  if (_dir) _dir->GetList()->Add(this);
+  SetName(name);
+  SetTitle(title);
 }
 
 
