@@ -229,6 +229,8 @@ void THnBase::Init(const char* name, const char* title,
 
    fNdimensions = axes->GetEntriesFast();
    InitStorage(nbins, chunkSize);
+   fTsumwx.Set(fNdimensions);
+   fTsumwx2.Set(fNdimensions);
    delete [] nbins;
 }
 
