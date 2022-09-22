@@ -174,6 +174,9 @@
 #include "Neg_FromONNX.hxx"
 #include "input_models/references/Neg.ref.hxx"
 
+#include "Exp_FromONNX.hxx"
+#include "input_models/references/Exp.ref.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -1706,6 +1709,24 @@ TEST(ONNX, Reciprocal)
    EXPECT_EQ(output.size(), sizeof(Reciprocal_ExpectedOutput::output) / sizeof(float));
 
    float* correct = Reciprocal_ExpectedOutput::output;
+
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, Exp)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   std::vector<float> input({1.46566453,  0.63334515,  2.4048165 ,  0.54468453,
+      -1.41271672, -0.18609187,  0.2754482 ,  1.10615209,  0.88474389,  0.47531232});
+   TMVA_SOFIE_Exp::Session s("Exp_FromONNX.data");
+   std::vector<float> output = s.infer(input.data());
+
+   EXPECT_EQ(output.size(), sizeof(Exp_ExpectedOutput::output) / sizeof(float));
+
+   float* correct = Exp_ExpectedOutput::output;
 
    for (size_t i = 0; i < output.size(); i++) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
