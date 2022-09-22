@@ -16,26 +16,81 @@ class RFunction_Aggregate;
 
 struct GNN_Init {
     // updation blocks
-    std::shared_ptr<RFunction_Update> edges_update_block;
-    std::shared_ptr<RFunction_Update> nodes_update_block;
-    std::shared_ptr<RFunction_Update> globals_update_block;
+    std::unique_ptr<RFunction_Update> edges_update_block;
+    std::unique_ptr<RFunction_Update> nodes_update_block;
+    std::unique_ptr<RFunction_Update> globals_update_block;
     
     // aggregation blocks
-    std::shared_ptr<RFunction_Aggregate> edge_node_agg_block;
-    std::shared_ptr<RFunction_Aggregate> edge_global_agg_block;
-    std::shared_ptr<RFunction_Aggregate> node_global_agg_block;
+    std::unique_ptr<RFunction_Aggregate> edge_node_agg_block;
+    std::unique_ptr<RFunction_Aggregate> edge_global_agg_block;
+    std::unique_ptr<RFunction_Aggregate> node_global_agg_block;
    
     int num_nodes;
     std::vector<std::pair<int,int>> edges;
    
-    int num_node_features;
-    int num_edge_features;
-    int num_global_features;
+    std::size_t num_node_features;
+    std::size_t num_edge_features;
+    std::size_t num_global_features;
 
     std::string filename;
+
+    ~GNN_Init(){
+        edges_update_block.reset();
+        nodes_update_block.reset();
+        globals_update_block.reset();
+
+        edge_node_agg_block.reset();
+        edge_global_agg_block.reset();
+        node_global_agg_block.reset();
+    }
+    
+    template <typename T>
+    void createUpdateFunction(T& updateFunction){
+        switch(updateFunction.GetFunctionTarget()){
+            case FunctionTarget::EDGES: {
+                edges_update_block.reset(new T(updateFunction));
+                break;
+            }
+            case FunctionTarget::NODES: {
+                nodes_update_block.reset(new T(updateFunction));
+                break;
+            }
+            case FunctionTarget::GLOBALS: {
+                globals_update_block.reset(new T(updateFunction));
+                break;
+            }
+            default: {
+                throw std::runtime_error("TMVA SOFIE: Invalid Update function supplied for creating GNN function block.");
+            }
+        }
+    }
+
+    template <typename T>
+    void createAggregateFunction(T& aggFunction, FunctionRelation relation){
+        switch(relation){
+            case FunctionRelation::NODES_EDGES : {
+                edge_node_agg_block.reset(new T(aggFunction));
+                break;
+            }
+            case FunctionRelation::NODES_GLOBALS: {
+                node_global_agg_block.reset(new T(aggFunction));
+                break;
+            }
+            case FunctionRelation::EDGES_GLOBALS: {
+                edge_global_agg_block.reset(new T(aggFunction));
+                break;
+            }
+            default: {
+                throw std::runtime_error("TMVA SOFIE: Invalid Aggregate function supplied for creating GNN function block.");
+            }
+        }
+    }
+
+    
 };
 
-class RModel_GNN: public RModel_Base{
+
+class RModel_GNN: public RModel_GNNBase{
 
 private:
     
@@ -54,11 +109,10 @@ private:
     std::vector<int> senders;              // contains node indices
     std::vector<int> receivers;            // contains node indices
 
-    int num_node_features;
-    int num_edge_features;
-    int num_global_features;
+    std::size_t num_node_features;
+    std::size_t num_edge_features;
+    std::size_t num_global_features;
 
-    std::string fFilename;
 
 public:
 
@@ -71,14 +125,11 @@ public:
    RModel_GNN(const RModel_GNN& other) = delete;
    RModel_GNN& operator=(const RModel_GNN& other) = delete;
 
-   RModel_GNN(const GNN_Init& graph_input_struct);
+   RModel_GNN(GNN_Init& graph_input_struct);
    RModel_GNN(){}
    RModel_GNN(std::string name, std::string parsedtime);
-
-//    void AddFunction(std::unique_ptr<RFunction> func);
    
-   void InitializeGNN(int batch_size=1);
-   void GenerateGNN(int batchSize = 1);
+   void Generate();
 
    ~RModel_GNN(){}
 //    ClassDef(RModel_GNN,1);

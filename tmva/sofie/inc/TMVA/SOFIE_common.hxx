@@ -423,14 +423,13 @@ extern "C" void sgemm_(const char * transa, const char * transb, const int * m, 
                        const float * beta, float * C, const int * ldc);
 }//BLAS
 
-namespace GNN{
-   struct GNN_Data {
+
+struct GNN_Data {
       std::vector<float> node_data;
-      std::vector<std::pair<int,int>> edges;  // pair of [receiver,sender]
       std::vector<float> edge_data;
       std::vector<float> global_data; 
-   };
-}
+};
+
 }//SOFIE
 }//Experimental
 }//TMVA

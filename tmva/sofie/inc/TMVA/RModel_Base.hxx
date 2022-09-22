@@ -78,9 +78,36 @@ public:
     void SetFilename(std::string filename){
       fName = filename;
     }
+    std::string GetFilename(){
+      return fName;
+    }
    // virtual ~RModel_Base(){}
    ClassDef(RModel_Base,1);
 
+};
+
+
+enum class GraphType{
+        INVALID=0, GNN=1, GraphIndependent=2
+};
+
+enum class FunctionType{
+        UPDATE=0, AGGREGATE=1
+};
+enum class FunctionTarget{
+        INVALID=0, NODES=1, EDGES=2, GLOBALS=3
+};
+enum class FunctionReducer{
+        INVALID=0, SUM=1, MEAN=2
+};
+enum class FunctionRelation{
+         INVALID=0, NODES_EDGES=1, NODES_GLOBALS=2, EDGES_GLOBALS=3
+};
+
+class RModel_GNNBase: public RModel_Base{
+   public:
+      RModel_GNNBase(){}
+      virtual void Generate() = 0;
 };
 
 }//SOFIE

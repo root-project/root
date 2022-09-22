@@ -41,27 +41,8 @@ private:
    std::vector<std::string> fInputTensorNames;  //input tensor names using ONNX order
 
    std::vector<std::unique_ptr<ROperator>> fOperators;
-
-<<<<<<< HEAD
-   std::string fFileName; //file name of original model file for identification
-   std::string fParseTime; //UTC date and time string at parsing
-
-   std::unordered_set<std::string> fNeededBlasRoutines;
-
-   const std::unordered_set<std::string> fAllowedStdLib = {"vector", "algorithm", "cmath"};
-   std::unordered_set<std::string> fNeededStdLib = {"vector"};
    std::unordered_set<std::string> fCustomOpHeaders;
 
-protected:
-   std::string fName="UnnamedModel";
-   std::string fGC; //generated code
-   bool fUseWeightFile = true;
-   bool fUseSession = true;
-   bool fIsGNN = false;
-   bool fIsGNNComponent = false;
-
-=======
->>>>>>> d8ae68bedf (feat: modify RModel architecture)
 public:
 
    //explicit move ctor/assn
@@ -87,6 +68,18 @@ public:
    void AddInputTensorInfo(std::string input_name, ETensorType type, std::vector<size_t> shape);
    void AddOperator(std::unique_ptr<ROperator> op, int order_execution = -1);
    void AddInitializedTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape, std::shared_ptr<void> data);
+   
+   template <typename T>
+   void AddInitializedTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape, T* raw_data){
+      int size=1;
+      for(auto item:shape){
+         size*=(int)item;
+      }
+      std::shared_ptr<void> data(malloc(size * sizeof(T)), free);
+      std::memcpy(data.get(), raw_data, size * sizeof(T));
+      AddInitializedTensor(tensor_name, type, shape, data);
+   }
+
    // Check if a tensor is initialized
    bool IsInitializedTensor(const std::string& name) const;
    void AddIntermediateTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape);
@@ -107,8 +100,7 @@ public:
    void GenerateIntermediateTensorInfo();
    void GenerateOutput();
    void Generate(std::underlying_type_t<Options> options, int batchSize = 1, long pos = 0);
-   void Generate(Options options = Options::kDefault, int batchSitmva/sofie/inc/TMVA/RModel.hxx
-ze = 1, int pos = 0) {
+   void Generate(Options options = Options::kDefault, int batchSize = 1, int pos = 0) {
       Generate(static_cast<std::underlying_type_t<Options>>(options), batchSize, pos);
    }
 
@@ -129,6 +121,7 @@ ze = 1, int pos = 0) {
    void OutputGenerated(std::string filename = "", bool append = false);
    std::vector<std::string> GetOutputTensorNames(){
       return fOutputTensorNames;
+   }
    void SetFilename(std::string filename){
       fName = filename;
    }
