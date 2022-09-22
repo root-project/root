@@ -1142,26 +1142,41 @@ double RooPlot::chiSquare(const char* curvename, const char* histname, int nFitP
 /// Otherwise, the curve is evaluated at the bin centres, which is not accurate for strongly curved distributions.
 RooHist* RooPlot::residHist(const char* histname, const char* curvename, bool normalize, bool useAverage) const
 {
-  // Find curve object
-  RooCurve* curve = (RooCurve*) findObject(curvename,RooCurve::Class()) ;
-  if (!curve) {
-    coutE(InputArguments) << "RooPlot::residHist(" << GetName() << ") cannot find curve" << endl ;
-    return 0 ;
+  // Find curve objects (there might be multiple in the case of multi-range fits)
+  std::vector<RooCurve *> curves;
+
+  for(auto const& item : _items) {
+    TObject &obj = *item.first;
+    if(obj.IsA() == RooCurve::Class()) {
+      // If no curvename was passed, we take by default the last curve and all
+      // other curves that have the same name
+      if((!curvename || curvename[0] == '\0') || std::string(curvename) == obj.GetName()) {
+        curvename = obj.GetName();
+        curves.push_back(static_cast<RooCurve*>(&obj));
+      }
+    }
+  }
+
+  if (curves.empty()) {
+    coutE(InputArguments) << "RooPlot::residHist(" << GetName() << ") cannot find curve" << std::endl;
+    return nullptr;
   }
 
   // Find histogram object
-  RooHist* hist = (RooHist*) findObject(histname,RooHist::Class()) ;
+  auto hist = static_cast<RooHist*>(findObject(histname,RooHist::Class()));
   if (!hist) {
-    coutE(InputArguments) << "RooPlot::residHist(" << GetName() << ") cannot find histogram" << endl ;
-    return 0 ;
+    coutE(InputArguments) << "RooPlot::residHist(" << GetName() << ") cannot find histogram" << std::endl;
+    return nullptr;
   }
 
-  auto residhist = hist->makeResidHist(*curve,normalize,useAverage);
-  residhist->GetHistogram()->GetXaxis()->SetRangeUser(_hist->GetXaxis()->GetXmin(), _hist->GetXaxis()->GetXmax());
-  residhist->GetHistogram()->GetXaxis()->SetTitle(_hist->GetXaxis()->GetTitle());
-  residhist->GetHistogram()->GetYaxis()->SetTitle(normalize ? "(Data - curve) / #sigma_{data}" : "Data - curve");
-
-  return residhist;
+  auto residHist = hist->createEmptyResidHist(*curves.front(), normalize);
+  for(RooCurve * curve : curves) {
+    hist->fillResidHist(*residHist, *curve, normalize, useAverage);
+  }
+  residHist->GetHistogram()->GetXaxis()->SetRangeUser(_hist->GetXaxis()->GetXmin(), _hist->GetXaxis()->GetXmax());
+  residHist->GetHistogram()->GetXaxis()->SetTitle(_hist->GetXaxis()->GetTitle());
+  residHist->GetHistogram()->GetYaxis()->SetTitle(normalize ? "(Data - curve) / #sigma_{data}" : "Data - curve");
+  return residHist.release();
 }
 
 

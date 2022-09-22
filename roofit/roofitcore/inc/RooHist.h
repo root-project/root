@@ -78,13 +78,17 @@ public:
   RooHist* makePullHist(const RooCurve& curve, bool useAverage=false) const
     {return makeResidHist(curve,true,useAverage); }
 
-
   bool isIdentical(const RooHist& other, double tol=1e-6, bool verbose=true) const ;
 
 
 protected:
   void initialize();
   Int_t roundBin(double y);
+
+  friend class RooPlot;
+
+  void fillResidHist(RooHist & residHist, const RooCurve& curve,bool normalize=false, bool useAverage=false) const;
+  std::unique_ptr<RooHist> createEmptyResidHist(const RooCurve& curve, bool normalize=false) const;
 
 private:
   double _nominalBinWidth ; ///< Average bin width
