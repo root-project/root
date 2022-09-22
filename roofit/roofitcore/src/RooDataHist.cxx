@@ -1966,7 +1966,8 @@ TIterator* RooDataHist::sliceIterator(RooAbsArg& sliceArg, const RooArgSet& othe
 void RooDataHist::SetName(const char *name) 
 {
   if (_dir) _dir->GetList()->Remove(this);
-  TNamed::SetName(name) ;
+  // We need to use the function from RooAbsData, because it already overrides TNamed::SetName
+  RooAbsData::SetName(name);
   if (_dir) _dir->GetList()->Add(this);
 }
 
@@ -1976,9 +1977,8 @@ void RooDataHist::SetName(const char *name)
 
 void RooDataHist::SetNameTitle(const char *name, const char* title) 
 {
-  if (_dir) _dir->GetList()->Remove(this);
-  TNamed::SetNameTitle(name,title) ;
-  if (_dir) _dir->GetList()->Add(this);
+  SetName(name);
+  SetTitle(title);
 }
 
 
