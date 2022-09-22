@@ -786,9 +786,11 @@ void THnBase::AddInternal(const THnBase* h, Double_t c, Bool_t rebinned)
    fTsumw += c * h->fTsumw;
    if (haveErrors) {
       fTsumw2 += c * c * h->fTsumw2;
-      for (Int_t d = 0; d < fNdimensions; ++d) {
-         fTsumwx[d] += c * h->fTsumwx[d];
-         fTsumwx2[d] += c * h->fTsumwx2[d];
+      if (h->fTsumwx.fN == fNdimensions && h->fTsumwx2.fN == fNdimensions) {
+         for (Int_t d = 0; d < fNdimensions; ++d) {
+            fTsumwx[d] += c * h->fTsumwx[d];
+            fTsumwx2[d] += c * h->fTsumwx2[d];
+         }
       }
    }
 
