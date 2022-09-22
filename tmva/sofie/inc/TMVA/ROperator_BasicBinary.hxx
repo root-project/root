@@ -52,16 +52,18 @@ template<typename T, EBasicBinaryOperator Op>
 class ROperator_BasicBinary final : public ROperator{
 private:
 
-   std::string fNX1;
-   std::string fNX2;
+   std::string fNA;
+   std::string fNB;
    std::string fNY;
-   std::vector<size_t> fShape;
 
+   std::vector<size_t> fShapeA;
+   std::vector<size_t> fShapeB;
+   std::vector<size_t> fShapeY;
 
 public:
    ROperator_BasicBinary(){}
-   ROperator_BasicBinary(std::string nameX1, std::string nameX2, std::string nameY):
-      fNX1(UTILITY::Clean_name(nameX1)), fNX2(UTILITY::Clean_name(nameX2)), fNY(UTILITY::Clean_name(nameY)){}
+   ROperator_BasicBinary(std::string nameA, std::string nameB, std::string nameY):
+      fNA(UTILITY::Clean_name(nameA)), fNB(UTILITY::Clean_name(nameB)), fNY(UTILITY::Clean_name(nameY)){}
 
    // type of output given input
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
@@ -75,47 +77,66 @@ public:
       return ret;
    }
 
-   void Initialize(RModel& model){
+   void Initialize(RModel& model) {
       // input must be a graph input, or already initialized intermediate tensor
-      if (model.CheckIfTensorAlreadyExist(fNX1) == false){
-         throw std::runtime_error(std::string("TMVA SOFIE Binary Op Input Tensor ") + fNX1 + "is not found in model");
+      if (model.CheckIfTensorAlreadyExist(fNA) == false){
+         throw std::runtime_error(std::string("TMVA SOFIE Binary Op Input Tensor ") + fNA + "is not found in model");
       }
-      if (model.CheckIfTensorAlreadyExist(fNX2) == false) {
-         throw std::runtime_error(std::string("TMVA SOFIE Binary Op Input Tensor ") + fNX2 + "is not found in model");
+      if (model.CheckIfTensorAlreadyExist(fNB) == false) {
+         throw std::runtime_error(std::string("TMVA SOFIE Binary Op Input Tensor ") + fNB + "is not found in model");
       }
-      auto shapeX1 = model.GetTensorShape(fNX1);
-      auto shapeX2 = model.GetTensorShape(fNX2);
-      // If the shape of 2 tensors are not same we perform multi-directional Broadcasting.
-      // We only support tensors with same length and the resultant output length should also be same.
-      if (shapeX1 != shapeX2) {
-         fShape = UTILITY::Multidirectional_broadcast(shapeX1,shapeX2);
-         size_t length1 = ConvertShapeToLength(shapeX1);
-         size_t length2 = ConvertShapeToLength(shapeX2);
-         size_t output_length = ConvertShapeToLength(fShape);
-         if(length1 != length2 || length1 != output_length){
-            throw std::runtime_error(std::string("TMVA SOFIE Binary Op does not support input tensors with different lengths. The output tensor should also have the same length as the input tensors."));
-         }
+      fShapeA = model.GetTensorShape(fNA);
+      fShapeB = model.GetTensorShape(fNB);
+      // If the shape of 2 tensors are not same we perform bidirectional broadcasting.
+      size_t lengthA = ConvertShapeToLength(fShapeA);
+      size_t lengthB = ConvertShapeToLength(fShapeB);
+      if (fShapeA.size() < fShapeB.size()) {
+         // Broadcast the shape of A to the shape of B from the left to the right
+         fShapeA = UTILITY::BidirectionalBroadcastShape(fShapeA, fShapeB);
+         fShapeY = fShapeB;
+      } else if (fShapeA.size() > fShapeB.size()) {
+         // Broadcast the shape of B to the shape of A from the left to the right
+         fShapeB = UTILITY::BidirectionalBroadcastShape(fShapeB, fShapeA);
+         fShapeY = fShapeA;
       }
-      // If both the tensors have same shape then assign the same shape to resultant output.
-      else if(shapeX1 == shapeX2){
-         fShape = shapeX1;
-      }   
-      model.AddIntermediateTensor(fNY, model.GetTensorType(fNX1), fShape);
+      if (lengthA < lengthB) {
+         // Broadcast A to B
+         fShapeY = fShapeB;
+         auto data = model.GetInitializedTensorData(fNA);
+         std::shared_ptr<void> broadcastedData(
+            UTILITY::BidirectionalBroadcast<float>(static_cast<float *>(data.get()), fShapeA, fShapeB),
+            std::default_delete<float[]>());
+         // Update the data and the shape of A
+         model.UpdateInitializedTensor(fNA, model.GetTensorType(fNA), fShapeB, broadcastedData);
+         fShapeA = fShapeB;
+      } else if (lengthB < lengthA) {
+         // Broadcast B to A
+         fShapeY = fShapeA;
+         auto data = model.GetInitializedTensorData(fNB);
+         std::shared_ptr<void> broadcastedData(
+            UTILITY::BidirectionalBroadcast<float>(static_cast<float *>(data.get()), fShapeB, fShapeA),
+            std::default_delete<float[]>());
+         // Update the data and the shape of B
+         model.UpdateInitializedTensor(fNB, model.GetTensorType(fNB), fShapeA, broadcastedData);
+         fShapeB = fShapeA;
+      } else {
+         fShapeY = fShapeA;
+      }
+      model.AddIntermediateTensor(fNY, model.GetTensorType(fNA), fShapeY);
    }
-
 
    std::string Generate(std::string OpName){
       OpName = "op_" + OpName;
 
-      if (fShape.empty()) {
+      if (fShapeY.empty()) {
          throw std::runtime_error("TMVA SOFIE Binary Op called to Generate without being initialized first");
       }
       std::stringstream out;
-      size_t length = ConvertShapeToLength(fShape);
+      size_t length = ConvertShapeToLength(fShapeY);
       out << "\n//------ " + std::string(BinaryOperatorTrait<T,Op>::Name())+"\n";
       out << SP << "for (size_t id = 0; id < " << length << " ; id++){\n";
       out << SP << SP << "tensor_" << fNY << "[id] = " +
-      std::string(BinaryOperatorTrait<T,Op>::Op( "tensor_" + fNX1 + "[id]" , "tensor_" + fNX2 + "[id]")) +  " ;\n";
+      std::string(BinaryOperatorTrait<T,Op>::Op( "tensor_" + fNA + "[id]" , "tensor_" + fNB + "[id]")) +  " ;\n";
       out << SP << "}\n";
       return out.str();
    }
