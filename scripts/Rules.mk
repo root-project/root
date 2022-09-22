@@ -60,8 +60,6 @@ endif
 
 # doing gmake FAIL=true runs the test that are known to fail
 
-# doing gmake TIME=true times the test output
-
 SUBDIRS := $(shell $(ROOTTEST_HOME)/scripts/subdirectories .)
 
 ALL_EXEC_CXX   := $(wildcard exec*.cxx)
@@ -156,23 +154,6 @@ else
 endif
 endif
 
-endif
-
-ifneq ($(TIME),)
-ifeq ($(ROOTTEST_RUNID),)
-   export ROOTTEST_RUNID := $(shell touch $(ROOTTEST_LOC)runid )
-   export ROOTTEST_RUNID := $(shell echo  $$((`cat $(ROOTTEST_LOC)runid`+1)) > $(ROOTTEST_LOC)runid )
-   export ROOTTEST_RUNID := $(shell cat $(ROOTTEST_LOC)runid )
-   ROOTTEST_TESTID := $(shell echo 0 > $(ROOTTEST_LOC)testid)
-   ROOTTEST_TESTID := 0
-else
-   ROOTTEST_TESTID := $(shell echo $$((`cat $(ROOTTEST_LOC)testid`+1)) > $(ROOTTEST_LOC)testid )
-   ROOTTEST_TESTID := $(shell cat $(ROOTTEST_LOC)testid )
-endif
-TESTTIMINGFILE := roottesttiming.out
-TESTTIMEPRE := export TIMEFORMAT="roottesttiming %S"; ( time
-TESTTIMEPOST :=  RUNNINGWITHTIMING=1 2>&1 ) 2> $(TESTTIMINGFILE).tmp &&  cat $(TESTTIMINGFILE).tmp | grep roottesttiming | sed -e 's,^roottesttiming ,,g' > $(TESTTIMINGFILE) && rm $(TESTTIMINGFILE).tmp
-TESTTIMEACTION = else if [ -f $(TESTTIMINGFILE) ]; then printf " %8s\n" "[`cat $(TESTTIMINGFILE)`ms]" && root.exe -q -b -l -n '$(ROOTTEST_HOME)/scripts/recordtiming.cc+("$(ROOTTEST_HOME)",$(ROOTTEST_RUNID),$(ROOTTEST_TESTID),"$(CURDIR)/$*","$(TESTTIMINGFILE)")' > /dev/null && rm -f $(TESTTIMINGFILE); fi
 endif
 
 .PHONY: valgrind perftrack
@@ -279,7 +260,7 @@ $(EVENTDIR)/bigeventTest.success: $(ROOTCORELIBS)
 
 $(TEST_TARGETS_DIR): %.test:  $(EVENTDIR)/$(SUCCESS_FILE) utils
 	@(echo Running test in $(CALLDIR)/$*)
-	@(cd $*; if [ "$(filter -j,$(MAKEFLAGS))" = "-j" ] ; then export ROOT_HIST=0; fi; $(TESTTIMEPRE) $(MAKE) -f Makefile CURRENTDIR=$* --no-print-directory $(TESTGOAL) $(TESTTIMEPOST) ; \
+	@(cd $*; if [ "$(filter -j,$(MAKEFLAGS))" = "-j" ] ; then export ROOT_HIST=0; fi; $(MAKE) -f Makefile CURRENTDIR=$* --no-print-directory $(TESTGOAL) ; \
      result=$$?; \
      if [ $$result -ne 0 ] ; then \
         if [ "x$(SUMMARY)" != "x" ] ; then \
@@ -294,7 +275,6 @@ $(TEST_TARGETS_DIR): %.test:  $(EVENTDIR)/$(SUCCESS_FILE) utils
         len=`echo Tests in $(CALLDIR)/$* | wc -c `;end=`expr 68 - $$len`;printf 'Tests in %s %*.*s ' $(CALLDIR)/$* $$end $$end $(DOTS); \
 	      printf 'FAIL\n' ; \
         false ; \
-     $(TESTTIMEACTION) \
      fi )
 
 #     result=$$?; \
@@ -644,19 +624,12 @@ ifeq ($(CINT_VERSION),)
 endif
 endif
 
-# Track the version of ROOT we are runing with
+# Track the version of ROOT we are running with
 
 ROOTV=$(ROOTTEST_LOC)/root_version
 ROOTVFILE=$(ROOTTEST_HOME)/root_version
 ifeq ($(ROOTTEST_CHECKED_VERSION),)
    export ROOTTEST_CHECKED_VERSION:= $(shell echo $(ROOTSYS) && (echo "$(ROOTSYS)" | diff - "$(ROOTVFILE)" 2> /dev/null && echo "--- Using ROOT from $(ROOTSYS)" >&2) || (echo "--- Switching to ROOT from $(ROOTSYS)" >&2; if [ -f "$(ROOTVFILE)" ]; then echo "---            (previously "`cat "$(ROOTVFILE)"`")" >&2; fi; echo "$(ROOTSYS)" > $(ROOTVFILE) ); )
-
-ifneq ($(TIME),)
-   CPUFILE=/proc/cpuinfo
-   ROOTTEST_ARCH=$(ROOTTEST_LOC)roottest.arch
-   export ROOTTEST_ARCH_FILE := $(shell if [ -e $(CPUFILE) ] ; then grep -e 'model name' -e cpu $(CPUFILE) | sort -u | sed -e 's/ //' -e 's/[ \t]*:/:/' > $(ROOTTEST_ARCH) ; else echo "Information Not Available" > $(ROOTTEST_ARCH); fi; )
-endif
-
 endif
 
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) .$(DllSuf) .$(ExeSuf) .cc .cxx .C .cpp
@@ -669,17 +642,14 @@ else
 MAKELIB       = $(ROOTSYS)/build/unix/makelib.sh $(MKLIBOPTIONS)
 endif
 
-ROOTCORELIBS_LIST = TreePlayer Tree Graf Hist Physics Core
+ROOTCORELIBS_LIST = TreePlayer Tree Graf Hist Physics MathCore Core
 ROOTCORELIBS = $(addprefix $(ROOT_LOC)/lib/lib,$(addsuffix .$(LibSuf),$(ROOTCORELIBS_LIST)))
 ROOTCINT = $(ROOT_LOC)/bin/rootcint$(ExeSuf)
 
-UTILS_LIBS =  $(ROOTTEST_LOC)scripts/utils_cc.$(DllSuf) $(ROOTTEST_LOC)scripts/recordtiming_cc.$(DllSuf)
+UTILS_LIBS =  $(ROOTTEST_LOC)scripts/utils_cc.$(DllSuf)
 
 $(ROOTTEST_LOC)scripts/utils_cc.$(DllSuf) : $(ROOTTEST_LOC)scripts/utils.cc $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$(ROOTTEST_HOME)scripts/utils.cc\"\) > $(ROOTTEST_LOC)scripts/utils_cc.build.log 2>&1 || handleError.sh --cmd='Call to build.C' --result=$$?  --log=$(ROOTTEST_LOC)scripts/utils_cc.build.log
-
-$(ROOTTEST_LOC)scripts/recordtiming_cc.$(DllSuf) : $(ROOTTEST_LOC)scripts/recordtiming.cc $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$(ROOTTEST_HOME)scripts/recordtiming.cc\"\) > $(ROOTTEST_LOC)scripts/recordtiming_cc.build.log 2>&1 || handleError.sh --cmd='Call to build.C' --result=$$?  --log=$(ROOTTEST_LOC)scripts/recordtiming_cc.build.log
 
 override ROOTMAP = $(ROOT_LOC)/etc/system.rootmap
 
