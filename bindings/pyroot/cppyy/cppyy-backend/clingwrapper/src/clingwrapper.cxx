@@ -946,7 +946,7 @@ bool Cppyy::IsEnum(const std::string& type_name)
     if (type_name.empty()) return false;
     std::string tn_short = TClassEdit::ShortType(type_name.c_str(), 1);
     if (tn_short.empty()) return false;
-    return gInterpreter->ClassInfo_IsEnum(tn_short.c_str());
+    return TEnum::GetEnum(tn_short.c_str());
 }
 
 // helpers for stripping scope names
