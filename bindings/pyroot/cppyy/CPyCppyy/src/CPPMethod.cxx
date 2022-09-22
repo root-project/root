@@ -328,13 +328,41 @@ CPyCppyy::CPPMethod::~CPPMethod()
 
 
 //- public members -----------------------------------------------------------
+/**
+ * @brief Construct a Python string from the method's prototype
+ * 
+ * @param fa Show formal arguments of the method
+ * @return PyObject* A Python string with the full method prototype, namespaces included.
+ * 
+ * For example, given:
+ * 
+ * int foo(int x);
+ * 
+ * namespace a {
+ * namespace b {
+ * namespace c {
+ * int foo(int x);
+ * }}}
+ * 
+ * This function returns:
+ * 
+ * 'int foo(int x)'
+ * 'int a::b::c::foo(int x)'
+ */
 PyObject* CPyCppyy::CPPMethod::GetPrototype(bool fa)
 {
-// construct python string from the method's prototype
-    return CPyCppyy_PyText_FromFormat("%s%s %s::%s%s",
+    // Gather the fully qualified final scope of the method. This includes
+    // all namespaces up to the one where the method is declared, for example:
+    // namespace a { namespace b { void foo(); }}
+    // gives
+    // a::b
+    std::string finalscope = Cppyy::GetScopedFinalName(fScope);
+    return CPyCppyy_PyText_FromFormat("%s%s %s%s%s%s",
         (Cppyy::IsStaticMethod(fMethod) ? "static " : ""),
         Cppyy::GetMethodResultType(fMethod).c_str(),
-        Cppyy::GetScopedFinalName(fScope).c_str(), Cppyy::GetMethodName(fMethod).c_str(),
+        finalscope.c_str(),
+        (finalscope.empty() ? "" : "::"), // Add final set of '::' if the method is scoped in namespace(s)
+        Cppyy::GetMethodName(fMethod).c_str(),
         GetSignatureString(fa).c_str());
 }
 //----------------------------------------------------------------------------
