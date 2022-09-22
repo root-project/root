@@ -40,9 +40,6 @@ else
 ifeq ($(ARCH),aix5)
                 $(CMDECHO) /usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
-ifeq ($(PLATFORM),macosx)
-	$(CMDECHO) $(LD) $(SOFLAGS) Foo.$(ObjSuf) FooDict.$(ObjSuf) $(OutPutOpt)  $(subst .$(DllSuf),.$(LibSuf),$@)
-else
 ifeq ($(PLATFORM),win32)
 	$(CMDECHO) bindexplib Foo Foo.$(ObjSuf) FooDict.$(ObjSuf) > Foo.def
 	$(CMDECHO) lib -nologo -MACHINE:IX86  Foo.$(ObjSuf) FooDict.$(ObjSuf) -def:Foo.def \
@@ -50,8 +47,7 @@ ifeq ($(PLATFORM),win32)
 	$(CMDECHO) $(LD) $(SOFLAGS) $(LDFLAGS) Foo.$(ObjSuf) FooDict.$(ObjSuf) Foo.exp $(LIBS) \
                    $(OutPutOpt)$@
 else
-	$(CMDECHO) $(LD) $(SOFLAGS) $(LDFLAGS) $(LIBSFORLINK) Foo.$(ObjSuf) FooDict.$(ObjSuf) $(OutPutOpt) $@
-endif
+	$(CMDECHO) $(LD) $(SOFLAGS) $(LDFLAGS) $(LIBS) Foo.$(ObjSuf) FooDict.$(ObjSuf) $(OutPutOpt) $@
 endif
 endif
 endif
