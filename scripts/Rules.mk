@@ -534,11 +534,10 @@ endif
 ifeq ($(MACOSX_MINOR),)
   export MACOSX_MINOR := $(strip $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2))
 endif
-UNDEFOPT      = dynamic_lookup
 LD           ?= c++
 LD           := MACOSX_DEPLOYMENT_TARGET=$(MACOSX_MAJOR).$(MACOSX_MINOR) $(LD)
 LDFLAGS       = -m32
-SOFLAGS       = -m32 -dynamiclib -single_module -undefined $(UNDEFOPT)
+SOFLAGS       = -m32 -dynamiclib -single_module
 DllSuf        = so
 LibSuf        = so
 endif
@@ -560,11 +559,10 @@ endif
 ifeq ($(MACOSX_MINOR),)
   export MACOSX_MINOR := $(strip $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2))
 endif
-UNDEFOPT      = dynamic_lookup
 LD           ?= c++
 LD           := MACOSX_DEPLOYMENT_TARGET=$(MACOSX_MAJOR).$(MACOSX_MINOR) $(LD)
 LDFLAGS       = -m64 -Wl,-rpath,@loader_path/. -Wl,-rpath,$(ROOTSYS)/lib
-SOFLAGS       = -m64 -dynamiclib -single_module -undefined $(UNDEFOPT)
+SOFLAGS       = -m64 -dynamiclib -single_module
 DllSuf        = so
 LibSuf        = so
 endif
@@ -586,11 +584,10 @@ endif
 ifeq ($(MACOSX_MINOR),)
   export MACOSX_MINOR := $(strip $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2))
 endif
-UNDEFOPT      = dynamic_lookup
 LD           ?= c++
 LD           := MACOSX_DEPLOYMENT_TARGET=$(MACOSX_MAJOR).$(MACOSX_MINOR) $(LD)
 LDFLAGS       = -m64 -Wl,-rpath,@loader_path/. -Wl,-rpath,$(ROOTSYS)/lib
-SOFLAGS       = -m64 -dynamiclib -single_module -undefined $(UNDEFOPT)
+SOFLAGS       = -m64 -dynamiclib -single_module
 DllSuf        = so
 LibSuf        = so
 endif
@@ -614,11 +611,10 @@ endif
 ifeq ($(MACOSX_MINOR),)
   export MACOSX_MINOR := $(strip $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2))
 endif
-UNDEFOPT      = dynamic_lookup
 LD           ?= icpc
 LD           := MACOSX_DEPLOYMENT_TARGET=$(MACOSX_MAJOR).$(MACOSX_MINOR) $(LD)
 LDFLAGS       =
-SOFLAGS       = -dynamiclib -single_module -undefined $(UNDEFOPT)
+SOFLAGS       = -dynamiclib -single_module
 DllSuf        = so
 LibSuf        = so
 endif
