@@ -95,6 +95,10 @@ public:
   static TObject* decodeObjOnTheFly(
           const char* callerID, const char* cmdArgName, Int_t objIdx, TObject* defVal, Args_t && ...args);
 
+  template<class ...Args_t>
+  static RooArgSet* decodeSetOnTheFly(
+          const char* callerID, const char* cmdArgName, Int_t objIdx, RooArgSet* defVal, Args_t && ...args);
+
   static double decodeDoubleOnTheFly(const char* callerID, const char* cmdArgName, int idx, double defVal,
       std::initializer_list<std::reference_wrapper<const RooCmdArg>> args);
 
@@ -223,6 +227,18 @@ TObject* RooCmdConfig::decodeObjOnTheFly(
   pc.defineObject("theObj",cmdArgName,objIdx,defVal) ;
   pc.process(std::forward<Args_t>(args)...);
   return pc.getObject("theObj") ;
+}
+
+
+template<class ...Args_t>
+RooArgSet* RooCmdConfig::decodeSetOnTheFly(
+        const char* callerID, const char* cmdArgName, Int_t objIdx, RooArgSet* defVal, Args_t && ...args)
+{
+  RooCmdConfig pc(callerID) ;
+  pc.allowUndefined() ;
+  pc.defineSet("theObj",cmdArgName,objIdx,defVal) ;
+  pc.process(std::forward<Args_t>(args)...);
+  return pc.getSet("theObj") ;
 }
 
 

@@ -458,7 +458,7 @@ RooAbsData* RooAbsData::reduce(const RooCmdArg& arg1,const RooCmdArg& arg2,const
   pc.defineObject("cutVar","CutVar",0,0) ;
   pc.defineInt("evtStart","EventRange",0,0) ;
   pc.defineInt("evtStop","EventRange",1,std::numeric_limits<int>::max()) ;
-  pc.defineObject("varSel","SelectVars",0,0) ;
+  pc.defineSet("varSel","SelectVars",0,0) ;
   pc.defineMutex("CutVar","CutSpec") ;
 
   // Process & check varargs
@@ -473,7 +473,7 @@ RooAbsData* RooAbsData::reduce(const RooCmdArg& arg1,const RooCmdArg& arg2,const
   RooFormulaVar* cutVar = static_cast<RooFormulaVar*>(pc.getObject("cutVar",0)) ;
   Int_t nStart = pc.getInt("evtStart",0) ;
   Int_t nStop = pc.getInt("evtStop",std::numeric_limits<int>::max()) ;
-  RooArgSet* varSet = static_cast<RooArgSet*>(pc.getObject("varSel")) ;
+  RooArgSet* varSet = pc.getSet("varSel");
   const char* name = pc.getString("name",0,true) ;
   const char* title = pc.getString("title",0,true) ;
 
