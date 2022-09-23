@@ -2,10 +2,8 @@
 #include <algorithm>
 #include <iostream>
 namespace Scale_by_2{
-std::vector<std::vector<float>> Compute(std::vector<std::vector<float>> inputs){
-    for(auto& it:inputs){
-        std::for_each(it.begin(), it.end(), [](float &i){i *= 2;});
-    }
-    return inputs;
+void Compute(std::vector<float>& input, std::vector<float>& output){
+    std::for_each(input.begin(), input.end(), [](float &i){i *= 2;});
+    output = input;
 }
 } //Double operator
