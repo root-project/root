@@ -92,9 +92,6 @@ else
 ifeq ($(ARCH),aix5)
 		$(CMDECHO)/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
-ifeq ($(PLATFORM),macosx)
-		$(CMDECHO) $(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTLIB)
-else
 ifeq ($(ARCH),win32)
 		$(CMDECHO) bindexplib $* $^ > $*.def
 		$(CMDECHO) lib -nologo -MACHINE:IX86 $^ -def:$*.def \
@@ -102,8 +99,7 @@ ifeq ($(ARCH),win32)
 		$(CMDECHO) $(LD) $(SOFLAGS) $(LDFLAGS) $^ $*.exp $(LIBS) \
 		   $(OutPutOpt)$@
 else
-		$(CMDECHO) $(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
-endif
+		$(CMDECHO) $(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@ $(LIBS)
 endif
 endif
 endif
@@ -121,12 +117,6 @@ else
 ifeq ($(ARCH),aix5)
 		$(CMDECHO)/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
-ifeq ($(ARCH),macosx)
-# We need to make both the .dylib and the .so
-		$(CMDECHO) $(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENT2LIB)
-		$(CMDECHO) $(LD) -bundle -undefined  $(UNDEFOPT) -Wl,-x $(LDFLAGS) $^ \
-		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
-else
 ifeq ($(ARCH),win32)
 		$(CMDECHO)bindexplib $* $^ > $*.def
 		$(CMDECHO)lib -nologo -MACHINE:IX86 $^ -def:$*.def \
@@ -134,8 +124,7 @@ ifeq ($(ARCH),win32)
 		$(CMDECHO) $(LD) $(SOFLAGS) $(LDFLAGS) $^ $*.exp $(LIBS) \
 		   $(OutPutOpt)$@
 else
-		$(CMDECHO) $(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
-endif
+		$(CMDECHO) $(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@ $(LIBS)
 endif
 endif
 endif
