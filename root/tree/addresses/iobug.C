@@ -36,11 +36,11 @@ protected:
       return newarrays;
    }
 
-   Double_t **Allocate(Int_t newsize) {
+   virtual Double_t **Allocate(Int_t newsize) {
       return AllocateArrays(2, newsize);
    }
 
-   void CopyAndRelease(Double_t **newarrays, Int_t ibegin, Int_t iend,
+   virtual void CopyAndRelease(Double_t **newarrays, Int_t ibegin, Int_t iend,
                        Int_t obegin)
    {
       // Copy points from fX and fY to arrays[0] and arrays[1]
@@ -58,7 +58,7 @@ protected:
       }
    }
 
-   Bool_t CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend,
+   virtual Bool_t CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend,
                      Int_t obegin)
    {
       // Copy points from fX and fY to arrays[0] and arrays[1]
@@ -95,7 +95,7 @@ protected:
       return newarrays;
    }
 
-   void FillZero(Int_t begin, Int_t end)
+   virtual void FillZero(Int_t begin, Int_t end)
    {
       // Set zero values for point arrays in the range [begin, end)
       // Should be redefined in descendant classes
@@ -108,7 +108,10 @@ public:
 
    Graph() : fMaxSize(0),fNpoints(0), fX(0),fY(0),fFunctions(0),fHistogram(0),fMinimum(0),fMaximum(0) {}
    Graph(Int_t n) : TNamed("Graph", "Graph"), TAttLine(), TAttFill(1, 1001), TAttMarker(),
-                    fMaxSize(n),fNpoints(n), fX(new Double_t[n]),fY(new Double_t[n]),fFunctions(0),fHistogram(0),fMinimum(0),fMaximum(0) {}
+                    fMaxSize(n),fNpoints(n), fX(new Double_t[n]),fY(new Double_t[n]),fFunctions(0),fHistogram(0),fMinimum(0),fMaximum(0)
+   {
+      FillZero(0, n);
+   }
    ~Graph() {
       delete [] fX;
       delete [] fY;
@@ -149,13 +152,69 @@ protected:
 
 public:
    GraphErrors() : Graph(0), fEX(0),fEY(0) {}
-   GraphErrors(Int_t n) : Graph(n),fEX(new Double_t[n]),fEY(new Double_t[n]) {}
+   GraphErrors(Int_t n) : Graph(n),fEX(new Double_t[n]),fEY(new Double_t[n])
+   {
+      FillZero(0, n);
+   }
    ~GraphErrors() {
       delete [] fEX;
       delete [] fEY;
    }
 
-   ClassDef(GraphErrors,3)  //A graph with error bars
+   Double_t **Allocate(Int_t newsize) override {
+      return AllocateArrays(4, newsize);
+   }
+
+   void CopyAndRelease(Double_t **newarrays, Int_t ibegin, Int_t iend,
+                       Int_t obegin) override
+   {
+      Double_t *newex, *newey;
+      if (newarrays) {
+         // newarrays will be deleted by Graph::CopyAndRelease.
+         newex = newarrays[2];
+         newey = newarrays[3];
+      }
+      Graph::CopyAndRelease(newarrays, ibegin, iend, obegin);
+      if (newarrays) {
+         delete[] fEX;
+         fEX = newex;
+         delete[] fEY;
+         fEY = newey;
+      }
+   }
+
+   Bool_t CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend,
+                     Int_t obegin) override
+   {
+      // Copy points from fEX and fEY to arrays[0] and arrays[1]
+      // or to fEX and fEY if arrays == 0 and ibegin != iend.
+
+      if (Graph::CopyPoints(arrays, ibegin, iend, obegin)) {
+         Int_t n = (iend - ibegin) * sizeof(Double_t);
+         if (arrays) {
+            memmove(&arrays[2][obegin], &fEX[ibegin], n);
+            memmove(&arrays[3][obegin], &fEY[ibegin], n);
+         } else {
+            memmove(&fEX[obegin], &fEX[ibegin], n);
+            memmove(&fEY[obegin], &fEY[ibegin], n);
+         }
+         return kTRUE;
+      } else
+         return kFALSE;
+
+   }
+
+   void FillZero(Int_t begin, Int_t end) override
+   {
+      // Set zero values for point arrays in the range [begin, end)
+      // Should be redefined in descendant classes
+
+      Graph::FillZero(begin, end);
+      memset(fEX + begin, 0, (end - begin)*sizeof(Double_t));
+      memset(fEY + begin, 0, (end - begin)*sizeof(Double_t));
+   }
+
+   ClassDefOverride(GraphErrors,3)  //A graph with error bars
 };
 
 void iobug(int split = 0, int classtype = 0, int clonesmode = 0, int show = 0, int dumpmode = 0)
@@ -216,14 +275,14 @@ void iobug(int split = 0, int classtype = 0, int clonesmode = 0, int show = 0, i
       // Remember "g" is local, so we must break the
       // connection between "g" and this branch before
       // leaving the routine.
-      t->Branch("graph", g->ClassName(), &g, 32000, split); 
+      t->Branch("graph", g->ClassName(), &g, 32000, split);
    }
 
    if (clonesmode & 0x2) {
       // Remember "clones" is local, so we must break the
       // connection between "clones" and this branch before
       // leaving the routine.
-      t->Branch("graphCl", &clones, 32000, split); 
+      t->Branch("graphCl", &clones, 32000, split);
    }
 
    t->Fill();
