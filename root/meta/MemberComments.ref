@@ -291,6 +291,8 @@ OBJ: TList	TList	Doubly linked list : 0
       TClass* TAttBBox2D::IsA() const
  OBJ: TMethod	IsA	 : 0
       TClass* TAttFill::IsA() const
+ OBJ: TMethod	IsDestructed	 : 0
+      Bool_t TObject::IsDestructed() const
  OBJ: TMethod	IsEqual	 : 0
       Bool_t TObject::IsEqual(const TObject* obj) const
  OBJ: TMethod	IsFolder	 : 0
