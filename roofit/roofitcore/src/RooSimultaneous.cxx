@@ -590,9 +590,9 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   // It is not used directly, but the "SliceCat" commands are nested in it.
   // Removing this dummy definition results in "ERROR: unrecognized command: SliceCatMany".
   pc.defineObject("dummy1","SliceCatMany",0) ;
-  pc.defineObject("projSet","Project",0) ;
-  pc.defineObject("sliceSet","SliceVars",0) ;
-  pc.defineObject("projDataSet","ProjData",0) ;
+  pc.defineSet("projSet","Project",0) ;
+  pc.defineSet("sliceSet","SliceVars",0) ;
+  pc.defineSet("projDataSet","ProjData",0) ;
   pc.defineObject("projData","ProjData",1) ;
   pc.defineMutex("Project","SliceVars") ;
   pc.allowUndefined() ; // there may be commands we don't handle here
@@ -604,10 +604,10 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   }
 
   const RooAbsData* projData = (const RooAbsData*) pc.getObject("projData") ;
-  const RooArgSet* projDataSet = (const RooArgSet*) pc.getObject("projDataSet") ;
-  const RooArgSet* sliceSetTmp = (const RooArgSet*) pc.getObject("sliceSet") ;
+  const RooArgSet* projDataSet = pc.getSet("projDataSet");
+  const RooArgSet* sliceSetTmp = pc.getSet("sliceSet") ;
   std::unique_ptr<RooArgSet> sliceSet( sliceSetTmp ? ((RooArgSet*) sliceSetTmp->Clone()) : nullptr );
-  const RooArgSet* projSet = (const RooArgSet*) pc.getObject("projSet") ;
+  const RooArgSet* projSet = pc.getSet("projSet") ;
   double scaleFactor = pc.getDouble("scaleFactor") ;
   ScaleType stype = (ScaleType) pc.getInt("scaleType") ;
 

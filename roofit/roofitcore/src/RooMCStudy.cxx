@@ -123,7 +123,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   RooCmdConfig pc(Form("RooMCStudy::RooMCStudy(%s)",model.GetName())) ;
 
   pc.defineObject("fitModel","FitModel",0,0) ;
-  pc.defineObject("condObs","ProjectedObservables",0,0) ;
+  pc.defineSet("condObs","ProjectedObservables",0,0) ;
   pc.defineObject("protoData","PrototypeData",0,0) ;
   pc.defineSet("cPars","Constrain",0,0) ;
   pc.defineSet("extCons","ExternalConstraints",0,0) ;
@@ -221,8 +221,8 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
 
   // Extract conditional observables and prototype data
   _genProtoData = static_cast<RooDataSet*>(pc.getObject("protoData",0)) ;
-  if (pc.getObject("condObs",0)) {
-    _projDeps.add(static_cast<RooArgSet&>(*pc.getObject("condObs",0))) ;
+  if (auto condObs = pc.getSet("condObs",0)) {
+    _projDeps.add(*condObs);
   }
 
   _dependents.add(observables) ;
