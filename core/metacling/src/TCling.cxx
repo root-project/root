@@ -3357,6 +3357,13 @@ void TCling::UpdateListOfLoadedSharedLibraries()
 #endif
 }
 
+namespace {
+template <int N>
+static bool StartsWithStrLit(const char *haystack, const char (&needle)[N]) {
+   return !strncmp(haystack, needle, N - 1);
+}
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Register a new shared library name with the interpreter; add it to
 /// fSharedLibs.
@@ -3374,41 +3381,47 @@ void TCling::RegisterLoadedSharedLibrary(const char* filename)
    }
 
 #if defined(R__MACOSX)
-   // Check that this is not a system library
+   // Check that this is not a system library that does not exist on disk.
    auto lenFilename = strlen(filename);
-   if (!strncmp(filename, "/usr/lib/system/", 16)
-       || !strncmp(filename, "/usr/lib/libc++", 15)
-       || !strncmp(filename, "/System/Library/Frameworks/", 27)
-       || !strncmp(filename, "/System/Library/PrivateFrameworks/", 34)
-       || !strncmp(filename, "/System/Library/CoreServices/", 29)
-       || !strcmp(filename, "cl_kernels") // yepp, no directory
-       || strstr(filename, "/usr/lib/libSystem")
-       || strstr(filename, "/usr/lib/libstdc++")
-       || strstr(filename, "/usr/lib/libicucore")
-       || strstr(filename, "/usr/lib/libbsm")
-       || strstr(filename, "/usr/lib/libobjc")
-       || strstr(filename, "/usr/lib/libresolv")
-       || strstr(filename, "/usr/lib/libauto")
-       || strstr(filename, "/usr/lib/libcups")
-       || strstr(filename, "/usr/lib/libDiagnosticMessagesClient")
-       || strstr(filename, "/usr/lib/liblangid")
-       || strstr(filename, "/usr/lib/libCRFSuite")
-       || strstr(filename, "/usr/lib/libpam")
-       || strstr(filename, "/usr/lib/libOpenScriptingUtil")
-       || strstr(filename, "/usr/lib/libextension")
-       || strstr(filename, "/usr/lib/libAudioToolboxUtility")
-       || strstr(filename, "/usr/lib/liboah")
-       || strstr(filename, "/usr/lib/libRosetta")
-       || strstr(filename, "/usr/lib/libCoreEntitlements")
-       || strstr(filename, "/usr/lib/libssl.")
-       || strstr(filename, "/usr/lib/libcrypto.")
-       // These are candidates for suppression, too:
-       //   -lfakelink -lapple_nghttp2 -lnetwork -lsqlite3 -lenergytrace -lCoreEntitlements
-       //   -lMobileGestalt -lcoretls -lcoretls_cfhelpers -lxar.1 -lcompression -larchive.2
-       //   -lxml2.2 -lpcap.A -ldns_services -llzma.5 -lbz2.1.0 -liconv.2 -lcharset.1
-       //   -lCheckFix -lmecabra -lmecab -lgermantok -lThaiTokenizer -lChineseTokenizer
-       //   -lcmph -lutil -lapp_launch_measurement -lxslt.1 -lspindump -late -lexpat.1
-       //   -lAudioStatistics -lSMC -lperfcheck -lmis -lIOReport -lheimdal-asn1
+   auto isInMacOSSystemDir = [](const char *fn) {
+      return StartsWithStrLit(fn, "/usr/lib/") || StartsWithStrLit(fn, "/System/Library/");
+   };
+   if (!strcmp(filename, "cl_kernels") // yepp, no directory
+
+       // These we should not link with (e.g. because they forward to .tbd):
+       || StartsWithStrLit(filename, "/usr/lib/system/")
+       || StartsWithStrLit(filename, "/usr/lib/libc++")
+       || StartsWithStrLit(filename, "/System/Library/Frameworks/")
+       || StartsWithStrLit(filename, "/System/Library/PrivateFrameworks/")
+       || StartsWithStrLit(filename, "/System/Library/CoreServices/")
+       || StartsWithStrLit(filename, "/usr/lib/libSystem")
+       || StartsWithStrLit(filename, "/usr/lib/libstdc++")
+       || StartsWithStrLit(filename, "/usr/lib/libicucore")
+       || StartsWithStrLit(filename, "/usr/lib/libbsm")
+       || StartsWithStrLit(filename, "/usr/lib/libobjc")
+       || StartsWithStrLit(filename, "/usr/lib/libresolv")
+       || StartsWithStrLit(filename, "/usr/lib/libauto")
+       || StartsWithStrLit(filename, "/usr/lib/libcups")
+       || StartsWithStrLit(filename, "/usr/lib/libDiagnosticMessagesClient")
+       || StartsWithStrLit(filename, "/usr/lib/liblangid")
+       || StartsWithStrLit(filename, "/usr/lib/libCRFSuite")
+       || StartsWithStrLit(filename, "/usr/lib/libpam")
+       || StartsWithStrLit(filename, "/usr/lib/libOpenScriptingUtil")
+       || StartsWithStrLit(filename, "/usr/lib/libextension")
+       || StartsWithStrLit(filename, "/usr/lib/libAudioToolboxUtility")
+       || StartsWithStrLit(filename, "/usr/lib/liboah")
+       || StartsWithStrLit(filename, "/usr/lib/libRosetta")
+       || StartsWithStrLit(filename, "/usr/lib/libCoreEntitlements")
+       || StartsWithStrLit(filename, "/usr/lib/libssl.")
+       || StartsWithStrLit(filename, "/usr/lib/libcrypto.")
+
+       // The system lib is likely in macOS's blob.
+       || (isInMacOSSystemDir(filename) && gSystem->AccessPathName(filename))
+
+       // "Link against the umbrella framework 'System.framework' instead"
+       || StartsWithStrLit(filename, "/usr/lib/system/libsystem_kernel")
+       || StartsWithStrLit(filename, "/usr/lib/system/libsystem_platform")
+       || StartsWithStrLit(filename, "/usr/lib/system/libsystem_pthread")
 
        // "cannot link directly with dylib/framework, your binary is not an allowed client of
        // /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/
