@@ -199,8 +199,8 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooD
              const RooCmdArg& arg4,const RooCmdArg& arg5,const RooCmdArg& arg6,
              const RooCmdArg& arg7,const RooCmdArg& arg8,const RooCmdArg& arg9) :
   RooAbsOptTestStatistic(name,title,pdf,hdata,
-                         *static_cast<const RooArgSet*>(RooCmdConfig::decodeObjOnTheFly("RooChi2Var::RooChi2Var","ProjectedObservables",0,&_emptySet,
-                                 arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9)),
+                         *RooCmdConfig::decodeSetOnTheFly("RooChi2Var::RooChi2Var","ProjectedObservables",0,&_emptySet,
+                                 arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
                          makeRooAbsTestStatisticCfgForPdf(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9))
 {
   RooCmdConfig pc("RooChi2Var::RooChi2Var") ;

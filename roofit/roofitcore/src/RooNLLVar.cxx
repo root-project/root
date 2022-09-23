@@ -94,9 +94,9 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
            const RooCmdArg& arg4, const RooCmdArg& arg5,const RooCmdArg& arg6,
            const RooCmdArg& arg7, const RooCmdArg& arg8,const RooCmdArg& arg9) :
   RooAbsOptTestStatistic(name,title,pdf,indata,
-                         *static_cast<const RooArgSet*>(RooCmdConfig::decodeObjOnTheFly(
+                         *RooCmdConfig::decodeSetOnTheFly(
                              "RooNLLVar::RooNLLVar","ProjectedObservables",0,&_emptySet,
-                             arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9)),
+                             arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
                          makeRooAbsTestStatisticCfg(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9))
 {
   RooCmdConfig pc("RooNLLVar::RooNLLVar") ;

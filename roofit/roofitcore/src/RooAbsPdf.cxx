@@ -1012,7 +1012,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("verbose","Verbose",0,0) ;
   pc.defineInt("optConst","Optimize",0,0) ;
   pc.defineInt("cloneData","CloneData", 0, 2);
-  pc.defineObject("projDepSet","ProjectedObservables",0,0) ;
+  pc.defineSet("projDepSet","ProjectedObservables",0,0) ;
   pc.defineSet("cPars","Constrain",0,0) ;
   pc.defineSet("glObs","GlobalObservables",0,0) ;
   pc.defineInt("doOffset","OffsetLikelihood",0,0) ;
@@ -1073,7 +1073,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   }
 
   RooArgSet projDeps ;
-  auto tmp = static_cast<RooArgSet*>(pc.getObject("projDepSet")) ;
+  auto tmp = pc.getSet("projDepSet");
   if (tmp) {
     projDeps.add(*tmp) ;
   }
@@ -1595,7 +1595,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("doOffset","OffsetLikelihood",0,0) ;
   pc.defineString("mintype","Minimizer",0,minimizerDefaults.minType.c_str()) ;
   pc.defineString("minalg","Minimizer",1,minimizerDefaults.minAlg.c_str()) ;
-  pc.defineObject("minosSet","Minos",0,minimizerDefaults.minosSet) ;
+  pc.defineSet("minosSet","Minos",0,minimizerDefaults.minosSet) ;
   pc.defineMutex("Range","RangeWithName") ;
 
   // Process and check varargs
@@ -1674,7 +1674,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   cfg.doWarn = pc.getInt("doWarn");
   cfg.doSumW2 = pc.getInt("doSumW2");
   cfg.doAsymptotic = pc.getInt("doAsymptoticError");
-  cfg.minosSet = static_cast<RooArgSet*>(pc.getObject("minosSet"));
+  cfg.minosSet = pc.getSet("minosSet");
   cfg.minType = pc.getString("mintype","");
   cfg.minAlg = pc.getString("minalg","minuit");
 
@@ -2710,7 +2710,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
   RooCmdConfig pc(Form("RooAbsPdf::plotOn(%s)",GetName())) ;
   pc.defineDouble("scaleFactor","Normalization",0,1.0) ;
   pc.defineInt("scaleType","Normalization",0,Relative) ;
-  pc.defineObject("compSet","SelectCompSet",0) ;
+  pc.defineSet("compSet","SelectCompSet",0) ;
   pc.defineString("compSpec","SelectCompSpec",0) ;
   pc.defineObject("asymCat","Asymmetry",0) ;
   pc.defineDouble("rangeLo","Range",0,-999.) ;
@@ -2734,7 +2734,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
   double scaleFactor = pc.getDouble("scaleFactor") ;
   const RooAbsCategoryLValue* asymCat = (const RooAbsCategoryLValue*) pc.getObject("asymCat") ;
   const char* compSpec = pc.getString("compSpec") ;
-  const RooArgSet* compSet = (const RooArgSet*) pc.getObject("compSet") ;
+  const RooArgSet* compSet = pc.getSet("compSet");
   bool haveCompSel = ( (compSpec && strlen(compSpec)>0) || compSet) ;
 
   // Suffix for curve name
@@ -3044,7 +3044,7 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
   pc.defineDouble("xmax","Layout",1,0.9) ;
   pc.defineInt("ymaxi","Layout",0,Int_t(0.9*10000)) ;
   pc.defineInt("showc","ShowConstants",0,0) ;
-  pc.defineObject("params","Parameters",0,0) ;
+  pc.defineSet("params","Parameters",0,0) ;
   pc.defineString("formatStr","Format",0,"NELU") ;
   pc.defineInt("sigDigit","Format",0,2) ;
   pc.defineInt("dummy","FormatArgs",0,0) ;
@@ -3067,7 +3067,7 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
   Int_t sigDigit = pc.getInt("sigDigit") ;
 
   // Decode command line arguments
-  RooArgSet* params = static_cast<RooArgSet*>(pc.getObject("params")) ;
+  RooArgSet* params = pc.getSet("params");
   if (!params) {
     std::unique_ptr<RooArgSet> paramsPtr{getParameters(frame->getNormVars())} ;
     if (pc.hasProcessed("FormatArgs")) {
@@ -3290,7 +3290,7 @@ RooAbsReal* RooAbsPdf::createCdf(const RooArgSet& iset, const RooCmdArg& arg1, c
 {
   // Define configuration for this method
   RooCmdConfig pc(Form("RooAbsReal::createCdf(%s)",GetName())) ;
-  pc.defineObject("supNormSet","SupNormSet",0,0) ;
+  pc.defineSet("supNormSet","SupNormSet",0,0) ;
   pc.defineInt("numScanBins","ScanParameters",0,1000) ;
   pc.defineInt("intOrder","ScanParameters",1,2) ;
   pc.defineInt("doScanNum","ScanNumCdf",0,1) ;
@@ -3305,7 +3305,7 @@ RooAbsReal* RooAbsPdf::createCdf(const RooArgSet& iset, const RooCmdArg& arg1, c
   }
 
   // Extract values from named arguments
-  const RooArgSet* snset = static_cast<const RooArgSet*>(pc.getObject("supNormSet",0)) ;
+  const RooArgSet* snset = pc.getSet("supNormSet",0);
   RooArgSet nset ;
   if (snset) {
     nset.add(*snset) ;

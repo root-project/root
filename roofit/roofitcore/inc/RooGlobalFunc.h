@@ -42,8 +42,6 @@ class RooConstVar ;
 class RooRealVar ;
 class RooAbsCategory ;
 class RooNumIntConfig ;
-class RooArgList ;
-class RooAbsCollection ;
 class TH1 ;
 class TTree ;
 
@@ -83,14 +81,11 @@ enum class BatchModeOption { Off, Cpu, Cuda, Old };
 RooCmdArg DrawOption(const char* opt) ;
 RooCmdArg Normalization(double scaleFactor) ;
 RooCmdArg Slice(const RooArgSet& sliceSet) ;
-RooCmdArg Slice(RooArgSet && sliceSet) ;
 RooCmdArg Slice(RooCategory& cat, const char* label) ;
 RooCmdArg Slice(std::map<RooCategory*, std::string> const&) ;
 RooCmdArg Project(const RooArgSet& projSet) ;
-RooCmdArg Project(RooArgSet && projSet) ;
 RooCmdArg ProjWData(const RooAbsData& projData, bool binData=false) ;
 RooCmdArg ProjWData(const RooArgSet& projSet, const RooAbsData& projData, bool binData=false) ;
-RooCmdArg ProjWData(RooArgSet && projSet, const RooAbsData& projData, bool binData=false) ;
 RooCmdArg Asymmetry(const RooCategory& cat) ;
 RooCmdArg Precision(double prec) ;
 RooCmdArg ShiftToZero() ;
@@ -112,15 +107,15 @@ RooCmdArg MoveToBack()  ;
 RooCmdArg VisualizeError(const RooDataSet& paramData, double Z=1) ;
 RooCmdArg VisualizeError(const RooFitResult& fitres, double Z=1, bool linearMethod=true) ;
 RooCmdArg VisualizeError(const RooFitResult& fitres, const RooArgSet& param, double Z=1, bool linearMethod=true) ;
-RooCmdArg VisualizeError(const RooFitResult& fitres, RooArgSet && param, double Z=1, bool linearMethod=true) ;
 RooCmdArg ShowProgress() ;
 
 // RooAbsPdf::plotOn arguments
 RooCmdArg Normalization(double scaleFactor, Int_t scaleType) ;
 template<class... Args_t>
 RooCmdArg Components(Args_t &&... argsOrArgSet) {
-  return RooCmdArg("SelectCompSet",0,0,0,0,nullptr,nullptr,
-          &RooCmdArg::take(RooArgSet{std::forward<Args_t>(argsOrArgSet)...}), nullptr);
+  RooCmdArg out{"SelectCompSet",0};
+  out.setSet(0, RooArgSet{std::forward<Args_t>(argsOrArgSet)...});
+  return out;
 }
 RooCmdArg Components(const char* compSpec) ;
 
@@ -165,9 +160,7 @@ RooCmdArg Import(RooDataSet& data) ;
 RooCmdArg Import(TTree& tree) ;
 RooCmdArg ImportFromFile(const char* fname, const char* tname) ;
 RooCmdArg StoreError(const RooArgSet& aset) ;
-RooCmdArg StoreError(RooArgSet && aset) ;
 RooCmdArg StoreAsymError(const RooArgSet& aset) ;
-RooCmdArg StoreAsymError(RooArgSet && aset) ;
 RooCmdArg OwnLinked() ;
 
 /** @} */
@@ -194,11 +187,9 @@ RooCmdArg AutoBinning(Int_t nbins=100, double marginFactor=0.1) ;
 
 // RooAbsReal::fillHistogram arguments
 RooCmdArg IntegratedObservables(const RooArgSet& intObs) ;
-RooCmdArg IntegratedObservables(RooArgSet && intObs) ;
 
 // RooAbsData::reduce arguments
 RooCmdArg SelectVars(const RooArgSet& vars) ;
-RooCmdArg SelectVars(RooArgSet && vars) ;
 RooCmdArg EventRange(Int_t nStart, Int_t nStop) ;
 
 
@@ -230,8 +221,9 @@ RooCmdArg Optimize(Int_t flag=2) ;
 //                          observables or a single RooArgSet containing them.
 template<class... Args_t>
 RooCmdArg ConditionalObservables(Args_t &&... argsOrArgSet) {
-  return RooCmdArg("ProjectedObservables",0,0,0,0,nullptr,nullptr,
-          &RooCmdArg::take(RooArgSet{std::forward<Args_t>(argsOrArgSet)...}));
+  RooCmdArg out{"ProjectedObservables",0};
+  out.setSet(0, RooArgSet{std::forward<Args_t>(argsOrArgSet)...});
+  return out;
 }
 
 // obsolete, for backward compatibility
@@ -250,21 +242,19 @@ RooCmdArg InitialHesse(bool flag=true) ;
 RooCmdArg Hesse(bool flag=true) ;
 RooCmdArg Minos(bool flag=true) ;
 RooCmdArg Minos(const RooArgSet& minosArgs) ;
-RooCmdArg Minos(RooArgSet && minosArgs) ;
 RooCmdArg SplitRange(bool flag=true) ;
 RooCmdArg SumCoefRange(const char* rangeName) ;
 RooCmdArg Constrain(const RooArgSet& params) ;
-RooCmdArg Constrain(RooArgSet && params) ;
 
 template<class... Args_t>
 RooCmdArg GlobalObservables(Args_t &&... argsOrArgSet) {
-  return RooCmdArg("GlobalObservables",0,0,0,0,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,
-          &RooCmdArg::take(RooArgSet{std::forward<Args_t>(argsOrArgSet)...}));
+  RooCmdArg out{"GlobalObservables",0};
+  out.setSet(0, RooArgSet{std::forward<Args_t>(argsOrArgSet)...});
+  return out;
 }
 RooCmdArg GlobalObservablesSource(const char* sourceName);
 RooCmdArg GlobalObservablesTag(const char* tagName) ;
 RooCmdArg ExternalConstraints(const RooArgSet& constraintPdfs) ;
-RooCmdArg ExternalConstraints(RooArgSet && constraintPdfs) ;
 RooCmdArg PrintEvalErrors(Int_t numErrors) ;
 RooCmdArg EvalErrorWall(bool flag) ;
 RooCmdArg SumW2Error(bool flag) ;
@@ -280,7 +270,6 @@ RooCmdArg RecoverFromUndefinedRegions(double strength);
 RooCmdArg Label(const char* str) ;
 RooCmdArg Layout(double xmin, double xmax=0.99, double ymin=0.95) ;
 RooCmdArg Parameters(const RooArgSet& params) ;
-RooCmdArg Parameters(RooArgSet && params) ;
 RooCmdArg ShowConstants(bool flag=true) ;
 
 // RooTreeData::statOn arguments
@@ -288,9 +277,6 @@ RooCmdArg What(const char* str) ;
 
 // RooProdPdf::ctor arguments
 RooCmdArg Conditional(const RooArgSet& pdfSet, const RooArgSet& depSet, bool depsAreCond=false) ;
-RooCmdArg Conditional(RooArgSet && pdfSet, const RooArgSet& depSet, bool depsAreCond=false) ;
-RooCmdArg Conditional(const RooArgSet& pdfSet, RooArgSet && depSet, bool depsAreCond=false) ;
-RooCmdArg Conditional(RooArgSet && pdfSet, RooArgSet && depSet, bool depsAreCond=false) ;
 
 /**
  * \defgroup Generating Arguments for generating data
@@ -321,8 +307,9 @@ RooCmdArg IntrinsicBinning(bool flag=true) ;
 // RooAbsReal::createIntegral arguments
 template<class... Args_t>
 RooCmdArg NormSet(Args_t &&... argsOrArgSet) {
-  return RooCmdArg("NormSet",0,0,0,0,nullptr,nullptr,
-          &RooCmdArg::take(RooArgSet{std::forward<Args_t>(argsOrArgSet)...}), nullptr);
+  RooCmdArg out{"NormSet",0};
+  out.setSet(0, RooArgSet{std::forward<Args_t>(argsOrArgSet)...});
+  return out;
 }
 RooCmdArg NumIntConfig(const RooNumIntConfig& cfg) ;
 
@@ -380,7 +367,6 @@ RooCmdArg Restrict(const char* catName, const char* stateNameList) ;
 
 // RooAbsPdf::createCdf() arguments
 RooCmdArg SupNormSet(const RooArgSet& nset) ;
-RooCmdArg SupNormSet(RooArgSet && nset) ;
 RooCmdArg ScanParameters(Int_t nbins,Int_t intOrder) ;
 RooCmdArg ScanNumCdf() ;
 RooCmdArg ScanAllCdf() ;

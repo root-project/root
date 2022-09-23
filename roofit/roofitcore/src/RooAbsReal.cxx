@@ -532,7 +532,7 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooCmdArg& a
   // Define configuration for this method
   RooCmdConfig pc(Form("RooAbsReal::createIntegral(%s)",GetName())) ;
   pc.defineString("rangeName","RangeWithName",0,"",true) ;
-  pc.defineObject("normSet","NormSet",0,0) ;
+  pc.defineSet("normSet","NormSet",0,0) ;
   pc.defineObject("numIntConfig","NumIntConfig",0,0) ;
 
   // Process & check varargs
@@ -543,7 +543,7 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooCmdArg& a
 
   // Extract values from named arguments
   const char* rangeName = pc.getString("rangeName",0,true) ;
-  const RooArgSet* nset = static_cast<const RooArgSet*>(pc.getObject("normSet",0)) ;
+  const RooArgSet* nset = pc.getSet("normSet",0);
   const RooNumIntConfig* cfg = static_cast<const RooNumIntConfig*>(pc.getObject("numIntConfig",0)) ;
 
   return createIntegral(iset,nset,cfg,rangeName) ;
@@ -1327,9 +1327,9 @@ TH1* RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
   pc.defineInt("intBinning","IntrinsicBinning",0,2) ;
   pc.defineInt("extended","Extended",0,2) ;
 
-  pc.defineObject("compSet","SelectCompSet",0) ;
+  pc.defineSet("compSet","SelectCompSet",0);
   pc.defineString("compSpec","SelectCompSpec",0) ;
-  pc.defineObject("projObs","ProjectedObservables",0,0) ;
+  pc.defineSet("projObs","ProjectedObservables",0,0) ;
   pc.defineObject("yvar","YVar",0,0) ;
   pc.defineObject("zvar","ZVar",0,0) ;
   pc.defineMutex("SelectCompSet","SelectCompSpec") ;
@@ -1354,7 +1354,7 @@ TH1* RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
     vars.add(*zvar) ;
   }
 
-  auto projObs = static_cast<RooArgSet*>(pc.getObject("projObs")) ;
+  auto projObs = pc.getSet("projObs");
   RooArgSet* intObs = 0 ;
 
   bool doScaling = pc.getInt("scaling") ;
@@ -1376,7 +1376,7 @@ TH1* RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
   }
 
   const char* compSpec = pc.getString("compSpec") ;
-  const RooArgSet* compSet = (const RooArgSet*) pc.getObject("compSet") ;
+  const RooArgSet* compSet = pc.getSet("compSet");
   bool haveCompSel = ( (compSpec && strlen(compSpec)>0) || compSet) ;
 
   RooBinning* intBinning(0) ;
@@ -1703,19 +1703,19 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   pc.defineString("sliceCatState","SliceCat",0,"",true) ;
   pc.defineDouble("scaleFactor","Normalization",0,1.0) ;
   pc.defineInt("scaleType","Normalization",0,Relative) ;
-  pc.defineObject("sliceSet","SliceVars",0) ;
+  pc.defineSet("sliceSet","SliceVars",0) ;
   pc.defineObject("sliceCatList","SliceCat",0,0,true) ;
   // This dummy is needed for plotOn to recognize the "SliceCatMany" command.
   // It is not used directly, but the "SliceCat" commands are nested in it.
   // Removing this dummy definition results in "ERROR: unrecognized command: SliceCatMany".
   pc.defineObject("dummy1","SliceCatMany",0) ;
-  pc.defineObject("projSet","Project",0) ;
+  pc.defineSet("projSet","Project",0) ;
   pc.defineObject("asymCat","Asymmetry",0) ;
   pc.defineDouble("precision","Precision",0,1e-3) ;
   pc.defineDouble("evalErrorVal","EvalErrorValue",0,0) ;
   pc.defineInt("doEvalError","EvalErrorValue",0,0) ;
   pc.defineInt("shiftToZero","ShiftToZero",0,0) ;
-  pc.defineObject("projDataSet","ProjData",0) ;
+  pc.defineSet("projDataSet","ProjData",0) ;
   pc.defineObject("projData","ProjData",1) ;
   pc.defineObject("errorFR","VisualizeError",0) ;
   pc.defineDouble("errorZ","VisualizeError",0,1.) ;
@@ -1779,15 +1779,15 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   o.stype = (ScaleType) pc.getInt("scaleType")  ;
   o.projData = (const RooAbsData*) pc.getObject("projData") ;
   o.binProjData = pc.getInt("binProjData") ;
-  o.projDataSet = (const RooArgSet*) pc.getObject("projDataSet") ;
+  o.projDataSet = pc.getSet("projDataSet");
   o.numCPU = pc.getInt("numCPU") ;
   o.interleave = (RooFit::MPSplit) pc.getInt("interleave") ;
   o.eeval      = pc.getDouble("evalErrorVal") ;
   o.doeeval   = pc.getInt("doEvalError") ;
 
-  const RooArgSet* sliceSetTmp = (const RooArgSet*) pc.getObject("sliceSet") ;
+  const RooArgSet* sliceSetTmp = pc.getSet("sliceSet");
   std::unique_ptr<RooArgSet> sliceSet{sliceSetTmp ? static_cast<RooArgSet*>(sliceSetTmp->Clone()) : nullptr};
-  const RooArgSet* projSet = (const RooArgSet*) pc.getObject("projSet") ;
+  const RooArgSet* projSet = pc.getSet("projSet") ;
   const RooAbsCategoryLValue* asymCat = (const RooAbsCategoryLValue*) pc.getObject("asymCat") ;
 
 
@@ -3878,7 +3878,7 @@ RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooCm
 {
   // Define configuration for this method
   RooCmdConfig pc(Form("RooAbsReal::createRunningIntegral(%s)",GetName())) ;
-  pc.defineObject("supNormSet","SupNormSet",0,0) ;
+  pc.defineSet("supNormSet","SupNormSet",0,0) ;
   pc.defineInt("numScanBins","ScanParameters",0,1000) ;
   pc.defineInt("intOrder","ScanParameters",1,2) ;
   pc.defineInt("doScanNum","ScanNum",0,1) ;
@@ -3893,9 +3893,8 @@ RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooCm
   }
 
   // Extract values from named arguments
-  const RooArgSet* snset = static_cast<const RooArgSet*>(pc.getObject("supNormSet",0)) ;
   RooArgSet nset ;
-  if (snset) {
+  if (const RooArgSet* snset = pc.getSet("supNormSet",0)) {
     nset.add(*snset) ;
   }
   Int_t numScanBins = pc.getInt("numScanBins") ;
@@ -4474,7 +4473,7 @@ RooFitResult* RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList)
   pc.defineInt("doWarn","Warnings",0,1) ;
   pc.defineString("mintype","Minimizer",0,"") ;
   pc.defineString("minalg","Minimizer",1,"minuit") ;
-  pc.defineObject("minosSet","Minos",0,0) ;
+  pc.defineSet("minosSet","Minos",0,nullptr) ;
 
   // Process and check varargs
   pc.process(cmdList) ;
@@ -4496,7 +4495,7 @@ RooFitResult* RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList)
   Int_t minos    = pc.getInt("minos") ;
   Int_t numee    = pc.getInt("numee") ;
   Int_t doWarn   = pc.getInt("doWarn") ;
-  const RooArgSet* minosSet = static_cast<RooArgSet*>(pc.getObject("minosSet")) ;
+  const RooArgSet* minosSet = pc.getSet("minosSet");
 
   RooFitResult *ret = 0 ;
 
