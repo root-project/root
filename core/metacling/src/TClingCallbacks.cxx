@@ -371,8 +371,10 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name) 
    // entities provided by the two systems. In that case check if the rootmaps
    // registered the enclosing namespace as a rootmap name resolution namespace
    // and only if that was not the case use the information in the GMI.
-   if (!NSD || !TCling__IsAutoLoadNamespaceCandidate(NSD))
-      return findInGlobalModuleIndex(Name, /*loadFirstMatchOnly*/ false);
+   if (!NSD || !TCling__IsAutoLoadNamespaceCandidate(NSD)) {
+      // After loading modules, we must update the redeclaration chains.
+      return findInGlobalModuleIndex(Name, /*loadFirstMatchOnly*/ false) && cast<Decl>(DC)->getMostRecentDecl();
+   }
 
    const DeclContext* primaryDC = NSD->getPrimaryContext();
    if (primaryDC != DC)
