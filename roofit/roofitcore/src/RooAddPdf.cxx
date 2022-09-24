@@ -110,11 +110,10 @@ void RooAddPdf::finalizeConstruction() {
     auto comp = [&](PdfInfo const& p){ return p.first == elem.first && p.second != elem.second; };
     auto found = std::find_if(seen.begin(), seen.end(), comp);
     if(found != seen.end()) {
-      std::stringstream errorMsg;
-      errorMsg << "RooAddPdf::RooAddPdf(" << GetName()
-               << ") pdf list contains pdfs with duplicate name \"" << pdf->GetName() << "\".";
-      coutE(InputArguments) << errorMsg.str() << std::endl;
-      throw std::invalid_argument(errorMsg.str().c_str());
+      RooFitError err{coutE(InputArguments)};
+      err << "RooAddPdf::RooAddPdf(" << GetName()
+          << ") pdf list contains pdfs with duplicate name \"" << pdf->GetName() << "\".";
+      err.logAndThrow();
     }
     seen.insert(elem);
   }
@@ -153,19 +152,17 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
   _recursive = recursiveFractions;
 
   if (inPdfList.size()>inCoefList.size()+1 || inPdfList.size()<inCoefList.size()) {
-    std::stringstream errorMsg;
-    errorMsg << "RooAddPdf::RooAddPdf(" << GetName()
-             << ") number of pdfs and coefficients inconsistent, must have Npdf=Ncoef or Npdf=Ncoef+1.";
-    coutE(InputArguments) << errorMsg.str() << std::endl;
-    throw std::invalid_argument(errorMsg.str().c_str());
+    RooFitError error{coutE(InputArguments)};
+    error << "RooAddPdf::RooAddPdf(" << GetName()
+          << ") number of pdfs and coefficients inconsistent, must have Npdf=Ncoef or Npdf=Ncoef+1.";
+    error.logAndThrow();
   }
 
   if (recursiveFractions && inPdfList.size()!=inCoefList.size()+1) {
-    std::stringstream errorMsg;
-    errorMsg << "RooAddPdf::RooAddPdf(" << GetName()
-             << "): Recursive fractions option can only be used if Npdf=Ncoef+1.";
-    coutE(InputArguments) << errorMsg.str() << std::endl;
-    throw std::invalid_argument(errorMsg.str());
+    RooFitError error{coutE(InputArguments)};
+    error << "RooAddPdf::RooAddPdf(" << GetName()
+          << "): Recursive fractions option can only be used if Npdf=Ncoef+1.";
+    error.logAndThrow();
   }
 
   // Constructor with N PDFs and N or N-1 coefs
@@ -190,23 +187,20 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
     auto coef = dynamic_cast<RooAbsReal*>(inCoefList.at(i));
     auto pdf  = dynamic_cast<RooAbsPdf*>(inPdfList.at(i));
     if (inPdfList.at(i) == nullptr) {
-      std::stringstream errorMsg;
-      errorMsg << "RooAddPdf::RooAddPdf(" << GetName()
-                 << ") number of pdfs and coefficients inconsistent, must have Npdf=Ncoef or Npdf=Ncoef+1";
-      coutE(InputArguments) << errorMsg.str() << std::endl;
-      throw std::invalid_argument(errorMsg.str());
+      RooFitError error{coutE(InputArguments)};
+      error << "RooAddPdf::RooAddPdf(" << GetName()
+            << ") number of pdfs and coefficients inconsistent, must have Npdf=Ncoef or Npdf=Ncoef+1";
+      error.logAndThrow();
     }
     if (!coef) {
-      std::stringstream errorMsg;
-      errorMsg << "RooAddPdf::RooAddPdf(" << GetName() << ") coefficient " << (coef ? coef->GetName() : "") << " is not of type RooAbsReal, ignored";
-      coutE(InputArguments) << errorMsg.str() << std::endl;
-      throw std::invalid_argument(errorMsg.str());
+      RooFitError error{coutE(InputArguments)};
+      error << "RooAddPdf::RooAddPdf(" << GetName() << ") coefficient " << (coef ? coef->GetName() : "") << " is not of type RooAbsReal, ignored";
+      error.logAndThrow();
     }
     if (!pdf) {
-      std::stringstream errorMsg;
-      errorMsg << "RooAddPdf::RooAddPdf(" << GetName() << ") pdf " << (pdf ? pdf->GetName() : "") << " is not of type RooAbsPdf, ignored";
-      coutE(InputArguments) << errorMsg.str() << std::endl;
-      throw std::invalid_argument(errorMsg.str());
+      RooFitError error{coutE(InputArguments)};
+      error << "RooAddPdf::RooAddPdf(" << GetName() << ") pdf " << (pdf ? pdf->GetName() : "") << " is not of type RooAbsPdf, ignored";
+      error.logAndThrow();
     }
     _pdfList.add(*pdf) ;
 
@@ -218,8 +212,9 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
     auto pdf = dynamic_cast<RooAbsPdf*>(inPdfList.at(inCoefList.size()));
 
     if (!pdf) {
-      coutE(InputArguments) << "RooAddPdf::RooAddPdf(" << GetName() << ") last argument " << inPdfList.at(inCoefList.size())->GetName() << " is not of type RooAbsPdf." << std::endl;
-      throw std::invalid_argument("Last argument for RooAddPdf is not a PDF.");
+      RooFitError error{coutE(InputArguments)};
+      error << "RooAddPdf::RooAddPdf(" << GetName() << ") last argument " << inPdfList.at(inCoefList.size())->GetName() << " is not of type RooAbsPdf." << std::endl;
+      error.logAndThrow();
     }
     _pdfList.add(*pdf) ;
 
@@ -254,18 +249,16 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
     auto pdf = dynamic_cast<const RooAbsPdf*>(pdfArg);
 
     if (!pdf) {
-      std::stringstream errorMsg;
-      errorMsg << "RooAddPdf::RooAddPdf(" << GetName() << ") pdf " << (pdf ? pdf->GetName() : "")
-               << " is not of type RooAbsPdf, RooAddPdf constructor call is invalid!";
-      coutE(InputArguments) << errorMsg.str() << std::endl;
-      throw std::invalid_argument(errorMsg.str().c_str());
+      RooFitError error{coutE(InputArguments)};
+      error << "RooAddPdf::RooAddPdf(" << GetName() << ") pdf " << (pdf ? pdf->GetName() : "")
+            << " is not of type RooAbsPdf, RooAddPdf constructor call is invalid!";
+      error.logAndThrow();
     }
     if (!pdf->canBeExtended()) {
-      std::stringstream errorMsg;
-      errorMsg << "RooAddPdf::RooAddPdf(" << GetName() << ") pdf " << pdf->GetName()
-               << " is not extendable, RooAddPdf constructor call is invalid!";
-      coutE(InputArguments) << errorMsg.str() << std::endl;
-      throw std::invalid_argument(errorMsg.str().c_str());
+      RooFitError error{coutE(InputArguments)};
+      error << "RooAddPdf::RooAddPdf(" << GetName() << ") pdf " << pdf->GetName()
+            << " is not extendable, RooAddPdf constructor call is invalid!";
+      error.logAndThrow();
     }
     _pdfList.add(*pdf) ;
   }
@@ -645,10 +638,9 @@ double RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, con
   RooArgSet* intSet ;
   const std::vector<Int_t>& subCode = _codeReg.retrieve(code-1,intSet) ;
   if (subCode.empty()) {
-    std::stringstream errorMsg;
-    errorMsg << "RooAddPdf::analyticalIntegral(" << GetName() << "): ERROR unrecognized integration code, " << code;
-    coutE(InputArguments) << errorMsg.str() << std::endl;
-    throw std::invalid_argument(errorMsg.str().c_str());
+    RooFitError error{coutE(InputArguments)};
+    error << "RooAddPdf::analyticalIntegral(" << GetName() << "): ERROR unrecognized integration code, " << code;
+    error.logAndThrow();
   }
 
   cxcoutD(Caching) << "RooAddPdf::aiWN(" << GetName() << ") calling getProjCache with nset = " << (normSet?*normSet:RooArgSet()) << std::endl ;

@@ -140,12 +140,10 @@ RooPolyFunc::RooPolyFunc(const char *name, const char *title, const RooAbsCollec
 {
    for (const auto &var : vars) {
       if (!dynamic_cast<RooAbsReal *>(var)) {
-         std::stringstream ss;
-         ss << "RooPolyFunc::ctor(" << GetName() << ") ERROR: coefficient " << var->GetName()
-            << " is not of type RooAbsReal";
-         const std::string errorMsg = ss.str();
-         coutE(InputArguments) << errorMsg << std::endl;
-         throw std::runtime_error(errorMsg);
+         RooFitError error{coutE(InputArguments)};
+         error << ClassName () << "::ctor(" << GetName() << ") ERROR: coefficient " << var->GetName()
+               << " is not of type RooAbsReal";
+         error.logAndThrow();
       }
       _vars.add(*var);
    }
@@ -215,11 +213,9 @@ RooPolyFunc::taylorExpand(const char *name, const char *title, RooAbsReal &func,
 
    // taylor expansion can be performed only for order 0, 1, 2 currently
    if (order >= 3 || order <= 0) {
-      std::stringstream errorMsgStream;
-      errorMsgStream << "RooPolyFunc::taylorExpand(" << name << ") ERROR: order must be 0, 1, or 2";
-      const auto errorMsg = errorMsgStream.str();
-      oocoutE(taylor_poly.get(), InputArguments) << errorMsg << std::endl;
-      throw std::invalid_argument(errorMsg);
+      RooFitError error{oocoutE(taylor_poly.get(), InputArguments)};
+      error << "RooPolyFunc::taylorExpand(" << name << ") ERROR: order must be 0, 1, or 2";
+      error.logAndThrow();
    }
 
    setCoordinates(observables, observableValues);

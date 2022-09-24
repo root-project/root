@@ -153,10 +153,10 @@ Int_t ParamHistFunc::GetNumBins( const RooArgSet& vars ) {
 
   for (auto comp : vars) {
     if (!dynamic_cast<RooRealVar*>(comp)) {
-      auto errorMsg = std::string("ParamHistFunc::GetNumBins") + vars.GetName() + ") ERROR: component "
-                      + comp->GetName() + " in vars list is not of type RooRealVar";
-      oocoutE(nullptr, InputArguments) <<  errorMsg << std::endl;
-      throw std::runtime_error(errorMsg);
+      RooFitError error{oocoutE(nullptr, InputArguments)};
+      error << "ParamHistFunc::GetNumBins" << vars.GetName() << ") ERROR: component "
+            << comp->GetName() << " in vars list is not of type RooRealVar";
+      error.logAndThrow();
     }
     auto var = static_cast<RooRealVar*>(comp);
 
@@ -525,10 +525,10 @@ Int_t ParamHistFunc::getCurrentBin() const {
 Int_t ParamHistFunc::addVarSet( const RooArgList& vars ) {
   for(auto const& comp : vars) {
     if (!dynamic_cast<RooRealVar*>(comp)) {
-      auto errorMsg = std::string("ParamHistFunc::(") + GetName() + ") ERROR: component "
-                      + comp->GetName() + " in variables list is not of type RooRealVar";
-      coutE(InputArguments) <<  errorMsg << std::endl;
-      throw std::runtime_error(errorMsg);
+      RooFitError error{coutE(InputArguments)};
+      error << "ParamHistFunc::(" << GetName() << ") ERROR: component "
+            << comp->GetName() << " in variables list is not of type RooRealVar";
+      error.logAndThrow();
     }
     _dataVars.add( *comp );
   }

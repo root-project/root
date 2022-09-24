@@ -42,6 +42,16 @@ discrete dimensions.
 
 ClassImp(RooHistPdf);
 
+namespace {
+
+void throwInvalidVariablesError(RooAbsArg const* arg) {
+  RooFitError error{oocoutE(arg, InputArguments)};
+  error << arg->ClassName() << "::ctor(" << arg->GetName()
+         << ") ERROR variable list and RooDataHist must contain the same variables.";
+  error.logAndThrow();
+}
+
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor from a RooDataHist. RooDataHist dimensions
@@ -64,15 +74,11 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& var
   // Verify that vars and dhist.get() have identical contents
   const RooArgSet* dvars = dhist.get() ;
   if (vars.size()!=dvars->size()) {
-    coutE(InputArguments) << "RooHistPdf::ctor(" << GetName()
-           << ") ERROR variable list and RooDataHist must contain the same variables." << std::endl ;
-    assert(0) ;
+    throwInvalidVariablesError(this);
   }
   for (const auto arg : vars) {
     if (!dvars->find(arg->GetName())) {
-      coutE(InputArguments) << "RooHistPdf::ctor(" << GetName()
-             << ") ERROR variable list and RooDataHist must contain the same variables." << std::endl ;
-      assert(0) ;
+      throwInvalidVariablesError(this);
     }
   }
 
@@ -114,21 +120,18 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList& pd
   // Verify that vars and dhist.get() have identical contents
   const RooArgSet* dvars = dhist.get() ;
   if (histObs.size()!=dvars->size()) {
-    coutE(InputArguments) << "RooHistPdf::ctor(" << GetName()
-           << ") ERROR histogram variable list and RooDataHist must contain the same variables." << std::endl ;
-    throw(std::string("RooHistPdf::ctor() ERROR: histogram variable list and RooDataHist must contain the same variables")) ;
+    throwInvalidVariablesError(this);
   }
 
   for (const auto arg : histObs) {
     if (!dvars->find(arg->GetName())) {
-      coutE(InputArguments) << "RooHistPdf::ctor(" << GetName()
-             << ") ERROR variable list and RooDataHist must contain the same variables." << std::endl ;
-      throw(std::string("RooHistPdf::ctor() ERROR: histogram variable list and RooDataHist must contain the same variables")) ;
+      throwInvalidVariablesError(this);
     }
     if (!arg->isFundamental()) {
-      coutE(InputArguments) << "RooHistPdf::ctor(" << GetName()
+      RooFitError error{coutE(InputArguments)};
+      error << ClassName() << "::ctor(" << GetName()
              << ") ERROR all elements of histogram observables set must be of type RooRealVar or RooCategory." << std::endl ;
-      throw(std::string("RooHistPdf::ctor() ERROR all elements of histogram observables set must be of type RooRealVar or RooCategory.")) ;
+      error.logAndThrow();
     }
   }
 

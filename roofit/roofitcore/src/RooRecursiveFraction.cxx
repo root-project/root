@@ -63,11 +63,10 @@ RooRecursiveFraction::RooRecursiveFraction(const char* name, const char* title, 
   for (Int_t ifrac=fracList.getSize()-1 ; ifrac>=0 ; ifrac--) {
     RooAbsArg* comp = fracList.at(ifrac) ;
     if (!dynamic_cast<RooAbsReal*>(comp)) {
-      std::stringstream errorMsg;
-      errorMsg << "RooRecursiveFraction::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
-             << " is not of type RooAbsReal" << endl ;
-      coutE(InputArguments) << errorMsg.str();
-      throw std::invalid_argument(errorMsg.str());
+      RooFitError error{coutE(InputArguments)};
+      error << "RooRecursiveFraction::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
+           << " is not of type RooAbsReal" << endl ;
+      error.logAndThrow();
     }
 
     _list.add(*comp) ;

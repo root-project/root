@@ -75,9 +75,10 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
   for (const auto arg : model._pdfList) {
     auto pdf = dynamic_cast<const RooAbsPdf *>(arg);
     if (!pdf) {
-      coutF(Generation) << "Cannot generate events from an object that is not a PDF.\n\t"
-          << "The offending object is a " << arg->ClassName() << " named '" << arg->GetName() << "'." << std::endl;
-      throw std::invalid_argument("Trying to generate events from on object that is not a PDF.");
+      RooFitError error{coutF(Generation)};
+      error << "Cannot generate events from an object that is not a PDF.\n\t"
+          << "The offending object is a " << arg->ClassName() << " named '" << arg->GetName() << "'.";
+      error.logAndThrow();
     }
 
     _gcList.emplace_back(pdf->genContext(vars,prototype,auxProto,verbose));
@@ -192,14 +193,12 @@ void RooAddGenContext::updateThresholds()
     for (Int_t i=0 ; i<_nComp ; i++) {
       double coef = pdf->_coefCache[i];
       if(coef < 0.0) {
-        std::stringstream errMsgStream;
-        errMsgStream << "RooAddGenContext::updateThresholds(): coefficient number " << i << " of the "
-                     << pdf->ClassName() << " \"" << pdf->GetName() <<  "\"" << " is negative!"
-                     << " The current RooAddGenConext doesn't support negative coefficients."
-                     << " Please recreate a new generator context with " << pdf->ClassName() << "::genContext()";
-        auto const errMsg = errMsgStream.str();
-        cxcoutE(Generation) << errMsg << std::endl;
-        throw std::runtime_error(errMsg);
+        RooFitError error{coutE(Generation)};
+        error << "RooAddGenContext::updateThresholds(): coefficient number " << i << " of the "
+              << pdf->ClassName() << " \"" << pdf->GetName() <<  "\"" << " is negative!"
+              << " The current RooAddGenConext doesn't support negative coefficients."
+              << " Please recreate a new generator context with " << pdf->ClassName() << "::genContext()";
+        error.logAndThrow();
       }
       _coefThresh[i+1] = coef + _coefThresh[i];
     }

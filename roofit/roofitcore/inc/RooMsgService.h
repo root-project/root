@@ -17,6 +17,7 @@
 #define ROO_MSG_SERVICE
 
 #include <RooCmdArg.h>
+#include <RooFitError.h>
 #include <RooGlobalFunc.h>
 
 #include <TObject.h>

@@ -106,6 +106,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFFTConvPdf.h
     RooFirstMoment.h
     RooFit.h
+    RooFitError.h
     RooFitResult.h
     RooFoamGenerator.h
     RooFormula.h
