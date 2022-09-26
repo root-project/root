@@ -20,11 +20,14 @@ if (ROOT_test_distrdf_pyspark_FOUND)
     # We use the PROCESSORS property to tell cmake how many cores we will be
     # using in the following test. In this folder, a Dask cluster object is
     # created on the local machine. It is going to use 2 cores with
-    # multiprocessing, so the property is set to 2 in this case.
+    # multiprocessing, we give it a more room by setting the property to 4.
+    # The test also locks a resource for the creation of a Spark cluster, which
+    # is shared with the "common" folder and the tutorials of the root
+    # repository.
     ROOTTEST_ADD_TEST(test_all
                       MACRO test_all.py
                       ENVIRONMENT ${PYSPARK_ENV_VARS}
                       TIMEOUT 420
-                      PROPERTIES PROCESSORS 4)
+                      PROPERTIES PROCESSORS 4 RESOURCE_LOCK spark_resource_lock)
 
 endif()
