@@ -46,7 +46,7 @@ public:
       NR = -1;
       minxs = maxxs = 0.0;
    }
-   ~NdbMTReactionXS() {}
+   ~NdbMTReactionXS() override {}
 
    // --- Access functions ---
    inline Float_t   Energy(int i)      { return ene[i]; }
@@ -71,7 +71,7 @@ public:
    inline Float_t   MinXS()         const   { return minxs; }
    inline Float_t   MaxXS()         const   { return maxxs; }
 
-   ClassDef(NdbMTReactionXS,1)
+   ClassDefOverride(NdbMTReactionXS,1)
 
 }; // NdbMTReactionXS
 

@@ -90,14 +90,14 @@ private:
 
 public:
    XSGui(const TGWindow *p, UInt_t w, UInt_t h);
-   virtual ~XSGui();
+   ~XSGui() override;
 
-   virtual void   CloseWindow();
-   virtual Bool_t   ProcessMessage(Longptr_t msg, Longptr_t param, Longptr_t);
+   void   CloseWindow() override;
+   Bool_t   ProcessMessage(Longptr_t msg, Longptr_t param, Longptr_t) override;
 
       Bool_t   ProcessMenuMessage( Longptr_t param );
 
-   //ClassDef(XSGui,1)
+   //ClassDefOverride(XSGui,1)
 }; // XSGui
 
 #endif

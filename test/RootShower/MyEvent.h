@@ -53,7 +53,7 @@ public:
    Int_t       GetPrimary() const { return fPrimary; }
    Double_t    GetEnergy() const { return fEnergy; }
 
-   ClassDef(EventHeader,1)  //Event Header
+   ClassDefOverride(EventHeader,1)  //Event Header
 };
 
 class MyEvent : public TObject {
@@ -77,8 +77,8 @@ private:
 
 public :
    MyEvent();
-   virtual ~MyEvent();
-   void            Clear(Option_t *option ="");
+   ~MyEvent() override;
+   void            Clear(Option_t *option ="") override;
    void            Reset(Option_t *option ="");
    void            Init(Int_t id, Int_t first_particle, Double_t E_0, Double_t B_0);
    void            SetB(Double_t newB) { fB = newB; }
@@ -116,7 +116,7 @@ public :
    Int_t           ParticleColor(Int_t);
    void            ScatterAngle(Int_t);
 
-   ClassDef(MyEvent,1)  //Event structure
+   ClassDefOverride(MyEvent,1)  //Event structure
 };
 
 #endif // MYEVENT_H
