@@ -6,11 +6,8 @@
 #include "KerasReshapeModel.hxx"
 #include "KerasConcatenateModel.hxx"
 #include "KerasBinaryOpModel.hxx"
-<<<<<<< HEAD
 #include "KerasActivationsModel.hxx"
-=======
 #include "KerasModelWithCustomOp.hxx"
->>>>>>> aeb0d6c6eb (feat: cmake changes, test function for custom op)
 
 #include <Python.h>
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
