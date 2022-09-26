@@ -12,9 +12,9 @@ public:
    NdbDCReactionXS()
       : NdbMF(33, "Data covariances for reaction cross section") {}
 
-   ~NdbDCReactionXS() {}
+   ~NdbDCReactionXS() override {}
 
-   ClassDef(NdbDCReactionXS,1)
+   ClassDefOverride(NdbDCReactionXS,1)
 
 }; // NdbDCReactionXS
 

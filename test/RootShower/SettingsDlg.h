@@ -43,11 +43,11 @@ private:
 public:
     SettingsDialog(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h,
                          UInt_t options = kVerticalFrame);
-    virtual ~SettingsDialog();
+    ~SettingsDialog() override;
 
     // slots
-    virtual void     CloseWindow();
-    virtual Bool_t   ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+    void     CloseWindow() override;
+    Bool_t   ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 };
 
 #endif

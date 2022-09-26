@@ -135,7 +135,7 @@ protected:
 public:
    XSReactionDlg(const TGWindow *p,
            const TGWindow *main, UInt_t initZ, UInt_t w, UInt_t h);
-   ~XSReactionDlg();
+   ~XSReactionDlg() override;
 
 protected:
       void   InitColorCombo(TGComboBox *cb);
@@ -155,12 +155,12 @@ protected:
       void   UpdateGraph(NdbMTReactionXS *xs);
       Bool_t   ExecCommand();
 
-   virtual void   CloseWindow();
+   void   CloseWindow() override;
       Bool_t   ProcessButton(Longptr_t param1, Longptr_t param2);
       Bool_t   ProcessCombo(Longptr_t param1, Longptr_t param2);
-   virtual Bool_t   ProcessMessage(Longptr_t msg, Longptr_t param1, Longptr_t param2);
+   Bool_t   ProcessMessage(Longptr_t msg, Longptr_t param1, Longptr_t param2) override;
 
-   //ClassDef(XSReactionDlg,1)
+   //ClassDefOverride(XSReactionDlg,1)
 }; // XSReactionDlg
 
 #endif
