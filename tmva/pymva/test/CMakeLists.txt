@@ -81,6 +81,9 @@ endif()
          INCLUDE_DIRS
          ${CMAKE_CURRENT_BINARY_DIR}
       )
+      if(APPLE)
+      target_link_options(TestRModelParserPyTorch PRIVATE ${PYTHON_LINK_OPTIONS_Development_Main})
+      endif()
       add_dependencies(TestRModelParserPyTorch SofieCompileModels_PyTorch)
    endif()
 endif(PY_TORCH_FOUND)
@@ -163,6 +166,9 @@ endif()
     INCLUDE_DIRS
     ${CMAKE_CURRENT_BINARY_DIR}
    )
+   if(APPLE)
+   target_link_options(TestRModelParserKeras PRIVATE ${PYTHON_LINK_OPTIONS_Development_Main})
+   endif()
    add_dependencies(TestRModelParserKeras SofieCompileModels_Keras SofieCustomModel)
 
 endif((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOUND))
