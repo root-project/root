@@ -138,6 +138,9 @@ endif()
                   ${CMAKE_SOURCE_DIR}/tmva/sofie/src/SOFIE_common.cxx
    )
    target_link_libraries(emitCustomModel ${PYTHON_LIBRARIES} ${Libraries})
+   if(APPLE)
+      target_link_options(emitCustomModel PRIVATE ${PYTHON_LINK_OPTIONS_Development_Main})
+   endif()
    target_include_directories(emitCustomModel PRIVATE
                               ${CMAKE_SOURCE_DIR}/tmva/sofie/inc
                               ${CMAKE_SOURCE_DIR}/tmva/inc
