@@ -73,10 +73,10 @@ def create_connection():
     ```
 
     In this tutorial, a cluster object is created for the local machine, using
-    multiprocessing (processes=True) on 4 workers (n_workers=4) each using only
-    1 core (threads_per_worker=1).
+    multiprocessing (processes=True) on 2 workers (n_workers=2) each using only
+    1 core (threads_per_worker=1) and 2GiB of RAM (memory_limit="2GiB").
     """
-    cluster = LocalCluster(n_workers=4, threads_per_worker=1, processes=True)
+    cluster = LocalCluster(n_workers=2, threads_per_worker=1, processes=True, memory_limit="2GiB")
     client = Client(cluster)
     return client
 

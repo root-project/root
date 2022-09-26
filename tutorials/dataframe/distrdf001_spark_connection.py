@@ -27,8 +27,8 @@ RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
 #
 #     1. spark.app.name: The name of the Spark application
 #     2. spark.master: The Spark endpoint responsible for running the
-#         application. With the syntax "local[4]" we signal Spark we want to run
-#         locally on the same machine with 4 cores, each running a separate
+#         application. With the syntax "local[2]" we signal Spark we want to run
+#         locally on the same machine with 2 cores, each running a separate
 #         process. The default behaviour of a Spark application would run
 #         locally on the same machine with as many concurrent processes as
 #         available cores, that could be also written as "local[*]".
@@ -49,7 +49,8 @@ RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
 # Create a SparkConf object with all the desired Spark configuration parameters
 sparkconf = pyspark.SparkConf().setAll(
     {"spark.app.name": "distrdf001_spark_connection",
-     "spark.master": "local[4]", }.items())
+     "spark.master": "local[2]",
+     "spark.driver.memory": "4g"}.items())
 # Create a SparkContext with the configuration stored in `sparkconf`
 sparkcontext = pyspark.SparkContext(conf=sparkconf)
 
