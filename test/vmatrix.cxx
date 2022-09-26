@@ -234,7 +234,7 @@ void stress_allocation()
 
 class FillMatrix : public TElementPosActionD {
    Int_t no_elems,no_cols;
-   void Operation(Double_t &element) const
+   void Operation(Double_t &element) const override
       { element = 4*TMath::Pi()/no_elems * (fI*no_cols+fJ); }
 public:
    FillMatrix() {}
@@ -383,7 +383,7 @@ void stress_matrix_fill(Int_t rsize,Int_t csize)
 typedef  double (*dfunc)(double);
 class ApplyFunction : public TElementActionD {
    dfunc fFunc;
-   void Operation(Double_t &element) const { element = fFunc(double(element)); }
+   void Operation(Double_t &element) const override { element = fFunc(double(element)); }
 public:
    ApplyFunction(dfunc func) : fFunc(func) { }
 };
@@ -699,7 +699,7 @@ void stress_transposition(Int_t msize)
 //           Test special matrix creation
 //
 class MakeHilbert : public TElementPosActionD {
-  void Operation(Double_t &element) const { element = 1./(fI+fJ+1); }
+  void Operation(Double_t &element) const override { element = 1./(fI+fJ+1); }
 public:
   MakeHilbert() { }
 };
@@ -707,7 +707,7 @@ public:
 #ifndef __CINT__
 class TestUnit : public TElementPosActionD {
   mutable Int_t fIsUnit;
-  void Operation(Double_t &element) const
+  void Operation(Double_t &element) const override
       { if (fIsUnit)
           fIsUnit = ((fI==fJ) ? (element == 1.0) : (element == 0)); }
 public:
@@ -854,7 +854,7 @@ void stress_special_creation(Int_t dim)
 //           Test matrix promises
 //
 class hilbert_matrix_promise : public TMatrixDLazy {
-  void FillIn(TMatrixD &m) const { m = THilbertMatrixD(m.GetRowLwb(),m.GetRowUpb(),
+  void FillIn(TMatrixD &m) const override { m = THilbertMatrixD(m.GetRowLwb(),m.GetRowUpb(),
                                                    m.GetColLwb(),m.GetColUpb()); }
 
 public:

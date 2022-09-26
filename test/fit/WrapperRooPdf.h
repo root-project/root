@@ -78,7 +78,7 @@ public:
    }
 
 
-   ~WrapperRooPdf() {
+   ~WrapperRooPdf() override {
       // need to delete observables and parameter list
       if (fX) delete fX;
       if (fParams) delete fParams;
@@ -92,18 +92,18 @@ public:
 #else
      ROOT::Math::IMultiGenFunction
 #endif
-     * Clone() const {
+     * Clone() const override {
       // copy the pdf function pointer
       return new WrapperRooPdf(fPdf, *fX, fNorm);
    }
 
-   unsigned int NPar() const {
+   unsigned int NPar() const override {
       return fParams->getSize();
    }
-   unsigned int NDim() const {
+   unsigned int NDim() const override {
       return fX->getSize();
    }
-   const double * Parameters() const {
+   const double * Parameters() const override {
       if (fParamValues.size() != NPar() )
          fParamValues.resize(NPar() );
 
@@ -119,7 +119,7 @@ public:
       return &fParamValues.front();
    }
 
-   std::string ParameterName(unsigned int i) const {
+   std::string ParameterName(unsigned int i) const override {
       // iterate on parameters and set values
       TIter itr = fParams->createIterator() ;
       RooRealVar* var = nullptr;
@@ -137,7 +137,7 @@ public:
       set parameters. Order of parameter is the one defined by the RooPdf and must be checked by user
     */
 
-   void SetParameters(const double * p) {
+   void SetParameters(const double * p) override {
       DoSetParameters(p);
    }
 
@@ -162,7 +162,7 @@ public:
 
 private:
 
-   double DoEvalPar(const double * x, const double * p) const {
+   double DoEvalPar(const double * x, const double * p) const override {
 
       // should maybe be optimized ???
       DoSetParameters(p);

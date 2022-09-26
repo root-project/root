@@ -81,9 +81,9 @@ public:
 
   TObjHit();
   TObjHit(int time);
-  virtual ~TObjHit(){;}
+  ~TObjHit() override{;}
 
-  ClassDef(TObjHit,1) // the hit class
+  ClassDefOverride(TObjHit,1) // the hit class
 };
 
 //-------------------------------------------------------------
@@ -232,7 +232,7 @@ public:
   Int_t MakeTree(int mode, int nevents, int compression, int split, float &cx);
   Int_t ReadTree();
 
-  ClassDef(TSTLhitHashSet,1) // STL vector of THit
+  ClassDefOverride(TSTLhitHashSet,1) // STL vector of THit
 };
 //-------------------------------------------------------------
 class TSTLhitHashMultiSet {
@@ -250,7 +250,7 @@ public:
   Int_t MakeTree(int mode, int nevents, int compression, int split, float &cx);
   Int_t ReadTree();
 
-  ClassDef(TSTLhitHashMultiSet,1) // STL vector of THit
+  ClassDefOverride(TSTLhitHashMultiSet,1) // STL vector of THit
 };
 #endif
 //-------------------------------------------------------------

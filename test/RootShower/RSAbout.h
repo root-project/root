@@ -48,10 +48,10 @@ private:
 public:
     RootShowerAbout(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h,
                    UInt_t options = kMainFrame | kVerticalFrame);
-    virtual ~RootShowerAbout();
+    ~RootShowerAbout() override;
 
-    virtual void CloseWindow();
-    virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+    void CloseWindow() override;
+    Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 };
 
 #endif // ROOTSHOWERABOUT_H

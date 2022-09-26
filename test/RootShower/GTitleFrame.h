@@ -48,7 +48,7 @@ public:
    GTitleFrame(const TGWindow *p, const char *mainText, const char *subText,
                UInt_t w, UInt_t h, UInt_t options = kHorizontalFrame | kRaisedFrame);
    void ChangeRightLogo(Int_t frame);
-   virtual ~GTitleFrame();
+   ~GTitleFrame() override;
 };
 
 #endif // GTITLEFRAME_H

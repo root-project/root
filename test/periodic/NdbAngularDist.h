@@ -11,9 +11,9 @@ protected:
 public:
    NdbAngularDist()
       : NdbMF(4, "Angular distributions for emitted particles") {}
-   ~NdbAngularDist() {}
+   ~NdbAngularDist() override {}
 
-   ClassDef(NdbAngularDist,1)
+   ClassDefOverride(NdbAngularDist,1)
 
 }; // NdbMfAngularDist
 

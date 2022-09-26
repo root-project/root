@@ -11,9 +11,9 @@ protected:
 public:
    NdbResParam()
       : NdbMF(2, "Resonance prameter data") {}
-   ~NdbResParam() {}
+   ~NdbResParam() override {}
 
-   ClassDef(NdbResParam,1)
+   ClassDefOverride(NdbResParam,1)
 }; // NdbResParam
 
 #endif

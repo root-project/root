@@ -12,9 +12,9 @@ public:
    NdbThermalNeutron()
       : NdbMF(7, "Thermal neutron scattering law data") {}
 
-   ~NdbThermalNeutron() {}
+   ~NdbThermalNeutron() override {}
 
-   ClassDef(NdbThermalNeutron,1)
+   ClassDefOverride(NdbThermalNeutron,1)
 }; // NdbThermalNeutron
 
 #endif

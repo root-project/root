@@ -28,7 +28,7 @@ private:
 
 public:
    TObjNum(int i = 0) : num(i) { }
-   ~TObjNum() { Printf("~TObjNum = %d", num); }
+   ~TObjNum() override { Printf("~TObjNum = %d", num); }
    void    SetNum(int i) { num = i; }
    int     GetNum() { return num; }
    void    Print(Option_t *) const override { Printf("TObjNum = %d", num); }

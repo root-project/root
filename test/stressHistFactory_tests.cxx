@@ -48,7 +48,7 @@ public:
      fOldDirectory = gSystem->pwd();
   }
 
-  ~PdfComparison()
+  ~PdfComparison() override
   {
      // delete temporary directory if in not verbose mode
      if (_verb == 0) {
@@ -59,7 +59,7 @@ public:
      }
   }
 
-  Bool_t isTestAvailable()
+  Bool_t isTestAvailable() override
   {
      bool ret = true;
      ret &= CreateTestDirectory();
@@ -71,7 +71,7 @@ public:
      return ret;
   }
 
-  Bool_t testCode()
+  Bool_t testCode() override
   {
     // print information where the temporary test/log files are placed
     if(_verb > 0)

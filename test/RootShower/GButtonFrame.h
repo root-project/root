@@ -42,7 +42,7 @@ public:
    // Constructor & destructor
    GButtonFrame(const TGWindow* p, TGWindow* buttonHandler, Int_t nextEventId,
                 Int_t showTrackId, Int_t interruptSimId);
-   virtual ~GButtonFrame();
+   ~GButtonFrame() override;
 
    void SetState(EState state);
 };

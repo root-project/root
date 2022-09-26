@@ -39,14 +39,14 @@ private:
 public:
    XSElementDlg(const TGWindow *p, const TGWindow *main,
          UInt_t *retZ, UInt_t w=600, UInt_t h=350);
-   ~XSElementDlg();
+   ~XSElementDlg() override;
 
-   virtual void   CloseWindow();
+   void   CloseWindow() override;
    virtual Bool_t   ProcessButton(Longptr_t param);
-   virtual Bool_t   ProcessMessage(Longptr_t msg,
-            Longptr_t param1, Longptr_t param2);
+   Bool_t   ProcessMessage(Longptr_t msg,
+            Longptr_t param1, Longptr_t param2) override;
 
-   //ClassDef(XSElementDlg,1)
+   //ClassDefOverride(XSElementDlg,1)
 }; // XSElementDlg
 
 #endif

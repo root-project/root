@@ -11,9 +11,9 @@ protected:
 public:
    NdbRadioMult()
       : NdbMF(9, "Multiplicities for radioactive nuclide production") {}
-   ~NdbRadioMult() {}
+   ~NdbRadioMult() override {}
 
-   ClassDef(NdbRadioMult,1)
+   ClassDefOverride(NdbRadioMult,1)
 }; // NdbRadioMult
 
 #endif

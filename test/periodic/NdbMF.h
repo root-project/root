@@ -24,10 +24,10 @@ public:
       iMF = aMF;
    }
 
-   ~NdbMF() {}
+   ~NdbMF() override {}
 
    // Virtual functions
-   virtual Int_t Compare(const TObject *o) const
+   Int_t Compare(const TObject *o) const override
       { return ((iMF==((NdbMF*)o)->iMF)? 0 :
             (iMF > ((NdbMF*)o)->iMF)? 1 : -1 ); }
 
@@ -50,7 +50,7 @@ public:
    // Move File pointer to beggining of MF section in ENDF file
    void   LocateType() {}
 
-   ClassDef(NdbMF,1)
+   ClassDefOverride(NdbMF,1)
 
 }; // NdbMF
 

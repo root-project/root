@@ -106,9 +106,9 @@ private:
 
 public:
    HistAction(const TGWindow *p, UInt_t w, UInt_t h);
-   virtual ~HistAction();
-   virtual void CloseWindow();
-   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   ~HistAction() override;
+   void CloseWindow() override;
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
    Int_t getNextTrueIndex(); //returns -1 in case of no index found
    void resetIter() {cursorIter = -1;}
    void resetFlags() { for (int i = 0; i < kMaxHist; i++) flags[i] = kFALSE; }
@@ -121,7 +121,7 @@ public:
    void clearScan();
    void paintHist();//draws a histo in case of user defined display layout
 
-   ClassDef(HistAction,0)
+   ClassDefOverride(HistAction,0)
 };
 
 #endif

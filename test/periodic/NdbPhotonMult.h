@@ -11,9 +11,9 @@ protected:
 public:
    NdbPhotonMult()
       : NdbMF(12, "Multiplicities for photon production") {}
-   ~NdbPhotonMult() {}
+   ~NdbPhotonMult() override {}
 
-   ClassDef(NdbPhotonMult,1)
+   ClassDefOverride(NdbPhotonMult,1)
 }; // NdbPhotonMult
 
 #endif

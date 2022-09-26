@@ -98,9 +98,9 @@ public:
   Double_t DoTest();         // Tests multiplexsor
 
   void        CleanUp()    { fColl->Delete(); }
-  void        Dump() const { fColl->Dump(); }
+  void        Dump() const override { fColl->Dump(); }
 
-  virtual const char* GetName() const
+  const char* GetName() const override
   { return fColl->ClassName(); }
 
   Tester() :
@@ -111,7 +111,7 @@ public:
       if(!strcmp(GetName(),"TObjArray"))    fWhat = Array;
       if(!strcmp(GetName(),"TBtree"))       fWhat = BTree;
   }
-  virtual ~Tester() { if(fColl) delete fColl; }
+  ~Tester() override { if(fColl) delete fColl; }
 };
 
 void Tester::Fill() {

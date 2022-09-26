@@ -201,10 +201,10 @@ public:
    }
 
 
-   unsigned int NPar() const { return NPAR; }
-   const double * Parameters() const { return fParams; }
-   ROOT::Math::IGenFunction * Clone() const { return new StatFunction(fPdf,fCdf,fQuant); }
-   void SetParameters(const double * p) { std::copy(p,p+NPAR,fParams); }
+   unsigned int NPar() const override { return NPAR; }
+   const double * Parameters() const override { return fParams; }
+   ROOT::Math::IGenFunction * Clone() const override { return new StatFunction(fPdf,fCdf,fQuant); }
+   void SetParameters(const double * p) override { std::copy(p,p+NPAR,fParams); }
    void SetParameters(double p0) { *fParams = p0; }
    void SetParameters(double p0, double p1) { *fParams = p0; *(fParams+1) = p1; }
    void SetParameters(double p0, double p1, double p2) { *fParams = p0; *(fParams+1) = p1; *(fParams+2) = p2; }
@@ -230,7 +230,7 @@ public:
 private:
 
 
-   double DoEvalPar(double x, const double * ) const {
+   double DoEvalPar(double x, const double * ) const override {
       // implement explicitly using cached parameter values
       return Evaluator<Func,NPAR>::F(fPdf,x, fParams);
    }

@@ -157,7 +157,7 @@ public:
 
    // Constructors & destructor
    RootShower(const TGWindow *p, UInt_t w, UInt_t h);
-   virtual ~RootShower();
+   ~RootShower() override;
 
    void                SetOk(Bool_t ok=true) { fOk = ok; }
    void                Modified(Bool_t modified=true) { fModified = modified; }
@@ -172,13 +172,13 @@ public:
    virtual void        ShowInfos();
    virtual void        HighLight(TGListTreeItem *item);
    virtual void        OnShowSelected(TGListTreeItem *item);
-   virtual void        Layout();
-   virtual void        CloseWindow();
-   virtual Bool_t      HandleConfigureNotify(Event_t *event);
-   virtual Bool_t      HandleKey(Event_t *event);
-   virtual Bool_t      ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
-   virtual Bool_t      HandleTimer(TTimer *);
-   virtual Int_t       DistancetoPrimitive(Int_t px, Int_t py);
+   void        Layout() override;
+   void        CloseWindow() override;
+   Bool_t      HandleConfigureNotify(Event_t *event) override;
+   Bool_t      HandleKey(Event_t *event) override;
+   Bool_t      ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
+   Bool_t      HandleTimer(TTimer *) override;
+   Int_t       DistancetoPrimitive(Int_t px, Int_t py) override;
    void                Clicked(TGListTreeItem *item, Int_t x, Int_t y);
    void                UpdateDisplay() { fCA->Modified(); fCA->Update(); }
 };

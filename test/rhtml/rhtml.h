@@ -57,10 +57,10 @@ protected:
 public:
    TGHtmlBrowserTest(const char *filename = 0, const TGWindow *p = 0,
                  UInt_t w = 900, UInt_t h = 600);
-   virtual ~TGHtmlBrowserTest() { ; }
+   ~TGHtmlBrowserTest() override { ; }
 
-   virtual void      CloseWindow();
-   virtual Bool_t    ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t);
+   void      CloseWindow() override;
+   Bool_t    ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t) override;
    void              Selected(const char *txt);
    void              URLChanged();
    void              Back();
@@ -70,7 +70,7 @@ public:
    void              MouseOver(char *);
    void              MouseDown(char *);
 
-   ClassDef(TGHtmlBrowserTest, 0) // very simple html browser
+   ClassDefOverride(TGHtmlBrowserTest, 0) // very simple html browser
 };
 
 #endif

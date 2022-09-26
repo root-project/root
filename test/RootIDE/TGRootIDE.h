@@ -61,7 +61,7 @@ public:
    TGDocument(const char *fname = "", const char *title = "", Int_t tabid = 0,
              TGTab *tab = 0, TGTabElement *tabel = 0, TGTextEdit *edit = 0,
              TObjArray *doclist = 0);
-   virtual ~TGDocument() { }
+   ~TGDocument() override { }
 
    Bool_t         Open(const char *filename);
    Bool_t         Close();
@@ -76,7 +76,7 @@ public:
    void           DataChanged();
    void           DataDropped(char *fname);
 
-   ClassDef(TGDocument,0)  // Simple class describing document used in TGRootIDE
+   ClassDefOverride(TGDocument,0)  // Simple class describing document used in TGRootIDE
 };
 
 class TGRootIDE : public TGMainFrame {
@@ -136,12 +136,12 @@ public:
                 UInt_t w = 900, UInt_t h = 600);
    TGRootIDE(TMacro *macro, const TGWindow *p = 0, UInt_t w = 0,
                 UInt_t h = 0);
-   virtual ~TGRootIDE();
+   ~TGRootIDE() override;
 
-   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
-   virtual Bool_t HandleKey(Event_t *event);
-   virtual Bool_t HandleTimer(TTimer *t);
-   virtual void   CloseWindow();
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
+   Bool_t HandleKey(Event_t *event) override;
+   Bool_t HandleTimer(TTimer *t) override;
+   void   CloseWindow() override;
 
    void           ClearText();
    Bool_t         LoadBuffer(const char *buf) { return fTextEdit->LoadBuffer(buf); }
@@ -182,7 +182,7 @@ public:
    void           MouseOver(char *);
    void           MouseDown(char *);
 
-   ClassDef(TGRootIDE,0)  // Simple IDE using TGTextEdit and TGHtml widgets
+   ClassDefOverride(TGRootIDE,0)  // Simple IDE using TGTextEdit and TGHtml widgets
 };
 
 #endif

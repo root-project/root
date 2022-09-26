@@ -28,7 +28,7 @@ class TChar : public TText {
 
 public:
    TChar(char ch='\0',Coord_t x=0, Coord_t y=0);
-   virtual ~TChar() { }
+   ~TChar() override { }
 
    char GetChar() {
       return GetTitle()[0];
@@ -47,19 +47,19 @@ private:
 
 public:
    Hello(const char *text = "Hello, World!");
-   virtual ~Hello();
+   ~Hello() override;
 
-   Bool_t  Notify();
-   void    ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   Int_t   DistancetoPrimitive(Int_t, Int_t) { return 0; }
+   Bool_t  Notify() override;
+   void    ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   Int_t   DistancetoPrimitive(Int_t, Int_t) override { return 0; }
 
    Float_t GetWidth();
-   void    Paint(Option_t* option="");
-   void    Print(Option_t * = "") const;
-   void    ls(Option_t * = "") const;
+   void    Paint(Option_t* option="") override;
+   void    Print(Option_t * = "") const override;
+   void    ls(Option_t * = "") const override;
    TList  *GetList() { return fList; }
 
-   ClassDef(Hello,0)   // animated text with cool wave effect
+   ClassDefOverride(Hello,0)   // animated text with cool wave effect
 };
 
 #endif

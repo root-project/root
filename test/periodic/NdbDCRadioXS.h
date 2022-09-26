@@ -12,9 +12,9 @@ public:
    NdbDCRadioXS()
       : NdbMF(40, "Data covariances for radionuclide production "
          "cross sections") {}
-   ~NdbDCRadioXS() {}
+   ~NdbDCRadioXS() override {}
 
-   ClassDef(NdbDCRadioXS,1)
+   ClassDefOverride(NdbDCRadioXS,1)
 
 }; // NdbDCRadioXS
 

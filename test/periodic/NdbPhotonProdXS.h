@@ -12,9 +12,9 @@ public:
    NdbPhotonProdXS()
       : NdbMF(13, "Cross sections for photon production") {}
 
-   ~NdbPhotonProdXS() {}
+   ~NdbPhotonProdXS() override {}
 
-   ClassDef(NdbPhotonProdXS,1)
+   ClassDefOverride(NdbPhotonProdXS,1)
 }; // NdbPhotonProdXS
 
 #endif

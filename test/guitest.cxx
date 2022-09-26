@@ -239,10 +239,10 @@ private:
 
 public:
    TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h);
-   virtual ~TestMainFrame();
+   ~TestMainFrame() override;
 
-   virtual void CloseWindow();
-   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t);
+   void CloseWindow() override;
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t) override;
 };
 
 
@@ -271,10 +271,10 @@ private:
 public:
    TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h,
                UInt_t options = kVerticalFrame);
-   virtual ~TestDialog();
+   ~TestDialog() override;
 
-   virtual void CloseWindow();
-   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   void CloseWindow() override;
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 };
 
 
@@ -296,10 +296,10 @@ private:
 public:
    TestMsgBox(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h,
               UInt_t options = kVerticalFrame);
-   virtual ~TestMsgBox();
+   ~TestMsgBox() override;
 
-   virtual void CloseWindow();
-   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   void CloseWindow() override;
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 };
 
 
@@ -316,10 +316,10 @@ private:
 
 public:
    TestSliders(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h);
-   virtual ~TestSliders();
+   ~TestSliders() override;
 
-   virtual void CloseWindow();
-   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   void CloseWindow() override;
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 };
 
 
@@ -332,11 +332,11 @@ private:
 
 public:
    TestShutter(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h);
-   ~TestShutter();
+   ~TestShutter() override;
 
    void AddShutterItem(const char *name, shutterData_t data[]);
-   virtual void CloseWindow();
-   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   void CloseWindow() override;
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 };
 
 
@@ -349,8 +349,8 @@ protected:
 
 public:
    TestDirList(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h);
-   virtual ~TestDirList();
-   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   ~TestDirList() override;
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 };
 
 
@@ -369,9 +369,9 @@ protected:
 
 public:
    TestFileList(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h);
-   virtual ~TestFileList();
+   ~TestFileList() override;
 
-   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 };
 
 
@@ -387,10 +387,10 @@ private:
 
 public:
    TestProgress(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h);
-   virtual ~TestProgress();
+   ~TestProgress() override;
 
-   virtual void CloseWindow();
-   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   void CloseWindow() override;
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 };
 
 
@@ -418,11 +418,11 @@ private:
 
 public:
    EntryTestDlg(const TGWindow *p, const TGWindow *main);
-   virtual ~EntryTestDlg();
-   virtual void CloseWindow();
+   ~EntryTestDlg() override;
+   void CloseWindow() override;
 
    void SetLimits();
-   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t);
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t) override;
 };
 
 
@@ -436,7 +436,7 @@ private:
 
 public:
    Editor(const TGWindow *main, UInt_t w, UInt_t h);
-   virtual ~Editor();
+   ~Editor() override;
 
    void   LoadBuffer(const char *buffer);
    void   LoadFile(const char *file);
@@ -445,8 +445,8 @@ public:
 
    void   SetTitle();
    void   Popup();
-   void   CloseWindow();
-   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   void   CloseWindow() override;
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 };
 
 
@@ -457,10 +457,10 @@ private:
 
 public:
    TileFrame(const TGWindow *p);
-   virtual ~TileFrame() { }
+   ~TileFrame() override { }
 
    void SetCanvas(TGCanvas *canvas) { fCanvas = canvas; }
-   Bool_t HandleButton(Event_t *event);
+   Bool_t HandleButton(Event_t *event) override;
 };
 
 TileFrame::TileFrame(const TGWindow *p) :

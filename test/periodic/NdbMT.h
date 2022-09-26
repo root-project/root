@@ -25,10 +25,10 @@ public:
    NdbMT( Int_t aMT, const char *desc)
    : sDescription(desc) { iMT = aMT; }
 
-   ~NdbMT() {}
+   ~NdbMT() override {}
 
    // Virtual functions
-   virtual Int_t Compare(const TObject *o) const
+   Int_t Compare(const TObject *o) const override
    { return ((iMT == ((NdbMT*)o)->iMT)? 0 :
              (iMT > ((NdbMT*)o)->iMT)? 1 : -1 ); }
 
@@ -51,7 +51,7 @@ public:
    virtual void ReadENDFSectionHeader() {}
    virtual void ReadENDFSection() {}
 
-   ClassDef(NdbMT,1)
+   ClassDefOverride(NdbMT,1)
 
 }; // NdbMT
 
