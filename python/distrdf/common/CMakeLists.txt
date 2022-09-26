@@ -21,10 +21,24 @@ if (ROOT_test_distrdf_pyspark_FOUND AND ROOT_test_distrdf_dask_FOUND)
     # We use the PROCESSORS property to tell cmake how many cores we will be
     # using in the following test. In this folder, both a Dask and a Spark
     # cluster objects are created on the local machine. Each object will use 2
-    # cores with multiprocessing, so the property is set to 4 in this case.
+    # cores with multiprocessing, 4 in total. We give it more room by setting
+    # the property to 6.
+    # The test also locks all resources related to creation of cluster objects,
+    # which are shared also with the respective folders of this project and the
+    # tutorials of the root repository.
     ROOTTEST_ADD_TEST(test_all
                       MACRO test_all.py
-                      ENVIRONMENT ${PYSPARK_ENV_VARS}
-                      PROPERTIES PROCESSORS 6)
+                      ENVIRONMENT ${PYSPARK_ENV_VARS})
 
+    # This test has to take multiple resource locks. This means that they should
+    # be passed as a cmake list (semi-colon separated strings) after the
+    # RESOURCE_LOCK argument to `set_tests_properties`. The issue lies in
+    # forwarding this argument to ROOTTEST_ADD_TEST and then ROOT_ADD_TEST.
+    # Argument forwarding and list parsing in cmake is utterly broken.
+    # The safest and most reliable thing to do is to call the final cmake
+    # function directly here, so we can be sure that the PROPERTIES argument
+    # will be properly parsed.
+    set_tests_properties(roottest-python-distrdf-common-test_all PROPERTIES
+                                                                 RESOURCE_LOCK "dask_resource_lock;spark_resource_lock"
+                                                                 PROCESSORS 6)
 endif()
