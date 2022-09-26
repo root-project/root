@@ -3184,6 +3184,24 @@ void TStreamerInfo::ForceWriteInfo(TFile* file, Bool_t force)
    ) {
       return;
    }
+
+   auto recurseIntoContent = [file, force](TClass *contentClass)
+   {
+      TVirtualStreamerInfo* si = 0;
+      if (contentClass->Property() & kIsAbstract) {
+         // If the class of the element is abstract, register the
+         // TStreamerInfo only if it has already been built.
+         // Otherwise call cl->GetStreamerInfo() would generate an
+         // incorrect StreamerInfo.
+         si = contentClass->GetCurrentStreamerInfo();
+      } else {
+         si = contentClass->GetStreamerInfo();
+      }
+      if (si) {
+         si->ForceWriteInfo(file, force);
+      }
+   };
+
    // We do not want to write streamer info to the file
    // for std::string.
    static TClassRef string_classref("string");
@@ -3200,6 +3218,9 @@ void TStreamerInfo::ForceWriteInfo(TFile* file, Bool_t force)
          return;
       }
    } else if (fClass->GetCollectionProxy()) { // We are an STL collection.
+      TClass *valueClass = fClass->GetCollectionProxy()->GetValueClass();
+      if (valueClass)
+         recurseIntoContent(valueClass);
       return;
    }
    // Mark ourselves for output, and block
@@ -3214,22 +3235,10 @@ void TStreamerInfo::ForceWriteInfo(TFile* file, Bool_t force)
    for (; element; element = (TStreamerElement*) next()) {
       if (element->IsTransient()) continue;
       TClass* cl = element->GetClassPointer();
-      if (cl) {
-         TVirtualStreamerInfo* si = 0;
-         if (cl->Property() & kIsAbstract) {
-            // If the class of the element is abstract, register the
-            // TStreamerInfo only if it has already been built.
-            // Otherwise call cl->GetStreamerInfo() would generate an
-            // incorrect StreamerInfo.
-            si = cl->GetCurrentStreamerInfo();
-         } else {
-            si = cl->GetStreamerInfo();
-         }
-         if (si) {
-            si->ForceWriteInfo(file, force);
-         }
-      }
+      if (cl)
+         recurseIntoContent(cl);
    }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
