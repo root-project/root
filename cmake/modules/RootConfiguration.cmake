@@ -824,12 +824,6 @@ endif()
 
 #---compiledata.h--------------------------------------------------------------------------------------------
 
-if(APPLE AND runtime_cxxmodules)
-  # Modules have superior dynamic linker and they can resolve undefined symbols upon library loading.
-  set(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS} -undefined dynamic_lookup")
-  set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} -undefined dynamic_lookup")
-endif()
-
 # ROOTBUILD definition (it is defined in compiledata.h and used by ACLIC
 # to decide whether (by default) to optimize or not optimize the user scripts.)
 if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
