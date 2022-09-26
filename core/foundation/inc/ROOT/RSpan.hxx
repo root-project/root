@@ -16,13 +16,7 @@
 
 #include "RConfigure.h"
 
-#if defined(_MSVC_LANG)
-# define R__MSVC_LANG _MSVC_LANG
-#else
-# define R__MSVC_LANG 0
-#endif
-
-#if defined(R__HAS_STD_SPAN) || R__MSVC_LANG >= 202002L || __cplusplus >= 202002L
+#if defined(R__HAS_STD_SPAN) || _MSVC_LANG >= 202002L || __cplusplus >= 202002L
 
 #include <span>
 
