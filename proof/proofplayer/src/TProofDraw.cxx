@@ -779,15 +779,15 @@ void TProofDrawHist::SlaveBegin(TTree *tree)
       fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
       fDimension = fTreeDrawArgsParser.GetDimension();
       TString exp = fTreeDrawArgsParser.GetExp();
-      const char *objname = fTreeDrawArgsParser.GetObjectName();
-      if (objname && strlen(objname) > 0 && strcmp(objname, "htemp")) {
-         TH1 *hist = dynamic_cast<TH1*> (fInput->FindObject(objname));
+      TString objname = fTreeDrawArgsParser.GetObjectName();
+      if (objname.Length() > 0 && strcmp(objname.Data(), "htemp")) {
+         TH1 *hist = dynamic_cast<TH1*> (fInput->FindObject(objname.Data()));
          if (hist) {
             fHistogram = (TH1 *) hist->Clone();
             PDB(kDraw,1) Info("SlaveBegin","original histogram found");
          } else {
             PDB(kDraw,1) Info("SlaveBegin", "original object '%s' not found"
-                                          " or it is not a histogram", objname);
+                                          " or it is not a histogram", objname.Data());
          }
       }
 
