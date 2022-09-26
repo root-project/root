@@ -12,8 +12,7 @@ if(dataframe)
     list(APPEND PYROOT_EXTRA_PYSOURCE
         ROOT/_pythonization/_rdf_utils.py
         ROOT/_pythonization/_rdataframe.py
-        ROOT/_pythonization/_rdfdescription.py
-        ROOT/_pythonization/_rtensor.py)
+        ROOT/_pythonization/_rdfdescription.py)
     if(PYTHON_VERSION_STRING_Development_Main VERSION_GREATER_EQUAL 3.7)
       list(APPEND PYROOT_EXTRA_PYSOURCE
           ROOT/_pythonization/_rdf_conversion_maps.py
@@ -30,38 +29,15 @@ list(APPEND PYROOT_EXTRA_HEADERS
      inc/TPyDispatcher.h)
 
 set(py_sources
-  ROOT/__init__.py
   ROOT/_application.py
-  ROOT/_numbadeclare.py
   ROOT/_facade.py
-  ROOT/_pythonization/__init__.py
+  ROOT/__init__.py
+  ROOT/_numbadeclare.py
   ROOT/_pythonization/_cppinstance.py
   ROOT/_pythonization/_drawables.py
   ROOT/_pythonization/_generic.py
+  ROOT/_pythonization/__init__.py
   ROOT/_pythonization/_pyz_utils.py
-  ROOT/_pythonization/_rbdt.py
-  ROOT/_pythonization/_rvec.py
-  ROOT/_pythonization/_stl_vector.py
-  ROOT/_pythonization/_tarray.py
-  ROOT/_pythonization/_tclass.py
-  ROOT/_pythonization/_tclonesarray.py
-  ROOT/_pythonization/_tcollection.py
-  ROOT/_pythonization/_tcomplex.py
-  ROOT/_pythonization/_tcontext.py
-  ROOT/_pythonization/_tdirectory.py
-  ROOT/_pythonization/_tdirectoryfile.py
-  ROOT/_pythonization/_tfile.py
-  ROOT/_pythonization/_tgraph.py
-  ROOT/_pythonization/_th1.py
-  ROOT/_pythonization/_titer.py
-  ROOT/_pythonization/_tobject.py
-  ROOT/_pythonization/_tobjstring.py
-  ROOT/_pythonization/_tree_inference.py
-  ROOT/_pythonization/_tseqcollection.py
-  ROOT/_pythonization/_tstring.py
-  ROOT/_pythonization/_ttree.py
-  ROOT/_pythonization/_tvector3.py
-  ROOT/_pythonization/_tvectort.py
   ROOT/_pythonization/_roofit/__init__.py
   ROOT/_pythonization/_roofit/_rooabscollection.py
   ROOT/_pythonization/_roofit/_rooabsdata.py
@@ -70,19 +46,53 @@ set(py_sources
   ROOT/_pythonization/_roofit/_rooabsreal.py
   ROOT/_pythonization/_roofit/_rooarglist.py
   ROOT/_pythonization/_roofit/_rooargset.py
+  ROOT/_pythonization/_roofit/_roocategory.py
   ROOT/_pythonization/_roofit/_roochi2var.py
   ROOT/_pythonization/_roofit/_roodatahist.py
   ROOT/_pythonization/_roofit/_roodataset.py
   ROOT/_pythonization/_roofit/_roodecays.py
   ROOT/_pythonization/_roofit/_roogenfitstudy.py
+  ROOT/_pythonization/_roofit/_rooglobalfunc.py
+  ROOT/_pythonization/_roofit/_roojsonfactorywstool.py
   ROOT/_pythonization/_roofit/_roomcstudy.py
   ROOT/_pythonization/_roofit/_roomsgservice.py
   ROOT/_pythonization/_roofit/_roonllvar.py
   ROOT/_pythonization/_roofit/_rooprodpdf.py
+  ROOT/_pythonization/_roofit/_roorealvar.py
   ROOT/_pythonization/_roofit/_roosimultaneous.py
   ROOT/_pythonization/_roofit/_roosimwstool.py
+  ROOT/_pythonization/_roofit/_roovectordatastore.py
   ROOT/_pythonization/_roofit/_rooworkspace.py
   ROOT/_pythonization/_roofit/_utils.py
+  ROOT/_pythonization/_rvec.py
+  ROOT/_pythonization/_stl_vector.py
+  ROOT/_pythonization/_tarray.py
+  ROOT/_pythonization/_tclass.py
+  ROOT/_pythonization/_tclonesarray.py
+  ROOT/_pythonization/_tcollection.py
+  ROOT/_pythonization/_tcomplex.py
+  ROOT/_pythonization/_tcontext.py
+  ROOT/_pythonization/_tdirectoryfile.py
+  ROOT/_pythonization/_tdirectory.py
+  ROOT/_pythonization/_tfile.py
+  ROOT/_pythonization/_tgraph.py
+  ROOT/_pythonization/_th1.py
+  ROOT/_pythonization/_titer.py
+  ROOT/_pythonization/_tmva/_crossvalidation.py
+  ROOT/_pythonization/_tmva/_dataloader.py
+  ROOT/_pythonization/_tmva/_factory.py
+  ROOT/_pythonization/_tmva/__init__.py
+  ROOT/_pythonization/_tmva/_rbdt.py
+  ROOT/_pythonization/_tmva/_rtensor.py
+  ROOT/_pythonization/_tmva/_tree_inference.py
+  ROOT/_pythonization/_tmva/_utils.py
+  ROOT/_pythonization/_tobject.py
+  ROOT/_pythonization/_tobjstring.py
+  ROOT/_pythonization/_tseqcollection.py
+  ROOT/_pythonization/_tstring.py
+  ROOT/_pythonization/_ttree.py
+  ROOT/_pythonization/_tvector3.py
+  ROOT/_pythonization/_tvectort.py
   ${PYROOT_EXTRA_PYSOURCE}
 )
 
@@ -113,7 +123,23 @@ set(cpp_sources
 set(ROOTPySrcDir python/ROOT)
 set(ROOT_headers_dir inc)
 
-file(COPY ${ROOTPySrcDir} DESTINATION ${localruntimedir})
+# Add custom rules to copy the Python sources into the build directory
+foreach(py_source ${py_sources})
+  add_custom_command(
+      OUTPUT ${localruntimedir}/${py_source}
+      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/python/${py_source}
+                                       ${localruntimedir}/${py_source}
+      DEPENDS python/${py_source}
+      COMMENT "Copying ${CMAKE_CURRENT_SOURCE_DIR}/python/${py_source}")
+  list(APPEND py_sources_in_localruntimedir ${localruntimedir}/${py_source})
+endforeach()
+
+# A custom target that depends on the Python sources being present in the build
+# directory. This will be used as a dependency of the pythonization libraries,
+# such that the Python sources get re-copied to the build directory when
+# changed.
+add_custom_target(ROOTPythonizationsPySources ALL DEPENDS ${py_sources_in_localruntimedir})
+
 # Copy headers inside build_dir/include/ROOT
 file(COPY ${ROOT_headers_dir}/ DESTINATION ${CMAKE_BINARY_DIR}/include/ROOT)
 
@@ -126,6 +152,10 @@ foreach(val RANGE ${how_many_pythons})
   set(libname ROOTPythonizations${python_under_version_string})
 
   add_library(${libname} SHARED ${cpp_sources})
+
+  # Insert the ROOTPythonizationsPySources in the dependency graph
+  add_dependencies(${libname} ROOTPythonizationsPySources)
+
   # Set the suffix to '.so' and the prefix to 'lib'
   set_target_properties(${libname} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES})
   if(MSVC)
