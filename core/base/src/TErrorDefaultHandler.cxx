@@ -134,7 +134,7 @@ void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, c
    if (level < gErrorIgnoreLevel)
       return;
 
-   const char *type = nullptr;
+   const char *type = "?";
 
    if (level >= kInfo)
       type = "Info";
@@ -155,9 +155,9 @@ void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, c
    else if (level >= kBreak && level < kSysError)
       smsg = std::string(type) + " " + msg;
    else if (!location || !location[0])
-      smsg = std::string(type ? type : "?") + ": " + msg;
+      smsg = std::string(type) + ": " + msg;
    else
-      smsg = std::string(type ? type : "?") + " in <" + location + ">: " + msg;
+      smsg = std::string(type) + " in <" + location + ">: " + msg;
 
    DebugPrint("%s\n", smsg.c_str());
 
