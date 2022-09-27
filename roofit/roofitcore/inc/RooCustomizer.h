@@ -22,7 +22,6 @@
 #include "TString.h"
 #include "RooArgSet.h"
 #include "RooPrintable.h"
-#include "RooFactoryWSTool.h"
 
 #include <vector>
 #include <string>
@@ -75,13 +74,6 @@ public:
 
   /// Releases ownership of list of cloned branch nodes
   void setCloneBranchSet(RooArgSet& cloneBranchSet) ;
-
-  /// Factory interface
-  class CustIFace : public RooFactoryWSTool::IFace {
-  public:
-    ~CustIFace() override {} ;
-    std::string create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args) override ;
-  } ;
 
 protected:
 
