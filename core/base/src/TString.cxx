@@ -263,6 +263,10 @@ char *TString::Init(Ssiz_t capacity, Ssiz_t nchar)
       Error("*TString::Init", "Negative length!");
       nchar = 0;
    }
+   if (nchar > capacity) {
+      Error("TString::Init", "capacity is smaller than nchar (%d > %d)", nchar, capacity);
+      nchar = capacity;
+   }
    if (capacity > MaxSize()) {
       Error("TString::Init", "capacity too large (%d, max = %d)", capacity, MaxSize());
       capacity = MaxSize();
