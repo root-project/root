@@ -1258,9 +1258,16 @@ void TDirectory::EncodeNameCycle(char *buffer, const char *name, Short_t cycle)
 void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle,
                                  const size_t namesize)
 {
+   if (!buffer) {
+      ::Warning("TDirectory::DecodeNameCycle",
+         "An empty buffer was passed, cannot decode.");
+      cycle = 9999;
+      return;
+   }
+   
    size_t len = 0;
-   const char *ni = buffer ? strchr(buffer, ';') : nullptr;
-
+   const char *ni = strchr(buffer, ';');
+   
    if (ni) {
       // Found ';'
       len = ni - buffer;
@@ -1275,7 +1282,7 @@ void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle,
       if (len > namesize-1ul) len = namesize-1;  // accommodate string terminator
    } else {
       ::Warning("TDirectory::DecodeNameCycle",
-         "Using unsafe version: invoke this metod by specifying the buffer size");
+         "Using unsafe version: invoke this method by specifying the buffer size");
    }
 
    strncpy(name, buffer, len);
