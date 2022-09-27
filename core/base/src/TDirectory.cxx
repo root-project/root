@@ -1253,8 +1253,6 @@ void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle,
                                  const size_t namesize)
 {
    if (!buffer) {
-      ::Warning("TDirectory::DecodeNameCycle",
-         "An empty buffer was passed, cannot decode.");
       cycle = 9999;
       return;
    }
