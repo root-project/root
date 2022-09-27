@@ -687,6 +687,9 @@ if(ROOT_pyroot_FOUND)
       list(APPEND ROOT_environ OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES)
     endif()
   endif()
+  # These lists keep track of distrdf tutorials, so we can add specific properties later
+  file(GLOB distrdf_spark_tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/*spark*)
+  file(GLOB distrdf_dask_tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/*dask*)
 
   find_python_module(xgboost QUIET)
   if(NOT PY_XGBOOST_FOUND OR NOT dataframe)
@@ -808,5 +811,18 @@ if(ROOT_pyroot_FOUND)
       # However, even this poor indication of MT behaviour is a good hint for cmake to reduce congestion.
       set_tests_properties(${tutorial_name} PROPERTIES RESOURCE_LOCK multithreaded PROCESSORS 4)
     endif()
+
+    if(${t} IN_LIST distrdf_spark_tutorials)
+      # Create a resource lock for the creation of a Spark cluster. This is also used in roottest.
+      # Also signal 4 processors to cmake to give the tutorial some room (it uses 2 cores).
+      set_tests_properties(${tutorial_name} PROPERTIES RESOURCE_LOCK spark_resource_lock PROCESSORS 4)
+    endif()
+
+    if(${t} IN_LIST distrdf_dask_tutorials)
+      # Create a resource lock for the creation of a Dask cluster. This is also used in roottest.
+      # Also signal 4 processors to cmake to give the tutorial some room (it uses 2 cores).
+      set_tests_properties(${tutorial_name} PROPERTIES RESOURCE_LOCK dask_resource_lock PROCESSORS 4)
+    endif()
+
   endforeach()
 endif()
