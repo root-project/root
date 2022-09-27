@@ -1019,7 +1019,8 @@ const char *TSystem::DirName(const char *pathname)
       len = res.Length() + 50;
       buf = new char [len];
    }
-   strncpy(buf, res.Data(), len);
+   if (buf)
+      strncpy(buf, res.Data(), len);
    return buf;
 }
 
