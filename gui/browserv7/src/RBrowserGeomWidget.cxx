@@ -84,8 +84,15 @@ public:
          return false;
 
       auto vol = fObject->Get<TGeoVolume>();
+
       if (vol) {
-         fViewer.SetGeometry(vol->GetGeoManager(), vol->GetName());
+         auto mgr = vol->GetGeoManager();
+
+         if (!mgr || (mgr->GetListOfVolumes()->GetLast() < 0) || (mgr->GetVolume(vol->GetName()) != vol))
+            fViewer.SetOnlyVolume(const_cast<TGeoVolume *>(vol));
+         else
+            fViewer.SetGeometry(vol->GetGeoManager(), vol->GetName());
+
          return true;
       }
 
