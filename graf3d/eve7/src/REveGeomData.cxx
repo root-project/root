@@ -33,14 +33,10 @@
 
 #include <algorithm>
 
-using namespace std::string_literals;
-
-
-/** Base class for iterating of hierarchical structure */
-
 namespace ROOT {
 namespace Experimental {
 
+/** Iterator of hierarchical geometry structures */
 
 class RGeomBrowserIter {
 
@@ -219,6 +215,11 @@ public:
 } // namespace Experimental
 } // namespace ROOT
 
+
+using namespace ROOT::Experimental;
+
+using namespace std::string_literals;
+
 /////////////////////////////////////////////////////////////////////
 /// Pack matrix into vector, which can be send to client
 /// Following sizes can be used for vector:
@@ -228,7 +229,7 @@ public:
 ///   9 - Rotation
 ///  16 - Full size
 
-void ROOT::Experimental::REveGeomDescription::PackMatrix(std::vector<float> &vect, TGeoMatrix *matr)
+void REveGeomDescription::PackMatrix(std::vector<float> &vect, TGeoMatrix *matr)
 {
    vect.clear();
 
@@ -299,9 +300,9 @@ void ROOT::Experimental::REveGeomDescription::PackMatrix(std::vector<float> &vec
 
 /////////////////////////////////////////////////////////////////////
 /// Collect information about geometry hierarchy into flat list
-/// like it done JSROOT.GEO.ClonedNodes.prototype.CreateClones
+/// like it done in JSROOT ClonedNodes.createClones
 
-void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr, const std::string &volname)
+void REveGeomDescription::Build(TGeoManager *mgr, const std::string &volname)
 {
    ClearDescription();
    if (!mgr) return;
@@ -336,9 +337,9 @@ void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr, const std:
 
 /////////////////////////////////////////////////////////////////////
 /// Collect information about geometry from single volume
-/// like it done JSROOT.GEO.ClonedNodes.prototype.CreateClones
+/// like it done in JSROOT ClonedNodes.createClones
 
-void ROOT::Experimental::REveGeomDescription::Build(TGeoVolume *vol)
+void REveGeomDescription::Build(TGeoVolume *vol)
 {
    ClearDescription();
 
@@ -352,7 +353,7 @@ void ROOT::Experimental::REveGeomDescription::Build(TGeoVolume *vol)
 /////////////////////////////////////////////////////////////////////
 /// Clear geometry description
 
-void ROOT::Experimental::REveGeomDescription::ClearDescription()
+void REveGeomDescription::ClearDescription()
 {
    fDesc.clear();
    fNodes.clear();
@@ -365,7 +366,7 @@ void ROOT::Experimental::REveGeomDescription::ClearDescription()
 /////////////////////////////////////////////////////////////////////
 /// Build geometry description
 
-void ROOT::Experimental::REveGeomDescription::BuildDescription(TGeoNode *topnode, TGeoVolume *topvolume)
+void REveGeomDescription::BuildDescription(TGeoNode *topnode, TGeoVolume *topvolume)
 {
    // vector to remember numbers
    std::vector<int> numbers;
@@ -453,7 +454,7 @@ void ROOT::Experimental::REveGeomDescription::BuildDescription(TGeoNode *topnode
 /// Get volume for specified nodeid
 /// If specific volume was configured, it will be returned for nodeid==0
 
-TGeoVolume *ROOT::Experimental::REveGeomDescription::GetVolume(int nodeid)
+TGeoVolume *REveGeomDescription::GetVolume(int nodeid)
 {
    auto node = fNodes[nodeid];
    if (node) return node->GetVolume();
@@ -463,7 +464,7 @@ TGeoVolume *ROOT::Experimental::REveGeomDescription::GetVolume(int nodeid)
 /////////////////////////////////////////////////////////////////////
 /// Set visibility flag for each nodes
 
-int ROOT::Experimental::REveGeomDescription::MarkVisible(bool on_screen)
+int REveGeomDescription::MarkVisible(bool on_screen)
 {
    int res = 0;
    for (int nodeid = 0; nodeid < (int) fNodes.size(); nodeid++) {
@@ -497,7 +498,7 @@ int ROOT::Experimental::REveGeomDescription::MarkVisible(bool on_screen)
 /////////////////////////////////////////////////////////////////////
 /// Count total number of visible childs under each node
 
-void ROOT::Experimental::REveGeomDescription::ProduceIdShifts()
+void REveGeomDescription::ProduceIdShifts()
 {
    for (auto &node : fDesc)
       node.idshift = -1;
@@ -521,7 +522,7 @@ void ROOT::Experimental::REveGeomDescription::ProduceIdShifts()
 /////////////////////////////////////////////////////////////////////
 /// Iterate over all nodes and call function for visible
 
-int ROOT::Experimental::REveGeomDescription::ScanNodes(bool only_visible, int maxlvl, REveGeomScanFunc_t func)
+int REveGeomDescription::ScanNodes(bool only_visible, int maxlvl, REveGeomScanFunc_t func)
 {
    if (fDesc.empty()) return 0;
 
@@ -537,7 +538,7 @@ int ROOT::Experimental::REveGeomDescription::ScanNodes(bool only_visible, int ma
 
       if (desc.nochlds && (lvl > 0)) lvl = 0;
 
-      // same logic as in JSROOT.GEO.ClonedNodes.prototype.ScanVisible
+      // same logic as in JSROOT ClonedNodes.scanVisible
       bool is_visible = (lvl >= 0) && (desc.vis > lvl) && desc.CanDisplay();
 
       if (is_visible || !only_visible)
@@ -550,7 +551,7 @@ int ROOT::Experimental::REveGeomDescription::ScanNodes(bool only_visible, int ma
          auto pos = stack.size();
          stack.emplace_back(0);
          for (unsigned k = 0; k < desc.chlds.size(); ++k) {
-            stack[pos] = k; // stack provides index in list of chdils
+            stack[pos] = k; // stack provides index in list of childs
             res += scan_func(desc.chlds[k], lvl - 1);
          }
          stack.pop_back();
@@ -571,7 +572,7 @@ int ROOT::Experimental::REveGeomDescription::ScanNodes(bool only_visible, int ma
 /////////////////////////////////////////////////////////////////////
 /// Collect nodes which are used in visibles
 
-void ROOT::Experimental::REveGeomDescription::CollectNodes(REveGeomDrawing &drawing)
+void REveGeomDescription::CollectNodes(REveGeomDrawing &drawing)
 {
    // TODO: for now reset all flags, later can be kept longer
    for (auto &node : fDesc)
@@ -608,7 +609,7 @@ void ROOT::Experimental::REveGeomDescription::CollectNodes(REveGeomDrawing &draw
 /// Find description object for requested shape
 /// If not exists - will be created
 
-std::string ROOT::Experimental::REveGeomDescription::ProcessBrowserRequest(const std::string &msg)
+std::string REveGeomDescription::ProcessBrowserRequest(const std::string &msg)
 {
    std::string res;
 
@@ -682,7 +683,7 @@ std::string ROOT::Experimental::REveGeomDescription::ProcessBrowserRequest(const
 /// Find description object for requested shape
 /// If not exists - will be created
 
-ROOT::Experimental::REveGeomDescription::ShapeDescr &ROOT::Experimental::REveGeomDescription::FindShapeDescr(TGeoShape *shape)
+REveGeomDescription::ShapeDescr &REveGeomDescription::FindShapeDescr(TGeoShape *shape)
 {
    for (auto &descr : fShapes)
       if (descr.fShape == shape)
@@ -697,8 +698,8 @@ ROOT::Experimental::REveGeomDescription::ShapeDescr &ROOT::Experimental::REveGeo
 /////////////////////////////////////////////////////////////////////
 /// Find description object and create render information
 
-ROOT::Experimental::REveGeomDescription::ShapeDescr &
-ROOT::Experimental::REveGeomDescription::MakeShapeDescr(TGeoShape *shape)
+REveGeomDescription::ShapeDescr &
+REveGeomDescription::MakeShapeDescr(TGeoShape *shape)
 {
    auto &elem = FindShapeDescr(shape);
 
@@ -750,7 +751,7 @@ ROOT::Experimental::REveGeomDescription::MakeShapeDescr(TGeoShape *shape)
 /////////////////////////////////////////////////////////////////////
 /// Copy material properties
 
-void ROOT::Experimental::REveGeomDescription::CopyMaterialProperties(TGeoVolume *volume, REveGeomNode &node)
+void REveGeomDescription::CopyMaterialProperties(TGeoVolume *volume, REveGeomNode &node)
 {
    if (!volume) return;
 
@@ -783,7 +784,7 @@ void ROOT::Experimental::REveGeomDescription::CopyMaterialProperties(TGeoVolume 
 /////////////////////////////////////////////////////////////////////
 /// Reset shape info, which used to pack binary data
 
-void ROOT::Experimental::REveGeomDescription::ResetRndrInfos()
+void REveGeomDescription::ResetRndrInfos()
 {
    for (auto &s: fShapes)
       s.reset();
@@ -793,7 +794,7 @@ void ROOT::Experimental::REveGeomDescription::ResetRndrInfos()
 /// Collect all information required to draw geometry on the client
 /// This includes list of each visible nodes, meshes and matrixes
 
-bool ROOT::Experimental::REveGeomDescription::CollectVisibles()
+bool REveGeomDescription::CollectVisibles()
 {
    std::vector<int> viscnt(fDesc.size(), 0);
 
@@ -889,7 +890,7 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles()
 /////////////////////////////////////////////////////////////////////
 /// Clear raw data. Will be rebuild when next connection will be established
 
-void ROOT::Experimental::REveGeomDescription::ClearDrawData()
+void REveGeomDescription::ClearDrawData()
 {
    fDrawJson.clear();
 }
@@ -898,7 +899,7 @@ void ROOT::Experimental::REveGeomDescription::ClearDrawData()
 /// return true when node used in main geometry drawing and does not have childs
 /// for such nodes one could provide optimize toggling of visibility flags
 
-bool ROOT::Experimental::REveGeomDescription::IsPrincipalEndNode(int nodeid)
+bool REveGeomDescription::IsPrincipalEndNode(int nodeid)
 {
    if ((nodeid < 0) || (nodeid >= (int)fDesc.size()))
       return false;
@@ -914,7 +915,7 @@ bool ROOT::Experimental::REveGeomDescription::IsPrincipalEndNode(int nodeid)
 /// If number of found elements less than 100, create description and shapes for them
 /// Returns number of match elements
 
-int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &find, std::string &hjson, std::string &json)
+int REveGeomDescription::SearchVisibles(const std::string &find, std::string &hjson, std::string &json)
 {
    hjson.clear();
    json.clear();
@@ -1079,7 +1080,7 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
 /////////////////////////////////////////////////////////////////////////////////
 /// Returns nodeid for given stack array, returns -1 in case of failure
 
-int ROOT::Experimental::REveGeomDescription::FindNodeId(const std::vector<int> &stack)
+int REveGeomDescription::FindNodeId(const std::vector<int> &stack)
 {
    int nodeid = 0;
 
@@ -1095,7 +1096,7 @@ int ROOT::Experimental::REveGeomDescription::FindNodeId(const std::vector<int> &
 /////////////////////////////////////////////////////////////////////////////////
 /// Creates stack for given array of ids, first element always should be 0
 
-std::vector<int> ROOT::Experimental::REveGeomDescription::MakeStackByIds(const std::vector<int> &ids)
+std::vector<int> REveGeomDescription::MakeStackByIds(const std::vector<int> &ids)
 {
    std::vector<int> stack;
 
@@ -1134,7 +1135,7 @@ std::vector<int> ROOT::Experimental::REveGeomDescription::MakeStackByIds(const s
 /// Produce stack based on string path
 /// Used to highlight geo volumes by browser hover event
 
-std::vector<int> ROOT::Experimental::REveGeomDescription::MakeStackByPath(const std::vector<std::string> &path)
+std::vector<int> REveGeomDescription::MakeStackByPath(const std::vector<std::string> &path)
 {
    std::vector<int> res;
 
@@ -1150,7 +1151,7 @@ std::vector<int> ROOT::Experimental::REveGeomDescription::MakeStackByPath(const 
 /// Produce list of node ids for given stack
 /// If found nodes preselected - use their ids
 
-std::vector<int> ROOT::Experimental::REveGeomDescription::MakeIdsByStack(const std::vector<int> &stack)
+std::vector<int> REveGeomDescription::MakeIdsByStack(const std::vector<int> &stack)
 {
    std::vector<int> ids;
 
@@ -1178,7 +1179,7 @@ std::vector<int> ROOT::Experimental::REveGeomDescription::MakeIdsByStack(const s
 /////////////////////////////////////////////////////////////////////////////////
 /// Returns path string for provided stack
 
-std::vector<std::string> ROOT::Experimental::REveGeomDescription::MakePathByStack(const std::vector<int> &stack)
+std::vector<std::string> REveGeomDescription::MakePathByStack(const std::vector<int> &stack)
 {
    std::vector<std::string> path;
 
@@ -1194,7 +1195,7 @@ std::vector<std::string> ROOT::Experimental::REveGeomDescription::MakePathByStac
 /// Return string with only part of nodes description which were modified
 /// Checks also volume
 
-std::string ROOT::Experimental::REveGeomDescription::ProduceModifyReply(int nodeid)
+std::string REveGeomDescription::ProduceModifyReply(int nodeid)
 {
    std::vector<REveGeomNodeBase *> nodes;
    auto vol = GetVolume(nodeid);
@@ -1216,7 +1217,7 @@ std::string ROOT::Experimental::REveGeomDescription::ProduceModifyReply(int node
 /// All nodes, which are referencing same shape will be transferred
 /// Returns true if new render information provided
 
-bool ROOT::Experimental::REveGeomDescription::ProduceDrawingFor(int nodeid, std::string &json, bool check_volume)
+bool REveGeomDescription::ProduceDrawingFor(int nodeid, std::string &json, bool check_volume)
 {
    // only this shape is interesting
 
@@ -1279,7 +1280,7 @@ bool ROOT::Experimental::REveGeomDescription::ProduceDrawingFor(int nodeid, std:
 /// But in this case one can exclude several classes which are not interesting,
 /// but appears very often
 
-std::string ROOT::Experimental::REveGeomDescription::MakeDrawingJson(REveGeomDrawing &drawing, bool has_shapes)
+std::string REveGeomDescription::MakeDrawingJson(REveGeomDrawing &drawing, bool has_shapes)
 {
    int comp = GetJsonComp();
 
@@ -1303,7 +1304,7 @@ std::string ROOT::Experimental::REveGeomDescription::MakeDrawingJson(REveGeomDra
 /// Change visibility for specified element
 /// Returns true if changes was performed
 
-bool ROOT::Experimental::REveGeomDescription::ChangeNodeVisibility(int nodeid, bool selected)
+bool REveGeomDescription::ChangeNodeVisibility(int nodeid, bool selected)
 {
    auto &dnode = fDesc[nodeid];
 
@@ -1334,7 +1335,7 @@ bool ROOT::Experimental::REveGeomDescription::ChangeNodeVisibility(int nodeid, b
 /// Change visibility for specified element
 /// Returns true if changes was performed
 
-std::unique_ptr<ROOT::Experimental::REveGeomNodeInfo> ROOT::Experimental::REveGeomDescription::MakeNodeInfo(const std::vector<std::string> &path)
+std::unique_ptr<REveGeomNodeInfo> REveGeomDescription::MakeNodeInfo(const std::vector<std::string> &path)
 {
    std::unique_ptr<REveGeomNodeInfo> res;
 
@@ -1376,7 +1377,7 @@ std::unique_ptr<ROOT::Experimental::REveGeomNodeInfo> ROOT::Experimental::REveGe
 /// Change configuration by client
 /// Returns true if any parameter was really changed
 
-bool ROOT::Experimental::REveGeomDescription::ChangeConfiguration(const std::string &json)
+bool REveGeomDescription::ChangeConfiguration(const std::string &json)
 {
    auto cfg = TBufferJSON::FromJSON<REveGeomConfig>(json);
    if (!cfg) return false;

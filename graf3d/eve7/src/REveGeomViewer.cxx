@@ -27,10 +27,12 @@
 
 using namespace std::string_literals;
 
+using namespace ROOT::Experimental;
+
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-ROOT::Experimental::REveGeomViewer::REveGeomViewer(TGeoManager *mgr, const std::string &volname)
+REveGeomViewer::REveGeomViewer(TGeoManager *mgr, const std::string &volname)
 {
    fWebWindow = RWebWindow::Create();
    fWebWindow->SetDefaultPage("file:rootui5sys/eve7/geom.html");
@@ -51,7 +53,7 @@ ROOT::Experimental::REveGeomViewer::REveGeomViewer(TGeoManager *mgr, const std::
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-ROOT::Experimental::REveGeomViewer::~REveGeomViewer()
+REveGeomViewer::~REveGeomViewer()
 {
 
 }
@@ -59,7 +61,7 @@ ROOT::Experimental::REveGeomViewer::~REveGeomViewer()
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// assign new geometry to the viewer
 
-void ROOT::Experimental::REveGeomViewer::SetGeometry(TGeoManager *mgr, const std::string &volname)
+void REveGeomViewer::SetGeometry(TGeoManager *mgr, const std::string &volname)
 {
    fGeoManager = mgr;
    fSelectedVolume = volname;
@@ -73,7 +75,7 @@ void ROOT::Experimental::REveGeomViewer::SetGeometry(TGeoManager *mgr, const std
 /////////////////////////////////////////////////////////////////////////////////
 /// Select visible top volume, all other volumes will be disabled
 
-void ROOT::Experimental::REveGeomViewer::SelectVolume(const std::string &volname)
+void REveGeomViewer::SelectVolume(const std::string &volname)
 {
    if ((volname != fSelectedVolume) && fGeoManager)
       SetGeometry(fGeoManager, volname);
@@ -82,7 +84,7 @@ void ROOT::Experimental::REveGeomViewer::SelectVolume(const std::string &volname
 /////////////////////////////////////////////////////////////////////////////////
 /// Draw only specified volume, special case when volume stored without valid geomanager
 
-void ROOT::Experimental::REveGeomViewer::SetOnlyVolume(TGeoVolume *vol)
+void REveGeomViewer::SetOnlyVolume(TGeoVolume *vol)
 {
    fGeoManager = nullptr;
    fSelectedVolume = "";
@@ -92,14 +94,13 @@ void ROOT::Experimental::REveGeomViewer::SetOnlyVolume(TGeoVolume *vol)
    Update();
 }
 
-
 /////////////////////////////////////////////////////////////////////////////////
 /// Show or update geometry in web window
 /// If web browser already started - just refresh drawing like "reload" button does
 /// If no web window exists or \param always_start_new_browser configured, starts new window
 /// \param args arguments to display
 
-void ROOT::Experimental::REveGeomViewer::Show(const RWebDisplayArgs &args, bool always_start_new_browser)
+void REveGeomViewer::Show(const RWebDisplayArgs &args, bool always_start_new_browser)
 {
    std::string user_args = "";
    if (!GetShowHierarchy()) user_args = "{ nobrowser: true }";
@@ -117,7 +118,7 @@ void ROOT::Experimental::REveGeomViewer::Show(const RWebDisplayArgs &args, bool 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Return URL address of web window used for geometry viewer
 
-std::string ROOT::Experimental::REveGeomViewer::GetWindowAddr() const
+std::string REveGeomViewer::GetWindowAddr() const
 {
    if (!fWebWindow) return "";
    return fWebWindow->GetAddr();
@@ -126,7 +127,7 @@ std::string ROOT::Experimental::REveGeomViewer::GetWindowAddr() const
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Update geometry drawings in all web displays
 
-void ROOT::Experimental::REveGeomViewer::Update()
+void REveGeomViewer::Update()
 {
    fWebWindow->Send(0, "RELOAD");
 }
@@ -134,7 +135,7 @@ void ROOT::Experimental::REveGeomViewer::Update()
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// convert JSON into stack array
 
-std::vector<int> ROOT::Experimental::REveGeomViewer::GetStackFromJson(const std::string &json, bool node_ids)
+std::vector<int> REveGeomViewer::GetStackFromJson(const std::string &json, bool node_ids)
 {
    std::vector<int> *stack{nullptr}, res;
 
@@ -152,7 +153,7 @@ std::vector<int> ROOT::Experimental::REveGeomViewer::GetStackFromJson(const std:
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Send data for principal geometry draw
 
-void ROOT::Experimental::REveGeomViewer::SendGeometry(unsigned connid)
+void REveGeomViewer::SendGeometry(unsigned connid)
 {
    if (!fDesc.HasDrawData())
       fDesc.CollectVisibles();
@@ -169,7 +170,7 @@ void ROOT::Experimental::REveGeomViewer::SendGeometry(unsigned connid)
 /// Normally has effect before first drawing of the geometry
 /// When geometry displayed, only "axis" and "rotate" options are updated
 
-void ROOT::Experimental::REveGeomViewer::SetDrawOptions(const std::string &opt)
+void REveGeomViewer::SetDrawOptions(const std::string &opt)
 {
    fDesc.SetDrawOptions(opt);
    unsigned connid = fWebWindow->GetConnectionId();
@@ -182,7 +183,7 @@ void ROOT::Experimental::REveGeomViewer::SetDrawOptions(const std::string &opt)
 /// Drawing should be completed at the moment
 /// Executed asynchronous - method returns immediately, image stored when received from the client
 
-void ROOT::Experimental::REveGeomViewer::SaveImage(const std::string &fname)
+void REveGeomViewer::SaveImage(const std::string &fname)
 {
     unsigned connid = fWebWindow->GetConnectionId();
     if (connid)
@@ -192,7 +193,7 @@ void ROOT::Experimental::REveGeomViewer::SaveImage(const std::string &fname)
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// receive data from client
 
-void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
+void REveGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
 {
    printf("Recv %s\n", arg.substr(0,100).c_str());
 
