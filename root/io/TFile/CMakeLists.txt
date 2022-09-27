@@ -4,6 +4,4 @@
 # define a CTest test that calls 'make' in ${CMAKE_CURRENT_SOURCE_DIR}
 #
 #-------------------------------------------------------------------------------
-if (ROOT_xml_FOUND)
 ROOTTEST_ADD_OLDTEST()
-endif()
