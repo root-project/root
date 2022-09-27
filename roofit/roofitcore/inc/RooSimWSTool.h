@@ -67,7 +67,7 @@ protected:
 
   RooSimWSTool(const RooSimWSTool&) ;
 
-  ObjBuildConfig* validateConfig(BuildConfig& bc) ;
+  std::unique_ptr<ObjBuildConfig> validateConfig(BuildConfig& bc) ;
   RooSimultaneous* executeBuild(const char* simPdfName,ObjBuildConfig& obc, bool verbose=true) ;
   std::string makeSplitName(const RooArgSet& splitCatSet) ;
 
