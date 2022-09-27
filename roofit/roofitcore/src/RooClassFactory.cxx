@@ -26,8 +26,10 @@ the generated code on the fly, and on request also immediate
 instantiate objects.
 **/
 
-#include "TClass.h"
 #include "RooClassFactory.h"
+
+#include "TClass.h"
+#include "RooFactoryWSTool.h"
 #include "RooErrorHandler.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
@@ -46,13 +48,18 @@ ClassImp(RooClassFactory);
 
 namespace {
 
+class ClassFacIFace : public RooFactoryWSTool::IFace {
+public:
+  std::string create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args) override ;
+} ;
+
 static Int_t init();
 
 Int_t dummy = init();
 
 static Int_t init()
 {
-  RooFactoryWSTool::IFace* iface = new RooClassFactory::ClassFacIFace ;
+  RooFactoryWSTool::IFace* iface = new ClassFacIFace ;
   RooFactoryWSTool::registerSpecial("CEXPR",iface) ;
   RooFactoryWSTool::registerSpecial("cexpr",iface) ;
   (void)dummy;
@@ -717,9 +724,11 @@ bool RooClassFactory::makeClass(const char* baseName, const char* className, con
   return false ;
 }
 
+namespace {
+
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string RooClassFactory::ClassFacIFace::create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args)
+std::string ClassFacIFace::create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args)
 {
   static int classCounter = 0 ;
 
@@ -764,9 +773,9 @@ std::string RooClassFactory::ClassFacIFace::create(RooFactoryWSTool& ft, const c
     }
 
     if (tn=="CEXPR") {
-      ret = makePdfInstance(className.c_str(),instanceName,expr,varList) ;
+      ret = RooClassFactory::makePdfInstance(className.c_str(),instanceName,expr,varList) ;
     } else {
-      ret = makeFunctionInstance(className.c_str(),instanceName,expr,varList) ;
+      ret = RooClassFactory::makeFunctionInstance(className.c_str(),instanceName,expr,varList) ;
     }
     if (!ret) {
       throw string(Form("RooClassFactory::ClassFacIFace::create() ERROR creating %s %s with RooClassFactory",((tn=="CEXPR")?"pdf":"function"),instanceName)) ;
@@ -786,3 +795,5 @@ std::string RooClassFactory::ClassFacIFace::create(RooFactoryWSTool& ft, const c
   }
   return string(instanceName) ;
 }
+
+} // namespace

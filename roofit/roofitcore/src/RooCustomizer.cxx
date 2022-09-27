@@ -149,6 +149,7 @@
 
 #include "RooCustomizer.h"
 
+#include "RooFactoryWSTool.h"
 #include "RooAbsCategoryLValue.h"
 #include "RooAbsCategory.h"
 #include "RooAbsArg.h"
@@ -180,13 +181,21 @@ ClassImp(RooCustomizer);
 
 namespace {
 
+/// Factory interface
+class CustIFace : public RooFactoryWSTool::IFace {
+public:
+  ~CustIFace() override {} ;
+  std::string create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args) override ;
+} ;
+
+
 static Int_t init();
 
 Int_t dummy = init() ;
 
 static Int_t init()
 {
-  RooFactoryWSTool::IFace* iface = new RooCustomizer::CustIFace ;
+  RooFactoryWSTool::IFace* iface = new CustIFace ;
   RooFactoryWSTool::registerSpecial("EDIT",iface) ;
   (void) dummy;
   return 0 ;
@@ -684,11 +693,11 @@ void RooCustomizer::setCloneBranchSet(RooArgSet& cloneBranchSet)
 }
 
 
-
+namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string RooCustomizer::CustIFace::create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args)
+std::string CustIFace::create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args)
 {
   // Check number of arguments
   if (args.size()<2) {
@@ -779,3 +788,5 @@ std::string RooCustomizer::CustIFace::create(RooFactoryWSTool& ft, const char* t
 
   return string(instanceName?instanceName:targ->GetName()) ;
 }
+
+} // namespace

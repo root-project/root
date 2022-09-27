@@ -20,7 +20,6 @@
 #include "TNamed.h"
 #include "RooArgSet.h"
 #include "RooPrintable.h"
-#include "RooFactoryWSTool.h"
 
 #include <vector>
 #include <string>
@@ -51,11 +50,6 @@ public:
               const char* expression="1.0", bool hasAnaInt=false, const char* intExpression=nullptr) ;
   static bool makeClass(const char* className, const char* name, const char* realArgNames=nullptr, const char* catArgNames=nullptr,
            const char* expression="1.0", bool hasAnaInt=false, bool hasIntGen=false, const char* intExpression=nullptr) ;
-
-  class ClassFacIFace : public RooFactoryWSTool::IFace {
-  public:
-    std::string create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args) override ;
-  } ;
 
 protected:
 
