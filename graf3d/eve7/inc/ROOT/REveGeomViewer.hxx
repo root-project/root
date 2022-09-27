@@ -18,6 +18,7 @@
 #include <memory>
 
 class TGeoManager;
+class TGeoVolume;
 
 namespace ROOT {
 namespace Experimental {
@@ -58,6 +59,8 @@ public:
    void SetGeometry(TGeoManager *mgr, const std::string &volname = "");
 
    void SelectVolume(const std::string &volname);
+
+   void SetOnlyVolume(TGeoVolume *vol);
 
    /** Configures maximal number of visible nodes and faces */
    void SetLimits(int nnodes = 5000, int nfaces = 100000)

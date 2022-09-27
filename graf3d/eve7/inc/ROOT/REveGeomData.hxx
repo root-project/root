@@ -192,6 +192,7 @@ class REveGeomDescription {
 
    std::vector<TGeoNode *> fNodes;  ///<! flat list of all nodes
    std::vector<REveGeomNode> fDesc; ///< converted description, send to client
+   TGeoVolume *fDrawVolume{nullptr}; ///<! select volume independent from TGeoMaanger
 
    std::vector<int> fSortMap;       ///<! nodes in order large -> smaller volume
    std::vector<ShapeDescr> fShapes; ///<! shapes with created descriptions
@@ -224,10 +225,18 @@ class REveGeomDescription {
 
    std::string MakeDrawingJson(REveGeomDrawing &drawing, bool has_shapes = false);
 
+   void ClearDescription();
+
+   void BuildDescription(TGeoNode *topnode, TGeoVolume *topvolume);
+
+   TGeoVolume *GetVolume(int nodeid);
+
 public:
    REveGeomDescription() = default;
 
    void Build(TGeoManager *mgr, const std::string &volname = "");
+
+   void Build(TGeoVolume *vol);
 
    /** Number of unique nodes in the geometry */
    int GetNumNodes() const { return fDesc.size(); }

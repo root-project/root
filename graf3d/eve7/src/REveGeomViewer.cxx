@@ -75,9 +75,23 @@ void ROOT::Experimental::REveGeomViewer::SetGeometry(TGeoManager *mgr, const std
 
 void ROOT::Experimental::REveGeomViewer::SelectVolume(const std::string &volname)
 {
-   if (volname != fSelectedVolume)
+   if ((volname != fSelectedVolume) && fGeoManager)
       SetGeometry(fGeoManager, volname);
 }
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Draw only specified volume, special case when volume stored without valid geomanager
+
+void ROOT::Experimental::REveGeomViewer::SetOnlyVolume(TGeoVolume *vol)
+{
+   fGeoManager = nullptr;
+   fSelectedVolume = "";
+
+   fDesc.Build(vol);
+
+   Update();
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////
 /// Show or update geometry in web window
