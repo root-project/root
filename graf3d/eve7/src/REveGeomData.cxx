@@ -232,9 +232,8 @@ void ROOT::Experimental::REveGeomDescription::PackMatrix(std::vector<float> &vec
 {
    vect.clear();
 
-   if (!matr || matr->IsIdentity()) {
+   if (!matr || matr->IsIdentity())
       return;
-   }
 
    auto trans = matr->GetTranslation();
    auto scale = matr->GetScale();
@@ -304,24 +303,20 @@ void ROOT::Experimental::REveGeomDescription::PackMatrix(std::vector<float> &vec
 
 void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr, const std::string &volname)
 {
-   fDesc.clear();
-   fNodes.clear();
-   fSortMap.clear();
-   ClearDrawData();
-   fDrawIdCut = 0;
-
+   ClearDescription();
    if (!mgr) return;
 
    auto topnode = mgr->GetTopNode();
+
    if (!volname.empty()) {
       auto vol = mgr->GetVolume(volname.c_str());
       if (vol) {
          TGeoNode *node;
          TGeoIterator next(mgr->GetTopVolume());
-         while ((node=next())) {
+         while ((node = next()) != nullptr) {
             if (node->GetVolume() == vol) break;
          }
-         if (node) { topnode = node; printf("Find node with volume\n"); }
+         if (node) topnode = node;
       }
    }
 
@@ -336,16 +331,55 @@ void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr, const std:
    SetMaxVisNodes(maxnodes);
    SetMaxVisFaces( (maxnodes > 5000 ? 5000 : (maxnodes < 1000 ? 1000 : maxnodes)) * 100);
 
+   BuildDescription(topnode, topnode->GetVolume());
+}
+
+/////////////////////////////////////////////////////////////////////
+/// Collect information about geometry from single volume
+/// like it done JSROOT.GEO.ClonedNodes.prototype.CreateClones
+
+void ROOT::Experimental::REveGeomDescription::Build(TGeoVolume *vol)
+{
+   ClearDescription();
+
+   if (!vol) return;
+
+   fDrawVolume = vol;
+
+   BuildDescription(nullptr, fDrawVolume);
+}
+
+/////////////////////////////////////////////////////////////////////
+/// Clear geometry description
+
+void ROOT::Experimental::REveGeomDescription::ClearDescription()
+{
+   fDesc.clear();
+   fNodes.clear();
+   fSortMap.clear();
+   ClearDrawData();
+   fDrawIdCut = 0;
+   fDrawVolume = nullptr;
+}
+
+/////////////////////////////////////////////////////////////////////
+/// Build geometry description
+
+void ROOT::Experimental::REveGeomDescription::BuildDescription(TGeoNode *topnode, TGeoVolume *topvolume)
+{
    // vector to remember numbers
    std::vector<int> numbers;
    int offset = 1000000000;
 
    // try to build flat list of all nodes
    TGeoNode *snode = topnode;
-   TGeoIterator iter(topnode->GetVolume());
+   TGeoIterator iter(topvolume);
    do {
-      // artificial offset, used as identifier
-      if (snode->GetNumber() >= offset) {
+      if (!snode) {
+         numbers.emplace_back(offset);
+         fNodes.emplace_back(nullptr);
+      } else if (snode->GetNumber() >= offset) {
+         // artificial offset already applied, used as identifier
          iter.Skip(); // no need to look inside
       } else {
          numbers.emplace_back(snode->GetNumber());
@@ -364,38 +398,42 @@ void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr, const std:
 
    // create vector of desc and childs
    int cnt = 0;
-   for (auto &node: fNodes) {
+   for (auto node : fNodes) {
 
-      fDesc.emplace_back(node->GetNumber() - offset);
+      fDesc.emplace_back(node ? node->GetNumber() - offset : 0);
+      TGeoVolume *vol = node ? node->GetVolume() : topvolume;
+
       auto &desc = fDesc[cnt++];
 
       sortarr.emplace_back(&desc);
 
-      desc.name = node->GetName();
+      desc.name = node ? node->GetName() : vol->GetName();
 
-      auto shape = dynamic_cast<TGeoBBox *>(node->GetVolume()->GetShape());
+      auto shape = dynamic_cast<TGeoBBox *>(vol->GetShape());
       if (shape) {
-         desc.vol = shape->GetDX()*shape->GetDY()*shape->GetDZ();
+         desc.vol = shape->GetDX() * shape->GetDY() * shape->GetDZ();
          desc.nfaces = 12; // TODO: get better value for each shape - excluding composite
       }
 
-      CopyMaterialProperties(node->GetVolume(), desc);
+      CopyMaterialProperties(vol, desc);
 
-      auto chlds = node->GetNodes();
+      auto chlds = node ? node->GetNodes() : vol->GetNodes();
 
-      PackMatrix(desc.matr, node->GetMatrix());
+      PackMatrix(desc.matr, node ? node->GetMatrix() : nullptr);
 
       if (chlds)
          for (int n = 0; n <= chlds->GetLast(); ++n) {
             auto chld = dynamic_cast<TGeoNode *> (chlds->At(n));
-            desc.chlds.emplace_back(chld->GetNumber()-offset);
+            desc.chlds.emplace_back(chld->GetNumber() - offset);
          }
    }
 
    // recover numbers
    cnt = 0;
-   for (auto &node: fNodes)
-      node->SetNumber(numbers[cnt++]);
+   for (auto node : fNodes) {
+      auto number = numbers[cnt++];
+      if (node) node->SetNumber(number);
+   }
 
    // sort in volume descent order
    std::sort(sortarr.begin(), sortarr.end(), [](REveGeomNode *a, REveGeomNode * b) { return a->vol > b->vol; });
@@ -412,26 +450,38 @@ void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr, const std:
 }
 
 /////////////////////////////////////////////////////////////////////
+/// Get volume for specified nodeid
+/// If specific volume was configured, it will be returned for nodeid==0
+
+TGeoVolume *ROOT::Experimental::REveGeomDescription::GetVolume(int nodeid)
+{
+   auto node = fNodes[nodeid];
+   if (node) return node->GetVolume();
+   return nodeid == 0 ? fDrawVolume : nullptr;
+}
+
+/////////////////////////////////////////////////////////////////////
 /// Set visibility flag for each nodes
 
 int ROOT::Experimental::REveGeomDescription::MarkVisible(bool on_screen)
 {
-   int res = 0, cnt = 0;
-   for (auto &node: fNodes) {
-      auto &desc = fDesc[cnt++];
+   int res = 0;
+   for (int nodeid = 0; nodeid < (int) fNodes.size(); nodeid++) {
+
+      auto node = fNodes[nodeid];
+      auto vol = GetVolume(nodeid);
+      auto &desc = fDesc[nodeid];
       desc.vis = 0;
       desc.nochlds = false;
 
       if (on_screen) {
-         if (node->IsOnScreen())
+         if (!node || node->IsOnScreen())
             desc.vis = 99;
       } else {
-         auto vol = node->GetVolume();
-
          if (vol->IsVisible() && !vol->TestAttBit(TGeoAtt::kVisNone))
             desc.vis = 99;
 
-         if (!node->IsVisDaughters())
+         if (node && !node->IsVisDaughters())
             desc.nochlds = true;
 
          if ((desc.vis > 0) && (desc.chlds.size() > 0) && !desc.nochlds)
@@ -477,7 +527,7 @@ int ROOT::Experimental::REveGeomDescription::ScanNodes(bool only_visible, int ma
 
    std::vector<int> stack;
    stack.reserve(25); // reserve enough space for most use-cases
-   int counter{0};
+   int counter = 0;
 
    using ScanFunc_t = std::function<int(int, int)>;
 
@@ -532,7 +582,7 @@ void ROOT::Experimental::REveGeomDescription::CollectNodes(REveGeomDrawing &draw
    drawing.numnodes = fDesc.size();
 
    for (auto &item : drawing.visibles) {
-      int nodeid{0};
+      int nodeid = 0;
       for (auto &chindx : item.stack) {
          auto &node = fDesc[nodeid];
          if (!node.useflag) {
@@ -769,7 +819,7 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles()
    fActualLevel = level;
    fDrawIdCut = 0;
 
-   int totalnumfaces{0}, totalnumnodes{0};
+   int totalnumfaces = 0, totalnumnodes = 0;
 
    //for (auto &node : fDesc)
    //   node.SetDisplayed(false);
@@ -781,7 +831,7 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles()
 
       if ((viscnt[sid] <= 0) || (desc.vol <= 0)) continue;
 
-      auto shape = fNodes[sid]->GetVolume()->GetShape();
+      auto shape = GetVolume(sid)->GetShape();
       if (!shape) continue;
 
       // now we need to create TEveGeoPolyShape, which can provide all rendering data
@@ -819,7 +869,7 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles()
          item.color = node.color;
          item.opacity = node.opacity;
 
-         auto volume = fNodes[node.id]->GetVolume();
+         auto volume = GetVolume(node.id);
 
          auto &sd = MakeShapeDescr(volume->GetShape());
 
@@ -876,7 +926,7 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
 
    std::vector<int> nodescnt(fDesc.size(), 0), viscnt(fDesc.size(), 0);
 
-   int nmatches{0};
+   int nmatches = 0;
 
    auto match_func = [&find](REveGeomNode &node) {
       return (node.vol > 0) && (node.name.compare(0, find.length(), find) == 0);
@@ -906,8 +956,8 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
 
    // now build all necessary shapes and check number of faces - not too many
 
-   int totalnumfaces{0}, totalnumnodes{0}, scnt{0};
-   bool send_rawdata{true};
+   int totalnumfaces = 0, totalnumnodes = 0, scnt = 0;
+   bool send_rawdata = true;
 
    // build all shapes in volume decreasing order
    for (auto &sid: fSortMap) {
@@ -918,7 +968,7 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
       auto &desc = fDesc[sid];
       if ((viscnt[sid] <= 0) && (desc.vol <= 0)) continue;
 
-      auto shape = fNodes[sid]->GetVolume()->GetShape();
+      auto shape = GetVolume(sid)->GetShape();
       if (!shape) continue;
 
       // create shape raw data
@@ -1005,7 +1055,7 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
       }
 
       auto &item = drawing.visibles.back();
-      auto volume = fNodes[node.id]->GetVolume();
+      auto volume = GetVolume(node.id);
 
       item.color = node.color;
       item.opacity = node.opacity;
@@ -1031,7 +1081,7 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
 
 int ROOT::Experimental::REveGeomDescription::FindNodeId(const std::vector<int> &stack)
 {
-   int nodeid{0};
+   int nodeid = 0;
 
    for (auto &chindx: stack) {
       auto &node = fDesc[nodeid];
@@ -1147,14 +1197,14 @@ std::vector<std::string> ROOT::Experimental::REveGeomDescription::MakePathByStac
 std::string ROOT::Experimental::REveGeomDescription::ProduceModifyReply(int nodeid)
 {
    std::vector<REveGeomNodeBase *> nodes;
-   auto vol = fNodes[nodeid]->GetVolume();
+   auto vol = GetVolume(nodeid);
 
    // we take not only single node, but all there same volume is referenced
    // nodes.push_back(&fDesc[nodeid]);
 
-   int id{0};
+   int id = 0;
    for (auto &desc : fDesc)
-      if (fNodes[id++]->GetVolume() == vol)
+      if (GetVolume(id++) == vol)
          nodes.emplace_back(&desc);
 
    return "MODIF:"s + TBufferJSON::ToJSON(&nodes, GetJsonComp()).Data();
@@ -1170,7 +1220,7 @@ bool ROOT::Experimental::REveGeomDescription::ProduceDrawingFor(int nodeid, std:
 {
    // only this shape is interesting
 
-   TGeoVolume *vol = (nodeid < 0) ? nullptr : fNodes[nodeid]->GetVolume();
+   TGeoVolume *vol = (nodeid < 0) ? nullptr : GetVolume(nodeid);
 
    if (!vol || !vol->GetShape()) {
       json.append("NO");
@@ -1183,7 +1233,7 @@ bool ROOT::Experimental::REveGeomDescription::ProduceDrawingFor(int nodeid, std:
       // select only nodes which reference same shape
 
       if (check_volume) {
-         if (fNodes[node.id]->GetVolume() != vol) return true;
+         if (GetVolume(node.id) != vol) return true;
       } else {
          if (node.id != nodeid) return true;
       }
@@ -1236,7 +1286,7 @@ std::string ROOT::Experimental::REveGeomDescription::MakeDrawingJson(REveGeomDra
    if (!has_shapes || (comp < TBufferJSON::kSkipTypeInfo))
       return TBufferJSON::ToJSON(&drawing, comp).Data();
 
-   comp = comp % TBufferJSON::kSkipTypeInfo; // no typeingo skipping
+   comp = comp % TBufferJSON::kSkipTypeInfo; // no typeinfo skipping
 
    TBufferJSON json;
    json.SetCompact(comp);
@@ -1257,7 +1307,7 @@ bool ROOT::Experimental::REveGeomDescription::ChangeNodeVisibility(int nodeid, b
 {
    auto &dnode = fDesc[nodeid];
 
-   auto vol = fNodes[nodeid]->GetVolume();
+   auto vol = GetVolume(nodeid);
 
    // nothing changed
    if (vol->IsVisible() == selected)
@@ -1270,9 +1320,9 @@ bool ROOT::Experimental::REveGeomDescription::ChangeNodeVisibility(int nodeid, b
       vol->SetVisDaughters(selected);
    }
 
-   int id{0};
+   int id = 0;
    for (auto &desc: fDesc)
-      if (fNodes[id++]->GetVolume() == vol)
+      if (GetVolume(id++) == vol)
          desc.vis = dnode.vis;
 
    ClearDrawData(); // after change raw data is no longer valid
@@ -1299,10 +1349,12 @@ std::unique_ptr<ROOT::Experimental::REveGeomNodeInfo> ROOT::Experimental::REveGe
       res = std::make_unique<REveGeomNodeInfo>();
 
       res->path = path;
-      res->node_name = node->GetName();
-      res->node_type = node->ClassName();
+      res->node_name = node ? node->GetName() : "node_name";
+      res->node_type = node ? node->ClassName() : "no class";
 
-      TGeoShape *shape = node->GetVolume() ? node->GetVolume()->GetShape() : nullptr;
+      auto vol = GetVolume(iter.GetNodeId());
+
+      TGeoShape *shape = vol ? vol->GetShape() : nullptr;
 
       if (shape) {
          res->shape_name = shape->GetName();
