@@ -30,10 +30,6 @@
 */
 
 
-
-
-#include <sys/types.h>
-
 #include "RooFitDriver.h"
 #include "RooMsgService.h"
 
@@ -106,9 +102,11 @@
 #include <TSystem.h> // To print stack traces when caching errors are detected
 #endif
 
-#include <sstream>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
+#include <limits>
+#include <sstream>
+#include <sys/types.h>
 
 using namespace std ;
 
@@ -2615,7 +2613,7 @@ double RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet &n
      if(rrvFitRes->namePtr() == namePtr()) return rrvFitRes->getError();
 
      // Strip out parameters with zero error
-     if (rrvFitRes->getError() <= 1e-20) continue;
+     if (rrvFitRes->getError() <= rrvFitRes->getVal() * std::numeric_limits<double>::epsilon()) continue;
 
      // Ignore parameters in the fit result that this RooAbsReal doesn't depend on
      if(!rrvInAbsReal) continue;
@@ -2828,7 +2826,7 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
     // Strip out parameters with zero error
     RooArgList fpf_stripped;
     for (auto const* frv : static_range_cast<RooRealVar*>(fr.floatParsFinal())) {
-       if (frv->getError() > 1e-20) {
+       if (frv->getError() > frv->getVal() * std::numeric_limits<double>::epsilon()) {
           fpf_stripped.add(*frv);
        }
     }
