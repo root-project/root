@@ -161,6 +161,13 @@ namespace SOFIE{
       }
    }
 
+   void RModel::UpdateOutputTensorList(std::vector<std::string> curr_output_tensors, std::vector<std::string> new_output_tensors){
+      for(auto& it:curr_output_tensors){
+         fOutputTensorNames.erase(std::remove(fOutputTensorNames.begin(), fOutputTensorNames.end(), it), fOutputTensorNames.end());
+      }
+      fOutputTensorNames.insert(fOutputTensorNames.end(), new_output_tensors.begin(), new_output_tensors.end());
+   }
+
    void RModel::UpdateInitializedTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape, std::shared_ptr<void> data){
       tensor_name = UTILITY::Clean_name(tensor_name);
       if (!CheckIfTensorAlreadyExist(tensor_name)){
@@ -183,6 +190,7 @@ namespace SOFIE{
       // check if there are only parametrized input tensor and convert in
       // ready input tensor according to batch size
       // convert parametric shape to a dimensional shape
+      fIntermediateTensorInfos.clear();
       if (fReadyInputTensorInfos.size() != fInputTensorNames.size()) {
          if ( fReadyInputTensorInfos.size() + fInputTensorInfos.size() != fInputTensorNames.size())
             throw std::runtime_error("TMVA-SOFIE: RModel::Initializes: invalid inputs");
@@ -212,6 +220,7 @@ namespace SOFIE{
          fUseSession = false;
       if (static_cast<std::underlying_type_t<Options>>(Options::kNoWeightFile) & options)
          fUseWeightFile = false;
+      fGC.clear();
       Initialize(batchSize);
       fGC += ("//Code generated automatically by TMVA for Inference of Model file [" + fFileName + "] at [" + fParseTime.substr(0, fParseTime.length()-1) +"] \n");
       // add header guards
@@ -222,6 +231,9 @@ namespace SOFIE{
       fGC += "#define " + hgname + "\n\n";
       for (auto& i: fNeededStdLib) {
          fGC += "#include<" + i + ">\n";
+      }      
+      for (auto& i: fCustomOpHeaders) {
+         fGC += "#include \"" + i + "\"\n";
       }
       // for the session we need to include SOFIE_Common functions
       //needed for convolution operator (need to add a flag)

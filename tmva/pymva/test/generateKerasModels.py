@@ -139,6 +139,7 @@ def generateActivationModel():
     model.compile(loss='mean_squared_error', optimizer=SGD(learning_rate=0.01))
     model.fit(x_train, y_train, epochs=10, batch_size=1)
     model.save('KerasModelActivations.h5')
+    
 
 generateFunctionalModel()
 generateSequentialModel()
