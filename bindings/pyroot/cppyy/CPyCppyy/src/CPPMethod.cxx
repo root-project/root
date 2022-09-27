@@ -272,7 +272,7 @@ void CPyCppyy::CPPMethod::SetPyError_(PyObject* msg)
             PyErr_Format(errtype, "%s =>\n    %s: %s",
                 CPyCppyy_PyText_AsString(doc), cname, details.c_str());
         }
-    } else {
+    } else if (evalue) {
         Py_XDECREF(((CPPExcInstance*)evalue)->fTopMessage);
         if (msg) {
             ((CPPExcInstance*)evalue)->fTopMessage = CPyCppyy_PyText_FromFormat(\
