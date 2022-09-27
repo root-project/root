@@ -127,13 +127,19 @@ using namespace std ;
 
 namespace {
 
+class SimWSIFace : public RooFactoryWSTool::IFace {
+public:
+  ~SimWSIFace() override {} ;
+  std::string create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args) override ;
+} ;
+
 static Int_t init();
 
 Int_t dummy = init() ;
 
 static Int_t init()
 {
-  static RooSimWSTool::SimWSIFace iface{};
+  static SimWSIFace iface{};
   RooFactoryWSTool::registerSpecial("SIMCLONE",&iface);
   RooFactoryWSTool::registerSpecial("MSIMCLONE",&iface);
   (void) dummy;
@@ -876,11 +882,11 @@ void RooSimWSTool::ObjBuildConfig::print()
 }
 
 
-
+namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string RooSimWSTool::SimWSIFace::create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args)
+std::string SimWSIFace::create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args)
 {
   string tn(typeName) ;
   if (tn=="SIMCLONE") {
@@ -1006,3 +1012,5 @@ std::string RooSimWSTool::SimWSIFace::create(RooFactoryWSTool& ft, const char* t
 
   return string(instanceName) ;
 }
+
+} // namespace

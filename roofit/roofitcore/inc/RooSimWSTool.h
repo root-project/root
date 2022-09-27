@@ -20,7 +20,7 @@
 #include "Rtypes.h"
 #include "RooWorkspace.h"
 #include "RooCmdArg.h"
-#include "RooFactoryWSTool.h"
+
 #include <list>
 #include <map>
 #include <string>
@@ -55,12 +55,6 @@ public:
           const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
 
   RooSimultaneous* build(const char* simPdfName,BuildConfig& bc, bool verbose=true) ;
-
-  class SimWSIFace : public RooFactoryWSTool::IFace {
-  public:
-    ~SimWSIFace() override {} ;
-    std::string create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args) override ;
-  } ;
 
 
 protected:
