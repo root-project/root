@@ -241,8 +241,10 @@ void *TStorage::ReAlloc(void *ovp, size_t size, size_t oldsize)
 #else
    void *vp = ::operator new(size);
 #endif
-   if (vp == nullptr)
+   if (vp == nullptr) {
       Fatal(where, "%s", gSpaceErr);
+      return vp;
+   }
 
    if (ovp == nullptr)
       return vp;
