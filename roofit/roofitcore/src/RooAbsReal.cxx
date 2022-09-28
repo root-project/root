@@ -1378,7 +1378,7 @@ TH1* RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
   RooBinning* intBinning(0) ;
   if (doIntBinning>0) {
     // Given RooAbsPdf* pdf and RooRealVar* obs
-    std::list<double>* bl = binBoundaries((RooRealVar&)xvar,xvar.getMin(),xvar.getMax()) ;
+    std::unique_ptr<std::list<double>> bl{binBoundaries(const_cast<RooAbsRealLValue&>(xvar),xvar.getMin(),xvar.getMax())};
     if (!bl) {
       // Only emit warning when intrinsic binning is explicitly requested
       if (doIntBinning==1) {
@@ -1392,7 +1392,7 @@ TH1* RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
       }
       std::vector<double> ba(bl->size());
       int i=0 ;
-      for (std::list<double>::iterator it=bl->begin() ; it!=bl->end() ; ++it) { ba[i++] = *it ; }
+      for (auto const& elem : *bl) { ba[i++] = elem ; }
       intBinning = new RooBinning(bl->size()-1,ba.data()) ;
     }
   }
@@ -3752,8 +3752,8 @@ Int_t RooAbsReal::numEvalErrors()
   }
 
   Int_t ntot(0) ;
-  for(auto iter = _evalErrorList.begin();iter!=_evalErrorList.end() ; ++iter) {
-    ntot += iter->second.second.size() ;
+  for(auto const& elem : _evalErrorList) {
+    ntot += elem.second.second.size() ;
   }
   return ntot ;
 }
