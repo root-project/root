@@ -135,11 +135,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          Promise.all([import(this.jsroot.source_dir + 'modules/geom/geobase.mjs'), import(this.jsroot.source_dir + 'modules/geom/TGeoPainter.mjs')]).then(arr => {
             this.geo = Object.assign({}, arr[0], arr[1]);
-            sap.ui.define(['rootui5/eve7/lib/EveElements'], EveElements => {
-               this.creator = new EveElements();
-               this.creator.useIndexAsIs = this.jsroot.decodeUrl().has('useindx');
-               this.checkSendRequest();
-            });
+            this.checkSendRequest();
          });
       },
 
@@ -263,7 +259,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (!this.standalone) {
             let req = geo_stack ? geo_stack : [];
             // avoid multiple time submitting same request
-            if (EVE.JSR.isSameStack(this._last_highlight_req, req)) return;
+            if (this.geo.isSameStack(this._last_highlight_req, req)) return;
             this._last_highlight_req = req;
             return this.sendViewerRequest("HIGHL", { stack: req });
          }
@@ -318,7 +314,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.geo_painter.clearDrawings();
          } else {
             let geomDrawing = this.byId("geomDrawing");
-            this.geo_painter = EVE.JSR.createGeoPainter(geomDrawing.getDomRef(), null, drawopt);
+            this.geo_painter = this.geo.createGeoPainter(geomDrawing.getDomRef(), null, drawopt);
             this.geo_painter.setMouseTmout(0);
             // this.geo_painter.setDepthMethod("dflt");
             this.geo_painter.ctrl.notoolbar = true;
@@ -339,7 +335,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       /** @summary Extract shapes from binary data using appropriate draw message
-       * @desc Draw message is vector of REveGeomVisible objects, including info where shape is in raw data */
+        * @desc Draw message is vector of REveGeomVisible objects, including info where shape is in raw data */
       extractRawShapes: function(draw_msg, recreate) {
 
          let nodes = null, old_gradpersegm = 0;
@@ -351,17 +347,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             nodes = (draw_msg.numnodes > 1e6) ? { length: draw_msg.numnodes } : new Array(draw_msg.numnodes); // array for all nodes
          }
 
-         for (let cnt=0; cnt < draw_msg.nodes.length; ++cnt) {
-            let node = draw_msg.nodes[cnt];
-            this.formatNodeElement(node);
+         draw_msg.nodes.forEach(node => {
+            node = this.geo.ClonedNodes.formatServerElement(node);
             if (nodes)
                nodes[node.id] = node;
             else
                this.geo_clones.updateNode(node);
-         }
+         });
 
          if (recreate) {
-            this.geo_clones = new EVE.JSR.ClonedNodes(null, nodes);
+            this.geo_clones = new this.geo.ClonedNodes(null, nodes);
             this.geo_clones.name_prefix = this.geo_clones.getNodeName(0);
             // normally only need when making selection, not used in geo viewer
             // this.geo_clones.setMaxVisNodes(draw_msg.maxvisnodes);
@@ -378,8 +373,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             nsegm = this.geom_model.getProperty("/cfg/nsegm");
 
          if (nsegm) {
-            old_gradpersegm = EVE.JSR.geoCfg("GradPerSegm");
-            EVE.JSR.geoCfg("GradPerSegm", 360 / Math.max(nsegm,6));
+            old_gradpersegm = this.geo.geoCfg("GradPerSegm");
+            this.geo.geoCfg("GradPerSegm", 360 / Math.max(nsegm,6));
          }
 
          for (let cnt = 0; cnt < draw_msg.visibles.length; ++cnt) {
@@ -389,65 +384,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             if (!rd) continue;
 
             item.server_shape = rd.server_shape =
-               this.createServerShape(rd, nsegm);
+               this.geo.createServerGeometry(rd, nsegm);
          }
 
          if (old_gradpersegm)
-            EVE.JSR.geoCfg("GradPerSegm", old_gradpersegm);
+            this.geo.geoCfg("GradPerSegm", old_gradpersegm);
 
          return true;
-      },
-
-      /** @summary Create single shape from provided raw data. If nsegm changed, shape will be recreated */
-      createServerShape: function(rd, nsegm) {
-
-         if (rd.server_shape && ((rd.nsegm===nsegm) || !rd.shape))
-            return rd.server_shape;
-
-         rd.nsegm = nsegm;
-
-         let g = null, off = 0;
-
-         if (rd.shape) {
-            // case when TGeoShape provided as is
-            g = EVE.JSR.createGeometry(rd.shape);
-         } else {
-
-            if (!rd.raw || (rd.raw.length==0)) {
-               console.error('No raw data at all');
-               return null;
-            }
-
-            if (!rd.raw.buffer) {
-               console.error('No raw buffer');
-               return null;
-            }
-
-            if (rd.sz[0]) {
-               rd.vtxBuff = new Float32Array(rd.raw.buffer, off, rd.sz[0]);
-               off += rd.sz[0]*4;
-            }
-
-            if (rd.sz[1]) {
-               rd.nrmBuff = new Float32Array(rd.raw.buffer, off, rd.sz[1]);
-               off += rd.sz[1]*4;
-            }
-
-            if (rd.sz[2]) {
-               rd.idxBuff = new Uint32Array(rd.raw.buffer, off, rd.sz[2]);
-               off += rd.sz[2]*4;
-            }
-
-            g = this.creator.makeEveGeometry(rd);
-         }
-
-         // shape handle is similar to created in JSROOT.GeoPainter
-         return {
-            _typename: "$$Shape$$", // indicate that shape can be used as is
-            ready: true,
-            geom: g,
-            nfaces: EVE.JSR.numGeometryFaces(g)
-         };
       },
 
       /** @summary function to accumulate and process all drawings messages
@@ -464,7 +407,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
 
 
-         if (!this.creator ||            // complete JSROOT/EVE7 TGeo functionality is loaded
+         if (!this.geo ||                // complete JSROOT TGeo functionality is loaded
             !this.queue.length ||        // drawing messages are created
             !this.renderingDone) return; // UI5 rendering is performed
 
@@ -600,38 +543,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
 
-      /** @summary Format REveGeomNode data to be able use it in list of clones */
-      formatNodeElement: function(elem) {
-         elem.kind = 2; // special element for geom viewer, used in TGeoPainter
-         elem.vis = 2; // visibility is alwys on
-         let m = elem.matr;
-         delete elem.matr;
-         if (!m || !m.length) return;
-
-         if (m.length == 16) {
-            elem.matrix = m;
-         } else {
-            let nm = elem.matrix = new Array(16);
-            for (let k = 0; k < 16; ++k) nm[k] = 0;
-            nm[0] = nm[5] = nm[10] = nm[15] = 1;
-
-            if (m.length == 3) {
-               // translation martix
-               nm[12] = m[0]; nm[13] = m[1]; nm[14] = m[2];
-            } else if (m.length == 4) {
-               // scale matrix
-               nm[0] = m[0]; nm[5] = m[1]; nm[10] = m[2]; nm[15] = m[3];
-            } else if (m.length == 9) {
-               // rotation matrix
-               nm[0] = m[0]; nm[4] = m[1]; nm[8]  = m[2];
-               nm[1] = m[3]; nm[5] = m[4]; nm[9]  = m[5];
-               nm[2] = m[6]; nm[6] = m[7]; nm[10] = m[8];
-            } else {
-               console.error('wrong number of elements in the matrix ' + m.length);
-            }
-         }
-      },
-
       /** @summary Parse compact geometry description
        * @desc Used only to initialize hierarchy browser with full Tree,
        * later should be done differently */
@@ -653,18 +564,17 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** TO BE CHANGED !!! When single node element is modified on the server side */
       modifyDescription: function(msg) {
-         let arr = JSON.parse(msg), can_refresh = true;
-
+         let arr = JSON.parse(msg);
          if (!arr || !this.geo_clones) return;
 
          console.error('modifyDescription should be changed');
-
-         return;
+/*
+         let can_refresh = true;
 
          for (let k=0;k<arr.length;++k) {
             let moditem = arr[k];
 
-            this.formatNodeElement(moditem);
+            this.geo.ClonedNodes.formatServerElement(moditem);
 
             let item = this.geo_clones.nodes[moditem.id];
 
@@ -694,7 +604,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          } else {
             // rebuild complete tree for TreeBrowser
          }
-
+*/
       },
 
       buildTreeNode: function(nodes, cache, indx, expand_lvl) {
@@ -813,7 +723,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.geo_painter.changedGlobalTransparency(function(node) {
                if (node.stack)
                   for (let n = 0; n < visibles.length; ++n)
-                     if (EVE.JSR.isSameStack(node.stack, visibles[n].stack))
+                     if (this.geo.isSameStack(node.stack, visibles[n].stack))
                         return 0;
                return dflt;
             });
@@ -852,7 +762,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          if (this.isConnected && this.renderingDone) {
 
-            if (this.creator && !this.ask_getdraw) {
+            if (this.geo && !this.ask_getdraw) {
                this.websocket.send("GETDRAW");
                this.ask_getdraw = true;
             }
@@ -977,7 +887,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          let server_shape = null;
 
          if (info.ri)
-            server_shape = this.createServerShape(info.ri, 0);
+            server_shape = this.geo.createServerGeometry(info.ri, 0);
 
          this.drawNodeShape(server_shape, false);
       },
@@ -1000,7 +910,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             return;
          }
 
-         this.node_painter = EVE.JSR.createGeoPainter(nodeDrawing.getDomRef(), server_shape, "");
+         this.node_painter = this.geo.createGeoPainter(nodeDrawing.getDomRef(), server_shape, "");
          this.node_painter.setMouseTmout(0);
          this.node_painter.ctrl.notoolbar = true;
          this.node_painter_active = true;
