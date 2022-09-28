@@ -11,10 +11,14 @@
 #include "ReadSpeed.hxx"
 
 #include <ROOT/TSeq.hxx>
+
+#ifdef R__USE_IMT
 #include <ROOT/TThreadExecutor.hxx>
 #include <ROOT/TTreeProcessorMT.hxx>  // for TTreeProcessorMT::GetTasksPerWorkerHint
-#include <ROOT/InternalTreeUtils.hxx> // for ROOT::Internal::TreeUtils::GetTopLevelBranchNames
 #include <ROOT/RSlotStack.hxx>
+#endif
+
+#include <ROOT/InternalTreeUtils.hxx> // for ROOT::Internal::TreeUtils::GetTopLevelBranchNames
 #include <TBranch.h>
 #include <TStopwatch.h>
 #include <TTree.h>
@@ -23,6 +27,7 @@
 #include <cassert>
 #include <cmath> // std::ceil
 #include <memory>
+#include <numeric> // std::accumulate
 #include <stdexcept>
 #include <set>
 #include <iostream>
@@ -266,6 +271,7 @@ ReadSpeed::MergeClusters(std::vector<std::vector<EntryRange>> &&clusters, unsign
 
 Result ReadSpeed::EvalThroughputMT(const Data &d, unsigned nThreads)
 {
+#ifdef R__USE_IMT
    ROOT::TThreadExecutor pool(nThreads);
    const auto actualThreads = ROOT::GetThreadPoolSize();
    if (actualThreads != nThreads)
@@ -335,6 +341,11 @@ Result ReadSpeed::EvalThroughputMT(const Data &d, unsigned nThreads)
            totalByteData.fUncompressedBytesRead,
            totalByteData.fCompressedBytesRead,
            actualThreads};
+#else
+   (void)d;
+   (void)nThreads;
+   return {};
+#endif // R__USE_IMT
 }
 
 Result ReadSpeed::EvalThroughput(const Data &d, unsigned nThreads)
@@ -356,5 +367,14 @@ Result ReadSpeed::EvalThroughput(const Data &d, unsigned nThreads)
       std::terminate();
    }
 
+#ifdef R__USE_IMT
    return nThreads > 0 ? EvalThroughputMT(d, nThreads) : EvalThroughputST(d);
+#else
+   if (nThreads > 0) {
+      std::cerr << nThreads
+                << " threads were requested, but ROOT was built without implicit multi-threading (IMT) support.\n";
+      std::terminate();
+   }
+   return EvalThroughputST(d);
+#endif
 }
