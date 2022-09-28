@@ -78,8 +78,7 @@ PyTypeObject TypedefPointerToClass_Type = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     (ternaryfunc)tpc_call,        // tp_call
     0, 0, 0, 0,
-    Py_TPFLAGS_DEFAULT |
-        Py_TPFLAGS_HAVE_GC,       // tp_flags
+    Py_TPFLAGS_DEFAULT,           // tp_flags
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 #if PY_VERSION_HEX >= 0x02030000
     , 0                           // tp_del
