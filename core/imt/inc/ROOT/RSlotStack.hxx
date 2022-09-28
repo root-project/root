@@ -18,10 +18,15 @@
 namespace ROOT {
 namespace Internal {
 
-/// This is an helper class to allow to pick a slot resorting to a map
-/// indexed by thread ids.
-/// WARNING: this class does not work as a regular stack. The size is
-/// fixed at construction time and no blocking is foreseen.
+/// A thread-safe stack of N indexes (0 to size - 1).
+/// RSlotStack can be used to safely assign a "processing slot" number to
+/// each thread in multi-thread applications.
+/// In release builds, pop and push operations are unchecked, potentially
+/// resulting in undefined behavior if more slot numbers than available are
+/// requested.
+/// An important design assumption is that a slot will almost always be available
+/// when a thread asks for it, and if it is not available it will be very soon,
+/// therefore a spinlock is used for synchronization.
 class RSlotStack {
 private:
    const unsigned int fSize;
