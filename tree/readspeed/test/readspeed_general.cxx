@@ -44,18 +44,16 @@ std::vector<std::string> ConcatVectors(const std::vector<std::string> &first, co
 }
 
 // Creates all of our needed .root files and deletes them once the testing is over.
-class Environment : public ::testing::Environment {
-public:
-   ~Environment() override {}
-
-   void SetUp() override
+class ReadSpeedIntegration : public ::testing::Test {
+protected:
+   static void SetUpTestSuite()
    {
       RequireFile("test1.root");
       RequireFile("test2.root");
       RequireFile("test3.root", {"x", "x_branch", "y_brunch", "mismatched"});
    }
 
-   void TearDown() override
+   static void TearDownTestSuite()
    {
       gSystem->Unlink("test1.root");
       gSystem->Unlink("test2.root");
@@ -63,15 +61,7 @@ public:
    }
 };
 
-int main(int argc, char **argv)
-{
-   testing::InitGoogleTest(&argc, argv);
-   testing::AddGlobalTestEnvironment(new Environment);
-   (void)(::testing::GTEST_FLAG(death_test_style) = "threadsafe");
-   return RUN_ALL_TESTS();
-}
-
-TEST(ReadSpeedIntegration, SingleThread)
+TEST_F(ReadSpeedIntegration, SingleThread)
 {
    const auto result = EvalThroughput({{"t"}, {"test1.root", "test2.root"}, {"x"}}, 0);
 
@@ -80,7 +70,7 @@ TEST(ReadSpeedIntegration, SingleThread)
 }
 
 #ifdef R__USE_IMT
-TEST(ReadSpeedIntegration, MultiThread)
+TEST_F(ReadSpeedIntegration, MultiThread)
 {
    const auto result = EvalThroughput({{"t"}, {"test1.root", "test2.root"}, {"x"}}, 2);
 
@@ -89,25 +79,25 @@ TEST(ReadSpeedIntegration, MultiThread)
 }
 #endif
 
-TEST(ReadSpeedIntegration, NonExistentFile)
+TEST_F(ReadSpeedIntegration, NonExistentFile)
 {
    EXPECT_THROW(EvalThroughput({{"t"}, {"test_fake.root"}, {"x"}}, 0), std::runtime_error)
       << "Should throw for non-existent file";
 }
 
-TEST(ReadSpeedIntegration, NonExistentTree)
+TEST_F(ReadSpeedIntegration, NonExistentTree)
 {
    EXPECT_THROW(EvalThroughput({{"t_fake"}, {"test1.root"}, {"x"}}, 0), std::runtime_error)
       << "Should throw for non-existent tree";
 }
 
-TEST(ReadSpeedIntegration, NonExistentBranch)
+TEST_F(ReadSpeedIntegration, NonExistentBranch)
 {
    EXPECT_THROW(EvalThroughput({{"t"}, {"test1.root"}, {"z"}}, 0), std::runtime_error)
       << "Should throw for non-existent branch";
 }
 
-TEST(ReadSpeedBranches, SingleBranch)
+TEST_F(ReadSpeedIntegration, SingleBranch)
 {
    const auto result = EvalThroughput({{"t"}, {"test3.root"}, {"x"}}, 0);
 
@@ -115,7 +105,7 @@ TEST(ReadSpeedBranches, SingleBranch)
    EXPECT_EQ(result.fCompressedBytesRead, 321967) << "Wrong number of compressed bytes read";
 }
 
-TEST(ReadSpeedBranches, PatternBranch)
+TEST_F(ReadSpeedIntegration, PatternBranch)
 {
    const auto result = EvalThroughput({{"t"}, {"test3.root"}, {"(x|y)_.*nch"}, true}, 0);
 
@@ -123,7 +113,7 @@ TEST(ReadSpeedBranches, PatternBranch)
    EXPECT_EQ(result.fCompressedBytesRead, 661576) << "Wrong number of compressed bytes read";
 }
 
-TEST(ReadSpeedBranches, NoMatches)
+TEST_F(ReadSpeedIntegration, NoMatches)
 {
    EXPECT_THROW(EvalThroughput({{"t"}, {"test3.root"}, {"x_.*"}, false}, 0), std::runtime_error)
       << "Should throw for no matching branch";
@@ -134,7 +124,7 @@ TEST(ReadSpeedBranches, NoMatches)
       << "Should terminate for no matching branch";
 }
 
-TEST(ReadSpeedBranches, AllBranches)
+TEST_F(ReadSpeedIntegration, AllBranches)
 {
    const auto result = EvalThroughput({{"t"}, {"test3.root"}, {".*"}, true}, 0);
 
