@@ -45,14 +45,13 @@
 
         import { connectWebWindow } from './jsrootsys/modules/webwindow.mjs';
         import { parse, decodeUrl, toJSON, source_dir } from './jsrootsys/modules/core.mjs';
-        import { initEVE } from './rootui5sys/eve7/eve.mjs';
 
         // create global EVE and THREE handles
 
-        initEVE(source_dir).then(() => connectWebWindow({
+        connectWebWindow({
            ui5: true,
            openui5libs: "sap.m, sap.ui.layout, sap.ui.unified, sap.ui.table" // customize openui5 libs later
-        })).then(handle => {
+        }).then(handle => {
             sap.ui.require(["sap/ui/core/mvc/XMLView"], XMLView => {
                 XMLView.create({
                    viewName: "rootui5.eve7.view.GeomViewer",
