@@ -1077,7 +1077,7 @@ function(ROOT_OBJECT_LIBRARY library)
   endif()
 
   #--- Fill the property OBJECTS with all the object files
-  #    This is needed becuase the generator expression $<TARGET_OBJECTS:target>
+  #    This is needed because the generator expression $<TARGET_OBJECTS:target>
   #    does not get expanded when used in custom command dependencies
   get_target_property(sources ${library} SOURCES)
   foreach(s ${sources})
