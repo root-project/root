@@ -399,7 +399,7 @@ RElement::EActionKind TObjectElement::GetDefaultAction() const
    if (!cl) return kActNone;
    std::string clname = cl->GetName();
    if ("TCanvas"s == clname) return kActCanvas;
-   if (("TGeoManager"s == cl->GetName()) || ("TGeoVolume"s == cl->GetName()) || (clname.compare(0, 8, "TGeoNode"s) == 0)) return kActGeom;
+   if (("TGeoManager"s == clname) || (clname.compare(0, 10, "TGeoVolume"s) == 0) || (clname.compare(0, 8, "TGeoNode"s) == 0)) return kActGeom;
    if (RProvider::CanDraw6(cl)) return kActDraw6;
    if (RProvider::CanDraw7(cl)) return kActDraw7;
    if (RProvider::CanHaveChilds(cl)) return kActBrowse;
@@ -423,7 +423,7 @@ bool TObjectElement::IsCapable(RElement::EActionKind action) const
       case kActDraw6: return RProvider::CanDraw6(cl); // if can draw in TCanvas, can produce image
       case kActDraw7: return RProvider::CanDraw7(cl);
       case kActCanvas: return "TCanvas"s == clname;
-      case kActGeom: return ("TGeoManager"s == clname) || ("TGeoVolume"s == clname) || (clname.compare(0, 8, "TGeoNode"s) == 0);
+      case kActGeom: return ("TGeoManager"s == clname) || (clname.compare(0, 10, "TGeoVolume"s) == 0) || (clname.compare(0, 8, "TGeoNode"s) == 0);
       default: return false;
    }
 
