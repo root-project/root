@@ -301,7 +301,6 @@ Result ReadSpeed::EvalThroughputMT(const Data &d, unsigned nThreads)
       const auto &branchNames = fileBranchNames[fileIdx];
 
       auto readRange = [&](const EntryRange &range) -> ByteData {
-
          ROOT::Internal::RSlotStackRAII slotRAII(slotStack);
          auto slotIndex = slotRAII.fSlot;
          auto &file = lastTFiles[slotIndex];
