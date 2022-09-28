@@ -352,10 +352,10 @@ class RFramePainter extends RObjectPainter {
 
    /** @summary Draw configured axes on the frame
      * @desc axes can be drawn only for main histogram  */
-   drawAxes() {
+   async drawAxes() {
 
       if (this.axes_drawn || (this.xmin == this.xmax) || (this.ymin == this.ymax))
-         return Promise.resolve(this.axes_drawn);
+         return this.axes_drawn;
 
       let ticksx = this.v7EvalAttr("ticksX", 1),
           ticksy = this.v7EvalAttr("ticksY", 1),
@@ -821,11 +821,11 @@ class RFramePainter extends RObjectPainter {
 
    /** @summary function can be used for zooming into specified range
      * @desc if both limits for each axis 0 (like xmin==xmax==0), axis will be unzoomed
-     * @returns {Promise} with boolean flag if zoom operation was performed */
-   zoom(xmin, xmax, ymin, ymax, zmin, zmax) {
+     * @return {Promise} with boolean flag if zoom operation was performed */
+   async zoom(xmin, xmax, ymin, ymax, zmin, zmax) {
 
       // disable zooming when axis conversion is enabled
-      if (this.projection) return Promise.resolve(false);
+      if (this.projection) return false;
 
       if (xmin==="x") { xmin = xmax; xmax = ymin; ymin = undefined; } else
       if (xmin==="y") { ymax = ymin; ymin = xmax; xmin = xmax = undefined; } else
@@ -928,7 +928,7 @@ class RFramePainter extends RObjectPainter {
          }
       }
 
-      if (!changed) return Promise.resolve(false);
+      if (!changed) return false;
 
       if (this.v7NormalMode())
          this.v7SubmitRequest("zoom", { _typename: "ROOT::Experimental::RFrame::RZoomRequest", ranges: req });
@@ -938,13 +938,13 @@ class RFramePainter extends RObjectPainter {
 
    /** @summary Provide zooming of single axis
      * @desc One can specify names like x/y/z but also second axis x2 or y2 */
-   zoomSingle(name, vmin, vmax) {
+   async zoomSingle(name, vmin, vmax) {
 
       let names = ["x","y","z","x2","y2"], indx = names.indexOf(name);
 
       // disable zooming when axis conversion is enabled
       if (this.projection || !this[name+"_handle"] || (indx < 0))
-         return Promise.resolve(false);
+         return false;
 
       let zoom_v = (vmin !== vmax), unzoom_v = false;
 
@@ -993,7 +993,7 @@ class RFramePainter extends RObjectPainter {
          req.values[indx*2] = req.values[indx*2+1] = -1;
       }
 
-      if (!changed) return Promise.resolve(false);
+      if (!changed) return false;
 
       if (this.v7NormalMode())
          this.v7SubmitRequest("zoom", { _typename: "ROOT::Experimental::RFrame::RZoomRequest", ranges: req });
@@ -1007,8 +1007,8 @@ class RFramePainter extends RObjectPainter {
    }
 
    /** @summary Unzoom specified axes
-     * @returns {Promise} with boolean flag if zoom is changed */
-   unzoom(dox, doy, doz) {
+     * @return {Promise} with boolean flag if zoom is changed */
+   async unzoom(dox, doy, doz) {
       if (dox == "all")
          return this.unzoom("x2").then(() => this.unzoom("y2")).then(() => this.unzoom("xyz"));
 
@@ -1059,7 +1059,7 @@ class RFramePainter extends RObjectPainter {
 
    /** @summary Fill menu for frame when server is not there */
    fillObjectOfflineMenu(menu, kind) {
-      if ((kind!="x") && (kind!="y")) return;
+      if ((kind != "x") && (kind != "y")) return;
 
       menu.add("Unzoom", () => this.unzoom(kind));
 

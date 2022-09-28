@@ -2,6 +2,7 @@ import { settings, gStyle } from '../core.mjs';
 import { Vector2, BufferGeometry, BufferAttribute, Mesh, MeshBasicMaterial, ShapeUtils } from '../three.mjs';
 import { assignFrame3DMethods, drawBinsLego, drawBinsError3D, drawBinsContour3D, drawBinsSurf3D } from './hist3d.mjs';
 import { TAxisPainter } from '../gpad/TAxisPainter.mjs';
+import { THistPainter } from '../hist2d/THistPainter.mjs';
 import { TH2Painter as TH2Painter2D  } from '../hist2d/TH2Painter.mjs';
 
 
@@ -159,12 +160,12 @@ function drawTH2PolyLego(painter) {
       }
 
       let geometry = new BufferGeometry();
-      geometry.setAttribute( 'position', new BufferAttribute( pos, 3 ) );
+      geometry.setAttribute('position', new BufferAttribute(pos, 3));
       geometry.computeVertexNormals();
 
-      let fcolor = painter.fPalette.getColor(colindx);
-      let material = new MeshBasicMaterial({ color: fcolor, vertexColors: false });
-      let mesh = new Mesh(geometry, material);
+      let color = painter.fPalette.getColor(colindx),
+          material = new MeshBasicMaterial({ color, vertexColors: false }),
+          mesh = new Mesh(geometry, material);
 
       pmain.toplevel.add(mesh);
 
@@ -202,7 +203,8 @@ function drawTH2PolyLego(painter) {
   * @private */
 class TH2Painter extends TH2Painter2D {
 
-   draw3D(reason) {
+   /** @summary draw TH2 object in 3D mode */
+   async draw3D(reason) {
 
       this.mode3d = true;
 
@@ -268,8 +270,8 @@ class TH2Painter extends TH2Painter2D {
    }
 
    /** @summary draw TH2 object */
-   static draw(dom, histo, opt) {
-      return TH2Painter._drawHist(new TH2Painter(dom, histo), opt);
+   static async draw(dom, histo, opt) {
+      return THistPainter._drawHist(new TH2Painter(dom, histo), opt);
    }
 
 } // class TH2Painter

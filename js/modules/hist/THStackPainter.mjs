@@ -144,14 +144,14 @@ class THStackPainter extends ObjectPainter {
    }
 
    /** @summary Draw next stack histogram */
-   drawNextHisto(indx, pad_painter) {
+   async drawNextHisto(indx, pad_painter) {
 
       let stack = this.getObject(),
           hlst = this.options.nostack ? stack.fHists : stack.fStack,
-          nhists = (hlst && hlst.arr) ? hlst.arr.length : 0;
+          nhists = hlst?.arr?.length || 0;
 
       if (indx >= nhists)
-         return Promise.resolve(this);
+         return this;
 
       let rindx = this.options.horder ? indx : nhists-indx-1,
           hist = hlst.arr[rindx],
@@ -176,7 +176,7 @@ class THStackPainter extends ObjectPainter {
       if (pad_painter) {
          let subpad_painter = pad_painter.getSubPadPainter(indx+1);
          if (!subpad_painter)
-            return Promise.resolve(this);
+            return this;
 
          let prev_name = subpad_painter.selectCurrentPad(subpad_painter.this_pad_name);
 
@@ -348,7 +348,7 @@ class THStackPainter extends ObjectPainter {
    }
 
    /** @summary draw THStack object */
-   static draw(dom, stack, opt) {
+   static async draw(dom, stack, opt) {
       if (!stack.fHists || !stack.fHists.arr)
          return null; // drawing not needed
 

@@ -559,7 +559,7 @@ class RAxisPainter extends RObjectPainter {
    }
 
    /** @summary Draw axis ticks
-     * @returns {Promise} with gaps on left and right side
+     * @return {Object} with gaps on left and right side
      * @private */
    drawTicks(axis_g, side, main_draw) {
       if (main_draw) this.ticks = [];
@@ -609,12 +609,12 @@ class RAxisPainter extends RObjectPainter {
 
        let gap0 = Math.round(0.25*this.ticksSize), gap = Math.round(1.25*this.ticksSize);
        return { "-1": (side > 0) || ticks_plusminus ? gap : gap0,
-                "1": (side < 0) || ticks_plusminus ? gap : gap0 };
+                 "1": (side < 0) || ticks_plusminus ? gap : gap0 };
    }
 
    /** @summary Performs labels drawing
-     * @returns {Promise} wwith gaps in both direction */
-   drawLabels(axis_g, side, gaps) {
+     * @return {Promise} with gaps in both direction */
+   async drawLabels(axis_g, side, gaps) {
       let center_lbls = this.isCenteredLabels(),
           rotate_lbls = this.labelsFont.angle != 0,
           textscale = 1, maxtextlen = 0, lbls_tilt = false,
@@ -750,9 +750,9 @@ class RAxisPainter extends RObjectPainter {
    }
 
    /** @summary Draw axis title */
-   drawTitle(axis_g, side, lgaps) {
+   async drawTitle(axis_g, side, lgaps) {
       if (!this.fTitle)
-         return Promise.resolve(this);
+         return this;
 
       let title_g = axis_g.append("svg:g").attr("class", "axis_title"),
           title_shift_x = 0, title_shift_y = 0, title_basepos = 0;
@@ -838,8 +838,8 @@ class RAxisPainter extends RObjectPainter {
    }
 
    /** @summary Performs axis drawing
-     * @returns {Promise} which resolved when drawing is completed */
-   drawAxis(layer, transform, side) {
+     * @return {Promise} which resolved when drawing is completed */
+   async drawAxis(layer, transform, side) {
       let axis_g = layer;
 
       if (side === undefined) side = 1;

@@ -7,13 +7,15 @@ import { ObjectPainter } from '../base/ObjectPainter.mjs';
 
 class TWebPaintingPainter extends ObjectPainter {
 
+   /** @summary Update TWebPainting object */
    updateObject(obj) {
       if (!this.matchObjectType(obj)) return false;
       this.assignObject(obj);
       return true;
    }
 
-   redraw() {
+   /** @summary draw TWebPainting object */
+   async redraw() {
 
       const obj = this.getObject(), func = this.getAxisToSvgFunc();
 
@@ -160,7 +162,7 @@ class TWebPaintingPainter extends ObjectPainter {
       return process(-1).then(() => { check_attributes(); return this; });
    }
 
-   static draw(dom, obj) {
+   static async draw(dom, obj) {
       let painter = new TWebPaintingPainter(dom, obj);
       painter.addToPadPrimitives();
       return painter.redraw();

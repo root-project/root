@@ -58,11 +58,11 @@ class RCanvasPainter extends RPadPainter {
    }
 
    /** @summary Changes layout
-     * @returns {Promise} indicating when finished */
-   changeLayout(layout_kind, mainid) {
+     * @return {Promise} indicating when finished */
+   async changeLayout(layout_kind, mainid) {
       let current = this.getLayoutKind();
       if (current == layout_kind)
-         return Promise.resolve(true);
+         return true;
 
       let origin = this.selectDom('origin'),
           sidebar = origin.select('.side_panel'),
@@ -71,7 +71,8 @@ class RCanvasPainter extends RPadPainter {
       while (main.node().firstChild)
          lst.push(main.node().removeChild(main.node().firstChild));
 
-      if (!sidebar.empty()) cleanup(sidebar.node());
+      if (!sidebar.empty())
+         cleanup(sidebar.node());
 
       this.setLayoutKind("simple"); // restore defaults
       origin.html(""); // cleanup origin
@@ -105,13 +106,13 @@ class RCanvasPainter extends RPadPainter {
 
       // resize main drawing and let draw extras
       resize(main.node());
-      return Promise.resolve(true);
+      return true;
    }
 
    /** @summary Toggle projection
-     * @returns {Promise} indicating when ready
+     * @return {Promise} indicating when ready
      * @private */
-   toggleProjection(kind) {
+   async toggleProjection(kind) {
       delete this.proj_painter;
 
       if (kind) this.proj_painter = 1; // just indicator that drawing can be preformed
@@ -135,16 +136,16 @@ class RCanvasPainter extends RPadPainter {
 
    /** @summary Draw projection for specified histogram
      * @private */
-   drawProjection( /*kind,hist*/) {
+   async drawProjection( /*kind,hist*/) {
       // dummy for the moment
+      return false;
    }
 
    /** @summary Draw in side panel
      * @private */
-   drawInSidePanel(canv, opt) {
+   async drawInSidePanel(canv, opt) {
       let side = this.selectDom('origin').select(".side_panel");
-      if (side.empty()) return Promise.resolve(null);
-      return this.drawObject(side.node(), canv, opt);
+      return side.empty() ?  null : this.drawObject(side.node(), canv, opt);
    }
 
    /** @summary Checks if canvas shown inside ui5 widget
@@ -364,7 +365,7 @@ class RCanvasPainter extends RPadPainter {
 
    /** @summary Submit menu request
      * @private */
-   submitMenuRequest(painter, menukind, reqid) {
+   async submitMenuRequest(painter, menukind, reqid) {
       return new Promise(resolveFunc => {
          this.submitDrawableRequest("", {
             _typename: "ROOT::Experimental::RDrawableMenuRequest",
@@ -422,7 +423,7 @@ class RCanvasPainter extends RPadPainter {
    }
 
    /** @summary Show specified section in canvas */
-   showSection(that, on) {
+   async showSection(that, on) {
       switch(that) {
          case "Menu": break;
          case "StatusBar": break;
@@ -430,7 +431,7 @@ class RCanvasPainter extends RPadPainter {
          case "ToolBar": break;
          case "ToolTips": this.setTooltipAllowed(on); break;
       }
-      return Promise.resolve(true);
+      return true;
    }
 
    /** @summary Method informs that something was changed in the canvas
@@ -519,11 +520,11 @@ class RCanvasPainter extends RPadPainter {
    }
 
    /** @summary Function used to activate GED
-     * @returns {Promise} when GED is there
+     * @return {Promise} when GED is there
      * @private */
-   activateGed(objpainter, kind, mode) {
+   async activateGed(objpainter, kind, mode) {
       if (this.testUI5() || !this.brlayout)
-         return Promise.resolve(false);
+         return false;
 
       if (this.brlayout.hasContent()) {
          if ((mode === "toggle") || (mode === false))
@@ -531,11 +532,11 @@ class RCanvasPainter extends RPadPainter {
          else
             objpainter?.getPadPainter()?.selectObjectPainter(objpainter);
 
-         return Promise.resolve(true);
+         return true;
       }
 
       if (mode === false)
-         return Promise.resolve(false);
+         return false;
 
       let btns = this.brlayout.createBrowserBtns();
 
@@ -595,7 +596,7 @@ class RCanvasPainter extends RPadPainter {
    }
 
    /** @summary draw RCanvas object */
-   static draw(dom, can /*, opt */) {
+   static async draw(dom, can /*, opt */) {
       let nocanvas = !can;
       if (nocanvas)
          can = create("ROOT::Experimental::TCanvas");
@@ -633,8 +634,8 @@ function drawRPadSnapshot(dom, snap /*, opt*/) {
   * @param {Object} painter  - painter object to process
   * @param {string|boolean} frame_kind  - false for no frame or "3d" for special 3D mode
   * @desc Assigns DOM, creates and draw RCanvas and RFrame if necessary, add painter to pad list of painters
-  * @returns {Promise} for ready */
-function ensureRCanvas(painter, frame_kind) {
+  * @return {Promise} for ready */
+async function ensureRCanvas(painter, frame_kind) {
    if (!painter)
       return Promise.reject(Error('Painter not provided in ensureRCanvas'));
 

@@ -334,7 +334,7 @@ class RPalettePainter extends RObjectPainter {
    }
 
    /** @summary draw RPalette object */
-   static draw(dom, palette, opt) {
+   static async draw(dom, palette, opt) {
       let painter = new RPalettePainter(dom, palette, opt, "palette");
       return ensureRCanvas(painter, false).then(() => {
          painter.createG(); // just create container, real drawing will be done by histogram

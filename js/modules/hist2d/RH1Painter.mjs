@@ -197,7 +197,7 @@ class RH1Painter extends RHistPainter {
    }
 
    /** @summary Draw histogram as bars */
-   drawBars(handle, funcs, width, height) {
+   async drawBars(handle, funcs, width, height) {
 
       this.createG(true);
 
@@ -266,11 +266,11 @@ class RH1Painter extends RHistPainter {
                .call(this.fillatt.func)
                .style("fill", d3_rgb(this.fillatt.color).darker(0.5).formatHex());
 
-       return Promise.resolve(true);
+       return true;
    }
 
    /** @summary Draw histogram as filled errors */
-   drawFilledErrors(handle, funcs /*, width, height*/) {
+   async drawFilledErrors(handle, funcs /*, width, height*/) {
       this.createG(true);
 
       let left = handle.i1, right = handle.i2, di = handle.stepi,
@@ -304,18 +304,18 @@ class RH1Painter extends RHistPainter {
                  .attr("d", path1.path + path2.path + "Z")
                  .call(this.fillatt.func);
 
-      return Promise.resolve(true);
+      return true;
    }
 
    /** @summary Draw 1D histogram as SVG */
-   draw1DBins() {
+   async draw1DBins() {
 
       let pmain = this.getFramePainter(),
           rect = pmain.getFrameRect();
 
       if (!this.draw_content || (rect.width <= 0) || (rect.height <= 0)) {
          this.removeG()
-         return Promise.resolve(false);
+         return false;
       }
 
       this.createHistDrawAttributes();
@@ -333,7 +333,7 @@ class RH1Painter extends RHistPainter {
    }
 
    /** @summary Draw histogram bins */
-   drawHistBins(handle, funcs, width, height) {
+   async drawHistBins(handle, funcs, width, height) {
       this.createG(true);
 
       let options = this.options,
@@ -594,7 +594,7 @@ class RH1Painter extends RHistPainter {
                     .call(this.fillatt.func);
       }
 
-      return show_text ? this.finishTextDrawing() : Promise.resolve(true);
+      return show_text ? this.finishTextDrawing() : true;
    }
 
    /** @summary Provide text information (tooltips) for histogram bin */
@@ -610,7 +610,7 @@ class RH1Painter extends RHistPainter {
           cont = histo.getBinContent(bin+1),
           xlbl = this.getAxisBinTip("x", bin, di);
 
-      if (name.length>0) tips.push(name);
+      if (name) tips.push(name);
 
       if (this.options.Error || this.options.Mark) {
          tips.push("x = " + xlbl);
@@ -620,7 +620,7 @@ class RH1Painter extends RHistPainter {
             tips.push("error y = " + histo.getBinError(bin + 1).toPrecision(4));
          }
       } else {
-         tips.push("bin = " + bin);
+         tips.push(`bin = ${bin+1}`);
          tips.push("x = " + xlbl);
          if (histo['$baseh']) cont -= histo['$baseh'].getBinContent(bin+1);
          let lbl = "entries = " + (di > 1 ? "~" : "");
@@ -925,7 +925,7 @@ class RH1Painter extends RHistPainter {
    }
 
    /** @summary Call appropriate draw function */
-   callDrawFunc(reason) {
+   async callDrawFunc(reason) {
       let main = this.getFramePainter();
 
       if (main && (main.mode3d !== this.options.Mode3D) && !this.isMainPainter())
@@ -935,7 +935,7 @@ class RH1Painter extends RHistPainter {
    }
 
    /** @summary Draw in 2d */
-   draw2D(reason) {
+   async draw2D(reason) {
       this.clear3DScene();
 
       return this.drawFrameAxes().then(res => {
@@ -947,17 +947,17 @@ class RH1Painter extends RHistPainter {
    }
 
    /** @summary Draw in 3d */
-   draw3D(reason) {
+   async draw3D(reason) {
       console.log('3D drawing is disabled, load ./hist/RH1Painter.mjs');
       return this.draw2D(reason);
    }
 
    /** @summary Readraw histogram */
-   redraw(reason) {
+   async redraw(reason) {
       return this.callDrawFunc(reason);
    }
 
-   static _draw(painter, opt) {
+   static async _draw(painter, opt) {
       return ensureRCanvas(painter).then(() => {
 
          painter.setAsMainPainter();
@@ -1000,7 +1000,7 @@ class RH1Painter extends RHistPainter {
    }
 
    /** @summary draw RH1 object */
-   static draw(dom, histo, opt) {
+   static async draw(dom, histo, opt) {
       return RH1Painter._draw(new RH1Painter(dom, histo), opt);
    }
 

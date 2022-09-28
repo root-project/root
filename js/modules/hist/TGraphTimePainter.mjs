@@ -35,7 +35,7 @@ class TGraphTimePainter extends ObjectPainter {
    }
 
    /** @summary Draw primitives */
-   drawPrimitives(indx) {
+   async drawPrimitives(indx) {
 
       if (!indx) {
          indx = 0;
@@ -46,7 +46,7 @@ class TGraphTimePainter extends ObjectPainter {
 
       if (!lst || (indx >= lst.arr.length)) {
          delete this._doing_primitives;
-         return Promise.resolve();
+         return;
       }
 
       return draw(this.getDom(), lst.arr[indx], lst.opt[indx]).then(ppainter => {
@@ -122,7 +122,7 @@ class TGraphTimePainter extends ObjectPainter {
    }
 
    /** @summary Draw TGraphTime object */
-   static draw(dom, gr, opt) {
+   static async draw(dom, gr, opt) {
       if (!gr.fFrame) {
         console.error('Frame histogram not exists');
         return null;

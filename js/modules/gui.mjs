@@ -142,11 +142,11 @@ function readStyleFromURL(url) {
   * @desc Used in many HTML files to create JSROOT GUI elements
   * @param {String} gui_element - id of the `<div>` element
   * @param {String} gui_kind - either "online", "nobrowser", "draw"
-  * @returns {Promise} with {@link HierarchyPainter} instance
+  * @return {Promise} with {@link HierarchyPainter} instance
   * @example
   * import { buildGUI } from '/path_to_jsroot/modules/gui.mjs';
   * buildGUI("guiDiv"); */
-function buildGUI(gui_element, gui_kind = "") {
+async function buildGUI(gui_element, gui_kind = "") {
    let myDiv = (typeof gui_element == 'string') ? d3_select('#' + gui_element) : d3_select(gui_element);
    if (myDiv.empty())
       return Promise.reject(Error('no div for gui found'));

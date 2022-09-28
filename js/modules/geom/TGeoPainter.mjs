@@ -22,7 +22,7 @@ import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { createMenu, closeMenu } from '../gui/menu.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 import { kindGeo, kindEve, geoCfg, geoBITS, ClonedNodes, testGeoBit, setGeoBit, toggleGeoBit, setInvisibleAll,
-         countNumShapes, getNodeKind, produceRenderOrder, createFlippedMesh,
+         countNumShapes, getNodeKind, produceRenderOrder, createServerGeometry, createFlippedMesh,
          projectGeometry, countGeometryFaces, createFrustum, createProjectionMatrix,
          getBoundingBox, provideObjectInfo, isSameStack, checkDuplicates, getObjectName, cleanupShape } from './geobase.mjs';
 
@@ -113,41 +113,40 @@ function buildCompositeVolume(comp, maxlvl, side) {
   * @private */
 function createList(parent, lst, name, title) {
 
-   if (!lst || !('arr' in lst) || (lst.arr.length==0)) return;
+   if (!lst?.arr?.length) return;
 
-   let item = {
+   let list_item = {
        _name: name,
        _kind: "ROOT.TList",
        _title: title,
        _more: true,
        _geoobj: lst,
        _parent: parent,
+       _get(item /*, itemname */) {
+          return Promise.resolve(item._geoobj || null);
+       },
+       _expand(node, lst) {
+          // only childs
+
+          if ('fVolume' in lst)
+             lst = lst.fVolume.fNodes;
+
+          if (!('arr' in lst)) return false;
+
+          node._childs = [];
+
+          checkDuplicates(null, lst.arr);
+
+          for (let n in lst.arr)
+             createItem(node, lst.arr[n]);
+
+          return true;
+       }
    };
 
-   item._get = function(item /*, itemname */) {
-      return Promise.resolve(item._geoobj || null);
-   };
-
-   item._expand = function(node, lst) {
-      // only childs
-
-      if ('fVolume' in lst)
-         lst = lst.fVolume.fNodes;
-
-      if (!('arr' in lst)) return false;
-
-      node._childs = [];
-
-      checkDuplicates(null, lst.arr);
-
-      for (let n in lst.arr)
-         createItem(node, lst.arr[n]);
-
-      return true;
-   };
-
-   if (!parent._childs) parent._childs = [];
-   parent._childs.push(item);
+   if (!parent._childs)
+      parent._childs = [];
+   parent._childs.push(list_item);
 }
 
 
@@ -2877,8 +2876,8 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Drawing with "count" option
      * @desc Scans hieararchy and check for unique nodes
-     * @returns {Promise} with object drawing ready */
-   drawCount(unqievis, clonetm) {
+     * @return {Promise} with object drawing ready */
+   async drawCount(unqievis, clonetm) {
 
       const makeTime = tm => (isBatchMode() ? "anytime" : tm.toString()) + " ms";
 
@@ -2945,8 +2944,8 @@ class TGeoPainter extends ObjectPainter {
      * Such function should be possible to find via {@link findFunction}
      * Function has to return Promise with objects to draw on geometry
      * By default function with name "extract_geo_tracks" is checked
-     * @returns {Promise} handling of drop operation */
-   performDrop(obj, itemname, hitem, opt) {
+     * @return {Promise} handling of drop operation */
+   async performDrop(obj, itemname, hitem, opt) {
 
       if (obj && (obj.$kind==='TTree')) {
          // drop tree means function call which must extract tracks from provided tree
@@ -3061,11 +3060,11 @@ class TGeoPainter extends ObjectPainter {
    }
 
    /** @summary Draw extra object like tracks
-     * @returns {Promise} for ready */
-   drawExtras(obj, itemname, add_objects) {
+     * @return {Promise} for ready */
+   async drawExtras(obj, itemname, add_objects) {
       // if object was hidden via menu, do not redraw it with next draw call
       if (!obj?._typename || (!add_objects && obj.$hidden_via_menu))
-         return Promise.resolve(false);
+         return false;
 
       let do_render = false;
       if (add_objects === undefined) {
@@ -3278,9 +3277,9 @@ class TGeoPainter extends ObjectPainter {
    }
 
    /** @summary Drawing different hits types like TPolyMarker3D */
-   drawHit(hit, itemname) {
+   async drawHit(hit, itemname) {
       if (!hit || !hit.fN || (hit.fN < 0))
-         return Promise.resolve(false);
+         return false;
 
       // make hit size scaling factor of overall geometry size
       // otherwise it is not possible to correctly see hits at all
@@ -3366,7 +3365,7 @@ class TGeoPainter extends ObjectPainter {
    }
 
    /** @summary Process script option - load and execute some gGeoManager-related calls */
-   loadMacro(script_name) {
+   async loadMacro(script_name) {
 
       let result = { obj: this.getGeometry(), prefix: "" };
 
@@ -3374,7 +3373,7 @@ class TGeoPainter extends ObjectPainter {
          result.prefix = result.obj.fName;
 
       if (!script_name || (script_name.length < 3) || (getNodeKind(result.obj) !== 0))
-         return Promise.resolve(result);
+         return result;
 
       let mgr = {
             GetVolume: name => {
@@ -3466,11 +3465,11 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Prepare drawings
      * @desc Return value used as promise for painter */
-   prepareObjectDraw(draw_obj, name_prefix) {
+   async prepareObjectDraw(draw_obj, name_prefix) {
 
       // if did cleanup - ignore all kind of activity
       if (this.did_cleanup)
-         return Promise.resolve(null);
+         return null;
 
       if (name_prefix == "__geom_viewer_append__") {
          this._new_append_nodes = draw_obj;
@@ -3698,7 +3697,7 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Call 3D rendering of the geometry
      * @param tmout - specifies delay, after which actual rendering will be invoked
      * @param [measure] - when true, for the first time printout rendering time
-     * @returns {Promise} when tmout bigger than 0 is specified
+     * @return {Promise} when tmout bigger than 0 is specified
      * @desc Timeout used to avoid multiple rendering of the picture when several 3D drawings
      * superimposed with each other. If tmeout<=0, rendering performed immediately
      * Several special values are used:
@@ -3899,7 +3898,7 @@ class TGeoPainter extends ObjectPainter {
    }
 
    /** @summary Draw axes if configured, otherwise just remove completely
-     * @returns {Promise} when norender not specified */
+     * @return {Promise} when norender not specified */
    drawSimpleAxis(norender) {
       this.getExtrasContainer('delete', 'axis');
 
@@ -4214,14 +4213,14 @@ class TGeoPainter extends ObjectPainter {
    }
 
    /** @summary Completes drawing procedure
-     * @returns {Promise} for ready */
-   completeDraw(close_progress) {
+     * @return {Promise} for ready */
+   async completeDraw(close_progress) {
 
       let first_time = false, full_redraw = false, check_extras = true;
 
       if (!this.ctrl) {
          console.warn('ctrl object does not exist in completeDraw - something went wrong');
-         return Promise.resolve(this);
+         return this;
       }
 
       let promise = Promise.resolve(true);
@@ -4538,7 +4537,7 @@ class TGeoPainter extends ObjectPainter {
    }
 
    /** @summary either change mesh wireframe or return current value
-     * @returns undefined when wireframe cannot be accessed
+     * @return undefined when wireframe cannot be accessed
      * @private */
    accessObjectWireFrame(obj, on) {
       if (!obj.hasOwnProperty("material") || (obj instanceof GridHelper)) return;
@@ -4628,7 +4627,7 @@ class TGeoPainter extends ObjectPainter {
    }
 
   /** @summary draw TGeo object */
-   static draw(dom, obj, opt) {
+   static async draw(dom, obj, opt) {
       if (!obj) return null;
 
       let shape = null, extras = null, extras_path = "", is_eve = false;
@@ -5071,7 +5070,7 @@ function drawAxis3D() {
   * @param {boolean} [opt.doubleside=false] - use double-side material
   * @param {boolean} [opt.wireframe=false] - show wireframe for created shapes
   * @param {boolean} [opt.dflt_colors=false] - use default ROOT colors
-  * @returns {object} Object3D with created model
+  * @return {object} Object3D with created model
   * @example
   * import { build } from './path_to_jsroot/modules/geom/TGeoPainter.mjs';
   * let obj3d = build(obj);
@@ -5088,66 +5087,102 @@ function build(obj, opt) {
 
    opt.res_mesh = opt.res_faces = 0;
 
-   let shape = null, hide_top = false;
+   let clones = null, visibles = null;
 
-   if (('fShapeBits' in obj) && ('fShapeId' in obj)) {
-      shape = obj; obj = null;
-   } else if ((obj._typename === 'TGeoVolumeAssembly') || (obj._typename === 'TGeoVolume')) {
-      shape = obj.fShape;
-   } else if ((obj._typename === "TEveGeoShapeExtract") || (obj._typename === "ROOT::Experimental::REveGeoShapeExtract")) {
-      shape = obj.fShape;
-   } else if (obj._typename === 'TGeoManager') {
-      obj = obj.fMasterVolume;
-      hide_top = !opt.showtop;
-      shape = obj.fShape;
-   } else if (obj.fVolume) {
-      shape = obj.fVolume.fShape;
+   if (obj.visibles && obj.nodes && obj.numnodes) {
+      // case of draw message from geometry viewer
+
+      let nodes = obj.numnodes > 1e6 ? { length: obj.numnodes } : new Array(obj.numnodes);
+
+      obj.nodes.forEach(node => {
+         nodes[node.id] = ClonedNodes.formatServerElement(node);
+      })
+
+      clones = new ClonedNodes(null, nodes);
+      clones.name_prefix = clones.getNodeName(0);
+      // normally only need when making selection, not used in geo viewer
+      // this.geo_clones.setMaxVisNodes(draw_msg.maxvisnodes);
+      // this.geo_clones.setVisLevel(draw_msg.vislevel);
+      // parameter need for visualization with transparency
+      // TODO: provide from server
+      clones.maxdepth = 20;
+
+      let nsegm = obj.cfg?.nsegm || 30;
+
+      for (let cnt = 0; cnt < obj.visibles.length; ++cnt) {
+         let item = obj.visibles[cnt], rd = item.ri;
+
+         // entry may be provided without shape - it is ok
+         if (rd)
+            item.server_shape = rd.server_shape = createServerGeometry(rd, nsegm);
+      }
+
+      visibles = obj.visibles;
+
    } else {
-      obj = null;
+      let shape = null, hide_top = false;
+
+      if (('fShapeBits' in obj) && ('fShapeId' in obj)) {
+         shape = obj; obj = null;
+      } else if ((obj._typename === 'TGeoVolumeAssembly') || (obj._typename === 'TGeoVolume')) {
+         shape = obj.fShape;
+      } else if ((obj._typename === "TEveGeoShapeExtract") || (obj._typename === "ROOT::Experimental::REveGeoShapeExtract")) {
+         shape = obj.fShape;
+      } else if (obj._typename === 'TGeoManager') {
+         obj = obj.fMasterVolume;
+         hide_top = !opt.showtop;
+         shape = obj.fShape;
+      } else if (obj.fVolume) {
+         shape = obj.fVolume.fShape;
+      } else {
+         obj = null;
+      }
+
+      if (opt.composite && shape && (shape._typename == 'TGeoCompositeShape') && shape.fNode)
+         obj = buildCompositeVolume(shape);
+
+      if (!obj && shape)
+         obj = Object.assign(create("TEveGeoShapeExtract"),
+                   { fTrans: null, fShape: shape, fRGBA: [0, 1, 0, 1], fElements: null, fRnrSelf: true });
+
+      if (!obj) return null;
+
+      if (obj._typename.indexOf('TGeoVolume') === 0)
+         obj = { _typename: "TGeoNode", fVolume: obj, fName: obj.fName, $geoh: obj.$geoh, _proxy: true };
+
+      clones = new ClonedNodes(obj);
+      clones.setVisLevel(opt.vislevel);
+      clones.setMaxVisNodes(opt.numnodes);
+
+      if (opt.dflt_colors)
+         clones.setDefaultColors(true);
+
+      let uniquevis = opt.no_screen ? 0 : clones.markVisibles(true);
+      if (uniquevis <= 0)
+         clones.markVisibles(false, false, hide_top);
+      else
+         clones.markVisibles(true, true, hide_top); // copy bits once and use normal visibility bits
+
+      clones.produceIdShifts();
+
+      // collect visible nodes
+      let res = clones.collectVisibles(opt.numfaces, opt.frustum);
+
+      visibles = res.lst;
    }
 
-   if (opt.composite && shape && (shape._typename == 'TGeoCompositeShape') && shape.fNode)
-      obj = buildCompositeVolume(shape);
-
-   if (!obj && shape)
-      obj = Object.assign(create("TEveGeoShapeExtract"),
-                { fTrans: null, fShape: shape, fRGBA: [0, 1, 0, 1], fElements: null, fRnrSelf: true });
-
-   if (!obj) return null;
-
-   if (obj._typename.indexOf('TGeoVolume') === 0)
-      obj = { _typename: "TGeoNode", fVolume: obj, fName: obj.fName, $geoh: obj.$geoh, _proxy: true };
-
-   let clones = new ClonedNodes(obj);
-   clones.setVisLevel(opt.vislevel);
-   clones.setMaxVisNodes(opt.numnodes);
-
-   if (opt.dflt_colors)
-      clones.setDefaultColors(true);
-
-   let uniquevis = opt.no_screen ? 0 : clones.markVisibles(true);
-   if (uniquevis <= 0)
-      clones.markVisibles(false, false, hide_top);
-   else
-      clones.markVisibles(true, true, hide_top); // copy bits once and use normal visibility bits
-
-   clones.produceIdShifts();
-
-   // collect visible nodes
-   let res = clones.collectVisibles(opt.numfaces, opt.frustum);
-
    // collect shapes
-   let shapes = clones.collectShapes(res.lst);
+   let shapes = clones.collectShapes(visibles);
 
    clones.buildShapes(shapes, opt.numfaces);
 
    let toplevel = new Object3D();
 
-   for (let n = 0; n < res.lst.length; ++n) {
-      let entry = res.lst[n];
+   for (let n = 0; n < visibles.length; ++n) {
+      let entry = visibles[n];
       if (entry.done) continue;
 
-      let shape = shapes[entry.shapeid];
+      let shape = entry.server_shape || shapes[entry.shapeid];
       if (!shape.ready) {
          console.warn('shape marked as not ready when should');
          break;

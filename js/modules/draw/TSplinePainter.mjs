@@ -308,7 +308,7 @@ class TSplinePainter extends ObjectPainter {
    }
 
    /** @summary Draw TSpline */
-   static draw(dom, spline, opt) {
+   static async draw(dom, spline, opt) {
       let painter = new TSplinePainter(dom, spline);
       painter.decodeOptions(opt);
 

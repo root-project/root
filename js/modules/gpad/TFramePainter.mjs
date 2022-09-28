@@ -260,13 +260,13 @@ function addDragHandler(_painter, arg) {
 const TooltipHandler = {
 
    /** @desc only canvas info_layer can be used while other pads can overlay
-     * @returns layer where frame tooltips are shown */
+     * @return layer where frame tooltips are shown */
    hints_layer() {
       let pp = this.getCanvPainter();
       return pp ? pp.getLayerSvg("info_layer") : d3_select(null);
    },
 
-   /** @returns true if tooltip is shown, use to prevent some other action */
+   /** @return true if tooltip is shown, use to prevent some other action */
    isTooltipShown() {
       if (!this.tooltip_enabled || !this.isTooltipAllowed()) return false;
       let hintsg = this.hints_layer().select(".objects_hints");
@@ -647,12 +647,12 @@ const FrameInteractive = {
    },
 
    /** @summary Add interactive handlers */
-   addFrameInteractivity(for_second_axes) {
+   async addFrameInteractivity(for_second_axes) {
 
       let pp = this.getPadPainter(),
           svg = this.getFrameSvg();
       if (pp?._fast_drawing || svg.empty())
-         return Promise.resolve(this);
+         return this;
 
       if (for_second_axes) {
 
@@ -665,7 +665,7 @@ const FrameInteractive = {
          }
          svg_x2.on("mousemove", evnt => this.showAxisStatus("x2", evnt));
          svg_y2.on("mousemove", evnt => this.showAxisStatus("y2", evnt));
-         return Promise.resolve(this);
+         return this;
       }
 
       let svg_x = svg.selectAll(".xaxis_container"),
@@ -716,7 +716,7 @@ const FrameInteractive = {
 
       svg.property('interactive_set', true);
 
-      return Promise.resolve(this);
+      return this;
    },
 
    /** @summary Add keys handler */
@@ -1978,14 +1978,15 @@ class TFramePainter extends ObjectPainter {
       return !second_x && !second_y ? this.axes_drawn : false;
    }
 
-   /** @summary draw axes, return Promise which ready when drawing is completed  */
-   drawAxes(shrink_forbidden, disable_x_draw, disable_y_draw,
-            AxisPos, has_x_obstacle, has_y_obstacle) {
+   /** @summary draw axes,
+     * @return {Promise} which ready when drawing is completed  */
+   async drawAxes(shrink_forbidden, disable_x_draw, disable_y_draw,
+                  AxisPos, has_x_obstacle, has_y_obstacle) {
 
       this.cleanAxesDrawings();
 
       if ((this.xmin == this.xmax) || (this.ymin == this.ymax))
-         return Promise.resolve(false);
+         return false;
 
       if (AxisPos === undefined) AxisPos = 0;
 
@@ -2543,11 +2544,11 @@ class TFramePainter extends ObjectPainter {
       * @param {number} [ymax]
       * @param {number} [zmin]
       * @param {number} [zmax]
-      * @returns {Promise} with boolean flag if zoom operation was performed */
-   zoom(xmin, xmax, ymin, ymax, zmin, zmax) {
+      * @return {Promise} with boolean flag if zoom operation was performed */
+   async zoom(xmin, xmax, ymin, ymax, zmin, zmax) {
 
       // disable zooming when axis conversion is enabled
-      if (this.projection) return Promise.resolve(false);
+      if (this.projection) return false;
 
       if (xmin==="x") { xmin = xmax; xmax = ymin; ymin = undefined; } else
       if (xmin==="y") { ymax = ymin; ymin = xmax; xmin = xmax = undefined; } else
@@ -2633,15 +2634,16 @@ class TFramePainter extends ObjectPainter {
             });
       }
 
-      return changed ? this.interactiveRedraw("pad", "zoom").then(() => true) : Promise.resolve(false);
+      return changed ? this.interactiveRedraw("pad", "zoom").then(() => true) : false;
    }
 
    /** @summary Provide zooming of single axis
      * @desc One can specify names like x/y/z but also second axis x2 or y2
      * @private */
-   zoomSingle(name, vmin, vmax) {
+   async zoomSingle(name, vmin, vmax) {
       // disable zooming when axis conversion is enabled
-      if (this.projection || !this[name+"_handle"]) return Promise.resolve(false);
+      if (this.projection || !this[name+"_handle"])
+         return false;
 
       let zoom_v = (vmin !== vmax), unzoom_v = false;
 
@@ -2674,7 +2676,7 @@ class TFramePainter extends ObjectPainter {
          this["zoom_" + name + "min"] = this["zoom_" + name + "max"] = 0;
       }
 
-      if (!changed) return Promise.resolve(false);
+      if (!changed) return false;
 
       return this.interactiveRedraw("pad", "zoom").then(() => true);
    }
@@ -2685,8 +2687,8 @@ class TFramePainter extends ObjectPainter {
    }
 
    /** @summary Unzoom speicified axes
-     * @returns {Promise} with boolean flag if zooming changed */
-   unzoom(dox, doy, doz) {
+     * @return {Promise} with boolean flag if zooming changed */
+   async unzoom(dox, doy, doz) {
       if (dox == "all")
          return this.unzoom("x2").then(() => this.unzoom("y2")).then(() => this.unzoom("xyz"));
 

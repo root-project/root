@@ -45,7 +45,7 @@ class TASImagePainter extends ObjectPainter {
 
    /** @summary Create url using image buffer
      * @private */
-   makeUrlFromImageBuf(obj, fp) {
+   async makeUrlFromImageBuf(obj, fp) {
 
       let nlevels = 1000;
       this.rgba = this.createRGBA(nlevels); // precaclucated colors
@@ -123,7 +123,8 @@ class TASImagePainter extends ObjectPainter {
       });
    }
 
-   makeUrlFromPngBuf(obj) {
+   /** @summary Produce data url from png data */
+   async makeUrlFromPngBuf(obj) {
       let buf = obj.fPngBuf, pngbuf = "";
 
       if (typeof buf == "string")
@@ -132,11 +133,11 @@ class TASImagePainter extends ObjectPainter {
          for (let k = 0; k < buf.length; ++k)
             pngbuf += String.fromCharCode(buf[k] < 0 ? 256 + buf[k] : buf[k]);
 
-      return Promise.resolve({ url: "data:image/png;base64," + btoa_func(pngbuf), constRatio: true });
+      return { url: "data:image/png;base64," + btoa_func(pngbuf), constRatio: true };
    }
 
    /** @summary Draw image */
-   drawImage() {
+   async drawImage() {
       let obj = this.getObject(),
           fp = this.getFramePainter(),
           rect = fp ? fp.getFrameRect() : this.getPadPainter().getPadRect();
@@ -232,10 +233,10 @@ class TASImagePainter extends ObjectPainter {
 
    /** @summary Draw color palette
      * @private */
-   drawColorPalette(enabled, can_move) {
+   async drawColorPalette(enabled, can_move) {
 
       if (!this.isMainPainter())
-         return Promise.resolve(null);
+         return null;
 
       if (!this.draw_palette) {
          let pal = create('TPave');
@@ -256,7 +257,7 @@ class TASImagePainter extends ObjectPainter {
             pal_painter.Enabled = false;
             pal_painter.removeG(); // completely remove drawing without need to redraw complete pad
          }
-         return Promise.resolve(null);
+         return null;
       }
 
       let frame_painter = this.getFramePainter();
@@ -337,7 +338,7 @@ class TASImagePainter extends ObjectPainter {
    }
 
    /** @summary Draw TASImage object */
-   static draw(dom, obj, opt) {
+   static async draw(dom, obj, opt) {
       let painter = new TASImagePainter(dom, obj, opt);
       painter.decodeOptions(opt);
       return ensureTCanvas(painter, false)

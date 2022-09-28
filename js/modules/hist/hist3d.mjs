@@ -102,7 +102,7 @@ function setCameraPosition(fp, first_time) {
 }
 
 /** @summary Create all necessary components for 3D drawings in frame painter
-  * @returns {Promise} when render3d !== -1
+  * @return {Promise} when render3d !== -1
   * @private */
 function create3DScene(render3d, x3dscale, y3dscale) {
 
@@ -417,8 +417,8 @@ function highlightBin3D(tip, selfmesh) {
          pos = new Float32Array(indicies.length*3);
          norm = new Float32Array(indicies.length*3);
          const geom = new BufferGeometry();
-         geom.setAttribute('position', new BufferAttribute( pos, 3 ));
-         geom.setAttribute('normal', new BufferAttribute( norm, 3 ));
+         geom.setAttribute('position', new BufferAttribute(pos, 3));
+         geom.setAttribute('normal', new BufferAttribute(norm, 3));
          const material = new MeshBasicMaterial({ color: color, opacity: opacity, vertexColors: false });
          tooltip_mesh = new Mesh(geom, material);
       } else {
@@ -1260,8 +1260,8 @@ function drawBinsLego(painter, is_v7 = false) {
       }
 
       let geometry = new BufferGeometry();
-      geometry.setAttribute( 'position', new BufferAttribute( positions, 3 ) );
-      geometry.setAttribute( 'normal', new BufferAttribute( normals, 3 ) );
+      geometry.setAttribute('position', new BufferAttribute(positions, 3));
+      geometry.setAttribute('normal', new BufferAttribute(normals, 3));
       // geometry.computeVertexNormals();
 
       let rootcolor = is_v7 ? 3 : histo.fFillColor,
@@ -1323,8 +1323,8 @@ function drawBinsLego(painter, is_v7 = false) {
 
       if (num2vertices > 0) {
          const geom2 = new BufferGeometry();
-         geom2.setAttribute( 'position', new BufferAttribute( pos2, 3 ) );
-         geom2.setAttribute( 'normal', new BufferAttribute( norm2, 3 ) );
+         geom2.setAttribute('position', new BufferAttribute(pos2, 3));
+         geom2.setAttribute('normal', new BufferAttribute(norm2, 3));
          //geom2.computeVertexNormals();
 
          const color2 = (rootcolor < 2) ? new Color(0xFF0000) : new Color(d3_rgb(fcolor).darker(0.5).toString()),
@@ -1874,7 +1874,7 @@ function drawBinsSurf3D(painter, is_v7 = false) {
          if (indx[lvl] !== nfaces[lvl]*9)
               console.error('SURF faces missmatch lvl', lvl, 'faces', nfaces[lvl], 'index', indx[lvl], 'check', nfaces[lvl]*9 - indx[lvl]);
          let geometry = new BufferGeometry();
-         geometry.setAttribute( 'position', new BufferAttribute( pos[lvl], 3 ) );
+         geometry.setAttribute('position', new BufferAttribute(pos[lvl], 3));
          geometry.computeVertexNormals();
          if (donormals && (lvl===1)) RecalculateNormals(geometry.getAttribute('normal').array);
 

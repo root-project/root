@@ -160,7 +160,7 @@ class RObjectPainter extends ObjectPainter {
    }
 
    /** @summary Evaluate RAttrText properties
-     * @returns {Object} FontHandler, can be used directly for the text drawing */
+     * @return {Object} FontHandler, can be used directly for the text drawing */
    v7EvalFont(name, dflts, fontScale) {
 
       if (!dflts) dflts = {}; else

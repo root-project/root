@@ -293,7 +293,7 @@ class TGraphPolargramPainter extends ObjectPainter {
    }
 
    /** @summary Draw TGraphPolargram */
-   static draw(dom, polargram /*, opt*/) {
+   static async draw(dom, polargram /*, opt*/) {
 
       let main = getElementMainPainter(dom);
       if (main) {
@@ -516,7 +516,7 @@ class TGraphPolarPainter extends ObjectPainter {
    }
 
    /** @summary Draw TGraphPolar */
-   static draw(dom, graph, opt) {
+   static async draw(dom, graph, opt) {
       let painter = new TGraphPolarPainter(dom, graph);
       painter.decodeOptions(opt);
 

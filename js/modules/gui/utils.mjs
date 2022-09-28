@@ -107,10 +107,10 @@ function tryOpenOpenUI(sources, args) {
 
 // return Promise let loader wait before dependent source will be invoked
 
-function loadOpenui5(args) {
+async function loadOpenui5(args) {
    // very simple - openui5 was loaded before and will be used as is
    if (typeof sap == 'object')
-      return Promise.resolve(sap);
+      return sap;
 
    if (!args) args = {};
 
@@ -476,8 +476,7 @@ function getBinFileContent(content) {
 
 /** @summary Function store content as file with filename
   * @private */
-function saveFile(filename, content) {
-
+async function saveFile(filename, content) {
    if (typeof _saveFileFunc == 'function') {
       return _saveFileFunc(filename, getBinFileContent(content));
    } else if (isNodeJs()) {
@@ -496,7 +495,7 @@ function saveFile(filename, content) {
          a.click();
       });
    }
-   return Promise.resolve(false);
+   return false;
 }
 
 /** @summary Function store content as file with filename

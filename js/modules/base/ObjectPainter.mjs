@@ -172,7 +172,7 @@ class ObjectPainter extends BasePainter {
    /** @summary Central place to update objects drawing
      * @param {object} obj - new version of object, values will be updated in original object
      * @param {string} [opt] - when specified, new draw options
-     * @returns {boolean|Promise} for object redraw
+     * @return {boolean|Promise} for object redraw
      * @desc Two actions typically done by redraw - update object content via {@link ObjectPainter#updateObject} and
       * then redraw correspondent pad via {@link ObjectPainter#redrawPad}. If possible one should redefine
       * only updateObject function and keep this function unchanged. But for some special painters this function is the
@@ -213,7 +213,7 @@ class ObjectPainter extends BasePainter {
    /** @summary returns color from current list of colors
      * @desc First checks canvas painter and then just access global list of colors
      * @param {number} indx - color index
-     * @returns {string} with SVG color name or rgb()
+     * @return {string} with SVG color name or rgb()
      * @protected */
    getColor(indx) {
       if (!this.root_colors)
@@ -224,7 +224,7 @@ class ObjectPainter extends BasePainter {
 
    /** @summary Add color to list of colors
      * @desc Returned color index can be used as color number in all other draw functions
-     * @returns {number} new color index
+     * @return {number} new color index
      * @protected */
    addColor(color) {
       if (!this.root_colors)
@@ -326,13 +326,13 @@ class ObjectPainter extends BasePainter {
    }
 
    /** @summary Canvas main svg element
-     * @returns {object} d3 selection with canvas svg
+     * @return {object} d3 selection with canvas svg
      * @protected */
    getCanvSvg() { return this.selectDom().select(".root_canvas"); }
 
    /** @summary Pad svg element
      * @param {string} [pad_name] - pad name to select, if not specified - pad where object is drawn
-     * @returns {object} d3 selection with pad svg
+     * @return {object} d3 selection with pad svg
      * @protected */
    getPadSvg(pad_name) {
       if (pad_name === undefined)
@@ -378,7 +378,7 @@ class ObjectPainter extends BasePainter {
 
    /** @summary Method selects current pad name
      * @param {string} [new_name] - when specified, new current pad name will be configured
-     * @returns {string} previous selected pad or actual pad when new_name not specified
+     * @return {string} previous selected pad or actual pad when new_name not specified
      * @private */
    selectCurrentPad(new_name) {
       let svg = this.getCanvSvg();
@@ -459,7 +459,7 @@ class ObjectPainter extends BasePainter {
      * @param {number} value - axis value to convert.
      * @param {boolean} ndc - is value in NDC coordinates
      * @param {boolean} [noround] - skip rounding
-     * @returns {number} value of requested coordiantes
+     * @return {number} value of requested coordiantes
      * @protected */
    axisToSvg(axis, value, ndc, noround) {
       let func = this.getAxisToSvgFunc(ndc, noround);
@@ -471,7 +471,7 @@ class ObjectPainter extends BasePainter {
      * @param {string} axis - name like "x" or "y"
      * @param {number} coord - graphics coordiante.
      * @param {boolean} ndc - kind of return value
-     * @returns {number} value of requested coordiantes
+     * @return {number} value of requested coordiantes
      * @protected */
    svgToAxis(axis, coord, ndc) {
       let use_frame = this.draw_g && this.draw_g.property('in_frame');
@@ -588,7 +588,7 @@ class ObjectPainter extends BasePainter {
      * See {@link TAttMarkerHandler} for more info.
      * Instance assigned as this.markeratt data member, recognized by GED editor
      * @param {object} args - either TAttMarker or see arguments of {@link TAttMarkerHandler}
-     * @returns {object} created handler
+     * @return {object} created handler
      * @protected */
    createAttMarker(args) {
       if (!args || (typeof args !== 'object'))
@@ -648,7 +648,7 @@ class ObjectPainter extends BasePainter {
      * @param {number} [args.color = undefined] - integer index of fill color
      * @param {string} [args.color_as_svg = undefined] - color will be specified as SVG string, not as index from color palette
      * @param {number} [args.kind = undefined] - some special kind which is handled differently from normal patterns
-     * @returns created handle
+     * @return created handle
      * @protected */
    createAttFill(args) {
       if (!args || (typeof args !== 'object'))
@@ -688,9 +688,9 @@ class ObjectPainter extends BasePainter {
 
    /** @summary indicate that redraw was invoked via interactive action (like context menu or zooming)
      * @desc Use to catch such action by GED and by server-side
-     * @returns {Promise} when completed
+     * @return {Promise} when completed
      * @private */
-   interactiveRedraw(arg, info, subelem) {
+   async interactiveRedraw(arg, info, subelem) {
 
       let reason, res;
       if ((typeof info == "string") && (info.indexOf("exec:") != 0))
@@ -721,11 +721,11 @@ class ObjectPainter extends BasePainter {
 
    /** @summary Redraw all objects in the current pad
      * @param {string} [reason] - like 'resize' or 'zoom'
-     * @returns {Promise} when pad redraw completed
+     * @return {Promise} when pad redraw completed
      * @protected */
-   redrawPad(reason) {
+   async redrawPad(reason) {
       let pp = this.getPadPainter();
-      return pp ? pp.redrawPad(reason) : Promise.resolve(false);
+      return pp ? pp.redrawPad(reason) : false;
    }
 
    /** @summary execute selected menu command, either locally or remotely
@@ -1200,12 +1200,12 @@ class ObjectPainter extends BasePainter {
    /** @summary Finish text drawing
      * @desc Should be called to complete all text drawing operations
      * @param {function} [draw_g] - <g> element for text drawing, this.draw_g used when not specified
-     * @returns {Promise} when text drawing completed
+     * @return {Promise} when text drawing completed
      * @protected */
-   finishTextDrawing(draw_g, try_optimize) {
+   async finishTextDrawing(draw_g, try_optimize) {
       if (!draw_g) draw_g = this.draw_g;
       if (!draw_g || draw_g.empty())
-         return Promise.resolve(false);
+         return false;
 
       draw_g.property('draw_text_completed', true); // mark that text drawing is completed
 
@@ -1230,7 +1230,7 @@ class ObjectPainter extends BasePainter {
 
    /** @summary Fill object menu in web canvas
      * @private */
-   fillObjectExecMenu(menu, kind) {
+   async fillObjectExecMenu(menu, kind) {
 
       if (this._userContextMenuFunc)
          return this._userContextMenuFunc(menu, kind);
@@ -1238,7 +1238,7 @@ class ObjectPainter extends BasePainter {
       let canvp = this.getCanvPainter();
 
       if (!this.snapid || !canvp || canvp?._readonly || !canvp?._websocket)
-         return Promise.resolve(menu);
+         return menu;
 
       function DoExecMenu(arg) {
          let execp = this.exec_painter || this,
@@ -1387,7 +1387,7 @@ class ObjectPainter extends BasePainter {
    }
 
    /** @summary Check if user-defined tooltip function was configured
-     * @returns {boolean} flag is user tooltip handler was configured */
+     * @return {boolean} flag is user tooltip handler was configured */
    hasUserTooltip() {
       return typeof this._user_tooltip_handler == 'function';
    }
@@ -1422,9 +1422,9 @@ class ObjectPainter extends BasePainter {
    /** @summary Provide projection areas
      * @param kind - "X", "Y" or ""
      * @private */
-   provideSpecialDrawArea(kind) {
+   async provideSpecialDrawArea(kind) {
       if (kind == this._special_draw_area)
-         return Promise.resolve(true);
+         return true;
 
       return this.getCanvPainter().toggleProjection(kind).then(() => {
          this._special_draw_area = kind;
@@ -1435,12 +1435,12 @@ class ObjectPainter extends BasePainter {
    /** @summary Provide projection areas
      * @param kind - "X", "Y" or ""
      * @private */
-   drawInSpecialArea(obj, opt) {
+   async drawInSpecialArea(obj, opt) {
       let canp = this.getCanvPainter();
       if (this._special_draw_area && (typeof canp?.drawProjection == "function"))
-            return canp.drawProjection(this._special_draw_area, obj, opt);
+         return canp.drawProjection(this._special_draw_area, obj, opt);
 
-      return Promise.resolve(false);
+      return false;
    }
 
    /** @summary Get tooltip for painter and specified event position
@@ -1483,7 +1483,7 @@ function drawRawText(dom, txt /*, opt*/) {
       return true;
    }
 
-   painter.drawText = function() {
+   painter.drawText = async function() {
       let txt = (this.txt._typename && (this.txt._typename == "TObjString")) ? this.txt.fString : this.txt.value;
       if (typeof txt != 'string') txt = "<undefined>";
 
@@ -1507,7 +1507,7 @@ function drawRawText(dom, txt /*, opt*/) {
       if (mathjax)
          typesetMathjax(frame.node());
 
-      return Promise.resolve(this);
+      return this;
    }
 
    return painter.drawText();
@@ -1530,7 +1530,7 @@ function getElementMainPainter(dom) {
 /** @summary Save object, drawn in specified element, as JSON.
   * @desc Normally it is TCanvas object with list of primitives
   * @param {string|object} dom - id of top div element or directly DOMElement
-  * @returns {string} produced JSON string */
+  * @return {string} produced JSON string */
 function drawingJSON(dom) {
    let canp = getElementCanvPainter(dom);
    return canp ? canp.produceJSON() : "";

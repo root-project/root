@@ -175,7 +175,7 @@ class TEfficiencyPainter extends ObjectPainter {
    }
 
    /** @summary Draw TEfficiency object */
-   static draw(dom, eff, opt) {
+   static async draw(dom, eff, opt) {
       if (!eff || !eff.fTotalHistogram)
          return null;
 

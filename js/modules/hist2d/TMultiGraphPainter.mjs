@@ -60,7 +60,7 @@ class TMultiGraphPainter extends ObjectPainter {
    }
 
    /** @summary Scan graphs range
-     * @returns {object} histogram for axes drawing */
+     * @return {object} histogram for axes drawing */
    scanGraphsRange(graphs, histo, pad) {
       let mgraph = this.getObject(),
           maximum, minimum, dx, dy, uxmin = 0, uxmax = 0, logx = false, logy = false,
@@ -196,18 +196,18 @@ class TMultiGraphPainter extends ObjectPainter {
    }
 
    /** @summary draw speical histogram for axis
-     * @returns {Promise} when ready */
-   drawAxisHist(histo, hopt) {
+     * @return {Promise} when ready */
+   async drawAxisHist(histo, hopt) {
       return TH1Painter.draw(this.getDom(), histo, "AXIS" + hopt);
    }
 
    /** @summary method draws next function from the functions list  */
-   drawNextFunction(indx) {
+   async drawNextFunction(indx) {
 
       let mgraph = this.getObject();
 
       if (!mgraph.fFunctions || (indx >= mgraph.fFunctions.arr.length))
-         return Promise.resolve(this);
+         return this;
 
       let pp = this.getPadPainter()
 
@@ -215,12 +215,13 @@ class TMultiGraphPainter extends ObjectPainter {
                .then(() => this.drawNextFunction(indx+1));
    }
 
-   drawGraph(gr, opt /*, pos3d */ ) {
+   /** @summary Draw graph  */
+   async drawGraph(gr, opt /*, pos3d */ ) {
       return TGraphPainter.draw(this.getDom(), gr, opt);
    }
 
    /** @summary method draws next graph  */
-   drawNextGraph(indx, opt) {
+   async drawNextGraph(indx, opt) {
 
       let graphs = this.getObject().fGraphs;
 
@@ -250,8 +251,9 @@ class TMultiGraphPainter extends ObjectPainter {
       });
    }
 
-   /** @private */
-   static _drawMG(painter, opt) {
+   /** @summary Draw multigraph object using painter instance
+     * @private */
+   static async _drawMG(painter, opt) {
 
       let d = new DrawOptions(opt);
 
@@ -282,10 +284,9 @@ class TMultiGraphPainter extends ObjectPainter {
    }
 
    /** @summary Draw TMultiGraph object */
-   static draw(dom, mgraph, opt) {
+   static async draw(dom, mgraph, opt) {
       return TMultiGraphPainter._drawMG(new TMultiGraphPainter(dom, mgraph), opt);
    }
-
 
 } // class TMultiGraphPainter
 

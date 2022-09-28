@@ -74,7 +74,7 @@ class TAttMarkerHandler {
      * @desc When drawing many elementary points, created path may depend from previously produced markers.
      * @param {number} x - first coordinate
      * @param {number} y - second coordinate
-     * @returns {string} path string */
+     * @return {string} path string */
    create(x, y) {
       if (!this.optimized)
          return `M${(x + this.x0).toFixed(this.ndig)},${(y + this.y0).toFixed(this.ndig)}${this.marker}`;

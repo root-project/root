@@ -412,7 +412,7 @@ class RPadPainter extends RObjectPainter {
    }
 
    /** @summary Create SVG element for the pad
-     * @returns true when pad is displayed and all its items should be redrawn */
+     * @return true when pad is displayed and all its items should be redrawn */
    createPadSvg(only_resize) {
 
       if (!this.has_canvas) {
@@ -525,7 +525,7 @@ class RPadPainter extends RObjectPainter {
 
    /** @summary sync drawing/redrawing/resize of the pad
      * @param {string} kind - kind of draw operation, if true - always queued
-     * @returns {Promise} when pad is ready for draw operation or false if operation already queued
+     * @return {Promise} when pad is ready for draw operation or false if operation already queued
      * @private */
    syncDraw(kind) {
       let entry = { kind : kind || "redraw" };
@@ -557,14 +557,14 @@ class RPadPainter extends RObjectPainter {
    }
 
    /** @summary Draw single primitive */
-   drawObject(dom, obj, opt) {
+   async drawObject(/*dom, obj, opt*/) {
       console.log('Not possible to draw object without loading of draw.mjs');
-      return Promise.resolve(null);
+      return null;
    }
 
    /** @summary Draw pad primitives
      * @private */
-   drawPrimitives(indx) {
+   async drawPrimitives(indx) {
 
       if (indx === undefined) {
          if (this.iscan)
@@ -586,7 +586,7 @@ class RPadPainter extends RObjectPainter {
             delete this._start_tm;
          }
 
-         return Promise.resolve();
+         return;
       }
 
       // handle used to invoke callback only when necessary
@@ -687,13 +687,13 @@ class RPadPainter extends RObjectPainter {
    }
 
    /** @summary Redraw pad means redraw ourself
-     * @returns {Promise} when redrawing ready */
-   redrawPad(reason) {
+     * @return {Promise} when redrawing ready */
+   async redrawPad(reason) {
 
       let sync_promise = this.syncDraw(reason);
       if (sync_promise === false) {
          console.log('Prevent RPad redrawing');
-         return Promise.resolve(false);
+         return false;
       }
 
       let showsubitems = true;
@@ -706,7 +706,7 @@ class RPadPainter extends RObjectPainter {
             if (isPromise(res))
                return res.then(() => redrawNext(indx));
          }
-         return Promise.resolve(true);
+         return true;
       };
 
       return sync_promise.then(() => {
@@ -863,9 +863,9 @@ class RPadPainter extends RObjectPainter {
    }
 
    /** @summary Function called when drawing next snapshot from the list
-     * @returns {Promise} with pad painter when ready
+     * @return {Promise} with pad painter when ready
      * @private */
-   drawNextSnap(lst, indx) {
+   async drawNextSnap(lst, indx) {
 
       if (indx === undefined) {
          indx = -1;
@@ -882,7 +882,7 @@ class RPadPainter extends RObjectPainter {
       if (!lst || indx >= lst.length) {
          delete this._snaps_map;
          delete this._auto_color_cnt;
-         return Promise.resolve(this);
+         return this;
       }
 
       let snap = lst[indx],
@@ -1028,12 +1028,12 @@ class RPadPainter extends RObjectPainter {
 
    /** @summary Redraw pad snap
      * @desc Online version of drawing pad primitives
-     * @returns {Promise} with pad painter*/
-   redrawPadSnap(snap) {
+     * @return {Promise} with pad painter*/
+   async redrawPadSnap(snap) {
       // for the pad/canvas display item contains list of primitives plus pad attributes
 
       if (!snap || !snap.fPrimitives)
-         return Promise.resolve(this);
+         return this;
 
       // for the moment only window size attributes are provided
       // let padattr = { fCw: snap.fWinSize[0], fCh: snap.fWinSize[1], fTitle: snap.fTitle };
@@ -1137,12 +1137,12 @@ class RPadPainter extends RObjectPainter {
 
    /** @summary Create image for the pad
      * @desc Used with web-based canvas to create images for server side
-     * @returns {Promise} with image data, coded with btoa() function
+     * @return {Promise} with image data, coded with btoa() function
      * @private */
-   createImage(format) {
+   async createImage(format) {
       // use https://github.com/MrRio/jsPDF in the future here
       if (format == "pdf")
-         return Promise.resolve(btoa_func("dummy PDF file"));
+         return btoa_func("dummy PDF file");
 
       if ((format == "png") || (format == "jpeg") || (format == "svg"))
          return this.produceImage(true, format).then(res => {
@@ -1151,7 +1151,7 @@ class RPadPainter extends RObjectPainter {
             return (separ > 0) ? res.slice(separ+7) : "";
          });
 
-      return Promise.resolve("");
+      return "";
    }
 
    /** @summary Show context menu for specified item
@@ -1205,8 +1205,8 @@ class RPadPainter extends RObjectPainter {
    }
 
    /** @summary Prodce image for the pad
-     * @returns {Promise} with created image */
-   produceImage(full_canvas, file_format) {
+     * @return {Promise} with created image */
+   async produceImage(full_canvas, file_format) {
 
       let use_frame = (full_canvas === "frame"),
           elem = use_frame ? this.getFrameSvg(this.this_pad_name) : (full_canvas ? this.getCanvSvg() : this.svg_this_pad()),
@@ -1214,7 +1214,7 @@ class RPadPainter extends RObjectPainter {
           items = []; // keep list of replaced elements, which should be moved back at the end
 
       if (elem.empty())
-         return Promise.resolve("");
+         return "";
 
       if (!use_frame) // do not make transformations for the frame
       painter.forEachPainterInPad(pp => {
@@ -1312,7 +1312,7 @@ class RPadPainter extends RObjectPainter {
 
       if (file_format == "svg") {
          reconstruct();
-         return Promise.resolve(svg); // return SVG file as is
+         return svg; // return SVG file as is
       }
 
       let doctype = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">',
@@ -1539,7 +1539,7 @@ class RPadPainter extends RObjectPainter {
    }
 
    /** @summary draw RPad object */
-   static draw(dom, pad, opt) {
+   static async draw(dom, pad, opt) {
       let painter = new RPadPainter(dom, pad, false);
       painter.decodeOptions(opt);
 

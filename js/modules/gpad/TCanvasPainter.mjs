@@ -73,11 +73,11 @@ class TCanvasPainter extends TPadPainter {
    }
 
    /** @summary Changes layout
-     * @returns {Promise} indicating when finished */
-   changeLayout(layout_kind, mainid) {
+     * @return {Promise} indicating when finished */
+   async changeLayout(layout_kind, mainid) {
       let current = this.getLayoutKind();
       if (current == layout_kind)
-         return Promise.resolve(true);
+         return true;
 
       let origin = this.selectDom('origin'),
           sidebar = origin.select('.side_panel'),
@@ -121,13 +121,13 @@ class TCanvasPainter extends TPadPainter {
 
       // resize main drawing and let draw extras
       resize(main.node());
-      return Promise.resolve(true);
+      return true;
    }
 
    /** @summary Toggle projection
-     * @returns {Promise} indicating when ready
+     * @return {Promise} indicating when ready
      * @private */
-   toggleProjection(kind) {
+   async toggleProjection(kind) {
       delete this.proj_painter;
 
       if (kind) this.proj_painter = 1; // just indicator that drawing can be preformed
@@ -151,9 +151,10 @@ class TCanvasPainter extends TPadPainter {
 
    /** @summary Draw projection for specified histogram
      * @private */
-   drawProjection(kind, hist, hopt) {
+   async drawProjection(kind, hist, hopt) {
 
-      if (!this.proj_painter) return; // ignore drawing if projection not configured
+      if (!this.proj_painter)
+         return false; // ignore drawing if projection not configured
 
       if (hopt === undefined) hopt = "hist";
 
@@ -185,11 +186,11 @@ class TCanvasPainter extends TPadPainter {
                        ? this.drawInUI5ProjectionArea(canv, drawopt)
                        : this.drawInSidePanel(canv, drawopt);
 
-         promise.then(painter => { this.proj_painter = painter; });
-      } else {
-         this.proj_painter.getMainPainter()?.updateObject(hist, hopt);
-         this.proj_painter.redrawPad();
-      }
+         return promise.then(painter => { this.proj_painter = painter; return painter; });
+      } else
+
+      this.proj_painter.getMainPainter()?.updateObject(hist, hopt);
+      return this.proj_painter.redrawPad();
    }
 
    /** @summary Checks if canvas shown inside ui5 widget
@@ -203,10 +204,9 @@ class TCanvasPainter extends TPadPainter {
 
    /** @summary Draw in side panel
      * @private */
-   drawInSidePanel(canv, opt) {
+   async drawInSidePanel(canv, opt) {
       let side = this.selectDom('origin').select(".side_panel");
-      if (side.empty()) return Promise.resolve(null);
-      return this.drawObject(side.node(), canv, opt);
+      return side.empty() ? null : this.drawObject(side.node(), canv, opt);
    }
 
    /** @summary Show message
@@ -233,7 +233,7 @@ class TCanvasPainter extends TPadPainter {
 
    /** @summary Submit menu request
      * @private */
-   submitMenuRequest(painter, kind, reqid) {
+   async submitMenuRequest(painter, kind, reqid) {
       // only single request can be handled, no limit better in RCanvas
       return new Promise(resolveFunc => {
          this._getmenu_callback = resolveFunc;
@@ -407,11 +407,11 @@ class TCanvasPainter extends TPadPainter {
    }
 
    /** @summary Function used to activate GED
-     * @returns {Promise} when GED is there
+     * @return {Promise} when GED is there
      * @private */
-   activateGed(objpainter, kind, mode) {
+   async activateGed(objpainter, kind, mode) {
       if (this.testUI5() || !this.brlayout)
-         return Promise.resolve(false);
+         return false;
 
       if (this.brlayout.hasContent()) {
          if ((mode === "toggle") || (mode === false))
@@ -419,11 +419,11 @@ class TCanvasPainter extends TPadPainter {
          else
             objpainter?.getPadPainter()?.selectObjectPainter(objpainter);
 
-         return Promise.resolve(true);
+         return true;
       }
 
       if (mode === false)
-         return Promise.resolve(false);
+         return false;
 
       let btns = this.brlayout.createBrowserBtns();
 
@@ -476,9 +476,9 @@ class TCanvasPainter extends TPadPainter {
    }
 
    /** @summary Show section of canvas  like menu or editor */
-   showSection(that, on) {
+   async showSection(that, on) {
       if (this.testUI5())
-         return Promise.resolve(false);
+         return false;
 
       console.log(`Show section ${that} flag = ${on}`);
 
@@ -490,7 +490,7 @@ class TCanvasPainter extends TPadPainter {
          case "ToolTips": this.setTooltipAllowed(on); break;
 
       }
-      return Promise.resolve(true);
+      return true;
    }
 
    /** @summary Complete handling of online canvas drawing
@@ -657,7 +657,7 @@ class TCanvasPainter extends TPadPainter {
    }
 
    /** @summary draw TCanvas */
-   static draw(dom, can, opt) {
+   static async draw(dom, can, opt) {
       let nocanvas = !can;
       if (nocanvas) can = create("TCanvas");
 
@@ -697,7 +697,7 @@ class TCanvasPainter extends TPadPainter {
   * @param {Object} painter  - painter object to process
   * @param {string|boolean} frame_kind  - false for no frame or "3d" for special 3D mode
   * @desc Assign dom, creates TCanvas if necessary, add to list of pad painters */
-function ensureTCanvas(painter, frame_kind) {
+async function ensureTCanvas(painter, frame_kind) {
    if (!painter)
       return Promise.reject(Error('Painter not provided in ensureTCanvas'));
 
@@ -718,7 +718,7 @@ function ensureTCanvas(painter, frame_kind) {
 
 /** @summary draw TPad snapshot from TWebCanvas
   * @private */
-function drawTPadSnapshot(dom, snap /*, opt*/) {
+async function drawTPadSnapshot(dom, snap /*, opt*/) {
    let can = create("TCanvas"),
        painter = new TCanvasPainter(dom, can);
    painter.normal_canvas = false;

@@ -44,12 +44,12 @@ class TGraphPainter extends TGraphPainter2D {
 
    /** @summary Draw axis histogram
      * @private */
-   drawAxisHisto() {
+   async drawAxisHisto() {
       let histo = this.createHistogram();
       return TH1Painter.draw(this.getDom(), histo, this.options.Axis);
    }
 
-   static draw(dom, graph, opt) {
+   static async draw(dom, graph, opt) {
       return TGraphPainter._drawGraph(new TGraphPainter(dom, graph), opt);
    }
 

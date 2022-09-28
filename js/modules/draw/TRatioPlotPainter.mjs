@@ -29,7 +29,7 @@ class TRatioPlotPainter extends ObjectPainter {
    }
 
    /** @summary Redraw TRatioPlot */
-   redraw() {
+   async redraw() {
       let ratio = this.getObject(),
           pp = this.getPadPainter();
 
@@ -148,7 +148,7 @@ class TRatioPlotPainter extends ObjectPainter {
    }
 
    /** @summary Draw TRatioPlot */
-   static draw(dom, ratio, opt) {
+   static async draw(dom, ratio, opt) {
       let painter = new TRatioPlotPainter(dom, ratio, opt);
 
       return ensureTCanvas(painter, false).then(() => painter.redraw());

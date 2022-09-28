@@ -28,14 +28,15 @@ class TPavePainter extends ObjectPainter {
       this.UseTextColor = false; // indicates if text color used, enabled menu entry
    }
 
-   /** @summary Draw pave and content */
-   drawPave(arg) {
+   /** @summary Draw pave and content
+     * @return {Promise} */
+   async drawPave(arg) {
 
       this.UseTextColor = false;
 
       if (!this.Enabled) {
          this.removeG();
-         return Promise.resolve(this);
+         return this;
       }
 
       let pt = this.getObject(), opt = pt.fOption.toUpperCase(),
@@ -234,10 +235,10 @@ class TPavePainter extends ObjectPainter {
    }
 
    /** @summary draw TPaveLabel object */
-   drawPaveLabel(width, height) {
+   async drawPaveLabel(width, height) {
       let pave = this.getObject();
       if (!pave.fLabel || !pave.fLabel.trim())
-         return Promise.resolve(this);
+         return this;
 
       this.UseTextColor = true;
 
@@ -1113,7 +1114,7 @@ class TPavePainter extends ObjectPainter {
    }
 
    /** @summary redraw pave object */
-   redraw() {
+   async redraw() {
       return this.drawPave();
    }
 
@@ -1135,7 +1136,7 @@ class TPavePainter extends ObjectPainter {
    }
 
    /** @summary Draw TPave */
-   static draw(dom, pave, opt) {
+   static async draw(dom, pave, opt) {
       let painter = new TPavePainter(dom, pave);
 
       return ensureTCanvas(painter, false).then(() => {
@@ -1209,13 +1210,14 @@ class TPavePainter extends ObjectPainter {
 /** @summary Produce and draw TLegend object for the specified dom
   * @desc Should be called when all other objects are painted
   * Invoked when item "$legend" specified in url string
-  * @returns {Object} Promise with TLegend painter
+  * @return {Promise} with TLegend painter
   * @private */
-function produceLegend(dom, opt) {
+async function produceLegend(dom, opt) {
    let main_painter = getElementMainPainter(dom),
        pp = main_painter ? main_painter.getPadPainter() : null,
        pad = pp?.getRootPad(true);
-   if (!pad) return Promise.resolve(null);
+
+   if (!pad) return null;
 
    let leg = create("TLegend");
 
@@ -1241,7 +1243,7 @@ function produceLegend(dom, opt) {
 
    // no entries - no need to draw legend
    let szx = 0.4, szy = leg.fPrimitives.arr.length;
-   if (!szy) return Promise.resolve(null);
+   if (!szy) return null;
    if (szy > 8) szy = 8;
    szy *= 0.1;
 

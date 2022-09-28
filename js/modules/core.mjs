@@ -5,7 +5,7 @@ let version_id = "dev";
 
 /** @summary version date
   * @desc Release date in format day/month/year like "19/11/2021" */
-let version_date = "17/08/2022";
+let version_date = "28/09/2022";
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -68,7 +68,7 @@ if ((typeof document !== "undefined") && (typeof window !== "undefined")) {
 }
 
 /** @summary Check if prototype string match to array (typed on untyped)
-  * @returns {Number} 0 - not array, 1 - regular array, 2 - typed array
+  * @return {Number} 0 - not array, 1 - regular array, 2 - typed array
   * @private */
 function isArrayProto(proto) {
     if ((proto.length < 14) || (proto.indexOf('[object ') != 0)) return 0;
@@ -376,9 +376,9 @@ function getDocument() {
 
 /** @summary Inject javascript code
   * @desc Replacement for eval
-  * @returns {Promise} when code is injected
+  * @return {Promise} when code is injected
   * @private */
-function injectCode(code) {
+async function injectCode(code) {
    if (nodejs) {
       let name, fs;
       return import('tmp').then(tmp => {
@@ -396,7 +396,7 @@ function injectCode(code) {
       let scripts = document.getElementsByTagName('script');
       for (let n = 0; n < scripts.length; ++n)
          if (scripts[n].innerHTML == code)
-            return Promise.resolve(true);
+            return true;
 
       let promise = code.indexOf("JSROOT.require") >= 0 ? _ensureJSROOT() : Promise.resolve(true);
 
@@ -411,15 +411,15 @@ function injectCode(code) {
       });
    }
 
-   return Promise.resolve(false);
+   return false;
 }
 
 /** @summary Load script or CSS file into the browser
   * @param {String} url - script or css file URL (or array, in this case they all loaded secuentially)
-  * @returns {Promise} */
-function loadScript(url) {
+  * @return {Promise} */
+async function loadScript(url) {
    if (!url)
-      return Promise.resolve(true);
+      return true;
 
    if ((typeof url == 'string') && (url.indexOf(";") >= 0))
       url = url.split(";");
@@ -443,7 +443,7 @@ function loadScript(url) {
 
    if (nodejs) {
       if (isstyle)
-         return Promise.resolve(null);
+         return null;
       if ((url.indexOf("http:") == 0) || (url.indexOf("https:") == 0))
          return httpRequest(url, "text").then(code => injectCode(code));
 
@@ -461,14 +461,14 @@ function loadScript(url) {
       for (let n = 0; n < styles.length; ++n) {
          if (!styles[n].href || (styles[n].type !== 'text/css') || (styles[n].rel !== 'stylesheet')) continue;
          if (match_url(styles[n].href))
-            return Promise.resolve(true);
+            return true;
       }
 
    } else {
       let scripts = document.getElementsByTagName('script');
       for (let n = 0; n < scripts.length; ++n)
          if (match_url(scripts[n].src))
-            return Promise.resolve(true);
+            return true;
    }
 
    if (isstyle) {
@@ -482,21 +482,21 @@ function loadScript(url) {
       element.setAttribute("src", url);
    }
 
-   return new Promise((resolve, reject) => {
-      element.onload = () => resolve(true);
-      element.onerror = () => { element.remove(); reject(Error(`Fail to load ${url}`)); };
+   return new Promise((resolveFunc, rejectFunc) => {
+      element.onload = () => resolveFunc(true);
+      element.onerror = () => { element.remove(); rejectFunc(Error(`Fail to load ${url}`)); };
       document.head.appendChild(element);
    });
 }
 
 /** @summary Generate mask for given bit
   * @param {number} n bit number
-  * @returns {Number} produced mask
+  * @return {Number} produced mask
   * @private */
 function BIT(n) { return 1 << n; }
 
 /** @summary Make deep clone of the object, including all sub-objects
-  * @returns {object} cloned object
+  * @return {object} cloned object
   * @private */
 function clone(src, map, nofunc) {
    if (!src) return null;
@@ -564,7 +564,7 @@ function addMethods(obj, typename) {
 /** @summary Should be used to parse JSON string produced with TBufferJSON class
   * @desc Replace all references inside object like { "$ref": "1" }
   * @param {object|string} json  object where references will be replaced
-  * @returns {object} parsed object */
+  * @return {object} parsed object */
 function parse(json) {
 
    if (!json) return null;
@@ -694,7 +694,7 @@ function parse(json) {
 /** @summary Parse response from multi.json request
   * @desc Method should be used to parse JSON code, produced by multi.json request of THttpServer
   * @param {string} json string to parse
-  * @returns {Array} array of parsed elements */
+  * @return {Array} array of parsed elements */
 function parseMulti(json) {
    if (!json) return null;
    let arr = parse(json);
@@ -709,7 +709,7 @@ function parseMulti(json) {
   * When performed properly, JSON can be used in [TBufferJSON::fromJSON()]{@link https://root.cern/doc/master/classTBufferJSON.html#a2ecf0daacdad801e60b8093a404c897d} method to read data back with C++
   * @param {object} obj - JavaScript object to convert
   * @param {number} [spacing] - optional line spacing in JSON
-  * @returns {string} produced JSON code */
+  * @return {string} produced JSON code */
 function toJSON(obj, spacing) {
    if (!obj || typeof obj !== 'object') return "";
 
@@ -761,7 +761,7 @@ function toJSON(obj, spacing) {
 /** @summary decodes URL options after '?' mark
   * @desc Following options supported ?opt1&opt2=3
   * @param {string} [url] URL string with options, document.URL will be used when not specified
-  * @returns {Object} with ```.has(opt)``` and ```.get(opt,dflt)``` methods
+  * @return {Object} with ```.has(opt)``` and ```.get(opt,dflt)``` methods
   * @example
   * let d = decodeUrl("any?opt1&op2=3");
   * console.log(`Has opt1 ${d.has("opt1")}`);     // true
@@ -956,12 +956,12 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
   * @param {string} url - URL for the request
   * @param {string} kind - kind of requested data
   * @param {string} [post_data] - data submitted with post kind of request
-  * @returns {Promise} Promise for requested data, result type depends from the kind
+  * @return {Promise} Promise for requested data, result type depends from the kind
   * @example
   * httpRequest("https://root.cern/js/files/thstack.json.gz", "object")
   *       .then(obj => console.log(`Get object of type ${obj._typename}`))
   *       .catch(err => console.error(err.message)); */
-function httpRequest(url, kind, post_data) {
+async function httpRequest(url, kind, post_data) {
    return new Promise((accept, reject) => {
       createHttpRequest(url, kind, accept, reject, true).then(xhr => xhr.send(post_data || null));
    });
@@ -1249,7 +1249,7 @@ function create(typename, target) {
   * @param {number} nbinsx - number of bins on X-axis
   * @param {number} [nbinsy] - number of bins on Y-axis (for 2D/3D histograms)
   * @param {number} [nbinsz] - number of bins on Z-axis (for 3D histograms)
-  * @returns {Object} created histogram object
+  * @return {Object} created histogram object
   * @example
   * let h1 = createHistogram("TH1I", 20);
   * h1.fName = "Hist1";
