@@ -48,22 +48,22 @@ class ReadSpeedIntegration : public ::testing::Test {
 protected:
    static void SetUpTestSuite()
    {
-      RequireFile("test1.root");
-      RequireFile("test2.root");
-      RequireFile("test3.root", {"x", "x_branch", "y_brunch", "mismatched"});
+      RequireFile("readspeedinput1.root");
+      RequireFile("readspeedinput2.root");
+      RequireFile("readspeedinput3.root", {"x", "x_branch", "y_brunch", "mismatched"});
    }
 
    static void TearDownTestSuite()
    {
-      gSystem->Unlink("test1.root");
-      gSystem->Unlink("test2.root");
-      gSystem->Unlink("test3.root");
+      gSystem->Unlink("readspeedinput1.root");
+      gSystem->Unlink("readspeedinput2.root");
+      gSystem->Unlink("readspeedinput3.root");
    }
 };
 
 TEST_F(ReadSpeedIntegration, SingleThread)
 {
-   const auto result = EvalThroughput({{"t"}, {"test1.root", "test2.root"}, {"x"}}, 0);
+   const auto result = EvalThroughput({{"t"}, {"readspeedinput1.root", "readspeedinput2.root"}, {"x"}}, 0);
 
    EXPECT_EQ(result.fUncompressedBytesRead, 80000000) << "Wrong number of uncompressed bytes read";
    EXPECT_EQ(result.fCompressedBytesRead, 643934) << "Wrong number of compressed bytes read";
@@ -72,7 +72,7 @@ TEST_F(ReadSpeedIntegration, SingleThread)
 #ifdef R__USE_IMT
 TEST_F(ReadSpeedIntegration, MultiThread)
 {
-   const auto result = EvalThroughput({{"t"}, {"test1.root", "test2.root"}, {"x"}}, 2);
+   const auto result = EvalThroughput({{"t"}, {"readspeedinput1.root", "readspeedinput2.root"}, {"x"}}, 2);
 
    EXPECT_EQ(result.fUncompressedBytesRead, 80000000) << "Wrong number of uncompressed bytes read";
    EXPECT_EQ(result.fCompressedBytesRead, 643934) << "Wrong number of compressed bytes read";
@@ -87,19 +87,19 @@ TEST_F(ReadSpeedIntegration, NonExistentFile)
 
 TEST_F(ReadSpeedIntegration, NonExistentTree)
 {
-   EXPECT_THROW(EvalThroughput({{"t_fake"}, {"test1.root"}, {"x"}}, 0), std::runtime_error)
+   EXPECT_THROW(EvalThroughput({{"t_fake"}, {"readspeedinput1.root"}, {"x"}}, 0), std::runtime_error)
       << "Should throw for non-existent tree";
 }
 
 TEST_F(ReadSpeedIntegration, NonExistentBranch)
 {
-   EXPECT_THROW(EvalThroughput({{"t"}, {"test1.root"}, {"z"}}, 0), std::runtime_error)
+   EXPECT_THROW(EvalThroughput({{"t"}, {"readspeedinput1.root"}, {"z"}}, 0), std::runtime_error)
       << "Should throw for non-existent branch";
 }
 
 TEST_F(ReadSpeedIntegration, SingleBranch)
 {
-   const auto result = EvalThroughput({{"t"}, {"test3.root"}, {"x"}}, 0);
+   const auto result = EvalThroughput({{"t"}, {"readspeedinput3.root"}, {"x"}}, 0);
 
    EXPECT_EQ(result.fUncompressedBytesRead, 40000000) << "Wrong number of uncompressed bytes read";
    EXPECT_EQ(result.fCompressedBytesRead, 321967) << "Wrong number of compressed bytes read";
@@ -107,7 +107,7 @@ TEST_F(ReadSpeedIntegration, SingleBranch)
 
 TEST_F(ReadSpeedIntegration, PatternBranch)
 {
-   const auto result = EvalThroughput({{"t"}, {"test3.root"}, {"(x|y)_.*nch"}, true}, 0);
+   const auto result = EvalThroughput({{"t"}, {"readspeedinput3.root"}, {"(x|y)_.*nch"}, true}, 0);
 
    EXPECT_EQ(result.fUncompressedBytesRead, 80000000) << "Wrong number of uncompressed bytes read";
    EXPECT_EQ(result.fCompressedBytesRead, 661576) << "Wrong number of compressed bytes read";
@@ -115,18 +115,19 @@ TEST_F(ReadSpeedIntegration, PatternBranch)
 
 TEST_F(ReadSpeedIntegration, NoMatches)
 {
-   EXPECT_THROW(EvalThroughput({{"t"}, {"test3.root"}, {"x_.*"}, false}, 0), std::runtime_error)
+   EXPECT_THROW(EvalThroughput({{"t"}, {"readspeedinput3.root"}, {"x_.*"}, false}, 0), std::runtime_error)
       << "Should throw for no matching branch";
-   EXPECT_DEATH(EvalThroughput({{"t"}, {"test3.root"}, {"z_.*"}, true}, 0), "branch regexes didn't match any branches")
+   EXPECT_DEATH(EvalThroughput({{"t"}, {"readspeedinput3.root"}, {"z_.*"}, true}, 0),
+                "branch regexes didn't match any branches")
       << "Should terminate for no matching branch";
-   EXPECT_DEATH(EvalThroughput({{"t"}, {"test3.root"}, {".*", "z_.*"}, true}, 0),
+   EXPECT_DEATH(EvalThroughput({{"t"}, {"readspeedinput3.root"}, {".*", "z_.*"}, true}, 0),
                 "following regexes didn't match any branches")
       << "Should terminate for no matching branch";
 }
 
 TEST_F(ReadSpeedIntegration, AllBranches)
 {
-   const auto result = EvalThroughput({{"t"}, {"test3.root"}, {".*"}, true}, 0);
+   const auto result = EvalThroughput({{"t"}, {"readspeedinput3.root"}, {".*"}, true}, 0);
 
    EXPECT_EQ(result.fUncompressedBytesRead, 160000000) << "Wrong number of uncompressed bytes read";
    EXPECT_EQ(result.fCompressedBytesRead, 1316837) << "Wrong number of compressed bytes read";
@@ -148,7 +149,8 @@ TEST(ReadSpeedCLI, CheckFilenames)
 
 TEST(ReadSpeedCLI, CheckTrees)
 {
-   const std::vector<std::string> baseArgs{"root-readspeed", "--files", "file.root", "--branches", "x", "--trees"};
+   const std::vector<std::string> baseArgs{"root-readspeed", "--files", "doesnotexist.root",
+                                           "--branches",     "x",       "--trees"};
    const std::vector<std::string> inTrees{"t1", "t2", "tree3"};
 
    const auto allArgs = ConcatVectors(baseArgs, inTrees);
@@ -163,7 +165,7 @@ TEST(ReadSpeedCLI, CheckTrees)
 TEST(ReadSpeedCLI, CheckBranches)
 {
    const std::vector<std::string> baseArgs{
-      "root-readspeed", "--files", "file.root", "--trees", "t", "--branches",
+      "root-readspeed", "--files", "doesnotexist.root", "--trees", "t", "--branches",
    };
    const std::vector<std::string> inBranches{"x", "x_branch", "long_branch_name"};
 
@@ -198,7 +200,7 @@ TEST(ReadSpeedCLI, NoArgs)
 TEST(ReadSpeedCLI, InvalidArgs)
 {
    const std::vector<std::string> allArgs{
-      "root-readspeed", "--files", "file.root", "--trees", "t", "--branches", "x", "--fake-flag",
+      "root-readspeed", "--files", "doesnotexist.root", "--trees", "t", "--branches", "x", "--fake-flag",
    };
 
    const auto parsedArgs = ParseArgs(allArgs);
@@ -209,7 +211,7 @@ TEST(ReadSpeedCLI, InvalidArgs)
 TEST(ReadSpeedCLI, RegularArgs)
 {
    const std::vector<std::string> allArgs{
-      "root-readspeed", "--files", "file.root", "--trees", "t", "--branches", "x",
+      "root-readspeed", "--files", "doesnotexist.root", "--trees", "t", "--branches", "x",
    };
 
    const auto parsedArgs = ParseArgs(allArgs);
@@ -222,7 +224,7 @@ TEST(ReadSpeedCLI, RegularArgs)
 TEST(ReadSpeedCLI, RegexArgs)
 {
    const std::vector<std::string> allArgs{
-      "root-readspeed", "--files", "file.root", "--trees", "t", "--branches-regex", "x.*",
+      "root-readspeed", "--files", "doesnotexist.root", "--trees", "t", "--branches-regex", "x.*",
    };
 
    const auto parsedArgs = ParseArgs(allArgs);
@@ -234,7 +236,7 @@ TEST(ReadSpeedCLI, RegexArgs)
 TEST(ReadSpeedCLI, AllBranches)
 {
    const std::vector<std::string> allArgs{
-      "root-readspeed", "--files", "file.root", "--trees", "t", "--all-branches",
+      "root-readspeed", "--files", "doesnotexist.root", "--trees", "t", "--all-branches",
    };
    const std::vector<std::string> allBranches = {".*"};
 
@@ -249,7 +251,7 @@ TEST(ReadSpeedCLI, AllBranches)
 TEST(ReadSpeedCLI, MultipleThreads)
 {
    const std::vector<std::string> allArgs{
-      "root-readspeed", "--files", "file.root", "--trees", "t", "--branches", "x", "--threads", "16",
+      "root-readspeed", "--files", "doesnotexist.root", "--trees", "t", "--branches", "x", "--threads", "16",
    };
    const unsigned int threads = 16;
 
@@ -266,7 +268,7 @@ TEST(ReadSpeedCLI, WorkerThreadsHint)
    const std::vector<std::string> allArgs{
       "root-readspeed",
       "--files",
-      "file.root",
+      "doesnotexist.root",
       "--trees",
       "t",
       "--branches",
