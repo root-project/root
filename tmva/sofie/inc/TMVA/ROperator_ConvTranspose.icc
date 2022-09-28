@@ -170,10 +170,10 @@ template <typename T>
 std::string ROperator_ConvTranspose<T>::GenerateSessionMembersCode(std::string opName)
 {
 
-   size_t outputChannelSize = fShapeY[2];
-   size_t kernelSize = fAttrKernelShape[0];
-   for (size_t i = 1; i < fDim; i++) {
-      outputChannelSize *= fShapeY[2 + i];
+   size_t outputChannelSize = fShapeY[1];
+   size_t kernelSize = 1;
+   for (size_t i = 0; i < fDim; i++) {
+      outputChannelSize *= fShapeY[2+ i];
       kernelSize *= fAttrKernelShape[i];
    }
 
@@ -282,14 +282,14 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
    out << SP << "char " << OpName << "_transB = 'N';\n";
    out << SP << "int " << OpName << "_m = " << oHeight * oWidth * oDepth << ";\n";
    out << SP << "int " << OpName << "_n = " << fShapeW[1] << ";\n";
-   out << SP << "int " << OpName << "_k = " << icstrideDil << ";\n";
+   out << SP << "int " << OpName << "_k = " << fShapeW[0]*icstrideDil << ";\n";
    out << SP << "float " << OpName << "_alpha = 1.0;\n";
    out << SP << "float " << OpName << "_beta = 0.0;\n";
 
    if (fUseSession) {
       out << SP << fType << " * " << OpName << "_xcol = fVec_" << OpName << "_xcol.data();\n";
    } else {
-      out << SP << fType << " " << OpName << "_xcol[" << icstrideDil * oDepth * oHeight * oWidth << "] = {0};\n";
+      out << SP << fType << " " << OpName << "_xcol[" << fShapeW[0]*icstrideDil * oDepth * oHeight * oWidth << "] = {0};\n";
    }
 
    // Loop on batch size
