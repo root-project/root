@@ -305,7 +305,9 @@ Result ReadSpeed::EvalThroughputMT(const Data &d, unsigned nThreads)
       const auto &branchNames = fileBranchNames[fileIdx];
 
       auto readRange = [&](const EntryRange &range) -> ByteData {
-         auto slotIndex = slotStack.GetSlot();
+
+         ROOT::Internal::RSlotStackRAII slotRAII(slotStack);
+         auto slotIndex = slotRAII.fSlot;
          auto &file = lastTFiles[slotIndex];
          auto &lastIndex = lastFileIdxs[slotIndex];
 
@@ -318,8 +320,6 @@ Result ReadSpeed::EvalThroughputMT(const Data &d, unsigned nThreads)
             throw std::runtime_error("Could not open file '" + fileName + '\'');
 
          auto result = ReadTree(file.get(), treeName, branchNames, range);
-
-         slotStack.ReturnSlot(slotIndex);
 
          return result;
       };
