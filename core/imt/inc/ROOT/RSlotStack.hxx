@@ -22,7 +22,7 @@ namespace Internal {
 /// RSlotStack can be used to safely assign a "processing slot" number to
 /// each thread in multi-thread applications.
 /// In release builds, pop and push operations are unchecked, potentially
-/// resulting in undefined behavior if more slot numbers than avaialble are
+/// resulting in undefined behavior if more slot numbers than available are
 /// requested.
 /// An important design assumption is that a slot will almost always be available
 /// when a thread asks for it, and if it is not available it will be very soon,
