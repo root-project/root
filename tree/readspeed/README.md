@@ -58,3 +58,13 @@ consider clearing the cache before running rootreadspeed.
 On Linux this can be done by running 'echo 3 > /proc/sys/vm/drop_caches' as a superuser,
 or a specific file can be dropped from the cache with
 `dd of=<FILENAME> oflag=nocache conv=notrunc,fdatasync count=0 > /dev/null 2>&1`.
+
+
+### Known overhead of TTreeReader, RDataFrame
+
+`rootreadspeed` is designed to read all data present in the specified branches, trees and files at the highest possible
+speed. When an analysis application is mostly bound by I/O, higher-level interfaces built on top of TTree such as
+TTreeReader and RDataFrame are known to add a significant runtime overhead with respect to the runtimes reported by
+`rootreadspeed` (up to a factor 2). In realistic analysis applications it has been observed that a large part of that
+overhead is compensated by the ability of TTreeReader and RDataFrame to read branch values selectively, based on event
+cuts. See also [this talk](https://indico.cern.ch/e/PPP138) (slides 16 to 19).
