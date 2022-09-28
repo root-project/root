@@ -129,7 +129,9 @@ const auto fullUsageText =
    " first read. If this is realistic of how your analysis will run - then there is no concern. However, if\n"
    " you expect to only read files once in a while - and as such the files are unlikely to be in the cache -\n"
    " consider clearing the cache before running rootreadspeed.\n"
-   "  (On Linux this can be done by running 'echo 3 > /proc/sys/vm/drop_caches' as a superuser)\n";
+   " On Linux this can be done by running 'echo 3 > /proc/sys/vm/drop_caches' as a superuser\n"
+   " or a specific file can be dropped from the cache with"
+   " `dd of=<FILENAME> oflag=nocache conv=notrunc,fdatasync count=0 > /dev/null 2>&1`.\n";
 
 void ReadSpeed::PrintThroughput(const Result &r)
 {
