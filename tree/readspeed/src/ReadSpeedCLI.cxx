@@ -131,7 +131,16 @@ const auto fullUsageText =
    " consider clearing the cache before running rootreadspeed.\n"
    " On Linux this can be done by running 'echo 3 > /proc/sys/vm/drop_caches' as a superuser\n"
    " or a specific file can be dropped from the cache with"
-   " `dd of=<FILENAME> oflag=nocache conv=notrunc,fdatasync count=0 > /dev/null 2>&1`.\n";
+   " `dd of=<FILENAME> oflag=nocache conv=notrunc,fdatasync count=0 > /dev/null 2>&1`.\n"
+   "\n"
+   "\n"
+   "Known overhead of TTreeReader, RDataFrame:\n"
+   "`rootreadspeed` is designed to read all data present in the specified branches, trees and files at the highest\n"
+   "possible speed. When an analysis application is bound by I/O, higher-level interfaces built on top of TTree\n"
+   "such as TTreeReader and RDataFrame are known to add a significant runtime overhead with respect to the runtimes\n"
+   "reported by `rootreadspeed` (up to a factor 2). In realistic analysis applications it has been observed that a\n"
+   "large part of that overhead is compensated by the ability of TTreeReader and RDataFrame to read branch values\n"
+   "selectively, based on event cuts.\n";
 
 void ReadSpeed::PrintThroughput(const Result &r)
 {
