@@ -3,7 +3,10 @@
 #include "ReadSpeed.hxx"
 #include "ReadSpeedCLI.hxx"
 
+#ifdef R__USE_IMT
 #include "ROOT/TTreeProcessorMT.hxx" // for TTreeProcessorMT::GetTasksPerWorkerHint
+#endif
+
 #include "TFile.h"
 #include "TSystem.h"
 #include "TTree.h"
@@ -76,6 +79,7 @@ TEST(ReadSpeedIntegration, SingleThread)
    EXPECT_EQ(result.fCompressedBytesRead, 643934) << "Wrong number of compressed bytes read";
 }
 
+#ifdef R__USE_IMT
 TEST(ReadSpeedIntegration, MultiThread)
 {
    const auto result = EvalThroughput({{"t"}, {"test1.root", "test2.root"}, {"x"}}, 2);
@@ -83,6 +87,7 @@ TEST(ReadSpeedIntegration, MultiThread)
    EXPECT_EQ(result.fUncompressedBytesRead, 80000000) << "Wrong number of uncompressed bytes read";
    EXPECT_EQ(result.fCompressedBytesRead, 643934) << "Wrong number of compressed bytes read";
 }
+#endif
 
 TEST(ReadSpeedIntegration, NonExistentFile)
 {
@@ -264,6 +269,7 @@ TEST(ReadSpeedCLI, MultipleThreads)
    EXPECT_EQ(parsedArgs.fNThreads, threads) << "Program not using the correct amount of threads";
 }
 
+#ifdef R__USE_IMT
 TEST(ReadSpeedCLI, WorkerThreadsHint)
 {
    const unsigned int oldTasksPerWorker = ROOT::TTreeProcessorMT::GetTasksPerWorkerHint();
@@ -285,3 +291,4 @@ TEST(ReadSpeedCLI, WorkerThreadsHint)
    EXPECT_TRUE(parsedArgs.fShouldRun) << "Program not running when given valid arguments";
    EXPECT_EQ(newTasksPerWorker, oldTasksPerWorker + 10) << "Tasks per worker hint not updated correctly";
 }
+#endif
