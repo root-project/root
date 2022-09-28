@@ -116,7 +116,7 @@ function createSVGRenderer(as_is, precision, doc) {
 
 /** @ummary Define rendering kind which will be used for rendering of 3D elements
  * @param {value} [render3d] - preconfigured value, will be used if applicable
- * @returns {value} - rendering kind, see constants.Render3D
+ * @return {value} - rendering kind, see constants.Render3D
  * @private */
 function getRender3DKind(render3d) {
    if (!render3d) render3d = isBatchMode() ? settings.Render3DBatch : settings.Render3D;
@@ -132,7 +132,7 @@ let Handling3DDrawings = {
 
    /** @summary Access current 3d mode
      * @param {string} [new_value] - when specified, set new 3d mode
-     * @returns current value
+     * @return current value
      * @private */
    access3dKind(new_value) {
       let svg = this.getPadSvg();
@@ -220,7 +220,7 @@ let Handling3DDrawings = {
    },
 
    /** @summary Clear all 3D drawings
-     * @returns can3d value - how webgl canvas was placed
+     * @return can3d value - how webgl canvas was placed
      * @private */
    clear3dCanvas() {
       let can3d = this.access3dKind(null);
@@ -387,10 +387,10 @@ function assign3DHandler(painter) {
   * @param {value} height - rendering height
   * @param {value} render3d - render type, see {@link constants.Render3D}
   * @param {object} args - different arguments for creating 3D renderer
-  * @returns {Promise} with renderer object
+  * @return {Promise} with renderer object
   * @private */
 
-function createRender3D(width, height, render3d, args) {
+async function createRender3D(width, height, render3d, args) {
 
    let rc = constants.Render3D, promise, need_workaround = false, doc = getDocument();
 

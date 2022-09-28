@@ -93,7 +93,7 @@ function geoWarn(msg) {
  *  @desc  0 - TGeoNode
  *         1 - TEveGeoNode
  *        -1 - unsupported
- * @returns detected node kind
+ * @return detected node kind
  * @private */
 function getNodeKind(obj) {
    if ((obj === undefined) || (obj === null) || (typeof obj !== 'object')) return -1;
@@ -2007,15 +2007,95 @@ function createGeometry(shape, limit) {
    return limit < 0 ? 0 : null;
 }
 
+
+function makeEveGeometry(rnr_data /*, force */) {
+   const GL_TRIANGLES = 4; // same as in EVE7
+
+   if (rnr_data.idxBuff[0] != GL_TRIANGLES)  throw "Expect triangles first.";
+
+   let nVert = 3 * rnr_data.idxBuff[1]; // number of vertices to draw
+
+   if (rnr_data.idxBuff.length != nVert + 2) throw "Expect single list of triangles in index buffer.";
+
+   let body = new BufferGeometry();
+   body.setAttribute('position', new BufferAttribute(rnr_data.vtxBuff, 3));
+   body.setIndex(new BufferAttribute(rnr_data.idxBuff, 1));
+   body.setDrawRange(2, nVert);
+   // this does not work correctly - draw range ignored when calculating normals
+   // even worse - shift 2 makes complete logic wrong while wrong triangle are extracted
+   // Let see if it will be fixed https://github.com/mrdoob/three.js/issues/15560
+   if (typeof body.computeVertexNormalsIdxRange == 'function')
+      body.computeVertexNormalsIdxRange(2, nVert);
+
+   return body;
+}
+
+/** @summary Create single shape from provided raw data from web viewer.
+  * @desc If nsegm changed, shape will be recreated
+  * @private */
+function createServerGeometry(rd, nsegm) {
+
+   if (rd.server_shape && ((rd.nsegm === nsegm) || !rd.shape))
+      return rd.server_shape;
+
+   rd.nsegm = nsegm;
+
+   let g = null, off = 0;
+
+   if (rd.shape) {
+      // case when TGeoShape provided as is
+      g = createGeometry(rd.shape);
+   } else {
+
+      if (!rd.raw || (rd.raw.length==0)) {
+         console.error('No raw data at all');
+         return null;
+      }
+
+      if (!rd.raw.buffer) {
+         console.error('No raw buffer');
+         return null;
+      }
+
+      if (rd.sz[0]) {
+         rd.vtxBuff = new Float32Array(rd.raw.buffer, off, rd.sz[0]);
+         off += rd.sz[0]*4;
+      }
+
+      if (rd.sz[1]) {
+         rd.nrmBuff = new Float32Array(rd.raw.buffer, off, rd.sz[1]);
+         off += rd.sz[1]*4;
+      }
+
+      if (rd.sz[2]) {
+         rd.idxBuff = new Uint32Array(rd.raw.buffer, off, rd.sz[2]);
+         off += rd.sz[2]*4;
+      }
+
+      g = makeEveGeometry(rd);
+   }
+
+   // shape handle is similar to created in JSROOT.GeoPainter
+   return {
+      _typename: "$$Shape$$", // indicate that shape can be used as is
+      ready: true,
+      geom: g,
+      nfaces: numGeometryFaces(g)
+   }
+}
+
 /** @summary Provides info about geo object, used for tooltip info
   * @param {Object} obj - any kind of TGeo-related object like shape or node or volume
   * @private */
 function provideObjectInfo(obj) {
    let info = [], shape = null;
 
-   if (obj.fVolume !== undefined) shape = obj.fVolume.fShape; else
-   if (obj.fShape !== undefined) shape = obj.fShape; else
-   if ((obj.fShapeBits !== undefined) && (obj.fShapeId !== undefined)) shape = obj;
+   if (obj.fVolume !== undefined)
+      shape = obj.fVolume.fShape;
+   else if (obj.fShape !== undefined)
+      shape = obj.fShape;
+   else if ((obj.fShapeBits !== undefined) && (obj.fShapeId !== undefined))
+      shape = obj;
 
    if (!shape) {
       info.push(obj._typename);
@@ -2165,7 +2245,7 @@ function createFrustum(source) {
 }
 
 /** @summary Compares two stacks.
-  * @returns {Number} length where stacks are the same
+  * @return {Number} length where stacks are the same
   * @private */
 function compareStacks(stack1, stack2) {
    if (!stack1 || !stack2) return 0;
@@ -3242,6 +3322,40 @@ class ClonedNodes {
 
       return res;
    }
+
+   /** @summary Format REveGeomNode data to be able use it in list of clones
+     * @private */
+   static formatServerElement(elem) {
+      elem.kind = 2; // special element for geom viewer, used in TGeoPainter
+      elem.vis = 2; // visibility is alwys on
+      let m = elem.matr;
+      delete elem.matr;
+      if (!m?.length) return elem;
+
+      if (m.length == 16) {
+         elem.matrix = m;
+      } else {
+         let nm = elem.matrix = new Array(16);
+         for (let k = 0; k < 16; ++k) nm[k] = 0;
+         nm[0] = nm[5] = nm[10] = nm[15] = 1;
+
+         if (m.length == 3) {
+            // translation martix
+            nm[12] = m[0]; nm[13] = m[1]; nm[14] = m[2];
+         } else if (m.length == 4) {
+            // scale matrix
+            nm[0] = m[0]; nm[5] = m[1]; nm[10] = m[2]; nm[15] = m[3];
+         } else if (m.length == 9) {
+            // rotation matrix
+            nm[0] = m[0]; nm[4] = m[1]; nm[8] = m[2];
+            nm[1] = m[3]; nm[5] = m[4]; nm[9] = m[5];
+            nm[2] = m[6]; nm[6] = m[7]; nm[10] = m[8];
+         } else {
+            console.error(`wrong number of elements ${m.length} in the matrix`);
+         }
+      }
+      return elem;
+   }
 }
 
 /** @summary Create flipped mesh for the shape
@@ -3576,5 +3690,5 @@ function produceRenderOrder(toplevel, origin, method, clones) {
 export { kindGeo, kindEve, kindShape,
          geoCfg, geoBITS, ClonedNodes, isSameStack, checkDuplicates, getObjectName, testGeoBit, setGeoBit, toggleGeoBit,
          setInvisibleAll, countNumShapes, getNodeKind, produceRenderOrder, createFlippedMesh, cleanupShape,
-         createGeometry, numGeometryFaces, numGeometryVertices,
+         createGeometry, numGeometryFaces, numGeometryVertices, createServerGeometry,
          projectGeometry, countGeometryFaces, createFrustum, createProjectionMatrix, getBoundingBox, provideObjectInfo };

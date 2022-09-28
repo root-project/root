@@ -152,8 +152,8 @@ class TGraph2DPainter extends ObjectPainter {
    }
 
    /** @summary Actual drawing of TGraph2D object
-     * @returns {Promise} for drawing ready */
-   redraw() {
+     * @return {Promise} for drawing ready */
+   async redraw() {
 
       let main = this.getMainPainter(),
           fp = this.getFramePainter(),
@@ -161,7 +161,7 @@ class TGraph2DPainter extends ObjectPainter {
           step = 1;
 
       if (!graph || !main || !fp || !fp.mode3d)
-         return Promise.resolve(this);
+         return this;
 
       let countSelected = (zmin, zmax) => {
          let cnt = 0;
@@ -345,7 +345,7 @@ class TGraph2DPainter extends ObjectPainter {
    }
 
    /** @summary draw TGraph2D object */
-   static draw(dom, gr, opt) {
+   static async draw(dom, gr, opt) {
       let painter = new TGraph2DPainter(dom, gr);
       painter.decodeOptions(opt, gr);
 

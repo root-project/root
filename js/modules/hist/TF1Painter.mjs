@@ -112,18 +112,18 @@ class TF1Painter extends ObjectPainter {
 
       if (!force_use_save)
          for (let n = 0; n < np; n++) {
-            let xx = xmin + n*dx, yy = 0;
-            if (logx) xx = Math.exp(xx);
+            let x = xmin + n*dx, y = 0;
+            if (logx) x = Math.exp(x);
             try {
-               yy = tf1.evalPar(xx);
+               y = tf1.evalPar(x);
             } catch(err) {
                iserror = true;
             }
 
             if (iserror) break;
 
-            if (Number.isFinite(yy))
-               res.push({ x: xx, y: yy });
+            if (Number.isFinite(y))
+               res.push({ x, y });
          }
 
       // in the case there were points have saved and we cannot calculate function
@@ -145,12 +145,12 @@ class TF1Painter extends ObjectPainter {
          }
 
          for (let n = 0; n < np; ++n) {
-            let xx = use_histo ? tf1.$histo.fXaxis.GetBinCenter(bin+n+1) : xmin + dx*n;
+            let x = use_histo ? tf1.$histo.fXaxis.GetBinCenter(bin+n+1) : xmin + dx*n;
             // check if points need to be displayed at all, keep at least 4-5 points for Bezier curves
-            if ((gxmin !== gxmax) && ((xx + 2*dx < gxmin) || (xx - 2*dx > gxmax))) continue;
-            let yy = tf1.fSave[n];
+            if ((gxmin !== gxmax) && ((x + 2*dx < gxmin) || (x - 2*dx > gxmax))) continue;
+            let y = tf1.fSave[n];
 
-            if (Number.isFinite(yy)) res.push({ x : xx, y : yy });
+            if (Number.isFinite(y)) res.push({ x, y });
          }
       }
 
@@ -163,7 +163,7 @@ class TF1Painter extends ObjectPainter {
       let xmin = 0, xmax = 1, ymin = 0, ymax = 1,
           bins = this.createBins(true);
 
-      if (bins && (bins.length > 0)) {
+      if (bins?.length) {
 
          xmin = xmax = bins[0].x;
          ymin = ymax = bins[0].y;
@@ -251,7 +251,7 @@ class TF1Painter extends ObjectPainter {
 
       res.changed = gbin.property("current_bin") !== best;
       res.menu = res.exact;
-      res.menu_dist = Math.sqrt((bin.grx-pnt.x)**2 + (bin.gry-pnt.y)**2);
+      res.menu_dist = Math.sqrt((bin.grx - pnt.x)**2 + (bin.gry - pnt.y)**2);
 
       if (res.changed)
          gbin.attr("cx", bin.grx)
@@ -259,12 +259,12 @@ class TF1Painter extends ObjectPainter {
              .property("current_bin", best);
 
       let name = this.getObjectHint();
-      if (name.length > 0) res.lines.push(name);
+      if (name) res.lines.push(name);
 
       let pmain = this.getFramePainter(),
           funcs = pmain?.getGrFuncs(this.second_x, this.second_y);
       if (funcs)
-         res.lines.push("x = " + funcs.axisAsText("x",bin.x) + " y = " + funcs.axisAsText("y",bin.y));
+         res.lines.push(`x = ${funcs.axisAsText("x",bin.x)} y = ${funcs.axisAsText("y",bin.y)}`);
 
       return res;
    }
@@ -309,22 +309,22 @@ class TF1Painter extends ObjectPainter {
 
          if (!this.lineatt.empty())
             this.draw_g.append("svg:path")
-               .attr("class", "line")
-               .attr("d", path.path)
-               .style("fill", "none")
-               .call(this.lineatt.func);
+                .attr("class", "line")
+                .attr("d", path.path)
+                .style("fill", "none")
+                .call(this.lineatt.func);
 
          if (!this.fillatt.empty())
             this.draw_g.append("svg:path")
-               .attr("class", "area")
-               .attr("d", path.path + path.close)
-               .call(this.fillatt.func);
+                .attr("class", "area")
+                .attr("d", path.path + path.close)
+                .call(this.fillatt.func);
       }
    }
 
    /** @summary Checks if it makes sense to zoom inside specified axis range */
    canZoomInside(axis,min,max) {
-      if (axis!=="x") return false;
+      if (axis !== "x") return false;
 
       let tf1 = this.getObject();
 
@@ -343,7 +343,7 @@ class TF1Painter extends ObjectPainter {
    }
 
    /** @summary draw TF1 object */
-   static draw(dom, tf1, opt) {
+   static async draw(dom, tf1, opt) {
       let painter = new TF1Painter(dom, tf1, opt),
           d = new DrawOptions(opt),
           has_main = !!painter.getMainPainter(),

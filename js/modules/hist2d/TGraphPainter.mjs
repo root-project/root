@@ -33,8 +33,8 @@ class TGraphPainter extends ObjectPainter {
 
    /** @summary Redraw graph
      * @desc may redraw histogram which was used to draw axes
-     * @returns {Promise} for ready */
-   redraw() {
+     * @return {Promise} for ready */
+   async redraw() {
       let promise = Promise.resolve(true);
 
       if (this.$redraw_hist) {
@@ -724,15 +724,14 @@ class TGraphPainter extends ObjectPainter {
 
       if (options.Mark) {
          // for tooltips use markers only if nodes were not created
-         let path = "", pnt, grx, gry;
-
          this.createAttMarker({ attr: graph, style: options.Mark - 100 });
 
          this.marker_size = this.markeratt.getFullSize();
 
          this.markeratt.resetPos();
 
-         let want_tooltip = !isBatchMode() && settings.Tooltip && (!this.markeratt.fill || (this.marker_size < 7)) && !nodes && main_block,
+         let path = "", pnt, grx, gry,
+             want_tooltip = !isBatchMode() && settings.Tooltip && (!this.markeratt.fill || (this.marker_size < 7)) && !nodes && main_block,
              hints_marker = "", hsz = Math.max(5, Math.round(this.marker_size*0.7)),
              maxnummarker = 1000000 / (this.markeratt.getMarkerLength() + 7), step = 1; // let produce SVG at maximum 1MB
 
@@ -762,9 +761,9 @@ class TGraphPainter extends ObjectPainter {
          }
          if (want_tooltip && hints_marker)
             draw_g.append("svg:path")
-                .attr("d", hints_marker)
-                .style("fill", "none")
-                .style("pointer-events", "visibleFill");
+                  .attr("d", hints_marker)
+                  .style("fill", "none")
+                  .style("pointer-events", "visibleFill");
       }
    }
 
@@ -936,9 +935,10 @@ class TGraphPainter extends ObjectPainter {
                   lines: this.getTooltips(d),
                   rect: best, d3bin: findbin };
 
-       res.user_info = { obj: gr,  name: gr.fName, bin: d.indx, cont: d.y, grx: d.grx1, gry: d.gry1 };
+       res.user_info = { obj: gr, name: gr.fName, bin: d.indx, cont: d.y, grx: d.grx1, gry: d.gry1 };
 
-      if (this.fillatt && this.fillatt.used && !this.fillatt.empty()) res.color2 = this.fillatt.getFillColor();
+      if (this.fillatt && this.fillatt.used && !this.fillatt.empty())
+         res.color2 = this.fillatt.getFillColor();
 
       if (best.exact) res.exact = true;
       res.menu = res.exact; // activate menu only when exactly locate bin
@@ -1003,7 +1003,7 @@ class TGraphPainter extends ObjectPainter {
          grx = funcs.grx(bin.x);
          gry = funcs.gry(bin.y);
 
-         dist = (pnt.x-grx)*(pnt.x-grx) + (pnt.y-gry)*(pnt.y-gry);
+         dist = (pnt.x-grx)**2 + (pnt.y-gry)**2;
 
          if (dist < bestdist) {
             bestdist = dist;
@@ -1032,7 +1032,7 @@ class TGraphPainter extends ObjectPainter {
 
          bestdist = 1e10;
 
-         const IsInside = (x, x1, x2) => ((x1>=x) && (x>=x2)) || ((x1<=x) && (x<=x2));
+         const IsInside = (x, x1, x2) => ((x1 >= x) && (x >= x2)) || ((x1 <= x) && (x <= x2));
 
          let bin0 = this.bins[0], grx0 = funcs.grx(bin0.x), gry0, posy = 0;
          for (n = 1; n < this.bins.length; ++n) {
@@ -1104,7 +1104,7 @@ class TGraphPainter extends ObjectPainter {
                   lines: this.getTooltips(best.bin),
                   usepath: true };
 
-      res.user_info = { obj: gr,  name: gr.fName, bin: 0, cont: 0, grx: res.x, gry: res.y };
+      res.user_info = { obj: gr, name: gr.fName, bin: 0, cont: 0, grx: res.x, gry: res.y };
 
       res.ismark = ismark;
       res.islines = islines;
@@ -1445,13 +1445,13 @@ class TGraphPainter extends ObjectPainter {
    }
 
    /** @summary method draws next function from the functions list
-     * @returns {Promise} */
-   drawNextFunction(indx) {
+     * @return {Promise} */
+   async drawNextFunction(indx) {
 
       let graph = this.getObject();
 
       if (indx >= (graph?.fFunctions?.arr?.length || 0))
-         return Promise.resolve(this);
+         return this;
 
       let pp = this.getPadPainter(),
           func = graph.fFunctions.arr[indx],
@@ -1466,14 +1466,14 @@ class TGraphPainter extends ObjectPainter {
 
    /** @summary Draw axis histogram
      * @private */
-   drawAxisHisto() {
+   async drawAxisHisto() {
       let histo = this.createHistogram();
       return TH1Painter.draw(this.getDom(), histo, this.options.Axis)
    }
 
    /** @summary Draw TGraph
      * @private */
-   static _drawGraph(painter, opt) {
+   static async _drawGraph(painter, opt) {
       painter.decodeOptions(opt, true);
       painter.createBins();
       painter.createStat();
@@ -1497,7 +1497,7 @@ class TGraphPainter extends ObjectPainter {
       }).then(() => painter.drawNextFunction(0));
    }
 
-   static draw(dom, graph, opt) {
+   static async draw(dom, graph, opt) {
       return TGraphPainter._drawGraph(new TGraphPainter(dom, graph), opt);
    }
 

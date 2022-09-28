@@ -2,7 +2,9 @@
 
 ## Changes in dev
 1. Force MathJax rendering when `\` symbol is found (#243)
-2. Fix - use alfa channel for TColor when intended
+2. Fix - use alpha channel for TColor when intended
+3. Fix - show correct bin index in TH2 tooltips
+4. Mark methods returning `Promise` objects as **async**
 
 
 ## Changes in 7.2.0

@@ -101,7 +101,7 @@ exports.settings = workaround_settings;
   *    - 'hierarchy' hierarchy browser
   *    - 'openui5' OpenUI5 and related functionality
   * @param {Array|string} req - list of required components (as array or string separated by semicolon)
-  * @returns {Promise} with array of requirements (or single element) */
+  * @return {Promise} with array of requirements (or single element) */
 
 function v6_require(need) {
    if (!need)

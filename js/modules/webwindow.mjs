@@ -250,7 +250,7 @@ class WebWindowHandle {
    /** @summary Returns arguments specified in the RWebWindow::SetUserArgs() method
      * @desc Can be any valid JSON expression. Undefined by default.
      * @param {string} [field] - if specified and user args is object, returns correspondent object member
-     * @returns user arguments object */
+     * @return user arguments object */
    getUserArgs(field) {
       if (field && (typeof field == 'string'))
          return (this.user_args && (typeof this.user_args == 'object')) ? this.user_args[field] : undefined;
@@ -371,7 +371,7 @@ class WebWindowHandle {
 
    /** @summary Checks number of credits for send operation
      * @param {number} [numsend = 1] - number of required send operations
-     * @returns true if one allow to send specified number of text message to server */
+     * @return true if one allow to send specified number of text message to server */
    canSend(numsend) { return this.cansend >= (numsend || 1); }
 
    /** @summary Returns number of possible send operations relative to number of credits */
@@ -636,8 +636,8 @@ class WebWindowHandle {
   * @param {object} arg.receiver - instance of receiver for websocket events, allows to initiate connection immediately
   * @param {string} [arg.first_recv] - required prefix in the first message from RWebWindow, remain part of message will be returned in handle.first_msg
   * @param {string} [arg.href] - URL to RWebWindow, using window.location.href by default
-  * @returns {Promise} ready-to-use {@link WebWindowHandle} instance  */
-function connectWebWindow(arg) {
+  * @return {Promise} for ready-to-use {@link WebWindowHandle} instance  */
+async function connectWebWindow(arg) {
 
    if (typeof arg == 'function')
       arg = { callback: arg };
