@@ -52,7 +52,7 @@ TDrawSelector.prototype.ShowProgress = function(value) {
 
 /** @summary Draw result of tree drawing
   * @private */
-function drawTreeDrawResult(dom, obj, opt) {
+async function drawTreeDrawResult(dom, obj, opt) {
 
    let typ = obj._typename;
 
@@ -74,7 +74,7 @@ function drawTreeDrawResult(dom, obj, opt) {
 
 /** @summary Handle callback function with progress of tree draw
   * @private */
-function treeDrawProgress(obj, final) {
+async function treeDrawProgress(obj, final) {
 
    // no need to update drawing if previous is not yet completed
    if (!final && !this.last_pr)
@@ -85,7 +85,7 @@ function treeDrawProgress(obj, final) {
       if (isBatchMode()) {
          let painter = new BasePainter(this.drawid);
          painter.selectDom().property("_json_object_", obj);
-         return Promise.resolve(painter);
+         return painter;
       }
       if (typeof internals.drawInspector == 'function')
          return internals.drawInspector(this.drawid, obj);
@@ -378,7 +378,7 @@ function drawLeafPlayer(hpainter, itemname) {
   * @desc just envelope for real TTree::Draw method which do the main job
   * Can be also used for the branch and leaf object
   * @private */
-function drawTree(dom, obj, opt) {
+async function drawTree(dom, obj, opt) {
 
    let tree = obj, args = opt;
 
@@ -454,7 +454,7 @@ function drawTree(dom, obj, opt) {
    } else if (args.expr || args.branch) {
       pr = treeDraw(tree, args);
    } else
-      return Promise.resolve(painter);
+      return painter;
 
    return pr.then(res => args.progress(res, true));
 }

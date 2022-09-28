@@ -13,7 +13,15 @@ import { TPadPainter } from './gpad/TPadPainter.mjs';
 // v7 namespace prefix
 const _v7 = "ROOT::Experimental::";
 
-function import_more() { return import('./draw/more.mjs'); }
+async function import_more() { return import('./draw/more.mjs'); }
+
+async function import_geo() {
+   return import('./geom/TGeoPainter.mjs').then(geo => {
+      let handle = getDrawHandle('ROOT.TGeoVolumeAssembly');
+      if (handle) handle.icon = 'img_geoassembly';
+      return geo;
+   });
+}
 
 // list of registered draw functions
 const drawFuncs = { lst: [
@@ -90,14 +98,14 @@ const drawFuncs = { lst: [
    { name: "TPolyMarker", icon: 'img_graph', draw: () => import_more().then(h => h.drawPolyMarker), direct: true },
    { name: "TASImage", icon: 'img_mgraph', class: () => import('./draw/TASImagePainter.mjs').then(h => h.TASImagePainter), opt: ";z" },
    { name: "TJSImage", icon: 'img_mgraph', draw: () => import_more().then(h => h.drawJSImage), opt: ";scale;center" },
-   { name: "TGeoVolume", icon: 'img_histo3d', class: () => import('./geom/TGeoPainter.mjs').then(h => h.TGeoPainter), get_expand: () => import('./geom/TGeoPainter.mjs').then(h => h.expandGeoObject), opt: ";more;all;count;projx;projz;wire;no_screen;dflt", ctrl: "dflt" },
+   { name: "TGeoVolume", icon: 'img_histo3d', class: () => import_geo().then(h => h.TGeoPainter), get_expand: () => import_geo().then(h => h.expandGeoObject), opt: ";more;all;count;projx;projz;wire;no_screen;dflt", ctrl: "dflt" },
    { name: "TEveGeoShapeExtract", sameas: "TGeoVolume", opt: ";more;all;count;projx;projz;wire;dflt" },
    { name: _v7+"REveGeoShapeExtract", sameas: "TGeoVolume", opt: ";more;all;count;projx;projz;wire;dflt" },
    { name: "TGeoOverlap", sameas: "TGeoVolume", opt: ";more;all;count;projx;projz;wire;dflt", dflt: "dflt", ctrl: "expand" },
    { name: "TGeoManager", sameas: "TGeoVolume", opt: ";more;all;count;projx;projz;wire;tracks;no_screen;dflt", dflt: "expand", ctrl: "dflt" },
-   { name: "TGeoVolumeAssembly", sameas: "TGeoVolume", icon: 'img_geoassembly', opt: ";more;all;count" },
-   { name: /^TGeo/, class: () => import('./geom/TGeoPainter.mjs').then(h => h.TGeoPainter), get_expand: () => import('./geom/TGeoPainter.mjs').then(h => h.expandGeoObject), opt: ";more;all;axis;compa;count;projx;projz;wire;no_screen;dflt", dflt: "dflt", ctrl: "expand" },
-   { name: "TAxis3D", icon: 'img_graph', draw: () => import('./geom/TGeoPainter.mjs').then(h => h.drawAxis3D), direct: true },
+   { name: "TGeoVolumeAssembly", sameas: "TGeoVolume", /* icon: 'img_geoassembly', */ opt: ";more;all;count" },
+   { name: /^TGeo/, class: () => import_geo().then(h => h.TGeoPainter), get_expand: () => import_geo().then(h => h.expandGeoObject), opt: ";more;all;axis;compa;count;projx;projz;wire;no_screen;dflt", dflt: "dflt", ctrl: "expand" },
+   { name: "TAxis3D", icon: 'img_graph', draw: () => import_geo().then(h => h.drawAxis3D), direct: true },
    // these are not draw functions, but provide extra info about correspondent classes
    { name: "kind:Command", icon: "img_execute", execute: true },
    { name: "TFolder", icon: "img_folder", icon2: "img_folderopen", noinspect: true, get_expand: () => import('./gui/HierarchyPainter.mjs').then(h => h.folderHierarchy) },
@@ -286,14 +294,14 @@ function setDefaultDrawOpt(classname, opt) {
   * @param {string|object} dom - id of div element to draw or directly DOMElement
   * @param {object} obj - object to draw, object type should be registered before with {@link addDrawFunc}
   * @param {string} opt - draw options separated by space, comma or semicolon
-  * @returns {Promise} with painter object
+  * @return {Promise} with painter object
   * @public
   * @desc An extensive list of support draw options can be found on [examples page]{@link https://root.cern/js/latest/examples.htm}
   * @example
   * let file = await openFile("https://root.cern/js/files/hsimple.root");
   * let obj = await file.readObject("hpxpy;1");
   * await draw("drawing", obj, "colz;logx;gridx;gridy"); */
-function draw(dom, obj, opt) {
+async function draw(dom, obj, opt) {
 
    if (!obj || (typeof obj !== 'object'))
       return Promise.reject(Error('not an object in draw call'));
@@ -316,7 +324,7 @@ function draw(dom, obj, opt) {
       return Promise.reject(Error(`Object of ${type_info} cannot be shown with draw`));
 
    if (handle.dummy)
-      return Promise.resolve(null);
+      return null;
 
    if (handle.draw_field && obj[handle.draw_field])
       return draw(dom, obj[handle.draw_field], opt || handle.draw_field_opt);
@@ -406,11 +414,11 @@ function draw(dom, obj, opt) {
   * @param {string|object} dom - id of div element to draw or directly DOMElement
   * @param {object} obj - object to draw, object type should be registered before with {@link addDrawFunc}
   * @param {string} opt - draw options
-  * @returns {Promise} with painter object
+  * @return {Promise} with painter object
   * @desc If drawing was not done before, it will be performed with {@link draw}.
   * Otherwise drawing content will be updated
   * @public */
-function redraw(dom, obj, opt) {
+async function redraw(dom, obj, opt) {
 
    if (!obj || (typeof obj !== 'object'))
       return Promise.reject(Error('not an object in redraw'));
@@ -513,8 +521,8 @@ function addStreamerInfosForPainter(lst) {
   * @param {string} [args.option] - draw options
   * @param {number} [args.width = 1200] - image width
   * @param {number} [args.height = 800] - image height
-  * @returns {Promise} with svg code */
-function makeSVG(args) {
+  * @return {Promise} with svg code */
+async function makeSVG(args) {
 
    if (!args) args = {};
    if (!args.object) return Promise.reject(Error("No object specified to generate SVG"));

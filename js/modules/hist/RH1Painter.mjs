@@ -50,7 +50,7 @@ class RH1Painter extends RH1Painter2D {
    }
 
       /** @summary draw RH1 object */
-   static draw(dom, histo, opt) {
+   static async draw(dom, histo, opt) {
       return RH1Painter._draw(new RH1Painter(dom, histo), opt);
    }
 

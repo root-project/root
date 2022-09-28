@@ -134,7 +134,7 @@ class TArrowPainter extends ObjectPainter {
    }
 
    /** @summary Draw TArrow object */
-   static draw(dom, obj, opt) {
+   static async draw(dom, obj, opt) {
       let painter = new TArrowPainter(dom, obj,opt);
       return ensureTCanvas(painter, false).then(() => painter.redraw());
    }

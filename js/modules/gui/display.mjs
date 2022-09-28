@@ -1324,11 +1324,11 @@ class BrowserLayout {
    }
 
    /** @summary Creates status line */
-   createStatusLine(height, mode) {
+   async createStatusLine(height, mode) {
 
       let main = d3_select("#"+this.gui_div+" .jsroot_browser");
       if (main.empty())
-         return Promise.resolve('');
+         return "";
 
       let id = this.gui_div + "_status",
           line = d3_select("#"+id),
@@ -1340,7 +1340,7 @@ class BrowserLayout {
 
       if (is_visible) {
          if (mode === true)
-            return Promise.resolve(id);
+            return id;
 
          let hsepar = main.select(".jsroot_h_separator");
 
@@ -1356,11 +1356,11 @@ class BrowserLayout {
          }
 
          this.adjustSeparators(null, 0, true);
-         return Promise.resolve("");
+         return "";
       }
 
       if (mode === false)
-         return Promise.resolve("");
+         return "";
 
       let left_pos = d3_select("#" + this.gui_div + "_drawing").style('left');
 
@@ -1397,7 +1397,7 @@ class BrowserLayout {
       this.adjustSeparators(null, height, true);
 
       if (this.status_layout == "app")
-         return Promise.resolve(id);
+         return id;
 
       this.status_layout = new GridDisplay(id, 'horizx4_1213');
 
@@ -1409,7 +1409,7 @@ class BrowserLayout {
 
       internals.showStatus = this.status_handler = this.showStatus.bind(this);
 
-      return Promise.resolve(id);
+      return id;
    }
 
    /** @summary Adjust separator positions */
@@ -1589,14 +1589,14 @@ class BrowserLayout {
    }
 
    /** @summary Toggle browser kind */
-   toggleBrowserKind(kind) {
+   async toggleBrowserKind(kind) {
 
       if (!this.gui_div)
-         return Promise.resolve(null);
+         return null;
 
       if (!kind) {
          if (!this.browser_kind)
-            return Promise.resolve(null);
+            return null;
          kind = (this.browser_kind === "float") ? "fix" : "float";
       }
 
@@ -1702,7 +1702,7 @@ class BrowserLayout {
 
       this.setButtonsPosition();
 
-      return Promise.resolve(this);
+      return this;
    }
 
 } // class BrowserLayout

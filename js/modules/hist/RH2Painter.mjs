@@ -72,7 +72,7 @@ class RH2Painter extends RH2Painter2D {
    }
 
       /** @summary draw RH2 object */
-   static draw(dom, obj, opt) {
+   static async draw(dom, obj, opt) {
       // create painter and add it to canvas
       return RH2Painter._draw(new RH2Painter(dom, obj), opt);
    }

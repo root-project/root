@@ -182,12 +182,12 @@ class RH3Painter extends RHistPainter {
 
       lines.push(this.getObjectHint());
 
-      lines.push("x = " + this.getAxisBinTip("x", ix, dx) + "  xbin=" + ix);
-      lines.push("y = " + this.getAxisBinTip("y", iy, dy) + "  ybin=" + iy);
-      lines.push("z = " + this.getAxisBinTip("z", iz, dz) + "  zbin=" + iz);
+      lines.push(`x = ${this.getAxisBinTip("x", ix, dx)}  xbin=${ix+1}`);
+      lines.push(`y = ${this.getAxisBinTip("y", iy, dy)}  ybin=${iy+1}`);
+      lines.push(`z = ${this.getAxisBinTip("z", iz, dz)}  zbin=${iz+1}`);
 
       let binz = histo.getBinContent(ix+1, iy+1, iz+1),
-          lbl = "entries = "+ ((dx>1) || (dy>1) || (dz>1) ? "~" : "");
+          lbl = "entries = "+ ((dx > 1) || (dy > 1) || (dz > 1) ? "~" : "");
       if (binz === Math.round(binz))
          lines.push(lbl + binz);
       else
@@ -198,7 +198,7 @@ class RH3Painter extends RHistPainter {
 
    /** @summary Try to draw 3D histogram as scatter plot
      * @desc If there are too many points, returns promise with false */
-   draw3DScatter(handle) {
+   async draw3DScatter(handle) {
 
       let histo = this.getHisto(),
           main = this.getFramePainter(),
@@ -208,7 +208,7 @@ class RH3Painter extends RHistPainter {
           i, j, k, bin_content;
 
       if ((i2 <= i1) || (j2 <= j1) || (k2 <= k1))
-         return Promise.resolve(true);
+         return true;
 
       // scale down factor if too large values
       let coef = (this.gmaxbin > 1000) ? 1000/this.gmaxbin : 1,
@@ -227,7 +227,7 @@ class RH3Painter extends RHistPainter {
 
       // too many pixels - use box drawing
       if (numpixels > (main.webgl ? 100000 : 30000))
-         return Promise.resolve(false);
+         return false;
 
       let pnts = new PointsCreator(numpixels, main.webgl, main.size_x3d/200),
           bins = new Int32Array(numpixels), nbin = 0,
@@ -527,8 +527,8 @@ class RH3Painter extends RHistPainter {
          let all_bins_buffgeom = new BufferGeometry();
 
          // Create mesh from bin buffergeometry
-         all_bins_buffgeom.setAttribute('position', new BufferAttribute( bin_verts[nseq], 3 ) );
-         all_bins_buffgeom.setAttribute('normal', new BufferAttribute( bin_norms[nseq], 3 ) );
+         all_bins_buffgeom.setAttribute('position', new BufferAttribute(bin_verts[nseq], 3));
+         all_bins_buffgeom.setAttribute('normal', new BufferAttribute(bin_norms[nseq], 3));
 
          if (use_colors) fillcolor = palette.getColor(ncol);
 
@@ -732,7 +732,7 @@ class RH3Painter extends RHistPainter {
    }
 
    /** @summary draw RH3 object */
-  static draw(dom, histo /*, opt*/) {
+  static async draw(dom, histo /*, opt*/) {
       let painter = new RH3Painter(dom, histo);
       painter.mode3d = true;
 

@@ -288,7 +288,7 @@ class TH1Painter extends THistPainter {
           bars = "", barsl = "", barsr = "",
           side = (this.options.BarStyle > 10) ? this.options.BarStyle % 10 : 0;
 
-      if (side>4) side = 4;
+      if (side > 4) side = 4;
       gry2 = pmain.swap_xy ? 0 : height;
       if (Number.isFinite(this.options.BaseLine))
          if (this.options.BaseLine >= funcs.scale_ymin)
@@ -394,8 +394,8 @@ class TH1Painter extends THistPainter {
          gry1 = Math.round(funcs.gry(y + yerr));
          gry2 = Math.round(funcs.gry(y - yerr));
 
-         bins1.push({ grx:grx, gry: gry1 });
-         bins2.unshift({ grx:grx, gry: gry2 });
+         bins1.push({ grx, gry: gry1 });
+         bins2.unshift({ grx, gry: gry2 });
       }
 
       let kind = (this.options.ErrorKind === 4) ? "bezier" : "line",
@@ -408,7 +408,7 @@ class TH1Painter extends THistPainter {
    }
 
    /** @summary Draw TH1 bins in SVG element
-     * @returns Promise or scalar value */
+     * @return Promise or scalar value */
    draw1DBins() {
 
       this.createHistDrawAttributes();
@@ -758,7 +758,7 @@ class TH1Painter extends THistPainter {
             tips.push("error y = " + histo.getBinError(bin + 1).toPrecision(4));
          }
       } else {
-         tips.push("bin = " + (bin+1));
+         tips.push(`bin = ${bin+1}`);
          tips.push("x = " + xlbl);
          if (histo['$baseh']) cont -= histo['$baseh'].getBinContent(bin+1);
          if (cont === Math.round(cont))
@@ -1112,7 +1112,7 @@ class TH1Painter extends THistPainter {
    }
 
    /** @summary Call drawing function depending from 3D mode */
-   callDrawFunc(reason) {
+   async callDrawFunc(reason) {
 
       let main = this.getMainPainter(),
           fp = this.getFramePainter();
@@ -1124,8 +1124,8 @@ class TH1Painter extends THistPainter {
    }
 
    /** @summary Performs 2D drawing of histogram
-     * @returns {Promise} when ready */
-   draw2D(/* reason */) {
+     * @return {Promise} when ready */
+   async draw2D(/* reason */) {
       this.clear3DScene();
 
       this.scanContent(true);
@@ -1143,8 +1143,8 @@ class TH1Painter extends THistPainter {
 
    /** @summary Should performs 3D drawing of histogram
      * @desc Disable in 2D case, just draw with default options
-     * @returns {Promise} when ready */
-   draw3D(reason) {
+     * @return {Promise} when ready */
+   async draw3D(reason) {
       console.log('3D drawing is disabled, load ./hist/TH1Painter.mjs');
       return this.draw2D(reason);
    }
@@ -1155,8 +1155,8 @@ class TH1Painter extends THistPainter {
    }
 
    /** @summary draw TH1 object */
-   static draw(dom, histo, opt) {
-      return TH1Painter._drawHist(new TH1Painter(dom, histo), opt);
+   static async draw(dom, histo, opt) {
+      return THistPainter._drawHist(new TH1Painter(dom, histo), opt);
    }
 
 } // class TH1Painter

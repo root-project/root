@@ -248,18 +248,18 @@ class RHistPainter extends RObjectPainter {
    }
 
    /** @summary Draw axes */
-   drawFrameAxes() {
+   async drawFrameAxes() {
       // return true when axes was drawn
       let main = this.getFramePainter();
       if (!main)
-         return Promise.resolve(false);
+         return false;
 
       if (!this.draw_content)
-         return Promise.resolve(true);
+         return true;
 
       if (!this.isMainPainter()) {
          if (!this.options.second_x && !this.options.second_y)
-            return Promise.resolve(true);
+            return true;
 
          main.setAxes2Ranges(this.options.second_x, this.getAxis("x"), this.xmin, this.xmax, this.options.second_y, this.getAxis("y"), this.ymin, this.ymax);
          return main.drawAxes2(this.options.second_x, this.options.second_y);
@@ -428,8 +428,8 @@ class RHistPainter extends RObjectPainter {
    }
 
    /** @summary Special method to request bins from server if existing data insufficient
-     * @returns {Promise} when ready */
-   drawingBins(reason) {
+     * @return {Promise} when ready */
+   async drawingBins(reason) {
 
       let is_axes_zoomed = false;
       if (reason && (typeof reason == "string") && (reason.indexOf("zoom") == 0)) {
@@ -458,13 +458,12 @@ class RHistPainter extends RObjectPainter {
             });
       }
 
-      return Promise.resolve(true);
+      return true;
    }
 
    /** @summary Toggle stat box drawing
      * @desc Not yet implemented */
-   toggleStat(/*arg*/) {
-   }
+   toggleStat(/*arg*/) {}
 
    /** @summary get selected index for axis */
    getSelectIndex(axis, size, add) {

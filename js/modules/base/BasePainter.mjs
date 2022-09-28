@@ -63,7 +63,7 @@ function getAbsPosInCanvas(sel, pos) {
   * @param {number} value - value to convert
   * @param {string} [fmt="6.4g"] - format can be like 5.4g or 4.2e or 6.4f
   * @param {boolean} [ret_fmt] - when true returns array with value and actual format like ["0.1","6.4f"]
-  * @returns {string|Array} - converted value or array with value and actual format
+  * @return {string|Array} - converted value or array with value and actual format
   * @private */
 function floatToString(value, fmt, ret_fmt) {
    if (!fmt) fmt = "6.4g";
@@ -417,7 +417,7 @@ class BasePainter {
    /** @summary Selects main HTML element assigned for drawing
      * @desc if main element was layouted, returns main element inside layout
      * @param {string} [is_direct] - if 'origin' specified, returns original element even if actual drawing moved to some other place
-     * @returns {object} d3.select object for main element for drawing */
+     * @return {object} d3.select object for main element for drawing */
    selectDom(is_direct) {
 
       if (!this.divid) return d3_select(null);
@@ -498,14 +498,14 @@ class BasePainter {
    }
 
    /** @summary Checks if draw elements were resized and drawing should be updated
-     * @returns {boolean} true if resize was detected
+     * @return {boolean} true if resize was detected
      * @protected
      * @abstract */
    checkResize(/* arg */) {}
 
    /** @summary Function checks if geometry of main div was changed.
      * @desc take into account enlarge state, used only in PadPainter class
-     * @returns size of area when main div is drawn
+     * @return size of area when main div is drawn
      * @private */
    testMainResize(check_level, new_size, height_factor) {
 
@@ -650,9 +650,9 @@ class BasePainter {
 } // class BasePainter
 
 /** @summary Load and initialize JSDOM from nodes
-  * @returns {Promise} with d3 selection for d3_body
+  * @return {Promise} with d3 selection for d3_body
    * @private */
-function _loadJSDOM() {
+async function _loadJSDOM() {
    return import("jsdom").then(handle => {
 
       if (!internals.nodejs_window) {

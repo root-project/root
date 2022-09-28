@@ -286,7 +286,7 @@ function getBranchObjectClass(branch, tree, with_clones = false, with_leafs = fa
 
 /** @summary Get branch with specified id
   * @desc All sub-branches checked as well
-  * @returns {Object} branch
+  * @return {Object} branch
   * @private */
 function getTreeBranch(tree, id) {
    if (!Number.isInteger(id)) return;
@@ -307,7 +307,7 @@ function getTreeBranch(tree, id) {
 /** @summary Special branch search
   * @desc Name can include extra part, which will be returned in the result
   * @param {string} name - name of the branch
-  * @returns {Object} with "branch" and "rest" members
+  * @return {Object} with "branch" and "rest" members
   * @private */
 function findBranchComplex(tree, name, lst = undefined, only_search = false) {
 
@@ -369,7 +369,7 @@ function findBranchComplex(tree, name, lst = undefined, only_search = false) {
 
 /** @summary Search branch with specified name
   * @param {string} name - name of the branch
-  * @returns {Object} found branch
+  * @return {Object} found branch
   * @private */
 function findBranch(tree, name) {
    let res = findBranchComplex(tree, name, tree.fBranches, true);
@@ -379,7 +379,7 @@ function findBranch(tree, name) {
 
 /** @summary Returns number of branches in the TTree
   * @desc Checks also sub-branches in the branches
-  * @returns {number} number of branches
+  * @return {number} number of branches
   * @private */
 function getNumBranches(tree) {
    function count(obj) {
@@ -1495,8 +1495,8 @@ function detectBranchMemberClass(brlst, prefix, start) {
   * @param {object} [args] - different arguments
   * @param {number} [args.firstentry] - first entry to process, 0 when not specified
   * @param {number} [args.numentries] - number of entries to process, all when not specified
-  * @returns {Promise} with TSelector instance */
-function treeProcess(tree, selector, args) {
+  * @return {Promise} with TSelector instance */
+async function treeProcess(tree, selector, args) {
    if (!args) args = {};
 
    if (!selector || !tree.$file || !selector.numBranches()) {
@@ -2525,8 +2525,8 @@ function treeProcess(tree, selector, args) {
   * @param {number} [args.numentries=undefined] - number of entries to process, all by default
   * @param {object} [args.branch=undefined] - TBranch object from TTree itself for the direct drawing
   * @param {function} [args.progress=undefined] - function called during histogram accumulation with argument { obj: draw_object, opt: draw_options }
-  * @returns {Promise} with object like { obj: draw_object, opt: draw_options } */
-function treeDraw(tree, args) {
+  * @return {Promise} with object like { obj: draw_object, opt: draw_options } */
+async function treeDraw(tree, args) {
 
    if (typeof args === 'string') args = { expr: args };
 
