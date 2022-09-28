@@ -156,7 +156,7 @@ std::vector<int> REveGeomViewer::GetStackFromJson(const std::string &json, bool 
 void REveGeomViewer::SendGeometry(unsigned connid)
 {
    if (!fDesc.HasDrawData())
-      fDesc.CollectVisibles();
+      fDesc.ProduceDrawData();
 
    auto &json = fDesc.GetDrawJson();
 
