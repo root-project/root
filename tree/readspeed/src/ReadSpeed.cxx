@@ -292,12 +292,8 @@ Result ReadSpeed::EvalThroughputMT(const Data &d, unsigned nThreads)
    const auto fileBranchNames = GetPerFileBranchNames(d);
 
    ROOT::Internal::RSlotStack slotStack(actualThreads);
-   std::vector<int> lastFileIdxs;
-   std::vector<std::unique_ptr<TFile>> lastTFiles;
-   for (unsigned int i = 0; i < actualThreads; ++i) {
-      lastFileIdxs.push_back(-1);
-      lastTFiles.push_back(std::make_unique<TFile>());
-   }
+   std::vector<int> lastFileIdxs(actualThreads, -1);
+   std::vector<std::unique_ptr<TFile>> lastTFiles(actualThreads);
 
    auto processFile = [&](int fileIdx) {
       const auto &fileName = d.fFileNames[fileIdx];
