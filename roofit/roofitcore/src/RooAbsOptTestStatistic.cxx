@@ -61,6 +61,8 @@ parallelized calculation of test statistics.
 #include "RooVectorDataStore.h"
 #include "RooBinSamplingPdf.h"
 
+#include "ROOT/StringUtils.hxx"
+
 using namespace std;
 
 ClassImp(RooAbsOptTestStatistic);
@@ -290,16 +292,27 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   // ******************************************************************
 
   std::unique_ptr<RooArgSet> origObsSet( real.getObservables(indata) );
-  RooArgSet* dataObsSet = (RooArgSet*) _dataClone->get() ;
   if (rangeName && strlen(rangeName)) {
     cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName() << ") constructing test statistic for sub-range named " << rangeName << endl ;
 
-    bool observablesKnowRange = false;
+    if(auto pdfClone = dynamic_cast<RooAbsPdf*>(_funcClone)) {
+       pdfClone->setNormRange(rangeName);
+    }
+
     // Adjust FUNC normalization ranges to requested fitRange, store original ranges for RooAddPdf coefficient interpretation
     for (const auto arg : *_funcObsSet) {
 
-      RooRealVar* realObs = dynamic_cast<RooRealVar*>(arg) ;
-      if (realObs) {
+      if (auto realObs = dynamic_cast<RooRealVar*>(arg)) {
+
+        auto tokens = ROOT::Split(rangeName, ",");
+        for(std::string const& token : tokens) {
+          if(!realObs->hasRange(token.c_str())) {
+             std::stringstream errMsg;
+             errMsg << "The observable \"" << realObs->GetName() << "\" doesn't define the requested range \""
+                    << token << "\". Replacing it with the default range." << std::endl;
+             coutW(Fitting) << errMsg.str() << std::endl;
+          }
+        }
 
         auto transferRangeAndBinning = [&](RooRealVar & toVar, const char* toName, const char* fromName) {
           toVar.setRange(toName, realObs->getMin(fromName),realObs->getMax(fromName));
@@ -312,22 +325,11 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
           }
         };
 
-        observablesKnowRange |= realObs->hasRange(rangeName);
-
-        // If no explicit range is given for RooAddPdf coefficients, create explicit named range equivalent to original observables range
-        if (!(addCoefRangeName && strlen(addCoefRangeName))) {
-          transferRangeAndBinning(*realObs, Form("NormalizationRangeFor%s",rangeName), nullptr);
-        }
-
-        // Adjust range of function observable to those of given named range
-        transferRangeAndBinning(*realObs, nullptr, rangeName);
-
-        // Adjust range of data observable to those of given named range
-        RooRealVar* dataObs = (RooRealVar*) dataObsSet->find(realObs->GetName()) ;
-        transferRangeAndBinning(*dataObs, nullptr, rangeName);
-
-        // Keep track of list of fit ranges in string attribute fit range of original p.d.f.
-        if (!_splitRange) {
+        // Keep track of list of fit ranges in string attribute fit range of
+        // original PDF, but only do so if we don't do multi-range
+        // normalization. In this case, we could not define an equivalend
+        // single fit range.
+        if (!_splitRange && strchr(rangeName,',') == 0) {
           const std::string fitRangeName = std::string("fit_") + GetName();
           const char* origAttrib = real.getStringAttribute("fitrange") ;
           std::string newAttr = origAttrib ? origAttrib : "";
@@ -343,9 +345,6 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
         }
       }
     }
-
-    if (!observablesKnowRange)
-      coutW(Fitting) << "None of the fit observables seem to know the range '" << rangeName << "'. This means that the full range will be used." << std::endl;
   }
 
 
@@ -366,10 +365,6 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
       cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName()
                  << ") fixing interpretation of coefficients of any RooAddPdf component to range " << addCoefRangeName << endl ;
       _funcClone->fixAddCoefRange(addCoefRangeName,false) ;
-    } else {
-      cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName()
-              << ") fixing interpretation of coefficients of any RooAddPdf to full domain of observables " << endl ;
-      _funcClone->fixAddCoefRange(Form("NormalizationRangeFor%s",rangeName),false) ;
     }
   }
 
@@ -859,3 +854,4 @@ void RooAbsOptTestStatistic::setUpBinSampling() {
 const char* RooAbsOptTestStatistic::cacheUniqueSuffix() const {
    return Form("_%lx", _dataClone->uniqueId().value()) ;
 }
+

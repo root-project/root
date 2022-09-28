@@ -49,6 +49,8 @@ combined in the main thread.
 #include "RooRealSumPdf.h"
 #include "RooAbsCategoryLValue.h"
 
+#include "ROOT/StringUtils.hxx"
+
 #include "TTimeStamp.h"
 #include "TClass.h"
 #include <string>
@@ -107,16 +109,6 @@ RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, Ro
 {
   // Register all parameters as servers
   _paramSet.add(*std::unique_ptr<RooArgSet>{real.getParameters(&data)});
-
-  if (cfg.rangeName.find(',') != std::string::npos) {
-    auto errorMsg = std::string("Ranges ") + cfg.rangeName
-            + " were passed to the RooAbsTestStatistic with name \"" + name + "\", "
-            + "but it doesn't support multiple comma-separated fit ranges!\n" +
-            + "Instead, one should combine multiple RooAbsTestStatistic objects "
-            + "(see RooAbsPdf::createNLL for an example with RooNLLVar).";
-    coutE(InputArguments) <<  errorMsg << std::endl;
-    throw std::invalid_argument(errorMsg);
-  }
 }
 
 
@@ -535,7 +527,11 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
         cfg.integrateOverBinsPrecision = thisAsRooAbsOptTestStatistic->_integrateBinsPrecision;
       }
       if (_splitRange && !rangeName.empty()) {
-        cfg.rangeName = rangeName + "_" + catName;
+        auto tokens = ROOT::Split(rangeName, ",");
+        for(std::string const& token : tokens) {
+          cfg.rangeName += token + "_" + catName + ",";
+        }
+        cfg.rangeName.pop_back(); // to remove the last comma
         cfg.nCPU = _nCPU*(_mpinterl?-1:1);
       } else {
         cfg.rangeName = rangeName;

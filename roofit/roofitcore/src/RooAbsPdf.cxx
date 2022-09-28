@@ -938,51 +938,6 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooCmdArg& arg1, const 
   return createNLL(data,l) ;
 }
 
-namespace {
-
-std::unique_ptr<RooAbsReal> createMultiRangeNLLCorrectionTerm(
-        RooAbsPdf const &pdf, RooAbsData const &data, std::string const &baseName, std::string const &rangeNames)
-{
-   double sumEntriesTotal = 0.0;
-
-   RooArgList termList;
-   RooArgList integralList;
-
-   for (const auto &currentRangeName : ROOT::Split(rangeNames, ",")) {
-      const std::string currentName = baseName + "_" + currentRangeName;
-
-      auto sumEntriesCurrent = data.sumEntries("1", currentRangeName.c_str());
-      sumEntriesTotal += sumEntriesCurrent;
-
-      RooArgSet depList;
-      pdf.getObservables(data.get(), depList);
-      auto pdfIntegralCurrent = pdf.createIntegral(depList, &depList, nullptr, currentRangeName.c_str());
-
-      auto term = new RooFormulaVar((currentName + "_correctionTerm").c_str(),
-                                    (std::string("-(") + std::to_string(sumEntriesCurrent) + " * log(x[0]))").c_str(),
-                                    RooArgList(*pdfIntegralCurrent));
-
-      termList.add(*term);
-      integralList.add(*pdfIntegralCurrent);
-   }
-
-   auto integralFull = new RooAddition((baseName + "_correctionFullIntegralTerm").c_str(),
-                                       "integral",
-                                       integralList,
-                                       true);
-
-   auto fullRangeTerm = new RooFormulaVar((baseName + "_foobar").c_str(),
-                                          (std::string("(") + std::to_string(sumEntriesTotal) + " * log(x[0]))").c_str(),
-                                          RooArgList(*integralFull));
-
-   termList.add(*fullRangeTerm);
-   return std::unique_ptr<RooAbsReal>{
-       new RooAddition((baseName + "_correction").c_str(), "correction", termList, true)};
-}
-
-
-} // namespace
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct representation of -log(L) of PDFwith given dataset. If dataset is unbinned, an unbinned likelihood is constructed. If the dataset
@@ -1129,43 +1084,9 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   cfg.integrateOverBinsPrecision = pc.getDouble("IntegrateBins");
   cfg.binnedL = false;
   cfg.takeGlobalObservablesFromData = takeGlobalObservablesFromData;
-  if (!rangeName || strchr(rangeName,',')==0) {
-    // Simple case: default range, or single restricted range
-    //cout<<"FK: Data test 1: "<<data.sumEntries()<<endl;
-
-    cfg.rangeName = rangeName ? rangeName : "";
-    nll = std::make_unique<RooNLLVar>(baseName.c_str(),"-log(likelihood)",*this,data,projDeps, ext, cfg);
-    static_cast<RooNLLVar&>(*nll).batchMode(batchMode == RooFit::BatchModeOption::Old);
-  } else {
-    // Composite case: multiple ranges
-    RooArgList nllList ;
-    auto tokens = ROOT::Split(rangeName, ",");
-    if (RooHelpers::checkIfRangesOverlap(*this, data, tokens, cfg.splitCutRange)) {
-      throw std::runtime_error(
-              std::string("Error in RooAbsPdf::createNLL! The ranges ") + rangeName + " are overlapping!");
-    }
-    for (const auto& token : tokens) {
-      cfg.rangeName = token;
-      auto nllComp = std::make_unique<RooNLLVar>((baseName + "_" + token).c_str(),"-log(likelihood)",
-                                                 *this,data,projDeps,ext,cfg);
-      nllComp->batchMode(pc.getInt("BatchMode"));
-      nllList.addOwned(std::move(nllComp)) ;
-    }
-
-    if (!ext) {
-      // Each RooNLLVar was created with the normalization set corresponding to
-      // the subrange, not the union range like it should be. We have to add an
-      // extra term to cancel this normalization problem. However, this is
-      // only necessarry for the non-extended case, because adding an extension
-      // term to the individual NLLs as done here is mathematicall equivalent
-      // to adding the normalization correction terms plus a global extension
-      // term.
-      nllList.addOwned(createMultiRangeNLLCorrectionTerm(*this, data, baseName, rangeName));
-    }
-
-    nll = std::make_unique<RooAddition>(baseName.c_str(),"-log(likelihood)",nllList) ;
-    nll->addOwnedComponents(std::move(nllList));
-  }
+  cfg.rangeName = rangeName ? rangeName : "";
+  nll = std::make_unique<RooNLLVar>(baseName.c_str(),"-log(likelihood)",*this,data,projDeps, ext, cfg);
+  static_cast<RooNLLVar&>(*nll).batchMode(batchMode == RooFit::BatchModeOption::Old);
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
 
   // Include constraints, if any, in likelihood
