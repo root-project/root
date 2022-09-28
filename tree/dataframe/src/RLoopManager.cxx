@@ -426,15 +426,6 @@ RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
    }
 }
 
-#ifdef R__USE_IMT
-struct RSlotRAII {
-   ROOT::Internal::RSlotStack &fSlotStack;
-   unsigned int fSlot;
-   RSlotRAII(ROOT::Internal::RSlotStack &slotStack) : fSlotStack(slotStack), fSlot(slotStack.GetSlot()) {}
-   ~RSlotRAII() { fSlotStack.ReturnSlot(fSlot); }
-};
-#endif
-
 /// Run event loop with no source files, in parallel.
 void RLoopManager::RunEmptySourceMT()
 {
@@ -458,7 +449,7 @@ void RLoopManager::RunEmptySourceMT()
 
    // Each task will generate a subrange of entries
    auto genFunction = [this, &slotStack](const std::pair<ULong64_t, ULong64_t> &range) {
-      RSlotRAII slotRAII(slotStack);
+      ROOT::Internal::RSlotStackRAII slotRAII(slotStack);
       auto slot = slotRAII.fSlot;
       RCallCleanUpTask cleanup(*this, slot);
       InitNodeSlots(nullptr, slot);
@@ -513,7 +504,7 @@ void RLoopManager::RunTreeProcessorMT()
    std::atomic<ULong64_t> entryCount(0ull);
 
    tp->Process([this, &slotStack, &entryCount](TTreeReader &r) -> void {
-      RSlotRAII slotRAII(slotStack);
+      ROOT::Internal::RSlotStackRAII slotRAII(slotStack);
       auto slot = slotRAII.fSlot;
       RCallCleanUpTask cleanup(*this, slot, &r);
       InitNodeSlots(&r, slot);
@@ -622,7 +613,7 @@ void RLoopManager::RunDataSourceMT()
 
    // Each task works on a subrange of entries
    auto runOnRange = [this, &slotStack](const std::pair<ULong64_t, ULong64_t> &range) {
-      RSlotRAII slotRAII(slotStack);
+      ROOT::Internal::RSlotStackRAII slotRAII(slotStack);
       const auto slot = slotRAII.fSlot;
       InitNodeSlots(nullptr, slot);
       RCallCleanUpTask cleanup(*this, slot);

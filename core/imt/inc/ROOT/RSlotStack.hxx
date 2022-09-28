@@ -40,6 +40,15 @@ public:
    unsigned int GetSlot();
 };
 
+/// A RAII object to pop and push slot numbers from a RSlotStack object.
+/// After construction the slot number is available as the data member fSlot.
+struct RSlotStackRAII {
+   ROOT::Internal::RSlotStack &fSlotStack;
+   unsigned int fSlot;
+   RSlotStackRAII(ROOT::Internal::RSlotStack &slotStack) : fSlotStack(slotStack), fSlot(slotStack.GetSlot()) {}
+   ~RSlotStackRAII() { fSlotStack.ReturnSlot(fSlot); }
+};
+
 } // namespace Internal
 } // namespace ROOT
 
