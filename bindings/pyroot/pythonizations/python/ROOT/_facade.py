@@ -8,6 +8,7 @@ import libcppyy as cppyy_backend
 from cppyy import gbl as gbl_namespace
 from cppyy import cppdef, include
 from libROOTPythonizations import gROOT, CreateBufferFromAddress
+from cppyy.gbl import gSystem
 
 from ._application import PyROOTApplication
 _numba_pyversion = (2, 7, 5)
@@ -354,11 +355,13 @@ class ROOTFacade(types.ModuleType):
         #this line is needed to import the pythonizations in _tmva directory
         from ._pythonization import _tmva
         ns = self._fallback_getattr('TMVA')
-        try:
-            from libROOTPythonizations import AsRTensor
-            ns.Experimental.AsRTensor = AsRTensor
-        except:
-            raise Exception('Failed to pythonize the namespace TMVA')
+        hasRDF = gSystem.GetFromPipe("root-config --has-dataframe") == "yes"
+        if hasRDF:
+            try:
+                from libROOTPythonizations import AsRTensor
+                ns.Experimental.AsRTensor = AsRTensor
+            except:
+                raise Exception('Failed to pythonize the namespace TMVA')
         del type(self).TMVA
         return ns
 
