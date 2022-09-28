@@ -602,7 +602,7 @@ void REveGeomDescription::CollectNodes(REveGeomDrawing &drawing)
       }
    }
 
-   printf("SELECT NODES %d\n", (int) drawing.nodes.size());
+   // printf("SELECT NODES %d\n", (int) drawing.nodes.size());
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -639,8 +639,8 @@ std::string REveGeomDescription::ProcessBrowserRequest(const std::string &msg)
       int nelements = 0;
       while (iter.NextNode())
          nelements++;
-      printf("Total number of valid nodes %d\n", nelements);
 
+      // printf("Total number of valid nodes %d\n", nelements);
    } else {
       std::vector<Browsable::RItem> temp_nodes;
       bool toplevel = request->path.empty();
@@ -791,10 +791,27 @@ void REveGeomDescription::ResetRndrInfos()
 }
 
 /////////////////////////////////////////////////////////////////////
+/// Produce JSON string which can be directly used with `build`
+/// function from JSROOT to create three.js model of configured geometry
+///
 /// Collect all information required to draw geometry on the client
 /// This includes list of each visible nodes, meshes and matrixes
+///
+/// Example of usage:
+///
+/// void geom() {
+///    auto f = TFile::Open("file_name.root");
+///    auto vol = f->Get<TGeoVolume>("object_name");
+///    ROOT::Experimental::REveGeomDescription desc;
+///    desc.Build(vol);
+///    std::ofstream fout("geom.json");
+///    fout << desc.ProduceJson();
+///  }
+///
+///  In JSROOT one loads data from JSON file and call `build` function to
+///  produce three.js model
 
-bool REveGeomDescription::CollectVisibles()
+std::string REveGeomDescription::ProduceJson()
 {
    std::vector<int> viscnt(fDesc.size(), 0);
 
@@ -882,9 +899,16 @@ bool REveGeomDescription::CollectVisibles()
 
    CollectNodes(drawing);
 
-   fDrawJson = "GDRAW:"s + MakeDrawingJson(drawing, has_shape);
+   return MakeDrawingJson(drawing, has_shape);
+}
 
-   return true;
+/////////////////////////////////////////////////////////////////////
+/// Collect all information required to draw geometry on the client
+/// This includes list of each visible nodes, meshes and matrixes
+
+void REveGeomDescription::ProduceDrawData()
+{
+   fDrawJson = "GDRAW:"s + ProduceJson();
 }
 
 /////////////////////////////////////////////////////////////////////

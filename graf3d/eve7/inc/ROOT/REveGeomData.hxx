@@ -269,13 +269,14 @@ public:
     * After get full description, client can do most operations without extra requests */
    bool IsPreferredOffline() const { return fPreferredOffline; }
 
-   bool CollectVisibles();
+   std::string ProduceJson();
 
    bool IsPrincipalEndNode(int nodeid);
 
    std::string ProcessBrowserRequest(const std::string &req = "");
 
    bool HasDrawData() const { return (fDrawJson.length() > 0) && (fDrawIdCut > 0); }
+   void ProduceDrawData();
    const std::string &GetDrawJson() const { return fDrawJson; }
    void ClearDrawData();
 
