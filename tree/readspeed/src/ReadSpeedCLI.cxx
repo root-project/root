@@ -10,7 +10,9 @@
 
 #include "ReadSpeedCLI.hxx"
 
+#ifdef R__USE_IMT
 #include <ROOT/TTreeProcessorMT.hxx> // for TTreeProcessorMT::SetTasksPerWorkerHint
+#endif
 
 #include <iostream>
 #include <cstring>
@@ -241,8 +243,13 @@ Args ReadSpeed::ParseArgs(const std::vector<std::string> &args)
             argState = EArgState::kNone;
             break;
          case EArgState::kTasksPerWorkerHint:
+#ifdef R__USE_IMT
             ROOT::TTreeProcessorMT::SetTasksPerWorkerHint(std::stoi(arg));
             argState = EArgState::kNone;
+#else
+            std::cerr << "ROOT was built without implicit multi-threading (IMT) support. The --tasks-per-worker option "
+                         "will be ignored.\n";
+#endif
             break;
          default: std::cerr << "Unrecognized option '" << arg << "'\n"; return {};
          }
