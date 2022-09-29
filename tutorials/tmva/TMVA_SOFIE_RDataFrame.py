@@ -18,7 +18,8 @@ ROOT.TMVA.PyMethodBase.PyInitialize()
 
 # check if the input file exists
 modelFile = "Higgs_trained_model.h5"
-if (!exists(modelFile)) :
+
+if not exists(modelFile):
     raise FileNotFoundError("You need to run TMVA_Higgs_Classification.C to generate the Keras trained model")
 
 # parse the input Keras model into RModel object
@@ -44,7 +45,7 @@ df2 = ROOT.RDataFrame("bkg_tree", inputFile)
 h2 = df2.Define("DNN_Value", "sofie_functor(rdfslot_,m_jj, m_jjj, m_lv, m_jlv, m_bb, m_wbb, m_wwbb)").Histo1D(("h_bkg", "", 100, 0, 1),"DNN_Value")
 
 # run over the input data once, combining both RDataFrame graphs.
-ROOT::RDF::RunGraphs({h1, h2});
+ROOT.RDF.RunGraphs([h1, h2]);
 
 print("Number of signal entries",h1.GetEntries())
 print("Number of background entries",h2.GetEntries())
