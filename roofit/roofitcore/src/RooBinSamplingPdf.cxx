@@ -294,7 +294,7 @@ std::unique_ptr<ROOT::Math::IntegratorOneDim>& RooBinSamplingPdf::integrator() c
 /// Binding used by the integrator to evaluate the PDF.
 double RooBinSamplingPdf::operator()(double x) const {
   _observable->setVal(x);
-  return _pdf->getVal();
+  return _pdf;
 }
 
 
