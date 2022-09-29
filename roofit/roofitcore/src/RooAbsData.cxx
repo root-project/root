@@ -498,13 +498,9 @@ RooAbsData* RooAbsData::reduce(const RooCmdArg& arg1,const RooCmdArg& arg2,const
     RooFormulaVar cutVarTmp(cutSpec,cutSpec,*get()) ;
     ret =  reduceEng(varSubset,&cutVarTmp,cutRange,nStart,nStop) ;
 
-  } else if (cutVar) {
-
-    ret = reduceEng(varSubset,cutVar,cutRange,nStart,nStop) ;
-
   } else {
 
-    ret = reduceEng(varSubset,0,cutRange,nStart,nStop) ;
+    ret = reduceEng(varSubset,cutVar,cutRange,nStart,nStop) ;
 
   }
 
