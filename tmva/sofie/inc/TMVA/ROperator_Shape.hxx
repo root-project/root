@@ -64,6 +64,8 @@ public:
       std::stringstream out;
 
       out << "\n//------ Shape\n";
+      // add a dummy statement to avoid warning for unused input
+      out << SP << "(void) tensor_" << fNX << ";\n";
       size_t length = ConvertShapeToLength(fOutput_shape);
       for (size_t id = 0; id < length; id++) {
          out << SP << "tensor_" << fNY << "["<< id << "] = " << fShape[fStart+id] << ";\n";
