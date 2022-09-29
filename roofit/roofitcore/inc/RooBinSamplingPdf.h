@@ -62,7 +62,7 @@ public:
   }
 
   /// Forwards to the PDF's implementation.
-  bool selfNormalized() const override { return _pdf->selfNormalized(); }
+  bool selfNormalized() const override { return true; }
 
   /// Forwards to the PDF's implementation.
   RooAbsReal* createIntegral(const RooArgSet& iset,
