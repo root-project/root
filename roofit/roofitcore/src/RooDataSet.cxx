@@ -100,6 +100,7 @@ the new `RooAbsData::uniqueId()`.
 #include "RooCompositeDataStore.h"
 #include "RooSentinel.h"
 #include "RooTrace.h"
+#include "RooHelpers.h"
 
 #include "ROOT/StringUtils.hxx"
 
@@ -886,7 +887,28 @@ RooAbsData* RooDataSet::reduceEng(const RooArgSet& varSubset, const RooFormulaVa
   if (_wgtVar) {
     tmp.add(*_wgtVar) ;
   }
+
+  if (!cutRange || strchr(cutRange,',')==0) {
   return new RooDataSet(GetName(), GetTitle(), this, tmp, cutVar, cutRange, nStart, nStop) ;
+  } else {
+    // Composite case: multiple ranges
+    auto tokens = ROOT::Split(cutRange, ",");
+    if (RooHelpers::checkIfRangesOverlap(tmp, *this, tokens)) {
+      std::stringstream errMsg;
+      errMsg << "Error in RooAbsData::reduce! The ranges " << cutRange << " are overlapping!";
+      throw std::runtime_error(errMsg.str());
+    }
+    RooDataSet * out = nullptr;
+    for (const auto& token : tokens) {
+      if(!out) {
+        out = new RooDataSet(GetName(), GetTitle(), this, tmp, cutVar, token.c_str(), nStart, nStop);
+      } else {
+        RooDataSet appendedData{GetName(), GetTitle(), this, tmp, cutVar, token.c_str(), nStart, nStop};
+        out->append(appendedData);
+      }
+    }
+    return out;
+  }
 }
 
 
