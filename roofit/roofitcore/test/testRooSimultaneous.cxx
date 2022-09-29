@@ -1,6 +1,7 @@
 // Tests for the RooSimultaneous
 // Authors: Jonas Rembser, CERN  06/2021
 
+#include <RooAddition.h>
 #include <RooAddPdf.h>
 #include <RooConstVar.h>
 #include <RooCategory.h>
@@ -140,7 +141,7 @@ TEST(RooSimultaneous, MultiRangeFitWithSplitRange)
    int nEventsInCat = 11000;
 
    RooWorkspace wsCat1{"wsCat1"};
-   wsCat1.factory("Gaussian::pdf_cat1(x_cat1[0,10],muCat1[4,0,10],sigma_cat1[1.0,0.1,10.0])");
+   wsCat1.factory("Gaussian::pdf_cat1(x_cat1[0,10],mu_cat1[4,0,10],sigma_cat1[1.0,0.1,10.0])");
    RooAbsPdf &pdfCat1 = *wsCat1.pdf("pdf_cat1");
    RooRealVar &xCat1 = *wsCat1.var("x_cat1");
    xCat1.setRange("SideBandLo_cat1", 0, 2);
@@ -148,12 +149,12 @@ TEST(RooSimultaneous, MultiRangeFitWithSplitRange)
    std::unique_ptr<RooDataSet> dsCat1{pdfCat1.generate(xCat1, nEventsInCat)};
 
    RooWorkspace wsCat2{"wsCat2"};
-   wsCat2.factory("Gaussian::pdf_cat2(x_cat2[0,10],muCat2[6,0,10],sigma_cat2[1.0,0.1,10.0])");
+   wsCat2.factory("Gaussian::pdf_cat2(x_cat2[0,10],mu_cat2[6,0,10],sigma_cat2[1.0,0.1,10.0])");
    RooAbsPdf &pdfCat2 = *wsCat2.pdf("pdf_cat2");
    RooRealVar &xCat2 = *wsCat2.var("x_cat2");
    xCat2.setRange("SideBandLo_cat2", 0, 4);
    xCat2.setRange("SideBandHi_cat2", 8, 10);
-   std::unique_ptr<RooDataSet> dsCat2{pdfCat1.generate(xCat2, nEventsInCat)};
+   std::unique_ptr<RooDataSet> dsCat2{pdfCat2.generate(xCat2, nEventsInCat)};
 
    RooCategory indexCat{"cat", "cat"};
    indexCat.defineType("cat1");
@@ -167,33 +168,24 @@ TEST(RooSimultaneous, MultiRangeFitWithSplitRange)
 
    RooDataSet combData{"combData", "", {xCat1, xCat2}, Index(indexCat), Import(dsmap)};
 
-   std::unique_ptr<RooAbsReal> nll1{pdfCat1.createNLL(*dsCat1, Range("SideBandLo_cat1,SideBandHi_cat1"))};
-   std::unique_ptr<RooAbsReal> nll2{pdfCat2.createNLL(*dsCat2, Range("SideBandLo_cat2,SideBandHi_cat2"))};
+   const char *cutRange1 = "SideBandLo_cat1,SideBandHi_cat1";
+   const char *cutRange2 = "SideBandLo_cat2,SideBandHi_cat2";
    std::unique_ptr<RooAbsReal> nllSim{simPdf.createNLL(combData, Range("SideBandLo,SideBandHi"), SplitRange())};
 
-   // For now, we can't cross check the likelihood value and the unit test
-   // only checks whether the simultaneous likelihood can be created with the
-   // SplitRange() argument without the range overlap checks failing. Once the
-   // issue with multi-range simultaneous likelihood values is fixed, the rest
-   // of the test can be commented out:
-
-   //const double nll1Val = nll1->getVal();
-   //const double nll2Val = nll2->getVal();
    // In simultaneous PDFs, the probability is normalized over the categories,
    // so we have to do that as well when computing the reference value. Since
    // we do a ranged fit, we have to consider the ranges when calculating the
    // number of events in data.
-   //double nCat1InRange = std::unique_ptr<RooAbsData>
-   //{
-      //dsCat1->reduce(CutRange("SideBandLo_cat1,SideBandHi_cat1"))
-      //} -> sumEntries();
-   //double nCat2InRange = std::unique_ptr<RooAbsData>
-   //{
-      //dsCat2->reduce(CutRange("SideBandLo_cat2,SideBandHi_cat2"))
-      //} -> sumEntries();
-   //const double nllSimRefVal = (nCat1InRange + nCat2InRange) * std::log(2) + nll1Val + nll2Val;
+   double n1 = std::unique_ptr<RooAbsData>(dsCat1->reduce(CutRange(cutRange1)))->sumEntries();
+   double n2 = std::unique_ptr<RooAbsData>(dsCat2->reduce(CutRange(cutRange2)))->sumEntries();
+   const double normTerm = (n1 + n2) * std::log(2);
 
-   //const double nllSimVal = nllSim->getVal();
+   std::unique_ptr<RooAbsReal> nll1{pdfCat1.createNLL(*dsCat1, Range(cutRange1))};
+   std::unique_ptr<RooAbsReal> nll2{pdfCat2.createNLL(*dsCat2, Range(cutRange2))};
+   RooAddition nllSimRef{"nllSimRef", "nllSimRef", {*nll1, *nll2, RooConst(normTerm)}};
 
-   //EXPECT_FLOAT_EQ(nllSimVal, nllSimRefVal);
+   const double nllSimRefVal = nllSimRef.getVal();
+   const double nllSimVal = nllSim->getVal();
+
+   EXPECT_FLOAT_EQ(nllSimVal, nllSimRefVal);
 }
