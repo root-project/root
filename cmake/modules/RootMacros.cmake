@@ -182,7 +182,7 @@ function(REFLEX_GENERATE_DICTIONARY dictionary)
     # The COMPILE_DEFINITIONS list might contain empty elements. These are
     # removed with the FILTER generator expression, excluding elements that
     # match the ^$ regexp (only matches empty strings).
-    LIST(APPEND definitions "$<FILTER:$<TARGET_PROPERTY:${ARG_MODULE},COMPILE_DEFINITIONS>,EXCLUDE,^$>")
+    LIST(APPEND definitions "$<FILTER:$<TARGET_PROPERTY:${dictionary},COMPILE_DEFINITIONS>,EXCLUDE,^$>")
   ENDIF()
 
   add_custom_command(
