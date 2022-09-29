@@ -1,4 +1,5 @@
 {
+#ifdef R__B64
    std::vector<int> data;
    data.resize(  (100*1024*1024+404780)/4);
    std::vector<float> smalldata;
@@ -91,5 +92,5 @@
 
 #endif
    // What about spurrious StreamerInfo warning.
-
+#endif
 }
