@@ -51,13 +51,6 @@ constexpr const char *RooNLLVarNew::weightVarNameSumW2;
 
 namespace {
 
-std::unique_ptr<RooAbsReal>
-createFractionInRange(RooAbsPdf const &pdf, RooArgSet const &observables, std::string const &rangeNames)
-{
-   return std::unique_ptr<RooAbsReal>{
-      pdf.createIntegral(observables, &observables, pdf.getIntegratorConfig(), rangeNames.c_str())};
-}
-
 template <class Input>
 double kahanSum(Input const &input)
 {
@@ -79,10 +72,9 @@ RooArgSet getObservablesInPdf(RooAbsPdf const &pdf, RooArgSet const &observables
 \param pdf The pdf for which the nll is computed for
 \param observables The observabes of the pdf
 \param isExtended Set to true if this is an extended fit
-\param rangeName the range name
 **/
 RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables,
-                           bool isExtended, std::string const &rangeName, bool doOffset)
+                           bool isExtended, bool doOffset)
    : RooAbsReal(name, title), _pdf{"pdf", "pdf", this, pdf}, _observables{getObservablesInPdf(pdf, observables)},
      _isExtended{isExtended}, _doOffset{doOffset},
      _weightVar{"weightVar", "weightVar", this, *new RooRealVar(weightVarName, weightVarName, 1.0), true, false, true},
@@ -133,13 +125,6 @@ RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, 
       }
    }
 
-   if (!rangeName.empty()) {
-      auto term = createFractionInRange(*actualPdf, _observables, rangeName);
-      _fractionInRange =
-         std::make_unique<RooTemplateProxy<RooAbsReal>>("_fractionInRange", "_fractionInRange", this, *term);
-      addOwnedComponents(std::move(term));
-   }
-
    resetWeightVarNames();
 }
 
@@ -150,9 +135,6 @@ RooNLLVarNew::RooNLLVarNew(const RooNLLVarNew &other, const char *name)
                                                                                                 this,
                                                                                                 other._weightSquaredVar}
 {
-   if (other._fractionInRange)
-      _fractionInRange =
-         std::make_unique<RooTemplateProxy<RooAbsReal>>("_fractionInRange", this, *other._fractionInRange);
 }
 
 /** Compute multiple negative logs of propabilities
@@ -225,33 +207,11 @@ void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_
    _logProbasBuffer.resize(nEvents);
    (*_pdf).getLogProbabilities(probas, _logProbasBuffer.data());
 
-   if ((_isExtended || _fractionInRange) && _sumWeight == 0.0) {
+   if (_isExtended && _sumWeight == 0.0) {
       _sumWeight = weights.size() == 1 ? weights[0] * nEvents : kahanSum(weights);
    }
-   if ((_isExtended || _fractionInRange) && _weightSquared && _sumWeight2 == 0.0) {
+   if (_isExtended && _weightSquared && _sumWeight2 == 0.0) {
       _sumWeight2 = weights.size() == 1 ? weightsSumW2[0] * nEvents : kahanSum(weightsSumW2);
-   }
-   double sumCorrectionTerm = 0;
-   if (_fractionInRange) {
-      auto fractionInRangeSpan = dataMap.at(*_fractionInRange);
-      if (fractionInRangeSpan.size() == 1) {
-         sumCorrectionTerm = (_weightSquared ? _sumWeight2 : _sumWeight) * std::log(fractionInRangeSpan[0]);
-      } else {
-         if (weightSpan.size() == 1) {
-            double fractionInRangeLogSum = 0.0;
-            for (std::size_t i = 0; i < fractionInRangeSpan.size(); ++i) {
-               fractionInRangeLogSum += std::log(fractionInRangeSpan[i]);
-            }
-            sumCorrectionTerm = weightSpan[0] * fractionInRangeLogSum;
-         } else {
-            // We don't need to use the library for now because the weights and
-            // correction term integrals are always in the CPU map.
-            sumCorrectionTerm = 0.0;
-            for (std::size_t i = 0; i < nEvents; ++i) {
-               sumCorrectionTerm += weightSpan[i] * std::log(fractionInRangeSpan[i]);
-            }
-         }
-      }
    }
 
    ROOT::Math::KahanSum<double> kahanProb;
@@ -277,13 +237,7 @@ void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_
    if (_isExtended) {
       assert(_sumWeight != 0.0);
       double expected = _pdf->expectedEvents(&_observables);
-      if (_fractionInRange) {
-         expected *= dataMap.at(*_fractionInRange)[0];
-      }
       kahanProb += _pdf->extendedTerm(_sumWeight, expected, _weightSquared ? _sumWeight2 : 0.0);
-   }
-   if (_fractionInRange) {
-      kahanProb += sumCorrectionTerm;
    }
 
    // Check if value offset flag is set.
