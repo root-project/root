@@ -356,19 +356,21 @@ void RooAddPdf::fixCoefRange(const char* rangeName)
 /// - Projection integrals to calculate transformed fraction coefficients when a frozen reference frame is provided
 /// - Projection integrals for similar transformations when a frozen reference range is provided.
 
-AddCacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooArgSet* iset, const char* rangeName) const
+AddCacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooArgSet* iset) const
 {
   // Check if cache already exists
-  auto cache = static_cast<AddCacheElem*>(_projCacheMgr.getObj(nset,iset,0,rangeName));
+  auto cache = static_cast<AddCacheElem*>(_projCacheMgr.getObj(nset,iset,0,normRange()));
   if (cache) {
     return cache ;
   }
 
   //Create new cache
-  cache = new AddCacheElem{*this, _pdfList, _coefList, nset, iset, rangeName,
-                        _projectCoefs, _refCoefNorm, _refCoefRangeName, _verboseEval};
+  cache = new AddCacheElem{*this, _pdfList, _coefList, nset, iset,
+                           _projectCoefs, _refCoefNorm,
+                           _refCoefRangeName ? RooNameReg::str(_refCoefRangeName) : "",
+                           _verboseEval};
 
-  _projCacheMgr.setObj(nset,iset,cache,RooNameReg::ptr(rangeName)) ;
+  _projCacheMgr.setObj(nset,iset,cache,RooNameReg::ptr(normRange())) ;
 
   return cache;
 }
@@ -476,7 +478,7 @@ double RooAddPdf::getValV(const RooArgSet* normSet) const
     _value = 0.0;
 
     for (unsigned int i=0; i < _pdfList.size(); ++i) {
-      const auto& pdf = static_cast<RooAbsPdf&>(_pdfList[i]);
+      auto& pdf = static_cast<RooAbsPdf&>(_pdfList[i]);
       double snormVal = 1.;
       snormVal = cache->suppNormVal(i);
 
@@ -658,7 +660,7 @@ double RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, con
     normSet = &_refCoefNorm ;
   }
 
-  AddCacheElem* cache = getProjCache(normSet,intSet,0) ; // WVE rangename here?
+  AddCacheElem* cache = getProjCache(normSet,intSet);
   updateCoefficients(*cache,normSet);
 
   // Calculate the current value of this object

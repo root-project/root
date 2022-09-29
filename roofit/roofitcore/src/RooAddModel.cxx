@@ -311,19 +311,21 @@ Int_t RooAddModel::basisCode(const char* name) const
 /// integrals to calculated transformed fraction coefficients when a frozen reference frame is provided
 /// and projection integrals for similar transformations when a frozen reference range is provided.
 
-AddCacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const RooArgSet* iset, const char* rangeName) const
+AddCacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const RooArgSet* iset) const
 {
   // Check if cache already exists
-  auto cache = static_cast<AddCacheElem*>(_projCacheMgr.getObj(nset,iset,0,rangeName));
+  auto cache = static_cast<AddCacheElem*>(_projCacheMgr.getObj(nset,iset,0,normRange()));
   if (cache) {
     return cache ;
   }
 
   //Create new cache
-  cache = new AddCacheElem{*this, _pdfList, _coefList, nset, iset, rangeName,
-                        _projectCoefs, _refCoefNorm, _refCoefRangeName, _verboseEval};
+  cache = new AddCacheElem{*this, _pdfList, _coefList, nset, iset,
+                           _projectCoefs, _refCoefNorm,
+                           _refCoefRangeName ? RooNameReg::str(_refCoefRangeName) : "",
+                           _verboseEval};
 
-  _projCacheMgr.setObj(nset,iset,cache,RooNameReg::ptr(rangeName)) ;
+  _projCacheMgr.setObj(nset,iset,cache,RooNameReg::ptr(normRange())) ;
 
   return cache;
 }

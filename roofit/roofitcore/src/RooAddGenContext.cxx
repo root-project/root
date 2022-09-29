@@ -150,7 +150,7 @@ void RooAddGenContext::initGenerator(const RooArgSet &theEvent)
     _pcache = amod->getProjCache(_vars.get()) ;
   } else {
     RooAddPdf* apdf = (RooAddPdf*) _pdf ;
-    _pcache = apdf->getProjCache(_vars.get(),nullptr,"FULL_RANGE_ADDGENCONTEXT") ;
+    _pcache = apdf->getProjCache(_vars.get(),nullptr) ;
   }
 
   // Forward initGenerator call to all components
