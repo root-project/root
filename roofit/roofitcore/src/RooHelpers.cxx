@@ -181,41 +181,13 @@ std::pair<double, double> getRangeOrBinningInterval(RooAbsArg const* arg, const 
 
 
 /// Check if there is any overlap when a list of ranges is applied to a set of observables.
-/// \param[in] pdf the PDF
+/// \param[in] observables The observables to check for overlap
 /// \param[in] data RooAbsCollection with the observables to check for overlap.
 /// \param[in] rangeNames The names of the ranges.
-/// \param[in] splitRange If `true`, each component of a RooSimultaneous will
-///                       be checked individually for overlaps, with the range
-///                       names in that component suffixed by `_<cat_label>`.
-///                       See the `SplitRange()` command argument of
-///                       RooAbsPdf::fitTo()` to understand where this is used.
-bool checkIfRangesOverlap(RooAbsPdf const& pdf,
+bool checkIfRangesOverlap(RooArgSet const& observables,
                           RooAbsData const& data,
-                          std::vector<std::string> const& rangeNames,
-                          bool splitRange)
+                          std::vector<std::string> const& rangeNames)
 {
-  // If the PDF is a RooSimultaneous and the `splitRange` option is set, we
-  // have to check each component PDF with a different set of rangeNames, each
-  // suffixed by the category name.
-  if(splitRange && dynamic_cast<RooSimultaneous const*>(&pdf)) {
-    auto const& simPdf = static_cast<RooSimultaneous const&>(pdf);
-    bool hasOverlap = false;
-    std::vector<std::string> rangeNamesSplit;
-    for (const auto& catState : simPdf.indexCat()) {
-      const std::string& catName = catState.first;
-      for(std::string const& rangeName : rangeNames) {
-        rangeNamesSplit.emplace_back(rangeName + "_" + catName);
-      }
-      hasOverlap |= checkIfRangesOverlap(*simPdf.getPdf(catName.c_str()), data, rangeNamesSplit, false);
-
-      rangeNamesSplit.clear();
-    }
-
-    return hasOverlap;
-  }
-
-  auto observables = *pdf.getObservables(data);
-
   auto getLimits = [&](RooAbsRealLValue const& rlv, const char* rangeName) {
 
     // RooDataHistCase
