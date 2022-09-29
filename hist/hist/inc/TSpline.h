@@ -2,7 +2,7 @@
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -238,8 +238,9 @@ public:
    Double_t Derivative(Double_t x) const;
    ~TSpline3() override {if (fPoly) delete [] fPoly;}
    void GetCoeff(Int_t i, Double_t &x, Double_t &y, Double_t &b,
-                 Double_t &c, Double_t &d) {x=fPoly[i].X();y=fPoly[i].Y();
-                  b=fPoly[i].B();c=fPoly[i].C();d=fPoly[i].D();}
+                 Double_t &c, Double_t &d) const
+      {x=fPoly[i].X();y=fPoly[i].Y();
+      b=fPoly[i].B();c=fPoly[i].C();d=fPoly[i].D();}
    void GetKnot(Int_t i, Double_t &x, Double_t &y) const override
       {x=fPoly[i].X(); y=fPoly[i].Y();}
     void     SaveAs(const char *filename,Option_t *option="") const override;
@@ -299,7 +300,7 @@ public:
    Double_t Derivative(Double_t x) const;
    ~TSpline5() override {if (fPoly) delete [] fPoly;}
    void GetCoeff(Int_t i, Double_t &x, Double_t &y, Double_t &b,
-                 Double_t &c, Double_t &d, Double_t &e, Double_t &f)
+                 Double_t &c, Double_t &d, Double_t &e, Double_t &f) const
       {x=fPoly[i].X();y=fPoly[i].Y();b=fPoly[i].B();
       c=fPoly[i].C();d=fPoly[i].D();
       e=fPoly[i].E();f=fPoly[i].F();}
