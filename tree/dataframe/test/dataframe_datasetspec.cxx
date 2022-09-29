@@ -3,6 +3,7 @@
 #include <ROOT/RVec.hxx>
 #include <ROOT/RDFHelpers.hxx>
 #include <ROOT/TestSupport.hxx>
+#include <ROOT/RDF/RDatasetSpec.hxx>
 #include <TSystem.h>
 
 #include <thread> // std::thread::hardware_concurrency
