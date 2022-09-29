@@ -366,31 +366,34 @@ RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t 
 }
 
 RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
-   : fBeginEntry(spec.fEntryRange.fBegin), fEndEntry(spec.fEntryRange.fEnd), fNSlots(RDFInternal::GetNSlots()),
+   : fBeginEntry(spec.GetEntryRangeBegin()), fEndEntry(spec.GetEntryRangeEnd()), fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
      fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots)
 {
-   auto chain = std::make_shared<TChain>(spec.fTreeNames.size() == 1 ? spec.fTreeNames[0].c_str() : "");
-   if (spec.fTreeNames.size() == 1) {
+   const auto &treeNames = spec.GetTreeNames();
+   const auto &fileNameGlobs = spec.GetFileNameGlobs();
+   auto chain = std::make_shared<TChain>(treeNames.size() == 1 ? treeNames[0].c_str() : "");
+   if (treeNames.size() == 1) {
       // A TChain has a global name, that is the name of single tree
       // The global name of the chain is also the name of each tree in the list
       // of files that make the chain.
-      for (const auto &f : spec.fFileNameGlobs)
+      for (const auto &f : fileNameGlobs)
          chain->Add(f.c_str());
    } else {
       // Some other times, each different file has its own tree name, we need to
       // reconstruct the full path to the tree in each file and pass that to
-      for (auto i = 0u; i < spec.fFileNameGlobs.size(); i++) {
-         const auto fullpath = spec.fFileNameGlobs[i] + "?#" + spec.fTreeNames[i];
+      for (auto i = 0u; i < fileNameGlobs.size(); i++) {
+         const auto fullpath = fileNameGlobs[i] + "?#" + treeNames[i];
          chain->Add(fullpath.c_str());
       }
    }
    SetTree(std::move(chain));
 
    // Create the friends from the list of friends
-   const auto &friendNames = spec.fFriendInfo.fFriendNames;
-   const auto &friendFileNames = spec.fFriendInfo.fFriendFileNames;
-   const auto &friendChainSubNames = spec.fFriendInfo.fFriendChainSubNames;
+   const auto &friendInfo = spec.GetFriendInfo();
+   const auto &friendNames = friendInfo.fFriendNames;
+   const auto &friendFileNames = friendInfo.fFriendFileNames;
+   const auto &friendChainSubNames = friendInfo.fFriendChainSubNames;
    const auto nFriends = friendNames.size();
 
    for (auto i = 0u; i < nFriends; ++i) {
