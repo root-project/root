@@ -17,6 +17,8 @@
 
 #include <memory>
 
+const bool batchMode = true;
+
 TEST(RooNLLVar, IntegrateBins) {
   RooRandom::randomGenerator()->SetSeed(1337ul);
 
@@ -47,7 +49,7 @@ TEST(RooNLLVar, IntegrateBins) {
 
   a.setVal(3.);
   std::unique_ptr<RooFitResult> fit2( pdf.fitTo(data, RooFit::Save(), RooFit::PrintLevel(-1),
-      RooFit::BatchMode(true),
+      RooFit::BatchMode(batchMode),
       RooFit::IntegrateBins(1.E-3)) );
   pdf.plotOn(frame.get(), RooFit::LineColor(kBlue), RooFit::Name("highRes"));
 
@@ -103,14 +105,14 @@ TEST(RooNLLVar, IntegrateBins_SubRange) {
   std::unique_ptr<RooFitResult> fit1( pdf.fitTo(data, RooFit::Save(), RooFit::PrintLevel(-1),
       RooFit::Optimize(0),
       RooFit::Range("range"),
-      RooFit::BatchMode(true))  );
+      RooFit::BatchMode(batchMode))  );
   pdf.plotOn(frame.get(), RooFit::LineColor(kRed), RooFit::Name("standard"));
 
   a.setVal(3.);
   std::unique_ptr<RooFitResult> fit2( pdf.fitTo(data, RooFit::Save(), RooFit::PrintLevel(-1),
       RooFit::Optimize(0),
       RooFit::Range("range"),
-      RooFit::BatchMode(true),
+      RooFit::BatchMode(batchMode),
       RooFit::IntegrateBins(1.E-3)) );
   pdf.plotOn(frame.get(), RooFit::LineColor(kBlue), RooFit::Name("highRes"));
 
@@ -172,7 +174,7 @@ TEST(RooNLLVar, IntegrateBins_CustomBinning) {
   a.setVal(3.);
   std::unique_ptr<RooFitResult> fit2( pdf.fitTo(data, RooFit::Save(), RooFit::PrintLevel(-1),
       RooFit::Optimize(0),
-      RooFit::BatchMode(true),
+      RooFit::BatchMode(batchMode),
       RooFit::IntegrateBins(1.E-3)) );
   pdf.plotOn(frame.get(), RooFit::LineColor(kBlue), RooFit::Name("highRes"));
 
@@ -216,14 +218,14 @@ TEST(RooNLLVar, IntegrateBins_RooDataHist) {
 
   a.setVal(3.);
   std::unique_ptr<RooFitResult> fit1( pdf.fitTo(*data, RooFit::Save(), RooFit::PrintLevel(-1),
-      RooFit::BatchMode(true),
+      RooFit::BatchMode(batchMode),
       RooFit::IntegrateBins(-1.) // Disable forcefully
       ) );
   pdf.plotOn(frame.get(), RooFit::LineColor(kRed), RooFit::Name("standard"));
 
   a.setVal(3.);
   std::unique_ptr<RooFitResult> fit2( pdf.fitTo(*data, RooFit::Save(), RooFit::PrintLevel(-1),
-      RooFit::BatchMode(true),
+      RooFit::BatchMode(batchMode),
       RooFit::IntegrateBins(0.) // Auto-enable for all RooDataHists.
       ) );
   pdf.plotOn(frame.get(), RooFit::LineColor(kBlue), RooFit::Name("highRes"));
@@ -270,7 +272,7 @@ TEST(RooChi2Var, IntegrateBins) {
 
   a.setVal(3.);
   std::unique_ptr<RooFitResult> fit2( pdf.chi2FitTo(*dataH, RooFit::Save(), RooFit::PrintLevel(-1),
-      RooFit::BatchMode(true),
+      RooFit::BatchMode(batchMode),
       RooFit::IntegrateBins(1.E-3)) );
   pdf.plotOn(frame.get(), RooFit::LineColor(kBlue), RooFit::Name("highRes"));
 

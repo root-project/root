@@ -95,7 +95,6 @@ TEST(RooBinSamplingPdf, CheckConsistentNormalization)
    // An integral over the normalization set normalized by an integral over the
    // normalization set should be unity by definition.
    std::unique_ptr<RooAbsReal> int1{binSamplingPdf.createIntegral(normSet, &normSet)};
-   std::cout << int1->getVal() << std::endl;
    EXPECT_FLOAT_EQ(int1->getVal(), 1.0);
 
    // Evaluating the pdf with a given normalization set should not unexpectedly
@@ -103,7 +102,5 @@ TEST(RooBinSamplingPdf, CheckConsistentNormalization)
    std::unique_ptr<RooAbsReal> int2{binSamplingPdf.createIntegral(normSet)};
    binSamplingPdf.getVal(normSet);
    std::unique_ptr<RooAbsReal> int3{binSamplingPdf.createIntegral(normSet)};
-   std::cout << int2->getVal() << std::endl;
-   std::cout << int3->getVal() << std::endl;
    EXPECT_FLOAT_EQ(int2->getVal(), int3->getVal());
 }
