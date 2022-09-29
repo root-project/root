@@ -206,6 +206,26 @@ AddCacheElem::AddCacheElem(RooAbsPdf const &addPdf, RooArgList const &pdfList, R
    }
 }
 
+void AddCacheElem::print() const
+{
+   auto printVector = [](auto const &vec, const char *name) {
+      std::cout << "+++ " << name << ":" << std::endl;
+      for (auto const &arg : vec) {
+         std::cout << "    ";
+         if (arg)
+            arg->Print();
+         else
+            std::cout << "nullptr" << std::endl;
+      }
+   };
+
+   printVector(_suppNormList, "_suppNormList");
+   printVector(_projList, "_projList");
+   printVector(_suppProjList, "_suppProjList");
+   printVector(_refRangeProjList, "_refRangeProjList");
+   printVector(_rangeProjList, "_rangeProjList");
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// List all RooAbsArg derived contents in this cache element
 

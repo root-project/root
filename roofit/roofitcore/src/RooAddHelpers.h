@@ -39,6 +39,8 @@ public:
 
    inline double rangeProjScaleFactor(std::size_t idx) const { return rangeProjVal(idx) / refRangeProjVal(idx); }
 
+   void print() const;
+
 private:
    inline double refRangeProjVal(std::size_t idx) const
    {
