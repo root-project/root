@@ -99,7 +99,7 @@ protected:
 
 
   mutable RooObjCacheManager _projCacheMgr ;  ///<! Manager of cache with coefficient projections and transformations
-  AddCacheElem* getProjCache(const RooArgSet* nset, const RooArgSet* iset=nullptr, const char* rangeName=nullptr) const ;
+  AddCacheElem* getProjCache(const RooArgSet* nset, const RooArgSet* iset=nullptr) const ;
   void updateCoefficients(AddCacheElem& cache, const RooArgSet* nset) const ;
 
   typedef RooArgList* pRooArgList ;
