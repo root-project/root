@@ -127,6 +127,31 @@ void RDatasetSpec::AddFriend(const std::vector<std::pair<std::string, std::strin
    fFriendInfo.AddFriend(treeAndFileNameGlobs, alias);
 }
 
+const std::vector<std::string> &RDatasetSpec::GetTreeNames() const
+{
+   return fTreeNames;
+}
+
+const std::vector<std::string> &RDatasetSpec::GetFileNameGlobs() const
+{
+   return fFileNameGlobs;
+}
+
+Long64_t RDatasetSpec::GetEntryRangeBegin() const
+{
+   return fEntryRange.fBegin;
+}
+
+Long64_t RDatasetSpec::GetEntryRangeEnd() const
+{
+   return fEntryRange.fEnd;
+}
+
+const ROOT::TreeUtils::RFriendInfo &RDatasetSpec::GetFriendInfo() const
+{
+   return fFriendInfo;
+}
+
 } // namespace Experimental
 } // namespace RDF
 } // namespace ROOT
