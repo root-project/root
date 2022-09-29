@@ -44,8 +44,10 @@ std::unique_ptr<RooAbsArg> createSimultaneousNLL(RooSimultaneous const &simPdf, 
       auto const &catName = catItem.first;
       if (RooAbsPdf *pdf = simPdf.getPdf(catName.c_str())) {
          auto name = std::string("nll_") + pdf->GetName();
-         auto nll = std::make_unique<RooNLLVarNew>(name.c_str(), name.c_str(), *pdf, observables, isExtended, rangeName,
-                                                   doOffset);
+         if (!rangeName.empty()) {
+            pdf->setNormRange(rangeName.c_str());
+         }
+         auto nll = std::make_unique<RooNLLVarNew>(name.c_str(), name.c_str(), *pdf, observables, isExtended, doOffset);
          // Rename the observables and weights
          newObservables.add(nll->prefixObservableAndWeightNames(std::string("_") + catName + "_"));
          nllTerms.addOwned(std::move(nll));
@@ -152,6 +154,11 @@ RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data, std::uniqu
    observables.remove(projDeps, true, true);
    obsClones.remove(projDeps, true, true);
 
+   // Set the normalization range
+   if (!rangeName.empty()) {
+      pdfClone->setNormRange(rangeName.c_str());
+   }
+
    oocxcoutI(&pdf, Fitting) << "RooAbsPdf::fitTo(" << pdf.GetName()
                             << ") fixing normalization set for coefficient determination to observables in data"
                             << "\n";
@@ -183,8 +190,8 @@ RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data, std::uniqu
       // Warning! This mutates "obsClones"
       nllTerms.addOwned(createSimultaneousNLL(*simPdf, obsClones, isExtended, rangeName, doOffset));
    } else {
-      nllTerms.addOwned(std::make_unique<RooNLLVarNew>("RooNLLVarNew", "RooNLLVarNew", finalPdf, obsClones, isExtended,
-                                                       rangeName, doOffset));
+      nllTerms.addOwned(
+         std::make_unique<RooNLLVarNew>("RooNLLVarNew", "RooNLLVarNew", finalPdf, obsClones, isExtended, doOffset));
    }
    if (constraints) {
       nllTerms.addOwned(std::move(constraints));

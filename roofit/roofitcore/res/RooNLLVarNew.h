@@ -34,7 +34,7 @@ public:
 
    RooNLLVarNew(){};
    RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables, bool isExtended,
-                std::string const &rangeName, bool doOffset);
+                bool doOffset);
    RooNLLVarNew(const RooNLLVarNew &other, const char *name = nullptr);
    TObject *clone(const char *newname) const override { return new RooNLLVarNew(*this, newname); }
 
@@ -68,7 +68,6 @@ private:
    std::string _prefix;
    RooTemplateProxy<RooAbsReal> _weightVar;
    RooTemplateProxy<RooAbsReal> _weightSquaredVar;
-   std::unique_ptr<RooTemplateProxy<RooAbsReal>> _fractionInRange;
    mutable std::vector<double> _binw;                  ///<!
    mutable std::vector<double> _logProbasBuffer;       ///<!
    mutable ROOT::Math::KahanSum<double> _offset = 0.0; ///<! Offset as KahanSum to avoid loss of precision

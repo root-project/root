@@ -21,7 +21,7 @@ public:
    RooNormalizedPdf(RooAbsPdf &pdf, RooArgSet const &normSet)
       : _pdf("numerator", "numerator", this, pdf),
         _normIntegral("denominator", "denominator", this,
-                      *pdf.createIntegral(normSet, *pdf.getIntegratorConfig(), nullptr), true, false, true),
+                      *pdf.createIntegral(normSet, *pdf.getIntegratorConfig(), pdf.normRange()), true, false, true),
         _normSet{normSet}
    {
       auto name = std::string(pdf.GetName()) + "_over_" + _normIntegral->GetName();
@@ -59,7 +59,7 @@ public:
    }
 
 protected:
-   void computeBatch(cudaStream_t *, double *output, size_t size, RooFit::Detail::DataMap const&) const override;
+   void computeBatch(cudaStream_t *, double *output, size_t size, RooFit::Detail::DataMap const &) const override;
    double evaluate() const override
    {
       // Evaluate() should not be called in the BatchMode, but we still need it
