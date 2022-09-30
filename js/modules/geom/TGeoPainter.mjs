@@ -6,8 +6,7 @@ import { REVISION, DoubleSide, FrontSide,
          Euler, Quaternion, MathUtils,
          Mesh, MeshLambertMaterial, MeshBasicMaterial,
          LineSegments, LineBasicMaterial, BufferAttribute,
-         TextGeometry, BufferGeometry, BoxBufferGeometry, CircleBufferGeometry,
-         SphereBufferGeometry, SphereGeometry, WireframeGeometry,
+         TextGeometry, BufferGeometry, BoxGeometry, CircleGeometry, SphereGeometry, WireframeGeometry,
          Scene, Fog, BoxHelper, AxesHelper, GridHelper, OrthographicCamera, PerspectiveCamera,
          TransformControls, PointLight, AmbientLight, HemisphereLight,
          EffectComposer, RenderPass, SSAOPass, UnrealBloomPass } from '../three.mjs';
@@ -128,10 +127,10 @@ function createList(parent, lst, name, title) {
        _expand(node, lst) {
           // only childs
 
-          if ('fVolume' in lst)
+          if (lst.fVolume)
              lst = lst.fVolume.fNodes;
 
-          if (!('arr' in lst)) return false;
+          if (!lst.arr) return false;
 
           node._childs = [];
 
@@ -326,7 +325,7 @@ class Toolbar {
       buttons.forEach(buttonConfig => {
          let buttonName = buttonConfig.name;
          if (!buttonName)
-            throw new Error(`must provide button ${name} in button config`);
+            throw new Error("must provide button name in button config");
          if (this.buttonsNames.indexOf(buttonName) !== -1)
             throw new Error(`button name ${buttonName} is taken`);
 
@@ -449,13 +448,13 @@ class TGeoPainter extends ObjectPainter {
    constructor(dom, obj) {
 
       let gm;
-      if (obj && (obj._typename === "TGeoManager")) {
+      if (obj?._typename === "TGeoManager") {
          gm = obj;
          obj = obj.fMasterVolume;
       }
 
-      if (obj && (obj._typename.indexOf('TGeoVolume') === 0))
-         obj = { _typename:"TGeoNode", fVolume: obj, fName: obj.fName, $geoh: obj.$geoh, _proxy: true };
+      if (obj?._typename && (obj._typename.indexOf('TGeoVolume') === 0))
+         obj = { _typename: "TGeoNode", fVolume: obj, fName: obj.fName, $geoh: obj.$geoh, _proxy: true };
 
       super(dom, obj);
 
@@ -614,7 +613,7 @@ class TGeoPainter extends ObjectPainter {
       let geometry = new SphereGeometry(0.025, 18, 36),
           material = new MeshBasicMaterial({ color: 'grey', vertexColors: false }),
           rayMaterial = new MeshBasicMaterial({ color: 'fuchsia', vertexColors: false }),
-          rayGeometry = new BoxBufferGeometry(0.001, 0.001, 2),
+          rayGeometry = new BoxGeometry(0.001, 0.001, 2),
           ray1Mesh = new Mesh(rayGeometry, rayMaterial),
           ray2Mesh = new Mesh(rayGeometry, rayMaterial),
           sphere1 = new Mesh(geometry, material),
@@ -746,7 +745,7 @@ class TGeoPainter extends ObjectPainter {
    modifyVisisbility(name, sign) {
       if (getNodeKind(this.getGeometry()) !== 0) return;
 
-      if (name == "")
+      if (!name)
          return setGeoBit(this.getGeometry().fVolume, geoBITS.kVisThis, (sign === "+"));
 
       let regexp, exact = false;
@@ -926,7 +925,6 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Activate specified items in the browser */
    activateInBrowser(names, force) {
-      // if (this.getItemName() === null) return;
 
       if (typeof names == 'string') names = [ names ];
 
@@ -995,7 +993,7 @@ class TGeoPainter extends ObjectPainter {
       console.log(`Compare matrixes total ${totalcnt} errors ${errcnt} takes ${tm2-tm1} maxdiff ${totalmax}`);
    }
 
-   /** @summary Fills context menu */
+   /** @summary Fill context menu */
    fillContextMenu(menu) {
       menu.add("header: Draw options");
 
@@ -1510,7 +1508,7 @@ class TGeoPainter extends ObjectPainter {
 
                      this._last_hidden = [];
 
-                     for (let i=0;i<indx;++i)
+                     for (let i = 0; i < indx; ++i)
                         this._last_hidden.push(intersects[i].object);
 
                      this._last_hidden.forEach(obj => { obj.visible = false; });
@@ -1623,7 +1621,7 @@ class TGeoPainter extends ObjectPainter {
       let mainitemname = this.getItemName(),
           sub = this.resolveStack(stack);
       if (!sub || !sub.name) return mainitemname;
-      return mainitemname ? (mainitemname + "/" + sub.name) : sub.name;
+      return mainitemname ? mainitemname + "/" + sub.name : sub.name;
    }
 
    /** @summary Add handler which will be called when element is highlighted in geometry drawing
@@ -2412,7 +2410,7 @@ class TGeoPainter extends ObjectPainter {
    }
 
    /** @summary Initial scene creation */
-   createScene(w, h) {
+   async createScene(w, h) {
       // three.js 3D drawing
       this._scene = new Scene();
       this._scene.fog = new Fog(0xffffff, 1, 10000);
@@ -3973,8 +3971,8 @@ class TGeoPainter extends ObjectPainter {
 
          if ((center[naxis]===0) && (center[naxis] >= box.min[name]) && (center[naxis] <= box.max[name]))
            if ((this.ctrl._axis != 2) || (naxis===0)) {
-               let geom = ortho ? new CircleBufferGeometry(text_size*0.25) :
-                                  new SphereBufferGeometry(text_size*0.25);
+               let geom = ortho ? new CircleGeometry(text_size*0.25) :
+                                  new SphereGeometry(text_size*0.25);
                mesh = new Mesh(geom, textMaterial);
                mesh.translateX((naxis===0) ? center[0] : buf[0]);
                mesh.translateY((naxis===1) ? center[1] : buf[1]);
@@ -5011,10 +5009,9 @@ function createItem(node, obj, name) {
    return sub;
 }
 
-
 /** @summary Draw dummy geometry
   * @private */
-function drawDummy3DGeom(painter) {
+async function drawDummy3DGeom(painter) {
 
    let extra = painter.getObject(),
        min = [-1, -1, -1], max = [1, 1, 1];

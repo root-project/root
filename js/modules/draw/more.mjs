@@ -10,7 +10,7 @@ import { addMoveHandler } from '../gui/utils.mjs';
 
 /** @summary Draw TText
   * @private */
-function drawText() {
+async function drawText() {
    let text = this.getObject(),
        pp = this.getPadPainter(),
        w = pp.getPadWidth(),
@@ -86,7 +86,7 @@ function drawText() {
 
 /** @summary Draw TLine
   * @private */
-function drawTLine(dom, obj) {
+async function drawTLine(dom, obj) {
 
    let painter = new ObjectPainter(dom, obj);
 

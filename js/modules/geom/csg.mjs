@@ -43,12 +43,12 @@ class Vertex {
       return this;
    }
 
-   multiplyScalar( scalar ) {
-      this.x *= scalar;
-      this.y *= scalar;
-      this.z *= scalar;
-      return this;
-   }
+   // multiplyScalar( scalar ) {
+   //   this.x *= scalar;
+   //   this.y *= scalar;
+   //   this.z *= scalar;
+   //   return this;
+   // }
 
    cross( vertex ) {
       let x = this.x,
@@ -137,10 +137,12 @@ class Vertex {
 
 class Polygon {
 
-   constructor(vertices) {
+   constructor(vertices, parent, more) {
       this.vertices = vertices || [];
       this.nsign = 1;
-      if ( this.vertices.length > 0 )
+      if (parent)
+         this.copyProperties(parent, more);
+      else if (this.vertices.length > 0)
          this.calculateProperties();
    }
 
@@ -155,8 +157,8 @@ class Polygon {
       return this;
    }
 
-   calculateProperties() {
-      if (this.normal) return;
+   calculateProperties(force) {
+      if (this.normal && !force) return;
 
       let a = this.vertices[0],
           b = this.vertices[1],
@@ -272,8 +274,8 @@ class Polygon {
 
          //if ( f.length >= 3 ) front.push( new Polygon( f ).calculateProperties() );
          //if ( b.length >= 3 ) back.push( new Polygon( b ).calculateProperties() );
-         if ( f.length >= 3 ) front.push( new Polygon( f ).copyProperties(polygon, true) );
-         if ( b.length >= 3 ) back.push( new Polygon( b ).copyProperties(polygon, true) );
+         if ( f.length >= 3 ) front.push( new Polygon( f, polygon, true ) );
+         if ( b.length >= 3 ) back.push( new Polygon( b, polygon, true ) );
       }
    }
 
@@ -365,9 +367,9 @@ class Node {
       let node = new Node();
 
       node.divider = this.divider.clone();
-      node.polygons = this.polygons.map( function( polygon ) { return polygon.clone(); } );
-      node.front = this.front && this.front.clone();
-      node.back = this.back && this.back.clone();
+      node.polygons = this.polygons.map( polygon => polygon.clone() );
+      node.front = this.front ? this.front.clone() : undefined;
+      node.back = this.back ? this.back.clone() : undefined;
 
       return node;
    }
@@ -488,7 +490,7 @@ class Geometry {
             if (flippedMesh) polygon.vertices.push( vert1, vert3, vert2 );
                         else polygon.vertices.push( vert1, vert2, vert3 );
 
-            polygon.calculateProperties();
+            polygon.calculateProperties(true);
             polygons.push( polygon );
          }
 
@@ -499,14 +501,18 @@ class Geometry {
       } else if (geometry.polygons && (geometry.polygons[0] instanceof Polygon)) {
          let polygons = geometry.polygons;
 
-         for (let i=0;i<polygons.length;++i) {
+         for (let i = 0; i < polygons.length; ++i) {
             let polygon = polygons[i];
             if (transfer_matrix) {
+               let new_vertices = [];
+
                for (let n = 0; n < polygon.vertices.length; ++n)
-                  polygon.vertices[n].applyMatrix4(transfer_matrix);
+                  new_vertices.push(polygon.vertices[n].clone().applyMatrix4(transfer_matrix));
+
+               polygon.vertices = new_vertices;
             }
 
-            polygon.calculateProperties();
+            polygon.calculateProperties(transfer_matrix);
          }
 
          this.tree = new Node( polygons, nodeid );
@@ -550,7 +556,7 @@ class Geometry {
          if (transfer_matrix) vertex.applyMatrix4(transfer_matrix);
          polygon.vertices.push( vertex );
 
-         polygon.calculateProperties();
+         polygon.calculateProperties(true);
          polygons.push( polygon );
       }
 
@@ -733,8 +739,7 @@ class Geometry {
             v.y *= y;
             v.z *= z;
          }
-         delete polygon.normal;
-         polygon.calculateProperties();
+         polygon.calculateProperties(true);
       }
    }
 
@@ -774,30 +779,27 @@ class Geometry {
 function createNormal(axis_name, pos, size) {
    if (!size || (size < 10000)) size = 10000;
 
-   let vert;
+   let vertices;
 
    switch(axis_name) {
       case "x":
-         vert = [ new Vertex(pos, -3*size,    size, 1, 0, 0),
-                  new Vertex(pos,    size, -3*size, 1, 0, 0),
-                  new Vertex(pos,    size,    size, 1, 0, 0) ];
+         vertices = [ new Vertex(pos, -3*size,    size, 1, 0, 0),
+                      new Vertex(pos,    size, -3*size, 1, 0, 0),
+                      new Vertex(pos,    size,    size, 1, 0, 0) ];
          break;
       case "y":
-         vert = [ new Vertex(-3*size,  pos,    size, 0, 1, 0),
-                  new Vertex(   size,  pos,    size, 0, 1, 0),
-                  new Vertex(   size,  pos, -3*size, 0, 1, 0) ];
+         vertices = [ new Vertex(-3*size,  pos,    size, 0, 1, 0),
+                      new Vertex(   size,  pos,    size, 0, 1, 0),
+                      new Vertex(   size,  pos, -3*size, 0, 1, 0) ];
          break;
       // case "z":
       default:
-         vert = [ new Vertex(-3*size,    size, pos, 0, 0, 1),
-                  new Vertex(   size, -3*size, pos, 0, 0, 1),
-                  new Vertex(   size,    size, pos, 0, 0, 1) ];
+         vertices = [ new Vertex(-3*size,    size, pos, 0, 0, 1),
+                      new Vertex(   size, -3*size, pos, 0, 0, 1),
+                      new Vertex(   size,    size, pos, 0, 0, 1) ];
    }
 
-   let polygon = new Polygon(vert);
-   polygon.calculateProperties();
-
-   let node = new Node([polygon]);
+   let node = new Node([ new Polygon(vertices) ]);
 
    return new Geometry(node);
 }
