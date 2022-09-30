@@ -607,8 +607,6 @@ const DirectStreamers = {
 };
 
 
-
-
 /** @summary Returns type id by its name
   * @private */
 function getTypeId(typname, norecursion) {
@@ -3130,7 +3128,7 @@ class TFile {
 
    /** @summary read formulas from the file and add them to TF1/TF2 objects
      * @private */
-   _readFormulas(tf1) {
+   async _readFormulas(tf1) {
 
       let arr = [];
 
@@ -3202,7 +3200,7 @@ class TFile {
 
    /** @summary Read file keys
      * @private */
-   readKeys() {
+   async readKeys() {
 
       // with the first readbuffer we read bigger amount to create header cache
       return this.readBuffer([0, 1024]).then(blob => {

@@ -449,7 +449,7 @@ async function redraw(dom, obj, opt) {
       let top = new BasePainter(dom).getTopPainter();
       // base painter do not have this method, if it there use it
       // it can be object painter here or can be specially introduce method to handling redraw!
-      if (top && typeof top.redrawObject == 'function') {
+      if (typeof top?.redrawObject == 'function') {
          redraw_res = top.redrawObject(obj, opt);
          if (redraw_res) res_painter = top;
       }

@@ -180,8 +180,9 @@ class TH3Painter extends THistPainter {
    }
 
    /** @summary draw 3D histogram as scatter plot
-     * @desc If there are too many points, box will be displayed */
-   async draw3DScatter() {
+     * @desc If there are too many points, box will be displayed
+     * @return {Promise|false} either Promise or just false that drawing cannot be performed */
+   draw3DScatter() {
 
       let histo = this.getObject(),
           main = this.getFramePainter(),
@@ -194,7 +195,7 @@ class TH3Painter extends THistPainter {
           i, j, k, bin_content;
 
       if ((i2 <= i1) || (j2 <= j1) || (k2 <= k1))
-         return true;
+         return Promise.resolve(true);
 
       // scale down factor if too large values
       let coef = (this.gmaxbin > 1000) ? 1000/this.gmaxbin : 1,

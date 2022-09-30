@@ -1302,7 +1302,7 @@ function applyAttributesToMathJax(painter, mj_node, svg, arg, font_size, svg_fac
 
 /** @summary Produce text with MathJax
   * @private */
-function produceMathjax(painter, mj_node, arg) {
+async function produceMathjax(painter, mj_node, arg) {
    let mtext = translateMath(arg.text, arg.latex, arg.color, painter),
        options = { em: arg.font.size, ex: arg.font.size/2, family: arg.font.name, scale: 1, containerWidth: -1, lineWidth: 100000 };
 
@@ -1323,7 +1323,7 @@ function produceMathjax(painter, mj_node, arg) {
 
 /** @summary Just typeset HTML node with MathJax
   * @private */
-function typesetMathjax(node) {
+async function typesetMathjax(node) {
    return loadMathjax().then(() => MathJax.typesetPromise(node ? [node] : undefined));
 }
 
