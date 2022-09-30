@@ -203,7 +203,6 @@ void *TStorage::ReAlloc(void *ovp, size_t size)
    if (vp == nullptr) {
      Fatal(where, "%s", gSpaceErr);
      return nullptr; // Unreacheable.
-      return vp;
    }
 
    if (ovp == nullptr)
@@ -244,7 +243,7 @@ void *TStorage::ReAlloc(void *ovp, size_t size, size_t oldsize)
 #endif
    if (vp == nullptr) {
       Fatal(where, "%s", gSpaceErr);
-      return vp;
+      return nullptr; // Unreacheable.
    }
 
    if (ovp == nullptr)
