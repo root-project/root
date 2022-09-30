@@ -28,13 +28,13 @@ RDefinesWithReaders::RDefinesWithReaders(std::shared_ptr<RDefineBase> define, un
    assert(fDefine != nullptr);
 }
 
-RDefineReader *RDefinesWithReaders::GetReader(unsigned int slot, const std::string &variationName)
+RDefineReader &RDefinesWithReaders::GetReader(unsigned int slot, const std::string &variationName)
 {
    auto &defineReaders = fReadersPerVariation[slot];
 
    auto it = defineReaders.find(variationName);
    if (it != defineReaders.end())
-      return it->second.get();
+      return *it->second;
 
    auto *define = fDefine.get();
    if (variationName != "nominal")
@@ -42,11 +42,11 @@ RDefineReader *RDefinesWithReaders::GetReader(unsigned int slot, const std::stri
 
 #if !defined(__clang__) && __GNUC__ >= 7 && __GNUC_MINOR__ >= 3
    const auto insertion = defineReaders.insert({variationName, std::make_unique<RDefineReader>(slot, *define)});
-   return insertion.first->second.get();
+   return *insertion.first->second;
 #else
    // gcc < 7.3 has issues with passing the non-movable std::pair temporary into the insert call
    auto reader = std::make_unique<RDefineReader>(slot, *define);
-   auto *ret = reader.get();
+   auto &ret = *reader;
    defineReaders[variationName] = std::move(reader);
    return ret;
 #endif
@@ -59,26 +59,27 @@ RVariationsWithReaders::RVariationsWithReaders(std::shared_ptr<RVariationBase> v
 }
 
 ////////////////////////////////////////////////////////////////////////////
-/// Return a column reader for the given slot, column and variation, or a nullptr if not available.
-RVariationReader *
+/// Return a column reader for the given slot, column and variation.
+RVariationReader &
 RVariationsWithReaders::GetReader(unsigned int slot, const std::string &colName, const std::string &variationName)
 {
-   assert(IsStrInVec(variationName, fVariation->GetVariationNames())); // otherwise we should not be here
+   assert(IsStrInVec(variationName, fVariation->GetVariationNames()));
+   assert(IsStrInVec(colName, fVariation->GetColumnNames()));
 
    auto &varReaders = fReadersPerVariation[slot];
 
    auto it = varReaders.find(variationName);
    if (it != varReaders.end())
-      return it->second.get();
+      return *it->second;
 
 #if !defined(__clang__) && __GNUC__ >= 7 && __GNUC_MINOR__ >= 3
    const auto insertion =
       varReaders.insert({variationName, std::make_unique<RVariationReader>(slot, colName, variationName, *fVariation)});
-   return insertion.first->second.get();
+   return *insertion.first->second;
 #else
    // gcc < 7.3 has issues with passing the non-movable std::pair temporary into the insert call
    auto reader = std::make_unique<RVariationReader>(slot, colName, variationName, *fVariation);
-   auto *ret = reader.get();
+   auto &ret = *reader;
    varReaders[variationName] = std::move(reader);
    return ret;
 #endif
@@ -289,6 +290,8 @@ std::string RColumnRegister::ResolveAlias(std::string_view alias) const
    return aliasStr; // not an alias, i.e. already resolved
 }
 
+/// Return a RDefineReader or a RVariationReader, or nullptr if not available.
+/// If requestedType does not match the actual type of the Define or Variation, an exception is thrown.
 RDFDetail::RColumnReaderBase *RColumnRegister::GetReader(unsigned int slot, const std::string &colName,
                                                          const std::string &variationName,
                                                          const std::type_info &requestedType)
@@ -299,7 +302,7 @@ RDFDetail::RColumnReaderBase *RColumnRegister::GetReader(unsigned int slot, cons
       if (variationAndReaders != nullptr) {
          const auto &actualType = variationAndReaders->GetVariation().GetTypeId();
          CheckReaderTypeMatches(actualType, requestedType, colName);
-         return variationAndReaders->GetReader(slot, colName, variationName);
+         return &variationAndReaders->GetReader(slot, colName, variationName);
       }
    }
 
@@ -308,7 +311,7 @@ RDFDetail::RColumnReaderBase *RColumnRegister::GetReader(unsigned int slot, cons
    if (it != fDefines->end()) {
       const auto &actualType = it->second->GetDefine().GetTypeId();
       CheckReaderTypeMatches(actualType, requestedType, colName);
-      return it->second->GetReader(slot, variationName);
+      return &it->second->GetReader(slot, variationName);
    }
 
    return nullptr;

@@ -53,7 +53,7 @@ class RDefinesWithReaders {
 public:
    RDefinesWithReaders(std::shared_ptr<RDefineBase> define, unsigned int nSlots);
    RDefineBase &GetDefine() const { return *fDefine; }
-   RDefineReader *GetReader(unsigned int slot, const std::string &variationName);
+   RDefineReader &GetReader(unsigned int slot, const std::string &variationName);
 };
 
 class RVariationsWithReaders {
@@ -66,7 +66,7 @@ class RVariationsWithReaders {
 public:
    RVariationsWithReaders(std::shared_ptr<RVariationBase> variation, unsigned int nSlots);
    RVariationBase &GetVariation() const { return *fVariation; }
-   RVariationReader *GetReader(unsigned int slot, const std::string &colName, const std::string &variationName);
+   RVariationReader &GetReader(unsigned int slot, const std::string &colName, const std::string &variationName);
 };
 
 /**
