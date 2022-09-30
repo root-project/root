@@ -133,7 +133,7 @@ std::unique_ptr<ROperator> make_ROperator_FuseConvTransposeAdd(const onnx::NodeP
 }
 
 template<EBasicUnaryOperator Op>
-std::unique_ptr<ROperator> make_ROperator_BasicUnary(const onnx::NodeProto& nodeproto, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type) {
+std::unique_ptr<ROperator> make_ROperator_BasicUnary(const onnx::NodeProto& nodeproto, const onnx::GraphProto& /*graphproto*/, std::unordered_map<std::string, ETensorType>& tensor_type) {
    std::unique_ptr<ROperator> op;
 
    ETensorType input_type = ETensorType::UNDEFINED;
