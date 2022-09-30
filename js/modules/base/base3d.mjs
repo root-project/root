@@ -426,7 +426,17 @@ async function createRender3D(width, height, render3d, args) {
          if (!gl) throw(Error("Fail to create headless-gl"));
          args.context = gl;
          gl.canvas = args.canvas;
+         let wk_rnd = false;
+         if (typeof navigator == 'undefined') {
+            // TODO: check if needed after r145
+            globalThis.navigator = { userAgent: "node" };
+            wk_rnd = true;
+         }
+
          let r = new WebGLRenderer(args);
+
+         if (wk_rnd) delete globalThis.navigator;
+
          r.jsroot_output = new WebGLRenderTarget(width, height);
          r.setRenderTarget(r.jsroot_output);
          need_workaround = true;
@@ -1409,7 +1419,7 @@ class PointsCreator {
 
    /** @summary constructor
      * @param {number} size - number of points
-     * @param {booleand} [iswebgl=true] - if WebGL is used
+     * @param {boolean} [iswebgl=true] - if WebGL is used
      * @param {number} [scale=1] - scale factor */
    constructor(size, iswebgl, scale) {
       this.webgl = (iswebgl === undefined) ? true : iswebgl;

@@ -5,6 +5,8 @@
 2. Fix - use alpha channel for TColor when intended
 3. Fix - show correct bin index in TH2 tooltips
 4. Mark methods returning `Promise` objects as **async**
+5. Fix several bugs in csg.mjs
+6. Upgrade three.js to r145
 
 
 ## Changes in 7.2.0
