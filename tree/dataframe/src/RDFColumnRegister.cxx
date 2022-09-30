@@ -40,8 +40,16 @@ RDefineReader *RDefinesWithReaders::GetReader(unsigned int slot, const std::stri
    if (variationName != "nominal")
       define = &define->GetVariedDefine(variationName);
 
+#if !defined(__clang__) && __GNUC__ >= 7 && __GNUC_MINOR__ >= 3
    const auto insertion = defineReaders.insert({variationName, std::make_unique<RDefineReader>(slot, *define)});
    return insertion.first->second.get();
+#else
+   // gcc < 7.3 has issues with passing the non-movable std::pair temporary into the insert call
+   auto reader = std::make_unique<RDefineReader>(slot, *define);
+   auto *ret = reader.get();
+   defineReaders[variationName] = std::move(reader);
+   return ret;
+#endif
 }
 
 RVariationsWithReaders::RVariationsWithReaders(std::shared_ptr<RVariationBase> variation, unsigned int nSlots)
@@ -63,9 +71,17 @@ RVariationsWithReaders::GetReader(unsigned int slot, const std::string &colName,
    if (it != varReaders.end())
       return it->second.get();
 
+#if !defined(__clang__) && __GNUC__ >= 7 && __GNUC_MINOR__ >= 3
    const auto insertion =
       varReaders.insert({variationName, std::make_unique<RVariationReader>(slot, colName, variationName, *fVariation)});
    return insertion.first->second.get();
+#else
+   // gcc < 7.3 has issues with passing the non-movable std::pair temporary into the insert call
+   auto reader = std::make_unique<RVariationReader>(slot, colName, variationName, *fVariation);
+   auto *ret = reader.get();
+   varReaders[variationName] = std::move(reader);
+   return ret;
+#endif
 }
 
 RColumnRegister::RColumnRegister(std::shared_ptr<RDFDetail::RLoopManager> lm)
