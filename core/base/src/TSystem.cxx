@@ -3798,6 +3798,11 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
          TString relink_cmd = cmd.Strip(TString::kTrailing, ';');
          relink_cmd += depLibsFullPaths;
+         if (verboseLevel > 3 && withInfo) {
+            ::Info("ACLiC", "relinking against all dependencies");
+            if (verboseLevel > 4)
+               ::Info("ACLiC", "%s", relink_cmd.Data());
+         }
          result = ExecAndReport(relink_cmd);
       }
 
