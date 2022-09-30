@@ -201,7 +201,8 @@ void *TStorage::ReAlloc(void *ovp, size_t size)
    void *vp = ::operator new(size);
 #endif
    if (vp == nullptr) {
-      Fatal(where, "%s", gSpaceErr);
+     Fatal(where, "%s", gSpaceErr);
+     return nullptr; // Unreacheable.
       return vp;
    }
 
