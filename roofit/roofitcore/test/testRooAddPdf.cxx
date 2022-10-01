@@ -3,8 +3,10 @@
 
 #include <RooAddPdf.h>
 #include <RooConstVar.h>
+#include <RooDataHist.h>
 #include <RooExponential.h>
 #include <RooGaussian.h>
+#include <RooHistPdf.h>
 #include <RooMsgService.h>
 #include <RooProdPdf.h>
 #include <RooWorkspace.h>
@@ -179,3 +181,59 @@ TEST(RooAddPdf, RecursiveCoefficients)
 
    EXPECT_TRUE(curve2->isIdentical(*curve1));
 }
+
+class ProjCacheTest : public testing::TestWithParam<std::tuple<bool>> {
+   void SetUp() override { _fixCoefNormalization = std::get<0>(GetParam()); }
+
+   void TearDown() override {}
+
+protected:
+   bool _fixCoefNormalization = false;
+};
+
+/// Verify that the coefficient projection works for different configurations
+/// of the RooAddPdf.
+TEST_P(ProjCacheTest, Test)
+{
+   RooRealVar x{"x", "x", 0, 4};
+   x.setBins(4);
+   x.setRange("B1", 0, 2);
+   x.setRange("B2", 2, 4);
+   x.setRange("FULL", 0, 4);
+
+   RooDataHist dataHist1{"dh1", "dh1", x};
+   RooDataHist dataHist2{"dh2", "dh2", x};
+
+   for (int i = 0; i < 4; ++i) {
+      dataHist1.set(i, i + 1, 0.0);
+      dataHist2.set(i, 4. - i, 0.0);
+   }
+
+   RooHistPdf pdf1{"pdf1", "pdf1", x, dataHist1};
+   RooHistPdf pdf2{"pdf2", "pdf2", x, dataHist2};
+
+   RooRealVar frac{"frac", "frac", 0.5, 0, 1};
+
+   RooAddPdf pdf{"pdf", "pdf", {pdf1, pdf2}, frac};
+
+   RooArgSet normSet{x};
+
+   x.setRange(2, 4);
+   pdf.fixCoefRange("FULL");
+   if (_fixCoefNormalization) {
+      pdf.fixCoefNormalization(normSet);
+   }
+
+   x.setVal(2.5);
+   EXPECT_FLOAT_EQ(pdf.getVal(normSet), 0.5);
+   x.setVal(3.5);
+   EXPECT_FLOAT_EQ(pdf.getVal(normSet), 0.5);
+}
+
+INSTANTIATE_TEST_SUITE_P(RooAddPdf, ProjCacheTest,
+                         testing::Values(ProjCacheTest::ParamType{false}, ProjCacheTest::ParamType{true}),
+                         [](testing::TestParamInfo<ProjCacheTest::ParamType> const &paramInfo) {
+                            std::stringstream ss;
+                            ss << (std::get<0>(paramInfo.param) ? "fixCoefNorm" : "floatingCoefNorm");
+                            return ss.str();
+                         });
