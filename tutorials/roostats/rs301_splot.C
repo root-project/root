@@ -147,9 +147,10 @@ void AddModel(RooWorkspace *ws)
    RooRealVar zYield("zYield", "fitted yield for Z", 50, 0., 1000);
    RooRealVar qcdYield("qcdYield", "fitted yield for QCD", 100, 0., 1000);
 
-   // now make the combined model
+   // now make the combined models
    std::cout << "make full model" << std::endl;
-   RooAddPdf model("model", "z+qcd background models", RooArgList(zModel, qcdModel), RooArgList(zYield, qcdYield));
+   RooAddPdf model("model", "z+qcd background models", {zModel, qcdModel}, {zYield, qcdYield});
+   RooAddPdf massModel("massModel", "z+qcd invariant mass model", {mZModel, qcdMassModel}, {zYield, qcdYield});
 
    // interesting for debugging and visualizing the model
    model.graphVizTree("fullModel.dot");
@@ -157,6 +158,7 @@ void AddModel(RooWorkspace *ws)
    std::cout << "import model" << std::endl;
 
    ws->import(model);
+   ws->import(massModel, RecycleConflictNodes());
 }
 
 //____________________________________
@@ -187,12 +189,10 @@ void DoSPlot(RooWorkspace *ws)
 
    // get what we need out of the workspace to do the fit
    RooAbsPdf *model = ws->pdf("model");
+   RooAbsPdf *massModel = ws->pdf("massModel");
    RooRealVar *zYield = ws->var("zYield");
    RooRealVar *qcdYield = ws->var("qcdYield");
-   RooDataSet *data = (RooDataSet *)ws->data("data");
-
-   // fit the model to the data.
-   model->fitTo(*data, Extended());
+   RooDataSet& data = static_cast<RooDataSet&>(*ws->data("data"));
 
    // The sPlot technique requires that we fix the parameters
    // of the model that are not yields after doing the fit.
@@ -209,16 +209,16 @@ void DoSPlot(RooWorkspace *ws)
    RooMsgService::instance().setSilentMode(true);
 
    std::cout << "\n\n------------------------------------------\nThe dataset before creating sWeights:\n";
-   data->Print();
+   data.Print();
 
    RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
 
-   // Now we use the SPlot class to add SWeights to our data set
-   // based on our model and our yield variables
-   RooStats::SPlot *sData = new RooStats::SPlot("sData", "An SPlot", *data, model, RooArgList(*zYield, *qcdYield));
+   // Now we use the SPlot class to add SWeights for the isolation variable to
+   // our data set based on fitting the yields to the invariant mass variable
+   RooStats::SPlot sData{"sData", "An SPlot", data, massModel, RooArgList(*zYield, *qcdYield)};
 
    std::cout << "\n\nThe dataset after creating sWeights:\n";
-   data->Print();
+   data.Print();
 
    // Check that our weights have the desired properties
 
@@ -226,15 +226,15 @@ void DoSPlot(RooWorkspace *ws)
 
    std::cout << std::endl
              << "Yield of Z is\t" << zYield->getVal() << ".  From sWeights it is "
-             << sData->GetYieldFromSWeight("zYield") << std::endl;
+             << sData.GetYieldFromSWeight("zYield") << std::endl;
 
    std::cout << "Yield of QCD is\t" << qcdYield->getVal() << ".  From sWeights it is "
-             << sData->GetYieldFromSWeight("qcdYield") << std::endl
+             << sData.GetYieldFromSWeight("qcdYield") << std::endl
              << std::endl;
 
    for (Int_t i = 0; i < 10; i++) {
-      std::cout << "z Weight for event " << i << std::right << std::setw(12) << sData->GetSWeight(i, "zYield") << "  qcd Weight"
-                << std::setw(12) << sData->GetSWeight(i, "qcdYield") << "  Total Weight" << std::setw(12) << sData->GetSumOfEventSWeight(i)
+      std::cout << "z Weight for event " << i << std::right << std::setw(12) << sData.GetSWeight(i, "zYield") << "  qcd Weight"
+                << std::setw(12) << sData.GetSWeight(i, "qcdYield") << "  Total Weight" << std::setw(12) << sData.GetSumOfEventSWeight(i)
                 << std::endl;
    }
 
@@ -242,7 +242,7 @@ void DoSPlot(RooWorkspace *ws)
 
    // import this new dataset with sWeights
    std::cout << "import new dataset with sWeights" << std::endl;
-   ws->import(*data, Rename("dataWithSWeights"));
+   ws->import(data, Rename("dataWithSWeights"));
 
    RooMsgService::instance().setGlobalKillBelow(RooFit::INFO);
 }
