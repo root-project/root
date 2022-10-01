@@ -54,6 +54,8 @@ int check(const char *args, size_t old_index)
 
 int execPair(const char *filename = "pair.root")
 {
+   gErrorIgnoreLevel = kPrint; // Get all the output even if .rootrc or env says otherwise                                               
+
    gInterpreter->SetClassAutoLoading(false);
    TInterpreter::SuspendAutoParsing s(gInterpreter);
 

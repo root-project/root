@@ -2,6 +2,8 @@
 
 int repro()
 {
+   gErrorIgnoreLevel = kPrint; // Get all the output even if .rootrc or env says otherwise
+
    // Check that our setup is reproducing the environment that caused the origin problem
    const char *name = "edm_test::FwdPtr<CaloTowerTest>";
    auto cl = TClass::GetClass(name);
