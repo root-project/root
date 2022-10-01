@@ -51,6 +51,8 @@ int outerPair()
 
 int main(int, char **)
 {
+   gErrorIgnoreLevel = kPrint; // Get all the output even if .rootrc or env says otherwise                                               
+
    gInterpreter->SetClassAutoLoading(false);
    TInterpreter::SuspendAutoParsing s(gInterpreter);
 

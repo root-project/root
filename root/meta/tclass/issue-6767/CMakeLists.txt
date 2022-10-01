@@ -7,4 +7,3 @@ ROOTTEST_ADD_TEST(reproducer
                   MACRO repro.C
                   OUTREF repro.ref
                   DEPENDS ${GENERATE_DICTIONARY_TEST})
-
