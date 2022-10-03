@@ -100,7 +100,6 @@ protected:
   mutable RooSetProxy _refCoefNorm ;   ///< Reference observable set for coefficient interpretation
   mutable TNamed* _refCoefRangeName = nullptr ;  ///< Reference range name for coefficient interpreation
 
-  bool _projectCoefs = false;     ///< If true coefficients need to be projected for use in evaluate()
   mutable std::vector<double> _coefCache; ///<! Transient cache with transformed values of coefficients
 
 
@@ -144,7 +143,7 @@ private:
 
   void finalizeConstruction();
 
-  ClassDefOverride(RooAddPdf,4) // PDF representing a sum of PDFs
+  ClassDefOverride(RooAddPdf,5) // PDF representing a sum of PDFs
 };
 
 #endif
