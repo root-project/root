@@ -56,6 +56,12 @@ Bool_t TObject::fgObjectStat = kTRUE;
 
 ClassImp(TObject);
 
+#if defined(__clang__) || defined (__GNUC__)
+# define ATTRIBUTE_NO_SANITIZE_ADDRESS __attribute__((no_sanitize_address))
+#else
+# define ATTRIBUTE_NO_SANITIZE_ADDRESS
+#endif
+
 namespace ROOT {
 namespace Internal {
 
@@ -66,6 +72,7 @@ namespace Internal {
 // like TClonesArray, where we know the destructor will be called but not operator
 // delete, we can still use it to detect the cases where the destructor was called.
 
+ATTRIBUTE_NO_SANITIZE_ADDRESS
 bool DeleteChangesMemoryImpl()
 {
    static constexpr UInt_t kGoldenUUID = 0x00000021;
