@@ -159,11 +159,16 @@ TEST(RooAddPdf, RecursiveCoefficients)
 {
    using namespace RooFit;
 
-   RooRealVar x{"x", "x", 0, 0, 20};
+   RooWorkspace ws;
+   ws.factory("Gaussian::g1(x[0, 0, 20], 3.0, 1.0)");
+   ws.factory("Gaussian::g2(x, 9.0, 1.0)");
+   ws.factory("Gaussian::g3(x, 15.0, 1.0)");
 
-   RooGaussian g1{"g1", "g1", x, RooConst(3.0), RooConst(1.0)};
-   RooGaussian g2{"g2", "g2", x, RooConst(9.0), RooConst(1.0)};
-   RooGaussian g3{"g3", "g3", x, RooConst(15.0), RooConst(1.0)};
+   RooRealVar &x = *ws.var("x");
+
+   RooAbsPdf &g1 = *ws.pdf("g1");
+   RooAbsPdf &g2 = *ws.pdf("g2");
+   RooAbsPdf &g3 = *ws.pdf("g3");
 
    // A regular RooAddPdf
    RooAddPdf model1{"model1", "model1", {g1, g2, g3}, {RooConst(1. / 3), RooConst(1. / 3)}};
@@ -237,3 +242,54 @@ INSTANTIATE_TEST_SUITE_P(RooAddPdf, ProjCacheTest,
                             ss << (std::get<0>(paramInfo.param) ? "fixCoefNorm" : "floatingCoefNorm");
                             return ss.str();
                          });
+
+/// Reproduces the former issue where the ranged projection of a RooAddPdf with
+/// binned PDFs got normalisation wrong:
+/// https://sft.its.cern.ch/jira/browse/ROOT-10483.
+TEST(RooAddPdf, ROOT10483)
+{
+   RooWorkspace ws;
+
+   // Create model
+   ws.factory("PROD::sig(Gaussian(x[-5,5], 0.0, 1.0), Gaussian(y[-5,5], 0.0, 1.0), Gaussian(z[-5,5], 0.0, 1.0))");
+   ws.factory("PROD::bkg(Polynomial(x, {-0.1, 0.004}), Polynomial(y, {0.1, -0.004}), Polynomial(z, {}))");
+   ws.factory("SUM::model(fsig[0.1, 0.0, 1.0] * sig, bkg)");
+
+   RooAbsPdf &gz = *ws.pdf("sig_3");
+   RooAbsPdf &sig = *ws.pdf("sig");
+   RooAbsPdf &bkg = *ws.pdf("bkg");
+   RooAbsPdf &model = *ws.pdf("model");
+
+   RooRealVar &x = *ws.var("x");
+   RooRealVar &y = *ws.var("y");
+   RooRealVar &z = *ws.var("z");
+   RooRealVar &fsig = *ws.var("fsig");
+
+   const int nEvents = 20000;
+
+   // Create RooHistPdf for signal shape
+   std::unique_ptr<RooDataSet> signalData{sig.generate({x, y, z}, nEvents)};
+
+   x.setBins(40);
+   y.setBins(40);
+
+   RooDataHist dh("dh", "binned version of d", {x, y}, *signalData);
+   RooHistPdf sigXYhist("sig_xy_hist", "sig_xy_hist", {x, y}, dh);
+   RooProdPdf sigHist("sig_hist", "sig_hist", {sigXYhist, gz});
+   RooAddPdf modelHist("model_hist", "model_hist", {sigHist, bkg}, fsig);
+
+   std::unique_ptr<RooDataSet> data{model.generate({x, y, z}, nEvents)};
+
+   y.setRange("sigRegion", -1, 1);
+   z.setRange("sigRegion", -1, 1);
+
+   std::unique_ptr<RooPlot> frame{x.frame(RooFit::Bins(40))};
+
+   data->plotOn(frame.get(), RooFit::CutRange("sigRegion"));
+   modelHist.plotOn(frame.get(), RooFit::ProjectionRange("sigRegion"));
+
+   // If the normalization in the plot is right, the reduced chi-square of the
+   // the plot will be good (i.e. less than one) as the data was directly
+   // sampled from the model.
+   EXPECT_LE(frame->chiSquare(), 1.0);
+}
