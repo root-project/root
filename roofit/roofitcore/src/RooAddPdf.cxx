@@ -281,7 +281,6 @@ RooAddPdf::RooAddPdf(const RooAddPdf& other, const char* name) :
   RooAbsPdf(other,name),
   _refCoefNorm("!refCoefNorm",this,other._refCoefNorm),
   _refCoefRangeName((TNamed*)other._refCoefRangeName),
-  _projectCoefs(other._projectCoefs),
   _projCacheMgr(other._projCacheMgr,this),
   _codeReg(other._codeReg),
   _pdfList("!pdfs",this,other._pdfList),
@@ -309,10 +308,8 @@ RooAddPdf::RooAddPdf(const RooAddPdf& other, const char* name) :
 void RooAddPdf::fixCoefNormalization(const RooArgSet& refCoefNorm)
 {
   if (refCoefNorm.empty()) {
-    _projectCoefs = false ;
     return ;
   }
-  _projectCoefs = true ;
 
   _refCoefNorm.removeAll() ;
   _refCoefNorm.add(refCoefNorm) ;
@@ -340,7 +337,6 @@ void RooAddPdf::fixCoefRange(const char* rangeName)
     _projCacheMgr.reset() ;
   }
   _refCoefRangeName = newNamePtr;
-  if (_refCoefRangeName) _projectCoefs = true ;
 }
 
 
@@ -365,10 +361,12 @@ AddCacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooArgSet* is
   }
 
   //Create new cache
-  cache = new AddCacheElem{*this, _pdfList, _coefList, nset, iset,
-                           _projectCoefs, _refCoefNorm,
+  cache = new AddCacheElem{*this, _pdfList, _coefList, nset, iset, _refCoefNorm,
                            _refCoefRangeName ? RooNameReg::str(_refCoefRangeName) : "",
                            _verboseEval};
+  //std::cout << std::endl;
+  //cache->print();
+  //std::cout << std::endl;
 
   _projCacheMgr.setObj(nset,iset,cache,RooNameReg::ptr(normRange())) ;
 
@@ -398,7 +396,7 @@ void RooAddPdf::updateCoefficients(AddCacheElem& cache, const RooArgSet* nset, b
       _coefCache[i] = static_cast<RooAbsReal const&>(_coefList[i]).getVal(nset);
     }
   }
-  RooAddHelpers::updateCoefficients(*this, _coefCache, _pdfList, _haveLastCoef, cache, nset, _projectCoefs,
+  RooAddHelpers::updateCoefficients(*this, _coefCache, _pdfList, _haveLastCoef, cache, nset,
                                     _refCoefNorm, _allExtendable, _coefErrCount);
 }
 
