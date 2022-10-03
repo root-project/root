@@ -331,7 +331,7 @@ Result ReadSpeed::EvalThroughputMT(const Data &d, unsigned nThreads)
 
    TStopwatch sw;
    sw.Start();
-   const auto totalByteData = pool.MapReduce(processFile, ROOT::TSeqUL{(unsigned long)d.fFileNames.size()}, SumBytes);
+   const auto totalByteData = pool.MapReduce(processFile, ROOT::TSeqUL(d.fFileNames.size()), SumBytes);
    sw.Stop();
 
    return {sw.RealTime(),
