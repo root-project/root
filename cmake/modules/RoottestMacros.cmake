@@ -47,10 +47,14 @@ function(ROOTTEST_ADD_TESTDIRS)
     string(REPLACE "${curdir}/" "" d ${d})
     add_subdirectory(${d})
     # create .rootrc in binary directory to avoid filling $HOME/.root_hist
-    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/${d}/.rootrc "
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${d}/.rootrc")
+      configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${d}/.rootrc ${CMAKE_CURRENT_BINARY_DIR}/${d} COPYONLY)
+    else()
+      file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/${d}/.rootrc "
 Rint.History:  .root_hist
 ACLiC.LinkLibs:  1
 ")
+    endif()
   endforeach()
 
 endfunction()
