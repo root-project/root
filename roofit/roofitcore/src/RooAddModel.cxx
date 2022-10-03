@@ -81,7 +81,6 @@ RooAddModel::RooAddModel(const char *name, const char *title, const RooArgList& 
   RooResolutionModel(name,title,(static_cast<RooResolutionModel*>(inPdfList.at(0)))->convVar()),
   _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,false,false),
   _refCoefRangeName(0),
-  _projectCoefs(false),
   _projCacheMgr(this,10),
   _intCacheMgr(this,10),
   _codeReg(10),
@@ -162,7 +161,6 @@ RooAddModel::RooAddModel(const RooAddModel& other, const char* name) :
   RooResolutionModel(other,name),
   _refCoefNorm("!refCoefNorm",this,other._refCoefNorm),
   _refCoefRangeName((TNamed*)other._refCoefRangeName),
-  _projectCoefs(other._projectCoefs),
   _projCacheMgr(other._projCacheMgr,this),
   _intCacheMgr(other._intCacheMgr,this),
   _codeReg(other._codeReg),
@@ -189,10 +187,8 @@ RooAddModel::RooAddModel(const RooAddModel& other, const char* name) :
 void RooAddModel::fixCoefNormalization(const RooArgSet& refCoefNorm)
 {
   if (refCoefNorm.empty()) {
-    _projectCoefs = false ;
     return ;
   }
-  _projectCoefs = true ;
 
   _refCoefNorm.removeAll() ;
   _refCoefNorm.add(refCoefNorm) ;
@@ -216,7 +212,6 @@ void RooAddModel::fixCoefNormalization(const RooArgSet& refCoefNorm)
 void RooAddModel::fixCoefRange(const char* rangeName)
 {
   _refCoefRangeName = (TNamed*)RooNameReg::ptr(rangeName) ;
-  if (_refCoefRangeName) _projectCoefs = true ;
 }
 
 
@@ -320,8 +315,7 @@ AddCacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const RooArgSet* 
   }
 
   //Create new cache
-  cache = new AddCacheElem{*this, _pdfList, _coefList, nset, iset,
-                           _projectCoefs, _refCoefNorm,
+  cache = new AddCacheElem{*this, _pdfList, _coefList, nset, iset, _refCoefNorm,
                            _refCoefRangeName ? RooNameReg::str(_refCoefRangeName) : "",
                            _verboseEval};
 
@@ -343,7 +337,7 @@ void RooAddModel::updateCoefficients(AddCacheElem& cache, const RooArgSet* nset)
   for(std::size_t i = 0; i < _coefList.size(); ++i) {
     _coefCache[i] = static_cast<RooAbsReal const&>(_coefList[i]).getVal(nset);
   }
-  RooAddHelpers::updateCoefficients(*this, _coefCache, _pdfList, _haveLastCoef, cache, nset, _projectCoefs,
+  RooAddHelpers::updateCoefficients(*this, _coefCache, _pdfList, _haveLastCoef, cache, nset,
                                     _refCoefNorm, _allExtendable, _coefErrCount);
 }
 
