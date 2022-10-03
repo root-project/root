@@ -21,8 +21,8 @@ class RooArgSet;
 class AddCacheElem : public RooAbsCacheElement {
 public:
    AddCacheElem(RooAbsPdf const &addPdf, RooArgList const &pdfList, RooArgList const &coefList, const RooArgSet *nset,
-                const RooArgSet *iset, bool projectCoefs, RooArgSet const &refCoefNormSet,
-                std::string const &refCoefNormRange, int verboseEval);
+                const RooArgSet *iset, RooArgSet const &refCoefNormSet, std::string const &refCoefNormRange,
+                int verboseEval);
 
    RooArgList containedArgs(Action) override;
 
@@ -56,7 +56,7 @@ private:
 class RooAddHelpers {
 public:
    static void updateCoefficients(RooAbsPdf const &addPdf, std::vector<double> &coefCache, RooArgList const &pdfList,
-                                  bool haveLastCoef, AddCacheElem &cache, const RooArgSet *nset, bool projectCoefs,
+                                  bool haveLastCoef, AddCacheElem &cache, const RooArgSet *nset,
                                   RooArgSet const &refCoefNormSet, bool allExtendable, int &coefErrCount);
 };
 

@@ -94,7 +94,6 @@ protected:
   mutable RooSetProxy _refCoefNorm ;   ///<! Reference observable set for coefficient interpretation
   mutable TNamed* _refCoefRangeName = nullptr;  ///<! Reference range name for coefficient interpretation
 
-  bool _projectCoefs = false;  ///< If true coefficients need to be projected for use in evaluate()
   mutable std::vector<double> _coefCache; ///<! Transiet cache with transformed values of coefficients
 
 
@@ -128,7 +127,7 @@ protected:
 
 private:
 
-  ClassDefOverride(RooAddModel,2) // Resolution model representing a sum of resolution models
+  ClassDefOverride(RooAddModel,3) // Resolution model representing a sum of resolution models
 };
 
 #endif

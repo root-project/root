@@ -23,8 +23,8 @@
 /// projection configuration.
 
 AddCacheElem::AddCacheElem(RooAbsPdf const &addPdf, RooArgList const &pdfList, RooArgList const &coefList,
-                           const RooArgSet *nset, const RooArgSet *iset, bool projectCoefs,
-                           RooArgSet const &refCoefNormSet, std::string const &refCoefNormRange, int verboseEval)
+                           const RooArgSet *nset, const RooArgSet *iset, RooArgSet const &refCoefNormSet,
+                           std::string const &refCoefNormRange, int verboseEval)
 {
    // We put the normRange into a std::string to not have to deal with
    // nullptr vs. "" ambiguities
@@ -94,13 +94,12 @@ AddCacheElem::AddCacheElem(RooAbsPdf const &addPdf, RooArgList const &pdfList, R
 
    // *** PART 2 : Create projection coefficients ***
 
+   const bool projectCoefsForRangeReasons = !refCoefNormRange.empty() || !normRange.empty() || hasPdfWithCustomRange;
+
    // If no projections required stop here
-   if (!projectCoefs && !hasPdfWithCustomRange) {
-      //     cout << " no projection required" << std::endl ;
+   if (refCoefNormSet.empty() && !projectCoefsForRangeReasons) {
       return;
    }
-
-   //   cout << "calculating projection" << std::endl ;
 
    // Reduce iset/nset to actual dependents of this PDF
    RooArgSet nset2;
@@ -117,7 +116,7 @@ AddCacheElem::AddCacheElem(RooAbsPdf const &addPdf, RooArgList const &pdfList, R
       nset2.add(refCoefNormSet);
    }
 
-   if (!nset2.equals(refCoefNormSet) || !refCoefNormRange.empty() || !normRange.empty() || hasPdfWithCustomRange) {
+   if (!nset2.equals(refCoefNormSet) || projectCoefsForRangeReasons) {
 
       // Recalculate projection integrals of PDFs
       for (auto *pdf : static_range_cast<const RooAbsPdf *>(pdfList)) {
@@ -220,8 +219,8 @@ RooArgList AddCacheElem::containedArgs(Action)
 
 void RooAddHelpers::updateCoefficients(RooAbsPdf const &addPdf, std::vector<double> &coefCache,
                                        RooArgList const &pdfList, bool haveLastCoef, AddCacheElem &cache,
-                                       const RooArgSet *nset, bool projectCoefs, RooArgSet const &refCoefNormSet,
-                                       bool allExtendable, int &coefErrCount)
+                                       const RooArgSet *nset, RooArgSet const &refCoefNormSet, bool allExtendable,
+                                       int &coefErrCount)
 {
    // Straight coefficients
    if (allExtendable) {
@@ -284,7 +283,7 @@ void RooAddHelpers::updateCoefficients(RooAbsPdf const &addPdf, std::vector<doub
    }
 
    // Stop here if not projection is required or needed
-   if ((!projectCoefs && !addPdf.normRange()) || !cache.doProjection()) {
+   if (!cache.doProjection()) {
       return;
    }
 
