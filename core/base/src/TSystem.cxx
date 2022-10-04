@@ -719,6 +719,7 @@ int TSystem::GetPid()
 void TSystem::Exit(int, Bool_t)
 {
    AbstractMethod("Exit");
+   throw; // unreachable
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -727,6 +728,7 @@ void TSystem::Exit(int, Bool_t)
 void TSystem::Abort(int)
 {
    AbstractMethod("Abort");
+   throw; // unreachable
 }
 
 ////////////////////////////////////////////////////////////////////////////////
