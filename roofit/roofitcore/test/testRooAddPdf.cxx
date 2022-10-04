@@ -243,6 +243,73 @@ INSTANTIATE_TEST_SUITE_P(RooAddPdf, ProjCacheTest,
                             return ss.str();
                          });
 
+/// Verify that if we change the normalization set of a server to a RooAddPdf,
+/// the projection caches in the RooAddPdf are cleared correctly.
+TEST(RooAddPdf, ResetServerNormRange)
+{
+   using namespace RooFit;
+
+   RooWorkspace ws;
+   ws.factory("PROD::sig(Polynomial(x[-10, 10], {0.0, 0.0, 1.0}, 0), Polynomial(y[-10, 10], {}))");
+   ws.factory("PROD::bkg(Polynomial(x, {}), Polynomial(y, {}))");
+   ws.factory("SUM::model(f[0.5, 0, 1] * sig, bkg)");
+   ws.factory("SUM::modelFixed(f * sig, bkg)");
+   ws.factory("EXPR::modelRef('f * 3.0/2000. * x * x + (1 - f) / 20.', {x, f})");
+
+   RooRealVar &x = *ws.var("x");
+   RooRealVar &y = *ws.var("y");
+
+   RooAddPdf &model = static_cast<RooAddPdf &>(*ws.pdf("model"));
+   RooAddPdf &modelFixed = static_cast<RooAddPdf &>(*ws.pdf("modelFixed"));
+   RooAbsPdf &modelRef = *ws.pdf("modelRef");
+
+   x.setRange("SIG", 0.0, +1.0);
+   y.setRange("SIG", 0.0, +1.0);
+
+   x.setRange("FULL", -10.0, +10.0);
+   y.setRange("FULL", -10.0, +10.0);
+
+   RooArgSet normSet1{x, y};
+   RooArgSet normSet2{x, y};
+
+   const char *fitRange = "SIG";
+
+   // We do the comparison also for a model where the normalization is fixed
+   modelFixed.fixCoefNormalization(normSet1);
+   modelFixed.fixCoefRange("FULL");
+
+   // First we set the normalization range only for the RooAddPdf...
+   model.setNormRange(fitRange);
+   modelFixed.setNormRange(fitRange);
+   modelRef.setNormRange(fitRange);
+
+   const double val1 = model.getVal(normSet1);
+   const double val1fixed = modelFixed.getVal(normSet1);
+   const double val1ref = modelRef.getVal(normSet1);
+
+   // ... then also for its servers
+   for (auto *pdf : static_range_cast<RooAbsPdf *>(ws.allPdfs())) {
+      pdf->setNormRange(fitRange);
+   }
+
+   // We first use the same normalization set to re-evaluate, then a different
+   // one to confuse to first trigger the chache and then have a another
+   // reference.
+   const double val2 = model.getVal(normSet1);
+   const double val3 = model.getVal(normSet2);
+   const double val2fixed = modelFixed.getVal(normSet1);
+   const double val3fixed = modelFixed.getVal(normSet2);
+   const double val2ref = modelRef.getVal(normSet1);
+   const double val3ref = modelRef.getVal(normSet2);
+
+   EXPECT_FLOAT_EQ(val1, val1ref);
+   EXPECT_FLOAT_EQ(val1fixed, val1ref);
+   EXPECT_FLOAT_EQ(val2, val2ref);
+   EXPECT_FLOAT_EQ(val2fixed, val2ref);
+   EXPECT_FLOAT_EQ(val3, val3ref);
+   EXPECT_FLOAT_EQ(val3fixed, val3ref);
+}
+
 /// Reproduces the former issue where the ranged projection of a RooAddPdf with
 /// binned PDFs got normalisation wrong:
 /// https://sft.its.cern.ch/jira/browse/ROOT-10483.
