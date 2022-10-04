@@ -716,6 +716,8 @@ void TRint::HandleException(Int_t sig)
 ////////////////////////////////////////////////////////////////////////////////
 /// Terminate the application. Reset the terminal to sane mode and call
 /// the logoff macro defined via Rint.Logoff environment variable.
+/// @note The function does not return, unless the class has
+/// been told to return from Run(), by a call to SetReturnFromRun().
 
 void TRint::Terminate(Int_t status)
 {
