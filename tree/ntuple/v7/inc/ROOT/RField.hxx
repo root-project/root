@@ -341,6 +341,7 @@ public:
 /// The collection proxy for a given class can be set via `TClass::CopyCollectionProxy()`.
 class RCollectionClassField : public Detail::RFieldBase {
 private:
+   static constexpr const std::uint32_t kReadChunkSize = 128;
    TVirtualCollectionProxy *fProxy;
    std::size_t fItemSize;
    ClusterSize_t fNWritten;

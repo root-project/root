@@ -34,7 +34,6 @@
 #include <TRealData.h>
 
 #include <algorithm>
-#include <alloca.h>
 #include <cctype> // for isspace
 #include <cstdint>
 #include <cstdlib> // for malloc, free
@@ -1010,11 +1009,23 @@ void ROOT::Experimental::RCollectionClassField::ReadGlobalImpl(NTupleSize_t glob
       }
    }
    fProxy->Clear();
-   auto buff = alloca(fItemSize);
-   for (std::size_t i = 0; i < nItems; ++i) {
-      auto itemValue = fSubFields[0]->GenerateValue(buff);
-      fSubFields[0]->Read(collectionStart + i, &itemValue);
-      fProxy->Insert(itemValue.GetRawPtr(), value->GetRawPtr(), 1);
+
+   // Avoid heap fragmentation at the cost of temporarily allocating slightly more memory
+   auto buff = std::make_unique<unsigned char[]>(kReadChunkSize * fItemSize);
+   auto nItemsLeft = static_cast<std::uint32_t>(nItems);
+   while (nItemsLeft > 0) {
+      auto count = std::min(nItemsLeft, kReadChunkSize);
+      for (std::size_t i = 0; i < count; ++i) {
+         auto itemValue = fSubFields[0]->GenerateValue(buff.get() + (i * fItemSize));
+         fSubFields[0]->Read(collectionStart + i, &itemValue);
+      }
+      fProxy->Insert(buff.get(), value->GetRawPtr(), count);
+      for (std::size_t i = 0; i < count; ++i) {
+         auto itemValue = fSubFields[0]->CaptureValue(buff.get() + (i * fItemSize));
+         fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
+      }
+      collectionStart = collectionStart + count;
+      nItemsLeft -= count;
    }
 }
 
