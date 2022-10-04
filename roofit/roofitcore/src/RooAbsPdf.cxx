@@ -3386,6 +3386,20 @@ RooAbsPdf::GenSpec::GenSpec(RooAbsGenContext* context, const RooArgSet& whatVars
 }
 
 
+namespace {
+
+void sterilizeClientCaches(RooAbsArg & arg) {
+  for(auto const& client : arg.clients()) {
+    for(int iCache = 0; iCache < client->numCaches(); ++iCache) {
+      if(auto cacheMgr = dynamic_cast<RooObjCacheManager*>(client->getCache(iCache))) {
+        cacheMgr->sterilize();
+      }
+    }
+  }
+}
+
+} // namespace
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -3396,6 +3410,9 @@ void RooAbsPdf::setNormRange(const char* rangeName)
   } else {
     _normRange.Clear() ;
   }
+
+  // the stuff that the clients have cached may depend on the normalization range
+  sterilizeClientCaches(*this);
 
   if (_norm) {
     _normMgr.sterilize() ;
@@ -3413,6 +3430,9 @@ void RooAbsPdf::setNormRangeOverride(const char* rangeName)
   } else {
     _normRangeOverride.Clear() ;
   }
+
+  // the stuff that the clients have cached may depend on the normalization range
+  sterilizeClientCaches(*this);
 
   if (_norm) {
     _normMgr.sterilize() ;
