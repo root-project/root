@@ -1259,7 +1259,7 @@ void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle,
    
    size_t len = 0;
    const char *ni = strchr(buffer, ';');
-   
+
    if (ni) {
       // Found ';'
       len = ni - buffer;
