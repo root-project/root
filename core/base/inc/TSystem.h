@@ -402,7 +402,7 @@ public:
    virtual int             ClosePipe(FILE *pipe);
    virtual TString         GetFromPipe(const char *command);
    virtual void            Exit [[ noreturn ]] (int code, Bool_t mode = kTRUE);
-   virtual void            Abort(int code = 0);
+   virtual void            Abort [[ noreturn ]] (int code = 0);
    virtual int             GetPid();
    virtual void            StackTrace();
 
