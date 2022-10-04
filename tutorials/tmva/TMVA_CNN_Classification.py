@@ -105,7 +105,7 @@ def MakeImagesTree(n, nh, nw):
     f.Close()
 
 hasGPU = ROOT.gSystem.GetFromPipe("root-config --has-tmva-gpu") == "yes"
-hasCPU = ROOT.gSystem.GetFromPipe("root-config --has-tmva-gpu") == "yes"
+hasCPU = ROOT.gSystem.GetFromPipe("root-config --has-tmva-cpu") == "yes"
 
 opt = [1, 1, 1, 1, 1]
 useTMVACNN = opt[0] if len(opt) > 0  else False
