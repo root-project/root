@@ -2,17 +2,19 @@
 // Authors: Stephan Hageboeck, CERN  02/2019
 //          Jonas Rembser, CERN, June 2021
 
+#include <RooAddPdf.h>
 #include <RooArgList.h>
 #include <RooArgSet.h>
+#include <RooConstVar.h>
+#include <RooDataSet.h>
+#include <RooDecay.h>
+#include <RooFitResult.h>
+#include <RooGamma.h>
+#include <RooGaussModel.h>
 #include <RooGenericPdf.h>
 #include <RooProdPdf.h>
 #include <RooRealVar.h>
-#include <RooDataSet.h>
-#include <RooGaussModel.h>
-#include <RooDecay.h>
-#include <RooFitResult.h>
-#include <RooConstVar.h>
-#include <RooGamma.h>
+#include <RooWorkspace.h>
 
 #include <gtest/gtest.h>
 
@@ -173,4 +175,62 @@ TEST(RooProdPdf, TestDepsAreCond)
    EXPECT_TRUE(result2->isIdentical(*result1)) << "batchmode fit is inconsistent!";
    EXPECT_TRUE(result3->isIdentical(*result1)) << "alternative model fit is inconsistent!";
    EXPECT_TRUE(result4->isIdentical(*result1)) << "alternative model batchmode fit is inconsistent!";
+}
+
+/// This test covers a potential problem with the custom normalization ranges
+/// of PDFs: the value of a RooProdPdf should not depend on the normalization
+/// ranges of its clients. TODO: this is still a problem! It needs to be fixed,
+/// and then the test can be enabled and this note should be removed.
+TEST(RooProdPdf, DISABLED_ChangeServerNormSetForProdPdfInAddPdf)
+{
+   // Define the model
+   RooWorkspace ws;
+   ws.factory("PROD::sig(Gaussian(x[-10, 10], 1.0, 1.0), Gaussian(y[-10, 10], 1.0, 1.0))");
+   ws.factory("PROD::bkg(Polynomial(x, {}), Polynomial(y, {}))");
+   ws.factory("SUM::model(f[0.5, 0, 1] * sig, bkg)");
+   ws.factory("SUM::modelFixed(f * sig, bkg)");
+   ws.factory("EXPR::modelRef('f * 3.0/2000. * x * x + (1 - f) / 20.', {x, f})");
+
+   RooRealVar &x = *ws.var("x");
+   RooRealVar &y = *ws.var("y");
+
+   RooAddPdf &model = static_cast<RooAddPdf &>(*ws.pdf("model"));
+
+   // Define signal and sideband regions
+   x.setRange("SB1", -10, +10);
+   y.setRange("SB1", -10, 0);
+
+   x.setRange("SB2", -10, 0);
+   y.setRange("SB2", 0, +10);
+
+   x.setRange("SIG", 0, +10);
+   y.setRange("SIG", 0, +10);
+
+   x.setRange("FULL", -10, +10);
+   y.setRange("FULL", -10, +10);
+
+   // Try different normalization sets to check if there is a false chache hit
+   // after changing the normalization range of the servers.
+   RooArgSet normSet1{x, y};
+   RooArgSet normSet2{x, y};
+
+   // The fit range needs to be a multi-range to trigger the problem that is covered by this test
+   const char *fitRange = "SB1,SB2";
+
+   // Set the normalization range for the top-level model
+   model.setNormRange(fitRange);
+
+   const double val1 = model.getVal(normSet1);
+
+   // Now set the normalization range for all other PDFs, which should not
+   // change the value of the top-level PDF.
+   for (auto *pdf : static_range_cast<RooAbsPdf *>(ws.allPdfs())) {
+      pdf->setNormRange(fitRange);
+   }
+
+   const double val2 = model.getVal(normSet1);
+   const double val3 = model.getVal(normSet2);
+
+   EXPECT_FLOAT_EQ(val2, val1);
+   EXPECT_FLOAT_EQ(val3, val1);
 }
