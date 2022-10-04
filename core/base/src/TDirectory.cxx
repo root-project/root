@@ -1235,6 +1235,7 @@ void TDirectory::SetName(const char* newname)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Encode the name and cycle into buffer like: "aap;2".
+/// @note if cycle is `9999`, the name is copied to the buffer without any `;`
 
 void TDirectory::EncodeNameCycle(char *buffer, const char *name, Short_t cycle)
 {
@@ -1248,6 +1249,11 @@ void TDirectory::EncodeNameCycle(char *buffer, const char *name, Short_t cycle)
 /// Decode a namecycle "aap;2" into name "aap" and cycle "2". Destination
 /// buffer size for name (including string terminator) should be specified in
 /// namesize.
+/// @note Edge cases:
+///   - If the number after the `;` is larger than `SHORT_MAX`, cycle is set to `0`.
+///   - If buffer is a nullptr, cycle is set to `9999`.
+///   - If name ends with `;*`, cycle is set to 10000`. 
+///   - In all other cases, i.e. when number is not a digit, cycle is set to `9999`.
 
 void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle,
                                  const size_t namesize)
