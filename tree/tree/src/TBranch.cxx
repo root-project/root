@@ -1243,7 +1243,7 @@ TBasket* TBranch::GetBasketImpl(Int_t basketnumber, TBuffer *user_buffer)
    // if cluster pre-fetching or retaining is on, do not re-use existing baskets
    // unless a new cluster is used.
    if (fTree->GetMaxVirtualSize() < 0 || fTree->GetClusterPrefetch())
-      basket = GetFreshCluster();
+      basket = GetFreshCluster(user_buffer);
    else
       basket = GetFreshBasket(basketnumber, user_buffer);
 
@@ -1888,23 +1888,36 @@ TBasket* TBranch::GetFreshBasket(Int_t basketnumber, TBuffer* user_buffer)
 /// Drops the cluster two behind the current cluster and returns a fresh basket
 /// by either reusing or creating a new one
 
-TBasket *TBranch::GetFreshCluster()
+TBasket *TBranch::GetFreshCluster(TBuffer* user_buffer)
 {
    TBasket *basket = 0;
+
+   auto CreateOrReuseBasket = [this, user_buffer]() -> TBasket* {
+      TBasket *newbasket = nullptr;
+      if (fExtraBasket) {
+         newbasket = fExtraBasket;
+         fExtraBasket = nullptr;
+      } else { 
+         newbasket = fTree->CreateBasket(this);
+      }
+      if (user_buffer)
+         newbasket->AdoptBuffer(user_buffer);
+      return newbasket;
+   };
 
    // If GetClusterIterator is called with a negative entry then GetStartEntry will be 0
    // So we need to check if we reach the zero before we have gone back (1-VirtualSize) clusters
    // if this is the case, we want to keep everything in memory so we return a new basket
    TTree::TClusterIterator iter = fTree->GetClusterIterator(fBasketEntry[fReadBasket]);
    if (iter.GetStartEntry() == 0) {
-      return fTree->CreateBasket(this);
+      return CreateOrReuseBasket();
    }
 
    // Iterate backwards (1-VirtualSize) clusters to reach cluster to be unloaded from memory,
    // skipped if VirtualSize > 0.
    for (Int_t j = 0; j < -fTree->GetMaxVirtualSize(); j++) {
       if (iter.Previous() == 0) {
-         return fTree->CreateBasket(this);
+         return CreateOrReuseBasket();
       }
    }
 
@@ -1916,7 +1929,7 @@ TBasket *TBranch::GetFreshCluster()
    while (fBasketEntry[basketToUnload] != entryToUnload) {
       basketToUnload--;
       if (basketToUnload < 0) {
-         return fTree->CreateBasket(this);
+         return CreateOrReuseBasket();
       }
    }
 
@@ -1927,7 +1940,7 @@ TBasket *TBranch::GetFreshCluster()
       fBaskets.AddAt(0, basketToUnload);
       --fNBaskets;
    } else {
-      basket = fTree->CreateBasket(this);
+      basket = CreateOrReuseBasket();
    }
    ++basketToUnload;
 
