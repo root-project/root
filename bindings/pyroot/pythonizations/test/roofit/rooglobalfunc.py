@@ -26,7 +26,26 @@ class TestRooGlobalFunc(unittest.TestCase):
         self.assertEqual(code(ROOT.kRed), code("r"))
 
         # Check that postfix operations applied to ROOT color codes work
-        self.assertEqual(code(ROOT.kRed+1), code("kRed+1"))
+        self.assertEqual(code(ROOT.kRed + 1), code("kRed+1"))
+
+    def test_roodataset_link(self):
+        """Test that the RooFit.Link() command argument works as expected in
+        the RooDataSet constructor.
+        Inspired by the reproducer code in GitHub issue #11469.
+        """
+        x = ROOT.RooRealVar("x", "", 0, 1)
+        g = ROOT.RooGaussian("g", "", x, ROOT.RooFit.RooConst(0.5), ROOT.RooFit.RooConst(0.2))
+
+        n_events = 1000
+
+        data = g.generate({x}, NumEvents=n_events)
+
+        sample = ROOT.RooCategory("cat", "cat")
+        sample.defineType("cat_0")
+
+        data_2 = ROOT.RooDataSet("data_2", "data_2", {x}, Index=sample, Link={"cat_0": data})
+
+        self.assertEqual(data_2.numEntries(), n_events)
 
 
 if __name__ == "__main__":
