@@ -3,6 +3,7 @@
 #include <cctype>
 
 #include "TMVA/RModel.hxx"
+#include "TMVA/SOFIE_common.hxx"
 
 
 
@@ -144,6 +145,11 @@ namespace SOFIE{
       InitializedTensor new_tensor {type, shape, data};
       fInitializedTensors[tensor_name] = new_tensor;
 
+   }
+
+   bool RModel::IsInitializedTensor(const std::string& tensorName) const {
+      std::string name = UTILITY::Clean_name(tensorName);
+      return fInitializedTensors.find(name) != fInitializedTensors.end();
    }
 
    void RModel::AddIntermediateTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape){
