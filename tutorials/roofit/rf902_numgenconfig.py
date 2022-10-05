@@ -52,5 +52,5 @@ model.specialGeneratorConfig().getConfigSection("RooFoamGenerator").setRealValue
 
 # Generate 10Kevt using ROOT.RooFoamGenerator (FOAM verbosity increased
 # with above chatLevel adjustment for illustration purposes)
-data_foam = model.generate({x}, 10000, ROOT.RooFit.Verbose())
+data_foam = model.generate({x}, 10000, Verbose=True)
 data_foam.Print()
