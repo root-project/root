@@ -1199,10 +1199,10 @@ private:
    using Display_t = ROOT::RDF::RDisplay;
    const std::shared_ptr<Display_t> fDisplayerHelper;
    const std::shared_ptr<PrevNodeType> fPrevNode;
-   int fEntriesToProcess;
+   size_t fEntriesToProcess;
 
 public:
-   DisplayHelper(int nRows, const std::shared_ptr<Display_t> &d, const std::shared_ptr<PrevNodeType> &prevNode)
+   DisplayHelper(size_t nRows, const std::shared_ptr<Display_t> &d, const std::shared_ptr<PrevNodeType> &prevNode)
       : fDisplayerHelper(d), fPrevNode(prevNode), fEntriesToProcess(nRows)
    {
    }
