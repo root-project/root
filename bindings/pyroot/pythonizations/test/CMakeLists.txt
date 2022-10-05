@@ -147,6 +147,7 @@ if(roofit)
 
     # Other pythonizations that fail on Windows for unknown reasons
     ROOT_ADD_PYUNITTEST(pyroot_roofit_rooglobalfunc roofit/rooglobalfunc.py)
+    ROOT_ADD_PYUNITTEST(pyroot_roofit_roosimultaneous roofit/roosimultaneous.py)
 
     # NumPy compatibility
     ROOT_ADD_PYUNITTEST(pyroot_roofit_roodataset_numpy roofit/roodataset_numpy.py PYTHON_DEPS numpy)
