@@ -782,7 +782,8 @@ Published on September 1, 2021
 Published on September 29, 2022
 
 ### Bugs and Issues fixed in this release
-[[ROOT-10829](https://sft.its.cern.ch/jira/browse/ROOT-10829)] - pure virtual method called error
+
+* [[ROOT-10829](https://sft.its.cern.ch/jira/browse/ROOT-10829)] - pure virtual method called error
 * [[#8933](https://github.com/root-project/root/issues/8933)] - `CMAKE_INSTALL_PYTHONDIR` on macOS creates broken symlinks
 * [[#9017](https://github.com/root-project/root/issues/9017)] - Access of deleted object during hadd tear down.
 * [[#8072](https://github.com/root-project/root/issues/8072)] - Failures with root 6.24.00 on Fedora 33 ppc64le
