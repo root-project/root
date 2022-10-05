@@ -2994,13 +2994,13 @@ public:
    /// d2->Print();
    /// ~~~
    template <typename... ColumnTypes>
-   RResultPtr<RDisplay> Display(const ColumnNames_t &columnList, int nRows = 5, size_t nMaxCollectionElements = 10)
+   RResultPtr<RDisplay> Display(const ColumnNames_t &columnList, size_t nRows = 5, size_t nMaxCollectionElements = 10)
    {
       CheckIMTDisabled("Display");  
       auto newCols = columnList;
       newCols.insert(newCols.begin(), "rdfentry_"); // Artificially insert first column
       auto displayer = std::make_shared<RDisplay>(newCols, GetColumnTypeNamesList(newCols), nMaxCollectionElements);
-      using displayHelperArgs_t = std::pair<int, std::shared_ptr<RDisplay>>;
+      using displayHelperArgs_t = std::pair<size_t, std::shared_ptr<RDisplay>>;
       // Need to add ULong64_t type corresponding to the first column rdfentry_
       return CreateAction<RDFInternal::ActionTags::Display, ULong64_t, ColumnTypes...>(
          std::move(newCols), displayer, std::make_shared<displayHelperArgs_t>(nRows, displayer));
@@ -3017,13 +3017,13 @@ public:
    /// See the previous overloads for further details.
    ///
    /// Invoked when no types are specified to Display
-   RResultPtr<RDisplay> Display(const ColumnNames_t &columnList, int nRows = 5, size_t nMaxCollectionElements = 10)
+   RResultPtr<RDisplay> Display(const ColumnNames_t &columnList, size_t nRows = 5, size_t nMaxCollectionElements = 10)
    {
       CheckIMTDisabled("Display");
       auto newCols = columnList;
       newCols.insert(newCols.begin(), "rdfentry_"); // Artificially insert first column
       auto displayer = std::make_shared<RDisplay>(newCols, GetColumnTypeNamesList(newCols), nMaxCollectionElements);
-      using displayHelperArgs_t = std::pair<int, std::shared_ptr<RDisplay>>;
+      using displayHelperArgs_t = std::pair<size_t, std::shared_ptr<RDisplay>>;
       return CreateAction<RDFInternal::ActionTags::Display, RDFDetail::RInferredType>(
          std::move(newCols), displayer, std::make_shared<displayHelperArgs_t>(nRows, displayer), columnList.size() + 1);
    }
@@ -3039,7 +3039,7 @@ public:
    /// is empty, all columns are selected.
    /// See the previous overloads for further details.
    RResultPtr<RDisplay>
-   Display(std::string_view columnNameRegexp = "", int nRows = 5, size_t nMaxCollectionElements = 10)
+   Display(std::string_view columnNameRegexp = "", size_t nRows = 5, size_t nMaxCollectionElements = 10)
    {
       const auto columnNames = GetColumnNames();
       const auto selectedColumns = RDFInternal::ConvertRegexToColumns(columnNames, columnNameRegexp, "Display");
@@ -3053,8 +3053,8 @@ public:
    /// \return the `RDisplay` instance wrapped in a RResultPtr.
    ///
    /// See the previous overloads for further details.
-   RResultPtr<RDisplay> Display(std::initializer_list<std::string> columnList, int nRows = 5,
-                                size_t nMaxCollectionElements = 10)
+   RResultPtr<RDisplay>
+   Display(std::initializer_list<std::string> columnList, size_t nRows = 5, size_t nMaxCollectionElements = 10)
    {
       ColumnNames_t selectedColumns(columnList);
       return Display(selectedColumns, nRows, nMaxCollectionElements);
