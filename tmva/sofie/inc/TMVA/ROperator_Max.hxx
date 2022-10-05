@@ -59,7 +59,7 @@ public:
          // If the shape of 2 tensors are not same we perform multi-directional Broadcasting.
          // We only support tensors with same length and the resultant output length should also be same.
          if (shapeX1 != shapeX2) {
-            fShape = UTILITY::BidirectionalBroadcastShape(shapeX1,shapeX2);
+            fShape = UTILITY::UnidirectionalBroadcastShape(shapeX1,shapeX2);
             size_t length1 = ConvertShapeToLength(shapeX1);
             size_t length2 = ConvertShapeToLength(shapeX2);
             size_t output_length = ConvertShapeToLength(fShape);

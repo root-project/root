@@ -123,12 +123,11 @@ namespace SOFIE{
          if (fNC != ""){
             fShapeC = model.GetTensorShape(fNC);
             fNC2 = fNC;
-            bool broadcast_needed = false;
-
-            // broadcast is not needed if fShapeY[0] == 1 i.e. C and Y have same length
-            if (ConvertShapeToLength(fShapeC) != ConvertShapeToLength(fShapeY)) {
-               broadcast_needed = true;
-            }
+            bool broadcast_needed = !UTILITY::AreSameShape(fShapeC, fShapeY);
+            // For Gemm broadcasting is not needed if fShapeY[0] == 1 i.e. C and Y have same length
+            //if (fShapeY[0] == 1 && ConvertShapeToLength(fShapeC) != ConvertShapeToLength(fShapeY)) {
+            //   broadcast_needed = false;
+            //}
 
             // std::cout << "doing broadcast " << broadcast_needed << " use session " << model.UseSession() <<
             //    " shape C " << ConvertShapeToString(fShapeC) << " shape Y " << ConvertShapeToString(fShapeY)
@@ -137,9 +136,10 @@ namespace SOFIE{
             if (broadcast_needed) {
                if (!model.UseSession()) {
                   auto original_data = model.GetInitializedTensorData(fNC);
+                  auto targetShape = UTILITY::UnidirectionalBroadcastShape(fShapeC, fShapeY);
                   if (fType == "float") {
-                     std::shared_ptr<void> new_data_ptr(UTILITY::BidirectionalBroadcast<float>(
-                        static_cast<float *>(original_data.get()), {1, fShapeC[0]}, fShapeY),
+                     std::shared_ptr<void> new_data_ptr(UTILITY::UnidirectionalBroadcast<float>(
+                        static_cast<float *>(original_data.get()), fShapeC, targetShape),
                         std::default_delete<float[]>());
 
                      model.UpdateInitializedTensor(fNC, model.GetTensorType(fNC), fShapeY, new_data_ptr);
@@ -167,10 +167,11 @@ namespace SOFIE{
          std::stringstream out;
          // generate initialization code for broadcasting of bias tensor
          if (fShapeC.size() != fShapeY.size() && fNC != fNC2) {
+            auto targetShape = UTILITY::UnidirectionalBroadcastShape(fShapeC, fShapeY);
             // include a separate scope to avoid defining unique operator temp variables
             out << SP << "{\n";
-            out << "      float * data = TMVA::Experimental::SOFIE::UTILITY::BidirectionalBroadcast<float>(tensor_"
-               << fNC << ", {1, " << fShapeC[0] << "}, " << ConvertShapeToString(fShapeY) << ");\n";
+            out << "      float * data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(tensor_"
+               << fNC << "," << ConvertShapeToString(fShapeC) << ", " << ConvertShapeToString(targetShape) << ");\n";
             size_t length = TMVA::Experimental::SOFIE::ConvertShapeToLength(fShapeY); // output size
             out << SP << SP << "std::copy(data, data + " << length << ", tensor_" << fNC2 << ");\n";
             out << SP << SP << "delete [] data;\n";
