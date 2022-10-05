@@ -11,7 +11,7 @@
 ################################################################################
 
 
-from ._utils import _kwargs_to_roocmdargs, cpp_signature
+from ._utils import _kwargs_to_roocmdargs, cpp_signature, _dict_to_std_map
 
 
 class RooSimultaneous(object):
@@ -26,6 +26,19 @@ class RooSimultaneous(object):
     simPdf.plotOn(frame, Slice=(sample, "control"), ProjWData=(sampleSet, combData))
     \endcode
     """
+
+    @cpp_signature(
+        "RooSimultaneous(const char *name, const char *title,"
+        "                std::map<std::string,RooAbsPdf*> pdfMap, RooAbsCategoryLValue& inIndexCat) ;"
+    )
+    def __init__(self, *args):
+        r"""The RooSimultaneous constructor that takes a map of category names
+        to PDFs is accepting a Python dictionary in Python.
+        """
+        if len(args) >= 3 and isinstance(args[2], dict):
+            args = list(args)
+            args[2] = _dict_to_std_map(args[2], {"std::string": "RooAbsPdf*"})
+        self._init(*args)
 
     @cpp_signature(
         "RooPlot *RooSimultaneous::plotOn(RooPlot* frame,"
