@@ -77,6 +77,8 @@ public:
    void AddInputTensorInfo(std::string input_name, ETensorType type, std::vector<size_t> shape);
    void AddOperator(std::unique_ptr<ROperator> op, int order_execution = -1);
    void AddInitializedTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape, std::shared_ptr<void> data);
+   // Check if a tensor is initialized
+   bool IsInitializedTensor(const std::string& name) const;
    void AddIntermediateTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape);
    void AddBlasRoutines(std::vector<std::string> routines) {
       for (auto &routine : routines) {
