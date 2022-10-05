@@ -69,27 +69,23 @@ combData = ROOT.RooDataSet(
     "combData",
     "combined data",
     {x},
-    ROOT.RooFit.Index(sample),
-    ROOT.RooFit.Import("physics", data),
-    ROOT.RooFit.Import("control", data_ctl),
+    Index=sample,
+    Import={"physics": data, "control": data_ctl},
 )
 
 # Construct a simultaneous pdf in (x, sample)
 # -----------------------------------------------------------------------------------
 
-# Construct a simultaneous pdf using category sample as index
-simPdf = ROOT.RooSimultaneous("simPdf", "simultaneous pdf", sample)
-
-# Associate model with the physics state and model_ctl with the control
-# state
-simPdf.addPdf(model, "physics")
-simPdf.addPdf(model_ctl, "control")
+# Construct a simultaneous pdf using category sample as index: associate model
+# with the physics state and model_ctl with the control state
+simPdf = ROOT.RooSimultaneous("simPdf", "simultaneous pdf", {"physics": model, "control": model_ctl}, sample)
 
 # Perform a simultaneous fit
 # ---------------------------------------------------
 
 # Perform simultaneous fit of model to data and model_ctl to data_ctl
-simPdf.fitTo(combData)
+fitResult = simPdf.fitTo(combData, PrintLevel=-1, Save=True)
+fitResult.Print()
 
 # Plot model slices on data slices
 # ----------------------------------------------------------------
@@ -101,19 +97,19 @@ frame1 = x.frame(Bins=30, Title="Physics sample")
 combData.plotOn(frame1, Cut="sample==sample::physics")
 
 # Plot "physics" slice of simultaneous pdf.
-# NB: You *must* project the sample index category with data using ProjWData
-# as a RooSimultaneous makes no prediction on the shape in the index category
-# and can thus not be integrated
-# NB2: The sampleSet *must* be named. It will not work to pass this as a temporary
-# because python will delete it. The same holds for fitTo() and plotOn() below.
-sampleSet = {sample}
-simPdf.plotOn(frame1, Slice=(sample, "physics"), Components="px", ProjWData=(sampleSet, combData), LineStyle="--")
+# NB: You *must* project the sample index category with data using ProjWData as
+# a RooSimultaneous makes no prediction on the shape in the index category and
+# can thus not be integrated. In other words: Since the PDF doesn't know the
+# number of events in the different category states, it doesn't know how much
+# of each component it has to project out. This info is read from the data.
+simPdf.plotOn(frame1, Slice=(sample, "physics"), ProjWData=(sample, combData))
+simPdf.plotOn(frame1, Slice=(sample, "physics"), Components="px", ProjWData=(sample, combData), LineStyle="--")
 
 # The same plot for the control sample slice
 frame2 = x.frame(Bins=30, Title="Control sample")
 combData.plotOn(frame2, Cut="sample==sample::control")
-simPdf.plotOn(frame2, Slice=(sample, "control"), ProjWData=(sampleSet, combData))
-simPdf.plotOn(frame2, Slice=(sample, "control"), Components="px_ctl", ProjWData=(sampleSet, combData), LineStyle="--")
+simPdf.plotOn(frame2, Slice=(sample, "control"), ProjWData=(sample, combData))
+simPdf.plotOn(frame2, Slice=(sample, "control"), Components="px_ctl", ProjWData=(sample, combData), LineStyle="--")
 
 c = ROOT.TCanvas("rf501_simultaneouspdf", "rf501_simultaneouspdf", 800, 400)
 c.Divide(2)

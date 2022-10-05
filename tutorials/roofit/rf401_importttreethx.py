@@ -117,14 +117,6 @@ dsC = ds2.reduce({x, y}, "z>5")
 
 # Create a dataset that imports contents of all the above datasets mapped
 # by index category c
-dsABC = ROOT.RooDataSet(
-    "dsABC",
-    "dsABC",
-    {x, y},
-    ROOT.RooFit.Import("SampleA", dsA),
-    ROOT.RooFit.Import("SampleB", dsB),
-    Index=c,
-    Import=("SampleC", dsC),
-)
+dsABC = ROOT.RooDataSet("dsABC", "dsABC", {x, y}, Index=c, Import={"SampleA": dsA, "SampleB": dsB, "SampleC": dsC})
 
 dsABC.Print()

@@ -42,15 +42,10 @@ model = ROOT.RooAddPdf("model", "model", [sig, bkg], [nsig, nbkg])
 # Create manager
 # ---------------------------
 
-# Configure manager to perform binned extended likelihood fits (Binned(), ROOT.RooFit.Extended()) on data generated
-# with a Poisson fluctuation on Nobs (Extended())
+# Configure manager to perform binned extended likelihood fits (Binned=True, Extended=True) on data generated
+# with a Poisson fluctuation on Nobs (Extended=True)
 mcs = ROOT.RooMCStudy(
-    model,
-    {mjjj},
-    ROOT.RooFit.Binned(),
-    ROOT.RooFit.Silence(),
-    ROOT.RooFit.Extended(ROOT.kTRUE),
-    ROOT.RooFit.FitOptions(ROOT.RooFit.Extended(ROOT.kTRUE), ROOT.RooFit.PrintEvalErrors(-1)),
+    model, {mjjj}, Binned=True, Silence=True, Extended=True, FitOptions={"Extended": True, "PrintEvalErrors": -1}
 )
 
 # Customize manager
