@@ -92,7 +92,7 @@ d.plotOn(frame)
 #
 # using namespace w
 # model.plotOn(frame)
-# model.plotOn(frame, ROOT.RooFit.Components(bkg), ROOT.RooFit.LineStyle(ROOT.kDashed))
+# model.plotOn(frame, Components=bkg, LineStyle="--")
 
 # correct syntax
 bkg = w["bkg"]
