@@ -1,7 +1,8 @@
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "misc-no-recursion"
 
-#include "xRooFit/xRooNode.h"
+#include "RooFit/Detail/RooNode.h"
+#include "xRooFit.h"
 
 #define protected public
 #include "TRootBrowser.h"
@@ -63,21 +64,21 @@
 #include "RooFitHS3/RooJSONFactoryWSTool.h"
 #endif
 
-xRooNode::InteractiveObject* xRooNode::gIntObj = nullptr;
-std::map<std::string,std::tuple<std::function<double(double,double,double)>,bool>> xRooNode::auxFunctions;
-void xRooNode::SetAuxFunction(const char* title, const std::function<double(double,double,double)>& func, bool symmetrize) {
+RooNode::InteractiveObject* RooNode::gIntObj = nullptr;
+std::map<std::string,std::tuple<std::function<double(double,double,double)>,bool>> RooNode::auxFunctions;
+void RooNode::SetAuxFunction(const char* title, const std::function<double(double,double,double)>& func, bool symmetrize) {
     auxFunctions[title] = std::make_tuple(func,symmetrize);
 }
 
 template<typename T> const T& _or_func(const T& a, const T& b) { if (a) return a; return b; }
 
 
-xRooNode::xRooNode(const char* classname, const char* name, const char* title) :
-    xRooNode(name,std::shared_ptr<TObject>(TClass::GetClass( classname ) ? (TObject*)TClass::GetClass( classname )->New() : nullptr,
+RooNode::RooNode(const char* classname, const char* name, const char* title) :
+    RooNode(name,std::shared_ptr<TObject>(TClass::GetClass( classname ) ? (TObject*)TClass::GetClass( classname )->New() : nullptr,
             [](TObject* o) {
         if (auto w = dynamic_cast<RooWorkspace*>(o); w) {
             w->_embeddedDataList.Delete();
-            xRooNode(*w).sterilize();
+            RooNode(*w).sterilize();
         }
         if(o) delete o;})) {
     if (auto a = get<TNamed>(); a) a->SetName(name);
@@ -86,7 +87,7 @@ xRooNode::xRooNode(const char* classname, const char* name, const char* title) :
 
 
 
-xRooNode::xRooNode(const char* name, const std::shared_ptr<TObject>& comp, const std::shared_ptr<xRooNode>& parent) :
+RooNode::RooNode(const char* name, const std::shared_ptr<TObject>& comp, const std::shared_ptr<RooNode>& parent) :
     TNamed(name,""), fComp(comp), fParent(parent) {
 
     if (!fComp && !fParent && !gSystem->AccessPathName(gSystem->ExpandPathName(name)) ) {
@@ -99,12 +100,12 @@ xRooNode::xRooNode(const char* name, const std::shared_ptr<TObject>& comp, const
             RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
             RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
             if (!tool.importJSON(gSystem->ExpandPathName(name))) {
-                Error("xRooNode","Error reading json workspace %s",name);
+                Error("RooNode","Error reading json workspace %s",name);
                 fComp.reset();
             }
             RooMsgService::instance().setGlobalKillBelow(msglevel);
 #else
-            Error("xRooNode","json format workspaces available only in ROOT 6.26 onwards");
+            Error("RooNode","json format workspaces available only in ROOT 6.26 onwards");
 #endif
         } else {
 
@@ -124,13 +125,13 @@ xRooNode::xRooNode(const char* name, const std::shared_ptr<TObject>& comp, const
                             // memory leak in workspace, some RooLinkedLists aren't cleared
                             if (ws) {
                                 dynamic_cast<RooWorkspace *>(ws)->_embeddedDataList.Delete();
-                                xRooNode(*ws).sterilize();
+                                RooNode(*ws).sterilize();
                                 delete ws;
                             }
                         });
                         if (fComp) {
                             TNamed::SetNameTitle(fComp->GetName(), fComp->GetTitle());
-                            fParent = std::make_shared<xRooNode>(
+                            fParent = std::make_shared<RooNode>(
                                     _file); // keep file alive - seems necessary to save workspace again in some cases
                             break;
                         }
@@ -148,7 +149,7 @@ xRooNode::xRooNode(const char* name, const std::shared_ptr<TObject>& comp, const
         // may not read correctly
         for(auto f : *gROOT->GetListOfFiles()) {
             if ((dynamic_cast<TFile*>(f)->GetVersion()/100) > (gROOT->GetVersionInt()/100)) {
-                Warning("xRooNode", "There is file open with version %d > current version %d ... results may be wrong",dynamic_cast<TFile*>(f)->GetVersion(),gROOT->GetVersionInt());
+                Warning("RooNode", "There is file open with version %d > current version %d ... results may be wrong",dynamic_cast<TFile*>(f)->GetVersion(),gROOT->GetVersionInt());
             }
         }
 
@@ -228,7 +229,7 @@ xRooNode::xRooNode(const char* name, const std::shared_ptr<TObject>& comp, const
     }
 }
 
-xRooNode::xRooNode(const TObject& comp, const std::shared_ptr<xRooNode>& parent) : xRooNode(/*[](const TObject& c) {
+RooNode::RooNode(const TObject& comp, const std::shared_ptr<RooNode>& parent) : RooNode(/*[](const TObject& c) {
     c.InheritsFrom("RooAbsArg");
     if (s) {
         return (s->getStringAttribute("alias")) ? s->getStringAttribute("alias") : c.GetName();
@@ -240,7 +241,7 @@ xRooNode::xRooNode(const TObject& comp, const std::shared_ptr<xRooNode>& parent)
 
 }
 
-xRooNode::xRooNode(const std::shared_ptr<TObject>& comp, const std::shared_ptr<xRooNode>& parent) : xRooNode(
+RooNode::RooNode(const std::shared_ptr<TObject>& comp, const std::shared_ptr<RooNode>& parent) : RooNode(
         [&]() {
             if (auto a = std::dynamic_pointer_cast<RooAbsArg>(comp); a && a->getStringAttribute("alias")) return a->getStringAttribute("alias");
             if (comp) return comp->GetName();
@@ -249,9 +250,9 @@ xRooNode::xRooNode(const std::shared_ptr<TObject>& comp, const std::shared_ptr<x
 
 }
 
-xRooNode::xRooNode(double value) : xRooNode(RooFit::RooConst(value)) { }
+RooNode::RooNode(double value) : RooNode(RooFit::RooConst(value)) { }
 
-void xRooNode::Checked(TObject* obj, bool val) {
+void RooNode::Checked(TObject* obj, bool val) {
     if (obj!=this) return;
 
     if(auto o = get(); o) {
@@ -278,7 +279,7 @@ void xRooNode::Checked(TObject* obj, bool val) {
 
 
 
-void xRooNode::Browse(TBrowser* b) {
+void RooNode::Browse(TBrowser* b) {
     static bool blockBrowse = false;
     if (blockBrowse) return;
     if (b==0) {
@@ -338,12 +339,12 @@ void xRooNode::Browse(TBrowser* b) {
         // organize in folders
         auto _folders = find(".folders");
         if (!_folders) {
-            _folders = emplace_back(std::make_shared<xRooNode>(".folders",nullptr,*this));
+            _folders = emplace_back(std::make_shared<RooNode>(".folders",nullptr,*this));
         }
         // ensure entry in folders for every folder type ...
         for(auto& v : *this) {
             if (v->fFolder != "" && !_folders->find(v->fFolder)) {
-                _folders->emplace_back(std::make_shared<xRooNode>(v->fFolder.c_str(),nullptr,*this));
+                _folders->emplace_back(std::make_shared<RooNode>(v->fFolder.c_str(),nullptr,*this));
             }
         }
         // now just add all the folders
@@ -378,7 +379,7 @@ void xRooNode::Browse(TBrowser* b) {
         if (auto o = v->get(); o) v->TNamed::SetNameTitle(nameSave,titleSave);
         if (_checked!=-1) {
             dynamic_cast<TQObject*>(b->GetBrowserImp())->Connect(
-                    "Checked(TObject *, Bool_t)","xRooNode",
+                    "Checked(TObject *, Bool_t)","RooNode",
                     v.get(),"Checked(TObject *, Bool_t)");
         }
         //v.fBrowsers.insert(b);
@@ -396,7 +397,7 @@ void xRooNode::Browse(TBrowser* b) {
                 }
             }
             if (!found) {
-                fBrowsables.push_back(std::make_shared<xRooNode>(dsets));
+                fBrowsables.push_back(std::make_shared<RooNode>(dsets));
             }
         }
     }*/
@@ -412,10 +413,10 @@ void xRooNode::Browse(TBrowser* b) {
     b->SetSelected(this);
 }
 
-bool xRooNode::IsFolder() const {
+bool RooNode::IsFolder() const {
     if (strlen(GetName())>0 && GetName()[0]=='!') return true;
     if (strlen(GetName())>0 && GetName()[0]=='.') return true;
-    if(empty()) const_cast<xRooNode*>(this)->browse();
+    if(empty()) const_cast<RooNode*>(this)->browse();
     return !empty();
 }
 
@@ -440,7 +441,7 @@ private:
 
 };
 
-std::shared_ptr<TObject> xRooNode::getObject(const std::string& name, const std::string& type) const {
+std::shared_ptr<TObject> RooNode::getObject(const std::string& name, const std::string& type) const {
     //if (fParent) return fParent->getObject(name);
 
     if (auto _owned = find(".memory"); _owned) {
@@ -486,7 +487,7 @@ std::shared_ptr<TObject> xRooNode::getObject(const std::string& name, const std:
     return nullptr;
 }
 
-TAxis* xRooNode::GetXaxis() const {
+TAxis* RooNode::GetXaxis() const {
     if (fXAxis) { return fXAxis.get(); }
     RooAbsLValue* x = nullptr;
     if (auto a = get<RooAbsArg>();a && a->isFundamental()) x = dynamic_cast<RooAbsLValue*>(a); // self-axis
@@ -608,7 +609,7 @@ TAxis* xRooNode::GetXaxis() const {
     return fXAxis.get();
 }
 
-const char* xRooNode::GetIconName() const {
+const char* RooNode::GetIconName() const {
     if (auto o = get(); o) {
         if(o->InheritsFrom("RooWorkspace")) return "TFile";
         if(o->InheritsFrom("RooAbsData")) return "TProfile";
@@ -638,7 +639,7 @@ const char* xRooNode::GetIconName() const {
 }
 
 
-const char* xRooNode::GetNodeType() const {
+const char* RooNode::GetNodeType() const {
     if (auto o = get(); o && fParent && (fParent->get<RooProduct>()||fParent->get<RooRealSumPdf>())) {
         if(o->InheritsFrom("RooStats::HistFactory::FlexibleInterpVar")) return "Overall";
         if(o->InheritsFrom("PiecewiseInterpolation")) return (dynamic_cast<RooAbsArg*>(o)->getAttribute("density")) ? "DensityHisto" : "Histo";
@@ -651,10 +652,10 @@ const char* xRooNode::GetNodeType() const {
     return "";
 }
 
-xRooNode xRooNode::coords(bool setVals) const {
-    xRooNode out(".coords",nullptr,*this);
+RooNode RooNode::coords(bool setVals) const {
+    RooNode out(".coords",nullptr,*this);
     // go up through parents looking for slice obs
-    auto _p = std::shared_ptr<xRooNode>(const_cast<xRooNode*>(this),[](xRooNode*){});
+    auto _p = std::shared_ptr<RooNode>(const_cast<RooNode*>(this),[](RooNode*){});
     while(_p) {
         TString pName(_p->GetName());
         if (auto pos = pName.Index('='); pos != -1) {
@@ -666,7 +667,7 @@ xRooNode xRooNode::coords(bool setVals) const {
                         _var->setVal(TString(pName(pos + 1, pName.Length())).Atof());
                     }
                 }
-                out.emplace_back(std::make_shared<xRooNode>(_obs->GetName(),_obs,_p));
+                out.emplace_back(std::make_shared<RooNode>(_obs->GetName(),_obs,_p));
             } else {
                 throw std::runtime_error("Unknown observable, could not find");
             }
@@ -676,14 +677,14 @@ xRooNode xRooNode::coords(bool setVals) const {
     return out;
 }
 
-void xRooNode::Add_(const char* name, const char* opt) {
+void RooNode::Add_(const char* name, const char* opt) {
     try {
         Add(name,opt);
     } catch(const std::exception& e) {
         new TGMsgBox(gClient->GetRoot(), gClient->GetRoot(), "Exception", e.what(),kMBIconExclamation); // deletes self on dismiss?
     }
 }
-void xRooNode::Vary_(const char* what) {
+void RooNode::Vary_(const char* what) {
     try {
         Vary(what);
     } catch(const std::exception& e) {
@@ -691,10 +692,10 @@ void xRooNode::Vary_(const char* what) {
     }
 }
 
-xRooNode xRooNode::Remove(const xRooNode& child) {
+RooNode RooNode::Remove(const RooNode& child) {
 
     if (strcmp(GetName(),".factors")==0 || strcmp(GetName(),".constraints")==0 || strcmp(GetName(),".components")==0) {
-        auto toRemove = (child.get<RooAbsArg>() || !find(child.GetName())) ? child : xRooNode( find(child.GetName())->fComp );
+        auto toRemove = (child.get<RooAbsArg>() || !find(child.GetName())) ? child : RooNode( find(child.GetName())->fComp );
         if (auto p = fParent->get<RooProdPdf>(); p) {
             auto pdf = toRemove.get<RooAbsArg>();
             if (!pdf) pdf = p->_pdfList.find(child.GetName());
@@ -716,7 +717,7 @@ xRooNode xRooNode::Remove(const xRooNode& child) {
                 if(p->_extendedIndex == i) p->_extendedIndex = -1;
                 else if(p->_extendedIndex > i) p->_extendedIndex--;
 
-                return xRooNode(*pdf);
+                return RooNode(*pdf);
             } else {
                 throw std::runtime_error(TString::Format("Cannot find %s in %s",child.GetName(),fParent->GetName()));
             }
@@ -728,7 +729,7 @@ xRooNode xRooNode::Remove(const xRooNode& child) {
             p->_compRSet.remove(*arg);
             p->removeServer(*arg,true);
             sterilize();
-            return xRooNode(*arg);
+            return RooNode(*arg);
         } else if(auto p = fParent->get<RooSimultaneous>(); p) {
             // remove from all channels
             bool removed=false;
@@ -760,12 +761,12 @@ xRooNode xRooNode::Remove(const xRooNode& child) {
             } else {
                 throw std::runtime_error(TString::Format("Cannot find %s in %s", child.GetName(), fParent->GetName()));
             }
-            return xRooNode(*arg);
+            return RooNode(*arg);
         } // todo: add support for RooAddPdf and RooAddition
     }
 
     if(auto w = get<RooWorkspace>(); w) {
-        xRooNode out(child.GetName());
+        RooNode out(child.GetName());
         auto arg = w->_allOwnedNodes.find(child.GetName());
         if(!arg) arg = operator[](child.GetName())->get<RooAbsArg>();
         if (!arg) {
@@ -788,9 +789,9 @@ xRooNode xRooNode::Remove(const xRooNode& child) {
     throw std::runtime_error("Removal not implemented for this type of object");
 }
 
-xRooNode xRooNode::Add(const xRooNode& child, Option_t* opt) {
+RooNode RooNode::Add(const RooNode& child, Option_t* opt) {
 
-        class AutoUpdater { public: AutoUpdater(xRooNode& _n) : n(_n) { } ~AutoUpdater() { n.browse(); } xRooNode& n; };
+        class AutoUpdater { public: AutoUpdater(RooNode& _n) : n(_n) { } ~AutoUpdater() { n.browse(); } RooNode& n; };
         AutoUpdater xxx(*this);
 
     TString sOpt(opt);
@@ -798,7 +799,7 @@ xRooNode xRooNode::Add(const xRooNode& child, Option_t* opt) {
 
     if (strlen(GetName())>0 && GetName()[0]=='!' && fParent) {
         // folder .. pass onto parent and add folder to child folder list
-        const_cast<xRooNode&>(child).fFolder += GetName();
+        const_cast<RooNode&>(child).fFolder += GetName();
         return fParent->Add(child,opt);
     }
     // this is how to get the first real parent ... may be useful at some point?
@@ -848,7 +849,7 @@ xRooNode xRooNode::Add(const xRooNode& child, Option_t* opt) {
                     _ws->saveSnapshot(asi.first->GetName(),_tmp,true);
 #endif
                 }
-                return xRooNode(*_ws->data(asi.first->GetName()),fParent);
+                return RooNode(*_ws->data(asi.first->GetName()),fParent);
             }
 
             auto _obs = fParent->obs().argList();
@@ -892,7 +893,7 @@ xRooNode xRooNode::Add(const xRooNode& child, Option_t* opt) {
             auto out = std::shared_ptr<TObject>(_ws->data(child.GetName()),[](TObject*){});
 
             if(out) {
-                xRooNode o(out,fParent);
+                RooNode o(out,fParent);
                 if(child.get<TH1>()) o = *child.get();
                 return o;
             }
@@ -903,7 +904,7 @@ xRooNode xRooNode::Add(const xRooNode& child, Option_t* opt) {
     if (!get()) {
         if (!fParent) throw std::runtime_error("Cannot add to null object with no parentage");
 
-        auto _ref = emplace_back(std::shared_ptr<xRooNode>(&const_cast<xRooNode&>(child),[](TObject*){}));
+        auto _ref = emplace_back(std::shared_ptr<RooNode>(&const_cast<RooNode&>(child),[](TObject*){}));
         try {
             fComp = fParent->Add(*this, "+").fComp;
         } catch(...) {
@@ -975,7 +976,7 @@ xRooNode xRooNode::Add(const xRooNode& child, Option_t* opt) {
                     TH1::AddDirectory(t);
                     h->GetXaxis()->SetName(TString::Format("%s;%s",_ax->GetParent()->GetName(),_ax->GetName()));
                     // technically convertForAcquisition has already acquired so no need to re-acquire but should be harmless
-                    _func = std::dynamic_pointer_cast<RooAbsArg>(acquire( xRooNode(*h).convertForAcquisition(*this) ));
+                    _func = std::dynamic_pointer_cast<RooAbsArg>(acquire( RooNode(*h).convertForAcquisition(*this) ));
                 } else if(_obs.size()==1) {
                     // use the single obs to make a TH1D
                     auto _x = _obs.at(0)->get<RooAbsLValue>();
@@ -989,7 +990,7 @@ xRooNode xRooNode::Add(const xRooNode& child, Option_t* opt) {
                     TH1::AddDirectory(t);
                     h->GetXaxis()->SetName(TString::Format("%s;%s",dynamic_cast<TObject*>(_x)->GetName(),binningName.Data()));
                     // technically convertForAcquisition has already acquired so no need to re-acquire but should be harmless
-                    _func = std::dynamic_pointer_cast<RooAbsArg>(acquire( xRooNode(*h).convertForAcquisition(*this) ));
+                    _func = std::dynamic_pointer_cast<RooAbsArg>(acquire( RooNode(*h).convertForAcquisition(*this) ));
                     Info("Add","Created densityhisto factor %s for %s",_func->GetName(),p->GetName());
                 } else {
                     throw std::runtime_error("Unsupported creation of new component in SumPdf for this many obs");
@@ -1017,7 +1018,7 @@ xRooNode xRooNode::Add(const xRooNode& child, Option_t* opt) {
 
             // promote the axis vars to observables
             // can't use original child as might refer to unacquired deps
-            for(auto& x : xRooNode("tmp",_f).deps()) {
+            for(auto& x : RooNode("tmp",_f).deps()) {
                 x->get<RooAbsArg>()->setAttribute("obs");
             }
             if(isConverted) Info("Add","Created %s factor RooHistFunc::%s for %s",_f->getAttribute("density") ? "densityhisto" : "histo",_f->GetName(),p->GetName());
@@ -1031,7 +1032,7 @@ xRooNode xRooNode::Add(const xRooNode& child, Option_t* opt) {
             // inherit binning if we dont have one yet
             if(!p->getStringAttribute("binning")) p->setStringAttribute("binning",_f->getStringAttribute("binning"));
 
-            xRooNode out(_f,*this);
+            RooNode out(_f,*this);
             if (auto gf = p->getStringAttribute("global_factors"); gf) {
                 TStringToken pattern(gf,";");
                 while(pattern.NextToken()) {
@@ -1057,7 +1058,7 @@ xRooNode xRooNode::Add(const xRooNode& child, Option_t* opt) {
                 }
             }
             if (_pdf) {
-                return xRooNode(*_pdf,*this).Add(child);
+                return RooNode(*_pdf,*this).Add(child);
             } else if(!tooMany) {
                 auto out = this->operator[]("samples")->Add(child);
                 return out;
@@ -1076,7 +1077,7 @@ xRooNode xRooNode::Add(const xRooNode& child, Option_t* opt) {
         child.convertForAcquisition(*this);
         if (child.get()) {
             auto out = acquire(child.fComp);
-            if(out) return xRooNode(child.GetName(),out,*this);
+            if(out) return RooNode(child.GetName(),out,*this);
         }
 
         if (!child.empty() || child.fFolder=="!models") {
@@ -1092,7 +1093,7 @@ xRooNode xRooNode::Add(const xRooNode& child, Option_t* opt) {
             _cat->setAttribute("obs");
             auto out = acquireNew<RooSimultaneous>(child.GetName(),child.GetTitle(),*_cat);
             Info("Add","Created model RooSimultaneous::%s in workspace %s",out->GetName(),p->GetName());
-            return xRooNode(out,*this);
+            return RooNode(out,*this);
         }
 
     }
@@ -1100,7 +1101,7 @@ xRooNode xRooNode::Add(const xRooNode& child, Option_t* opt) {
     if (sOpt=="model") {
         // can only add a model to a workspace
         if(get<RooWorkspace>()) {
-            const_cast<xRooNode&>(child).fFolder = "!models";
+            const_cast<RooNode&>(child).fFolder = "!models";
             return Add(child);
         }
     } else if(sOpt=="channel") {
@@ -1115,7 +1116,7 @@ xRooNode xRooNode::Add(const xRooNode& child, Option_t* opt) {
                 out = acquireNew<RooProdPdf>(child.GetName(),(strlen(child.GetTitle())) ? child.GetTitle() : child.GetName(),RooArgList());
                 Info("Add","Created channel RooProdPdf::%s in workspace %s",out->GetName(),get()->GetName());
             }
-            return xRooNode(out,*this);
+            return RooNode(out,*this);
         }
     } else if(sOpt=="sample") {
         if (get<RooProdPdf>()) {
@@ -1128,7 +1129,7 @@ xRooNode xRooNode::Add(const xRooNode& child, Option_t* opt) {
         }
     } else if(sOpt=="dataset") {
         if (get<RooWorkspace>()) {
-            //const_cast<xRooNode&>(child).fFolder = "!datasets";return Add(child);
+            //const_cast<RooNode&>(child).fFolder = "!datasets";return Add(child);
             return (*this).datasets().Add(child);
         }
     }
@@ -1147,9 +1148,9 @@ xRooNode xRooNode::Add(const xRooNode& child, Option_t* opt) {
 
     if (!child.get() && child.empty() && strlen(child.GetName())) {
         // can add a 'placeholder' node, note it will be deleted at the next browse
-        xRooNode out(child.GetName(),nullptr,*this);
+        RooNode out(child.GetName(),nullptr,*this);
         out.SetTitle(child.GetTitle());
-        emplace_back(std::make_shared<xRooNode>(out));
+        emplace_back(std::make_shared<RooNode>(out));
         // update the parent in the out node so that it's copy of the parent knows it has itself in it
         // actually maybe not want this :-/
         //out.fParent = std::make_shared<Node2>(*this);
@@ -1170,24 +1171,24 @@ xRooNode xRooNode::Add(const xRooNode& child, Option_t* opt) {
     throw std::runtime_error(TString::Format("Cannot add %s to %s",child.GetName(),GetName()));
 }
 
-std::string xRooNode::GetPath() const {
+std::string RooNode::GetPath() const {
     if (!fParent) return GetName();
     return fParent->GetPath() +"/" + GetName();
 }
 
-xRooNode::~xRooNode() {
+RooNode::~RooNode() {
     //std::cout << "deleting " << GetPath() << std::endl;
 }
 
-void xRooNode::SetHidden(Bool_t set) {
+void RooNode::SetHidden(Bool_t set) {
     if (auto a = get<RooAbsArg>()) a->setAttribute("hidden",set);
 }
-bool xRooNode::IsHidden() const {
+bool RooNode::IsHidden() const {
     if (auto a = get<RooAbsArg>()) return a->getAttribute("hidden");
     return false;
 }
 
-xRooNode xRooNode::Combine(const xRooNode& rhs) {
+RooNode RooNode::Combine(const RooNode& rhs) {
 
     if (get() == rhs.get()) {
         // nothing to do because objects are identical
@@ -1228,8 +1229,8 @@ xRooNode xRooNode::Combine(const xRooNode& rhs) {
 }
 
 
-xRooNode xRooNode::shallowCopy(const std::string& name, std::shared_ptr<xRooNode> parent) {
-    xRooNode out(name.c_str(),nullptr,parent /*? parent : fParent -- was passing fParent for getObject benefit before fProvider concept*/);
+RooNode RooNode::shallowCopy(const std::string& name, std::shared_ptr<RooNode> parent) {
+    RooNode out(name.c_str(),nullptr,parent /*? parent : fParent -- was passing fParent for getObject benefit before fProvider concept*/);
     //if(!parent) out.fAcquirer = true;
     if(!parent) out.fProvider = fParent;
 
@@ -1247,7 +1248,7 @@ xRooNode xRooNode::shallowCopy(const std::string& name, std::shared_ptr<xRooNode
                 TString cName(c->GetName());
                 cName = cName(cName.Index('=')+1,cName.Length());
                 // by passing out as the parent, will ensure out acquires everything created
-                auto c_copy = c->shallowCopy(name+"_"+c->get()->GetName(),std::shared_ptr<xRooNode>(&out,[](xRooNode*){}));
+                auto c_copy = c->shallowCopy(name+"_"+c->get()->GetName(),std::shared_ptr<RooNode>(&out,[](RooNode*){}));
                 pdf->addPdf(*dynamic_cast<RooAbsPdf*>(c_copy.get()),cName);
             }
             out.fComp = pdf;
@@ -1274,7 +1275,7 @@ xRooNode xRooNode::shallowCopy(const std::string& name, std::shared_ptr<xRooNode
 }
 
 
-void xRooNode::Print(Option_t *opt) const {
+void RooNode::Print(Option_t *opt) const {
     TString sOpt(opt);
     int depth=0;
     if(sOpt.Contains("depth=")) {
@@ -1307,7 +1308,7 @@ void xRooNode::Print(Option_t *opt) const {
             std::cout << std::endl;
         }
     }
-    const_cast<xRooNode*>(this)->browse();
+    const_cast<RooNode*>(this)->browse();
     std::vector<std::string> folderNames;
     for (auto &k : *this) {
         if(std::find(folderNames.begin(),folderNames.end(),k->fFolder)==folderNames.end()) {
@@ -1350,7 +1351,7 @@ void xRooNode::Print(Option_t *opt) const {
 #include "RooPoisson.h"
 #include "RooGaussian.h"
 
-xRooNode xRooNode::Constrain(const xRooNode& child) {
+RooNode RooNode::Constrain(const RooNode& child) {
     if (!child.get()) {
 
         if (auto v = get<RooRealVar>(); v) {
@@ -1395,7 +1396,7 @@ xRooNode xRooNode::Constrain(const xRooNode& child) {
                 auto constr = acquireNew<RooPoisson>(Form("pois_%s",v->GetName()),TString::Format("Poisson Constraint of %s",v->GetTitle()) ,*globs,
                                                            *acquireNew<RooProduct>(TString::Format("mean_%s",v->GetName()),TString::Format("Poisson Constraint of %s",globs->GetTitle()), RooArgList(*v,*tau )),true /* no rounding */);
 
-                auto out = Constrain(xRooNode(Form("pois_%s",GetName()),constr));
+                auto out = Constrain(RooNode(Form("pois_%s",GetName()),constr));
                 if (!v->hasError()) v->setError(mean/sqrt(tau_val)); // if v doesnt have an uncert, will put one on it now
                 Info("Constrain","Added poisson constraint pdf RooPoisson::%s (tau=%g) for %s",out->GetName(),tau_val,GetName());
                 return out;
@@ -1407,7 +1408,7 @@ xRooNode xRooNode::Constrain(const xRooNode& child) {
 
                 globs->setStringAttribute("nominal",TString::Format("%f",mean));
                 auto constr = acquireNew<RooGaussian>(Form("gaus_%s",v->GetName()),TString::Format("Gaussian Constraint of %s",v->GetTitle()),*globs,*v,*acquireNew<RooConstVar>(TString::Format("sigma_%s",v->GetName()),"",sigma));
-                auto out = Constrain(xRooNode(Form("gaus_%s",GetName()),constr));
+                auto out = Constrain(RooNode(Form("gaus_%s",GetName()),constr));
                 if (!v->hasError()) v->setError(sigma); // if v doesnt have an uncert, will put one on it now
                 Info("Constrain","Added gaussian constraint pdf RooGaussian::%s (mean=%g,sigma=%g) for %s",out->GetName(),mean,sigma,GetName());
                 return out;
@@ -1453,9 +1454,9 @@ xRooNode xRooNode::Constrain(const xRooNode& child) {
     throw std::runtime_error(TString::Format("Cannot constrain %s",GetName()));
 }
 
-xRooNode xRooNode::Multiply(const xRooNode& child, Option_t* opt) {
+RooNode RooNode::Multiply(const RooNode& child, Option_t* opt) {
 
-    class AutoUpdater { public: AutoUpdater(xRooNode& _n) : n(_n) { } ~AutoUpdater() { n.browse(); } xRooNode& n; };
+    class AutoUpdater { public: AutoUpdater(RooNode& _n) : n(_n) { } ~AutoUpdater() { n.browse(); } RooNode& n; };
     AutoUpdater xxx(*this);
 
     if(fBinNumber!=-1) {
@@ -1475,7 +1476,7 @@ xRooNode xRooNode::Multiply(const xRooNode& child, Option_t* opt) {
                 for(auto c : fParent->get<RooAbsArg>()->clients()) {
                     if (c->IsA() == RooProduct::Class() && c->getAttribute(TString::Format("ORIGNAME:%s",fParent->get()->GetName()))) {
                         // try getting binFactors out of this
-                        binFactors = xRooNode(*c).factors().find("binFactors"); break;
+                        binFactors = RooNode(*c).factors().find("binFactors"); break;
                     }
                 }
             }
@@ -1532,12 +1533,12 @@ xRooNode xRooNode::Multiply(const xRooNode& child, Option_t* opt) {
 //                    return binFactors->bins().at(fBinNumber - 1)->Multiply(child,opt);
 //                }
             }
-            return xRooNode(*o,binFactors);
+            return RooNode(*o,binFactors);
         }
     } else if (!get() && fParent) {
         // try to 'create' object based on parentage
         // add child as a temporary child to help with decision making
-        auto _ref = emplace_back(std::shared_ptr<xRooNode>(&const_cast<xRooNode &>(child), [](TObject *) {}));
+        auto _ref = emplace_back(std::shared_ptr<RooNode>(&const_cast<RooNode &>(child), [](TObject *) {}));
         try {
             fComp = fParent->Add(*this, "+").fComp;
         } catch (...) {
@@ -1550,7 +1551,7 @@ xRooNode xRooNode::Multiply(const xRooNode& child, Option_t* opt) {
     if (!child.get()) {
         TString sOpt(opt);sOpt.ToLower();
         if (auto o = getObject<RooAbsReal>(child.GetName())) {
-            auto out =  Multiply(xRooNode(o,child.fParent));
+            auto out =  Multiply(RooNode(o,child.fParent));
             // have to protect bin case where get() is null (could change but then must change logic above too)
             if(get()) Info("Multiply","Scaled %s by existing factor %s::%s",mainChild().get() ? mainChild().get()->GetName() : get()->GetName(),o->ClassName(),o->GetName());
             return out;
@@ -1627,7 +1628,7 @@ xRooNode xRooNode::Multiply(const xRooNode& child, Option_t* opt) {
 
 
                 // promote the axis vars to observables
-                for (auto &x: xRooNode("tmp", _f).deps()) {
+                for (auto &x: RooNode("tmp", _f).deps()) {
                     x->get<RooAbsArg>()->setAttribute("obs");
                 }
             }
@@ -1647,7 +1648,7 @@ xRooNode xRooNode::Multiply(const xRooNode& child, Option_t* opt) {
             p->setValueDirty();
 
             browse();
-            xRooNode out(_f,*this);
+            RooNode out(_f,*this);
             for(auto& _par : out.pars()) {
                 if (auto s = _par->get<RooAbsArg>()->getStringAttribute("boundConstraint"); s) {
                     bool found=false;
@@ -1688,7 +1689,7 @@ xRooNode xRooNode::Multiply(const xRooNode& child, Option_t* opt) {
             _pdf->setStringAttribute("binning",p->getStringAttribute("binning"));
             out = _pdf;
             Info("Multiply","Created pdf RooRealSumPdf::%s in channel %s",_pdf->GetName(),p->GetName());
-            if(child.get<RooAbsReal>()) xRooNode(*out,*this).Add(child);
+            if(child.get<RooAbsReal>()) RooNode(*out,*this).Add(child);
         }
 
         if (auto _pdf = std::dynamic_pointer_cast<RooAbsPdf>(out); _pdf) {
@@ -1705,7 +1706,7 @@ xRooNode xRooNode::Multiply(const xRooNode& child, Option_t* opt) {
             p->setValueDirty();
             p->setNormRange(0);
             browse();
-            return xRooNode(_pdf,*this);
+            return RooNode(_pdf,*this);
         }
     } else if(auto p = get<RooRealSumPdf>(); p) {
         // multiplying all current and future components
@@ -1721,7 +1722,7 @@ xRooNode xRooNode::Multiply(const xRooNode& child, Option_t* opt) {
             s += out->GetName();
             p->setStringAttribute("global_factors",s);
             Info("Multiply","Flagged %s as a global factor in channel %s (is applied to all current and future samples in the channel)",out->GetName(),p->GetName());
-            return xRooNode(out,*this);
+            return RooNode(out,*this);
         }
 
     } else if(auto p = get<RooAbsReal>(); p && !get<RooAbsPdf>()) {
@@ -1758,15 +1759,15 @@ xRooNode xRooNode::Multiply(const xRooNode& child, Option_t* opt) {
 
 
 
-xRooNode xRooNode::Vary(const xRooNode& child) {
+RooNode RooNode::Vary(const RooNode& child) {
 
-    class AutoUpdater { public: AutoUpdater(xRooNode& _n) : n(_n) { } ~AutoUpdater() { n.browse(); } xRooNode& n; };
+    class AutoUpdater { public: AutoUpdater(RooNode& _n) : n(_n) { } ~AutoUpdater() { n.browse(); } RooNode& n; };
     AutoUpdater xxx(*this);
 
     if (!get() && fParent) {
         // try to 'create' object based on parentage
         // add child as a temporary child to help with decision making
-        auto _ref = emplace_back(std::shared_ptr<xRooNode>(&const_cast<xRooNode&>(child),[](TObject*){}));
+        auto _ref = emplace_back(std::shared_ptr<RooNode>(&const_cast<RooNode&>(child),[](TObject*){}));
         try {
             fComp = fParent->Add(*this, "+").fComp;
         } catch(...) {
@@ -1800,7 +1801,7 @@ xRooNode xRooNode::Vary(const xRooNode& child) {
             s->addPdf(*_pdf,label.c_str());
             sterilize();
             browse();
-            return xRooNode(TString::Format("%s=%s",s->indexCat().GetName(),label.data()),_pdf,*this);
+            return RooNode(TString::Format("%s=%s",s->indexCat().GetName(),label.data()),_pdf,*this);
         }
 
     } else if(auto p = get<RooStats::HistFactory::FlexibleInterpVar>();p) {
@@ -1927,9 +1928,9 @@ xRooNode xRooNode::Vary(const xRooNode& child) {
 
         //child.convertForAcquisition(*this);
         if(f) {
-            if(child.get()) xRooNode("tmp", *f, *this) = *child.get();
+            if(child.get()) RooNode("tmp", *f, *this) = *child.get();
             f->setValueDirty();
-            xRooNode out(*f,*this);
+            RooNode out(*f,*this);
             out.sterilize();
             return out;
         }
@@ -2007,11 +2008,11 @@ xRooNode xRooNode::Vary(const xRooNode& child) {
     throw std::runtime_error(TString::Format("Cannot vary %s with %s",GetName(),child.GetName()));
 }
 
-bool xRooNode::SetContents(double value) {
+bool RooNode::SetContents(double value) {
     return SetContents(RooConstVar(GetName(),GetTitle(),value));
 }
 
-bool xRooNode::SetContents(double value, const char* par, double val) {
+bool RooNode::SetContents(double value, const char* par, double val) {
     return SetContents(RooConstVar(GetName(),GetTitle(),value),par,val);
 }
 
@@ -2021,7 +2022,7 @@ struct BinningRestorer {
     RooAbsBinning* b = nullptr;
 };
 
-xRooNode& xRooNode::operator=(const TObject& o) {
+RooNode& RooNode::operator=(const TObject& o) {
 
     if (!get()) {
         fComp = std::shared_ptr<TObject>(const_cast<TObject *>(&o), [](TObject *) {});
@@ -2115,7 +2116,7 @@ xRooNode& xRooNode::operator=(const TObject& o) {
 
 #include "RooFormulaVar.h"
 
-void xRooNode::SetBinContent_(int bin, double value, const char* par, double parVal) {
+void RooNode::SetBinContent_(int bin, double value, const char* par, double parVal) {
     try {
         SetBinContent(bin,value, strlen(par)>0 ? par : nullptr, parVal);
     } catch(const std::exception& e) {
@@ -2123,7 +2124,7 @@ void xRooNode::SetBinContent_(int bin, double value, const char* par, double par
     }
 }
 
-void xRooNode::SetContents_(double value) {
+void RooNode::SetContents_(double value) {
     try {
         if(!SetContents(value)) throw std::runtime_error("Failed to SetContent");
     } catch(const std::exception& e) {
@@ -2131,7 +2132,7 @@ void xRooNode::SetContents_(double value) {
     }
 }
 
-bool xRooNode::SetBinContent(int bin, double value, const char* par, double parVal) {
+bool RooNode::SetBinContent(int bin, double value, const char* par, double parVal) {
 
     // create if needed
     if (!get()) {
@@ -2361,11 +2362,11 @@ bool xRooNode::SetBinContent(int bin, double value, const char* par, double parV
 
 }
 
-bool xRooNode::SetBinData(int bin, double value, const char* dataName) {
+bool RooNode::SetBinData(int bin, double value, const char* dataName) {
     return datasets()[dataName]->SetBinContent(bin,value);
 }
 
-bool xRooNode::SetBinError(int bin, double value) {
+bool RooNode::SetBinError(int bin, double value) {
 
     // if it's a RooProduct locate child with the same name
     if (get<RooProduct>()) {
@@ -2404,7 +2405,7 @@ bool xRooNode::SetBinError(int bin, double value) {
         if (!f_stat) {
             if (value==0) return true;
             TString parNames;
-            for(auto& p : xRooNode("tmp",*f,std::shared_ptr<xRooNode>(nullptr)).deps()) {
+            for(auto& p : RooNode("tmp",*f,std::shared_ptr<RooNode>(nullptr)).deps()) {
                 if (parNames!="") parNames += ",";
                 parNames += p->get()->GetName();
             }
@@ -2452,7 +2453,7 @@ bool xRooNode::SetBinError(int bin, double value) {
             phf->_paramSet.add(all);
         }
 
-        xRooNode v((value==0) ? *var : *newVar,*this);
+        RooNode v((value==0) ? *var : *newVar,*this);
         auto rrv = dynamic_cast<RooRealVar*>(v.get());
         if (strcmp(rrv->GetName(),"1")!=0) {
             TString origName = (f->getStringAttribute("origName")) ? f->getStringAttribute("origName") : GetName();
@@ -2510,7 +2511,7 @@ bool xRooNode::SetBinError(int bin, double value) {
 
 }
 
-std::shared_ptr<xRooNode> xRooNode::find(const std::string& name) const {
+std::shared_ptr<RooNode> RooNode::find(const std::string& name) const {
     try {
         return at(name);
     } catch(std::out_of_range& ) {
@@ -2518,7 +2519,7 @@ std::shared_ptr<xRooNode> xRooNode::find(const std::string& name) const {
     }
 }
 
-RooWorkspace* xRooNode::ws() const {
+RooWorkspace* RooNode::ws() const {
     if (auto _w = get<RooWorkspace>(); _w) return _w;
     if(auto a = get<RooAbsArg>(); a && a->_myws) {
         return a->_myws;
@@ -2527,12 +2528,12 @@ RooWorkspace* xRooNode::ws() const {
     return nullptr;
 }
 
-xRooNode xRooNode::constraints() const {
+RooNode RooNode::constraints() const {
 
-    xRooNode out(".constraints",nullptr,*this);
+    RooNode out(".constraints",nullptr,*this);
 
-    std::function<RooAbsPdf*(const xRooNode& n, RooAbsArg& par, RooAbsPdf* ignore)> getConstraint;
-    getConstraint = [&](const xRooNode& n, RooAbsArg& par, RooAbsPdf* ignore) {
+    std::function<RooAbsPdf*(const RooNode& n, RooAbsArg& par, RooAbsPdf* ignore)> getConstraint;
+    getConstraint = [&](const RooNode& n, RooAbsArg& par, RooAbsPdf* ignore) {
         //std::cout << "Getting constraint of "<< n.GetName() << std::endl;
         auto o = n.get<RooProdPdf>();
         if (!o) {
@@ -2549,7 +2550,7 @@ xRooNode xRooNode::constraints() const {
                 for(auto p : _ws->allPdfs()) {
                     if (p==ignore) continue;
                     if (p->dependsOn(par)) {
-                        out.emplace_back(std::make_shared<xRooNode>(par.GetName(), *p, *this));
+                        out.emplace_back(std::make_shared<RooNode>(par.GetName(), *p, *this));
                     }
                 }
             }
@@ -2559,7 +2560,7 @@ xRooNode xRooNode::constraints() const {
         for(auto p : o->pdfList()) {
             if (p==ignore) continue;
             if (p->dependsOn(par)) {
-                out.emplace_back(std::make_shared<xRooNode>(par.GetName(), *p, *this));
+                out.emplace_back(std::make_shared<RooNode>(par.GetName(), *p, *this));
             }
         }
         return (RooAbsPdf*)nullptr;
@@ -2618,7 +2619,7 @@ xRooNode xRooNode::constraints() const {
     return out;
 }
 
-std::shared_ptr<TObject> xRooNode::convertForAcquisition(xRooNode& acquirer) const {
+std::shared_ptr<TObject> RooNode::convertForAcquisition(RooNode& acquirer) const {
 
     // if arg is a histogram, will acquire it as a RooHistFunc unless no conversion
     // todo: could flag not to convert
@@ -2738,7 +2739,7 @@ std::shared_ptr<TObject> xRooNode::convertForAcquisition(xRooNode& acquirer) con
 
 
             // copy values over using the assignment operator - may convert to a RooProduct if there are stat uncerts
-            xRooNode tmp(h->GetName(),_f,acquirer);
+            RooNode tmp(h->GetName(),_f,acquirer);
             tmp = *h;
             _f = std::dynamic_pointer_cast<RooAbsArg>(tmp.fComp); // in case got upgrade to a RooProduct
         }
@@ -2760,11 +2761,11 @@ std::shared_ptr<TObject> xRooNode::convertForAcquisition(xRooNode& acquirer) con
 
 }
 
-void xRooNode::SetFillColor(Color_t fcolor) {
+void RooNode::SetFillColor(Color_t fcolor) {
     if(auto a = get<RooAbsArg>(); a) a->setStringAttribute("FillColor",TString::Format("%d",fcolor));
 }
 
-std::shared_ptr<TObject> xRooNode::acquire(const std::shared_ptr<TObject>& arg, bool checkFactory, bool mustBeNew) {
+std::shared_ptr<TObject> RooNode::acquire(const std::shared_ptr<TObject>& arg, bool checkFactory, bool mustBeNew) {
     if (!arg) return nullptr;
     if (!fAcquirer && !get<RooWorkspace>() && fParent) return fParent->acquire(arg,checkFactory,mustBeNew);
 
@@ -2846,7 +2847,7 @@ std::shared_ptr<TObject> xRooNode::acquire(const std::shared_ptr<TObject>& arg, 
     }
     auto _owned = find(".memory");
     if (!_owned) {
-        _owned = emplace_back(std::make_shared<xRooNode>(".memory",nullptr,*this));
+        _owned = emplace_back(std::make_shared<RooNode>(".memory",nullptr,*this));
     }
     // look for exact name, dont use 'find' because doesnt work if trying to find "1" and it doesn't exist, will get back idx 1 instead
     for(auto& r : *_owned) {
@@ -2856,21 +2857,21 @@ std::shared_ptr<TObject> xRooNode::acquire(const std::shared_ptr<TObject>& arg, 
     }
     if(!fProvider) std::cout << GetName() << " taking over " << arg->ClassName() << "::" << arg->GetName() << std::endl;
     /*emplace_back(std::make_shared<Node2>(".memory",nullptr,*this))*/
-    return _owned->emplace_back(std::make_shared<xRooNode>(arg->GetName(),arg,*this))->fComp;
+    return _owned->emplace_back(std::make_shared<RooNode>(arg->GetName(),arg,*this))->fComp;
     //return arg;
 }
 
-bool xRooNode::SetXaxis(const char* name, const char* title, int nbins, double low, double high) {
+bool RooNode::SetXaxis(const char* name, const char* title, int nbins, double low, double high) {
     RooUniformBinning b(low,high,nbins,name);b.SetTitle(title);
     return SetXaxis(b);
 }
 
-bool xRooNode::SetXaxis(const char* name, const char* title, int nbins, double* bins) {
+bool RooNode::SetXaxis(const char* name, const char* title, int nbins, double* bins) {
     RooBinning b(nbins,bins,name); b.SetTitle(title);
     return SetXaxis(b);
 }
 
-bool xRooNode::SetXaxis(const RooAbsBinning& binning) {
+bool RooNode::SetXaxis(const RooAbsBinning& binning) {
 
     auto name = binning.GetName();
     double high = binning.highBound();
@@ -2924,7 +2925,7 @@ bool xRooNode::SetXaxis(const RooAbsBinning& binning) {
 
 
 
-bool xRooNode::contains(const std::string& name) const {
+bool RooNode::contains(const std::string& name) const {
     try {
         return at(name,false)!=nullptr;
     } catch(std::out_of_range& ) {
@@ -2932,7 +2933,7 @@ bool xRooNode::contains(const std::string& name) const {
     }
 }
 
-std::shared_ptr<xRooNode> xRooNode::at(const std::string& name, bool browseResult) const {
+std::shared_ptr<RooNode> RooNode::at(const std::string& name, bool browseResult) const {
     std::string partname = (name.find('/')!=std::string::npos) ? name.substr(0,name.find('/')) : name;
     auto _s = (!get() && fParent) ? fParent->get<RooSimultaneous>() : get<RooSimultaneous>(); // makes work if doing simPdf.variations()["blah"]
     std::string extra = (_s) ? _s->indexCat().GetName() : "";
@@ -2968,7 +2969,7 @@ std::shared_ptr<xRooNode> xRooNode::at(const std::string& name, bool browseResul
     throw std::out_of_range(name + " does not exist");
 }
 
-std::shared_ptr<xRooNode> xRooNode::operator[](const std::string& name) {
+std::shared_ptr<RooNode> RooNode::operator[](const std::string& name) {
     std::string partname = (name.find('/')!=std::string::npos) ? name.substr(0,name.find('/')) : name;
     browse();
     auto _s = (!get() && fParent) ? fParent->get<RooSimultaneous>() : get<RooSimultaneous>(); // makes work if doing simPdf.variations()["blah"]
@@ -2994,14 +2995,14 @@ std::shared_ptr<xRooNode> xRooNode::operator[](const std::string& name) {
             }
         }
     }
-    auto out = std::make_shared<xRooNode>(partname.c_str(),nullptr,*this); // not adding as child yeeet
+    auto out = std::make_shared<RooNode>(partname.c_str(),nullptr,*this); // not adding as child yeeet
     if (partname != name) {
         return out->operator[](name.substr(partname.length()+1));
     }
     return out;
 }
 
-TGListTreeItem* xRooNode::GetTreeItem(TBrowser* b) const {
+TGListTreeItem* RooNode::GetTreeItem(TBrowser* b) const {
     if (!b) {
         for(auto o : *gROOT->GetListOfBrowsers()) {
             b = dynamic_cast<TBrowser*>(o); if (!b || !b->GetBrowserImp()) continue;
@@ -3013,13 +3014,13 @@ TGListTreeItem* xRooNode::GetTreeItem(TBrowser* b) const {
     if(auto _b = dynamic_cast<TGFileBrowser*>( dynamic_cast<TRootBrowser*>(b->GetBrowserImp())->fActBrowser ); _b) {
         auto _root = _b->fRootDir;
         if (!_root) _root = _b->fListTree->GetFirstItem();
-        return _b->fListTree->FindItemByObj(_root,const_cast<xRooNode*>(this));
+        return _b->fListTree->FindItemByObj(_root,const_cast<RooNode*>(this));
     }
     return nullptr;
 }
 
 
-void xRooNode::SetName(const char* name) {
+void RooNode::SetName(const char* name) {
     TNamed::SetName(name);
     if (auto a = get<RooAbsArg>(); a) a->setStringAttribute("alias",name);
     for(auto o : *gROOT->GetListOfBrowsers()) {
@@ -3031,18 +3032,18 @@ void xRooNode::SetName(const char* name) {
     }
 }
 
-xRooNode& xRooNode::browse() {
+RooNode& RooNode::browse() {
     if (get<RooArgList>() || (!get() && !(strlen(GetName())>0&&(GetName()[0]=='!')) && !fBrowseOperation)) return *this; // nothing to browse - 'collection' nodes should already be populated except for folders
     // alternative could have been to mandate that the 'components' of a collection node are the children it has.
 
-    auto findByObj = [&](const std::shared_ptr<xRooNode>& n) {
+    auto findByObj = [&](const std::shared_ptr<RooNode>& n) {
         for(auto& c : *this) {
             if(c->get()==n->get() && strcmp(n->GetName(),c->GetName())==0) return c;
         }
-        return std::shared_ptr<xRooNode>(nullptr);
+        return std::shared_ptr<RooNode>(nullptr);
     };
 
-    auto appendChildren = [&](const xRooNode& n) {
+    auto appendChildren = [&](const RooNode& n) {
         size_t out = 0;
         for(auto& c : n) {
             if (auto existing = findByObj(c); existing) {
@@ -3095,7 +3096,7 @@ xRooNode& xRooNode::browse() {
         for(int i=0;i<arg->numProxies();i++) {
             auto _proxy = arg->getProxy(i);
             if(auto a = dynamic_cast<RooArgProxy*>(_proxy)) {
-                auto c = std::make_shared<xRooNode>(TString::Format(".%s",_proxy->name()),*(a->absArg()),*this);
+                auto c = std::make_shared<RooNode>(TString::Format(".%s",_proxy->name()),*(a->absArg()),*this);
                 if (auto existing = findByObj(c); existing) {
                     existing->fTimes++;
                     existing->fFolder = c->fFolder; // transfer folder assignment
@@ -3104,7 +3105,7 @@ xRooNode& xRooNode::browse() {
                 }
             } else if(auto s = dynamic_cast<RooAbsCollection*>(_proxy)) {
                 for(auto a : *s) {
-                    auto c = std::make_shared<xRooNode>(*a,*this);
+                    auto c = std::make_shared<RooNode>(*a,*this);
                     c->fFolder = std::string("!.") + _proxy->name();
                     if (auto existing = findByObj(c); existing) {
                         existing->fTimes++;
@@ -3116,7 +3117,7 @@ xRooNode& xRooNode::browse() {
             }
         }
         /*for(auto& s : arg->servers()) {
-            auto c = std::make_shared<xRooNode>(*s,*this);
+            auto c = std::make_shared<RooNode>(*s,*this);
             if (auto existing = findByObj(c); existing) {
                 existing->fTimes++;
                 existing->fFolder = c->fFolder; // transfer folder assignment
@@ -3170,8 +3171,8 @@ xRooNode& xRooNode::browse() {
     return *this;
 }
 
-xRooNode xRooNode::obs() const {
-    xRooNode out(".obs",std::make_shared<RooArgList>(),*this);
+RooNode RooNode::obs() const {
+    RooNode out(".obs",std::make_shared<RooArgList>(),*this);
     out.get<RooArgList>()->setName((GetPath()+".obs").c_str());
     for(auto o : deps()) {
         if (o->get<RooAbsArg>()->getAttribute("obs")) {out.get<RooArgList>()->add(*o->get<RooAbsArg>());out.emplace_back(o); }
@@ -3179,8 +3180,8 @@ xRooNode xRooNode::obs() const {
     return out;
 }
 
-xRooNode xRooNode::globs() const {
-    xRooNode out(".globs",std::make_shared<RooArgList>(),*this);
+RooNode RooNode::globs() const {
+    RooNode out(".globs",std::make_shared<RooArgList>(),*this);
     out.get<RooArgList>()->setName((GetPath()+".globs").c_str());
     for(auto o : obs()) {
         if (o->get<RooAbsArg>()->getAttribute("global")) {out.get<RooArgList>()->add(*o->get<RooAbsArg>());out.emplace_back(o);}
@@ -3188,8 +3189,8 @@ xRooNode xRooNode::globs() const {
     return out;
 }
 
-xRooNode xRooNode::robs() const {
-    xRooNode out(".robs",std::make_shared<RooArgList>(),*this);
+RooNode RooNode::robs() const {
+    RooNode out(".robs",std::make_shared<RooArgList>(),*this);
     out.get<RooArgList>()->setName((GetPath()+".robs").c_str());
     for(auto o : obs()) {
         if (!o->get<RooAbsArg>()->getAttribute("global")) {out.get<RooArgList>()->add(*o->get<RooAbsArg>());out.emplace_back(o);}
@@ -3197,8 +3198,8 @@ xRooNode xRooNode::robs() const {
     return out;
 }
 
-xRooNode xRooNode::pars() const {
-    xRooNode out(".pars",std::make_shared<RooArgList>(),*this);
+RooNode RooNode::pars() const {
+    RooNode out(".pars",std::make_shared<RooArgList>(),*this);
     out.get<RooArgList>()->setName((GetPath()+".pars").c_str());
     for(auto o : deps()) {
         if (!o->get<RooAbsArg>()->getAttribute("obs")) {out.get<RooArgList>()->add(*(o->get<RooAbsArg>()));out.emplace_back(o);}
@@ -3206,8 +3207,8 @@ xRooNode xRooNode::pars() const {
     return out;
 }
 
-xRooNode xRooNode::args() const {
-    xRooNode out(".args",std::make_shared<RooArgList>(),*this);
+RooNode RooNode::args() const {
+    RooNode out(".args",std::make_shared<RooArgList>(),*this);
     out.get<RooArgList>()->setName((GetPath()+".args").c_str());
     for(auto o : pars()) {
         if (o->get<RooConstVar>() || o->get<RooAbsArg>()->getAttribute("Constant")) {out.get<RooArgList>()->add(*o->get<RooAbsArg>());out.emplace_back(o);}
@@ -3215,17 +3216,17 @@ xRooNode xRooNode::args() const {
     return out;
 }
 
-xRooNode xRooNode::vars() const {
-    std::cout << "xRooNode: WARNING: vars() method deprecated in favour of floats() ... please update your code" << std::endl;
-    xRooNode out(".vars",std::make_shared<RooArgList>(),*this);
+RooNode RooNode::vars() const {
+    std::cout << "RooNode: WARNING: vars() method deprecated in favour of floats() ... please update your code" << std::endl;
+    RooNode out(".vars",std::make_shared<RooArgList>(),*this);
     for(auto o : pars()) {
         if (!o->get<RooAbsArg>()->getAttribute("Constant") && !o->get<RooConstVar>()) {out.get<RooArgList>()->add(*o->get<RooAbsArg>());out.emplace_back(o);}
     }
     return out;
 }
 
-xRooNode xRooNode::floats() const {
-    xRooNode out(".floats",std::make_shared<RooArgList>(),*this);
+RooNode RooNode::floats() const {
+    RooNode out(".floats",std::make_shared<RooArgList>(),*this);
     out.get<RooArgList>()->setName((GetPath()+".floats").c_str());
     for(auto o : pars()) {
         if (!o->get<RooAbsArg>()->getAttribute("Constant") && !o->get<RooConstVar>()) {out.get<RooArgList>()->add(*o->get<RooAbsArg>());out.emplace_back(o);}
@@ -3233,8 +3234,8 @@ xRooNode xRooNode::floats() const {
     return out;
 }
 
-xRooNode  xRooNode::poi() const {
-    xRooNode out(".poi",std::make_shared<RooArgList>(),*this);
+RooNode  RooNode::poi() const {
+    RooNode out(".poi",std::make_shared<RooArgList>(),*this);
     out.get<RooArgList>()->setName((GetPath()+".poi").c_str());
     for(auto o : pars()) {
         if (o->get<RooAbsArg>()->getAttribute("poi")) {out.get<RooArgList>()->add(*o->get<RooAbsArg>());out.emplace_back(o);}
@@ -3242,8 +3243,8 @@ xRooNode  xRooNode::poi() const {
     return out;
 }
 
-xRooNode  xRooNode::np() const {
-    xRooNode out(".np",std::make_shared<RooArgList>(),*this);
+RooNode  RooNode::np() const {
+    RooNode out(".np",std::make_shared<RooArgList>(),*this);
     out.get<RooArgList>()->setName((GetPath()+".np").c_str());
     for(auto o : pars()) {
         if (!o->get<RooAbsArg>()->getAttribute("poi") && !o->get<RooConstVar>()) {out.get<RooArgList>()->add(*o->get<RooAbsArg>());out.emplace_back(o);}
@@ -3251,40 +3252,40 @@ xRooNode  xRooNode::np() const {
     return out;
 }
 
-xRooNode xRooNode::deps() const {
-    xRooNode out(".deps",std::make_shared<RooArgList>(),*this);
+RooNode RooNode::deps() const {
+    RooNode out(".deps",std::make_shared<RooArgList>(),*this);
     out.get<RooArgList>()->setName((GetPath()+".deps").c_str());
     if (auto p = get<RooAbsArg>();p) {
         // also need to get all constPars so use leafNodeServerList .. will include self if is fundamental, which is what we want
         RooArgSet allLeafs;
         p->leafNodeServerList(&allLeafs);
         for(auto& c : allLeafs) {
-            if (c->isFundamental() || dynamic_cast<RooConstVar*>(c)) {out.get<RooArgList>()->add(*c);out.emplace_back(std::make_shared<xRooNode>(*c,*this));  }
+            if (c->isFundamental() || dynamic_cast<RooConstVar*>(c)) {out.get<RooArgList>()->add(*c);out.emplace_back(std::make_shared<RooNode>(*c,*this));  }
         }
     } else if(auto p = get<RooAbsData>(); p) {
         for(auto a : *p->get()) {
             a->setAttribute("obs");
-            out.emplace_back(std::make_shared<xRooNode>(*a,*this));
+            out.emplace_back(std::make_shared<RooNode>(*a,*this));
             out.get<RooArgList>()->add(*a);
         }
         if (auto _globs = find(".globs"); _globs && _globs->get<RooAbsCollection>()) {
             for(auto& a : *_globs->get<RooAbsCollection>()) {
                 a->setAttribute("obs"); a->setAttribute("global");
-                out.emplace_back(std::make_shared<xRooNode>(*a,*this));
+                out.emplace_back(std::make_shared<RooNode>(*a,*this));
                 out.get<RooArgList>()->add(*a);
             }
         } else if (auto _ws = ws(); _ws) {
             if (auto _globs = dynamic_cast<RooArgSet*>(_ws->_snapshots.find(p->GetName())); _globs) {
                 for(auto a : *_globs) {
                     a->setAttribute("obs");a->setAttribute("global");
-                    out.emplace_back(std::make_shared<xRooNode>(*a,*this));
+                    out.emplace_back(std::make_shared<RooNode>(*a,*this));
                     out.get<RooArgList>()->add(*a);
                 }
             } else if (auto _gl = _ws->_namedSets.find("globalObservables"); _gl != _ws->_namedSets.end()) {
                 for(auto& _g : _gl->second) {
                     auto _clone = std::shared_ptr<RooAbsArg>(dynamic_cast<RooAbsArg*>(_g->Clone(_g->GetName())));
                     if (auto v = std::dynamic_pointer_cast<RooAbsRealLValue>(_clone); v && _g->getStringAttribute("nominal")) v->setVal(TString(_g->getStringAttribute("nominal")).Atof());
-                    out.emplace_back(std::make_shared<xRooNode>(_clone,*this));
+                    out.emplace_back(std::make_shared<RooNode>(_clone,*this));
                     out.get<RooArgList>()->add(*_clone);
                 }
             } else if(fParent) {
@@ -3294,31 +3295,31 @@ xRooNode xRooNode::deps() const {
                 for(auto& _g : *_globs) {
                     auto _clone = std::shared_ptr<RooAbsArg>(dynamic_cast<RooAbsArg*>(_g->Clone(_g->GetName())));
                     if (auto v = std::dynamic_pointer_cast<RooAbsRealLValue>(_clone); v && _g->getStringAttribute("nominal")) v->setVal(TString(_g->getStringAttribute("nominal")).Atof());
-                    out.emplace_back(std::make_shared<xRooNode>(_clone,*this));
+                    out.emplace_back(std::make_shared<RooNode>(_clone,*this));
                     out.get<RooArgList>()->add(*_clone);
                 }
             }
         }
     } else if(auto w = get<RooWorkspace>(); w) {
         for(auto a : w->allVars()) {
-            out.emplace_back(std::make_shared<xRooNode>(*a,*this));
+            out.emplace_back(std::make_shared<RooNode>(*a,*this));
             out.get<RooArgList>()->add(*a);
         }
         // add all cats as well
         for(auto a : w->allCats()) {
-            out.emplace_back(std::make_shared<xRooNode>(*a,*this));
+            out.emplace_back(std::make_shared<RooNode>(*a,*this));
             out.get<RooArgList>()->add(*a);
         }
     }
     return out;
 }
 
-xRooNode xRooNode::components() const {
-    xRooNode out(".components",nullptr,*this);
+RooNode RooNode::components() const {
+    RooNode out(".components",nullptr,*this);
 
     if (auto p = get<RooAddPdf>(); p) {
         for(auto& o : p->pdfList()) {
-            out.emplace_back(std::make_shared<xRooNode>(*o,*this));
+            out.emplace_back(std::make_shared<RooNode>(*o,*this));
         }
     } else if(auto p = get<RooRealSumPdf>(); p) {
         // check for common prefixes and suffixes, will use to define aliases to shorten names
@@ -3335,11 +3336,11 @@ xRooNode xRooNode::components() const {
 //            }
 //        }
         for(auto& o : p->funcList()) {
-            out.emplace_back(std::make_shared<xRooNode>(*o,*this));
+            out.emplace_back(std::make_shared<RooNode>(*o,*this));
         }
     } else if(auto p = get<RooAddition>(); p) {
         for(auto& o : p->list()) {
-            out.emplace_back(std::make_shared<xRooNode>(*o,*this));
+            out.emplace_back(std::make_shared<RooNode>(*o,*this));
         }
     } /*else if(auto p = get<RooFitResultTree>(); p) {
         long _nentries = p->GetEntries();
@@ -3361,12 +3362,12 @@ xRooNode xRooNode::components() const {
                 auto nFits = p->get()->GetEntries(_sel);
                 if (nFits > 0) {
                     total += nFits;
-                    out.emplace_back(std::make_shared<xRooNode>( _d->GetName(), fComp, *this));
+                    out.emplace_back(std::make_shared<RooNode>( _d->GetName(), fComp, *this));
                 }
                 if (total >= _nentries) break;
             }
             if (total < _nentries) {
-                out.emplace_back(std::make_shared<xRooNode>("otherDatasets", fComp, *this));
+                out.emplace_back(std::make_shared<RooNode>("otherDatasets", fComp, *this));
             }
         } else if(depth==1) {
             // get unconditional fit if we can ...
@@ -3381,9 +3382,9 @@ xRooNode xRooNode::components() const {
                     // before adding a copy of fit, see if fit already exists in this and reuse
                     _name += uuid.GetTime().AsString();
                     if (auto _existing = find(_name.Data()); _existing) {
-                        out.emplace_back(std::make_shared<xRooNode>(*_existing));
+                        out.emplace_back(std::make_shared<RooNode>(*_existing));
                     } else {
-                        out.emplace_back(std::make_shared<xRooNode>(_name, _fr, *this));
+                        out.emplace_back(std::make_shared<RooNode>(_name, _fr, *this));
                         out.back()->fFolder = "!unconditional";
                     }
 
@@ -3397,7 +3398,7 @@ xRooNode xRooNode::components() const {
                 if (auto n = p->GetEntrys(
                             p->BuildSelection(dName, {{_par->GetName(), std::numeric_limits<double>::quiet_NaN()}}), 1).size();n > 0) {
                 //if (p->get()->GetEntries(_sel) > 0) {
-                    out.emplace_back(std::make_shared<xRooNode>(_par->GetName(),fComp,*this));
+                    out.emplace_back(std::make_shared<RooNode>(_par->GetName(),fComp,*this));
                     total += n;
                 }
             }
@@ -3409,9 +3410,9 @@ xRooNode xRooNode::components() const {
                 auto _fr = p->GetFit(i);
                 TString _name = TString::Format("%f;%s",dynamic_cast<RooAbsReal*>(_fr->constPars().find(GetName()))->getVal(),TUUID(_fr->GetName()).GetTime().AsString());
                 if (auto _existing = find(_name.Data()); _existing) {
-                    out.emplace_back(std::make_shared<xRooNode>(*_existing));
+                    out.emplace_back(std::make_shared<RooNode>(*_existing));
                 } else {
-                    out.emplace_back(std::make_shared<xRooNode>(_name, _fr, *this));
+                    out.emplace_back(std::make_shared<RooNode>(_name, _fr, *this));
                 }
             }
         }
@@ -3423,7 +3424,7 @@ xRooNode xRooNode::components() const {
             bool hasClients = false;
             for(auto& c : o->clients()) if(!c->InheritsFrom("RooRealIntegral")) { hasClients=true; break; }
             if (hasClients) continue;
-            out.emplace_back(std::make_shared<xRooNode>(*o,*this));
+            out.emplace_back(std::make_shared<RooNode>(*o,*this));
             if(o->InheritsFrom("RooAbsPdf")) out.back()->fFolder = "!models";
             else out.back()->fFolder = "!scratch";
         }
@@ -3433,13 +3434,13 @@ xRooNode xRooNode::components() const {
                 if (s.Contains(';')) s= s(0,s.Index(';'));
                 if (auto _pdf = out.find(s.Data()); _pdf) {
                     //std::cout << " type = " << _pdf->get()->ClassName() << std::endl;
-                    out.emplace_back(std::make_shared<xRooNode>(fr->GetTitle(),*fr,_pdf));
+                    out.emplace_back(std::make_shared<RooNode>(fr->GetTitle(),*fr,_pdf));
                     // for a while, this node's parent pointed to something of type Node2!!
                     // how to fix??? - I fxied it with a new constructo to avoid the shared_ptr<Node2> calling the const Node2& constructor via getting wrapped in a Node2(shared_ptr<TObject>) call
                     //out.back()->fParent = _pdf;
                     //std::cout << " type2 = " << out.back()->fParent->get()->ClassName() << std::endl;
                 } else {
-                    out.emplace_back(std::make_shared<xRooNode>(fr->GetTitle(),*fr,*this));
+                    out.emplace_back(std::make_shared<RooNode>(fr->GetTitle(),*fr,*this));
 
                 }
                 out.back()->fFolder = "!fits";
@@ -3448,11 +3449,11 @@ xRooNode xRooNode::components() const {
                 if (t->GetUserInfo()->FindObject("fitConfig")) {
                     auto frt = getObject<RooFitResultTree>(t->GetName());
                     if (!frt) {
-                        frt = const_cast<xRooNode *>(this)->acquire<RooFitResultTree>(t);
+                        frt = const_cast<RooNode *>(this)->acquire<RooFitResultTree>(t);
                     }
                     if (frt) {
                         if (auto _pdf = frt->GetPdf()) {
-                            out.emplace_back(std::make_shared<xRooNode>(frt, xRooNode(*_pdf, *this)));
+                            out.emplace_back(std::make_shared<RooNode>(frt, RooNode(*_pdf, *this)));
                             out.back()->fFolder = "!fits";
                         }
                     }
@@ -3460,32 +3461,32 @@ xRooNode xRooNode::components() const {
                     // assume its a RooDataTree until we have better way to identify
                     auto rdt = getObject<RooDataTree>(t->GetName());
                     if (!rdt) {
-                        rdt = const_cast<xRooNode *>(this)->acquire<RooDataTree>(t);
+                        rdt = const_cast<RooNode *>(this)->acquire<RooDataTree>(t);
                     }
                     if (rdt) {
                         if (auto _pdf = rdt->GetPdf()) {
-                            out.emplace_back(std::make_shared<xRooNode>(rdt, xRooNode(*_pdf, *this)));
+                            out.emplace_back(std::make_shared<RooNode>(rdt, RooNode(*_pdf, *this)));
                             out.back()->fFolder = "!datasets";
                         }
                     }
                 }
                 // TODO: Handle other tree type?
             }*/ else {
-                out.emplace_back(std::make_shared<xRooNode>(*o,*this));
+                out.emplace_back(std::make_shared<RooNode>(*o,*this));
                 out.back()->fFolder = "!objects";
             }
         }
         for(auto& [k,v] : p->_namedSets) { // warning -- if this is a map, will it invalidate the object addresses on fill?
             // skip 'CACHE' sets because they are auto-removed when sanitizing workspaces, which will invalidate these children
             if (k.find("CACHE_")==0) continue;
-            out.emplace_back(std::make_shared<xRooNode>(k.c_str(),v,*this));
+            out.emplace_back(std::make_shared<RooNode>(k.c_str(),v,*this));
             out.back()->fFolder = "!sets";
         }
 
         std::unique_ptr<TIterator> iter( p->_snapshots.MakeIterator() );
         RooArgSet* snap ;
         while((snap=(RooArgSet*)iter->Next())) {
-            out.emplace_back(std::make_shared<xRooNode>(*snap,*this));
+            out.emplace_back(std::make_shared<RooNode>(*snap,*this));
             out.back()->fFolder = "!snapshots";
         }
     } else if(strlen(GetName())>0 && GetName()[0]=='!' && fParent) {
@@ -3508,13 +3509,13 @@ xRooNode xRooNode::components() const {
     return out;
 }
 
-xRooNode xRooNode::bins() const {
-    xRooNode out(".bins",nullptr,*this);
+RooNode RooNode::bins() const {
+    RooNode out(".bins",nullptr,*this);
 
     if(auto phf = get<ParamHistFunc>(); phf) {
         int i=1;
         for(auto par : phf->_paramSet) {
-            out.emplace_back(std::make_shared<xRooNode>(*par,*this));
+            out.emplace_back(std::make_shared<RooNode>(*par,*this));
             out.back()->fBinNumber = i;i++;
         }
     } else if (auto ax = GetXaxis(); ax) {
@@ -3527,7 +3528,7 @@ xRooNode xRooNode::bins() const {
                     else _factors.push_back(f->bins()[i-1]->get<RooAbsArg>());
                 }
             }
-            out.emplace_back(std::make_shared<xRooNode>(TString::Format("%s=%g", ax->GetParent()->GetName(), ax->GetBinCenter(i)),
+            out.emplace_back(std::make_shared<RooNode>(TString::Format("%s=%g", ax->GetParent()->GetName(), ax->GetBinCenter(i)),
                                                         _factors.empty() ? nullptr : std::make_shared<RooProduct>(TString::Format("%s.binFactors.bin%d",GetName(),i), "binFactors",
                                                                                                                   RooArgList()), *this));
             for(auto f : _factors) out.back()->get<RooProduct>()->_compRSet.add(*f);
@@ -3538,7 +3539,7 @@ xRooNode xRooNode::bins() const {
     return out;
 }
 
-xRooNode xRooNode::coefs() const {
+RooNode RooNode::coefs() const {
     RooArgList coefs;
 
     // if parent is a sumpdf or addpdf then include the coefs
@@ -3562,34 +3563,34 @@ xRooNode xRooNode::coefs() const {
             }
         }
     }
-    xRooNode out(".coefs",coefs.empty() ? nullptr : std::make_shared<RooAddition>(".coefs", "Coefficients of",
+    RooNode out(".coefs",coefs.empty() ? nullptr : std::make_shared<RooAddition>(".coefs", "Coefficients of",
                                                      coefs),*this);
     if(!coefs.empty()) out.browse();
 
     return out;
 }
 
-xRooNode xRooNode::factors() const {
-    xRooNode out(".factors",nullptr,*this);
+RooNode RooNode::factors() const {
+    RooNode out(".factors",nullptr,*this);
 
     if (auto p = get<RooProdPdf>(); p) {
         auto _main = mainChild();
         if (auto a = _main.get<RooAbsArg>(); a && !a->getStringAttribute("alias")) a->setStringAttribute("alias","samples");
         int _npdfs = p->pdfList().size();
         for(auto& o : p->pdfList()) {
-            out.emplace_back(std::make_shared<xRooNode>(*o,*this));
+            out.emplace_back(std::make_shared<RooNode>(*o,*this));
             if (_npdfs > 5 && o != _main.get()) out.back()->fFolder = "!constraints";
         }
     } else if(auto p = get<RooProduct>(); p) {
         for(auto& o : p->components()) {
             if (o->InheritsFrom("RooProduct")) {
                 // get factors of this term
-                auto x = xRooNode("tmp",*o,*this).factors();
+                auto x = RooNode("tmp",*o,*this).factors();
                 for(auto& n : x) {
-                    out.emplace_back(std::make_shared<xRooNode>(n->GetName(),n->fComp,*this));
+                    out.emplace_back(std::make_shared<RooNode>(n->GetName(),n->fComp,*this));
                 }
             } else {
-                out.emplace_back(std::make_shared<xRooNode>(*o, *this));
+                out.emplace_back(std::make_shared<RooNode>(*o, *this));
             }
         }
     } else if(auto w = get<RooWorkspace>(); w) {
@@ -3604,7 +3605,7 @@ xRooNode xRooNode::factors() const {
                 show=false;
                 if (c->InheritsFrom("RooProduct")) show=true;
             }
-            if(show) out.emplace_back(std::make_shared<xRooNode>(*a, *this));
+            if(show) out.emplace_back(std::make_shared<RooNode>(*a, *this));
         }
     }
 
@@ -3613,10 +3614,10 @@ xRooNode xRooNode::factors() const {
     if (!_coefs.empty()) {
         if (_coefs.size() == 1) {
             if (strcmp(_coefs.at(0)->GetName(),"1")!=0) { // don't add the "1"
-                out.emplace_back(std::make_shared<xRooNode>(".coef", *_coefs.at(0)->get(), *this));
+                out.emplace_back(std::make_shared<RooNode>(".coef", *_coefs.at(0)->get(), *this));
             }
         } else {
-            out.emplace_back(std::make_shared<xRooNode>(_coefs));
+            out.emplace_back(std::make_shared<RooNode>(_coefs));
         }
     }
 /*
@@ -3657,28 +3658,28 @@ xRooNode xRooNode::factors() const {
     return out;
 }
 
-xRooNode xRooNode::variations() const {
-    xRooNode out(".variations",nullptr,*this);
+RooNode RooNode::variations() const {
+    RooNode out(".variations",nullptr,*this);
 
     if (auto p = get<RooSimultaneous>(); p) {
         for(auto& c : p->indexCat()) {
             auto pp = p->getPdf(c.first.c_str());
             if (!pp) continue;
-            out.emplace_back(std::make_shared<xRooNode>(TString::Format("%s=%s",p->indexCat().GetName(),c.first.c_str()),*pp,*this));
+            out.emplace_back(std::make_shared<RooNode>(TString::Format("%s=%s",p->indexCat().GetName(),c.first.c_str()),*pp,*this));
         }
     } else if (auto p = get<PiecewiseInterpolation>(); p) {
-        out.emplace_back(std::make_shared<xRooNode>("nominal",p->_nominal.arg(),*this));
+        out.emplace_back(std::make_shared<RooNode>("nominal",p->_nominal.arg(),*this));
         for(int i=0;i < p->paramList().size();i++) {
             // TODO: should we only return one if we find they are symmetrized?
-            out.emplace_back(std::make_shared<xRooNode>(TString::Format("%s=1",p->paramList().at(i)->GetName()),*p->highList().at(i),*this));
-            out.emplace_back(std::make_shared<xRooNode>(TString::Format("%s=-1",p->paramList().at(i)->GetName()),*p->lowList().at(i),*this));
+            out.emplace_back(std::make_shared<RooNode>(TString::Format("%s=1",p->paramList().at(i)->GetName()),*p->highList().at(i),*this));
+            out.emplace_back(std::make_shared<RooNode>(TString::Format("%s=-1",p->paramList().at(i)->GetName()),*p->lowList().at(i),*this));
         }
     } else if(auto p = get<RooStats::HistFactory::FlexibleInterpVar>(); p) {
-        out.emplace_back(std::make_shared<xRooNode>("nominal", RooFit::RooConst(p->_nominal), *this));
+        out.emplace_back(std::make_shared<RooNode>("nominal", RooFit::RooConst(p->_nominal), *this));
         for (int i = 0; i < p->_paramList.size(); i++) {
-            out.emplace_back(std::make_shared<xRooNode>(TString::Format("%s=1", p->_paramList.at(i)->GetName()),
+            out.emplace_back(std::make_shared<RooNode>(TString::Format("%s=1", p->_paramList.at(i)->GetName()),
                                                       RooFit::RooConst(p->_high.at(i)), *this));
-            out.emplace_back(std::make_shared<xRooNode>(TString::Format("%s=-1", p->_paramList.at(i)->GetName()),
+            out.emplace_back(std::make_shared<RooNode>(TString::Format("%s=-1", p->_paramList.at(i)->GetName()),
                                                       RooFit::RooConst(p->_low.at(i)), *this));
         }
     } else if(auto p = get<ParamHistFunc>(); p) {
@@ -3689,26 +3690,26 @@ xRooNode xRooNode::variations() const {
             //if(auto _v = dynamic_cast<RooRealVar*>(p->_dataSet.get(i)->first()); _v) {
             //    _name = TString::Format("%s=%g",_v->GetName(),_v->getVal());
             //}
-            //out.emplace_back(std::make_shared<xRooNode>(_name,*par,*this)); -- -removed cos now have bin() method
+            //out.emplace_back(std::make_shared<RooNode>(_name,*par,*this)); -- -removed cos now have bin() method
             i++;
         }
     }
     return out;
 }
 
-RooArgList xRooNode::argList() const {
+RooArgList RooNode::argList() const {
     RooArgList out;out.setName(GetName());
     for (auto& k : *this) { if(auto o = k->get<RooAbsArg>();o) out.add(*o); }
     return out;
 }
 
-xRooNode xRooNode::datasets() const {
-    xRooNode out(".datasets()",nullptr,*this);
-    out.fBrowseOperation = [](xRooNode* f) { return f->fParent->datasets(); };
+RooNode RooNode::datasets() const {
+    RooNode out(".datasets()",nullptr,*this);
+    out.fBrowseOperation = [](RooNode* f) { return f->fParent->datasets(); };
 
     if (auto _ws = get<RooWorkspace>(); _ws) {
         for(auto& d : _ws->allData()) {
-            out.emplace_back(std::make_shared<xRooNode>(*d, *this));
+            out.emplace_back(std::make_shared<RooNode>(*d, *this));
             out.back()->fFolder = "!datasets";
         }
     } else if(auto _ws = ws(); _ws) {
@@ -3720,19 +3721,19 @@ xRooNode xRooNode::datasets() const {
                 auto a = dynamic_cast<RooAbsArg*>(ax->GetParent());
                 _obs.add(*a,true);
             }
-            xRooNode _wsNode(*_ws,*this);
+            RooNode _wsNode(*_ws,*this);
             for(auto& d : _wsNode.datasets()) {
                 if (std::unique_ptr<RooAbsCollection>(d->obs().argList().selectCommon(_obs))->size() == _obs.size()) {
                     // all obs present .. include
-                    out.emplace_back(std::make_shared<xRooNode>(d->fComp, *this));
+                    out.emplace_back(std::make_shared<RooNode>(d->fComp, *this));
                 }
             }
         } /*else if(auto p = get<RooFitResult>(); p) {
             // look for datasets in workspace that match the fit result name after hashing
-            for(auto& _d : xRooNode(*_ws,*this).datasets()) {
+            for(auto& _d : RooNode(*_ws,*this).datasets()) {
                 auto _hash = RooAbsTree::nameToHash(_d->get()->GetName());
                 if (TString::Format("%d;%d",_hash.first,_hash.second) == p->GetTitle()) {
-                    out.emplace_back(std::make_shared<xRooNode>(_d->fComp, *this));
+                    out.emplace_back(std::make_shared<RooNode>(_d->fComp, *this));
                 }
             }
         }*/
@@ -3744,7 +3745,7 @@ xRooNode xRooNode::datasets() const {
 
 
 
-TGraph* xRooNode::BuildGraph(RooAbsLValue* v, bool includeZeros, TVirtualPad* fromPad) const {
+TGraph* RooNode::BuildGraph(RooAbsLValue* v, bool includeZeros, TVirtualPad* fromPad) const {
 
     if (auto fr = get<RooFitResult>(); fr) {
         return nullptr;
@@ -3879,7 +3880,7 @@ TGraph* xRooNode::BuildGraph(RooAbsLValue* v, bool includeZeros, TVirtualPad* fr
 
 }
 
-void xRooNode::SetFitResult(const RooFitResult* fr) {
+void RooNode::SetFitResult(const RooFitResult* fr) {
     if(fr){
         if (auto _w = ws(); _w) {
             auto res = acquire(std::shared_ptr<RooFitResult>(const_cast<RooFitResult*>(fr),[](RooFitResult*){}));
@@ -3903,12 +3904,12 @@ void xRooNode::SetFitResult(const RooFitResult* fr) {
     }
 }
 
-void xRooNode::SetFitResult(const xRooNode& fr) {
+void RooNode::SetFitResult(const RooNode& fr) {
     if(auto _fr = fr.get<const RooFitResult>()) { SetFitResult(_fr); }
     else throw std::runtime_error("Not a RooFitResult");
 }
 
-xRooNode xRooNode::fitResult(const char* opt) const {
+RooNode RooNode::fitResult(const char* opt) const {
 
     if (get<RooFitResult>()) return *this;
     if (get<RooAbsData>()) {
@@ -3916,10 +3917,10 @@ xRooNode xRooNode::fitResult(const char* opt) const {
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6, 26, 00)
         // check if weightVar of RooAbsData has fitResult attribute on it, will be the generation fit result
         if (get<RooDataSet>() && get<RooDataSet>()->weightVar() && get<RooDataSet>()->weightVar()->getStringAttribute("fitResult")) {
-            return xRooNode(getObject<const RooFitResult>(get<RooDataSet>()->weightVar()->getStringAttribute("fitResult")),*this);
+            return RooNode(getObject<const RooFitResult>(get<RooDataSet>()->weightVar()->getStringAttribute("fitResult")),*this);
         }
 #endif
-        return xRooNode();
+        return RooNode();
     }
 
     TString sOpt(opt);
@@ -3935,8 +3936,8 @@ xRooNode xRooNode::fitResult(const char* opt) const {
             auto _v = dynamic_cast<RooRealVar *>(p);
             if (!_v) continue;
             if(auto s = _v->getStringAttribute("nominal");s) _v->setVal(TString(s).Atof());
-            auto _constr = xRooNode(fParent->getObject<RooRealVar>(p->GetName()),*this).constraints();
-            std::shared_ptr<xRooNode> pConstr;
+            auto _constr = RooNode(fParent->getObject<RooRealVar>(p->GetName()),*this).constraints();
+            std::shared_ptr<RooNode> pConstr;
             for(auto& c : _constr) {
                 if (c->get<RooPoisson>() || c->get<RooGaussian>()) { pConstr = c; break; }
             }
@@ -3981,7 +3982,7 @@ xRooNode xRooNode::fitResult(const char* opt) const {
             if (auto atr = p->getStringAttribute("initVal");atr && dynamic_cast<RooRealVar*>(p)) dynamic_cast<RooRealVar*>(p)->setVal(TString(atr).Atof());
         }
         fr->setInitParList(*_snap);
-        return xRooNode(fr,*this);
+        return RooNode(fr,*this);
     }
 
 
@@ -4023,16 +4024,16 @@ xRooNode xRooNode::fitResult(const char* opt) const {
                         if (auto atr = p->getStringAttribute("initVal");atr && dynamic_cast<RooRealVar*>(p)) dynamic_cast<RooRealVar*>(p)->setVal(TString(atr).Atof());
                     }
                     fr->setInitParList(*_snap);
-                    return xRooNode(fr,*this);
+                    return RooNode(fr,*this);
                 }
-                return xRooNode(*_fr,*_w);
+                return RooNode(*_fr,*_w);
             }
         }
     } else {
         // objects not in workspaces are allowed to have a fitResult set in their memory
         // use getObject to get it
         if (auto fr = getObject<RooFitResult>(".fitResult"); fr) {
-            return xRooNode(fr,*this);
+            return RooNode(fr,*this);
         }
     }
 
@@ -4073,31 +4074,31 @@ xRooNode xRooNode::fitResult(const char* opt) const {
     fr->setInitParList(*_snap);
 
     //return *const_cast<Node2*>(this)->emplace_back(std::make_shared<Node2>(".fitResult",fr,*this));
-    return xRooNode(fr,*this);
+    return RooNode(fr,*this);
 }
 
 
 
-//xRooNode xRooNode::fitTo_(const char* datasetName) const {
+//RooNode RooNode::fitTo_(const char* datasetName) const {
 //    try {
 //        return fitTo(datasetName);
 //    } catch(const std::exception& e) {
 //        new TGMsgBox(gClient->GetRoot(), gClient->GetRoot(), "Exception", e.what(),kMBIconExclamation); // deletes self on dismiss?
-//        return xRooNode();
+//        return RooNode();
 //    }
 //}
 //
-//xRooNode xRooNode::fitTo(const char* datasetName) const {
+//RooNode RooNode::fitTo(const char* datasetName) const {
 //    return fitTo(*datasets().at(datasetName));
 //}
 
-void xRooNode::SetRange(const char* range) {
+void RooNode::SetRange(const char* range) {
     if(auto o = get<RooAbsArg>(); o) o->setStringAttribute("range",range);
     // todo: clear the range attribute on all servers
     // could make this controlled by a flag but probably easiest to enforce so you must set range
     // in children after if you wanted to override
 }
-const char* xRooNode::GetRange() const {
+const char* RooNode::GetRange() const {
     std::string& out = fRange;
     if(auto o = get<RooAbsArg>(); o && o->getStringAttribute("range")) out = o->getStringAttribute("range");
     auto _parent = fParent;
@@ -4110,16 +4111,16 @@ const char* xRooNode::GetRange() const {
 
 #include "TRegexp.h"
 
-xRooNLLVar xRooNode::nll(const xRooNode& _data) const {
+xRooNLLVar RooNode::nll(const RooNode& _data) const {
     return nll(_data,*xRooFit::createNLLOptions());
 }
 
-xRooNLLVar xRooNode::nll(const xRooNode& _data,std::initializer_list<RooCmdArg> nllOpts) const {
+xRooNLLVar RooNode::nll(const RooNode& _data,std::initializer_list<RooCmdArg> nllOpts) const {
     RooLinkedList l; for(auto& i : nllOpts) l.Add(const_cast<RooCmdArg*>(&i));
     return nll(_data,l);
 }
 
-xRooNLLVar xRooNode::nll(const xRooNode& _data, const RooLinkedList& opts) const {
+xRooNLLVar RooNode::nll(const RooNode& _data, const RooLinkedList& opts) const {
 
     if(!get<RooAbsPdf>()) throw std::runtime_error(TString::Format("%s is not a pdf",GetName()));
 
@@ -4129,8 +4130,8 @@ xRooNLLVar xRooNode::nll(const xRooNode& _data, const RooLinkedList& opts) const
         if(strlen(_data.GetName())==0) {
             // create the EXPECTED (asimov) dataset with the observables
             auto asi = xRooFit::generateFrom(*get<RooAbsPdf>(),std::dynamic_pointer_cast<const RooFitResult>(fitResult().fComp),true);
-            _d = std::make_shared<xRooNode>(asi.first,*this);
-            _d->emplace_back(std::make_shared<xRooNode>(".globs",std::const_pointer_cast<RooAbsCollection>(asi.second),*_d));
+            _d = std::make_shared<RooNode>(asi.first,*this);
+            _d->emplace_back(std::make_shared<RooNode>(".globs",std::const_pointer_cast<RooAbsCollection>(asi.second),*_d));
         } else if(!_d) {
             throw std::runtime_error(TString::Format("Cannot find dataset %s",_data.GetName()));
         }
@@ -4162,7 +4163,7 @@ xRooNLLVar xRooNode::nll(const xRooNode& _data, const RooLinkedList& opts) const
 
 }
 
-//xRooNode xRooNode::fitTo(const xRooNode& _data) const {
+//RooNode RooNode::fitTo(const RooNode& _data) const {
 //
 //
 //    auto _pdf = get<RooAbsPdf>();
@@ -4198,8 +4199,8 @@ xRooNLLVar xRooNode::nll(const xRooNode& _data, const RooLinkedList& opts) const
 //            }
 //            RooFitResultTree t(newPdf->GetName(),"",*newPdf);
 //            auto _fr = std::const_pointer_cast<RooFitResult>(t.fitTo(_data.get<RooAbsData>(), &globsSet));
-//            xRooNode parent(_data.GetName(),nullptr,*this);
-//            xRooNode out(_fr->GetName(),/*acquire(_fr)*/ _fr,parent);
+//            RooNode parent(_data.GetName(),nullptr,*this);
+//            RooNode out(_fr->GetName(),/*acquire(_fr)*/ _fr,parent);
 //            // do full propagation by 'checking' the fr ...
 //            out.Checked(&out,true);
 //            return out;
@@ -4233,16 +4234,16 @@ xRooNLLVar xRooNode::nll(const xRooNode& _data, const RooLinkedList& opts) const
 //
 //    //_fr->SetTitle(TString::Format("%s;%s",GetName(),datasetName));
 //    if (!_frt) {
-//        t = std::make_shared<RooFitResultTree>(std::dynamic_pointer_cast<TTree>(const_cast<xRooNode*>(this)->acquire(t->fTree)).get());
+//        t = std::make_shared<RooFitResultTree>(std::dynamic_pointer_cast<TTree>(const_cast<RooNode*>(this)->acquire(t->fTree)).get());
 //    }
-//    xRooNode parent(_data.GetName(),nullptr,xRooNode(t,*this));
-//    xRooNode out(_fr->GetName(),/*acquire(_fr)*/ _fr,parent);
+//    RooNode parent(_data.GetName(),nullptr,RooNode(t,*this));
+//    RooNode out(_fr->GetName(),/*acquire(_fr)*/ _fr,parent);
 //    // do full propagation by 'checking' the fr ...
 //    out.Checked(&out,true);
 //    return out;
 //}
 
-std::shared_ptr<xRooNode> xRooNode::parentPdf() const {
+std::shared_ptr<RooNode> RooNode::parentPdf() const {
     // find first parent that is a pdf
     auto out = fParent;
     while(out && !out->get<RooAbsPdf>()) {
@@ -4251,7 +4252,7 @@ std::shared_ptr<xRooNode> xRooNode::parentPdf() const {
     return out;
 }
 
-xRooNode xRooNode::reduced(const std::string& _range) {
+RooNode RooNode::reduced(const std::string& _range) {
     auto rangeName = (_range.empty()) ? GetRange() : _range;
     if (!rangeName.empty()) {
         std::vector<TString> patterns;
@@ -4276,10 +4277,10 @@ xRooNode xRooNode::reduced(const std::string& _range) {
                     newPdf->addPdf( *c->get<RooAbsPdf>(), cName );
                 }
             }
-            return xRooNode(newPdf,fParent);
+            return RooNode(newPdf,fParent);
         } else if(!components().empty()) {
             // create a new obj and remove non-matching components
-            xRooNode out(std::shared_ptr<TObject>(get()->Clone(TString::Format("%s_reduced",get()->GetName()))),fParent);
+            RooNode out(std::shared_ptr<TObject>(get()->Clone(TString::Format("%s_reduced",get()->GetName()))),fParent);
             // go through components and remove any that don't match pattern
             std::vector<TObject*> funcs; // to be removed
             for(auto& c : out.components()) {
@@ -4294,7 +4295,7 @@ xRooNode xRooNode::reduced(const std::string& _range) {
             return out;
         } else if (!get() || get<RooArgList>()) {
             // filter the children ....
-            xRooNode out(get<RooArgList>() ? std::make_shared<RooArgList>() : std::shared_ptr<TObject>(nullptr),fParent);
+            RooNode out(get<RooArgList>() ? std::make_shared<RooArgList>() : std::shared_ptr<TObject>(nullptr),fParent);
             for(auto c : *this) {
                 bool matchAny = false;
                 for(auto& p : patterns) {
@@ -4306,15 +4307,15 @@ xRooNode xRooNode::reduced(const std::string& _range) {
         }
     }
 
-    return xRooNode(get<RooArgList>() ? std::make_shared<RooArgList>() : std::shared_ptr<TObject>(nullptr),fParent);
+    return RooNode(get<RooArgList>() ? std::make_shared<RooArgList>() : std::shared_ptr<TObject>(nullptr),fParent);
 }
 
-//xRooNode xRooNode::generate(bool expected) const {
+//RooNode RooNode::generate(bool expected) const {
 //
 //    auto fr = fitResult();
 //    auto _fr = fr.get<RooFitResult>();
 //
-//    auto _pdf = (get<RooAbsPdf>()) ? std::shared_ptr<const xRooNode>(this, [](const xRooNode*){}) : parentPdf();
+//    auto _pdf = (get<RooAbsPdf>()) ? std::shared_ptr<const RooNode>(this, [](const RooNode*){}) : parentPdf();
 //    if (!_pdf) {
 //        throw std::runtime_error("Could not find pdf");
 //    }
@@ -4352,9 +4353,9 @@ xRooNode xRooNode::reduced(const std::string& _range) {
 //            t->SetObservables(&s1,&s2);
 //            auto _data = t->generate(_fr,expected);
 //
-//            xRooNode parent(_fr ? _fr->GetName() : "unknown",nullptr,xRooNode(t,*this));
-//            xRooNode out(_data.first->GetName(),/*acquire(_fr)*/ _data.first,parent);
-//            out.emplace_back(std::make_shared<xRooNode>(".globs",std::const_pointer_cast<RooArgSet>(_data.second),out));
+//            RooNode parent(_fr ? _fr->GetName() : "unknown",nullptr,RooNode(t,*this));
+//            RooNode out(_data.first->GetName(),/*acquire(_fr)*/ _data.first,parent);
+//            out.emplace_back(std::make_shared<RooNode>(".globs",std::const_pointer_cast<RooArgSet>(_data.second),out));
 //            return out;
 //        }
 //    }
@@ -4375,11 +4376,11 @@ xRooNode xRooNode::reduced(const std::string& _range) {
 //    }
 //    auto _data = t->generate(_fr,expected);
 //    if (!_frt) {
-//        t = std::make_shared<RooDataTree>(std::dynamic_pointer_cast<TTree>(const_cast<xRooNode*>(this)->acquire(t->fTree)).get());
+//        t = std::make_shared<RooDataTree>(std::dynamic_pointer_cast<TTree>(const_cast<RooNode*>(this)->acquire(t->fTree)).get());
 //    }
-//    xRooNode parent(_fr ? _fr->GetName() : "unknown",nullptr,xRooNode(t,*this));
-//    xRooNode out(_data.first->GetName(),/*acquire(_fr)*/ _data.first,parent);
-//    out.emplace_back(std::make_shared<xRooNode>(".globs",std::const_pointer_cast<RooArgSet>(_data.second),out));
+//    RooNode parent(_fr ? _fr->GetName() : "unknown",nullptr,RooNode(t,*this));
+//    RooNode out(_data.first->GetName(),/*acquire(_fr)*/ _data.first,parent);
+//    out.emplace_back(std::make_shared<RooNode>(".globs",std::const_pointer_cast<RooArgSet>(_data.second),out));
 //    return out;
 //}
 
@@ -4501,7 +4502,7 @@ private:
 
 #include <csignal>
 
-const xRooNode* runningNode = nullptr;
+const RooNode* runningNode = nullptr;
 void (*gOldHandlerr)(int);
 
 void buildHistogramInterrupt(int signum) {
@@ -4515,7 +4516,7 @@ void buildHistogramInterrupt(int signum) {
     }
 }
 
-void xRooNode::sterilize() {
+void RooNode::sterilize() {
     auto _doSterilize = [](RooAbsArg* obj) {
         if( RooAbsPdf* arg = dynamic_cast<RooAbsPdf*>(obj); arg ) {
             arg->_normMgr.reset();
@@ -4564,7 +4565,7 @@ void xRooNode::sterilize() {
     _doSterilize(dynamic_cast<RooAbsArg*>(get())); // sterilize self
 }
 
-TH1* xRooNode::BuildHistogram(RooAbsLValue* v, bool empty, bool errors, int binStart, int binEnd) const {
+TH1* RooNode::BuildHistogram(RooAbsLValue* v, bool empty, bool errors, int binStart, int binEnd) const {
     auto rar = get<RooAbsReal>();
     if (!rar) return nullptr;
 
@@ -4769,13 +4770,13 @@ TH1* xRooNode::BuildHistogram(RooAbsLValue* v, bool empty, bool errors, int binS
     return h;
 }
 
-double xRooNode::GetBinData(int bin, const char* dataName) {
+double RooNode::GetBinData(int bin, const char* dataName) {
     auto node = datasets().find(dataName);
     if( !node ) return std::numeric_limits<double>::quiet_NaN();
     return node->GetBinContent(bin);
 }
 
-std::vector<double> xRooNode::GetBinContents(int binStart, int binEnd) const {
+std::vector<double> RooNode::GetBinContents(int binStart, int binEnd) const {
     if(fBinNumber!=-1) {
         if(binStart!=binEnd || !fParent) {
             throw std::runtime_error(TString::Format("%s is a bin - only has one value",GetName()));
@@ -4803,13 +4804,13 @@ std::vector<double> xRooNode::GetBinContents(int binStart, int binEnd) const {
     return out;
 }
 
-xRooNode xRooNode::mainChild() const {
+RooNode RooNode::mainChild() const {
     if(auto a = get<RooAbsArg>(); a) {
         // go through servers looking for 'main' thing
         for (auto &l : a->servers()) {
             if (l->getAttribute("MAIN_MEASUREMENT") || l->InheritsFrom("RooRealSumPdf") ||
                 l->InheritsFrom("RooAddPdf")) {
-                return xRooNode(*l, *this);
+                return RooNode(*l, *this);
             }
         }
         // the main child of a RooProduct is one that has the same name (/alias) as the product (except if is a bin factor)
@@ -4819,10 +4820,10 @@ xRooNode xRooNode::mainChild() const {
             }
         }
     }
-    return xRooNode();
+    return RooNode();
 }
 
-void xRooNode::Inspect() const { if(auto o = get();o) o->Inspect(); else TNamed::Inspect(); }
+void RooNode::Inspect() const { if(auto o = get();o) o->Inspect(); else TNamed::Inspect(); }
 
 #include "TSystem.h"
 
@@ -4944,7 +4945,7 @@ public:
     TVirtualPad* fPad=nullptr;
 };
 
-void xRooNode::Draw(Option_t* opt) {
+void RooNode::Draw(Option_t* opt) {
     if (!get() && !IsFolder()) return;
 
     if (auxFunctions.empty()) {
@@ -5146,14 +5147,14 @@ void xRooNode::Draw(Option_t* opt) {
         }
         //gPad->GetListOfPrimitives()->Remove(pullGraph); delete pullGraph;
         mg->Draw("z0p"); mg->SetBit(kCanDelete);
-        auto _thisClone = new xRooNode("node",fComp,fParent); _thisClone->SetBit(kCanDelete);
+        auto _thisClone = new RooNode("node",fComp,fParent); _thisClone->SetBit(kCanDelete);
         _thisClone->AppendPad();
 
         // ensure statusbar visible for interactive plot
         if(gPad->GetCanvas() && !gPad->GetCanvas()->TestBit(TCanvas::kShowEventStatus)) {
             gPad->GetCanvas()->ToggleEventStatus();
         }
-        gPad->AddExec("interactivePull","xRooNode::Interactive_Pull()");
+        gPad->AddExec("interactivePull","RooNode::Interactive_Pull()");
 
         pad->cd();
         return;
@@ -5302,7 +5303,7 @@ void xRooNode::Draw(Option_t* opt) {
                 // so to avoid TList::Clear warning about double delete for all but the last draw we must remove last entry
                 if (!pullGraphs.empty()) gPad->GetListOfPrimitives()->RemoveLast();
                 clearPad();
-                xRooNode(_fr,*this).Draw(); // draws pull plot
+                RooNode(_fr,*this).Draw(); // draws pull plot
                 g->SetPoint(g->GetN(),dynamic_cast<RooRealVar*>(_fr->constPars().find(GetName()))->getVal(),_fr->minNll());
                 pullGraphs.insert(std::make_pair(g->GetPointX(g->GetN()-1), dynamic_cast<TGraph*>( gPad->GetPrimitive(TString::Format("%s_pull",_fr->GetName()))->Clone(TString::Format("%g",g->GetPointX(g->GetN()-1))) ) ));
                 g->SetPointError(g->GetN()-1,0,_fr->edm());
@@ -5321,7 +5322,7 @@ void xRooNode::Draw(Option_t* opt) {
             _pad->SetBottomMargin(0.5);
             g->SetBit(kCanDelete);
             g->Draw("AP");
-            gPad->AddExec("interactivePLL","xRooNode::Interactive_PLLPlot()");
+            gPad->AddExec("interactivePLL","RooNode::Interactive_PLLPlot()");
             _hiddenPad->Draw();
             _pullPad->Draw();
             _pad->cd();
@@ -5355,9 +5356,9 @@ void xRooNode::Draw(Option_t* opt) {
             double prefitError = dynamic_cast<RooRealVar*>(fr->floatParsInit().find(p->GetName()))->getError();
             double prefitVal = dynamic_cast<RooRealVar*>(fr->floatParsInit().find(p->GetName()))->getVal();
 
-            std::shared_ptr<xRooNode> pConstr;
+            std::shared_ptr<RooNode> pConstr;
             if(fParent && fParent->getObject<RooRealVar>(p->GetName())) {
-                auto _constr = xRooNode(fParent->getObject<RooRealVar>(p->GetName()), *this).constraints();
+                auto _constr = RooNode(fParent->getObject<RooRealVar>(p->GetName()), *this).constraints();
                 for (auto &c: _constr) {
                     if (c->get<RooPoisson>() || c->get<RooGaussian>()) {
                         pConstr = c;
@@ -6005,7 +6006,7 @@ void xRooNode::Draw(Option_t* opt) {
 
 
 
-void xRooNode::SaveAs(const char* filename, Option_t* option) const {
+void RooNode::SaveAs(const char* filename, Option_t* option) const {
     TString sOpt(option);sOpt.ToLower();
     if (auto w = get<RooWorkspace>(); w) {
 
@@ -6044,13 +6045,13 @@ void xRooNode::SaveAs(const char* filename, Option_t* option) const {
 
 
 
-double xRooNode::GetBinError(int bin, const RooFitResult* fr) const {
+double RooNode::GetBinError(int bin, const RooFitResult* fr) const {
     auto res = GetBinErrors(bin,bin,fr);
     if (res.empty()) return std::numeric_limits<double>::quiet_NaN();
     return res.at(0);
 }
 
-std::pair<double,double> xRooNode::IntegralAndError(const RooFitResult* fr) const {
+std::pair<double,double> RooNode::IntegralAndError(const RooFitResult* fr) const {
     double out = 1.;
     double err = std::numeric_limits<double>::quiet_NaN();
 
@@ -6080,7 +6081,7 @@ std::pair<double,double> xRooNode::IntegralAndError(const RooFitResult* fr) cons
         auto f = std::shared_ptr<RooAbsReal>(p->createIntegral(*std::unique_ptr<RooArgSet>( p->getObservables(_obs)))); // did use x here before using obs
         double tmp = out; // coef value ... not included in Error of integral we just created (doesn't have coefs() return)
         out *= f->getVal();
-        err = tmp * xRooNode(f,*this).GetBinError(-1,fr);
+        err = tmp * RooNode(f,*this).GetBinError(-1,fr);
     } else if (auto d = get<RooAbsData>()) {
         auto vals = GetBinContents(1,0); // returns all bins
         for(auto& v : vals) out += v;
@@ -6095,7 +6096,7 @@ std::pair<double,double> xRooNode::IntegralAndError(const RooFitResult* fr) cons
 
 }
 
-std::vector<double> xRooNode::GetBinErrors(int binStart, int binEnd, const RooFitResult* _fr) const {
+std::vector<double> RooNode::GetBinErrors(int binStart, int binEnd, const RooFitResult* _fr) const {
     std::vector<double> out;
 
     auto o = dynamic_cast<RooAbsReal*>(get());

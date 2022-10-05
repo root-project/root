@@ -4,7 +4,7 @@
 #include "RooNLLVar.h"
 #undef protected
 
-#include "xRooFit/xRooFit.h"
+#include "xRooFit.h"
 
 #include "RooCmdArg.h"
 #include "RooAbsPdf.h"
@@ -242,7 +242,7 @@ void xRooNLLVar::reinitialize() {
         if (std::shared_ptr<RooAbsReal>::get()) attribs = std::shared_ptr<RooAbsReal>::get()->attributes();
         this->reset( fPdf->createNLL(*fData,*fOpts) );
         for(auto& a : attribs) std::shared_ptr<RooAbsReal>::get()->setAttribute(a.c_str());
-        if(fPdf->_myws) { xRooNode(*fPdf->_myws).sterilize(); } // there seems to be a nasty bug somewhere that can make the cache become invalid, so clear it here
+        if(fPdf->_myws) { RooNode(*fPdf->_myws).sterilize(); } // there seems to be a nasty bug somewhere that can make the cache become invalid, so clear it here
         if(oldName!="") std::shared_ptr<RooAbsReal>::get()->SetName(oldName);
         if(!origValues.empty()) {
             // need to evaluate NOW so that slaves are created while the BinnedLikelihood settings are in place
@@ -268,7 +268,7 @@ std::pair<std::shared_ptr<RooAbsData>,std::shared_ptr<const RooAbsCollection>> x
     return xRooFit::generateFrom(*fPdf, fr,expected,seed);
 }
 
-xRooNLLVar::xRooFitResult::xRooFitResult(const std::shared_ptr<xRooNode>& in): std::shared_ptr<const RooFitResult>(std::dynamic_pointer_cast<const RooFitResult>(in->fComp)), fNode(in) { }
+xRooNLLVar::xRooFitResult::xRooFitResult(const std::shared_ptr<RooNode>& in): std::shared_ptr<const RooFitResult>(std::dynamic_pointer_cast<const RooFitResult>(in->fComp)), fNode(in) { }
 const RooFitResult* xRooNLLVar::xRooFitResult::operator->() const { return fNode->get<RooFitResult>(); }
 //xRooNLLVar::xRooFitResult::operator std::shared_ptr<const RooFitResult>() const { return std::dynamic_pointer_cast<const RooFitResult>(fNode->fComp); }
 xRooNLLVar::xRooFitResult::operator const RooFitResult*() const { return fNode->get<const RooFitResult>(); }
@@ -304,7 +304,7 @@ xRooNLLVar::xRooFitResult xRooNLLVar::minimize(const std::shared_ptr<ROOT::Fit::
         out->_constPars->setAttribAll("global",false);
         if(fGlobs) std::unique_ptr<RooAbsCollection>(out->_constPars->selectCommon(*fGlobs))->setAttribAll("global",true);
     }
-    return xRooFitResult(std::make_shared<xRooNode>(out,fPdf));
+    return xRooFitResult(std::make_shared<RooNode>(out,fPdf));
 }
 
 class AutoRestorer {
@@ -494,7 +494,7 @@ std::pair<std::shared_ptr<RooAbsData>,std::shared_ptr<const RooAbsCollection>> x
     return std::make_pair(fData,fGlobs);
 }
 
-Bool_t xRooNLLVar::setData(const xRooNode& data) {
+Bool_t xRooNLLVar::setData(const RooNode& data) {
     if (data.fComp && !data.get<RooAbsData>()) {
         return false;
     }

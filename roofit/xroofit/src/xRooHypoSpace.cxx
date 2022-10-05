@@ -1,4 +1,4 @@
-#include "xRooFit/xRooHypoSpace.h"
+#include "xRooHypoSpace.h"
 
 #include "RooArgSet.h"
 #include "RooArgList.h"
@@ -14,10 +14,10 @@
 
 //bool xRooNLLVar::xRooHypoSpace::AddWorkspace(const char* wsFilename, const char* extraPars){
 //
-//    auto ws = std::make_shared<xRooNode>(wsFilename);
+//    auto ws = std::make_shared<RooNode>(wsFilename);
 //
 //    ws->browse();
-//    std::set<std::shared_ptr<xRooNode>> models;
+//    std::set<std::shared_ptr<RooNode>> models;
 //    for(auto n : *ws) {
 //        if (n->fFolder == "!models") models.insert(n);
 //    }
@@ -37,15 +37,15 @@ xRooNLLVar::xRooHypoSpace::xRooHypoSpace(const char* name, const char* title) : 
 
 }
 
-std::shared_ptr<xRooNode> xRooNLLVar::xRooHypoSpace::pdf(const char* parValues) const {
+std::shared_ptr<RooNode> xRooNLLVar::xRooHypoSpace::pdf(const char* parValues) const {
     return pdf(toArgs(parValues));
 }
 
-std::shared_ptr<xRooNode> xRooNLLVar::xRooHypoSpace::pdf(const RooAbsCollection& parValues) const {
+std::shared_ptr<RooNode> xRooNLLVar::xRooHypoSpace::pdf(const RooAbsCollection& parValues) const {
     RooArgList rhs; rhs.add(parValues);
     rhs.sort();
 
-    std::shared_ptr<xRooNode> out = nullptr;
+    std::shared_ptr<RooNode> out = nullptr;
 
     for(auto& [_range,_pdf] : fPdfs) {
         // any pars not in rhs are assumed to have infinite range in rhs
@@ -180,7 +180,7 @@ xRooNLLVar::xRooHypoPoint& xRooNLLVar::xRooHypoSpace::AddPoint(const char* coord
 
 }
 
-bool xRooNLLVar::xRooHypoSpace::AddModel(const xRooNode& _pdf, const char* validity) {
+bool xRooNLLVar::xRooHypoSpace::AddModel(const RooNode& _pdf, const char* validity) {
 
     if (!_pdf.get<RooAbsPdf>()) {
         throw std::runtime_error("Not a pdf");
@@ -206,7 +206,7 @@ bool xRooNLLVar::xRooHypoSpace::AddModel(const xRooNode& _pdf, const char* valid
 
     fPars->addClone(pars);
 
-    fPdfs.insert(std::make_pair(myPars,std::make_shared<xRooNode>(_pdf)));
+    fPdfs.insert(std::make_pair(myPars,std::make_shared<RooNode>(_pdf)));
 
     return true;
 
@@ -906,7 +906,7 @@ void xRooNLLVar::xRooHypoSpace::Draw(Option_t* opt) {
             auto pad = new TPad(fr->GetName(),TString::Format("%s = %g",poi().first()->GetTitle(),p.fNullVal()),0,0,1.,1);
             pad->SetNumber(out->GetN()+1); // can't use "0" for a subpad
             pad->cd();
-            xRooNode(fr).Draw("goff");
+            RooNode(fr).Draw("goff");
             _pad->cd();
             //_pad->GetListOfPrimitives()->AddFirst(pad);
             pad->AppendPad();
@@ -947,7 +947,7 @@ void xRooNLLVar::xRooHypoSpace::Draw(Option_t* opt) {
         auto pad = new TPad(ufr->GetName(), "unconditional fit", 0, 0, 1., 1.);
         pad->SetNumber(-1);
         pad->cd();
-        xRooNode(ufr).Draw("goff");
+        RooNode(ufr).Draw("goff");
         _pad->cd();
         pad->AppendPad();
 
@@ -966,8 +966,8 @@ void xRooNLLVar::xRooHypoSpace::Draw(Option_t* opt) {
 
 
 
-    if (!xRooNode::gIntObj) { xRooNode::gIntObj = new xRooNode::InteractiveObject; }
-    gPad->GetCanvas()->Connect("Highlighted(TVirtualPad*,TObject*,Int_t,Int_t)","xRooNode::InteractiveObject",xRooNode::gIntObj,"Interactive_PLLPlot(TVirtualPad*,TObject*,Int_t,Int_t)");
+    if (!RooNode::gIntObj) { RooNode::gIntObj = new RooNode::InteractiveObject; }
+    gPad->GetCanvas()->Connect("Highlighted(TVirtualPad*,TObject*,Int_t,Int_t)","RooNode::InteractiveObject",RooNode::gIntObj,"Interactive_PLLPlot(TVirtualPad*,TObject*,Int_t,Int_t)");
 
     return;
 

@@ -1,4 +1,4 @@
-#include "xRooFit/xRooFit.h"
+#include "xRooFit.h"
 
 #include <cmath>
 #include "Math/ProbFunc.h"

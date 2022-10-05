@@ -1,6 +1,6 @@
 #pragma once
 
-#include "xRooFit/xRooFit.h"
+#include "xRooFit.h"
 
 class RooAbsPdf;
 class RooAbsData;
@@ -51,12 +51,12 @@ public:
 
    class xRooFitResult : public std::shared_ptr<const RooFitResult> {
       public:
-       xRooFitResult(const std::shared_ptr<xRooNode>& in);// : fNode(in) { }
+       xRooFitResult(const std::shared_ptr<RooNode>& in);// : fNode(in) { }
         const RooFitResult* operator->() const;
 //        operator std::shared_ptr<const RooFitResult>() const;
         operator const RooFitResult*() const;
         void Draw(Option_t* opt="");
-        std::shared_ptr<xRooNode> fNode;
+        std::shared_ptr<RooNode> fNode;
     };
 
     xRooFitResult minimize(const std::shared_ptr<ROOT::Fit::FitConfig>& = nullptr);
@@ -153,7 +153,7 @@ public:
 
         bool AddWorkspace(const char* wsFilename, const char* extraPars="");
 
-        bool AddModel(const xRooNode& pdf, const char* validity="");
+        bool AddModel(const RooNode& pdf, const char* validity="");
 
         void LoadFits(const char* apath);
 
@@ -189,8 +189,8 @@ public:
 
         std::pair<double,double> FindLimit(const char* opt, double relUncert = std::numeric_limits<double>::infinity());
 
-        std::shared_ptr<xRooNode> pdf(const RooAbsCollection& parValues) const;
-        std::shared_ptr<xRooNode> pdf(const char* parValues="") const;
+        std::shared_ptr<RooNode> pdf(const RooAbsCollection& parValues) const;
+        std::shared_ptr<RooNode> pdf(const char* parValues="") const;
 
       private:
         static RooArgList toArgs(const char* str);
@@ -198,11 +198,11 @@ public:
         xRooFit::Asymptotics::PLLType fTestStatType = xRooFit::Asymptotics::Unknown;
         std::shared_ptr<RooArgSet> fPars;
 
-        std::map<std::shared_ptr<xRooNode>,std::shared_ptr<xRooNLLVar>> fNlls; // existing NLL functions of added pdfs;
+        std::map<std::shared_ptr<RooNode>,std::shared_ptr<xRooNLLVar>> fNlls; // existing NLL functions of added pdfs;
 
-        std::set<std::shared_ptr<xRooNode>> fWorkspaces; // added workspaces (kept open)
+        std::set<std::shared_ptr<RooNode>> fWorkspaces; // added workspaces (kept open)
 
-        std::set<std::pair<std::shared_ptr<RooArgList>,std::shared_ptr<xRooNode>>> fPdfs;
+        std::set<std::pair<std::shared_ptr<RooArgList>,std::shared_ptr<RooNode>>> fPdfs;
 
     };
 
@@ -241,7 +241,7 @@ public:
     Bool_t setData(const std::shared_ptr<RooAbsData>& data,const std::shared_ptr<const RooAbsCollection>& globs) {
         return setData(std::make_pair(data,globs));
     }
-    Bool_t setData(const xRooNode& data);
+    Bool_t setData(const RooNode& data);
 
     // using shared ptrs everywhere, even for RooLinkedList which needs custom deleter to clear itself
     // but still work ok for assignment operations

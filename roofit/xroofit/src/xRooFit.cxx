@@ -1,5 +1,5 @@
 
-#include "xRooFit/xRooFit.h"
+#include "xRooFit.h"
 
 
 #include "RooDataSet.h"
@@ -1032,7 +1032,7 @@ TCanvas* xRooFit::hypoTest(RooWorkspace& w, int nToysNull, int nToysAlt, const x
     Info("hypoTest","Using Dataset: %s",obsData->GetName());
 
     {
-        auto _globs = xRooNode(w).datasets()[obsData->GetName()]->globs(); // keep alive because may own the globs
+        auto _globs = RooNode(w).datasets()[obsData->GetName()]->globs(); // keep alive because may own the globs
         obsGlobs = std::make_shared<RooArgSet>(); obsGlobs->addClone(_globs.argList());
         Info("hypoTest","Using Globs: %s", (obsGlobs->empty()) ? " <NONE>" : obsGlobs->contentsString().c_str());
     }

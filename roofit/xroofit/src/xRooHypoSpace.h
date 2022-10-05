@@ -1,6 +1,6 @@
 #pragma once
 
-#include "xRooFit/xRooNLLVar.h"
+#include "xRooNLLVar.h"
 
 class xRooHypoSpace : public xRooNLLVar::xRooHypoSpace {
 

@@ -1,7 +1,7 @@
-// Interactive methods of xRooNode
+// Interactive methods of RooNode
 
 
-#include "xRooFit/xRooNode.h"
+#include "RooFit/Detail/RooNode.h"
 
 #include "RooArgList.h"
 #include "RooArgSet.h"
@@ -13,7 +13,7 @@
 #include "TGraphAsymmErrors.h"
 #include "TMultiGraph.h"
 
-void xRooNode::Interactive_Pull() {
+void RooNode::Interactive_Pull() {
     auto select = dynamic_cast<TGraph*>(gPad->GetSelected());
     //if (!select) return;
     int event = gPad->GetEvent();
@@ -67,7 +67,7 @@ void xRooNode::Interactive_Pull() {
         }
 
         // then do an overlay update
-        auto _node = dynamic_cast<xRooNode*>( gPad->GetPrimitive("node") );
+        auto _node = dynamic_cast<RooNode*>( gPad->GetPrimitive("node") );
         if (!_node) return;
         RooArgSet _pars(_node->pars().argList());
         std::unique_ptr<RooArgSet> snap(_pars.snapshot());
@@ -99,7 +99,7 @@ void xRooNode::Interactive_Pull() {
     }
 }
 
-void xRooNode::Interactive_PLLPlot() {
+void RooNode::Interactive_PLLPlot() {
 
     //TObject *select = gPad->GetSelected();
     //if(!select) return;
@@ -164,7 +164,7 @@ void xRooNode::Interactive_PLLPlot() {
 
 #include "TSystem.h"
 
-void xRooNode::InteractiveObject::Interactive_PLLPlot(TVirtualPad *pad, TObject *obj, Int_t x, Int_t y) {
+void RooNode::InteractiveObject::Interactive_PLLPlot(TVirtualPad *pad, TObject *obj, Int_t x, Int_t y) {
 
     if(auto g = dynamic_cast<TGraph*>(obj); g && pad && pad->GetMother() && pad->GetNumber()==1) {
         auto frPad = pad->GetMother()->GetPad(2);

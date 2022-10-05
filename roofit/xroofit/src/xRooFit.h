@@ -7,7 +7,7 @@
  * Including this should give you access to all xRooFit features
  */
 
-#include "xRooFit/xRooNode.h"
+#include "RooFit/Detail/RooNode.h"
 
 class RooAbsData;
 class RooAbsCollection;
@@ -162,7 +162,7 @@ public:
 
 };
 
-#include "xRooFit/xRooNLLVar.h"
-#include "xRooFit/xRooHypoSpace.h"
+#include "xRooNLLVar.h"
+#include "xRooHypoSpace.h"
 
 #endif // include guard
