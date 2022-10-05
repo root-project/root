@@ -76,9 +76,10 @@ for %%w in (%*) do (
          if %%f==!feature! (
             set res=%%f
             if not "!out!"=="" (
-               set out=!out! 
+               set out=!out! yes
+            ) else (
+               set out=yes
             )
-            set out=!out!yes
          )
       )
       if !res!=="" (
@@ -92,9 +93,10 @@ for %%w in (%*) do (
             set err=1
          ) else (
             if not "!out!"=="" (
-               set out=!out! 
+               set out=!out! no
+            ) else (
+               set out=no
             )
-            set out=!out!no
          )
       )
    )
