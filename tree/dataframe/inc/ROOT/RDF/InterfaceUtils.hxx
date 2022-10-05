@@ -230,7 +230,7 @@ BuildAction(const ColumnNames_t &bl, const std::shared_ptr<double> &stdDeviation
    return std::make_unique<Action_t>(Helper_t(stdDeviationV, nSlots), bl, prevNode, colRegister);
 }
 
-using displayHelperArgs_t = std::pair<int, std::shared_ptr<ROOT::RDF::RDisplay>>;
+using displayHelperArgs_t = std::pair<size_t, std::shared_ptr<ROOT::RDF::RDisplay>>;
 
 // Display action
 template <typename... ColTypes, typename PrevNodeType>
