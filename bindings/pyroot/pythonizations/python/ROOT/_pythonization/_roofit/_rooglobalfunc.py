@@ -205,7 +205,7 @@ def Link(*args, **kwargs):
     if len(args) == 1 and len(kwargs) == 0 and isinstance(args[0], dict):
         args = list(args)
         args[0] = _dict_to_std_map(args[0], {"std::string": "RooAbsData*"})
-        return RooFit._Import(args[0])
+        return RooFit._Link(args[0])
 
     return RooFit._Link(*args, **kwargs)
 
