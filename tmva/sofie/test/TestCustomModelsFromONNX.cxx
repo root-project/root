@@ -18,9 +18,6 @@
 #include "Add_FromONNX.hxx"
 #include "input_models/references/Add.ref.hxx"
 
-#include "Add_broadcast_FromONNX.hxx"
-#include "input_models/references/Add_broadcast.ref.hxx"
-
 #include "Mul_FromONNX.hxx"
 #include "input_models/references/Mul.ref.hxx"
 
@@ -177,6 +174,27 @@
 #include "Exp_FromONNX.hxx"
 #include "input_models/references/Exp.ref.hxx"
 
+#include "AddBroadcast1_FromONNX.hxx"
+#include "input_models/references/AddBroadcast1.ref.hxx"
+
+#include "AddBroadcast2_FromONNX.hxx"
+#include "input_models/references/AddBroadcast2.ref.hxx"
+
+#include "AddBroadcast3_FromONNX.hxx"
+#include "input_models/references/AddBroadcast3.ref.hxx"
+
+#include "AddBroadcast4_FromONNX.hxx"
+#include "input_models/references/AddBroadcast4.ref.hxx"
+
+#include "AddBroadcast5_FromONNX.hxx"
+#include "input_models/references/AddBroadcast5.ref.hxx"
+
+#include "AddBroadcast6_FromONNX.hxx"
+#include "input_models/references/AddBroadcast6.ref.hxx"
+
+#include "AddBroadcast7_FromONNX.hxx"
+#include "input_models/references/AddBroadcast7.ref.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -243,34 +261,6 @@ TEST(ONNX, Sub)
       EXPECT_EQ(output.size(), sizeof(Sub_ExpectedOutput::outputs) / sizeof(float));
 
       float *correct = Sub_ExpectedOutput::outputs;
-
-      // Checking every output value, one by one
-      for (size_t i = 0; i < output.size(); ++i) {
-         EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
-      }
-   }
-
-TEST(ONNX, Add_broadcast)
-   {
-      constexpr float TOLERANCE = DEFAULT_TOLERANCE;
-
-      // Preparing the standard input
-      std::vector<float> input1({
-         1, 2, 3,
-         3, 4, 5
-      });
-      std::vector<float> input2({
-         5, 6, 7,
-         8, 9, 10
-      });
-      TMVA_SOFIE_Add_broadcast::Session s("Add_broadcast_FromONNX.dat");
-
-      std::vector<float> output = s.infer(input2.data(),input1.data());
-
-      // Checking output size
-      EXPECT_EQ(output.size(), sizeof(Add_broadcast_ExpectedOutput::outputs) / sizeof(float));
-
-      float *correct = Add_broadcast_ExpectedOutput::outputs;
 
       // Checking every output value, one by one
       for (size_t i = 0; i < output.size(); ++i) {
@@ -1728,6 +1718,240 @@ TEST(ONNX, Exp)
 
    float* correct = Exp_ExpectedOutput::output;
 
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, AddBroadcast1) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // input
+   // The shape of A is {4, 5}
+   std::vector<float> A({1.0626695,  0.43842875,  1.22476468,  0.79763274,  0.98688211,
+                 0.25267614, 0.44874883,  0.31516773,  -0.78771195, 0.64565664,
+                 0.50450593, -0.41265227, -0.22474539, -0.22362374, 0.00509674,
+                 0.16927211, 1.06756969,  -0.81634773, 0.88467744,  0.78902059});
+   // The shape of B is {5}
+   std::vector<float> B({-0.78023305, -1.34029483, -3.01482951, 0.53641361,
+                 -1.22594789});
+   TMVA_SOFIE_AddBroadcast1::Session s("AddBroadcast1_FromONNX.dat");
+   std::vector<float> output(s.infer(A.data(), B.data()));
+
+   // Checking the output size
+   EXPECT_EQ(output.size(), sizeof(AddBroadcast1_ExpectedOutput::output) / sizeof(float));
+
+   float* correct = AddBroadcast1_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, AddBroadcast2) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // input
+   // The shape of A is {2, 3, 4, 5}
+   std::vector<float> A({
+        -1.22516739e+00, -2.50373737e+00, -6.14517347e-01, 4.43165956e-01,
+        4.09232228e-03,  1.43520073e+00,  -8.37526920e-01, 1.18762642e+00,
+        -1.42122220e+00, 3.77123343e-01,  -6.16450821e-01, 1.96641319e+00,
+        -2.03568224e+00, -5.36703377e-01, -2.22149348e+00, -1.58297075e+00,
+        -1.25149214e+00, 6.50629098e-01,  2.06339687e+00,  6.02281648e-01,
+        -5.39034004e-01, -1.26280821e+00, 7.87767451e-01,  1.08251530e-01,
+        2.32829794e+00,  -1.50890004e+00, -5.95592927e-01, -9.20059053e-02,
+        1.63228625e+00,  1.94686070e+00,  7.45655684e-01,  3.86955114e-01,
+        -1.83205116e+00, -1.15734817e+00, 3.80085814e-02,  -2.16949162e-01,
+        -2.35165487e-01, 2.18171406e-01,  6.13588954e-02,  -8.57086260e-01,
+        -2.01864267e+00, -1.61373575e+00, -2.02050258e+00, -3.25052069e-01,
+        -1.07114643e-01, 4.68470099e-01,  1.99557999e-01,  -1.94637668e+00,
+        2.47900553e-01,  7.76198825e-01,  -1.98736855e-01, -2.00884998e+00,
+        1.46847865e+00,  9.61028795e-01,  -8.14965358e-03, 4.63333332e-01,
+        -1.11316244e-01, 1.82046921e+00,  -1.00519072e-01, 2.40577520e+00,
+        2.57814258e+00,  -1.51412865e+00, -6.48090386e-02, 9.22939224e-01,
+        -1.31486041e+00, 3.67387151e-01,  -2.17020478e-03, -4.74744054e-01,
+        -6.28942699e-01, -1.31704730e+00, -6.20633846e-01, -4.90250204e-01,
+        -2.12485120e-01, -2.36786681e-02, 2.88809968e-02,  -7.44777791e-01,
+        1.30091804e-02,  -1.68105549e+00, 8.22247057e-02,  -1.14939503e+00,
+        -1.57565418e+00, -7.99386689e-01, -4.06411097e-01, 1.09358391e+00,
+        1.58323366e+00,  -8.15174970e-02, -9.09925044e-02, 2.35596716e+00,
+        -6.85364818e-02, 4.12883924e-01,  5.00495425e-01,  -1.48442647e+00,
+        -5.19349052e-01, 3.81025828e-01,  -1.06188597e-01, 2.83921542e-01,
+        1.13215001e+00,  1.21558052e+00,  -1.04667496e+00, -9.41151099e-01,
+        -4.04363040e-02, 1.45554304e+00,  1.64025681e-01,  -3.34693361e-01,
+        1.27701314e+00,  8.64744621e-01,  1.09621430e+00,  -1.06563435e+00,
+        -1.55637568e+00, 2.14343040e+00,  4.69610352e-01,  9.09135609e-01,
+        -6.20603382e-01, -1.04235434e+00, -1.32974691e+00, -1.35968049e-01,
+        9.62438348e-01,  1.13413513e+00,  -9.24612219e-01, -2.26132356e+00});
+   // The shape of B is {5}
+   std::vector<float> B({0.60081805, 0.56575772, -0.58408511, -1.50827751, 1.2396254});
+   TMVA_SOFIE_AddBroadcast2::Session s("AddBroadcast2_FromONNX.dat");
+   std::vector<float> output(s.infer(A.data(), B.data()));
+
+   // Checking the output size
+   EXPECT_EQ(output.size(), sizeof(AddBroadcast2_ExpectedOutput::output) / sizeof(float));
+
+   float* correct = AddBroadcast2_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, AddBroadcast3) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // input
+   // The shape of A is {2, 3, 4, 5}
+   std::vector<float> A({
+         -0.79900037, 1.26774471,  0.10287351,  -0.00704713, 0.19927171,
+        1.77125926,  0.23393901,  -0.75160577, -0.40987021, 0.02957325,
+        2.48770369,  2.72426688,  0.16116267,  0.13580884,  -1.34550983,
+        1.08341747,  -0.57232679, -0.27434247, 2.29759196,  0.72506479,
+        -0.35984264, -1.47553974, 0.46544721,  0.45304508,  0.39350919,
+        0.25335039,  -2.15455262, 0.58592831,  0.0907586,   1.32830358,
+        2.16876532,  -1.31509165, -0.77901816, 1.72970744,  0.89410519,
+        1.18891089,  0.58372505,  -0.6117035,  -0.83829228, 0.63917945,
+        0.66626077,  -1.07667629, 0.01411519,  -0.67082652, -0.04556866,
+        -0.04949148, -1.87075929, 0.25587637,  0.14715114,  -0.74584515,
+        -1.19373527, -1.52142058, -0.92522942, -0.98126531, -0.07535746,
+        -1.4692508,  -0.08861242, 0.64951867,  -0.16918995, 0.87015361,
+        0.57688991,  1.36293834,  1.28256834,  0.39245538,  0.43308474,
+        0.84529828,  -0.56686547, -0.84791844, -0.11286944, 0.60857973,
+        -0.79519511, -0.20491925, -1.52951743, -0.39030064, -2.76160767,
+        0.09055906,  -0.99142034, 0.33480785,  -1.09999883, 1.36149355,
+        0.18557576,  0.55407001,  1.23164067,  -0.23469015, -1.37274723,
+        1.80717934,  1.42966758,  0.72077395,  -0.09774939, 1.12065382,
+        -0.51515613, -0.9527945,  0.87646967,  -0.59440101, -0.12440208,
+        -0.71096692, -0.6301275,  0.51726169,  1.23726643,  1.56255466,
+        -0.94469759, -0.38114756, -0.42021761, -0.58921487, -0.71439637,
+        0.04793575,  -2.04214516, -0.45765407, -1.12307202, 0.90727137,
+        0.96272832,  0.54303206,  -0.84973033, 0.28780329,  0.17027854,
+        -0.11893711, -1.22414638, -1.62747593, 0.53264501,  0.53483601});
+   // The shape of B is {2, 1, 1, 5}
+   std::vector<float> B({0.13225244, -0.47801406, -1.47034622, 0.87786363, -0.51388502,
+                 0.77012016, 0.99407484,  -0.41014198, 1.76506248, 1.24142803});
+   TMVA_SOFIE_AddBroadcast3::Session s("AddBroadcast3_FromONNX.dat");
+   std::vector<float> output(s.infer(A.data(), B.data()));
+
+   // Checking the output size
+   EXPECT_EQ(output.size(), sizeof(AddBroadcast3_ExpectedOutput::output) / sizeof(float));
+
+   float* correct = AddBroadcast3_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, AddBroadcast4) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // input
+   // The shape of A is {2, 4}
+   std::vector<float> A({0.50898894, -0.27829921, -0.68761628,  0.33186382,  0.57915535,
+        0.406858  ,  1.4203833 ,  0.19857093});
+   // The shape of B is {2, 1}
+   std::vector<float> B({1.94301397, 0.40606817});
+   TMVA_SOFIE_AddBroadcast4::Session s("AddBroadcast4_FromONNX.dat");
+   std::vector<float> output(s.infer(A.data(), B.data()));
+
+   // Checking the output size
+   EXPECT_EQ(output.size(), sizeof(AddBroadcast4_ExpectedOutput::output) / sizeof(float));
+
+   float* correct = AddBroadcast4_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, AddBroadcast5) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // input
+   // The shape of A is {2, 3, 4}
+   std::vector<float> A({1.69787452,  1.10641673,  2.19755165,  0.06709206,  0.04572308,
+       -2.14504366, -0.47730702,  0.15205423, -0.25159224, -0.07529807,
+        0.5174367 ,  0.08267595,  0.34015625,  0.09460231, -1.16608969,
+       -0.23466058, -0.5520268 , -0.13844847,  0.53055759,  0.17068648,
+       -0.49491276, -1.4246271 , -0.99973914, -0.2571329});
+   // The shape of B is {2, 1, 4}
+   std::vector<float> B({-0.45616139, -0.05853134,  1.09564217,  0.95880315,  0.94995322,
+       -0.35864105,  1.08570897,  0.6028053});
+   TMVA_SOFIE_AddBroadcast5::Session s("AddBroadcast5_FromONNX.dat");
+   std::vector<float> output(s.infer(A.data(), B.data()));
+
+   // Checking the output size
+   EXPECT_EQ(output.size(), sizeof(AddBroadcast5_ExpectedOutput::output) / sizeof(float));
+
+   float* correct = AddBroadcast5_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, AddBroadcast6) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // input
+   // The shape of A is {2, 2, 3, 2, 2}
+   std::vector<float> A({
+       0.03162163,  1.36340443, -0.34736459, -0.71856324,  0.40669968,
+       -0.37595741,  0.22234952,  1.69563792,  0.91459166, -0.02081215,
+       -1.64894217, -0.01189261,  0.58031339, -0.11880191,  0.70099317,
+       -0.37424243, -0.23980527, -0.03178407, -0.27969109,  0.01895688,
+        1.32111755,  0.02113906,  0.51450298, -1.41760768, -0.19220553,
+        0.23529522,  0.95199908, -1.38971445, -0.75836965, -0.90956958,
+       -0.13006828, -0.64390454, -0.0808229 ,  0.79134757,  1.00684867,
+       -1.43818087, -0.14550621, -0.33635512, -0.6185612 , -0.49281407,
+       -1.12947258,  1.61818821, -0.05826431, -1.47802183,  0.25637381,
+       -0.1547858 ,  2.50788792,  0.30898059});
+   // The shape of B is {2, 1, 3, 1, 2}
+   std::vector<float> B({1.05498675, -1.64311041,  0.11925147, -1.59755778, -0.01445313,
+       -0.69440541, -0.12011281,  0.00539323, -0.16923531,  2.34533598,
+        1.30268048,  0.45699443});
+   TMVA_SOFIE_AddBroadcast6::Session s("AddBroadcast6_FromONNX.dat");
+   std::vector<float> output(s.infer(A.data(), B.data()));
+
+   // Checking the output size
+   EXPECT_EQ(output.size(), sizeof(AddBroadcast6_ExpectedOutput::output) / sizeof(float));
+
+   float* correct = AddBroadcast6_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, AddBroadcast7) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // input
+   // The shae of A is {1, 1, 3, 4}
+   std::vector<float> A({1.40519865e+00, -2.87660856e-01,  7.49375999e-02,  1.22074840e+00,
+       -4.86212681e-01, -6.88210109e-01, -6.77434705e-01,  3.67088873e-01,
+        8.05744026e-04, -2.08031088e-01,  9.69779132e-01,  7.58373863e-01});
+   // The shape of B is {2, 1, 3, 1}
+   std::vector<float> B({-0.42164834, -0.61767078, -0.68778897, -1.14175916,  0.63204375,
+       -0.60630317});
+   TMVA_SOFIE_AddBroadcast7::Session s("AddBroadcast7_FromONNX.dat");
+   std::vector<float> output(s.infer(A.data(), B.data()));
+
+   // Checking the output size
+   EXPECT_EQ(output.size(), sizeof(AddBroadcast7_ExpectedOutput::output) / sizeof(float));
+
+   float* correct = AddBroadcast7_ExpectedOutput::output;
+
+   // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); i++) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }

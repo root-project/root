@@ -106,8 +106,14 @@ ETensorType GetTemplatedType(T /*obj*/ ){
 }
 
 namespace UTILITY{
-// Broadcast the shape of one tensor to another when they don't have the same number of dimensions or the same length
-std::vector<size_t> BidirectionalBroadcastShape(const std::vector<size_t>& /*shapeA*/, const std::vector<size_t>& /*shapeB*/);
+// Check if two shapes are equal
+bool AreSameShape(const std::vector<size_t>&, const std::vector<size_t>&);
+
+// Multidirectional broadcast a list of tensors to the same shape
+std::vector<size_t> MultidirectionalBroadcastShape(std::vector<std::vector<size_t>>);
+
+// Unidirectional broadcast two shapes to the same shape
+std::vector<size_t> UnidirectionalBroadcastShape(std::vector<size_t>, std::vector<size_t>);
 
 std::string Clean_name(std::string input_tensor_name);
 
@@ -150,74 +156,73 @@ T* BroadcastConvBias(const T* data, const size_t channel, const std::vector<size
    return newData;
 }
 
-// Bidirectional broadcasting
-// Broadcast a tensor A of shape {1, ..., 1, A_i, A_i+1 ..., A_j-1, 1, ..., 1} to a tensor B of shape {B_1, B_2, ...., B_i, B_i+1, ..., Bj-1, B_j, Bj+1, ...., B_n-1, B_n} where A_k = B_k for k in [i, j)
+// Broadcast a tensor from shape to targetShape according to numpy broadcasting rules
+// See more at https://numpy.org/doc/stable/user/basics.broadcasting.html
+// and https://github.com/onnx/onnx/blob/main/docs/Broadcasting.md .
 template<typename T>
-T* BidirectionalBroadcast(const T* data, const std::vector<size_t>& shapeA, const std::vector<size_t>& shapeB) {
-   // Find i and j such that A_k=B_k for k in [i, j) and A[k]=1 otherwise
-   size_t size = shapeA.size();
-   if (size != shapeB.size()) {
-      throw
-         std::runtime_error("TMVA::SOFIE - A and B must have the same size.");
-   }
+T* BroadcastTensor(const T* data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape) {
+   // Size of the shapes
+   size_t size = shape.size();
+   // Current length of the broadcasted tensor
+   size_t curLength = ConvertShapeToLength(shape);
+   size_t targetLength = ConvertShapeToLength(targetShape);
+   // newShape is an aray of size equal to dimension along which we are broadcasting the tensor
+   T* broadcastedData = new T[targetLength];
+   std::copy(data, data + curLength, broadcastedData);
+   // Product of the previous dimensions of targetShape
+   size_t arrayNum = 1;
+   // New broadcasted data
+   std::vector<T> newData(targetLength);
 
-   size_t i = 0;
-   for (size_t k = 0; k < size; k++) {
-      if (shapeA[k] > 1) {
-         i = k;
-         break;
-      }
-   }
-   size_t j = i + 1;
-   for (size_t k = i + 1; k < size; k++) {
-      if (shapeA[k] == 1) {
-         j = k;
-         break;
-      }
-   }
-   if (shapeA[size-1] > 1) {
-      j = size;
-   }
-
-   size_t lengthA = ConvertShapeToLength(shapeA);
-   size_t lengthB = ConvertShapeToLength(shapeB);
-   T* newData = new T[lengthB];
-
-   // lengthEnd is the length of [B_j, B_j+1, ..., B_size)
-   size_t lengthEnd = 1;
-   for (size_t k = j; k < size; k++) {
-      lengthEnd *= shapeB[k];
-   }
-   // Broadcast data[i,...,j) to newData[0 ... lengthA * lengthEnd)
-   for (size_t k = 0; k < lengthA; k++) {
-      std::fill(newData + k * lengthEnd, newData + (k + 1) * lengthEnd, data[k]);
-   }
-
-   // Broadcast newData[0... lengthA * lengthEnd) to newData[0... lengthBegin * lengthA * lengthEnd)
-   // where lengthBegin is the length of [B_0, B_1, ..., B_i) and lengthbegin * lengthA * lengthEnd is the length of B
-   if (i > 0) {
-      if (i == 1) {
-         // There's only one dimension left B_0
-         size_t dim = shapeB[0];
-         size_t stride = lengthA * lengthEnd;
-         for (size_t k = 1; k < dim; k++) {
-            std::copy(newData, newData + stride, newData + k * stride);
-         }
-      } else {
-         // There are at least two dimensions before i B_0, B_1, ..., B_i-1
-         // Broadcast to B_i-1, B_i-2, ... and B_0
-         size_t stride = lengthA * lengthEnd;
-         for (size_t idx = i - 1; idx >= 0; idx--) {
-            size_t dim = shapeB[idx];
-            stride *= shapeB[idx + 1];
-            for (size_t k = 1; k < dim; k++) {
-               std::copy(newData, newData + stride, newData + k * stride);
+   for (size_t idx = 0; idx < size; idx++) {
+      size_t dim = shape[idx];
+      size_t targetDim = targetShape[idx];
+      if (dim == 1 && targetDim > 1) {
+         // Set the new length of the data
+         size_t newLength = curLength * targetDim;
+         // View the data as a list of arrayNum arrays of size arrayLength
+         size_t arrayLength = curLength / arrayNum;
+         // Broadcast each array dim times
+         if (arrayLength > 1) {
+            // If each array has at least two elements
+            for (size_t arrayIdx = 0; arrayIdx < arrayNum; arrayIdx++) {
+               for (size_t targetIdx = 0; targetIdx < targetDim; targetIdx++) {
+                  size_t offset = arrayIdx * arrayLength * targetDim + targetIdx * arrayLength;
+                  std::copy(broadcastedData + arrayIdx * arrayLength,
+                     broadcastedData + (arrayIdx + 1) * arrayLength,
+                     newData.begin() + offset);
+               }
+            }
+         } else {
+            // If each array has one element
+            for (size_t arrayIdx = 0; arrayIdx < arrayNum; arrayIdx++) {
+               std::fill(newData.begin() + arrayIdx * targetDim,
+                  newData.begin() + (arrayIdx + 1) * targetDim, broadcastedData[arrayIdx]);
             }
          }
+         // Update current length
+         curLength = newLength;
+         // Update broadcasted data
+         std::copy(newData.begin(), newData.begin() + newLength, broadcastedData);
       }
+      // Update the number of arrays
+      arrayNum *= targetDim;
    }
+   return broadcastedData;
+}
 
-   return newData;
+// Unidirectional broadcasting shape to targetShape
+template<typename T>
+T* UnidirectionalBroadcast(const T* data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape) {
+   // Prepend shape with ones
+   if (shape.size() < targetShape.size()) {
+      size_t targetSize = targetShape.size();
+      std::vector<size_t> newShape(targetSize, 1);
+      size_t offset = targetSize - shape.size();
+      std::copy(shape.begin(), shape.end(), newShape.begin() + offset);
+      return BroadcastTensor<T>(data, newShape, targetShape);
+   }
+   return BroadcastTensor<T>(data, shape, targetShape);
 }
 
 /// compute stride of a tensor given its shape (assume layout is row-major)
