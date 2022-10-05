@@ -1,0 +1,29 @@
+ROOT_STANDARD_LIBRARY_PACKAGE(xRooFit
+  HEADERS
+    xRooFit/xRooBrowser.h
+    xRooFit/xRooFit.h
+    xRooFit/xRooHypoSpace.h
+    xRooFit/xRooNLLVar.h
+    xRooFit/xRooNode.h
+  SOURCES
+    src/Asymptotics.cxx
+    src/xRooBrowser.cxx
+    src/xRooFit.cxx
+    src/xRooHypoSpace.cxx
+    src/xRooNLLVar.cxx
+    src/xRooNode.cxx
+    src/xRooNode_interactive.cxx
+  DICTIONARY_OPTIONS
+    "-writeEmptyRootPCM"
+  LIBRARIES
+  DEPENDENCIES
+    Gui
+    HistFactory
+    RooFit
+    RooFitHS3
+    RooStats
+  LINKDEF
+    inc/LinkDef.h
+)
+
+#ROOT_ADD_TEST_SUBDIRECTORY(test)
