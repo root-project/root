@@ -990,7 +990,7 @@ RooDataHist* RooDataSet::binnedClone(const char* newName, const char* newTitle) 
   if (newTitle) {
     title = newTitle ;
   } else {
-    name = std::string(GetTitle()) + "_binned" ;
+    title = std::string(GetTitle()) + "_binned" ;
   }
 
   return new RooDataHist(name,title,*get(),*this) ;
