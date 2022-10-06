@@ -71,12 +71,12 @@ public:
             fLastResult = false;
          } else {
             // apply range filter logic, cache the result
-            ++fNProcessedEntries;
-            if (fNProcessedEntries <= fStart || (fStop > 0 && fNProcessedEntries > fStop) ||
-                (fStride != 1 && fNProcessedEntries % fStride != 0))
+            if (fNProcessedEntries < fStart || (fStop > 0 && fNProcessedEntries >= fStop) ||
+                (fStride != 1 && (fNProcessedEntries - fStart) % fStride != 0))
                fLastResult = false;
             else
                fLastResult = true;
+            ++fNProcessedEntries;
             if (fNProcessedEntries == fStop) {
                fHasStopped = true;
                fPrevNode.StopProcessing();
