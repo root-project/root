@@ -60,61 +60,6 @@ namespace ROOT {
 namespace Internal {
 namespace TreeUtils {
 
-////////////////////////////////////////////////////////////////////////////////
-/// \brief Add information of a single friend.
-///
-/// \param[in] treeName Name of the tree.
-/// \param[in] fileNameGlob Path to the file. Refer to TChain::Add for globbing rules.
-/// \param[in] alias Alias for this friend.
-void RFriendInfo::AddFriend(const std::string &treeName, const std::string &fileNameGlob, const std::string &alias)
-{
-   fFriendNames.emplace_back(std::make_pair(treeName, alias));
-   fFriendFileNames.emplace_back(std::vector<std::string>{fileNameGlob});
-   fFriendChainSubNames.emplace_back();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// \brief Add information of a single friend.
-///
-/// \param[in] treeName Name of the tree.
-/// \param[in] fileNameGlobs Paths to the files. Refer to TChain::Add for globbing rules.
-/// \param[in] alias Alias for this friend.
-void RFriendInfo::AddFriend(const std::string &treeName, const std::vector<std::string> &fileNameGlobs,
-                            const std::string &alias)
-{
-   fFriendNames.emplace_back(std::make_pair(treeName, alias));
-   fFriendFileNames.emplace_back(fileNameGlobs);
-   fFriendChainSubNames.emplace_back(std::vector<std::string>(fileNameGlobs.size(), treeName));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// \brief Add information of a single friend.
-///
-/// \param[in] treeAndFileNameGlobs Pairs of (treename, filename). Refer to TChain::Add for globbing rules.
-/// \param[in] alias Alias for this friend.
-void RFriendInfo::AddFriend(const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
-                            const std::string &alias)
-{
-   fFriendNames.emplace_back(std::make_pair("", alias));
-
-   fFriendFileNames.emplace_back();
-   fFriendChainSubNames.emplace_back();
-
-   auto &theseFileNames = fFriendFileNames.back();
-   auto &theseChainSubNames = fFriendChainSubNames.back();
-   auto nPairs = treeAndFileNameGlobs.size();
-   theseFileNames.reserve(nPairs);
-   theseChainSubNames.reserve(nPairs);
-
-   auto fSubNamesIt = std::back_inserter(theseChainSubNames);
-   auto fNamesIt = std::back_inserter(theseFileNames);
-
-   for (const auto &names : treeAndFileNameGlobs) {
-      *fSubNamesIt = names.first;
-      *fNamesIt = names.second;
-   }
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 /// Get all the top-level branches names, including the ones of the friend trees
 std::vector<std::string> GetTopLevelBranchNames(TTree &t)
@@ -200,9 +145,9 @@ std::vector<std::string> GetFileNamesFromTree(const TTree &tree)
 /// - A vector with all the paths to the files contained in the chain.
 /// - A vector with all the names of the trees making up the chain,
 ///   associated with the file names of the previous vector.
-RFriendInfo GetFriendInfo(const TTree &tree)
+ROOT::TreeUtils::RFriendInfo GetFriendInfo(const TTree &tree)
 {
-   std::vector<NameAlias> friendNames;
+   std::vector<std::pair<std::string, std::string>> friendNames;
    std::vector<std::vector<std::string>> friendFileNames;
    std::vector<std::vector<std::string>> friendChainSubNames;
 
@@ -214,7 +159,7 @@ RFriendInfo GetFriendInfo(const TTree &tree)
    // loaded here if we used tree.GetTree()->GetListOfFriends().
    const auto *friends = tree.GetListOfFriends();
    if (!friends)
-      return RFriendInfo();
+      return ROOT::TreeUtils::RFriendInfo();
 
    for (auto fr : *friends) {
       // Can't pass fr as const TObject* because TFriendElement::GetTree is not const.
@@ -275,7 +220,8 @@ RFriendInfo GetFriendInfo(const TTree &tree)
       }
    }
 
-   return RFriendInfo{std::move(friendNames), std::move(friendFileNames), std::move(friendChainSubNames)};
+   return ROOT::TreeUtils::RFriendInfo{std::move(friendNames), std::move(friendFileNames),
+                                       std::move(friendChainSubNames)};
 }
 
 ////////////////////////////////////////////////////////////////////////////////

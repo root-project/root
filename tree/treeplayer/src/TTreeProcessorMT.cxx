@@ -244,7 +244,7 @@ static ClustersAndEntries MakeClusters(const std::vector<std::string> &treeNames
 
 ////////////////////////////////////////////////////////////////////////
 /// Return a vector containing the number of entries of each file of each friend TChain
-static std::vector<std::vector<Long64_t>> GetFriendEntries(const Internal::TreeUtils::RFriendInfo &friendInfo)
+static std::vector<std::vector<Long64_t>> GetFriendEntries(const ROOT::TreeUtils::RFriendInfo &friendInfo)
 {
 
    const auto &friendNames = friendInfo.fFriendNames;
@@ -317,7 +317,7 @@ namespace Internal {
 /// \param[in] nEntries Number of entries to be processed.
 /// \param[in] friendEntries Number of entries in each friend. Expected to have same ordering as friendInfo.
 void TTreeView::MakeChain(const std::vector<std::string> &treeNames, const std::vector<std::string> &fileNames,
-                          const TreeUtils::RFriendInfo &friendInfo, const std::vector<Long64_t> &nEntries,
+                          const ROOT::TreeUtils::RFriendInfo &friendInfo, const std::vector<Long64_t> &nEntries,
                           const std::vector<std::vector<Long64_t>> &friendEntries)
 {
 
@@ -373,7 +373,7 @@ void TTreeView::MakeChain(const std::vector<std::string> &treeNames, const std::
 /// Get a TTreeReader for the current tree of this view.
 std::unique_ptr<TTreeReader>
 TTreeView::GetTreeReader(Long64_t start, Long64_t end, const std::vector<std::string> &treeNames,
-                         const std::vector<std::string> &fileNames, const TreeUtils::RFriendInfo &friendInfo,
+                         const std::vector<std::string> &fileNames, const ROOT::TreeUtils::RFriendInfo &friendInfo,
                          const TEntryList &entryList, const std::vector<Long64_t> &nEntries,
                          const std::vector<std::vector<Long64_t>> &friendEntries)
 {
