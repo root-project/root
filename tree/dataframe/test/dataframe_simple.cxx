@@ -96,7 +96,7 @@ TEST_P(RDFSimpleTests, CreateZeroEntriesWithBranches)
    }
    RDataFrame tdf(treename, filename);
    auto c = tdf.Count();
-   auto m = tdf.Mean("b1");
+   auto m = tdf.Mean<double>("b1");
    EXPECT_EQ(0U, *c);
    EXPECT_EQ(0., *m);
 }
@@ -142,7 +142,7 @@ TEST_P(RDFSimpleTests, Define_lambda)
 {
    RDataFrame tdf(10);
    auto d = tdf.Define("i", []() { return 1; });
-   auto m = d.Mean("i");
+   auto m = d.Mean<int>("i");
    EXPECT_DOUBLE_EQ(1., *m);
 }
 
@@ -155,7 +155,7 @@ TEST_P(RDFSimpleTests, Define_function)
 {
    RDataFrame tdf(10);
    auto d = tdf.Define("i", DefineFunction);
-   auto m = d.Mean("i");
+   auto m = d.Mean<int>("i");
    EXPECT_DOUBLE_EQ(1., *m);
 }
 
@@ -168,7 +168,7 @@ TEST_P(RDFSimpleTests, Define_functor)
    RDataFrame tdf(10);
    DefineStruct def;
    auto d = tdf.Define("i", def);
-   auto m = d.Mean("i");
+   auto m = d.Mean<int>("i");
    EXPECT_DOUBLE_EQ(1., *m);
 }
 
@@ -176,7 +176,7 @@ TEST_P(RDFSimpleTests, Define_jitted)
 {
    RDataFrame tdf(10);
    auto d = tdf.Define("i", "1");
-   auto m = d.Mean("i");
+   auto m = d.Mean<int>("i");
    EXPECT_DOUBLE_EQ(1., *m);
 }
 
@@ -778,7 +778,7 @@ TEST(RDFSimpleTests, GenVector)
    // The leading underscore of "_hh" tests against ROOT-10305.
    ROOT::RDataFrame t(1);
    auto aa = t.Define("_hh", "ROOT::Math::PtEtaPhiMVector(1,1,1,1)").Define("h", "_hh.Rapidity()");
-   auto m = aa.Mean("h");
+   auto m = aa.Mean<double>("h");
    EXPECT_TRUE(0 != *m);
 }
 
@@ -980,7 +980,7 @@ TEST_P(RDFSimpleTests, ChainWithDifferentTreeNames)
 
    // pass chain to RDF and process trees with different names
    ROOT::RDataFrame df2(c);
-   EXPECT_DOUBLE_EQ(*df2.Mean("x"), 2);
+   EXPECT_DOUBLE_EQ(*df2.Mean<int>("x"), 2);
 
    gSystem->Unlink(fname1);
    gSystem->Unlink(fname2);
