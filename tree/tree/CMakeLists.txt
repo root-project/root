@@ -67,9 +67,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Tree
     TVirtualIndex.h
     TVirtualTreePlayer.h
     ROOT/InternalTreeUtils.hxx
+    ROOT/RFriendInfo.hxx
     ROOT/TIOFeatures.hxx
   SOURCES
     src/InternalTreeUtils.cxx
+    src/RFriendInfo.cxx
     src/TBasket.cxx
     src/TBasketSQL.cxx
     src/TBranchBrowsable.cxx

@@ -16,8 +16,8 @@
 #include <utility> // std::pair
 #include <vector>
 
-#include <ROOT/InternalTreeUtils.hxx> // ROOT::Internal::TreeUtils::RFriendInfo
-#include <RtypesCore.h>               // Long64_t
+#include <ROOT/RFriendInfo.hxx>
+#include <RtypesCore.h> // Long64_t
 
 namespace ROOT {
 
@@ -57,8 +57,8 @@ private:
     * They can contain the globbing characters supported by TChain. See TChain::Add for more information.
     */
    std::vector<std::string> fFileNameGlobs;
-   REntryRange fEntryRange; ///< Start (inclusive) and end (exclusive) entry for the dataset processing
-   ROOT::Internal::TreeUtils::RFriendInfo fFriendInfo; ///< List of friends
+   REntryRange fEntryRange;                  ///< Start (inclusive) and end (exclusive) entry for the dataset processing
+   ROOT::TreeUtils::RFriendInfo fFriendInfo; ///< List of friends
 
 public:
    RDatasetSpec(const std::string &treeName, const std::string &fileNameGlob, const REntryRange &entryRange = {});
