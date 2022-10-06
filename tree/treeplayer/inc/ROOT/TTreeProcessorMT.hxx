@@ -22,7 +22,8 @@
 #include "TEntryList.h"
 #include "ROOT/TThreadedObject.hxx"
 #include "ROOT/TThreadExecutor.hxx"
-#include "ROOT/InternalTreeUtils.hxx" // RFriendInfo
+#include "ROOT/InternalTreeUtils.hxx" // RNoCleanupNotifier
+#include "ROOT/RFriendInfo.hxx"
 
 #include <functional>
 #include <memory>
@@ -61,7 +62,7 @@ class TTreeView {
    std::unique_ptr<TChain> fChain; ///< Chain on which to operate
 
    void MakeChain(const std::vector<std::string> &treeName, const std::vector<std::string> &fileNames,
-                  const TreeUtils::RFriendInfo &friendInfo, const std::vector<Long64_t> &nEntries,
+                  const ROOT::TreeUtils::RFriendInfo &friendInfo, const std::vector<Long64_t> &nEntries,
                   const std::vector<std::vector<Long64_t>> &friendEntries);
 
 public:
@@ -70,8 +71,8 @@ public:
    TTreeView(const TTreeView &) {}
    std::unique_ptr<TTreeReader> GetTreeReader(Long64_t start, Long64_t end, const std::vector<std::string> &treeName,
                                               const std::vector<std::string> &fileNames,
-                                              const TreeUtils::RFriendInfo &friendInfo, const TEntryList &entryList,
-                                              const std::vector<Long64_t> &nEntries,
+                                              const ROOT::TreeUtils::RFriendInfo &friendInfo,
+                                              const TEntryList &entryList, const std::vector<Long64_t> &nEntries,
                                               const std::vector<std::vector<Long64_t>> &friendEntries);
    void Reset();
 };
@@ -83,7 +84,7 @@ private:
    const std::vector<std::string> fTreeNames; ///< TTree names (always same size and ordering as fFileNames)
    /// User-defined selection of entry numbers to be processed, empty if none was provided
    TEntryList fEntryList;
-   const Internal::TreeUtils::RFriendInfo fFriendInfo;
+   const ROOT::TreeUtils::RFriendInfo fFriendInfo;
    ROOT::TThreadExecutor fPool; ///<! Thread pool for processing.
 
    /// Thread-local TreeViews
