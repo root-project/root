@@ -21,11 +21,11 @@ TEST_F(RDFRanges, API)
    auto c1 = tdf.Range(0).Count();
    auto c2 = tdf.Range(10).Count();
    auto m = tdf.Range(5, 50).Max<ULong64_t>("tdfentry_");
-   auto t = tdf.Range(5, 10, 3).Take<ULong64_t>("tdfentry_");
+   auto t = tdf.Range(1, 10, 3).Take<ULong64_t>("tdfentry_");
    EXPECT_EQ(*c1, 100u);
    EXPECT_EQ(*c2, 10u);
    EXPECT_EQ(*m, 49u);
-   EXPECT_EQ(*t, std::vector<ULong64_t>({5, 8}));
+   EXPECT_EQ(*t, std::vector<ULong64_t>({1, 4, 7}));
 }
 
 TEST_F(RDFRanges, FromRange)
