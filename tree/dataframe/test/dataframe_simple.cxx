@@ -98,7 +98,7 @@ TEST_P(RDFSimpleTests, CreateZeroEntriesWithBranches)
    auto c = tdf.Count();
    auto m = tdf.Mean("b1");
    EXPECT_EQ(0U, *c);
-   EXPECT_EQ(0., *m);
+   EXPECT_DOUBLE_EQ(0., *m);
 }
 
 TEST_P(RDFSimpleTests, BuildWithTDirectory)
@@ -207,7 +207,7 @@ TEST_P(RDFSimpleTests, Define_jitted_complex)
    RDataFrame tdf(50);
    auto d = tdf.Define("i", "r.Uniform(0.,8.)");
    auto m = d.Max("i");
-   EXPECT_EQ(7.867497533559811628, *m);
+   EXPECT_DOUBLE_EQ(7.867497533559811628, *m);
 }
 
 TEST_P(RDFSimpleTests, Define_jitted_complex_array_sum)
@@ -251,7 +251,7 @@ TEST_P(RDFSimpleTests, Define_Filter_jitted)
    auto d = tdf.Define("r", [&r]() { return r.Uniform(0., 8.); });
    auto df = d.Filter("r>5");
    auto m = df.Max("r");
-   EXPECT_EQ(7.867497533559811628, *m);
+   EXPECT_DOUBLE_EQ(7.867497533559811628, *m);
 }
 
 TEST_P(RDFSimpleTests, Define_Filter_named)
@@ -261,7 +261,7 @@ TEST_P(RDFSimpleTests, Define_Filter_named)
    auto d = tdf.Define("r", [&r]() { return r.Uniform(0., 8.); });
    auto df = d.Filter([](double x) { return x > 5; }, {"r"}, "myFilter");
    auto m = df.Max("r");
-   EXPECT_EQ(7.867497533559811628, *m);
+   EXPECT_DOUBLE_EQ(7.867497533559811628, *m);
 }
 
 TEST_P(RDFSimpleTests, Define_Filter_named_jitted)
@@ -271,7 +271,7 @@ TEST_P(RDFSimpleTests, Define_Filter_named_jitted)
    auto d = tdf.Define("r", [&r]() { return r.Uniform(0., 8.); });
    auto df = d.Filter("r>5", "myFilter");
    auto m = df.Max("r");
-   EXPECT_EQ(7.867497533559811628, *m);
+   EXPECT_DOUBLE_EQ(7.867497533559811628, *m);
 }
 
 // jitted Define + Filters
@@ -282,7 +282,7 @@ TEST_P(RDFSimpleTests, Define_jitted_Filter)
    auto d = tdf.Define("r", "r.Uniform(0.,8.)");
    auto df = d.Filter([](double x) { return x > 5; }, {"r"});
    auto m = df.Max("r");
-   EXPECT_EQ(7.867497533559811628, *m);
+   EXPECT_DOUBLE_EQ(7.867497533559811628, *m);
 }
 
 TEST_P(RDFSimpleTests, Define_jitted_Filter_jitted)
@@ -292,7 +292,7 @@ TEST_P(RDFSimpleTests, Define_jitted_Filter_jitted)
    auto d = tdf.Define("r", "r.Uniform(0.,8.)");
    auto df = d.Filter("r>5");
    auto m = df.Max("r");
-   EXPECT_EQ(7.867497533559811628, *m);
+   EXPECT_DOUBLE_EQ(7.867497533559811628, *m);
 }
 
 TEST_P(RDFSimpleTests, Define_jitted_Filter_named)
@@ -302,7 +302,7 @@ TEST_P(RDFSimpleTests, Define_jitted_Filter_named)
    auto d = tdf.Define("r", "r.Uniform(0.,8.)");
    auto df = d.Filter([](double x) { return x > 5; }, {"r"}, "myFilter");
    auto m = df.Max("r");
-   EXPECT_EQ(7.867497533559811628, *m);
+   EXPECT_DOUBLE_EQ(7.867497533559811628, *m);
 }
 
 TEST_P(RDFSimpleTests, Define_jitted_Filter_named_jitted)
@@ -312,7 +312,7 @@ TEST_P(RDFSimpleTests, Define_jitted_Filter_named_jitted)
    auto d = tdf.Define("r", "r.Uniform(0.,8.)");
    auto df = d.Filter("r>5", "myFilter");
    auto m = df.Max("r");
-   EXPECT_EQ(7.867497533559811628, *m);
+   EXPECT_DOUBLE_EQ(7.867497533559811628, *m);
 }
 
 TEST_P(RDFSimpleTests, Define_jitted_Filter_complex_array)
@@ -338,7 +338,7 @@ TEST_P(RDFSimpleTests, DefineSlotConsistency)
 {
    RDataFrame df(8);
    auto m = df.DefineSlot("x", [](unsigned int) { return 1.; }).Max("x");
-   EXPECT_EQ(1., *m);
+   EXPECT_DOUBLE_EQ(1., *m);
 }
 
 TEST_P(RDFSimpleTests, DefineSlot)
