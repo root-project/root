@@ -3484,15 +3484,8 @@ static void R__WriteMoveBodyPointersArrays(FILE *file, const TString &protoname,
             if (element->GetArrayDim() == 1) {
                fprintf(file,"   for (Int_t i=0;i<%d;i++) %s[i] = rhs.%s[i];\n",element->GetArrayLength(),ename,ename);
             } else if (element->GetArrayDim() >= 2) {
-               fprintf(file,"   for (Int_t i=0;i<%d;i++) (&(%s",element->GetArrayLength(),ename);
-               for (Int_t d = 0; d < element->GetArrayDim(); ++d) {
-                  fprintf(file,"[0]");
-               }
-               fprintf(file,"))[i] = (&(rhs.%s",ename);
-               for (Int_t d = 0; d < element->GetArrayDim(); ++d) {
-                  fprintf(file,"[0]");
-               }
-               fprintf(file,"))[i];\n");
+               fprintf(file,"   for (Int_t i=0;i<%d;i++) reinterpret_cast<%s *>(%s", element->GetArrayLength(), element->GetTypeName(), ename);
+               fprintf(file,")[i] = reinterpret_cast<%s const *>(rhs.%s)[i];\n", element->GetTypeName(), ename);
             }
          } else if (element->GetType() == TVirtualStreamerInfo::kSTLp) {
             if (!defMod) { fprintf(file,"   %s &modrhs = const_cast<%s &>( rhs );\n",protoname.Data(),protoname.Data()); defMod = kTRUE; };
