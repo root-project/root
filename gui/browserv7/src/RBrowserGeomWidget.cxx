@@ -52,27 +52,19 @@ class RBrowserGeomWidget : public RBrowserWidget {
 
 public:
 
-   RBrowserGeomWidget(const std::string &name) : RBrowserWidget(name), fViewer()
+   RBrowserGeomWidget(const std::string &name) : RBrowserWidget(name)
    {
       fViewer.SetTitle(name);
       fViewer.SetShowHierarchy(false);
-
-      // fViewer.SetGeometry(MakeDummy());
    }
 
    virtual ~RBrowserGeomWidget() = default;
 
    std::string GetKind() const override { return "geom"s; }
 
-   void Show(const std::string &arg) override
-   {
-      fViewer.Show(arg);
-   }
+   void Show(const std::string &arg) override { fViewer.Show(arg); }
 
-   std::string GetUrl() override
-   {
-      return "../"s + fViewer.GetWindowAddr() + "/"s;
-   }
+   std::string GetUrl() override { return "../"s + fViewer.GetWindowAddr() + "/"s; }
 
    bool DrawElement(std::shared_ptr<Browsable::RElement> &elem, const std::string &, bool) override
    {
