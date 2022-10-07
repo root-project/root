@@ -22,9 +22,9 @@ def _kwargs_to_tmva_cmdargs(*args, **kwargs):
 
         try:
             if isinstance(v, bool):
-                return f"{k}" if v else "!" + f"{k}"
+                return str(k) if v else "!{}".format(k)
             else:
-                return f"{k}={v}"
+                return "{k}={v}".format(k=k,v=v)
         except:
             raise AttributeError("Unsupported Type passed")
 
