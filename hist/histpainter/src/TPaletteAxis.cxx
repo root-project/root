@@ -120,7 +120,7 @@ End_Macro
 
 TPaletteAxis::TPaletteAxis(): TPave()
 {
-   fH  = nullptr;
+   fH = nullptr;
    SetName("");
 }
 
@@ -132,6 +132,7 @@ TPaletteAxis::TPaletteAxis(Double_t x1, Double_t y1, Double_t x2, Double_t  y2, 
    : TPave(x1, y1, x2, y2)
 {
    fH = h;
+   if (!fH) return;
    SetName("palette");
    TAxis *zaxis = fH->GetZaxis();
    fAxis.ImportAxisAttributes(zaxis);
@@ -259,26 +260,28 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             ratio2 = temp;
          }
          if (ratio2 - ratio1 > 0.05) {
-            if (fH->GetDimension() == 2) {
-               Double_t zmin = fH->GetMinimum();
-               Double_t zmax = fH->GetMaximum();
-               if (gPad->GetLogz()) {
-                  if (zmin <= 0 && zmax > 0) zmin = TMath::Min((Double_t)1,
-                                                                  (Double_t)0.001 * zmax);
-                  zmin = TMath::Log10(zmin);
-                  zmax = TMath::Log10(zmax);
+            if (fH) {
+               if (fH->GetDimension() == 2) {
+                  Double_t zmin = fH->GetMinimum();
+                  Double_t zmax = fH->GetMaximum();
+                  if (gPad->GetLogz()) {
+                     if (zmin <= 0 && zmax > 0) zmin = TMath::Min((Double_t)1,
+                                                                     (Double_t)0.001 * zmax);
+                     zmin = TMath::Log10(zmin);
+                     zmax = TMath::Log10(zmax);
+                  }
+                  Double_t newmin = zmin + (zmax - zmin) * ratio1;
+                  Double_t newmax = zmin + (zmax - zmin) * ratio2;
+                  if (newmin < zmin)newmin = fH->GetBinContent(fH->GetMinimumBin());
+                  if (newmax > zmax)newmax = fH->GetBinContent(fH->GetMaximumBin());
+                  if (gPad->GetLogz()) {
+                     newmin = TMath::Exp(2.302585092994 * newmin);
+                     newmax = TMath::Exp(2.302585092994 * newmax);
+                  }
+                  fH->SetMinimum(newmin);
+                  fH->SetMaximum(newmax);
+                  fH->SetBit(TH1::kIsZoomed);
                }
-               Double_t newmin = zmin + (zmax - zmin) * ratio1;
-               Double_t newmax = zmin + (zmax - zmin) * ratio2;
-               if (newmin < zmin)newmin = fH->GetBinContent(fH->GetMinimumBin());
-               if (newmax > zmax)newmax = fH->GetBinContent(fH->GetMaximumBin());
-               if (gPad->GetLogz()) {
-                  newmin = TMath::Exp(2.302585092994 * newmin);
-                  newmax = TMath::Exp(2.302585092994 * newmax);
-               }
-               fH->SetMinimum(newmin);
-               fH->SetMaximum(newmax);
-               fH->SetBit(TH1::kIsZoomed);
             }
             gPad->Modified(kTRUE);
          }
@@ -308,6 +311,7 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 Int_t TPaletteAxis::GetBinColor(Int_t i, Int_t j)
 {
+   if (!fH) return 0;
    Double_t zc = fH->GetBinContent(i, j);
    return GetValueColor(zc);
 }
@@ -321,8 +325,12 @@ char *TPaletteAxis::GetObjectInfo(Int_t /* px */, Int_t py) const
    Double_t z;
    static char info[64];
 
-   Double_t zmin = fH->GetMinimum();
-   Double_t zmax = fH->GetMaximum();
+   Double_t zmin = 0.;
+   Double_t zmax = 0.;
+   if (fH) {
+      zmin = fH->GetMinimum();
+      zmax = fH->GetMaximum();
+   }
    Int_t   y1   = gPad->GetWh() - gPad->VtoPixel(fY1NDC);
    Int_t   y2   = gPad->GetWh() - gPad->VtoPixel(fY2NDC);
    Int_t   y    = gPad->GetWh() - py;
@@ -362,6 +370,8 @@ char *TPaletteAxis::GetObjectInfo(Int_t /* px */, Int_t py) const
 
 Int_t TPaletteAxis::GetValueColor(Double_t zc)
 {
+   if (!fH) return 0;
+
    Double_t wmin  = fH->GetMinimum();
    Double_t wmax  = fH->GetMaximum();
    Double_t wlmin = wmin;
@@ -375,7 +385,8 @@ Int_t TPaletteAxis::GetValueColor(Double_t zc)
    }
 
    Int_t ncolors = gStyle->GetNumberOfColors();
-   Int_t ndivz = fH->GetContour();
+   Int_t ndivz =0;
+   if (fH) ndivz = fH->GetContour();
    if (ndivz == 0) return 0;
    ndivz = TMath::Abs(ndivz);
    Int_t theColor, color;
@@ -396,6 +407,9 @@ Int_t TPaletteAxis::GetValueColor(Double_t zc)
 
 void TPaletteAxis::Paint(Option_t *)
 {
+
+   if (!fH) return;
+
    ConvertNDCtoPad();
 
    SetFillStyle(1001);
@@ -555,7 +569,8 @@ void TPaletteAxis::Paint(Option_t *)
 
 void TPaletteAxis::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   //char quote = '"';
+   if (!fH) return;
+
    out << "   " << std::endl;
    if (gROOT->ClassSaved(TPaletteAxis::Class())) {
       out << "   ";
@@ -585,6 +600,7 @@ void TPaletteAxis::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 
 void TPaletteAxis::UnZoom()
 {
+   if (!fH) return;
    TView *view = gPad ? gPad->GetView() : nullptr;
    if (view) {
       delete view;

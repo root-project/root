@@ -52,19 +52,19 @@ public:
    void  Paint(Option_t *option="") override;
    void  SavePrimitive(std::ostream &out, Option_t *option = "") override;
    void          SetHistogram(TH1* h) {fH = h;}
-   virtual void  SetNdivisions(Int_t ndiv=10) {fH->GetZaxis()->SetNdivisions(ndiv);} // *MENU*
-   virtual void  SetAxisColor(Int_t color=1, Float_t alpha=1) {fH->GetZaxis()->SetAxisColor(color,alpha);} // *MENU*
-   virtual void  SetLabelColor(Int_t color=1) {fH->GetZaxis()->SetLabelColor(color);} // *MENU*
-   virtual void  SetLabelFont(Int_t font=42) {fH->GetZaxis()->SetLabelFont(font);} // *MENU*
-   virtual void  SetLabelOffset(Float_t offset=0.005) {fH->GetZaxis()->SetLabelOffset(offset);} // *MENU*
-   virtual void  SetLabelSize(Float_t size=0.035) {fH->GetZaxis()->SetLabelSize(size);} // *MENU*
-   virtual void  SetMaxDigits(Float_t maxdigits=5) {fH->GetZaxis()->SetMaxDigits(maxdigits);} // *MENU*
-   virtual void  SetTickLength(Float_t length=0.03) {fH->GetZaxis()->SetTickLength(length);} // *MENU*
-   virtual void  SetTitleOffset(Float_t offset=1) {fH->GetZaxis()->SetTitleOffset(offset);} // *MENU*
-   virtual void  SetTitleSize(Float_t size=0.035) {fH->GetZaxis()->SetTitleSize(size);} // *MENU*
-   virtual void  SetTitleColor(Int_t color=1) {fH->GetZaxis()->SetTitleColor(color);} // *MENU*
-   virtual void  SetTitleFont(Int_t font=42) {fH->GetZaxis()->SetTitleFont(font);} // *MENU*
-   virtual void  SetTitle(char *title) {fH->GetZaxis()->SetTitle(title);} // *MENU*
+   virtual void  SetNdivisions(Int_t ndiv=10) {if (fH) fH->GetZaxis()->SetNdivisions(ndiv);} // *MENU*
+   virtual void  SetAxisColor(Int_t color=1, Float_t alpha=1) {if (fH) fH->GetZaxis()->SetAxisColor(color,alpha);} // *MENU*
+   virtual void  SetLabelColor(Int_t color=1) {if (fH) fH->GetZaxis()->SetLabelColor(color);} // *MENU*
+   virtual void  SetLabelFont(Int_t font=42) {if (fH) fH->GetZaxis()->SetLabelFont(font);} // *MENU*
+   virtual void  SetLabelOffset(Float_t offset=0.005) {if (fH) fH->GetZaxis()->SetLabelOffset(offset);} // *MENU*
+   virtual void  SetLabelSize(Float_t size=0.035) {if (fH) fH->GetZaxis()->SetLabelSize(size);} // *MENU*
+   virtual void  SetMaxDigits(Float_t maxdigits=5) {if (fH) fH->GetZaxis()->SetMaxDigits(maxdigits);} // *MENU*
+   virtual void  SetTickLength(Float_t length=0.03) {if (fH) fH->GetZaxis()->SetTickLength(length);} // *MENU*
+   virtual void  SetTitleOffset(Float_t offset=1) {if (fH) fH->GetZaxis()->SetTitleOffset(offset);} // *MENU*
+   virtual void  SetTitleSize(Float_t size=0.035) {if (fH) fH->GetZaxis()->SetTitleSize(size);} // *MENU*
+   virtual void  SetTitleColor(Int_t color=1) {if (fH) fH->GetZaxis()->SetTitleColor(color);} // *MENU*
+   virtual void  SetTitleFont(Int_t font=42) {if (fH) fH->GetZaxis()->SetTitleFont(font);} // *MENU*
+   virtual void  SetTitle(char *title) {if (fH) fH->GetZaxis()->SetTitle(title);} // *MENU*
 
    void  SetLineWidth(Width_t linewidth) override {fAxis.SetLineWidth(linewidth);} // *MENU*
    virtual void  UnZoom();  // *MENU*
