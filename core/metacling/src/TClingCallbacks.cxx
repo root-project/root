@@ -362,6 +362,15 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name) 
    if (Name.getNameKind() != DeclarationName::Identifier)
       return false;
 
+   Sema &SemaR = m_Interpreter->getSema();
+   auto *D = cast<Decl>(DC);
+   SourceLocation Loc = D->getLocation();
+   if (Loc.isValid() && SemaR.getSourceManager().isInSystemHeader(Loc)) {
+      // This declaration comes from a system module, we do not want to try
+      // autoparsing it and find instantiations in our ROOT modules.
+      return false;
+   }
+
    // Get the 'lookup' decl context.
    // We need to cast away the constness because we will lookup items of this
    // namespace/DeclContext
@@ -373,14 +382,13 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name) 
    // and only if that was not the case use the information in the GMI.
    if (!NSD || !TCling__IsAutoLoadNamespaceCandidate(NSD)) {
       // After loading modules, we must update the redeclaration chains.
-      return findInGlobalModuleIndex(Name, /*loadFirstMatchOnly*/ false) && cast<Decl>(DC)->getMostRecentDecl();
+      return findInGlobalModuleIndex(Name, /*loadFirstMatchOnly*/ false) && D->getMostRecentDecl();
    }
 
    const DeclContext* primaryDC = NSD->getPrimaryContext();
    if (primaryDC != DC)
       return false;
 
-   Sema &SemaR = m_Interpreter->getSema();
    LookupResult R(SemaR, Name, SourceLocation(), Sema::LookupOrdinaryName);
    R.suppressDiagnostics();
    // We need the qualified name for TCling to find the right library.
@@ -425,7 +433,8 @@ bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
 
    SourceLocation Loc = Tag->getLocation();
    if (SemaR.getSourceManager().isInSystemHeader(Loc)) {
-      // We will not help the system headers, sorry.
+      // This declaration comes from a system module, we do not want to try
+      // autoparsing it and find instantiations in our ROOT modules.
       return false;
    }
 
