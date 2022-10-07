@@ -318,6 +318,7 @@ public:
 
       if (fKeyClass.empty()) return kActNone;
       if ((fKeyClass == "TCanvas"s) || (fKeyClass == "ROOT::Experimental::RCanvas"s)) return kActCanvas;
+      if ((fKeyClass == "TTree"s) || (fKeyClass == "TNtuple"s)) return kActTree;
       if (fKeyClass == "TGeoManager"s) return kActGeom;
       if (RProvider::CanDraw6(fKeyClass)) return kActDraw6;
       if (RProvider::CanDraw7(fKeyClass)) return kActDraw7;
@@ -352,6 +353,7 @@ public:
             return RProvider::CanDraw7(TClass::GetClass(fKeyClass.c_str(), kFALSE, kTRUE));
          }
          case kActCanvas: return (fKeyClass == "TCanvas"s) || (fKeyClass == "ROOT::Experimental::RCanvas"s);
+         case kActTree: return (fKeyClass == "TTree"s) || (fKeyClass == "TNtuple"s);
          case kActGeom: return (fKeyClass == "TGeoManager"s);
          default: return false;
       }

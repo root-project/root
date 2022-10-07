@@ -36,6 +36,13 @@ ROOT_LINKER_LIBRARY(ROOTBrowserGeomWidget
      ROOTEve
 )
 
+ROOT_LINKER_LIBRARY(ROOTBrowserTreeWidget
+     src/RBrowserTreeWidget.cxx
+  DEPENDENCIES
+     ROOTBrowserWidgets
+     ROOTTreeViewer
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
   HEADERS
     ROOT/RBrowser.hxx
@@ -54,6 +61,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
   DEPENDENCIES
     ROOTBrowsable
     ROOTWebDisplay
+    RIO
 )
 
 

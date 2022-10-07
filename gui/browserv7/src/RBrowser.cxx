@@ -180,6 +180,8 @@ RBrowser::RBrowser(bool use_rcanvas)
          kind = "tcanvas";
       else if (args.GetWidgetKind() == "REveGeomViewer")
          kind = "geom";
+      else if (args.GetWidgetKind() == "RTreeViewer")
+         kind = "tree";
 
       if (!fWebWindow || !fCatchWindowShow || kind.empty()) return false;
 
@@ -330,11 +332,12 @@ std::string RBrowser::ProcessDblClick(std::vector<std::string> &args)
 
    std::string widget_kind;
    switch(dflt_action) {
-      case Browsable::RElement::kActGeom: widget_kind = "geom"; break;
       case Browsable::RElement::kActDraw6: widget_kind = "tcanvas"; break;
       case Browsable::RElement::kActDraw7: widget_kind = "rcanvas"; break;
       case Browsable::RElement::kActEdit: widget_kind = "editor"; break;
       case Browsable::RElement::kActImage: widget_kind = "image"; break;
+      case Browsable::RElement::kActTree: widget_kind = "tree"; break;
+      case Browsable::RElement::kActGeom: widget_kind = "geom"; break;
       default: widget_kind.clear();
    }
 

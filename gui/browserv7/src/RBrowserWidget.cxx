@@ -50,11 +50,13 @@ std::shared_ptr<RBrowserWidget> RBrowserWidgetProvider::CreateWidget(const std::
    auto iter = map.find(kind);
    if (iter == map.end()) {
       // try to load necessary libraries
-      if (kind == "geom")
+      if (kind == "geom"s)
          gSystem->Load("libROOTBrowserGeomWidget");
-      else if (kind == "tcanvas")
+      else if (kind == "tree"s)
+         gSystem->Load("libROOTBrowserTreeWidget");
+      else if (kind == "tcanvas"s)
          gSystem->Load("libROOTBrowserTCanvasWidget");
-      else if (kind == "rcanvas")
+      else if (kind == "rcanvas"s)
          gSystem->Load("libROOTBrowserRCanvasWidget");
       iter = map.find(kind);
       if (iter == map.end())
@@ -66,18 +68,19 @@ std::shared_ptr<RBrowserWidget> RBrowserWidgetProvider::CreateWidget(const std::
 ///////////////////////////////////////////////////////////////
 /// Create specified widget for existing object
 
-
 std::shared_ptr<RBrowserWidget> RBrowserWidgetProvider::CreateWidgetFor(const std::string &kind, const std::string &name, std::shared_ptr<Browsable::RElement> &element)
 {
    auto &map = GetMap();
    auto iter = map.find(kind);
    if (iter == map.end()) {
       // try to load necessary libraries
-      if (kind == "geom")
+      if (kind == "geom"s)
          gSystem->Load("libROOTBrowserGeomWidget");
-      else if (kind == "tcanvas")
+      else if (kind == "tree"s)
+         gSystem->Load("libROOTBrowserTreeWidget");
+      else if (kind == "tcanvas"s)
          gSystem->Load("libROOTBrowserTCanvasWidget");
-      else if (kind == "rcanvas")
+      else if (kind == "rcanvas"s)
          gSystem->Load("libROOTBrowserRCanvasWidget");
       iter = map.find(kind);
       if (iter == map.end())
