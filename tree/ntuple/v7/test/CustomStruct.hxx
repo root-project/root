@@ -90,4 +90,11 @@ struct StructWithEnums : BaseOfStructWithEnums {
    int b = static_cast<int>(DeclEC::E42);
 };
 
+/// A class that behaves as a collection accessed through the `TVirtualCollectionProxy` interface
+template <typename T>
+struct StructUsingCollectionProxy {
+   using ValueType = T;
+   std::vector<T> v; //! do not accidentally store via RClassField
+};
+
 #endif
