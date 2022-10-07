@@ -9,12 +9,12 @@
 ################################################################
 
 if(dataframe)
-    list(APPEND PYROOT_EXTRA_PYSOURCE
+    list(APPEND PYROOT_EXTRA_PY2_PY3_SOURCE
         ROOT/_pythonization/_rdf_utils.py
         ROOT/_pythonization/_rdataframe.py
         ROOT/_pythonization/_rdfdescription.py)
     if(PYTHON_VERSION_STRING_Development_Main VERSION_GREATER_EQUAL 3.7)
-      list(APPEND PYROOT_EXTRA_PYSOURCE
+      list(APPEND PYROOT_EXTRA_PY3_SOURCE
           ROOT/_pythonization/_rdf_conversion_maps.py
           ROOT/_pythonization/_rdf_pyz.py)
     endif()
@@ -28,7 +28,7 @@ endif()
 list(APPEND PYROOT_EXTRA_HEADERS
      inc/TPyDispatcher.h)
 
-set(py_sources
+set(py2_py3_sources
   ROOT/_application.py
   ROOT/_facade.py
   ROOT/__init__.py
@@ -93,7 +93,11 @@ set(py_sources
   ROOT/_pythonization/_ttree.py
   ROOT/_pythonization/_tvector3.py
   ROOT/_pythonization/_tvectort.py
-  ${PYROOT_EXTRA_PYSOURCE}
+  ${PYROOT_EXTRA_PY2_PY3_SOURCE}
+)
+
+set(py3_sources
+  ${PYROOT_EXTRA_PY3_SOURCE}
 )
 
 set(cpp_sources
@@ -124,7 +128,7 @@ set(ROOTPySrcDir python/ROOT)
 set(ROOT_headers_dir inc)
 
 # Add custom rules to copy the Python sources into the build directory
-foreach(py_source ${py_sources})
+foreach(py_source ${py2_py3_sources} ${py3_sources})
   add_custom_command(
       OUTPUT ${localruntimedir}/${py_source}
       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/python/${py_source}
@@ -179,10 +183,19 @@ foreach(val RANGE ${how_many_pythons})
     target_compile_options(${libname} PRIVATE -Wno-strict-aliasing)
   endif()
 
+  set(py_sources ${py2_py3_sources})
+  if(${python_major_version_string} EQUAL 3)
+    # If Python3, compile Python3-only compatible files too
+    list(APPEND py_sources ${py3_sources})
+  endif()
+
   # Compile .py files
   foreach(py_source ${py_sources})
-    install(CODE "execute_process(COMMAND ${python_executable} -m py_compile ${localruntimedir}/${py_source})")
-    install(CODE "execute_process(COMMAND ${python_executable} -O -m py_compile ${localruntimedir}/${py_source})")
+    add_custom_command(TARGET ${libname}
+                       COMMAND ${python_executable} -m py_compile ${localruntimedir}/${py_source}
+                       COMMAND ${python_executable} -O -m py_compile ${localruntimedir}/${py_source}
+                       DEPENDS ${localruntimedir}/${py_source}
+                       COMMENT "Compiling PyROOT source ${py_source} for Python ${python_major_version_string}.${python_under_version_string}")
   endforeach()
 
   # Create meta-target PyROOT2 and PyROOT3 (INTERFACE library)
