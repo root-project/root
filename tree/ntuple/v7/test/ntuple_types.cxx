@@ -394,6 +394,134 @@ TEST(RNTuple, TClassTemplatedBase)
    }
 }
 
+namespace {
+/// Simple collection proxy for `StructUsingCollectionProxy<T>`
+template <typename CollectionT>
+struct SimpleCollectionProxy : public TVirtualCollectionProxy {
+   CollectionT *fObject = nullptr;
+
+   SimpleCollectionProxy()
+      : TVirtualCollectionProxy(TClass::GetClass(ROOT::Internal::GetDemangledTypeName(typeid(CollectionT)).c_str()))
+   {
+   }
+   SimpleCollectionProxy(const SimpleCollectionProxy &) : SimpleCollectionProxy() {}
+
+   TVirtualCollectionProxy *Generate() const override { return new SimpleCollectionProxy<CollectionT>(*this); }
+   Int_t GetCollectionType() const override { return ROOT::kSTLvector; }
+   ULong_t GetIncrement() const override { return sizeof(typename CollectionT::ValueType); }
+   UInt_t Sizeof() const override { return sizeof(CollectionT); }
+   Bool_t HasPointers() const override { return kFALSE; }
+
+   TClass *GetValueClass() const override
+   {
+      if constexpr (std::is_fundamental<typename CollectionT::ValueType>::value)
+         return nullptr;
+      return TClass::GetClass(ROOT::Internal::GetDemangledTypeName(typeid(typename CollectionT::ValueType)).c_str());
+   }
+   EDataType GetType() const override
+   {
+      if constexpr (std::is_same<typename CollectionT::ValueType, char>::value)
+         return EDataType::kChar_t;
+      ;
+      if constexpr (std::is_same<typename CollectionT::ValueType, float>::value)
+         return EDataType::kFloat_t;
+      ;
+      return EDataType::kOther_t;
+   }
+
+   void PushProxy(void *objectstart) override { fObject = static_cast<CollectionT *>(objectstart); }
+   void PopProxy() override { fObject = nullptr; }
+
+   void *At(UInt_t idx) override { return &fObject->v[idx]; }
+   void Clear(const char * /*opt*/ = "") override { fObject->v.clear(); }
+   UInt_t Size() const override { return fObject->v.size(); }
+   void *Allocate(UInt_t /*n*/, Bool_t /*forceDelete*/) override { return nullptr; }
+   void Commit(void *) override {}
+   void Insert(const void *data, void *container, size_t size) override
+   {
+      auto p = static_cast<const typename CollectionT::ValueType *>(data);
+      for (size_t i = 0; i < size; ++i) {
+         static_cast<CollectionT *>(container)->v.push_back(p[i]);
+      }
+   }
+
+   TStreamerInfoActions::TActionSequence *
+   GetConversionReadMemberWiseActions(TClass * /*oldClass*/, Int_t /*version*/) override
+   {
+      return nullptr;
+   }
+   TStreamerInfoActions::TActionSequence *GetReadMemberWiseActions(Int_t /*version*/) override { return nullptr; }
+   TStreamerInfoActions::TActionSequence *GetWriteMemberWiseActions() override { return nullptr; }
+
+   CreateIterators_t GetFunctionCreateIterators(Bool_t /*read*/ = kTRUE) override { return nullptr; }
+   CopyIterator_t GetFunctionCopyIterator(Bool_t /*read*/ = kTRUE) override { return nullptr; }
+   Next_t GetFunctionNext(Bool_t /*read*/ = kTRUE) override { return nullptr; }
+   DeleteIterator_t GetFunctionDeleteIterator(Bool_t /*read*/ = kTRUE) override { return nullptr; }
+   DeleteTwoIterators_t GetFunctionDeleteTwoIterators(Bool_t /*read*/ = kTRUE) override { return nullptr; }
+};
+} // namespace
+
+namespace ROOT::Experimental {
+   template <>
+   struct IsCollectionProxy<StructUsingCollectionProxy<char>> : std::true_type {};
+   template <>
+   struct IsCollectionProxy<StructUsingCollectionProxy<float>> : std::true_type {};
+}
+
+TEST(RNTuple, TVirtualCollectionProxy)
+{
+   SimpleCollectionProxy<StructUsingCollectionProxy<char>> proxyC;
+   SimpleCollectionProxy<StructUsingCollectionProxy<float>> proxyF;
+
+   auto klassC = TClass::GetClass("StructUsingCollectionProxy<char>");
+   klassC->CopyCollectionProxy(proxyC);
+   auto klassF = TClass::GetClass("StructUsingCollectionProxy<float>");
+   klassF->CopyCollectionProxy(proxyF);
+
+   auto field = RField<StructUsingCollectionProxy<float>>("c");
+   EXPECT_EQ(sizeof(StructUsingCollectionProxy<float>), field.GetValueSize());
+
+   FileRaii fileGuard("test_ntuple_tvirtualcollectionproxy.ntuple");
+   {
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("C", "StructUsingCollectionProxy<char>").Unwrap());
+      model->AddField(RFieldBase::Create("F", "StructUsingCollectionProxy<float>").Unwrap());
+
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+      auto fieldC = ntuple->GetModel()->GetDefaultEntry()->Get<StructUsingCollectionProxy<char>>("C");
+      auto fieldF = ntuple->GetModel()->GetDefaultEntry()->Get<StructUsingCollectionProxy<float>>("F");
+      for (unsigned i = 0; i < 1000; ++i) {
+         if ((i % 100) == 0) {
+            fieldC->v.clear();
+            fieldF->v.clear();
+         }
+         fieldC->v.push_back(42);
+         fieldF->v.push_back(static_cast<float>(i % 100));
+         ntuple->Fill();
+      }
+   }
+
+   {
+      auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
+      EXPECT_EQ(1000U, ntuple->GetNEntries());
+      auto viewC = ntuple->GetView<StructUsingCollectionProxy<char>>("C");
+      auto viewF = ntuple->GetView<StructUsingCollectionProxy<float>>("F");
+      for (auto i : ntuple->GetEntryRange()) {
+         auto &collC = viewC(i);
+         auto &collF = viewF(i);
+
+         EXPECT_EQ((i % 100) + 1, collC.v.size());
+         for (unsigned j = 0; j < collC.v.size(); ++j) {
+            EXPECT_EQ(42, collC.v[j]);
+         }
+         EXPECT_EQ((i % 100) + 1, collF.v.size());
+         for (unsigned j = 0; j < collF.v.size(); ++j) {
+            EXPECT_EQ(static_cast<float>(j), collF.v[j]);
+         }
+      }
+   }
+}
+
 TEST(RNTuple, Enums)
 {
    FileRaii fileGuard("test_ntuple_enums.ntuple");

@@ -20,4 +20,7 @@
 #pragma link C++ class BaseOfStructWithEnums + ;
 #pragma link C++ class StructWithEnums + ;
 
+#pragma link C++ class StructUsingCollectionProxy<char> + ;
+#pragma link C++ class StructUsingCollectionProxy<float> + ;
+
 #endif
