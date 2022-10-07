@@ -1,0 +1,33 @@
+<mvc:View height="100%" width="100%"
+   class="sapUiSizeCompact sapUiResponsivePadding--header sapUiResponsivePadding--content sapUiResponsivePadding--footer sapUiResponsivePadding--floatingFooter"
+   controllerName="rootui5.tree.controller.TreeViewer"
+   xmlns="sap.m"
+   xmlns:mvc="sap.ui.core.mvc"
+   xmlns:core="sap.ui.core"
+   xmlns:l="sap.ui.layout"
+   xmlns:t="sap.ui.table">
+   <Page id="treeDraw" title="Tree viewer" showNavButton="false" floatingFooter="true"
+       showFooter="true" showSubHeader="false" showHeader="true" class="sapUiStdPage">
+       <content>
+       <HBox>
+         <VBox>
+           <Button text="Toggle floating footer" press="toggleFooter"/>
+           <Button text="Toggle footer visibility" press="toggleVisibility"/>
+           <Button text="Add Panel" press="addPanel"/>
+         </VBox>
+         <VBox>
+           <Button text="Remove Panel" press="removePanel"/>
+         </VBox>
+       </HBox>
+
+       </content>
+
+       <footer>
+         <OverflowToolbar>
+            <ToolbarSpacer/>
+            <Button type="Accept" text="Draw" press="performDraw"/>
+            <Button type="Reject" text="Quit" press="onQuitRootPress" visible="{/not_embeded}"/>
+         </OverflowToolbar>
+      </footer>
+   </Page>
+</mvc:View>
