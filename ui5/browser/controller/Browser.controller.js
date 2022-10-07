@@ -275,6 +275,37 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       /* =========================================== */
+      /* =============== Tree Viewer =============== */
+      /* =========================================== */
+
+      createTreeViewer: function(url, name, title) {
+         const oTabContainer = this.getView().byId("tabContainer");
+
+         let item = new TabContainerItem(name, {
+            icon: "sap-icon://tree",
+            name: "Tree Viewer",
+            key: name,
+            additionalText: title
+         });
+
+         //item.setModel(new JSONModel({
+         //   url: dummy_url,
+         //   name, title
+         //}));
+
+         oTabContainer.addItem(item);
+
+         this.jsroot.connectWebWindow({
+            kind: this.websocket.kind,
+            href: this.websocket.getHRef(url),
+            user_args: { nobrowser: true }
+         }).then(handle => XMLView.create({
+            viewName: "rootui5.tree.view.TreeViewer",
+            viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
+         })).then(oView => item.addContent(oView));
+      },
+
+      /* =========================================== */
       /* =============== Code Editor =============== */
       /* =========================================== */
 
@@ -1056,6 +1087,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          switch(kind) {
             case "editor": this.createCodeEditor(par1, par2, par3); break;
             case "image": this.createImageViewer(par1, par2, par3); break;
+            case "tree": this.createTreeViewer(par1, par2, par3); break;
             case "geom": this.createGeomViewer(par1, par2, par3); break;
             case "catched": this.createCatchedWidget(par1, par2, par3); break;
             default: this.createCanvas(kind, par1, par2, par3);
@@ -1085,17 +1117,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          import('/rootui5sys/eve7/eve.mjs')
            .then(h => h.initEVE(this.jsroot.source_dir))
-           .then(() =>
-              this.jsroot.connectWebWindow({
-                 kind: this.websocket.kind,
-                 href: this.websocket.getHRef(url),
-                 user_args: { nobrowser: true }
-              }))
-           .then(handle => XMLView.create({
-             viewName: "rootui5.eve7.view.GeomViewer",
-             viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
-           }))
-           .then(oView => item.addContent(oView));
+           .then(() => this.jsroot.connectWebWindow({
+               kind: this.websocket.kind,
+               href: this.websocket.getHRef(url),
+               user_args: { nobrowser: true }
+           })).then(handle => XMLView.create({
+               viewName: "rootui5.eve7.view.GeomViewer",
+               viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
+           })).then(oView => item.addContent(oView));
       },
 
       createCanvas: async function(kind, url, name, title) {

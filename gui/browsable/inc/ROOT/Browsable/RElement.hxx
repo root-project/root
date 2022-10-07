@@ -54,6 +54,7 @@ public:
       kActDraw6,   ///< can be drawn inside ROOT6 canvas
       kActDraw7,   ///< can be drawn inside ROOT7 canvas
       kActCanvas,  ///< indicate that it is canvas and should be drawn directly
+      kActTree,    ///< can be shown in tree viewer
       kActGeom     ///< can be shown in geometry viewer
    };
 
