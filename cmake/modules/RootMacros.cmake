@@ -522,14 +522,9 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endif(ARG_MODULE)
 
   # modules.idx deps
-  if (TARGET modules_idx)
-    add_dependencies(modules_idx_marker ${library_target_name})
-    add_dependencies(modules_idx ${library_target_name})
-  else()
-    get_property(modules_idx_deps GLOBAL PROPERTY modules_idx_deps_property)
-    list(APPEND modules_idx_deps ${library_target_name})
-    set_property(GLOBAL PROPERTY modules_idx_deps_property "${modules_idx_deps}")
-  endif()
+  get_property(local_modules_idx_deps GLOBAL PROPERTY modules_idx_deps_property)
+  list(APPEND local_modules_idx_deps ${library_target_name})
+  set_property(GLOBAL PROPERTY modules_idx_deps_property "${local_modules_idx_deps}")
 
   #---Set the library output directory-----------------------
   ROOT_GET_LIBRARY_OUTPUT_DIR(library_output_dir)

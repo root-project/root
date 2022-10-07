@@ -516,9 +516,6 @@ endif()
 if(runtime_cxxmodules)
   ROOT_GET_LIBRARY_OUTPUT_DIR(library_output_dir)
   get_property(modules_idx_deps GLOBAL PROPERTY modules_idx_deps_property)
-  # This custom target allows to add dependencies to the modules.idx file after the
-  # facts.
-  add_custom_target(modules_idx_marker)
   add_custom_command(OUTPUT ${library_output_dir}/modules.idx
                      COMMAND ${CMAKE_COMMAND} -E remove -f modules.idx modules.timestamp
                      COMMAND ${ld_library_path}=${library_output_dir}:$ENV{${ld_library_path}}
@@ -526,7 +523,7 @@ if(runtime_cxxmodules)
                              $<TARGET_FILE:root.exe> -l -q -b
                      WORKING_DIRECTORY ${library_output_dir}
                      DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts
-                             modules_idx_marker ${modules_idx_deps})
+                             ${modules_idx_deps})
   add_custom_target(modules_idx ALL DEPENDS ${library_output_dir}/modules.idx)
   add_dependencies(modules_idx ${modules_idx_deps})
   set_property(TARGET modules_idx PROPERTY modules_idx_file ${library_output_dir}/modules.idx)
