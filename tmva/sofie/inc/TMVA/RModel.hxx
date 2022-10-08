@@ -137,13 +137,8 @@ public:
 
    bool UseSession() const { return fUseSession;}
 
-   ~RModel(){
-      /*
-      for (auto& i: fInitializedTensors){
-         free(i.second.data);
-      }
-      */
-   }
+   ~RModel() {}
+
    ClassDef(RModel,1);
 };
 
