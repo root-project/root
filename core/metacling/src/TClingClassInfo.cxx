@@ -813,6 +813,7 @@ bool TClingClassInfo::IsBase(const char *name) const
 
 bool TClingClassInfo::IsEnum(cling::Interpreter *interp, const char *name)
 {
+   R__LOCKGUARD(gInterpreterMutex);
    // Note: This is a static member function.
    TClingClassInfo info(interp, name);
    if (info.IsValid() && (info.Property() & kIsEnum)) {
