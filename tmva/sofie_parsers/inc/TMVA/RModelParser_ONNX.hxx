@@ -1,30 +1,73 @@
 #ifndef TMVA_SOFIE_RMODELPARSER_ONNX
 #define TMVA_SOFIE_RMODELPARSER_ONNX
 
-
-
-#include "TMVA/SOFIE_common.hxx"
 #include "TMVA/RModel.hxx"
-#include "TMVA/OperatorList.hxx"
 
-#include <string>
-#include <fstream>
 #include <memory>
-#include <ctime>
+#include <functional>
 #include <unordered_map>
 
-namespace TMVA{
-namespace Experimental{
-namespace SOFIE{
+// forward declaration
+namespace onnx {
+class NodeProto;
+class GraphProto;
+} // namespace onnx
 
-class RModelParser_ONNX{
+namespace TMVA {
+namespace Experimental {
+namespace SOFIE {
+
+class RModelParser_ONNX;
+
+using ParserFuncSignature =
+   std::function<std::unique_ptr<ROperator>(RModelParser_ONNX & /*parser*/, const onnx::NodeProto & /*nodeproto*/)>;
+using ParserFuseFuncSignature =
+   std::function<std::unique_ptr<ROperator> (RModelParser_ONNX& /*parser*/, const onnx::NodeProto& /*firstnode*/, const onnx::NodeProto& /*secondnode*/)>;
+
+class RModelParser_ONNX {
 public:
+   struct OperatorsMapImpl;
+
+private:
+   bool fVerbose = false;
+   // Registered operators
+   std::unique_ptr<OperatorsMapImpl> fOperatorsMapImpl;
+   // Type of the tensors
+   std::unordered_map<std::string, ETensorType> fTensorTypeMap;
+
+public:
+   // Register an ONNX operator
+   void RegisterOperator(const std::string &name, ParserFuncSignature func);
+
+   // Check if the operator is registered
+   bool IsRegisteredOperator(const std::string &name);
+
+   // List of registered operators
+   std::vector<std::string> GetRegisteredOperators();
+
+   // Set the type of the tensor
+   void RegisterTensorType(const std::string & /*name*/, ETensorType /*type*/);
+
+   // Check if the type of the tensor is registered
+   bool IsRegisteredTensorType(const std::string & /*name*/);
+
+   // Get the type of the tensor
+   ETensorType GetTensorType(const std::string &name);
+
+   // Parse the index'th node from the ONNX graph
+   std::unique_ptr<ROperator> ParseOperator(const size_t /*index*/, const onnx::GraphProto & /*graphproto*/,
+                                            const std::vector<size_t> & /*nodes*/);
+
+public:
+   RModelParser_ONNX() noexcept;
+
    RModel Parse(std::string filename, bool verbose = false);
+
+   ~RModelParser_ONNX();
 };
 
+} // namespace SOFIE
+} // namespace Experimental
+} // namespace TMVA
 
-}//SOFIE
-}//Experimental
-}//TMVA
-
-#endif //TMVA_SOFIE_RMODELPARSER_ONNX
+#endif // TMVA_SOFIE_RMODELPARSER_ONNX
