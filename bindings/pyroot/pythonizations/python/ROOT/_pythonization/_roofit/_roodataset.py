@@ -56,7 +56,7 @@ class RooDataSet(object):
         return self._plotOnXY(*args, **kwargs)
 
     @staticmethod
-    def from_numpy(data, variables, name=None, title=None, weight_name=None, clip_to_limits=True):
+    def from_numpy(data, variables, name=None, title=None, weight_name=None):
         """Create a RooDataSet from a dictionary of numpy arrays.
         Args:
             data (dict): Dictionary with strings as keys and numpy arrays as
@@ -71,12 +71,6 @@ class RooDataSet(object):
                          empty string.
             weight_name (str): Key of the array in `data` that will be used for
                                the dataset weights.
-            clip_to_limits (bool): When entries are added to a RooDataSet, the
-                                   standard RooFit behavior is to clip the
-                                   values to the limits specified by the
-                                   binning of the RooFit variables. To save
-                                   computational cost, you can disable this
-                                   clipping if not necessary in your workflow.
 
         Returns:
             RooDataSet
@@ -93,15 +87,43 @@ class RooDataSet(object):
         else:
             dataset = ROOT.RooDataSet(name, title, variables, weight_name)
 
+        def log_warning(s):
+            """Log a string to the RooFit message log for the WARNING level on
+            the DataHandling topic.
+            """
+            log = ROOT.RooMsgService.instance().log(dataset, ROOT.RooFit.WARNING, ROOT.RooFit.DataHandling)
+            b = bytes(s, "utf-8")
+            log.write(b, len(b))
+            log.write("\n", 1)
+
+        range_mask = np.ones_like(list(data.values())[0], dtype=bool)
+
+        def in_range(arr, variable):
+
+            # For categories, we need to check whether the elements of the
+            # array are in the set of category state indices
+            if variable.isCategory():
+                return np.isin(arr, [state.second for state in variable])
+
+            return (arr >= variable.getMin()) & (arr <= variable.getMax())
+
+        # Get a mask that filters out all entries that are outside the variable definition range
+        range_mask = np.logical_and.reduce([in_range(data[v.GetName()], v) for v in variables])
+        # If all entries are in the range, we don't need a mask
+        if range_mask.all():
+            range_mask = None
+
+        def select_range_and_change_type(arr, dtype):
+            if range_mask is not None:
+                arr = arr[range_mask]
+            arr = arr if arr.dtype == dtype else np.array(arr, dtype=dtype)
+            return arr
+
         for real in dataset.store().realStoreList():
             vec = real.data()
             arg = real.bufArg()
-            arr = data[arg.GetName()]
+            arr = select_range_and_change_type(data[arg.GetName()], np.float64)
 
-            if clip_to_limits:
-                arr = np.clip(arr, a_min=arg.getMin(), a_max=arg.getMax())
-
-            arr = arr if arr.dtype == np.float64 else np.array(arr, dtype=np.float64)
             vec.resize(len(arr))
 
             beg = arr.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
@@ -111,8 +133,8 @@ class RooDataSet(object):
 
         for cat in dataset.store().catStoreList():
             vec = cat.data()
-            arr = data[cat.bufArg().GetName()]
-            arr = arr if arr.dtype == np.int32 else np.array(arr, dtype=np.int32)
+            arg = cat.bufArg()
+            arr = select_range_and_change_type(data[arg.GetName()], np.int32)
             vec.resize(len(arr))
 
             beg = arr.ctypes.data_as(ctypes.POINTER(ctypes.c_int))
@@ -131,6 +153,10 @@ class RooDataSet(object):
 
         for cat in dataset.store().catStoreList():
             assert n_entries == cat.size()
+
+        if range_mask is not None:
+            n_out_of_range = len(range_mask) - range_mask.sum()
+            log_warning("RooDataSet.from_numpy({0}) Ignored {1} out-of-range events".format(name, n_out_of_range))
 
         return dataset
 
@@ -195,7 +221,7 @@ class RooDataSet(object):
         return data
 
     @staticmethod
-    def from_pandas(df, variables, name=None, title=None, weight_name=None, clip_to_limits=True):
+    def from_pandas(df, variables, name=None, title=None, weight_name=None):
         """Create a RooDataSet from a pandas DataFrame.
         Args:
             df (pandas.DataFrame): Pandas DataFrame to import.
@@ -209,12 +235,6 @@ class RooDataSet(object):
                          empty string.
             weight_name (str): Key of the array in `data` that will be used for
                                the dataset weights.
-            clip_to_limits (bool): When entries are added to a RooDataSet, the
-                                   standard RooFit behavior is to clip the
-                                   values to the limits specified by the
-                                   binning of the RooFit variables. To save
-                                   computational cost, you can disable this
-                                   clipping if not necessary in your workflow.
 
         Returns:
             RooDataSet
@@ -224,9 +244,7 @@ class RooDataSet(object):
         data = {}
         for column in df:
             data[column] = df[column].values
-        return ROOT.RooDataSet.from_numpy(
-            data, variables=variables, name=name, title=title, weight_name=weight_name, clip_to_limits=clip_to_limits
-        )
+        return ROOT.RooDataSet.from_numpy(data, variables=variables, name=name, title=title, weight_name=weight_name)
 
     def to_pandas(self, compute_derived_weight=False):
         """Export a RooDataSet to a pandas DataFrame.
