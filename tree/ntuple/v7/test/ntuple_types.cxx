@@ -466,17 +466,22 @@ namespace ROOT::Experimental {
    struct IsCollectionProxy<StructUsingCollectionProxy<char>> : std::true_type {};
    template <>
    struct IsCollectionProxy<StructUsingCollectionProxy<float>> : std::true_type {};
+   template <>
+   struct IsCollectionProxy<StructUsingCollectionProxy<CustomStruct>> : std::true_type {};
 }
 
 TEST(RNTuple, TVirtualCollectionProxy)
 {
    SimpleCollectionProxy<StructUsingCollectionProxy<char>> proxyC;
    SimpleCollectionProxy<StructUsingCollectionProxy<float>> proxyF;
+   SimpleCollectionProxy<StructUsingCollectionProxy<CustomStruct>> proxyS;
 
    auto klassC = TClass::GetClass("StructUsingCollectionProxy<char>");
    klassC->CopyCollectionProxy(proxyC);
    auto klassF = TClass::GetClass("StructUsingCollectionProxy<float>");
    klassF->CopyCollectionProxy(proxyF);
+   auto klassS = TClass::GetClass("StructUsingCollectionProxy<CustomStruct>");
+   klassS->CopyCollectionProxy(proxyS);
 
    auto field = RField<StructUsingCollectionProxy<float>>("c");
    EXPECT_EQ(sizeof(StructUsingCollectionProxy<float>), field.GetValueSize());
@@ -486,17 +491,30 @@ TEST(RNTuple, TVirtualCollectionProxy)
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("C", "StructUsingCollectionProxy<char>").Unwrap());
       model->AddField(RFieldBase::Create("F", "StructUsingCollectionProxy<float>").Unwrap());
+      model->AddField(RFieldBase::Create("S", "StructUsingCollectionProxy<CustomStruct>").Unwrap());
 
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
       auto fieldC = ntuple->GetModel()->GetDefaultEntry()->Get<StructUsingCollectionProxy<char>>("C");
       auto fieldF = ntuple->GetModel()->GetDefaultEntry()->Get<StructUsingCollectionProxy<float>>("F");
+      auto fieldS = ntuple->GetModel()->GetDefaultEntry()->Get<StructUsingCollectionProxy<CustomStruct>>("S");
       for (unsigned i = 0; i < 1000; ++i) {
          if ((i % 100) == 0) {
             fieldC->v.clear();
             fieldF->v.clear();
+            fieldS->v.clear();
          }
          fieldC->v.push_back(42);
          fieldF->v.push_back(static_cast<float>(i % 100));
+
+         std::vector<float> v1;
+         for (unsigned j = 0, nItems = (i % 10); j < nItems; ++j) {
+            v1.push_back(static_cast<float>(j));
+         }
+         fieldS->v.push_back(CustomStruct{
+            /*a=*/static_cast<float>(i % 100),
+            /*v1=*/std::move(v1),
+            /*v2=*/std::vector<std::vector<float>>{{static_cast<float>(i % 100)}, {static_cast<float>((i % 100) + 1)}},
+            /*s=*/"hello" + std::to_string(i % 100)});
          ntuple->Fill();
       }
    }
@@ -506,9 +524,11 @@ TEST(RNTuple, TVirtualCollectionProxy)
       EXPECT_EQ(1000U, ntuple->GetNEntries());
       auto viewC = ntuple->GetView<StructUsingCollectionProxy<char>>("C");
       auto viewF = ntuple->GetView<StructUsingCollectionProxy<float>>("F");
+      auto viewS = ntuple->GetView<StructUsingCollectionProxy<CustomStruct>>("S");
       for (auto i : ntuple->GetEntryRange()) {
          auto &collC = viewC(i);
          auto &collF = viewF(i);
+         auto &collS = viewS(i);
 
          EXPECT_EQ((i % 100) + 1, collC.v.size());
          for (unsigned j = 0; j < collC.v.size(); ++j) {
@@ -517,6 +537,18 @@ TEST(RNTuple, TVirtualCollectionProxy)
          EXPECT_EQ((i % 100) + 1, collF.v.size());
          for (unsigned j = 0; j < collF.v.size(); ++j) {
             EXPECT_EQ(static_cast<float>(j), collF.v[j]);
+         }
+
+         EXPECT_EQ((i % 100) + 1, collS.v.size());
+         for (unsigned j = 0; j < collS.v.size(); ++j) {
+            const auto &item = collS.v[j];
+            EXPECT_EQ(static_cast<float>(j), item.a);
+            for (unsigned k = 0; k < item.v1.size(); ++k) {
+               EXPECT_EQ(static_cast<float>(k), item.v1[k]);
+            }
+            EXPECT_EQ(static_cast<float>(j), item.v2[0][0]);
+            EXPECT_EQ(static_cast<float>(j + 1), item.v2[1][0]);
+            EXPECT_EQ("hello" + std::to_string(j), item.s);
          }
       }
    }
