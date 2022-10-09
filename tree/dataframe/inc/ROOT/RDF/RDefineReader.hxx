@@ -29,7 +29,7 @@ class R__CLING_PTRCHECK(off) RDefineReader final : public ROOT::Detail::RDF::RCo
    /// Non-owning reference to the node responsible for the defined column.
    RDFDetail::RDefineBase &fDefine;
 
-   /// Non-owning ptr to the defined value.
+   /// Non-owning ptr to the beginning of a contiguous array of values.
    void *fValuePtr = nullptr;
 
    /// The slot this value belongs to.

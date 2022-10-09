@@ -57,8 +57,7 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
    using ret_type = typename CallableTraits<F>::ret_type;
    // Avoid instantiating vector<bool> as `operator[]` returns temporaries in that case. Use std::deque instead.
-   using ValuesPerSlot_t =
-      std::conditional_t<std::is_same<ret_type, bool>::value, std::deque<ret_type>, std::vector<ret_type>>;
+   using ValuesPerSlot_t = std::vector<ROOT::RVec<ret_type>>;
 
    F fExpression;
    ValuesPerSlot_t fLastResults;
@@ -106,6 +105,8 @@ public:
       : RDefineBase(name, type, colRegister, lm, columns, variationName), fExpression(std::move(expression)),
         fLastResults(lm.GetNSlots() * RDFInternal::CacheLineStep<ret_type>()), fValues(lm.GetNSlots())
    {
+      for (auto &r : fLastResults)
+         r.resize(1u); // for now we don't really have bulks
       fLoopManager->Register(this);
    }
 
@@ -123,7 +124,7 @@ public:
    /// Return the (type-erased) address of the Define'd value for the given processing slot.
    void *GetValuePtr(unsigned int slot) final
    {
-      return static_cast<void *>(&fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()]);
+      return static_cast<void *>(fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()].data());
    }
 
    /// Update the value at the address returned by GetValuePtr with the content corresponding to the given entry
@@ -138,12 +139,11 @@ public:
 
       std::for_each(fValues[slot].begin(), fValues[slot].end(), [&requestedMask](auto *v) { v->Load(requestedMask); });
 
-      // TODO change fLastResults to an array of results per slot
-      auto &result = fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()];
+      auto *results = fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()].data();
       const std::size_t bulkSize = 1; // for now we don't actually have bulks
       for (std::size_t i = 0ul; i < bulkSize; ++i) {
          if (requestedMask[i] && !valueMask[i]) { // we don't have a value for this entry yet
-            result = EvalExpr(slot, i, valueMask.FirstEntry() + i, ColumnTypes_t{}, TypeInd_t{}, ExtraArgsTag{});
+            results[i] = EvalExpr(slot, i, valueMask.FirstEntry() + i, ColumnTypes_t{}, TypeInd_t{}, ExtraArgsTag{});
             valueMask[i] = true;
          }
       }
