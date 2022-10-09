@@ -99,7 +99,7 @@ double RooPoisson::analyticalIntegral(Int_t code, const char* rangeName) const
     if (xmax < 0. || xmax < xmin) {
       return 0.;
     }
-    if (!x.hasMax() || RooNumber::isInfinite(xmax)) {
+    if ((!x.hasMax() || RooNumber::isInfinite(xmax)) && xmin <= 0.0) {
       //Integrating the full Poisson distribution here
       return 1.;
     }
