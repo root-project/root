@@ -868,8 +868,8 @@ TEST(RDataFrameUtils, RegexWithFriendsInJittedFilters)
    t.Branch("x", &x);
    t.Fill();
    TTree fr("fr", "fr");
-   x = -42;
-   fr.Branch("x", &x);
+   int frx = -42;
+   fr.Branch("x", &frx);
    fr.Fill();
    t.AddFriend(&fr);
    ROOT::RDataFrame df(t);
