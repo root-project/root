@@ -14,6 +14,7 @@
 
 #include "ROOT/RTreeViewer.hxx"
 #include "TTree.h"
+#include "ROOT/RBrowser.hxx"
 
 #include "TBufferJSON.h"
 
@@ -34,6 +35,9 @@ public:
    {
       fViewer.SetTitle(name);
       fViewer.SetShowHierarchy(false);
+      fViewer.SetCallback([this](const std::string &canvas_name) {
+         GetBrowser()->ActivateWidget(canvas_name, "tcanvas");
+      });
    }
 
    virtual ~RBrowserTreeWidget() = default;
@@ -43,7 +47,6 @@ public:
    std::string GetUrl() override { return "../"s + fViewer.GetWindowAddr() + "/"s; }
 
    void Show(const std::string &arg) override { fViewer.Show(arg); }
-
 
    bool DrawElement(std::shared_ptr<Browsable::RElement> &elem, const std::string &, bool) override
    {

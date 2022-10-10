@@ -40,6 +40,7 @@ ROOT_LINKER_LIBRARY(ROOTBrowserTreeWidget
      src/RBrowserTreeWidget.cxx
   DEPENDENCIES
      ROOTBrowserWidgets
+     ROOTBrowserv7
      ROOTTreeViewer
 )
 

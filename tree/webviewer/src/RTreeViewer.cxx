@@ -183,5 +183,14 @@ void RTreeViewer::InvokeTreeDraw(const std::string &json)
 
    fTree->Draw(expr.c_str());
 
-   if (gPad) gPad->Update();
+   std::string canv_name;
+
+   if (gPad) {
+      gPad->Update();
+      canv_name = gPad->GetName();
+   }
+
+   // at the end invoke callback
+   if (fCallback)
+      fCallback(canv_name);
 }

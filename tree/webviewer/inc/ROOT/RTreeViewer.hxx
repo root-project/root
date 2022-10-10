@@ -16,6 +16,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <functional>
 
 class TTree;
 
@@ -28,6 +29,8 @@ class REveManager;
 class RTreeViewer {
 
 public:
+
+   using PerformDrawCallback_t = std::function<void(const std::string &)>;
 
    struct RBranchInfo {
       std::string fName, fTitle;
@@ -50,6 +53,8 @@ public:
 
    void SetTree(TTree *tree);
 
+   void SetCallback(PerformDrawCallback_t func) { fCallback = func; }
+
    /** Configures default hierarchy browser visibility, only has effect before showing web window */
    void SetShowHierarchy(bool on = true) { fShowHierarchy = on; }
 
@@ -67,6 +72,7 @@ private:
    std::shared_ptr<RWebWindow> fWebWindow; ///<! web window
    bool fShowHierarchy{false};             ///<! show TTree hierarchy
    RConfig fCfg;                           ///<! configuration, exchanged between client and server
+   PerformDrawCallback_t fCallback;        ///<! callback invoked when tree draw performed
 
    void WebWindowConnect(unsigned connid);
    void WebWindowCallback(unsigned connid, const std::string &arg);
