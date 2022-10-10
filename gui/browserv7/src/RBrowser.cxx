@@ -306,6 +306,9 @@ std::string RBrowser::ProcessDblClick(std::vector<std::string> &args)
       if (!new_widget)
          return ""s;
 
+      // assign back pointer
+      new_widget->fBrowser = this;
+
       new_widget->Show("embed");
       fWidgets.emplace_back(new_widget);
       fActiveWidgetName = new_widget->GetName();
@@ -411,6 +414,7 @@ std::shared_ptr<RBrowserWidget> RBrowser::AddWidget(const std::string &kind)
       return nullptr;
    }
 
+   widget->fBrowser = this;
    widget->Show("embed");
    fWidgets.emplace_back(widget);
 
@@ -708,4 +712,32 @@ void RBrowser::SetWorkingPath(const std::string &path)
          fWebWindow->Send(0, GetCurrentWorkingDirectory());
    }
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Activate widget in RBrowser
+/// One should specify title and (optionally) kind of widget like "tcanvas" or "geom"
+
+bool RBrowser::ActivateWidget(const std::string &title, const std::string &kind)
+{
+   if (title.empty())
+      return false;
+
+   for (auto &widget : fWidgets) {
+
+      if (widget->GetTitle() != title)
+         continue;
+
+      if (!kind.empty() && (widget->GetKind() != kind))
+         continue;
+
+      if (fWebWindow)
+         fWebWindow->Send(0, "SELECT_WIDGET:"s + widget->GetName());
+      else
+         fActiveWidgetName = widget->GetName();
+      return true;
+   }
+
+   return false;
+}
+
 
