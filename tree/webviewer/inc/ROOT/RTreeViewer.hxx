@@ -14,6 +14,8 @@
 #include <ROOT/RWebDisplayArgs.hxx>
 
 #include <memory>
+#include <vector>
+#include <string>
 
 class TTree;
 
@@ -25,16 +27,18 @@ class REveManager;
 
 class RTreeViewer {
 
-   TTree *fTree{nullptr};                  ///<! TTree to show
-   std::string fTitle;                     ///<! title of tree viewer
-   std::shared_ptr<RWebWindow> fWebWindow; ///<! web window
-   bool fShowHierarchy{false};             ///<! show TTree hierarchy
-
-   void WebWindowCallback(unsigned connid, const std::string &arg);
-
-   void SendViewerData(unsigned connid);
-
 public:
+
+   struct RBranchInfo {
+      std::string fName, fTitle;
+      RBranchInfo() = default;
+      RBranchInfo(const std::string &_name, const std::string &_title) : fName(_name), fTitle(_title) {}
+   };
+
+   struct RConfig {
+      std::string fExprX, fExprY, fExprZ, fExprCut;
+      std::vector<RBranchInfo> fBranches;
+   };
 
    RTreeViewer(TTree *tree = nullptr);
    virtual ~RTreeViewer();
@@ -56,6 +60,22 @@ public:
 
    void Update();
 
+private:
+
+   TTree *fTree{nullptr};                  ///<! TTree to show
+   std::string fTitle;                     ///<! title of tree viewer
+   std::shared_ptr<RWebWindow> fWebWindow; ///<! web window
+   bool fShowHierarchy{false};             ///<! show TTree hierarchy
+   RConfig fCfg;                           ///<! configuration, exchanged between client and server
+
+   void WebWindowConnect(unsigned connid);
+   void WebWindowCallback(unsigned connid, const std::string &arg);
+
+   void SendCfg(unsigned connid);
+
+   void UpdateBranchList();
+
+   void InvokeTreeDraw(const std::string &json);
 };
 
 } // namespace Experimental

@@ -14,8 +14,10 @@
 #include <ROOT/RWebWindow.hxx>
 
 #include "TTree.h"
+#include "TVirtualPad.h"
+#include "TBranch.h"
 // #include "THttpServer.h"
-// #include "TBufferJSON.h"
+#include "TBufferJSON.h"
 
 using namespace std::string_literals;
 
@@ -30,9 +32,10 @@ RTreeViewer::RTreeViewer(TTree *tree)
    fWebWindow->SetDefaultPage("file:rootui5sys/tree/index.html");
 
    // this is call-back, invoked when message received via websocket
+   fWebWindow->SetConnectCallBack([this](unsigned connid) { WebWindowConnect(connid); });
    fWebWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { WebWindowCallback(connid, arg); });
    fWebWindow->SetGeometry(900, 700); // configure predefined window geometry
-   fWebWindow->SetConnLimit(0); // allow any connections numbers at the same time
+   fWebWindow->SetConnLimit(1); // allow the only connection
    fWebWindow->SetMaxQueueLength(30); // number of allowed entries in the window queue
 
    if (tree) SetTree(tree);
@@ -52,6 +55,8 @@ RTreeViewer::~RTreeViewer()
 void RTreeViewer::SetTree(TTree *tree)
 {
    fTree = tree;
+
+   UpdateBranchList();
 
    Update();
 }
@@ -90,17 +95,26 @@ std::string RTreeViewer::GetWindowAddr() const
 
 void RTreeViewer::Update()
 {
-   fWebWindow->Send(0, "RELOAD");
+   SendCfg(0);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Send data for initialize viewer
 
-void RTreeViewer::SendViewerData(unsigned connid)
+void RTreeViewer::SendCfg(unsigned connid)
 {
-   std::string json = "VIEWER:{}";
+   std::string json = "CFG:"s + TBufferJSON::ToJSON(&fCfg, TBufferJSON::kSkipTypeInfo + TBufferJSON::kNoSpaces).Data();
 
    fWebWindow->Send(connid, json);
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// react on new connection
+
+void RTreeViewer::WebWindowConnect(unsigned connid)
+{
+   SendCfg(connid);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -108,16 +122,66 @@ void RTreeViewer::SendViewerData(unsigned connid)
 
 void RTreeViewer::WebWindowCallback(unsigned connid, const std::string &arg)
 {
-   if (arg == "GETVIEWER") {
+   if (arg == "GETCFG"s) {
 
-      SendViewerData(connid);
+      SendCfg(connid);
 
-   } else if (arg == "QUIT_ROOT") {
+   } else if (arg == "QUIT_ROOT"s) {
 
       fWebWindow->TerminateROOT();
 
-   } else if (arg == "RELOAD") {
+   } if (arg.compare(0, 5, "DRAW:"s) == 0) {
 
-      SendViewerData(connid);
+      InvokeTreeDraw(arg.substr(5));
    }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Update branch list
+
+void RTreeViewer::UpdateBranchList()
+{
+
+   fCfg.fBranches.clear();
+
+   if (!fTree) return;
+
+   TIter iter(fTree->GetListOfBranches());
+
+   while (auto br = dynamic_cast<TBranch *>(iter())) {
+      fCfg.fBranches.emplace_back(br->GetName(), br->GetTitle());
+   }
+
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Invoke tree drawing
+
+void RTreeViewer::InvokeTreeDraw(const std::string &json)
+{
+   auto newcfg = TBufferJSON::FromJSON<RConfig>(json);
+
+   if (!newcfg || !fTree) return;
+
+   fCfg = *newcfg;
+
+   UpdateBranchList();
+
+   std::string expr = fCfg.fExprX;
+   if (!fCfg.fExprY.empty()) {
+      expr += ":"s;
+      expr += fCfg.fExprY;
+
+      if (!fCfg.fExprZ.empty()) {
+         expr += ":"s;
+         expr += fCfg.fExprZ;
+      }
+   }
+
+   printf("Draw %s\n", expr.c_str());
+
+   fTree->Draw(expr.c_str());
+
+   if (gPad) gPad->Update();
 }

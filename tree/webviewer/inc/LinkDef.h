@@ -22,5 +22,7 @@
 
 // Geometry viewer
 #pragma link C++ class ROOT::Experimental::RTreeViewer+;
+#pragma link C++ struct ROOT::Experimental::RTreeViewer::RBranchInfo+;
+#pragma link C++ struct ROOT::Experimental::RTreeViewer::RConfig+;
 
 #endif
