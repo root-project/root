@@ -32,7 +32,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.standalone = this.websocket.kind == "file";
 
          this.cfg = {
-            fExprX: "", fExprY: "", fExprZ: "", fExprCut: "",
+            fExprX: "", fExprY: "", fExprZ: "", fExprCut: "", fOption: "",
+            fNumber: 0, fFirst: 0, fStep: 1, fLargerStep: 2, fTreeEntries: 100,
             fBranches: [ { fName: "px", fTitle: "px branch" }, { fName: "py", fTitle: "py branch" }, { fName: "pz", fTitle: "pz branch" } ]
          };
          this.cfg_model = new JSONModel(this.cfg);
@@ -67,7 +68,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             mhdr = msg;
          }
 
-         console.log(mhdr, msg.length, msg.substr(0,70), "...");
+         // console.log(mhdr, msg.length, msg.substr(0,70), "...");
 
          switch (mhdr) {
             case "CFG":   // generic viewer configuration
@@ -84,6 +85,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.last_cfg = cfg;
 
          Object.assign(this.cfg, cfg);
+
+         // if (!this.cfg.fFirst) delete this.cfg.fFirst; // default value
+         // if (!this.cfg.fNumber) delete this.cfg.fNumber; // default value
 
          this.cfg_model.refresh();
       },
@@ -112,7 +116,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
          this._pValueHelpDialog.then(oDialog =>{
             // Create a filter for the binding
-            oDialog.getBinding('items').filter([new Filter('fName', FilterOperator.Contains, sInputValue)]);
+            oDialog.getBinding('items').filter([new Filter('fName', FilterOperator.Contains, '')]);
             // Open ValueHelpDialog filtered by the input's value
             oDialog.open(sInputValue);
          });
@@ -128,25 +132,32 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       onBranchHelpClose: function (oEvent) {
          let oSelectedItem = oEvent.getParameter('selectedItem');
          oEvent.getSource().getBinding("items").filter([]);
-         if (oSelectedItem && this.branchInputId)
-            this.byId(this.branchInputId).setValue(oSelectedItem.getTitle());
+         if (oSelectedItem && this.branchInputId) {
+            let old = this.byId(this.branchInputId).getValue();
+            if (old && old[old.length-1] != ' ') old += ' ';
+            this.byId(this.branchInputId).setValue(old + oSelectedItem.getTitle());
+         }
          delete this.branchInputId;
       },
 
       performDraw: function() {
-         if (!this.last_cfg) return;
+         let send = this.last_cfg;
+
+         if (!send) return;
 
          if (!this.cfg.fExprX)
             return MessageBox.error('X expression not specified');
 
-         Object.assign(this.last_cfg, this.cfg);
-         this.last_cfg.fBranches = [];
+         Object.assign(send, this.cfg);
 
-         console.log('Sending', JSON.stringify(this.last_cfg));
+         send.fBranches = [];
+         if (!send.fNumber)
+            send.fNumber = 0;
 
-         this.websocket.send("DRAW:"+JSON.stringify(this.last_cfg));
+         if (!send.fFirst)
+            send.fFirst = 0;
 
-
+         this.websocket.send("DRAW:"+JSON.stringify(send));
       },
 
       /** @summary Reload configuration */

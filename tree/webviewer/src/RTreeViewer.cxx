@@ -56,7 +56,7 @@ void RTreeViewer::SetTree(TTree *tree)
 {
    fTree = tree;
 
-   UpdateBranchList();
+   UpdateConfig();
 
    Update();
 }
@@ -137,11 +137,10 @@ void RTreeViewer::WebWindowCallback(unsigned connid, const std::string &arg)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-/// Update branch list
+/// Update RConfig data
 
-void RTreeViewer::UpdateBranchList()
+void RTreeViewer::UpdateConfig()
 {
-
    fCfg.fBranches.clear();
 
    if (!fTree) return;
@@ -152,6 +151,11 @@ void RTreeViewer::UpdateBranchList()
       fCfg.fBranches.emplace_back(br->GetName(), br->GetTitle());
    }
 
+   fCfg.fTreeEntries = fTree->GetEntries();
+
+   fCfg.fStep = 1;
+   fCfg.fLargerStep = fCfg.fTreeEntries/100;
+   if (fCfg.fLargerStep < 2) fCfg.fLargerStep = 2;
 }
 
 
@@ -166,7 +170,7 @@ void RTreeViewer::InvokeTreeDraw(const std::string &json)
 
    fCfg = *newcfg;
 
-   UpdateBranchList();
+   UpdateConfig();
 
    std::string expr = fCfg.fExprX;
    if (!fCfg.fExprY.empty()) {
@@ -181,7 +185,10 @@ void RTreeViewer::InvokeTreeDraw(const std::string &json)
 
    printf("Draw %s\n", expr.c_str());
 
-   fTree->Draw(expr.c_str());
+   auto nentries = TTree::kMaxEntries;
+   if (fCfg.fNumber > 0) nentries = fCfg.fNumber;
+
+   fTree->Draw(expr.c_str(), fCfg.fExprCut.c_str(), fCfg.fOption.c_str(), nentries, fCfg.fFirst);
 
    std::string canv_name;
 
