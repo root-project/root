@@ -28,105 +28,6 @@ RDatasetSpec::REntryRange::REntryRange(Long64_t begin, Long64_t end) : fBegin(be
                              "creation of a dataset specification.");
 }
 
-/**
- * \class ROOT::RDF::Experimental::RDatasetSpec
- * \ingroup dataframe
- * \brief A dataset specification for RDataFrame.
- **/
-
-////////////////////////////////////////////////////////////////////////////
-/// \brief Construct an RDatasetSpec for one or more samples with the same tree name.
-/// \param[in] treeName Name of the tree
-/// \param[in] fileNameGlob Single file name or glob expression for the files where the tree(s) are stored
-/// \param[in] entryRange The global entry range to be processed, {begin (inclusive), end (exclusive)}
-///
-/// The filename glob supports the same type of expressions as TChain::Add().
-RDatasetSpec::RDatasetSpec(const std::string &treeName, const std::string &fileNameGlob, const REntryRange &entryRange)
-   : fTreeNames({treeName}), fFileNameGlobs({fileNameGlob}), fEntryRange(entryRange)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////
-/// \brief Construct an RDatasetSpec for one or more samples with the same tree name.
-/// \param[in] treeName Name of the tree
-/// \param[in] fileNameGlobs A vector of file names or glob expressions for the files where the trees are stored
-/// \param[in] entryRange The global entry range to be processed, {begin (inclusive), end (exclusive)}
-///
-/// The filename glob supports the same type of expressions as TChain::Add().
-RDatasetSpec::RDatasetSpec(const std::string &treeName, const std::vector<std::string> &fileNameGlobs,
-                           const REntryRange &entryRange)
-   : fTreeNames({treeName}), fFileNameGlobs(fileNameGlobs), fEntryRange(entryRange)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////
-/// \brief Construct an RDatasetSpec for a chain of several trees (possibly having different names).
-/// \param[in] treeAndFileNameGlobs A vector of pairs of tree names and their corresponding file names/globs
-/// \param[in] entryRange The global entry range to be processed, {begin (inclusive), end (exclusive)}
-///
-/// The filename glob supports the same type of expressions as TChain::Add().
-///
-/// ### Example usage:
-/// ~~~{.py}
-/// spec = ROOT.RDF.Experimental.RDatasetSpec([("tree1", "a.root"), ("tree2", "b.root")], (5, 10))
-/// df = ROOT.RDataFrame(spec)
-/// ~~~
-RDatasetSpec::RDatasetSpec(const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
-                           const REntryRange &entryRange)
-   : fEntryRange(entryRange)
-{
-   fTreeNames.reserve(treeAndFileNameGlobs.size());
-   fFileNameGlobs.reserve(treeAndFileNameGlobs.size());
-   for (auto &p : treeAndFileNameGlobs) {
-      fTreeNames.emplace_back(p.first);
-      fFileNameGlobs.emplace_back(p.second);
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////
-/// \brief Add a friend tree or chain with the same tree name to the dataset specification.
-/// \param[in] treeName Name of the tree
-/// \param[in] fileNameGlob Single file name or glob expression for the files where the tree(s) are stored
-/// \param[in] alias String to refer to the particular friend
-///
-/// The filename glob supports the same type of expressions as TChain::Add().
-void RDatasetSpec::AddFriend(const std::string &treeName, const std::string &fileNameGlob, const std::string &alias)
-{
-   fFriendInfo.AddFriend(treeName, fileNameGlob, alias);
-}
-
-////////////////////////////////////////////////////////////////////////////
-/// \brief Add a friend tree or chain with the same tree name to the dataset specification.
-/// \param[in] treeName Name of the tree
-/// \param[in] fileNameGlobs A vector of file names or glob expressions for the files where the trees are stored
-/// \param[in] alias String to refer to the particular friend
-///
-/// The filename glob supports the same type of expressions as TChain::Add().
-void RDatasetSpec::AddFriend(const std::string &treeName, const std::vector<std::string> &fileNameGlobs,
-                             const std::string &alias)
-{
-   fFriendInfo.AddFriend(treeName, fileNameGlobs, alias);
-}
-
-////////////////////////////////////////////////////////////////////////////
-/// \brief Add a friend tree or chain (possibly with different tree names) to the dataset specification.
-/// \param[in] treeAndFileNameGlobs A vector of pairs of tree names and their corresponding file names/globs
-/// \param[in] alias String to refer to the particular friend
-///
-/// The filename glob supports the same type of expressions as TChain::Add().
-///
-/// ### Example usage:
-/// ~~~{.py}
-/// spec = ROOT.RDF.Experimental.RDatasetSpec("tree", "file.root")
-/// spec.AddFriend([("tree1", "a.root"), ("tree2", "b.root")], "alias")
-/// df = ROOT.RDataFrame(spec)
-/// ~~~
-void RDatasetSpec::AddFriend(const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
-                             const std::string &alias)
-{
-   fFriendInfo.AddFriend(treeAndFileNameGlobs, alias);
-}
-
 const std::vector<std::string> &RDatasetSpec::GetTreeNames() const
 {
    return fTreeNames;
@@ -150,6 +51,138 @@ Long64_t RDatasetSpec::GetEntryRangeEnd() const
 const ROOT::TreeUtils::RFriendInfo &RDatasetSpec::GetFriendInfo() const
 {
    return fFriendInfo;
+}
+
+const RDatasetSpec::RGroupInfo &RDatasetSpec::GetGroupInfo() const
+{
+   return fGroupInfo;
+}
+
+void RDatasetSpec::RGroupInfo::AddGroupInfo(const std::string &name, Long64_t size, const RMetaData &metaData)
+{
+   fName.reserve(fName.size() + 1);
+   fSize.reserve(fSize.size() + 1);
+   fMetaData.reserve(fMetaData.size() + 1);
+   fName.emplace_back(name);
+   fSize.emplace_back(size);
+   fMetaData.emplace_back(metaData);
+}
+
+RDatasetSpec::RDatasetSpec(const std::vector<std::string> &trees, const std::vector<std::string> &fileGlobs,
+                           const RGroupInfo &groupInfo, const ROOT::TreeUtils::RFriendInfo &friendInfo,
+                           const REntryRange &entryRange)
+   : fTreeNames(trees), fFileNameGlobs(fileGlobs), fEntryRange(entryRange), fFriendInfo(friendInfo),
+     fGroupInfo(groupInfo)
+{
+}
+
+RSpecBuilder &RSpecBuilder::AddGroup(const std::string &groupName, const std::string &treeName,
+                                     const std::string &fileNameGlob, const RMetaData &metaData)
+{
+   // adding a single fileglob/tree, hence extend the vectors with 1 elem
+   fTreeNames.reserve(fTreeNames.size() + 1);
+   fTreeNames.emplace_back(treeName);
+   fFileNameGlobs.reserve(fFileNameGlobs.size() + 1);
+   fFileNameGlobs.emplace_back(fileNameGlob);
+
+   // the group is of size 1, e.g. a single file glob
+   fGroupInfo.AddGroupInfo(groupName, 1, metaData);
+   return *this;
+}
+
+RSpecBuilder &RSpecBuilder::AddGroup(const std::string &groupName, const std::string &treeName,
+                                     const std::vector<std::string> &fileNameGlobs, const RMetaData &metaData)
+{
+   // this constructor expects 1 tree name and multiple file names
+   // however, in order to align many groups in TChain, we here copy the tree names multiple times
+   // e.g. for N files, we store N (repeating) tree names to keep the alignment
+   const auto nNewGlobs = fileNameGlobs.size();
+   fTreeNames.reserve(fTreeNames.size() + nNewGlobs);
+   for (auto i = 0u; i < nNewGlobs; ++i) // TODO: there might be a better intruction to do that
+      fTreeNames.emplace_back(treeName);
+   fFileNameGlobs.reserve(fFileNameGlobs.size() + nNewGlobs);
+   fFileNameGlobs.insert(std::end(fFileNameGlobs), std::begin(fileNameGlobs), std::end(fileNameGlobs));
+
+   fGroupInfo.AddGroupInfo(groupName, nNewGlobs, metaData); // note that the group is of size nNewGlobs
+   return *this;
+}
+
+RSpecBuilder &RSpecBuilder::AddGroup(const std::string &groupName,
+                                     const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
+                                     const RMetaData &metaData)
+{
+   const auto nNewGlobs = treeAndFileNameGlobs.size();
+   fTreeNames.reserve(nNewGlobs);
+   fFileNameGlobs.reserve(nNewGlobs);
+   for (auto &p : treeAndFileNameGlobs) {
+      fTreeNames.emplace_back(p.first);
+      fFileNameGlobs.emplace_back(p.second);
+   }
+
+   fGroupInfo.AddGroupInfo(groupName, nNewGlobs, metaData);
+   return *this;
+}
+
+RSpecBuilder &RSpecBuilder::AddGroup(const std::string &groupName, const std::vector<std::string> &trees,
+                                     const std::vector<std::string> &files, const RMetaData &metaData)
+{
+   const auto nNewGlobs = files.size();
+   if (trees.size() != 1 && trees.size() != nNewGlobs)
+      throw std::logic_error("Mismatch between number of trees and file globs.");
+   fTreeNames.reserve(fTreeNames.size() + nNewGlobs);
+   fFileNameGlobs.reserve(fFileNameGlobs.size() + nNewGlobs);
+   if (trees.size() == 1)
+      for (auto i = 0u; i < nNewGlobs; ++i)
+         fTreeNames.insert(std::end(fTreeNames), std::begin(trees), std::end(trees));
+   else
+      fTreeNames.insert(std::end(fTreeNames), std::begin(trees), std::end(trees));
+   fFileNameGlobs.insert(std::end(fFileNameGlobs), std::begin(files), std::end(files));
+
+   fGroupInfo.AddGroupInfo(groupName, nNewGlobs, metaData);
+   return *this;
+}
+
+RSpecBuilder &
+RSpecBuilder::WithFriends(const std::string &treeName, const std::string &fileNameGlob, const std::string &alias)
+{
+   fFriendInfo.AddFriend(treeName, fileNameGlob, alias);
+   return *this;
+}
+
+RSpecBuilder &RSpecBuilder::WithFriends(const std::string &treeName, const std::vector<std::string> &fileNameGlobs,
+                                        const std::string &alias)
+{
+   fFriendInfo.AddFriend(treeName, fileNameGlobs, alias);
+   return *this;
+}
+
+RSpecBuilder &RSpecBuilder::WithFriends(const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
+                                        const std::string &alias)
+{
+   fFriendInfo.AddFriend(treeAndFileNameGlobs, alias);
+   return *this;
+}
+
+RSpecBuilder &RSpecBuilder::WithRange(const RDatasetSpec::REntryRange &entryRange)
+{
+   fEntryRange = entryRange;
+   return *this;
+}
+
+RSpecBuilder &RSpecBuilder::WithFriends(const std::vector<std::string> &trees, const std::vector<std::string> &files,
+                                        const std::string &alias)
+{
+   std::vector<std::pair<std::string, std::string>> target;
+   target.reserve(files.size());
+   std::transform(trees.begin(), trees.end(), files.begin(), std::back_inserter(target),
+                  [](std::string a, std::string b) { return std::make_pair(a, b); });
+   fFriendInfo.AddFriend(target, alias);
+   return *this;
+}
+
+RDatasetSpec RSpecBuilder::Build()
+{
+   return std::move(RDatasetSpec(fTreeNames, fFileNameGlobs, fGroupInfo, fFriendInfo, fEntryRange));
 }
 
 } // namespace Experimental
