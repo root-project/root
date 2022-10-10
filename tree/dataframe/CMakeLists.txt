@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
@@ -74,6 +74,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/RLazyDSImpl.hxx
     ROOT/RDF/RLoopManager.hxx
     ROOT/RDF/RMergeableValue.hxx
+    ROOT/RDF/RMetaData.hxx
     ROOT/RDF/RNodeBase.hxx
     ROOT/RDF/RRangeBase.hxx
     ROOT/RDF/RRange.hxx
@@ -110,6 +111,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RJittedFilter.cxx
     src/RJittedVariation.cxx
     src/RLoopManager.cxx
+    src/RMetaData.cxx
     src/RRangeBase.cxx
     src/RVariationBase.cxx
     src/RVariationsDescription.cxx
@@ -146,6 +148,10 @@ endif(root7)
 
 if(MSVC)
   target_compile_definitions(ROOTDataFrame PRIVATE _USE_MATH_DEFINES)
+endif()
+
+if(builtin_nlohmannjson)
+  target_include_directories(ROOTDataFrame PRIVATE ${CMAKE_SOURCE_DIR}/builtins)
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
