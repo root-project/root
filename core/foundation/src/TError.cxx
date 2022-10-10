@@ -66,7 +66,7 @@ ErrorSystemMsgHandlerFunc_t SetErrorSystemMsgHandler(ErrorSystemMsgHandlerFunc_t
 /// A very simple error handler that is usually replaced by the TROOT default error handler.
 /// The minimal error handler is not serialized across threads, so that output of multi-threaded programs
 /// can get scrambled
-/// @note `abort()` is only called if `abort_bool` is `true` and `level < gErrorIgnoreLevel`
+/// @note `abort()` is only called if `abort_bool` is `true` and `level >= gErrorIgnoreLevel`
 void MinimalErrorHandler(Int_t level, Bool_t abort_bool, const char *location, const char *msg)
 {
    if (level < gErrorIgnoreLevel)
