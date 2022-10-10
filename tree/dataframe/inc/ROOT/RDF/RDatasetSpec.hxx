@@ -16,6 +16,7 @@
 #include <utility> // std::pair
 #include <vector>
 
+#include <ROOT/RDF/RMetaData.hxx>
 #include <ROOT/RFriendInfo.hxx>
 #include <RtypesCore.h> // Long64_t
 
@@ -34,6 +35,18 @@ public:
       REntryRange(Long64_t startEntry, Long64_t endEntry);
    };
 
+   // groups need to fulfill:
+   // 1. preserve the original order -> arrange them in a vector, store also number of fileglobs in this group
+   // 2. there is 1:1 correspondence between group and meta data => group and metadata can go together
+   // Current solution: create a simple struct to hold the triplet {groupName, groupSize, MetaData}
+   // This Group structure does not need an exposure to the user.
+   struct RGroupInfo {
+      std::vector<std::string> fName;   // name of the group
+      std::vector<Long64_t> fSize;      // the matching between fileGlobs and group sizes is relative!
+      std::vector<RMetaData> fMetaData; // behaves like a heterogenuous dictionary
+      void AddGroupInfo(const std::string &name, Long64_t size, const RMetaData &metaData);
+   };
+
 private:
    /**
     * A list of names of trees.
@@ -49,29 +62,57 @@ private:
    std::vector<std::string> fFileNameGlobs;
    REntryRange fEntryRange;                  ///< Start (inclusive) and end (exclusive) entry for the dataset processing
    ROOT::TreeUtils::RFriendInfo fFriendInfo; ///< List of friends
+   RGroupInfo fGroupInfo;                    ///< List of groups
 
 public:
-   RDatasetSpec(const std::string &treeName, const std::string &fileNameGlob, const REntryRange &entryRange = {});
-
-   RDatasetSpec(const std::string &treeName, const std::vector<std::string> &fileNameGlobs,
+   RDatasetSpec(const std::vector<std::string> &trees, const std::vector<std::string> &fileGlobs,
+                const RGroupInfo &groupInfo = {}, const ROOT::TreeUtils::RFriendInfo &friendInfo = {},
                 const REntryRange &entryRange = {});
-
-   RDatasetSpec(const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
-                const REntryRange &entryRange = {});
-
-   void AddFriend(const std::string &treeName, const std::string &fileNameGlob, const std::string &alias = "");
-
-   void
-   AddFriend(const std::string &treeName, const std::vector<std::string> &fileNameGlobs, const std::string &alias = "");
-
-   void AddFriend(const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
-                  const std::string &alias = "");
 
    const std::vector<std::string> &GetTreeNames() const;
    const std::vector<std::string> &GetFileNameGlobs() const;
    Long64_t GetEntryRangeBegin() const;
    Long64_t GetEntryRangeEnd() const;
    const ROOT::TreeUtils::RFriendInfo &GetFriendInfo() const;
+   const RGroupInfo &GetGroupInfo() const;
+};
+
+class RSpecBuilder {
+   std::vector<std::string> fTreeNames;
+   std::vector<std::string> fFileNameGlobs;
+   RDatasetSpec::REntryRange fEntryRange;    // global! range
+   ROOT::TreeUtils::RFriendInfo fFriendInfo; // global! friends
+   RDatasetSpec::RGroupInfo fGroupInfo;      // groups have relative order!
+
+public:
+   RSpecBuilder &AddGroup(const std::string &groupName, const std::string &treeName, const std::string &fileNameGlob,
+                          const RMetaData &metaData);
+
+   RSpecBuilder &AddGroup(const std::string &groupName, const std::string &treeName,
+                          const std::vector<std::string> &fileNameGlobs, const RMetaData &metaData);
+
+   RSpecBuilder &AddGroup(const std::string &groupName,
+                          const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
+                          const RMetaData &metaData);
+
+   RSpecBuilder &AddGroup(const std::string &groupName, const std::vector<std::string> &trees,
+                          const std::vector<std::string> &files, const RMetaData &metaData);
+
+   RSpecBuilder &
+   WithFriends(const std::string &treeName, const std::string &fileNameGlob, const std::string &alias = "");
+
+   RSpecBuilder &WithFriends(const std::string &treeName, const std::vector<std::string> &fileNameGlobs,
+                             const std::string &alias = "");
+
+   RSpecBuilder &WithFriends(const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
+                             const std::string &alias = "");
+
+   RSpecBuilder &WithFriends(const std::vector<std::string> &trees, const std::vector<std::string> &files,
+                             const std::string &alias = "");
+
+   RSpecBuilder &WithRange(const RDatasetSpec::REntryRange &entryRange = {});
+
+   RDatasetSpec Build();
 };
 
 } // namespace Experimental
