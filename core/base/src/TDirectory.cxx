@@ -1235,7 +1235,7 @@ void TDirectory::SetName(const char* newname)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Encode the name and cycle into buffer like: "aap;2".
-/// @note if cycle is `9999`, the name is copied to the buffer without any `;`
+/// @note if `cycle` is 9999, its value will not appear in the output and `name` will be used verbatim.
 
 void TDirectory::EncodeNameCycle(char *buffer, const char *name, Short_t cycle)
 {
