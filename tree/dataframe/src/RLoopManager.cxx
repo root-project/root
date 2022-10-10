@@ -709,7 +709,6 @@ void RLoopManager::UpdateSampleInfo(unsigned int slot, TTreeReader &r) {
    auto *file = tree->GetCurrentFile();
    const std::string fname = file != nullptr ? file->GetName() : "#inmemorytree#";
 
-
    std::pair<Long64_t, Long64_t> range = r.GetEntriesRange();
    R__ASSERT(range.first >= 0);
    if (range.second == -1) {
