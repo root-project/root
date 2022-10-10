@@ -16,12 +16,35 @@
 #include "TTree.h"
 #include "TVirtualPad.h"
 #include "TBranch.h"
+#include "TTimer.h"
 // #include "THttpServer.h"
 #include "TBufferJSON.h"
 
-using namespace std::string_literals;
+
+namespace ROOT {
+namespace Experimental {
+
+class TProgressTimer : public TTimer {
+   RTreeViewer &fViewer;
+public:
+   TProgressTimer(RTreeViewer &viewer, Int_t period) : TTimer(period, kTRUE), fViewer(viewer)
+   {
+   }
+
+   Bool_t Notify() override
+   {
+      fViewer.SendProgress();
+      return kTRUE;
+   }
+};
+
+} // namespace Experimental
+} // namespace ROOT
+
 
 using namespace ROOT::Experimental;
+using namespace std::string_literals;
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// constructor
@@ -183,12 +206,27 @@ void RTreeViewer::InvokeTreeDraw(const std::string &json)
       }
    }
 
-   printf("Draw %s\n", expr.c_str());
+   // printf("Draw %s\n", expr.c_str());
 
-   auto nentries = TTree::kMaxEntries;
-   if (fCfg.fNumber > 0) nentries = fCfg.fNumber;
+   Long64_t nentries = (fCfg.fNumber > 0) ? fCfg.fNumber : TTree::kMaxEntries;
+
+   if (!fProgrTimer)
+      fProgrTimer = std::make_unique<TProgressTimer>(*this, 50);
+
+   fTree->SetTimerInterval(50);
+
+   fLastSendProgress.clear();
+
+   // SendProgress();
+
+   fProgrTimer->TurnOn();
 
    fTree->Draw(expr.c_str(), fCfg.fExprCut.c_str(), fCfg.fOption.c_str(), nentries, fCfg.fFirst);
+
+   fProgrTimer->TurnOff();
+
+   if (!fLastSendProgress.empty())
+      SendProgress(true);
 
    std::string canv_name;
 
@@ -201,3 +239,35 @@ void RTreeViewer::InvokeTreeDraw(const std::string &json)
    if (fCallback)
       fCallback(canv_name);
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Send progress to the client
+
+void RTreeViewer::SendProgress(bool completed)
+{
+   std::string progress = "100";
+
+   if (!completed) {
+
+      Long64_t first = fCfg.fFirst;
+      Long64_t nentries = fTree->GetEntries();
+      Long64_t last = nentries;
+      if ((fCfg.fNumber > 0) && (first + fCfg.fNumber < nentries))
+         last = first + fCfg.fNumber;
+
+      Long64_t current = fTree->GetReadEntry();
+
+      if (last > first)
+         progress = std::to_string((current - first + 1.) / ( last - first + 0. ) * 100.);
+   }
+
+   if (fLastSendProgress == progress)
+      return;
+
+   fLastSendProgress = progress;
+
+   // printf("Progress %s\n", progress.c_str());
+
+   fWebWindow->Send(0, "PROGRESS:"s + progress);
+}
+

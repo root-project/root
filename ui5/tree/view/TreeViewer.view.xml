@@ -85,6 +85,14 @@
                   placeholder="First entry"
                   tooltip="First entry, default - 0, maximum is {= ${/fTreeEntries} - 1}"/>
             </HBox>
+            <ProgressIndicator
+                id="draw_progress"
+                class="sapUiSmallMarginBottom"
+                percentValue="0"
+                displayValue="0%"
+                showValue="false"
+                state="None"
+                visible="false"/>
           </VBox>
        </content>
 
