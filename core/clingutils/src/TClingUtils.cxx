@@ -1322,7 +1322,8 @@ bool ROOT::TMetaUtils::HasCustomConvStreamerMemberFunction(const AnnotatedRecord
 
 void ROOT::TMetaUtils::GetQualifiedName(std::string &qual_name, const clang::QualType &type, const clang::NamedDecl &forcontext)
 {
-   ROOT::TMetaUtils::GetFullyQualifiedTypeName(qual_name, type, forcontext.getASTContext());
+   ROOT::TMetaUtils::GetFullyQualifiedTypeName(qual_name, type, forcontext.getASTContext(),
+      llvm::dyn_cast_or_null<clang::ClassTemplateSpecializationDecl>(&forcontext));
 }
 
 //----
@@ -1437,6 +1438,7 @@ void ROOT::TMetaUtils::CreateNameTypeMap(const clang::CXXRecordDecl &cl, ROOT::M
    std::string typenameStr;
 
    const clang::ASTContext& astContext =  cl.getASTContext();
+   auto CTSD = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(&cl);
 
    // Loop over the non static data member.
    for(clang::RecordDecl::field_iterator field_iter = cl.field_begin(), end = cl.field_end();
@@ -1461,7 +1463,7 @@ void ROOT::TMetaUtils::CreateNameTypeMap(const clang::CXXRecordDecl &cl, ROOT::M
          }
       }
 
-      GetFullyQualifiedTypeName(typenameStr, fieldType, astContext);
+      GetFullyQualifiedTypeName(typenameStr, fieldType, astContext, CTSD);
       nameType[field_iter->getName().str()] = ROOT::Internal::TSchemaType(typenameStr.c_str(),dims.str().c_str());
    }
 
@@ -3452,9 +3454,10 @@ std::string ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
 
 void ROOT::TMetaUtils::GetFullyQualifiedTypeName(std::string &typenamestr,
                                                  const clang::QualType &qtype,
-                                                 const clang::ASTContext &astContext)
+                                                 const clang::ASTContext &astContext,
+                                                 const clang::ClassTemplateSpecializationDecl *Spec /*= nullptr*/)
 {
-   std::string fqname = cling::utils::TypeName::GetFullyQualifiedName(qtype, astContext);
+   std::string fqname = cling::utils::TypeName::GetFullyQualifiedName(qtype, astContext, Spec);
    TClassEdit::TSplitType splitname(fqname.c_str(),
                                     (TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst));
    splitname.ShortType(typenamestr,TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst);
@@ -3464,7 +3467,8 @@ void ROOT::TMetaUtils::GetFullyQualifiedTypeName(std::string &typenamestr,
 
 void ROOT::TMetaUtils::GetFullyQualifiedTypeName(std::string &typenamestr,
                                                  const clang::QualType &qtype,
-                                                 const cling::Interpreter &interpreter)
+                                                 const cling::Interpreter &interpreter,
+                                                 const clang::ClassTemplateSpecializationDecl *Spec /*= nullptr*/)
 {
    // We need this because GetFullyQualifiedTypeName is triggering deserialization
    // This calling the same name function GetFullyQualifiedTypeName, but this should stay here because
@@ -3473,7 +3477,8 @@ void ROOT::TMetaUtils::GetFullyQualifiedTypeName(std::string &typenamestr,
 
    GetFullyQualifiedTypeName(typenamestr,
                              qtype,
-                             interpreter.getCI()->getASTContext());
+                             interpreter.getCI()->getASTContext(),
+                             Spec);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
