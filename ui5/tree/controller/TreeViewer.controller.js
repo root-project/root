@@ -1,6 +1,10 @@
 sap.ui.define(['sap/ui/core/mvc/Controller',
-               'sap/ui/model/json/JSONModel'
-],function(Controller, JSONModel) {
+               'sap/ui/model/json/JSONModel',
+               'sap/ui/core/Fragment',
+               'sap/ui/model/Filter',
+               'sap/ui/model/FilterOperator',
+               'sap/m/MessageBox'
+],function(Controller, JSONModel, Fragment, Filter, FilterOperator, MessageBox) {
 
    "use strict";
 
@@ -28,29 +32,23 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.standalone = this.websocket.kind == "file";
 
          this.cfg = {
-            standalone: this.websocket.kind == "file",
-            not_embeded: !this._embeded
+            fExprX: "", fExprY: "", fExprZ: "", fExprCut: "",
+            fBranches: [ { fName: "px", fTitle: "px branch" }, { fName: "py", fTitle: "py branch" }, { fName: "pz", fTitle: "pz branch" } ]
          };
          this.cfg_model = new JSONModel(this.cfg);
          this.getView().setModel(this.cfg_model);
 
-         this.checkSendRequest();
+         this.byId("treeViewerPage").setShowHeader(this._embeded);
+         this.byId("quitButton").setVisible(!this._embeded);
+
       },
 
       onWebsocketOpened: function(/*handle*/) {
-         this.isConnected = true;
-
-         // when connection established, checked if we can submit request
-         this.checkSendRequest();
       },
 
       onWebsocketClosed: function() {
          // when connection closed, close panel as well
-         console.log('CLOSE WINDOW WHEN CONNECTION CLOSED');
-
          if (window && !this._embeded) window.close();
-
-         this.isConnected = false;
       },
 
       /** Entry point for all data from server */
@@ -61,70 +59,104 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (typeof msg != "string")
             return console.error(`TreeViewer does not uses binary messages len = ${mgs.byteLength}`);
 
-         let mhdr = msg.substr(0,6);
-         msg = msg.substr(6);
+         let p = msg.indexOf(":"), mhdr;
+         if (p > 0) {
+            mhdr = msg.slice(0, p);
+            msg = msg.slice(p+1);
+         } else {
+            mhdr = msg;
+         }
 
          console.log(mhdr, msg.length, msg.substr(0,70), "...");
 
          switch (mhdr) {
-         case "RELOAD":
-            this.doReload(true);
-            break;
-         case "VIEWER:":   // generic viewer configuration
-            this.checkViewerMsg(this.jsroot.parse(msg)); // use jsroot.parse while refs are used
-            break;
-         default:
-            console.error(`Non recognized msg ${mhdr} len= ${msg.length}`);
+            case "CFG":   // generic viewer configuration
+               this.setCfg(this.jsroot.parse(msg)); // use jsroot.parse while refs are used
+               break;
+            default:
+               console.error(`Non recognized msg ${mhdr} len = ${msg.length}`);
          }
       },
 
       /** @summary processing viewer configuration */
-      checkViewerMsg: function(msg) {
-         console.log('checkViewerMsg', msg);
+      setCfg: function(cfg) {
+
+         this.last_cfg = cfg;
+
+         Object.assign(this.cfg, cfg);
+
+         this.cfg_model.refresh();
       },
 
       onBeforeRendering: function() {
-         this.renderingDone = false;
       },
 
       onAfterRendering: function() {
-         this.renderingDone = true;
-
-         this.checkSendRequest();
       },
 
-      checkSendRequest: function(force) {
-         if (force) this.ask_getdraw = false;
+      onBranchHelpRequest: function(oEvent) {
+         let sInputValue = oEvent.getSource().getValue(),
+            oView = this.getView();
 
-         if (this.isConnected && this.renderingDone) {
+         this.branchInputId = oEvent.getSource().getId();
 
-            if (this.geo && !this.ask_getdraw) {
-               this.websocket.send("GETVIEWER");
-               this.ask_getdraw = true;
-            }
+         if (!this._pValueHelpDialog) {
+            this._pValueHelpDialog = Fragment.load({
+               id: oView.getId(),
+               name: 'rootui5.tree.view.BranchHelpDialog',
+               controller: this
+            }).then(oDialog => {
+               oView.addDependent(oDialog);
+               return oDialog;
+            });
          }
+         this._pValueHelpDialog.then(oDialog =>{
+            // Create a filter for the binding
+            oDialog.getBinding('items').filter([new Filter('fName', FilterOperator.Contains, sInputValue)]);
+            // Open ValueHelpDialog filtered by the input's value
+            oDialog.open(sInputValue);
+         });
+      },
+
+      onBranchHelpSearch: function (oEvent) {
+         let sValue = oEvent.getParameter('value'),
+             oFilter = new Filter('fName', FilterOperator.Contains, sValue);
+
+         oEvent.getSource().getBinding('items').filter([oFilter]);
+      },
+
+      onBranchHelpClose: function (oEvent) {
+         let oSelectedItem = oEvent.getParameter('selectedItem');
+         oEvent.getSource().getBinding("items").filter([]);
+         if (oSelectedItem && this.branchInputId)
+            this.byId(this.branchInputId).setValue(oSelectedItem.getTitle());
+         delete this.branchInputId;
       },
 
       performDraw: function() {
+         if (!this.last_cfg) return;
+
+         if (!this.cfg.fExprX)
+            return MessageBox.error('X expression not specified');
+
+         Object.assign(this.last_cfg, this.cfg);
+         this.last_cfg.fBranches = [];
+
+         console.log('Sending', JSON.stringify(this.last_cfg));
+
+         this.websocket.send("DRAW:"+JSON.stringify(this.last_cfg));
+
+
       },
 
-      /** @summary Reload geometry description and base drawing, normally not required */
+      /** @summary Reload configuration */
       onRealoadPress: function () {
-         this.doReload(true);
+         this.doReload();
       },
 
-      doReload: function(force) {
-         if (this.standalone) {
-            // offline uscase, maybe iremove later
-         } else {
-            this.checkSendRequest(force);
-
-            // keep here - if implementing browsing of tree hierarchy
-            if (this.model) {
-               this.model.clearFullModel();
-               this.model.reloadMainModel(force);
-            }
-         }
+      doReload: function() {
+         if (!this.standalone)
+            this.websocket.send("GETCFG");
       },
 
       /** Quit ROOT session */

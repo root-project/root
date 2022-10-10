@@ -6,27 +6,70 @@
    xmlns:core="sap.ui.core"
    xmlns:l="sap.ui.layout"
    xmlns:t="sap.ui.table">
-   <Page id="treeDraw" title="Tree viewer" showNavButton="false" floatingFooter="true"
-       showFooter="true" showSubHeader="false" showHeader="true" class="sapUiStdPage">
+   <Page id="treeViewerPage" title="Tree viewer" showNavButton="false" floatingFooter="true"
+       showFooter="true" showSubHeader="false" showHeader="false" class="sapUiStdPage">
        <content>
-       <HBox>
-         <VBox>
-           <Button text="Toggle floating footer" press="toggleFooter"/>
-           <Button text="Toggle footer visibility" press="toggleVisibility"/>
-           <Button text="Add Panel" press="addPanel"/>
-         </VBox>
-         <VBox>
-           <Button text="Remove Panel" press="removePanel"/>
-         </VBox>
-       </HBox>
-
+          <VBox width="100%">
+            <Label text="X:" labelFor="input_x" />
+            <Input
+              id="input_x"
+              value="{/fExprX}"
+              placeholder="Input x expression"
+              showSuggestion="true"
+              showValueHelp="true"
+              valueHelpRequest=".onBranchHelpRequest"
+              suggestionItems="{/fBranches}">
+              <suggestionItems>
+                 <core:Item text="{fName}"/>
+              </suggestionItems>
+            </Input>
+            <Label text="Y:" labelFor="input_y" />
+            <Input
+              id="input_y"
+              value="{/fExprY}"
+              placeholder="Input y expression"
+              showSuggestion="true"
+              showValueHelp="true"
+              valueHelpRequest=".onBranchHelpRequest"
+              suggestionItems="{/fBranches}">
+              <suggestionItems>
+                 <core:Item text="{fName}"/>
+              </suggestionItems>
+            </Input>
+            <Label text="Z:" labelFor="input_z" />
+            <Input
+              id="input_z"
+              value="{/fExprZ}"
+              placeholder="Input z expression"
+              showSuggestion="true"
+              showValueHelp="true"
+              valueHelpRequest=".onBranchHelpRequest"
+              suggestionItems="{/fBranches}">
+              <suggestionItems>
+                 <core:Item text="{fName}"/>
+              </suggestionItems>
+            </Input>
+            <Label text="Cut:" labelFor="input_cut" />
+            <Input
+              id="fExprCut"
+              value="{/expr_cut}"
+              placeholder="Input cut expression"
+              showSuggestion="true"
+              showValueHelp="true"
+              valueHelpRequest=".onBranchHelpRequest"
+              suggestionItems="{/fBranches}">
+              <suggestionItems>
+                 <core:Item text="{fName}"/>
+              </suggestionItems>
+            </Input>
+          </VBox>
        </content>
 
        <footer>
          <OverflowToolbar>
             <ToolbarSpacer/>
-            <Button type="Accept" text="Draw" press="performDraw"/>
-            <Button type="Reject" text="Quit" press="onQuitRootPress" visible="{/not_embeded}"/>
+            <Button type="Accept" text="Draw" press="performDraw" enabled="{= ${/fExprX} !== &apos;&apos; }"/>
+            <Button id="quitButton" type="Reject" text="Quit" press="onQuitRootPress"/>
          </OverflowToolbar>
       </footer>
    </Page>

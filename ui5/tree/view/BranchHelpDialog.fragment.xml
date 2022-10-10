@@ -1,0 +1,16 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+   <SelectDialog
+      id="selectBranchDialog"
+      title="Branches"
+      items="{/fBranches}"
+      search=".onBranchHelpSearch"
+      confirm=".onBranchHelpClose"
+      cancel=".onBranchHelpClose">
+      <StandardListItem
+         icon=""
+         iconDensityAware="false"
+         iconInset="false"
+         title="{fName}"
+         description="{fTitle}"/>
+   </SelectDialog>
+</core:FragmentDefinition>
