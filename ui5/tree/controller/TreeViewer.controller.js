@@ -74,6 +74,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             case "CFG":   // generic viewer configuration
                this.setCfg(this.jsroot.parse(msg)); // use jsroot.parse while refs are used
                break;
+            case "PROGRESS":
+               this.showProgess(parseFloat(msg));
+               break;
             default:
                console.error(`Non recognized msg ${mhdr} len = ${msg.length}`);
          }
@@ -158,6 +161,15 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             send.fFirst = 0;
 
          this.websocket.send("DRAW:"+JSON.stringify(send));
+      },
+
+      showProgess: function(val) {
+        let pr = this.byId("draw_progress");
+        pr.setVisible(true);
+        pr.setPercentValue(val);
+
+        if (val >= 100.)
+           setTimeout(() => pr.setVisible(false), 2000);
       },
 
       /** @summary Reload configuration */
