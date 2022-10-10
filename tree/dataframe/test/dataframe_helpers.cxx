@@ -4,6 +4,7 @@
 #include <ROOT/RVec.hxx>
 #include <ROOT/RDFHelpers.hxx>
 #include <ROOT/RResultHandle.hxx>
+#include <ROOT/RDF/RMetaData.hxx>
 #include <TSystem.h>
 #include <RConfigure.h>
 
@@ -681,4 +682,52 @@ TEST(RunGraphs, AlreadyRun)
 
    ROOT_EXPECT_WARNING(ROOT::RDF::RunGraphs({r1, r2, r3, r4}), "RunGraphs",
                        "Got 4 handles from which 2 link to results which are already ready.");
+}
+
+TEST(RMetaData, SimpleOperations)
+{
+   ROOT::RDF::Experimental::RMetaData m;
+   m.AddMetaData("year", 2022);
+   m.AddMetaData("energy", 13.6);
+   m.AddMetaData("framework", "ROOT6");
+   EXPECT_EQ(m.GetI("year"), 2022);
+   EXPECT_DOUBLE_EQ(m.GetD("energy"), 13.6);
+   EXPECT_EQ(m.GetS("framework"), "ROOT6");
+   EXPECT_EQ(m.Dump("year"), "2022");
+   EXPECT_EQ(m.Dump("energy"), "13.6");
+   EXPECT_EQ(m.Dump("framework"), "\"ROOT6\"");
+
+   // adding to the same key currently overwrites
+   // overwriting with the same type is okay
+   m.AddMetaData("year", 2023);
+   m.AddMetaData("energy", 13.9);
+   m.AddMetaData("framework", "ROOT7");
+   EXPECT_EQ(m.GetI("year"), 2023);
+   EXPECT_DOUBLE_EQ(m.GetD("energy"), 13.9);
+   EXPECT_EQ(m.GetS("framework"), "ROOT7");
+   // overwriting with different types
+   m.AddMetaData("year", 20.23);
+   m.AddMetaData("energy", "14");
+   m.AddMetaData("framework", 7);
+   EXPECT_DOUBLE_EQ(m.GetD("year"), 20.23);
+   EXPECT_EQ(m.GetS("energy"), "14");
+   EXPECT_EQ(m.GetI("framework"), 7);
+}
+
+TEST(RMetaData, InvalidQueries)
+{
+   ROOT::RDF::Experimental::RMetaData m;
+   m.AddMetaData("year", 2022);
+   m.AddMetaData("energy", 13.6);
+   m.AddMetaData("framework", "ROOT6");
+
+   // asking for the wrong type, but valid column
+   EXPECT_THROW(m.GetD("year"), std::logic_error);
+   EXPECT_THROW(m.GetS("energy"), std::logic_error);
+   EXPECT_THROW(m.GetI("framework"), std::logic_error);
+
+   // asking for non-existent columns
+   EXPECT_THROW(m.GetD("alpha"), std::logic_error);
+   EXPECT_THROW(m.GetS("beta"), std::logic_error);
+   EXPECT_THROW(m.GetI("gamma"), std::logic_error);
 }
