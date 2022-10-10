@@ -89,6 +89,8 @@ public:
    /// Is RWebWindow::Show calls catched for embeding of created widgets
    bool GetCatchWindowShow() const { return fCatchWindowShow; }
 
+   bool ActivateWidget(const std::string &title, const std::string &kind = "");
+
 };
 
 } // namespace Experimental
