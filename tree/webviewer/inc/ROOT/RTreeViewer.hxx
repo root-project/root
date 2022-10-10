@@ -13,6 +13,8 @@
 
 #include <ROOT/RWebDisplayArgs.hxx>
 
+#include "Rtypes.h"
+
 #include <memory>
 #include <vector>
 #include <string>
@@ -39,8 +41,9 @@ public:
    };
 
    struct RConfig {
-      std::string fExprX, fExprY, fExprZ, fExprCut;
+      std::string fExprX, fExprY, fExprZ, fExprCut, fOption;
       std::vector<RBranchInfo> fBranches;
+      Long64_t fNumber{0}, fFirst{0}, fStep{1}, fLargerStep{2}, fTreeEntries{0};
    };
 
    RTreeViewer(TTree *tree = nullptr);
@@ -79,7 +82,7 @@ private:
 
    void SendCfg(unsigned connid);
 
-   void UpdateBranchList();
+   void UpdateConfig();
 
    void InvokeTreeDraw(const std::string &json);
 };

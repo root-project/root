@@ -10,7 +10,7 @@
        showFooter="true" showSubHeader="false" showHeader="false" class="sapUiStdPage">
        <content>
           <VBox width="100%">
-            <Label text="X:" labelFor="input_x" />
+            <Label text="X:" labelFor="input_x"/>
             <Input
               id="input_x"
               value="{/fExprX}"
@@ -23,7 +23,7 @@
                  <core:Item text="{fName}"/>
               </suggestionItems>
             </Input>
-            <Label text="Y:" labelFor="input_y" />
+            <Label text="Y:" labelFor="input_y"/>
             <Input
               id="input_y"
               value="{/fExprY}"
@@ -36,7 +36,7 @@
                  <core:Item text="{fName}"/>
               </suggestionItems>
             </Input>
-            <Label text="Z:" labelFor="input_z" />
+            <Label text="Z:" labelFor="input_z"/>
             <Input
               id="input_z"
               value="{/fExprZ}"
@@ -49,10 +49,10 @@
                  <core:Item text="{fName}"/>
               </suggestionItems>
             </Input>
-            <Label text="Cut:" labelFor="input_cut" />
+            <Label text="Cut:" labelFor="input_cut"/>
             <Input
-              id="fExprCut"
-              value="{/expr_cut}"
+              id="input_cut"
+              value="{/fExprCut}"
               placeholder="Input cut expression"
               showSuggestion="true"
               showValueHelp="true"
@@ -62,6 +62,29 @@
                  <core:Item text="{fName}"/>
               </suggestionItems>
             </Input>
+            <Label text="Options:" labelFor="input_option"/>
+            <Input id="input_option" value="{/fOption}" placeholder="Input options"/>
+            <Label text="Entries:" labelFor="input_number"/>
+            <HBox>
+               <StepInput
+                  id="input_number"
+                  min="0"
+                  max="{/fTreeEntries}"
+                  step="{/fStep}"
+                  largerStep="{/fLargerStep}"
+                  value="{/fNumber}"
+                  placeholder="Number of entries"
+                  tooltip="Number of entries, 0 - all entries, maximum is {/fTreeEntries}"/>
+               <StepInput
+                  id="input_first"
+                  min="0"
+                  max="{/fTreeEntries}"
+                  step="{/fStep}"
+                  largerStep="{/fLargerStep}"
+                  value="{/fFirst}"
+                  placeholder="First entry"
+                  tooltip="First entry, default - 0, maximum is {= ${/fTreeEntries} - 1}"/>
+            </HBox>
           </VBox>
        </content>
 
