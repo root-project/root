@@ -1251,9 +1251,8 @@ void TDirectory::EncodeNameCycle(char *buffer, const char *name, Short_t cycle)
 /// namesize.
 /// @note Edge cases:
 ///   - If the number after the `;` is larger than `SHORT_MAX`, cycle is set to `0`.
-///   - If buffer is a nullptr, cycle is set to `9999`.
 ///   - If name ends with `;*`, cycle is set to 10000`. 
-///   - In all other cases, i.e. when number is not a digit, cycle is set to `9999`.
+///   - In all other cases, i.e. when number is not a digit or buffer is a nullptr, cycle is set to `9999`.
 
 void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle,
                                  const size_t namesize)
