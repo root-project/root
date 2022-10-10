@@ -366,27 +366,32 @@ RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t 
 }
 
 RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
-   : fBeginEntry(spec.GetEntryRangeBegin()), fEndEntry(spec.GetEntryRangeEnd()), fNSlots(RDFInternal::GetNSlots()),
+   : fBeginEntry(spec.GetEntryRangeBegin()), fEndEntry(spec.GetEntryRangeEnd()), fGroupInfo(spec.GetGroupInfo()),
+     fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
      fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots)
 {
    const auto &treeNames = spec.GetTreeNames();
    const auto &fileNameGlobs = spec.GetFileNameGlobs();
-   auto chain = std::make_shared<TChain>(treeNames.size() == 1 ? treeNames[0].c_str() : "");
-   if (treeNames.size() == 1) {
-      // A TChain has a global name, that is the name of single tree
-      // The global name of the chain is also the name of each tree in the list
-      // of files that make the chain.
-      for (const auto &f : fileNameGlobs)
-         chain->Add(f.c_str());
-   } else {
-      // Some other times, each different file has its own tree name, we need to
-      // reconstruct the full path to the tree in each file and pass that to
-      for (auto i = 0u; i < fileNameGlobs.size(); i++) {
-         const auto fullpath = fileNameGlobs[i] + "?#" + treeNames[i];
-         chain->Add(fullpath.c_str());
-      }
+   auto chain = std::make_shared<TChain>("");
+   auto lastGroupIdx = 0u;
+   auto initGroupSize = fGroupInfo.fSize[lastGroupIdx];
+   for (auto i = 0u; i < fileNameGlobs.size(); ++i) {
+      // update the size of the groups with the expanded globs
+      // example: g1 with 2 globs resolving in 3 and 4 files,
+      // and g2 with 2 globs resolving in 1 and 2 files
+      // chain->Add returns the number of files in the resolved expression,
+      // hence need to add number of resolved files - 1 to the current group idx
+      const auto fullpath = fileNameGlobs[i] + "/" + treeNames[i]; // TODO: use ?# once #11483 is solved
+      fGroupInfo.fSize[lastGroupIdx] += chain->Add(fullpath.c_str()) - 1;
+      // we saved that the first group has 2 file globs, once each glob is evaluated,
+      // we need to identify that we have 1 less glob to go through from the current group
+      if (--initGroupSize == 0)
+         // once we went to the end of the current group, go to next group
+         initGroupSize = fGroupInfo.fSize[++lastGroupIdx];
    }
+   for (auto i = 1u; i < fGroupInfo.fSize.size(); ++i)
+      fGroupInfo.fSize[i] += fGroupInfo.fSize[i - 1];
    SetTree(std::move(chain));
 
    // Create the friends from the list of friends
@@ -497,8 +502,13 @@ void RLoopManager::RunTreeProcessorMT()
       return;
    ROOT::Internal::RSlotStack slotStack(fNSlots);
    const auto &entryList = fTree->GetEntryList() ? *fTree->GetEntryList() : TEntryList();
-   auto tp = (fBeginEntry != 0 || fEndEntry != std::numeric_limits<Long64_t>::max())
-                ? std::make_unique<ROOT::TTreeProcessorMT>(*fTree, fNSlots, std::make_pair(fBeginEntry, fEndEntry))
+   // FIXME: this is a workaound to force TTreeProcessorMT to build chains globally in case of fGroupInfo
+   // TODO: either modify the TTreeProcessorMT or device a mechanism to spread groups distributedly
+   auto tp = (fBeginEntry != 0 || fEndEntry != std::numeric_limits<Long64_t>::max() || &fGroupInfo != nullptr)
+                ? std::make_unique<ROOT::TTreeProcessorMT>(
+                     *fTree, fNSlots,
+                     std::make_pair(fBeginEntry,
+                                    fEndEntry == std::numeric_limits<Long64_t>::max() ? fEndEntry : fEndEntry - 1))
                 : std::make_unique<ROOT::TTreeProcessorMT>(*fTree, entryList, fNSlots);
 
    std::atomic<ULong64_t> entryCount(0ull);
@@ -702,8 +712,12 @@ void RLoopManager::UpdateSampleInfo(unsigned int slot, const std::pair<ULong64_t
 }
 
 void RLoopManager::UpdateSampleInfo(unsigned int slot, TTreeReader &r) {
-   // one GetTree to retrieve the TChain, another to retrieve the underlying TTree
-   auto *tree = r.GetTree()->GetTree();
+   auto *chain = r.GetTree();                        // retrieve the TChain
+   const auto treePosition = chain->GetTreeNumber(); // retrieve the position of the underlying TTree
+   const auto groupPosition = std::distance(
+      fGroupInfo.fSize.begin(), std::upper_bound(fGroupInfo.fSize.begin(), fGroupInfo.fSize.end(), treePosition));
+   auto *tree = chain->GetTree(); // retrieve the underlying TTree
+
    R__ASSERT(tree != nullptr);
    const std::string treename = ROOT::Internal::TreeUtils::GetTreeFullPaths(*tree)[0];
    auto *file = tree->GetCurrentFile();
@@ -715,7 +729,7 @@ void RLoopManager::UpdateSampleInfo(unsigned int slot, TTreeReader &r) {
       range.second = tree->GetEntries(); // convert '-1', i.e. 'until the end', to the actual entry number
    }
 
-   fSampleInfos[slot] = RSampleInfo(fname + "/" + treename, range);
+   fSampleInfos[slot] = RSampleInfo(fname + "/" + treename, range, fGroupInfo.fMetaData[groupPosition]);
 }
 
 /// Initialize all nodes of the functional graph before running the event loop.
