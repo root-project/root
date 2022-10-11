@@ -43,7 +43,7 @@ public:
    };
 
    struct RConfig {
-      std::string fExprX, fExprY, fExprZ, fExprCut, fOption;
+      std::string fTreeName, fExprX, fExprY, fExprZ, fExprCut, fOption;
       std::vector<RBranchInfo> fBranches;
       Long64_t fNumber{0}, fFirst{0}, fStep{1}, fLargerStep{2}, fTreeEntries{0};
    };
