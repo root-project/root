@@ -206,7 +206,6 @@ if [ "x${SOURCE}" = "x" ]; then
          echo Consider enabling extdebug, or using 'source' instead, or "cd where/root/is".
       else
          echo ERROR: must "cd where/root/is" before calling ". bin/thisroot.sh" for this version of "$SHELLNAME"!
-         
       fi
       ROOTSYS=; export ROOTSYS
       return 1
