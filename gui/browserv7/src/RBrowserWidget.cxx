@@ -15,15 +15,36 @@
 #include <algorithm>
 
 #include "TSystem.h"
+#include "TBufferJSON.h"
 
 
 using namespace std::string_literals;
 using namespace ROOT::Experimental;
 
+
+///////////////////////////////////////////////////////////////
+/// Returns string which can be send to browser client to set/change
+/// title of the widget tab
+
+std::string RBrowserWidget::SendWidgetTitle()
+{
+   std::vector<std::string> args;
+   args.emplace_back(GetName());
+   args.emplace_back(GetTitle());
+
+   return "SET_TITLE:"s + TBufferJSON::ToJSON(&args).Data();
+}
+
+///////////////////////////////////////////////////////////////
+/// Constructor
+
 RBrowserWidgetProvider::RBrowserWidgetProvider(const std::string &kind)
 {
    GetMap().emplace(kind, this);
 }
+
+///////////////////////////////////////////////////////////////
+/// Destructor
 
 RBrowserWidgetProvider::~RBrowserWidgetProvider()
 {
@@ -34,6 +55,9 @@ RBrowserWidgetProvider::~RBrowserWidgetProvider()
    if (iter != map.end())
       map.erase(iter);
 }
+
+///////////////////////////////////////////////////////////////
+/// Returns static map of existing providers
 
 RBrowserWidgetProvider::ProvidersMap_t& RBrowserWidgetProvider::GetMap()
 {
