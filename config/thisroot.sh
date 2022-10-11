@@ -3,7 +3,7 @@
 # Conveniently an alias like this can be defined in .bashrc or .zshrc:
 #   alias thisroot=". bin/thisroot.sh"
 #
-# This script if for the bash like shells, see thisroot.csh for csh like shells.
+# This script is for the bash like shells, see thisroot.csh for csh like shells.
 #
 # Author: Fons Rademakers, 18/8/2006
 
