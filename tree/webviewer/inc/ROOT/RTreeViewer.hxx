@@ -21,6 +21,7 @@
 #include <functional>
 
 class TTree;
+class TObjArray;
 
 namespace ROOT {
 namespace Experimental {
@@ -85,6 +86,8 @@ private:
    void WebWindowCallback(unsigned connid, const std::string &arg);
 
    void SendCfg(unsigned connid);
+
+   void AddBranches(TObjArray *branches);
 
    void UpdateConfig();
 
