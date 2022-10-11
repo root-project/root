@@ -954,6 +954,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.findTab(arr[2], true); // set active
             break;
          }
+         case "SET_TITLE": {
+            let arr = JSON.parse(msg),
+                tab = this.findTab(arr[0]);
+            tab?.setAdditionalText(arr[1]);
+            break;
+         }
          case "WORKPATH":
             this.updateBReadcrumbs(JSON.parse(msg));
             this.doReload();
