@@ -220,6 +220,9 @@ namespace SOFIE{
          fUseSession = false;
       if (static_cast<std::underlying_type_t<Options>>(Options::kNoWeightFile) & options)
          fUseWeightFile = false;
+      if (fUseWeightFile && !fUseSession) {
+         throw std::runtime_error("TMVA-SOFIE: RModel::Generate: cannot use a separate weight file without generating a Session class");
+      }
       fGC.clear();
       Initialize(batchSize);
       fGC += ("//Code generated automatically by TMVA for Inference of Model file [" + fFileName + "] at [" + fParseTime.substr(0, fParseTime.length()-1) +"] \n");
@@ -311,12 +314,15 @@ namespace SOFIE{
             fGC += fOperators[id]->GenerateSessionMembersCode(opName);
          }
          fGC += "\n";
-         fGC += "Session(std::string filename =\"\") {\n";
          // here add initialization and reading of weight tensors
          if (fUseWeightFile) {
+            fGC += "Session(std::string filename =\"\") {\n";
             fGC += "   if (filename.empty()) filename = \"" + fName + ".dat\";\n";
             ReadInitializedTensorsFromFile();
             //fUseWeightFile = fUseWeightFile;
+         } else {
+            // no need to pass weight file since it is not used
+            fGC += "Session() {\n";
          }
          // add here initialization code
          for (size_t id = 0; id < fOperators.size() ; id++){
