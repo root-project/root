@@ -16,7 +16,7 @@ drop_from_path()
 {
    # Assert that we got enough arguments
    if test $# -ne 2 ; then
-      echo "drop_from_path: needs 2 arguments"
+      echo "drop_from_path: needs 2 arguments" >&2
       return 1
    fi
 
@@ -213,12 +213,16 @@ if [ -z "${SOURCE}" ]; then
       ROOTSYS="$PWD"; export ROOTSYS
    elif [ -f ./thisroot.sh ]; then
       ROOTSYS=$(cd .. > /dev/null && pwd); export ROOTSYS
+      if [ -z "$ROOTSYS" ]; then
+         echo "ERROR: \"cd ..\" or \"pwd\" failed" >&2
+         return 1
+      fi
    else
       if [ "$SHELLNAME" = "bash" ] ; then
-         echo ERROR: please turn on extdebug using "shopt -s extdebug"
-         echo or "cd where/root/is" before calling ". bin/thisroot.sh"
+         echo "ERROR: please turn on extdebug using \"shopt -s extdebug\"" >&2
+         echo "or \"cd where/root/is\" before calling \". bin/thisroot.sh\"" >&2
       else
-         echo ERROR: must "cd where/root/is" before calling ". bin/thisroot.sh" for this version of "$SHELLNAME"!
+         echo "ERROR: must \"cd where/root/is\" before calling \". bin/thisroot.sh\" for this version of \"$SHELLNAME\"!" >&2
       fi
       ROOTSYS=; export ROOTSYS
       return 1
@@ -227,6 +231,10 @@ else
    # get param to "."
    thisroot="$(dirname "${SOURCE}")"
    ROOTSYS=$(cd "${thisroot}/.." > /dev/null && pwd); export ROOTSYS
+   if [ -z "$ROOTSYS" ]; then
+      echo "ERROR: \"cd ${thisroot}/..\" or \"pwd\" failed" >&2
+      return 1
+   fi
 fi
 
 
