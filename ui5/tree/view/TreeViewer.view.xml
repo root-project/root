@@ -65,9 +65,10 @@
             <Label text="Options:" labelFor="input_option"/>
             <Input id="input_option" value="{/fOption}" placeholder="Input options"/>
             <Label text="Entries:" labelFor="input_number"/>
-            <HBox>
+            <HBox width="100%">
                <StepInput
                   id="input_number"
+                  class="sapUiSizeCompact"
                   min="0"
                   max="{/fTreeEntries}"
                   step="{/fStep}"
@@ -77,6 +78,7 @@
                   tooltip="Number of entries, 0 - all entries, maximum is {/fTreeEntries}"/>
                <StepInput
                   id="input_first"
+                  class="sapUiSizeCompact"
                   min="0"
                   max="{/fTreeEntries}"
                   step="{/fStep}"

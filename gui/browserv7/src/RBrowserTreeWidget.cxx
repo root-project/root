@@ -16,8 +16,6 @@
 #include "TTree.h"
 #include "ROOT/RBrowser.hxx"
 
-#include "TBufferJSON.h"
-
 using namespace ROOT::Experimental;
 
 using namespace std::string_literals;
@@ -65,6 +63,8 @@ public:
 
       return true;
    }
+
+   std::string SendWidgetContent() override { return SendWidgetTitle(); }
 
 };
 

@@ -40,6 +40,10 @@ class RBrowserWidget {
 
    RBrowser  *fBrowser{nullptr};
 
+protected:
+
+   std::string SendWidgetTitle();
+
 public:
 
    explicit RBrowserWidget(const std::string &name) : fName(name) {};

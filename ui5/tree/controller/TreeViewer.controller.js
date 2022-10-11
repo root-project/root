@@ -103,7 +103,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       onBranchHelpRequest: function(oEvent) {
          let sInputValue = oEvent.getSource().getValue(),
-            oView = this.getView();
+             oView = this.getView();
 
          this.branchInputId = oEvent.getSource().getId();
 
@@ -121,7 +121,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             // Create a filter for the binding
             oDialog.getBinding('items').filter([new Filter('fName', FilterOperator.Contains, '')]);
             // Open ValueHelpDialog filtered by the input's value
-            oDialog.open(sInputValue);
+            oDialog.open('');
          });
       },
 
