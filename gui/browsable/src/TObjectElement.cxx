@@ -114,7 +114,7 @@ public:
 
 class TMyBrowserImp : public TBrowserImp {
    TObjectLevelIter *fIter{nullptr};   ///<!  back-reference on iterator
-   const TObject *fBrowseObj{nullptr}; ///<!  object which wil be browsed
+   const TObject *fBrowseObj{nullptr}; ///<!  object which will be browsed
    bool fDuplicated{false};            ///<! is object was duplicated?
 
 public:
@@ -140,7 +140,11 @@ public:
       }
 
       fIter->AddElement(std::move(elem));
+   }
 
+   void BrowseObj(TObject* obj) override
+   {
+      Add(obj, nullptr, 0);
    }
 
 };
