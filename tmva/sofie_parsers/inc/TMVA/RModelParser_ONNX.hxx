@@ -13,12 +13,6 @@
 #include <ctime>
 #include <unordered_map>
 
-//forward declaration
-namespace onnx{
-   class NodeProto;
-   class GraphProto;
-}
-
 namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
