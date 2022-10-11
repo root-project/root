@@ -63,6 +63,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/RCutFlowReport.hxx
     ROOT/RDF/RDatasetSpec.hxx
     ROOT/RDF/RDisplay.hxx
+    ROOT/RDF/RDFFromJSON.hxx
     ROOT/RDF/RFilterBase.hxx
     ROOT/RDF/RFilter.hxx
     ROOT/RDF/RInterface.hxx
@@ -99,6 +100,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RDFActionHelpers.cxx
     src/RDFColumnRegister.cxx
     src/RDFDisplay.cxx
+    src/RDFFromJSON.cxx
     src/RDFGraphUtils.cxx
     src/RDFHistoModels.cxx
     src/RDFInterfaceUtils.cxx
