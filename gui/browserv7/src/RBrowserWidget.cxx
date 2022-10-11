@@ -28,9 +28,7 @@ using namespace ROOT::Experimental;
 
 std::string RBrowserWidget::SendWidgetTitle()
 {
-   std::vector<std::string> args;
-   args.emplace_back(GetName());
-   args.emplace_back(GetTitle());
+   std::vector<std::string> args = { GetName(), GetTitle(), Browsable::RElement::GetPathAsString(GetPath()) };
 
    return "SET_TITLE:"s + TBufferJSON::ToJSON(&args).Data();
 }

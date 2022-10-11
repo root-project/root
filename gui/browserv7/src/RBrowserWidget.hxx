@@ -40,10 +40,6 @@ class RBrowserWidget {
 
    RBrowser  *fBrowser{nullptr};
 
-protected:
-
-   std::string SendWidgetTitle();
-
 public:
 
    explicit RBrowserWidget(const std::string &name) : fName(name) {};
@@ -67,6 +63,7 @@ public:
 
    virtual bool DrawElement(std::shared_ptr<Browsable::RElement> &, const std::string &, bool) { return false; }
    virtual std::string SendWidgetContent() { return ""; }
+   std::string SendWidgetTitle();
 
    virtual void CheckModified() {}
 };
