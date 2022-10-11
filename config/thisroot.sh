@@ -202,8 +202,8 @@ if [ "x${SOURCE}" = "x" ]; then
       ROOTSYS=$(cd ..  > /dev/null; pwd); export ROOTSYS
    else
       if [ "$SHELLNAME" = "bash" ] ; then
-         echo ERROR: "$SHELLNAME" can only be used if the extdebug option is enabled (for BASH_ARGV to be defined)! # https://www.gnu.org/software/bash/manual/html_node/Bash-Variables.html#index-BASH_005fARGV
-         echo Consider enabling extdebug, or using 'source' instead, or "cd where/root/is".
+         echo ERROR: please turn on extdebug using "shopt -s extdebug"
+         echo or "cd where/root/is" before calling ". thisroot.sh"
       else
          echo ERROR: must "cd where/root/is" before calling ". bin/thisroot.sh" for this version of "$SHELLNAME"!
       fi
