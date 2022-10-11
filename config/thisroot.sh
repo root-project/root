@@ -201,7 +201,13 @@ if [ "x${SOURCE}" = "x" ]; then
    elif [ -f ./thisroot.sh ]; then
       ROOTSYS=$(cd ..  > /dev/null; pwd); export ROOTSYS
    else
-      echo ERROR: must "cd where/root/is" before calling ". bin/thisroot.sh" for this version of "$SHELLNAME"!
+      if [ "$SHELLNAME" = "bash" ] ; then
+         echo ERROR: "$SHELLNAME" can only be used if the extdebug option is enabled (for BASH_ARGV to be defined)! # https://www.gnu.org/software/bash/manual/html_node/Bash-Variables.html#index-BASH_005fARGV
+         echo Consider enabling extdebug, or using 'source' instead, or "cd where/root/is".
+      else
+         echo ERROR: must "cd where/root/is" before calling ". bin/thisroot.sh" for this version of "$SHELLNAME"!
+         
+      fi
       ROOTSYS=; export ROOTSYS
       return 1
    fi
