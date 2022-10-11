@@ -16,13 +16,19 @@
 #include "TTree.h"
 #include "TVirtualPad.h"
 #include "TBranch.h"
+#include "TBranchElement.h"
+#include "TStreamerInfo.h"
+#include "TLeaf.h"
+
 #include "TTimer.h"
-// #include "THttpServer.h"
 #include "TBufferJSON.h"
 
 
 namespace ROOT {
 namespace Experimental {
+
+
+
 
 class TProgressTimer : public TTimer {
    RTreeViewer &fViewer;
@@ -160,6 +166,66 @@ void RTreeViewer::WebWindowCallback(unsigned connid, const std::string &arg)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
+/// Add branches to config
+
+void RTreeViewer::AddBranches(TObjArray *branches)
+{
+   if (!branches || (branches->GetLast() < 0))
+      return;
+
+   TIter iter(branches);
+
+   auto replaceSlashes = [](std::string str, const std::string& from = "/", const std::string& to = "\\/") {
+       size_t start_pos = 0;
+       while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+           str.replace(start_pos, from.length(), to);
+           start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
+       }
+       return str;
+   };
+
+   while (auto br = dynamic_cast<TBranch *>(iter())) {
+
+      auto leaves = br->GetListOfLeaves();
+
+      auto subbr = br->GetListOfBranches();
+
+      std::string brname = br->GetName();
+
+      TLeaf *leaf0 = (leaves->GetLast() == 0) ? dynamic_cast<TLeaf *>(leaves->At(0)) : nullptr;
+
+      auto brelem = dynamic_cast<TBranchElement *>(br);
+
+      std::string brfullname = br->GetFullName().Data();
+
+      if ((subbr->GetLast() < 0) && leaf0 && (brname == leaf0->GetName())) {
+
+         // ignore branches containing objects, see TBranchElement::GetTypeName()
+         if (brelem && (brelem->GetStreamerType() < 1 || brelem->GetStreamerType() > 59))
+            continue;
+
+         fCfg.fBranches.emplace_back(replaceSlashes(brfullname), br->GetTitle() + " / "s + leaf0->GetTypeName());
+         continue;
+      }
+
+      TIter liter(leaves);
+      while (auto leaf = dynamic_cast<TLeaf *>(liter())) {
+
+         std::string leaffullname = leaf->GetFullName().Data();
+
+         // ignore counter leaf for STL container
+         if (brelem && brelem->GetStreamerType() == TStreamerInfo::kSTL && (leaves->GetLast() == 0) && (leaffullname == brfullname + "_"))
+            break;
+
+         fCfg.fBranches.emplace_back(replaceSlashes(leaffullname), leaf->GetTitle() + " / "s + leaf->GetTypeName());
+      }
+
+      AddBranches(subbr);
+   }
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
 /// Update RConfig data
 
 void RTreeViewer::UpdateConfig()
@@ -170,11 +236,7 @@ void RTreeViewer::UpdateConfig()
 
    fCfg.fTreeName = fTree->GetName();
 
-   TIter iter(fTree->GetListOfBranches());
-
-   while (auto br = dynamic_cast<TBranch *>(iter())) {
-      fCfg.fBranches.emplace_back(br->GetName(), br->GetTitle());
-   }
+   AddBranches(fTree->GetListOfBranches());
 
    fCfg.fTreeEntries = fTree->GetEntries();
 
@@ -267,8 +329,6 @@ void RTreeViewer::SendProgress(bool completed)
       return;
 
    fLastSendProgress = progress;
-
-   // printf("Progress %s\n", progress.c_str());
 
    fWebWindow->Send(0, "PROGRESS:"s + progress);
 }
