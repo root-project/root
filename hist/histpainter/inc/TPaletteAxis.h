@@ -64,9 +64,9 @@ public:
    virtual void  SetTitleSize(Float_t size=0.035) {if (fH) fH->GetZaxis()->SetTitleSize(size);} // *MENU*
    virtual void  SetTitleColor(Int_t color=1) {if (fH) fH->GetZaxis()->SetTitleColor(color);} // *MENU*
    virtual void  SetTitleFont(Int_t font=42) {if (fH) fH->GetZaxis()->SetTitleFont(font);} // *MENU*
-   virtual void  SetTitle(char *title) {if (fH) fH->GetZaxis()->SetTitle(title);} // *MENU*
+   virtual void  SetTitle(const char *title="") {if (fH) fH->GetZaxis()->SetTitle(title);} // *MENU*
+   void  SetLineWidth(Width_t width) override {fAxis.SetLineWidth(width);} // *MENU*
 
-   void  SetLineWidth(Width_t linewidth) override {fAxis.SetLineWidth(linewidth);} // *MENU*
    virtual void  UnZoom();  // *MENU*
 
    ClassDefOverride(TPaletteAxis,4)  //class used to display a color palette axis for 2-d plots
