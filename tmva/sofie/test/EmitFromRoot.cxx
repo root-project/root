@@ -29,8 +29,18 @@ int main(int argc, char *argv[]){
    RModel *modelPtr;
    fileRead.GetObject("model",modelPtr);
    fileRead.Close();
-   // in this case we don't write session class and weight file
-   modelPtr->Generate(Options::kNoSession | Options::kNoWeightFile);
+   if (outname.find("Linear_") != std::string::npos) {
+      // use Session and weight file for linear model with large weights
+      modelPtr->Generate(); 
+   }
+   else if (outname.find("LinearWith") != std::string::npos){
+      // in this case we don't write session class but not weight file
+      modelPtr->Generate(Options::kNoWeightFile);
+   }
+   else {
+      // in this case we don't write session class and not weight file
+      modelPtr->Generate(Options::kNoSession | Options::kNoWeightFile);
+   }
    modelPtr->OutputGenerated(outname+"_FromROOT.hxx");
    return 0;
 }
