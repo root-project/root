@@ -3392,7 +3392,6 @@ void TCling::RegisterLoadedSharedLibrary(const char* filename)
        // "Link against the umbrella framework 'System.framework' instead"
        || !strncmp(filename, "/usr/lib/system/libsystem_kernel", 32)
        || !strncmp(filename, "/usr/lib/system/libsystem_platform", 34)
-       || !strncmp(filename, "/usr/lib/system/libsystem_pthread", 34)
        // "cannot link directly with dylib/framework, your binary is not an allowed client of
        // /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/
        // SDKs/MacOSX.sdk/usr/lib/libAudioToolboxUtility.tbd for architecture x86_64
