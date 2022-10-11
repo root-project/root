@@ -50,7 +50,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       onWebsocketClosed: function() {
          // when connection closed, close panel as well
-         if (window && !this._embeded) window.close();
+
+         console.log('web socket closed', this._embeded);
+
+         // if (window && !this._embeded) window.close();
       },
 
       /** Entry point for all data from server */
@@ -100,18 +103,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       onBranchHelpRequest: function(oEvent) {
-         let sInputValue = oEvent.getSource().getValue(),
-             oView = this.getView();
 
          this.branchInputId = oEvent.getSource().getId();
 
          if (!this._pValueHelpDialog) {
             this._pValueHelpDialog = Fragment.load({
-               id: oView.getId(),
+               id: this.getView().getId(),
                name: 'rootui5.tree.view.BranchHelpDialog',
                controller: this
             }).then(oDialog => {
-               oView.addDependent(oDialog);
+               this.getView().addDependent(oDialog);
                return oDialog;
             });
          }
@@ -139,6 +140,20 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.byId(this.branchInputId).setValue(old + oSelectedItem.getTitle());
          }
          delete this.branchInputId;
+      },
+
+      onPressClearBtn: function(oEvent) {
+         let id = oEvent.getSource().getId();
+         if (id.indexOf("clear_x") >= 0)
+            this.cfg.fExprX = "";
+         else if (id.indexOf("clear_y") >= 0)
+            this.cfg.fExprY = "";
+         else if (id.indexOf("clear_z") >= 0)
+            this.cfg.fExprZ = "";
+         else if (id.indexOf("clear_cut") >= 0)
+            this.cfg.fExprCut = "";
+
+         this.cfg_model.refresh();
       },
 
       performDraw: function() {
