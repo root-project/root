@@ -571,7 +571,8 @@ std::string RBrowser::GetCurrentWorkingDirectory()
 
 std::string RBrowser::NewWidgetMsg(std::shared_ptr<RBrowserWidget> &widget)
 {
-   std::vector<std::string> arr = { widget->GetKind(), widget->GetUrl(), widget->GetName(), widget->GetTitle() };
+   std::vector<std::string> arr = { widget->GetKind(), widget->GetUrl(), widget->GetName(), widget->GetTitle(),
+                                    Browsable::RElement::GetPathAsString(widget->GetPath()) };
    return "NEWWIDGET:"s + TBufferJSON::ToJSON(&arr, TBufferJSON::kNoSpaces).Data();
 }
 

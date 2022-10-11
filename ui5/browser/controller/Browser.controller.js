@@ -57,7 +57,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
      * @desc All Browser functionality is loaded after main ui5 rendering is performed */
 
    return Controller.extend("rootui5.browser.controller.Browser", {
-      onInit: async function () {
+      onInit: function () {
 
         uiDevice.orientation.attachHandler(mParams => this.handleChangeOrientation(mParams.landscape));
 
@@ -246,10 +246,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.drawingOptions = { TH1: 'hist', TH2: 'COL', TProfile: 'E0'};
       },
 
-      createImageViewer: function (dummy_url, name, title) {
-         let oTabContainer = this.getView().byId("tabContainer");
+      createImageViewer: function (dummy_url, name, title, tooltip) {
+         let oTabContainer = this.getView().byId("tabContainer"),
+             image = new Image({ src: "", densityAware: false });
 
-         let image = new Image({ src: "", densityAware: false });
          image.addStyleClass("imageViewer");
 
          let item = new TabContainerItem(name, {
@@ -257,6 +257,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             name: "Image Viewer",
             key: name,
             additionalText: title,
+            tooltip: tooltip || '',
             content: new mPage({
                showNavButton: false,
                showFooter: false,
@@ -271,27 +272,24 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }));
 
          oTabContainer.addItem(item);
-         // oTabContainer.setSelectedItem(item);
+
+         return item;
       },
 
       /* =========================================== */
       /* =============== Tree Viewer =============== */
       /* =========================================== */
 
-      createTreeViewer: function(url, name, title) {
+      createTreeViewer: function(url, name, title, tooltip) {
          const oTabContainer = this.getView().byId("tabContainer");
 
          let item = new TabContainerItem(name, {
             icon: "sap-icon://tree",
             name: "Tree Viewer",
             key: name,
-            additionalText: title
+            additionalText: title,
+            tooltip: tooltip || ''
          });
-
-         //item.setModel(new JSONModel({
-         //   url: dummy_url,
-         //   name, title
-         //}));
 
          oTabContainer.addItem(item);
 
@@ -303,20 +301,23 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             viewName: "rootui5.tree.view.TreeViewer",
             viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
          })).then(oView => item.addContent(oView));
+
+         return item;
       },
 
       /* =========================================== */
       /* =============== Code Editor =============== */
       /* =========================================== */
 
-      createCodeEditor: function(dummy_url, name, editor_title) {
+      createCodeEditor: function(dummy_url, name, editor_title, tooltip) {
          const oTabContainer = this.getView().byId("tabContainer");
 
          let item = new TabContainerItem(name, {
             icon: "sap-icon://write-new-document",
             name: "Code Editor",
             key: name,
-            additionalText: "{/title}"
+            additionalText: "{/title}",
+            tooltip: tooltip || ''
          });
 
          item.addContent(new ToolHeader({
@@ -387,7 +388,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }));
 
          oTabContainer.addItem(item);
-         // oTabContainer.setSelectedItem(item);
+
+         return item;
       },
 
       /** @brief Invoke dialog with server side code */
@@ -555,25 +557,24 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* =============== Settings menu =============== */
       /* ============================================= */
 
-      _getSettingsMenu: async function () {
-         if (!this._oSettingsMenu) {
-            this._oSettingsMenu = await Fragment.load({ name: "rootui5.browser.view.settingsmenu", controller: this });
-            this._oSettingsMenu.setModel(this._oSettingsModel);
-            this.getView().addDependent(this._oSettingsMenu);
-         }
-         return this._oSettingsMenu;
-      },
-
-      onSettingPress: async function () {
-         let menu = await this._getSettingsMenu();
-
+      onSettingPress: function () {
          this._oSettingsModel.setProperty("/AppendToCanvas", this.model.isAppendToCanvas());
          this._oSettingsModel.setProperty("/OnlyLastCycle", (this.model.getOnlyLastCycle() > 0));
          this._oSettingsModel.setProperty("/ShowHiddenFiles", this.model.isShowHidden());
          this._oSettingsModel.setProperty("/SortMethod", this.model.getSortMethod());
          this._oSettingsModel.setProperty("/ReverseOrder", this.model.isReverseOrder());
 
-         menu.open();
+         if (!this._oSettingsMenu)
+            this._oSettingsMenu = Fragment.load({
+               name: "rootui5.browser.view.settingsmenu",
+               controller: this
+            }).then(menu => {
+               menu.setModel(this._oSettingsModel);
+               this.getView().addDependent(menu);
+               return menu;
+            });
+
+         this._oSettingsMenu.then(menu => menu.open());
       },
 
       handleSettingsChange: function (oEvent) {
@@ -617,34 +618,36 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       /** @summary Add Tab event handler */
-      handlePressAddTab: async function (oEvent) {
+      handlePressAddTab: function (oEvent) {
          //TODO: Change to some UI5 function (unknown for now), not know how to get
          let oButton = oEvent.getSource().mAggregations._tabStrip.mAggregations.addButton;
 
          // create action sheet only once
-         if (!this._tabMenu) {
-            this._tabMenu = await Fragment.load({
+         if (!this._tabMenu)
+            this._tabMenu = Fragment.load({
                name: "rootui5.browser.view.tabsmenu",
                controller: this
+            }).then(menu => {
+               this.getView().addDependent(menu);
+               return menu;
             });
-            this.getView().addDependent(this._tabMenu);
-         }
-         this._tabMenu.openBy(oButton);
+
+         this._tabMenu.then(menu => menu.openBy(oButton));
       },
 
       /** @summary handle creation of new tab */
       handleNewTab: function (oEvent) {
          let msg, txt = oEvent.getSource().getText();
 
-         if (txt.indexOf("editor") >= 0)
+         if (txt.indexOf('editor') >= 0)
             msg = "NEWWIDGET:editor";
-         else if (txt.indexOf("Image") >= 0)
+         else if (txt.indexOf('Image') >= 0)
             msg = "NEWWIDGET:image";
-         else if (txt.indexOf("Geometry") >= 0)
+         else if (txt.indexOf('Geometry') >= 0)
             msg = "NEWWIDGET:geom";
-         else if (txt.indexOf("Root 6") >= 0)
+         else if (txt.indexOf('Root 6') >= 0)
             msg = "NEWWIDGET:tcanvas";
-         else if (txt.indexOf("Root 7") >= 0)
+         else if (txt.indexOf('Root 7') >= 0)
             msg = "NEWWIDGET:rcanvas";
 
          if (this.isConnected && msg)
@@ -659,8 +662,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          // already array with all items inside
          let oBreadcrumbs = this.getView().byId("breadcrumbs");
          oBreadcrumbs.removeAllLinks();
-         for (let i=-1; i<split.length; i++) {
-            let txt = i<0 ? "/": split[i];
+         for (let i = -1; i < split.length; i++) {
+            let txt = i < 0 ? '/' : split[i];
             if (i === split.length-1) {
                oBreadcrumbs.setCurrentLocationText(txt);
             } else {
@@ -677,7 +680,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          let oLinks = oBreadcrumbs.getLinks();
          let path = [];
          for (let i = 0; i < oLinks.length; i++) {
-            if (i>0) path.push(oLinks[i].getText());
+            if (i > 0) path.push(oLinks[i].getText());
             if (oLinks[i].getId() === sId ) break;
          }
          // after CHPATH will be replied, client also start reload
@@ -884,7 +887,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          return className;
       },
 
-      onWebsocketOpened: function(handle) {
+      onWebsocketOpened: function(/*handle*/) {
          this.isConnected = true;
 
          if (this.model)
@@ -911,9 +914,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          // console.log('MSG', msg.substr(0,20));
 
-         let mhdr = msg.split(":")[0];
-         msg = msg.substr(mhdr.length+1);
-
+         let p = msg.indexOf(':'), mhdr = '';
+         if (p > 0) {
+            mhdr = msg.slice(0, p);
+            msg = msg.slice(p+1);
+         } else {
+            mhdr = msg;
+            msg = '';
+         }
 
          switch (mhdr) {
          case "INMSG":
@@ -922,8 +930,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          case "NOPE":
             break;
          case "EDITOR": { // update code editor
-            let arr = JSON.parse(msg);
-            let tab = this.findTab(arr[0]);
+            let arr = JSON.parse(msg),
+                tab = this.findTab(arr[0]);
 
             if (tab) {
                this.setEditorFileKind(tab, arr[1]);
@@ -950,7 +958,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
          case "NEWWIDGET": {  // widget created by server, need to establish connection
             let arr = JSON.parse(msg);
-            this.createElement(arr[0], arr[1], arr[2], arr[3]);
+            this.createElement(arr[0], arr[1], arr[2], arr[3], arr[4]);
             this.findTab(arr[2], true); // set active
             break;
          }
@@ -958,6 +966,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             let arr = JSON.parse(msg),
                 tab = this.findTab(arr[0]);
             tab?.setAdditionalText(arr[1]);
+            tab?.setTooltip(arr[2] || '');
             break;
          }
          case "WORKPATH":
@@ -986,7 +995,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.updateLogs(JSON.parse(msg));
             break;
          default:
-            console.error('Non recognized msg ' + mhdr + ' len=' + msg.length);
+            console.error(`Not recognized msg ${mhdr} len= ${msg.length}`);
          }
       },
 
@@ -1046,7 +1055,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          setTimeout(() => { if (window) window.close(); }, 2000);
       },
 
-      onSearch : function(oEvt) {
+      onSearch: function(oEvt) {
          this.changeItemsFilter(oEvt.getSource().getValue());
       },
 
@@ -1084,63 +1093,68 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                arr[k].shift();
                this.updateLogs(arr[k]);
             } else {
-               this.createElement(kind, arr[k][1], arr[k][2], arr[k][3]);
+               this.createElement(kind, arr[k][1], arr[k][2], arr[k][3], arr[k][4]);
             }
          }
       },
 
-      createElement: function(kind, par1, par2, par3) {
+      createElement: function(kind, par1, par2, par3, tooltip) {
+         let tabItem;
          switch(kind) {
-            case "editor": this.createCodeEditor(par1, par2, par3); break;
-            case "image": this.createImageViewer(par1, par2, par3); break;
-            case "tree": this.createTreeViewer(par1, par2, par3); break;
-            case "geom": this.createGeomViewer(par1, par2, par3); break;
-            case "catched": this.createCatchedWidget(par1, par2, par3); break;
-            default: this.createCanvas(kind, par1, par2, par3);
+            case "editor": tabItem = this.createCodeEditor(par1, par2, par3, tooltip); break;
+            case "image": tabItem = this.createImageViewer(par1, par2, par3, tooltip); break;
+            case "tree": tabItem = this.createTreeViewer(par1, par2, par3, tooltip); break;
+            case "geom": tabItem = this.createGeomViewer(par1, par2, par3, tooltip); break;
+            case "catched": tabItem = this.createCatchedWidget(par1, par2, par3, tooltip); break;
+            default: tabItem = this.createCanvas(kind, par1, par2, par3, tooltip);
          }
+         return tabItem;
       },
 
-      createCatchedWidget: function(url, name, catched_kind) {
+      createCatchedWidget: function(url, name, catched_kind, tooltip) {
          switch(catched_kind) {
-            case "rcanvas": this.createCanvas("rcanvas", url, name, "Catched RCanvas"); break;
-            case "tcanvas": this.createCanvas("tcanvas", url, name, "Catched TCanvas"); break;
-            case "geom": this.createGeomViewer(url, name, "Catched geom viewer"); break;
+            case "rcanvas": return this.createCanvas("rcanvas", url, name, "Catched RCanvas", tooltip);
+            case "tcanvas": return this.createCanvas("tcanvas", url, name, "Catched TCanvas", tooltip);
+            case "tree": return this.createTreeViewer(url, name, "Catched tree viewer", tooltip);
+            case "geom": return this.createGeomViewer(url, name, "Catched geom viewer", tooltip);
             default: console.error("Not supported cacthed kind", catched_kind);
          }
       },
 
-      createGeomViewer: function(url, name /*, title */) {
+      createGeomViewer: function(url, name , _title, tooltip) {
          let oTabContainer = this.byId("tabContainer");
          let item = new TabContainerItem({
             name: "Geom viewer",
             key: name,
             additionalText: name,
-            icon: "sap-icon://column-chart-dual-axis"
+            icon: "sap-icon://column-chart-dual-axis",
+            tooltip: tooltip || ''
          });
 
          oTabContainer.addItem(item);
          // oTabContainer.setSelectedItem(item);
 
-         import('/rootui5sys/eve7/eve.mjs')
-           .then(h => h.initEVE(this.jsroot.source_dir))
-           .then(() => this.jsroot.connectWebWindow({
-               kind: this.websocket.kind,
-               href: this.websocket.getHRef(url),
-               user_args: { nobrowser: true }
-           })).then(handle => XMLView.create({
-               viewName: "rootui5.eve7.view.GeomViewer",
-               viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
-           })).then(oView => item.addContent(oView));
+         this.jsroot.connectWebWindow({
+            kind: this.websocket.kind,
+            href: this.websocket.getHRef(url),
+            user_args: { nobrowser: true }
+         }).then(handle => XMLView.create({
+            viewName: "rootui5.eve7.view.GeomViewer",
+            viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
+         })).then(oView => item.addContent(oView));
+
+         return item;
       },
 
-      createCanvas: async function(kind, url, name, title) {
+      createCanvas: function(kind, url, name, title, tooltip) {
          if (!url || !name || (kind != "tcanvas" && kind != "rcanvas")) return;
 
          let item = new TabContainerItem({
             name: (kind == "rcanvas") ? "RCanvas" : "TCanvas",
             key: name,
             additionalText: title || name,
-            icon: "sap-icon://column-chart-dual-axis"
+            icon: "sap-icon://column-chart-dual-axis",
+            tooltip: tooltip || ''
          });
 
          this.byId("tabContainer").addItem(item);
@@ -1148,34 +1162,36 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          let conn = new this.jsroot.WebWindowHandle(this.websocket.kind);
          conn.setHRef(this.websocket.getHRef(url)); // argument for connect, makes relative path
 
-         let draw = await import(this.jsroot.source_dir + 'modules/draw.mjs');
-
-         let painter = await ((kind == "rcanvas")
-                ? import(this.jsroot.source_dir + 'modules/gpad/RCanvasPainter.mjs').then(h => {
+         import(this.jsroot.source_dir + 'modules/draw.mjs').then(draw => {
+            if (kind == "rcanvas")
+               return import(this.jsroot.source_dir + 'modules/gpad/RCanvasPainter.mjs').then(h => {
                    draw.assignPadPainterDraw(h.RPadPainter);
                    return new h.RCanvasPainter(null, null);
-                })
-                : import(this.jsroot.source_dir + 'modules/gpad/TCanvasPainter.mjs').then(h => {
-                     draw.assignPadPainterDraw(h.TPadPainter);
-                     return new h.TCanvasPainter(null, null);
-                }));
+                });
 
-         painter.online_canvas = true; // indicates that canvas gets data from running server
-         painter.embed_canvas = true;  // use to indicate that canvas ui should not close complete window when closing
-         painter.use_openui = true;
-         painter.batch_mode = false;
-         painter._window_handle = conn;
+            return import(this.jsroot.source_dir + 'modules/gpad/TCanvasPainter.mjs').then(h => {
+               draw.assignPadPainterDraw(h.TPadPainter);
+               return new h.TCanvasPainter(null, null);
+            });
+         }).then(painter => {
+            painter.online_canvas = true; // indicates that canvas gets data from running server
+            painter.embed_canvas = true;  // use to indicate that canvas ui should not close complete window when closing
+            painter.use_openui = true;
+            painter.batch_mode = false;
+            painter._window_handle = conn;
 
-         let oView = await XMLView.create({
-            viewName: "rootui5.canv.view.Canvas",
-            viewData: { canvas_painter: painter },
-            height: "100%"
+            return XMLView.create({
+               viewName: "rootui5.canv.view.Canvas",
+               viewData: { canvas_painter: painter },
+               height: "100%"
+            });
+         }).then(oView => {
+            item.addContent(oView);
+            let ctrl = oView.getController();
+            ctrl.onCloseCanvasPress = this.doCloseTabItem.bind(this, item);
          });
 
-         item.addContent(oView);
-
-         let ctrl = oView.getController();
-         ctrl.onCloseCanvasPress = this.doCloseTabItem.bind(this, item);
+         return item;
       }
 
    });
