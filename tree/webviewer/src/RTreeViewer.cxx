@@ -168,6 +168,8 @@ void RTreeViewer::UpdateConfig()
 
    if (!fTree) return;
 
+   fCfg.fTreeName = fTree->GetName();
+
    TIter iter(fTree->GetListOfBranches());
 
    while (auto br = dynamic_cast<TBranch *>(iter())) {

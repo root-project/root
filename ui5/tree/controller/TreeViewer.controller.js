@@ -32,6 +32,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.standalone = this.websocket.kind == "file";
 
          this.cfg = {
+            fTreeName: "",
             fExprX: "", fExprY: "", fExprZ: "", fExprCut: "", fOption: "",
             fNumber: 0, fFirst: 0, fStep: 1, fLargerStep: 2, fTreeEntries: 100,
             fBranches: [ { fName: "px", fTitle: "px branch" }, { fName: "py", fTitle: "py branch" }, { fName: "pz", fTitle: "pz branch" } ]
@@ -88,9 +89,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.last_cfg = cfg;
 
          Object.assign(this.cfg, cfg);
-
-         // if (!this.cfg.fFirst) delete this.cfg.fFirst; // default value
-         // if (!this.cfg.fNumber) delete this.cfg.fNumber; // default value
 
          this.cfg_model.refresh();
       },

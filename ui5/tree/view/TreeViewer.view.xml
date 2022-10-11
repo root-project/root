@@ -6,7 +6,7 @@
    xmlns:core="sap.ui.core"
    xmlns:l="sap.ui.layout"
    xmlns:t="sap.ui.table">
-   <Page id="treeViewerPage" title="Tree viewer" showNavButton="false" floatingFooter="true"
+   <Page id="treeViewerPage" title="Tree viewer: {/fTreeName}" showNavButton="false" floatingFooter="true"
        showFooter="true" showSubHeader="false" showHeader="false" class="sapUiStdPage">
        <content>
           <VBox width="100%">
