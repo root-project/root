@@ -126,7 +126,7 @@ static void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, ColumnName
          InsertBranchName(bNamesReg, bNames, std::string(branchDirectlyFromTree->GetFullName()), friendName,
                           allowDuplicates);
 
-      if (t.GetBranch(subBranchName.c_str()))
+      if (bNamesReg.find(subBranchName) == bNamesReg.end() && t.GetBranch(subBranchName.c_str()))
          InsertBranchName(bNamesReg, bNames, subBranchName, friendName, allowDuplicates);
    }
 }
