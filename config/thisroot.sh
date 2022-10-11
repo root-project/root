@@ -203,7 +203,7 @@ if [ "x${SOURCE}" = "x" ]; then
    else
       if [ "$SHELLNAME" = "bash" ] ; then
          echo ERROR: please turn on extdebug using "shopt -s extdebug"
-         echo or "cd where/root/is" before calling ". thisroot.sh"
+         echo or "cd where/root/is" before calling ". bin/thisroot.sh"
       else
          echo ERROR: must "cd where/root/is" before calling ". bin/thisroot.sh" for this version of "$SHELLNAME"!
       fi
