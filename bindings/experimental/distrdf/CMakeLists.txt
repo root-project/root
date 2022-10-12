@@ -32,7 +32,7 @@ set(py_sources
 )
 
 # Compile .py files
-# We include DistRDF in the build only if Python 3.7+ is used,
+# We include DistRDF in the build only if Python 3.8+ is used,
 # so we can directly use the main Python executable to compile the sources
 foreach(py_source ${py_sources})
   install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE_Development_Main} -m py_compile ${localruntimedir}/${py_source})")
