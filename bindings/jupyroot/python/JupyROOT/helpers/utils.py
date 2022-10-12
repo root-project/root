@@ -27,10 +27,8 @@ from datetime import datetime
 from hashlib import sha1
 from contextlib import contextmanager
 from subprocess import check_output
-from IPython import get_ipython
-from IPython.display import HTML
+from IPython import get_ipython, display
 from IPython.core.extensions import ExtensionManager
-import IPython.display
 import ROOT
 from JupyROOT.helpers import handlers
 
@@ -396,8 +394,8 @@ class StreamCapture(object):
             for t in transformers:
                 (out, err, otype) = t(out, err)
                 if otype == 'html':
-                    IPython.display.display(HTML(out))
-                    IPython.display.display(HTML(err))
+                    display.display(display.HTML(out))
+                    display.display(display.HTML(err))
         return 0
 
     def register(self):
@@ -553,24 +551,24 @@ class NotebookDrawer(object):
         return thisJsCode
 
     def _getJsDiv(self):
-        return HTML(self._getJsCode())
+        return display.HTML(self._getJsCode())
 
     def _jsDisplay(self):
-        IPython.display.display(self._getJsDiv())
+        display.display(self._getJsDiv())
         return 0
 
     def _getPngImage(self):
         ofile = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
         with _setIgnoreLevel(ROOT.kError):
             self.drawableObject.SaveAs(ofile.name)
-        img = IPython.display.Image(filename=ofile.name, format='png', embed=True)
+        img = display.Image(filename=ofile.name, format='png', embed=True)
         ofile.close()
         os.unlink(ofile.name)
         return img
 
     def _pngDisplay(self):
         img = self._getPngImage()
-        IPython.display.display(img)
+        display.display(img)
 
     def _display(self):
        if _enableJSVisDebug:
@@ -632,7 +630,7 @@ def enhanceROOTModule():
     ROOT.disableJSVisDebug = disableJSVisDebug
 
 def enableCppHighlighting():
-    ipDispJs = IPython.display.display_javascript
+    ipDispJs = display.display_javascript
     # Define highlight mode for %%cpp magic
     ipDispJs(_jsMagicHighlight.format(cppMIME = cppMIME), raw=True)
 
