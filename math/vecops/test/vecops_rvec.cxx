@@ -814,6 +814,14 @@ TEST(VecOps, Range)
    CheckEqual(Range(l), ref);
 }
 
+TEST(VecOps, RangeBeginEnd)
+{
+   const RVecI ref{1, 2, 3};
+   CheckEqual(Range(1, 4), ref);
+
+   CheckEqual(Range(4, 1), RVecI{});
+}
+
 TEST(VecOps, Drop)
 {
    RVec<int> v1{2, 0, 1};
