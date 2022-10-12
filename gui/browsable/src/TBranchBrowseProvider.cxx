@@ -45,7 +45,6 @@ public:
    Long64_t GetSize() const override
    {
       auto tr = fObject->Get<TTree>();
-      printf("Return TTree size %ld\n", (long) (tr ? tr->GetTotBytes() : -1));
       return tr ? tr->GetTotBytes() : -1;
    }
 };

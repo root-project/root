@@ -116,16 +116,21 @@ class TMyBrowserImp : public TBrowserImp {
    TObjectLevelIter *fIter{nullptr};   ///<!  back-reference on iterator
    const TObject *fBrowseObj{nullptr}; ///<!  object which will be browsed
    bool fDuplicated{false};            ///<! is object was duplicated?
+   bool fIgnore{false};                 ///<! ignore browsing, used during TBrowser constructor
 
 public:
 
    TMyBrowserImp(TObjectLevelIter *iter, TObject *obj) : TBrowserImp(nullptr), fIter(iter), fBrowseObj(obj) {}
    virtual ~TMyBrowserImp() = default;
 
+   void SetIgnore(bool on = true) { fIgnore = on; }
+
    bool IsDuplicated() const { return fDuplicated; }
 
    void Add(TObject* obj, const char* name, Int_t) override
    {
+      if (fIgnore) return;
+
       // prevent duplication of object itself - ignore such browsing
       if (fBrowseObj == obj) fDuplicated = true;
       if (fDuplicated) return;
@@ -144,6 +149,8 @@ public:
 
    void BrowseObj(TObject* obj) override
    {
+      if (fIgnore) return;
+
       Add(obj, nullptr, 0);
    }
 
@@ -353,8 +360,13 @@ std::unique_ptr<RLevelIter> TObjectElement::GetChildsIter()
 
    TMyBrowserImp *imp = new TMyBrowserImp(iter.get(), fObj);
 
+   // ignore browsing during TBrowser constructor, avoid gROOT adding
+   imp->SetIgnore(true);
+
    // must be new, otherwise TBrowser constructor ignores imp
    TBrowser *br = new TBrowser("name", "title", imp);
+
+   imp->SetIgnore(false);
 
    fObj->Browse(br);
 
