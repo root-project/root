@@ -41,26 +41,21 @@ public:
       if (!htemp)
          return nullptr;
 
+      TString title = expr.c_str();
+      title.ReplaceAll("\\/", "/");
+      title.ReplaceAll("#","\\#");
+
       htemp->SetDirectory(nullptr);
       htemp->SetName(hname.c_str());
+      htemp->SetTitle(title.Data());
 
       htemp->BufferEmpty();
 
       return htemp;
    }
 
-   TH1 *DrawLeaf(std::unique_ptr<RHolder> &obj)
+   TH1 *DrawBranch(TBranch *tbranch)
    {
-      auto tleaf = obj->get_object<TLeaf>();
-      if (!tleaf)
-         return nullptr;
-
-      return DrawTree(tleaf->GetBranch()->GetTree(), tleaf->GetName(), tleaf->GetName());
-   }
-
-   TH1 *DrawBranch(std::unique_ptr<RHolder> &obj)
-   {
-      auto tbranch = obj->get_object<TBranch>();
       if (!tbranch)
          return nullptr;
 
@@ -70,9 +65,45 @@ public:
 
       TString name = tbranch->GetName();
       Int_t pos = name.First('[');
-      if (pos!=kNPOS) name.Remove(pos);
+      if (pos != kNPOS) name.Remove(pos);
 
-      return DrawTree(tbranch->GetTree(), name.Data(), name.Data());
+      TString fullname = tbranch->GetFullName();
+      pos = fullname.First('[');
+      if (pos != kNPOS) {
+         fullname.Remove(pos);
+         fullname.Append("[]");
+      }
+
+      return DrawTree(tbranch->GetTree(), fullname.Data(), name.Data());
+   }
+
+   TH1 *DrawBranch(std::unique_ptr<RHolder> &obj)
+   {
+      return DrawBranch(obj->get_object<TBranch>());
+   }
+
+   TH1 *DrawLeaf(std::unique_ptr<RHolder> &obj)
+   {
+      auto tleaf = obj->get_object<TLeaf>();
+      if (!tleaf)
+         return nullptr;
+
+      auto tbranch = tleaf->GetBranch();
+      if (tbranch && (tbranch->GetNleaves() == 1))
+         return DrawBranch(tbranch);
+
+      TString name = tleaf->GetName();
+      Int_t pos = name.First('[');
+      if (pos != kNPOS) name.Remove(pos);
+
+      TString fullname = tleaf->GetFullName();
+      pos = fullname.First('[');
+      if (pos != kNPOS) {
+         fullname.Remove(pos);
+         fullname.Append("[]");
+      }
+
+      return DrawTree(tleaf->GetBranch()->GetTree(), fullname.Data(), name.Data());
    }
 
    TH1 *DrawBranchElement(std::unique_ptr<RHolder> &obj)
