@@ -82,6 +82,7 @@ void MethodPyKeras::DeclareOptions() {
    DeclareOptionRef(fNumThreads, "NumThreads", "Number of CPU threads (only for Tensorflow backend)");
    DeclareOptionRef(fGpuOptions, "GpuOptions", "GPU options for tensorflow, such as allow_growth");
    DeclareOptionRef(fUseTFKeras, "tf.keras", "Use tensorflow from Keras");
+   DeclareOptionRef(fUseTFKeras, "tfkeras", "Use tensorflow from Keras");
    DeclareOptionRef(fVerbose, "Verbose", "Keras verbosity during training");
    DeclareOptionRef(fContinueTraining, "ContinueTraining", "Load weights from previous training");
    DeclareOptionRef(fSaveBestOnly, "SaveBestOnly", "Store only weights with smallest validation loss");
