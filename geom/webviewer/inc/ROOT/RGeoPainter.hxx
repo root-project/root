@@ -9,25 +9,25 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_REveGeoPainter
-#define ROOT7_REveGeoPainter
+#ifndef ROOT7_RGeoPainter
+#define ROOT7_RGeoPainter
 
 #include "TVirtualGeoPainter.h"
 
-#include <ROOT/REveGeomViewer.hxx>
+#include <ROOT/RGeomViewer.hxx>
 
 namespace ROOT {
 namespace Experimental {
 
-class REveGeoPainter : public TVirtualGeoPainter {
+class RGeoPainter : public TVirtualGeoPainter {
 
    TGeoManager *fGeoManager{nullptr};
 
-   std::shared_ptr<REveGeomViewer> fViewer;
+   std::shared_ptr<RGeomViewer> fViewer;
 
 public:
-   REveGeoPainter(TGeoManager *manager);
-   virtual ~REveGeoPainter();
+   RGeoPainter(TGeoManager *manager);
+   virtual ~RGeoPainter();
 
    void       AddSize3D(Int_t, Int_t, Int_t) override {}
    TVirtualGeoTrack *AddTrack(Int_t, Int_t, TObject *) override { return nullptr; }
@@ -110,7 +110,7 @@ public:
    void       UnbombTranslation(const Double_t *, Double_t *) override {}
    Double_t   Weight(Double_t, Option_t* = "v") override { return 0.; }
 
-   ClassDefOverride(REveGeoPainter,0)  // Web-based geo painter
+   ClassDefOverride(RGeoPainter,0)  // Web-based geo painter
 };
 
 } // namespace Experimental

@@ -12,7 +12,7 @@
 
 #include "RBrowserWidget.hxx"
 
-#include <ROOT/REveGeomViewer.hxx>
+#include <ROOT/RGeomViewer.hxx>
 
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
@@ -25,7 +25,7 @@ using namespace std::string_literals;
 
 
 class RBrowserGeomWidget : public RBrowserWidget {
-   REveGeomViewer fViewer;
+   RGeomViewer fViewer;
 
    std::unique_ptr<Browsable::RHolder> fObject; // geometry object
 

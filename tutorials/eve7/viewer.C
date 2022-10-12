@@ -6,7 +6,7 @@
 ///
 /// \author Sergey Linev
 
-#include <ROOT/REveGeomViewer.hxx>
+#include <ROOT/RGeomViewer.hxx>
 #include <ROOT/RDirectory.hxx>
 
 #include "TGeoManager.h"
@@ -38,7 +38,7 @@ void viewer()
 
    using namespace ROOT::Experimental;
 
-   auto viewer = std::make_shared<REveGeomViewer>(gGeoManager);
+   auto viewer = std::make_shared<RGeomViewer>(gGeoManager);
 
    // select volume to draw
    viewer->SelectVolume("CMSE");

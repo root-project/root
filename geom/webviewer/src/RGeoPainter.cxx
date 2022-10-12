@@ -9,23 +9,23 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/REveGeoPainter.hxx>
+#include <ROOT/RGeoPainter.hxx>
 
 #include "TGeoVolume.h"
 
 using namespace ROOT::Experimental;
 
-REveGeoPainter::REveGeoPainter(TGeoManager *manager) : TVirtualGeoPainter(manager)
+RGeoPainter::RGeoPainter(TGeoManager *manager) : TVirtualGeoPainter(manager)
 {
    TVirtualGeoPainter::SetPainter(this);
    fGeoManager = manager;
 }
 
-REveGeoPainter::~REveGeoPainter()
+RGeoPainter::~RGeoPainter()
 {
 }
 
-void REveGeoPainter::SetGeoManager(TGeoManager *mgr)
+void RGeoPainter::SetGeoManager(TGeoManager *mgr)
 {
    if (fViewer && (fGeoManager!=mgr))
       fViewer->SetGeometry(fGeoManager);
@@ -33,10 +33,10 @@ void REveGeoPainter::SetGeoManager(TGeoManager *mgr)
    fGeoManager = mgr;
 }
 
-void REveGeoPainter::DrawVolume(TGeoVolume *vol, Option_t *opt)
+void RGeoPainter::DrawVolume(TGeoVolume *vol, Option_t *opt)
 {
    if (!fViewer)
-      fViewer = std::make_shared<REveGeomViewer>(fGeoManager);
+      fViewer = std::make_shared<RGeomViewer>(fGeoManager);
 
    // select volume to draw
    fViewer->SetGeometry(fGeoManager, vol->GetName());
