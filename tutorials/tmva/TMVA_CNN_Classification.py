@@ -33,8 +33,6 @@ import os
 import importlib
 
 TMVA.Tools.Instance()
-TMVA.PyMethodBase.PyInitialize()
-
 
 def MakeImagesTree(n, nh, nw):
     # image size (nh x nw)
@@ -122,6 +120,8 @@ if (not hasCPU and not hasGPU) :
 if ROOT.gSystem.GetFromPipe("root-config --has-tmva-pymva") != "yes":
     useKerasCNN = False
     usePyTorchCNN = False
+else:
+    TMVA.PyMethodBase.PyInitialize()
 
 tf_spec = importlib.util.find_spec("tensorflow")
 if tf_spec is None:
@@ -138,10 +138,6 @@ if not useTMVACNN:
         "TMVA_CNN_Classificaton",
         "TMVA is not build with GPU or CPU multi-thread support. Cannot use TMVA Deep Learning for CNN",
     )
-
-#there is an issue using TF and PyTorch - so use only one of the two
-if (usePyTorchCNN):
-   useKerasCNN = False
 
 writeOutputFile = True
 

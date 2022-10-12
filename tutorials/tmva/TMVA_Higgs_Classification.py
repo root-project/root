@@ -30,15 +30,12 @@
 ## - The third argument is a string option defining some general configuration for the TMVA session. For example all TMVA output can be suppressed by removing the "!" (not) in front of the "Silent" argument in the option string
 
 import ROOT
+import os
 
 TMVA = ROOT.TMVA
 TFile = ROOT.TFile
 
-
 TMVA.Tools.Instance()
-## For PYMVA methods
-TMVA.PyMethodBase.PyInitialize()
-
 
 # options to control used methods
 useLikelihood = True  # likelihood based discriminant
@@ -47,8 +44,20 @@ useFischer = True  # Fischer discriminant
 useMLP = False  # Multi Layer Perceptron (old TMVA NN implementation)
 useBDT = True  # Boosted Decision Tree
 useDL = True  # TMVA Deep learning ( CPU or GPU)
+useKeras = True # Use Keras Deep Learning via PyMVA
 
-TMVA.Tools.Instance()
+if ROOT.gSystem.GetFromPipe("root-config --has-tmva-pymva") == "yes":
+    TMVA.PyMethodBase.PyInitialize()
+else:
+    useKeras = False  # cannot use Keras if PYMVA is not available
+
+if useKeras:
+    try:
+        import tensorflow
+    except:
+        ROOT.Warning("TMVA_Higgs_Classification", "Skip using Keras since tensorflow is not available")
+        useKeras = False
+
 outputFile = TFile.Open("Higgs_ClassificationOutput.root", "RECREATE")
 factory = TMVA.Factory(
     "TMVA_Higgs_Classification", outputFile, V=False, ROC=True, Silent=False, Color=True, AnalysisType="Classification"
@@ -276,7 +285,7 @@ if useDL:
     training1 = ROOT.TString(
         "LearningRate=1e-3,Momentum=0.9,"
         "ConvergenceSteps=10,BatchSize=128,TestRepetitions=1,"
-        "MaxEpochs=30,WeightDecay=1e-4,Regularization=None,"
+        "MaxEpochs=20,WeightDecay=1e-4,Regularization=None,"
         "Optimizer=ADAM,ADAM_beta1=0.9,ADAM_beta2=0.999,ADAM_eps=1.E-7,"  # ADAM default parameters
         "DropConfig=0.0+0.0+0.0+0."
     )
@@ -309,6 +318,45 @@ if useDL:
         TrainingStrategy=training1,
         Architecture=arch,
     )
+
+#Keras DL
+if useKeras:
+    ROOT.Info("TMVA_Higgs_Classification", "Building Deep Learning keras model")
+    # create Keras model with 4 layers of 64 units and relu activations
+    import tensorflow
+    from tensorflow.keras.models import Sequential
+    from tensorflow.keras.optimizers import Adam
+    from tensorflow.keras.layers import Input, Dense
+
+    model = Sequential()
+    model.add(Dense(64, activation='relu',input_dim=7))
+    model.add(Dense(64, activation='relu'))
+    model.add(Dense(64, activation='relu'))
+    model.add(Dense(64, activation='relu'))
+    model.add(Dense(2, activation='sigmoid'))
+    model.compile(loss = 'binary_crossentropy', optimizer = Adam(learning_rate = 0.001), metrics = ['accuracy'])
+    model.save('model_higgs.h5')
+    model.summary()
+
+    if not os.path.exists("model_higgs.h5"):
+        raise FileNotFoundError("Error creating Keras model file - skip using Keras")
+    else:
+        # book PyKeras method only if Keras model could be created
+        ROOT.Info("TMVA_Higgs_Classification", "Booking Deep Learning keras model")
+        factory.BookMethod(
+            loader,
+            TMVA.Types.kPyKeras,
+            "PyKeras",
+            H=True,
+            V=False,
+            VarTransform=None,
+            FilenameModel="model_higgs.h5",
+            FilenameTrainedModel="trained_model_higgs.h5",
+            NumEpochs=20,
+            BatchSize=100 )
+#            GpuOptions="allow_growth=True",
+#        )  # needed for RTX NVidia card and to avoid TF allocates all GPU memory
+
 
 ## Train Methods
 
