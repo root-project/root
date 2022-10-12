@@ -3040,6 +3040,17 @@ inline RVec<std::size_t> Range(std::size_t length)
    return ret;
 }
 
+/// Produce RVec with entries equal to begin, begin+1, ..., end-1.
+/// An empty RVec is returned if begin >= end.
+inline RVec<std::size_t> Range(std::size_t begin, std::size_t end)
+{
+   RVec<std::size_t> ret;
+   ret.reserve(begin < end ? end - begin : 0u);
+   for (auto i = begin; i < end; ++i)
+      ret.push_back(i);
+   return ret;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Print a RVec at the prompt:
 template <class T>
