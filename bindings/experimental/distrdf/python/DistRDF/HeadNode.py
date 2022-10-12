@@ -15,7 +15,7 @@ from DistRDF.Backends.Base import BaseBackend, distrdf_mapper, distrdf_reducer, 
 from DistRDF.Node import Node
 from DistRDF.Operation import Action, InstantAction, Operation
 from DistRDF.Backends import Utils
-from DistRDF.Profiling import profilable_mapper
+
 
 logger = logging.getLogger(__name__)
 
@@ -193,7 +193,7 @@ class HeadNode(Node, ABC):
                 ComputationGraphGenerator.trigger_computation_graph, self._generate_graph_dict())
         
         if self._activate_profiling:
-
+            from DistRDF.Profiling import profilable_mapper
             mapper = self._visualization.decorate(profilable_mapper)
 
         else:
