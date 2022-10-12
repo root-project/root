@@ -9,11 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_REveGeomViewer
-#define ROOT7_REveGeomViewer
+#ifndef ROOT7_RGeomViewer
+#define ROOT7_RGeomViewer
 
 #include <ROOT/RWebDisplayArgs.hxx>
-#include <ROOT/REveGeomData.hxx>
+#include <ROOT/RGeomData.hxx>
 
 #include <memory>
 
@@ -24,17 +24,14 @@ namespace ROOT {
 namespace Experimental {
 
 class RWebWindow;
-class REveManager;
 
-class REveGeomViewer {
-
-   friend class REveManager;
+class RGeomViewer {
 
 protected:
 
    TGeoManager *fGeoManager{nullptr};        ///<! geometry to show
    std::string fSelectedVolume;              ///<! name of selected volume
-   REveGeomDescription fDesc;                ///<! geometry description, send to the client as first message
+   RGeomDescription fDesc;                ///<! geometry description, send to the client as first message
    bool fShowHierarchy{true};                ///<! if hierarchy visible by default
    std::string fTitle;                       ///<! title of geometry viewer
 
@@ -48,8 +45,8 @@ protected:
 
 public:
 
-   REveGeomViewer(TGeoManager *mgr = nullptr, const std::string &volname = "");
-   virtual ~REveGeomViewer();
+   RGeomViewer(TGeoManager *mgr = nullptr, const std::string &volname = "");
+   virtual ~RGeomViewer();
 
    void SetTitle(const std::string &title) { fTitle = title; }
    const std::string &GetTitle() const { return fTitle; }

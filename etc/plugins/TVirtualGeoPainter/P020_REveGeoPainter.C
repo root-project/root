@@ -1,5 +1,5 @@
-void P020_REveGeoPainter()
+void P020_RGeoPainter()
 {
-   gPluginMgr->AddHandler("TVirtualGeoPainter", "web", "ROOT::Experimental::REveGeoPainter",
-      "ROOTEve", "REveGeoPainter(TGeoManager*)");
+   gPluginMgr->AddHandler("TVirtualGeoPainter", "web", "ROOT::Experimental::RGeoPainter",
+      "ROOTGeomViewer", "RGeoPainter(TGeoManager*)");
 }

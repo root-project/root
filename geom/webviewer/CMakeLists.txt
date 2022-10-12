@@ -16,5 +16,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGeomViewer
   DEPENDENCIES
     Core
     Geom
+    RCsg
     ROOTWebDisplay
+    ROOTBrowserv7
 )

@@ -36,7 +36,7 @@
 #include "TGeoPhysicalNode.h"
 
 #include <ROOT/RWebWindow.hxx>
-#include <ROOT/REveGeomViewer.hxx>
+#include <ROOT/RGeomViewer.hxx>
 
 Bool_t comments = kTRUE;
 Bool_t grotate = kFALSE;
@@ -51,7 +51,7 @@ std::string getOptions()
 }
 
 // create here to keep it in memory
-auto geomViewer = std::make_shared<ROOT::Experimental::REveGeomViewer>();
+auto geomViewer = std::make_shared<ROOT::Experimental::RGeomViewer>();
 
 auto helpWindow = ROOT::Experimental::RWebWindow::Create();
 
