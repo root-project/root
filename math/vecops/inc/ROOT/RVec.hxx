@@ -1880,8 +1880,7 @@ T Sum(const RVec<T> &v, const T zero = T(0))
    return std::accumulate(v.begin(), v.end(), zero);
 }
 
-/// Product method analogous to Sum:
-/// Multiply the elements of a vector
+/// Return the product of the elements of the RVec.
 template <typename T>
 T Product(const RVec<T> &v, const T init = T(1)) // initialize with identity
 {
@@ -3006,7 +3005,6 @@ RVec<T> Construct(const RVec<Args_t> &... args)
    return ret;
 }
 
-/// Enumerate method:
 /// For any Rvec v produce another RVec with entries starting from 0, and incrementing by 1 until a N = v.size() is reached.
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
@@ -3026,7 +3024,6 @@ RVec<typename RVec<T>::size_type> Enumerate(const RVec<T> &v)
    return ret;
 }
 
-/// Range method: 
 /// Produce RVec with entries starting from 0, and incrementing by 1 until a user-specified N is reached.
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
