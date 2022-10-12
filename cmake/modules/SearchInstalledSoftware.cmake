@@ -2169,10 +2169,10 @@ if(test_distrdf_dask)
   message(STATUS "Looking for Dask")
 
   if(fail-on-missing)
-    find_package(Dask 2022.02 REQUIRED)
+    find_package(Dask 2022.08.1 REQUIRED)
   else()
 
-    find_package(Dask 2022.02)
+    find_package(Dask 2022.08.1)
     if(NOT Dask_FOUND)
       message(STATUS "Switching OFF 'test_distrdf_dask' option")
       set(test_distrdf_dask OFF CACHE BOOL "Disabled because Dask not found" FORCE)
