@@ -311,6 +311,9 @@ public:
    virtual TArrayD *GetSumw2() {return &fSumw2;}
    virtual const TArrayD *GetSumw2() const {return &fSumw2;}
    virtual Int_t    GetSumw2N() const {return fSumw2.fN;}
+           /// This function returns the Standard Deviation (Sigma) of the distribution not the Root Mean Square (RMS).
+           /// The name "RMS" is been often used as a synonym for the Standard Deviation and it was introduced many years ago (Hbook/PAW times).
+           /// We keep the name GetRMS for continuity as an alias to GetStdDev. GetStdDev() should be used instead.
            Double_t GetRMS(Int_t axis=1) const { return GetStdDev(axis); }
            Double_t GetRMSError(Int_t axis=1) const { return GetStdDevError(axis); }
 
