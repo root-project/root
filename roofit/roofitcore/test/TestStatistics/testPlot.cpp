@@ -72,8 +72,10 @@ public:
       // Creating a minimizer and explicitly setting type of parallelization
       std::size_t nWorkers = 1;
       RooFit::MultiProcess::Config::setDefaultNWorkers(nWorkers);
-      RooMinimizer m(likelihood, RooFit::TestStatistics::LikelihoodMode::serial,
-                     RooFit::TestStatistics::LikelihoodGradientMode::multiprocess);
+      RooMinimizer::Config cfg;
+      cfg.parallel_likelihood = false;
+      cfg.parallel_gradient = true;
+      RooMinimizer m(likelihood, cfg);
 
       // Minimize
       m.migrad();

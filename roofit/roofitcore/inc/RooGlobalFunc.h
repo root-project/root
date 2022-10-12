@@ -201,6 +201,8 @@ RooCmdArg EventRange(Int_t nStart, Int_t nStop) ;
 RooCmdArg Extended(bool flag=true) ;
 RooCmdArg DataError(Int_t) ;
 RooCmdArg NumCPU(Int_t nCPU, Int_t interleave=0) ;
+RooCmdArg Parallelize(Int_t nWorkers, bool parallel_gradient, bool parallel_likelihood) ;
+RooCmdArg NewStyle(bool flag=false) ;
 
 RooCmdArg BatchMode(std::string const& batchMode="cpu");
 // The const char * overload is necessary, otherwise the compiler will cast a

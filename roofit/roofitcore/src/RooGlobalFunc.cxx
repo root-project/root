@@ -177,6 +177,8 @@ namespace RooFit {
   RooCmdArg Extended(bool flag) { return RooCmdArg("Extended",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg DataError(Int_t etype) { return RooCmdArg("DataError",(Int_t)etype,0,0,0,0,0,0,0) ; }
   RooCmdArg NumCPU(Int_t nCPU, Int_t interleave)   { return RooCmdArg("NumCPU",nCPU,interleave,0,0,0,0,0,0) ; }
+  RooCmdArg NewStyle(bool flag) { return RooCmdArg("NewStyle",flag,0,0,0,0,0,0) ; }
+  RooCmdArg Parallelize(Int_t nWorkers, bool parallel_gradient, bool parallel_likelihood) { return RooCmdArg("Parallelize",nWorkers,parallel_gradient,parallel_likelihood,0,0,0,0,0) ; }
   RooCmdArg BatchMode(std::string const& batchMode) {
       std::string lower = batchMode;
       std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c){ return std::tolower(c); });

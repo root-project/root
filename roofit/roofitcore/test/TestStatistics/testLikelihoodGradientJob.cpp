@@ -101,8 +101,10 @@ TEST_P(LikelihoodGradientJob, Gaussian1D)
 
    RooFit::MultiProcess::Config::setDefaultNWorkers(NWorkers);
    auto likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data);
-   RooMinimizer m1(likelihood, RooFit::TestStatistics::LikelihoodMode::serial,
-                   RooFit::TestStatistics::LikelihoodGradientMode::multiprocess);
+   RooMinimizer::Config cfg;
+   cfg.parallel_likelihood = false;
+   cfg.parallel_gradient = true;
+   RooMinimizer m1(likelihood, cfg);
 
    m1.setStrategy(0);
    m1.setPrintLevel(-1);
@@ -148,8 +150,10 @@ TEST(LikelihoodGradientJob, RepeatMigrad)
 
    RooFit::MultiProcess::Config::setDefaultNWorkers(NWorkers);
    auto likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data);
-   RooMinimizer m1(likelihood, RooFit::TestStatistics::LikelihoodMode::serial,
-                   RooFit::TestStatistics::LikelihoodGradientMode::multiprocess);
+   RooMinimizer::Config cfg;
+   cfg.parallel_likelihood = false;
+   cfg.parallel_gradient = true;
+   RooMinimizer m1(likelihood, cfg);
 
    m1.setStrategy(0);
    m1.setPrintLevel(-1);
@@ -223,8 +227,10 @@ TEST_P(LikelihoodGradientJob, GaussianND)
 
    RooFit::MultiProcess::Config::setDefaultNWorkers(NWorkers);
    auto likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data);
-   RooMinimizer m1(likelihood, RooFit::TestStatistics::LikelihoodMode::serial,
-                   RooFit::TestStatistics::LikelihoodGradientMode::multiprocess);
+   RooMinimizer::Config cfg;
+   cfg.parallel_likelihood = false;
+   cfg.parallel_gradient = true;
+   RooMinimizer m1(likelihood, cfg);
 
    m1.setStrategy(0);
    m1.setPrintLevel(-1);
@@ -392,8 +398,10 @@ TEST_F(LikelihoodSimBinnedConstrainedTest, ConstrainedAndOffset)
       pdf, data, RooFit::TestStatistics::ConstrainedParameters(RooArgSet(*w.var("alpha_bkg_obs_A"))),
       RooFit::TestStatistics::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_B"))));
 
-   RooMinimizer m1(likelihood, RooFit::TestStatistics::LikelihoodMode::serial,
-                   RooFit::TestStatistics::LikelihoodGradientMode::multiprocess);
+   RooMinimizer::Config cfg;
+   cfg.parallel_likelihood = false;
+   cfg.parallel_gradient = true;
+   RooMinimizer m1(likelihood, cfg);
    m1.setOffsetting(true);
 
    m1.setStrategy(0);
@@ -475,8 +483,10 @@ TEST_P(LikelihoodGradientJob, Gaussian1DAlsoWithLikelihoodJob)
 
    RooFit::MultiProcess::Config::setDefaultNWorkers(NWorkers);
    auto likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data);
-   RooMinimizer m1(likelihood, RooFit::TestStatistics::LikelihoodMode::multiprocess,
-                   RooFit::TestStatistics::LikelihoodGradientMode::multiprocess);
+   RooMinimizer::Config cfg;
+   cfg.parallel_likelihood = true;
+   cfg.parallel_gradient = true;
+   RooMinimizer m1(likelihood, cfg);
 
    m1.setStrategy(0);
    m1.setPrintLevel(-1);
