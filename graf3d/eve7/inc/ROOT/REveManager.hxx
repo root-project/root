@@ -42,8 +42,6 @@ class REveScene;
 class REveSceneList;
 
 class RWebWindow;
-class REveGeomViewer;
-
 
 class REveManager
 {
@@ -156,7 +154,7 @@ protected:
    std::unordered_map<std::string, std::shared_ptr<TMethodCall> > fMethCallMap;
 
    Logger            fLogger;
-   REveServerStatus  fServerStatus; 
+   REveServerStatus  fServerStatus;
 
    void WindowConnect(unsigned connid);
    void WindowData(unsigned connid, const std::string &arg);
@@ -266,8 +264,6 @@ public:
    void SendBinary(unsigned connid, const void *data, std::size_t len);
 
    void Show(const RWebDisplayArgs &args = "");
-
-   std::shared_ptr<REveGeomViewer> ShowGeometry(const RWebDisplayArgs &args = "");
 
    void GetServerStatus(REveServerStatus&);
 };
