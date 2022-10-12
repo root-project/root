@@ -64,7 +64,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
     * To start drawing, following stages should be completed:
     *    - ui5 element is rendered (onAfterRendering is called)
     *    - TGeo-related JSROOT functionality is loaded
-    *    - REveGeomDrawing object delivered from the server
+    *    - RGeomDrawing object delivered from the server
     * Only after all this stages are completed, one could start to analyze  */
 
    return Controller.extend("rootui5.geom.controller.GeomViewer", {
@@ -160,14 +160,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
 
-      /** @summary Send REveGeomRequest data to geometry viewer */
+      /** @summary Send RGeomRequest data to geometry viewer */
       sendViewerRequest: function(_oper, args) {
          let req = { oper: _oper, path: [], stack: [] };
          Object.assign(req, args);
          this.websocket.send("GVREQ:" + JSON.stringify(req));
       },
 
-      /** Process reply on REveGeomRequest */
+      /** Process reply on RGeomRequest */
       processViewerReply: function(repl) {
          if (!repl || (typeof repl != "object") || !repl.oper)
             return false;

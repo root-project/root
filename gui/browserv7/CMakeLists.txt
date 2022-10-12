@@ -33,7 +33,7 @@ ROOT_LINKER_LIBRARY(ROOTBrowserGeomWidget
      src/RBrowserGeomWidget.cxx
   DEPENDENCIES
      ROOTBrowserWidgets
-     ROOTEve
+     ROOTGeomViewer
 )
 
 ROOT_LINKER_LIBRARY(ROOTBrowserTreeWidget

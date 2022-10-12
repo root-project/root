@@ -178,7 +178,7 @@ RBrowser::RBrowser(bool use_rcanvas)
          kind = "rcanvas";
       else if (args.GetWidgetKind() == "TCanvas")
          kind = "tcanvas";
-      else if (args.GetWidgetKind() == "REveGeomViewer")
+      else if (args.GetWidgetKind() == "RGeomViewer")
          kind = "geom";
       else if (args.GetWidgetKind() == "RTreeViewer")
          kind = "tree";

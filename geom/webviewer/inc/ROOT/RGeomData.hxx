@@ -1,4 +1,4 @@
-// @(#)root/eve7:$Id$
+// @(#)root/geom/webviewer:$Id$
 // Author: Sergey Linev, 14.12.2018
 
 /*************************************************************************
@@ -9,10 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_REveGeomData
-#define ROOT7_REveGeomData
-
-#include <ROOT/REveRenderData.hxx>
+#ifndef ROOT7_RGeomData
+#define ROOT7_RGeomData
 
 #include <vector>
 #include <string>
@@ -30,12 +28,12 @@ class TGeoVolume;
 namespace ROOT {
 namespace Experimental {
 
-class REveRenderData;
 class RGeomBrowserIter;
+class RLogChannel;
 
 /** Base description of geometry node, required only to build hierarchy */
 
-class REveGeomNodeBase {
+class RGeomNodeBase {
 public:
    int id{0};               ///< node id, index in array
    std::string name;        ///< node name
@@ -46,14 +44,14 @@ public:
    std::string color;       ///< rgb code without rgb() prefix
    int sortid{0};           ///<! place in sorted array, to check cuts, or id of original node when used search structures
 
-   REveGeomNodeBase(int _id = 0) : id(_id) {}
+   RGeomNodeBase(int _id = 0) : id(_id) {}
 
    bool IsVisible() const { return vis > 0; }
 };
 
 /** Full node description including matrices and other attributes */
 
-class REveGeomNode : public REveGeomNodeBase  {
+class RGeomNode : public RGeomNodeBase  {
 public:
    std::vector<float> matr; ///< matrix for the node, can have reduced number of elements
    double vol{0};           ///<! volume estimation
@@ -62,7 +60,7 @@ public:
    bool useflag{false};     ///<! extra flag, used for selection
    float opacity{1.};       ///<! opacity of the color
 
-   REveGeomNode(int _id = 0) : REveGeomNodeBase(_id) {}
+   RGeomNode(int _id = 0) : RGeomNodeBase(_id) {}
 
    /** True when there is shape and it can be displayed */
    bool CanDisplay() const { return (vol > 0.) && (nfaces > 0); }
@@ -92,10 +90,10 @@ public:
 };
 
 
-/** REveGeomVisible contains description of visible node
+/** RGeomVisible contains description of visible node
  * It is path to the node plus reference to shape rendering data */
 
-class REveGeomVisible {
+class RGeomVisible {
 public:
    int nodeid{0};                    ///< selected node id,
    int seqid{0};                     ///< sequence id, used for merging later
@@ -104,15 +102,15 @@ public:
    double opacity{1};                ///< opacity
    RGeomRenderInfo *ri{nullptr};     ///< render information for the shape, can be same for different nodes
 
-   REveGeomVisible() = default;
-   REveGeomVisible(int _nodeid, int _seqid, const std::vector<int> &_stack) : nodeid(_nodeid), seqid(_seqid), stack(_stack) {}
+   RGeomVisible() = default;
+   RGeomVisible(int _nodeid, int _seqid, const std::vector<int> &_stack) : nodeid(_nodeid), seqid(_seqid), stack(_stack) {}
 };
 
 
 /** Configuration parameters which can be configured on the client
  * Send as is to-from client */
 
-class REveGeomConfig {
+class RGeomConfig {
 public:
    int vislevel{0};                         ///< visible level
    int maxnumnodes{0};                      ///< maximal number of nodes
@@ -127,24 +125,24 @@ public:
 /** Object with full description for drawing geometry
  * It includes list of visible items and list of nodes required to build them */
 
-class REveGeomDrawing {
+class RGeomDrawing {
 public:
-   REveGeomConfig *cfg{nullptr};            ///< current configurations
-   int numnodes{0};                         ///< total number of nodes in description
-   std::vector<REveGeomNode*> nodes;        ///< all used nodes to display visible items and not known for client
-   std::vector<REveGeomVisible> visibles;   ///< all visible items
+   RGeomConfig *cfg{nullptr};            ///< current configurations
+   int numnodes{0};                      ///< total number of nodes in description
+   std::vector<RGeomNode*> nodes;        ///< all used nodes to display visible items and not known for client
+   std::vector<RGeomVisible> visibles;   ///< all visible items
 };
 
 
 /** Request object send from client for different operations */
-class REveGeomRequest {
+class RGeomRequest {
 public:
    std::string oper;  ///< operation like HIGHL or HOVER
    std::vector<std::string> path;  ///< path parameter, used with HOVER
    std::vector<int> stack; ///< stack parameter, used with HIGHL
 };
 
-class REveGeomNodeInfo {
+class RGeomNodeInfo {
 public:
    std::vector<std::string> path;  ///< full path to node
    std::string node_type;  ///< node class name
@@ -155,10 +153,10 @@ public:
    RGeomRenderInfo *ri{nullptr};  ///< rendering information (if applicable)
 };
 
-using REveGeomScanFunc_t = std::function<bool(REveGeomNode &, std::vector<int> &, bool, int)>;
+using RGeomScanFunc_t = std::function<bool(RGeomNode &, std::vector<int> &, bool, int)>;
 
 
-class REveGeomDescription {
+class RGeomDescription {
 
    friend class RGeomBrowserIter;
 
@@ -191,7 +189,7 @@ class REveGeomDescription {
    };
 
    std::vector<TGeoNode *> fNodes;  ///<! flat list of all nodes
-   std::vector<REveGeomNode> fDesc; ///< converted description, send to client
+   std::vector<RGeomNode> fDesc; ///< converted description, send to client
    TGeoVolume *fDrawVolume{nullptr}; ///<! select volume independent from TGeoMaanger
 
    std::vector<int> fSortMap;       ///<! nodes in order large -> smaller volume
@@ -203,7 +201,7 @@ class REveGeomDescription {
    bool fPreferredOffline{false};   ///<! indicates that full description should be provided to client
    int fJsonComp{0};                ///<! default JSON compression
 
-   REveGeomConfig fCfg;             ///<! configuration parameter editable from GUI
+   RGeomConfig fCfg;             ///<! configuration parameter editable from GUI
 
    void PackMatrix(std::vector<float> &arr, TGeoMatrix *matr);
 
@@ -211,7 +209,7 @@ class REveGeomDescription {
 
    void ProduceIdShifts();
 
-   int ScanNodes(bool only_visible, int maxlvl, REveGeomScanFunc_t func);
+   int ScanNodes(bool only_visible, int maxlvl, RGeomScanFunc_t func);
 
    void ResetRndrInfos();
 
@@ -219,11 +217,11 @@ class REveGeomDescription {
 
    ShapeDescr &MakeShapeDescr(TGeoShape *shape);
 
-   void CopyMaterialProperties(TGeoVolume *vol, REveGeomNode &node);
+   void CopyMaterialProperties(TGeoVolume *vol, RGeomNode &node);
 
-   void CollectNodes(REveGeomDrawing &drawing);
+   void CollectNodes(RGeomDrawing &drawing);
 
-   std::string MakeDrawingJson(REveGeomDrawing &drawing, bool has_shapes = false);
+   std::string MakeDrawingJson(RGeomDrawing &drawing, bool has_shapes = false);
 
    void ClearDescription();
 
@@ -232,7 +230,7 @@ class REveGeomDescription {
    TGeoVolume *GetVolume(int nodeid);
 
 public:
-   REveGeomDescription() = default;
+   RGeomDescription() = default;
 
    void Build(TGeoManager *mgr, const std::string &volname = "");
 
@@ -320,8 +318,12 @@ public:
 
    bool ChangeConfiguration(const std::string &json);
 
-   std::unique_ptr<REveGeomNodeInfo> MakeNodeInfo(const std::vector<std::string> &path);
+   std::unique_ptr<RGeomNodeInfo> MakeNodeInfo(const std::vector<std::string> &path);
 };
+
+
+/// Log channel for Eve diagnostics.
+RLogChannel &RGeomLog();
 
 
 } // namespace Experimental

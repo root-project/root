@@ -18,9 +18,9 @@
 #pragma link C++ class ROOT::Experimental::RGeomNodeBase+;
 #pragma link C++ class ROOT::Experimental::RGeomNode+;
 #pragma link C++ class ROOT::Experimental::RGeomVisible+;
-#pragma link C++ class ROOT::Experimental::RRenderInfo+;
-#pragma link C++ class ROOT::Experimental::RRawRenderInfo+;
-#pragma link C++ class ROOT::Experimental::RShapeRenderInfo;
+#pragma link C++ class ROOT::Experimental::RGeomRenderInfo+;
+#pragma link C++ class ROOT::Experimental::RGeomRawRenderInfo+;
+#pragma link C++ class ROOT::Experimental::RGeomShapeRenderInfo;
 #pragma link C++ class ROOT::Experimental::RGeomDescription+;
 #pragma link C++ class ROOT::Experimental::RGeomDrawing+;
 #pragma link C++ class ROOT::Experimental::RGeomRequest+;

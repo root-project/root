@@ -9,13 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/REveGeomData.hxx>
+#include <ROOT/RGeomData.hxx>
 
 #include <ROOT/RBrowserRequest.hxx>
 #include <ROOT/RBrowserReply.hxx>
-#include <ROOT/REveGeoPolyShape.hxx>
-#include <ROOT/REveUtil.hxx>
 #include <ROOT/RLogger.hxx>
+#include "CsgOps.h"
 
 #include "TMath.h"
 #include "TColor.h"
@@ -27,6 +26,7 @@
 #include "TGeoMatrix.h"
 #include "TGeoMedium.h"
 #include "TGeoMaterial.h"
+#include "TGeoBoolNode.h"
 #include "TGeoCompositeShape.h"
 #include "TBuffer3D.h"
 #include "TBufferJSON.h"
@@ -36,11 +36,19 @@
 namespace ROOT {
 namespace Experimental {
 
+
+RLogChannel &RGeomLog()
+{
+   static RLogChannel sLog("ROOT.Geom");
+   return sLog;
+}
+
+
 /** Iterator of hierarchical geometry structures */
 
 class RGeomBrowserIter {
 
-   REveGeomDescription &fDesc;
+   RGeomDescription &fDesc;
    int fParentId{-1};
    unsigned fChild{0};
    int fNodeId{0};
@@ -50,7 +58,7 @@ class RGeomBrowserIter {
 
 public:
 
-   RGeomBrowserIter(REveGeomDescription &desc) : fDesc(desc) {}
+   RGeomBrowserIter(RGeomDescription &desc) : fDesc(desc) {}
 
    const std::string &GetName() const { return fDesc.fDesc[fNodeId].name; }
 
@@ -229,7 +237,7 @@ using namespace std::string_literals;
 ///   9 - Rotation
 ///  16 - Full size
 
-void REveGeomDescription::PackMatrix(std::vector<float> &vect, TGeoMatrix *matr)
+void RGeomDescription::PackMatrix(std::vector<float> &vect, TGeoMatrix *matr)
 {
    vect.clear();
 
@@ -302,7 +310,7 @@ void REveGeomDescription::PackMatrix(std::vector<float> &vect, TGeoMatrix *matr)
 /// Collect information about geometry hierarchy into flat list
 /// like it done in JSROOT ClonedNodes.createClones
 
-void REveGeomDescription::Build(TGeoManager *mgr, const std::string &volname)
+void RGeomDescription::Build(TGeoManager *mgr, const std::string &volname)
 {
    ClearDescription();
    if (!mgr) return;
@@ -339,7 +347,7 @@ void REveGeomDescription::Build(TGeoManager *mgr, const std::string &volname)
 /// Collect information about geometry from single volume
 /// like it done in JSROOT ClonedNodes.createClones
 
-void REveGeomDescription::Build(TGeoVolume *vol)
+void RGeomDescription::Build(TGeoVolume *vol)
 {
    ClearDescription();
 
@@ -353,7 +361,7 @@ void REveGeomDescription::Build(TGeoVolume *vol)
 /////////////////////////////////////////////////////////////////////
 /// Clear geometry description
 
-void REveGeomDescription::ClearDescription()
+void RGeomDescription::ClearDescription()
 {
    fDesc.clear();
    fNodes.clear();
@@ -366,7 +374,7 @@ void REveGeomDescription::ClearDescription()
 /////////////////////////////////////////////////////////////////////
 /// Build geometry description
 
-void REveGeomDescription::BuildDescription(TGeoNode *topnode, TGeoVolume *topvolume)
+void RGeomDescription::BuildDescription(TGeoNode *topnode, TGeoVolume *topvolume)
 {
    // vector to remember numbers
    std::vector<int> numbers;
@@ -394,7 +402,7 @@ void REveGeomDescription::BuildDescription(TGeoNode *topnode, TGeoVolume *topvol
    fSortMap.reserve(fNodes.size());
 
    // array for sorting
-   std::vector<REveGeomNode *> sortarr;
+   std::vector<RGeomNode *> sortarr;
    sortarr.reserve(fNodes.size());
 
    // create vector of desc and childs
@@ -437,7 +445,7 @@ void REveGeomDescription::BuildDescription(TGeoNode *topnode, TGeoVolume *topvol
    }
 
    // sort in volume descent order
-   std::sort(sortarr.begin(), sortarr.end(), [](REveGeomNode *a, REveGeomNode * b) { return a->vol > b->vol; });
+   std::sort(sortarr.begin(), sortarr.end(), [](RGeomNode *a, RGeomNode * b) { return a->vol > b->vol; });
 
    cnt = 0;
    for (auto &elem: sortarr) {
@@ -454,7 +462,7 @@ void REveGeomDescription::BuildDescription(TGeoNode *topnode, TGeoVolume *topvol
 /// Get volume for specified nodeid
 /// If specific volume was configured, it will be returned for nodeid==0
 
-TGeoVolume *REveGeomDescription::GetVolume(int nodeid)
+TGeoVolume *RGeomDescription::GetVolume(int nodeid)
 {
    auto node = fNodes[nodeid];
    if (node) return node->GetVolume();
@@ -464,7 +472,7 @@ TGeoVolume *REveGeomDescription::GetVolume(int nodeid)
 /////////////////////////////////////////////////////////////////////
 /// Set visibility flag for each nodes
 
-int REveGeomDescription::MarkVisible(bool on_screen)
+int RGeomDescription::MarkVisible(bool on_screen)
 {
    int res = 0;
    for (int nodeid = 0; nodeid < (int) fNodes.size(); nodeid++) {
@@ -498,14 +506,14 @@ int REveGeomDescription::MarkVisible(bool on_screen)
 /////////////////////////////////////////////////////////////////////
 /// Count total number of visible childs under each node
 
-void REveGeomDescription::ProduceIdShifts()
+void RGeomDescription::ProduceIdShifts()
 {
    for (auto &node : fDesc)
       node.idshift = -1;
 
-   using ScanFunc_t = std::function<int(REveGeomNode &)>;
+   using ScanFunc_t = std::function<int(RGeomNode &)>;
 
-   ScanFunc_t scan_func = [&, this](REveGeomNode &node) {
+   ScanFunc_t scan_func = [&, this](RGeomNode &node) {
       if (node.idshift < 0) {
          node.idshift = 0;
          for(auto id : node.chlds)
@@ -522,7 +530,7 @@ void REveGeomDescription::ProduceIdShifts()
 /////////////////////////////////////////////////////////////////////
 /// Iterate over all nodes and call function for visible
 
-int REveGeomDescription::ScanNodes(bool only_visible, int maxlvl, REveGeomScanFunc_t func)
+int RGeomDescription::ScanNodes(bool only_visible, int maxlvl, RGeomScanFunc_t func)
 {
    if (fDesc.empty()) return 0;
 
@@ -572,7 +580,7 @@ int REveGeomDescription::ScanNodes(bool only_visible, int maxlvl, REveGeomScanFu
 /////////////////////////////////////////////////////////////////////
 /// Collect nodes which are used in visibles
 
-void REveGeomDescription::CollectNodes(REveGeomDrawing &drawing)
+void RGeomDescription::CollectNodes(RGeomDrawing &drawing)
 {
    // TODO: for now reset all flags, later can be kept longer
    for (auto &node : fDesc)
@@ -609,7 +617,7 @@ void REveGeomDescription::CollectNodes(REveGeomDrawing &drawing)
 /// Find description object for requested shape
 /// If not exists - will be created
 
-std::string REveGeomDescription::ProcessBrowserRequest(const std::string &msg)
+std::string RGeomDescription::ProcessBrowserRequest(const std::string &msg)
 {
    std::string res;
 
@@ -626,7 +634,7 @@ std::string REveGeomDescription::ProcessBrowserRequest(const std::string &msg)
 
    if (request->path.empty() && (request->first == 0) && (GetNumNodes() < (IsPreferredOffline() ? 1000000 : 1000))) {
 
-      std::vector<REveGeomNodeBase *> vect(fDesc.size(), nullptr);
+      std::vector<RGeomNodeBase *> vect(fDesc.size(), nullptr);
 
       int cnt = 0;
       for (auto &item : fDesc)
@@ -683,7 +691,7 @@ std::string REveGeomDescription::ProcessBrowserRequest(const std::string &msg)
 /// Find description object for requested shape
 /// If not exists - will be created
 
-REveGeomDescription::ShapeDescr &REveGeomDescription::FindShapeDescr(TGeoShape *shape)
+RGeomDescription::ShapeDescr &RGeomDescription::FindShapeDescr(TGeoShape *shape)
 {
    for (auto &descr : fShapes)
       if (descr.fShape == shape)
@@ -695,21 +703,67 @@ REveGeomDescription::ShapeDescr &REveGeomDescription::FindShapeDescr(TGeoShape *
    return elem;
 }
 
+
+////////////////////////////////////////////////////////////////////////
+/// Function produces mesh for provided shape, applying matrix to the result
+
+std::unique_ptr<RootCsg::TBaseMesh> MakeGeoMesh(TGeoMatrix *matr, TGeoShape *shape)
+{
+   TGeoCompositeShape *comp = dynamic_cast<TGeoCompositeShape *> (shape);
+
+   std::unique_ptr<RootCsg::TBaseMesh> res;
+
+   if (!comp) {
+      std::unique_ptr<TBuffer3D> b3d(shape->MakeBuffer3D());
+
+      if (matr) {
+         Double_t *v = b3d->fPnts;
+         Double_t buf[3];
+         for (UInt_t i = 0; i < b3d->NbPnts(); ++i) {
+            buf[0] = v[i*3];
+            buf[1] = v[i*3+1];
+            buf[2] = v[i*3+2];
+            matr->LocalToMaster(buf, &v[i*3]);
+         }
+      }
+
+      res.reset(RootCsg::ConvertToMesh(*b3d.get()));
+   } else {
+      auto node = comp->GetBoolNode();
+
+      TGeoHMatrix mleft, mright;
+      if (matr) { mleft = *matr; mright = *matr; }
+
+      mleft.Multiply(node->GetLeftMatrix());
+      auto left = MakeGeoMesh(&mleft, node->GetLeftShape());
+
+      mright.Multiply(node->GetRightMatrix());
+      auto right = MakeGeoMesh(&mright, node->GetRightShape());
+
+      if (node->IsA() == TGeoUnion::Class()) res.reset(RootCsg::BuildUnion(left.get(), right.get()));
+      if (node->IsA() == TGeoIntersection::Class()) res.reset(RootCsg::BuildIntersection(left.get(), right.get()));
+      if (node->IsA() == TGeoSubtraction::Class()) res.reset(RootCsg::BuildDifference(left.get(), right.get()));
+   }
+
+   return res;
+}
+
+
 /////////////////////////////////////////////////////////////////////
 /// Find description object and create render information
 
-REveGeomDescription::ShapeDescr &
-REveGeomDescription::MakeShapeDescr(TGeoShape *shape)
+RGeomDescription::ShapeDescr &
+RGeomDescription::MakeShapeDescr(TGeoShape *shape)
 {
    auto &elem = FindShapeDescr(shape);
 
    if (elem.nfaces == 0) {
 
-      TGeoCompositeShape *comp = nullptr;
+      // TGeoCompositeShape *comp = nullptr;
 
       int boundary = 3; //
       if (shape->IsComposite()) {
-         comp = dynamic_cast<TGeoCompositeShape *>(shape);
+         // comp = dynamic_cast<TGeoCompositeShape *>(shape);
          // composite is most complex for client, therefore by default build on server
          boundary = 1;
       } else if (!shape->IsCylType()) {
@@ -721,6 +775,11 @@ REveGeomDescription::MakeShapeDescr(TGeoShape *shape)
          elem.nfaces = 1;
          elem.fShapeInfo.shape = shape;
       } else {
+
+         auto mesh = MakeGeoMesh(nullptr, shape);
+
+
+         /*
 
          auto poly = std::make_unique<REveGeoPolyShape>();
 
@@ -741,6 +800,7 @@ REveGeomDescription::MakeShapeDescr(TGeoShape *shape)
          elem.fRawInfo.sz[0] = rd.SizeV();
          elem.fRawInfo.sz[1] = rd.SizeN();
          elem.fRawInfo.sz[2] = rd.SizeI();
+*/
 
       }
    }
@@ -751,7 +811,7 @@ REveGeomDescription::MakeShapeDescr(TGeoShape *shape)
 /////////////////////////////////////////////////////////////////////
 /// Copy material properties
 
-void REveGeomDescription::CopyMaterialProperties(TGeoVolume *volume, REveGeomNode &node)
+void RGeomDescription::CopyMaterialProperties(TGeoVolume *volume, RGeomNode &node)
 {
    if (!volume) return;
 
@@ -784,7 +844,7 @@ void REveGeomDescription::CopyMaterialProperties(TGeoVolume *volume, REveGeomNod
 /////////////////////////////////////////////////////////////////////
 /// Reset shape info, which used to pack binary data
 
-void REveGeomDescription::ResetRndrInfos()
+void RGeomDescription::ResetRndrInfos()
 {
    for (auto &s: fShapes)
       s.reset();
@@ -802,7 +862,7 @@ void REveGeomDescription::ResetRndrInfos()
 /// void geom() {
 ///    auto f = TFile::Open("file_name.root");
 ///    auto vol = f->Get<TGeoVolume>("object_name");
-///    ROOT::Experimental::REveGeomDescription desc;
+///    ROOT::Experimental::RGeomDescription desc;
 ///    desc.Build(vol);
 ///    std::ofstream fout("geom.json");
 ///    fout << desc.ProduceJson();
@@ -811,14 +871,14 @@ void REveGeomDescription::ResetRndrInfos()
 ///  In JSROOT one loads data from JSON file and call `build` function to
 ///  produce three.js model
 
-std::string REveGeomDescription::ProduceJson()
+std::string RGeomDescription::ProduceJson()
 {
    std::vector<int> viscnt(fDesc.size(), 0);
 
    int level = GetVisLevel();
 
    // first count how many times each individual node appears
-   int numnodes = ScanNodes(true, level, [&viscnt](REveGeomNode &node, std::vector<int> &, bool, int) {
+   int numnodes = ScanNodes(true, level, [&viscnt](RGeomNode &node, std::vector<int> &, bool, int) {
       viscnt[node.id]++;
       return true;
    });
@@ -827,7 +887,7 @@ std::string REveGeomDescription::ProduceJson()
       while ((numnodes > GetMaxVisNodes()) && (level > 1)) {
          level--;
          viscnt.assign(viscnt.size(), 0);
-         numnodes = ScanNodes(true, level, [&viscnt](REveGeomNode &node, std::vector<int> &, bool, int) {
+         numnodes = ScanNodes(true, level, [&viscnt](RGeomNode &node, std::vector<int> &, bool, int) {
             viscnt[node.id]++;
             return true;
          });
@@ -857,7 +917,7 @@ std::string REveGeomDescription::ProduceJson()
 
       // should not happen, but just in case
       if (shape_descr.nfaces <= 0) {
-         R__LOG_ERROR(REveLog()) << "No faces for the shape " << shape->GetName() << " class " << shape->ClassName();
+         R__LOG_ERROR(RGeomLog()) << "No faces for the shape " << shape->GetName() << " class " << shape->ClassName();
          continue;
       }
 
@@ -875,11 +935,11 @@ std::string REveGeomDescription::ProduceJson()
    // finally we should create data for streaming to the client
    // it includes list of visible nodes and rawdata
 
-   REveGeomDrawing drawing;
+   RGeomDrawing drawing;
    ResetRndrInfos();
    bool has_shape = false;
 
-   ScanNodes(true, level, [&, this](REveGeomNode &node, std::vector<int> &stack, bool, int seqid) {
+   ScanNodes(true, level, [&, this](RGeomNode &node, std::vector<int> &stack, bool, int seqid) {
       if (node.sortid < fDrawIdCut) {
          drawing.visibles.emplace_back(node.id, seqid, stack);
 
@@ -906,7 +966,7 @@ std::string REveGeomDescription::ProduceJson()
 /// Collect all information required to draw geometry on the client
 /// This includes list of each visible nodes, meshes and matrixes
 
-void REveGeomDescription::ProduceDrawData()
+void RGeomDescription::ProduceDrawData()
 {
    fDrawJson = "GDRAW:"s + ProduceJson();
 }
@@ -914,7 +974,7 @@ void REveGeomDescription::ProduceDrawData()
 /////////////////////////////////////////////////////////////////////
 /// Clear raw data. Will be rebuild when next connection will be established
 
-void REveGeomDescription::ClearDrawData()
+void RGeomDescription::ClearDrawData()
 {
    fDrawJson.clear();
 }
@@ -923,7 +983,7 @@ void REveGeomDescription::ClearDrawData()
 /// return true when node used in main geometry drawing and does not have childs
 /// for such nodes one could provide optimize toggling of visibility flags
 
-bool REveGeomDescription::IsPrincipalEndNode(int nodeid)
+bool RGeomDescription::IsPrincipalEndNode(int nodeid)
 {
    if ((nodeid < 0) || (nodeid >= (int)fDesc.size()))
       return false;
@@ -939,7 +999,7 @@ bool REveGeomDescription::IsPrincipalEndNode(int nodeid)
 /// If number of found elements less than 100, create description and shapes for them
 /// Returns number of match elements
 
-int REveGeomDescription::SearchVisibles(const std::string &find, std::string &hjson, std::string &json)
+int RGeomDescription::SearchVisibles(const std::string &find, std::string &hjson, std::string &json)
 {
    hjson.clear();
    json.clear();
@@ -953,12 +1013,12 @@ int REveGeomDescription::SearchVisibles(const std::string &find, std::string &hj
 
    int nmatches = 0;
 
-   auto match_func = [&find](REveGeomNode &node) {
+   auto match_func = [&find](RGeomNode &node) {
       return (node.vol > 0) && (node.name.compare(0, find.length(), find) == 0);
    };
 
    // first count how many times each individual node appears
-   ScanNodes(false, 0, [&nodescnt,&viscnt,&match_func,&nmatches](REveGeomNode &node, std::vector<int> &, bool is_vis, int) {
+   ScanNodes(false, 0, [&nodescnt,&viscnt,&match_func,&nmatches](RGeomNode &node, std::vector<int> &, bool is_vis, int) {
 
       if (match_func(node)) {
          nmatches++;
@@ -1001,7 +1061,7 @@ int REveGeomDescription::SearchVisibles(const std::string &find, std::string &hj
 
       // should not happen, but just in case
       if (shape_descr.nfaces <= 0) {
-         R__LOG_ERROR(REveLog()) << "No faces for the shape " << shape->GetName() << " class " << shape->ClassName();
+         R__LOG_ERROR(RGeomLog()) << "No faces for the shape " << shape->GetName() << " class " << shape->ClassName();
          continue;
       }
 
@@ -1021,7 +1081,7 @@ int REveGeomDescription::SearchVisibles(const std::string &find, std::string &hj
    // it includes list of visible nodes and rawdata (if there is enough space)
 
 
-   std::vector<REveGeomNodeBase> found_desc; ///<! hierarchy of nodes, used for search
+   std::vector<RGeomNodeBase> found_desc; ///<! hierarchy of nodes, used for search
    std::vector<int> found_map(fDesc.size(), -1);   ///<! mapping between nodeid - > foundid
 
    // these are only selected nodes to produce hierarchy
@@ -1034,10 +1094,10 @@ int REveGeomDescription::SearchVisibles(const std::string &find, std::string &hj
 
    ResetRndrInfos();
 
-   REveGeomDrawing drawing;
+   RGeomDrawing drawing;
    bool has_shape = true;
 
-   ScanNodes(false, 0, [&, this](REveGeomNode &node, std::vector<int> &stack, bool is_vis, int seqid) {
+   ScanNodes(false, 0, [&, this](RGeomNode &node, std::vector<int> &stack, bool is_vis, int seqid) {
       // select only nodes which should match
       if (!match_func(node))
          return true;
@@ -1104,7 +1164,7 @@ int REveGeomDescription::SearchVisibles(const std::string &find, std::string &hj
 /////////////////////////////////////////////////////////////////////////////////
 /// Returns nodeid for given stack array, returns -1 in case of failure
 
-int REveGeomDescription::FindNodeId(const std::vector<int> &stack)
+int RGeomDescription::FindNodeId(const std::vector<int> &stack)
 {
    int nodeid = 0;
 
@@ -1120,7 +1180,7 @@ int REveGeomDescription::FindNodeId(const std::vector<int> &stack)
 /////////////////////////////////////////////////////////////////////////////////
 /// Creates stack for given array of ids, first element always should be 0
 
-std::vector<int> REveGeomDescription::MakeStackByIds(const std::vector<int> &ids)
+std::vector<int> RGeomDescription::MakeStackByIds(const std::vector<int> &ids)
 {
    std::vector<int> stack;
 
@@ -1159,7 +1219,7 @@ std::vector<int> REveGeomDescription::MakeStackByIds(const std::vector<int> &ids
 /// Produce stack based on string path
 /// Used to highlight geo volumes by browser hover event
 
-std::vector<int> REveGeomDescription::MakeStackByPath(const std::vector<std::string> &path)
+std::vector<int> RGeomDescription::MakeStackByPath(const std::vector<std::string> &path)
 {
    std::vector<int> res;
 
@@ -1175,7 +1235,7 @@ std::vector<int> REveGeomDescription::MakeStackByPath(const std::vector<std::str
 /// Produce list of node ids for given stack
 /// If found nodes preselected - use their ids
 
-std::vector<int> REveGeomDescription::MakeIdsByStack(const std::vector<int> &stack)
+std::vector<int> RGeomDescription::MakeIdsByStack(const std::vector<int> &stack)
 {
    std::vector<int> ids;
 
@@ -1203,7 +1263,7 @@ std::vector<int> REveGeomDescription::MakeIdsByStack(const std::vector<int> &sta
 /////////////////////////////////////////////////////////////////////////////////
 /// Returns path string for provided stack
 
-std::vector<std::string> REveGeomDescription::MakePathByStack(const std::vector<int> &stack)
+std::vector<std::string> RGeomDescription::MakePathByStack(const std::vector<int> &stack)
 {
    std::vector<std::string> path;
 
@@ -1219,9 +1279,9 @@ std::vector<std::string> REveGeomDescription::MakePathByStack(const std::vector<
 /// Return string with only part of nodes description which were modified
 /// Checks also volume
 
-std::string REveGeomDescription::ProduceModifyReply(int nodeid)
+std::string RGeomDescription::ProduceModifyReply(int nodeid)
 {
-   std::vector<REveGeomNodeBase *> nodes;
+   std::vector<RGeomNodeBase *> nodes;
    auto vol = GetVolume(nodeid);
 
    // we take not only single node, but all there same volume is referenced
@@ -1241,7 +1301,7 @@ std::string REveGeomDescription::ProduceModifyReply(int nodeid)
 /// All nodes, which are referencing same shape will be transferred
 /// Returns true if new render information provided
 
-bool REveGeomDescription::ProduceDrawingFor(int nodeid, std::string &json, bool check_volume)
+bool RGeomDescription::ProduceDrawingFor(int nodeid, std::string &json, bool check_volume)
 {
    // only this shape is interesting
 
@@ -1252,9 +1312,9 @@ bool REveGeomDescription::ProduceDrawingFor(int nodeid, std::string &json, bool 
       return false;
    }
 
-   REveGeomDrawing drawing;
+   RGeomDrawing drawing;
 
-   ScanNodes(true, 0, [&, this](REveGeomNode &node, std::vector<int> &stack, bool, int seq_id) {
+   ScanNodes(true, 0, [&, this](RGeomNode &node, std::vector<int> &stack, bool, int seq_id) {
       // select only nodes which reference same shape
 
       if (check_volume) {
@@ -1304,7 +1364,7 @@ bool REveGeomDescription::ProduceDrawingFor(int nodeid, std::string &json, bool 
 /// But in this case one can exclude several classes which are not interesting,
 /// but appears very often
 
-std::string REveGeomDescription::MakeDrawingJson(REveGeomDrawing &drawing, bool has_shapes)
+std::string RGeomDescription::MakeDrawingJson(RGeomDrawing &drawing, bool has_shapes)
 {
    int comp = GetJsonComp();
 
@@ -1315,20 +1375,20 @@ std::string REveGeomDescription::MakeDrawingJson(REveGeomDrawing &drawing, bool 
 
    TBufferJSON json;
    json.SetCompact(comp);
-   json.SetSkipClassInfo(TClass::GetClass<REveGeomDrawing>());
-   json.SetSkipClassInfo(TClass::GetClass<REveGeomNode>());
-   json.SetSkipClassInfo(TClass::GetClass<REveGeomVisible>());
+   json.SetSkipClassInfo(TClass::GetClass<RGeomDrawing>());
+   json.SetSkipClassInfo(TClass::GetClass<RGeomNode>());
+   json.SetSkipClassInfo(TClass::GetClass<RGeomVisible>());
    json.SetSkipClassInfo(TClass::GetClass<RGeomShapeRenderInfo>());
    json.SetSkipClassInfo(TClass::GetClass<RGeomRawRenderInfo>());
 
-   return json.StoreObject(&drawing, TClass::GetClass<REveGeomDrawing>()).Data();
+   return json.StoreObject(&drawing, TClass::GetClass<RGeomDrawing>()).Data();
 }
 
 /////////////////////////////////////////////////////////////////////////////////
 /// Change visibility for specified element
 /// Returns true if changes was performed
 
-bool REveGeomDescription::ChangeNodeVisibility(int nodeid, bool selected)
+bool RGeomDescription::ChangeNodeVisibility(int nodeid, bool selected)
 {
    auto &dnode = fDesc[nodeid];
 
@@ -1359,9 +1419,9 @@ bool REveGeomDescription::ChangeNodeVisibility(int nodeid, bool selected)
 /// Change visibility for specified element
 /// Returns true if changes was performed
 
-std::unique_ptr<REveGeomNodeInfo> REveGeomDescription::MakeNodeInfo(const std::vector<std::string> &path)
+std::unique_ptr<RGeomNodeInfo> RGeomDescription::MakeNodeInfo(const std::vector<std::string> &path)
 {
-   std::unique_ptr<REveGeomNodeInfo> res;
+   std::unique_ptr<RGeomNodeInfo> res;
 
    RGeomBrowserIter iter(*this);
 
@@ -1371,7 +1431,7 @@ std::unique_ptr<REveGeomNodeInfo> REveGeomDescription::MakeNodeInfo(const std::v
 
       auto &desc = fDesc[iter.GetNodeId()];
 
-      res = std::make_unique<REveGeomNodeInfo>();
+      res = std::make_unique<RGeomNodeInfo>();
 
       res->path = path;
       res->node_name = node ? node->GetName() : "node_name";
@@ -1401,9 +1461,9 @@ std::unique_ptr<REveGeomNodeInfo> REveGeomDescription::MakeNodeInfo(const std::v
 /// Change configuration by client
 /// Returns true if any parameter was really changed
 
-bool REveGeomDescription::ChangeConfiguration(const std::string &json)
+bool RGeomDescription::ChangeConfiguration(const std::string &json)
 {
-   auto cfg = TBufferJSON::FromJSON<REveGeomConfig>(json);
+   auto cfg = TBufferJSON::FromJSON<RGeomConfig>(json);
    if (!cfg) return false;
 
    auto json1 = TBufferJSON::ToJSON(cfg.get());
@@ -1418,5 +1478,8 @@ bool REveGeomDescription::ChangeConfiguration(const std::string &json)
 
    return true;
 }
+
+
+
 
 
