@@ -26,8 +26,12 @@ if(pyroot)
     add_subdirectory(jupyroot)
     add_subdirectory(jsmva)
     if(dataframe AND (PYTHON_VERSION_STRING_Development_Main VERSION_GREATER_EQUAL 3.8))
-      # TODO: Add a status message to signal both if DistRDF is being built or if it isn't
+      message(STATUS "Distributed RDataFrame enabled")
       add_subdirectory(experimental/distrdf)
+    else()
+      message(STATUS "Requirements to enable distributed RDataFrame:")
+      message(STATUS "    dataframe: required:ON, actual:${dataframe}")
+      message(STATUS "    Python version: required:>=3.8, actual:${PYTHON_VERSION_STRING_Development_Main}")
     endif()
 
   endif()
