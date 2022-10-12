@@ -16,9 +16,6 @@ if (NOT ONNX_MODELS_DIR)
   set(ONNX_MODELS_DIR input_models)
 endif()
 
-#protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS "${SOFIE_PARSERS_DIR}/onnx_proto3")
-#set_source_files_properties(${PROTO_SRCS} ${PROTO_HDRS} PROPERTIES GENERATED TRUE)
-
 add_executable(emitFromONNX
    EmitFromONNX.cxx
 )
@@ -83,8 +80,12 @@ target_compile_options(emitFromROOT PRIVATE -Wno-unused-parameter -Wno-array-bou
 
 # Automatic compilation of headers from root files
 add_custom_target(SofieCompileModels_ROOT)
-add_dependencies(SofieCompileModels_ROOT emitFromROOT)
-
+# onepcm or modules dependency is needed for using ROOT I/O when converting a model in a ROOT file
+if (runtime_cxxmodules)
+  add_dependencies(SofieCompileModels_ROOT emitFromROOT modules_idx)
+else()
+  add_dependencies(SofieCompileModels_ROOT emitFromROOT onepcm)
+endif()
 # Finding .onnx files to be parsed and creating the appropriate command
 file(GLOB ONNX_FILES "${ONNX_MODELS_DIR}/*.onnx")
 foreach(onnx_file ${ONNX_FILES})
