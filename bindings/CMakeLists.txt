@@ -25,7 +25,7 @@ if(pyroot)
     add_subdirectory(tpython)
     add_subdirectory(jupyroot)
     add_subdirectory(jsmva)
-    if(dataframe AND (PYTHON_VERSION_STRING_Development_Main VERSION_GREATER_EQUAL 3.7))
+    if(dataframe AND (PYTHON_VERSION_STRING_Development_Main VERSION_GREATER_EQUAL 3.8))
       # TODO: Add a status message to signal both if DistRDF is being built or if it isn't
       add_subdirectory(experimental/distrdf)
     endif()
