@@ -13,7 +13,7 @@
 #include "TGeoVolume.h"
 #include "TFile.h"
 
-void viewer()
+void web_cms()
 {
    TFile::SetCacheFileDir(".");
 
