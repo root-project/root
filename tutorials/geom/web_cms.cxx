@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_eve7
+/// \ingroup tutorial_webgui
 ///  Web-based geometry viewer for CMS geometry
 ///
 /// \macro_code
