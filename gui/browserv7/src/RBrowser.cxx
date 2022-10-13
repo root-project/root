@@ -13,6 +13,7 @@
 #include <ROOT/RBrowser.hxx>
 
 #include <ROOT/Browsable/RSysFile.hxx>
+#include <ROOT/Browsable/RLevelIter.hxx>
 
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RFileDialog.hxx>
@@ -314,6 +315,11 @@ std::string RBrowser::ProcessDblClick(std::vector<std::string> &args)
       fActiveWidgetName = new_widget->GetName();
 
       return NewWidgetMsg(new_widget);
+   }
+
+   // before display tree or geometry ensure that they read and cached inside element
+   if (elem->IsCapable(Browsable::RElement::kActGeom) || elem->IsCapable(Browsable::RElement::kActTree)) {
+      elem->GetChildsIter();
    }
 
    auto widget = GetActiveWidget();
