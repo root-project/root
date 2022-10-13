@@ -76,9 +76,8 @@ public:
 /** Render info with raw data */
 class RGeomRawRenderInfo : public RGeomRenderInfo  {
 public:
-   // render data, equivalent of REveElement::WriteCoreJson
-   int sz[3]={0,0, 0};        ///< fRenderData: [SizeV(), SizeN(), SizeI()];
-   std::vector<unsigned char> raw;  ///< raw shape data with render information, JSON_base64
+   std::vector<unsigned char> raw;  ///< float vertices as raw data, JSON_base64
+   std::vector<int> idx;            ///< vertex indexes, always triangles
    virtual ~RGeomRawRenderInfo() = default;
 };
 
@@ -201,7 +200,7 @@ class RGeomDescription {
    bool fPreferredOffline{false};   ///<! indicates that full description should be provided to client
    int fJsonComp{0};                ///<! default JSON compression
 
-   RGeomConfig fCfg;             ///<! configuration parameter editable from GUI
+   RGeomConfig fCfg;                ///<! configuration parameter editable from GUI
 
    void PackMatrix(std::vector<float> &arr, TGeoMatrix *matr);
 

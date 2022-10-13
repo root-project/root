@@ -752,8 +752,7 @@ std::unique_ptr<RootCsg::TBaseMesh> MakeGeoMesh(TGeoMatrix *matr, TGeoShape *sha
 /////////////////////////////////////////////////////////////////////
 /// Find description object and create render information
 
-RGeomDescription::ShapeDescr &
-RGeomDescription::MakeShapeDescr(TGeoShape *shape)
+RGeomDescription::ShapeDescr &RGeomDescription::MakeShapeDescr(TGeoShape *shape)
 {
    auto &elem = FindShapeDescr(shape);
 
@@ -773,27 +772,37 @@ RGeomDescription::MakeShapeDescr(TGeoShape *shape)
          elem.fShapeInfo.shape = shape;
       } else {
 
+         int old_nsegm = -1;
+         if (fCfg.nsegm > 0 && gGeoManager) {
+            old_nsegm = gGeoManager->GetNsegments();
+            gGeoManager->SetNsegments(fCfg.nsegm);
+         }
+
          auto mesh = MakeGeoMesh(nullptr, shape);
 
-         Int_t num_vertices = mesh->NumberOfVertices();
+         if (old_nsegm > 0 && gGeoManager)
+            gGeoManager->SetNsegments(old_nsegm);
 
-         Int_t num_polynoms = 0;
 
-         Int_t index_buffer_size = 2, vertex_buffer_size = 3 * num_vertices;
+         Int_t num_vertices = mesh->NumberOfVertices(), num_polynoms = 0;
+
          for (unsigned polyIndex = 0; polyIndex < mesh->NumberOfPolys(); ++polyIndex) {
 
             auto size_of_polygon = mesh->SizeOfPoly(polyIndex);
 
             if (size_of_polygon == 3) {
                num_polynoms += 1;
-               index_buffer_size += 3;
             } else if (size_of_polygon == 4) {
                num_polynoms += 2;
-               index_buffer_size += 6;
             } else {
                R__LOG_ERROR(RGeomLog()) << "CSG polygon has unsupported number of vertices " << size_of_polygon;
             }
          }
+
+         Int_t index_buffer_size = num_polynoms * 3,  // triangle indexes
+               vertex_buffer_size = num_vertices * 3; // X,Y,Z array
+
+         elem.nfaces = num_polynoms;
 
          std::vector<float> vertices(vertex_buffer_size);
 
@@ -804,40 +813,32 @@ RGeomDescription::MakeShapeDescr(TGeoShape *shape)
             vertices[i*3+2] = v[2];
          }
 
-         std::vector<int> indexes(index_buffer_size);
-         indexes[0] = 4; // REveRenderData::GL_TRIANGLES;
-         indexes[1] = num_polynoms;
-         int indx = 2;
+         elem.fRawInfo.raw.resize(vertices.size() * sizeof(float));
+
+         memcpy(reinterpret_cast<char *>(elem.fRawInfo.raw.data()), vertices.data(), vertices.size() * sizeof(float));
+
+         auto &indexes = elem.fRawInfo.idx;
+
+         indexes.resize(index_buffer_size);
+         int pos = 0;
 
          for (unsigned polyIndex = 0; polyIndex < mesh->NumberOfPolys(); ++polyIndex) {
             auto size_of_polygon = mesh->SizeOfPoly(polyIndex);
 
-            if (size_of_polygon == 3) {
+            if ((size_of_polygon == 3) || (size_of_polygon == 4))  {
+               // add first triangle
                for (int i = 0; i < 3; ++i)
-                  indexes[indx++] = mesh->GetVertexIndex(polyIndex, i);
-            } else if (size_of_polygon == 4) {
-               for (int i = 0; i < 3; ++i)
-                  indexes[indx++] = mesh->GetVertexIndex(polyIndex, i);
+                  indexes[pos++] = mesh->GetVertexIndex(polyIndex, i);
+            }
 
-               indexes[indx++] = mesh->GetVertexIndex(polyIndex, 0);
-               indexes[indx++] = mesh->GetVertexIndex(polyIndex, 2);
-               indexes[indx++] = mesh->GetVertexIndex(polyIndex, 3);
+            if (size_of_polygon == 4) {
+               // add second triangle
+               indexes[pos++] = mesh->GetVertexIndex(polyIndex, 0);
+               indexes[pos++] = mesh->GetVertexIndex(polyIndex, 2);
+               indexes[pos++] = mesh->GetVertexIndex(polyIndex, 3);
             }
          }
 
-         elem.nfaces = num_polynoms;
-
-         elem.fRawInfo.sz[0] = vertex_buffer_size;
-         elem.fRawInfo.sz[1] = 0; // no normals
-         elem.fRawInfo.sz[2] = index_buffer_size;
-
-         auto vsize = vertex_buffer_size*sizeof(float),
-              isize = index_buffer_size * sizeof(int);
-
-         elem.fRawInfo.raw.resize(vsize + isize);
-         char *buf = reinterpret_cast<char *>(elem.fRawInfo.raw.data());
-         memcpy(buf, vertices.data(), vsize);
-         memcpy(buf+vsize, indexes.data(), isize);
       }
    }
 
