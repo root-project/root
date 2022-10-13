@@ -40,28 +40,27 @@
    <body>
       <div id="GeomDiv">
       </div>
-
-      <script type='module'>
-
-        import { connectWebWindow } from './jsrootsys/modules/webwindow.mjs';
-        import { parse, decodeUrl, toJSON, source_dir } from './jsrootsys/modules/core.mjs';
-
-        // create global EVE and THREE handles
-
-        connectWebWindow({
-           ui5: true,
-           openui5libs: "sap.m, sap.ui.layout, sap.ui.unified, sap.ui.table" // customize openui5 libs later
-        }).then(handle => {
-            sap.ui.require(["sap/ui/core/mvc/XMLView"], XMLView => {
-                XMLView.create({
-                   viewName: "rootui5.eve7.view.GeomViewer",
-                   viewData: { conn_handle: handle, jsroot: { parse, decodeUrl, toJSON, source_dir } }
-                }).then(oView => oView.placeAt("GeomDiv"));
-             });
-        });
-
-      </script>
-
    </body>
+
+   <script type='module'>
+
+     import { connectWebWindow } from './jsrootsys/modules/webwindow.mjs';
+     import { parse, decodeUrl, toJSON, source_dir } from './jsrootsys/modules/core.mjs';
+
+     // create global EVE and THREE handles
+
+     connectWebWindow({
+        ui5: true,
+        openui5libs: "sap.m, sap.ui.layout, sap.ui.unified, sap.ui.table" // customize openui5 libs later
+     }).then(handle => {
+         sap.ui.require(["sap/ui/core/mvc/XMLView"], XMLView => {
+             XMLView.create({
+                viewName: "rootui5.eve7.view.GeomViewer",
+                viewData: { conn_handle: handle, jsroot: { parse, decodeUrl, toJSON, source_dir } }
+             }).then(oView => oView.placeAt("GeomDiv"));
+          });
+     });
+
+   </script>
 
 </html>
