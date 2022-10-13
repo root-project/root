@@ -15,7 +15,7 @@ function getButtonSize(handler, fact) {
 }
 
 function toggleButtonsVisibility(handler, action) {
-   let group = handler.getLayerSvg("btns_layer", handler.this_pad_name),
+   let group = handler.getLayerSvg('btns_layer', handler.this_pad_name),
        btn = group.select("[name='Toggle']");
 
    if (btn.empty()) return;
@@ -23,7 +23,7 @@ function toggleButtonsVisibility(handler, action) {
    let state = btn.property('buttons_state');
 
    if (btn.property('timout_handler')) {
-      if (action!=='timeout') clearTimeout(btn.property('timout_handler'));
+      if (action !== 'timeout') clearTimeout(btn.property('timout_handler'));
       btn.property('timout_handler', null);
    }
 
@@ -45,7 +45,7 @@ function toggleButtonsVisibility(handler, action) {
 
    group.selectAll('svg').each(function() {
       if (this===btn.node()) return;
-      d3_select(this).style('display', is_visible ? "" : "none");
+      d3_select(this).style('display', is_visible ? '' : 'none');
    });
 }
 
@@ -62,51 +62,51 @@ let PadButtonsHandler = {
          btns_y = height - sz0;
       }
 
-      btns.attr("transform","translate("+btns_x+","+btns_y+")");
+      btns.attr('transform', `translate(${btns_x},${btns_y})`);
    },
 
    findPadButton(keyname) {
-      let group = this.getLayerSvg("btns_layer", this.this_pad_name), found_func = "";
+      let group = this.getLayerSvg('btns_layer', this.this_pad_name), found_func = '';
       if (!group.empty())
-         group.selectAll("svg").each(function() {
-            if (d3_select(this).attr("key") === keyname)
-               found_func = d3_select(this).attr("name");
+         group.selectAll('svg').each(function() {
+            if (d3_select(this).attr('key') === keyname)
+               found_func = d3_select(this).attr('name');
          });
 
       return found_func;
    },
 
    removePadButtons() {
-      let group = this.getLayerSvg("btns_layer", this.this_pad_name);
+      let group = this.getLayerSvg('btns_layer', this.this_pad_name);
       if (!group.empty()) {
-         group.selectAll("*").remove();
-         group.property("nextx", null);
+         group.selectAll('*').remove();
+         group.property('nextx', null);
       }
    },
 
    showPadButtons() {
-      let group = this.getLayerSvg("btns_layer", this.this_pad_name);
+      let group = this.getLayerSvg('btns_layer', this.this_pad_name);
       if (group.empty()) return;
 
       // clean all previous buttons
-      group.selectAll("*").remove();
+      group.selectAll('*').remove();
       if (!this._buttons) return;
 
       let iscan = this.iscan || !this.has_canvas, ctrl,
           x = group.property('leftside') ? getButtonSize(this, 1.25) : 0, y = 0;
 
       if (this._fast_drawing) {
-         ctrl = ToolbarIcons.createSVG(group, ToolbarIcons.circle, getButtonSize(this), "enlargePad");
-         ctrl.attr("name", "Enlarge").attr("x", 0).attr("y", 0)
-             .on("click", evnt => this.clickPadButton("enlargePad", evnt));
+         ctrl = ToolbarIcons.createSVG(group, ToolbarIcons.circle, getButtonSize(this), 'enlargePad');
+         ctrl.attr('name', 'Enlarge').attr('x', 0).attr('y', 0)
+             .on('click', evnt => this.clickPadButton('enlargePad', evnt));
       } else {
-         ctrl = ToolbarIcons.createSVG(group, ToolbarIcons.rect, getButtonSize(this), "Toggle tool buttons");
+         ctrl = ToolbarIcons.createSVG(group, ToolbarIcons.rect, getButtonSize(this), 'Toggle tool buttons');
 
-         ctrl.attr("name", "Toggle").attr("x", 0).attr("y", 0)
-             .property("buttons_state", (settings.ToolBar!=='popup'))
-             .on("click", () => toggleButtonsVisibility(this, 'toggle'))
-             .on("mouseenter", () => toggleButtonsVisibility(this, 'enable'))
-             .on("mouseleave", () => toggleButtonsVisibility(this, 'disable'));
+         ctrl.attr('name', 'Toggle').attr('x', 0).attr('y', 0)
+             .property('buttons_state', (settings.ToolBar !== 'popup'))
+             .on('click', () => toggleButtonsVisibility(this, 'toggle'))
+             .on('mouseenter', () => toggleButtonsVisibility(this, 'enable'))
+             .on('mouseleave', () => toggleButtonsVisibility(this, 'disable'));
 
          for (let k = 0; k < this._buttons.length; ++k) {
             let item = this._buttons[k],
@@ -116,34 +116,34 @@ let PadButtonsHandler = {
             if (!btn) btn = ToolbarIcons.circle;
 
             let svg = ToolbarIcons.createSVG(group, btn, getButtonSize(this),
-                        item.tooltip + (iscan ? "" : (" on pad " + this.this_pad_name)) + (item.keyname ? " (keyshortcut " + item.keyname + ")" : ""));
+                        item.tooltip + (iscan ? '' : (' on pad ' + this.this_pad_name)) + (item.keyname ? ' (keyshortcut ' + item.keyname + ')' : ''));
 
             if (group.property('vertical'))
-                svg.attr("x", y).attr("y", x);
+                svg.attr('x', y).attr('y', x);
             else
-               svg.attr("x", x).attr("y", y);
+               svg.attr('x', x).attr('y', y);
 
-            svg.attr("name", item.funcname)
-               .style('display', (ctrl.property("buttons_state") ? '' : 'none'))
-               .on("mouseenter", () => toggleButtonsVisibility(this, 'enterbtn'))
-               .on("mouseleave", () => toggleButtonsVisibility(this, 'leavebtn'));
+            svg.attr('name', item.funcname)
+               .style('display', (ctrl.property('buttons_state') ? '' : 'none'))
+               .on('mouseenter', () => toggleButtonsVisibility(this, 'enterbtn'))
+               .on('mouseleave', () => toggleButtonsVisibility(this, 'leavebtn'));
 
-            if (item.keyname) svg.attr("key", item.keyname);
+            if (item.keyname) svg.attr('key', item.keyname);
 
-            svg.on("click", evnt => this.clickPadButton(item.funcname, evnt));
+            svg.on('click', evnt => this.clickPadButton(item.funcname, evnt));
 
             x += getButtonSize(this, 1.25);
          }
       }
 
-      group.property("nextx", x);
+      group.property('nextx', x);
 
       this.alignButtons(group, this.getPadWidth(), this.getPadHeight());
 
       if (group.property('vertical'))
-         ctrl.attr("y", x);
+         ctrl.attr('y', x);
       else if (!group.property('leftside'))
-         ctrl.attr("x", x);
+         ctrl.attr('x', x);
    },
 
    assign(painter) {
@@ -172,10 +172,10 @@ class TPadPainter extends ObjectPainter {
       super(dom, pad);
       this.pad = pad;
       this.iscan = iscan; // indicate if working with canvas
-      this.this_pad_name = "";
+      this.this_pad_name = '';
       if (!this.iscan && pad?.fName) {
-         this.this_pad_name = pad.fName.replace(" ", "_"); // avoid empty symbol in pad name
-         let regexp = new RegExp("^[A-Za-z][A-Za-z0-9_]*$");
+         this.this_pad_name = pad.fName.replace(' ', '_'); // avoid empty symbol in pad name
+         let regexp = new RegExp('^[A-Za-z][A-Za-z0-9_]*$');
          if (!regexp.test(this.this_pad_name)) this.this_pad_name = 'jsroot_pad_' + internals.id_counter++;
       }
       this.painters = []; // complete list of all painters in the pad
@@ -318,16 +318,16 @@ class TPadPainter extends ObjectPainter {
 
    /** @summary Call function for each painter in pad
      * @param {function} userfunc - function to call
-     * @param {string} kind - "all" for all objects (default), "pads" only pads and subpads, "objects" only for object in current pad
+     * @param {string} kind - 'all' for all objects (default), 'pads' only pads and subpads, 'objects' only for object in current pad
      * @private */
    forEachPainterInPad(userfunc, kind) {
-      if (!kind) kind = "all";
-      if (kind != "objects") userfunc(this);
+      if (!kind) kind = 'all';
+      if (kind != 'objects') userfunc(this);
       for (let k = 0; k < this.painters.length; ++k) {
          let sub = this.painters[k];
          if (typeof sub.forEachPainterInPad === 'function') {
-            if (kind != "objects") sub.forEachPainterInPad(userfunc, kind);
-         } else if (kind != "pads") {
+            if (kind != 'objects') sub.forEachPainterInPad(userfunc, kind);
+         } else if (kind != 'pads') {
             userfunc(sub);
          }
       }
@@ -344,7 +344,7 @@ class TPadPainter extends ObjectPainter {
      * @private */
    producePadEvent(_what, _padpainter, _painter, _position, _place) {
 
-      if ((_what == "select") && (typeof this.selectActivePad == 'function'))
+      if ((_what == 'select') && (typeof this.selectActivePad == 'function'))
          this.selectActivePad(_padpainter, _painter, _position);
 
       if (this.pad_events_receiver)
@@ -363,7 +363,7 @@ class TPadPainter extends ObjectPainter {
 
       selectActivePad({ pp: this, active: true });
 
-      if (canp) canp.producePadEvent("select", this, _painter, pos, _place);
+      if (canp) canp.producePadEvent('select', this, _painter, pos, _place);
    }
 
    /** @summary Draw pad active border
@@ -377,12 +377,12 @@ class TPadPainter extends ObjectPainter {
       if (this.is_active_pad === undefined) return;
 
       if (!svg_rect)
-         svg_rect = this.iscan ? this.getCanvSvg().select(".canvas_fillrect") :
-                                 this.svg_this_pad().select(".root_pad_border");
+         svg_rect = this.iscan ? this.getCanvSvg().select('.canvas_fillrect') :
+                                 this.svg_this_pad().select('.root_pad_border');
 
-      let lineatt = this.is_active_pad ? new TAttLineHandler({ style: 1, width: 1, color: "red" }) : this.lineatt;
+      let lineatt = this.is_active_pad ? new TAttLineHandler({ style: 1, width: 1, color: 'red' }) : this.lineatt;
 
-      if (!lineatt) lineatt = new TAttLineHandler({ color: "none" });
+      if (!lineatt) lineatt = new TAttLineHandler({ color: 'none' });
 
       svg_rect.call(lineatt.func);
    }
@@ -407,48 +407,48 @@ class TPadPainter extends ObjectPainter {
          if (!rect.changed) return false;
 
          if (!isBatchMode())
-            btns = this.getLayerSvg("btns_layer", this.this_pad_name);
+            btns = this.getLayerSvg('btns_layer', this.this_pad_name);
 
-         info = this.getLayerSvg("info_layer", this.this_pad_name);
-         frect = svg.select(".canvas_fillrect");
+         info = this.getLayerSvg('info_layer', this.this_pad_name);
+         frect = svg.select('.canvas_fillrect');
 
       } else {
 
          let render_to = this.selectDom();
 
-         if (render_to.style('position')=='static')
+         if (render_to.style('position') == 'static')
             render_to.style('position','relative');
 
-         svg = render_to.append("svg")
-             .attr("class", "jsroot root_canvas")
+         svg = render_to.append('svg')
+             .attr('class', 'jsroot root_canvas')
              .property('pad_painter', this) // this is custom property
-             .property('current_pad', "") // this is custom property
+             .property('current_pad', '') // this is custom property
              .property('redraw_by_resize', false); // could be enabled to force redraw by each resize
 
          this.setTopPainter(); //assign canvas as top painter of that element
 
          if (isBatchMode()) {
-            svg.attr("xmlns", "http://www.w3.org/2000/svg");
-            svg.attr("xmlns:xlink", "http://www.w3.org/1999/xlink");
+            svg.attr('xmlns', 'http://www.w3.org/2000/svg');
+            svg.attr('xmlns:xlink', 'http://www.w3.org/1999/xlink');
          } else if (!this.online_canvas) {
-            svg.append("svg:title").text("ROOT canvas");
+            svg.append('svg:title').text('ROOT canvas');
          }
 
          if (!isBatchMode() || (this.pad.fFillStyle > 0))
-            frect = svg.append("svg:path").attr("class","canvas_fillrect");
+            frect = svg.append('svg:path').attr('class','canvas_fillrect');
 
          if (!isBatchMode())
-            frect.style("pointer-events", "visibleFill")
-                 .on("dblclick", evnt => this.enlargePad(evnt))
-                 .on("click", () => this.selectObjectPainter())
-                 .on("mouseenter", () => this.showObjectStatus())
-                 .on("contextmenu", settings.ContextMenu ? evnt => this.padContextMenu(evnt) : null);
+            frect.style('pointer-events', 'visibleFill')
+                 .on('dblclick', evnt => this.enlargePad(evnt))
+                 .on('click', () => this.selectObjectPainter())
+                 .on('mouseenter', () => this.showObjectStatus())
+                 .on('contextmenu', settings.ContextMenu ? evnt => this.padContextMenu(evnt) : null);
 
-         svg.append("svg:g").attr("class","primitives_layer");
-         info = svg.append("svg:g").attr("class", "info_layer");
+         svg.append('svg:g').attr('class','primitives_layer');
+         info = svg.append('svg:g').attr('class', 'info_layer');
          if (!isBatchMode())
-            btns = svg.append("svg:g")
-                      .attr("class","btns_layer")
+            btns = svg.append('svg:g')
+                      .attr('class','btns_layer')
                       .property('leftside', settings.ToolBarSide == 'left')
                       .property('vertical', settings.ToolBarVert);
 
@@ -459,7 +459,7 @@ class TPadPainter extends ObjectPainter {
          }
 
          if (this._fixed_size) {
-            render_to.style("overflow","auto");
+            render_to.style('overflow','auto');
             rect = { width: this.pad.fCw, height: this.pad.fCh };
             if (!rect.width || !rect.height)
                rect = getElementRect(render_to);
@@ -471,35 +471,35 @@ class TPadPainter extends ObjectPainter {
       this.createAttFill({ attr: this.pad });
 
       if ((rect.width <= lmt) || (rect.height <= lmt)) {
-         svg.style("display", "none");
+         svg.style('display', 'none');
          console.warn(`Hide canvas while geometry too small w=${rect.width} h=${rect.height}`);
          rect.width = 200; rect.height = 100; // just to complete drawing
       } else {
-         svg.style("display", null);
+         svg.style('display', null);
       }
 
       if (this._fixed_size) {
-         svg.attr("x", 0)
-            .attr("y", 0)
-            .attr("width", rect.width)
-            .attr("height", rect.height)
-            .style("position", "absolute");
+         svg.attr('x', 0)
+            .attr('y', 0)
+            .attr('width', rect.width)
+            .attr('height', rect.height)
+            .style('position', 'absolute');
       } else {
-        svg.attr("x", 0)
-           .attr("y", 0)
-           .style("width", "100%")
-           .style("height", "100%")
-           .style("position", "absolute")
-           .style("left", 0)
-           .style("top", 0)
-           .style("right", 0)
-           .style("bottom", 0);
+        svg.attr('x', 0)
+           .attr('y', 0)
+           .style('width', '100%')
+           .style('height', '100%')
+           .style('position', 'absolute')
+           .style('left', 0)
+           .style('top', 0)
+           .style('right', 0)
+           .style('bottom', 0);
       }
 
-      svg.style("filter", settings.DarkMode || this.pad?.$dark ? "invert(100%)" : null);
+      svg.style('filter', settings.DarkMode || this.pad?.$dark ? 'invert(100%)' : null);
 
-      svg.attr("viewBox", `0 0 ${rect.width} ${rect.height}`)
-         .attr("preserveAspectRatio", "none")  // we do not preserve relative ratio
+      svg.attr('viewBox', `0 0 ${rect.width} ${rect.height}`)
+         .attr('preserveAspectRatio', 'none')  // we do not preserve relative ratio
          .property('height_factor', factor)
          .property('draw_x', 0)
          .property('draw_y', 0)
@@ -512,7 +512,7 @@ class TPadPainter extends ObjectPainter {
       this._pad_height = rect.height;
 
       if (frect) {
-         frect.attr("d", `M0,0H${rect.width}V${rect.height}H0Z`)
+         frect.attr('d', `M0,0H${rect.width}V${rect.height}H0Z`)
               .call(this.fillatt.func);
          this.drawActiveBorder(frect);
       }
@@ -522,23 +522,23 @@ class TPadPainter extends ObjectPainter {
       if (this.alignButtons && btns)
          this.alignButtons(btns, rect.width, rect.height);
 
-      let dt = info.select(".canvas_date");
+      let dt = info.select('.canvas_date');
       if (!gStyle.fOptDate) {
          dt.remove();
       } else {
-         if (dt.empty()) dt = info.append("text").attr("class", "canvas_date");
+         if (dt.empty()) dt = info.append('text').attr('class', 'canvas_date');
          let date = new Date(),
              posx = Math.round(rect.width * gStyle.fDateX),
              posy = Math.round(rect.height * (1 - gStyle.fDateY));
          if (!isBatchMode() && (posx < 25)) posx = 25;
          if (gStyle.fOptDate > 1) date.setTime(gStyle.fOptDate*1000);
-         dt.attr("transform", `translate(${posx}, ${posy})`)
-           .style("text-anchor", "start")
+         dt.attr('transform', `translate(${posx}, ${posy})`)
+           .style('text-anchor', 'start')
            .text(date.toLocaleString('en-GB'));
       }
 
       if (!gStyle.fOptFile || !this.getItemName())
-         info.select(".canvas_item").remove();
+         info.select('.canvas_item').remove();
       else
          this.drawItemNameOnCanvas(this.getItemName());
 
@@ -548,17 +548,17 @@ class TPadPainter extends ObjectPainter {
    /** @summary Draw item name on canvas if gStyle.fOptFile is configured
      * @private */
    drawItemNameOnCanvas(item_name) {
-      let info = this.getLayerSvg("info_layer", this.this_pad_name),
-          df = info.select(".canvas_item");
+      let info = this.getLayerSvg('info_layer', this.this_pad_name),
+          df = info.select('.canvas_item');
       if (!gStyle.fOptFile || !item_name) {
          df.remove();
       } else {
-         if (df.empty()) df = info.append("text").attr("class", "canvas_item");
+         if (df.empty()) df = info.append('text').attr('class', 'canvas_item');
          let rect = this.getPadRect(),
              posx = Math.round(rect.width * (1 - gStyle.fDateX)),
              posy = Math.round(rect.height * (1 - gStyle.fDateY));
-         df.attr("transform", `translate(${posx}, ${posy})`)
-           .style("text-anchor", "end")
+         df.attr('transform', `translate(${posx}, ${posy})`)
+           .style('text-anchor', 'end')
            .text(item_name);
       }
    }
@@ -572,18 +572,18 @@ class TPadPainter extends ObjectPainter {
       }
 
       let svg_can = this.getCanvSvg(),
-          pad_enlarged = svg_can.property("pad_enlarged");
+          pad_enlarged = svg_can.property('pad_enlarged');
 
       if (this.iscan || !this.has_canvas || (!pad_enlarged && !this.hasObjectsToDraw() && !this.painters)) {
          if (this._fixed_size) return; // canvas cannot be enlarged in such mode
          if (!this.enlargeMain('toggle')) return;
-         if (this.enlargeMain('state')=='off') svg_can.property("pad_enlarged", null);
+         if (this.enlargeMain('state') == 'off') svg_can.property('pad_enlarged', null);
       } else if (!pad_enlarged) {
          this.enlargeMain(true, true);
-         svg_can.property("pad_enlarged", this.pad);
+         svg_can.property('pad_enlarged', this.pad);
       } else if (pad_enlarged === this.pad) {
          this.enlargeMain(false);
-         svg_can.property("pad_enlarged", null);
+         svg_can.property('pad_enlarged', null);
       } else {
          console.error('missmatch with pad double click events');
       }
@@ -606,9 +606,9 @@ class TPadPainter extends ObjectPainter {
       }
 
       let svg_can = this.getCanvSvg(),
-          width = svg_can.property("draw_width"),
-          height = svg_can.property("draw_height"),
-          pad_enlarged = svg_can.property("pad_enlarged"),
+          width = svg_can.property('draw_width'),
+          height = svg_can.property('draw_height'),
+          pad_enlarged = svg_can.property('pad_enlarged'),
           pad_visible = !this.pad_draw_disabled && (!pad_enlarged || (pad_enlarged === this.pad)),
           w = Math.round(this.pad.fAbsWNDC * width),
           h = Math.round(this.pad.fAbsHNDC * height),
@@ -620,34 +620,34 @@ class TPadPainter extends ObjectPainter {
 
       if (only_resize) {
          svg_pad = this.svg_this_pad();
-         svg_rect = svg_pad.select(".root_pad_border");
+         svg_rect = svg_pad.select('.root_pad_border');
          if (!isBatchMode())
-            btns = this.getLayerSvg("btns_layer", this.this_pad_name);
+            btns = this.getLayerSvg('btns_layer', this.this_pad_name);
       } else {
-         svg_pad = svg_can.select(".primitives_layer")
-             .append("svg:svg") // here was g before, svg used to blend all drawin outside
-             .classed("__root_pad_" + this.this_pad_name, true)
-             .attr("pad", this.this_pad_name) // set extra attribute  to mark pad name
+         svg_pad = svg_can.select('.primitives_layer')
+             .append('svg:svg') // here was g before, svg used to blend all drawin outside
+             .classed('__root_pad_' + this.this_pad_name, true)
+             .attr('pad', this.this_pad_name) // set extra attribute  to mark pad name
              .property('pad_painter', this); // this is custom property
 
          if (!isBatchMode())
-            svg_pad.append("svg:title").text("subpad " + this.this_pad_name);
+            svg_pad.append('svg:title').text('subpad ' + this.this_pad_name);
 
          // need to check attributes directly while attributes objects will be created later
          if (!isBatchMode() || (this.pad.fFillStyle > 0) || ((this.pad.fLineStyle > 0) && (this.pad.fLineColor > 0)))
-            svg_rect = svg_pad.append("svg:path").attr("class", "root_pad_border");
+            svg_rect = svg_pad.append('svg:path').attr('class', 'root_pad_border');
 
          if (!isBatchMode())
-            svg_rect.style("pointer-events", "visibleFill") // get events also for not visible rect
-                    .on("dblclick", evnt => this.enlargePad(evnt))
-                    .on("click", () => this.selectObjectPainter())
-                    .on("mouseenter", () => this.showObjectStatus())
-                    .on("contextmenu", settings.ContextMenu ? evnt => this.padContextMenu(evnt) : null);
+            svg_rect.style('pointer-events', 'visibleFill') // get events also for not visible rect
+                    .on('dblclick', evnt => this.enlargePad(evnt))
+                    .on('click', () => this.selectObjectPainter())
+                    .on('mouseenter', () => this.showObjectStatus())
+                    .on('contextmenu', settings.ContextMenu ? evnt => this.padContextMenu(evnt) : null);
 
-         svg_pad.append("svg:g").attr("class","primitives_layer");
+         svg_pad.append('svg:g').attr('class','primitives_layer');
          if (!isBatchMode())
-            btns = svg_pad.append("svg:g")
-                          .attr("class","btns_layer")
+            btns = svg_pad.append('svg:g')
+                          .attr('class','btns_layer')
                           .property('leftside', settings.ToolBarSide != 'left')
                           .property('vertical', settings.ToolBarVert);
       }
@@ -655,13 +655,13 @@ class TPadPainter extends ObjectPainter {
       this.createAttFill({ attr: this.pad });
       this.createAttLine({ attr: this.pad, color0: this.pad.fBorderMode == 0 ? 'none' : '' });
 
-      svg_pad.style("display", pad_visible ? null : "none")
-             .attr("viewBox", `0 0 ${w} ${h}`) // due to svg
-             .attr("preserveAspectRatio", "none")   // due to svg, we do not preserve relative ratio
-             .attr("x", x)        // due to svg
-             .attr("y", y)        // due to svg
-             .attr("width", w)    // due to svg
-             .attr("height", h)   // due to svg
+      svg_pad.style('display', pad_visible ? null : 'none')
+             .attr('viewBox', `0 0 ${w} ${h}`) // due to svg
+             .attr('preserveAspectRatio', 'none')   // due to svg, we do not preserve relative ratio
+             .attr('x', x)        // due to svg
+             .attr('y', y)        // due to svg
+             .attr('width', w)    // due to svg
+             .attr('height', h)   // due to svg
              .property('draw_x', x) // this is to make similar with canvas
              .property('draw_y', y)
              .property('draw_width', w)
@@ -673,7 +673,7 @@ class TPadPainter extends ObjectPainter {
       this._pad_height = h;
 
       if (svg_rect) {
-         svg_rect.attr("d", `M0,0H${w}V${h}H0Z`)
+         svg_rect.attr('d', `M0,0H${w}V${h}H0Z`)
                  .call(this.fillatt.func)
                  .call(this.lineatt.func);
 
@@ -684,7 +684,7 @@ class TPadPainter extends ObjectPainter {
 
       // special case of 3D canvas overlay
       if (svg_pad.property('can3d') === constants.Embed3D.Overlay)
-          this.selectDom().select(".draw3d_" + this.this_pad_name)
+          this.selectDom().select('.draw3d_' + this.this_pad_name)
               .style('display', pad_visible ? '' : 'none');
 
       if (this.alignButtons && btns)
@@ -709,12 +709,12 @@ class TPadPainter extends ObjectPainter {
 
       if (!obj) return false;
 
-      if (obj._typename == "TStyle") {
+      if (obj._typename == 'TStyle') {
          Object.assign(gStyle, obj);
          return true;
       }
 
-      if ((obj._typename == "TObjArray") && (obj.name == "ListOfColors")) {
+      if ((obj._typename == 'TObjArray') && (obj.name == 'ListOfColors')) {
 
          if (this.options && this.options.CreatePalette) {
             let arr = [];
@@ -735,14 +735,14 @@ class TPadPainter extends ObjectPainter {
          return true;
       }
 
-      if ((obj._typename == "TObjArray") && (obj.name == "CurrentColorPalette")) {
+      if ((obj._typename == 'TObjArray') && (obj.name == 'CurrentColorPalette')) {
          let arr = [], missing = false;
          for (let n = 0; n < obj.arr.length; ++n) {
             let col = obj.arr[n];
             if (col && (col._typename == 'TColor')) {
                arr[n] = getRGBfromTColor(col);
             } else {
-               console.log('Missing color with index ' + n); missing = true;
+               console.log(`Missing color with index ${n}`); missing = true;
             }
          }
          if (!this.options || (!missing && !this.options.IgnorePalette))
@@ -800,7 +800,7 @@ class TPadPainter extends ObjectPainter {
    /** @summary Return true if any objects beside sub-pads exists in the pad */
    hasObjectsToDraw() {
       let arr = this.pad?.fPrimitives?.arr;
-      return arr && arr.find(obj => obj._typename != "TPad") ? true : false;
+      return arr && arr.find(obj => obj._typename != 'TPad') ? true : false;
    }
 
    /** @summary sync drawing/redrawing/resize of the pad
@@ -808,7 +808,7 @@ class TPadPainter extends ObjectPainter {
      * @return {Promise} when pad is ready for draw operation or false if operation already queued
      * @private */
    syncDraw(kind) {
-      let entry = { kind : kind || "redraw" };
+      let entry = { kind : kind || 'redraw' };
       if (this._doing_draw === undefined) {
          this._doing_draw = [ entry ];
          return Promise.resolve(true);
@@ -832,7 +832,7 @@ class TPadPainter extends ObjectPainter {
      * @private */
    confirmDraw() {
       if (this._doing_draw === undefined)
-         return console.warn("failure, should not happen");
+         return console.warn('failure, should not happen');
       this._doing_draw.shift();
       if (this._doing_draw.length == 0) {
          delete this._doing_draw;
@@ -867,7 +867,7 @@ class TPadPainter extends ObjectPainter {
       if (indx >= this._num_primitives) {
          if (this._start_tm) {
             let spenttm = new Date().getTime() - this._start_tm;
-            if (spenttm > 1000) console.log(`Canvas ${this.pad?.fName || "---"} drawing took ${(spenttm*1e-3).toFixed(2)}s`);
+            if (spenttm > 1000) console.log(`Canvas ${this.pad?.fName || '---'} drawing took ${(spenttm*1e-3).toFixed(2)}s`);
             delete this._start_tm;
          }
 
@@ -909,8 +909,8 @@ class TPadPainter extends ObjectPainter {
                 x2 = x1 +dx -2*xmargin;
             if (x1 > x2) continue;
             n++;
-            let pad = create("TPad");
-            pad.fName = pad.fTitle = this.pad.fName + "_" + n;
+            let pad = create('TPad');
+            pad.fName = pad.fTitle = this.pad.fName + '_' + n;
             pad.fNumber = n;
             if (!this.iscan) {
                pad.fAbsWNDC = (x2-x1) * this.pad.fAbsWNDC;
@@ -975,7 +975,7 @@ class TPadPainter extends ObjectPainter {
    /** @summary Changes canvas dark mode
      * @private */
    changeDarkMode(mode) {
-      this.getCanvSvg().style("filter", (mode ?? settings.DarkMode) ? "invert(100%)" : null);
+      this.getCanvSvg().style('filter', (mode ?? settings.DarkMode) ? 'invert(100%)' : null);
    }
 
    /** @summary Fill pad context menu
@@ -983,35 +983,35 @@ class TPadPainter extends ObjectPainter {
    fillContextMenu(menu) {
 
       if (this.pad)
-         menu.add("header:" + this.pad._typename + "::" + this.pad.fName);
+         menu.add('header:' + this.pad._typename + '::' + this.pad.fName);
       else
-         menu.add("header:Canvas");
+         menu.add('header:Canvas');
 
-      menu.addchk(this.isTooltipAllowed(), "Show tooltips", () => this.setTooltipAllowed("toggle"));
+      menu.addchk(this.isTooltipAllowed(), 'Show tooltips', () => this.setTooltipAllowed('toggle'));
 
       if (!this._websocket) {
 
          function SetPadField(arg) {
             this.pad[arg.slice(1)] = parseInt(arg[0]);
-            this.interactiveRedraw("pad", arg.slice(1));
+            this.interactiveRedraw('pad', arg.slice(1));
          }
 
          menu.addchk(this.pad.fGridx, 'Grid x', (this.pad.fGridx ? '0' : '1') + 'fGridx', SetPadField);
          menu.addchk(this.pad.fGridy, 'Grid y', (this.pad.fGridy ? '0' : '1') + 'fGridy', SetPadField);
-         menu.add("sub:Ticks x");
-         menu.addchk(this.pad.fTickx == 0, "normal", "0fTickx", SetPadField);
-         menu.addchk(this.pad.fTickx == 1, "ticks on both sides", "1fTickx", SetPadField);
-         menu.addchk(this.pad.fTickx == 2, "labels on both sides", "2fTickx", SetPadField);
-         menu.add("endsub:");
-         menu.add("sub:Ticks y");
-         menu.addchk(this.pad.fTicky == 0, "normal", "0fTicky", SetPadField);
-         menu.addchk(this.pad.fTicky == 1, "ticks on both sides", "1fTicky", SetPadField);
-         menu.addchk(this.pad.fTicky == 2, "labels on both sides", "2fTicky", SetPadField);
-         menu.add("endsub:");
+         menu.add('sub:Ticks x');
+         menu.addchk(this.pad.fTickx == 0, 'normal', '0fTickx', SetPadField);
+         menu.addchk(this.pad.fTickx == 1, 'ticks on both sides', '1fTickx', SetPadField);
+         menu.addchk(this.pad.fTickx == 2, 'labels on both sides', '2fTickx', SetPadField);
+         menu.add('endsub:');
+         menu.add('sub:Ticks y');
+         menu.addchk(this.pad.fTicky == 0, 'normal', '0fTicky', SetPadField);
+         menu.addchk(this.pad.fTicky == 1, 'ticks on both sides', '1fTicky', SetPadField);
+         menu.addchk(this.pad.fTicky == 2, 'labels on both sides', '2fTicky', SetPadField);
+         menu.add('endsub:');
 
          menu.addAttributesMenu(this);
-         menu.add("Save to gStyle", function() {
-            if (this.fillatt) this.fillatt.saveToStyle(this.iscan ? "fCanvasColor" : "fPadColor");
+         menu.add('Save to gStyle', function() {
+            if (this.fillatt) this.fillatt.saveToStyle(this.iscan ? 'fCanvasColor' : 'fPadColor');
             gStyle.fPadGridX = this.pad.fGridX;
             gStyle.fPadGridY = this.pad.fGridX;
             gStyle.fPadTickX = this.pad.fTickx;
@@ -1019,28 +1019,28 @@ class TPadPainter extends ObjectPainter {
             gStyle.fOptLogx = this.pad.fLogx;
             gStyle.fOptLogy = this.pad.fLogy;
             gStyle.fOptLogz = this.pad.fLogz;
-         }, "Store pad fill attributes, grid, tick and log scale settings to gStyle");
+         }, 'Store pad fill attributes, grid, tick and log scale settings to gStyle');
 
          if (this.iscan)
             menu.addSettingsMenu(false, false, arg => {
-               if (arg == "dark") this.changeDarkMode();
+               if (arg == 'dark') this.changeDarkMode();
             });
       }
 
-      menu.add("separator");
+      menu.add('separator');
 
       if (typeof this.hasMenuBar == 'function' && typeof this.actiavteMenuBar == 'function')
-         menu.addchk(this.hasMenuBar(), "Menu bar", flag => this.actiavteMenuBar(flag));
+         menu.addchk(this.hasMenuBar(), 'Menu bar', flag => this.actiavteMenuBar(flag));
 
       if (typeof this.hasEventStatus == 'function' && typeof this.activateStatusBar == 'function')
-         menu.addchk(this.hasEventStatus(), "Event status", () => this.activateStatusBar('toggle'));
+         menu.addchk(this.hasEventStatus(), 'Event status', () => this.activateStatusBar('toggle'));
 
       if (this.enlargeMain() || (this.has_canvas && this.hasObjectsToDraw()))
-         menu.addchk((this.enlargeMain('state')=='on'), "Enlarge " + (this.iscan ? "canvas" : "pad"), () => this.enlargePad());
+         menu.addchk(this.enlargeMain('state') == 'on', 'Enlarge ' + (this.iscan ? 'canvas' : 'pad'), () => this.enlargePad());
 
-      let fname = this.this_pad_name || (this.iscan ? "canvas" : "pad");
-      menu.add(`Save as ${fname}.png`, fname+".png", arg => this.saveAs("png", this.iscan, arg));
-      menu.add(`Save as ${fname}.svg`, fname+".svg", arg => this.saveAs("svg", this.iscan, arg));
+      let fname = this.this_pad_name || (this.iscan ? 'canvas' : 'pad');
+      menu.add(`Save as ${fname}.png`, fname+'.png', arg => this.saveAs('png', this.iscan, arg));
+      menu.add(`Save as ${fname}.svg`, fname+'.svg', arg => this.saveAs('svg', this.iscan, arg));
 
       return true;
    }
@@ -1064,7 +1064,7 @@ class TPadPainter extends ObjectPainter {
 
       createMenu(evnt, this).then(menu => {
          this.fillContextMenu(menu);
-         return this.fillObjectExecMenu(menu, "");
+         return this.fillObjectExecMenu(menu, '');
       }).then(menu => menu.show());
    }
 
@@ -1100,7 +1100,7 @@ class TPadPainter extends ObjectPainter {
       }).then(() => {
          this.confirmDraw();
          if (getActivePad() === this)
-            this.getCanvPainter()?.producePadEvent("padredraw", this);
+            this.getCanvPainter()?.producePadEvent('padredraw', this);
          return true;
       });
    }
@@ -1129,7 +1129,7 @@ class TPadPainter extends ObjectPainter {
 
       if (!this.iscan && this.has_canvas) return false;
 
-      let sync_promise = this.syncDraw("canvas_resize");
+      let sync_promise = this.syncDraw('canvas_resize');
       if (sync_promise === false) return false;
 
       if ((size === true) || (size === false)) { force = size; size = null; }
@@ -1145,7 +1145,7 @@ class TPadPainter extends ObjectPainter {
                 return changed;
              }
 
-             let res = this.painters[indx].redraw(force ? "redraw" : "resize");
+             let res = this.painters[indx].redraw(force ? 'redraw' : 'resize');
              if (!isPromise(res)) res = Promise.resolve();
              return res.then(() => redrawNext(indx+1));
           };
@@ -1233,8 +1233,8 @@ class TPadPainter extends ObjectPainter {
             objpainter.snapid = lst[indx].fObjectID;
 
          if (objpainter.$primary && (pi > 0) && this.painters[pi-1].$secondary) {
-            this.painters[pi-1].snapid = objpainter.snapid + "#hist";
-            console.log('ASSIGN SECONDARY HIST ID', this.painters[pi-1].snapid);
+            this.painters[pi-1].snapid = objpainter.snapid + '#hist';
+            console.log(`ASSIGN SECONDARY HIST ID ${this.painters[pi-1].snapid}`);
          }
       }
    }
@@ -1301,14 +1301,14 @@ class TPadPainter extends ObjectPainter {
       // list of colors
       if (snap.fKind === webSnapIds.kColors) {
 
-         let ListOfColors = [], arr = snap.fSnapshot.fOper.split(";");
+         let ListOfColors = [], arr = snap.fSnapshot.fOper.split(';');
          for (let n = 0; n < arr.length; ++n) {
-            let name = arr[n], p = name.indexOf(":");
+            let name = arr[n], p = name.indexOf(':');
             if (p > 0) {
-               ListOfColors[parseInt(name.slice(0,p))] = d3_color("rgb(" + name.slice(p+1) + ")").formatHex();
+               ListOfColors[parseInt(name.slice(0,p))] = d3_color(`rgb(${name.slice(p+1)})`).formatHex();
             } else {
-               p = name.indexOf("=");
-               ListOfColors[parseInt(name.slice(0,p))] = d3_color("rgba(" + name.slice(p+1) + ")").formatHex8();
+               p = name.indexOf('=');
+               ListOfColors[parseInt(name.slice(0,p))] = d3_color(`rgba(${name.slice(p+1)})`).formatHex8();
             }
          }
 
@@ -1345,7 +1345,7 @@ class TPadPainter extends ObjectPainter {
 
          padpainter.createPadSvg();
 
-         if (padpainter.matchObjectType("TPad") && (snap.fPrimitives.length > 0))
+         if (padpainter.matchObjectType('TPad') && (snap.fPrimitives.length > 0))
             padpainter.addPadButtons(true);
 
          // we select current pad, where all drawing is performed
@@ -1422,12 +1422,12 @@ class TPadPainter extends ObjectPainter {
          // case of ROOT7 with always dummy TPad as first entry
          if (!first.fCw || !first.fCh) this._fixed_size = false;
 
-         let mainid = this.selectDom().attr("id");
+         let mainid = this.selectDom().attr('id');
 
-         if (!this.batch_mode && !this.use_openui && !this.brlayout && mainid && (typeof mainid == "string")) {
+         if (!this.batch_mode && !this.use_openui && !this.brlayout && mainid && (typeof mainid == 'string')) {
             this.brlayout = new BrowserLayout(mainid, null, this);
             this.brlayout.create(mainid, true);
-            // this.brlayout.toggleBrowserKind("float");
+            // this.brlayout.toggleBrowserKind('float');
             this.setDom(this.brlayout.drawing_divid()); // need to create canvas
             registerForResize(this.brlayout);
          }
@@ -1442,12 +1442,12 @@ class TPadPainter extends ObjectPainter {
 
          let pr = Promise.resolve(true);
 
-         if ((typeof snap.fScripts == "string") && snap.fScripts) {
-            let src = "";
+         if ((typeof snap.fScripts == 'string') && snap.fScripts) {
+            let src = '';
 
-            if (snap.fScripts.indexOf("load:") == 0)
-               src = snap.fScripts.slice(5).split(";");
-            else if (snap.fScripts.indexOf("assert:") == 0)
+            if (snap.fScripts.indexOf('load:') == 0)
+               src = snap.fScripts.slice(5).split(';');
+            else if (snap.fScripts.indexOf('assert:') == 0)
                src = snap.fScripts.slice(7);
 
             pr = src ? loadScript(src) : injectCode(snap.fScripts);
@@ -1487,15 +1487,15 @@ class TPadPainter extends ObjectPainter {
 
       // check if frame or title was recreated, we could reassign handlers for them directly
       // while this is temporary objects, which can be recreated very often, try to catch such situation ourselfs
-      MatchPrimitive(this.painters, snap.fPrimitives, "TFrame");
-      MatchPrimitive(this.painters, snap.fPrimitives, "TPaveText", "title");
+      MatchPrimitive(this.painters, snap.fPrimitives, 'TFrame');
+      MatchPrimitive(this.painters, snap.fPrimitives, 'TPaveText', 'title');
 
       let isanyfound = false, isanyremove = false;
 
       // find and remove painters which no longer exists in the list
       for (let k = 0; k < this.painters.length; ++k) {
          let sub = this.painters[k];
-         if ((sub.snapid===undefined) || sub.$secondary) continue; // look only for painters with snapid
+         if ((sub.snapid === undefined) || sub.$secondary) continue; // look only for painters with snapid
 
          for (let i = 0; i < snap.fPrimitives.length; ++i)
             if (snap.fPrimitives[i].fObjectID === sub.snapid) { sub = null; isanyfound = true; break; }
@@ -1537,7 +1537,7 @@ class TPadPainter extends ObjectPainter {
          // redraw secondaries like stat box
          let promises = [];
          this.painters.forEach(sub => {
-            if ((sub.snapid===undefined) || sub.$secondary) {
+            if ((sub.snapid === undefined) || sub.$secondary) {
                let res = sub.redraw();
                if (isPromise(res)) promises.push(res);
             }
@@ -1546,7 +1546,7 @@ class TPadPainter extends ObjectPainter {
       }).then(() => {
          this.selectCurrentPad(prev_name);
          if (getActivePad() === this)
-            this.getCanvPainter()?.producePadEvent("padredraw", this);
+            this.getCanvPainter()?.producePadEvent('padredraw', this);
          return this;
       });
    }
@@ -1557,17 +1557,17 @@ class TPadPainter extends ObjectPainter {
      * @private */
    async createImage(format) {
       // use https://github.com/MrRio/jsPDF in the future here
-      if (format == "pdf")
-         return btoa_func("dummy PDF file");
+      if (format == 'pdf')
+         return btoa_func('dummy PDF file');
 
-      if ((format == "png") || (format == "jpeg") || (format == "svg"))
+      if ((format == 'png') || (format == 'jpeg') || (format == 'svg'))
          return this.produceImage(true, format).then(res => {
-            if (!res || (format == "svg")) return res;
-            let separ = res.indexOf("base64,");
-            return (separ > 0) ? res.slice(separ+7) : "";
+            if (!res || (format == 'svg')) return res;
+            let separ = res.indexOf('base64,');
+            return (separ > 0) ? res.slice(separ+7) : '';
          });
 
-      return "";
+      return '';
    }
 
    /** @summary Collects pad information for TWebCanvas
@@ -1576,12 +1576,12 @@ class TPadPainter extends ObjectPainter {
    getWebPadOptions(arg) {
       let is_top = (arg === undefined), elem = null, scan_subpads = true;
       // no any options need to be collected in readonly mode
-      if (is_top && this._readonly) return "";
-      if (arg === "only_this") { is_top = true; scan_subpads = false; }
+      if (is_top && this._readonly) return '';
+      if (arg === 'only_this') { is_top = true; scan_subpads = false; }
       if (is_top) arg = [];
 
       if (this.snapid) {
-         elem = { _typename: "TWebPadOptions", snapid: this.snapid.toString(),
+         elem = { _typename: 'TWebPadOptions', snapid: this.snapid.toString(),
                   active: !!this.is_active_pad,
                   bits: 0, primitives: [],
                   logx: this.pad.fLogx, logy: this.pad.fLogy, logz: this.pad.fLogz,
@@ -1596,15 +1596,15 @@ class TPadPainter extends ObjectPainter {
          if (this.getPadRanges(elem))
             arg.push(elem);
          else
-            console.log('fail to get ranges for pad ' +  this.pad.fName);
+            console.log(`fail to get ranges for pad ${this.pad.fName}`);
       }
 
       this.painters.forEach(sub => {
-         if (typeof sub.getWebPadOptions == "function") {
+         if (typeof sub.getWebPadOptions == 'function') {
             if (scan_subpads) sub.getWebPadOptions(arg);
          } else if (sub.snapid) {
-            let opt = { _typename: "TWebObjectOptions", snapid: sub.snapid.toString(), opt: sub.getDrawOpt(), fcust: "", fopt: [] };
-            if (typeof sub.fillWebObjectOptions == "function")
+            let opt = { _typename: 'TWebObjectOptions', snapid: sub.snapid.toString(), opt: sub.getDrawOpt(), fcust: '', fopt: [] };
+            if (typeof sub.fillWebObjectOptions == 'function')
                opt = sub.fillWebObjectOptions(opt);
             elem.primitives.push(opt);
          }
@@ -1653,9 +1653,9 @@ class TPadPainter extends ObjectPainter {
 
       let func = direct_funcs[main.logx],
           func2 = revert_funcs[main.logx],
-          k = (func(main.scale_xmax) - func(main.scale_xmin))/p.property("draw_width"),
-          x1 = func(main.scale_xmin) - k*p.property("draw_x"),
-          x2 = x1 + k*p.property("draw_width");
+          k = (func(main.scale_xmax) - func(main.scale_xmin))/p.property('draw_width'),
+          x1 = func(main.scale_xmin) - k*p.property('draw_x'),
+          x2 = x1 + k*p.property('draw_width');
 
       r.ux1 = match(func2(x1), r.ux1, r.px2-r.px1);
       r.ux2 = match(func2(x2), r.ux2, r.px2-r.px1);
@@ -1663,9 +1663,9 @@ class TPadPainter extends ObjectPainter {
       func = direct_funcs[main.logy];
       func2 = revert_funcs[main.logy];
 
-      k = (func(main.scale_ymax) - func(main.scale_ymin))/p.property("draw_height");
-      let y2 = func(main.scale_ymax) + k*p.property("draw_y"),
-          y1 = y2 - k*p.property("draw_height");
+      k = (func(main.scale_ymax) - func(main.scale_ymin))/p.property('draw_height');
+      let y2 = func(main.scale_ymax) + k*p.property('draw_y'),
+          y1 = y2 - k*p.property('draw_height');
 
       r.uy1 = match(func2(y1), r.uy1, r.py2-r.py1);
       r.uy2 = match(func2(y2), r.uy2, r.py2-r.py1);
@@ -1680,19 +1680,19 @@ class TPadPainter extends ObjectPainter {
            evnt = { clientX: rrr.left+10, clientY: rrr.top + 10 };
 
        // use timeout to avoid conflict with mouse click and automatic menu close
-       if (name == "pad")
+       if (name == 'pad')
           return setTimeout(() => this.padContextMenu(evnt), 50);
 
        let selp = null, selkind;
 
        switch(name) {
-          case "xaxis":
-          case "yaxis":
-          case "zaxis":
+          case 'xaxis':
+          case 'yaxis':
+          case 'zaxis':
              selp = this.getFramePainter();
              selkind = name[0];
              break;
-          case "frame":
+          case 'frame':
              selp = this.getFramePainter();
              break;
           default: {
@@ -1713,13 +1713,13 @@ class TPadPainter extends ObjectPainter {
      * @desc Used from context menu */
    saveAs(kind, full_canvas, filename) {
       if (!filename)
-         filename = (this.this_pad_name || (this.iscan ? "canvas" : "pad")) + "." + kind;
+         filename = (this.this_pad_name || (this.iscan ? 'canvas' : 'pad')) + '.' + kind;
 
       this.produceImage(full_canvas, kind).then(imgdata => {
          if (!imgdata)
             return console.error(`Fail to produce image ${filename}`);
 
-         saveFile(filename, (kind != "svg") ? imgdata : "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(imgdata));
+         saveFile(filename, (kind != 'svg') ? imgdata : 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(imgdata));
       });
    }
 
@@ -1727,14 +1727,14 @@ class TPadPainter extends ObjectPainter {
      * @return {Promise} with created image */
    async produceImage(full_canvas, file_format) {
 
-      let use_frame = (full_canvas === "frame"),
+      let use_frame = (full_canvas === 'frame'),
           elem = use_frame ? this.getFrameSvg(this.this_pad_name) : (full_canvas ? this.getCanvSvg() : this.svg_this_pad()),
           painter = (full_canvas && !use_frame) ? this.getCanvPainter() : this,
           items = [], // keep list of replaced elements, which should be moved back at the end
           active_pp = null;
 
       if (elem.empty())
-         return "";
+         return '';
 
       painter.forEachPainterInPad(pp => {
 
@@ -1749,7 +1749,7 @@ class TPadPainter extends ObjectPainter {
          items.push(item);
 
          // remove buttons from each subpad
-         let btns = pp.getLayerSvg("btns_layer", pp.this_pad_name);
+         let btns = pp.getLayerSvg('btns_layer', pp.this_pad_name);
          item.btns_node = btns.node();
          if (item.btns_node) {
             item.btns_prnt = item.btns_node.parentNode;
@@ -1768,11 +1768,11 @@ class TPadPainter extends ObjectPainter {
 
          let canvas = main.renderer.domElement;
          main.render3D(0); // WebGL clears buffers, therefore we should render scene and convert immediately
-         let dataUrl = canvas.toDataURL("image/png");
+         let dataUrl = canvas.toDataURL('image/png');
 
          // remove 3D drawings
          if (can3d === constants.Embed3D.Embed) {
-            item.foreign = item.prnt.select("." + sz2.clname);
+            item.foreign = item.prnt.select('.' + sz2.clname);
             item.foreign.remove();
          }
 
@@ -1784,14 +1784,14 @@ class TPadPainter extends ObjectPainter {
          }
 
          // add svg image
-         item.img = item.prnt.insert("image",".primitives_layer")     // create image object
-                        .attr("x", sz2.x)
-                        .attr("y", sz2.y)
-                        .attr("width", canvas.width)
-                        .attr("height", canvas.height)
-                        .attr("href", dataUrl);
+         item.img = item.prnt.insert('image','.primitives_layer')     // create image object
+                        .attr('x', sz2.x)
+                        .attr('y', sz2.y)
+                        .attr('width', canvas.width)
+                        .attr('height', canvas.height)
+                        .attr('href', dataUrl);
 
-      }, "pads");
+      }, 'pads');
 
       const reEncode = data => {
          data = encodeURIComponent(data);
@@ -1811,7 +1811,7 @@ class TPadPainter extends ObjectPainter {
             if (item.img)
                item.img.remove(); // delete embed image
 
-            let prim = item.prnt.select(".primitives_layer");
+            let prim = item.prnt.select('.primitives_layer');
 
             if (item.foreign) // reinsert foreign object
                item.prnt.node().insertBefore(item.foreign.node(), prim.node());
@@ -1838,7 +1838,7 @@ class TPadPainter extends ObjectPainter {
 
       svg = compressSVG(svg);
 
-      if (file_format == "svg") {
+      if (file_format == 'svg') {
          reconstruct();
          return svg; // return SVG file as is
       }
@@ -1859,7 +1859,7 @@ class TPadPainter extends ObjectPainter {
          }
 
          image.onerror = function(arg) {
-            console.log('IMAGE ERROR', arg);
+            console.log(`IMAGE ERROR ${arg}`);
             reconstruct();
             resolveFunc(null);
          }
@@ -1871,16 +1871,16 @@ class TPadPainter extends ObjectPainter {
    /** @summary Process pad button click */
    clickPadButton(funcname, evnt) {
 
-      if (funcname == "CanvasSnapShot")
-         return this.saveAs("png", true);
+      if (funcname == 'CanvasSnapShot')
+         return this.saveAs('png', true);
 
-      if (funcname == "enlargePad")
+      if (funcname == 'enlargePad')
          return this.enlargePad();
 
-      if (funcname == "PadSnapShot")
-         return this.saveAs("png", false);
+      if (funcname == 'PadSnapShot')
+         return this.saveAs('png', false);
 
-      if (funcname == "PadContextMenus") {
+      if (funcname == 'PadContextMenus') {
 
          if (evnt) {
             evnt.preventDefault();
@@ -1890,35 +1890,35 @@ class TPadPainter extends ObjectPainter {
          if (closeMenu()) return;
 
          createMenu(evnt, this).then(menu => {
-            menu.add("header:Menus");
+            menu.add('header:Menus');
 
             if (this.iscan)
-               menu.add("Canvas", "pad", this.itemContextMenu);
+               menu.add('Canvas', 'pad', this.itemContextMenu);
             else
-               menu.add("Pad", "pad", this.itemContextMenu);
+               menu.add('Pad', 'pad', this.itemContextMenu);
 
             if (this.getFramePainter())
-               menu.add("Frame", "frame", this.itemContextMenu);
+               menu.add('Frame', 'frame', this.itemContextMenu);
 
             let main = this.getMainPainter(); // here pad painter method
 
             if (main) {
-               menu.add("X axis", "xaxis", this.itemContextMenu);
-               menu.add("Y axis", "yaxis", this.itemContextMenu);
+               menu.add('X axis', 'xaxis', this.itemContextMenu);
+               menu.add('Y axis', 'yaxis', this.itemContextMenu);
                if ((typeof main.getDimension === 'function') && (main.getDimension() > 1))
-                  menu.add("Z axis", "zaxis", this.itemContextMenu);
+                  menu.add('Z axis', 'zaxis', this.itemContextMenu);
             }
 
             if (this.painters && (this.painters.length > 0)) {
-               menu.add("separator");
+               menu.add('separator');
                let shown = [];
                this.painters.forEach((pp,indx) => {
                   let obj = pp ? pp.getObject() : null;
                   if (!obj || (shown.indexOf(obj) >= 0)) return;
                   if (pp.$secondary) return;
-                  let name = ('_typename' in obj) ? (obj._typename + "::") : "";
+                  let name = ('_typename' in obj) ? (obj._typename + '::') : '';
                   if ('fName' in obj) name += obj.fName;
-                  if (!name.length) name = "item" + indx;
+                  if (!name.length) name = 'item' + indx;
                   menu.add(name, indx, this.itemContextMenu);
                });
             }
@@ -1956,7 +1956,7 @@ class TPadPainter extends ObjectPainter {
       this._buttons.push({ btn, tooltip, funcname, keyname });
 
       let iscan = this.iscan || !this.has_canvas;
-      if (!iscan && (funcname.indexOf("Pad")!=0) && (funcname !== "enlargePad")) {
+      if (!iscan && (funcname.indexOf('Pad')!=0) && (funcname !== 'enlargePad')) {
          let cp = this.getCanvPainter();
          if (cp && (cp !== this)) cp.addPadButton(btn, tooltip, funcname);
       }
@@ -1975,19 +1975,19 @@ class TPadPainter extends ObjectPainter {
      * @private */
    addPadButtons(is_online) {
 
-      this.addPadButton("camera", "Create PNG", this.iscan ? "CanvasSnapShot" : "PadSnapShot", "Ctrl PrintScreen");
+      this.addPadButton('camera', 'Create PNG', this.iscan ? 'CanvasSnapShot' : 'PadSnapShot', 'Ctrl PrintScreen');
 
       if (settings.ContextMenu)
-         this.addPadButton("question", "Access context menus", "PadContextMenus");
+         this.addPadButton('question', 'Access context menus', 'PadContextMenus');
 
       let add_enlarge = !this.iscan && this.has_canvas && this.hasObjectsToDraw()
 
       if (add_enlarge || this.enlargeMain('verify'))
-         this.addPadButton("circle", "Enlarge canvas", "enlargePad");
+         this.addPadButton('circle', 'Enlarge canvas', 'enlargePad');
 
       if (is_online && this.brlayout) {
-         this.addPadButton("diamand", "Toggle Ged", "ToggleGed");
-         this.addPadButton("three_circles", "Toggle Status", "ToggleStatus");
+         this.addPadButton('diamand', 'Toggle Ged', 'ToggleGed');
+         this.addPadButton('three_circles', 'Toggle Status', 'ToggleStatus');
       }
    }
 
@@ -2009,12 +2009,12 @@ class TPadPainter extends ObjectPainter {
       if (d.check('ROTATE')) this.options.RotateFrame = true;
       if (d.check('FIXFRAME')) this.options.FixFrame = true;
 
-      if (d.check("CP",true)) this.options.CreatePalette = d.partAsInt(0,0);
+      if (d.check('CP',true)) this.options.CreatePalette = d.partAsInt(0,0);
 
-      if (d.check("NOZOOMX")) this.options.NoZoomX = true;
-      if (d.check("NOZOOMY")) this.options.NoZoomY = true;
+      if (d.check('NOZOOMX')) this.options.NoZoomX = true;
+      if (d.check('NOZOOMY')) this.options.NoZoomY = true;
 
-      if (d.check("NOMARGINS")) pad.fLeftMargin = pad.fRightMargin = pad.fBottomMargin = pad.fTopMargin = 0;
+      if (d.check('NOMARGINS')) pad.fLeftMargin = pad.fRightMargin = pad.fBottomMargin = pad.fTopMargin = 0;
       if (d.check('WHITE')) pad.fFillColor = 0;
       if (d.check('LOG2X')) { pad.fLogx = 2; pad.fUxmin = 0; pad.fUxmax = 1; pad.fX1 = 0; pad.fX2 = 1; }
       if (d.check('LOGX')) { pad.fLogx = 1; pad.fUxmin = 0; pad.fUxmax = 1; pad.fX1 = 0; pad.fX2 = 1; }
@@ -2048,7 +2048,7 @@ class TPadPainter extends ObjectPainter {
       if (painter.getCanvSvg().empty()) {
          // one can draw pad without canvas
          painter.has_canvas = false;
-         painter.this_pad_name = "";
+         painter.this_pad_name = '';
          painter.setTopPainter();
       } else {
          // pad painter will be registered in the canvas painters list
@@ -2057,7 +2057,7 @@ class TPadPainter extends ObjectPainter {
 
       painter.createPadSvg();
 
-      if (painter.matchObjectType("TPad") && (!painter.has_canvas || painter.hasObjectsToDraw()))
+      if (painter.matchObjectType('TPad') && (!painter.has_canvas || painter.hasObjectsToDraw()))
          painter.addPadButtons();
 
       // we select current pad, where all drawing is performed

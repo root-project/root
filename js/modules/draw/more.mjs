@@ -28,7 +28,7 @@ async function drawText() {
       // frame coordiantes
       w = main.getFrameWidth();
       h = main.getFrameHeight();
-      use_frame = "upper_layer";
+      use_frame = 'upper_layer';
    } else if (pp.getRootPad(true)) {
       // force pad coordiantes
    } else {
@@ -41,10 +41,10 @@ async function drawText() {
 
    this.createG(use_frame);
 
-   this.draw_g.attr("transform", null); // remove transofrm from interactive changes
+   this.draw_g.attr('transform', null); // remove transofrm from interactive changes
 
-   this.pos_x = this.axisToSvg("x", pos_x, this.isndc);
-   this.pos_y = this.axisToSvg("y", pos_y, this.isndc);
+   this.pos_x = this.axisToSvg('x', pos_x, this.isndc);
+   this.pos_y = this.axisToSvg('y', pos_y, this.isndc);
 
    let arg = { align: text.fTextAlign, x: this.pos_x, y: this.pos_y, text: text.fTitle, color: tcolor, latex: 0 };
 
@@ -53,7 +53,7 @@ async function drawText() {
    if (text._typename == 'TLatex') { arg.latex = 1; fact = 0.9; } else
    if (text._typename == 'TMathText') { arg.latex = 2; fact = 0.8; }
 
-   this.startTextDrawing(text.fTextFont, Math.round((textsize>1) ? textsize : textsize*Math.min(w,h)*fact));
+   this.startTextDrawing(text.fTextFont, Math.round((textsize > 1) ? textsize : textsize*Math.min(w,h)*fact));
 
    this.drawText(arg);
 
@@ -66,15 +66,15 @@ async function drawText() {
          this.moveDrag = function(dx,dy) {
             this.pos_dx += dx;
             this.pos_dy += dy;
-            this.draw_g.attr("transform", `translate(${this.pos_dx},${this.pos_dy})`);
+            this.draw_g.attr('transform', `translate(${this.pos_dx},${this.pos_dy})`);
         }
 
       if (!this.moveEnd)
          this.moveEnd = function(not_changed) {
             if (not_changed) return;
             let text = this.getObject();
-            text.fX = this.svgToAxis("x", this.pos_x + this.pos_dx, this.isndc),
-            text.fY = this.svgToAxis("y", this.pos_y + this.pos_dy, this.isndc);
+            text.fX = this.svgToAxis('x', this.pos_x + this.pos_dx, this.isndc),
+            text.fY = this.svgToAxis('y', this.pos_y + this.pos_dy, this.isndc);
             this.submitCanvExec(`SetX(${text.fX});;SetY(${text.fY});;`);
          }
 
@@ -100,8 +100,8 @@ async function drawTLine(dom, obj) {
       this.createG();
 
       this.draw_g
-          .append("svg:path")
-          .attr("d", `M${this.axisToSvg("x", line.fX1, isndc)},${this.axisToSvg("y", line.fY1, isndc)}L${this.axisToSvg("x", line.fX2, isndc)},${this.axisToSvg("y", line.fY2, isndc)}`)
+          .append('svg:path')
+          .attr('d', `M${this.axisToSvg('x', line.fX1, isndc)},${this.axisToSvg('y', line.fY1, isndc)}L${this.axisToSvg('x', line.fX2, isndc)},${this.axisToSvg('y', line.fY2, isndc)}`)
           .call(lineatt.func);
 
       return this;
@@ -122,18 +122,18 @@ function drawPolyLine() {
        fillatt = this.createAttFill(polyline),
        kPolyLineNDC = BIT(14),
        isndc = polyline.TestBit(kPolyLineNDC),
-       cmd = "", func = this.getAxisToSvgFunc(isndc);
+       cmd = '', func = this.getAxisToSvgFunc(isndc);
 
    for (let n = 0; n <= polyline.fLastPoint; ++n)
-      cmd += ((n > 0) ? "L" : "M") + func.x(polyline.fX[n]) + "," + func.y(polyline.fY[n]);
+      cmd += `${n>0?'L':'M'}${func.x(polyline.fX[n])},${func.y(polyline.fY[n])}`;
 
-   if (polyline._typename != "TPolyLine") fillatt.setSolidColor("none");
+   if (polyline._typename != 'TPolyLine') fillatt.setSolidColor('none');
 
-   if (!fillatt.empty()) cmd+="Z";
+   if (!fillatt.empty()) cmd += 'Z';
 
    this.draw_g
-       .append("svg:path")
-       .attr("d", cmd)
+       .append('svg:path')
+       .attr('d', cmd)
        .call(lineatt.func)
        .call(fillatt.func);
 }
@@ -155,13 +155,13 @@ function drawEllipse() {
        y = funcs.y(ellipse.fY1),
        rx = funcs.x(ellipse.fX1 + ellipse.fR1) - x,
        ry = y - funcs.y(ellipse.fY1 + ellipse.fR2),
-       path = "", closed_ellipse = (ellipse.fPhimin == 0) && (ellipse.fPhimax == 360);
+       path = '', closed_ellipse = (ellipse.fPhimin == 0) && (ellipse.fPhimax == 360);
 
    // handle same as ellipse with equal radius
-   if ((ellipse._typename == "TCrown") && (ellipse.fR1 <= 0))
+   if ((ellipse._typename == 'TCrown') && (ellipse.fR1 <= 0))
       rx = funcs.x(ellipse.fX1 + ellipse.fR2) - x;
 
-   if ((ellipse._typename == "TCrown") && (ellipse.fR1 > 0)) {
+   if ((ellipse._typename == 'TCrown') && (ellipse.fR1 > 0)) {
       let rx1 = rx, ry2 = ry,
           ry1 = y - funcs.y(ellipse.fY1 + ellipse.fR1),
           rx2 = funcs.x(ellipse.fX1 + ellipse.fR2) - x;
@@ -198,7 +198,7 @@ function drawEllipse() {
          np = 200,
          dphi = (phi2-phi1) / (np - (closed_ellipse ? 0 : 1)),
          lastx = 0, lasty = 0;
-     if (!closed_ellipse) path = "M0,0";
+     if (!closed_ellipse) path = 'M0,0';
      for (let n = 0; n < np; ++n) {
          let angle = phi1 + n*dphi,
              dx = ellipse.fR1 * Math.cos(angle),
@@ -215,13 +215,13 @@ function drawEllipse() {
             path += `l${px-lastx},${py-lasty}`;
          lastx = px; lasty = py;
      }
-     path += "Z";
+     path += 'Z';
    }
 
    this.draw_g
-      .append("svg:path")
-      .attr("transform",`translate(${x},${y})`)
-      .attr("d", path)
+      .append('svg:path')
+      .attr('transform',`translate(${x},${y})`)
+      .attr('d', path)
       .call(this.lineatt.func).call(this.fillatt.func);
 }
 
@@ -233,12 +233,12 @@ function drawPie() {
    // create svg:g container for ellipse drawing
    this.createG();
 
-   let xc = this.axisToSvg("x", pie.fX),
-       yc = this.axisToSvg("y", pie.fY),
-       rx = this.axisToSvg("x", pie.fX + pie.fRadius) - xc,
-       ry = this.axisToSvg("y", pie.fY + pie.fRadius) - yc;
+   let xc = this.axisToSvg('x', pie.fX),
+       yc = this.axisToSvg('y', pie.fY),
+       rx = this.axisToSvg('x', pie.fX + pie.fRadius) - xc,
+       ry = this.axisToSvg('y', pie.fY + pie.fRadius) - yc;
 
-   this.draw_g.attr("transform",`translate(${xc},${yc})`);
+   this.draw_g.attr('transform',`translate(${xc},${yc})`);
 
    // Draw the slices
    let nb = pie.fPieSlices.length, total = 0,
@@ -257,8 +257,8 @@ function drawPie() {
       let x2 = Math.round(rx*Math.cos(af)), y2 = Math.round(ry*Math.sin(af));
 
       this.draw_g
-          .append("svg:path")
-          .attr("d", `M0,0L${x1},${y1}A${rx},${ry},0,0,0,${x2},${y2}z`)
+          .append('svg:path')
+          .attr('d', `M0,0L${x1},${y1}A${rx},${ry},0,0,0,${x2},${y2}z`)
           .call(lineatt.func)
           .call(fillatt.func);
       x1 = x2; y1 = y2;
@@ -271,26 +271,26 @@ function drawBox() {
 
    let box = this.getObject(),
        opt = this.getDrawOpt(),
-       draw_line = (opt.toUpperCase().indexOf("L")>=0),
+       draw_line = (opt.toUpperCase().indexOf('L') >= 0),
        lineatt = this.createAttLine(box),
        fillatt = this.createAttFill(box);
 
    // create svg:g container for box drawing
    this.createG();
 
-   let x1 = this.axisToSvg("x", box.fX1),
-       x2 = this.axisToSvg("x", box.fX2),
-       y1 = this.axisToSvg("y", box.fY1),
-       y2 = this.axisToSvg("y", box.fY2),
+   let x1 = this.axisToSvg('x', box.fX1),
+       x2 = this.axisToSvg('x', box.fX2),
+       y1 = this.axisToSvg('y', box.fY1),
+       y2 = this.axisToSvg('y', box.fY2),
        xx = Math.min(x1,x2), yy = Math.min(y1,y2),
        ww = Math.abs(x2-x1), hh = Math.abs(y1-y2);
 
-   // if box filled, contour line drawn only with "L" draw option:
-   if (!fillatt.empty() && !draw_line) lineatt.color = "none";
+   // if box filled, contour line drawn only with 'L' draw option:
+   if (!fillatt.empty() && !draw_line) lineatt.color = 'none';
 
    this.draw_g
-       .append("svg:path")
-       .attr("d", `M${xx},${yy}h${ww}v${hh}h${-ww}z`)
+       .append('svg:path')
+       .attr('d', `M${xx},${yy}h${ww}v${hh}h${-ww}z`)
        .call(lineatt.func)
        .call(fillatt.func);
 
@@ -301,15 +301,15 @@ function drawBox() {
 
       if (box.fBorderMode < 0) { let s = side1; side1 = side2; side2 = s; }
 
-      this.draw_g.append("svg:path")
-                 .attr("d", side1)
+      this.draw_g.append('svg:path')
+                 .attr('d', side1)
                  .call(fillatt.func)
-                 .style("fill", d3_rgb(fillatt.color).brighter(0.5).formatHex());
+                 .style('fill', d3_rgb(fillatt.color).brighter(0.5).formatHex());
 
-      this.draw_g.append("svg:path")
-          .attr("d", side2)
+      this.draw_g.append('svg:path')
+          .attr('d', side2)
           .call(fillatt.func)
-          .style("fill", d3_rgb(fillatt.color).darker(0.5).formatHex());
+          .style('fill', d3_rgb(fillatt.color).darker(0.5).formatHex());
    }
 }
 
@@ -324,13 +324,13 @@ function drawMarker() {
    // create svg:g container for box drawing
    this.createG();
 
-   let x = this.axisToSvg("x", marker.fX, isndc),
-       y = this.axisToSvg("y", marker.fY, isndc),
+   let x = this.axisToSvg('x', marker.fX, isndc),
+       y = this.axisToSvg('y', marker.fY, isndc),
        path = att.create(x,y);
 
    if (path)
-      this.draw_g.append("svg:path")
-          .attr("d", path)
+      this.draw_g.append('svg:path')
+          .attr('d', path)
           .call(att.func);
 }
 
@@ -343,15 +343,15 @@ function drawPolyMarker() {
 
    let poly = this.getObject(),
        att = new TAttMarkerHandler(poly),
-       path = "",
+       path = '',
        func = this.getAxisToSvgFunc();
 
    for (let n = 0; n < poly.fN; ++n)
       path += att.create(func.x(poly.fX[n]), func.y(poly.fY[n]));
 
    if (path)
-      this.draw_g.append("svg:path")
-          .attr("d", path)
+      this.draw_g.append('svg:path')
+          .attr('d', path)
           .call(att.func);
 }
 
@@ -360,13 +360,13 @@ function drawPolyMarker() {
 function drawJSImage(dom, obj, opt) {
    let painter = new BasePainter(dom),
        main = painter.selectDom(),
-       img = main.append("img").attr("src", obj.fName).attr("title", obj.fTitle || obj.fName);
+       img = main.append('img').attr('src', obj.fName).attr('title', obj.fTitle || obj.fName);
 
-   if (opt && opt.indexOf("scale") >= 0) {
-      img.style("width","100%").style("height","100%");
-   } else if (opt && opt.indexOf("center") >= 0) {
-      main.style("position", "relative");
-      img.attr("style", "margin: 0; position: absolute;  top: 50%; left: 50%; transform: translate(-50%, -50%);");
+   if (opt && opt.indexOf('scale') >= 0) {
+      img.style('width','100%').style('height','100%');
+   } else if (opt && opt.indexOf('center') >= 0) {
+      main.style('position', 'relative');
+      img.attr('style', 'margin: 0; position: absolute;  top: 50%; left: 50%; transform: translate(-50%, -50%);');
    }
 
    painter.setTopPainter();

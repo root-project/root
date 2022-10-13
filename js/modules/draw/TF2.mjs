@@ -35,7 +35,7 @@ function createTF2Histogram(func, hist = undefined) {
          }
 
          if (!iserr && Number.isFinite(z)) {
-            if (!hist) hist = createHistogram("TH2F", npx, npy);
+            if (!hist) hist = createHistogram('TH2F', npx, npy);
             isany = true;
             hist.setBinContent(hist.getBin(i+1,j+1), z);
          }
@@ -43,7 +43,7 @@ function createTF2Histogram(func, hist = undefined) {
 
    let use_saved_points = (iserr || !isany) && (nsave > 6);
    if (!use_saved_points && !hist)
-      hist = createHistogram("TH2F", npx, npy);
+      hist = createHistogram('TH2F', npx, npy);
 
    if (!iserr && isany) {
       hist.fXaxis.fXmin = func.fXmin - (use_middle ? 0 : dx/2);
@@ -59,7 +59,7 @@ function createTF2Histogram(func, hist = undefined) {
       dx = (func.fSave[nsave-5] - func.fSave[nsave-6]) / npx;
       dy = (func.fSave[nsave-3] - func.fSave[nsave-4]) / npy;
 
-      if (!hist) hist = createHistogram("TH2F", npx+1, npy+1);
+      if (!hist) hist = createHistogram('TH2F', npx+1, npy+1);
 
       hist.fXaxis.fXmin = func.fSave[nsave-6] - dx/2;
       hist.fXaxis.fXmax = func.fSave[nsave-5] + dx/2;
@@ -72,7 +72,7 @@ function createTF2Histogram(func, hist = undefined) {
             hist.setBinContent(hist.getBin(i+1,j+1), func.fSave[k++]);
    }
 
-   hist.fName = "Func";
+   hist.fName = 'Func';
    hist.fTitle = func.fTitle;
    hist.fMinimum = func.fMinimum;
    hist.fMaximum = func.fMaximum;
@@ -105,18 +105,18 @@ function drawTF2(dom, func, opt) {
    let d = new DrawOptions(opt);
 
    if (d.empty())
-      opt = "cont3";
-   else if (d.opt === "SAME")
-      opt = "cont2 same";
+      opt = 'cont3';
+   else if (d.opt === 'SAME')
+      opt = 'cont2 same';
    else
       opt = d.opt;
 
    // workaround for old waves.C
-   if (opt == "SAMECOLORZ" || opt == "SAMECOLOR" || opt == "SAMECOLZ") opt = "SAMECOL";
+   if (opt == 'SAMECOLORZ' || opt == 'SAMECOLOR' || opt == 'SAMECOLZ') opt = 'SAMECOL';
 
-   if (opt.indexOf("SAME") == 0)
+   if (opt.indexOf('SAME') == 0)
       if (!getElementMainPainter(dom))
-         opt = "A_ADJUST_FRAME_" + opt.slice(4);
+         opt = 'A_ADJUST_FRAME_' + opt.slice(4);
 
    return TH2Painter.draw(dom, hist, opt).then(hpainter => {
 

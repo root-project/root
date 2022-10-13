@@ -22,7 +22,7 @@ class RObjectPainter extends ObjectPainter {
          let typ1 = typeof dflt, typ2 = typeof res;
          if (typ1 == typ2) return res;
          if (typ1 == 'boolean') {
-            if (typ2 == 'string') return (res != "") && (res != "0") && (res != "no") && (res != "off");
+            if (typ2 == 'string') return (res != '') && (res != '0') && (res != 'no') && (res != 'off');
             return !!res;
          }
          if ((typ1 == 'number') && (typ2 == 'string'))
@@ -40,8 +40,8 @@ class RObjectPainter extends ObjectPainter {
          for (let k = 0; k < blks.length; ++k) {
             let block = blks[k],
                 match = (this.csstype && (block.selector == this.csstype)) ||
-                        (obj.fId && (block.selector == ("#" + obj.fId))) ||
-                        (obj.fCssClass && (block.selector == ("." + obj.fCssClass)));
+                        (obj.fId && (block.selector == ('#' + obj.fId))) ||
+                        (obj.fCssClass && (block.selector == ('.' + obj.fCssClass)));
 
             if (match && block.map && block.map.m) {
                let value = block.map.m[name.toLowerCase()];
@@ -71,7 +71,7 @@ class RObjectPainter extends ObjectPainter {
       if (value === undefined)
          return Math.round(dflt*sizepx);
 
-      if (typeof value == "number")
+      if (typeof value == 'number')
          return Math.round(value*sizepx);
 
       if (value === null)
@@ -89,7 +89,7 @@ class RObjectPainter extends ObjectPainter {
 
          if ((val[pos] == '-') || (val[pos] == '+')) {
             if (operand) {
-               console.log("Fail to parse RPadLength " + value);
+               console.log('Fail to parse RPadLength ' + value);
                return dflt;
             }
             operand = (val[pos] == '-') ? -1 : 1;
@@ -99,11 +99,11 @@ class RObjectPainter extends ObjectPainter {
 
          if (pos > 0) { val = val.slice(pos); pos = 0; }
 
-         while ((pos < val.length) && (((val[pos]>='0') && (val[pos]<='9')) || (val[pos]=='.'))) pos++;
+         while ((pos < val.length) && (((val[pos] >= '0') && (val[pos] <= '9')) || (val[pos] == '.'))) pos++;
 
          let v = parseFloat(val.slice(0, pos));
          if (!Number.isFinite(v)) {
-            console.log("Fail to parse RPadLength " + value);
+            console.log('Fail to parse RPadLength ' + value);
             return Math.round(dflt*sizepx);
          }
 
@@ -128,28 +128,28 @@ class RObjectPainter extends ObjectPainter {
 
    /** @summary Evaluate RColor using attribute storage and configured RStyle */
    v7EvalColor(name, dflt) {
-      let val = this.v7EvalAttr(name, "");
-      if (!val || (typeof val != "string")) return dflt;
+      let val = this.v7EvalAttr(name, '');
+      if (!val || (typeof val != 'string')) return dflt;
 
-      if (val == "auto") {
+      if (val == 'auto') {
          let pp = this.getPadPainter();
          if (pp?._auto_color_cnt !== undefined) {
             let pal = pp.getHistPalette(),
                 cnt = pp._auto_color_cnt++,
                 num = pp._num_primitives - 1;
             if (num < 2) num = 2;
-            val = pal ? pal.getColorOrdinal((cnt % num) / num) : "blue";
+            val = pal ? pal.getColorOrdinal((cnt % num) / num) : 'blue';
             if (!this._auto_colors) this._auto_colors = {};
             this._auto_colors[name] = val;
          } else if (this._auto_colors && this._auto_colors[name]) {
             val = this._auto_colors[name];
          } else {
             console.error(`Autocolor ${name} not defined yet - please check code`);
-            val = "";
+            val = '';
          }
-      } else if (val[0] == "[") {
+      } else if (val[0] == '[') {
          let ordinal = parseFloat(val.slice(1, val.length-1));
-         val = "black";
+         val = 'black';
          if (Number.isFinite(ordinal)) {
              let pp = this.getPadPainter(),
                  pal = pp?.getHistPalette();
@@ -164,63 +164,63 @@ class RObjectPainter extends ObjectPainter {
    v7EvalFont(name, dflts, fontScale) {
 
       if (!dflts) dflts = {}; else
-      if (typeof dflts == "number") dflts = { size: dflts };
+      if (typeof dflts == 'number') dflts = { size: dflts };
 
       let pp = this.getPadPainter(),
-          rfont = pp?._dfltRFont || { fFamily: "Arial", fStyle: "", fWeight: "" },
-          text_size   = this.v7EvalAttr(name + "_size", dflts.size || 12),
-          text_angle  = this.v7EvalAttr(name + "_angle", 0),
-          text_align  = this.v7EvalAttr(name + "_align", dflts.align || "none"),
-          text_color  = this.v7EvalColor(name + "_color", dflts.color || "none"),
-          font_family = this.v7EvalAttr(name + "_font_family", rfont.fFamily || "Arial"),
-          font_style  = this.v7EvalAttr(name + "_font_style", rfont.fStyle || ""),
-          font_weight = this.v7EvalAttr(name + "_font_weight", rfont.fWeight || "");
+          rfont = pp?._dfltRFont || { fFamily: 'Arial', fStyle: '', fWeight: '' },
+          text_size   = this.v7EvalAttr(name + '_size', dflts.size || 12),
+          text_angle  = this.v7EvalAttr(name + '_angle', 0),
+          text_align  = this.v7EvalAttr(name + '_align', dflts.align || 'none'),
+          text_color  = this.v7EvalColor(name + '_color', dflts.color || 'none'),
+          font_family = this.v7EvalAttr(name + '_font_family', rfont.fFamily || 'Arial'),
+          font_style  = this.v7EvalAttr(name + '_font_style', rfont.fStyle || ''),
+          font_weight = this.v7EvalAttr(name + '_font_weight', rfont.fWeight || '');
 
-       if (typeof text_size == "string") text_size = parseFloat(text_size);
+       if (typeof text_size == 'string') text_size = parseFloat(text_size);
        if (!Number.isFinite(text_size) || (text_size <= 0)) text_size = 12;
        if (!fontScale) fontScale = pp?.getPadHeight() || 100;
 
        let handler = new FontHandler(null, text_size, fontScale, font_family, font_style, font_weight);
 
        if (text_angle) handler.setAngle(360 - text_angle);
-       if (text_align !== "none") handler.setAlign(text_align);
-       if (text_color !== "none") handler.setColor(text_color);
+       if (text_align !== 'none') handler.setAlign(text_align);
+       if (text_color !== 'none') handler.setColor(text_color);
 
        return handler;
     }
 
    /** @summary Create this.fillatt object based on v7 fill attributes */
    createv7AttFill(prefix) {
-      if (!prefix || (typeof prefix != "string")) prefix = "fill_";
+      if (!prefix || (typeof prefix != 'string')) prefix = 'fill_';
 
-      let color = this.v7EvalColor(prefix + "color", ""),
-          pattern = this.v7EvalAttr(prefix + "style", 0);
+      let color = this.v7EvalColor(prefix + 'color', ''),
+          pattern = this.v7EvalAttr(prefix + 'style', 0);
 
       this.createAttFill({ pattern, color,  color_as_svg: true });
    }
 
    /** @summary Create this.lineatt object based on v7 line attributes */
    createv7AttLine(prefix) {
-      if (!prefix || (typeof prefix != "string")) prefix = "line_";
+      if (!prefix || (typeof prefix != 'string')) prefix = 'line_';
 
-      let color = this.v7EvalColor(prefix + "color", "black"),
-          width = this.v7EvalAttr(prefix + "width", 1),
-          style = this.v7EvalAttr(prefix + "style", 1),
-          pattern = this.v7EvalAttr(prefix + "pattern");
+      let color = this.v7EvalColor(prefix + 'color', 'black'),
+          width = this.v7EvalAttr(prefix + 'width', 1),
+          style = this.v7EvalAttr(prefix + 'style', 1),
+          pattern = this.v7EvalAttr(prefix + 'pattern');
 
       this.createAttLine({ color, width, style, pattern });
 
-      if (prefix == "border_")
-         this.lineatt.setBorder(this.v7EvalAttr(prefix + "rx", 0), this.v7EvalAttr(prefix + "ry", 0));
+      if (prefix == 'border_')
+         this.lineatt.setBorder(this.v7EvalAttr(prefix + 'rx', 0), this.v7EvalAttr(prefix + 'ry', 0));
    }
 
     /** @summary Create this.markeratt object based on v7 attributes */
    createv7AttMarker(prefix) {
-      if (!prefix || (typeof prefix != "string")) prefix = "marker_";
+      if (!prefix || (typeof prefix != 'string')) prefix = 'marker_';
 
-      let color = this.v7EvalColor(prefix + "color", "black"),
-          size = this.v7EvalAttr(prefix + "size", 0.01),
-          style = this.v7EvalAttr(prefix + "style", 1),
+      let color = this.v7EvalColor(prefix + 'color', 'black'),
+          size = this.v7EvalAttr(prefix + 'size', 0.01),
+          style = this.v7EvalAttr(prefix + 'style', 1),
           refsize = 1;
       if (size < 1) {
          let pp = this.getPadPainter();
@@ -237,7 +237,7 @@ class RObjectPainter extends ObjectPainter {
          return false;
 
       if (!req._typename) {
-         req._typename = "ROOT::Experimental::RChangeAttrRequest";
+         req._typename = 'ROOT::Experimental::RChangeAttrRequest';
          req.ids = [];
          req.names = [];
          req.values = [];
@@ -256,17 +256,17 @@ class RObjectPainter extends ObjectPainter {
 
       if (!kind)
          switch(typeof value) {
-            case "number": kind = "double"; break;
-            case "boolean": kind = "boolean"; break;
+            case 'number': kind = 'double'; break;
+            case 'boolean': kind = 'boolean'; break;
          }
 
-      obj = { _typename: "ROOT::Experimental::RAttrMap::" };
+      obj = { _typename: 'ROOT::Experimental::RAttrMap::' };
       switch(kind) {
-         case "none": obj._typename += "NoValue_t"; break;
-         case "boolean": obj._typename += "BoolValue_t"; obj.v = value ? true : false; break;
-         case "int": obj._typename += "IntValue_t"; obj.v = parseInt(value); break;
-         case "double": obj._typename += "DoubleValue_t"; obj.v = parseFloat(value); break;
-         default: obj._typename += "StringValue_t"; obj.v = (typeof value == "string") ? value : JSON.stringify(value); break;
+         case 'none': obj._typename += 'NoValue_t'; break;
+         case 'boolean': obj._typename += 'BoolValue_t'; obj.v = value ? true : false; break;
+         case 'int': obj._typename += 'IntValue_t'; obj.v = parseInt(value); break;
+         case 'double': obj._typename += 'DoubleValue_t'; obj.v = parseFloat(value); break;
+         default: obj._typename += 'StringValue_t'; obj.v = (typeof value == 'string') ? value : JSON.stringify(value); break;
       }
 
       req.values.push(obj);
@@ -279,7 +279,7 @@ class RObjectPainter extends ObjectPainter {
       if (canp && req?._typename) {
          if (do_update !== undefined)
             req.update = do_update ? true : false;
-         canp.v7SubmitRequest("", req);
+         canp.v7SubmitRequest('', req);
       }
    }
 

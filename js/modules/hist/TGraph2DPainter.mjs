@@ -22,11 +22,11 @@ class TGraph2DPainter extends ObjectPainter {
 
       let res = this.options;
 
-      res.Color = d.check("COL");
-      res.Line = d.check("LINE");
-      res.Error = d.check("ERR") && (this.matchObjectType("TGraph2DErrors") || this.matchObjectType("TGraph2DAsymmErrors"));
-      res.Circles = d.check("P0");
-      res.Markers = d.check("P");
+      res.Color = d.check('COL');
+      res.Line = d.check('LINE');
+      res.Error = d.check('ERR') && (this.matchObjectType('TGraph2DErrors') || this.matchObjectType('TGraph2DAsymmErrors'));
+      res.Circles = d.check('P0');
+      res.Markers = d.check('P');
 
       if (!res.Markers && !res.Error && !res.Circles && !res.Line) {
          if ((gr.fMarkerSize == 1) && (gr.fMarkerStyle == 1))
@@ -42,7 +42,7 @@ class TGraph2DPainter extends ObjectPainter {
    /** @summary Create histogram for axes drawing */
    createHistogram() {
       let gr = this.getObject(),
-          asymm = this.matchObjectType("TGraph2DAsymmErrors"),
+          asymm = this.matchObjectType('TGraph2DAsymmErrors'),
           xmin = gr.fX[0], xmax = xmin,
           ymin = gr.fY[0], ymax = ymin,
           zmin = gr.fZ[0], zmax = zmin;
@@ -76,22 +76,22 @@ class TGraph2DPainter extends ObjectPainter {
           uymin = ymin - dy, uymax = ymax + dy,
           uzmin = zmin - dz, uzmax = zmax + dz;
 
-      if ((uxmin<0) && (xmin>=0)) uxmin = xmin*0.98;
-      if ((uxmax>0) && (xmax<=0)) uxmax = 0;
+      if ((uxmin < 0) && (xmin >= 0)) uxmin = xmin*0.98;
+      if ((uxmax > 0) && (xmax <= 0)) uxmax = 0;
 
-      if ((uymin<0) && (ymin>=0)) uymin = ymin*0.98;
-      if ((uymax>0) && (ymax<=0)) uymax = 0;
+      if ((uymin < 0) && (ymin >= 0)) uymin = ymin*0.98;
+      if ((uymax > 0) && (ymax <= 0)) uymax = 0;
 
-      if ((uzmin<0) && (zmin>=0)) uzmin = zmin*0.98;
-      if ((uzmax>0) && (zmax<=0)) uzmax = 0;
+      if ((uzmin < 0) && (zmin >= 0)) uzmin = zmin*0.98;
+      if ((uzmax > 0) && (zmax <= 0)) uzmax = 0;
 
       let graph = this.getObject();
 
       if (graph.fMinimum != -1111) uzmin = graph.fMinimum;
       if (graph.fMaximum != -1111) uzmax = graph.fMaximum;
 
-      let histo = createHistogram("TH2I", 10, 10);
-      histo.fName = graph.fName + "_h";
+      let histo = createHistogram('TH2I', 10, 10);
+      histo.fName = graph.fName + '_h';
       histo.fTitle = graph.fTitle;
       histo.fXaxis.fXmin = uxmin;
       histo.fXaxis.fXmax = uxmax;
@@ -114,7 +114,7 @@ class TGraph2DPainter extends ObjectPainter {
       }
 
       let indx = Math.floor(intersect.index / this.nvertex);
-      if ((indx<0) || (indx >= this.index.length)) return null;
+      if ((indx < 0) || (indx >= this.index.length)) return null;
       let sqr = v => v*v;
 
       indx = this.index[indx];
@@ -143,10 +143,10 @@ class TGraph2DPainter extends ObjectPainter {
          z2: grz + this.scale0,
          color: this.tip_color,
          lines: [ this.tip_name,
-                  "pnt: " + indx,
-                  "x: " + p.axisAsText("x", gr.fX[indx]),
-                  "y: " + p.axisAsText("y", gr.fY[indx]),
-                  "z: " + p.axisAsText("z", gr.fZ[indx])
+                  'pnt: ' + indx,
+                  'x: ' + p.axisAsText('x', gr.fX[indx]),
+                  'y: ' + p.axisAsText('y', gr.fY[indx]),
+                  'z: ' + p.axisAsText('z', gr.fZ[indx])
                 ]
       };
    }
@@ -218,7 +218,7 @@ class TGraph2DPainter extends ObjectPainter {
 
          if (this.options.Error) {
             err = new Float32Array(size*6*3);
-            asymm = this.matchObjectType("TGraph2DAsymmErrors");
+            asymm = this.matchObjectType('TGraph2DAsymmErrors');
           }
 
          if (this.options.Line)
@@ -231,7 +231,7 @@ class TGraph2DPainter extends ObjectPainter {
 
             if (step > 1) {
                select = (select+1) % step;
-               if (select!==0) continue;
+               if (select !== 0) continue;
             }
 
             index[icnt++] = i; // remember point index for tooltip
@@ -354,7 +354,7 @@ class TGraph2DPainter extends ObjectPainter {
       if (!painter.getMainPainter()) {
          if (!gr.fHistogram)
             gr.fHistogram = painter.createHistogram();
-         promise = TH2Painter.draw(dom, gr.fHistogram, "lego;axis");
+         promise = TH2Painter.draw(dom, gr.fHistogram, 'lego;axis');
          painter.ownhisto = true;
       }
 

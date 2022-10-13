@@ -19,7 +19,7 @@ let clones = null;
 onmessage = function(e) {
 
    if (typeof e.data == 'string') {
-      console.log('Worker get message ' + e.data);
+      console.log(`Worker get message ${e.data}`);
       return;
    }
 
@@ -32,11 +32,11 @@ onmessage = function(e) {
    e.data.tm1 = new Date().getTime();
 
    if (e.data.init) {
-      // console.log('start worker ' +  (e.data.tm1 -  e.data.tm0));
+      // console.log(`start worker ${e.data.tm1 -  e.data.tm0}`);
 
       let nodes = e.data.clones;
       if (nodes) {
-         // console.log('get clones ' + nodes.length);
+         // console.log(`get clones ${nodes.length}`);
          clones = new ClonedNodes(null, nodes);
          clones.setVisLevel(e.data.vislevel);
          clones.setMaxVisNodes(e.data.maxvisnodes);
@@ -113,7 +113,7 @@ onmessage = function(e) {
 
       e.data.tm2 = new Date().getTime();
 
-      // console.log('Collect visibles in worker ' + e.data.new_nodes.length + ' takes ' + (e.data.tm2-e.data.tm1));
+      // console.log(`Collect visibles in worker ${e.data.new_nodes.length} takes ${e.data.tm2-e.data.tm1}`);
 
       return postMessage(e.data);
    }

@@ -104,7 +104,7 @@ class TEfficiencyPainter extends ObjectPainter {
    /** @summary Create graph for the drawing of 1-dim TEfficiency */
    createGraph(/*eff*/) {
       let gr = create('TGraphAsymmErrors');
-      gr.fName = "eff_graph";
+      gr.fName = 'eff_graph';
       return gr;
    }
 
@@ -115,7 +115,7 @@ class TEfficiencyPainter extends ObjectPainter {
             hist = createHistogram('TH2F', nbinsx, nbinsy);
       Object.assign(hist.fXaxis, eff.fTotalHistogram.fXaxis);
       Object.assign(hist.fYaxis, eff.fTotalHistogram.fYaxis);
-      hist.fName = "eff_histo";
+      hist.fName = 'eff_histo';
       return hist;
    }
 
@@ -124,7 +124,7 @@ class TEfficiencyPainter extends ObjectPainter {
       const eff = this.getObject(),
             xaxis = eff.fTotalHistogram.fXaxis,
             npoints = xaxis.fNbins,
-            plot0Bins = (opt.indexOf("e0") >= 0);
+            plot0Bins = (opt.indexOf('e0') >= 0);
 
       for (let n = 0, j = 0; n < npoints; ++n) {
          if (!plot0Bins && eff.fTotalHistogram.getBinContent(n+1) === 0) continue;
@@ -179,13 +179,13 @@ class TEfficiencyPainter extends ObjectPainter {
       if (!eff || !eff.fTotalHistogram)
          return null;
 
-      if (!opt || (typeof opt != 'string')) opt = "";
+      if (!opt || (typeof opt != 'string')) opt = '';
       opt = opt.toLowerCase();
 
       let ndim = 0;
-      if (eff.fTotalHistogram._typename.indexOf("TH1") == 0)
+      if (eff.fTotalHistogram._typename.indexOf('TH1') == 0)
          ndim = 1;
-      else if (eff.fTotalHistogram._typename.indexOf("TH2") == 0)
+      else if (eff.fTotalHistogram._typename.indexOf('TH2') == 0)
          ndim = 2;
       else
          return null;
@@ -198,15 +198,15 @@ class TEfficiencyPainter extends ObjectPainter {
       let promise;
 
       if (ndim == 1) {
-         if (!opt) opt = "ap";
-         if ((opt.indexOf("same") < 0) && (opt.indexOf("a") < 0)) opt += "a";
-         if (opt.indexOf("p") < 0) opt += "p";
+         if (!opt) opt = 'ap';
+         if ((opt.indexOf('same') < 0) && (opt.indexOf('a') < 0)) opt += 'a';
+         if (opt.indexOf('p') < 0) opt += 'p';
 
          let gr = painter.createGraph(eff);
          painter.fillGraph(gr, opt);
          promise = TGraphPainter.draw(dom, gr, opt);
       } else {
-         if (!opt) opt = "col";
+         if (!opt) opt = 'col';
          let hist = painter.createHisto(eff);
          painter.fillHisto(hist, opt);
          promise = TH2Painter.draw(dom, hist, opt);

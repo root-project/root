@@ -18,7 +18,7 @@ const kMACHEP  = 1.11022302462515654042363166809e-16,
   * a[0]x^N+a[1]x^(N-1) + ... + a[N]
   * @memberof Math */
 function Polynomialeval(x, a, N) {
-   if (N==0) return a[0];
+   if (!N) return a[0];
 
    let pom = a[0];
    for (let i = 1; i <= N; ++i)
@@ -31,7 +31,7 @@ function Polynomialeval(x, a, N) {
   * x^N+a[0]x^(N-1) + ... + a[N-1]
   * @memberof Math */
 function Polynomial1eval(x, a, N) {
-   if (N==0) return a[0];
+   if (!N) return a[0];
 
    let pom = x + a[0];
    for (let i = 1; i < N; ++i)
@@ -613,7 +613,7 @@ function igam(a, x) {
 function igami(a, y0) {
    // check the domain
    if (a <= 0) {
-      console.error("igami : Wrong domain for parameter a (must be > 0)");
+      console.error('igami : Wrong domain for parameter a (must be > 0)');
       return 0;
    }
    if (y0 <= 0) {
@@ -721,8 +721,7 @@ function igami(a, y0) {
   * @desc LANDAU pdf : algorithm from CERNLIB G110 denlan
   *  same algorithm is used in GSL
   * @memberof Math */
-function landau_pdf(x, xi, x0) {
-   if (x0===undefined) x0 = 0;
+function landau_pdf(x, xi, x0 = 0) {
    if (xi <= 0) return 0;
    const v = (x - x0)/xi;
    let u, ue, us, denlan;
@@ -830,8 +829,7 @@ function beta(x,y) {
 
 /** @summary chisquared_cdf_c
   * @memberof Math */
-function chisquared_cdf_c(x,r,x0) {
-   if (x0===undefined) x0 = 0;
+function chisquared_cdf_c(x,r,x0 = 0) {
    return inc_gamma_c ( 0.5 * r , 0.5*(x-x0) );
 }
 
@@ -1148,11 +1146,11 @@ function incbi(aa,bb,yy0) {
 
    // check the domain
    if (aa <= 0) {
-      // MATH_ERROR_MSG("Cephes::incbi","Wrong domain for parameter a (must be > 0)");
+      // MATH_ERROR_MSG('Cephes::incbi','Wrong domain for parameter a (must be > 0)');
       return 0;
    }
    if (bb <= 0) {
-      // MATH_ERROR_MSG("Cephes::incbi","Wrong domain for parameter b (must be > 0)");
+      // MATH_ERROR_MSG('Cephes::incbi','Wrong domain for parameter b (must be > 0)');
       return 0;
    }
 
@@ -1328,13 +1326,13 @@ function incbi(aa,bb,yy0) {
                dir -= 1;
             }
          }
-         //math_error( "incbi", PLOSS );
+         //math_error( 'incbi', PLOSS );
          if( x0 >= 1.0 ) {
             x = 1.0 - kMACHEP;
             return process_done(); //goto done;
          }
          if( x <= 0.0 ) {
-            //math_error( "incbi", UNDERFLOW );
+            //math_error( 'incbi', UNDERFLOW );
             x = 0.0;
             return process_done(); //goto done;
          }
@@ -1541,8 +1539,7 @@ function exponential_cdf(x, lambda, x0 = 0) {
 
 /** @summary chisquared_pdf
   * @memberof Math */
-function chisquared_pdf(x,r,x0) {
-   if (x0===undefined) x0 = 0;
+function chisquared_pdf(x, r, x0 = 0) {
    if ((x-x0) < 0) return 0.0;
    const a = r/2 -1.;
    // let return inf for case x  = x0 and treat special case of r = 2 otherwise will return nan
@@ -1592,7 +1589,7 @@ function fdistribution_cdf(x, n, m, x0 = 0) {
 /** @summary Prob function
   * @memberof Math */
 function Prob(chi2, ndf) {
-   if (ndf <= 0) return 0; // Set CL to zero in case ndf<=0
+   if (ndf <= 0) return 0; // Set CL to zero in case ndf <= 0
 
    if (chi2 <= 0) {
       if (chi2 < 0) return 0;
@@ -1679,7 +1676,7 @@ function BetaDist(x, p, q) {
 /** @summary Computes the distribution function of the Beta distribution.
   * @memberof Math */
 function BetaDistI(x, p, q) {
-   if ((x<0) || (x>1) || (p<=0) || (q<=0)) return 0;
+   if ((x < 0) || (x > 1) || (p <= 0) || (q <= 0)) return 0;
    return BetaIncomplete(x, p, q);
 }
 
@@ -1752,7 +1749,7 @@ function crystalball_pdf(x, alpha, n, sigma, mean = 0) {
   * @memberof Math */
 function crystalball_integral(x, alpha, n, sigma, mean = 0) {
    if (sigma == 0) return 0;
-   if (alpha==0) return 0.;
+   if (alpha == 0) return 0.;
    let useLog = (n == 1.0),
        z = (x-mean)/sigma;
    if (alpha < 0 ) z = -z;
@@ -2021,7 +2018,7 @@ function getTEfficiencyBoundaryFunc(option, isbayessian) {
       case kFNormal: return eff_Normal;
       case kFWilson: return eff_Wilson;
       case kFAC: return eff_AgrestiCoull;
-      case kFFC: console.log("Feldman-Cousins interval kFFC not supported; using kFCP"); return eff_ClopperPearson;
+      case kFFC: console.log('Feldman-Cousins interval kFFC not supported; using kFCP'); return eff_ClopperPearson;
       case kMidP: return eff_MidPInterval;
       // case kBJeffrey:
       // case kBUniform:
