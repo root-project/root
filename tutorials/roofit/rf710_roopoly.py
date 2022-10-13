@@ -28,7 +28,7 @@ f.addTerm(+5, x, 2)
 f.addTerm(+5, x, 1)
 f.addTerm(-6, x, 0)
 
-f = ROOT.RooFormulaVar("f", "f", "pow(@0,4) -5 * pow(@0,3) +5 * pow(@0,2) + 5 * pow(@0,1) - 6", ROOT.RooArgList(x))
+f = ROOT.RooFormulaVar("f", "f", "pow(@0,4) -5 * pow(@0,3) +5 * pow(@0,2) + 5 * pow(@0,1) - 6", [x])
 # taylor expand around x0 = 0
 # -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
 x0 = 2.0
@@ -38,8 +38,8 @@ frame = x.frame(Title="x^{4} - 5x^{3} + 5x^{2} + 5x - 6")
 c = ROOT.TCanvas("c", "c", 400, 400)
 
 f.plotOn(frame, Name="f")
-taylor_o1.plotOn(frame, Name="taylor_o1", LineColor=ROOT.kRed, LineStyle=ROOT.kDashed)
-taylor_o2.plotOn(frame, Name="taylor_o2", LineColor=ROOT.kRed - 9, LineStyle=ROOT.kDotted)
+taylor_o1.plotOn(frame, Name="taylor_o1", LineColor="kRed", LineStyle="kDashed")
+taylor_o2.plotOn(frame, Name="taylor_o2", LineColor="kRed - 9", LineStyle="kDotted")
 
 c.cd()
 frame.SetMinimum(-8.0)
