@@ -75,12 +75,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          // console.log(mhdr, msg.length, msg.substr(0,70), "...");
 
          switch (mhdr) {
-            case "CFG":   // generic viewer configuration
+            case 'CFG':   // generic viewer configuration
                this.setCfg(this.jsroot.parse(msg)); // use jsroot.parse while refs are used
                break;
-            case "PROGRESS":
+            case 'PROGRESS':
                this.showProgess(parseFloat(msg));
                break;
+            case 'SUGGEST':
+               this.showSuggestedItem(msg);
+               break;
+
             default:
                console.error(`Non recognized msg ${mhdr} len = ${msg.length}`);
          }
@@ -100,6 +104,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       onAfterRendering: function() {
+
+         const inputs = ['input_x','input_y','input_z', 'input_cut'];
+
+         inputs.forEach(id => {
+            this.byId(id).$().find('input').focus(() => { this.lastFocus = id; });
+         });
       },
 
       onBranchHelpRequest: function(oEvent) {
@@ -144,19 +154,30 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       onPressClearBtn: function(oEvent) {
          let id = oEvent.getSource().getId();
-         if (id.indexOf("clear_x") >= 0)
+         if (id.indexOf("clear_x") >= 0) {
+            this.lastFocus = "input_x";
             this.cfg.fExprX = "";
-         else if (id.indexOf("clear_y") >= 0)
+         } else if (id.indexOf("clear_y") >= 0) {
             this.cfg.fExprY = "";
-         else if (id.indexOf("clear_z") >= 0)
+            this.lastFocus = "input_y";
+         } else if (id.indexOf("clear_z") >= 0) {
             this.cfg.fExprZ = "";
-         else if (id.indexOf("clear_cut") >= 0)
+            this.lastFocus = "input_z";
+         } else if (id.indexOf("clear_cut") >= 0) {
             this.cfg.fExprCut = "";
+            this.lastFocus = "input_cut";
+         }
 
          this.cfg_model.refresh();
       },
 
-      performDraw: function() {
+      onPressClearWidget: function() {
+         this.cfg.fExprX = this.cfg.fExprY = this.cfg.fExprZ = this.cfg.fExprCut = "";
+         delete this.lastFocus;
+         this.cfg_model.refresh();
+      },
+
+      onPressPerformDraw: function() {
          let send = this.last_cfg;
 
          if (!send) return;
@@ -183,6 +204,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
         if (val >= 100.)
            setTimeout(() => pr.setVisible(false), 2000);
+      },
+
+      showSuggestedItem: function(name) {
+         let id = this.lastFocus || 'input_x';
+
+         let val = this.byId(id).getValue();
+
+         this.byId(id).setValue(val ? val + ' + ' + name : name);
       },
 
       /** @summary Reload configuration */
