@@ -137,7 +137,7 @@ leg2.SetLineColor(ROOT.kWhite)
 
 leg2.AddEntry("morph_dh_cHq3=0.01", "c_{Hq^{(3)}}=0.01", "L")
 leg2.AddEntry(0, "", "")
-leg2.AddEntry("morph_dh_cHq3=0.025", "c_{Hq^{(3)}}=0.025", "L")
+leg2.AddEntry("morph_dh_cHq3=0.25", "c_{Hq^{(3)}}=0.25", "L")
 leg2.AddEntry(0, "", "")
 leg2.AddEntry("morph_dh_cHq3=0.5", "c_{Hq^{(3)}}=0.5", "L")
 leg2.AddEntry(0, "", "")
