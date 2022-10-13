@@ -11,7 +11,11 @@
        <content>
           <VBox width="100%">
             <FlexBox renderType="Bare" width="100%" alignItems="Center" >
-              <Label text="X" showColon="true" wrapping="false" labelFor="input_x" class="sapUiTinyMarginEnd"/>
+              <Label text="X" showColon="true" wrapping="false" labelFor="input_x" class="sapUiTinyMarginEnd">
+                 <layoutData>
+                    <FlexItemData minWidth="25px"/>
+                 </layoutData>
+               </Label>
               <Input
                  id="input_x"
                  value="{/fExprX}"
@@ -27,8 +31,12 @@
               </Input>
               <Button id="clear_x" icon="sap-icon://sys-cancel" tooltip="Clear X expression" type="Transparent" press="onPressClearBtn" class="sapUiSizeCompact"/>
             </FlexBox>
-            <FlexBox renderType="Bare" width="100%" alignItems="Center" >
-               <Label text="Y" showColon="true" wrapping="false" labelFor="input_y" class="sapUiTinyMarginEnd"/>
+            <FlexBox renderType="Bare" width="100%" justifyContent="SpaceBetween" alignItems="Center">
+               <Label text="Y" showColon="true" wrapping="false" labelFor="input_y" class="sapUiTinyMarginEnd">
+                 <layoutData>
+                    <FlexItemData minWidth="25px"/>
+                 </layoutData>
+               </Label>
                <Input
                  id="input_y"
                  value="{/fExprY}"
@@ -44,8 +52,12 @@
                </Input>
                <Button id="clear_y" icon="sap-icon://sys-cancel" tooltip="Clear Y expression" type="Transparent" press="onPressClearBtn" class="sapUiSizeCompact"/>
             </FlexBox>
-            <FlexBox renderType="Bare" width="100%" alignItems="Center" >
-               <Label text="Z" showColon="true" wrapping="false" labelFor="input_z" class="sapUiTinyMarginEnd"/>
+            <FlexBox renderType="Bare" width="100%" justifyContent="SpaceBetween" alignItems="Center" >
+               <Label text="Z" showColon="true" wrapping="false" labelFor="input_z" class="sapUiTinyMarginEnd">
+                 <layoutData>
+                    <FlexItemData minWidth="25px"/>
+                 </layoutData>
+               </Label>
                <Input
                  id="input_z"
                  value="{/fExprZ}"
@@ -61,8 +73,12 @@
                </Input>
                <Button id="clear_z" icon="sap-icon://sys-cancel" tooltip="Clear Z expression" type="Transparent" press="onPressClearBtn" class="sapUiSizeCompact"/>
             </FlexBox>
-            <FlexBox renderType="Bare" width="100%" alignItems="Center" >
-               <Label text="Cut" showColon="true" wrapping="false" labelFor="input_cut" class="sapUiTinyMarginEnd"/>
+            <FlexBox renderType="Bare" width="100%" justifyContent="SpaceBetween" alignItems="Center" >
+               <Label text="Cut" showColon="true" wrapping="false" labelFor="input_cut" class="sapUiTinyMarginEnd">
+                 <layoutData>
+                    <FlexItemData minWidth="55px" />
+                 </layoutData>
+               </Label>
                <Input
                  id="input_cut"
                  value="{/fExprCut}"
@@ -78,8 +94,12 @@
                </Input>
                <Button id="clear_cut" icon="sap-icon://sys-cancel" tooltip="Clear cut expression" type="Transparent" press="onPressClearBtn" class="sapUiSizeCompact"/>
             </FlexBox>
-            <FlexBox renderType="Bare" width="100%" alignItems="Center">
-               <Label text="Options" showColon="true" wrapping="false" labelFor="input_option" class="sapUiTinyMarginEnd"/>
+            <FlexBox renderType="Bare" width="100%" justifyContent="SpaceBetween" alignItems="Center">
+               <Label text="Options" showColon="true" wrapping="false" labelFor="input_option" class="sapUiTinyMarginEnd">
+                  <layoutData>
+                     <FlexItemData minWidth="55px" />
+                  </layoutData>
+               </Label>
                <Input
                   id="input_option"
                   class="sapUiTinyMarginEnd"
@@ -87,8 +107,12 @@
                   valueLiveUpdate="true"
                   placeholder="Input options"/>
             </FlexBox>
-            <FlexBox renderType="Bare" width="100%" alignItems="Center">
-               <Label text="Entries" showColon="true" wrapping="false" labelFor="input_number" class="sapUiTinyMarginEnd"/>
+            <FlexBox renderType="Bare" width="100%" justifyContent="SpaceBetween" alignItems="Center">
+               <Label text="Entries" showColon="true" wrapping="false" labelFor="input_number" class="sapUiTinyMarginEnd">
+                  <layoutData>
+                     <FlexItemData minWidth="55px" />
+                  </layoutData>
+               </Label>
                <StepInput
                   id="input_number"
                   class="sapUiSizeCompact sapUiTinyMarginEnd"
@@ -126,7 +150,8 @@
        <footer>
          <OverflowToolbar>
             <ToolbarSpacer/>
-            <Button type="Accept" text="Draw" press="performDraw" enabled="{= ${/fExprX} !== &apos;&apos; }"/>
+            <Button type="Reject" text="Clear" press="onPressClearWidget"/>
+            <Button type="Accept" text="Draw" press="onPressPerformDraw" enabled="{= ${/fExprX} !== &apos;&apos; }"/>
             <Button id="quitButton" type="Reject" text="Quit" press="onQuitRootPress"/>
          </OverflowToolbar>
       </footer>

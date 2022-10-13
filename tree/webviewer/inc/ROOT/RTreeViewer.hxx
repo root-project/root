@@ -21,6 +21,8 @@
 #include <functional>
 
 class TTree;
+class TBranch;
+class TLeaf;
 class TObjArray;
 
 namespace ROOT {
@@ -59,6 +61,10 @@ public:
 
    void SetTree(TTree *tree);
 
+   bool SuggestLeaf(const TLeaf *leaf);
+
+   bool SuggestBranch(const TBranch *branch);
+
    void SetCallback(PerformDrawCallback_t func) { fCallback = func; }
 
    /** Configures default hierarchy browser visibility, only has effect before showing web window */
@@ -86,6 +92,8 @@ private:
    void WebWindowCallback(unsigned connid, const std::string &arg);
 
    void SendCfg(unsigned connid);
+
+   std::string FormatItemName(const std::string &name);
 
    void AddBranches(TObjArray *branches);
 

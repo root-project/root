@@ -90,6 +90,47 @@ void RTreeViewer::SetTree(TTree *tree)
    Update();
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Suggest to use leaf in the gui
+/// Normally just assign as last edited expression
+
+bool RTreeViewer::SuggestLeaf(const TLeaf *leaf)
+{
+   const TBranch *branch = leaf ? leaf->GetBranch() : nullptr;
+
+   const TTree *tree = branch ? branch->GetTree() : nullptr;
+
+   if (!tree || (fTree != tree))
+      return false;
+
+   if ((const_cast<TBranch *>(branch)->GetListOfBranches()->GetLast() < 0) && (branch->GetNleaves() == 1)) {
+      std::string brname = branch->GetName();
+      if (brname == leaf->GetName())
+         return SuggestBranch(branch);
+   }
+
+   fWebWindow->Send(0, "SUGGEST:"s + FormatItemName(leaf->GetFullName().Data()));
+
+   return true;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Suggest to use branch in the gui
+/// Normally just assign as last edited expression
+
+bool RTreeViewer::SuggestBranch(const TBranch *branch)
+{
+   const TTree *tree = branch ? branch->GetTree() : nullptr;
+
+   if (!tree || (fTree != tree))
+      return false;
+
+   fWebWindow->Send(0, "SUGGEST:"s + FormatItemName(branch->GetFullName().Data()));
+
+   return true;
+}
+
+
 /////////////////////////////////////////////////////////////////////////////////
 /// Show or update viewer in web window
 /// If web browser already started - just refresh drawing like "reload" button does
@@ -166,6 +207,25 @@ void RTreeViewer::WebWindowCallback(unsigned connid, const std::string &arg)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
+/// Format item name used in draw expression
+
+std::string RTreeViewer::FormatItemName(const std::string &name)
+{
+   std::string res = name;
+
+   std::string from = "/";
+   std::string to = "\\/";
+
+   size_t start_pos = 0;
+   while((start_pos = res.find(from, start_pos)) != std::string::npos) {
+       res.replace(start_pos, from.length(), to);
+       start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
+   }
+   return res;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
 /// Add branches to config
 
 void RTreeViewer::AddBranches(TObjArray *branches)
@@ -174,15 +234,6 @@ void RTreeViewer::AddBranches(TObjArray *branches)
       return;
 
    TIter iter(branches);
-
-   auto replaceSlashes = [](std::string str, const std::string& from = "/", const std::string& to = "\\/") {
-       size_t start_pos = 0;
-       while((start_pos = str.find(from, start_pos)) != std::string::npos) {
-           str.replace(start_pos, from.length(), to);
-           start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
-       }
-       return str;
-   };
 
    while (auto br = dynamic_cast<TBranch *>(iter())) {
 
@@ -204,7 +255,7 @@ void RTreeViewer::AddBranches(TObjArray *branches)
          if (brelem && (brelem->GetStreamerType() < 1 || brelem->GetStreamerType() > 59))
             continue;
 
-         fCfg.fBranches.emplace_back(replaceSlashes(brfullname), br->GetTitle() + " / "s + leaf0->GetTypeName());
+         fCfg.fBranches.emplace_back(FormatItemName(brfullname), br->GetTitle() + " / "s + leaf0->GetTypeName());
          continue;
       }
 
@@ -217,7 +268,7 @@ void RTreeViewer::AddBranches(TObjArray *branches)
          if (brelem && brelem->GetStreamerType() == TStreamerInfo::kSTL && (leaves->GetLast() == 0) && (leaffullname == brfullname + "_"))
             break;
 
-         fCfg.fBranches.emplace_back(replaceSlashes(leaffullname), leaf->GetTitle() + " / "s + leaf->GetTypeName());
+         fCfg.fBranches.emplace_back(FormatItemName(leaffullname), leaf->GetTitle() + " / "s + leaf->GetTypeName());
       }
 
       AddBranches(subbr);

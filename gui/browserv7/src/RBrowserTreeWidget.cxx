@@ -13,8 +13,10 @@
 #include "RBrowserWidget.hxx"
 
 #include "ROOT/RTreeViewer.hxx"
-#include "TTree.h"
 #include "ROOT/RBrowser.hxx"
+#include "TTree.h"
+#include "TBranch.h"
+#include "TLeaf.h"
 
 using namespace ROOT::Experimental;
 
@@ -25,7 +27,6 @@ class RBrowserTreeWidget : public RBrowserWidget {
    RTreeViewer fViewer;
    std::unique_ptr<Browsable::RHolder> fObject; // tree object
    std::string fTitle;
-   bool fFirstSend{false};
 
 public:
 
@@ -51,17 +52,27 @@ public:
       if (!elem->IsCapable(Browsable::RElement::kActTree))
          return false;
 
-      fObject = elem->GetObject();
-      if (!fObject)
+      auto obj = elem->GetObject();
+      if (!obj)
          return false;
 
-      auto tree = fObject->Get<TTree>();
-      if (!tree) return false;
+      auto tree = obj->Get<TTree>();
+      if (tree) {
+         fObject = std::move(obj);
+         fTitle = tree->GetName();
+         fViewer.SetTree(const_cast<TTree *>(tree));
+         return true;
+      }
 
-      fTitle = tree->GetName();
-      fViewer.SetTree(const_cast<TTree *>(tree));
+      auto branch = obj->Get<TBranch>();
+      if (branch)
+         return fViewer.SuggestBranch(branch);
 
-      return true;
+      auto leaf = obj->Get<TLeaf>();
+      if (leaf)
+         return fViewer.SuggestLeaf(leaf);
+
+      return false;
    }
 
    std::string SendWidgetContent() override { return SendWidgetTitle(); }
