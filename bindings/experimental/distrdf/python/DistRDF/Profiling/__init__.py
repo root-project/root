@@ -15,16 +15,7 @@
 # It is crucial that this instruction is executed before importing ROOT in the distributed workers.
 from __future__ import annotations
 
-# TODO: Each time the module DistRDF is imported, the CLING_PROFILE=1 variable is set
-# modyfing the environment in both the client and the workers.
-# This affects only the workers when the profling option is enabled, since in all other
-# cases Cling is already initialized. However the environment is modified every time, and
-# this can potentially give rise to unexpected side effects.
-# The issue can be solved by adding the option to programmatically enable/disable 
-# Cling's profiling feature after its initialization, moving this step inside the 
-# data collection context manager for all Visualizations
-from os import environ
-environ["CLING_PROFILE"]="1"
+import os
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -45,7 +36,16 @@ class ClingProfile():
     """
 
     def __init__(self, rdf:RDataFrame, visualization:str="flamegraph", **options) -> None:
-        
+
+        # We check whether the environment variable is set by the user in the
+        # local environment. For a local run of distributed RDataFrame, this
+        # should be enough to also get jitting info from cling in the mapper
+        # tasks. For distributed runs, the variable should be also propagated to the workers
+        if os.environ.get("CLING_PROFILE", "0") != "1":
+            raise RuntimeError(
+                "The profiling feature is not active. Please set CLING_PROFILE=1 in your environment and make sure it "
+                "is also propagated to the distributed nodes.")
+
         vclass = SUPPORTED_VISUALIZATIONS.get(visualization, None)
 
         if not vclass:
@@ -67,9 +67,13 @@ class ClingProfile():
 def profilable_mapper(*args, **kwargs):
     """DistRDF mapper function wrapper"""
 
-    # This wrapper is used to trick pickle, and avoid import of the dependencies of distrdf_mapper, which include ROOT.
-    # By doing so, this submodule gets imported first, so the CLING_PROFILE=1 environment variable is set before cling
-    # gets initialized, hence effectively enabling the profiling feature.
+    # Before running the mapper, check that this worker has the environment
+    # variable set. Hopefully this was set in a way that when cling was loaded
+    # for the first time on this workers, the variable was already visible.
+    if os.environ.get("CLING_PROFILE", "0") != "1":
+        raise RuntimeError(
+            "The profiling feature is not active in the environment of the computing nodes. "
+            "Please set CLING_PROFILE=1 on all nodes of the cluster.")
 
     # Import of DistRDF mapper is done only here
     from DistRDF.Backends.Base import distrdf_mapper
